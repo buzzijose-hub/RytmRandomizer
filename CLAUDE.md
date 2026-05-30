@@ -10,10 +10,11 @@
 
 1. **This file** — operational guardrails.
 2. **[`AGENTS.md`](AGENTS.md)** — folder map, test commands, anti-patterns, cross-reference index.
-3. **[`CONTRIBUTING.md`](CONTRIBUTING.md)** — full developer handbook (read on demand; AGENTS.md links into the right sections).
-4. **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** + **[`docs/ARCHITECTURE_DIAGRAMS.md`](docs/ARCHITECTURE_DIAGRAMS.md)** — architecture standard + 26 mermaid diagrams.
-5. **[`.claude/rules/`](.claude/rules/)** — 11 mandatory rules (architecture, cascade-merge-pattern, coverage-gate-100pct, parity-fixture-discipline, skill-routing, device-protocol-strategy, hardware-pinned-packages, pr-body-conformance-checklist, maximize-parallelization, autonomous-agent-execution, codex-contribution-guide).
-6. **[`.claude/skills/`](.claude/skills/)** — 19 task-specific skills, invokable via `/<skill-name>`.
+3. **[`agent-memory/INDEX.md`](agent-memory/INDEX.md)** — shared agent memory (workflow feedback, project facts, reference). Same shape as Claude Code's local memory (`~/.claude/projects/<id>/memory/`); the in-repo store is the canonical version so every agent on every machine reads the same observations. Individual memories are read on demand when their `description` matches the current task.
+4. **[`CONTRIBUTING.md`](CONTRIBUTING.md)** — full developer handbook (read on demand; AGENTS.md links into the right sections).
+5. **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** + **[`docs/ARCHITECTURE_DIAGRAMS.md`](docs/ARCHITECTURE_DIAGRAMS.md)** — architecture standard + 26 mermaid diagrams.
+6. **[`.claude/rules/`](.claude/rules/)** — 11 mandatory rules (architecture, cascade-merge-pattern, coverage-gate-100pct, parity-fixture-discipline, skill-routing, device-protocol-strategy, hardware-pinned-packages, pr-body-conformance-checklist, maximize-parallelization, autonomous-agent-execution, codex-contribution-guide).
+7. **[`.claude/skills/`](.claude/skills/)** — 19 task-specific skills, invokable via `/<skill-name>`.
 
 ## Operational guardrails — apply on every task
 
@@ -38,7 +39,7 @@
 - **Running tests:** `python -m pytest` (default `-n auto` xdist parallelization). Never `-o addopts=''` outside `PARITY_CAPTURE_MODE=1` — 3× slowdown.
 - **Lint:** `python -m ruff check . && python -m black --check --target-version=py311 . && python -m isort --profile black --check-only .` (must all pass before push).
 - **Task runner:** prefer `just <task>` if [`Justfile`](Justfile) is present (`just test`, `just fast`, `just lint`, `just check`, `just pr`).
-- **PRs:** `gh pr create --base modularize-v1.34 --title "..." --body-file path/to/body.md`. Body must include conformance checklist.
+- **PRs:** `python scripts/create_pr.py --title "..." --body-file path/to/body.md` so `edward-rosado` is requested automatically. Raw fallback: `gh pr create --base modularize-v1.34 --reviewer edward-rosado --title "..." --body-file path/to/body.md`. Body must include conformance checklist.
 
 ### Default to small reversible changes
 

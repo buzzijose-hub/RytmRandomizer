@@ -375,6 +375,123 @@ def test_scene_presets_has_14_entries_with_known_keys():
     assert data.SCENE_PRESETS["s5"]["action"] == "clean"
 
 
+def test_style_profiles_cover_core_techno_aesthetic_targets():
+    assert set(data.STYLE_PROFILES) == {
+        "detroit_minimal",
+        "mills_hypnotic",
+        "hood_stripped",
+        "ur_machine_funk",
+        "hardgroove_percussive",
+        "birmingham_pressure",
+        "industrial_dark",
+        "deep_dark_hypnosis",
+        "warehouse_peak",
+        "jose_core_techno",
+    }
+    assert data.STYLE_PROFILES["detroit_minimal"].name == "Detroit Minimal"
+    assert data.STYLE_PROFILES["birmingham_pressure"].scores.grit == 9
+    assert data.STYLE_PROFILES["jose_core_techno"].name == "Jose Core Techno"
+    assert "jeff_mills" in data.STYLE_PROFILES["jose_core_techno"].tags
+    assert "oscar_mulero" in data.STYLE_PROFILES["jose_core_techno"].tags
+    assert (
+        "A4 Track 1 bassline pressure" in data.STYLE_PROFILES["jose_core_techno"].analog_four_focus
+    )
+    assert "snapshot" in data.STYLE_PROFILES["warehouse_peak"].analyzer_targets
+
+
+def test_style_profiles_reference_existing_scene_presets():
+    for profile in data.STYLE_PROFILES.values():
+        assert profile.scene_keys
+        for scene_key in profile.scene_keys:
+            assert scene_key in data.SCENE_PRESETS
+
+
+def test_style_profiles_are_complete_passive_design_records():
+    for profile in data.STYLE_PROFILES.values():
+        assert profile.key
+        assert profile.name
+        assert profile.summary
+        assert profile.tags
+        assert profile.rytm_focus
+        assert profile.analog_four_focus
+        assert profile.analyzer_targets
+        for score in (
+            profile.scores.energy,
+            profile.scores.density,
+            profile.scores.darkness,
+            profile.scores.grit,
+            profile.scores.groove,
+            profile.scores.hypnosis,
+            profile.scores.space,
+        ):
+            assert 0 <= score <= 10
+
+
+def test_style_target_vectors_import_guard_rejects_profile_mismatch():
+    source_path = PROJECT_ROOT / "rytm_randomizer" / "data" / "style_targets.py"
+    source = source_path.read_text(encoding="utf-8").replace(
+        "from .style_profiles import STYLE_PROFILES",
+        "STYLE_PROFILES = {}",
+    )
+    module_name = "rytm_randomizer.data._style_targets_guard_probe"
+    probe_module = type(sys)(module_name)
+    probe_module.__dict__.update(
+        {
+            "__builtins__": __builtins__,
+            "__name__": module_name,
+            "__package__": "rytm_randomizer.data",
+        }
+    )
+    sys.modules[module_name] = probe_module
+
+    try:
+        with pytest.raises(ValueError, match="style target vectors must cover every style profile"):
+            exec(  # noqa: S102 - local source probe covers the import-time catalog guard.
+                compile(source, str(source_path), "exec"),
+                probe_module.__dict__,
+            )
+    finally:
+        sys.modules.pop(module_name, None)
+
+
+def test_style_discovery_policy_maps_reference_to_wild_bands():
+    from rytm_randomizer.data.style_discovery import (
+        DEFAULT_STYLE_DISCOVERY_AMOUNT,
+        STYLE_DISCOVERY_AMOUNT_MAX,
+        STYLE_DISCOVERY_AMOUNT_MIN,
+        style_discovery_policy,
+    )
+
+    assert STYLE_DISCOVERY_AMOUNT_MIN == 0
+    assert STYLE_DISCOVERY_AMOUNT_MAX == 100
+    assert DEFAULT_STYLE_DISCOVERY_AMOUNT == 45
+    assert style_discovery_policy(0).band == "reference"
+    assert style_discovery_policy(20).band == "reference"
+    assert style_discovery_policy(21).band == "balanced"
+    assert style_discovery_policy(60).band == "balanced"
+    assert style_discovery_policy(61).band == "discovery"
+    assert style_discovery_policy(85).band == "discovery"
+    assert style_discovery_policy(86).band == "wild_discovery"
+    assert style_discovery_policy(100).band == "wild_discovery"
+
+
+@pytest.mark.parametrize("amount", [-1, 101])
+def test_style_discovery_policy_rejects_out_of_range_amounts(amount):
+    from rytm_randomizer.data.style_discovery import style_discovery_policy
+
+    with pytest.raises(ValueError, match="discovery amount must be between 0 and 100"):
+        style_discovery_policy(amount)
+
+
+def test_style_discovery_policy_reports_internal_band_gap(monkeypatch):
+    from rytm_randomizer.data import style_discovery
+
+    monkeypatch.setattr(style_discovery, "STYLE_DISCOVERY_BANDS", ())
+
+    with pytest.raises(ValueError, match="no discovery band covers amount 50"):
+        style_discovery.style_discovery_policy(50)
+
+
 def test_group_layout_maps_four_pads_to_known_profiles():
     assert set(data.GROUP_LAYOUT) == {1, 2, 3, 4}
     assert data.GROUP_LAYOUT[1]["profile"] == "2"

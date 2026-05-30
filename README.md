@@ -1,70 +1,202 @@
+<div align="center">
+
+<img src="docs/assets/hero-banner.svg" alt="RytmRandomizer — your musical taste, on hardware" width="100%" />
+
 # RytmRandomizer
 
-RytmRandomizer is a Python tool for Elektron hardware: the Analog Rytm MK2 drum machine and the Analog Four MK2 synthesizer. The Analog Rytm path is the mature live-performance randomizer, with MIDI parameter mutation, a four-pad scene system (Rolling / Deeper / Intense / Wild, each with A/B depth variants), and safety guardrails so you do not accidentally send MIDI to hardware. The Analog Four path is now registered behind the same cross-machine `Device` Protocol, with candidate/manifest-gated planning while saved-kit offsets are promoted.
+**A creative cockpit for the Elektron Analog Rytm MK2.**
+**Author a profile · mutate live · ship to hardware as a signed file.**
 
-Each machine is exposed as a registered `Device`; see `docs/ARCHITECTURE.md` section 6.1. You can inspect the dual-machine target surface with `rytm`, `a4`, or `both`. The interactive runtime is owned end-to-end by the modular package (`rytm_randomizer.app` -> `rytm_randomizer.shell`). The original V1.34 monolith (`rytm_hybrid_randomizer_v134.py`) was retired in favor of the package; its reference behavior is captured as JSON goldens under `tests/fixtures/v134_parity/` and asserted by the parity test files.
+[![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-orange.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](pyproject.toml)
+[![Tests](https://img.shields.io/badge/tests-3%2C900%2B-9be8a0.svg)](#testing)
+[![Phase 1 · Cockpit](https://img.shields.io/badge/Phase%201%20%C2%B7%20Cockpit-shipped-7cc4ff.svg)](#cockpit)
+[![Phase 2 · Wizard](https://img.shields.io/badge/Phase%202%20%C2%B7%20Wizard-shipped-9be8a0.svg)](#profile-wizard)
+[![Phase 3 · Export](https://img.shields.io/badge/Phase%203%20%C2%B7%20Export-shipped-9be8a0.svg)](#export-pipeline)
+[![Phase 4 · Hardware](https://img.shields.io/badge/Phase%204%20%C2%B7%20Hardware-next-ffcf7c.svg)](#roadmap)
+
+</div>
 
 ---
 
-## End-user setup
+## What is it?
 
-This path is for someone who just wants to run RytmRandomizer against their Analog Rytm MK2, or inspect the safe dual-machine target surface that now includes Analog Four MK2.
+You own an Analog Rytm. You also own a musical taste — a sound you keep chasing when you sit in front of the machine. RytmRandomizer is the desktop tool that **bridges the two**.
 
-### 1. Requirements
+1. **Point it at your inspiration** — a folder of tracks, a kit dump, the name of an artist you love.
+2. **It learns your style** as a deployable *Profile* (12 pads × style traits).
+3. **Mutate live** during a session: preview the change as a ghost, lock pads you love, undo any move, fire SEND only when the cockpit's pre-flight check says the plan is ready.
+4. **Export the Profile** as a tiny signed file you can share, version-pin, or load onto dedicated hardware (Phase 4).
 
-- An Analog Rytm MK2 connected over USB MIDI for the current interactive runtime
-- Optional: an Analog Four MK2 for the candidate dual-machine path
-- One of: a native installer (preferred, see below) **or** Python >= 3.9 + `pip` (Python 3.11 is the tested contributor/runtime matrix)
+Passive by default — nothing touches MIDI unless you explicitly `--arm`. Byte-identical mutation across Python today and embedded C tomorrow.
 
-### 2. Install — option A: native installer (recommended)
+---
 
-> **Coming soon.** The native installers (Windows `.msi`, macOS `.pkg`, Linux AppImage / `.deb`) are wired up via [BeeWare briefcase](https://briefcase.beeware.org/) but the **first signed release has not shipped yet**. The build matrix lives in `.github/workflows/installers.yml`; release artifacts will be attached to the GitHub Release page once code-signing is provisioned. Until then, use option B.
+<a id="cockpit"></a>
+## The Cockpit
 
-When available, the install flow is:
+<div align="center">
+<img src="docs/assets/cockpit-mockup.svg" alt="Cockpit GUI mockup — snapshot panel, mutation panel, ghost preview, locks, SEND-plan readiness" width="100%" />
+</div>
 
-1. Visit the [GitHub Releases](https://github.com/buzzijose-hub/RytmRandomizer/releases) page.
-2. Download the artifact for your OS:
-   - Windows: `RytmRandomizer-<version>.msi`
-   - macOS: `RytmRandomizer-<version>.pkg`
-   - Linux: `RytmRandomizer-<version>.AppImage` or `.deb` / `.rpm`
-3. Double-click to install. The installer drops a `rytm-randomizer` CLI binary on your PATH with its own bundled Python — no `pip`, no terminal experience needed.
+A Tauri desktop window backed by a Python sidecar that hosts the mutation engine, snapshot history, profile registry, and the device adapter.
 
-### 2. Install — option B: `pip` (works today)
+| Surface | What it does |
+|---|---|
+| **Snapshot panel** | All 12 pads at a glance, with a ghost overlay showing what the next mutation would change. Lock any pad to protect it. |
+| **Mutation panel** | Pick a profile, set depth (0.10 → 0.90), regen on demand. Every change is deterministic for a given (snapshot, profile, depth, seed). |
+| **History strip** | Saved + auto snapshots. Undo any move. Jump to any past snapshot. |
+| **SEND-plan readiness** | The cockpit refuses to fire SEND until the server confirms the plan is ready. Stale plans clear automatically after candidate or lock changes. |
+| **Profile chips** | Switch profiles mid-set without losing your snapshot or your locks. |
+
+**Passive by construction.** The cockpit defaults to a mock device adapter. No MIDI port opens until you explicitly `--arm`.
+
+**Sidecar security guarantees** (post CODE_REVIEW.md sweep, 2026-05):
+
+- **Per-launch HMAC handshake token.** The sidecar mints a fresh URL-safe token on every start (`secrets.token_urlsafe(32)`), writes it to `RYTM_RAND_WS_TOKEN_FILE` (or `~/.rytm-randomizer/cockpit-ws-token` in dev), and refuses every command until the first WS frame echoes the token under `hmac.compare_digest`. A foreign browser tab that can't read the token file cannot drive the cockpit.
+- **Pinned subprotocol** (`rytm-rand-cockpit-v1`). Casual `new WebSocket(url)` connections from a browser tab omit the subprotocol and fail the upgrade.
+- **Per-message size cap** (1 MiB by default; override via `RYTM_RAND_WS_MAX_MESSAGE_BYTES`). Oversize frames are rejected before parsing so a hostile client can't OOM the sidecar.
+- **Wizard-source path allow-list.** Filesystem locations sent to the analyzer must resolve inside one of the roots in `WIZARD_SOURCE_ROOTS` (defaults to `~/.rytm-randomizer/wizard-sources/`). Symlinks and out-of-root paths are rejected with a categorical reason that never echoes the path back over the wire.
+- **Architecture-enforced.** Nine prevention tests under `tests/architecture/` (e.g. `test_no_unauthenticated_ws_endpoints`, `test_no_unconstrained_path_inputs`, `test_no_raw_exception_messages_on_wire`, `test_no_silent_overwrite_writes`) hard-fail CI if any of these invariants regresses.
+
+For the dev-loop launch (two-terminal split) see [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md). The release Tauri bundle spawns the sidecar automatically.
+
+---
+
+<a id="profile-wizard"></a>
+## The Profile Wizard
+
+<div align="center">
+<img src="docs/assets/wizard-flow.svg" alt="Profile Wizard five-step flow — Name, Add sources, Analyze, Review, Save" width="100%" />
+</div>
+
+Click **"+ Create profile…"** in the cockpit and walk through five steps to author a `kind="user"` profile from whatever inspires you:
+
+- **Kits** — SysEx dumps from your library
+- **Sounds** — folders of `.wav` / `.aif` / `.flac` samples
+- **Songs / albums** — audio files run through the existing `style_analysis/` extractor
+- **Artists** — names looked up against a curated reference table (e.g. "Surgeon" → industrial/metallic / rolling-low-end)
+- **Folders** — point at a directory and the wizard does the right thing per file
+
+Each source is analyzed, the derived `StyleTrait`s are averaged, and the wizard maps them onto pads via a tunable `TRAIT_TO_PAD` table. Hit **Save** and the new profile lands in `~/.rytm-randomizer/profiles/` — the cockpit's profile chips pick it up automatically.
+
+> 🛡️ The wizard is passive — it never opens a MIDI port and never sends MIDI.
+
+---
+
+<a id="export-pipeline"></a>
+## Export Pipeline · Phase 3
+
+<div align="center">
+<img src="docs/assets/export-pipeline.svg" alt="Export pipeline — ProfileModel through pack, sign, atomic write, verify, to a portable .rymp file" width="100%" />
+</div>
+
+A profile in the cockpit is one thing. A **deployable artifact** is another. Phase 3 turns the in-memory `ProfileModel` into a tiny, self-describing, signed file (`cockpit-export-profile-model` for the write, `cockpit-export-rehearsal-report` for the passive pre-flight; see [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md) §5c for the operator walkthrough):
+
+```bash
+rytm-randomizer cockpit-export-profile-model \
+    --profile-id buzzi \
+    --output ~/exports/buzzi-v1.0.0.rymp \
+    --key-hex $RYMP_SIGNING_KEY --key-id buzzi-2026
+```
+
+What it does:
+
+1. **`pack`** the `ProfileModel` to MessagePack with a 4-byte magic (`RYMP`), versioned header, payload length, CRC32.
+2. **`sign`** with HMAC-SHA256 (stdlib only — no crypto library dep). Wrap in a `RYMS` envelope carrying the algorithm, key id, and 32-byte signature.
+3. **`write`** atomically: temp-file in the same directory → `fsync` → `os.replace`. **No partial files ever land on disk** — works identically on POSIX and Windows.
+4. **`verify`** the bytes that were just written. The verifier never raises; it returns a `VerificationResult` with `ok` + a `reason` from a finite set.
+
+The output is a ~8 KB file you can email, hash-check, version-pin in a sample-pack zip, and eventually load onto dedicated hardware.
+
+**Rehearse before you ship.** Run the passive `cockpit-export-rehearsal-report` first to see exactly what file would land — path, payload size, format version, CRC, signing status — without writing anything.
+
+---
+
+## Architecture
+
+<div align="center">
+<img src="docs/assets/architecture.svg" alt="System architecture — Cockpit UI, Python sidecar, Analog Rytm hardware, future embedded loader" width="100%" />
+</div>
+
+Four boundaries. Same `ProfileModel` shape lives in three of them: the cockpit's in-memory tree, the exported `.rymp` binary, and (eventually) the embedded hardware loader. **Same model → same mutation output** across Python and embedded C.
+
+A few invariants the codebase actively defends:
+
+- **Passive by default.** A subprocess-driven test sweep asserts that no passive CLI command imports `mido` / `rtmidi` / any adapter module. Auto-discovered, so every new command is automatically covered.
+- **V1.34 parity is byte-frozen.** The reference mutation engine's behaviour is captured as JSON goldens under `tests/fixtures/v134_parity/` — 685 byte-identical fixtures asserted on every PR.
+- **The mutation engine is deterministic.** Same `(snapshot, profile, depth, seed)` → same `MutationCandidate`. Always.
+- **Exception taxonomy enforced.** Every `raise` either uses the `RytmRandomizerError` taxonomy or a validation-allowed stdlib class. Architecture tests fail loudly if a new bare exception slips in.
+- **Architecture invariants** pin everything from the wire format of the export binary to the existence of the wizard's hash router, so the same regression cannot ship twice.
+
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the long form; [`docs/ARCHITECTURE_DIAGRAMS.md`](docs/ARCHITECTURE_DIAGRAMS.md) for the diagrams.
+
+---
+
+## Use cases
+
+**🎛️ Live-set sound design.** You're three hours into a warehouse set and you need the kit to evolve without losing the bones. Pick a profile, slide depth to ~0.4, REGEN until the ghost overlay looks right, lock the kick, SEND. Two unsaved sends, undo if it didn't land. The 4-pad scene system below the cockpit (Rolling / Deeper / Intense / Wild) gives you another lever for the longer arcs.
+
+**🎹 Dual-machine rigs.** If you run an Elektron Analog Four MKII alongside the Rytm, the same surface plans both. The dual-machine planner accepts saved-kit dumps from both, ranks kit-pairs by readiness against a target style, and produces unified mock previews — keeping the Analog Four's sends candidate / manifest-gated until you explicitly arm it.
+
+**🎚️ Studio profile authoring.** Drop a folder of reference tracks into the wizard, let the style analyzer chew on them, review the trait bars, save as `kind="user"`. Now you have a deployable model that captures *that producer's sound* — not a copy, a reference. Use it next time you want to evoke them without sampling them.
+
+**📦 Share a sound with a friend.** Export your profile as a `~/exports/buzzi-v1.0.0.rymp`. They drop it into their `~/.rytm-randomizer/profiles/`, the cockpit picks it up, they're running mutations against your taste in 60 seconds. CRC32 + HMAC-SHA256 means the file you sent is the file they ran.
+
+**🤖 Future: laptop-free performance.** Phase 4's dedicated hardware loads a `.rymp` from flash, accepts a snapshot over SysEx, generates a `MutationCandidate` using a C-port of the same engine, and emits the resulting CC back to the Rytm. One push-button = a new kit, no laptop in the loop.
+
+---
+
+<a id="install"></a>
+## Install
+
+### 🚀 Recommended — native installer (coming soon)
+
+> The signed installers (Windows `.msi`, macOS `.pkg`, Linux AppImage / `.deb`) are wired up via [BeeWare briefcase](https://briefcase.beeware.org/) for the Python CLI and a Tauri 2 bundle for the cockpit GUI. Phase 3's export pipeline is the last on-disk artifact gate before the first signed release; OS signing / notarization is the only outstanding piece.
+
+Two install paths because there are two artifacts:
+
+| Artifact | What it includes | Build target |
+|---|---|---|
+| **Briefcase installer** | Python CLI sidecar — passive reports, armed `rytm-randomizer` runtime, export CLI | `.github/workflows/installers.yml` `briefcase` |
+| **Cockpit Tauri bundle** | React cockpit GUI + Profile wizard + bundled Python sidecar | `.github/workflows/installers.yml` `desktop-bundle` |
+
+Install both if you want the GUI cockpit *and* the CLI. See [`docs/BUILDING_INSTALLERS.md`](docs/BUILDING_INSTALLERS.md) for the build matrix and per-OS prerequisites.
+
+### 🛠️ pip (works today)
 
 ```bash
 pip install rytm-randomizer
-```
-
-Or, from a local clone:
-
-```bash
+# or, from a clone:
 pip install -e .
 ```
 
-### 3. Per-OS MIDI notes
-
-- **Windows / macOS** — `python-rtmidi` ships prebuilt wheels, so `pip install` just works. The native installers bundle the wheel directly, so end users do not need a working compiler.
-- **Linux** — if no wheel is available for your platform, `python-rtmidi` builds from source and you may need the ALSA development headers first: `sudo apt install libasound2-dev`. The AppImage / `.deb` carry the ALSA runtime so end users do not need the dev headers.
-
-### 4. Launch
+### Launch
 
 ```bash
+# Passive menu — no MIDI port, no MIDI sent. Safe to explore.
 rytm-randomizer
+
+# Full interactive logic against an in-memory mock sender.
+rytm-randomizer --dry-run
+
+# Open a real MIDI port and drive the Analog Rytm.
+rytm-randomizer --arm
 ```
 
-The default landing mode is the **passive menu**: a read-only inspection / preview screen that opens no MIDI port and sends no MIDI. From there:
+`--arm` and `--dry-run` are mutually exclusive; pick one, or neither for the passive menu.
+
+### Launching the cockpit
 
 ```bash
-rytm-randomizer --dry-run   # full interactive logic against an in-memory mock
-                            # sender. No hardware, no port opened. Safe to
-                            # explore the command surface.
+# Terminal 1 — Python sidecar (WebSocket on 127.0.0.1:4317)
+python -m rytm_randomizer.cockpit
 
-rytm-randomizer --arm       # open a real MIDI output port and drive the
-                            # Analog Rytm. The interactive shell prompts you
-                            # for a target pad, profile, then a command.
+# Terminal 2 — Tauri shell + web frontend
+cd desktop/shell && cargo run
 ```
 
-`--arm` and `--dry-run` are mutually exclusive: pick one, or neither for the passive menu.
+(In a release build, the Tauri shell auto-spawns the sidecar — the two-terminal split is for development only.) See [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md) for prerequisites, install steps, and the first-profile walkthrough.
 
 Analog Rytm curated style kits can render all 12 pads. Dry-run first:
 
@@ -237,57 +369,74 @@ target.
 
 ---
 
-## Developer setup
+<a id="roadmap"></a>
+## Roadmap
 
-This path is for someone who wants to work on the code, run tests, or contribute.
+```
+✅ Phase 1 · Cockpit                      Tauri shell, WS sidecar, mutation engine,
+   shipped (PR #99)                       snapshot history, profile registry,
+                                          v10 UX (snapshot · mutation · history).
 
-### 1. Clone and install with dev dependencies
+✅ Phase 2 · Profile Wizard               In-cockpit authoring of kind="user"
+   shipped (PR #102)                      profiles from kits, audio, references.
+                                          Plus Playwright E2E + 17 arch guards.
+
+✅ Phase 3 · Export Pipeline              Production-grade pipeline around the
+   shipped (PR #106)                      Phase 1 serializer: HMAC-SHA256
+                                          signing (stdlib only, timing-safe),
+                                          atomic file writes (sibling temp +
+                                          fsync + os.replace), never-raises
+                                          integrity verifier, CLI driver, and
+                                          passive pre-flight rehearsal report.
+                                          7 WSes, 1 bundled PR, Phase-4-ready
+                                          wire format pinned by arch tests.
+
+🔮 Phase 4 · Hardware Runtime             Dedicated device that loads .rymp
+   next                                   from flash, runs an embedded C
+                                          port of the same mutation engine,
+                                          emits CC back to the Rytm.
+                                          One push-button = new kit, no laptop.
+```
+
+See [`docs/STATUS.md`](docs/STATUS.md) for the dated activity log and the per-phase implementation plans under [`docs/superpowers/plans/`](docs/superpowers/plans/).
+
+---
+
+## For contributors
 
 ```bash
 git clone https://github.com/buzzijose-hub/RytmRandomizer.git
 cd RytmRandomizer
 pip install -e ".[dev]"
+pytest                    # full suite — 3,900+ tests, ~30s on a multi-core machine
+just check                # pre-PR gate (ruff + black + isort + tests + arch)
 ```
 
-### 2. Run the test suite
+The test suite uses `pytest-xdist` (`-n auto`) for parallel execution and a 180-second per-test timeout. Don't pass `-o addopts=''` for normal runs — it disables xdist and triples the runtime.
 
-```bash
-pytest
-```
+**Repository map** (high-level):
 
-The full suite is roughly 2,400 tests and usually runs in about 30 seconds on a multi-core machine. `pyproject.toml` sets `-n auto`, so `pytest-xdist` parallelizes across CPU cores. Do not pass `-o addopts=''` for normal runs; it disables xdist and makes the suite much slower. Every commit must keep the suite green. The pytest config in `pyproject.toml` enables:
+| Path | Purpose |
+|---|---|
+| `rytm_randomizer/cockpit/` | Phase 1 cockpit · data · engine · profiles · history · device · ws · export |
+| `rytm_randomizer/cockpit/wizard/` | Phase 2 wizard · state · analyze · sysex/reference analyzers · builder · pad mapping |
+| `rytm_randomizer/cockpit/export/` | Phase 3 export pipeline · pack · sign · write · verify · CLI |
+| `rytm_randomizer/devices/` | Cross-machine `Device` Protocol + registry (Analog Rytm + Analog Four) |
+| `rytm_randomizer/reports/` | 50+ passive reports — CLI-driven, no MIDI side effects |
+| `rytm_randomizer/engines/`, `group_runner.py`, `scene_runner.py` | V1.34 Analog Rytm orchestration (byte-frozen reference) |
+| `rytm_randomizer/data/`, `state/`, `guardrails/`, `observability/` | Fact tables, runtime state, policy, logging |
+| `desktop/shell/` | Tauri 2 Rust shell — spawns the Python sidecar, wraps the web frontend |
+| `desktop/web/` | React + TypeScript + Vite cockpit + wizard UI · vitest + Playwright |
+| `tests/` | 3,700+ tests across 170+ modules — arch invariants, V1.34 parity, integration, E2E |
+| `docs/` | Architecture, status, plans, specs, install + cockpit quickstart |
 
-- `pytest-xdist` (`-n auto`) for parallel execution.
-- `pytest-timeout` (default 180s per test) so no test can silently hang the suite.
-- `--durations=20` after every run so per-test timings are always visible.
-- `pytest-sugar` for a live progress bar; pass `-p no:sugar -v` for plain output.
-
-Common loops if `just` is installed: `just test` for the full suite, `just fast` for the fast subset, `just lint` for ruff/black/isort, and `just check` for the pre-PR gate.
-
-### 3. Repository map
-
-| Path | What it is |
-|------|------------|
-| `rytm_randomizer/` | The product package. `app.py` is the entry point; `cli.py` is the passive CLI; `shell.py` is the interactive command loop. |
-| `rytm_randomizer/devices/` | Cross-machine `Device` Protocol + registry. `analog_rytm.py` and `analog_four.py` are the registered devices; `strategies/` holds each device's snapshot decoder, mutation planner, and message renderer. |
-| `rytm_randomizer/senders/` | Generic guarded and hardware send paths that consume any registered `Device`. |
-| `rytm_randomizer/dual_machine/` | Dual-machine target reporting and alias resolution for `rytm`, `a4`, and `both`; it fans out through `devices.all_devices()`. |
-| `rytm_randomizer/engines/`, `group_runner.py`, `scene_runner.py` | The V1.34 Analog Rytm orchestration layer. |
-| `rytm_randomizer/data/`, `state/` | Canonical fact tables and runtime state. |
-| `rytm_randomizer/guardrails/`, `observability/`, `snapshot/`, `reports/`, `behavior/`, `style_analysis/` | Safety/policy, logging/metrics, SysEx envelope helpers, passive reports, behavior evaluators, and style-analysis support. |
-| `tests/fixtures/v134_parity/` | Frozen V1.34 reference behavior as JSON goldens, one per parity request. The retired `rytm_hybrid_randomizer_v134.py` monolith used to be the live byte-parity baseline; the goldens are now the authoritative source. |
-| `tests/` | Roughly 2,400 tests across 108 test files, including `tests/architecture/` mechanical guardrails and parity tests against the V1.34 JSON goldens. |
-| `docs/` | Project documentation, status, process notes, `ARCHITECTURE.md`, `ARCHITECTURE_DIAGRAMS.md`, and `PLAN_REQUIREMENTS.md`. |
-| `scripts/` | Cross-platform Python tooling such as closeout and coverage checks. `Scripts/` is the legacy PowerShell equivalent. |
-| `tooling/` | Developer utilities (hardware-capture scripts). Not part of the core product. |
-
-### 4. Contributing
-
-See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the workflow (planning, TDD, code review) and the parity rules around the V1.34 reference. The architecture standard is `docs/ARCHITECTURE.md`; `docs/ARCHITECTURE_DIAGRAMS.md` has the visual map. Agentic contributors should also read `AGENTS.md`, and Codex work should read `docs/CODEX_CONTRIBUTING.md`.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow (plan → TDD → code review → ship), the parity rules around V1.34, and the per-PR gate battery. Agentic contributors should read [`AGENTS.md`](AGENTS.md) and [`docs/CODEX_CONTRIBUTING.md`](docs/CODEX_CONTRIBUTING.md).
 
 ---
 
-## Scenes and commands
+## CLI cheat-sheet
+
+The full surface is large - see [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) for every command and its flags. The headline ones:
 
 The scene system below is the validated V1.34 four-pad layer. These tables are
 the canonical reference for what commands exist there; `rytm_randomizer.shell`
@@ -295,35 +444,79 @@ dispatches them. For all-12-pad style mutation, use
 `python -m rytm_randomizer.app --dry-run --rytm-12-pad-shell` first, then the
 armed form with `--confirm-rytm-12-pad-send`.
 
-### Scene system
+```bash
+# Cockpit + wizard + export
+python -m rytm_randomizer.cockpit                                     # sidecar
+cockpit-export-profile-model --profile-id X --output Y.rymp           # ship a profile (Phase 3)
+cockpit-export-rehearsal-report --profile-id X                        # passive pre-flight
+manual-feedback-packet-report --scenario profile                      # collect installer/wizard/export feedback
+
+# Live-set planning
+style-performance-arc-live-set-cockpit-report                         # one-screen cockpit packet
+style-performance-arc-live-show-export-report                         # handoff manifest
+style-performance-arc-stage-routing-report                            # cue-by-cue route cards
+style-crates-queue-journal-report --json                              # crates, staged moves, journal seeds
+style-crate-rehearsal-deck-report --json                              # GUI-ready crate/queue/journal rehearsal cards
+reference-style-blueprint-report --description "Glenn Wilson pressure" # 12-pad + A4 influence blueprint
+
+# Dual-machine targets
+dual-machine-target-report rytm | a4 | both                           # safe target surface
+dual-machine-style-kit-selection-report STYLE --rytm KITS --analog-four KITS
+
+# Snapshot intelligence
+rytm-snapshot-intelligence-report KITS.syx --slot N                   # one Rytm kit snapshot
+rytm-snapshot-mutation-preview-report KITS.syx --slot N --depth 2     # mock-only preview
+```
+
+Every command above is **passive by construction** — no MIDI port opens, no MIDI is sent. The full list is auto-discovered and swept on every PR by `tests/test_real_midi_passive_cli_safety.py`.
+
+---
+
+## Scenes and commands · V1.34
+
+The validated V1.34 layer is the byte-frozen reference behaviour for the interactive armed runtime. These are the canonical command tables that `rytm_randomizer.shell` dispatches.
+
+<details>
+<summary><b>Scene system</b></summary>
 
 ```text
 S0  = Home / Clean anchors
-S1  = Rolling
-S1A = Rolling Light
-S1B = Rolling Push
-S2  = Deeper
-S2A = Deeper Groove
-S2B = Deeper Pressure
-S3  = Intense
-S3A = Intense Motion
-S3B = Intense Grit
-S4  = Wild
-S4A = Wild Controlled
-S4B = Wild Maximum
+S1  = Rolling          S1A = Rolling Light       S1B = Rolling Push
+S2  = Deeper           S2A = Deeper Groove       S2B = Deeper Pressure
+S3  = Intense          S3A = Intense Motion      S3B = Intense Grit
+S4  = Wild             S4A = Wild Controlled     S4B = Wild Maximum
 S5  = Back to Clean anchors
 ```
 
-### Four-lane pad layout
+</details>
+
+<details>
+<summary><b>Four-lane pad layout</b></summary>
 
 ```text
-Pad 1 = BD Hard / protected kick foundation
-Pad 2 = BD Classic / secondary percussion lane
-Pad 3 = SY Raw / bass + synth-percussion motion lane
-Pad 4 = BD Acoustic / body + accent pressure lane
+Pad 1 = BD Hard      / protected kick foundation
+Pad 2 = BD Classic   / secondary percussion lane
+Pad 3 = SY Raw       / bass + synth-percussion motion lane
+Pad 4 = BD Acoustic  / body + accent pressure lane
 ```
 
-### Safety rules
+</details>
+
+<details>
+<summary><b>Example scene flow</b></summary>
+
+A typical four-pad live arc:
+
+```text
+SCN     GM      S1A     S3A     S3B     S4B     S5      1       Z       Q
+```
+
+Keep volume moderate for S3B and S4B.
+
+</details>
+
+<details>
+<summary><b>Safety rules</b></summary>
 
 - No new machine profiles.
 - No new MIDI CC mappings.
@@ -347,7 +540,7 @@ Pad 4 = BD Acoustic / body + accent pressure lane
 - Analog Four named parameter sends are active: `python -m rytm_randomizer.app --arm --a4-send-param --parameter "OSC1 PWM Depth" --channel 0 --value 32` prompts for an A4 output port, sends one manual-backed CC MSB message, closes the port, and exits.
 - Analog Four kit recipes are active: `python -m rytm_randomizer.app --arm --a4-kit-recipe bell-techno-grid` prompts for an A4 output port, sends a coordinated manual-backed four-track CC recipe, closes the port, and exits.
 
-### Dual-machine target commands
+</details>
 
 The passive CLI exposes the current machine target surface, passive 12-pad machine matrix, snapshot readiness, and Analog Rytm MIDI catalog without opening a MIDI port:
 
@@ -362,19 +555,35 @@ python -m rytm_randomizer.cli analog-rytm-midi-catalog-report   # passive OS 1.7
 
 Aliases: `rytm-only` and `a4-only` are accepted. The reports are passive: they open no MIDI port and send no MIDI. The snapshot-pad compatibility report explains which legal Rytm pad/machine combinations are snapshot-mutable today and which remain selectable-only until the follow-up runtime slice. The Analog Rytm MIDI catalog records OS 1.72 CC/NRPN rows with safety status labels; documented-only rows are not promoted to mutation until a separate approved hardware-validation pass. The Analog Four path is candidate/manifest-gated; do not run armed Analog Four hardware sends until a readiness report says the plan is ready.
 
-### Recommended quick validation flow
+---
 
-```text
-SCN
-GM
-S1A
-S3A
-S3B
-S4B
-S5
-1
-Z
-Q
-```
+## License
 
-Keep volume moderate for S3B and S4B.
+**Free for personal and noncommercial use. Commercial license available.**
+
+RytmRandomizer is licensed under the [PolyForm Noncommercial License
+1.0.0](LICENSE) — a [source-available](https://en.wikipedia.org/wiki/Source-available_software)
+license that lets anyone clone, run, modify, share, and contribute to the
+project for any **noncommercial** purpose. That includes hobby projects,
+personal use, research, education, charitable work, and government use.
+
+What requires a separate commercial license:
+
+- Bundling RytmRandomizer (or a derivative) into a paid product
+- Hosting RytmRandomizer as a paid service or SaaS offering
+- OEM bundling, white-label distribution, or paid integrations
+- Any other revenue-generating use
+
+For commercial licensing inquiries, open an issue or contact the project
+owners via the [GitHub project page](https://github.com/buzzijose-hub/RytmRandomizer).
+
+Copyright (c) 2025-2026 Jose Buzzi ([@buzzijose-hub](https://github.com/buzzijose-hub))
+and Edward Rosado ([@edward-rosado](https://github.com/edward-rosado)).
+
+<div align="center">
+
+**Made for the Analog Rytm MK2. Built so the same model runs on hardware tomorrow.**
+
+[Docs](docs/) · [Status](docs/STATUS.md) · [Cockpit Quickstart](docs/COCKPIT_QUICKSTART.md) · [Architecture](docs/ARCHITECTURE.md) · [Contributing](CONTRIBUTING.md)
+
+</div>

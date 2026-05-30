@@ -29,6 +29,9 @@ from ..data.rytm_machine_catalog import RYTM_MACHINE_PROFILES, RytmMachineProfil
 from ..devices.strategies import RytmKitSnapshot, rytm_snapshot_payload_fingerprint
 from ..midi_io import Sender, send_cc
 from .analog_rytm_12_pad_shell import classify_rytm_pad_role
+from .analog_rytm_live_helpers import clamp_midi_value as _clamp_midi_value
+from .analog_rytm_live_helpers import live_no_sleep as _no_sleep
+from .analog_rytm_live_helpers import rendered_events_by_pad as _events_by_pad
 
 InputFunc: TypeAlias = Callable[[str], str]
 SnapshotDepth: TypeAlias = Literal["micro", "groove", "strong"]
@@ -657,14 +660,6 @@ SNAPSHOT_SHELL_COMMANDS: Final[Mapping[str, SnapshotShellCommand]] = MappingProx
 )
 
 
-def _no_sleep(_seconds: float) -> None:
-    return None
-
-
-def _clamp_midi_value(value: int) -> int:
-    return max(0, min(127, value))
-
-
 def _valid_pad_number(value: str) -> int | None:
     try:
         pad = int(value)
@@ -912,7 +907,7 @@ def _is_machine_source_tune_event(event: AnalogRytmRenderedStyleEvent) -> bool:
 def _lane_for_event(event: AnalogRytmRenderedStyleEvent) -> SnapshotLane | None:
     if _is_machine_source_tune_event(event):
         return _LANE_TUNE
-    family = _parameter_family(event.parameter)
+    family = _snapshot_parameter_family(event.parameter)
     if family == _LANE_NOISE:
         return _LANE_NOISE
     if family in {"delay", "reverb"}:
@@ -1067,14 +1062,6 @@ def _reset_lane_events_to_anchor(
     )
 
 
-def _events_by_pad(
-    events: Sequence[AnalogRytmRenderedStyleEvent],
-) -> Mapping[int, tuple[AnalogRytmRenderedStyleEvent, ...]]:
-    return MappingProxyType(
-        {pad: tuple(event for event in events if event.pad == pad) for pad in range(1, 13)}
-    )
-
-
 def _snapshot_profile(snapshot: RytmKitSnapshot, pad: int) -> RytmMachineProfile | None:
     fact = snapshot.machine_facts.facts_by_pad.get(pad)
     if fact is None:
@@ -1224,7 +1211,7 @@ def build_snapshot_shell_anchor(snapshot: RytmKitSnapshot) -> RytmSnapshotShellA
     )
 
 
-def _parameter_family(parameter: str) -> str:
+def _snapshot_parameter_family(parameter: str) -> str:
     name = parameter.casefold()
     if "frequency" in name or "tune" in name:
         return "pitch"
@@ -1257,7 +1244,7 @@ def _event_matches_zone(event: AnalogRytmRenderedStyleEvent, zone: SnapshotZone)
     if zone == _ZONE_FILTER:
         return event.section == _FILTER_SECTION
     if zone == _ZONE_GRIT:
-        return _parameter_family(event.parameter) in {
+        return _snapshot_parameter_family(event.parameter) in {
             "drive",
             "noise",
             "resonance",
@@ -1272,7 +1259,7 @@ def _base_delta(
     window: int,
 ) -> int:
     role = classify_rytm_pad_role(event.machine_key)
-    family = _parameter_family(event.parameter)
+    family = _snapshot_parameter_family(event.parameter)
 
     if command.name == _CMD_S1A:
         if family == "decay":
@@ -1378,7 +1365,7 @@ def _bias_adjusted_delta(
     if delta == 0 or bias == _RANDOMIZER_BIAS_NEUTRAL:
         return delta
     magnitude = abs(delta)
-    family = _parameter_family(event.parameter)
+    family = _snapshot_parameter_family(event.parameter)
     parameter = event.parameter.casefold()
     is_filter_frequency = event.section == _FILTER_SECTION and "frequency" in parameter
     if bias == _RANDOMIZER_BIAS_BRIGHTER and is_filter_frequency:
@@ -1759,7 +1746,7 @@ def format_snapshot_shell_status(state: RytmSnapshotShellState) -> str:
     )
 
 
-def _help_text() -> str:
+def _snapshot_help_text() -> str:
     return "\n".join(
         [
             "RytmRandomizer snapshot shell commands",
@@ -2244,7 +2231,7 @@ class AnalogRytmSnapshotShell:
             self._write_line("Exiting.")
             return False
         if normalized in {_CMD_HELP, "h", "?"}:
-            self._write_line(_help_text())
+            self._write_line(_snapshot_help_text())
             return True
         if normalized in {_CMD_PREVIEW, "p"}:
             self._preview()

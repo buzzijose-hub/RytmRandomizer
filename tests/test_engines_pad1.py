@@ -435,6 +435,7 @@ def test_show_tools_loaded_snapshot_branch(
     getattr(eng, show_method)()
     text = capsys.readouterr().out
     assert "Current Pad 1 state snapshot:" in text
+    assert snapshot_marker in text
 
 
 @pytest.mark.parametrize(

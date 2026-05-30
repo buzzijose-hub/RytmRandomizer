@@ -26,6 +26,26 @@ from .analog_four_snapshot_decoder import (
     A4_CANDIDATE_KIT_TYPE_BYTE,
     AnalogFourKitSnapshot,
     AnalogFourSnapshotDecoder,
+    analog_four_snapshot_payload_fingerprint,
+)
+from .analog_four_style_mutation_intent import (
+    AnalogFourStyleMutationIntentPlan,
+    AnalogFourStyleMutationIntentRow,
+    AnalogFourStyleMutationTrackIntent,
+    plan_analog_four_style_mutation_intent,
+)
+from .analog_four_style_mutation_mock_preview import (
+    AnalogFourStyleMutationMockPreview,
+    AnalogFourStyleMutationMockPreviewDeferredRow,
+    AnalogFourStyleMutationMockPreviewEvent,
+    build_analog_four_style_mutation_mock_preview,
+)
+from .analog_four_style_snapshot_routing import (
+    ANALOG_FOUR_STYLE_ZONE_AXIS_WEIGHTS,
+    AnalogFourStyleSnapshotRoutingPlan,
+    AnalogFourStyleTrackPlan,
+    analog_four_style_zone_bias,
+    plan_analog_four_style_snapshot_routes,
 )
 from .analog_rytm_message_renderer import AnalogRytmMessageRenderer
 from .analog_rytm_mutation_planner import (
@@ -48,9 +68,38 @@ from .analog_rytm_snapshot_decoder import (
     RytmSnapshotMachineFacts,
     rytm_snapshot_payload_fingerprint,
 )
+from .analog_rytm_snapshot_routing import (
+    RytmSnapshotMachineRoute,
+    RytmSnapshotMachineRoutingResult,
+    route_rytm_snapshot_machine_values,
+)
+from .analog_rytm_style_mutation_intent import (
+    RytmStyleMutationIntentPlan,
+    RytmStyleMutationIntentRow,
+    RytmStyleMutationPadIntent,
+    plan_rytm_style_mutation_intent,
+)
+from .analog_rytm_style_mutation_mock_preview import (
+    RytmStyleMutationMockPreview,
+    RytmStyleMutationMockPreviewEvent,
+    build_rytm_style_mutation_mock_preview,
+)
+from .analog_rytm_style_mutation_render_plan import (
+    RytmStyleMutationRenderEvent,
+    RytmStyleMutationRenderPadPlan,
+    RytmStyleMutationRenderPlan,
+    plan_rytm_style_mutation_render_plan,
+)
+from .analog_rytm_style_snapshot_routing import (
+    RytmStyleMachineCandidate,
+    RytmStyleSnapshotPadPlan,
+    RytmStyleSnapshotRoutingPlan,
+    plan_rytm_style_snapshot_routes,
+)
 
 __all__ = [
     "A4_CANDIDATE_KIT_TYPE_BYTE",
+    "ANALOG_FOUR_STYLE_ZONE_AXIS_WEIGHTS",
     "MAX_A4_DEPTH",
     "MAX_DEPTH",
     "RYTM_KIT_TYPE_BYTE",
@@ -60,6 +109,14 @@ __all__ = [
     "AnalogFourPlanEvent",
     "AnalogFourMessageRenderer",
     "AnalogFourSnapshotDecoder",
+    "AnalogFourStyleMutationIntentPlan",
+    "AnalogFourStyleMutationIntentRow",
+    "AnalogFourStyleMutationMockPreview",
+    "AnalogFourStyleMutationMockPreviewDeferredRow",
+    "AnalogFourStyleMutationMockPreviewEvent",
+    "AnalogFourStyleMutationTrackIntent",
+    "AnalogFourStyleSnapshotRoutingPlan",
+    "AnalogFourStyleTrackPlan",
     "AnalogRytmMessageRenderer",
     "AnalogRytmMutationPlanner",
     "AnalogRytmSnapshotDecoder",
@@ -72,5 +129,28 @@ __all__ = [
     "RytmSnapshotMachineFact",
     "RytmSnapshotMachineFacts",
     "build_rytm_performance_mutation_plan",
+    "RytmSnapshotMachineRoute",
+    "RytmSnapshotMachineRoutingResult",
+    "RytmStyleMachineCandidate",
+    "RytmStyleMutationIntentPlan",
+    "RytmStyleMutationIntentRow",
+    "RytmStyleMutationMockPreview",
+    "RytmStyleMutationMockPreviewEvent",
+    "RytmStyleMutationPadIntent",
+    "RytmStyleMutationRenderEvent",
+    "RytmStyleMutationRenderPadPlan",
+    "RytmStyleMutationRenderPlan",
+    "RytmStyleSnapshotPadPlan",
+    "RytmStyleSnapshotRoutingPlan",
+    "analog_four_snapshot_payload_fingerprint",
+    "analog_four_style_zone_bias",
+    "build_analog_four_style_mutation_mock_preview",
+    "build_rytm_style_mutation_mock_preview",
+    "plan_analog_four_style_mutation_intent",
+    "plan_analog_four_style_snapshot_routes",
+    "plan_rytm_style_mutation_intent",
+    "plan_rytm_style_mutation_render_plan",
+    "plan_rytm_style_snapshot_routes",
+    "route_rytm_snapshot_machine_values",
     "rytm_snapshot_payload_fingerprint",
 ]

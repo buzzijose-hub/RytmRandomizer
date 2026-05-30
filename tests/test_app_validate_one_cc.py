@@ -8,6 +8,7 @@ import types
 from pathlib import Path
 
 import pytest
+
 from conftest import elektron_syx_message, rytm_real_layout_kit_payload
 
 pytestmark = pytest.mark.fast
@@ -60,6 +61,22 @@ def test_app_main_dry_run_validate_one_cc_records_single_mock_message(capsys) ->
     assert "control: 17" in captured.out
     assert "value: 64" in captured.out
     assert "Mock sender captured 1 message(s)." in captured.out
+    assert captured.err == ""
+
+
+def test_app_help_describes_validate_one_cc_dry_run_and_arm_modes(capsys) -> None:
+    from rytm_randomizer import app
+
+    with pytest.raises(SystemExit) as exc_info:
+        app.main(["--help"])
+    captured = capsys.readouterr()
+    normalized_help = " ".join(captured.out.split())
+
+    assert exc_info.value.code == 0
+    assert "--validate-one-cc" in normalized_help
+    assert "With --dry-run it records one inert mock CC" in normalized_help
+    assert "with --arm it prompts for an output port" in normalized_help
+    assert "sends exactly one real CC" in normalized_help
     assert captured.err == ""
 
 

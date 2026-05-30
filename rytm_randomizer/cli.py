@@ -12,9 +12,33 @@ def _registered_command_exit_code(args):
     from . import cli_registry
 
     lazy_commands = {
+        "mock-mapper-report": (
+            "rytm_randomizer.reports",
+            "MOCK_MAPPER_REPORT_CLI_COMMAND",
+        ),
+        "runtime-plan-report": (
+            "rytm_randomizer.reports",
+            "RUNTIME_PLAN_REPORT_CLI_COMMAND",
+        ),
+        "active-boundary-report": (
+            "rytm_randomizer.reports",
+            "ACTIVE_BOUNDARY_REPORT_CLI_COMMAND",
+        ),
         "rytm-12-pad-machine-matrix-report": (
             "rytm_randomizer.reports.rytm_machine_matrix",
             "RYTM_MACHINE_MATRIX_CLI_COMMAND",
+        ),
+        "rytm-outbound-cc-repeatability-report": (
+            "rytm_randomizer.reports.rytm_outbound_cc_repeatability",
+            "RYTM_OUTBOUND_CC_REPEATABILITY_CLI_COMMAND",
+        ),
+        "manual-validation-kit-report": (
+            "rytm_randomizer.reports.manual_validation_kit",
+            "MANUAL_VALIDATION_KIT_CLI_COMMAND",
+        ),
+        "manual-feedback-packet-report": (
+            "rytm_randomizer.reports.manual_feedback_packet",
+            "MANUAL_FEEDBACK_PACKET_CLI_COMMAND",
         ),
         "rytm-snapshot-pad-compatibility-report": (
             "rytm_randomizer.reports.rytm_snapshot_pad_compatibility",
@@ -23,6 +47,330 @@ def _registered_command_exit_code(args):
         "analog-rytm-midi-catalog-report": (
             "rytm_randomizer.reports.analog_rytm_midi_catalog",
             "ANALOG_RYTM_MIDI_CATALOG_CLI_COMMAND",
+        ),
+        "rytm-snapshot-intelligence-report": (
+            "rytm_randomizer.reports.rytm_snapshot_intelligence",
+            "RYTM_SNAPSHOT_INTELLIGENCE_CLI_COMMAND",
+        ),
+        "rytm-snapshot-mutation-preview-report": (
+            "rytm_randomizer.reports.rytm_snapshot_mutation_preview",
+            "RYTM_SNAPSHOT_MUTATION_PREVIEW_CLI_COMMAND",
+        ),
+        "rytm-style-snapshot-routing-report": (
+            "rytm_randomizer.reports.rytm_style_snapshot_routing",
+            "RYTM_STYLE_SNAPSHOT_ROUTING_CLI_COMMAND",
+        ),
+        "rytm-style-mutation-intent-report": (
+            "rytm_randomizer.reports.rytm_style_mutation_intent",
+            "RYTM_STYLE_MUTATION_INTENT_CLI_COMMAND",
+        ),
+        "rytm-style-mutation-render-plan-report": (
+            "rytm_randomizer.reports.rytm_style_mutation_render_plan",
+            "RYTM_STYLE_MUTATION_RENDER_PLAN_CLI_COMMAND",
+        ),
+        "rytm-style-mutation-mock-preview-report": (
+            "rytm_randomizer.reports.rytm_style_mutation_mock_preview",
+            "RYTM_STYLE_MUTATION_MOCK_PREVIEW_CLI_COMMAND",
+        ),
+        "rytm-style-kit-readiness-report": (
+            "rytm_randomizer.reports.rytm_style_kit_readiness",
+            "RYTM_STYLE_KIT_READINESS_CLI_COMMAND",
+        ),
+        "analog-four-style-snapshot-routing-report": (
+            "rytm_randomizer.reports.analog_four_style_snapshot_routing",
+            "ANALOG_FOUR_STYLE_SNAPSHOT_ROUTING_CLI_COMMAND",
+        ),
+        "analog-four-style-mutation-intent-report": (
+            "rytm_randomizer.reports.analog_four_style_mutation_intent",
+            "ANALOG_FOUR_STYLE_MUTATION_INTENT_CLI_COMMAND",
+        ),
+        "analog-four-style-mutation-mock-preview-report": (
+            "rytm_randomizer.reports.analog_four_style_mutation_mock_preview",
+            "ANALOG_FOUR_STYLE_MUTATION_MOCK_PREVIEW_CLI_COMMAND",
+        ),
+        "analog-four-kit-catalog-report": (
+            "rytm_randomizer.reports.analog_four_kit_catalog",
+            "ANALOG_FOUR_KIT_CATALOG_CLI_COMMAND",
+        ),
+        "analog-four-style-kit-readiness-report": (
+            "rytm_randomizer.reports.analog_four_style_kit_readiness",
+            "ANALOG_FOUR_STYLE_KIT_READINESS_CLI_COMMAND",
+        ),
+        "dual-machine-style-snapshot-routing-report": (
+            "rytm_randomizer.reports.dual_machine_style_snapshot_routing",
+            "DUAL_MACHINE_STYLE_SNAPSHOT_ROUTING_CLI_COMMAND",
+        ),
+        "dual-machine-style-mutation-intent-report": (
+            "rytm_randomizer.reports.dual_machine_style_mutation_intent",
+            "DUAL_MACHINE_STYLE_MUTATION_INTENT_CLI_COMMAND",
+        ),
+        "dual-machine-style-mutation-mock-preview-report": (
+            "rytm_randomizer.reports.dual_machine_style_mutation_mock_preview",
+            "DUAL_MACHINE_STYLE_MUTATION_MOCK_PREVIEW_CLI_COMMAND",
+        ),
+        "dual-machine-style-kit-readiness-report": (
+            "rytm_randomizer.reports.dual_machine_style_kit_readiness",
+            "DUAL_MACHINE_STYLE_KIT_READINESS_CLI_COMMAND",
+        ),
+        "dual-machine-style-kit-selection-report": (
+            "rytm_randomizer.reports.dual_machine_style_kit_selection",
+            "DUAL_MACHINE_STYLE_KIT_SELECTION_CLI_COMMAND",
+        ),
+        "dual-machine-style-selection-mock-preview-report": (
+            "rytm_randomizer.reports.dual_machine_style_selection_mock_preview",
+            "DUAL_MACHINE_STYLE_SELECTION_MOCK_PREVIEW_CLI_COMMAND",
+        ),
+        "dual-machine-style-live-audition-report": (
+            "rytm_randomizer.reports.dual_machine_style_live_audition",
+            "DUAL_MACHINE_STYLE_LIVE_AUDITION_CLI_COMMAND",
+        ),
+        "dual-machine-style-performance-set-plan-report": (
+            "rytm_randomizer.reports.dual_machine_style_performance_set_plan",
+            "DUAL_MACHINE_STYLE_PERFORMANCE_SET_PLAN_CLI_COMMAND",
+        ),
+        "style-profile-report": (
+            "rytm_randomizer.reports.style_profiles",
+            "STYLE_PROFILE_REPORT_CLI_COMMAND",
+        ),
+        "style-crates-queue-journal-report": (
+            "rytm_randomizer.reports.style_crates_queue_journal",
+            "STYLE_CRATES_QUEUE_JOURNAL_CLI_COMMAND",
+        ),
+        "style-crate-rehearsal-deck-report": (
+            "rytm_randomizer.reports.style_crate_rehearsal_deck",
+            "STYLE_CRATE_REHEARSAL_DECK_CLI_COMMAND",
+        ),
+        "reference-style-blueprint-report": (
+            "rytm_randomizer.reports.reference_style_blueprint",
+            "REFERENCE_STYLE_BLUEPRINT_CLI_COMMAND",
+        ),
+        "list-style-profiles": (
+            "rytm_randomizer.reports.style_profiles",
+            "LIST_STYLE_PROFILES_CLI_COMMAND",
+        ),
+        "inspect-style-profile": (
+            "rytm_randomizer.reports.style_profiles",
+            "INSPECT_STYLE_PROFILE_CLI_COMMAND",
+        ),
+        "search-style-profiles": (
+            "rytm_randomizer.reports.style_profiles",
+            "SEARCH_STYLE_PROFILES_CLI_COMMAND",
+        ),
+        "style-target-report": (
+            "rytm_randomizer.reports.style_targets",
+            "STYLE_TARGET_REPORT_CLI_COMMAND",
+        ),
+        "inspect-style-target": (
+            "rytm_randomizer.reports.style_targets",
+            "INSPECT_STYLE_TARGET_CLI_COMMAND",
+        ),
+        "style-performance-arc-report": (
+            "rytm_randomizer.reports.style_performance_arcs",
+            "STYLE_PERFORMANCE_ARC_REPORT_CLI_COMMAND",
+        ),
+        "list-style-performance-arcs": (
+            "rytm_randomizer.reports.style_performance_arcs",
+            "LIST_STYLE_PERFORMANCE_ARCS_CLI_COMMAND",
+        ),
+        "inspect-style-performance-arc": (
+            "rytm_randomizer.reports.style_performance_arcs",
+            "INSPECT_STYLE_PERFORMANCE_ARC_CLI_COMMAND",
+        ),
+        "search-style-performance-arcs": (
+            "rytm_randomizer.reports.style_performance_arcs",
+            "SEARCH_STYLE_PERFORMANCE_ARCS_CLI_COMMAND",
+        ),
+        "style-performance-arc-set-plan-report": (
+            "rytm_randomizer.reports.style_performance_arcs",
+            "STYLE_PERFORMANCE_ARC_SET_PLAN_CLI_COMMAND",
+        ),
+        "style-performance-arc-readiness-report": (
+            "rytm_randomizer.reports.style_performance_arcs",
+            "STYLE_PERFORMANCE_ARC_READINESS_CLI_COMMAND",
+        ),
+        "style-performance-arc-audition-packet-report": (
+            "rytm_randomizer.reports.style_performance_arcs",
+            "STYLE_PERFORMANCE_ARC_AUDITION_PACKET_CLI_COMMAND",
+        ),
+        "style-performance-arc-rehearsal-manifest-report": (
+            "rytm_randomizer.reports.style_performance_arcs",
+            "STYLE_PERFORMANCE_ARC_REHEARSAL_MANIFEST_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-session-packet-report": (
+            "rytm_randomizer.reports.style_performance_arcs",
+            "STYLE_PERFORMANCE_ARC_LIVE_SESSION_PACKET_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-render-bundle-report": (
+            "rytm_randomizer.reports.style_performance_arcs",
+            "STYLE_PERFORMANCE_ARC_LIVE_RENDER_BUNDLE_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-cue-sheet-report": (
+            "rytm_randomizer.reports.style_performance_arcs",
+            "STYLE_PERFORMANCE_ARC_LIVE_CUE_SHEET_CLI_COMMAND",
+        ),
+        "style-performance-arc-reference-match-report": (
+            "rytm_randomizer.reports.style_performance_arcs",
+            "STYLE_PERFORMANCE_ARC_REFERENCE_MATCH_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-runbook-report": (
+            "rytm_randomizer.reports.live_performance_runbook",
+            "STYLE_PERFORMANCE_ARC_LIVE_RUNBOOK_CLI_COMMAND",
+        ),
+        "style-performance-arc-stage-routing-report": (
+            "rytm_randomizer.reports.live_stage_snapshot_routing",
+            "STYLE_PERFORMANCE_ARC_STAGE_ROUTING_CLI_COMMAND",
+        ),
+        "style-performance-arc-stage-rehearsal-state-report": (
+            "rytm_randomizer.reports.live_stage_rehearsal_state",
+            "STYLE_PERFORMANCE_ARC_STAGE_REHEARSAL_STATE_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-set-cockpit-report": (
+            "rytm_randomizer.reports.live_set_cockpit",
+            "STYLE_PERFORMANCE_ARC_LIVE_SET_COCKPIT_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-show-export-report": (
+            "rytm_randomizer.reports.live_show_export",
+            "STYLE_PERFORMANCE_ARC_LIVE_SHOW_EXPORT_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-transition-timeline-report": (
+            "rytm_randomizer.reports.live_transition_timeline",
+            "STYLE_PERFORMANCE_ARC_LIVE_TRANSITION_TIMELINE_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-command-deck-report": (
+            "rytm_randomizer.reports.live_command_deck",
+            "STYLE_PERFORMANCE_ARC_LIVE_COMMAND_DECK_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-state-report": (
+            "rytm_randomizer.reports.live_performance_state",
+            "STYLE_PERFORMANCE_ARC_LIVE_STATE_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-readiness-report": (
+            "rytm_randomizer.reports.live_performance_readiness",
+            "STYLE_PERFORMANCE_ARC_LIVE_READINESS_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-control-surface-report": (
+            "rytm_randomizer.reports.live_control_surface",
+            "STYLE_PERFORMANCE_ARC_LIVE_CONTROL_SURFACE_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-analyzer-handoff-report": (
+            "rytm_randomizer.reports.live_analyzer_handoff",
+            "STYLE_PERFORMANCE_ARC_LIVE_ANALYZER_HANDOFF_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-analyzer-targets-report": (
+            "rytm_randomizer.reports.live_analyzer_targets",
+            "STYLE_PERFORMANCE_ARC_LIVE_ANALYZER_TARGETS_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-analyzer-readiness-report": (
+            "rytm_randomizer.reports.live_gui_analyzer_readiness",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_ANALYZER_READINESS_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-rehearsal-session-report": (
+            "rytm_randomizer.reports.live_gui_rehearsal_session",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_REHEARSAL_SESSION_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-capture-queue-report": (
+            "rytm_randomizer.reports.live_gui_capture_queue",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_CAPTURE_QUEUE_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-capture-review-report": (
+            "rytm_randomizer.reports.live_gui_capture_review",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_CAPTURE_REVIEW_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-sidecar-session-report": (
+            "rytm_randomizer.reports.live_gui_sidecar_session",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_SIDECAR_SESSION_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-screen-contract-report": (
+            "rytm_randomizer.reports.live_gui_screen_contract",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_SCREEN_CONTRACT_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-render-tree-report": (
+            "rytm_randomizer.reports.live_gui_render_tree",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_RENDER_TREE_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-analyzer-overlay-report": (
+            "rytm_randomizer.reports.live_gui_analyzer_overlay",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_ANALYZER_OVERLAY_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-analyzer-frame-report": (
+            "rytm_randomizer.reports.live_gui_analyzer_frame",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_ANALYZER_FRAME_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-interaction-script-report": (
+            "rytm_randomizer.reports.live_gui_interaction_script",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_INTERACTION_SCRIPT_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-action-reducer-report": (
+            "rytm_randomizer.reports.live_gui_action_reducer",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_ACTION_REDUCER_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-controller-state-report": (
+            "rytm_randomizer.reports.live_gui_controller_state",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_CONTROLLER_STATE_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-playback-transcript-report": (
+            "rytm_randomizer.reports.live_gui_playback_transcript",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_PLAYBACK_TRANSCRIPT_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-playback-validation-report": (
+            "rytm_randomizer.reports.live_gui_playback_validation",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_PLAYBACK_VALIDATION_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-test-harness-contract-report": (
+            "rytm_randomizer.reports.live_gui_test_harness_contract",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_TEST_HARNESS_CONTRACT_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-test-harness-readiness-report": (
+            "rytm_randomizer.reports.live_gui_test_harness_readiness",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_TEST_HARNESS_READINESS_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-implementation-bridge-report": (
+            "rytm_randomizer.reports.live_gui_implementation_bridge",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_IMPLEMENTATION_BRIDGE_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-desktop-blueprint-report": (
+            "rytm_randomizer.reports.live_gui_desktop_blueprint",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_BLUEPRINT_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-desktop-app-plan-report": (
+            "rytm_randomizer.reports.live_gui_desktop_app_plan",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_APP_PLAN_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-desktop-component-contract-report": (
+            "rytm_randomizer.reports.live_gui_desktop_component_contract",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_COMPONENT_CONTRACT_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-desktop-view-model-report": (
+            "rytm_randomizer.reports.live_gui_desktop_view_model",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_VIEW_MODEL_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-desktop-render-contract-report": (
+            "rytm_randomizer.reports.live_gui_desktop_render_contract",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_RENDER_CONTRACT_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-desktop-render-harness-report": (
+            "rytm_randomizer.reports.live_gui_desktop_render_harness",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_RENDER_HARNESS_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-cockpit-boundary-readiness-report": (
+            "rytm_randomizer.reports.live_gui_cockpit_boundary_readiness",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_COCKPIT_BOUNDARY_READINESS_CLI_COMMAND",
+        ),
+        "cockpit-send-plan-readiness-report": (
+            "rytm_randomizer.reports.cockpit_send_plan_operator_readiness",
+            "COCKPIT_SEND_PLAN_OPERATOR_READINESS_CLI_COMMAND",
+        ),
+        "cockpit-send-plan-rehearsal-surface-report": (
+            "rytm_randomizer.reports.cockpit_send_plan_rehearsal_surface",
+            "COCKPIT_SEND_PLAN_REHEARSAL_SURFACE_CLI_COMMAND",
+        ),
+        "cockpit-export-profile-model": (
+            "rytm_randomizer.cockpit.export.cli",
+            "COCKPIT_EXPORT_PROFILE_MODEL_CLI_COMMAND",
+        ),
+        "cockpit-export-rehearsal-report": (
+            "rytm_randomizer.reports.cockpit_export_rehearsal",
+            "COCKPIT_EXPORT_REHEARSAL_CLI_COMMAND",
         ),
     }
     command = cli_registry.get(args[0])
@@ -41,8 +389,11 @@ def _registered_command_exit_code(args):
 
     try:
         kwargs = command.args_parser(args[1:])
-    except ValueError:
-        sys.stderr.write(f"{USAGE}\n")
+    except ValueError as exc:
+        if command.error_formatter is None:
+            sys.stderr.write(f"{USAGE}\n")
+        else:
+            sys.stderr.write(f"{command.error_formatter(exc)}\n")
         return 2
 
     return command.handler(**kwargs)
@@ -269,10 +620,7 @@ def format_preview_command_report(command_key):
             "RytmRandomizer passive command preview",
             f"Command: {command}",
             "Found: False",
-            (
-                "Message: Command preview not found. No MIDI was sent. "
-                "No command executed. No hardware was mutated."
-            ),
+            "Message: Command preview not found. No MIDI was sent. No command executed. No hardware was mutated.",
             f"Safety summary: {report['safety_summary']}",
         ]
 
@@ -316,10 +664,7 @@ def format_preview_scene_report(scene_key):
             "RytmRandomizer passive scene preview",
             f"Scene: {key}",
             "Found: False",
-            (
-                "Message: Scene preview not found. No MIDI was sent. "
-                "No scene executed. No command executed. No hardware was mutated."
-            ),
+            "Message: Scene preview not found. No MIDI was sent. No scene executed. No command executed. No hardware was mutated.",
         ]
 
     metadata = report["metadata"]
@@ -361,10 +706,7 @@ def format_preview_group_profile_report(profile_key):
             "RytmRandomizer passive group profile preview",
             f"Group profile: {key}",
             "Found: False",
-            (
-                "Message: Group profile preview not found. No MIDI was sent. "
-                "No command executed. No hardware was mutated."
-            ),
+            "Message: Group profile preview not found. No MIDI was sent. No command executed. No hardware was mutated.",
         ]
 
     metadata = report["metadata"]
@@ -440,27 +782,6 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
-    if args == ["mock-mapper-report"]:
-        from .reports import format_mock_mapper_report
-
-        sys.stdout.write("\n".join(format_mock_mapper_report()))
-        sys.stdout.write("\n")
-        return 0
-
-    if args == ["runtime-plan-report"]:
-        from .reports import format_runtime_plan_report
-
-        sys.stdout.write("\n".join(format_runtime_plan_report()))
-        sys.stdout.write("\n")
-        return 0
-
-    if args == ["active-boundary-report"]:
-        from .reports import format_active_boundary_report
-
-        sys.stdout.write("\n".join(format_active_boundary_report()))
-        sys.stdout.write("\n")
-        return 0
-
     if args == ["mock-runtime-active-bridge-report"]:
         from .reports import format_mock_runtime_active_bridge_report
 
@@ -485,8 +806,7 @@ def main(argv=None):
     if args and args[0] == "dual-machine-target-report":
         if len(args) != 2:
             sys.stderr.write(
-                "Usage: python -m rytm_randomizer.cli "
-                "dual-machine-target-report <rytm|a4|both>\n"
+                "Usage: python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>\n"
             )
             return 2
 

@@ -26,6 +26,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import ClassVar
 
 from rytm_randomizer.guardrails.schema import Confidence, SourceType
 from rytm_randomizer.observability.errors import DataError
@@ -47,6 +48,8 @@ class StyleAnalysisDependencyError(DataError, RuntimeError):
     (:func:`extract_from_description`) never raises this; only the audio
     paths do.
     """
+
+    fingerprint: ClassVar[str] = "style.analysis.dependency_missing"
 
 
 # ---------------------------------------------------------------------------

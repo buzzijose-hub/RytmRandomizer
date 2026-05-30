@@ -1,5 +1,7 @@
 # Analog Rytm Snapshot Shell Implementation Plan
 
+> Status: in-flight (branch codex/rytm-snapshot-pad-compatibility-pr1)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build the first live-safe all-12-pad snapshot shell that anchors to a current-kit SysEx dump and exposes old V1.34-style mutation commands.

@@ -14,6 +14,7 @@ import sys
 from pathlib import Path
 
 import pytest
+
 from conftest import rytm_real_layout_kit_payload
 
 # WS-M4: mark this module as fast-suite; pytest -m fast skips the 505

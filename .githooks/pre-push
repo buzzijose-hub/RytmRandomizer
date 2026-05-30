@@ -24,20 +24,34 @@ set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 
-# Prefer a Python command that both resolves and runs. On Windows, Git's shell
-# may see the Microsoft Store `python3` execution alias before the real
-# interpreter; `command -v` succeeds for that alias even though invoking it
-# fails. Probe each candidate before selecting it.
-PY=
-for candidate in python3 python py; do
-    if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c 'import sys' >/dev/null 2>&1; then
-        PY=$candidate
-        break
+# Find a python that actually executes. On Windows, the bare names
+# (`python`, `python3`, `py`) often resolve to Microsoft Store stub
+# executables under %LOCALAPPDATA%\Microsoft\WindowsApps\ that throw
+# "Permission denied" / "The system cannot find the path specified" when
+# invoked from a subprocess (git hooks run non-interactively). The fix:
+# probe each candidate with `--version` and skip the ones that fail.
+_pyworks() {
+    # Returns 0 if the given python prints a version line cleanly,
+    # 1 otherwise (Store shim, missing binary, broken venv, etc.).
+    "$1" --version >/dev/null 2>&1
+}
+
+# Candidate list in priority order: PATH lookups first (handles venv-
+# activated shells, conda envs, normal Unix installs), then well-known
+# Windows install paths as last-resort fallbacks.
+PY=""
+for candidate in python3 python py "/c/Program Files/WindowsApps/PythonSoftwareFoundation.Python.3.13_3.13.3568.0_x64__qbz5n2kfra8p0/python3.13.exe" "/c/Program Files/WindowsApps/PythonSoftwareFoundation.Python.3.12_3.12.3568.0_x64__qbz5n2kfra8p0/python3.12.exe" "/c/Program Files/WindowsApps/PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0/python3.11.exe"; do
+    if command -v "$candidate" >/dev/null 2>&1 || [[ -x "$candidate" ]]; then
+        if _pyworks "$candidate"; then
+            PY="$candidate"
+            break
+        fi
     fi
 done
 
 if [[ -z "$PY" ]]; then
-    echo "[pre-push] python not found — skipping local gate; CI will enforce it." >&2
+    echo "[pre-push] no working python found (all candidates fail --version)." >&2
+    echo "[pre-push] skipping local gate; CI's architecture job will enforce it." >&2
     exit 0
 fi
 

@@ -17,7 +17,7 @@ When this file is updated, every open plan PR is expected to rebase and re-valid
 
 ## The hard gates (apply per workstream, no exceptions)
 
-A workstream does not reach `pr_open` (i.e. cannot call `gh pr create`) until **every gate below** passes locally. CI failures in any gate auto-revert the last commit and re-enter the implementation phase.
+A workstream does not reach `pr_open` (i.e. cannot call `scripts/create_pr.py` / `gh pr create`) until **every gate below** passes locally. CI failures in any gate auto-revert the last commit and re-enter the implementation phase.
 
 ### Gate 1 — Branch coverage on touched files: **100%**
 
@@ -323,6 +323,24 @@ For every WS, determine whether it touches the architecture surface, and if so:
 Then verify, for every touched doc section: the prose is accurate post-change (no "will land later" for landed work, no stale module names); every **count** the docs quote (subpackage / module / test-file / arch-test / golden / device count) matches reality; the affected mermaid diagrams are updated; internal cross-links resolve.
 
 **Enforcement.** Step 8 of the `code-review` skill produces a mandatory **Docs** section. A change that touches the architecture surface without updating the diagrams is an Important finding. `tests/architecture/test_readme_freshness.py` is the mechanical backstop for `README.md` freshness; the architecture-diagram freshness is the human-judgement check the post-push / pre-push review performs.
+
+### CODE_REVIEW.md prevention-test family (strengthens existing gates, no new gate count)
+
+The CODE_REVIEW.md sweep (2026-05) added nine architecture tests under `tests/architecture/`. They do not add a new gate — they bind specific failure classes from the staff-engineer review to existing gates so the same regression class cannot ship twice. The count therefore stays at 18; the enforcement under those 18 gates is now tighter.
+
+| Prevention test | Failure class it prevents | Strengthens gate |
+|---|---|---|
+| `test_no_unauthenticated_ws_endpoints.py` | A new `@app.websocket(...)` handler that does not reference the handshake-token symbol (C1 regression) | Gate 13 (env-var-backed safe default) + Gate 7 (security observability) |
+| `test_no_unconstrained_path_inputs.py` | A wire-handler that accepts a `location: str` and passes it to filesystem ops without going through `WizardPathPolicy.validate` (C2 regression) | Gate 17 (reuse the policy object instead of re-implementing path validation) |
+| `test_no_raw_exception_messages_on_wire.py` | A handler that catches an exception and puts `str(exc)` directly into the response envelope (H4 regression) | Gate 7 (categorical errors, not raw strings) |
+| `test_no_silent_overwrite_writes.py` | A `Path.write_text` / `Path.write_bytes` in `cockpit/` that sidesteps the canonical `atomic_write` (M7 regression) | Gate 17 (reuse `cockpit/export/writer.py:atomic_write`) |
+| `test_no_side_channel_session_attrs.py` | `setattr(session, ...)` for attributes not declared on the `CockpitSession` dataclass (H1 regression) | Gate 6 (type-system hygiene — no `Any` smuggling) |
+| `test_no_str_in_literal_position.py` | `# type: ignore[arg-type]` to launder `str` into a `Literal` position (P1 + H2 regression) | Gate 6 + Gate 10 (string-literal dispatch via `narrow_*` helpers, not type-ignore) |
+| `test_final_constants.py` | A top-level module constant without a `Final[T]` annotation (282-entry grandfather floor) | Gate 12 (the gate previously had no mechanical test) |
+| `test_abstraction_reuse.py` | A second canonical surface for `atomic_write` / `pack_signed` / similar duplicated abstractions (C3 regression) | Gate 17 (was reviewer-judgement only; now mechanically backed) |
+| `test_cli_no_inline_arms.py` | A new inline `if args == [...]` arm in `cli.py` instead of `cli_registry.CliCommand.register(...)` (H7 + IH4 + IH5 regression) | Gate 10 + Gate 17 |
+
+**Grandfathered-ratchet pattern.** Each test counts the existing violations on first land and asserts the count cannot grow. The ratchet thaws over time as offenders migrate to the canonical pattern, and the count can only ratchet down. This is the same pattern used by `test_final_constants.py` (282-entry floor) and `test_cli_no_inline_arms.py`.
 
 ---
 

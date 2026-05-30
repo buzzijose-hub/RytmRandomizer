@@ -5,6 +5,7 @@
 - [Strict rules — non-negotiables](#strict-rules--non-negotiables)
 - [Branching model](#branching-model)
 - [Local development setup](#local-development-setup)
+- [Cockpit / desktop development](#cockpit--desktop-development)
 - [Cross-platform operation](#cross-platform-operation)
 - [End-to-end contributor flow](#end-to-end-contributor-flow)
 - [Verification gate](#verification-gate)
@@ -32,7 +33,7 @@ Every PR must satisfy ALL of these. If you cannot satisfy one, do not open the P
 
 1. **V1.34 parity** — 685/685 byte-identical JSON goldens under `tests/fixtures/v134_parity/`. Do not regenerate without explicit approval.
 2. **Coverage ratchet** — ≥95% pure-branch coverage project-wide (enforced by `scripts/coverage_ratchet.py`).
-3. **Architecture tests** — all 16 test files under `tests/architecture/` pass. Do not add to allowlists without justification in the PR body.
+3. **Architecture tests** — all 17 test files under `tests/architecture/` pass. Do not add to allowlists without justification in the PR body.
 4. **Lint clean** — `ruff check`, `black --check --target-version=py311`, `isort --profile black --check-only` all clean. No exceptions; auto-fix locally before pushing.
 5. **No hardware in tests** — no test opens a real MIDI port; no test mutates a connected device.
 6. **Lazy MIDI imports** — `mido` and `python-rtmidi` are imported lazily inside `real_midi_adapter.py`. Never at module top-level. Enforced by `tests/architecture/test_no_side_effects.py`.
@@ -101,6 +102,150 @@ sudo apt-get install libasound2-dev
 ```
 
 **Hardware pinning:** `mido==1.3.3` and `python-rtmidi==1.5.8` are pinned because they encode the exact byte-level MIDI wire format the Elektron Analog Rytm MK2 accepts. **Do not bump these versions**, even for CVE advisories, without coordinating with @buzzijose-hub. See `.claude/skills/learned/pip-audit-editable-install/SKILL.md` for the `pip-audit` policy on these pins.
+
+## Cockpit / desktop development
+
+The Phase 1 cockpit (see [`docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md`](docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md), [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md), and [`docs/ARCHITECTURE.md` §6.2](docs/ARCHITECTURE.md#62-cockpit--profile-model-layer-phase-1)) is a Tauri 2 + web frontend bundled with a Python sidecar. Phase 2 layers the Profile Wizard on top (see [`docs/superpowers/specs/2026-05-24-profile-wizard-design.md`](docs/superpowers/specs/2026-05-24-profile-wizard-design.md) and [`docs/ARCHITECTURE.md` §6.3](docs/ARCHITECTURE.md#63-profile-wizard-layer-phase-2)). Working on the cockpit code — including the wizard — requires three toolchains in addition to the Python dev setup above.
+
+**Required toolchains:**
+
+| Toolchain | Minimum version | Why |
+|---|---|---|
+| Python | 3.11 | Same as the rest of the project; the `cockpit` subpackage is plain Python. |
+| Rust | 1.88 (stable) | Builds the Tauri 2 shell under `desktop/shell/`. Install via [`rustup`](https://rustup.rs/). |
+| Node.js | 20 LTS | Builds the Vite + React + TypeScript frontend under `desktop/web/`. Use `nvm`, `fnm`, or your platform's installer. |
+
+Tauri has additional per-OS system dependencies (WebView2 on Windows, `webkit2gtk` on Linux, the Xcode Command Line Tools on macOS). See [the Tauri prerequisites page](https://tauri.app/start/prerequisites/) and the per-OS install steps in [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md).
+
+**Build commands:**
+
+```bash
+# Python sidecar (already installed via pip install -e ".[dev]")
+python -m rytm_randomizer.cockpit         # runs the WebSocket server on 127.0.0.1:4317
+
+# Web frontend (Vite dev server with HMR)
+cd desktop/web
+npm install
+npm run dev                                # serves at http://localhost:5173 with hot reload
+npm test                                   # vitest unit tests
+npm run build                              # production bundle into desktop/web/dist/
+
+# Tauri shell (Rust)
+cd desktop/shell
+cargo build                                # debug build, fast iteration
+cargo run                                  # spawns the sidecar + loads the frontend
+cargo build --release                      # release binary (slower, ships standalone)
+cargo test
+cargo clippy --all-targets -- -D warnings  # required for CI
+```
+
+**Dev-loop tips:**
+
+- **Use the two-terminal split during active development.** Run `python -m rytm_randomizer.cockpit` in one terminal and `cd desktop/shell && cargo run` in another. The shell talks to the standalone sidecar over WebSocket. The release-build path spawns the sidecar internally; that's slower to iterate on.
+- **Hot-reload the frontend separately.** `cd desktop/web && npm run dev` gives you a Vite dev server with HMR; open the dev URL in any browser (or point Tauri at it via `tauri dev`) to iterate on UI without a full rebuild.
+- **The sidecar port is configurable.** `RYTM_RAND_WS_PORT=4318 python -m rytm_randomizer.cockpit` overrides the default `4317`. The web frontend reads the port from the same env var (mirrored by the Tauri shell when it spawns the sidecar). Default is safe on every OS this project supports.
+- **Mock-first; armed on purpose.** The cockpit defaults to `MockDeviceAdapter` (no MIDI port opened). The real-MIDI path constructs `RealMidiDeviceAdapter`, which wraps the existing `mido_provider` and only opens a port behind an explicit arm step. This matches the rest of the project's passive-default discipline (Strict rule 8) — running the cockpit never touches your Rytm until you ask it to.
+- **Wrapped passive report JSON is an allowed read-only input pattern.** A passive report that composes another passive report may accept the wrapped upstream JSON object and peel out its inner payload, but it must cover both raw-input and wrapped-report paths in focused tests.
+- **Run the conformance fixtures when touching the engine.** Changes to `cockpit/engine/mutate.py` or `cockpit/engine/prng.py` must keep `tests/cockpit/fixtures/engine_conformance/*.json` byte-identical. Those fixtures lock the algorithm so the future C-portable implementation produces matching output.
+- **Web frontend tests are fast.** `cd desktop/web && npm test -- --run` runs the full Vitest suite in under 2s on a modern laptop. The Vitest watch mode (`npm test`) is good for tight iteration.
+- **Rust build is the slowest piece; cache it.** First `cargo build` is multi-minute on a cold cache; subsequent rebuilds are seconds. Keep `desktop/shell/target/` between runs (it's already in `.gitignore`).
+- **CI runs the cockpit gates separately.** Python coverage on `rytm_randomizer/cockpit/**`, web lint/typecheck/Vitest/build, and Rust `cargo fmt --check` + `cargo test` + `cargo clippy` each run as first-class CI jobs alongside the existing pytest matrix.
+- **Profile Wizard uses `@tauri-apps/plugin-dialog` for file / folder pickers.** The Phase 2 wizard's Add step opens a native file picker (audio file or single SysEx dump) or folder picker (a directory of `.syx` kits) via Tauri 2's `dialog` plugin. The Tauri-side dialog plugin requires three things to work in a production bundle:
+
+  1. `tauri-plugin-dialog = "2"` declared in `desktop/shell/Cargo.toml` under `[dependencies]`.
+  2. `.plugin(tauri_plugin_dialog::init())` registered in `desktop/shell/src/main.rs` on the Tauri builder.
+  3. `dialog:allow-open` permission listed in `desktop/shell/capabilities/default.json` (Tauri 2 denies plugin access without an explicit per-window allow-list).
+
+  On the web side, `@tauri-apps/plugin-dialog` is declared in `desktop/web/package.json` and loaded by `AddStep.tsx` via a runtime dynamic import. Tests stub the import via an indirection in `AddStep.tsx`; the Tauri shell injects the real implementation at production runtime. The plugin is not used outside `desktop/web/src/wizard/**`; the rest of the cockpit frontend continues to talk only to the Python sidecar over WebSocket.
+- **Wizard analyzers are passive and stay off the MIDI boundary.** The Phase 2 `cockpit/wizard/analyze.py`, `cockpit/wizard/sysex_analyzer.py`, and `cockpit/wizard/reference_analyzer.py` modules read files, decode SysEx in memory, and look up reference text in a built-in `Final` table. None of them imports `mido` (or anything that lazily imports `mido`), and none of them opens a MIDI port. The `tests/architecture/test_no_side_effects.py` gate enforces this for the whole `cockpit/wizard/` subpackage just as it does for the rest of the package — the wizard fits cleanly inside the existing passive-default discipline.
+- **Wrapped-readiness-JSON pattern for passive reports.** Passive reports that consume cockpit data may accept EITHER the inner data JSON (a bare `CockpitSendPlan` / `ProfileModel` mapping) OR the wrapped report JSON (a top-level document with the inner data nested under a known key), peeling out the inner key automatically. PR #104's `cockpit_send_plan_rehearsal_surface.py::_readiness_from_mapping` introduced the pattern; Phase 3's `reports/cockpit_export_rehearsal.py::_profile_from_mapping` follows the same shape for `--profile-id` resolution. New rehearsal-surface-style reports should reuse this peeling helper rather than reinventing it — operators end up passing whichever JSON they already had on hand (the inner data or the previous report's output) and both paths work without a separate flag.
+
+## Patterns introduced by the CODE_REVIEW.md sweep (2026-05-25)
+
+The 12-PR sweep against the staff-engineer review introduced four reusable patterns that future cockpit / wire-boundary code is expected to follow. Each pattern is mechanically enforced by an architecture test under `tests/architecture/` so the smell cannot reappear silently. The complete table of prevention tests is in [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md#code_reviewmd-prevention-test-family-strengthens-existing-gates-no-new-gate-count) and [`docs/CODE_REVIEW_HOOK_SETUP.md`](docs/CODE_REVIEW_HOOK_SETUP.md).
+
+### `narrow_*` Literal-narrowing helpers (wire-boundary)
+
+When a `from_dict` constructor needs to turn a runtime `str` (read off the wire) into a `Literal["a", "b", "c"]` value on a frozen dataclass, **do not** write:
+
+```python
+# ANTI-PATTERN — banned by tests/architecture/test_no_str_in_literal_position.py
+return MutationCandidate(
+    safety_status=str(data["safety_status"]),  # type: ignore[arg-type]
+    ...
+)
+```
+
+The `# type: ignore[arg-type]` lies to the type checker without buying any runtime validation. Use a `narrow_*` helper instead — one helper per Literal alias, declared next to the alias:
+
+```python
+# rytm_randomizer/cockpit/data/types.py
+Status = Literal["safe", "edge", "hot"]
+_STATUS_VALUES: Final[frozenset[str]] = frozenset(("safe", "edge", "hot"))
+
+def narrow_status(s: str) -> Status:
+    if s not in _STATUS_VALUES:
+        raise ValueError(f"not a Status: {s!r}")
+    return cast(Status, s)
+```
+
+The full helper family (`narrow_kind`, `narrow_history_kind`, `narrow_via`, `narrow_status`, `narrow_transition_curve`, `narrow_readiness_reason`, `narrow_mode`, `narrow_step`) lives in `cockpit/data/types.py`, `cockpit/data/send_plan.py`, and `cockpit/wizard/state.py`. New Literal aliases on wire-bound dataclasses MUST ship a matching `narrow_*` helper. See `tests/architecture/test_no_str_in_literal_position.py` for the enforcement.
+
+### `WizardPathPolicy` (and the policy-object pattern in general)
+
+When a wire handler accepts a string that gets fed to a filesystem op, do not validate inline in the handler. Pin the policy as a frozen dataclass with a single `validate(input) -> SafeShape` method that returns the safe object on success and raises a categorical exception on failure. `rytm_randomizer/cockpit/wizard/path_policy.py:WizardPathPolicy` is the reference implementation:
+
+```python
+@dataclass(frozen=True)
+class WizardPathPolicy:
+    roots: tuple[Path, ...]
+
+    @classmethod
+    def from_env(cls, env_var: str = WIZARD_SOURCE_ROOTS_ENV) -> WizardPathPolicy: ...
+
+    def validate(self, location: str) -> Path:
+        # 1. non-empty   2. no symlink in chain   3. exists   4. inside a root
+        # Raises WizardSourcePathRejected with a CATEGORICAL message that
+        # NEVER echoes the rejected path back to the caller.
+        ...
+```
+
+Why a policy object, not free functions:
+
+- **Testable in isolation.** Tests construct a `WizardPathPolicy(roots=(tmp_path,))` and exercise every branch without env mutation or filesystem fakery.
+- **Frozen + side-effect-free.** Safe to share across coroutines, safe to stash on the `CockpitSession`.
+- **Single source of truth.** `from_env(...)` is the only place the env var is parsed; nothing else duplicates the parsing logic.
+- **Categorical errors.** The rejection message is one of a fixed enumeration (`"path is empty"`, `"path traverses a symlink"`, `"path does not exist"`, `"path is outside the allowed roots"`). The wire handler logs the offending path server-side but never returns it to the caller — this is the H4 fix and is enforced by `tests/architecture/test_no_raw_exception_messages_on_wire.py`.
+
+Apply this pattern to any new wire-boundary policy (allow-listed origins, allow-listed kit slot ranges, allow-listed CC ranges, etc.). The matching arch test is `tests/architecture/test_no_unconstrained_path_inputs.py`.
+
+### Grandfathered-ratchet arch tests
+
+Several new arch tests cannot start at zero (existing codebase already has violations) but the count must never grow. Pattern:
+
+```python
+# tests/architecture/test_final_constants.py
+GRANDFATHER_FLOOR: Final[int] = 282
+"""Number of top-level constants without Final[T] when this test landed.
+
+The ratchet may only thaw DOWNWARD as offenders migrate. If you add a
+new top-level constant in a cockpit/wizard/data/state module, give it
+Final[T]. If the count goes UP, fix the new offender or document why
+it can't carry the annotation (rare).
+"""
+
+def test_final_floor_not_exceeded() -> None:
+    actual = _count_offenders(...)
+    assert actual <= GRANDFATHER_FLOOR, (
+        f"{actual} > {GRANDFATHER_FLOOR}; new top-level constants without Final[T]."
+    )
+```
+
+When you legitimately reduce the count (migrated offenders), lower `GRANDFATHER_FLOOR` in the same PR — the ratchet only goes one way. This pattern is used by `test_final_constants.py` (282-entry floor), `test_cli_no_inline_arms.py`, `test_no_raw_exception_messages_on_wire.py`, and `test_no_str_in_literal_position.py`.
+
+### Single canonical surface (no fallback re-implementations)
+
+When a primitive exists somewhere in the package (`cockpit/export/writer.py:atomic_write`, `cockpit/export/signing.py:pack_signed`, `cockpit/wizard/path_policy.py:WizardPathPolicy.validate`), **import it directly**. Do not write a try/except-ImportError fallback "in case the canonical module isn't there." `cli.py` previously carried a 60-LOC fallback `atomic_write` re-implementation that diverged on three observable points (PR 3, C3); the fix was to delete the fallback and hard-import. A broken canonical surface must fail loudly at module load, not silently switch to divergent behaviour. `tests/architecture/test_abstraction_reuse.py` flags any second canonical surface for these primitives.
 
 ## Cross-platform operation
 
@@ -174,7 +319,11 @@ The full path from idea to merged PR. Follow this even for a small change.
         └─ On demand / fallback: just review  ·  /agent code-reviewer  ·  /skill code-review
 
 6. Open PR
-   ├─ gh pr create --base modularize-v1.34 \
+   ├─ python scripts/create_pr.py \
+   │      --title "<conventional-commit-style title>" \
+   │      --body-file <path-to-prepared-body>
+   ├─ Raw fallback: gh pr create --base modularize-v1.34 \
+   │      --reviewer edward-rosado \
    │      --title "<conventional-commit-style title>" \
    │      --body-file <path-to-prepared-body>
    ├─ PR body MUST include:
@@ -188,9 +337,13 @@ The full path from idea to merged PR. Follow this even for a small change.
    ├─ Watch: gh pr checks <PR#> --watch
    ├─ Address every failing check
    ├─ Re-run pre-push verification locally before each push
+   ├─ Re-request review after updating the PR:
+   │  python scripts/create_pr.py --request-review-for <PR#>
    └─ Standing order: do not stop until ALL checks pass
 
 8. Request review
+   ├─ `scripts/create_pr.py` requests edward-rosado automatically
+   │  when opening a PR and when re-requesting review after updates.
    ├─ The base branch requires CODEOWNERS review (@buzzijose-hub).
    ├─ Post a merge-ready comment summarizing: CI state, test count,
    │  coverage %, parity status, gates satisfied.
@@ -400,6 +553,13 @@ Sub-rules under `.claude/rules/` extend the 18 gates:
 
 Architecture-enforcement tests under `tests/architecture/` mechanically
 verify a subset of these gates on every CI run; do not skip them locally.
+
+`RYTM_RAND_WS_PORT` is reserved for a future cockpit Python sidecar/WebSocket
+port. It is not currently read by runtime code and must not start a server,
+open a port, launch a GUI, or send MIDI. If a future cockpit implementation
+starts reading it, document the default, valid overrides, local setup, CI
+behavior, installer behavior, and passive-CLI isolation here and in
+`docs/LOCAL_DEV_TOOLING_NOTES.md` before enabling the sidecar.
 
 ## Test suite structure
 
@@ -668,13 +828,20 @@ gh pr diff <PR#>                                  # diff
 gh pr comments <PR#>                              # discussion
 
 # OPENING A PR
+python scripts/create_pr.py \
+   --title "<title>" \
+   --body-file path/to/body.md
+
+# Raw fallback if the helper is unavailable:
 gh pr create --base modularize-v1.34 \
+   --reviewer edward-rosado \
    --title "<title>" \
    --body-file path/to/body.md
 
 # UPDATING A PR
 gh pr edit <PR#> --body-file path/to/new-body.md
 gh pr comment <PR#> --body "<comment>"
+python scripts/create_pr.py --request-review-for <PR#>
 
 # REVIEWING
 gh pr review <PR#> --comment --body "<comment>"
@@ -766,7 +933,14 @@ that true:
    gates (lint + architecture + V1.34 parity) on every `git push`, by any
    tool, and **blocks the push** if they fail. Activate it once with
    `git config core.hooksPath .githooks` — `just install` and the dev
-   container do this for you.
+   container do this for you. **The top-level `conftest.py` also
+   self-heals this on the first `pytest` run in any clone or worktree**
+   (each `git worktree add` gets its own per-worktree git config space and
+   does NOT inherit the parent's `core.hooksPath` — without the
+   self-heal, lint regressions would silently escape the local gate, see
+   PR #107). The architecture test
+   `tests/architecture/test_pre_push_hook_installed.py` asserts the gate
+   is active and fails loudly if the self-heal didn't fire.
 
 You can also run the full review on demand with `just review` (it
 env-detects the agent and dispatches it — no copy-paste).

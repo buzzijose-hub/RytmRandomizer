@@ -1,5 +1,7 @@
 # Analog Rytm MIDI Catalog Implementation Plan
 
+> Status: in-flight (branch codex/rytm-snapshot-pad-compatibility-pr1)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add a passive, manual-backed Analog Rytm MKII MIDI catalog and report that cover Appendix C CC/NRPN rows, every known Rytm machine SRC mapping, and the safety status for promotion into runtime mutation.

@@ -30,6 +30,7 @@ from __future__ import annotations
 import sys
 import types
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Any, Callable
 
 import pytest
@@ -227,6 +228,29 @@ def elektron_syx_message(payload: bytes) -> bytes:
     """Wrap one payload in a SysEx start/end frame for passive fixture banks."""
 
     return bytes([0xF0]) + payload + bytes([0xF7])
+
+
+def analog_four_minimal_kit_payload(name: bytes = b"A4 KIT") -> bytes:
+    """Build the minimal Analog Four kit payload shape used by passive reports."""
+
+    payload = bytes([0x00, 0x20, 0x3C, 0x07]) + name[:16].ljust(16, b"\x00")
+    return payload
+
+
+def dual_machine_reference_bank_files(tmp_path: Path) -> tuple[Path, Path]:
+    """Write tiny Rytm/A4 saved-kit banks for passive dual-machine report tests."""
+
+    rytm_path = tmp_path / "rytm-reference-bank.syx"
+    rytm_path.write_bytes(
+        elektron_syx_message(rytm_real_layout_kit_payload(name=b"ARC RYTM ONE"))
+        + elektron_syx_message(rytm_real_layout_kit_payload(name=b"ARC RYTM TWO"))
+    )
+    a4_path = tmp_path / "a4-reference-bank.syx"
+    a4_path.write_bytes(
+        elektron_syx_message(analog_four_minimal_kit_payload(b"ARC A4 ONE"))
+        + elektron_syx_message(analog_four_minimal_kit_payload(b"ARC A4 TWO"))
+    )
+    return rytm_path, a4_path
 
 
 @pytest.fixture

@@ -22,10 +22,35 @@ pre-release step.
   ```
   pip install -e ".[dev]"
   ```
+  The `dev` extra includes the cockpit sidecar and Profile Wizard audio
+  analyzer dependencies used by the manual GUI flow.
 - Confirm the entry point resolves:
   ```
   rytm-randomizer --help
   ```
+
+## Passive Validation Kit
+
+Before launching the installer, opening the cockpit, or arming hardware, print
+the passive validation kit:
+
+```
+python -m rytm_randomizer.cli manual-validation-kit-report
+```
+
+Use `--phase <slug>` to focus the current pass:
+
+```
+python -m rytm_randomizer.cli manual-validation-kit-report --phase installer_bootstrap
+python -m rytm_randomizer.cli manual-validation-kit-report --phase profile_workflow
+python -m rytm_randomizer.cli manual-validation-kit-report --phase mock_rehearsal
+python -m rytm_randomizer.cli manual-validation-kit-report --phase armed_smoke
+python -m rytm_randomizer.cli manual-validation-kit-report --phase evidence_closeout
+```
+
+This report is a checklist and evidence prompt only. It does not launch the
+GUI, run analysis, write profile/export files, open a MIDI port, send MIDI, or
+execute the armed smoke command it prints for the operator.
 
 ## Passive USB Input Channel-Map Validation (2026-05-26)
 
@@ -203,291 +228,107 @@ every CC for every machine, scenes, group mutation, pattern changes, transport,
 clock, kit-save, project writes, SysEx, unattended sends, or Analog Four
 behavior.
 
-## Analog Rytm Passive CC Observe Validation
+## Second Outbound 12-Track CC Repeatability Validation
 
-This validation is input-only. It opens the Analog Rytm MIDI input port, sends
-no MIDI, opens no output port, requests no SysEx, and writes no kit/project
-data.
+This is the next recommended hardware pass, but it is not run by this planning
+slice. The goal is repeatability: prove the first successful all-12 result can
+be repeated before testing any new CC number, mutation command, scene, SysEx, or
+Analog Four behavior.
 
-Command:
+Planning references:
 
-```powershell
-python -m rytm_randomizer.app --arm --rytm-cc-observe
-```
+- `docs/superpowers/specs/2026-05-26-second-outbound-cc-validation-design.md`
+- `docs/superpowers/plans/2026-05-26-second-outbound-cc-validation.md`
 
-Preferred exact-label command for the Dual VCO diagnostic:
+Passive readiness report:
 
-```powershell
-python -m rytm_randomizer.app --arm --rytm-cc-observe --rytm-cc-observe-live-snapshot
-```
+- Text checklist:
+  `python -m rytm_randomizer.cli rytm-outbound-cc-repeatability-report`
+- GUI-ready JSON:
+  `python -m rytm_randomizer.cli rytm-outbound-cc-repeatability-report --json`
 
-Optional exact-label command when a current-kit SysEx file is available:
+The readiness report only prints the checklist and replay metadata. It does
+not open a port, send MIDI, run the validation, or mutate hardware.
 
-```powershell
-python -m rytm_randomizer.app --arm --rytm-cc-observe --rytm-cc-observe-snapshot current-kit.syx
-```
+Manual feedback packet:
 
-Expected:
+- Profile/export/analyzer feedback:
+  `python -m rytm_randomizer.cli manual-feedback-packet-report --scenario profile`
+- Hardware-boundary feedback:
+  `python -m rytm_randomizer.cli manual-feedback-packet-report --scenario hardware --json`
 
-- Select the Analog Rytm MIDI input port.
-- Move one or more Rytm controls.
-- Press Enter to capture observed pending CCs.
-- Confirm the report lists raw pad/channel/control/value observations.
-- Confirm candidate labels include Rytm manual labels when known. For SRC rows,
-  expect multiple candidates unless a separate snapshot anchor proves the active
-  machine.
-- Confirm standard NRPN-style CC99/CC98/CC6/CC38 sequences are summarized as
-  decoded NRPN observations.
-- Confirm the report says `Opened output: False` and `Sent MIDI: False`.
+This packet is also passive. It is for capturing screenshots, sidecar lines,
+stop conditions, and reviewer notes after a manual pass. It does not launch the
+GUI, run analysis, write profile files, open ports, or send MIDI.
 
-Dual VCO detune diagnostic:
+Use the same one-CC helper and the same message shape:
 
-- Reload the known-good kit on the Rytm first.
-- Run `--arm --rytm-cc-observe --rytm-cc-observe-live-snapshot` and send the
-  current KIT SysEx when prompted. If a file dump already exists, the
-  file-based `--rytm-cc-observe-snapshot current-kit.syx` path is also valid.
-- Select Pad 2, open the Dual VCO SRC page, turn encoder B a tiny amount, then
-  press Enter in PowerShell.
-- Repeat for Pad 3.
-- Record whether encoder B emits direct CC20, an NRPN sequence, a different CC,
-  or no MIDI at all.
+`python -m rytm_randomizer.app --arm --validate-one-cc --channel N --control 17 --value 64`
 
-## Passive OS 1.72 MIDI Catalog Boundary
+Run tracks one at a time:
 
-The Analog Rytm MIDI catalog is manual-backed and read-only:
-`python -m rytm_randomizer.cli analog-rytm-midi-catalog-report` opens no MIDI
-port, sends no MIDI, and requires no hardware. It records Appendix C CC/NRPN
-rows, machine-specific SRC rows, and MIDI note trigger rows with safety status
-labels.
+| Track | Target mido channel | Control | Value | Expected result |
+|---:|---:|---:|---:|---|
+| 1 | 0 | 17 | 64 | Only Track 1 changes |
+| 2 | 1 | 17 | 64 | Only Track 2 changes |
+| 3 | 2 | 17 | 64 | Only Track 3 changes |
+| 4 | 3 | 17 | 64 | Only Track 4 changes |
+| 5 | 4 | 17 | 64 | Only Track 5 changes |
+| 6 | 5 | 17 | 64 | Only Track 6 changes |
+| 7 | 6 | 17 | 64 | Only Track 7 changes |
+| 8 | 7 | 17 | 64 | Only Track 8 changes |
+| 9 | 8 | 17 | 64 | Only Track 9 changes |
+| 10 | 9 | 17 | 64 | Only Track 10 changes |
+| 11 | 10 | 17 | 64 | Only Track 11 changes |
+| 12 | 11 | 17 | 64 | Only Track 12 changes |
 
-Do not treat a documented catalog row as validated runtime mutation support.
-Only rows already covered by the V1.34 mutation maps are marked
-`validated_runtime`; documented-only rows require a separate approved
-disposable-kit hardware-validation pass before any active path can send them.
+Stop immediately if:
 
-## Curated Rytm Style Kit Send Validation
+- More than one track changes.
+- The wrong track changes.
+- Nothing changes on the intended track.
+- The parameter jump is larger than expected.
+- Any pattern, kit, project, transport, clock, or SysEx behavior appears.
+- The operator is unsure what changed.
+- Monitoring level feels unsafe.
 
-This validation is active. It opens one Analog Rytm MIDI output port, sends a
-curated full-12-pad CC MSB recipe, closes the output port, and exits. Run it
-only on a saved or disposable Rytm kit with monitoring volume low.
+Do not test a new CC number in this pass. If a new parameter needs validation,
+write a separate candidate note first.
 
-Dry-run first:
+## Analog Four First Outbound Validation Planning
 
-```powershell
-python -m rytm_randomizer.app --dry-run --rytm-kit-style detroit-deep
-```
+Analog Four validation is a separate path from the Rytm 12-track validation.
+The Rytm result proves the current Rytm studio setup; it does not prove Analog
+Four channels, CC numbers, port names, or receive behavior.
 
-Armed command:
+Planning references:
 
-```powershell
-python -m rytm_randomizer.app --arm --rytm-kit-style detroit-deep --confirm-rytm-kit-send
-```
+- `docs/superpowers/specs/2026-05-27-analog-four-first-outbound-validation-design.md`
+- `docs/superpowers/plans/2026-05-27-analog-four-first-outbound-validation.md`
 
-Expected:
+Current A4 boundary:
 
-- Select the Analog Rytm output port.
-- Confirm the command prints `Sent Rytm style kit CC messages.`.
-- Confirm tracks 1-12 receive machine selections plus manual-backed tone,
-  filter, amp-send, and modulation values for the selected style.
-- Confirm no samples, performance macros, source level, track level, amp
-  volume, transport, pattern change, clock, kit-save, project-write, or SysEx
-  behavior appears.
-- Stop immediately if the wrong pad responds, more than one unexpected pad
-  jumps, monitoring level becomes unsafe, or the device shows save/write
-  behavior.
+- `AnalogFourDevice` exists through the Device + Strategy seam.
+- Track count is 4.
+- Passive reports and mock-oriented A4 strategy surfaces exist.
+- No A4 outbound hardware validation has been run.
+- No exact A4 CC is approved by this runbook yet.
 
-## All-12-Pad Interactive Shell Validation
+Before any A4 outbound send:
 
-This validation is active and operator-driven. It opens one Analog Rytm MIDI
-output port, runs a 12-pad shell, and sends only when the operator enters
-`send` inside the shell. Run it only on a saved or disposable kit with
-monitoring volume low.
+- confirm the exact Analog Four USB MIDI output port,
+- confirm the A4 receive-channel model,
+- choose one safe CC only from the official manual, observed inbound A4 MIDI,
+  or reviewed A4-specific code/data,
+- prove the candidate through `MockMidiSender`,
+- keep Rytm unused or disconnected for the A4 pass,
+- run one A4 track at a time with Jose present.
 
-Dry-run first:
+Do not reuse the Rytm-shaped `--validate-one-cc` helper as an approved A4
+hardware path until a separate A4-specific implementation gate exists.
 
-```powershell
-python -m rytm_randomizer.app --dry-run --rytm-12-pad-shell
-```
-
-Suggested dry-run commands:
-
-```text
-load detroit-deep
-roll
-preview
-send
-q
-```
-
-Armed command:
-
-```powershell
-python -m rytm_randomizer.app --arm --rytm-12-pad-shell --confirm-rytm-12-pad-send
-```
-
-Suggested armed commands:
-
-```text
-load detroit-deep
-preview
-send
-roll
-preview
-send
-q
-```
-
-Expected:
-
-- Select the Analog Rytm output port.
-- Confirm `load detroit-deep` reports 12 pads and a full event count.
-- Confirm `preview` shows `RytmRandomizer 12-pad shell preview`.
-- Confirm `send` prints `sent current 12-pad plan`.
-- Audition all 12 pads after the first send and again after the mutation send.
-- Confirm the kick retains low-end weight; BD filter frequency must stay in
-  the sub-safe range.
-- Confirm no samples, performance macros, source level, track level, amp
-  volume, transport, pattern change, clock, kit-save, project-write, or SysEx
-  behavior appears.
-- Stop immediately if the wrong pad responds, more than one unexpected pad
-  jumps, monitoring level becomes unsafe, the kick disappears, or the device
-  shows save/write behavior.
-
-## All-12-Pad Snapshot Shell Validation
-
-This validation is active and operator-driven. It starts from a current-kit
-SysEx dump, opens one Analog Rytm MIDI output port in armed mode, and sends only
-when the operator enters `send` inside the shell. Run it only on a saved or
-disposable kit with monitoring volume low.
-
-Fresh live receive command:
-
-```powershell
-python -m rytm_randomizer.app --arm --rytm-live-snapshot-shell --confirm-rytm-snapshot-shell-send
-```
-
-Fresh live receive flow:
-
-```text
-1. Select the Analog Rytm MIDI input.
-2. When the app prints that it is waiting, use the Rytm front panel:
-   GLOBAL SETTINGS > SYSEX DUMP > SYSEX SEND > KIT
-3. Press YES on the Rytm to send the KIT dump.
-4. Confirm the app prints received KIT SysEx, kit name, and fingerprint.
-5. Select the Analog Rytm MIDI output.
-6. Use mode live, depth gentle, lane lfo off, lane fx micro, status,
-   randomize, changes, send, go, changes, send, Z, send, q inside
-   snapshot-12>.
-7. To validate a freshly loaded hardware kit without restarting, load the new
-   kit on the Rytm, type `kit` or `resnapshot`, send
-   GLOBAL SETTINGS > SYSEX DUMP > SYSEX SEND > KIT again, then confirm the app
-   prints the new kit name and fingerprint before mutating or sending.
-```
-
-Dry-run first:
-
-```powershell
-python -m rytm_randomizer.app --dry-run --rytm-snapshot-shell captures\current-kit.syx
-```
-
-Suggested dry-run commands:
-
-```text
-S1A
-preview
-mode live
-depth gentle
-lane lfo off
-lane fx micro
-pad 1 gentle
-status
-randomize
-changes
-send
-again
-changes
-send
-V
-micro
-preview
-Z
-send
-q
-```
-
-Armed command:
-
-```powershell
-python -m rytm_randomizer.app --arm --rytm-snapshot-shell captures\current-kit.syx --confirm-rytm-snapshot-shell-send
-```
-
-Suggested armed commands:
-
-```text
-preview
-mode live
-depth gentle
-lane lfo off
-lane fx micro
-pad 1 gentle
-status
-randomize
-preview
-changes
-send
-go
-changes
-send
-Z
-send
-q
-```
-
-Expected:
-
-- For the live command, no output port is selected until after the KIT SysEx is
-  received and decoded.
-- Confirm `kit` / `resnapshot` waits for a fresh KIT SysEx inside the live
-  shell, replaces the captured anchor, clears the staged mutation, and keeps
-  the current session guardrails.
-- Select the Analog Rytm output port.
-- Confirm startup prints `Loaded kit anchor` with the captured kit name.
-- Confirm `status` shows `mode: live`, the selected global depth, locked pads,
-  any pad overrides, and the lane guardrail summary. The default live profile
-  should show `tune=micro, noise=normal, fx=micro, filter=normal, amp=normal,
-  lfo=off`.
-- Confirm `preview` shows `RytmRandomizer snapshot shell preview`.
-- Confirm `changes` shows Pad 1 allowed source/AMP deltas and later-pad source
-  deltas before the first send, with no Pad 1 filter, LFO, or AMP attack-time
-  deltas.
-- Confirm `send` prints `sent current snapshot plan`.
-- Confirm `again` or `next` applies a new variation from the last mutation
-  before the next `send`, while remaining inside the selected anchor-relative
-  lane after repeated mutations.
-- Confirm `go` applies the next variation from the last mutation and sends it in
-  one command.
-- Confirm `Z` and `fresh` restore the captured anchor values for promoted rows.
-- Confirm lane guardrails behave like a live sound-design permission layer:
-  `lane lfo off` leaves LFO rows anchored and out of sends, `lane fx micro`
-  keeps delay/reverb movement small, and wider lane settings are intentional
-  section-change choices rather than defaults.
-- Confirm `Y`, `V`, and `N` print the zone-layering hint, and use `fresh` first
-  when validating an anchor-only zone mutation.
-- Audition all 12 pads after the first send and again after a mutation send.
-- Confirm the kick retains low-end weight; Pad 1 filter, LFO, and AMP attack
-  controls should be omitted from the send plan, and Pad 1 tune-style source
-  controls should remain within plus or minus 3 of the captured kit value.
-- Confirm `lock N` leaves pad N unchanged during the next mutation if testing
-  pad isolation, and confirm locked pads are omitted from the next `send`.
-- Confirm `pad N strong` or `pad N wild` can intentionally push one pad harder
-  than the global depth while the rest of the kit stays controlled.
-- Confirm later pads receive current-machine SRC movement, not only filter/LFO
-  movement.
-- Confirm no machine switching, samples, performance macros, source level,
-  track level, amp volume, transport, pattern change, clock, kit-save,
-  project-write, or SysEx behavior appears.
-- Stop immediately if the wrong pad responds, monitoring level becomes unsafe,
-  the kick disappears, or the device shows save/write behavior.
+Stop immediately if the A4 channel model, CC candidate, output port, or target
+track is unclear.
 
 ## Canonical operator-command flow
 
@@ -579,75 +420,152 @@ These checks are manual only. Do not add them to CI.
 6. Confirm both devices are listed.
 7. Do not run armed hardware sends until the A4 readiness report says the plan is ready.
 
-## Analog Four Soft Live Capture Validation
+## Live-Show Passive Preflight
 
-This validation is input-only. It opens the Analog Four MIDI input port, sends
-no MIDI, opens no output port, requests no SysEx, and writes no kit/project
-data.
+These checks are manual only. They are safe to run before a live rehearsal because
+no MIDI is sent, no port is opened, and no hardware is mutated.
 
-Command:
-
-```powershell
-python -m rytm_randomizer.app --arm --a4-soft-capture
-```
-
-Expected:
-
-- Select the Analog Four input port.
-- Move one or more A4 controls on tracks 1-4.
-- Press Enter to capture observed pending CCs.
-- Confirm the report lists known manual-backed parameters and marks unknown
-  parameters as untouched.
-- Confirm the report says `Opened output: False` and `Sent MIDI: False`.
-
-## Analog Four Named Parameter Send Validation
-
-This validation is active. It opens one Analog Four MIDI output port, sends one
-manual-backed CC MSB message, closes the output port, and exits. Run it only on
-a saved or disposable A4 kit with monitoring volume low.
-
-Command:
-
-```powershell
-python -m rytm_randomizer.app --arm --a4-send-param --parameter "OSC1 PWM Depth" --channel 0 --value 32
-```
-
-Expected:
-
-- Select the Analog Four output port.
-- Confirm only track 1 responds, because mido channel 0 corresponds to A4
-  track 1.
-- Confirm the parameter movement matches `OSC1 PWM Depth`.
-- Confirm the command prints `Sent exactly one A4 parameter CC message.`.
-- Stop immediately if the wrong track, more than one track, transport, pattern,
-  kit-save, project-write, or SysEx behavior appears.
-
-## Analog Four Kit Recipe Validation
-
-This validation is active. It opens one Analog Four MIDI output port, sends a
-coordinated manual-backed four-track CC recipe, closes the output port, and
-exits. Run it only on a saved or disposable A4 kit with monitoring volume low.
-
-Command:
-
-```powershell
-python -m rytm_randomizer.app --arm --a4-kit-recipe detroit-minimal
-```
-
-Use `bell-techno-grid` instead of `detroit-minimal` when starting from a newly
-initialized Analog Four project and you want the more controlled bell-techno
-target.
-
-Expected:
-
-- Select the Analog Four output port.
-- Confirm the command prints `Sent A4 kit recipe CC messages.`.
-- Confirm tracks 1-4 change into a tight, percussive, Detroit-minimal style
-  patch shape.
-- Confirm no kit-save, project-write, transport, pattern, clock, or SysEx
-  behavior appears.
-- Stop immediately if the device responds on the wrong tracks or the monitoring
-  level feels unsafe.
+1. Run a passive stage-routing report against the saved kit banks you plan to use:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-stage-routing-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --events --limit 8
+   ```
+2. Run the passive stage rehearsal state report for the same saved kit banks:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-stage-rehearsal-state-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --events --limit 8
+   ```
+3. Run the passive live set cockpit report for the same saved kit banks:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-set-cockpit-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --events --limit 8
+   ```
+4. Run the passive live show export packet for the same saved kit banks:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-show-export-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --events --limit 8
+   ```
+5. Run the passive live transition timeline for the same saved kit banks:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-transition-timeline-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --events --limit 8
+   ```
+6. Run the passive live command deck for the cue you want to rehearse:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-command-deck-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --events --limit 8
+   ```
+7. Run the passive live state packet for the cue you want a future GUI to render:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-state-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --events --limit 8
+   ```
+8. Run the passive live analyzer target packet before any future analyzer compare:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-analyzer-targets-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3
+   ```
+9. Run the passive live GUI/audio-analyzer readiness bundle before any future GUI or analyzer compare:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-readiness-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3
+   ```
+10. Run the passive live GUI rehearsal session packet before repeated listen-only cue captures:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-rehearsal-session-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2
+   ```
+11. Run the passive live GUI/audio analyzer capture queue before any future recording/analyzer loop:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-capture-queue-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --capture-prefix warehouse
+   ```
+12. Run the passive live GUI/audio analyzer capture review after a listen-only take is represented as FeatureReport evidence:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-capture-review-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse
+   ```
+13. Run the passive live GUI sidecar session after the capture review when you want one future-desktop-GUI state packet:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-sidecar-session-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar"
+   ```
+14. Run the passive live GUI screen contract when you want ordered GUI regions and component state:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-screen-contract-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen"
+   ```
+15. Run the passive live GUI render tree when you want deterministic root/region/component/table-row nodes for a future GUI or test harness:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-render-tree-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard
+   ```
+16. Run the passive live GUI analyzer overlay when you want audio-analyzer meter metadata for a future GUI overlay:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-overlay-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay"
+   ```
+17. Run the passive live GUI analyzer frame when you want ordered GUI frame events and test-harness assertions:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-frame-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" --frame-label "Warehouse frame"
+   ```
+18. Run the passive live GUI interaction script when you want deterministic future GUI action bindings:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-interaction-script-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" --frame-label "Warehouse frame" --interaction-label "Warehouse interactions"
+   ```
+19. Run the passive live GUI action reducer when you want deterministic future GUI controller transition metadata:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-action-reducer-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" --reducer-label "Warehouse reducer"
+   ```
+20. Run the passive live GUI controller state when you want deterministic future GUI view-model state:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-controller-state-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" --reducer-label "Warehouse reducer" --controller-label "Warehouse controller"
+   ```
+21. Run the passive live GUI playback transcript when you want deterministic future GUI test-harness playback metadata:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-playback-transcript-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" --playback-label "Warehouse playback"
+   ```
+22. Run the passive live GUI playback validation matrix when you want deterministic future GUI/audio-analyzer test cases:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-playback-validation-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" --playback-label "Warehouse playback" --validation-label "Warehouse validation"
+   ```
+23. Run the passive live GUI test-harness contract when you want deterministic future GUI/audio-analyzer harness suites and fixture bindings:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-contract-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" --playback-label "Warehouse playback" --validation-label "Warehouse validation" --harness-label "Warehouse harness"
+   ```
+24. Run the passive live GUI test-harness readiness report when you want deterministic future GUI/audio-analyzer readiness gates:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-readiness-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" --playback-label "Warehouse playback" --validation-label "Warehouse validation" --harness-label "Warehouse harness" --readiness-label "Warehouse readiness"
+   ```
+25. Run the passive live GUI implementation bridge when you want future-GUI wiring metadata:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-implementation-bridge-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" --playback-label "Warehouse playback" --validation-label "Warehouse validation" --harness-label "Warehouse harness" --readiness-label "Warehouse readiness" --bridge-label "Warehouse implementation bridge"
+   ```
+26. Run the passive live GUI desktop blueprint when you want future desktop-GUI layout metadata:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-blueprint-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" --playback-label "Warehouse playback" --validation-label "Warehouse validation" --harness-label "Warehouse harness" --readiness-label "Warehouse readiness" --bridge-label "Warehouse implementation bridge" --blueprint-label "Warehouse desktop blueprint" --desktop-shell operator-dashboard
+   ```
+27. Run the passive live GUI desktop app plan when you want future desktop-app implementation metadata:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-app-plan-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" --playback-label "Warehouse playback" --validation-label "Warehouse validation" --harness-label "Warehouse harness" --readiness-label "Warehouse readiness" --bridge-label "Warehouse implementation bridge" --blueprint-label "Warehouse desktop blueprint" --desktop-shell operator-dashboard --app-plan-label "Warehouse desktop app plan" --framework-target desktop-python
+   ```
+28. Run the passive live GUI desktop component contract when you want future desktop component metadata:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-component-contract-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" --playback-label "Warehouse playback" --validation-label "Warehouse validation" --harness-label "Warehouse harness" --readiness-label "Warehouse readiness" --bridge-label "Warehouse implementation bridge" --blueprint-label "Warehouse desktop blueprint" --desktop-shell operator-dashboard --app-plan-label "Warehouse desktop app plan" --framework-target desktop-python --component-contract-label "Warehouse component contract" --selector-prefix warehouse-live
+   ```
+29. Run the passive live GUI desktop view model when you want future GUI state-binding metadata:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-view-model-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" --playback-label "Warehouse playback" --validation-label "Warehouse validation" --harness-label "Warehouse harness" --readiness-label "Warehouse readiness" --bridge-label "Warehouse implementation bridge" --blueprint-label "Warehouse desktop blueprint" --desktop-shell operator-dashboard --app-plan-label "Warehouse desktop app plan" --framework-target desktop-python --component-contract-label "Warehouse component contract" --selector-prefix warehouse-live --view-model-label "Warehouse desktop view model" --state-prefix warehouse-state
+   ```
+30. Run the passive live GUI desktop render contract when you want future renderer metadata:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-contract-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" --playback-label "Warehouse playback" --validation-label "Warehouse validation" --harness-label "Warehouse harness" --readiness-label "Warehouse readiness" --bridge-label "Warehouse implementation bridge" --blueprint-label "Warehouse desktop blueprint" --desktop-shell operator-dashboard --app-plan-label "Warehouse desktop app plan" --framework-target desktop-python --component-contract-label "Warehouse component contract" --selector-prefix warehouse-live --view-model-label "Warehouse desktop view model" --state-prefix warehouse-state --render-contract-label "Warehouse render contract"
+   ```
+31. Run the passive live GUI desktop render harness when you want future GUI test-surface metadata:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-harness-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" --playback-label "Warehouse playback" --validation-label "Warehouse validation" --harness-label "Warehouse harness" --readiness-label "Warehouse readiness" --bridge-label "Warehouse implementation bridge" --blueprint-label "Warehouse desktop blueprint" --desktop-shell operator-dashboard --app-plan-label "Warehouse desktop app plan" --framework-target desktop-python --component-contract-label "Warehouse component contract" --selector-prefix warehouse-live --view-model-label "Warehouse desktop view model" --state-prefix warehouse-state --render-contract-label "Warehouse render contract" --render-harness-label "Warehouse render harness" --runner-label "Warehouse passive runner"
+   ```
+32. Run the passive live GUI cockpit boundary-readiness report when you want future desktop-cockpit implementation boundary metadata:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-cockpit-boundary-readiness-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" --playback-label "Warehouse playback" --validation-label "Warehouse validation" --harness-label "Warehouse harness" --readiness-label "Warehouse readiness" --bridge-label "Warehouse implementation bridge" --blueprint-label "Warehouse desktop blueprint" --desktop-shell operator-dashboard --app-plan-label "Warehouse desktop app plan" --framework-target desktop-python --component-contract-label "Warehouse component contract" --selector-prefix warehouse-live --view-model-label "Warehouse desktop view model" --state-prefix warehouse-state --render-contract-label "Warehouse render contract" --render-harness-label "Warehouse render harness" --runner-label "Warehouse passive runner" --boundary-label "Warehouse cockpit boundary"
+   ```
+33. Confirm the reports print `Live set card:`, `Route cards:`, `Stage rehearsal summary:`, `Machine states:`, `Cue states:`, `Cockpit summary:`, `Machine panels:`, `Cue cockpit cards:`, `Show export summary:`, `Machine handoff manifest:`, `Cue launch script:`, `Transition timeline summary:`, `Transition cards:`, `Command deck summary:`, `Now cue:`, `Live state summary:`, `Current GUI state:`, `Machine state panels:`, `Live analyzer handoff summary:`, `Live analyzer target packet summary:`, `GUI/audio-analyzer readiness bundle summary:`, `Live GUI rehearsal session summary:`, `Live GUI capture queue summary:`, `Live GUI capture review summary:`, `Live GUI sidecar session summary:`, `Live GUI screen contract summary:`, `Live GUI render tree summary:`, `Live GUI analyzer overlay summary:`, `Live GUI analyzer frame summary:`, `Live GUI interaction script summary:`, `Live GUI action reducer summary:`, `Live GUI controller state summary:`, `Live GUI playback transcript summary:`, `Live GUI playback validation summary:`, `Live GUI test-harness contract summary:`, `Live GUI test-harness readiness summary:`, `Live GUI implementation bridge summary:`, `Live GUI desktop blueprint summary:`, `Live GUI desktop app plan summary:`, `Live GUI desktop component contract summary:`, `Live GUI desktop view-model summary:`, `Live GUI desktop render contract summary:`, `Live GUI desktop render harness summary:`, and `Live GUI cockpit boundary readiness summary:`.
+34. Confirm each cue lists saved-kit slots/fingerprints, planned pads/tracks,
+   Rytm mock rows, A4 deferred/candidate rows, blockers, and recovery actions.
+35. Confirm rehearsal/cockpit/export/timeline/deck/state/analyzer target/readiness/session/capture-queue/capture-review/sidecar packets mark each cue as `go`, `rehearse`, or `do-not-arm` where applicable; capture review, sidecar, analyzer-overlay, analyzer-frame, interaction-script, action-reducer, controller-state, playback-transcript, playback-validation, test-harness-contract, test-harness-readiness, implementation-bridge, desktop-blueprint, desktop-app-plan, desktop-component-contract, desktop-view-model, desktop-render-contract, desktop-render-harness, and cockpit-boundary packets may also mark a take as `repeat`, hold the future GUI bridge, hold the future desktop blueprint, hold the future app plan, hold component contracts, hold view-model bindings, hold render contracts, hold render harnesses, or hold cockpit implementation.
+36. Treat the current validated Rytm live flow as:
+   ```
+   SCN -> GM -> S1A -> S3A -> S3B -> S4B -> S5 -> Z -> Q
+   ```
+37. Keep volume moderate before `S3B` and `S4B`.
+38. If the set gets too hot, use `S5`, then `Z`, then `Q`.
+39. Remember that the passive reports are route/rehearsal/cockpit/export/state/analyzer/session/capture-queue/capture-review/sidecar/screen-contract/render-tree/analyzer-overlay/analyzer-frame/interaction-script/action-reducer/controller-state/playback-transcript/playback-validation/test-harness-contract/test-harness-readiness/implementation-bridge/desktop-blueprint/desktop-app-plan/desktop-component-contract/desktop-view-model/desktop-render-contract/desktop-render-harness/cockpit-boundary cards only. Armed runtime
+   mutation remains the validated four-pad Rytm surface until a later runtime
+   slice promotes more live sends.
 
 ## What to do if a step fails
 

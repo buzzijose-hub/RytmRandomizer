@@ -123,8 +123,9 @@ def _build_parser() -> argparse.ArgumentParser:
         "--validate-one-cc",
         action="store_true",
         help=(
-            "Dry-run-only outbound validation helper. Builds one inert mock CC "
-            "message through MockMidiSender; opens no ports and sends no MIDI."
+            "One-CC outbound validation helper. With --dry-run it records one "
+            "inert mock CC and opens no port; with --arm it prompts for an "
+            "output port, sends exactly one real CC, closes the port, and exits."
         ),
     )
     parser.add_argument(
@@ -430,14 +431,16 @@ def _run_arm() -> int:
     finally:
         close = getattr(port, "close", None)
         if callable(close):
-            # Port close is best-effort: the OS / mido backend can raise any of
-            # OSError / RuntimeError / AttributeError on shutdown depending on
-            # the backend. We list the realistic family explicitly rather than
-            # bare ``except Exception`` so a programming error in this block
-            # still propagates.
+            # Port close is best-effort: the OS / mido backend can raise either
+            # OSError or RuntimeError on shutdown depending on the backend. We
+            # list the realistic family explicitly rather than bare
+            # ``except Exception`` so a programming error in this block still
+            # propagates. ``AttributeError`` is intentionally NOT swallowed --
+            # it indicates ``close`` was operating on ``None`` or a malformed
+            # port object, which is a real bug.
             try:
                 close()
-            except (OSError, RuntimeError, AttributeError):  # pragma: no cover - best-effort
+            except (OSError, RuntimeError):  # pragma: no cover - best-effort
                 _shutdown_logger = _observability_get_logger(__name__)
                 _shutdown_logger.debug("port_close_failed_best_effort")
 

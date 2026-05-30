@@ -192,11 +192,14 @@ pr:
     @echo "Branch: $(git rev-parse --abbrev-ref HEAD)"
     @echo ""
     @echo "Use:"
-    @echo "  gh pr create --base modularize-v1.34 --title '<title>' --body-file <path>"
+    @echo "  python scripts/create_pr.py --title '<title>' --body-file <path>"
     @echo ""
-    @echo "Or interactively:"
-    @echo "  gh pr create --base modularize-v1.34"
+    @echo "Raw fallback:"
+    @echo "  gh pr create --base modularize-v1.34 --reviewer edward-rosado --title '<title>' --body-file <path>"
     @echo ""
+    @echo "Both paths request review from edward-rosado automatically."
+    @echo "After updating an existing PR, re-request review with:"
+    @echo "  python scripts/create_pr.py --request-review-for <pr-number-or-url>"
     @echo "Body must include: conformance checklist (18 gates), strict-rules confirmation, test plan."
     @echo "See .github/PULL_REQUEST_TEMPLATE.md for the canonical template."
 
@@ -209,6 +212,17 @@ watch:
 rerun-failed:
     @RUN=$(gh run list --branch $(git rev-parse --abbrev-ref HEAD) --json databaseId --jq '.[0].databaseId'); \
         gh run rerun $$RUN --failed
+
+# ─────────────────────────────────────────────────────────────────────────
+# DESKTOP COCKPIT
+# ─────────────────────────────────────────────────────────────────────────
+
+# Build the Tauri desktop bundle for the current OS. Mirrors the
+# desktop-bundle matrix job in .github/workflows/installers.yml so a
+# release engineer can reproduce the per-OS bundle locally before tagging.
+desktop-bundle:
+    cd desktop/web && npm ci && npm run build
+    cd desktop/shell && cargo tauri build
 
 # ─────────────────────────────────────────────────────────────────────────
 # DOCS

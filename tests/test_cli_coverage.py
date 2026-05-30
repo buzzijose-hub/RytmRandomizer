@@ -20,6 +20,7 @@ double-burden without adding coverage value.
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -82,6 +83,416 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     assert top_level_help.startswith("RytmRandomizer passive CLI")
     assert snapshot_help.startswith(
         "RytmRandomizer passive CLI: rytm-snapshot-pad-compatibility-report"
+    )
+    intelligence_help = resolve_help_text("rytm-snapshot-intelligence-report")
+    mutation_preview_help = resolve_help_text("rytm-snapshot-mutation-preview-report")
+    style_routing_help = resolve_help_text("rytm-style-snapshot-routing-report")
+    style_intent_help = resolve_help_text("rytm-style-mutation-intent-report")
+    style_render_plan_help = resolve_help_text("rytm-style-mutation-render-plan-report")
+    style_mock_preview_help = resolve_help_text("rytm-style-mutation-mock-preview-report")
+    style_kit_readiness_help = resolve_help_text("rytm-style-kit-readiness-report")
+    style_crates_queue_journal_help = resolve_help_text("style-crates-queue-journal-report")
+    a4_style_routing_help = resolve_help_text("analog-four-style-snapshot-routing-report")
+    a4_style_intent_help = resolve_help_text("analog-four-style-mutation-intent-report")
+    a4_style_mock_preview_help = resolve_help_text("analog-four-style-mutation-mock-preview-report")
+    a4_kit_catalog_help = resolve_help_text("analog-four-kit-catalog-report")
+    a4_style_kit_readiness_help = resolve_help_text("analog-four-style-kit-readiness-report")
+    dual_style_routing_help = resolve_help_text("dual-machine-style-snapshot-routing-report")
+    dual_style_intent_help = resolve_help_text("dual-machine-style-mutation-intent-report")
+    dual_style_mock_preview_help = resolve_help_text(
+        "dual-machine-style-mutation-mock-preview-report"
+    )
+    dual_style_kit_readiness_help = resolve_help_text("dual-machine-style-kit-readiness-report")
+    dual_style_kit_selection_help = resolve_help_text("dual-machine-style-kit-selection-report")
+    dual_style_selection_mock_preview_help = resolve_help_text(
+        "dual-machine-style-selection-mock-preview-report"
+    )
+    dual_style_live_audition_help = resolve_help_text("dual-machine-style-live-audition-report")
+    dual_style_performance_set_plan_help = resolve_help_text(
+        "dual-machine-style-performance-set-plan-report"
+    )
+    style_target_help = resolve_help_text("style-target-report")
+    live_runbook_help = resolve_help_text("style-performance-arc-live-runbook-report")
+    stage_routing_help = resolve_help_text("style-performance-arc-stage-routing-report")
+    stage_rehearsal_help = resolve_help_text("style-performance-arc-stage-rehearsal-state-report")
+    live_set_cockpit_help = resolve_help_text("style-performance-arc-live-set-cockpit-report")
+    live_show_export_help = resolve_help_text("style-performance-arc-live-show-export-report")
+    live_transition_timeline_help = resolve_help_text(
+        "style-performance-arc-live-transition-timeline-report"
+    )
+    live_command_deck_help = resolve_help_text("style-performance-arc-live-command-deck-report")
+    live_state_help = resolve_help_text("style-performance-arc-live-state-report")
+    live_readiness_help = resolve_help_text("style-performance-arc-live-readiness-report")
+    live_control_surface_help = resolve_help_text(
+        "style-performance-arc-live-control-surface-report"
+    )
+    live_analyzer_handoff_help = resolve_help_text(
+        "style-performance-arc-live-analyzer-handoff-report"
+    )
+    live_analyzer_targets_help = resolve_help_text(
+        "style-performance-arc-live-analyzer-targets-report"
+    )
+    live_gui_analyzer_readiness_help = resolve_help_text(
+        "style-performance-arc-live-gui-analyzer-readiness-report"
+    )
+    live_gui_rehearsal_session_help = resolve_help_text(
+        "style-performance-arc-live-gui-rehearsal-session-report"
+    )
+    live_gui_capture_queue_help = resolve_help_text(
+        "style-performance-arc-live-gui-capture-queue-report"
+    )
+    live_gui_capture_review_help = resolve_help_text(
+        "style-performance-arc-live-gui-capture-review-report"
+    )
+    live_gui_sidecar_session_help = resolve_help_text(
+        "style-performance-arc-live-gui-sidecar-session-report"
+    )
+    live_gui_screen_contract_help = resolve_help_text(
+        "style-performance-arc-live-gui-screen-contract-report"
+    )
+    live_gui_render_tree_help = resolve_help_text(
+        "style-performance-arc-live-gui-render-tree-report"
+    )
+    live_gui_analyzer_overlay_help = resolve_help_text(
+        "style-performance-arc-live-gui-analyzer-overlay-report"
+    )
+    live_gui_analyzer_frame_help = resolve_help_text(
+        "style-performance-arc-live-gui-analyzer-frame-report"
+    )
+    live_gui_interaction_script_help = resolve_help_text(
+        "style-performance-arc-live-gui-interaction-script-report"
+    )
+    live_gui_action_reducer_help = resolve_help_text(
+        "style-performance-arc-live-gui-action-reducer-report"
+    )
+    live_gui_controller_state_help = resolve_help_text(
+        "style-performance-arc-live-gui-controller-state-report"
+    )
+    live_gui_playback_transcript_help = resolve_help_text(
+        "style-performance-arc-live-gui-playback-transcript-report"
+    )
+    live_gui_playback_validation_help = resolve_help_text(
+        "style-performance-arc-live-gui-playback-validation-report"
+    )
+    live_gui_test_harness_contract_help = resolve_help_text(
+        "style-performance-arc-live-gui-test-harness-contract-report"
+    )
+    live_gui_test_harness_readiness_help = resolve_help_text(
+        "style-performance-arc-live-gui-test-harness-readiness-report"
+    )
+    live_gui_implementation_bridge_help = resolve_help_text(
+        "style-performance-arc-live-gui-implementation-bridge-report"
+    )
+    live_gui_desktop_blueprint_help = resolve_help_text(
+        "style-performance-arc-live-gui-desktop-blueprint-report"
+    )
+    live_gui_desktop_app_plan_help = resolve_help_text(
+        "style-performance-arc-live-gui-desktop-app-plan-report"
+    )
+    live_gui_desktop_component_contract_help = resolve_help_text(
+        "style-performance-arc-live-gui-desktop-component-contract-report"
+    )
+    live_gui_desktop_view_model_help = resolve_help_text(
+        "style-performance-arc-live-gui-desktop-view-model-report"
+    )
+    live_gui_desktop_render_contract_help = resolve_help_text(
+        "style-performance-arc-live-gui-desktop-render-contract-report"
+    )
+    live_gui_desktop_render_harness_help = resolve_help_text(
+        "style-performance-arc-live-gui-desktop-render-harness-report"
+    )
+    live_gui_cockpit_boundary_readiness_help = resolve_help_text(
+        "style-performance-arc-live-gui-cockpit-boundary-readiness-report"
+    )
+    cockpit_send_plan_readiness_help = resolve_help_text("cockpit-send-plan-readiness-report")
+    cockpit_send_plan_rehearsal_surface_help = resolve_help_text(
+        "cockpit-send-plan-rehearsal-surface-report"
+    )
+    cockpit_export_rehearsal_help = resolve_help_text("cockpit-export-rehearsal-report")
+
+    assert top_level_help.startswith("RytmRandomizer passive CLI")
+    assert "style-performance-arc-live-readiness-report" in top_level_help
+    assert "style-crates-queue-journal-report" in top_level_help
+    assert "style-performance-arc-live-control-surface-report" in top_level_help
+    assert "style-performance-arc-live-analyzer-handoff-report" in top_level_help
+    assert "style-performance-arc-live-analyzer-targets-report" in top_level_help
+    assert "style-performance-arc-live-gui-analyzer-readiness-report" in top_level_help
+    assert "style-performance-arc-live-gui-rehearsal-session-report" in top_level_help
+    assert "style-performance-arc-live-gui-capture-queue-report" in top_level_help
+    assert "style-performance-arc-live-gui-capture-review-report" in top_level_help
+    assert "style-performance-arc-live-gui-sidecar-session-report" in top_level_help
+    assert "style-performance-arc-live-gui-screen-contract-report" in top_level_help
+    assert "style-performance-arc-live-gui-render-tree-report" in top_level_help
+    assert "style-performance-arc-live-gui-analyzer-overlay-report" in top_level_help
+    assert "style-performance-arc-live-gui-analyzer-frame-report" in top_level_help
+    assert "style-performance-arc-live-gui-interaction-script-report" in top_level_help
+    assert "style-performance-arc-live-gui-action-reducer-report" in top_level_help
+    assert "style-performance-arc-live-gui-controller-state-report" in top_level_help
+    assert "style-performance-arc-live-gui-playback-transcript-report" in top_level_help
+    assert "style-performance-arc-live-gui-playback-validation-report" in top_level_help
+    assert "style-performance-arc-live-gui-test-harness-contract-report" in top_level_help
+    assert "style-performance-arc-live-gui-test-harness-readiness-report" in top_level_help
+    assert "style-performance-arc-live-gui-implementation-bridge-report" in top_level_help
+    assert "style-performance-arc-live-gui-desktop-blueprint-report" in top_level_help
+    assert "style-performance-arc-live-gui-desktop-app-plan-report" in top_level_help
+    assert "style-performance-arc-live-gui-desktop-component-contract-report" in top_level_help
+    assert "style-performance-arc-live-gui-desktop-view-model-report" in top_level_help
+    assert "style-performance-arc-live-gui-desktop-render-contract-report" in top_level_help
+    assert "style-performance-arc-live-gui-desktop-render-harness-report" in top_level_help
+    assert "style-performance-arc-live-gui-cockpit-boundary-readiness-report" in (top_level_help)
+    assert "cockpit-send-plan-readiness-report" in top_level_help
+    assert "cockpit-send-plan-rehearsal-surface-report" in top_level_help
+    assert "cockpit-export-rehearsal-report" in top_level_help
+    assert snapshot_help.startswith(
+        "RytmRandomizer passive CLI: rytm-snapshot-pad-compatibility-report"
+    )
+    assert intelligence_help.startswith(
+        "RytmRandomizer passive CLI: rytm-snapshot-intelligence-report"
+    )
+    assert mutation_preview_help.startswith(
+        "RytmRandomizer passive CLI: rytm-snapshot-mutation-preview-report"
+    )
+    assert style_routing_help.startswith(
+        "RytmRandomizer passive CLI: rytm-style-snapshot-routing-report"
+    )
+    assert style_intent_help.startswith(
+        "RytmRandomizer passive CLI: rytm-style-mutation-intent-report"
+    )
+    assert style_render_plan_help.startswith(
+        "RytmRandomizer passive CLI: rytm-style-mutation-render-plan-report"
+    )
+    assert style_mock_preview_help.startswith(
+        "RytmRandomizer passive CLI: rytm-style-mutation-mock-preview-report"
+    )
+    assert style_kit_readiness_help.startswith(
+        "RytmRandomizer passive CLI: rytm-style-kit-readiness-report"
+    )
+    assert style_crates_queue_journal_help.startswith(
+        "RytmRandomizer passive CLI: style-crates-queue-journal-report"
+    )
+    assert a4_style_routing_help.startswith(
+        "RytmRandomizer passive CLI: analog-four-style-snapshot-routing-report"
+    )
+    assert a4_style_intent_help.startswith(
+        "RytmRandomizer passive CLI: analog-four-style-mutation-intent-report"
+    )
+    assert a4_style_mock_preview_help.startswith(
+        "RytmRandomizer passive CLI: analog-four-style-mutation-mock-preview-report"
+    )
+    assert a4_kit_catalog_help.startswith(
+        "RytmRandomizer passive CLI: analog-four-kit-catalog-report"
+    )
+    assert a4_style_kit_readiness_help.startswith(
+        "RytmRandomizer passive CLI: analog-four-style-kit-readiness-report"
+    )
+    assert dual_style_routing_help.startswith(
+        "RytmRandomizer passive CLI: dual-machine-style-snapshot-routing-report"
+    )
+    assert dual_style_intent_help.startswith(
+        "RytmRandomizer passive CLI: dual-machine-style-mutation-intent-report"
+    )
+    assert dual_style_mock_preview_help.startswith(
+        "RytmRandomizer passive CLI: dual-machine-style-mutation-mock-preview-report"
+    )
+    assert dual_style_kit_readiness_help.startswith(
+        "RytmRandomizer passive CLI: dual-machine-style-kit-readiness-report"
+    )
+    assert dual_style_kit_selection_help.startswith(
+        "RytmRandomizer passive CLI: dual-machine-style-kit-selection-report"
+    )
+    assert dual_style_selection_mock_preview_help.startswith(
+        "RytmRandomizer passive CLI: dual-machine-style-selection-mock-preview-report"
+    )
+    assert dual_style_live_audition_help.startswith(
+        "RytmRandomizer passive CLI: dual-machine-style-live-audition-report"
+    )
+    assert dual_style_performance_set_plan_help.startswith(
+        "RytmRandomizer passive CLI: dual-machine-style-performance-set-plan-report"
+    )
+    assert live_readiness_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-readiness-report"
+    )
+    assert "GUI/audio-analyzer readiness" in live_readiness_help
+    assert "no MIDI sending" in live_readiness_help
+    assert live_control_surface_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-control-surface-report"
+    )
+    assert "GUI/audio-analyzer control surface" in live_control_surface_help
+    assert "no MIDI sending" in live_control_surface_help
+    assert live_analyzer_handoff_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-analyzer-handoff-report"
+    )
+    assert "audio analyzer handoff" in live_analyzer_handoff_help
+    assert "no MIDI sending" in live_analyzer_handoff_help
+    assert live_analyzer_targets_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-analyzer-targets-report"
+    )
+    assert "future live analyzer comparison" in live_analyzer_targets_help
+    assert "no MIDI sending" in live_analyzer_targets_help
+    assert live_gui_analyzer_readiness_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-gui-analyzer-readiness-report"
+    )
+    assert "GUI/audio-analyzer readiness bundle" in live_gui_analyzer_readiness_help
+    assert "no MIDI sending" in live_gui_analyzer_readiness_help
+    assert live_gui_rehearsal_session_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-gui-rehearsal-session-report"
+    )
+    assert "GUI rehearsal session packet" in live_gui_rehearsal_session_help
+    assert "no MIDI sending" in live_gui_rehearsal_session_help
+    assert live_gui_capture_queue_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-gui-capture-queue-report"
+    )
+    assert "GUI/audio analyzer capture queue" in live_gui_capture_queue_help
+    assert "no MIDI sending" in live_gui_capture_queue_help
+    assert live_gui_capture_review_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-gui-capture-review-report"
+    )
+    assert "go/repeat/hold" in live_gui_capture_review_help
+    assert "no MIDI sending" in live_gui_capture_review_help
+    assert live_gui_sidecar_session_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-gui-sidecar-session-report"
+    )
+    assert "single sidecar-ready GUI state" in live_gui_sidecar_session_help
+    assert "no MIDI sending" in live_gui_sidecar_session_help
+    assert live_gui_screen_contract_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-gui-screen-contract-report"
+    )
+    assert "GUI screen contract" in live_gui_screen_contract_help
+    assert "no MIDI sending" in live_gui_screen_contract_help
+    assert live_gui_render_tree_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-gui-render-tree-report"
+    )
+    assert "GUI render tree" in live_gui_render_tree_help
+    assert "no MIDI sending" in live_gui_render_tree_help
+    assert live_gui_analyzer_overlay_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-gui-analyzer-overlay-report"
+    )
+    assert "analyzer overlay" in live_gui_analyzer_overlay_help
+    assert "no MIDI sending" in live_gui_analyzer_overlay_help
+    assert live_gui_analyzer_frame_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-gui-analyzer-frame-report"
+    )
+    assert "analyzer frame" in live_gui_analyzer_frame_help
+    assert "no MIDI sending" in live_gui_analyzer_frame_help
+    assert live_gui_interaction_script_help.startswith(
+        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-interaction-script-report"
+    )
+    assert "GUI interaction script" in live_gui_interaction_script_help
+    assert "no MIDI sending" in live_gui_interaction_script_help
+    assert live_gui_action_reducer_help.startswith(
+        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-action-reducer-report"
+    )
+    assert "GUI action reducer" in live_gui_action_reducer_help
+    assert "no MIDI sending" in live_gui_action_reducer_help
+    assert live_gui_controller_state_help.startswith(
+        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-controller-state-report"
+    )
+    assert "GUI controller state" in live_gui_controller_state_help
+    assert "no MIDI sending" in live_gui_controller_state_help
+    assert live_gui_playback_transcript_help.startswith(
+        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-playback-transcript-report"
+    )
+    assert "GUI playback transcript" in live_gui_playback_transcript_help
+    assert "no MIDI sending" in live_gui_playback_transcript_help
+    assert live_gui_playback_validation_help.startswith(
+        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-playback-validation-report"
+    )
+    assert "GUI playback validation" in live_gui_playback_validation_help
+    assert "no MIDI sending" in live_gui_playback_validation_help
+    assert live_gui_test_harness_contract_help.startswith(
+        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-test-harness-contract-report"
+    )
+    assert "GUI test-harness contract" in live_gui_test_harness_contract_help
+    assert "no MIDI sending" in live_gui_test_harness_contract_help
+    assert live_gui_test_harness_readiness_help.startswith(
+        "RytmRandomizer passive CLI: "
+        "style-performance-arc-live-gui-test-harness-readiness-report"
+    )
+    assert "GUI test-harness readiness" in live_gui_test_harness_readiness_help
+    assert "no MIDI sending" in live_gui_test_harness_readiness_help
+    assert live_gui_implementation_bridge_help.startswith(
+        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-implementation-bridge-report"
+    )
+    assert "GUI implementation bridge" in live_gui_implementation_bridge_help
+    assert "no MIDI sending" in live_gui_implementation_bridge_help
+    assert live_gui_desktop_blueprint_help.startswith(
+        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-desktop-blueprint-report"
+    )
+    assert "desktop GUI blueprint" in live_gui_desktop_blueprint_help
+    assert "no MIDI sending" in live_gui_desktop_blueprint_help
+    assert live_gui_desktop_app_plan_help.startswith(
+        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-desktop-app-plan-report"
+    )
+    assert "desktop app plan" in live_gui_desktop_app_plan_help
+    assert "no MIDI sending" in live_gui_desktop_app_plan_help
+    assert live_gui_desktop_component_contract_help.startswith(
+        "RytmRandomizer passive CLI: "
+        "style-performance-arc-live-gui-desktop-component-contract-report"
+    )
+    assert "desktop component contract" in live_gui_desktop_component_contract_help
+    assert "no MIDI sending" in live_gui_desktop_component_contract_help
+    assert live_gui_desktop_view_model_help.startswith(
+        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-desktop-view-model-report"
+    )
+    assert "desktop view model" in live_gui_desktop_view_model_help
+    assert "no MIDI sending" in live_gui_desktop_view_model_help
+    assert live_gui_desktop_render_contract_help.startswith(
+        "RytmRandomizer passive CLI: "
+        "style-performance-arc-live-gui-desktop-render-contract-report"
+    )
+    assert "desktop render contract" in live_gui_desktop_render_contract_help
+    assert "no MIDI sending" in live_gui_desktop_render_contract_help
+    assert live_gui_desktop_render_harness_help.startswith(
+        "RytmRandomizer passive CLI: "
+        "style-performance-arc-live-gui-desktop-render-harness-report"
+    )
+    assert "GUI desktop render harness" in live_gui_desktop_render_harness_help
+    assert "no MIDI sending" in live_gui_desktop_render_harness_help
+    assert live_gui_cockpit_boundary_readiness_help.startswith(
+        "RytmRandomizer passive CLI: "
+        "style-performance-arc-live-gui-cockpit-boundary-readiness-report"
+    )
+    assert "cockpit boundary readiness" in live_gui_cockpit_boundary_readiness_help
+    assert "no MIDI sending" in live_gui_cockpit_boundary_readiness_help
+    assert cockpit_send_plan_readiness_help.startswith(
+        "RytmRandomizer passive CLI: cockpit-send-plan-readiness-report"
+    )
+    assert "send-plan operator readiness" in cockpit_send_plan_readiness_help
+    assert "no MIDI sending" in cockpit_send_plan_readiness_help
+    assert cockpit_send_plan_rehearsal_surface_help.startswith(
+        "RytmRandomizer passive CLI: cockpit-send-plan-rehearsal-surface-report"
+    )
+    assert "send-plan rehearsal surface" in cockpit_send_plan_rehearsal_surface_help
+    assert "no MIDI sending" in cockpit_send_plan_rehearsal_surface_help
+    assert cockpit_export_rehearsal_help.startswith(
+        "RytmRandomizer passive CLI: cockpit-export-rehearsal-report"
+    )
+    assert "model-export rehearsal" in cockpit_export_rehearsal_help
+    assert "no MIDI sending" in cockpit_export_rehearsal_help
+    assert style_target_help.startswith("RytmRandomizer passive CLI: style-target-report")
+    assert live_runbook_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-runbook-report"
+    )
+    assert stage_routing_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-stage-routing-report"
+    )
+    assert stage_rehearsal_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-stage-rehearsal-state-report"
+    )
+    assert live_set_cockpit_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-set-cockpit-report"
+    )
+    assert live_show_export_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-show-export-report"
+    )
+    assert live_transition_timeline_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-transition-timeline-report"
+    )
+    assert live_command_deck_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-command-deck-report"
+    )
+    assert live_state_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-state-report"
     )
     assert snapshot_help.split("Safety:\n", 1)[1].splitlines() == [
         f"  {line}" for line in SAFETY_LINES
@@ -461,6 +872,489 @@ def test_main_rytm_snapshot_pad_compatibility_report_lazy_imports_when_module_un
     assert rc == 0
     assert "RytmRandomizer passive Rytm snapshot pad compatibility" in captured.out
     assert captured.err == ""
+
+
+def test_main_rytm_snapshot_intelligence_report_lazy_imports_when_module_unloaded(
+    tmp_path: Path,
+    capsys,
+):
+    import sys
+
+    from conftest import rytm_real_layout_kit_payload
+    from rytm_randomizer import cli_registry
+
+    payload = rytm_real_layout_kit_payload(name=b"COVERAGE")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+    module_name = "rytm_randomizer.reports.rytm_snapshot_intelligence"
+    saved_commands = dict(cli_registry._COMMANDS)
+    saved_module = sys.modules.pop(module_name, None)
+    cli_registry._COMMANDS.pop("rytm-snapshot-intelligence-report", None)
+    try:
+        rc = cli.main(["rytm-snapshot-intelligence-report", str(path)])
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved_commands)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+        else:
+            sys.modules.pop(module_name, None)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive Rytm snapshot intelligence" in captured.out
+    assert "Kit: COVERAGE" in captured.out
+    assert captured.err == ""
+
+
+def test_main_rytm_snapshot_mutation_preview_report_lazy_imports_when_module_unloaded(
+    tmp_path: Path,
+    capsys,
+):
+    import sys
+
+    from conftest import rytm_real_layout_kit_payload
+    from rytm_randomizer import cli_registry
+
+    payload = rytm_real_layout_kit_payload(name=b"PREVCOV")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+    module_name = "rytm_randomizer.reports.rytm_snapshot_mutation_preview"
+    saved_commands = dict(cli_registry._COMMANDS)
+    saved_module = sys.modules.pop(module_name, None)
+    cli_registry._COMMANDS.pop("rytm-snapshot-mutation-preview-report", None)
+    try:
+        rc = cli.main(["rytm-snapshot-mutation-preview-report", str(path), "--depth", "2"])
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved_commands)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+        else:
+            sys.modules.pop(module_name, None)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive Rytm snapshot mutation preview" in captured.out
+    assert "Kit: PREVCOV" in captured.out
+    assert captured.err == ""
+
+
+def test_main_rytm_style_mutation_mock_preview_report_lazy_imports_when_module_unloaded(
+    tmp_path: Path,
+    capsys,
+):
+    import sys
+
+    from conftest import rytm_real_layout_kit_payload
+    from rytm_randomizer import cli_registry
+
+    payload = rytm_real_layout_kit_payload(name=b"STYLECOV")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+    module_name = "rytm_randomizer.reports.rytm_style_mutation_mock_preview"
+    saved_commands = dict(cli_registry._COMMANDS)
+    saved_module = sys.modules.pop(module_name, None)
+    cli_registry._COMMANDS.pop("rytm-style-mutation-mock-preview-report", None)
+    try:
+        rc = cli.main(
+            [
+                "rytm-style-mutation-mock-preview-report",
+                str(path),
+                "jose_core_techno",
+            ]
+        )
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved_commands)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+        else:
+            sys.modules.pop(module_name, None)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive Rytm style mutation mock preview" in captured.out
+    assert "Kit: STYLECOV" in captured.out
+    assert captured.err == ""
+
+
+def test_main_rytm_style_kit_readiness_report_lazy_imports_when_module_unloaded(
+    tmp_path: Path,
+    capsys,
+):
+    import sys
+
+    from conftest import rytm_real_layout_kit_payload
+    from rytm_randomizer import cli_registry
+
+    payload = rytm_real_layout_kit_payload(name=b"RYTMKITCOV")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+    module_name = "rytm_randomizer.reports.rytm_style_kit_readiness"
+    saved_commands = dict(cli_registry._COMMANDS)
+    saved_module = sys.modules.pop(module_name, None)
+    cli_registry._COMMANDS.pop("rytm-style-kit-readiness-report", None)
+    try:
+        rc = cli.main(
+            [
+                "rytm-style-kit-readiness-report",
+                str(path),
+                "jose_core_techno",
+            ]
+        )
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved_commands)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+        else:
+            sys.modules.pop(module_name, None)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive Rytm style kit readiness" in captured.out
+    assert "RYTMKITCOV" in captured.out
+    assert captured.err == ""
+
+
+def test_main_analog_four_style_mutation_mock_preview_report_lazy_imports_when_module_unloaded(
+    tmp_path: Path,
+    capsys,
+):
+    import sys
+
+    from rytm_randomizer import cli_registry
+
+    payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4COV".ljust(16, b"\x00")
+    path = tmp_path / "a4.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+    module_name = "rytm_randomizer.reports.analog_four_style_mutation_mock_preview"
+    saved_commands = dict(cli_registry._COMMANDS)
+    saved_module = sys.modules.pop(module_name, None)
+    cli_registry._COMMANDS.pop("analog-four-style-mutation-mock-preview-report", None)
+    try:
+        rc = cli.main(
+            [
+                "analog-four-style-mutation-mock-preview-report",
+                str(path),
+                "jose_core_techno",
+            ]
+        )
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved_commands)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+        else:
+            sys.modules.pop(module_name, None)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive Analog Four style mutation mock preview" in captured.out
+    assert "Kit: A4COV" in captured.out
+    assert captured.err == ""
+
+
+def test_main_dual_machine_style_mutation_mock_preview_report_lazy_imports_when_unloaded(
+    tmp_path: Path,
+    capsys,
+):
+    import sys
+
+    from conftest import rytm_real_layout_kit_payload
+    from rytm_randomizer import cli_registry
+
+    rytm_payload = rytm_real_layout_kit_payload(name=b"DUALRYTM")
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(bytes([0xF0]) + rytm_payload + bytes([0xF7]))
+    a4_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"DUALA4".ljust(16, b"\x00")
+    a4_path = tmp_path / "a4.syx"
+    a4_path.write_bytes(bytes([0xF0]) + a4_payload + bytes([0xF7]))
+    module_name = "rytm_randomizer.reports.dual_machine_style_mutation_mock_preview"
+    saved_commands = dict(cli_registry._COMMANDS)
+    saved_module = sys.modules.pop(module_name, None)
+    cli_registry._COMMANDS.pop("dual-machine-style-mutation-mock-preview-report", None)
+    try:
+        rc = cli.main(
+            [
+                "dual-machine-style-mutation-mock-preview-report",
+                str(rytm_path),
+                str(a4_path),
+                "jose_core_techno",
+            ]
+        )
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved_commands)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+        else:
+            sys.modules.pop(module_name, None)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive dual-machine style mutation mock preview" in captured.out
+    assert "Kit: DUALRYTM" in captured.out
+    assert "Kit: DUALA4" in captured.out
+    assert captured.err == ""
+
+
+def test_main_dual_machine_style_kit_readiness_report_lazy_imports_when_unloaded(
+    tmp_path: Path,
+    capsys,
+):
+    import sys
+
+    from conftest import rytm_real_layout_kit_payload
+    from rytm_randomizer import cli_registry
+
+    rytm_payload = rytm_real_layout_kit_payload(name=b"PAIRRYTM")
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(bytes([0xF0]) + rytm_payload + bytes([0xF7]))
+    a4_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"PAIRA4".ljust(16, b"\x00")
+    a4_path = tmp_path / "a4.syx"
+    a4_path.write_bytes(bytes([0xF0]) + a4_payload + bytes([0xF7]))
+    module_name = "rytm_randomizer.reports.dual_machine_style_kit_readiness"
+    saved_commands = dict(cli_registry._COMMANDS)
+    saved_module = sys.modules.pop(module_name, None)
+    cli_registry._COMMANDS.pop("dual-machine-style-kit-readiness-report", None)
+    try:
+        rc = cli.main(
+            [
+                "dual-machine-style-kit-readiness-report",
+                str(rytm_path),
+                str(a4_path),
+                "jose_core_techno",
+            ]
+        )
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved_commands)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+        else:
+            sys.modules.pop(module_name, None)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive dual-machine style kit readiness" in captured.out
+    assert "PAIRRYTM" in captured.out
+    assert "PAIRA4" in captured.out
+    assert captured.err == ""
+
+
+def test_main_dual_machine_style_kit_selection_report_lazy_imports_when_unloaded(
+    tmp_path: Path,
+    capsys,
+):
+    import sys
+
+    from conftest import rytm_real_layout_kit_payload
+    from rytm_randomizer import cli_registry
+
+    rytm_payload = rytm_real_layout_kit_payload(name=b"SELECTRY")
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(bytes([0xF0]) + rytm_payload + bytes([0xF7]))
+    module_name = "rytm_randomizer.reports.dual_machine_style_kit_selection"
+    saved_commands = dict(cli_registry._COMMANDS)
+    saved_module = sys.modules.pop(module_name, None)
+    cli_registry._COMMANDS.pop("dual-machine-style-kit-selection-report", None)
+    try:
+        rc = cli.main(
+            [
+                "dual-machine-style-kit-selection-report",
+                "jose_core_techno",
+                "--rytm",
+                str(rytm_path),
+                "--scope",
+                "rytm-only",
+            ]
+        )
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved_commands)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+        else:
+            sys.modules.pop(module_name, None)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive dual-machine style kit selection" in captured.out
+    assert "SELECTRY" in captured.out
+    assert "leave Analog Four unchanged" in captured.out
+    assert captured.err == ""
+
+
+def test_main_dual_machine_style_selection_mock_preview_report_lazy_imports_when_unloaded(
+    tmp_path: Path,
+    capsys,
+):
+    import sys
+
+    from conftest import rytm_real_layout_kit_payload
+    from rytm_randomizer import cli_registry
+
+    rytm_payload = rytm_real_layout_kit_payload(name=b"SELPREV")
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(bytes([0xF0]) + rytm_payload + bytes([0xF7]))
+    module_name = "rytm_randomizer.reports.dual_machine_style_selection_mock_preview"
+    saved_commands = dict(cli_registry._COMMANDS)
+    saved_module = sys.modules.pop(module_name, None)
+    cli_registry._COMMANDS.pop("dual-machine-style-selection-mock-preview-report", None)
+    try:
+        rc = cli.main(
+            [
+                "dual-machine-style-selection-mock-preview-report",
+                "jose_core_techno",
+                "--rytm",
+                str(rytm_path),
+                "--scope",
+                "rytm-only",
+            ]
+        )
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved_commands)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+        else:
+            sys.modules.pop(module_name, None)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive dual-machine style selection mock preview" in captured.out
+    assert "SELPREV" in captured.out
+    assert "leave Analog Four unchanged" in captured.out
+    assert captured.err == ""
+
+
+def test_main_dual_machine_style_live_audition_report_lazy_imports_when_unloaded(
+    tmp_path: Path,
+    capsys,
+):
+    import sys
+
+    from conftest import rytm_real_layout_kit_payload
+    from rytm_randomizer import cli_registry
+
+    rytm_payload = rytm_real_layout_kit_payload(name=b"LIVEAUD")
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(bytes([0xF0]) + rytm_payload + bytes([0xF7]))
+    module_name = "rytm_randomizer.reports.dual_machine_style_live_audition"
+    saved_commands = dict(cli_registry._COMMANDS)
+    saved_module = sys.modules.pop(module_name, None)
+    cli_registry._COMMANDS.pop("dual-machine-style-live-audition-report", None)
+    try:
+        rc = cli.main(
+            [
+                "dual-machine-style-live-audition-report",
+                "jose_core_techno",
+                "warehouse_peak",
+                "--rytm",
+                str(rytm_path),
+                "--scope",
+                "rytm-only",
+            ]
+        )
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved_commands)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+        else:
+            sys.modules.pop(module_name, None)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive dual-machine style live audition" in captured.out
+    assert "LIVEAUD" in captured.out
+    assert "2. warehouse_peak" in captured.out
+    assert captured.err == ""
+
+
+def test_main_dual_machine_style_performance_set_plan_report_lazy_imports_when_unloaded(
+    tmp_path: Path,
+    capsys,
+):
+    import sys
+
+    from conftest import rytm_real_layout_kit_payload
+    from rytm_randomizer import cli_registry
+
+    rytm_payload = rytm_real_layout_kit_payload(name=b"SETPLAN")
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(bytes([0xF0]) + rytm_payload + bytes([0xF7]))
+    module_name = "rytm_randomizer.reports.dual_machine_style_performance_set_plan"
+    saved_commands = dict(cli_registry._COMMANDS)
+    saved_module = sys.modules.pop(module_name, None)
+    cli_registry._COMMANDS.pop("dual-machine-style-performance-set-plan-report", None)
+    try:
+        rc = cli.main(
+            [
+                "dual-machine-style-performance-set-plan-report",
+                "jose_core_techno",
+                "warehouse_peak",
+                "--rytm",
+                str(rytm_path),
+                "--scope",
+                "rytm-only",
+                "--total-minutes",
+                "120",
+            ]
+        )
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved_commands)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+        else:
+            sys.modules.pop(module_name, None)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive dual-machine style performance set plan" in captured.out
+    assert "SETPLAN" in captured.out
+    assert "00:00-01:00" in captured.out
+    assert "2. 01:00-02:00" in captured.out
+    assert captured.err == ""
+
+
+def test_main_rytm_snapshot_intelligence_report_returns_two_for_missing_file(capsys):
+    rc = cli.main(["rytm-snapshot-intelligence-report", "missing-file.syx"])
+
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "SysEx file does not exist" in captured.err
+
+
+def test_main_rytm_snapshot_intelligence_report_formats_parse_errors(capsys):
+    rc = cli.main(["rytm-snapshot-intelligence-report", "kit.syx", "--slot", "-1"])
+
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "--slot must be >= 0" in captured.err
+
+
+def test_main_rytm_snapshot_mutation_preview_report_returns_two_for_missing_file(capsys):
+    rc = cli.main(["rytm-snapshot-mutation-preview-report", "missing-file.syx"])
+
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "SysEx file does not exist" in captured.err
+
+
+def test_main_rytm_snapshot_mutation_preview_report_formats_parse_errors(capsys):
+    rc = cli.main(["rytm-snapshot-mutation-preview-report", "kit.syx", "--depth", "8"])
+
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "--depth must be in [0, 7]" in captured.err
 
 
 def test_main_rytm_machine_matrix_report_rejects_extra_args(capsys):

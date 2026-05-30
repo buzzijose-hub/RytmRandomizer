@@ -1,0 +1,160 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 540" role="img" aria-label="Architecture — cockpit, sidecar, hardware">
+  <defs>
+    <linearGradient id="bg3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#13171f"/>
+      <stop offset="100%" stop-color="#0c0f15"/>
+    </linearGradient>
+    <marker id="ah" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7cc4ff"/>
+    </marker>
+    <marker id="ah2" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ff6a3d"/>
+    </marker>
+  </defs>
+  <rect width="1280" height="540" fill="url(#bg3)"/>
+  <text x="640" y="40" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#f5f5f5" text-anchor="middle" letter-spacing="3">
+    ARCHITECTURE
+  </text>
+  <text x="640" y="62" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="500" fill="#8c93a0" text-anchor="middle">
+    Four boundaries · passive by default · same model everywhere
+  </text>
+  <!-- swimlanes -->
+  <g font-family="Helvetica, Arial, sans-serif">
+    <!-- LANE 1: Cockpit (UI) -->
+    <g transform="translate(40,100)">
+      <rect width="280" height="380" rx="12" fill="#1c2230" stroke="#2a3140"/>
+      <text x="20" y="32" font-size="13" font-weight="700" fill="#7cc4ff" letter-spacing="2">COCKPIT · UI</text>
+      <text x="20" y="50" font-size="10" font-weight="500" fill="#5b6573">React + Tauri (desktop)</text>
+      <!-- modules -->
+      <g transform="translate(20,72)" font-size="12" font-weight="600">
+        <rect width="240" height="38" rx="6" fill="#0e1116" stroke="#2a3140"/>
+        <text x="14" y="24" fill="#f5f5f5">Snapshot panel</text>
+        <text x="14" y="22" font-size="10" font-weight="500" fill="#8c93a0" dy="14">12 pads · ghost preview · locks</text>
+      </g>
+      <g transform="translate(20,124)" font-size="12" font-weight="600">
+        <rect width="240" height="38" rx="6" fill="#0e1116" stroke="#2a3140"/>
+        <text x="14" y="24" fill="#f5f5f5">Mutation panel</text>
+        <text x="14" y="22" font-size="10" font-weight="500" fill="#8c93a0" dy="14">profile · depth · regen · save</text>
+      </g>
+      <g transform="translate(20,176)" font-size="12" font-weight="600">
+        <rect width="240" height="38" rx="6" fill="#0e1116" stroke="#2a3140"/>
+        <text x="14" y="24" fill="#f5f5f5">Profile wizard</text>
+        <text x="14" y="22" font-size="10" font-weight="500" fill="#9be8a0" dy="14">Phase 2 · author kind=user profiles</text>
+      </g>
+      <g transform="translate(20,228)" font-size="12" font-weight="600">
+        <rect width="240" height="38" rx="6" fill="#0e1116" stroke="#2a3140"/>
+        <text x="14" y="24" fill="#f5f5f5">Export rehearsal</text>
+        <text x="14" y="22" font-size="10" font-weight="500" fill="#ffcf7c" dy="14">Phase 3 · passive pre-flight</text>
+      </g>
+      <g transform="translate(20,280)" font-size="12" font-weight="600">
+        <rect width="240" height="38" rx="6" fill="#0e1116" stroke="#2a3140"/>
+        <text x="14" y="24" fill="#f5f5f5">History strip</text>
+        <text x="14" y="22" font-size="10" font-weight="500" fill="#8c93a0" dy="14">undo · saved snapshots</text>
+      </g>
+      <text x="140" y="362" font-size="11" font-weight="700" fill="#5b6573" text-anchor="middle" letter-spacing="2">WebSocket (JSON)</text>
+    </g>
+    <!-- arrows lane 1 → lane 2 -->
+    <g stroke="#7cc4ff" stroke-width="2" fill="none">
+      <path d="M 320 220 L 380 220" marker-end="url(#ah)"/>
+      <path d="M 380 240 L 320 240" marker-end="url(#ah)"/>
+    </g>
+    <text x="350" y="208" font-family="Helvetica, Arial, sans-serif" font-size="10" font-weight="500" fill="#7cc4ff" text-anchor="middle">commands</text>
+    <text x="350" y="262" font-family="Helvetica, Arial, sans-serif" font-size="10" font-weight="500" fill="#7cc4ff" text-anchor="middle">events</text>
+    <!-- LANE 2: Python sidecar -->
+    <g transform="translate(390,100)">
+      <rect width="320" height="380" rx="12" fill="#1c2230" stroke="#2a3140"/>
+      <text x="20" y="32" font-size="13" font-weight="700" fill="#9be8a0" letter-spacing="2">PYTHON SIDECAR</text>
+      <text x="20" y="50" font-size="10" font-weight="500" fill="#5b6573">passive by default · FastAPI WS · 127.0.0.1:4317</text>
+      <g transform="translate(20,72)" font-size="12" font-weight="600">
+        <rect width="280" height="38" rx="6" fill="#0e1116" stroke="#2a3140"/>
+        <text x="14" y="24" fill="#f5f5f5">cockpit.ws.handlers</text>
+        <text x="14" y="22" font-size="10" font-weight="500" fill="#8c93a0" dy="14">19 commands · 9 events · ack-first</text>
+      </g>
+      <g transform="translate(20,124)" font-size="12" font-weight="600">
+        <rect width="280" height="38" rx="6" fill="#0e1116" stroke="#2a3140"/>
+        <text x="14" y="24" fill="#f5f5f5">cockpit.engine</text>
+        <text x="14" y="22" font-size="10" font-weight="500" fill="#8c93a0" dy="14">mutate(snapshot, profile, depth, seed)</text>
+      </g>
+      <g transform="translate(20,176)" font-size="12" font-weight="600">
+        <rect width="280" height="38" rx="6" fill="#0e1116" stroke="#2a3140"/>
+        <text x="14" y="24" fill="#f5f5f5">cockpit.profiles · history</text>
+        <text x="14" y="22" font-size="10" font-weight="500" fill="#8c93a0" dy="14">ProfileRegistry · HistoryStore</text>
+      </g>
+      <g transform="translate(20,228)" font-size="12" font-weight="600">
+        <rect width="280" height="38" rx="6" fill="#0e1116" stroke="#2a3140"/>
+        <text x="14" y="24" fill="#f5f5f5">cockpit.export</text>
+        <text x="14" y="22" font-size="10" font-weight="500" fill="#ffcf7c" dy="14">Phase 3 · pack + sign + write + verify</text>
+      </g>
+      <g transform="translate(20,280)" font-size="12" font-weight="600">
+        <rect width="280" height="38" rx="6" fill="#0e1116" stroke="#2a3140"/>
+        <text x="14" y="24" fill="#f5f5f5">cockpit.device</text>
+        <text x="14" y="22" font-size="10" font-weight="500" fill="#8c93a0" dy="14">MockDeviceAdapter · RealMidiAdapter (--arm)</text>
+      </g>
+    </g>
+    <!-- arrows lane 2 → lane 3 -->
+    <g stroke="#ff6a3d" stroke-width="2" fill="none">
+      <path d="M 710 295 L 780 295" marker-end="url(#ah2)"/>
+    </g>
+    <text x="745" y="284" font-family="Helvetica, Arial, sans-serif" font-size="10" font-weight="500" fill="#ff6a3d" text-anchor="middle">CC + sysex</text>
+    <text x="745" y="312" font-family="Helvetica, Arial, sans-serif" font-size="10" font-weight="500" fill="#ff6a3d" text-anchor="middle">(only when armed)</text>
+    <!-- LANE 3: Analog Rytm MK2 -->
+    <g transform="translate(790,100)">
+      <rect width="190" height="380" rx="12" fill="#0e1116" stroke="#2a3140"/>
+      <text x="20" y="32" font-size="13" font-weight="700" fill="#ff6a3d" letter-spacing="2">HARDWARE</text>
+      <text x="20" y="50" font-size="10" font-weight="500" fill="#5b6573">Elektron Analog Rytm MK2</text>
+      <!-- mini rytm illustration -->
+      <g transform="translate(15,80)" stroke="#2a3140">
+        <rect x="0" y="0" width="160" height="260" rx="10" fill="#13181f"/>
+        <text x="80" y="22" font-family="Helvetica, Arial, sans-serif" font-size="9" font-weight="700" fill="#ff6a3d" text-anchor="middle" letter-spacing="2">ANALOG RYTM</text>
+        <!-- 4 columns x 3 rows pad grid -->
+        <g fill="#1f2530" stroke="#2a3140">
+          <rect x="14"  y="44" width="28" height="28" rx="4"/>
+          <rect x="50"  y="44" width="28" height="28" rx="4"/>
+          <rect x="86"  y="44" width="28" height="28" rx="4"/>
+          <rect x="122" y="44" width="28" height="28" rx="4"/>
+          <rect x="14"  y="80" width="28" height="28" rx="4"/>
+          <rect x="50"  y="80" width="28" height="28" rx="4" fill="#ff6a3d" stroke="#ffaa6d"/>
+          <rect x="86"  y="80" width="28" height="28" rx="4"/>
+          <rect x="122" y="80" width="28" height="28" rx="4"/>
+          <rect x="14"  y="116" width="28" height="28" rx="4"/>
+          <rect x="50"  y="116" width="28" height="28" rx="4"/>
+          <rect x="86"  y="116" width="28" height="28" rx="4"/>
+          <rect x="122" y="116" width="28" height="28" rx="4"/>
+        </g>
+        <!-- knobs -->
+        <g fill="none" stroke="#3a4150">
+          <circle cx="26"  cy="170" r="10"/>  <circle cx="58"  cy="170" r="10"/>
+          <circle cx="90"  cy="170" r="10"/>  <circle cx="122" cy="170" r="10"/>
+          <circle cx="42"  cy="200" r="10"/>  <circle cx="74"  cy="200" r="10"/>
+          <circle cx="106" cy="200" r="10"/>  <circle cx="138" cy="200" r="10"/>
+        </g>
+        <text x="80" y="240" font-family="Helvetica, Arial, sans-serif" font-size="8" font-weight="500" fill="#5b6573" text-anchor="middle">USB MIDI</text>
+      </g>
+    </g>
+    <!-- arrows lane 2 → lane 4 (Phase 3 / Phase 4) -->
+    <g stroke="#ffcf7c" stroke-width="2" stroke-dasharray="4 4" fill="none">
+      <path d="M 710 270 Q 1020 270 1020 295 L 1080 295" marker-end="url(#ah2)"/>
+    </g>
+    <text x="1020" y="258" font-family="Helvetica, Arial, sans-serif" font-size="10" font-weight="500" fill="#ffcf7c" text-anchor="middle">.rymp · signed · CRC32</text>
+    <!-- LANE 4: Future hardware (Phase 4) -->
+    <g transform="translate(1000,100)">
+      <rect width="240" height="380" rx="12" fill="#0e1116" stroke="#262d3a" stroke-dasharray="3 3"/>
+      <text x="20" y="32" font-size="13" font-weight="700" fill="#5b6573" letter-spacing="2">PHASE 4 · HARDWARE</text>
+      <text x="20" y="50" font-size="10" font-weight="500" fill="#3a4150">future · dedicated device</text>
+      <g transform="translate(20,72)" font-size="12" font-weight="600">
+        <rect width="200" height="38" rx="6" fill="#13181f" stroke="#1f2530"/>
+        <text x="14" y="24" fill="#6b7280">embedded loader (C/Rust)</text>
+      </g>
+      <g transform="translate(20,124)" font-size="12" font-weight="600">
+        <rect width="200" height="38" rx="6" fill="#13181f" stroke="#1f2530"/>
+        <text x="14" y="24" fill="#6b7280">embedded mutate()</text>
+        <text x="14" y="22" font-size="10" font-weight="500" fill="#3a4150" dy="14">byte-identical to Python</text>
+      </g>
+      <g transform="translate(20,176)" font-size="12" font-weight="600">
+        <rect width="200" height="38" rx="6" fill="#13181f" stroke="#1f2530"/>
+        <text x="14" y="24" fill="#6b7280">one push-button = new kit</text>
+      </g>
+      <text x="120" y="320" font-size="11" font-weight="700" fill="#3a4150" text-anchor="middle" letter-spacing="2">NO LAPTOP REQUIRED</text>
+    </g>
+  </g>
+</svg>

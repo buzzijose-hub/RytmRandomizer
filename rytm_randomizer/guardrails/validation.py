@@ -38,7 +38,7 @@ from __future__ import annotations
 
 import dataclasses
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, ClassVar
 
 from ..data import PROFILES
 from ..observability.errors import BoundaryError
@@ -162,6 +162,8 @@ class ProfileRejectedError(BoundaryError):
     carries the specific reason and the offending field so a calling agent
     can surface a precise correction prompt.
     """
+
+    fingerprint: ClassVar[str] = "guardrail.profile.validation_failed"
 
 
 # ---------------------------------------------------------------------------

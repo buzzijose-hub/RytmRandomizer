@@ -32,6 +32,138 @@ You run these on **the same OS as the target installer**. See the
 
 ---
 
+## Cockpit / wizard desktop bundle
+
+Briefcase ships the **Python CLI sidecar only**. It does not include the
+React cockpit, the Profile Wizard, or any of the `desktop/` tree —
+those are a separate artifact lineage with their own build tool and
+their own per-OS output.
+
+The Cockpit GUI (and therefore the Phase 2 Profile Wizard layered on
+top of it) ships as a **Tauri 2 bundle**, built from `desktop/shell/`.
+That bundle is the only way an end user gets the wizard surface; the
+Briefcase `.msi` / `.pkg` / `.deb` / AppImage carry the passive CLI,
+armed runtime, and Python sidecar dependencies, but nothing from the
+React/Tauri GUI tree.
+
+### Local build
+
+```bash
+npm --prefix desktop/web ci
+npm --prefix desktop/web run build
+cd desktop/shell
+cargo install tauri-cli --version "^2"
+cargo tauri build
+```
+
+The `just desktop-bundle` recipe wraps the same steps for local builds
+and CI parity. The recipe and the manual block produce identical
+output.
+
+The first `cargo tauri build` on a cold Rust cache is multi-minute;
+subsequent builds finish in seconds because `desktop/shell/target/`
+is cached.
+
+### Per-OS artifacts
+
+Tauri writes per-OS installers under
+`desktop/shell/target/release/bundle/`:
+
+| OS | Artifact path under `bundle/` |
+|---|---|
+| Windows | `msi/RytmRandomizerCockpit_<version>_x64_en-US.msi` (plus a `nsis/` `.exe` if NSIS is configured) |
+| macOS | `dmg/RytmRandomizerCockpit_<version>_x64.dmg` and `macos/RytmRandomizerCockpit.app` |
+| Linux | `deb/`, `rpm/`, and `appimage/` subdirectories |
+
+These are GUI installers (the operator double-clicks the file), unlike
+the CLI-oriented Briefcase artifacts. They embed the web frontend from
+`desktop/web/dist/` and they expect the Python sidecar's
+`python -m rytm_randomizer.cockpit` entry point to be reachable on PATH
+at launch time - typically because the operator has also installed the
+Briefcase artifact, or has an editable `pip install -e ".[cockpit]"`
+or `pip install -e ".[dev]"` checkout active.
+
+### Runtime supervision
+
+The Tauri bundle is a process supervisor. When the operator launches
+the cockpit binary, the Rust shell in `desktop/shell/src/main.rs`:
+
+1. **Allocates a per-launch token file path** under the user's data dir
+   (e.g. `%APPDATA%\rytm-randomizer\cockpit-ws-token` on Windows,
+   `~/Library/Application Support/rytm-randomizer/cockpit-ws-token` on
+   macOS, `~/.local/share/rytm-randomizer/cockpit-ws-token` on Linux).
+   This path is owned by the user-private app data dir; the shell creates
+   the parent directory with platform-appropriate permissions.
+2. **Sets `RYTM_RAND_WS_TOKEN_FILE` in the sidecar's environment** to
+   the path from step 1 BEFORE spawning the sidecar. This is REQUIRED
+   for the cockpit to work post CODE_REVIEW.md sweep (PR 1): the sidecar
+   mints a fresh token on every boot, writes it to the path the env var
+   names, and refuses every WS command until the first frame echoes the
+   token under `hmac.compare_digest`. A shell that fails to set the env
+   var falls back to the dev-default `~/.rytm-randomizer/cockpit-ws-token`,
+   which still works but is not the production-recommended path.
+3. Optionally sets `RYTM_RAND_WS_PORT` (default 4317) and
+   `WIZARD_SOURCE_ROOTS` (default `~/.rytm-randomizer/wizard-sources/`)
+   per the operator's preferences.
+4. Starts the embedded web frontend in the Tauri window.
+5. Spawns the Python sidecar (`python -m rytm_randomizer.cockpit`) as
+   a child process with the env from steps 2–3 applied.
+6. **Reads the token back from the same file** (the sidecar has now
+   written it) and hands it to the web frontend via Tauri's IPC so the
+   first WS frame the React client sends can be
+   `{"type": "hello", "token": "<urlsafe>"}`.
+7. Bridges the two over WebSocket on `127.0.0.1:<port>` (default 4317),
+   negotiating the subprotocol `rytm-rand-cockpit-v1` (defence-in-depth
+   on top of the token).
+
+When the window closes, the shell terminates the sidecar and removes
+the per-launch token file (the file mode is `0o600` on POSIX; on Windows
+the user-private app data dir already restricts access). The operator
+never has to manage the sidecar lifecycle directly — the bundle owns
+both halves.
+
+**Why the env var is mandatory for a release bundle:** the dev default
+prints the token to stdout for interactive copy-paste. A bundled
+release has no stdout the operator sees, so the only way for the Tauri
+shell to learn the token is to set the env var, spawn the sidecar, and
+read the file the sidecar writes to that path. A shell that skips this
+step ships a sidecar the cockpit window cannot connect to.
+
+**Phase 3 export CLI is shipped inside the same Tauri bundle.** The
+Phase 3 Model Export Pipeline (`cockpit-export-profile-model` plus the
+passive `cockpit-export-rehearsal-report`; see
+[`docs/superpowers/specs/2026-05-24-phase-3-export-pipeline-design.md`](superpowers/specs/2026-05-24-phase-3-export-pipeline-design.md)
+and [`docs/COCKPIT_QUICKSTART.md` §5c](COCKPIT_QUICKSTART.md#5c-exporting-a-profile-for-hardware))
+adds no new system dependency — HMAC + SHA-256 + CRC32 are stdlib and
+MessagePack is already a Phase 1 dependency. Both CLI entry points run
+through the same Python sidecar that powers the cockpit, so launching
+the export from inside the Tauri shell uses the bundled sidecar's
+`python -m rytm_randomizer.cli cockpit-export-profile-model ...` entry
+without spawning a second interpreter. Operators who installed only the
+Briefcase CLI artifact (no GUI) get the same export entry on PATH; the
+bundle and the CLI artifact share the export pipeline byte-for-byte.
+
+### CI
+
+`.github/workflows/installers.yml` has a `desktop-bundle` matrix job
+that runs the four-step build on every release (per OS) and uploads
+the per-OS artifacts. The artifacts are attached to each GitHub
+Release alongside the Briefcase outputs, so an operator picks the file
+for their OS regardless of which lineage they want.
+
+Two CI path details are deliberate:
+
+- The Linux Briefcase job installs into a `.venv-briefcase` virtualenv
+  created by the runner's system `python3`. Briefcase Linux system
+  package builds compare their interpreter against the host `python3`;
+  using `actions/setup-python` on Linux exits before `briefcase create`.
+- The Tauri `beforeDevCommand` and `beforeBuildCommand` use
+  `npm --prefix web ...`. Tauri resolves those commands from
+  `desktop/`, so `../web` points at the repository root's missing
+  `web/package.json` instead of `desktop/web/package.json`.
+
+---
+
 ## Per-OS prerequisites
 
 ### Windows (`.msi`)
@@ -69,6 +201,7 @@ similar) and registers a CLI launcher; the user opens Terminal and runs
 |-------------|-----|-----|
 | Python 3.10+ | Briefcase itself | distro package manager |
 | **Docker** | Briefcase builds Linux artifacts inside `manylinux` containers for portability | `apt install docker.io` / equivalent, plus add your user to the `docker` group |
+| ALSA runtime (`libasound2t64` on Ubuntu 24.04+) | Briefcase's Linux system-package dependency check requires the runtime shared-library package on the host | `apt install libasound2t64` on current GitHub-hosted Ubuntu runners; older distros may still use `libasound2` |
 | `libfuse2` | required to **run** an AppImage on the build host (the AppImage filesystem is FUSE-based) | `apt install libfuse2` on Debian/Ubuntu (the package was split out of the default install in Ubuntu 22.04+) |
 | ALSA dev headers (`libasound2-dev`) | `python-rtmidi`'s C extension links against ALSA. Already declared in `pyproject.toml` `system_requires`, but the briefcase build container needs Docker to fetch them | n/a — handled by briefcase |
 | `appimagetool` | only required if building AppImages **outside** Docker | most users won't need this; let briefcase run the Docker path |
@@ -248,6 +381,17 @@ machine).
 - **macOS: "code object is not signed at all"** — Gatekeeper is rejecting
   the unsigned binary. Either fully provision Developer ID signing
   (see above) or run with `--no-sign` for a personal-use build.
+- **Linux: `Package 'libasound2' has no installation candidate`** —
+  Ubuntu 24.04 exposes the runtime as the concrete `libasound2t64`
+  provider. Install `libasound2t64` on current GitHub-hosted runners
+  and keep `pyproject.toml` `system_runtime_requires` aligned with
+  that concrete package name, because Briefcase validates the configured
+  dependency list before `briefcase create`.
+- **Linux CI uploads no artifact even though `dist/*.deb` exists** —
+  keep the `installers.yml` Linux artifact glob as a YAML block scalar
+  with one path per line. `actions/upload-artifact` treats a
+  space-separated `"dist/*.AppImage dist/*.deb"` string as one missing
+  path.
 - **Linux: "AppImage failed to mount"** — the build host is missing
   `libfuse2`. `sudo apt install libfuse2`.
 - **`briefcase create` fails with TOML error** — your `pyproject.toml`

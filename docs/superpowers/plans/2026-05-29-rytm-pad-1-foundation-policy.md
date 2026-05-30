@@ -1,5 +1,7 @@
 # Rytm Pad 1 Foundation Policy Implementation Plan
 
+> Status: in-flight (branch codex/rytm-snapshot-pad-compatibility-pr1)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Protect Pad 1 kick-foundation controls in the live snapshot shell while preserving small anchor-relative tuning movement.

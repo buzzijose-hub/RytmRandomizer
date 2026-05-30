@@ -11,15 +11,600 @@ pytestmark = pytest.mark.fast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
+
+
+def _operator_docs_text() -> str:
+    """Return the concatenated operator-facing docs (README + CLI_REFERENCE).
+
+    Historically the README carried the full CLI command appendix and every
+    ``test_readme_mentions_*`` assertion read straight from ``README.md``.
+    The product-facing README rewrite moved the deep command reference into
+    ``docs/CLI_REFERENCE.md`` to keep the landing page scannable; the
+    operator-facing invariant -- "every passive CLI command is documented
+    for an operator who reads our docs" -- is unchanged, it just spans two
+    files now. This helper reads BOTH and returns the joined text so the
+    existing assertions keep working without each having to know the
+    layout. New tests should call this helper too.
+    """
+
+    readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    cli_ref_path = PROJECT_ROOT / "docs" / "CLI_REFERENCE.md"
+    cli_ref = cli_ref_path.read_text(encoding="utf-8") if cli_ref_path.exists() else ""
+    return readme + "\n" + cli_ref
+
+
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
     "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
     "active-boundary-report | mock-runtime-active-bridge-report | "
     "anchor-profile-report | behavior-parity-report | rytm-12-pad-machine-matrix-report | "
+    "manual-feedback-packet-report "
+    "[--scenario full|installer|profile|mock|hardware|review] [--json] | "
     "rytm-snapshot-pad-compatibility-report | analog-rytm-midi-catalog-report | "
+    "rytm-snapshot-intelligence-report <syx-path> [--slot N|--list] | "
+    "rytm-snapshot-mutation-preview-report <syx-path> [--slot N] [--depth N] "
+    "[--events] [--limit N] | "
+    "rytm-style-snapshot-routing-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--json] | "
+    "rytm-style-mutation-intent-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--json] | "
+    "rytm-style-mutation-render-plan-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--json] | "
+    "rytm-style-mutation-mock-preview-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--events] [--limit N] [--json] | "
+    "rytm-style-kit-readiness-report <syx-path> <style-key> "
+    "[--discovery N] [--limit N] [--json] | "
+    "analog-four-style-snapshot-routing-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--json] | "
+    "analog-four-style-mutation-intent-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--json] | "
+    "analog-four-style-mutation-mock-preview-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--events] [--limit N] [--json] | "
+    "analog-four-kit-catalog-report <syx-path> [--limit N] [--json] | "
+    "analog-four-style-kit-readiness-report <syx-path> <style-key> "
+    "[--discovery N] [--limit N] [--json] | "
+    "dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> "
+    "<style-key> [--discovery N] [--limit N] [--json] | "
+    "dual-machine-style-kit-selection-report <style-key> --rytm <syx-path> "
+    "[--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--discovery N] [--limit N] [--json] | "
+    "dual-machine-style-selection-mock-preview-report <style-key> --rytm <syx-path> "
+    "[--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--discovery N] [--events] [--limit N] [--json] | "
+    "dual-machine-style-live-audition-report <style-key> [<style-key> ...] "
+    "--rytm <syx-path> [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--discovery N] [--events] [--limit N] [--json] | "
+    "dual-machine-style-performance-set-plan-report <style-key> [<style-key> ...] "
+    "--rytm <syx-path> [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
+    "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
+    "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
+    "dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> "
+    "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
+    "dual-machine-style-mutation-mock-preview-report <rytm-syx-path> <a4-syx-path> "
+    "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] "
+    "[--events] [--limit N] [--json] | "
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
+    "style-profile-report | style-crates-queue-journal-report [--json] | "
+    "style-crate-rehearsal-deck-report [--crate <key>] [--json] | "
+    "reference-style-blueprint-report "
+    "(--description <text>|--audio <path>|--library <dir>) [--json] | "
+    "list-style-profiles | inspect-style-profile <key> | "
+    "search-style-profiles <query> | style-target-report | inspect-style-target <key> | "
+    "style-performance-arc-report | list-style-performance-arcs | "
+    "inspect-style-performance-arc <key> | search-style-performance-arcs <query> | "
+    "style-performance-arc-set-plan-report <arc-key> --rytm <syx-path> "
+    "[--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-readiness-report [<arc-key> ...] --rytm <syx-path> "
+    "[--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--limit N] [--json] | "
+    "style-performance-arc-audition-packet-report [<arc-key> ...] --rytm <syx-path> "
+    "[--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-rehearsal-manifest-report [<arc-key> ...] --rytm <syx-path> "
+    "[--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-live-session-packet-report [<arc-key> ...] --rytm <syx-path> "
+    "[--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-live-render-bundle-report [<arc-key> ...] --rytm <syx-path> "
+    "[--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-live-cue-sheet-report [<arc-key> ...] [--rytm <syx-path>] "
+    "[--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-reference-match-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-live-runbook-report "
+    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-stage-routing-report "
+    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-stage-rehearsal-state-report "
+    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-live-set-cockpit-report "
+    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-live-show-export-report "
+    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-live-transition-timeline-report "
+    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-live-command-deck-report "
+    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-live-state-report "
+    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-live-readiness-report "
+    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--json] | "
+    "style-performance-arc-live-control-surface-report "
+    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--json] | "
+    "style-performance-arc-live-analyzer-handoff-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] [--json] | "
+    "style-performance-arc-live-analyzer-targets-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] [--json] | "
+    "style-performance-arc-live-gui-analyzer-readiness-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] [--json] | "
+    "style-performance-arc-live-gui-rehearsal-session-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--label <text>] [--json] | "
+    "style-performance-arc-live-gui-capture-queue-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--label <text>] [--capture-prefix <text>] [--json] | "
+    "style-performance-arc-live-gui-capture-review-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--json] | "
+    "style-performance-arc-live-gui-sidecar-session-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] [--json] | "
+    "style-performance-arc-live-gui-screen-contract-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] [--json] | "
+    "style-performance-arc-live-gui-render-tree-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--json] | "
+    "style-performance-arc-live-gui-analyzer-overlay-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] [--json] | "
+    "style-performance-arc-live-gui-analyzer-frame-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--json] | "
+    "style-performance-arc-live-gui-interaction-script-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] [--json] | "
+    "style-performance-arc-live-gui-action-reducer-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--json] | "
+    "style-performance-arc-live-gui-controller-state-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] [--json] | "
+    "style-performance-arc-live-gui-playback-transcript-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--json] | "
+    "style-performance-arc-live-gui-playback-validation-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] [--json] | "
+    "style-performance-arc-live-gui-test-harness-contract-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--json] | "
+    "style-performance-arc-live-gui-test-harness-readiness-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--readiness-label <text>] [--json] | "
+    "style-performance-arc-live-gui-implementation-bridge-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--readiness-label <text>] "
+    "[--bridge-label <text>] [--json] | "
+    "style-performance-arc-live-gui-desktop-blueprint-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--readiness-label <text>] "
+    "[--bridge-label <text>] [--blueprint-label <text>] "
+    "[--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--json] | "
+    "style-performance-arc-live-gui-desktop-app-plan-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--readiness-label <text>] "
+    "[--bridge-label <text>] [--blueprint-label <text>] "
+    "[--desktop-shell operator-dashboard|desktop-sidecar|test-harness] "
+    "[--app-plan-label <text>] "
+    "[--framework-target desktop-python|web-desktop|test-harness] [--json] | "
+    "style-performance-arc-live-gui-desktop-component-contract-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--readiness-label <text>] "
+    "[--bridge-label <text>] [--blueprint-label <text>] "
+    "[--desktop-shell operator-dashboard|desktop-sidecar|test-harness] "
+    "[--app-plan-label <text>] "
+    "[--framework-target desktop-python|web-desktop|test-harness] "
+    "[--component-contract-label <text>] [--selector-prefix <text>] [--json] | "
+    "style-performance-arc-live-gui-desktop-view-model-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--readiness-label <text>] "
+    "[--bridge-label <text>] [--blueprint-label <text>] "
+    "[--desktop-shell operator-dashboard|desktop-sidecar|test-harness] "
+    "[--app-plan-label <text>] "
+    "[--framework-target desktop-python|web-desktop|test-harness] "
+    "[--component-contract-label <text>] [--selector-prefix <text>] "
+    "[--view-model-label <text>] [--state-prefix <text>] [--json] | "
+    "style-performance-arc-live-gui-desktop-render-contract-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--readiness-label <text>] "
+    "[--bridge-label <text>] [--blueprint-label <text>] "
+    "[--desktop-shell operator-dashboard|desktop-sidecar|test-harness] "
+    "[--app-plan-label <text>] "
+    "[--framework-target desktop-python|web-desktop|test-harness] "
+    "[--component-contract-label <text>] [--selector-prefix <text>] "
+    "[--view-model-label <text>] [--state-prefix <text>] "
+    "[--render-contract-label <text>] [--json] | "
+    "style-performance-arc-live-gui-desktop-render-harness-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--readiness-label <text>] "
+    "[--bridge-label <text>] [--blueprint-label <text>] "
+    "[--desktop-shell operator-dashboard|desktop-sidecar|test-harness] "
+    "[--app-plan-label <text>] "
+    "[--framework-target desktop-python|web-desktop|test-harness] "
+    "[--component-contract-label <text>] [--selector-prefix <text>] "
+    "[--view-model-label <text>] [--state-prefix <text>] "
+    "[--render-contract-label <text>] "
+    "[--render-harness-label <text>] [--runner-label <text>] [--json] | "
+    "cockpit-send-plan-readiness-report (--plan-json <json>|--plan-file <path>) "
+    "[--label <text>] [--json] | "
+    "cockpit-send-plan-rehearsal-surface-report "
+    "(--plan-json <json>|--plan-file <path>|--readiness-json <json>|--readiness-file <path>) "
+    "[--label <text>] [--json] | "
+    "cockpit-export-profile-model --profile-id <id> --profiles-dir <path> "
+    "--output <file.rymp> [--key-hex <hex> --key-id <label>] "
+    "[--unsigned] [--overwrite] [--json] | "
+    "cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> "
+    "[--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json] | "
+    "manual-feedback-packet-report "
+    "[--scenario full|installer|profile|mock|hardware|review] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -199,6 +784,324 @@ def test_analog_rytm_midi_catalog_help_safety_matches_report_source():
 
     assert result.returncode == 0
     help_text = normalize_newlines(result.stdout)
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_rytm_snapshot_intelligence_report_help_exits_zero_and_matches_fixture():
+    result = run_cli("rytm-snapshot-intelligence-report", "--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_rytm_snapshot_intelligence_report_help_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_rytm_snapshot_intelligence_help_safety_matches_report_source():
+    from rytm_randomizer.reports.rytm_snapshot_intelligence import SAFETY_LINES
+
+    result = run_cli("rytm-snapshot-intelligence-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_rytm_snapshot_mutation_preview_report_help_exits_zero_and_matches_fixture():
+    result = run_cli("rytm-snapshot-mutation-preview-report", "--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_rytm_snapshot_mutation_preview_report_help_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_rytm_snapshot_mutation_preview_help_safety_matches_report_source():
+    from rytm_randomizer.reports.rytm_snapshot_mutation_preview import SAFETY_LINES
+
+    result = run_cli("rytm-snapshot-mutation-preview-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_rytm_style_snapshot_routing_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.rytm_style_snapshot_routing import SAFETY_LINES
+
+    result = run_cli("rytm-style-snapshot-routing-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: rytm-style-snapshot-routing-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_rytm_style_mutation_intent_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.rytm_style_mutation_intent import SAFETY_LINES
+
+    result = run_cli("rytm-style-mutation-intent-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: rytm-style-mutation-intent-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_rytm_style_mutation_render_plan_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.rytm_style_mutation_render_plan import SAFETY_LINES
+
+    result = run_cli("rytm-style-mutation-render-plan-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: rytm-style-mutation-render-plan-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_rytm_style_mutation_mock_preview_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.rytm_style_mutation_mock_preview import SAFETY_LINES
+
+    result = run_cli("rytm-style-mutation-mock-preview-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: rytm-style-mutation-mock-preview-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_analog_four_style_snapshot_routing_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.analog_four_style_snapshot_routing import SAFETY_LINES
+
+    result = run_cli("analog-four-style-snapshot-routing-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: analog-four-style-snapshot-routing-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_analog_four_style_mutation_intent_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.analog_four_style_mutation_intent import SAFETY_LINES
+
+    result = run_cli("analog-four-style-mutation-intent-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: analog-four-style-mutation-intent-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_analog_four_style_mutation_mock_preview_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.analog_four_style_mutation_mock_preview import SAFETY_LINES
+
+    result = run_cli("analog-four-style-mutation-mock-preview-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: analog-four-style-mutation-mock-preview-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_analog_four_kit_catalog_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.analog_four_kit_catalog import SAFETY_LINES
+
+    result = run_cli("analog-four-kit-catalog-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: analog-four-kit-catalog-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_rytm_style_kit_readiness_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.rytm_style_kit_readiness import SAFETY_LINES
+
+    result = run_cli("rytm-style-kit-readiness-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: rytm-style-kit-readiness-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_analog_four_style_kit_readiness_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.analog_four_style_kit_readiness import SAFETY_LINES
+
+    result = run_cli("analog-four-style-kit-readiness-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: analog-four-style-kit-readiness-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_kit_readiness_report_help_exits_zero_and_safety_matches_source():
+    from rytm_randomizer.reports.dual_machine_style_kit_readiness import SAFETY_LINES
+
+    result = run_cli("dual-machine-style-kit-readiness-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: dual-machine-style-kit-readiness-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_kit_selection_report_help_exits_zero_and_safety_matches_source():
+    from rytm_randomizer.reports.dual_machine_style_kit_selection import SAFETY_LINES
+
+    result = run_cli("dual-machine-style-kit-selection-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: dual-machine-style-kit-selection-report" in help_text
+    assert "--scope dual|rytm-only|analog-four-only|a4-only" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_selection_mock_preview_report_help_exits_zero_and_safety_matches_source():
+    from rytm_randomizer.reports.dual_machine_style_selection_mock_preview import (
+        SAFETY_LINES,
+    )
+
+    result = run_cli("dual-machine-style-selection-mock-preview-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert (
+        "RytmRandomizer passive CLI: dual-machine-style-selection-mock-preview-report" in help_text
+    )
+    assert "--rank N" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_live_audition_report_help_exits_zero_and_safety_matches_source():
+    from rytm_randomizer.reports.dual_machine_style_live_audition import SAFETY_LINES
+
+    result = run_cli("dual-machine-style-live-audition-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: dual-machine-style-live-audition-report" in help_text
+    assert "<style-key> [<style-key> ...]" in help_text
+    assert "--rank N" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_performance_set_plan_report_help_exits_zero_and_safety_matches_source():
+    from rytm_randomizer.reports.dual_machine_style_performance_set_plan import (
+        SAFETY_LINES,
+    )
+
+    result = run_cli("dual-machine-style-performance-set-plan-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: dual-machine-style-performance-set-plan-report" in help_text
+    assert "--total-minutes N" in help_text
+    assert "--discovery-start N" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_snapshot_routing_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.dual_machine_style_snapshot_routing import SAFETY_LINES
+
+    result = run_cli("dual-machine-style-snapshot-routing-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: dual-machine-style-snapshot-routing-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_mutation_intent_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.dual_machine_style_mutation_intent import SAFETY_LINES
+
+    result = run_cli("dual-machine-style-mutation-intent-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: dual-machine-style-mutation-intent-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_mutation_mock_preview_report_help_exits_zero_and_safety_matches_source():
+    from rytm_randomizer.reports.dual_machine_style_mutation_mock_preview import SAFETY_LINES
+
+    result = run_cli("dual-machine-style-mutation-mock-preview-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert (
+        "RytmRandomizer passive CLI: dual-machine-style-mutation-mock-preview-report" in help_text
+    )
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_style_profile_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.style_profiles import SAFETY_LINES
+
+    result = run_cli("style-profile-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: style-profile-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_style_crates_queue_journal_report_help_exits_zero_and_safety_matches_source():
+    from rytm_randomizer.reports.style_crates_queue_journal import SAFETY_LINES
+
+    result = run_cli("style-crates-queue-journal-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: style-crates-queue-journal-report" in help_text
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
     assert result.stderr == ""
@@ -471,25 +1374,1181 @@ def test_analog_rytm_midi_catalog_report_command_exits_zero_and_describes_covera
     assert result.stderr == ""
 
 
+def test_rytm_snapshot_intelligence_report_command_reads_syx_file(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"SUBPROC")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli("rytm-snapshot-intelligence-report", str(path))
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Rytm snapshot intelligence" in result.stdout
+    assert "Kit: SUBPROC" in result.stdout
+    assert "Pad 10:" in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_snapshot_intelligence_report_command_rejects_missing_file(tmp_path):
+    result = run_cli("rytm-snapshot-intelligence-report", str(tmp_path / "missing.syx"))
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert "SysEx file does not exist" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_rytm_snapshot_intelligence_report_command_reports_out_of_range_slot(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"SLOT0")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli("rytm-snapshot-intelligence-report", str(path), "--slot", "1")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert "Requested --slot 1" in result.stderr
+    assert "only 1 supported Analog Rytm kit snapshot" in result.stderr
+    assert "Slot 0: SLOT0" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_rytm_snapshot_intelligence_report_command_lists_supported_slots(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    first_payload = rytm_real_layout_kit_payload(name=b"FIRST")
+    second_payload = rytm_real_layout_kit_payload(name=b"SECOND")
+    path = tmp_path / "bank.syx"
+    path.write_bytes(
+        bytes([0xF0]) + first_payload + bytes([0xF7, 0xF0]) + second_payload + bytes([0xF7])
+    )
+
+    result = run_cli("rytm-snapshot-intelligence-report", str(path), "--list")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Rytm snapshot file catalog" in result.stdout
+    assert "Supported Rytm kit snapshots: 2" in result.stdout
+    assert "Slot 0: FIRST" in result.stdout
+    assert "Slot 1: SECOND" in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_snapshot_mutation_preview_report_command_reads_syx_file(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"PREVIEW")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli("rytm-snapshot-mutation-preview-report", str(path), "--depth", "2")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Rytm snapshot mutation preview" in result.stdout
+    assert "Kit: PREVIEW" in result.stdout
+    assert "Depth: 2" in result.stdout
+    assert "- Plan ready: False" in result.stdout
+    assert "- Mock messages: 0" in result.stdout
+    assert "candidate-only" in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_snapshot_mutation_preview_report_command_can_show_event_section(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"PREVIEW")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "rytm-snapshot-mutation-preview-report",
+        str(path),
+        "--events",
+        "--limit",
+        "3",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Rytm snapshot mutation preview" in result.stdout
+    assert "Event preview:" in result.stdout
+    assert "- No event rows available because the plan is not ready." in result.stdout
+    assert "candidate-only" in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_snapshot_mutation_preview_report_command_rejects_missing_file(tmp_path):
+    result = run_cli(
+        "rytm-snapshot-mutation-preview-report",
+        str(tmp_path / "missing.syx"),
+    )
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert "SysEx file does not exist" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_rytm_style_snapshot_routing_report_command_reads_syx_file(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"STYLE")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "rytm-style-snapshot-routing-report",
+        str(path),
+        "birmingham_pressure",
+        "--discovery",
+        "10",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Rytm style snapshot routing" in result.stdout
+    assert "Kit: STYLE" in result.stdout
+    assert "Style target: birmingham_pressure" in result.stdout
+    assert "Discovery band: reference" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert "- no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_style_snapshot_routing_report_command_can_emit_json(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"RYTMJSON")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "rytm-style-snapshot-routing-report",
+        str(path),
+        "birmingham_pressure",
+        "--discovery",
+        "95",
+        "--json",
+    )
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["kit_name"] == "RYTMJSON"
+    assert parsed["style_key"] == "birmingham_pressure"
+    assert parsed["discovery_amount"] == 95
+    assert parsed["discovery_band"] == "wild_discovery"
+    assert parsed["pads"][0]["pad"] == 1
+    assert result.stderr == ""
+
+
+def test_rytm_style_snapshot_routing_report_unknown_style_fails_safely(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"STYLE")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli("rytm-style-snapshot-routing-report", str(path), "ghost_style")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert "Unknown style target key: ghost_style" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_rytm_style_mutation_intent_report_command_reads_syx_file(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"INTENT")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "rytm-style-mutation-intent-report",
+        str(path),
+        "birmingham_pressure",
+        "--discovery",
+        "10",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Rytm style mutation intent" in result.stdout
+    assert "Kit: INTENT" in result.stdout
+    assert "Style target: birmingham_pressure" in result.stdout
+    assert "Discovery band: reference" in result.stdout
+    assert "Mutation depth: micro" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert "- no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_style_mutation_intent_report_command_can_emit_json(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"INTJSON")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "rytm-style-mutation-intent-report",
+        str(path),
+        "birmingham_pressure",
+        "--discovery",
+        "95",
+        "--json",
+    )
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["kit_name"] == "INTJSON"
+    assert parsed["style_key"] == "birmingham_pressure"
+    assert parsed["discovery_band"] == "wild_discovery"
+    assert parsed["mutation_depth"] == "wild"
+    assert "RytmRandomizer passive Rytm" not in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_style_mutation_render_plan_report_command_reads_syx_file(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"RENDER")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "rytm-style-mutation-render-plan-report",
+        str(path),
+        "birmingham_pressure",
+        "--discovery",
+        "75",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Rytm style mutation render plan" in result.stdout
+    assert "Kit: RENDER" in result.stdout
+    assert "Render ready: True" in result.stdout
+    assert "target" in result.stdout
+    assert "window" in result.stdout
+    assert "- no MIDI rendering" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert "- no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_style_mutation_render_plan_report_command_can_emit_json(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"RENJSON")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "rytm-style-mutation-render-plan-report",
+        str(path),
+        "birmingham_pressure",
+        "--discovery",
+        "95",
+        "--json",
+    )
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["kit_name"] == "RENJSON"
+    assert parsed["style_key"] == "birmingham_pressure"
+    assert parsed["mutation_depth"] == "wild"
+    assert parsed["render_ready"] is True
+    assert parsed["pads"][0]["render_events"][0]["target_value"] >= 0
+    assert result.stderr == ""
+
+
+def test_rytm_style_mutation_mock_preview_report_command_reads_syx_file(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"MOCKPREV")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "rytm-style-mutation-mock-preview-report",
+        str(path),
+        "jose_core_techno",
+        "--discovery",
+        "45",
+        "--events",
+        "--limit",
+        "1",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Rytm style mutation mock preview" in result.stdout
+    assert "Kit: MOCKPREV" in result.stdout
+    assert "Preview ready: True" in result.stdout
+    assert "CC" in result.stdout
+    assert "- mock-only preview" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert "- no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_style_mutation_mock_preview_report_command_can_emit_json(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"MOCKJS")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "rytm-style-mutation-mock-preview-report",
+        str(path),
+        "jose_core_techno",
+        "--json",
+    )
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["kit_name"] == "MOCKJS"
+    assert parsed["style_key"] == "jose_core_techno"
+    assert parsed["discovery_amount"] == 45
+    assert parsed["preview_ready"] is True
+    assert parsed["events"][0]["control"] >= 0
+    assert result.stderr == ""
+
+
+def test_analog_four_style_snapshot_routing_report_command_reads_syx_file(tmp_path):
+    payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4STYLE".ljust(16, b"\x00")
+    path = tmp_path / "a4.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "analog-four-style-snapshot-routing-report",
+        str(path),
+        "industrial_dark",
+        "--discovery",
+        "10",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Analog Four style snapshot routing" in result.stdout
+    assert "Kit: A4STYLE" in result.stdout
+    assert "Style target: industrial_dark" in result.stdout
+    assert "Discovery band: reference" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert "- no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_analog_four_style_snapshot_routing_report_command_can_emit_json(tmp_path):
+    a4_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4JSON".ljust(16, b"\x00")
+    path = tmp_path / "a4.syx"
+    path.write_bytes(bytes([0xF0]) + a4_payload + bytes([0xF7]))
+
+    result = run_cli(
+        "analog-four-style-snapshot-routing-report",
+        str(path),
+        "industrial_dark",
+        "--discovery",
+        "95",
+        "--json",
+    )
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["kit_name"] == "A4JSON"
+    assert parsed["style_key"] == "industrial_dark"
+    assert parsed["discovery_amount"] == 95
+    assert parsed["discovery_band"] == "wild_discovery"
+    assert parsed["tracks"][0]["track"] == 1
+    assert result.stderr == ""
+
+
+def test_analog_four_style_snapshot_routing_report_unknown_style_fails_safely(tmp_path):
+    payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4STYLE".ljust(16, b"\x00")
+    path = tmp_path / "a4.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli("analog-four-style-snapshot-routing-report", str(path), "ghost_style")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert "Unknown style target key: ghost_style" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_analog_four_style_mutation_intent_report_command_reads_syx_file(tmp_path):
+    payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4INTENT".ljust(16, b"\x00")
+    path = tmp_path / "a4.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "analog-four-style-mutation-intent-report",
+        str(path),
+        "birmingham_pressure",
+        "--discovery",
+        "75",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Analog Four style mutation intent" in result.stdout
+    assert "Kit: A4INTENT" in result.stdout
+    assert "Style target: birmingham_pressure" in result.stdout
+    assert "Mutation depth: strong" in result.stdout
+    assert "bias 94" in result.stdout
+    assert "direction higher" in result.stdout
+    assert "- no MIDI rendering" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_analog_four_style_mutation_intent_report_command_can_emit_json(tmp_path):
+    a4_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4JSON".ljust(16, b"\x00")
+    path = tmp_path / "a4.syx"
+    path.write_bytes(bytes([0xF0]) + a4_payload + bytes([0xF7]))
+
+    result = run_cli(
+        "analog-four-style-mutation-intent-report",
+        str(path),
+        "birmingham_pressure",
+        "--discovery",
+        "75",
+        "--json",
+    )
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["kit_name"] == "A4JSON"
+    assert parsed["style_key"] == "birmingham_pressure"
+    assert parsed["mutation_depth"] == "strong"
+    assert parsed["tracks"][0]["intent_rows"][0]["target_bias"] == 94
+    assert result.stderr == ""
+
+
+def test_analog_four_style_mutation_intent_report_unknown_style_fails_safely(tmp_path):
+    payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4INTENT".ljust(16, b"\x00")
+    path = tmp_path / "a4.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli("analog-four-style-mutation-intent-report", str(path), "ghost_style")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert "Unknown style target key: ghost_style" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_analog_four_style_mutation_mock_preview_report_command_reads_syx_file(tmp_path):
+    payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4MOCK".ljust(16, b"\x00")
+    path = tmp_path / "a4.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "analog-four-style-mutation-mock-preview-report",
+        str(path),
+        "jose_core_techno",
+        "--events",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Analog Four style mutation mock preview" in result.stdout
+    assert "Kit: A4MOCK" in result.stdout
+    assert "Style target: jose_core_techno" in result.stdout
+    assert "Preview ready: False" in result.stdout
+    assert "candidate-only" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_analog_four_style_mutation_mock_preview_report_command_can_emit_json(tmp_path):
+    a4_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4MJSON".ljust(16, b"\x00")
+    path = tmp_path / "a4.syx"
+    path.write_bytes(bytes([0xF0]) + a4_payload + bytes([0xF7]))
+
+    result = run_cli(
+        "analog-four-style-mutation-mock-preview-report",
+        str(path),
+        "jose_core_techno",
+        "--json",
+    )
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["kit_name"] == "A4MJSON"
+    assert parsed["style_key"] == "jose_core_techno"
+    assert parsed["preview_ready"] is False
+    assert parsed["mock_message_count"] == 0
+    assert "candidate-only" in parsed["readiness_reason"]
+    assert result.stderr == ""
+
+
+def test_analog_four_style_mutation_mock_preview_report_unknown_style_fails_safely(tmp_path):
+    payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4MOCK".ljust(16, b"\x00")
+    path = tmp_path / "a4.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli("analog-four-style-mutation-mock-preview-report", str(path), "ghost_style")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert "Unknown style target key: ghost_style" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_analog_four_kit_catalog_report_command_reads_syx_file(tmp_path):
+    payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4CAT".ljust(16, b"\x00")
+    path = tmp_path / "a4-catalog.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli("analog-four-kit-catalog-report", str(path))
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Analog Four kit catalog" in result.stdout
+    assert "Supported kits: 1" in result.stdout
+    assert "Candidate snapshots: 1" in result.stdout
+    assert "Mutation-ready kits: 0" in result.stdout
+    assert "Slot 0 | A4CAT | layout candidate | offsets candidate-only" in result.stdout
+    assert "- SysEx decode only" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert "- no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_analog_four_kit_catalog_report_command_can_emit_json(tmp_path):
+    first_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4ONE".ljust(16, b"\x00")
+    second_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4TWO".ljust(16, b"\x00")
+    path = tmp_path / "a4-catalog.syx"
+    path.write_bytes(
+        bytes([0xF0])
+        + first_payload
+        + bytes([0xF7])
+        + bytes([0xF0])
+        + second_payload
+        + bytes([0xF7])
+    )
+
+    result = run_cli("analog-four-kit-catalog-report", str(path), "--limit", "1", "--json")
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["supported_kit_count"] == 2
+    assert parsed["shown_count"] == 1
+    assert parsed["truncated_count"] == 1
+    assert parsed["entries"][0]["kit_name"] == "A4ONE"
+    assert parsed["entries"][0]["snapshot_layout"] == "candidate"
+    assert result.stderr == ""
+
+
+def test_analog_four_style_kit_readiness_report_command_reads_syx_file(tmp_path):
+    payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4READY".ljust(16, b"\x00")
+    path = tmp_path / "a4-readiness.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli("analog-four-style-kit-readiness-report", str(path), "jose_core_techno")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Analog Four style kit readiness" in result.stdout
+    assert "Style target: jose_core_techno" in result.stdout
+    assert "Supported kits: 1" in result.stdout
+    assert "Preview-ready kits: 0" in result.stdout
+    assert "Blocked kits: 1" in result.stdout
+    assert "Slot 0 | A4READY | layout candidate | preview_ready False" in result.stdout
+    assert "- style/mock preview only" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert "- no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_analog_four_style_kit_readiness_report_command_can_emit_json(tmp_path):
+    first_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4ONE".ljust(16, b"\x00")
+    second_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4TWO".ljust(16, b"\x00")
+    path = tmp_path / "a4-readiness.syx"
+    path.write_bytes(
+        bytes([0xF0])
+        + first_payload
+        + bytes([0xF7])
+        + bytes([0xF0])
+        + second_payload
+        + bytes([0xF7])
+    )
+
+    result = run_cli(
+        "analog-four-style-kit-readiness-report",
+        str(path),
+        "jose_core_techno",
+        "--limit",
+        "1",
+        "--json",
+    )
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["style_key"] == "jose_core_techno"
+    assert parsed["kit_count"] == 2
+    assert parsed["shown_count"] == 1
+    assert parsed["truncated_count"] == 1
+    assert parsed["entries"][0]["kit_name"] == "A4ONE"
+    assert parsed["entries"][0]["preview_ready"] is False
+    assert result.stderr == ""
+
+
+def test_rytm_style_kit_readiness_report_command_reads_syx_file(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    path = tmp_path / "rytm-readiness.syx"
+    path.write_bytes(
+        bytes([0xF0]) + rytm_real_layout_kit_payload(name=b"RYTMREADY") + bytes([0xF7])
+    )
+
+    result = run_cli("rytm-style-kit-readiness-report", str(path), "jose_core_techno")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Rytm style kit readiness" in result.stdout
+    assert "Style target: jose_core_techno" in result.stdout
+    assert "Supported kits: 1" in result.stdout
+    assert "Preview-ready kits: 1" in result.stdout
+    assert "Blocked kits: 0" in result.stdout
+    assert "Slot 0 | RYTMREADY | preview_ready True" in result.stdout
+    assert "- style/mock preview only" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert "- no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_style_kit_readiness_report_command_can_emit_json(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    first_payload = rytm_real_layout_kit_payload(name=b"RYTMONE")
+    second_payload = rytm_real_layout_kit_payload(name=b"RYTMTWO")
+    path = tmp_path / "rytm-readiness.syx"
+    path.write_bytes(
+        bytes([0xF0])
+        + first_payload
+        + bytes([0xF7])
+        + bytes([0xF0])
+        + second_payload
+        + bytes([0xF7])
+    )
+
+    result = run_cli(
+        "rytm-style-kit-readiness-report",
+        str(path),
+        "jose_core_techno",
+        "--limit",
+        "1",
+        "--json",
+    )
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["style_key"] == "jose_core_techno"
+    assert parsed["kit_count"] == 2
+    assert parsed["shown_count"] == 1
+    assert parsed["truncated_count"] == 1
+    assert parsed["entries"][0]["kit_name"] == "RYTMONE"
+    assert parsed["entries"][0]["preview_ready"] is True
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_kit_readiness_report_command_reads_syx_files(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(
+        bytes([0xF0]) + rytm_real_layout_kit_payload(name=b"PAIRRYTM") + bytes([0xF7])
+    )
+    a4_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"PAIRA4".ljust(16, b"\x00")
+    a4_path = tmp_path / "a4.syx"
+    a4_path.write_bytes(bytes([0xF0]) + a4_payload + bytes([0xF7]))
+
+    result = run_cli(
+        "dual-machine-style-kit-readiness-report",
+        str(rytm_path),
+        str(a4_path),
+        "jose_core_techno",
+        "--limit",
+        "1",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive dual-machine style kit readiness" in result.stdout
+    assert "Style target: jose_core_techno" in result.stdout
+    assert "Rytm kits: 1" in result.stdout
+    assert "Analog Four kits: 1" in result.stdout
+    assert "Pairings: 1" in result.stdout
+    assert "Rytm slot 0 PAIRRYTM + A4 slot 0 PAIRA4" in result.stdout
+    assert "readiness partial" in result.stdout
+    assert "- rig-level kit-bank readiness only" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert "- no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_kit_readiness_report_command_can_emit_json(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(
+        bytes([0xF0]) + rytm_real_layout_kit_payload(name=b"PAIRJSON") + bytes([0xF7])
+    )
+    a4_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4PAIR".ljust(16, b"\x00")
+    a4_path = tmp_path / "a4.syx"
+    a4_path.write_bytes(bytes([0xF0]) + a4_payload + bytes([0xF7]))
+
+    result = run_cli(
+        "dual-machine-style-kit-readiness-report",
+        str(rytm_path),
+        str(a4_path),
+        "jose_core_techno",
+        "--json",
+    )
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["pairing_count"] == 1
+    assert parsed["entries"][0]["rig_readiness"] == "partial"
+    assert parsed["entries"][0]["rytm"]["kit_name"] == "PAIRJSON"
+    assert parsed["entries"][0]["analog_four"]["kit_name"] == "A4PAIR"
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_snapshot_routing_report_command_reads_syx_files(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(
+        bytes([0xF0]) + rytm_real_layout_kit_payload(name=b"DUORYTM") + bytes([0xF7])
+    )
+    a4_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"DUOA4".ljust(16, b"\x00")
+    a4_path = tmp_path / "a4.syx"
+    a4_path.write_bytes(bytes([0xF0]) + a4_payload + bytes([0xF7]))
+
+    result = run_cli(
+        "dual-machine-style-snapshot-routing-report",
+        str(rytm_path),
+        str(a4_path),
+        "industrial_dark",
+        "--discovery",
+        "10",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive dual-machine style snapshot routing" in result.stdout
+    assert "Style target: industrial_dark" in result.stdout
+    assert "- Kit: DUORYTM" in result.stdout
+    assert "- Kit: DUOA4" in result.stdout
+    assert "Discovery band: reference" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert "- no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_snapshot_routing_report_command_can_emit_json(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(
+        bytes([0xF0]) + rytm_real_layout_kit_payload(name=b"DUOJSON") + bytes([0xF7])
+    )
+    a4_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4JSON".ljust(16, b"\x00")
+    a4_path = tmp_path / "a4.syx"
+    a4_path.write_bytes(bytes([0xF0]) + a4_payload + bytes([0xF7]))
+
+    result = run_cli(
+        "dual-machine-style-snapshot-routing-report",
+        str(rytm_path),
+        str(a4_path),
+        "industrial_dark",
+        "--discovery",
+        "95",
+        "--json",
+    )
+
+    payload = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert payload["style_key"] == "industrial_dark"
+    assert payload["discovery_amount"] == 95
+    assert payload["discovery_band"] == "wild_discovery"
+    assert payload["machines"]["rytm"]["kit_name"] == "DUOJSON"
+    assert payload["machines"]["analog_four"]["kit_name"] == "A4JSON"
+    assert payload["safety"][0] == "passive/read-only"
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_snapshot_routing_report_unknown_style_fails_safely(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(
+        bytes([0xF0]) + rytm_real_layout_kit_payload(name=b"DUORYTM") + bytes([0xF7])
+    )
+    a4_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"DUOA4".ljust(16, b"\x00")
+    a4_path = tmp_path / "a4.syx"
+    a4_path.write_bytes(bytes([0xF0]) + a4_payload + bytes([0xF7]))
+
+    result = run_cli(
+        "dual-machine-style-snapshot-routing-report",
+        str(rytm_path),
+        str(a4_path),
+        "ghost_style",
+    )
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert "Unknown style target key: ghost_style" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
 def test_readme_mentions_rytm_machine_matrix_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "rytm-12-pad-machine-matrix-report" in text
     assert "12-pad machine matrix" in text
 
 
 def test_readme_mentions_rytm_snapshot_pad_compatibility_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "rytm-snapshot-pad-compatibility-report" in text
     assert "snapshot-pad compatibility" in text
 
 
 def test_readme_mentions_analog_rytm_midi_catalog_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "analog-rytm-midi-catalog-report" in text
     assert "Analog Rytm MIDI catalog" in text
+
+
+def test_readme_mentions_rytm_snapshot_intelligence_report_command():
+    text = _operator_docs_text()
+
+    assert "rytm-snapshot-intelligence-report" in text
+    assert "snapshot intelligence" in text
+
+
+def test_readme_mentions_rytm_snapshot_mutation_preview_report_command():
+    text = _operator_docs_text()
+
+    assert "rytm-snapshot-mutation-preview-report" in text
+    assert "snapshot mutation preview" in text
+    assert "--events" in text
+
+
+def test_readme_mentions_style_profile_commands():
+    text = _operator_docs_text()
+
+    assert "style-profile-report" in text
+    assert "style profiles" in text
+
+
+def test_readme_mentions_analog_four_style_snapshot_routing_report_command():
+    text = _operator_docs_text()
+
+    assert "analog-four-style-snapshot-routing-report" in text
+    assert "Analog Four style snapshot routing" in text
+
+
+def test_readme_mentions_dual_machine_style_snapshot_routing_report_command():
+    text = _operator_docs_text()
+
+    assert "dual-machine-style-snapshot-routing-report" in text
+    assert "dual-machine style snapshot routing" in text
+
+
+def test_readme_mentions_dual_machine_style_selection_mock_preview_report_command():
+    text = _operator_docs_text()
+
+    assert "dual-machine-style-selection-mock-preview-report" in text
+    assert "selection mock preview" in text
+
+
+def test_readme_mentions_dual_machine_style_live_audition_report_command():
+    text = _operator_docs_text()
+
+    assert "dual-machine-style-live-audition-report" in text
+    assert "live audition" in text
+
+
+def test_readme_mentions_dual_machine_style_performance_set_plan_report_command():
+    text = _operator_docs_text()
+
+    assert "dual-machine-style-performance-set-plan-report" in text
+    assert "performance set plan" in text
+
+
+def test_readme_mentions_style_performance_arc_live_cue_sheet_report_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-cue-sheet-report" in text
+    assert "live cue sheet" in text
+
+
+def test_readme_mentions_style_performance_arc_reference_match_report_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-reference-match-report" in text
+    assert "reference-match" in text
+
+
+def test_readme_mentions_style_performance_arc_live_runbook_report_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-runbook-report" in text
+    assert "live runbook" in text
+
+
+def test_readme_mentions_style_performance_arc_stage_routing_report_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-stage-routing-report" in text
+    assert "stage routing" in text
+    assert "route cards" in text
+
+
+def test_readme_mentions_style_performance_arc_stage_rehearsal_state_report_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-stage-rehearsal-state-report" in text
+    assert "stage rehearsal" in text
+    assert "go/rehearse/do-not-arm" in text
+
+
+def test_readme_mentions_style_performance_arc_live_show_export_report_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-show-export-report" in text
+    assert "live show export" in text
+    assert "show handoff" in text
+
+
+def test_readme_mentions_style_performance_arc_live_transition_timeline_report_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-transition-timeline-report" in text
+    assert "live transition timeline" in text
+    assert "transition cards" in text
+
+
+def test_readme_mentions_style_performance_arc_live_command_deck_report_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-command-deck-report" in text
+    assert "live command deck" in text
+    assert "command cards" in text
+
+
+def test_readme_mentions_style_performance_arc_live_state_report_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-state-report" in text
+    assert "live state packet" in text
+    assert "GUI-ready" in text
+
+
+def test_readme_mentions_style_performance_arc_live_control_surface_report_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-control-surface-report" in text
+    assert "control surface" in text
+    assert "GUI/audio-analyzer" in text
+
+
+def test_readme_mentions_style_performance_arc_live_analyzer_handoff_report_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-analyzer-handoff-report" in text
+    assert "analyzer handoff" in text
+    assert "FeatureReport meters" in text
+
+
+def test_readme_mentions_style_performance_arc_live_analyzer_targets_report_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-analyzer-targets-report" in text
+    assert "analyzer target" in text
+    assert "future live analyzer comparison" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_analyzer_readiness_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-analyzer-readiness-report" in text
+    assert "GUI/audio-analyzer readiness bundle" in text
+    assert "blocked active actions" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_rehearsal_session_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-rehearsal-session-report" in text
+    assert "GUI rehearsal session packet" in text
+    assert "listen-only rehearsal take" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_capture_queue_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-capture-queue-report" in text
+    assert "GUI/audio analyzer capture queue" in text
+    assert "analyzer job" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_capture_review_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-capture-review-report" in text
+    assert "GUI/audio analyzer capture review" in text
+    assert "go/repeat/hold" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_sidecar_session_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-sidecar-session-report" in text
+    assert "sidecar-ready GUI state" in text
+    assert "disabled active controls" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_screen_contract_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-screen-contract-report" in text
+    assert "GUI screen contract" in text
+    assert "disabled interaction controls" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_render_tree_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-render-tree-report" in text
+    assert "GUI render tree" in text
+    assert "deterministic root/region/component tree" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_analyzer_overlay_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-analyzer-overlay-report" in text
+    assert "GUI analyzer overlay" in text
+    assert "meter widgets" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_analyzer_frame_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-analyzer-frame-report" in text
+    assert "GUI analyzer frame" in text
+    assert "frame events" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_interaction_script_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-interaction-script-report" in text
+    assert "GUI interaction script" in text
+    assert "control bindings" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_action_reducer_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-action-reducer-report" in text
+    assert "GUI action reducer" in text
+    assert "control transition" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_controller_state_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-controller-state-report" in text
+    assert "GUI controller state" in text
+    assert "control-state" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_playback_transcript_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-playback-transcript-report" in text
+    assert "GUI playback transcript" in text
+    assert "playback transcript" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_playback_validation_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-playback-validation-report" in text
+    assert "GUI playback validation" in text
+    assert "validation matrix" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_test_harness_contract_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-test-harness-contract-report" in text
+    assert "GUI test-harness contract" in text
+    assert "Harness suites" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_test_harness_readiness_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-test-harness-readiness-report" in text
+    assert "GUI test-harness readiness" in text
+    assert "readiness gates" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_implementation_bridge_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-implementation-bridge-report" in text
+    assert "GUI implementation bridge" in text
+    assert "view-model packets" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_desktop_blueprint_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-desktop-blueprint-report" in text
+    assert "GUI desktop blueprint" in text
+    assert "desktop shell" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_desktop_app_plan_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-desktop-app-plan-report" in text
+    assert "GUI desktop app plan" in text
+    assert "app shell" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_desktop_component_contract_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-desktop-component-contract-report" in text
+    assert "GUI desktop component contract" in text
+    assert "component props" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_desktop_view_model_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-desktop-view-model-report" in text
+    assert "GUI desktop view model" in text
+    assert "state bindings" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_desktop_render_contract_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-desktop-render-contract-report" in text
+    assert "GUI desktop render contract" in text
+    assert "render surfaces" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_desktop_render_harness_command():
+    text = _operator_docs_text()
+
+    assert "style-performance-arc-live-gui-desktop-render-harness-report" in text
+    assert "GUI desktop render harness" in text
+    assert "surface harnesses" in text
 
 
 def test_dual_machine_target_report_prints_both_devices(capsys) -> None:
@@ -667,6 +2726,226 @@ def test_analog_rytm_midi_catalog_report_command_is_deterministic():
     assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
     assert first.stderr == ""
     assert second.stderr == ""
+
+
+def test_rytm_snapshot_intelligence_report_command_is_deterministic(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"DETERMIN")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+    first = run_cli("rytm-snapshot-intelligence-report", str(path))
+    second = run_cli("rytm-snapshot-intelligence-report", str(path))
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
+def test_rytm_snapshot_mutation_preview_report_command_is_deterministic(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"PREVDET")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+    first = run_cli("rytm-snapshot-mutation-preview-report", str(path), "--depth", "2")
+    second = run_cli("rytm-snapshot-mutation-preview-report", str(path), "--depth", "2")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
+def test_style_profile_report_command_exits_zero_and_describes_foundation():
+    result = run_cli("style-profile-report")
+    output = normalize_newlines(result.stdout)
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive style profile report" in output
+    assert "- Profiles: 10" in output
+    assert "Detroit Minimal" in output
+    assert "Birmingham Pressure" in output
+    assert "Jose Core Techno" in output
+    assert "Analyzer hooks:" in output
+    assert "- passive/read-only" in output
+    assert "- no MIDI sending" in output
+    assert result.stderr == ""
+
+
+def test_style_profile_report_command_is_deterministic():
+    first = run_cli("style-profile-report")
+    second = run_cli("style-profile-report")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
+def test_style_crates_queue_journal_report_command_exits_zero_and_describes_mvp():
+    result = run_cli("style-crates-queue-journal-report")
+    output = normalize_newlines(result.stdout)
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive style crates queue journal report" in output
+    assert "- Crates: 9" in output
+    assert "dark_hypnotic: Dark Hypnotic" in output
+    assert "industrial_broken: Industrial/Broken" in output
+    assert "Staged Queue:" in output
+    assert "Mutation Journal:" in output
+    assert "Future Danger Modes:" in output
+    assert "- no MIDI sending" in output
+    assert result.stderr == ""
+
+
+def test_style_crates_queue_journal_report_json_exits_zero_and_is_deterministic():
+    first = run_cli("style-crates-queue-journal-report", "--json")
+    second = run_cli("style-crates-queue-journal-report", "--json")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    payload = json.loads(first.stdout)
+    model = payload["style_crates_queue_journal"]
+    assert model["crate_count"] == 9
+    assert model["queue"][0]["crate_key"] == "dark_hypnotic"
+    assert model["journal"][0]["seed"] == "style-journal-warehouse-0001"
+    assert payload["safety"][0] == "passive/read-only"
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
+def test_list_style_profiles_exits_zero_and_lists_keys():
+    result = run_cli("list-style-profiles")
+    output = normalize_newlines(result.stdout)
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive style profile list" in output
+    assert "- birmingham_pressure: Birmingham Pressure" in output
+    assert "- warehouse_peak: Warehouse Peak" in output
+    assert result.stderr == ""
+
+
+def test_inspect_style_profile_known_key_exits_zero_and_describes_routing():
+    result = run_cli("inspect-style-profile", "birmingham_pressure")
+    output = normalize_newlines(result.stdout)
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive style profile inspection" in output
+    assert "Key: birmingham_pressure" in output
+    assert "Found: True" in output
+    assert "Scenes: s3b, s4a, s4b" in output
+    assert "Rytm focus:" in output
+    assert "Analog Four focus:" in output
+    assert result.stderr == ""
+
+
+def test_inspect_style_profile_unknown_key_fails_safely():
+    result = run_cli("inspect-style-profile", "DOES_NOT_EXIST")
+
+    assert result.returncode == 1
+    assert result.stdout == ""
+    assert "RytmRandomizer passive style profile inspection" in result.stderr
+    assert "Found: False" in result.stderr
+    assert "No MIDI was sent." in result.stderr
+
+
+def test_search_style_profiles_known_query_exits_zero():
+    result = run_cli("search-style-profiles", "hardgroove")
+    output = normalize_newlines(result.stdout)
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive style profile search" in output
+    assert "Query: hardgroove" in output
+    assert "Match count: 1" in output
+    assert "- hardgroove_percussive: Hardgroove Percussive" in output
+    assert result.stderr == ""
+
+
+def test_search_style_profiles_no_match_exits_zero():
+    result = run_cli("search-style-profiles", "NO_MATCH")
+    output = normalize_newlines(result.stdout)
+
+    assert result.returncode == 0
+    assert "Match count: 0" in output
+    assert "- no matches found. No MIDI was sent. No command executed." in output
+    assert result.stderr == ""
+
+
+def test_unknown_style_profile_report_arguments_fail_safely():
+    result = run_cli("style-profile-report", "--mutate")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert normalize_newlines(result.stderr) == USAGE
+
+
+def test_unknown_style_crates_queue_journal_arguments_fail_safely():
+    result = run_cli("style-crates-queue-journal-report", "--mutate")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert normalize_newlines(result.stderr) == USAGE
+
+
+def test_missing_inspect_style_profile_key_fails_safely():
+    result = run_cli("inspect-style-profile")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert normalize_newlines(result.stderr) == USAGE
+
+
+def test_missing_search_style_profile_query_fails_safely():
+    result = run_cli("search-style-profiles")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert normalize_newlines(result.stderr) == USAGE
+
+
+def test_style_target_report_command_exits_zero_and_is_passive():
+    result = run_cli("style-target-report")
+    output = normalize_newlines(result.stdout)
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive style target vector report" in output
+    assert "- Targets: 10" in output
+    assert "- no MIDI sending" in output
+    assert result.stderr == ""
+
+
+def test_inspect_style_target_known_key_exits_zero():
+    result = run_cli("inspect-style-target", "birmingham_pressure")
+    output = normalize_newlines(result.stdout)
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive style target vector inspection" in output
+    assert "Key: birmingham_pressure" in output
+    assert "drive_pressure: 95" in output
+    assert result.stderr == ""
+
+
+def test_inspect_style_target_unknown_key_fails_safely():
+    result = run_cli("inspect-style-target", "ghost_style")
+
+    assert result.returncode == 1
+    assert result.stdout == ""
+    assert "Style target not found" in result.stderr
+    assert "No MIDI was sent" in result.stderr
+
+
+def test_style_target_report_rejects_unknown_argument():
+    result = run_cli("style-target-report", "--mutate")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert normalize_newlines(result.stderr) == USAGE
 
 
 def test_top_level_help_exposes_no_active_execution_commands():

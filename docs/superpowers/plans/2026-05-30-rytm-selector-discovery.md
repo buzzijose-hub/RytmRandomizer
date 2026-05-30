@@ -1,5 +1,7 @@
 # Rytm Selector Discovery Implementation Plan
 
+> Status: in-flight (branch codex/rytm-snapshot-pad-compatibility-pr1)
+
 **Goal:** Let explicit `amount wide` randomizer contracts explore selector-style
 parameters such as BD Acoustic `Waveform` without making default live mode
 riskier.

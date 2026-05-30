@@ -1,5 +1,7 @@
 # Rytm Live Session Guardrails Implementation Plan
 
+> Status: in-flight (branch codex/rytm-snapshot-pad-compatibility-pr1)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add session-only live guardrails to the Analog Rytm snapshot shell so global mutations respect per-pad locks and depth lanes.

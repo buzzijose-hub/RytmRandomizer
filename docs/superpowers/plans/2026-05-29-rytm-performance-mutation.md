@@ -1,5 +1,7 @@
 # Rytm Performance Mutation Implementation Plan
 
+> Status: in-flight (branch codex/rytm-snapshot-pad-compatibility-pr1)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add an explicit performance mutation path that decodes a captured Analog Rytm kit SysEx file and renders either a seeded, depth-bounded live-safe current-machine mutation or an explicit flow-shift machine-switching mutation.

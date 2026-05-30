@@ -22,3 +22,13 @@ Historical note: This file's original rules ("split the monolithic script into
 modules", "keep `rytm_hybrid_randomizer_v134.py` as the reference") drove the
 Wave 1-4 modularization work that is now complete. It is kept here only as a
 trail marker. Do not use it to plan new work.
+
+## Open modularization targets (post-Wave-4)
+
+Three known structural-debt items remain that aren't full monolith splits but follow the same "reuse the canonical surface, don't duplicate" discipline. Tracked here so they don't get lost between PRs:
+
+- **`handlers.py` / `wizard_handlers.py` unification (IH4).** The cockpit WS dispatcher uses two `_HANDLERS` / `WIZARD_HANDLERS` dicts plus a string-prefix branch in `handlers.handle_command`. The CODE_REVIEW.md sweep scoped PR 8 to the CLI registry; the wizard-handler dispatch unification (a single registry pattern matching the `cli_registry` shape) is a follow-up. Target shape: one `WS_COMMANDS: Final[Mapping[str, Handler]]` registry, no string-prefix branch, both Phase 1 and Phase 2 commands registered through the same factory.
+- **Single canonical `atomic_write` surface (C3-class).** `cockpit/export/writer.py:atomic_write` is the package's only sanctioned "durably write bytes to disk" primitive. The previous fallback in `cli.py` was deleted (PR 3); `ProfileRegistry.save` now routes through it (PR 7). The `tests/architecture/test_abstraction_reuse.py` arch test will flag any second canonical surface for `atomic_write` / `pack_signed` / similar primitives. Adding a new primitive that does its own write-temp-fsync-rename dance is a Gate 17 violation.
+- **`pending_events` as a real session field, not `setattr` (H1-class).** Wire handlers that need to queue events between ack and drain MUST declare the queue as a field on the dataclass (`pending_events: list[dict] = field(default_factory=list)` on `CockpitSession`). Smuggling state via `setattr(session, "_pending_events", ...)` is forbidden by `tests/architecture/test_no_side_channel_session_attrs.py`.
+
+When in doubt, the post-2026-05-25 architecture is: one canonical primitive per concern, frozen dataclasses everywhere on the wire boundary, narrowed Literals at every `from_dict`, and a policy-object pattern (e.g. `WizardPathPolicy`) for any wire-bound validation. See [`CONTRIBUTING.md` § Patterns introduced by the CODE_REVIEW.md sweep](../CONTRIBUTING.md#patterns-introduced-by-the-code_reviewmd-sweep-2026-05-25) for the full pattern catalogue.

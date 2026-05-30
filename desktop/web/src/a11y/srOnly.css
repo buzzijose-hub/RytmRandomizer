@@ -1,0 +1,16 @@
+/**
+ * Visually hidden but screen-reader-accessible. Standard SR-only
+ * pattern: zero size, clipped, with !important on the layout props
+ * so per-context CSS can't accidentally re-show the element.
+ */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}

@@ -19,12 +19,18 @@ WS-S6 ``MutationPlanner`` Protocol by exposing ``plan(snapshot, depth)``.
 from __future__ import annotations
 
 import random
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Final
 
 from ...data.profiles import PROFILES
 from ...guardrails.validation import PAD_PROFILE_KEY
+from ...observability.metrics import get_metrics
 from .analog_rytm_snapshot_decoder import RytmKitSnapshot
+from .analog_rytm_snapshot_routing import (
+    RytmSnapshotMachineRoutingResult,
+    route_rytm_snapshot_machine_values,
+)
 
 # ---------------------------------------------------------------------------
 # Plan dataclasses
@@ -126,6 +132,58 @@ class AnalogRytmMutationPlanner:
                 or if ``depth`` is outside ``[0, MAX_DEPTH]``.
         """
 
+        self._validate_inputs(snapshot, depth)
+        return self._plan_for_profile_keys(snapshot, depth, PAD_PROFILE_KEY)
+
+    def plan_for_machine_values(
+        self,
+        snapshot: RytmKitSnapshot,
+        depth: int,
+        pad_machine_values: Mapping[int, int],
+    ) -> RytmMutationPlan:
+        """Build a plan from snapshot-derived ``pad -> machine_value`` facts."""
+
+        self._validate_inputs(snapshot, depth)
+
+        routing = route_rytm_snapshot_machine_values(pad_machine_values)
+        if not routing.ready:
+            self._record_blocked_snapshot_routes(routing)
+            return RytmMutationPlan(
+                snapshot=snapshot,
+                depth=depth,
+                events=(),
+                ready=False,
+                readiness_reason=routing.readiness_reason,
+            )
+
+        return self._plan_for_profile_keys(snapshot, depth, routing.profile_keys_by_pad)
+
+    def plan_for_snapshot_machine_facts(
+        self,
+        snapshot: RytmKitSnapshot,
+        depth: int,
+    ) -> RytmMutationPlan:
+        """Build a plan from machine facts already decoded on ``snapshot``."""
+
+        self._validate_inputs(snapshot, depth)
+        if not snapshot.machine_facts.promoted:
+            return RytmMutationPlan(
+                snapshot=snapshot,
+                depth=depth,
+                events=(),
+                ready=False,
+                readiness_reason=(
+                    "snapshot machine facts are candidate-only; promote offsets before mutation"
+                ),
+            )
+
+        machine_values: dict[int, int] = {}
+        for pad, fact in snapshot.machine_facts.facts_by_pad.items():
+            if fact.decoded_machine_value is not None:
+                machine_values[pad] = fact.decoded_machine_value
+        return self.plan_for_machine_values(snapshot, depth, machine_values)
+
+    def _validate_inputs(self, snapshot: RytmKitSnapshot, depth: int) -> None:
         if not isinstance(snapshot, RytmKitSnapshot):
             raise ValueError(
                 "AnalogRytmMutationPlanner.plan: snapshot must be a "
@@ -137,6 +195,12 @@ class AnalogRytmMutationPlanner:
                 f"got {depth}"
             )
 
+    def _plan_for_profile_keys(
+        self,
+        snapshot: RytmKitSnapshot,
+        depth: int,
+        pad_profile_keys: Mapping[int, str],
+    ) -> RytmMutationPlan:
         # Derive a deterministic integer seed from (seed, slot, depth) so
         # the same triple always produces the same plan. Stuff the three
         # values into a single int via bit-shifting to keep the seed
@@ -146,10 +210,13 @@ class AnalogRytmMutationPlanner:
 
         events: list[RytmPlanEvent] = []
         # Iterate pads in stable order so the plan is deterministic.
-        for pad in sorted(PAD_PROFILE_KEY):
-            profile_key = PAD_PROFILE_KEY[pad]
+        for pad in sorted(pad_profile_keys):
+            profile_key = pad_profile_keys[pad]
             profile = PROFILES.get(profile_key)
             if profile is None:
+                # Snapshot-machine routing emits only profile keys derived
+                # from PROFILES; the default PAD_PROFILE_KEY path can drift
+                # independently, so keep this guard close to plan creation.
                 # Should not happen with the canonical data, but guard so a
                 # data drift gives a meaningful error rather than a None
                 # dereference.
@@ -198,3 +265,11 @@ class AnalogRytmMutationPlanner:
             ready=True,
             readiness_reason="",
         )
+
+    def _record_blocked_snapshot_routes(self, routing: RytmSnapshotMachineRoutingResult) -> None:
+        metrics = get_metrics()
+        for route in routing.routes_by_pad.values():
+            if not route.ready:
+                # Snapshot routing blocks are pad-scoped guardrail refusals
+                # before rendering, so reuse the existing pad block counter.
+                metrics.record_guardrail_block(route.pad)

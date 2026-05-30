@@ -21,6 +21,9 @@ from ..data.analog_rytm_style_recipes import (
     render_analog_rytm_style_recipe,
 )
 from ..midi_io import Sender, send_cc
+from .analog_rytm_live_helpers import clamp_midi_value as _clamp_midi_value
+from .analog_rytm_live_helpers import live_no_sleep as _no_sleep
+from .analog_rytm_live_helpers import rendered_events_by_pad as _events_by_pad
 
 Rytm12PadRole: TypeAlias = Literal[
     "kick",
@@ -113,14 +116,6 @@ _MUTATION_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
 )
 
 
-def _no_sleep(_seconds: float) -> None:
-    return None
-
-
-def _clamp_midi_value(value: int) -> int:
-    return max(0, min(127, value))
-
-
 def classify_rytm_pad_role(machine_key: str) -> Rytm12PadRole:
     """Classify a Rytm machine key into a broad kit role."""
 
@@ -141,7 +136,7 @@ def classify_rytm_pad_role(machine_key: str) -> Rytm12PadRole:
     return "percussion"
 
 
-def _parameter_family(parameter: str) -> str:
+def _twelve_pad_parameter_family(parameter: str) -> str:
     name = parameter.casefold()
     if "tune" in name or "frequency" in name:
         return "pitch"
@@ -177,7 +172,7 @@ def _mutation_delta(
     mutation_name: str,
 ) -> int:
     role = classify_rytm_pad_role(event.machine_key)
-    family = _parameter_family(event.parameter)
+    family = _twelve_pad_parameter_family(event.parameter)
 
     if mutation_name == _MUTATION_ROLLING:
         if family == "decay":
@@ -329,14 +324,6 @@ def send_12_pad_events(
             send_cc(out, event.cc_msb, event.value, channel=event.channel, sleep=sleep)
 
 
-def _events_by_pad(
-    events: Sequence[AnalogRytmRenderedStyleEvent],
-) -> Mapping[int, tuple[AnalogRytmRenderedStyleEvent, ...]]:
-    return MappingProxyType(
-        {pad: tuple(event for event in events if event.pad == pad) for pad in range(1, 13)}
-    )
-
-
 def format_12_pad_preview(state: Rytm12PadState) -> str:
     """Format the staged 12-pad plan for operator review."""
 
@@ -365,7 +352,7 @@ def format_12_pad_preview(state: Rytm12PadState) -> str:
     return "\n".join(lines)
 
 
-def _help_text() -> str:
+def _twelve_pad_help_text() -> str:
     style_names = ", ".join(sorted(ANALOG_RYTM_STYLE_RECIPES))
     mutation_names = ", ".join(mutation.label for mutation in ANALOG_RYTM_12_PAD_MUTATIONS.values())
     return "\n".join(
@@ -503,7 +490,7 @@ class AnalogRytm12PadShell:
             self._write_line("Exiting.")
             return False
         if normalized in {"help", "?", "h"}:
-            self._write_line(_help_text())
+            self._write_line(_twelve_pad_help_text())
             return True
         if normalized in {"styles", "ls"}:
             self._write_line(

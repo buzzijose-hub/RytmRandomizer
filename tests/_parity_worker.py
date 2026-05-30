@@ -88,9 +88,33 @@ SHUTDOWN_TIMEOUT = 10.0
 
 CAPTURE_ENV_VAR = "PARITY_CAPTURE_MODE"
 
+# TODO(CODE_REVIEW.md TS3): Migrate ``PARITY_CAPTURE_MODE`` from an env-var
+# toggle to a ``@pytest.mark.slow`` marker on the parity-capture-only tests.
+#
+# Why this is deferred rather than swapped here: the env var is read inside
+# the warm subprocess worker (see ``_capture_mode_enabled()`` below and
+# every ``mode == "capture"`` branch in this file). A marker-only flag
+# lives test-side -- pytest reads it during collection -- and would need
+# the test wrapper to translate the marker into a per-request ``mode``
+# field on the worker JSON envelope. That is a tractable refactor but
+# touches the worker protocol surface, the index-writer code path
+# (``_INDEX.json`` is only written in capture mode), and every Wave-4
+# parity test's harness; doing it inline would conflict with the parity
+# bundle agents that own those files.
+#
+# The current env var is kept for now so a fixture regeneration run still
+# works via ``PARITY_CAPTURE_MODE=1 pytest -n0 tests/test_engines_pad1.py``
+# (the README documents this contract). When the marker swap lands,
+# CAPTURE_ENV_VAR / ``_capture_mode_enabled`` / every ``mode == "capture"``
+# branch / the ``-n0`` README guidance all change in one PR.
+
 
 def _capture_mode_enabled() -> bool:
-    """``True`` when ``PARITY_CAPTURE_MODE=1`` is set in the environment."""
+    """``True`` when ``PARITY_CAPTURE_MODE=1`` is set in the environment.
+
+    See the ``TODO(CODE_REVIEW.md TS3)`` block above for the deferred
+    migration to a ``@pytest.mark.slow`` marker.
+    """
 
     return os.environ.get(CAPTURE_ENV_VAR, "").strip() not in ("", "0", "false", "False")
 

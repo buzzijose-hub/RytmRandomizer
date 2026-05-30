@@ -8,7 +8,11 @@ version = "1.34.0"
 description = "A MIDI randomizer/mutator for the Elektron Analog Rytm MK2."
 readme = "README.md"
 requires-python = ">=3.9"
-license = "Apache-2.0"
+# PolyForm Noncommercial 1.0.0 — free for personal / non-commercial use.
+# Commercial use (paid product, hosted service, OEM bundle, etc.) requires
+# a separate commercial license; see LICENSE for the full terms.
+license = "PolyForm-Noncommercial-1.0.0"
+license-files = ["LICENSE"]
 dependencies = [
     # Elektron-critical pins. mido encodes the wire-format MIDI messages
     # the Analog Rytm MK2 receives over the cable; python-rtmidi drives the
@@ -32,12 +36,47 @@ dev = [
     "pytest-timeout>=2,<3",
     "pytest-sugar>=1,<2",
     "pytest-xdist>=3,<4",
+    # WS-G/WS-E cockpit tests exercise ProfileModel export plus the
+    # FastAPI/Uvicorn WebSocket sidecar and the Profile Wizard analyzer;
+    # mirrored from the [cockpit] and [style] extras below so CI's
+    # ``pip install -e .[dev]`` picks them up without chaining extras.
+    "msgpack>=1.0.0,<2",
+    "fastapi>=0.110.0,<0.136.3",
+    "httpx>=0.27.0,<1",
+    "uvicorn[standard]>=0.27.0",
+    "websockets>=12.0",
+    "librosa>=0.11,<2",
 ]
 # WS-V style analysis: audio feature extraction (Layer 1 of the four-layer
 # guardrails system). Only pulled in by users running real audio analyses;
 # the description-only path in style_analysis/ requires nothing extra.
 # librosa never touches MIDI, so its version is not Elektron-critical.
 style = [
+    "librosa>=0.11,<2",
+]
+# WS-G cockpit export pipeline (Phase 3 of the cockpit/profile-model
+# design): MessagePack-encoded ProfileModel blobs for the embedded
+# hardware runtime. msgpack is a small, pure-Python-compatible
+# serializer with implementations in C, Rust, and JavaScript — picked
+# precisely so the Phase 4 firmware can read the same wire format the
+# Python pipeline emits. It never touches MIDI, so its version is not
+# Elektron-critical. Pinned with a >= floor; the wire format is stable
+# across minor versions.
+#
+# WS-E cockpit WebSocket server (Phase 1 sidecar): FastAPI exposes one
+# WebSocket endpoint at /ws; uvicorn[standard] hosts it under
+# ``python -m rytm_randomizer.cockpit``; ``websockets`` is the underlying
+# ASGI WS transport FastAPI/Starlette consume. The same sidecar also hosts
+# the Profile Wizard analyzer, so the cockpit runtime includes the style
+# audio stack. None of these reach the MIDI boundary, so the versions are
+# not Elektron-critical. Pinned with floors that match the reference
+# implementation and keep the JSON protocol drop-in compatible. The upper cap
+# excludes FastAPI 0.136.3, which pip-audit currently flags as MAL-2026-4750.
+cockpit = [
+    "msgpack>=1.0.0,<2",
+    "fastapi>=0.110.0,<0.136.3",
+    "uvicorn[standard]>=0.27.0",
+    "websockets>=12.0",
     "librosa>=0.11,<2",
 ]
 # Native end-user installer toolchain. Kept separate from `dev` so the test
@@ -130,7 +169,7 @@ extend-exclude = '''
 [tool.isort]
 profile = "black"
 line_length = 100
-skip = [".venv", ".worktrees", "Backups", "Exports", "LegacyScripts"]
+skip = [".venv", ".worktrees", "Backups", "Exports", "LegacyScripts", "venv"]
 
 [tool.ruff]
 line-length = 100
@@ -184,7 +223,19 @@ ignore = [
 "tests/**" = [
     "S101", "S105", "S110", "S311", "S603", "S607",
     "E402", "B007", "B011", "B017", "B904",
+    # SIM117 (nested `with` -> single multi-context `with`) — most test
+    # files prefer the explicit nested form for readability when the
+    # outer context is a TestClient + the inner is a websocket. The
+    # combined form is harder to debug when the inner block raises.
+    "SIM117",
 ]
+# Top-level conftest.py self-heals the local git pre-push hook on
+# the first pytest run in any worktree (see conftest.py docstring).
+# That involves two subprocess.run calls to the resolved git binary
+# with a static argv -- bandit's S603 ("subprocess call: check for
+# execution of untrusted input") is a false positive because there
+# is no untrusted input. Bandit cannot prove the argv is static.
+"conftest.py" = ["S603"]
 # rytm_randomizer/observability/errors.py: __all__ lists names that are
 # resolved via PEP 562 module-level __getattr__ (lazy re-export to avoid
 # import cycles). F822 does not understand PEP 562 lazy attributes.
@@ -234,8 +285,8 @@ project_name = "RytmRandomizer"
 bundle = "com.rytmrandomizer"
 version = "1.34.0"
 url = "https://github.com/misteredr/RytmRandomizer"
-license = "Apache-2.0"
-author = "RytmRandomizer contributors"
+license = "PolyForm-Noncommercial-1.0.0"
+author = "Jose Buzzi and Edward Rosado"
 author_email = "rytm-randomizer@example.com"
 
 [tool.briefcase.app.rytm-randomizer]
@@ -253,10 +304,18 @@ sources = ["rytm_randomizer"]
 console_app = true
 # Runtime deps -- briefcase resolves these from the same Python ecosystem
 # pip uses, so the wheels (including python-rtmidi's platform-specific
-# C-extension wheels) get bundled into the installer.
+# C-extension wheels) get bundled into the installer. The GUI itself ships
+# via Tauri, but the packaged Python runtime must still include the cockpit
+# sidecar/export/analyzer deps because the desktop shell launches
+# ``python -m rytm_randomizer.cockpit``.
 requires = [
     "mido==1.3.3",
     "python-rtmidi==1.5.8",
+    "msgpack>=1.0.0,<2",
+    "fastapi>=0.110.0,<0.136.3",
+    "uvicorn[standard]>=0.27.0",
+    "websockets>=12.0",
+    "librosa>=0.11,<2",
 ]
 # Placeholder icon. installer-assets/icon.svg is a text placeholder; the
 # release engineer must supply rendered PNGs (Windows .ico, macOS .icns,
@@ -279,12 +338,22 @@ min_os_version = "11.0"
 requires = [
     "mido==1.3.3",
     "python-rtmidi==1.5.8",
+    "msgpack>=1.0.0,<2",
+    "fastapi>=0.110.0,<0.136.3",
+    "uvicorn[standard]>=0.27.0",
+    "websockets>=12.0",
+    "librosa>=0.11,<2",
 ]
 
 [tool.briefcase.app.rytm-randomizer.linux]
 requires = [
     "mido==1.3.3",
     "python-rtmidi==1.5.8",
+    "msgpack>=1.0.0,<2",
+    "fastapi>=0.110.0,<0.136.3",
+    "uvicorn[standard]>=0.27.0",
+    "websockets>=12.0",
+    "librosa>=0.11,<2",
 ]
 # python-rtmidi builds its C extension against ALSA on Linux. Without the
 # ALSA dev headers in the build environment, the wheel build fails. Listing
@@ -294,9 +363,11 @@ system_requires = [
     "libasound2-dev",
 ]
 # Runtime deps -- ALSA's shared library, not the -dev headers, is what the
-# installed package needs to load python-rtmidi at runtime.
+# installed package needs to load python-rtmidi at runtime. Ubuntu 24.04
+# exposes this as the concrete libasound2t64 package; Briefcase checks the
+# configured package name before create/build.
 system_runtime_requires = [
-    "libasound2",
+    "libasound2t64",
 ]
 
 # AppImage-specific config. Briefcase officially discourages AppImages for
@@ -318,4 +389,9 @@ system_requires = [
 requires = [
     "mido==1.3.3",
     "python-rtmidi==1.5.8",
+    "msgpack>=1.0.0,<2",
+    "fastapi>=0.110.0,<0.136.3",
+    "uvicorn[standard]>=0.27.0",
+    "websockets>=12.0",
+    "librosa>=0.11,<2",
 ]

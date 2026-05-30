@@ -16,8 +16,12 @@ does not pull in MIDI libraries, bridge modules, or behavior evaluators.
 
 from __future__ import annotations
 
+import sys
+from collections.abc import Sequence
 from copy import deepcopy
+from typing import Any, Final
 
+from ..cli_registry import CliCommand
 from .formatter import passive_footer_lines, safety_section_lines
 from .rytm_machine_matrix import (  # noqa: F401
     build_rytm_machine_matrix_report,
@@ -1429,3 +1433,92 @@ def format_mock_runtime_active_bridge_report(report=None):
         ]
     )
     return lines
+
+
+# ---------------------------------------------------------------------------
+# CLI registry entries (WS-S7 / H7 scoped migration)
+#
+# These three commands are migrated from the inline ``if args == [...]``
+# ladder in ``rytm_randomizer/cli.py:main()`` to the ``cli_registry``
+# extension seam. The arch test
+# ``tests/architecture/test_cli_no_inline_arms.py`` grandfathers the
+# remaining inline arms and rejects any *new* additions, so all future
+# passive subcommands MUST register here (or in a per-report module like
+# ``rytm_machine_matrix.py``) instead of being cut into ``main()``.
+#
+# Each ``CliCommand`` follows the same shape as
+# ``RYTM_MACHINE_MATRIX_CLI_COMMAND``:
+#
+# * ``_parse_<command>_args`` rejects argv tails (these arms take no
+#   arguments), raising ``ValueError`` so the dispatcher renders
+#   ``USAGE`` and exits ``2`` — preserving the behavior asserted by
+#   ``test_unknown_<command>_arguments_fail_safely``.
+# * ``_handle_<command>`` writes the same lines the deleted inline arm
+#   wrote, returning ``0`` on success.
+# * ``register(...)`` is NOT called at module-import time here — the
+#   registration is wired through ``cli.py:_registered_command_exit_code``'s
+#   ``lazy_commands`` table, matching the existing pattern for every
+#   per-report module. That avoids importing the reports package eagerly
+#   from ``cli.py`` (which would defeat the lazy-import discipline this
+#   ``__init__`` already relies on).
+# ---------------------------------------------------------------------------
+
+
+def _parse_mock_mapper_report_args(argv: Sequence[str]) -> dict[str, Any]:
+    if argv:
+        raise ValueError("mock-mapper-report takes no arguments")
+    return {}
+
+
+def _handle_mock_mapper_report() -> int:
+    sys.stdout.write("\n".join(format_mock_mapper_report()))
+    sys.stdout.write("\n")
+    return 0
+
+
+MOCK_MAPPER_REPORT_CLI_COMMAND: Final[CliCommand] = CliCommand(
+    name="mock-mapper-report",
+    summary="Print the passive mock message mapper report.",
+    args_parser=_parse_mock_mapper_report_args,
+    handler=_handle_mock_mapper_report,
+)
+
+
+def _parse_runtime_plan_report_args(argv: Sequence[str]) -> dict[str, Any]:
+    if argv:
+        raise ValueError("runtime-plan-report takes no arguments")
+    return {}
+
+
+def _handle_runtime_plan_report() -> int:
+    sys.stdout.write("\n".join(format_runtime_plan_report()))
+    sys.stdout.write("\n")
+    return 0
+
+
+RUNTIME_PLAN_REPORT_CLI_COMMAND: Final[CliCommand] = CliCommand(
+    name="runtime-plan-report",
+    summary="Print the passive runtime plan report.",
+    args_parser=_parse_runtime_plan_report_args,
+    handler=_handle_runtime_plan_report,
+)
+
+
+def _parse_active_boundary_report_args(argv: Sequence[str]) -> dict[str, Any]:
+    if argv:
+        raise ValueError("active-boundary-report takes no arguments")
+    return {}
+
+
+def _handle_active_boundary_report() -> int:
+    sys.stdout.write("\n".join(format_active_boundary_report()))
+    sys.stdout.write("\n")
+    return 0
+
+
+ACTIVE_BOUNDARY_REPORT_CLI_COMMAND: Final[CliCommand] = CliCommand(
+    name="active-boundary-report",
+    summary="Print the passive active boundary report.",
+    args_parser=_parse_active_boundary_report_args,
+    handler=_handle_active_boundary_report,
+)

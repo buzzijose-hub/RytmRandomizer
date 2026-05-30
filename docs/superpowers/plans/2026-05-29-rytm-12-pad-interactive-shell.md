@@ -1,5 +1,7 @@
 # Analog Rytm 12-Pad Interactive Shell Implementation Plan
 
+> Status: in-flight (branch codex/rytm-snapshot-pad-compatibility-pr1)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add an all-12-pad interactive Analog Rytm shell with role-safe mutations, preview, send, undo, and reset.

@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final, Protocol
 
+from .message_values import coerce_int as _coerce_int
+
 SOURCE: Final[str] = "passive_rytm_cc_observation"
 UNKNOWN_POLICY: Final[str] = "unknown_controls_reported_only"
 TRACK_COUNT: Final[int] = 12
@@ -347,12 +349,6 @@ def _label_sort_key(label: RytmCcLabel) -> tuple[int, str, str, str]:
     if label.machine_key is None:
         return (0, label.section, "", label.parameter)
     return (1, label.machine_key, label.section, label.parameter)
-
-
-def _coerce_int(value: object) -> int:
-    if isinstance(value, int):
-        return value
-    return -1
 
 
 __all__ = [

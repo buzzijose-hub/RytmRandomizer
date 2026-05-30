@@ -1,5 +1,7 @@
 # Analog Four Soft Live Capture Implementation Plan
 
+> Status: in-flight (branch codex/rytm-snapshot-pad-compatibility-pr1)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build a passive Analog Four MKII soft live capture path that observes incoming CC messages for all four A4 tracks and reports the captured known state without opening output ports or sending MIDI.

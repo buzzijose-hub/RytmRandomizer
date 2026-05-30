@@ -7,6 +7,8 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Final, Protocol
 
+from .message_values import coerce_int as _coerce_int
+
 SOURCE: Final[str] = "passive_cc_observation"
 UNKNOWN_POLICY: Final[str] = "unknown_parameters_untouched"
 TRACK_COUNT: Final[int] = 4
@@ -168,12 +170,6 @@ def _ensure_four_tracks(
         by_track.get(track, A4ObservedTrackState(track=track))
         for track in range(1, TRACK_COUNT + 1)
     )
-
-
-def _coerce_int(value: object) -> int:
-    if isinstance(value, int):
-        return value
-    return -1
 
 
 __all__ = [

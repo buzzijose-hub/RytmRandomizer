@@ -25,6 +25,8 @@ Public surface:
   into a single newline-separated string.
 * ``passive_report_lines(header, body_lines)`` -- list-returning sibling of
   ``render_passive_report``.
+* ``powershell_literal_arg(value)`` -- render a replay-command argument for the
+  PowerShell-first operator console.
 
 Per Gate 12, every module-level constant is annotated ``Final``.
 """
@@ -50,6 +52,10 @@ PASSIVE_FOOTER_MEMORY_LINE: Final[str] = "In-memory only: True"
 PASSIVE_FOOTER: Final[tuple[str, str]] = (
     PASSIVE_FOOTER_SOURCE_TEMPLATE,
     PASSIVE_FOOTER_MEMORY_LINE,
+)
+_OPERATOR_CONSOLE_ENCODING: Final[str] = "cp1252"
+_POWERSHELL_BARE_ARG_CHARS: Final[frozenset[str]] = frozenset(
+    "abcdefghijklmnopqrstuvwxyz" "ABCDEFGHIJKLMNOPQRSTUVWXYZ" "0123456789" "-_./\\:+=,@%"
 )
 
 
@@ -95,6 +101,13 @@ def passive_footer_lines(source_module: str, *, include_memory_line: bool = True
     return lines
 
 
+def _operator_console_safe_text(text: str) -> str:
+    encoded = text.encode(_OPERATOR_CONSOLE_ENCODING, errors="replace").decode(
+        _OPERATOR_CONSOLE_ENCODING
+    )
+    return "".join(char if char == "\t" or char.isprintable() else "?" for char in encoded)
+
+
 def passive_report_lines(
     header: PassiveReportHeader,
     body_lines: Iterable[str],
@@ -105,15 +118,25 @@ def passive_report_lines(
     ``header.source_module`` is set) the standard 1-or-2-line passive footer.
     """
 
-    lines: list[str] = [header.title, *body_lines]
+    lines: list[str] = [_operator_console_safe_text(header.title)]
+    lines.extend(_operator_console_safe_text(line) for line in body_lines)
     if header.source_module is not None:
         lines.extend(
-            passive_footer_lines(
-                header.source_module,
+            _operator_console_safe_text(line)
+            for line in passive_footer_lines(
+                _operator_console_safe_text(header.source_module),
                 include_memory_line=header.include_memory_line,
             )
         )
     return lines
+
+
+def powershell_literal_arg(value: str) -> str:
+    """Return a PowerShell-safe literal command argument."""
+
+    if value and all(char in _POWERSHELL_BARE_ARG_CHARS for char in value):
+        return value
+    return "'" + value.replace("'", "''") + "'"
 
 
 def render_passive_report(
@@ -133,6 +156,7 @@ __all__ = [
     "SAFETY_SECTION_HEADER",
     "passive_footer_lines",
     "passive_report_lines",
+    "powershell_literal_arg",
     "render_passive_report",
     "safety_section_lines",
 ]

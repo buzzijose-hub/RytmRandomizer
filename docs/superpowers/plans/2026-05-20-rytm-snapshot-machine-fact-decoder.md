@@ -1,5 +1,7 @@
 # Rytm Snapshot Machine-Fact Decoder Implementation Plan
 
+> Status: in-flight (branch codex/rytm-snapshot-pad-compatibility-pr1)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Decode passive Rytm kit snapshots into per-pad machine facts so snapshot mode can explain, route, and eventually mutate the currently loaded kit instead of loading anchors first.

@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 import pytest
-from conftest import pack_elektron_7bit
 
+from conftest import pack_elektron_7bit
 from rytm_randomizer.data.analog_rytm_kit_layout import (
     RYTM_KIT_DUMP_ID,
     RYTM_KIT_RAW_SIZE,

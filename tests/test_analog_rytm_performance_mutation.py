@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 import pytest
-from conftest import rytm_real_layout_kit_payload
 
+from conftest import rytm_real_layout_kit_payload
 from rytm_randomizer.data.analog_rytm_style_recipes import AnalogRytmRenderedStyleEvent
 
 pytestmark = pytest.mark.fast

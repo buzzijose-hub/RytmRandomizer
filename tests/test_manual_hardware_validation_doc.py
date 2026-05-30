@@ -18,3 +18,23 @@ def test_manual_hardware_validation_documents_dual_machine_strategy_redo() -> No
     assert "python -m rytm_randomizer.cli dual-machine-target-report a4" in text
     assert "python -m rytm_randomizer.cli dual-machine-target-report both" in text
     assert "manual only" in text.lower()
+
+
+def test_manual_hardware_validation_documents_live_show_preflight() -> None:
+    text = (ROOT / "docs" / "MANUAL_HARDWARE_VALIDATION.md").read_text()
+
+    assert "## Live-Show Passive Preflight" in text
+    assert "style-performance-arc-stage-routing-report" in text
+    assert "style-performance-arc-stage-rehearsal-state-report" in text
+    assert "style-performance-arc-live-set-cockpit-report" in text
+    assert "style-performance-arc-live-show-export-report" in text
+    assert "style-performance-arc-live-command-deck-report" in text
+    assert "style-performance-arc-live-state-report" in text
+    assert "go`, `rehearse`, or `do-not-arm" in text
+    assert "Cockpit summary:" in text
+    assert "Show export summary:" in text
+    assert "Command deck summary:" in text
+    assert "Live state summary:" in text
+    assert "SCN -> GM -> S1A -> S3A -> S3B -> S4B -> S5 -> Z -> Q" in text
+    assert "no MIDI is sent" in text
+    assert "manual only" in text.lower()
