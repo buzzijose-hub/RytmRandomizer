@@ -350,6 +350,34 @@ staging macro. The remaining question is musical feel on different kits:
 whether this should stay specifically "pads 2-4 drum-core" or become the first
 of several named performance macros.
 
+## Follow-up Macro: Kit-Core Full-Kit Staging
+
+The next passive code slice adds `kit-core` as a broader all-12-pad staging
+macro. It is not a new outbound transport and it does not send on its own; it
+stages `randomize` so the operator can inspect `changes` before `send` or
+`go`.
+
+`kit-core` keeps the hardware-validated `drum-core` foundation:
+
+- `preset live`
+- LFO off
+- FX micro
+- Pad 1 locked as the kick anchor
+- pads 2-4 wide/full with Pad 2 looser and pads 3-4 grittier
+
+It then encodes Jose's pad 5-12 performance policy for captured-kit
+randomization:
+
+- pads 6-8 get wide/full source discovery, light filter movement, no LFO
+  movement, and AMP movement limited to overdrive, delay, and reverb.
+- pads 5, 9, 10, and 11 keep filter and LFO rows frozen, and their AMP rows are
+  also limited to overdrive, delay, and reverb.
+- the existing Pad 2/3 Dual VCO `Osc 2 Detune` live-CC guard remains active.
+
+This is ready for dry-run and code review. Hardware validation still needs an
+operator pass on a fresh Rytm KIT capture before treating `kit-core` as
+performance-proven.
+
 ## Hardware Lesson: Dual VCO Detune Guard
 
 Follow-up inspection on KIT 13 found that both Dual VCO pads showed `ERR` on

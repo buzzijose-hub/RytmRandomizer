@@ -42,6 +42,8 @@ SnapshotSessionDepth: TypeAlias = Literal["gentle", "normal", "strong", "wild"]
 SnapshotTunePolicy: TypeAlias = Literal["off", "micro", "normal", "wide"]
 SnapshotLane: TypeAlias = Literal["tune", "noise", "fx", "filter", "amp", "lfo"]
 SnapshotLanePolicy: TypeAlias = Literal["off", "micro", "normal", "wide"]
+SnapshotPadLanePolicies: TypeAlias = Mapping[int, Mapping[SnapshotLane, SnapshotLanePolicy]]
+SnapshotPadSectionFamilyAllowlists: TypeAlias = Mapping[int, Mapping[str, frozenset[str]]]
 SnapshotRandomizerRole: TypeAlias = Literal[
     "kick",
     "snare",
@@ -95,6 +97,7 @@ _CMD_FRESH: Final[str] = "fresh"
 _CMD_KIT: Final[str] = "kit"
 _CMD_RESNAPSHOT: Final[str] = "resnapshot"
 _CMD_DRUM_CORE: Final[str] = "drum-core"
+_CMD_KIT_CORE: Final[str] = "kit-core"
 _CMD_QUIT: Final[str] = "q"
 _CMD_HELP: Final[str] = "help"
 _CMD_S1A: Final[str] = "s1a"
@@ -176,6 +179,7 @@ _ZONE_LAYERING_HINT: Final[str] = (
     "zone commands layer on the current staged plan; "
     "use fresh first for anchor-only zone changes"
 )
+_AMP_FX_FAMILIES: Final[frozenset[str]] = frozenset({"drive", "delay", "reverb"})
 
 _MACHINE_PROFILE_BY_VALUE: Final[Mapping[int, RytmMachineProfile]] = MappingProxyType(
     {profile.machine_value: profile for profile in RYTM_MACHINE_PROFILES}
@@ -510,6 +514,8 @@ class SnapshotSessionGuardrails:
     live_pad_caps: Mapping[int, SnapshotSessionDepth]
     tune_policy: SnapshotTunePolicy
     lane_policies: Mapping[SnapshotLane, SnapshotLanePolicy]
+    pad_lane_policies: SnapshotPadLanePolicies
+    pad_section_family_allowlists: SnapshotPadSectionFamilyAllowlists
     randomizer_overrides: Mapping[int, SnapshotPadRandomizerContract]
 
 
@@ -524,6 +530,8 @@ def default_snapshot_session_guardrails() -> SnapshotSessionGuardrails:
         live_pad_caps=_LIVE_PAD_CAPS,
         tune_policy=_TUNE_POLICY_MICRO,
         lane_policies=_LIVE_LANE_POLICIES,
+        pad_lane_policies=MappingProxyType({}),
+        pad_section_family_allowlists=MappingProxyType({}),
         randomizer_overrides=MappingProxyType({}),
     )
 
@@ -536,6 +544,8 @@ def _snapshot_session_guardrails(
     locked_pads: frozenset[int] = frozenset(),
     tune_policy: SnapshotTunePolicy | None = None,
     lane_policies: Mapping[SnapshotLane, SnapshotLanePolicy] | None = None,
+    pad_lane_policies: SnapshotPadLanePolicies | None = None,
+    pad_section_family_allowlists: SnapshotPadSectionFamilyAllowlists | None = None,
     randomizer_overrides: Mapping[int, SnapshotPadRandomizerContract] | None = None,
 ) -> SnapshotSessionGuardrails:
     selected_tune_policy = tune_policy or _default_tune_policy_for_mode(mode)
@@ -550,6 +560,20 @@ def _snapshot_session_guardrails(
         live_pad_caps=_LIVE_PAD_CAPS,
         tune_policy=selected_tune_policy,
         lane_policies=MappingProxyType(selected_lane_policies_dict),
+        pad_lane_policies=MappingProxyType(
+            {
+                pad: MappingProxyType(dict(policies))
+                for pad, policies in (pad_lane_policies or {}).items()
+            }
+        ),
+        pad_section_family_allowlists=MappingProxyType(
+            {
+                pad: MappingProxyType(
+                    {section: frozenset(families) for section, families in allowlists.items()}
+                )
+                for pad, allowlists in (pad_section_family_allowlists or {}).items()
+            }
+        ),
         randomizer_overrides=MappingProxyType(dict(randomizer_overrides or {})),
     )
 
@@ -921,15 +945,38 @@ def _lane_for_event(event: AnalogRytmRenderedStyleEvent) -> SnapshotLane | None:
     return None
 
 
+def _lane_policy_for_event(
+    event: AnalogRytmRenderedStyleEvent,
+    guardrails: SnapshotSessionGuardrails,
+) -> SnapshotLanePolicy | None:
+    lane = _lane_for_event(event)
+    if lane is None:
+        return None
+    pad_lane_policy = guardrails.pad_lane_policies.get(event.pad, {})
+    return pad_lane_policy.get(lane, guardrails.lane_policies[lane])
+
+
+def _event_allowed_by_pad_section_family(
+    event: AnalogRytmRenderedStyleEvent,
+    guardrails: SnapshotSessionGuardrails,
+) -> bool:
+    section_allowlists = guardrails.pad_section_family_allowlists.get(event.pad)
+    if section_allowlists is None:
+        return True
+    allowed_families = section_allowlists.get(event.section)
+    if allowed_families is None:
+        return True
+    return _snapshot_parameter_family(event.parameter) in allowed_families
+
+
 def _lane_limited_session_depth(
     event: AnalogRytmRenderedStyleEvent,
     session_depth: SnapshotSessionDepth,
     guardrails: SnapshotSessionGuardrails,
 ) -> SnapshotSessionDepth | None:
-    lane = _lane_for_event(event)
-    if lane is None:
+    policy = _lane_policy_for_event(event, guardrails)
+    if policy is None:
         return session_depth
-    policy = guardrails.lane_policies[lane]
     if policy == _LANE_POLICY_OFF:
         return None
     return _min_session_depth(session_depth, _LANE_POLICY_SESSION_DEPTH[policy])
@@ -943,10 +990,12 @@ def _is_snapshot_shell_event_active(
         return False
     if _is_live_dual_vco_detune_guarded_event(event):
         return False
+    if not _event_allowed_by_pad_section_family(event, guardrails):
+        return False
     if guardrails.tune_policy == _TUNE_POLICY_OFF and _is_machine_source_tune_event(event):
         return False
-    lane = _lane_for_event(event)
-    if lane is not None and guardrails.lane_policies[lane] == _LANE_POLICY_OFF:
+    lane_policy = _lane_policy_for_event(event, guardrails)
+    if lane_policy == _LANE_POLICY_OFF:
         return False
     return not _is_pad_1_foundation_protected_event(event)
 
@@ -973,6 +1022,55 @@ def _replace_lane_policy(
         guardrails,
         lane_policies=MappingProxyType(lane_policies),
         tune_policy=tune_policy,
+    )
+
+
+def _replace_pad_lane_policy(
+    guardrails: SnapshotSessionGuardrails,
+    pad: int,
+    lane: SnapshotLane,
+    policy: SnapshotLanePolicy,
+) -> SnapshotSessionGuardrails:
+    pad_lane_policies = {
+        selected_pad: dict(policies)
+        for selected_pad, policies in guardrails.pad_lane_policies.items()
+    }
+    pad_lane_policies.setdefault(pad, {})[lane] = policy
+    return replace(
+        guardrails,
+        pad_lane_policies=MappingProxyType(
+            {
+                selected_pad: MappingProxyType(policies)
+                for selected_pad, policies in pad_lane_policies.items()
+            }
+        ),
+    )
+
+
+def _replace_pad_section_family_allowlist(
+    guardrails: SnapshotSessionGuardrails,
+    pad: int,
+    section: str,
+    allowed_families: frozenset[str],
+) -> SnapshotSessionGuardrails:
+    allowlists = {
+        selected_pad: dict(section_allowlists)
+        for selected_pad, section_allowlists in guardrails.pad_section_family_allowlists.items()
+    }
+    allowlists.setdefault(pad, {})[section] = allowed_families
+    return replace(
+        guardrails,
+        pad_section_family_allowlists=MappingProxyType(
+            {
+                selected_pad: MappingProxyType(
+                    {
+                        selected_section: frozenset(families)
+                        for selected_section, families in section_allowlists.items()
+                    }
+                )
+                for selected_pad, section_allowlists in allowlists.items()
+            }
+        ),
     )
 
 
@@ -1434,6 +1532,9 @@ def _mutate_snapshot_event(
     if _is_live_dual_vco_detune_guarded_event(current_event):
         return anchor_event
 
+    if not _event_allowed_by_pad_section_family(current_event, guardrails):
+        return anchor_event
+
     if not _event_matches_zone(current_event, command.zone):
         return current_event
 
@@ -1507,8 +1608,7 @@ def _mutate_snapshot_event(
             anchor_event.value_max,
         )
     else:
-        event_lane = _lane_for_event(current_event)
-        lane_policy = guardrails.lane_policies[event_lane] if event_lane is not None else None
+        lane_policy = _lane_policy_for_event(current_event, guardrails)
         if (
             randomizer_contract is not None
             and randomizer_contract.amount == _RANDOMIZER_AMOUNT_WIDE
@@ -1685,6 +1785,30 @@ def _format_lane_policies(policies: Mapping[SnapshotLane, SnapshotLanePolicy]) -
     return ", ".join(f"{lane}={policies[lane]}" for lane in _LANES)
 
 
+def _format_pad_lane_policies(policies: SnapshotPadLanePolicies) -> str:
+    if not policies:
+        return "none"
+    return "; ".join(
+        f"{pad}:{','.join(f'{lane}={pad_policies[lane]}' for lane in _LANES if lane in pad_policies)}"
+        for pad, pad_policies in sorted(policies.items())
+    )
+
+
+def _format_pad_section_family_allowlists(
+    allowlists: SnapshotPadSectionFamilyAllowlists,
+) -> str:
+    if not allowlists:
+        return "none"
+    pad_lines: list[str] = []
+    for pad, section_allowlists in sorted(allowlists.items()):
+        sections = ",".join(
+            f"{section}={'/'.join(sorted(families))}"
+            for section, families in sorted(section_allowlists.items())
+        )
+        pad_lines.append(f"{pad}:{sections}")
+    return "; ".join(pad_lines)
+
+
 def _format_randomizer_contract(contract: SnapshotPadRandomizerContract) -> str:
     return f"{contract.role}/{contract.amount}/{contract.density}/{contract.bias}"
 
@@ -1736,6 +1860,9 @@ def format_snapshot_shell_status(state: RytmSnapshotShellState) -> str:
             f"global depth: {guardrails.global_depth}",
             f"tune lane: {guardrails.tune_policy}",
             f"lanes: {_format_lane_policies(guardrails.lane_policies)}",
+            f"pad lane overrides: {_format_pad_lane_policies(guardrails.pad_lane_policies)}",
+            "pad section allowlists: "
+            f"{_format_pad_section_family_allowlists(guardrails.pad_section_family_allowlists)}",
             f"locked pads: {_format_pad_list(sorted(guardrails.locked_pads))}",
             f"active pad overrides: {_format_pad_overrides(_active_pad_overrides(guardrails))}",
             f"inactive pad overrides: {_format_pad_overrides(_inactive_pad_overrides(guardrails))}",
@@ -1768,6 +1895,7 @@ def _snapshot_help_text() -> str:
             "go = make the next variation and send it",
             "randomize / rand / r = OXI-style kit variation respecting pad contracts",
             "drum-core = lock Pad 1 and stage wide pads 2-4 drum discovery",
+            "kit-core = lock Pad 1 and stage full-kit discovery using Jose's pad 5-12 lane recipe",
             "kit / resnapshot = receive a new live KIT SysEx anchor",
             "mode live|studio = choose session guardrail range",
             "depth gentle|normal|strong|wild = set global session depth",
@@ -1988,6 +2116,36 @@ class AnalogRytmSnapshotShell:
         )
         self._write_line(f"pad {pad} randomizer {field}: {value}")
 
+    def _set_pad_lane_policy(
+        self,
+        pad: int,
+        lane: SnapshotLane,
+        policy: SnapshotLanePolicy,
+    ) -> None:
+        self.state = replace(
+            self.state,
+            guardrails=_replace_pad_lane_policy(self.state.guardrails, pad, lane, policy),
+        )
+        self._write_line(f"pad {pad} lane {lane}: {policy}")
+
+    def _set_pad_section_family_allowlist(
+        self,
+        pad: int,
+        section: str,
+        allowed_families: frozenset[str],
+    ) -> None:
+        self.state = replace(
+            self.state,
+            guardrails=_replace_pad_section_family_allowlist(
+                self.state.guardrails,
+                pad,
+                section,
+                allowed_families,
+            ),
+        )
+        families = ", ".join(sorted(allowed_families)) if allowed_families else "none"
+        self._write_line(f"pad {pad} {section.lower()} families: {families}")
+
     def _set_pad_policy(self, parts: Sequence[str]) -> None:
         if len(parts) == 4:
             self._set_pad_randomizer_policy(parts)
@@ -2152,6 +2310,38 @@ class AnalogRytmSnapshotShell:
             self._set_pad_randomizer_policy(("pad", raw_pad, "bias", bias))
         self._apply_command(SNAPSHOT_SHELL_COMMANDS[_CMD_RANDOMIZE])
 
+    def _apply_kit_core_macro(self) -> None:
+        self._write_line("macro applied: kit-core")
+        self._set_preset(("preset", _PRESET_LIVE))
+        self._set_lane_policy(("lane", _LANE_LFO, _LANE_POLICY_OFF))
+        self._set_lane_policy(("lane", _LANE_FX, _LANE_POLICY_MICRO))
+        self._set_lock(("lock", "1"), locked=True)
+        for pad, bias in (
+            (2, _RANDOMIZER_BIAS_LOOSER),
+            (3, _RANDOMIZER_BIAS_GRITTIER),
+            (4, _RANDOMIZER_BIAS_GRITTIER),
+        ):
+            raw_pad = str(pad)
+            self._set_pad_randomizer_policy(("pad", raw_pad, "amount", _RANDOMIZER_AMOUNT_WIDE))
+            self._set_pad_randomizer_policy(("pad", raw_pad, "density", _RANDOMIZER_DENSITY_FULL))
+            self._set_pad_randomizer_policy(("pad", raw_pad, "bias", bias))
+        for pad in (6, 7, 8):
+            raw_pad = str(pad)
+            self._set_pad_lane_policy(pad, _LANE_FILTER, _LANE_POLICY_MICRO)
+            self._set_pad_lane_policy(pad, _LANE_LFO, _LANE_POLICY_OFF)
+            self._set_pad_section_family_allowlist(pad, _AMP_SECTION, _AMP_FX_FAMILIES)
+            self._set_pad_randomizer_policy(("pad", raw_pad, "amount", _RANDOMIZER_AMOUNT_WIDE))
+            self._set_pad_randomizer_policy(("pad", raw_pad, "density", _RANDOMIZER_DENSITY_FULL))
+            self._set_pad_randomizer_policy(("pad", raw_pad, "bias", _RANDOMIZER_BIAS_TIGHTER))
+        for pad in (5, 9, 10, 11):
+            raw_pad = str(pad)
+            self._set_pad_lane_policy(pad, _LANE_FILTER, _LANE_POLICY_OFF)
+            self._set_pad_lane_policy(pad, _LANE_LFO, _LANE_POLICY_OFF)
+            self._set_pad_section_family_allowlist(pad, _AMP_SECTION, _AMP_FX_FAMILIES)
+            self._set_pad_randomizer_policy(("pad", raw_pad, "amount", _RANDOMIZER_AMOUNT_NORMAL))
+            self._set_pad_randomizer_policy(("pad", raw_pad, "density", _RANDOMIZER_DENSITY_HIGH))
+        self._apply_command(SNAPSHOT_SHELL_COMMANDS[_CMD_RANDOMIZE])
+
     def _resnapshot_anchor(self) -> None:
         if self._resnapshot_func is None:
             self._write_line(
@@ -2256,6 +2446,9 @@ class AnalogRytmSnapshotShell:
             return True
         if normalized in {_CMD_DRUM_CORE, "drumcore"}:
             self._apply_drum_core_macro()
+            return True
+        if normalized in {_CMD_KIT_CORE, "kitcore", "full-kit"}:
+            self._apply_kit_core_macro()
             return True
         if normalized == _CMD_UNDO:
             self._undo()

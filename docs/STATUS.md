@@ -4,6 +4,14 @@ Last updated: 2026-05-30. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-30: Live snapshot shell `kit-core` macro prepared for the first
+  all-12-pad OXI-style captured-kit recipe. It reuses the proven `drum-core`
+  setup for Pad 1 and pads 2-4, then adds Jose's pad 5-12 lane discipline:
+  pads 6-8 get wide/full source discovery with light filter movement, no LFO,
+  and AMP limited to overdrive/delay/reverb; pads 5, 9, 10, and 11 keep filter
+  and LFO frozen and also limit AMP movement to overdrive/delay/reverb. The
+  macro stages `randomize` only, sends no MIDI by itself, and still preserves
+  the Pad 2/3 Dual VCO `Osc 2 Detune` live-CC circuit breaker.
 - 2026-05-28: Analog Four cockpit UI surface prepared locally. The cockpit
   device rail can switch the center panel from the default Analog Rytm MKII
   12-pad snapshot view to an Analog Four MKII four-track view. The A4 surface
