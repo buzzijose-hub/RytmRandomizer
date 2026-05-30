@@ -4,6 +4,12 @@ Last updated: 2026-05-30. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-30: Direct one-CC isolation confirmed the Dual VCO detune guard is the
+  right live-CC safety boundary for KIT 13. Sending CC20 to Pad 2 and Pad 3,
+  including the captured same values, produced `ERR` on encoder B and did not
+  recover by sending the captured values back. For now, Dual VCO detune must
+  stay out of the live CC send path; detune discovery would need a different
+  transport than one-off CC sends.
 - 2026-05-30: Dual VCO detune guard hardware validation completed on KIT 13
   (`0d0be6fd4494d754`). After the guard, `drum-core` omitted Pad 2 and Pad 3
   `dual_vco Osc 2 Detune` from `changes` and active sends; `send` transmitted

@@ -388,6 +388,21 @@ listening for whether `Osc Config` remains musically useful or needs its own
 range narrowing later, but encoder-B detune is no longer part of the live send
 plan for pads 2-3 Dual VCO.
 
+Direct one-CC isolation then tested whether the guard was merely too
+conservative:
+
+- Pad 2 CC20 same-value send, using the captured value `25`, produced `ERR`.
+- Pad 2 CC20 one-step movement, value `24`, also produced `ERR`.
+- Pad 3 CC20 same-value send, using the captured value `4`, produced `ERR`.
+- Pad 3 CC20 one-step movement, value `3`, also produced `ERR`.
+- Sending the captured values back over CC20 did not recover the pads.
+
+Conclusion: this is not an amount, density, or range-width problem. In this
+hardware state, the Dual VCO `Osc 2 Detune` row is unsafe over the live CC path
+itself. Keeping those two CC20 rows out of `drum-core` is correct. Future Dual
+VCO detune discovery should only be revisited if it uses a different transport
+or a separately proven hardware procedure.
+
 ## Safe Resume Steps For Tomorrow
 
 1. Start with a fresh current-kit SysEx capture from the Rytm.
