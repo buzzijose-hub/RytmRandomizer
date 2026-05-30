@@ -20,14 +20,17 @@ export function AnalogFourTrackCard({
   const className = locked ? 'a4-track-card locked' : 'a4-track-card';
 
   return (
-    <article className={className} data-testid={`a4-track-card-${track.track}`}>
+    <article
+      className={className}
+      data-testid={`a4-track-card-${track.track}`}
+      data-role-key={track.roleKey}
+    >
       <header className="a4-track-header">
         <div>
           <div className="pad-card-title">
             {track.trackLabel} - Track {track.track}
           </div>
           <div className="pad-card-machine">{track.roleLabel}</div>
-          <p className="a4-track-role">{track.roleKey}</p>
         </div>
         <LockButton
           locked={locked}
@@ -36,8 +39,14 @@ export function AnalogFourTrackCard({
         />
       </header>
       <div className="a4-depth-row">
-        <span>Safe Depth</span>
-        <meter min={0} max={100} value={track.safeDepth}>
+        <span id={`a4-track-${track.track}-safe-depth-label`}>Safe Depth</span>
+        <meter
+          min={0}
+          max={100}
+          value={track.safeDepth}
+          aria-labelledby={`a4-track-${track.track}-safe-depth-label`}
+          aria-valuetext={`${track.safeDepth} percent safe mutation depth for ${track.trackLabel}`}
+        >
           {track.safeDepth}%
         </meter>
         <strong>{track.safeDepth}%</strong>

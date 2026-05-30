@@ -1,6 +1,7 @@
 # Analog Four Cockpit UI Implementation Plan
 
-> Status: in-flight (PR pending)
+> Status: ready for merge — review feedback addressed (a11y meter labelling,
+> roleKey diagnostic attribute, E2E A4 panel-switch coverage)
 
 > **For agentic workers:** keep this slice isolated from hardware execution.
 > This is a frontend visibility change only. Do not add MIDI rendering, port
