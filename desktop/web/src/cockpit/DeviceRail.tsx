@@ -21,7 +21,7 @@ import {
 } from './devices';
 
 const DEFAULT_SESSION_LABEL = 'Live Session';
-const ACTIVE_RYTM_PAD_LIMIT = 4;
+const RYTM_PAD_COUNT = 12;
 
 interface BuildDeviceRailReadinessModelOptions {
   snapshot: Snapshot | null;
@@ -107,14 +107,14 @@ export function buildDeviceRailReadinessModel({
   const padSurfaceCards = Object.fromEntries(
     pads.map((pad) => [pad.pad_id, rytmPadSurfaceCard(pad)]),
   ) as Readonly<Record<number, LiveGuiRytmPadSurfaceCardDict>>;
-  const activeRytmTrackCount = pads.filter((pad) => pad.pad_id <= ACTIVE_RYTM_PAD_LIMIT).length;
-  const plannedRytmTrackCount = Math.max(0, 12 - activeRytmTrackCount);
+  const activeRytmTrackCount = pads.length;
+  const plannedRytmTrackCount = Math.max(0, RYTM_PAD_COUNT - activeRytmTrackCount);
   const deviceInventoryCards = {
     [RYTM_DEVICE_ID]: deviceInventoryCard({
       deviceId: RYTM_DEVICE_ID,
       displayName: 'Elektron Analog Rytm MKII',
       order: 1,
-      trackCount: Math.max(12, pads.length),
+      trackCount: Math.max(RYTM_PAD_COUNT, pads.length),
       roleSummary: '12-pad drum and percussion surface',
       portState,
       hardwareState,
@@ -133,7 +133,11 @@ export function buildDeviceRailReadinessModel({
       passive: true,
     }),
   };
-  const rytmTracks = pads.map(rytmTrackFromPad);
+  const rytmTracks = Array.from({ length: RYTM_PAD_COUNT }, (_, index) => {
+    const padNumber = index + 1;
+    const pad = pads.find((candidatePad) => candidatePad.pad_id === padNumber);
+    return pad === undefined ? plannedRytmTrack(padNumber) : rytmTrackFromPad(pad);
+  });
   const analogFourTracks = ANALOG_FOUR_TRACKS.map((track) => ({
     device_id: ANALOG_FOUR_DEVICE_ID,
     track_number: track.track,
@@ -156,15 +160,15 @@ export function buildDeviceRailReadinessModel({
       device_id: RYTM_DEVICE_ID,
       display_name: 'Analog Rytm MKII',
       order: 1,
-      track_count: Math.max(12, pads.length),
-      mapped_track_count: Math.max(12, pads.length),
+      track_count: Math.max(RYTM_PAD_COUNT, pads.length),
+      mapped_track_count: Math.max(RYTM_PAD_COUNT, pads.length),
       active_track_count: activeRytmTrackCount,
       planned_track_count: plannedRytmTrackCount,
-      status: 'limited-active',
+      status: pads.length === 0 ? 'not-loaded' : 'mock-safe',
       role_summary: '12-pad drum and percussion surface',
       port_state: portState,
       hardware_state: hardwareState,
-      summary: `${Math.max(12, pads.length)} tracks / limited-active`,
+      summary: `${Math.max(RYTM_PAD_COUNT, pads.length)} tracks / mock-safe`,
       test_id: 'device-card-analog-rytm-mk2',
     },
     {
@@ -195,7 +199,7 @@ export function buildDeviceRailReadinessModel({
     planned_track_count: plannedTrackCount,
     pad_surface: {
       model_version: 'live-gui-12-pad-surface-v1',
-      pad_count: 12,
+      pad_count: RYTM_PAD_COUNT,
       active_pad_count: activeRytmTrackCount,
       planned_pad_count: plannedRytmTrackCount,
       cards_by_pad: padSurfaceCards,
@@ -246,11 +250,11 @@ export function buildDeviceRailReadinessModel({
       compatibility_id: snapshot?.snapshot_id ?? 'no-snapshot',
       panel_label: 'Snapshot Compatibility',
       session_label: DEFAULT_SESSION_LABEL,
-      compatibility_status: pads.length === 0 ? 'not-loaded' : 'limited',
-      status_badge: pads.length === 0 ? 'No snapshot' : 'Limited',
+      compatibility_status: pads.length === 0 ? 'not-loaded' : 'compatible',
+      status_badge: pads.length === 0 ? 'No snapshot' : 'Compatible',
       summary:
         pads.length > 0
-          ? `${activeRytmTrackCount} pads are mutation-ready; ${plannedRytmTrackCount} pads remain planned expansion.`
+          ? `${activeRytmTrackCount} pads are mutation-ready for mock-safe review.`
           : 'No snapshot loaded.',
       pad_count: pads.length,
       snapshot_mutable_pad_count: activeRytmTrackCount,
@@ -279,36 +283,48 @@ function deviceDisplayStatus(device: LiveGuiDualDeviceRigDeviceDict): string {
 }
 
 function rytmPadSurfaceCard(pad: PadState): LiveGuiRytmPadSurfaceCardDict {
-  const locked = pad.pad_id > 4;
   return {
     pad: pad.pad_id,
     track_code: String(pad.pad_id),
     label: pad.machine,
-    surface_state: locked ? 'planned_expansion' : 'active_v134',
-    ui_enabled: !locked,
-    ui_locked: locked,
-    lock_reason: locked ? 'planned 12-pad expansion surface' : '',
+    surface_state: 'active_v134',
+    ui_enabled: true,
+    ui_locked: false,
+    lock_reason: '',
     default_role: pad.machine,
     default_machine_label: pad.machine,
     legal_machine_count: 1,
-    snapshot_mutable_machine_count: locked ? 0 : 1,
-    selectable_only_machine_count: locked ? 1 : 0,
+    snapshot_mutable_machine_count: 1,
+    selectable_only_machine_count: 0,
     primary_machine_labels: [pad.machine],
   };
 }
 
 function rytmTrackFromPad(pad: PadState): LiveGuiDualDeviceRigTrackDict {
-  const enabled = pad.pad_id <= ACTIVE_RYTM_PAD_LIMIT;
   return {
     device_id: RYTM_DEVICE_ID,
     track_number: pad.pad_id,
     track_label: `Pad ${pad.pad_id}`,
     label: pad.machine,
     role: pad.machine,
-    state: enabled ? 'active_v134' : 'planned_expansion',
-    enabled,
+    state: 'active_v134',
+    enabled: true,
     source: 'rytm-12-pad-surface',
     test_id: `device-rail-rytm-pad-${pad.pad_id}`,
+  };
+}
+
+function plannedRytmTrack(padNumber: number): LiveGuiDualDeviceRigTrackDict {
+  return {
+    device_id: RYTM_DEVICE_ID,
+    track_number: padNumber,
+    track_label: `Pad ${padNumber}`,
+    label: `Pad ${padNumber}`,
+    role: 'Planned',
+    state: 'planned_v134',
+    enabled: false,
+    source: 'rytm-12-pad-surface-planned',
+    test_id: `device-rail-rytm-pad-${padNumber}`,
   };
 }
 
@@ -359,11 +375,11 @@ function snapshotCompatibilityPad(pad: PadState): LiveGuiSnapshotCompatibilityPa
     status: 'compatible',
     severity: 'safe',
     map_safe: true,
-    snapshot_mutation_enabled: pad.pad_id <= 4,
+    snapshot_mutation_enabled: true,
     allowed_machine_count: 1,
-    mutable_machine_count: pad.pad_id <= 4 ? 1 : 0,
+    mutable_machine_count: 1,
     selectable_machine_count: 1,
-    lock_reason: pad.pad_id > 4 ? 'planned 12-pad expansion surface' : '',
+    lock_reason: '',
     machine_labels: [pad.machine],
     test_id: `device-rail-compat-pad-${pad.pad_id}`,
   };

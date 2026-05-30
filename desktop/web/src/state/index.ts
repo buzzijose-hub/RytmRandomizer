@@ -26,7 +26,13 @@ export {
   selectCanUndo,
 } from './store';
 
-export type { CockpitState, CockpitActions, CockpitStore, SessionStatus } from './store';
+export type {
+  CockpitState,
+  CockpitActions,
+  CockpitStore,
+  OperatorLogEntry,
+  SessionStatus,
+} from './store';
 
 /**
  * Wire a CockpitClient's event stream into the given store. Returns an unsubscribe
@@ -37,6 +43,13 @@ export function bindClientToStore(
   store: { getState: () => CockpitStore } = useCockpitStore,
 ): Unsubscribe {
   const unsubs: Unsubscribe[] = [
+    client.onStatusChange((status) => {
+      store.getState().setConnectionStatus(status);
+      store.getState().appendOperatorLog({
+        level: status === 'connected' ? 'info' : 'error',
+        message: `WebSocket ${status}`,
+      });
+    }),
     client.on('snapshot_changed', (ev) => store.getState().setSnapshot(ev.snapshot)),
     client.on('mutation_previewed', (ev) => {
       store.getState().setPreviewCandidate(ev.candidate);

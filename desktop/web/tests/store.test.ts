@@ -23,6 +23,7 @@ import {
   type SessionStatus,
 } from '../src/state';
 import type {
+  ConnectionStatus,
   EventHandler,
   Unsubscribe,
   CockpitClient,
@@ -126,6 +127,8 @@ describe('cockpit store — actions write each slice', () => {
     expect(state.profile).toBeNull();
     expect(state.sendPlan).toBeNull();
     expect(state.sessionStatus).toBeNull();
+    expect(state.connectionStatus).toBe('closed');
+    expect(state.operatorLog).toEqual([]);
     expect(INITIAL_STATE).toEqual({
       snapshot: null,
       previewCandidate: null,
@@ -133,6 +136,8 @@ describe('cockpit store — actions write each slice', () => {
       profile: null,
       sendPlan: null,
       sessionStatus: null,
+      connectionStatus: 'closed',
+      operatorLog: [],
     });
   });
 
@@ -178,6 +183,19 @@ describe('cockpit store — actions write each slice', () => {
     expect(store.getState().sessionStatus).toEqual(session);
   });
 
+  it('setConnectionStatus and appendOperatorLog write operator feedback slices', () => {
+    const store = createCockpitStore();
+    store.getState().setConnectionStatus('connected');
+    store.getState().appendOperatorLog({ level: 'info', message: 'WebSocket connected' });
+    store.getState().appendOperatorLog({ level: 'error', message: 'send rejected' });
+    expect(store.getState().connectionStatus).toBe('connected');
+    expect(store.getState().operatorLog.map((entry) => entry.message)).toEqual([
+      'WebSocket connected',
+      'send rejected',
+    ]);
+    expect(store.getState().operatorLog[1]).toMatchObject({ level: 'error' });
+  });
+
   it('reset() returns to INITIAL_STATE', () => {
     const store = createCockpitStore();
     store.getState().setSnapshot(snapshot);
@@ -186,6 +204,8 @@ describe('cockpit store — actions write each slice', () => {
     store.getState().setProfile(profile);
     store.getState().setSendPlan(sendPlan);
     store.getState().setSessionStatus(session);
+    store.getState().setConnectionStatus('connected');
+    store.getState().appendOperatorLog({ level: 'info', message: 'WebSocket connected' });
     store.getState().reset();
     const s = store.getState();
     expect(s.snapshot).toBeNull();
@@ -194,6 +214,8 @@ describe('cockpit store — actions write each slice', () => {
     expect(s.profile).toBeNull();
     expect(s.sendPlan).toBeNull();
     expect(s.sessionStatus).toBeNull();
+    expect(s.connectionStatus).toBe('closed');
+    expect(s.operatorLog).toEqual([]);
   });
 
   it('exports a singleton useCockpitStore that is the same Zustand store across imports', () => {
@@ -288,7 +310,9 @@ describe('cockpit store — selectors', () => {
  */
 class FakeClient {
   readonly handlers = new Map<EventType, EventHandler[]>();
+  readonly statusHandlers: Array<(status: ConnectionStatus) => void> = [];
   unsubCalls = 0;
+  status: ConnectionStatus = 'closed';
 
   on<T extends EventType>(
     eventType: T,
@@ -303,6 +327,22 @@ class FakeClient {
     return () => {
       this.unsubCalls += 1;
     };
+  }
+
+  onStatusChange(handler: (status: ConnectionStatus) => void): Unsubscribe {
+    this.statusHandlers.push(handler);
+    return () => {
+      this.unsubCalls += 1;
+    };
+  }
+
+  getStatus(): ConnectionStatus {
+    return this.status;
+  }
+
+  fireStatus(status: ConnectionStatus): void {
+    this.status = status;
+    for (const handler of this.statusHandlers) handler(status);
   }
 }
 
@@ -368,9 +408,16 @@ describe('bindClientToStore', () => {
       unsaved_sends: 0,
     });
 
-    // Unsubscribe should call client's individual unsubs (5 events → 5 calls).
+    client.fireStatus('connected');
+    expect(store.getState().connectionStatus).toBe('connected');
+    expect(store.getState().operatorLog.at(-1)).toMatchObject({
+      level: 'info',
+      message: 'WebSocket connected',
+    });
+
+    // Unsubscribe should call client's individual unsubs.
     unbind();
-    expect(client.unsubCalls).toBe(6);
+    expect(client.unsubCalls).toBe(7);
   });
 
   it('falls back to the module-level singleton store when no store is provided', () => {

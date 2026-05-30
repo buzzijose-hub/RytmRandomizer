@@ -306,7 +306,7 @@ describe('AddStep — dialog opener (injected for determinism)', () => {
     expect(openDialog).not.toHaveBeenCalled();
   });
 
-  it('default dialog opener (no injection) falls back to null when the Tauri plugin is unavailable', async () => {
+  it('default dialog opener (no injection) shows a paste-path fallback when the Tauri plugin is unavailable', async () => {
     // No injection: production path runs the dynamic import, which throws in jsdom.
     render(
       <AddStep
@@ -323,6 +323,9 @@ describe('AddStep — dialog opener (injected for determinism)', () => {
     });
     // Plugin import fails → location stays empty.
     expect(screen.getByTestId('wizard-draft-location')).toHaveValue('');
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Browse is unavailable in this shell. Paste the full path instead.',
+    );
   });
 });
 

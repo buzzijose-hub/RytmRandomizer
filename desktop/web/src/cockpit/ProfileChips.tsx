@@ -15,6 +15,7 @@ import { useCockpitStore } from '../state';
 import type { ProfileKind, ProfileModel } from '../ws/protocol';
 
 import { useCockpitClient } from './context';
+import { useLoggedCommand } from './useLoggedCommand';
 
 export interface ProfileChipsProps {
   /** Catalogue of profiles to show as chips. Filtered by `kind` upstream. */
@@ -23,7 +24,7 @@ export interface ProfileChipsProps {
 
 export function ProfileChips({ available }: ProfileChipsProps): JSX.Element {
   const active = useCockpitStore((s) => s.profile);
-  const client = useCockpitClient();
+  const sendCommand = useLoggedCommand();
 
   return (
     <div className="profile-chips" data-testid="profile-chips">
@@ -41,7 +42,7 @@ export function ProfileChips({ available }: ProfileChipsProps): JSX.Element {
                 aria-pressed={isActive}
                 data-testid={`profile-chip-${p.profile_id}`}
                 onClick={() => {
-                  void client.send({ type: 'select_profile', profile_id: p.profile_id });
+                  sendCommand({ type: 'select_profile', profile_id: p.profile_id });
                 }}
               >
                 {isActive ? '★ ' : ''}

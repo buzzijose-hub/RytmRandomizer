@@ -146,6 +146,11 @@
   flex: 1;
 }
 
+.wizard-field-help {
+  color: var(--accent, #58a6ff);
+  font-size: 12px;
+}
+
 /* ---------- Buttons + actions ---------- */
 
 .wizard-actions {

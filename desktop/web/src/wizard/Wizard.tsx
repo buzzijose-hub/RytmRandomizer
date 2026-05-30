@@ -169,7 +169,13 @@ export function Wizard({
 
   const goToAdd = (): void => setActiveStep('add');
   const goToName = (): void => setActiveStep('name');
-  const goToAnalyze = (): void => setActiveStep('analyze');
+  const goToAnalyze = (): void => {
+    setActiveStep('analyze');
+  };
+  const startAnalyzeFromAdd = (): void => {
+    setActiveStep('analyze');
+    void sendWizardCommand(client, { type: 'wizard_analyze' });
+  };
 
   return (
     <div className="wizard-root" data-testid="wizard-root">
@@ -192,7 +198,7 @@ export function Wizard({
             onAddSource={handleAddSource}
             onRemoveSource={handleRemoveSource}
             onBack={goToName}
-            onNext={goToAnalyze}
+            onNext={startAnalyzeFromAdd}
             {...(openDialog === undefined ? {} : { openDialog })}
           />
         ) : null}
