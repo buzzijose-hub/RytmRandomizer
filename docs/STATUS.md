@@ -6,13 +6,19 @@ Last updated: 2026-05-30. This file is a hand-authored snapshot and is meant to 
 
 - 2026-05-30: Live snapshot shell `kit-core` macro prepared for the first
   all-12-pad OXI-style captured-kit recipe. It reuses the proven `drum-core`
-  setup for Pad 1 and pads 2-4, then adds Jose's pad 5-12 lane discipline:
+  setup for Pad 1 and pads 2-4, then adds Jose's pad 5-11 lane discipline:
   pads 6-8 get wide/full source discovery with light filter movement, no LFO,
   and AMP limited to overdrive/delay/reverb; pads 5, 9, 10, and 11 keep filter
   and LFO frozen and also limit AMP movement to overdrive/delay/reverb. The
   macro stages `randomize` only, sends no MIDI by itself, and inherits the
   center-band Pad 2/3 Dual VCO `Osc 2 Detune` live lane while still guarding
-  the low KIT 13 values that produced `ERR`.
+  the low KIT 13 values that produced `ERR`. Hardware smoke testing on KIT 13
+  (`4e32243208cc7fe5`) confirmed pads 2-4 keep the drum-core foundation,
+  pads 5/9/10/11 and pads 6-8 all move SRC as the primary musical lane, no
+  protected LFO/filter rows moved on the reserved pads, and `Z` plus `send`
+  returned to `no parameter changes staged`. Pad 12 remains available in the
+  general product/macro for users who use it, though Jose does not currently
+  rely on that lane live.
 - 2026-05-28: Analog Four cockpit UI surface prepared locally. The cockpit
   device rail can switch the center panel from the default Analog Rytm MKII
   12-pad snapshot view to an Analog Four MKII four-track view. The A4 surface

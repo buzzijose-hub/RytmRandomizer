@@ -365,18 +365,45 @@ stages `randomize` so the operator can inspect `changes` before `send` or
 - Pad 1 locked as the kick anchor
 - pads 2-4 wide/full with Pad 2 looser and pads 3-4 grittier
 
-It then encodes Jose's pad 5-12 performance policy for captured-kit
+It then encodes Jose's pad 5-11 performance policy for captured-kit
 randomization:
 
 - pads 6-8 get wide/full source discovery, light filter movement, no LFO
   movement, and AMP movement limited to overdrive, delay, and reverb.
 - pads 5, 9, 10, and 11 keep filter and LFO rows frozen, and their AMP rows are
   also limited to overdrive, delay, and reverb.
+- Pad 12 remains available in the general product/macro for users who use that
+  lane, but Jose does not rely on Pad 12 in his current live workflow.
 - the existing Pad 2/3 Dual VCO `Osc 2 Detune` live-CC guard remains active.
 
-This is ready for dry-run and code review. Hardware validation still needs an
-operator pass on a fresh Rytm KIT capture before treating `kit-core` as
-performance-proven.
+Hardware validation on KIT 13 fingerprint `4e32243208cc7fe5` confirmed the
+macro path:
+
+- `kit-core` applied `preset live`, LFO off, FX micro, Pad 1 locked, pads 2-4
+  wide/full, pads 6-8 wide/full with light filter/no LFO, and pads 5/9/10/11
+  with filter/LFO off and AMP limited to delay/drive/reverb.
+- Pad 2 Dual VCO kept moving the intended drum-core foundation rows:
+  `Osc 1 Tune`, `Osc 1 Decay`, `Balance`, `Osc Config`, `Osc 2 Decay`,
+  `Bend`, filter rows, and AMP rows. It did not show the previously dangerous
+  low-value `Osc 2 Detune` movement.
+- Pad 3 SY Raw moved source rows including `Tune`, `Decay`, `Osc 2 Detune`,
+  `Waveform 1`, and `Balance`, plus filter and AMP rows.
+- Pad 4 SD Hard moved source rows including `Tune`, `Decay`, `Sweep Depth`,
+  `Tick Level`, `Noise Decay`, `Noise Level`, and `Sweep Time`, plus filter
+  and AMP rows.
+- Pads 5/9/10/11 did move SRC rows, which is the desired primary behavior:
+  Pad 5 `Tune`/`Decay`/`Sweep Depth`/`Noise Level`/`Snap Type`, Pad 9
+  `Tune`/`Decay`/`Color`, Pad 10 `Tune 1-6`, and Pad 11
+  `Tune`/`Tail Decay`/`Component` rows.
+- Pads 6-8 moved XT Classic source rows heavily, with only light filter
+  movement and no LFO rows shown.
+- `send`, repeated `go`, then `Z` plus `send` completed without reported
+  hardware errors, and final `changes` returned `no parameter changes staged`.
+
+Conclusion: `kit-core` is hardware-smoke-tested as an OXI-style full-kit
+sound-design performer macro. The listening notes still need to decide whether
+Pad 12 should stay in this general macro or move to a separate user-selectable
+expanded-kit variant, but it should remain available for users who use it.
 
 ## Hardware Lesson: Dual VCO Detune Guard
 
