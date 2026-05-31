@@ -17,7 +17,6 @@ from .send_plan import (
     ReadinessReason,
     SendPlanPacket,
     narrow_readiness_reason,
-    synthetic_parameter_cc,
 )
 from .snapshot import PadState, Snapshot
 from .types import (
@@ -70,5 +69,4 @@ __all__ = [
     "narrow_transition_curve",
     "narrow_via",
     "new_ulid",
-    "synthetic_parameter_cc",
 ]
