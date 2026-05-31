@@ -34,9 +34,14 @@ Last updated: 2026-05-30. This file is a hand-authored snapshot and is meant to 
   `machine:dual_vco:Osc 2 Detune`, with zero NRPN messages. Direct outbound
   one-CC tests on KIT 14 sent Pad 2 `CC20` values `79`, `78`, back to `79`,
   and then a fresh current-kit anchor `66`, `65`, `66`, `67`, `66`, all with
-  no visible `ERR`. The live snapshot shell now lets Dual VCO detune move one
-  step around captured center-band anchors in `65..79` and still guards low
-  KIT 13-style values such as `25`, `24`, `4`, and `3` out of active sends.
+  no visible `ERR`. Additional outbound tests from the same anchor sent `64`,
+  `68`, `63`, `69`, `62`, and `70` with no visible `ERR`, so the live snapshot
+  shell now lets Dual VCO detune use an amount-aware lane: micro/gentle remains
+  one step, normal remains two steps, and wide/strong can use four steps while
+  clamped to the proven center band. High anchors such as `79` stay one-step
+  conservative because only `79 -> 78 -> 79` has been proven there. Low KIT
+  13-style values such as `25`, `24`, `4`, and `3` still stay guarded out of
+  active sends.
 - 2026-05-30: Passive Analog Rytm CC observation path added for the next Dual
   VCO detune investigation. `--arm --rytm-cc-observe` opens only a Rytm MIDI
   input, sends no MIDI, drains pending CCs after Enter, reports raw

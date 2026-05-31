@@ -481,11 +481,11 @@ _MACHINE_SRC_ROWS: Final[Mapping[str, tuple[_MachineRow, ...]]] = MappingProxyTy
             ("Random Claps", 22),
             ("Clap Decay", 23),
         ),
-        # Hardware validation for PR #148 showed that direct outbound live
-        # CC20 on Pads 2 and 3 Dual VCO Osc 2 Detune can put the Rytm in ERR.
-        # Keep the manual row for labels and passive planning, but the live
-        # snapshot shell guards it via _is_live_dual_vco_detune_guarded_event
-        # until a safe detune transport is validated.
+        # Hardware validation for PRs #148/#149 showed that low captured values
+        # can put Pad 2/3 Dual VCO Osc 2 Detune in ERR over direct CC20, while
+        # centered anchors tolerate a narrow live lane. Keep the manual row for
+        # labels/passive planning; the live snapshot shell gates the active
+        # send window via _is_live_dual_vco_detune_guarded_event.
         "dual_vco": (
             ("Level", 16),
             ("Osc 1 Tune", 17),

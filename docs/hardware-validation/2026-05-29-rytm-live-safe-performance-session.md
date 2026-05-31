@@ -524,11 +524,29 @@ anchor then proved the one-step center-band lane:
 - Pad 2 one-step `CC20` movement to `67` produced no visible `ERR`.
 - Pad 2 return `CC20` send to `66` produced no visible `ERR`.
 
+Additional outbound isolation from the same Pad 2 anchor `66` then proved a
+musically useful center-band window for stronger randomizer amounts:
+
+- Pad 2 two-step `CC20` movement to `64` produced no visible `ERR`.
+- Pad 2 return `CC20` send to `66` produced no visible `ERR`.
+- Pad 2 two-step `CC20` movement to `68` produced no visible `ERR`.
+- Pad 2 three-step `CC20` movement to `63` produced no visible `ERR`.
+- Pad 2 return `CC20` send to `66` produced no visible `ERR`.
+- Pad 2 three-step `CC20` movement to `69` produced no visible `ERR`.
+- Pad 2 return `CC20` send to `66` produced no visible `ERR`.
+- Pad 2 four-step `CC20` movement to `62` produced no visible `ERR`.
+- Pad 2 return `CC20` send to `66` produced no visible `ERR`.
+- Pad 2 four-step `CC20` movement to `70` produced no visible `ERR`.
+
 Conclusion: Dual VCO detune is not globally unusable over live CC. The unsafe
 KIT 13 low values remain guarded, but captured center-band anchors can now move
-one step within `65..79` so the parameter can participate in sound design
-without re-opening the earlier `ERR` path. The passive observer also saw the
-hardware emit `80`, but outbound `80` has not yet been separately proven.
+inside an amount-aware live lane: micro/gentle stays at one step, normal stays
+at two steps, and wide/strong stays at four steps for anchors in the proven
+center-band. High anchors such as `79` remain one-step conservative because only
+`79 -> 78 -> 79` has been separately proven there. This lets the parameter
+participate in sound design without re-opening the earlier low-value `ERR`
+path. The passive observer also saw the hardware emit `80`, but outbound `80`
+has not yet been separately proven.
 
 ## Safe Resume Steps For Tomorrow
 

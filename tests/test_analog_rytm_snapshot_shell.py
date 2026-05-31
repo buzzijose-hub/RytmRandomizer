@@ -1141,6 +1141,43 @@ def test_snapshot_shell_drum_core_allows_anchor_relative_dual_vco_osc_2_detune(
     )
 
 
+def test_snapshot_shell_drum_core_widens_centered_dual_vco_detune_on_next_variation(
+    capsys,
+) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    snapshot = AnalogRytmSnapshotDecoder().decode(
+        _snapshot_payload_with_track_overrides(
+            overrides_by_pad={
+                2: (28, {4: 66, 5: 64}),
+            },
+        ),
+        slot=0,
+    )
+    anchor = build_snapshot_shell_anchor(snapshot)
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(anchor, sender)
+
+    assert shell.dispatch("drum-core") is True
+    assert shell.dispatch("go") is True
+    assert shell.dispatch("changes") is True
+
+    captured = capsys.readouterr()
+    anchor_detune = _event_for(anchor.events, pad=2, parameter="Osc 2 Detune")
+    current_detune = _event_for(shell.state.current_events, pad=2, parameter="Osc 2 Detune")
+    detune_delta = abs(current_detune.value - anchor_detune.value)
+    assert anchor_detune.value == 66
+    assert 2 <= detune_delta <= 4
+    assert "Pad 02 dual_vco Osc 2 Detune" in captured.out
+    assert any(
+        message.channel == 1 and message.control == 20 and message.value == current_detune.value
+        for message in sender.sent_messages
+    )
+
+
 def test_snapshot_shell_randomize_density_low_touches_fewer_pad_rows_than_full() -> None:
     from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
         AnalogRytmSnapshotShell,

@@ -166,8 +166,8 @@ _AMP_ATTACK_TIME: Final[str] = "Amp Attack Time"
 _PAD_1_TUNE_WINDOW: Final[int] = 3
 _LEVEL_PARAMETERS: Final[frozenset[str]] = frozenset({"Level", "Track Level", "Amp Volume"})
 _DUAL_VCO_DETUNE_PARAMETER: Final[str] = "Osc 2 Detune"
-_DUAL_VCO_DETUNE_LIVE_SAFE_RANGE: Final[tuple[int, int]] = (65, 79)
-_DUAL_VCO_DETUNE_LIVE_MUTATION_RADIUS: Final[int] = 1
+_DUAL_VCO_DETUNE_LIVE_SAFE_RANGE: Final[tuple[int, int]] = (62, 79)
+_DUAL_VCO_DETUNE_WIDE_ANCHOR_MAX: Final[int] = 70
 _GENERAL_SCOPES: Final[frozenset[str]] = frozenset({"filter", "amp", "lfo"})
 _PROMOTED_SRC_MUTATION_STATUSES: Final[frozenset[str]] = frozenset(
     {"validated_runtime", "documented_only"}
@@ -336,6 +336,21 @@ _RANDOMIZER_AMOUNT_DEPTH: Final[Mapping[SnapshotRandomizerAmount, SnapshotSessio
             _RANDOMIZER_AMOUNT_WIDE: _SESSION_DEPTH_STRONG,
         }
     )
+)
+_DUAL_VCO_DETUNE_RADIUS_BY_DEPTH: Final[Mapping[SnapshotSessionDepth, int]] = MappingProxyType(
+    {
+        _SESSION_DEPTH_GENTLE: 1,
+        _SESSION_DEPTH_NORMAL: 2,
+        _SESSION_DEPTH_STRONG: 4,
+        _SESSION_DEPTH_WILD: 4,
+    }
+)
+_DUAL_VCO_DETUNE_RADIUS_BY_AMOUNT: Final[Mapping[SnapshotRandomizerAmount, int]] = MappingProxyType(
+    {
+        _RANDOMIZER_AMOUNT_MICRO: 1,
+        _RANDOMIZER_AMOUNT_NORMAL: 2,
+        _RANDOMIZER_AMOUNT_WIDE: 4,
+    }
 )
 _RANDOMIZER_DENSITY_PERCENT: Final[Mapping[SnapshotRandomizerDensity, int]] = MappingProxyType(
     {
@@ -940,6 +955,7 @@ def _is_live_dual_vco_detune_safe_value(value: int) -> bool:
 
 def _live_dual_vco_detune_window(
     anchor_event: AnalogRytmRenderedStyleEvent,
+    radius: int,
 ) -> tuple[int, int] | None:
     if not _is_live_dual_vco_detune_event(anchor_event):
         return None
@@ -948,20 +964,33 @@ def _live_dual_vco_detune_window(
 
     low, high = _DUAL_VCO_DETUNE_LIVE_SAFE_RANGE
     return (
-        max(low, anchor_event.value - _DUAL_VCO_DETUNE_LIVE_MUTATION_RADIUS),
-        min(high, anchor_event.value + _DUAL_VCO_DETUNE_LIVE_MUTATION_RADIUS),
+        max(low, anchor_event.value - radius),
+        min(high, anchor_event.value + radius),
     )
+
+
+def _live_dual_vco_detune_radius(
+    anchor_event: AnalogRytmRenderedStyleEvent,
+    session_depth: SnapshotSessionDepth,
+    randomizer_contract: SnapshotPadRandomizerContract | None,
+) -> int:
+    if anchor_event.value > _DUAL_VCO_DETUNE_WIDE_ANCHOR_MAX:
+        return 1
+    if randomizer_contract is not None:
+        return _DUAL_VCO_DETUNE_RADIUS_BY_AMOUNT[randomizer_contract.amount]
+    return _DUAL_VCO_DETUNE_RADIUS_BY_DEPTH[session_depth]
 
 
 def _live_dual_vco_detune_limited_value(
     anchor_event: AnalogRytmRenderedStyleEvent,
     event: AnalogRytmRenderedStyleEvent,
     proposed_value: int,
+    radius: int,
 ) -> int:
     if not _is_live_dual_vco_detune_event(event):
         return proposed_value
 
-    window = _live_dual_vco_detune_window(anchor_event)
+    window = _live_dual_vco_detune_window(anchor_event, radius)
     if window is None:
         return anchor_event.value
     low, high = window
@@ -1545,6 +1574,15 @@ def _tune_policy_delta(
     policy: SnapshotTunePolicy,
 ) -> int:
     max_step = min(window, _TUNE_POLICY_MAX_STEPS[policy])
+    return _tune_delta_for_max_step(event, command, generation, max_step)
+
+
+def _tune_delta_for_max_step(
+    event: AnalogRytmRenderedStyleEvent,
+    command: SnapshotShellCommand,
+    generation: int,
+    max_step: int,
+) -> int:
     if max_step <= 0:
         return 0
 
@@ -1618,13 +1656,26 @@ def _mutate_snapshot_event(
 
     window = _session_depth_window(guardrails.mode, session_depth)
     if _is_machine_source_tune_event(current_event):
-        delta = _tune_policy_delta(
+        dual_vco_detune_radius = _live_dual_vco_detune_radius(
             anchor_event,
-            command,
-            window,
-            generation,
-            guardrails.tune_policy,
+            session_depth,
+            randomizer_contract,
         )
+        if _is_live_dual_vco_detune_event(current_event):
+            delta = _tune_delta_for_max_step(
+                anchor_event,
+                command,
+                generation,
+                dual_vco_detune_radius,
+            )
+        else:
+            delta = _tune_policy_delta(
+                anchor_event,
+                command,
+                window,
+                generation,
+                guardrails.tune_policy,
+            )
         if delta == 0:
             return current_event
         proposed_value = _value_limited_value(
@@ -1636,6 +1687,7 @@ def _mutate_snapshot_event(
             anchor_event,
             current_event,
             proposed_value,
+            dual_vco_detune_radius,
         )
         return replace(
             current_event,
