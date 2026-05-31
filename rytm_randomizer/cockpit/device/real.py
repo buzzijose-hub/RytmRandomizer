@@ -38,8 +38,8 @@ from ..data import (
     PadState,
     Snapshot,
     new_ulid,
-    synthetic_parameter_cc,
 )
+from ..data.send_plan import synthetic_parameter_cc
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from ...mido_provider import MidoMidiPortProvider

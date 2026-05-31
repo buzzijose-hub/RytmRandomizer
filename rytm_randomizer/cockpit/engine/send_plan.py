@@ -19,16 +19,14 @@ from ..data import (
     ReadinessReason,
     SendPlanPacket,
     Snapshot,
-    synthetic_parameter_cc,
 )
+from ..data.rytm_parameter_map import cockpit_pad_channel, cockpit_parameter_control
 
 _logger = get_logger(__name__)
 """Module logger for the cockpit send-plan builder. Bound here so future
 structured log calls (per-plan packet/blocked-reason breadcrumbs) can
 land in the package's structured stream without touching this file's
 imports. See ``OBSERVABILITY_REVIEW.md`` Phase 5."""
-
-_DEFAULT_MIDI_CHANNEL = 0
 
 
 def prepare_send_plan(
@@ -42,7 +40,7 @@ def prepare_send_plan(
     if profile is None or candidate is None:
         return None
 
-    packets = _candidate_packets(candidate, pad_locks)
+    packets = _candidate_packets(snapshot, candidate, pad_locks)
     blocked_reasons = _blocked_reasons(snapshot, profile, candidate, packets)
     ready = not blocked_reasons
     readiness_reason: ReadinessReason = "ready" if ready else blocked_reasons[0]
@@ -63,20 +61,28 @@ def prepare_send_plan(
 
 
 def _candidate_packets(
+    snapshot: Snapshot,
     candidate: MutationCandidate,
     pad_locks: frozenset[int],
 ) -> tuple[SendPlanPacket, ...]:
+    machines_by_pad = {pad.pad_id: pad.machine for pad in snapshot.pads}
     packets: list[SendPlanPacket] = []
     for delta in sorted(candidate.pad_deltas, key=lambda item: item.pad_id):
         if delta.pad_id in pad_locks:
             continue
+        machine = machines_by_pad.get(delta.pad_id)
+        if machine is None:
+            continue
         for parameter in sorted(delta.changed_keys):
+            control = cockpit_parameter_control(machine, parameter)
+            if control is None:
+                continue
             packets.append(
                 SendPlanPacket(
                     pad_id=delta.pad_id,
                     parameter=parameter,
-                    channel=_DEFAULT_MIDI_CHANNEL,
-                    control=synthetic_parameter_cc(parameter),
+                    channel=cockpit_pad_channel(delta.pad_id),
+                    control=control,
                     value=int(delta.proposed_params[parameter]),
                 )
             )
