@@ -1,9 +1,16 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-05-30. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-06-02. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-05-31: Next OXI-style live macro bundle design prepared while PR #149
+  waited on formal review. The spec defines the post-#149 direction for named
+  live macros (`kit-core`, `hard-groove`, `industrial`, `dub-pressure`,
+  `transition`, `home`), all-12-pad Rytm pad policies, Dual VCO detune
+  safe-band handling, passive/mock-first Analog Four runway, Cockpit macro
+  contract handoff, and hardware-validation gates. See
+  `docs/superpowers/specs/2026-05-31-oxi-live-macro-bundle-design.md`.
 - 2026-05-30: Live snapshot shell `kit-core` macro prepared for the first
   all-12-pad OXI-style captured-kit recipe. It reuses the proven `drum-core`
   setup for Pad 1 and pads 2-4, then adds Jose's pad 5-11 lane discipline:
