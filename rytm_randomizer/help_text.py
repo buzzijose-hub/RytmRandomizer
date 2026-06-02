@@ -68,6 +68,7 @@ USAGE = (
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
     "style-profile-report | style-crates-queue-journal-report [--json] | "
     "style-crate-rehearsal-deck-report [--crate <key>] [--json] | "
+    "oxi-live-macro-catalog-report | "
     "reference-style-blueprint-report "
     "(--description <text>|--audio <path>|--library <dir>) [--json] | "
     "list-style-profiles | inspect-style-profile <key> | "
@@ -1166,6 +1167,27 @@ Behavior:
 
 Safety:
 {_safety_block(SAFETY_LINES)}"""
+
+
+def _oxi_live_macro_catalog_report_help():
+    return """RytmRandomizer passive CLI: oxi-live-macro-catalog-report
+
+Usage:
+  python -m rytm_randomizer.cli oxi-live-macro-catalog-report
+  python -m rytm_randomizer.cli oxi-live-macro-catalog-report --help
+
+Behavior:
+  Prints the passive OXI live macro catalog, including Rytm macro cards,
+  candidate-only Analog Four runway state, recovery actions, and blocked active
+  actions.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required"""
 
 
 def _reference_style_blueprint_report_help():
@@ -2587,6 +2609,7 @@ Usage:
   python -m rytm_randomizer.cli style-profile-report
   python -m rytm_randomizer.cli style-crates-queue-journal-report [--json]
   python -m rytm_randomizer.cli style-crate-rehearsal-deck-report [--crate <key>] [--json]
+  python -m rytm_randomizer.cli oxi-live-macro-catalog-report
   python -m rytm_randomizer.cli reference-style-blueprint-report (--description <text>|--audio <path>|--library <dir>) [--json]
   python -m rytm_randomizer.cli list-style-profiles
   python -m rytm_randomizer.cli inspect-style-profile <key>
@@ -2735,6 +2758,8 @@ Commands:
                      Print the passive Style Crates, Queue, and Mutation Journal report.
   style-crate-rehearsal-deck-report
                      Print passive GUI-ready style crate rehearsal cards.
+  oxi-live-macro-catalog-report
+                     Print passive OXI live macro cards and A4 runway state.
   reference-style-blueprint-report
                      Translate a style reference into a passive Rytm plus Analog Four blueprint.
   list-style-profiles
@@ -3132,6 +3157,7 @@ Safety:
     "style-profile-report": _style_profile_report_help,
     "style-crates-queue-journal-report": _style_crates_queue_journal_report_help,
     "style-crate-rehearsal-deck-report": _style_crate_rehearsal_deck_report_help,
+    "oxi-live-macro-catalog-report": _oxi_live_macro_catalog_report_help,
     "reference-style-blueprint-report": _reference_style_blueprint_report_help,
     "style-target-report": _style_target_report_help,
     "style-performance-arc-report": _style_performance_arc_report_help,
