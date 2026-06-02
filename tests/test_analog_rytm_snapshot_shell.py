@@ -1180,6 +1180,60 @@ def test_snapshot_shell_kit_core_keeps_tom_filter_light_and_lfo_frozen() -> None
         )
 
 
+@pytest.mark.parametrize("command", ("hard-groove", "industrial", "dub-pressure", "transition"))
+def test_snapshot_shell_macros_keep_reserved_pads_src_first_and_no_filter_lfo(
+    command: str,
+) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    anchor = build_snapshot_shell_anchor(_snapshot())
+    shell = AnalogRytmSnapshotShell(anchor, MockMidiSender())
+
+    assert shell.dispatch(command) is True
+
+    for pad in (5, 9, 10, 11):
+        changed = _changed_events_for_pad(anchor.events, shell.state.current_events, pad=pad)
+        assert any(event.source == "machine_src" for event in changed)
+        assert all(event.section not in {"FILTER", "LFO"} for event in changed)
+        assert all(
+            event.section != "AMP"
+            or event.parameter in {"Amp Overdrive", "Amp Delay Send", "Amp Reverb Send"}
+            for event in changed
+        )
+
+
+@pytest.mark.parametrize("command", ("hard-groove", "industrial", "dub-pressure", "transition"))
+def test_snapshot_shell_macros_keep_tom_pads_source_with_light_filter_and_no_lfo(
+    command: str,
+) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    anchor = build_snapshot_shell_anchor(_snapshot())
+    shell = AnalogRytmSnapshotShell(anchor, MockMidiSender())
+
+    assert shell.dispatch(command) is True
+
+    for pad in (6, 7, 8):
+        changed = _changed_events_for_pad(anchor.events, shell.state.current_events, pad=pad)
+        assert any(event.source == "machine_src" for event in changed)
+        assert all(
+            old.value == new.value
+            for old, new in zip(anchor.events, shell.state.current_events, strict=True)
+            if new.pad == pad and new.section == "LFO"
+        )
+        assert all(
+            abs(new.value - old.value) <= 2
+            for old, new in zip(anchor.events, shell.state.current_events, strict=True)
+            if new.pad == pad and new.section == "FILTER"
+        )
+
+
 def test_snapshot_shell_drum_core_allows_centered_dual_vco_osc_2_detune(
     capsys,
 ) -> None:
