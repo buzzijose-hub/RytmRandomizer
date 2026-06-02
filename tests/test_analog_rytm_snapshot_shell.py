@@ -1234,6 +1234,70 @@ def test_snapshot_shell_macros_keep_tom_pads_source_with_light_filter_and_no_lfo
         )
 
 
+@pytest.mark.parametrize("command", ("hard-groove", "industrial", "dub-pressure", "transition"))
+def test_snapshot_shell_macros_keep_low_dual_vco_detune_guarded(command: str) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    snapshot = AnalogRytmSnapshotDecoder().decode(
+        _snapshot_payload_with_track_overrides(
+            overrides_by_pad={
+                2: (28, {4: 25, 5: 64}),
+                3: (28, {4: 4, 5: 51}),
+            },
+        ),
+        slot=0,
+    )
+    anchor = build_snapshot_shell_anchor(snapshot)
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(anchor, sender)
+
+    assert shell.dispatch(command) is True
+    assert shell.dispatch("send") is True
+
+    assert (
+        _event_for(shell.state.current_events, pad=2, parameter="Osc 2 Detune").value
+        == _event_for(anchor.events, pad=2, parameter="Osc 2 Detune").value
+    )
+    assert (
+        _event_for(shell.state.current_events, pad=3, parameter="Osc 2 Detune").value
+        == _event_for(anchor.events, pad=3, parameter="Osc 2 Detune").value
+    )
+    assert all(
+        not (message.channel in {1, 2} and message.control == 20)
+        for message in sender.sent_messages
+    )
+
+
+@pytest.mark.parametrize("command", ("hard-groove", "industrial", "dub-pressure", "transition"))
+def test_snapshot_shell_macros_allow_center_band_dual_vco_detune(command: str) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    snapshot = AnalogRytmSnapshotDecoder().decode(
+        _snapshot_payload_with_track_overrides(
+            overrides_by_pad={
+                2: (28, {4: 66, 5: 64}),
+            },
+        ),
+        slot=0,
+    )
+    anchor = build_snapshot_shell_anchor(snapshot)
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(anchor, sender)
+
+    assert shell.dispatch(command) is True
+    assert shell.dispatch("send") is True
+
+    current = _event_for(shell.state.current_events, pad=2, parameter="Osc 2 Detune")
+    assert 62 <= current.value <= 70
+    assert any(message.channel == 1 and message.control == 20 for message in sender.sent_messages)
+
+
 def test_snapshot_shell_drum_core_allows_centered_dual_vco_osc_2_detune(
     capsys,
 ) -> None:
