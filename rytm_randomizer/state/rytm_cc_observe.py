@@ -34,6 +34,11 @@ class RytmObserveExactEvent(Protocol):
     source: str
 
 
+class RytmObserveAnchorEvent(RytmObserveExactEvent, Protocol):
+    pad: int
+    value: int
+
+
 @dataclass(frozen=True)
 class RytmCcLabel:
     section: str
@@ -62,6 +67,14 @@ class ObservedRytmControl:
     @property
     def label_names(self) -> tuple[str, ...]:
         return tuple(label.display_name for label in self.labels)
+
+
+@dataclass(frozen=True)
+class RytmDualVcoDetuneAnchor:
+    pad: int
+    channel: int
+    control: int
+    anchor_value: int
 
 
 @dataclass(frozen=True)
@@ -153,6 +166,24 @@ def build_rytm_cc_exact_label_lookup(
     return MappingProxyType(
         {key: tuple(sorted(labels, key=_label_sort_key)) for key, labels in sorted(grouped.items())}
     )
+
+
+def build_rytm_dual_vco_detune_anchor_lookup(
+    events: Iterable[RytmObserveAnchorEvent],
+) -> Mapping[tuple[int, int], RytmDualVcoDetuneAnchor]:
+    """Return exact Dual VCO detune anchors keyed by ``(channel, CC)``."""
+
+    anchors: dict[tuple[int, int], RytmDualVcoDetuneAnchor] = {}
+    for event in events:
+        if not _is_dual_vco_detune_event(event):
+            continue
+        anchors[(event.channel, event.cc_msb)] = RytmDualVcoDetuneAnchor(
+            pad=event.pad,
+            channel=event.channel,
+            control=event.cc_msb,
+            anchor_value=event.value,
+        )
+    return MappingProxyType(dict(sorted(anchors.items())))
 
 
 def observe_rytm_cc_message(
@@ -338,6 +369,14 @@ def _nrpn_address_for_exact_event(event: RytmObserveExactEvent) -> tuple[int | N
     return None, None
 
 
+def _is_dual_vco_detune_event(event: RytmObserveExactEvent) -> bool:
+    return (
+        event.source == "machine_src"
+        and event.machine_key == "dual_vco"
+        and event.parameter == "Osc 2 Detune"
+    )
+
+
 def _machine_key_for(mapping: RytmObserveCcMapping) -> str | None:
     machine_key = getattr(mapping, "machine_key", None)
     if isinstance(machine_key, str):
@@ -356,12 +395,15 @@ __all__ = [
     "UNKNOWN_POLICY",
     "TRACK_COUNT",
     "RytmObserveCcMapping",
+    "RytmObserveAnchorEvent",
     "RytmObserveExactEvent",
+    "RytmDualVcoDetuneAnchor",
     "RytmCcLabel",
     "ObservedRytmControl",
     "ObservedRytmNrpn",
     "RytmCcObserveSnapshot",
     "empty_rytm_cc_observe_snapshot",
+    "build_rytm_dual_vco_detune_anchor_lookup",
     "build_rytm_cc_label_lookup",
     "build_rytm_cc_exact_label_lookup",
     "observe_rytm_cc_message",

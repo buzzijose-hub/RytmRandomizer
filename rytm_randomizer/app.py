@@ -573,11 +573,13 @@ def _run_rytm_cc_observe(args: argparse.Namespace) -> int:
     from .state.rytm_cc_observe import (
         build_rytm_cc_exact_label_lookup,
         build_rytm_cc_label_lookup,
+        build_rytm_dual_vco_detune_anchor_lookup,
         empty_rytm_cc_observe_snapshot,
         observe_rytm_cc_message,
     )
 
     exact_cc_lookup = None
+    dual_vco_detune_anchors = None
     snapshot_label_line = None
     if args.rytm_cc_observe_snapshot is not None:
         try:
@@ -586,6 +588,7 @@ def _run_rytm_cc_observe(args: argparse.Namespace) -> int:
             sys.stderr.write(f"--rytm-cc-observe-snapshot failed: {exc}\n")
             return 1
         exact_cc_lookup = build_rytm_cc_exact_label_lookup(anchor.events)
+        dual_vco_detune_anchors = build_rytm_dual_vco_detune_anchor_lookup(anchor.events)
         snapshot_label_line = f"snapshot labels: {anchor.kit_name} ({anchor.fingerprint})"
 
     provider = build_mido_midi_port_provider()
@@ -632,6 +635,7 @@ def _run_rytm_cc_observe(args: argparse.Namespace) -> int:
             return 1
         sys.stdout.write("received KIT SysEx\n")
         exact_cc_lookup = build_rytm_cc_exact_label_lookup(anchor.events)
+        dual_vco_detune_anchors = build_rytm_dual_vco_detune_anchor_lookup(anchor.events)
         snapshot_label_line = f"snapshot labels: {anchor.kit_name} ({anchor.fingerprint})"
 
     try:
@@ -673,7 +677,15 @@ def _run_rytm_cc_observe(args: argparse.Namespace) -> int:
                 _shutdown_logger = _observability_get_logger(__name__)
                 _shutdown_logger.debug("rytm_cc_observe_port_close_failed_best_effort")
 
-    sys.stdout.write("\n".join(format_rytm_cc_observe_report(snapshot, input_name=port_name)))
+    sys.stdout.write(
+        "\n".join(
+            format_rytm_cc_observe_report(
+                snapshot,
+                input_name=port_name,
+                dual_vco_detune_anchors=dual_vco_detune_anchors,
+            )
+        )
+    )
     sys.stdout.write("\n")
     return 0
 

@@ -241,6 +241,19 @@ def _changed_event_count_for_pad(
     )
 
 
+def _changed_events_for_pad(
+    before: Sequence[AnalogRytmRenderedStyleEvent],
+    after: Sequence[AnalogRytmRenderedStyleEvent],
+    *,
+    pad: int,
+) -> tuple[AnalogRytmRenderedStyleEvent, ...]:
+    return tuple(
+        new
+        for old, new in zip(before, after, strict=True)
+        if new.pad == pad and old.value != new.value
+    )
+
+
 def _pad_values_unchanged(
     before: Sequence[AnalogRytmRenderedStyleEvent],
     after: Sequence[AnalogRytmRenderedStyleEvent],
@@ -922,6 +935,281 @@ def test_snapshot_shell_drum_core_omits_dual_vco_osc_2_detune_for_pads_2_and_3(
     )
     assert all(
         not (message.channel in {1, 2} and message.control == 20)
+        for message in sender.sent_messages
+    )
+
+
+def test_snapshot_shell_kit_core_macro_applies_full_kit_pad_lane_recipe(
+    capsys,
+) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(build_snapshot_shell_anchor(_snapshot()), sender)
+
+    assert shell.dispatch("kit-core") is True
+
+    captured = capsys.readouterr()
+    guardrails = shell.state.guardrails
+    assert guardrails.mode == "live"
+    assert guardrails.locked_pads == frozenset({1})
+    assert guardrails.lane_policies["lfo"] == "off"
+    assert guardrails.lane_policies["fx"] == "micro"
+    assert guardrails.randomizer_overrides[2].amount == "wide"
+    assert guardrails.randomizer_overrides[2].density == "full"
+    assert guardrails.randomizer_overrides[2].bias == "looser"
+    assert guardrails.randomizer_overrides[6].amount == "wide"
+    assert guardrails.randomizer_overrides[6].density == "full"
+    assert guardrails.randomizer_overrides[6].bias == "tighter"
+    assert guardrails.randomizer_overrides[8].amount == "wide"
+    assert guardrails.randomizer_overrides[8].density == "full"
+    assert guardrails.randomizer_overrides[8].bias == "tighter"
+    for pad in (5, 9, 10, 11):
+        assert guardrails.pad_lane_policies[pad]["filter"] == "off"
+        assert guardrails.pad_lane_policies[pad]["lfo"] == "off"
+        assert guardrails.pad_section_family_allowlists[pad]["AMP"] == frozenset(
+            {"drive", "delay", "reverb"}
+        )
+    for pad in (6, 7, 8):
+        assert guardrails.pad_lane_policies[pad]["filter"] == "micro"
+        assert guardrails.pad_lane_policies[pad]["lfo"] == "off"
+        assert guardrails.pad_section_family_allowlists[pad]["AMP"] == frozenset(
+            {"drive", "delay", "reverb"}
+        )
+    assert shell.state.last_command_name == "randomize"
+    assert _pad_values_unchanged(shell.state.anchor.events, shell.state.current_events, pad=1)
+    assert _changed_event_count_for_pad(
+        shell.state.anchor.events,
+        shell.state.current_events,
+        pad=6,
+    )
+    assert len(sender.sent_messages) == 0
+    assert "macro applied: kit-core" in captured.out
+    assert "mutation applied: Randomize" in captured.out
+    assert shell.dispatch("status") is True
+    captured = capsys.readouterr()
+    assert "pad lane overrides:" in captured.out
+    assert "5:filter=off,lfo=off" in captured.out
+    assert "6:filter=micro,lfo=off" in captured.out
+    assert "pad section allowlists:" in captured.out
+    assert "5:AMP=delay/drive/reverb" in captured.out
+
+
+def test_snapshot_shell_kit_core_omits_filter_lfo_and_non_fx_amp_on_reserved_pads() -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    anchor = build_snapshot_shell_anchor(_snapshot())
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(anchor, sender)
+
+    assert shell.dispatch("kit-core") is True
+    assert shell.dispatch("send") is True
+
+    forbidden_addresses = {
+        (event.channel, event.cc_msb)
+        for event in anchor.events
+        if event.pad in {5, 9, 10, 11}
+        and (
+            event.section in {"FILTER", "LFO"}
+            or (
+                event.section == "AMP"
+                and event.parameter
+                not in {
+                    "Amp Overdrive",
+                    "Amp Delay Send",
+                    "Amp Reverb Send",
+                }
+            )
+        )
+    }
+    assert all(
+        (message.channel, message.control) not in forbidden_addresses
+        for message in sender.sent_messages
+    )
+    for pad in (5, 9, 10, 11):
+        assert all(
+            event.section not in {"FILTER", "LFO"}
+            and not (
+                event.section == "AMP"
+                and event.parameter not in {"Amp Overdrive", "Amp Delay Send", "Amp Reverb Send"}
+            )
+            for event in _changed_events_for_pad(anchor.events, shell.state.current_events, pad=pad)
+        )
+
+
+def test_snapshot_shell_kit_core_keeps_tom_filter_light_and_lfo_frozen() -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    anchor = build_snapshot_shell_anchor(_snapshot())
+    shell = AnalogRytmSnapshotShell(anchor, MockMidiSender())
+
+    assert shell.dispatch("kit-core") is True
+
+    for pad in (6, 7, 8):
+        assert any(
+            event.source == "machine_src"
+            for event in _changed_events_for_pad(anchor.events, shell.state.current_events, pad=pad)
+        )
+        assert all(
+            abs(new.value - old.value) <= 2
+            for old, new in zip(anchor.events, shell.state.current_events, strict=True)
+            if new.pad == pad and new.section == "FILTER"
+        )
+        assert all(
+            old.value == new.value
+            for old, new in zip(anchor.events, shell.state.current_events, strict=True)
+            if new.pad == pad and new.section == "LFO"
+        )
+
+
+def test_snapshot_shell_drum_core_allows_centered_dual_vco_osc_2_detune(
+    capsys,
+) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    snapshot = AnalogRytmSnapshotDecoder().decode(
+        _snapshot_payload_with_track_overrides(
+            overrides_by_pad={
+                2: (28, {4: 79, 5: 64}),
+            },
+        ),
+        slot=0,
+    )
+    anchor = build_snapshot_shell_anchor(snapshot)
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(anchor, sender)
+
+    assert shell.dispatch("drum-core") is True
+    assert shell.dispatch("changes") is True
+    assert shell.dispatch("send") is True
+
+    captured = capsys.readouterr()
+    current_detune = _event_for(shell.state.current_events, pad=2, parameter="Osc 2 Detune")
+    assert current_detune.value == 78
+    assert "Pad 02 dual_vco Osc 2 Detune" in captured.out
+    assert any(
+        message.channel == 1 and message.control == 20 and message.value == current_detune.value
+        for message in sender.sent_messages
+    )
+
+
+def test_snapshot_shell_drum_core_allows_anchor_relative_dual_vco_osc_2_detune(
+    capsys,
+) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    snapshot = AnalogRytmSnapshotDecoder().decode(
+        _snapshot_payload_with_track_overrides(
+            overrides_by_pad={
+                2: (28, {4: 66, 5: 64}),
+            },
+        ),
+        slot=0,
+    )
+    anchor = build_snapshot_shell_anchor(snapshot)
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(anchor, sender)
+
+    assert shell.dispatch("drum-core") is True
+    assert shell.dispatch("changes") is True
+    assert shell.dispatch("send") is True
+
+    captured = capsys.readouterr()
+    anchor_detune = _event_for(anchor.events, pad=2, parameter="Osc 2 Detune")
+    current_detune = _event_for(shell.state.current_events, pad=2, parameter="Osc 2 Detune")
+    assert anchor_detune.value == 66
+    assert abs(current_detune.value - anchor_detune.value) == 1
+    assert "Pad 02 dual_vco Osc 2 Detune" in captured.out
+    assert any(
+        message.channel == 1 and message.control == 20 and message.value == current_detune.value
+        for message in sender.sent_messages
+    )
+
+
+def test_snapshot_shell_drum_core_allows_pad_3_centered_dual_vco_osc_2_detune(
+    capsys,
+) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    snapshot = AnalogRytmSnapshotDecoder().decode(
+        _snapshot_payload_with_track_overrides(
+            overrides_by_pad={
+                3: (28, {4: 66, 5: 64}),
+            },
+        ),
+        slot=0,
+    )
+    anchor = build_snapshot_shell_anchor(snapshot)
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(anchor, sender)
+
+    assert shell.dispatch("drum-core") is True
+    assert shell.dispatch("changes") is True
+    assert shell.dispatch("send") is True
+
+    captured = capsys.readouterr()
+    anchor_detune = _event_for(anchor.events, pad=3, parameter="Osc 2 Detune")
+    current_detune = _event_for(shell.state.current_events, pad=3, parameter="Osc 2 Detune")
+    assert anchor_detune.value == 66
+    assert abs(current_detune.value - anchor_detune.value) == 1
+    assert "Pad 03 dual_vco Osc 2 Detune" in captured.out
+    assert any(
+        message.channel == 2 and message.control == 20 and message.value == current_detune.value
+        for message in sender.sent_messages
+    )
+
+
+def test_snapshot_shell_drum_core_widens_centered_dual_vco_detune_on_next_variation(
+    capsys,
+) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    snapshot = AnalogRytmSnapshotDecoder().decode(
+        _snapshot_payload_with_track_overrides(
+            overrides_by_pad={
+                2: (28, {4: 66, 5: 64}),
+            },
+        ),
+        slot=0,
+    )
+    anchor = build_snapshot_shell_anchor(snapshot)
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(anchor, sender)
+
+    assert shell.dispatch("drum-core") is True
+    assert shell.dispatch("go") is True
+    assert shell.dispatch("changes") is True
+
+    captured = capsys.readouterr()
+    anchor_detune = _event_for(anchor.events, pad=2, parameter="Osc 2 Detune")
+    current_detune = _event_for(shell.state.current_events, pad=2, parameter="Osc 2 Detune")
+    detune_delta = abs(current_detune.value - anchor_detune.value)
+    assert anchor_detune.value == 66
+    assert 2 <= detune_delta <= 4
+    assert "Pad 02 dual_vco Osc 2 Detune" in captured.out
+    assert any(
+        message.channel == 1 and message.control == 20 and message.value == current_detune.value
         for message in sender.sent_messages
     )
 
@@ -2147,6 +2435,9 @@ def test_snapshot_shell_dispatch_validation_edges(capsys, monkeypatch) -> None:
         "preset",
         "preset nope",
         "preset live",
+        "kit-core",
+        "kitcore",
+        "full-kit",
         "guards",
         "guards reset",
         "again",

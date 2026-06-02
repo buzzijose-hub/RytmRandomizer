@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Final
 
 from ..state.rytm_cc_observe import (
     ObservedRytmControl,
     ObservedRytmNrpn,
     RytmCcObserveSnapshot,
+    RytmDualVcoDetuneAnchor,
 )
 from .formatter import PassiveReportHeader, passive_report_lines
 
@@ -23,13 +25,26 @@ def format_rytm_cc_observe_report(
     snapshot: RytmCcObserveSnapshot,
     *,
     input_name: str,
+    dual_vco_detune_anchors: Mapping[tuple[int, int], RytmDualVcoDetuneAnchor] | None = None,
 ) -> list[str]:
     """Return deterministic passive report lines for Rytm CC observations."""
 
-    return passive_report_lines(_HEADER, _body_lines(snapshot, input_name=input_name))
+    return passive_report_lines(
+        _HEADER,
+        _body_lines(
+            snapshot,
+            input_name=input_name,
+            dual_vco_detune_anchors=dual_vco_detune_anchors,
+        ),
+    )
 
 
-def _body_lines(snapshot: RytmCcObserveSnapshot, *, input_name: str) -> list[str]:
+def _body_lines(
+    snapshot: RytmCcObserveSnapshot,
+    *,
+    input_name: str,
+    dual_vco_detune_anchors: Mapping[tuple[int, int], RytmDualVcoDetuneAnchor] | None,
+) -> list[str]:
     lines = [
         f"Input: {input_name}",
         "Opened output: False",
@@ -39,6 +54,9 @@ def _body_lines(snapshot: RytmCcObserveSnapshot, *, input_name: str) -> list[str
 
     for observation in snapshot.observations:
         lines.extend(_observation_lines(observation))
+
+    if dual_vco_detune_anchors is not None:
+        lines.extend(_dual_vco_detune_probe_lines(snapshot, dual_vco_detune_anchors))
 
     lines.append(f"Observed NRPN messages: {snapshot.observed_nrpn_count}")
     for nrpn in snapshot.nrpn_observations:
@@ -52,6 +70,49 @@ def _body_lines(snapshot: RytmCcObserveSnapshot, *, input_name: str) -> list[str
         ]
     )
     return lines
+
+
+def _dual_vco_detune_probe_lines(
+    snapshot: RytmCcObserveSnapshot,
+    anchors: Mapping[tuple[int, int], RytmDualVcoDetuneAnchor],
+) -> list[str]:
+    lines = ["Dual VCO detune probe:"]
+    if not anchors:
+        lines.append("- no Dual VCO Osc 2 Detune anchor rows in the captured snapshot")
+        return lines
+
+    for key, anchor in anchors.items():
+        observed_values = tuple(
+            observation.value
+            for observation in snapshot.observations
+            if (observation.channel, observation.control) == key
+        )
+        if not observed_values:
+            lines.append(
+                f"- Pad {anchor.pad} CC{anchor.control} anchor value {anchor.anchor_value}; "
+                "observed value(s) none; verdict: move that encoder before pressing Enter"
+            )
+            continue
+        deltas = tuple(value - anchor.anchor_value for value in observed_values)
+        verdict = (
+            "emitted CC includes anchor value; raw snapshot and emitted CC share the same scale"
+            if any(delta == 0 for delta in deltas)
+            else "emitted CC did not include anchor value; rerun with tiny movement from anchor"
+        )
+        lines.append(
+            f"- Pad {anchor.pad} CC{anchor.control} anchor value {anchor.anchor_value}; "
+            f"observed value(s) {_format_values(observed_values)}; "
+            f"delta(s) {_format_deltas(deltas)}; verdict: {verdict}"
+        )
+    return lines
+
+
+def _format_values(values: tuple[int, ...]) -> str:
+    return ", ".join(str(value) for value in values)
+
+
+def _format_deltas(deltas: tuple[int, ...]) -> str:
+    return ", ".join(f"{delta:+d}" for delta in deltas)
 
 
 def _nrpn_lines(nrpn: ObservedRytmNrpn) -> list[str]:

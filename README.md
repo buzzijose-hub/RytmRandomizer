@@ -253,9 +253,10 @@ clears the staged mutation, and keeps the current session guardrails.
 
 Inside the shell, use `S1A`, `S3A`, `S3B`, `S4B`, `4`, `Y`, `V`, `N`, `Z`,
 `U`, `preview`, `changes`, `send`, `go`, `again`, `next`, `kit`,
-`resnapshot`, `mode`, `depth`, `lane`, `lock`, `unlock`, `pad`, `preset`,
-`guards reset`, `status`, and `q`. `Y`, `V`, and `N` ask for depth (`micro`,
-`groove`, or `strong`). `send` repeats the currently staged plan; type `go` to
+`resnapshot`, `drum-core`, `kit-core`, `mode`, `depth`, `lane`, `lock`,
+`unlock`, `pad`, `preset`, `guards reset`, `status`, and `q`. `Y`, `V`, and
+`N` ask for depth (`micro`, `groove`, or `strong`). `send` repeats the currently
+staged plan; type `go` to
 make the next variation and send it in one step, or type the same mutation
 command again, `again`, or `next` to stage the next variation before sending.
 
@@ -294,6 +295,8 @@ preset studio
 guards reset
 fresh
 kit
+drum-core
+kit-core
 ```
 
 Global mutations respect each pad's session lane. In `live` mode, Pad 1 is
@@ -323,6 +326,18 @@ switch machines, and avoids samples, performance macros, source level, track
 level, amp volume, SysEx writes, transport, pattern changes, and kit/project
 writes. Zone commands (`Y`, `V`, and `N`) layer on the current staged plan; use
 `fresh` or `Z` first when you want an anchor-only zone mutation.
+
+Two live staging macros capture the hardware-testing direction. `drum-core`
+keeps the hardware-proven four-pad recipe: `preset live`, LFO off, FX micro,
+Pad 1 locked as the kick anchor, and pads 2-4 wide/full with Pad 2 looser and
+pads 3-4 grittier. `kit-core` extends that idea to the whole captured kit while
+keeping Jose's pad 5-12 lane discipline: Pad 1 stays locked; pads 2-4 keep the
+drum-core recipe; pads 6-8 are treated as tom/discovery voices with wide/full
+source movement, light filter movement, no LFO movement, and AMP limited to
+overdrive, delay, and reverb; pads 5, 9, 10, and 11 do not move filter or LFO
+rows and also limit AMP movement to overdrive, delay, and reverb. Both macros
+stage `randomize` only. Inspect `changes`, then explicitly type `send` or `go`
+when you are ready.
 
 Analog Four soft live capture is input-only:
 

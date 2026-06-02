@@ -350,6 +350,61 @@ staging macro. The remaining question is musical feel on different kits:
 whether this should stay specifically "pads 2-4 drum-core" or become the first
 of several named performance macros.
 
+## Follow-up Macro: Kit-Core Full-Kit Staging
+
+The next passive code slice adds `kit-core` as a broader all-12-pad staging
+macro. It is not a new outbound transport and it does not send on its own; it
+stages `randomize` so the operator can inspect `changes` before `send` or
+`go`.
+
+`kit-core` keeps the hardware-validated `drum-core` foundation:
+
+- `preset live`
+- LFO off
+- FX micro
+- Pad 1 locked as the kick anchor
+- pads 2-4 wide/full with Pad 2 looser and pads 3-4 grittier
+
+It then encodes Jose's pad 5-11 performance policy for captured-kit
+randomization:
+
+- pads 6-8 get wide/full source discovery, light filter movement, no LFO
+  movement, and AMP movement limited to overdrive, delay, and reverb.
+- pads 5, 9, 10, and 11 keep filter and LFO rows frozen, and their AMP rows are
+  also limited to overdrive, delay, and reverb.
+- Pad 12 remains available in the general product/macro for users who use that
+  lane, but Jose does not rely on Pad 12 in his current live workflow.
+- the existing Pad 2/3 Dual VCO `Osc 2 Detune` live-CC guard remains active.
+
+Hardware validation on KIT 13 fingerprint `4e32243208cc7fe5` confirmed the
+macro path:
+
+- `kit-core` applied `preset live`, LFO off, FX micro, Pad 1 locked, pads 2-4
+  wide/full, pads 6-8 wide/full with light filter/no LFO, and pads 5/9/10/11
+  with filter/LFO off and AMP limited to delay/drive/reverb.
+- Pad 2 Dual VCO kept moving the intended drum-core foundation rows:
+  `Osc 1 Tune`, `Osc 1 Decay`, `Balance`, `Osc Config`, `Osc 2 Decay`,
+  `Bend`, filter rows, and AMP rows. It did not show the previously dangerous
+  low-value `Osc 2 Detune` movement.
+- Pad 3 SY Raw moved source rows including `Tune`, `Decay`, `Osc 2 Detune`,
+  `Waveform 1`, and `Balance`, plus filter and AMP rows.
+- Pad 4 SD Hard moved source rows including `Tune`, `Decay`, `Sweep Depth`,
+  `Tick Level`, `Noise Decay`, `Noise Level`, and `Sweep Time`, plus filter
+  and AMP rows.
+- Pads 5/9/10/11 did move SRC rows, which is the desired primary behavior:
+  Pad 5 `Tune`/`Decay`/`Sweep Depth`/`Noise Level`/`Snap Type`, Pad 9
+  `Tune`/`Decay`/`Color`, Pad 10 `Tune 1-6`, and Pad 11
+  `Tune`/`Tail Decay`/`Component` rows.
+- Pads 6-8 moved XT Classic source rows heavily, with only light filter
+  movement and no LFO rows shown.
+- `send`, repeated `go`, then `Z` plus `send` completed without reported
+  hardware errors, and final `changes` returned `no parameter changes staged`.
+
+Conclusion: `kit-core` is hardware-smoke-tested as an OXI-style full-kit
+sound-design performer macro. The listening notes still need to decide whether
+Pad 12 should stay in this general macro or move to a separate user-selectable
+expanded-kit variant, but it should remain available for users who use it.
+
 ## Hardware Lesson: Dual VCO Detune Guard
 
 Follow-up inspection on KIT 13 found that both Dual VCO pads showed `ERR` on
@@ -450,6 +505,48 @@ hardware procedure proves a different transport safe. The current enforcement
 point is `_is_live_dual_vco_detune_guarded_event`; it is a live-CC circuit
 breaker, not a permanent decision to remove Dual VCO detune from future
 sound-design work.
+
+Follow-up outbound isolation on KIT 14 then proved a narrow centered live band:
+
+- Pad 2 same-value `CC20` send at `79` produced no visible `ERR`.
+- Pad 2 one-step `CC20` movement to `78` produced no visible `ERR`.
+- Pad 2 return `CC20` send to `79` produced no visible `ERR`.
+
+Second follow-up on the current loaded KIT 14 captured a fresh live snapshot
+with Pad 2 Dual VCO `Osc 2 Detune` at anchor `66`. The passive observer reported
+direct `CC20` value `66`, zero NRPN messages, and the verdict that the raw
+snapshot and emitted CC share the same scale. Outbound isolation from that exact
+anchor then proved the one-step center-band lane:
+
+- Pad 2 same-value `CC20` send at `66` produced no visible `ERR`.
+- Pad 2 one-step `CC20` movement to `65` produced no visible `ERR`.
+- Pad 2 return `CC20` send to `66` produced no visible `ERR`.
+- Pad 2 one-step `CC20` movement to `67` produced no visible `ERR`.
+- Pad 2 return `CC20` send to `66` produced no visible `ERR`.
+
+Additional outbound isolation from the same Pad 2 anchor `66` then proved a
+musically useful center-band window for stronger randomizer amounts:
+
+- Pad 2 two-step `CC20` movement to `64` produced no visible `ERR`.
+- Pad 2 return `CC20` send to `66` produced no visible `ERR`.
+- Pad 2 two-step `CC20` movement to `68` produced no visible `ERR`.
+- Pad 2 three-step `CC20` movement to `63` produced no visible `ERR`.
+- Pad 2 return `CC20` send to `66` produced no visible `ERR`.
+- Pad 2 three-step `CC20` movement to `69` produced no visible `ERR`.
+- Pad 2 return `CC20` send to `66` produced no visible `ERR`.
+- Pad 2 four-step `CC20` movement to `62` produced no visible `ERR`.
+- Pad 2 return `CC20` send to `66` produced no visible `ERR`.
+- Pad 2 four-step `CC20` movement to `70` produced no visible `ERR`.
+
+Conclusion: Dual VCO detune is not globally unusable over live CC. The unsafe
+KIT 13 low values remain guarded, but captured center-band anchors can now move
+inside an amount-aware live lane: micro/gentle stays at one step, normal stays
+at two steps, and wide/strong stays at four steps for anchors in the proven
+center-band. High anchors such as `79` remain one-step conservative because only
+`79 -> 78 -> 79` has been separately proven there. This lets the parameter
+participate in sound design without re-opening the earlier low-value `ERR`
+path. The passive observer also saw the hardware emit `80`, but outbound `80`
+has not yet been separately proven.
 
 ## Safe Resume Steps For Tomorrow
 
