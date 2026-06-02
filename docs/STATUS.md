@@ -4,6 +4,12 @@ Last updated: 2026-06-02. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-02: OXI live macro bundle implementation plan prepared on the clean
+  post-#149 base. The plan extends the merged `kit-core` foundation into named
+  live macros (`hard-groove`, `industrial`, `dub-pressure`, `transition`,
+  `home`), adds a passive macro catalog for Cockpit handoff, keeps Analog Four
+  candidate-only, and defines the hardware validation script. See
+  `docs/superpowers/plans/2026-06-02-oxi-live-macro-bundle.md`.
 - 2026-05-31: Next OXI-style live macro bundle design prepared while PR #149
   waited on formal review. The spec defines the post-#149 direction for named
   live macros (`kit-core`, `hard-groove`, `industrial`, `dub-pressure`,
