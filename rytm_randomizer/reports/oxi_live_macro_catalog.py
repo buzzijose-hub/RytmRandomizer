@@ -90,8 +90,7 @@ def format_oxi_live_macro_catalog_report(
     for card in report.rytm_macros:
         pads = ", ".join(str(pad) for pad in card.affected_pads)
         lines.append(
-            f"- {card.name} | {card.risk_label} | "
-            f"recovery={card.recovery_action} | pads={pads}"
+            f"- {card.name} | {card.risk_label} | " f"recovery={card.recovery_action} | pads={pads}"
         )
         lines.append(f"  {card.summary}")
     lines.extend(
