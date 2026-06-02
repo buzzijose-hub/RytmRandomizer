@@ -32,6 +32,7 @@ from .analog_rytm_12_pad_shell import classify_rytm_pad_role
 from .analog_rytm_live_helpers import clamp_midi_value as _clamp_midi_value
 from .analog_rytm_live_helpers import live_no_sleep as _no_sleep
 from .analog_rytm_live_helpers import rendered_events_by_pad as _events_by_pad
+from .analog_rytm_snapshot_macros import SNAPSHOT_LIVE_MACROS, SnapshotLiveMacroSpec
 
 InputFunc: TypeAlias = Callable[[str], str]
 SnapshotDepth: TypeAlias = Literal["micro", "groove", "strong"]
@@ -98,6 +99,7 @@ _CMD_KIT: Final[str] = "kit"
 _CMD_RESNAPSHOT: Final[str] = "resnapshot"
 _CMD_DRUM_CORE: Final[str] = "drum-core"
 _CMD_KIT_CORE: Final[str] = "kit-core"
+_CMD_MACRO: Final[str] = "macro"
 _CMD_QUIT: Final[str] = "q"
 _CMD_HELP: Final[str] = "help"
 _CMD_S1A: Final[str] = "s1a"
@@ -2002,6 +2004,8 @@ def _snapshot_help_text() -> str:
             "randomize / rand / r = OXI-style kit variation respecting pad contracts",
             "drum-core = lock Pad 1 and stage wide pads 2-4 drum discovery",
             "kit-core = lock Pad 1 and stage full-kit discovery using Jose's pad 5-12 lane recipe",
+            "macro NAME = stage a named live macro",
+            "hard-groove / industrial / dub-pressure / transition / home = direct macro shortcuts",
             "kit / resnapshot = receive a new live KIT SysEx anchor",
             "mode live|studio = choose session guardrail range",
             "depth gentle|normal|strong|wild = set global session depth",
@@ -2416,37 +2420,50 @@ class AnalogRytmSnapshotShell:
             self._set_pad_randomizer_policy(("pad", raw_pad, "bias", bias))
         self._apply_command(SNAPSHOT_SHELL_COMMANDS[_CMD_RANDOMIZE])
 
-    def _apply_kit_core_macro(self) -> None:
-        self._write_line("macro applied: kit-core")
-        self._set_preset(("preset", _PRESET_LIVE))
-        self._set_lane_policy(("lane", _LANE_LFO, _LANE_POLICY_OFF))
-        self._set_lane_policy(("lane", _LANE_FX, _LANE_POLICY_MICRO))
-        self._set_lock(("lock", "1"), locked=True)
-        for pad, bias in (
-            (2, _RANDOMIZER_BIAS_LOOSER),
-            (3, _RANDOMIZER_BIAS_GRITTIER),
-            (4, _RANDOMIZER_BIAS_GRITTIER),
-        ):
+    def _apply_home_macro(self) -> None:
+        self._write_line("macro applied: home")
+        self.state = replace(
+            self.state,
+            mutation_name="home",
+            previous_events=self.state.current_events,
+            current_events=self.state.anchor.events,
+            last_command_name=None,
+            last_depth=None,
+        )
+
+    def _apply_live_macro_spec(self, spec: SnapshotLiveMacroSpec) -> None:
+        self._write_line(f"macro applied: {spec.name}")
+        self._set_preset(("preset", spec.mode))
+        for lane, policy in spec.lane_policies.items():
+            self._set_lane_policy(("lane", lane, policy))
+        for pad in sorted(spec.locked_pads):
+            self._set_lock(("lock", str(pad)), locked=True)
+        for pad, pad_policy in sorted(spec.pad_policies.items()):
+            for lane, policy in pad_policy.lane_policies.items():
+                self._set_pad_lane_policy(pad, lane, policy)
+            for section, families in pad_policy.section_family_allowlists.items():
+                self._set_pad_section_family_allowlist(pad, section, families)
             raw_pad = str(pad)
-            self._set_pad_randomizer_policy(("pad", raw_pad, "amount", _RANDOMIZER_AMOUNT_WIDE))
-            self._set_pad_randomizer_policy(("pad", raw_pad, "density", _RANDOMIZER_DENSITY_FULL))
-            self._set_pad_randomizer_policy(("pad", raw_pad, "bias", bias))
-        for pad in (6, 7, 8):
-            raw_pad = str(pad)
-            self._set_pad_lane_policy(pad, _LANE_FILTER, _LANE_POLICY_MICRO)
-            self._set_pad_lane_policy(pad, _LANE_LFO, _LANE_POLICY_OFF)
-            self._set_pad_section_family_allowlist(pad, _AMP_SECTION, _AMP_FX_FAMILIES)
-            self._set_pad_randomizer_policy(("pad", raw_pad, "amount", _RANDOMIZER_AMOUNT_WIDE))
-            self._set_pad_randomizer_policy(("pad", raw_pad, "density", _RANDOMIZER_DENSITY_FULL))
-            self._set_pad_randomizer_policy(("pad", raw_pad, "bias", _RANDOMIZER_BIAS_TIGHTER))
-        for pad in (5, 9, 10, 11):
-            raw_pad = str(pad)
-            self._set_pad_lane_policy(pad, _LANE_FILTER, _LANE_POLICY_OFF)
-            self._set_pad_lane_policy(pad, _LANE_LFO, _LANE_POLICY_OFF)
-            self._set_pad_section_family_allowlist(pad, _AMP_SECTION, _AMP_FX_FAMILIES)
-            self._set_pad_randomizer_policy(("pad", raw_pad, "amount", _RANDOMIZER_AMOUNT_NORMAL))
-            self._set_pad_randomizer_policy(("pad", raw_pad, "density", _RANDOMIZER_DENSITY_HIGH))
+            if pad_policy.amount is not None:
+                self._set_pad_randomizer_policy(("pad", raw_pad, "amount", pad_policy.amount))
+            if pad_policy.density is not None:
+                self._set_pad_randomizer_policy(("pad", raw_pad, "density", pad_policy.density))
+            if pad_policy.bias is not None:
+                self._set_pad_randomizer_policy(("pad", raw_pad, "bias", pad_policy.bias))
         self._apply_command(SNAPSHOT_SHELL_COMMANDS[_CMD_RANDOMIZE])
+
+    def _apply_live_macro(self, macro_name: str) -> None:
+        if macro_name == "home":
+            self._apply_home_macro()
+            return
+        spec = SNAPSHOT_LIVE_MACROS.get(macro_name)
+        if spec is None:
+            self._write_line(f"unknown snapshot shell macro: {macro_name}")
+            return
+        self._apply_live_macro_spec(spec)
+
+    def _apply_kit_core_macro(self) -> None:
+        self._apply_live_macro(_CMD_KIT_CORE)
 
     def _resnapshot_anchor(self) -> None:
         if self._resnapshot_func is None:
@@ -2555,6 +2572,15 @@ class AnalogRytmSnapshotShell:
             return True
         if normalized in {_CMD_KIT_CORE, "kitcore", "full-kit"}:
             self._apply_kit_core_macro()
+            return True
+        if parts and parts[0] == _CMD_MACRO:
+            if len(parts) != 2:
+                self._write_line("usage: macro NAME")
+                return True
+            self._apply_live_macro(parts[1])
+            return True
+        if normalized in SNAPSHOT_LIVE_MACROS:
+            self._apply_live_macro(normalized)
             return True
         if normalized == _CMD_UNDO:
             self._undo()

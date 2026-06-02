@@ -974,6 +974,80 @@ def test_snapshot_shell_live_macro_specs_are_passive_data() -> None:
     )
 
 
+@pytest.mark.parametrize(
+    ("command", "macro_name"),
+    (
+        ("macro hard-groove", "hard-groove"),
+        ("macro industrial", "industrial"),
+        ("macro dub-pressure", "dub-pressure"),
+        ("macro transition", "transition"),
+        ("hard-groove", "hard-groove"),
+        ("industrial", "industrial"),
+        ("dub-pressure", "dub-pressure"),
+        ("transition", "transition"),
+    ),
+)
+def test_snapshot_shell_named_live_macros_stage_without_sending(
+    command: str,
+    macro_name: str,
+    capsys,
+) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(build_snapshot_shell_anchor(_snapshot()), sender)
+
+    assert shell.dispatch(command) is True
+
+    captured = capsys.readouterr()
+    assert f"macro applied: {macro_name}" in captured.out
+    assert shell.state.guardrails.mode == "live"
+    assert shell.state.guardrails.locked_pads == frozenset({1})
+    assert shell.state.last_command_name == "randomize"
+    assert _pad_values_unchanged(shell.state.anchor.events, shell.state.current_events, pad=1)
+    assert len(sender.sent_messages) == 0
+
+
+def test_snapshot_shell_macro_home_restores_anchor_without_sending(capsys) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    anchor = build_snapshot_shell_anchor(_snapshot())
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(anchor, sender)
+
+    assert shell.dispatch("kit-core") is True
+    assert shell.dispatch("macro home") is True
+
+    captured = capsys.readouterr()
+    assert "macro applied: home" in captured.out
+    assert shell.state.mutation_name == "home"
+    assert shell.state.current_events == anchor.events
+    assert shell.state.last_command_name is None
+    assert len(sender.sent_messages) == 0
+
+
+def test_snapshot_shell_unknown_macro_is_non_destructive(capsys) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    anchor = build_snapshot_shell_anchor(_snapshot())
+    shell = AnalogRytmSnapshotShell(anchor, MockMidiSender())
+
+    assert shell.dispatch("macro alien") is True
+
+    captured = capsys.readouterr()
+    assert "unknown snapshot shell macro: alien" in captured.out
+    assert shell.state.current_events == anchor.events
+
+
 def test_snapshot_shell_kit_core_macro_applies_full_kit_pad_lane_recipe(
     capsys,
 ) -> None:
