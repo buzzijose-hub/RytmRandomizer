@@ -939,6 +939,41 @@ def test_snapshot_shell_drum_core_omits_dual_vco_osc_2_detune_for_pads_2_and_3(
     )
 
 
+def test_snapshot_shell_live_macro_catalog_contains_expected_names() -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_macros import (
+        SNAPSHOT_LIVE_MACROS,
+    )
+
+    assert tuple(SNAPSHOT_LIVE_MACROS) == (
+        "kit-core",
+        "hard-groove",
+        "industrial",
+        "dub-pressure",
+        "transition",
+        "home",
+    )
+
+
+def test_snapshot_shell_live_macro_specs_are_passive_data() -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_macros import (
+        SNAPSHOT_LIVE_MACROS,
+    )
+
+    hard_groove = SNAPSHOT_LIVE_MACROS["hard-groove"]
+
+    assert hard_groove.name == "hard-groove"
+    assert hard_groove.label == "Hard Groove"
+    assert hard_groove.mode == "live"
+    assert hard_groove.locked_pads == frozenset({1})
+    assert hard_groove.recovery_action == "home"
+    assert hard_groove.risk_label == "live-safe"
+    assert hard_groove.pad_policies[5].lane_policies["filter"] == "off"
+    assert hard_groove.pad_policies[5].lane_policies["lfo"] == "off"
+    assert hard_groove.pad_policies[5].section_family_allowlists["AMP"] == frozenset(
+        {"drive", "delay", "reverb"}
+    )
+
+
 def test_snapshot_shell_kit_core_macro_applies_full_kit_pad_lane_recipe(
     capsys,
 ) -> None:
