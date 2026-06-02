@@ -53,3 +53,37 @@ def test_oxi_live_macro_catalog_json_is_deterministic() -> None:
     ]
     assert payload["analog_four"]["status"] == "candidate-only"
     assert payload["blocked_active_actions"] == ["A4 outbound macro send"]
+
+
+def test_oxi_live_macro_catalog_cli_command_rejects_args_and_writes_report(
+    capsys,
+) -> None:
+    from rytm_randomizer.reports.oxi_live_macro_catalog import (
+        OXI_LIVE_MACRO_CATALOG_CLI_COMMAND,
+    )
+
+    assert OXI_LIVE_MACRO_CATALOG_CLI_COMMAND.args_parser([]) == {}
+    with pytest.raises(ValueError, match="does not accept arguments"):
+        OXI_LIVE_MACRO_CATALOG_CLI_COMMAND.args_parser(["extra"])
+
+    assert OXI_LIVE_MACRO_CATALOG_CLI_COMMAND.handler() == 0
+    captured = capsys.readouterr()
+    assert "RytmRandomizer OXI live macro catalog" in captured.out
+    assert "A4 outbound macro send" in captured.out
+
+
+def test_passive_report_cli_commands_reject_unexpected_arguments() -> None:
+    from rytm_randomizer.reports import (
+        ACTIVE_BOUNDARY_REPORT_CLI_COMMAND,
+        MOCK_MAPPER_REPORT_CLI_COMMAND,
+        RUNTIME_PLAN_REPORT_CLI_COMMAND,
+    )
+
+    for command in (
+        MOCK_MAPPER_REPORT_CLI_COMMAND,
+        RUNTIME_PLAN_REPORT_CLI_COMMAND,
+        ACTIVE_BOUNDARY_REPORT_CLI_COMMAND,
+    ):
+        assert command.args_parser([]) == {}
+        with pytest.raises(ValueError, match="takes no arguments"):
+            command.args_parser(["unexpected"])

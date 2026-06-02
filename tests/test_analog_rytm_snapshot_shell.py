@@ -1048,6 +1048,47 @@ def test_snapshot_shell_unknown_macro_is_non_destructive(capsys) -> None:
     assert shell.state.current_events == anchor.events
 
 
+def test_snapshot_shell_sparse_macro_policy_skips_optional_randomizer_fields(
+    capsys,
+) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_macros import (
+        SnapshotLiveMacroSpec,
+        SnapshotMacroPadPolicy,
+    )
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    anchor = build_snapshot_shell_anchor(_snapshot())
+    shell = AnalogRytmSnapshotShell(anchor, MockMidiSender())
+    spec = SnapshotLiveMacroSpec(
+        name="sparse-test",
+        label="Sparse Test",
+        mode="live",
+        lane_policies={"lfo": "off"},
+        locked_pads=frozenset(),
+        pad_policies={
+            2: SnapshotMacroPadPolicy(
+                lane_policies={"filter": "off"},
+                section_family_allowlists={"AMP": frozenset({"drive"})},
+            )
+        },
+        recovery_action="home",
+        risk_label="live-safe",
+        summary="Sparse macro policy used to prove optional fields stay optional.",
+    )
+
+    shell._apply_live_macro_spec(spec)
+
+    captured = capsys.readouterr()
+    assert "macro applied: sparse-test" in captured.out
+    assert shell.state.guardrails.pad_lane_policies[2]["filter"] == "off"
+    assert shell.state.guardrails.pad_section_family_allowlists[2]["AMP"] == frozenset({"drive"})
+    assert 2 not in shell.state.guardrails.randomizer_overrides
+    assert shell.state.last_command_name == "randomize"
+
+
 def test_snapshot_shell_kit_core_macro_applies_full_kit_pad_lane_recipe(
     capsys,
 ) -> None:
