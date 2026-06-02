@@ -4,6 +4,15 @@ Last updated: 2026-06-02. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-02: OXI live macro bundle implementation started from the clean
+  post-#149 base. The live snapshot shell now stages named macros
+  (`hard-groove`, `industrial`, `dub-pressure`, `transition`, and `home`) in
+  addition to `kit-core`; reserved pads keep SRC-first movement while avoiding
+  filter/LFO and non-FX AMP sends, tom pads keep source movement with light
+  filter and no LFO, and macro-wide Dual VCO detune tests preserve the
+  low-anchor guard while allowing the proven center-band lane. The passive
+  `oxi-live-macro-catalog-report` exposes Rytm macro cards plus a
+  candidate-only Analog Four runway for Cockpit handoff.
 - 2026-06-02: OXI live macro bundle implementation plan prepared on the clean
   post-#149 base. The plan extends the merged `kit-core` foundation into named
   live macros (`hard-groove`, `industrial`, `dub-pressure`, `transition`,
