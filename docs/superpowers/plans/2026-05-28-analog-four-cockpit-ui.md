@@ -77,5 +77,6 @@ drive/NRPN work.
 - `npm run typecheck`
 - `npm run build`
 - `npm run test:run`
+- `npm run test:coverage`
 - `python -m pytest tests/architecture/ -q`
 - Full relevant build/test commands before PR closeout.

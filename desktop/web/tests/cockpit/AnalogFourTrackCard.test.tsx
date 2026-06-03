@@ -11,11 +11,14 @@ import {
 
 import { FakeCockpitClient } from './_fixtures';
 
-function renderCard(previewOn: boolean): FakeCockpitClient {
+function renderCard(
+  previewOn: boolean,
+  track = ANALOG_FOUR_TRACKS[0]!,
+): FakeCockpitClient {
   const fake = new FakeCockpitClient();
   render(
     <CockpitClientProvider client={fake.asClient()}>
-      <AnalogFourTrackCard track={ANALOG_FOUR_TRACKS[0]!} previewOn={previewOn} />
+      <AnalogFourTrackCard track={track} previewOn={previewOn} />
     </CockpitClientProvider>,
   );
   return fake;
@@ -129,4 +132,31 @@ describe('AnalogFourTrackCard', () => {
       }
     }
   });
+
+  it.each([
+    [1, 'OSC1 Level', 'pressure', 'Amp Env Decay'],
+    [2, 'OSC1 Pulsewidth', 'space', 'Amp Delay Send'],
+    [3, 'OSC2 Level', 'space', 'Amp Reverb Send'],
+    [4, 'Amp Delay Send', 'shape', 'Amp Reverb Send'],
+  ])(
+    'renders role-specific OXI macro targets for Analog Four track %i',
+    (trackNumber, anchorTarget, secondMacroKey, secondTarget) => {
+      const track = ANALOG_FOUR_TRACKS.find((candidate) => candidate.track === trackNumber);
+
+      expect(track).toBeDefined();
+      if (track === undefined) {
+        throw new Error(`Missing A4 test track ${trackNumber}`);
+      }
+      renderCard(true, track);
+
+      const deck = screen.getByTestId(`a4-track-${trackNumber}-oxi-macros`);
+
+      expect(within(deck).getByTestId(`a4-track-${trackNumber}-oxi-macro-anchor`)).toHaveTextContent(
+        anchorTarget,
+      );
+      expect(
+        within(deck).getByTestId(`a4-track-${trackNumber}-oxi-macro-${secondMacroKey}`),
+      ).toHaveTextContent(secondTarget);
+    },
+  );
 });
