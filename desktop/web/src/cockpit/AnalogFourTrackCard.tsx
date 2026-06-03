@@ -20,7 +20,7 @@ export function AnalogFourTrackCard({
   const { isLocked, toggleLock } = usePadLocks();
   const locked = isLocked(track.track);
   const className = locked ? 'a4-track-card locked' : 'a4-track-card';
-  const oxiActions = ANALOG_FOUR_OXI_ACTIONS_BY_ROLE[track.roleKey] ?? [];
+  const oxiActions = ANALOG_FOUR_OXI_ACTIONS_BY_ROLE[track.roleKey];
 
   return (
     <article
