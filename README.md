@@ -585,7 +585,7 @@ python -m rytm_randomizer.cli dual-machine-target-report both   # both registere
 python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report   # passive Rytm 12-pad machine compatibility matrix
 python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report   # passive snapshot readiness per Rytm pad
 python -m rytm_randomizer.cli analog-rytm-midi-catalog-report   # passive OS 1.72 Rytm CC/NRPN catalog
-python -m rytm_randomizer.cli oxi-live-macro-catalog-report   # passive OXI live macro cards and A4 runway state
+python -m rytm_randomizer.cli oxi-live-macro-catalog-report   # passive OXI live macro cards, live flow, and A4 runway state
 ```
 
 Aliases: `rytm-only` and `a4-only` are accepted. The reports are passive: they open no MIDI port and send no MIDI. The snapshot-pad compatibility report explains which legal Rytm pad/machine combinations are snapshot-mutable today and which remain selectable-only until the follow-up runtime slice. The Analog Rytm MIDI catalog records OS 1.72 CC/NRPN rows with safety status labels; documented-only rows are not promoted to mutation until a separate approved hardware-validation pass. The Analog Four path is candidate/manifest-gated; do not run armed Analog Four hardware sends until a readiness report says the plan is ready.

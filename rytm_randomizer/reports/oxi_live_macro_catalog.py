@@ -37,13 +37,86 @@ class AnalogFourMacroRunway:
 
 
 @dataclass(frozen=True)
+class OxiLivePerformanceStep:
+    """Passive step in the OXI-style live performance flow."""
+
+    order: int
+    name: str
+    command: str
+    send_policy: str
+    recovery_action: str
+    intent: str
+
+
+@dataclass(frozen=True)
 class OxiLiveMacroCatalogReport:
     """Passive report surface for Rytm macros plus A4 runway boundaries."""
 
     title: str
     rytm_macros: tuple[OxiLiveMacroCard, ...]
+    performance_flow: tuple[OxiLivePerformanceStep, ...]
     analog_four: AnalogFourMacroRunway
     blocked_active_actions: tuple[str, ...]
+
+
+_LIVE_PERFORMANCE_FLOW: Final[tuple[OxiLivePerformanceStep, ...]] = (
+    OxiLivePerformanceStep(
+        order=1,
+        name="capture-anchor",
+        command="kit/resnapshot",
+        send_policy="receive-only",
+        recovery_action="captured-anchor",
+        intent="Capture the current Rytm kit as the safe anchor.",
+    ),
+    OxiLivePerformanceStep(
+        order=2,
+        name="kit-core",
+        command="kit-core",
+        send_policy="stage-review-send",
+        recovery_action="home",
+        intent="Normalize live guardrails and stage the first full-kit idea.",
+    ),
+    OxiLivePerformanceStep(
+        order=3,
+        name="hard-groove",
+        command="hard-groove",
+        send_policy="stage-review-send",
+        recovery_action="home",
+        intent="Push source-first rhythm movement while the kick stays protected.",
+    ),
+    OxiLivePerformanceStep(
+        order=4,
+        name="industrial",
+        command="industrial",
+        send_policy="stage-review-send",
+        recovery_action="home",
+        intent="Raise grit, pressure, and texture inside the live-safe guardrails.",
+    ),
+    OxiLivePerformanceStep(
+        order=5,
+        name="dub-pressure",
+        command="dub-pressure",
+        send_policy="stage-review-send",
+        recovery_action="home",
+        intent="Pull the kit toward space, delay, reverb, and lower-end pressure.",
+    ),
+    OxiLivePerformanceStep(
+        order=6,
+        name="transition",
+        command="transition",
+        send_policy="stage-review-send",
+        recovery_action="home",
+        intent="Create a short bridge or fill lane before returning to the groove.",
+    ),
+    OxiLivePerformanceStep(
+        order=7,
+        name="home",
+        command="home",
+        send_policy="restore-anchor",
+        recovery_action="captured-anchor",
+        intent="Return the staged plan to the captured safe kit.",
+    ),
+)
 
 
 def _affected_pads(pad_policies: Mapping[int, object]) -> tuple[int, ...]:
@@ -72,6 +145,7 @@ def build_oxi_live_macro_catalog_report() -> OxiLiveMacroCatalogReport:
     return OxiLiveMacroCatalogReport(
         title=REPORT_TITLE,
         rytm_macros=cards,
+        performance_flow=_LIVE_PERFORMANCE_FLOW,
         analog_four=AnalogFourMacroRunway(
             status="candidate-only",
             tracks=_A4_CANDIDATE_TRACKS,
@@ -93,6 +167,13 @@ def format_oxi_live_macro_catalog_report(
             f"- {card.name} | {card.risk_label} | " f"recovery={card.recovery_action} | pads={pads}"
         )
         lines.append(f"  {card.summary}")
+    lines.extend(("", "Live performance flow:"))
+    for step in report.performance_flow:
+        lines.append(
+            f"- {step.order}. {step.name} | command={step.command} | "
+            f"send={step.send_policy} | recovery={step.recovery_action}"
+        )
+        lines.append(f"  {step.intent}")
     lines.extend(
         (
             "",
@@ -122,6 +203,17 @@ def build_oxi_live_macro_catalog_payload() -> dict[str, object]:
                 "summary": card.summary,
             }
             for card in report.rytm_macros
+        ],
+        "performance_flow": [
+            {
+                "order": step.order,
+                "name": step.name,
+                "command": step.command,
+                "send_policy": step.send_policy,
+                "recovery_action": step.recovery_action,
+                "intent": step.intent,
+            }
+            for step in report.performance_flow
         ],
         "analog_four": {
             "status": report.analog_four.status,
@@ -159,6 +251,7 @@ __all__ = (
     "AnalogFourMacroRunway",
     "OxiLiveMacroCard",
     "OxiLiveMacroCatalogReport",
+    "OxiLivePerformanceStep",
     "OXI_LIVE_MACRO_CATALOG_CLI_COMMAND",
     "REPORT_TITLE",
     "build_oxi_live_macro_catalog_payload",

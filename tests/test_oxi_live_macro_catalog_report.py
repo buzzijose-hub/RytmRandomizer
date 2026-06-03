@@ -25,8 +25,32 @@ def test_oxi_live_macro_catalog_report_lists_rytm_macros_and_a4_candidate_state(
     ]
     assert "Rytm macros:" in text
     assert "hard-groove | live-safe | recovery=home" in text
+    assert "Live performance flow:" in text
+    assert "capture-anchor | command=kit/resnapshot | send=receive-only" in text
+    assert "home | command=home | send=restore-anchor" in text
     assert "Analog Four runway: candidate-only" in text
     assert "blocked active actions: A4 outbound macro send" in text
+
+
+def test_oxi_live_macro_catalog_report_includes_performance_flow_contract() -> None:
+    from rytm_randomizer.reports.oxi_live_macro_catalog import (
+        build_oxi_live_macro_catalog_report,
+    )
+
+    report = build_oxi_live_macro_catalog_report()
+
+    assert [step.command for step in report.performance_flow] == [
+        "kit/resnapshot",
+        "kit-core",
+        "hard-groove",
+        "industrial",
+        "dub-pressure",
+        "transition",
+        "home",
+    ]
+    assert report.performance_flow[0].intent == "Capture the current Rytm kit as the safe anchor."
+    assert report.performance_flow[-1].send_policy == "restore-anchor"
+    assert report.performance_flow[-1].recovery_action == "captured-anchor"
 
 
 def test_oxi_live_macro_catalog_json_is_deterministic() -> None:
@@ -51,6 +75,16 @@ def test_oxi_live_macro_catalog_json_is_deterministic() -> None:
         11,
         12,
     ]
+    assert payload["performance_flow"][0] == {
+        "order": 1,
+        "name": "capture-anchor",
+        "command": "kit/resnapshot",
+        "send_policy": "receive-only",
+        "recovery_action": "captured-anchor",
+        "intent": "Capture the current Rytm kit as the safe anchor.",
+    }
+    assert payload["performance_flow"][-1]["name"] == "home"
+    assert payload["performance_flow"][-1]["send_policy"] == "restore-anchor"
     assert payload["analog_four"]["status"] == "candidate-only"
     assert payload["blocked_active_actions"] == ["A4 outbound macro send"]
 
