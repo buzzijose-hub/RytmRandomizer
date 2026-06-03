@@ -53,8 +53,9 @@ A Tauri desktop window backed by a Python sidecar that hosts the mutation engine
 **Passive by construction.** The cockpit defaults to a mock device adapter. No MIDI port opens until you explicitly `--arm`.
 
 The Analog Four cockpit view is currently visibility-only. It shows four synth
-tracks and the existing A4 strategy zones for dry-run review, but it does not
-add an A4 SEND path, open ports, or send MIDI.
+tracks, the existing A4 strategy zones, and OXI-style track macro rows for
+Anchor / Shape / Pressure / Space dry-run review, but it does not add an A4
+SEND path, open ports, or send MIDI.
 
 **Sidecar security guarantees** (post CODE_REVIEW.md sweep, 2026-05):
 

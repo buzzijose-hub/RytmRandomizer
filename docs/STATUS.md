@@ -1,9 +1,15 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-05-30. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-06-03. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-06-03: Analog Four cockpit OXI-style track macro strip prepared locally.
+  Each A4 staged track now shows passive Anchor / Shape / Pressure / Space rows
+  aligned to the existing A4 mutation-zone vocabulary, with drive/NRPN-only
+  moves still marked deferred. The strip is frontend-only review metadata: no
+  A4 SEND path, no MIDI renderer change, no port opening, no real MIDI send,
+  and no hardware validation.
 - 2026-05-30: Live snapshot shell `kit-core` macro prepared for the first
   all-12-pad OXI-style captured-kit recipe. It reuses the proven `drum-core`
   setup for Pad 1 and pads 2-4, then adds Jose's pad 5-11 lane discipline:

@@ -3,7 +3,11 @@ import { describe, expect, it } from 'vitest';
 
 import { AnalogFourTrackCard } from '../../src/cockpit/AnalogFourTrackCard';
 import { CockpitClientProvider } from '../../src/cockpit/context';
-import { ANALOG_FOUR_TRACKS } from '../../src/cockpit/devices';
+import {
+  ANALOG_FOUR_MUTATION_ZONES,
+  ANALOG_FOUR_OXI_ACTIONS_BY_ROLE,
+  ANALOG_FOUR_TRACKS,
+} from '../../src/cockpit/devices';
 
 import { FakeCockpitClient } from './_fixtures';
 
@@ -67,5 +71,62 @@ describe('AnalogFourTrackCard', () => {
       'aria-valuetext',
       expect.stringContaining(ANALOG_FOUR_TRACKS[0]!.trackLabel),
     );
+  });
+
+  it('renders a passive OXI-style macro strip for the selected Analog Four track', () => {
+    renderCard(true);
+
+    const deck = screen.getByTestId('a4-track-1-oxi-macros');
+
+    expect(deck).toHaveTextContent('OXI macros');
+    expect(within(deck).getAllByTestId(/a4-track-1-oxi-macro-/)).toHaveLength(4);
+    expect(within(deck).getByTestId('a4-track-1-oxi-macro-anchor')).toHaveTextContent(
+      'Anchor',
+    );
+    expect(within(deck).getByTestId('a4-track-1-oxi-macro-anchor')).toHaveTextContent(
+      'OSC1 Level',
+    );
+    expect(within(deck).getByTestId('a4-track-1-oxi-macro-pressure')).toHaveTextContent(
+      'Preview row',
+    );
+    expect(within(deck).getByTestId('a4-track-1-oxi-macro-space')).toHaveTextContent(
+      'Deferred',
+    );
+  });
+
+  it('shows dry-run labels in the passive OXI macro strip when preview is off', () => {
+    renderCard(false);
+
+    const deck = screen.getByTestId('a4-track-1-oxi-macros');
+
+    expect(within(deck).getByTestId('a4-track-1-oxi-macro-anchor')).toHaveTextContent(
+      'Dry-run row',
+    );
+    expect(within(deck).getByTestId('a4-track-1-oxi-macro-space')).toHaveTextContent(
+      'Deferred',
+    );
+  });
+
+  it('keeps the A4 OXI macro source of truth aligned with track roles and mutation zones', () => {
+    const zoneKeys = new Set(ANALOG_FOUR_MUTATION_ZONES.map((zone) => zone.key));
+
+    for (const track of ANALOG_FOUR_TRACKS) {
+      const actions = ANALOG_FOUR_OXI_ACTIONS_BY_ROLE[track.roleKey];
+
+      expect(actions).toBeDefined();
+      if (actions === undefined) {
+        throw new Error(`Missing OXI actions for ${track.roleKey}`);
+      }
+      expect(actions).toHaveLength(4);
+      expect(actions.map((action) => action.key)).toEqual([
+        'anchor',
+        'shape',
+        'pressure',
+        'space',
+      ]);
+      for (const action of actions) {
+        expect(zoneKeys.has(action.targetZoneKey)).toBe(true);
+      }
+    }
   });
 });

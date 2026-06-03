@@ -3,6 +3,9 @@
 > Status: in-flight — review feedback addressed (a11y meter labelling, roleKey
 > diagnostic attribute, E2E A4 panel-switch coverage); ready to merge once
 > CODEOWNERS sign-off and CI complete.
+>
+> Follow-up: this PR adds a passive OXI-style track macro strip to the same A4
+> cockpit surface. It remains frontend-only and does not add A4 SEND behavior.
 
 > **For agentic workers:** keep this slice isolated from hardware execution.
 > This is a frontend visibility change only. Do not add MIDI rendering, port
@@ -43,7 +46,16 @@ drive/NRPN work.
   - Drive, marked deferred / NRPN-only
 - [x] Preserve the existing cockpit safety rail, mutation panel, preview
   toggle, locks, and dry-run posture.
+- [x] Add passive OXI-style macro rows per A4 track:
+  - Anchor
+  - Shape
+  - Pressure
+  - Space
+- [x] Keep deferred/NRPN-only rows visibly parked instead of promoting them to
+  sendable behavior.
 - [x] Add focused Vitest coverage for device selection and the A4 track view.
+- [x] Add focused Vitest coverage that the OXI macro source of truth stays
+  aligned with A4 track roles and existing mutation zones.
 - [x] Update docs so the UI surface is discoverable by reviewers.
 
 ## Non-Goals
@@ -63,4 +75,7 @@ drive/NRPN work.
 - `npm run test:run -- tests/cockpit/DeviceRail.test.tsx tests/cockpit/SnapshotPanel.test.tsx tests/cockpit/Cockpit.test.tsx`
 - `npm run lint`
 - `npm run typecheck`
+- `npm run build`
+- `npm run test:run`
+- `python -m pytest tests/architecture/ -q`
 - Full relevant build/test commands before PR closeout.

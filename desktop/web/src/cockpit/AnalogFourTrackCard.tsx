@@ -1,5 +1,7 @@
 import {
   ANALOG_FOUR_MUTATION_ZONES,
+  ANALOG_FOUR_OXI_ACTIONS_BY_ROLE,
+  type AnalogFourOxiMacroAction,
   type AnalogFourTrackProfile,
   type AnalogFourZoneState,
 } from './devices';
@@ -18,6 +20,7 @@ export function AnalogFourTrackCard({
   const { isLocked, toggleLock } = usePadLocks();
   const locked = isLocked(track.track);
   const className = locked ? 'a4-track-card locked' : 'a4-track-card';
+  const oxiActions = ANALOG_FOUR_OXI_ACTIONS_BY_ROLE[track.roleKey] ?? [];
 
   return (
     <article
@@ -51,6 +54,23 @@ export function AnalogFourTrackCard({
         </meter>
         <strong>{track.safeDepth}%</strong>
       </div>
+      <div
+        className="a4-oxi-macro-strip"
+        data-testid={`a4-track-${track.track}-oxi-macros`}
+        aria-label={`${track.trackLabel} OXI macro actions`}
+      >
+        <h3>OXI macros</h3>
+        <div className="a4-oxi-macro-grid">
+          {oxiActions.map((action) => (
+            <AnalogFourOxiMacroRow
+              key={action.key}
+              action={action}
+              previewOn={previewOn}
+              testId={`a4-track-${track.track}-oxi-macro-${action.key}`}
+            />
+          ))}
+        </div>
+      </div>
       <div className="a4-zone-grid" aria-label={`${track.trackLabel} mutation zones`}>
         {ANALOG_FOUR_MUTATION_ZONES.map((zone) => (
           <AnalogFourZonePill
@@ -65,6 +85,28 @@ export function AnalogFourTrackCard({
         ))}
       </div>
     </article>
+  );
+}
+
+function AnalogFourOxiMacroRow({
+  action,
+  previewOn,
+  testId,
+}: {
+  action: AnalogFourOxiMacroAction;
+  previewOn: boolean;
+  testId: string;
+}): JSX.Element {
+  const statusLabel =
+    action.status === 'cc-ready' ? (previewOn ? 'Preview row' : 'Dry-run row') : 'Deferred';
+
+  return (
+    <div className={`a4-oxi-macro ${action.status}`} data-testid={testId}>
+      <strong>{action.label}</strong>
+      <span>{action.targetParameter}</span>
+      <small>{action.scope}</small>
+      <em>{statusLabel}</em>
+    </div>
   );
 }
 
