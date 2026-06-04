@@ -1,9 +1,18 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-02. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-06-03. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-06-03: Passive Analog Four OXI-style macro report added as the first
+  snapshot-free A4 planning surface for Jose's OXI-adjacent live rig workflow.
+  `python -m rytm_randomizer.cli analog-four-oxi-macro-report` previews
+  deterministic four-track macro rows (`home`, `hard-groove`, `dub-pressure`,
+  `industrial-transition`) from the existing manual-backed Analog Four CC table.
+  The command is in-memory and report-only: it does not read hardware, open
+  ports, render real MIDI, send MIDI, dispatch execution, write SysEx, or mutate
+  the Analog Four. It gives the future cockpit/A4 workflow a visible macro
+  vocabulary before any additional hardware-facing A4 path is promoted.
 - 2026-06-02: OXI live macro bundle implementation started from the clean
   post-#149 base. The live snapshot shell now stages named macros
   (`hard-groove`, `industrial`, `dub-pressure`, `transition`, and `home`) in

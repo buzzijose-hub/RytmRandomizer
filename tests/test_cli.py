@@ -61,6 +61,8 @@ USAGE = (
     "analog-four-style-mutation-mock-preview-report <syx-path> <style-key> "
     "[--slot N] [--discovery N] [--events] [--limit N] [--json] | "
     "analog-four-kit-catalog-report <syx-path> [--limit N] [--json] | "
+    "analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] "
+    "[--events] [--limit N] [--json] | "
     "analog-four-style-kit-readiness-report <syx-path> <style-key> "
     "[--discovery N] [--limit N] [--json] | "
     "dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> "
@@ -938,6 +940,23 @@ def test_analog_four_kit_catalog_report_help_exits_zero_and_safety_matches_repor
     assert result.stderr == ""
 
 
+def test_analog_four_oxi_macro_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.analog_four_oxi_macro_report import SAFETY_LINES
+
+    result = run_cli("analog-four-oxi-macro-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: analog-four-oxi-macro-report" in help_text
+    assert "python -m rytm_randomizer.cli analog-four-oxi-macro-report" in help_text
+    assert "--seed N" in help_text
+    assert "--intensity N" in help_text
+    assert "--events" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
 def test_rytm_style_kit_readiness_report_help_exits_zero_and_safety_matches_report_source():
     from rytm_randomizer.reports.rytm_style_kit_readiness import SAFETY_LINES
 
@@ -1285,6 +1304,80 @@ def test_mock_mapper_report_command_exits_zero_and_matches_fixture():
 
     assert result.returncode == 0
     assert normalize_newlines(result.stdout) == fixture_text("cli_mock_mapper_report_expected.txt")
+    assert result.stderr == ""
+
+
+def test_analog_four_oxi_macro_report_command_exits_zero_and_is_deterministic():
+    first = run_cli(
+        "analog-four-oxi-macro-report",
+        "hard-groove",
+        "--seed",
+        "23",
+        "--intensity",
+        "6",
+        "--events",
+        "--limit",
+        "0",
+    )
+    second = run_cli(
+        "analog-four-oxi-macro-report",
+        "hard-groove",
+        "--seed",
+        "23",
+        "--intensity",
+        "6",
+        "--events",
+        "--limit",
+        "0",
+    )
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    output = normalize_newlines(first.stdout)
+    assert "RytmRandomizer passive Analog Four OXI macro report" in output
+    assert "Macro: hard-groove / Hard Groove" in output
+    assert "Tracks: 4" in output
+    assert "Shown events: 12" in output
+    assert "Truncated events: 0" in output
+    assert "- Track 1" in output
+    assert "- Track 4" in output
+    assert "- mock_only: True" in output
+    assert "- hardware_required: False" in output
+    assert "- opens_ports: False" in output
+    assert "- sends_midi: False" in output
+    assert "- active_behavior: False" in output
+    assert "- no MIDI sending" in output
+    assert "- no port opening" in output
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
+def test_analog_four_oxi_macro_report_json_exits_zero_and_is_machine_readable():
+    result = run_cli(
+        "analog-four-oxi-macro-report",
+        "dub-pressure",
+        "--seed",
+        "3",
+        "--intensity",
+        "5",
+        "--json",
+    )
+
+    assert result.returncode == 0
+    payload = json.loads(result.stdout)
+    assert payload["macro_name"] == "dub-pressure"
+    assert payload["macro_label"] == "Dub Pressure"
+    assert payload["track_count"] == 4
+    assert payload["event_count"] == len(payload["events"])
+    assert payload["mock_only"] is True
+    assert payload["hardware_required"] is False
+    assert payload["opens_ports"] is False
+    assert payload["sends_midi"] is False
+    assert payload["active_behavior"] is False
+    assert {event["track"] for event in payload["events"]} == {1, 2, 3, 4}
+    assert all(0 <= event["value"] <= 127 for event in payload["events"])
+    assert "no MIDI sending" in payload["safety"]
     assert result.stderr == ""
 
 
