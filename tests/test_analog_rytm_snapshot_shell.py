@@ -939,6 +939,156 @@ def test_snapshot_shell_drum_core_omits_dual_vco_osc_2_detune_for_pads_2_and_3(
     )
 
 
+def test_snapshot_shell_live_macro_catalog_contains_expected_names() -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_macros import (
+        SNAPSHOT_LIVE_MACROS,
+    )
+
+    assert tuple(SNAPSHOT_LIVE_MACROS) == (
+        "kit-core",
+        "hard-groove",
+        "industrial",
+        "dub-pressure",
+        "transition",
+        "home",
+    )
+
+
+def test_snapshot_shell_live_macro_specs_are_passive_data() -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_macros import (
+        SNAPSHOT_LIVE_MACROS,
+    )
+
+    hard_groove = SNAPSHOT_LIVE_MACROS["hard-groove"]
+
+    assert hard_groove.name == "hard-groove"
+    assert hard_groove.label == "Hard Groove"
+    assert hard_groove.mode == "live"
+    assert hard_groove.locked_pads == frozenset({1})
+    assert hard_groove.recovery_action == "home"
+    assert hard_groove.risk_label == "live-safe"
+    assert hard_groove.pad_policies[5].lane_policies["filter"] == "off"
+    assert hard_groove.pad_policies[5].lane_policies["lfo"] == "off"
+    assert hard_groove.pad_policies[5].section_family_allowlists["AMP"] == frozenset(
+        {"drive", "delay", "reverb"}
+    )
+
+
+@pytest.mark.parametrize(
+    ("command", "macro_name"),
+    (
+        ("macro hard-groove", "hard-groove"),
+        ("macro industrial", "industrial"),
+        ("macro dub-pressure", "dub-pressure"),
+        ("macro transition", "transition"),
+        ("hard-groove", "hard-groove"),
+        ("industrial", "industrial"),
+        ("dub-pressure", "dub-pressure"),
+        ("transition", "transition"),
+    ),
+)
+def test_snapshot_shell_named_live_macros_stage_without_sending(
+    command: str,
+    macro_name: str,
+    capsys,
+) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(build_snapshot_shell_anchor(_snapshot()), sender)
+
+    assert shell.dispatch(command) is True
+
+    captured = capsys.readouterr()
+    assert f"macro applied: {macro_name}" in captured.out
+    assert shell.state.guardrails.mode == "live"
+    assert shell.state.guardrails.locked_pads == frozenset({1})
+    assert shell.state.last_command_name == "randomize"
+    assert _pad_values_unchanged(shell.state.anchor.events, shell.state.current_events, pad=1)
+    assert len(sender.sent_messages) == 0
+
+
+def test_snapshot_shell_macro_home_restores_anchor_without_sending(capsys) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    anchor = build_snapshot_shell_anchor(_snapshot())
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(anchor, sender)
+
+    assert shell.dispatch("kit-core") is True
+    assert shell.dispatch("macro home") is True
+
+    captured = capsys.readouterr()
+    assert "macro applied: home" in captured.out
+    assert shell.state.mutation_name == "home"
+    assert shell.state.current_events == anchor.events
+    assert shell.state.last_command_name is None
+    assert len(sender.sent_messages) == 0
+
+
+def test_snapshot_shell_unknown_macro_is_non_destructive(capsys) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    anchor = build_snapshot_shell_anchor(_snapshot())
+    shell = AnalogRytmSnapshotShell(anchor, MockMidiSender())
+
+    assert shell.dispatch("macro alien") is True
+
+    captured = capsys.readouterr()
+    assert "unknown snapshot shell macro: alien" in captured.out
+    assert shell.state.current_events == anchor.events
+
+
+def test_snapshot_shell_sparse_macro_policy_skips_optional_randomizer_fields(
+    capsys,
+) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_macros import (
+        SnapshotLiveMacroSpec,
+        SnapshotMacroPadPolicy,
+    )
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    anchor = build_snapshot_shell_anchor(_snapshot())
+    shell = AnalogRytmSnapshotShell(anchor, MockMidiSender())
+    spec = SnapshotLiveMacroSpec(
+        name="sparse-test",
+        label="Sparse Test",
+        mode="live",
+        lane_policies={"lfo": "off"},
+        locked_pads=frozenset(),
+        pad_policies={
+            2: SnapshotMacroPadPolicy(
+                lane_policies={"filter": "off"},
+                section_family_allowlists={"AMP": frozenset({"drive"})},
+            )
+        },
+        recovery_action="home",
+        risk_label="live-safe",
+        summary="Sparse macro policy used to prove optional fields stay optional.",
+    )
+
+    shell._apply_live_macro_spec(spec)
+
+    captured = capsys.readouterr()
+    assert "macro applied: sparse-test" in captured.out
+    assert shell.state.guardrails.pad_lane_policies[2]["filter"] == "off"
+    assert shell.state.guardrails.pad_section_family_allowlists[2]["AMP"] == frozenset({"drive"})
+    assert 2 not in shell.state.guardrails.randomizer_overrides
+    assert shell.state.last_command_name == "randomize"
+
+
 def test_snapshot_shell_kit_core_macro_applies_full_kit_pad_lane_recipe(
     capsys,
 ) -> None:
@@ -1069,6 +1219,124 @@ def test_snapshot_shell_kit_core_keeps_tom_filter_light_and_lfo_frozen() -> None
             for old, new in zip(anchor.events, shell.state.current_events, strict=True)
             if new.pad == pad and new.section == "LFO"
         )
+
+
+@pytest.mark.parametrize("command", ("hard-groove", "industrial", "dub-pressure", "transition"))
+def test_snapshot_shell_macros_keep_reserved_pads_src_first_and_no_filter_lfo(
+    command: str,
+) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    anchor = build_snapshot_shell_anchor(_snapshot())
+    shell = AnalogRytmSnapshotShell(anchor, MockMidiSender())
+
+    assert shell.dispatch(command) is True
+
+    for pad in (5, 9, 10, 11):
+        changed = _changed_events_for_pad(anchor.events, shell.state.current_events, pad=pad)
+        assert any(event.source == "machine_src" for event in changed)
+        assert all(event.section not in {"FILTER", "LFO"} for event in changed)
+        assert all(
+            event.section != "AMP"
+            or event.parameter in {"Amp Overdrive", "Amp Delay Send", "Amp Reverb Send"}
+            for event in changed
+        )
+
+
+@pytest.mark.parametrize("command", ("hard-groove", "industrial", "dub-pressure", "transition"))
+def test_snapshot_shell_macros_keep_tom_pads_source_with_light_filter_and_no_lfo(
+    command: str,
+) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    anchor = build_snapshot_shell_anchor(_snapshot())
+    shell = AnalogRytmSnapshotShell(anchor, MockMidiSender())
+
+    assert shell.dispatch(command) is True
+
+    for pad in (6, 7, 8):
+        changed = _changed_events_for_pad(anchor.events, shell.state.current_events, pad=pad)
+        assert any(event.source == "machine_src" for event in changed)
+        assert all(
+            old.value == new.value
+            for old, new in zip(anchor.events, shell.state.current_events, strict=True)
+            if new.pad == pad and new.section == "LFO"
+        )
+        assert all(
+            abs(new.value - old.value) <= 2
+            for old, new in zip(anchor.events, shell.state.current_events, strict=True)
+            if new.pad == pad and new.section == "FILTER"
+        )
+
+
+@pytest.mark.parametrize("command", ("hard-groove", "industrial", "dub-pressure", "transition"))
+def test_snapshot_shell_macros_keep_low_dual_vco_detune_guarded(command: str) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    snapshot = AnalogRytmSnapshotDecoder().decode(
+        _snapshot_payload_with_track_overrides(
+            overrides_by_pad={
+                2: (28, {4: 25, 5: 64}),
+                3: (28, {4: 4, 5: 51}),
+            },
+        ),
+        slot=0,
+    )
+    anchor = build_snapshot_shell_anchor(snapshot)
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(anchor, sender)
+
+    assert shell.dispatch(command) is True
+    assert shell.dispatch("send") is True
+
+    assert (
+        _event_for(shell.state.current_events, pad=2, parameter="Osc 2 Detune").value
+        == _event_for(anchor.events, pad=2, parameter="Osc 2 Detune").value
+    )
+    assert (
+        _event_for(shell.state.current_events, pad=3, parameter="Osc 2 Detune").value
+        == _event_for(anchor.events, pad=3, parameter="Osc 2 Detune").value
+    )
+    assert all(
+        not (message.channel in {1, 2} and message.control == 20)
+        for message in sender.sent_messages
+    )
+
+
+@pytest.mark.parametrize("command", ("hard-groove", "industrial", "dub-pressure", "transition"))
+def test_snapshot_shell_macros_allow_center_band_dual_vco_detune(command: str) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    snapshot = AnalogRytmSnapshotDecoder().decode(
+        _snapshot_payload_with_track_overrides(
+            overrides_by_pad={
+                2: (28, {4: 66, 5: 64}),
+            },
+        ),
+        slot=0,
+    )
+    anchor = build_snapshot_shell_anchor(snapshot)
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(anchor, sender)
+
+    assert shell.dispatch(command) is True
+    assert shell.dispatch("send") is True
+
+    current = _event_for(shell.state.current_events, pad=2, parameter="Osc 2 Detune")
+    assert 62 <= current.value <= 70
+    assert any(message.channel == 1 and message.control == 20 for message in sender.sent_messages)
 
 
 def test_snapshot_shell_drum_core_allows_centered_dual_vco_osc_2_detune(

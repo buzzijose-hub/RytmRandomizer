@@ -10,6 +10,38 @@ Last updated: 2026-06-03. This file is a hand-authored snapshot and is meant to 
   moves still marked deferred. The strip is frontend-only review metadata: no
   A4 SEND path, no MIDI renderer change, no port opening, no real MIDI send,
   and no hardware validation.
+- 2026-06-03: Passive Analog Four OXI-style macro report added as the first
+  snapshot-free A4 planning surface for Jose's OXI-adjacent live rig workflow.
+  `python -m rytm_randomizer.cli analog-four-oxi-macro-report` previews
+  deterministic four-track macro rows (`home`, `hard-groove`, `dub-pressure`,
+  `industrial-transition`) from the existing manual-backed Analog Four CC table.
+  The command is in-memory and report-only: it does not read hardware, open
+  ports, render real MIDI, send MIDI, dispatch execution, write SysEx, or mutate
+  the Analog Four. It gives the future cockpit/A4 workflow a visible macro
+  vocabulary before any additional hardware-facing A4 path is promoted.
+- 2026-06-02: OXI live macro bundle implementation started from the clean
+  post-#149 base. The live snapshot shell now stages named macros
+  (`hard-groove`, `industrial`, `dub-pressure`, `transition`, and `home`) in
+  addition to `kit-core`; reserved pads keep SRC-first movement while avoiding
+  filter/LFO and non-FX AMP sends, tom pads keep source movement with light
+  filter and no LFO, and macro-wide Dual VCO detune tests preserve the
+  low-anchor guard while allowing the proven center-band lane. The passive
+  `oxi-live-macro-catalog-report` exposes Rytm macro cards, the passive
+  live-performance flow, and a candidate-only Analog Four runway for Cockpit
+  handoff.
+- 2026-06-02: OXI live macro bundle implementation plan prepared on the clean
+  post-#149 base. The plan extends the merged `kit-core` foundation into named
+  live macros (`hard-groove`, `industrial`, `dub-pressure`, `transition`,
+  `home`), adds a passive macro catalog for Cockpit handoff, keeps Analog Four
+  candidate-only, and defines the hardware validation script. See
+  `docs/superpowers/plans/2026-06-02-oxi-live-macro-bundle.md`.
+- 2026-05-31: Next OXI-style live macro bundle design prepared while PR #149
+  waited on formal review. The spec defines the post-#149 direction for named
+  live macros (`kit-core`, `hard-groove`, `industrial`, `dub-pressure`,
+  `transition`, `home`), all-12-pad Rytm pad policies, Dual VCO detune
+  safe-band handling, passive/mock-first Analog Four runway, Cockpit macro
+  contract handoff, and hardware-validation gates. See
+  `docs/superpowers/specs/2026-05-31-oxi-live-macro-bundle-design.md`.
 - 2026-05-30: Live snapshot shell `kit-core` macro prepared for the first
   all-12-pad OXI-style captured-kit recipe. It reuses the proven `drum-core`
   setup for Pad 1 and pads 2-4, then adds Jose's pad 5-11 lane discipline:

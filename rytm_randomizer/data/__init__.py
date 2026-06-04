@@ -27,6 +27,10 @@ from .analog_four_midi import (
     ANALOG_FOUR_SYNTH_TRACK_NRPN,
     ANALOG_FOUR_SYNTH_TRACK_NRPN_BY_ADDRESS,
 )
+from .analog_four_oxi_macros import (
+    ANALOG_FOUR_OXI_MACROS,
+    DEFAULT_ANALOG_FOUR_OXI_MACRO,
+)
 from .analog_four_recipes import ANALOG_FOUR_KIT_RECIPES
 from .analog_rytm_kit_layout import (
     RYTM_KIT_DUMP_ID,
@@ -191,6 +195,8 @@ __all__ = [
     "ANALOG_FOUR_MANUAL_CC",
     "ANALOG_FOUR_MANUAL_CC_BY_MSB",
     "ANALOG_FOUR_KIT_RECIPES",
+    "ANALOG_FOUR_OXI_MACROS",
+    "DEFAULT_ANALOG_FOUR_OXI_MACRO",
     "ANALOG_RYTM_ALL_CC_BY_SECTION_AND_PARAMETER",
     "ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER",
     "ANALOG_RYTM_DOCUMENTED_ONLY_CC",

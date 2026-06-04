@@ -55,7 +55,9 @@ A Tauri desktop window backed by a Python sidecar that hosts the mutation engine
 The Analog Four cockpit view is currently visibility-only. It shows four synth
 tracks, the existing A4 strategy zones, and OXI-style track macro rows for
 Anchor / Shape / Pressure / Space dry-run review, but it does not add an A4
-SEND path, open ports, or send MIDI.
+SEND path, open ports, or send MIDI. The passive
+`analog-four-oxi-macro-report` command previews four-track OXI-style A4 macro
+shapes from manual-backed CC metadata before any future send path is promoted.
 
 **Sidecar security guarantees** (post CODE_REVIEW.md sweep, 2026-05):
 
@@ -254,10 +256,11 @@ clears the staged mutation, and keeps the current session guardrails.
 
 Inside the shell, use `S1A`, `S3A`, `S3B`, `S4B`, `4`, `Y`, `V`, `N`, `Z`,
 `U`, `preview`, `changes`, `send`, `go`, `again`, `next`, `kit`,
-`resnapshot`, `drum-core`, `kit-core`, `mode`, `depth`, `lane`, `lock`,
-`unlock`, `pad`, `preset`, `guards reset`, `status`, and `q`. `Y`, `V`, and
-`N` ask for depth (`micro`, `groove`, or `strong`). `send` repeats the currently
-staged plan; type `go` to
+`resnapshot`, `drum-core`, `kit-core`, `hard-groove`, `industrial`,
+`dub-pressure`, `transition`, `home`, `macro NAME`, `mode`, `depth`, `lane`,
+`lock`, `unlock`, `pad`, `preset`, `guards reset`, `status`, and `q`. `Y`,
+`V`, and `N` ask for depth (`micro`, `groove`, or `strong`). `send` repeats
+the currently staged plan; type `go` to
 make the next variation and send it in one step, or type the same mutation
 command again, `again`, or `next` to stage the next variation before sending.
 
@@ -298,6 +301,12 @@ fresh
 kit
 drum-core
 kit-core
+hard-groove
+industrial
+dub-pressure
+transition
+home
+macro hard-groove
 ```
 
 Global mutations respect each pad's session lane. In `live` mode, Pad 1 is
@@ -328,17 +337,24 @@ level, amp volume, SysEx writes, transport, pattern changes, and kit/project
 writes. Zone commands (`Y`, `V`, and `N`) layer on the current staged plan; use
 `fresh` or `Z` first when you want an anchor-only zone mutation.
 
-Two live staging macros capture the hardware-testing direction. `drum-core`
-keeps the hardware-proven four-pad recipe: `preset live`, LFO off, FX micro,
-Pad 1 locked as the kick anchor, and pads 2-4 wide/full with Pad 2 looser and
-pads 3-4 grittier. `kit-core` extends that idea to the whole captured kit while
-keeping Jose's pad 5-12 lane discipline: Pad 1 stays locked; pads 2-4 keep the
-drum-core recipe; pads 6-8 are treated as tom/discovery voices with wide/full
-source movement, light filter movement, no LFO movement, and AMP limited to
-overdrive, delay, and reverb; pads 5, 9, 10, and 11 do not move filter or LFO
-rows and also limit AMP movement to overdrive, delay, and reverb. Both macros
-stage `randomize` only. Inspect `changes`, then explicitly type `send` or `go`
-when you are ready.
+Named live staging macros capture the OXI-style hardware-testing direction.
+`drum-core` keeps the hardware-proven four-pad recipe: `preset live`, LFO off,
+FX micro, Pad 1 locked as the kick anchor, and pads 2-4 wide/full with Pad 2
+looser and pads 3-4 grittier. `kit-core` extends that idea to the whole
+captured kit while keeping Jose's pad 5-12 lane discipline: Pad 1 stays locked;
+pads 2-4 keep the drum-core recipe; pads 6-8 are treated as tom/discovery
+voices with wide/full source movement, light filter movement, no LFO movement,
+and AMP limited to overdrive, delay, and reverb; pads 5, 9, 10, and 11 do not
+move filter or LFO rows and also limit AMP movement to overdrive, delay, and
+reverb. The newer macro shortcuts layer on top of that same safety model:
+`hard-groove` is dry pressure for OXI patterns that already carry the groove,
+`industrial` adds metallic pressure and controlled grit, `dub-pressure` opens a
+darker spacious pressure lane, `transition` stages section movement, and `home`
+returns the staged plan to the captured anchor. You can also type
+`macro hard-groove`, `macro industrial`, `macro dub-pressure`,
+`macro transition`, or `macro home`. Every macro stages changes first. Inspect
+`changes`, then explicitly type `send` or `go` when you are ready. Use `Z` plus
+`send` or `home` plus `send` to recover the captured kit.
 
 Analog Four soft live capture is input-only:
 
@@ -572,6 +588,8 @@ python -m rytm_randomizer.cli dual-machine-target-report both   # both registere
 python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report   # passive Rytm 12-pad machine compatibility matrix
 python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report   # passive snapshot readiness per Rytm pad
 python -m rytm_randomizer.cli analog-rytm-midi-catalog-report   # passive OS 1.72 Rytm CC/NRPN catalog
+python -m rytm_randomizer.cli oxi-live-macro-catalog-report   # passive OXI live macro cards, live flow, and A4 runway state
+python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove --seed 23 --intensity 6 --events --limit 0
 ```
 
 Aliases: `rytm-only` and `a4-only` are accepted. The reports are passive: they open no MIDI port and send no MIDI. The snapshot-pad compatibility report explains which legal Rytm pad/machine combinations are snapshot-mutable today and which remain selectable-only until the follow-up runtime slice. The Analog Rytm MIDI catalog records OS 1.72 CC/NRPN rows with safety status labels; documented-only rows are not promoted to mutation until a separate approved hardware-validation pass. The Analog Four path is candidate/manifest-gated; do not run armed Analog Four hardware sends until a readiness report says the plan is ready.

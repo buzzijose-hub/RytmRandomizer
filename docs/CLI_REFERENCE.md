@@ -195,6 +195,7 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `analog-four-style-mutation-intent-report` | Passive Analog Four track/zone mutation intent |
 | `analog-four-style-mutation-mock-preview-report` | Passive Analog Four mock CC rows (deferred while saved-kit offsets are promoted) |
 | `analog-four-kit-catalog-report` | Passive Analog Four decoded kit catalog |
+| `analog-four-oxi-macro-report` | Passive in-memory Analog Four OXI-style four-track macro preview |
 | `analog-four-style-kit-readiness-report` | Passive per-kit Analog Four style-readiness sweep |
 
 ```bash
@@ -202,8 +203,17 @@ python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report KITS.syx
 python -m rytm_randomizer.cli analog-four-style-mutation-intent-report KITS.syx birmingham_pressure --slot 0 --discovery 45
 python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report KITS.syx jose_core_techno --slot 0 --discovery 45 --events --limit 24
 python -m rytm_randomizer.cli analog-four-kit-catalog-report KITS.syx --limit 16
+python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove --seed 23 --intensity 6 --events --limit 0
 python -m rytm_randomizer.cli analog-four-style-kit-readiness-report KITS.syx jose_core_techno --limit 16
 ```
+
+`analog-four-oxi-macro-report` is a snapshot-free planning surface for the
+Analog Four side of an OXI-style live rig. It uses existing manual-backed A4 CC
+metadata to preview deterministic values across four tracks, but it does not
+open a port, render real MIDI, or send anything. Use it to audition macro
+shapes such as `home`, `hard-groove`, `dub-pressure`, and
+`industrial-transition` before promoting any future A4 path into a gated
+hardware plan.
 
 ---
 

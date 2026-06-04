@@ -35,6 +35,8 @@ USAGE = (
     "analog-four-style-mutation-mock-preview-report <syx-path> <style-key> "
     "[--slot N] [--discovery N] [--events] [--limit N] [--json] | "
     "analog-four-kit-catalog-report <syx-path> [--limit N] [--json] | "
+    "analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] "
+    "[--events] [--limit N] [--json] | "
     "analog-four-style-kit-readiness-report <syx-path> <style-key> "
     "[--discovery N] [--limit N] [--json] | "
     "dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> "
@@ -68,6 +70,7 @@ USAGE = (
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
     "style-profile-report | style-crates-queue-journal-report [--json] | "
     "style-crate-rehearsal-deck-report [--crate <key>] [--json] | "
+    "oxi-live-macro-catalog-report | "
     "reference-style-blueprint-report "
     "(--description <text>|--audio <path>|--library <dir>) [--json] | "
     "list-style-profiles | inspect-style-profile <key> | "
@@ -886,6 +889,33 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _analog_four_oxi_macro_report_help():
+    from .reports.analog_four_oxi_macro_report import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: analog-four-oxi-macro-report
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-oxi-macro-report
+  python -m rytm_randomizer.cli analog-four-oxi-macro-report <macro-name>
+  python -m rytm_randomizer.cli analog-four-oxi-macro-report <macro-name> --seed N
+  python -m rytm_randomizer.cli analog-four-oxi-macro-report <macro-name> --intensity N
+  python -m rytm_randomizer.cli analog-four-oxi-macro-report <macro-name> --events
+  python -m rytm_randomizer.cli analog-four-oxi-macro-report <macro-name> --events --limit N
+  python -m rytm_randomizer.cli analog-four-oxi-macro-report <macro-name> --json
+  python -m rytm_randomizer.cli analog-four-oxi-macro-report --help
+
+Behavior:
+  Prints a passive in-memory Analog Four OXI-style macro preview. The report
+  uses the existing manual-backed Analog Four CC metadata, stages deterministic
+  four-track preview rows by seed and intensity, and can include mock row
+  details with --events. It does not read a SysEx file, invoke a mapper, open a
+  MIDI port, render real MIDI, or mutate hardware. Use --limit N to cap event
+  rows; N=0 displays all rows. Use --json for GUI/analyzer consumers.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def _analog_four_style_kit_readiness_report_help():
     from .reports.analog_four_style_kit_readiness import SAFETY_LINES
 
@@ -1166,6 +1196,27 @@ Behavior:
 
 Safety:
 {_safety_block(SAFETY_LINES)}"""
+
+
+def _oxi_live_macro_catalog_report_help():
+    return """RytmRandomizer passive CLI: oxi-live-macro-catalog-report
+
+Usage:
+  python -m rytm_randomizer.cli oxi-live-macro-catalog-report
+  python -m rytm_randomizer.cli oxi-live-macro-catalog-report --help
+
+Behavior:
+  Prints the passive OXI live macro catalog, including Rytm macro cards,
+  candidate-only Analog Four runway state, recovery actions, and blocked active
+  actions.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required"""
 
 
 def _reference_style_blueprint_report_help():
@@ -2574,6 +2625,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-style-mutation-intent-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report <syx-path> <style-key> [--slot N] [--discovery N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-kit-catalog-report <syx-path> [--limit N] [--json]
+  python -m rytm_randomizer.cli analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-style-kit-readiness-report <syx-path> <style-key> [--discovery N] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> <style-key> [--discovery N] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-kit-selection-report <style-key> --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--discovery N] [--limit N] [--json]
@@ -2587,6 +2639,7 @@ Usage:
   python -m rytm_randomizer.cli style-profile-report
   python -m rytm_randomizer.cli style-crates-queue-journal-report [--json]
   python -m rytm_randomizer.cli style-crate-rehearsal-deck-report [--crate <key>] [--json]
+  python -m rytm_randomizer.cli oxi-live-macro-catalog-report
   python -m rytm_randomizer.cli reference-style-blueprint-report (--description <text>|--audio <path>|--library <dir>) [--json]
   python -m rytm_randomizer.cli list-style-profiles
   python -m rytm_randomizer.cli inspect-style-profile <key>
@@ -2709,6 +2762,8 @@ Commands:
                      Print passive Analog Four style mutation mock-preview rows for a SysEx file.
   analog-four-kit-catalog-report
                      Print passive Analog Four kit catalog metadata for a SysEx file.
+  analog-four-oxi-macro-report
+                     Print passive Analog Four OXI-style macro preview metadata.
   analog-four-style-kit-readiness-report
                      Print passive Analog Four style readiness for every decoded kit.
   dual-machine-style-kit-readiness-report
@@ -2735,6 +2790,8 @@ Commands:
                      Print the passive Style Crates, Queue, and Mutation Journal report.
   style-crate-rehearsal-deck-report
                      Print passive GUI-ready style crate rehearsal cards.
+  oxi-live-macro-catalog-report
+                     Print passive OXI live macro cards and A4 runway state.
   reference-style-blueprint-report
                      Translate a style reference into a passive Rytm plus Analog Four blueprint.
   list-style-profiles
@@ -3114,6 +3171,7 @@ Safety:
         _analog_four_style_mutation_mock_preview_report_help
     ),
     "analog-four-kit-catalog-report": _analog_four_kit_catalog_report_help,
+    "analog-four-oxi-macro-report": _analog_four_oxi_macro_report_help,
     "analog-four-style-kit-readiness-report": _analog_four_style_kit_readiness_report_help,
     "dual-machine-style-kit-readiness-report": _dual_machine_style_kit_readiness_report_help,
     "dual-machine-style-kit-selection-report": _dual_machine_style_kit_selection_report_help,
@@ -3132,6 +3190,7 @@ Safety:
     "style-profile-report": _style_profile_report_help,
     "style-crates-queue-journal-report": _style_crates_queue_journal_report_help,
     "style-crate-rehearsal-deck-report": _style_crate_rehearsal_deck_report_help,
+    "oxi-live-macro-catalog-report": _oxi_live_macro_catalog_report_help,
     "reference-style-blueprint-report": _reference_style_blueprint_report_help,
     "style-target-report": _style_target_report_help,
     "style-performance-arc-report": _style_performance_arc_report_help,
