@@ -18,11 +18,18 @@ import type {
   LiveGuiSnapshotHistoryEntryDict,
   LiveGuiStatusFooterItemDict,
   LiveGuiUndoStackEntryDict,
+  LivePerformanceFlowModel,
+  LivePerformanceFlowStepModel,
   LiveReadinessModel,
-  LiveReadinessPanelProps,
+  LiveReadinessPanelViewProps,
 } from '../types/live_gui_protocol';
 
-export type { LiveReadinessModel, LiveReadinessPanelProps } from '../types/live_gui_protocol';
+export type {
+  LivePerformanceFlowModel,
+  LiveReadinessModel,
+  LiveReadinessPanelProps,
+  LiveReadinessPanelViewProps,
+} from '../types/live_gui_protocol';
 
 const PASSIVE_SAFETY = [
   'passive/read-only',
@@ -41,6 +48,103 @@ const BLOCKED_ACTIONS = [
 ] as const;
 
 const REPLAY_COMMANDS = ['python -m rytm_randomizer.cli live-gui-status-footer-model-report'] as const;
+
+export const DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL: LivePerformanceFlowModel = {
+  model_version: 'live-performance-flow-v1',
+  flow_id: 'oxi-rytm-a4-performance-flow',
+  flow_status: 'mock-safe',
+  current_step_key: 'capture-anchor',
+  steps: [
+    flowStep(
+      'capture-anchor',
+      1,
+      'Capture Anchor',
+      'setup',
+      'kit/resnapshot',
+      'A4 soft-capture reference',
+      'receive-only',
+      'Z + send',
+      'safe',
+    ),
+    flowStep(
+      'kit-core',
+      2,
+      'Kit Core',
+      'foundation',
+      'kit-core',
+      'review bass/stab candidates',
+      'stage-review-send',
+      'home',
+      'staged',
+    ),
+    flowStep(
+      'hard-groove',
+      3,
+      'Hard Groove',
+      'pressure',
+      'hard-groove',
+      'review rhythmic contour',
+      'stage-review-send',
+      'home',
+      'staged',
+    ),
+    flowStep(
+      'industrial',
+      4,
+      'Industrial',
+      'texture',
+      'industrial',
+      'review texture motion',
+      'stage-review-send',
+      'home',
+      'staged',
+    ),
+    flowStep(
+      'dub-pressure',
+      5,
+      'Dub Pressure',
+      'space',
+      'dub-pressure',
+      'review delay/reverb space',
+      'stage-review-send',
+      'home',
+      'staged',
+    ),
+    flowStep(
+      'transition',
+      6,
+      'Transition',
+      'handoff',
+      'transition',
+      'review bridge candidate',
+      'dry-run-only',
+      'home',
+      'review',
+    ),
+    flowStep(
+      'home',
+      7,
+      'Home',
+      'recovery',
+      'Z + send',
+      'keep A4 review-only',
+      'restore-anchor',
+      'kit/resnapshot',
+      'safe',
+    ),
+  ],
+  blocked_actions: [
+    'a4_outbound_macro_send',
+    'unattended_hardware_behavior',
+    'open_midi_port_without_arm',
+    'send_without_dry_run',
+  ],
+  safety_lines: PASSIVE_SAFETY,
+  replay_commands: [
+    'python -m rytm_randomizer.cli oxi-live-macro-catalog-report --json',
+    'python -m rytm_randomizer.cli analog-four-oxi-macro-report --json',
+  ],
+};
 
 export const DEFAULT_LIVE_READINESS_MODEL: LiveReadinessModel = {
   pad_surface: {
@@ -396,6 +500,30 @@ export const DEFAULT_LIVE_READINESS_MODEL: LiveReadinessModel = {
     safety: PASSIVE_SAFETY,
   },
 };
+
+function flowStep(
+  key: string,
+  order: number,
+  label: string,
+  phase: string,
+  rytmCommand: string,
+  analogFourAction: string,
+  sendPolicy: string,
+  recoveryAction: string,
+  status: string,
+): LivePerformanceFlowStepModel {
+  return {
+    key,
+    order,
+    label,
+    phase,
+    rytm_command: rytmCommand,
+    analog_four_action: analogFourAction,
+    send_policy: sendPolicy,
+    recovery_action: recoveryAction,
+    status,
+  };
+}
 
 function cardsByPad(
   cards: ReadonlyArray<LiveGuiRytmPadSurfaceCardDict>,
@@ -793,7 +921,8 @@ function orderedDeviceCards(
 
 export function LiveReadinessPanel({
   model = DEFAULT_LIVE_READINESS_MODEL,
-}: LiveReadinessPanelProps): JSX.Element {
+  performanceFlow = DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL,
+}: LiveReadinessPanelViewProps): JSX.Element {
   return (
     <section
       className="cockpit-panel live-readiness-panel"
@@ -808,6 +937,7 @@ export function LiveReadinessPanel({
         <LiveTwelvePadSurface model={model.pad_surface} />
         <LiveDeviceInventory model={model.device_inventory} />
         <LiveSceneQueue model={model.scene_queue} />
+        <LivePerformanceFlow model={performanceFlow} />
         <LiveStatusFooter model={model.status_footer} />
         <LiveSnapshotHistory model={model.snapshot_history} />
         <LiveSafetyChecklist model={model.safety_checklist} />
@@ -815,6 +945,49 @@ export function LiveReadinessPanel({
         <LiveAnalyzerPanel model={model.analyzer_panel} />
         <LiveHardwareRail model={model.hardware_rail} />
         <LiveSnapshotCompatibility model={model.snapshot_compatibility} />
+      </div>
+    </section>
+  );
+}
+
+export function LivePerformanceFlow({ model }: { model: LivePerformanceFlowModel }): JSX.Element {
+  return (
+    <section className="live-surface live-surface-wide" data-testid="live-performance-flow">
+      <SurfaceTitle title="Performance Flow" meta={`${model.steps.length} steps / ${model.flow_status}`} />
+      <div className="live-performance-rail">
+        {model.steps.map((step) => (
+          <article
+            key={step.key}
+            className={`live-performance-step ${step.status} ${
+              step.key === model.current_step_key ? 'current' : 'next'
+            }`}
+            data-testid={`live-performance-flow-step-${step.key}`}
+          >
+            <span className="live-pad-index">
+              {step.order}. {step.phase}
+            </span>
+            <strong>{step.label}</strong>
+            <span>Rytm: {step.rytm_command}</span>
+            <span>A4: {step.analog_four_action}</span>
+            <small>
+              {step.send_policy} / recovery {step.recovery_action}
+            </small>
+          </article>
+        ))}
+      </div>
+      <div className="live-chip-row">
+        {model.blocked_actions.map((action) => (
+          <span key={action} className="live-chip live-chip-blocked">
+            {action}
+          </span>
+        ))}
+      </div>
+      <div className="live-chip-row">
+        {model.replay_commands.map((commandText) => (
+          <span key={commandText} className="live-chip">
+            {commandText}
+          </span>
+        ))}
       </div>
     </section>
   );
