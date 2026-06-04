@@ -224,8 +224,9 @@ left (your current pad state) and a Mutation Panel on the right
 The device rail can switch the center view between the default Analog Rytm
 MKII 12-pad snapshot surface and the Analog Four MKII four-track staged
 surface. The Analog Four view is for dry-run visibility only: it shows the
-current A4 track roles and mutation zones, but it does not add an A4 SEND path,
-open MIDI ports, or send MIDI.
+current A4 track roles, mutation zones, and OXI-style Anchor / Shape /
+Pressure / Space macro rows, but it does not add an A4 SEND path, open MIDI
+ports, or send MIDI.
 
 1. **Pick a built-in scene** — the right panel lists seven shipped
    `kind="scene"` profiles (industrial, hypnotic, garage, peak_time,

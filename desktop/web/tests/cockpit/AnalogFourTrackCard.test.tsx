@@ -3,15 +3,22 @@ import { describe, expect, it } from 'vitest';
 
 import { AnalogFourTrackCard } from '../../src/cockpit/AnalogFourTrackCard';
 import { CockpitClientProvider } from '../../src/cockpit/context';
-import { ANALOG_FOUR_TRACKS } from '../../src/cockpit/devices';
+import {
+  ANALOG_FOUR_MUTATION_ZONES,
+  ANALOG_FOUR_OXI_ACTIONS_BY_ROLE,
+  ANALOG_FOUR_TRACKS,
+} from '../../src/cockpit/devices';
 
 import { FakeCockpitClient } from './_fixtures';
 
-function renderCard(previewOn: boolean): FakeCockpitClient {
+function renderCard(
+  previewOn: boolean,
+  track = ANALOG_FOUR_TRACKS[0]!,
+): FakeCockpitClient {
   const fake = new FakeCockpitClient();
   render(
     <CockpitClientProvider client={fake.asClient()}>
-      <AnalogFourTrackCard track={ANALOG_FOUR_TRACKS[0]!} previewOn={previewOn} />
+      <AnalogFourTrackCard track={track} previewOn={previewOn} />
     </CockpitClientProvider>,
   );
   return fake;
@@ -68,4 +75,88 @@ describe('AnalogFourTrackCard', () => {
       expect.stringContaining(ANALOG_FOUR_TRACKS[0]!.trackLabel),
     );
   });
+
+  it('renders a passive OXI-style macro strip for the selected Analog Four track', () => {
+    renderCard(true);
+
+    const deck = screen.getByTestId('a4-track-1-oxi-macros');
+
+    expect(deck).toHaveTextContent('OXI macros');
+    expect(within(deck).getAllByTestId(/a4-track-1-oxi-macro-/)).toHaveLength(4);
+    expect(within(deck).getByTestId('a4-track-1-oxi-macro-anchor')).toHaveTextContent(
+      'Anchor',
+    );
+    expect(within(deck).getByTestId('a4-track-1-oxi-macro-anchor')).toHaveTextContent(
+      'OSC1 Level',
+    );
+    expect(within(deck).getByTestId('a4-track-1-oxi-macro-pressure')).toHaveTextContent(
+      'Preview row',
+    );
+    expect(within(deck).getByTestId('a4-track-1-oxi-macro-space')).toHaveTextContent(
+      'Deferred',
+    );
+  });
+
+  it('shows dry-run labels in the passive OXI macro strip when preview is off', () => {
+    renderCard(false);
+
+    const deck = screen.getByTestId('a4-track-1-oxi-macros');
+
+    expect(within(deck).getByTestId('a4-track-1-oxi-macro-anchor')).toHaveTextContent(
+      'Dry-run row',
+    );
+    expect(within(deck).getByTestId('a4-track-1-oxi-macro-space')).toHaveTextContent(
+      'Deferred',
+    );
+  });
+
+  it('keeps the A4 OXI macro source of truth aligned with track roles and mutation zones', () => {
+    const zoneKeys = new Set(ANALOG_FOUR_MUTATION_ZONES.map((zone) => zone.key));
+
+    for (const track of ANALOG_FOUR_TRACKS) {
+      const actions = ANALOG_FOUR_OXI_ACTIONS_BY_ROLE[track.roleKey];
+
+      expect(actions).toBeDefined();
+      if (actions === undefined) {
+        throw new Error(`Missing OXI actions for ${track.roleKey}`);
+      }
+      expect(actions).toHaveLength(4);
+      expect(actions.map((action) => action.key)).toEqual([
+        'anchor',
+        'shape',
+        'pressure',
+        'space',
+      ]);
+      for (const action of actions) {
+        expect(zoneKeys.has(action.targetZoneKey)).toBe(true);
+      }
+    }
+  });
+
+  it.each([
+    [1, 'OSC1 Level', 'pressure', 'Amp Env Decay'],
+    [2, 'OSC1 Pulsewidth', 'space', 'Amp Delay Send'],
+    [3, 'OSC2 Level', 'space', 'Amp Reverb Send'],
+    [4, 'Amp Delay Send', 'shape', 'Amp Reverb Send'],
+  ])(
+    'renders role-specific OXI macro targets for Analog Four track %i',
+    (trackNumber, anchorTarget, secondMacroKey, secondTarget) => {
+      const track = ANALOG_FOUR_TRACKS.find((candidate) => candidate.track === trackNumber);
+
+      expect(track).toBeDefined();
+      if (track === undefined) {
+        throw new Error(`Missing A4 test track ${trackNumber}`);
+      }
+      renderCard(true, track);
+
+      const deck = screen.getByTestId(`a4-track-${trackNumber}-oxi-macros`);
+
+      expect(within(deck).getByTestId(`a4-track-${trackNumber}-oxi-macro-anchor`)).toHaveTextContent(
+        anchorTarget,
+      );
+      expect(
+        within(deck).getByTestId(`a4-track-${trackNumber}-oxi-macro-${secondMacroKey}`),
+      ).toHaveTextContent(secondTarget);
+    },
+  );
 });

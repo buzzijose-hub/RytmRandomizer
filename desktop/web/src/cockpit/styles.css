@@ -720,6 +720,66 @@ html,
   text-align: right;
 }
 
+.a4-oxi-macro-strip {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 10px;
+}
+
+.a4-oxi-macro-strip h3 {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 11px;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.a4-oxi-macro-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.a4-oxi-macro {
+  min-width: 0;
+  border: 1px solid rgba(86, 212, 221, 0.32);
+  border-radius: 8px;
+  background: rgba(13, 17, 23, 0.35);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.a4-oxi-macro.deferred {
+  border-color: rgba(210, 153, 34, 0.58);
+}
+
+.a4-oxi-macro strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.a4-oxi-macro span,
+.a4-oxi-macro small {
+  color: var(--text-dim);
+  font-size: 11px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.a4-oxi-macro em {
+  color: var(--cyan);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.a4-oxi-macro.deferred em {
+  color: var(--amber);
+}
+
 .a4-zone-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1306,7 +1366,8 @@ html,
   }
 
   .a4-track-grid,
-  .a4-zone-grid {
+  .a4-zone-grid,
+  .a4-oxi-macro-grid {
     grid-template-columns: 1fr;
   }
 

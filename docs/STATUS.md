@@ -4,6 +4,12 @@ Last updated: 2026-06-03. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-03: Analog Four cockpit OXI-style track macro strip prepared locally.
+  Each A4 staged track now shows passive Anchor / Shape / Pressure / Space rows
+  aligned to the existing A4 mutation-zone vocabulary, with drive/NRPN-only
+  moves still marked deferred. The strip is frontend-only review metadata: no
+  A4 SEND path, no MIDI renderer change, no port opening, no real MIDI send,
+  and no hardware validation.
 - 2026-06-03: Passive Analog Four OXI-style macro report added as the first
   snapshot-free A4 planning surface for Jose's OXI-adjacent live rig workflow.
   `python -m rytm_randomizer.cli analog-four-oxi-macro-report` previews
