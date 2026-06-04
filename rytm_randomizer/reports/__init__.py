@@ -23,6 +23,11 @@ from typing import Any, Final
 
 from ..cli_registry import CliCommand
 from .formatter import passive_footer_lines, safety_section_lines
+from .oxi_live_macro_catalog import (  # noqa: F401
+    build_oxi_live_macro_catalog_payload,
+    build_oxi_live_macro_catalog_report,
+    format_oxi_live_macro_catalog_report,
+)
 from .rytm_machine_matrix import (  # noqa: F401
     build_rytm_machine_matrix_report,
     format_rytm_machine_matrix_report,
