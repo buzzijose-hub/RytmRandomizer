@@ -144,6 +144,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.style_crate_rehearsal_deck",
             "STYLE_CRATE_REHEARSAL_DECK_CLI_COMMAND",
         ),
+        "oxi-live-macro-catalog-report": (
+            "rytm_randomizer.reports.oxi_live_macro_catalog",
+            "OXI_LIVE_MACRO_CATALOG_CLI_COMMAND",
+        ),
         "reference-style-blueprint-report": (
             "rytm_randomizer.reports.reference_style_blueprint",
             "REFERENCE_STYLE_BLUEPRINT_CLI_COMMAND",
