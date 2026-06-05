@@ -107,6 +107,22 @@ class OxiPromotionCriterion:
 
 
 @dataclass(frozen=True)
+class OxiOperatorCue:
+    """One passive stage/inspect/fire/recover cue for live use."""
+
+    chapter_name: str
+    label: str
+    oxi_action: str
+    rytm_stage_command: str
+    inspect_command: str
+    fire_command: str
+    recovery_command: str
+    a4_action: str
+    expected_result: str
+    blocked_action: str
+
+
+@dataclass(frozen=True)
 class OxiLiveSetStrategyReport:
     """Passive report tying OXI, Rytm macros, A4 runway, and pad policy together."""
 
@@ -116,6 +132,7 @@ class OxiLiveSetStrategyReport:
     pad_policies: tuple[OxiPadPolicy, ...]
     hardware_validation_runway: tuple[OxiHardwareValidationStep, ...]
     promotion_criteria: tuple[OxiPromotionCriterion, ...]
+    operator_cues: tuple[OxiOperatorCue, ...]
     next_hardware_validations: tuple[str, ...]
     safety: Mapping[str, object]
 
@@ -323,6 +340,93 @@ _PROMOTION_CRITERIA: Final[tuple[OxiPromotionCriterion, ...]] = (
     ),
 )
 
+_OPERATOR_CUES: Final[tuple[OxiOperatorCue, ...]] = (
+    OxiOperatorCue(
+        chapter_name="capture-anchor",
+        label="Capture Anchor",
+        oxi_action="hold or prepare the first pattern",
+        rytm_stage_command="kit/resnapshot",
+        inspect_command="status",
+        fire_command="no send",
+        recovery_command="captured anchor",
+        a4_action="hold-current-a4-patch",
+        expected_result="current Rytm kit becomes the safe anchor before the set moves",
+        blocked_action="no mutation before anchor capture",
+    ),
+    OxiOperatorCue(
+        chapter_name="establish-groove",
+        label="Establish Groove",
+        oxi_action="keep groove, triggers, mutes, and pattern motion running",
+        rytm_stage_command="macro hard-groove",
+        inspect_command="changes",
+        fire_command="send or go",
+        recovery_command="home + send or Z + send",
+        a4_action="review hard-groove A4 macro",
+        expected_result="tight source-first Rytm pressure over the OXI pattern",
+        blocked_action="no unattended sends",
+    ),
+    OxiOperatorCue(
+        chapter_name="pressure-build",
+        label="Pressure Build",
+        oxi_action="increase pattern density or mute tension externally",
+        rytm_stage_command="macro industrial",
+        inspect_command="changes",
+        fire_command="send or go",
+        recovery_command="home + send or Z + send",
+        a4_action="review industrial-transition A4 macro",
+        expected_result="metallic grit rises while Pad 1 remains protected",
+        blocked_action="no A4 outbound macro",
+    ),
+    OxiOperatorCue(
+        chapter_name="peak-texture",
+        label="Peak Texture",
+        oxi_action="hold the peak pattern while sound design carries the lift",
+        rytm_stage_command="macro industrial",
+        inspect_command="changes",
+        fire_command="send or go",
+        recovery_command="home + send or Z + send",
+        a4_action="review pressure macro only",
+        expected_result="stronger Rytm pressure without releasing recovery",
+        blocked_action="no chaos mode without explicit future opt-in",
+    ),
+    OxiOperatorCue(
+        chapter_name="space-release",
+        label="Space Release",
+        oxi_action="thin triggers or open mutes for the release",
+        rytm_stage_command="macro dub-pressure",
+        inspect_command="changes",
+        fire_command="send or go",
+        recovery_command="home + send or Z + send",
+        a4_action="review dub-pressure A4 macro",
+        expected_result="delay/reverb pressure without losing the captured-kit anchor",
+        blocked_action="no unattended sends",
+    ),
+    OxiOperatorCue(
+        chapter_name="transition-fill",
+        label="Transition Fill",
+        oxi_action="prepare or launch the next pattern change",
+        rytm_stage_command="macro transition",
+        inspect_command="changes",
+        fire_command="send or go",
+        recovery_command="home + send or Z + send",
+        a4_action="review transition-only",
+        expected_result="short section movement before the next OXI decision",
+        blocked_action="no transport or pattern writes",
+    ),
+    OxiOperatorCue(
+        chapter_name="home-reset",
+        label="Home Reset",
+        oxi_action="settle the groove or prepare the next chapter",
+        rytm_stage_command="home",
+        inspect_command="changes",
+        fire_command="send",
+        recovery_command="Z + send",
+        a4_action="no A4 send",
+        expected_result="captured Rytm anchor restored",
+        blocked_action="no persistent kit/project write",
+    ),
+)
+
 
 def build_oxi_live_set_strategy_report() -> OxiLiveSetStrategyReport:
     """Return the deterministic passive OXI live set strategy report."""
@@ -334,6 +438,7 @@ def build_oxi_live_set_strategy_report() -> OxiLiveSetStrategyReport:
         pad_policies=_PAD_POLICIES,
         hardware_validation_runway=_HARDWARE_VALIDATION_RUNWAY,
         promotion_criteria=_PROMOTION_CRITERIA,
+        operator_cues=_OPERATOR_CUES,
         next_hardware_validations=_NEXT_HARDWARE_VALIDATIONS,
         safety=_SAFETY_PAYLOAD,
     )
@@ -362,6 +467,13 @@ def _validation_step_line(step: OxiHardwareValidationStep) -> str:
 
 def _promotion_criterion_line(criterion: OxiPromotionCriterion) -> str:
     return f"- {criterion.name} | {criterion.device} | {criterion.current_status}"
+
+
+def _operator_cue_line(cue: OxiOperatorCue) -> str:
+    return (
+        f"- {cue.chapter_name} | OXI={cue.oxi_action} | "
+        f"Rytm={cue.rytm_stage_command} | Inspect={cue.inspect_command}"
+    )
 
 
 def format_oxi_live_set_strategy_report(
@@ -398,6 +510,14 @@ def format_oxi_live_set_strategy_report(
         lines.append(f"  Required evidence: {criterion.required_evidence}")
         lines.append(f"  Promotes to: {criterion.promotes_to}")
         lines.append(f"  Safety: {criterion.safety_note}")
+    lines.append("Operator cue sheet:")
+    for cue in resolved.operator_cues:
+        lines.append(_operator_cue_line(cue))
+        lines.append(f"  Fire: {cue.fire_command}")
+        lines.append(f"  Recover: {cue.recovery_command}")
+        lines.append(f"  A4: {cue.a4_action}")
+        lines.append(f"  Result: {cue.expected_result}")
+        lines.append(f"  Blocked: {cue.blocked_action}")
     lines.append("Next hardware validations:")
     lines.extend(f"- {item}" for item in resolved.next_hardware_validations)
     lines.append("Safety:")
@@ -461,6 +581,21 @@ def _promotion_criterion_payload(criterion: OxiPromotionCriterion) -> dict[str, 
     }
 
 
+def _operator_cue_payload(cue: OxiOperatorCue) -> dict[str, object]:
+    return {
+        "chapter_name": cue.chapter_name,
+        "label": cue.label,
+        "oxi_action": cue.oxi_action,
+        "rytm_stage_command": cue.rytm_stage_command,
+        "inspect_command": cue.inspect_command,
+        "fire_command": cue.fire_command,
+        "recovery_command": cue.recovery_command,
+        "a4_action": cue.a4_action,
+        "expected_result": cue.expected_result,
+        "blocked_action": cue.blocked_action,
+    }
+
+
 def build_oxi_live_set_strategy_payload() -> dict[str, object]:
     """Return JSON-ready deterministic strategy metadata."""
 
@@ -476,6 +611,7 @@ def build_oxi_live_set_strategy_payload() -> dict[str, object]:
         "promotion_criteria": [
             _promotion_criterion_payload(criterion) for criterion in report.promotion_criteria
         ],
+        "operator_cues": [_operator_cue_payload(cue) for cue in report.operator_cues],
         "next_hardware_validations": list(report.next_hardware_validations),
         "safety": dict(report.safety),
     }
@@ -525,6 +661,7 @@ __all__ = (
     "OxiHardwareValidationStep",
     "OxiLiveSetChapter",
     "OxiLiveSetStrategyReport",
+    "OxiOperatorCue",
     "OxiPadPolicy",
     "OxiPromotionCriterion",
     "OxiRigRole",

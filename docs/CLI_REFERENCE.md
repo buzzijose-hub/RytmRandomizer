@@ -222,7 +222,7 @@ hardware plan.
 | Command | Description |
 |---|---|
 | `oxi-live-macro-catalog-report` | Passive Rytm macro cards, recovery actions, live flow, and A4 runway state |
-| `oxi-live-set-strategy-report` | Passive OXI-style set chapters, all-12-pad policy, and A4 review-only actions |
+| `oxi-live-set-strategy-report` | Passive OXI-style set chapters, operator cues, all-12-pad policy, and A4 review-only actions |
 
 ```bash
 python -m rytm_randomizer.cli oxi-live-macro-catalog-report
@@ -238,7 +238,9 @@ until its outbound macro path is separately validated. It also keeps Jose's
 current pad discipline explicit: pads 5, 9, 10, and 11 stay SRC-first with
 filter/LFO off and AMP limited to overdrive, delay, and reverb; pads 6-8 stay
 tom/source-focused with light filter motion and LFO off; Pad 12 remains
-available for users who rely on it. The JSON payload also includes a
+available for users who rely on it. The JSON payload also includes an operator
+cue sheet that maps each chapter to stage, inspect, fire, recover, expected
+result, and blocked-action steps. It also includes a
 hardware-validation runway for the next Rytm kit-core smoke, Dual VCO
 center-band check, A4 input-only soft capture, and passive A4 macro dry-run.
 Analog Four promotion criteria keep outbound macros blocked until input-label

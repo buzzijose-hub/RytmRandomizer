@@ -174,6 +174,47 @@ def test_a4_promotion_criteria_keep_outbound_macros_blocked_until_evidence_exist
     assert "no A4 outbound macro send until this gate is satisfied" in text
 
 
+def test_operator_cues_turn_each_chapter_into_stage_inspect_fire_recover_steps() -> None:
+    from rytm_randomizer.reports.oxi_live_set_strategy import (
+        build_oxi_live_set_strategy_payload,
+        build_oxi_live_set_strategy_report,
+        format_oxi_live_set_strategy_report,
+    )
+
+    report = build_oxi_live_set_strategy_report()
+    by_chapter = {cue.chapter_name: cue for cue in report.operator_cues}
+
+    assert tuple(by_chapter) == tuple(chapter.name for chapter in report.chapters)
+
+    establish = by_chapter["establish-groove"]
+    assert establish.oxi_action == "keep groove, triggers, mutes, and pattern motion running"
+    assert establish.rytm_stage_command == "macro hard-groove"
+    assert establish.inspect_command == "changes"
+    assert establish.fire_command == "send or go"
+    assert establish.recovery_command == "home + send or Z + send"
+    assert establish.blocked_action == "no unattended sends"
+
+    release = by_chapter["space-release"]
+    assert release.rytm_stage_command == "macro dub-pressure"
+    assert release.expected_result == "delay/reverb pressure without losing the captured-kit anchor"
+
+    reset = by_chapter["home-reset"]
+    assert reset.fire_command == "send"
+    assert reset.a4_action == "no A4 send"
+    assert reset.recovery_command == "Z + send"
+
+    payload = build_oxi_live_set_strategy_payload()
+    assert payload["operator_cues"][1]["chapter_name"] == "establish-groove"
+    assert payload["operator_cues"][1]["blocked_action"] == "no unattended sends"
+    assert payload["operator_cues"][-1]["fire_command"] == "send"
+
+    text = "\n".join(format_oxi_live_set_strategy_report(report))
+    assert "Operator cue sheet:" in text
+    assert "establish-groove | OXI=keep groove, triggers, mutes, and pattern motion running" in text
+    assert "Fire: send or go" in text
+    assert "Blocked: no unattended sends" in text
+
+
 def test_cli_command_prints_text_json_and_rejects_unexpected_arguments() -> None:
     text_result = subprocess.run(
         [sys.executable, "-m", "rytm_randomizer.cli", "oxi-live-set-strategy-report"],
