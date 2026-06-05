@@ -28,6 +28,11 @@ from .oxi_live_macro_catalog import (  # noqa: F401
     build_oxi_live_macro_catalog_report,
     format_oxi_live_macro_catalog_report,
 )
+from .oxi_live_set_strategy import (  # noqa: F401
+    build_oxi_live_set_strategy_payload,
+    build_oxi_live_set_strategy_report,
+    format_oxi_live_set_strategy_report,
+)
 from .rytm_machine_matrix import (  # noqa: F401
     build_rytm_machine_matrix_report,
     format_rytm_machine_matrix_report,

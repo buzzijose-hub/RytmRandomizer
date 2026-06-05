@@ -22,6 +22,18 @@ Last updated: 2026-06-05. This file is a hand-authored snapshot and is meant to 
   stdout/JSON, CLI help, README coverage, and a TypeScript protocol mirror. The
   report is metadata-only: no GUI launch, no real MIDI rendering, no MIDI send,
   no port opening, no hardware mutation, and no A4 outbound macro path.
+- 2026-06-05: Passive OXI live set strategy report prepared locally. The new
+  `oxi-live-set-strategy-report [--json]` surface turns the merged
+  `kit/resnapshot`, `kit-core`, `hard-groove`, `industrial`, `dub-pressure`,
+  `transition`, and `home` vocabulary into set chapters, rig-role summaries,
+  all-12-pad policy notes, A4 review-only actions, and next hardware validation
+  prompts. It preserves Jose's current pad discipline by keeping pads 5, 9, 10,
+  and 11 SRC-first with filter/LFO off and AMP limited to overdrive, delay, and
+  reverb; pads 6-8 stay SRC/tom-focused with light filter movement and LFO off;
+  Pad 12 remains available for users who rely on it. The surface is
+  report-only: no port opening, no MIDI send, no command execution, no hardware
+  mutation, no A4 outbound path, and no V1.34 parity change. See
+  `docs/superpowers/plans/2026-06-05-oxi-live-set-strategy-report.md`.
 - 2026-06-04: Live performance cockpit flow follow-up cleanups. The new
   `DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL`, `LivePerformanceFlow` renderer, and the
   `LivePerformanceFlowModel` / `LivePerformanceFlowStepModel` /
