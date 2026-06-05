@@ -4,6 +4,18 @@ Last updated: 2026-06-05. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-05: Wired the Claude Code post-push code-review hook (and fixed the
+  "settings file failed to parse / expected string, received object" error).
+  Added `scripts/code_review_gate.py --mode claude-hook` — it reads the
+  PostToolUse hook JSON on stdin, no-ops unless the call was a `git push`, then
+  runs the mechanical gates and re-prompts the 8-step review via
+  `additionalContext` (sharing its body with `--mode codex-hook`). Replaced the
+  rejected `Agent`-action block in `.claude/settings.json` with a SCHEMA-VALID
+  `hooks` block (string `matcher` + `type: command`, preferring the repo
+  `.venv` then `python3`). Added
+  `tests/architecture/test_claude_code_review_hook.py` and refreshed
+  `docs/CODE_REVIEW_HOOK_SETUP.md`. Tooling/config only: no engine, runner, or
+  V1.34 parity change.
 - 2026-06-05: Performance-flow report follow-up cleanups. Wired `source_module`
   through `LiveGuiPerformanceFlowModel` (dataclass, TypedDict, payload, and the
   `live_gui_protocol.ts` mirror + cockpit default) to match every sibling

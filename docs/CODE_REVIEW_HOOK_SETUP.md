@@ -58,8 +58,8 @@ single PR comment. The dimension→step→gate table is in
 All three mechanisms call **one** implementation of the mechanical gates:
 [`scripts/code_review_gate.py`](../scripts/code_review_gate.py). It runs
 lint (ruff + black + isort) + `pytest tests/architecture/` + the 685 V1.34
-parity items, and has three `--mode`s — `cli`, `codex-hook`, `git-hook` —
-one per caller. Because there is a single script, the gates can never
+parity items, and has four `--mode`s — `cli`, `claude-hook`, `codex-hook`,
+`git-hook` — one per caller. Because there is a single script, the gates can never
 drift between "what `just review` runs" and "what the hook runs".
 
 ## The three mechanisms
@@ -67,18 +67,32 @@ drift between "what `just review` runs" and "what the hook runs".
 ### 1. Claude Code — `.claude/settings.json` (automatic, zero setup)
 
 Claude Code reads [`.claude/settings.json`](../.claude/settings.json) from
-the repo root automatically. The `PostToolUse` hook there fires the
-`code-reviewer` agent on any Bash command matching `^\s*git\s+push`. The
-agent **orchestrates the review by fanning out one targeted agent per
-dimension** (see § "One agent per review dimension" above), then
-synthesizes the per-dimension findings — covering all 8 steps including
-the judgement steps 7-8 — into one verdict. **Nothing to install**: clone
-the repo and it is live.
+the repo root automatically. Its `PostToolUse` hook (a STRING `matcher` plus
+a nested `hooks` array with one `type: command` entry — the schema Claude
+Code validates) runs `scripts/code_review_gate.py --mode claude-hook` after
+every Bash tool call. The script:
 
-If your Claude Code version does not support the `Agent` hook action type,
-the hook is ignored harmlessly — run the review manually with
-`/agent code-reviewer` or `/skill code-review`. (The `.githooks/pre-push`
-hook below still runs the mechanical gates regardless.)
+- reads the hook's JSON payload on stdin and **no-ops silently** unless the
+  tool call was a `git push`;
+- on a `git push`, runs the mechanical gates and writes a JSON response:
+  - **pass** → `hookSpecificOutput.additionalContext` carrying an instruction
+    that re-prompts Claude to perform the review as one targeted agent per
+    dimension (per the skill's "Execution model" section) — or to run the
+    `code-reviewer` agent — and synthesize the verdict;
+  - **fail** → `decision: "block"` with the failing-gate reason, so Claude
+    sees the failure and self-corrects instead of proceeding.
+
+**Nothing to install**: clone the repo and it is live. The hook command
+prefers the repo `.venv` interpreter (so the gate's lint/test tools resolve)
+and falls back to `python3` on PATH. You can also run the review on demand
+with the `/code-review` skill or the `code-reviewer` agent.
+
+> **Why a `command` hook, not an `Agent` hook.** An earlier version declared
+> an `Agent`-action hook with a matcher OBJECT; the installed Claude Code
+> rejects that shape (`matcher` must be a string), failing settings
+> validation with "expected string, received object". A `command` hook
+> cannot dispatch the `code-reviewer` agent directly, so — exactly like
+> `.codex/hooks.json` — it re-prompts the review through `additionalContext`.
 
 ### 2. Codex — `.codex/hooks.json` (automatic, zero setup)
 
@@ -101,7 +115,8 @@ script:
 **Why a `command` hook, not an `agent` hook.** Codex currently runs only
 `type: "command"` hook handlers — `prompt` and `agent` handlers are parsed
 but *skipped*. So `.codex/hooks.json` cannot dispatch the `code-reviewer`
-agent directly the way `.claude/settings.json` can. The workaround is the
+agent directly — and neither can `.claude/settings.json` (Claude Code runs
+only `type: command` hooks here too). The workaround is the
 `additionalContext` channel: the `command` hook runs the gate script, and
 the script injects the per-dimension fan-out review instruction back into
 the model's own context. Same review outcome, different plumbing — and
@@ -150,8 +165,10 @@ The review is enforced in **four** layers, so disabling any one never lets
 a violation merge:
 
 1. **`.githooks/pre-push`** — mechanical gates, every tool, blocks the push.
-2. **`.claude/settings.json`** — Claude Code agent review (8 steps).
-3. **`.codex/hooks.json`** — codex agent review (8 steps, via re-prompt).
+2. **`.claude/settings.json`** — Claude Code command hook → re-prompts the
+   8-step review (`--mode claude-hook`).
+3. **`.codex/hooks.json`** — codex command hook → re-prompts the 8-step
+   review (`--mode codex-hook`).
 4. **CI** — the `architecture` job in `.github/workflows/test.yml` runs
    `pytest tests/architecture/` on every PR and is a **required status check**.
    It mechanically re-checks the compliance subset server-side (import
@@ -183,7 +200,7 @@ a violation merge:
      `cli_registry.CliCommand.register(...)` (prevents H7 + IH4 + IH5).
 
 Layers 1-3 are local and fast; layer 4 is the server-side guarantee. The
-agent hooks (2, 3) and `just review` catch the **judgement-level** findings
+re-prompt hooks (2, 3) and `just review` catch the **judgement-level** findings
 CI cannot — Step 7 abstraction reuse, Step 8 diagram freshness, missing
 tests for new public surface. CI catches the mechanical violations even if
 every local hook is off.
@@ -204,7 +221,7 @@ Do not commit a disabled hook — the team relies on all four layers.
 ## Cross-references
 
 - [`scripts/code_review_gate.py`](../scripts/code_review_gate.py) — the
-  shared mechanical-gate script (3 modes: cli / codex-hook / git-hook).
+  shared mechanical-gate script (4 modes: cli / claude-hook / codex-hook / git-hook).
 - [`.claude/settings.json`](../.claude/settings.json) — Claude Code hook.
 - [`.codex/hooks.json`](../.codex/hooks.json) — codex hook.
 - [`.githooks/pre-push`](../.githooks/pre-push) — universal git pre-push hook.
