@@ -4,6 +4,14 @@ Last updated: 2026-06-04. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-04: Live performance cockpit flow follow-up cleanups. The new
+  `DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL`, `LivePerformanceFlow` renderer, and the
+  `LivePerformanceFlowModel` / `LivePerformanceFlowStepModel` /
+  `LiveReadinessPanelViewProps` types are now re-exported from the cockpit
+  barrel (`desktop/web/src/cockpit/index.ts`) for public-API completeness, and
+  the performance-flow test now asserts both the `current` and `next`
+  step-state classes explicitly. Frontend-only: no port opening, no A4 send
+  path, no MIDI send, and no V1.34 parity change.
 - 2026-06-04: Live performance cockpit flow prepared locally. The live
   readiness panel now includes a passive `Performance Flow` surface that ties
   the merged Rytm OXI macro vocabulary (`kit/resnapshot`, `kit-core`,
