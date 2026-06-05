@@ -4,6 +4,17 @@ Last updated: 2026-06-05. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-05: Performance-flow report follow-up cleanups. Wired `source_module`
+  through `LiveGuiPerformanceFlowModel` (dataclass, TypedDict, payload, and the
+  `live_gui_protocol.ts` mirror + cockpit default) to match every sibling
+  `live_gui_*_model` report; fixed the cockpit's `oxi-live-macro-catalog-report`
+  replay chip to drop the unsupported `--json` flag (that command takes no
+  arguments); and added a value-level architecture guard
+  (`tests/architecture/test_live_gui_performance_flow_values_match_frontend.py`)
+  pinning the frontend `DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL` steps and replay
+  commands to the Python report so the two cannot silently drift. Frontend +
+  passive-report metadata only: no port opening, no A4 send path, no MIDI send,
+  and no V1.34 parity change.
 - 2026-06-05: Passive live GUI performance flow report prepared locally.
   `python -m rytm_randomizer.cli live-gui-performance-flow-model-report --json`
   now emits the cockpit-ready Rytm/A4 Performance Flow contract as a Python

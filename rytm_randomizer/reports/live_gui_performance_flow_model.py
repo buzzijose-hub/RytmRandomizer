@@ -77,6 +77,7 @@ class LiveGuiPerformanceFlowModel:
     """Passive cockpit performance flow packet for future GUI consumers."""
 
     model_version: str
+    source_module: str
     flow_id: str
     flow_status: str
     current_step_key: str
@@ -90,6 +91,7 @@ class LiveGuiPerformanceFlowModelDict(TypedDict):
     """JSON-ready contract for :class:`LiveGuiPerformanceFlowModel`."""
 
     model_version: str
+    source_module: str
     flow_id: str
     flow_status: str
     current_step_key: str
@@ -189,6 +191,7 @@ def build_live_gui_performance_flow_model(
 
     return LiveGuiPerformanceFlowModel(
         model_version=MODEL_VERSION,
+        source_module=SOURCE_MODULE,
         flow_id=FLOW_ID,
         flow_status=FLOW_STATUS,
         current_step_key=current_step_key,
@@ -223,6 +226,7 @@ def live_gui_performance_flow_model_payload(
     return {
         "live_gui_performance_flow_model": {
             "model_version": model.model_version,
+            "source_module": model.source_module,
             "flow_id": model.flow_id,
             "flow_status": model.flow_status,
             "current_step_key": model.current_step_key,
