@@ -176,9 +176,11 @@ describe('LiveReadinessPanel', () => {
     const captureStep = within(flowPanel).getByTestId('live-performance-flow-step-capture-anchor');
     expect(captureStep).toHaveTextContent('kit/resnapshot');
     expect(captureStep).toHaveTextContent('receive-only');
+    expect(captureStep).toHaveClass('next');
 
     const kitCoreStep = within(flowPanel).getByTestId('live-performance-flow-step-kit-core');
     expect(kitCoreStep).toHaveClass('staged');
+    expect(kitCoreStep).toHaveClass('current');
     expect(kitCoreStep).toHaveTextContent('review low-pulse candidate');
     expect(kitCoreStep).toHaveTextContent('stage-review-send');
 

@@ -18,11 +18,13 @@ export { HistoryStrip } from './HistoryStrip';
 export { MutationPanel } from './MutationPanel';
 export type { MutationPanelProps } from './MutationPanel';
 export {
+  DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL,
   DEFAULT_LIVE_READINESS_MODEL,
   LiveAnalyzerPanel,
   LiveCommandQueue,
   LiveDeviceInventory,
   LiveHardwareRail,
+  LivePerformanceFlow,
   LiveReadinessPanel,
   LiveSafetyChecklist,
   LiveSceneQueue,
@@ -61,8 +63,11 @@ export type {
   LiveGuiStatusFooterItemDict,
   LiveGuiStatusFooterModelDict,
   LiveGuiUndoStackEntryDict,
+  LivePerformanceFlowModel,
+  LivePerformanceFlowStepModel,
   LiveReadinessModel,
   LiveReadinessPanelProps,
+  LiveReadinessPanelViewProps,
 } from '../types/live_gui_protocol';
 export { ProfileToggle } from './ProfileToggle';
 export type { ProfileToggleProps } from './ProfileToggle';
