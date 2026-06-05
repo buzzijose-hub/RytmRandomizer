@@ -6,8 +6,10 @@ import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import {
+  DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL,
   DEFAULT_LIVE_READINESS_MODEL,
   LiveReadinessPanel,
+  type LivePerformanceFlowModel,
   type LiveReadinessModel,
 } from '../../src/cockpit/LiveReadinessPanel';
 
@@ -110,6 +112,25 @@ const model: LiveReadinessModel = {
   },
 };
 
+const performanceFlow: LivePerformanceFlowModel = {
+  ...DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL,
+  flow_status: 'mock-safe-review',
+  current_step_key: 'kit-core',
+  steps: [
+    DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL.steps[0]!,
+    {
+      ...DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL.steps[1]!,
+      key: 'kit-core',
+      label: 'Kit Core',
+      rytm_command: 'kit-core',
+      analog_four_action: 'review low-pulse candidate',
+      send_policy: 'stage-review-send',
+      status: 'staged',
+    },
+    DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL.steps[6]!,
+  ],
+};
+
 describe('LiveReadinessPanel', () => {
   it('renders all passive GUI model surfaces as visible consumers', () => {
     render(<LiveReadinessPanel model={model} />);
@@ -143,6 +164,30 @@ describe('LiveReadinessPanel', () => {
     expect(within(padSurface).getByTestId('live-pad-12')).toHaveTextContent('BD Acoustic');
     expect(screen.getByTestId('live-device-inventory')).toHaveTextContent('Analog Rytm MKII');
     expect(screen.getByTestId('live-device-inventory')).toHaveTextContent('Analog Four MKII');
+  });
+
+  it('renders the passive performance flow across Rytm and Analog Four lanes', () => {
+    render(<LiveReadinessPanel model={model} performanceFlow={performanceFlow} />);
+
+    const flowPanel = screen.getByTestId('live-performance-flow');
+    expect(flowPanel).toHaveTextContent('Performance Flow');
+    expect(flowPanel).toHaveTextContent('mock-safe-review');
+
+    const captureStep = within(flowPanel).getByTestId('live-performance-flow-step-capture-anchor');
+    expect(captureStep).toHaveTextContent('kit/resnapshot');
+    expect(captureStep).toHaveTextContent('receive-only');
+
+    const kitCoreStep = within(flowPanel).getByTestId('live-performance-flow-step-kit-core');
+    expect(kitCoreStep).toHaveClass('staged');
+    expect(kitCoreStep).toHaveTextContent('review low-pulse candidate');
+    expect(kitCoreStep).toHaveTextContent('stage-review-send');
+
+    const homeStep = within(flowPanel).getByTestId('live-performance-flow-step-home');
+    expect(homeStep).toHaveTextContent('Z + send');
+    expect(homeStep).toHaveTextContent('restore-anchor');
+
+    expect(flowPanel).toHaveTextContent('a4_outbound_macro_send');
+    expect(flowPanel).toHaveTextContent('unattended_hardware_behavior');
   });
 
   it('keeps hardware rail actions declarative and disabled in passive mode', () => {

@@ -1,9 +1,21 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-03. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-06-04. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-06-04: Live performance cockpit flow prepared locally. The live
+  readiness panel now includes a passive `Performance Flow` surface that ties
+  the merged Rytm OXI macro vocabulary (`kit/resnapshot`, `kit-core`,
+  `hard-groove`, `industrial`, `dub-pressure`, `transition`, `Z + send`) to the
+  existing Analog Four review-only macro runway. The surface exposes step phase,
+  Rytm command, A4 review action, send policy, recovery action, passive replay
+  commands, and blocked actions such as A4 outbound macro send and unattended
+  hardware behavior. This is frontend-only cockpit state: no port opening, no
+  A4 send path, no hardware arm, no MIDI send, no SysEx write, and no V1.34
+  parity change. See
+  `docs/superpowers/specs/2026-06-04-live-performance-cockpit-flow-design.md`
+  and `docs/superpowers/plans/2026-06-04-live-performance-cockpit-flow.md`.
 - 2026-06-03: Analog Four cockpit OXI-style track macro strip prepared locally.
   Each A4 staged track now shows passive Anchor / Shape / Pressure / Space rows
   aligned to the existing A4 mutation-zone vocabulary, with drive/NRPN-only

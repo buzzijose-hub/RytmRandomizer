@@ -210,10 +210,19 @@ html,
   gap: 8px;
 }
 
+.live-scene-rail,
+.live-preview-queue,
+.live-performance-rail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 8px;
+}
+
 .live-pad-card,
 .live-compatibility-pad,
 .live-scene-card,
 .live-preview-step,
+.live-performance-step,
 .live-row,
 .live-status-chip {
   min-width: 0;
@@ -227,6 +236,7 @@ html,
 .live-compatibility-pad,
 .live-scene-card,
 .live-preview-step,
+.live-performance-step,
 .live-row,
 .live-status-chip,
 .live-meter-row {
@@ -248,8 +258,21 @@ html,
 }
 
 .live-scene-card.high-risk,
+.live-performance-step.review,
 .live-row.blocked {
   border-color: rgba(248, 81, 73, 0.7);
+}
+
+.live-performance-step.safe {
+  border-color: rgba(46, 160, 67, 0.58);
+}
+
+.live-performance-step.staged {
+  border-color: rgba(210, 153, 34, 0.62);
+}
+
+.live-performance-step.current {
+  box-shadow: inset 0 0 0 1px rgba(86, 212, 221, 0.34);
 }
 
 .live-pad-index,
@@ -263,6 +286,8 @@ html,
 .live-row small,
 .live-scene-card span,
 .live-scene-card small,
+.live-performance-step span,
+.live-performance-step small,
 .live-preview-step span,
 .live-preview-step small {
   color: var(--text-dim);
@@ -273,6 +298,7 @@ html,
 .live-compatibility-pad strong,
 .live-row strong,
 .live-scene-card strong,
+.live-performance-step strong,
 .live-preview-step strong,
 .live-status-chip strong {
   color: var(--text);
@@ -309,6 +335,11 @@ html,
   border-radius: 6px;
   background: var(--panel-2);
   color: var(--text);
+}
+
+.live-chip-blocked {
+  border-color: rgba(248, 81, 73, 0.58);
+  color: var(--danger);
 }
 
 .live-chip {
