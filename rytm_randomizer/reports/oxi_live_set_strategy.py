@@ -123,6 +123,18 @@ class OxiOperatorCue:
 
 
 @dataclass(frozen=True)
+class OxiRehearsalCheckpoint:
+    """One passive checkpoint for an operator-present rehearsal run."""
+
+    name: str
+    phase: str
+    required_command: str
+    operator_confirmation: str
+    success_signal: str
+    blocked_action: str
+
+
+@dataclass(frozen=True)
 class OxiLiveSetStrategyReport:
     """Passive report tying OXI, Rytm macros, A4 runway, and pad policy together."""
 
@@ -133,6 +145,7 @@ class OxiLiveSetStrategyReport:
     hardware_validation_runway: tuple[OxiHardwareValidationStep, ...]
     promotion_criteria: tuple[OxiPromotionCriterion, ...]
     operator_cues: tuple[OxiOperatorCue, ...]
+    rehearsal_checkpoints: tuple[OxiRehearsalCheckpoint, ...]
     next_hardware_validations: tuple[str, ...]
     safety: Mapping[str, object]
 
@@ -427,6 +440,65 @@ _OPERATOR_CUES: Final[tuple[OxiOperatorCue, ...]] = (
     ),
 )
 
+_REHEARSAL_CHECKPOINTS: Final[tuple[OxiRehearsalCheckpoint, ...]] = (
+    OxiRehearsalCheckpoint(
+        name="capture-current-kit",
+        phase="pre-set",
+        required_command="kit/resnapshot",
+        operator_confirmation="Rytm sent the intended KIT SysEx",
+        success_signal="new kit name and fingerprint are visible",
+        blocked_action="do not mutate before a captured anchor exists",
+    ),
+    OxiRehearsalCheckpoint(
+        name="stage-first-macro",
+        phase="pre-set",
+        required_command="kit-core or macro hard-groove",
+        operator_confirmation="macro matches the first planned chapter",
+        success_signal="changes shows staged sound-design movement",
+        blocked_action="do not type send before reviewing changes",
+    ),
+    OxiRehearsalCheckpoint(
+        name="inspect-before-send",
+        phase="before-send",
+        required_command="changes",
+        operator_confirmation="staged rows match the intended chapter",
+        success_signal="operator can name the pads and lanes that will move",
+        blocked_action="no blind sends",
+    ),
+    OxiRehearsalCheckpoint(
+        name="fire-manually",
+        phase="send",
+        required_command="send or go",
+        operator_confirmation="Jose is listening with the machines on",
+        success_signal="variation sounds useful without visible hardware errors",
+        blocked_action="no unattended hardware behavior",
+    ),
+    OxiRehearsalCheckpoint(
+        name="recover-anchor",
+        phase="recovery",
+        required_command="home + send or Z + send",
+        operator_confirmation="recovery command sent after the audition",
+        success_signal="no parameter changes staged after recovery",
+        blocked_action="do not continue if recovery is unclear",
+    ),
+    OxiRehearsalCheckpoint(
+        name="promote-a4-only-after-evidence",
+        phase="a4-gate",
+        required_command="--arm --a4-soft-capture",
+        operator_confirmation="A4 labels and recovery path are documented",
+        success_signal="A4 remains review-only until promotion criteria pass",
+        blocked_action="no A4 outbound macro during Rytm-only rehearsal",
+    ),
+    OxiRehearsalCheckpoint(
+        name="document-after-set",
+        phase="after-set",
+        required_command="write down useful macros, bad rows, and recovery notes",
+        operator_confirmation="musical notes and hardware symptoms are captured",
+        success_signal="notes captured for the next bundle",
+        blocked_action="do not promote untested behavior from memory alone",
+    ),
+)
+
 
 def build_oxi_live_set_strategy_report() -> OxiLiveSetStrategyReport:
     """Return the deterministic passive OXI live set strategy report."""
@@ -439,6 +511,7 @@ def build_oxi_live_set_strategy_report() -> OxiLiveSetStrategyReport:
         hardware_validation_runway=_HARDWARE_VALIDATION_RUNWAY,
         promotion_criteria=_PROMOTION_CRITERIA,
         operator_cues=_OPERATOR_CUES,
+        rehearsal_checkpoints=_REHEARSAL_CHECKPOINTS,
         next_hardware_validations=_NEXT_HARDWARE_VALIDATIONS,
         safety=_SAFETY_PAYLOAD,
     )
@@ -474,6 +547,10 @@ def _operator_cue_line(cue: OxiOperatorCue) -> str:
         f"- {cue.chapter_name} | OXI={cue.oxi_action} | "
         f"Rytm={cue.rytm_stage_command} | Inspect={cue.inspect_command}"
     )
+
+
+def _rehearsal_checkpoint_line(checkpoint: OxiRehearsalCheckpoint) -> str:
+    return f"- {checkpoint.name} | {checkpoint.phase} | command={checkpoint.required_command}"
 
 
 def format_oxi_live_set_strategy_report(
@@ -518,6 +595,12 @@ def format_oxi_live_set_strategy_report(
         lines.append(f"  A4: {cue.a4_action}")
         lines.append(f"  Result: {cue.expected_result}")
         lines.append(f"  Blocked: {cue.blocked_action}")
+    lines.append("Rehearsal checkpoints:")
+    for checkpoint in resolved.rehearsal_checkpoints:
+        lines.append(_rehearsal_checkpoint_line(checkpoint))
+        lines.append(f"  Confirm: {checkpoint.operator_confirmation}")
+        lines.append(f"  Success: {checkpoint.success_signal}")
+        lines.append(f"  Blocked: {checkpoint.blocked_action}")
     lines.append("Next hardware validations:")
     lines.extend(f"- {item}" for item in resolved.next_hardware_validations)
     lines.append("Safety:")
@@ -596,6 +679,17 @@ def _operator_cue_payload(cue: OxiOperatorCue) -> dict[str, object]:
     }
 
 
+def _rehearsal_checkpoint_payload(checkpoint: OxiRehearsalCheckpoint) -> dict[str, object]:
+    return {
+        "name": checkpoint.name,
+        "phase": checkpoint.phase,
+        "required_command": checkpoint.required_command,
+        "operator_confirmation": checkpoint.operator_confirmation,
+        "success_signal": checkpoint.success_signal,
+        "blocked_action": checkpoint.blocked_action,
+    }
+
+
 def build_oxi_live_set_strategy_payload() -> dict[str, object]:
     """Return JSON-ready deterministic strategy metadata."""
 
@@ -612,6 +706,9 @@ def build_oxi_live_set_strategy_payload() -> dict[str, object]:
             _promotion_criterion_payload(criterion) for criterion in report.promotion_criteria
         ],
         "operator_cues": [_operator_cue_payload(cue) for cue in report.operator_cues],
+        "rehearsal_checkpoints": [
+            _rehearsal_checkpoint_payload(checkpoint) for checkpoint in report.rehearsal_checkpoints
+        ],
         "next_hardware_validations": list(report.next_hardware_validations),
         "safety": dict(report.safety),
     }
@@ -664,6 +761,7 @@ __all__ = (
     "OxiOperatorCue",
     "OxiPadPolicy",
     "OxiPromotionCriterion",
+    "OxiRehearsalCheckpoint",
     "OxiRigRole",
     "REPORT_TITLE",
     "SAFETY_LINES",

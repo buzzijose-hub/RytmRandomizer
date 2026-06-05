@@ -37,8 +37,10 @@ Last updated: 2026-06-05. This file is a hand-authored snapshot and is meant to 
   input-label coverage, passive macro review, an explicit arm gate, and recovery
   evidence exist. The payload also includes an operator cue sheet that maps each
   chapter to OXI action, Rytm staging command, inspect/fire/recover commands,
-  expected result, and blocked active action. The surface is report-only: no
-  port opening, no MIDI send, no command execution, no hardware mutation, no A4
+  expected result, and blocked active action, plus rehearsal checkpoints for
+  capture, first-macro staging, pre-send review, manual fire, anchor recovery,
+  A4 gating, and after-set documentation. The surface is report-only: no port
+  opening, no MIDI send, no command execution, no hardware mutation, no A4
   outbound path, and no V1.34 parity change. See
   `docs/superpowers/plans/2026-06-05-oxi-live-set-strategy-report.md`.
 - 2026-06-04: Live performance cockpit flow follow-up cleanups. The new

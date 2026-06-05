@@ -215,6 +215,59 @@ def test_operator_cues_turn_each_chapter_into_stage_inspect_fire_recover_steps()
     assert "Blocked: no unattended sends" in text
 
 
+def test_rehearsal_checkpoints_cover_preflight_fire_recovery_and_after_set() -> None:
+    from rytm_randomizer.reports.oxi_live_set_strategy import (
+        build_oxi_live_set_strategy_payload,
+        build_oxi_live_set_strategy_report,
+        format_oxi_live_set_strategy_report,
+    )
+
+    report = build_oxi_live_set_strategy_report()
+    by_name = {checkpoint.name: checkpoint for checkpoint in report.rehearsal_checkpoints}
+
+    assert tuple(by_name) == (
+        "capture-current-kit",
+        "stage-first-macro",
+        "inspect-before-send",
+        "fire-manually",
+        "recover-anchor",
+        "promote-a4-only-after-evidence",
+        "document-after-set",
+    )
+
+    capture = by_name["capture-current-kit"]
+    assert capture.phase == "pre-set"
+    assert capture.required_command == "kit/resnapshot"
+    assert capture.success_signal == "new kit name and fingerprint are visible"
+    assert capture.blocked_action == "do not mutate before a captured anchor exists"
+
+    inspect = by_name["inspect-before-send"]
+    assert inspect.phase == "before-send"
+    assert inspect.required_command == "changes"
+    assert inspect.operator_confirmation == "staged rows match the intended chapter"
+
+    recover = by_name["recover-anchor"]
+    assert recover.required_command == "home + send or Z + send"
+    assert recover.success_signal == "no parameter changes staged after recovery"
+
+    a4_gate = by_name["promote-a4-only-after-evidence"]
+    assert a4_gate.phase == "a4-gate"
+    assert a4_gate.blocked_action == "no A4 outbound macro during Rytm-only rehearsal"
+
+    payload = build_oxi_live_set_strategy_payload()
+    assert payload["rehearsal_checkpoints"][0]["name"] == "capture-current-kit"
+    assert payload["rehearsal_checkpoints"][3]["required_command"] == "send or go"
+    assert (
+        payload["rehearsal_checkpoints"][-1]["success_signal"]
+        == "notes captured for the next bundle"
+    )
+
+    text = "\n".join(format_oxi_live_set_strategy_report(report))
+    assert "Rehearsal checkpoints:" in text
+    assert "capture-current-kit | pre-set | command=kit/resnapshot" in text
+    assert "Success: no parameter changes staged after recovery" in text
+
+
 def test_cli_command_prints_text_json_and_rejects_unexpected_arguments() -> None:
     text_result = subprocess.run(
         [sys.executable, "-m", "rytm_randomizer.cli", "oxi-live-set-strategy-report"],
