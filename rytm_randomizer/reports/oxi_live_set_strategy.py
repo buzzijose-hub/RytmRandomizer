@@ -2,19 +2,16 @@
 
 from __future__ import annotations
 
-import json
-import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final
 
-from ..cli_registry import CliCommand, register
+from ..cli_registry import CliCommand, make_passive_report_command, register
 from .formatter import PassiveReportHeader, passive_report_lines
 
 REPORT_TITLE: Final[str] = "RytmRandomizer OXI live set strategy report"
 SOURCE_MODULE: Final[str] = "reports.oxi_live_set_strategy"
-USAGE: Final[str] = "oxi-live-set-strategy-report usage: [--json]"
 SAFETY_LINES: Final[tuple[str, ...]] = (
     "passive/read-only",
     "strategy metadata only",
@@ -847,41 +844,11 @@ def build_oxi_live_set_strategy_payload() -> dict[str, object]:
     }
 
 
-def _parse_oxi_live_set_strategy_args(argv: Sequence[str]) -> dict[str, object]:
-    if not argv:
-        return {"json_output": False}
-    if list(argv) == ["--json"]:
-        return {"json_output": True}
-    raise ValueError(USAGE)
-
-
-def _handle_oxi_live_set_strategy_report(*, json_output: bool) -> int:
-    if json_output:
-        sys.stdout.write(
-            json.dumps(
-                build_oxi_live_set_strategy_payload(),
-                indent=2,
-                sort_keys=True,
-            )
-        )
-        sys.stdout.write("\n")
-        return 0
-    report = build_oxi_live_set_strategy_report()
-    sys.stdout.write("\n".join(format_oxi_live_set_strategy_report(report)))
-    sys.stdout.write("\n")
-    return 0
-
-
-def _format_oxi_live_set_strategy_error(exc: Exception) -> str:
-    return f"Error: {exc}"
-
-
-OXI_LIVE_SET_STRATEGY_CLI_COMMAND: Final[CliCommand] = CliCommand(
+OXI_LIVE_SET_STRATEGY_CLI_COMMAND: Final[CliCommand] = make_passive_report_command(
     name="oxi-live-set-strategy-report",
     summary="Print passive OXI live set strategy chapters and pad policy.",
-    args_parser=_parse_oxi_live_set_strategy_args,
-    handler=_handle_oxi_live_set_strategy_report,
-    error_formatter=_format_oxi_live_set_strategy_error,
+    format_lines=format_oxi_live_set_strategy_report,
+    build_payload=build_oxi_live_set_strategy_payload,
 )
 
 register(OXI_LIVE_SET_STRATEGY_CLI_COMMAND)
@@ -900,7 +867,6 @@ __all__ = (
     "REPORT_TITLE",
     "SAFETY_LINES",
     "SOURCE_MODULE",
-    "USAGE",
     "build_oxi_live_set_strategy_payload",
     "build_oxi_live_set_strategy_report",
     "format_oxi_live_set_strategy_report",

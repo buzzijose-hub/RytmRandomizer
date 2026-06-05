@@ -373,29 +373,28 @@ def test_cli_command_prints_text_json_and_rejects_unexpected_arguments() -> None
     assert "oxi-live-set-strategy-report usage: [--json]" in bad_result.stderr
 
 
-def test_cli_parser_handler_and_error_formatter_cover_direct_paths(capsys) -> None:
+def test_cli_command_object_uses_shared_passive_report_factory_paths(capsys) -> None:
     from rytm_randomizer.reports.oxi_live_set_strategy import (
-        _format_oxi_live_set_strategy_error,
-        _handle_oxi_live_set_strategy_report,
-        _parse_oxi_live_set_strategy_args,
+        OXI_LIVE_SET_STRATEGY_CLI_COMMAND,
     )
 
-    assert _parse_oxi_live_set_strategy_args([]) == {"json_output": False}
-    assert _parse_oxi_live_set_strategy_args(["--json"]) == {"json_output": True}
+    assert OXI_LIVE_SET_STRATEGY_CLI_COMMAND.args_parser([]) == {"json_output": False}
+    assert OXI_LIVE_SET_STRATEGY_CLI_COMMAND.args_parser(["--json"]) == {"json_output": True}
     with pytest.raises(ValueError, match="oxi-live-set-strategy-report usage"):
-        _parse_oxi_live_set_strategy_args(["--arm"])
+        OXI_LIVE_SET_STRATEGY_CLI_COMMAND.args_parser(["--arm"])
 
-    assert _handle_oxi_live_set_strategy_report(json_output=False) == 0
+    assert OXI_LIVE_SET_STRATEGY_CLI_COMMAND.handler(json_output=False) == 0
     text_result = capsys.readouterr()
     assert "RytmRandomizer OXI live set strategy report" in text_result.out
     assert text_result.err == ""
 
-    assert _handle_oxi_live_set_strategy_report(json_output=True) == 0
+    assert OXI_LIVE_SET_STRATEGY_CLI_COMMAND.handler(json_output=True) == 0
     json_result = capsys.readouterr()
     assert json.loads(json_result.out)["title"] == "RytmRandomizer OXI live set strategy report"
     assert json_result.err == ""
 
-    assert _format_oxi_live_set_strategy_error(ValueError("bad")) == "Error: bad"
+    assert OXI_LIVE_SET_STRATEGY_CLI_COMMAND.error_formatter is not None
+    assert OXI_LIVE_SET_STRATEGY_CLI_COMMAND.error_formatter(ValueError("bad")) == "Error: bad"
 
 
 def test_cli_command_imports_no_real_midi_modules() -> None:

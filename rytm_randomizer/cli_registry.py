@@ -114,7 +114,9 @@ REFERENCES
 from __future__ import annotations
 
 import importlib
+import json
 import pkgutil
+import sys
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from types import MappingProxyType
@@ -284,6 +286,58 @@ def discover_all(package_root: str = "rytm_randomizer") -> None:
         if _should_skip(fullname):
             continue
         importlib.import_module(fullname)
+
+
+def make_passive_report_command(
+    name: str,
+    summary: str,
+    *,
+    format_lines: Callable[[], Sequence[str]],
+    build_payload: Callable[[], Mapping[str, object]],
+    json_flag: bool = True,
+) -> CliCommand:
+    """Return a ``CliCommand`` for a no-input passive text/JSON report.
+
+    This centralizes the standard report-only command contract used by
+    report modules that accept either no args or a single ``--json`` flag:
+    parse args, dispatch text vs JSON output, and render parse/handler
+    failures as ``Error: <message>``.
+    """
+
+    usage = f"{name} usage: [--json]" if json_flag else f"{name} usage: no arguments"
+
+    def _parse_args(argv: Sequence[str]) -> dict[str, Any]:
+        if not argv:
+            return {"json_output": False} if json_flag else {}
+        if json_flag and list(argv) == ["--json"]:
+            return {"json_output": True}
+        raise ValueError(usage)
+
+    def _handle_report(*, json_output: bool = False) -> int:
+        if json_output:
+            sys.stdout.write(
+                json.dumps(
+                    build_payload(),
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+            sys.stdout.write("\n")
+            return 0
+        sys.stdout.write("\n".join(format_lines()))
+        sys.stdout.write("\n")
+        return 0
+
+    def _format_error(exc: Exception) -> str:
+        return f"Error: {exc}"
+
+    return CliCommand(
+        name=name,
+        summary=summary,
+        args_parser=_parse_args,
+        handler=_handle_report,
+        error_formatter=_format_error,
+    )
 
 
 def default_error_formatter(exc: Exception) -> str:
