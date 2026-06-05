@@ -2,46 +2,27 @@
   "_doc": [
     "Repo-local Claude Code settings for RytmRandomizer.",
     "",
-    "The hooks block below auto-invokes the code-reviewer agent after a git",
-    "push. The matcher fires PostToolUse on any Bash invocation whose command",
-    "begins with `git push`. The harness invokes the agent definition at",
-    ".claude/agents/code-reviewer.md, which orchestrates the code-review",
-    "skill at .claude/skills/code-review/SKILL.md by fanning out ONE TARGETED",
-    "AGENT PER DIMENSION in parallel (per the skill's 'Execution model'",
-    "section) and synthesizing the per-dimension findings into one verdict.",
+    "Post-push code review is enforced by three mechanisms (see",
+    "docs/CODE_REVIEW_HOOK_SETUP.md):",
+    "  1. .githooks/pre-push runs the mechanical gates (lint + architecture +",
+    "     V1.34 parity) via scripts/code_review_gate.py for ANY tool once",
+    "     core.hooksPath is set (`just install` does this).",
+    "  2. .codex/hooks.json — the codex PostToolUse command hook that",
+    "     re-prompts the 8-step code-review skill after a `git push`.",
+    "  3. The CI `architecture` job enforces the same gates server-side.",
     "",
-    "SETUP — no action needed. Claude Code reads .claude/settings.json",
-    "automatically from the repo root. Codex has its own equivalent at",
-    ".codex/hooks.json (also zero-setup). A universal git pre-push hook at",
-    ".githooks/pre-push runs the mechanical gates for ANY tool once",
-    "core.hooksPath is set (`just install` / the dev container do this).",
-    "All three call the one shared scripts/code_review_gate.py. See",
-    "docs/CODE_REVIEW_HOOK_SETUP.md for the full three-mechanism picture",
-    "and what to do if the harness does not support the `Agent` action.",
-    "",
-    "If your harness version does not yet support the `Agent` action type for",
-    "hooks, the hook is ignored harmlessly. Run the review manually with",
-    "`/agent code-reviewer` or `/skill code-review` (Claude Code), or per",
-    "docs/CODE_REVIEW_HOOK_SETUP.md (codex / other agents). The review is",
-    "ALSO enforced server-side by the `architecture` CI job, so a skipped",
-    "local hook never lets a violation merge.",
+    "This file previously declared a Claude Code PostToolUse `Agent` hook (a",
+    "matcher OBJECT plus an `action.Agent` block). The installed Claude Code",
+    "validates `matcher` as a STRING with a nested `hooks` array of",
+    "`type: command` entries, so that shape failed settings validation",
+    "(\"settings file failed to parse / expected string, received object\") and",
+    "was removed. A `command` hook cannot dispatch the code-reviewer agent, so",
+    "until a native Agent-type hook is supported here, run the review on demand",
+    "with the /code-review skill (or the code-reviewer agent in",
+    ".claude/agents/code-reviewer.md). The pre-push hook and the CI",
+    "`architecture` job keep the review enforced regardless.",
     "",
     "See docs/ARCHITECTURE.md and .claude/rules/architecture.md for the",
-    "architecture spec that the code-reviewer agent enforces."
-  ],
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": {
-          "tool": "Bash",
-          "command_regex": "^\\s*git\\s+push(\\s|$)"
-        },
-        "action": {
-          "type": "Agent",
-          "agent": "code-reviewer",
-          "prompt": "A `git push` just completed in this worktree. Execute the code-review skill (.claude/skills/code-review/SKILL.md) against the most recently pushed commits. Gather the diff with `git log --oneline -10` plus `git diff @{upstream}..HEAD` (or `git diff <base-branch>...HEAD` if no upstream). Run the review as ONE TARGETED AGENT PER DIMENSION, in parallel — not one wide agent covering everything. The skill's 'Execution model' section is the authoritative dimension list; spawn one agent per dimension in that table — at least: architecture/import-direction, house style/type hygiene, parity + test hygiene, side effects + mido leakage, observability, abstraction reuse/genericization (Step 7: could the new code be generalized, or does an existing abstraction such as the Device Protocol, the snapshot envelope helpers, the generic senders, cli_registry, data/, observability/metrics, or the report formatter already cover it), docs + diagram freshness (Step 8: are docs/ARCHITECTURE.md and docs/ARCHITECTURE_DIAGRAMS.md updated for any architecture-surface change, and do the quoted counts still match), and string-literal dispatch / env vars / maintainability / execution shape / learning capture (Gates 10, 13, 14, 15, 16). Each dimension agent runs `pytest tests/architecture/ -q` as needed. Then synthesize the per-dimension findings into ONE structured Critical/Important/Minor/Abstraction/Docs verdict."
-        }
-      }
-    ]
-  }
+    "architecture spec the review enforces."
+  ]
 }
