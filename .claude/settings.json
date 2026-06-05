@@ -2,27 +2,45 @@
   "_doc": [
     "Repo-local Claude Code settings for RytmRandomizer.",
     "",
-    "Post-push code review is enforced by three mechanisms (see",
-    "docs/CODE_REVIEW_HOOK_SETUP.md):",
-    "  1. .githooks/pre-push runs the mechanical gates (lint + architecture +",
-    "     V1.34 parity) via scripts/code_review_gate.py for ANY tool once",
-    "     core.hooksPath is set (`just install` does this).",
-    "  2. .codex/hooks.json — the codex PostToolUse command hook that",
-    "     re-prompts the 8-step code-review skill after a `git push`.",
-    "  3. The CI `architecture` job enforces the same gates server-side.",
+    "Post-push code review is wired through four mechanisms (see",
+    "docs/CODE_REVIEW_HOOK_SETUP.md), all sharing scripts/code_review_gate.py:",
+    "  1. THIS file's PostToolUse hook (below) runs the gate in",
+    "     `--mode claude-hook` after a `git push`: it no-ops on any other",
+    "     command, and on a push runs the mechanical gates (lint +",
+    "     architecture + V1.34 parity) then re-prompts the 8-step code-review",
+    "     skill via the hook's additionalContext channel.",
+    "  2. .codex/hooks.json — the codex analogue (`--mode codex-hook`).",
+    "  3. .githooks/pre-push — the universal mechanical backstop for ANY tool",
+    "     (`--mode git-hook`) once core.hooksPath is set (`just install`).",
+    "  4. The CI `architecture` job enforces the same gates server-side.",
     "",
-    "This file previously declared a Claude Code PostToolUse `Agent` hook (a",
-    "matcher OBJECT plus an `action.Agent` block). The installed Claude Code",
-    "validates `matcher` as a STRING with a nested `hooks` array of",
-    "`type: command` entries, so that shape failed settings validation",
-    "(\"settings file failed to parse / expected string, received object\") and",
-    "was removed. A `command` hook cannot dispatch the code-reviewer agent, so",
-    "until a native Agent-type hook is supported here, run the review on demand",
-    "with the /code-review skill (or the code-reviewer agent in",
-    ".claude/agents/code-reviewer.md). The pre-push hook and the CI",
-    "`architecture` job keep the review enforced regardless.",
+    "SCHEMA NOTE: `matcher` MUST be a string, and each entry carries a nested",
+    "`hooks` array of `type: command` entries. An earlier version used a",
+    "matcher OBJECT plus an `action.Agent` block, which this Claude Code",
+    "rejects (\"settings file failed to parse / expected string, received",
+    "object\"). A `command` hook cannot dispatch the code-reviewer agent",
+    "directly, so the command re-prompts the review through additionalContext",
+    "instead (the same wiring codex uses). You can also run it on demand with",
+    "the /code-review skill or the code-reviewer agent (.claude/agents/).",
+    "",
+    "The command prefers the repo virtualenv (.venv) so the gate's lint/test",
+    "tools resolve, and falls back to `python3` on PATH otherwise.",
     "",
     "See docs/ARCHITECTURE.md and .claude/rules/architecture.md for the",
     "architecture spec the review enforces."
-  ]
+  ],
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "ROOT=\"$(git rev-parse --show-toplevel)\"; PY=\"$ROOT/.venv/bin/python\"; [ -x \"$PY\" ] || PY=python3; \"$PY\" \"$ROOT/scripts/code_review_gate.py\" --mode claude-hook",
+            "timeout": 240
+          }
+        ]
+      }
+    ]
+  }
 }

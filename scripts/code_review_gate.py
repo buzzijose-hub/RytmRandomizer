@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 """Shared code-review gate for RytmRandomizer.
 
-ONE script, three callers — so the review behaves identically no matter who
+ONE script, four callers — so the review behaves identically no matter who
 or what triggers it (Claude Code, codex, a human, or plain ``git``):
 
   * ``--mode cli``       ``just review`` runs this directly. Runs the
                          mechanical gates and exits non-zero on failure.
+  * ``--mode claude-hook`` The Claude Code ``PostToolUse`` hook
+                         (``.claude/settings.json``) runs this. Same contract
+                         as ``codex-hook`` (reads the hook JSON on stdin,
+                         no-ops unless the tool call was a ``git push``, then
+                         runs the gates and writes the hand-off JSON) — only
+                         the hand-off prompt differs (it points Claude at the
+                         code-review skill / code-reviewer agent).
   * ``--mode codex-hook`` The codex ``PostToolUse`` hook
                          (``.codex/hooks.json``) runs this. It reads the
                          hook JSON on stdin, no-ops unless the tool call was
@@ -34,6 +41,7 @@ docs/CODE_REVIEW_HOOK_SETUP.md).
 
 Usage:
     python scripts/code_review_gate.py --mode cli
+    python scripts/code_review_gate.py --mode claude-hook  # stdin = hook JSON
     python scripts/code_review_gate.py --mode codex-hook   # stdin = hook JSON
     python scripts/code_review_gate.py --mode git-hook
 """
@@ -82,6 +90,34 @@ _CODEX_HANDOFF = (
     "the per-dimension findings into ONE structured "
     "Critical/Important/Minor/Abstraction/Docs verdict and post it as a "
     "single PR comment."
+)
+
+# The Claude Code analogue of ``_CODEX_HANDOFF``. Claude Code's ``command``
+# hooks cannot dispatch the ``code-reviewer`` agent directly either, so the
+# hook injects this as ``additionalContext`` to re-prompt Claude to run the
+# review itself — pointing at the in-repo skill + agent it can invoke.
+_CLAUDE_HANDOFF = (
+    "A `git push` just completed. The mechanical code-review gates "
+    "(lint + architecture + V1.34 parity) PASSED. Now complete the code "
+    "review of the pushed commits (`git diff modularize-v1.34...HEAD`) by "
+    "running the code-review skill (.claude/skills/code-review/SKILL.md) — or "
+    "the code-reviewer agent (.claude/agents/code-reviewer.md) — as ONE "
+    "TARGETED AGENT PER REVIEW DIMENSION, in parallel, not one wide agent "
+    "covering every dimension. The skill's 'Execution model' section is the "
+    "authoritative dimension table; spawn one agent per dimension in it — at "
+    "least: architecture / import-direction; house style / type hygiene; "
+    "parity + test hygiene; side effects + mido leakage; observability; "
+    "abstraction reuse / genericization (Step 7 — could the new code be "
+    "generalized, or does an existing abstraction such as the Device "
+    "Protocol, snapshot/envelope helpers, the generic senders, cli_registry, "
+    "data/, observability/metrics, or the report formatter already cover it); "
+    "docs + diagram freshness (Step 8 — are docs/ARCHITECTURE.md and "
+    "docs/ARCHITECTURE_DIAGRAMS.md updated for any architecture-surface "
+    "change, and do the counts the docs quote still match); and string-literal "
+    "dispatch / env vars / maintainability / execution shape / learning "
+    "capture (Gates 10, 13, 14, 15, 16). Then synthesize the per-dimension "
+    "findings into ONE structured Critical/Important/Minor/Abstraction/Docs "
+    "verdict and post it as a single PR comment."
 )
 
 # Each gate: (label, argv). argv runs with cwd=REPO_ROOT.
@@ -154,13 +190,13 @@ def _mode_cli() -> int:
     return 0
 
 
-def _read_codex_hook_command() -> str | None:
-    """Parse the codex hook JSON on stdin. Return the Bash command, or None.
+def _read_hook_command() -> str | None:
+    """Parse a PostToolUse hook JSON on stdin. Return the Bash command, or None.
 
-    The codex PostToolUse hook delivers a JSON object on stdin with
-    ``tool_name`` and ``tool_input``. For a Bash tool call ``tool_input`` has
-    a ``command`` string. Returns None when the payload is not a Bash call or
-    is unparseable (the hook then no-ops, never blocks).
+    Claude Code and codex deliver the same shape: a JSON object with
+    ``tool_name`` and ``tool_input``. For a Bash/shell tool call
+    ``tool_input`` has a ``command`` string. Returns None when the payload is
+    not a shell call or is unparseable (the hook then no-ops, never blocks).
     """
     raw = sys.stdin.read()
     if not raw.strip():
@@ -180,27 +216,29 @@ def _read_codex_hook_command() -> str | None:
     return command if isinstance(command, str) else None
 
 
-def _mode_codex_hook() -> int:
-    """Codex PostToolUse hook path.
+def _run_post_push_review_hook(handoff: str) -> int:
+    """Shared PostToolUse hook body for Claude Code and codex.
 
     Reads the hook JSON on stdin. If the tool call was not a `git push`,
     writes nothing and exits 0 (silent no-op). If it WAS a `git push`, runs
     the mechanical gates and writes a JSON response on stdout:
-      * pass -> hookSpecificOutput.additionalContext = the 8-step hand-off.
-      * fail -> decision "block" + reason, so codex sees the failure and
+      * pass -> hookSpecificOutput.additionalContext = ``handoff`` (the
+                agent-specific 8-step review instruction).
+      * fail -> decision "block" + reason, so the agent sees the failure and
                 self-corrects rather than proceeding.
     The hook process itself always exits 0; the JSON carries the verdict.
     """
-    command = _read_codex_hook_command()
+    command = _read_hook_command()
     if command is None or not _GIT_PUSH_RE.search(command):
         return 0  # not a git push (or not a shell call) -> no-op
 
     passed, failures = run_mechanical_gates(quiet=True)
+    response: dict[str, object]
     if passed:
         response = {
             "hookSpecificOutput": {
                 "hookEventName": "PostToolUse",
-                "additionalContext": _CODEX_HANDOFF,
+                "additionalContext": handoff,
             }
         }
     else:
@@ -217,6 +255,16 @@ def _mode_codex_hook() -> int:
     json.dump(response, sys.stdout)
     sys.stdout.write("\n")
     return 0
+
+
+def _mode_claude_hook() -> int:
+    """Claude Code PostToolUse hook path (see ``_run_post_push_review_hook``)."""
+    return _run_post_push_review_hook(_CLAUDE_HANDOFF)
+
+
+def _mode_codex_hook() -> int:
+    """Codex PostToolUse hook path (see ``_run_post_push_review_hook``)."""
+    return _run_post_push_review_hook(_CODEX_HANDOFF)
 
 
 def _mode_git_hook() -> int:
@@ -249,12 +297,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--mode",
         required=True,
-        choices=("cli", "codex-hook", "git-hook"),
+        choices=("cli", "claude-hook", "codex-hook", "git-hook"),
         help="Which caller is invoking the gate.",
     )
     args = parser.parse_args(argv)
     if args.mode == "cli":
         return _mode_cli()
+    if args.mode == "claude-hook":
+        return _mode_claude_hook()
     if args.mode == "codex-hook":
         return _mode_codex_hook()
     return _mode_git_hook()
