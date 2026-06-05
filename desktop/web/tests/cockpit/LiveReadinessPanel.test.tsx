@@ -190,6 +190,7 @@ describe('LiveReadinessPanel', () => {
 
     expect(flowPanel).toHaveTextContent('a4_outbound_macro_send');
     expect(flowPanel).toHaveTextContent('unattended_hardware_behavior');
+    expect(flowPanel).toHaveTextContent('live-gui-performance-flow-model-report --json');
   });
 
   it('keeps hardware rail actions declarative and disabled in passive mode', () => {

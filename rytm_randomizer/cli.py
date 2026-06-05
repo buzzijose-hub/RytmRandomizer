@@ -148,6 +148,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.oxi_live_macro_catalog",
             "OXI_LIVE_MACRO_CATALOG_CLI_COMMAND",
         ),
+        "live-gui-performance-flow-model-report": (
+            "rytm_randomizer.reports.live_gui_performance_flow_model",
+            "LIVE_GUI_PERFORMANCE_FLOW_MODEL_CLI_COMMAND",
+        ),
         "reference-style-blueprint-report": (
             "rytm_randomizer.reports.reference_style_blueprint",
             "REFERENCE_STYLE_BLUEPRINT_CLI_COMMAND",
