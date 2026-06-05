@@ -95,6 +95,18 @@ class OxiHardwareValidationStep:
 
 
 @dataclass(frozen=True)
+class OxiPromotionCriterion:
+    """Evidence required before a review-only lane can become active."""
+
+    name: str
+    device: str
+    current_status: str
+    required_evidence: str
+    promotes_to: str
+    safety_note: str
+
+
+@dataclass(frozen=True)
 class OxiLiveSetStrategyReport:
     """Passive report tying OXI, Rytm macros, A4 runway, and pad policy together."""
 
@@ -103,6 +115,7 @@ class OxiLiveSetStrategyReport:
     chapters: tuple[OxiLiveSetChapter, ...]
     pad_policies: tuple[OxiPadPolicy, ...]
     hardware_validation_runway: tuple[OxiHardwareValidationStep, ...]
+    promotion_criteria: tuple[OxiPromotionCriterion, ...]
     next_hardware_validations: tuple[str, ...]
     safety: Mapping[str, object]
 
@@ -275,6 +288,41 @@ _HARDWARE_VALIDATION_RUNWAY: Final[tuple[OxiHardwareValidationStep, ...]] = (
     ),
 )
 
+_PROMOTION_CRITERIA: Final[tuple[OxiPromotionCriterion, ...]] = (
+    OxiPromotionCriterion(
+        name="a4-input-label-coverage",
+        device="Analog Four MKII",
+        current_status="blocked",
+        required_evidence="known labels for moved controls on tracks 1-4",
+        promotes_to="A4 macro readiness review",
+        safety_note="input-only evidence comes before any outbound A4 macro path",
+    ),
+    OxiPromotionCriterion(
+        name="a4-macro-review",
+        device="Analog Four MKII",
+        current_status="blocked",
+        required_evidence="operator-approved passive macro rows for home and one pressure macro",
+        promotes_to="single-macro outbound rehearsal",
+        safety_note="macro rows stay report-only until the review is explicit",
+    ),
+    OxiPromotionCriterion(
+        name="a4-explicit-arm-gate",
+        device="Analog Four MKII",
+        current_status="blocked",
+        required_evidence="operator-confirmed --arm path with no unattended behavior",
+        promotes_to="armed one-shot A4 macro validation",
+        safety_note="no A4 outbound macro send until this gate is satisfied",
+    ),
+    OxiPromotionCriterion(
+        name="a4-recovery-path",
+        device="Analog Four MKII",
+        current_status="blocked",
+        required_evidence="documented return-to-anchor or neutral macro after a sent A4 change",
+        promotes_to="candidate live companion macro",
+        safety_note="no live A4 macro without a tested recovery move",
+    ),
+)
+
 
 def build_oxi_live_set_strategy_report() -> OxiLiveSetStrategyReport:
     """Return the deterministic passive OXI live set strategy report."""
@@ -285,6 +333,7 @@ def build_oxi_live_set_strategy_report() -> OxiLiveSetStrategyReport:
         chapters=_CHAPTERS,
         pad_policies=_PAD_POLICIES,
         hardware_validation_runway=_HARDWARE_VALIDATION_RUNWAY,
+        promotion_criteria=_PROMOTION_CRITERIA,
         next_hardware_validations=_NEXT_HARDWARE_VALIDATIONS,
         safety=_SAFETY_PAYLOAD,
     )
@@ -309,6 +358,10 @@ def _pad_policy_line(policy: OxiPadPolicy) -> str:
 
 def _validation_step_line(step: OxiHardwareValidationStep) -> str:
     return f"- {step.name} | {step.device} | {step.validation_mode} | " f"path={step.operator_path}"
+
+
+def _promotion_criterion_line(criterion: OxiPromotionCriterion) -> str:
+    return f"- {criterion.name} | {criterion.device} | {criterion.current_status}"
 
 
 def format_oxi_live_set_strategy_report(
@@ -339,6 +392,12 @@ def format_oxi_live_set_strategy_report(
         lines.append(_validation_step_line(step))
         lines.append(f"  Evidence: {step.expected_evidence}")
         lines.append(f"  Boundary: {step.safety_boundary}")
+    lines.append("Promotion criteria:")
+    for criterion in resolved.promotion_criteria:
+        lines.append(_promotion_criterion_line(criterion))
+        lines.append(f"  Required evidence: {criterion.required_evidence}")
+        lines.append(f"  Promotes to: {criterion.promotes_to}")
+        lines.append(f"  Safety: {criterion.safety_note}")
     lines.append("Next hardware validations:")
     lines.extend(f"- {item}" for item in resolved.next_hardware_validations)
     lines.append("Safety:")
@@ -391,6 +450,17 @@ def _validation_step_payload(step: OxiHardwareValidationStep) -> dict[str, objec
     }
 
 
+def _promotion_criterion_payload(criterion: OxiPromotionCriterion) -> dict[str, object]:
+    return {
+        "name": criterion.name,
+        "device": criterion.device,
+        "current_status": criterion.current_status,
+        "required_evidence": criterion.required_evidence,
+        "promotes_to": criterion.promotes_to,
+        "safety_note": criterion.safety_note,
+    }
+
+
 def build_oxi_live_set_strategy_payload() -> dict[str, object]:
     """Return JSON-ready deterministic strategy metadata."""
 
@@ -402,6 +472,9 @@ def build_oxi_live_set_strategy_payload() -> dict[str, object]:
         "pad_policies": [_pad_policy_payload(policy) for policy in report.pad_policies],
         "hardware_validation_runway": [
             _validation_step_payload(step) for step in report.hardware_validation_runway
+        ],
+        "promotion_criteria": [
+            _promotion_criterion_payload(criterion) for criterion in report.promotion_criteria
         ],
         "next_hardware_validations": list(report.next_hardware_validations),
         "safety": dict(report.safety),
@@ -453,6 +526,7 @@ __all__ = (
     "OxiLiveSetChapter",
     "OxiLiveSetStrategyReport",
     "OxiPadPolicy",
+    "OxiPromotionCriterion",
     "OxiRigRole",
     "REPORT_TITLE",
     "SAFETY_LINES",

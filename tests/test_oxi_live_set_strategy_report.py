@@ -138,6 +138,42 @@ def test_hardware_validation_runway_keeps_a4_input_only_before_promotion() -> No
     assert "a4-soft-capture | Analog Four MKII | input-only" in text
 
 
+def test_a4_promotion_criteria_keep_outbound_macros_blocked_until_evidence_exists() -> None:
+    from rytm_randomizer.reports.oxi_live_set_strategy import (
+        build_oxi_live_set_strategy_payload,
+        build_oxi_live_set_strategy_report,
+        format_oxi_live_set_strategy_report,
+    )
+
+    report = build_oxi_live_set_strategy_report()
+    by_name = {criterion.name: criterion for criterion in report.promotion_criteria}
+
+    assert tuple(by_name) == (
+        "a4-input-label-coverage",
+        "a4-macro-review",
+        "a4-explicit-arm-gate",
+        "a4-recovery-path",
+    )
+    label_coverage = by_name["a4-input-label-coverage"]
+    assert label_coverage.device == "Analog Four MKII"
+    assert label_coverage.current_status == "blocked"
+    assert label_coverage.required_evidence == "known labels for moved controls on tracks 1-4"
+    assert label_coverage.promotes_to == "A4 macro readiness review"
+
+    arm_gate = by_name["a4-explicit-arm-gate"]
+    assert arm_gate.required_evidence == "operator-confirmed --arm path with no unattended behavior"
+    assert arm_gate.safety_note == "no A4 outbound macro send until this gate is satisfied"
+
+    payload = build_oxi_live_set_strategy_payload()
+    assert payload["promotion_criteria"][0]["name"] == "a4-input-label-coverage"
+    assert payload["promotion_criteria"][2]["current_status"] == "blocked"
+
+    text = "\n".join(format_oxi_live_set_strategy_report(report))
+    assert "Promotion criteria:" in text
+    assert "a4-explicit-arm-gate | Analog Four MKII | blocked" in text
+    assert "no A4 outbound macro send until this gate is satisfied" in text
+
+
 def test_cli_command_prints_text_json_and_rejects_unexpected_arguments() -> None:
     text_result = subprocess.run(
         [sys.executable, "-m", "rytm_randomizer.cli", "oxi-live-set-strategy-report"],

@@ -33,9 +33,11 @@ Last updated: 2026-06-05. This file is a hand-authored snapshot and is meant to 
   Pad 12 remains available for users who rely on it. The payload also includes
   a named hardware-validation runway for the next Rytm kit-core smoke test, Dual
   VCO center-band confirmation, A4 input-only soft capture, and passive A4 macro
-  dry-run. The surface is report-only: no port opening, no MIDI send, no command
-  execution, no hardware mutation, no A4 outbound path, and no V1.34 parity
-  change. See
+  dry-run, plus A4 promotion criteria that keep outbound macros blocked until
+  input-label coverage, passive macro review, an explicit arm gate, and recovery
+  evidence exist. The surface is report-only: no port opening, no MIDI send, no
+  command execution, no hardware mutation, no A4 outbound path, and no V1.34
+  parity change. See
   `docs/superpowers/plans/2026-06-05-oxi-live-set-strategy-report.md`.
 - 2026-06-04: Live performance cockpit flow follow-up cleanups. The new
   `DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL`, `LivePerformanceFlow` renderer, and the
