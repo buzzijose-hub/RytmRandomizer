@@ -39,9 +39,12 @@ Last updated: 2026-06-05. This file is a hand-authored snapshot and is meant to 
   chapter to OXI action, Rytm staging command, inspect/fire/recover commands,
   expected result, and blocked active action, plus rehearsal checkpoints for
   capture, first-macro staging, pre-send review, manual fire, anchor recovery,
-  A4 gating, and after-set documentation. The surface is report-only: no port
-  opening, no MIDI send, no command execution, no hardware mutation, no A4
-  outbound path, and no V1.34 parity change. See
+  A4 gating, and after-set documentation. A replay/rehearsal command section
+  now separates passive report reads, passive A4 macro review, the
+  operator-present Rytm shell launch, `changes`, manual fire, and recovery so a
+  future GUI can render the flow without executing it. The surface is
+  report-only: no port opening, no MIDI send, no command execution, no hardware
+  mutation, no A4 outbound path, and no V1.34 parity change. See
   `docs/superpowers/plans/2026-06-05-oxi-live-set-strategy-report.md`.
 - 2026-06-04: Live performance cockpit flow follow-up cleanups. The new
   `DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL`, `LivePerformanceFlow` renderer, and the

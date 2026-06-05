@@ -222,7 +222,7 @@ hardware plan.
 | Command | Description |
 |---|---|
 | `oxi-live-macro-catalog-report` | Passive Rytm macro cards, recovery actions, live flow, and A4 runway state |
-| `oxi-live-set-strategy-report` | Passive OXI-style set chapters, operator cues, rehearsal checkpoints, all-12-pad policy, and A4 review-only actions |
+| `oxi-live-set-strategy-report` | Passive OXI-style set chapters, operator cues, rehearsal/replay commands, all-12-pad policy, and A4 review-only actions |
 
 ```bash
 python -m rytm_randomizer.cli oxi-live-macro-catalog-report
@@ -242,7 +242,10 @@ available for users who rely on it. The JSON payload also includes an operator
 cue sheet that maps each chapter to stage, inspect, fire, recover, expected
 result, and blocked-action steps. Rehearsal checkpoints cover capture,
 first-macro staging, `changes` review, manual fire, anchor recovery, A4 gate,
-and after-set notes. It also includes a
+and after-set notes. Replay command metadata separates passive CLI reports,
+passive A4 macro review, the operator-present Rytm shell launch, `changes`,
+manual fire, and anchor recovery so a future GUI can render buttons without
+executing them. It also includes a
 hardware-validation runway for the next Rytm kit-core smoke, Dual VCO
 center-band check, A4 input-only soft capture, and passive A4 macro dry-run.
 Analog Four promotion criteria keep outbound macros blocked until input-label

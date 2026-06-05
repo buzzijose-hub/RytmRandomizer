@@ -135,6 +135,20 @@ class OxiRehearsalCheckpoint:
 
 
 @dataclass(frozen=True)
+class OxiReplayCommand:
+    """One deterministic command or in-shell step for later rehearsal."""
+
+    name: str
+    execution_mode: str
+    command: str
+    purpose: str
+    expected_observation: str
+    opens_ports: bool
+    sends_midi: str
+    safety_note: str
+
+
+@dataclass(frozen=True)
 class OxiLiveSetStrategyReport:
     """Passive report tying OXI, Rytm macros, A4 runway, and pad policy together."""
 
@@ -146,6 +160,7 @@ class OxiLiveSetStrategyReport:
     promotion_criteria: tuple[OxiPromotionCriterion, ...]
     operator_cues: tuple[OxiOperatorCue, ...]
     rehearsal_checkpoints: tuple[OxiRehearsalCheckpoint, ...]
+    replay_commands: tuple[OxiReplayCommand, ...]
     next_hardware_validations: tuple[str, ...]
     safety: Mapping[str, object]
 
@@ -499,6 +514,95 @@ _REHEARSAL_CHECKPOINTS: Final[tuple[OxiRehearsalCheckpoint, ...]] = (
     ),
 )
 
+_REPLAY_COMMANDS: Final[tuple[OxiReplayCommand, ...]] = (
+    OxiReplayCommand(
+        name="read-strategy",
+        execution_mode="passive-cli",
+        command="python -m rytm_randomizer.cli oxi-live-set-strategy-report",
+        purpose="Read the operator strategy in text form before a rehearsal.",
+        expected_observation="report prints OXI roles, chapters, pad policies, and safety notes",
+        opens_ports=False,
+        sends_midi="never",
+        safety_note="metadata-only report",
+    ),
+    OxiReplayCommand(
+        name="read-strategy-json",
+        execution_mode="passive-cli",
+        command="python -m rytm_randomizer.cli oxi-live-set-strategy-report --json",
+        purpose="Expose deterministic JSON for the future GUI/control surface.",
+        expected_observation="JSON contains chapters, cues, checkpoints, and replay commands",
+        opens_ports=False,
+        sends_midi="never",
+        safety_note="metadata-only report",
+    ),
+    OxiReplayCommand(
+        name="review-a4-hard-groove",
+        execution_mode="passive-cli",
+        command=(
+            "python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove "
+            "--seed 23 --intensity 6 --events --limit 0"
+        ),
+        purpose="Review the A4 companion idea without promoting an outbound path.",
+        expected_observation="A4 rows render as dry-run metadata only",
+        opens_ports=False,
+        sends_midi="never",
+        safety_note="A4 remains review-only",
+    ),
+    OxiReplayCommand(
+        name="start-rytm-live-shell",
+        execution_mode="armed-operator-shell",
+        command=(
+            "python -m rytm_randomizer.app --arm --rytm-live-snapshot-shell "
+            "--confirm-rytm-snapshot-shell-send"
+        ),
+        purpose="Capture the current Rytm kit and enter the operator-present shell.",
+        expected_observation="loaded kit name and fingerprint are visible",
+        opens_ports=True,
+        sends_midi="only after explicit in-shell send/go",
+        safety_note="requires Jose present with hardware on",
+    ),
+    OxiReplayCommand(
+        name="stage-hard-groove",
+        execution_mode="in-shell",
+        command="macro hard-groove",
+        purpose="Stage the first OXI-style sound-design move.",
+        expected_observation="macro is staged but not sent",
+        opens_ports=True,
+        sends_midi="not by itself",
+        safety_note="inspect before send",
+    ),
+    OxiReplayCommand(
+        name="inspect-staged-plan",
+        execution_mode="in-shell",
+        command="changes",
+        purpose="Review pads, lanes, and values before firing.",
+        expected_observation="staged rows are printed for operator review",
+        opens_ports=True,
+        sends_midi="never",
+        safety_note="must happen before fire-manually",
+    ),
+    OxiReplayCommand(
+        name="fire-manually",
+        execution_mode="in-shell",
+        command="send or go",
+        purpose="Fire the staged plan only after listening readiness is confirmed.",
+        expected_observation="Rytm changes audibly without unattended behavior",
+        opens_ports=True,
+        sends_midi="operator-confirmed",
+        safety_note="Jose must be present and listening",
+    ),
+    OxiReplayCommand(
+        name="recover-anchor",
+        execution_mode="in-shell",
+        command="home + send or Z + send",
+        purpose="Return the hardware to the captured safe kit.",
+        expected_observation="changes returns to no parameter changes staged",
+        opens_ports=True,
+        sends_midi="operator-confirmed",
+        safety_note="recovery path must stay available",
+    ),
+)
+
 
 def build_oxi_live_set_strategy_report() -> OxiLiveSetStrategyReport:
     """Return the deterministic passive OXI live set strategy report."""
@@ -512,6 +616,7 @@ def build_oxi_live_set_strategy_report() -> OxiLiveSetStrategyReport:
         promotion_criteria=_PROMOTION_CRITERIA,
         operator_cues=_OPERATOR_CUES,
         rehearsal_checkpoints=_REHEARSAL_CHECKPOINTS,
+        replay_commands=_REPLAY_COMMANDS,
         next_hardware_validations=_NEXT_HARDWARE_VALIDATIONS,
         safety=_SAFETY_PAYLOAD,
     )
@@ -551,6 +656,13 @@ def _operator_cue_line(cue: OxiOperatorCue) -> str:
 
 def _rehearsal_checkpoint_line(checkpoint: OxiRehearsalCheckpoint) -> str:
     return f"- {checkpoint.name} | {checkpoint.phase} | command={checkpoint.required_command}"
+
+
+def _replay_command_line(command: OxiReplayCommand) -> str:
+    return (
+        f"- {command.name} | {command.execution_mode} | "
+        f"opens_ports={command.opens_ports} | sends_midi={command.sends_midi}"
+    )
 
 
 def format_oxi_live_set_strategy_report(
@@ -601,6 +713,13 @@ def format_oxi_live_set_strategy_report(
         lines.append(f"  Confirm: {checkpoint.operator_confirmation}")
         lines.append(f"  Success: {checkpoint.success_signal}")
         lines.append(f"  Blocked: {checkpoint.blocked_action}")
+    lines.append("Replay / rehearsal commands:")
+    for command in resolved.replay_commands:
+        lines.append(_replay_command_line(command))
+        lines.append(f"  Command: {command.command}")
+        lines.append(f"  Purpose: {command.purpose}")
+        lines.append(f"  Expect: {command.expected_observation}")
+        lines.append(f"  Safety: {command.safety_note}")
     lines.append("Next hardware validations:")
     lines.extend(f"- {item}" for item in resolved.next_hardware_validations)
     lines.append("Safety:")
@@ -690,6 +809,19 @@ def _rehearsal_checkpoint_payload(checkpoint: OxiRehearsalCheckpoint) -> dict[st
     }
 
 
+def _replay_command_payload(command: OxiReplayCommand) -> dict[str, object]:
+    return {
+        "name": command.name,
+        "execution_mode": command.execution_mode,
+        "command": command.command,
+        "purpose": command.purpose,
+        "expected_observation": command.expected_observation,
+        "opens_ports": command.opens_ports,
+        "sends_midi": command.sends_midi,
+        "safety_note": command.safety_note,
+    }
+
+
 def build_oxi_live_set_strategy_payload() -> dict[str, object]:
     """Return JSON-ready deterministic strategy metadata."""
 
@@ -709,6 +841,7 @@ def build_oxi_live_set_strategy_payload() -> dict[str, object]:
         "rehearsal_checkpoints": [
             _rehearsal_checkpoint_payload(checkpoint) for checkpoint in report.rehearsal_checkpoints
         ],
+        "replay_commands": [_replay_command_payload(command) for command in report.replay_commands],
         "next_hardware_validations": list(report.next_hardware_validations),
         "safety": dict(report.safety),
     }
@@ -762,6 +895,7 @@ __all__ = (
     "OxiPadPolicy",
     "OxiPromotionCriterion",
     "OxiRehearsalCheckpoint",
+    "OxiReplayCommand",
     "OxiRigRole",
     "REPORT_TITLE",
     "SAFETY_LINES",

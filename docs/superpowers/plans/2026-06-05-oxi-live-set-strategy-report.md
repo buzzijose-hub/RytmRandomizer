@@ -14,6 +14,7 @@ Add a passive, deterministic report that turns the merged OXI-style macro vocabu
 - Include A4 promotion criteria that keep outbound macros blocked until input labels, passive macro review, explicit arm gates, and recovery paths are validated.
 - Include an operator cue sheet that maps every chapter to OXI action, Rytm staging, inspection, fire, recovery, expected result, and blocked actions.
 - Include rehearsal checkpoints for capture, first macro staging, pre-send review, manual fire, anchor recovery, A4 gating, and after-set notes.
+- Include replay/rehearsal command metadata that separates passive reports, A4 review-only commands, the operator-present Rytm shell launch, `changes`, manual fire, and recovery.
 - Update passive CLI help, README, tests, and status docs.
 - Keep all behavior report-only: no MIDI send, no port opening, no active hardware action, no GUI launch, no SysEx write.
 

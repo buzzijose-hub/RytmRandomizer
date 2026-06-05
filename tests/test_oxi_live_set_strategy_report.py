@@ -268,6 +268,62 @@ def test_rehearsal_checkpoints_cover_preflight_fire_recovery_and_after_set() -> 
     assert "Success: no parameter changes staged after recovery" in text
 
 
+def test_replay_commands_keep_passive_reports_separate_from_operator_armed_shell() -> None:
+    from rytm_randomizer.reports.oxi_live_set_strategy import (
+        build_oxi_live_set_strategy_payload,
+        build_oxi_live_set_strategy_report,
+        format_oxi_live_set_strategy_report,
+    )
+
+    report = build_oxi_live_set_strategy_report()
+    by_name = {command.name: command for command in report.replay_commands}
+
+    assert tuple(by_name) == (
+        "read-strategy",
+        "read-strategy-json",
+        "review-a4-hard-groove",
+        "start-rytm-live-shell",
+        "stage-hard-groove",
+        "inspect-staged-plan",
+        "fire-manually",
+        "recover-anchor",
+    )
+
+    passive = by_name["read-strategy"]
+    assert passive.execution_mode == "passive-cli"
+    assert passive.command == "python -m rytm_randomizer.cli oxi-live-set-strategy-report"
+    assert passive.opens_ports is False
+    assert passive.sends_midi == "never"
+
+    a4_review = by_name["review-a4-hard-groove"]
+    assert a4_review.execution_mode == "passive-cli"
+    assert a4_review.command == (
+        "python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove "
+        "--seed 23 --intensity 6 --events --limit 0"
+    )
+    assert a4_review.sends_midi == "never"
+
+    shell = by_name["start-rytm-live-shell"]
+    assert shell.execution_mode == "armed-operator-shell"
+    assert shell.opens_ports is True
+    assert shell.sends_midi == "only after explicit in-shell send/go"
+
+    ordered_commands = [command.command for command in report.replay_commands]
+    assert ordered_commands.index("changes") < ordered_commands.index("send or go")
+    assert by_name["fire-manually"].safety_note == "Jose must be present and listening"
+    assert by_name["recover-anchor"].command == "home + send or Z + send"
+
+    payload = build_oxi_live_set_strategy_payload()
+    assert payload["replay_commands"][0]["name"] == "read-strategy"
+    assert payload["replay_commands"][3]["execution_mode"] == "armed-operator-shell"
+    assert payload["replay_commands"][6]["sends_midi"] == "operator-confirmed"
+
+    text = "\n".join(format_oxi_live_set_strategy_report(report))
+    assert "Replay / rehearsal commands:" in text
+    assert "read-strategy | passive-cli | opens_ports=False | sends_midi=never" in text
+    assert "fire-manually | in-shell | opens_ports=True | sends_midi=operator-confirmed" in text
+
+
 def test_cli_command_prints_text_json_and_rejects_unexpected_arguments() -> None:
     text_result = subprocess.run(
         [sys.executable, "-m", "rytm_randomizer.cli", "oxi-live-set-strategy-report"],
