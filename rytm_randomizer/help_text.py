@@ -71,6 +71,7 @@ USAGE = (
     "style-profile-report | style-crates-queue-journal-report [--json] | "
     "style-crate-rehearsal-deck-report [--crate <key>] [--json] | "
     "oxi-live-macro-catalog-report | "
+    "live-gui-performance-flow-model-report [--json] | "
     "reference-style-blueprint-report "
     "(--description <text>|--audio <path>|--library <dir>) [--json] | "
     "list-style-profiles | inspect-style-profile <key> | "
@@ -1215,6 +1216,30 @@ Safety:
   no MIDI sending
   no port opening
   no command execution
+  no hardware mutation
+  no hardware required"""
+
+
+def _live_gui_performance_flow_model_report_help():
+    return """RytmRandomizer passive CLI: live-gui-performance-flow-model-report
+
+Usage:
+  python -m rytm_randomizer.cli live-gui-performance-flow-model-report
+  python -m rytm_randomizer.cli live-gui-performance-flow-model-report --json
+  python -m rytm_randomizer.cli live-gui-performance-flow-model-report --help
+
+Behavior:
+  Emits the passive cockpit Performance Flow model that maps Rytm OXI macro
+  commands to Analog Four review-only actions.
+
+Safety:
+  passive/read-only
+  GUI performance flow metadata only
+  no GUI launch
+  no file writing
+  no real MIDI rendering
+  no MIDI sending
+  no port opening
   no hardware mutation
   no hardware required"""
 
@@ -2640,6 +2665,7 @@ Usage:
   python -m rytm_randomizer.cli style-crates-queue-journal-report [--json]
   python -m rytm_randomizer.cli style-crate-rehearsal-deck-report [--crate <key>] [--json]
   python -m rytm_randomizer.cli oxi-live-macro-catalog-report
+  python -m rytm_randomizer.cli live-gui-performance-flow-model-report [--json]
   python -m rytm_randomizer.cli reference-style-blueprint-report (--description <text>|--audio <path>|--library <dir>) [--json]
   python -m rytm_randomizer.cli list-style-profiles
   python -m rytm_randomizer.cli inspect-style-profile <key>
@@ -2792,6 +2818,8 @@ Commands:
                      Print passive GUI-ready style crate rehearsal cards.
   oxi-live-macro-catalog-report
                      Print passive OXI live macro cards and A4 runway state.
+  live-gui-performance-flow-model-report
+                     Print the passive live GUI performance flow model.
   reference-style-blueprint-report
                      Translate a style reference into a passive Rytm plus Analog Four blueprint.
   list-style-profiles
@@ -3191,6 +3219,7 @@ Safety:
     "style-crates-queue-journal-report": _style_crates_queue_journal_report_help,
     "style-crate-rehearsal-deck-report": _style_crate_rehearsal_deck_report_help,
     "oxi-live-macro-catalog-report": _oxi_live_macro_catalog_report_help,
+    "live-gui-performance-flow-model-report": _live_gui_performance_flow_model_report_help,
     "reference-style-blueprint-report": _reference_style_blueprint_report_help,
     "style-target-report": _style_target_report_help,
     "style-performance-arc-report": _style_performance_arc_report_help,

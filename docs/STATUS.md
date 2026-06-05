@@ -1,9 +1,16 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-04. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-06-05. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-06-05: Passive live GUI performance flow report prepared locally.
+  `python -m rytm_randomizer.cli live-gui-performance-flow-model-report --json`
+  now emits the cockpit-ready Rytm/A4 Performance Flow contract as a Python
+  report model with frozen dataclasses, sibling TypedDicts, deterministic
+  stdout/JSON, CLI help, README coverage, and a TypeScript protocol mirror. The
+  report is metadata-only: no GUI launch, no real MIDI rendering, no MIDI send,
+  no port opening, no hardware mutation, and no A4 outbound macro path.
 - 2026-06-04: Live performance cockpit flow follow-up cleanups. The new
   `DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL`, `LivePerformanceFlow` renderer, and the
   `LivePerformanceFlowModel` / `LivePerformanceFlowStepModel` /

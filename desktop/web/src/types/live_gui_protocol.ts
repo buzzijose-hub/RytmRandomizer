@@ -439,6 +439,29 @@ export interface LiveGuiDualDeviceRigReadinessModelDict {
   safety: ReadonlyArray<string>;
 }
 
+export interface LiveGuiPerformanceFlowStepDict {
+  key: string;
+  order: number;
+  label: string;
+  phase: string;
+  rytm_command: string;
+  analog_four_action: string;
+  send_policy: string;
+  recovery_action: string;
+  status: string;
+}
+
+export interface LiveGuiPerformanceFlowModelDict {
+  model_version: string;
+  flow_id: string;
+  flow_status: string;
+  current_step_key: string;
+  steps: ReadonlyArray<LiveGuiPerformanceFlowStepDict>;
+  blocked_actions: ReadonlyArray<string>;
+  safety_lines: ReadonlyArray<string>;
+  replay_commands: ReadonlyArray<string>;
+}
+
 export interface LiveReadinessModel {
   pad_surface: LiveGuiRytmTwelvePadSurfaceModelDict;
   device_inventory: LiveGuiDeviceInventoryModelDict;
@@ -456,28 +479,9 @@ export interface LiveReadinessPanelProps {
   model?: LiveReadinessModel;
 }
 
-export interface LivePerformanceFlowStepModel {
-  key: string;
-  order: number;
-  label: string;
-  phase: string;
-  rytm_command: string;
-  analog_four_action: string;
-  send_policy: string;
-  recovery_action: string;
-  status: string;
-}
+export type LivePerformanceFlowStepModel = LiveGuiPerformanceFlowStepDict;
 
-export interface LivePerformanceFlowModel {
-  model_version: string;
-  flow_id: string;
-  flow_status: string;
-  current_step_key: string;
-  steps: ReadonlyArray<LivePerformanceFlowStepModel>;
-  blocked_actions: ReadonlyArray<string>;
-  safety_lines: ReadonlyArray<string>;
-  replay_commands: ReadonlyArray<string>;
-}
+export type LivePerformanceFlowModel = LiveGuiPerformanceFlowModelDict;
 
 export interface LiveReadinessPanelViewProps extends LiveReadinessPanelProps {
   performanceFlow?: LivePerformanceFlowModel;
