@@ -453,6 +453,7 @@ export interface LiveGuiPerformanceFlowStepDict {
 
 export interface LiveGuiPerformanceFlowModelDict {
   model_version: string;
+  source_module: string;
   flow_id: string;
   flow_status: string;
   current_step_key: string;

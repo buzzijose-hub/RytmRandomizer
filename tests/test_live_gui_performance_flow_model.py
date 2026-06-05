@@ -17,6 +17,7 @@ def test_performance_flow_model_exposes_cockpit_steps_and_safety() -> None:
     model = build_live_gui_performance_flow_model()
 
     assert model.model_version == "live-gui-performance-flow-model-v1"
+    assert model.source_module == "reports.live_gui_performance_flow_model"
     assert model.flow_id == "oxi-rytm-a4-performance-flow"
     assert model.flow_status == "mock-safe"
     assert model.current_step_key == "capture-anchor"
@@ -51,6 +52,7 @@ def test_performance_flow_payload_is_gui_ready_and_json_safe() -> None:
     json.dumps(payload, sort_keys=True)
     flow_payload = payload["live_gui_performance_flow_model"]
     assert flow_payload["model_version"] == model.model_version
+    assert flow_payload["source_module"] == "reports.live_gui_performance_flow_model"
     assert flow_payload["flow_status"] == "mock-safe"
     assert flow_payload["current_step_key"] == "capture-anchor"
     assert flow_payload["steps"][0]["key"] == "capture-anchor"

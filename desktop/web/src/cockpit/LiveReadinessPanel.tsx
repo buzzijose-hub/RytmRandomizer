@@ -51,6 +51,7 @@ const REPLAY_COMMANDS = ['python -m rytm_randomizer.cli live-gui-status-footer-m
 
 export const DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL: LivePerformanceFlowModel = {
   model_version: 'live-gui-performance-flow-model-v1',
+  source_module: 'reports.live_gui_performance_flow_model',
   flow_id: 'oxi-rytm-a4-performance-flow',
   flow_status: 'mock-safe',
   current_step_key: 'capture-anchor',
@@ -142,7 +143,7 @@ export const DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL: LivePerformanceFlowModel = {
   safety_lines: PASSIVE_SAFETY,
   replay_commands: [
     'python -m rytm_randomizer.cli live-gui-performance-flow-model-report --json',
-    'python -m rytm_randomizer.cli oxi-live-macro-catalog-report --json',
+    'python -m rytm_randomizer.cli oxi-live-macro-catalog-report',
     'python -m rytm_randomizer.cli analog-four-oxi-macro-report --json',
   ],
 };
