@@ -4,12 +4,13 @@ Status: draft
 
 ## Intent
 
-Add a passive, deterministic report that turns the merged OXI-style macro vocabulary into an operator-facing live set strategy. The report explains how OXI, Analog Rytm, and Analog Four divide responsibilities during performance, how the named Rytm macros can be used as set chapters, and how Jose's current pad-lane discipline should be represented without removing Pad 12 from the product.
+Add a passive, deterministic report that turns the merged OXI-style macro vocabulary into an operator-facing live set strategy. The report explains how OXI, Analog Rytm, and Analog Four divide responsibilities during performance, how the named Rytm macros can be used as set chapters, how Jose's current pad-lane discipline should be represented without removing Pad 12 from the product, and which Rytm/A4 validation passes should come next.
 
 ## Scope
 
 - Add `rytm_randomizer.reports.oxi_live_set_strategy`.
 - Add passive CLI command `oxi-live-set-strategy-report [--json]`.
+- Include a hardware-validation runway for the next operator-present Rytm and A4 passes.
 - Update passive CLI help, README, tests, and status docs.
 - Keep all behavior report-only: no MIDI send, no port opening, no active hardware action, no GUI launch, no SysEx write.
 

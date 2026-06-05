@@ -102,6 +102,42 @@ def test_json_payload_is_deterministic_and_explicitly_passive() -> None:
     ]
 
 
+def test_hardware_validation_runway_keeps_a4_input_only_before_promotion() -> None:
+    from rytm_randomizer.reports.oxi_live_set_strategy import (
+        build_oxi_live_set_strategy_payload,
+        build_oxi_live_set_strategy_report,
+        format_oxi_live_set_strategy_report,
+    )
+
+    report = build_oxi_live_set_strategy_report()
+    by_name = {step.name: step for step in report.hardware_validation_runway}
+
+    assert tuple(by_name) == (
+        "rytm-kit-core-smoke",
+        "rytm-dual-vco-center-band",
+        "a4-soft-capture",
+        "a4-macro-dry-run",
+    )
+    kit_core = by_name["rytm-kit-core-smoke"]
+    assert kit_core.device == "Analog Rytm MKII"
+    assert kit_core.operator_path == "kit-core -> changes -> send -> go -> Z + send"
+    assert kit_core.validation_mode == "operator-present armed Rytm shell"
+    assert "no parameter changes staged" in kit_core.expected_evidence
+
+    a4_capture = by_name["a4-soft-capture"]
+    assert a4_capture.device == "Analog Four MKII"
+    assert a4_capture.validation_mode == "input-only"
+    assert a4_capture.safety_boundary == "opens A4 input only; no output and no MIDI send"
+
+    payload = build_oxi_live_set_strategy_payload()
+    assert payload["hardware_validation_runway"][2]["name"] == "a4-soft-capture"
+    assert payload["hardware_validation_runway"][2]["validation_mode"] == "input-only"
+
+    text = "\n".join(format_oxi_live_set_strategy_report(report))
+    assert "Hardware validation runway:" in text
+    assert "a4-soft-capture | Analog Four MKII | input-only" in text
+
+
 def test_cli_command_prints_text_json_and_rejects_unexpected_arguments() -> None:
     text_result = subprocess.run(
         [sys.executable, "-m", "rytm_randomizer.cli", "oxi-live-set-strategy-report"],

@@ -83,6 +83,18 @@ class OxiPadPolicy:
 
 
 @dataclass(frozen=True)
+class OxiHardwareValidationStep:
+    """One operator-present validation step for the next live rig pass."""
+
+    name: str
+    device: str
+    operator_path: str
+    validation_mode: str
+    expected_evidence: str
+    safety_boundary: str
+
+
+@dataclass(frozen=True)
 class OxiLiveSetStrategyReport:
     """Passive report tying OXI, Rytm macros, A4 runway, and pad policy together."""
 
@@ -90,6 +102,7 @@ class OxiLiveSetStrategyReport:
     rig_roles: tuple[OxiRigRole, ...]
     chapters: tuple[OxiLiveSetChapter, ...]
     pad_policies: tuple[OxiPadPolicy, ...]
+    hardware_validation_runway: tuple[OxiHardwareValidationStep, ...]
     next_hardware_validations: tuple[str, ...]
     safety: Mapping[str, object]
 
@@ -227,6 +240,41 @@ _PAD_POLICIES: Final[tuple[OxiPadPolicy, ...]] = (
     ),
 )
 
+_HARDWARE_VALIDATION_RUNWAY: Final[tuple[OxiHardwareValidationStep, ...]] = (
+    OxiHardwareValidationStep(
+        name="rytm-kit-core-smoke",
+        device="Analog Rytm MKII",
+        operator_path="kit-core -> changes -> send -> go -> Z + send",
+        validation_mode="operator-present armed Rytm shell",
+        expected_evidence="full-kit macro sounds musical and returns to no parameter changes staged",
+        safety_boundary="requires --arm and explicit shell send/go commands",
+    ),
+    OxiHardwareValidationStep(
+        name="rytm-dual-vco-center-band",
+        device="Analog Rytm MKII",
+        operator_path="validate current Pad 2/3 Dual VCO CC20 center-band movement",
+        validation_mode="operator-present one-CC or shell smoke test",
+        expected_evidence="no visible ERR and detune movement remains useful at the chosen amount",
+        safety_boundary="stay in proven center band before widening any low-anchor lane",
+    ),
+    OxiHardwareValidationStep(
+        name="a4-soft-capture",
+        device="Analog Four MKII",
+        operator_path="--arm --a4-soft-capture",
+        validation_mode="input-only",
+        expected_evidence="tracks 1-4 emit known Appendix D labels for moved controls",
+        safety_boundary="opens A4 input only; no output and no MIDI send",
+    ),
+    OxiHardwareValidationStep(
+        name="a4-macro-dry-run",
+        device="Analog Four MKII",
+        operator_path="analog-four-oxi-macro-report hard-groove --events --limit 0",
+        validation_mode="passive CLI",
+        expected_evidence="A4 macro rows match the intended OXI companion role before hardware promotion",
+        safety_boundary="report-only; no A4 output path",
+    ),
+)
+
 
 def build_oxi_live_set_strategy_report() -> OxiLiveSetStrategyReport:
     """Return the deterministic passive OXI live set strategy report."""
@@ -236,6 +284,7 @@ def build_oxi_live_set_strategy_report() -> OxiLiveSetStrategyReport:
         rig_roles=_RIG_ROLES,
         chapters=_CHAPTERS,
         pad_policies=_PAD_POLICIES,
+        hardware_validation_runway=_HARDWARE_VALIDATION_RUNWAY,
         next_hardware_validations=_NEXT_HARDWARE_VALIDATIONS,
         safety=_SAFETY_PAYLOAD,
     )
@@ -256,6 +305,10 @@ def _pad_policy_line(policy: OxiPadPolicy) -> str:
         f"filter={policy.filter_policy} | lfo={policy.lfo_policy} | "
         f"amp={policy.amp_policy}"
     )
+
+
+def _validation_step_line(step: OxiHardwareValidationStep) -> str:
+    return f"- {step.name} | {step.device} | {step.validation_mode} | " f"path={step.operator_path}"
 
 
 def format_oxi_live_set_strategy_report(
@@ -281,6 +334,11 @@ def format_oxi_live_set_strategy_report(
     for policy in resolved.pad_policies:
         lines.append(_pad_policy_line(policy))
         lines.append(f"  {policy.product_note}")
+    lines.append("Hardware validation runway:")
+    for step in resolved.hardware_validation_runway:
+        lines.append(_validation_step_line(step))
+        lines.append(f"  Evidence: {step.expected_evidence}")
+        lines.append(f"  Boundary: {step.safety_boundary}")
     lines.append("Next hardware validations:")
     lines.extend(f"- {item}" for item in resolved.next_hardware_validations)
     lines.append("Safety:")
@@ -322,6 +380,17 @@ def _pad_policy_payload(policy: OxiPadPolicy) -> dict[str, object]:
     }
 
 
+def _validation_step_payload(step: OxiHardwareValidationStep) -> dict[str, object]:
+    return {
+        "name": step.name,
+        "device": step.device,
+        "operator_path": step.operator_path,
+        "validation_mode": step.validation_mode,
+        "expected_evidence": step.expected_evidence,
+        "safety_boundary": step.safety_boundary,
+    }
+
+
 def build_oxi_live_set_strategy_payload() -> dict[str, object]:
     """Return JSON-ready deterministic strategy metadata."""
 
@@ -331,6 +400,9 @@ def build_oxi_live_set_strategy_payload() -> dict[str, object]:
         "rig_roles": [_rig_role_payload(role) for role in report.rig_roles],
         "chapters": [_chapter_payload(chapter) for chapter in report.chapters],
         "pad_policies": [_pad_policy_payload(policy) for policy in report.pad_policies],
+        "hardware_validation_runway": [
+            _validation_step_payload(step) for step in report.hardware_validation_runway
+        ],
         "next_hardware_validations": list(report.next_hardware_validations),
         "safety": dict(report.safety),
     }
@@ -377,6 +449,7 @@ register(OXI_LIVE_SET_STRATEGY_CLI_COMMAND)
 
 __all__ = (
     "OXI_LIVE_SET_STRATEGY_CLI_COMMAND",
+    "OxiHardwareValidationStep",
     "OxiLiveSetChapter",
     "OxiLiveSetStrategyReport",
     "OxiPadPolicy",
