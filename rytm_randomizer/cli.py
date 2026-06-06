@@ -96,6 +96,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.analog_four_oxi_macro_report",
             "ANALOG_FOUR_OXI_MACRO_CLI_COMMAND",
         ),
+        "analog-four-outbound-candidate-report": (
+            "rytm_randomizer.reports.analog_four_outbound_candidate",
+            "ANALOG_FOUR_OUTBOUND_CANDIDATE_CLI_COMMAND",
+        ),
         "analog-four-style-kit-readiness-report": (
             "rytm_randomizer.reports.analog_four_style_kit_readiness",
             "ANALOG_FOUR_STYLE_KIT_READINESS_CLI_COMMAND",

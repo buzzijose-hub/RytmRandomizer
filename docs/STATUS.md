@@ -4,6 +4,14 @@ Last updated: 2026-06-05. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-05: Passive Analog Four outbound-candidate report prepared locally.
+  `python -m rytm_randomizer.cli analog-four-outbound-candidate-report --json`
+  now emits a candidate-only validation ladder for the manual-backed OSC1 PWM
+  Depth row across A4 tracks 1-4. The packet exposes deterministic candidate
+  rows, blocked active actions, replay commands, and GUI-ready JSON while
+  keeping A4 outbound CC/macro sends blocked until manual validation. Passive
+  report only: no port opening, no MIDI sending, no hardware mutation, and no
+  V1.34 parity change.
 - 2026-06-05: Wired the Claude Code post-push code-review hook (and fixed the
   "settings file failed to parse / expected string, received object" error).
   Added `scripts/code_review_gate.py --mode claude-hook` — it reads the

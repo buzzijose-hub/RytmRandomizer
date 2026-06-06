@@ -63,6 +63,7 @@ USAGE = (
     "analog-four-kit-catalog-report <syx-path> [--limit N] [--json] | "
     "analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] "
     "[--events] [--limit N] [--json] | "
+    "analog-four-outbound-candidate-report [--json] | "
     "analog-four-style-kit-readiness-report <syx-path> <style-key> "
     "[--discovery N] [--limit N] [--json] | "
     "dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> "
@@ -958,6 +959,21 @@ def test_analog_four_oxi_macro_report_help_exits_zero_and_safety_matches_report_
     assert result.stderr == ""
 
 
+def test_analog_four_outbound_candidate_report_help_exits_zero_and_safety_matches_source():
+    from rytm_randomizer.reports.analog_four_outbound_candidate import SAFETY_LINES
+
+    result = run_cli("analog-four-outbound-candidate-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: analog-four-outbound-candidate-report" in help_text
+    assert "python -m rytm_randomizer.cli analog-four-outbound-candidate-report" in help_text
+    assert "OSC1 PWM Depth" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
 def test_rytm_style_kit_readiness_report_help_exits_zero_and_safety_matches_report_source():
     from rytm_randomizer.reports.rytm_style_kit_readiness import SAFETY_LINES
 
@@ -1380,6 +1396,42 @@ def test_analog_four_oxi_macro_report_json_exits_zero_and_is_machine_readable():
     assert all(0 <= event["value"] <= 127 for event in payload["events"])
     assert "no MIDI sending" in payload["safety"]
     assert result.stderr == ""
+
+
+def test_analog_four_outbound_candidate_report_command_exits_zero():
+    result = run_cli("analog-four-outbound-candidate-report")
+
+    assert result.returncode == 0
+    output = normalize_newlines(result.stdout)
+    assert "Analog Four outbound status: candidate-only" in output
+    assert "Track 1 | mido channel 0 | OSC1 PWM Depth | CC74 -> 32" in output
+    assert "Track 4 | mido channel 3 | OSC1 PWM Depth | CC74 -> 32" in output
+    assert "blocked active actions: A4 outbound CC send, A4 outbound macro send" in output
+    assert "- no MIDI sending" in output
+    assert result.stderr == ""
+
+
+def test_analog_four_outbound_candidate_report_json_exits_zero():
+    result = run_cli("analog-four-outbound-candidate-report", "--json")
+
+    assert result.returncode == 0
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "candidate-only"
+    assert [row["track"] for row in payload["candidate_rows"]] == [1, 2, 3, 4]
+    assert {row["cc_msb"] for row in payload["candidate_rows"]} == {74}
+    assert payload["blocked_active_actions"] == [
+        "A4 outbound CC send",
+        "A4 outbound macro send",
+    ]
+    assert result.stderr == ""
+
+
+def test_analog_four_outbound_candidate_report_rejects_unknown_argument():
+    result = run_cli("analog-four-outbound-candidate-report", "--mutate")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert "analog-four-outbound-candidate-report usage" in result.stderr
 
 
 def test_runtime_plan_report_command_exits_zero_and_matches_fixture():

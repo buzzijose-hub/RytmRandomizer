@@ -58,6 +58,9 @@ Anchor / Shape / Pressure / Space dry-run review, but it does not add an A4
 SEND path, open ports, or send MIDI. The passive
 `analog-four-oxi-macro-report` command previews four-track OXI-style A4 macro
 shapes from manual-backed CC metadata before any future send path is promoted.
+The passive `analog-four-outbound-candidate-report` command narrows that future
+send path to a single validation ladder for the manual-backed OSC1 PWM Depth
+candidate row; it is candidate-only and does not open ports or send MIDI.
 
 **Sidecar security guarantees** (post CODE_REVIEW.md sweep, 2026-05):
 
@@ -591,6 +594,7 @@ python -m rytm_randomizer.cli analog-rytm-midi-catalog-report   # passive OS 1.7
 python -m rytm_randomizer.cli oxi-live-macro-catalog-report   # passive OXI live macro cards, live flow, and A4 runway state
 python -m rytm_randomizer.cli live-gui-performance-flow-model-report --json   # cockpit-ready Rytm/A4 performance flow model
 python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove --seed 23 --intensity 6 --events --limit 0
+python -m rytm_randomizer.cli analog-four-outbound-candidate-report --json   # passive A4 outbound validation ladder
 ```
 
 Aliases: `rytm-only` and `a4-only` are accepted. The reports are passive: they open no MIDI port and send no MIDI. The snapshot-pad compatibility report explains which legal Rytm pad/machine combinations are snapshot-mutable today and which remain selectable-only until the follow-up runtime slice. The Analog Rytm MIDI catalog records OS 1.72 CC/NRPN rows with safety status labels; documented-only rows are not promoted to mutation until a separate approved hardware-validation pass. The live GUI performance-flow model emits the cockpit-ready sequence that joins Rytm OXI macro commands with Analog Four review-only actions. The Analog Four path is candidate/manifest-gated; do not run armed Analog Four hardware sends until a readiness report says the plan is ready.

@@ -37,6 +37,7 @@ USAGE = (
     "analog-four-kit-catalog-report <syx-path> [--limit N] [--json] | "
     "analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] "
     "[--events] [--limit N] [--json] | "
+    "analog-four-outbound-candidate-report [--json] | "
     "analog-four-style-kit-readiness-report <syx-path> <style-key> "
     "[--discovery N] [--limit N] [--json] | "
     "dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> "
@@ -912,6 +913,26 @@ Behavior:
   details with --events. It does not read a SysEx file, invoke a mapper, open a
   MIDI port, render real MIDI, or mutate hardware. Use --limit N to cap event
   rows; N=0 displays all rows. Use --json for GUI/analyzer consumers.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _analog_four_outbound_candidate_report_help():
+    from .reports.analog_four_outbound_candidate import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: analog-four-outbound-candidate-report
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-outbound-candidate-report
+  python -m rytm_randomizer.cli analog-four-outbound-candidate-report --json
+  python -m rytm_randomizer.cli analog-four-outbound-candidate-report --help
+
+Behavior:
+  Prints a passive candidate-only Analog Four outbound validation ladder for
+  the manual-backed OSC1 PWM Depth CC row across tracks 1-4. The report shows
+  candidate CC rows, validation gates, blocked active actions, and replay
+  commands without opening ports or sending MIDI.
 
 Safety:
 {_safety_block(SAFETY_LINES)}"""
@@ -2651,6 +2672,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report <syx-path> <style-key> [--slot N] [--discovery N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-kit-catalog-report <syx-path> [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] [--events] [--limit N] [--json]
+  python -m rytm_randomizer.cli analog-four-outbound-candidate-report [--json]
   python -m rytm_randomizer.cli analog-four-style-kit-readiness-report <syx-path> <style-key> [--discovery N] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> <style-key> [--discovery N] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-kit-selection-report <style-key> --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--discovery N] [--limit N] [--json]
@@ -2790,6 +2812,8 @@ Commands:
                      Print passive Analog Four kit catalog metadata for a SysEx file.
   analog-four-oxi-macro-report
                      Print passive Analog Four OXI-style macro preview metadata.
+  analog-four-outbound-candidate-report
+                     Print passive Analog Four outbound candidate validation metadata.
   analog-four-style-kit-readiness-report
                      Print passive Analog Four style readiness for every decoded kit.
   dual-machine-style-kit-readiness-report
@@ -3200,6 +3224,7 @@ Safety:
     ),
     "analog-four-kit-catalog-report": _analog_four_kit_catalog_report_help,
     "analog-four-oxi-macro-report": _analog_four_oxi_macro_report_help,
+    "analog-four-outbound-candidate-report": _analog_four_outbound_candidate_report_help,
     "analog-four-style-kit-readiness-report": _analog_four_style_kit_readiness_report_help,
     "dual-machine-style-kit-readiness-report": _dual_machine_style_kit_readiness_report_help,
     "dual-machine-style-kit-selection-report": _dual_machine_style_kit_selection_report_help,

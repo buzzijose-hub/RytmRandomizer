@@ -22,6 +22,11 @@ from copy import deepcopy
 from typing import Any, Final
 
 from ..cli_registry import CliCommand
+from .analog_four_outbound_candidate import (  # noqa: F401
+    build_analog_four_outbound_candidate_payload,
+    build_analog_four_outbound_candidate_report,
+    format_analog_four_outbound_candidate_report,
+)
 from .formatter import passive_footer_lines, safety_section_lines
 from .oxi_live_macro_catalog import (  # noqa: F401
     build_oxi_live_macro_catalog_payload,
