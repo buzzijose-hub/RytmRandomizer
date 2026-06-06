@@ -196,6 +196,7 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `analog-four-style-mutation-mock-preview-report` | Passive Analog Four mock CC rows (deferred while saved-kit offsets are promoted) |
 | `analog-four-kit-catalog-report` | Passive Analog Four decoded kit catalog |
 | `analog-four-oxi-macro-report` | Passive in-memory Analog Four OXI-style four-track macro preview |
+| `analog-four-oxi-macro-readiness-report` | Passive Analog Four OXI macro readiness and operator-present validation commands |
 | `analog-four-style-kit-readiness-report` | Passive per-kit Analog Four style-readiness sweep |
 
 ```bash
@@ -204,6 +205,7 @@ python -m rytm_randomizer.cli analog-four-style-mutation-intent-report KITS.syx 
 python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report KITS.syx jose_core_techno --slot 0 --discovery 45 --events --limit 24
 python -m rytm_randomizer.cli analog-four-kit-catalog-report KITS.syx --limit 16
 python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove --seed 23 --intensity 6 --events --limit 0
+python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4
 python -m rytm_randomizer.cli analog-four-style-kit-readiness-report KITS.syx jose_core_techno --limit 16
 ```
 
@@ -214,6 +216,11 @@ open a port, render real MIDI, or send anything. Use it to audition macro
 shapes such as `home`, `hard-groove`, `dub-pressure`, and
 `industrial-transition` before promoting any future A4 path into a gated
 hardware plan.
+
+`analog-four-oxi-macro-readiness-report` is the next passive promotion gate. It
+reuses the same deterministic macro rows, marks manual-backed CC rows as
+`cc-ready`, and prints explicit operator-present validation commands. It does
+not arm hardware, open ports, send MIDI, or implement full A4 macro SEND.
 
 ---
 

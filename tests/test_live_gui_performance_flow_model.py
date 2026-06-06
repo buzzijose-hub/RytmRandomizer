@@ -38,6 +38,13 @@ def test_performance_flow_model_exposes_cockpit_steps_and_safety() -> None:
     assert "unattended_hardware_behavior" in model.blocked_actions
     assert "no MIDI sending" in model.safety_lines
     assert "no port opening" in model.safety_lines
+    assert model.analog_four_readiness.readiness == "review-ready"
+    assert (
+        model.analog_four_readiness.command
+        == "python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report "
+        "hard-groove --seed 0 --intensity 4 --limit 4"
+    )
+    assert "a4_outbound_macro_send" in model.analog_four_readiness.blocked_active_actions
 
 
 def test_performance_flow_payload_is_gui_ready_and_json_safe() -> None:
@@ -61,6 +68,12 @@ def test_performance_flow_payload_is_gui_ready_and_json_safe() -> None:
     assert isinstance(flow_payload["blocked_actions"], list)
     assert isinstance(flow_payload["safety_lines"], list)
     assert flow_payload["replay_commands"] == list(model.replay_commands)
+    assert flow_payload["analog_four_readiness"] == {
+        "readiness": "review-ready",
+        "command": model.analog_four_readiness.command,
+        "summary": model.analog_four_readiness.summary,
+        "blocked_active_actions": list(model.analog_four_readiness.blocked_active_actions),
+    }
 
 
 def test_performance_flow_report_is_operator_readable_and_passive() -> None:
@@ -81,6 +94,9 @@ def test_performance_flow_report_is_operator_readable_and_passive() -> None:
     assert "no GUI launch" in text
     assert "no MIDI sending" in text
     assert "no port opening" in text
+    assert "A4 macro readiness:" in text
+    assert "analog-four-oxi-macro-readiness-report hard-groove" in text
+    assert "full macro SEND remains blocked" in text
 
     kit_core_lines = format_live_gui_performance_flow_model_report(
         build_live_gui_performance_flow_model(current_step_key="kit-core")
@@ -106,6 +122,7 @@ def test_performance_flow_cli_text_and_json_modes(capsys: pytest.CaptureFixture[
     assert flow_payload["flow_id"] == "oxi-rytm-a4-performance-flow"
     assert flow_payload["steps"][0]["key"] == "capture-anchor"
     assert "open_midi_port_without_arm" in flow_payload["blocked_actions"]
+    assert flow_payload["analog_four_readiness"]["readiness"] == "review-ready"
 
 
 def test_performance_flow_cli_rejects_unknown_args(

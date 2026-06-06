@@ -63,6 +63,8 @@ USAGE = (
     "analog-four-kit-catalog-report <syx-path> [--limit N] [--json] | "
     "analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] "
     "[--events] [--limit N] [--json] | "
+    "analog-four-oxi-macro-readiness-report [<macro-name>] [--seed N] "
+    "[--intensity N] [--limit N] [--json] | "
     "analog-four-style-kit-readiness-report <syx-path> <style-key> "
     "[--discovery N] [--limit N] [--json] | "
     "dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> "

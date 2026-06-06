@@ -37,6 +37,8 @@ USAGE = (
     "analog-four-kit-catalog-report <syx-path> [--limit N] [--json] | "
     "analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] "
     "[--events] [--limit N] [--json] | "
+    "analog-four-oxi-macro-readiness-report [<macro-name>] [--seed N] "
+    "[--intensity N] [--limit N] [--json] | "
     "analog-four-style-kit-readiness-report <syx-path> <style-key> "
     "[--discovery N] [--limit N] [--json] | "
     "dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> "
@@ -913,6 +915,32 @@ Behavior:
   details with --events. It does not read a SysEx file, invoke a mapper, open a
   MIDI port, render real MIDI, or mutate hardware. Use --limit N to cap event
   rows; N=0 displays all rows. Use --json for GUI/analyzer consumers.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _analog_four_oxi_macro_readiness_report_help():
+    from .reports.analog_four_oxi_macro_readiness import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: analog-four-oxi-macro-readiness-report
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report
+  python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report <macro-name>
+  python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report <macro-name> --seed N
+  python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report <macro-name> --intensity N
+  python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report <macro-name> --limit N
+  python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report <macro-name> --json
+  python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report --help
+
+Behavior:
+  Prints a passive Analog Four OXI macro hardware-readiness report. It reuses
+  the deterministic macro rows from analog-four-oxi-macro-report, annotates
+  each row with the manual-backed CC readiness status, and emits explicit
+  operator-present validation commands for later studio checks. It does not
+  open MIDI ports, send MIDI, execute validation commands, or arm the A4 full
+  macro send path.
 
 Safety:
 {_safety_block(SAFETY_LINES)}"""
@@ -2672,6 +2700,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report <syx-path> <style-key> [--slot N] [--discovery N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-kit-catalog-report <syx-path> [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] [--events] [--limit N] [--json]
+  python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report [<macro-name>] [--seed N] [--intensity N] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-style-kit-readiness-report <syx-path> <style-key> [--discovery N] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> <style-key> [--discovery N] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-kit-selection-report <style-key> --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--discovery N] [--limit N] [--json]
@@ -2812,6 +2841,8 @@ Commands:
                      Print passive Analog Four kit catalog metadata for a SysEx file.
   analog-four-oxi-macro-report
                      Print passive Analog Four OXI-style macro preview metadata.
+  analog-four-oxi-macro-readiness-report
+                     Print passive Analog Four OXI macro hardware-readiness metadata.
   analog-four-style-kit-readiness-report
                      Print passive Analog Four style readiness for every decoded kit.
   dual-machine-style-kit-readiness-report
@@ -3224,6 +3255,7 @@ Safety:
     ),
     "analog-four-kit-catalog-report": _analog_four_kit_catalog_report_help,
     "analog-four-oxi-macro-report": _analog_four_oxi_macro_report_help,
+    "analog-four-oxi-macro-readiness-report": (_analog_four_oxi_macro_readiness_report_help),
     "analog-four-style-kit-readiness-report": _analog_four_style_kit_readiness_report_help,
     "dual-machine-style-kit-readiness-report": _dual_machine_style_kit_readiness_report_help,
     "dual-machine-style-kit-selection-report": _dual_machine_style_kit_selection_report_help,

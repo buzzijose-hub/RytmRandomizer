@@ -451,6 +451,13 @@ export interface LiveGuiPerformanceFlowStepDict {
   status: string;
 }
 
+export interface LiveGuiAnalogFourReadinessDict {
+  readiness: string;
+  command: string;
+  summary: string;
+  blocked_active_actions: ReadonlyArray<string>;
+}
+
 export interface LiveGuiPerformanceFlowModelDict {
   model_version: string;
   source_module: string;
@@ -458,6 +465,7 @@ export interface LiveGuiPerformanceFlowModelDict {
   flow_status: string;
   current_step_key: string;
   steps: ReadonlyArray<LiveGuiPerformanceFlowStepDict>;
+  analog_four_readiness: LiveGuiAnalogFourReadinessDict;
   blocked_actions: ReadonlyArray<string>;
   safety_lines: ReadonlyArray<string>;
   replay_commands: ReadonlyArray<string>;

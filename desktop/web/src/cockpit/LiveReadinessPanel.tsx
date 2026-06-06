@@ -49,6 +49,9 @@ const BLOCKED_ACTIONS = [
 
 const REPLAY_COMMANDS = ['python -m rytm_randomizer.cli live-gui-status-footer-model-report'] as const;
 
+const A4_MACRO_READINESS_COMMAND =
+  'python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4';
+
 export const DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL: LivePerformanceFlowModel = {
   model_version: 'live-gui-performance-flow-model-v1',
   source_module: 'reports.live_gui_performance_flow_model',
@@ -140,11 +143,19 @@ export const DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL: LivePerformanceFlowModel = {
     'open_midi_port_without_arm',
     'send_without_dry_run',
   ],
+  analog_four_readiness: {
+    readiness: 'review-ready',
+    command: A4_MACRO_READINESS_COMMAND,
+    summary:
+      'A4 macro rows are CC-ready for operator-present validation; full macro SEND remains blocked.',
+    blocked_active_actions: ['a4_outbound_macro_send'],
+  },
   safety_lines: PASSIVE_SAFETY,
   replay_commands: [
     'python -m rytm_randomizer.cli live-gui-performance-flow-model-report --json',
     'python -m rytm_randomizer.cli oxi-live-macro-catalog-report',
     'python -m rytm_randomizer.cli analog-four-oxi-macro-report --json',
+    'python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4',
   ],
 };
 
@@ -977,6 +988,19 @@ export function LivePerformanceFlow({ model }: { model: LivePerformanceFlowModel
           </article>
         ))}
       </div>
+      <article className="live-row live-a4-readiness" data-testid="live-a4-macro-readiness">
+        <strong>A4 Macro Readiness</strong>
+        <span>{model.analog_four_readiness.readiness}</span>
+        <small>{model.analog_four_readiness.summary}</small>
+        <span>{model.analog_four_readiness.command}</span>
+        <div className="live-chip-row">
+          {model.analog_four_readiness.blocked_active_actions.map((action) => (
+            <span key={action} className="live-chip live-chip-blocked">
+              {action}
+            </span>
+          ))}
+        </div>
+      </article>
       <div className="live-chip-row">
         {model.blocked_actions.map((action) => (
           <span key={action} className="live-chip live-chip-blocked">

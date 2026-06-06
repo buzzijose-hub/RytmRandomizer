@@ -22,6 +22,15 @@ Last updated: 2026-06-06. This file is a hand-authored snapshot and is meant to 
   removing the oversized reports `__init__.py` grandfather entry. Passive/report
   infrastructure only: no port opening, no MIDI send, no hardware mutation, and
   no V1.34 parity change.
+- 2026-06-06: Post-#158 OXI/A4 readiness work prepared locally while PR #158
+  remained review-blocked. Added the passive
+  `analog-four-oxi-macro-readiness-report` command, which reuses the existing
+  deterministic A4 OXI macro rows, labels each row as manual-backed `cc-ready`,
+  emits explicit operator-present `--a4-send-param` validation commands, and
+  keeps full A4 macro SEND blocked. The live GUI performance-flow model and
+  cockpit readiness panel now expose the A4 readiness state and replay command
+  as passive metadata. Safety remains unchanged: no GUI launch, no port
+  opening, no MIDI send, no hardware mutation, and no unattended A4 behavior.
 - 2026-06-05: Wired the Claude Code post-push code-review hook (and fixed the
   "settings file failed to parse / expected string, received object" error).
   Added `scripts/code_review_gate.py --mode claude-hook` — it reads the
