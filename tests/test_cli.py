@@ -3000,7 +3000,10 @@ def test_unknown_style_crates_queue_journal_arguments_fail_safely():
 
     assert result.returncode == 2
     assert result.stdout == ""
-    assert normalize_newlines(result.stderr) == USAGE
+    assert (
+        normalize_newlines(result.stderr)
+        == "Error: style-crates-queue-journal-report accepts only optional --json"
+    )
 
 
 def test_missing_inspect_style_profile_key_fails_safely():

@@ -7,6 +7,7 @@ import pytest
 pytestmark = pytest.mark.fast
 
 from rytm_randomizer.reports.rytm_snapshot_pad_compatibility import (
+    RYTM_SNAPSHOT_PAD_COMPATIBILITY_CLI_COMMAND,
     build_rytm_snapshot_pad_compatibility_report,
     format_rytm_snapshot_pad_compatibility_report,
 )
@@ -67,22 +68,16 @@ def test_format_report_is_passive_and_operator_facing() -> None:
 
 
 def test_parse_cli_args_accepts_empty_argv() -> None:
-    from rytm_randomizer.reports import rytm_snapshot_pad_compatibility as report_mod
-
-    assert report_mod._parse_cli_args(()) == {}
+    assert RYTM_SNAPSHOT_PAD_COMPATIBILITY_CLI_COMMAND.args_parser(()) == {}
 
 
 def test_parse_cli_args_rejects_extra_args() -> None:
-    from rytm_randomizer.reports import rytm_snapshot_pad_compatibility as report_mod
-
-    with pytest.raises(ValueError, match="takes no arguments"):
-        report_mod._parse_cli_args(("extra",))
+    with pytest.raises(ValueError, match="does not accept arguments"):
+        RYTM_SNAPSHOT_PAD_COMPATIBILITY_CLI_COMMAND.args_parser(("extra",))
 
 
 def test_handle_cli_report_writes_report(capsys: pytest.CaptureFixture[str]) -> None:
-    from rytm_randomizer.reports import rytm_snapshot_pad_compatibility as report_mod
-
-    result = report_mod._handle_cli_report()
+    result = RYTM_SNAPSHOT_PAD_COMPATIBILITY_CLI_COMMAND.handler()
     captured = capsys.readouterr()
 
     assert result == 0

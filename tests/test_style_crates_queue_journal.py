@@ -359,6 +359,6 @@ def test_style_crates_report_lookup_errors_and_json_handler_edge(capsys) -> None
     with pytest.raises(KeyError, match="unknown move"):
         report_module._move_by_key(crate, "missing")
 
-    assert report_module._handle_style_crates_queue_journal_report(json_output=True) == 0
+    assert report_module.STYLE_CRATES_QUEUE_JOURNAL_CLI_COMMAND.handler(json_output=True) == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["style_crates_queue_journal"]["journal_entry_count"] == 2

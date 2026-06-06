@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final
 
-from ..cli_registry import CliCommand, register
+from ..cli_registry import CliCommand, make_passive_report_command, register
 from ..data.rytm_machine_catalog import (
     RYTM_MACHINE_PROFILES,
     RYTM_PAD_CAPABILITIES,
@@ -111,23 +110,12 @@ def format_rytm_machine_matrix_report(
     return passive_report_lines(_HEADER, _body_lines(source_report))
 
 
-def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
-    if argv:
-        raise ValueError("rytm-12-pad-machine-matrix-report takes no arguments")
-    return {}
-
-
-def _handle_cli_report() -> int:
-    sys.stdout.write("\n".join(format_rytm_machine_matrix_report()))
-    sys.stdout.write("\n")
-    return 0
-
-
-RYTM_MACHINE_MATRIX_CLI_COMMAND: Final[CliCommand] = CliCommand(
-    name="rytm-12-pad-machine-matrix-report",
-    summary="Print the passive Rytm 12-pad machine matrix report.",
-    args_parser=_parse_cli_args,
-    handler=_handle_cli_report,
+RYTM_MACHINE_MATRIX_CLI_COMMAND: Final[CliCommand] = make_passive_report_command(
+    "rytm-12-pad-machine-matrix-report",
+    "Print the passive Rytm 12-pad machine matrix report.",
+    format_lines=format_rytm_machine_matrix_report,
+    json_flag=False,
+    error_formatter=None,
 )
 
 register(RYTM_MACHINE_MATRIX_CLI_COMMAND)

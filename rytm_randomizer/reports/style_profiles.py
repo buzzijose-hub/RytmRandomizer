@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final
 
-from ..cli_registry import CliCommand, register
+from ..cli_registry import CliCommand, make_passive_report_command, register
 from ..data.style_profiles import STYLE_PROFILES, StyleProfile, StyleProfileScores
 from .formatter import SAFETY_SECTION_HEADER, PassiveReportHeader, passive_report_lines
 
@@ -202,12 +202,6 @@ def format_style_profile_search(query: str) -> list[str]:
     return passive_report_lines(_SEARCH_HEADER, lines)
 
 
-def _parse_no_args(argv: Sequence[str]) -> dict[str, object]:
-    if argv:
-        raise ValueError("command takes no arguments")
-    return {}
-
-
 def _parse_key(argv: Sequence[str]) -> dict[str, object]:
     if len(argv) != 1:
         raise ValueError("command requires exactly one key")
@@ -226,14 +220,6 @@ def _write_lines(lines: Sequence[str]) -> int:
     return 0
 
 
-def _handle_style_profile_report() -> int:
-    return _write_lines(format_style_profile_report())
-
-
-def _handle_style_profile_list() -> int:
-    return _write_lines(format_style_profile_list())
-
-
 def _handle_style_profile_inspection(key: str) -> int:
     lines = format_style_profile_inspection(key)
     output = "\n".join(lines)
@@ -248,17 +234,19 @@ def _handle_style_profile_search(query: str) -> int:
     return _write_lines(format_style_profile_search(query))
 
 
-STYLE_PROFILE_REPORT_CLI_COMMAND: Final[CliCommand] = CliCommand(
-    name="style-profile-report",
-    summary="Print the passive style profile report.",
-    args_parser=_parse_no_args,
-    handler=_handle_style_profile_report,
+STYLE_PROFILE_REPORT_CLI_COMMAND: Final[CliCommand] = make_passive_report_command(
+    "style-profile-report",
+    "Print the passive style profile report.",
+    format_lines=format_style_profile_report,
+    json_flag=False,
+    error_formatter=None,
 )
-LIST_STYLE_PROFILES_CLI_COMMAND: Final[CliCommand] = CliCommand(
-    name="list-style-profiles",
-    summary="List passive style profile keys and names.",
-    args_parser=_parse_no_args,
-    handler=_handle_style_profile_list,
+LIST_STYLE_PROFILES_CLI_COMMAND: Final[CliCommand] = make_passive_report_command(
+    "list-style-profiles",
+    "List passive style profile keys and names.",
+    format_lines=format_style_profile_list,
+    json_flag=False,
+    error_formatter=None,
 )
 INSPECT_STYLE_PROFILE_CLI_COMMAND: Final[CliCommand] = CliCommand(
     name="inspect-style-profile",

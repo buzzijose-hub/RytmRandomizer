@@ -370,7 +370,7 @@ def test_cli_command_prints_text_json_and_rejects_unexpected_arguments() -> None
 
     assert bad_result.returncode == 2
     assert bad_result.stdout == ""
-    assert "oxi-live-set-strategy-report usage: [--json]" in bad_result.stderr
+    assert "oxi-live-set-strategy-report accepts only optional --json" in bad_result.stderr
 
 
 def test_cli_command_object_uses_shared_passive_report_factory_paths(capsys) -> None:
@@ -380,7 +380,9 @@ def test_cli_command_object_uses_shared_passive_report_factory_paths(capsys) -> 
 
     assert OXI_LIVE_SET_STRATEGY_CLI_COMMAND.args_parser([]) == {"json_output": False}
     assert OXI_LIVE_SET_STRATEGY_CLI_COMMAND.args_parser(["--json"]) == {"json_output": True}
-    with pytest.raises(ValueError, match="oxi-live-set-strategy-report usage"):
+    with pytest.raises(
+        ValueError, match="oxi-live-set-strategy-report accepts only optional --json"
+    ):
         OXI_LIVE_SET_STRATEGY_CLI_COMMAND.args_parser(["--arm"])
 
     assert OXI_LIVE_SET_STRATEGY_CLI_COMMAND.handler(json_output=False) == 0

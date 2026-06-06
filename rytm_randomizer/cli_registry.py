@@ -193,6 +193,10 @@ class CliCommand:
 _COMMANDS: dict[str, CliCommand] = {}
 
 
+def _format_passive_report_error(exc: Exception) -> str:
+    return f"Error: {exc}"
+
+
 def register(command: CliCommand) -> None:
     """Register ``command`` under its ``name`` key.
 
@@ -293,8 +297,10 @@ def make_passive_report_command(
     summary: str,
     *,
     format_lines: Callable[[], Sequence[str]],
-    build_payload: Callable[[], Mapping[str, object]],
+    build_payload: Callable[[], Mapping[str, object]] | None = None,
     json_flag: bool = True,
+    json_indent: int | None = 2,
+    error_formatter: Callable[[Exception], str] | None = _format_passive_report_error,
 ) -> CliCommand:
     """Return a ``CliCommand`` for a no-input passive text/JSON report.
 
@@ -304,21 +310,23 @@ def make_passive_report_command(
     failures as ``Error: <message>``.
     """
 
-    usage = f"{name} usage: [--json]" if json_flag else f"{name} usage: no arguments"
-
     def _parse_args(argv: Sequence[str]) -> dict[str, Any]:
         if not argv:
             return {"json_output": False} if json_flag else {}
         if json_flag and list(argv) == ["--json"]:
             return {"json_output": True}
-        raise ValueError(usage)
+        if json_flag:
+            raise ValueError(f"{name} accepts only optional --json")
+        raise ValueError(f"{name} does not accept arguments")
 
     def _handle_report(*, json_output: bool = False) -> int:
         if json_output:
+            if build_payload is None:
+                raise ValueError(f"{name} does not provide JSON output")
             sys.stdout.write(
                 json.dumps(
                     build_payload(),
-                    indent=2,
+                    indent=json_indent,
                     sort_keys=True,
                 )
             )
@@ -328,15 +336,12 @@ def make_passive_report_command(
         sys.stdout.write("\n")
         return 0
 
-    def _format_error(exc: Exception) -> str:
-        return f"Error: {exc}"
-
     return CliCommand(
         name=name,
         summary=summary,
         args_parser=_parse_args,
         handler=_handle_report,
-        error_formatter=_format_error,
+        error_formatter=error_formatter,
     )
 
 

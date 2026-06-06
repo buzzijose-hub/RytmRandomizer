@@ -97,17 +97,7 @@ _MAX_REPORT_MODULE_LOC: Final[int] = 1500
 #
 # Filenames are paths relative to ``rytm_randomizer/reports/`` so the
 # allowlist survives directory moves without losing fidelity.
-_GRANDFATHERED_OVERSIZED_REPORTS: Final[frozenset[str]] = frozenset(
-    {
-        # The reports package __init__.py is the consolidated registry
-        # of every report builder + a generic dispatcher. It carries a
-        # lot of small adapters and lazy-imported builders for every
-        # *_report.py shim module. Splitting it is a separate concern
-        # (CODE_REVIEW.md PR 12+) and out of scope for the PR that
-        # introduces this gate.
-        "__init__.py",
-    }
-)
+_GRANDFATHERED_OVERSIZED_REPORTS: Final[frozenset[str]] = frozenset()
 
 
 def _iter_reports_python_files() -> list[Path]:
@@ -230,8 +220,8 @@ def test_no_new_oversized_reports_modules() -> None:
 
     Concretely, this test enforces the rule that the allowlist is
     frozen at the size it had when the gate was installed
-    (2026-05-25 — exactly one entry, the consolidated reports
-    ``__init__.py``). Any new entry must include a documented
+    (2026-06-06 — no entries remain after the passive report command
+    factory migration). Any new entry must include a documented
     justification in the PR body explaining why a split is not
     possible in that PR.
     """
@@ -239,7 +229,7 @@ def test_no_new_oversized_reports_modules() -> None:
     # The frozen-floor expectation — bump this only after explicit
     # discussion in the PR body and a corresponding allowlist entry
     # justification.
-    _EXPECTED_GRANDFATHERED_MAX_SIZE = 1
+    _EXPECTED_GRANDFATHERED_MAX_SIZE = 0
     assert len(_GRANDFATHERED_OVERSIZED_REPORTS) <= _EXPECTED_GRANDFATHERED_MAX_SIZE, (
         "Grandfathered allowlist has grown beyond the frozen floor of "
         f"{_EXPECTED_GRANDFATHERED_MAX_SIZE} entry. New oversized "

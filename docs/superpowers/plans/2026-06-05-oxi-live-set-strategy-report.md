@@ -30,6 +30,40 @@ Add a passive, deterministic report that turns the merged OXI-style macro vocabu
 
 This uses the existing passive report pattern: frozen dataclasses, JSON-ready payload builder, deterministic formatter, and `cli_registry.CliCommand`. The report consumes the already-merged OXI macro vocabulary conceptually rather than duplicating active shell behavior or renderer code.
 
+## Review Follow-Up: Passive Report Command Factory
+
+PR review asked for the existing canonical passive report commands to use the shared command factory where their parser shape is simple. This follow-up migrates the commands that fit one of these two shapes:
+
+- no arguments:
+  `mock-mapper-report`, `runtime-plan-report`, `active-boundary-report`,
+  `analog-rytm-midi-catalog-report`, `oxi-live-macro-catalog-report`,
+  `rytm-12-pad-machine-matrix-report`,
+  `rytm-snapshot-pad-compatibility-report`, `style-profile-report`,
+  `list-style-profiles`, `style-target-report`,
+  `style-performance-arc-report`, and `list-style-performance-arcs`
+- optional `--json` only:
+  `style-crates-queue-journal-report`,
+  `live-gui-performance-flow-model-report`, and
+  `oxi-live-set-strategy-report`
+
+The factory now carries the canonical parse errors:
+
+- `"{name} accepts only optional --json"` for optional-JSON reports
+- `"{name} does not accept arguments"` for no-arg reports
+
+The following command groups intentionally remain bespoke because they accept real operands or options and are not a canonical no-arg / optional-JSON report:
+
+- style profile inspection/search: key/query operands
+- style target inspection: key operand
+- style performance arc inspect/search and arc packet/build reports: arc keys, cue/lookahead/rank/limit/events/label options
+- style crate rehearsal deck: crate filters plus JSON behavior
+- reference style blueprint: mutually exclusive description/audio/library inputs
+- snapshot and SysEx reports: file paths, slots, discovery windows, event flags, limits, style keys, or dual-machine kit paths
+- Analog Four OXI macro report: macro key, seed/intensity/events/limit controls
+- live GUI/cockpit report builders with viewport, density, label, sizing, output path, signing, or overwrite options
+
+The abstraction ratchets were updated to prove this migration: duplicated `_parse_cli_args`, `_handle_cli_report`, and `_parse_no_args` allowlists shrank, and the oversized reports `__init__.py` grandfather entry was removed.
+
 ## Workstream Graph
 
 | Workstream | Dependency | Files Owned |
@@ -41,9 +75,11 @@ This uses the existing passive report pattern: frozen dataclasses, JSON-ready pa
 
 - `python -m pytest tests/test_oxi_live_set_strategy_report.py -q`
 - `python -m pytest tests/test_oxi_live_set_strategy_report.py --cov=rytm_randomizer.reports.oxi_live_set_strategy --cov-branch --cov-fail-under=100 --cov-report=term-missing -q`
+- `python -m pytest tests/test_cli_registry.py --cov=rytm_randomizer.cli_registry --cov-branch --cov-report=term-missing --cov-fail-under=100 -q`
 - `python -m pytest tests/test_cli.py::test_top_level_help_exits_zero_and_matches_fixture -q`
 - `python -m pytest tests/test_real_midi_passive_cli_safety.py tests/architecture/test_cli_no_inline_arms.py -q`
 - `python -m pytest tests/architecture/ -q`
+- `python -m pytest`
 - `python -m pytest -m fast`
 - `python -m ruff check .`
 - `python -m black --check --target-version=py311 .`

@@ -343,6 +343,24 @@ def test_make_passive_report_command_writes_sorted_json_when_json_flag(capsys) -
     assert captured.err == ""
 
 
+def test_make_passive_report_command_can_write_compact_json(capsys) -> None:
+    from rytm_randomizer.cli_registry import make_passive_report_command
+
+    command = make_passive_report_command(
+        "compact-report",
+        "compact passive report",
+        format_lines=lambda: ("unused",),
+        build_payload=lambda: {"z": 2, "a": True},
+        json_indent=None,
+    )
+
+    assert command.handler(**command.args_parser(["--json"])) == 0
+
+    captured = capsys.readouterr()
+    assert captured.out == '{"a": true, "z": 2}\n'
+    assert captured.err == ""
+
+
 def test_make_passive_report_command_rejects_unexpected_args_and_formats_error() -> None:
     from rytm_randomizer.cli_registry import make_passive_report_command
 
@@ -353,12 +371,12 @@ def test_make_passive_report_command_rejects_unexpected_args_and_formats_error()
         build_payload=lambda: {"demo": True},
     )
 
-    with pytest.raises(ValueError, match=r"demo-report usage: \[--json\]"):
+    with pytest.raises(ValueError, match="demo-report accepts only optional --json"):
         command.args_parser(["--arm"])
 
     assert command.error_formatter is not None
-    assert command.error_formatter(ValueError("demo-report usage: [--json]")) == (
-        "Error: demo-report usage: [--json]"
+    assert command.error_formatter(ValueError("demo-report accepts only optional --json")) == (
+        "Error: demo-report accepts only optional --json"
     )
 
 
@@ -369,18 +387,44 @@ def test_make_passive_report_command_can_disable_json_flag(capsys) -> None:
         "plain-report",
         "plain passive report",
         format_lines=lambda: ("plain",),
-        build_payload=lambda: {"unused": True},
         json_flag=False,
     )
 
     assert command.args_parser([]) == {}
     assert command.handler() == 0
-    with pytest.raises(ValueError, match="plain-report usage: no arguments"):
+    with pytest.raises(ValueError, match="plain-report does not accept arguments"):
         command.args_parser(["--json"])
 
     captured = capsys.readouterr()
     assert captured.out == "plain\n"
     assert captured.err == ""
+
+
+def test_make_passive_report_command_can_preserve_default_dispatch_error() -> None:
+    from rytm_randomizer.cli_registry import make_passive_report_command
+
+    command = make_passive_report_command(
+        "legacy-report",
+        "legacy passive report",
+        format_lines=lambda: ("legacy",),
+        json_flag=False,
+        error_formatter=None,
+    )
+
+    assert command.error_formatter is None
+
+
+def test_make_passive_report_command_rejects_json_without_payload() -> None:
+    from rytm_randomizer.cli_registry import make_passive_report_command
+
+    command = make_passive_report_command(
+        "payloadless-report",
+        "payloadless passive report",
+        format_lines=lambda: ("payloadless",),
+    )
+
+    with pytest.raises(ValueError, match="payloadless-report does not provide JSON output"):
+        command.handler(**command.args_parser(["--json"]))
 
 
 # ---------------------------------------------------------------------------

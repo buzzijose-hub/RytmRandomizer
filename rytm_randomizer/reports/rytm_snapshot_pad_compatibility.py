@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final
 
-from ..cli_registry import CliCommand, register
+from ..cli_registry import CliCommand, make_passive_report_command, register
 from ..data.rytm_machine_catalog import (
     MACHINE_SELECTABLE,
     MUTABLE_V134,
@@ -154,23 +153,12 @@ def format_rytm_snapshot_pad_compatibility_report(
     return passive_report_lines(_HEADER, _body_lines(source_report))
 
 
-def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
-    if argv:
-        raise ValueError("rytm-snapshot-pad-compatibility-report takes no arguments")
-    return {}
-
-
-def _handle_cli_report() -> int:
-    sys.stdout.write("\n".join(format_rytm_snapshot_pad_compatibility_report()))
-    sys.stdout.write("\n")
-    return 0
-
-
-RYTM_SNAPSHOT_PAD_COMPATIBILITY_CLI_COMMAND: Final[CliCommand] = CliCommand(
-    name="rytm-snapshot-pad-compatibility-report",
-    summary="Print the passive Rytm snapshot-pad compatibility report.",
-    args_parser=_parse_cli_args,
-    handler=_handle_cli_report,
+RYTM_SNAPSHOT_PAD_COMPATIBILITY_CLI_COMMAND: Final[CliCommand] = make_passive_report_command(
+    "rytm-snapshot-pad-compatibility-report",
+    "Print the passive Rytm snapshot-pad compatibility report.",
+    format_lines=format_rytm_snapshot_pad_compatibility_report,
+    json_flag=False,
+    error_formatter=None,
 )
 
 register(RYTM_SNAPSHOT_PAD_COMPATIBILITY_CLI_COMMAND)

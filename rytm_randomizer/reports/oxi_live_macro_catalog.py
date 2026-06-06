@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Final
 
-from ..cli_registry import CliCommand, register
+from ..cli_registry import CliCommand, make_passive_report_command, register
 from ..engines.analog_rytm_snapshot_macros import SNAPSHOT_LIVE_MACROS
 
 REPORT_TITLE: Final[str] = "RytmRandomizer OXI live macro catalog"
@@ -224,24 +223,14 @@ def build_oxi_live_macro_catalog_payload() -> dict[str, object]:
     }
 
 
-def _parse_oxi_live_macro_catalog_args(args: Sequence[str]) -> dict[str, object]:
-    if args:
-        raise ValueError("oxi-live-macro-catalog-report does not accept arguments")
-    return {}
-
-
-def _handle_oxi_live_macro_catalog_report() -> int:
-    report = build_oxi_live_macro_catalog_report()
-    sys.stdout.write("\n".join(format_oxi_live_macro_catalog_report(report)))
-    sys.stdout.write("\n")
-    return 0
-
-
-OXI_LIVE_MACRO_CATALOG_CLI_COMMAND: Final[CliCommand] = CliCommand(
-    name="oxi-live-macro-catalog-report",
-    summary="Print the passive OXI live macro catalog and candidate-only A4 runway.",
-    args_parser=_parse_oxi_live_macro_catalog_args,
-    handler=_handle_oxi_live_macro_catalog_report,
+OXI_LIVE_MACRO_CATALOG_CLI_COMMAND: Final[CliCommand] = make_passive_report_command(
+    "oxi-live-macro-catalog-report",
+    "Print the passive OXI live macro catalog and candidate-only A4 runway.",
+    format_lines=lambda: format_oxi_live_macro_catalog_report(
+        build_oxi_live_macro_catalog_report()
+    ),
+    json_flag=False,
+    error_formatter=None,
 )
 
 register(OXI_LIVE_MACRO_CATALOG_CLI_COMMAND)
