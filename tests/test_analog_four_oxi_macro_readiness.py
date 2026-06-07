@@ -50,6 +50,10 @@ def test_a4_macro_readiness_defaults_to_passive_cc_ready_rows() -> None:
     assert report.sends_midi is False
     assert report.hardware_required is False
     assert report.operator_present_required is True
+    assert report.preflight_command == ("python -m rytm_randomizer.app --arm --a4-soft-capture")
+    assert report.validation_steps[0] == "Run the input-only A4 soft capture first."
+    assert "Stop immediately if the A4 display shows ERR" in report.recovery_notes
+    assert "At least one operator-present validation pass is clean" in report.promotion_gates
     assert report.ready_count == len(report.events)
     assert report.review_count == 0
     assert report.blocked_count == 0
@@ -79,6 +83,9 @@ def test_a4_macro_readiness_format_and_json_are_deterministic() -> None:
     assert "Readiness: review-ready" in text
     assert "Shown events: 2" in text
     assert "Validation commands:" in text
+    assert "Validation workflow:" in text
+    assert "- Preflight: python -m rytm_randomizer.app --arm --a4-soft-capture" in text
+    assert "Promotion gates:" in text
     assert "A4 full macro SEND remains unimplemented" in text
     assert "Source: rytm_randomizer.reports.analog_four_oxi_macro_readiness" in text
     assert "In-memory only: True" in text
@@ -87,6 +94,10 @@ def test_a4_macro_readiness_format_and_json_are_deterministic() -> None:
     assert payload["shown_count"] == 2
     assert payload["truncated_count"] == report.event_count - 2
     assert payload["events"][0]["status"] == "cc-ready"
+    assert payload["preflight_command"] == ("python -m rytm_randomizer.app --arm --a4-soft-capture")
+    assert payload["validation_steps"][0] == "Run the input-only A4 soft capture first."
+    assert "Do not run full A4 macro SEND from this report." in payload["recovery_notes"]
+    assert "Every row maps to manual-backed CC metadata" in payload["promotion_gates"]
     assert json.dumps(payload, sort_keys=True) == json.dumps(
         build_analog_four_oxi_macro_readiness_payload(report, event_limit=2),
         sort_keys=True,
@@ -166,6 +177,7 @@ def test_a4_macro_readiness_cli_json_mode(capsys: pytest.CaptureFixture[str]) ->
     assert payload["shown_count"] == 2
     assert payload["opens_ports"] is False
     assert payload["sends_midi"] is False
+    assert payload["promotion_gates"][-1] == "A recovery/stop procedure is documented."
 
 
 def test_a4_macro_readiness_cli_rejects_bad_args() -> None:

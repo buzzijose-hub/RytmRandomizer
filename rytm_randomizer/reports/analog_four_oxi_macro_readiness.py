@@ -22,6 +22,7 @@ ReportReadiness = Literal["review-ready", "needs-review", "blocked"]
 
 REPORT_TITLE: Final[str] = "RytmRandomizer passive Analog Four OXI macro readiness"
 SOURCE_MODULE: Final[str] = "reports.analog_four_oxi_macro_readiness"
+PREFLIGHT_COMMAND: Final[str] = "python -m rytm_randomizer.app --arm --a4-soft-capture"
 SAFETY_LINES: Final[tuple[str, ...]] = (
     "passive/read-only",
     "manual-backed Analog Four CC metadata only",
@@ -30,6 +31,22 @@ SAFETY_LINES: Final[tuple[str, ...]] = (
     "no port opening",
     "no unattended hardware behavior",
     "A4 full macro SEND remains unimplemented",
+)
+VALIDATION_STEPS: Final[tuple[str, ...]] = (
+    "Run the input-only A4 soft capture first.",
+    "Review known and unknown controls before sending one row.",
+    "Send one validation command while watching the A4 display.",
+    "Repeat only rows that remain musical and reversible.",
+)
+RECOVERY_NOTES: Final[tuple[str, ...]] = (
+    "Stop immediately if the A4 display shows ERR",
+    "Do not run full A4 macro SEND from this report.",
+    "Return the A4 kit manually or reload the saved kit before continuing.",
+)
+PROMOTION_GATES: Final[tuple[str, ...]] = (
+    "Every row maps to manual-backed CC metadata",
+    "At least one operator-present validation pass is clean",
+    "A recovery/stop procedure is documented.",
 )
 _HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
     title=REPORT_TITLE,
@@ -76,6 +93,10 @@ class AnalogFourOxiMacroReadinessReport:
     sends_midi: bool
     hardware_required: bool
     operator_present_required: bool
+    preflight_command: str
+    validation_steps: tuple[str, ...]
+    recovery_notes: tuple[str, ...]
+    promotion_gates: tuple[str, ...]
 
 
 def _validate_event_limit(event_limit: int) -> None:
@@ -160,6 +181,10 @@ def build_analog_four_oxi_macro_readiness_report(
         sends_midi=False,
         hardware_required=False,
         operator_present_required=True,
+        preflight_command=PREFLIGHT_COMMAND,
+        validation_steps=VALIDATION_STEPS,
+        recovery_notes=RECOVERY_NOTES,
+        promotion_gates=PROMOTION_GATES,
     )
 
 
@@ -193,11 +218,18 @@ def _a4_macro_readiness_body_lines(
         f"- sends_midi: {report.sends_midi}",
         f"- hardware_required: {report.hardware_required}",
         f"- operator_present_required: {report.operator_present_required}",
+        "Validation workflow:",
+        f"- Preflight: {report.preflight_command}",
+        *[f"- {step}" for step in report.validation_steps],
         "Readiness events:",
     ]
     lines.extend(_event_line(event) for event in visible_events)
     lines.append("Validation commands:")
     lines.extend(f"- {event.validation_command}" for event in visible_events)
+    lines.append("Recovery notes:")
+    lines.extend(f"- {note}" for note in report.recovery_notes)
+    lines.append("Promotion gates:")
+    lines.extend(f"- {gate}" for gate in report.promotion_gates)
     lines.append(SAFETY_SECTION_HEADER)
     lines.extend(f"- {line}" for line in SAFETY_LINES)
     return lines
@@ -261,6 +293,10 @@ def build_analog_four_oxi_macro_readiness_payload(
         "sends_midi": report.sends_midi,
         "hardware_required": report.hardware_required,
         "operator_present_required": report.operator_present_required,
+        "preflight_command": report.preflight_command,
+        "validation_steps": list(report.validation_steps),
+        "recovery_notes": list(report.recovery_notes),
+        "promotion_gates": list(report.promotion_gates),
         "events": [_a4_macro_readiness_event_json(event) for event in visible_events],
         "safety": list(SAFETY_LINES),
     }
@@ -390,9 +426,13 @@ __all__ = [
     "ANALOG_FOUR_OXI_MACRO_READINESS_CLI_COMMAND",
     "AnalogFourOxiMacroReadinessEvent",
     "AnalogFourOxiMacroReadinessReport",
+    "PREFLIGHT_COMMAND",
+    "PROMOTION_GATES",
     "REPORT_TITLE",
+    "RECOVERY_NOTES",
     "SAFETY_LINES",
     "SOURCE_MODULE",
+    "VALIDATION_STEPS",
     "build_analog_four_oxi_macro_readiness_payload",
     "build_analog_four_oxi_macro_readiness_report",
     "format_analog_four_oxi_macro_readiness_report",

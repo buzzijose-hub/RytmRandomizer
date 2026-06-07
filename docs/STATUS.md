@@ -26,8 +26,9 @@ Last updated: 2026-06-06. This file is a hand-authored snapshot and is meant to 
   remained review-blocked. Added the passive
   `analog-four-oxi-macro-readiness-report` command, which reuses the existing
   deterministic A4 OXI macro rows, labels each row as manual-backed `cc-ready`,
-  emits explicit operator-present `--a4-send-param` validation commands, and
-  keeps full A4 macro SEND blocked. The live GUI performance-flow model and
+  emits an input-only `--a4-soft-capture` preflight, explicit operator-present
+  `--a4-send-param` validation commands, stop/recovery notes, promotion gates,
+  and keeps full A4 macro SEND blocked. The live GUI performance-flow model and
   cockpit readiness panel now expose the A4 readiness state and replay command
   as passive metadata. Safety remains unchanged: no GUI launch, no port
   opening, no MIDI send, no hardware mutation, and no unattended A4 behavior.

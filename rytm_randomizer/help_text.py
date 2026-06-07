@@ -921,7 +921,10 @@ Safety:
 
 
 def _analog_four_oxi_macro_readiness_report_help():
-    from .reports.analog_four_oxi_macro_readiness import SAFETY_LINES
+    from .reports.analog_four_oxi_macro_readiness import (
+        PREFLIGHT_COMMAND,
+        SAFETY_LINES,
+    )
 
     return f"""RytmRandomizer passive CLI: analog-four-oxi-macro-readiness-report
 
@@ -938,7 +941,11 @@ Behavior:
   Prints a passive Analog Four OXI macro hardware-readiness report. It reuses
   the deterministic macro rows from analog-four-oxi-macro-report, annotates
   each row with the manual-backed CC readiness status, and emits explicit
-  operator-present validation commands for later studio checks. It does not
+  operator-present validation commands for later studio checks. Run the
+  input-only soft-capture preflight first:
+  {PREFLIGHT_COMMAND}
+
+  The report also prints stop/recovery notes and promotion gates. It does not
   open MIDI ports, send MIDI, execute validation commands, or arm the A4 full
   macro send path.
 

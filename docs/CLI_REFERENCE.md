@@ -196,7 +196,7 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `analog-four-style-mutation-mock-preview-report` | Passive Analog Four mock CC rows (deferred while saved-kit offsets are promoted) |
 | `analog-four-kit-catalog-report` | Passive Analog Four decoded kit catalog |
 | `analog-four-oxi-macro-report` | Passive in-memory Analog Four OXI-style four-track macro preview |
-| `analog-four-oxi-macro-readiness-report` | Passive Analog Four OXI macro readiness and operator-present validation commands |
+| `analog-four-oxi-macro-readiness-report` | Passive Analog Four OXI macro readiness, soft-capture preflight, and operator-present validation commands |
 | `analog-four-style-kit-readiness-report` | Passive per-kit Analog Four style-readiness sweep |
 
 ```bash
@@ -219,8 +219,10 @@ hardware plan.
 
 `analog-four-oxi-macro-readiness-report` is the next passive promotion gate. It
 reuses the same deterministic macro rows, marks manual-backed CC rows as
-`cc-ready`, and prints explicit operator-present validation commands. It does
-not arm hardware, open ports, send MIDI, or implement full A4 macro SEND.
+`cc-ready`, and prints an input-only soft-capture preflight command, explicit
+operator-present validation commands, stop/recovery notes, and promotion gates.
+It does not arm hardware, open ports, send MIDI, or implement full A4 macro
+SEND.
 
 ---
 
