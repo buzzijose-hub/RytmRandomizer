@@ -73,6 +73,7 @@ USAGE = (
     "style-profile-report | style-crates-queue-journal-report [--json] | "
     "style-crate-rehearsal-deck-report [--crate <key>] [--json] | "
     "oxi-live-macro-catalog-report | "
+    "rytm-live-macro-hardware-rehearsal-report [--json] | "
     "live-gui-performance-flow-model-report [--json] | "
     "oxi-live-set-strategy-report [--json] | "
     "reference-style-blueprint-report "
@@ -1254,6 +1255,26 @@ Safety:
   no command execution
   no hardware mutation
   no hardware required"""
+
+
+def _rytm_live_macro_hardware_rehearsal_report_help():
+    return """RytmRandomizer passive CLI: rytm-live-macro-hardware-rehearsal-report
+
+Usage:
+  python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report
+  python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report --json
+  python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report --help
+
+Behavior:
+  Prints a passive operator rehearsal packet for the next Rytm macro hardware
+  session. It gives the armed shell launch command, macro-by-macro checks,
+  Pad 5/9/10/11 and Pad 6-8 lane notes, and recovery checkpoints.
+
+Safety:
+  passive/read-only report
+  does not open MIDI ports
+  does not send MIDI
+  operator must run the armed shell manually"""
 
 
 def _live_gui_performance_flow_model_report_help():
@@ -2722,6 +2743,7 @@ Usage:
   python -m rytm_randomizer.cli style-crates-queue-journal-report [--json]
   python -m rytm_randomizer.cli style-crate-rehearsal-deck-report [--crate <key>] [--json]
   python -m rytm_randomizer.cli oxi-live-macro-catalog-report
+  python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report [--json]
   python -m rytm_randomizer.cli live-gui-performance-flow-model-report [--json]
   python -m rytm_randomizer.cli oxi-live-set-strategy-report [--json]
   python -m rytm_randomizer.cli reference-style-blueprint-report (--description <text>|--audio <path>|--library <dir>) [--json]
@@ -2878,6 +2900,8 @@ Commands:
                      Print passive GUI-ready style crate rehearsal cards.
   oxi-live-macro-catalog-report
                      Print passive OXI live macro cards and A4 runway state.
+  rytm-live-macro-hardware-rehearsal-report
+                     Print passive Rytm macro hardware rehearsal checklist.
   live-gui-performance-flow-model-report
                      Print the passive live GUI performance flow model.
   oxi-live-set-strategy-report
@@ -3282,6 +3306,7 @@ Safety:
     "style-crates-queue-journal-report": _style_crates_queue_journal_report_help,
     "style-crate-rehearsal-deck-report": _style_crate_rehearsal_deck_report_help,
     "oxi-live-macro-catalog-report": _oxi_live_macro_catalog_report_help,
+    "rytm-live-macro-hardware-rehearsal-report": (_rytm_live_macro_hardware_rehearsal_report_help),
     "live-gui-performance-flow-model-report": _live_gui_performance_flow_model_report_help,
     "oxi-live-set-strategy-report": _oxi_live_set_strategy_report_help,
     "reference-style-blueprint-report": _reference_style_blueprint_report_help,

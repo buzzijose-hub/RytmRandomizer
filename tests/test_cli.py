@@ -99,6 +99,7 @@ USAGE = (
     "style-profile-report | style-crates-queue-journal-report [--json] | "
     "style-crate-rehearsal-deck-report [--crate <key>] [--json] | "
     "oxi-live-macro-catalog-report | "
+    "rytm-live-macro-hardware-rehearsal-report [--json] | "
     "live-gui-performance-flow-model-report [--json] | "
     "oxi-live-set-strategy-report [--json] | "
     "reference-style-blueprint-report "
@@ -2930,6 +2931,33 @@ def test_style_crates_queue_journal_report_json_exits_zero_and_is_deterministic(
     assert payload["safety"][0] == "passive/read-only"
     assert first.stderr == ""
     assert second.stderr == ""
+
+
+def test_rytm_live_macro_hardware_rehearsal_report_cli_text_and_json_are_deterministic():
+    first = run_cli("rytm-live-macro-hardware-rehearsal-report")
+    second = run_cli("rytm-live-macro-hardware-rehearsal-report")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert "RytmRandomizer passive Rytm live macro hardware rehearsal" in first.stdout
+    assert "Pad lane checks:" in first.stdout
+    assert "Pads 5, 9, 10, 11: SRC stays important" in first.stdout
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+    json_first = run_cli("rytm-live-macro-hardware-rehearsal-report", "--json")
+    json_second = run_cli("rytm-live-macro-hardware-rehearsal-report", "--json")
+
+    assert json_first.returncode == 0
+    assert json_second.returncode == 0
+    assert normalize_newlines(json_first.stdout) == normalize_newlines(json_second.stdout)
+    payload = json.loads(json_first.stdout)
+    assert payload["macros"][0]["name"] == "kit-core"
+    assert payload["pad_lane_checks"][0]["pads"] == [5, 9, 10, 11]
+    assert payload["safety"][2] == "does not send MIDI"
+    assert json_first.stderr == ""
+    assert json_second.stderr == ""
 
 
 def test_list_style_profiles_exits_zero_and_lists_keys():

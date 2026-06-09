@@ -1,6 +1,6 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-06. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-06-09. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
@@ -32,6 +32,14 @@ Last updated: 2026-06-06. This file is a hand-authored snapshot and is meant to 
   cockpit readiness panel now expose the A4 readiness state and replay command
   as passive metadata. Safety remains unchanged: no GUI launch, no port
   opening, no MIDI send, no hardware mutation, and no unattended A4 behavior.
+- 2026-06-09: Continued post-#158 local prep with a passive
+  `rytm-live-macro-hardware-rehearsal-report` checklist for the next
+  operator-present Rytm studio session. The report prints the armed live
+  snapshot shell launch command, `kit-core`/`hard-groove`/`industrial`/
+  `dub-pressure`/`transition`/`home` macro checkpoints, Pad 5/9/10/11
+  SRC-first notes, Pad 6-8 tom/source notes, Pad 12 availability notes, and
+  `home`/`Z` recovery checks. It is passive report metadata only: no port
+  opening, no MIDI send, no command execution, and no hardware mutation.
 - 2026-06-05: Wired the Claude Code post-push code-review hook (and fixed the
   "settings file failed to parse / expected string, received object" error).
   Added `scripts/code_review_gate.py --mode claude-hook` — it reads the

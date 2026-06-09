@@ -231,13 +231,24 @@ SEND.
 | Command | Description |
 |---|---|
 | `oxi-live-macro-catalog-report` | Passive Rytm macro cards, recovery actions, live flow, and A4 runway state |
+| `rytm-live-macro-hardware-rehearsal-report` | Passive next-studio Rytm macro checklist with launch command, pad-lane checks, and recovery notes |
 | `oxi-live-set-strategy-report` | Passive OXI-style set chapters, operator cues, rehearsal/replay commands, all-12-pad policy, and A4 review-only actions |
 
 ```bash
 python -m rytm_randomizer.cli oxi-live-macro-catalog-report
+python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report
+python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report --json
 python -m rytm_randomizer.cli oxi-live-set-strategy-report
 python -m rytm_randomizer.cli oxi-live-set-strategy-report --json
 ```
+
+`rytm-live-macro-hardware-rehearsal-report` is the passive checklist for the
+next operator-present Rytm hardware session. It prints the armed live snapshot
+shell launch command, the `kit-core`, `hard-groove`, `industrial`,
+`dub-pressure`, `transition`, and `home` macro rehearsal cards, Pad 5/9/10/11
+SRC-first notes, Pad 6-8 tom/source notes, Pad 12 product-availability notes,
+and the `home`/`Z` recovery checks. The report itself does not arm hardware,
+open MIDI ports, send MIDI, or mutate hardware.
 
 `oxi-live-set-strategy-report` is the passive bridge between the OXI-style
 operator idea and the current macro vocabulary. It describes OXI as the source
