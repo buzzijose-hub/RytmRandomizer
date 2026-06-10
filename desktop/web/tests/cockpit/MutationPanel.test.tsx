@@ -47,10 +47,40 @@ describe('MutationPanel', () => {
   it('renders the panel scaffolding with the four child sections', () => {
     renderWith();
     expect(screen.getByTestId('mutation-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('style-crate-queue')).toBeInTheDocument();
     expect(screen.getByTestId('profile-toggle')).toBeInTheDocument();
     expect(screen.getByTestId('profile-chips')).toBeInTheDocument();
     expect(screen.getByTestId('depth-slider')).toBeInTheDocument();
     expect(screen.getByTestId('action-bar')).toBeInTheDocument();
+  });
+
+  it('renders passive style crates and the staged performance queue', () => {
+    renderWith();
+
+    expect(screen.getByTestId('style-crate-hard-groove')).toHaveTextContent('Hard Groove');
+    expect(screen.getByTestId('style-crate-dark-hypnotic')).toHaveTextContent('Dark Hypnotic');
+    expect(screen.getByTestId('style-crate-industrial-warehouse')).toHaveTextContent(
+      'Industrial Warehouse',
+    );
+    expect(screen.getByTestId('style-queue-current')).toHaveTextContent('Dark Hypnotic');
+    expect(screen.getByTestId('style-queue-next-0')).toHaveTextContent('Industrial Warehouse');
+    expect(screen.getByTestId('style-queue-next-1')).toHaveTextContent('Peak Time');
+    expect(screen.getByTestId('style-crate-summary')).toHaveTextContent(
+      '28 parameters will change across 5 pads and 1 synth track.',
+    );
+    expect(screen.getByTestId('style-crate-safety')).toHaveTextContent(
+      'Passive queue preview only',
+    );
+  });
+
+  it('updates the selected crate detail without dispatching hardware actions', () => {
+    const { fake } = renderWith();
+
+    fireEvent.click(screen.getByTestId('style-crate-dub-pressure'));
+
+    expect(screen.getByTestId('style-crate-selected')).toHaveTextContent('Dub Pressure');
+    expect(screen.getByTestId('style-crate-selected')).toHaveTextContent('Space and low-end');
+    expect(fake.sent).toHaveLength(0);
   });
 
   it('initially shows only "scene" profiles in the chip list', () => {

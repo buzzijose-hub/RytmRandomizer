@@ -17,6 +17,7 @@ export type { PadCardProps } from './PadCard';
 export { HistoryStrip } from './HistoryStrip';
 export { MutationPanel } from './MutationPanel';
 export type { MutationPanelProps } from './MutationPanel';
+export { StyleCrateQueue } from './StyleCrateQueue';
 export {
   DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL,
   DEFAULT_LIVE_READINESS_MODEL,
