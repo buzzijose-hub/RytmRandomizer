@@ -63,10 +63,10 @@ describe('MutationPanel', () => {
       'Industrial Warehouse',
     );
     expect(screen.getByTestId('style-queue-current')).toHaveTextContent('Dark Hypnotic');
-    expect(screen.getByTestId('style-queue-next-0')).toHaveTextContent('Industrial Warehouse');
-    expect(screen.getByTestId('style-queue-next-1')).toHaveTextContent('Peak Time');
+    expect(screen.getByTestId('style-queue-next-0')).toHaveTextContent('Hard Groove');
+    expect(screen.getByTestId('style-queue-next-1')).toHaveTextContent('Industrial Warehouse');
     expect(screen.getByTestId('style-crate-summary')).toHaveTextContent(
-      '28 parameters will change across 5 pads and 1 synth track.',
+      '3 staged moves cover 14 target pad slots and 2 journal seeds.',
     );
     expect(screen.getByTestId('style-crate-safety')).toHaveTextContent(
       'Passive queue preview only',

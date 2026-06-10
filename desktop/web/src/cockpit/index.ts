@@ -18,6 +18,18 @@ export { HistoryStrip } from './HistoryStrip';
 export { MutationPanel } from './MutationPanel';
 export type { MutationPanelProps } from './MutationPanel';
 export { StyleCrateQueue } from './StyleCrateQueue';
+export type { StyleCrateQueueProps } from './StyleCrateQueue';
+export {
+  DEFAULT_STYLE_CRATE_QUEUE_MODEL,
+  DEFAULT_STYLE_CRATE_REHEARSAL_DECK,
+  toStyleCrateQueueModel,
+} from './styleCrateQueueModel';
+export type {
+  StyleCrateQueueCrate,
+  StyleCrateQueueModel,
+  StyleCrateQueueMove,
+  StyleCrateTone,
+} from './styleCrateQueueModel';
 export {
   DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL,
   DEFAULT_LIVE_READINESS_MODEL,

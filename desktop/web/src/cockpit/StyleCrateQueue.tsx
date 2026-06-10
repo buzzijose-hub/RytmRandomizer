@@ -1,126 +1,51 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-type CrateTone = 'blue' | 'cyan' | 'green' | 'muted' | 'orange' | 'purple' | 'yellow';
-
-interface StyleCrate {
-  readonly key: string;
-  readonly name: string;
-  readonly summary: string;
-  readonly move: string;
-  readonly energy: number;
-  readonly risk: number;
-  readonly tone: CrateTone;
-}
-
-interface QueueMove {
-  readonly key: string;
-  readonly crateKey: string;
-  readonly label: string;
-  readonly subtitle: string;
-  readonly status: string;
-}
-
-const DEFAULT_STYLE_CRATE: StyleCrate = {
-  key: 'dark-hypnotic',
-  name: 'Dark Hypnotic',
-  summary: 'Deeper & Minimal',
-  move: 'Shadow Filter Pressure',
-  energy: 5,
-  risk: 3,
-  tone: 'blue',
-};
-
-const STYLE_CRATES: ReadonlyArray<StyleCrate> = [
-  {
-    key: 'hard-groove',
-    name: 'Hard Groove',
-    summary: 'Rolling percussion density',
-    move: 'Rolling Perc Push',
-    energy: 7,
-    risk: 4,
-    tone: 'green',
-  },
-  DEFAULT_STYLE_CRATE,
-  {
-    key: 'industrial-warehouse',
-    name: 'Industrial Warehouse',
-    summary: 'Metal & Drive',
-    move: 'Broken Metal Stress',
-    energy: 8,
-    risk: 7,
-    tone: 'orange',
-  },
-  {
-    key: 'dub-pressure',
-    name: 'Dub Pressure',
-    summary: 'Space and low-end',
-    move: 'Sub Space Bloom',
-    energy: 4,
-    risk: 3,
-    tone: 'purple',
-  },
-  {
-    key: 'peak-time',
-    name: 'Peak Time',
-    summary: 'Energy & Lift',
-    move: 'Warehouse Lift',
-    energy: 9,
-    risk: 6,
-    tone: 'yellow',
-  },
-  {
-    key: 'transition-build',
-    name: 'Transition / Build',
-    summary: 'Handoff movement',
-    move: 'Back To Clean Handoff',
-    energy: 6,
-    risk: 2,
-    tone: 'cyan',
-  },
-  {
-    key: 'home-reset',
-    name: 'Home / Reset',
-    summary: 'Recovery anchor',
-    move: 'Back To Clean',
-    energy: 2,
-    risk: 1,
-    tone: 'muted',
-  },
-];
-
-const STAGED_QUEUE: ReadonlyArray<QueueMove> = [
-  {
-    key: 'current-dark-hypnotic',
-    crateKey: 'dark-hypnotic',
-    label: 'Dark Hypnotic',
-    subtitle: 'Deeper & Minimal',
-    status: 'pending',
-  },
-  {
-    key: 'next-industrial',
-    crateKey: 'industrial-warehouse',
-    label: 'Industrial Warehouse',
-    subtitle: 'Metal & Drive',
-    status: 'up next',
-  },
-  {
-    key: 'next-peak-time',
-    crateKey: 'peak-time',
-    label: 'Peak Time',
-    subtitle: 'Energy & Lift',
-    status: 'up next',
-  },
-];
+import {
+  DEFAULT_STYLE_CRATE_QUEUE_MODEL,
+  type StyleCrateQueueCrate,
+  type StyleCrateQueueModel,
+} from './styleCrateQueueModel';
 
 const PROFILE_LABELS = ['Subtle', 'Balanced', 'Extreme', 'Chaos'] as const;
 type ProfileLabel = (typeof PROFILE_LABELS)[number];
 
-export function StyleCrateQueue(): JSX.Element {
-  const [selectedKey, setSelectedKey] = useState('dark-hypnotic');
+export interface StyleCrateQueueProps {
+  readonly model?: StyleCrateQueueModel;
+}
+
+const EMPTY_STYLE_CRATE: StyleCrateQueueCrate = {
+  key: 'empty',
+  testIdKey: 'empty',
+  name: 'No crate staged',
+  summary: 'No passive crate deck is available.',
+  move: 'No staged move',
+  energy: 0,
+  risk: 0,
+  tone: 'muted',
+  targetPads: [],
+  riskStatus: 'safe',
+  operatorAction: 'Load a passive rehearsal deck',
+};
+
+export function StyleCrateQueue({
+  model = DEFAULT_STYLE_CRATE_QUEUE_MODEL,
+}: StyleCrateQueueProps): JSX.Element {
+  const firstCrateKey = model.crates[0]?.key ?? EMPTY_STYLE_CRATE.key;
+  const [selectedKey, setSelectedKey] = useState(firstCrateKey);
   const [selectedProfile, setSelectedProfile] = useState<ProfileLabel>('Balanced');
+
+  useEffect(() => {
+    if (!model.crates.some((crate) => crate.key === selectedKey)) {
+      setSelectedKey(firstCrateKey);
+    }
+  }, [firstCrateKey, model.crates, selectedKey]);
+
   const selectedCrate = useMemo(
-    () => STYLE_CRATES.find((crate) => crate.key === selectedKey) ?? DEFAULT_STYLE_CRATE,
-    [selectedKey],
+    () =>
+      model.crates.find((crate) => crate.key === selectedKey) ??
+      model.crates[0] ??
+      EMPTY_STYLE_CRATE,
+    [model.crates, selectedKey],
   );
 
   return (
@@ -128,14 +53,14 @@ export function StyleCrateQueue(): JSX.Element {
       <div className="style-crate-layout">
         <div className="style-crate-list" aria-label="Style crates">
           <div className="style-section-heading">Style Crates</div>
-          {STYLE_CRATES.map((crate) => (
+          {model.crates.map((crate) => (
             <button
               key={crate.key}
               type="button"
               className={`style-crate-card ${crate.tone} ${
                 crate.key === selectedKey ? 'active' : ''
               }`}
-              data-testid={`style-crate-${crate.key}`}
+              data-testid={`style-crate-${crate.testIdKey}`}
               aria-pressed={crate.key === selectedKey}
               onClick={() => setSelectedKey(crate.key)}
             >
@@ -149,20 +74,28 @@ export function StyleCrateQueue(): JSX.Element {
         </div>
 
         <div className="style-queue-panel" aria-label="Staged style queue">
-          <div className="style-section-heading">Queue (3)</div>
+          <div className="style-section-heading">Queue ({model.queue.length})</div>
           <div className="style-queue-stack">
-            {STAGED_QUEUE.map((move, index) => (
+            {model.queue.map((move, index) => (
               <article
                 key={move.key}
                 className={`style-queue-card ${index === 0 ? 'current' : ''}`}
                 data-testid={index === 0 ? 'style-queue-current' : `style-queue-next-${index - 1}`}
               >
-                <span className="style-queue-eyebrow">{index === 0 ? 'Current' : 'Up Next'}</span>
+                <span className="style-queue-eyebrow">{move.position}</span>
                 <strong>{move.label}</strong>
+                <span>{move.crateName}</span>
                 <span>{move.subtitle}</span>
                 <em>{move.status}</em>
               </article>
             ))}
+            {model.queue.length === 0 ? (
+              <article className="style-queue-card" data-testid="style-queue-empty">
+                <span className="style-queue-eyebrow">Empty</span>
+                <strong>No staged moves</strong>
+                <span>Load a passive rehearsal deck to populate the queue.</span>
+              </article>
+            ) : null}
           </div>
         </div>
       </div>
@@ -177,6 +110,7 @@ export function StyleCrateQueue(): JSX.Element {
           <span>Energy {selectedCrate.energy}/10</span>
           <span>Risk {selectedCrate.risk}/10</span>
           <span>{selectedCrate.move}</span>
+          <span>pads {selectedCrate.targetPads.join(', ') || 'none'}</span>
         </div>
       </article>
 
@@ -196,10 +130,10 @@ export function StyleCrateQueue(): JSX.Element {
 
       <div className="style-crate-summary" data-testid="style-crate-summary">
         <strong>Mutation Summary</strong>
-        <span>28 parameters will change across 5 pads and 1 synth track.</span>
+        <span>{model.summary}</span>
       </div>
       <div className="style-crate-safety" data-testid="style-crate-safety">
-        Passive queue preview only
+        {model.safetyLabel}
       </div>
     </section>
   );
