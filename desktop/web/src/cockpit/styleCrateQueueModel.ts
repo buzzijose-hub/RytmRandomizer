@@ -43,6 +43,70 @@ export interface StyleCrateQueueMove {
   readonly dryRunOnly: boolean;
 }
 
+export interface StyleCrateAnalogFourSetStep {
+  readonly order: number;
+  readonly macroName: string;
+  readonly macroLabel: string;
+  readonly summary: string;
+  readonly seed: number;
+  readonly intensity: number;
+  readonly energy: number;
+  readonly readiness: string;
+  readonly eventCount: number;
+  readonly readyCount: number;
+  readonly reviewCount: number;
+  readonly blockedCount: number;
+  readonly validationCommand: string;
+  readonly recoveryAction: string;
+}
+
+export interface StyleCrateAnalogFourSetStepDict {
+  readonly order: number;
+  readonly macro_name: string;
+  readonly macro_label: string;
+  readonly summary: string;
+  readonly seed: number;
+  readonly intensity: number;
+  readonly energy: number;
+  readonly readiness: string;
+  readonly event_count: number;
+  readonly ready_count: number;
+  readonly review_count: number;
+  readonly blocked_count: number;
+  readonly validation_command: string;
+  readonly recovery_action: string;
+}
+
+export interface StyleCrateAnalogFourSetPlan {
+  readonly title: string;
+  readonly setName: string;
+  readonly stepCount: number;
+  readonly currentStep: StyleCrateAnalogFourSetStep;
+  readonly upNext: ReadonlyArray<StyleCrateAnalogFourSetStep>;
+  readonly steps: ReadonlyArray<StyleCrateAnalogFourSetStep>;
+  readonly opensPorts: boolean;
+  readonly sendsMidi: boolean;
+  readonly hardwareRequired: boolean;
+  readonly blockedActiveActions: ReadonlyArray<string>;
+  readonly safety: ReadonlyArray<string>;
+  readonly replayCommand: string;
+}
+
+export interface StyleCrateAnalogFourSetPlanDict {
+  readonly title: string;
+  readonly set_name: string;
+  readonly step_count: number;
+  readonly current_step: StyleCrateAnalogFourSetStepDict;
+  readonly up_next: ReadonlyArray<StyleCrateAnalogFourSetStepDict>;
+  readonly steps: ReadonlyArray<StyleCrateAnalogFourSetStepDict>;
+  readonly opens_ports: boolean;
+  readonly sends_midi: boolean;
+  readonly hardware_required: boolean;
+  readonly blocked_active_actions: ReadonlyArray<string>;
+  readonly safety: ReadonlyArray<string>;
+  readonly replay_command: string;
+}
+
 export interface StyleCrateQueueModel {
   readonly modelVersion: string;
   readonly deckId: string;
@@ -54,6 +118,11 @@ export interface StyleCrateQueueModel {
   readonly safetyLabel: string;
   readonly blockedActions: ReadonlyArray<string>;
   readonly replayCommands: ReadonlyArray<string>;
+  readonly analogFourSetPlan: StyleCrateAnalogFourSetPlan;
+}
+
+export interface ToStyleCrateQueueModelOptions {
+  readonly analogFourSetPlan?: StyleCrateAnalogFourSetPlanDict;
 }
 
 const CRATE_DISPLAY_OVERRIDES: Record<
@@ -85,6 +154,124 @@ const CRATE_DISPLAY_OVERRIDES: Record<
 
 const DEFAULT_TONE: StyleCrateTone = 'blue';
 
+export const ANALOG_FOUR_SET_PLAN_REPLAY_COMMAND =
+  'python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --json';
+
+const DEFAULT_ANALOG_FOUR_SET_STEPS: readonly [
+  StyleCrateAnalogFourSetStep,
+  ...StyleCrateAnalogFourSetStep[],
+] = [
+  {
+    order: 1,
+    macroName: 'home',
+    macroLabel: 'Home',
+    summary: 'Gentle four-track reset-adjacent motion for a stable live anchor.',
+    seed: 0,
+    intensity: 2,
+    energy: 2,
+    readiness: 'review-ready',
+    eventCount: 8,
+    readyCount: 8,
+    reviewCount: 0,
+    blockedCount: 0,
+    validationCommand:
+      'analog-four-oxi-macro-readiness-report home --seed 0 --intensity 2 --limit 4',
+    recoveryAction: 'reload saved A4 kit or return to home macro',
+  },
+  {
+    order: 2,
+    macroName: 'hard-groove',
+    macroLabel: 'Hard Groove',
+    summary: 'OXI-style four-track pressure for bass, stab, motion, and air lanes.',
+    seed: 1,
+    intensity: 5,
+    energy: 5,
+    readiness: 'review-ready',
+    eventCount: 12,
+    readyCount: 12,
+    reviewCount: 0,
+    blockedCount: 0,
+    validationCommand:
+      'analog-four-oxi-macro-readiness-report hard-groove --seed 1 --intensity 5 --limit 4',
+    recoveryAction: 'reload saved A4 kit or return to home macro',
+  },
+  {
+    order: 3,
+    macroName: 'dub-pressure',
+    macroLabel: 'Dub Pressure',
+    summary: 'Delay/reverb-led A4 macro for cavernous but controlled hypnosis.',
+    seed: 2,
+    intensity: 4,
+    energy: 4,
+    readiness: 'review-ready',
+    eventCount: 8,
+    readyCount: 8,
+    reviewCount: 0,
+    blockedCount: 0,
+    validationCommand:
+      'analog-four-oxi-macro-readiness-report dub-pressure --seed 2 --intensity 4 --limit 4',
+    recoveryAction: 'reload saved A4 kit or return to home macro',
+  },
+  {
+    order: 4,
+    macroName: 'industrial-transition',
+    macroLabel: 'Industrial Transition',
+    summary: 'Tense four-track riser macro for transitions and breakdown pressure.',
+    seed: 3,
+    intensity: 7,
+    energy: 7,
+    readiness: 'review-ready',
+    eventCount: 9,
+    readyCount: 9,
+    reviewCount: 0,
+    blockedCount: 0,
+    validationCommand:
+      'analog-four-oxi-macro-readiness-report industrial-transition --seed 3 --intensity 7 --limit 4',
+    recoveryAction: 'reload saved A4 kit or return to home macro',
+  },
+  {
+    order: 5,
+    macroName: 'home',
+    macroLabel: 'Home',
+    summary: 'Gentle four-track reset-adjacent motion for a stable live anchor.',
+    seed: 4,
+    intensity: 2,
+    energy: 2,
+    readiness: 'review-ready',
+    eventCount: 8,
+    readyCount: 8,
+    reviewCount: 0,
+    blockedCount: 0,
+    validationCommand:
+      'analog-four-oxi-macro-readiness-report home --seed 4 --intensity 2 --limit 4',
+    recoveryAction: 'reload saved A4 kit or return to home macro',
+  },
+];
+
+export const DEFAULT_ANALOG_FOUR_SET_PLAN: StyleCrateAnalogFourSetPlan = {
+  title: 'RytmRandomizer passive Analog Four OXI macro set planner',
+  setName: 'warehouse-arc',
+  stepCount: DEFAULT_ANALOG_FOUR_SET_STEPS.length,
+  currentStep: DEFAULT_ANALOG_FOUR_SET_STEPS[0],
+  upNext: DEFAULT_ANALOG_FOUR_SET_STEPS.slice(1),
+  steps: DEFAULT_ANALOG_FOUR_SET_STEPS,
+  opensPorts: false,
+  sendsMidi: false,
+  hardwareRequired: false,
+  blockedActiveActions: ['A4 full macro SEND', 'A4 unattended macro playback'],
+  safety: [
+    'passive/read-only',
+    'A4 OXI macro set planning only',
+    'manual-backed Analog Four CC metadata only',
+    'no MIDI sending',
+    'no port opening',
+    'no command execution',
+    'no hardware mutation',
+    'A4 full macro SEND remains blocked',
+  ],
+  replayCommand: ANALOG_FOUR_SET_PLAN_REPLAY_COMMAND,
+};
+
 function toTestIdKey(key: string): string {
   return key.toLowerCase().replaceAll('_', '-').replaceAll('/', '-').replaceAll(' ', '-');
 }
@@ -102,8 +289,58 @@ function crateDisplay(crate: StyleCrateRehearsalCrateCardDict): {
   };
 }
 
+function replayCommandsWithAnalogFourSetPlanner(
+  replayCommands: ReadonlyArray<string>,
+  replayCommand: string = ANALOG_FOUR_SET_PLAN_REPLAY_COMMAND,
+): ReadonlyArray<string> {
+  return replayCommands.includes(replayCommand)
+    ? replayCommands
+    : [...replayCommands, replayCommand];
+}
+
+function toStyleCrateAnalogFourSetStep(
+  step: StyleCrateAnalogFourSetStepDict,
+): StyleCrateAnalogFourSetStep {
+  return {
+    order: step.order,
+    macroName: step.macro_name,
+    macroLabel: step.macro_label,
+    summary: step.summary,
+    seed: step.seed,
+    intensity: step.intensity,
+    energy: step.energy,
+    readiness: step.readiness,
+    eventCount: step.event_count,
+    readyCount: step.ready_count,
+    reviewCount: step.review_count,
+    blockedCount: step.blocked_count,
+    validationCommand: step.validation_command,
+    recoveryAction: step.recovery_action,
+  };
+}
+
+export function toStyleCrateAnalogFourSetPlan(
+  plan: StyleCrateAnalogFourSetPlanDict,
+): StyleCrateAnalogFourSetPlan {
+  return {
+    title: plan.title,
+    setName: plan.set_name,
+    stepCount: plan.step_count,
+    currentStep: toStyleCrateAnalogFourSetStep(plan.current_step),
+    upNext: plan.up_next.map(toStyleCrateAnalogFourSetStep),
+    steps: plan.steps.map(toStyleCrateAnalogFourSetStep),
+    opensPorts: plan.opens_ports,
+    sendsMidi: plan.sends_midi,
+    hardwareRequired: plan.hardware_required,
+    blockedActiveActions: plan.blocked_active_actions,
+    safety: plan.safety,
+    replayCommand: plan.replay_command,
+  };
+}
+
 export function toStyleCrateQueueModel(
   deck: StyleCrateRehearsalDeckDict,
+  options: ToStyleCrateQueueModelOptions = {},
 ): StyleCrateQueueModel {
   const crates = deck.crate_cards.map((crate) => {
     const display = crateDisplay(crate);
@@ -142,6 +379,10 @@ export function toStyleCrateQueueModel(
   }));
   const targetPadSlots = queue.reduce((total, move) => total + move.targetPads.length, 0);
   const journalCount = deck.journal_cards.length;
+  const analogFourSetPlan =
+    options.analogFourSetPlan === undefined
+      ? DEFAULT_ANALOG_FOUR_SET_PLAN
+      : toStyleCrateAnalogFourSetPlan(options.analogFourSetPlan);
 
   return {
     modelVersion: deck.deck_version,
@@ -153,7 +394,11 @@ export function toStyleCrateQueueModel(
     summary: `${queue.length} staged moves cover ${targetPadSlots} target pad slots and ${journalCount} journal seeds.`,
     safetyLabel: 'Passive queue preview only',
     blockedActions: deck.blocked_actions,
-    replayCommands: deck.replay_commands,
+    replayCommands: replayCommandsWithAnalogFourSetPlanner(
+      deck.replay_commands,
+      analogFourSetPlan.replayCommand,
+    ),
+    analogFourSetPlan,
   };
 }
 

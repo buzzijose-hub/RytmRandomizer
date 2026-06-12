@@ -100,6 +100,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.analog_four_oxi_macro_readiness",
             "ANALOG_FOUR_OXI_MACRO_READINESS_CLI_COMMAND",
         ),
+        "analog-four-oxi-macro-set-planner-report": (
+            "rytm_randomizer.reports.analog_four_oxi_macro_set_planner",
+            "ANALOG_FOUR_OXI_MACRO_SET_PLANNER_CLI_COMMAND",
+        ),
         "analog-four-style-kit-readiness-report": (
             "rytm_randomizer.reports.analog_four_style_kit_readiness",
             "ANALOG_FOUR_STYLE_KIT_READINESS_CLI_COMMAND",

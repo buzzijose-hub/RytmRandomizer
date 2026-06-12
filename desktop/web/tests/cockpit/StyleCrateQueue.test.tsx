@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { StyleCrateQueue } from '../../src/cockpit/StyleCrateQueue';
 import {
+  DEFAULT_ANALOG_FOUR_SET_PLAN,
   DEFAULT_STYLE_CRATE_QUEUE_MODEL,
   type StyleCrateQueueModel,
 } from '../../src/cockpit/styleCrateQueueModel';
@@ -32,6 +33,7 @@ const EMPTY_QUEUE_MODEL: StyleCrateQueueModel = {
   safetyLabel: 'Passive queue preview only',
   blockedActions: [],
   replayCommands: [],
+  analogFourSetPlan: DEFAULT_ANALOG_FOUR_SET_PLAN,
 };
 
 const NO_CRATE_MODEL: StyleCrateQueueModel = {
@@ -51,6 +53,44 @@ describe('StyleCrateQueue', () => {
     expect(screen.getByTestId('style-crate-summary')).toHaveTextContent(
       '3 staged moves cover 14 target pad slots and 2 journal seeds.',
     );
+  });
+
+  it('renders the passive Analog Four set plan alongside the style queue', () => {
+    render(<StyleCrateQueue model={DEFAULT_STYLE_CRATE_QUEUE_MODEL} />);
+
+    expect(screen.getByTestId('style-crate-a4-set-plan')).toHaveTextContent(
+      'Analog Four Set Plan',
+    );
+    expect(screen.getByTestId('style-crate-a4-set-plan')).toHaveTextContent('warehouse-arc');
+    expect(screen.getByTestId('style-crate-a4-current')).toHaveTextContent('home');
+    expect(screen.getByTestId('style-crate-a4-current')).toHaveTextContent('Home');
+    expect(screen.getByTestId('style-crate-a4-next')).toHaveTextContent('hard-groove');
+    expect(screen.getByTestId('style-crate-a4-next')).toHaveTextContent('dub-pressure');
+    expect(screen.getByTestId('style-crate-a4-set-plan')).toHaveTextContent(
+      'A4 full macro SEND',
+    );
+    expect(screen.getByTestId('style-crate-a4-set-plan')).toHaveTextContent(
+      'no MIDI sending',
+    );
+  });
+
+  it('renders active and empty-up-next Analog Four set-plan states from supplied models', () => {
+    render(
+      <StyleCrateQueue
+        model={{
+          ...DEFAULT_STYLE_CRATE_QUEUE_MODEL,
+          analogFourSetPlan: {
+            ...DEFAULT_ANALOG_FOUR_SET_PLAN,
+            sendsMidi: true,
+            upNext: [],
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByTestId('style-crate-a4-set-plan')).toHaveTextContent('active send path');
+    expect(screen.getByTestId('style-crate-a4-next')).toHaveTextContent('none');
+    expect(screen.getByTestId('style-crate-a4-next')).toHaveTextContent('0 queued A4 moves');
   });
 
   it('updates selected backend-derived crate details locally', () => {

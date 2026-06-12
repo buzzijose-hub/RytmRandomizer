@@ -47,6 +47,10 @@ export function StyleCrateQueue({
       EMPTY_STYLE_CRATE,
     [model.crates, selectedKey],
   );
+  const analogFourSetPlan = model.analogFourSetPlan;
+  const analogFourNextLabels = analogFourSetPlan.upNext
+    .map((step) => step.macroName)
+    .join(' -> ');
 
   return (
     <section className="style-crate-queue" data-testid="style-crate-queue">
@@ -127,6 +131,36 @@ export function StyleCrateQueue({
           </button>
         ))}
       </div>
+
+      <article className="style-crate-a4-set-plan" data-testid="style-crate-a4-set-plan">
+        <div className="style-crate-a4-header">
+          <div>
+            <span className="style-section-heading">Analog Four Set Plan</span>
+            <strong>{analogFourSetPlan.setName}</strong>
+          </div>
+          <span>{analogFourSetPlan.sendsMidi ? 'active send path' : 'passive review'}</span>
+        </div>
+        <div className="style-crate-a4-grid">
+          <div data-testid="style-crate-a4-current">
+            <span className="style-queue-eyebrow">Current</span>
+            <strong>{analogFourSetPlan.currentStep.macroName}</strong>
+            <span>{analogFourSetPlan.currentStep.macroLabel}</span>
+            <span>{analogFourSetPlan.currentStep.readiness}</span>
+          </div>
+          <div data-testid="style-crate-a4-next">
+            <span className="style-queue-eyebrow">Up Next</span>
+            <strong>{analogFourNextLabels || 'none'}</strong>
+            <span>{analogFourSetPlan.upNext.length} queued A4 moves</span>
+            <span>{analogFourSetPlan.currentStep.recoveryAction}</span>
+          </div>
+        </div>
+        <div className="style-crate-a4-safety">
+          {analogFourSetPlan.blockedActiveActions.map((action) => (
+            <span key={action}>{action}</span>
+          ))}
+          <span>{analogFourSetPlan.safety.find((line) => line === 'no MIDI sending')}</span>
+        </div>
+      </article>
 
       <div className="style-crate-summary" data-testid="style-crate-summary">
         <strong>Mutation Summary</strong>

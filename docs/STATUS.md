@@ -1,9 +1,28 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-09. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-06-12. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-06-12: Cockpit style-crate queue surface now consumes the passive
+  Analog Four OXI macro set planner metadata prepared on PR #160. The
+  frontend model maps the report's snake_case JSON into the Cockpit camelCase
+  queue contract, carries the `warehouse-arc` current/up-next A4 macro plan,
+  blocked `A4 full macro SEND`/unattended-playback actions, safety flags, and
+  report-owned replay commands that preserve custom set name, macro sequence,
+  seed, and `--json` arguments for exact plan replay;
+  the component renders that A4 set plan alongside the style queue for
+  review-only visibility. Frontend/passive metadata only: no port opening, no
+  MIDI send, no command execution, no hardware mutation, and A4 full macro SEND
+  remains blocked.
+- 2026-06-11: Passive Analog Four OXI macro set planner prepared locally. The
+  new `analog-four-oxi-macro-set-planner-report` command sequences the existing
+  A4 `home`, `hard-groove`, `dub-pressure`, and `industrial-transition`
+  macro/readiness cards into a current/up-next set plan with deterministic
+  JSON, validation commands, readiness counts, recovery notes, and blocked
+  active-action metadata for future Cockpit queue work. It remains report-only:
+  no port opening, no MIDI send, no command execution, no hardware mutation,
+  no unattended A4 playback, and full A4 macro SEND remains blocked.
 - 2026-06-06: Passive report CLI command factory review follow-up prepared on
   PR #158. The shared `make_passive_report_command` now covers no-arg reports,
   optional `--json` reports, compact JSON output, and dispatcher-default parse

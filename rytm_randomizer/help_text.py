@@ -39,6 +39,8 @@ USAGE = (
     "[--events] [--limit N] [--json] | "
     "analog-four-oxi-macro-readiness-report [<macro-name>] [--seed N] "
     "[--intensity N] [--limit N] [--json] | "
+    "analog-four-oxi-macro-set-planner-report [--set-name <text>] "
+    "[--sequence <macro,...>] [--seed N] [--json] | "
     "analog-four-style-kit-readiness-report <syx-path> <style-key> "
     "[--discovery N] [--limit N] [--json] | "
     "dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> "
@@ -949,6 +951,40 @@ Behavior:
   The report also prints stop/recovery notes and promotion gates. It does not
   open MIDI ports, send MIDI, execute validation commands, or arm the A4 full
   macro send path.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _analog_four_oxi_macro_set_planner_report_help():
+    from .reports.analog_four_oxi_macro_set_planner import (
+        BLOCKED_ACTIVE_ACTIONS,
+        DEFAULT_SEQUENCE,
+        SAFETY_LINES,
+    )
+
+    default_sequence = ", ".join(DEFAULT_SEQUENCE)
+    blocked_actions = "\n".join(f"  - {action}" for action in BLOCKED_ACTIVE_ACTIONS)
+    return f"""RytmRandomizer passive CLI: analog-four-oxi-macro-set-planner-report
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report
+  python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --set-name <text>
+  python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --sequence <macro,...>
+  python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --seed N
+  python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --json
+  python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --help
+
+Behavior:
+  Prints a passive Analog Four OXI macro set planner. The default set sequence
+  is {default_sequence}. Each set step reuses analog-four-oxi-macro-report and
+  analog-four-oxi-macro-readiness-report metadata, then emits current/up-next
+  queue fields, readiness counts, validation commands, and recovery notes for
+  future Cockpit set planning. It does not open MIDI ports, send MIDI, execute
+  validation commands, automate playback, or arm the A4 full macro send path.
+
+Blocked active actions:
+{blocked_actions}
 
 Safety:
 {_safety_block(SAFETY_LINES)}"""
@@ -2729,6 +2765,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-kit-catalog-report <syx-path> [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report [<macro-name>] [--seed N] [--intensity N] [--limit N] [--json]
+  python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report [--set-name <text>] [--sequence <macro,...>] [--seed N] [--json]
   python -m rytm_randomizer.cli analog-four-style-kit-readiness-report <syx-path> <style-key> [--discovery N] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> <style-key> [--discovery N] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-kit-selection-report <style-key> --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--discovery N] [--limit N] [--json]
@@ -2872,6 +2909,8 @@ Commands:
                      Print passive Analog Four OXI-style macro preview metadata.
   analog-four-oxi-macro-readiness-report
                      Print passive Analog Four OXI macro hardware-readiness metadata.
+  analog-four-oxi-macro-set-planner-report
+                     Print passive Analog Four OXI macro set-planner metadata.
   analog-four-style-kit-readiness-report
                      Print passive Analog Four style readiness for every decoded kit.
   dual-machine-style-kit-readiness-report
@@ -3287,6 +3326,7 @@ Safety:
     "analog-four-kit-catalog-report": _analog_four_kit_catalog_report_help,
     "analog-four-oxi-macro-report": _analog_four_oxi_macro_report_help,
     "analog-four-oxi-macro-readiness-report": (_analog_four_oxi_macro_readiness_report_help),
+    "analog-four-oxi-macro-set-planner-report": (_analog_four_oxi_macro_set_planner_report_help),
     "analog-four-style-kit-readiness-report": _analog_four_style_kit_readiness_report_help,
     "dual-machine-style-kit-readiness-report": _dual_machine_style_kit_readiness_report_help,
     "dual-machine-style-kit-selection-report": _dual_machine_style_kit_selection_report_help,
