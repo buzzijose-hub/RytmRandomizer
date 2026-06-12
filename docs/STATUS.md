@@ -4,6 +4,11 @@ Last updated: 2026-06-12. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-12: Desktop shell CI hardening pinned the Tauri shell's transitive
+  `time` dependency to `=0.3.47` after the Windows `desktop-shell` job resolved
+  `time 0.3.48` with `tauri-utils 2.9.2` and failed inside upstream Rust
+  dependency trait impls. This is dependency-resolution hardening only: no
+  shell behavior, web build, Python sidecar, MIDI, or hardware path changed.
 - 2026-06-12: Post-#160 live-performance bridge started on a clean base. The
   passive live GUI performance flow model now includes an
   `analog_four_set_plan` summary sourced from the merged
