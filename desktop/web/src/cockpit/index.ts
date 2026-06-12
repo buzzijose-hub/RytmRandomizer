@@ -34,6 +34,7 @@ export {
   PerformanceConsole,
 } from './PerformanceConsole';
 export type { PerformanceConsoleProps } from './PerformanceConsole';
+export { performanceConsoleDemoModel } from './performanceConsoleDemoModel';
 export {
   DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL,
   DEFAULT_LIVE_READINESS_MODEL,

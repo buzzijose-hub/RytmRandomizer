@@ -4,6 +4,16 @@ Last updated: 2026-06-12. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-12: Cockpit performance console demo route prepared after PR #163.
+  The desktop App hash router now renders a bundled typed
+  `LiveGuiPerformanceConsoleModelDict` at `#/performance-console` or
+  `#/console` when no injected live packet is supplied, so the installed/local
+  cockpit can preview the 12-pad Rytm, Analog Four, style queue, snapshot
+  history, command queue, and safety checklist surface before any sidecar
+  session frame arrives. Injected packets still take precedence for tests and
+  preview hosts. Frontend static demo data only: no WebSocket protocol change,
+  no sidecar command, no MIDI port opening, no hardware arm path, no queued
+  command dispatch, and no MIDI send.
 - 2026-06-12: Cockpit performance console preview route added for the passive
   packet introduced in PR #162. The desktop App hash router can now render an
   injected `LiveGuiPerformanceConsoleModelDict` at `#/performance-console` or
