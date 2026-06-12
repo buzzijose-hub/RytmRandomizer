@@ -407,6 +407,7 @@ UI drives the engine with **typed commands** that ack synchronously.
 | `send_plan_changed` | `{ send_plan: CockpitSendPlan \| null }` | After PREPARE, stale candidate/lock changes, or SEND |
 | `history_updated` | `{ history: History }` | After SEND, SAVE, LOAD, or UNDO |
 | `profile_changed` | `{ profile: ProfileModel \| null }` | After `select_profile` |
+| `performance_console_changed` | `{ performance_console: LiveGuiPerformanceConsoleModel \| null }` | On connect, when the passive performance-console packet refreshes |
 | `session_status` | `{ armed, midi_port, mode, unsaved_sends }` | On connect, on arm-toggle |
 
 | Command (UI → engine) | Returns | Notes |
@@ -793,9 +794,9 @@ Every `/ws` connection performs four steps in fixed order, all enforced in
    per-launch token loaded at server boot under `hmac.compare_digest` (constant-time).
    Rejection paths close the socket with policy-violation code `1008` after writing a
    typed ack (`auth_required` / `auth_failed`) so a programmatic client can branch.
-3. **Bootstrap event quartet.** `emit_initial_events` sends `session_status`,
-   `snapshot_changed`, `profile_changed`, `history_updated` so the UI renders a complete
-   first frame.
+3. **Bootstrap event set.** `emit_initial_events` sends `session_status`,
+   `snapshot_changed`, `profile_changed`, `history_updated`, and
+   `performance_console_changed` so the UI renders a complete first frame.
 4. **Size-capped command loop.** Each inbound frame is checked against
    `_DEFAULT_MAX_MESSAGE_BYTES` (1 MiB; override via `RYTM_RAND_WS_MAX_MESSAGE_BYTES`)
    *before* `json.loads`. Oversize frames are rejected with `message_too_large` + close

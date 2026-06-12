@@ -67,7 +67,7 @@ pytestmark = pytest.mark.fast
 # End-to-end happy path.
 #
 # All commands travel through the FastAPI WebSocket endpoint. The
-# :func:`cockpit_ws` fixture has already drained the bootstrap quartet,
+# :func:`cockpit_ws` fixture has already drained the bootstrap event set,
 # so every ``receive_json`` here is either an ack (returned by
 # ``send_cmd``) or a wizard event (returned by ``drain_events``).
 # ---------------------------------------------------------------------------
@@ -206,10 +206,10 @@ def test_wizard_save_writes_profile_file_to_disk_and_is_listable(tmp_path: Path)
         TestClient(app) as client,
         client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws,
     ):
-        # Complete the per-launch handshake before the bootstrap quartet (C1).
+        # Complete the per-launch handshake before the bootstrap event set (C1).
         complete_handshake(ws)
-        # Drain the bootstrap quartet.
-        for _ in range(4):
+        # Drain the bootstrap event set.
+        for _ in range(5):
             ws.receive_json()
 
         # Drive the full flow via the WebSocket.
@@ -284,7 +284,7 @@ def test_wizard_saved_profile_is_visible_to_new_connections(tmp_path: Path) -> N
         client_one.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws_one,
     ):
         complete_handshake(ws_one)
-        for _ in range(4):
+        for _ in range(5):
             ws_one.receive_json()
         send_cmd(ws_one, "wizard_start")
         drain_events(ws_one, 1)
@@ -324,7 +324,7 @@ def test_wizard_saved_profile_is_visible_to_new_connections(tmp_path: Path) -> N
         client_two.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws_two,
     ):
         complete_handshake(ws_two)
-        for _ in range(4):
+        for _ in range(5):
             ws_two.receive_json()
         select_ack = send_cmd(
             ws_two,
@@ -453,7 +453,7 @@ def test_wizard_analyzer_failure_marks_job_failed_over_ws(
         client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws,
     ):
         complete_handshake(ws)
-        for _ in range(4):
+        for _ in range(5):
             ws.receive_json()
         send_cmd(ws, "wizard_start")
         drain_events(ws, 1)

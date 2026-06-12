@@ -5,8 +5,9 @@ exercise the ``/ws`` endpoint end-to-end without spinning up a real
 uvicorn process. The TestClient's ``websocket_connect`` context manager
 mimics a real WebSocket round-trip:
 
-* On enter, the bootstrap event quartet (session_status, snapshot_changed,
-  profile_changed, history_updated) arrives synchronously.
+* On enter, the bootstrap event set (session_status, snapshot_changed,
+  profile_changed, history_updated, performance_console_changed) arrives
+  synchronously.
 * Sending a command envelope via ``send_json`` triggers the dispatcher
   and the matching ack + event(s) arrive in order.
 
@@ -41,6 +42,7 @@ from rytm_randomizer.cockpit.profiles import ProfileRegistry
 from rytm_randomizer.cockpit.ws.protocol import (
     EVENT_HISTORY_UPDATED,
     EVENT_MUTATION_PREVIEWED,
+    EVENT_PERFORMANCE_CONSOLE_CHANGED,
     EVENT_PROFILE_CHANGED,
     EVENT_SEND_PLAN_CHANGED,
     EVENT_SESSION_STATUS,
@@ -115,7 +117,7 @@ def session_factory(tmp_path: Path):
 
 
 def _recv_initial_events(ws) -> list[dict]:
-    """Run the handshake then drain the four bootstrap events.
+    """Run the handshake then drain the five bootstrap events.
 
     Per CODE_REVIEW.md PR 1 finding C1, the cockpit WS endpoint now
     requires a handshake before bootstrap fires. Folding the handshake
@@ -124,7 +126,7 @@ def _recv_initial_events(ws) -> list[dict]:
     """
 
     complete_handshake(ws)
-    return [ws.receive_json() for _ in range(4)]
+    return [ws.receive_json() for _ in range(5)]
 
 
 def _send_command(ws, request_id: str, cmd_type: str, **body) -> dict:
@@ -149,11 +151,11 @@ def _prepare_send_plan(ws, request_id: str = "req-prepare") -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Connect-time bootstrap event quartet.
+# Connect-time bootstrap event set.
 # ---------------------------------------------------------------------------
 
 
-def test_connect_emits_four_initial_events_in_order(session_factory) -> None:
+def test_connect_emits_five_initial_events_in_order(session_factory) -> None:
     session = session_factory()
     app = create_app(session, token=TEST_WS_TOKEN)
     client = TestClient(app)
@@ -167,6 +169,7 @@ def test_connect_emits_four_initial_events_in_order(session_factory) -> None:
         EVENT_SNAPSHOT_CHANGED,
         EVENT_PROFILE_CHANGED,
         EVENT_HISTORY_UPDATED,
+        EVENT_PERFORMANCE_CONSOLE_CHANGED,
     ]
     assert events[0]["mode"] == "mock"  # MockDeviceAdapter
     assert events[2]["profile"] is None  # No active profile yet

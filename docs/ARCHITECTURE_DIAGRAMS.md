@@ -2478,7 +2478,7 @@ sequenceDiagram
     alt token matches
         Endpoint-->>TauriShell: {"ok": true}
         Note over Endpoint: BOOTSTRAP
-        Endpoint-->>TauriShell: session_status<br/>snapshot_changed<br/>profile_changed<br/>history_updated
+        Endpoint-->>TauriShell: session_status<br/>snapshot_changed<br/>profile_changed<br/>history_updated<br/>performance_console_changed
         Note over Endpoint: COMMAND LOOP (SX1)
         loop until disconnect
             TauriShell->>Endpoint: text frame

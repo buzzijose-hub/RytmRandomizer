@@ -4,6 +4,14 @@ Last updated: 2026-06-12. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-12: Cockpit performance console WebSocket/store bridge prepared after
+  PR #164. The `/ws` bootstrap now emits a passive
+  `performance_console_changed` packet after session, snapshot, profile, and
+  history events; the TypeScript client stores it, and the App route prefers
+  injected packets, then live WebSocket store packets, then the bundled demo
+  model. This remains passive review metadata only: no MIDI port opening, no
+  hardware arm path, no command queue dispatch, no profile analyzer execution,
+  no snapshot SEND, and no MIDI send.
 - 2026-06-12: Cockpit performance console demo route prepared after PR #163.
   The desktop App hash router now renders a bundled typed
   `LiveGuiPerformanceConsoleModelDict` at `#/performance-console` or

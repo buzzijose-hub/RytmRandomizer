@@ -54,6 +54,7 @@ pytestmark = pytest.mark.fast
 
 
 _FIXED_TS = datetime(2026, 5, 23, 12, 0, 0, tzinfo=timezone.utc)
+_PERFORMANCE_CONSOLE_CHANGED = "performance_console_changed"
 
 
 # ---------------------------------------------------------------------------
@@ -875,7 +876,7 @@ def test_export_profile_model_bad_target_returns_error(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_emit_initial_events_sends_four_events_in_order(tmp_path: Path) -> None:
+def test_emit_initial_events_sends_five_events_in_order(tmp_path: Path) -> None:
     session = _make_session(tmp_path)
     recorder = _Recorder()
 
@@ -887,7 +888,22 @@ def test_emit_initial_events_sends_four_events_in_order(tmp_path: Path) -> None:
         EVENT_SNAPSHOT_CHANGED,
         EVENT_PROFILE_CHANGED,
         EVENT_HISTORY_UPDATED,
+        _PERFORMANCE_CONSOLE_CHANGED,
     ]
+
+
+def test_emit_initial_events_carries_passive_performance_console_packet(tmp_path: Path) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    _run(handlers.emit_initial_events(recorder, session))
+
+    event = next(e for e in recorder.events if e["type"] == _PERFORMANCE_CONSOLE_CHANGED)
+    model = event["performance_console"]
+    assert model["console_version"] == "live-gui-performance-console-v1"
+    assert model["hardware_mode"] == "passive"
+    assert "open_midi_port_without_arm" in model["blocked_actions"]
+    assert model["rytm_pad_surface"]["pad_count"] == 12
 
 
 def test_emit_initial_events_carries_armed_false_for_mock(tmp_path: Path) -> None:

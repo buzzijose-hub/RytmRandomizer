@@ -159,6 +159,11 @@ EVENT_HISTORY_UPDATED: Final[Literal["history_updated"]] = "history_updated"
 EVENT_PROFILE_CHANGED: Final[Literal["profile_changed"]] = "profile_changed"
 """Emitted when the operator selects a different active :class:`ProfileModel`."""
 
+EVENT_PERFORMANCE_CONSOLE_CHANGED: Final[Literal["performance_console_changed"]] = (
+    "performance_console_changed"
+)
+"""Emitted when the passive Cockpit performance console packet refreshes."""
+
 EVENT_SESSION_STATUS: Final[Literal["session_status"]] = "session_status"
 """Emitted at connect + after SEND to refresh ``unsaved_sends`` / mode pill."""
 
@@ -170,6 +175,7 @@ EVENT_TYPES: Final[frozenset[str]] = (
             EVENT_SEND_PLAN_CHANGED,
             EVENT_HISTORY_UPDATED,
             EVENT_PROFILE_CHANGED,
+            EVENT_PERFORMANCE_CONSOLE_CHANGED,
             EVENT_SESSION_STATUS,
         }
     )
@@ -287,6 +293,19 @@ class ProfileChangedEvent(TypedDict):
 
     type: Literal["profile_changed"]
     profile: dict | None
+
+
+class PerformanceConsoleChangedEvent(TypedDict):
+    """``performance_console_changed`` - passive performance-console packet.
+
+    ``performance_console`` is the JSON-ready
+    :class:`LiveGuiPerformanceConsoleModel` payload produced by the
+    passive report layer, or ``None`` to clear the surface. The event is
+    read-only; it does not grant any hardware send authority.
+    """
+
+    type: Literal["performance_console_changed"]
+    performance_console: dict | None
 
 
 class SessionStatusEvent(TypedDict):
@@ -479,6 +498,7 @@ __all__ = [
     "ERR_VALIDATION",
     "EVENT_HISTORY_UPDATED",
     "EVENT_MUTATION_PREVIEWED",
+    "EVENT_PERFORMANCE_CONSOLE_CHANGED",
     "EVENT_PROFILE_CHANGED",
     "EVENT_SEND_PLAN_CHANGED",
     "EVENT_SESSION_STATUS",
@@ -492,6 +512,7 @@ __all__ = [
     "LoadSnapshotCommand",
     "MESSAGE_TOO_LARGE_CODE",
     "MutationPreviewedEvent",
+    "PerformanceConsoleChangedEvent",
     "PrepareSendPlanCommand",
     "ProfileChangedEvent",
     "RegenCommand",

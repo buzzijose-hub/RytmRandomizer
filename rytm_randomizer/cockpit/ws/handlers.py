@@ -90,6 +90,7 @@ from .protocol import (
     ERR_VALIDATION,
     EVENT_HISTORY_UPDATED,
     EVENT_MUTATION_PREVIEWED,
+    EVENT_PERFORMANCE_CONSOLE_CHANGED,
     EVENT_PROFILE_CHANGED,
     EVENT_SEND_PLAN_CHANGED,
     EVENT_SESSION_STATUS,
@@ -216,21 +217,37 @@ def _build_profile_changed(profile: Any) -> dict:
     }
 
 
+def _build_performance_console_changed() -> dict:
+    """Construct the passive performance-console packet event."""
+
+    from ...reports.live_gui_performance_console_model import (  # noqa: PLC0415
+        live_gui_performance_console_model_payload,
+    )
+
+    payload = live_gui_performance_console_model_payload()
+    return {
+        "type": EVENT_PERFORMANCE_CONSOLE_CHANGED,
+        "performance_console": payload["live_gui_performance_console"],
+    }
+
+
 async def emit_initial_events(emitter: EventEmitter, session: CockpitSession) -> None:
-    """Send the 4 bootstrap events a freshly-connected client expects.
+    """Send the 5 bootstrap events a freshly-connected client expects.
 
     Order matters for the UI: a client renders the session status pill
     first (so the user sees "armed" or "mock"), then the snapshot (so
     pads render), then the active profile (so the profile chip
-    highlights), then the history strip. The cockpit web frontend
-    handles them in any order, but this order keeps debug logs readable
-    when stepping through a fresh connect.
+    highlights), then the history strip, then the passive performance
+    console packet. The cockpit web frontend handles them in any order,
+    but this order keeps debug logs readable when stepping through a
+    fresh connect.
     """
 
     await emitter.send_event(_build_session_status(session))
     await emitter.send_event(_build_snapshot_changed(session.device.capture_snapshot()))
     await emitter.send_event(_build_profile_changed(session.active_profile))
     await emitter.send_event(_build_history_updated(session.history_store.current))
+    await emitter.send_event(_build_performance_console_changed())
 
 
 # ---------------------------------------------------------------------------

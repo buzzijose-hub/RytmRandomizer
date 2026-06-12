@@ -38,7 +38,7 @@ test.describe('handshake token (PR #113 / C1)', () => {
     await page.goto('/');
 
     // `cockpit-root` only mounts after `sessionStatus` arrives, which
-    // requires a successful handshake + the bootstrap-event quartet from
+    // requires a successful handshake + the bootstrap-event set from
     // `_perform_handshake` + `emit_initial_events`. If the handshake
     // fails, the placeholder ("Connecting…") stays on screen forever.
     await expect(page.getByTestId('cockpit-root')).toBeVisible({ timeout: 10_000 });

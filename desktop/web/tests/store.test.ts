@@ -36,6 +36,7 @@ import type {
   CockpitSendPlan,
   MutationCandidate,
   MutationPreviewedEvent,
+  PerformanceConsoleChangedEvent,
   ProfileChangedEvent,
   ProfileModel,
   SessionStatusEvent,
@@ -43,6 +44,7 @@ import type {
   Snapshot,
   SnapshotChangedEvent,
 } from '../src/ws/protocol';
+import { performanceConsoleModel } from './cockpit/performanceConsoleFixture';
 
 // ---------- Fixtures ----------
 
@@ -125,6 +127,7 @@ describe('cockpit store — actions write each slice', () => {
     expect(state.previewCandidate).toBeNull();
     expect(state.history).toBeNull();
     expect(state.profile).toBeNull();
+    expect(state.performanceConsole).toBeNull();
     expect(state.sendPlan).toBeNull();
     expect(state.sessionStatus).toBeNull();
     expect(state.connectionStatus).toBe('closed');
@@ -134,6 +137,7 @@ describe('cockpit store — actions write each slice', () => {
       previewCandidate: null,
       history: null,
       profile: null,
+      performanceConsole: null,
       sendPlan: null,
       sessionStatus: null,
       connectionStatus: 'closed',
@@ -169,6 +173,14 @@ describe('cockpit store — actions write each slice', () => {
     expect(store.getState().profile).toBeNull();
   });
 
+  it('setPerformanceConsole accepts a passive console packet and null', () => {
+    const store = createCockpitStore();
+    store.getState().setPerformanceConsole(performanceConsoleModel);
+    expect(store.getState().performanceConsole).toBe(performanceConsoleModel);
+    store.getState().setPerformanceConsole(null);
+    expect(store.getState().performanceConsole).toBeNull();
+  });
+
   it('setSendPlan accepts a plan and null (stale plan cleared)', () => {
     const store = createCockpitStore();
     store.getState().setSendPlan(sendPlan);
@@ -202,6 +214,7 @@ describe('cockpit store — actions write each slice', () => {
     store.getState().setPreviewCandidate(candidate);
     store.getState().setHistory(history);
     store.getState().setProfile(profile);
+    store.getState().setPerformanceConsole(performanceConsoleModel);
     store.getState().setSendPlan(sendPlan);
     store.getState().setSessionStatus(session);
     store.getState().setConnectionStatus('connected');
@@ -212,6 +225,7 @@ describe('cockpit store — actions write each slice', () => {
     expect(s.previewCandidate).toBeNull();
     expect(s.history).toBeNull();
     expect(s.profile).toBeNull();
+    expect(s.performanceConsole).toBeNull();
     expect(s.sendPlan).toBeNull();
     expect(s.sessionStatus).toBeNull();
     expect(s.connectionStatus).toBe('closed');
@@ -347,7 +361,7 @@ class FakeClient {
 }
 
 describe('bindClientToStore', () => {
-  it('routes all six engine events into the corresponding store slices', () => {
+  it('routes all seven engine events into the corresponding store slices', () => {
     const store = createCockpitStore();
     const client = new FakeClient();
     const unbind = bindClientToStore(client as unknown as CockpitClient, store);
@@ -393,6 +407,20 @@ describe('bindClientToStore', () => {
     fire('profile_changed', profileOff);
     expect(store.getState().profile).toBeNull();
 
+    const consoleEvent: PerformanceConsoleChangedEvent = {
+      type: 'performance_console_changed',
+      performance_console: performanceConsoleModel,
+    };
+    fire('performance_console_changed', consoleEvent);
+    expect(store.getState().performanceConsole).toBe(performanceConsoleModel);
+
+    const consoleOff: PerformanceConsoleChangedEvent = {
+      type: 'performance_console_changed',
+      performance_console: null,
+    };
+    fire('performance_console_changed', consoleOff);
+    expect(store.getState().performanceConsole).toBeNull();
+
     const sessionEvent: SessionStatusEvent = {
       type: 'session_status',
       armed: false,
@@ -417,7 +445,7 @@ describe('bindClientToStore', () => {
 
     // Unsubscribe should call client's individual unsubs.
     unbind();
-    expect(client.unsubCalls).toBe(7);
+    expect(client.unsubCalls).toBe(8);
   });
 
   it('falls back to the module-level singleton store when no store is provided', () => {

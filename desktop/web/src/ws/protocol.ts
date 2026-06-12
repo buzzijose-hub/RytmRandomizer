@@ -9,6 +9,7 @@
  * `cockpit/data/` (WS-A).
  */
 
+import type { LiveGuiPerformanceConsoleModelDict } from '../types/live_gui_protocol';
 import type { WizardEvent } from '../types/wizard_protocol';
 
 // ---------- Domain enums (literal unions) ----------
@@ -155,6 +156,11 @@ export interface ProfileChangedEvent {
   profile: ProfileModel | null;
 }
 
+export interface PerformanceConsoleChangedEvent {
+  type: 'performance_console_changed';
+  performance_console: LiveGuiPerformanceConsoleModelDict | null;
+}
+
 export interface SessionStatusEvent {
   type: 'session_status';
   armed: boolean;
@@ -169,6 +175,7 @@ export type Event =
   | SendPlanChangedEvent
   | HistoryUpdatedEvent
   | ProfileChangedEvent
+  | PerformanceConsoleChangedEvent
   | SessionStatusEvent
   | WizardEvent;
 
@@ -286,6 +293,7 @@ export function isEvent(msg: unknown): msg is Event {
     'send_plan_changed',
     'history_updated',
     'profile_changed',
+    'performance_console_changed',
     'session_status',
     'wizard_state_changed',
     'analysis_progress',

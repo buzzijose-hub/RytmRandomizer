@@ -74,6 +74,14 @@ export function bindClientToStore(
         ev.profile !== null ? `Profile selected: ${ev.profile.name}` : 'Profile cleared',
       );
     }),
+    client.on('performance_console_changed', (ev) => {
+      store.getState().setPerformanceConsole(ev.performance_console);
+      announce(
+        ev.performance_console !== null
+          ? 'Performance console packet ready'
+          : 'Performance console packet cleared',
+      );
+    }),
     client.on('session_status', (ev) => {
       store.getState().setSessionStatus({
         armed: ev.armed,

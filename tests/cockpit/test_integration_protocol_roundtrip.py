@@ -332,7 +332,7 @@ def test_malformed_json_closes_connection_but_server_keeps_serving(
     The load-bearing invariant for the spec's "malformed JSON → graceful
     handling" wording is: **the server process does not die**. We pin
     that by opening a fresh connection after the broken one and
-    confirming the bootstrap quartet still arrives.
+    confirming the bootstrap event set still arrives.
     """
 
     # The server now closes the socket on malformed JSON; we tolerate
@@ -341,7 +341,7 @@ def test_malformed_json_closes_connection_but_server_keeps_serving(
     try:
         with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
             complete_handshake(ws)
-            collect_initial_events(ws, count=4)
+            collect_initial_events(ws, count=5)
             ws.send_text("this is not json at all")
     except Exception:
         # Either path is acceptable; the spec-bearing assertion is below.
@@ -350,8 +350,8 @@ def test_malformed_json_closes_connection_but_server_keeps_serving(
     # Prove the server still serves: open a fresh connection and bootstrap.
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
-        bootstrap = collect_initial_events(ws, count=4)
-    assert len(bootstrap) == 4
+        bootstrap = collect_initial_events(ws, count=5)
+    assert len(bootstrap) == 5
 
 
 def test_request_id_round_trips_with_unicode_payload(cockpit_ws: object) -> None:

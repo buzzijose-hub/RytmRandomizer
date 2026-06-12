@@ -2,7 +2,7 @@
 
 These fixtures spin up a real :func:`rytm_randomizer.cockpit.ws.server.create_app`
 FastAPI instance in-process and drive it through ``fastapi.testclient.TestClient``
-so every command in the spec (11 total) and every event (6 total) can be
+so every command in the spec (11 total) and every event (7 total) can be
 exercised end-to-end across the JSON-over-WebSocket protocol.
 
 The two top-level fixtures:
@@ -13,7 +13,7 @@ The two top-level fixtures:
   :class:`ProfileRegistry`, so the seven built-in scenes are always
   available without filesystem mutation.
 * :func:`cockpit_ws` — opens a WebSocket connection against
-  :func:`cockpit_client`, **drains the four bootstrap events** so tests
+  :func:`cockpit_client`, **drains the five bootstrap events** so tests
   start at the "live command loop" cursor, and yields the live socket.
 
 Four helpers that integration tests call directly:
@@ -145,14 +145,14 @@ def cockpit_ws(cockpit_client: TestClient) -> Iterator[object]:
     """Open a WebSocket, complete the handshake, drain bootstrap, yield the live socket.
 
     Per CODE_REVIEW.md PR 1 finding C1, the cockpit WS endpoint now
-    requires a handshake before the bootstrap quartet fires. This
+    requires a handshake before the bootstrap event set fires. This
     fixture:
 
     1. Connects on the pinned :data:`WS_SUBPROTOCOL` so the server
        accepts the upgrade (L8).
     2. Sends ``{"type": "hello", "token": TEST_WS_TOKEN}`` and reads the
        ``{"ok": true}`` ack (C1).
-    3. Drains the four bootstrap events emitted by
+    3. Drains the five bootstrap events emitted by
        :func:`emit_initial_events` so the first ``receive_json`` inside
        the test body is the response to its first command.
 
@@ -163,7 +163,7 @@ def cockpit_ws(cockpit_client: TestClient) -> Iterator[object]:
 
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
-        for _ in range(4):
+        for _ in range(5):
             ws.receive_json()
         yield ws
 
@@ -181,8 +181,8 @@ def complete_handshake(ws: object, token: str = TEST_WS_TOKEN) -> dict:
     return ws.receive_json()  # type: ignore[attr-defined]
 
 
-def collect_initial_events(ws: object, count: int = 4) -> list[dict]:
-    """Read ``count`` event frames in order (default: the bootstrap quartet).
+def collect_initial_events(ws: object, count: int = 5) -> list[dict]:
+    """Read ``count`` event frames in order (default: the bootstrap event set).
 
     Use only on a freshly-connected WebSocket whose bootstrap events have
     not yet been drained. The :func:`cockpit_ws` fixture has already
