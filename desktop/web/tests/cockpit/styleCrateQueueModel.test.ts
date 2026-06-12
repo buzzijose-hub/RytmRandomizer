@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  ANALOG_FOUR_SET_PLAN_REPLAY_COMMAND,
   DEFAULT_STYLE_CRATE_REHEARSAL_DECK,
   DEFAULT_STYLE_CRATE_QUEUE_MODEL,
   toStyleCrateQueueModel,
@@ -63,6 +64,20 @@ describe('styleCrateQueueModel', () => {
       'python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --json',
     );
     expect(DEFAULT_STYLE_CRATE_QUEUE_MODEL.replayCommands).toContain(setPlan.replayCommand);
+  });
+
+  it('does not duplicate the Analog Four set planner replay command', () => {
+    const model = toStyleCrateQueueModel({
+      ...DEFAULT_STYLE_CRATE_REHEARSAL_DECK,
+      replay_commands: [
+        'rytm-randomizer style-crates --format json',
+        ANALOG_FOUR_SET_PLAN_REPLAY_COMMAND,
+      ],
+    });
+
+    expect(
+      model.replayCommands.filter((command) => command === ANALOG_FOUR_SET_PLAN_REPLAY_COMMAND),
+    ).toHaveLength(1);
   });
 
   it('keeps generic crate display and unknown queued crate labels deterministic', () => {

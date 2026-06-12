@@ -74,6 +74,25 @@ describe('StyleCrateQueue', () => {
     );
   });
 
+  it('renders active and empty-up-next Analog Four set-plan states from supplied models', () => {
+    render(
+      <StyleCrateQueue
+        model={{
+          ...DEFAULT_STYLE_CRATE_QUEUE_MODEL,
+          analogFourSetPlan: {
+            ...DEFAULT_ANALOG_FOUR_SET_PLAN,
+            sendsMidi: true,
+            upNext: [],
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByTestId('style-crate-a4-set-plan')).toHaveTextContent('active send path');
+    expect(screen.getByTestId('style-crate-a4-next')).toHaveTextContent('none');
+    expect(screen.getByTestId('style-crate-a4-next')).toHaveTextContent('0 queued A4 moves');
+  });
+
   it('updates selected backend-derived crate details locally', () => {
     render(<StyleCrateQueue model={DEFAULT_STYLE_CRATE_QUEUE_MODEL} />);
 
