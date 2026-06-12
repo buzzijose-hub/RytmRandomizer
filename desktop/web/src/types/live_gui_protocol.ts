@@ -484,6 +484,35 @@ export interface LiveGuiPerformanceFlowModelDict {
   replay_commands: ReadonlyArray<string>;
 }
 
+export interface LiveGuiPerformanceConsoleMacroActionCardDict {
+  macro_key: string;
+  order: number;
+  label: string;
+  shell_command: string;
+  send_policy: string;
+  recovery_action: string;
+  risk_label: string;
+  affected_pads: ReadonlyArray<number>;
+  pad_count: number;
+  status: string;
+  hardware_action_state: string;
+  hardware_send_enabled: boolean;
+  dry_run_only: boolean;
+  operator_hint: string;
+  test_id: string;
+}
+
+export interface LiveGuiPerformanceConsoleMacroActionDeckDict {
+  deck_version: string;
+  deck_id: string;
+  deck_status: string;
+  current_macro_key: string;
+  cards: ReadonlyArray<LiveGuiPerformanceConsoleMacroActionCardDict>;
+  blocked_actions: ReadonlyArray<string>;
+  safety_lines: ReadonlyArray<string>;
+  replay_commands: ReadonlyArray<string>;
+}
+
 export interface LiveGuiPerformanceConsoleDeviceInventoryModelDict {
   model_version: string;
   device_count: number;
@@ -512,6 +541,7 @@ export interface LiveGuiPerformanceConsoleModelDict {
   device_inventory: LiveGuiPerformanceConsoleDeviceInventoryModelDict;
   rytm_pad_surface: LiveGuiPerformanceConsoleRytmTwelvePadSurfaceModelDict;
   performance_flow: LiveGuiPerformanceFlowModelDict;
+  macro_action_deck: LiveGuiPerformanceConsoleMacroActionDeckDict;
   style_queue: StyleCrateRehearsalDeckDict;
   snapshot_history: LiveGuiSnapshotHistoryModelDict;
   command_queue: LiveGuiCommandQueueModelDict;

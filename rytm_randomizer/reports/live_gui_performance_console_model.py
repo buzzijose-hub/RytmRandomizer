@@ -34,6 +34,10 @@ from .live_gui_snapshot_history_model import (
     build_live_gui_snapshot_history_model,
     to_live_gui_snapshot_history_model_json,
 )
+from .oxi_live_macro_catalog import (
+    OxiLiveMacroCatalogReport,
+    build_oxi_live_macro_catalog_report,
+)
 from .style_crate_rehearsal_deck import (
     build_style_crate_rehearsal_deck,
     to_style_crate_rehearsal_deck_json,
@@ -44,6 +48,23 @@ SOURCE_MODULE: Final[str] = "reports.live_gui_performance_console_model"
 CONSOLE_VERSION: Final[str] = "live-gui-performance-console-v1"
 CONSOLE_STATUS: Final[str] = "mock-safe"
 HARDWARE_MODE: Final[str] = "passive"
+MACRO_ACTION_DECK_VERSION: Final[str] = "performance-console-macro-action-deck-v1"
+MACRO_ACTION_DECK_ID: Final[str] = "rytm-live-macro-actions"
+MACRO_ACTION_DECK_STATUS: Final[str] = "passive-ready"
+MACRO_ACTION_HARDWARE_STATE: Final[str] = "blocked"
+MACRO_ACTION_BLOCKED_ACTIONS: Final[tuple[str, ...]] = (
+    "fire macro from Cockpit console",
+    "prepare hardware send from Cockpit macro action",
+)
+MACRO_ACTION_SAFETY_LINES: Final[tuple[str, ...]] = (
+    "macro action cards are declarative only",
+    "operators still use the armed snapshot shell for real sends",
+    "all Cockpit macro fire controls stay disabled",
+)
+MACRO_ACTION_REPLAY_COMMANDS: Final[tuple[str, ...]] = (
+    "python -m rytm_randomizer.cli oxi-live-macro-catalog-report",
+    "python -m rytm_randomizer.cli live-gui-performance-flow-model-report --json",
+)
 REPLAY_COMMANDS: Final[tuple[str, ...]] = (
     "python -m rytm_randomizer.cli live-gui-performance-console-report",
     "python -m rytm_randomizer.cli live-gui-performance-console-report --json",
@@ -81,6 +102,7 @@ class LiveGuiPerformanceConsoleModel:
     device_inventory: dict[str, object]
     rytm_pad_surface: dict[str, object]
     performance_flow: dict[str, object]
+    macro_action_deck: dict[str, object]
     style_queue: dict[str, object]
     snapshot_history: dict[str, object]
     command_queue: dict[str, object]
@@ -102,6 +124,7 @@ class LiveGuiPerformanceConsoleModelDict(TypedDict):
     device_inventory: dict[str, object]
     rytm_pad_surface: dict[str, object]
     performance_flow: dict[str, object]
+    macro_action_deck: dict[str, object]
     style_queue: dict[str, object]
     snapshot_history: dict[str, object]
     command_queue: dict[str, object]
@@ -218,12 +241,88 @@ def _tuple_from_payload(payload: dict[str, object], key: str) -> tuple[str, ...]
     return tuple(str(value) for value in values)
 
 
+def _flow_lookup(catalog: OxiLiveMacroCatalogReport) -> dict[str, tuple[str, str]]:
+    return {
+        step.name: (step.send_policy, step.recovery_action)
+        for step in catalog.performance_flow
+        if step.name != "capture-anchor"
+    }
+
+
+def _macro_action_status(*, risk_label: str, macro_key: str) -> str:
+    if macro_key == "home":
+        return "recovery"
+    if risk_label == "edge":
+        return "review"
+    return "staged"
+
+
+def _macro_operator_hint(*, macro_key: str, recovery_action: str) -> str:
+    if macro_key == "home":
+        return "Type home in the armed shell, inspect changes, then send to restore the anchor."
+    return (
+        f"Type {macro_key} in the armed shell, inspect changes, send manually, "
+        f"and recover with {recovery_action}."
+    )
+
+
+def _build_macro_action_deck(
+    *,
+    current_macro_key: str,
+    catalog: OxiLiveMacroCatalogReport | None = None,
+) -> dict[str, object]:
+    source = build_oxi_live_macro_catalog_report() if catalog is None else catalog
+    flow_by_name = _flow_lookup(source)
+    cards: list[dict[str, object]] = []
+    for order, macro in enumerate(source.rytm_macros, start=1):
+        send_policy, recovery_action = flow_by_name.get(
+            macro.name,
+            ("stage-review-send", macro.recovery_action),
+        )
+        cards.append(
+            {
+                "macro_key": macro.name,
+                "order": order,
+                "label": macro.label,
+                "shell_command": macro.name,
+                "send_policy": send_policy,
+                "recovery_action": recovery_action,
+                "risk_label": macro.risk_label,
+                "affected_pads": list(macro.affected_pads),
+                "pad_count": len(macro.affected_pads),
+                "status": _macro_action_status(
+                    risk_label=macro.risk_label,
+                    macro_key=macro.name,
+                ),
+                "hardware_action_state": MACRO_ACTION_HARDWARE_STATE,
+                "hardware_send_enabled": False,
+                "dry_run_only": True,
+                "operator_hint": _macro_operator_hint(
+                    macro_key=macro.name,
+                    recovery_action=recovery_action,
+                ),
+                "test_id": f"macro-action-{macro.name}",
+            }
+        )
+    return {
+        "deck_version": MACRO_ACTION_DECK_VERSION,
+        "deck_id": MACRO_ACTION_DECK_ID,
+        "deck_status": MACRO_ACTION_DECK_STATUS,
+        "current_macro_key": current_macro_key,
+        "cards": cards,
+        "blocked_actions": list(MACRO_ACTION_BLOCKED_ACTIONS),
+        "safety_lines": list(MACRO_ACTION_SAFETY_LINES),
+        "replay_commands": list(MACRO_ACTION_REPLAY_COMMANDS),
+    }
+
+
 def _console_id(
     *,
     session_label: str,
     device_inventory: dict[str, object],
     rytm_pad_surface: dict[str, object],
     performance_flow: dict[str, object],
+    macro_action_deck: dict[str, object],
     style_queue: dict[str, object],
     snapshot_history: dict[str, object],
     command_queue: dict[str, object],
@@ -236,6 +335,7 @@ def _console_id(
             str(device_inventory.get("device_count", "")),
             str(rytm_pad_surface.get("pad_count", "")),
             str(performance_flow.get("flow_id", "")),
+            str(macro_action_deck.get("deck_id", "")),
             str(style_queue.get("deck_id", "")),
             str(snapshot_history.get("snapshot_history_id", "")),
             str(command_queue.get("command_queue_id", "")),
@@ -260,6 +360,9 @@ def build_live_gui_performance_console_model(
     performance_flow = live_gui_performance_flow_model_payload(
         build_live_gui_performance_flow_model()
     )["live_gui_performance_flow_model"]
+    macro_action_deck = _build_macro_action_deck(
+        current_macro_key=str(performance_flow["current_step_key"])
+    )
     style_queue = to_style_crate_rehearsal_deck_json(build_style_crate_rehearsal_deck())[
         "style_crate_rehearsal_deck"
     ]
@@ -281,6 +384,7 @@ def build_live_gui_performance_console_model(
 
     blocked_actions = _unique_tuple(
         tuple(performance_flow["blocked_actions"]),
+        _tuple_from_payload(macro_action_deck, "blocked_actions"),
         tuple(style_queue["blocked_actions"]),
         tuple(snapshot_history["blocked_actions"]),
         tuple(command_queue["blocked_actions"]),
@@ -291,6 +395,7 @@ def build_live_gui_performance_console_model(
     safety_lines = _unique_tuple(
         BASE_SAFETY_LINES,
         tuple(performance_flow["safety_lines"]),
+        _tuple_from_payload(macro_action_deck, "safety_lines"),
         _tuple_from_payload(device_inventory, "safety"),
         _tuple_from_payload(rytm_pad_surface, "safety"),
     )
@@ -303,6 +408,7 @@ def build_live_gui_performance_console_model(
             device_inventory=device_inventory,
             rytm_pad_surface=rytm_pad_surface,
             performance_flow=performance_flow,
+            macro_action_deck=macro_action_deck,
             style_queue=style_queue,
             snapshot_history=snapshot_history,
             command_queue=command_queue,
@@ -314,6 +420,7 @@ def build_live_gui_performance_console_model(
         device_inventory=device_inventory,
         rytm_pad_surface=rytm_pad_surface,
         performance_flow=performance_flow,
+        macro_action_deck=macro_action_deck,
         style_queue=style_queue,
         snapshot_history=snapshot_history,
         command_queue=command_queue,
@@ -341,6 +448,7 @@ def live_gui_performance_console_model_payload(
             "device_inventory": source.device_inventory,
             "rytm_pad_surface": source.rytm_pad_surface,
             "performance_flow": source.performance_flow,
+            "macro_action_deck": source.macro_action_deck,
             "style_queue": source.style_queue,
             "snapshot_history": source.snapshot_history,
             "command_queue": source.command_queue,
@@ -379,6 +487,14 @@ def _format_console_body(model: LiveGuiPerformanceConsoleModel) -> list[str]:
         "Performance flow:",
         f"- current: {current_flow_key}",
         f"- steps: {len(model.performance_flow['steps'])}",
+        "Macro actions:",
+        *[
+            (
+                f"- {card['macro_key']}: {card['shell_command']} / "
+                f"{card['send_policy']} / {card['hardware_action_state']}"
+            )
+            for card in model.macro_action_deck["cards"]
+        ],
         "A4 set plan:",
         f"- set: {a4_set_plan['set_name']}",
         f"- current macro: {a4_set_plan['current_macro']}",
@@ -433,6 +549,12 @@ __all__ = [
     "CONSOLE_STATUS",
     "CONSOLE_VERSION",
     "HARDWARE_MODE",
+    "MACRO_ACTION_BLOCKED_ACTIONS",
+    "MACRO_ACTION_DECK_STATUS",
+    "MACRO_ACTION_DECK_VERSION",
+    "MACRO_ACTION_HARDWARE_STATE",
+    "MACRO_ACTION_REPLAY_COMMANDS",
+    "MACRO_ACTION_SAFETY_LINES",
     "LIVE_GUI_PERFORMANCE_CONSOLE_CLI_COMMAND",
     "LiveGuiPerformanceConsoleModel",
     "LiveGuiPerformanceConsoleModelDict",

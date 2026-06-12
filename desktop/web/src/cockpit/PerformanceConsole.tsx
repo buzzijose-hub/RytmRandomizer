@@ -1,5 +1,6 @@
 import type {
   LiveGuiDeviceInventoryCardDict,
+  LiveGuiPerformanceConsoleMacroActionCardDict,
   LiveGuiPerformanceConsoleModelDict,
   LiveGuiRytmPadSurfaceCardDict,
 } from '../types/live_gui_protocol';
@@ -18,6 +19,12 @@ function orderedPads(
   pads: ReadonlyArray<LiveGuiRytmPadSurfaceCardDict>,
 ): ReadonlyArray<LiveGuiRytmPadSurfaceCardDict> {
   return [...pads].sort((left, right) => left.pad - right.pad);
+}
+
+function orderedMacroActions(
+  cards: ReadonlyArray<LiveGuiPerformanceConsoleMacroActionCardDict>,
+): ReadonlyArray<LiveGuiPerformanceConsoleMacroActionCardDict> {
+  return [...cards].sort((left, right) => left.order - right.order);
 }
 
 export function PerformanceConsole({ model }: PerformanceConsoleProps): JSX.Element {
@@ -128,6 +135,63 @@ export function PerformanceConsole({ model }: PerformanceConsoleProps): JSX.Elem
             ))}
           </div>
         </article>
+      </section>
+
+      <section
+        className="performance-console-surface performance-console-wide"
+        data-testid="performance-console-macro-actions"
+        aria-labelledby="console-macro-actions-title"
+      >
+        <header className="performance-console-section-header">
+          <h2 id="console-macro-actions-title">Live Macro Actions</h2>
+          <span>
+            {model.macro_action_deck.deck_status} / current {model.macro_action_deck.current_macro_key}
+          </span>
+        </header>
+        <div className="performance-console-macro-grid">
+          {orderedMacroActions(model.macro_action_deck.cards).map((card) => (
+            <article
+              key={card.macro_key}
+              className={`performance-console-macro-card ${card.status}`}
+              data-testid={card.test_id}
+            >
+              <header>
+                <strong>{card.label}</strong>
+                <span>{card.macro_key}</span>
+              </header>
+              <small>
+                {card.shell_command} / {card.send_policy} / {card.risk_label}
+              </small>
+              <span>pads {card.affected_pads.join(', ')}</span>
+              <small>{card.operator_hint}</small>
+              <div className="live-chip-row">
+                {model.macro_action_deck.blocked_actions.map((action) => (
+                  <span key={`${card.macro_key}-${action}`} className="live-chip live-chip-blocked">
+                    {action}
+                  </span>
+                ))}
+              </div>
+              <div className="performance-console-macro-actions">
+                <button
+                  type="button"
+                  className="live-readiness-action"
+                  disabled
+                  title="Macro preparation is blocked in this passive console packet."
+                >
+                  Prepare {card.macro_key}
+                </button>
+                <button
+                  type="button"
+                  className="live-readiness-action live-readiness-action-locked"
+                  disabled
+                  title="Real sends remain in the explicitly armed snapshot shell."
+                >
+                  Send {card.macro_key}
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section

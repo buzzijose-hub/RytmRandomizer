@@ -44,6 +44,35 @@ def test_performance_console_model_composes_live_cockpit_sections() -> None:
     assert model.performance_flow["analog_four_set_plan"]["set_name"] == "warehouse-arc"
     assert model.performance_flow["analog_four_set_plan"]["current_macro"] == "home"
     assert model.performance_flow["steps"][1]["key"] == "kit-core"
+    macro_deck = model.macro_action_deck
+    assert macro_deck["deck_status"] == "passive-ready"
+    assert macro_deck["current_macro_key"] == "capture-anchor"
+    assert [card["macro_key"] for card in macro_deck["cards"]] == [
+        "kit-core",
+        "hard-groove",
+        "industrial",
+        "dub-pressure",
+        "transition",
+        "home",
+    ]
+    assert macro_deck["cards"][0]["shell_command"] == "kit-core"
+    assert macro_deck["cards"][0]["send_policy"] == "stage-review-send"
+    assert macro_deck["cards"][0]["hardware_send_enabled"] is False
+    assert macro_deck["cards"][1]["affected_pads"] == [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+    ]
+    assert macro_deck["cards"][-1]["recovery_action"] == "captured-anchor"
+    assert "fire macro from Cockpit console" in macro_deck["blocked_actions"]
 
     assert model.style_queue["deck_status"] == "passive-ready"
     assert len(model.style_queue["crate_cards"]) >= 7
@@ -115,6 +144,8 @@ def test_performance_console_payload_is_json_safe_and_passive() -> None:
     assert model["console_version"] == "live-gui-performance-console-v1"
     assert model["device_inventory"]["cards"][1]["device_id"] == "analog_four_mk2"
     assert model["rytm_pad_surface"]["pad_count"] == 12
+    assert model["macro_action_deck"]["cards"][1]["macro_key"] == "hard-groove"
+    assert model["macro_action_deck"]["cards"][1]["shell_command"] == "hard-groove"
     assert model["performance_flow"]["analog_four_set_plan"]["step_count"] == 5
     assert model["snapshot_history"]["entries"][0]["snapshot_id"] == "console-snap-01"
     assert payload["safety"][0] == "passive/read-only"
@@ -145,6 +176,8 @@ def test_performance_console_report_is_operator_readable() -> None:
     assert "- pads: 12" in lines
     assert "Performance flow:" in lines
     assert "- current: capture-anchor" in lines
+    assert "Macro actions:" in lines
+    assert "- hard-groove: hard-groove / stage-review-send / blocked" in lines
     assert "A4 set plan:" in lines
     assert "- set: warehouse-arc" in lines
     assert "Style queue and journal:" in lines

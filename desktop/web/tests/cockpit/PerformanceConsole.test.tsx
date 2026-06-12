@@ -33,6 +33,15 @@ describe('PerformanceConsole', () => {
     expect(flow).toHaveTextContent('warehouse-arc');
     expect(flow).toHaveTextContent('A4 full macro SEND');
 
+    const macroActions = screen.getByTestId('performance-console-macro-actions');
+    expect(macroActions).toHaveTextContent('Live Macro Actions');
+    expect(macroActions).toHaveTextContent('hard-groove');
+    expect(macroActions).toHaveTextContent('pads 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12');
+    expect(macroActions).toHaveTextContent('stage-review-send');
+    expect(macroActions).toHaveTextContent('fire macro from Cockpit console');
+    expect(within(macroActions).getAllByRole('button', { name: /prepare/i })[0]).toBeDisabled();
+    expect(within(macroActions).getAllByRole('button', { name: /send/i })[0]).toBeDisabled();
+
     const styleQueue = screen.getByTestId('performance-console-style-queue');
     expect(styleQueue).toHaveTextContent('Dark Hypnotic');
     expect(styleQueue).toHaveTextContent('snap-06');

@@ -4,6 +4,16 @@ Last updated: 2026-06-12. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-12: Cockpit performance console macro-action deck prepared after
+  PR #165. The passive `live-gui-performance-console-report` now carries
+  deterministic cards for `kit-core`, `hard-groove`, `industrial`,
+  `dub-pressure`, `transition`, and `home`, derived from the existing OXI live
+  macro catalog and performance-flow metadata. The desktop Performance Console
+  renders those cards with affected pads, shell command, send policy, recovery
+  action, and disabled Prepare/Send controls so operators can review the live
+  set moves visually while real macro firing stays in the explicitly armed
+  snapshot shell. Passive metadata only: no sidecar command dispatch, no MIDI
+  port opening, no hardware arm path, no MIDI send, and no snapshot mutation.
 - 2026-06-12: Cockpit performance console WebSocket/store bridge prepared after
   PR #164. The `/ws` bootstrap now emits a passive
   `performance_console_changed` packet after session, snapshot, profile, and
