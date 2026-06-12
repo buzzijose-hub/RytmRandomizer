@@ -18,6 +18,7 @@ import { useCockpitStore } from '../src/state';
 import { useWizardStore } from '../src/state/wizard_store';
 
 import { FakeCockpitClient, sessionLive, snapshot } from './cockpit/_fixtures';
+import { performanceConsoleModel } from './cockpit/performanceConsoleFixture';
 
 function setHash(hash: string): void {
   window.location.hash = hash;
@@ -45,6 +46,76 @@ describe('App hash router', () => {
     render(<App client={fake.asClient()} />);
     expect(screen.getByText(/Connecting/)).toBeInTheDocument();
     expect(screen.queryByTestId('cockpit-root')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('wizard-root')).not.toBeInTheDocument();
+  });
+
+  it('mounts the Performance Console preview route from an injected passive model before session_status arrives', () => {
+    setHash('/performance-console');
+    const fake = new FakeCockpitClient();
+
+    render(<App client={fake.asClient()} performanceConsole={performanceConsoleModel} />);
+
+    expect(screen.getByTestId('performance-console')).toBeInTheDocument();
+    expect(screen.queryByText(/Connecting/)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('cockpit-root')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('wizard-root')).not.toBeInTheDocument();
+  });
+
+  it('mounts the Performance Console preview route from the short console alias', () => {
+    setHash('/console');
+    const fake = new FakeCockpitClient();
+
+    render(<App client={fake.asClient()} performanceConsole={performanceConsoleModel} />);
+
+    expect(screen.getByTestId('performance-console')).toBeInTheDocument();
+    expect(screen.queryByText(/Connecting/)).not.toBeInTheDocument();
+  });
+
+  it('falls back to the connecting placeholder on the Performance Console route without a model', () => {
+    setHash('/performance-console');
+    const fake = new FakeCockpitClient();
+
+    render(<App client={fake.asClient()} />);
+
+    expect(screen.getByText(/Connecting/)).toBeInTheDocument();
+    expect(screen.queryByTestId('performance-console')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('cockpit-root')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('wizard-root')).not.toBeInTheDocument();
+  });
+
+  it('swaps Performance Console → Wizard when the hash changes after mount', () => {
+    setHash('/performance-console');
+    const fake = new FakeCockpitClient();
+    useCockpitStore.getState().setSessionStatus(sessionLive);
+    useCockpitStore.getState().setSnapshot(snapshot);
+    render(<App client={fake.asClient()} performanceConsole={performanceConsoleModel} />);
+    expect(screen.getByTestId('performance-console')).toBeInTheDocument();
+
+    act(() => {
+      setHash('/wizard');
+      fireHashChange();
+    });
+
+    expect(screen.getByTestId('wizard-root')).toBeInTheDocument();
+    expect(screen.queryByTestId('performance-console')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('cockpit-root')).not.toBeInTheDocument();
+  });
+
+  it('swaps Performance Console → Cockpit when the hash returns to "#/" after mount', () => {
+    setHash('/performance-console');
+    const fake = new FakeCockpitClient();
+    useCockpitStore.getState().setSessionStatus(sessionLive);
+    useCockpitStore.getState().setSnapshot(snapshot);
+    render(<App client={fake.asClient()} performanceConsole={performanceConsoleModel} />);
+    expect(screen.getByTestId('performance-console')).toBeInTheDocument();
+
+    act(() => {
+      setHash('/');
+      fireHashChange();
+    });
+
+    expect(screen.getByTestId('cockpit-root')).toBeInTheDocument();
+    expect(screen.queryByTestId('performance-console')).not.toBeInTheDocument();
     expect(screen.queryByTestId('wizard-root')).not.toBeInTheDocument();
   });
 

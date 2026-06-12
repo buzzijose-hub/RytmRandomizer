@@ -22,14 +22,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { LiveRegion, useDocumentTitle, useFocusOnRouteChange } from './a11y';
-import { Cockpit } from './cockpit';
+import { Cockpit, PerformanceConsole } from './cockpit';
 import { bindClientToStore, useCockpitStore } from './state';
+import type { LiveGuiPerformanceConsoleModelDict } from './types/live_gui_protocol';
 import { Wizard } from './wizard';
 import { CockpitClient, type ConnectionStatus } from './ws/client';
 
 interface AppProps {
   /** Inject a client for tests/storybook. Default: a new singleton connected to the sidecar. */
   client?: CockpitClient;
+  /** Inject the passive performance-console packet for mock-safe preview routes. */
+  performanceConsole?: LiveGuiPerformanceConsoleModelDict;
 }
 
 /**
@@ -52,12 +55,19 @@ function isWizardRoute(hash: string): boolean {
   return hash === '#/wizard' || hash.startsWith('#/wizard/');
 }
 
-export function App({ client: injected }: AppProps = {}): JSX.Element {
+/** True when the hash points at the passive performance console preview surface. */
+function isPerformanceConsoleRoute(hash: string): boolean {
+  return hash === '#/performance-console' || hash === '#/console';
+}
+
+export function App({ client: injected, performanceConsole }: AppProps = {}): JSX.Element {
   const client = useMemo(() => injected ?? new CockpitClient(), [injected]);
   const sessionStatus = useCockpitStore((s) => s.sessionStatus);
   const [connStatus, setConnStatus] = useState<ConnectionStatus>(client.getStatus());
   const route = useHashRoute();
   const routeRootRef = useRef<HTMLDivElement>(null);
+  const performanceConsoleModel = isPerformanceConsoleRoute(route) ? performanceConsole : undefined;
+  const showPerformanceConsole = performanceConsoleModel !== undefined;
 
   useEffect(() => {
     const unbind = bindClientToStore(client);
@@ -71,7 +81,9 @@ export function App({ client: injected }: AppProps = {}): JSX.Element {
   }, [client]);
 
   useDocumentTitle(
-    sessionStatus === null
+    showPerformanceConsole
+      ? 'RytmRandomizer · Performance Console'
+      : sessionStatus === null
       ? 'RytmRandomizer · Connecting'
       : isWizardRoute(route)
         ? 'RytmRandomizer · Profile Wizard'
@@ -79,6 +91,17 @@ export function App({ client: injected }: AppProps = {}): JSX.Element {
   );
 
   useFocusOnRouteChange(routeRootRef, [route, sessionStatus === null]);
+
+  if (showPerformanceConsole) {
+    return (
+      <>
+        <LiveRegion />
+        <div ref={routeRootRef} tabIndex={-1}>
+          <PerformanceConsole model={performanceConsoleModel} />
+        </div>
+      </>
+    );
+  }
 
   if (sessionStatus === null) {
     return (

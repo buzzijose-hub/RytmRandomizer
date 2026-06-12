@@ -4,6 +4,16 @@ Last updated: 2026-06-12. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-12: Cockpit performance console preview route added for the passive
+  packet introduced in PR #162. The desktop App hash router can now render an
+  injected `LiveGuiPerformanceConsoleModelDict` at `#/performance-console` or
+  `#/console` before a sidecar session frame arrives, giving tests,
+  storybook-style hosts, and preview shells a direct mock-safe path to the
+  full 12-pad Rytm, Analog Four, style queue, snapshot journal, command queue,
+  and safety checklist surface. The route is model-injected only: it opens no
+  MIDI port, launches no hardware path, sends no MIDI, and falls back to the
+  existing connecting/Cockpit/Wizard behavior when no console model is
+  supplied.
 - 2026-06-12: Cockpit performance console bundle prepared after PR #161. The
   passive `live-gui-performance-console-report` now composes the Rytm 12-pad
   snapshot surface, registered device inventory, Style Crates queue and
