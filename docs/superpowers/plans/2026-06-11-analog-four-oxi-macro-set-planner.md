@@ -142,8 +142,38 @@ python -m isort --profile black --check-only .
 git diff --check
 ```
 
+## Task 6: Cockpit JSON Adapter Hardening
+
+**Files:**
+- Modify: `desktop/web/src/cockpit/styleCrateQueueModel.ts`
+- Modify: `desktop/web/tests/cockpit/styleCrateQueueModel.test.ts`
+- Modify: `docs/STATUS.md`
+
+- [x] **Step 1: Add red tests for backend set-planner JSON**
+
+Cover the `analog-four-oxi-macro-set-planner-report --json` snake_case payload
+shape and ensure Cockpit can consume a custom set name, current/up-next macro
+steps, blocked actions, safety flags, and report-owned replay command.
+
+- [x] **Step 2: Add the Cockpit adapter**
+
+Add `toStyleCrateAnalogFourSetPlan` and an optional `toStyleCrateQueueModel`
+input so the style queue can use real backend A4 set planner JSON while keeping
+the default `warehouse-arc` fallback populated.
+
+- [x] **Step 3: Verify frontend contract**
+
+Run:
+
+```powershell
+npm.cmd run test:run -- tests/cockpit/styleCrateQueueModel.test.ts
+npm.cmd run typecheck
+```
+
+Expected: affected Cockpit model tests and TypeScript build pass.
+
 ## Self-Review
 
-- Spec coverage: covers A4 set sequencing, readiness rows, replay commands, blocked active actions, docs, CLI, and JSON payloads.
+- Spec coverage: covers A4 set sequencing, readiness rows, replay commands, blocked active actions, docs, CLI, JSON payloads, and the Cockpit adapter from backend JSON to frontend model.
 - Safety coverage: no port opening, no MIDI sending, no hardware mutation, no full A4 macro SEND.
 - Architecture coverage: new work stays inside `reports/`, existing CLI registry, existing data/report surfaces, and does not add top-level packages.

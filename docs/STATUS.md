@@ -6,7 +6,8 @@ Last updated: 2026-06-12. This file is a hand-authored snapshot and is meant to 
 
 - 2026-06-12: Cockpit style-crate queue surface now consumes the passive
   Analog Four OXI macro set planner metadata prepared on PR #160. The
-  frontend model carries the `warehouse-arc` current/up-next A4 macro plan,
+  frontend model maps the report's snake_case JSON into the Cockpit camelCase
+  queue contract, carries the `warehouse-arc` current/up-next A4 macro plan,
   blocked `A4 full macro SEND`/unattended-playback actions, safety flags, and
   the report-owned replay command for
   `analog-four-oxi-macro-set-planner-report --json`;

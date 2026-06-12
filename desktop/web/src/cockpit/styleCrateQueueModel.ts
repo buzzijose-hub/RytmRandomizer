@@ -60,6 +60,23 @@ export interface StyleCrateAnalogFourSetStep {
   readonly recoveryAction: string;
 }
 
+export interface StyleCrateAnalogFourSetStepDict {
+  readonly order: number;
+  readonly macro_name: string;
+  readonly macro_label: string;
+  readonly summary: string;
+  readonly seed: number;
+  readonly intensity: number;
+  readonly energy: number;
+  readonly readiness: string;
+  readonly event_count: number;
+  readonly ready_count: number;
+  readonly review_count: number;
+  readonly blocked_count: number;
+  readonly validation_command: string;
+  readonly recovery_action: string;
+}
+
 export interface StyleCrateAnalogFourSetPlan {
   readonly title: string;
   readonly setName: string;
@@ -75,6 +92,21 @@ export interface StyleCrateAnalogFourSetPlan {
   readonly replayCommand: string;
 }
 
+export interface StyleCrateAnalogFourSetPlanDict {
+  readonly title: string;
+  readonly set_name: string;
+  readonly step_count: number;
+  readonly current_step: StyleCrateAnalogFourSetStepDict;
+  readonly up_next: ReadonlyArray<StyleCrateAnalogFourSetStepDict>;
+  readonly steps: ReadonlyArray<StyleCrateAnalogFourSetStepDict>;
+  readonly opens_ports: boolean;
+  readonly sends_midi: boolean;
+  readonly hardware_required: boolean;
+  readonly blocked_active_actions: ReadonlyArray<string>;
+  readonly safety: ReadonlyArray<string>;
+  readonly replay_command: string;
+}
+
 export interface StyleCrateQueueModel {
   readonly modelVersion: string;
   readonly deckId: string;
@@ -87,6 +119,10 @@ export interface StyleCrateQueueModel {
   readonly blockedActions: ReadonlyArray<string>;
   readonly replayCommands: ReadonlyArray<string>;
   readonly analogFourSetPlan: StyleCrateAnalogFourSetPlan;
+}
+
+export interface ToStyleCrateQueueModelOptions {
+  readonly analogFourSetPlan?: StyleCrateAnalogFourSetPlanDict;
 }
 
 const CRATE_DISPLAY_OVERRIDES: Record<
@@ -255,14 +291,56 @@ function crateDisplay(crate: StyleCrateRehearsalCrateCardDict): {
 
 function replayCommandsWithAnalogFourSetPlanner(
   replayCommands: ReadonlyArray<string>,
+  replayCommand: string = ANALOG_FOUR_SET_PLAN_REPLAY_COMMAND,
 ): ReadonlyArray<string> {
-  return replayCommands.includes(ANALOG_FOUR_SET_PLAN_REPLAY_COMMAND)
+  return replayCommands.includes(replayCommand)
     ? replayCommands
-    : [...replayCommands, ANALOG_FOUR_SET_PLAN_REPLAY_COMMAND];
+    : [...replayCommands, replayCommand];
+}
+
+function toStyleCrateAnalogFourSetStep(
+  step: StyleCrateAnalogFourSetStepDict,
+): StyleCrateAnalogFourSetStep {
+  return {
+    order: step.order,
+    macroName: step.macro_name,
+    macroLabel: step.macro_label,
+    summary: step.summary,
+    seed: step.seed,
+    intensity: step.intensity,
+    energy: step.energy,
+    readiness: step.readiness,
+    eventCount: step.event_count,
+    readyCount: step.ready_count,
+    reviewCount: step.review_count,
+    blockedCount: step.blocked_count,
+    validationCommand: step.validation_command,
+    recoveryAction: step.recovery_action,
+  };
+}
+
+export function toStyleCrateAnalogFourSetPlan(
+  plan: StyleCrateAnalogFourSetPlanDict,
+): StyleCrateAnalogFourSetPlan {
+  return {
+    title: plan.title,
+    setName: plan.set_name,
+    stepCount: plan.step_count,
+    currentStep: toStyleCrateAnalogFourSetStep(plan.current_step),
+    upNext: plan.up_next.map(toStyleCrateAnalogFourSetStep),
+    steps: plan.steps.map(toStyleCrateAnalogFourSetStep),
+    opensPorts: plan.opens_ports,
+    sendsMidi: plan.sends_midi,
+    hardwareRequired: plan.hardware_required,
+    blockedActiveActions: plan.blocked_active_actions,
+    safety: plan.safety,
+    replayCommand: plan.replay_command,
+  };
 }
 
 export function toStyleCrateQueueModel(
   deck: StyleCrateRehearsalDeckDict,
+  options: ToStyleCrateQueueModelOptions = {},
 ): StyleCrateQueueModel {
   const crates = deck.crate_cards.map((crate) => {
     const display = crateDisplay(crate);
@@ -301,6 +379,10 @@ export function toStyleCrateQueueModel(
   }));
   const targetPadSlots = queue.reduce((total, move) => total + move.targetPads.length, 0);
   const journalCount = deck.journal_cards.length;
+  const analogFourSetPlan =
+    options.analogFourSetPlan === undefined
+      ? DEFAULT_ANALOG_FOUR_SET_PLAN
+      : toStyleCrateAnalogFourSetPlan(options.analogFourSetPlan);
 
   return {
     modelVersion: deck.deck_version,
@@ -312,8 +394,11 @@ export function toStyleCrateQueueModel(
     summary: `${queue.length} staged moves cover ${targetPadSlots} target pad slots and ${journalCount} journal seeds.`,
     safetyLabel: 'Passive queue preview only',
     blockedActions: deck.blocked_actions,
-    replayCommands: replayCommandsWithAnalogFourSetPlanner(deck.replay_commands),
-    analogFourSetPlan: DEFAULT_ANALOG_FOUR_SET_PLAN,
+    replayCommands: replayCommandsWithAnalogFourSetPlanner(
+      deck.replay_commands,
+      analogFourSetPlan.replayCommand,
+    ),
+    analogFourSetPlan,
   };
 }
 
