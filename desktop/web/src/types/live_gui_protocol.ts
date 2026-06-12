@@ -458,6 +458,16 @@ export interface LiveGuiAnalogFourReadinessDict {
   blocked_active_actions: ReadonlyArray<string>;
 }
 
+export interface LiveGuiAnalogFourSetPlanDict {
+  set_name: string;
+  current_macro: string;
+  up_next_macros: ReadonlyArray<string>;
+  step_count: number;
+  replay_command: string;
+  summary: string;
+  blocked_active_actions: ReadonlyArray<string>;
+}
+
 export interface LiveGuiPerformanceFlowModelDict {
   model_version: string;
   source_module: string;
@@ -466,6 +476,7 @@ export interface LiveGuiPerformanceFlowModelDict {
   current_step_key: string;
   steps: ReadonlyArray<LiveGuiPerformanceFlowStepDict>;
   analog_four_readiness: LiveGuiAnalogFourReadinessDict;
+  analog_four_set_plan: LiveGuiAnalogFourSetPlanDict;
   blocked_actions: ReadonlyArray<string>;
   safety_lines: ReadonlyArray<string>;
   replay_commands: ReadonlyArray<string>;

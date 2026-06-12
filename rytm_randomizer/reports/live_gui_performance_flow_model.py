@@ -7,6 +7,10 @@ from dataclasses import dataclass
 from typing import Final, TypedDict
 
 from ..cli_registry import CliCommand, make_passive_report_command, register
+from .analog_four_oxi_macro_set_planner import (
+    AnalogFourOxiSetPlannerReport,
+    build_analog_four_oxi_macro_set_planner_report,
+)
 
 REPORT_TITLE: Final[str] = "RytmRandomizer passive live GUI performance flow model"
 SOURCE_MODULE: Final[str] = "reports.live_gui_performance_flow_model"
@@ -38,6 +42,7 @@ REPLAY_COMMANDS: Final[tuple[str, ...]] = (
     "python -m rytm_randomizer.cli live-gui-performance-flow-model-report --json",
     "python -m rytm_randomizer.cli oxi-live-macro-catalog-report",
     "python -m rytm_randomizer.cli analog-four-oxi-macro-report --json",
+    "python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --json",
     "python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report "
     "hard-groove --seed 0 --intensity 4 --limit 4",
 )
@@ -95,6 +100,49 @@ class LiveGuiAnalogFourReadinessDict(TypedDict):
     blocked_active_actions: tuple[str, ...]
 
 
+@dataclass(frozen=True)
+class LiveGuiAnalogFourSetPlan:
+    """GUI-ready A4 macro set-plan summary for the passive flow model."""
+
+    set_name: str
+    current_macro: str
+    up_next_macros: tuple[str, ...]
+    step_count: int
+    replay_command: str
+    summary: str
+    blocked_active_actions: tuple[str, ...]
+
+
+class LiveGuiAnalogFourSetPlanDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiAnalogFourSetPlan`."""
+
+    set_name: str
+    current_macro: str
+    up_next_macros: tuple[str, ...]
+    step_count: int
+    replay_command: str
+    summary: str
+    blocked_active_actions: tuple[str, ...]
+
+
+def _analog_four_set_plan_from_report(
+    report: AnalogFourOxiSetPlannerReport,
+) -> LiveGuiAnalogFourSetPlan:
+    up_next_macros = tuple(step.macro_name for step in report.up_next)
+    return LiveGuiAnalogFourSetPlan(
+        set_name=report.set_name,
+        current_macro=report.current_step.macro_name,
+        up_next_macros=up_next_macros,
+        step_count=len(report.steps),
+        replay_command=report.replay_command,
+        summary=(
+            f"{report.set_name} stages {len(report.steps)} A4 macro moves; "
+            f"current {report.current_step.macro_name}; full macro SEND remains blocked."
+        ),
+        blocked_active_actions=report.blocked_active_actions,
+    )
+
+
 DEFAULT_ANALOG_FOUR_READINESS: Final[LiveGuiAnalogFourReadiness] = LiveGuiAnalogFourReadiness(
     readiness="review-ready",
     command=A4_MACRO_READINESS_COMMAND,
@@ -103,6 +151,10 @@ DEFAULT_ANALOG_FOUR_READINESS: Final[LiveGuiAnalogFourReadiness] = LiveGuiAnalog
         "full macro SEND remains blocked."
     ),
     blocked_active_actions=("a4_outbound_macro_send",),
+)
+
+DEFAULT_ANALOG_FOUR_SET_PLAN: Final[LiveGuiAnalogFourSetPlan] = _analog_four_set_plan_from_report(
+    build_analog_four_oxi_macro_set_planner_report()
 )
 
 
@@ -117,6 +169,7 @@ class LiveGuiPerformanceFlowModel:
     current_step_key: str
     steps: tuple[LiveGuiPerformanceFlowStep, ...]
     analog_four_readiness: LiveGuiAnalogFourReadiness
+    analog_four_set_plan: LiveGuiAnalogFourSetPlan
     blocked_actions: tuple[str, ...]
     safety_lines: tuple[str, ...]
     replay_commands: tuple[str, ...]
@@ -132,6 +185,7 @@ class LiveGuiPerformanceFlowModelDict(TypedDict):
     current_step_key: str
     steps: tuple[LiveGuiPerformanceFlowStepDict, ...]
     analog_four_readiness: LiveGuiAnalogFourReadinessDict
+    analog_four_set_plan: LiveGuiAnalogFourSetPlanDict
     blocked_actions: tuple[str, ...]
     safety_lines: tuple[str, ...]
     replay_commands: tuple[str, ...]
@@ -222,6 +276,7 @@ def build_live_gui_performance_flow_model(
     *,
     steps: Sequence[LiveGuiPerformanceFlowStep] = DEFAULT_STEPS,
     analog_four_readiness: LiveGuiAnalogFourReadiness = DEFAULT_ANALOG_FOUR_READINESS,
+    analog_four_set_plan: LiveGuiAnalogFourSetPlan = DEFAULT_ANALOG_FOUR_SET_PLAN,
     current_step_key: str = CURRENT_STEP_KEY,
 ) -> LiveGuiPerformanceFlowModel:
     """Build the deterministic passive live GUI performance flow model."""
@@ -234,6 +289,7 @@ def build_live_gui_performance_flow_model(
         current_step_key=current_step_key,
         steps=tuple(steps),
         analog_four_readiness=analog_four_readiness,
+        analog_four_set_plan=analog_four_set_plan,
         blocked_actions=BLOCKED_ACTIONS,
         safety_lines=SAFETY_LINES,
         replay_commands=REPLAY_COMMANDS,
@@ -267,6 +323,20 @@ def _live_gui_analog_four_readiness_payload(
     }
 
 
+def _live_gui_analog_four_set_plan_payload(
+    set_plan: LiveGuiAnalogFourSetPlan,
+) -> dict[str, object]:
+    return {
+        "set_name": set_plan.set_name,
+        "current_macro": set_plan.current_macro,
+        "up_next_macros": list(set_plan.up_next_macros),
+        "step_count": set_plan.step_count,
+        "replay_command": set_plan.replay_command,
+        "summary": set_plan.summary,
+        "blocked_active_actions": list(set_plan.blocked_active_actions),
+    }
+
+
 def live_gui_performance_flow_model_payload(
     model: LiveGuiPerformanceFlowModel,
 ) -> dict[str, object]:
@@ -282,6 +352,9 @@ def live_gui_performance_flow_model_payload(
             "steps": [_live_gui_performance_flow_step_payload(step) for step in model.steps],
             "analog_four_readiness": _live_gui_analog_four_readiness_payload(
                 model.analog_four_readiness
+            ),
+            "analog_four_set_plan": _live_gui_analog_four_set_plan_payload(
+                model.analog_four_set_plan
             ),
             "blocked_actions": list(model.blocked_actions),
             "safety_lines": list(model.safety_lines),
@@ -336,6 +409,16 @@ def format_live_gui_performance_flow_model_report(
         "- blocked active actions: "
         f"{', '.join(model.analog_four_readiness.blocked_active_actions)}"
     )
+    lines.extend(("", "A4 set plan:"))
+    lines.append(f"- set: {model.analog_four_set_plan.set_name}")
+    lines.append(f"- current macro: {model.analog_four_set_plan.current_macro}")
+    lines.append(f"- up next: {', '.join(model.analog_four_set_plan.up_next_macros)}")
+    lines.append(f"- replay: {model.analog_four_set_plan.replay_command}")
+    lines.append(f"- summary: {model.analog_four_set_plan.summary}")
+    lines.append(
+        "- blocked active actions: "
+        f"{', '.join(model.analog_four_set_plan.blocked_active_actions)}"
+    )
     lines.extend(("", "Replay commands:"))
     lines.extend(f"- {command}" for command in model.replay_commands)
     lines.extend(("", "Passive safety:"))
@@ -366,9 +449,12 @@ __all__ = [
     "FLOW_ID",
     "FLOW_STATUS",
     "DEFAULT_ANALOG_FOUR_READINESS",
+    "DEFAULT_ANALOG_FOUR_SET_PLAN",
     "LIVE_GUI_PERFORMANCE_FLOW_MODEL_CLI_COMMAND",
     "LiveGuiAnalogFourReadiness",
     "LiveGuiAnalogFourReadinessDict",
+    "LiveGuiAnalogFourSetPlan",
+    "LiveGuiAnalogFourSetPlanDict",
     "LiveGuiPerformanceFlowModel",
     "LiveGuiPerformanceFlowModelDict",
     "LiveGuiPerformanceFlowStep",

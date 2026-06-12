@@ -45,6 +45,20 @@ def test_performance_flow_model_exposes_cockpit_steps_and_safety() -> None:
         "hard-groove --seed 0 --intensity 4 --limit 4"
     )
     assert "a4_outbound_macro_send" in model.analog_four_readiness.blocked_active_actions
+    assert model.analog_four_set_plan.set_name == "warehouse-arc"
+    assert model.analog_four_set_plan.current_macro == "home"
+    assert model.analog_four_set_plan.up_next_macros == (
+        "hard-groove",
+        "dub-pressure",
+        "industrial-transition",
+        "home",
+    )
+    assert model.analog_four_set_plan.step_count == 5
+    assert (
+        model.analog_four_set_plan.replay_command
+        == "python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --json"
+    )
+    assert "A4 full macro SEND" in model.analog_four_set_plan.blocked_active_actions
 
 
 def test_performance_flow_payload_is_gui_ready_and_json_safe() -> None:
@@ -74,6 +88,22 @@ def test_performance_flow_payload_is_gui_ready_and_json_safe() -> None:
         "summary": model.analog_four_readiness.summary,
         "blocked_active_actions": list(model.analog_four_readiness.blocked_active_actions),
     }
+    assert flow_payload["analog_four_set_plan"] == {
+        "set_name": "warehouse-arc",
+        "current_macro": "home",
+        "up_next_macros": [
+            "hard-groove",
+            "dub-pressure",
+            "industrial-transition",
+            "home",
+        ],
+        "step_count": 5,
+        "replay_command": (
+            "python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --json"
+        ),
+        "summary": model.analog_four_set_plan.summary,
+        "blocked_active_actions": list(model.analog_four_set_plan.blocked_active_actions),
+    }
 
 
 def test_performance_flow_report_is_operator_readable_and_passive() -> None:
@@ -97,6 +127,11 @@ def test_performance_flow_report_is_operator_readable_and_passive() -> None:
     assert "A4 macro readiness:" in text
     assert "analog-four-oxi-macro-readiness-report hard-groove" in text
     assert "full macro SEND remains blocked" in text
+    assert "A4 set plan:" in text
+    assert "- set: warehouse-arc" in text
+    assert "- current macro: home" in text
+    assert "- up next: hard-groove, dub-pressure, industrial-transition, home" in text
+    assert "analog-four-oxi-macro-set-planner-report --json" in text
 
     kit_core_lines = format_live_gui_performance_flow_model_report(
         build_live_gui_performance_flow_model(current_step_key="kit-core")
@@ -123,6 +158,8 @@ def test_performance_flow_cli_text_and_json_modes(capsys: pytest.CaptureFixture[
     assert flow_payload["steps"][0]["key"] == "capture-anchor"
     assert "open_midi_port_without_arm" in flow_payload["blocked_actions"]
     assert flow_payload["analog_four_readiness"]["readiness"] == "review-ready"
+    assert flow_payload["analog_four_set_plan"]["set_name"] == "warehouse-arc"
+    assert flow_payload["analog_four_set_plan"]["current_macro"] == "home"
 
 
 def test_performance_flow_cli_rejects_unknown_args(

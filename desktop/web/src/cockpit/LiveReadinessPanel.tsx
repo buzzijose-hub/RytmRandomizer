@@ -51,6 +51,8 @@ const REPLAY_COMMANDS = ['python -m rytm_randomizer.cli live-gui-status-footer-m
 
 const A4_MACRO_READINESS_COMMAND =
   'python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4';
+const A4_MACRO_SET_PLANNER_COMMAND =
+  'python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --json';
 
 export const DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL: LivePerformanceFlowModel = {
   model_version: 'live-gui-performance-flow-model-v1',
@@ -155,8 +157,18 @@ export const DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL: LivePerformanceFlowModel = {
     'python -m rytm_randomizer.cli live-gui-performance-flow-model-report --json',
     'python -m rytm_randomizer.cli oxi-live-macro-catalog-report',
     'python -m rytm_randomizer.cli analog-four-oxi-macro-report --json',
+    'python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --json',
     'python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4',
   ],
+  analog_four_set_plan: {
+    set_name: 'warehouse-arc',
+    current_macro: 'home',
+    up_next_macros: ['hard-groove', 'dub-pressure', 'industrial-transition', 'home'],
+    step_count: 5,
+    replay_command: A4_MACRO_SET_PLANNER_COMMAND,
+    summary: 'warehouse-arc stages 5 A4 macro moves; current home; full macro SEND remains blocked.',
+    blocked_active_actions: ['A4 full macro SEND', 'A4 unattended macro playback'],
+  },
 };
 
 export const DEFAULT_LIVE_READINESS_MODEL: LiveReadinessModel = {
@@ -964,6 +976,11 @@ export function LiveReadinessPanel({
 }
 
 export function LivePerformanceFlow({ model }: { model: LivePerformanceFlowModel }): JSX.Element {
+  const analogFourMacroPath = [
+    model.analog_four_set_plan.current_macro,
+    ...model.analog_four_set_plan.up_next_macros,
+  ].join(' -> ');
+
   return (
     <section className="live-surface live-surface-wide" data-testid="live-performance-flow">
       <SurfaceTitle title="Performance Flow" meta={`${model.steps.length} steps / ${model.flow_status}`} />
@@ -995,6 +1012,19 @@ export function LivePerformanceFlow({ model }: { model: LivePerformanceFlowModel
         <span>{model.analog_four_readiness.command}</span>
         <div className="live-chip-row">
           {model.analog_four_readiness.blocked_active_actions.map((action) => (
+            <span key={action} className="live-chip live-chip-blocked">
+              {action}
+            </span>
+          ))}
+        </div>
+      </article>
+      <article className="live-row live-a4-set-plan" data-testid="live-a4-set-plan">
+        <strong>A4 Set Plan</strong>
+        <span>{model.analog_four_set_plan.set_name}</span>
+        <small>{analogFourMacroPath}</small>
+        <span>{model.analog_four_set_plan.replay_command}</span>
+        <div className="live-chip-row">
+          {model.analog_four_set_plan.blocked_active_actions.map((action) => (
             <span key={action} className="live-chip live-chip-blocked">
               {action}
             </span>

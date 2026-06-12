@@ -194,6 +194,10 @@ describe('LiveReadinessPanel', () => {
     expect(flowPanel).toHaveTextContent('review-ready');
     expect(flowPanel).toHaveTextContent('full macro SEND remains blocked');
     expect(flowPanel).toHaveTextContent('analog-four-oxi-macro-readiness-report hard-groove');
+    expect(flowPanel).toHaveTextContent('A4 Set Plan');
+    expect(flowPanel).toHaveTextContent('warehouse-arc');
+    expect(flowPanel).toHaveTextContent('home -> hard-groove -> dub-pressure');
+    expect(flowPanel).toHaveTextContent('analog-four-oxi-macro-set-planner-report --json');
     expect(flowPanel).toHaveTextContent('live-gui-performance-flow-model-report --json');
   });
 
