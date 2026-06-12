@@ -196,6 +196,7 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `analog-four-style-mutation-mock-preview-report` | Passive Analog Four mock CC rows (deferred while saved-kit offsets are promoted) |
 | `analog-four-kit-catalog-report` | Passive Analog Four decoded kit catalog |
 | `analog-four-oxi-macro-report` | Passive in-memory Analog Four OXI-style four-track macro preview |
+| `analog-four-oxi-macro-readiness-report` | Passive Analog Four OXI macro readiness, soft-capture preflight, and operator-present validation commands |
 | `analog-four-style-kit-readiness-report` | Passive per-kit Analog Four style-readiness sweep |
 
 ```bash
@@ -204,6 +205,7 @@ python -m rytm_randomizer.cli analog-four-style-mutation-intent-report KITS.syx 
 python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report KITS.syx jose_core_techno --slot 0 --discovery 45 --events --limit 24
 python -m rytm_randomizer.cli analog-four-kit-catalog-report KITS.syx --limit 16
 python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove --seed 23 --intensity 6 --events --limit 0
+python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4
 python -m rytm_randomizer.cli analog-four-style-kit-readiness-report KITS.syx jose_core_techno --limit 16
 ```
 
@@ -215,6 +217,13 @@ shapes such as `home`, `hard-groove`, `dub-pressure`, and
 `industrial-transition` before promoting any future A4 path into a gated
 hardware plan.
 
+`analog-four-oxi-macro-readiness-report` is the next passive promotion gate. It
+reuses the same deterministic macro rows, marks manual-backed CC rows as
+`cc-ready`, and prints an input-only soft-capture preflight command, explicit
+operator-present validation commands, stop/recovery notes, and promotion gates.
+It does not arm hardware, open ports, send MIDI, or implement full A4 macro
+SEND.
+
 ---
 
 ## OXI live macro strategy
@@ -222,13 +231,24 @@ hardware plan.
 | Command | Description |
 |---|---|
 | `oxi-live-macro-catalog-report` | Passive Rytm macro cards, recovery actions, live flow, and A4 runway state |
+| `rytm-live-macro-hardware-rehearsal-report` | Passive next-studio Rytm macro checklist with launch command, pad-lane checks, and recovery notes |
 | `oxi-live-set-strategy-report` | Passive OXI-style set chapters, operator cues, rehearsal/replay commands, all-12-pad policy, and A4 review-only actions |
 
 ```bash
 python -m rytm_randomizer.cli oxi-live-macro-catalog-report
+python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report
+python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report --json
 python -m rytm_randomizer.cli oxi-live-set-strategy-report
 python -m rytm_randomizer.cli oxi-live-set-strategy-report --json
 ```
+
+`rytm-live-macro-hardware-rehearsal-report` is the passive checklist for the
+next operator-present Rytm hardware session. It prints the armed live snapshot
+shell launch command, the `kit-core`, `hard-groove`, `industrial`,
+`dub-pressure`, `transition`, and `home` macro rehearsal cards, Pad 5/9/10/11
+SRC-first notes, Pad 6-8 tom/source notes, Pad 12 product-availability notes,
+and the `home`/`Z` recovery checks. The report itself does not arm hardware,
+open MIDI ports, send MIDI, or mutate hardware.
 
 `oxi-live-set-strategy-report` is the passive bridge between the OXI-style
 operator idea and the current macro vocabulary. It describes OXI as the source

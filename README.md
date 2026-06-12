@@ -58,6 +58,10 @@ Anchor / Shape / Pressure / Space dry-run review, but it does not add an A4
 SEND path, open ports, or send MIDI. The passive
 `analog-four-oxi-macro-report` command previews four-track OXI-style A4 macro
 shapes from manual-backed CC metadata before any future send path is promoted.
+The paired passive `analog-four-oxi-macro-readiness-report` command turns those
+rows into a soft-capture-first validation workflow, operator-present one-row
+validation commands, recovery notes, and promotion gates while explicitly
+keeping full A4 macro SEND blocked until separate hardware evidence promotes it.
 
 **Sidecar security guarantees** (post CODE_REVIEW.md sweep, 2026-05):
 
@@ -589,12 +593,14 @@ python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report   # passive Rytm
 python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report   # passive snapshot readiness per Rytm pad
 python -m rytm_randomizer.cli analog-rytm-midi-catalog-report   # passive OS 1.72 Rytm CC/NRPN catalog
 python -m rytm_randomizer.cli oxi-live-macro-catalog-report   # passive OXI live macro cards, live flow, and A4 runway state
+python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report --json   # passive next-studio Rytm macro rehearsal checklist
 python -m rytm_randomizer.cli live-gui-performance-flow-model-report --json   # cockpit-ready Rytm/A4 performance flow model
 python -m rytm_randomizer.cli oxi-live-set-strategy-report --json   # passive OXI set chapters, operator cues, rehearsal/replay commands, pad policy, and A4 review-only actions
 python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove --seed 23 --intensity 6 --events --limit 0
+python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4
 ```
 
-Aliases: `rytm-only` and `a4-only` are accepted. The reports are passive: they open no MIDI port and send no MIDI. The snapshot-pad compatibility report explains which legal Rytm pad/machine combinations are snapshot-mutable today and which remain selectable-only until the follow-up runtime slice. The Analog Rytm MIDI catalog records OS 1.72 CC/NRPN rows with safety status labels; documented-only rows are not promoted to mutation until a separate approved hardware-validation pass. The live GUI performance-flow model emits the cockpit-ready sequence that joins Rytm OXI macro commands with Analog Four review-only actions. The OXI live set strategy report ties `kit/resnapshot`, `kit-core`, `hard-groove`, `industrial`, `dub-pressure`, `transition`, and `home` into operator chapters while preserving the pad 5/9/10/11 SRC+FX lane discipline, the pad 6-8 tom/source lane, Pad 12 availability for users who rely on it, the next Rytm/A4 validation runway, the A4 promotion gates, an operator cue sheet for what OXI keeps handling, what RytmRandomizer stages, what Jose inspects, what fires, what recovers, rehearsal checkpoints for capture, review, fire, recovery, A4 gating, and after-set notes, and replay/rehearsal command metadata for passive reports, A4 review, Rytm shell launch, `changes`, manual fire, and recovery. The Analog Four path is candidate/manifest-gated; do not run armed Analog Four hardware sends until a readiness report says the plan is ready.
+Aliases: `rytm-only` and `a4-only` are accepted. The reports are passive: they open no MIDI port and send no MIDI. The snapshot-pad compatibility report explains which legal Rytm pad/machine combinations are snapshot-mutable today and which remain selectable-only until the follow-up runtime slice. The Analog Rytm MIDI catalog records OS 1.72 CC/NRPN rows with safety status labels; documented-only rows are not promoted to mutation until a separate approved hardware-validation pass. The live GUI performance-flow model emits the cockpit-ready sequence that joins Rytm OXI macro commands with Analog Four review-only actions. The Rytm live macro hardware rehearsal report turns the macro list into a next-studio checklist with the armed shell launch command, per-macro checkpoints, Pad 5/9/10/11 SRC-first notes, Pad 6-8 tom/source notes, Pad 12 availability notes, and `home`/`Z` recovery checks. The OXI live set strategy report ties `kit/resnapshot`, `kit-core`, `hard-groove`, `industrial`, `dub-pressure`, `transition`, and `home` into operator chapters while preserving the pad 5/9/10/11 SRC+FX lane discipline, the pad 6-8 tom/source lane, Pad 12 availability for users who rely on it, the next Rytm/A4 validation runway, the A4 promotion gates, an operator cue sheet for what OXI keeps handling, what RytmRandomizer stages, what Jose inspects, what fires, what recovers, rehearsal checkpoints for capture, review, fire, recovery, A4 gating, and after-set notes, and replay/rehearsal command metadata for passive reports, A4 review, Rytm shell launch, `changes`, manual fire, and recovery. The A4 readiness report adds the soft-capture preflight command plus one-row validation commands and stop/recovery notes. The Analog Four path is candidate/manifest-gated; do not run armed Analog Four hardware sends until a readiness report says the plan is ready.
 
 ---
 

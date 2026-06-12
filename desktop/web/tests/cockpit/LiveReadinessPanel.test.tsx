@@ -190,6 +190,10 @@ describe('LiveReadinessPanel', () => {
 
     expect(flowPanel).toHaveTextContent('a4_outbound_macro_send');
     expect(flowPanel).toHaveTextContent('unattended_hardware_behavior');
+    expect(flowPanel).toHaveTextContent('A4 Macro Readiness');
+    expect(flowPanel).toHaveTextContent('review-ready');
+    expect(flowPanel).toHaveTextContent('full macro SEND remains blocked');
+    expect(flowPanel).toHaveTextContent('analog-four-oxi-macro-readiness-report hard-groove');
     expect(flowPanel).toHaveTextContent('live-gui-performance-flow-model-report --json');
   });
 

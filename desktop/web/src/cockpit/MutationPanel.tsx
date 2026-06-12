@@ -14,6 +14,7 @@ import { ActionBar } from './ActionBar';
 import { DepthSlider } from './DepthSlider';
 import { ProfileChips } from './ProfileChips';
 import { ProfileToggle } from './ProfileToggle';
+import { StyleCrateQueue } from './StyleCrateQueue';
 
 export interface MutationPanelProps {
   /** Catalogue of all profiles known to the cockpit. */
@@ -55,6 +56,7 @@ export function MutationPanel({
   return (
     <section className="cockpit-panel" data-testid="mutation-panel">
       <h2>Mutation Panel</h2>
+      <StyleCrateQueue />
       <ProfileToggle value={kind} onChange={setKind} />
       <ProfileChips available={filtered} />
       <button

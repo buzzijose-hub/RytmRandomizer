@@ -203,6 +203,7 @@ PASSIVE_CLI_SWEEP_COMMANDS = (
     ("rytm-style-kit-readiness-report", "--help"),
     ("analog-four-style-mutation-mock-preview-report", "--help"),
     ("analog-four-style-kit-readiness-report", "--help"),
+    ("analog-four-oxi-macro-readiness-report", "--help"),
     ("dual-machine-style-kit-readiness-report", "--help"),
     ("dual-machine-style-kit-selection-report", "--help"),
     ("dual-machine-style-selection-mock-preview-report", "--help"),

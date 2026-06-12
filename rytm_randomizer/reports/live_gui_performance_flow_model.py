@@ -38,6 +38,12 @@ REPLAY_COMMANDS: Final[tuple[str, ...]] = (
     "python -m rytm_randomizer.cli live-gui-performance-flow-model-report --json",
     "python -m rytm_randomizer.cli oxi-live-macro-catalog-report",
     "python -m rytm_randomizer.cli analog-four-oxi-macro-report --json",
+    "python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report "
+    "hard-groove --seed 0 --intensity 4 --limit 4",
+)
+A4_MACRO_READINESS_COMMAND: Final[str] = (
+    "python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report "
+    "hard-groove --seed 0 --intensity 4 --limit 4"
 )
 
 
@@ -71,6 +77,36 @@ class LiveGuiPerformanceFlowStepDict(TypedDict):
 
 
 @dataclass(frozen=True)
+class LiveGuiAnalogFourReadiness:
+    """GUI-ready A4 macro readiness summary for the passive flow model."""
+
+    readiness: str
+    command: str
+    summary: str
+    blocked_active_actions: tuple[str, ...]
+
+
+class LiveGuiAnalogFourReadinessDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiAnalogFourReadiness`."""
+
+    readiness: str
+    command: str
+    summary: str
+    blocked_active_actions: tuple[str, ...]
+
+
+DEFAULT_ANALOG_FOUR_READINESS: Final[LiveGuiAnalogFourReadiness] = LiveGuiAnalogFourReadiness(
+    readiness="review-ready",
+    command=A4_MACRO_READINESS_COMMAND,
+    summary=(
+        "A4 macro rows are CC-ready for operator-present validation; "
+        "full macro SEND remains blocked."
+    ),
+    blocked_active_actions=("a4_outbound_macro_send",),
+)
+
+
+@dataclass(frozen=True)
 class LiveGuiPerformanceFlowModel:
     """Passive cockpit performance flow packet for future GUI consumers."""
 
@@ -80,6 +116,7 @@ class LiveGuiPerformanceFlowModel:
     flow_status: str
     current_step_key: str
     steps: tuple[LiveGuiPerformanceFlowStep, ...]
+    analog_four_readiness: LiveGuiAnalogFourReadiness
     blocked_actions: tuple[str, ...]
     safety_lines: tuple[str, ...]
     replay_commands: tuple[str, ...]
@@ -94,6 +131,7 @@ class LiveGuiPerformanceFlowModelDict(TypedDict):
     flow_status: str
     current_step_key: str
     steps: tuple[LiveGuiPerformanceFlowStepDict, ...]
+    analog_four_readiness: LiveGuiAnalogFourReadinessDict
     blocked_actions: tuple[str, ...]
     safety_lines: tuple[str, ...]
     replay_commands: tuple[str, ...]
@@ -183,6 +221,7 @@ DEFAULT_STEPS: Final[tuple[LiveGuiPerformanceFlowStep, ...]] = (
 def build_live_gui_performance_flow_model(
     *,
     steps: Sequence[LiveGuiPerformanceFlowStep] = DEFAULT_STEPS,
+    analog_four_readiness: LiveGuiAnalogFourReadiness = DEFAULT_ANALOG_FOUR_READINESS,
     current_step_key: str = CURRENT_STEP_KEY,
 ) -> LiveGuiPerformanceFlowModel:
     """Build the deterministic passive live GUI performance flow model."""
@@ -194,6 +233,7 @@ def build_live_gui_performance_flow_model(
         flow_status=FLOW_STATUS,
         current_step_key=current_step_key,
         steps=tuple(steps),
+        analog_four_readiness=analog_four_readiness,
         blocked_actions=BLOCKED_ACTIONS,
         safety_lines=SAFETY_LINES,
         replay_commands=REPLAY_COMMANDS,
@@ -216,6 +256,17 @@ def _live_gui_performance_flow_step_payload(
     }
 
 
+def _live_gui_analog_four_readiness_payload(
+    readiness: LiveGuiAnalogFourReadiness,
+) -> dict[str, object]:
+    return {
+        "readiness": readiness.readiness,
+        "command": readiness.command,
+        "summary": readiness.summary,
+        "blocked_active_actions": list(readiness.blocked_active_actions),
+    }
+
+
 def live_gui_performance_flow_model_payload(
     model: LiveGuiPerformanceFlowModel,
 ) -> dict[str, object]:
@@ -229,6 +280,9 @@ def live_gui_performance_flow_model_payload(
             "flow_status": model.flow_status,
             "current_step_key": model.current_step_key,
             "steps": [_live_gui_performance_flow_step_payload(step) for step in model.steps],
+            "analog_four_readiness": _live_gui_analog_four_readiness_payload(
+                model.analog_four_readiness
+            ),
             "blocked_actions": list(model.blocked_actions),
             "safety_lines": list(model.safety_lines),
             "replay_commands": list(model.replay_commands),
@@ -274,6 +328,14 @@ def format_live_gui_performance_flow_model_report(
             f"  {step.label} / {step.phase}; A4: {step.analog_four_action}; "
             f"recovery: {step.recovery_action}"
         )
+    lines.extend(("", "A4 macro readiness:"))
+    lines.append(f"- readiness: {model.analog_four_readiness.readiness}")
+    lines.append(f"- command: {model.analog_four_readiness.command}")
+    lines.append(f"- summary: {model.analog_four_readiness.summary}")
+    lines.append(
+        "- blocked active actions: "
+        f"{', '.join(model.analog_four_readiness.blocked_active_actions)}"
+    )
     lines.extend(("", "Replay commands:"))
     lines.extend(f"- {command}" for command in model.replay_commands)
     lines.extend(("", "Passive safety:"))
@@ -303,7 +365,10 @@ __all__ = [
     "DEFAULT_STEPS",
     "FLOW_ID",
     "FLOW_STATUS",
+    "DEFAULT_ANALOG_FOUR_READINESS",
     "LIVE_GUI_PERFORMANCE_FLOW_MODEL_CLI_COMMAND",
+    "LiveGuiAnalogFourReadiness",
+    "LiveGuiAnalogFourReadinessDict",
     "LiveGuiPerformanceFlowModel",
     "LiveGuiPerformanceFlowModelDict",
     "LiveGuiPerformanceFlowStep",

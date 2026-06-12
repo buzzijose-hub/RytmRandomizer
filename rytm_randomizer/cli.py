@@ -96,6 +96,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.analog_four_oxi_macro_report",
             "ANALOG_FOUR_OXI_MACRO_CLI_COMMAND",
         ),
+        "analog-four-oxi-macro-readiness-report": (
+            "rytm_randomizer.reports.analog_four_oxi_macro_readiness",
+            "ANALOG_FOUR_OXI_MACRO_READINESS_CLI_COMMAND",
+        ),
         "analog-four-style-kit-readiness-report": (
             "rytm_randomizer.reports.analog_four_style_kit_readiness",
             "ANALOG_FOUR_STYLE_KIT_READINESS_CLI_COMMAND",
@@ -147,6 +151,10 @@ def _registered_command_exit_code(args):
         "oxi-live-macro-catalog-report": (
             "rytm_randomizer.reports.oxi_live_macro_catalog",
             "OXI_LIVE_MACRO_CATALOG_CLI_COMMAND",
+        ),
+        "rytm-live-macro-hardware-rehearsal-report": (
+            "rytm_randomizer.reports.rytm_live_macro_hardware_rehearsal",
+            "RYTM_LIVE_MACRO_HARDWARE_REHEARSAL_CLI_COMMAND",
         ),
         "live-gui-performance-flow-model-report": (
             "rytm_randomizer.reports.live_gui_performance_flow_model",

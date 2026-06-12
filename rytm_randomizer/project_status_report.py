@@ -29,6 +29,7 @@ PASSIVE_CLI_COMMANDS = (
     "mock-runtime-active-bridge-report",
     "anchor-profile-report",
     "behavior-parity-report",
+    "rytm-live-macro-hardware-rehearsal-report",
     "list-commands",
     "list-scenes",
     "list-group-profiles",
