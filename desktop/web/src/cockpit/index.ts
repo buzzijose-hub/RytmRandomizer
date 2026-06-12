@@ -66,6 +66,8 @@ export type {
   LiveGuiHardwareRailSafetyCheckDict,
   LiveGuiLastActionDict,
   LiveGuiPerformanceConsoleDeviceInventoryModelDict,
+  LiveGuiPerformanceConsoleMacroActionCardDict,
+  LiveGuiPerformanceConsoleMacroActionDeckDict,
   LiveGuiPerformanceConsoleModelDict,
   LiveGuiPerformanceConsoleRytmTwelvePadSurfaceModelDict,
   LiveGuiQueuedCommandDict,
