@@ -22,7 +22,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { LiveRegion, useDocumentTitle, useFocusOnRouteChange } from './a11y';
-import { Cockpit, PerformanceConsole } from './cockpit';
+import { Cockpit, PerformanceConsole, performanceConsoleDemoModel } from './cockpit';
 import { bindClientToStore, useCockpitStore } from './state';
 import type { LiveGuiPerformanceConsoleModelDict } from './types/live_gui_protocol';
 import { Wizard } from './wizard';
@@ -66,7 +66,9 @@ export function App({ client: injected, performanceConsole }: AppProps = {}): JS
   const [connStatus, setConnStatus] = useState<ConnectionStatus>(client.getStatus());
   const route = useHashRoute();
   const routeRootRef = useRef<HTMLDivElement>(null);
-  const performanceConsoleModel = isPerformanceConsoleRoute(route) ? performanceConsole : undefined;
+  const performanceConsoleModel = isPerformanceConsoleRoute(route)
+    ? performanceConsole ?? performanceConsoleDemoModel
+    : undefined;
   const showPerformanceConsole = performanceConsoleModel !== undefined;
 
   useEffect(() => {
