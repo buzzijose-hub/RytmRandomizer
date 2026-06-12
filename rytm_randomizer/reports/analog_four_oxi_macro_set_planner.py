@@ -26,6 +26,9 @@ DEFAULT_SEQUENCE: Final[tuple[str, ...]] = (
     "industrial-transition",
     "home",
 )
+REPLAY_COMMAND: Final[str] = (
+    "python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --json"
+)
 BLOCKED_ACTIVE_ACTIONS: Final[tuple[str, ...]] = (
     "A4 full macro SEND",
     "A4 unattended macro playback",
@@ -85,6 +88,7 @@ class AnalogFourOxiSetPlannerReport:
     hardware_required: bool
     blocked_active_actions: tuple[str, ...]
     safety: tuple[str, ...]
+    replay_command: str
 
 
 def _validate_sequence(sequence: Sequence[str]) -> tuple[str, ...]:
@@ -175,6 +179,7 @@ def build_analog_four_oxi_macro_set_planner_report(
         hardware_required=False,
         blocked_active_actions=BLOCKED_ACTIVE_ACTIONS,
         safety=SAFETY_LINES,
+        replay_command=REPLAY_COMMAND,
     )
 
 
@@ -214,6 +219,7 @@ def _a4_macro_set_planner_body_lines(
         )
     lines.append("Blocked active actions:")
     lines.extend(f"- {action}" for action in report.blocked_active_actions)
+    lines.append(f"Replay command: {report.replay_command}")
     lines.append("Safety flags:")
     lines.extend(
         (
@@ -279,6 +285,7 @@ def build_analog_four_oxi_macro_set_planner_payload(
         "hardware_required": report.hardware_required,
         "blocked_active_actions": list(report.blocked_active_actions),
         "safety": list(report.safety),
+        "replay_command": report.replay_command,
     }
 
 
@@ -388,6 +395,7 @@ __all__ = [
     "DEFAULT_SET_NAME",
     "RECOVERY_ACTION",
     "REPORT_TITLE",
+    "REPLAY_COMMAND",
     "SAFETY_LINES",
     "SOURCE_MODULE",
     "AnalogFourOxiSetPlannerReport",

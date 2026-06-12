@@ -64,7 +64,8 @@ validation commands, recovery notes, and promotion gates while explicitly
 keeping full A4 macro SEND blocked until separate hardware evidence promotes it.
 The passive `analog-four-oxi-macro-set-planner-report` command sequences those
 macro/readiness cards into a current/up-next set plan for future Cockpit queue
-work without adding A4 playback, automation, port opening, or MIDI sending.
+work, including the report-owned replay command, without adding A4 playback,
+automation, port opening, or MIDI sending.
 
 **Sidecar security guarantees** (post CODE_REVIEW.md sweep, 2026-05):
 

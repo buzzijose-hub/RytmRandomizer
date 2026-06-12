@@ -8,7 +8,8 @@ Last updated: 2026-06-12. This file is a hand-authored snapshot and is meant to 
   Analog Four OXI macro set planner metadata prepared on PR #160. The
   frontend model carries the `warehouse-arc` current/up-next A4 macro plan,
   blocked `A4 full macro SEND`/unattended-playback actions, safety flags, and
-  the replay command for `analog-four-oxi-macro-set-planner-report --json`;
+  the report-owned replay command for
+  `analog-four-oxi-macro-set-planner-report --json`;
   the component renders that A4 set plan alongside the style queue for
   review-only visibility. Frontend/passive metadata only: no port opening, no
   MIDI send, no command execution, no hardware mutation, and A4 full macro SEND

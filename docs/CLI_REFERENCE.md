@@ -227,7 +227,8 @@ SEND.
 `analog-four-oxi-macro-set-planner-report` is the passive queue layer for those
 macro rows. It sequences the default `warehouse-arc` current/up-next plan
 (`home`, `hard-groove`, `dub-pressure`, `industrial-transition`, `home`) for
-Cockpit review and keeps `A4 full macro SEND` plus unattended playback blocked.
+Cockpit review, emits its own passive JSON replay command, and keeps `A4 full
+macro SEND` plus unattended playback blocked.
 
 ---
 

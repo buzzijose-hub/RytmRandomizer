@@ -106,6 +106,15 @@ def test_set_planner_text_and_json_are_deterministic() -> None:
         "A4 full macro SEND",
         "A4 unattended macro playback",
     ]
+    assert (
+        report.replay_command
+        == "python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --json"
+    )
+    assert payload["replay_command"] == report.replay_command
+    assert (
+        "Replay command: python -m rytm_randomizer.cli "
+        "analog-four-oxi-macro-set-planner-report --json"
+    ) in text
     assert json.dumps(payload, sort_keys=True) == json.dumps(
         build_analog_four_oxi_macro_set_planner_payload(report),
         sort_keys=True,
