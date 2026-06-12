@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final
 
-from ..cli_registry import CliCommand, register
+from ..cli_registry import CliCommand, make_passive_report_command, register
 from ..data.style_targets import (
     STYLE_TARGET_VECTOR_AXES,
     STYLE_TARGET_VECTORS,
@@ -122,12 +122,6 @@ def format_style_target_inspection(key: str) -> list[str]:
     return passive_report_lines(_INSPECT_HEADER, lines)
 
 
-def _parse_no_args(argv: Sequence[str]) -> dict[str, object]:
-    if argv:
-        raise ValueError("command takes no arguments")
-    return {}
-
-
 def _parse_key(argv: Sequence[str]) -> dict[str, object]:
     if len(argv) != 1:
         raise ValueError("command requires exactly one key")
@@ -140,10 +134,6 @@ def _write_lines(lines: Sequence[str]) -> int:
     return 0
 
 
-def _handle_style_target_report() -> int:
-    return _write_lines(format_style_target_report())
-
-
 def _handle_style_target_inspection(key: str) -> int:
     lines = format_style_target_inspection(key)
     output = "\n".join(lines)
@@ -154,11 +144,12 @@ def _handle_style_target_inspection(key: str) -> int:
     return 1
 
 
-STYLE_TARGET_REPORT_CLI_COMMAND: Final[CliCommand] = CliCommand(
-    name="style-target-report",
-    summary="Print the passive style target vector report.",
-    args_parser=_parse_no_args,
-    handler=_handle_style_target_report,
+STYLE_TARGET_REPORT_CLI_COMMAND: Final[CliCommand] = make_passive_report_command(
+    "style-target-report",
+    "Print the passive style target vector report.",
+    format_lines=format_style_target_report,
+    json_flag=False,
+    error_formatter=None,
 )
 INSPECT_STYLE_TARGET_CLI_COMMAND: Final[CliCommand] = CliCommand(
     name="inspect-style-target",

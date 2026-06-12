@@ -72,6 +72,7 @@ USAGE = (
     "style-crate-rehearsal-deck-report [--crate <key>] [--json] | "
     "oxi-live-macro-catalog-report | "
     "live-gui-performance-flow-model-report [--json] | "
+    "oxi-live-set-strategy-report [--json] | "
     "reference-style-blueprint-report "
     "(--description <text>|--audio <path>|--library <dir>) [--json] | "
     "list-style-profiles | inspect-style-profile <key> | "
@@ -1242,6 +1243,26 @@ Safety:
   no port opening
   no hardware mutation
   no hardware required"""
+
+
+def _oxi_live_set_strategy_report_help():
+    from .reports.oxi_live_set_strategy import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: oxi-live-set-strategy-report
+
+Usage:
+  python -m rytm_randomizer.cli oxi-live-set-strategy-report
+  python -m rytm_randomizer.cli oxi-live-set-strategy-report --json
+  python -m rytm_randomizer.cli oxi-live-set-strategy-report --help
+
+Behavior:
+  Prints passive OXI-style live set chapters, rig-role responsibilities,
+  all-12-pad strategy notes, Jose's current pad-lane discipline, A4
+  review-only companion actions, and next hardware validation prompts.
+  Use --json for GUI/analyzer consumers.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
 
 
 def _reference_style_blueprint_report_help():
@@ -2666,6 +2687,7 @@ Usage:
   python -m rytm_randomizer.cli style-crate-rehearsal-deck-report [--crate <key>] [--json]
   python -m rytm_randomizer.cli oxi-live-macro-catalog-report
   python -m rytm_randomizer.cli live-gui-performance-flow-model-report [--json]
+  python -m rytm_randomizer.cli oxi-live-set-strategy-report [--json]
   python -m rytm_randomizer.cli reference-style-blueprint-report (--description <text>|--audio <path>|--library <dir>) [--json]
   python -m rytm_randomizer.cli list-style-profiles
   python -m rytm_randomizer.cli inspect-style-profile <key>
@@ -2820,6 +2842,8 @@ Commands:
                      Print passive OXI live macro cards and A4 runway state.
   live-gui-performance-flow-model-report
                      Print the passive live GUI performance flow model.
+  oxi-live-set-strategy-report
+                     Print passive OXI live set strategy chapters and pad policy.
   reference-style-blueprint-report
                      Translate a style reference into a passive Rytm plus Analog Four blueprint.
   list-style-profiles
@@ -3220,6 +3244,7 @@ Safety:
     "style-crate-rehearsal-deck-report": _style_crate_rehearsal_deck_report_help,
     "oxi-live-macro-catalog-report": _oxi_live_macro_catalog_report_help,
     "live-gui-performance-flow-model-report": _live_gui_performance_flow_model_report_help,
+    "oxi-live-set-strategy-report": _oxi_live_set_strategy_report_help,
     "reference-style-blueprint-report": _reference_style_blueprint_report_help,
     "style-target-report": _style_target_report_help,
     "style-performance-arc-report": _style_performance_arc_report_help,

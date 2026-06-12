@@ -217,6 +217,43 @@ hardware plan.
 
 ---
 
+## OXI live macro strategy
+
+| Command | Description |
+|---|---|
+| `oxi-live-macro-catalog-report` | Passive Rytm macro cards, recovery actions, live flow, and A4 runway state |
+| `oxi-live-set-strategy-report` | Passive OXI-style set chapters, operator cues, rehearsal/replay commands, all-12-pad policy, and A4 review-only actions |
+
+```bash
+python -m rytm_randomizer.cli oxi-live-macro-catalog-report
+python -m rytm_randomizer.cli oxi-live-set-strategy-report
+python -m rytm_randomizer.cli oxi-live-set-strategy-report --json
+```
+
+`oxi-live-set-strategy-report` is the passive bridge between the OXI-style
+operator idea and the current macro vocabulary. It describes OXI as the source
+of notes, triggers, mutes, and pattern motion; RytmRandomizer as the second
+performer riding captured-kit sound design; and Analog Four as review-only
+until its outbound macro path is separately validated. It also keeps Jose's
+current pad discipline explicit: pads 5, 9, 10, and 11 stay SRC-first with
+filter/LFO off and AMP limited to overdrive, delay, and reverb; pads 6-8 stay
+tom/source-focused with light filter motion and LFO off; Pad 12 remains
+available for users who rely on it. The JSON payload also includes an operator
+cue sheet that maps each chapter to stage, inspect, fire, recover, expected
+result, and blocked-action steps. Rehearsal checkpoints cover capture,
+first-macro staging, `changes` review, manual fire, anchor recovery, A4 gate,
+and after-set notes. Replay command metadata separates passive CLI reports,
+passive A4 macro review, the operator-present Rytm shell launch, `changes`,
+manual fire, and anchor recovery so a future GUI can render buttons without
+executing them. It also includes a
+hardware-validation runway for the next Rytm kit-core smoke, Dual VCO
+center-band check, A4 input-only soft capture, and passive A4 macro dry-run.
+Analog Four promotion criteria keep outbound macros blocked until input-label
+coverage, passive macro review, an explicit arm gate, and a tested recovery
+path exist.
+
+---
+
 ## Rig-level (Rytm + Analog Four together)
 
 | Command | Description |

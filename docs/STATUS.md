@@ -1,9 +1,27 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-05. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-06-06. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-06-06: Passive report CLI command factory review follow-up prepared on
+  PR #158. The shared `make_passive_report_command` now covers no-arg reports,
+  optional `--json` reports, compact JSON output, and dispatcher-default parse
+  errors with canonical invalid-argument messages. Existing canonical reports
+  migrated onto the factory include mock mapper, runtime plan, active boundary,
+  Analog Rytm MIDI catalog, OXI live macro catalog, Rytm machine matrix, Rytm
+  snapshot pad compatibility, style profile/list, style target, style
+  performance arc/list, style crates queue/journal, live GUI performance flow,
+  and OXI live set strategy. Bespoke parsers remain only where the command has
+  real operands or options such as style-profile inspect/search, style-target
+  inspect, style-performance arc inspect/search and arc packet builders,
+  style-crate rehearsal deck filters, reference-style blueprint input modes,
+  snapshot/SysEx-path reports, Analog Four macro review controls, GUI sizing
+  options, limits, slots, labels, or output-path behavior. The abstraction
+  ratchets were tightened by shrinking duplicated parser/handler allowlists and
+  removing the oversized reports `__init__.py` grandfather entry. Passive/report
+  infrastructure only: no port opening, no MIDI send, no hardware mutation, and
+  no V1.34 parity change.
 - 2026-06-05: Wired the Claude Code post-push code-review hook (and fixed the
   "settings file failed to parse / expected string, received object" error).
   Added `scripts/code_review_gate.py --mode claude-hook` — it reads the
@@ -34,6 +52,30 @@ Last updated: 2026-06-05. This file is a hand-authored snapshot and is meant to 
   stdout/JSON, CLI help, README coverage, and a TypeScript protocol mirror. The
   report is metadata-only: no GUI launch, no real MIDI rendering, no MIDI send,
   no port opening, no hardware mutation, and no A4 outbound macro path.
+- 2026-06-05: Passive OXI live set strategy report prepared locally. The new
+  `oxi-live-set-strategy-report [--json]` surface turns the merged
+  `kit/resnapshot`, `kit-core`, `hard-groove`, `industrial`, `dub-pressure`,
+  `transition`, and `home` vocabulary into set chapters, rig-role summaries,
+  all-12-pad policy notes, A4 review-only actions, and next hardware validation
+  prompts. It preserves Jose's current pad discipline by keeping pads 5, 9, 10,
+  and 11 SRC-first with filter/LFO off and AMP limited to overdrive, delay, and
+  reverb; pads 6-8 stay SRC/tom-focused with light filter movement and LFO off;
+  Pad 12 remains available for users who rely on it. The payload also includes
+  a named hardware-validation runway for the next Rytm kit-core smoke test, Dual
+  VCO center-band confirmation, A4 input-only soft capture, and passive A4 macro
+  dry-run, plus A4 promotion criteria that keep outbound macros blocked until
+  input-label coverage, passive macro review, an explicit arm gate, and recovery
+  evidence exist. The payload also includes an operator cue sheet that maps each
+  chapter to OXI action, Rytm staging command, inspect/fire/recover commands,
+  expected result, and blocked active action, plus rehearsal checkpoints for
+  capture, first-macro staging, pre-send review, manual fire, anchor recovery,
+  A4 gating, and after-set documentation. A replay/rehearsal command section
+  now separates passive report reads, passive A4 macro review, the
+  operator-present Rytm shell launch, `changes`, manual fire, and recovery so a
+  future GUI can render the flow without executing it. The surface is
+  report-only: no port opening, no MIDI send, no command execution, no hardware
+  mutation, no A4 outbound path, and no V1.34 parity change. See
+  `docs/superpowers/plans/2026-06-05-oxi-live-set-strategy-report.md`.
 - 2026-06-04: Live performance cockpit flow follow-up cleanups. The new
   `DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL`, `LivePerformanceFlow` renderer, and the
   `LivePerformanceFlowModel` / `LivePerformanceFlowStepModel` /

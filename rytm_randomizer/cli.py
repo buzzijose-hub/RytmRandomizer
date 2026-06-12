@@ -152,6 +152,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.live_gui_performance_flow_model",
             "LIVE_GUI_PERFORMANCE_FLOW_MODEL_CLI_COMMAND",
         ),
+        "oxi-live-set-strategy-report": (
+            "rytm_randomizer.reports.oxi_live_set_strategy",
+            "OXI_LIVE_SET_STRATEGY_CLI_COMMAND",
+        ),
         "reference-style-blueprint-report": (
             "rytm_randomizer.reports.reference_style_blueprint",
             "REFERENCE_STYLE_BLUEPRINT_CLI_COMMAND",

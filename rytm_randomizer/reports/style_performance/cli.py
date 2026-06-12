@@ -22,7 +22,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Final
 
-from ...cli_registry import CliCommand, register
+from ...cli_registry import CliCommand, make_passive_report_command, register
 from ..dual_machine_style_kit_selection import normalize_selection_scope
 from ._constants import (
     _AUDITION_PACKET_OPTIONS,
@@ -654,14 +654,6 @@ def _write_lines(lines: Sequence[str]) -> int:
     return 0
 
 
-def _handle_style_performance_arc_report() -> int:
-    return _write_lines(format_style_performance_arc_report())
-
-
-def _handle_style_performance_arc_list() -> int:
-    return _write_lines(format_style_performance_arc_list())
-
-
 def _handle_style_performance_arc_inspection(key: str) -> int:
     lines = format_style_performance_arc_inspection(key)
     output = "\n".join(lines)
@@ -1076,17 +1068,19 @@ def _format_cli_error(exc: Exception) -> str:
     return f"Error: {exc}"
 
 
-STYLE_PERFORMANCE_ARC_REPORT_CLI_COMMAND: Final[CliCommand] = CliCommand(
-    name="style-performance-arc-report",
-    summary="Print the passive style performance arc report.",
-    args_parser=_parse_no_args,
-    handler=_handle_style_performance_arc_report,
+STYLE_PERFORMANCE_ARC_REPORT_CLI_COMMAND: Final[CliCommand] = make_passive_report_command(
+    "style-performance-arc-report",
+    "Print the passive style performance arc report.",
+    format_lines=format_style_performance_arc_report,
+    json_flag=False,
+    error_formatter=None,
 )
-LIST_STYLE_PERFORMANCE_ARCS_CLI_COMMAND: Final[CliCommand] = CliCommand(
-    name="list-style-performance-arcs",
-    summary="List passive style performance arc keys and names.",
-    args_parser=_parse_no_args,
-    handler=_handle_style_performance_arc_list,
+LIST_STYLE_PERFORMANCE_ARCS_CLI_COMMAND: Final[CliCommand] = make_passive_report_command(
+    "list-style-performance-arcs",
+    "List passive style performance arc keys and names.",
+    format_lines=format_style_performance_arc_list,
+    json_flag=False,
+    error_formatter=None,
 )
 INSPECT_STYLE_PERFORMANCE_ARC_CLI_COMMAND: Final[CliCommand] = CliCommand(
     name="inspect-style-performance-arc",

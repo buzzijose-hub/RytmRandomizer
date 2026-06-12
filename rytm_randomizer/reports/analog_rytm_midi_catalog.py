@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import sys
-from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Final
 
-from ..cli_registry import CliCommand, register
+from ..cli_registry import CliCommand, make_passive_report_command, register
 from ..data.analog_rytm_midi import get_analog_rytm_catalog_summary
 from .formatter import SAFETY_SECTION_HEADER, PassiveReportHeader, passive_report_lines
 
@@ -98,23 +96,12 @@ def format_analog_rytm_midi_catalog_report(
     return passive_report_lines(_HEADER, _body_lines(source_report))
 
 
-def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
-    if argv:
-        raise ValueError("analog-rytm-midi-catalog-report takes no arguments")
-    return {}
-
-
-def _handle_cli_report() -> int:
-    sys.stdout.write("\n".join(format_analog_rytm_midi_catalog_report()))
-    sys.stdout.write("\n")
-    return 0
-
-
-ANALOG_RYTM_MIDI_CATALOG_CLI_COMMAND: Final[CliCommand] = CliCommand(
-    name="analog-rytm-midi-catalog-report",
-    summary="Print the passive Analog Rytm MIDI catalog report.",
-    args_parser=_parse_cli_args,
-    handler=_handle_cli_report,
+ANALOG_RYTM_MIDI_CATALOG_CLI_COMMAND: Final[CliCommand] = make_passive_report_command(
+    "analog-rytm-midi-catalog-report",
+    "Print the passive Analog Rytm MIDI catalog report.",
+    format_lines=format_analog_rytm_midi_catalog_report,
+    json_flag=False,
+    error_formatter=None,
 )
 
 register(ANALOG_RYTM_MIDI_CATALOG_CLI_COMMAND)

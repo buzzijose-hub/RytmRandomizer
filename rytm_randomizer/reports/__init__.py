@@ -16,17 +16,20 @@ does not pull in MIDI libraries, bridge modules, or behavior evaluators.
 
 from __future__ import annotations
 
-import sys
-from collections.abc import Sequence
 from copy import deepcopy
-from typing import Any, Final
+from typing import Final
 
-from ..cli_registry import CliCommand
+from ..cli_registry import CliCommand, make_passive_report_command
 from .formatter import passive_footer_lines, safety_section_lines
 from .oxi_live_macro_catalog import (  # noqa: F401
     build_oxi_live_macro_catalog_payload,
     build_oxi_live_macro_catalog_report,
     format_oxi_live_macro_catalog_report,
+)
+from .oxi_live_set_strategy import (  # noqa: F401
+    build_oxi_live_set_strategy_payload,
+    build_oxi_live_set_strategy_report,
+    format_oxi_live_set_strategy_report,
 )
 from .rytm_machine_matrix import (  # noqa: F401
     build_rytm_machine_matrix_report,
@@ -1469,61 +1472,28 @@ def format_mock_runtime_active_bridge_report(report=None):
 # ---------------------------------------------------------------------------
 
 
-def _parse_mock_mapper_report_args(argv: Sequence[str]) -> dict[str, Any]:
-    if argv:
-        raise ValueError("mock-mapper-report takes no arguments")
-    return {}
-
-
-def _handle_mock_mapper_report() -> int:
-    sys.stdout.write("\n".join(format_mock_mapper_report()))
-    sys.stdout.write("\n")
-    return 0
-
-
-MOCK_MAPPER_REPORT_CLI_COMMAND: Final[CliCommand] = CliCommand(
-    name="mock-mapper-report",
-    summary="Print the passive mock message mapper report.",
-    args_parser=_parse_mock_mapper_report_args,
-    handler=_handle_mock_mapper_report,
+MOCK_MAPPER_REPORT_CLI_COMMAND: Final[CliCommand] = make_passive_report_command(
+    "mock-mapper-report",
+    "Print the passive mock message mapper report.",
+    format_lines=format_mock_mapper_report,
+    json_flag=False,
+    error_formatter=None,
 )
 
 
-def _parse_runtime_plan_report_args(argv: Sequence[str]) -> dict[str, Any]:
-    if argv:
-        raise ValueError("runtime-plan-report takes no arguments")
-    return {}
-
-
-def _handle_runtime_plan_report() -> int:
-    sys.stdout.write("\n".join(format_runtime_plan_report()))
-    sys.stdout.write("\n")
-    return 0
-
-
-RUNTIME_PLAN_REPORT_CLI_COMMAND: Final[CliCommand] = CliCommand(
-    name="runtime-plan-report",
-    summary="Print the passive runtime plan report.",
-    args_parser=_parse_runtime_plan_report_args,
-    handler=_handle_runtime_plan_report,
+RUNTIME_PLAN_REPORT_CLI_COMMAND: Final[CliCommand] = make_passive_report_command(
+    "runtime-plan-report",
+    "Print the passive runtime plan report.",
+    format_lines=format_runtime_plan_report,
+    json_flag=False,
+    error_formatter=None,
 )
 
 
-def _parse_active_boundary_report_args(argv: Sequence[str]) -> dict[str, Any]:
-    if argv:
-        raise ValueError("active-boundary-report takes no arguments")
-    return {}
-
-
-def _handle_active_boundary_report() -> int:
-    sys.stdout.write("\n".join(format_active_boundary_report()))
-    sys.stdout.write("\n")
-    return 0
-
-
-ACTIVE_BOUNDARY_REPORT_CLI_COMMAND: Final[CliCommand] = CliCommand(
-    name="active-boundary-report",
-    summary="Print the passive active boundary report.",
-    args_parser=_parse_active_boundary_report_args,
-    handler=_handle_active_boundary_report,
+ACTIVE_BOUNDARY_REPORT_CLI_COMMAND: Final[CliCommand] = make_passive_report_command(
+    "active-boundary-report",
+    "Print the passive active boundary report.",
+    format_lines=format_active_boundary_report,
+    json_flag=False,
+    error_formatter=None,
 )

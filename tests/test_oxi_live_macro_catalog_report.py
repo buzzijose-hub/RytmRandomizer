@@ -119,5 +119,5 @@ def test_passive_report_cli_commands_reject_unexpected_arguments() -> None:
         ACTIVE_BOUNDARY_REPORT_CLI_COMMAND,
     ):
         assert command.args_parser([]) == {}
-        with pytest.raises(ValueError, match="takes no arguments"):
+        with pytest.raises(ValueError, match="does not accept arguments"):
             command.args_parser(["unexpected"])

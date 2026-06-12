@@ -136,7 +136,11 @@ def test_style_target_cli_command_parsers_accept_expected_arguments():
 @pytest.mark.parametrize(
     ("command_name", "argv", "message"),
     [
-        ("STYLE_TARGET_REPORT_CLI_COMMAND", ["extra"], "command takes no arguments"),
+        (
+            "STYLE_TARGET_REPORT_CLI_COMMAND",
+            ["extra"],
+            "style-target-report does not accept arguments",
+        ),
         ("INSPECT_STYLE_TARGET_CLI_COMMAND", [], "command requires exactly one key"),
         (
             "INSPECT_STYLE_TARGET_CLI_COMMAND",

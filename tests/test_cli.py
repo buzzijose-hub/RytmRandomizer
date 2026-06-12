@@ -98,6 +98,7 @@ USAGE = (
     "style-crate-rehearsal-deck-report [--crate <key>] [--json] | "
     "oxi-live-macro-catalog-report | "
     "live-gui-performance-flow-model-report [--json] | "
+    "oxi-live-set-strategy-report [--json] | "
     "reference-style-blueprint-report "
     "(--description <text>|--audio <path>|--library <dir>) [--json] | "
     "list-style-profiles | inspect-style-profile <key> | "
@@ -1123,6 +1124,20 @@ def test_style_crates_queue_journal_report_help_exits_zero_and_safety_matches_so
     assert result.returncode == 0
     help_text = normalize_newlines(result.stdout)
     assert "RytmRandomizer passive CLI: style-crates-queue-journal-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_oxi_live_set_strategy_report_help_exits_zero_and_safety_matches_source():
+    from rytm_randomizer.reports.oxi_live_set_strategy import SAFETY_LINES
+
+    result = run_cli("oxi-live-set-strategy-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: oxi-live-set-strategy-report" in help_text
+    assert "python -m rytm_randomizer.cli oxi-live-set-strategy-report --json" in help_text
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
     assert result.stderr == ""
@@ -2985,7 +3000,10 @@ def test_unknown_style_crates_queue_journal_arguments_fail_safely():
 
     assert result.returncode == 2
     assert result.stdout == ""
-    assert normalize_newlines(result.stderr) == USAGE
+    assert (
+        normalize_newlines(result.stderr)
+        == "Error: style-crates-queue-journal-report accepts only optional --json"
+    )
 
 
 def test_missing_inspect_style_profile_key_fails_safely():

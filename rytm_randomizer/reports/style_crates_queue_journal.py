@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import json
-import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final
 
-from ..cli_registry import CliCommand, register
+from ..cli_registry import CliCommand, make_passive_report_command, register
 from ..data.style_crates import (
     DANGER_MODES,
     DEFAULT_MUTATION_JOURNAL,
@@ -312,30 +310,16 @@ def to_style_crates_queue_journal_json(
     }
 
 
-def _parse_style_crates_queue_journal_args(argv: Sequence[str]) -> dict[str, object]:
-    if not argv:
-        return {"json_output": False}
-    if tuple(argv) == ("--json",):
-        return {"json_output": True}
-    raise ValueError("style-crates-queue-journal-report accepts only optional --json")
-
-
-def _handle_style_crates_queue_journal_report(*, json_output: bool = False) -> int:
-    report = build_style_crates_queue_journal_report()
-    if json_output:
-        json.dump(to_style_crates_queue_journal_json(report), sys.stdout, sort_keys=True)
-        sys.stdout.write("\n")
-        return 0
-    sys.stdout.write("\n".join(format_style_crates_queue_journal_report(report)))
-    sys.stdout.write("\n")
-    return 0
-
-
-STYLE_CRATES_QUEUE_JOURNAL_CLI_COMMAND: Final[CliCommand] = CliCommand(
-    name="style-crates-queue-journal-report",
-    summary="Print the passive Style Crates, Queue, and Mutation Journal report.",
-    args_parser=_parse_style_crates_queue_journal_args,
-    handler=_handle_style_crates_queue_journal_report,
+STYLE_CRATES_QUEUE_JOURNAL_CLI_COMMAND: Final[CliCommand] = make_passive_report_command(
+    "style-crates-queue-journal-report",
+    "Print the passive Style Crates, Queue, and Mutation Journal report.",
+    format_lines=lambda: format_style_crates_queue_journal_report(
+        build_style_crates_queue_journal_report()
+    ),
+    build_payload=lambda: to_style_crates_queue_journal_json(
+        build_style_crates_queue_journal_report()
+    ),
+    json_indent=None,
 )
 
 register(STYLE_CRATES_QUEUE_JOURNAL_CLI_COMMAND)

@@ -114,7 +114,9 @@ REFERENCES
 from __future__ import annotations
 
 import importlib
+import json
 import pkgutil
+import sys
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from types import MappingProxyType
@@ -189,6 +191,10 @@ class CliCommand:
 
 
 _COMMANDS: dict[str, CliCommand] = {}
+
+
+def _format_passive_report_error(exc: Exception) -> str:
+    return f"Error: {exc}"
 
 
 def register(command: CliCommand) -> None:
@@ -284,6 +290,59 @@ def discover_all(package_root: str = "rytm_randomizer") -> None:
         if _should_skip(fullname):
             continue
         importlib.import_module(fullname)
+
+
+def make_passive_report_command(
+    name: str,
+    summary: str,
+    *,
+    format_lines: Callable[[], Sequence[str]],
+    build_payload: Callable[[], Mapping[str, object]] | None = None,
+    json_flag: bool = True,
+    json_indent: int | None = 2,
+    error_formatter: Callable[[Exception], str] | None = _format_passive_report_error,
+) -> CliCommand:
+    """Return a ``CliCommand`` for a no-input passive text/JSON report.
+
+    This centralizes the standard report-only command contract used by
+    report modules that accept either no args or a single ``--json`` flag:
+    parse args, dispatch text vs JSON output, and render parse/handler
+    failures as ``Error: <message>``.
+    """
+
+    def _parse_args(argv: Sequence[str]) -> dict[str, Any]:
+        if not argv:
+            return {"json_output": False} if json_flag else {}
+        if json_flag and list(argv) == ["--json"]:
+            return {"json_output": True}
+        if json_flag:
+            raise ValueError(f"{name} accepts only optional --json")
+        raise ValueError(f"{name} does not accept arguments")
+
+    def _handle_report(*, json_output: bool = False) -> int:
+        if json_output:
+            if build_payload is None:
+                raise ValueError(f"{name} does not provide JSON output")
+            sys.stdout.write(
+                json.dumps(
+                    build_payload(),
+                    indent=json_indent,
+                    sort_keys=True,
+                )
+            )
+            sys.stdout.write("\n")
+            return 0
+        sys.stdout.write("\n".join(format_lines()))
+        sys.stdout.write("\n")
+        return 0
+
+    return CliCommand(
+        name=name,
+        summary=summary,
+        args_parser=_parse_args,
+        handler=_handle_report,
+        error_formatter=error_formatter,
+    )
 
 
 def default_error_formatter(exc: Exception) -> str:

@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import json
-import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Final, TypedDict
 
-from ..cli_registry import CliCommand, register
+from ..cli_registry import CliCommand, make_passive_report_command, register
 
 REPORT_TITLE: Final[str] = "RytmRandomizer passive live GUI performance flow model"
 SOURCE_MODULE: Final[str] = "reports.live_gui_performance_flow_model"
@@ -285,43 +283,15 @@ def format_live_gui_performance_flow_model_report(
     return tuple(lines)
 
 
-def _parse_live_gui_performance_flow_model_args(
-    args: Sequence[str],
-) -> dict[str, object]:
-    if not args:
-        return {"json_output": False}
-    if tuple(args) == ("--json",):
-        return {"json_output": True}
-    raise ValueError("live-gui-performance-flow-model-report accepts only optional --json")
-
-
-def _handle_live_gui_performance_flow_model_report(*, json_output: bool) -> int:
-    model = build_live_gui_performance_flow_model()
-    if json_output:
-        sys.stdout.write(
-            json.dumps(
-                live_gui_performance_flow_model_payload(model),
-                indent=2,
-                sort_keys=True,
-            )
-        )
-        sys.stdout.write("\n")
-        return 0
-    sys.stdout.write("\n".join(format_live_gui_performance_flow_model_report(model)))
-    sys.stdout.write("\n")
-    return 0
-
-
-def _format_live_gui_performance_flow_model_error(exc: Exception) -> str:
-    return f"Error: {exc}"
-
-
-LIVE_GUI_PERFORMANCE_FLOW_MODEL_CLI_COMMAND: Final[CliCommand] = CliCommand(
-    name="live-gui-performance-flow-model-report",
-    summary="Print the passive live GUI performance flow model.",
-    args_parser=_parse_live_gui_performance_flow_model_args,
-    handler=_handle_live_gui_performance_flow_model_report,
-    error_formatter=_format_live_gui_performance_flow_model_error,
+LIVE_GUI_PERFORMANCE_FLOW_MODEL_CLI_COMMAND: Final[CliCommand] = make_passive_report_command(
+    "live-gui-performance-flow-model-report",
+    "Print the passive live GUI performance flow model.",
+    format_lines=lambda: format_live_gui_performance_flow_model_report(
+        build_live_gui_performance_flow_model()
+    ),
+    build_payload=lambda: live_gui_performance_flow_model_payload(
+        build_live_gui_performance_flow_model()
+    ),
 )
 
 register(LIVE_GUI_PERFORMANCE_FLOW_MODEL_CLI_COMMAND)

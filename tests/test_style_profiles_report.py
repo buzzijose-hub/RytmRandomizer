@@ -110,8 +110,16 @@ def test_style_profile_cli_command_parsers_accept_expected_arguments():
 @pytest.mark.parametrize(
     ("command", "argv", "message"),
     [
-        (STYLE_PROFILE_REPORT_CLI_COMMAND, ["extra"], "command takes no arguments"),
-        (LIST_STYLE_PROFILES_CLI_COMMAND, ["extra"], "command takes no arguments"),
+        (
+            STYLE_PROFILE_REPORT_CLI_COMMAND,
+            ["extra"],
+            "style-profile-report does not accept arguments",
+        ),
+        (
+            LIST_STYLE_PROFILES_CLI_COMMAND,
+            ["extra"],
+            "list-style-profiles does not accept arguments",
+        ),
         (INSPECT_STYLE_PROFILE_CLI_COMMAND, [], "command requires exactly one key"),
         (
             INSPECT_STYLE_PROFILE_CLI_COMMAND,
