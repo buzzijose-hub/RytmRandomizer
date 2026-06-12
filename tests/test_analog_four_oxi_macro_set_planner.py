@@ -108,12 +108,14 @@ def test_set_planner_text_and_json_are_deterministic() -> None:
     ]
     assert (
         report.replay_command
-        == "python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --json"
+        == "python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report "
+        "--set-name late-room --sequence home,dub-pressure,industrial-transition --seed 4 --json"
     )
     assert payload["replay_command"] == report.replay_command
     assert (
         "Replay command: python -m rytm_randomizer.cli "
-        "analog-four-oxi-macro-set-planner-report --json"
+        "analog-four-oxi-macro-set-planner-report --set-name late-room "
+        "--sequence home,dub-pressure,industrial-transition --seed 4 --json"
     ) in text
     assert json.dumps(payload, sort_keys=True) == json.dumps(
         build_analog_four_oxi_macro_set_planner_payload(report),
@@ -192,5 +194,10 @@ def test_set_planner_cli_outputs_text_and_json(capsys: pytest.CaptureFixture[str
     payload = json.loads(capsys.readouterr().out)
     assert payload["step_count"] == 2
     assert payload["steps"][1]["macro_name"] == "dub-pressure"
+    assert (
+        payload["replay_command"]
+        == "python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report "
+        "--sequence home,dub-pressure --seed 3 --json"
+    )
     assert payload["opens_ports"] is False
     assert payload["sends_midi"] is False

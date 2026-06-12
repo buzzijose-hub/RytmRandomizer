@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shlex
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -98,6 +99,32 @@ def _validate_sequence(sequence: Sequence[str]) -> tuple[str, ...]:
     return resolved
 
 
+def _quote_replay_arg(value: str) -> str:
+    return shlex.quote(value)
+
+
+def _replay_command_for(
+    *,
+    set_name: str,
+    sequence: Sequence[str],
+    seed: int,
+) -> str:
+    args: list[str] = [
+        "python",
+        "-m",
+        "rytm_randomizer.cli",
+        "analog-four-oxi-macro-set-planner-report",
+    ]
+    if set_name != DEFAULT_SET_NAME:
+        args.extend(("--set-name", set_name))
+    if tuple(sequence) != DEFAULT_SEQUENCE:
+        args.extend(("--sequence", ",".join(sequence)))
+    if seed != 0:
+        args.extend(("--seed", str(seed)))
+    args.append("--json")
+    return " ".join(_quote_replay_arg(arg) for arg in args)
+
+
 def _macro_intensity(macro_name: str) -> int:
     if macro_name not in ANALOG_FOUR_OXI_MACROS:
         build_analog_four_oxi_macro_report(macro_name)
@@ -179,7 +206,11 @@ def build_analog_four_oxi_macro_set_planner_report(
         hardware_required=False,
         blocked_active_actions=BLOCKED_ACTIVE_ACTIONS,
         safety=SAFETY_LINES,
-        replay_command=REPLAY_COMMAND,
+        replay_command=_replay_command_for(
+            set_name=set_name,
+            sequence=resolved_sequence,
+            seed=seed,
+        ),
     )
 
 

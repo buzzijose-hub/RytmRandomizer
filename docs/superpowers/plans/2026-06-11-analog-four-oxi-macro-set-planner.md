@@ -172,6 +172,35 @@ npm.cmd run typecheck
 
 Expected: affected Cockpit model tests and TypeScript build pass.
 
+## Task 7: Exact Replay Command Preservation
+
+**Files:**
+- Modify: `rytm_randomizer/reports/analog_four_oxi_macro_set_planner.py`
+- Modify: `tests/test_analog_four_oxi_macro_set_planner.py`
+- Modify: `docs/STATUS.md`
+
+- [x] **Step 1: Add red test for custom set-plan replay**
+
+Cover custom `--set-name`, `--sequence`, and `--seed` JSON output so the
+payload's `replay_command` can reproduce the exact set plan instead of falling
+back to the default `warehouse-arc` command.
+
+- [x] **Step 2: Compute replay command from resolved plan arguments**
+
+Keep the default replay command unchanged for the default set plan, while
+preserving non-default set name, macro sequence, and seed arguments for custom
+set plans.
+
+- [x] **Step 3: Verify focused backend contract**
+
+Run:
+
+```powershell
+python -m pytest tests\test_analog_four_oxi_macro_set_planner.py -n 0
+```
+
+Expected: all planner tests pass.
+
 ## Self-Review
 
 - Spec coverage: covers A4 set sequencing, readiness rows, replay commands, blocked active actions, docs, CLI, JSON payloads, and the Cockpit adapter from backend JSON to frontend model.
