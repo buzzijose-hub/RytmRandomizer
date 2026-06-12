@@ -67,8 +67,16 @@ export function App({ client: injected, performanceConsole }: AppProps = {}): JS
   const [connStatus, setConnStatus] = useState<ConnectionStatus>(client.getStatus());
   const route = useHashRoute();
   const routeRootRef = useRef<HTMLDivElement>(null);
-  const performanceConsoleModel = isPerformanceConsoleRoute(route)
+  const isConsoleRoute = isPerformanceConsoleRoute(route);
+  const performanceConsoleModel = isConsoleRoute
     ? performanceConsole ?? storePerformanceConsole ?? performanceConsoleDemoModel
+    : undefined;
+  const performanceConsoleSource = isConsoleRoute
+    ? performanceConsole !== undefined
+      ? 'injected packet'
+      : storePerformanceConsole !== null
+        ? 'live websocket'
+        : 'demo fallback'
     : undefined;
   const showPerformanceConsole = performanceConsoleModel !== undefined;
 
@@ -100,7 +108,10 @@ export function App({ client: injected, performanceConsole }: AppProps = {}): JS
       <>
         <LiveRegion />
         <div ref={routeRootRef} tabIndex={-1}>
-          <PerformanceConsole model={performanceConsoleModel} />
+          <PerformanceConsole
+            model={performanceConsoleModel}
+            packetSource={performanceConsoleSource}
+          />
         </div>
       </>
     );

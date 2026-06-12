@@ -14,6 +14,7 @@ describe('PerformanceConsole', () => {
     const safetyState = screen.getByLabelText('Console safety state');
     expect(within(safetyState).getByText('mock-safe')).toBeInTheDocument();
     expect(within(safetyState).getByText('passive')).toBeInTheDocument();
+    expect(within(safetyState).getByText('passive packet')).toBeInTheDocument();
     expect(screen.getByText('Warehouse arc')).toBeInTheDocument();
 
     expect(screen.getByTestId('performance-console-device-analog_rytm_mk2')).toHaveTextContent(

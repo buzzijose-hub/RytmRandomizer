@@ -467,7 +467,7 @@ html,
 }
 
 .performance-console-status {
-  grid-template-columns: repeat(2, auto);
+  grid-template-columns: repeat(3, auto);
 }
 
 .performance-console-status span {

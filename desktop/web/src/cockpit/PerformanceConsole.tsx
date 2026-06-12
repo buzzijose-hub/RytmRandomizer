@@ -7,6 +7,7 @@ import type {
 
 export interface PerformanceConsoleProps {
   model: LiveGuiPerformanceConsoleModelDict;
+  packetSource?: string;
 }
 
 function orderedDevices(
@@ -27,7 +28,10 @@ function orderedMacroActions(
   return [...cards].sort((left, right) => left.order - right.order);
 }
 
-export function PerformanceConsole({ model }: PerformanceConsoleProps): JSX.Element {
+export function PerformanceConsole({
+  model,
+  packetSource = 'passive packet',
+}: PerformanceConsoleProps): JSX.Element {
   const a4SetPlan = model.performance_flow.analog_four_set_plan;
   const macroPath = [a4SetPlan.current_macro, ...a4SetPlan.up_next_macros].join(' -> ');
 
@@ -45,6 +49,7 @@ export function PerformanceConsole({ model }: PerformanceConsoleProps): JSX.Elem
         <div className="performance-console-status" aria-label="Console safety state">
           <span>{model.console_status}</span>
           <span>{model.hardware_mode}</span>
+          <span>{packetSource}</span>
         </div>
       </header>
 

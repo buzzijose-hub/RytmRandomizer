@@ -4,6 +4,11 @@ Last updated: 2026-06-12. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-12: Cockpit performance console source-badge follow-up prepared after
+  the macro-action deck. The desktop route now carries a passive header badge
+  distinguishing injected preview packets, live WebSocket/store packets, and
+  bundled demo fallback packets so installed-app testers can tell what they are
+  looking at without touching any hardware path.
 - 2026-06-12: Cockpit performance console macro-action deck prepared after
   PR #165. The passive `live-gui-performance-console-report` now carries
   deterministic cards for `kit-core`, `hard-groove`, `industrial`,
