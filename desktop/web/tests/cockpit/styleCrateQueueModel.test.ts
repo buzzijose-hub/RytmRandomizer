@@ -39,4 +39,49 @@ describe('styleCrateQueueModel', () => {
     expect(DEFAULT_STYLE_CRATE_QUEUE_MODEL.queue).toHaveLength(3);
     expect(DEFAULT_STYLE_CRATE_QUEUE_MODEL.journalCount).toBe(2);
   });
+
+  it('keeps generic crate display and unknown queued crate labels deterministic', () => {
+    const sourceCrate = DEFAULT_STYLE_CRATE_REHEARSAL_DECK.crate_cards[0];
+    const sourceQueueCard = DEFAULT_STYLE_CRATE_REHEARSAL_DECK.queue_cards[0];
+    if (sourceCrate === undefined || sourceQueueCard === undefined) {
+      throw new Error('default style crate fixture must include one crate and one queue card');
+    }
+
+    const model = toStyleCrateQueueModel({
+      ...DEFAULT_STYLE_CRATE_REHEARSAL_DECK,
+      crate_cards: [
+        {
+          ...sourceCrate,
+          crate_key: 'Custom Crate/One',
+          crate_name: 'Custom Crate One',
+          primary_move_name: 'Custom Move',
+        },
+      ],
+      queue_cards: [
+        {
+          ...sourceQueueCard,
+          queue_key: 'custom queue/one',
+          crate_key: 'missing_crate',
+          move_name: 'Unknown Crate Move',
+          target_pads: [12],
+        },
+      ],
+      journal_cards: [],
+    });
+
+    expect(model.crates[0]).toMatchObject({
+      key: 'Custom Crate/One',
+      testIdKey: 'custom-crate-one',
+      name: 'Custom Crate One',
+      tone: 'blue',
+    });
+    expect(model.queue[0]).toMatchObject({
+      key: 'custom queue/one',
+      testIdKey: 'custom-queue-one',
+      crateName: 'missing_crate',
+      label: 'Unknown Crate Move',
+      position: 'Current',
+    });
+    expect(model.summary).toBe('1 staged moves cover 1 target pad slots and 0 journal seeds.');
+  });
 });
