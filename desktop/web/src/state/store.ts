@@ -10,6 +10,7 @@
  *   - previewCandidate ← mutation_previewed.candidate (null when preview is off)
  *   - history          ← history_updated.history
  *   - profile          ← profile_changed.profile (active profile, null when none)
+ *   - performanceConsole ← performance_console_changed.performance_console
  *   - sessionStatus    ← session_status (full payload sans `type`)
  *
  * The store does NOT own a WebSocket; bindings to a `CockpitClient` live in the
@@ -18,6 +19,7 @@
 
 import { create } from 'zustand';
 
+import type { LiveGuiPerformanceConsoleModelDict } from '../types/live_gui_protocol';
 import type { ConnectionStatus } from '../ws/client';
 import type {
   CockpitSendPlan,
@@ -48,6 +50,7 @@ export interface CockpitState {
   previewCandidate: MutationCandidate | null;
   history: History | null;
   profile: ProfileModel | null;
+  performanceConsole: LiveGuiPerformanceConsoleModelDict | null;
   sendPlan: CockpitSendPlan | null;
   sessionStatus: SessionStatus | null;
   connectionStatus: ConnectionStatus;
@@ -59,6 +62,7 @@ export interface CockpitActions {
   setPreviewCandidate: (candidate: MutationCandidate | null) => void;
   setHistory: (history: History) => void;
   setProfile: (profile: ProfileModel | null) => void;
+  setPerformanceConsole: (model: LiveGuiPerformanceConsoleModelDict | null) => void;
   setSendPlan: (sendPlan: CockpitSendPlan | null) => void;
   setSessionStatus: (status: SessionStatus) => void;
   setConnectionStatus: (status: ConnectionStatus) => void;
@@ -76,6 +80,7 @@ export const INITIAL_STATE: CockpitState = {
   previewCandidate: null,
   history: null,
   profile: null,
+  performanceConsole: null,
   sendPlan: null,
   sessionStatus: null,
   connectionStatus: 'closed',
@@ -103,6 +108,7 @@ export function createCockpitStore() {
     setPreviewCandidate: (candidate) => set({ previewCandidate: candidate }),
     setHistory: (history) => set({ history }),
     setProfile: (profile) => set({ profile }),
+    setPerformanceConsole: (model) => set({ performanceConsole: model }),
     setSendPlan: (sendPlan) => set({ sendPlan }),
     setSessionStatus: (status) => set({ sessionStatus: status }),
     setConnectionStatus: (status) => set({ connectionStatus: status }),

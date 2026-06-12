@@ -63,11 +63,12 @@ function isPerformanceConsoleRoute(hash: string): boolean {
 export function App({ client: injected, performanceConsole }: AppProps = {}): JSX.Element {
   const client = useMemo(() => injected ?? new CockpitClient(), [injected]);
   const sessionStatus = useCockpitStore((s) => s.sessionStatus);
+  const storePerformanceConsole = useCockpitStore((s) => s.performanceConsole);
   const [connStatus, setConnStatus] = useState<ConnectionStatus>(client.getStatus());
   const route = useHashRoute();
   const routeRootRef = useRef<HTMLDivElement>(null);
   const performanceConsoleModel = isPerformanceConsoleRoute(route)
-    ? performanceConsole ?? performanceConsoleDemoModel
+    ? performanceConsole ?? storePerformanceConsole ?? performanceConsoleDemoModel
     : undefined;
   const showPerformanceConsole = performanceConsoleModel !== undefined;
 

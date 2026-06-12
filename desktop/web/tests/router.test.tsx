@@ -120,6 +120,45 @@ describe('App hash router', () => {
     expect(screen.queryByTestId('wizard-root')).not.toBeInTheDocument();
   });
 
+  it('mounts the Performance Console route from the live store packet before falling back to demo', () => {
+    setHash('/performance-console');
+    const fake = new FakeCockpitClient();
+    const storeModel = {
+      ...performanceConsoleModel,
+      console_id: 'console-live-ws',
+      session_label: 'Live WS packet',
+    };
+    useCockpitStore.getState().setPerformanceConsole(storeModel);
+
+    render(<App client={fake.asClient()} />);
+
+    expect(screen.getByTestId('performance-console')).toBeInTheDocument();
+    expect(screen.getByText('Live WS packet')).toBeInTheDocument();
+    expect(screen.queryByText('Warehouse arc')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Connecting/)).not.toBeInTheDocument();
+  });
+
+  it('keeps the injected Performance Console model ahead of the live store packet', () => {
+    setHash('/performance-console');
+    const fake = new FakeCockpitClient();
+    useCockpitStore.getState().setPerformanceConsole({
+      ...performanceConsoleModel,
+      console_id: 'console-live-ws',
+      session_label: 'Live WS packet',
+    });
+    const injectedModel = {
+      ...performanceConsoleModel,
+      console_id: 'console-injected',
+      session_label: 'Injected packet',
+    };
+
+    render(<App client={fake.asClient()} performanceConsole={injectedModel} />);
+
+    expect(screen.getByTestId('performance-console')).toBeInTheDocument();
+    expect(screen.getByText('Injected packet')).toBeInTheDocument();
+    expect(screen.queryByText('Live WS packet')).not.toBeInTheDocument();
+  });
+
   it('mounts the Cockpit when the hash is empty', () => {
     const fake = new FakeCockpitClient();
     useCockpitStore.getState().setSessionStatus(sessionLive);

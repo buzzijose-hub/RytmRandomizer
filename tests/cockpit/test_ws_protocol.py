@@ -1,7 +1,7 @@
 """Tests for ``rytm_randomizer.cockpit.ws.protocol`` — schema/typing surface.
 
 The protocol module is the wire-format authority for the cockpit
-WebSocket transport: it declares the 5 event TypedDicts, the 10
+WebSocket transport: it declares the 7 cockpit event TypedDicts, the 11
 command TypedDicts, the envelope/ack wrappers, and the matching
 EVENT_TYPES/COMMAND_TYPES constants. These tests verify the
 type-system contract holds:
@@ -43,12 +43,13 @@ def test_event_types_frozenset_lists_every_event_constant() -> None:
         protocol.EVENT_SEND_PLAN_CHANGED,
         protocol.EVENT_HISTORY_UPDATED,
         protocol.EVENT_PROFILE_CHANGED,
+        protocol.EVENT_PERFORMANCE_CONSOLE_CHANGED,
         protocol.EVENT_SESSION_STATUS,
     }
     assert individual <= protocol.EVENT_TYPES
     assert isinstance(protocol.EVENT_TYPES, frozenset)
-    # 6 cockpit events + 3 wizard events (folded in from wizard_protocol)
-    assert len(protocol.EVENT_TYPES) == 9
+    # 7 cockpit events + 3 wizard events (folded in from wizard_protocol)
+    assert len(protocol.EVENT_TYPES) == 10
 
 
 def test_command_types_frozenset_lists_every_command_constant() -> None:
@@ -87,6 +88,7 @@ def test_event_and_command_constants_match_spec_strings() -> None:
     assert protocol.EVENT_SEND_PLAN_CHANGED == "send_plan_changed"
     assert protocol.EVENT_HISTORY_UPDATED == "history_updated"
     assert protocol.EVENT_PROFILE_CHANGED == "profile_changed"
+    assert protocol.EVENT_PERFORMANCE_CONSOLE_CHANGED == "performance_console_changed"
     assert protocol.EVENT_SESSION_STATUS == "session_status"
 
     assert protocol.COMMAND_SELECT_PROFILE == "select_profile"
@@ -186,6 +188,24 @@ def test_profile_changed_event_accepts_profile_dict() -> None:
         "profile": {"profile_id": "scene-rolling", "name": "rolling"},
     }
     assert event["profile"]["profile_id"] == "scene-rolling"
+
+
+def test_performance_console_changed_event_accepts_model_and_none() -> None:
+    event: protocol.PerformanceConsoleChangedEvent = {
+        "type": "performance_console_changed",
+        "performance_console": {
+            "console_version": "live-gui-performance-console-v1",
+            "hardware_mode": "passive",
+        },
+    }
+    assert event["type"] == protocol.EVENT_PERFORMANCE_CONSOLE_CHANGED
+    assert event["performance_console"]["hardware_mode"] == "passive"
+
+    cleared: protocol.PerformanceConsoleChangedEvent = {
+        "type": "performance_console_changed",
+        "performance_console": None,
+    }
+    assert cleared["performance_console"] is None
 
 
 def test_session_status_event_dict_carries_all_fields() -> None:

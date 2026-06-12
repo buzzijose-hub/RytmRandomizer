@@ -27,10 +27,11 @@ The single endpoint at ``/ws`` performs **four** steps on every connection:
    "auth_failed"}`` and the socket is closed with policy-violation
    code 1008 (C1). No cockpit command can fire until handshake
    completes.
-3. **Push the bootstrap event quartet** —
+3. **Push the bootstrap event set** —
    :func:`emit_initial_events` sends ``session_status``,
-   ``snapshot_changed``, ``profile_changed``, and ``history_updated``
-   so the UI can render a complete first frame.
+   ``snapshot_changed``, ``profile_changed``, ``history_updated``, and
+   ``performance_console_changed`` so the UI can render a complete
+   first frame.
 4. **Enter the command loop** — every inbound frame is checked against
    the per-message byte cap (SX1) before parsing; oversize frames are
    rejected with ``{"ok": false, "code": "message_too_large"}`` +
@@ -279,7 +280,7 @@ def create_app(session: CockpitSession, *, token: str) -> FastAPI:
         """The cockpit's single WebSocket endpoint.
 
         Negotiates the pinned subprotocol, runs the auth handshake,
-        sends the bootstrap event quartet, then loops on size-capped
+        sends the bootstrap event set, then loops on size-capped
         command frames until the client disconnects.
         """
 

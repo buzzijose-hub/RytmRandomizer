@@ -1,12 +1,13 @@
-"""Integration: connect → initial events (the bootstrap quartet).
+"""Integration: connect → initial events (the bootstrap event set).
 
 The spec mandates that any client connecting to ``/ws`` immediately
-receives four event frames before the command loop opens:
+receives five event frames before the command loop opens:
 
 1. ``session_status`` — armed/mock pill, unsaved_sends, midi_port.
 2. ``snapshot_changed`` — the device's current parameter state.
 3. ``profile_changed`` — the active profile (``None`` on first connect).
 4. ``history_updated`` — the snapshot history chain + ``current_id``.
+5. ``performance_console_changed`` — passive 12-pad performance console packet.
 
 This file pins that contract end-to-end across the FastAPI / TestClient
 boundary. Subsequent integration tests rely on the same ordering when
@@ -25,6 +26,7 @@ from fastapi.testclient import TestClient
 
 from rytm_randomizer.cockpit.ws.protocol import (
     EVENT_HISTORY_UPDATED,
+    EVENT_PERFORMANCE_CONSOLE_CHANGED,
     EVENT_PROFILE_CHANGED,
     EVENT_SESSION_STATUS,
     EVENT_SNAPSHOT_CHANGED,
@@ -35,11 +37,11 @@ pytestmark = pytest.mark.fast
 
 
 def test_initial_events_on_connect(cockpit_client: TestClient) -> None:
-    """On connect, server emits session_status, snapshot_changed, profile_changed, history_updated."""
+    """On connect, server emits the full five-event bootstrap packet."""
 
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
-        events = collect_initial_events(ws, count=4)
+        events = collect_initial_events(ws, count=5)
 
     types = {e["type"] for e in events}
     assert types == {
@@ -47,15 +49,16 @@ def test_initial_events_on_connect(cockpit_client: TestClient) -> None:
         EVENT_SNAPSHOT_CHANGED,
         EVENT_PROFILE_CHANGED,
         EVENT_HISTORY_UPDATED,
+        EVENT_PERFORMANCE_CONSOLE_CHANGED,
     }
 
 
 def test_initial_events_order_is_stable(cockpit_client: TestClient) -> None:
-    """The bootstrap quartet arrives in the documented order (status → snapshot → profile → history)."""
+    """The bootstrap event set arrives in the documented order."""
 
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
-        events = collect_initial_events(ws, count=4)
+        events = collect_initial_events(ws, count=5)
 
     types_in_order = [e["type"] for e in events]
     assert types_in_order == [
@@ -63,6 +66,7 @@ def test_initial_events_order_is_stable(cockpit_client: TestClient) -> None:
         EVENT_SNAPSHOT_CHANGED,
         EVENT_PROFILE_CHANGED,
         EVENT_HISTORY_UPDATED,
+        EVENT_PERFORMANCE_CONSOLE_CHANGED,
     ]
 
 
@@ -71,7 +75,7 @@ def test_initial_session_status_marks_mock_mode(cockpit_client: TestClient) -> N
 
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
-        events = collect_initial_events(ws, count=4)
+        events = collect_initial_events(ws, count=5)
 
     status = next(e for e in events if e["type"] == EVENT_SESSION_STATUS)
     assert status["mode"] == "mock"
@@ -85,7 +89,7 @@ def test_initial_snapshot_event_carries_reference_pads(cockpit_client: TestClien
 
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
-        events = collect_initial_events(ws, count=4)
+        events = collect_initial_events(ws, count=5)
 
     snapshot = next(e for e in events if e["type"] == EVENT_SNAPSHOT_CHANGED)["snapshot"]
     pad_ids = [pad["pad_id"] for pad in snapshot["pads"]]
@@ -113,7 +117,7 @@ def test_initial_profile_event_is_null_on_fresh_session(cockpit_client: TestClie
 
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
-        events = collect_initial_events(ws, count=4)
+        events = collect_initial_events(ws, count=5)
 
     profile = next(e for e in events if e["type"] == EVENT_PROFILE_CHANGED)["profile"]
     assert profile is None
@@ -124,10 +128,26 @@ def test_initial_history_event_has_root_entry(cockpit_client: TestClient) -> Non
 
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
-        events = collect_initial_events(ws, count=4)
+        events = collect_initial_events(ws, count=5)
 
     history = next(e for e in events if e["type"] == EVENT_HISTORY_UPDATED)["history"]
     assert len(history["entries"]) == 1
     assert history["current_id"] == history["entries"][0]["snapshot"]["snapshot_id"]
     assert history["entries"][0]["kind"] == "auto"
     assert history["entries"][0]["parent_id"] is None
+
+
+def test_initial_performance_console_event_is_passive(cockpit_client: TestClient) -> None:
+    """The bootstrap performance-console packet remains passive and 12-pad aware."""
+
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
+        events = collect_initial_events(ws, count=5)
+
+    model = next(e for e in events if e["type"] == EVENT_PERFORMANCE_CONSOLE_CHANGED)[
+        "performance_console"
+    ]
+    assert model["console_version"] == "live-gui-performance-console-v1"
+    assert model["hardware_mode"] == "passive"
+    assert model["rytm_pad_surface"]["pad_count"] == 12
+    assert "open_midi_port_without_arm" in model["blocked_actions"]

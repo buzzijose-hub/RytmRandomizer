@@ -5,7 +5,7 @@ findings:
 
 * **C1** — every WebSocket connection must complete an authenticated
   handshake (``{"type": "hello", "token": "<urlsafe>"}``) before any
-  cockpit command (or even the bootstrap event quartet) is permitted.
+  cockpit command (or even the bootstrap event set) is permitted.
 * **L8** — the server must pin a subprotocol so a casual
   ``new WebSocket(url)`` from a foreign tab fails the upgrade.
 * **SX1** — the server must reject oversized frames before they OOM the
@@ -39,6 +39,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
     CLOSE_CODE_MESSAGE_TOO_BIG,
     CLOSE_CODE_POLICY_VIOLATION,
     EVENT_HISTORY_UPDATED,
+    EVENT_PERFORMANCE_CONSOLE_CHANGED,
     EVENT_PROFILE_CHANGED,
     EVENT_SESSION_STATUS,
     EVENT_SNAPSHOT_CHANGED,
@@ -121,20 +122,21 @@ def test_server_echoes_pinned_subprotocol_on_accept(client: TestClient) -> None:
 
 
 def test_handshake_with_valid_token_unlocks_bootstrap_events(client: TestClient) -> None:
-    """Happy path: valid token → ``ok=true`` ack → bootstrap quartet flows."""
+    """Happy path: valid token → ``ok=true`` ack → bootstrap event set flows."""
 
     with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         ws.send_json(_hello(_TOKEN))
         ack = ws.receive_json()
         assert ack == {"ok": True}
 
-        # The four bootstrap events arrive in the documented order.
-        events = [ws.receive_json() for _ in range(4)]
+        # The five bootstrap events arrive in the documented order.
+        events = [ws.receive_json() for _ in range(5)]
         assert [e["type"] for e in events] == [
             EVENT_SESSION_STATUS,
             EVENT_SNAPSHOT_CHANGED,
             EVENT_PROFILE_CHANGED,
             EVENT_HISTORY_UPDATED,
+            EVENT_PERFORMANCE_CONSOLE_CHANGED,
         ]
 
 
@@ -247,7 +249,7 @@ def test_oversize_message_after_handshake_is_rejected(
         with testclient.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
             ws.send_json(_hello(_TOKEN))
             assert ws.receive_json() == {"ok": True}
-            for _ in range(4):
+            for _ in range(5):
                 ws.receive_json()  # drain bootstrap
 
             # Build a request envelope whose JSON serialization comfortably
@@ -272,7 +274,7 @@ def test_under_cap_message_after_handshake_is_processed(client: TestClient) -> N
     with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         ws.send_json(_hello(_TOKEN))
         assert ws.receive_json() == {"ok": True}
-        for _ in range(4):
+        for _ in range(5):
             ws.receive_json()  # drain bootstrap
 
         ws.send_json(
@@ -297,7 +299,7 @@ def _handshake_and_drain_bootstrap(ws: object) -> None:
     ws.send_json(_hello(_TOKEN))  # type: ignore[attr-defined]
     ack = ws.receive_json()  # type: ignore[attr-defined]
     assert ack == {"ok": True}
-    for _ in range(4):
+    for _ in range(5):
         ws.receive_json()  # type: ignore[attr-defined]
 
 

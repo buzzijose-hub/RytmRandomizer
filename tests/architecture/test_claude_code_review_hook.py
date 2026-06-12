@@ -94,7 +94,7 @@ def test_claude_hook_emits_additional_context_on_pass(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     gate = _load_gate_module()
-    monkeypatch.setattr(gate, "run_mechanical_gates", lambda *, quiet: (True, []))
+    monkeypatch.setattr(gate, "run_mechanical_gates", lambda **_: (True, []))
     monkeypatch.setattr(
         gate.sys,
         "stdin",
@@ -114,7 +114,7 @@ def test_claude_hook_blocks_on_gate_failure(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     gate = _load_gate_module()
-    monkeypatch.setattr(gate, "run_mechanical_gates", lambda *, quiet: (False, ["Lint: ruff"]))
+    monkeypatch.setattr(gate, "run_mechanical_gates", lambda **_: (False, ["Lint: ruff"]))
     monkeypatch.setattr(
         gate.sys,
         "stdin",

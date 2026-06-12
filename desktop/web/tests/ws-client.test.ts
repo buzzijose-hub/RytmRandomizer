@@ -910,12 +910,15 @@ describe('CockpitClient — default request id generator path (no injection)', (
 });
 
 describe('protocol type guards', () => {
-  it('isEvent identifies all six event types', () => {
+  it('isEvent identifies all seven event types', () => {
     expect(isEvent({ type: 'snapshot_changed', snapshot: {} })).toBe(true);
     expect(isEvent({ type: 'mutation_previewed', candidate: null })).toBe(true);
     expect(isEvent({ type: 'send_plan_changed', send_plan: null })).toBe(true);
     expect(isEvent({ type: 'history_updated', history: {} })).toBe(true);
     expect(isEvent({ type: 'profile_changed', profile: null })).toBe(true);
+    expect(isEvent({ type: 'performance_console_changed', performance_console: null })).toBe(
+      true,
+    );
     expect(isEvent({ type: 'session_status' })).toBe(true);
   });
 
