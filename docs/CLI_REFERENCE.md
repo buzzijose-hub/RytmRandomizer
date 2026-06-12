@@ -224,6 +224,11 @@ operator-present validation commands, stop/recovery notes, and promotion gates.
 It does not arm hardware, open ports, send MIDI, or implement full A4 macro
 SEND.
 
+`analog-four-oxi-macro-set-planner-report` is the passive queue layer for those
+macro rows. It sequences the default `warehouse-arc` current/up-next plan
+(`home`, `hard-groove`, `dub-pressure`, `industrial-transition`, `home`) for
+Cockpit review and keeps `A4 full macro SEND` plus unattended playback blocked.
+
 ---
 
 ## OXI live macro strategy

@@ -228,6 +228,12 @@ current A4 track roles, mutation zones, and OXI-style Anchor / Shape /
 Pressure / Space macro rows, but it does not add an A4 SEND path, open MIDI
 ports, or send MIDI.
 
+The Style Crates queue also includes a passive Analog Four set-plan card. It
+renders the current/up-next A4 `warehouse-arc` macro sequence from
+`analog-four-oxi-macro-set-planner-report --json`, blocked A4 send actions, and
+the no-MIDI safety flags so the Cockpit can show where the A4 side will fit
+before any outbound A4 macro path exists.
+
 1. **Pick a built-in scene** — the right panel lists seven shipped
    `kind="scene"` profiles (industrial, hypnotic, garage, peak_time,
    rolling, birmingham, drone). Click one to make it active.

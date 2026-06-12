@@ -40,6 +40,31 @@ describe('styleCrateQueueModel', () => {
     expect(DEFAULT_STYLE_CRATE_QUEUE_MODEL.journalCount).toBe(2);
   });
 
+  it('carries the passive Analog Four macro set plan for cockpit review', () => {
+    const setPlan = DEFAULT_STYLE_CRATE_QUEUE_MODEL.analogFourSetPlan;
+
+    expect(setPlan.setName).toBe('warehouse-arc');
+    expect(setPlan.currentStep).toMatchObject({
+      macroName: 'home',
+      macroLabel: 'Home',
+      readiness: 'review-ready',
+    });
+    expect(setPlan.upNext.map((step) => step.macroName)).toEqual([
+      'hard-groove',
+      'dub-pressure',
+      'industrial-transition',
+      'home',
+    ]);
+    expect(setPlan.opensPorts).toBe(false);
+    expect(setPlan.sendsMidi).toBe(false);
+    expect(setPlan.hardwareRequired).toBe(false);
+    expect(setPlan.blockedActiveActions).toContain('A4 full macro SEND');
+    expect(setPlan.replayCommand).toBe(
+      'python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --json',
+    );
+    expect(DEFAULT_STYLE_CRATE_QUEUE_MODEL.replayCommands).toContain(setPlan.replayCommand);
+  });
+
   it('keeps generic crate display and unknown queued crate labels deterministic', () => {
     const sourceCrate = DEFAULT_STYLE_CRATE_REHEARSAL_DECK.crate_cards[0];
     const sourceQueueCard = DEFAULT_STYLE_CRATE_REHEARSAL_DECK.queue_cards[0];

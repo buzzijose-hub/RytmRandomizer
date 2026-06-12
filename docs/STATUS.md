@@ -1,9 +1,18 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-11. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-06-12. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-06-12: Cockpit style-crate queue surface now consumes the passive
+  Analog Four OXI macro set planner metadata prepared on PR #160. The
+  frontend model carries the `warehouse-arc` current/up-next A4 macro plan,
+  blocked `A4 full macro SEND`/unattended-playback actions, safety flags, and
+  the replay command for `analog-four-oxi-macro-set-planner-report --json`;
+  the component renders that A4 set plan alongside the style queue for
+  review-only visibility. Frontend/passive metadata only: no port opening, no
+  MIDI send, no command execution, no hardware mutation, and A4 full macro SEND
+  remains blocked.
 - 2026-06-11: Passive Analog Four OXI macro set planner prepared locally. The
   new `analog-four-oxi-macro-set-planner-report` command sequences the existing
   A4 `home`, `hard-groove`, `dub-pressure`, and `industrial-transition`

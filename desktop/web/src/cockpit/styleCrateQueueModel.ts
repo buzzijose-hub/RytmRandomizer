@@ -43,6 +43,38 @@ export interface StyleCrateQueueMove {
   readonly dryRunOnly: boolean;
 }
 
+export interface StyleCrateAnalogFourSetStep {
+  readonly order: number;
+  readonly macroName: string;
+  readonly macroLabel: string;
+  readonly summary: string;
+  readonly seed: number;
+  readonly intensity: number;
+  readonly energy: number;
+  readonly readiness: string;
+  readonly eventCount: number;
+  readonly readyCount: number;
+  readonly reviewCount: number;
+  readonly blockedCount: number;
+  readonly validationCommand: string;
+  readonly recoveryAction: string;
+}
+
+export interface StyleCrateAnalogFourSetPlan {
+  readonly title: string;
+  readonly setName: string;
+  readonly stepCount: number;
+  readonly currentStep: StyleCrateAnalogFourSetStep;
+  readonly upNext: ReadonlyArray<StyleCrateAnalogFourSetStep>;
+  readonly steps: ReadonlyArray<StyleCrateAnalogFourSetStep>;
+  readonly opensPorts: boolean;
+  readonly sendsMidi: boolean;
+  readonly hardwareRequired: boolean;
+  readonly blockedActiveActions: ReadonlyArray<string>;
+  readonly safety: ReadonlyArray<string>;
+  readonly replayCommand: string;
+}
+
 export interface StyleCrateQueueModel {
   readonly modelVersion: string;
   readonly deckId: string;
@@ -54,6 +86,7 @@ export interface StyleCrateQueueModel {
   readonly safetyLabel: string;
   readonly blockedActions: ReadonlyArray<string>;
   readonly replayCommands: ReadonlyArray<string>;
+  readonly analogFourSetPlan: StyleCrateAnalogFourSetPlan;
 }
 
 const CRATE_DISPLAY_OVERRIDES: Record<
@@ -85,6 +118,124 @@ const CRATE_DISPLAY_OVERRIDES: Record<
 
 const DEFAULT_TONE: StyleCrateTone = 'blue';
 
+export const ANALOG_FOUR_SET_PLAN_REPLAY_COMMAND =
+  'python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --json';
+
+const DEFAULT_ANALOG_FOUR_SET_STEPS: readonly [
+  StyleCrateAnalogFourSetStep,
+  ...StyleCrateAnalogFourSetStep[],
+] = [
+  {
+    order: 1,
+    macroName: 'home',
+    macroLabel: 'Home',
+    summary: 'Gentle four-track reset-adjacent motion for a stable live anchor.',
+    seed: 0,
+    intensity: 2,
+    energy: 2,
+    readiness: 'review-ready',
+    eventCount: 8,
+    readyCount: 8,
+    reviewCount: 0,
+    blockedCount: 0,
+    validationCommand:
+      'analog-four-oxi-macro-readiness-report home --seed 0 --intensity 2 --limit 4',
+    recoveryAction: 'reload saved A4 kit or return to home macro',
+  },
+  {
+    order: 2,
+    macroName: 'hard-groove',
+    macroLabel: 'Hard Groove',
+    summary: 'OXI-style four-track pressure for bass, stab, motion, and air lanes.',
+    seed: 1,
+    intensity: 5,
+    energy: 5,
+    readiness: 'review-ready',
+    eventCount: 12,
+    readyCount: 12,
+    reviewCount: 0,
+    blockedCount: 0,
+    validationCommand:
+      'analog-four-oxi-macro-readiness-report hard-groove --seed 1 --intensity 5 --limit 4',
+    recoveryAction: 'reload saved A4 kit or return to home macro',
+  },
+  {
+    order: 3,
+    macroName: 'dub-pressure',
+    macroLabel: 'Dub Pressure',
+    summary: 'Delay/reverb-led A4 macro for cavernous but controlled hypnosis.',
+    seed: 2,
+    intensity: 4,
+    energy: 4,
+    readiness: 'review-ready',
+    eventCount: 8,
+    readyCount: 8,
+    reviewCount: 0,
+    blockedCount: 0,
+    validationCommand:
+      'analog-four-oxi-macro-readiness-report dub-pressure --seed 2 --intensity 4 --limit 4',
+    recoveryAction: 'reload saved A4 kit or return to home macro',
+  },
+  {
+    order: 4,
+    macroName: 'industrial-transition',
+    macroLabel: 'Industrial Transition',
+    summary: 'Tense four-track riser macro for transitions and breakdown pressure.',
+    seed: 3,
+    intensity: 7,
+    energy: 7,
+    readiness: 'review-ready',
+    eventCount: 9,
+    readyCount: 9,
+    reviewCount: 0,
+    blockedCount: 0,
+    validationCommand:
+      'analog-four-oxi-macro-readiness-report industrial-transition --seed 3 --intensity 7 --limit 4',
+    recoveryAction: 'reload saved A4 kit or return to home macro',
+  },
+  {
+    order: 5,
+    macroName: 'home',
+    macroLabel: 'Home',
+    summary: 'Gentle four-track reset-adjacent motion for a stable live anchor.',
+    seed: 4,
+    intensity: 2,
+    energy: 2,
+    readiness: 'review-ready',
+    eventCount: 8,
+    readyCount: 8,
+    reviewCount: 0,
+    blockedCount: 0,
+    validationCommand:
+      'analog-four-oxi-macro-readiness-report home --seed 4 --intensity 2 --limit 4',
+    recoveryAction: 'reload saved A4 kit or return to home macro',
+  },
+];
+
+export const DEFAULT_ANALOG_FOUR_SET_PLAN: StyleCrateAnalogFourSetPlan = {
+  title: 'RytmRandomizer passive Analog Four OXI macro set planner',
+  setName: 'warehouse-arc',
+  stepCount: DEFAULT_ANALOG_FOUR_SET_STEPS.length,
+  currentStep: DEFAULT_ANALOG_FOUR_SET_STEPS[0],
+  upNext: DEFAULT_ANALOG_FOUR_SET_STEPS.slice(1),
+  steps: DEFAULT_ANALOG_FOUR_SET_STEPS,
+  opensPorts: false,
+  sendsMidi: false,
+  hardwareRequired: false,
+  blockedActiveActions: ['A4 full macro SEND', 'A4 unattended macro playback'],
+  safety: [
+    'passive/read-only',
+    'A4 OXI macro set planning only',
+    'manual-backed Analog Four CC metadata only',
+    'no MIDI sending',
+    'no port opening',
+    'no command execution',
+    'no hardware mutation',
+    'A4 full macro SEND remains blocked',
+  ],
+  replayCommand: ANALOG_FOUR_SET_PLAN_REPLAY_COMMAND,
+};
+
 function toTestIdKey(key: string): string {
   return key.toLowerCase().replaceAll('_', '-').replaceAll('/', '-').replaceAll(' ', '-');
 }
@@ -100,6 +251,14 @@ function crateDisplay(crate: StyleCrateRehearsalCrateCardDict): {
     testIdKey: override?.testIdKey ?? toTestIdKey(crate.crate_key),
     tone: override?.tone ?? DEFAULT_TONE,
   };
+}
+
+function replayCommandsWithAnalogFourSetPlanner(
+  replayCommands: ReadonlyArray<string>,
+): ReadonlyArray<string> {
+  return replayCommands.includes(ANALOG_FOUR_SET_PLAN_REPLAY_COMMAND)
+    ? replayCommands
+    : [...replayCommands, ANALOG_FOUR_SET_PLAN_REPLAY_COMMAND];
 }
 
 export function toStyleCrateQueueModel(
@@ -153,7 +312,8 @@ export function toStyleCrateQueueModel(
     summary: `${queue.length} staged moves cover ${targetPadSlots} target pad slots and ${journalCount} journal seeds.`,
     safetyLabel: 'Passive queue preview only',
     blockedActions: deck.blocked_actions,
-    replayCommands: deck.replay_commands,
+    replayCommands: replayCommandsWithAnalogFourSetPlanner(deck.replay_commands),
+    analogFourSetPlan: DEFAULT_ANALOG_FOUR_SET_PLAN,
   };
 }
 
