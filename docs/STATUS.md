@@ -4,6 +4,15 @@ Last updated: 2026-06-12. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-12: Cockpit performance console bundle prepared after PR #161. The
+  passive `live-gui-performance-console-report` now composes the Rytm 12-pad
+  snapshot surface, registered device inventory, Style Crates queue and
+  Mutation Journal cards, snapshot history, command queue, safety checklist,
+  and Analog Four set-plan review into one GUI-ready packet, with a typed
+  React `PerformanceConsole` consumer for passive review. This remains
+  mock-safe metadata only: no GUI launch, no MIDI port opening, no MIDI send,
+  no hardware mutation, no queue dispatch, no snapshot-history SEND, and full
+  A4 outbound macro SEND remains blocked.
 - 2026-06-12: Desktop shell CI hardening pinned the Tauri shell's transitive
   `time` dependency to `=0.3.47` after the Windows `desktop-shell` job resolved
   `time 0.3.48` with `tauri-utils 2.9.2` and failed inside upstream Rust

@@ -31,6 +31,7 @@ LIVE_GUI_MODEL_MODULES: Final[tuple[Path, ...]] = (
     PROJECT_ROOT / "rytm_randomizer" / "reports" / "live_gui_snapshot_compatibility_model.py",
     PROJECT_ROOT / "rytm_randomizer" / "reports" / "live_gui_dual_device_rig_readiness_model.py",
     PROJECT_ROOT / "rytm_randomizer" / "reports" / "live_gui_performance_flow_model.py",
+    PROJECT_ROOT / "rytm_randomizer" / "reports" / "live_gui_performance_console_model.py",
 )
 
 _TS_INTERFACE_RE: Final[re.Pattern[str]] = re.compile(

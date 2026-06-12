@@ -422,6 +422,132 @@ html,
   opacity: 0.7;
 }
 
+/* ---------- Performance console packet ---------- */
+
+.performance-console {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.85fr) minmax(520px, 1.55fr) minmax(300px, 1fr);
+  gap: 12px;
+  min-width: 0;
+  color: var(--text);
+}
+
+.performance-console-header,
+.performance-console-surface {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 12px;
+}
+
+.performance-console-header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.performance-console-header h1,
+.performance-console-surface h2 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.performance-console-status,
+.performance-console-section-header,
+.performance-console-flow-rail,
+.performance-console-device-grid,
+.performance-console-list,
+.performance-console-a4-plan {
+  display: grid;
+  gap: 8px;
+}
+
+.performance-console-status {
+  grid-template-columns: repeat(2, auto);
+}
+
+.performance-console-status span {
+  border: 1px solid rgba(46, 160, 67, 0.58);
+  border-radius: 999px;
+  color: var(--green);
+  padding: 3px 8px;
+  font-size: 12px;
+}
+
+.performance-console-section-header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+}
+
+.performance-console-section-header span,
+.performance-console-device span,
+.performance-console-device small,
+.performance-console-pad span,
+.performance-console-pad small,
+.performance-console-step span,
+.performance-console-step small,
+.performance-console-a4-plan span,
+.performance-console-a4-plan small,
+.performance-console-list span,
+.performance-console-list small {
+  color: var(--text-dim);
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.performance-console-device,
+.performance-console-pad,
+.performance-console-step,
+.performance-console-a4-plan,
+.performance-console-list article {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(13, 17, 23, 0.38);
+  padding: 8px;
+  display: grid;
+  gap: 4px;
+}
+
+.performance-console-device strong,
+.performance-console-pad strong,
+.performance-console-step strong,
+.performance-console-a4-plan strong,
+.performance-console-list strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.performance-console-pad-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.performance-console-pad.active_v134,
+.performance-console-pad.active,
+.performance-console-step.current {
+  border-color: rgba(86, 212, 221, 0.55);
+  box-shadow: inset 3px 0 0 var(--cyan);
+}
+
+.performance-console-pad.planned_expansion,
+.performance-console-step.next {
+  border-color: rgba(210, 153, 34, 0.48);
+}
+
+.performance-console-wide {
+  grid-column: span 2;
+}
+
+.performance-console-a4-plan {
+  border-color: rgba(86, 212, 221, 0.32);
+  margin-top: 8px;
+}
+
 /* ---------- Device + safety rails ---------- */
 
 .device-rail,
@@ -1647,13 +1773,19 @@ html,
   }
 
   .live-readiness-grid,
-  .live-command-columns {
+  .live-command-columns,
+  .performance-console {
     grid-template-columns: 1fr;
   }
 
   .live-pad-grid,
-  .live-compatibility-grid {
+  .live-compatibility-grid,
+  .performance-console-pad-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .performance-console-wide {
+    grid-column: 1;
   }
 }
 
@@ -1683,7 +1815,8 @@ html,
 
   .live-pad-grid,
   .live-compatibility-grid,
-  .live-chip-grid {
+  .live-chip-grid,
+  .performance-console-pad-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 

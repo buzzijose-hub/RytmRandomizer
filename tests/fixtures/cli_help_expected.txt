@@ -53,6 +53,7 @@ Usage:
   python -m rytm_randomizer.cli oxi-live-macro-catalog-report
   python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report [--json]
   python -m rytm_randomizer.cli live-gui-performance-flow-model-report [--json]
+  python -m rytm_randomizer.cli live-gui-performance-console-report [--json]
   python -m rytm_randomizer.cli oxi-live-set-strategy-report [--json]
   python -m rytm_randomizer.cli reference-style-blueprint-report (--description <text>|--audio <path>|--library <dir>) [--json]
   python -m rytm_randomizer.cli list-style-profiles
@@ -214,6 +215,8 @@ Commands:
                      Print passive Rytm macro hardware rehearsal checklist.
   live-gui-performance-flow-model-report
                      Print the passive live GUI performance flow model.
+  live-gui-performance-console-report
+                     Print the passive Cockpit performance console model.
   oxi-live-set-strategy-report
                      Print passive OXI live set strategy chapters and pad policy.
   reference-style-blueprint-report
