@@ -31,6 +31,10 @@ export type {
   StyleCrateTone,
 } from './styleCrateQueueModel';
 export {
+  PerformanceConsole,
+} from './PerformanceConsole';
+export type { PerformanceConsoleProps } from './PerformanceConsole';
+export {
   DEFAULT_LIVE_PERFORMANCE_FLOW_MODEL,
   DEFAULT_LIVE_READINESS_MODEL,
   LiveAnalyzerPanel,
@@ -60,6 +64,9 @@ export type {
   LiveGuiHardwareRailModelDict,
   LiveGuiHardwareRailSafetyCheckDict,
   LiveGuiLastActionDict,
+  LiveGuiPerformanceConsoleDeviceInventoryModelDict,
+  LiveGuiPerformanceConsoleModelDict,
+  LiveGuiPerformanceConsoleRytmTwelvePadSurfaceModelDict,
   LiveGuiQueuedCommandDict,
   LiveGuiRytmPadSurfaceCardDict,
   LiveGuiRytmTwelvePadSurfaceModelDict,

@@ -1,7 +1,7 @@
 # Cockpit Performance Console Bundle Implementation Plan
 
-> Status: proposed
-> Dependency: blocked on PR #161 merge
+> Status: in-flight
+> Dependency: PR #161 merged in `origin/modularize-v1.34`
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -64,8 +64,8 @@ Out of scope:
   - Owns the top-level passive console packet.
   - Composes existing reports; does not duplicate crate/macro/A4 facts.
   - Registers `live-gui-performance-console-report`.
-- Modify `rytm_randomizer/reports/__init__.py`
-  - Re-export the console builder/formatter/payload helpers.
+- Keep `rytm_randomizer/reports/__init__.py` unchanged
+  - The reports package deliberately avoids eager imports; the new command is lazy-loaded through `cli.py` instead.
 - Modify `rytm_randomizer/cli.py`
   - Add one lazy CLI registry entry for `live-gui-performance-console-report`.
 - Modify `rytm_randomizer/help_text.py`
@@ -76,8 +76,8 @@ Out of scope:
   - Add `LiveGuiPerformanceConsoleModelDict` and nested aliases.
 - Create `desktop/web/src/cockpit/PerformanceConsole.tsx`
   - Renders the composed console packet with existing components where possible.
-- Modify `desktop/web/src/cockpit/Cockpit.tsx`
-  - Switch the main Cockpit body to the performance console when a console packet is supplied; keep current fallback.
+- Keep `desktop/web/src/cockpit/Cockpit.tsx` unchanged for this bundle
+  - No runtime state source currently supplies the composed console packet, so this PR exports the tested component for the future Tauri/state wiring step.
 - Create `desktop/web/tests/cockpit/PerformanceConsole.test.tsx`
   - Covers 12 pads, A4 set plan, style queue, safety rail, blocked actions, and snapshot history.
 - Modify `README.md`
@@ -126,7 +126,7 @@ Per `docs/PLAN_REQUIREMENTS.md`, the implementation PR must satisfy all 18 gates
 **Files:**
 - Create: `tests/test_live_gui_performance_console_model.py`
 
-- [ ] **Step 1: Write the failing composition test**
+- [x] **Step 1: Write the failing composition test**
 
 Add:
 
@@ -162,7 +162,7 @@ def test_performance_console_composes_existing_operator_packets() -> None:
     assert "Hardware: passive/mock-safe" in text
 ```
 
-- [ ] **Step 2: Write the failing deterministic JSON test**
+- [x] **Step 2: Write the failing deterministic JSON test**
 
 Add:
 
@@ -181,7 +181,7 @@ def test_performance_console_json_payload_is_deterministic() -> None:
     )
 ```
 
-- [ ] **Step 3: Run and verify red**
+- [x] **Step 3: Run and verify red**
 
 Run:
 
@@ -197,7 +197,7 @@ Expected: fails with `ModuleNotFoundError: No module named 'rytm_randomizer.repo
 - Create: `rytm_randomizer/reports/live_gui_performance_console_model.py`
 - Modify: `rytm_randomizer/reports/__init__.py`
 
-- [ ] **Step 1: Implement the passive model module**
+- [x] **Step 1: Implement the passive model module**
 
 Create `rytm_randomizer/reports/live_gui_performance_console_model.py` with:
 
@@ -320,19 +320,11 @@ register(LIVE_GUI_PERFORMANCE_CONSOLE_CLI_COMMAND)
 
 If existing report builders expose `to_dict()` names that differ from the snippet above, adjust the adapter functions to their actual public JSON helpers and add assertions that the same builder remains the source of truth.
 
-- [ ] **Step 2: Re-export the model helpers**
+- [x] **Step 2: Keep the model helpers lazily imported**
 
-In `rytm_randomizer/reports/__init__.py`, add:
+No eager `rytm_randomizer/reports/__init__.py` re-export was added. The reports package documents that heavy or behavior-specific dependencies stay lazy, so the console command is registered through the existing lazy CLI entry instead.
 
-```python
-from .live_gui_performance_console_model import (  # noqa: F401
-    build_live_gui_performance_console_model,
-    build_live_gui_performance_console_payload,
-    format_live_gui_performance_console_model,
-)
-```
-
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 Run:
 
@@ -349,7 +341,7 @@ Expected: tests progress from import failure to any real contract mismatch.
 - Modify: `rytm_randomizer/help_text.py`
 - Modify: `tests/test_live_gui_performance_console_model.py`
 
-- [ ] **Step 1: Add CLI tests**
+- [x] **Step 1: Add CLI tests**
 
 Add:
 
@@ -371,7 +363,7 @@ def test_performance_console_cli_supports_text_and_json(capsys) -> None:
         LIVE_GUI_PERFORMANCE_CONSOLE_CLI_COMMAND.invoke(("--arm",))
 ```
 
-- [ ] **Step 2: Add lazy CLI entry**
+- [x] **Step 2: Add lazy CLI entry**
 
 In `rytm_randomizer/cli.py`, add:
 
@@ -382,7 +374,7 @@ In `rytm_randomizer/cli.py`, add:
 ),
 ```
 
-- [ ] **Step 3: Add help text**
+- [x] **Step 3: Add help text**
 
 In `rytm_randomizer/help_text.py`, add command help that includes:
 
@@ -392,7 +384,7 @@ Composes Rytm pad state, style queue, snapshot history, command queue, safety
 state, and A4 set-plan review. Opens no MIDI ports and sends no MIDI.
 ```
 
-- [ ] **Step 4: Run CLI/help tests**
+- [x] **Step 4: Run CLI/help tests**
 
 Run:
 
@@ -410,7 +402,7 @@ Expected: CLI tests pass and passive safety remains intact.
 - Modify: `desktop/web/src/cockpit/Cockpit.tsx`
 - Create: `desktop/web/tests/cockpit/PerformanceConsole.test.tsx`
 
-- [ ] **Step 1: Add frontend test**
+- [x] **Step 1: Add frontend test**
 
 Create `desktop/web/tests/cockpit/PerformanceConsole.test.tsx`:
 
@@ -455,7 +447,7 @@ describe('PerformanceConsole', () => {
 });
 ```
 
-- [ ] **Step 2: Add protocol type**
+- [x] **Step 2: Add protocol type**
 
 In `desktop/web/src/types/live_gui_protocol.ts`, add:
 
@@ -478,7 +470,7 @@ export interface LiveGuiPerformanceConsoleModelDict {
 
 If the existing TypeScript file already has narrower exported interfaces for any nested model, use those instead of `unknown`.
 
-- [ ] **Step 3: Implement component**
+- [x] **Step 3: Implement component**
 
 Create `desktop/web/src/cockpit/PerformanceConsole.tsx` with:
 
@@ -533,11 +525,11 @@ export function PerformanceConsole({ model }: PerformanceConsoleProps) {
 }
 ```
 
-- [ ] **Step 4: Wire Cockpit fallback**
+- [x] **Step 4: Export component and leave Cockpit fallback unchanged**
 
-In `desktop/web/src/cockpit/Cockpit.tsx`, keep the existing screen as fallback. Add an optional `performanceConsole` prop only if the current app state already has a place to pass protocol packets. If no runtime state source exists yet, export the component and keep `Cockpit.tsx` unchanged for this bundle.
+`desktop/web/src/cockpit/Cockpit.tsx` remains unchanged because no runtime state source exists yet for the composed console packet. The new `PerformanceConsole` component and protocol type are exported for the future wiring step.
 
-- [ ] **Step 5: Run frontend tests and typecheck**
+- [x] **Step 5: Run frontend tests and typecheck**
 
 Run:
 
@@ -556,7 +548,7 @@ Expected: test and typecheck pass.
 - Modify: `README.md`
 - Modify: `docs/STATUS.md`
 
-- [ ] **Step 1: Add README command note**
+- [x] **Step 1: Add README command note**
 
 Near the passive report command list, add:
 
@@ -574,7 +566,7 @@ It is passive/mock-safe: it opens no MIDI port, sends no MIDI, and keeps
 hardware sends and A4 outbound macro sends represented as blocked actions.
 ```
 
-- [ ] **Step 2: Add STATUS entry only when implementation ships**
+- [x] **Step 2: Add STATUS entry only when implementation ships**
 
 At the top of `docs/STATUS.md`, add:
 
@@ -586,7 +578,7 @@ At the top of `docs/STATUS.md`, add:
   queue dispatch, and A4 outbound macro send blocked.
 ```
 
-- [ ] **Step 3: Run docs checks**
+- [x] **Step 3: Run docs checks**
 
 Run:
 
@@ -601,7 +593,7 @@ Expected: docs checks pass.
 **Files:**
 - All files touched above.
 
-- [ ] **Step 1: Run focused backend tests**
+- [x] **Step 1: Run focused backend tests**
 
 Run:
 
@@ -611,7 +603,7 @@ python -m pytest tests\test_live_gui_performance_console_model.py -n 0
 
 Expected: all tests pass.
 
-- [ ] **Step 2: Run frontend test/typecheck**
+- [x] **Step 2: Run frontend test/typecheck**
 
 Run:
 
@@ -624,7 +616,7 @@ Pop-Location
 
 Expected: Vitest and typecheck pass.
 
-- [ ] **Step 3: Run architecture and lint gates**
+- [x] **Step 3: Run architecture and lint gates**
 
 Run:
 
@@ -637,7 +629,7 @@ python -m isort --profile black --check-only .
 
 Expected: all pass.
 
-- [ ] **Step 4: Run full test suite**
+- [x] **Step 4: Run full test suite**
 
 Run:
 
@@ -647,7 +639,7 @@ python -m pytest
 
 Expected: full suite passes.
 
-- [ ] **Step 5: Run touched-file coverage and vulture**
+- [x] **Step 5: Run touched-file coverage and vulture**
 
 Run:
 

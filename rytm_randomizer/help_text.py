@@ -77,6 +77,7 @@ USAGE = (
     "oxi-live-macro-catalog-report | "
     "rytm-live-macro-hardware-rehearsal-report [--json] | "
     "live-gui-performance-flow-model-report [--json] | "
+    "live-gui-performance-console-report [--json] | "
     "oxi-live-set-strategy-report [--json] | "
     "reference-style-blueprint-report "
     "(--description <text>|--audio <path>|--library <dir>) [--json] | "
@@ -1331,6 +1332,31 @@ Safety:
   no GUI launch
   no file writing
   no real MIDI rendering
+  no MIDI sending
+  no port opening
+  no hardware mutation
+  no hardware required"""
+
+
+def _live_gui_performance_console_report_help():
+    return """RytmRandomizer passive CLI: live-gui-performance-console-report
+
+Usage:
+  python -m rytm_randomizer.cli live-gui-performance-console-report
+  python -m rytm_randomizer.cli live-gui-performance-console-report --json
+  python -m rytm_randomizer.cli live-gui-performance-console-report --help
+
+Behavior:
+  Emits the passive Cockpit performance console packet that composes the
+  device rail, Rytm 12-pad surface, style queue/journal, snapshot history,
+  command queue, safety checklist, and A4 set plan into one GUI-ready model.
+
+Safety:
+  passive/read-only
+  Cockpit performance console packet only
+  no GUI launch
+  no file writing
+  no command execution
   no MIDI sending
   no port opening
   no hardware mutation
@@ -2782,6 +2808,7 @@ Usage:
   python -m rytm_randomizer.cli oxi-live-macro-catalog-report
   python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report [--json]
   python -m rytm_randomizer.cli live-gui-performance-flow-model-report [--json]
+  python -m rytm_randomizer.cli live-gui-performance-console-report [--json]
   python -m rytm_randomizer.cli oxi-live-set-strategy-report [--json]
   python -m rytm_randomizer.cli reference-style-blueprint-report (--description <text>|--audio <path>|--library <dir>) [--json]
   python -m rytm_randomizer.cli list-style-profiles
@@ -2943,6 +2970,8 @@ Commands:
                      Print passive Rytm macro hardware rehearsal checklist.
   live-gui-performance-flow-model-report
                      Print the passive live GUI performance flow model.
+  live-gui-performance-console-report
+                     Print the passive Cockpit performance console model.
   oxi-live-set-strategy-report
                      Print passive OXI live set strategy chapters and pad policy.
   reference-style-blueprint-report
@@ -3348,6 +3377,7 @@ Safety:
     "oxi-live-macro-catalog-report": _oxi_live_macro_catalog_report_help,
     "rytm-live-macro-hardware-rehearsal-report": (_rytm_live_macro_hardware_rehearsal_report_help),
     "live-gui-performance-flow-model-report": _live_gui_performance_flow_model_report_help,
+    "live-gui-performance-console-report": _live_gui_performance_console_report_help,
     "oxi-live-set-strategy-report": _oxi_live_set_strategy_report_help,
     "reference-style-blueprint-report": _reference_style_blueprint_report_help,
     "style-target-report": _style_target_report_help,

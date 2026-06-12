@@ -1,0 +1,338 @@
+import { render, screen, within } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+
+import { PerformanceConsole } from '../../src/cockpit/PerformanceConsole';
+import type { LiveGuiPerformanceConsoleModelDict } from '../../src/types/live_gui_protocol';
+
+const model: LiveGuiPerformanceConsoleModelDict = {
+  console_version: 'live-gui-performance-console-v1',
+  source_module: 'reports.live_gui_performance_console_model',
+  console_id: 'console-test',
+  session_label: 'Warehouse arc',
+  console_status: 'mock-safe',
+  hardware_mode: 'passive',
+  device_inventory: {
+    model_version: 'live-gui-device-inventory-v1',
+    device_count: 2,
+    cards: [
+      {
+        device_id: 'analog_rytm_mk2',
+        display_name: 'Elektron Analog Rytm MKII',
+        order: 1,
+        track_count: 12,
+        default_midi_channel_label: '1-12',
+        sysex_manufacturer_id_hex: '00 20 3c',
+        role_summary: '12-pad drum and sample performance surface',
+        port_state: 'closed',
+        hardware_state: 'disarmed',
+        mock_state: 'mock-safe',
+        can_open_port: false,
+        can_arm_hardware: false,
+        capability_badges: ['12 pads', 'snapshot-safe'],
+        passive: true,
+      },
+      {
+        device_id: 'analog_four_mk2',
+        display_name: 'Elektron Analog Four MKII',
+        order: 2,
+        track_count: 4,
+        default_midi_channel_label: '1-4',
+        sysex_manufacturer_id_hex: '00 20 3c',
+        role_summary: '4-track synth performance surface',
+        port_state: 'closed',
+        hardware_state: 'disarmed',
+        mock_state: 'review-only',
+        can_open_port: false,
+        can_arm_hardware: false,
+        capability_badges: ['4 synth tracks', 'macro review'],
+        passive: true,
+      },
+    ],
+    blocked_actions: ['open_midi_port_without_arm'],
+    safety: ['passive/read-only'],
+  },
+  rytm_pad_surface: {
+    model_version: 'live-gui-12-pad-surface-v1',
+    pad_count: 12,
+    active_pad_count: 12,
+    planned_pad_count: 0,
+    cards: Array.from({ length: 12 }, (_, index) => ({
+      pad: index + 1,
+      track_code: index + 1 === 11 ? 'SY' : `T${index + 1}`,
+      label: index + 1 === 11 ? 'SY Raw' : `Pad ${index + 1}`,
+      surface_state: 'active',
+      ui_enabled: true,
+      ui_locked: false,
+      lock_reason: '',
+      default_role: index + 1 >= 6 && index + 1 <= 8 ? 'tom' : 'performance',
+      default_machine_label: index + 1 === 11 ? 'SY Raw' : 'Snapshot machine',
+      legal_machine_count: 4,
+      snapshot_mutable_machine_count: 4,
+      selectable_only_machine_count: 0,
+      primary_machine_labels: ['Snapshot machine'],
+    })),
+    blocked_actions: ['send_midi'],
+    safety: ['no MIDI sending'],
+  },
+  performance_flow: {
+    model_version: 'live-gui-performance-flow-model-v1',
+    source_module: 'reports.live_gui_performance_flow_model',
+    flow_id: 'oxi-rytm-a4-performance-flow',
+    flow_status: 'mock-safe',
+    current_step_key: 'kit-core',
+    steps: [
+      {
+        key: 'capture-anchor',
+        order: 1,
+        label: 'Capture Anchor',
+        phase: 'setup',
+        rytm_command: 'kit / resnapshot',
+        analog_four_action: 'soft-capture reference',
+        send_policy: 'receive-only',
+        recovery_action: 'Z + send',
+        status: 'safe',
+      },
+      {
+        key: 'kit-core',
+        order: 2,
+        label: 'Kit Core',
+        phase: 'foundation',
+        rytm_command: 'kit-core',
+        analog_four_action: 'review warehouse macro',
+        send_policy: 'stage-review-send',
+        recovery_action: 'home',
+        status: 'staged',
+      },
+    ],
+    analog_four_readiness: {
+      readiness: 'review-ready',
+      command: 'python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report',
+      summary: 'A4 macro rows are review-ready; full macro SEND remains blocked.',
+      blocked_active_actions: ['a4_outbound_macro_send'],
+    },
+    analog_four_set_plan: {
+      set_name: 'warehouse-arc',
+      current_macro: 'home',
+      up_next_macros: ['hard-groove', 'dub-pressure', 'industrial-transition'],
+      step_count: 4,
+      replay_command: 'python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --json',
+      summary: 'warehouse-arc stages A4 macro moves for review.',
+      blocked_active_actions: ['A4 full macro SEND'],
+    },
+    blocked_actions: ['a4_outbound_macro_send'],
+    safety_lines: ['passive/read-only'],
+    replay_commands: ['python -m rytm_randomizer.cli live-gui-performance-flow-model-report --json'],
+  },
+  style_queue: {
+    deck_version: 'style-crate-rehearsal-deck-v1',
+    deck_id: 'style-crates',
+    deck_status: 'passive',
+    crate_filter: 'all',
+    crate_cards: [
+      {
+        crate_key: 'dark-hypnotic',
+        crate_name: 'Dark Hypnotic',
+        summary: 'rolling pressure',
+        tags: ['dark', 'hypnotic'],
+        move_count: 3,
+        primary_move_key: 'move-dark-01',
+        primary_move_name: 'Dark Hypnotic',
+        energy: 7,
+        risk: 4,
+        risk_status: 'safe',
+        target_pads: [1, 2, 3, 4],
+        operator_action: 'stage only',
+      },
+    ],
+    queue_cards: [
+      {
+        queue_key: 'queue-dark-01',
+        order: 1,
+        use_case: 'live',
+        chapter: 'current',
+        crate_key: 'dark-hypnotic',
+        move_key: 'move-dark-01',
+        move_name: 'Dark Hypnotic',
+        status: 'pending',
+        mutation_amount_percent: 56,
+        target_pads: [1, 2, 3, 4],
+        risk_status: 'safe',
+        operator_action: 'preview',
+        recovery_action: 'home',
+        dry_run_only: true,
+      },
+    ],
+    journal_cards: [
+      {
+        journal_key: 'journal-snap-06',
+        name: 'snap-06',
+        tags: ['warehouse'],
+        replay_seed: 'seed-06',
+        pads: [1, 2, 3, 4, 11],
+        depth: 'balanced',
+        guardrail_mode: 'live-safe',
+        risk_status: 'safe',
+        value_summary: ['Pad 11 texture lift'],
+        operator_action: 'save to journal',
+      },
+    ],
+    blocked_actions: ['dispatch queued command from model'],
+    replay_commands: ['python -m rytm_randomizer.cli style-crate-rehearsal-deck-report --json'],
+  },
+  snapshot_history: {
+    snapshot_history_version: 'live-gui-snapshot-history-model-v1',
+    snapshot_history_id: 'history-test',
+    session_label: 'Warehouse arc',
+    current_id: 'console-snap-03',
+    current_index: 2,
+    entry_count: 3,
+    entries: [
+      {
+        key: 'history-03',
+        order: 3,
+        snapshot_id: 'console-snap-03',
+        label: 'Warehouse arc take',
+        kind: 'saved',
+        via: 'send',
+        parent_id: 'console-snap-02',
+        device: 'analog_rytm_mk2',
+        pad_count: 12,
+        scene_slot: 'A01',
+        bpm_label: '128 BPM',
+        is_current: true,
+        is_saved: true,
+        can_load: false,
+        can_undo_to: false,
+        summary: 'current warehouse take',
+        test_id: 'snapshot-history-console-snap-03',
+      },
+    ],
+    controls: [],
+    safety_lines: ['in-memory only'],
+    blocked_actions: ['send MIDI from snapshot history'],
+    replay_commands: ['python -m rytm_randomizer.cli live-gui-snapshot-history-model-report --json'],
+  },
+  command_queue: {
+    command_queue_version: 'live-gui-command-queue-model-v1',
+    command_queue_id: 'queue-test',
+    session_label: 'Warehouse arc',
+    queue_status: 'pending',
+    dry_run_active: true,
+    hardware_armed: false,
+    active_command_key: null,
+    queued_commands: [
+      {
+        key: 'mutate-pad-11',
+        order: 1,
+        label: 'Mutate Pad 11',
+        status: 'pending',
+        enabled: false,
+        action_type: 'dry-run',
+        target: 'Pad 11 / SY Raw',
+        dry_run_only: true,
+        estimated_message_count: 28,
+        operator_action: 'preview only',
+        test_id: 'command-mutate-pad-11',
+      },
+    ],
+    last_actions: [],
+    undo_stack: [],
+    safety_lines: ['dry-run active'],
+    blocked_actions: ['dispatch queued command from model'],
+    replay_commands: ['python -m rytm_randomizer.cli live-gui-command-queue-model-report --json'],
+  },
+  safety_checklist: {
+    safety_checklist_version: 'live-gui-safety-checklist-model-v1',
+    safety_checklist_id: 'safety-test',
+    session_label: 'Warehouse arc',
+    checklist_status: 'passed',
+    passed_count: 4,
+    total_count: 4,
+    items: [
+      {
+        key: 'no-midi-port',
+        order: 1,
+        label: 'No MIDI Port Open',
+        status: 'passed',
+        severity: 'safe',
+        message: 'No hardware port is open.',
+        operator_action: 'No action required.',
+        test_id: 'safety-no-midi-port',
+      },
+    ],
+    arm_gate: {
+      key: 'arm-hardware',
+      label: 'Arm Hardware',
+      state: 'locked',
+      enabled: false,
+      reason: 'Hardware arm remains locked in this passive console packet.',
+      requirements: ['dry run complete', 'MIDI port open'],
+      midi_port_name: null,
+      midi_port_open: false,
+      hardware_connected: false,
+      send_plan_ready: false,
+      dry_run_complete: false,
+      test_id: 'safety-arm-hardware',
+    },
+    safety_lines: ['mock safe'],
+    blocked_actions: ['arm_hardware'],
+    replay_commands: ['python -m rytm_randomizer.cli live-gui-safety-checklist-model-report --json'],
+  },
+  blocked_actions: [
+    'open_midi_port_without_arm',
+    'a4_outbound_macro_send',
+    'dispatch queued command from model',
+    'send MIDI from snapshot history',
+  ],
+  safety_lines: ['passive/read-only', 'no MIDI sending', 'no port opening'],
+  replay_commands: ['python -m rytm_randomizer.cli live-gui-performance-console-report --json'],
+};
+
+describe('PerformanceConsole', () => {
+  it('renders the passive console packet without enabling hardware actions', () => {
+    render(<PerformanceConsole model={model} />);
+
+    expect(screen.getByTestId('performance-console')).toHaveTextContent(
+      'RytmRandomizer Cockpit Performance Console',
+    );
+    const safetyState = screen.getByLabelText('Console safety state');
+    expect(within(safetyState).getByText('mock-safe')).toBeInTheDocument();
+    expect(within(safetyState).getByText('passive')).toBeInTheDocument();
+    expect(screen.getByText('Warehouse arc')).toBeInTheDocument();
+
+    expect(screen.getByTestId('performance-console-device-analog_rytm_mk2')).toHaveTextContent(
+      'Elektron Analog Rytm MKII',
+    );
+    expect(screen.getByTestId('performance-console-device-analog_four_mk2')).toHaveTextContent(
+      'Elektron Analog Four MKII',
+    );
+
+    expect(screen.getAllByTestId(/performance-console-pad-/)).toHaveLength(12);
+    expect(screen.getByTestId('performance-console-pad-11')).toHaveTextContent('SY Raw');
+    expect(screen.getByTestId('performance-console-pad-12')).toHaveTextContent('Pad 12');
+
+    const flow = screen.getByTestId('performance-console-flow');
+    expect(flow).toHaveTextContent('capture-anchor');
+    expect(flow).toHaveTextContent('kit-core');
+    expect(flow).toHaveTextContent('warehouse-arc');
+    expect(flow).toHaveTextContent('A4 full macro SEND');
+
+    const styleQueue = screen.getByTestId('performance-console-style-queue');
+    expect(styleQueue).toHaveTextContent('Dark Hypnotic');
+    expect(styleQueue).toHaveTextContent('snap-06');
+
+    expect(screen.getByTestId('performance-console-snapshot-history')).toHaveTextContent(
+      'console-snap-03',
+    );
+    expect(screen.getByTestId('performance-console-command-queue')).toHaveTextContent(
+      'Mutate Pad 11',
+    );
+    expect(screen.getByTestId('performance-console-safety')).toHaveTextContent('4 / 4');
+
+    const blocked = screen.getByTestId('performance-console-blocked-actions');
+    expect(within(blocked).getByText('a4_outbound_macro_send')).toBeInTheDocument();
+    expect(within(blocked).getByText('send MIDI from snapshot history')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+  });
+});

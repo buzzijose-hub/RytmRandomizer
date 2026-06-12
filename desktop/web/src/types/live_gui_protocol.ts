@@ -7,6 +7,8 @@
  * keeps these TypeScript field names aligned with the Python contracts.
  */
 
+import type { StyleCrateRehearsalDeckDict } from './style_crate_rehearsal_deck';
+
 export interface LiveGuiRytmPadSurfaceCardDict {
   pad: number;
   track_code: string;
@@ -477,6 +479,43 @@ export interface LiveGuiPerformanceFlowModelDict {
   steps: ReadonlyArray<LiveGuiPerformanceFlowStepDict>;
   analog_four_readiness: LiveGuiAnalogFourReadinessDict;
   analog_four_set_plan: LiveGuiAnalogFourSetPlanDict;
+  blocked_actions: ReadonlyArray<string>;
+  safety_lines: ReadonlyArray<string>;
+  replay_commands: ReadonlyArray<string>;
+}
+
+export interface LiveGuiPerformanceConsoleDeviceInventoryModelDict {
+  model_version: string;
+  device_count: number;
+  cards: ReadonlyArray<LiveGuiDeviceInventoryCardDict>;
+  blocked_actions: ReadonlyArray<string>;
+  safety: ReadonlyArray<string>;
+}
+
+export interface LiveGuiPerformanceConsoleRytmTwelvePadSurfaceModelDict {
+  model_version: string;
+  pad_count: number;
+  active_pad_count: number;
+  planned_pad_count: number;
+  cards: ReadonlyArray<LiveGuiRytmPadSurfaceCardDict>;
+  blocked_actions: ReadonlyArray<string>;
+  safety: ReadonlyArray<string>;
+}
+
+export interface LiveGuiPerformanceConsoleModelDict {
+  console_version: string;
+  source_module: string;
+  console_id: string;
+  session_label: string;
+  console_status: string;
+  hardware_mode: string;
+  device_inventory: LiveGuiPerformanceConsoleDeviceInventoryModelDict;
+  rytm_pad_surface: LiveGuiPerformanceConsoleRytmTwelvePadSurfaceModelDict;
+  performance_flow: LiveGuiPerformanceFlowModelDict;
+  style_queue: StyleCrateRehearsalDeckDict;
+  snapshot_history: LiveGuiSnapshotHistoryModelDict;
+  command_queue: LiveGuiCommandQueueModelDict;
+  safety_checklist: LiveGuiSafetyChecklistModelDict;
   blocked_actions: ReadonlyArray<string>;
   safety_lines: ReadonlyArray<string>;
   replay_commands: ReadonlyArray<string>;

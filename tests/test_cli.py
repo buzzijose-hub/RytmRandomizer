@@ -103,6 +103,7 @@ USAGE = (
     "oxi-live-macro-catalog-report | "
     "rytm-live-macro-hardware-rehearsal-report [--json] | "
     "live-gui-performance-flow-model-report [--json] | "
+    "live-gui-performance-console-report [--json] | "
     "oxi-live-set-strategy-report [--json] | "
     "reference-style-blueprint-report "
     "(--description <text>|--audio <path>|--library <dir>) [--json] | "

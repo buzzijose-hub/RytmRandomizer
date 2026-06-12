@@ -348,6 +348,7 @@ The `live-gui-*` family is the GUI consumer contract — each report is one scre
 
 | Command | Surface |
 |---|---|
+| `live-gui-performance-console-report` | **Cockpit performance console packet** with device rail, 12-pad Rytm snapshot surface, A4 set-plan review, Style Crates queue, snapshot history, command queue, safety checklist, and blocked hardware actions |
 | `style-performance-arc-live-gui-analyzer-readiness-report` | **GUI/audio-analyzer readiness bundle** with panel manifest, stream wiring, operator workflow, **blocked active actions** |
 | `style-performance-arc-live-gui-rehearsal-session-report` | **GUI rehearsal session packet** with task cards, **listen-only rehearsal take** cards, operator checklist |
 | `style-performance-arc-live-gui-capture-queue-report` | **GUI/audio analyzer capture queue** with capture slots, suggested filenames, **analyzer job** cards |
@@ -371,5 +372,16 @@ The `live-gui-*` family is the GUI consumer contract — each report is one scre
 | `style-performance-arc-live-gui-desktop-view-model-report` | **GUI desktop view model** with component view models, **state bindings**, disabled actions, style tokens |
 | `style-performance-arc-live-gui-desktop-render-contract-report` | **GUI desktop render contract** with **render surfaces**, render bindings, style-token bindings |
 | `style-performance-arc-live-gui-desktop-render-harness-report` | **GUI desktop render harness** with **surface harnesses**, binding harnesses, style-token checks |
+
+```bash
+python -m rytm_randomizer.cli live-gui-performance-console-report
+python -m rytm_randomizer.cli live-gui-performance-console-report --json
+```
+
+`live-gui-performance-console-report` is the composed Cockpit packet for the
+cinematic performance-console direction. It aggregates existing passive report
+builders instead of duplicating facts, emits a single JSON object for a GUI
+consumer, and keeps open-port, hardware send, queue dispatch, snapshot-history
+SEND, and Analog Four outbound macro actions blocked.
 
 Run any one with `--help` for its full flag set, or check the lazy command registry in [`rytm_randomizer/cli.py`](../rytm_randomizer/cli.py) for the complete catalogue.
