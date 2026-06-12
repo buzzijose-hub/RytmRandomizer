@@ -4,6 +4,20 @@ Last updated: 2026-06-12. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-12: Desktop shell CI hardening pinned the Tauri shell's transitive
+  `time` dependency to `=0.3.47` after the Windows `desktop-shell` job resolved
+  `time 0.3.48` with `tauri-utils 2.9.2` and failed inside upstream Rust
+  dependency trait impls. This is dependency-resolution hardening only: no
+  shell behavior, web build, Python sidecar, MIDI, or hardware path changed.
+- 2026-06-12: Post-#160 live-performance bridge started on a clean base. The
+  passive live GUI performance flow model now includes an
+  `analog_four_set_plan` summary sourced from the merged
+  `analog-four-oxi-macro-set-planner-report`, and the Cockpit live readiness
+  panel renders an A4 Set Plan card with the current/up-next macro path,
+  replay command, and blocked full-SEND/unattended-playback actions. This is
+  passive GUI/report metadata only: no GUI launch, no port opening, no MIDI
+  send, no hardware mutation, no unattended A4 behavior, and full A4 macro
+  SEND remains blocked.
 - 2026-06-12: Cockpit style-crate queue surface now consumes the passive
   Analog Four OXI macro set planner metadata prepared on PR #160. The
   frontend model maps the report's snake_case JSON into the Cockpit camelCase
