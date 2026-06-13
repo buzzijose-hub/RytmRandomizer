@@ -89,6 +89,50 @@ def test_oxi_live_macro_catalog_json_is_deterministic() -> None:
     assert payload["blocked_active_actions"] == ["A4 outbound macro send"]
 
 
+def test_oxi_live_macro_catalog_exposes_gui_ready_macro_policies() -> None:
+    from rytm_randomizer.reports.oxi_live_macro_catalog import (
+        build_oxi_live_macro_catalog_payload,
+        build_oxi_live_macro_catalog_report,
+        format_oxi_live_macro_catalog_report,
+    )
+
+    report = build_oxi_live_macro_catalog_report()
+    payload = build_oxi_live_macro_catalog_payload()
+    text = "\n".join(format_oxi_live_macro_catalog_report(report))
+
+    kit_core = report.rytm_macros[0]
+    assert kit_core.locked_pads == (1,)
+    assert kit_core.lane_policies == {"fx": "micro", "lfo": "off"}
+    assert kit_core.pad_policies[5] == {
+        "amount": "normal",
+        "density": "high",
+        "bias": None,
+        "lane_policies": {"filter": "off", "lfo": "off"},
+        "section_family_allowlists": {"AMP": ["delay", "drive", "reverb"]},
+    }
+    assert kit_core.pad_policies[6]["lane_policies"] == {
+        "filter": "micro",
+        "lfo": "off",
+    }
+    assert kit_core.pad_policies[6]["section_family_allowlists"] == {
+        "AMP": ["delay", "drive", "reverb"]
+    }
+
+    hard_groove = payload["rytm_macros"][1]
+    assert hard_groove["locked_pads"] == [1]
+    assert hard_groove["lane_policies"] == {"fx": "micro", "lfo": "off"}
+    assert hard_groove["pad_policies"]["12"] == {
+        "amount": "normal",
+        "density": "medium",
+        "bias": "neutral",
+        "lane_policies": {},
+        "section_family_allowlists": {"AMP": ["delay", "drive", "reverb"]},
+    }
+    assert "locked pads: 1" in text
+    assert "global lanes: fx=micro, lfo=off" in text
+    assert "pad 5: amount=normal, density=high, lanes=filter=off/lfo=off" in text
+
+
 def test_oxi_live_macro_catalog_cli_command_rejects_args_and_writes_report(
     capsys,
 ) -> None:
