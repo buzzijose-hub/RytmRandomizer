@@ -4,6 +4,15 @@ Last updated: 2026-06-13. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-13: Cockpit A4 review-surface follow-up started on a clean base
+  after PR #173 merged. The passive Performance Console now composes the
+  existing Analog Four OXI macro set planner and readiness reports into a
+  GUI-ready A4 review surface with the `warehouse-arc` sequence, next macro
+  readiness rows, soft-capture preflight, validation workflow, recovery notes,
+  promotion gates, blocked actions, safety lines, and disabled Review/Promote
+  controls. Passive metadata only: no sidecar command dispatch, no command
+  execution, no MIDI port opening, no hardware arm path, no MIDI send, and no
+  full A4 macro SEND.
 - 2026-06-13: Cockpit OXI rehearsal-board follow-up started on a clean base
   after PR #172 merged. The passive Performance Console now composes the
   existing OXI live set strategy and Rytm live macro hardware rehearsal reports

@@ -53,6 +53,26 @@ describe('PerformanceConsole', () => {
     expect(flow).toHaveTextContent('warehouse-arc');
     expect(flow).toHaveTextContent('A4 full macro SEND');
 
+    const a4ReviewSurface = screen.getByTestId('performance-console-a4-review-surface');
+    expect(a4ReviewSurface).toHaveTextContent('Analog Four Review Surface');
+    expect(a4ReviewSurface).toHaveTextContent('review-only');
+    expect(a4ReviewSurface).toHaveTextContent('warehouse-arc');
+    expect(a4ReviewSurface).toHaveTextContent('focus hard-groove');
+    expect(a4ReviewSurface).toHaveTextContent('Hard Groove');
+    expect(a4ReviewSurface).toHaveTextContent('Dub Pressure');
+    expect(a4ReviewSurface).toHaveTextContent('Industrial Transition');
+    expect(a4ReviewSurface).toHaveTextContent('Track 1 / FLT Frequency');
+    expect(a4ReviewSurface).toHaveTextContent('cc-ready');
+    expect(a4ReviewSurface).toHaveTextContent('Run the input-only A4 soft capture first.');
+    expect(a4ReviewSurface).toHaveTextContent('At least one operator-present validation pass is clean');
+    expect(a4ReviewSurface).toHaveTextContent('A4 full macro SEND');
+    expect(a4ReviewSurface).toHaveTextContent('A4 unattended macro playback');
+    expect(a4ReviewSurface).toHaveTextContent('A4 full macro SEND remains blocked');
+    expect(
+      within(a4ReviewSurface).getByRole('button', { name: /review a4 hard-groove/i }),
+    ).toBeDisabled();
+    expect(within(a4ReviewSurface).getByRole('button', { name: /promote a4 macro/i })).toBeDisabled();
+
     const macroActions = screen.getByTestId('performance-console-macro-actions');
     expect(macroActions).toHaveTextContent('Live Macro Actions');
     expect(macroActions).toHaveTextContent('hard-groove');

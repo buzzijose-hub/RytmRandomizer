@@ -5,10 +5,18 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Final, TypedDict
+from typing import Final, TypedDict, cast
 
 from ..cli_registry import CliCommand, make_passive_report_command, register
 from ..cockpit.data import History, HistoryEntry, PadState, Snapshot
+from .analog_four_oxi_macro_readiness import (
+    build_analog_four_oxi_macro_readiness_payload,
+    build_analog_four_oxi_macro_readiness_report,
+)
+from .analog_four_oxi_macro_set_planner import (
+    build_analog_four_oxi_macro_set_planner_payload,
+    build_analog_four_oxi_macro_set_planner_report,
+)
 from .formatter import SAFETY_SECTION_HEADER, PassiveReportHeader, passive_report_lines
 from .live_gui_12_pad_surface_model import (
     build_live_gui_12_pad_surface_model,
@@ -89,6 +97,20 @@ REHEARSAL_BOARD_SAFETY_LINES: Final[tuple[str, ...]] = (
     "A4 outbound macro promotion remains blocked",
     "no MIDI sending",
 )
+A4_REVIEW_SURFACE_VERSION: Final[str] = "performance-console-a4-review-surface-v1"
+A4_REVIEW_SURFACE_ID: Final[str] = "a4-oxi-macro-review-surface"
+A4_REVIEW_SURFACE_STATUS: Final[str] = "review-only"
+A4_REVIEW_EVENT_LIMIT: Final[int] = 4
+A4_REVIEW_BLOCKED_ACTIONS: Final[tuple[str, ...]] = (
+    "trigger A4 macro from Cockpit console",
+    "open A4 output port from Cockpit console",
+)
+A4_REVIEW_SAFETY_LINES: Final[tuple[str, ...]] = (
+    "A4 review surface is declarative only",
+    "A4 validation commands are shown for operator review only",
+    "no MIDI sending",
+    "no port opening",
+)
 REPLAY_COMMANDS: Final[tuple[str, ...]] = (
     "python -m rytm_randomizer.cli live-gui-performance-console-report",
     "python -m rytm_randomizer.cli live-gui-performance-console-report --json",
@@ -128,6 +150,7 @@ class LiveGuiPerformanceConsoleModel:
     performance_flow: dict[str, object]
     macro_action_deck: dict[str, object]
     rehearsal_board: dict[str, object]
+    analog_four_review_surface: dict[str, object]
     style_queue: dict[str, object]
     analyzer_panel: dict[str, object]
     snapshot_history: dict[str, object]
@@ -152,6 +175,7 @@ class LiveGuiPerformanceConsoleModelDict(TypedDict):
     performance_flow: dict[str, object]
     macro_action_deck: dict[str, object]
     rehearsal_board: dict[str, object]
+    analog_four_review_surface: dict[str, object]
     style_queue: dict[str, object]
     analyzer_panel: dict[str, object]
     snapshot_history: dict[str, object]
@@ -308,6 +332,42 @@ def _payload_string(payload: dict[str, object], key: str) -> str:
     return value
 
 
+def _payload_dict(payload: dict[str, object], key: str) -> dict[str, object]:
+    value = payload.get(key, {})
+    if not isinstance(value, dict):
+        return {}
+    return value
+
+
+def _payload_int(payload: dict[str, object], key: str) -> int:
+    value = payload.get(key, 0)
+    if not isinstance(value, int):
+        return 0
+    return value
+
+
+def _first_payload_dict(values: list[object]) -> dict[str, object]:
+    if not values:
+        return {}
+    first_value = values[0]
+    if not isinstance(first_value, dict):
+        return {}
+    return first_value
+
+
+def _a4_readiness_replay_command(
+    *,
+    macro_name: str,
+    seed: int,
+    intensity: int,
+) -> str:
+    return (
+        "python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report "
+        f"{macro_name} --seed {seed} --intensity {intensity} "
+        f"--limit {A4_REVIEW_EVENT_LIMIT} --json"
+    )
+
+
 def _build_rehearsal_board() -> dict[str, object]:
     strategy = build_oxi_live_set_strategy_payload()
     rehearsal = build_rytm_live_macro_hardware_rehearsal_payload()
@@ -329,6 +389,77 @@ def _build_rehearsal_board() -> dict[str, object]:
         "replay_commands": _payload_list(strategy, "replay_commands"),
         "blocked_actions": list(REHEARSAL_BOARD_BLOCKED_ACTIONS),
         "safety_lines": list(REHEARSAL_BOARD_SAFETY_LINES),
+    }
+
+
+def _build_analog_four_review_surface() -> dict[str, object]:
+    set_plan = build_analog_four_oxi_macro_set_planner_report()
+    set_payload = build_analog_four_oxi_macro_set_planner_payload(set_plan)
+    up_next = _payload_list(set_payload, "up_next")
+    current_step = _payload_dict(set_payload, "current_step")
+    review_step = _first_payload_dict(up_next) or current_step
+    macro_name = _payload_string(review_step, "macro_name")
+    seed = _payload_int(review_step, "seed")
+    intensity = _payload_int(review_step, "intensity")
+    readiness = build_analog_four_oxi_macro_readiness_report(
+        macro_name,
+        seed=seed,
+        intensity=intensity,
+    )
+    readiness_payload = build_analog_four_oxi_macro_readiness_payload(
+        readiness,
+        event_limit=A4_REVIEW_EVENT_LIMIT,
+    )
+    return {
+        "surface_version": A4_REVIEW_SURFACE_VERSION,
+        "surface_id": A4_REVIEW_SURFACE_ID,
+        "surface_status": A4_REVIEW_SURFACE_STATUS,
+        "title": "Analog Four Review Surface",
+        "set_name": _payload_string(set_payload, "set_name"),
+        "step_count": _payload_int(set_payload, "step_count"),
+        "current_step": current_step,
+        "up_next": up_next,
+        "steps": _payload_list(set_payload, "steps"),
+        "review_focus": {
+            "macro_name": macro_name,
+            "macro_label": _payload_string(review_step, "macro_label"),
+            "seed": seed,
+            "intensity": intensity,
+            "energy": _payload_int(review_step, "energy"),
+            "readiness": _payload_string(readiness_payload, "readiness"),
+            "event_count": _payload_int(readiness_payload, "event_count"),
+            "ready_count": _payload_int(readiness_payload, "ready_count"),
+            "review_count": _payload_int(readiness_payload, "review_count"),
+            "blocked_count": _payload_int(readiness_payload, "blocked_count"),
+            "shown_count": _payload_int(readiness_payload, "shown_count"),
+        },
+        "readiness_events": _payload_list(readiness_payload, "events"),
+        "preflight_command": _payload_string(readiness_payload, "preflight_command"),
+        "validation_steps": _payload_list(readiness_payload, "validation_steps"),
+        "recovery_notes": _payload_list(readiness_payload, "recovery_notes"),
+        "promotion_gates": _payload_list(readiness_payload, "promotion_gates"),
+        "replay_command": _payload_string(set_payload, "replay_command"),
+        "readiness_replay_command": _a4_readiness_replay_command(
+            macro_name=macro_name,
+            seed=seed,
+            intensity=intensity,
+        ),
+        "opens_ports": False,
+        "sends_midi": False,
+        "hardware_required": False,
+        "blocked_actions": list(
+            _unique_tuple(
+                A4_REVIEW_BLOCKED_ACTIONS,
+                _tuple_from_payload(set_payload, "blocked_active_actions"),
+            )
+        ),
+        "safety_lines": list(
+            _unique_tuple(
+                A4_REVIEW_SAFETY_LINES,
+                _tuple_from_payload(set_payload, "safety"),
+                _tuple_from_payload(readiness_payload, "safety"),
+            )
+        ),
     }
 
 
@@ -390,6 +521,7 @@ def _console_id(
     performance_flow: dict[str, object],
     macro_action_deck: dict[str, object],
     rehearsal_board: dict[str, object],
+    analog_four_review_surface: dict[str, object],
     style_queue: dict[str, object],
     analyzer_panel: dict[str, object],
     snapshot_history: dict[str, object],
@@ -405,6 +537,7 @@ def _console_id(
             str(performance_flow.get("flow_id", "")),
             str(macro_action_deck.get("deck_id", "")),
             str(rehearsal_board.get("board_id", "")),
+            str(analog_four_review_surface.get("surface_id", "")),
             str(style_queue.get("deck_id", "")),
             str(analyzer_panel.get("panel_id", "")),
             str(snapshot_history.get("snapshot_history_id", "")),
@@ -434,6 +567,7 @@ def build_live_gui_performance_console_model(
         current_macro_key=str(performance_flow["current_step_key"])
     )
     rehearsal_board = _build_rehearsal_board()
+    analog_four_review_surface = _build_analog_four_review_surface()
     style_queue = to_style_crate_rehearsal_deck_json(build_style_crate_rehearsal_deck())[
         "style_crate_rehearsal_deck"
     ]
@@ -460,6 +594,7 @@ def build_live_gui_performance_console_model(
         tuple(performance_flow["blocked_actions"]),
         _tuple_from_payload(macro_action_deck, "blocked_actions"),
         _tuple_from_payload(rehearsal_board, "blocked_actions"),
+        _tuple_from_payload(analog_four_review_surface, "blocked_actions"),
         tuple(style_queue["blocked_actions"]),
         tuple(analyzer_panel["blocked_actions"]),
         tuple(snapshot_history["blocked_actions"]),
@@ -473,6 +608,7 @@ def build_live_gui_performance_console_model(
         tuple(performance_flow["safety_lines"]),
         _tuple_from_payload(macro_action_deck, "safety_lines"),
         _tuple_from_payload(rehearsal_board, "safety_lines"),
+        _tuple_from_payload(analog_four_review_surface, "safety_lines"),
         _tuple_from_payload(device_inventory, "safety"),
         _tuple_from_payload(rytm_pad_surface, "safety"),
     )
@@ -487,6 +623,7 @@ def build_live_gui_performance_console_model(
             performance_flow=performance_flow,
             macro_action_deck=macro_action_deck,
             rehearsal_board=rehearsal_board,
+            analog_four_review_surface=analog_four_review_surface,
             style_queue=style_queue,
             analyzer_panel=analyzer_panel,
             snapshot_history=snapshot_history,
@@ -501,6 +638,7 @@ def build_live_gui_performance_console_model(
         performance_flow=performance_flow,
         macro_action_deck=macro_action_deck,
         rehearsal_board=rehearsal_board,
+        analog_four_review_surface=analog_four_review_surface,
         style_queue=style_queue,
         analyzer_panel=analyzer_panel,
         snapshot_history=snapshot_history,
@@ -531,6 +669,7 @@ def live_gui_performance_console_model_payload(
             "performance_flow": source.performance_flow,
             "macro_action_deck": source.macro_action_deck,
             "rehearsal_board": source.rehearsal_board,
+            "analog_four_review_surface": source.analog_four_review_surface,
             "style_queue": source.style_queue,
             "analyzer_panel": source.analyzer_panel,
             "snapshot_history": source.snapshot_history,
@@ -572,6 +711,29 @@ def _rehearsal_board_lines(model: LiveGuiPerformanceConsoleModel) -> list[str]:
     return lines
 
 
+def _analog_four_review_surface_lines(model: LiveGuiPerformanceConsoleModel) -> list[str]:
+    surface = model.analog_four_review_surface
+    review_focus = cast(dict[str, object], surface["review_focus"])
+    lines = [
+        "A4 review surface:",
+        f"- status: {surface['surface_status']}",
+        f"- set: {surface['set_name']}",
+        f"- steps: {surface['step_count']}",
+        (f"- review focus: {review_focus['macro_name']} / " f"{review_focus['readiness']}"),
+        f"- shown readiness events: {review_focus['shown_count']}",
+        f"- validation preflight: {surface['preflight_command']}",
+        f"- readiness replay: {surface['readiness_replay_command']}",
+    ]
+    for step in surface["steps"]:
+        lines.append(
+            f"- A4 step: {step['order']} / {step['macro_name']} / "
+            f"{step['readiness']} / events={step['event_count']}"
+        )
+    lines.extend(f"- blocked: {action}" for action in surface["blocked_actions"])
+    lines.extend(f"- safety: {line}" for line in surface["safety_lines"])
+    return lines
+
+
 def _format_console_body(model: LiveGuiPerformanceConsoleModel) -> list[str]:
     current_flow_key = model.performance_flow["current_step_key"]
     a4_set_plan = model.performance_flow["analog_four_set_plan"]
@@ -598,6 +760,7 @@ def _format_console_body(model: LiveGuiPerformanceConsoleModel) -> list[str]:
             for card in model.macro_action_deck["cards"]
         ],
         *_rehearsal_board_lines(model),
+        *_analog_four_review_surface_lines(model),
         "A4 set plan:",
         f"- set: {a4_set_plan['set_name']}",
         f"- current macro: {a4_set_plan['current_macro']}",

@@ -45,6 +45,40 @@ def test_performance_console_model_composes_live_cockpit_sections() -> None:
     assert model.performance_flow["analog_four_set_plan"]["current_macro"] == "home"
     assert model.performance_flow["steps"][1]["key"] == "kit-core"
 
+    a4_review_surface = model.analog_four_review_surface
+    assert a4_review_surface["surface_version"] == "performance-console-a4-review-surface-v1"
+    assert a4_review_surface["surface_status"] == "review-only"
+    assert a4_review_surface["set_name"] == "warehouse-arc"
+    assert a4_review_surface["current_step"]["macro_name"] == "home"
+    assert [step["macro_name"] for step in a4_review_surface["steps"]] == [
+        "home",
+        "hard-groove",
+        "dub-pressure",
+        "industrial-transition",
+        "home",
+    ]
+    assert a4_review_surface["review_focus"]["macro_name"] == "hard-groove"
+    assert a4_review_surface["review_focus"]["readiness"] == "review-ready"
+    assert a4_review_surface["readiness_events"][0]["status"] == "cc-ready"
+    assert (
+        a4_review_surface["preflight_command"]
+        == "python -m rytm_randomizer.app --arm --a4-soft-capture"
+    )
+    assert "Run the input-only A4 soft capture first." in a4_review_surface["validation_steps"]
+    assert (
+        "At least one operator-present validation pass is clean"
+        in a4_review_surface["promotion_gates"]
+    )
+    assert "A4 full macro SEND" in a4_review_surface["blocked_actions"]
+    assert "A4 unattended macro playback" in a4_review_surface["blocked_actions"]
+    assert "A4 full macro SEND remains blocked" in a4_review_surface["safety_lines"]
+    assert a4_review_surface["replay_command"].startswith(
+        "python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report"
+    )
+    assert a4_review_surface["readiness_replay_command"].startswith(
+        "python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove"
+    )
+
     rehearsal_board = model.rehearsal_board
     assert rehearsal_board["board_version"] == "performance-console-rehearsal-board-v1"
     assert rehearsal_board["board_status"] == "passive-ready"
@@ -161,6 +195,17 @@ def test_performance_console_model_ignores_malformed_optional_payload_sequences(
     assert "not-a-sequence" not in model.safety_lines
 
 
+def test_performance_console_payload_helpers_ignore_malformed_values() -> None:
+    from rytm_randomizer.reports import live_gui_performance_console_model as report
+
+    assert report._payload_list({"value": "not-a-list"}, "value") == []
+    assert report._payload_string({"value": 123}, "value") == ""
+    assert report._payload_dict({"value": "not-a-dict"}, "value") == {}
+    assert report._payload_int({"value": "not-an-int"}, "value") == 0
+    assert report._first_payload_dict([]) == {}
+    assert report._first_payload_dict(["not-a-dict"]) == {}
+
+
 def test_performance_console_payload_is_json_safe_and_passive() -> None:
     before_modules = set(sys.modules)
 
@@ -180,6 +225,8 @@ def test_performance_console_payload_is_json_safe_and_passive() -> None:
     assert model["rehearsal_board"]["chapters"][1]["name"] == "establish-groove"
     assert model["rehearsal_board"]["pad_lane_checks"][1]["pads"] == [6, 7, 8]
     assert model["rehearsal_board"]["hardware_validation_runway"][2]["name"] == "a4-soft-capture"
+    assert model["analog_four_review_surface"]["review_focus"]["macro_name"] == "hard-groove"
+    assert model["analog_four_review_surface"]["readiness_events"][0]["status"] == "cc-ready"
     assert model["performance_flow"]["analog_four_set_plan"]["step_count"] == 5
     assert model["analyzer_panel"]["panel_status"] == "empty"
     assert model["analyzer_panel"]["required_actions"] == ["load-reference"]
@@ -223,6 +270,12 @@ def test_performance_console_report_is_operator_readable() -> None:
     )
     assert "- pad lane: Pads 5, 9, 10, 11: SRC stays important" in lines
     assert "- hardware validation: a4-soft-capture / Analog Four MKII / input-only" in lines
+    assert "A4 review surface:" in lines
+    assert "- set: warehouse-arc" in lines
+    assert "- review focus: hard-groove / review-ready" in lines
+    assert "- validation preflight: python -m rytm_randomizer.app --arm --a4-soft-capture" in lines
+    assert "- blocked: A4 full macro SEND" in lines
+    assert "- safety: A4 full macro SEND remains blocked" in lines
     assert "A4 set plan:" in lines
     assert "- set: warehouse-arc" in lines
     assert "Style queue and journal:" in lines
@@ -254,6 +307,7 @@ def test_performance_console_cli_text_and_json_modes(capsys: pytest.CaptureFixtu
     assert model["console_status"] == "mock-safe"
     assert model["device_inventory"]["device_count"] == 2
     assert model["analyzer_panel"]["panel_mode"] == "split"
+    assert model["analog_four_review_surface"]["surface_status"] == "review-only"
     assert model["performance_flow"]["analog_four_set_plan"]["set_name"] == "warehouse-arc"
 
 

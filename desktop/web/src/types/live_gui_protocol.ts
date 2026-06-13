@@ -603,6 +603,75 @@ export interface LiveGuiPerformanceConsoleRehearsalBoardDict {
   safety_lines: ReadonlyArray<string>;
 }
 
+export interface LiveGuiPerformanceConsoleAnalogFourReviewStepDict {
+  order: number;
+  macro_name: string;
+  macro_label: string;
+  summary: string;
+  seed: number;
+  intensity: number;
+  energy: number;
+  readiness: string;
+  event_count: number;
+  ready_count: number;
+  review_count: number;
+  blocked_count: number;
+  validation_command: string;
+  recovery_action: string;
+}
+
+export interface LiveGuiPerformanceConsoleAnalogFourReviewFocusDict {
+  macro_name: string;
+  macro_label: string;
+  seed: number;
+  intensity: number;
+  energy: number;
+  readiness: string;
+  event_count: number;
+  ready_count: number;
+  review_count: number;
+  blocked_count: number;
+  shown_count: number;
+}
+
+export interface LiveGuiPerformanceConsoleAnalogFourReadinessEventDict {
+  track: number;
+  role: string;
+  lane: string;
+  parameter: string;
+  channel: number;
+  control: number;
+  value: number;
+  status: string;
+  validation_command: string;
+  reason: string;
+}
+
+export interface LiveGuiPerformanceConsoleAnalogFourReviewSurfaceDict {
+  surface_version: string;
+  surface_id: string;
+  surface_status: string;
+  title: string;
+  set_name: string;
+  step_count: number;
+  current_step: LiveGuiPerformanceConsoleAnalogFourReviewStepDict;
+  up_next: ReadonlyArray<LiveGuiPerformanceConsoleAnalogFourReviewStepDict>;
+  steps: ReadonlyArray<LiveGuiPerformanceConsoleAnalogFourReviewStepDict>;
+  review_focus: LiveGuiPerformanceConsoleAnalogFourReviewFocusDict;
+  readiness_events: ReadonlyArray<LiveGuiPerformanceConsoleAnalogFourReadinessEventDict>;
+  preflight_command: string;
+  validation_steps: ReadonlyArray<string>;
+  recovery_notes: ReadonlyArray<string>;
+  promotion_gates: ReadonlyArray<string>;
+  replay_command: string;
+  readiness_replay_command: string;
+  opens_ports: boolean;
+  sends_midi: boolean;
+  hardware_required: boolean;
+  blocked_actions: ReadonlyArray<string>;
+  safety_lines: ReadonlyArray<string>;
+}
+
 export interface LiveGuiPerformanceConsoleDeviceInventoryModelDict {
   model_version: string;
   device_count: number;
@@ -633,6 +702,7 @@ export interface LiveGuiPerformanceConsoleModelDict {
   performance_flow: LiveGuiPerformanceFlowModelDict;
   macro_action_deck: LiveGuiPerformanceConsoleMacroActionDeckDict;
   rehearsal_board: LiveGuiPerformanceConsoleRehearsalBoardDict;
+  analog_four_review_surface: LiveGuiPerformanceConsoleAnalogFourReviewSurfaceDict;
   style_queue: StyleCrateRehearsalDeckDict;
   analyzer_panel: LiveGuiAnalyzerPanelModelDict;
   snapshot_history: LiveGuiSnapshotHistoryModelDict;
