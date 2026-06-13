@@ -17,7 +17,7 @@ function performanceConsoleModelWithActiveDryRunBoundaries(): LiveGuiPerformance
     style_queue: {
       ...performanceConsoleModel.style_queue,
       queue_cards: performanceConsoleModel.style_queue.queue_cards.map((move) =>
-        move.queue_key === 'queue-dark-01' ? { ...move, dry_run_only: false } : move,
+        move.queue_key === 'queue-opening-shadow' ? { ...move, dry_run_only: false } : move,
       ),
     },
   };
@@ -68,19 +68,30 @@ describe('PerformanceConsole', () => {
 
     const styleQueue = screen.getByTestId('performance-console-style-queue');
     expect(styleQueue).toHaveTextContent('Style Crates');
+    expect(within(styleQueue).getAllByTestId(/^style-crate-/)).toHaveLength(9);
     const darkHypnoticCrate = within(styleQueue).getByTestId('style-crate-dark-hypnotic');
-    expect(darkHypnoticCrate).toHaveTextContent('rolling pressure');
-    expect(darkHypnoticCrate).toHaveTextContent('energy 7');
-    expect(darkHypnoticCrate).toHaveTextContent('risk 4');
-    expect(darkHypnoticCrate).toHaveTextContent('pads 1, 2, 3, 4');
-    expect(darkHypnoticCrate).toHaveTextContent('dark');
+    expect(darkHypnoticCrate).toHaveTextContent('Deeper & Minimal');
+    expect(darkHypnoticCrate).toHaveTextContent('energy 5');
+    expect(darkHypnoticCrate).toHaveTextContent('risk 3');
+    expect(darkHypnoticCrate).toHaveTextContent('pads 1, 3, 11');
     expect(darkHypnoticCrate).toHaveTextContent('hypnotic');
-    expect(within(darkHypnoticCrate).getByRole('button', { name: /stage dark hypnotic/i })).toBeDisabled();
+    expect(darkHypnoticCrate).toHaveTextContent('minimal');
+    expect(darkHypnoticCrate).toHaveTextContent('shadow');
+    expect(
+      within(darkHypnoticCrate).getByRole('button', { name: /stage shadow filter pressure/i }),
+    ).toBeDisabled();
+    const industrialCrate = within(styleQueue).getByTestId('style-crate-industrial-broken');
+    expect(industrialCrate).toHaveTextContent('Industrial/Broken');
+    expect(industrialCrate).toHaveTextContent('Metal & Drive');
+    expect(industrialCrate).toHaveTextContent('energy 8');
+    expect(industrialCrate).toHaveTextContent('risk 7');
+    expect(industrialCrate).toHaveTextContent('pads 3, 4, 8, 10, 11');
     expect(styleQueue).toHaveTextContent('Dark Hypnotic');
-    expect(styleQueue).toHaveTextContent('snap-06');
-    expect(styleQueue).toHaveTextContent('preview');
-    expect(styleQueue).toHaveTextContent('recover home');
-    expect(styleQueue).toHaveTextContent('pads 1, 2, 3, 4');
+    expect(styleQueue).toHaveTextContent('Shadow Filter Pressure');
+    expect(styleQueue).toHaveTextContent('Pressure Rattle');
+    expect(styleQueue).toHaveTextContent('Preview before real send');
+    expect(styleQueue).toHaveTextContent('recover Back To Clean Handoff');
+    expect(styleQueue).toHaveTextContent('pads 1, 3, 11');
     expect(styleQueue).toHaveTextContent('dry-run only');
 
     expect(screen.getByTestId('performance-console-snapshot-history')).toHaveTextContent(
@@ -106,8 +117,12 @@ describe('PerformanceConsole', () => {
     expect(hardGrooveMacro).not.toHaveTextContent('dry-run only');
 
     const styleQueue = screen.getByTestId('performance-console-style-queue');
-    expect(styleQueue).toHaveTextContent('preview');
-    expect(styleQueue).toHaveTextContent('recover home');
-    expect(styleQueue).not.toHaveTextContent('dry-run only');
+    const openingMove = within(styleQueue).getByTestId('style-queue-move-queue-opening-shadow');
+    expect(openingMove).toHaveTextContent('Preview before real send');
+    expect(openingMove).toHaveTextContent('recover Back To Clean Handoff');
+    expect(openingMove).not.toHaveTextContent('dry-run only');
+    expect(within(styleQueue).getByTestId('style-queue-move-queue-groove-pressure')).toHaveTextContent(
+      'dry-run only',
+    );
   });
 });

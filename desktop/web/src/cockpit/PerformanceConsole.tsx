@@ -28,6 +28,10 @@ function orderedMacroActions(
   return [...cards].sort((left, right) => left.order - right.order);
 }
 
+function toTestIdKey(value: string): string {
+  return value.toLowerCase().replaceAll('_', '-').replaceAll('/', '-').replaceAll(' ', '-');
+}
+
 export function PerformanceConsole({
   model,
   packetSource = 'passive packet',
@@ -218,7 +222,7 @@ export function PerformanceConsole({
         <h3 className="performance-console-subheading">Style Crates</h3>
         <div className="performance-console-list" aria-label="Style crates">
           {model.style_queue.crate_cards.map((crate) => (
-            <article key={crate.crate_key} data-testid={`style-crate-${crate.crate_key}`}>
+            <article key={crate.crate_key} data-testid={`style-crate-${toTestIdKey(crate.crate_key)}`}>
               <strong>{crate.crate_name}</strong>
               <span>{crate.summary}</span>
               <small>
@@ -249,7 +253,10 @@ export function PerformanceConsole({
         <h3 className="performance-console-subheading">Queued Moves</h3>
         <div className="performance-console-list">
           {model.style_queue.queue_cards.map((move) => (
-            <article key={move.queue_key}>
+            <article
+              key={move.queue_key}
+              data-testid={`style-queue-move-${toTestIdKey(move.queue_key)}`}
+            >
               <strong>{move.move_name}</strong>
               <span>
                 {move.chapter} / {move.mutation_amount_percent}% / {move.risk_status}

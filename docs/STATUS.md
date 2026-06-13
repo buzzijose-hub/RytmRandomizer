@@ -4,6 +4,16 @@ Last updated: 2026-06-13. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-13: Cockpit demo Style Crates catalog follow-up prepared after the
+  crate-browser merge. The bundled passive Performance Console fallback model
+  now reuses the full default Style Crates rehearsal deck instead of a one-card
+  duplicate, so installed/mock Cockpit sessions can preview Dark Hypnotic, Peak
+  Time, Hard Groove, Dub Pressure, Industrial/Broken, Deep Minimal, Chaos
+  Fills, Transitions, Saved Accidents, staged queue moves, and journal seeds
+  from the same source as the passive style-crate report. UI `data-testid`
+  values for crate and queue cards are normalized for stable coverage. Demo
+  data and rendering only: no WebSocket payload, sidecar command, queue
+  dispatch, MIDI port, hardware arm path, or MIDI send behavior changed.
 - 2026-06-13: Cockpit style-crate browser follow-up prepared after the
   performance action-readiness merge. The passive performance console now
   renders the existing Style Crates cards before the queued moves and journal,
