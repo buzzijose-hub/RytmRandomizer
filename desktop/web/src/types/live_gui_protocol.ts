@@ -513,6 +513,51 @@ export interface LiveGuiPerformanceConsoleMacroActionDeckDict {
   replay_commands: ReadonlyArray<string>;
 }
 
+export interface LiveGuiPerformanceConsoleRytmLanePolicyPadGroupDict {
+  group_key: string;
+  pads: ReadonlyArray<number>;
+  summary: string;
+  lane_policy: string;
+  operator_note: string;
+}
+
+export interface LiveGuiPerformanceConsoleRytmPadPolicyCardDict {
+  amount: string | null;
+  density: string | null;
+  bias: string | null;
+  lane_policies: Readonly<Record<string, string>>;
+  section_family_allowlists: Readonly<Record<string, ReadonlyArray<string>>>;
+}
+
+export interface LiveGuiPerformanceConsoleRytmMacroPolicyRowDict {
+  macro_key: string;
+  order: number;
+  label: string;
+  style_crate: string;
+  risk_label: string;
+  energy: number;
+  risk: number;
+  affected_pads: ReadonlyArray<number>;
+  locked_pads: ReadonlyArray<number>;
+  lane_policy_summary: string;
+  pad_policy_cards: Readonly<Record<string, LiveGuiPerformanceConsoleRytmPadPolicyCardDict>>;
+  recovery_action: string;
+  summary: string;
+}
+
+export interface LiveGuiPerformanceConsoleRytmLanePolicyMatrixDict {
+  matrix_version: string;
+  matrix_id: string;
+  matrix_status: string;
+  source_report: string;
+  macro_count: number;
+  pad_groups: ReadonlyArray<LiveGuiPerformanceConsoleRytmLanePolicyPadGroupDict>;
+  macro_rows: ReadonlyArray<LiveGuiPerformanceConsoleRytmMacroPolicyRowDict>;
+  blocked_actions: ReadonlyArray<string>;
+  safety_lines: ReadonlyArray<string>;
+  replay_commands: ReadonlyArray<string>;
+}
+
 export interface LiveGuiPerformanceConsoleRehearsalChapterDict {
   order: number;
   name: string;
@@ -699,6 +744,7 @@ export interface LiveGuiPerformanceConsoleModelDict {
   hardware_mode: string;
   device_inventory: LiveGuiPerformanceConsoleDeviceInventoryModelDict;
   rytm_pad_surface: LiveGuiPerformanceConsoleRytmTwelvePadSurfaceModelDict;
+  rytm_lane_policy_matrix: LiveGuiPerformanceConsoleRytmLanePolicyMatrixDict;
   performance_flow: LiveGuiPerformanceFlowModelDict;
   macro_action_deck: LiveGuiPerformanceConsoleMacroActionDeckDict;
   rehearsal_board: LiveGuiPerformanceConsoleRehearsalBoardDict;

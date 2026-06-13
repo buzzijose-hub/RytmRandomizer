@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Final, TypedDict, cast
@@ -111,6 +112,51 @@ A4_REVIEW_SAFETY_LINES: Final[tuple[str, ...]] = (
     "no MIDI sending",
     "no port opening",
 )
+RYTM_LANE_POLICY_MATRIX_VERSION: Final[str] = "performance-console-rytm-lane-policy-matrix-v1"
+RYTM_LANE_POLICY_MATRIX_ID: Final[str] = "rytm-oxi-lane-policy-matrix"
+RYTM_LANE_POLICY_MATRIX_STATUS: Final[str] = "passive-ready"
+RYTM_LANE_POLICY_BLOCKED_ACTIONS: Final[tuple[str, ...]] = (
+    "dispatch Rytm lane policy from Cockpit console",
+    "send Rytm lane policy from Cockpit console",
+)
+RYTM_LANE_POLICY_SAFETY_LINES: Final[tuple[str, ...]] = (
+    "Rytm lane policy matrix is declarative only",
+    "Cockpit shows macro policy before the armed snapshot shell applies anything",
+    "no MIDI sending",
+    "no port opening",
+)
+RYTM_LANE_POLICY_REPLAY_COMMANDS: Final[tuple[str, ...]] = (
+    "python -m rytm_randomizer.cli oxi-live-macro-catalog-report",
+)
+_RYTM_LANE_POLICY_PAD_GROUPS: Final[tuple[dict[str, object], ...]] = (
+    {
+        "group_key": "reserved-src-fx",
+        "pads": [5, 9, 10, 11],
+        "summary": "SRC-first reserved percussion pads",
+        "lane_policy": ("SRC primary; filter=off; lfo=off; AMP limited to overdrive/delay/reverb"),
+        "operator_note": (
+            "Pads 5, 9, 10, and 11 keep source movement as the main musical control."
+        ),
+    },
+    {
+        "group_key": "tom-source",
+        "pads": [6, 7, 8],
+        "summary": "tom/source movement pads",
+        "lane_policy": (
+            "SRC primary; filter=micro/light; lfo=off; AMP limited to overdrive/delay/reverb"
+        ),
+        "operator_note": (
+            "Pads 6-8 can move harder on tom source controls while filter stays light."
+        ),
+    },
+    {
+        "group_key": "pad-12-supported",
+        "pads": [12],
+        "summary": "product-supported expansion pad",
+        "lane_policy": "Pad 12 remains eligible for product users even when Jose does not use it.",
+        "operator_note": "Keep Pad 12 visible as supported, but do not make it a live dependency.",
+    },
+)
 REPLAY_COMMANDS: Final[tuple[str, ...]] = (
     "python -m rytm_randomizer.cli live-gui-performance-console-report",
     "python -m rytm_randomizer.cli live-gui-performance-console-report --json",
@@ -147,6 +193,7 @@ class LiveGuiPerformanceConsoleModel:
     hardware_mode: str
     device_inventory: dict[str, object]
     rytm_pad_surface: dict[str, object]
+    rytm_lane_policy_matrix: dict[str, object]
     performance_flow: dict[str, object]
     macro_action_deck: dict[str, object]
     rehearsal_board: dict[str, object]
@@ -172,6 +219,7 @@ class LiveGuiPerformanceConsoleModelDict(TypedDict):
     hardware_mode: str
     device_inventory: dict[str, object]
     rytm_pad_surface: dict[str, object]
+    rytm_lane_policy_matrix: dict[str, object]
     performance_flow: dict[str, object]
     macro_action_deck: dict[str, object]
     rehearsal_board: dict[str, object]
@@ -513,11 +561,88 @@ def _build_macro_action_deck(
     }
 
 
+def _operator_family_name(family: str) -> str:
+    return "overdrive" if family == "drive" else family
+
+
+def _operator_family_allowlists(
+    allowlists: Mapping[str, object],
+) -> dict[str, list[str]]:
+    operator_allowlists: dict[str, list[str]] = {}
+    for section, families in allowlists.items():
+        operator_families = cast(list[object], families)
+        operator_allowlists[section] = sorted(
+            _operator_family_name(str(family)) for family in operator_families
+        )
+    return operator_allowlists
+
+
+def _operator_pad_policy_cards(
+    pad_policies: Mapping[int, dict[str, object]],
+) -> dict[str, dict[str, object]]:
+    cards: dict[str, dict[str, object]] = {}
+    for pad, policy in pad_policies.items():
+        section_family_allowlists = cast(
+            Mapping[str, object],
+            policy["section_family_allowlists"],
+        )
+        cards[str(pad)] = {
+            "amount": policy["amount"],
+            "density": policy["density"],
+            "bias": policy["bias"],
+            "lane_policies": policy["lane_policies"],
+            "section_family_allowlists": _operator_family_allowlists(section_family_allowlists),
+        }
+    return cards
+
+
+def _lane_policy_summary(lane_policies: Mapping[str, str]) -> str:
+    return ", ".join(f"{key}={lane_policies[key]}" for key in sorted(lane_policies)) or "none"
+
+
+def _build_rytm_lane_policy_matrix(
+    *,
+    catalog: OxiLiveMacroCatalogReport,
+) -> dict[str, object]:
+    macro_rows: list[dict[str, object]] = []
+    for order, macro in enumerate(catalog.rytm_macros, start=1):
+        macro_rows.append(
+            {
+                "macro_key": macro.name,
+                "order": order,
+                "label": macro.label,
+                "style_crate": macro.style_crate,
+                "risk_label": macro.risk_label,
+                "energy": macro.energy,
+                "risk": macro.risk,
+                "affected_pads": list(macro.affected_pads),
+                "locked_pads": list(macro.locked_pads),
+                "lane_policy_summary": _lane_policy_summary(macro.lane_policies),
+                "pad_policy_cards": _operator_pad_policy_cards(macro.pad_policies),
+                "recovery_action": macro.recovery_action,
+                "summary": macro.summary,
+            }
+        )
+    return {
+        "matrix_version": RYTM_LANE_POLICY_MATRIX_VERSION,
+        "matrix_id": RYTM_LANE_POLICY_MATRIX_ID,
+        "matrix_status": RYTM_LANE_POLICY_MATRIX_STATUS,
+        "source_report": "oxi-live-macro-catalog-report",
+        "macro_count": len(macro_rows),
+        "pad_groups": list(_RYTM_LANE_POLICY_PAD_GROUPS),
+        "macro_rows": macro_rows,
+        "blocked_actions": list(RYTM_LANE_POLICY_BLOCKED_ACTIONS),
+        "safety_lines": list(RYTM_LANE_POLICY_SAFETY_LINES),
+        "replay_commands": list(RYTM_LANE_POLICY_REPLAY_COMMANDS),
+    }
+
+
 def _console_id(
     *,
     session_label: str,
     device_inventory: dict[str, object],
     rytm_pad_surface: dict[str, object],
+    rytm_lane_policy_matrix: dict[str, object],
     performance_flow: dict[str, object],
     macro_action_deck: dict[str, object],
     rehearsal_board: dict[str, object],
@@ -534,6 +659,7 @@ def _console_id(
             session_label,
             str(device_inventory.get("device_count", "")),
             str(rytm_pad_surface.get("pad_count", "")),
+            str(rytm_lane_policy_matrix.get("matrix_id", "")),
             str(performance_flow.get("flow_id", "")),
             str(macro_action_deck.get("deck_id", "")),
             str(rehearsal_board.get("board_id", "")),
@@ -563,9 +689,12 @@ def build_live_gui_performance_console_model(
     performance_flow = live_gui_performance_flow_model_payload(
         build_live_gui_performance_flow_model()
     )["live_gui_performance_flow_model"]
+    macro_catalog = build_oxi_live_macro_catalog_report()
     macro_action_deck = _build_macro_action_deck(
-        current_macro_key=str(performance_flow["current_step_key"])
+        current_macro_key=str(performance_flow["current_step_key"]),
+        catalog=macro_catalog,
     )
+    rytm_lane_policy_matrix = _build_rytm_lane_policy_matrix(catalog=macro_catalog)
     rehearsal_board = _build_rehearsal_board()
     analog_four_review_surface = _build_analog_four_review_surface()
     style_queue = to_style_crate_rehearsal_deck_json(build_style_crate_rehearsal_deck())[
@@ -593,6 +722,7 @@ def build_live_gui_performance_console_model(
     blocked_actions = _unique_tuple(
         tuple(performance_flow["blocked_actions"]),
         _tuple_from_payload(macro_action_deck, "blocked_actions"),
+        _tuple_from_payload(rytm_lane_policy_matrix, "blocked_actions"),
         _tuple_from_payload(rehearsal_board, "blocked_actions"),
         _tuple_from_payload(analog_four_review_surface, "blocked_actions"),
         tuple(style_queue["blocked_actions"]),
@@ -607,6 +737,7 @@ def build_live_gui_performance_console_model(
         BASE_SAFETY_LINES,
         tuple(performance_flow["safety_lines"]),
         _tuple_from_payload(macro_action_deck, "safety_lines"),
+        _tuple_from_payload(rytm_lane_policy_matrix, "safety_lines"),
         _tuple_from_payload(rehearsal_board, "safety_lines"),
         _tuple_from_payload(analog_four_review_surface, "safety_lines"),
         _tuple_from_payload(device_inventory, "safety"),
@@ -620,6 +751,7 @@ def build_live_gui_performance_console_model(
             session_label=normalized_session_label,
             device_inventory=device_inventory,
             rytm_pad_surface=rytm_pad_surface,
+            rytm_lane_policy_matrix=rytm_lane_policy_matrix,
             performance_flow=performance_flow,
             macro_action_deck=macro_action_deck,
             rehearsal_board=rehearsal_board,
@@ -635,6 +767,7 @@ def build_live_gui_performance_console_model(
         hardware_mode=HARDWARE_MODE,
         device_inventory=device_inventory,
         rytm_pad_surface=rytm_pad_surface,
+        rytm_lane_policy_matrix=rytm_lane_policy_matrix,
         performance_flow=performance_flow,
         macro_action_deck=macro_action_deck,
         rehearsal_board=rehearsal_board,
@@ -666,6 +799,7 @@ def live_gui_performance_console_model_payload(
             "hardware_mode": source.hardware_mode,
             "device_inventory": source.device_inventory,
             "rytm_pad_surface": source.rytm_pad_surface,
+            "rytm_lane_policy_matrix": source.rytm_lane_policy_matrix,
             "performance_flow": source.performance_flow,
             "macro_action_deck": source.macro_action_deck,
             "rehearsal_board": source.rehearsal_board,
@@ -734,6 +868,27 @@ def _analog_four_review_surface_lines(model: LiveGuiPerformanceConsoleModel) -> 
     return lines
 
 
+def _rytm_lane_policy_matrix_lines(model: LiveGuiPerformanceConsoleModel) -> list[str]:
+    matrix = model.rytm_lane_policy_matrix
+    lines = [
+        "Rytm lane policy matrix:",
+        f"- status: {matrix['matrix_status']}",
+        f"- macros: {matrix['macro_count']}",
+        f"- source: {matrix['source_report']}",
+    ]
+    for group in matrix["pad_groups"]:
+        lines.append(
+            f"- pad group: {group['group_key']} / pads "
+            f"{', '.join(str(pad) for pad in group['pads'])}"
+        )
+    for row in matrix["macro_rows"]:
+        lines.append(
+            f"- macro policy: {row['macro_key']} / pads "
+            f"{', '.join(str(pad) for pad in row['affected_pads'])}"
+        )
+    return lines
+
+
 def _format_console_body(model: LiveGuiPerformanceConsoleModel) -> list[str]:
     current_flow_key = model.performance_flow["current_step_key"]
     a4_set_plan = model.performance_flow["analog_four_set_plan"]
@@ -748,6 +903,7 @@ def _format_console_body(model: LiveGuiPerformanceConsoleModel) -> list[str]:
         f"- pads: {model.rytm_pad_surface['pad_count']}",
         f"- active V1.34 pads: {model.rytm_pad_surface['active_pad_count']}",
         f"- planned pads: {model.rytm_pad_surface['planned_pad_count']}",
+        *_rytm_lane_policy_matrix_lines(model),
         "Performance flow:",
         f"- current: {current_flow_key}",
         f"- steps: {len(model.performance_flow['steps'])}",
@@ -839,6 +995,12 @@ __all__ = [
     "REHEARSAL_BOARD_SAFETY_LINES",
     "REHEARSAL_BOARD_STATUS",
     "REHEARSAL_BOARD_VERSION",
+    "RYTM_LANE_POLICY_BLOCKED_ACTIONS",
+    "RYTM_LANE_POLICY_MATRIX_ID",
+    "RYTM_LANE_POLICY_MATRIX_STATUS",
+    "RYTM_LANE_POLICY_MATRIX_VERSION",
+    "RYTM_LANE_POLICY_REPLAY_COMMANDS",
+    "RYTM_LANE_POLICY_SAFETY_LINES",
     "SOURCE_MODULE",
     "build_live_gui_performance_console_model",
     "format_live_gui_performance_console_model_report",
