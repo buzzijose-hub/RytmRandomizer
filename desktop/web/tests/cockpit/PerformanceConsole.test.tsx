@@ -66,6 +66,22 @@ describe('PerformanceConsole', () => {
     expect(hardGrooveMacro).toHaveTextContent('hardware blocked');
     expect(hardGrooveMacro).toHaveTextContent('dry-run only');
 
+    const rehearsalBoard = screen.getByTestId('performance-console-rehearsal-board');
+    expect(rehearsalBoard).toHaveTextContent('Rehearsal Board');
+    expect(rehearsalBoard).toHaveTextContent('passive-ready');
+    expect(rehearsalBoard).toHaveTextContent('Capture Anchor');
+    expect(rehearsalBoard).toHaveTextContent('Establish Groove');
+    expect(rehearsalBoard).toHaveTextContent('macro hard-groove');
+    expect(rehearsalBoard).toHaveTextContent('Pads 5, 9, 10, 11: SRC stays important');
+    expect(rehearsalBoard).toHaveTextContent('Pads 6-8: tom/source movement');
+    expect(rehearsalBoard).toHaveTextContent('a4-soft-capture');
+    expect(rehearsalBoard).toHaveTextContent('A4 Input Label Coverage');
+    expect(rehearsalBoard).toHaveTextContent('fire rehearsal cue from Cockpit console');
+    expect(
+      within(rehearsalBoard).getByRole('button', { name: /launch armed shell/i }),
+    ).toBeDisabled();
+    expect(within(rehearsalBoard).getByRole('button', { name: /fire cue/i })).toBeDisabled();
+
     const styleQueue = screen.getByTestId('performance-console-style-queue');
     expect(styleQueue).toHaveTextContent('Style Crates');
     expect(within(styleQueue).getAllByTestId(/^style-crate-/)).toHaveLength(9);

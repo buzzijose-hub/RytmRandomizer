@@ -4,6 +4,14 @@ Last updated: 2026-06-13. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-13: Cockpit OXI rehearsal-board follow-up started on a clean base
+  after PR #172 merged. The passive Performance Console now composes the
+  existing OXI live set strategy and Rytm live macro hardware rehearsal reports
+  into a GUI-ready Rehearsal Board with live chapters, operator cues,
+  SRC-first pad-lane checks, Rytm/A4 hardware-validation runway, A4 promotion
+  gates, recovery checks, replay commands, and disabled launch/fire controls.
+  Passive metadata only: no sidecar command dispatch, no MIDI port opening,
+  no hardware arm path, no MIDI send, and no A4 outbound macro promotion.
 - 2026-06-13: OXI live macro catalog local prep now exposes GUI-ready policy
   metadata for the Cockpit handoff: each macro card carries locked pads, global
   lane policies, per-pad amount/density/bias, per-pad lane overrides, and
