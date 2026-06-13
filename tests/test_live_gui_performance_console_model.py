@@ -44,6 +44,27 @@ def test_performance_console_model_composes_live_cockpit_sections() -> None:
     assert model.performance_flow["analog_four_set_plan"]["set_name"] == "warehouse-arc"
     assert model.performance_flow["analog_four_set_plan"]["current_macro"] == "home"
     assert model.performance_flow["steps"][1]["key"] == "kit-core"
+
+    rehearsal_board = model.rehearsal_board
+    assert rehearsal_board["board_version"] == "performance-console-rehearsal-board-v1"
+    assert rehearsal_board["board_status"] == "passive-ready"
+    assert rehearsal_board["launch_command"].startswith(
+        "python -m rytm_randomizer.app --arm --rytm-live-snapshot-shell"
+    )
+    assert [chapter["name"] for chapter in rehearsal_board["chapters"]][:3] == [
+        "capture-anchor",
+        "establish-groove",
+        "pressure-build",
+    ]
+    assert rehearsal_board["operator_cues"][1]["rytm_stage_command"] == "macro hard-groove"
+    assert rehearsal_board["pad_lane_checks"][0]["pads"] == [5, 9, 10, 11]
+    assert "SRC stays important" in rehearsal_board["pad_lane_checks"][0]["summary"]
+    assert rehearsal_board["hardware_validation_runway"][2]["name"] == "a4-soft-capture"
+    assert rehearsal_board["promotion_criteria"][0]["name"] == "a4-input-label-coverage"
+    assert "fire rehearsal cue from Cockpit console" in rehearsal_board["blocked_actions"]
+    assert "no MIDI sending" in rehearsal_board["safety_lines"]
+    assert rehearsal_board["replay_commands"][0]["name"] == "read-strategy"
+
     macro_deck = model.macro_action_deck
     assert macro_deck["deck_status"] == "passive-ready"
     assert macro_deck["current_macro_key"] == "capture-anchor"
@@ -98,6 +119,7 @@ def test_performance_console_model_composes_live_cockpit_sections() -> None:
     assert "open_midi_port_without_arm" in model.blocked_actions
     assert "a4_outbound_macro_send" in model.blocked_actions
     assert "record-audio" in model.blocked_actions
+    assert "fire rehearsal cue from Cockpit console" in model.blocked_actions
     assert "dispatch queued command from model" in model.blocked_actions
     assert "send MIDI from snapshot history" in model.blocked_actions
     assert "no MIDI sending" in model.safety_lines
@@ -155,6 +177,9 @@ def test_performance_console_payload_is_json_safe_and_passive() -> None:
     assert model["rytm_pad_surface"]["pad_count"] == 12
     assert model["macro_action_deck"]["cards"][1]["macro_key"] == "hard-groove"
     assert model["macro_action_deck"]["cards"][1]["shell_command"] == "hard-groove"
+    assert model["rehearsal_board"]["chapters"][1]["name"] == "establish-groove"
+    assert model["rehearsal_board"]["pad_lane_checks"][1]["pads"] == [6, 7, 8]
+    assert model["rehearsal_board"]["hardware_validation_runway"][2]["name"] == "a4-soft-capture"
     assert model["performance_flow"]["analog_four_set_plan"]["step_count"] == 5
     assert model["analyzer_panel"]["panel_status"] == "empty"
     assert model["analyzer_panel"]["required_actions"] == ["load-reference"]
@@ -189,6 +214,15 @@ def test_performance_console_report_is_operator_readable() -> None:
     assert "- current: capture-anchor" in lines
     assert "Macro actions:" in lines
     assert "- hard-groove: hard-groove / stage-review-send / blocked" in lines
+    assert "Rehearsal board:" in lines
+    assert "- chapters: 7" in lines
+    assert "- next hardware validations: 2" in lines
+    assert (
+        "- launch: python -m rytm_randomizer.app --arm --rytm-live-snapshot-shell --confirm-rytm-snapshot-shell-send"
+        in lines
+    )
+    assert "- pad lane: Pads 5, 9, 10, 11: SRC stays important" in lines
+    assert "- hardware validation: a4-soft-capture / Analog Four MKII / input-only" in lines
     assert "A4 set plan:" in lines
     assert "- set: warehouse-arc" in lines
     assert "Style queue and journal:" in lines

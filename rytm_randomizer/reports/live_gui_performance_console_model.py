@@ -42,6 +42,10 @@ from .oxi_live_macro_catalog import (
     OxiLiveMacroCatalogReport,
     build_oxi_live_macro_catalog_report,
 )
+from .oxi_live_set_strategy import build_oxi_live_set_strategy_payload
+from .rytm_live_macro_hardware_rehearsal import (
+    build_rytm_live_macro_hardware_rehearsal_payload,
+)
 from .style_crate_rehearsal_deck import (
     build_style_crate_rehearsal_deck,
     to_style_crate_rehearsal_deck_json,
@@ -68,6 +72,22 @@ MACRO_ACTION_SAFETY_LINES: Final[tuple[str, ...]] = (
 MACRO_ACTION_REPLAY_COMMANDS: Final[tuple[str, ...]] = (
     "python -m rytm_randomizer.cli oxi-live-macro-catalog-report",
     "python -m rytm_randomizer.cli live-gui-performance-flow-model-report --json",
+)
+REHEARSAL_BOARD_VERSION: Final[str] = "performance-console-rehearsal-board-v1"
+REHEARSAL_BOARD_ID: Final[str] = "oxi-live-rehearsal-board"
+REHEARSAL_BOARD_STATUS: Final[str] = "passive-ready"
+REHEARSAL_BOARD_BLOCKED_ACTIONS: Final[tuple[str, ...]] = (
+    "fire rehearsal cue from Cockpit console",
+    "open MIDI port from rehearsal board",
+    "send MIDI from rehearsal board",
+    "promote A4 macro from rehearsal board",
+)
+REHEARSAL_BOARD_SAFETY_LINES: Final[tuple[str, ...]] = (
+    "rehearsal board is declarative only",
+    "launch command is shown for operator copy/review only",
+    "real Rytm sends remain in the explicitly armed snapshot shell",
+    "A4 outbound macro promotion remains blocked",
+    "no MIDI sending",
 )
 REPLAY_COMMANDS: Final[tuple[str, ...]] = (
     "python -m rytm_randomizer.cli live-gui-performance-console-report",
@@ -107,6 +127,7 @@ class LiveGuiPerformanceConsoleModel:
     rytm_pad_surface: dict[str, object]
     performance_flow: dict[str, object]
     macro_action_deck: dict[str, object]
+    rehearsal_board: dict[str, object]
     style_queue: dict[str, object]
     analyzer_panel: dict[str, object]
     snapshot_history: dict[str, object]
@@ -130,6 +151,7 @@ class LiveGuiPerformanceConsoleModelDict(TypedDict):
     rytm_pad_surface: dict[str, object]
     performance_flow: dict[str, object]
     macro_action_deck: dict[str, object]
+    rehearsal_board: dict[str, object]
     style_queue: dict[str, object]
     analyzer_panel: dict[str, object]
     snapshot_history: dict[str, object]
@@ -272,6 +294,44 @@ def _macro_operator_hint(*, macro_key: str, recovery_action: str) -> str:
     )
 
 
+def _payload_list(payload: dict[str, object], key: str) -> list[object]:
+    values = payload.get(key, ())
+    if not isinstance(values, list):
+        return []
+    return values
+
+
+def _payload_string(payload: dict[str, object], key: str) -> str:
+    value = payload.get(key, "")
+    if not isinstance(value, str):
+        return ""
+    return value
+
+
+def _build_rehearsal_board() -> dict[str, object]:
+    strategy = build_oxi_live_set_strategy_payload()
+    rehearsal = build_rytm_live_macro_hardware_rehearsal_payload()
+    return {
+        "board_version": REHEARSAL_BOARD_VERSION,
+        "board_id": REHEARSAL_BOARD_ID,
+        "board_status": REHEARSAL_BOARD_STATUS,
+        "title": "OXI Live Rehearsal Board",
+        "launch_command": _payload_string(rehearsal, "launch_command"),
+        "studio_workflow": _payload_list(rehearsal, "studio_workflow"),
+        "chapters": _payload_list(strategy, "chapters"),
+        "operator_cues": _payload_list(strategy, "operator_cues"),
+        "pad_lane_checks": _payload_list(rehearsal, "pad_lane_checks"),
+        "macro_checkpoints": _payload_list(rehearsal, "macros"),
+        "hardware_validation_runway": _payload_list(strategy, "hardware_validation_runway"),
+        "promotion_criteria": _payload_list(strategy, "promotion_criteria"),
+        "recovery_checks": _payload_list(rehearsal, "recovery_checks"),
+        "next_hardware_validations": _payload_list(strategy, "next_hardware_validations"),
+        "replay_commands": _payload_list(strategy, "replay_commands"),
+        "blocked_actions": list(REHEARSAL_BOARD_BLOCKED_ACTIONS),
+        "safety_lines": list(REHEARSAL_BOARD_SAFETY_LINES),
+    }
+
+
 def _build_macro_action_deck(
     *,
     current_macro_key: str,
@@ -329,6 +389,7 @@ def _console_id(
     rytm_pad_surface: dict[str, object],
     performance_flow: dict[str, object],
     macro_action_deck: dict[str, object],
+    rehearsal_board: dict[str, object],
     style_queue: dict[str, object],
     analyzer_panel: dict[str, object],
     snapshot_history: dict[str, object],
@@ -343,6 +404,7 @@ def _console_id(
             str(rytm_pad_surface.get("pad_count", "")),
             str(performance_flow.get("flow_id", "")),
             str(macro_action_deck.get("deck_id", "")),
+            str(rehearsal_board.get("board_id", "")),
             str(style_queue.get("deck_id", "")),
             str(analyzer_panel.get("panel_id", "")),
             str(snapshot_history.get("snapshot_history_id", "")),
@@ -371,6 +433,7 @@ def build_live_gui_performance_console_model(
     macro_action_deck = _build_macro_action_deck(
         current_macro_key=str(performance_flow["current_step_key"])
     )
+    rehearsal_board = _build_rehearsal_board()
     style_queue = to_style_crate_rehearsal_deck_json(build_style_crate_rehearsal_deck())[
         "style_crate_rehearsal_deck"
     ]
@@ -396,6 +459,7 @@ def build_live_gui_performance_console_model(
     blocked_actions = _unique_tuple(
         tuple(performance_flow["blocked_actions"]),
         _tuple_from_payload(macro_action_deck, "blocked_actions"),
+        _tuple_from_payload(rehearsal_board, "blocked_actions"),
         tuple(style_queue["blocked_actions"]),
         tuple(analyzer_panel["blocked_actions"]),
         tuple(snapshot_history["blocked_actions"]),
@@ -408,6 +472,7 @@ def build_live_gui_performance_console_model(
         BASE_SAFETY_LINES,
         tuple(performance_flow["safety_lines"]),
         _tuple_from_payload(macro_action_deck, "safety_lines"),
+        _tuple_from_payload(rehearsal_board, "safety_lines"),
         _tuple_from_payload(device_inventory, "safety"),
         _tuple_from_payload(rytm_pad_surface, "safety"),
     )
@@ -421,6 +486,7 @@ def build_live_gui_performance_console_model(
             rytm_pad_surface=rytm_pad_surface,
             performance_flow=performance_flow,
             macro_action_deck=macro_action_deck,
+            rehearsal_board=rehearsal_board,
             style_queue=style_queue,
             analyzer_panel=analyzer_panel,
             snapshot_history=snapshot_history,
@@ -434,6 +500,7 @@ def build_live_gui_performance_console_model(
         rytm_pad_surface=rytm_pad_surface,
         performance_flow=performance_flow,
         macro_action_deck=macro_action_deck,
+        rehearsal_board=rehearsal_board,
         style_queue=style_queue,
         analyzer_panel=analyzer_panel,
         snapshot_history=snapshot_history,
@@ -463,6 +530,7 @@ def live_gui_performance_console_model_payload(
             "rytm_pad_surface": source.rytm_pad_surface,
             "performance_flow": source.performance_flow,
             "macro_action_deck": source.macro_action_deck,
+            "rehearsal_board": source.rehearsal_board,
             "style_queue": source.style_queue,
             "analyzer_panel": source.analyzer_panel,
             "snapshot_history": source.snapshot_history,
@@ -481,6 +549,25 @@ def _device_lines(model: LiveGuiPerformanceConsoleModel) -> list[str]:
     for card in model.device_inventory["cards"]:
         lines.append(
             f"- {card['device_id']} / {card['display_name']} / {card['track_count']} tracks"
+        )
+    return lines
+
+
+def _rehearsal_board_lines(model: LiveGuiPerformanceConsoleModel) -> list[str]:
+    board = model.rehearsal_board
+    lines = [
+        "Rehearsal board:",
+        f"- status: {board['board_status']}",
+        f"- chapters: {len(board['chapters'])}",
+        f"- next hardware validations: {len(board['next_hardware_validations'])}",
+        f"- launch: {board['launch_command']}",
+    ]
+    for lane in board["pad_lane_checks"]:
+        lines.append(f"- pad lane: {lane['summary']}")
+    for step in board["hardware_validation_runway"]:
+        lines.append(
+            f"- hardware validation: {step['name']} / "
+            f"{step['device']} / {step['validation_mode']}"
         )
     return lines
 
@@ -510,6 +597,7 @@ def _format_console_body(model: LiveGuiPerformanceConsoleModel) -> list[str]:
             )
             for card in model.macro_action_deck["cards"]
         ],
+        *_rehearsal_board_lines(model),
         "A4 set plan:",
         f"- set: {a4_set_plan['set_name']}",
         f"- current macro: {a4_set_plan['current_macro']}",
@@ -583,6 +671,11 @@ __all__ = [
     "LiveGuiPerformanceConsoleModelDict",
     "REPORT_TITLE",
     "REPLAY_COMMANDS",
+    "REHEARSAL_BOARD_BLOCKED_ACTIONS",
+    "REHEARSAL_BOARD_ID",
+    "REHEARSAL_BOARD_SAFETY_LINES",
+    "REHEARSAL_BOARD_STATUS",
+    "REHEARSAL_BOARD_VERSION",
     "SOURCE_MODULE",
     "build_live_gui_performance_console_model",
     "format_live_gui_performance_console_model_report",

@@ -513,6 +513,96 @@ export interface LiveGuiPerformanceConsoleMacroActionDeckDict {
   replay_commands: ReadonlyArray<string>;
 }
 
+export interface LiveGuiPerformanceConsoleRehearsalChapterDict {
+  order: number;
+  name: string;
+  label: string;
+  rytm_command: string;
+  macro_sequence: ReadonlyArray<string>;
+  a4_review_action: string;
+  operator_intent: string;
+  recovery_action: string;
+}
+
+export interface LiveGuiPerformanceConsoleRehearsalCueDict {
+  chapter_name: string;
+  label: string;
+  oxi_action: string;
+  rytm_stage_command: string;
+  inspect_command: string;
+  fire_command: string;
+  recovery_command: string;
+  a4_action: string;
+  expected_result: string;
+  blocked_action: string;
+}
+
+export interface LiveGuiPerformanceConsolePadLaneCheckDict {
+  pads: ReadonlyArray<number>;
+  summary: string;
+  expected_motion: string;
+  warning: string;
+}
+
+export interface LiveGuiPerformanceConsoleMacroCheckpointDict {
+  name: string;
+  label: string;
+  risk_label: string;
+  recovery_action: string;
+  affected_pads: ReadonlyArray<number>;
+  summary: string;
+  checkpoints: ReadonlyArray<string>;
+}
+
+export interface LiveGuiPerformanceConsoleHardwareValidationStepDict {
+  name: string;
+  device: string;
+  operator_path: string;
+  validation_mode: string;
+  expected_evidence: string;
+  safety_boundary: string;
+}
+
+export interface LiveGuiPerformanceConsolePromotionCriterionDict {
+  name: string;
+  device: string;
+  current_status: string;
+  required_evidence: string;
+  promotes_to: string;
+  safety_note: string;
+}
+
+export interface LiveGuiPerformanceConsoleReplayCommandDict {
+  name: string;
+  execution_mode: string;
+  command: string;
+  purpose: string;
+  expected_observation: string;
+  opens_ports: boolean;
+  sends_midi: string;
+  safety_note: string;
+}
+
+export interface LiveGuiPerformanceConsoleRehearsalBoardDict {
+  board_version: string;
+  board_id: string;
+  board_status: string;
+  title: string;
+  launch_command: string;
+  studio_workflow: ReadonlyArray<string>;
+  chapters: ReadonlyArray<LiveGuiPerformanceConsoleRehearsalChapterDict>;
+  operator_cues: ReadonlyArray<LiveGuiPerformanceConsoleRehearsalCueDict>;
+  pad_lane_checks: ReadonlyArray<LiveGuiPerformanceConsolePadLaneCheckDict>;
+  macro_checkpoints: ReadonlyArray<LiveGuiPerformanceConsoleMacroCheckpointDict>;
+  hardware_validation_runway: ReadonlyArray<LiveGuiPerformanceConsoleHardwareValidationStepDict>;
+  promotion_criteria: ReadonlyArray<LiveGuiPerformanceConsolePromotionCriterionDict>;
+  recovery_checks: ReadonlyArray<string>;
+  next_hardware_validations: ReadonlyArray<string>;
+  replay_commands: ReadonlyArray<LiveGuiPerformanceConsoleReplayCommandDict>;
+  blocked_actions: ReadonlyArray<string>;
+  safety_lines: ReadonlyArray<string>;
+}
+
 export interface LiveGuiPerformanceConsoleDeviceInventoryModelDict {
   model_version: string;
   device_count: number;
@@ -542,6 +632,7 @@ export interface LiveGuiPerformanceConsoleModelDict {
   rytm_pad_surface: LiveGuiPerformanceConsoleRytmTwelvePadSurfaceModelDict;
   performance_flow: LiveGuiPerformanceFlowModelDict;
   macro_action_deck: LiveGuiPerformanceConsoleMacroActionDeckDict;
+  rehearsal_board: LiveGuiPerformanceConsoleRehearsalBoardDict;
   style_queue: StyleCrateRehearsalDeckDict;
   analyzer_panel: LiveGuiAnalyzerPanelModelDict;
   snapshot_history: LiveGuiSnapshotHistoryModelDict;

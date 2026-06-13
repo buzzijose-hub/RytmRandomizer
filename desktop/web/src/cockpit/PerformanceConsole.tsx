@@ -35,6 +35,14 @@ function toTestIdKey(value: string): string {
   return value.toLowerCase().replaceAll('_', '-').replaceAll('/', '-').replaceAll(' ', '-');
 }
 
+function toHumanLabel(value: string): string {
+  return value
+    .split(/[-_]/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
 function orderedAnalyzerControls(
   controls: Readonly<Record<string, LiveGuiAnalyzerPanelControlDict>>,
 ): ReadonlyArray<LiveGuiAnalyzerPanelControlDict> {
@@ -221,6 +229,122 @@ export function PerformanceConsole({
                 </button>
               </div>
             </article>
+          ))}
+        </div>
+      </section>
+
+      <section
+        className="performance-console-surface performance-console-wide"
+        data-testid="performance-console-rehearsal-board"
+        aria-labelledby="console-rehearsal-board-title"
+      >
+        <header className="performance-console-section-header">
+          <h2 id="console-rehearsal-board-title">Rehearsal Board</h2>
+          <span>{model.rehearsal_board.board_status}</span>
+        </header>
+        <p className="panel-meta">{model.rehearsal_board.title}</p>
+        <small>{model.rehearsal_board.launch_command}</small>
+        <div className="performance-console-macro-actions">
+          <button
+            type="button"
+            className="live-readiness-action"
+            disabled
+            title="The armed shell launch command is shown for operator review only."
+          >
+            Launch Armed Shell
+          </button>
+          <button
+            type="button"
+            className="live-readiness-action live-readiness-action-locked"
+            disabled
+            title="Rehearsal cues cannot send hardware from this passive console."
+          >
+            Fire Cue
+          </button>
+        </div>
+
+        <h3 className="performance-console-subheading">Live Chapters</h3>
+        <div className="performance-console-list">
+          {model.rehearsal_board.chapters.map((chapter) => (
+            <article key={chapter.name}>
+              <strong>{chapter.label}</strong>
+              <span>
+                {chapter.rytm_command} / recover {chapter.recovery_action}
+              </span>
+              <small>{chapter.operator_intent}</small>
+              <div className="live-chip-row">
+                {chapter.macro_sequence.map((macro) => (
+                  <span key={`${chapter.name}-${macro}`} className="live-chip">
+                    {macro}
+                  </span>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Operator Cues</h3>
+        <div className="performance-console-list">
+          {model.rehearsal_board.operator_cues.map((cue) => (
+            <article key={`${cue.chapter_name}-${cue.rytm_stage_command}`}>
+              <strong>{cue.label}</strong>
+              <span>
+                OXI {cue.oxi_action} / Rytm {cue.rytm_stage_command}
+              </span>
+              <small>
+                inspect {cue.inspect_command} / fire {cue.fire_command} / recover{' '}
+                {cue.recovery_command}
+              </small>
+              <small>{cue.expected_result}</small>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Pad Lane Checks</h3>
+        <div className="performance-console-list">
+          {model.rehearsal_board.pad_lane_checks.map((lane) => (
+            <article key={lane.summary}>
+              <strong>{lane.summary}</strong>
+              <span>pads {lane.pads.join(', ')}</span>
+              <small>{lane.expected_motion}</small>
+              <small>{lane.warning}</small>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Next Hardware Validations</h3>
+        <div className="performance-console-list">
+          {model.rehearsal_board.hardware_validation_runway.map((step) => (
+            <article key={step.name}>
+              <strong>{step.name}</strong>
+              <span>
+                {step.device} / {step.validation_mode}
+              </span>
+              <small>{step.operator_path}</small>
+              <small>{step.expected_evidence}</small>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">A4 Promotion Gates</h3>
+        <div className="performance-console-list">
+          {model.rehearsal_board.promotion_criteria.map((criterion) => (
+            <article key={criterion.name}>
+              <strong>{toHumanLabel(criterion.name)}</strong>
+              <span>
+                {criterion.device} / {criterion.current_status}
+              </span>
+              <small>{criterion.required_evidence}</small>
+              <small>{criterion.safety_note}</small>
+            </article>
+          ))}
+        </div>
+
+        <div className="live-chip-row">
+          {model.rehearsal_board.blocked_actions.map((action) => (
+            <span key={action} className="live-chip live-chip-blocked">
+              {action}
+            </span>
           ))}
         </div>
       </section>
