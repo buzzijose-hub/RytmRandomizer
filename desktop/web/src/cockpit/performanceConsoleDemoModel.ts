@@ -1,4 +1,5 @@
 import type { LiveGuiPerformanceConsoleModelDict } from '../types/live_gui_protocol';
+import { DEFAULT_STYLE_CRATE_REHEARSAL_DECK } from './styleCrateQueueModel';
 
 export const performanceConsoleDemoModel: LiveGuiPerformanceConsoleModelDict = {
   console_version: 'live-gui-performance-console-v1',
@@ -190,62 +191,7 @@ export const performanceConsoleDemoModel: LiveGuiPerformanceConsoleModelDict = {
       'python -m rytm_randomizer.cli live-gui-performance-flow-model-report --json',
     ],
   },
-  style_queue: {
-    deck_version: 'style-crate-rehearsal-deck-v1',
-    deck_id: 'style-crates',
-    deck_status: 'passive',
-    crate_filter: 'all',
-    crate_cards: [
-      {
-        crate_key: 'dark-hypnotic',
-        crate_name: 'Dark Hypnotic',
-        summary: 'rolling pressure',
-        tags: ['dark', 'hypnotic'],
-        move_count: 3,
-        primary_move_key: 'move-dark-01',
-        primary_move_name: 'Dark Hypnotic',
-        energy: 7,
-        risk: 4,
-        risk_status: 'safe',
-        target_pads: [1, 2, 3, 4],
-        operator_action: 'stage only',
-      },
-    ],
-    queue_cards: [
-      {
-        queue_key: 'queue-dark-01',
-        order: 1,
-        use_case: 'live',
-        chapter: 'current',
-        crate_key: 'dark-hypnotic',
-        move_key: 'move-dark-01',
-        move_name: 'Dark Hypnotic',
-        status: 'pending',
-        mutation_amount_percent: 56,
-        target_pads: [1, 2, 3, 4],
-        risk_status: 'safe',
-        operator_action: 'preview',
-        recovery_action: 'home',
-        dry_run_only: true,
-      },
-    ],
-    journal_cards: [
-      {
-        journal_key: 'journal-snap-06',
-        name: 'snap-06',
-        tags: ['warehouse'],
-        replay_seed: 'seed-06',
-        pads: [1, 2, 3, 4, 11],
-        depth: 'balanced',
-        guardrail_mode: 'live-safe',
-        risk_status: 'safe',
-        value_summary: ['Pad 11 texture lift'],
-        operator_action: 'save to journal',
-      },
-    ],
-    blocked_actions: ['dispatch queued command from model'],
-    replay_commands: ['python -m rytm_randomizer.cli style-crate-rehearsal-deck-report --json'],
-  },
+  style_queue: DEFAULT_STYLE_CRATE_REHEARSAL_DECK,
   snapshot_history: {
     snapshot_history_version: 'live-gui-snapshot-history-model-v1',
     snapshot_history_id: 'history-test',
