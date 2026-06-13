@@ -168,6 +168,13 @@ export function PerformanceConsole({
                 {card.shell_command} / {card.send_policy} / {card.risk_label}
               </small>
               <span>pads {card.affected_pads.join(', ')}</span>
+              <div className="live-chip-row" aria-label={`Macro ${card.macro_key} boundary`}>
+                <span className="live-chip">recover {card.recovery_action}</span>
+                <span className="live-chip live-chip-blocked">
+                  hardware {card.hardware_action_state}
+                </span>
+                {card.dry_run_only ? <span className="live-chip">dry-run only</span> : null}
+              </div>
               <small>{card.operator_hint}</small>
               <div className="live-chip-row">
                 {model.macro_action_deck.blocked_actions.map((action) => (
@@ -215,6 +222,15 @@ export function PerformanceConsole({
               <span>
                 {move.chapter} / {move.mutation_amount_percent}% / {move.risk_status}
               </span>
+              <small>
+                pads {move.target_pads.join(', ')} / {move.operator_action} / recover{' '}
+                {move.recovery_action}
+              </small>
+              {move.dry_run_only ? (
+                <div className="live-chip-row">
+                  <span className="live-chip">dry-run only</span>
+                </div>
+              ) : null}
             </article>
           ))}
           {model.style_queue.journal_cards.map((entry) => (

@@ -2,7 +2,26 @@ import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { PerformanceConsole } from '../../src/cockpit/PerformanceConsole';
+import type { LiveGuiPerformanceConsoleModelDict } from '../../src/types/live_gui_protocol';
 import { performanceConsoleModel } from './performanceConsoleFixture';
+
+function performanceConsoleModelWithActiveDryRunBoundaries(): LiveGuiPerformanceConsoleModelDict {
+  return {
+    ...performanceConsoleModel,
+    macro_action_deck: {
+      ...performanceConsoleModel.macro_action_deck,
+      cards: performanceConsoleModel.macro_action_deck.cards.map((card) =>
+        card.macro_key === 'hard-groove' ? { ...card, dry_run_only: false } : card,
+      ),
+    },
+    style_queue: {
+      ...performanceConsoleModel.style_queue,
+      queue_cards: performanceConsoleModel.style_queue.queue_cards.map((move) =>
+        move.queue_key === 'queue-dark-01' ? { ...move, dry_run_only: false } : move,
+      ),
+    },
+  };
+}
 
 describe('PerformanceConsole', () => {
   it('renders the passive console packet without enabling hardware actions', () => {
@@ -42,10 +61,18 @@ describe('PerformanceConsole', () => {
     expect(macroActions).toHaveTextContent('fire macro from Cockpit console');
     expect(within(macroActions).getAllByRole('button', { name: /prepare/i })[0]).toBeDisabled();
     expect(within(macroActions).getAllByRole('button', { name: /send/i })[0]).toBeDisabled();
+    const hardGrooveMacro = within(macroActions).getByTestId('macro-action-hard-groove');
+    expect(hardGrooveMacro).toHaveTextContent('recover home');
+    expect(hardGrooveMacro).toHaveTextContent('hardware blocked');
+    expect(hardGrooveMacro).toHaveTextContent('dry-run only');
 
     const styleQueue = screen.getByTestId('performance-console-style-queue');
     expect(styleQueue).toHaveTextContent('Dark Hypnotic');
     expect(styleQueue).toHaveTextContent('snap-06');
+    expect(styleQueue).toHaveTextContent('preview');
+    expect(styleQueue).toHaveTextContent('recover home');
+    expect(styleQueue).toHaveTextContent('pads 1, 2, 3, 4');
+    expect(styleQueue).toHaveTextContent('dry-run only');
 
     expect(screen.getByTestId('performance-console-snapshot-history')).toHaveTextContent(
       'console-snap-03',
@@ -60,5 +87,18 @@ describe('PerformanceConsole', () => {
     expect(within(blocked).getByText('send MIDI from snapshot history')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
     expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+  });
+
+  it('omits dry-run-only labels when a macro or queued move is not dry-run-only', () => {
+    render(<PerformanceConsole model={performanceConsoleModelWithActiveDryRunBoundaries()} />);
+
+    const macroActions = screen.getByTestId('performance-console-macro-actions');
+    const hardGrooveMacro = within(macroActions).getByTestId('macro-action-hard-groove');
+    expect(hardGrooveMacro).not.toHaveTextContent('dry-run only');
+
+    const styleQueue = screen.getByTestId('performance-console-style-queue');
+    expect(styleQueue).toHaveTextContent('preview');
+    expect(styleQueue).toHaveTextContent('recover home');
+    expect(styleQueue).not.toHaveTextContent('dry-run only');
   });
 });
