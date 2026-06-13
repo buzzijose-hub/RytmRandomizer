@@ -1,9 +1,15 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-12. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-06-13. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-06-13: Cockpit style-crate browser follow-up prepared after the
+  performance action-readiness merge. The passive performance console now
+  renders the existing Style Crates cards before the queued moves and journal,
+  including crate summary, energy/risk, target pads, tags, operator action, and
+  disabled staging controls. This is UI visibility only: no WebSocket payload,
+  sidecar command, queue dispatch, MIDI port, or hardware send behavior changed.
 - 2026-06-13: Cockpit performance action-readiness follow-up prepared after
   the packet source badge merge. The passive performance console now makes
   macro-card and style-queue recovery paths, dry-run-only state, target pads,
