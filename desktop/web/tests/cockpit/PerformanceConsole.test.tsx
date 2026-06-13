@@ -67,6 +67,15 @@ describe('PerformanceConsole', () => {
     expect(hardGrooveMacro).toHaveTextContent('dry-run only');
 
     const styleQueue = screen.getByTestId('performance-console-style-queue');
+    expect(styleQueue).toHaveTextContent('Style Crates');
+    const darkHypnoticCrate = within(styleQueue).getByTestId('style-crate-dark-hypnotic');
+    expect(darkHypnoticCrate).toHaveTextContent('rolling pressure');
+    expect(darkHypnoticCrate).toHaveTextContent('energy 7');
+    expect(darkHypnoticCrate).toHaveTextContent('risk 4');
+    expect(darkHypnoticCrate).toHaveTextContent('pads 1, 2, 3, 4');
+    expect(darkHypnoticCrate).toHaveTextContent('dark');
+    expect(darkHypnoticCrate).toHaveTextContent('hypnotic');
+    expect(within(darkHypnoticCrate).getByRole('button', { name: /stage dark hypnotic/i })).toBeDisabled();
     expect(styleQueue).toHaveTextContent('Dark Hypnotic');
     expect(styleQueue).toHaveTextContent('snap-06');
     expect(styleQueue).toHaveTextContent('preview');

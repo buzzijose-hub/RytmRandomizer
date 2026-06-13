@@ -215,6 +215,38 @@ export function PerformanceConsole({
           <h2 id="console-style-queue-title">Style Queue / Journal</h2>
           <span>{model.style_queue.deck_status}</span>
         </header>
+        <h3 className="performance-console-subheading">Style Crates</h3>
+        <div className="performance-console-list" aria-label="Style crates">
+          {model.style_queue.crate_cards.map((crate) => (
+            <article key={crate.crate_key} data-testid={`style-crate-${crate.crate_key}`}>
+              <strong>{crate.crate_name}</strong>
+              <span>{crate.summary}</span>
+              <small>
+                energy {crate.energy} / risk {crate.risk} / {crate.risk_status} / pads{' '}
+                {crate.target_pads.join(', ')}
+              </small>
+              <small>
+                primary move {crate.primary_move_name} / {crate.operator_action}
+              </small>
+              <div className="live-chip-row">
+                {crate.tags.map((tag) => (
+                  <span key={`${crate.crate_key}-${tag}`} className="live-chip">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="live-readiness-action"
+                disabled
+                title="Style crate staging remains passive in this console packet."
+              >
+                Stage {crate.primary_move_name}
+              </button>
+            </article>
+          ))}
+        </div>
+        <h3 className="performance-console-subheading">Queued Moves</h3>
         <div className="performance-console-list">
           {model.style_queue.queue_cards.map((move) => (
             <article key={move.queue_key}>
@@ -233,6 +265,9 @@ export function PerformanceConsole({
               ) : null}
             </article>
           ))}
+        </div>
+        <h3 className="performance-console-subheading">Mutation Journal</h3>
+        <div className="performance-console-list">
           {model.style_queue.journal_cards.map((entry) => (
             <article key={entry.journal_key}>
               <strong>{entry.name}</strong>
