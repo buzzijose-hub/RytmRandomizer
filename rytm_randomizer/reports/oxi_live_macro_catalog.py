@@ -149,7 +149,9 @@ def _sorted_family_allowlists(
     return {key: sorted(mapping[key]) for key in sorted(mapping)}
 
 
-def _pad_policy_payload(policy: SnapshotMacroPadPolicy) -> MacroPadPolicyPayload:
+def _snapshot_macro_pad_policy_payload(
+    policy: SnapshotMacroPadPolicy,
+) -> MacroPadPolicyPayload:
     return {
         "amount": policy.amount,
         "density": policy.density,
@@ -162,7 +164,7 @@ def _pad_policy_payload(policy: SnapshotMacroPadPolicy) -> MacroPadPolicyPayload
 def _pad_policies_payload(
     policies: Mapping[int, SnapshotMacroPadPolicy],
 ) -> dict[int, MacroPadPolicyPayload]:
-    return {pad: _pad_policy_payload(policies[pad]) for pad in sorted(policies)}
+    return {pad: _snapshot_macro_pad_policy_payload(policies[pad]) for pad in sorted(policies)}
 
 
 def _format_mapping(mapping: Mapping[str, str]) -> str:
