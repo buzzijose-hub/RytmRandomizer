@@ -25,6 +25,10 @@ class OxiLiveMacroCard:
 
     name: str
     label: str
+    style_crate: str
+    energy: int
+    risk: int
+    tags: tuple[str, ...]
     risk_label: str
     affected_pads: tuple[int, ...]
     locked_pads: tuple[int, ...]
@@ -185,6 +189,10 @@ def build_oxi_live_macro_catalog_report() -> OxiLiveMacroCatalogReport:
         OxiLiveMacroCard(
             name=macro.name,
             label=macro.label,
+            style_crate=macro.style_crate,
+            energy=macro.energy,
+            risk=macro.risk,
+            tags=macro.tags,
             risk_label=macro.risk_label,
             affected_pads=_affected_pads(macro.pad_policies),
             locked_pads=tuple(sorted(macro.locked_pads)),
@@ -219,8 +227,10 @@ def format_oxi_live_macro_catalog_report(
         lines.append(
             f"- {card.name} | {card.risk_label} | " f"recovery={card.recovery_action} | pads={pads}"
         )
+        lines.append(f"  crate={card.style_crate} | energy={card.energy} | risk={card.risk}")
         locked_pads = ", ".join(str(pad) for pad in card.locked_pads) or "none"
         lines.append(f"  locked pads: {locked_pads}")
+        lines.append(f"  tags: {', '.join(card.tags)}")
         lines.append(f"  global lanes: {_format_mapping(card.lane_policies)}")
         for pad, policy in card.pad_policies.items():
             lines.append(_format_pad_policy(pad, policy))
@@ -255,6 +265,10 @@ def build_oxi_live_macro_catalog_payload() -> dict[str, object]:
             {
                 "name": card.name,
                 "label": card.label,
+                "style_crate": card.style_crate,
+                "energy": card.energy,
+                "risk": card.risk,
+                "tags": list(card.tags),
                 "risk_label": card.risk_label,
                 "affected_pads": list(card.affected_pads),
                 "locked_pads": list(card.locked_pads),
