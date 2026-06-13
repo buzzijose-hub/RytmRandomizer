@@ -79,6 +79,14 @@ def test_performance_console_model_composes_live_cockpit_sections() -> None:
     assert len(model.style_queue["queue_cards"]) >= 3
     assert len(model.style_queue["journal_cards"]) >= 1
 
+    analyzer_panel = model.analyzer_panel
+    assert analyzer_panel["panel_model_version"] == "live-gui-analyzer-panel-model-v1"
+    assert analyzer_panel["panel_status"] == "empty"
+    assert analyzer_panel["panel_mode"] == "split"
+    assert analyzer_panel["reference_label"] == "No reference loaded"
+    assert analyzer_panel["required_actions"] == ["load-reference"]
+    assert analyzer_panel["controls"]["preview"]["enabled"] is False
+
     assert model.snapshot_history["session_label"] == "Warehouse arc"
     assert model.snapshot_history["entry_count"] == 3
     assert model.snapshot_history["current_id"] == "console-snap-03"
@@ -89,6 +97,7 @@ def test_performance_console_model_composes_live_cockpit_sections() -> None:
 
     assert "open_midi_port_without_arm" in model.blocked_actions
     assert "a4_outbound_macro_send" in model.blocked_actions
+    assert "record-audio" in model.blocked_actions
     assert "dispatch queued command from model" in model.blocked_actions
     assert "send MIDI from snapshot history" in model.blocked_actions
     assert "no MIDI sending" in model.safety_lines
@@ -147,6 +156,8 @@ def test_performance_console_payload_is_json_safe_and_passive() -> None:
     assert model["macro_action_deck"]["cards"][1]["macro_key"] == "hard-groove"
     assert model["macro_action_deck"]["cards"][1]["shell_command"] == "hard-groove"
     assert model["performance_flow"]["analog_four_set_plan"]["step_count"] == 5
+    assert model["analyzer_panel"]["panel_status"] == "empty"
+    assert model["analyzer_panel"]["required_actions"] == ["load-reference"]
     assert model["snapshot_history"]["entries"][0]["snapshot_id"] == "console-snap-01"
     assert payload["safety"][0] == "passive/read-only"
 
@@ -181,6 +192,9 @@ def test_performance_console_report_is_operator_readable() -> None:
     assert "A4 set plan:" in lines
     assert "- set: warehouse-arc" in lines
     assert "Style queue and journal:" in lines
+    assert "Analyzer panel:" in lines
+    assert "- analyzer status: empty" in lines
+    assert "- analyzer required actions: load-reference" in lines
     assert "Snapshot history:" in lines
     assert "- current: console-snap-03" in lines
     assert "Command queue:" in lines
@@ -205,6 +219,7 @@ def test_performance_console_cli_text_and_json_modes(capsys: pytest.CaptureFixtu
     model = payload["live_gui_performance_console"]
     assert model["console_status"] == "mock-safe"
     assert model["device_inventory"]["device_count"] == 2
+    assert model["analyzer_panel"]["panel_mode"] == "split"
     assert model["performance_flow"]["analog_four_set_plan"]["set_name"] == "warehouse-arc"
 
 

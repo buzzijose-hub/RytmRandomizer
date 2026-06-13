@@ -94,6 +94,15 @@ describe('PerformanceConsole', () => {
     expect(styleQueue).toHaveTextContent('pads 1, 3, 11');
     expect(styleQueue).toHaveTextContent('dry-run only');
 
+    const analyzerPanel = screen.getByTestId('performance-console-analyzer-panel');
+    expect(analyzerPanel).toHaveTextContent('Analyzer (Post-Mutation Preview)');
+    expect(analyzerPanel).toHaveTextContent('empty');
+    expect(analyzerPanel).toHaveTextContent('No reference loaded');
+    expect(analyzerPanel).toHaveTextContent('load-reference');
+    expect(within(analyzerPanel).getByRole('button', { name: /preview analyzer/i })).toBeDisabled();
+    expect(within(analyzerPanel).getByRole('button', { name: /dry run analyzer/i })).toBeDisabled();
+    expect(within(analyzerPanel).getByText('record-audio')).toBeInTheDocument();
+
     expect(screen.getByTestId('performance-console-snapshot-history')).toHaveTextContent(
       'console-snap-03',
     );

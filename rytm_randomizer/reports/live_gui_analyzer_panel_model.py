@@ -135,7 +135,7 @@ class LiveGuiAnalyzerPanelModelDict(TypedDict):
     tempo_stability_percent: int
     waveform_bins: tuple[LiveGuiAnalyzerWaveformBinDict, ...]
     spectrum_bands: tuple[LiveGuiAnalyzerSpectrumBandDict, ...]
-    controls: tuple[LiveGuiAnalyzerPanelControlDict, ...]
+    controls: Mapping[str, LiveGuiAnalyzerPanelControlDict]
     required_actions: tuple[str, ...]
     blocked_actions: tuple[str, ...]
     safety: Mapping[str, bool]
