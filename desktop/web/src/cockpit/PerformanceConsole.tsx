@@ -60,6 +60,8 @@ export function PerformanceConsole({
   packetSource = 'passive packet',
 }: PerformanceConsoleProps): JSX.Element {
   const a4SetPlan = model.performance_flow.analog_four_set_plan;
+  const a4ReviewSurface = model.analog_four_review_surface;
+  const a4ReviewFocus = a4ReviewSurface.review_focus;
   const macroPath = [a4SetPlan.current_macro, ...a4SetPlan.up_next_macros].join(' -> ');
 
   return (
@@ -167,6 +169,112 @@ export function PerformanceConsole({
             ))}
           </div>
         </article>
+      </section>
+
+      <section
+        className="performance-console-surface performance-console-wide"
+        data-testid="performance-console-a4-review-surface"
+        aria-labelledby="console-a4-review-surface-title"
+      >
+        <header className="performance-console-section-header">
+          <h2 id="console-a4-review-surface-title">{a4ReviewSurface.title}</h2>
+          <span>{a4ReviewSurface.surface_status}</span>
+        </header>
+        <p className="panel-meta">
+          {a4ReviewSurface.set_name} / focus {a4ReviewFocus.macro_name} /{' '}
+          {a4ReviewFocus.readiness}
+        </p>
+        <small>{a4ReviewSurface.preflight_command}</small>
+
+        <h3 className="performance-console-subheading">A4 Set Review Path</h3>
+        <div className="performance-console-list">
+          {a4ReviewSurface.steps.map((step) => (
+            <article key={`${step.order}-${step.macro_name}`}>
+              <strong>{step.macro_label}</strong>
+              <span>
+                {step.macro_name} / seed {step.seed} / intensity {step.intensity} / energy{' '}
+                {step.energy}
+              </span>
+              <small>{step.summary}</small>
+              <small>
+                {step.readiness} / ready {step.ready_count} / review {step.review_count} /
+                blocked {step.blocked_count}
+              </small>
+              <small>{step.validation_command}</small>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Readiness Events</h3>
+        <div className="performance-console-list">
+          {a4ReviewSurface.readiness_events.map((event) => (
+            <article key={`${event.track}-${event.parameter}-${event.value}`}>
+              <strong>
+                Track {event.track} / {event.parameter}
+              </strong>
+              <span>
+                {event.role} / {event.lane} / CC{event.control} to {event.value}
+              </span>
+              <small>{event.status}</small>
+              <small>{event.validation_command}</small>
+              <small>{event.reason}</small>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Validation Workflow</h3>
+        <div className="performance-console-list">
+          <article>
+            <strong>Preflight</strong>
+            <span>{a4ReviewSurface.preflight_command}</span>
+            {a4ReviewSurface.validation_steps.map((step) => (
+              <small key={step}>{step}</small>
+            ))}
+          </article>
+          <article>
+            <strong>Promotion Gates</strong>
+            {a4ReviewSurface.promotion_gates.map((gate) => (
+              <small key={gate}>{gate}</small>
+            ))}
+          </article>
+          <article>
+            <strong>Recovery Notes</strong>
+            {a4ReviewSurface.recovery_notes.map((note) => (
+              <small key={note}>{note}</small>
+            ))}
+          </article>
+        </div>
+
+        <div className="live-chip-row">
+          {a4ReviewSurface.blocked_actions.map((action) => (
+            <span key={action} className="live-chip live-chip-blocked">
+              {action}
+            </span>
+          ))}
+          {a4ReviewSurface.safety_lines.map((line) => (
+            <span key={line} className="live-chip">
+              {line}
+            </span>
+          ))}
+        </div>
+        <div className="performance-console-macro-actions">
+          <button
+            type="button"
+            className="live-readiness-action"
+            disabled
+            title="A4 macro validation is a review-only Cockpit surface."
+          >
+            Review A4 {a4ReviewFocus.macro_name}
+          </button>
+          <button
+            type="button"
+            className="live-readiness-action live-readiness-action-locked"
+            disabled
+            title="A4 full macro send remains blocked until hardware validation promotes it."
+          >
+            Promote A4 Macro
+          </button>
+        </div>
       </section>
 
       <section

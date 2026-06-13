@@ -66,6 +66,12 @@ The passive `analog-four-oxi-macro-set-planner-report` command sequences those
 macro/readiness cards into a current/up-next set plan for future Cockpit queue
 work, including the report-owned replay command, without adding A4 playback,
 automation, port opening, or MIDI sending.
+The passive `live-gui-performance-console-report` also composes that set
+planner with the A4 readiness payload into a Cockpit A4 Review Surface: the UI
+can show the `warehouse-arc` sequence, the next macro's readiness rows,
+soft-capture preflight, validation steps, recovery notes, promotion gates, and
+blocked full-SEND/unattended-playback actions while every A4 Review/Promote
+control remains disabled.
 
 **Sidecar security guarantees** (post CODE_REVIEW.md sweep, 2026-05):
 
