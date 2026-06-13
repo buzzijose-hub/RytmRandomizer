@@ -51,6 +51,10 @@ class SnapshotLiveMacroSpec:
     recovery_action: str
     risk_label: MacroRiskLabel
     summary: str
+    style_crate: str = "Unassigned"
+    energy: int = 1
+    risk: int = 1
+    tags: tuple[str, ...] = ()
 
 
 _AMP_FX_FAMILIES: Final[frozenset[str]] = frozenset({"delay", "drive", "reverb"})
@@ -102,6 +106,10 @@ def _macro(
     pad_policies: Mapping[int, SnapshotMacroPadPolicy],
     risk_label: MacroRiskLabel,
     summary: str,
+    style_crate: str,
+    energy: int,
+    risk: int,
+    tags: tuple[str, ...],
 ) -> SnapshotLiveMacroSpec:
     return SnapshotLiveMacroSpec(
         name=name,
@@ -113,6 +121,10 @@ def _macro(
         recovery_action="home",
         risk_label=risk_label,
         summary=summary,
+        style_crate=style_crate,
+        energy=energy,
+        risk=risk,
+        tags=tags,
     )
 
 
@@ -154,6 +166,10 @@ SNAPSHOT_LIVE_MACROS: Final[Mapping[str, SnapshotLiveMacroSpec]] = MappingProxyT
             lane_policies=_BASE_LIVE_LANES,
             risk_label="live-safe",
             summary="Full-kit live-safe discovery with Jose's pad 5-11 lane discipline.",
+            style_crate="Core Tools",
+            energy=5,
+            risk=2,
+            tags=("full-kit", "src-first", "live-safe", "anchor-recovery"),
             pad_policies={
                 2: _pad_policy(amount="wide", density="full", bias="looser"),
                 3: _pad_policy(amount="wide", density="full", bias="grittier"),
@@ -173,6 +189,10 @@ SNAPSHOT_LIVE_MACROS: Final[Mapping[str, SnapshotLiveMacroSpec]] = MappingProxyT
             lane_policies=_BASE_LIVE_LANES,
             risk_label="live-safe",
             summary="Dry pressure macro for OXI patterns that already carry the groove.",
+            style_crate="Hard Groove",
+            energy=7,
+            risk=3,
+            tags=("dry-pressure", "source-motion", "locked-kick"),
             pad_policies={
                 2: _pad_policy(amount="normal", density="high", bias="tighter"),
                 3: _pad_policy(amount="normal", density="high", bias="tighter"),
@@ -214,6 +234,10 @@ SNAPSHOT_LIVE_MACROS: Final[Mapping[str, SnapshotLiveMacroSpec]] = MappingProxyT
             lane_policies=_BASE_LIVE_LANES,
             risk_label="edge",
             summary="Metallic pressure and controlled grit without releasing the kick anchor.",
+            style_crate="Industrial Warehouse",
+            energy=8,
+            risk=5,
+            tags=("metallic", "grit", "pressure", "locked-kick"),
             pad_policies={
                 2: _pad_policy(amount="wide", density="full", bias="grittier"),
                 3: _pad_policy(amount="wide", density="full", bias="grittier"),
@@ -255,6 +279,10 @@ SNAPSHOT_LIVE_MACROS: Final[Mapping[str, SnapshotLiveMacroSpec]] = MappingProxyT
             lane_policies=_DUB_PRESSURE_LANES,
             risk_label="live-safe",
             summary="Darker pressure with more delay/reverb influence and small filter motion.",
+            style_crate="Dub Pressure",
+            energy=6,
+            risk=3,
+            tags=("delay", "reverb", "space", "darker"),
             pad_policies={
                 2: _pad_policy(amount="normal", density="medium", bias="darker"),
                 3: _pad_policy(amount="normal", density="medium", bias="looser"),
@@ -296,6 +324,10 @@ SNAPSHOT_LIVE_MACROS: Final[Mapping[str, SnapshotLiveMacroSpec]] = MappingProxyT
             lane_policies=_TRANSITION_LANES,
             risk_label="edge",
             summary="Set-section movement with obvious recovery through home.",
+            style_crate="Transition / Build",
+            energy=7,
+            risk=5,
+            tags=("bridge", "fill", "movement", "home-recovery"),
             pad_policies={
                 2: _pad_policy(amount="wide", density="full", bias="looser"),
                 3: _pad_policy(amount="wide", density="full", bias="grittier"),
@@ -341,6 +373,10 @@ SNAPSHOT_LIVE_MACROS: Final[Mapping[str, SnapshotLiveMacroSpec]] = MappingProxyT
             recovery_action="home",
             risk_label="live-safe",
             summary="Return the current staged plan to the captured anchor.",
+            style_crate="Home / Reset",
+            energy=1,
+            risk=1,
+            tags=("restore", "anchor", "recovery"),
         ),
     }
 )

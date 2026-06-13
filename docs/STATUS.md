@@ -4,6 +4,16 @@ Last updated: 2026-06-13. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-13: OXI live macro catalog local prep now exposes GUI-ready policy
+  metadata for the Cockpit handoff: each macro card carries locked pads, global
+  lane policies, per-pad amount/density/bias, per-pad lane overrides, and
+  section-family allowlists for SRC-first reserved-pad/tom-pad behavior. This is
+  passive report/JSON work only; it does not open MIDI ports or send hardware
+  messages.
+- 2026-06-13: OXI live macro definitions now carry Style Crate metadata for
+  Cockpit browsing and queue planning: crate name, energy, risk, and tags flow
+  through the passive macro catalog text/JSON while keeping the live snapshot
+  shell behavior unchanged.
 - 2026-06-13: Cockpit demo Style Crates catalog follow-up prepared after the
   crate-browser merge. The bundled passive Performance Console fallback model
   now reuses the full default Style Crates rehearsal deck instead of a one-card

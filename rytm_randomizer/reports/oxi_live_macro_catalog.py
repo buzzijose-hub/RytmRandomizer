@@ -4,14 +4,19 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, TypeAlias
 
 from ..cli_registry import CliCommand, make_passive_report_command, register
-from ..engines.analog_rytm_snapshot_macros import SNAPSHOT_LIVE_MACROS
+from ..engines.analog_rytm_snapshot_macros import (
+    SNAPSHOT_LIVE_MACROS,
+    SnapshotMacroPadPolicy,
+)
 
 REPORT_TITLE: Final[str] = "RytmRandomizer OXI live macro catalog"
 _A4_BLOCKED_ACTIONS: Final[tuple[str, ...]] = ("A4 outbound macro send",)
 _A4_CANDIDATE_TRACKS: Final[tuple[int, ...]] = (1, 2, 3, 4)
+MacroPadPolicyValue: TypeAlias = str | None | dict[str, str] | dict[str, list[str]]
+MacroPadPolicyPayload: TypeAlias = dict[str, MacroPadPolicyValue]
 
 
 @dataclass(frozen=True)
@@ -20,8 +25,15 @@ class OxiLiveMacroCard:
 
     name: str
     label: str
+    style_crate: str
+    energy: int
+    risk: int
+    tags: tuple[str, ...]
     risk_label: str
     affected_pads: tuple[int, ...]
+    locked_pads: tuple[int, ...]
+    lane_policies: Mapping[str, str]
+    pad_policies: Mapping[int, MacroPadPolicyPayload]
     recovery_action: str
     summary: str
 
@@ -127,6 +139,51 @@ def _affected_pads(pad_policies: Mapping[int, object]) -> tuple[int, ...]:
     return tuple(pads)
 
 
+def _sorted_str_mapping(mapping: Mapping[str, str]) -> dict[str, str]:
+    return {key: mapping[key] for key in sorted(mapping)}
+
+
+def _sorted_family_allowlists(
+    mapping: Mapping[str, frozenset[str]],
+) -> dict[str, list[str]]:
+    return {key: sorted(mapping[key]) for key in sorted(mapping)}
+
+
+def _snapshot_macro_pad_policy_payload(
+    policy: SnapshotMacroPadPolicy,
+) -> MacroPadPolicyPayload:
+    return {
+        "amount": policy.amount,
+        "density": policy.density,
+        "bias": policy.bias,
+        "lane_policies": _sorted_str_mapping(policy.lane_policies),
+        "section_family_allowlists": _sorted_family_allowlists(policy.section_family_allowlists),
+    }
+
+
+def _pad_policies_payload(
+    policies: Mapping[int, SnapshotMacroPadPolicy],
+) -> dict[int, MacroPadPolicyPayload]:
+    return {pad: _snapshot_macro_pad_policy_payload(policies[pad]) for pad in sorted(policies)}
+
+
+def _format_mapping(mapping: Mapping[str, str]) -> str:
+    if not mapping:
+        return "none"
+    return ", ".join(f"{key}={mapping[key]}" for key in sorted(mapping))
+
+
+def _format_pad_policy(pad: int, policy: MacroPadPolicyPayload) -> str:
+    lanes = policy["lane_policies"]
+    lane_text = "none"
+    if isinstance(lanes, dict) and lanes:
+        lane_text = "/".join(f"{key}={lanes[key]}" for key in sorted(lanes))
+    return (
+        f"  pad {pad}: amount={policy['amount']}, "
+        f"density={policy['density']}, lanes={lane_text}"
+    )
+
+
 def build_oxi_live_macro_catalog_report() -> OxiLiveMacroCatalogReport:
     """Build the deterministic passive OXI live macro catalog report."""
 
@@ -134,8 +191,15 @@ def build_oxi_live_macro_catalog_report() -> OxiLiveMacroCatalogReport:
         OxiLiveMacroCard(
             name=macro.name,
             label=macro.label,
+            style_crate=macro.style_crate,
+            energy=macro.energy,
+            risk=macro.risk,
+            tags=macro.tags,
             risk_label=macro.risk_label,
             affected_pads=_affected_pads(macro.pad_policies),
+            locked_pads=tuple(sorted(macro.locked_pads)),
+            lane_policies=_sorted_str_mapping(macro.lane_policies),
+            pad_policies=_pad_policies_payload(macro.pad_policies),
             recovery_action=macro.recovery_action,
             summary=macro.summary,
         )
@@ -165,6 +229,13 @@ def format_oxi_live_macro_catalog_report(
         lines.append(
             f"- {card.name} | {card.risk_label} | " f"recovery={card.recovery_action} | pads={pads}"
         )
+        lines.append(f"  crate={card.style_crate} | energy={card.energy} | risk={card.risk}")
+        locked_pads = ", ".join(str(pad) for pad in card.locked_pads) or "none"
+        lines.append(f"  locked pads: {locked_pads}")
+        lines.append(f"  tags: {', '.join(card.tags)}")
+        lines.append(f"  global lanes: {_format_mapping(card.lane_policies)}")
+        for pad, policy in card.pad_policies.items():
+            lines.append(_format_pad_policy(pad, policy))
         lines.append(f"  {card.summary}")
     lines.extend(("", "Live performance flow:"))
     for step in report.performance_flow:
@@ -196,8 +267,15 @@ def build_oxi_live_macro_catalog_payload() -> dict[str, object]:
             {
                 "name": card.name,
                 "label": card.label,
+                "style_crate": card.style_crate,
+                "energy": card.energy,
+                "risk": card.risk,
+                "tags": list(card.tags),
                 "risk_label": card.risk_label,
                 "affected_pads": list(card.affected_pads),
+                "locked_pads": list(card.locked_pads),
+                "lane_policies": dict(card.lane_policies),
+                "pad_policies": {str(pad): policy for pad, policy in card.pad_policies.items()},
                 "recovery_action": card.recovery_action,
                 "summary": card.summary,
             }
