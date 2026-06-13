@@ -58,6 +58,24 @@ def test_performance_console_model_composes_live_cockpit_sections() -> None:
     assert macro_deck["cards"][0]["shell_command"] == "kit-core"
     assert macro_deck["cards"][0]["send_policy"] == "stage-review-send"
     assert macro_deck["cards"][0]["hardware_send_enabled"] is False
+    assert macro_deck["cards"][0]["style_crate"] == "Core Tools"
+    assert macro_deck["cards"][0]["energy"] == 5
+    assert macro_deck["cards"][0]["risk"] == 2
+    assert macro_deck["cards"][0]["tags"] == [
+        "full-kit",
+        "src-first",
+        "live-safe",
+        "anchor-recovery",
+    ]
+    assert macro_deck["cards"][0]["locked_pads"] == [1]
+    assert macro_deck["cards"][0]["lane_policies"] == {"fx": "micro", "lfo": "off"}
+    assert macro_deck["cards"][0]["pad_policies"]["5"] == {
+        "amount": "normal",
+        "density": "high",
+        "bias": None,
+        "lane_policies": {"filter": "off", "lfo": "off"},
+        "section_family_allowlists": {"AMP": ["delay", "drive", "reverb"]},
+    }
     assert macro_deck["cards"][1]["affected_pads"] == [
         2,
         3,
@@ -71,6 +89,8 @@ def test_performance_console_model_composes_live_cockpit_sections() -> None:
         11,
         12,
     ]
+    assert macro_deck["cards"][1]["style_crate"] == "Hard Groove"
+    assert macro_deck["cards"][2]["tags"] == ["metallic", "grit", "pressure", "locked-kick"]
     assert macro_deck["cards"][-1]["recovery_action"] == "captured-anchor"
     assert "fire macro from Cockpit console" in macro_deck["blocked_actions"]
 
@@ -155,6 +175,12 @@ def test_performance_console_payload_is_json_safe_and_passive() -> None:
     assert model["rytm_pad_surface"]["pad_count"] == 12
     assert model["macro_action_deck"]["cards"][1]["macro_key"] == "hard-groove"
     assert model["macro_action_deck"]["cards"][1]["shell_command"] == "hard-groove"
+    assert model["macro_action_deck"]["cards"][1]["style_crate"] == "Hard Groove"
+    assert model["macro_action_deck"]["cards"][1]["locked_pads"] == [1]
+    assert model["macro_action_deck"]["cards"][1]["lane_policies"] == {
+        "fx": "micro",
+        "lfo": "off",
+    }
     assert model["performance_flow"]["analog_four_set_plan"]["step_count"] == 5
     assert model["analyzer_panel"]["panel_status"] == "empty"
     assert model["analyzer_panel"]["required_actions"] == ["load-reference"]

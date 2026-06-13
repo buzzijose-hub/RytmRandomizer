@@ -4,6 +4,14 @@ Last updated: 2026-06-13. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-13: OXI macro catalog PR expanded as one larger bundled feature
+  instead of splitting the Cockpit handoff into another PR. The passive
+  Performance Console macro-action cards now consume the macro catalog's Style
+  Crate metadata and GUI-ready pad policy payloads, exposing crate, energy,
+  risk, tags, locked pads, global lane policies, and first pad-policy hints
+  while keeping Prepare/SEND controls disabled. Passive GUI/report metadata
+  only: no WebSocket command dispatch, no MIDI port opening, no hardware arm
+  path, no MIDI send, and no snapshot mutation changed.
 - 2026-06-13: OXI live macro catalog local prep now exposes GUI-ready policy
   metadata for the Cockpit handoff: each macro card carries locked pads, global
   lane policies, per-pad amount/density/bias, per-pad lane overrides, and

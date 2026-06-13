@@ -68,6 +68,7 @@ export type {
   LiveGuiPerformanceConsoleDeviceInventoryModelDict,
   LiveGuiPerformanceConsoleMacroActionCardDict,
   LiveGuiPerformanceConsoleMacroActionDeckDict,
+  LiveGuiPerformanceConsoleMacroPadPolicyDict,
   LiveGuiPerformanceConsoleModelDict,
   LiveGuiPerformanceConsoleRytmTwelvePadSurfaceModelDict,
   LiveGuiQueuedCommandDict,

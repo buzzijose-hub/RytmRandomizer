@@ -488,11 +488,18 @@ export interface LiveGuiPerformanceConsoleMacroActionCardDict {
   macro_key: string;
   order: number;
   label: string;
+  style_crate: string;
+  energy: number;
+  risk: number;
+  tags: ReadonlyArray<string>;
   shell_command: string;
   send_policy: string;
   recovery_action: string;
   risk_label: string;
   affected_pads: ReadonlyArray<number>;
+  locked_pads: ReadonlyArray<number>;
+  lane_policies: Readonly<Record<string, string>>;
+  pad_policies: Readonly<Record<string, LiveGuiPerformanceConsoleMacroPadPolicyDict>>;
   pad_count: number;
   status: string;
   hardware_action_state: string;
@@ -500,6 +507,14 @@ export interface LiveGuiPerformanceConsoleMacroActionCardDict {
   dry_run_only: boolean;
   operator_hint: string;
   test_id: string;
+}
+
+export interface LiveGuiPerformanceConsoleMacroPadPolicyDict {
+  amount: string;
+  density: string;
+  bias: string | null;
+  lane_policies: Readonly<Record<string, string>>;
+  section_family_allowlists: Readonly<Record<string, ReadonlyArray<string>>>;
 }
 
 export interface LiveGuiPerformanceConsoleMacroActionDeckDict {

@@ -62,9 +62,21 @@ describe('PerformanceConsole', () => {
     expect(within(macroActions).getAllByRole('button', { name: /prepare/i })[0]).toBeDisabled();
     expect(within(macroActions).getAllByRole('button', { name: /send/i })[0]).toBeDisabled();
     const hardGrooveMacro = within(macroActions).getByTestId('macro-action-hard-groove');
+    expect(hardGrooveMacro).toHaveTextContent('Hard Groove');
+    expect(hardGrooveMacro).toHaveTextContent('energy 7');
+    expect(hardGrooveMacro).toHaveTextContent('risk 3');
+    expect(hardGrooveMacro).toHaveTextContent('locked pads 1');
+    expect(hardGrooveMacro).toHaveTextContent('fx micro');
+    expect(hardGrooveMacro).toHaveTextContent('lfo off');
+    expect(hardGrooveMacro).toHaveTextContent('dry-pressure');
+    expect(hardGrooveMacro).toHaveTextContent('source-motion');
     expect(hardGrooveMacro).toHaveTextContent('recover home');
     expect(hardGrooveMacro).toHaveTextContent('hardware blocked');
     expect(hardGrooveMacro).toHaveTextContent('dry-run only');
+    const kitCoreMacro = within(macroActions).getByTestId('macro-action-kit-core');
+    expect(kitCoreMacro).toHaveTextContent('pad 5 amount normal');
+    expect(kitCoreMacro).toHaveTextContent('filter off');
+    expect(kitCoreMacro).toHaveTextContent('AMP delay, drive, reverb');
 
     const styleQueue = screen.getByTestId('performance-console-style-queue');
     expect(styleQueue).toHaveTextContent('Style Crates');

@@ -35,6 +35,29 @@ function toTestIdKey(value: string): string {
   return value.toLowerCase().replaceAll('_', '-').replaceAll('/', '-').replaceAll(' ', '-');
 }
 
+function formatMacroLanePolicies(policies: Readonly<Record<string, string>>): ReadonlyArray<string> {
+  return Object.entries(policies)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([lane, policy]) => `${lane} ${policy}`);
+}
+
+function firstMacroPadPolicy(
+  card: LiveGuiPerformanceConsoleMacroActionCardDict,
+): [string, LiveGuiPerformanceConsoleMacroActionCardDict['pad_policies'][string]] | null {
+  const entries = Object.entries(card.pad_policies).sort(
+    ([left], [right]) => Number(left) - Number(right),
+  );
+  return entries[0] ?? null;
+}
+
+function formatSectionAllowlists(
+  allowlists: Readonly<Record<string, ReadonlyArray<string>>>,
+): ReadonlyArray<string> {
+  return Object.entries(allowlists)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([section, families]) => `${section} ${families.join(', ')}`);
+}
+
 function orderedAnalyzerControls(
   controls: Readonly<Record<string, LiveGuiAnalyzerPanelControlDict>>,
 ): ReadonlyArray<LiveGuiAnalyzerPanelControlDict> {
@@ -179,6 +202,10 @@ export function PerformanceConsole({
               className={`performance-console-macro-card ${card.status}`}
               data-testid={card.test_id}
             >
+              {(() => {
+                const padPolicy = firstMacroPadPolicy(card);
+                return (
+                  <>
               <header>
                 <strong>{card.label}</strong>
                 <span>{card.macro_key}</span>
@@ -186,14 +213,50 @@ export function PerformanceConsole({
               <small>
                 {card.shell_command} / {card.send_policy} / {card.risk_label}
               </small>
+              <small>
+                {card.style_crate} / energy {card.energy} / risk {card.risk}
+              </small>
               <span>pads {card.affected_pads.join(', ')}</span>
+              <div className="live-chip-row" aria-label={`Macro ${card.macro_key} style tags`}>
+                {card.tags.map((tag) => (
+                  <span key={`${card.macro_key}-tag-${tag}`} className="live-chip">
+                    {tag}
+                  </span>
+                ))}
+              </div>
               <div className="live-chip-row" aria-label={`Macro ${card.macro_key} boundary`}>
+                <span className="live-chip">
+                  locked pads {card.locked_pads.join(', ') || 'none'}
+                </span>
+                {formatMacroLanePolicies(card.lane_policies).map((policy) => (
+                  <span key={`${card.macro_key}-lane-${policy}`} className="live-chip">
+                    {policy}
+                  </span>
+                ))}
                 <span className="live-chip">recover {card.recovery_action}</span>
                 <span className="live-chip live-chip-blocked">
                   hardware {card.hardware_action_state}
                 </span>
                 {card.dry_run_only ? <span className="live-chip">dry-run only</span> : null}
               </div>
+              {padPolicy ? (
+                <div className="live-chip-row" aria-label={`Macro ${card.macro_key} pad policy`}>
+                  <span className="live-chip">
+                    pad {padPolicy[0]} amount {padPolicy[1].amount}
+                  </span>
+                  <span className="live-chip">density {padPolicy[1].density}</span>
+                  {formatMacroLanePolicies(padPolicy[1].lane_policies).map((policy) => (
+                    <span key={`${card.macro_key}-pad-${padPolicy[0]}-${policy}`} className="live-chip">
+                      {policy}
+                    </span>
+                  ))}
+                  {formatSectionAllowlists(padPolicy[1].section_family_allowlists).map((policy) => (
+                    <span key={`${card.macro_key}-pad-${padPolicy[0]}-${policy}`} className="live-chip">
+                      {policy}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
               <small>{card.operator_hint}</small>
               <div className="live-chip-row">
                 {model.macro_action_deck.blocked_actions.map((action) => (
@@ -220,6 +283,9 @@ export function PerformanceConsole({
                   Send {card.macro_key}
                 </button>
               </div>
+                  </>
+                );
+              })()}
             </article>
           ))}
         </div>
