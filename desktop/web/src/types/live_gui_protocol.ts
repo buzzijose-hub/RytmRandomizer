@@ -298,7 +298,7 @@ export interface LiveGuiAnalyzerPanelModelDict {
   tempo_stability_percent: number;
   waveform_bins: ReadonlyArray<LiveGuiAnalyzerWaveformBinDict>;
   spectrum_bands: ReadonlyArray<LiveGuiAnalyzerSpectrumBandDict>;
-  controls: ReadonlyArray<LiveGuiAnalyzerPanelControlDict>;
+  controls: Readonly<Record<string, LiveGuiAnalyzerPanelControlDict>>;
   required_actions: ReadonlyArray<string>;
   blocked_actions: ReadonlyArray<string>;
   safety: Readonly<Record<string, boolean>>;
@@ -543,6 +543,7 @@ export interface LiveGuiPerformanceConsoleModelDict {
   performance_flow: LiveGuiPerformanceFlowModelDict;
   macro_action_deck: LiveGuiPerformanceConsoleMacroActionDeckDict;
   style_queue: StyleCrateRehearsalDeckDict;
+  analyzer_panel: LiveGuiAnalyzerPanelModelDict;
   snapshot_history: LiveGuiSnapshotHistoryModelDict;
   command_queue: LiveGuiCommandQueueModelDict;
   safety_checklist: LiveGuiSafetyChecklistModelDict;

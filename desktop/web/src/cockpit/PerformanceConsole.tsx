@@ -1,4 +1,5 @@
 import type {
+  LiveGuiAnalyzerPanelControlDict,
   LiveGuiDeviceInventoryCardDict,
   LiveGuiPerformanceConsoleMacroActionCardDict,
   LiveGuiPerformanceConsoleModelDict,
@@ -9,6 +10,8 @@ export interface PerformanceConsoleProps {
   model: LiveGuiPerformanceConsoleModelDict;
   packetSource?: string;
 }
+
+const ANALYZER_CONTROL_ORDER: ReadonlyArray<string> = ['preview', 'dry_run', 'arm_hardware'];
 
 function orderedDevices(
   devices: ReadonlyArray<LiveGuiDeviceInventoryCardDict>,
@@ -30,6 +33,18 @@ function orderedMacroActions(
 
 function toTestIdKey(value: string): string {
   return value.toLowerCase().replaceAll('_', '-').replaceAll('/', '-').replaceAll(' ', '-');
+}
+
+function orderedAnalyzerControls(
+  controls: Readonly<Record<string, LiveGuiAnalyzerPanelControlDict>>,
+): ReadonlyArray<LiveGuiAnalyzerPanelControlDict> {
+  const ordered = ANALYZER_CONTROL_ORDER.map((key) => controls[key]).filter(
+    (control): control is LiveGuiAnalyzerPanelControlDict => control !== undefined,
+  );
+  const remaining = Object.values(controls).filter(
+    (control) => !ANALYZER_CONTROL_ORDER.includes(control.key),
+  );
+  return [...ordered, ...remaining];
 }
 
 export function PerformanceConsole({
@@ -280,6 +295,58 @@ export function PerformanceConsole({
               <strong>{entry.name}</strong>
               <span>{entry.value_summary.join(', ')}</span>
             </article>
+          ))}
+        </div>
+      </section>
+
+      <section
+        className="performance-console-surface"
+        data-testid="performance-console-analyzer-panel"
+        aria-labelledby="console-analyzer-panel-title"
+      >
+        <header className="performance-console-section-header">
+          <h2 id="console-analyzer-panel-title">{model.analyzer_panel.title}</h2>
+          <span>
+            {model.analyzer_panel.panel_status} / {model.analyzer_panel.panel_mode}
+          </span>
+        </header>
+        <p className="panel-meta">{model.analyzer_panel.reference_label}</p>
+        <div className="performance-console-list" aria-label="Analyzer spectrum">
+          {model.analyzer_panel.spectrum_bands.map((band) => (
+            <article key={band.key}>
+              <strong>{band.label}</strong>
+              <span>
+                {band.low_hz}-{band.high_hz} Hz / {band.status}
+              </span>
+              <small>{band.value_percent}%</small>
+            </article>
+          ))}
+        </div>
+        <div className="live-chip-row" aria-label="Analyzer required actions">
+          {model.analyzer_panel.required_actions.map((action) => (
+            <span key={action} className="live-chip">
+              {action}
+            </span>
+          ))}
+        </div>
+        <div className="live-chip-row" aria-label="Analyzer blocked actions">
+          {model.analyzer_panel.blocked_actions.map((action) => (
+            <span key={action} className="live-chip live-chip-blocked">
+              {action}
+            </span>
+          ))}
+        </div>
+        <div className="performance-console-macro-actions">
+          {orderedAnalyzerControls(model.analyzer_panel.controls).map((control) => (
+            <button
+              key={control.key}
+              type="button"
+              className="live-readiness-action"
+              disabled={!control.enabled}
+              title={control.status}
+            >
+              {control.label} analyzer
+            </button>
           ))}
         </div>
       </section>

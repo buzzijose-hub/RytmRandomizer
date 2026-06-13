@@ -414,11 +414,11 @@ export const DEFAULT_LIVE_READINESS_MODEL: LiveReadinessModel = {
       band('high', 'High', 2500, 12000, 0, 'empty'),
       band('noise', 'Noise', 12000, 20000, 0, 'empty'),
     ],
-    controls: [
-      analyzerControl('preview', 'Preview', false, 'waiting-for-reference'),
-      analyzerControl('dry_run', 'Dry Run', false, 'waiting-for-reference'),
-      analyzerControl('arm_hardware', 'Arm Hardware', false, 'locked'),
-    ],
+    controls: {
+      preview: analyzerControl('preview', 'Preview', false, 'waiting-for-reference'),
+      dry_run: analyzerControl('dry_run', 'Dry Run', false, 'waiting-for-reference'),
+      arm_hardware: analyzerControl('arm_hardware', 'Arm Hardware', false, 'locked'),
+    },
     required_actions: ['load-reference'],
     blocked_actions: BLOCKED_ACTIONS,
     safety: {

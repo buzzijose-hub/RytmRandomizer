@@ -14,6 +14,14 @@ Last updated: 2026-06-13. This file is a hand-authored snapshot and is meant to 
   values for crate and queue cards are normalized for stable coverage. Demo
   data and rendering only: no WebSocket payload, sidecar command, queue
   dispatch, MIDI port, hardware arm path, or MIDI send behavior changed.
+- 2026-06-13: Cockpit performance console analyzer handoff prepared locally
+  after the Style Crates catalog merge. The passive performance console model
+  now composes the existing analyzer panel contract, folds analyzer blocked
+  actions into the console safety packet, exposes the analyzer section in
+  deterministic text/JSON, and renders a locked passive analyzer panel beside
+  the reusable full Style Crates rehearsal deck. This remains mock-safe: no
+  audio analysis is invoked, no files are read or written, no GUI sidecar is
+  launched by the report, no MIDI ports are opened, and no MIDI is sent.
 - 2026-06-13: Cockpit style-crate browser follow-up prepared after the
   performance action-readiness merge. The passive performance console now
   renders the existing Style Crates cards before the queued moves and journal,

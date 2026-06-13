@@ -14,6 +14,10 @@ from .live_gui_12_pad_surface_model import (
     build_live_gui_12_pad_surface_model,
     live_gui_12_pad_surface_model_payload,
 )
+from .live_gui_analyzer_panel_model import (
+    build_live_gui_analyzer_panel_model,
+    to_live_gui_analyzer_panel_model_json,
+)
 from .live_gui_command_queue_model import (
     build_live_gui_command_queue_model,
     to_live_gui_command_queue_model_json,
@@ -104,6 +108,7 @@ class LiveGuiPerformanceConsoleModel:
     performance_flow: dict[str, object]
     macro_action_deck: dict[str, object]
     style_queue: dict[str, object]
+    analyzer_panel: dict[str, object]
     snapshot_history: dict[str, object]
     command_queue: dict[str, object]
     safety_checklist: dict[str, object]
@@ -126,6 +131,7 @@ class LiveGuiPerformanceConsoleModelDict(TypedDict):
     performance_flow: dict[str, object]
     macro_action_deck: dict[str, object]
     style_queue: dict[str, object]
+    analyzer_panel: dict[str, object]
     snapshot_history: dict[str, object]
     command_queue: dict[str, object]
     safety_checklist: dict[str, object]
@@ -324,6 +330,7 @@ def _console_id(
     performance_flow: dict[str, object],
     macro_action_deck: dict[str, object],
     style_queue: dict[str, object],
+    analyzer_panel: dict[str, object],
     snapshot_history: dict[str, object],
     command_queue: dict[str, object],
     safety_checklist: dict[str, object],
@@ -337,6 +344,7 @@ def _console_id(
             str(performance_flow.get("flow_id", "")),
             str(macro_action_deck.get("deck_id", "")),
             str(style_queue.get("deck_id", "")),
+            str(analyzer_panel.get("panel_id", "")),
             str(snapshot_history.get("snapshot_history_id", "")),
             str(command_queue.get("command_queue_id", "")),
             str(safety_checklist.get("safety_checklist_id", "")),
@@ -366,6 +374,9 @@ def build_live_gui_performance_console_model(
     style_queue = to_style_crate_rehearsal_deck_json(build_style_crate_rehearsal_deck())[
         "style_crate_rehearsal_deck"
     ]
+    analyzer_panel = to_live_gui_analyzer_panel_model_json(build_live_gui_analyzer_panel_model())[
+        "live_gui_analyzer_panel"
+    ]
     snapshot_history = to_live_gui_snapshot_history_model_json(
         build_live_gui_snapshot_history_model(
             history,
@@ -386,6 +397,7 @@ def build_live_gui_performance_console_model(
         tuple(performance_flow["blocked_actions"]),
         _tuple_from_payload(macro_action_deck, "blocked_actions"),
         tuple(style_queue["blocked_actions"]),
+        tuple(analyzer_panel["blocked_actions"]),
         tuple(snapshot_history["blocked_actions"]),
         tuple(command_queue["blocked_actions"]),
         tuple(safety_checklist["blocked_actions"]),
@@ -410,6 +422,7 @@ def build_live_gui_performance_console_model(
             performance_flow=performance_flow,
             macro_action_deck=macro_action_deck,
             style_queue=style_queue,
+            analyzer_panel=analyzer_panel,
             snapshot_history=snapshot_history,
             command_queue=command_queue,
             safety_checklist=safety_checklist,
@@ -422,6 +435,7 @@ def build_live_gui_performance_console_model(
         performance_flow=performance_flow,
         macro_action_deck=macro_action_deck,
         style_queue=style_queue,
+        analyzer_panel=analyzer_panel,
         snapshot_history=snapshot_history,
         command_queue=command_queue,
         safety_checklist=safety_checklist,
@@ -450,6 +464,7 @@ def live_gui_performance_console_model_payload(
             "performance_flow": source.performance_flow,
             "macro_action_deck": source.macro_action_deck,
             "style_queue": source.style_queue,
+            "analyzer_panel": source.analyzer_panel,
             "snapshot_history": source.snapshot_history,
             "command_queue": source.command_queue,
             "safety_checklist": source.safety_checklist,
@@ -503,6 +518,14 @@ def _format_console_body(model: LiveGuiPerformanceConsoleModel) -> list[str]:
         f"- crates: {len(model.style_queue['crate_cards'])}",
         f"- queued moves: {len(model.style_queue['queue_cards'])}",
         f"- journal entries: {len(model.style_queue['journal_cards'])}",
+        "Analyzer panel:",
+        f"- analyzer status: {model.analyzer_panel['panel_status']}",
+        f"- analyzer mode: {model.analyzer_panel['panel_mode']}",
+        f"- analyzer reference: {model.analyzer_panel['reference_label']}",
+        (
+            "- analyzer required actions: "
+            f"{', '.join(model.analyzer_panel['required_actions']) or 'none'}"
+        ),
         "Snapshot history:",
         f"- current: {model.snapshot_history['current_id']}",
         f"- entries: {model.snapshot_history['entry_count']}",
