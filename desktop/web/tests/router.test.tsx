@@ -56,6 +56,7 @@ describe('App hash router', () => {
     render(<App client={fake.asClient()} performanceConsole={performanceConsoleModel} />);
 
     expect(screen.getByTestId('performance-console')).toBeInTheDocument();
+    expect(screen.getByLabelText('Console safety state')).toHaveTextContent('injected packet');
     expect(screen.queryByText(/Connecting/)).not.toBeInTheDocument();
     expect(screen.queryByTestId('cockpit-root')).not.toBeInTheDocument();
     expect(screen.queryByTestId('wizard-root')).not.toBeInTheDocument();
@@ -68,6 +69,7 @@ describe('App hash router', () => {
     render(<App client={fake.asClient()} performanceConsole={performanceConsoleModel} />);
 
     expect(screen.getByTestId('performance-console')).toBeInTheDocument();
+    expect(screen.getByLabelText('Console safety state')).toHaveTextContent('injected packet');
     expect(screen.queryByText(/Connecting/)).not.toBeInTheDocument();
   });
 
@@ -78,6 +80,7 @@ describe('App hash router', () => {
     render(<App client={fake.asClient()} />);
 
     expect(screen.getByTestId('performance-console')).toBeInTheDocument();
+    expect(screen.getByLabelText('Console safety state')).toHaveTextContent('demo fallback');
     expect(screen.getByText('RytmRandomizer Cockpit Performance Console')).toBeInTheDocument();
     expect(screen.queryByText(/Connecting/)).not.toBeInTheDocument();
     expect(screen.queryByTestId('cockpit-root')).not.toBeInTheDocument();
@@ -133,6 +136,7 @@ describe('App hash router', () => {
     render(<App client={fake.asClient()} />);
 
     expect(screen.getByTestId('performance-console')).toBeInTheDocument();
+    expect(screen.getByLabelText('Console safety state')).toHaveTextContent('live websocket');
     expect(screen.getByText('Live WS packet')).toBeInTheDocument();
     expect(screen.queryByText('Warehouse arc')).not.toBeInTheDocument();
     expect(screen.queryByText(/Connecting/)).not.toBeInTheDocument();
@@ -155,6 +159,7 @@ describe('App hash router', () => {
     render(<App client={fake.asClient()} performanceConsole={injectedModel} />);
 
     expect(screen.getByTestId('performance-console')).toBeInTheDocument();
+    expect(screen.getByLabelText('Console safety state')).toHaveTextContent('injected packet');
     expect(screen.getByText('Injected packet')).toBeInTheDocument();
     expect(screen.queryByText('Live WS packet')).not.toBeInTheDocument();
   });
