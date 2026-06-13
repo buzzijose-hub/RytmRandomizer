@@ -14,6 +14,36 @@ function performanceConsoleModelWithActiveDryRunBoundaries(): LiveGuiPerformance
         card.macro_key === 'hard-groove' ? { ...card, dry_run_only: false } : card,
       ),
     },
+    rytm_lane_policy_matrix: {
+      ...performanceConsoleModel.rytm_lane_policy_matrix,
+      macro_rows: performanceConsoleModel.rytm_lane_policy_matrix.macro_rows.map((row) =>
+        row.macro_key === 'hard-groove'
+          ? {
+              ...row,
+              pad_policy_cards: {
+                ...row.pad_policy_cards,
+                '10': {
+                  amount: null,
+                  density: null,
+                  bias: null,
+                  lane_policies: {},
+                  section_family_allowlists: {},
+                },
+                '11': {
+                  amount: 'normal',
+                  density: 'medium',
+                  bias: 'brighter',
+                  lane_policies: {},
+                  section_family_allowlists: {
+                    SRC: ['tune'],
+                    AMP: ['overdrive'],
+                  },
+                },
+              },
+            }
+          : row,
+      ),
+    },
     style_queue: {
       ...performanceConsoleModel.style_queue,
       queue_cards: performanceConsoleModel.style_queue.queue_cards.map((move) =>
@@ -46,6 +76,27 @@ describe('PerformanceConsole', () => {
     expect(screen.getAllByTestId(/performance-console-pad-/)).toHaveLength(12);
     expect(screen.getByTestId('performance-console-pad-11')).toHaveTextContent('SY Raw');
     expect(screen.getByTestId('performance-console-pad-12')).toHaveTextContent('Pad 12');
+
+    const lanePolicyMatrix = screen.getByTestId('performance-console-rytm-lane-policy-matrix');
+    expect(lanePolicyMatrix).toHaveTextContent('Rytm Lane Policy Matrix');
+    expect(lanePolicyMatrix).toHaveTextContent('passive-ready');
+    expect(lanePolicyMatrix).toHaveTextContent('reserved-src-fx');
+    expect(lanePolicyMatrix).toHaveTextContent('pads 5, 9, 10, 11');
+    expect(lanePolicyMatrix).toHaveTextContent('SRC-first');
+    expect(lanePolicyMatrix).toHaveTextContent('filter=off');
+    expect(lanePolicyMatrix).toHaveTextContent('lfo=off');
+    expect(lanePolicyMatrix).toHaveTextContent('tom/source');
+    expect(lanePolicyMatrix).toHaveTextContent('pad-12-supported');
+    expect(lanePolicyMatrix).toHaveTextContent('hard-groove');
+    expect(lanePolicyMatrix).toHaveTextContent('Hard Groove');
+    expect(lanePolicyMatrix).toHaveTextContent('AMP: delay, overdrive, reverb');
+    expect(lanePolicyMatrix).toHaveTextContent('dispatch Rytm lane policy from Cockpit console');
+    expect(
+      within(lanePolicyMatrix).getByRole('button', { name: /apply rytm lane policy/i }),
+    ).toBeDisabled();
+    expect(
+      within(lanePolicyMatrix).getByRole('button', { name: /send rytm policy/i }),
+    ).toBeDisabled();
 
     const flow = screen.getByTestId('performance-console-flow');
     expect(flow).toHaveTextContent('capture-anchor');
@@ -160,6 +211,15 @@ describe('PerformanceConsole', () => {
     const macroActions = screen.getByTestId('performance-console-macro-actions');
     const hardGrooveMacro = within(macroActions).getByTestId('macro-action-hard-groove');
     expect(hardGrooveMacro).not.toHaveTextContent('dry-run only');
+
+    const lanePolicyMatrix = screen.getByTestId('performance-console-rytm-lane-policy-matrix');
+    const hardGroovePolicy = within(lanePolicyMatrix).getByTestId('rytm-macro-policy-hard-groove');
+    expect(hardGroovePolicy).toHaveTextContent(
+      'Pad 10: amount default / density default / bias default / default lanes / all allowed families',
+    );
+    expect(hardGroovePolicy).toHaveTextContent(
+      'Pad 11: amount normal / density medium / bias brighter / default lanes / AMP: overdrive / SRC: tune',
+    );
 
     const styleQueue = screen.getByTestId('performance-console-style-queue');
     const openingMove = within(styleQueue).getByTestId('style-queue-move-queue-opening-shadow');

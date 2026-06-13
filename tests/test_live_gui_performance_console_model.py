@@ -45,6 +45,38 @@ def test_performance_console_model_composes_live_cockpit_sections() -> None:
     assert model.performance_flow["analog_four_set_plan"]["current_macro"] == "home"
     assert model.performance_flow["steps"][1]["key"] == "kit-core"
 
+    rytm_lane_policy_matrix = model.rytm_lane_policy_matrix
+    assert (
+        rytm_lane_policy_matrix["matrix_version"]
+        == "performance-console-rytm-lane-policy-matrix-v1"
+    )
+    assert rytm_lane_policy_matrix["matrix_status"] == "passive-ready"
+    assert rytm_lane_policy_matrix["source_report"] == "oxi-live-macro-catalog-report"
+    assert rytm_lane_policy_matrix["macro_count"] >= 6
+    assert rytm_lane_policy_matrix["pad_groups"][0]["pads"] == [5, 9, 10, 11]
+    assert "SRC-first" in rytm_lane_policy_matrix["pad_groups"][0]["summary"]
+    assert "filter=off" in rytm_lane_policy_matrix["pad_groups"][0]["lane_policy"]
+    assert rytm_lane_policy_matrix["pad_groups"][1]["pads"] == [6, 7, 8]
+    assert "tom/source" in rytm_lane_policy_matrix["pad_groups"][1]["summary"]
+    assert rytm_lane_policy_matrix["pad_groups"][2]["pads"] == [12]
+    hard_groove_row = rytm_lane_policy_matrix["macro_rows"][1]
+    assert hard_groove_row["macro_key"] == "hard-groove"
+    assert hard_groove_row["style_crate"] == "Hard Groove"
+    assert hard_groove_row["pad_policy_cards"]["5"]["lane_policies"]["filter"] == "off"
+    assert hard_groove_row["pad_policy_cards"]["5"]["lane_policies"]["lfo"] == "off"
+    assert hard_groove_row["pad_policy_cards"]["5"]["section_family_allowlists"]["AMP"] == [
+        "delay",
+        "overdrive",
+        "reverb",
+    ]
+    assert hard_groove_row["pad_policy_cards"]["6"]["lane_policies"]["filter"] == "micro"
+    assert hard_groove_row["pad_policy_cards"]["6"]["lane_policies"]["lfo"] == "off"
+    assert "no MIDI sending" in rytm_lane_policy_matrix["safety_lines"]
+    assert (
+        "dispatch Rytm lane policy from Cockpit console"
+        in rytm_lane_policy_matrix["blocked_actions"]
+    )
+
     a4_review_surface = model.analog_four_review_surface
     assert a4_review_surface["surface_version"] == "performance-console-a4-review-surface-v1"
     assert a4_review_surface["surface_status"] == "review-only"
@@ -222,6 +254,8 @@ def test_performance_console_payload_is_json_safe_and_passive() -> None:
     assert model["rytm_pad_surface"]["pad_count"] == 12
     assert model["macro_action_deck"]["cards"][1]["macro_key"] == "hard-groove"
     assert model["macro_action_deck"]["cards"][1]["shell_command"] == "hard-groove"
+    assert model["rytm_lane_policy_matrix"]["pad_groups"][0]["pads"] == [5, 9, 10, 11]
+    assert model["rytm_lane_policy_matrix"]["macro_rows"][1]["macro_key"] == "hard-groove"
     assert model["rehearsal_board"]["chapters"][1]["name"] == "establish-groove"
     assert model["rehearsal_board"]["pad_lane_checks"][1]["pads"] == [6, 7, 8]
     assert model["rehearsal_board"]["hardware_validation_runway"][2]["name"] == "a4-soft-capture"
@@ -257,6 +291,9 @@ def test_performance_console_report_is_operator_readable() -> None:
     assert "- analog_four_mk2 / Elektron Analog Four MKII / 4 tracks" in lines
     assert "Rytm pad surface:" in lines
     assert "- pads: 12" in lines
+    assert "Rytm lane policy matrix:" in lines
+    assert "- pad group: reserved-src-fx / pads 5, 9, 10, 11" in lines
+    assert "- macro policy: hard-groove / pads 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12" in lines
     assert "Performance flow:" in lines
     assert "- current: capture-anchor" in lines
     assert "Macro actions:" in lines
@@ -307,6 +344,7 @@ def test_performance_console_cli_text_and_json_modes(capsys: pytest.CaptureFixtu
     assert model["console_status"] == "mock-safe"
     assert model["device_inventory"]["device_count"] == 2
     assert model["analyzer_panel"]["panel_mode"] == "split"
+    assert model["rytm_lane_policy_matrix"]["matrix_status"] == "passive-ready"
     assert model["analog_four_review_surface"]["surface_status"] == "review-only"
     assert model["performance_flow"]["analog_four_set_plan"]["set_name"] == "warehouse-arc"
 

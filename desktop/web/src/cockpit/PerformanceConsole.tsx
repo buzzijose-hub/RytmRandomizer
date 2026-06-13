@@ -3,6 +3,7 @@ import type {
   LiveGuiDeviceInventoryCardDict,
   LiveGuiPerformanceConsoleMacroActionCardDict,
   LiveGuiPerformanceConsoleModelDict,
+  LiveGuiPerformanceConsoleRytmMacroPolicyRowDict,
   LiveGuiRytmPadSurfaceCardDict,
 } from '../types/live_gui_protocol';
 
@@ -31,6 +32,12 @@ function orderedMacroActions(
   return [...cards].sort((left, right) => left.order - right.order);
 }
 
+function orderedRytmMacroPolicies(
+  rows: ReadonlyArray<LiveGuiPerformanceConsoleRytmMacroPolicyRowDict>,
+): ReadonlyArray<LiveGuiPerformanceConsoleRytmMacroPolicyRowDict> {
+  return [...rows].sort((left, right) => left.order - right.order);
+}
+
 function toTestIdKey(value: string): string {
   return value.toLowerCase().replaceAll('_', '-').replaceAll('/', '-').replaceAll(' ', '-');
 }
@@ -53,6 +60,22 @@ function orderedAnalyzerControls(
     (control) => !ANALYZER_CONTROL_ORDER.includes(control.key),
   );
   return [...ordered, ...remaining];
+}
+
+function formatLanePolicies(lanes: Readonly<Record<string, string>>): string {
+  const entries = Object.entries(lanes).sort(([left], [right]) => left.localeCompare(right));
+  return entries.map(([key, value]) => `${key}=${value}`).join(', ') || 'default lanes';
+}
+
+function formatSectionAllowlists(
+  allowlists: Readonly<Record<string, ReadonlyArray<string>>>,
+): string {
+  const entries = Object.entries(allowlists).sort(([left], [right]) => left.localeCompare(right));
+  return (
+    entries
+      .map(([section, families]) => `${section}: ${[...families].sort().join(', ')}`)
+      .join(' / ') || 'all allowed families'
+  );
 }
 
 export function PerformanceConsole({
@@ -129,6 +152,89 @@ export function PerformanceConsole({
               </small>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section
+        className="performance-console-surface performance-console-wide"
+        data-testid="performance-console-rytm-lane-policy-matrix"
+        aria-labelledby="console-rytm-lane-policy-matrix-title"
+      >
+        <header className="performance-console-section-header">
+          <h2 id="console-rytm-lane-policy-matrix-title">Rytm Lane Policy Matrix</h2>
+          <span>
+            {model.rytm_lane_policy_matrix.matrix_status} /{' '}
+            {model.rytm_lane_policy_matrix.macro_count} macros
+          </span>
+        </header>
+        <p className="panel-meta">{model.rytm_lane_policy_matrix.source_report}</p>
+
+        <h3 className="performance-console-subheading">Pad Groups</h3>
+        <div className="performance-console-list">
+          {model.rytm_lane_policy_matrix.pad_groups.map((group) => (
+            <article key={group.group_key} data-testid={`rytm-lane-policy-${group.group_key}`}>
+              <strong>{group.group_key}</strong>
+              <span>pads {group.pads.join(', ')}</span>
+              <small>{group.summary}</small>
+              <small>{group.lane_policy}</small>
+              <small>{group.operator_note}</small>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Macro Policies</h3>
+        <div className="performance-console-list">
+          {orderedRytmMacroPolicies(model.rytm_lane_policy_matrix.macro_rows).map((row) => (
+            <article key={row.macro_key} data-testid={`rytm-macro-policy-${row.macro_key}`}>
+              <strong>{row.label}</strong>
+              <span>
+                {row.macro_key} / {row.style_crate} / {row.risk_label}
+              </span>
+              <small>pads {row.affected_pads.join(', ')}</small>
+              <small>{row.lane_policy_summary}</small>
+              <small>recover {row.recovery_action}</small>
+              <small>{row.summary}</small>
+              {Object.entries(row.pad_policy_cards).map(([pad, policy]) => (
+                <small key={`${row.macro_key}-pad-${pad}`}>
+                  Pad {pad}: amount {policy.amount ?? 'default'} / density{' '}
+                  {policy.density ?? 'default'} / bias {policy.bias ?? 'default'} /{' '}
+                  {formatLanePolicies(policy.lane_policies)} /{' '}
+                  {formatSectionAllowlists(policy.section_family_allowlists)}
+                </small>
+              ))}
+            </article>
+          ))}
+        </div>
+
+        <div className="live-chip-row">
+          {model.rytm_lane_policy_matrix.blocked_actions.map((action) => (
+            <span key={action} className="live-chip live-chip-blocked">
+              {action}
+            </span>
+          ))}
+          {model.rytm_lane_policy_matrix.safety_lines.map((line) => (
+            <span key={line} className="live-chip">
+              {line}
+            </span>
+          ))}
+        </div>
+        <div className="performance-console-macro-actions">
+          <button
+            type="button"
+            className="live-readiness-action"
+            disabled
+            title="Rytm lane policy dispatch remains blocked in this passive console."
+          >
+            Apply Rytm Lane Policy
+          </button>
+          <button
+            type="button"
+            className="live-readiness-action live-readiness-action-locked"
+            disabled
+            title="Real Rytm sends remain in the explicitly armed snapshot shell."
+          >
+            Send Rytm Policy
+          </button>
         </div>
       </section>
 

@@ -4,6 +4,16 @@ Last updated: 2026-06-13. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-13: Cockpit Rytm lane-policy matrix follow-up started on a clean
+  base after PR #174 merged. The passive Performance Console now carries a
+  GUI-ready Rytm Lane Policy Matrix derived from the existing OXI live macro
+  catalog, including SRC-first pad group guidance for pads 5, 9, 10, and 11,
+  tom/source guidance for pads 6-8, Pad 12 product availability, per-macro
+  style crate/risk/energy rows, per-pad lane policies, AMP allowlists surfaced
+  as overdrive/delay/reverb, blocked actions, replay command metadata, and
+  disabled Apply/Send controls. Passive metadata/UI only: no macro dispatch,
+  no sidecar command execution, no MIDI port opening, no hardware arm path, no
+  MIDI send, and no snapshot mutation.
 - 2026-06-13: Cockpit A4 review-surface follow-up started on a clean base
   after PR #173 merged. The passive Performance Console now composes the
   existing Analog Four OXI macro set planner and readiness reports into a
