@@ -74,8 +74,24 @@ describe('PerformanceConsole', () => {
     expect(rehearsalBoard).toHaveTextContent('macro hard-groove');
     expect(rehearsalBoard).toHaveTextContent('Pads 5, 9, 10, 11: SRC stays important');
     expect(rehearsalBoard).toHaveTextContent('Pads 6-8: tom/source movement');
+    expect(rehearsalBoard).toHaveTextContent('Studio Workflow');
+    expect(rehearsalBoard).toHaveTextContent(
+      'Capture the current Rytm kit with KIT SysEx before changing anything.',
+    );
+    expect(rehearsalBoard).toHaveTextContent('Macro Checkpoints');
+    expect(rehearsalBoard).toHaveTextContent('Hard Groove');
+    expect(rehearsalBoard).toHaveTextContent('capture anchor first');
+    expect(rehearsalBoard).toHaveTextContent('recover with home');
+    expect(rehearsalBoard).toHaveTextContent('Recovery Checks');
+    expect(rehearsalBoard).toHaveTextContent('Z then send');
     expect(rehearsalBoard).toHaveTextContent('a4-soft-capture');
     expect(rehearsalBoard).toHaveTextContent('A4 Input Label Coverage');
+    expect(rehearsalBoard).toHaveTextContent('Rytm full-kit macro smoke test');
+    expect(rehearsalBoard).toHaveTextContent('Replay Commands');
+    expect(rehearsalBoard).toHaveTextContent('read-strategy');
+    expect(rehearsalBoard).toHaveTextContent('start-rytm-live-shell');
+    expect(rehearsalBoard).toHaveTextContent('Safety Lines');
+    expect(rehearsalBoard).toHaveTextContent('A4 outbound macro promotion remains blocked');
     expect(rehearsalBoard).toHaveTextContent('fire rehearsal cue from Cockpit console');
     expect(
       within(rehearsalBoard).getByRole('button', { name: /launch armed shell/i }),

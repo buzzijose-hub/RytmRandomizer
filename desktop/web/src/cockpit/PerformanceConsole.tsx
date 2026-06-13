@@ -263,6 +263,15 @@ export function PerformanceConsole({
           </button>
         </div>
 
+        <h3 className="performance-console-subheading">Studio Workflow</h3>
+        <div className="performance-console-list">
+          {model.rehearsal_board.studio_workflow.map((step) => (
+            <article key={step}>
+              <strong>{step}</strong>
+            </article>
+          ))}
+        </div>
+
         <h3 className="performance-console-subheading">Live Chapters</h3>
         <div className="performance-console-list">
           {model.rehearsal_board.chapters.map((chapter) => (
@@ -312,6 +321,27 @@ export function PerformanceConsole({
           ))}
         </div>
 
+        <h3 className="performance-console-subheading">Macro Checkpoints</h3>
+        <div className="performance-console-list">
+          {model.rehearsal_board.macro_checkpoints.map((checkpoint) => (
+            <article key={checkpoint.name}>
+              <strong>{checkpoint.label}</strong>
+              <span>
+                {checkpoint.risk_label} / pads {checkpoint.affected_pads.join(', ')}
+              </span>
+              <small>{checkpoint.summary}</small>
+              <small>recover with {checkpoint.recovery_action}</small>
+              <div className="live-chip-row">
+                {checkpoint.checkpoints.map((check) => (
+                  <span key={`${checkpoint.name}-${check}`} className="live-chip">
+                    {check}
+                  </span>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+
         <h3 className="performance-console-subheading">Next Hardware Validations</h3>
         <div className="performance-console-list">
           {model.rehearsal_board.hardware_validation_runway.map((step) => (
@@ -322,6 +352,15 @@ export function PerformanceConsole({
               </span>
               <small>{step.operator_path}</small>
               <small>{step.expected_evidence}</small>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Queued Hardware Validations</h3>
+        <div className="performance-console-list">
+          {model.rehearsal_board.next_hardware_validations.map((validation) => (
+            <article key={validation}>
+              <strong>{validation}</strong>
             </article>
           ))}
         </div>
@@ -337,6 +376,45 @@ export function PerformanceConsole({
               <small>{criterion.required_evidence}</small>
               <small>{criterion.safety_note}</small>
             </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Recovery Checks</h3>
+        <div className="performance-console-list">
+          {model.rehearsal_board.recovery_checks.map((check) => (
+            <article key={check}>
+              <strong>{check}</strong>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Replay Commands</h3>
+        <div className="performance-console-list">
+          {model.rehearsal_board.replay_commands.map((command) => (
+            <article key={command.name}>
+              <strong>{command.name}</strong>
+              <span>
+                {command.execution_mode} / sends {command.sends_midi}
+              </span>
+              <small>{command.command}</small>
+              <small>{command.purpose}</small>
+              <small>{command.expected_observation}</small>
+              <div className="live-chip-row">
+                <span className={command.opens_ports ? 'live-chip live-chip-blocked' : 'live-chip'}>
+                  {command.opens_ports ? 'opens ports' : 'opens no ports'}
+                </span>
+                <span className="live-chip">{command.safety_note}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Safety Lines</h3>
+        <div className="live-chip-row">
+          {model.rehearsal_board.safety_lines.map((line) => (
+            <span key={line} className="live-chip">
+              {line}
+            </span>
           ))}
         </div>
 
