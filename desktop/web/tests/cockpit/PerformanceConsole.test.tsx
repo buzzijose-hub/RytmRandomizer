@@ -42,10 +42,18 @@ describe('PerformanceConsole', () => {
     expect(macroActions).toHaveTextContent('fire macro from Cockpit console');
     expect(within(macroActions).getAllByRole('button', { name: /prepare/i })[0]).toBeDisabled();
     expect(within(macroActions).getAllByRole('button', { name: /send/i })[0]).toBeDisabled();
+    const hardGrooveMacro = within(macroActions).getByTestId('macro-action-hard-groove');
+    expect(hardGrooveMacro).toHaveTextContent('recover home');
+    expect(hardGrooveMacro).toHaveTextContent('hardware blocked');
+    expect(hardGrooveMacro).toHaveTextContent('dry-run only');
 
     const styleQueue = screen.getByTestId('performance-console-style-queue');
     expect(styleQueue).toHaveTextContent('Dark Hypnotic');
     expect(styleQueue).toHaveTextContent('snap-06');
+    expect(styleQueue).toHaveTextContent('preview');
+    expect(styleQueue).toHaveTextContent('recover home');
+    expect(styleQueue).toHaveTextContent('pads 1, 2, 3, 4');
+    expect(styleQueue).toHaveTextContent('dry-run only');
 
     expect(screen.getByTestId('performance-console-snapshot-history')).toHaveTextContent(
       'console-snap-03',

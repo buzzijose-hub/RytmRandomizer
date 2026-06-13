@@ -4,6 +4,11 @@ Last updated: 2026-06-12. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-13: Cockpit performance action-readiness follow-up prepared after
+  the packet source badge merge. The passive performance console now makes
+  macro-card and style-queue recovery paths, dry-run-only state, target pads,
+  and blocked hardware action state visible directly in the operator cards
+  without changing WebSocket payloads, sidecar commands, or MIDI behavior.
 - 2026-06-12: Cockpit performance console source-badge follow-up prepared after
   the macro-action deck. The desktop route now carries a passive header badge
   distinguishing injected preview packets, live WebSocket/store packets, and
