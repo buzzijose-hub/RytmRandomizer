@@ -30,6 +30,7 @@ cd desktop/web
 npm.cmd ci
 npm.cmd run test:run -- tests/cockpit/PerformanceConsole.test.tsx
 npm.cmd run test:run
+npm.cmd run test:coverage
 npm.cmd run typecheck
 npm.cmd run lint
 npm.cmd run build
@@ -46,6 +47,8 @@ git diff --check
 
 - [x] Focused component test passes.
 - [x] Full desktop Vitest passes: 39 files, 393 tests.
+- [x] Desktop coverage gate passes: 100% statements, branches, functions, and
+  lines.
 - [x] Desktop typecheck, lint, and build pass.
 - [x] Architecture suite passes: 607 passed, 1 existing warn-only duplicate
   `main` warning.
