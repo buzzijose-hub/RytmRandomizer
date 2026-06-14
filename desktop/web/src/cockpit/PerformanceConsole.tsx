@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import type {
   LiveGuiAnalyzerPanelControlDict,
@@ -25,6 +25,8 @@ const ANALYZER_CONTROL_ORDER: ReadonlyArray<string> = ['preview', 'dry_run', 'ar
 const SNAPSHOT_DECK_PREVIEW_PARAMETER_COUNT = 3;
 const PREVIEW_DEPTH_MIN = 10;
 const PREVIEW_DEPTH_MAX = 90;
+const LOCAL_REHEARSAL_STORAGE_KEY = 'rytmrandomizer.performanceConsole.localRehearsal.v1';
+const LOCAL_REHEARSAL_STORAGE_VERSION = 1;
 
 interface LocalJournalEntry {
   readonly id: string;
@@ -48,6 +50,22 @@ interface LocalOperatorEvent {
   readonly label: string;
   readonly detail: string;
   readonly status: string;
+}
+
+interface LocalRehearsalSnapshot {
+  readonly version: number;
+  readonly selectedCrateKey: string | null;
+  readonly selectedQueueKey: string | null;
+  readonly selectedSnapshotId: string | null;
+  readonly previewDepth: number | null;
+  readonly lastDryRunSummary: string;
+  readonly localJournalEntries: ReadonlyArray<LocalJournalEntry>;
+  readonly localSetPlanEntries: ReadonlyArray<LocalSetPlanEntry>;
+  readonly currentSetPlanStep: LocalSetPlanEntry | null;
+  readonly localOperatorEvents: ReadonlyArray<LocalOperatorEvent>;
+  readonly lastSetPlanAction: string;
+  readonly nextLocalSetPlanIndex: number;
+  readonly localAutosaveEnabled: boolean;
 }
 
 function orderedDevices(
@@ -251,6 +269,169 @@ function isKeyboardActivation(key: string): boolean {
   return key === 'Enter' || key === ' ';
 }
 
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function stringField(record: Readonly<Record<string, unknown>>, key: string): string | null {
+  const value = record[key];
+  return typeof value === 'string' ? value : null;
+}
+
+function nullableStringField(
+  record: Readonly<Record<string, unknown>>,
+  key: string,
+): string | null {
+  const value = record[key];
+  return value === null || typeof value === 'undefined' ? null : stringField(record, key);
+}
+
+function numberField(record: Readonly<Record<string, unknown>>, key: string): number | null {
+  const value = record[key];
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function booleanField(record: Readonly<Record<string, unknown>>, key: string): boolean | null {
+  const value = record[key];
+  return typeof value === 'boolean' ? value : null;
+}
+
+function localJournalEntryFromUnknown(value: unknown): LocalJournalEntry | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const id = stringField(value, 'id');
+  const crateName = stringField(value, 'crateName');
+  const moveName = stringField(value, 'moveName');
+  const snapshotId = stringField(value, 'snapshotId');
+  const depth = numberField(value, 'depth');
+  if (id === null || crateName === null || moveName === null || snapshotId === null || depth === null) {
+    return null;
+  }
+  return {
+    id,
+    crateName,
+    moveName,
+    snapshotId,
+    depth: clampPreviewDepth(depth),
+  };
+}
+
+function localSetPlanEntryFromUnknown(value: unknown): LocalSetPlanEntry | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const id = stringField(value, 'id');
+  const crateName = stringField(value, 'crateName');
+  const moveName = stringField(value, 'moveName');
+  const snapshotId = stringField(value, 'snapshotId');
+  const depth = numberField(value, 'depth');
+  if (id === null || crateName === null || moveName === null || snapshotId === null || depth === null) {
+    return null;
+  }
+  return {
+    id,
+    crateName,
+    moveName,
+    snapshotId,
+    depth: clampPreviewDepth(depth),
+    status: stringField(value, 'status') ?? 'Local only',
+  };
+}
+
+function localOperatorEventFromUnknown(value: unknown): LocalOperatorEvent | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const id = stringField(value, 'id');
+  const label = stringField(value, 'label');
+  const detail = stringField(value, 'detail');
+  if (id === null || label === null || detail === null) {
+    return null;
+  }
+  return {
+    id,
+    label,
+    detail,
+    status: stringField(value, 'status') ?? 'Local only',
+  };
+}
+
+function localArrayFromUnknown<T>(
+  value: unknown,
+  parser: (candidate: unknown) => T | null,
+): ReadonlyArray<T> {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.flatMap((candidate) => {
+    const parsed = parser(candidate);
+    return parsed === null ? [] : [parsed];
+  });
+}
+
+function localRehearsalSnapshotFromUnknown(value: unknown): LocalRehearsalSnapshot | null {
+  if (!isRecord(value) || numberField(value, 'version') !== LOCAL_REHEARSAL_STORAGE_VERSION) {
+    return null;
+  }
+  const currentSetPlanStep = localSetPlanEntryFromUnknown(value.currentSetPlanStep);
+  const importedPreviewDepth = numberField(value, 'previewDepth');
+  return {
+    version: LOCAL_REHEARSAL_STORAGE_VERSION,
+    selectedCrateKey: nullableStringField(value, 'selectedCrateKey'),
+    selectedQueueKey: nullableStringField(value, 'selectedQueueKey'),
+    selectedSnapshotId: nullableStringField(value, 'selectedSnapshotId'),
+    previewDepth: importedPreviewDepth === null ? null : clampPreviewDepth(importedPreviewDepth),
+    lastDryRunSummary:
+      stringField(value, 'lastDryRunSummary') ?? 'No local dry-run performed.',
+    localJournalEntries: localArrayFromUnknown(value.localJournalEntries, localJournalEntryFromUnknown),
+    localSetPlanEntries: localArrayFromUnknown(value.localSetPlanEntries, localSetPlanEntryFromUnknown),
+    currentSetPlanStep,
+    localOperatorEvents: localArrayFromUnknown(value.localOperatorEvents, localOperatorEventFromUnknown),
+    lastSetPlanAction: stringField(value, 'lastSetPlanAction') ?? 'No local set-plan action yet.',
+    nextLocalSetPlanIndex: Math.max(0, Math.round(numberField(value, 'nextLocalSetPlanIndex') ?? 0)),
+    localAutosaveEnabled: booleanField(value, 'localAutosaveEnabled') ?? true,
+  };
+}
+
+function localStorageHandle(): Storage | null {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+function readLocalRehearsalSnapshot(): LocalRehearsalSnapshot | null {
+  const storage = localStorageHandle();
+  if (storage === null) {
+    return null;
+  }
+  const stored = storage.getItem(LOCAL_REHEARSAL_STORAGE_KEY);
+  if (stored === null) {
+    return null;
+  }
+  try {
+    return localRehearsalSnapshotFromUnknown(JSON.parse(stored));
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalRehearsalSnapshot(snapshot: LocalRehearsalSnapshot): void {
+  const storage = localStorageHandle();
+  if (storage !== null) {
+    storage.setItem(LOCAL_REHEARSAL_STORAGE_KEY, JSON.stringify(snapshot));
+  }
+}
+
+function removeLocalRehearsalSnapshot(): void {
+  const storage = localStorageHandle();
+  if (storage !== null) {
+    storage.removeItem(LOCAL_REHEARSAL_STORAGE_KEY);
+  }
+}
+
 function orderedAnalyzerControls(
   controls: Readonly<Record<string, LiveGuiAnalyzerPanelControlDict>>,
 ): ReadonlyArray<LiveGuiAnalyzerPanelControlDict> {
@@ -283,18 +464,47 @@ export function PerformanceConsole({
   model,
   packetSource = 'passive packet',
 }: PerformanceConsoleProps): JSX.Element {
-  const [selectedCrateKey, setSelectedCrateKey] = useState<string | null>(null);
-  const [selectedQueueKey, setSelectedQueueKey] = useState<string | null>(null);
-  const [selectedSnapshotId, setSelectedSnapshotId] = useState<string | null>(null);
-  const [previewDepth, setPreviewDepth] = useState<number | null>(null);
-  const [lastDryRunSummary, setLastDryRunSummary] = useState<string>('No local dry-run performed.');
-  const [localJournalEntries, setLocalJournalEntries] = useState<ReadonlyArray<LocalJournalEntry>>([]);
-  const [localSetPlanEntries, setLocalSetPlanEntries] = useState<ReadonlyArray<LocalSetPlanEntry>>([]);
-  const [currentSetPlanStep, setCurrentSetPlanStep] = useState<LocalSetPlanEntry | null>(null);
-  const [localOperatorEvents, setLocalOperatorEvents] = useState<ReadonlyArray<LocalOperatorEvent>>([]);
-  const nextLocalSetPlanIndex = useRef<number>(0);
+  const initialLocalRehearsal = useMemo(() => readLocalRehearsalSnapshot(), []);
+  const [selectedCrateKey, setSelectedCrateKey] = useState<string | null>(
+    initialLocalRehearsal?.selectedCrateKey ?? null,
+  );
+  const [selectedQueueKey, setSelectedQueueKey] = useState<string | null>(
+    initialLocalRehearsal?.selectedQueueKey ?? null,
+  );
+  const [selectedSnapshotId, setSelectedSnapshotId] = useState<string | null>(
+    initialLocalRehearsal?.selectedSnapshotId ?? null,
+  );
+  const [previewDepth, setPreviewDepth] = useState<number | null>(
+    initialLocalRehearsal?.previewDepth ?? null,
+  );
+  const [lastDryRunSummary, setLastDryRunSummary] = useState<string>(
+    initialLocalRehearsal?.lastDryRunSummary ?? 'No local dry-run performed.',
+  );
+  const [localJournalEntries, setLocalJournalEntries] = useState<ReadonlyArray<LocalJournalEntry>>(
+    initialLocalRehearsal?.localJournalEntries ?? [],
+  );
+  const [localSetPlanEntries, setLocalSetPlanEntries] = useState<ReadonlyArray<LocalSetPlanEntry>>(
+    initialLocalRehearsal?.localSetPlanEntries ?? [],
+  );
+  const [currentSetPlanStep, setCurrentSetPlanStep] = useState<LocalSetPlanEntry | null>(
+    initialLocalRehearsal?.currentSetPlanStep ?? null,
+  );
+  const [localOperatorEvents, setLocalOperatorEvents] = useState<ReadonlyArray<LocalOperatorEvent>>(
+    initialLocalRehearsal?.localOperatorEvents ?? [],
+  );
+  const [localAutosaveEnabled, setLocalAutosaveEnabled] = useState<boolean>(
+    initialLocalRehearsal?.localAutosaveEnabled ?? true,
+  );
+  const [localPersistenceSummary, setLocalPersistenceSummary] = useState<string>(
+    initialLocalRehearsal === null
+      ? 'Local auto-save on. No saved local rehearsal loaded.'
+      : 'Local auto-save on. Restored saved local rehearsal.',
+  );
+  const [localExportPayload, setLocalExportPayload] = useState<string>('');
+  const [localImportPayload, setLocalImportPayload] = useState<string>('');
+  const nextLocalSetPlanIndex = useRef<number>(initialLocalRehearsal?.nextLocalSetPlanIndex ?? 0);
   const [lastSetPlanAction, setLastSetPlanAction] = useState<string>(
-    'No local set-plan action yet.',
+    initialLocalRehearsal?.lastSetPlanAction ?? 'No local set-plan action yet.',
   );
   const a4SetPlan = model.performance_flow.analog_four_set_plan;
   const a4ReviewSurface = model.analog_four_review_surface;
@@ -358,6 +568,42 @@ export function PerformanceConsole({
     'Recovery: use Z + send from the armed snapshot shell.',
     'Local handoff only: no WebSocket command, sidecar action, MIDI port, arm, or send.',
   ];
+  const localRehearsalSnapshot = useMemo<LocalRehearsalSnapshot>(
+    () => ({
+      version: LOCAL_REHEARSAL_STORAGE_VERSION,
+      selectedCrateKey,
+      selectedQueueKey,
+      selectedSnapshotId,
+      previewDepth,
+      lastDryRunSummary,
+      localJournalEntries,
+      localSetPlanEntries,
+      currentSetPlanStep,
+      localOperatorEvents,
+      lastSetPlanAction,
+      nextLocalSetPlanIndex: nextLocalSetPlanIndex.current,
+      localAutosaveEnabled,
+    }),
+    [
+      selectedCrateKey,
+      selectedQueueKey,
+      selectedSnapshotId,
+      previewDepth,
+      lastDryRunSummary,
+      localJournalEntries,
+      localSetPlanEntries,
+      currentSetPlanStep,
+      localOperatorEvents,
+      lastSetPlanAction,
+      localAutosaveEnabled,
+    ],
+  );
+
+  useEffect(() => {
+    if (localAutosaveEnabled) {
+      writeLocalRehearsalSnapshot(localRehearsalSnapshot);
+    }
+  }, [localAutosaveEnabled, localRehearsalSnapshot]);
 
   const appendLocalOperatorEvent = (label: string, detail: string): void => {
     setLocalOperatorEvents((events) => [
@@ -369,6 +615,77 @@ export function PerformanceConsole({
         status: 'Local only',
       },
     ]);
+  };
+
+  const toggleLocalAutosave = (enabled: boolean): void => {
+    setLocalAutosaveEnabled(enabled);
+    setLocalPersistenceSummary(
+      enabled
+        ? 'Local auto-save on. Local rehearsal changes are saved in this browser.'
+        : 'Local auto-save off. Local rehearsal changes stay in memory only.',
+    );
+    appendLocalOperatorEvent(
+      enabled ? 'Enabled local auto-save' : 'Disabled local auto-save',
+      'Browser-local persistence only; no sidecar or MIDI action.',
+    );
+  };
+
+  const exportLocalRehearsalJson = (): void => {
+    const payload = JSON.stringify(localRehearsalSnapshot, null, 2);
+    setLocalExportPayload(payload);
+    setLocalPersistenceSummary('Exported local rehearsal JSON. Local only; no MIDI sent.');
+    appendLocalOperatorEvent(
+      'Exported local rehearsal JSON',
+      `${localJournalEntries.length} journal take(s), ${localSetPlanEntries.length} queued step(s).`,
+    );
+  };
+
+  const importLocalRehearsalJson = (): void => {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(localImportPayload);
+    } catch {
+      setLocalPersistenceSummary('Import failed: JSON could not be parsed. Local only; no MIDI sent.');
+      appendLocalOperatorEvent('Import failed', 'JSON could not be parsed.');
+      return;
+    }
+    const importedSnapshot = localRehearsalSnapshotFromUnknown(parsed);
+    if (importedSnapshot === null) {
+      setLocalPersistenceSummary('Import failed: unsupported local rehearsal payload. Local only; no MIDI sent.');
+      appendLocalOperatorEvent('Import failed', 'Unsupported local rehearsal payload.');
+      return;
+    }
+    setSelectedCrateKey(importedSnapshot.selectedCrateKey);
+    setSelectedQueueKey(importedSnapshot.selectedQueueKey);
+    setSelectedSnapshotId(importedSnapshot.selectedSnapshotId);
+    setPreviewDepth(importedSnapshot.previewDepth);
+    setLastDryRunSummary(importedSnapshot.lastDryRunSummary);
+    setLocalJournalEntries(importedSnapshot.localJournalEntries);
+    setLocalSetPlanEntries(importedSnapshot.localSetPlanEntries);
+    setCurrentSetPlanStep(importedSnapshot.currentSetPlanStep);
+    setLastSetPlanAction(importedSnapshot.lastSetPlanAction);
+    setLocalAutosaveEnabled(importedSnapshot.localAutosaveEnabled);
+    nextLocalSetPlanIndex.current = importedSnapshot.nextLocalSetPlanIndex;
+    setLocalOperatorEvents([
+      ...importedSnapshot.localOperatorEvents,
+      {
+        id: localOperatorEventId(importedSnapshot.localOperatorEvents.length),
+        label: 'Imported local rehearsal JSON',
+        detail: 'Loaded passive browser-local rehearsal state.',
+        status: 'Local only',
+      },
+    ]);
+    setLocalPersistenceSummary('Imported local rehearsal JSON. Local only; no MIDI sent.');
+  };
+
+  const clearSavedLocalRehearsal = (): void => {
+    removeLocalRehearsalSnapshot();
+    setLocalAutosaveEnabled(false);
+    setLocalPersistenceSummary('Cleared saved local rehearsal. Local auto-save off; no MIDI sent.');
+    appendLocalOperatorEvent(
+      'Cleared saved local rehearsal',
+      'Removed browser-local rehearsal state only.',
+    );
   };
 
   const selectCrate = (crate: StyleCrateRehearsalCrateCardDict): void => {
@@ -795,6 +1112,72 @@ export function PerformanceConsole({
             <span>Selected snapshot {selectedSnapshotIdLabel}</span>
             <span data-testid="performance-console-depth-value">Depth {currentDepth}%</span>
             <small>Local only: no WebSocket dispatch, no sidecar command, no MIDI port, no MIDI send.</small>
+          </section>
+          <section
+            className="performance-console-local-panel performance-console-local-persistence"
+            data-testid="performance-console-local-persistence"
+            aria-label="Local rehearsal persistence"
+          >
+            <strong>Local rehearsal persistence</strong>
+            <label className="performance-console-local-toggle">
+              <input
+                type="checkbox"
+                checked={localAutosaveEnabled}
+                data-testid="performance-console-local-autosave"
+                onChange={(event) => {
+                  toggleLocalAutosave(event.currentTarget.checked);
+                }}
+              />
+              <span>Local auto-save</span>
+            </label>
+            <span data-testid="performance-console-local-persistence-summary">
+              {localPersistenceSummary}
+            </span>
+            <div className="performance-console-local-actions">
+              <button
+                type="button"
+                className="live-readiness-action performance-console-local-control"
+                title="Exports current local rehearsal state as copy-ready JSON only."
+                onClick={exportLocalRehearsalJson}
+              >
+                Export local rehearsal JSON
+              </button>
+              <button
+                type="button"
+                className="live-readiness-action performance-console-local-control"
+                title="Imports copy-ready local rehearsal JSON without dispatching any command."
+                onClick={importLocalRehearsalJson}
+              >
+                Import local rehearsal JSON
+              </button>
+              <button
+                type="button"
+                className="live-readiness-action performance-console-local-control"
+                title="Clears browser-local rehearsal storage only."
+                onClick={clearSavedLocalRehearsal}
+              >
+                Clear saved local rehearsal
+              </button>
+            </div>
+            <label className="performance-console-local-json">
+              <span>Import JSON</span>
+              <textarea
+                data-testid="performance-console-local-import-input"
+                value={localImportPayload}
+                onChange={(event) => {
+                  setLocalImportPayload(event.currentTarget.value);
+                }}
+              />
+            </label>
+            {localExportPayload.length === 0 ? null : (
+              <pre data-testid="performance-console-local-export-payload">
+                {localExportPayload}
+              </pre>
+            )}
+            <small>
+              Browser-local only: import/export does not read hardware, write project files,
+              call the sidecar, open MIDI ports, arm hardware, or send MIDI.
+            </small>
           </section>
           <h3 className="performance-console-subheading">Mutation Journal</h3>
           <div className="performance-console-list">
