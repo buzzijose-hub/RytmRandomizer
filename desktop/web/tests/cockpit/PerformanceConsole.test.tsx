@@ -574,6 +574,67 @@ describe('PerformanceConsole', () => {
     expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
   });
 
+  it('supports local-only set planning without enabling hardware sends', () => {
+    render(<PerformanceConsole model={performanceConsoleModelWithSelectableHistory()} />);
+
+    fireEvent.click(screen.getByTestId('performance-console-style-crate-select-peak-time'));
+    fireEvent.click(screen.getByTestId('performance-console-queue-select-queue-groove-pressure'));
+    fireEvent.click(screen.getByTestId('performance-console-history-console-snap-01'));
+    fireEvent.change(screen.getByTestId('performance-console-depth-input'), {
+      target: { value: '72' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /stage local set-plan step/i }));
+
+    const localSetPlan = screen.getByTestId('performance-console-local-set-plan');
+    expect(localSetPlan).toHaveTextContent('local-step-01');
+    expect(localSetPlan).toHaveTextContent('Peak Time');
+    expect(localSetPlan).toHaveTextContent('Rolling Perc Push');
+    expect(localSetPlan).toHaveTextContent('console-snap-01');
+    expect(localSetPlan).toHaveTextContent('72%');
+    expect(localSetPlan).toHaveTextContent('Local only');
+
+    fireEvent.click(screen.getByTestId('performance-console-style-crate-select-industrial-broken'));
+    fireEvent.click(screen.getByTestId('performance-console-queue-select-queue-peak-metal'));
+    fireEvent.click(screen.getByTestId('performance-console-history-console-snap-02'));
+    fireEvent.change(screen.getByTestId('performance-console-depth-input'), {
+      target: { value: '58' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /stage local set-plan step/i }));
+
+    expect(localSetPlan).toHaveTextContent('local-step-02');
+    expect(localSetPlan).toHaveTextContent('Industrial/Broken');
+    expect(localSetPlan).toHaveTextContent('Broken Metal Stress');
+    expect(localSetPlan).toHaveTextContent('console-snap-02');
+    expect(localSetPlan).toHaveTextContent('58%');
+
+    fireEvent.click(screen.getByRole('button', { name: /promote next local set-plan step/i }));
+
+    expect(screen.getByTestId('performance-console-local-set-plan-summary')).toHaveTextContent(
+      'Promoted local-step-01',
+    );
+    expect(screen.queryByTestId('local-set-plan-step-local-step-01')).not.toBeInTheDocument();
+    expect(localSetPlan).toHaveTextContent('local-step-02');
+
+    fireEvent.click(screen.getByRole('button', { name: /skip next local set-plan step/i }));
+
+    expect(screen.getByTestId('performance-console-local-set-plan-summary')).toHaveTextContent(
+      'Skipped local-step-02',
+    );
+    expect(localSetPlan).toHaveTextContent('No local set-plan steps staged.');
+
+    fireEvent.click(screen.getByRole('button', { name: /stage local set-plan step/i }));
+    expect(localSetPlan).toHaveTextContent('local-step-01');
+
+    fireEvent.click(screen.getByRole('button', { name: /clear local set-plan/i }));
+
+    expect(screen.getByTestId('performance-console-local-set-plan-summary')).toHaveTextContent(
+      'Cleared 1 local set-plan step',
+    );
+    expect(localSetPlan).toHaveTextContent('No local set-plan steps staged.');
+    expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
+  });
+
   it('supports keyboard snapshot selection in the local rehearsal preview', () => {
     render(<PerformanceConsole model={performanceConsoleModelWithSelectableHistory()} />);
 
@@ -614,6 +675,33 @@ describe('PerformanceConsole', () => {
     expect(screen.getByTestId('performance-console-local-journal')).toHaveTextContent(
       'No queued move',
     );
+
+    fireEvent.click(screen.getByRole('button', { name: /promote next local set-plan step/i }));
+    expect(screen.getByTestId('performance-console-local-set-plan-summary')).toHaveTextContent(
+      'No local set-plan steps to promote',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /skip next local set-plan step/i }));
+    expect(screen.getByTestId('performance-console-local-set-plan-summary')).toHaveTextContent(
+      'No local set-plan steps to skip',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /clear local set-plan/i }));
+    expect(screen.getByTestId('performance-console-local-set-plan-summary')).toHaveTextContent(
+      'Cleared 0 local set-plan step',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /stage local set-plan step/i }));
+    expect(screen.getByTestId('performance-console-local-set-plan')).toHaveTextContent('No crate');
+    expect(screen.getByTestId('performance-console-local-set-plan')).toHaveTextContent(
+      'No queued move',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /clear local set-plan/i }));
+    expect(screen.getByTestId('performance-console-local-set-plan-summary')).toHaveTextContent(
+      'Cleared 1 local set-plan step',
+    );
+
     expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
   });
 });

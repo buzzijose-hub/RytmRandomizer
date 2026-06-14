@@ -4,6 +4,17 @@ Last updated: 2026-06-14. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-14: Cockpit local set-planning bundle started on a clean base after
+  PR #177 merged. The cinematic passive console now stages local set-plan
+  entries from the selected crate, queued move, snapshot, and preview depth;
+  operators can promote the next staged move, skip it, or clear the plan while
+  preserving local-only evidence and summaries. This remains frontend/local-only:
+  no WebSocket command dispatch, no Tauri or sidecar command execution, no
+  MIDI port opening, no hardware arm path, no queued command execution, no
+  snapshot mutation, and no MIDI send. The same bundle also pins the
+  desktop-shell `brotli-decompressor` / `alloc-stdlib` / `alloc-no-stdlib`
+  resolver bridge after a 2026-06-14 upstream `brotli` allocator release
+  broke fresh CI resolution.
 - 2026-06-14: Cockpit Performance Console interaction bundle started after
   PR #176 merged. The cinematic passive console now rehearses operator intent
   locally: style crate selection, queued move selection, snapshot selection,

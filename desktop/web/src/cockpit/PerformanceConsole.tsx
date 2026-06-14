@@ -34,6 +34,15 @@ interface LocalJournalEntry {
   readonly depth: number;
 }
 
+interface LocalSetPlanEntry {
+  readonly id: string;
+  readonly crateName: string;
+  readonly moveName: string;
+  readonly snapshotId: string;
+  readonly depth: number;
+  readonly status: string;
+}
+
 function orderedDevices(
   devices: ReadonlyArray<LiveGuiDeviceInventoryCardDict>,
 ): ReadonlyArray<LiveGuiDeviceInventoryCardDict> {
@@ -189,6 +198,22 @@ function localTakeId(index: number): string {
   return `local-take-${String(index + 1).padStart(2, '0')}`;
 }
 
+function localSetPlanId(index: number): string {
+  return `local-step-${String(index + 1).padStart(2, '0')}`;
+}
+
+function nextLocalSetPlanId(entries: ReadonlyArray<LocalSetPlanEntry>): string {
+  const highestId = entries.reduce((highest, entry) => {
+    const numericId = Number(entry.id.replace('local-step-', ''));
+    return Math.max(highest, numericId);
+  }, 0);
+  return localSetPlanId(highestId);
+}
+
+function localSetPlanEntrySummary(entry: LocalSetPlanEntry): string {
+  return `${entry.moveName} / ${entry.crateName} / ${entry.snapshotId} / ${entry.depth}%`;
+}
+
 function isKeyboardActivation(key: string): boolean {
   return key === 'Enter' || key === ' ';
 }
@@ -231,6 +256,10 @@ export function PerformanceConsole({
   const [previewDepth, setPreviewDepth] = useState<number | null>(null);
   const [lastDryRunSummary, setLastDryRunSummary] = useState<string>('No local dry-run performed.');
   const [localJournalEntries, setLocalJournalEntries] = useState<ReadonlyArray<LocalJournalEntry>>([]);
+  const [localSetPlanEntries, setLocalSetPlanEntries] = useState<ReadonlyArray<LocalSetPlanEntry>>([]);
+  const [lastSetPlanAction, setLastSetPlanAction] = useState<string>(
+    'No local set-plan action yet.',
+  );
   const a4SetPlan = model.performance_flow.analog_four_set_plan;
   const a4ReviewSurface = model.analog_four_review_surface;
   const a4ReviewFocus = a4ReviewSurface.review_focus;
@@ -315,6 +344,49 @@ export function PerformanceConsole({
         depth: currentDepth,
       },
     ]);
+  };
+
+  const stageLocalSetPlanEntry = (): void => {
+    const entry: LocalSetPlanEntry = {
+      id: nextLocalSetPlanId(localSetPlanEntries),
+      crateName: selectedCrate?.crate_name ?? 'No crate',
+      moveName: currentQueueMove?.move_name ?? 'No queued move',
+      snapshotId: selectedSnapshotIdLabel,
+      depth: currentDepth,
+      status: 'Local only',
+    };
+    setLocalSetPlanEntries([...localSetPlanEntries, entry]);
+    setLastSetPlanAction(`Staged ${entry.id}: ${localSetPlanEntrySummary(entry)}. Local only; no MIDI sent.`);
+  };
+
+  const promoteNextLocalSetStep = (): void => {
+    const nextEntry = localSetPlanEntries[0];
+    if (nextEntry === undefined) {
+      setLastSetPlanAction('No local set-plan steps to promote. Local only; no MIDI sent.');
+      return;
+    }
+    setLocalSetPlanEntries(localSetPlanEntries.slice(1));
+    setLastSetPlanAction(
+      `Promoted ${nextEntry.id}: ${localSetPlanEntrySummary(nextEntry)}. Local only; no MIDI sent.`,
+    );
+  };
+
+  const skipNextLocalSetStep = (): void => {
+    const nextEntry = localSetPlanEntries[0];
+    if (nextEntry === undefined) {
+      setLastSetPlanAction('No local set-plan steps to skip. Local only; no MIDI sent.');
+      return;
+    }
+    setLocalSetPlanEntries(localSetPlanEntries.slice(1));
+    setLastSetPlanAction(
+      `Skipped ${nextEntry.id}: ${localSetPlanEntrySummary(nextEntry)}. Local only; no MIDI sent.`,
+    );
+  };
+
+  const clearLocalSetPlan = (): void => {
+    const stepCount = localSetPlanEntries.length;
+    setLocalSetPlanEntries([]);
+    setLastSetPlanAction(`Cleared ${stepCount} local set-plan step(s). Local only; no MIDI sent.`);
   };
 
   return (
@@ -689,6 +761,14 @@ export function PerformanceConsole({
             <button
               type="button"
               className="live-readiness-action performance-console-local-control"
+              title="Stages the current local rehearsal selection in memory only."
+              onClick={stageLocalSetPlanEntry}
+            >
+              Stage local set-plan step
+            </button>
+            <button
+              type="button"
+              className="live-readiness-action performance-console-local-control"
               title="Runs a local-only dry-run summary. No command is dispatched."
               onClick={runLocalDryRun}
             >
@@ -723,6 +803,58 @@ export function PerformanceConsole({
                 {entry.id}: {entry.moveName} / {entry.crateName} / {entry.snapshotId} / {entry.depth}%
               </span>
             ))}
+          </section>
+          <section
+            className="performance-console-local-panel performance-console-local-set-plan"
+            data-testid="performance-console-local-set-plan"
+            aria-label="Local set-plan queue"
+          >
+            <strong>Local set-plan queue</strong>
+            <span data-testid="performance-console-local-set-plan-summary">{lastSetPlanAction}</span>
+            {localSetPlanEntries.length === 0 ? <span>No local set-plan steps staged.</span> : null}
+            <div className="performance-console-local-set-plan-list">
+              {localSetPlanEntries.map((entry) => (
+                <article key={entry.id} data-testid={`local-set-plan-step-${entry.id}`}>
+                  <strong>
+                    {entry.id}: {entry.moveName}
+                  </strong>
+                  <span>{entry.crateName}</span>
+                  <small>
+                    snapshot {entry.snapshotId} / depth {entry.depth}% / {entry.status}
+                  </small>
+                </article>
+              ))}
+            </div>
+            <div className="performance-console-local-actions">
+              <button
+                type="button"
+                className="live-readiness-action performance-console-local-control"
+                title="Promotes the next local set-plan step in memory only."
+                onClick={promoteNextLocalSetStep}
+              >
+                Promote next local set-plan step
+              </button>
+              <button
+                type="button"
+                className="live-readiness-action performance-console-local-control"
+                title="Skips the next local set-plan step in memory only."
+                onClick={skipNextLocalSetStep}
+              >
+                Skip next local set-plan step
+              </button>
+              <button
+                type="button"
+                className="live-readiness-action performance-console-local-control"
+                title="Clears the local set-plan queue in memory only."
+                onClick={clearLocalSetPlan}
+              >
+                Clear local set-plan
+              </button>
+            </div>
+            <small>
+              Local only: this set plan does not dispatch WebSocket commands, execute sidecar
+              actions, open MIDI ports, arm hardware, or send MIDI.
+            </small>
           </section>
         </section>
 
