@@ -4,6 +4,16 @@ Last updated: 2026-06-14. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-14: Cockpit local rehearsal persistence follow-up started after
+  PR #179 merged. The passive Performance Console now serializes its local
+  rehearsal state into a versioned browser-local snapshot, restores selected
+  crate/queue/snapshot/depth, local dry-run summary, journal takes, current
+  plus queued set-plan state, and operator log on remount, and exposes local
+  auto-save, copy-ready JSON export/import, and clear-storage controls. This is
+  frontend/component-local only: no WebSocket command dispatch, no Tauri or
+  sidecar command execution, no project file writes, no MIDI port opening, no
+  hardware arm path, no queued command execution, no snapshot mutation, and no
+  MIDI send.
 - 2026-06-14: Cockpit operator set-planning follow-up started after PR #178
   merged. The passive Performance Console local rehearsal layer now promotes a
   staged move into a current local set-plan step, labels the remaining staged

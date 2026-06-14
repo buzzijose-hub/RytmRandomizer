@@ -95,6 +95,9 @@ move into a current local set-plan step, label the remaining move as up next,
 show an operator handoff with current/next/recovery notes, complete the current
 step, skip or clear queued moves, reset the local plan, and keep a local
 operator activity log while remaining component-local and mock-safe.
+It also supports browser-local auto-save plus copy-ready JSON export/import for
+that rehearsal state, so operators can recover or move a local plan without any
+sidecar command, file write, MIDI port, hardware arm path, or MIDI send.
 
 **Sidecar security guarantees** (post CODE_REVIEW.md sweep, 2026-05):
 

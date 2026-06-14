@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { PerformanceConsole } from '../../src/cockpit/PerformanceConsole';
 import type { LiveGuiPerformanceConsoleModelDict } from '../../src/types/live_gui_protocol';
@@ -232,6 +232,10 @@ function performanceConsoleModelWithEmptyStyleDeck(): LiveGuiPerformanceConsoleM
 }
 
 describe('PerformanceConsole', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
   it('renders the passive console packet without enabling hardware actions', () => {
     render(<PerformanceConsole model={performanceConsoleModel} />);
 
@@ -691,6 +695,320 @@ describe('PerformanceConsole', () => {
     expect(operatorLog).toHaveTextContent('Reset local set-plan');
     expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
+  });
+
+  it('autosaves and restores the local rehearsal plan without hardware sends', () => {
+    window.localStorage.clear();
+    const { unmount } = render(
+      <PerformanceConsole model={performanceConsoleModelWithSelectableHistory()} />,
+    );
+
+    fireEvent.click(screen.getByTestId('performance-console-style-crate-select-peak-time'));
+    fireEvent.click(screen.getByTestId('performance-console-queue-select-queue-groove-pressure'));
+    fireEvent.click(screen.getByTestId('performance-console-history-console-snap-01'));
+    fireEvent.change(screen.getByTestId('performance-console-depth-input'), {
+      target: { value: '72' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /run local dry-run/i }));
+    fireEvent.click(screen.getByRole('button', { name: /save local journal take/i }));
+    fireEvent.click(screen.getByRole('button', { name: /stage local set-plan step/i }));
+    fireEvent.click(screen.getByRole('button', { name: /promote next local set-plan step/i }));
+
+    const stored = window.localStorage.getItem(
+      'rytmrandomizer.performanceConsole.localRehearsal.v1',
+    );
+    expect(stored).toContain('local-step-01');
+    expect(stored).toContain('local-take-01');
+    expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
+      'Local auto-save on',
+    );
+
+    unmount();
+    render(<PerformanceConsole model={performanceConsoleModelWithSelectableHistory()} />);
+
+    expect(screen.getByTestId('performance-console-local-preview')).toHaveTextContent(
+      'Selected crate Peak Time',
+    );
+    expect(screen.getByTestId('performance-console-local-preview')).toHaveTextContent(
+      'Selected move Rolling Perc Push',
+    );
+    expect(screen.getByTestId('performance-console-local-preview')).toHaveTextContent(
+      'Selected snapshot console-snap-01',
+    );
+    expect(screen.getByTestId('performance-console-local-preview')).toHaveTextContent('Depth 72%');
+    expect(screen.getByTestId('performance-console-local-journal')).toHaveTextContent(
+      'local-take-01',
+    );
+    expect(screen.getByTestId('performance-console-current-set-plan-step')).toHaveTextContent(
+      'local-step-01',
+    );
+    expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+  });
+
+  it('exports and imports local rehearsal JSON without dispatching hardware actions', () => {
+    window.localStorage.clear();
+    render(<PerformanceConsole model={performanceConsoleModelWithSelectableHistory()} />);
+
+    const importPayload = {
+      version: 1,
+      selectedCrateKey: 'industrial-broken',
+      selectedQueueKey: 'queue-peak-metal',
+      selectedSnapshotId: 'console-snap-02',
+      previewDepth: 64,
+      lastDryRunSummary: 'Imported local dry-run. No MIDI port opened; no MIDI sent.',
+      localJournalEntries: [
+        {
+          id: 'imported-take-01',
+          crateName: 'Industrial/Broken',
+          moveName: 'Broken Metal Stress',
+          snapshotId: 'console-snap-02',
+          depth: 64,
+        },
+      ],
+      localSetPlanEntries: [
+        {
+          id: 'imported-step-02',
+          crateName: 'Peak Time',
+          moveName: 'Rolling Perc Push',
+          snapshotId: 'console-snap-01',
+          depth: 48,
+          status: 'Local only',
+        },
+      ],
+      currentSetPlanStep: {
+        id: 'imported-step-01',
+        crateName: 'Industrial/Broken',
+        moveName: 'Broken Metal Stress',
+        snapshotId: 'console-snap-02',
+        depth: 64,
+        status: 'Local only',
+      },
+      localOperatorEvents: [
+        {
+          id: 'imported-event-01',
+          label: 'Imported rehearsal',
+          detail: 'Loaded from passive JSON.',
+          status: 'Local only',
+        },
+      ],
+      lastSetPlanAction: 'Imported local rehearsal snapshot. Local only; no MIDI sent.',
+      nextLocalSetPlanIndex: 7,
+    };
+
+    fireEvent.change(screen.getByTestId('performance-console-local-import-input'), {
+      target: { value: JSON.stringify(importPayload) },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /import local rehearsal json/i }));
+
+    expect(screen.getByTestId('performance-console-local-preview')).toHaveTextContent(
+      'Selected crate Industrial/Broken',
+    );
+    expect(screen.getByTestId('performance-console-local-preview')).toHaveTextContent(
+      'Selected move Broken Metal Stress',
+    );
+    expect(screen.getByTestId('performance-console-local-preview')).toHaveTextContent(
+      'Selected snapshot console-snap-02',
+    );
+    expect(screen.getByTestId('performance-console-local-preview')).toHaveTextContent('Depth 64%');
+    expect(screen.getByTestId('performance-console-local-journal')).toHaveTextContent(
+      'imported-take-01',
+    );
+    expect(screen.getByTestId('performance-console-current-set-plan-step')).toHaveTextContent(
+      'imported-step-01',
+    );
+    expect(screen.getByTestId('performance-console-local-set-plan')).toHaveTextContent(
+      'imported-step-02',
+    );
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Imported local rehearsal JSON',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /export local rehearsal json/i }));
+
+    const exportedPayload = screen.getByTestId('performance-console-local-export-payload');
+    expect(exportedPayload).toHaveTextContent('imported-step-01');
+    expect(exportedPayload).toHaveTextContent('imported-take-01');
+    expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
+      'Exported local rehearsal JSON',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /clear saved local rehearsal/i }));
+    expect(window.localStorage.getItem('rytmrandomizer.performanceConsole.localRehearsal.v1')).toBe(
+      null,
+    );
+    expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
+  });
+
+  it('reports invalid local rehearsal imports and ignores malformed imported rows safely', () => {
+    render(<PerformanceConsole model={performanceConsoleModelWithSelectableHistory()} />);
+
+    fireEvent.change(screen.getByTestId('performance-console-local-import-input'), {
+      target: { value: '{not json' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /import local rehearsal json/i }));
+
+    expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
+      'Import failed: JSON could not be parsed',
+    );
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Import failed',
+    );
+
+    fireEvent.change(screen.getByTestId('performance-console-local-import-input'), {
+      target: { value: JSON.stringify({ version: 99 }) },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /import local rehearsal json/i }));
+
+    expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
+      'Import failed: unsupported local rehearsal payload',
+    );
+
+    const sparsePayload = {
+      version: 1,
+      selectedCrateKey: null,
+      selectedQueueKey: null,
+      selectedSnapshotId: null,
+      previewDepth: 999,
+      lastDryRunSummary: 'Sparse import dry-run summary.',
+      localJournalEntries: [
+        null,
+        { id: 'bad-journal-row' },
+        {
+          id: 'valid-imported-take',
+          crateName: 'Peak Time',
+          moveName: 'Rolling Perc Push',
+          snapshotId: 'console-snap-01',
+          depth: 999,
+        },
+      ],
+      localSetPlanEntries: [
+        null,
+        { id: 'bad-set-plan-row' },
+        {
+          id: 'valid-imported-step',
+          crateName: 'Peak Time',
+          moveName: 'Rolling Perc Push',
+          snapshotId: 'console-snap-01',
+          depth: -10,
+        },
+      ],
+      currentSetPlanStep: { id: 'bad-current-step' },
+      localOperatorEvents: [
+        null,
+        { id: 'bad-event-row' },
+        {
+          id: 'valid-imported-event',
+          label: 'Valid imported event',
+          detail: 'Kept by parser.',
+        },
+      ],
+      lastSetPlanAction: 'Sparse import action.',
+      nextLocalSetPlanIndex: -4,
+      localAutosaveEnabled: false,
+    };
+
+    fireEvent.change(screen.getByTestId('performance-console-local-import-input'), {
+      target: { value: JSON.stringify(sparsePayload) },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /import local rehearsal json/i }));
+
+    expect(screen.getByTestId('performance-console-local-preview')).toHaveTextContent(
+      'Selected crate Dark Hypnotic',
+    );
+    expect(screen.getByTestId('performance-console-local-preview')).toHaveTextContent('Depth 90%');
+    expect(screen.getByTestId('performance-console-local-journal')).toHaveTextContent(
+      'valid-imported-take',
+    );
+    expect(screen.getByTestId('performance-console-local-journal')).not.toHaveTextContent(
+      'bad-journal-row',
+    );
+    expect(screen.getByTestId('performance-console-local-set-plan')).toHaveTextContent(
+      'valid-imported-step',
+    );
+    expect(screen.getByTestId('performance-console-local-set-plan')).not.toHaveTextContent(
+      'bad-set-plan-row',
+    );
+    expect(screen.getByTestId('performance-console-current-set-plan-step')).toHaveTextContent(
+      'No current local set-plan step.',
+    );
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Valid imported event',
+    );
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Imported local rehearsal JSON',
+    );
+    expect(screen.getByTestId('performance-console-local-operator-log')).not.toHaveTextContent(
+      'bad-event-row',
+    );
+    expect(screen.getByTestId('performance-console-local-autosave')).not.toBeChecked();
+
+    fireEvent.click(screen.getByTestId('performance-console-local-autosave'));
+    expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
+      'Local auto-save on',
+    );
+    fireEvent.click(screen.getByTestId('performance-console-local-autosave'));
+    expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
+      'Local auto-save off',
+    );
+    expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByTestId('performance-console-local-import-input'), {
+      target: {
+        value: JSON.stringify({
+          version: 1,
+          localJournalEntries: {},
+          localSetPlanEntries: {},
+          localOperatorEvents: {},
+        }),
+      },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /import local rehearsal json/i }));
+
+    expect(screen.getByTestId('performance-console-local-journal')).toHaveTextContent(
+      'No local journal takes saved.',
+    );
+    expect(screen.getByTestId('performance-console-local-set-plan')).toHaveTextContent(
+      'No local set-plan steps staged.',
+    );
+  });
+
+  it('falls back safely when saved local rehearsal storage is unavailable or corrupt', () => {
+    window.localStorage.setItem('rytmrandomizer.performanceConsole.localRehearsal.v1', '{bad json');
+    const corruptStorageRender = render(
+      <PerformanceConsole model={performanceConsoleModelWithSelectableHistory()} />,
+    );
+
+    expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
+      'No saved local rehearsal loaded',
+    );
+    corruptStorageRender.unmount();
+
+    const originalStorageDescriptor = Object.getOwnPropertyDescriptor(window, 'localStorage');
+    if (originalStorageDescriptor === undefined) {
+      throw new Error('Expected jsdom localStorage descriptor to exist');
+    }
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      get() {
+        throw new Error('blocked storage');
+      },
+    });
+
+    try {
+      render(<PerformanceConsole model={performanceConsoleModelWithSelectableHistory()} />);
+
+      expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
+        'No saved local rehearsal loaded',
+      );
+      fireEvent.click(screen.getByRole('button', { name: /clear saved local rehearsal/i }));
+      expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
+        'Cleared saved local rehearsal',
+      );
+      expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+    } finally {
+      Object.defineProperty(window, 'localStorage', originalStorageDescriptor);
+    }
   });
 
   it('supports keyboard snapshot selection in the local rehearsal preview', () => {

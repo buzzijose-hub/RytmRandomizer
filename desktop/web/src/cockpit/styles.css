@@ -984,6 +984,44 @@ html,
   line-height: 1.35;
 }
 
+.performance-console-local-toggle {
+  align-items: center;
+  color: var(--text-dim);
+  display: inline-flex;
+  font-size: 11px;
+  gap: 8px;
+}
+
+.performance-console-local-toggle input {
+  accent-color: var(--accent);
+  height: 14px;
+  width: 14px;
+}
+
+.performance-console-local-json {
+  display: grid;
+  gap: 5px;
+}
+
+.performance-console-local-json textarea,
+.performance-console-local-persistence pre {
+  background: rgba(1, 4, 9, 0.72);
+  border: 1px solid rgba(88, 166, 255, 0.22);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace;
+  font-size: 11px;
+  line-height: 1.35;
+  margin: 0;
+  max-height: 170px;
+  min-height: 74px;
+  overflow: auto;
+  padding: 8px;
+  resize: vertical;
+  white-space: pre-wrap;
+  width: 100%;
+}
+
 .performance-console-local-set-plan-list,
 .performance-console-local-operator-log-list {
   display: grid;
