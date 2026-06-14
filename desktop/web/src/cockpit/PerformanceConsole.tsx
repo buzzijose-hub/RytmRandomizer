@@ -5,7 +5,10 @@ import type {
   LiveGuiPerformanceConsoleModelDict,
   LiveGuiPerformanceConsoleRytmMacroPolicyRowDict,
   LiveGuiRytmPadSurfaceCardDict,
+  LiveGuiSnapshotHistoryEntryDict,
 } from '../types/live_gui_protocol';
+import { ANALOG_FOUR_DEVICE_ID, RYTM_DEVICE_ID } from './devices';
+import { RYTM_PARAMETER_GROUPS } from './parameterGroups';
 
 export interface PerformanceConsoleProps {
   model: LiveGuiPerformanceConsoleModelDict;
@@ -13,6 +16,7 @@ export interface PerformanceConsoleProps {
 }
 
 const ANALYZER_CONTROL_ORDER: ReadonlyArray<string> = ['preview', 'dry_run', 'arm_hardware'];
+const SNAPSHOT_DECK_PREVIEW_PARAMETER_COUNT = 3;
 
 function orderedDevices(
   devices: ReadonlyArray<LiveGuiDeviceInventoryCardDict>,
@@ -48,6 +52,113 @@ function toHumanLabel(value: string): string {
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
+}
+
+function toStatusLabel(value: string): string {
+  return toHumanLabel(value).toUpperCase();
+}
+
+function uniqueText(values: ReadonlyArray<string>): ReadonlyArray<string> {
+  return [...new Set(values.filter((value) => value.trim().length > 0))];
+}
+
+function deviceTrackLabel(device: LiveGuiDeviceInventoryCardDict, index: number): string | number {
+  if (device.device_id === ANALOG_FOUR_DEVICE_ID) {
+    return `T${index + 1}`;
+  }
+  if (device.device_id === RYTM_DEVICE_ID) {
+    return index + 1;
+  }
+  return `${device.default_midi_channel_label}:${index + 1}`;
+}
+
+function portSummary(
+  devices: ReadonlyArray<LiveGuiDeviceInventoryCardDict>,
+  model: LiveGuiPerformanceConsoleModelDict,
+): string {
+  const armGate = model.safety_checklist.arm_gate;
+  if (armGate.midi_port_name !== null) {
+    return armGate.midi_port_name;
+  }
+  if (armGate.midi_port_open) {
+    return 'MIDI port open';
+  }
+  const portStates = uniqueText(devices.map((device) => device.port_state));
+  if (portStates.every((state) => ['closed', 'not_open', 'none'].includes(state))) {
+    return 'No MIDI Port Open';
+  }
+  return portStates.map(toHumanLabel).join(' / ');
+}
+
+function mockSummary(devices: ReadonlyArray<LiveGuiDeviceInventoryCardDict>): string {
+  return uniqueText(devices.map((device) => device.mock_state)).map(toHumanLabel).join(' / ') || 'mock state unknown';
+}
+
+function armSummary(model: LiveGuiPerformanceConsoleModelDict): string {
+  if (model.command_queue.hardware_armed) {
+    return 'ARMED';
+  }
+  return toStatusLabel(model.safety_checklist.arm_gate.state);
+}
+
+function dryRunSummary(model: LiveGuiPerformanceConsoleModelDict): string {
+  return model.command_queue.dry_run_active ? 'dry-run active' : 'dry-run inactive';
+}
+
+function snapshotSceneLabel(snapshot: LiveGuiSnapshotHistoryEntryDict | undefined): string {
+  if (snapshot === undefined || snapshot.scene_slot === null) {
+    return 'Scene not set';
+  }
+  return `Scene ${snapshot.scene_slot}`;
+}
+
+function snapshotIdentityLabel(snapshot: LiveGuiSnapshotHistoryEntryDict | undefined): string {
+  return snapshot === undefined ? 'No current snapshot' : `Snapshot ${snapshot.snapshot_id}`;
+}
+
+function snapshotBpmLabel(snapshot: LiveGuiSnapshotHistoryEntryDict | undefined): string {
+  if (snapshot === undefined) {
+    return 'BPM unknown';
+  }
+  return snapshot.bpm_label;
+}
+
+function profileLabels(
+  model: LiveGuiPerformanceConsoleModelDict,
+  currentMove: { readonly risk_status: string; readonly status: string } | undefined,
+  currentMacro: LiveGuiPerformanceConsoleMacroActionCardDict | undefined,
+): ReadonlyArray<string> {
+  const labels = [model.macro_action_deck.deck_status];
+  if (currentMove !== undefined) {
+    labels.push(currentMove.risk_status, currentMove.status);
+  }
+  if (currentMacro !== undefined) {
+    labels.push(currentMacro.risk_label);
+  }
+  return uniqueText(labels);
+}
+
+function companionTrackCount(devices: ReadonlyArray<LiveGuiDeviceInventoryCardDict>): number {
+  return devices
+    .filter((device) => device.device_id !== RYTM_DEVICE_ID)
+    .reduce((total, device) => total + device.track_count, 0);
+}
+
+function deviceListLabel(devices: ReadonlyArray<LiveGuiDeviceInventoryCardDict>): string {
+  if (devices.length === 0) {
+    return 'none';
+  }
+  return devices.map((device) => device.display_name).join(' + ');
+}
+
+function queuedCommandButtonLabel(
+  command: { readonly label: string } | undefined,
+  queueStatus: string,
+): string {
+  if (command === undefined) {
+    return `Queue ${queueStatus}`;
+  }
+  return `Queue ${command.label}`;
 }
 
 function orderedAnalyzerControls(
@@ -86,6 +197,32 @@ export function PerformanceConsole({
   const a4ReviewSurface = model.analog_four_review_surface;
   const a4ReviewFocus = a4ReviewSurface.review_focus;
   const macroPath = [a4SetPlan.current_macro, ...a4SetPlan.up_next_macros].join(' -> ');
+  const sortedDevices = orderedDevices(model.device_inventory.cards);
+  const sortedPads = orderedPads(model.rytm_pad_surface.cards);
+  const sortedMacros = orderedMacroActions(model.macro_action_deck.cards);
+  const sortedRytmPolicies = orderedRytmMacroPolicies(model.rytm_lane_policy_matrix.macro_rows);
+  const sortedQueue = [...model.style_queue.queue_cards].sort((left, right) => left.order - right.order);
+  const currentQueueMove = sortedQueue[0];
+  const currentSnapshot =
+    model.snapshot_history.entries.find((entry) => entry.snapshot_id === model.snapshot_history.current_id) ??
+    model.snapshot_history.entries[0];
+  const currentMacro =
+    sortedMacros.find((card) => card.macro_key === model.macro_action_deck.current_macro_key) ??
+    sortedMacros[0];
+  const currentDepth = currentQueueMove?.mutation_amount_percent ?? 0;
+  const mutationPadCount = currentMacro?.affected_pads.length ?? 0;
+  const analogFourDevice = sortedDevices.find((device) => device.device_id === ANALOG_FOUR_DEVICE_ID);
+  const rytmDevice = sortedDevices.find((device) => device.device_id === RYTM_DEVICE_ID);
+  const currentSceneLabel = snapshotSceneLabel(currentSnapshot);
+  const currentSnapshotLabel = snapshotIdentityLabel(currentSnapshot);
+  const portState = portSummary(sortedDevices, model);
+  const mutationProfileLabels = profileLabels(model, currentQueueMove, currentMacro);
+  const synthTrackCount = analogFourDevice?.track_count ?? companionTrackCount(sortedDevices);
+  const previewParameters = RYTM_PARAMETER_GROUPS[0]!.params.slice(
+    0,
+    SNAPSHOT_DECK_PREVIEW_PARAMETER_COUNT,
+  );
+  const queuedCommand = model.command_queue.queued_commands[0];
 
   return (
     <main
@@ -93,9 +230,9 @@ export function PerformanceConsole({
       data-testid="performance-console"
       aria-labelledby="performance-console-title"
     >
-      <header className="performance-console-header">
-        <div>
-          <p className="panel-meta">{model.session_label}</p>
+      <header className="performance-console-topbar" data-testid="performance-console-topbar">
+        <div className="performance-console-brand">
+          <span aria-hidden="true" className="performance-console-brand-mark" />
           <h1 id="performance-console-title">RytmRandomizer Cockpit Performance Console</h1>
         </div>
         <div className="performance-console-status" aria-label="Console safety state">
@@ -103,56 +240,315 @@ export function PerformanceConsole({
           <span>{model.hardware_mode}</span>
           <span>{packetSource}</span>
         </div>
+        <div className="performance-console-topbar-controls" aria-label="Cockpit hardware state">
+          <strong>
+            {toStatusLabel(model.console_status)} - {portState}
+          </strong>
+          <span>MIDI Port</span>
+          <span>{portState}</span>
+          <span>Arm</span>
+          <strong>{armSummary(model)}</strong>
+          <span>{model.command_queue.queue_status}</span>
+          <span>{dryRunSummary(model)}</span>
+          <span>{currentSceneLabel}</span>
+          <span>{snapshotBpmLabel(currentSnapshot)}</span>
+          <button type="button" className="live-readiness-action" disabled>
+            Tap Tempo
+          </button>
+        </div>
       </header>
 
-      <section className="performance-console-surface" aria-labelledby="console-device-rail-title">
-        <h2 id="console-device-rail-title">Device Rail</h2>
-        <div className="performance-console-device-grid">
-          {orderedDevices(model.device_inventory.cards).map((device) => (
+      <aside className="performance-console-left-rail" data-testid="performance-console-left-rail">
+        <section className="performance-console-surface" aria-labelledby="console-device-rail-title">
+          <h2 id="console-device-rail-title">Device Rail</h2>
+          <div className="performance-console-device-grid">
+            {sortedDevices.map((device) => (
+              <article
+                key={device.device_id}
+                className="performance-console-device performance-console-device-rail-card"
+                data-testid={`performance-console-device-${device.device_id}`}
+              >
+                <header>
+                  <strong>{device.display_name}</strong>
+                  <span>{toStatusLabel(device.hardware_state)}</span>
+                </header>
+                <small>{device.role_summary}</small>
+                <small>
+                  {device.track_count} tracks / port {device.port_state} / mock {device.mock_state}
+                </small>
+                <div className="performance-console-device-chip-grid">
+                  {Array.from({ length: device.track_count }, (_, index) => (
+                    <span key={`${device.device_id}-${index + 1}`} className="performance-console-device-chip">
+                      {deviceTrackLabel(device, index)}
+                    </span>
+                  ))}
+                </div>
+                <div className="live-chip-row">
+                  {device.capability_badges.map((badge) => (
+                    <span key={badge} className="live-chip">
+                      {badge}
+                    </span>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="performance-console-surface performance-console-readiness-card">
+          <h2>Safety / Readiness</h2>
+          <div className="performance-console-readiness-meter">
+            <strong>{toStatusLabel(model.safety_checklist.checklist_status)}</strong>
+            <span>{model.safety_checklist.arm_gate.reason}</span>
+          </div>
+          <div className="performance-console-list">
+            {model.safety_checklist.items.map((item) => (
+              <article key={item.key}>
+                <strong>{item.label}</strong>
+                <span>{item.status}</span>
+                <small>{item.message}</small>
+              </article>
+            ))}
+            <article>
+              <strong>{model.safety_checklist.arm_gate.label}</strong>
+              <span>{model.safety_checklist.arm_gate.state}</span>
+              <small>{model.safety_checklist.arm_gate.reason}</small>
+            </article>
+          </div>
+        </section>
+      </aside>
+
+      <section
+        className="performance-console-snapshot-deck"
+        data-testid="performance-console-snapshot-deck"
+        aria-labelledby="console-pad-grid-title"
+      >
+        <header className="performance-console-deck-header">
+          <div>
+            <p className="panel-meta">SNAPSHOT - ANALOG RYTM MKII</p>
+            <h2 id="console-pad-grid-title">Snapshot - Analog Rytm MKII</h2>
+          </div>
+          <div className="live-chip-row">
+            <span className="live-chip">{currentSceneLabel}</span>
+            <span className="live-chip">{model.session_label}</span>
+            <span className="live-chip">{currentSnapshotLabel}</span>
+            <span className="live-chip">{snapshotBpmLabel(currentSnapshot)}</span>
+          </div>
+        </header>
+        <div className="performance-console-pad-grid">
+          {sortedPads.map((pad) => (
             <article
-              key={device.device_id}
-              className="performance-console-device"
-              data-testid={`performance-console-device-${device.device_id}`}
+              key={pad.pad}
+              className={`performance-console-pad ${pad.surface_state}`}
+              data-testid={`performance-console-pad-${pad.pad}`}
             >
-              <strong>{device.display_name}</strong>
-              <span>{device.role_summary}</span>
+              <header>
+                <span>{pad.pad}</span>
+                <small>{pad.track_code}</small>
+              </header>
+              <strong>{pad.label}</strong>
               <small>
-                {device.track_count} tracks / port {device.port_state} / mock {device.mock_state}
+                {pad.track_code} / {pad.default_role} / {pad.default_machine_label}
               </small>
-              <div className="live-chip-row">
-                {device.capability_badges.map((badge) => (
-                  <span key={badge} className="live-chip">
-                    {badge}
+              <div className="performance-console-pad-knobs" aria-label={`Pad ${pad.pad} preview controls`}>
+                {previewParameters.map((parameter, index) => (
+                  <span key={`${pad.pad}-${parameter.key}`} className={`performance-console-mini-knob knob-${index}`}>
+                    <span aria-hidden="true" />
+                    <small>{parameter.label}</small>
                   </span>
                 ))}
               </div>
             </article>
           ))}
         </div>
+        <section
+          className="performance-console-surface performance-console-snapshot-history-panel"
+          data-testid="performance-console-snapshot-history"
+          aria-labelledby="console-snapshot-history-title"
+        >
+          <header className="performance-console-section-header">
+            <h2 id="console-snapshot-history-title">Snapshot History / Mutation Journal</h2>
+            <span>{model.snapshot_history.entry_count} entries</span>
+          </header>
+          <div className="performance-console-history-rail">
+            {model.snapshot_history.entries.map((entry) => (
+              <article
+                key={entry.key}
+                className={entry.snapshot_id === currentSnapshot?.snapshot_id ? 'current' : undefined}
+              >
+                <strong>{entry.snapshot_id}</strong>
+                <span>{entry.label}</span>
+                <small>{entry.summary}</small>
+              </article>
+            ))}
+          </div>
+        </section>
       </section>
 
-      <section className="performance-console-surface" aria-labelledby="console-pad-grid-title">
-        <header className="performance-console-section-header">
-          <h2 id="console-pad-grid-title">Rytm 12-Pad Snapshot Surface</h2>
-          <span>
-            {model.rytm_pad_surface.active_pad_count} active / {model.rytm_pad_surface.pad_count} pads
-          </span>
+      <section
+        className="performance-console-mutation-panel"
+        data-testid="performance-console-mutation-panel"
+        aria-labelledby="console-mutation-panel-title"
+      >
+        <header className="performance-console-deck-header">
+          <div>
+            <p className="panel-meta">MUTATION PANEL</p>
+            <h2 id="console-mutation-panel-title">Mutation Panel</h2>
+          </div>
+          <span className="live-chip">Queue ({sortedQueue.length})</span>
         </header>
-        <div className="performance-console-pad-grid">
-          {orderedPads(model.rytm_pad_surface.cards).map((pad) => (
-            <article
-              key={pad.pad}
-              className={`performance-console-pad ${pad.surface_state}`}
-              data-testid={`performance-console-pad-${pad.pad}`}
-            >
-              <span>Pad {pad.pad}</span>
-              <strong>{pad.label}</strong>
-              <small>
-                {pad.track_code} / {pad.default_role} / {pad.default_machine_label}
-              </small>
-            </article>
-          ))}
-        </div>
+
+        <section
+          className="performance-console-surface"
+          data-testid="performance-console-style-queue"
+          aria-labelledby="console-style-queue-title"
+        >
+          <header className="performance-console-section-header">
+            <h2 id="console-style-queue-title">Style Queue / Journal</h2>
+            <span>{model.style_queue.deck_status}</span>
+          </header>
+          <h3 className="performance-console-subheading">Style Crates</h3>
+          <div className="performance-console-list performance-console-crate-list" aria-label="Style crates">
+            {model.style_queue.crate_cards.map((crate) => (
+              <article
+                key={crate.crate_key}
+                data-testid={`style-crate-${toTestIdKey(crate.crate_key)}`}
+              >
+                <strong>{crate.crate_name}</strong>
+                <span>{crate.summary}</span>
+                <small>
+                  energy {crate.energy} / risk {crate.risk} / {crate.risk_status} / pads{' '}
+                  {crate.target_pads.join(', ')}
+                </small>
+                <small>
+                  primary move {crate.primary_move_name} / {crate.operator_action}
+                </small>
+                <div className="live-chip-row">
+                  {crate.tags.map((tag) => (
+                    <span key={`${crate.crate_key}-${tag}`} className="live-chip">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="live-readiness-action"
+                  disabled
+                  title="Style crate staging remains passive in this console packet."
+                >
+                  Stage {crate.primary_move_name}
+                </button>
+              </article>
+            ))}
+          </div>
+          <h3 className="performance-console-subheading">Queued Moves</h3>
+          <div className="performance-console-list">
+            {sortedQueue.map((move) => (
+              <article
+                key={move.queue_key}
+                className={move.queue_key === currentQueueMove?.queue_key ? 'current' : undefined}
+                data-testid={`style-queue-move-${toTestIdKey(move.queue_key)}`}
+              >
+                <strong>{move.move_name}</strong>
+                <span>
+                  {move.chapter} / {move.mutation_amount_percent}% / {move.risk_status}
+                </span>
+                <small>
+                  pads {move.target_pads.join(', ')} / {move.operator_action} / recover{' '}
+                  {move.recovery_action}
+                </small>
+                {move.dry_run_only ? (
+                  <div className="live-chip-row">
+                    <span className="live-chip">dry-run only</span>
+                  </div>
+                ) : null}
+              </article>
+            ))}
+          </div>
+          <h3 className="performance-console-subheading">Mutation Journal</h3>
+          <div className="performance-console-list">
+            {model.style_queue.journal_cards.map((entry) => (
+              <article key={entry.journal_key}>
+                <strong>{entry.name}</strong>
+                <span>{entry.value_summary.join(', ')}</span>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="performance-console-surface performance-console-depth-panel">
+          <header className="performance-console-section-header">
+            <h2>Depth</h2>
+            <span>{currentDepth}%</span>
+          </header>
+          <div className="performance-console-depth-track" aria-label="Mutation depth preview">
+            <span style={{ width: `${currentDepth}%` }} />
+          </div>
+          <h3 className="performance-console-subheading">Profile</h3>
+          <div className="performance-console-profile-row">
+            {mutationProfileLabels.map((profile, index) => (
+              <span key={profile} className={index === 0 ? 'active' : undefined}>
+                {toHumanLabel(profile)}
+              </span>
+            ))}
+          </div>
+        </section>
+
+        <section className="performance-console-surface performance-console-mutation-summary">
+          <header className="performance-console-section-header">
+            <h2>Mutation Summary</h2>
+            <span>{model.macro_action_deck.deck_status}</span>
+          </header>
+          <p>
+            {mutationPadCount} drum pads and {synthTrackCount} synth tracks
+            represented in the passive console.
+          </p>
+          <div className="performance-console-radar" aria-label="Mutation summary radar">
+            {['energy', 'density', 'chaos', 'space', 'grit', 'motion'].map((label) => (
+              <span key={label}>{label}</span>
+            ))}
+          </div>
+        </section>
+
+        <section className="performance-console-surface">
+          <h2>Actions</h2>
+          <div className="performance-console-action-grid">
+            <button type="button" className="live-readiness-action" disabled>
+              {currentQueueMove?.operator_action ?? model.style_queue.deck_status}
+            </button>
+            <button type="button" className="live-readiness-action" disabled>
+              Review {currentMacro?.label ?? model.macro_action_deck.current_macro_key}
+            </button>
+            <button type="button" className="live-readiness-action live-readiness-action-locked" disabled>
+              {queuedCommandButtonLabel(queuedCommand, model.command_queue.queue_status)}
+            </button>
+            <button type="button" className="live-readiness-action live-readiness-action-locked" disabled>
+              {model.safety_checklist.arm_gate.label} {model.safety_checklist.arm_gate.state}
+            </button>
+          </div>
+        </section>
+
+        <section
+          className="performance-console-surface"
+          data-testid="performance-console-blocked-actions"
+          aria-labelledby="console-blocked-actions-title"
+        >
+          <h2 id="console-blocked-actions-title">Blocked Hardware Actions</h2>
+          <div className="live-chip-row">
+            {model.blocked_actions.map((action) => (
+              <span key={action} className="live-chip live-chip-blocked">
+                {action}
+              </span>
+            ))}
+          </div>
+          <div className="live-chip-row">
+            {model.safety_lines.map((line) => (
+              <span key={line} className="live-chip">
+                {line}
+              </span>
+            ))}
+          </div>
+        </section>
       </section>
 
       <section
@@ -184,7 +580,7 @@ export function PerformanceConsole({
 
         <h3 className="performance-console-subheading">Macro Policies</h3>
         <div className="performance-console-list">
-          {orderedRytmMacroPolicies(model.rytm_lane_policy_matrix.macro_rows).map((row) => (
+          {sortedRytmPolicies.map((row) => (
             <article key={row.macro_key} data-testid={`rytm-macro-policy-${row.macro_key}`}>
               <strong>{row.label}</strong>
               <span>
@@ -395,7 +791,7 @@ export function PerformanceConsole({
           </span>
         </header>
         <div className="performance-console-macro-grid">
-          {orderedMacroActions(model.macro_action_deck.cards).map((card) => (
+          {sortedMacros.map((card) => (
             <article
               key={card.macro_key}
               className={`performance-console-macro-card ${card.status}`}
@@ -565,80 +961,6 @@ export function PerformanceConsole({
 
       <section
         className="performance-console-surface"
-        data-testid="performance-console-style-queue"
-        aria-labelledby="console-style-queue-title"
-      >
-        <header className="performance-console-section-header">
-          <h2 id="console-style-queue-title">Style Queue / Journal</h2>
-          <span>{model.style_queue.deck_status}</span>
-        </header>
-        <h3 className="performance-console-subheading">Style Crates</h3>
-        <div className="performance-console-list" aria-label="Style crates">
-          {model.style_queue.crate_cards.map((crate) => (
-            <article key={crate.crate_key} data-testid={`style-crate-${toTestIdKey(crate.crate_key)}`}>
-              <strong>{crate.crate_name}</strong>
-              <span>{crate.summary}</span>
-              <small>
-                energy {crate.energy} / risk {crate.risk} / {crate.risk_status} / pads{' '}
-                {crate.target_pads.join(', ')}
-              </small>
-              <small>
-                primary move {crate.primary_move_name} / {crate.operator_action}
-              </small>
-              <div className="live-chip-row">
-                {crate.tags.map((tag) => (
-                  <span key={`${crate.crate_key}-${tag}`} className="live-chip">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <button
-                type="button"
-                className="live-readiness-action"
-                disabled
-                title="Style crate staging remains passive in this console packet."
-              >
-                Stage {crate.primary_move_name}
-              </button>
-            </article>
-          ))}
-        </div>
-        <h3 className="performance-console-subheading">Queued Moves</h3>
-        <div className="performance-console-list">
-          {model.style_queue.queue_cards.map((move) => (
-            <article
-              key={move.queue_key}
-              data-testid={`style-queue-move-${toTestIdKey(move.queue_key)}`}
-            >
-              <strong>{move.move_name}</strong>
-              <span>
-                {move.chapter} / {move.mutation_amount_percent}% / {move.risk_status}
-              </span>
-              <small>
-                pads {move.target_pads.join(', ')} / {move.operator_action} / recover{' '}
-                {move.recovery_action}
-              </small>
-              {move.dry_run_only ? (
-                <div className="live-chip-row">
-                  <span className="live-chip">dry-run only</span>
-                </div>
-              ) : null}
-            </article>
-          ))}
-        </div>
-        <h3 className="performance-console-subheading">Mutation Journal</h3>
-        <div className="performance-console-list">
-          {model.style_queue.journal_cards.map((entry) => (
-            <article key={entry.journal_key}>
-              <strong>{entry.name}</strong>
-              <span>{entry.value_summary.join(', ')}</span>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section
-        className="performance-console-surface"
         data-testid="performance-console-analyzer-panel"
         aria-labelledby="console-analyzer-panel-title"
       >
@@ -685,26 +1007,6 @@ export function PerformanceConsole({
             >
               {control.label} analyzer
             </button>
-          ))}
-        </div>
-      </section>
-
-      <section
-        className="performance-console-surface"
-        data-testid="performance-console-snapshot-history"
-        aria-labelledby="console-snapshot-history-title"
-      >
-        <header className="performance-console-section-header">
-          <h2 id="console-snapshot-history-title">Snapshot History</h2>
-          <span>{model.snapshot_history.entry_count} entries</span>
-        </header>
-        <div className="performance-console-list">
-          {model.snapshot_history.entries.map((entry) => (
-            <article key={entry.key}>
-              <strong>{entry.snapshot_id}</strong>
-              <span>{entry.label}</span>
-              <small>{entry.summary}</small>
-            </article>
           ))}
         </div>
       </section>
@@ -764,27 +1066,15 @@ export function PerformanceConsole({
         </button>
       </section>
 
-      <section
-        className="performance-console-surface performance-console-wide"
-        data-testid="performance-console-blocked-actions"
-        aria-labelledby="console-blocked-actions-title"
-      >
-        <h2 id="console-blocked-actions-title">Blocked Active Actions</h2>
-        <div className="live-chip-row">
-          {model.blocked_actions.map((action) => (
-            <span key={action} className="live-chip live-chip-blocked">
-              {action}
-            </span>
-          ))}
-        </div>
-        <div className="live-chip-row">
-          {model.safety_lines.map((line) => (
-            <span key={line} className="live-chip">
-              {line}
-            </span>
-          ))}
-        </div>
-      </section>
+      <footer className="performance-console-bottom-strip" data-testid="performance-console-bottom-strip">
+        <span>Session {model.session_label}</span>
+        <span>Devices {deviceListLabel(sortedDevices)}</span>
+        <span>Mock {mockSummary(sortedDevices)}</span>
+        <span>Rytm {rytmDevice?.hardware_state ?? 'not present'}</span>
+        <span>A4 {analogFourDevice?.hardware_state ?? 'not present'}</span>
+        <span>Journal entries {model.style_queue.journal_cards.length}</span>
+        <span>Cockpit Mode {model.hardware_mode}</span>
+      </footer>
     </main>
   );
 }

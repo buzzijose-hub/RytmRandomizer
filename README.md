@@ -80,6 +80,12 @@ filter and no LFO craziness; Pad 12 remains product-supported even when a live
 operator chooses not to use it. Apply/Send controls for that matrix remain
 disabled in Cockpit; real sends still happen only from the explicitly armed
 snapshot shell.
+The Performance Console route renders those passive packets in a cinematic
+operator HUD: top safety bar, device rail, all-12-pad snapshot deck, Style
+Crates/queue mutation panel, blocked hardware actions, command queue, safety
+checklist, and bottom session strip. The layout is still review-only: it
+does not dispatch sidecar commands, open MIDI ports, arm hardware, or send
+MIDI.
 
 **Sidecar security guarantees** (post CODE_REVIEW.md sweep, 2026-05):
 

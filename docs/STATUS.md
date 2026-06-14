@@ -4,6 +4,15 @@ Last updated: 2026-06-13. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-13: Cockpit Performance Console cinematic HUD follow-up started on
+  a clean base after PR #175 merged. The existing passive Performance Console
+  packet now renders as a dense live-operator HUD inspired by Jose's 2026-06-09
+  mockup: top safety/port/arm status bar, left device rail for Rytm/A4,
+  central all-12-pad snapshot deck with snapshot history/mutation journal, right
+  Style Crates/queue mutation panel with depth/profile/actions/blocked
+  hardware actions, and a bottom session strip. Frontend/passive rendering
+  only: no WebSocket command dispatch, no sidecar command execution, no MIDI
+  port opening, no hardware arm path, no MIDI send, and no snapshot mutation.
 - 2026-06-13: Cockpit Rytm lane-policy matrix follow-up started on a clean
   base after PR #174 merged. The passive Performance Console now carries a
   GUI-ready Rytm Lane Policy Matrix derived from the existing OXI live macro
