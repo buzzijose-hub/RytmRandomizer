@@ -27,6 +27,8 @@ const PREVIEW_DEPTH_MIN = 10;
 const PREVIEW_DEPTH_MAX = 90;
 const LOCAL_REHEARSAL_STORAGE_KEY = 'rytmrandomizer.performanceConsole.localRehearsal.v1';
 const LOCAL_REHEARSAL_STORAGE_VERSION = 1;
+const LOCAL_REHEARSAL_PACKAGE_KIND = 'rytmrandomizer.cockpit.local-rehearsal-package';
+const LOCAL_REHEARSAL_PACKAGE_VERSION = 1;
 
 interface LocalJournalEntry {
   readonly id: string;
@@ -68,6 +70,44 @@ interface LocalRehearsalSnapshot {
   readonly localAutosaveEnabled: boolean;
 }
 
+interface LocalRehearsalPackageManifest {
+  readonly sessionLabel: string;
+  readonly packetSource: string;
+  readonly selectedCrateName: string;
+  readonly selectedMoveName: string;
+  readonly selectedSnapshotId: string;
+  readonly queuedStepCount: number;
+  readonly currentStepId: string | null;
+  readonly journalTakeCount: number;
+  readonly hardwareMode: string;
+}
+
+interface LocalRehearsalPackageCompatibility {
+  readonly status: string;
+  readonly checks: ReadonlyArray<string>;
+}
+
+interface LocalRehearsalPackageSafety {
+  readonly devices: ReadonlyArray<string>;
+  readonly checklist: ReadonlyArray<string>;
+}
+
+interface LocalRehearsalPackage {
+  readonly kind: string;
+  readonly version: number;
+  readonly manifest: LocalRehearsalPackageManifest;
+  readonly compatibility: LocalRehearsalPackageCompatibility;
+  readonly safety: LocalRehearsalPackageSafety;
+  readonly blockedActions: ReadonlyArray<string>;
+  readonly recoveryNotes: ReadonlyArray<string>;
+  readonly rehearsal: LocalRehearsalSnapshot;
+}
+
+interface LocalRehearsalImport {
+  readonly snapshot: LocalRehearsalSnapshot;
+  readonly rehearsalPackage: LocalRehearsalPackage | null;
+}
+
 function orderedDevices(
   devices: ReadonlyArray<LiveGuiDeviceInventoryCardDict>,
 ): ReadonlyArray<LiveGuiDeviceInventoryCardDict> {
@@ -94,6 +134,14 @@ function orderedRytmMacroPolicies(
 
 function toTestIdKey(value: string): string {
   return value.toLowerCase().replaceAll('_', '-').replaceAll('/', '-').replaceAll(' ', '-');
+}
+
+function toReferenceKey(value: string): string {
+  return value.toLowerCase().replaceAll('-', '_');
+}
+
+function sameReferenceKey(left: string, right: string): boolean {
+  return toReferenceKey(left) === toReferenceKey(right);
 }
 
 function toHumanLabel(value: string): string {
@@ -394,6 +442,279 @@ function localRehearsalSnapshotFromUnknown(value: unknown): LocalRehearsalSnapsh
   };
 }
 
+function stringArrayFromUnknown(value: unknown): ReadonlyArray<string> {
+  return localArrayFromUnknown(value, (candidate) =>
+    typeof candidate === 'string' ? candidate : null,
+  );
+}
+
+function localRehearsalPackageManifestFromUnknown(
+  value: unknown,
+): LocalRehearsalPackageManifest | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const sessionLabel = stringField(value, 'sessionLabel');
+  const packetSource = stringField(value, 'packetSource');
+  const selectedCrateName = stringField(value, 'selectedCrateName');
+  const selectedMoveName = stringField(value, 'selectedMoveName');
+  const selectedSnapshotId = stringField(value, 'selectedSnapshotId');
+  const queuedStepCount = numberField(value, 'queuedStepCount');
+  const journalTakeCount = numberField(value, 'journalTakeCount');
+  const hardwareMode = stringField(value, 'hardwareMode');
+  if (
+    sessionLabel === null ||
+    packetSource === null ||
+    selectedCrateName === null ||
+    selectedMoveName === null ||
+    selectedSnapshotId === null ||
+    queuedStepCount === null ||
+    journalTakeCount === null ||
+    hardwareMode === null
+  ) {
+    return null;
+  }
+  return {
+    sessionLabel,
+    packetSource,
+    selectedCrateName,
+    selectedMoveName,
+    selectedSnapshotId,
+    queuedStepCount: Math.max(0, Math.round(queuedStepCount)),
+    currentStepId: nullableStringField(value, 'currentStepId'),
+    journalTakeCount: Math.max(0, Math.round(journalTakeCount)),
+    hardwareMode,
+  };
+}
+
+function localRehearsalPackageCompatibilityFromUnknown(
+  value: unknown,
+): LocalRehearsalPackageCompatibility | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const status = stringField(value, 'status');
+  if (status === null) {
+    return null;
+  }
+  return {
+    status,
+    checks: stringArrayFromUnknown(value.checks),
+  };
+}
+
+function localRehearsalPackageSafetyFromUnknown(
+  value: unknown,
+): LocalRehearsalPackageSafety | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  return {
+    devices: stringArrayFromUnknown(value.devices),
+    checklist: stringArrayFromUnknown(value.checklist),
+  };
+}
+
+function localRehearsalPackageFromUnknown(value: unknown): LocalRehearsalPackage | null {
+  if (
+    !isRecord(value) ||
+    stringField(value, 'kind') !== LOCAL_REHEARSAL_PACKAGE_KIND ||
+    numberField(value, 'version') !== LOCAL_REHEARSAL_PACKAGE_VERSION
+  ) {
+    return null;
+  }
+  const manifest = localRehearsalPackageManifestFromUnknown(value.manifest);
+  const compatibility = localRehearsalPackageCompatibilityFromUnknown(value.compatibility);
+  const safety = localRehearsalPackageSafetyFromUnknown(value.safety);
+  const rehearsal = localRehearsalSnapshotFromUnknown(value.rehearsal);
+  if (
+    manifest === null ||
+    compatibility === null ||
+    safety === null ||
+    rehearsal === null
+  ) {
+    return null;
+  }
+  return {
+    kind: LOCAL_REHEARSAL_PACKAGE_KIND,
+    version: LOCAL_REHEARSAL_PACKAGE_VERSION,
+    manifest,
+    compatibility,
+    safety,
+    blockedActions: stringArrayFromUnknown(value.blockedActions),
+    recoveryNotes: stringArrayFromUnknown(value.recoveryNotes),
+    rehearsal,
+  };
+}
+
+function localRehearsalImportFromUnknown(value: unknown): LocalRehearsalImport | null {
+  const rehearsalPackage = localRehearsalPackageFromUnknown(value);
+  if (rehearsalPackage !== null) {
+    return {
+      snapshot: rehearsalPackage.rehearsal,
+      rehearsalPackage,
+    };
+  }
+  const snapshot = localRehearsalSnapshotFromUnknown(value);
+  if (snapshot === null) {
+    return null;
+  }
+  return {
+    snapshot,
+    rehearsalPackage: null,
+  };
+}
+
+function packageCompatibilityForSnapshot(
+  model: LiveGuiPerformanceConsoleModelDict,
+  snapshot: LocalRehearsalSnapshot,
+): LocalRehearsalPackageCompatibility {
+  const referencedQueueMove =
+    snapshot.selectedQueueKey === null
+      ? undefined
+      : model.style_queue.queue_cards.find((move) => move.queue_key === snapshot.selectedQueueKey);
+  const crateExists =
+    snapshot.selectedCrateKey === null ||
+    model.style_queue.crate_cards.some((crate) =>
+      sameReferenceKey(crate.crate_key, snapshot.selectedCrateKey ?? ''),
+    ) ||
+    (referencedQueueMove !== undefined &&
+      model.style_queue.crate_cards.some((crate) => crate.crate_key === referencedQueueMove.crate_key));
+  const queueExists =
+    snapshot.selectedQueueKey === null ||
+    referencedQueueMove !== undefined;
+  const snapshotExists =
+    snapshot.selectedSnapshotId === null ||
+    model.snapshot_history.entries.some(
+      (entry) => entry.snapshot_id === snapshot.selectedSnapshotId,
+    );
+  const checks = [
+    crateExists
+      ? 'selected crate exists in current packet'
+      : 'selected crate missing from current packet',
+    queueExists
+      ? 'selected queued move exists in current packet'
+      : 'selected queued move missing from current packet',
+    snapshotExists
+      ? 'selected snapshot exists in current packet'
+      : 'selected snapshot missing from current packet',
+  ];
+  return {
+    status: checks.some((check) => check.includes('missing')) ? 'needs review' : 'compatible',
+    checks,
+  };
+}
+
+function packageSafetyForModel(
+  model: LiveGuiPerformanceConsoleModelDict,
+  devices: ReadonlyArray<LiveGuiDeviceInventoryCardDict>,
+): LocalRehearsalPackageSafety {
+  return {
+    devices: devices.map((device) => device.display_name),
+    checklist: uniqueText([
+      ...model.safety_checklist.items.map(
+        (item) => `${item.label}: ${toStatusLabel(item.status)}`,
+      ),
+      `${model.safety_checklist.arm_gate.label}: ${toStatusLabel(
+        model.safety_checklist.arm_gate.state,
+      )}`,
+      ...model.safety_checklist.safety_lines,
+      ...model.safety_lines,
+    ]),
+  };
+}
+
+function packageBlockedActionsForModel(
+  model: LiveGuiPerformanceConsoleModelDict,
+): ReadonlyArray<string> {
+  return uniqueText([
+    ...model.blocked_actions,
+    ...model.device_inventory.blocked_actions,
+    ...model.rytm_pad_surface.blocked_actions,
+    ...model.rytm_lane_policy_matrix.blocked_actions,
+    ...model.performance_flow.blocked_actions,
+    ...model.performance_flow.analog_four_set_plan.blocked_active_actions,
+    ...model.macro_action_deck.blocked_actions,
+    ...model.rehearsal_board.blocked_actions,
+    ...model.analog_four_review_surface.blocked_actions,
+    ...model.analyzer_panel.blocked_actions,
+    ...model.snapshot_history.blocked_actions,
+    ...model.command_queue.blocked_actions,
+    ...model.safety_checklist.blocked_actions,
+  ]);
+}
+
+function packageRecoveryNotesForModel(
+  model: LiveGuiPerformanceConsoleModelDict,
+  currentMove: StyleCrateRehearsalQueueCardDict | undefined,
+  localHandoffLines: ReadonlyArray<string>,
+): ReadonlyArray<string> {
+  return uniqueText([
+    'use Z + send from the armed snapshot shell',
+    ...(currentMove === undefined ? [] : [`queue recovery: ${currentMove.recovery_action}`]),
+    ...model.analog_four_review_surface.recovery_notes,
+    ...model.rehearsal_board.recovery_checks,
+    ...localHandoffLines,
+  ]);
+}
+
+function buildLocalRehearsalPackage({
+  model,
+  packetSource,
+  localRehearsalSnapshot,
+  selectedCrate,
+  currentQueueMove,
+  selectedSnapshotIdLabel,
+  currentSetPlanStep,
+  localSetPlanEntries,
+  localJournalEntries,
+  sortedDevices,
+  localHandoffLines,
+}: {
+  readonly model: LiveGuiPerformanceConsoleModelDict;
+  readonly packetSource: string;
+  readonly localRehearsalSnapshot: LocalRehearsalSnapshot;
+  readonly selectedCrate: StyleCrateRehearsalCrateCardDict | undefined;
+  readonly currentQueueMove: StyleCrateRehearsalQueueCardDict | undefined;
+  readonly selectedSnapshotIdLabel: string;
+  readonly currentSetPlanStep: LocalSetPlanEntry | null;
+  readonly localSetPlanEntries: ReadonlyArray<LocalSetPlanEntry>;
+  readonly localJournalEntries: ReadonlyArray<LocalJournalEntry>;
+  readonly sortedDevices: ReadonlyArray<LiveGuiDeviceInventoryCardDict>;
+  readonly localHandoffLines: ReadonlyArray<string>;
+}): LocalRehearsalPackage {
+  return {
+    kind: LOCAL_REHEARSAL_PACKAGE_KIND,
+    version: LOCAL_REHEARSAL_PACKAGE_VERSION,
+    manifest: {
+      sessionLabel: model.session_label,
+      packetSource,
+      selectedCrateName: selectedCrate?.crate_name ?? 'none',
+      selectedMoveName: currentQueueMove?.move_name ?? 'none',
+      selectedSnapshotId: selectedSnapshotIdLabel,
+      queuedStepCount: localSetPlanEntries.length,
+      currentStepId: currentSetPlanStep?.id ?? null,
+      journalTakeCount: localJournalEntries.length,
+      hardwareMode: model.hardware_mode,
+    },
+    compatibility: packageCompatibilityForSnapshot(model, localRehearsalSnapshot),
+    safety: packageSafetyForModel(model, sortedDevices),
+    blockedActions: packageBlockedActionsForModel(model),
+    recoveryNotes: packageRecoveryNotesForModel(model, currentQueueMove, localHandoffLines),
+    rehearsal: localRehearsalSnapshot,
+  };
+}
+
+function packageWithCurrentCompatibility(
+  model: LiveGuiPerformanceConsoleModelDict,
+  rehearsalPackage: LocalRehearsalPackage,
+): LocalRehearsalPackage {
+  return {
+    ...rehearsalPackage,
+    compatibility: packageCompatibilityForSnapshot(model, rehearsalPackage.rehearsal),
+  };
+}
+
 function localStorageHandle(): Storage | null {
   try {
     return window.localStorage;
@@ -502,6 +823,8 @@ export function PerformanceConsole({
   );
   const [localExportPayload, setLocalExportPayload] = useState<string>('');
   const [localImportPayload, setLocalImportPayload] = useState<string>('');
+  const [localPackage, setLocalPackage] = useState<LocalRehearsalPackage | null>(null);
+  const [localPackagePayload, setLocalPackagePayload] = useState<string>('');
   const nextLocalSetPlanIndex = useRef<number>(initialLocalRehearsal?.nextLocalSetPlanIndex ?? 0);
   const [lastSetPlanAction, setLastSetPlanAction] = useState<string>(
     initialLocalRehearsal?.lastSetPlanAction ?? 'No local set-plan action yet.',
@@ -534,7 +857,9 @@ export function PerformanceConsole({
     model.snapshot_history.entries.find((entry) => entry.snapshot_id === model.snapshot_history.current_id) ??
     model.snapshot_history.entries[0];
   const selectedCrate =
-    model.style_queue.crate_cards.find((crate) => crate.crate_key === selectedCrateKey) ??
+    model.style_queue.crate_cards.find(
+      (crate) => selectedCrateKey !== null && sameReferenceKey(crate.crate_key, selectedCrateKey),
+    ) ??
     model.style_queue.crate_cards.find((crate) => crate.crate_key === currentQueueMove?.crate_key) ??
     model.style_queue.crate_cards[0];
   const currentMacro =
@@ -630,31 +955,11 @@ export function PerformanceConsole({
     );
   };
 
-  const exportLocalRehearsalJson = (): void => {
-    const payload = JSON.stringify(localRehearsalSnapshot, null, 2);
-    setLocalExportPayload(payload);
-    setLocalPersistenceSummary('Exported local rehearsal JSON. Local only; no MIDI sent.');
-    appendLocalOperatorEvent(
-      'Exported local rehearsal JSON',
-      `${localJournalEntries.length} journal take(s), ${localSetPlanEntries.length} queued step(s).`,
-    );
-  };
-
-  const importLocalRehearsalJson = (): void => {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(localImportPayload);
-    } catch {
-      setLocalPersistenceSummary('Import failed: JSON could not be parsed. Local only; no MIDI sent.');
-      appendLocalOperatorEvent('Import failed', 'JSON could not be parsed.');
-      return;
-    }
-    const importedSnapshot = localRehearsalSnapshotFromUnknown(parsed);
-    if (importedSnapshot === null) {
-      setLocalPersistenceSummary('Import failed: unsupported local rehearsal payload. Local only; no MIDI sent.');
-      appendLocalOperatorEvent('Import failed', 'Unsupported local rehearsal payload.');
-      return;
-    }
+  const applyLocalRehearsalSnapshot = (
+    importedSnapshot: LocalRehearsalSnapshot,
+    eventLabel: string,
+    eventDetail: string,
+  ): void => {
     setSelectedCrateKey(importedSnapshot.selectedCrateKey);
     setSelectedQueueKey(importedSnapshot.selectedQueueKey);
     setSelectedSnapshotId(importedSnapshot.selectedSnapshotId);
@@ -670,12 +975,104 @@ export function PerformanceConsole({
       ...importedSnapshot.localOperatorEvents,
       {
         id: localOperatorEventId(importedSnapshot.localOperatorEvents.length),
-        label: 'Imported local rehearsal JSON',
-        detail: 'Loaded passive browser-local rehearsal state.',
+        label: eventLabel,
+        detail: eventDetail,
         status: 'Local only',
       },
     ]);
+  };
+
+  const exportLocalRehearsalJson = (): void => {
+    const payload = JSON.stringify(localRehearsalSnapshot, null, 2);
+    setLocalExportPayload(payload);
+    setLocalPersistenceSummary('Exported local rehearsal JSON. Local only; no MIDI sent.');
+    appendLocalOperatorEvent(
+      'Exported local rehearsal JSON',
+      `${localJournalEntries.length} journal take(s), ${localSetPlanEntries.length} queued step(s).`,
+    );
+  };
+
+  const exportLocalRehearsalPackage = (): void => {
+    const rehearsalPackage = buildLocalRehearsalPackage({
+      model,
+      packetSource,
+      localRehearsalSnapshot,
+      selectedCrate,
+      currentQueueMove,
+      selectedSnapshotIdLabel,
+      currentSetPlanStep,
+      localSetPlanEntries,
+      localJournalEntries,
+      sortedDevices,
+      localHandoffLines,
+    });
+    setLocalPackage(rehearsalPackage);
+    setLocalPackagePayload(JSON.stringify(rehearsalPackage, null, 2));
+    setLocalPersistenceSummary('Exported local rehearsal package. Local only; no MIDI sent.');
+    appendLocalOperatorEvent(
+      'Exported local rehearsal package',
+      `${rehearsalPackage.manifest.sessionLabel} / ${rehearsalPackage.compatibility.status}.`,
+    );
+  };
+
+  const importLocalRehearsalJson = (): void => {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(localImportPayload);
+    } catch {
+      setLocalPersistenceSummary('Import failed: JSON could not be parsed. Local only; no MIDI sent.');
+      appendLocalOperatorEvent('Import failed', 'JSON could not be parsed.');
+      return;
+    }
+    const rehearsalImport = localRehearsalImportFromUnknown(parsed);
+    if (rehearsalImport === null) {
+      setLocalPersistenceSummary('Import failed: unsupported local rehearsal payload. Local only; no MIDI sent.');
+      appendLocalOperatorEvent('Import failed', 'Unsupported local rehearsal payload.');
+      return;
+    }
+    applyLocalRehearsalSnapshot(
+      rehearsalImport.snapshot,
+      'Imported local rehearsal JSON',
+      'Loaded passive browser-local rehearsal state.',
+    );
+    if (rehearsalImport.rehearsalPackage === null) {
+      setLocalPackage(null);
+      setLocalPackagePayload('');
+    } else {
+      const rehearsalPackage = packageWithCurrentCompatibility(
+        model,
+        rehearsalImport.rehearsalPackage,
+      );
+      setLocalPackage(rehearsalPackage);
+      setLocalPackagePayload(JSON.stringify(rehearsalPackage, null, 2));
+    }
     setLocalPersistenceSummary('Imported local rehearsal JSON. Local only; no MIDI sent.');
+  };
+
+  const importLocalRehearsalPackage = (): void => {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(localImportPayload);
+    } catch {
+      setLocalPersistenceSummary('Import failed: JSON could not be parsed. Local only; no MIDI sent.');
+      appendLocalOperatorEvent('Import failed', 'JSON could not be parsed.');
+      return;
+    }
+    const rehearsalPackage = localRehearsalPackageFromUnknown(parsed);
+    if (rehearsalPackage === null) {
+      setLocalPersistenceSummary('Import failed: unsupported local rehearsal package. Local only; no MIDI sent.');
+      appendLocalOperatorEvent('Import failed', 'Unsupported local rehearsal package.');
+      return;
+    }
+    const compatiblePackage = packageWithCurrentCompatibility(model, rehearsalPackage);
+    applyLocalRehearsalSnapshot(
+      compatiblePackage.rehearsal,
+      'Imported local rehearsal package',
+      `${compatiblePackage.manifest.sessionLabel} / ${compatiblePackage.compatibility.status}.`,
+    );
+    setLocalPackage(compatiblePackage);
+    setLocalPackagePayload(JSON.stringify(compatiblePackage, null, 2));
+    setLocalPersistenceSummary('Imported local rehearsal package. Local only; no MIDI sent.');
   };
 
   const clearSavedLocalRehearsal = (): void => {
@@ -1153,6 +1550,22 @@ export function PerformanceConsole({
               <button
                 type="button"
                 className="live-readiness-action performance-console-local-control"
+                title="Exports a portable rehearsal package with manifest, compatibility, and safety evidence."
+                onClick={exportLocalRehearsalPackage}
+              >
+                Export local rehearsal package
+              </button>
+              <button
+                type="button"
+                className="live-readiness-action performance-console-local-control"
+                title="Imports a portable rehearsal package without dispatching any command."
+                onClick={importLocalRehearsalPackage}
+              >
+                Import local rehearsal package
+              </button>
+              <button
+                type="button"
+                className="live-readiness-action performance-console-local-control"
                 title="Clears browser-local rehearsal storage only."
                 onClick={clearSavedLocalRehearsal}
               >
@@ -1172,6 +1585,61 @@ export function PerformanceConsole({
             {localExportPayload.length === 0 ? null : (
               <pre data-testid="performance-console-local-export-payload">
                 {localExportPayload}
+              </pre>
+            )}
+            {localPackage === null ? null : (
+              <section
+                className="performance-console-local-package"
+                data-testid="performance-console-local-package"
+                aria-label="Local rehearsal package evidence"
+              >
+                <strong>Local rehearsal package</strong>
+                <div className="performance-console-local-package-grid">
+                  <span>{localPackage.compatibility.status}</span>
+                  <span>{localPackage.manifest.sessionLabel}</span>
+                  <span>{localPackage.manifest.packetSource}</span>
+                  <span>{localPackage.manifest.selectedCrateName}</span>
+                  <span>{localPackage.manifest.selectedMoveName}</span>
+                  <span>{localPackage.manifest.selectedSnapshotId}</span>
+                  <span>current {localPackage.manifest.currentStepId ?? 'none'}</span>
+                  <span>queued {localPackage.manifest.queuedStepCount}</span>
+                  <span>journal {localPackage.manifest.journalTakeCount}</span>
+                </div>
+                <div className="performance-console-local-package-list">
+                  <strong>Compatibility</strong>
+                  {localPackage.compatibility.checks.map((check) => (
+                    <small key={check}>{check}</small>
+                  ))}
+                </div>
+                <div className="performance-console-local-package-list">
+                  <strong>Devices</strong>
+                  {localPackage.safety.devices.map((device) => (
+                    <small key={device}>{device}</small>
+                  ))}
+                </div>
+                <div className="performance-console-local-package-list">
+                  <strong>Safety</strong>
+                  {localPackage.safety.checklist.map((item) => (
+                    <small key={item}>{item}</small>
+                  ))}
+                </div>
+                <div className="performance-console-local-package-list">
+                  <strong>Blocked actions</strong>
+                  {localPackage.blockedActions.map((action) => (
+                    <small key={action}>{action}</small>
+                  ))}
+                </div>
+                <div className="performance-console-local-package-list">
+                  <strong>Recovery</strong>
+                  {localPackage.recoveryNotes.map((note) => (
+                    <small key={note}>{note}</small>
+                  ))}
+                </div>
+              </section>
+            )}
+            {localPackagePayload.length === 0 ? null : (
+              <pre data-testid="performance-console-local-package-payload">
+                {localPackagePayload}
               </pre>
             )}
             <small>
