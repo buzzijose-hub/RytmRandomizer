@@ -984,6 +984,25 @@ html,
   line-height: 1.35;
 }
 
+.performance-console-local-set-plan-list {
+  display: grid;
+  gap: 6px;
+}
+
+.performance-console-local-set-plan-list article {
+  border: 1px solid rgba(88, 166, 255, 0.24);
+  border-radius: 6px;
+  background: rgba(22, 27, 34, 0.58);
+  display: grid;
+  gap: 3px;
+  padding: 7px;
+}
+
+.performance-console-local-set-plan-list strong {
+  color: var(--text);
+  font-size: 11px;
+}
+
 .performance-console-depth-input {
   display: grid;
   gap: 5px;
