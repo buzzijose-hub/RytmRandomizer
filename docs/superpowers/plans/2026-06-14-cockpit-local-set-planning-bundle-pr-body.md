@@ -10,6 +10,7 @@ Adds passive local set planning to the Cockpit Performance Console. Operators ca
 - Added CSS for compact staged set-plan entries inside the existing cockpit HUD.
 - Added Vitest coverage for multi-step staging, promote/skip/clear behavior, empty-plan fallbacks, and hardware-send safety.
 - Updated `README.md`, `docs/STATUS.md`, and the implementation plan.
+- Added desktop-shell Cargo resolver pins for the `brotli-decompressor` / `alloc-stdlib` / `alloc-no-stdlib` bridge plus an architecture guard after fresh 2026-06-14 `brotli` allocator releases broke GitHub `desktop-shell` resolution before project Rust code compiled.
 
 ## Why this matters
 
@@ -23,6 +24,7 @@ npm.cmd run test:coverage
 npm.cmd run build
 npm.cmd run typecheck
 npm.cmd run lint -- --ext .ts,.tsx --max-warnings 0 src/cockpit/PerformanceConsole.tsx tests/cockpit/PerformanceConsole.test.tsx
+python -m pytest tests\architecture\test_desktop_shell_cargo_resolver_pins.py -q
 python -m pytest tests\architecture\ -q
 python -m pytest
 python -m ruff check .
@@ -31,8 +33,9 @@ python -m isort --profile black --check-only .
 git diff --check
 ```
 
-- [x] Local pytest passes: 5697 passed, 3 skipped.
-- [x] `tests/architecture/` passes: 607 passed.
+- [x] Local pytest passes: 5698 passed, 3 skipped.
+- [x] `tests/architecture/` passes: 608 passed.
+- [x] Desktop-shell Cargo resolver guard passes after red/green verification.
 - [x] Frontend coverage passes at 100% statements / branches / functions / lines.
 - [x] Cockpit Performance Console focused test passes: 12 passed.
 - [x] Cockpit web build, typecheck, and targeted ESLint pass.
@@ -42,7 +45,7 @@ git diff --check
 
 ## Plan-requirements conformance
 
-Per [`docs/PLAN_REQUIREMENTS.md`](../docs/PLAN_REQUIREMENTS.md) - every non-trivial PR must satisfy all 18 gates. Mark each `[x]`, or `[ ] N/A - <reason>`.
+Per [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUIREMENTS.md) - every non-trivial PR must satisfy all 18 gates. Mark each `[x]`, or `[ ] N/A - <reason>`.
 
 - [x] **Gate 1** - 100% branch coverage on touched frontend files via `npm.cmd run test:coverage`.
 - [x] **Gate 2** - V1.34 parity byte-identical through `python -m pytest`; no parity fixtures changed.
@@ -61,11 +64,11 @@ Per [`docs/PLAN_REQUIREMENTS.md`](../docs/PLAN_REQUIREMENTS.md) - every non-triv
 - [ ] Gate 15 - N/A: no reusable new agent workflow or project rule was discovered.
 - [x] **Gate 16** - execution shape: one clean-base bundled PR against `modularize-v1.34`; no stacked PRs.
 - [x] **Gate 17** - abstraction reuse: reuses `LiveGuiPerformanceConsoleModelDict`, existing style queue packet types, and existing cockpit component/CSS surface.
-- [ ] Gate 18 - N/A: no new architecture boundary, protocol, registry, CLI/report command, or diagram count changed.
+- [ ] Gate 18 - N/A: no new architecture boundary, protocol, registry, CLI/report command, or diagram count changed; the desktop-shell Cargo pin is dependency-resolution hardening only.
 
 ## Strict rules - non-negotiables
 
-Per [`CONTRIBUTING.md` Section Strict rules](../CONTRIBUTING.md#strict-rules--non-negotiables) - confirm each:
+Per [`CONTRIBUTING.md` Section Strict rules](../../../CONTRIBUTING.md#strict-rules--non-negotiables) - confirm each:
 
 - [x] **No hardware in tests** - tests render React only; no real MIDI port is opened and no connected device is mutated.
 - [x] **Lazy MIDI imports** - no MIDI imports touched.

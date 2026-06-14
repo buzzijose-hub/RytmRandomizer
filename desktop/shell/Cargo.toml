@@ -27,6 +27,11 @@ log = "0.4"
 env_logger = "0.11"
 # CI pin: tauri-utils 2.9.2 conflicts with time 0.3.48 on Windows/Rust 1.88.
 time = "=0.3.47"
+# CI pin: 2026-06-14 brotli-decompressor/alloc-stdlib releases can resolve
+# alloc-no-stdlib 3.x while brotli 8.0.3 still compiles against 2.x traits.
+brotli-decompressor = "=5.0.1"
+alloc-stdlib = "=0.2.2"
+alloc-no-stdlib = "=2.0.4"
 
 [target.'cfg(unix)'.dependencies]
 nix = { version = "0.29", features = ["signal"] }

@@ -26,6 +26,10 @@
   - Update the top status snapshot in place after implementation.
 - Modify `README.md`
   - Add a short note to the Cockpit/Performance Console section describing the local set-plan queue.
+- Modify `desktop/shell/Cargo.toml`
+  - Pin the `brotli-decompressor` / `alloc-stdlib` / `alloc-no-stdlib` resolver bridge after the 2026-06-14 upstream `brotli` allocator release broke fresh desktop-shell CI resolution.
+- Add `tests/architecture/test_desktop_shell_cargo_resolver_pins.py`
+  - Guard the temporary resolver pin while the upstream `brotli` graph is incompatible.
 
 ## Task 1: Red Tests For Local Set Planning
 
@@ -112,7 +116,7 @@ Edit the top `Recent Cleanup` section in place with the new bundle status and sa
 ## Task 4: Verification, Review, And PR
 
 **Files:**
-- No new production files beyond the focused cockpit surface.
+- Focused cockpit surface plus one desktop-shell Cargo resolver constraint for the GitHub `desktop-shell` CI failure.
 
 - [x] **Step 1: Run focused frontend checks**
 
@@ -137,6 +141,16 @@ python -m isort --profile black --check-only .
 git diff --check
 ```
 
-- [ ] **Step 3: Commit and open one PR**
+- [x] **Step 3: Add desktop-shell resolver guard after CI failure**
+
+After GitHub `desktop-shell` failed in `cargo test`, trace the failure to fresh
+2026-06-14 crates.io releases that let `alloc-no-stdlib` 3.x enter the `brotli`
+graph while `brotli 8.0.3` still compiles against 2.x allocator traits. Add a
+focused architecture test for the bridge pins, verify it fails red, then add the
+minimal `brotli-decompressor = "=5.0.1"`, `alloc-stdlib = "=0.2.2"`, and
+`alloc-no-stdlib = "=2.0.4"` shell dependency constraints and verify the guard
+passes green.
+
+- [x] **Step 4: Commit and open/update one PR**
 
 Create a single bundled PR against `modularize-v1.34`; do not stack it on another open PR. The PR body must include the 18-gate checklist and explicitly state the controls are passive/local-only with no MIDI behavior changes.

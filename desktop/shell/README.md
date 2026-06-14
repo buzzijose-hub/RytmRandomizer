@@ -64,6 +64,11 @@ unit-tested in `src/sidecar.rs`.
 - **Rust toolchain** — install via [rustup](https://rustup.rs/). MSRV is
   Rust 1.88 (see `Cargo.toml` `rust-version`), matching the current Tauri 2
   transitive dependency graph resolved by Cargo.
+- **Cargo resolver pins** — `Cargo.toml` currently pins the
+  `brotli-decompressor` / `alloc-stdlib` / `alloc-no-stdlib` bridge because
+  fresh 2026-06-14 `brotli` transitive releases can otherwise resolve
+  incompatible 2.x/3.x allocator traits before the shell's own Rust code
+  compiles.
 - **Tauri 2 system deps** — see
   [tauri.app prerequisites](https://v2.tauri.app/start/prerequisites/) for
   per-OS native dependencies (WebView2 on Windows, webkit2gtk on Linux).
