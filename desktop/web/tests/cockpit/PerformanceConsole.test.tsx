@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { PerformanceConsole } from '../../src/cockpit/PerformanceConsole';
@@ -170,6 +170,63 @@ function performanceConsoleModelWithNoSnapshotHistory(): LiveGuiPerformanceConso
       current_id: 'missing-snapshot',
       entry_count: 0,
       entries: [],
+    },
+  };
+}
+
+function performanceConsoleModelWithSelectableHistory(): LiveGuiPerformanceConsoleModelDict {
+  return {
+    ...performanceConsoleModel,
+    snapshot_history: {
+      ...performanceConsoleModel.snapshot_history,
+      current_id: 'console-snap-03',
+      current_index: 2,
+      entry_count: 3,
+      entries: [
+        {
+          ...performanceConsoleModel.snapshot_history.entries[0]!,
+          key: 'history-01',
+          order: 1,
+          snapshot_id: 'console-snap-01',
+          label: 'Opening clean take',
+          parent_id: null,
+          scene_slot: 'S0',
+          bpm_label: '124 BPM',
+          is_current: false,
+          can_load: true,
+          can_undo_to: true,
+          summary: 'earlier clean anchor',
+          test_id: 'snapshot-history-console-snap-01',
+        },
+        {
+          ...performanceConsoleModel.snapshot_history.entries[0]!,
+          key: 'history-02',
+          order: 2,
+          snapshot_id: 'console-snap-02',
+          label: 'Pressure build take',
+          parent_id: 'console-snap-01',
+          scene_slot: 'S1',
+          bpm_label: '126 BPM',
+          is_current: false,
+          can_load: true,
+          can_undo_to: true,
+          summary: 'middle pressure build',
+          test_id: 'snapshot-history-console-snap-02',
+        },
+        performanceConsoleModel.snapshot_history.entries[0]!,
+      ],
+    },
+  };
+}
+
+function performanceConsoleModelWithEmptyStyleDeck(): LiveGuiPerformanceConsoleModelDict {
+  return {
+    ...performanceConsoleModel,
+    style_queue: {
+      ...performanceConsoleModel.style_queue,
+      crate_cards: [],
+      queue_cards: [],
+      journal_cards: [],
     },
   };
 }
@@ -484,5 +541,79 @@ describe('PerformanceConsole', () => {
         name: /queue pending/i,
       }),
     ).toBeDisabled();
+  });
+
+  it('supports local-only rehearsal interactions without enabling hardware sends', () => {
+    render(<PerformanceConsole model={performanceConsoleModelWithSelectableHistory()} />);
+
+    fireEvent.click(screen.getByTestId('performance-console-style-crate-select-peak-time'));
+    fireEvent.click(screen.getByTestId('performance-console-queue-select-queue-groove-pressure'));
+    fireEvent.click(screen.getByTestId('performance-console-history-console-snap-01'));
+    fireEvent.change(screen.getByTestId('performance-console-depth-input'), {
+      target: { value: '72' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /run local dry-run/i }));
+    fireEvent.click(screen.getByRole('button', { name: /save local journal take/i }));
+
+    const localPreview = screen.getByTestId('performance-console-local-preview');
+    expect(localPreview).toHaveTextContent('Selected crate Peak Time');
+    expect(localPreview).toHaveTextContent('Selected move Rolling Perc Push');
+    expect(localPreview).toHaveTextContent('Selected snapshot console-snap-01');
+    expect(localPreview).toHaveTextContent('Depth 72%');
+    expect(localPreview).toHaveTextContent('Local only');
+
+    expect(screen.getByTestId('performance-console-last-dry-run')).toHaveTextContent('Local dry-run');
+    expect(screen.getByTestId('performance-console-last-dry-run')).toHaveTextContent('Peak Time');
+    expect(screen.getByTestId('performance-console-last-dry-run')).toHaveTextContent('72%');
+    expect(screen.getByTestId('performance-console-local-journal')).toHaveTextContent('local-take-01');
+    expect(screen.getByTestId('performance-console-local-journal')).toHaveTextContent(
+      'Rolling Perc Push',
+    );
+
+    expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
+  });
+
+  it('supports keyboard snapshot selection in the local rehearsal preview', () => {
+    render(<PerformanceConsole model={performanceConsoleModelWithSelectableHistory()} />);
+
+    const firstSnapshot = screen.getByTestId('performance-console-history-console-snap-01');
+    const secondSnapshot = screen.getByTestId('performance-console-history-console-snap-02');
+
+    fireEvent.keyDown(firstSnapshot, { key: 'Escape' });
+    expect(screen.getByTestId('performance-console-local-preview')).toHaveTextContent(
+      'Selected snapshot console-snap-03',
+    );
+
+    fireEvent.keyDown(firstSnapshot, { key: 'Enter' });
+    expect(screen.getByTestId('performance-console-local-preview')).toHaveTextContent(
+      'Selected snapshot console-snap-01',
+    );
+
+    fireEvent.keyDown(secondSnapshot, { key: ' ' });
+    expect(screen.getByTestId('performance-console-local-preview')).toHaveTextContent(
+      'Selected snapshot console-snap-02',
+    );
+  });
+
+  it('keeps local rehearsal safe when no style crates or queue moves are available', () => {
+    render(<PerformanceConsole model={performanceConsoleModelWithEmptyStyleDeck()} />);
+
+    const localPreview = screen.getByTestId('performance-console-local-preview');
+    expect(localPreview).toHaveTextContent('Selected crate none');
+    expect(localPreview).toHaveTextContent('Selected move none');
+
+    fireEvent.click(screen.getByRole('button', { name: /run local dry-run/i }));
+    fireEvent.click(screen.getByRole('button', { name: /save local journal take/i }));
+
+    expect(screen.getByTestId('performance-console-last-dry-run')).toHaveTextContent('No crate');
+    expect(screen.getByTestId('performance-console-last-dry-run')).toHaveTextContent(
+      'No queued move',
+    );
+    expect(screen.getByTestId('performance-console-local-journal')).toHaveTextContent('No crate');
+    expect(screen.getByTestId('performance-console-local-journal')).toHaveTextContent(
+      'No queued move',
+    );
+    expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
   });
 });

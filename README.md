@@ -86,6 +86,10 @@ Crates/queue mutation panel, blocked hardware actions, command queue, safety
 checklist, and bottom session strip. The layout is still review-only: it
 does not dispatch sidecar commands, open MIDI ports, arm hardware, or send
 MIDI.
+It also supports local-only rehearsal interactions for selecting crates,
+queued moves, snapshots, preview depth, dry-run summary, and journal saves;
+those controls update in-memory preview state only and still do not dispatch
+sidecar commands, open MIDI ports, arm hardware, or send MIDI.
 
 **Sidecar security guarantees** (post CODE_REVIEW.md sweep, 2026-05):
 

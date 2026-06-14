@@ -1,3 +1,5 @@
+import { useMemo, useState } from 'react';
+
 import type {
   LiveGuiAnalyzerPanelControlDict,
   LiveGuiDeviceInventoryCardDict,
@@ -7,6 +9,10 @@ import type {
   LiveGuiRytmPadSurfaceCardDict,
   LiveGuiSnapshotHistoryEntryDict,
 } from '../types/live_gui_protocol';
+import type {
+  StyleCrateRehearsalCrateCardDict,
+  StyleCrateRehearsalQueueCardDict,
+} from '../types/style_crate_rehearsal_deck';
 import { ANALOG_FOUR_DEVICE_ID, RYTM_DEVICE_ID } from './devices';
 import { RYTM_PARAMETER_GROUPS } from './parameterGroups';
 
@@ -17,6 +23,16 @@ export interface PerformanceConsoleProps {
 
 const ANALYZER_CONTROL_ORDER: ReadonlyArray<string> = ['preview', 'dry_run', 'arm_hardware'];
 const SNAPSHOT_DECK_PREVIEW_PARAMETER_COUNT = 3;
+const PREVIEW_DEPTH_MIN = 10;
+const PREVIEW_DEPTH_MAX = 90;
+
+interface LocalJournalEntry {
+  readonly id: string;
+  readonly crateName: string;
+  readonly moveName: string;
+  readonly snapshotId: string;
+  readonly depth: number;
+}
 
 function orderedDevices(
   devices: ReadonlyArray<LiveGuiDeviceInventoryCardDict>,
@@ -161,6 +177,22 @@ function queuedCommandButtonLabel(
   return `Queue ${command.label}`;
 }
 
+function clampPreviewDepth(value: number): number {
+  return Math.min(PREVIEW_DEPTH_MAX, Math.max(PREVIEW_DEPTH_MIN, Math.round(value)));
+}
+
+function inputDepthValue(depth: number): number {
+  return depth === 0 ? PREVIEW_DEPTH_MIN : clampPreviewDepth(depth);
+}
+
+function localTakeId(index: number): string {
+  return `local-take-${String(index + 1).padStart(2, '0')}`;
+}
+
+function isKeyboardActivation(key: string): boolean {
+  return key === 'Enter' || key === ' ';
+}
+
 function orderedAnalyzerControls(
   controls: Readonly<Record<string, LiveGuiAnalyzerPanelControlDict>>,
 ): ReadonlyArray<LiveGuiAnalyzerPanelControlDict> {
@@ -193,23 +225,47 @@ export function PerformanceConsole({
   model,
   packetSource = 'passive packet',
 }: PerformanceConsoleProps): JSX.Element {
+  const [selectedCrateKey, setSelectedCrateKey] = useState<string | null>(null);
+  const [selectedQueueKey, setSelectedQueueKey] = useState<string | null>(null);
+  const [selectedSnapshotId, setSelectedSnapshotId] = useState<string | null>(null);
+  const [previewDepth, setPreviewDepth] = useState<number | null>(null);
+  const [lastDryRunSummary, setLastDryRunSummary] = useState<string>('No local dry-run performed.');
+  const [localJournalEntries, setLocalJournalEntries] = useState<ReadonlyArray<LocalJournalEntry>>([]);
   const a4SetPlan = model.performance_flow.analog_four_set_plan;
   const a4ReviewSurface = model.analog_four_review_surface;
   const a4ReviewFocus = a4ReviewSurface.review_focus;
   const macroPath = [a4SetPlan.current_macro, ...a4SetPlan.up_next_macros].join(' -> ');
-  const sortedDevices = orderedDevices(model.device_inventory.cards);
-  const sortedPads = orderedPads(model.rytm_pad_surface.cards);
-  const sortedMacros = orderedMacroActions(model.macro_action_deck.cards);
-  const sortedRytmPolicies = orderedRytmMacroPolicies(model.rytm_lane_policy_matrix.macro_rows);
-  const sortedQueue = [...model.style_queue.queue_cards].sort((left, right) => left.order - right.order);
-  const currentQueueMove = sortedQueue[0];
+  const sortedDevices = useMemo(
+    () => orderedDevices(model.device_inventory.cards),
+    [model.device_inventory.cards],
+  );
+  const sortedPads = useMemo(() => orderedPads(model.rytm_pad_surface.cards), [model.rytm_pad_surface.cards]);
+  const sortedMacros = useMemo(
+    () => orderedMacroActions(model.macro_action_deck.cards),
+    [model.macro_action_deck.cards],
+  );
+  const sortedRytmPolicies = useMemo(
+    () => orderedRytmMacroPolicies(model.rytm_lane_policy_matrix.macro_rows),
+    [model.rytm_lane_policy_matrix.macro_rows],
+  );
+  const sortedQueue = useMemo(
+    () => [...model.style_queue.queue_cards].sort((left, right) => left.order - right.order),
+    [model.style_queue.queue_cards],
+  );
+  const currentQueueMove =
+    sortedQueue.find((move) => move.queue_key === selectedQueueKey) ?? sortedQueue[0];
   const currentSnapshot =
+    model.snapshot_history.entries.find((entry) => entry.snapshot_id === selectedSnapshotId) ??
     model.snapshot_history.entries.find((entry) => entry.snapshot_id === model.snapshot_history.current_id) ??
     model.snapshot_history.entries[0];
+  const selectedCrate =
+    model.style_queue.crate_cards.find((crate) => crate.crate_key === selectedCrateKey) ??
+    model.style_queue.crate_cards.find((crate) => crate.crate_key === currentQueueMove?.crate_key) ??
+    model.style_queue.crate_cards[0];
   const currentMacro =
     sortedMacros.find((card) => card.macro_key === model.macro_action_deck.current_macro_key) ??
     sortedMacros[0];
-  const currentDepth = currentQueueMove?.mutation_amount_percent ?? 0;
+  const currentDepth = previewDepth ?? currentQueueMove?.mutation_amount_percent ?? 0;
   const mutationPadCount = currentMacro?.affected_pads.length ?? 0;
   const analogFourDevice = sortedDevices.find((device) => device.device_id === ANALOG_FOUR_DEVICE_ID);
   const rytmDevice = sortedDevices.find((device) => device.device_id === RYTM_DEVICE_ID);
@@ -223,6 +279,43 @@ export function PerformanceConsole({
     SNAPSHOT_DECK_PREVIEW_PARAMETER_COUNT,
   );
   const queuedCommand = model.command_queue.queued_commands[0];
+  const selectedSnapshotIdLabel = currentSnapshot?.snapshot_id ?? 'none';
+
+  const selectCrate = (crate: StyleCrateRehearsalCrateCardDict): void => {
+    setSelectedCrateKey(crate.crate_key);
+  };
+
+  const selectQueueMove = (move: StyleCrateRehearsalQueueCardDict): void => {
+    setSelectedQueueKey(move.queue_key);
+    setPreviewDepth(clampPreviewDepth(move.mutation_amount_percent));
+  };
+
+  const selectSnapshot = (snapshot: LiveGuiSnapshotHistoryEntryDict): void => {
+    setSelectedSnapshotId(snapshot.snapshot_id);
+  };
+
+  const runLocalDryRun = (): void => {
+    const crateName = selectedCrate?.crate_name ?? 'No crate';
+    const moveName = currentQueueMove?.move_name ?? 'No queued move';
+    setLastDryRunSummary(
+      `Local dry-run: ${crateName} -> ${moveName} at ${currentDepth}% from ${selectedSnapshotIdLabel}. No MIDI port opened; no MIDI sent.`,
+    );
+  };
+
+  const saveLocalJournalTake = (): void => {
+    const crateName = selectedCrate?.crate_name ?? 'No crate';
+    const moveName = currentQueueMove?.move_name ?? 'No queued move';
+    setLocalJournalEntries((entries) => [
+      ...entries,
+      {
+        id: localTakeId(entries.length),
+        crateName,
+        moveName,
+        snapshotId: selectedSnapshotIdLabel,
+        depth: currentDepth,
+      },
+    ]);
+  };
 
   return (
     <main
@@ -375,6 +468,21 @@ export function PerformanceConsole({
               <article
                 key={entry.key}
                 className={entry.snapshot_id === currentSnapshot?.snapshot_id ? 'current' : undefined}
+                data-testid={`performance-console-history-${entry.snapshot_id}`}
+                role="button"
+                tabIndex={0}
+                aria-pressed={entry.snapshot_id === currentSnapshot?.snapshot_id}
+                aria-label={`Select snapshot ${entry.snapshot_id}`}
+                title="Load this snapshot into the local rehearsal preview only."
+                onClick={() => {
+                  selectSnapshot(entry);
+                }}
+                onKeyDown={(event) => {
+                  if (isKeyboardActivation(event.key)) {
+                    event.preventDefault();
+                    selectSnapshot(entry);
+                  }
+                }}
               >
                 <strong>{entry.snapshot_id}</strong>
                 <span>{entry.label}</span>
@@ -413,6 +521,7 @@ export function PerformanceConsole({
               <article
                 key={crate.crate_key}
                 data-testid={`style-crate-${toTestIdKey(crate.crate_key)}`}
+                className={crate.crate_key === selectedCrate?.crate_key ? 'current' : undefined}
               >
                 <strong>{crate.crate_name}</strong>
                 <span>{crate.summary}</span>
@@ -430,6 +539,18 @@ export function PerformanceConsole({
                     </span>
                   ))}
                 </div>
+                <button
+                  type="button"
+                  className="live-readiness-action performance-console-local-control"
+                  data-testid={`performance-console-style-crate-select-${toTestIdKey(crate.crate_key)}`}
+                  aria-pressed={crate.crate_key === selectedCrate?.crate_key}
+                  title="Select this crate in the local rehearsal preview only."
+                  onClick={() => {
+                    selectCrate(crate);
+                  }}
+                >
+                  Select {crate.crate_name}
+                </button>
                 <button
                   type="button"
                   className="live-readiness-action"
@@ -462,9 +583,33 @@ export function PerformanceConsole({
                     <span className="live-chip">dry-run only</span>
                   </div>
                 ) : null}
+                <button
+                  type="button"
+                  className="live-readiness-action performance-console-local-control"
+                  data-testid={`performance-console-queue-select-${toTestIdKey(move.queue_key)}`}
+                  aria-pressed={move.queue_key === currentQueueMove?.queue_key}
+                  title="Select this queued move in the local rehearsal preview only."
+                  onClick={() => {
+                    selectQueueMove(move);
+                  }}
+                >
+                  Select {move.move_name}
+                </button>
               </article>
             ))}
           </div>
+          <section
+            className="performance-console-local-panel"
+            data-testid="performance-console-local-preview"
+            aria-label="Local rehearsal preview"
+          >
+            <strong>Local rehearsal preview</strong>
+            <span>Selected crate {selectedCrate?.crate_name ?? 'none'}</span>
+            <span>Selected move {currentQueueMove?.move_name ?? 'none'}</span>
+            <span>Selected snapshot {selectedSnapshotIdLabel}</span>
+            <span data-testid="performance-console-depth-value">Depth {currentDepth}%</span>
+            <small>Local only: no WebSocket dispatch, no sidecar command, no MIDI port, no MIDI send.</small>
+          </section>
           <h3 className="performance-console-subheading">Mutation Journal</h3>
           <div className="performance-console-list">
             {model.style_queue.journal_cards.map((entry) => (
@@ -482,8 +627,22 @@ export function PerformanceConsole({
             <span>{currentDepth}%</span>
           </header>
           <div className="performance-console-depth-track" aria-label="Mutation depth preview">
-            <span style={{ width: `${currentDepth}%` }} />
+            <span data-testid="performance-console-depth-fill" style={{ width: `${currentDepth}%` }} />
           </div>
+          <label className="performance-console-depth-input">
+            <span>Local preview depth</span>
+            <input
+              type="range"
+              aria-label="Local preview depth"
+              min={PREVIEW_DEPTH_MIN}
+              max={PREVIEW_DEPTH_MAX}
+              value={inputDepthValue(currentDepth)}
+              data-testid="performance-console-depth-input"
+              onChange={(event) => {
+                setPreviewDepth(clampPreviewDepth(Number(event.currentTarget.value)));
+              }}
+            />
+          </label>
           <h3 className="performance-console-subheading">Profile</h3>
           <div className="performance-console-profile-row">
             {mutationProfileLabels.map((profile, index) => (
@@ -526,6 +685,45 @@ export function PerformanceConsole({
               {model.safety_checklist.arm_gate.label} {model.safety_checklist.arm_gate.state}
             </button>
           </div>
+          <div className="performance-console-local-actions">
+            <button
+              type="button"
+              className="live-readiness-action performance-console-local-control"
+              title="Runs a local-only dry-run summary. No command is dispatched."
+              onClick={runLocalDryRun}
+            >
+              Run local dry-run
+            </button>
+            <button
+              type="button"
+              className="live-readiness-action performance-console-local-control"
+              title="Saves the current local rehearsal selection in memory only."
+              onClick={saveLocalJournalTake}
+            >
+              Save local journal take
+            </button>
+          </div>
+          <section
+            className="performance-console-local-panel"
+            data-testid="performance-console-last-dry-run"
+            aria-label="Last local dry-run result"
+          >
+            <strong>Last local dry-run result</strong>
+            <span data-testid="performance-console-local-dry-run-summary">{lastDryRunSummary}</span>
+          </section>
+          <section
+            className="performance-console-local-panel"
+            data-testid="performance-console-local-journal"
+            aria-label="Local mutation journal"
+          >
+            <strong>Local mutation journal</strong>
+            {localJournalEntries.length === 0 ? <span>No local journal takes saved.</span> : null}
+            {localJournalEntries.map((entry) => (
+              <span key={entry.id} data-testid={`journal-take-${entry.id}`}>
+                {entry.id}: {entry.moveName} / {entry.crateName} / {entry.snapshotId} / {entry.depth}%
+              </span>
+            ))}
+          </section>
         </section>
 
         <section

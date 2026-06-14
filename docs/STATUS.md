@@ -1,9 +1,18 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-13. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-06-14. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-06-14: Cockpit Performance Console interaction bundle started after
+  PR #176 merged. The cinematic passive console now rehearses operator intent
+  locally: style crate selection, queued move selection, snapshot selection,
+  preview-depth changes, local dry-run summaries, and local journal saves all
+  update component-local state derived from the existing
+  `LiveGuiPerformanceConsoleModelDict`. This remains frontend/local-only:
+  no WebSocket command dispatch, no Tauri or sidecar command execution, no
+  MIDI port opening, no hardware arm path, no queued command execution, no
+  snapshot mutation, and no MIDI send.
 - 2026-06-13: Cockpit Performance Console cinematic HUD follow-up started on
   a clean base after PR #175 merged. The existing passive Performance Console
   packet now renders as a dense live-operator HUD inspired by Jose's 2026-06-09
