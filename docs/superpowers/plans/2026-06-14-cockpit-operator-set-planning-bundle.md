@@ -4,7 +4,7 @@ Status: in-flight
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Turn the passive cockpit local set-plan queue into an operator-grade rehearsal surface with current/up-next state and a local activity log, without touching hardware paths.
+**Goal:** Turn the passive cockpit local set-plan queue into an operator-grade rehearsal surface with current/up-next state, operator handoff notes, and a local activity log, without touching hardware paths.
 
 **Architecture:** Keep the work inside the existing React `PerformanceConsole` because the behavior is component-local rehearsal state derived from the already-merged `LiveGuiPerformanceConsoleModelDict`. The bundle must not add WebSocket commands, Tauri invocations, sidecar execution, MIDI port opening, snapshot mutation, or hardware send behavior.
 
@@ -152,11 +152,11 @@ function localSetPlanSummary(
 
 - [ ] **Step 2: Surface the summary**
 
-Use the helper in `performance-console-local-set-plan-summary` so the operator can see current + queued state after every action.
+Use the helper in `performance-console-local-set-plan-summary` so the operator can see current + queued state after every action. Also render a local operator handoff with the current step, next step, recent local action, recovery note, and explicit no-send safety copy.
 
 - [ ] **Step 3: Style without layout churn**
 
-Add compact CSS classes for the current step and operator log. Use stable dimensions, grid gaps, and no nested cards beyond the existing panel pattern.
+Add compact CSS classes for the current step, handoff card, and operator log. Use stable dimensions, grid gaps, and no nested cards beyond the existing panel pattern.
 
 ## Task 4: Docs And PR Body
 

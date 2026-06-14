@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import type {
   LiveGuiAnalyzerPanelControlDict,
@@ -209,14 +209,6 @@ function localSetPlanId(index: number): string {
   return `local-step-${String(index + 1).padStart(2, '0')}`;
 }
 
-function nextLocalSetPlanId(entries: ReadonlyArray<LocalSetPlanEntry>): string {
-  const highestId = entries.reduce((highest, entry) => {
-    const numericId = Number(entry.id.replace('local-step-', ''));
-    return Math.max(highest, numericId);
-  }, 0);
-  return localSetPlanId(highestId);
-}
-
 function localSetPlanEntrySummary(entry: LocalSetPlanEntry): string {
   return `${entry.moveName} / ${entry.crateName} / ${entry.snapshotId} / ${entry.depth}%`;
 }
@@ -231,6 +223,24 @@ function localSetPlanStatusSummary(
   }
   const currentLabel = current === null ? 'no current step' : `current ${current.id}`;
   return `${lastAction} ${currentLabel}; ${queued.length} queued. Local only; no MIDI sent.`;
+}
+
+function localSetPlanHandoffLine(
+  label: string,
+  entry: LocalSetPlanEntry | null | undefined,
+): string {
+  if (entry === null || entry === undefined) {
+    return `${label}: none`;
+  }
+  return `${label}: ${entry.id} / ${entry.moveName} / ${entry.crateName} / ${entry.snapshotId} / ${entry.depth}%`;
+}
+
+function localOperatorRecentLine(events: ReadonlyArray<LocalOperatorEvent>): string {
+  const lastEvent = events.at(-1);
+  if (lastEvent === undefined) {
+    return 'Recent: no local operator activity.';
+  }
+  return `Recent: ${lastEvent.label}`;
 }
 
 function localOperatorEventId(index: number): string {
@@ -282,6 +292,7 @@ export function PerformanceConsole({
   const [localSetPlanEntries, setLocalSetPlanEntries] = useState<ReadonlyArray<LocalSetPlanEntry>>([]);
   const [currentSetPlanStep, setCurrentSetPlanStep] = useState<LocalSetPlanEntry | null>(null);
   const [localOperatorEvents, setLocalOperatorEvents] = useState<ReadonlyArray<LocalOperatorEvent>>([]);
+  const nextLocalSetPlanIndex = useRef<number>(0);
   const [lastSetPlanAction, setLastSetPlanAction] = useState<string>(
     'No local set-plan action yet.',
   );
@@ -339,6 +350,14 @@ export function PerformanceConsole({
     localSetPlanEntries,
     lastSetPlanAction,
   );
+  const nextLocalSetPlanStep = localSetPlanEntries[0];
+  const localHandoffLines = [
+    localSetPlanHandoffLine('Current', currentSetPlanStep),
+    localSetPlanHandoffLine('Next', nextLocalSetPlanStep),
+    localOperatorRecentLine(localOperatorEvents),
+    'Recovery: use Z + send from the armed snapshot shell.',
+    'Local handoff only: no WebSocket command, sidecar action, MIDI port, arm, or send.',
+  ];
 
   const appendLocalOperatorEvent = (label: string, detail: string): void => {
     setLocalOperatorEvents((events) => [
@@ -396,15 +415,17 @@ export function PerformanceConsole({
   };
 
   const stageLocalSetPlanEntry = (): void => {
+    const nextIndex = nextLocalSetPlanIndex.current;
+    nextLocalSetPlanIndex.current = nextIndex + 1;
     const entry: LocalSetPlanEntry = {
-      id: nextLocalSetPlanId(localSetPlanEntries),
+      id: localSetPlanId(nextIndex),
       crateName: selectedCrate?.crate_name ?? 'No crate',
       moveName: currentQueueMove?.move_name ?? 'No queued move',
       snapshotId: selectedSnapshotIdLabel,
       depth: currentDepth,
       status: 'Local only',
     };
-    setLocalSetPlanEntries([...localSetPlanEntries, entry]);
+    setLocalSetPlanEntries((entries) => [...entries, entry]);
     setLastSetPlanAction(`Staged ${entry.id}: ${localSetPlanEntrySummary(entry)}. Local only; no MIDI sent.`);
     appendLocalOperatorEvent(`Staged ${entry.id}`, localSetPlanEntrySummary(entry));
   };
@@ -904,6 +925,15 @@ export function PerformanceConsole({
                 </article>
               ))}
             </div>
+            <article
+              className="performance-console-local-handoff"
+              data-testid="performance-console-local-handoff"
+            >
+              <strong>Operator handoff</strong>
+              {localHandoffLines.map((line) => (
+                <span key={line}>{line}</span>
+              ))}
+            </article>
             <div className="performance-console-local-actions">
               <button
                 type="button"

@@ -1,20 +1,22 @@
 # Summary
 
-Deepens the passive Cockpit Performance Console local set-planning surface. Operators can now promote a staged move into a current local set-plan step, see the next queued move labeled as up next, and review a local operator activity log for stage/promote/skip/clear/dry-run/journal actions.
+Deepens the passive Cockpit Performance Console local set-planning surface. Operators can now promote a staged move into a current local set-plan step, see the next queued move labeled as up next, review a local operator handoff with current/next/recovery notes, and inspect a local operator activity log for stage/promote/skip/clear/dry-run/journal actions.
 
 ## What changed
 
 - Added component-local `currentSetPlanStep` state to `desktop/web/src/cockpit/PerformanceConsole.tsx`.
+- Added monotonic local set-plan step IDs so current and next handoff rows cannot reuse the same local step label.
 - Added component-local operator activity events for dry-run, journal save, stage, promote, skip, and clear actions.
 - Rendered a current local set-plan step panel and up-next labels for staged steps.
+- Rendered a local operator handoff card with current step, next step, recent local activity, recovery note, and no-send safety copy.
 - Rendered an in-memory local operator activity log with local-only safety status.
-- Updated compact cockpit CSS for the current-step card and activity-log list.
-- Extended Vitest coverage for current/up-next state, operator log entries, and unchanged hardware-send safety.
+- Updated compact cockpit CSS for the current-step card, handoff card, and activity-log list.
+- Extended Vitest coverage for current/up-next state, handoff notes, operator log entries, and unchanged hardware-send safety.
 - Updated `README.md`, `docs/STATUS.md`, and the implementation plan.
 
 ## Why this matters
 
-This moves the cinematic cockpit closer to Jose's live-performance workflow: before any hardware path is connected, the UI can rehearse what the current move is, what is up next, and what local operator actions have happened. The safety boundary stays unchanged: no WebSocket dispatch, no Tauri invoke, no sidecar command execution, no MIDI port opening, no hardware arm path, no queued command execution, no snapshot mutation, and no MIDI send.
+This moves the cinematic cockpit closer to Jose's live-performance workflow: before any hardware path is connected, the UI can rehearse what the current move is, what is up next, what recovery action the operator should remember, and what local operator actions have happened. The safety boundary stays unchanged: no WebSocket dispatch, no Tauri invoke, no sidecar command execution, no MIDI port opening, no hardware arm path, no queued command execution, no snapshot mutation, and no MIDI send.
 
 ## Test plan
 
@@ -34,6 +36,8 @@ git diff --check
 ```
 
 - [x] TDD red: focused cockpit test failed on missing `performance-console-current-set-plan-step`.
+- [x] TDD red: focused cockpit test failed on missing `performance-console-local-handoff`.
+- [x] TDD red: focused cockpit test failed when a post-skip staged move reused `local-step-01`.
 - [x] Focused cockpit test passes: 12 passed.
 - [x] Frontend typecheck, production build, and targeted ESLint pass.
 - [x] Frontend coverage passes: 404 passed, 100% statements / branches / functions / lines.
@@ -85,4 +89,3 @@ Plan doc: `docs/superpowers/plans/2026-06-14-cockpit-operator-set-planning-bundl
 ## Reviewer notes
 
 The new active controls are intentionally local-only. They update React state and visible rehearsal evidence only; they do not call a cockpit client, WebSocket, Tauri invoke, sidecar command, MIDI adapter, send planner, or queue executor.
-

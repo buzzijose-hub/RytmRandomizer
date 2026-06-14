@@ -629,6 +629,20 @@ describe('PerformanceConsole', () => {
     expect(operatorLog).toHaveTextContent('Promoted local-step-01');
     expect(operatorLog).toHaveTextContent('Local only');
 
+    const handoff = screen.getByTestId('performance-console-local-handoff');
+    expect(handoff).toHaveTextContent('Operator handoff');
+    expect(handoff).toHaveTextContent(
+      'Current: local-step-01 / Rolling Perc Push / Peak Time / console-snap-01 / 72%',
+    );
+    expect(handoff).toHaveTextContent(
+      'Next: local-step-02 / Broken Metal Stress / Industrial/Broken / console-snap-02 / 58%',
+    );
+    expect(handoff).toHaveTextContent('Recent: Promoted local-step-01');
+    expect(handoff).toHaveTextContent('Recovery: use Z + send from the armed snapshot shell.');
+    expect(handoff).toHaveTextContent(
+      'Local handoff only: no WebSocket command, sidecar action, MIDI port, arm, or send.',
+    );
+
     fireEvent.click(screen.getByRole('button', { name: /skip next local set-plan step/i }));
 
     expect(screen.getByTestId('performance-console-local-set-plan-summary')).toHaveTextContent(
@@ -638,7 +652,8 @@ describe('PerformanceConsole', () => {
     expect(localSetPlan).toHaveTextContent('No local set-plan steps staged.');
 
     fireEvent.click(screen.getByRole('button', { name: /stage local set-plan step/i }));
-    expect(localSetPlan).toHaveTextContent('local-step-01');
+    expect(localSetPlan).toHaveTextContent('local-step-03');
+    expect(localSetPlan).not.toHaveTextContent('local-step-01: Broken Metal Stress');
 
     fireEvent.click(screen.getByRole('button', { name: /clear local set-plan/i }));
 
