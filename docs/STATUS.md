@@ -4,6 +4,17 @@ Last updated: 2026-06-14. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-14: Cockpit rehearsal package follow-up started after PR #180
+  merged. The passive Performance Console can now export its browser-local
+  rehearsal snapshot as a portable package with manifest metadata, packet
+  compatibility checks, device/safety evidence, blocked-action evidence, and
+  recovery notes; package import accepts the new envelope while preserving
+  backward compatibility with the older raw local rehearsal JSON shape and
+  keeps missing crate/queue/snapshot references visible as needs-review
+  warnings. This remains frontend/component-local only: no WebSocket command
+  dispatch, no Tauri or sidecar command execution, no project file writes, no
+  MIDI port opening, no hardware arm path, no queued command execution, no
+  snapshot mutation, and no MIDI send.
 - 2026-06-14: Cockpit local rehearsal persistence follow-up started after
   PR #179 merged. The passive Performance Console now serializes its local
   rehearsal state into a versioned browser-local snapshot, restores selected

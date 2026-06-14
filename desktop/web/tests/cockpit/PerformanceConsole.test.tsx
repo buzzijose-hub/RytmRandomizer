@@ -840,6 +840,294 @@ describe('PerformanceConsole', () => {
     expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
   });
 
+  it('exports a portable local rehearsal package with manifest and safety evidence', () => {
+    window.localStorage.clear();
+    render(<PerformanceConsole model={performanceConsoleModelWithSelectableHistory()} />);
+
+    fireEvent.click(screen.getByTestId('performance-console-style-crate-select-peak-time'));
+    fireEvent.click(screen.getByTestId('performance-console-queue-select-queue-groove-pressure'));
+    fireEvent.click(screen.getByTestId('performance-console-history-console-snap-01'));
+    fireEvent.change(screen.getByTestId('performance-console-depth-input'), {
+      target: { value: '72' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /stage local set-plan step/i }));
+    fireEvent.click(screen.getByRole('button', { name: /promote next local set-plan step/i }));
+    fireEvent.click(screen.getByRole('button', { name: /export local rehearsal package/i }));
+
+    const packagePanel = screen.getByTestId('performance-console-local-package');
+    expect(packagePanel).toHaveTextContent('Local rehearsal package');
+    expect(packagePanel).toHaveTextContent('compatible');
+    expect(packagePanel).toHaveTextContent('Warehouse arc');
+    expect(packagePanel).toHaveTextContent('passive packet');
+    expect(packagePanel).toHaveTextContent('Peak Time');
+    expect(packagePanel).toHaveTextContent('Rolling Perc Push');
+    expect(packagePanel).toHaveTextContent('console-snap-01');
+    expect(packagePanel).toHaveTextContent('current local-step-01');
+    expect(packagePanel).toHaveTextContent('queued 0');
+    expect(packagePanel).toHaveTextContent('journal 0');
+    expect(packagePanel).toHaveTextContent('Elektron Analog Rytm MKII');
+    expect(packagePanel).toHaveTextContent('Elektron Analog Four MKII');
+    expect(packagePanel).toHaveTextContent('a4_outbound_macro_send');
+    expect(packagePanel).toHaveTextContent('use Z + send from the armed snapshot shell');
+
+    const packagePayload = screen.getByTestId('performance-console-local-package-payload');
+    expect(packagePayload).toHaveTextContent(
+      '"kind": "rytmrandomizer.cockpit.local-rehearsal-package"',
+    );
+    expect(packagePayload).toHaveTextContent('"version": 1');
+    expect(packagePayload).toHaveTextContent('"selectedCrateName": "Peak Time"');
+    expect(packagePayload).toHaveTextContent('"selectedMoveName": "Rolling Perc Push"');
+    expect(packagePayload).toHaveTextContent('"selectedSnapshotId": "console-snap-01"');
+    expect(packagePayload).toHaveTextContent('"currentStepId": "local-step-01"');
+    expect(packagePayload).toHaveTextContent('"status": "compatible"');
+    expect(packagePayload).toHaveTextContent('"selected crate exists in current packet"');
+    expect(packagePayload).toHaveTextContent('"selected queued move exists in current packet"');
+    expect(packagePayload).toHaveTextContent('"selected snapshot exists in current packet"');
+    expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
+  });
+
+  it('exports a compatible local rehearsal package before crate or queue selection', () => {
+    window.localStorage.clear();
+    render(<PerformanceConsole model={performanceConsoleModelWithEmptyStyleDeck()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /export local rehearsal package/i }));
+
+    const packagePanel = screen.getByTestId('performance-console-local-package');
+    expect(packagePanel).toHaveTextContent('compatible');
+    expect(packagePanel).toHaveTextContent('selected crate exists in current packet');
+    expect(packagePanel).toHaveTextContent('selected queued move exists in current packet');
+    expect(packagePanel).toHaveTextContent('current none');
+    expect(packagePanel).not.toHaveTextContent('queue recovery:');
+
+    const packagePayload = screen.getByTestId('performance-console-local-package-payload');
+    expect(packagePayload).toHaveTextContent('"selectedCrateName": "none"');
+    expect(packagePayload).toHaveTextContent('"selectedMoveName": "none"');
+    expect(packagePayload).toHaveTextContent('"queuedStepCount": 0');
+    expect(packagePayload).toHaveTextContent('"currentStepId": null');
+    expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+  });
+
+  it('imports a local rehearsal package and keeps raw snapshot import compatibility', () => {
+    window.localStorage.clear();
+    render(<PerformanceConsole model={performanceConsoleModelWithSelectableHistory()} />);
+
+    const rehearsalSnapshot = {
+      version: 1,
+      selectedCrateKey: 'industrial-broken',
+      selectedQueueKey: 'queue-peak-metal',
+      selectedSnapshotId: 'console-snap-02',
+      previewDepth: 64,
+      lastDryRunSummary: 'Imported package dry-run. No MIDI port opened; no MIDI sent.',
+      localJournalEntries: [
+        {
+          id: 'package-take-01',
+          crateName: 'Industrial/Broken',
+          moveName: 'Broken Metal Stress',
+          snapshotId: 'console-snap-02',
+          depth: 64,
+        },
+      ],
+      localSetPlanEntries: [
+        {
+          id: 'package-step-02',
+          crateName: 'Peak Time',
+          moveName: 'Rolling Perc Push',
+          snapshotId: 'console-snap-01',
+          depth: 48,
+          status: 'Local only',
+        },
+      ],
+      currentSetPlanStep: {
+        id: 'package-step-01',
+        crateName: 'Industrial/Broken',
+        moveName: 'Broken Metal Stress',
+        snapshotId: 'console-snap-02',
+        depth: 64,
+        status: 'Local only',
+      },
+      localOperatorEvents: [
+        {
+          id: 'package-event-01',
+          label: 'Package event',
+          detail: 'Loaded from a portable package.',
+          status: 'Local only',
+        },
+      ],
+      lastSetPlanAction: 'Imported package snapshot. Local only; no MIDI sent.',
+      nextLocalSetPlanIndex: 5,
+      localAutosaveEnabled: true,
+    };
+    const packagePayload = {
+      kind: 'rytmrandomizer.cockpit.local-rehearsal-package',
+      version: 1,
+      manifest: {
+        sessionLabel: 'Warehouse arc',
+        packetSource: 'passive packet',
+        selectedCrateName: 'Industrial/Broken',
+        selectedMoveName: 'Broken Metal Stress',
+        selectedSnapshotId: 'console-snap-02',
+        queuedStepCount: 1,
+        currentStepId: 'package-step-01',
+        journalTakeCount: 1,
+        hardwareMode: 'passive',
+      },
+      compatibility: {
+        status: 'compatible',
+        checks: [
+          'selected crate exists in current packet',
+          'selected queued move exists in current packet',
+          'selected snapshot exists in current packet',
+        ],
+      },
+      safety: {
+        devices: ['Elektron Analog Rytm MKII', 'Elektron Analog Four MKII'],
+        checklist: ['No MIDI Port Open'],
+      },
+      blockedActions: ['send MIDI from snapshot history'],
+      recoveryNotes: ['use Z + send from the armed snapshot shell'],
+      rehearsal: rehearsalSnapshot,
+    };
+
+    fireEvent.change(screen.getByTestId('performance-console-local-import-input'), {
+      target: { value: JSON.stringify(packagePayload) },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /import local rehearsal package/i }));
+
+    expect(screen.getByTestId('performance-console-local-preview')).toHaveTextContent(
+      'Selected crate Industrial/Broken',
+    );
+    expect(screen.getByTestId('performance-console-local-preview')).toHaveTextContent(
+      'Selected move Broken Metal Stress',
+    );
+    expect(screen.getByTestId('performance-console-local-preview')).toHaveTextContent(
+      'Selected snapshot console-snap-02',
+    );
+    expect(screen.getByTestId('performance-console-local-journal')).toHaveTextContent(
+      'package-take-01',
+    );
+    expect(screen.getByTestId('performance-console-current-set-plan-step')).toHaveTextContent(
+      'package-step-01',
+    );
+    expect(screen.getByTestId('performance-console-local-set-plan')).toHaveTextContent(
+      'package-step-02',
+    );
+    expect(screen.getByTestId('performance-console-local-package')).toHaveTextContent(
+      'compatible',
+    );
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Imported local rehearsal package',
+    );
+
+    fireEvent.change(screen.getByTestId('performance-console-local-import-input'), {
+      target: { value: JSON.stringify(packagePayload) },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /import local rehearsal json/i }));
+
+    expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
+      'Imported local rehearsal JSON',
+    );
+    expect(screen.getByTestId('performance-console-local-package')).toHaveTextContent(
+      'compatible',
+    );
+
+    fireEvent.change(screen.getByTestId('performance-console-local-import-input'), {
+      target: { value: JSON.stringify({ ...rehearsalSnapshot, selectedCrateKey: 'peak-time' }) },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /import local rehearsal json/i }));
+
+    expect(screen.getByTestId('performance-console-local-preview')).toHaveTextContent(
+      'Selected crate Peak Time',
+    );
+    expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
+      'Imported local rehearsal JSON',
+    );
+    expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps imported rehearsal package compatibility warnings visible for missing packet references', () => {
+    render(<PerformanceConsole model={performanceConsoleModelWithSelectableHistory()} />);
+
+    const packagePayload = {
+      kind: 'rytmrandomizer.cockpit.local-rehearsal-package',
+      version: 1,
+      manifest: {
+        sessionLabel: 'External rehearsal',
+        packetSource: 'external package',
+        selectedCrateName: 'External Crate',
+        selectedMoveName: 'External Move',
+        selectedSnapshotId: 'external-snapshot',
+        queuedStepCount: 0,
+        currentStepId: null,
+        journalTakeCount: 0,
+        hardwareMode: 'passive',
+      },
+      compatibility: {
+        status: 'compatible',
+        checks: ['external package claimed compatibility'],
+      },
+      safety: {
+        devices: ['External Device', 42],
+        checklist: ['External safety note', false],
+      },
+      blockedActions: ['external blocked action', null],
+      recoveryNotes: ['external recovery note', 7],
+      rehearsal: {
+        version: 1,
+        selectedCrateKey: 'missing-crate',
+        selectedQueueKey: 'missing-queue',
+        selectedSnapshotId: 'missing-snapshot',
+        previewDepth: 44,
+        lastDryRunSummary: 'Imported missing-reference package.',
+        localJournalEntries: [],
+        localSetPlanEntries: [],
+        currentSetPlanStep: null,
+        localOperatorEvents: [],
+        lastSetPlanAction: 'Imported missing-reference package.',
+        nextLocalSetPlanIndex: 0,
+        localAutosaveEnabled: true,
+      },
+    };
+
+    fireEvent.change(screen.getByTestId('performance-console-local-import-input'), {
+      target: { value: JSON.stringify(packagePayload) },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /import local rehearsal package/i }));
+
+    const packagePanel = screen.getByTestId('performance-console-local-package');
+    expect(packagePanel).toHaveTextContent('needs review');
+    expect(packagePanel).toHaveTextContent('selected crate missing from current packet');
+    expect(packagePanel).toHaveTextContent('selected queued move missing from current packet');
+    expect(packagePanel).toHaveTextContent('selected snapshot missing from current packet');
+    expect(packagePanel).toHaveTextContent('External Device');
+    expect(packagePanel).toHaveTextContent('external blocked action');
+    expect(packagePanel).toHaveTextContent('external recovery note');
+    expect(screen.getByTestId('performance-console-local-preview')).toHaveTextContent('Depth 44%');
+    expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
+
+    fireEvent.change(screen.getByTestId('performance-console-local-import-input'), {
+      target: {
+        value: JSON.stringify({
+          ...packagePayload,
+          rehearsal: {
+            ...packagePayload.rehearsal,
+            selectedCrateKey: 'missing-crate',
+            selectedQueueKey: 'queue-groove-pressure',
+            selectedSnapshotId: null,
+          },
+        }),
+      },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /import local rehearsal package/i }));
+
+    const fallbackPackagePanel = screen.getByTestId('performance-console-local-package');
+    expect(fallbackPackagePanel).toHaveTextContent('compatible');
+    expect(fallbackPackagePanel).toHaveTextContent('selected crate exists in current packet');
+    expect(fallbackPackagePanel).toHaveTextContent('selected queued move exists in current packet');
+    expect(fallbackPackagePanel).toHaveTextContent('selected snapshot exists in current packet');
+  });
+
   it('reports invalid local rehearsal imports and ignores malformed imported rows safely', () => {
     render(<PerformanceConsole model={performanceConsoleModelWithSelectableHistory()} />);
 
@@ -855,6 +1143,12 @@ describe('PerformanceConsole', () => {
       'Import failed',
     );
 
+    fireEvent.click(screen.getByRole('button', { name: /import local rehearsal package/i }));
+
+    expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
+      'Import failed: JSON could not be parsed',
+    );
+
     fireEvent.change(screen.getByTestId('performance-console-local-import-input'), {
       target: { value: JSON.stringify({ version: 99 }) },
     });
@@ -863,6 +1157,62 @@ describe('PerformanceConsole', () => {
     expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
       'Import failed: unsupported local rehearsal payload',
     );
+
+    fireEvent.click(screen.getByRole('button', { name: /import local rehearsal package/i }));
+
+    expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
+      'Import failed: unsupported local rehearsal package',
+    );
+
+    const validPackageShell = {
+      kind: 'rytmrandomizer.cockpit.local-rehearsal-package',
+      version: 1,
+      manifest: {
+        sessionLabel: 'Import failure shell',
+        packetSource: 'test',
+        selectedCrateName: 'None',
+        selectedMoveName: 'None',
+        selectedSnapshotId: 'None',
+        queuedStepCount: 0,
+        currentStepId: null,
+        journalTakeCount: 0,
+        hardwareMode: 'passive',
+      },
+      compatibility: {
+        status: 'compatible',
+        checks: [],
+      },
+      safety: {
+        devices: [],
+        checklist: [],
+      },
+      blockedActions: [],
+      recoveryNotes: [],
+      rehearsal: {
+        version: 1,
+      },
+    };
+
+    for (const malformedPackage of [
+      { ...validPackageShell, manifest: null },
+      {
+        ...validPackageShell,
+        manifest: { ...validPackageShell.manifest, sessionLabel: null },
+      },
+      { ...validPackageShell, compatibility: null },
+      { ...validPackageShell, compatibility: { checks: [] } },
+      { ...validPackageShell, safety: null },
+      { ...validPackageShell, rehearsal: { version: 99 } },
+    ]) {
+      fireEvent.change(screen.getByTestId('performance-console-local-import-input'), {
+        target: { value: JSON.stringify(malformedPackage) },
+      });
+      fireEvent.click(screen.getByRole('button', { name: /import local rehearsal package/i }));
+
+      expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
+        'Import failed: unsupported local rehearsal package',
+      );
+    }
 
     const sparsePayload = {
       version: 1,

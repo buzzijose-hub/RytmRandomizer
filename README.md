@@ -98,6 +98,13 @@ operator activity log while remaining component-local and mock-safe.
 It also supports browser-local auto-save plus copy-ready JSON export/import for
 that rehearsal state, so operators can recover or move a local plan without any
 sidecar command, file write, MIDI port, hardware arm path, or MIDI send.
+The same persistence surface can wrap that local rehearsal snapshot in a
+portable rehearsal package with a manifest, current packet compatibility
+checks, device/safety evidence, blocked-action evidence, and recovery notes.
+Package import still accepts the older raw local snapshot JSON shape for
+backward compatibility, recalculates compatibility against the current passive
+packet, and remains browser-local only: no sidecar command, project file write,
+MIDI port, hardware arm path, or MIDI send.
 
 **Sidecar security guarantees** (post CODE_REVIEW.md sweep, 2026-05):
 
