@@ -932,6 +932,73 @@ html,
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.performance-console-local-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.performance-console-local-control {
+  border-color: rgba(86, 212, 221, 0.46);
+  color: var(--cyan);
+  cursor: pointer;
+}
+
+.performance-console-local-control:hover,
+.performance-console-local-control:focus-visible,
+.performance-console-list article[role='button']:hover,
+.performance-console-list article[role='button']:focus-visible,
+.performance-console-history-rail article[role='button']:hover,
+.performance-console-history-rail article[role='button']:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.16);
+  outline: none;
+}
+
+.performance-console-list article[aria-pressed='true'],
+.performance-console-history-rail article[aria-pressed='true'] {
+  border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.performance-console-local-panel {
+  border: 1px solid rgba(86, 212, 221, 0.24);
+  border-radius: 8px;
+  background: rgba(8, 12, 17, 0.48);
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 8px;
+}
+
+.performance-console-local-panel strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.performance-console-local-panel span,
+.performance-console-local-panel small {
+  color: var(--text-dim);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.performance-console-depth-input {
+  display: grid;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.performance-console-depth-input span {
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.performance-console-depth-input input {
+  width: 100%;
+}
+
 .performance-console-crate-list {
   max-height: 420px;
   overflow: auto;
