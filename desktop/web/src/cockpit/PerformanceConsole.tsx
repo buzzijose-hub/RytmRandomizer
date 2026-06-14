@@ -469,6 +469,40 @@ export function PerformanceConsole({
     );
   };
 
+  const completeCurrentLocalSetStep = (): void => {
+    const currentEntry = currentSetPlanStep;
+    if (currentEntry === null) {
+      setLastSetPlanAction('No current local set-plan step to complete. Local only; no MIDI sent.');
+      appendLocalOperatorEvent(
+        'Complete ignored',
+        'No current local set-plan step to complete.',
+      );
+      return;
+    }
+    setCurrentSetPlanStep(null);
+    setLastSetPlanAction(
+      `Completed ${currentEntry.id}: ${localSetPlanEntrySummary(currentEntry)}. Local only; no MIDI sent.`,
+    );
+    appendLocalOperatorEvent(
+      `Completed ${currentEntry.id}`,
+      localSetPlanEntrySummary(currentEntry),
+    );
+  };
+
+  const resetLocalSetPlan = (): void => {
+    const currentEntry = currentSetPlanStep;
+    const queuedCount = localSetPlanEntries.length;
+    setCurrentSetPlanStep(null);
+    setLocalSetPlanEntries([]);
+    setLastSetPlanAction('Reset local set-plan. Local only; no MIDI sent.');
+    appendLocalOperatorEvent(
+      'Reset local set-plan',
+      currentEntry === null
+        ? `Cleared ${queuedCount} queued step(s).`
+        : `Cleared current ${currentEntry.id} and ${queuedCount} queued step(s).`,
+    );
+  };
+
   return (
     <main
       className="performance-console"
@@ -946,6 +980,14 @@ export function PerformanceConsole({
               <button
                 type="button"
                 className="live-readiness-action performance-console-local-control"
+                title="Completes the current local set-plan step in memory only."
+                onClick={completeCurrentLocalSetStep}
+              >
+                Complete current local set-plan step
+              </button>
+              <button
+                type="button"
+                className="live-readiness-action performance-console-local-control"
                 title="Skips the next local set-plan step in memory only."
                 onClick={skipNextLocalSetStep}
               >
@@ -958,6 +1000,14 @@ export function PerformanceConsole({
                 onClick={clearLocalSetPlan}
               >
                 Clear local set-plan
+              </button>
+              <button
+                type="button"
+                className="live-readiness-action performance-console-local-control"
+                title="Resets the current and queued local set-plan state in memory only."
+                onClick={resetLocalSetPlan}
+              >
+                Reset local set-plan
               </button>
             </div>
             <small>

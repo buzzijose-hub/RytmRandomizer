@@ -92,9 +92,9 @@ those controls update in-memory preview state only and still do not dispatch
 sidecar commands, open MIDI ports, arm hardware, or send MIDI.
 The same local layer can stage multiple set-plan steps, promote the next staged
 move into a current local set-plan step, label the remaining move as up next,
-show an operator handoff with current/next/recovery notes, skip or clear queued
-moves, and keep a local operator activity log while remaining component-local
-and mock-safe.
+show an operator handoff with current/next/recovery notes, complete the current
+step, skip or clear queued moves, reset the local plan, and keep a local
+operator activity log while remaining component-local and mock-safe.
 
 **Sidecar security guarantees** (post CODE_REVIEW.md sweep, 2026-05):
 

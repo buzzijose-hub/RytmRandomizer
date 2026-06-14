@@ -158,6 +158,43 @@ Use the helper in `performance-console-local-set-plan-summary` so the operator c
 
 Add compact CSS classes for the current step, handoff card, and operator log. Use stable dimensions, grid gaps, and no nested cards beyond the existing panel pattern.
 
+## Task 3A: Local Completion And Reset Controls
+
+**Files:**
+- Modify: `desktop/web/tests/cockpit/PerformanceConsole.test.tsx`
+- Modify: `desktop/web/src/cockpit/PerformanceConsole.tsx`
+- Modify: `desktop/web/src/cockpit/styles.css`
+
+- [x] **Step 1: Write the failing test**
+
+Extend the local set-plan test so it promotes a staged move, completes the
+current step, verifies the up-next step remains queued, then resets the local
+plan and verifies both current and queued local state are empty.
+
+- [x] **Step 2: Run the focused test and verify RED**
+
+Run:
+
+```powershell
+Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\desktop\web'
+npm.cmd run test:run -- tests/cockpit/PerformanceConsole.test.tsx
+```
+
+Observed: the focused test failed because the
+`Complete current local set-plan step` button did not exist.
+
+- [x] **Step 3: Implement local-only complete/reset actions**
+
+Add component-local handlers that complete the current local set-plan step or
+reset current plus queued local plan state. Both actions only update React
+state and local operator log entries; they do not dispatch WebSocket commands,
+Tauri invokes, sidecar actions, MIDI adapter calls, hardware arm paths, or MIDI
+sends.
+
+- [x] **Step 4: Verify GREEN**
+
+Run the same focused Vitest command and confirm the complete/reset assertions pass.
+
 ## Task 4: Docs And PR Body
 
 **Files:**

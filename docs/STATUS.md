@@ -8,8 +8,9 @@ Last updated: 2026-06-14. This file is a hand-authored snapshot and is meant to 
   merged. The passive Performance Console local rehearsal layer now promotes a
   staged move into a current local set-plan step, labels the remaining staged
   move as up next, renders a local operator handoff with current/next/recovery
-  notes, records local stage/promote/skip/clear/dry-run/journal activity in an
-  in-memory operator log, and keeps the local set-plan summary tied to current
+  notes, records local stage/promote/complete/skip/clear/reset/dry-run/journal
+  activity in an in-memory operator log, exposes local-only complete-current
+  and reset-plan controls, and keeps the local set-plan summary tied to current
   plus queued state. This remains frontend/component-local only:
   no WebSocket command dispatch, no Tauri or sidecar command execution, no MIDI
   port opening, no hardware arm path, no queued command execution, no snapshot

@@ -643,6 +643,22 @@ describe('PerformanceConsole', () => {
       'Local handoff only: no WebSocket command, sidecar action, MIDI port, arm, or send.',
     );
 
+    fireEvent.click(screen.getByRole('button', { name: /complete current local set-plan step/i }));
+
+    expect(screen.getByTestId('performance-console-current-set-plan-step')).toHaveTextContent(
+      'No current local set-plan step.',
+    );
+    expect(screen.getByTestId('performance-console-local-set-plan-summary')).toHaveTextContent(
+      'Completed local-step-01',
+    );
+    expect(localSetPlan).toHaveTextContent('local-step-02');
+    expect(localSetPlan).toHaveTextContent('Up next');
+    expect(operatorLog).toHaveTextContent('Completed local-step-01');
+    expect(handoff).toHaveTextContent('Current: none');
+    expect(handoff).toHaveTextContent(
+      'Next: local-step-02 / Broken Metal Stress / Industrial/Broken / console-snap-02 / 58%',
+    );
+
     fireEvent.click(screen.getByRole('button', { name: /skip next local set-plan step/i }));
 
     expect(screen.getByTestId('performance-console-local-set-plan-summary')).toHaveTextContent(
@@ -662,6 +678,17 @@ describe('PerformanceConsole', () => {
     );
     expect(operatorLog).toHaveTextContent('Cleared 1 local set-plan step');
     expect(localSetPlan).toHaveTextContent('No local set-plan steps staged.');
+
+    fireEvent.click(screen.getByRole('button', { name: /reset local set-plan/i }));
+
+    expect(screen.getByTestId('performance-console-local-set-plan-summary')).toHaveTextContent(
+      'Reset local set-plan',
+    );
+    expect(screen.getByTestId('performance-console-current-set-plan-step')).toHaveTextContent(
+      'No current local set-plan step.',
+    );
+    expect(localSetPlan).toHaveTextContent('No local set-plan steps staged.');
+    expect(operatorLog).toHaveTextContent('Reset local set-plan');
     expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
   });
@@ -717,6 +744,14 @@ describe('PerformanceConsole', () => {
       'No local set-plan steps to skip',
     );
 
+    fireEvent.click(screen.getByRole('button', { name: /complete current local set-plan step/i }));
+    expect(screen.getByTestId('performance-console-local-set-plan-summary')).toHaveTextContent(
+      'No current local set-plan step to complete',
+    );
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Complete ignored',
+    );
+
     fireEvent.click(screen.getByRole('button', { name: /clear local set-plan/i }));
     expect(screen.getByTestId('performance-console-local-set-plan-summary')).toHaveTextContent(
       'Cleared 0 local set-plan step',
@@ -728,9 +763,25 @@ describe('PerformanceConsole', () => {
       'No queued move',
     );
 
+    fireEvent.click(screen.getByRole('button', { name: /promote next local set-plan step/i }));
+    expect(screen.getByTestId('performance-console-current-set-plan-step')).toHaveTextContent(
+      'local-step-01',
+    );
+
     fireEvent.click(screen.getByRole('button', { name: /clear local set-plan/i }));
     expect(screen.getByTestId('performance-console-local-set-plan-summary')).toHaveTextContent(
-      'Cleared 1 local set-plan step',
+      'Cleared 0 local set-plan step',
+    );
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Current step remains local-step-01',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /reset local set-plan/i }));
+    expect(screen.getByTestId('performance-console-local-set-plan-summary')).toHaveTextContent(
+      'Reset local set-plan',
+    );
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Cleared current local-step-01 and 0 queued step',
     );
 
     expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
