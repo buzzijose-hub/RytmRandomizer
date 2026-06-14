@@ -90,9 +90,10 @@ It also supports local-only rehearsal interactions for selecting crates,
 queued moves, snapshots, preview depth, dry-run summary, and journal saves;
 those controls update in-memory preview state only and still do not dispatch
 sidecar commands, open MIDI ports, arm hardware, or send MIDI.
-The same local layer can stage multiple set-plan steps, promote or skip the
-next staged move, and clear the local plan while remaining component-local and
-mock-safe.
+The same local layer can stage multiple set-plan steps, promote the next staged
+move into a current local set-plan step, label the remaining move as up next,
+skip or clear queued moves, and keep a local operator activity log while
+remaining component-local and mock-safe.
 
 **Sidecar security guarantees** (post CODE_REVIEW.md sweep, 2026-05):
 

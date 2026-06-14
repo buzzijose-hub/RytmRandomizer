@@ -984,18 +984,32 @@ html,
   line-height: 1.35;
 }
 
-.performance-console-local-set-plan-list {
+.performance-console-local-set-plan-list,
+.performance-console-local-operator-log-list {
   display: grid;
   gap: 6px;
 }
 
-.performance-console-local-set-plan-list article {
+.performance-console-local-current-step,
+.performance-console-local-set-plan-list article,
+.performance-console-local-operator-log-list article {
   border: 1px solid rgba(88, 166, 255, 0.24);
   border-radius: 6px;
   background: rgba(22, 27, 34, 0.58);
   display: grid;
   gap: 3px;
   padding: 7px;
+}
+
+.performance-console-local-current-step {
+  border-color: rgba(46, 160, 67, 0.52);
+  box-shadow: inset 3px 0 0 rgba(46, 160, 67, 0.84);
+}
+
+.performance-console-local-operator-log-list {
+  max-height: 164px;
+  overflow: auto;
+  padding-right: 2px;
 }
 
 .performance-console-local-set-plan-list strong {

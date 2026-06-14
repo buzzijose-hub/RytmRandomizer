@@ -43,6 +43,13 @@ interface LocalSetPlanEntry {
   readonly status: string;
 }
 
+interface LocalOperatorEvent {
+  readonly id: string;
+  readonly label: string;
+  readonly detail: string;
+  readonly status: string;
+}
+
 function orderedDevices(
   devices: ReadonlyArray<LiveGuiDeviceInventoryCardDict>,
 ): ReadonlyArray<LiveGuiDeviceInventoryCardDict> {
@@ -214,6 +221,22 @@ function localSetPlanEntrySummary(entry: LocalSetPlanEntry): string {
   return `${entry.moveName} / ${entry.crateName} / ${entry.snapshotId} / ${entry.depth}%`;
 }
 
+function localSetPlanStatusSummary(
+  current: LocalSetPlanEntry | null,
+  queued: ReadonlyArray<LocalSetPlanEntry>,
+  lastAction: string,
+): string {
+  if (current === null && queued.length === 0) {
+    return `${lastAction} No active local set plan. Local only; no MIDI sent.`;
+  }
+  const currentLabel = current === null ? 'no current step' : `current ${current.id}`;
+  return `${lastAction} ${currentLabel}; ${queued.length} queued. Local only; no MIDI sent.`;
+}
+
+function localOperatorEventId(index: number): string {
+  return `local-event-${String(index + 1).padStart(2, '0')}`;
+}
+
 function isKeyboardActivation(key: string): boolean {
   return key === 'Enter' || key === ' ';
 }
@@ -257,6 +280,8 @@ export function PerformanceConsole({
   const [lastDryRunSummary, setLastDryRunSummary] = useState<string>('No local dry-run performed.');
   const [localJournalEntries, setLocalJournalEntries] = useState<ReadonlyArray<LocalJournalEntry>>([]);
   const [localSetPlanEntries, setLocalSetPlanEntries] = useState<ReadonlyArray<LocalSetPlanEntry>>([]);
+  const [currentSetPlanStep, setCurrentSetPlanStep] = useState<LocalSetPlanEntry | null>(null);
+  const [localOperatorEvents, setLocalOperatorEvents] = useState<ReadonlyArray<LocalOperatorEvent>>([]);
   const [lastSetPlanAction, setLastSetPlanAction] = useState<string>(
     'No local set-plan action yet.',
   );
@@ -309,6 +334,23 @@ export function PerformanceConsole({
   );
   const queuedCommand = model.command_queue.queued_commands[0];
   const selectedSnapshotIdLabel = currentSnapshot?.snapshot_id ?? 'none';
+  const localSetPlanSummary = localSetPlanStatusSummary(
+    currentSetPlanStep,
+    localSetPlanEntries,
+    lastSetPlanAction,
+  );
+
+  const appendLocalOperatorEvent = (label: string, detail: string): void => {
+    setLocalOperatorEvents((events) => [
+      ...events,
+      {
+        id: localOperatorEventId(events.length),
+        label,
+        detail,
+        status: 'Local only',
+      },
+    ]);
+  };
 
   const selectCrate = (crate: StyleCrateRehearsalCrateCardDict): void => {
     setSelectedCrateKey(crate.crate_key);
@@ -326,24 +368,31 @@ export function PerformanceConsole({
   const runLocalDryRun = (): void => {
     const crateName = selectedCrate?.crate_name ?? 'No crate';
     const moveName = currentQueueMove?.move_name ?? 'No queued move';
+    const summary = `${crateName} -> ${moveName} at ${currentDepth}% from ${selectedSnapshotIdLabel}`;
     setLastDryRunSummary(
-      `Local dry-run: ${crateName} -> ${moveName} at ${currentDepth}% from ${selectedSnapshotIdLabel}. No MIDI port opened; no MIDI sent.`,
+      `Local dry-run: ${summary}. No MIDI port opened; no MIDI sent.`,
     );
+    appendLocalOperatorEvent('Ran local dry-run', summary);
   };
 
   const saveLocalJournalTake = (): void => {
     const crateName = selectedCrate?.crate_name ?? 'No crate';
     const moveName = currentQueueMove?.move_name ?? 'No queued move';
+    const snapshotId = selectedSnapshotIdLabel;
     setLocalJournalEntries((entries) => [
       ...entries,
       {
         id: localTakeId(entries.length),
         crateName,
         moveName,
-        snapshotId: selectedSnapshotIdLabel,
+        snapshotId,
         depth: currentDepth,
       },
     ]);
+    appendLocalOperatorEvent(
+      'Saved local journal take',
+      `${moveName} / ${crateName} / ${snapshotId} / ${currentDepth}%`,
+    );
   };
 
   const stageLocalSetPlanEntry = (): void => {
@@ -357,36 +406,46 @@ export function PerformanceConsole({
     };
     setLocalSetPlanEntries([...localSetPlanEntries, entry]);
     setLastSetPlanAction(`Staged ${entry.id}: ${localSetPlanEntrySummary(entry)}. Local only; no MIDI sent.`);
+    appendLocalOperatorEvent(`Staged ${entry.id}`, localSetPlanEntrySummary(entry));
   };
 
   const promoteNextLocalSetStep = (): void => {
     const nextEntry = localSetPlanEntries[0];
     if (nextEntry === undefined) {
       setLastSetPlanAction('No local set-plan steps to promote. Local only; no MIDI sent.');
+      appendLocalOperatorEvent('Promote skipped', 'No local set-plan steps to promote.');
       return;
     }
+    setCurrentSetPlanStep(nextEntry);
     setLocalSetPlanEntries(localSetPlanEntries.slice(1));
     setLastSetPlanAction(
       `Promoted ${nextEntry.id}: ${localSetPlanEntrySummary(nextEntry)}. Local only; no MIDI sent.`,
     );
+    appendLocalOperatorEvent(`Promoted ${nextEntry.id}`, localSetPlanEntrySummary(nextEntry));
   };
 
   const skipNextLocalSetStep = (): void => {
     const nextEntry = localSetPlanEntries[0];
     if (nextEntry === undefined) {
       setLastSetPlanAction('No local set-plan steps to skip. Local only; no MIDI sent.');
+      appendLocalOperatorEvent('Skip ignored', 'No local set-plan steps to skip.');
       return;
     }
     setLocalSetPlanEntries(localSetPlanEntries.slice(1));
     setLastSetPlanAction(
       `Skipped ${nextEntry.id}: ${localSetPlanEntrySummary(nextEntry)}. Local only; no MIDI sent.`,
     );
+    appendLocalOperatorEvent(`Skipped ${nextEntry.id}`, localSetPlanEntrySummary(nextEntry));
   };
 
   const clearLocalSetPlan = (): void => {
     const stepCount = localSetPlanEntries.length;
     setLocalSetPlanEntries([]);
     setLastSetPlanAction(`Cleared ${stepCount} local set-plan step(s). Local only; no MIDI sent.`);
+    appendLocalOperatorEvent(
+      `Cleared ${stepCount} local set-plan step(s)`,
+      currentSetPlanStep === null ? 'No current step changed.' : `Current step remains ${currentSetPlanStep.id}.`,
+    );
   };
 
   return (
@@ -810,14 +869,34 @@ export function PerformanceConsole({
             aria-label="Local set-plan queue"
           >
             <strong>Local set-plan queue</strong>
-            <span data-testid="performance-console-local-set-plan-summary">{lastSetPlanAction}</span>
+            <span data-testid="performance-console-local-set-plan-summary">{localSetPlanSummary}</span>
+            <article
+              className="performance-console-local-current-step"
+              data-testid="performance-console-current-set-plan-step"
+            >
+              <strong>Current local set-plan step</strong>
+              {currentSetPlanStep === null ? (
+                <span>No current local set-plan step.</span>
+              ) : (
+                <>
+                  <span>
+                    {currentSetPlanStep.id}: {currentSetPlanStep.moveName}
+                  </span>
+                  <small>
+                    {currentSetPlanStep.crateName} / snapshot {currentSetPlanStep.snapshotId} /
+                    depth {currentSetPlanStep.depth}% / {currentSetPlanStep.status}
+                  </small>
+                </>
+              )}
+            </article>
             {localSetPlanEntries.length === 0 ? <span>No local set-plan steps staged.</span> : null}
             <div className="performance-console-local-set-plan-list">
-              {localSetPlanEntries.map((entry) => (
+              {localSetPlanEntries.map((entry, index) => (
                 <article key={entry.id} data-testid={`local-set-plan-step-${entry.id}`}>
                   <strong>
                     {entry.id}: {entry.moveName}
                   </strong>
+                  <span>{index === 0 ? 'Up next' : `Queued ${index + 1}`}</span>
                   <span>{entry.crateName}</span>
                   <small>
                     snapshot {entry.snapshotId} / depth {entry.depth}% / {entry.status}
@@ -855,6 +934,25 @@ export function PerformanceConsole({
               Local only: this set plan does not dispatch WebSocket commands, execute sidecar
               actions, open MIDI ports, arm hardware, or send MIDI.
             </small>
+          </section>
+          <section
+            className="performance-console-local-panel performance-console-local-operator-log"
+            data-testid="performance-console-local-operator-log"
+            aria-label="Local operator activity log"
+          >
+            <strong>Local operator activity</strong>
+            {localOperatorEvents.length === 0 ? (
+              <span>No local operator activity recorded.</span>
+            ) : null}
+            <div className="performance-console-local-operator-log-list">
+              {localOperatorEvents.map((event) => (
+                <article key={event.id} data-testid={`local-operator-event-${event.id}`}>
+                  <strong>{event.label}</strong>
+                  <span>{event.status}</span>
+                  <small>{event.detail}</small>
+                </article>
+              ))}
+            </div>
           </section>
         </section>
 

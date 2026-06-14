@@ -609,17 +609,32 @@ describe('PerformanceConsole', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /promote next local set-plan step/i }));
 
+    const currentSetPlanStep = screen.getByTestId('performance-console-current-set-plan-step');
+    expect(currentSetPlanStep).toHaveTextContent('local-step-01');
+    expect(currentSetPlanStep).toHaveTextContent('Rolling Perc Push');
+    expect(currentSetPlanStep).toHaveTextContent('Peak Time');
+    expect(currentSetPlanStep).toHaveTextContent('console-snap-01');
+    expect(currentSetPlanStep).toHaveTextContent('72%');
+
     expect(screen.getByTestId('performance-console-local-set-plan-summary')).toHaveTextContent(
       'Promoted local-step-01',
     );
     expect(screen.queryByTestId('local-set-plan-step-local-step-01')).not.toBeInTheDocument();
     expect(localSetPlan).toHaveTextContent('local-step-02');
+    expect(localSetPlan).toHaveTextContent('Up next');
+
+    const operatorLog = screen.getByTestId('performance-console-local-operator-log');
+    expect(operatorLog).toHaveTextContent('Staged local-step-01');
+    expect(operatorLog).toHaveTextContent('Staged local-step-02');
+    expect(operatorLog).toHaveTextContent('Promoted local-step-01');
+    expect(operatorLog).toHaveTextContent('Local only');
 
     fireEvent.click(screen.getByRole('button', { name: /skip next local set-plan step/i }));
 
     expect(screen.getByTestId('performance-console-local-set-plan-summary')).toHaveTextContent(
       'Skipped local-step-02',
     );
+    expect(operatorLog).toHaveTextContent('Skipped local-step-02');
     expect(localSetPlan).toHaveTextContent('No local set-plan steps staged.');
 
     fireEvent.click(screen.getByRole('button', { name: /stage local set-plan step/i }));
@@ -630,6 +645,7 @@ describe('PerformanceConsole', () => {
     expect(screen.getByTestId('performance-console-local-set-plan-summary')).toHaveTextContent(
       'Cleared 1 local set-plan step',
     );
+    expect(operatorLog).toHaveTextContent('Cleared 1 local set-plan step');
     expect(localSetPlan).toHaveTextContent('No local set-plan steps staged.');
     expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
