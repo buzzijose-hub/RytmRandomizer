@@ -75,6 +75,7 @@ USAGE = (
     "style-profile-report | style-crates-queue-journal-report [--json] | "
     "style-crate-rehearsal-deck-report [--crate <key>] [--json] | "
     "oxi-live-macro-catalog-report | "
+    "controller-brain-mapping-report [--json] | "
     "rytm-live-macro-hardware-rehearsal-report [--json] | "
     "live-gui-performance-flow-model-report [--json] | "
     "live-gui-performance-console-report [--json] | "
@@ -1290,6 +1291,30 @@ Safety:
   no MIDI sending
   no port opening
   no command execution
+  no hardware mutation
+  no hardware required"""
+
+
+def _controller_brain_mapping_report_help():
+    return """RytmRandomizer passive CLI: controller-brain-mapping-report
+
+Usage:
+  python -m rytm_randomizer.cli controller-brain-mapping-report
+  python -m rytm_randomizer.cli controller-brain-mapping-report --json
+  python -m rytm_randomizer.cli controller-brain-mapping-report --help
+
+Behavior:
+  Prints the passive 16-encoder controller-brain intent catalog for future
+  hardware surfaces. It maps paged controls to reviewed RytmRandomizer intent
+  such as Rytm pad lanes, Analog Four runway macros, Style Crates, live queue
+  staging, snapshot recovery, and Mutation Journal actions.
+
+Safety:
+  passive/read-only
+  no MIDI controller input
+  no MIDI sending
+  no port opening
+  no WebSocket command dispatch
   no hardware mutation
   no hardware required"""
 
@@ -2806,6 +2831,7 @@ Usage:
   python -m rytm_randomizer.cli style-crates-queue-journal-report [--json]
   python -m rytm_randomizer.cli style-crate-rehearsal-deck-report [--crate <key>] [--json]
   python -m rytm_randomizer.cli oxi-live-macro-catalog-report
+  python -m rytm_randomizer.cli controller-brain-mapping-report [--json]
   python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report [--json]
   python -m rytm_randomizer.cli live-gui-performance-flow-model-report [--json]
   python -m rytm_randomizer.cli live-gui-performance-console-report [--json]
@@ -2966,6 +2992,8 @@ Commands:
                      Print passive GUI-ready style crate rehearsal cards.
   oxi-live-macro-catalog-report
                      Print passive OXI live macro cards and A4 runway state.
+  controller-brain-mapping-report
+                     Print passive 16-encoder controller-brain intent maps.
   rytm-live-macro-hardware-rehearsal-report
                      Print passive Rytm macro hardware rehearsal checklist.
   live-gui-performance-flow-model-report
@@ -3375,6 +3403,7 @@ Safety:
     "style-crates-queue-journal-report": _style_crates_queue_journal_report_help,
     "style-crate-rehearsal-deck-report": _style_crate_rehearsal_deck_report_help,
     "oxi-live-macro-catalog-report": _oxi_live_macro_catalog_report_help,
+    "controller-brain-mapping-report": _controller_brain_mapping_report_help,
     "rytm-live-macro-hardware-rehearsal-report": (_rytm_live_macro_hardware_rehearsal_report_help),
     "live-gui-performance-flow-model-report": _live_gui_performance_flow_model_report_help,
     "live-gui-performance-console-report": _live_gui_performance_console_report_help,

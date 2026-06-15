@@ -1,9 +1,20 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-14. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-06-15. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-06-15: Passive controller-brain mapping bundle started on a clean
+  base after PR #182 merged. The new controller-brain plan treats OXI E16,
+  E16-like, and generic 16-encoder surfaces as intent controllers for
+  RytmRandomizer rather than raw MIDI CC boxes: pages cover global macro depth
+  and safety, all 12 Rytm pad lanes, Analog Four runway tracks, Style Crates,
+  live queue staging, snapshot recovery, and Mutation Journal actions. The
+  first implementation slice adds a pure data model plus
+  `controller-brain-mapping-report [--json]`, and it remains passive:
+  no controller input opening, no MIDI learn, no controller feedback,
+  no WebSocket command dispatch, no hardware arming, no MIDI port opening,
+  no snapshot mutation, and no MIDI send.
 - 2026-06-14: Cockpit rehearsal package review workbench prepared on the
   clean base after PR #181 merged. The passive Performance Console now compares
   an exported/imported local rehearsal package against the currently loaded

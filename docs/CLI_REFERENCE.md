@@ -237,11 +237,14 @@ macro SEND` plus unattended playback blocked.
 | Command | Description |
 |---|---|
 | `oxi-live-macro-catalog-report` | Passive Rytm macro cards, recovery actions, live flow, and A4 runway state |
+| `controller-brain-mapping-report [--json]` | Passive 16-encoder controller-brain intent pages for Rytm, A4, crates, queue, snapshots, and journal |
 | `rytm-live-macro-hardware-rehearsal-report` | Passive next-studio Rytm macro checklist with launch command, pad-lane checks, and recovery notes |
 | `oxi-live-set-strategy-report` | Passive OXI-style set chapters, operator cues, rehearsal/replay commands, all-12-pad policy, and A4 review-only actions |
 
 ```bash
 python -m rytm_randomizer.cli oxi-live-macro-catalog-report
+python -m rytm_randomizer.cli controller-brain-mapping-report
+python -m rytm_randomizer.cli controller-brain-mapping-report --json
 python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report
 python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report --json
 python -m rytm_randomizer.cli oxi-live-set-strategy-report
@@ -277,6 +280,16 @@ center-band check, A4 input-only soft capture, and passive A4 macro dry-run.
 Analog Four promotion criteria keep outbound macros blocked until input-label
 coverage, passive macro review, an explicit arm gate, and a tested recovery
 path exist.
+
+`controller-brain-mapping-report` is the passive planning layer for OXI E16,
+E16-like, or generic 16-encoder controller surfaces. It does not open a
+controller input, learn raw MIDI CCs, send controller feedback, dispatch
+WebSocket commands, arm hardware, or send MIDI. Instead it maps paged encoder
+slots to reviewed RytmRandomizer intent: global macro depth and safety, all 12
+Rytm pad lanes, Analog Four runway macro controls, Style Crates, live queue
+staging, snapshot recovery, and Mutation Journal actions. That keeps the
+hardware-controller idea product-shaped without bypassing the existing passive
+preview and explicit-arm rules.
 
 ---
 
