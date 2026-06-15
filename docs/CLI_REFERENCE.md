@@ -238,6 +238,7 @@ macro SEND` plus unattended playback blocked.
 |---|---|
 | `oxi-live-macro-catalog-report` | Passive Rytm macro cards, recovery actions, live flow, and A4 runway state |
 | `controller-brain-mapping-report [--json]` | Passive 16-encoder controller-brain intent pages for Rytm, A4, crates, queue, snapshots, and journal |
+| `controller-brain-rehearsal-report [--json]` | Passive controller-template export rows plus virtual gesture outcomes for future controller software |
 | `rytm-live-macro-hardware-rehearsal-report` | Passive next-studio Rytm macro checklist with launch command, pad-lane checks, and recovery notes |
 | `oxi-live-set-strategy-report` | Passive OXI-style set chapters, operator cues, rehearsal/replay commands, all-12-pad policy, and A4 review-only actions |
 
@@ -245,6 +246,8 @@ macro SEND` plus unattended playback blocked.
 python -m rytm_randomizer.cli oxi-live-macro-catalog-report
 python -m rytm_randomizer.cli controller-brain-mapping-report
 python -m rytm_randomizer.cli controller-brain-mapping-report --json
+python -m rytm_randomizer.cli controller-brain-rehearsal-report
+python -m rytm_randomizer.cli controller-brain-rehearsal-report --json
 python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report
 python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report --json
 python -m rytm_randomizer.cli oxi-live-set-strategy-report
@@ -290,6 +293,14 @@ Rytm pad lanes, Analog Four runway macro controls, Style Crates, live queue
 staging, snapshot recovery, and Mutation Journal actions. That keeps the
 hardware-controller idea product-shaped without bypassing the existing passive
 preview and explicit-arm rules.
+
+`controller-brain-rehearsal-report` is the passive export and rehearsal packet
+for that map. It derives all 112 controller-template rows from
+`controller_mapping_profiles.py`, resolves representative virtual gestures into
+their reviewed intent keys, records blocked active actions, and emits a JSON
+shape that a future Cockpit/controller bridge can render without opening
+controller input, learning raw MIDI messages, dispatching WebSocket commands,
+opening hardware ports, or sending MIDI.
 
 ---
 
