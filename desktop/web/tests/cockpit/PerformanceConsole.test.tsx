@@ -887,6 +887,52 @@ describe('PerformanceConsole', () => {
     expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
   });
 
+  it('reviews an exported rehearsal package against the current cockpit packet locally', () => {
+    render(<PerformanceConsole model={performanceConsoleModelWithSelectableHistory()} />);
+
+    fireEvent.click(screen.getByTestId('performance-console-style-crate-select-peak-time'));
+    fireEvent.click(screen.getByTestId('performance-console-queue-select-queue-groove-pressure'));
+    fireEvent.click(screen.getByTestId('performance-console-history-console-snap-01'));
+    fireEvent.change(screen.getByTestId('performance-console-depth-input'), {
+      target: { value: '72' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /stage local set-plan step/i }));
+    fireEvent.click(screen.getByRole('button', { name: /export local rehearsal package/i }));
+
+    const review = screen.getByTestId('performance-console-local-package-review');
+    expect(review).toHaveTextContent('Package review workbench');
+    expect(review).toHaveTextContent('review status compatible');
+    expect(review).toHaveTextContent('Package can be rehearsed with the current cockpit packet.');
+    expect(review).toHaveTextContent('Crate');
+    expect(review).toHaveTextContent('package Peak Time');
+    expect(review).toHaveTextContent('current Peak Time');
+    expect(review).toHaveTextContent('Queued move');
+    expect(review).toHaveTextContent('package Rolling Perc Push');
+    expect(review).toHaveTextContent('current Rolling Perc Push');
+    expect(review).toHaveTextContent('Snapshot');
+    expect(review).toHaveTextContent('package console-snap-01');
+    expect(review).toHaveTextContent('current console-snap-01');
+    expect(review).toHaveTextContent('Depth');
+    expect(review).toHaveTextContent('package 72%');
+    expect(review).toHaveTextContent('current 72%');
+    expect(review).toHaveTextContent('Blocked actions');
+    expect(review).toHaveTextContent('Recovery notes');
+
+    fireEvent.click(screen.getByRole('button', { name: /stage package review locally/i }));
+
+    expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
+      'Staged local package review: compatible',
+    );
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Staged package review',
+    );
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Package can be rehearsed with the current cockpit packet.',
+    );
+    expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
+  });
+
   it('exports a compatible local rehearsal package before crate or queue selection', () => {
     window.localStorage.clear();
     render(<PerformanceConsole model={performanceConsoleModelWithEmptyStyleDeck()} />);
@@ -1042,6 +1088,7 @@ describe('PerformanceConsole', () => {
     expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
       'Imported local rehearsal JSON',
     );
+    expect(screen.queryByTestId('performance-console-local-package-review')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
   });
 
@@ -1105,6 +1152,24 @@ describe('PerformanceConsole', () => {
     expect(screen.getByTestId('performance-console-local-preview')).toHaveTextContent('Depth 44%');
     expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
+
+    const review = screen.getByTestId('performance-console-local-package-review');
+    expect(review).toHaveTextContent('review status needs review');
+    expect(review).toHaveTextContent('Package needs operator review before reuse.');
+    expect(review).toHaveTextContent('Crate');
+    expect(review).toHaveTextContent('package External Crate');
+    expect(review).toHaveTextContent('current missing-crate');
+    expect(review).toHaveTextContent('missing');
+    expect(review).toHaveTextContent('Queued move');
+    expect(review).toHaveTextContent('package External Move');
+    expect(review).toHaveTextContent('current missing-queue');
+    expect(review).toHaveTextContent('Snapshot');
+    expect(review).toHaveTextContent('package external-snapshot');
+    expect(review).toHaveTextContent('current missing-snapshot');
+    expect(review).toHaveTextContent('Blocked actions');
+    expect(review).toHaveTextContent('package 1');
+    expect(review).toHaveTextContent('Recovery notes');
+    expect(review).toHaveTextContent('current 1');
 
     fireEvent.change(screen.getByTestId('performance-console-local-import-input'), {
       target: {

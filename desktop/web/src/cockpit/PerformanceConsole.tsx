@@ -108,6 +108,19 @@ interface LocalRehearsalImport {
   readonly rehearsalPackage: LocalRehearsalPackage | null;
 }
 
+interface LocalRehearsalPackageReviewRow {
+  readonly label: string;
+  readonly packageValue: string;
+  readonly currentValue: string;
+  readonly status: string;
+}
+
+interface LocalRehearsalPackageReview {
+  readonly status: string;
+  readonly summary: string;
+  readonly rows: ReadonlyArray<LocalRehearsalPackageReviewRow>;
+}
+
 function orderedDevices(
   devices: ReadonlyArray<LiveGuiDeviceInventoryCardDict>,
 ): ReadonlyArray<LiveGuiDeviceInventoryCardDict> {
@@ -715,6 +728,167 @@ function packageWithCurrentCompatibility(
   };
 }
 
+function compatibilityStatusFor(
+  compatibility: LocalRehearsalPackageCompatibility,
+  needle: string,
+): string {
+  return compatibility.checks.some((entry) => entry.includes(needle) && entry.includes('missing'))
+    ? 'missing'
+    : 'match';
+}
+
+function comparisonStatus(packageValue: string, currentValue: string): string {
+  return packageValue === currentValue ? 'match' : 'changed';
+}
+
+function currentReferenceValue(
+  status: string,
+  fallbackLabel: string,
+  referenceLabel: string,
+): string {
+  if (status === 'missing') {
+    return referenceLabel;
+  }
+  return fallbackLabel;
+}
+
+function countLabel(values: ReadonlyArray<string>): string {
+  return String(values.length);
+}
+
+function localPackageReviewForCurrentPacket({
+  model,
+  localPackage,
+  selectedCrate,
+  currentQueueMove,
+  selectedSnapshotIdLabel,
+  currentDepth,
+  currentSetPlanStep,
+  localSetPlanEntries,
+  localJournalEntries,
+  localHandoffLines,
+}: {
+  readonly model: LiveGuiPerformanceConsoleModelDict;
+  readonly localPackage: LocalRehearsalPackage | null;
+  readonly selectedCrate: StyleCrateRehearsalCrateCardDict | undefined;
+  readonly currentQueueMove: StyleCrateRehearsalQueueCardDict | undefined;
+  readonly selectedSnapshotIdLabel: string;
+  readonly currentDepth: number;
+  readonly currentSetPlanStep: LocalSetPlanEntry | null;
+  readonly localSetPlanEntries: ReadonlyArray<LocalSetPlanEntry>;
+  readonly localJournalEntries: ReadonlyArray<LocalJournalEntry>;
+  readonly localHandoffLines: ReadonlyArray<string>;
+}): LocalRehearsalPackageReview | null {
+  if (localPackage === null) {
+    return null;
+  }
+  const crateStatus = compatibilityStatusFor(localPackage.compatibility, 'selected crate');
+  const queueStatus = compatibilityStatusFor(localPackage.compatibility, 'selected queued move');
+  const snapshotStatus = compatibilityStatusFor(localPackage.compatibility, 'selected snapshot');
+  const currentBlockedActions = packageBlockedActionsForModel(model);
+  const currentRecoveryNotes = packageRecoveryNotesForModel(
+    model,
+    currentQueueMove,
+    localHandoffLines,
+  );
+  const rows: ReadonlyArray<LocalRehearsalPackageReviewRow> = [
+    {
+      label: 'Crate',
+      packageValue: localPackage.manifest.selectedCrateName,
+      currentValue: currentReferenceValue(
+        crateStatus,
+        selectedCrate?.crate_name ?? 'none',
+        localPackage.rehearsal.selectedCrateKey ?? 'none',
+      ),
+      status: crateStatus,
+    },
+    {
+      label: 'Queued move',
+      packageValue: localPackage.manifest.selectedMoveName,
+      currentValue: currentReferenceValue(
+        queueStatus,
+        currentQueueMove?.move_name ?? 'none',
+        localPackage.rehearsal.selectedQueueKey ?? 'none',
+      ),
+      status: queueStatus,
+    },
+    {
+      label: 'Snapshot',
+      packageValue: localPackage.manifest.selectedSnapshotId,
+      currentValue: currentReferenceValue(
+        snapshotStatus,
+        selectedSnapshotIdLabel,
+        localPackage.rehearsal.selectedSnapshotId ?? 'none',
+      ),
+      status: snapshotStatus,
+    },
+    {
+      label: 'Depth',
+      packageValue: `${localPackage.rehearsal.previewDepth ?? 0}%`,
+      currentValue: `${currentDepth}%`,
+      status: comparisonStatus(`${localPackage.rehearsal.previewDepth ?? 0}%`, `${currentDepth}%`),
+    },
+    {
+      label: 'Current step',
+      packageValue: localPackage.manifest.currentStepId ?? 'none',
+      currentValue: currentSetPlanStep?.id ?? 'none',
+      status: comparisonStatus(
+        localPackage.manifest.currentStepId ?? 'none',
+        currentSetPlanStep?.id ?? 'none',
+      ),
+    },
+    {
+      label: 'Queued steps',
+      packageValue: String(localPackage.manifest.queuedStepCount),
+      currentValue: String(localSetPlanEntries.length),
+      status: comparisonStatus(
+        String(localPackage.manifest.queuedStepCount),
+        String(localSetPlanEntries.length),
+      ),
+    },
+    {
+      label: 'Journal takes',
+      packageValue: String(localPackage.manifest.journalTakeCount),
+      currentValue: String(localJournalEntries.length),
+      status: comparisonStatus(
+        String(localPackage.manifest.journalTakeCount),
+        String(localJournalEntries.length),
+      ),
+    },
+    {
+      label: 'Blocked actions',
+      packageValue: countLabel(localPackage.blockedActions),
+      currentValue: countLabel(currentBlockedActions),
+      status: comparisonStatus(
+        countLabel(localPackage.blockedActions),
+        countLabel(currentBlockedActions),
+      ),
+    },
+    {
+      label: 'Recovery notes',
+      packageValue: countLabel(localPackage.recoveryNotes),
+      currentValue: countLabel(currentRecoveryNotes),
+      status: comparisonStatus(
+        countLabel(localPackage.recoveryNotes),
+        countLabel(currentRecoveryNotes),
+      ),
+    },
+  ];
+  const status =
+    localPackage.compatibility.status === 'needs review' ||
+    rows.some((row) => row.status === 'missing')
+      ? 'needs review'
+      : 'compatible';
+  return {
+    status,
+    summary:
+      status === 'compatible'
+        ? 'Package can be rehearsed with the current cockpit packet.'
+        : 'Package needs operator review before reuse.',
+    rows,
+  };
+}
+
 function localStorageHandle(): Storage | null {
   try {
     return window.localStorage;
@@ -886,13 +1060,16 @@ export function PerformanceConsole({
     lastSetPlanAction,
   );
   const nextLocalSetPlanStep = localSetPlanEntries[0];
-  const localHandoffLines = [
-    localSetPlanHandoffLine('Current', currentSetPlanStep),
-    localSetPlanHandoffLine('Next', nextLocalSetPlanStep),
-    localOperatorRecentLine(localOperatorEvents),
-    'Recovery: use Z + send from the armed snapshot shell.',
-    'Local handoff only: no WebSocket command, sidecar action, MIDI port, arm, or send.',
-  ];
+  const localHandoffLines = useMemo(
+    () => [
+      localSetPlanHandoffLine('Current', currentSetPlanStep),
+      localSetPlanHandoffLine('Next', nextLocalSetPlanStep),
+      localOperatorRecentLine(localOperatorEvents),
+      'Recovery: use Z + send from the armed snapshot shell.',
+      'Local handoff only: no WebSocket command, sidecar action, MIDI port, arm, or send.',
+    ],
+    [currentSetPlanStep, nextLocalSetPlanStep, localOperatorEvents],
+  );
   const localRehearsalSnapshot = useMemo<LocalRehearsalSnapshot>(
     () => ({
       version: LOCAL_REHEARSAL_STORAGE_VERSION,
@@ -923,6 +1100,34 @@ export function PerformanceConsole({
       localAutosaveEnabled,
     ],
   );
+  const localPackageReview = useMemo(
+    () =>
+      localPackageReviewForCurrentPacket({
+        model,
+        localPackage,
+        selectedCrate,
+        currentQueueMove,
+        selectedSnapshotIdLabel,
+        currentDepth,
+        currentSetPlanStep,
+        localSetPlanEntries,
+        localJournalEntries,
+        localHandoffLines,
+      }),
+    [
+      model,
+      localPackage,
+      selectedCrate,
+      currentQueueMove,
+      selectedSnapshotIdLabel,
+      currentDepth,
+      currentSetPlanStep,
+      localSetPlanEntries,
+      localJournalEntries,
+      localHandoffLines,
+    ],
+  );
+  const visiblePackageReview = localPackageReview as LocalRehearsalPackageReview;
 
   useEffect(() => {
     if (localAutosaveEnabled) {
@@ -1073,6 +1278,13 @@ export function PerformanceConsole({
     setLocalPackage(compatiblePackage);
     setLocalPackagePayload(JSON.stringify(compatiblePackage, null, 2));
     setLocalPersistenceSummary('Imported local rehearsal package. Local only; no MIDI sent.');
+  };
+
+  const stageLocalPackageReview = (review: LocalRehearsalPackageReview): void => {
+    setLocalPersistenceSummary(
+      `Staged local package review: ${review.status}. Local only; no MIDI sent.`,
+    );
+    appendLocalOperatorEvent('Staged package review', review.summary);
   };
 
   const clearSavedLocalRehearsal = (): void => {
@@ -1635,6 +1847,38 @@ export function PerformanceConsole({
                     <small key={note}>{note}</small>
                   ))}
                 </div>
+                <section
+                  className="performance-console-local-package-review"
+                  data-testid="performance-console-local-package-review"
+                  aria-label="Local rehearsal package review workbench"
+                >
+                  <strong>Package review workbench</strong>
+                  <span>review status {visiblePackageReview.status}</span>
+                  <small>{visiblePackageReview.summary}</small>
+                  <div className="performance-console-local-package-review-rows">
+                    {visiblePackageReview.rows.map((row) => (
+                      <article
+                        key={row.label}
+                        className={`performance-console-local-package-review-row ${row.status}`}
+                      >
+                        <strong>{row.label}</strong>
+                        <span>package {row.packageValue}</span>
+                        <span>current {row.currentValue}</span>
+                        <small>{row.status}</small>
+                      </article>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    className="live-readiness-action performance-console-local-control"
+                    title="Stages package-review evidence in the local operator log only."
+                    onClick={() => {
+                      stageLocalPackageReview(visiblePackageReview);
+                    }}
+                  >
+                    Stage package review locally
+                  </button>
+                </section>
               </section>
             )}
             {localPackagePayload.length === 0 ? null : (
