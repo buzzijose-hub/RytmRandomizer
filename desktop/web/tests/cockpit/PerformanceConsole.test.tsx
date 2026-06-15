@@ -929,6 +929,15 @@ describe('PerformanceConsole', () => {
     expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
       'Package can be rehearsed with the current cockpit packet.',
     );
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Crate: package Peak Time; current Peak Time; status match',
+    );
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Depth: package 72%; current 72%; status match',
+    );
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Blocked actions:',
+    );
     expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
   });
@@ -1187,10 +1196,16 @@ describe('PerformanceConsole', () => {
     fireEvent.click(screen.getByRole('button', { name: /import local rehearsal package/i }));
 
     const fallbackPackagePanel = screen.getByTestId('performance-console-local-package');
-    expect(fallbackPackagePanel).toHaveTextContent('compatible');
-    expect(fallbackPackagePanel).toHaveTextContent('selected crate exists in current packet');
+    expect(fallbackPackagePanel).toHaveTextContent('needs review');
+    expect(fallbackPackagePanel).toHaveTextContent('selected crate missing from current packet');
     expect(fallbackPackagePanel).toHaveTextContent('selected queued move exists in current packet');
     expect(fallbackPackagePanel).toHaveTextContent('selected snapshot exists in current packet');
+    expect(screen.getByTestId('performance-console-local-package-review')).toHaveTextContent(
+      'review status needs review',
+    );
+    expect(screen.getByTestId('performance-console-local-package-review')).toHaveTextContent(
+      'current missing-crate',
+    );
   });
 
   it('reports invalid local rehearsal imports and ignores malformed imported rows safely', () => {

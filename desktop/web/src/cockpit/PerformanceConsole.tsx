@@ -586,13 +586,13 @@ function packageCompatibilityForSnapshot(
     snapshot.selectedQueueKey === null
       ? undefined
       : model.style_queue.queue_cards.find((move) => move.queue_key === snapshot.selectedQueueKey);
+  const selectedCrateKey = snapshot.selectedCrateKey;
   const crateExists =
-    snapshot.selectedCrateKey === null ||
-    model.style_queue.crate_cards.some((crate) =>
-      sameReferenceKey(crate.crate_key, snapshot.selectedCrateKey ?? ''),
-    ) ||
-    (referencedQueueMove !== undefined &&
-      model.style_queue.crate_cards.some((crate) => crate.crate_key === referencedQueueMove.crate_key));
+    selectedCrateKey === null
+      ? true
+      : model.style_queue.crate_cards.some((crate) =>
+          sameReferenceKey(crate.crate_key, selectedCrateKey),
+        );
   const queueExists =
     snapshot.selectedQueueKey === null ||
     referencedQueueMove !== undefined;
@@ -887,6 +887,16 @@ function localPackageReviewForCurrentPacket({
         : 'Package needs operator review before reuse.',
     rows,
   };
+}
+
+function localPackageReviewDetail(review: LocalRehearsalPackageReview): string {
+  const rowEvidence = review.rows
+    .map(
+      (row) =>
+        `${row.label}: package ${row.packageValue}; current ${row.currentValue}; status ${row.status}`,
+    )
+    .join(' | ');
+  return `${review.summary} ${rowEvidence}`;
 }
 
 function localStorageHandle(): Storage | null {
@@ -1284,7 +1294,7 @@ export function PerformanceConsole({
     setLocalPersistenceSummary(
       `Staged local package review: ${review.status}. Local only; no MIDI sent.`,
     );
-    appendLocalOperatorEvent('Staged package review', review.summary);
+    appendLocalOperatorEvent('Staged package review', localPackageReviewDetail(review));
   };
 
   const clearSavedLocalRehearsal = (): void => {
