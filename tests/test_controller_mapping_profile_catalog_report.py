@@ -60,6 +60,15 @@ def test_controller_mapping_report_has_no_raw_midi_controller_fields() -> None:
     }
 
 
+def test_controller_mapping_report_rejects_unknown_profile() -> None:
+    from rytm_randomizer.reports.controller_mapping_profile_catalog import (
+        build_controller_mapping_profile_report,
+    )
+
+    with pytest.raises(ValueError, match="unknown controller mapping profile"):
+        build_controller_mapping_profile_report("missing-profile")
+
+
 def test_controller_mapping_report_cli_supports_text_and_json(capsys) -> None:
     from rytm_randomizer.reports.controller_mapping_profile_catalog import (
         CONTROLLER_MAPPING_PROFILE_CATALOG_CLI_COMMAND,

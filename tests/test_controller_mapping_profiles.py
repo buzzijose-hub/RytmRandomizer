@@ -80,3 +80,33 @@ def test_controller_profile_export_constants_are_reexported() -> None:
     assert data.CONTROLLER_ENCODER_COUNT == 16
     assert data.DEFAULT_CONTROLLER_MAPPING_PROFILE == "generic-16-encoder-performance"
     assert "CONTROLLER_MAPPING_PROFILES" in data.__all__
+
+
+def test_controller_page_builder_rejects_wrong_control_count() -> None:
+    from rytm_randomizer.data import controller_mapping_profiles as profiles
+
+    with pytest.raises(ValueError, match="must define 16 controls"):
+        profiles._page("bad", "Bad", "Missing controls", ())
+
+
+def test_controller_page_builder_rejects_non_sequential_slots() -> None:
+    from rytm_randomizer.data import controller_mapping_profiles as profiles
+
+    controls = tuple(
+        profiles.ControllerMappingControlSpec(
+            slot=slot,
+            label=f"Control {slot}",
+            target_device="style_queue",
+            target_scope="global",
+            intent_key=f"test.{slot}",
+            action="adjust_test",
+            lane="test",
+            safety_tier="passive",
+            recovery_action="recover_anchor",
+            notes="Test control.",
+        )
+        for slot in (*range(1, 16), 20)
+    )
+
+    with pytest.raises(ValueError, match="slots must be 1-16"):
+        profiles._page("bad", "Bad", "Bad slots", controls)
