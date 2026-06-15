@@ -103,8 +103,10 @@ portable rehearsal package with a manifest, current packet compatibility
 checks, device/safety evidence, blocked-action evidence, and recovery notes.
 Package import still accepts the older raw local snapshot JSON shape for
 backward compatibility, recalculates compatibility against the current passive
-packet, and remains browser-local only: no sidecar command, project file write,
-MIDI port, hardware arm path, or MIDI send.
+packet, and now renders a browser-local package review workbench that compares
+the package against the currently loaded cockpit packet and stages review
+evidence in the operator log. The package flow remains browser-local only: no
+sidecar command, project file write, MIDI port, hardware arm path, or MIDI send.
 
 **Sidecar security guarantees** (post CODE_REVIEW.md sweep, 2026-05):
 
