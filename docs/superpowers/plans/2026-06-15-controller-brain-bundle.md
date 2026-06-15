@@ -1,5 +1,7 @@
 # Controller Brain Implementation Plan
 
+> Status: in-flight (PR pending)
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add a passive E16/OXI-style controller-brain catalog and report so a 16-encoder surface can be mapped to RytmRandomizer musical intent rather than raw CCs.
