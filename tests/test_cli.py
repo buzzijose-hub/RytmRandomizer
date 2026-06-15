@@ -102,6 +102,7 @@ USAGE = (
     "style-crate-rehearsal-deck-report [--crate <key>] [--json] | "
     "oxi-live-macro-catalog-report | "
     "controller-brain-mapping-report [--json] | "
+    "controller-brain-rehearsal-report [--json] | "
     "rytm-live-macro-hardware-rehearsal-report [--json] | "
     "live-gui-performance-flow-model-report [--json] | "
     "live-gui-performance-console-report [--json] | "
@@ -2338,6 +2339,7 @@ def test_readme_mentions_controller_brain_mapping_report_command():
     text = _operator_docs_text()
 
     assert "controller-brain-mapping-report" in text
+    assert "controller-brain-rehearsal-report" in text
     assert "16-encoder" in text
     assert "controller-brain" in text
 

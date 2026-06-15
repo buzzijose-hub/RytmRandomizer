@@ -4,6 +4,17 @@ Last updated: 2026-06-15. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-15: Passive controller-brain rehearsal/export bundle started on
+  the clean base after PR #183 merged. The new
+  `controller-brain-rehearsal-report [--json]` surface derives 112
+  controller-template rows from the generic 16-encoder controller-brain map,
+  resolves representative virtual encoder gestures into deterministic intent
+  outcomes for Rytm pads, Analog Four runway controls, Style Crates, live
+  queue staging, and snapshot recovery, and emits blocked-action plus safety
+  evidence for future Cockpit/controller rendering. This remains passive:
+  no controller input opening, no MIDI learn, no raw CC capture, no controller
+  feedback, no WebSocket command dispatch, no hardware arming, no MIDI port
+  opening, no snapshot mutation, and no MIDI send.
 - 2026-06-15: Passive controller-brain mapping bundle started on a clean
   base after PR #182 merged. The new controller-brain plan treats OXI E16,
   E16-like, and generic 16-encoder surfaces as intent controllers for
