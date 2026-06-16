@@ -649,6 +649,7 @@ function packageBlockedActionsForModel(
     ...model.performance_flow.analog_four_set_plan.blocked_active_actions,
     ...model.macro_action_deck.blocked_actions,
     ...model.rehearsal_board.blocked_actions,
+    ...model.controller_brain_panel.blocked_actions,
     ...model.analog_four_review_surface.blocked_actions,
     ...model.analyzer_panel.blocked_actions,
     ...model.snapshot_history.blocked_actions,
@@ -2565,6 +2566,83 @@ export function PerformanceConsole({
 
         <div className="live-chip-row">
           {model.rehearsal_board.blocked_actions.map((action) => (
+            <span key={action} className="live-chip live-chip-blocked">
+              {action}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      <section
+        className="performance-console-surface performance-console-wide"
+        data-testid="performance-console-controller-brain-panel"
+        aria-labelledby="console-controller-brain-panel-title"
+      >
+        <header className="performance-console-section-header">
+          <h2 id="console-controller-brain-panel-title">Controller Brain</h2>
+          <span>{model.controller_brain_panel.panel_status}</span>
+        </header>
+        <p className="panel-meta">{model.controller_brain_panel.scenario_label}</p>
+        <small>
+          {model.controller_brain_panel.profile_key} / {model.controller_brain_panel.source_report}
+        </small>
+        <div className="performance-console-macro-actions">
+          <button
+            type="button"
+            className="live-readiness-action"
+            disabled
+            title="Controller input remains blocked until a separate hardware bridge is designed."
+          >
+            Open Controller Input
+          </button>
+          <button
+            type="button"
+            className="live-readiness-action live-readiness-action-locked"
+            disabled
+            title="Controller gestures are passive intent rows and cannot dispatch Cockpit commands."
+          >
+            Dispatch Controller Cue
+          </button>
+        </div>
+
+        <h3 className="performance-console-subheading">Template Export</h3>
+        <div className="performance-console-list">
+          <article>
+            <strong>controller template rows {model.controller_brain_panel.template_row_count}</strong>
+            <span>
+              {model.controller_brain_panel.template_page_count} pages /{' '}
+              {model.controller_brain_panel.gesture_count} rehearsed gestures
+            </span>
+            <small>{model.controller_brain_panel.scenario_summary}</small>
+          </article>
+          {model.controller_brain_panel.template_page_cards.map((page) => (
+            <article key={page.page_key}>
+              <strong>{page.page_key}</strong>
+              <span>
+                {page.row_count} rows / slots {page.first_slot}-{page.last_slot}
+              </span>
+              <small>{page.page_label}</small>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Virtual Gesture Outcomes</h3>
+        <div className="performance-console-list">
+          {model.controller_brain_panel.gesture_outcomes.map((outcome) => (
+            <article key={`${outcome.step}-${outcome.assignment_key}`}>
+              <strong>
+                {outcome.assignment_key} -&gt; {outcome.resolved_intent_key}
+              </strong>
+              <span>
+                {outcome.gesture} / delta {outcome.value_delta} / {outcome.status}
+              </span>
+              <small>{outcome.notes}</small>
+            </article>
+          ))}
+        </div>
+
+        <div className="live-chip-row">
+          {model.controller_brain_panel.blocked_actions.map((action) => (
             <span key={action} className="live-chip live-chip-blocked">
               {action}
             </span>
