@@ -4,6 +4,16 @@ Last updated: 2026-06-15. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-15: Passive controller-brain Cockpit bundle started on the clean
+  base after PR #184 merged. The passive
+  `live-gui-performance-console-report [--json]` now composes the
+  `controller-brain-rehearsal-report` into a GUI-ready Controller Brain panel
+  with the 112-row controller template, seven controller page cards, nine
+  virtual gesture outcomes, operator notes, blocked active actions, safety
+  lines, and replay commands. This remains passive/mock-safe: no controller
+  input opening, no MIDI learn, no raw CC capture, no controller feedback,
+  no WebSocket command dispatch, no hardware arming, no MIDI port opening,
+  no snapshot mutation, and no MIDI send.
 - 2026-06-15: Passive controller-brain rehearsal/export bundle started on
   the clean base after PR #183 merged. The new
   `controller-brain-rehearsal-report [--json]` surface derives 112

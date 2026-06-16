@@ -648,6 +648,76 @@ export interface LiveGuiPerformanceConsoleRehearsalBoardDict {
   safety_lines: ReadonlyArray<string>;
 }
 
+export interface LiveGuiPerformanceConsoleControllerTemplateRowDict {
+  assignment_key: string;
+  page_key: string;
+  page_label: string;
+  page_index: number;
+  slot: number;
+  label: string;
+  target_device: string;
+  target_scope: string;
+  intent_key: string;
+  action: string;
+  lane: string;
+  safety_tier: string;
+  recovery_action: string;
+  operator_note: string;
+}
+
+export interface LiveGuiPerformanceConsoleControllerTemplatePageCardDict {
+  page_key: string;
+  page_label: string;
+  page_index: number;
+  row_count: number;
+  first_slot: number;
+  last_slot: number;
+}
+
+export interface LiveGuiPerformanceConsoleControllerGestureOutcomeDict {
+  step: number;
+  assignment_key: string;
+  page_key: string;
+  slot: number;
+  gesture: string;
+  value_delta: number;
+  resolved_intent_key: string;
+  resolved_action: string;
+  resolved_target_device: string;
+  resolved_target_scope: string;
+  lane: string;
+  safety_tier: string;
+  recovery_action: string;
+  status: string;
+  operator_goal: string;
+  notes: string;
+}
+
+export interface LiveGuiPerformanceConsoleControllerBrainPanelDict {
+  panel_version: string;
+  panel_id: string;
+  panel_status: string;
+  source_report: string;
+  title: string;
+  profile_key: string;
+  profile_label: string;
+  controller_family: string;
+  controller_layout: string;
+  scenario_key: string;
+  scenario_label: string;
+  scenario_summary: string;
+  template_row_count: number;
+  template_rows: ReadonlyArray<LiveGuiPerformanceConsoleControllerTemplateRowDict>;
+  template_page_count: number;
+  template_page_cards: ReadonlyArray<LiveGuiPerformanceConsoleControllerTemplatePageCardDict>;
+  gesture_count: number;
+  gesture_outcomes: ReadonlyArray<LiveGuiPerformanceConsoleControllerGestureOutcomeDict>;
+  operator_notes: ReadonlyArray<string>;
+  blocked_actions: ReadonlyArray<string>;
+  safety_lines: ReadonlyArray<string>;
+  replay_commands: ReadonlyArray<string>;
+}
+
 export interface LiveGuiPerformanceConsoleAnalogFourReviewStepDict {
   order: number;
   macro_name: string;
@@ -748,6 +818,7 @@ export interface LiveGuiPerformanceConsoleModelDict {
   performance_flow: LiveGuiPerformanceFlowModelDict;
   macro_action_deck: LiveGuiPerformanceConsoleMacroActionDeckDict;
   rehearsal_board: LiveGuiPerformanceConsoleRehearsalBoardDict;
+  controller_brain_panel: LiveGuiPerformanceConsoleControllerBrainPanelDict;
   analog_four_review_surface: LiveGuiPerformanceConsoleAnalogFourReviewSurfaceDict;
   style_queue: StyleCrateRehearsalDeckDict;
   analyzer_panel: LiveGuiAnalyzerPanelModelDict;

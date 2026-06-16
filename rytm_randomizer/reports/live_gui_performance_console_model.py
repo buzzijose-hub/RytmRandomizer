@@ -18,6 +18,7 @@ from .analog_four_oxi_macro_set_planner import (
     build_analog_four_oxi_macro_set_planner_payload,
     build_analog_four_oxi_macro_set_planner_report,
 )
+from .controller_brain_rehearsal import build_controller_brain_rehearsal_payload
 from .formatter import SAFETY_SECTION_HEADER, PassiveReportHeader, passive_report_lines
 from .live_gui_12_pad_surface_model import (
     build_live_gui_12_pad_surface_model,
@@ -98,6 +99,8 @@ REHEARSAL_BOARD_SAFETY_LINES: Final[tuple[str, ...]] = (
     "A4 outbound macro promotion remains blocked",
     "no MIDI sending",
 )
+CONTROLLER_BRAIN_PANEL_VERSION: Final[str] = "performance-console-controller-brain-panel-v1"
+CONTROLLER_BRAIN_PANEL_ID: Final[str] = "controller-brain-rehearsal-panel"
 A4_REVIEW_SURFACE_VERSION: Final[str] = "performance-console-a4-review-surface-v1"
 A4_REVIEW_SURFACE_ID: Final[str] = "a4-oxi-macro-review-surface"
 A4_REVIEW_SURFACE_STATUS: Final[str] = "review-only"
@@ -197,6 +200,7 @@ class LiveGuiPerformanceConsoleModel:
     performance_flow: dict[str, object]
     macro_action_deck: dict[str, object]
     rehearsal_board: dict[str, object]
+    controller_brain_panel: dict[str, object]
     analog_four_review_surface: dict[str, object]
     style_queue: dict[str, object]
     analyzer_panel: dict[str, object]
@@ -223,6 +227,7 @@ class LiveGuiPerformanceConsoleModelDict(TypedDict):
     performance_flow: dict[str, object]
     macro_action_deck: dict[str, object]
     rehearsal_board: dict[str, object]
+    controller_brain_panel: dict[str, object]
     analog_four_review_surface: dict[str, object]
     style_queue: dict[str, object]
     analyzer_panel: dict[str, object]
@@ -440,6 +445,83 @@ def _build_rehearsal_board() -> dict[str, object]:
     }
 
 
+def _controller_template_page_cards(
+    template_rows: list[object],
+) -> list[dict[str, object]]:
+    cards_by_key: dict[str, dict[str, object]] = {}
+    slots_by_key: dict[str, list[int]] = {}
+    for row_value in template_rows:
+        if not isinstance(row_value, dict):
+            continue
+
+        page_key = _payload_string(row_value, "page_key")
+        if not page_key:
+            continue
+
+        page_label = _payload_string(row_value, "page_label")
+        page_index = _payload_int(row_value, "page_index")
+        slot = _payload_int(row_value, "slot")
+        if page_key not in cards_by_key:
+            cards_by_key[page_key] = {
+                "page_key": page_key,
+                "page_label": page_label,
+                "page_index": page_index,
+                "row_count": 0,
+                "first_slot": slot,
+                "last_slot": slot,
+            }
+            slots_by_key[page_key] = []
+
+        card = cards_by_key[page_key]
+        row_count = card.get("row_count", 0)
+        card["row_count"] = row_count + 1 if isinstance(row_count, int) else 1
+        slots_by_key[page_key].append(slot)
+
+    for page_key, slots in slots_by_key.items():
+        if not slots:
+            continue
+        card = cards_by_key[page_key]
+        card["first_slot"] = min(slots)
+        card["last_slot"] = max(slots)
+
+    return sorted(
+        cards_by_key.values(),
+        key=lambda card: card["page_index"] if isinstance(card["page_index"], int) else 0,
+    )
+
+
+def _build_controller_brain_panel() -> dict[str, object]:
+    payload = build_controller_brain_rehearsal_payload()
+    source = _payload_dict(payload, "controller_brain_rehearsal")
+    template_rows = _payload_list(source, "template_rows")
+    gesture_outcomes = _payload_list(source, "gesture_outcomes")
+    template_page_cards = _controller_template_page_cards(template_rows)
+    return {
+        "panel_version": CONTROLLER_BRAIN_PANEL_VERSION,
+        "panel_id": CONTROLLER_BRAIN_PANEL_ID,
+        "panel_status": _payload_string(source, "rehearsal_status"),
+        "source_report": "controller-brain-rehearsal-report",
+        "title": _payload_string(source, "title"),
+        "profile_key": _payload_string(source, "profile_key"),
+        "profile_label": _payload_string(source, "profile_label"),
+        "controller_family": _payload_string(source, "controller_family"),
+        "controller_layout": _payload_string(source, "controller_layout"),
+        "scenario_key": _payload_string(source, "scenario_key"),
+        "scenario_label": _payload_string(source, "scenario_label"),
+        "scenario_summary": _payload_string(source, "scenario_summary"),
+        "template_row_count": _payload_int(source, "template_row_count"),
+        "template_rows": template_rows,
+        "template_page_count": len(template_page_cards),
+        "template_page_cards": template_page_cards,
+        "gesture_count": len(gesture_outcomes),
+        "gesture_outcomes": gesture_outcomes,
+        "operator_notes": _payload_list(source, "operator_notes"),
+        "blocked_actions": list(_tuple_from_payload(source, "blocked_active_actions")),
+        "safety_lines": list(_tuple_from_payload(payload, "safety")),
+        "replay_commands": _payload_list(source, "replay_commands"),
+    }
+
+
 def _build_analog_four_review_surface() -> dict[str, object]:
     set_plan = build_analog_four_oxi_macro_set_planner_report()
     set_payload = build_analog_four_oxi_macro_set_planner_payload(set_plan)
@@ -646,6 +728,7 @@ def _console_id(
     performance_flow: dict[str, object],
     macro_action_deck: dict[str, object],
     rehearsal_board: dict[str, object],
+    controller_brain_panel: dict[str, object],
     analog_four_review_surface: dict[str, object],
     style_queue: dict[str, object],
     analyzer_panel: dict[str, object],
@@ -663,6 +746,7 @@ def _console_id(
             str(performance_flow.get("flow_id", "")),
             str(macro_action_deck.get("deck_id", "")),
             str(rehearsal_board.get("board_id", "")),
+            str(controller_brain_panel.get("panel_id", "")),
             str(analog_four_review_surface.get("surface_id", "")),
             str(style_queue.get("deck_id", "")),
             str(analyzer_panel.get("panel_id", "")),
@@ -696,6 +780,7 @@ def build_live_gui_performance_console_model(
     )
     rytm_lane_policy_matrix = _build_rytm_lane_policy_matrix(catalog=macro_catalog)
     rehearsal_board = _build_rehearsal_board()
+    controller_brain_panel = _build_controller_brain_panel()
     analog_four_review_surface = _build_analog_four_review_surface()
     style_queue = to_style_crate_rehearsal_deck_json(build_style_crate_rehearsal_deck())[
         "style_crate_rehearsal_deck"
@@ -724,6 +809,7 @@ def build_live_gui_performance_console_model(
         _tuple_from_payload(macro_action_deck, "blocked_actions"),
         _tuple_from_payload(rytm_lane_policy_matrix, "blocked_actions"),
         _tuple_from_payload(rehearsal_board, "blocked_actions"),
+        _tuple_from_payload(controller_brain_panel, "blocked_actions"),
         _tuple_from_payload(analog_four_review_surface, "blocked_actions"),
         tuple(style_queue["blocked_actions"]),
         tuple(analyzer_panel["blocked_actions"]),
@@ -739,6 +825,7 @@ def build_live_gui_performance_console_model(
         _tuple_from_payload(macro_action_deck, "safety_lines"),
         _tuple_from_payload(rytm_lane_policy_matrix, "safety_lines"),
         _tuple_from_payload(rehearsal_board, "safety_lines"),
+        _tuple_from_payload(controller_brain_panel, "safety_lines"),
         _tuple_from_payload(analog_four_review_surface, "safety_lines"),
         _tuple_from_payload(device_inventory, "safety"),
         _tuple_from_payload(rytm_pad_surface, "safety"),
@@ -755,6 +842,7 @@ def build_live_gui_performance_console_model(
             performance_flow=performance_flow,
             macro_action_deck=macro_action_deck,
             rehearsal_board=rehearsal_board,
+            controller_brain_panel=controller_brain_panel,
             analog_four_review_surface=analog_four_review_surface,
             style_queue=style_queue,
             analyzer_panel=analyzer_panel,
@@ -771,6 +859,7 @@ def build_live_gui_performance_console_model(
         performance_flow=performance_flow,
         macro_action_deck=macro_action_deck,
         rehearsal_board=rehearsal_board,
+        controller_brain_panel=controller_brain_panel,
         analog_four_review_surface=analog_four_review_surface,
         style_queue=style_queue,
         analyzer_panel=analyzer_panel,
@@ -803,6 +892,7 @@ def live_gui_performance_console_model_payload(
             "performance_flow": source.performance_flow,
             "macro_action_deck": source.macro_action_deck,
             "rehearsal_board": source.rehearsal_board,
+            "controller_brain_panel": source.controller_brain_panel,
             "analog_four_review_surface": source.analog_four_review_surface,
             "style_queue": source.style_queue,
             "analyzer_panel": source.analyzer_panel,
@@ -841,6 +931,31 @@ def _rehearsal_board_lines(model: LiveGuiPerformanceConsoleModel) -> list[str]:
         lines.append(
             f"- hardware validation: {step['name']} / "
             f"{step['device']} / {step['validation_mode']}"
+        )
+    return lines
+
+
+def _controller_brain_panel_lines(model: LiveGuiPerformanceConsoleModel) -> list[str]:
+    panel = model.controller_brain_panel
+    lines = [
+        "Controller brain panel:",
+        f"- status: {panel['panel_status']}",
+        f"- profile: {panel['profile_key']}",
+        f"- scenario: {panel['scenario_key']}",
+        f"- controller template rows: {panel['template_row_count']}",
+        f"- controller pages: {panel['template_page_count']}",
+        f"- controller gestures: {panel['gesture_count']}",
+    ]
+    for page_card in panel["template_page_cards"]:
+        lines.append(
+            f"- controller page: {page_card['page_key']} / "
+            f"{page_card['row_count']} rows / slots "
+            f"{page_card['first_slot']}-{page_card['last_slot']}"
+        )
+    for outcome in panel["gesture_outcomes"]:
+        lines.append(
+            f"- controller gesture: {outcome['assignment_key']} -> "
+            f"{outcome['resolved_intent_key']}"
         )
     return lines
 
@@ -916,6 +1031,7 @@ def _format_console_body(model: LiveGuiPerformanceConsoleModel) -> list[str]:
             for card in model.macro_action_deck["cards"]
         ],
         *_rehearsal_board_lines(model),
+        *_controller_brain_panel_lines(model),
         *_analog_four_review_surface_lines(model),
         "A4 set plan:",
         f"- set: {a4_set_plan['set_name']}",
@@ -978,6 +1094,8 @@ __all__ = [
     "BASE_SAFETY_LINES",
     "CONSOLE_STATUS",
     "CONSOLE_VERSION",
+    "CONTROLLER_BRAIN_PANEL_ID",
+    "CONTROLLER_BRAIN_PANEL_VERSION",
     "HARDWARE_MODE",
     "MACRO_ACTION_BLOCKED_ACTIONS",
     "MACRO_ACTION_DECK_STATUS",

@@ -1,6 +1,151 @@
 import type { LiveGuiPerformanceConsoleModelDict } from '../types/live_gui_protocol';
 import { DEFAULT_STYLE_CRATE_REHEARSAL_DECK } from './styleCrateQueueModel';
 
+const controllerBrainTemplatePageCards = [
+  {
+    page_key: 'global-brain',
+    page_label: 'Global Brain',
+    page_index: 1,
+    row_count: 16,
+    first_slot: 1,
+    last_slot: 16,
+  },
+  {
+    page_key: 'rytm-pads-1-4',
+    page_label: 'Rytm Pads 1-4',
+    page_index: 2,
+    row_count: 16,
+    first_slot: 1,
+    last_slot: 16,
+  },
+  {
+    page_key: 'rytm-pads-5-8',
+    page_label: 'Rytm Pads 5-8',
+    page_index: 3,
+    row_count: 16,
+    first_slot: 1,
+    last_slot: 16,
+  },
+  {
+    page_key: 'rytm-pads-9-12',
+    page_label: 'Rytm Pads 9-12',
+    page_index: 4,
+    row_count: 16,
+    first_slot: 1,
+    last_slot: 16,
+  },
+  {
+    page_key: 'analog-four-tracks',
+    page_label: 'Analog Four Tracks',
+    page_index: 5,
+    row_count: 16,
+    first_slot: 1,
+    last_slot: 16,
+  },
+  {
+    page_key: 'style-crates-queue',
+    page_label: 'Style Crates / Queue',
+    page_index: 6,
+    row_count: 16,
+    first_slot: 1,
+    last_slot: 16,
+  },
+  {
+    page_key: 'snapshot-recovery-journal',
+    page_label: 'Snapshot Recovery / Journal',
+    page_index: 7,
+    row_count: 16,
+    first_slot: 1,
+    last_slot: 16,
+  },
+] as const;
+
+const controllerBrainIntentForSlot = (pageKey: string, slot: number): string => {
+  if (pageKey === 'global-brain' && slot === 1) return 'global.preview_depth';
+  if (pageKey === 'global-brain' && slot === 7) return 'macro.industrial';
+  if (pageKey === 'rytm-pads-5-8' && slot === 1) return 'rytm.pad5.source_amount';
+  if (pageKey === 'rytm-pads-5-8' && slot === 5) return 'rytm.pad6.source_amount';
+  if (pageKey === 'rytm-pads-9-12' && slot === 13) return 'rytm.pad12.source_amount';
+  if (pageKey === 'analog-four-tracks' && slot === 1) return 'a4.track1.macro_depth';
+  if (pageKey === 'style-crates-queue' && slot === 2) return 'crate.dark_hypnotic';
+  if (pageKey === 'style-crates-queue' && slot === 10) return 'queue.next_1';
+  if (pageKey === 'snapshot-recovery-journal' && slot === 16) return 'snapshot.panic_home';
+  return `${pageKey}.slot${slot}`;
+};
+
+const controllerBrainTemplateRows = controllerBrainTemplatePageCards.flatMap((page) =>
+  Array.from({ length: page.row_count }, (_, index) => {
+    const slot = index + 1;
+    const intentKey = controllerBrainIntentForSlot(page.page_key, slot);
+    return {
+      assignment_key: `${page.page_key}:${String(slot).padStart(2, '0')}`,
+      page_key: page.page_key,
+      page_label: page.page_label,
+      page_index: page.page_index,
+      slot,
+      label: `Encoder ${slot}`,
+      target_device: intentKey.startsWith('a4.') ? 'analog_four_mk2' : 'cockpit',
+      target_scope: intentKey,
+      intent_key: intentKey,
+      action: 'stage-intent',
+      lane: intentKey.includes('source') ? 'src' : 'control',
+      safety_tier: 'passive',
+      recovery_action: intentKey === 'snapshot.panic_home' ? 'captured-anchor' : 'review',
+      operator_note: 'Demo controller-brain row for passive Cockpit rendering.',
+    };
+  }),
+);
+
+const controllerBrainGestureOutcomes = [
+  ['global-brain:01', 'global-brain', 1, 'turn clockwise', 12, 'global.preview_depth'],
+  ['global-brain:07', 'global-brain', 7, 'press', 0, 'macro.industrial'],
+  ['rytm-pads-5-8:01', 'rytm-pads-5-8', 1, 'turn clockwise', 9, 'rytm.pad5.source_amount'],
+  ['rytm-pads-5-8:05', 'rytm-pads-5-8', 5, 'turn clockwise', 14, 'rytm.pad6.source_amount'],
+  [
+    'rytm-pads-9-12:13',
+    'rytm-pads-9-12',
+    13,
+    'turn counterclockwise',
+    -7,
+    'rytm.pad12.source_amount',
+  ],
+  [
+    'analog-four-tracks:01',
+    'analog-four-tracks',
+    1,
+    'turn clockwise',
+    10,
+    'a4.track1.macro_depth',
+  ],
+  ['style-crates-queue:02', 'style-crates-queue', 2, 'press', 0, 'crate.dark_hypnotic'],
+  ['style-crates-queue:10', 'style-crates-queue', 10, 'press', 0, 'queue.next_1'],
+  [
+    'snapshot-recovery-journal:16',
+    'snapshot-recovery-journal',
+    16,
+    'press and hold',
+    0,
+    'snapshot.panic_home',
+  ],
+].map(([assignmentKey, pageKey, slot, gesture, valueDelta, intentKey], index) => ({
+  step: index + 1,
+  assignment_key: String(assignmentKey),
+  page_key: String(pageKey),
+  slot: Number(slot),
+  gesture: String(gesture),
+  value_delta: Number(valueDelta),
+  resolved_intent_key: String(intentKey),
+  resolved_action: 'stage-intent',
+  resolved_target_device: String(intentKey).startsWith('a4.') ? 'analog_four_mk2' : 'cockpit',
+  resolved_target_scope: String(intentKey),
+  lane: String(intentKey).includes('source') ? 'src' : 'control',
+  safety_tier: 'passive',
+  recovery_action: intentKey === 'snapshot.panic_home' ? 'captured-anchor' : 'review',
+  status: 'passive-intent-staged',
+  operator_goal: 'Render the passive controller-brain rehearsal in Cockpit.',
+  notes: 'Demo outcome; no controller input, WebSocket dispatch, or MIDI send.',
+}));
+
 export const performanceConsoleDemoModel: LiveGuiPerformanceConsoleModelDict = {
   console_version: 'live-gui-performance-console-v1',
   source_module: 'desktop.web.cockpit.performanceConsoleDemoModel',
@@ -541,6 +686,58 @@ export const performanceConsoleDemoModel: LiveGuiPerformanceConsoleModelDict = {
       'no MIDI sending',
     ],
   },
+  controller_brain_panel: {
+    panel_version: 'performance-console-controller-brain-panel-v1',
+    panel_id: 'controller-brain-rehearsal-panel',
+    panel_status: 'passive-ready',
+    source_report: 'controller-brain-rehearsal-report',
+    title: 'RytmRandomizer passive controller brain rehearsal report',
+    profile_key: 'generic-16-encoder-performance',
+    profile_label: 'Generic 16 Encoder Performance Controller',
+    controller_family: 'generic-16-encoder',
+    controller_layout: '7 pages x 16 controls',
+    scenario_key: 'warehouse-controller-brain-rehearsal',
+    scenario_label: 'Warehouse Controller Brain Rehearsal',
+    scenario_summary:
+      'Virtual 16-encoder rehearsal for Rytm, Analog Four, Style Crates, queue, and recovery intent.',
+    template_row_count: 112,
+    template_rows: controllerBrainTemplateRows,
+    template_page_count: controllerBrainTemplatePageCards.length,
+    template_page_cards: controllerBrainTemplatePageCards,
+    gesture_count: controllerBrainGestureOutcomes.length,
+    gesture_outcomes: controllerBrainGestureOutcomes,
+    operator_notes: [
+      'Treat the controller as an intent browser, not as a live MIDI input device.',
+      'Use SRC-first Rytm pad controls for Pads 5-12 before broad filter or LFO moves.',
+      'Keep Pad 12 available for users who want it, while allowing local lock/exclusion.',
+      'Analog Four controls are staged as runway intent until a validated A4 hardware path exists.',
+    ],
+    blocked_actions: [
+      'open MIDI controller input',
+      'MIDI learn or raw CC capture',
+      'send controller feedback',
+      'dispatch Cockpit WebSocket commands',
+      'open MIDI output',
+      'arm hardware',
+      'send hardware MIDI',
+    ],
+    safety_lines: [
+      'passive/read-only',
+      'controller-template rows only',
+      'virtual encoder gestures only',
+      'no MIDI controller input',
+      'no MIDI learn or raw CC capture',
+      'no WebSocket command dispatch',
+      'no MIDI sending',
+      'no port opening',
+      'no hardware mutation',
+      'no hardware required',
+    ],
+    replay_commands: [
+      'python -m rytm_randomizer.cli controller-brain-mapping-report --json',
+      'python -m rytm_randomizer.cli controller-brain-rehearsal-report --json',
+    ],
+  },
   analog_four_review_surface: {
     surface_version: 'performance-console-a4-review-surface-v1',
     surface_id: 'a4-oxi-macro-review-surface',
@@ -977,7 +1174,15 @@ export const performanceConsoleDemoModel: LiveGuiPerformanceConsoleModelDict = {
     'dispatch queued command from model',
     'record-audio',
     'send MIDI from snapshot history',
+    'MIDI learn or raw CC capture',
+    'dispatch Cockpit WebSocket commands',
   ],
-  safety_lines: ['passive/read-only', 'no MIDI sending', 'no port opening'],
+  safety_lines: [
+    'passive/read-only',
+    'no MIDI controller input',
+    'no WebSocket command dispatch',
+    'no MIDI sending',
+    'no port opening',
+  ],
   replay_commands: ['python -m rytm_randomizer.cli live-gui-performance-console-report --json'],
 };

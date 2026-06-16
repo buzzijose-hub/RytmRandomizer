@@ -131,6 +131,33 @@ def test_performance_console_model_composes_live_cockpit_sections() -> None:
     assert "no MIDI sending" in rehearsal_board["safety_lines"]
     assert rehearsal_board["replay_commands"][0]["name"] == "read-strategy"
 
+    controller_brain_panel = model.controller_brain_panel
+    assert (
+        controller_brain_panel["panel_version"] == "performance-console-controller-brain-panel-v1"
+    )
+    assert controller_brain_panel["panel_status"] == "passive-ready"
+    assert controller_brain_panel["source_report"] == "controller-brain-rehearsal-report"
+    assert controller_brain_panel["profile_key"] == "generic-16-encoder-performance"
+    assert controller_brain_panel["scenario_key"] == "warehouse-controller-brain-rehearsal"
+    assert controller_brain_panel["template_row_count"] == 112
+    assert controller_brain_panel["template_page_count"] == 7
+    assert controller_brain_panel["gesture_count"] == 9
+    assert controller_brain_panel["template_page_cards"][0]["page_key"] == "global-brain"
+    assert controller_brain_panel["template_page_cards"][0]["row_count"] == 16
+    assert {
+        outcome["resolved_intent_key"] for outcome in controller_brain_panel["gesture_outcomes"]
+    } >= {
+        "global.preview_depth",
+        "rytm.pad5.source_amount",
+        "rytm.pad6.source_amount",
+        "rytm.pad12.source_amount",
+        "a4.track1.macro_depth",
+        "queue.next_1",
+        "snapshot.panic_home",
+    }
+    assert "MIDI learn or raw CC capture" in controller_brain_panel["blocked_actions"]
+    assert "no MIDI controller input" in controller_brain_panel["safety_lines"]
+
     macro_deck = model.macro_action_deck
     assert macro_deck["deck_status"] == "passive-ready"
     assert macro_deck["current_macro_key"] == "capture-anchor"
@@ -259,6 +286,11 @@ def test_performance_console_payload_is_json_safe_and_passive() -> None:
     assert model["rehearsal_board"]["chapters"][1]["name"] == "establish-groove"
     assert model["rehearsal_board"]["pad_lane_checks"][1]["pads"] == [6, 7, 8]
     assert model["rehearsal_board"]["hardware_validation_runway"][2]["name"] == "a4-soft-capture"
+    assert model["controller_brain_panel"]["template_row_count"] == 112
+    assert (
+        model["controller_brain_panel"]["gesture_outcomes"][-1]["resolved_intent_key"]
+        == "snapshot.panic_home"
+    )
     assert model["analog_four_review_surface"]["review_focus"]["macro_name"] == "hard-groove"
     assert model["analog_four_review_surface"]["readiness_events"][0]["status"] == "cc-ready"
     assert model["performance_flow"]["analog_four_set_plan"]["step_count"] == 5
@@ -307,6 +339,9 @@ def test_performance_console_report_is_operator_readable() -> None:
     )
     assert "- pad lane: Pads 5, 9, 10, 11: SRC stays important" in lines
     assert "- hardware validation: a4-soft-capture / Analog Four MKII / input-only" in lines
+    assert "Controller brain panel:" in lines
+    assert "- controller template rows: 112" in lines
+    assert "- controller gesture: snapshot-recovery-journal:16 -> snapshot.panic_home" in lines
     assert "A4 review surface:" in lines
     assert "- set: warehouse-arc" in lines
     assert "- review focus: hard-groove / review-ready" in lines
@@ -345,6 +380,7 @@ def test_performance_console_cli_text_and_json_modes(capsys: pytest.CaptureFixtu
     assert model["device_inventory"]["device_count"] == 2
     assert model["analyzer_panel"]["panel_mode"] == "split"
     assert model["rytm_lane_policy_matrix"]["matrix_status"] == "passive-ready"
+    assert model["controller_brain_panel"]["panel_status"] == "passive-ready"
     assert model["analog_four_review_surface"]["surface_status"] == "review-only"
     assert model["performance_flow"]["analog_four_set_plan"]["set_name"] == "warehouse-arc"
 

@@ -393,6 +393,23 @@ describe('PerformanceConsole', () => {
     ).toBeDisabled();
     expect(within(rehearsalBoard).getByRole('button', { name: /fire cue/i })).toBeDisabled();
 
+    const controllerBrainPanel = screen.getByTestId('performance-console-controller-brain-panel');
+    expect(controllerBrainPanel).toHaveTextContent('Controller Brain');
+    expect(controllerBrainPanel).toHaveTextContent('passive-ready');
+    expect(controllerBrainPanel).toHaveTextContent('generic-16-encoder-performance');
+    expect(controllerBrainPanel).toHaveTextContent('controller template rows 112');
+    expect(controllerBrainPanel).toHaveTextContent('global-brain');
+    expect(controllerBrainPanel).toHaveTextContent('slots 1-16');
+    expect(controllerBrainPanel).toHaveTextContent(
+      'rytm-pads-5-8:01 -> rytm.pad5.source_amount',
+    );
+    expect(controllerBrainPanel).toHaveTextContent('snapshot.panic_home');
+    expect(controllerBrainPanel).toHaveTextContent('MIDI learn or raw CC capture');
+    expect(within(controllerBrainPanel).getByRole('button', { name: /open controller input/i }))
+      .toBeDisabled();
+    expect(within(controllerBrainPanel).getByRole('button', { name: /dispatch controller cue/i }))
+      .toBeDisabled();
+
     const styleQueue = screen.getByTestId('performance-console-style-queue');
     expect(styleQueue).toHaveTextContent('Style Crates');
     expect(within(styleQueue).getAllByTestId(/^style-crate-/)).toHaveLength(9);
