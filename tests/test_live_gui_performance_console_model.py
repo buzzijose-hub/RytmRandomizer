@@ -158,6 +158,35 @@ def test_performance_console_model_composes_live_cockpit_sections() -> None:
     assert "MIDI learn or raw CC capture" in controller_brain_panel["blocked_actions"]
     assert "no MIDI controller input" in controller_brain_panel["safety_lines"]
 
+    live_kit_capture_panel = model.live_kit_capture_panel
+    assert (
+        live_kit_capture_panel["panel_version"] == "performance-console-live-kit-capture-panel-v1"
+    )
+    assert live_kit_capture_panel["panel_status"] == "passive-ready"
+    assert live_kit_capture_panel["tagline"] == "Mutate the kit you are actually playing."
+    assert live_kit_capture_panel["source_report"] == "rytm-live-macro-hardware-rehearsal-report"
+    assert live_kit_capture_panel["launch_command"].startswith(
+        "python -m rytm_randomizer.app --arm --rytm-live-snapshot-shell"
+    )
+    assert [step["step_key"] for step in live_kit_capture_panel["workflow_steps"]] == [
+        "receive-kit-sysex",
+        "review-captured-kit",
+        "mutate-captured-kit",
+        "go-send-next-variation",
+        "recover-captured-anchor",
+        "resnapshot-new-anchor",
+    ]
+    assert live_kit_capture_panel["workflow_steps"][0]["operator_command"] == "kit"
+    assert live_kit_capture_panel["workflow_steps"][2]["operator_command"] == "randomize"
+    assert live_kit_capture_panel["workflow_steps"][3]["operator_command"] == "go"
+    assert live_kit_capture_panel["differentiators"][0]["name"] == "live-kit-capture"
+    assert (
+        live_kit_capture_panel["differentiators"][1]["name"] == "engine-aware-current-kit-mutation"
+    )
+    assert "Z then send" in live_kit_capture_panel["recovery_commands"]
+    assert "receive kit from Cockpit console" in live_kit_capture_panel["blocked_actions"]
+    assert "no SysEx receive from passive Cockpit report" in live_kit_capture_panel["safety_lines"]
+
     macro_deck = model.macro_action_deck
     assert macro_deck["deck_status"] == "passive-ready"
     assert macro_deck["current_macro_key"] == "capture-anchor"
@@ -265,6 +294,42 @@ def test_performance_console_payload_helpers_ignore_malformed_values() -> None:
     assert report._first_payload_dict(["not-a-dict"]) == {}
 
 
+def test_controller_template_page_cards_skip_invalid_rows_and_blank_pages() -> None:
+    from rytm_randomizer.reports.live_gui_performance_console_model import (
+        _controller_template_page_cards,
+    )
+
+    cards = _controller_template_page_cards(
+        [
+            "not a template row",
+            {"page_key": "", "page_label": "Blank", "page_index": 99, "slot": 1},
+            {
+                "page_key": "valid-page",
+                "page_label": "Valid Page",
+                "page_index": 2,
+                "slot": 7,
+            },
+            {
+                "page_key": "valid-page",
+                "page_label": "Valid Page",
+                "page_index": 2,
+                "slot": 9,
+            },
+        ]
+    )
+
+    assert cards == [
+        {
+            "page_key": "valid-page",
+            "page_label": "Valid Page",
+            "page_index": 2,
+            "row_count": 2,
+            "first_slot": 7,
+            "last_slot": 9,
+        }
+    ]
+
+
 def test_performance_console_payload_is_json_safe_and_passive() -> None:
     before_modules = set(sys.modules)
 
@@ -290,6 +355,13 @@ def test_performance_console_payload_is_json_safe_and_passive() -> None:
     assert (
         model["controller_brain_panel"]["gesture_outcomes"][-1]["resolved_intent_key"]
         == "snapshot.panic_home"
+    )
+    assert model["live_kit_capture_panel"]["tagline"] == (
+        "Mutate the kit you are actually playing."
+    )
+    assert model["live_kit_capture_panel"]["workflow_steps"][0]["step_key"] == ("receive-kit-sysex")
+    assert model["live_kit_capture_panel"]["differentiators"][-1]["name"] == (
+        "controller-complement"
     )
     assert model["analog_four_review_surface"]["review_focus"]["macro_name"] == "hard-groove"
     assert model["analog_four_review_surface"]["readiness_events"][0]["status"] == "cc-ready"
@@ -342,6 +414,11 @@ def test_performance_console_report_is_operator_readable() -> None:
     assert "Controller brain panel:" in lines
     assert "- controller template rows: 112" in lines
     assert "- controller gesture: snapshot-recovery-journal:16 -> snapshot.panic_home" in lines
+    assert "Live kit capture:" in lines
+    assert "- tagline: Mutate the kit you are actually playing." in lines
+    assert "- capture step: receive-kit-sysex / kit" in lines
+    assert "- differentiator: live-kit-capture" in lines
+    assert "- recovery: Z then send" in lines
     assert "A4 review surface:" in lines
     assert "- set: warehouse-arc" in lines
     assert "- review focus: hard-groove / review-ready" in lines
@@ -381,6 +458,7 @@ def test_performance_console_cli_text_and_json_modes(capsys: pytest.CaptureFixtu
     assert model["analyzer_panel"]["panel_mode"] == "split"
     assert model["rytm_lane_policy_matrix"]["matrix_status"] == "passive-ready"
     assert model["controller_brain_panel"]["panel_status"] == "passive-ready"
+    assert model["live_kit_capture_panel"]["panel_status"] == "passive-ready"
     assert model["analog_four_review_surface"]["surface_status"] == "review-only"
     assert model["performance_flow"]["analog_four_set_plan"]["set_name"] == "warehouse-arc"
 

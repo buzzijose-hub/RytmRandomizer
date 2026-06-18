@@ -718,6 +718,39 @@ export interface LiveGuiPerformanceConsoleControllerBrainPanelDict {
   replay_commands: ReadonlyArray<string>;
 }
 
+export interface LiveGuiPerformanceConsoleLiveKitCaptureWorkflowStepDict {
+  step_key: string;
+  label: string;
+  operator_command: string;
+  description: string;
+  cockpit_state: string;
+  safety_note: string;
+}
+
+export interface LiveGuiPerformanceConsoleLiveKitCaptureDifferentiatorDict {
+  name: string;
+  label: string;
+  summary: string;
+  controller_limit: string;
+  why_it_matters: string;
+}
+
+export interface LiveGuiPerformanceConsoleLiveKitCapturePanelDict {
+  panel_version: string;
+  panel_id: string;
+  panel_status: string;
+  title: string;
+  tagline: string;
+  source_report: string;
+  launch_command: string;
+  workflow_steps: ReadonlyArray<LiveGuiPerformanceConsoleLiveKitCaptureWorkflowStepDict>;
+  differentiators: ReadonlyArray<LiveGuiPerformanceConsoleLiveKitCaptureDifferentiatorDict>;
+  recovery_commands: ReadonlyArray<string>;
+  blocked_actions: ReadonlyArray<string>;
+  safety_lines: ReadonlyArray<string>;
+  replay_commands: ReadonlyArray<string>;
+}
+
 export interface LiveGuiPerformanceConsoleAnalogFourReviewStepDict {
   order: number;
   macro_name: string;
@@ -819,6 +852,7 @@ export interface LiveGuiPerformanceConsoleModelDict {
   macro_action_deck: LiveGuiPerformanceConsoleMacroActionDeckDict;
   rehearsal_board: LiveGuiPerformanceConsoleRehearsalBoardDict;
   controller_brain_panel: LiveGuiPerformanceConsoleControllerBrainPanelDict;
+  live_kit_capture_panel: LiveGuiPerformanceConsoleLiveKitCapturePanelDict;
   analog_four_review_surface: LiveGuiPerformanceConsoleAnalogFourReviewSurfaceDict;
   style_queue: StyleCrateRehearsalDeckDict;
   analyzer_panel: LiveGuiAnalyzerPanelModelDict;

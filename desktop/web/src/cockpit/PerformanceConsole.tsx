@@ -650,6 +650,7 @@ function packageBlockedActionsForModel(
     ...model.macro_action_deck.blocked_actions,
     ...model.rehearsal_board.blocked_actions,
     ...model.controller_brain_panel.blocked_actions,
+    ...model.live_kit_capture_panel.blocked_actions,
     ...model.analog_four_review_surface.blocked_actions,
     ...model.analyzer_panel.blocked_actions,
     ...model.snapshot_history.blocked_actions,
@@ -668,6 +669,7 @@ function packageRecoveryNotesForModel(
     ...(currentMove === undefined ? [] : [`queue recovery: ${currentMove.recovery_action}`]),
     ...model.analog_four_review_surface.recovery_notes,
     ...model.rehearsal_board.recovery_checks,
+    ...model.live_kit_capture_panel.recovery_commands,
     ...localHandoffLines,
   ]);
 }
@@ -2645,6 +2647,98 @@ export function PerformanceConsole({
           {model.controller_brain_panel.blocked_actions.map((action) => (
             <span key={action} className="live-chip live-chip-blocked">
               {action}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      <section
+        className="performance-console-surface performance-console-wide"
+        data-testid="performance-console-live-kit-capture-panel"
+        aria-labelledby="console-live-kit-capture-panel-title"
+      >
+        <header className="performance-console-section-header">
+          <h2 id="console-live-kit-capture-panel-title">{model.live_kit_capture_panel.title}</h2>
+          <span>{model.live_kit_capture_panel.panel_status}</span>
+        </header>
+        <p className="panel-meta">{model.live_kit_capture_panel.tagline}</p>
+        <small>
+          {model.live_kit_capture_panel.source_report} /{' '}
+          {model.live_kit_capture_panel.launch_command}
+        </small>
+        <div className="performance-console-macro-actions">
+          <button
+            type="button"
+            className="live-readiness-action"
+            disabled
+            title="Passive Cockpit reports cannot receive SysEx or open MIDI input ports."
+          >
+            Receive Kit
+          </button>
+          <button
+            type="button"
+            className="live-readiness-action"
+            disabled
+            title="Captured-kit mutation stays in the explicitly armed snapshot shell."
+          >
+            Mutate Captured Kit
+          </button>
+          <button
+            type="button"
+            className="live-readiness-action live-readiness-action-locked"
+            disabled
+            title="Real sends remain blocked from this passive console."
+          >
+            Send Captured Plan
+          </button>
+        </div>
+
+        <h3 className="performance-console-subheading">Live Capture Workflow</h3>
+        <div className="performance-console-list">
+          {model.live_kit_capture_panel.workflow_steps.map((step) => (
+            <article key={step.step_key}>
+              <strong>{step.label}</strong>
+              <span>
+                {step.step_key} / {step.operator_command}
+              </span>
+              <small>{step.description}</small>
+              <small>{step.cockpit_state}</small>
+              <small>{step.safety_note}</small>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Why This Beats Fixed Mapping</h3>
+        <div className="performance-console-list">
+          {model.live_kit_capture_panel.differentiators.map((item) => (
+            <article key={item.name}>
+              <strong>{item.label}</strong>
+              <span>{item.name}</span>
+              <small>{item.summary}</small>
+              <small>{item.controller_limit}</small>
+              <small>{item.why_it_matters}</small>
+            </article>
+          ))}
+        </div>
+
+        <div className="live-chip-row" aria-label="Live kit capture recovery commands">
+          {model.live_kit_capture_panel.recovery_commands.map((command) => (
+            <span key={command} className="live-chip">
+              {command}
+            </span>
+          ))}
+        </div>
+        <div className="live-chip-row" aria-label="Live kit capture blocked actions">
+          {model.live_kit_capture_panel.blocked_actions.map((action) => (
+            <span key={action} className="live-chip live-chip-blocked">
+              {action}
+            </span>
+          ))}
+        </div>
+        <div className="live-chip-row" aria-label="Live kit capture safety lines">
+          {model.live_kit_capture_panel.safety_lines.map((line) => (
+            <span key={line} className="live-chip">
+              {line}
             </span>
           ))}
         </div>

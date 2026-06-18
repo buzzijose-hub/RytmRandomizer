@@ -1,9 +1,20 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-15. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-06-16. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-06-16: Passive live-kit capture Cockpit bundle started on the clean
+  base after PR #185 merged. The passive
+  `live-gui-performance-console-report [--json]` now carries a GUI-ready
+  Live Kit Capture panel that makes RytmRandomizer's core differentiator
+  explicit: "Mutate the kit you are actually playing." The panel shows the
+  armed snapshot shell launch command, receive/review/mutate/go/recover/
+  resnapshot workflow, fixed-controller differentiators, `home`/`Z` recovery
+  commands, blocked active actions, safety lines, and replay commands. This
+  remains passive/mock-safe: no SysEx receive from Cockpit, no MIDI port
+  opening, no snapshot mutation from the report, no WebSocket command dispatch,
+  no hardware arming, and no MIDI send.
 - 2026-06-15: Passive controller-brain Cockpit bundle started on the clean
   base after PR #184 merged. The passive
   `live-gui-performance-console-report [--json]` now composes the

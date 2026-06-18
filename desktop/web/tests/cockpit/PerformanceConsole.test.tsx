@@ -410,6 +410,24 @@ describe('PerformanceConsole', () => {
     expect(within(controllerBrainPanel).getByRole('button', { name: /dispatch controller cue/i }))
       .toBeDisabled();
 
+    const liveKitCapturePanel = screen.getByTestId('performance-console-live-kit-capture-panel');
+    expect(liveKitCapturePanel).toHaveTextContent('Live Kit Capture');
+    expect(liveKitCapturePanel).toHaveTextContent('Mutate the kit you are actually playing.');
+    expect(liveKitCapturePanel).toHaveTextContent('receive-kit-sysex');
+    expect(liveKitCapturePanel).toHaveTextContent('mutate-captured-kit');
+    expect(liveKitCapturePanel).toHaveTextContent('captured-anchor recovery');
+    expect(liveKitCapturePanel).toHaveTextContent('live-kit-capture');
+    expect(liveKitCapturePanel).toHaveTextContent('controller-complement');
+    expect(liveKitCapturePanel).toHaveTextContent('receive kit from Cockpit console');
+    expect(within(liveKitCapturePanel).getByRole('button', { name: /receive kit/i }))
+      .toBeDisabled();
+    expect(
+      within(liveKitCapturePanel).getByRole('button', { name: /mutate captured kit/i }),
+    ).toBeDisabled();
+    expect(
+      within(liveKitCapturePanel).getByRole('button', { name: /send captured plan/i }),
+    ).toBeDisabled();
+
     const styleQueue = screen.getByTestId('performance-console-style-queue');
     expect(styleQueue).toHaveTextContent('Style Crates');
     expect(within(styleQueue).getAllByTestId(/^style-crate-/)).toHaveLength(9);
