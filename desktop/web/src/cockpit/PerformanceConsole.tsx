@@ -633,6 +633,7 @@ function packageSafetyForModel(
       )}`,
       ...model.safety_checklist.safety_lines,
       ...model.live_kit_capture_workbench.safety_lines,
+      ...model.live_kit_package_audition.safety_lines,
       ...model.safety_lines,
     ]),
   };
@@ -654,6 +655,7 @@ function packageBlockedActionsForModel(
     ...model.live_kit_capture_panel.blocked_actions,
     ...model.live_kit_capture_workbench.blocked_actions,
     ...model.live_kit_capture_workbench.package_manifest.blocked_actions,
+    ...model.live_kit_package_audition.blocked_actions,
     ...model.analog_four_review_surface.blocked_actions,
     ...model.analyzer_panel.blocked_actions,
     ...model.snapshot_history.blocked_actions,
@@ -674,6 +676,8 @@ function packageRecoveryNotesForModel(
     ...model.rehearsal_board.recovery_checks,
     ...model.live_kit_capture_panel.recovery_commands,
     ...model.live_kit_capture_workbench.recovery_gates.map((gate) => gate.operator_sequence),
+    ...model.live_kit_package_audition.audition_slots.map((slot) => slot.recovery_command),
+    ...model.live_kit_package_audition.audition_queue.map((queueItem) => queueItem.recovery_command),
     ...localHandoffLines,
   ]);
 }
@@ -2915,6 +2919,138 @@ export function PerformanceConsole({
         </div>
         <div className="live-chip-row" aria-label="Live kit capture workbench safety lines">
           {model.live_kit_capture_workbench.safety_lines.map((line) => (
+            <span key={line} className="live-chip">
+              {line}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      <section
+        className="performance-console-surface performance-console-wide"
+        data-testid="performance-console-live-kit-package-audition"
+        aria-labelledby="console-live-kit-package-audition-title"
+      >
+        <header className="performance-console-section-header">
+          <h2 id="console-live-kit-package-audition-title">
+            {model.live_kit_package_audition.title}
+          </h2>
+          <span>{model.live_kit_package_audition.audition_status}</span>
+        </header>
+        <p className="panel-meta">{model.live_kit_package_audition.summary}</p>
+        <small>
+          {model.live_kit_package_audition.source_workbench_id} /{' '}
+          {model.live_kit_package_audition.source_package_manifest_version}
+        </small>
+        <div className="performance-console-macro-actions">
+          {model.live_kit_package_audition.disabled_controls.map((control) => (
+            <button
+              key={control}
+              type="button"
+              className="live-readiness-action live-readiness-action-locked"
+              disabled
+              title="Live kit package audition is passive review metadata only."
+            >
+              {control}
+            </button>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Audition Summary</h3>
+        <div className="performance-console-list">
+          <article>
+            <strong>{model.live_kit_package_audition.audition_id}</strong>
+            <span>
+              slots {model.live_kit_package_audition.audition_summary.slot_count} /
+              queue {model.live_kit_package_audition.audition_summary.queue_count} /
+              checks {model.live_kit_package_audition.audition_summary.check_count} /
+              journal {model.live_kit_package_audition.audition_summary.journal_preview_count}
+            </span>
+          </article>
+        </div>
+
+        <h3 className="performance-console-subheading">Audition Slots</h3>
+        <div className="performance-console-list">
+          {model.live_kit_package_audition.audition_slots.map((slot) => (
+            <article key={slot.slot_key}>
+              <strong>{slot.label}</strong>
+              <span>
+                {slot.slot_key} / {slot.style_crate} / {slot.slot_status}
+              </span>
+              <small>pads {slot.target_pads.join(', ')}</small>
+              <small>sequence {slot.operator_sequence.join(' -> ')}</small>
+              <small>
+                energy {slot.energy} / risk {slot.risk} / seed {slot.seed}
+              </small>
+              <small>{slot.recovery_command}</small>
+              <small>{slot.notes}</small>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Audition Queue</h3>
+        <div className="performance-console-list">
+          {model.live_kit_package_audition.audition_queue.map((queueItem) => (
+            <article key={queueItem.queue_key}>
+              <strong>queue {queueItem.queue_key}</strong>
+              <span>
+                {queueItem.queue_status} / {queueItem.fire_command}
+              </span>
+              <small>{queueItem.review_command}</small>
+              <small>{queueItem.recovery_command}</small>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Package Checks</h3>
+        <div className="performance-console-list">
+          {model.live_kit_package_audition.package_checks.map((check) => (
+            <article key={check.check_key}>
+              <strong>{check.label}</strong>
+              <span>
+                {check.check_key} / {check.status}
+              </span>
+              <small>{check.required ? 'required' : 'optional'}</small>
+              <small>{check.evidence}</small>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Journal Preview</h3>
+        <div className="performance-console-list">
+          <article>
+            <strong>{model.live_kit_package_audition.journal_preview.name}</strong>
+            <span>
+              {model.live_kit_package_audition.journal_preview.seed} /{' '}
+              {model.live_kit_package_audition.journal_preview.depth} /{' '}
+              {model.live_kit_package_audition.journal_preview.guardrail_mode}
+            </span>
+            <small>
+              tags {model.live_kit_package_audition.journal_preview.tags.join(', ')}
+            </small>
+            <small>pads {model.live_kit_package_audition.journal_preview.pads.join(', ')}</small>
+            <small>{model.live_kit_package_audition.journal_preview.value_summary}</small>
+            <small>{model.live_kit_package_audition.journal_preview.notes}</small>
+            <small>{model.live_kit_package_audition.journal_preview.replay_policy}</small>
+          </article>
+        </div>
+
+        <div className="live-chip-row" aria-label="Live kit package audition replay commands">
+          {model.live_kit_package_audition.replay_commands.map((command) => (
+            <span key={command} className="live-chip">
+              {command}
+            </span>
+          ))}
+        </div>
+        <div className="live-chip-row" aria-label="Live kit package audition blocked actions">
+          {model.live_kit_package_audition.blocked_actions.map((action) => (
+            <span key={action} className="live-chip live-chip-blocked">
+              {action}
+            </span>
+          ))}
+        </div>
+        <div className="live-chip-row" aria-label="Live kit package audition safety lines">
+          {model.live_kit_package_audition.safety_lines.map((line) => (
             <span key={line} className="live-chip">
               {line}
             </span>

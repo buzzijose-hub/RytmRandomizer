@@ -4,6 +4,18 @@ Last updated: 2026-06-18. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-18: Passive Live Kit Package Audition bundle started on the clean
+  base after PR #189 merged. The passive
+  `live-gui-performance-console-report [--json]` now composes a GUI-ready
+  Live Kit Package Audition surface from the Live Kit Capture Workbench:
+  captured-base/hard-groove/industrial/dub/recovery audition slots, review-only
+  queue rows, package checks, disabled package/journal/send controls, and a
+  Mutation Journal preview seed. The Performance Console renders the audition
+  surface with Generate Package, Audition Variation, Commit Favorite, Write
+  Journal, and Send Variation disabled. This remains passive/mock-safe: no
+  SysEx receive from Cockpit, no package file write/export, no package apply,
+  no WebSocket command dispatch, no hardware arming, no MIDI port opening, and
+  no MIDI send.
 - 2026-06-18: Passive Live Kit Capture Workbench bundle started on the clean
   base after PR #187 merged. The passive
   `live-gui-performance-console-report [--json]` now extends the Live Kit

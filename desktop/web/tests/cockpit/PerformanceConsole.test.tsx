@@ -249,6 +249,21 @@ function performanceConsoleModelWithAllowedWorkbenchGate(): LiveGuiPerformanceCo
   };
 }
 
+function performanceConsoleModelWithOptionalPackageCheck(): LiveGuiPerformanceConsoleModelDict {
+  return {
+    ...performanceConsoleModel,
+    live_kit_package_audition: {
+      ...performanceConsoleModel.live_kit_package_audition,
+      package_checks: performanceConsoleModel.live_kit_package_audition.package_checks.map(
+        (check) =>
+          check.check_key === 'journal-preview-only'
+            ? { ...check, required: false }
+            : check,
+      ),
+    },
+  };
+}
+
 describe('PerformanceConsole', () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -478,6 +493,37 @@ describe('PerformanceConsole', () => {
       within(liveKitCaptureWorkbench).getByRole('button', { name: /send captured plan/i }),
     ).toBeDisabled();
 
+    const liveKitPackageAudition = screen.getByTestId(
+      'performance-console-live-kit-package-audition',
+    );
+    expect(liveKitPackageAudition).toHaveTextContent('Live Kit Package Audition');
+    expect(liveKitPackageAudition).toHaveTextContent('passive-ready');
+    expect(liveKitPackageAudition).toHaveTextContent('captured-base');
+    expect(liveKitPackageAudition).toHaveTextContent('hard-groove-lift');
+    expect(liveKitPackageAudition).toHaveTextContent('Industrial/Broken');
+    expect(liveKitPackageAudition).toHaveTextContent('queue industrial-pressure');
+    expect(liveKitPackageAudition).toHaveTextContent('recovery-visible-before-fire');
+    expect(liveKitPackageAudition).toHaveTextContent('Captured Kit Audition 0001');
+    expect(liveKitPackageAudition).toHaveTextContent('live-kit-audition-0001');
+    expect(liveKitPackageAudition).toHaveTextContent(
+      'send audition variation from Cockpit console',
+    );
+    expect(
+      within(liveKitPackageAudition).getByRole('button', { name: /generate package/i }),
+    ).toBeDisabled();
+    expect(
+      within(liveKitPackageAudition).getByRole('button', { name: /audition variation/i }),
+    ).toBeDisabled();
+    expect(
+      within(liveKitPackageAudition).getByRole('button', { name: /commit favorite/i }),
+    ).toBeDisabled();
+    expect(
+      within(liveKitPackageAudition).getByRole('button', { name: /write journal/i }),
+    ).toBeDisabled();
+    expect(
+      within(liveKitPackageAudition).getByRole('button', { name: /send variation/i }),
+    ).toBeDisabled();
+
     const styleQueue = screen.getByTestId('performance-console-style-queue');
     expect(styleQueue).toHaveTextContent('Style Crates');
     expect(within(styleQueue).getAllByTestId(/^style-crate-/)).toHaveLength(9);
@@ -542,6 +588,16 @@ describe('PerformanceConsole', () => {
     );
     expect(liveKitCaptureWorkbench).toHaveTextContent('manual-fire');
     expect(liveKitCaptureWorkbench).toHaveTextContent('cockpit allowed');
+  });
+
+  it('renders optional live-kit package checks when a packet marks them optional', () => {
+    render(<PerformanceConsole model={performanceConsoleModelWithOptionalPackageCheck()} />);
+
+    const liveKitPackageAudition = screen.getByTestId(
+      'performance-console-live-kit-package-audition',
+    );
+    expect(liveKitPackageAudition).toHaveTextContent('journal-preview-only');
+    expect(liveKitPackageAudition).toHaveTextContent('optional');
   });
 
   it('omits dry-run-only labels when a macro or queued move is not dry-run-only', () => {
