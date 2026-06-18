@@ -187,6 +187,73 @@ def test_performance_console_model_composes_live_cockpit_sections() -> None:
     assert "receive kit from Cockpit console" in live_kit_capture_panel["blocked_actions"]
     assert "no SysEx receive from passive Cockpit report" in live_kit_capture_panel["safety_lines"]
 
+    live_kit_capture_workbench = model.live_kit_capture_workbench
+    assert (
+        live_kit_capture_workbench["workbench_version"]
+        == "performance-console-live-kit-capture-workbench-v1"
+    )
+    assert live_kit_capture_workbench["workbench_status"] == "passive-ready"
+    assert live_kit_capture_workbench["source_panel_id"] == "live-kit-capture-panel"
+    assert live_kit_capture_workbench["title"] == "Live Kit Capture Workbench"
+    assert [slot["slot_key"] for slot in live_kit_capture_workbench["capture_slots"]] == [
+        "current-live-kit",
+        "candidate-variation",
+        "recovery-anchor",
+        "resnapshot-target",
+    ]
+    assert live_kit_capture_workbench["capture_slots"][0]["operator_command"] == "kit"
+    assert live_kit_capture_workbench["capture_slots"][1]["operator_command"] == "randomize"
+    assert live_kit_capture_workbench["capture_slots"][2]["operator_command"] == "Z then send"
+    assert live_kit_capture_workbench["capture_slots"][3]["operator_command"] == "resnapshot"
+
+    anchor_verification = live_kit_capture_workbench["anchor_verification"]
+    assert anchor_verification["fingerprint_source"] == "received-kit-sysex"
+    assert anchor_verification["expected_kit_label"] == "operator-selected live Rytm kit"
+    assert [check["check_key"] for check in anchor_verification["checks"]] == [
+        "kit-sysex-received",
+        "fingerprint-recorded",
+        "twelve-pad-context",
+        "lane-policy-attached",
+        "recovery-command-visible",
+    ]
+    assert {check["status"] for check in anchor_verification["checks"]} == {"review-ready"}
+
+    mutation_readiness = live_kit_capture_workbench["mutation_readiness"]
+    assert mutation_readiness["readiness_status"] == "operator-gated"
+    assert mutation_readiness["ready_gate_count"] == 4
+    assert mutation_readiness["blocked_gate_count"] == 2
+    assert [gate["gate_key"] for gate in mutation_readiness["gates"]] == [
+        "capture-current-kit",
+        "review-current-deltas",
+        "stage-candidate",
+        "manual-fire",
+        "recover-anchor",
+        "resnapshot-anchor",
+    ]
+    assert mutation_readiness["gates"][3]["cockpit_action_allowed"] is False
+    assert mutation_readiness["gates"][3]["operator_action"] == "go"
+
+    assert [gate["gate_key"] for gate in live_kit_capture_workbench["recovery_gates"]] == [
+        "home-send",
+        "z-send",
+        "reload-saved-kit",
+        "resnapshot-before-next-run",
+    ]
+    assert live_kit_capture_workbench["recovery_gates"][1]["operator_sequence"] == "Z then send"
+    package_manifest = live_kit_capture_workbench["package_manifest"]
+    assert package_manifest["manifest_version"] == "live-kit-capture-workbench-package-v1"
+    assert package_manifest["exports_files"] is False
+    assert "capture_slots" in package_manifest["includes"]
+    assert "Send Captured Plan" in package_manifest["disabled_controls"]
+    assert "apply captured-kit package from Cockpit console" in package_manifest["blocked_actions"]
+    assert (
+        "apply captured-kit package from Cockpit console"
+        in live_kit_capture_workbench["blocked_actions"]
+    )
+    assert (
+        "no package apply from passive Cockpit report" in live_kit_capture_workbench["safety_lines"]
+    )
+
     macro_deck = model.macro_action_deck
     assert macro_deck["deck_status"] == "passive-ready"
     assert macro_deck["current_macro_key"] == "capture-anchor"
@@ -242,6 +309,7 @@ def test_performance_console_model_composes_live_cockpit_sections() -> None:
     assert "a4_outbound_macro_send" in model.blocked_actions
     assert "record-audio" in model.blocked_actions
     assert "fire rehearsal cue from Cockpit console" in model.blocked_actions
+    assert "apply captured-kit package from Cockpit console" in model.blocked_actions
     assert "dispatch queued command from model" in model.blocked_actions
     assert "send MIDI from snapshot history" in model.blocked_actions
     assert "no MIDI sending" in model.safety_lines
@@ -251,6 +319,55 @@ def test_performance_console_model_composes_live_cockpit_sections() -> None:
         "python -m rytm_randomizer.cli live-gui-performance-console-report",
         "python -m rytm_randomizer.cli live-gui-performance-console-report --json",
     )
+
+
+def test_live_kit_capture_workbench_tolerates_incomplete_source_panel() -> None:
+    from rytm_randomizer.reports.performance_console.live_kit_capture_workbench import (
+        build_live_kit_capture_workbench,
+    )
+
+    workbench = build_live_kit_capture_workbench({"panel_id": 123})
+
+    assert workbench["source_panel_id"] == ""
+    assert workbench["launch_command"] == ""
+    assert workbench["replay_commands"][-1] == ""
+    assert workbench["package_manifest"]["source_panel_id"] == ""
+
+
+def test_live_kit_capture_workbench_lines_ignore_malformed_sequences() -> None:
+    from rytm_randomizer.reports.performance_console.live_kit_capture_workbench import (
+        build_live_kit_capture_workbench,
+        live_kit_capture_workbench_lines,
+    )
+
+    workbench = build_live_kit_capture_workbench(
+        {
+            "panel_id": "live-kit-capture-panel",
+            "launch_command": "python -m rytm_randomizer.app --arm --rytm-live-snapshot-shell",
+        }
+    )
+    workbench["capture_slots"] = [
+        {
+            "slot_key": "kept-slot",
+            "operator_command": "kit",
+            "slot_status": "review-ready",
+        },
+        "ignore-me",
+    ]
+    anchor_verification = dict(workbench["anchor_verification"])
+    anchor_verification["checks"] = "ignore malformed checks"
+    workbench["anchor_verification"] = anchor_verification
+    mutation_readiness = dict(workbench["mutation_readiness"])
+    mutation_readiness["gates"] = "ignore malformed readiness gates"
+    workbench["mutation_readiness"] = mutation_readiness
+    workbench["recovery_gates"] = "ignore malformed recovery gates"
+
+    lines = live_kit_capture_workbench_lines(workbench)
+
+    assert "- capture slot: kept-slot / kit / review-ready" in lines
+    assert not any(line.startswith("- anchor check:") for line in lines)
+    assert not any(line.startswith("- readiness gate:") for line in lines)
+    assert not any(line.startswith("- recovery gate:") for line in lines)
 
 
 def test_performance_console_model_rejects_blank_session_label() -> None:
@@ -363,6 +480,13 @@ def test_performance_console_payload_is_json_safe_and_passive() -> None:
     assert model["live_kit_capture_panel"]["differentiators"][-1]["name"] == (
         "controller-complement"
     )
+    assert model["live_kit_capture_workbench"]["capture_slots"][0]["slot_key"] == (
+        "current-live-kit"
+    )
+    assert model["live_kit_capture_workbench"]["mutation_readiness"]["readiness_status"] == (
+        "operator-gated"
+    )
+    assert model["live_kit_capture_workbench"]["package_manifest"]["exports_files"] is False
     assert model["analog_four_review_surface"]["review_focus"]["macro_name"] == "hard-groove"
     assert model["analog_four_review_surface"]["readiness_events"][0]["status"] == "cc-ready"
     assert model["performance_flow"]["analog_four_set_plan"]["step_count"] == 5
@@ -419,6 +543,13 @@ def test_performance_console_report_is_operator_readable() -> None:
     assert "- capture step: receive-kit-sysex / kit" in lines
     assert "- differentiator: live-kit-capture" in lines
     assert "- recovery: Z then send" in lines
+    assert "Live kit capture workbench:" in lines
+    assert "- workbench status: passive-ready" in lines
+    assert "- capture slot: current-live-kit / kit / review-ready" in lines
+    assert "- anchor check: twelve-pad-context / review-ready" in lines
+    assert "- readiness gate: manual-fire / go / blocked" in lines
+    assert "- recovery gate: z-send / Z then send" in lines
+    assert "- package manifest: live-kit-capture-workbench-package-v1 / exports=False" in lines
     assert "A4 review surface:" in lines
     assert "- set: warehouse-arc" in lines
     assert "- review focus: hard-groove / review-ready" in lines
@@ -459,6 +590,7 @@ def test_performance_console_cli_text_and_json_modes(capsys: pytest.CaptureFixtu
     assert model["rytm_lane_policy_matrix"]["matrix_status"] == "passive-ready"
     assert model["controller_brain_panel"]["panel_status"] == "passive-ready"
     assert model["live_kit_capture_panel"]["panel_status"] == "passive-ready"
+    assert model["live_kit_capture_workbench"]["workbench_status"] == "passive-ready"
     assert model["analog_four_review_surface"]["surface_status"] == "review-only"
     assert model["performance_flow"]["analog_four_set_plan"]["set_name"] == "warehouse-arc"
 

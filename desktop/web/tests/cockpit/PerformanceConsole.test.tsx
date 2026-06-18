@@ -231,6 +231,24 @@ function performanceConsoleModelWithEmptyStyleDeck(): LiveGuiPerformanceConsoleM
   };
 }
 
+function performanceConsoleModelWithAllowedWorkbenchGate(): LiveGuiPerformanceConsoleModelDict {
+  return {
+    ...performanceConsoleModel,
+    live_kit_capture_workbench: {
+      ...performanceConsoleModel.live_kit_capture_workbench,
+      mutation_readiness: {
+        ...performanceConsoleModel.live_kit_capture_workbench.mutation_readiness,
+        gates: performanceConsoleModel.live_kit_capture_workbench.mutation_readiness.gates.map(
+          (gate) =>
+            gate.gate_key === 'manual-fire'
+              ? { ...gate, cockpit_action_allowed: true }
+              : gate,
+        ),
+      },
+    },
+  };
+}
+
 describe('PerformanceConsole', () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -428,6 +446,38 @@ describe('PerformanceConsole', () => {
       within(liveKitCapturePanel).getByRole('button', { name: /send captured plan/i }),
     ).toBeDisabled();
 
+    const liveKitCaptureWorkbench = screen.getByTestId(
+      'performance-console-live-kit-capture-workbench',
+    );
+    expect(liveKitCaptureWorkbench).toHaveTextContent('Live Kit Capture Workbench');
+    expect(liveKitCaptureWorkbench).toHaveTextContent('current-live-kit');
+    expect(liveKitCaptureWorkbench).toHaveTextContent('candidate-variation');
+    expect(liveKitCaptureWorkbench).toHaveTextContent('recovery-anchor');
+    expect(liveKitCaptureWorkbench).toHaveTextContent('resnapshot-target');
+    expect(liveKitCaptureWorkbench).toHaveTextContent('twelve-pad-context');
+    expect(liveKitCaptureWorkbench).toHaveTextContent('manual-fire');
+    expect(liveKitCaptureWorkbench).toHaveTextContent('z-send');
+    expect(liveKitCaptureWorkbench).toHaveTextContent(
+      'live-kit-capture-workbench-package-v1',
+    );
+    expect(liveKitCaptureWorkbench).toHaveTextContent(
+      'apply captured-kit package from Cockpit console',
+    );
+    expect(within(liveKitCaptureWorkbench).getByRole('button', { name: /receive kit/i }))
+      .toBeDisabled();
+    expect(
+      within(liveKitCaptureWorkbench).getByRole('button', { name: /stage mutation/i }),
+    ).toBeDisabled();
+    expect(
+      within(liveKitCaptureWorkbench).getByRole('button', { name: /apply package/i }),
+    ).toBeDisabled();
+    expect(
+      within(liveKitCaptureWorkbench).getByRole('button', { name: /export package/i }),
+    ).toBeDisabled();
+    expect(
+      within(liveKitCaptureWorkbench).getByRole('button', { name: /send captured plan/i }),
+    ).toBeDisabled();
+
     const styleQueue = screen.getByTestId('performance-console-style-queue');
     expect(styleQueue).toHaveTextContent('Style Crates');
     expect(within(styleQueue).getAllByTestId(/^style-crate-/)).toHaveLength(9);
@@ -482,6 +532,16 @@ describe('PerformanceConsole', () => {
       }),
     ).toBeDisabled();
     expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+  });
+
+  it('renders an allowed live-kit workbench readiness gate when the packet permits it', () => {
+    render(<PerformanceConsole model={performanceConsoleModelWithAllowedWorkbenchGate()} />);
+
+    const liveKitCaptureWorkbench = screen.getByTestId(
+      'performance-console-live-kit-capture-workbench',
+    );
+    expect(liveKitCaptureWorkbench).toHaveTextContent('manual-fire');
+    expect(liveKitCaptureWorkbench).toHaveTextContent('cockpit allowed');
   });
 
   it('omits dry-run-only labels when a macro or queued move is not dry-run-only', () => {

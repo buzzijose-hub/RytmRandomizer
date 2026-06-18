@@ -1,9 +1,20 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-16. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-06-18. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-06-18: Passive Live Kit Capture Workbench bundle started on the clean
+  base after PR #187 merged. The passive
+  `live-gui-performance-console-report [--json]` now extends the Live Kit
+  Capture panel with a GUI-ready workbench for capture slots, anchor
+  verification, mutation readiness, recovery gates, and future captured-kit
+  package metadata. The Performance Console renders the workbench with disabled
+  Receive Kit, Stage Mutation, Apply Package, Export Package, and Send
+  Captured Plan controls. This remains passive/mock-safe: no SysEx receive from
+  Cockpit, no MIDI port opening, no package apply/export write, no snapshot
+  mutation from the report, no WebSocket command dispatch, no hardware arming,
+  and no MIDI send.
 - 2026-06-16: Passive live-kit capture Cockpit bundle started on the clean
   base after PR #185 merged. The passive
   `live-gui-performance-console-report [--json]` now carries a GUI-ready
