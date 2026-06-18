@@ -632,6 +632,7 @@ function packageSafetyForModel(
         model.safety_checklist.arm_gate.state,
       )}`,
       ...model.safety_checklist.safety_lines,
+      ...model.live_kit_capture_workbench.safety_lines,
       ...model.safety_lines,
     ]),
   };
@@ -651,6 +652,8 @@ function packageBlockedActionsForModel(
     ...model.rehearsal_board.blocked_actions,
     ...model.controller_brain_panel.blocked_actions,
     ...model.live_kit_capture_panel.blocked_actions,
+    ...model.live_kit_capture_workbench.blocked_actions,
+    ...model.live_kit_capture_workbench.package_manifest.blocked_actions,
     ...model.analog_four_review_surface.blocked_actions,
     ...model.analyzer_panel.blocked_actions,
     ...model.snapshot_history.blocked_actions,
@@ -670,6 +673,7 @@ function packageRecoveryNotesForModel(
     ...model.analog_four_review_surface.recovery_notes,
     ...model.rehearsal_board.recovery_checks,
     ...model.live_kit_capture_panel.recovery_commands,
+    ...model.live_kit_capture_workbench.recovery_gates.map((gate) => gate.operator_sequence),
     ...localHandoffLines,
   ]);
 }
@@ -2737,6 +2741,180 @@ export function PerformanceConsole({
         </div>
         <div className="live-chip-row" aria-label="Live kit capture safety lines">
           {model.live_kit_capture_panel.safety_lines.map((line) => (
+            <span key={line} className="live-chip">
+              {line}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      <section
+        className="performance-console-surface performance-console-wide"
+        data-testid="performance-console-live-kit-capture-workbench"
+        aria-labelledby="console-live-kit-capture-workbench-title"
+      >
+        <header className="performance-console-section-header">
+          <h2 id="console-live-kit-capture-workbench-title">
+            {model.live_kit_capture_workbench.title}
+          </h2>
+          <span>{model.live_kit_capture_workbench.workbench_status}</span>
+        </header>
+        <p className="panel-meta">{model.live_kit_capture_workbench.summary}</p>
+        <small>
+          {model.live_kit_capture_workbench.source_panel_id} /{' '}
+          {model.live_kit_capture_workbench.launch_command}
+        </small>
+        <div className="performance-console-macro-actions">
+          <button
+            type="button"
+            className="live-readiness-action"
+            disabled
+            title="Passive Cockpit workbench cannot receive SysEx."
+          >
+            Receive Kit
+          </button>
+          <button
+            type="button"
+            className="live-readiness-action"
+            disabled
+            title="Mutation staging remains in the explicitly armed snapshot shell."
+          >
+            Stage Mutation
+          </button>
+          <button
+            type="button"
+            className="live-readiness-action"
+            disabled
+            title="Captured-kit package apply is not active in this passive report."
+          >
+            Apply Package
+          </button>
+          <button
+            type="button"
+            className="live-readiness-action"
+            disabled
+            title="This workbench advertises package metadata only."
+          >
+            Export Package
+          </button>
+          <button
+            type="button"
+            className="live-readiness-action live-readiness-action-locked"
+            disabled
+            title="Real sends remain blocked from this passive console."
+          >
+            Send Captured Plan
+          </button>
+        </div>
+
+        <h3 className="performance-console-subheading">Capture Slots</h3>
+        <div className="performance-console-list">
+          {model.live_kit_capture_workbench.capture_slots.map((slot) => (
+            <article key={slot.slot_key}>
+              <strong>{slot.label}</strong>
+              <span>
+                {slot.slot_key} / {slot.operator_command} / {slot.slot_status}
+              </span>
+              <small>{slot.stores}</small>
+              <small>{slot.source}</small>
+              <small>{slot.safety_note}</small>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Anchor Verification</h3>
+        <div className="performance-console-list">
+          <article>
+            <strong>{model.live_kit_capture_workbench.anchor_verification.anchor_key}</strong>
+            <span>
+              {model.live_kit_capture_workbench.anchor_verification.expected_kit_label} /{' '}
+              {model.live_kit_capture_workbench.anchor_verification.fingerprint_source}
+            </span>
+          </article>
+          {model.live_kit_capture_workbench.anchor_verification.checks.map((check) => (
+            <article key={check.check_key}>
+              <strong>{check.label}</strong>
+              <span>
+                {check.check_key} / {check.status}
+              </span>
+              <small>{check.evidence}</small>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Mutation Readiness</h3>
+        <div className="performance-console-list">
+          <article>
+            <strong>{model.live_kit_capture_workbench.mutation_readiness.readiness_status}</strong>
+            <span>
+              ready {model.live_kit_capture_workbench.mutation_readiness.ready_gate_count} /
+              blocked {model.live_kit_capture_workbench.mutation_readiness.blocked_gate_count}
+            </span>
+          </article>
+          {model.live_kit_capture_workbench.mutation_readiness.gates.map((gate) => (
+            <article key={gate.gate_key}>
+              <strong>{gate.label}</strong>
+              <span>
+                {gate.gate_key} / {gate.operator_action} / {gate.status}
+              </span>
+              <small>
+                {gate.cockpit_action_allowed ? 'cockpit allowed' : 'cockpit blocked'}
+              </small>
+              <small>{gate.blocked_action}</small>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Recovery Gates</h3>
+        <div className="performance-console-list">
+          {model.live_kit_capture_workbench.recovery_gates.map((gate) => (
+            <article key={gate.gate_key}>
+              <strong>{gate.label}</strong>
+              <span>
+                {gate.gate_key} / {gate.operator_sequence}
+              </span>
+              <small>{gate.expected_result}</small>
+              <small>{gate.required_before_fire ? 'required before fire' : 'fallback'}</small>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Package Manifest</h3>
+        <div className="performance-console-list">
+          <article>
+            <strong>
+              {model.live_kit_capture_workbench.package_manifest.manifest_version}
+            </strong>
+            <span>
+              {model.live_kit_capture_workbench.package_manifest.manifest_id} / exports{' '}
+              {String(model.live_kit_capture_workbench.package_manifest.exports_files)}
+            </span>
+            <small>
+              includes {model.live_kit_capture_workbench.package_manifest.includes.join(', ')}
+            </small>
+            <small>
+              disabled{' '}
+              {model.live_kit_capture_workbench.package_manifest.disabled_controls.join(', ')}
+            </small>
+          </article>
+        </div>
+
+        <div className="live-chip-row" aria-label="Live kit capture workbench blocked actions">
+          {model.live_kit_capture_workbench.blocked_actions.map((action) => (
+            <span key={action} className="live-chip live-chip-blocked">
+              {action}
+            </span>
+          ))}
+        </div>
+        <div className="live-chip-row" aria-label="Live kit capture workbench package blocked actions">
+          {model.live_kit_capture_workbench.package_manifest.blocked_actions.map((action) => (
+            <span key={action} className="live-chip live-chip-blocked">
+              {action}
+            </span>
+          ))}
+        </div>
+        <div className="live-chip-row" aria-label="Live kit capture workbench safety lines">
+          {model.live_kit_capture_workbench.safety_lines.map((line) => (
             <span key={line} className="live-chip">
               {line}
             </span>

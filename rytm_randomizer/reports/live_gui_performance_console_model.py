@@ -53,6 +53,10 @@ from .oxi_live_macro_catalog import (
     build_oxi_live_macro_catalog_report,
 )
 from .oxi_live_set_strategy import build_oxi_live_set_strategy_payload
+from .performance_console.live_kit_capture_workbench import (
+    build_live_kit_capture_workbench,
+    live_kit_capture_workbench_lines,
+)
 from .rytm_live_macro_hardware_rehearsal import (
     build_rytm_live_macro_hardware_rehearsal_payload,
 )
@@ -219,6 +223,7 @@ class LiveGuiPerformanceConsoleModel:
     rehearsal_board: dict[str, object]
     controller_brain_panel: dict[str, object]
     live_kit_capture_panel: dict[str, object]
+    live_kit_capture_workbench: dict[str, object]
     analog_four_review_surface: dict[str, object]
     style_queue: dict[str, object]
     analyzer_panel: dict[str, object]
@@ -247,6 +252,7 @@ class LiveGuiPerformanceConsoleModelDict(TypedDict):
     rehearsal_board: dict[str, object]
     controller_brain_panel: dict[str, object]
     live_kit_capture_panel: dict[str, object]
+    live_kit_capture_workbench: dict[str, object]
     analog_four_review_surface: dict[str, object]
     style_queue: dict[str, object]
     analyzer_panel: dict[str, object]
@@ -856,6 +862,7 @@ def _console_id(
     rehearsal_board: dict[str, object],
     controller_brain_panel: dict[str, object],
     live_kit_capture_panel: dict[str, object],
+    live_kit_capture_workbench: dict[str, object],
     analog_four_review_surface: dict[str, object],
     style_queue: dict[str, object],
     analyzer_panel: dict[str, object],
@@ -875,6 +882,7 @@ def _console_id(
             str(rehearsal_board.get("board_id", "")),
             str(controller_brain_panel.get("panel_id", "")),
             str(live_kit_capture_panel.get("panel_id", "")),
+            str(live_kit_capture_workbench.get("workbench_id", "")),
             str(analog_four_review_surface.get("surface_id", "")),
             str(style_queue.get("deck_id", "")),
             str(analyzer_panel.get("panel_id", "")),
@@ -910,6 +918,7 @@ def build_live_gui_performance_console_model(
     rehearsal_board = _build_rehearsal_board()
     controller_brain_panel = _build_controller_brain_panel()
     live_kit_capture_panel = _build_live_kit_capture_panel(rehearsal_board)
+    live_kit_capture_workbench = build_live_kit_capture_workbench(live_kit_capture_panel)
     analog_four_review_surface = _build_analog_four_review_surface()
     style_queue = to_style_crate_rehearsal_deck_json(build_style_crate_rehearsal_deck())[
         "style_crate_rehearsal_deck"
@@ -940,6 +949,7 @@ def build_live_gui_performance_console_model(
         _tuple_from_payload(rehearsal_board, "blocked_actions"),
         _tuple_from_payload(controller_brain_panel, "blocked_actions"),
         _tuple_from_payload(live_kit_capture_panel, "blocked_actions"),
+        _tuple_from_payload(live_kit_capture_workbench, "blocked_actions"),
         _tuple_from_payload(analog_four_review_surface, "blocked_actions"),
         tuple(style_queue["blocked_actions"]),
         tuple(analyzer_panel["blocked_actions"]),
@@ -957,6 +967,7 @@ def build_live_gui_performance_console_model(
         _tuple_from_payload(rehearsal_board, "safety_lines"),
         _tuple_from_payload(controller_brain_panel, "safety_lines"),
         _tuple_from_payload(live_kit_capture_panel, "safety_lines"),
+        _tuple_from_payload(live_kit_capture_workbench, "safety_lines"),
         _tuple_from_payload(analog_four_review_surface, "safety_lines"),
         _tuple_from_payload(device_inventory, "safety"),
         _tuple_from_payload(rytm_pad_surface, "safety"),
@@ -975,6 +986,7 @@ def build_live_gui_performance_console_model(
             rehearsal_board=rehearsal_board,
             controller_brain_panel=controller_brain_panel,
             live_kit_capture_panel=live_kit_capture_panel,
+            live_kit_capture_workbench=live_kit_capture_workbench,
             analog_four_review_surface=analog_four_review_surface,
             style_queue=style_queue,
             analyzer_panel=analyzer_panel,
@@ -993,6 +1005,7 @@ def build_live_gui_performance_console_model(
         rehearsal_board=rehearsal_board,
         controller_brain_panel=controller_brain_panel,
         live_kit_capture_panel=live_kit_capture_panel,
+        live_kit_capture_workbench=live_kit_capture_workbench,
         analog_four_review_surface=analog_four_review_surface,
         style_queue=style_queue,
         analyzer_panel=analyzer_panel,
@@ -1027,6 +1040,7 @@ def live_gui_performance_console_model_payload(
             "rehearsal_board": source.rehearsal_board,
             "controller_brain_panel": source.controller_brain_panel,
             "live_kit_capture_panel": source.live_kit_capture_panel,
+            "live_kit_capture_workbench": source.live_kit_capture_workbench,
             "analog_four_review_surface": source.analog_four_review_surface,
             "style_queue": source.style_queue,
             "analyzer_panel": source.analyzer_panel,
@@ -1183,6 +1197,7 @@ def _format_console_body(model: LiveGuiPerformanceConsoleModel) -> list[str]:
         *_rehearsal_board_lines(model),
         *_controller_brain_panel_lines(model),
         *_live_kit_capture_panel_lines(model),
+        *live_kit_capture_workbench_lines(model.live_kit_capture_workbench),
         *_analog_four_review_surface_lines(model),
         "A4 set plan:",
         f"- set: {a4_set_plan['set_name']}",

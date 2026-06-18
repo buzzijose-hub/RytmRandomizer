@@ -751,6 +751,83 @@ export interface LiveGuiPerformanceConsoleLiveKitCapturePanelDict {
   replay_commands: ReadonlyArray<string>;
 }
 
+export interface LiveGuiPerformanceConsoleLiveKitCaptureWorkbenchSlotDict {
+  slot_key: string;
+  label: string;
+  slot_status: string;
+  operator_command: string;
+  stores: string;
+  source: string;
+  safety_note: string;
+}
+
+export interface LiveGuiPerformanceConsoleLiveKitCaptureAnchorCheckDict {
+  check_key: string;
+  label: string;
+  status: string;
+  evidence: string;
+}
+
+export interface LiveGuiPerformanceConsoleLiveKitCaptureAnchorVerificationDict {
+  anchor_key: string;
+  expected_kit_label: string;
+  fingerprint_source: string;
+  checks: ReadonlyArray<LiveGuiPerformanceConsoleLiveKitCaptureAnchorCheckDict>;
+}
+
+export interface LiveGuiPerformanceConsoleLiveKitCaptureReadinessGateDict {
+  gate_key: string;
+  label: string;
+  status: string;
+  operator_action: string;
+  cockpit_action_allowed: boolean;
+  blocked_action: string;
+}
+
+export interface LiveGuiPerformanceConsoleLiveKitCaptureMutationReadinessDict {
+  readiness_status: string;
+  ready_gate_count: number;
+  blocked_gate_count: number;
+  gates: ReadonlyArray<LiveGuiPerformanceConsoleLiveKitCaptureReadinessGateDict>;
+}
+
+export interface LiveGuiPerformanceConsoleLiveKitCaptureRecoveryGateDict {
+  gate_key: string;
+  label: string;
+  operator_sequence: string;
+  expected_result: string;
+  required_before_fire: boolean;
+}
+
+export interface LiveGuiPerformanceConsoleLiveKitCapturePackageManifestDict {
+  manifest_version: string;
+  manifest_id: string;
+  source_panel_id: string;
+  exports_files: boolean;
+  includes: ReadonlyArray<string>;
+  disabled_controls: ReadonlyArray<string>;
+  blocked_actions: ReadonlyArray<string>;
+  replay_commands: ReadonlyArray<string>;
+}
+
+export interface LiveGuiPerformanceConsoleLiveKitCaptureWorkbenchDict {
+  workbench_version: string;
+  workbench_id: string;
+  workbench_status: string;
+  title: string;
+  summary: string;
+  source_panel_id: string;
+  launch_command: string;
+  capture_slots: ReadonlyArray<LiveGuiPerformanceConsoleLiveKitCaptureWorkbenchSlotDict>;
+  anchor_verification: LiveGuiPerformanceConsoleLiveKitCaptureAnchorVerificationDict;
+  mutation_readiness: LiveGuiPerformanceConsoleLiveKitCaptureMutationReadinessDict;
+  recovery_gates: ReadonlyArray<LiveGuiPerformanceConsoleLiveKitCaptureRecoveryGateDict>;
+  package_manifest: LiveGuiPerformanceConsoleLiveKitCapturePackageManifestDict;
+  blocked_actions: ReadonlyArray<string>;
+  safety_lines: ReadonlyArray<string>;
+  replay_commands: ReadonlyArray<string>;
+}
+
 export interface LiveGuiPerformanceConsoleAnalogFourReviewStepDict {
   order: number;
   macro_name: string;
@@ -853,6 +930,7 @@ export interface LiveGuiPerformanceConsoleModelDict {
   rehearsal_board: LiveGuiPerformanceConsoleRehearsalBoardDict;
   controller_brain_panel: LiveGuiPerformanceConsoleControllerBrainPanelDict;
   live_kit_capture_panel: LiveGuiPerformanceConsoleLiveKitCapturePanelDict;
+  live_kit_capture_workbench: LiveGuiPerformanceConsoleLiveKitCaptureWorkbenchDict;
   analog_four_review_surface: LiveGuiPerformanceConsoleAnalogFourReviewSurfaceDict;
   style_queue: StyleCrateRehearsalDeckDict;
   analyzer_panel: LiveGuiAnalyzerPanelModelDict;
