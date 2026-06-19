@@ -58,6 +58,7 @@ from .performance_console.live_kit_capture_workbench import (
     live_kit_capture_workbench_lines,
 )
 from .performance_console.live_kit_package_audition import (
+    LiveKitPackageAuditionPayload,
     build_live_kit_package_audition,
     live_kit_package_audition_lines,
 )
@@ -228,7 +229,7 @@ class LiveGuiPerformanceConsoleModel:
     controller_brain_panel: dict[str, object]
     live_kit_capture_panel: dict[str, object]
     live_kit_capture_workbench: dict[str, object]
-    live_kit_package_audition: dict[str, object]
+    live_kit_package_audition: LiveKitPackageAuditionPayload
     analog_four_review_surface: dict[str, object]
     style_queue: dict[str, object]
     analyzer_panel: dict[str, object]
@@ -258,7 +259,7 @@ class LiveGuiPerformanceConsoleModelDict(TypedDict):
     controller_brain_panel: dict[str, object]
     live_kit_capture_panel: dict[str, object]
     live_kit_capture_workbench: dict[str, object]
-    live_kit_package_audition: dict[str, object]
+    live_kit_package_audition: LiveKitPackageAuditionPayload
     analog_four_review_surface: dict[str, object]
     style_queue: dict[str, object]
     analyzer_panel: dict[str, object]

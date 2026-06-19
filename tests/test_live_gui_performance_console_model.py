@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+from typing import get_type_hints
 
 import pytest
 
@@ -382,6 +383,29 @@ def test_live_kit_package_audition_tolerates_incomplete_workbench() -> None:
     assert audition["replay_commands"][-1] == ""
     assert audition["audition_summary"]["slot_count"] == 5
     assert audition["package_checks"][0]["status"] == "review-only"
+
+
+def test_live_kit_package_audition_contract_uses_typed_payload_and_public_helpers() -> None:
+    from rytm_randomizer.reports.live_gui_performance_console_model import (
+        LiveGuiPerformanceConsoleModel,
+        LiveGuiPerformanceConsoleModelDict,
+    )
+    from rytm_randomizer.reports.performance_console.live_kit_package_audition import (
+        LiveKitPackageAuditionPayload,
+        build_live_kit_package_audition,
+    )
+    from rytm_randomizer.reports.performance_console.payload_helpers import dict_sequence
+
+    assert get_type_hints(build_live_kit_package_audition)["return"] is (
+        LiveKitPackageAuditionPayload
+    )
+    assert get_type_hints(LiveGuiPerformanceConsoleModel)["live_kit_package_audition"] is (
+        LiveKitPackageAuditionPayload
+    )
+    assert get_type_hints(LiveGuiPerformanceConsoleModelDict)["live_kit_package_audition"] is (
+        LiveKitPackageAuditionPayload
+    )
+    assert dict_sequence([{"kept": True}, "ignored"]) == ({"kept": True},)
 
 
 def test_live_kit_package_audition_lines_ignore_malformed_sequences() -> None:

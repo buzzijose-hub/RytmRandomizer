@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Final, cast
+from typing import Final, TypedDict, cast
 
-from .live_kit_capture_workbench import _dict_sequence as _workbench_dict_sequence
+from .payload_helpers import dict_sequence
 
 LIVE_KIT_PACKAGE_AUDITION_VERSION: Final[str] = "performance-console-live-kit-package-audition-v1"
 LIVE_KIT_PACKAGE_AUDITION_ID: Final[str] = "live-kit-package-audition"
@@ -25,6 +25,86 @@ LIVE_KIT_PACKAGE_AUDITION_SAFETY_LINES: Final[tuple[str, ...]] = (
     "no MIDI sending",
     "no port opening",
 )
+
+
+class LiveKitPackageAuditionSummary(TypedDict):
+    """Count summary for the package audition surface."""
+
+    slot_count: int
+    queue_count: int
+    check_count: int
+    journal_preview_count: int
+
+
+class LiveKitPackageAuditionSlot(TypedDict):
+    """One captured-kit audition slot."""
+
+    slot_key: str
+    label: str
+    style_crate: str
+    slot_status: str
+    energy: int
+    risk: int
+    target_pads: list[int]
+    operator_sequence: list[str]
+    recovery_command: str
+    seed: str
+    notes: str
+
+
+class LiveKitPackageAuditionQueueRow(TypedDict):
+    """One review-only audition queue row."""
+
+    queue_key: str
+    queue_status: str
+    fire_command: str
+    review_command: str
+    recovery_command: str
+
+
+class LiveKitPackageAuditionCheck(TypedDict):
+    """One passive package audition check."""
+
+    check_key: str
+    label: str
+    status: str
+    required: bool
+    evidence: str
+
+
+class LiveKitPackageAuditionJournalPreview(TypedDict):
+    """Journal preview metadata that is not written by the passive report."""
+
+    name: str
+    seed: str
+    tags: list[str]
+    pads: list[int]
+    depth: str
+    guardrail_mode: str
+    value_summary: str
+    notes: str
+    replay_policy: str
+
+
+class LiveKitPackageAuditionPayload(TypedDict):
+    """JSON-ready passive live-kit package audition contract."""
+
+    audition_version: str
+    audition_id: str
+    audition_status: str
+    title: str
+    summary: str
+    source_workbench_id: str
+    source_package_manifest_version: str
+    audition_summary: LiveKitPackageAuditionSummary
+    audition_slots: list[LiveKitPackageAuditionSlot]
+    audition_queue: list[LiveKitPackageAuditionQueueRow]
+    package_checks: list[LiveKitPackageAuditionCheck]
+    journal_preview: LiveKitPackageAuditionJournalPreview
+    disabled_controls: list[str]
+    blocked_actions: list[str]
+    safety_lines: list[str]
+    replay_commands: list[str]
 
 
 def _audition_payload_text(payload: Mapping[str, object], key: str) -> str:
@@ -48,25 +128,25 @@ def _source_manifest_version(workbench: Mapping[str, object]) -> str:
 
 def build_live_kit_package_audition(
     live_kit_capture_workbench: Mapping[str, object],
-) -> dict[str, object]:
+) -> LiveKitPackageAuditionPayload:
     """Return passive captured-kit audition package metadata for Cockpit."""
 
     source_workbench_id = _audition_payload_text(live_kit_capture_workbench, "workbench_id")
     source_manifest_version = _source_manifest_version(live_kit_capture_workbench)
     launch_command = _audition_payload_text(live_kit_capture_workbench, "launch_command")
-    replay_commands = [
+    replay_commands: list[str] = [
         "python -m rytm_randomizer.cli live-gui-performance-console-report --json",
         "python -m rytm_randomizer.cli oxi-live-macro-catalog-report",
         launch_command,
     ]
-    disabled_controls = [
+    disabled_controls: list[str] = [
         "Generate Package",
         "Audition Variation",
         "Commit Favorite",
         "Write Journal",
         "Send Variation",
     ]
-    audition_slots = [
+    audition_slots: list[LiveKitPackageAuditionSlot] = [
         {
             "slot_key": "captured-base",
             "label": "Captured Base",
@@ -133,7 +213,7 @@ def build_live_kit_package_audition(
             "notes": "Explicit return path before and after every audition.",
         },
     ]
-    audition_queue = [
+    audition_queue: list[LiveKitPackageAuditionQueueRow] = [
         {
             "queue_key": "hard-groove-lift",
             "queue_status": "current",
@@ -163,7 +243,7 @@ def build_live_kit_package_audition(
             "recovery_command": "reload saved kit if needed",
         },
     ]
-    package_checks = [
+    package_checks: list[LiveKitPackageAuditionCheck] = [
         {
             "check_key": "source-workbench-passive",
             "label": "Source Workbench Passive",
@@ -207,7 +287,18 @@ def build_live_kit_package_audition(
             "evidence": "journal entry is metadata until a future explicit save path exists",
         },
     ]
-    return {
+    journal_preview: LiveKitPackageAuditionJournalPreview = {
+        "name": "Captured Kit Audition 0001",
+        "seed": "live-kit-audition-0001",
+        "tags": ["captured-kit", "hard-groove", "industrial", "recovery-ready"],
+        "pads": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        "depth": "balanced",
+        "guardrail_mode": "Live Safe",
+        "value_summary": "SRC-first plus controlled drive/space from captured anchor",
+        "notes": "Candidate favorite remains a journal preview until explicit save exists.",
+        "replay_policy": "metadata-only",
+    }
+    payload: LiveKitPackageAuditionPayload = {
         "audition_version": LIVE_KIT_PACKAGE_AUDITION_VERSION,
         "audition_id": LIVE_KIT_PACKAGE_AUDITION_ID,
         "audition_status": LIVE_KIT_PACKAGE_AUDITION_STATUS,
@@ -227,22 +318,13 @@ def build_live_kit_package_audition(
         "audition_slots": audition_slots,
         "audition_queue": audition_queue,
         "package_checks": package_checks,
-        "journal_preview": {
-            "name": "Captured Kit Audition 0001",
-            "seed": "live-kit-audition-0001",
-            "tags": ["captured-kit", "hard-groove", "industrial", "recovery-ready"],
-            "pads": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-            "depth": "balanced",
-            "guardrail_mode": "Live Safe",
-            "value_summary": "SRC-first plus controlled drive/space from captured anchor",
-            "notes": "Candidate favorite remains a journal preview until explicit save exists.",
-            "replay_policy": "metadata-only",
-        },
+        "journal_preview": journal_preview,
         "disabled_controls": disabled_controls,
         "blocked_actions": list(LIVE_KIT_PACKAGE_AUDITION_BLOCKED_ACTIONS),
         "safety_lines": list(LIVE_KIT_PACKAGE_AUDITION_SAFETY_LINES),
         "replay_commands": replay_commands,
     }
+    return payload
 
 
 def live_kit_package_audition_lines(audition: Mapping[str, object]) -> list[str]:
@@ -258,17 +340,17 @@ def live_kit_package_audition_lines(audition: Mapping[str, object]) -> list[str]
         f"- audition slots: {summary['slot_count']}",
         f"- audition queue: {summary['queue_count']}",
     ]
-    for slot in _workbench_dict_sequence(audition["audition_slots"]):
+    for slot in dict_sequence(audition["audition_slots"]):
         lines.append(
             f"- audition slot: {slot['slot_key']} / {slot['style_crate']} / "
             f"{slot['slot_status']}"
         )
-    for queue_item in _workbench_dict_sequence(audition["audition_queue"]):
+    for queue_item in dict_sequence(audition["audition_queue"]):
         lines.append(
             f"- audition queue: {queue_item['queue_key']} / "
             f"{queue_item['queue_status']} / {queue_item['fire_command']}"
         )
-    for check in _workbench_dict_sequence(audition["package_checks"]):
+    for check in dict_sequence(audition["package_checks"]):
         lines.append(f"- package check: {check['check_key']} / {check['status']}")
     lines.append(f"- journal preview: {journal_preview['name']} / " f"{journal_preview['seed']}")
     lines.extend(

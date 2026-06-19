@@ -1019,7 +1019,10 @@ describe('PerformanceConsole', () => {
     expect(packagePanel).toHaveTextContent('Elektron Analog Rytm MKII');
     expect(packagePanel).toHaveTextContent('Elektron Analog Four MKII');
     expect(packagePanel).toHaveTextContent('a4_outbound_macro_send');
+    expect(packagePanel).toHaveTextContent('send audition variation from Cockpit console');
+    expect(packagePanel).toHaveTextContent('live kit package audition is declarative only');
     expect(packagePanel).toHaveTextContent('use Z + send from the armed snapshot shell');
+    expect(packagePanel).toHaveTextContent('reload saved kit if needed');
 
     const packagePayload = screen.getByTestId('performance-console-local-package-payload');
     expect(packagePayload).toHaveTextContent(
@@ -1034,6 +1037,9 @@ describe('PerformanceConsole', () => {
     expect(packagePayload).toHaveTextContent('"selected crate exists in current packet"');
     expect(packagePayload).toHaveTextContent('"selected queued move exists in current packet"');
     expect(packagePayload).toHaveTextContent('"selected snapshot exists in current packet"');
+    expect(packagePayload).toHaveTextContent('"send audition variation from Cockpit console"');
+    expect(packagePayload).toHaveTextContent('"live kit package audition is declarative only"');
+    expect(packagePayload).toHaveTextContent('"reload saved kit if needed"');
     expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
   });

@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Final, cast
 
+from .payload_helpers import dict_sequence
+
 LIVE_KIT_CAPTURE_WORKBENCH_VERSION: Final[str] = "performance-console-live-kit-capture-workbench-v1"
 LIVE_KIT_CAPTURE_WORKBENCH_ID: Final[str] = "live-kit-capture-workbench"
 LIVE_KIT_CAPTURE_WORKBENCH_STATUS: Final[str] = "passive-ready"
@@ -31,12 +33,6 @@ def _workbench_payload_text(payload: Mapping[str, object], key: str) -> str:
     if isinstance(value, str):
         return value
     return ""
-
-
-def _dict_sequence(value: object) -> tuple[Mapping[str, object], ...]:
-    if not isinstance(value, list):
-        return ()
-    return tuple(item for item in value if isinstance(item, dict))
 
 
 def build_live_kit_capture_workbench(
@@ -279,19 +275,19 @@ def live_kit_capture_workbench_lines(workbench: Mapping[str, object]) -> list[st
         f"- anchor fingerprint source: {anchor_verification['fingerprint_source']}",
         f"- mutation readiness: {mutation_readiness['readiness_status']}",
     ]
-    for slot in _dict_sequence(workbench["capture_slots"]):
+    for slot in dict_sequence(workbench["capture_slots"]):
         lines.append(
             f"- capture slot: {slot['slot_key']} / "
             f"{slot['operator_command']} / {slot['slot_status']}"
         )
-    for check in _dict_sequence(anchor_verification["checks"]):
+    for check in dict_sequence(anchor_verification["checks"]):
         lines.append(f"- anchor check: {check['check_key']} / {check['status']}")
-    for gate in _dict_sequence(mutation_readiness["gates"]):
+    for gate in dict_sequence(mutation_readiness["gates"]):
         action_state = "enabled" if gate["cockpit_action_allowed"] else "blocked"
         lines.append(
             f"- readiness gate: {gate['gate_key']} / " f"{gate['operator_action']} / {action_state}"
         )
-    for recovery_gate in _dict_sequence(workbench["recovery_gates"]):
+    for recovery_gate in dict_sequence(workbench["recovery_gates"]):
         lines.append(
             f"- recovery gate: {recovery_gate['gate_key']} / "
             f"{recovery_gate['operator_sequence']}"
