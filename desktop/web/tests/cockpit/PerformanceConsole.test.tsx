@@ -249,6 +249,21 @@ function performanceConsoleModelWithAllowedWorkbenchGate(): LiveGuiPerformanceCo
   };
 }
 
+function performanceConsoleModelWithOptionalPackageCheck(): LiveGuiPerformanceConsoleModelDict {
+  return {
+    ...performanceConsoleModel,
+    live_kit_package_audition: {
+      ...performanceConsoleModel.live_kit_package_audition,
+      package_checks: performanceConsoleModel.live_kit_package_audition.package_checks.map(
+        (check) =>
+          check.check_key === 'journal-preview-only'
+            ? { ...check, required: false }
+            : check,
+      ),
+    },
+  };
+}
+
 describe('PerformanceConsole', () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -478,6 +493,37 @@ describe('PerformanceConsole', () => {
       within(liveKitCaptureWorkbench).getByRole('button', { name: /send captured plan/i }),
     ).toBeDisabled();
 
+    const liveKitPackageAudition = screen.getByTestId(
+      'performance-console-live-kit-package-audition',
+    );
+    expect(liveKitPackageAudition).toHaveTextContent('Live Kit Package Audition');
+    expect(liveKitPackageAudition).toHaveTextContent('passive-ready');
+    expect(liveKitPackageAudition).toHaveTextContent('captured-base');
+    expect(liveKitPackageAudition).toHaveTextContent('hard-groove-lift');
+    expect(liveKitPackageAudition).toHaveTextContent('Industrial/Broken');
+    expect(liveKitPackageAudition).toHaveTextContent('queue industrial-pressure');
+    expect(liveKitPackageAudition).toHaveTextContent('recovery-visible-before-fire');
+    expect(liveKitPackageAudition).toHaveTextContent('Captured Kit Audition 0001');
+    expect(liveKitPackageAudition).toHaveTextContent('live-kit-audition-0001');
+    expect(liveKitPackageAudition).toHaveTextContent(
+      'send audition variation from Cockpit console',
+    );
+    expect(
+      within(liveKitPackageAudition).getByRole('button', { name: /generate package/i }),
+    ).toBeDisabled();
+    expect(
+      within(liveKitPackageAudition).getByRole('button', { name: /audition variation/i }),
+    ).toBeDisabled();
+    expect(
+      within(liveKitPackageAudition).getByRole('button', { name: /commit favorite/i }),
+    ).toBeDisabled();
+    expect(
+      within(liveKitPackageAudition).getByRole('button', { name: /write journal/i }),
+    ).toBeDisabled();
+    expect(
+      within(liveKitPackageAudition).getByRole('button', { name: /send variation/i }),
+    ).toBeDisabled();
+
     const styleQueue = screen.getByTestId('performance-console-style-queue');
     expect(styleQueue).toHaveTextContent('Style Crates');
     expect(within(styleQueue).getAllByTestId(/^style-crate-/)).toHaveLength(9);
@@ -542,6 +588,16 @@ describe('PerformanceConsole', () => {
     );
     expect(liveKitCaptureWorkbench).toHaveTextContent('manual-fire');
     expect(liveKitCaptureWorkbench).toHaveTextContent('cockpit allowed');
+  });
+
+  it('renders optional live-kit package checks when a packet marks them optional', () => {
+    render(<PerformanceConsole model={performanceConsoleModelWithOptionalPackageCheck()} />);
+
+    const liveKitPackageAudition = screen.getByTestId(
+      'performance-console-live-kit-package-audition',
+    );
+    expect(liveKitPackageAudition).toHaveTextContent('journal-preview-only');
+    expect(liveKitPackageAudition).toHaveTextContent('optional');
   });
 
   it('omits dry-run-only labels when a macro or queued move is not dry-run-only', () => {
@@ -963,7 +1019,10 @@ describe('PerformanceConsole', () => {
     expect(packagePanel).toHaveTextContent('Elektron Analog Rytm MKII');
     expect(packagePanel).toHaveTextContent('Elektron Analog Four MKII');
     expect(packagePanel).toHaveTextContent('a4_outbound_macro_send');
+    expect(packagePanel).toHaveTextContent('send audition variation from Cockpit console');
+    expect(packagePanel).toHaveTextContent('live kit package audition is declarative only');
     expect(packagePanel).toHaveTextContent('use Z + send from the armed snapshot shell');
+    expect(packagePanel).toHaveTextContent('reload saved kit if needed');
 
     const packagePayload = screen.getByTestId('performance-console-local-package-payload');
     expect(packagePayload).toHaveTextContent(
@@ -978,6 +1037,9 @@ describe('PerformanceConsole', () => {
     expect(packagePayload).toHaveTextContent('"selected crate exists in current packet"');
     expect(packagePayload).toHaveTextContent('"selected queued move exists in current packet"');
     expect(packagePayload).toHaveTextContent('"selected snapshot exists in current packet"');
+    expect(packagePayload).toHaveTextContent('"send audition variation from Cockpit console"');
+    expect(packagePayload).toHaveTextContent('"live kit package audition is declarative only"');
+    expect(packagePayload).toHaveTextContent('"reload saved kit if needed"');
     expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
   });

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+from typing import get_type_hints
 
 import pytest
 
@@ -370,6 +371,69 @@ def test_live_kit_capture_workbench_lines_ignore_malformed_sequences() -> None:
     assert not any(line.startswith("- recovery gate:") for line in lines)
 
 
+def test_live_kit_package_audition_tolerates_incomplete_workbench() -> None:
+    from rytm_randomizer.reports.performance_console.live_kit_package_audition import (
+        build_live_kit_package_audition,
+    )
+
+    audition = build_live_kit_package_audition({"workbench_id": 123})
+
+    assert audition["source_workbench_id"] == ""
+    assert audition["source_package_manifest_version"] == ""
+    assert audition["replay_commands"][-1] == ""
+    assert audition["audition_summary"]["slot_count"] == 5
+    assert audition["package_checks"][0]["status"] == "review-only"
+
+
+def test_live_kit_package_audition_contract_uses_typed_payload_and_public_helpers() -> None:
+    from rytm_randomizer.reports.live_gui_performance_console_model import (
+        LiveGuiPerformanceConsoleModel,
+        LiveGuiPerformanceConsoleModelDict,
+    )
+    from rytm_randomizer.reports.performance_console.live_kit_package_audition import (
+        LiveKitPackageAuditionPayload,
+        build_live_kit_package_audition,
+    )
+    from rytm_randomizer.reports.performance_console.payload_helpers import dict_sequence
+
+    assert get_type_hints(build_live_kit_package_audition)["return"] is (
+        LiveKitPackageAuditionPayload
+    )
+    assert get_type_hints(LiveGuiPerformanceConsoleModel)["live_kit_package_audition"] is (
+        LiveKitPackageAuditionPayload
+    )
+    assert get_type_hints(LiveGuiPerformanceConsoleModelDict)["live_kit_package_audition"] is (
+        LiveKitPackageAuditionPayload
+    )
+    assert dict_sequence([{"kept": True}, "ignored"]) == ({"kept": True},)
+
+
+def test_live_kit_package_audition_lines_ignore_malformed_sequences() -> None:
+    from rytm_randomizer.reports.performance_console.live_kit_package_audition import (
+        build_live_kit_package_audition,
+        live_kit_package_audition_lines,
+    )
+
+    audition = build_live_kit_package_audition(
+        {
+            "workbench_id": "live-kit-capture-workbench",
+            "launch_command": "python -m rytm_randomizer.app --arm --rytm-live-snapshot-shell",
+            "package_manifest": {
+                "manifest_version": "live-kit-capture-workbench-package-v1",
+            },
+        }
+    )
+    audition["audition_slots"] = "ignore malformed slots"
+    audition["audition_queue"] = "ignore malformed queue"
+    audition["package_checks"] = "ignore malformed checks"
+
+    lines = live_kit_package_audition_lines(audition)
+
+    assert "- audition status: passive-ready" in lines
+    assert not any(line.startswith("- audition slot:") for line in lines)
+    assert not any(line.startswith("- package check:") for line in lines)
+
+
 def test_performance_console_model_rejects_blank_session_label() -> None:
     from rytm_randomizer.reports.live_gui_performance_console_model import (
         build_live_gui_performance_console_model,
@@ -487,6 +551,24 @@ def test_performance_console_payload_is_json_safe_and_passive() -> None:
         "operator-gated"
     )
     assert model["live_kit_capture_workbench"]["package_manifest"]["exports_files"] is False
+    audition = model["live_kit_package_audition"]
+    assert audition["audition_status"] == "passive-ready"
+    assert audition["source_workbench_id"] == "live-kit-capture-workbench"
+    assert audition["source_package_manifest_version"] == "live-kit-capture-workbench-package-v1"
+    assert audition["audition_summary"]["slot_count"] == 5
+    assert audition["audition_summary"]["queue_count"] == 4
+    assert audition["audition_slots"][0]["slot_key"] == "captured-base"
+    assert audition["audition_slots"][1]["style_crate"] == "Hard Groove"
+    assert audition["audition_slots"][2]["operator_sequence"] == [
+        "randomize",
+        "changes",
+        "go",
+    ]
+    assert audition["audition_queue"][0]["queue_status"] == "current"
+    assert audition["package_checks"][-1]["check_key"] == "journal-preview-only"
+    assert audition["journal_preview"]["seed"] == "live-kit-audition-0001"
+    assert "Send Variation" in audition["disabled_controls"]
+    assert "send audition variation from Cockpit console" in audition["blocked_actions"]
     assert model["analog_four_review_surface"]["review_focus"]["macro_name"] == "hard-groove"
     assert model["analog_four_review_surface"]["readiness_events"][0]["status"] == "cc-ready"
     assert model["performance_flow"]["analog_four_set_plan"]["step_count"] == 5
@@ -550,6 +632,13 @@ def test_performance_console_report_is_operator_readable() -> None:
     assert "- readiness gate: manual-fire / go / blocked" in lines
     assert "- recovery gate: z-send / Z then send" in lines
     assert "- package manifest: live-kit-capture-workbench-package-v1 / exports=False" in lines
+    assert "Live kit package audition:" in lines
+    assert "- audition status: passive-ready" in lines
+    assert "- audition slot: hard-groove-lift / Hard Groove / review-only" in lines
+    assert "- audition queue: industrial-pressure / up-next / go" in lines
+    assert "- package check: recovery-visible-before-fire / review-only" in lines
+    assert "- journal preview: Captured Kit Audition 0001 / live-kit-audition-0001" in lines
+    assert "- audition disabled control: Send Variation" in lines
     assert "A4 review surface:" in lines
     assert "- set: warehouse-arc" in lines
     assert "- review focus: hard-groove / review-ready" in lines
@@ -591,6 +680,7 @@ def test_performance_console_cli_text_and_json_modes(capsys: pytest.CaptureFixtu
     assert model["controller_brain_panel"]["panel_status"] == "passive-ready"
     assert model["live_kit_capture_panel"]["panel_status"] == "passive-ready"
     assert model["live_kit_capture_workbench"]["workbench_status"] == "passive-ready"
+    assert model["live_kit_package_audition"]["audition_status"] == "passive-ready"
     assert model["analog_four_review_surface"]["surface_status"] == "review-only"
     assert model["performance_flow"]["analog_four_set_plan"]["set_name"] == "warehouse-arc"
 
