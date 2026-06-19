@@ -3,6 +3,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type {
   LiveGuiAnalyzerPanelControlDict,
   LiveGuiDeviceInventoryCardDict,
+  LiveGuiPerformanceConsoleLiveKitOperatorPackageDict,
+  LiveGuiPerformanceConsoleLiveKitOperatorPackageSlotBindingDict,
+  LiveGuiPerformanceConsoleLiveKitOperatorPackageStepDict,
   LiveGuiPerformanceConsoleMacroActionCardDict,
   LiveGuiPerformanceConsoleModelDict,
   LiveGuiPerformanceConsoleRytmMacroPolicyRowDict,
@@ -29,6 +32,63 @@ const LOCAL_REHEARSAL_STORAGE_KEY = 'rytmrandomizer.performanceConsole.localRehe
 const LOCAL_REHEARSAL_STORAGE_VERSION = 1;
 const LOCAL_REHEARSAL_PACKAGE_KIND = 'rytmrandomizer.cockpit.local-rehearsal-package';
 const LOCAL_REHEARSAL_PACKAGE_VERSION = 1;
+
+const LEGACY_OPERATOR_PACKAGE_FALLBACK: LiveGuiPerformanceConsoleLiveKitOperatorPackageDict = {
+  operator_package_version: 'legacy-missing',
+  operator_package_id: 'live-kit-operator-package-unavailable',
+  operator_package_status: 'unavailable',
+  title: 'Live Kit Operator Package',
+  summary: 'Operator package metadata is not present on this older console packet.',
+  source_audition_id: 'unavailable',
+  source_workbench_id: 'unavailable',
+  source_package_manifest_version: 'unavailable',
+  package_manifest: {
+    manifest_version: 'legacy-missing',
+    package_kind: 'legacy-missing',
+    package_id: 'live-kit-operator-package-unavailable',
+    source_audition_id: 'unavailable',
+    source_workbench_id: 'unavailable',
+    source_package_manifest_version: 'unavailable',
+    slot_count: 0,
+    queue_count: 0,
+    recovery_count: 0,
+    journal_preview_count: 0,
+    exports_files: false,
+    includes: [],
+  },
+  operator_steps: [],
+  slot_bindings: [],
+  recovery_requirements: [],
+  journal_commit_preview: {
+    name: 'Operator package unavailable',
+    seed: 'unavailable',
+    tags: [],
+    pads: [],
+    depth: 'none',
+    guardrail_mode: 'passive',
+    value_summary: 'No operator package metadata was supplied by this packet.',
+    notes: 'Load a newer live-gui-performance-console packet for package staging.',
+    replay_policy: 'unavailable',
+    commit_status: 'unavailable',
+    write_policy: 'no-write',
+  },
+  local_export_preview: {
+    export_kind: 'unavailable',
+    export_status: 'unavailable',
+    writes_files: false,
+    extra_fields: [],
+    source_audition_id: 'unavailable',
+    selected_slot_policy: 'unavailable',
+  },
+  disabled_controls: ['Send Operator Package'],
+  blocked_actions: ['operator package unavailable on this console packet'],
+  safety_lines: ['legacy packet: no operator package metadata present'],
+  replay_commands: [],
+};
+
+type LegacyPerformanceConsoleModelDict = LiveGuiPerformanceConsoleModelDict & {
+  readonly live_kit_operator_package?: LiveGuiPerformanceConsoleLiveKitOperatorPackageDict;
+};
 
 interface LocalJournalEntry {
   readonly id: string;
@@ -59,6 +119,7 @@ interface LocalRehearsalSnapshot {
   readonly selectedCrateKey: string | null;
   readonly selectedQueueKey: string | null;
   readonly selectedSnapshotId: string | null;
+  readonly selectedOperatorPackageSlotKey: string | null;
   readonly previewDepth: number | null;
   readonly lastDryRunSummary: string;
   readonly localJournalEntries: ReadonlyArray<LocalJournalEntry>;
@@ -92,12 +153,33 @@ interface LocalRehearsalPackageSafety {
   readonly checklist: ReadonlyArray<string>;
 }
 
+interface LocalRehearsalPackageAuditionSource {
+  readonly sourceAuditionId: string;
+  readonly sourceWorkbenchId: string;
+  readonly slotKey: string;
+  readonly slotLabel: string;
+  readonly styleCrate: string;
+  readonly journalSeed: string;
+  readonly recoveryCommand: string;
+}
+
+interface LocalRehearsalPackageOperatorPackage {
+  readonly operatorPackageId: string;
+  readonly packageExportKey: string;
+  readonly cockpitBinding: string;
+  readonly localAction: string;
+  readonly stageTarget: string;
+  readonly safetyStatus: string;
+}
+
 interface LocalRehearsalPackage {
   readonly kind: string;
   readonly version: number;
   readonly manifest: LocalRehearsalPackageManifest;
   readonly compatibility: LocalRehearsalPackageCompatibility;
   readonly safety: LocalRehearsalPackageSafety;
+  readonly auditionSource?: LocalRehearsalPackageAuditionSource;
+  readonly operatorPackage?: LocalRehearsalPackageOperatorPackage;
   readonly blockedActions: ReadonlyArray<string>;
   readonly recoveryNotes: ReadonlyArray<string>;
   readonly rehearsal: LocalRehearsalSnapshot;
@@ -442,6 +524,7 @@ function localRehearsalSnapshotFromUnknown(value: unknown): LocalRehearsalSnapsh
     selectedCrateKey: nullableStringField(value, 'selectedCrateKey'),
     selectedQueueKey: nullableStringField(value, 'selectedQueueKey'),
     selectedSnapshotId: nullableStringField(value, 'selectedSnapshotId'),
+    selectedOperatorPackageSlotKey: nullableStringField(value, 'selectedOperatorPackageSlotKey'),
     previewDepth: importedPreviewDepth === null ? null : clampPreviewDepth(importedPreviewDepth),
     lastDryRunSummary:
       stringField(value, 'lastDryRunSummary') ?? 'No local dry-run performed.',
@@ -458,6 +541,15 @@ function localRehearsalSnapshotFromUnknown(value: unknown): LocalRehearsalSnapsh
 function stringArrayFromUnknown(value: unknown): ReadonlyArray<string> {
   return localArrayFromUnknown(value, (candidate) =>
     typeof candidate === 'string' ? candidate : null,
+  );
+}
+
+function liveKitOperatorPackageForModel(
+  model: LiveGuiPerformanceConsoleModelDict,
+): LiveGuiPerformanceConsoleLiveKitOperatorPackageDict {
+  return (
+    (model as LegacyPerformanceConsoleModelDict).live_kit_operator_package ??
+    LEGACY_OPERATOR_PACKAGE_FALLBACK
   );
 }
 
@@ -528,6 +620,73 @@ function localRehearsalPackageSafetyFromUnknown(
   };
 }
 
+function localRehearsalPackageAuditionSourceFromUnknown(
+  value: unknown,
+): LocalRehearsalPackageAuditionSource | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const sourceAuditionId = stringField(value, 'sourceAuditionId');
+  const sourceWorkbenchId = stringField(value, 'sourceWorkbenchId');
+  const slotKey = stringField(value, 'slotKey');
+  const slotLabel = stringField(value, 'slotLabel');
+  const styleCrate = stringField(value, 'styleCrate');
+  const journalSeed = stringField(value, 'journalSeed');
+  const recoveryCommand = stringField(value, 'recoveryCommand');
+  if (
+    sourceAuditionId === null ||
+    sourceWorkbenchId === null ||
+    slotKey === null ||
+    slotLabel === null ||
+    styleCrate === null ||
+    journalSeed === null ||
+    recoveryCommand === null
+  ) {
+    return null;
+  }
+  return {
+    sourceAuditionId,
+    sourceWorkbenchId,
+    slotKey,
+    slotLabel,
+    styleCrate,
+    journalSeed,
+    recoveryCommand,
+  };
+}
+
+function localRehearsalPackageOperatorPackageFromUnknown(
+  value: unknown,
+): LocalRehearsalPackageOperatorPackage | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+  const operatorPackageId = stringField(value, 'operatorPackageId');
+  const packageExportKey = stringField(value, 'packageExportKey');
+  const cockpitBinding = stringField(value, 'cockpitBinding');
+  const localAction = stringField(value, 'localAction');
+  const stageTarget = stringField(value, 'stageTarget');
+  const safetyStatus = stringField(value, 'safetyStatus');
+  if (
+    operatorPackageId === null ||
+    packageExportKey === null ||
+    cockpitBinding === null ||
+    localAction === null ||
+    stageTarget === null ||
+    safetyStatus === null
+  ) {
+    return null;
+  }
+  return {
+    operatorPackageId,
+    packageExportKey,
+    cockpitBinding,
+    localAction,
+    stageTarget,
+    safetyStatus,
+  };
+}
+
 function localRehearsalPackageFromUnknown(value: unknown): LocalRehearsalPackage | null {
   if (
     !isRecord(value) ||
@@ -554,6 +713,9 @@ function localRehearsalPackageFromUnknown(value: unknown): LocalRehearsalPackage
     manifest,
     compatibility,
     safety,
+    auditionSource: localRehearsalPackageAuditionSourceFromUnknown(value.auditionSource) ?? undefined,
+    operatorPackage:
+      localRehearsalPackageOperatorPackageFromUnknown(value.operatorPackage) ?? undefined,
     blockedActions: stringArrayFromUnknown(value.blockedActions),
     recoveryNotes: stringArrayFromUnknown(value.recoveryNotes),
     rehearsal,
@@ -601,6 +763,10 @@ function packageCompatibilityForSnapshot(
     model.snapshot_history.entries.some(
       (entry) => entry.snapshot_id === snapshot.selectedSnapshotId,
     );
+  const operatorPackageSlotExists =
+    snapshot.selectedOperatorPackageSlotKey === null ||
+    (operatorPackageStepBySlot(model, snapshot.selectedOperatorPackageSlotKey) !== undefined &&
+      operatorPackageBindingBySlot(model, snapshot.selectedOperatorPackageSlotKey) !== undefined);
   const checks = [
     crateExists
       ? 'selected crate exists in current packet'
@@ -611,6 +777,11 @@ function packageCompatibilityForSnapshot(
     snapshotExists
       ? 'selected snapshot exists in current packet'
       : 'selected snapshot missing from current packet',
+    snapshot.selectedOperatorPackageSlotKey === null
+      ? 'operator package slot not selected'
+      : operatorPackageSlotExists
+        ? 'operator package slot exists in current packet'
+        : 'operator package slot missing from current packet',
   ];
   return {
     status: checks.some((check) => check.includes('missing')) ? 'needs review' : 'compatible',
@@ -634,6 +805,7 @@ function packageSafetyForModel(
       ...model.safety_checklist.safety_lines,
       ...model.live_kit_capture_workbench.safety_lines,
       ...model.live_kit_package_audition.safety_lines,
+      ...liveKitOperatorPackageForModel(model).safety_lines,
       ...model.safety_lines,
     ]),
   };
@@ -656,6 +828,7 @@ function packageBlockedActionsForModel(
     ...model.live_kit_capture_workbench.blocked_actions,
     ...model.live_kit_capture_workbench.package_manifest.blocked_actions,
     ...model.live_kit_package_audition.blocked_actions,
+    ...liveKitOperatorPackageForModel(model).blocked_actions,
     ...model.analog_four_review_surface.blocked_actions,
     ...model.analyzer_panel.blocked_actions,
     ...model.snapshot_history.blocked_actions,
@@ -678,8 +851,80 @@ function packageRecoveryNotesForModel(
     ...model.live_kit_capture_workbench.recovery_gates.map((gate) => gate.operator_sequence),
     ...model.live_kit_package_audition.audition_slots.map((slot) => slot.recovery_command),
     ...model.live_kit_package_audition.audition_queue.map((queueItem) => queueItem.recovery_command),
+    ...liveKitOperatorPackageForModel(model).recovery_requirements.map(
+      (requirement) => requirement.command,
+    ),
     ...localHandoffLines,
   ]);
+}
+
+function operatorPackageStepBySlot(
+  model: LiveGuiPerformanceConsoleModelDict,
+  slotKey: string | null,
+): LiveGuiPerformanceConsoleLiveKitOperatorPackageStepDict | undefined {
+  if (slotKey === null) {
+    return undefined;
+  }
+  return liveKitOperatorPackageForModel(model).operator_steps.find(
+    (step) => step.slot_key === slotKey,
+  );
+}
+
+function operatorPackageBindingBySlot(
+  model: LiveGuiPerformanceConsoleModelDict,
+  slotKey: string | null,
+): LiveGuiPerformanceConsoleLiveKitOperatorPackageSlotBindingDict | undefined {
+  if (slotKey === null) {
+    return undefined;
+  }
+  return liveKitOperatorPackageForModel(model).slot_bindings.find(
+    (binding) => binding.slot_key === slotKey,
+  );
+}
+
+function operatorPackageAuditionSource(
+  model: LiveGuiPerformanceConsoleModelDict,
+  slotKey: string | null,
+): LocalRehearsalPackageAuditionSource | undefined {
+  if (slotKey === null) {
+    return undefined;
+  }
+  const slot = model.live_kit_package_audition.audition_slots.find(
+    (candidate) => candidate.slot_key === slotKey,
+  );
+  const binding = operatorPackageBindingBySlot(model, slotKey);
+  if (slot === undefined || binding === undefined) {
+    return undefined;
+  }
+  const operatorPackage = liveKitOperatorPackageForModel(model);
+  return {
+    sourceAuditionId: operatorPackage.source_audition_id,
+    sourceWorkbenchId: operatorPackage.source_workbench_id,
+    slotKey: slot.slot_key,
+    slotLabel: slot.label,
+    styleCrate: slot.style_crate,
+    journalSeed: binding.journal_seed,
+    recoveryCommand: slot.recovery_command,
+  };
+}
+
+function operatorPackageExportEvidence(
+  model: LiveGuiPerformanceConsoleModelDict,
+  slotKey: string | null,
+): LocalRehearsalPackageOperatorPackage | undefined {
+  const step = operatorPackageStepBySlot(model, slotKey);
+  const binding = operatorPackageBindingBySlot(model, slotKey);
+  if (step === undefined || binding === undefined) {
+    return undefined;
+  }
+  return {
+    operatorPackageId: liveKitOperatorPackageForModel(model).operator_package_id,
+    packageExportKey: binding.package_export_key,
+    cockpitBinding: step.cockpit_binding,
+    localAction: step.local_action,
+    stageTarget: step.stage_target,
+    safetyStatus: step.safety_status,
+  };
 }
 
 function buildLocalRehearsalPackage({
@@ -694,6 +939,7 @@ function buildLocalRehearsalPackage({
   localJournalEntries,
   sortedDevices,
   localHandoffLines,
+  selectedOperatorPackageSlotKey,
 }: {
   readonly model: LiveGuiPerformanceConsoleModelDict;
   readonly packetSource: string;
@@ -706,6 +952,7 @@ function buildLocalRehearsalPackage({
   readonly localJournalEntries: ReadonlyArray<LocalJournalEntry>;
   readonly sortedDevices: ReadonlyArray<LiveGuiDeviceInventoryCardDict>;
   readonly localHandoffLines: ReadonlyArray<string>;
+  readonly selectedOperatorPackageSlotKey: string | null;
 }): LocalRehearsalPackage {
   return {
     kind: LOCAL_REHEARSAL_PACKAGE_KIND,
@@ -723,6 +970,8 @@ function buildLocalRehearsalPackage({
     },
     compatibility: packageCompatibilityForSnapshot(model, localRehearsalSnapshot),
     safety: packageSafetyForModel(model, sortedDevices),
+    auditionSource: operatorPackageAuditionSource(model, selectedOperatorPackageSlotKey),
+    operatorPackage: operatorPackageExportEvidence(model, selectedOperatorPackageSlotKey),
     blockedActions: packageBlockedActionsForModel(model),
     recoveryNotes: packageRecoveryNotesForModel(model, currentQueueMove, localHandoffLines),
     rehearsal: localRehearsalSnapshot,
@@ -796,6 +1045,17 @@ function localPackageReviewForCurrentPacket({
   const crateStatus = compatibilityStatusFor(localPackage.compatibility, 'selected crate');
   const queueStatus = compatibilityStatusFor(localPackage.compatibility, 'selected queued move');
   const snapshotStatus = compatibilityStatusFor(localPackage.compatibility, 'selected snapshot');
+  const operatorPackageSlotStatus = compatibilityStatusFor(
+    localPackage.compatibility,
+    'operator package slot',
+  );
+  const operatorPackageSlotKey = localPackage.rehearsal.selectedOperatorPackageSlotKey;
+  const currentOperatorPackageSlot =
+    operatorPackageSlotKey !== null &&
+    operatorPackageStepBySlot(model, operatorPackageSlotKey) !== undefined &&
+    operatorPackageBindingBySlot(model, operatorPackageSlotKey) !== undefined
+      ? operatorPackageSlotKey
+      : 'none';
   const currentBlockedActions = packageBlockedActionsForModel(model);
   const currentRecoveryNotes = packageRecoveryNotesForModel(
     model,
@@ -838,6 +1098,16 @@ function localPackageReviewForCurrentPacket({
       packageValue: `${localPackage.rehearsal.previewDepth ?? 0}%`,
       currentValue: `${currentDepth}%`,
       status: comparisonStatus(`${localPackage.rehearsal.previewDepth ?? 0}%`, `${currentDepth}%`),
+    },
+    {
+      label: 'Operator package slot',
+      packageValue: operatorPackageSlotKey ?? 'none',
+      currentValue: currentReferenceValue(
+        operatorPackageSlotStatus,
+        currentOperatorPackageSlot,
+        operatorPackageSlotKey ?? 'none',
+      ),
+      status: operatorPackageSlotStatus,
     },
     {
       label: 'Current step',
@@ -990,6 +1260,9 @@ export function PerformanceConsole({
   const [selectedSnapshotId, setSelectedSnapshotId] = useState<string | null>(
     initialLocalRehearsal?.selectedSnapshotId ?? null,
   );
+  const [selectedOperatorPackageSlotKey, setSelectedOperatorPackageSlotKey] = useState<
+    string | null
+  >(initialLocalRehearsal?.selectedOperatorPackageSlotKey ?? null);
   const [previewDepth, setPreviewDepth] = useState<number | null>(
     initialLocalRehearsal?.previewDepth ?? null,
   );
@@ -1027,6 +1300,7 @@ export function PerformanceConsole({
   const a4SetPlan = model.performance_flow.analog_four_set_plan;
   const a4ReviewSurface = model.analog_four_review_surface;
   const a4ReviewFocus = a4ReviewSurface.review_focus;
+  const liveKitOperatorPackage = liveKitOperatorPackageForModel(model);
   const macroPath = [a4SetPlan.current_macro, ...a4SetPlan.up_next_macros].join(' -> ');
   const sortedDevices = useMemo(
     () => orderedDevices(model.device_inventory.cards),
@@ -1097,6 +1371,7 @@ export function PerformanceConsole({
       selectedCrateKey,
       selectedQueueKey,
       selectedSnapshotId,
+      selectedOperatorPackageSlotKey,
       previewDepth,
       lastDryRunSummary,
       localJournalEntries,
@@ -1111,6 +1386,7 @@ export function PerformanceConsole({
       selectedCrateKey,
       selectedQueueKey,
       selectedSnapshotId,
+      selectedOperatorPackageSlotKey,
       previewDepth,
       lastDryRunSummary,
       localJournalEntries,
@@ -1189,6 +1465,7 @@ export function PerformanceConsole({
     setSelectedCrateKey(importedSnapshot.selectedCrateKey);
     setSelectedQueueKey(importedSnapshot.selectedQueueKey);
     setSelectedSnapshotId(importedSnapshot.selectedSnapshotId);
+    setSelectedOperatorPackageSlotKey(importedSnapshot.selectedOperatorPackageSlotKey);
     setPreviewDepth(importedSnapshot.previewDepth);
     setLastDryRunSummary(importedSnapshot.lastDryRunSummary);
     setLocalJournalEntries(importedSnapshot.localJournalEntries);
@@ -1231,6 +1508,7 @@ export function PerformanceConsole({
       localJournalEntries,
       sortedDevices,
       localHandoffLines,
+      selectedOperatorPackageSlotKey,
     });
     setLocalPackage(rehearsalPackage);
     setLocalPackagePayload(JSON.stringify(rehearsalPackage, null, 2));
@@ -1375,6 +1653,31 @@ export function PerformanceConsole({
     setLocalSetPlanEntries((entries) => [...entries, entry]);
     setLastSetPlanAction(`Staged ${entry.id}: ${localSetPlanEntrySummary(entry)}. Local only; no MIDI sent.`);
     appendLocalOperatorEvent(`Staged ${entry.id}`, localSetPlanEntrySummary(entry));
+  };
+
+  const stageOperatorPackageStep = (
+    step: LiveGuiPerformanceConsoleLiveKitOperatorPackageStepDict,
+  ): void => {
+    const binding = operatorPackageBindingBySlot(model, step.slot_key);
+    const nextIndex = nextLocalSetPlanIndex.current;
+    nextLocalSetPlanIndex.current = nextIndex + 1;
+    setSelectedOperatorPackageSlotKey(step.slot_key);
+    const entry: LocalSetPlanEntry = {
+      id: localSetPlanId(nextIndex),
+      crateName: 'Live Kit Operator Package',
+      moveName: step.label,
+      snapshotId: selectedSnapshotIdLabel,
+      depth: clampPreviewDepth(binding?.depth_percent ?? currentDepth),
+      status: 'Local only',
+    };
+    setLocalSetPlanEntries((entries) => [...entries, entry]);
+    setLastSetPlanAction(
+      `Staged operator package ${step.slot_key}: ${localSetPlanEntrySummary(entry)}. Local only; no MIDI sent.`,
+    );
+    appendLocalOperatorEvent(
+      `Staged operator package ${step.slot_key}`,
+      `${step.cockpit_binding} / ${step.local_action} / recovery ${step.recovery_command}.`,
+    );
   };
 
   const promoteNextLocalSetStep = (): void => {
@@ -1856,6 +2159,19 @@ export function PerformanceConsole({
                     <small key={item}>{item}</small>
                   ))}
                 </div>
+                {localPackage.auditionSource === undefined ||
+                localPackage.operatorPackage === undefined ? null : (
+                  <div className="performance-console-local-package-list">
+                    <strong>Operator package</strong>
+                    <small>{localPackage.operatorPackage.operatorPackageId}</small>
+                    <small>{localPackage.auditionSource.slotKey}</small>
+                    <small>{localPackage.auditionSource.slotLabel}</small>
+                    <small>{localPackage.auditionSource.styleCrate}</small>
+                    <small>{localPackage.operatorPackage.packageExportKey}</small>
+                    <small>{localPackage.operatorPackage.cockpitBinding}</small>
+                    <small>{localPackage.auditionSource.recoveryCommand}</small>
+                  </div>
+                )}
                 <div className="performance-console-local-package-list">
                   <strong>Blocked actions</strong>
                   {localPackage.blockedActions.map((action) => (
@@ -3051,6 +3367,160 @@ export function PerformanceConsole({
         </div>
         <div className="live-chip-row" aria-label="Live kit package audition safety lines">
           {model.live_kit_package_audition.safety_lines.map((line) => (
+            <span key={line} className="live-chip">
+              {line}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      <section
+        className="performance-console-surface performance-console-wide"
+        data-testid="performance-console-live-kit-operator-package"
+        aria-labelledby="console-live-kit-operator-package-title"
+      >
+        <header className="performance-console-section-header">
+          <h2 id="console-live-kit-operator-package-title">
+            {liveKitOperatorPackage.title}
+          </h2>
+          <span>{liveKitOperatorPackage.operator_package_status}</span>
+        </header>
+        <p className="panel-meta">{liveKitOperatorPackage.summary}</p>
+        <small>
+          {liveKitOperatorPackage.operator_package_id} /{' '}
+          {liveKitOperatorPackage.source_audition_id} /{' '}
+          {liveKitOperatorPackage.source_workbench_id}
+        </small>
+
+        <h3 className="performance-console-subheading">Operator Manifest</h3>
+        <div className="performance-console-list">
+          <article>
+            <strong>{liveKitOperatorPackage.package_manifest.package_kind}</strong>
+            <span>
+              slots {liveKitOperatorPackage.package_manifest.slot_count} /
+              queue {liveKitOperatorPackage.package_manifest.queue_count} /
+              recovery {liveKitOperatorPackage.package_manifest.recovery_count} /
+              exports {String(liveKitOperatorPackage.package_manifest.exports_files)}
+            </span>
+            <small>
+              includes {liveKitOperatorPackage.package_manifest.includes.join(', ')}
+            </small>
+          </article>
+        </div>
+
+        <h3 className="performance-console-subheading">Operator Steps</h3>
+        <div className="performance-console-list">
+          {liveKitOperatorPackage.operator_steps.map((step) => (
+            <article key={step.step_key}>
+              <strong>{step.label}</strong>
+              <span>
+                {step.slot_key} / {step.local_action} / {step.operator_command}
+              </span>
+              <small>
+                {step.queue_status} / {step.stage_target} / {step.cockpit_binding}
+              </small>
+              <small>{step.recovery_command}</small>
+              <small>{step.safety_status}</small>
+              <button
+                type="button"
+                className="live-readiness-action performance-console-local-control"
+                title="Stages this operator package step in the browser-local set plan only."
+                onClick={() => {
+                  stageOperatorPackageStep(step);
+                }}
+              >
+                Stage {step.label} operator package
+              </button>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Slot Bindings</h3>
+        <div className="performance-console-list">
+          {liveKitOperatorPackage.slot_bindings.map((binding) => (
+            <article key={binding.slot_key}>
+              <strong>{binding.package_export_key}</strong>
+              <span>
+                {binding.slot_key} / {binding.style_crate} / {binding.depth_percent}%
+              </span>
+              <small>{binding.queue_key || 'reference'}</small>
+              <small>{binding.journal_seed}</small>
+              <small>{binding.value_source}</small>
+              <small>{binding.action_preview}</small>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Recovery Requirements</h3>
+        <div className="performance-console-list">
+          {liveKitOperatorPackage.recovery_requirements.map((requirement) => (
+            <article key={requirement.requirement_key}>
+              <strong>{requirement.label}</strong>
+              <span>
+                {requirement.requirement_key} / {requirement.command}
+              </span>
+              <small>
+                {requirement.required_before_send ? 'required before send' : 'optional'}
+              </small>
+              <small>{requirement.evidence}</small>
+            </article>
+          ))}
+        </div>
+
+        <h3 className="performance-console-subheading">Journal And Export Preview</h3>
+        <div className="performance-console-list">
+          <article>
+            <strong>{liveKitOperatorPackage.journal_commit_preview.name}</strong>
+            <span>
+              {liveKitOperatorPackage.journal_commit_preview.commit_status} /{' '}
+              {liveKitOperatorPackage.journal_commit_preview.write_policy}
+            </span>
+            <small>{liveKitOperatorPackage.journal_commit_preview.seed}</small>
+            <small>
+              tags {liveKitOperatorPackage.journal_commit_preview.tags.join(', ')}
+            </small>
+          </article>
+          <article>
+            <strong>{liveKitOperatorPackage.local_export_preview.export_kind}</strong>
+            <span>
+              {liveKitOperatorPackage.local_export_preview.export_status} / writes{' '}
+              {String(liveKitOperatorPackage.local_export_preview.writes_files)}
+            </span>
+            <small>
+              fields {liveKitOperatorPackage.local_export_preview.extra_fields.join(', ')}
+            </small>
+          </article>
+        </div>
+
+        <div className="performance-console-macro-actions">
+          {liveKitOperatorPackage.disabled_controls.map((control) => (
+            <button
+              key={control}
+              type="button"
+              className="live-readiness-action live-readiness-action-locked"
+              disabled
+              title="Operator package hardware actions remain blocked in this passive console."
+            >
+              {control}
+            </button>
+          ))}
+        </div>
+        <div className="live-chip-row" aria-label="Live kit operator package replay commands">
+          {liveKitOperatorPackage.replay_commands.map((command) => (
+            <span key={command} className="live-chip">
+              {command}
+            </span>
+          ))}
+        </div>
+        <div className="live-chip-row" aria-label="Live kit operator package blocked actions">
+          {liveKitOperatorPackage.blocked_actions.map((action) => (
+            <span key={action} className="live-chip live-chip-blocked">
+              {action}
+            </span>
+          ))}
+        </div>
+        <div className="live-chip-row" aria-label="Live kit operator package safety lines">
+          {liveKitOperatorPackage.safety_lines.map((line) => (
             <span key={line} className="live-chip">
               {line}
             </span>

@@ -101,6 +101,11 @@ sidecar command, file write, MIDI port, hardware arm path, or MIDI send.
 The same persistence surface can wrap that local rehearsal snapshot in a
 portable rehearsal package with a manifest, current packet compatibility
 checks, device/safety evidence, blocked-action evidence, and recovery notes.
+The passive live-kit audition lane now feeds a browser-local Live Kit Operator
+Package panel: captured-base, hard-groove, industrial, dub, and recovery
+audition slots can be staged into the local set-plan, reviewed with explicit
+recovery requirements, and exported with `auditionSource` / `operatorPackage`
+metadata so the package records which captured-kit move inspired it.
 Package import still accepts the older raw local snapshot JSON shape for
 backward compatibility, recalculates compatibility against the current passive
 packet, and now renders a browser-local package review workbench that compares
@@ -642,7 +647,7 @@ python -m rytm_randomizer.cli controller-brain-mapping-report --json   # passive
 python -m rytm_randomizer.cli controller-brain-rehearsal-report --json   # passive controller-brain template/rehearsal export packet
 python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report --json   # passive next-studio Rytm macro rehearsal checklist
 python -m rytm_randomizer.cli live-gui-performance-flow-model-report --json   # cockpit-ready Rytm/A4 performance flow model
-python -m rytm_randomizer.cli live-gui-performance-console-report --json   # full passive Cockpit performance console packet with lane policy, macro action, rehearsal board, live-kit capture workbench/package audition, and controller-brain panel
+python -m rytm_randomizer.cli live-gui-performance-console-report --json   # full passive Cockpit performance console packet with lane policy, macro action, rehearsal board, live-kit capture workbench/package audition/operator package, and controller-brain panel
 python -m rytm_randomizer.cli oxi-live-set-strategy-report --json   # passive OXI set chapters, operator cues, rehearsal/replay commands, pad policy, and A4 review-only actions
 python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove --seed 23 --intensity 6 --events --limit 0
 python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4
