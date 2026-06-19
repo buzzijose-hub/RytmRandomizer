@@ -434,6 +434,79 @@ def test_live_kit_package_audition_lines_ignore_malformed_sequences() -> None:
     assert not any(line.startswith("- package check:") for line in lines)
 
 
+def test_live_kit_operator_package_tolerates_incomplete_sources() -> None:
+    from rytm_randomizer.reports.performance_console.live_kit_operator_package import (
+        build_live_kit_operator_package,
+    )
+
+    operator_package = build_live_kit_operator_package({"workbench_id": 123}, {"audition_id": 456})
+
+    assert operator_package["source_workbench_id"] == ""
+    assert operator_package["source_audition_id"] == ""
+    assert operator_package["source_package_manifest_version"] == ""
+    assert operator_package["package_manifest"]["slot_count"] == 0
+    assert operator_package["package_manifest"]["queue_count"] == 0
+    assert operator_package["operator_steps"] == []
+    assert operator_package["slot_bindings"] == []
+    assert operator_package["recovery_requirements"] == []
+    assert operator_package["local_export_preview"]["writes_files"] is False
+
+
+def test_live_kit_operator_package_contract_uses_typed_payload_and_public_helpers() -> None:
+    from rytm_randomizer.reports.live_gui_performance_console_model import (
+        LiveGuiPerformanceConsoleModel,
+        LiveGuiPerformanceConsoleModelDict,
+    )
+    from rytm_randomizer.reports.performance_console.live_kit_operator_package import (
+        LiveKitOperatorPackagePayload,
+        build_live_kit_operator_package,
+    )
+
+    assert get_type_hints(build_live_kit_operator_package)["return"] is (
+        LiveKitOperatorPackagePayload
+    )
+    assert get_type_hints(LiveGuiPerformanceConsoleModel)["live_kit_operator_package"] is (
+        LiveKitOperatorPackagePayload
+    )
+    assert get_type_hints(LiveGuiPerformanceConsoleModelDict)["live_kit_operator_package"] is (
+        LiveKitOperatorPackagePayload
+    )
+
+
+def test_live_kit_operator_package_lines_ignore_malformed_sequences() -> None:
+    from rytm_randomizer.reports.performance_console.live_kit_operator_package import (
+        build_live_kit_operator_package,
+        live_kit_operator_package_lines,
+    )
+    from rytm_randomizer.reports.performance_console.live_kit_package_audition import (
+        build_live_kit_package_audition,
+    )
+
+    audition = build_live_kit_package_audition(
+        {
+            "workbench_id": "live-kit-capture-workbench",
+            "launch_command": "python -m rytm_randomizer.app --arm --rytm-live-snapshot-shell",
+            "package_manifest": {
+                "manifest_version": "live-kit-capture-workbench-package-v1",
+            },
+        }
+    )
+    operator_package = build_live_kit_operator_package(
+        {"workbench_id": "live-kit-capture-workbench"},
+        audition,
+    )
+    operator_package["operator_steps"] = "ignore malformed steps"
+    operator_package["slot_bindings"] = "ignore malformed bindings"
+    operator_package["recovery_requirements"] = "ignore malformed requirements"
+
+    lines = live_kit_operator_package_lines(operator_package)
+
+    assert "- operator package status: passive-ready" in lines
+    assert not any(line.startswith("- operator step:") for line in lines)
+    assert not any(line.startswith("- slot binding:") for line in lines)
+    assert not any(line.startswith("- recovery requirement:") for line in lines)
+
+
 def test_performance_console_model_rejects_blank_session_label() -> None:
     from rytm_randomizer.reports.live_gui_performance_console_model import (
         build_live_gui_performance_console_model,
@@ -569,6 +642,37 @@ def test_performance_console_payload_is_json_safe_and_passive() -> None:
     assert audition["journal_preview"]["seed"] == "live-kit-audition-0001"
     assert "Send Variation" in audition["disabled_controls"]
     assert "send audition variation from Cockpit console" in audition["blocked_actions"]
+    operator_package = model["live_kit_operator_package"]
+    assert operator_package["operator_package_status"] == "passive-ready"
+    assert operator_package["source_audition_id"] == "live-kit-package-audition"
+    assert operator_package["source_workbench_id"] == "live-kit-capture-workbench"
+    assert operator_package["package_manifest"]["package_kind"] == (
+        "rytmrandomizer.live-kit.operator-package"
+    )
+    assert operator_package["package_manifest"]["slot_count"] == 5
+    assert operator_package["package_manifest"]["queue_count"] == 4
+    assert operator_package["package_manifest"]["exports_files"] is False
+    assert operator_package["operator_steps"][1]["slot_key"] == "hard-groove-lift"
+    assert operator_package["operator_steps"][1]["local_action"] == "stage-local-set-plan"
+    assert operator_package["operator_steps"][1]["operator_command"] == "go"
+    assert operator_package["operator_steps"][1]["cockpit_binding"] == (
+        "Stage Local Operator Package"
+    )
+    assert operator_package["slot_bindings"][1]["slot_key"] == "hard-groove-lift"
+    assert operator_package["slot_bindings"][1]["journal_seed"] == "live-kit-hard-groove-0001"
+    assert operator_package["slot_bindings"][1]["package_export_key"] == (
+        "operator-package-hard-groove-lift"
+    )
+    assert operator_package["recovery_requirements"][0]["required_before_send"] is True
+    assert operator_package["recovery_requirements"][0]["command"] == "Z then send"
+    assert operator_package["journal_commit_preview"]["commit_status"] == "preview-only"
+    assert operator_package["local_export_preview"]["export_kind"] == (
+        "rytmrandomizer.cockpit.local-rehearsal-package"
+    )
+    assert operator_package["local_export_preview"]["export_status"] == "browser-local-only"
+    assert "Stage Operator Package" in operator_package["disabled_controls"]
+    assert "send operator package from Cockpit console" in operator_package["blocked_actions"]
+    assert "no MIDI sending" in operator_package["safety_lines"]
     assert model["analog_four_review_surface"]["review_focus"]["macro_name"] == "hard-groove"
     assert model["analog_four_review_surface"]["readiness_events"][0]["status"] == "cc-ready"
     assert model["performance_flow"]["analog_four_set_plan"]["step_count"] == 5
@@ -639,6 +743,13 @@ def test_performance_console_report_is_operator_readable() -> None:
     assert "- package check: recovery-visible-before-fire / review-only" in lines
     assert "- journal preview: Captured Kit Audition 0001 / live-kit-audition-0001" in lines
     assert "- audition disabled control: Send Variation" in lines
+    assert "Live kit operator package:" in lines
+    assert "- operator package status: passive-ready" in lines
+    assert "- operator step: hard-groove-lift / stage-local-set-plan / go" in lines
+    assert "- slot binding: hard-groove-lift / operator-package-hard-groove-lift" in lines
+    assert "- recovery requirement: z-then-send / Z then send" in lines
+    assert "- local export preview: browser-local-only / writes=False" in lines
+    assert "- operator package disabled control: Stage Operator Package" in lines
     assert "A4 review surface:" in lines
     assert "- set: warehouse-arc" in lines
     assert "- review focus: hard-groove / review-ready" in lines
@@ -681,6 +792,7 @@ def test_performance_console_cli_text_and_json_modes(capsys: pytest.CaptureFixtu
     assert model["live_kit_capture_panel"]["panel_status"] == "passive-ready"
     assert model["live_kit_capture_workbench"]["workbench_status"] == "passive-ready"
     assert model["live_kit_package_audition"]["audition_status"] == "passive-ready"
+    assert model["live_kit_operator_package"]["operator_package_status"] == "passive-ready"
     assert model["analog_four_review_surface"]["surface_status"] == "review-only"
     assert model["performance_flow"]["analog_four_set_plan"]["set_name"] == "warehouse-arc"
 

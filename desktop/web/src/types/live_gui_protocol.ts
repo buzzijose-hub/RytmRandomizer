@@ -896,6 +896,98 @@ export interface LiveGuiPerformanceConsoleLiveKitPackageAuditionDict {
   replay_commands: ReadonlyArray<string>;
 }
 
+export interface LiveGuiPerformanceConsoleLiveKitOperatorPackageManifestDict {
+  manifest_version: string;
+  package_kind: string;
+  package_id: string;
+  source_audition_id: string;
+  source_workbench_id: string;
+  source_package_manifest_version: string;
+  slot_count: number;
+  queue_count: number;
+  recovery_count: number;
+  journal_preview_count: number;
+  exports_files: boolean;
+  includes: ReadonlyArray<string>;
+}
+
+export interface LiveGuiPerformanceConsoleLiveKitOperatorPackageStepDict {
+  step_key: string;
+  label: string;
+  slot_key: string;
+  queue_status: string;
+  local_action: string;
+  operator_command: string;
+  cockpit_binding: string;
+  stage_target: string;
+  recovery_command: string;
+  safety_status: string;
+}
+
+export interface LiveGuiPerformanceConsoleLiveKitOperatorPackageSlotBindingDict {
+  slot_key: string;
+  style_crate: string;
+  crate_key: string;
+  queue_key: string;
+  depth_percent: number;
+  journal_seed: string;
+  package_export_key: string;
+  value_source: string;
+  action_preview: string;
+}
+
+export interface LiveGuiPerformanceConsoleLiveKitOperatorPackageRecoveryRequirementDict {
+  requirement_key: string;
+  label: string;
+  command: string;
+  required_before_send: boolean;
+  evidence: string;
+}
+
+export interface LiveGuiPerformanceConsoleLiveKitOperatorPackageJournalCommitPreviewDict {
+  name: string;
+  seed: string;
+  tags: ReadonlyArray<string>;
+  pads: ReadonlyArray<number>;
+  depth: string;
+  guardrail_mode: string;
+  value_summary: string;
+  notes: string;
+  replay_policy: string;
+  commit_status: string;
+  write_policy: string;
+}
+
+export interface LiveGuiPerformanceConsoleLiveKitOperatorPackageLocalExportPreviewDict {
+  export_kind: string;
+  export_status: string;
+  writes_files: boolean;
+  extra_fields: ReadonlyArray<string>;
+  source_audition_id: string;
+  selected_slot_policy: string;
+}
+
+export interface LiveGuiPerformanceConsoleLiveKitOperatorPackageDict {
+  operator_package_version: string;
+  operator_package_id: string;
+  operator_package_status: string;
+  title: string;
+  summary: string;
+  source_audition_id: string;
+  source_workbench_id: string;
+  source_package_manifest_version: string;
+  package_manifest: LiveGuiPerformanceConsoleLiveKitOperatorPackageManifestDict;
+  operator_steps: ReadonlyArray<LiveGuiPerformanceConsoleLiveKitOperatorPackageStepDict>;
+  slot_bindings: ReadonlyArray<LiveGuiPerformanceConsoleLiveKitOperatorPackageSlotBindingDict>;
+  recovery_requirements: ReadonlyArray<LiveGuiPerformanceConsoleLiveKitOperatorPackageRecoveryRequirementDict>;
+  journal_commit_preview: LiveGuiPerformanceConsoleLiveKitOperatorPackageJournalCommitPreviewDict;
+  local_export_preview: LiveGuiPerformanceConsoleLiveKitOperatorPackageLocalExportPreviewDict;
+  disabled_controls: ReadonlyArray<string>;
+  blocked_actions: ReadonlyArray<string>;
+  safety_lines: ReadonlyArray<string>;
+  replay_commands: ReadonlyArray<string>;
+}
+
 export interface LiveGuiPerformanceConsoleAnalogFourReviewStepDict {
   order: number;
   macro_name: string;
@@ -1000,6 +1092,7 @@ export interface LiveGuiPerformanceConsoleModelDict {
   live_kit_capture_panel: LiveGuiPerformanceConsoleLiveKitCapturePanelDict;
   live_kit_capture_workbench: LiveGuiPerformanceConsoleLiveKitCaptureWorkbenchDict;
   live_kit_package_audition: LiveGuiPerformanceConsoleLiveKitPackageAuditionDict;
+  live_kit_operator_package: LiveGuiPerformanceConsoleLiveKitOperatorPackageDict;
   analog_four_review_surface: LiveGuiPerformanceConsoleAnalogFourReviewSurfaceDict;
   style_queue: StyleCrateRehearsalDeckDict;
   analyzer_panel: LiveGuiAnalyzerPanelModelDict;

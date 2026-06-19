@@ -264,6 +264,70 @@ function performanceConsoleModelWithOptionalPackageCheck(): LiveGuiPerformanceCo
   };
 }
 
+function performanceConsoleModelWithoutOperatorPackage(): LiveGuiPerformanceConsoleModelDict {
+  const legacyModel: Partial<LiveGuiPerformanceConsoleModelDict> = { ...performanceConsoleModel };
+  delete legacyModel.live_kit_operator_package;
+  return legacyModel as LiveGuiPerformanceConsoleModelDict;
+}
+
+function performanceConsoleModelWithMissingOperatorPackageAuditionSlot(): LiveGuiPerformanceConsoleModelDict {
+  const operatorStep = performanceConsoleModel.live_kit_operator_package.operator_steps[0]!;
+  const slotBinding = performanceConsoleModel.live_kit_operator_package.slot_bindings[0]!;
+  return {
+    ...performanceConsoleModelWithSelectableHistory(),
+    live_kit_operator_package: {
+      ...performanceConsoleModel.live_kit_operator_package,
+      operator_steps: [
+        {
+          ...operatorStep,
+          step_key: 'stage-missing-slot',
+          slot_key: 'missing-audition-slot',
+          label: 'Missing Slot Operator',
+          stage_target: 'missing-audition-slot',
+        },
+      ],
+      slot_bindings: [
+        {
+          ...slotBinding,
+          slot_key: 'missing-audition-slot',
+          package_export_key: 'operator-package-missing-audition-slot',
+        },
+      ],
+    },
+  };
+}
+
+function performanceConsoleModelWithUnboundOperatorPackageStep(): LiveGuiPerformanceConsoleModelDict {
+  const operatorStep = performanceConsoleModel.live_kit_operator_package.operator_steps[0]!;
+  const recoveryRequirement =
+    performanceConsoleModel.live_kit_operator_package.recovery_requirements[0]!;
+  return {
+    ...performanceConsoleModelWithSelectableHistory(),
+    live_kit_operator_package: {
+      ...performanceConsoleModel.live_kit_operator_package,
+      operator_steps: [
+        {
+          ...operatorStep,
+          step_key: 'stage-unbound-operator-slot',
+          slot_key: 'unbound-operator-slot',
+          label: 'Unbound Operator',
+          stage_target: 'local-set-plan',
+        },
+      ],
+      slot_bindings: [],
+      recovery_requirements: [
+        {
+          ...recoveryRequirement,
+          requirement_key: 'optional-recovery-note',
+          label: 'Optional Recovery',
+          required_before_send: false,
+          evidence: 'Optional operator note only.',
+        },
+      ],
+    },
+  };
+}
+
 describe('PerformanceConsole', () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -524,6 +588,23 @@ describe('PerformanceConsole', () => {
       within(liveKitPackageAudition).getByRole('button', { name: /send variation/i }),
     ).toBeDisabled();
 
+    const liveKitOperatorPackage = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    expect(liveKitOperatorPackage).toHaveTextContent('Live Kit Operator Package');
+    expect(liveKitOperatorPackage).toHaveTextContent('passive-ready');
+    expect(liveKitOperatorPackage).toHaveTextContent('live-kit-operator-package');
+    expect(liveKitOperatorPackage).toHaveTextContent('hard-groove-lift');
+    expect(liveKitOperatorPackage).toHaveTextContent('stage-local-set-plan');
+    expect(liveKitOperatorPackage).toHaveTextContent('operator-package-hard-groove-lift');
+    expect(liveKitOperatorPackage).toHaveTextContent('z-then-send');
+    expect(liveKitOperatorPackage).toHaveTextContent('browser-local-only');
+    expect(liveKitOperatorPackage).toHaveTextContent('Captured Kit Audition 0001');
+    expect(liveKitOperatorPackage).toHaveTextContent('send operator package from Cockpit console');
+    expect(within(liveKitOperatorPackage).getByRole('button', {
+      name: /send operator package/i,
+    })).toBeDisabled();
+
     const styleQueue = screen.getByTestId('performance-console-style-queue');
     expect(styleQueue).toHaveTextContent('Style Crates');
     expect(within(styleQueue).getAllByTestId(/^style-crate-/)).toHaveLength(9);
@@ -598,6 +679,126 @@ describe('PerformanceConsole', () => {
     );
     expect(liveKitPackageAudition).toHaveTextContent('journal-preview-only');
     expect(liveKitPackageAudition).toHaveTextContent('optional');
+  });
+
+  it('stages live-kit operator package slots locally before package export', () => {
+    window.localStorage.clear();
+    render(<PerformanceConsole model={performanceConsoleModelWithSelectableHistory()} />);
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    fireEvent.click(
+      within(operatorPackagePanel).getByRole('button', {
+        name: /stage hard groove lift operator package/i,
+      }),
+    );
+
+    expect(screen.getByTestId('performance-console-local-set-plan')).toHaveTextContent(
+      'Hard Groove Lift',
+    );
+    expect(screen.getByTestId('performance-console-local-set-plan')).toHaveTextContent(
+      'Live Kit Operator Package',
+    );
+    expect(screen.getByTestId('performance-console-local-set-plan')).toHaveTextContent('70%');
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Staged operator package hard-groove-lift',
+    );
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Z then send',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /export local rehearsal package/i }));
+
+    const packagePanel = screen.getByTestId('performance-console-local-package');
+    expect(packagePanel).toHaveTextContent('Operator package');
+    expect(packagePanel).toHaveTextContent('live-kit-operator-package');
+    expect(packagePanel).toHaveTextContent('hard-groove-lift');
+    expect(packagePanel).toHaveTextContent('Stage Local Operator Package');
+
+    const packagePayload = screen.getByTestId('performance-console-local-package-payload');
+    expect(packagePayload).toHaveTextContent('"auditionSource"');
+    expect(packagePayload).toHaveTextContent('"sourceAuditionId": "live-kit-package-audition"');
+    expect(packagePayload).toHaveTextContent('"slotKey": "hard-groove-lift"');
+    expect(packagePayload).toHaveTextContent('"operatorPackage"');
+    expect(packagePayload).toHaveTextContent('"operatorPackageId": "live-kit-operator-package"');
+    expect(packagePayload).toHaveTextContent('"packageExportKey": "operator-package-hard-groove-lift"');
+    expect(packagePayload).toHaveTextContent('"recoveryCommand": "Z then send"');
+    expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
+  });
+
+  it('renders legacy console packets without operator package metadata', () => {
+    render(<PerformanceConsole model={performanceConsoleModelWithoutOperatorPackage()} />);
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    expect(operatorPackagePanel).toHaveTextContent('Live Kit Operator Package');
+    expect(operatorPackagePanel).toHaveTextContent('unavailable');
+    expect(operatorPackagePanel).toHaveTextContent(
+      'Operator package metadata is not present on this older console packet.',
+    );
+    expect(operatorPackagePanel).toHaveTextContent(
+      'operator package unavailable on this console packet',
+    );
+    expect(
+      within(operatorPackagePanel).getByRole('button', { name: /send operator package/i }),
+    ).toBeDisabled();
+    expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
+  });
+
+  it('keeps operator package export local when audition slot evidence is missing', () => {
+    render(<PerformanceConsole model={performanceConsoleModelWithMissingOperatorPackageAuditionSlot()} />);
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    fireEvent.click(
+      within(operatorPackagePanel).getByRole('button', {
+        name: /stage missing slot operator operator package/i,
+      }),
+    );
+    fireEvent.click(screen.getByRole('button', { name: /export local rehearsal package/i }));
+
+    const packagePanel = screen.getByTestId('performance-console-local-package');
+    expect(packagePanel).toHaveTextContent('Operator package');
+    expect(packagePanel).toHaveTextContent('missing-audition-slot');
+
+    const packagePayload = screen.getByTestId('performance-console-local-package-payload');
+    expect(packagePayload).toHaveTextContent('"operatorPackage"');
+    expect(packagePayload).toHaveTextContent(
+      '"packageExportKey": "operator-package-missing-audition-slot"',
+    );
+    expect(packagePayload).not.toHaveTextContent('"auditionSource"');
+    expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
+  });
+
+  it('stages unbound operator package steps with local depth fallback and optional recovery', () => {
+    render(<PerformanceConsole model={performanceConsoleModelWithUnboundOperatorPackageStep()} />);
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    expect(operatorPackagePanel).toHaveTextContent('Optional Recovery');
+    expect(operatorPackagePanel).toHaveTextContent('optional');
+
+    fireEvent.click(
+      within(operatorPackagePanel).getByRole('button', {
+        name: /stage unbound operator operator package/i,
+      }),
+    );
+
+    expect(screen.getByTestId('performance-console-local-set-plan')).toHaveTextContent(
+      'Unbound Operator',
+    );
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Staged operator package unbound-operator-slot',
+    );
+    expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
   });
 
   it('omits dry-run-only labels when a macro or queued move is not dry-run-only', () => {
@@ -1169,6 +1370,7 @@ describe('PerformanceConsole', () => {
       lastSetPlanAction: 'Imported package snapshot. Local only; no MIDI sent.',
       nextLocalSetPlanIndex: 5,
       localAutosaveEnabled: true,
+      selectedOperatorPackageSlotKey: 'hard-groove-lift',
     };
     const packagePayload = {
       kind: 'rytmrandomizer.cockpit.local-rehearsal-package',
@@ -1198,6 +1400,23 @@ describe('PerformanceConsole', () => {
       },
       blockedActions: ['send MIDI from snapshot history'],
       recoveryNotes: ['use Z + send from the armed snapshot shell'],
+      auditionSource: {
+        sourceAuditionId: 'live-kit-package-audition',
+        sourceWorkbenchId: 'live-kit-capture-workbench',
+        slotKey: 'hard-groove-lift',
+        slotLabel: 'Hard Groove Lift',
+        styleCrate: 'Hard Groove',
+        journalSeed: 'seed-hard-groove-lift',
+        recoveryCommand: 'Z then send',
+      },
+      operatorPackage: {
+        operatorPackageId: 'live-kit-operator-package',
+        packageExportKey: 'operator-package-hard-groove-lift',
+        cockpitBinding: 'Stage Local Operator Package',
+        localAction: 'Stage Local Operator Package',
+        stageTarget: 'local-set-plan',
+        safetyStatus: 'passive-ready',
+      },
       rehearsal: rehearsalSnapshot,
     };
 
@@ -1226,6 +1445,15 @@ describe('PerformanceConsole', () => {
     );
     expect(screen.getByTestId('performance-console-local-package')).toHaveTextContent(
       'compatible',
+    );
+    expect(screen.getByTestId('performance-console-local-package')).toHaveTextContent(
+      'live-kit-operator-package',
+    );
+    expect(screen.getByTestId('performance-console-local-package')).toHaveTextContent(
+      'hard-groove-lift',
+    );
+    expect(screen.getByTestId('performance-console-local-package')).toHaveTextContent(
+      'Stage Local Operator Package',
     );
     expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
       'Imported local rehearsal package',
@@ -1285,11 +1513,15 @@ describe('PerformanceConsole', () => {
       },
       blockedActions: ['external blocked action', null],
       recoveryNotes: ['external recovery note', 7],
+      operatorPackage: {
+        operatorPackageId: 'partial-operator-package',
+      },
       rehearsal: {
         version: 1,
         selectedCrateKey: 'missing-crate',
         selectedQueueKey: 'missing-queue',
         selectedSnapshotId: 'missing-snapshot',
+        selectedOperatorPackageSlotKey: 'missing-operator-slot',
         previewDepth: 44,
         lastDryRunSummary: 'Imported missing-reference package.',
         localJournalEntries: [],
@@ -1312,6 +1544,7 @@ describe('PerformanceConsole', () => {
     expect(packagePanel).toHaveTextContent('selected crate missing from current packet');
     expect(packagePanel).toHaveTextContent('selected queued move missing from current packet');
     expect(packagePanel).toHaveTextContent('selected snapshot missing from current packet');
+    expect(packagePanel).toHaveTextContent('operator package slot missing from current packet');
     expect(packagePanel).toHaveTextContent('External Device');
     expect(packagePanel).toHaveTextContent('external blocked action');
     expect(packagePanel).toHaveTextContent('external recovery note');
@@ -1332,6 +1565,9 @@ describe('PerformanceConsole', () => {
     expect(review).toHaveTextContent('Snapshot');
     expect(review).toHaveTextContent('package external-snapshot');
     expect(review).toHaveTextContent('current missing-snapshot');
+    expect(review).toHaveTextContent('Operator package slot');
+    expect(review).toHaveTextContent('package missing-operator-slot');
+    expect(review).toHaveTextContent('current missing-operator-slot');
     expect(review).toHaveTextContent('Blocked actions');
     expect(review).toHaveTextContent('package 1');
     expect(review).toHaveTextContent('Recovery notes');
@@ -1346,6 +1582,7 @@ describe('PerformanceConsole', () => {
             selectedCrateKey: 'missing-crate',
             selectedQueueKey: 'queue-groove-pressure',
             selectedSnapshotId: null,
+            selectedOperatorPackageSlotKey: 'missing-operator-slot',
           },
         }),
       },
@@ -1436,6 +1673,10 @@ describe('PerformanceConsole', () => {
         ...validPackageShell,
         manifest: { ...validPackageShell.manifest, sessionLabel: null },
       },
+      {
+        ...validPackageShell,
+        manifest: { ...validPackageShell.manifest, selectedMoveName: null },
+      },
       { ...validPackageShell, compatibility: null },
       { ...validPackageShell, compatibility: { checks: [] } },
       { ...validPackageShell, safety: null },
@@ -1450,6 +1691,22 @@ describe('PerformanceConsole', () => {
         'Import failed: unsupported local rehearsal package',
       );
     }
+
+    const packageWithMalformedOptionalMetadata = {
+      ...validPackageShell,
+      auditionSource: {
+        sourceAuditionId: 'live-kit-package-audition',
+      },
+      operatorPackage: 'not an operator package',
+    };
+    fireEvent.change(screen.getByTestId('performance-console-local-import-input'), {
+      target: { value: JSON.stringify(packageWithMalformedOptionalMetadata) },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /import local rehearsal package/i }));
+
+    expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
+      'Imported local rehearsal package. Local only; no MIDI sent.',
+    );
 
     const sparsePayload = {
       version: 1,

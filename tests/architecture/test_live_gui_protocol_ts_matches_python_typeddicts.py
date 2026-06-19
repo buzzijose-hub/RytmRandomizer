@@ -18,6 +18,13 @@ LIVE_GUI_PROTOCOL_TS: Final[Path] = (
 LIVE_READINESS_PANEL_TSX: Final[Path] = (
     PROJECT_ROOT / "desktop" / "web" / "src" / "cockpit" / "LiveReadinessPanel.tsx"
 )
+LIVE_KIT_OPERATOR_PACKAGE_MODULE: Final[Path] = (
+    PROJECT_ROOT
+    / "rytm_randomizer"
+    / "reports"
+    / "performance_console"
+    / "live_kit_operator_package.py"
+)
 LIVE_GUI_MODEL_MODULES: Final[tuple[Path, ...]] = (
     PROJECT_ROOT / "rytm_randomizer" / "reports" / "live_gui_12_pad_surface_model.py",
     PROJECT_ROOT / "rytm_randomizer" / "reports" / "live_gui_device_inventory_model.py",
@@ -33,6 +40,21 @@ LIVE_GUI_MODEL_MODULES: Final[tuple[Path, ...]] = (
     PROJECT_ROOT / "rytm_randomizer" / "reports" / "live_gui_performance_flow_model.py",
     PROJECT_ROOT / "rytm_randomizer" / "reports" / "live_gui_performance_console_model.py",
 )
+LIVE_KIT_OPERATOR_PACKAGE_TS_INTERFACES: Final[dict[str, str]] = {
+    "LiveKitOperatorPackageManifest": "LiveGuiPerformanceConsoleLiveKitOperatorPackageManifestDict",
+    "LiveKitOperatorPackageStep": "LiveGuiPerformanceConsoleLiveKitOperatorPackageStepDict",
+    "LiveKitOperatorPackageSlotBinding": "LiveGuiPerformanceConsoleLiveKitOperatorPackageSlotBindingDict",
+    "LiveKitOperatorPackageRecoveryRequirement": (
+        "LiveGuiPerformanceConsoleLiveKitOperatorPackageRecoveryRequirementDict"
+    ),
+    "LiveKitOperatorPackageJournalCommitPreview": (
+        "LiveGuiPerformanceConsoleLiveKitOperatorPackageJournalCommitPreviewDict"
+    ),
+    "LiveKitOperatorPackageLocalExportPreview": (
+        "LiveGuiPerformanceConsoleLiveKitOperatorPackageLocalExportPreviewDict"
+    ),
+    "LiveKitOperatorPackagePayload": "LiveGuiPerformanceConsoleLiveKitOperatorPackageDict",
+}
 
 _TS_INTERFACE_RE: Final[re.Pattern[str]] = re.compile(
     r"export\s+interface\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*\{(?P<body>.*?)\n\}",
@@ -108,6 +130,15 @@ def _python_contracts() -> dict[str, tuple[Path, tuple[str, ...]]]:
     return contracts
 
 
+def _typed_dict_contracts(source_path: Path) -> dict[str, tuple[str, ...]]:
+    tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=str(source_path))
+    return {
+        node.name: _class_fields(node)
+        for node in tree.body
+        if isinstance(node, ast.ClassDef) and _is_typed_dict(node)
+    }
+
+
 def _ts_interfaces() -> dict[str, tuple[str, ...]]:
     assert LIVE_GUI_PROTOCOL_TS.is_file(), (
         "desktop/web/src/types/live_gui_protocol.ts is required as the single "
@@ -146,6 +177,27 @@ def test_live_gui_typescript_protocol_mirrors_python_typeddicts() -> None:
             f"TypeScript interface {dict_name} must mirror "
             f"{source_path.relative_to(PROJECT_ROOT).as_posix()} field order and names. "
             f"Expected {python_fields!r}, got {ts_fields!r}."
+        )
+
+
+def test_live_kit_operator_package_typescript_protocol_mirrors_python_typeddicts() -> None:
+    """The nested operator-package payload contract is pinned Python -> TypeScript."""
+
+    python_contracts = _typed_dict_contracts(LIVE_KIT_OPERATOR_PACKAGE_MODULE)
+    ts_interfaces = _ts_interfaces()
+
+    for python_name, ts_name in LIVE_KIT_OPERATOR_PACKAGE_TS_INTERFACES.items():
+        assert python_name in python_contracts, (
+            f"{LIVE_KIT_OPERATOR_PACKAGE_MODULE.relative_to(PROJECT_ROOT).as_posix()} "
+            f"is missing TypedDict {python_name}."
+        )
+        assert ts_name in ts_interfaces, (
+            "desktop/web/src/types/live_gui_protocol.ts is missing interface "
+            f"{ts_name} for Python TypedDict {python_name}."
+        )
+        assert ts_interfaces[ts_name] == python_contracts[python_name], (
+            f"TypeScript interface {ts_name} must mirror {python_name} field order and names. "
+            f"Expected {python_contracts[python_name]!r}, got {ts_interfaces[ts_name]!r}."
         )
 
 

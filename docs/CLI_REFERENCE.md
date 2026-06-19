@@ -372,7 +372,7 @@ The `live-gui-*` family is the GUI consumer contract — each report is one scre
 
 | Command | Surface |
 |---|---|
-| `live-gui-performance-console-report` | **Cockpit performance console packet** with device rail, 12-pad Rytm snapshot surface, passive macro action deck, live-kit capture panel/workbench/package audition, controller-brain panel, A4 set-plan review, Style Crates queue, snapshot history, command queue, safety checklist, and blocked hardware actions |
+| `live-gui-performance-console-report` | **Cockpit performance console packet** with device rail, 12-pad Rytm snapshot surface, passive macro action deck, live-kit capture panel/workbench/package audition/operator package, controller-brain panel, A4 set-plan review, Style Crates queue, snapshot history, command queue, safety checklist, and blocked hardware actions |
 | `style-performance-arc-live-gui-analyzer-readiness-report` | **GUI/audio-analyzer readiness bundle** with panel manifest, stream wiring, operator workflow, **blocked active actions** |
 | `style-performance-arc-live-gui-rehearsal-session-report` | **GUI rehearsal session packet** with task cards, **listen-only rehearsal take** cards, operator checklist |
 | `style-performance-arc-live-gui-capture-queue-report` | **GUI/audio analyzer capture queue** with capture slots, suggested filenames, **analyzer job** cards |
@@ -412,7 +412,11 @@ verification, mutation-readiness gates, recovery gates, and future
 package-manifest metadata while keeping every apply/export/send control
 disabled. The Live Kit Package Audition surface then exposes review-only
 audition slots, queue order, package checks, disabled package/journal/send
-controls, and a journal preview seed for favorite captured-kit variations. It
+controls, and a journal preview seed for favorite captured-kit variations. The
+Live Kit Operator Package surface binds those audition slots into browser-local
+set-plan staging actions, recovery requirements, journal/export preview
+metadata, and local rehearsal package `auditionSource` / `operatorPackage`
+evidence while keeping real package stage/send/write controls disabled. It
 keeps open-port, hardware send, Cockpit macro fire/prepare, queue dispatch,
 snapshot-history SEND, live-kit receive/mutate/send, captured-kit package
 apply/export/audition, controller MIDI learn/input, controller WebSocket

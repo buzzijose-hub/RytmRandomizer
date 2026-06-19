@@ -1,9 +1,22 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-18. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-06-19. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-06-19: Passive Live Kit Operator Package bundle started on the clean
+  base after PR #190 merged. The passive
+  `live-gui-performance-console-report [--json]` now binds the Live Kit
+  Package Audition surface into a GUI-ready Live Kit Operator Package lane:
+  operator steps, slot bindings, recovery requirements, journal commit preview,
+  and local export preview. The Performance Console renders that lane, lets an
+  audition slot stage a browser-local set-plan step, records the action in the
+  local operator log, and includes `auditionSource` / `operatorPackage`
+  evidence in exported local rehearsal packages while preserving older package
+  import compatibility. This remains passive/mock-safe: no SysEx receive from
+  Cockpit, no package file write/export outside browser-local JSON, no package
+  apply, no WebSocket command dispatch, no hardware arming, no MIDI port
+  opening, and no MIDI send.
 - 2026-06-18: Passive Live Kit Package Audition bundle started on the clean
   base after PR #189 merged. The passive
   `live-gui-performance-console-report [--json]` now composes a GUI-ready
