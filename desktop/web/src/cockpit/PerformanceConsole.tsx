@@ -16,12 +16,16 @@ import type {
   StyleCrateRehearsalCrateCardDict,
   StyleCrateRehearsalQueueCardDict,
 } from '../types/style_crate_rehearsal_deck';
+import type { CommandAck, RehearseOperatorPackageStepCommand } from '../ws/protocol';
 import { ANALOG_FOUR_DEVICE_ID, RYTM_DEVICE_ID } from './devices';
 import { RYTM_PARAMETER_GROUPS } from './parameterGroups';
 
 export interface PerformanceConsoleProps {
   model: LiveGuiPerformanceConsoleModelDict;
   packetSource?: string;
+  onRehearseOperatorPackageStep?: (
+    command: RehearseOperatorPackageStepCommand,
+  ) => Promise<CommandAck>;
 }
 
 const ANALYZER_CONTROL_ORDER: ReadonlyArray<string> = ['preview', 'dry_run', 'arm_hardware'];
@@ -1249,6 +1253,7 @@ function formatSectionAllowlists(
 export function PerformanceConsole({
   model,
   packetSource = 'passive packet',
+  onRehearseOperatorPackageStep,
 }: PerformanceConsoleProps): JSX.Element {
   const initialLocalRehearsal = useMemo(() => readLocalRehearsalSnapshot(), []);
   const [selectedCrateKey, setSelectedCrateKey] = useState<string | null>(
@@ -1678,6 +1683,43 @@ export function PerformanceConsole({
       `Staged operator package ${step.slot_key}`,
       `${step.cockpit_binding} / ${step.local_action} / recovery ${step.recovery_command}.`,
     );
+    if (onRehearseOperatorPackageStep !== undefined) {
+      const command: RehearseOperatorPackageStepCommand = {
+        type: 'rehearse_operator_package_step',
+        operator_package_id: liveKitOperatorPackage.operator_package_id,
+        step_key: step.step_key,
+        slot_key: step.slot_key,
+        package_export_key: binding?.package_export_key ?? `operator-package-${step.slot_key}`,
+        snapshot_id: selectedSnapshotIdLabel,
+        depth_percent: clampPreviewDepth(binding?.depth_percent ?? currentDepth),
+        mock_safe: true,
+      };
+      void onRehearseOperatorPackageStep(command)
+        .then((ack) => {
+          if (ack.ok) {
+            const rehearsal = ack.operator_package_rehearsal;
+            appendLocalOperatorEvent(
+              'Sidecar rehearsal acknowledged',
+              rehearsal === undefined
+                ? 'Mock-safe operator package rehearsal accepted; no MIDI sent.'
+                : `${rehearsal.slot_key} / ${rehearsal.rehearsal_status} / sent MIDI ${String(
+                    rehearsal.sent_midi,
+                  )}.`,
+            );
+            return;
+          }
+          appendLocalOperatorEvent(
+            'Sidecar rehearsal rejected',
+            ack.message ?? ack.error ?? ack.code ?? 'Operator package rehearsal rejected.',
+          );
+        })
+        .catch((error: unknown) => {
+          appendLocalOperatorEvent(
+            'Sidecar rehearsal failed',
+            error instanceof Error ? error.message : 'Operator package rehearsal failed.',
+          );
+        });
+    }
   };
 
   const promoteNextLocalSetStep = (): void => {

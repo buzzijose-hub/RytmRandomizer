@@ -1,8 +1,9 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { PerformanceConsole } from '../../src/cockpit/PerformanceConsole';
 import type { LiveGuiPerformanceConsoleModelDict } from '../../src/types/live_gui_protocol';
+import { FakeCockpitClient } from './_fixtures';
 import { performanceConsoleModel } from './performanceConsoleFixture';
 
 function performanceConsoleModelWithActiveDryRunBoundaries(): LiveGuiPerformanceConsoleModelDict {
@@ -726,6 +727,81 @@ describe('PerformanceConsole', () => {
     expect(packagePayload).toHaveTextContent('"recoveryCommand": "Z then send"');
     expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
+  });
+
+  it('sends a mock-safe operator package rehearsal command when the sidecar callback is available', async () => {
+    window.localStorage.clear();
+    const client = new FakeCockpitClient();
+    render(
+      <PerformanceConsole
+        model={performanceConsoleModelWithSelectableHistory()}
+        onRehearseOperatorPackageStep={(command) => client.send(command)}
+      />,
+    );
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    fireEvent.click(
+      within(operatorPackagePanel).getByRole('button', {
+        name: /stage hard groove lift operator package/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(client.sent).toHaveLength(1);
+    });
+    expect(client.sent[0]).toMatchObject({
+      type: 'rehearse_operator_package_step',
+      operator_package_id: 'live-kit-operator-package',
+      step_key: 'operator-step-hard-groove-lift',
+      slot_key: 'hard-groove-lift',
+      package_export_key: 'operator-package-hard-groove-lift',
+      snapshot_id: 'console-snap-03',
+      depth_percent: 70,
+      mock_safe: true,
+    });
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Sidecar rehearsal acknowledged',
+    );
+    expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+  });
+
+  it('logs mock-safe operator package rehearsal rejection without rolling back local staging', async () => {
+    const client = new FakeCockpitClient();
+    client.ackQueue.push({
+      request_id: 'operator-package-rejected',
+      ok: false,
+      code: 'validation_error',
+      message: 'mock_safe must be true',
+    });
+    render(
+      <PerformanceConsole
+        model={performanceConsoleModelWithSelectableHistory()}
+        onRehearseOperatorPackageStep={(command) => client.send(command)}
+      />,
+    );
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    fireEvent.click(
+      within(operatorPackagePanel).getByRole('button', {
+        name: /stage hard groove lift operator package/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+        'Sidecar rehearsal rejected',
+      );
+    });
+    expect(screen.getByTestId('performance-console-local-set-plan')).toHaveTextContent(
+      'Hard Groove Lift',
+    );
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'mock_safe must be true',
+    );
   });
 
   it('renders legacy console packets without operator package metadata', () => {

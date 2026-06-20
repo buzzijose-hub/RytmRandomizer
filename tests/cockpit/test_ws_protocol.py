@@ -58,7 +58,7 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
     ``COMMAND_TYPES`` is the union of the cockpit + wizard command
     surfaces; the wizard subset is folded in from :mod:`wizard_protocol`
     and asserted in the wizard test file. This test verifies the
-    10 cockpit-native commands remain present.
+    12 cockpit-native commands remain present.
     """
 
     individual = {
@@ -73,11 +73,12 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
         protocol.COMMAND_LOAD_SNAPSHOT,
         protocol.COMMAND_UNDO,
         protocol.COMMAND_EXPORT_PROFILE_MODEL,
+        protocol.COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
     }
     assert individual <= protocol.COMMAND_TYPES
     assert isinstance(protocol.COMMAND_TYPES, frozenset)
-    # 11 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
-    assert len(protocol.COMMAND_TYPES) == 19
+    # 12 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
+    assert len(protocol.COMMAND_TYPES) == 20
 
 
 def test_event_and_command_constants_match_spec_strings() -> None:
@@ -102,6 +103,7 @@ def test_event_and_command_constants_match_spec_strings() -> None:
     assert protocol.COMMAND_LOAD_SNAPSHOT == "load_snapshot"
     assert protocol.COMMAND_UNDO == "undo"
     assert protocol.COMMAND_EXPORT_PROFILE_MODEL == "export_profile_model"
+    assert protocol.COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP == "rehearse_operator_package_step"
 
 
 def test_event_and_command_typeset_are_disjoint() -> None:
@@ -257,6 +259,37 @@ def test_command_ack_with_categorical_error_has_code_and_message() -> None:
     assert ack["ok"] is False
     assert ack["code"] == "validation_error"
     assert ack["message"] == "no current candidate"
+
+
+def test_rehearse_operator_package_step_command_dict_carries_spec_keys() -> None:
+    command: protocol.RehearseOperatorPackageStepCommand = {
+        "type": "rehearse_operator_package_step",
+        "operator_package_id": "live-kit-operator-package",
+        "step_key": "operator-step-hard-groove-lift",
+        "slot_key": "hard-groove-lift",
+        "package_export_key": "operator-package-hard-groove-lift",
+        "snapshot_id": "snap-06",
+        "depth_percent": 70,
+        "mock_safe": True,
+    }
+
+    assert command["type"] == protocol.COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP
+    assert command["mock_safe"] is True
+
+
+def test_command_ack_accepts_operator_package_rehearsal_payload() -> None:
+    ack: protocol.CommandAck = {
+        "request_id": "req-operator-package",
+        "ok": True,
+        "operator_package_rehearsal": {
+            "rehearsal_id": "operator-package-rehearsal:operator-step-hard-groove-lift",
+            "opened_midi_port": False,
+            "sent_midi": False,
+            "writes_files": False,
+        },
+    }
+
+    assert ack["operator_package_rehearsal"]["sent_midi"] is False
 
 
 def test_command_ack_with_candidate_for_set_depth() -> None:
