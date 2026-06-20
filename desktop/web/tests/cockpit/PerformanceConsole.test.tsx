@@ -732,6 +732,21 @@ describe('PerformanceConsole', () => {
   it('sends a mock-safe operator package rehearsal command when the sidecar callback is available', async () => {
     window.localStorage.clear();
     const client = new FakeCockpitClient();
+    client.ackQueue.push({
+      request_id: 'operator-package-rehearsed',
+      ok: true,
+      operator_package_rehearsal: {
+        rehearsal_id: 'operator-package-rehearsal:operator-step-hard-groove-lift',
+        operator_package_id: 'live-kit-operator-package',
+        step_key: 'operator-step-hard-groove-lift',
+        slot_key: 'hard-groove-lift',
+        mock_safe: true,
+        rehearsal_status: 'mock_safe_ready',
+        opened_midi_port: false,
+        sent_midi: false,
+        writes_files: false,
+      },
+    });
     render(
       <PerformanceConsole
         model={performanceConsoleModelWithSelectableHistory()}
@@ -763,6 +778,9 @@ describe('PerformanceConsole', () => {
     });
     expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
       'Sidecar rehearsal acknowledged',
+    );
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'hard-groove-lift / mock_safe_ready / sent MIDI false',
     );
     expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
   });
@@ -801,6 +819,115 @@ describe('PerformanceConsole', () => {
     );
     expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
       'mock_safe must be true',
+    );
+  });
+
+  it.each([
+    {
+      name: 'error text',
+      ack: { request_id: 'operator-package-error', ok: false, error: 'slot mismatch' },
+      expected: 'slot mismatch',
+    },
+    {
+      name: 'code text',
+      ack: { request_id: 'operator-package-code', ok: false, code: 'slot_mismatch' },
+      expected: 'slot_mismatch',
+    },
+    {
+      name: 'fallback text',
+      ack: { request_id: 'operator-package-fallback', ok: false },
+      expected: 'Operator package rehearsal rejected.',
+    },
+  ])('logs mock-safe operator package rehearsal rejection $name', async ({ ack, expected }) => {
+    const client = new FakeCockpitClient();
+    client.ackQueue.push(ack);
+    render(
+      <PerformanceConsole
+        model={performanceConsoleModelWithSelectableHistory()}
+        onRehearseOperatorPackageStep={(command) => client.send(command)}
+      />,
+    );
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    fireEvent.click(
+      within(operatorPackagePanel).getByRole('button', {
+        name: /stage hard groove lift operator package/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+        'Sidecar rehearsal rejected',
+      );
+    });
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      expected,
+    );
+  });
+
+  it('logs mock-safe operator package rehearsal Error failures without rolling back local staging', async () => {
+    const client = new FakeCockpitClient();
+    client.nextRejection = new Error('sidecar offline');
+    render(
+      <PerformanceConsole
+        model={performanceConsoleModelWithSelectableHistory()}
+        onRehearseOperatorPackageStep={(command) => client.send(command)}
+      />,
+    );
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    fireEvent.click(
+      within(operatorPackagePanel).getByRole('button', {
+        name: /stage hard groove lift operator package/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+        'Sidecar rehearsal failed',
+      );
+    });
+    expect(screen.getByTestId('performance-console-local-set-plan')).toHaveTextContent(
+      'Hard Groove Lift',
+    );
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'sidecar offline',
+    );
+  });
+
+  it('logs mock-safe operator package rehearsal transport failure without rolling back local staging', async () => {
+    const client = new FakeCockpitClient();
+    client.nextRejection = 'sidecar unavailable';
+    render(
+      <PerformanceConsole
+        model={performanceConsoleModelWithSelectableHistory()}
+        onRehearseOperatorPackageStep={(command) => client.send(command)}
+      />,
+    );
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    fireEvent.click(
+      within(operatorPackagePanel).getByRole('button', {
+        name: /stage hard groove lift operator package/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+        'Sidecar rehearsal failed',
+      );
+    });
+    expect(screen.getByTestId('performance-console-local-set-plan')).toHaveTextContent(
+      'Hard Groove Lift',
+    );
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Operator package rehearsal failed.',
     );
   });
 
@@ -875,6 +1002,36 @@ describe('PerformanceConsole', () => {
     );
     expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
+  });
+
+  it('sends unbound operator package rehearsal commands with local fallback package and depth', async () => {
+    const client = new FakeCockpitClient();
+    render(
+      <PerformanceConsole
+        model={performanceConsoleModelWithUnboundOperatorPackageStep()}
+        onRehearseOperatorPackageStep={(command) => client.send(command)}
+      />,
+    );
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    fireEvent.click(
+      within(operatorPackagePanel).getByRole('button', {
+        name: /stage unbound operator operator package/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(client.sent).toHaveLength(1);
+    });
+    expect(client.sent[0]).toMatchObject({
+      type: 'rehearse_operator_package_step',
+      slot_key: 'unbound-operator-slot',
+      package_export_key: 'operator-package-unbound-operator-slot',
+      depth_percent: 28,
+      mock_safe: true,
+    });
   });
 
   it('omits dry-run-only labels when a macro or queued move is not dry-run-only', () => {
