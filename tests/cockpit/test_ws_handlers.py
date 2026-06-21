@@ -41,6 +41,7 @@ from rytm_randomizer.cockpit.profiles import ProfileRegistry
 from rytm_randomizer.cockpit.ws import handlers
 from rytm_randomizer.cockpit.ws.handlers import drain_pending_events, handle_command
 from rytm_randomizer.cockpit.ws.protocol import (
+    COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
     COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
     EVENT_HISTORY_UPDATED,
     EVENT_MUTATION_PREVIEWED,
@@ -1016,8 +1017,215 @@ def test_rehearse_operator_package_step_rejects_slot_mismatch(tmp_path: Path) ->
     assert recorder.events == []
 
 
+def test_rehearse_operator_package_step_rejects_package_export_key_mismatch(
+    tmp_path: Path,
+) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
+            operator_package_id="live-kit-operator-package",
+            step_key="operator-step-hard-groove-lift",
+            slot_key="hard-groove-lift",
+            package_export_key="operator-package-stale-hard-groove-lift",
+            depth_percent=70,
+            mock_safe=True,
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert "package_export_key mismatch" in ack["message"]
+    assert recorder.events == []
+
+
+def test_rehearse_operator_package_sequence_returns_mock_safe_ack_without_side_effects(
+    tmp_path: Path,
+) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+    before_snapshot = session.device.capture_snapshot().to_dict()
+
+    ack = _dispatch(
+        _envelope(
+            COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
+            operator_package_id="live-kit-operator-package",
+            step_keys=[
+                "operator-step-hard-groove-lift",
+                "operator-step-industrial-pressure",
+            ],
+            package_export_keys={
+                "operator-step-hard-groove-lift": "operator-package-hard-groove-lift",
+                "operator-step-industrial-pressure": "operator-package-industrial-pressure",
+            },
+            snapshot_id="snap-06",
+            mock_safe=True,
+        ),
+        session,
+        recorder,
+    )
+
+    rehearsal = ack["operator_package_sequence_rehearsal"]
+    assert ack["ok"] is True
+    assert rehearsal["operator_package_id"] == "live-kit-operator-package"
+    assert rehearsal["rehearsal_status"] == "mock_safe_ready"
+    assert rehearsal["step_count"] == 2
+    assert rehearsal["step_keys"] == [
+        "operator-step-hard-groove-lift",
+        "operator-step-industrial-pressure",
+    ]
+    assert rehearsal["snapshot_id"] == "snap-06"
+    assert rehearsal["mock_safe"] is True
+    assert rehearsal["opened_midi_port"] is False
+    assert rehearsal["sent_midi"] is False
+    assert rehearsal["writes_files"] is False
+    assert len(rehearsal["step_rehearsals"]) == 2
+    assert rehearsal["step_rehearsals"][0]["slot_key"] == "hard-groove-lift"
+    assert rehearsal["step_rehearsals"][1]["slot_key"] == "industrial-pressure"
+    assert all(row["opened_midi_port"] is False for row in rehearsal["step_rehearsals"])
+    assert all(row["sent_midi"] is False for row in rehearsal["step_rehearsals"])
+    assert all(row["writes_files"] is False for row in rehearsal["step_rehearsals"])
+    assert "send operator package from Cockpit console" in rehearsal["blocked_actions"]
+    assert "no MIDI sending" in rehearsal["safety_lines"]
+    assert "no port opening" in rehearsal["safety_lines"]
+    assert session.device.capture_snapshot().to_dict() == before_snapshot
+    assert session.unsaved_sends == 0
+    assert session.current_send_plan is None
+    assert recorder.events == []
+
+
+def test_rehearse_operator_package_sequence_uses_all_steps_when_step_keys_empty(
+    tmp_path: Path,
+) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
+            operator_package_id="live-kit-operator-package",
+            step_keys=[],
+            package_export_keys={},
+            snapshot_id="snap-06",
+            mock_safe=True,
+        ),
+        session,
+        recorder,
+    )
+
+    rehearsal = ack["operator_package_sequence_rehearsal"]
+    assert ack["ok"] is True
+    assert rehearsal["step_count"] == 5
+    assert len(rehearsal["step_rehearsals"]) == 5
+    assert recorder.events == []
+
+
+def test_rehearse_operator_package_sequence_requires_mock_safe_true(tmp_path: Path) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
+            operator_package_id="live-kit-operator-package",
+            step_keys=["operator-step-hard-groove-lift"],
+            package_export_keys={
+                "operator-step-hard-groove-lift": "operator-package-hard-groove-lift"
+            },
+            snapshot_id="snap-06",
+            mock_safe=False,
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert "mock_safe" in ack["message"]
+    assert recorder.events == []
+
+
+def test_rehearse_operator_package_sequence_rejects_unknown_package(tmp_path: Path) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
+            operator_package_id="wrong-package",
+            step_keys=["operator-step-hard-groove-lift"],
+            package_export_keys={
+                "operator-step-hard-groove-lift": "operator-package-hard-groove-lift"
+            },
+            snapshot_id="snap-06",
+            mock_safe=True,
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert "unknown operator_package_id" in ack["message"]
+    assert recorder.events == []
+
+
+def test_rehearse_operator_package_sequence_rejects_unknown_step(tmp_path: Path) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
+            operator_package_id="live-kit-operator-package",
+            step_keys=["operator-step-missing"],
+            package_export_keys={"operator-step-missing": "operator-package-missing"},
+            snapshot_id="snap-06",
+            mock_safe=True,
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert "unknown operator package step" in ack["message"]
+    assert recorder.events == []
+
+
+def test_rehearse_operator_package_sequence_rejects_package_export_key_mismatch(
+    tmp_path: Path,
+) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
+            operator_package_id="live-kit-operator-package",
+            step_keys=["operator-step-hard-groove-lift"],
+            package_export_keys={
+                "operator-step-hard-groove-lift": "operator-package-stale-hard-groove-lift"
+            },
+            snapshot_id="snap-06",
+            mock_safe=True,
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert "package_export_key mismatch" in ack["message"]
+    assert recorder.events == []
+
+
 # ---------------------------------------------------------------------------
-# emit_initial_events — covers helper function.
+# emit_initial_events - covers helper function.
 # ---------------------------------------------------------------------------
 
 

@@ -1,9 +1,23 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-20. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-06-21. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-06-21: Operator Package runtime control bundle started on the clean
+  base after PR #192 merged. The Cockpit WebSocket protocol now also has a
+  typed `rehearse_operator_package_sequence` command that validates the
+  current Live Kit Operator Package id, selected operator steps, package
+  export-key bindings, and `mock_safe: true` before returning deterministic
+  `operator_package_sequence_rehearsal` evidence. The existing
+  `rehearse_operator_package_step` handler now rejects stale
+  `package_export_key` values instead of silently using the server-side
+  binding. The Performance Console renders a mock-safe package-sequence
+  rehearsal control, sends all current operator steps through the sidecar
+  when available, and logs the ack/rejection in the local operator log. This
+  remains a runtime rehearsal bridge only: no package apply, no package file
+  write, no snapshot mutation, no hardware arming, no MIDI port opening, and
+  no MIDI send.
 - 2026-06-20: Mock-safe Live Kit Operator Package runtime bridge started on
   the clean base after PR #191 merged. The Cockpit WebSocket protocol now has
   a typed `rehearse_operator_package_step` command that validates the current

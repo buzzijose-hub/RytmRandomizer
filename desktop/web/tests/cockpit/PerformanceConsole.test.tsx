@@ -785,6 +785,233 @@ describe('PerformanceConsole', () => {
     expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
   });
 
+  it('sends a mock-safe operator package sequence rehearsal command for all package steps', async () => {
+    window.localStorage.clear();
+    const client = new FakeCockpitClient();
+    const model = performanceConsoleModelWithSelectableHistory();
+    const operatorPackage = model.live_kit_operator_package;
+    const stepKeys = operatorPackage.operator_steps.map((step) => step.step_key);
+    const packageExportKeys = Object.fromEntries(
+      operatorPackage.operator_steps.map((step) => {
+        const binding = operatorPackage.slot_bindings.find(
+          (candidate) => candidate.slot_key === step.slot_key,
+        );
+        return [step.step_key, binding?.package_export_key ?? `operator-package-${step.slot_key}`];
+      }),
+    );
+    client.ackQueue.push({
+      request_id: 'operator-package-sequence-rehearsed',
+      ok: true,
+      operator_package_sequence_rehearsal: {
+        rehearsal_id: 'operator-package-sequence-rehearsal:live-kit-operator-package',
+        operator_package_id: 'live-kit-operator-package',
+        step_count: stepKeys.length,
+        step_keys: stepKeys,
+        snapshot_id: 'console-snap-03',
+        mock_safe: true,
+        rehearsal_status: 'mock_safe_ready',
+        opened_midi_port: false,
+        sent_midi: false,
+        writes_files: false,
+        step_rehearsals: [],
+      },
+    });
+    render(
+      <PerformanceConsole
+        model={model}
+        onRehearseOperatorPackageSequence={(command) => client.send(command)}
+      />,
+    );
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    fireEvent.click(
+      within(operatorPackagePanel).getByRole('button', {
+        name: /rehearse operator package sequence/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(client.sent).toHaveLength(1);
+    });
+    expect(client.sent[0]).toMatchObject({
+      type: 'rehearse_operator_package_sequence',
+      operator_package_id: 'live-kit-operator-package',
+      step_keys: stepKeys,
+      package_export_keys: packageExportKeys,
+      snapshot_id: 'console-snap-03',
+      mock_safe: true,
+    });
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Operator package sequence acknowledged',
+    );
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      `${stepKeys.length} steps / mock_safe_ready / sent MIDI false`,
+    );
+    expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+  });
+
+  it('uses fallback export keys and logs fallback sequence acknowledgement', async () => {
+    const client = new FakeCockpitClient();
+    client.ackQueue.push({
+      request_id: 'operator-package-sequence-fallback-ack',
+      ok: true,
+    });
+    render(
+      <PerformanceConsole
+        model={performanceConsoleModelWithUnboundOperatorPackageStep()}
+        onRehearseOperatorPackageSequence={(command) => client.send(command)}
+      />,
+    );
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    fireEvent.click(
+      within(operatorPackagePanel).getByRole('button', {
+        name: /rehearse operator package sequence/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(client.sent).toHaveLength(1);
+    });
+    expect(client.sent[0]).toMatchObject({
+      type: 'rehearse_operator_package_sequence',
+      step_keys: ['stage-unbound-operator-slot'],
+      package_export_keys: {
+        'stage-unbound-operator-slot': 'operator-package-unbound-operator-slot',
+      },
+    });
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Mock-safe operator package sequence accepted; no MIDI sent.',
+    );
+  });
+
+  it.each([
+    {
+      name: 'message text',
+      ack: {
+        request_id: 'operator-package-sequence-message',
+        ok: false,
+        message: 'package export key mismatch',
+      },
+      expected: 'package export key mismatch',
+    },
+    {
+      name: 'error text',
+      ack: {
+        request_id: 'operator-package-sequence-error',
+        ok: false,
+        error: 'unknown package',
+      },
+      expected: 'unknown package',
+    },
+    {
+      name: 'code text',
+      ack: {
+        request_id: 'operator-package-sequence-code',
+        ok: false,
+        code: 'unknown_step',
+      },
+      expected: 'unknown_step',
+    },
+    {
+      name: 'fallback text',
+      ack: {
+        request_id: 'operator-package-sequence-fallback',
+        ok: false,
+      },
+      expected: 'Operator package sequence rehearsal rejected.',
+    },
+  ])('logs mock-safe operator package sequence rehearsal rejection $name', async ({ ack, expected }) => {
+    const client = new FakeCockpitClient();
+    client.ackQueue.push(ack);
+    render(
+      <PerformanceConsole
+        model={performanceConsoleModelWithSelectableHistory()}
+        onRehearseOperatorPackageSequence={(command) => client.send(command)}
+      />,
+    );
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    fireEvent.click(
+      within(operatorPackagePanel).getByRole('button', {
+        name: /rehearse operator package sequence/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+        'Operator package sequence rejected',
+      );
+    });
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      expected,
+    );
+  });
+
+  it('logs mock-safe operator package sequence transport failure', async () => {
+    const client = new FakeCockpitClient();
+    client.nextRejection = new Error('sequence sidecar offline');
+    render(
+      <PerformanceConsole
+        model={performanceConsoleModelWithSelectableHistory()}
+        onRehearseOperatorPackageSequence={(command) => client.send(command)}
+      />,
+    );
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    fireEvent.click(
+      within(operatorPackagePanel).getByRole('button', {
+        name: /rehearse operator package sequence/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+        'Operator package sequence failed',
+      );
+    });
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'sequence sidecar offline',
+    );
+  });
+
+  it('logs mock-safe operator package sequence non-Error transport failure', async () => {
+    const client = new FakeCockpitClient();
+    client.nextRejection = 'sequence sidecar unavailable';
+    render(
+      <PerformanceConsole
+        model={performanceConsoleModelWithSelectableHistory()}
+        onRehearseOperatorPackageSequence={(command) => client.send(command)}
+      />,
+    );
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    fireEvent.click(
+      within(operatorPackagePanel).getByRole('button', {
+        name: /rehearse operator package sequence/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+        'Operator package sequence failed',
+      );
+    });
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Operator package sequence rehearsal failed.',
+    );
+  });
+
   it('logs mock-safe operator package rehearsal rejection without rolling back local staging', async () => {
     const client = new FakeCockpitClient();
     client.ackQueue.push({

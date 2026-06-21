@@ -140,6 +140,22 @@ export interface OperatorPackageRehearsal {
   safety_lines?: string[];
 }
 
+export interface OperatorPackageSequenceRehearsal {
+  rehearsal_id: string;
+  operator_package_id: string;
+  step_count: number;
+  step_keys: string[];
+  snapshot_id?: string;
+  mock_safe: boolean;
+  rehearsal_status: string;
+  opened_midi_port: boolean;
+  sent_midi: boolean;
+  writes_files: boolean;
+  blocked_actions?: string[];
+  safety_lines?: string[];
+  step_rehearsals: OperatorPackageRehearsal[];
+}
+
 export interface HistoryEntry {
   snapshot: Snapshot;
   kind: HistoryEntryKind;
@@ -271,6 +287,15 @@ export interface RehearseOperatorPackageStepCommand {
   mock_safe: boolean;
 }
 
+export interface RehearseOperatorPackageSequenceCommand {
+  type: 'rehearse_operator_package_sequence';
+  operator_package_id: string;
+  step_keys: string[];
+  package_export_keys: Record<string, string>;
+  snapshot_id: string;
+  mock_safe: boolean;
+}
+
 export type Command =
   | SelectProfileCommand
   | SetDepthCommand
@@ -283,7 +308,8 @@ export type Command =
   | LoadSnapshotCommand
   | UndoCommand
   | ExportProfileModelCommand
-  | RehearseOperatorPackageStepCommand;
+  | RehearseOperatorPackageStepCommand
+  | RehearseOperatorPackageSequenceCommand;
 
 export type CommandType = Command['type'];
 
@@ -311,6 +337,7 @@ export interface CommandAck {
   model_bytes?: string; // base64 for binary, raw json otherwise
   model_bytes_b64?: string; // Python sidecar's explicit base64 field name
   operator_package_rehearsal?: OperatorPackageRehearsal;
+  operator_package_sequence_rehearsal?: OperatorPackageSequenceRehearsal;
   error?: string;
   code?: string;
   message?: string;

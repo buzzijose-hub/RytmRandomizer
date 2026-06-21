@@ -209,6 +209,9 @@ COMMAND_EXPORT_PROFILE_MODEL: Final[Literal["export_profile_model"]] = "export_p
 COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP: Final[Literal["rehearse_operator_package_step"]] = (
     "rehearse_operator_package_step"
 )
+COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE: Final[Literal["rehearse_operator_package_sequence"]] = (
+    "rehearse_operator_package_sequence"
+)
 
 COMMAND_TYPES: Final[frozenset[str]] = (
     frozenset(
@@ -225,13 +228,14 @@ COMMAND_TYPES: Final[frozenset[str]] = (
             COMMAND_UNDO,
             COMMAND_EXPORT_PROFILE_MODEL,
             COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
+            COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
         }
     )
     | WIZARD_COMMAND_TYPES
 )
 """Frozen set of every supported command-type discriminator (cockpit + wizard).
 
-12 cockpit commands + 8 wizard commands = 20 total. The wizard commands are
+13 cockpit commands + 8 wizard commands = 21 total. The wizard commands are
 folded in from :data:`wizard_protocol.WIZARD_COMMAND_TYPES` so the cockpit's
 single ``COMMAND_TYPES`` constant remains the wire-format authority.
 """
@@ -379,6 +383,11 @@ class CommandAck(TypedDict, total=False):
     * ``rehearse_operator_package_step`` - ``operator_package_rehearsal``
       (a deterministic mock-safe rehearsal summary that proves no port
       opened, no MIDI was sent, and no files were written).
+    * ``rehearse_operator_package_sequence`` -
+      ``operator_package_sequence_rehearsal`` (a deterministic mock-safe
+      package-level rehearsal summary that validates selected operator
+      steps as one sequence while proving no port opened, no MIDI was sent,
+      and no files were written).
     """
 
     request_id: str
@@ -393,6 +402,7 @@ class CommandAck(TypedDict, total=False):
     snapshot_id: str | None
     model_bytes_b64: str | None
     operator_package_rehearsal: dict | None
+    operator_package_sequence_rehearsal: dict | None
 
 
 # ---------------------------------------------------------------------------
@@ -496,6 +506,17 @@ class RehearseOperatorPackageStepCommand(TypedDict):
     mock_safe: bool
 
 
+class RehearseOperatorPackageSequenceCommand(TypedDict):
+    """``rehearse_operator_package_sequence`` - mock-safe package preflight."""
+
+    type: Literal["rehearse_operator_package_sequence"]
+    operator_package_id: str
+    step_keys: list[str]
+    package_export_keys: dict[str, str]
+    snapshot_id: str
+    mock_safe: bool
+
+
 __all__ = [
     "CLOSE_CODE_MESSAGE_TOO_BIG",
     "CLOSE_CODE_POLICY_VIOLATION",
@@ -503,6 +524,7 @@ __all__ = [
     "COMMAND_LOAD_SNAPSHOT",
     "COMMAND_PREPARE_SEND_PLAN",
     "COMMAND_REGEN",
+    "COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE",
     "COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP",
     "COMMAND_SAVE",
     "COMMAND_SELECT_PROFILE",
@@ -538,6 +560,7 @@ __all__ = [
     "PrepareSendPlanCommand",
     "ProfileChangedEvent",
     "RegenCommand",
+    "RehearseOperatorPackageSequenceCommand",
     "RehearseOperatorPackageStepCommand",
     "SaveCommand",
     "SelectProfileCommand",

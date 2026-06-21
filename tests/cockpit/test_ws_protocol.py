@@ -74,11 +74,12 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
         protocol.COMMAND_UNDO,
         protocol.COMMAND_EXPORT_PROFILE_MODEL,
         protocol.COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
+        protocol.COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
     }
     assert individual <= protocol.COMMAND_TYPES
     assert isinstance(protocol.COMMAND_TYPES, frozenset)
-    # 12 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
-    assert len(protocol.COMMAND_TYPES) == 20
+    # 13 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
+    assert len(protocol.COMMAND_TYPES) == 21
 
 
 def test_event_and_command_constants_match_spec_strings() -> None:
@@ -104,6 +105,9 @@ def test_event_and_command_constants_match_spec_strings() -> None:
     assert protocol.COMMAND_UNDO == "undo"
     assert protocol.COMMAND_EXPORT_PROFILE_MODEL == "export_profile_model"
     assert protocol.COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP == "rehearse_operator_package_step"
+    assert (
+        protocol.COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE == "rehearse_operator_package_sequence"
+    )
 
 
 def test_event_and_command_typeset_are_disjoint() -> None:
@@ -277,6 +281,27 @@ def test_rehearse_operator_package_step_command_dict_carries_spec_keys() -> None
     assert command["mock_safe"] is True
 
 
+def test_rehearse_operator_package_sequence_command_dict_carries_spec_keys() -> None:
+    command: protocol.RehearseOperatorPackageSequenceCommand = {
+        "type": "rehearse_operator_package_sequence",
+        "operator_package_id": "live-kit-operator-package",
+        "step_keys": [
+            "operator-step-hard-groove-lift",
+            "operator-step-industrial-pressure",
+        ],
+        "package_export_keys": {
+            "operator-step-hard-groove-lift": "operator-package-hard-groove-lift",
+            "operator-step-industrial-pressure": "operator-package-industrial-pressure",
+        },
+        "snapshot_id": "snap-06",
+        "mock_safe": True,
+    }
+
+    assert command["type"] == protocol.COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE
+    assert command["mock_safe"] is True
+    assert len(command["step_keys"]) == 2
+
+
 def test_command_ack_accepts_operator_package_rehearsal_payload() -> None:
     ack: protocol.CommandAck = {
         "request_id": "req-operator-package",
@@ -290,6 +315,23 @@ def test_command_ack_accepts_operator_package_rehearsal_payload() -> None:
     }
 
     assert ack["operator_package_rehearsal"]["sent_midi"] is False
+
+
+def test_command_ack_accepts_operator_package_sequence_rehearsal_payload() -> None:
+    ack: protocol.CommandAck = {
+        "request_id": "req-operator-package-sequence",
+        "ok": True,
+        "operator_package_sequence_rehearsal": {
+            "rehearsal_id": "operator-package-sequence-rehearsal:live-kit-operator-package",
+            "step_count": 2,
+            "opened_midi_port": False,
+            "sent_midi": False,
+            "writes_files": False,
+        },
+    }
+
+    assert ack["operator_package_sequence_rehearsal"]["step_count"] == 2
+    assert ack["operator_package_sequence_rehearsal"]["sent_midi"] is False
 
 
 def test_command_ack_with_candidate_for_set_depth() -> None:

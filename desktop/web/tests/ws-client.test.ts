@@ -582,6 +582,56 @@ describe('CockpitClient — send / ack correlation', () => {
     expect(result.operator_package_rehearsal?.rehearsal_status).toBe('mock_safe_ready');
   });
 
+  it('round-trips an operator package sequence rehearsal command with typed ack payload', async () => {
+    const h = makeHarness();
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    const cmd: Command = {
+      type: 'rehearse_operator_package_sequence',
+      operator_package_id: 'live-kit-operator-package',
+      step_keys: [
+        'operator-step-hard-groove-lift',
+        'operator-step-industrial-pressure',
+      ],
+      package_export_keys: {
+        'operator-step-hard-groove-lift': 'operator-package-hard-groove-lift',
+        'operator-step-industrial-pressure': 'operator-package-industrial-pressure',
+      },
+      snapshot_id: 'snap-06',
+      mock_safe: true,
+    };
+    const promise = h.client.send(cmd);
+    const sent = JSON.parse(h.currentSocket().sent[0] ?? '') as {
+      request_id: string;
+      command: Command;
+    };
+    expect(sent.command).toMatchObject(cmd);
+    h.currentSocket().emitMessage(
+      ack(sent.request_id, {
+        operator_package_sequence_rehearsal: {
+          rehearsal_id: 'operator-package-sequence-rehearsal:live-kit-operator-package',
+          operator_package_id: 'live-kit-operator-package',
+          step_count: 2,
+          step_keys: [
+            'operator-step-hard-groove-lift',
+            'operator-step-industrial-pressure',
+          ],
+          snapshot_id: 'snap-06',
+          mock_safe: true,
+          rehearsal_status: 'mock_safe_ready',
+          opened_midi_port: false,
+          sent_midi: false,
+          writes_files: false,
+          step_rehearsals: [],
+        },
+      }),
+    );
+
+    const result = await promise;
+    expect(result.operator_package_sequence_rehearsal?.sent_midi).toBe(false);
+    expect(result.operator_package_sequence_rehearsal?.step_count).toBe(2);
+  });
+
   it('rejects send() when the socket is not OPEN', async () => {
     const h = makeHarness();
     h.client.connect();
