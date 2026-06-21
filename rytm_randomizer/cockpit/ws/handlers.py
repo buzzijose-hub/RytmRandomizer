@@ -77,6 +77,7 @@ from .protocol import (
     COMMAND_LOAD_SNAPSHOT,
     COMMAND_PREPARE_SEND_PLAN,
     COMMAND_REGEN,
+    COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
     COMMAND_SAVE,
     COMMAND_SELECT_PROFILE,
     COMMAND_SEND,
@@ -677,6 +678,85 @@ async def _handle_export_profile_model(cmd: dict, session: CockpitSession) -> Ha
     return HandlerResult(ack={"ok": True, "model_bytes_b64": encoded})
 
 
+def _live_kit_operator_package_payload() -> dict:
+    """Return the current passive live-kit operator package payload."""
+
+    from ...reports.live_gui_performance_console_model import (  # noqa: PLC0415
+        live_gui_performance_console_model_payload,
+    )
+
+    console_payload = live_gui_performance_console_model_payload()["live_gui_performance_console"]
+    return console_payload["live_kit_operator_package"]
+
+
+async def _handle_rehearse_operator_package_step(
+    cmd: dict, _session: CockpitSession
+) -> HandlerResult:
+    """Rehearse one operator package step through the WS bridge without side effects."""
+
+    if cmd.get("mock_safe") is not True:
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, "mock_safe must be true for operator package rehearsal")
+        )
+    package = _live_kit_operator_package_payload()
+    operator_package_id = str(cmd["operator_package_id"])
+    expected_package_id = str(package["operator_package_id"])
+    if operator_package_id != expected_package_id:
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION,
+                f"unknown operator_package_id: {operator_package_id!r}",
+            )
+        )
+    step_key = str(cmd["step_key"])
+    slot_key = str(cmd["slot_key"])
+    step = next(
+        (row for row in package["operator_steps"] if row["step_key"] == step_key),
+        None,
+    )
+    if step is None:
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, f"unknown operator package step: {step_key!r}")
+        )
+    if str(step["slot_key"]) != slot_key:
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION,
+                f"slot_key mismatch for operator package step: {slot_key!r}",
+            )
+        )
+    binding = next(
+        (row for row in package["slot_bindings"] if row["slot_key"] == slot_key),
+        {},
+    )
+    depth_percent = int(binding.get("depth_percent", cmd["depth_percent"]))
+    package_export_key = str(binding.get("package_export_key", cmd["package_export_key"]))
+    rehearsal = {
+        "rehearsal_id": f"operator-package-rehearsal:{step_key}",
+        "operator_package_id": expected_package_id,
+        "step_key": step_key,
+        "slot_key": slot_key,
+        "label": str(step["label"]),
+        "cockpit_binding": str(step["cockpit_binding"]),
+        "local_action": str(step["local_action"]),
+        "stage_target": str(step["stage_target"]),
+        "recovery_command": str(step["recovery_command"]),
+        "operator_command": str(step["operator_command"]),
+        "package_export_key": package_export_key,
+        "snapshot_id": str(cmd["snapshot_id"]),
+        "depth_percent": depth_percent,
+        "mock_safe": True,
+        "rehearsal_status": "mock_safe_ready",
+        "safety_status": str(step["safety_status"]),
+        "opened_midi_port": False,
+        "sent_midi": False,
+        "writes_files": False,
+        "blocked_actions": list(package["blocked_actions"]),
+        "safety_lines": list(package["safety_lines"]),
+    }
+    return HandlerResult(ack={"ok": True, "operator_package_rehearsal": rehearsal})
+
+
 # ---------------------------------------------------------------------------
 # Dispatcher — the single public entry point exported to server.py.
 # ---------------------------------------------------------------------------
@@ -695,6 +775,7 @@ _CORE_HANDLERS: dict[str, HandlerFn] = {
     COMMAND_LOAD_SNAPSHOT: _handle_load_snapshot,
     COMMAND_UNDO: _handle_undo,
     COMMAND_EXPORT_PROFILE_MODEL: _handle_export_profile_model,
+    COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP: _handle_rehearse_operator_package_step,
 }
 
 #: Backwards-compatibility alias for the legacy ``_HANDLERS`` symbol some

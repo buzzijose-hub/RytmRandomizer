@@ -206,6 +206,9 @@ COMMAND_SAVE: Final[Literal["save"]] = "save"
 COMMAND_LOAD_SNAPSHOT: Final[Literal["load_snapshot"]] = "load_snapshot"
 COMMAND_UNDO: Final[Literal["undo"]] = "undo"
 COMMAND_EXPORT_PROFILE_MODEL: Final[Literal["export_profile_model"]] = "export_profile_model"
+COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP: Final[Literal["rehearse_operator_package_step"]] = (
+    "rehearse_operator_package_step"
+)
 
 COMMAND_TYPES: Final[frozenset[str]] = (
     frozenset(
@@ -221,13 +224,14 @@ COMMAND_TYPES: Final[frozenset[str]] = (
             COMMAND_LOAD_SNAPSHOT,
             COMMAND_UNDO,
             COMMAND_EXPORT_PROFILE_MODEL,
+            COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
         }
     )
     | WIZARD_COMMAND_TYPES
 )
 """Frozen set of every supported command-type discriminator (cockpit + wizard).
 
-10 cockpit commands + 8 wizard commands = 18 total. The wizard commands are
+12 cockpit commands + 8 wizard commands = 20 total. The wizard commands are
 folded in from :data:`wizard_protocol.WIZARD_COMMAND_TYPES` so the cockpit's
 single ``COMMAND_TYPES`` constant remains the wire-format authority.
 """
@@ -372,6 +376,9 @@ class CommandAck(TypedDict, total=False):
       :func:`pack_profile_model` base64-encoded for JSON transport;
       the field name carries ``_b64`` to make the encoding explicit on
       the wire).
+    * ``rehearse_operator_package_step`` - ``operator_package_rehearsal``
+      (a deterministic mock-safe rehearsal summary that proves no port
+      opened, no MIDI was sent, and no files were written).
     """
 
     request_id: str
@@ -385,6 +392,7 @@ class CommandAck(TypedDict, total=False):
     new_snapshot_id: str | None
     snapshot_id: str | None
     model_bytes_b64: str | None
+    operator_package_rehearsal: dict | None
 
 
 # ---------------------------------------------------------------------------
@@ -475,6 +483,19 @@ class ExportProfileModelCommand(TypedDict):
     target: Literal["binary", "json"]
 
 
+class RehearseOperatorPackageStepCommand(TypedDict):
+    """``rehearse_operator_package_step`` - mock-safe operator package preflight."""
+
+    type: Literal["rehearse_operator_package_step"]
+    operator_package_id: str
+    step_key: str
+    slot_key: str
+    package_export_key: str
+    snapshot_id: str
+    depth_percent: int
+    mock_safe: bool
+
+
 __all__ = [
     "CLOSE_CODE_MESSAGE_TOO_BIG",
     "CLOSE_CODE_POLICY_VIOLATION",
@@ -482,6 +503,7 @@ __all__ = [
     "COMMAND_LOAD_SNAPSHOT",
     "COMMAND_PREPARE_SEND_PLAN",
     "COMMAND_REGEN",
+    "COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP",
     "COMMAND_SAVE",
     "COMMAND_SELECT_PROFILE",
     "COMMAND_SEND",
@@ -516,6 +538,7 @@ __all__ = [
     "PrepareSendPlanCommand",
     "ProfileChangedEvent",
     "RegenCommand",
+    "RehearseOperatorPackageStepCommand",
     "SaveCommand",
     "SelectProfileCommand",
     "SendCommand",

@@ -1,6 +1,6 @@
 """Integration: every command type round-trips correctly over the WebSocket.
 
-For each of the 11 spec commands, sends an envelope and verifies:
+For each of the 12 spec commands, sends an envelope and verifies:
 
 * the ack frame's ``request_id`` echoes the request,
 * ``ok`` is ``True`` for valid commands,
@@ -34,6 +34,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
     COMMAND_LOAD_SNAPSHOT,
     COMMAND_PREPARE_SEND_PLAN,
     COMMAND_REGEN,
+    COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
     COMMAND_SAVE,
     COMMAND_SELECT_PROFILE,
     COMMAND_SEND,
@@ -232,18 +233,44 @@ def test_export_profile_model_roundtrips_with_model_bytes_b64_field(
     assert isinstance(ack["model_bytes_b64"], str)
 
 
-def test_all_eleven_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
+def test_rehearse_operator_package_step_roundtrips_with_mock_safe_rehearsal_ack(
+    cockpit_ws: object,
+) -> None:
+    """``rehearse_operator_package_step`` returns mock-safe operator package evidence."""
+
+    ack = send_cmd(
+        cockpit_ws,
+        COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
+        request_id="rt-operator-package",
+        operator_package_id="live-kit-operator-package",
+        step_key="operator-step-hard-groove-lift",
+        slot_key="hard-groove-lift",
+        package_export_key="operator-package-hard-groove-lift",
+        snapshot_id="snap-06",
+        depth_percent=70,
+        mock_safe=True,
+    )
+
+    assert ack["request_id"] == "rt-operator-package"
+    assert ack["ok"] is True
+    rehearsal = ack["operator_package_rehearsal"]
+    assert rehearsal["rehearsal_status"] == "mock_safe_ready"
+    assert rehearsal["opened_midi_port"] is False
+    assert rehearsal["sent_midi"] is False
+
+
+def test_all_twelve_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
     """Pin invariant: every cockpit-native command has a matching round-trip test above.
 
     ``COMMAND_TYPES`` is the union of the cockpit + wizard command surfaces
-    (11 cockpit + 8 wizard = 19 total). This test pins the 11 cockpit-native
+    (12 cockpit + 8 wizard = 20 total). This test pins the 12 cockpit-native
     commands; the wizard subset is exercised end-to-end in
     ``test_integration_wizard_flow.py``. If a new cockpit command lands and
     this assertion is not extended, the file falls out of sync silently —
     this test makes that drift visible at the integration boundary.
     """
 
-    assert len(COMMAND_TYPES) == 19
+    assert len(COMMAND_TYPES) == 20
     cockpit_native = {
         COMMAND_SELECT_PROFILE,
         COMMAND_SET_DEPTH,
@@ -256,9 +283,10 @@ def test_all_eleven_cockpit_command_types_are_exercised(cockpit_ws: object) -> N
         COMMAND_LOAD_SNAPSHOT,
         COMMAND_UNDO,
         COMMAND_EXPORT_PROFILE_MODEL,
+        COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
     }
     assert cockpit_native <= COMMAND_TYPES
-    assert len(cockpit_native) == 11
+    assert len(cockpit_native) == 12
 
 
 # ---------------------------------------------------------------------------

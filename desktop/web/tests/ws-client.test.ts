@@ -541,6 +541,47 @@ describe('CockpitClient — send / ack correlation', () => {
     expect(result.request_id).toBe(sent.request_id);
   });
 
+  it('round-trips an operator package rehearsal command with typed ack payload', async () => {
+    const h = makeHarness();
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    const cmd: Command = {
+      type: 'rehearse_operator_package_step',
+      operator_package_id: 'live-kit-operator-package',
+      step_key: 'operator-step-hard-groove-lift',
+      slot_key: 'hard-groove-lift',
+      package_export_key: 'operator-package-hard-groove-lift',
+      snapshot_id: 'snap-06',
+      depth_percent: 70,
+      mock_safe: true,
+    };
+    const promise = h.client.send(cmd);
+    const sent = JSON.parse(h.currentSocket().sent[0] ?? '') as {
+      request_id: string;
+      command: Command;
+    };
+    expect(sent.command).toMatchObject(cmd);
+    h.currentSocket().emitMessage(
+      ack(sent.request_id, {
+        operator_package_rehearsal: {
+          rehearsal_id: 'operator-package-rehearsal:operator-step-hard-groove-lift',
+          operator_package_id: 'live-kit-operator-package',
+          step_key: 'operator-step-hard-groove-lift',
+          slot_key: 'hard-groove-lift',
+          mock_safe: true,
+          rehearsal_status: 'mock_safe_ready',
+          opened_midi_port: false,
+          sent_midi: false,
+          writes_files: false,
+        },
+      }),
+    );
+
+    const result = await promise;
+    expect(result.operator_package_rehearsal?.sent_midi).toBe(false);
+    expect(result.operator_package_rehearsal?.rehearsal_status).toBe('mock_safe_ready');
+  });
+
   it('rejects send() when the socket is not OPEN', async () => {
     const h = makeHarness();
     h.client.connect();

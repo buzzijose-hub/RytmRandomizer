@@ -116,6 +116,30 @@ export interface CockpitSendPlan {
   packets: SendPlanPacket[];
 }
 
+export interface OperatorPackageRehearsal {
+  rehearsal_id: string;
+  operator_package_id: string;
+  step_key: string;
+  slot_key: string;
+  label?: string;
+  cockpit_binding?: string;
+  local_action?: string;
+  stage_target?: string;
+  recovery_command?: string;
+  operator_command?: string;
+  package_export_key?: string;
+  snapshot_id?: string;
+  depth_percent?: number;
+  mock_safe: boolean;
+  rehearsal_status: string;
+  safety_status?: string;
+  opened_midi_port: boolean;
+  sent_midi: boolean;
+  writes_files: boolean;
+  blocked_actions?: string[];
+  safety_lines?: string[];
+}
+
 export interface HistoryEntry {
   snapshot: Snapshot;
   kind: HistoryEntryKind;
@@ -236,6 +260,17 @@ export interface ExportProfileModelCommand {
   target: ExportTarget;
 }
 
+export interface RehearseOperatorPackageStepCommand {
+  type: 'rehearse_operator_package_step';
+  operator_package_id: string;
+  step_key: string;
+  slot_key: string;
+  package_export_key: string;
+  snapshot_id: string;
+  depth_percent: number;
+  mock_safe: boolean;
+}
+
 export type Command =
   | SelectProfileCommand
   | SetDepthCommand
@@ -247,7 +282,8 @@ export type Command =
   | SaveCommand
   | LoadSnapshotCommand
   | UndoCommand
-  | ExportProfileModelCommand;
+  | ExportProfileModelCommand
+  | RehearseOperatorPackageStepCommand;
 
 export type CommandType = Command['type'];
 
@@ -274,8 +310,10 @@ export interface CommandAck {
   new_snapshot_id?: string;
   model_bytes?: string; // base64 for binary, raw json otherwise
   model_bytes_b64?: string; // Python sidecar's explicit base64 field name
+  operator_package_rehearsal?: OperatorPackageRehearsal;
   error?: string;
   code?: string;
+  message?: string;
 }
 
 /**
