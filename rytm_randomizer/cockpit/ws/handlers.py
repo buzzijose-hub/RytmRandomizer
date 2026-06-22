@@ -61,9 +61,9 @@ import base64
 import json
 import time
 from collections import OrderedDict
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
-from typing import Any, Final, Protocol, runtime_checkable
+from typing import Any, Final, Protocol, cast, runtime_checkable
 
 from ...observability.errors import RytmRandomizerError
 from ...observability.logging import get_logger
@@ -77,6 +77,7 @@ from .protocol import (
     COMMAND_LOAD_SNAPSHOT,
     COMMAND_PREPARE_SEND_PLAN,
     COMMAND_REGEN,
+    COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
     COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
     COMMAND_SAVE,
     COMMAND_SELECT_PROFILE,
@@ -689,31 +690,160 @@ def _live_kit_operator_package_payload() -> dict:
     return console_payload["live_kit_operator_package"]
 
 
+def _operator_package_steps(package: Mapping[str, object]) -> list[Mapping[str, object]]:
+    rows = package.get("operator_steps", [])
+    if not isinstance(rows, list):
+        return []
+    return [cast(Mapping[str, object], row) for row in rows if isinstance(row, dict)]
+
+
+def _operator_package_bindings(package: Mapping[str, object]) -> list[Mapping[str, object]]:
+    rows = package.get("slot_bindings", [])
+    if not isinstance(rows, list):
+        return []
+    return [cast(Mapping[str, object], row) for row in rows if isinstance(row, dict)]
+
+
+def _operator_package_blocked_actions(package: Mapping[str, object]) -> list[str]:
+    rows = package.get("blocked_actions", [])
+    if not isinstance(rows, list):
+        return []
+    return [row for row in rows if isinstance(row, str)]
+
+
+def _operator_package_safety_lines(package: Mapping[str, object]) -> list[str]:
+    rows = package.get("safety_lines", [])
+    if not isinstance(rows, list):
+        return []
+    return [row for row in rows if isinstance(row, str)]
+
+
+def _validate_operator_package_header(
+    cmd: Mapping[str, object],
+    package: Mapping[str, object],
+) -> dict | None:
+    if cmd.get("mock_safe") is not True:
+        return _error_ack(ERR_VALIDATION, "mock_safe must be true for operator package rehearsal")
+    operator_package_id = str(cmd["operator_package_id"])
+    expected_package_id = str(package["operator_package_id"])
+    if operator_package_id != expected_package_id:
+        return _error_ack(
+            ERR_VALIDATION,
+            f"unknown operator_package_id: {operator_package_id!r}",
+        )
+    return None
+
+
+def _operator_package_step_by_key(
+    package: Mapping[str, object],
+    step_key: str,
+) -> Mapping[str, object] | None:
+    return next(
+        (row for row in _operator_package_steps(package) if row.get("step_key") == step_key),
+        None,
+    )
+
+
+def _operator_package_binding_by_slot(
+    package: Mapping[str, object],
+    slot_key: str,
+) -> Mapping[str, object]:
+    return next(
+        (row for row in _operator_package_bindings(package) if row.get("slot_key") == slot_key),
+        {},
+    )
+
+
+def _expected_operator_package_export_key(
+    *,
+    step: Mapping[str, object],
+    binding: Mapping[str, object],
+) -> str:
+    fallback_slot = str(step["slot_key"])
+    return str(binding.get("package_export_key", f"operator-package-{fallback_slot}"))
+
+
+def _operator_package_export_key_mismatch_ack(
+    *,
+    step_key: str,
+    expected_package_export_key: str,
+    provided_package_export_key: str | None,
+) -> dict | None:
+    if provided_package_export_key is None:
+        return None
+    if provided_package_export_key == expected_package_export_key:
+        return None
+    return _error_ack(
+        ERR_VALIDATION,
+        f"package_export_key mismatch for operator package step: {step_key!r}",
+    )
+
+
+def _operator_package_step_rehearsal(
+    *,
+    package: Mapping[str, object],
+    step: Mapping[str, object],
+    binding: Mapping[str, object],
+    snapshot_id: str,
+) -> dict:
+    step_key = str(step["step_key"])
+    slot_key = str(step["slot_key"])
+    depth_percent = int(binding.get("depth_percent", 0))
+    package_export_key = _expected_operator_package_export_key(step=step, binding=binding)
+    return {
+        "rehearsal_id": f"operator-package-rehearsal:{step_key}",
+        "operator_package_id": str(package["operator_package_id"]),
+        "step_key": step_key,
+        "slot_key": slot_key,
+        "label": str(step["label"]),
+        "cockpit_binding": str(step["cockpit_binding"]),
+        "local_action": str(step["local_action"]),
+        "stage_target": str(step["stage_target"]),
+        "recovery_command": str(step["recovery_command"]),
+        "operator_command": str(step["operator_command"]),
+        "package_export_key": package_export_key,
+        "snapshot_id": snapshot_id,
+        "depth_percent": depth_percent,
+        "mock_safe": True,
+        "rehearsal_status": "mock_safe_ready",
+        "safety_status": str(step["safety_status"]),
+        "opened_midi_port": False,
+        "sent_midi": False,
+        "writes_files": False,
+        "blocked_actions": _operator_package_blocked_actions(package),
+        "safety_lines": _operator_package_safety_lines(package),
+    }
+
+
+def _operator_package_step_keys_from_command(
+    cmd: Mapping[str, object],
+    package: Mapping[str, object],
+) -> list[str]:
+    requested = cmd.get("step_keys", [])
+    if not isinstance(requested, list) or not requested:
+        return [str(row["step_key"]) for row in _operator_package_steps(package)]
+    return [str(step_key) for step_key in requested]
+
+
+def _operator_package_export_keys_from_command(cmd: Mapping[str, object]) -> dict[str, str]:
+    provided = cmd.get("package_export_keys", {})
+    if not isinstance(provided, dict):
+        return {}
+    return {str(key): str(value) for key, value in provided.items()}
+
+
 async def _handle_rehearse_operator_package_step(
     cmd: dict, _session: CockpitSession
 ) -> HandlerResult:
     """Rehearse one operator package step through the WS bridge without side effects."""
 
-    if cmd.get("mock_safe") is not True:
-        return HandlerResult(
-            ack=_error_ack(ERR_VALIDATION, "mock_safe must be true for operator package rehearsal")
-        )
     package = _live_kit_operator_package_payload()
-    operator_package_id = str(cmd["operator_package_id"])
-    expected_package_id = str(package["operator_package_id"])
-    if operator_package_id != expected_package_id:
-        return HandlerResult(
-            ack=_error_ack(
-                ERR_VALIDATION,
-                f"unknown operator_package_id: {operator_package_id!r}",
-            )
-        )
+    invalid_ack = _validate_operator_package_header(cmd, package)
+    if invalid_ack is not None:
+        return HandlerResult(ack=invalid_ack)
     step_key = str(cmd["step_key"])
     slot_key = str(cmd["slot_key"])
-    step = next(
-        (row for row in package["operator_steps"] if row["step_key"] == step_key),
-        None,
-    )
+    step = _operator_package_step_by_key(package, step_key)
     if step is None:
         return HandlerResult(
             ack=_error_ack(ERR_VALIDATION, f"unknown operator package step: {step_key!r}")
@@ -725,36 +855,76 @@ async def _handle_rehearse_operator_package_step(
                 f"slot_key mismatch for operator package step: {slot_key!r}",
             )
         )
-    binding = next(
-        (row for row in package["slot_bindings"] if row["slot_key"] == slot_key),
-        {},
+    binding = _operator_package_binding_by_slot(package, slot_key)
+    package_export_key = _expected_operator_package_export_key(step=step, binding=binding)
+    mismatch_ack = _operator_package_export_key_mismatch_ack(
+        step_key=step_key,
+        expected_package_export_key=package_export_key,
+        provided_package_export_key=str(cmd["package_export_key"]),
     )
-    depth_percent = int(binding.get("depth_percent", cmd["depth_percent"]))
-    package_export_key = str(binding.get("package_export_key", cmd["package_export_key"]))
+    if mismatch_ack is not None:
+        return HandlerResult(ack=mismatch_ack)
+    rehearsal = _operator_package_step_rehearsal(
+        package=package,
+        step=step,
+        binding=binding,
+        snapshot_id=str(cmd["snapshot_id"]),
+    )
+    return HandlerResult(ack={"ok": True, "operator_package_rehearsal": rehearsal})
+
+
+async def _handle_rehearse_operator_package_sequence(
+    cmd: dict, _session: CockpitSession
+) -> HandlerResult:
+    """Rehearse selected operator package steps as one mock-safe sequence."""
+
+    package = _live_kit_operator_package_payload()
+    invalid_ack = _validate_operator_package_header(cmd, package)
+    if invalid_ack is not None:
+        return HandlerResult(ack=invalid_ack)
+    requested_step_keys = _operator_package_step_keys_from_command(cmd, package)
+    provided_export_keys = _operator_package_export_keys_from_command(cmd)
+    snapshot_id = str(cmd["snapshot_id"])
+    step_rehearsals: list[dict] = []
+    for step_key in requested_step_keys:
+        step = _operator_package_step_by_key(package, step_key)
+        if step is None:
+            return HandlerResult(
+                ack=_error_ack(ERR_VALIDATION, f"unknown operator package step: {step_key!r}")
+            )
+        binding = _operator_package_binding_by_slot(package, str(step["slot_key"]))
+        package_export_key = _expected_operator_package_export_key(step=step, binding=binding)
+        mismatch_ack = _operator_package_export_key_mismatch_ack(
+            step_key=step_key,
+            expected_package_export_key=package_export_key,
+            provided_package_export_key=provided_export_keys.get(step_key),
+        )
+        if mismatch_ack is not None:
+            return HandlerResult(ack=mismatch_ack)
+        step_rehearsals.append(
+            _operator_package_step_rehearsal(
+                package=package,
+                step=step,
+                binding=binding,
+                snapshot_id=snapshot_id,
+            )
+        )
     rehearsal = {
-        "rehearsal_id": f"operator-package-rehearsal:{step_key}",
-        "operator_package_id": expected_package_id,
-        "step_key": step_key,
-        "slot_key": slot_key,
-        "label": str(step["label"]),
-        "cockpit_binding": str(step["cockpit_binding"]),
-        "local_action": str(step["local_action"]),
-        "stage_target": str(step["stage_target"]),
-        "recovery_command": str(step["recovery_command"]),
-        "operator_command": str(step["operator_command"]),
-        "package_export_key": package_export_key,
-        "snapshot_id": str(cmd["snapshot_id"]),
-        "depth_percent": depth_percent,
+        "rehearsal_id": f"operator-package-sequence-rehearsal:{package['operator_package_id']}",
+        "operator_package_id": str(package["operator_package_id"]),
+        "step_count": len(step_rehearsals),
+        "step_keys": requested_step_keys,
+        "snapshot_id": snapshot_id,
         "mock_safe": True,
         "rehearsal_status": "mock_safe_ready",
-        "safety_status": str(step["safety_status"]),
         "opened_midi_port": False,
         "sent_midi": False,
         "writes_files": False,
-        "blocked_actions": list(package["blocked_actions"]),
-        "safety_lines": list(package["safety_lines"]),
+        "blocked_actions": _operator_package_blocked_actions(package),
+        "safety_lines": _operator_package_safety_lines(package),
+        "step_rehearsals": step_rehearsals,
     }
-    return HandlerResult(ack={"ok": True, "operator_package_rehearsal": rehearsal})
+    return HandlerResult(ack={"ok": True, "operator_package_sequence_rehearsal": rehearsal})
 
 
 # ---------------------------------------------------------------------------
@@ -776,6 +946,7 @@ _CORE_HANDLERS: dict[str, HandlerFn] = {
     COMMAND_UNDO: _handle_undo,
     COMMAND_EXPORT_PROFILE_MODEL: _handle_export_profile_model,
     COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP: _handle_rehearse_operator_package_step,
+    COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE: _handle_rehearse_operator_package_sequence,
 }
 
 #: Backwards-compatibility alias for the legacy ``_HANDLERS`` symbol some

@@ -112,6 +112,7 @@ export function App({ client: injected, performanceConsole }: AppProps = {}): JS
             model={performanceConsoleModel}
             packetSource={performanceConsoleSource}
             onRehearseOperatorPackageStep={(command) => client.send(command)}
+            onRehearseOperatorPackageSequence={(command) => client.send(command)}
           />
         </div>
       </>

@@ -16,7 +16,11 @@ import type {
   StyleCrateRehearsalCrateCardDict,
   StyleCrateRehearsalQueueCardDict,
 } from '../types/style_crate_rehearsal_deck';
-import type { CommandAck, RehearseOperatorPackageStepCommand } from '../ws/protocol';
+import type {
+  CommandAck,
+  RehearseOperatorPackageSequenceCommand,
+  RehearseOperatorPackageStepCommand,
+} from '../ws/protocol';
 import { ANALOG_FOUR_DEVICE_ID, RYTM_DEVICE_ID } from './devices';
 import { RYTM_PARAMETER_GROUPS } from './parameterGroups';
 
@@ -25,6 +29,9 @@ export interface PerformanceConsoleProps {
   packetSource?: string;
   onRehearseOperatorPackageStep?: (
     command: RehearseOperatorPackageStepCommand,
+  ) => Promise<CommandAck>;
+  onRehearseOperatorPackageSequence?: (
+    command: RehearseOperatorPackageSequenceCommand,
   ) => Promise<CommandAck>;
 }
 
@@ -1254,6 +1261,7 @@ export function PerformanceConsole({
   model,
   packetSource = 'passive packet',
   onRehearseOperatorPackageStep,
+  onRehearseOperatorPackageSequence,
 }: PerformanceConsoleProps): JSX.Element {
   const initialLocalRehearsal = useMemo(() => readLocalRehearsalSnapshot(), []);
   const [selectedCrateKey, setSelectedCrateKey] = useState<string | null>(
@@ -1720,6 +1728,52 @@ export function PerformanceConsole({
           );
         });
     }
+  };
+
+  const rehearseOperatorPackageSequence = (): void => {
+    const stepKeys = liveKitOperatorPackage.operator_steps.map((step) => step.step_key);
+    const packageExportKeys: Record<string, string> = {};
+    for (const step of liveKitOperatorPackage.operator_steps) {
+      const binding = operatorPackageBindingBySlot(model, step.slot_key);
+      packageExportKeys[step.step_key] =
+        binding?.package_export_key ?? `operator-package-${step.slot_key}`;
+    }
+    const command: RehearseOperatorPackageSequenceCommand = {
+      type: 'rehearse_operator_package_sequence',
+      operator_package_id: liveKitOperatorPackage.operator_package_id,
+      step_keys: stepKeys,
+      package_export_keys: packageExportKeys,
+      snapshot_id: selectedSnapshotIdLabel,
+      mock_safe: true,
+    };
+    const rehearseSequence = onRehearseOperatorPackageSequence as (
+      command: RehearseOperatorPackageSequenceCommand,
+    ) => Promise<CommandAck>;
+    void rehearseSequence(command)
+      .then((ack) => {
+        if (ack.ok) {
+          const rehearsal = ack.operator_package_sequence_rehearsal;
+          appendLocalOperatorEvent(
+            'Operator package sequence acknowledged',
+            rehearsal === undefined
+              ? 'Mock-safe operator package sequence accepted; no MIDI sent.'
+              : `${rehearsal.step_count} steps / ${rehearsal.rehearsal_status} / sent MIDI ${String(
+                  rehearsal.sent_midi,
+                )}.`,
+          );
+          return;
+        }
+        appendLocalOperatorEvent(
+          'Operator package sequence rejected',
+          ack.message ?? ack.error ?? ack.code ?? 'Operator package sequence rehearsal rejected.',
+        );
+      })
+      .catch((error: unknown) => {
+        appendLocalOperatorEvent(
+          'Operator package sequence failed',
+          error instanceof Error ? error.message : 'Operator package sequence rehearsal failed.',
+        );
+      });
   };
 
   const promoteNextLocalSetStep = (): void => {
@@ -3448,6 +3502,20 @@ export function PerformanceConsole({
               includes {liveKitOperatorPackage.package_manifest.includes.join(', ')}
             </small>
           </article>
+        </div>
+        <div className="performance-console-macro-actions">
+          <button
+            type="button"
+            className="live-readiness-action performance-console-local-control"
+            disabled={
+              onRehearseOperatorPackageSequence === undefined ||
+              liveKitOperatorPackage.operator_steps.length === 0
+            }
+            title="Rehearses every operator package step through the mock-safe sidecar bridge."
+            onClick={rehearseOperatorPackageSequence}
+          >
+            Rehearse operator package sequence
+          </button>
         </div>
 
         <h3 className="performance-console-subheading">Operator Steps</h3>
