@@ -24,7 +24,7 @@ import json
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
 
 import pytest
 
@@ -57,6 +57,7 @@ pytestmark = pytest.mark.fast
 
 _FIXED_TS = datetime(2026, 5, 23, 12, 0, 0, tzinfo=timezone.utc)
 _PERFORMANCE_CONSOLE_CHANGED = "performance_console_changed"
+_COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY: Final[str] = "preview_operator_package_apply"
 
 
 # ---------------------------------------------------------------------------
@@ -1221,6 +1222,293 @@ def test_rehearse_operator_package_sequence_rejects_package_export_key_mismatch(
     assert ack["ok"] is False
     assert ack["code"] == "validation_error"
     assert "package_export_key mismatch" in ack["message"]
+    assert recorder.events == []
+
+
+# ---------------------------------------------------------------------------
+# preview_operator_package_apply - mock-safe apply-preview bridge.
+# ---------------------------------------------------------------------------
+
+
+def test_preview_operator_package_apply_returns_deterministic_mock_safe_payload(
+    tmp_path: Path,
+) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+    before_snapshot = session.device.capture_snapshot().to_dict()
+
+    ack = _dispatch(
+        _envelope(
+            _COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
+            operator_package_id="live-kit-operator-package",
+            step_keys=[
+                "operator-step-hard-groove-lift",
+                "operator-step-industrial-pressure",
+            ],
+            package_export_keys={
+                "operator-step-hard-groove-lift": "operator-package-hard-groove-lift",
+                "operator-step-industrial-pressure": "operator-package-industrial-pressure",
+            },
+            snapshot_id="snap-06",
+            mock_safe=True,
+        ),
+        session,
+        recorder,
+    )
+
+    preview = ack["operator_package_apply_preview"]
+    assert ack["ok"] is True
+    assert preview["preview_id"] == (
+        "operator-package-apply-preview:live-kit-operator-package:snap-06:"
+        "operator-step-hard-groove-lift,operator-step-industrial-pressure"
+    )
+    assert preview["operator_package_id"] == "live-kit-operator-package"
+    assert preview["snapshot_id"] == "snap-06"
+    assert preview["mock_safe"] is True
+    assert preview["preview_status"] == "mock_safe_ready"
+    assert preview["apply_policy"] == "preview_only"
+    assert preview["opened_midi_port"] is False
+    assert preview["sent_midi"] is False
+    assert preview["writes_files"] is False
+    assert preview["step_count"] == 2
+    assert preview["step_keys"] == [
+        "operator-step-hard-groove-lift",
+        "operator-step-industrial-pressure",
+    ]
+    assert preview["apply_steps"] == [
+        {
+            "order": 1,
+            "step_key": "operator-step-hard-groove-lift",
+            "slot_key": "hard-groove-lift",
+            "label": "Hard Groove Lift",
+            "package_export_key": "operator-package-hard-groove-lift",
+            "local_action": "stage-local-set-plan",
+            "operator_command": "go",
+            "recovery_command": "Z then send",
+            "readiness_status": "ready_for_mock_apply_preview",
+            "blocked_action": "real_send_blocked",
+        },
+        {
+            "order": 2,
+            "step_key": "operator-step-industrial-pressure",
+            "slot_key": "industrial-pressure",
+            "label": "Industrial Pressure",
+            "package_export_key": "operator-package-industrial-pressure",
+            "local_action": "stage-local-set-plan",
+            "operator_command": "go",
+            "recovery_command": "Z then send",
+            "readiness_status": "ready_for_mock_apply_preview",
+            "blocked_action": "real_send_blocked",
+        },
+    ]
+    assert preview["readiness_checks"] == [
+        {"check": "mock_safe", "status": "passed", "required": True},
+        {
+            "check": "operator_package_id",
+            "status": "passed",
+            "operator_package_id": "live-kit-operator-package",
+        },
+        {"check": "selected_steps", "status": "passed", "step_count": 2},
+        {"check": "package_export_keys", "status": "passed", "binding_count": 2},
+    ]
+    assert len(preview["recovery_requirements"]) == 3
+    assert preview["recovery_requirements"][0]["requirement_key"] == "z-then-send"
+    assert "send operator package from Cockpit console" in preview["blocked_actions"]
+    assert "no MIDI sending" in preview["safety_lines"]
+    assert "no port opening" in preview["safety_lines"]
+    assert preview["dry_run_summary"] == {
+        "apply_policy": "preview_only",
+        "would_apply_steps": 2,
+        "would_open_midi_port": False,
+        "would_send_midi": False,
+        "would_write_files": False,
+        "would_mutate_snapshot": False,
+        "events_emitted": False,
+    }
+    assert session.device.capture_snapshot().to_dict() == before_snapshot
+    assert session.unsaved_sends == 0
+    assert session.current_send_plan is None
+    assert recorder.events == []
+
+
+def test_preview_operator_package_apply_uses_all_steps_when_step_keys_empty(
+    tmp_path: Path,
+) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            _COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
+            operator_package_id="live-kit-operator-package",
+            step_keys=[],
+            package_export_keys={},
+            snapshot_id="snap-06",
+            mock_safe=True,
+        ),
+        session,
+        recorder,
+    )
+
+    preview = ack["operator_package_apply_preview"]
+    assert ack["ok"] is True
+    assert preview["step_count"] == 5
+    assert preview["step_keys"] == [
+        "operator-step-captured-base",
+        "operator-step-hard-groove-lift",
+        "operator-step-industrial-pressure",
+        "operator-step-dub-reset",
+        "operator-step-recovery-return",
+    ]
+    assert [row["order"] for row in preview["apply_steps"]] == [1, 2, 3, 4, 5]
+    assert recorder.events == []
+
+
+def test_preview_operator_package_apply_requires_mock_safe_true(tmp_path: Path) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            _COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
+            operator_package_id="live-kit-operator-package",
+            step_keys=["operator-step-hard-groove-lift"],
+            package_export_keys={
+                "operator-step-hard-groove-lift": "operator-package-hard-groove-lift"
+            },
+            snapshot_id="snap-06",
+            mock_safe=False,
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert "mock_safe" in ack["message"]
+    assert recorder.events == []
+
+
+def test_preview_operator_package_apply_rejects_unknown_package(tmp_path: Path) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            _COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
+            operator_package_id="wrong-package",
+            step_keys=["operator-step-hard-groove-lift"],
+            package_export_keys={
+                "operator-step-hard-groove-lift": "operator-package-hard-groove-lift"
+            },
+            snapshot_id="snap-06",
+            mock_safe=True,
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert "unknown operator_package_id" in ack["message"]
+    assert recorder.events == []
+
+
+def test_preview_operator_package_apply_rejects_unknown_step(tmp_path: Path) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            _COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
+            operator_package_id="live-kit-operator-package",
+            step_keys=["operator-step-missing"],
+            package_export_keys={"operator-step-missing": "operator-package-missing"},
+            snapshot_id="snap-06",
+            mock_safe=True,
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert "unknown operator package step" in ack["message"]
+    assert recorder.events == []
+
+
+def test_preview_operator_package_apply_rejects_package_export_key_mismatch(
+    tmp_path: Path,
+) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            _COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
+            operator_package_id="live-kit-operator-package",
+            step_keys=["operator-step-hard-groove-lift"],
+            package_export_keys={
+                "operator-step-hard-groove-lift": "operator-package-stale-hard-groove-lift"
+            },
+            snapshot_id="snap-06",
+            mock_safe=True,
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert "package_export_key mismatch" in ack["message"]
+    assert recorder.events == []
+
+
+def test_preview_operator_package_apply_preserves_send_plan_and_never_calls_device_writes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    profile = _profile()
+    session = _make_session(tmp_path, profile)
+    session.active_profile = profile
+    _dispatch(_envelope("set_depth", depth=0.5), session, _Recorder())
+    _dispatch(_envelope("prepare_send_plan"), session, _Recorder())
+    assert session.current_candidate is not None
+    assert session.current_send_plan is not None
+    before_snapshot = session.device.capture_snapshot().to_dict()
+    before_candidate_id = session.current_candidate.candidate_id
+    before_plan = session.current_send_plan
+    calls: list[str] = []
+
+    def _record_unexpected_call(*_args: object, **_kwargs: object) -> None:
+        calls.append("called")
+
+    monkeypatch.setattr(session.device, "apply", _record_unexpected_call)
+    monkeypatch.setattr(session.device, "apply_send_plan", _record_unexpected_call)
+    monkeypatch.setattr(session.device, "commit_kit", _record_unexpected_call)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            _COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
+            operator_package_id="live-kit-operator-package",
+            step_keys=["operator-step-hard-groove-lift"],
+            package_export_keys={
+                "operator-step-hard-groove-lift": "operator-package-hard-groove-lift"
+            },
+            snapshot_id="snap-06",
+            mock_safe=True,
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is True
+    assert calls == []
+    assert session.device.capture_snapshot().to_dict() == before_snapshot
+    assert session.current_candidate is not None
+    assert session.current_candidate.candidate_id == before_candidate_id
+    assert session.current_send_plan is before_plan
+    assert session.unsaved_sends == 0
     assert recorder.events == []
 
 

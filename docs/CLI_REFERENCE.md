@@ -422,4 +422,11 @@ snapshot-history SEND, live-kit receive/mutate/send, captured-kit package
 apply/export/audition, controller MIDI learn/input, controller WebSocket
 dispatch, and Analog Four outbound macro actions blocked.
 
+The Operator Package Apply Preview surface stays on the same mock-safe sidecar
+bridge. Its ack previews the whole package apply plan with ordered apply steps,
+validated export keys, readiness checks, recovery requirements, blocked
+real-send actions, safety lines, a dry-run summary, and proof that no port
+opened, no MIDI was sent, and no package file was written. It is intentionally
+not the real hardware apply/send path.
+
 Run any one with `--help` for its full flag set, or check the lazy command registry in [`rytm_randomizer/cli.py`](../rytm_randomizer/cli.py) for the complete catalogue.
