@@ -1481,6 +1481,11 @@ describe('PerformanceConsole', () => {
             status: 'passed',
             binding_count: stepKeys.length,
           },
+          {
+            check: 'operator_notes',
+            status: 'passed',
+            required: false,
+          },
         ],
         recovery_requirements: [
           {
@@ -1489,6 +1494,13 @@ describe('PerformanceConsole', () => {
             command: 'Z then send',
             required_before_send: true,
             evidence: 'captured-base exposes recovery before staging',
+          },
+          {
+            requirement_key: 'journal-before-close',
+            label: 'Optional: Save to journal before close',
+            command: 'save to journal',
+            required_before_send: false,
+            evidence: 'operator can save favorites after dry-run review',
           },
         ],
         blocked_actions: [
@@ -1551,9 +1563,12 @@ describe('PerformanceConsole', () => {
     expect(mockApplyPanel).toHaveTextContent('operator package live-kit-operator-package');
     expect(mockApplyPanel).toHaveTextContent('selected_steps');
     expect(mockApplyPanel).toHaveTextContent(`binding count ${stepKeys.length}`);
+    expect(mockApplyPanel).toHaveTextContent('operator_notes');
+    expect(mockApplyPanel).toHaveTextContent('optional');
     expect(mockApplyPanel).toHaveTextContent('accepted_for_mock_apply');
     expect(mockApplyPanel).toHaveTextContent('real_apply_blocked');
     expect(mockApplyPanel).toHaveTextContent('Recovery: Z then send');
+    expect(mockApplyPanel).toHaveTextContent('Optional: Save to journal before close');
     expect(mockApplyPanel).toHaveTextContent('open MIDI port from operator package');
     expect(mockApplyPanel).toHaveTextContent('no MIDI sending');
     expect(mockApplyPanel).toHaveTextContent('opened MIDI port false');
