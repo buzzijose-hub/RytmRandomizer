@@ -156,6 +156,66 @@ export interface OperatorPackageSequenceRehearsal {
   step_rehearsals: OperatorPackageRehearsal[];
 }
 
+export interface OperatorPackageApplyPreviewStep {
+  order: number;
+  step_key: string;
+  label: string;
+  slot_key: string;
+  package_export_key: string;
+  local_action: string;
+  operator_command: string;
+  recovery_command: string;
+  readiness_status: string;
+  blocked_action: string;
+}
+
+export interface OperatorPackageApplyPreviewReadinessCheck {
+  check: string;
+  status: string;
+  required?: boolean;
+  operator_package_id?: string;
+  step_count?: number;
+  binding_count?: number;
+}
+
+export interface OperatorPackageApplyPreviewRecoveryRequirement {
+  requirement_key: string;
+  label: string;
+  command: string;
+  required_before_send: boolean;
+  evidence: string;
+}
+
+export interface OperatorPackageApplyPreviewDryRunSummary {
+  apply_policy: string;
+  would_apply_steps: number;
+  would_open_midi_port: boolean;
+  would_send_midi: boolean;
+  would_write_files: boolean;
+  would_mutate_snapshot: boolean;
+  events_emitted: boolean;
+}
+
+export interface OperatorPackageApplyPreview {
+  preview_id: string;
+  operator_package_id: string;
+  snapshot_id: string;
+  mock_safe: boolean;
+  preview_status: string;
+  apply_policy: string;
+  opened_midi_port: boolean;
+  sent_midi: boolean;
+  writes_files: boolean;
+  step_count: number;
+  step_keys: string[];
+  apply_steps: OperatorPackageApplyPreviewStep[];
+  readiness_checks: OperatorPackageApplyPreviewReadinessCheck[];
+  recovery_requirements: OperatorPackageApplyPreviewRecoveryRequirement[];
+  blocked_actions: string[];
+  safety_lines: string[];
+  dry_run_summary: OperatorPackageApplyPreviewDryRunSummary;
+}
+
 export interface HistoryEntry {
   snapshot: Snapshot;
   kind: HistoryEntryKind;
@@ -296,6 +356,15 @@ export interface RehearseOperatorPackageSequenceCommand {
   mock_safe: boolean;
 }
 
+export interface PreviewOperatorPackageApplyCommand {
+  type: 'preview_operator_package_apply';
+  operator_package_id: string;
+  step_keys: string[];
+  package_export_keys: Record<string, string>;
+  snapshot_id: string;
+  mock_safe: boolean;
+}
+
 export type Command =
   | SelectProfileCommand
   | SetDepthCommand
@@ -309,7 +378,8 @@ export type Command =
   | UndoCommand
   | ExportProfileModelCommand
   | RehearseOperatorPackageStepCommand
-  | RehearseOperatorPackageSequenceCommand;
+  | RehearseOperatorPackageSequenceCommand
+  | PreviewOperatorPackageApplyCommand;
 
 export type CommandType = Command['type'];
 
@@ -338,6 +408,7 @@ export interface CommandAck {
   model_bytes_b64?: string; // Python sidecar's explicit base64 field name
   operator_package_rehearsal?: OperatorPackageRehearsal;
   operator_package_sequence_rehearsal?: OperatorPackageSequenceRehearsal;
+  operator_package_apply_preview?: OperatorPackageApplyPreview;
   error?: string;
   code?: string;
   message?: string;

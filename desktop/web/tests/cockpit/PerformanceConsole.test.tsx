@@ -329,6 +329,17 @@ function performanceConsoleModelWithUnboundOperatorPackageStep(): LiveGuiPerform
   };
 }
 
+function performanceConsoleModelWithNoOperatorPackageSteps(): LiveGuiPerformanceConsoleModelDict {
+  return {
+    ...performanceConsoleModel,
+    live_kit_operator_package: {
+      ...performanceConsoleModel.live_kit_operator_package,
+      operator_steps: [],
+      slot_bindings: [],
+    },
+  };
+}
+
 describe('PerformanceConsole', () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -1010,6 +1021,366 @@ describe('PerformanceConsole', () => {
     expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
       'Operator package sequence rehearsal failed.',
     );
+  });
+
+  it('disables operator package apply preview when the callback or package steps are unavailable', () => {
+    const missingCallbackRender = render(
+      <PerformanceConsole model={performanceConsoleModelWithSelectableHistory()} />,
+    );
+
+    expect(
+      screen.getByRole('button', { name: /preview operator package apply plan/i }),
+    ).toBeDisabled();
+    missingCallbackRender.unmount();
+
+    render(
+      <PerformanceConsole
+        model={performanceConsoleModelWithNoOperatorPackageSteps()}
+        onPreviewOperatorPackageApply={() =>
+          Promise.resolve({ request_id: 'unused-preview', ok: true })
+        }
+      />,
+    );
+
+    expect(
+      screen.getByRole('button', { name: /preview operator package apply plan/i }),
+    ).toBeDisabled();
+  });
+
+  it('sends a mock-safe operator package apply preview command and renders the review panel', async () => {
+    const client = new FakeCockpitClient();
+    const model = performanceConsoleModelWithSelectableHistory();
+    const operatorPackage = model.live_kit_operator_package;
+    const stepKeys = operatorPackage.operator_steps.map((step) => step.step_key);
+    const packageExportKeys = Object.fromEntries(
+      operatorPackage.operator_steps.map((step) => {
+        const binding = operatorPackage.slot_bindings.find(
+          (candidate) => candidate.slot_key === step.slot_key,
+        );
+        return [step.step_key, binding?.package_export_key ?? `operator-package-${step.slot_key}`];
+      }),
+    );
+    client.ackQueue.push({
+      request_id: 'operator-package-apply-previewed',
+      ok: true,
+      operator_package_apply_preview: {
+        preview_id: 'operator-package-apply-preview:live-kit-operator-package',
+        operator_package_id: 'live-kit-operator-package',
+        snapshot_id: 'console-snap-03',
+        mock_safe: true,
+        preview_status: 'mock_safe_ready',
+        apply_policy: 'preview_only',
+        opened_midi_port: false,
+        sent_midi: false,
+        writes_files: false,
+        step_count: stepKeys.length,
+        step_keys: stepKeys,
+        apply_steps: [
+          {
+            step_key: 'operator-step-hard-groove-lift',
+            label: 'Hard Groove Lift',
+            slot_key: 'hard-groove-lift',
+            package_export_key: 'operator-package-hard-groove-lift',
+            order: 1,
+            local_action: 'stage-local-set-plan',
+            operator_command: 'go',
+            recovery_command: 'Z then send',
+            readiness_status: 'ready_for_mock_apply_preview',
+            blocked_action: 'real_send_blocked',
+          },
+          {
+            step_key: 'operator-step-industrial-pressure',
+            label: 'Industrial Pressure',
+            slot_key: 'industrial-pressure',
+            package_export_key: 'operator-package-industrial-pressure',
+            order: 2,
+            local_action: 'stage-local-set-plan',
+            operator_command: 'go',
+            recovery_command: 'Z then send',
+            readiness_status: 'ready_for_mock_apply_preview',
+            blocked_action: 'real_send_blocked',
+          },
+        ],
+        readiness_checks: [
+          {
+            check: 'mock_safe',
+            status: 'passed',
+            required: true,
+          },
+          {
+            check: 'operator_package_id',
+            status: 'passed',
+            operator_package_id: 'live-kit-operator-package',
+          },
+          {
+            check: 'selected_steps',
+            status: 'passed',
+            step_count: stepKeys.length,
+          },
+          {
+            check: 'package_export_keys',
+            status: 'passed',
+            binding_count: stepKeys.length,
+          },
+          {
+            check: 'optional_preview_note',
+            status: 'passed',
+            required: false,
+          },
+          {
+            check: 'metadata_only',
+            status: 'passed',
+          },
+        ],
+        recovery_requirements: [
+          {
+            requirement_key: 'z-then-send',
+            label: 'Recovery: Z then send',
+            command: 'Z then send',
+            required_before_send: true,
+            evidence: 'captured-base exposes recovery before staging',
+          },
+          {
+            requirement_key: 'optional-note',
+            label: 'Optional recovery note',
+            command: 'none',
+            required_before_send: false,
+            evidence: 'optional review note only',
+          },
+        ],
+        blocked_actions: [
+          'open MIDI port from operator package',
+          'write operator package file from passive report',
+        ],
+        safety_lines: ['no MIDI sending', 'no port opening'],
+        dry_run_summary: {
+          apply_policy: 'preview_only',
+          would_apply_steps: stepKeys.length,
+          would_open_midi_port: false,
+          would_send_midi: false,
+          would_write_files: false,
+          would_mutate_snapshot: false,
+          events_emitted: false,
+        },
+      },
+    });
+    render(
+      <PerformanceConsole
+        model={model}
+        onPreviewOperatorPackageApply={(command) => client.send(command)}
+      />,
+    );
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    fireEvent.click(
+      within(operatorPackagePanel).getByRole('button', {
+        name: /preview operator package apply plan/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(client.sent).toHaveLength(1);
+    });
+    expect(client.sent[0]).toMatchObject({
+      type: 'preview_operator_package_apply',
+      operator_package_id: 'live-kit-operator-package',
+      step_keys: stepKeys,
+      package_export_keys: packageExportKeys,
+      snapshot_id: 'console-snap-03',
+      mock_safe: true,
+    });
+
+    const previewPanel = await screen.findByTestId(
+      'performance-console-operator-package-apply-preview',
+    );
+    expect(previewPanel).toHaveTextContent('mock_safe_ready');
+    expect(previewPanel).toHaveTextContent(
+      'preview_only / would apply 5 steps / open MIDI port false / send MIDI false / write files false / mutate snapshot false / events emitted false',
+    );
+    expect(previewPanel).toHaveTextContent(`steps ${stepKeys.length}`);
+    expect(previewPanel).toHaveTextContent('preview_only');
+    expect(previewPanel).toHaveTextContent('Hard Groove Lift');
+    expect(previewPanel).toHaveTextContent('operator-package-hard-groove-lift');
+    expect(previewPanel).toHaveTextContent('mock_safe');
+    expect(previewPanel).toHaveTextContent('operator package live-kit-operator-package');
+    expect(previewPanel).toHaveTextContent('selected_steps');
+    expect(previewPanel).toHaveTextContent(`binding count ${stepKeys.length}`);
+    expect(previewPanel).toHaveTextContent('optional_preview_note');
+    expect(previewPanel).toHaveTextContent('optional');
+    expect(previewPanel).toHaveTextContent('metadata_only');
+    expect(previewPanel).toHaveTextContent('no extra evidence');
+    expect(previewPanel).toHaveTextContent('ready_for_mock_apply_preview');
+    expect(previewPanel).toHaveTextContent('real_send_blocked');
+    expect(previewPanel).toHaveTextContent('Recovery: Z then send');
+    expect(previewPanel).toHaveTextContent('Optional recovery note');
+    expect(previewPanel).toHaveTextContent('open MIDI port from operator package');
+    expect(previewPanel).toHaveTextContent('no MIDI sending');
+    expect(previewPanel).toHaveTextContent('opened MIDI port false');
+    expect(previewPanel).toHaveTextContent('sent MIDI false');
+    expect(previewPanel).toHaveTextContent('writes files false');
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'Operator package apply preview acknowledged',
+    );
+    expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
+  });
+
+  it('logs accepted operator package apply preview ack when payload is omitted', async () => {
+    const client = new FakeCockpitClient();
+    client.ackQueue.push({
+      request_id: 'operator-package-apply-preview-accepted',
+      ok: true,
+    });
+    render(
+      <PerformanceConsole
+        model={performanceConsoleModelWithSelectableHistory()}
+        onPreviewOperatorPackageApply={(command) => client.send(command)}
+      />,
+    );
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    fireEvent.click(
+      within(operatorPackagePanel).getByRole('button', {
+        name: /preview operator package apply plan/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+        'Mock-safe operator package apply preview accepted; no MIDI sent.',
+      );
+    });
+    expect(
+      screen.queryByTestId('performance-console-operator-package-apply-preview'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('logs operator package apply preview rejection without rendering a stale panel', async () => {
+    const client = new FakeCockpitClient();
+    client.ackQueue.push({
+      request_id: 'operator-package-apply-preview-rejected',
+      ok: false,
+      message: 'apply preview requires mock_safe true',
+    });
+    render(
+      <PerformanceConsole
+        model={performanceConsoleModelWithSelectableHistory()}
+        onPreviewOperatorPackageApply={(command) => client.send(command)}
+      />,
+    );
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    fireEvent.click(
+      within(operatorPackagePanel).getByRole('button', {
+        name: /preview operator package apply plan/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+        'Operator package apply preview rejected',
+      );
+    });
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'apply preview requires mock_safe true',
+    );
+    expect(
+      screen.queryByTestId('performance-console-operator-package-apply-preview'),
+    ).not.toBeInTheDocument();
+  });
+
+  it.each([
+    [{ error: 'apply preview sidecar rejected' }, 'apply preview sidecar rejected'],
+    [{ code: 'validation_error' }, 'validation_error'],
+    [{}, 'Operator package apply preview rejected.'],
+  ])('logs operator package apply preview rejection fallback %#', async (ackPatch, expected) => {
+    const client = new FakeCockpitClient();
+    client.ackQueue.push({
+      request_id: 'operator-package-apply-preview-rejected',
+      ok: false,
+      ...ackPatch,
+    });
+    render(
+      <PerformanceConsole
+        model={performanceConsoleModelWithSelectableHistory()}
+        onPreviewOperatorPackageApply={(command) => client.send(command)}
+      />,
+    );
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    fireEvent.click(
+      within(operatorPackagePanel).getByRole('button', {
+        name: /preview operator package apply plan/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+        expected,
+      );
+    });
+  });
+
+  it('logs operator package apply preview transport failure', async () => {
+    const client = new FakeCockpitClient();
+    client.nextRejection = new Error('apply preview sidecar offline');
+    render(
+      <PerformanceConsole
+        model={performanceConsoleModelWithSelectableHistory()}
+        onPreviewOperatorPackageApply={(command) => client.send(command)}
+      />,
+    );
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    fireEvent.click(
+      within(operatorPackagePanel).getByRole('button', {
+        name: /preview operator package apply plan/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+        'Operator package apply preview failed',
+      );
+    });
+    expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+      'apply preview sidecar offline',
+    );
+  });
+
+  it('logs generic operator package apply preview failure for non-error rejections', async () => {
+    const client = new FakeCockpitClient();
+    client.nextRejection = 'sidecar offline';
+    render(
+      <PerformanceConsole
+        model={performanceConsoleModelWithSelectableHistory()}
+        onPreviewOperatorPackageApply={(command) => client.send(command)}
+      />,
+    );
+
+    const operatorPackagePanel = screen.getByTestId(
+      'performance-console-live-kit-operator-package',
+    );
+    fireEvent.click(
+      within(operatorPackagePanel).getByRole('button', {
+        name: /preview operator package apply plan/i,
+      }),
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('performance-console-local-operator-log')).toHaveTextContent(
+        'Operator package apply preview failed.',
+      );
+    });
   });
 
   it('logs mock-safe operator package rehearsal rejection without rolling back local staging', async () => {

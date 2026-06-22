@@ -212,6 +212,9 @@ COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP: Final[Literal["rehearse_operator_package
 COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE: Final[Literal["rehearse_operator_package_sequence"]] = (
     "rehearse_operator_package_sequence"
 )
+COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY: Final[Literal["preview_operator_package_apply"]] = (
+    "preview_operator_package_apply"
+)
 
 COMMAND_TYPES: Final[frozenset[str]] = (
     frozenset(
@@ -229,13 +232,14 @@ COMMAND_TYPES: Final[frozenset[str]] = (
             COMMAND_EXPORT_PROFILE_MODEL,
             COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
             COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
+            COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
         }
     )
     | WIZARD_COMMAND_TYPES
 )
 """Frozen set of every supported command-type discriminator (cockpit + wizard).
 
-13 cockpit commands + 8 wizard commands = 21 total. The wizard commands are
+14 cockpit commands + 8 wizard commands = 22 total. The wizard commands are
 folded in from :data:`wizard_protocol.WIZARD_COMMAND_TYPES` so the cockpit's
 single ``COMMAND_TYPES`` constant remains the wire-format authority.
 """
@@ -388,6 +392,11 @@ class CommandAck(TypedDict, total=False):
       package-level rehearsal summary that validates selected operator
       steps as one sequence while proving no port opened, no MIDI was sent,
       and no files were written).
+    * ``preview_operator_package_apply`` - ``operator_package_apply_preview``
+      (a deterministic mock-safe apply preview that validates selected
+      operator package steps and export-key bindings while proving no port
+      opened, no MIDI was sent, no files were written, and no snapshot was
+      mutated).
     """
 
     request_id: str
@@ -403,6 +412,7 @@ class CommandAck(TypedDict, total=False):
     model_bytes_b64: str | None
     operator_package_rehearsal: dict | None
     operator_package_sequence_rehearsal: dict | None
+    operator_package_apply_preview: dict | None
 
 
 # ---------------------------------------------------------------------------
@@ -517,12 +527,24 @@ class RehearseOperatorPackageSequenceCommand(TypedDict):
     mock_safe: bool
 
 
+class PreviewOperatorPackageApplyCommand(TypedDict):
+    """``preview_operator_package_apply`` - mock-safe package apply preview."""
+
+    type: Literal["preview_operator_package_apply"]
+    operator_package_id: str
+    step_keys: list[str]
+    package_export_keys: dict[str, str]
+    snapshot_id: str
+    mock_safe: bool
+
+
 __all__ = [
     "CLOSE_CODE_MESSAGE_TOO_BIG",
     "CLOSE_CODE_POLICY_VIOLATION",
     "COMMAND_EXPORT_PROFILE_MODEL",
     "COMMAND_LOAD_SNAPSHOT",
     "COMMAND_PREPARE_SEND_PLAN",
+    "COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY",
     "COMMAND_REGEN",
     "COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE",
     "COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP",
@@ -558,6 +580,7 @@ __all__ = [
     "MutationPreviewedEvent",
     "PerformanceConsoleChangedEvent",
     "PrepareSendPlanCommand",
+    "PreviewOperatorPackageApplyCommand",
     "ProfileChangedEvent",
     "RegenCommand",
     "RehearseOperatorPackageSequenceCommand",

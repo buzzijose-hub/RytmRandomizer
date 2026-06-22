@@ -18,6 +18,8 @@ import type {
 } from '../types/style_crate_rehearsal_deck';
 import type {
   CommandAck,
+  OperatorPackageApplyPreview,
+  PreviewOperatorPackageApplyCommand,
   RehearseOperatorPackageSequenceCommand,
   RehearseOperatorPackageStepCommand,
 } from '../ws/protocol';
@@ -32,6 +34,9 @@ export interface PerformanceConsoleProps {
   ) => Promise<CommandAck>;
   onRehearseOperatorPackageSequence?: (
     command: RehearseOperatorPackageSequenceCommand,
+  ) => Promise<CommandAck>;
+  onPreviewOperatorPackageApply?: (
+    command: PreviewOperatorPackageApplyCommand,
   ) => Promise<CommandAck>;
 }
 
@@ -893,6 +898,52 @@ function operatorPackageBindingBySlot(
   );
 }
 
+function operatorPackageExportKeysByStep(
+  model: LiveGuiPerformanceConsoleModelDict,
+  operatorPackage: LiveGuiPerformanceConsoleLiveKitOperatorPackageDict,
+): Record<string, string> {
+  const packageExportKeys: Record<string, string> = {};
+  for (const step of operatorPackage.operator_steps) {
+    const binding = operatorPackageBindingBySlot(model, step.slot_key);
+    packageExportKeys[step.step_key] =
+      binding?.package_export_key ?? `operator-package-${step.slot_key}`;
+  }
+  return packageExportKeys;
+}
+
+function operatorPackageApplyPreviewSummaryText(
+  summary: OperatorPackageApplyPreview['dry_run_summary'],
+): string {
+  return [
+    summary.apply_policy,
+    `would apply ${summary.would_apply_steps} steps`,
+    `open MIDI port ${String(summary.would_open_midi_port)}`,
+    `send MIDI ${String(summary.would_send_midi)}`,
+    `write files ${String(summary.would_write_files)}`,
+    `mutate snapshot ${String(summary.would_mutate_snapshot)}`,
+    `events emitted ${String(summary.events_emitted)}`,
+  ].join(' / ');
+}
+
+function operatorPackageApplyPreviewReadinessEvidence(
+  check: OperatorPackageApplyPreview['readiness_checks'][number],
+): string {
+  const evidence: string[] = [];
+  if (check.required !== undefined) {
+    evidence.push(`required ${String(check.required)}`);
+  }
+  if (check.operator_package_id !== undefined) {
+    evidence.push(`operator package ${check.operator_package_id}`);
+  }
+  if (check.step_count !== undefined) {
+    evidence.push(`step count ${check.step_count}`);
+  }
+  if (check.binding_count !== undefined) {
+    evidence.push(`binding count ${check.binding_count}`);
+  }
+  return evidence.length === 0 ? 'no extra evidence' : evidence.join(' / ');
+}
+
 function operatorPackageAuditionSource(
   model: LiveGuiPerformanceConsoleModelDict,
   slotKey: string | null,
@@ -1262,6 +1313,7 @@ export function PerformanceConsole({
   packetSource = 'passive packet',
   onRehearseOperatorPackageStep,
   onRehearseOperatorPackageSequence,
+  onPreviewOperatorPackageApply,
 }: PerformanceConsoleProps): JSX.Element {
   const initialLocalRehearsal = useMemo(() => readLocalRehearsalSnapshot(), []);
   const [selectedCrateKey, setSelectedCrateKey] = useState<string | null>(
@@ -1306,6 +1358,8 @@ export function PerformanceConsole({
   const [localImportPayload, setLocalImportPayload] = useState<string>('');
   const [localPackage, setLocalPackage] = useState<LocalRehearsalPackage | null>(null);
   const [localPackagePayload, setLocalPackagePayload] = useState<string>('');
+  const [operatorPackageApplyPreview, setOperatorPackageApplyPreview] =
+    useState<OperatorPackageApplyPreview | null>(null);
   const nextLocalSetPlanIndex = useRef<number>(initialLocalRehearsal?.nextLocalSetPlanIndex ?? 0);
   const [lastSetPlanAction, setLastSetPlanAction] = useState<string>(
     initialLocalRehearsal?.lastSetPlanAction ?? 'No local set-plan action yet.',
@@ -1732,12 +1786,7 @@ export function PerformanceConsole({
 
   const rehearseOperatorPackageSequence = (): void => {
     const stepKeys = liveKitOperatorPackage.operator_steps.map((step) => step.step_key);
-    const packageExportKeys: Record<string, string> = {};
-    for (const step of liveKitOperatorPackage.operator_steps) {
-      const binding = operatorPackageBindingBySlot(model, step.slot_key);
-      packageExportKeys[step.step_key] =
-        binding?.package_export_key ?? `operator-package-${step.slot_key}`;
-    }
+    const packageExportKeys = operatorPackageExportKeysByStep(model, liveKitOperatorPackage);
     const command: RehearseOperatorPackageSequenceCommand = {
       type: 'rehearse_operator_package_sequence',
       operator_package_id: liveKitOperatorPackage.operator_package_id,
@@ -1772,6 +1821,50 @@ export function PerformanceConsole({
         appendLocalOperatorEvent(
           'Operator package sequence failed',
           error instanceof Error ? error.message : 'Operator package sequence rehearsal failed.',
+        );
+      });
+  };
+
+  const previewOperatorPackageApply = (): void => {
+    const stepKeys = liveKitOperatorPackage.operator_steps.map((step) => step.step_key);
+    const packageExportKeys = operatorPackageExportKeysByStep(model, liveKitOperatorPackage);
+    const command: PreviewOperatorPackageApplyCommand = {
+      type: 'preview_operator_package_apply',
+      operator_package_id: liveKitOperatorPackage.operator_package_id,
+      step_keys: stepKeys,
+      package_export_keys: packageExportKeys,
+      snapshot_id: selectedSnapshotIdLabel,
+      mock_safe: true,
+    };
+    const previewApply = onPreviewOperatorPackageApply as (
+      command: PreviewOperatorPackageApplyCommand,
+    ) => Promise<CommandAck>;
+    void previewApply(command)
+      .then((ack) => {
+        if (ack.ok) {
+          const preview = ack.operator_package_apply_preview;
+          setOperatorPackageApplyPreview(preview ?? null);
+          appendLocalOperatorEvent(
+            'Operator package apply preview acknowledged',
+            preview === undefined
+              ? 'Mock-safe operator package apply preview accepted; no MIDI sent.'
+              : `${preview.step_count} steps / ${preview.preview_status} / sent MIDI ${String(
+                  preview.sent_midi,
+                )} / writes files ${String(preview.writes_files)}.`,
+          );
+          return;
+        }
+        setOperatorPackageApplyPreview(null);
+        appendLocalOperatorEvent(
+          'Operator package apply preview rejected',
+          ack.message ?? ack.error ?? ack.code ?? 'Operator package apply preview rejected.',
+        );
+      })
+      .catch((error: unknown) => {
+        setOperatorPackageApplyPreview(null);
+        appendLocalOperatorEvent(
+          'Operator package apply preview failed',
+          error instanceof Error ? error.message : 'Operator package apply preview failed.',
         );
       });
   };
@@ -3516,7 +3609,114 @@ export function PerformanceConsole({
           >
             Rehearse operator package sequence
           </button>
+          <button
+            type="button"
+            className="live-readiness-action performance-console-local-control"
+            disabled={
+              onPreviewOperatorPackageApply === undefined ||
+              liveKitOperatorPackage.operator_steps.length === 0
+            }
+            title="Previews the operator package apply plan through the mock-safe sidecar bridge."
+            onClick={previewOperatorPackageApply}
+          >
+            Preview operator package apply plan
+          </button>
         </div>
+
+        {operatorPackageApplyPreview === null ? null : (
+          <section
+            className="performance-console-local-package"
+            data-testid="performance-console-operator-package-apply-preview"
+            aria-label="Operator package apply preview review"
+          >
+            <strong>Operator package apply preview</strong>
+            <div className="performance-console-local-package-grid">
+              <span>{operatorPackageApplyPreview.preview_status}</span>
+              <span>{operatorPackageApplyPreview.apply_policy}</span>
+              <span>steps {operatorPackageApplyPreview.step_count}</span>
+              <span>snapshot {operatorPackageApplyPreview.snapshot_id}</span>
+              <span>mock safe {String(operatorPackageApplyPreview.mock_safe)}</span>
+              <span>opened MIDI port {String(operatorPackageApplyPreview.opened_midi_port)}</span>
+              <span>sent MIDI {String(operatorPackageApplyPreview.sent_midi)}</span>
+              <span>writes files {String(operatorPackageApplyPreview.writes_files)}</span>
+            </div>
+            <small>
+              {operatorPackageApplyPreviewSummaryText(
+                operatorPackageApplyPreview.dry_run_summary,
+              )}
+            </small>
+
+            <h3 className="performance-console-subheading">Apply Steps</h3>
+            <div className="performance-console-list">
+              {operatorPackageApplyPreview.apply_steps.map((step) => (
+                <article key={`${step.order}-${step.step_key}`}>
+                  <strong>{step.label}</strong>
+                  <span>
+                    {step.order} / {step.step_key} / {step.slot_key} /{' '}
+                    {step.readiness_status}
+                  </span>
+                  <small>{step.package_export_key}</small>
+                  <small>
+                    {step.local_action} / {step.operator_command}
+                  </small>
+                  <small>{step.recovery_command}</small>
+                  <small>{step.blocked_action}</small>
+                </article>
+              ))}
+            </div>
+
+            <h3 className="performance-console-subheading">Readiness Checks</h3>
+            <div className="performance-console-list">
+              {operatorPackageApplyPreview.readiness_checks.map((check) => (
+                <article key={check.check}>
+                  <strong>{check.check}</strong>
+                  <span>
+                    {check.check} / {check.status}
+                  </span>
+                  <small>
+                    {check.required === undefined
+                      ? 'requirement metadata unavailable'
+                      : check.required
+                        ? 'required'
+                        : 'optional'}
+                  </small>
+                  <small>{operatorPackageApplyPreviewReadinessEvidence(check)}</small>
+                </article>
+              ))}
+            </div>
+
+            <h3 className="performance-console-subheading">Recovery Requirements</h3>
+            <div className="performance-console-list">
+              {operatorPackageApplyPreview.recovery_requirements.map((requirement) => (
+                <article key={requirement.requirement_key}>
+                  <strong>{requirement.label}</strong>
+                  <span>
+                    {requirement.requirement_key} / {requirement.command}
+                  </span>
+                  <small>
+                    {requirement.required_before_send ? 'required before send' : 'optional'}
+                  </small>
+                  <small>{requirement.evidence}</small>
+                </article>
+              ))}
+            </div>
+
+            <div className="live-chip-row" aria-label="Operator package apply preview blocked actions">
+              {operatorPackageApplyPreview.blocked_actions.map((action) => (
+                <span key={action} className="live-chip live-chip-blocked">
+                  {action}
+                </span>
+              ))}
+            </div>
+            <div className="live-chip-row" aria-label="Operator package apply preview safety lines">
+              {operatorPackageApplyPreview.safety_lines.map((line) => (
+                <span key={line} className="live-chip">
+                  {line}
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
 
         <h3 className="performance-console-subheading">Operator Steps</h3>
         <div className="performance-console-list">

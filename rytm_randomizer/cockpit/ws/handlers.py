@@ -76,6 +76,7 @@ from .protocol import (
     COMMAND_EXPORT_PROFILE_MODEL,
     COMMAND_LOAD_SNAPSHOT,
     COMMAND_PREPARE_SEND_PLAN,
+    COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
     COMMAND_REGEN,
     COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
     COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
@@ -815,6 +816,69 @@ def _operator_package_step_rehearsal(
     }
 
 
+def _operator_package_recovery_requirements(package: Mapping[str, object]) -> list[dict]:
+    return [
+        dict(row)
+        for row in cast(
+            list[Mapping[str, object]],
+            package["recovery_requirements"],
+        )
+    ]
+
+
+def _operator_package_apply_preview_step(
+    *,
+    order: int,
+    step: Mapping[str, object],
+    package_export_key: str,
+) -> dict:
+    return {
+        "order": order,
+        "step_key": str(step["step_key"]),
+        "slot_key": str(step["slot_key"]),
+        "label": str(step["label"]),
+        "package_export_key": package_export_key,
+        "local_action": str(step["local_action"]),
+        "operator_command": str(step["operator_command"]),
+        "recovery_command": str(step["recovery_command"]),
+        "readiness_status": "ready_for_mock_apply_preview",
+        "blocked_action": "real_send_blocked",
+    }
+
+
+def _operator_package_apply_preview_readiness_checks(
+    *,
+    operator_package_id: str,
+    step_count: int,
+) -> list[dict]:
+    return [
+        {"check": "mock_safe", "status": "passed", "required": True},
+        {
+            "check": "operator_package_id",
+            "status": "passed",
+            "operator_package_id": operator_package_id,
+        },
+        {"check": "selected_steps", "status": "passed", "step_count": step_count},
+        {
+            "check": "package_export_keys",
+            "status": "passed",
+            "binding_count": step_count,
+        },
+    ]
+
+
+def _operator_package_apply_preview_summary(*, step_count: int) -> dict:
+    return {
+        "apply_policy": "preview_only",
+        "would_apply_steps": step_count,
+        "would_open_midi_port": False,
+        "would_send_midi": False,
+        "would_write_files": False,
+        "would_mutate_snapshot": False,
+        "events_emitted": False,
+    }
+
+
 def _operator_package_step_keys_from_command(
     cmd: Mapping[str, object],
     package: Mapping[str, object],
@@ -927,6 +991,71 @@ async def _handle_rehearse_operator_package_sequence(
     return HandlerResult(ack={"ok": True, "operator_package_sequence_rehearsal": rehearsal})
 
 
+async def _handle_preview_operator_package_apply(
+    cmd: dict, _session: CockpitSession
+) -> HandlerResult:
+    """Preview applying selected operator package steps without side effects."""
+
+    package = _live_kit_operator_package_payload()
+    invalid_ack = _validate_operator_package_header(cmd, package)
+    if invalid_ack is not None:
+        return HandlerResult(ack=invalid_ack)
+    requested_step_keys = _operator_package_step_keys_from_command(cmd, package)
+    provided_export_keys = _operator_package_export_keys_from_command(cmd)
+    snapshot_id = str(cmd["snapshot_id"])
+    apply_steps: list[dict] = []
+    for order, step_key in enumerate(requested_step_keys, start=1):
+        step = _operator_package_step_by_key(package, step_key)
+        if step is None:
+            return HandlerResult(
+                ack=_error_ack(ERR_VALIDATION, f"unknown operator package step: {step_key!r}")
+            )
+        binding = _operator_package_binding_by_slot(package, str(step["slot_key"]))
+        package_export_key = _expected_operator_package_export_key(step=step, binding=binding)
+        mismatch_ack = _operator_package_export_key_mismatch_ack(
+            step_key=step_key,
+            expected_package_export_key=package_export_key,
+            provided_package_export_key=provided_export_keys.get(step_key),
+        )
+        if mismatch_ack is not None:
+            return HandlerResult(ack=mismatch_ack)
+        apply_steps.append(
+            _operator_package_apply_preview_step(
+                order=order,
+                step=step,
+                package_export_key=package_export_key,
+            )
+        )
+    operator_package_id = str(package["operator_package_id"])
+    step_count = len(apply_steps)
+    preview = {
+        "preview_id": (
+            f"operator-package-apply-preview:{operator_package_id}:"
+            f"{snapshot_id}:{','.join(requested_step_keys)}"
+        ),
+        "operator_package_id": operator_package_id,
+        "snapshot_id": snapshot_id,
+        "mock_safe": True,
+        "preview_status": "mock_safe_ready",
+        "apply_policy": "preview_only",
+        "opened_midi_port": False,
+        "sent_midi": False,
+        "writes_files": False,
+        "step_count": step_count,
+        "step_keys": requested_step_keys,
+        "apply_steps": apply_steps,
+        "readiness_checks": _operator_package_apply_preview_readiness_checks(
+            operator_package_id=operator_package_id,
+            step_count=step_count,
+        ),
+        "recovery_requirements": _operator_package_recovery_requirements(package),
+        "blocked_actions": _operator_package_blocked_actions(package),
+        "safety_lines": _operator_package_safety_lines(package),
+        "dry_run_summary": _operator_package_apply_preview_summary(step_count=step_count),
+    }
+    return HandlerResult(ack={"ok": True, "operator_package_apply_preview": preview})
+
+
 # ---------------------------------------------------------------------------
 # Dispatcher — the single public entry point exported to server.py.
 # ---------------------------------------------------------------------------
@@ -947,6 +1076,7 @@ _CORE_HANDLERS: dict[str, HandlerFn] = {
     COMMAND_EXPORT_PROFILE_MODEL: _handle_export_profile_model,
     COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP: _handle_rehearse_operator_package_step,
     COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE: _handle_rehearse_operator_package_sequence,
+    COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY: _handle_preview_operator_package_apply,
 }
 
 #: Backwards-compatibility alias for the legacy ``_HANDLERS`` symbol some
