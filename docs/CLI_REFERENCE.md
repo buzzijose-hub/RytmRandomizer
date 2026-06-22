@@ -429,4 +429,11 @@ real-send actions, safety lines, a dry-run summary, and proof that no port
 opened, no MIDI was sent, and no package file was written. It is intentionally
 not the real hardware apply/send path.
 
+The Operator Package Mock Apply surface is the next mock-only acknowledgement
+on that same bridge. Its `mock_apply_operator_package` ack accepts the current
+package in review mode, returns deterministic mock-apply step evidence, and
+keeps explicit proof that no MIDI port opened, no MIDI was sent, no package
+file was written, no snapshot mutated, no send plan applied, and no event
+stream emitted.
+
 Run any one with `--help` for its full flag set, or check the lazy command registry in [`rytm_randomizer/cli.py`](../rytm_randomizer/cli.py) for the complete catalogue.

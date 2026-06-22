@@ -50,6 +50,8 @@ from rytm_randomizer.cockpit.ws.protocol import (
 
 pytestmark = pytest.mark.fast
 
+_COMMAND_MOCK_APPLY_OPERATOR_PACKAGE = "mock_apply_operator_package"
+
 
 # ---------------------------------------------------------------------------
 # Per-command round-trip: request_id echo + ok=True + command-specific fields.
@@ -325,18 +327,52 @@ def test_preview_operator_package_apply_roundtrips_with_mock_safe_preview_ack(
     assert preview["writes_files"] is False
 
 
-def test_all_fourteen_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
+def test_mock_apply_operator_package_roundtrips_with_mock_safe_apply_ack(
+    cockpit_ws: object,
+) -> None:
+    """``mock_apply_operator_package`` validates mock-only apply acceptance."""
+
+    ack = send_cmd(
+        cockpit_ws,
+        _COMMAND_MOCK_APPLY_OPERATOR_PACKAGE,
+        request_id="rt-operator-package-mock-apply",
+        operator_package_id="live-kit-operator-package",
+        step_keys=[
+            "operator-step-hard-groove-lift",
+            "operator-step-industrial-pressure",
+        ],
+        package_export_keys={
+            "operator-step-hard-groove-lift": "operator-package-hard-groove-lift",
+            "operator-step-industrial-pressure": "operator-package-industrial-pressure",
+        },
+        snapshot_id="snap-06",
+        mock_safe=True,
+    )
+
+    assert ack["request_id"] == "rt-operator-package-mock-apply"
+    assert ack["ok"] is True
+    mock_apply = ack["operator_package_mock_apply"]
+    assert mock_apply["mock_apply_status"] == "mock_applied"
+    assert mock_apply["step_count"] == 2
+    assert mock_apply["opened_midi_port"] is False
+    assert mock_apply["sent_midi"] is False
+    assert mock_apply["writes_files"] is False
+    assert mock_apply["mutated_snapshot"] is False
+    assert mock_apply["applied_send_plan"] is False
+
+
+def test_all_fifteen_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
     """Pin invariant: every cockpit-native command has a matching round-trip test above.
 
     ``COMMAND_TYPES`` is the union of the cockpit + wizard command surfaces
-    (14 cockpit + 8 wizard = 22 total). This test pins the 14 cockpit-native
+    (15 cockpit + 8 wizard = 23 total). This test pins the 15 cockpit-native
     commands; the wizard subset is exercised end-to-end in
     ``test_integration_wizard_flow.py``. If a new cockpit command lands and
     this assertion is not extended, the file falls out of sync silently —
     this test makes that drift visible at the integration boundary.
     """
 
-    assert len(COMMAND_TYPES) == 22
+    assert len(COMMAND_TYPES) == 23
     cockpit_native = {
         COMMAND_SELECT_PROFILE,
         COMMAND_SET_DEPTH,
@@ -352,9 +388,10 @@ def test_all_fourteen_cockpit_command_types_are_exercised(cockpit_ws: object) ->
         COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
         COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
         COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
+        _COMMAND_MOCK_APPLY_OPERATOR_PACKAGE,
     }
     assert cockpit_native <= COMMAND_TYPES
-    assert len(cockpit_native) == 14
+    assert len(cockpit_native) == 15
 
 
 # ---------------------------------------------------------------------------

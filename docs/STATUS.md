@@ -4,6 +4,18 @@ Last updated: 2026-06-22. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-06-22: Operator Package Mock Apply bundle started on the clean base
+  after PR #195 merged. The Cockpit WebSocket protocol now includes a typed
+  `mock_apply_operator_package` command that validates the current Live Kit
+  Operator Package id, selected operator steps, package export-key bindings,
+  snapshot id, and `mock_safe: true` before returning deterministic
+  `operator_package_mock_apply` evidence. The Performance Console renders a
+  Mock apply operator package control and a review panel with step evidence,
+  readiness checks, recovery requirements, blocked actions, safety lines, and
+  no-side-effect proof. This remains a mock-only acknowledgement: no package
+  files are written, no snapshots are mutated, no send plans are applied, no
+  hardware is armed, no MIDI port is opened, no MIDI is sent, and no event
+  stream is emitted.
 - 2026-06-22: Operator Package Apply Preview bundle packaging prepared on the
   clean base after the PR #193 runtime-control merge. The plan and draft PR
   body cover the next passive/mock-safe Cockpit-to-sidecar surface: preview the

@@ -75,6 +75,7 @@ from ..export import pack_profile_model
 from .protocol import (
     COMMAND_EXPORT_PROFILE_MODEL,
     COMMAND_LOAD_SNAPSHOT,
+    COMMAND_MOCK_APPLY_OPERATOR_PACKAGE,
     COMMAND_PREPARE_SEND_PLAN,
     COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
     COMMAND_REGEN,
@@ -846,6 +847,26 @@ def _operator_package_apply_preview_step(
     }
 
 
+def _operator_package_mock_apply_step(
+    *,
+    order: int,
+    step: Mapping[str, object],
+    package_export_key: str,
+) -> dict:
+    return {
+        "order": order,
+        "step_key": str(step["step_key"]),
+        "slot_key": str(step["slot_key"]),
+        "label": str(step["label"]),
+        "package_export_key": package_export_key,
+        "local_action": str(step["local_action"]),
+        "operator_command": str(step["operator_command"]),
+        "recovery_command": str(step["recovery_command"]),
+        "mock_apply_status": "accepted_for_mock_apply",
+        "blocked_action": "real_apply_blocked",
+    }
+
+
 def _operator_package_apply_preview_readiness_checks(
     *,
     operator_package_id: str,
@@ -875,6 +896,19 @@ def _operator_package_apply_preview_summary(*, step_count: int) -> dict:
         "would_send_midi": False,
         "would_write_files": False,
         "would_mutate_snapshot": False,
+        "events_emitted": False,
+    }
+
+
+def _operator_package_mock_apply_summary(*, step_count: int) -> dict:
+    return {
+        "apply_policy": "mock_apply_only",
+        "mock_applied_steps": step_count,
+        "opened_midi_port": False,
+        "sent_midi": False,
+        "writes_files": False,
+        "mutated_snapshot": False,
+        "applied_send_plan": False,
         "events_emitted": False,
     }
 
@@ -1056,6 +1090,72 @@ async def _handle_preview_operator_package_apply(
     return HandlerResult(ack={"ok": True, "operator_package_apply_preview": preview})
 
 
+async def _handle_mock_apply_operator_package(cmd: dict, _session: CockpitSession) -> HandlerResult:
+    """Accept selected operator package steps in mock only without side effects."""
+
+    package = _live_kit_operator_package_payload()
+    invalid_ack = _validate_operator_package_header(cmd, package)
+    if invalid_ack is not None:
+        return HandlerResult(ack=invalid_ack)
+    requested_step_keys = _operator_package_step_keys_from_command(cmd, package)
+    provided_export_keys = _operator_package_export_keys_from_command(cmd)
+    snapshot_id = str(cmd["snapshot_id"])
+    mock_apply_steps: list[dict] = []
+    for order, step_key in enumerate(requested_step_keys, start=1):
+        step = _operator_package_step_by_key(package, step_key)
+        if step is None:
+            return HandlerResult(
+                ack=_error_ack(ERR_VALIDATION, f"unknown operator package step: {step_key!r}")
+            )
+        binding = _operator_package_binding_by_slot(package, str(step["slot_key"]))
+        package_export_key = _expected_operator_package_export_key(step=step, binding=binding)
+        mismatch_ack = _operator_package_export_key_mismatch_ack(
+            step_key=step_key,
+            expected_package_export_key=package_export_key,
+            provided_package_export_key=provided_export_keys.get(step_key),
+        )
+        if mismatch_ack is not None:
+            return HandlerResult(ack=mismatch_ack)
+        mock_apply_steps.append(
+            _operator_package_mock_apply_step(
+                order=order,
+                step=step,
+                package_export_key=package_export_key,
+            )
+        )
+    operator_package_id = str(package["operator_package_id"])
+    step_count = len(mock_apply_steps)
+    mock_apply = {
+        "mock_apply_id": (
+            f"operator-package-mock-apply:{operator_package_id}:"
+            f"{snapshot_id}:{','.join(requested_step_keys)}"
+        ),
+        "operator_package_id": operator_package_id,
+        "snapshot_id": snapshot_id,
+        "mock_safe": True,
+        "mock_apply_status": "mock_applied",
+        "apply_policy": "mock_apply_only",
+        "opened_midi_port": False,
+        "sent_midi": False,
+        "writes_files": False,
+        "mutated_snapshot": False,
+        "applied_send_plan": False,
+        "emitted_events": False,
+        "step_count": step_count,
+        "step_keys": requested_step_keys,
+        "mock_apply_steps": mock_apply_steps,
+        "readiness_checks": _operator_package_apply_preview_readiness_checks(
+            operator_package_id=operator_package_id,
+            step_count=step_count,
+        ),
+        "recovery_requirements": _operator_package_recovery_requirements(package),
+        "blocked_actions": _operator_package_blocked_actions(package),
+        "safety_lines": _operator_package_safety_lines(package),
+        "dry_run_summary": _operator_package_mock_apply_summary(step_count=step_count),
+    }
+    return HandlerResult(ack={"ok": True, "operator_package_mock_apply": mock_apply})
+
+
 # ---------------------------------------------------------------------------
 # Dispatcher — the single public entry point exported to server.py.
 # ---------------------------------------------------------------------------
@@ -1077,6 +1177,7 @@ _CORE_HANDLERS: dict[str, HandlerFn] = {
     COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP: _handle_rehearse_operator_package_step,
     COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE: _handle_rehearse_operator_package_sequence,
     COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY: _handle_preview_operator_package_apply,
+    COMMAND_MOCK_APPLY_OPERATOR_PACKAGE: _handle_mock_apply_operator_package,
 }
 
 #: Backwards-compatibility alias for the legacy ``_HANDLERS`` symbol some
