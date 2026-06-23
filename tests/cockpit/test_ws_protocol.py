@@ -58,7 +58,7 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
     ``COMMAND_TYPES`` is the union of the cockpit + wizard command
     surfaces; the wizard subset is folded in from :mod:`wizard_protocol`
     and asserted in the wizard test file. This test verifies the
-    15 cockpit-native commands remain present.
+    16 cockpit-native commands remain present.
     """
 
     individual = {
