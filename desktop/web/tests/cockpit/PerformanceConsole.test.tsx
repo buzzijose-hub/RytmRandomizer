@@ -1337,6 +1337,12 @@ describe('PerformanceConsole', () => {
             writes_files: false,
             events_emitted: false,
           },
+          {
+            check: 'optional_receipt_note',
+            status: 'passed',
+            required: false,
+            writes_files: false,
+          },
         ],
         recovery_requirements: [
           {
@@ -1345,6 +1351,13 @@ describe('PerformanceConsole', () => {
             command: 'Z then send',
             required_before_send: true,
             evidence: 'captured-base exposes recovery before staging',
+          },
+          {
+            requirement_key: 'receipt-note',
+            label: 'Optional receipt note',
+            command: 'none',
+            required_before_send: false,
+            evidence: 'receipt note only',
           },
         ],
         blocked_actions: [
@@ -1409,7 +1422,10 @@ describe('PerformanceConsole', () => {
     expect(receiptPanel).toHaveTextContent('receipt_mode');
     expect(receiptPanel).toHaveTextContent('writes files false');
     expect(receiptPanel).toHaveTextContent('events emitted false');
+    expect(receiptPanel).toHaveTextContent('optional_receipt_note');
+    expect(receiptPanel).toHaveTextContent('optional');
     expect(receiptPanel).toHaveTextContent('Recovery: Z then send');
+    expect(receiptPanel).toHaveTextContent('Optional receipt note');
     expect(receiptPanel).toHaveTextContent('open MIDI port from operator package');
     expect(receiptPanel).toHaveTextContent('no MIDI sending');
     expect(receiptPanel).toHaveTextContent('opened MIDI port false');
