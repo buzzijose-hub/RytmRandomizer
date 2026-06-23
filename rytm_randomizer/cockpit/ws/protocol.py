@@ -218,6 +218,9 @@ COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY: Final[Literal["preview_operator_package_
 COMMAND_MOCK_APPLY_OPERATOR_PACKAGE: Final[Literal["mock_apply_operator_package"]] = (
     "mock_apply_operator_package"
 )
+COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT: Final[Literal["build_operator_package_receipt"]] = (
+    "build_operator_package_receipt"
+)
 
 COMMAND_TYPES: Final[frozenset[str]] = (
     frozenset(
@@ -237,6 +240,7 @@ COMMAND_TYPES: Final[frozenset[str]] = (
             COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
             COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
             COMMAND_MOCK_APPLY_OPERATOR_PACKAGE,
+            COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
         }
     )
     | WIZARD_COMMAND_TYPES
@@ -406,6 +410,11 @@ class CommandAck(TypedDict, total=False):
       operator package steps in mock only while proving no port opened, no MIDI
       was sent, no files were written, no send plan was applied, and no
       snapshot was mutated).
+    * ``build_operator_package_receipt`` - ``operator_package_receipt`` (a
+      deterministic passive audit packet for the current operator package
+      preview; it records reviewed steps and safety evidence while proving no
+      port opened, no MIDI was sent, no files were written, no send plan was
+      applied, and no events were emitted).
     """
 
     request_id: str
@@ -423,6 +432,7 @@ class CommandAck(TypedDict, total=False):
     operator_package_sequence_rehearsal: dict | None
     operator_package_apply_preview: dict | None
     operator_package_mock_apply: dict | None
+    operator_package_receipt: dict | None
 
 
 # ---------------------------------------------------------------------------
@@ -559,7 +569,19 @@ class MockApplyOperatorPackageCommand(TypedDict):
     mock_safe: bool
 
 
+class BuildOperatorPackageReceiptCommand(TypedDict):
+    """``build_operator_package_receipt`` - mock-safe package receipt."""
+
+    type: Literal["build_operator_package_receipt"]
+    operator_package_id: str
+    step_keys: list[str]
+    package_export_keys: dict[str, str]
+    snapshot_id: str
+    mock_safe: bool
+
+
 __all__ = [
+    "COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT",
     "CLOSE_CODE_MESSAGE_TOO_BIG",
     "CLOSE_CODE_POLICY_VIOLATION",
     "COMMAND_EXPORT_PROFILE_MODEL",
@@ -593,6 +615,7 @@ __all__ = [
     "EVENT_SNAPSHOT_CHANGED",
     "EVENT_TYPES",
     "ExportProfileModelCommand",
+    "BuildOperatorPackageReceiptCommand",
     "HANDSHAKE_AUTH_FAILED",
     "HANDSHAKE_AUTH_REQUIRED",
     "HELLO_FRAME_TYPE",
