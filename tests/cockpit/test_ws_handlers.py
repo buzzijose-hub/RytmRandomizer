@@ -41,6 +41,7 @@ from rytm_randomizer.cockpit.profiles import ProfileRegistry
 from rytm_randomizer.cockpit.ws import handlers
 from rytm_randomizer.cockpit.ws.handlers import drain_pending_events, handle_command
 from rytm_randomizer.cockpit.ws.protocol import (
+    COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
     COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
     COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
     EVENT_HISTORY_UPDATED,
@@ -1490,6 +1491,307 @@ def test_preview_operator_package_apply_preserves_send_plan_and_never_calls_devi
     ack = _dispatch(
         _envelope(
             _COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
+            operator_package_id="live-kit-operator-package",
+            step_keys=["operator-step-hard-groove-lift"],
+            package_export_keys={
+                "operator-step-hard-groove-lift": "operator-package-hard-groove-lift"
+            },
+            snapshot_id="snap-06",
+            mock_safe=True,
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is True
+    assert calls == []
+    assert session.device.capture_snapshot().to_dict() == before_snapshot
+    assert session.current_candidate is not None
+    assert session.current_candidate.candidate_id == before_candidate_id
+    assert session.current_send_plan is before_plan
+    assert session.unsaved_sends == 0
+    assert recorder.events == []
+
+
+# ---------------------------------------------------------------------------
+# build_operator_package_receipt - mock-safe receipt/audit bridge.
+# ---------------------------------------------------------------------------
+
+
+def test_build_operator_package_receipt_returns_deterministic_mock_safe_payload(
+    tmp_path: Path,
+) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+    before_snapshot = session.device.capture_snapshot().to_dict()
+
+    ack = _dispatch(
+        _envelope(
+            COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
+            operator_package_id="live-kit-operator-package",
+            step_keys=[
+                "operator-step-hard-groove-lift",
+                "operator-step-industrial-pressure",
+            ],
+            package_export_keys={
+                "operator-step-hard-groove-lift": "operator-package-hard-groove-lift",
+                "operator-step-industrial-pressure": "operator-package-industrial-pressure",
+            },
+            snapshot_id="snap-06",
+            mock_safe=True,
+        ),
+        session,
+        recorder,
+    )
+
+    receipt = ack["operator_package_receipt"]
+    assert ack["ok"] is True
+    assert receipt["receipt_id"] == (
+        "operator-package-receipt:live-kit-operator-package:snap-06:"
+        "operator-step-hard-groove-lift,operator-step-industrial-pressure"
+    )
+    assert receipt["receipt_digest"]
+    assert len(receipt["receipt_digest"]) == 16
+    assert receipt["operator_package_id"] == "live-kit-operator-package"
+    assert receipt["snapshot_id"] == "snap-06"
+    assert receipt["mock_safe"] is True
+    assert receipt["receipt_status"] == "mock_safe_receipt_ready"
+    assert receipt["receipt_policy"] == "passive_audit_only"
+    assert receipt["opened_midi_port"] is False
+    assert receipt["sent_midi"] is False
+    assert receipt["writes_files"] is False
+    assert receipt["mutated_snapshot"] is False
+    assert receipt["applied_send_plan"] is False
+    assert receipt["events_emitted"] is False
+    assert receipt["step_count"] == 2
+    assert receipt["step_keys"] == [
+        "operator-step-hard-groove-lift",
+        "operator-step-industrial-pressure",
+    ]
+    assert receipt["receipt_steps"] == [
+        {
+            "order": 1,
+            "step_key": "operator-step-hard-groove-lift",
+            "slot_key": "hard-groove-lift",
+            "label": "Hard Groove Lift",
+            "package_export_key": "operator-package-hard-groove-lift",
+            "local_action": "stage-local-set-plan",
+            "operator_command": "go",
+            "recovery_command": "Z then send",
+            "readiness_status": "ready_for_mock_apply_preview",
+            "blocked_action": "real_send_blocked",
+            "receipt_status": "recorded_for_review",
+        },
+        {
+            "order": 2,
+            "step_key": "operator-step-industrial-pressure",
+            "slot_key": "industrial-pressure",
+            "label": "Industrial Pressure",
+            "package_export_key": "operator-package-industrial-pressure",
+            "local_action": "stage-local-set-plan",
+            "operator_command": "go",
+            "recovery_command": "Z then send",
+            "readiness_status": "ready_for_mock_apply_preview",
+            "blocked_action": "real_send_blocked",
+            "receipt_status": "recorded_for_review",
+        },
+    ]
+    assert receipt["readiness_checks"] == [
+        {"check": "mock_safe", "status": "passed", "required": True},
+        {
+            "check": "operator_package_id",
+            "status": "passed",
+            "operator_package_id": "live-kit-operator-package",
+        },
+        {"check": "selected_steps", "status": "passed", "step_count": 2},
+        {"check": "package_export_keys", "status": "passed", "binding_count": 2},
+        {
+            "check": "receipt_mode",
+            "status": "passed",
+            "writes_files": False,
+            "events_emitted": False,
+        },
+    ]
+    assert len(receipt["recovery_requirements"]) == 3
+    assert receipt["recovery_requirements"][0]["requirement_key"] == "z-then-send"
+    assert "send operator package from Cockpit console" in receipt["blocked_actions"]
+    assert "no MIDI sending" in receipt["safety_lines"]
+    assert receipt["audit_summary"] == {
+        "receipt_policy": "passive_audit_only",
+        "recorded_steps": 2,
+        "records_apply_preview": True,
+        "would_open_midi_port": False,
+        "would_send_midi": False,
+        "would_write_files": False,
+        "would_mutate_snapshot": False,
+        "would_apply_send_plan": False,
+        "events_emitted": False,
+    }
+    assert session.device.capture_snapshot().to_dict() == before_snapshot
+    assert session.unsaved_sends == 0
+    assert session.current_send_plan is None
+    assert recorder.events == []
+
+
+def test_build_operator_package_receipt_uses_all_steps_when_step_keys_empty(
+    tmp_path: Path,
+) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
+            operator_package_id="live-kit-operator-package",
+            step_keys=[],
+            package_export_keys={},
+            snapshot_id="snap-06",
+            mock_safe=True,
+        ),
+        session,
+        recorder,
+    )
+
+    receipt = ack["operator_package_receipt"]
+    assert ack["ok"] is True
+    assert receipt["step_count"] == 5
+    assert receipt["step_keys"] == [
+        "operator-step-captured-base",
+        "operator-step-hard-groove-lift",
+        "operator-step-industrial-pressure",
+        "operator-step-dub-reset",
+        "operator-step-recovery-return",
+    ]
+    assert [row["order"] for row in receipt["receipt_steps"]] == [1, 2, 3, 4, 5]
+    assert recorder.events == []
+
+
+def test_build_operator_package_receipt_requires_mock_safe_true(tmp_path: Path) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
+            operator_package_id="live-kit-operator-package",
+            step_keys=["operator-step-hard-groove-lift"],
+            package_export_keys={
+                "operator-step-hard-groove-lift": "operator-package-hard-groove-lift"
+            },
+            snapshot_id="snap-06",
+            mock_safe=False,
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert "mock_safe" in ack["message"]
+    assert recorder.events == []
+
+
+def test_build_operator_package_receipt_rejects_unknown_package(tmp_path: Path) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
+            operator_package_id="wrong-package",
+            step_keys=["operator-step-hard-groove-lift"],
+            package_export_keys={
+                "operator-step-hard-groove-lift": "operator-package-hard-groove-lift"
+            },
+            snapshot_id="snap-06",
+            mock_safe=True,
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert "unknown operator_package_id" in ack["message"]
+    assert recorder.events == []
+
+
+def test_build_operator_package_receipt_rejects_unknown_step(tmp_path: Path) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
+            operator_package_id="live-kit-operator-package",
+            step_keys=["operator-step-missing"],
+            package_export_keys={"operator-step-missing": "operator-package-missing"},
+            snapshot_id="snap-06",
+            mock_safe=True,
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert "unknown operator package step" in ack["message"]
+    assert recorder.events == []
+
+
+def test_build_operator_package_receipt_rejects_package_export_key_mismatch(
+    tmp_path: Path,
+) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
+            operator_package_id="live-kit-operator-package",
+            step_keys=["operator-step-hard-groove-lift"],
+            package_export_keys={
+                "operator-step-hard-groove-lift": "operator-package-stale-hard-groove-lift"
+            },
+            snapshot_id="snap-06",
+            mock_safe=True,
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert "package_export_key mismatch" in ack["message"]
+    assert recorder.events == []
+
+
+def test_build_operator_package_receipt_preserves_send_plan_and_device_state(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    profile = _profile()
+    session = _make_session(tmp_path, profile)
+    session.active_profile = profile
+    _dispatch(_envelope("set_depth", depth=0.5), session, _Recorder())
+    _dispatch(_envelope("prepare_send_plan"), session, _Recorder())
+    assert session.current_candidate is not None
+    assert session.current_send_plan is not None
+    before_snapshot = session.device.capture_snapshot().to_dict()
+    before_candidate_id = session.current_candidate.candidate_id
+    before_plan = session.current_send_plan
+    calls: list[str] = []
+
+    def _record_unexpected_call(*_args: object, **_kwargs: object) -> None:
+        calls.append("called")
+
+    monkeypatch.setattr(session.device, "apply", _record_unexpected_call)
+    monkeypatch.setattr(session.device, "apply_send_plan", _record_unexpected_call)
+    monkeypatch.setattr(session.device, "commit_kit", _record_unexpected_call)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
             operator_package_id="live-kit-operator-package",
             step_keys=["operator-step-hard-groove-lift"],
             package_export_keys={

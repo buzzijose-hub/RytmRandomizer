@@ -215,6 +215,9 @@ COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE: Final[Literal["rehearse_operator_pac
 COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY: Final[Literal["preview_operator_package_apply"]] = (
     "preview_operator_package_apply"
 )
+COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT: Final[Literal["build_operator_package_receipt"]] = (
+    "build_operator_package_receipt"
+)
 
 COMMAND_TYPES: Final[frozenset[str]] = (
     frozenset(
@@ -233,13 +236,14 @@ COMMAND_TYPES: Final[frozenset[str]] = (
             COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
             COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
             COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
+            COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
         }
     )
     | WIZARD_COMMAND_TYPES
 )
 """Frozen set of every supported command-type discriminator (cockpit + wizard).
 
-14 cockpit commands + 8 wizard commands = 22 total. The wizard commands are
+15 cockpit commands + 8 wizard commands = 23 total. The wizard commands are
 folded in from :data:`wizard_protocol.WIZARD_COMMAND_TYPES` so the cockpit's
 single ``COMMAND_TYPES`` constant remains the wire-format authority.
 """
@@ -397,6 +401,11 @@ class CommandAck(TypedDict, total=False):
       operator package steps and export-key bindings while proving no port
       opened, no MIDI was sent, no files were written, and no snapshot was
       mutated).
+    * ``build_operator_package_receipt`` - ``operator_package_receipt`` (a
+      deterministic passive audit packet for the current operator package
+      preview; it records reviewed steps and safety evidence while proving no
+      port opened, no MIDI was sent, no files were written, no send plan was
+      applied, and no events were emitted).
     """
 
     request_id: str
@@ -413,6 +422,7 @@ class CommandAck(TypedDict, total=False):
     operator_package_rehearsal: dict | None
     operator_package_sequence_rehearsal: dict | None
     operator_package_apply_preview: dict | None
+    operator_package_receipt: dict | None
 
 
 # ---------------------------------------------------------------------------
@@ -538,7 +548,19 @@ class PreviewOperatorPackageApplyCommand(TypedDict):
     mock_safe: bool
 
 
+class BuildOperatorPackageReceiptCommand(TypedDict):
+    """``build_operator_package_receipt`` - mock-safe package receipt."""
+
+    type: Literal["build_operator_package_receipt"]
+    operator_package_id: str
+    step_keys: list[str]
+    package_export_keys: dict[str, str]
+    snapshot_id: str
+    mock_safe: bool
+
+
 __all__ = [
+    "COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT",
     "CLOSE_CODE_MESSAGE_TOO_BIG",
     "CLOSE_CODE_POLICY_VIOLATION",
     "COMMAND_EXPORT_PROFILE_MODEL",
@@ -571,6 +593,7 @@ __all__ = [
     "EVENT_SNAPSHOT_CHANGED",
     "EVENT_TYPES",
     "ExportProfileModelCommand",
+    "BuildOperatorPackageReceiptCommand",
     "HANDSHAKE_AUTH_FAILED",
     "HANDSHAKE_AUTH_REQUIRED",
     "HELLO_FRAME_TYPE",

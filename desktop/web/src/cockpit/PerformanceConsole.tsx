@@ -17,8 +17,10 @@ import type {
   StyleCrateRehearsalQueueCardDict,
 } from '../types/style_crate_rehearsal_deck';
 import type {
+  BuildOperatorPackageReceiptCommand,
   CommandAck,
   OperatorPackageApplyPreview,
+  OperatorPackageReceipt,
   PreviewOperatorPackageApplyCommand,
   RehearseOperatorPackageSequenceCommand,
   RehearseOperatorPackageStepCommand,
@@ -37,6 +39,9 @@ export interface PerformanceConsoleProps {
   ) => Promise<CommandAck>;
   onPreviewOperatorPackageApply?: (
     command: PreviewOperatorPackageApplyCommand,
+  ) => Promise<CommandAck>;
+  onBuildOperatorPackageReceipt?: (
+    command: BuildOperatorPackageReceiptCommand,
   ) => Promise<CommandAck>;
 }
 
@@ -944,6 +949,41 @@ function operatorPackageApplyPreviewReadinessEvidence(
   return evidence.length === 0 ? 'no extra evidence' : evidence.join(' / ');
 }
 
+function operatorPackageReceiptSummaryText(
+  summary: OperatorPackageReceipt['audit_summary'],
+): string {
+  return [
+    summary.receipt_policy,
+    `recorded ${summary.recorded_steps} steps`,
+    `records apply preview ${String(summary.records_apply_preview)}`,
+    `open MIDI port ${String(summary.would_open_midi_port)}`,
+    `send MIDI ${String(summary.would_send_midi)}`,
+    `write files ${String(summary.would_write_files)}`,
+    `mutate snapshot ${String(summary.would_mutate_snapshot)}`,
+    `apply send plan ${String(summary.would_apply_send_plan)}`,
+    `events emitted ${String(summary.events_emitted)}`,
+  ].join(' / ');
+}
+
+function operatorPackageReceiptReadinessEvidence(
+  check: OperatorPackageReceipt['readiness_checks'][number],
+): string {
+  const evidence = operatorPackageApplyPreviewReadinessEvidence(check);
+  const receiptEvidence: string[] = [];
+  if (check.writes_files !== undefined) {
+    receiptEvidence.push(`writes files ${String(check.writes_files)}`);
+  }
+  if (check.events_emitted !== undefined) {
+    receiptEvidence.push(`events emitted ${String(check.events_emitted)}`);
+  }
+  if (receiptEvidence.length === 0) {
+    return evidence;
+  }
+  return evidence === 'no extra evidence'
+    ? receiptEvidence.join(' / ')
+    : `${evidence} / ${receiptEvidence.join(' / ')}`;
+}
+
 function operatorPackageAuditionSource(
   model: LiveGuiPerformanceConsoleModelDict,
   slotKey: string | null,
@@ -1314,6 +1354,7 @@ export function PerformanceConsole({
   onRehearseOperatorPackageStep,
   onRehearseOperatorPackageSequence,
   onPreviewOperatorPackageApply,
+  onBuildOperatorPackageReceipt,
 }: PerformanceConsoleProps): JSX.Element {
   const initialLocalRehearsal = useMemo(() => readLocalRehearsalSnapshot(), []);
   const [selectedCrateKey, setSelectedCrateKey] = useState<string | null>(
@@ -1360,6 +1401,8 @@ export function PerformanceConsole({
   const [localPackagePayload, setLocalPackagePayload] = useState<string>('');
   const [operatorPackageApplyPreview, setOperatorPackageApplyPreview] =
     useState<OperatorPackageApplyPreview | null>(null);
+  const [operatorPackageReceipt, setOperatorPackageReceipt] =
+    useState<OperatorPackageReceipt | null>(null);
   const nextLocalSetPlanIndex = useRef<number>(initialLocalRehearsal?.nextLocalSetPlanIndex ?? 0);
   const [lastSetPlanAction, setLastSetPlanAction] = useState<string>(
     initialLocalRehearsal?.lastSetPlanAction ?? 'No local set-plan action yet.',
@@ -1865,6 +1908,50 @@ export function PerformanceConsole({
         appendLocalOperatorEvent(
           'Operator package apply preview failed',
           error instanceof Error ? error.message : 'Operator package apply preview failed.',
+        );
+      });
+  };
+
+  const buildOperatorPackageReceipt = (): void => {
+    const stepKeys = liveKitOperatorPackage.operator_steps.map((step) => step.step_key);
+    const packageExportKeys = operatorPackageExportKeysByStep(model, liveKitOperatorPackage);
+    const command: BuildOperatorPackageReceiptCommand = {
+      type: 'build_operator_package_receipt',
+      operator_package_id: liveKitOperatorPackage.operator_package_id,
+      step_keys: stepKeys,
+      package_export_keys: packageExportKeys,
+      snapshot_id: selectedSnapshotIdLabel,
+      mock_safe: true,
+    };
+    const buildReceipt = onBuildOperatorPackageReceipt as (
+      command: BuildOperatorPackageReceiptCommand,
+    ) => Promise<CommandAck>;
+    void buildReceipt(command)
+      .then((ack) => {
+        if (ack.ok) {
+          const receipt = ack.operator_package_receipt;
+          setOperatorPackageReceipt(receipt ?? null);
+          appendLocalOperatorEvent(
+            'Operator package receipt acknowledged',
+            receipt === undefined
+              ? 'Mock-safe operator package receipt accepted; no MIDI sent.'
+              : `${receipt.step_count} steps / ${receipt.receipt_status} / sent MIDI ${String(
+                  receipt.sent_midi,
+                )} / writes files ${String(receipt.writes_files)}.`,
+          );
+          return;
+        }
+        setOperatorPackageReceipt(null);
+        appendLocalOperatorEvent(
+          'Operator package receipt rejected',
+          ack.message ?? ack.error ?? ack.code ?? 'Operator package receipt rejected.',
+        );
+      })
+      .catch((error: unknown) => {
+        setOperatorPackageReceipt(null);
+        appendLocalOperatorEvent(
+          'Operator package receipt failed',
+          error instanceof Error ? error.message : 'Operator package receipt failed.',
         );
       });
   };
@@ -3621,6 +3708,18 @@ export function PerformanceConsole({
           >
             Preview operator package apply plan
           </button>
+          <button
+            type="button"
+            className="live-readiness-action performance-console-local-control"
+            disabled={
+              onBuildOperatorPackageReceipt === undefined ||
+              liveKitOperatorPackage.operator_steps.length === 0
+            }
+            title="Builds a passive receipt for the current operator package preview evidence."
+            onClick={buildOperatorPackageReceipt}
+          >
+            Build operator package receipt
+          </button>
         </div>
 
         {operatorPackageApplyPreview === null ? null : (
@@ -3710,6 +3809,102 @@ export function PerformanceConsole({
             </div>
             <div className="live-chip-row" aria-label="Operator package apply preview safety lines">
               {operatorPackageApplyPreview.safety_lines.map((line) => (
+                <span key={line} className="live-chip">
+                  {line}
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {operatorPackageReceipt === null ? null : (
+          <section
+            className="performance-console-local-package"
+            data-testid="performance-console-operator-package-receipt"
+            aria-label="Operator package receipt audit"
+          >
+            <strong>Operator package receipt</strong>
+            <div className="performance-console-local-package-grid">
+              <span>{operatorPackageReceipt.receipt_status}</span>
+              <span>{operatorPackageReceipt.receipt_policy}</span>
+              <span>steps {operatorPackageReceipt.step_count}</span>
+              <span>snapshot {operatorPackageReceipt.snapshot_id}</span>
+              <span>receipt {operatorPackageReceipt.receipt_digest}</span>
+              <span>mock safe {String(operatorPackageReceipt.mock_safe)}</span>
+              <span>opened MIDI port {String(operatorPackageReceipt.opened_midi_port)}</span>
+              <span>sent MIDI {String(operatorPackageReceipt.sent_midi)}</span>
+              <span>writes files {String(operatorPackageReceipt.writes_files)}</span>
+              <span>mutated snapshot {String(operatorPackageReceipt.mutated_snapshot)}</span>
+              <span>applied send plan {String(operatorPackageReceipt.applied_send_plan)}</span>
+              <span>events emitted {String(operatorPackageReceipt.events_emitted)}</span>
+            </div>
+            <small>{operatorPackageReceiptSummaryText(operatorPackageReceipt.audit_summary)}</small>
+
+            <h3 className="performance-console-subheading">Receipt Steps</h3>
+            <div className="performance-console-list">
+              {operatorPackageReceipt.receipt_steps.map((step) => (
+                <article key={`${step.order}-${step.step_key}`}>
+                  <strong>{step.label}</strong>
+                  <span>
+                    {step.order} / {step.step_key} / {step.slot_key} /{' '}
+                    {step.readiness_status}
+                  </span>
+                  <small>{step.package_export_key}</small>
+                  <small>
+                    {step.local_action} / {step.operator_command}
+                  </small>
+                  <small>{step.recovery_command}</small>
+                  <small>{step.blocked_action}</small>
+                  <small>{step.receipt_status}</small>
+                </article>
+              ))}
+            </div>
+
+            <h3 className="performance-console-subheading">Receipt Checks</h3>
+            <div className="performance-console-list">
+              {operatorPackageReceipt.readiness_checks.map((check) => (
+                <article key={check.check}>
+                  <strong>{check.check}</strong>
+                  <span>
+                    {check.check} / {check.status}
+                  </span>
+                  <small>
+                    {check.required === undefined
+                      ? 'requirement metadata unavailable'
+                      : check.required
+                        ? 'required'
+                        : 'optional'}
+                  </small>
+                  <small>{operatorPackageReceiptReadinessEvidence(check)}</small>
+                </article>
+              ))}
+            </div>
+
+            <h3 className="performance-console-subheading">Recovery Requirements</h3>
+            <div className="performance-console-list">
+              {operatorPackageReceipt.recovery_requirements.map((requirement) => (
+                <article key={requirement.requirement_key}>
+                  <strong>{requirement.label}</strong>
+                  <span>
+                    {requirement.requirement_key} / {requirement.command}
+                  </span>
+                  <small>
+                    {requirement.required_before_send ? 'required before send' : 'optional'}
+                  </small>
+                  <small>{requirement.evidence}</small>
+                </article>
+              ))}
+            </div>
+
+            <div className="live-chip-row" aria-label="Operator package receipt blocked actions">
+              {operatorPackageReceipt.blocked_actions.map((action) => (
+                <span key={action} className="live-chip live-chip-blocked">
+                  {action}
+                </span>
+              ))}
+            </div>
+            <div className="live-chip-row" aria-label="Operator package receipt safety lines">
+              {operatorPackageReceipt.safety_lines.map((line) => (
                 <span key={line} className="live-chip">
                   {line}
                 </span>
