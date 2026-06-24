@@ -216,6 +216,99 @@ export interface OperatorPackageApplyPreview {
   dry_run_summary: OperatorPackageApplyPreviewDryRunSummary;
 }
 
+export interface OperatorPackageMockApplyStep {
+  order: number;
+  step_key: string;
+  label: string;
+  slot_key: string;
+  package_export_key: string;
+  local_action: string;
+  operator_command: string;
+  recovery_command: string;
+  mock_apply_status: string;
+  blocked_action: string;
+}
+
+export interface OperatorPackageMockApplyDryRunSummary {
+  apply_policy: string;
+  mock_applied_steps: number;
+  opened_midi_port: boolean;
+  sent_midi: boolean;
+  writes_files: boolean;
+  mutated_snapshot: boolean;
+  applied_send_plan: boolean;
+  events_emitted: boolean;
+}
+
+export interface OperatorPackageMockApply {
+  mock_apply_id: string;
+  operator_package_id: string;
+  snapshot_id: string;
+  mock_safe: boolean;
+  mock_apply_status: string;
+  apply_policy: string;
+  opened_midi_port: boolean;
+  sent_midi: boolean;
+  writes_files: boolean;
+  mutated_snapshot: boolean;
+  applied_send_plan: boolean;
+  emitted_events: boolean;
+  step_count: number;
+  step_keys: string[];
+  mock_apply_steps: OperatorPackageMockApplyStep[];
+  readiness_checks: OperatorPackageApplyPreviewReadinessCheck[];
+  recovery_requirements: OperatorPackageApplyPreviewRecoveryRequirement[];
+  blocked_actions: string[];
+  safety_lines: string[];
+  dry_run_summary: OperatorPackageMockApplyDryRunSummary;
+}
+
+export interface OperatorPackageReceiptStep extends OperatorPackageApplyPreviewStep {
+  receipt_status: string;
+}
+
+export interface OperatorPackageReceiptReadinessCheck
+  extends OperatorPackageApplyPreviewReadinessCheck {
+  writes_files?: boolean;
+  events_emitted?: boolean;
+}
+
+export interface OperatorPackageReceiptAuditSummary {
+  receipt_policy: string;
+  recorded_steps: number;
+  records_apply_preview: boolean;
+  would_open_midi_port: boolean;
+  would_send_midi: boolean;
+  would_write_files: boolean;
+  would_mutate_snapshot: boolean;
+  would_apply_send_plan: boolean;
+  events_emitted: boolean;
+}
+
+export interface OperatorPackageReceipt {
+  receipt_id: string;
+  receipt_digest: string;
+  operator_package_id: string;
+  snapshot_id: string;
+  mock_safe: boolean;
+  receipt_status: string;
+  receipt_policy: string;
+  opened_midi_port: boolean;
+  sent_midi: boolean;
+  writes_files: boolean;
+  mutated_snapshot: boolean;
+  applied_send_plan: boolean;
+  events_emitted: boolean;
+  step_count: number;
+  step_keys: string[];
+  receipt_steps: OperatorPackageReceiptStep[];
+  readiness_checks: OperatorPackageReceiptReadinessCheck[];
+  recovery_requirements: OperatorPackageApplyPreviewRecoveryRequirement[];
+  blocked_actions: string[];
+  safety_lines: string[];
+  audit_summary: OperatorPackageReceiptAuditSummary;
+}
+
 export interface HistoryEntry {
   snapshot: Snapshot;
   kind: HistoryEntryKind;
@@ -365,6 +458,24 @@ export interface PreviewOperatorPackageApplyCommand {
   mock_safe: boolean;
 }
 
+export interface MockApplyOperatorPackageCommand {
+  type: 'mock_apply_operator_package';
+  operator_package_id: string;
+  step_keys: string[];
+  package_export_keys: Record<string, string>;
+  snapshot_id: string;
+  mock_safe: boolean;
+}
+
+export interface BuildOperatorPackageReceiptCommand {
+  type: 'build_operator_package_receipt';
+  operator_package_id: string;
+  step_keys: string[];
+  package_export_keys: Record<string, string>;
+  snapshot_id: string;
+  mock_safe: boolean;
+}
+
 export type Command =
   | SelectProfileCommand
   | SetDepthCommand
@@ -379,7 +490,9 @@ export type Command =
   | ExportProfileModelCommand
   | RehearseOperatorPackageStepCommand
   | RehearseOperatorPackageSequenceCommand
-  | PreviewOperatorPackageApplyCommand;
+  | PreviewOperatorPackageApplyCommand
+  | MockApplyOperatorPackageCommand
+  | BuildOperatorPackageReceiptCommand;
 
 export type CommandType = Command['type'];
 
@@ -409,6 +522,8 @@ export interface CommandAck {
   operator_package_rehearsal?: OperatorPackageRehearsal;
   operator_package_sequence_rehearsal?: OperatorPackageSequenceRehearsal;
   operator_package_apply_preview?: OperatorPackageApplyPreview;
+  operator_package_mock_apply?: OperatorPackageMockApply;
+  operator_package_receipt?: OperatorPackageReceipt;
   error?: string;
   code?: string;
   message?: string;

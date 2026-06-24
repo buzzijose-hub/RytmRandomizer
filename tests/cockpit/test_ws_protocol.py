@@ -58,7 +58,7 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
     ``COMMAND_TYPES`` is the union of the cockpit + wizard command
     surfaces; the wizard subset is folded in from :mod:`wizard_protocol`
     and asserted in the wizard test file. This test verifies the
-    12 cockpit-native commands remain present.
+    16 cockpit-native commands remain present.
     """
 
     individual = {
@@ -76,11 +76,13 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
         protocol.COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
         protocol.COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
         protocol.COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
+        protocol.COMMAND_MOCK_APPLY_OPERATOR_PACKAGE,
+        protocol.COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
     }
     assert individual <= protocol.COMMAND_TYPES
     assert isinstance(protocol.COMMAND_TYPES, frozenset)
-    # 14 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
-    assert len(protocol.COMMAND_TYPES) == 22
+    # 16 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
+    assert len(protocol.COMMAND_TYPES) == 24
 
 
 def test_event_and_command_constants_match_spec_strings() -> None:
@@ -110,6 +112,8 @@ def test_event_and_command_constants_match_spec_strings() -> None:
         protocol.COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE == "rehearse_operator_package_sequence"
     )
     assert protocol.COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY == "preview_operator_package_apply"
+    assert protocol.COMMAND_MOCK_APPLY_OPERATOR_PACKAGE == "mock_apply_operator_package"
+    assert protocol.COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT == "build_operator_package_receipt"
 
 
 def test_event_and_command_typeset_are_disjoint() -> None:
@@ -325,6 +329,48 @@ def test_preview_operator_package_apply_command_dict_carries_spec_keys() -> None
     assert len(command["step_keys"]) == 2
 
 
+def test_mock_apply_operator_package_command_dict_carries_spec_keys() -> None:
+    command: protocol.MockApplyOperatorPackageCommand = {
+        "type": "mock_apply_operator_package",
+        "operator_package_id": "live-kit-operator-package",
+        "step_keys": [
+            "operator-step-hard-groove-lift",
+            "operator-step-industrial-pressure",
+        ],
+        "package_export_keys": {
+            "operator-step-hard-groove-lift": "operator-package-hard-groove-lift",
+            "operator-step-industrial-pressure": "operator-package-industrial-pressure",
+        },
+        "snapshot_id": "snap-06",
+        "mock_safe": True,
+    }
+
+    assert command["type"] == protocol.COMMAND_MOCK_APPLY_OPERATOR_PACKAGE
+    assert command["mock_safe"] is True
+    assert len(command["step_keys"]) == 2
+
+
+def test_build_operator_package_receipt_command_dict_carries_spec_keys() -> None:
+    command: protocol.BuildOperatorPackageReceiptCommand = {
+        "type": "build_operator_package_receipt",
+        "operator_package_id": "live-kit-operator-package",
+        "step_keys": [
+            "operator-step-hard-groove-lift",
+            "operator-step-industrial-pressure",
+        ],
+        "package_export_keys": {
+            "operator-step-hard-groove-lift": "operator-package-hard-groove-lift",
+            "operator-step-industrial-pressure": "operator-package-industrial-pressure",
+        },
+        "snapshot_id": "snap-06",
+        "mock_safe": True,
+    }
+
+    assert command["type"] == protocol.COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT
+    assert command["mock_safe"] is True
+    assert len(command["step_keys"]) == 2
+
+
 def test_command_ack_accepts_operator_package_rehearsal_payload() -> None:
     ack: protocol.CommandAck = {
         "request_id": "req-operator-package",
@@ -372,6 +418,47 @@ def test_command_ack_accepts_operator_package_apply_preview_payload() -> None:
 
     assert ack["operator_package_apply_preview"]["step_count"] == 1
     assert ack["operator_package_apply_preview"]["sent_midi"] is False
+
+
+def test_command_ack_accepts_operator_package_mock_apply_payload() -> None:
+    ack: protocol.CommandAck = {
+        "request_id": "req-operator-package-mock-apply",
+        "ok": True,
+        "operator_package_mock_apply": {
+            "mock_apply_id": "operator-package-mock-apply:live-kit-operator-package:snap-06:operator-step-hard-groove-lift",
+            "step_count": 1,
+            "mock_apply_status": "mock_applied",
+            "opened_midi_port": False,
+            "sent_midi": False,
+            "writes_files": False,
+            "mutated_snapshot": False,
+            "applied_send_plan": False,
+        },
+    }
+
+    assert ack["operator_package_mock_apply"]["step_count"] == 1
+    assert ack["operator_package_mock_apply"]["sent_midi"] is False
+    assert ack["operator_package_mock_apply"]["applied_send_plan"] is False
+
+
+def test_command_ack_accepts_operator_package_receipt_payload() -> None:
+    ack: protocol.CommandAck = {
+        "request_id": "req-operator-package-receipt",
+        "ok": True,
+        "operator_package_receipt": {
+            "receipt_id": "operator-package-receipt:live-kit-operator-package:snap-06:operator-step-hard-groove-lift",
+            "step_count": 1,
+            "opened_midi_port": False,
+            "sent_midi": False,
+            "writes_files": False,
+            "mutated_snapshot": False,
+            "applied_send_plan": False,
+            "events_emitted": False,
+        },
+    }
+
+    assert ack["operator_package_receipt"]["step_count"] == 1
+    assert ack["operator_package_receipt"]["sent_midi"] is False
 
 
 def test_command_ack_with_candidate_for_set_depth() -> None:

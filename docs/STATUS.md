@@ -1,9 +1,21 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-22. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-06-23. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-06-23: Operator Package Mock Apply + Receipt bundle consolidated on
+  the clean base after PR #195 merged. The Cockpit WebSocket protocol now
+  includes typed `mock_apply_operator_package` and
+  `build_operator_package_receipt` commands that validate the current Live Kit
+  Operator Package id, selected operator steps, package export-key bindings,
+  snapshot id, and `mock_safe: true` before returning deterministic mock-apply
+  and receipt evidence. The Performance Console renders both controls and
+  review panels with step evidence, readiness checks, recovery requirements,
+  blocked actions, safety lines, stable receipt digest, and no-side-effect
+  proof. This remains mock/passive only: no package files are written, no
+  snapshots are mutated, no send plans are applied, no hardware is armed, no
+  MIDI port is opened, no MIDI is sent, and no event stream is emitted.
 - 2026-06-22: Operator Package Apply Preview bundle packaging prepared on the
   clean base after the PR #193 runtime-control merge. The plan and draft PR
   body cover the next passive/mock-safe Cockpit-to-sidecar surface: preview the
