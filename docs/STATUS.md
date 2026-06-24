@@ -1,9 +1,21 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-23. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-06-24. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-06-24: Controller Brain Operator Package Ledger bundle started on the
+  clean base after PR #196 merged. The new passive
+  `controller-brain-operator-package-report [--json]` composes the reviewed
+  controller-brain virtual gesture packet with the current Live Kit Operator
+  Package slots, mapping macro depth, industrial macro selection, Rytm pad-lane
+  amount gestures, A4 review-only gestures, Style Crate selection, queue
+  staging, and panic-home recovery into deterministic package-review bindings.
+  This keeps the OXI/E16-style controller story tied to RytmRandomizer's live
+  KIT/operator-package advantage while preserving side-effect proof: no
+  controller input, no raw CC capture, no WebSocket dispatch, no file writing,
+  no snapshot mutation, no hardware arming, no MIDI port opening, and no MIDI
+  sending.
 - 2026-06-23: Operator Package Mock Apply + Receipt bundle consolidated on
   the clean base after PR #195 merged. The Cockpit WebSocket protocol now
   includes typed `mock_apply_operator_package` and

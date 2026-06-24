@@ -239,6 +239,7 @@ macro SEND` plus unattended playback blocked.
 | `oxi-live-macro-catalog-report` | Passive Rytm macro cards, recovery actions, live flow, and A4 runway state |
 | `controller-brain-mapping-report [--json]` | Passive 16-encoder controller-brain intent pages for Rytm, A4, crates, queue, snapshots, and journal |
 | `controller-brain-rehearsal-report [--json]` | Passive controller-template export rows plus virtual gesture outcomes for future controller software |
+| `controller-brain-operator-package-report [--json]` | Passive controller gestures to Live Kit Operator Package slot/readiness ledger |
 | `rytm-live-macro-hardware-rehearsal-report` | Passive next-studio Rytm macro checklist with launch command, pad-lane checks, and recovery notes |
 | `oxi-live-set-strategy-report` | Passive OXI-style set chapters, operator cues, rehearsal/replay commands, all-12-pad policy, and A4 review-only actions |
 
@@ -248,6 +249,8 @@ python -m rytm_randomizer.cli controller-brain-mapping-report
 python -m rytm_randomizer.cli controller-brain-mapping-report --json
 python -m rytm_randomizer.cli controller-brain-rehearsal-report
 python -m rytm_randomizer.cli controller-brain-rehearsal-report --json
+python -m rytm_randomizer.cli controller-brain-operator-package-report
+python -m rytm_randomizer.cli controller-brain-operator-package-report --json
 python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report
 python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report --json
 python -m rytm_randomizer.cli oxi-live-set-strategy-report
@@ -301,6 +304,14 @@ their reviewed intent keys, records blocked active actions, and emits a JSON
 shape that a future Cockpit/controller bridge can render without opening
 controller input, learning raw MIDI messages, dispatching WebSocket commands,
 opening hardware ports, or sending MIDI.
+
+`controller-brain-operator-package-report` composes that virtual gesture packet
+with the current Live Kit Operator Package slots. The ledger maps macro depth,
+industrial macro selection, Rytm pad-lane amount gestures, A4 review-only
+gestures, Style Crate selection, queue staging, and panic-home recovery into
+package-review targets while proving the side effects remain false: no
+controller input, no raw CC capture, no WebSocket dispatch, no file write, no
+snapshot mutation, no hardware arm, no MIDI port, and no MIDI send.
 
 ---
 
