@@ -6,6 +6,7 @@ import type {
   LiveGuiPerformanceConsoleLiveKitOperatorPackageDict,
   LiveGuiPerformanceConsoleLiveKitOperatorPackageSlotBindingDict,
   LiveGuiPerformanceConsoleLiveKitOperatorPackageStepDict,
+  LiveGuiPerformanceConsoleLiveKitOperatorReviewLedgerDict,
   LiveGuiPerformanceConsoleMacroActionCardDict,
   LiveGuiPerformanceConsoleModelDict,
   LiveGuiPerformanceConsoleRytmMacroPolicyRowDict,
@@ -112,8 +113,36 @@ const LEGACY_OPERATOR_PACKAGE_FALLBACK: LiveGuiPerformanceConsoleLiveKitOperator
   replay_commands: [],
 };
 
+const LEGACY_OPERATOR_REVIEW_LEDGER_FALLBACK: LiveGuiPerformanceConsoleLiveKitOperatorReviewLedgerDict = {
+  ledger_version: 'legacy-missing',
+  ledger_id: 'operator-package-review-ledger-unavailable',
+  ledger_status: 'unavailable',
+  title: 'Operator Package Review Ledger',
+  operator_package_id: 'live-kit-operator-package-unavailable',
+  source_audition_id: 'unavailable',
+  source_workbench_id: 'unavailable',
+  review_stage_count: 0,
+  step_count: 0,
+  review_stages: [],
+  step_rows: [],
+  readiness_summary: {
+    mock_safe: true,
+    opened_midi_port: false,
+    sent_midi: false,
+    writes_files: false,
+    mutated_snapshot: false,
+    applied_send_plan: false,
+    events_emitted: false,
+    required_recovery_count: 0,
+  },
+  blocked_actions: ['operator package review ledger unavailable on this console packet'],
+  safety_lines: ['legacy packet: no operator package review ledger present'],
+  replay_commands: [],
+};
+
 type LegacyPerformanceConsoleModelDict = LiveGuiPerformanceConsoleModelDict & {
   readonly live_kit_operator_package?: LiveGuiPerformanceConsoleLiveKitOperatorPackageDict;
+  readonly operator_package_review_ledger?: LiveGuiPerformanceConsoleLiveKitOperatorReviewLedgerDict;
 };
 
 interface LocalJournalEntry {
@@ -576,6 +605,15 @@ function liveKitOperatorPackageForModel(
   return (
     (model as LegacyPerformanceConsoleModelDict).live_kit_operator_package ??
     LEGACY_OPERATOR_PACKAGE_FALLBACK
+  );
+}
+
+function operatorPackageReviewLedgerForModel(
+  model: LiveGuiPerformanceConsoleModelDict,
+): LiveGuiPerformanceConsoleLiveKitOperatorReviewLedgerDict {
+  return (
+    (model as LegacyPerformanceConsoleModelDict).operator_package_review_ledger ??
+    LEGACY_OPERATOR_REVIEW_LEDGER_FALLBACK
   );
 }
 
@@ -1436,6 +1474,7 @@ export function PerformanceConsole({
   const a4ReviewSurface = model.analog_four_review_surface;
   const a4ReviewFocus = a4ReviewSurface.review_focus;
   const liveKitOperatorPackage = liveKitOperatorPackageForModel(model);
+  const operatorPackageReviewLedger = operatorPackageReviewLedgerForModel(model);
   const macroPath = [a4SetPlan.current_macro, ...a4SetPlan.up_next_macros].join(' -> ');
   const sortedDevices = useMemo(
     () => orderedDevices(model.device_inventory.cards),
@@ -4099,6 +4138,104 @@ export function PerformanceConsole({
             </div>
           </section>
         )}
+
+        <section
+          className="performance-console-local-package"
+          data-testid="performance-console-operator-package-review-ledger"
+          aria-label="Operator package review ledger"
+        >
+          <strong>{operatorPackageReviewLedger.title}</strong>
+          <div className="performance-console-local-package-grid">
+            <span>{operatorPackageReviewLedger.ledger_status}</span>
+            <span>stages {operatorPackageReviewLedger.review_stage_count}</span>
+            <span>steps {operatorPackageReviewLedger.step_count}</span>
+            <span>mock safe {String(operatorPackageReviewLedger.readiness_summary.mock_safe)}</span>
+            <span>
+              opened MIDI port{' '}
+              {String(operatorPackageReviewLedger.readiness_summary.opened_midi_port)}
+            </span>
+            <span>sent MIDI {String(operatorPackageReviewLedger.readiness_summary.sent_midi)}</span>
+            <span>
+              writes files {String(operatorPackageReviewLedger.readiness_summary.writes_files)}
+            </span>
+            <span>
+              required recovery{' '}
+              {operatorPackageReviewLedger.readiness_summary.required_recovery_count}
+            </span>
+          </div>
+          <small>
+            {operatorPackageReviewLedger.ledger_id} /{' '}
+            {operatorPackageReviewLedger.operator_package_id}
+          </small>
+
+          <h3 className="performance-console-subheading">Review Stages</h3>
+          <div className="performance-console-list">
+            {operatorPackageReviewLedger.review_stages.map((stage) => (
+              <article key={stage.stage_key}>
+                <strong>{stage.label}</strong>
+                <span>
+                  {stage.stage_key} / {stage.policy} / {stage.status}
+                </span>
+                <small>{stage.summary}</small>
+                <small>
+                  sent MIDI {String(stage.sent_midi)} / writes files{' '}
+                  {String(stage.writes_files)}
+                </small>
+              </article>
+            ))}
+          </div>
+
+          <h3 className="performance-console-subheading">Step Ledger</h3>
+          <div className="performance-console-list">
+            {operatorPackageReviewLedger.step_rows.map((row) => (
+              <article key={`${row.order}-${row.step_key}`}>
+                <strong>{row.label}</strong>
+                <span>
+                  {row.slot_key} / {row.package_export_key} / {row.depth_percent}%
+                </span>
+                <small>
+                  {row.queue_status} / {row.local_action} / {row.operator_command}
+                </small>
+                <small>
+                  {row.preview_status} / {row.mock_apply_status} / {row.receipt_status}
+                </small>
+                <small>{row.recovery_command}</small>
+              </article>
+            ))}
+          </div>
+
+          <div className="performance-console-macro-actions">
+            <button
+              type="button"
+              className="live-readiness-action live-readiness-action-locked"
+              disabled
+              title="Ledger apply remains blocked in the passive console."
+            >
+              Apply operator package ledger
+            </button>
+          </div>
+          <div className="live-chip-row" aria-label="Operator package review ledger replay commands">
+            {operatorPackageReviewLedger.replay_commands.map((command) => (
+              <span key={command} className="live-chip">
+                {command}
+              </span>
+            ))}
+          </div>
+          <div className="live-chip-row" aria-label="Operator package review ledger blocked actions">
+            {operatorPackageReviewLedger.blocked_actions.map((action) => (
+              <span key={action} className="live-chip live-chip-blocked">
+                {action}
+              </span>
+            ))}
+          </div>
+          <div className="live-chip-row" aria-label="Operator package review ledger safety lines">
+            {operatorPackageReviewLedger.safety_lines.map((line) => (
+              <span key={line} className="live-chip">
+                {line}
+              </span>
+            ))}
+          </div>
+        </section>
 
         <h3 className="performance-console-subheading">Operator Steps</h3>
         <div className="performance-console-list">
