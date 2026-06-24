@@ -645,6 +645,8 @@ python -m rytm_randomizer.cli analog-rytm-midi-catalog-report   # passive OS 1.7
 python -m rytm_randomizer.cli oxi-live-macro-catalog-report   # passive OXI live macro cards, live flow, and A4 runway state
 python -m rytm_randomizer.cli controller-brain-mapping-report --json   # passive 16-encoder controller-brain intent map
 python -m rytm_randomizer.cli controller-brain-rehearsal-report --json   # passive controller-brain template/rehearsal export packet
+python -m rytm_randomizer.cli controller-brain-live-runbook-report --json   # passive controller-brain live runbook tying controller gestures to stage/inspect/fire/recover metadata
+python -m rytm_randomizer.cli controller-brain-live-state-report --json   # passive controller-brain state rows, queued intents, and audit events for the future bridge
 python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report --json   # passive next-studio Rytm macro rehearsal checklist
 python -m rytm_randomizer.cli live-gui-performance-flow-model-report --json   # cockpit-ready Rytm/A4 performance flow model
 python -m rytm_randomizer.cli live-gui-performance-console-report --json   # full passive Cockpit performance console packet with lane policy, macro action, rehearsal board, live-kit capture workbench/package audition/operator package, and controller-brain panel

@@ -77,6 +77,23 @@ USAGE = (
     "oxi-live-macro-catalog-report | "
     "controller-brain-mapping-report [--json] | "
     "controller-brain-rehearsal-report [--json] | "
+    "controller-brain-live-runbook-report [--json] | "
+    "controller-brain-live-state-report [--json] | "
+    "controller-brain-live-bridge-readiness-report [--json] | "
+    "controller-brain-live-dispatch-rehearsal-report [--json] | "
+    "controller-brain-live-feedback-rehearsal-report [--json] | "
+    "controller-brain-live-cockpit-handoff-report [--json] | "
+    "controller-brain-live-implementation-bridge-report [--json] | "
+    "controller-brain-live-desktop-blueprint-report [--json] | "
+    "controller-brain-live-desktop-app-plan-report "
+    "[--app-plan-label <text>] "
+    "[--framework-target desktop-python|web-desktop|test-harness] [--json] | "
+    "controller-brain-live-desktop-component-contract-report "
+    "[--component-contract-label <text>] [--selector-prefix <text>] [--json] | "
+    "controller-brain-live-desktop-view-model-report "
+    "[--view-model-label <text>] [--state-prefix <text>] [--json] | "
+    "controller-brain-live-desktop-render-contract-report "
+    "[--render-contract-label <text>] [--surface-prefix <text>] [--json] | "
     "rytm-live-macro-hardware-rehearsal-report [--json] | "
     "live-gui-performance-flow-model-report [--json] | "
     "live-gui-performance-console-report [--json] | "
@@ -1343,6 +1360,382 @@ Safety:
   no port opening
   no hardware mutation
   no hardware required"""
+
+
+def _controller_brain_live_runbook_report_help():
+    return """RytmRandomizer passive CLI: controller-brain-live-runbook-report
+
+Usage:
+  python -m rytm_randomizer.cli controller-brain-live-runbook-report
+  python -m rytm_randomizer.cli controller-brain-live-runbook-report --json
+  python -m rytm_randomizer.cli controller-brain-live-runbook-report --help
+
+Behavior:
+  Prints a passive controller-brain live runbook. It composes the controller
+  rehearsal packet, OXI live set strategy, and Cockpit performance console
+  metadata into stage, inspect, fire, and recover steps for future controller
+  surfaces.
+
+Safety:
+  passive/read-only
+  no MIDI controller input
+  no MIDI learn or raw CC capture
+  no WebSocket command dispatch
+  no MIDI sending
+  no port opening
+  no hardware mutation
+  no hardware required"""
+
+
+def _controller_brain_live_state_report_help():
+    return """RytmRandomizer passive CLI: controller-brain-live-state-report
+
+Usage:
+  python -m rytm_randomizer.cli controller-brain-live-state-report
+  python -m rytm_randomizer.cli controller-brain-live-state-report --json
+  python -m rytm_randomizer.cli controller-brain-live-state-report --help
+
+Behavior:
+  Prints a passive controller-brain live state contract. It derives state rows,
+  queued intents, and audit events from the controller-brain live runbook so a
+  future fixed-controller bridge can render and test the next interaction layer
+  without opening controller input or dispatching runtime commands.
+
+Safety:
+  passive/read-only
+  controller-brain live state metadata only
+  queued intents are metadata only
+  audit events are metadata only
+  no MIDI controller input
+  no MIDI learn or raw CC capture
+  no WebSocket command dispatch
+  no MIDI sending
+  no port opening
+  no snapshot mutation
+  no hardware mutation
+  no hardware required"""
+
+
+def _controller_brain_live_bridge_readiness_report_help():
+    return """RytmRandomizer passive CLI: controller-brain-live-bridge-readiness-report
+
+Usage:
+  python -m rytm_randomizer.cli controller-brain-live-bridge-readiness-report
+  python -m rytm_randomizer.cli controller-brain-live-bridge-readiness-report --json
+  python -m rytm_randomizer.cli controller-brain-live-bridge-readiness-report --help
+
+Behavior:
+  Prints passive controller-brain live bridge readiness. It derives contract
+  packets and readiness gates from the controller-brain live state contract so a
+  future controller input adapter, reducer, WebSocket dispatcher, feedback
+  layer, and hardware-send path have an explicit blocked handoff.
+
+Safety:
+  passive/read-only
+  controller-brain bridge readiness metadata only
+  contract packets are metadata only
+  no MIDI controller input
+  no MIDI learn or raw CC capture
+  no runtime reducer execution
+  no WebSocket command dispatch
+  no controller feedback emission
+  no MIDI sending
+  no port opening
+  no snapshot mutation
+  no hardware mutation
+  no hardware required"""
+
+
+def _controller_brain_live_dispatch_rehearsal_report_help():
+    return """RytmRandomizer passive CLI: controller-brain-live-dispatch-rehearsal-report
+
+Usage:
+  python -m rytm_randomizer.cli controller-brain-live-dispatch-rehearsal-report
+  python -m rytm_randomizer.cli controller-brain-live-dispatch-rehearsal-report --json
+  python -m rytm_randomizer.cli controller-brain-live-dispatch-rehearsal-report --help
+
+Behavior:
+  Prints passive controller-brain live dispatch rehearsal. It derives shadow
+  dispatch decisions from the controller-brain bridge-readiness contract so a
+  future controller input adapter, reducer, WebSocket dispatcher, feedback
+  layer, and hardware-send path have an explicit blocked rehearsal packet.
+
+Safety:
+  passive/read-only
+  controller-brain dispatch rehearsal metadata only
+  shadow dispatch decisions are metadata only
+  no MIDI controller input
+  no MIDI learn or raw CC capture
+  no runtime reducer execution
+  no WebSocket command dispatch
+  no controller feedback emission
+  no MIDI sending
+  no port opening
+  no snapshot mutation
+  no hardware mutation
+  no hardware required"""
+
+
+def _controller_brain_live_feedback_rehearsal_report_help():
+    return """RytmRandomizer passive CLI: controller-brain-live-feedback-rehearsal-report
+
+Usage:
+  python -m rytm_randomizer.cli controller-brain-live-feedback-rehearsal-report
+  python -m rytm_randomizer.cli controller-brain-live-feedback-rehearsal-report --json
+  python -m rytm_randomizer.cli controller-brain-live-feedback-rehearsal-report --help
+
+Behavior:
+  Prints passive controller-brain live feedback rehearsal. It derives feedback
+  frames from the controller-brain dispatch rehearsal contract so a future
+  controller output adapter can map LED state, encoder rings, display text, and
+  WebSocket feedback without emitting anything yet.
+
+Safety:
+  passive/read-only
+  controller-brain feedback rehearsal metadata only
+  feedback frames are metadata only
+  no MIDI controller output
+  no controller feedback emission
+  no WebSocket feedback dispatch
+  no runtime reducer execution
+  no MIDI sending
+  no port opening
+  no snapshot mutation
+  no hardware mutation
+  no hardware required"""
+
+
+def _controller_brain_live_cockpit_handoff_report_help():
+    return """RytmRandomizer passive CLI: controller-brain-live-cockpit-handoff-report
+
+Usage:
+  python -m rytm_randomizer.cli controller-brain-live-cockpit-handoff-report
+  python -m rytm_randomizer.cli controller-brain-live-cockpit-handoff-report --json
+  python -m rytm_randomizer.cli controller-brain-live-cockpit-handoff-report --help
+
+Behavior:
+  Prints passive controller-brain live Cockpit handoff metadata. It derives
+  GUI-ready handoff cards, Cockpit panels, disabled Cockpit controls, replay
+  commands, and safety evidence from the controller-brain feedback rehearsal.
+
+Safety:
+  passive/read-only
+  controller-brain Cockpit handoff metadata only
+  GUI-ready handoff cards are metadata only
+  disabled Cockpit controls are metadata only
+  no controller input
+  no runtime reducer execution
+  no WebSocket dispatch
+  no controller feedback emission
+  no MIDI controller output
+  no MIDI sending
+  no port opening
+  no snapshot mutation
+  no hardware mutation
+  no hardware required"""
+
+
+def _controller_brain_live_implementation_bridge_report_help():
+    return """RytmRandomizer passive CLI: controller-brain-live-implementation-bridge-report
+
+Usage:
+  python -m rytm_randomizer.cli controller-brain-live-implementation-bridge-report
+  python -m rytm_randomizer.cli controller-brain-live-implementation-bridge-report --json
+  python -m rytm_randomizer.cli controller-brain-live-implementation-bridge-report --help
+
+Behavior:
+  Prints passive controller-brain live implementation bridge metadata. It turns
+  disabled Cockpit handoff cards into future GUI implementation bindings,
+  fixture bundles, implementation gates, replay commands, and safety evidence
+  without mounting a renderer or executing runtime behavior.
+
+Safety:
+  passive/read-only
+  controller-brain implementation bridge metadata only
+  implementation bindings are declarative metadata only
+  fixture bundles are metadata only
+  implementation gates are metadata only
+  no GUI launch
+  no GUI renderer start
+  no runtime reducer execution
+  no WebSocket dispatch
+  no controller feedback emission
+  no MIDI controller output
+  no MIDI sending
+  no port opening
+  no snapshot mutation
+  no hardware mutation
+  no hardware required"""
+
+
+def _controller_brain_live_desktop_blueprint_report_help():
+    return """RytmRandomizer passive CLI: controller-brain-live-desktop-blueprint-report
+
+Usage:
+  python -m rytm_randomizer.cli controller-brain-live-desktop-blueprint-report
+  python -m rytm_randomizer.cli controller-brain-live-desktop-blueprint-report --json
+  python -m rytm_randomizer.cli controller-brain-live-desktop-blueprint-report --help
+
+Behavior:
+  Prints passive controller-brain live desktop blueprint metadata. It turns the
+  implementation bridge into disabled desktop regions, component contracts,
+  view-model bindings, fixture hints, acceptance checks, replay commands, and
+  safety evidence for future Cockpit desktop work without mounting the GUI.
+
+Safety:
+  passive/read-only
+  controller-brain desktop blueprint metadata only
+  desktop regions are declarative metadata only
+  component contracts are declarative metadata only
+  view-model bindings are declarative metadata only
+  fixture hints are metadata only
+  acceptance checks are metadata only
+  no GUI launch
+  no GUI renderer start
+  no runtime reducer execution
+  no WebSocket dispatch
+  no controller feedback emission
+  no MIDI controller output
+  no MIDI sending
+  no port opening
+  no snapshot mutation
+  no file writing
+  no hardware mutation
+  no hardware required"""
+
+
+def _controller_brain_live_desktop_app_plan_report_help():
+    return """RytmRandomizer passive CLI: controller-brain-live-desktop-app-plan-report
+
+Usage:
+  python -m rytm_randomizer.cli controller-brain-live-desktop-app-plan-report
+  python -m rytm_randomizer.cli controller-brain-live-desktop-app-plan-report --json
+  python -m rytm_randomizer.cli controller-brain-live-desktop-app-plan-report --app-plan-label "Controller brain desktop app plan" --framework-target desktop-python
+  python -m rytm_randomizer.cli controller-brain-live-desktop-app-plan-report --help
+
+Behavior:
+  Prints passive controller-brain live desktop app plan metadata. It turns the
+  desktop blueprint into disabled app routes, component file hints, state
+  slices, style tokens, acceptance checks, replay commands, and safety evidence
+  for future Cockpit desktop work without launching an app or writing files.
+
+Safety:
+  passive/read-only
+  controller-brain desktop app plan metadata only
+  app routes are declarative metadata only
+  component file hints are advisory metadata only
+  state slices are declarative metadata only
+  style tokens are declarative metadata only
+  acceptance checks are metadata only
+  no GUI launch
+  no app launch
+  no GUI renderer start
+  no runtime reducer execution
+  no WebSocket dispatch
+  no controller feedback emission
+  no MIDI sending
+  no port opening
+  no snapshot mutation
+  no file writing
+  no hardware mutation
+  no hardware required"""
+
+
+def _controller_brain_live_desktop_component_contract_report_help():
+    return """RytmRandomizer passive CLI: controller-brain-live-desktop-component-contract-report
+
+Usage:
+  python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report
+  python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report --json
+  python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report --component-contract-label "Controller brain desktop component contract" --selector-prefix rr-controller
+  python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report --help
+
+Behavior:
+  Prints disabled future component API contracts for the controller-brain
+  desktop surface. It turns desktop app-plan component file hints and state
+  slices into component selectors, prop contracts, event contracts, test hooks,
+  fixture contracts, acceptance checks, replay commands, and safety evidence
+  for future Cockpit desktop work without launching an app or writing files.
+
+Safety:
+  passive/read-only
+  controller-brain desktop component contract metadata only
+  component contracts are declarative metadata only
+  prop contracts are declarative metadata only
+  event contracts are disabled metadata only
+  test hooks are declarative metadata only
+  fixture contracts are advisory metadata only
+  no GUI launch
+  no app launch
+  no GUI renderer start
+  no runtime reducer execution
+  no WebSocket dispatch
+  no controller feedback emission
+  no MIDI sending
+  no port opening
+  no snapshot mutation
+  no file writing
+  no hardware mutation
+  no hardware required"""
+
+
+def _controller_brain_live_desktop_view_model_report_help():
+    return """RytmRandomizer passive CLI: controller-brain-live-desktop-view-model-report
+
+Usage:
+  python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report
+  python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report --json
+  python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report --view-model-label "Controller brain desktop view model" --state-prefix rr-state
+  python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report --help
+
+Behavior:
+  Prints disabled future component view models for the controller-brain desktop
+  surface. It turns desktop component contracts into component view models,
+  state bindings, disabled action models, render assertions, acceptance checks,
+  replay commands, and safety evidence for future Cockpit desktop work without
+  launching an app, rendering a GUI, or writing files.
+
+Safety:
+  passive/read-only
+  controller-brain desktop view model metadata only
+  component view models are declarative metadata only
+  state bindings are declarative metadata only
+  disabled action models are metadata only
+  render assertions are metadata only
+  no GUI launch
+  no app launch
+  no GUI renderer start
+  no runtime reducer execution
+  no WebSocket dispatch
+  no controller feedback emission
+  no MIDI controller output
+  no MIDI sending
+  no port opening
+  no snapshot mutation
+  no file writing
+  no hardware mutation
+  no hardware required"""
+
+
+def _controller_brain_live_desktop_render_contract_report_help():
+    return """RytmRandomizer passive CLI: controller-brain-live-desktop-render-contract-report
+
+Usage:
+  python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report
+  python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report --json
+  python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report --render-contract-label "Controller brain desktop render contract" --surface-prefix rr-render
+  python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report --help
+
+Behavior:
+  Prints future render surfaces for the controller-brain desktop UI. It composes
+  the passive desktop view-model report into disabled render bindings,
+  render guards, render assertions, acceptance checks, replay commands, and safety
+  evidence for future Cockpit desktop work.
+
+Safety:
+  This report performs no GUI launch, no renderer execution,
+  no WebSocket dispatch, no MIDI sending, and no file writing. It only prints
+  deterministic metadata to stdout/JSON."""
 
 
 def _rytm_live_macro_hardware_rehearsal_report_help():
@@ -2859,6 +3252,18 @@ Usage:
   python -m rytm_randomizer.cli oxi-live-macro-catalog-report
   python -m rytm_randomizer.cli controller-brain-mapping-report [--json]
   python -m rytm_randomizer.cli controller-brain-rehearsal-report [--json]
+  python -m rytm_randomizer.cli controller-brain-live-runbook-report [--json]
+  python -m rytm_randomizer.cli controller-brain-live-state-report [--json]
+  python -m rytm_randomizer.cli controller-brain-live-bridge-readiness-report [--json]
+  python -m rytm_randomizer.cli controller-brain-live-dispatch-rehearsal-report [--json]
+  python -m rytm_randomizer.cli controller-brain-live-feedback-rehearsal-report [--json]
+  python -m rytm_randomizer.cli controller-brain-live-cockpit-handoff-report [--json]
+  python -m rytm_randomizer.cli controller-brain-live-implementation-bridge-report [--json]
+  python -m rytm_randomizer.cli controller-brain-live-desktop-blueprint-report [--json]
+  python -m rytm_randomizer.cli controller-brain-live-desktop-app-plan-report [--app-plan-label <text>] [--framework-target desktop-python|web-desktop|test-harness] [--json]
+  python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report [--component-contract-label <text>] [--selector-prefix <text>] [--json]
+  python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report [--view-model-label <text>] [--state-prefix <text>] [--json]
+  python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report [--render-contract-label <text>] [--surface-prefix <text>] [--json]
   python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report [--json]
   python -m rytm_randomizer.cli live-gui-performance-flow-model-report [--json]
   python -m rytm_randomizer.cli live-gui-performance-console-report [--json]
@@ -3023,6 +3428,30 @@ Commands:
                      Print passive 16-encoder controller-brain intent maps.
   controller-brain-rehearsal-report
                      Print passive controller-brain rehearsal and template export packets.
+  controller-brain-live-runbook-report
+                     Print passive controller-brain live runbook steps.
+  controller-brain-live-state-report
+                     Print passive controller-brain live state rows, queued intents, and audit events.
+  controller-brain-live-bridge-readiness-report
+                     Print passive controller-brain bridge readiness packets and gates.
+  controller-brain-live-dispatch-rehearsal-report
+                     Print passive controller-brain shadow dispatch decisions and gates.
+  controller-brain-live-feedback-rehearsal-report
+                     Print passive controller-brain feedback frames and output gates.
+  controller-brain-live-cockpit-handoff-report
+                     Print passive controller-brain Cockpit handoff cards and disabled controls.
+  controller-brain-live-implementation-bridge-report
+                     Print passive controller-brain implementation bindings and gates.
+  controller-brain-live-desktop-blueprint-report
+                     Print passive controller-brain desktop regions and component contracts.
+  controller-brain-live-desktop-app-plan-report
+                     Print passive controller-brain app routes and component file hints.
+  controller-brain-live-desktop-component-contract-report
+                     Print passive controller-brain desktop component API contracts.
+  controller-brain-live-desktop-view-model-report
+                     Print passive controller-brain desktop view models and state bindings.
+  controller-brain-live-desktop-render-contract-report
+                     Print passive controller-brain desktop render surfaces and bindings.
   rytm-live-macro-hardware-rehearsal-report
                      Print passive Rytm macro hardware rehearsal checklist.
   live-gui-performance-flow-model-report
@@ -3434,6 +3863,38 @@ Safety:
     "oxi-live-macro-catalog-report": _oxi_live_macro_catalog_report_help,
     "controller-brain-mapping-report": _controller_brain_mapping_report_help,
     "controller-brain-rehearsal-report": _controller_brain_rehearsal_report_help,
+    "controller-brain-live-runbook-report": (_controller_brain_live_runbook_report_help),
+    "controller-brain-live-state-report": _controller_brain_live_state_report_help,
+    "controller-brain-live-bridge-readiness-report": (
+        _controller_brain_live_bridge_readiness_report_help
+    ),
+    "controller-brain-live-dispatch-rehearsal-report": (
+        _controller_brain_live_dispatch_rehearsal_report_help
+    ),
+    "controller-brain-live-feedback-rehearsal-report": (
+        _controller_brain_live_feedback_rehearsal_report_help
+    ),
+    "controller-brain-live-cockpit-handoff-report": (
+        _controller_brain_live_cockpit_handoff_report_help
+    ),
+    "controller-brain-live-implementation-bridge-report": (
+        _controller_brain_live_implementation_bridge_report_help
+    ),
+    "controller-brain-live-desktop-blueprint-report": (
+        _controller_brain_live_desktop_blueprint_report_help
+    ),
+    "controller-brain-live-desktop-app-plan-report": (
+        _controller_brain_live_desktop_app_plan_report_help
+    ),
+    "controller-brain-live-desktop-component-contract-report": (
+        _controller_brain_live_desktop_component_contract_report_help
+    ),
+    "controller-brain-live-desktop-view-model-report": (
+        _controller_brain_live_desktop_view_model_report_help
+    ),
+    "controller-brain-live-desktop-render-contract-report": (
+        _controller_brain_live_desktop_render_contract_report_help
+    ),
     "rytm-live-macro-hardware-rehearsal-report": (_rytm_live_macro_hardware_rehearsal_report_help),
     "live-gui-performance-flow-model-report": _live_gui_performance_flow_model_report_help,
     "live-gui-performance-console-report": _live_gui_performance_console_report_help,

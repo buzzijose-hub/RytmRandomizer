@@ -1,9 +1,50 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-23. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-06-24. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-06-24: Passive Controller Brain Live Runbook bundle started on the clean
+  base after PR #196 merged. The new
+  `controller-brain-live-runbook-report [--json]` and
+  `controller-brain-live-state-report [--json]` surfaces now extend through
+  `controller-brain-live-bridge-readiness-report [--json]` and
+  `controller-brain-live-dispatch-rehearsal-report [--json]` into
+  `controller-brain-live-feedback-rehearsal-report [--json]` and
+  `controller-brain-live-cockpit-handoff-report [--json]`, plus the
+  `controller-brain-live-implementation-bridge-report [--json]` and
+  `controller-brain-live-desktop-blueprint-report [--json]` follow-up and the
+  `controller-brain-live-desktop-app-plan-report [--json]` and
+  `controller-brain-live-desktop-component-contract-report [--json]` plus
+  `controller-brain-live-desktop-view-model-report [--json]` and
+  `controller-brain-live-desktop-render-contract-report [--json]`
+  continuations.
+  Together they
+  compose the existing controller-brain rehearsal packet, OXI live set strategy,
+  and Cockpit performance console model into deterministic stage, inspect, fire,
+  recover, queued-intent, audit-event, bridge contract-packet, bridge-readiness,
+  shadow-dispatch, metadata-only feedback frames, and GUI-ready disabled
+  Cockpit handoff cards, disabled GUI implementation bindings, and desktop
+  blueprint contracts, app-plan routes, component API contracts, and
+  desktop view models and disabled render contracts for future
+  fixed-controller surfaces. They record
+  gesture intent, readiness gates, blocked active actions, replay commands,
+  source report provenance, state rows, queued intents, audit events, bridge
+  packets, dispatch decisions, transport gates, feedback frames, output gates,
+  Cockpit panels, disabled controls, implementation bindings, fixture bundles,
+  implementation gates, desktop regions, component contracts, view-model
+  bindings, fixture hints, app routes, component file hints, disabled state
+  slices, style tokens, component contracts, prop contracts, disabled event
+  contracts, test hooks, fixture contracts, component view models, state
+  bindings, disabled action models, render surfaces, render bindings,
+  render guards, render assertions, acceptance checks, and
+  safety lines
+  while keeping
+  every active path blocked: no controller input, no MIDI learn/raw CC capture,
+  no GUI launch, no
+  GUI renderer start, no runtime reducer execution, no WebSocket dispatch or
+  feedback, no controller feedback, no MIDI controller output, no MIDI port
+  opening, no MIDI send, no snapshot mutation, and no file writing.
 - 2026-06-23: Operator Package Mock Apply + Receipt bundle consolidated on
   the clean base after PR #195 merged. The Cockpit WebSocket protocol now
   includes typed `mock_apply_operator_package` and

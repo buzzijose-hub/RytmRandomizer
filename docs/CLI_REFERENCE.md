@@ -239,6 +239,18 @@ macro SEND` plus unattended playback blocked.
 | `oxi-live-macro-catalog-report` | Passive Rytm macro cards, recovery actions, live flow, and A4 runway state |
 | `controller-brain-mapping-report [--json]` | Passive 16-encoder controller-brain intent pages for Rytm, A4, crates, queue, snapshots, and journal |
 | `controller-brain-rehearsal-report [--json]` | Passive controller-template export rows plus virtual gesture outcomes for future controller software |
+| `controller-brain-live-runbook-report [--json]` | Passive controller-brain live runbook that composes controller gestures, OXI chapters, and Cockpit readiness into stage/inspect/fire/recover metadata |
+| `controller-brain-live-state-report [--json]` | Passive controller-brain live state rows, queued intents, audit events, readiness gates, and blocked bridge actions |
+| `controller-brain-live-bridge-readiness-report [--json]` | Passive controller-brain bridge contract packets, readiness gates, and blocked runtime actions |
+| `controller-brain-live-dispatch-rehearsal-report [--json]` | Passive controller-brain shadow dispatch decisions, dispatch groups, and blocked transport gates |
+| `controller-brain-live-feedback-rehearsal-report [--json]` | Passive controller-brain feedback frames, feedback zones, and blocked output gates |
+| `controller-brain-live-cockpit-handoff-report [--json]` | Passive controller-brain Cockpit handoff cards, panels, disabled controls, and replay commands |
+| `controller-brain-live-implementation-bridge-report [--json]` | Passive controller-brain GUI implementation bindings, fixture bundles, and implementation gates |
+| `controller-brain-live-desktop-blueprint-report [--json]` | Passive controller-brain desktop regions, component contracts, view-model bindings, fixture hints, and acceptance checks |
+| `controller-brain-live-desktop-app-plan-report [--app-plan-label <text>] [--framework-target desktop-python\|web-desktop\|test-harness] [--json]` | Passive controller-brain desktop app routes, component file hints, state slices, style tokens, and acceptance checks |
+| `controller-brain-live-desktop-component-contract-report [--component-contract-label <text>] [--selector-prefix <text>] [--json]` | Passive controller-brain desktop component API contracts, props, disabled events, test hooks, and fixture contracts |
+| `controller-brain-live-desktop-view-model-report [--view-model-label <text>] [--state-prefix <text>] [--json]` | Passive controller-brain desktop component view models, state bindings, disabled action models, render assertions, and acceptance checks |
+| `controller-brain-live-desktop-render-contract-report [--render-contract-label <text>] [--surface-prefix <text>] [--json]` | Passive controller-brain desktop render surfaces, render bindings, render guards, render assertions, and acceptance checks |
 | `rytm-live-macro-hardware-rehearsal-report` | Passive next-studio Rytm macro checklist with launch command, pad-lane checks, and recovery notes |
 | `oxi-live-set-strategy-report` | Passive OXI-style set chapters, operator cues, rehearsal/replay commands, all-12-pad policy, and A4 review-only actions |
 
@@ -248,6 +260,30 @@ python -m rytm_randomizer.cli controller-brain-mapping-report
 python -m rytm_randomizer.cli controller-brain-mapping-report --json
 python -m rytm_randomizer.cli controller-brain-rehearsal-report
 python -m rytm_randomizer.cli controller-brain-rehearsal-report --json
+python -m rytm_randomizer.cli controller-brain-live-runbook-report
+python -m rytm_randomizer.cli controller-brain-live-runbook-report --json
+python -m rytm_randomizer.cli controller-brain-live-state-report
+python -m rytm_randomizer.cli controller-brain-live-state-report --json
+python -m rytm_randomizer.cli controller-brain-live-bridge-readiness-report
+python -m rytm_randomizer.cli controller-brain-live-bridge-readiness-report --json
+python -m rytm_randomizer.cli controller-brain-live-dispatch-rehearsal-report
+python -m rytm_randomizer.cli controller-brain-live-dispatch-rehearsal-report --json
+python -m rytm_randomizer.cli controller-brain-live-feedback-rehearsal-report
+python -m rytm_randomizer.cli controller-brain-live-feedback-rehearsal-report --json
+python -m rytm_randomizer.cli controller-brain-live-cockpit-handoff-report
+python -m rytm_randomizer.cli controller-brain-live-cockpit-handoff-report --json
+python -m rytm_randomizer.cli controller-brain-live-implementation-bridge-report
+python -m rytm_randomizer.cli controller-brain-live-implementation-bridge-report --json
+python -m rytm_randomizer.cli controller-brain-live-desktop-blueprint-report
+python -m rytm_randomizer.cli controller-brain-live-desktop-blueprint-report --json
+python -m rytm_randomizer.cli controller-brain-live-desktop-app-plan-report
+python -m rytm_randomizer.cli controller-brain-live-desktop-app-plan-report --app-plan-label "Controller brain desktop app plan" --framework-target desktop-python --json
+python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report
+python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report --component-contract-label "Controller brain desktop component contract" --selector-prefix rr-controller --json
+python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report
+python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report --view-model-label "Controller brain desktop view model" --state-prefix rr-state --json
+python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report
+python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report --render-contract-label "Controller brain desktop render contract" --surface-prefix rr-render --json
 python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report
 python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report --json
 python -m rytm_randomizer.cli oxi-live-set-strategy-report
@@ -301,6 +337,100 @@ their reviewed intent keys, records blocked active actions, and emits a JSON
 shape that a future Cockpit/controller bridge can render without opening
 controller input, learning raw MIDI messages, dispatching WebSocket commands,
 opening hardware ports, or sending MIDI.
+
+`controller-brain-live-runbook-report` composes the controller rehearsal packet,
+the OXI live set strategy, and the Cockpit performance console payload into a
+stage, inspect, fire, and recover runbook for a future fixed-controller
+surface. The report stays passive: it opens no controller input, performs no
+MIDI learn or raw CC capture, dispatches no WebSocket commands, opens no MIDI
+ports, sends no MIDI, and mutates no snapshots.
+
+`controller-brain-live-state-report` derives the next bridge contract from that
+runbook: deterministic `state.*` rows, `queued.*` intents, `audit.*` events,
+readiness gates, blocked active actions, and replay commands. It is still
+metadata only. It opens no controller input, performs no MIDI learn or raw CC
+capture, dispatches no WebSocket commands, opens no MIDI ports, sends no MIDI,
+and mutates no snapshots.
+
+`controller-brain-live-bridge-readiness-report` is the passive implementation
+handoff after the state report. It turns each `state.*`, `queued.*`, and
+`audit.*` row into a deterministic bridge packet, marks only the state, queue,
+and audit contracts ready, and keeps controller input, gesture reducer runtime,
+WebSocket dispatch, controller feedback, MIDI output, hardware send, and
+snapshot mutation blocked until a separate active bridge is designed and
+approved.
+
+`controller-brain-live-dispatch-rehearsal-report` is the passive dry-run after
+bridge readiness. It turns bridge packets into shadow dispatch decisions,
+summarizes state/queue/audit dispatch groups, and keeps controller input,
+runtime reducers, WebSocket dispatch, controller feedback, MIDI output, hardware
+send, and snapshot mutation blocked.
+
+`controller-brain-live-feedback-rehearsal-report` is the passive output-side
+follow-up after dispatch rehearsal. It turns shadow dispatch decisions into
+metadata-only LED, encoder-ring, and display feedback frames while keeping the
+controller output adapter, WebSocket feedback, MIDI output, hardware feedback,
+and snapshot mutation blocked.
+
+`controller-brain-live-cockpit-handoff-report` is the passive GUI handoff after
+feedback rehearsal. It turns the metadata-only feedback frames into GUI-ready
+handoff cards, Cockpit panel summaries, disabled Cockpit controls, replay
+commands, and safety evidence while keeping controller input, runtime reducers,
+WebSocket dispatch, controller feedback, MIDI output, hardware send, and
+snapshot mutation blocked.
+
+`controller-brain-live-implementation-bridge-report` is the passive GUI
+implementation handoff after the Cockpit handoff. It turns disabled handoff
+cards into deterministic implementation bindings, fixture bundles,
+implementation gates, replay commands, and safety evidence for a future GUI
+test harness while keeping GUI launch, renderer startup, runtime reducers,
+WebSocket dispatch, controller feedback, MIDI output, hardware send, and
+snapshot mutation blocked.
+
+`controller-brain-live-desktop-blueprint-report` is the passive desktop
+blueprint after the implementation bridge. It turns disabled implementation
+bindings into deterministic desktop regions, component contracts, view-model
+bindings, fixture hints, acceptance checks, replay commands, and safety evidence
+for future Cockpit desktop work while keeping GUI launch, renderer startup,
+runtime reducers, WebSocket dispatch, controller feedback, MIDI output,
+hardware send, snapshot mutation, and fixture file writing blocked.
+
+`controller-brain-live-desktop-app-plan-report` is the passive app-plan after
+the desktop blueprint. It turns disabled desktop regions and component
+contracts into deterministic app routes, component file hints, disabled state
+slices, style tokens, acceptance checks, replay commands, and safety evidence
+for future Cockpit desktop implementation work while keeping GUI launch, app
+launch, renderer startup, runtime reducers, WebSocket dispatch, controller
+feedback, MIDI output, hardware send, snapshot mutation, and file writing
+blocked.
+
+`controller-brain-live-desktop-component-contract-report` is the passive
+component-contract layer after the desktop app plan. It turns advisory
+component file hints and disabled state slices into deterministic component API
+contracts, view-model prop contracts, disabled event contracts, test hooks,
+fixture contracts, acceptance checks, replay commands, and safety evidence for
+future Cockpit desktop implementation work while keeping GUI launch, app
+launch, renderer startup, runtime reducers, WebSocket dispatch, controller
+feedback, MIDI output, hardware send, snapshot mutation, and file writing
+blocked.
+
+`controller-brain-live-desktop-view-model-report` is the passive view-model
+layer after the desktop component contract. It turns component API contracts
+into deterministic future component view models, state bindings, disabled
+action models, render assertions, acceptance checks, replay commands, and
+safety evidence for future Cockpit desktop implementation work while keeping
+GUI launch, app launch, renderer startup, runtime reducers, WebSocket dispatch,
+controller feedback, MIDI output, hardware send, snapshot mutation, and file
+writing blocked.
+
+`controller-brain-live-desktop-render-contract-report` is the passive render
+contract layer after the desktop view model. It turns component view models,
+state bindings, disabled action models, and source render assertions into
+disabled future render surfaces, one-way render bindings, render guards,
+render assertions, acceptance checks, replay commands, and safety evidence for
+future Cockpit renderer work while keeping GUI launch, component mounting,
+renderer execution, WebSocket dispatch, controller feedback, MIDI output,
+hardware send, snapshot mutation, and file writing blocked.
 
 ---
 
