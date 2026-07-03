@@ -66,6 +66,8 @@ The passive `analog-four-oxi-macro-set-planner-report` command sequences those
 macro/readiness cards into a current/up-next set plan for future Cockpit queue
 work, including the report-owned replay command, without adding A4 playback,
 automation, port opening, or MIDI sending.
+The passive patch genome/learning reports turn descriptions or audio into A4
+patch DNA, trait reasoning, capture steps, and live-dial readiness.
 The passive `live-gui-performance-console-report` also composes that set
 planner with the A4 readiness payload into a Cockpit A4 Review Surface: the UI
 can show the `warehouse-arc` sequence, the next macro's readiness rows,

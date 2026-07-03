@@ -96,6 +96,7 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     a4_style_intent_help = resolve_help_text("analog-four-style-mutation-intent-report")
     a4_style_mock_preview_help = resolve_help_text("analog-four-style-mutation-mock-preview-report")
     a4_kit_catalog_help = resolve_help_text("analog-four-kit-catalog-report")
+    a4_patch_learning_help = resolve_help_text("analog-four-patch-learning-report")
     a4_style_kit_readiness_help = resolve_help_text("analog-four-style-kit-readiness-report")
     dual_style_routing_help = resolve_help_text("dual-machine-style-snapshot-routing-report")
     dual_style_intent_help = resolve_help_text("dual-machine-style-mutation-intent-report")
@@ -281,6 +282,9 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     assert a4_kit_catalog_help.startswith(
         "RytmRandomizer passive CLI: analog-four-kit-catalog-report"
+    )
+    assert a4_patch_learning_help.startswith(
+        "RytmRandomizer passive CLI: analog-four-patch-learning-report"
     )
     assert a4_style_kit_readiness_help.startswith(
         "RytmRandomizer passive CLI: analog-four-style-kit-readiness-report"

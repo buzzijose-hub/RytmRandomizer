@@ -63,6 +63,8 @@ USAGE = (
     "analog-four-kit-catalog-report <syx-path> [--limit N] [--json] | "
     "analog-four-patch-genome-report "
     "(--description <text>|--audio <path>) [--track N] [--candidate N] [--json] | "
+    "analog-four-patch-learning-report "
+    "(--description <text>|--audio <path>) [--track N] [--candidate N] [--json] | "
     "analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] "
     "[--events] [--limit N] [--json] | "
     "analog-four-oxi-macro-readiness-report [<macro-name>] [--seed N] "
@@ -677,6 +679,7 @@ def test_top_level_help_exits_zero_and_matches_fixture():
     [
         "analog-rytm-midi-catalog-report",
         "analog-four-patch-genome-report",
+        "analog-four-patch-learning-report",
         "analog-four-oxi-macro-report",
         "analog-four-oxi-macro-readiness-report",
         "analog-four-oxi-macro-set-planner-report",

@@ -3,9 +3,9 @@
 > Status: in-flight
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:test-driven-development. This plan is structured for one bundled PR with maximum-parallelization sidecar exploration and no stacked PRs, per docs/PLAN_REQUIREMENTS.md Gate 16.
 
-**Goal:** Add a passive Synplant-inspired audio/description-to-Analog-Four patch genome that produces four A4 patch candidates, a selected candidate DNA sheet, front-panel dial targets, and CC/NRPN transport metadata without opening MIDI ports or mutating hardware.
+**Goal:** Add a passive Synplant-inspired audio/description-to-Analog-Four patch genome that produces four A4 patch candidates, a selected candidate DNA sheet, front-panel dial targets, CC/NRPN transport metadata, and a learning packet that explains candidate ranking, trait-to-A4 routes, future capture steps, and live-dial readiness without opening MIDI ports or mutating hardware.
 
-**Architecture:** Keep A4-specific facts in `rytm_randomizer/data/`, deterministic audio-intelligence translation in `rytm_randomizer/style_analysis/`, and operator output in a focused `rytm_randomizer/reports/` module registered through `cli_registry`. The live-dial-in path remains a future promotion step: this PR emits manual/CC/NRPN-ready rows and never routes NRPN-only rows through the existing CC-only A4 renderer.
+**Architecture:** Keep A4-specific facts in `rytm_randomizer/data/`, deterministic audio-intelligence translation in `rytm_randomizer/style_analysis/`, and operator output in focused `rytm_randomizer/reports/` modules registered through `cli_registry`. The live-dial-in path remains a future promotion step: this PR emits manual/CC/NRPN-ready rows and never routes NRPN-only rows through the existing CC-only A4 renderer.
 
 **Tech Stack:** Python 3.11 stdlib, existing `FeatureReport` style-analysis pipeline, existing manual-backed `analog_four_midi.py`, passive CLI registry.
 
@@ -19,6 +19,7 @@
 | WS-B | Patch genome compiler | WS-A | WS-C, WS-D | `rytm_randomizer/style_analysis/analog_four_patch_genome.py`, `rytm_randomizer/style_analysis/__init__.py`, `tests/test_analog_four_patch_genome.py` |
 | WS-C | Passive report + CLI | WS-A, WS-B | WS-D | `rytm_randomizer/reports/analog_four_patch_genome.py`, `rytm_randomizer/cli.py`, `rytm_randomizer/help_text.py`, `tests/test_analog_four_patch_genome_report.py` |
 | WS-D | Docs + status | none | WS-A, WS-B, WS-C | `README.md`, `docs/CLI_REFERENCE.md`, `docs/ARCHITECTURE.md`, `docs/ARCHITECTURE_DIAGRAMS.md`, `docs/STATUS.md`, this plan |
+| WS-E | Patch learning + live-dial readiness | WS-A, WS-B | WS-D | `rytm_randomizer/data/analog_four_learning.py`, `rytm_randomizer/style_analysis/analog_four_patch_learning.py`, `rytm_randomizer/reports/analog_four_patch_learning.py`, `tests/test_analog_four_patch_learning*.py` |
 
 ## Execution Shape
 
@@ -44,8 +45,9 @@
 4. Implement the display scale data and helpers.
 5. Implement the style-analysis patch genome compiler using `FeatureReport` and the existing `build_reference_style_blueprint` trait surface.
 6. Implement the passive report module and lazy CLI registration.
-7. Update operator docs and architecture/status references.
-8. Run focused tests, then fast/architecture/lint verification as feasible.
+7. Implement the passive patch-learning packet/report with candidate scoring, trait routing, capture matrix, and live-dial readiness.
+8. Update operator docs and architecture/status references.
+9. Run focused tests, then fast/architecture/lint verification as feasible.
 
 ## Safety Contract
 
@@ -56,6 +58,7 @@
 - No parity fixture regeneration.
 - CC-ready rows are explicit `0..127` values.
 - NRPN-only enum/destination rows are represented honestly as front-panel/manual rows unless the manual-backed ordinal is known.
+- Patch learning is explanatory and deterministic; it does not claim a trained model or hardware-captured A4 state until future capture data exists.
 
 ## Plan-Requirements Conformance
 

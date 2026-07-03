@@ -196,6 +196,7 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `analog-four-style-mutation-mock-preview-report` | Passive Analog Four mock CC rows (deferred while saved-kit offsets are promoted) |
 | `analog-four-kit-catalog-report` | Passive Analog Four decoded kit catalog |
 | `analog-four-patch-genome-report` | Passive four-candidate Analog Four single-sound patch DNA from audio or text |
+| `analog-four-patch-learning-report` | Passive Analog Four patch learning routes, capture matrix, and live-dial readiness |
 | `analog-four-oxi-macro-report` | Passive in-memory Analog Four OXI-style four-track macro preview |
 | `analog-four-oxi-macro-readiness-report` | Passive Analog Four OXI macro readiness, soft-capture preflight, and operator-present validation commands |
 | `analog-four-style-kit-readiness-report` | Passive per-kit Analog Four style-readiness sweep |
@@ -207,6 +208,8 @@ python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report KIT
 python -m rytm_randomizer.cli analog-four-kit-catalog-report KITS.syx --limit 16
 python -m rytm_randomizer.cli analog-four-patch-genome-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
 python -m rytm_randomizer.cli analog-four-patch-genome-report --audio reference.wav --track 2 --json
+python -m rytm_randomizer.cli analog-four-patch-learning-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
+python -m rytm_randomizer.cli analog-four-patch-learning-report --audio reference.wav --track 2 --json
 python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove --seed 23 --intensity 6 --events --limit 0
 python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4
 python -m rytm_randomizer.cli analog-four-style-kit-readiness-report KITS.syx jose_core_techno --limit 16
@@ -219,6 +222,12 @@ front-panel values plus CC/NRPN metadata. Bipolar screen values such as
 Filter Overdrive and LFO depths are shown as `-64..+63` targets; CC-ready rows
 also show the raw `0..127` value; NRPN-only destination labels remain
 screen-only until their exact ordinals are captured for live dial-in.
+
+`analog-four-patch-learning-report` is the passive intelligence/learning layer
+above the genome. It ranks the four candidate columns, maps measured traits
+such as metallic pressure and tempo drive to the selected A4 controls, prints a
+future capture matrix for real A4 recordings, and separates CC/NRPN-ready rows
+from screen-only NRPN destinations before any live dial-in work is promoted.
 
 `analog-four-oxi-macro-report` is a snapshot-free planning surface for the
 Analog Four side of an OXI-style live rig. It uses existing manual-backed A4 CC

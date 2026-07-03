@@ -96,6 +96,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.analog_four_patch_genome",
             "ANALOG_FOUR_PATCH_GENOME_CLI_COMMAND",
         ),
+        "analog-four-patch-learning-report": (
+            "rytm_randomizer.reports.analog_four_patch_learning",
+            "ANALOG_FOUR_PATCH_LEARNING_CLI_COMMAND",
+        ),
         "analog-four-oxi-macro-report": (
             "rytm_randomizer.reports.analog_four_oxi_macro_report",
             "ANALOG_FOUR_OXI_MACRO_CLI_COMMAND",

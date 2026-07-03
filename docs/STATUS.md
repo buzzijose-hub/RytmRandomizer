@@ -4,6 +4,13 @@ Last updated: 2026-07-03. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-07-03: Passive Analog Four patch learning layer prepared locally. The
+  new `analog-four-patch-learning-report` command builds on the patch genome
+  by ranking all four candidates, routing measured reference traits to Analog
+  Four parameter families, printing a capture matrix for future empirical A4
+  recordings, and separating CC/NRPN-ready rows from screen-only NRPN
+  destinations before live dial-in promotion. It remains passive: no MIDI port
+  opened, no MIDI sent, no SysEx written, and no hardware state captured.
 - 2026-07-03: Passive Analog Four patch genome report prepared locally. The
   new `analog-four-patch-genome-report` command turns a description or audio
   FeatureReport into four Analog Four MKII single-sound candidates, then prints
