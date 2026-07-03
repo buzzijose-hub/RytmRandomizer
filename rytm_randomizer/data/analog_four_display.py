@@ -9,7 +9,7 @@ state is touched.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Final
 
@@ -31,12 +31,16 @@ TRANSPORT_SCREEN_ONLY_NRPN: Final[str] = "screen-only-nrpn"
 TRANSPORT_SCREEN_ONLY: Final[str] = "screen-only"
 
 
+def _empty_analog_four_value_labels() -> Mapping[int, str]:
+    return MappingProxyType({})
+
+
 @dataclass(frozen=True)
 class AnalogFourDisplaySpec:
     """Front-panel scale metadata for one Analog Four parameter."""
 
     display_scale: str
-    value_labels: Mapping[int, str] = MappingProxyType({})
+    value_labels: Mapping[int, str] = field(default_factory=_empty_analog_four_value_labels)
     center_label: str | None = None
     transport_ready: bool = True
     value_note: str = ""
