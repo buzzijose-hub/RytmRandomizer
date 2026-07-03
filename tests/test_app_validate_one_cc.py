@@ -412,7 +412,7 @@ def test_app_main_arm_a4_send_param_resolves_manual_cc_and_sends_one_message(
     assert fake_port.closed is True
 
 
-def test_app_main_a4_send_param_requires_arm(capsys) -> None:
+def test_app_main_a4_send_param_requires_dry_run_or_arm(capsys) -> None:
     from rytm_randomizer import app
 
     exit_code = app.main(
@@ -429,7 +429,7 @@ def test_app_main_a4_send_param_requires_arm(capsys) -> None:
     captured = capsys.readouterr()
 
     assert exit_code == 1
-    assert "--a4-send-param requires --arm" in captured.err
+    assert "--a4-send-param requires --dry-run or --arm" in captured.err
 
 
 def test_app_main_a4_send_param_rejects_unknown_parameter_before_output(
@@ -513,6 +513,48 @@ def test_app_main_a4_send_param_rejects_validate_one_cc_before_output(capsys, mo
     assert "--a4-send-param cannot be combined with --validate-one-cc" in captured.err
 
 
+def test_app_main_dry_run_a4_send_param_resolves_manual_cc_without_output(
+    capsys,
+    monkeypatch,
+) -> None:
+    """``--dry-run --a4-send-param`` previews the manual-backed CC with no port."""
+
+    from rytm_randomizer import app, mido_provider
+
+    def fail_midi_call(self, *_args):
+        raise AssertionError("A4 parameter dry-run must not touch MIDI ports")
+
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_midi_call)
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--a4-send-param",
+            "--parameter",
+            "OSC1 PWM Depth",
+            "--channel",
+            "0",
+            "--value",
+            "32",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "RytmRandomizer A4 parameter send dry-run" in captured.out
+    assert "mock only: True" in captured.out
+    assert "no port opened: True" in captured.out
+    assert "no real MIDI: True" in captured.out
+    assert "parameter: OSC1 PWM Depth" in captured.out
+    assert "section: OSC 1" in captured.out
+    assert "channel: 0" in captured.out
+    assert "control: 74" in captured.out
+    assert "value: 32" in captured.out
+    assert "Mock sender captured 1 message(s)." in captured.out
+    assert captured.err == ""
+
+
 def test_app_main_arm_a4_send_nrpn_param_sends_manual_nrpn_sequence(
     capsys, fake_mido_session, monkeypatch
 ) -> None:
@@ -573,6 +615,49 @@ def test_app_main_arm_a4_send_nrpn_param_sends_manual_nrpn_sequence(
         (0, 6, 2),
     ]
     assert fake_port.closed is True
+
+
+def test_app_main_dry_run_a4_send_nrpn_param_renders_inert_sequence_with_lsb(
+    capsys,
+    monkeypatch,
+) -> None:
+    """``--dry-run --a4-send-nrpn-param`` previews NRPN CC sequence rows."""
+
+    from rytm_randomizer import app, mido_provider
+
+    def fail_midi_call(self, *_args):
+        raise AssertionError("A4 NRPN dry-run must not touch MIDI ports")
+
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_midi_call)
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--a4-send-nrpn-param",
+            "--parameter",
+            "Sync Mode",
+            "--channel",
+            "0",
+            "--value",
+            "2",
+            "--value-lsb",
+            "7",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "RytmRandomizer A4 NRPN parameter send dry-run" in captured.out
+    assert "mock only: True" in captured.out
+    assert "parameter: Sync Mode" in captured.out
+    assert "section: OSC COMMON" in captured.out
+    assert "channel: 0" in captured.out
+    assert "nrpn: 1:31" in captured.out
+    assert "value-msb: 2" in captured.out
+    assert "value-lsb: 7" in captured.out
+    assert "Mock sender captured 4 message(s)." in captured.out
+    assert captured.err == ""
 
 
 def test_app_main_arm_a4_kit_recipe_can_send_nrpn_sequences(
@@ -680,14 +765,43 @@ def test_app_main_arm_a4_kit_recipe_sends_recipe_events(
     assert fake_port.closed is True
 
 
-def test_app_main_a4_kit_recipe_requires_arm(capsys) -> None:
+def test_app_main_dry_run_a4_kit_recipe_renders_recipe_without_output(
+    capsys,
+    monkeypatch,
+) -> None:
+    """``--dry-run --a4-kit-recipe`` renders manual-backed recipe rows to mock MIDI."""
+
+    from rytm_randomizer import app, data, mido_provider
+
+    def fail_midi_call(self, *_args):
+        raise AssertionError("A4 recipe dry-run must not touch MIDI ports")
+
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_midi_call)
+
+    recipe = data.ANALOG_FOUR_KIT_RECIPES["detroit-minimal"]
+    exit_code = app.main(["--dry-run", "--a4-kit-recipe", "detroit-minimal"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "RytmRandomizer A4 kit recipe dry-run" in captured.out
+    assert "mock only: True" in captured.out
+    assert "no port opened: True" in captured.out
+    assert "recipe: Detroit Minimal" in captured.out
+    assert "message format: CC" in captured.out
+    assert f"event count: {len(recipe.events)}" in captured.out
+    assert f"Mock sender captured {len(recipe.events)} message(s)." in captured.out
+    assert captured.err == ""
+
+
+def test_app_main_a4_kit_recipe_requires_dry_run_or_arm(capsys) -> None:
     from rytm_randomizer import app
 
     exit_code = app.main(["--a4-kit-recipe", "detroit-minimal"])
     captured = capsys.readouterr()
 
     assert exit_code == 1
-    assert "--a4-kit-recipe requires --arm" in captured.err
+    assert "--a4-kit-recipe requires --dry-run or --arm" in captured.err
 
 
 def test_app_main_a4_kit_recipe_rejects_unknown_recipe_before_output(capsys, monkeypatch) -> None:
@@ -2301,9 +2415,9 @@ def test_app_misc_guard_and_input_edges(tmp_path: Path, capsys, monkeypatch) -> 
     assert app.main(["--arm", "--rytm-cc-observe"]) == 1
 
     captured = capsys.readouterr()
-    assert "--a4-send-param requires --arm" in captured.err
+    assert "--a4-send-param requires --dry-run or --arm" in captured.err
     assert "--a4-send-param requires --parameter" in captured.err
-    assert "--a4-send-nrpn-param requires --arm" in captured.err
+    assert "--a4-send-nrpn-param requires --dry-run or --arm" in captured.err
     assert "value-lsb must be in [0, 127]" in captured.err
     assert "--rytm-performance-snapshot failed: plan is not ready" in captured.err
 

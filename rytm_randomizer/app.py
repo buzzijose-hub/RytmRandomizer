@@ -17,6 +17,9 @@ Flag behavior (Wave 4 / WS-O convergence):
 * ``--dry-run --rytm-kit-style`` / ``--arm --rytm-kit-style``: render or send a
   curated full-12-pad Analog Rytm style kit. Armed sends require the additional
   ``--confirm-rytm-kit-send`` flag.
+* ``--dry-run --a4-send-param`` / ``--arm --a4-send-param`` and the A4 NRPN /
+  recipe variants: resolve manual-backed Analog Four mappings and either record
+  inert mock messages or send through an explicitly selected armed output port.
 * ``--dry-run --rytm-12-pad-shell`` / ``--arm --rytm-12-pad-shell``: run the
   all-12-pad interactive style/mutation shell. Armed sends require the
   additional ``--confirm-rytm-12-pad-send`` flag.
@@ -164,17 +167,18 @@ def _build_parser() -> argparse.ArgumentParser:
         "--a4-send-param",
         action="store_true",
         help=(
-            "Armed Analog Four parameter send. Resolves --parameter through the "
-            "manual-backed A4 CC table and sends one CC MSB message."
+            "Analog Four parameter send. With --dry-run it records one inert "
+            "mock CC; with --arm it resolves --parameter through the manual-backed "
+            "A4 CC table and sends one CC MSB message."
         ),
     )
     parser.add_argument(
         "--a4-send-nrpn-param",
         action="store_true",
         help=(
-            "Armed Analog Four synth-track NRPN send. Resolves --parameter "
-            "through the manual-backed A4 synth NRPN table and sends one NRPN "
-            "sequence."
+            "Analog Four synth-track NRPN send. With --dry-run it records an "
+            "inert mock NRPN CC sequence; with --arm it resolves --parameter "
+            "through the manual-backed A4 synth NRPN table and sends one NRPN sequence."
         ),
     )
     parser.add_argument(
@@ -184,8 +188,8 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--a4-kit-recipe",
         help=(
-            "Armed Analog Four kit recipe name. Sends a manual-backed sequence "
-            "of A4 CC messages across tracks 1-4."
+            "Analog Four kit recipe name. With --dry-run it records an inert mock "
+            "sequence; with --arm it sends manual-backed A4 CC messages across tracks 1-4."
         ),
     )
     parser.add_argument(
@@ -805,11 +809,132 @@ def _resolve_a4_kit_recipe(recipe_name: str) -> AnalogFourKitRecipe | None:
     return None
 
 
+def _send_a4_cc(
+    out: Sender,
+    mapping: AnalogFourCcMapping,
+    value: int,
+    *,
+    channel: int,
+    skip_sleep: bool,
+) -> None:
+    """Send one validated A4 CC-capable mapping through ``out``."""
+
+    if mapping.cc_msb is None:
+        raise ValueError(f"A4 parameter has no manual CC address: {mapping.parameter}")
+
+    from .midi_io import send_cc
+
+    if skip_sleep:
+        send_cc(out, mapping.cc_msb, value, channel=channel, sleep=_skip_validation_sleep)
+    else:
+        send_cc(out, mapping.cc_msb, value, channel=channel)
+
+
+def _send_a4_nrpn(
+    out: Sender,
+    mapping: AnalogFourCcMapping,
+    value_msb: int,
+    *,
+    value_lsb: int | None = None,
+    channel: int,
+    skip_sleep: bool,
+) -> None:
+    """Send one validated A4 NRPN-capable mapping through ``out``."""
+
+    if mapping.nrpn_msb is None or mapping.nrpn_lsb is None:
+        raise ValueError(f"A4 parameter has no manual NRPN address: {mapping.parameter}")
+
+    from .midi_io import send_nrpn
+
+    if skip_sleep:
+        send_nrpn(
+            out,
+            mapping.nrpn_msb,
+            mapping.nrpn_lsb,
+            value_msb,
+            value_lsb=value_lsb,
+            channel=channel,
+            sleep=_skip_validation_sleep,
+        )
+    else:
+        send_nrpn(
+            out,
+            mapping.nrpn_msb,
+            mapping.nrpn_lsb,
+            value_msb,
+            value_lsb=value_lsb,
+            channel=channel,
+        )
+
+
+def _send_a4_recipe_events(
+    out: Sender,
+    resolved_events: Sequence[tuple[AnalogFourRecipeEvent, AnalogFourCcMapping]],
+    *,
+    use_nrpn: bool,
+    skip_sleep: bool,
+) -> None:
+    """Send validated A4 recipe events through ``out`` as CC or NRPN rows."""
+
+    for event, mapping in resolved_events:
+        if use_nrpn:
+            _send_a4_nrpn(
+                out,
+                mapping,
+                event.value,
+                channel=event.track - 1,
+                skip_sleep=skip_sleep,
+            )
+        else:
+            _send_a4_cc(
+                out,
+                mapping,
+                event.value,
+                channel=event.track - 1,
+                skip_sleep=skip_sleep,
+            )
+
+
+def _run_dry_run_a4_send_param(
+    mapping: AnalogFourCcMapping,
+    *,
+    value: int,
+    channel: int,
+) -> int:
+    """Record one manual-backed A4 CC through the mock sender."""
+
+    from .mock_midi import MockMidiSender
+
+    sender = MockMidiSender()
+    try:
+        _send_a4_cc(sender, mapping, value, channel=channel, skip_sleep=True)
+    except ValueError as exc:
+        sys.stderr.write(f"--dry-run --a4-send-param failed: {exc}\n")
+        return 1
+
+    lines = [
+        "RytmRandomizer A4 parameter send dry-run",
+        "mock only: True",
+        "no hardware: True",
+        "no port opened: True",
+        "no real MIDI: True",
+        f"parameter: {mapping.parameter}",
+        f"section: {mapping.section}",
+        f"channel: {channel}",
+        f"control: {mapping.cc_msb}",
+        f"value: {value}",
+        f"Mock sender captured {len(sender.sent_messages)} message(s).",
+    ]
+    sys.stdout.write("\n".join(lines))
+    sys.stdout.write("\n")
+    return 0
+
+
 def _run_a4_send_param(args: argparse.Namespace) -> int:
     """Open one real MIDI output, send one named A4 parameter CC, and exit."""
 
-    if not args.arm:
-        sys.stderr.write("--a4-send-param requires --arm.\n")
+    if not args.arm and not args.dry_run:
+        sys.stderr.write("--a4-send-param requires --dry-run or --arm.\n")
         return 1
     if args.parameter is None or args.parameter.strip() == "":
         sys.stderr.write("--a4-send-param requires --parameter.\n")
@@ -824,6 +949,9 @@ def _run_a4_send_param(args: argparse.Namespace) -> int:
     if mapping is None:
         sys.stderr.write(f"--a4-send-param failed: unknown A4 parameter: {args.parameter}\n")
         return 1
+
+    if args.dry_run:
+        return _run_dry_run_a4_send_param(mapping, value=value, channel=channel)
 
     from .mido_provider import build_mido_midi_port_provider
     from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
@@ -854,10 +982,8 @@ def _run_a4_send_param(args: argparse.Namespace) -> int:
         return 1
 
     try:
-        from .midi_io import send_cc
-
-        send_cc(port, mapping.cc_msb, value, channel=channel)
-    except (OSError, RuntimeError, AttributeError) as exc:
+        _send_a4_cc(port, mapping, value, channel=channel, skip_sleep=False)
+    except (OSError, RuntimeError, AttributeError, ValueError) as exc:
         sys.stderr.write(f"--arm --a4-send-param send failed: {exc}\n")
         return 1
     finally:
@@ -887,11 +1013,56 @@ def _run_a4_send_param(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_dry_run_a4_send_nrpn_param(
+    mapping: AnalogFourCcMapping,
+    *,
+    value_msb: int,
+    value_lsb: int | None,
+    channel: int,
+) -> int:
+    """Record one manual-backed A4 NRPN sequence through the mock sender."""
+
+    from .mock_midi import MockMidiSender
+
+    sender = MockMidiSender()
+    try:
+        _send_a4_nrpn(
+            sender,
+            mapping,
+            value_msb,
+            value_lsb=value_lsb,
+            channel=channel,
+            skip_sleep=True,
+        )
+    except ValueError as exc:
+        sys.stderr.write(f"--dry-run --a4-send-nrpn-param failed: {exc}\n")
+        return 1
+
+    lines = [
+        "RytmRandomizer A4 NRPN parameter send dry-run",
+        "mock only: True",
+        "no hardware: True",
+        "no port opened: True",
+        "no real MIDI: True",
+        f"parameter: {mapping.parameter}",
+        f"section: {mapping.section}",
+        f"channel: {channel}",
+        f"nrpn: {mapping.nrpn_msb}:{mapping.nrpn_lsb}",
+        f"value-msb: {value_msb}",
+    ]
+    if value_lsb is not None:
+        lines.append(f"value-lsb: {value_lsb}")
+    lines.append(f"Mock sender captured {len(sender.sent_messages)} message(s).")
+    sys.stdout.write("\n".join(lines))
+    sys.stdout.write("\n")
+    return 0
+
+
 def _run_a4_send_nrpn_param(args: argparse.Namespace) -> int:
     """Open one real MIDI output, send one named A4 synth-track NRPN, and exit."""
 
-    if not args.arm:
-        sys.stderr.write("--a4-send-nrpn-param requires --arm.\n")
+    if not args.arm and not args.dry_run:
+        sys.stderr.write("--a4-send-nrpn-param requires --dry-run or --arm.\n")
         return 1
     if args.parameter is None or args.parameter.strip() == "":
         sys.stderr.write("--a4-send-nrpn-param requires --parameter.\n")
@@ -911,6 +1082,14 @@ def _run_a4_send_nrpn_param(args: argparse.Namespace) -> int:
             f"--a4-send-nrpn-param failed: unknown A4 synth NRPN parameter: {args.parameter}\n"
         )
         return 1
+
+    if args.dry_run:
+        return _run_dry_run_a4_send_nrpn_param(
+            mapping,
+            value_msb=value,
+            value_lsb=args.value_lsb,
+            channel=channel,
+        )
 
     from .mido_provider import build_mido_midi_port_provider
     from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
@@ -944,17 +1123,15 @@ def _run_a4_send_nrpn_param(args: argparse.Namespace) -> int:
         return 1
 
     try:
-        from .midi_io import send_nrpn
-
-        send_nrpn(
+        _send_a4_nrpn(
             port,
-            mapping.nrpn_msb,
-            mapping.nrpn_lsb,
+            mapping,
             value,
             value_lsb=args.value_lsb,
             channel=channel,
+            skip_sleep=False,
         )
-    except (OSError, RuntimeError, AttributeError) as exc:
+    except (OSError, RuntimeError, AttributeError, ValueError) as exc:
         sys.stderr.write(f"--arm --a4-send-nrpn-param send failed: {exc}\n")
         return 1
     finally:
@@ -1028,11 +1205,49 @@ def _validate_a4_recipe_events(
     return resolved_events
 
 
+def _run_dry_run_a4_kit_recipe(
+    recipe: AnalogFourKitRecipe,
+    resolved_events: Sequence[tuple[AnalogFourRecipeEvent, AnalogFourCcMapping]],
+    *,
+    use_nrpn: bool,
+) -> int:
+    """Render a manual-backed A4 recipe through the mock sender."""
+
+    from .mock_midi import MockMidiSender
+
+    sender = MockMidiSender()
+    try:
+        _send_a4_recipe_events(
+            sender,
+            resolved_events,
+            use_nrpn=use_nrpn,
+            skip_sleep=True,
+        )
+    except ValueError as exc:
+        sys.stderr.write(f"--dry-run --a4-kit-recipe failed: {exc}\n")
+        return 1
+
+    lines = [
+        "RytmRandomizer A4 kit recipe dry-run",
+        "mock only: True",
+        "no hardware: True",
+        "no port opened: True",
+        "no real MIDI: True",
+        f"recipe: {recipe.label}",
+        f"message format: {'NRPN' if use_nrpn else 'CC'}",
+        f"event count: {len(resolved_events)}",
+        f"Mock sender captured {len(sender.sent_messages)} message(s).",
+    ]
+    sys.stdout.write("\n".join(lines))
+    sys.stdout.write("\n")
+    return 0
+
+
 def _run_a4_kit_recipe(args: argparse.Namespace) -> int:
     """Open one real MIDI output, send a named A4 recipe, and exit."""
 
-    if not args.arm:
-        sys.stderr.write("--a4-kit-recipe requires --arm.\n")
+    if not args.arm and not args.dry_run:
+        sys.stderr.write("--a4-kit-recipe requires --dry-run or --arm.\n")
         return 1
     if args.a4_kit_recipe is None or args.a4_kit_recipe.strip() == "":
         sys.stderr.write("--a4-kit-recipe requires a recipe name.\n")
@@ -1046,6 +1261,13 @@ def _run_a4_kit_recipe(args: argparse.Namespace) -> int:
     resolved_events = _validate_a4_recipe_events(recipe, use_nrpn=args.a4_kit_recipe_nrpn)
     if resolved_events is None:
         return 1
+
+    if args.dry_run:
+        return _run_dry_run_a4_kit_recipe(
+            recipe,
+            resolved_events,
+            use_nrpn=args.a4_kit_recipe_nrpn,
+        )
 
     from .mido_provider import build_mido_midi_port_provider
     from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
@@ -1079,23 +1301,12 @@ def _run_a4_kit_recipe(args: argparse.Namespace) -> int:
         return 1
 
     try:
-        from .midi_io import send_cc, send_nrpn
-
-        for event, mapping in resolved_events:
-            if args.a4_kit_recipe_nrpn:
-                if mapping.nrpn_msb is None or mapping.nrpn_lsb is None:
-                    raise ValueError("validated A4 recipe event is missing an NRPN address")
-                send_nrpn(
-                    port,
-                    mapping.nrpn_msb,
-                    mapping.nrpn_lsb,
-                    event.value,
-                    channel=event.track - 1,
-                )
-            else:
-                if mapping.cc_msb is None:
-                    raise ValueError("validated A4 recipe event is missing a CC address")
-                send_cc(port, mapping.cc_msb, event.value, channel=event.track - 1)
+        _send_a4_recipe_events(
+            port,
+            resolved_events,
+            use_nrpn=args.a4_kit_recipe_nrpn,
+            skip_sleep=False,
+        )
     except (OSError, RuntimeError, AttributeError, ValueError) as exc:
         sys.stderr.write(f"--arm --a4-kit-recipe send failed: {exc}\n")
         return 1

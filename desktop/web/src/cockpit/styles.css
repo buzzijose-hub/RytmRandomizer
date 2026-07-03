@@ -1959,6 +1959,241 @@ html,
   border-color: rgba(248, 81, 73, 0.6);
 }
 
+/* ---------- Patch genome panel ---------- */
+
+.patch-genome-panel {
+  gap: 12px;
+}
+
+.patch-genome-header,
+.patch-genome-family-detail header,
+.patch-genome-gene,
+.patch-genome-gene-status,
+.patch-genome-actions {
+  display: flex;
+  align-items: center;
+}
+
+.patch-genome-header,
+.patch-genome-family-detail header {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.patch-genome-header p,
+.patch-genome-family-detail p {
+  margin: 4px 0 0;
+}
+
+.patch-genome-state,
+.patch-genome-meta-grid span,
+.patch-genome-family-grid button,
+.patch-genome-family-detail,
+.patch-genome-gene,
+.patch-genome-trait,
+.patch-genome-actions button {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(13, 17, 23, 0.38);
+}
+
+.patch-genome-state {
+  flex: 0 0 auto;
+  color: var(--cyan);
+  font-size: 11px;
+  padding: 4px 8px;
+}
+
+.patch-genome-meta-grid,
+.patch-genome-family-grid,
+.patch-genome-gene-list,
+.patch-genome-traits {
+  display: grid;
+  gap: 8px;
+}
+
+.patch-genome-meta-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.patch-genome-meta-grid span {
+  color: var(--text-dim);
+  font-size: 11px;
+  line-height: 1.25;
+  min-width: 0;
+  padding: 7px 8px;
+  overflow-wrap: anywhere;
+}
+
+.patch-genome-family-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.patch-genome-family-grid button {
+  color: var(--text);
+  cursor: pointer;
+  display: grid;
+  gap: 3px;
+  min-height: 82px;
+  min-width: 0;
+  padding: 8px;
+  text-align: left;
+}
+
+.patch-genome-family-grid button:hover,
+.patch-genome-family-grid button:focus-visible,
+.patch-genome-family-grid button.active {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: inset 0 3px 0 var(--accent);
+}
+
+.patch-genome-family-grid button span,
+.patch-genome-family-grid button small,
+.patch-genome-family-detail p,
+.patch-genome-family-detail header > span,
+.patch-genome-gene span,
+.patch-genome-gene small,
+.patch-genome-values span,
+.patch-genome-gene-status span,
+.patch-genome-trait span {
+  color: var(--text-dim);
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.patch-genome-family-grid button strong,
+.patch-genome-family-detail h3,
+.patch-genome-gene strong,
+.patch-genome-values strong,
+.patch-genome-trait strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.patch-genome-family-detail {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+}
+
+.patch-genome-family-detail h3 {
+  margin: 0;
+}
+
+.patch-genome-family-detail header > span {
+  border: 1px solid rgba(86, 212, 221, 0.28);
+  border-radius: 999px;
+  color: var(--cyan);
+  max-width: 160px;
+  padding: 4px 8px;
+  text-align: right;
+}
+
+.patch-genome-gene {
+  display: grid;
+  grid-template-columns: minmax(106px, 1fr) minmax(80px, 0.75fr) 52px minmax(88px, 0.7fr);
+  gap: 8px;
+  min-width: 0;
+  padding: 8px;
+}
+
+.patch-genome-gene.ready {
+  border-color: rgba(46, 160, 67, 0.52);
+}
+
+.patch-genome-gene.review {
+  border-color: rgba(210, 153, 34, 0.56);
+}
+
+.patch-genome-gene.deferred {
+  border-color: rgba(139, 148, 158, 0.5);
+}
+
+.patch-genome-gene.locked {
+  border-color: rgba(210, 153, 34, 0.86);
+  box-shadow: inset 3px 0 0 var(--amber);
+}
+
+.patch-genome-gene-main {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.patch-genome-delta {
+  height: 8px;
+  align-self: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(8, 12, 17, 0.76);
+  overflow: hidden;
+}
+
+.patch-genome-delta span {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  border-radius: inherit;
+  background: var(--cyan);
+}
+
+.patch-genome-values {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.patch-genome-gene-status {
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.patch-genome-gene-status button,
+.patch-genome-actions button {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 5px 8px;
+}
+
+.patch-genome-gene-status button:hover,
+.patch-genome-actions button:hover {
+  background: var(--panel-2);
+}
+
+.patch-genome-trait {
+  display: grid;
+  grid-template-columns: minmax(72px, 0.65fr) minmax(90px, 1fr) 38px;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 8px;
+}
+
+.patch-genome-trait meter {
+  width: 100%;
+  height: 9px;
+}
+
+.patch-genome-trait strong {
+  text-align: right;
+}
+
+.patch-genome-actions {
+  gap: 8px;
+}
+
+.patch-genome-actions button {
+  flex: 1;
+  justify-content: center;
+}
+
 /* ---------- Style crates / queue ---------- */
 
 .style-crate-queue {
@@ -2443,11 +2678,26 @@ html,
   .style-crate-a4-header,
   .style-crate-a4-grid,
   .style-crate-a4-safety,
+  .patch-genome-family-grid,
+  .patch-genome-meta-grid,
+  .patch-genome-gene,
   .style-profile-row {
     grid-template-columns: 1fr;
   }
 
   .style-crate-meter-grid {
     justify-items: start;
+  }
+
+  .patch-genome-family-detail header,
+  .patch-genome-gene-status,
+  .patch-genome-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .patch-genome-family-detail header > span {
+    max-width: none;
+    text-align: left;
   }
 }

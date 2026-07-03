@@ -45,12 +45,18 @@ A Tauri desktop window backed by a Python sidecar that hosts the mutation engine
 |---|---|
 | **Device rail** | Switch the cockpit view between the Analog Rytm MKII 12-pad surface and the Analog Four MKII four-track mock/staged surface. |
 | **Snapshot panel** | All 12 pads at a glance, with a ghost overlay showing what the next mutation would change. Lock any pad to protect it. |
+| **Patch Genome** | Synplant-inspired design-preview surface for grouped patch genes, local locks, grow/reset variants, and Analog Four-facing dry-run review. |
 | **Mutation panel** | Pick a profile, set depth (0.10 → 0.90), regen on demand. Every change is deterministic for a given (snapshot, profile, depth, seed). |
 | **History strip** | Saved + auto snapshots. Undo any move. Jump to any past snapshot. |
 | **SEND-plan readiness** | The cockpit refuses to fire SEND until the server confirms the plan is ready. Stale plans clear automatically after candidate or lock changes. |
 | **Profile chips** | Switch profiles mid-set without losing your snapshot or your locks. |
 
 **Passive by construction.** The cockpit defaults to a mock device adapter. No MIDI port opens until you explicitly `--arm`.
+
+The Patch Genome panel is frontend-only: it translates the Synplant-inspired design language
+into grouped patch families for review and local exploration, but it does not run audio
+analysis, synthesize patches from recordings, dispatch sidecar commands, open MIDI ports,
+or send MIDI; saved visual references live in `docs/assets/synplant-2-reference/`.
 
 The Analog Four cockpit view is currently visibility-only. It shows four synth
 tracks, the existing A4 strategy zones, and OXI-style track macro rows for
@@ -427,20 +433,33 @@ Add `--rytm-cc-observe-snapshot current-kit.syx` when a current-kit dump is
 available to replace candidate SRC labels with exact pad/machine labels from
 that kit.
 
-Analog Four named parameter sends are active and require an explicit armed
-output-port choice:
+Analog Four named parameter sends can be previewed through the mock sender
+before any hardware path is armed:
+
+```bash
+python -m rytm_randomizer.app --dry-run --a4-send-param --parameter "OSC1 PWM Depth" --channel 0 --value 32
+```
+
+The dry-run resolves the parameter through the same manual-backed Appendix D
+CC table, records exactly one inert mock CC, opens no port, and sends no real
+MIDI. The armed path still requires an explicit output-port choice:
 
 ```bash
 python -m rytm_randomizer.app --arm --a4-send-param --parameter "OSC1 PWM Depth" --channel 0 --value 32
 ```
 
-The command resolves the parameter through the manual-backed Appendix D CC
-table, sends one CC MSB message, closes the output port, and exits. Channels
-are zero-based mido channels for A4 tracks 1-4, so `--channel 0` targets track
-1.
+The armed command sends one CC MSB message, closes the output port, and exits.
+Channels are zero-based mido channels for A4 tracks 1-4, so `--channel 0`
+targets track 1. NRPN-capable synth parameters follow the same dry-run/armed
+split via `--a4-send-nrpn-param` and the manual-backed NRPN table.
 
-Analog Four kit recipes are active and also require an explicit armed
-output-port choice:
+Analog Four kit recipes also support mock-safe preview:
+
+```bash
+python -m rytm_randomizer.app --dry-run --a4-kit-recipe detroit-minimal
+```
+
+The armed recipe path still requires an explicit output-port choice:
 
 ```bash
 python -m rytm_randomizer.app --arm --a4-kit-recipe detroit-minimal
@@ -618,11 +637,11 @@ Keep volume moderate for S3B and S4B.
 - Main-prompt `1`, `2`, and `3` remain guarded and send no MIDI.
 - Four-pad scene/global commands auto-load anchors if needed.
 - Free-form all-row mutation, samples, performance macros, source level, track level, amp volume, NRPN style-kit sends, SysEx, transport, pattern changes, and kit/project writes remain out of scope.
-- Analog Four sends are candidate/manifest-gated and require an explicit `--arm` path plus a ready plan; the passive default touches no hardware.
+- Analog Four sends are candidate/manifest-gated and require either an explicit `--dry-run` mock preview or an explicit `--arm` path plus a ready plan; the passive default touches no hardware.
 - Analog Rytm CC observe is input-only: `python -m rytm_randomizer.app --arm --rytm-cc-observe` opens a Rytm MIDI input port, observes pending CC messages, prints raw CC/NRPN observations with candidate labels, optionally sharpens labels with `--rytm-cc-observe-live-snapshot` or `--rytm-cc-observe-snapshot current-kit.syx`, and sends no MIDI.
 - Analog Four soft live capture is input-only: `python -m rytm_randomizer.app --arm --a4-soft-capture` opens an A4 MIDI input port, observes pending CC messages, prints a known/unknown state report, and sends no MIDI.
-- Analog Four named parameter sends are active: `python -m rytm_randomizer.app --arm --a4-send-param --parameter "OSC1 PWM Depth" --channel 0 --value 32` prompts for an A4 output port, sends one manual-backed CC MSB message, closes the port, and exits.
-- Analog Four kit recipes are active: `python -m rytm_randomizer.app --arm --a4-kit-recipe bell-techno-grid` prompts for an A4 output port, sends a coordinated manual-backed four-track CC recipe, closes the port, and exits.
+- Analog Four named parameter sends are active but dry-run first: `python -m rytm_randomizer.app --dry-run --a4-send-param --parameter "OSC1 PWM Depth" --channel 0 --value 32` records one inert mock CC, while the matching `--arm` command prompts for an A4 output port, sends one manual-backed CC MSB message, closes the port, and exits.
+- Analog Four kit recipes are active but dry-run first: `python -m rytm_randomizer.app --dry-run --a4-kit-recipe bell-techno-grid` records the coordinated manual-backed four-track CC recipe in memory, while the matching `--arm` command prompts for an A4 output port, sends the recipe, closes the port, and exits.
 
 </details>
 
