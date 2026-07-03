@@ -1,9 +1,18 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-23. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-07-03. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-07-03: Passive Analog Four patch genome report prepared locally. The
+  new `analog-four-patch-genome-report` command turns a description or audio
+  FeatureReport into four Analog Four MKII single-sound candidates, then prints
+  the selected candidate as front-panel patch DNA with CC/NRPN metadata. The
+  report includes the user-reviewed A4 details that matter for manual dialing:
+  bipolar Filter Overdrive and LFO depths, Filter 2 type/resonance, EnvA/EnvF
+  shapes, EnvF release, and LFO multiplier/waveform/destination rows. It stays
+  passive: no MIDI port opened, no MIDI sent, no SysEx written, and NRPN-only
+  destination labels remain screen-only until exact ordinals are captured.
 - 2026-06-23: Operator Package Mock Apply + Receipt bundle consolidated on
   the clean base after PR #195 merged. The Cockpit WebSocket protocol now
   includes typed `mock_apply_operator_package` and

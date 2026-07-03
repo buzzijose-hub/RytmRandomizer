@@ -34,6 +34,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-style-mutation-intent-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report <syx-path> <style-key> [--slot N] [--discovery N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-kit-catalog-report <syx-path> [--limit N] [--json]
+  python -m rytm_randomizer.cli analog-four-patch-genome-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
   python -m rytm_randomizer.cli analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report [<macro-name>] [--seed N] [--intensity N] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report [--set-name <text>] [--sequence <macro,...>] [--seed N] [--json]
@@ -179,6 +180,8 @@ Commands:
                      Print passive Analog Four style mutation mock-preview rows for a SysEx file.
   analog-four-kit-catalog-report
                      Print passive Analog Four kit catalog metadata for a SysEx file.
+  analog-four-patch-genome-report
+                     Generate passive Analog Four patch DNA candidates from audio or text.
   analog-four-oxi-macro-report
                      Print passive Analog Four OXI-style macro preview metadata.
   analog-four-oxi-macro-readiness-report

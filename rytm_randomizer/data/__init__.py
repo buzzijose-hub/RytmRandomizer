@@ -19,6 +19,7 @@ the data is ever changed in a way that breaks known-good expectations.
 
 from __future__ import annotations
 
+from .analog_four_display import ANALOG_FOUR_PARAMETER_DISPLAY
 from .analog_four_midi import (
     ANALOG_FOUR_MANUAL_CC,
     ANALOG_FOUR_MANUAL_CC_BY_MSB,
@@ -203,6 +204,7 @@ __all__ = [
     "ANALOG_FOUR_SYNTH_TRACK_NRPN_BY_ADDRESS",
     "ANALOG_FOUR_MANUAL_CC",
     "ANALOG_FOUR_MANUAL_CC_BY_MSB",
+    "ANALOG_FOUR_PARAMETER_DISPLAY",
     "ANALOG_FOUR_KIT_RECIPES",
     "ANALOG_FOUR_OXI_MACROS",
     "DEFAULT_ANALOG_FOUR_OXI_MACRO",

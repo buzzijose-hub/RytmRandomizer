@@ -61,6 +61,8 @@ USAGE = (
     "analog-four-style-mutation-mock-preview-report <syx-path> <style-key> "
     "[--slot N] [--discovery N] [--events] [--limit N] [--json] | "
     "analog-four-kit-catalog-report <syx-path> [--limit N] [--json] | "
+    "analog-four-patch-genome-report "
+    "(--description <text>|--audio <path>) [--track N] [--candidate N] [--json] | "
     "analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] "
     "[--events] [--limit N] [--json] | "
     "analog-four-oxi-macro-readiness-report [<macro-name>] [--seed N] "
@@ -668,6 +670,32 @@ def test_top_level_help_exits_zero_and_matches_fixture():
     assert result.returncode == 0
     assert normalize_newlines(result.stdout) == fixture_text("cli_help_expected.txt")
     assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "analog-rytm-midi-catalog-report",
+        "analog-four-patch-genome-report",
+        "analog-four-oxi-macro-report",
+        "analog-four-oxi-macro-readiness-report",
+        "analog-four-oxi-macro-set-planner-report",
+        "oxi-live-macro-catalog-report",
+        "controller-brain-mapping-report",
+        "controller-brain-rehearsal-report",
+        "rytm-live-macro-hardware-rehearsal-report",
+        "live-gui-performance-flow-model-report",
+        "live-gui-performance-console-report",
+        "oxi-live-set-strategy-report",
+    ],
+)
+def test_lazy_help_text_entries_resolve_directly(command: str):
+    from rytm_randomizer.help_text import resolve_help_text
+
+    text = resolve_help_text(command)
+
+    assert f"RytmRandomizer passive CLI: {command}" in text
+    assert "Safety:" in text
 
 
 def test_report_help_exits_zero_and_matches_fixture():
