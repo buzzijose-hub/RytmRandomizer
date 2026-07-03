@@ -34,6 +34,7 @@ describe('Cockpit', () => {
     expect(screen.getByTestId('header-bar')).toBeInTheDocument();
     expect(screen.getByTestId('snapshot-panel')).toBeInTheDocument();
     expect(screen.getByTestId('live-readiness-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('patch-genome-panel')).toBeInTheDocument();
     expect(screen.getByTestId('mutation-panel')).toBeInTheDocument();
   });
 
