@@ -31,8 +31,10 @@ reviewable UI cockpit, not an audio-to-patch engine.
 Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\.worktrees\synplant-cockpit-ui-design\desktop\web'
 npm.cmd ci
 npm.cmd run test:run
+npm.cmd run test:coverage
 npm.cmd run build
 npm.cmd run lint
+npm.cmd run e2e:ci
 
 Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\.worktrees\synplant-cockpit-ui-design'
 & 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\.venv\Scripts\python.exe' -m pytest tests/architecture/test_readme_freshness.py tests/architecture/test_readme_is_product_facing.py tests/architecture/test_plan_doc_status_truth.py -q -n 0
@@ -44,9 +46,10 @@ git diff --cached --check
 git push -u origin codex/synplant-cockpit-ui-design
 ```
 
-- [x] Full frontend Vitest suite passed: 41 files, 474 tests.
+- [x] Full frontend Vitest coverage suite passed: 41 files, 476 tests, 100% statements/branches/functions/lines.
 - [x] Frontend build passed.
 - [x] Frontend ESLint passed.
+- [x] Full Playwright e2e passed: 12 passed, 1 skipped.
 - [x] README/plan status targeted architecture checks passed: 17 tests.
 - [x] Full architecture suite passed locally with `-n 0`: 622 passed, 1 existing warn-only abstraction warning.
 - [x] Python lint trio passed.

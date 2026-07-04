@@ -139,7 +139,7 @@ export function PatchGenomePanel({
                   <span>{gene.parameterLabel}</span>
                   <small>{gene.laneLabel}</small>
                 </div>
-                <div className="patch-genome-delta" aria-label={`${gene.label} preview delta`}>
+                <div className="patch-genome-delta" aria-hidden="true">
                   <span style={{ width: `${deltaPercent(gene, variantIndex)}%` }} />
                 </div>
                 <div className="patch-genome-values">
