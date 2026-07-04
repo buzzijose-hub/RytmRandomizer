@@ -39,6 +39,9 @@ USAGE = (
     "(--description <text>|--audio <path>) [--track N] [--candidate N] [--json] | "
     "analog-four-patch-learning-report "
     "(--description <text>|--audio <path>) [--track N] [--candidate N] [--json] | "
+    "analog-four-patch-corpus-report "
+    "(--description <text>|--audio <path>) [--track N] [--limit N] "
+    "[--corpus-file <path>] [--json] | "
     "analog-four-patch-send-plan-report "
     "(--description <text>|--audio <path>) [--track N] [--candidate N] [--json] | "
     "analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] "
@@ -947,6 +950,31 @@ Behavior:
   candidates, mapping measured reference traits to A4 controls, printing a
   future capture matrix for empirical learning, and separating live-dial-ready
   CC/NRPN rows from front-panel-only NRPN rows that still need ordinal capture.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _analog_four_patch_corpus_report_help():
+    from .reports.analog_four_patch_corpus import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: analog-four-patch-corpus-report
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-patch-corpus-report --description <text>
+  python -m rytm_randomizer.cli analog-four-patch-corpus-report --audio <path>
+  python -m rytm_randomizer.cli analog-four-patch-corpus-report --description <text> --track N
+  python -m rytm_randomizer.cli analog-four-patch-corpus-report --description <text> --limit N
+  python -m rytm_randomizer.cli analog-four-patch-corpus-report --description <text> --corpus-file <path>
+  python -m rytm_randomizer.cli analog-four-patch-corpus-report --description <text> --json
+  python -m rytm_randomizer.cli analog-four-patch-corpus-report --help
+
+Behavior:
+  Ranks a reference description or audio feature report against passive
+  Analog Four MK2 patch-corpus examples. Without --corpus-file it uses
+  clearly labeled synthetic starter rows derived from the current four patch
+  candidates; with --corpus-file it can rank operator-recorded A4
+  audio/patch examples without opening MIDI or touching hardware.
 
 Safety:
 {_safety_block(SAFETY_LINES)}"""
@@ -2920,6 +2948,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-kit-catalog-report <syx-path> [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-patch-genome-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
   python -m rytm_randomizer.cli analog-four-patch-learning-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
+  python -m rytm_randomizer.cli analog-four-patch-corpus-report (--description <text>|--audio <path>) [--track N] [--limit N] [--corpus-file <path>] [--json]
   python -m rytm_randomizer.cli analog-four-patch-send-plan-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
   python -m rytm_randomizer.cli analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report [<macro-name>] [--seed N] [--intensity N] [--limit N] [--json]
@@ -3070,6 +3099,8 @@ Commands:
                      Generate passive Analog Four patch DNA candidates from audio or text.
   analog-four-patch-learning-report
                      Generate passive Analog Four patch learning and live-dial readiness.
+  analog-four-patch-corpus-report
+                     Rank passive Analog Four patch corpus matches from audio or text.
   analog-four-patch-send-plan-report
                      Preview generated Analog Four patch CC/NRPN live-dial events.
   analog-four-oxi-macro-report
@@ -3499,6 +3530,7 @@ Safety:
     "analog-four-kit-catalog-report": _analog_four_kit_catalog_report_help,
     "analog-four-patch-genome-report": _analog_four_patch_genome_report_help,
     "analog-four-patch-learning-report": _analog_four_patch_learning_report_help,
+    "analog-four-patch-corpus-report": _analog_four_patch_corpus_report_help,
     "analog-four-patch-send-plan-report": _analog_four_patch_send_plan_report_help,
     "analog-four-oxi-macro-report": _analog_four_oxi_macro_report_help,
     "analog-four-oxi-macro-readiness-report": (_analog_four_oxi_macro_readiness_report_help),

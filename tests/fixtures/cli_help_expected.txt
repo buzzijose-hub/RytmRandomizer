@@ -36,6 +36,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-kit-catalog-report <syx-path> [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-patch-genome-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
   python -m rytm_randomizer.cli analog-four-patch-learning-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
+  python -m rytm_randomizer.cli analog-four-patch-corpus-report (--description <text>|--audio <path>) [--track N] [--limit N] [--corpus-file <path>] [--json]
   python -m rytm_randomizer.cli analog-four-patch-send-plan-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
   python -m rytm_randomizer.cli analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report [<macro-name>] [--seed N] [--intensity N] [--limit N] [--json]
@@ -186,6 +187,8 @@ Commands:
                      Generate passive Analog Four patch DNA candidates from audio or text.
   analog-four-patch-learning-report
                      Generate passive Analog Four patch learning and live-dial readiness.
+  analog-four-patch-corpus-report
+                     Rank passive Analog Four patch corpus matches from audio or text.
   analog-four-patch-send-plan-report
                      Preview generated Analog Four patch CC/NRPN live-dial events.
   analog-four-oxi-macro-report

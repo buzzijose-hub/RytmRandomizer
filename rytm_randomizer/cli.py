@@ -100,6 +100,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.analog_four_patch_learning",
             "ANALOG_FOUR_PATCH_LEARNING_CLI_COMMAND",
         ),
+        "analog-four-patch-corpus-report": (
+            "rytm_randomizer.reports.analog_four_patch_corpus",
+            "ANALOG_FOUR_PATCH_CORPUS_CLI_COMMAND",
+        ),
         "analog-four-patch-send-plan-report": (
             "rytm_randomizer.reports.analog_four_patch_send_plan",
             "ANALOG_FOUR_PATCH_SEND_PLAN_CLI_COMMAND",

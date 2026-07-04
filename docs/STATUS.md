@@ -4,6 +4,14 @@ Last updated: 2026-07-03. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-07-03: Passive Analog Four patch capture-corpus matcher prepared
+  locally. The new `analog-four-patch-corpus-report` command ranks a
+  description or audio FeatureReport against starter or supplied A4
+  patch/audio corpus entries, recommends the nearest generated candidate, and
+  prints the missing hardware-capture gaps before any training promotion. It
+  remains passive: no MIDI port opened, no MIDI sent, no SysEx written, and
+  synthetic starter rows are labeled separately from captured hardware
+  evidence.
 - 2026-07-03: Analog Four generated patch send-plan bridge prepared locally.
   The new `analog-four-patch-send-plan-report` command previews the selected
   audio/description-generated candidate as ordered CC/NRPN live-dial events,

@@ -197,6 +197,7 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `analog-four-kit-catalog-report` | Passive Analog Four decoded kit catalog |
 | `analog-four-patch-genome-report` | Passive four-candidate Analog Four single-sound patch DNA from audio or text |
 | `analog-four-patch-learning-report` | Passive Analog Four patch learning routes, capture matrix, and live-dial readiness |
+| `analog-four-patch-corpus-report` | Passive nearest-match ranking against starter or captured Analog Four patch/audio examples |
 | `analog-four-patch-send-plan-report` | Passive CC/NRPN live-dial send plan for a generated Analog Four patch |
 | `analog-four-oxi-macro-report` | Passive in-memory Analog Four OXI-style four-track macro preview |
 | `analog-four-oxi-macro-readiness-report` | Passive Analog Four OXI macro readiness, soft-capture preflight, and operator-present validation commands |
@@ -211,6 +212,8 @@ python -m rytm_randomizer.cli analog-four-patch-genome-report --description "hyp
 python -m rytm_randomizer.cli analog-four-patch-genome-report --audio reference.wav --track 2 --json
 python -m rytm_randomizer.cli analog-four-patch-learning-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
 python -m rytm_randomizer.cli analog-four-patch-learning-report --audio reference.wav --track 2 --json
+python -m rytm_randomizer.cli analog-four-patch-corpus-report --description "hypnotic metallic HP2 stab" --track 1 --limit 4
+python -m rytm_randomizer.cli analog-four-patch-corpus-report --audio reference.wav --corpus-file a4-captures.json --json
 python -m rytm_randomizer.cli analog-four-patch-send-plan-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
 python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove --seed 23 --intensity 6 --events --limit 0
 python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4
@@ -237,6 +240,14 @@ above the genome. It ranks the four candidate columns, maps measured traits
 such as metallic pressure and tempo drive to the selected A4 controls, prints a
 future capture matrix for real A4 recordings, and separates CC/NRPN-ready rows
 from screen-only NRPN destinations before any live dial-in work is promoted.
+
+`analog-four-patch-corpus-report` is the first passive corpus-learning surface.
+It ranks a description or audio reference against A4 patch/audio examples,
+using clearly labeled synthetic starter rows when no corpus file is supplied
+and operator-recorded hardware examples when `--corpus-file` is provided. It
+does not train a model, open ports, send MIDI, or write SysEx; it tells us
+which real captures are still missing before that matching can become
+hardware-backed.
 
 `analog-four-patch-send-plan-report` is the passive rehearsal surface for that
 promotion. It compiles the selected candidate into ordered CC/NRPN live-dial

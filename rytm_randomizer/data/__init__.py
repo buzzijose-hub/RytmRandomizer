@@ -37,6 +37,7 @@ from .analog_four_oxi_macros import (
     ANALOG_FOUR_OXI_MACROS,
     DEFAULT_ANALOG_FOUR_OXI_MACRO,
 )
+from .analog_four_patch_corpus import ANALOG_FOUR_PATCH_CORPUS_STARTER_SPECS
 from .analog_four_patch_templates import ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES
 from .analog_four_recipes import ANALOG_FOUR_KIT_RECIPES
 from .analog_rytm_kit_layout import (
@@ -212,6 +213,7 @@ __all__ = [
     "ANALOG_FOUR_MANUAL_CC_BY_MSB",
     "ANALOG_FOUR_PARAMETER_DISPLAY",
     "ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES",
+    "ANALOG_FOUR_PATCH_CORPUS_STARTER_SPECS",
     "ANALOG_FOUR_LEARNING_CAPTURE_MATRIX",
     "ANALOG_FOUR_LEARNING_TRAIT_ROUTES",
     "ANALOG_FOUR_LEARNING_TRANSPORT_STATUS_WEIGHTS",

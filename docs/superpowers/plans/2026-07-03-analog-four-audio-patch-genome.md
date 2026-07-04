@@ -3,7 +3,7 @@
 > Status: in-flight
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:test-driven-development. This plan is structured for one bundled PR with maximum-parallelization sidecar exploration and no stacked PRs, per docs/PLAN_REQUIREMENTS.md Gate 16.
 
-**Goal:** Add a Synplant-inspired audio/description-to-Analog-Four patch genome that produces four A4 patch candidates, a selected candidate DNA sheet, front-panel dial targets, CC/NRPN transport metadata, a learning packet that explains candidate ranking, trait-to-A4 routes, future capture steps, and live-dial readiness, plus a gated send-plan bridge that can preview or explicitly arm compiler-approved live-dial rows without promoting screen-only destinations.
+**Goal:** Add a Synplant-inspired audio/description-to-Analog-Four patch genome that produces four A4 patch candidates, a selected candidate DNA sheet, front-panel dial targets, CC/NRPN transport metadata, a learning packet that explains candidate ranking, trait-to-A4 routes, future capture steps, passive patch-corpus nearest-match ranking for starter or captured A4 audio/patch examples, and live-dial readiness, plus a gated send-plan bridge that can preview or explicitly arm compiler-approved live-dial rows without promoting screen-only destinations.
 
 **Architecture:** Keep A4-specific facts in `rytm_randomizer/data/`, deterministic audio-intelligence translation in `rytm_randomizer/style_analysis/`, passive operator output in focused `rytm_randomizer/reports/` modules registered through `cli_registry`, and active output only in `rytm_randomizer/app.py` behind `--arm` plus a confirmation flag. Screen-only NRPN destination rows remain skipped until their ordinals are captured.
 
@@ -21,6 +21,7 @@
 | WS-D | Docs + status | none | WS-A, WS-B, WS-C | `README.md`, `docs/CLI_REFERENCE.md`, `docs/ARCHITECTURE.md`, `docs/ARCHITECTURE_DIAGRAMS.md`, `docs/STATUS.md`, this plan |
 | WS-E | Patch learning + live-dial readiness | WS-A, WS-B | WS-D | `rytm_randomizer/data/analog_four_learning.py`, `rytm_randomizer/style_analysis/analog_four_patch_learning.py`, `rytm_randomizer/reports/analog_four_patch_learning.py`, `tests/test_analog_four_patch_learning*.py` |
 | WS-F | Patch send-plan bridge + gated app send | WS-A, WS-B, WS-E | WS-D | `rytm_randomizer/style_analysis/analog_four_patch_send_plan.py`, `rytm_randomizer/reports/analog_four_patch_send_plan.py`, `rytm_randomizer/senders/midi_event_plan.py`, `rytm_randomizer/app.py`, `tests/test_analog_four_patch_send_plan*.py`, `tests/test_app_validate_one_cc.py` |
+| WS-G | Patch capture-corpus nearest matching | WS-A, WS-B, WS-E | WS-D | `rytm_randomizer/data/analog_four_patch_corpus.py`, `rytm_randomizer/style_analysis/analog_four_patch_corpus.py`, `rytm_randomizer/reports/analog_four_patch_corpus.py`, `tests/test_analog_four_patch_corpus*.py` |
 
 ## Execution Shape
 
@@ -48,8 +49,9 @@
 6. Implement the passive report module and lazy CLI registration.
 7. Implement the passive patch-learning packet/report with candidate scoring, trait routing, capture matrix, and live-dial readiness.
 8. Implement the passive send-plan compiler/report and gated app dry-run/armed send bridge.
-9. Update operator docs and architecture/status references.
-10. Run focused tests, then fast/architecture/lint verification as feasible.
+9. Implement the passive capture-corpus nearest-match compiler/report with synthetic starter rows and optional captured corpus file input.
+10. Update operator docs and architecture/status references.
+11. Run focused tests, then fast/architecture/lint verification as feasible.
 
 ## Safety Contract
 
@@ -62,6 +64,7 @@
 - NRPN-only enum/destination rows are represented honestly as front-panel/manual rows unless the manual-backed ordinal is known.
 - Screen-only destination rows are skipped by the active send-plan bridge.
 - Patch learning is explanatory and deterministic; it does not claim a trained model or hardware-captured A4 state until future capture data exists.
+- Patch corpus matching labels synthetic starter rows separately from captured hardware rows; it does not claim trained model status or hardware-backed certainty until real A4 recordings are supplied and validated.
 
 ## Plan-Requirements Conformance
 

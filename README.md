@@ -554,7 +554,7 @@ reference-style-blueprint-report --description "Glenn Wilson pressure" # 12-pad 
 
 # Dual-machine targets
 dual-machine-target-report rytm | a4 | both                           # safe target surface
-dual-machine-style-kit-selection-report STYLE --rytm KITS --analog-four KITS # A4 patch DNA: analog-four-patch-send-plan-report; genome/learning in CLI reference
+dual-machine-style-kit-selection-report STYLE --rytm KITS --analog-four KITS # A4 patch DNA/corpus/send-plan: see CLI reference
 
 # Snapshot intelligence
 rytm-snapshot-intelligence-report KITS.syx --slot N                   # one Rytm kit snapshot
@@ -627,7 +627,7 @@ Keep volume moderate for S3B and S4B.
 - Main-prompt `1`, `2`, and `3` remain guarded and send no MIDI.
 - Four-pad scene/global commands auto-load anchors if needed.
 - Free-form all-row mutation, samples, performance macros, source level, track level, amp volume, NRPN style-kit sends, SysEx, transport, pattern changes, and kit/project writes remain out of scope.
-- Analog Four sends are candidate/manifest-gated and require an explicit `--arm` path plus a ready plan; generated patch sends use `--a4-patch-send-plan --confirm-a4-patch-send-plan`; the passive default touches no hardware.
+- Analog Four sends are candidate/manifest-gated and require an explicit `--arm` path plus a ready plan; generated patch sends use `--a4-patch-send-plan --confirm-a4-patch-send-plan`; patch genome, learning, and corpus matching stay passive by default.
 - Analog Rytm CC observe is input-only: `python -m rytm_randomizer.app --arm --rytm-cc-observe` opens a Rytm MIDI input port, observes pending CC messages, prints raw CC/NRPN observations with candidate labels, optionally sharpens labels with `--rytm-cc-observe-live-snapshot` or `--rytm-cc-observe-snapshot current-kit.syx`, and sends no MIDI.
 - Analog Four soft live capture is input-only: `python -m rytm_randomizer.app --arm --a4-soft-capture` opens an A4 MIDI input port, observes pending CC messages, prints a known/unknown state report, and sends no MIDI.
 - Analog Four named parameter sends are active: `python -m rytm_randomizer.app --arm --a4-send-param --parameter "OSC1 PWM Depth" --channel 0 --value 32` prompts for an A4 output port, sends one manual-backed CC MSB message, closes the port, and exits.

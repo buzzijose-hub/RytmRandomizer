@@ -65,6 +65,9 @@ USAGE = (
     "(--description <text>|--audio <path>) [--track N] [--candidate N] [--json] | "
     "analog-four-patch-learning-report "
     "(--description <text>|--audio <path>) [--track N] [--candidate N] [--json] | "
+    "analog-four-patch-corpus-report "
+    "(--description <text>|--audio <path>) [--track N] [--limit N] "
+    "[--corpus-file <path>] [--json] | "
     "analog-four-patch-send-plan-report "
     "(--description <text>|--audio <path>) [--track N] [--candidate N] [--json] | "
     "analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] "
@@ -682,6 +685,7 @@ def test_top_level_help_exits_zero_and_matches_fixture():
         "analog-rytm-midi-catalog-report",
         "analog-four-patch-genome-report",
         "analog-four-patch-learning-report",
+        "analog-four-patch-corpus-report",
         "analog-four-patch-send-plan-report",
         "analog-four-oxi-macro-report",
         "analog-four-oxi-macro-readiness-report",
