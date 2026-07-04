@@ -34,6 +34,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-style-mutation-intent-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report <syx-path> <style-key> [--slot N] [--discovery N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-kit-catalog-report <syx-path> [--limit N] [--json]
+  python -m rytm_randomizer.cli analog-four-baseline-report --kit <syx-path> --pattern-kit <syx-path> --whole-project <syx-path> [--json]
   python -m rytm_randomizer.cli analog-four-patch-genome-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
   python -m rytm_randomizer.cli analog-four-patch-learning-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
   python -m rytm_randomizer.cli analog-four-patch-corpus-report (--description <text>|--audio <path>) [--track N] [--limit N] [--corpus-file <path>] [--json]
@@ -183,6 +184,8 @@ Commands:
                      Print passive Analog Four style mutation mock-preview rows for a SysEx file.
   analog-four-kit-catalog-report
                      Print passive Analog Four kit catalog metadata for a SysEx file.
+  analog-four-baseline-report
+                     Compare initialized Analog Four kit, pattern+kit, and project dumps.
   analog-four-patch-genome-report
                      Generate passive Analog Four patch DNA candidates from audio or text.
   analog-four-patch-learning-report

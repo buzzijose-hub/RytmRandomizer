@@ -1,9 +1,18 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-07-03. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-07-04. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-07-04: Passive Analog Four initialized-baseline report prepared
+  locally from Jose's Test 1 exports. The new
+  `analog-four-baseline-report` command compares kit, pattern+kit, and
+  whole-project SysEx export scopes, decodes supported saved-kit frames, and
+  reports a coherent clean-slate fingerprint (`7006c189ecffc2a2`) that future
+  changed-patch captures can diff against. It remains passive: no MIDI port
+  opened, no MIDI sent, no SysEx written, no hardware mutation, and no
+  parameter-level A4 DNA extraction claim while saved-kit offsets are still
+  candidate-only.
 - 2026-07-03: Passive Analog Four patch capture-corpus matcher prepared
   locally. The new `analog-four-patch-corpus-report` command ranks a
   description or audio FeatureReport against starter or supplied A4

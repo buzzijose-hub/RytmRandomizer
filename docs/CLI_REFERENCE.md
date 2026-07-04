@@ -195,6 +195,7 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `analog-four-style-mutation-intent-report` | Passive Analog Four track/zone mutation intent |
 | `analog-four-style-mutation-mock-preview-report` | Passive Analog Four mock CC rows (deferred while saved-kit offsets are promoted) |
 | `analog-four-kit-catalog-report` | Passive Analog Four decoded kit catalog |
+| `analog-four-baseline-report` | Passive initialized A4 SysEx baseline comparison across kit, pattern+kit, and whole-project exports |
 | `analog-four-patch-genome-report` | Passive four-candidate Analog Four single-sound patch DNA from audio or text |
 | `analog-four-patch-learning-report` | Passive Analog Four patch learning routes, capture matrix, and live-dial readiness |
 | `analog-four-patch-corpus-report` | Passive nearest-match ranking against starter or captured Analog Four patch/audio examples |
@@ -208,6 +209,7 @@ python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report KITS.syx
 python -m rytm_randomizer.cli analog-four-style-mutation-intent-report KITS.syx birmingham_pressure --slot 0 --discovery 45
 python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report KITS.syx jose_core_techno --slot 0 --discovery 45 --events --limit 24
 python -m rytm_randomizer.cli analog-four-kit-catalog-report KITS.syx --limit 16
+python -m rytm_randomizer.cli analog-four-baseline-report --kit A4_Test1_Init_Kit.syx --pattern-kit A4_Test1_Init_A01_PatternKit.syx --whole-project A4_Test1_Init_WholeProject.syx --json
 python -m rytm_randomizer.cli analog-four-patch-genome-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
 python -m rytm_randomizer.cli analog-four-patch-genome-report --audio reference.wav --track 2 --json
 python -m rytm_randomizer.cli analog-four-patch-learning-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
@@ -226,6 +228,14 @@ Active companion app bridge for the selected patch send plan:
 python -m rytm_randomizer.app --dry-run --a4-patch-send-plan --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
 python -m rytm_randomizer.app --arm --a4-patch-send-plan --description "hypnotic metallic HP2 stab" --track 1 --candidate 1 --confirm-a4-patch-send-plan
 ```
+
+`analog-four-baseline-report` is the passive clean-slate intake for A4 patch
+capture work. It reads three local SysEx export scopes - kit, pattern+kit, and
+whole-project - decodes supported saved-kit frames, compares their first kit
+payload fingerprints, and reports whether the initialized baseline is coherent
+enough for future changed-patch diffs. It does not open MIDI ports, send MIDI,
+write SysEx, or claim parameter-level DNA extraction while the A4 saved-kit
+offsets remain candidate-only.
 
 `analog-four-patch-genome-report` is the passive patch-DNA bridge for manual
 studio tests. It takes one description or audio file, builds four candidate
