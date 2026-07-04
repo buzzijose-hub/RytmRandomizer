@@ -62,6 +62,7 @@ if TYPE_CHECKING:
     from .devices.strategies import RytmPerformanceMutationPlan
     from .engines.analog_rytm_snapshot_shell import ResnapshotFunc, RytmSnapshotShellAnchor
     from .midi_io import Sender
+    from .style_analysis.analog_four_patch_send_plan import AnalogFourPatchSendPlan
 
 
 RYTM_LIVE_SNAPSHOT_CAPTURE_TIMEOUT_SECONDS: Final[float] = 120.0
@@ -192,6 +193,38 @@ def _build_parser() -> argparse.ArgumentParser:
         "--a4-kit-recipe-nrpn",
         action="store_true",
         help="Send --a4-kit-recipe events as A4 synth-track NRPN sequences instead of CCs.",
+    )
+    parser.add_argument(
+        "--a4-patch-send-plan",
+        action="store_true",
+        help=(
+            "Generate an Analog Four patch from --description or --audio and "
+            "render its live-dial send plan. Use with --dry-run or with "
+            "--arm --confirm-a4-patch-send-plan."
+        ),
+    )
+    parser.add_argument(
+        "--confirm-a4-patch-send-plan",
+        action="store_true",
+        help="Required confirmation flag for armed --a4-patch-send-plan sends.",
+    )
+    parser.add_argument(
+        "--description",
+        help="Reference description for --a4-patch-send-plan.",
+    )
+    parser.add_argument(
+        "--audio",
+        help="Reference audio path for --a4-patch-send-plan.",
+    )
+    parser.add_argument(
+        "--track",
+        type=int,
+        help="Analog Four track for --a4-patch-send-plan.",
+    )
+    parser.add_argument(
+        "--candidate",
+        type=int,
+        help="Analog Four patch candidate for --a4-patch-send-plan.",
     )
     parser.add_argument(
         "--rytm-kit-style",
@@ -1128,6 +1161,262 @@ def _run_a4_kit_recipe(args: argparse.Namespace) -> int:
     return 0
 
 
+def _resolve_a4_patch_send_plan_source(args: argparse.Namespace) -> tuple[str, str] | None:
+    """Return the exactly-one source tuple for A4 patch send-plan generation."""
+
+    sources: list[tuple[str, str]] = []
+    if args.description is not None:
+        sources.append(("--description", args.description))
+    if args.audio is not None:
+        sources.append(("--audio", args.audio))
+    if len(sources) != 1:
+        sys.stderr.write(
+            "--a4-patch-send-plan requires exactly one source: --description or --audio.\n"
+        )
+        return None
+    source_flag, source_value = sources[0]
+    if source_value.strip() == "":
+        sys.stderr.write(f"{source_flag} requires a non-empty value.\n")
+        return None
+    return source_flag, source_value
+
+
+def _a4_patch_optional_range(
+    name: str,
+    value: int | None,
+    *,
+    default: int,
+    low: int,
+    high: int,
+) -> int | None:
+    """Return an optional A4 patch-send integer after range validation."""
+
+    resolved = default if value is None else value
+    if resolved < low or resolved > high:
+        sys.stderr.write(f"{name} must be in [{low}, {high}].\n")
+        return None
+    return resolved
+
+
+def _build_a4_patch_send_plan_from_args(
+    args: argparse.Namespace,
+) -> tuple[AnalogFourPatchSendPlan, str] | None:
+    """Build an A4 patch send plan from app arguments without touching MIDI."""
+
+    from .style_analysis.analog_four_patch_send_plan import (
+        ANALOG_FOUR_PATCH_CANDIDATE_MAX,
+        ANALOG_FOUR_PATCH_CANDIDATE_MIN,
+        ANALOG_FOUR_TRACK_MAX,
+        ANALOG_FOUR_TRACK_MIN,
+        build_analog_four_patch_send_plan_from_source,
+    )
+
+    source = _resolve_a4_patch_send_plan_source(args)
+    if source is None:
+        return None
+    track = _a4_patch_optional_range(
+        "track",
+        args.track,
+        default=ANALOG_FOUR_TRACK_MIN,
+        low=ANALOG_FOUR_TRACK_MIN,
+        high=ANALOG_FOUR_TRACK_MAX,
+    )
+    selected_candidate = _a4_patch_optional_range(
+        "candidate",
+        args.candidate,
+        default=ANALOG_FOUR_PATCH_CANDIDATE_MIN,
+        low=ANALOG_FOUR_PATCH_CANDIDATE_MIN,
+        high=ANALOG_FOUR_PATCH_CANDIDATE_MAX,
+    )
+    if track is None or selected_candidate is None:
+        return None
+
+    source_flag, source_value = source
+    try:
+        from .style_analysis import StyleAnalysisDependencyError
+
+        source = build_analog_four_patch_send_plan_from_source(
+            source_flag,
+            source_value,
+            track=track,
+            selected_candidate=selected_candidate,
+        )
+    except (StyleAnalysisDependencyError, ValueError, TypeError, KeyError) as exc:
+        sys.stderr.write(f"--a4-patch-send-plan failed: {exc}\n")
+        return None
+    return source.plan, source.source_label
+
+
+def _send_a4_patch_send_plan_events(plan: AnalogFourPatchSendPlan, out: Sender) -> None:
+    """Send compiler-approved A4 patch events through an injected MIDI sender."""
+
+    from .senders.midi_event_plan import send_cc_nrpn_event_plan
+
+    try:
+        send_cc_nrpn_event_plan(
+            plan.send_events,
+            out,
+            sleep=_skip_validation_sleep,
+        )
+    except ValueError as exc:
+        raise ValueError(f"A4 patch send-plan event failed validation: {exc}") from exc
+
+
+def _run_dry_run_a4_patch_send_plan(
+    plan: AnalogFourPatchSendPlan,
+    *,
+    source_label: str,
+) -> int:
+    """Render the generated A4 patch send plan through the mock sender."""
+
+    from .mock_midi import MockMidiSender
+
+    sender = MockMidiSender()
+    try:
+        _send_a4_patch_send_plan_events(plan, sender)
+    except (OSError, RuntimeError, AttributeError, ValueError) as exc:
+        sys.stderr.write(f"--dry-run --a4-patch-send-plan send failed: {exc}\n")
+        return 1
+
+    summary = plan.summary
+    lines = [
+        "RytmRandomizer A4 patch send-plan dry-run",
+        "mock only: True",
+        "no hardware: True",
+        "no port opened: True",
+        "no real MIDI: True",
+        f"source: {source_label}",
+        f"track: {plan.selected_track}",
+        f"candidate: {plan.selected_candidate} / {plan.selected_label}",
+        f"sendable events: {summary.sendable_count}",
+        f"transport messages: {summary.transport_message_count}",
+        f"manual rows skipped: {summary.manual_count}",
+        f"Mock sender captured {len(sender.sent_messages)} message(s).",
+    ]
+    sys.stdout.write("\n".join(lines))
+    sys.stdout.write("\n")
+    return 0
+
+
+def _run_armed_a4_patch_send_plan(
+    plan: AnalogFourPatchSendPlan,
+    *,
+    source_label: str,
+) -> int:
+    """Open one A4 output port, send the patch send plan, close, and exit."""
+
+    from .mido_provider import build_mido_midi_port_provider
+    from .observability.metrics import get_metrics
+    from .observability.tracing import operation
+    from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
+
+    logger = _observability_get_logger(__name__)
+    metrics = get_metrics()
+    provider = build_mido_midi_port_provider()
+    summary = plan.summary
+    with operation(
+        "a4_patch_send_plan_send",
+        logger=logger,
+        level=logging.DEBUG,
+        source=source_label,
+        track=plan.selected_track,
+        candidate=plan.selected_candidate,
+        sendable_count=summary.sendable_count,
+        transport_message_count=summary.transport_message_count,
+    ):
+        try:
+            output_names = provider.list_output_names()
+        except (RealMidiDependencyError, RealMidiPortError) as exc:
+            metrics.record_error("a4_patch_send_plan_port_list")
+            logger.error("a4_patch_send_plan_port_list_failed")
+            sys.stderr.write(f"--arm --a4-patch-send-plan failed: {exc}\n")
+            return 1
+
+        if not output_names:
+            metrics.record_error("a4_patch_send_plan_no_output_ports")
+            logger.error("a4_patch_send_plan_no_output_ports")
+            sys.stderr.write(
+                "--arm --a4-patch-send-plan failed: no real MIDI output ports available. "
+                "Connect the Analog Four and retry.\n"
+            )
+            return 1
+
+        port_name = _choose_a4_output_port_name(
+            output_names,
+            error_prefix="--arm --a4-patch-send-plan",
+        )
+        if port_name is None:
+            metrics.record_error("a4_patch_send_plan_port_selection")
+            logger.error("a4_patch_send_plan_port_selection_failed")
+            return 1
+
+        sys.stdout.write(f"\nOpening MIDI output: {port_name}\n")
+        try:
+            port = provider.open_output(port_name)
+        except (RealMidiDependencyError, RealMidiPortError) as exc:
+            metrics.record_error("a4_patch_send_plan_port_open")
+            logger.error("a4_patch_send_plan_port_open_failed")
+            sys.stderr.write(f"--arm --a4-patch-send-plan failed: {exc}\n")
+            return 1
+
+        try:
+            _send_a4_patch_send_plan_events(plan, port)
+        except (OSError, RuntimeError, AttributeError, ValueError) as exc:
+            metrics.record_error("a4_patch_send_plan_send")
+            logger.error("a4_patch_send_plan_send_failed")
+            sys.stderr.write(f"--arm --a4-patch-send-plan send failed: {exc}\n")
+            return 1
+        finally:
+            close = getattr(port, "close", None)
+            if callable(close):
+                try:
+                    close()
+                except (OSError, RuntimeError, AttributeError):  # pragma: no cover
+                    metrics.record_error("a4_patch_send_plan_port_close")
+                    logger.debug("a4_patch_send_plan_port_close_failed_best_effort")
+
+    lines = [
+        "RytmRandomizer A4 patch send-plan send",
+        "armed: True",
+        "hardware observation required: True",
+        "sent real MIDI: True",
+        f"port: {port_name}",
+        f"source: {source_label}",
+        f"track: {plan.selected_track}",
+        f"candidate: {plan.selected_candidate} / {plan.selected_label}",
+        f"sendable events: {summary.sendable_count}",
+        f"transport messages: {summary.transport_message_count}",
+        f"manual rows skipped: {summary.manual_count}",
+        "Sent generated A4 patch send-plan MIDI events.",
+    ]
+    sys.stdout.write("\n".join(lines))
+    sys.stdout.write("\n")
+    return 0
+
+
+def _run_a4_patch_send_plan(args: argparse.Namespace) -> int:
+    """Validate and run the generated A4 patch send-plan path."""
+
+    if not args.arm and not args.dry_run:
+        sys.stderr.write("--a4-patch-send-plan requires --dry-run or --arm.\n")
+        return 1
+
+    if args.arm:
+        if not args.confirm_a4_patch_send_plan:
+            sys.stderr.write(
+                "--a4-patch-send-plan armed sends require " "--confirm-a4-patch-send-plan.\n"
+            )
+            return 1
+    built = _build_a4_patch_send_plan_from_args(args)
+    if built is None:
+        return 1
+    plan, source_label = built
+
+    if args.arm:
+        return _run_armed_a4_patch_send_plan(plan, source_label=source_label)
+    return _run_dry_run_a4_patch_send_plan(plan, source_label=source_label)
+
+
 def _resolve_rytm_style_recipe(recipe_name: str) -> AnalogRytmStyleRecipe | None:
     """Resolve a curated Analog Rytm style recipe by slug or display label."""
 
@@ -2022,6 +2311,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             ("a4-send-param", args.a4_send_param),
             ("a4-send-nrpn-param", args.a4_send_nrpn_param),
             ("a4-kit-recipe", args.a4_kit_recipe),
+            ("a4-patch-send-plan", args.a4_patch_send_plan),
         )
         for option_name, is_active in conflicts:
             if is_active:
@@ -2229,6 +2519,41 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.value_lsb is not None and not args.a4_send_nrpn_param:
         sys.stderr.write("--value-lsb requires --a4-send-nrpn-param.\n")
         return 1
+    if not args.a4_patch_send_plan:
+        if args.confirm_a4_patch_send_plan:
+            sys.stderr.write("--confirm-a4-patch-send-plan requires --a4-patch-send-plan.\n")
+            return 1
+        if args.description is not None:
+            sys.stderr.write("--description requires --a4-patch-send-plan.\n")
+            return 1
+        if args.audio is not None:
+            sys.stderr.write("--audio requires --a4-patch-send-plan.\n")
+            return 1
+        if args.track is not None:
+            sys.stderr.write("--track requires --a4-patch-send-plan.\n")
+            return 1
+        if args.candidate is not None:
+            sys.stderr.write("--candidate requires --a4-patch-send-plan.\n")
+            return 1
+    if args.a4_patch_send_plan:
+        conflicts = (
+            ("validate-one-cc", args.validate_one_cc),
+            ("rytm-cc-observe", args.rytm_cc_observe),
+            ("rytm-live-snapshot-shell", args.rytm_live_snapshot_shell),
+            ("rytm-snapshot-shell", args.rytm_snapshot_shell),
+            ("rytm-12-pad-shell", args.rytm_12_pad_shell),
+            ("rytm-performance-snapshot", args.rytm_performance_snapshot),
+            ("rytm-kit-style", args.rytm_kit_style),
+            ("a4-soft-capture", args.a4_soft_capture),
+            ("a4-send-param", args.a4_send_param),
+            ("a4-send-nrpn-param", args.a4_send_nrpn_param),
+            ("a4-kit-recipe", args.a4_kit_recipe),
+            ("a4-kit-recipe-nrpn", args.a4_kit_recipe_nrpn),
+        )
+        for option_name, is_active in conflicts:
+            if is_active:
+                sys.stderr.write(f"--a4-patch-send-plan cannot be combined with --{option_name}.\n")
+                return 1
     if args.rytm_live_snapshot_shell:
         return _run_rytm_live_snapshot_shell(args)
     if args.rytm_cc_observe:
@@ -2251,6 +2576,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _run_a4_send_nrpn_param(args)
     if args.a4_kit_recipe:
         return _run_a4_kit_recipe(args)
+    if args.a4_patch_send_plan:
+        return _run_a4_patch_send_plan(args)
     if args.arm:
         return _run_arm()
     if args.dry_run:
