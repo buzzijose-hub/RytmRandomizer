@@ -1669,6 +1669,68 @@ def test_snapshot_shell_randomize_amount_wide_discovers_selector_at_edge() -> No
     assert 0 <= current_waveform.value <= 11
 
 
+def test_snapshot_shell_command_four_explores_bd_sharp_waveforms_across_go() -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    snapshot = AnalogRytmSnapshotDecoder().decode(
+        _snapshot_payload_with_track_values(
+            pad=3,
+            machine_value=26,
+            values_by_lsb={7: 1},
+        ),
+        slot=0,
+    )
+    anchor = build_snapshot_shell_anchor(snapshot)
+    shell = AnalogRytmSnapshotShell(anchor, MockMidiSender())
+
+    anchor_waveform = _event_for(anchor.events, pad=3, parameter="Waveform")
+    assert anchor_waveform.machine_key == "bd_sharp"
+    assert anchor_waveform.value == 1
+
+    assert shell.dispatch("4") is True
+    observed = {_event_for(shell.state.current_events, pad=3, parameter="Waveform").value}
+    for _ in range(6):
+        assert shell.dispatch("go") is True
+        observed.add(_event_for(shell.state.current_events, pad=3, parameter="Waveform").value)
+
+    assert len(observed) >= 4
+    assert all(0 <= value <= 11 for value in observed)
+
+
+def test_snapshot_shell_command_four_explores_dual_vco_osc_config_across_go() -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    snapshot = AnalogRytmSnapshotDecoder().decode(
+        _snapshot_payload_with_track_values(
+            pad=3,
+            machine_value=28,
+            values_by_lsb={5: 40},
+        ),
+        slot=0,
+    )
+    anchor = build_snapshot_shell_anchor(snapshot)
+    shell = AnalogRytmSnapshotShell(anchor, MockMidiSender())
+
+    anchor_config = _event_for(anchor.events, pad=3, parameter="Osc Config")
+    assert anchor_config.machine_key == "dual_vco"
+    assert anchor_config.value == 40
+
+    assert shell.dispatch("4") is True
+    observed = {_event_for(shell.state.current_events, pad=3, parameter="Osc Config").value}
+    for _ in range(6):
+        assert shell.dispatch("go") is True
+        observed.add(_event_for(shell.state.current_events, pad=3, parameter="Osc Config").value)
+
+    assert len(observed) >= 4
+    assert all(0 <= value <= 79 for value in observed)
+
+
 def test_snapshot_shell_lane_micro_keeps_wide_selector_discovery_cautious() -> None:
     from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
         AnalogRytmSnapshotShell,

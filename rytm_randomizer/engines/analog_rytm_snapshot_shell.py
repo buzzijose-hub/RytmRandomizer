@@ -185,6 +185,11 @@ _ZONE_LAYERING_HINT: Final[str] = (
     "use fresh first for anchor-only zone changes"
 )
 _AMP_FX_FAMILIES: Final[frozenset[str]] = frozenset({"drive", "delay", "reverb"})
+_WIDE_SOURCE_SELECTOR_DISCOVERY_COMMANDS: Final[frozenset[str]] = frozenset({_CMD_FOUR, _CMD_S4B})
+_WIDE_SOURCE_SELECTOR_PARAMETERS: Final[frozenset[tuple[str, str]]] = frozenset(
+    {("dual_vco", "Osc Config")}
+)
+_WIDE_SOURCE_WAVEFORM_SELECTOR_MIN_SPAN: Final[int] = 6
 
 _MACHINE_PROFILE_BY_VALUE: Final[Mapping[int, RytmMachineProfile]] = MappingProxyType(
     {profile.machine_value: profile for profile in RYTM_MACHINE_PROFILES}
@@ -902,6 +907,26 @@ def _wide_selector_discovery_value(
     value = int.from_bytes(hashlib.blake2s(payload, digest_size=2).digest(), "big")
     step = 1 + (value % (span - 1))
     return low + ((normalized_anchor - low + step) % span)
+
+
+def _uses_wide_source_selector_discovery(
+    event: AnalogRytmRenderedStyleEvent,
+    command: SnapshotShellCommand,
+    selector_range: SelectorValueRange,
+    lane_policy: SnapshotLanePolicy | None,
+) -> bool:
+    low, high = selector_range
+    is_source_selector = (
+        "waveform" in event.parameter.casefold()
+        or (event.machine_key, event.parameter) in _WIDE_SOURCE_SELECTOR_PARAMETERS
+    )
+    return (
+        command.name in _WIDE_SOURCE_SELECTOR_DISCOVERY_COMMANDS
+        and event.source == "machine_src"
+        and is_source_selector
+        and lane_policy != _LANE_POLICY_MICRO
+        and (high - low + 1) >= _WIDE_SOURCE_WAVEFORM_SELECTOR_MIN_SPAN
+    )
 
 
 def _is_snapshot_omitted_mapping(mapping: AnalogRytmCcMapping) -> bool:
@@ -1721,6 +1746,11 @@ def _mutate_snapshot_event(
             randomizer_contract is not None
             and randomizer_contract.amount == _RANDOMIZER_AMOUNT_WIDE
             and lane_policy != _LANE_POLICY_MICRO
+        ) or _uses_wide_source_selector_discovery(
+            anchor_event,
+            command,
+            selector_range,
+            lane_policy,
         ):
             proposed_value = _wide_selector_discovery_value(
                 anchor_event,
