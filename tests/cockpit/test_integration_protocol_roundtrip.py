@@ -1,6 +1,6 @@
 """Integration: every command type round-trips correctly over the WebSocket.
 
-For each of the 11 spec commands, sends an envelope and verifies:
+For each cockpit-native spec command, sends an envelope and verifies:
 
 * the ack frame's ``request_id`` echoes the request,
 * ``ok`` is ``True`` for valid commands,
@@ -30,10 +30,14 @@ from cockpit.conftest import collect_initial_events, complete_handshake, drain_e
 from fastapi.testclient import TestClient
 
 from rytm_randomizer.cockpit.ws.protocol import (
+    COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
     COMMAND_EXPORT_PROFILE_MODEL,
     COMMAND_LOAD_SNAPSHOT,
     COMMAND_PREPARE_SEND_PLAN,
+    COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
     COMMAND_REGEN,
+    COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
+    COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
     COMMAND_SAVE,
     COMMAND_SELECT_PROFILE,
     COMMAND_SEND,
@@ -46,6 +50,8 @@ from rytm_randomizer.cockpit.ws.protocol import (
 )
 
 pytestmark = pytest.mark.fast
+
+_COMMAND_MOCK_APPLY_OPERATOR_PACKAGE = "mock_apply_operator_package"
 
 
 # ---------------------------------------------------------------------------
@@ -232,18 +238,177 @@ def test_export_profile_model_roundtrips_with_model_bytes_b64_field(
     assert isinstance(ack["model_bytes_b64"], str)
 
 
-def test_all_eleven_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
+def test_rehearse_operator_package_step_roundtrips_with_mock_safe_rehearsal_ack(
+    cockpit_ws: object,
+) -> None:
+    """``rehearse_operator_package_step`` returns mock-safe operator package evidence."""
+
+    ack = send_cmd(
+        cockpit_ws,
+        COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
+        request_id="rt-operator-package",
+        operator_package_id="live-kit-operator-package",
+        step_key="operator-step-hard-groove-lift",
+        slot_key="hard-groove-lift",
+        package_export_key="operator-package-hard-groove-lift",
+        snapshot_id="snap-06",
+        depth_percent=70,
+        mock_safe=True,
+    )
+
+    assert ack["request_id"] == "rt-operator-package"
+    assert ack["ok"] is True
+    rehearsal = ack["operator_package_rehearsal"]
+    assert rehearsal["rehearsal_status"] == "mock_safe_ready"
+    assert rehearsal["opened_midi_port"] is False
+    assert rehearsal["sent_midi"] is False
+
+
+def test_rehearse_operator_package_sequence_roundtrips_with_mock_safe_rehearsal_ack(
+    cockpit_ws: object,
+) -> None:
+    """``rehearse_operator_package_sequence`` validates package steps as one unit."""
+
+    ack = send_cmd(
+        cockpit_ws,
+        COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
+        request_id="rt-operator-package-sequence",
+        operator_package_id="live-kit-operator-package",
+        step_keys=[
+            "operator-step-hard-groove-lift",
+            "operator-step-industrial-pressure",
+        ],
+        package_export_keys={
+            "operator-step-hard-groove-lift": "operator-package-hard-groove-lift",
+            "operator-step-industrial-pressure": "operator-package-industrial-pressure",
+        },
+        snapshot_id="snap-06",
+        mock_safe=True,
+    )
+
+    assert ack["request_id"] == "rt-operator-package-sequence"
+    assert ack["ok"] is True
+    rehearsal = ack["operator_package_sequence_rehearsal"]
+    assert rehearsal["rehearsal_status"] == "mock_safe_ready"
+    assert rehearsal["step_count"] == 2
+    assert rehearsal["opened_midi_port"] is False
+    assert rehearsal["sent_midi"] is False
+    assert rehearsal["writes_files"] is False
+
+
+def test_preview_operator_package_apply_roundtrips_with_mock_safe_preview_ack(
+    cockpit_ws: object,
+) -> None:
+    """``preview_operator_package_apply`` validates package apply preview evidence."""
+
+    ack = send_cmd(
+        cockpit_ws,
+        COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
+        request_id="rt-operator-package-apply-preview",
+        operator_package_id="live-kit-operator-package",
+        step_keys=[
+            "operator-step-hard-groove-lift",
+            "operator-step-industrial-pressure",
+        ],
+        package_export_keys={
+            "operator-step-hard-groove-lift": "operator-package-hard-groove-lift",
+            "operator-step-industrial-pressure": "operator-package-industrial-pressure",
+        },
+        snapshot_id="snap-06",
+        mock_safe=True,
+    )
+
+    assert ack["request_id"] == "rt-operator-package-apply-preview"
+    assert ack["ok"] is True
+    preview = ack["operator_package_apply_preview"]
+    assert preview["preview_status"] == "mock_safe_ready"
+    assert preview["step_count"] == 2
+    assert preview["opened_midi_port"] is False
+    assert preview["sent_midi"] is False
+    assert preview["writes_files"] is False
+
+
+def test_mock_apply_operator_package_roundtrips_with_mock_safe_apply_ack(
+    cockpit_ws: object,
+) -> None:
+    """``mock_apply_operator_package`` validates mock-only apply acceptance."""
+
+    ack = send_cmd(
+        cockpit_ws,
+        _COMMAND_MOCK_APPLY_OPERATOR_PACKAGE,
+        request_id="rt-operator-package-mock-apply",
+        operator_package_id="live-kit-operator-package",
+        step_keys=[
+            "operator-step-hard-groove-lift",
+            "operator-step-industrial-pressure",
+        ],
+        package_export_keys={
+            "operator-step-hard-groove-lift": "operator-package-hard-groove-lift",
+            "operator-step-industrial-pressure": "operator-package-industrial-pressure",
+        },
+        snapshot_id="snap-06",
+        mock_safe=True,
+    )
+
+    assert ack["request_id"] == "rt-operator-package-mock-apply"
+    assert ack["ok"] is True
+    mock_apply = ack["operator_package_mock_apply"]
+    assert mock_apply["mock_apply_status"] == "mock_applied"
+    assert mock_apply["step_count"] == 2
+    assert mock_apply["opened_midi_port"] is False
+    assert mock_apply["sent_midi"] is False
+    assert mock_apply["writes_files"] is False
+    assert mock_apply["mutated_snapshot"] is False
+    assert mock_apply["applied_send_plan"] is False
+
+
+def test_build_operator_package_receipt_roundtrips_with_mock_safe_receipt_ack(
+    cockpit_ws: object,
+) -> None:
+    """``build_operator_package_receipt`` records passive audit evidence."""
+
+    ack = send_cmd(
+        cockpit_ws,
+        COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
+        request_id="rt-operator-package-receipt",
+        operator_package_id="live-kit-operator-package",
+        step_keys=[
+            "operator-step-hard-groove-lift",
+            "operator-step-industrial-pressure",
+        ],
+        package_export_keys={
+            "operator-step-hard-groove-lift": "operator-package-hard-groove-lift",
+            "operator-step-industrial-pressure": "operator-package-industrial-pressure",
+        },
+        snapshot_id="snap-06",
+        mock_safe=True,
+    )
+
+    assert ack["request_id"] == "rt-operator-package-receipt"
+    assert ack["ok"] is True
+    receipt = ack["operator_package_receipt"]
+    assert receipt["receipt_status"] == "mock_safe_receipt_ready"
+    assert receipt["step_count"] == 2
+    assert receipt["opened_midi_port"] is False
+    assert receipt["sent_midi"] is False
+    assert receipt["writes_files"] is False
+    assert receipt["mutated_snapshot"] is False
+    assert receipt["applied_send_plan"] is False
+    assert receipt["events_emitted"] is False
+
+
+def test_all_sixteen_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
     """Pin invariant: every cockpit-native command has a matching round-trip test above.
 
     ``COMMAND_TYPES`` is the union of the cockpit + wizard command surfaces
-    (11 cockpit + 8 wizard = 19 total). This test pins the 11 cockpit-native
+    (16 cockpit + 8 wizard = 24 total). This test pins the 16 cockpit-native
     commands; the wizard subset is exercised end-to-end in
     ``test_integration_wizard_flow.py``. If a new cockpit command lands and
     this assertion is not extended, the file falls out of sync silently —
     this test makes that drift visible at the integration boundary.
     """
 
-    assert len(COMMAND_TYPES) == 19
+    assert len(COMMAND_TYPES) == 24
     cockpit_native = {
         COMMAND_SELECT_PROFILE,
         COMMAND_SET_DEPTH,
@@ -256,9 +421,14 @@ def test_all_eleven_cockpit_command_types_are_exercised(cockpit_ws: object) -> N
         COMMAND_LOAD_SNAPSHOT,
         COMMAND_UNDO,
         COMMAND_EXPORT_PROFILE_MODEL,
+        COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
+        COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
+        COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
+        _COMMAND_MOCK_APPLY_OPERATOR_PACKAGE,
+        COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
     }
     assert cockpit_native <= COMMAND_TYPES
-    assert len(cockpit_native) == 11
+    assert len(cockpit_native) == 16
 
 
 # ---------------------------------------------------------------------------

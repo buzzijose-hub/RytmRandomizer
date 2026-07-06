@@ -1,9 +1,102 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-15. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-06-23. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-06-23: Operator Package Mock Apply + Receipt bundle consolidated on
+  the clean base after PR #195 merged. The Cockpit WebSocket protocol now
+  includes typed `mock_apply_operator_package` and
+  `build_operator_package_receipt` commands that validate the current Live Kit
+  Operator Package id, selected operator steps, package export-key bindings,
+  snapshot id, and `mock_safe: true` before returning deterministic mock-apply
+  and receipt evidence. The Performance Console renders both controls and
+  review panels with step evidence, readiness checks, recovery requirements,
+  blocked actions, safety lines, stable receipt digest, and no-side-effect
+  proof. This remains mock/passive only: no package files are written, no
+  snapshots are mutated, no send plans are applied, no hardware is armed, no
+  MIDI port is opened, no MIDI is sent, and no event stream is emitted.
+- 2026-06-22: Operator Package Apply Preview bundle packaging prepared on the
+  clean base after the PR #193 runtime-control merge. The plan and draft PR
+  body cover the next passive/mock-safe Cockpit-to-sidecar surface: preview the
+  apply plan for the whole Operator Package and return deterministic evidence
+  for ordered apply steps, validated export keys, readiness checks, recovery
+  requirements, blocked real-send actions, safety lines, dry-run summary, and
+  no-port / no-MIDI / no-file proof. This packaging is intentionally not real
+  hardware apply/send: no package files are written, no snapshots are mutated,
+  no send plans are applied, no hardware is armed, no MIDI port is opened, and
+  no MIDI is sent.
+- 2026-06-21: Operator Package runtime control bundle started on the clean
+  base after PR #192 merged. The Cockpit WebSocket protocol now also has a
+  typed `rehearse_operator_package_sequence` command that validates the
+  current Live Kit Operator Package id, selected operator steps, package
+  export-key bindings, and `mock_safe: true` before returning deterministic
+  `operator_package_sequence_rehearsal` evidence. The existing
+  `rehearse_operator_package_step` handler now rejects stale
+  `package_export_key` values instead of silently using the server-side
+  binding. The Performance Console renders a mock-safe package-sequence
+  rehearsal control, sends all current operator steps through the sidecar
+  when available, and logs the ack/rejection in the local operator log. This
+  remains a runtime rehearsal bridge only: no package apply, no package file
+  write, no snapshot mutation, no hardware arming, no MIDI port opening, and
+  no MIDI send.
+- 2026-06-20: Mock-safe Live Kit Operator Package runtime bridge started on
+  the clean base after PR #191 merged. The Cockpit WebSocket protocol now has
+  a typed `rehearse_operator_package_step` command that validates the current
+  Live Kit Operator Package id, step key, slot key, and `mock_safe: true`
+  before returning deterministic `operator_package_rehearsal` evidence. The
+  Performance Console keeps staging operator package steps locally, and when a
+  sidecar client is available the same click also asks the sidecar to rehearse
+  the step and records the ack/rejection in the local operator log. This is a
+  runtime bridge only: no package apply, no package file write, no snapshot
+  mutation, no hardware arming, no MIDI port opening, and no MIDI send.
+- 2026-06-19: Passive Live Kit Operator Package bundle started on the clean
+  base after PR #190 merged. The passive
+  `live-gui-performance-console-report [--json]` now binds the Live Kit
+  Package Audition surface into a GUI-ready Live Kit Operator Package lane:
+  operator steps, slot bindings, recovery requirements, journal commit preview,
+  and local export preview. The Performance Console renders that lane, lets an
+  audition slot stage a browser-local set-plan step, records the action in the
+  local operator log, and includes `auditionSource` / `operatorPackage`
+  evidence in exported local rehearsal packages while preserving older package
+  import compatibility. This remains passive/mock-safe: no SysEx receive from
+  Cockpit, no package file write/export outside browser-local JSON, no package
+  apply, no WebSocket command dispatch, no hardware arming, no MIDI port
+  opening, and no MIDI send.
+- 2026-06-18: Passive Live Kit Package Audition bundle started on the clean
+  base after PR #189 merged. The passive
+  `live-gui-performance-console-report [--json]` now composes a GUI-ready
+  Live Kit Package Audition surface from the Live Kit Capture Workbench:
+  captured-base/hard-groove/industrial/dub/recovery audition slots, review-only
+  queue rows, package checks, disabled package/journal/send controls, and a
+  Mutation Journal preview seed. The Performance Console renders the audition
+  surface with Generate Package, Audition Variation, Commit Favorite, Write
+  Journal, and Send Variation disabled. This remains passive/mock-safe: no
+  SysEx receive from Cockpit, no package file write/export, no package apply,
+  no WebSocket command dispatch, no hardware arming, no MIDI port opening, and
+  no MIDI send.
+- 2026-06-18: Passive Live Kit Capture Workbench bundle started on the clean
+  base after PR #187 merged. The passive
+  `live-gui-performance-console-report [--json]` now extends the Live Kit
+  Capture panel with a GUI-ready workbench for capture slots, anchor
+  verification, mutation readiness, recovery gates, and future captured-kit
+  package metadata. The Performance Console renders the workbench with disabled
+  Receive Kit, Stage Mutation, Apply Package, Export Package, and Send
+  Captured Plan controls. This remains passive/mock-safe: no SysEx receive from
+  Cockpit, no MIDI port opening, no package apply/export write, no snapshot
+  mutation from the report, no WebSocket command dispatch, no hardware arming,
+  and no MIDI send.
+- 2026-06-16: Passive live-kit capture Cockpit bundle started on the clean
+  base after PR #185 merged. The passive
+  `live-gui-performance-console-report [--json]` now carries a GUI-ready
+  Live Kit Capture panel that makes RytmRandomizer's core differentiator
+  explicit: "Mutate the kit you are actually playing." The panel shows the
+  armed snapshot shell launch command, receive/review/mutate/go/recover/
+  resnapshot workflow, fixed-controller differentiators, `home`/`Z` recovery
+  commands, blocked active actions, safety lines, and replay commands. This
+  remains passive/mock-safe: no SysEx receive from Cockpit, no MIDI port
+  opening, no snapshot mutation from the report, no WebSocket command dispatch,
+  no hardware arming, and no MIDI send.
 - 2026-06-15: Passive controller-brain Cockpit bundle started on the clean
   base after PR #184 merged. The passive
   `live-gui-performance-console-report [--json]` now composes the

@@ -22,9 +22,12 @@ import {
 import {
   isCommandAck,
   isEvent,
+  type BuildOperatorPackageReceiptCommand,
   type Command,
   type CommandAck,
   type Event,
+  type MockApplyOperatorPackageCommand,
+  type PreviewOperatorPackageApplyCommand,
   type SessionStatusEvent,
 } from '../src/ws/protocol';
 
@@ -539,6 +542,385 @@ describe('CockpitClient — send / ack correlation', () => {
     const result = await promise;
     expect(result.ok).toBe(true);
     expect(result.request_id).toBe(sent.request_id);
+  });
+
+  it('round-trips an operator package rehearsal command with typed ack payload', async () => {
+    const h = makeHarness();
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    const cmd: Command = {
+      type: 'rehearse_operator_package_step',
+      operator_package_id: 'live-kit-operator-package',
+      step_key: 'operator-step-hard-groove-lift',
+      slot_key: 'hard-groove-lift',
+      package_export_key: 'operator-package-hard-groove-lift',
+      snapshot_id: 'snap-06',
+      depth_percent: 70,
+      mock_safe: true,
+    };
+    const promise = h.client.send(cmd);
+    const sent = JSON.parse(h.currentSocket().sent[0] ?? '') as {
+      request_id: string;
+      command: Command;
+    };
+    expect(sent.command).toMatchObject(cmd);
+    h.currentSocket().emitMessage(
+      ack(sent.request_id, {
+        operator_package_rehearsal: {
+          rehearsal_id: 'operator-package-rehearsal:operator-step-hard-groove-lift',
+          operator_package_id: 'live-kit-operator-package',
+          step_key: 'operator-step-hard-groove-lift',
+          slot_key: 'hard-groove-lift',
+          mock_safe: true,
+          rehearsal_status: 'mock_safe_ready',
+          opened_midi_port: false,
+          sent_midi: false,
+          writes_files: false,
+        },
+      }),
+    );
+
+    const result = await promise;
+    expect(result.operator_package_rehearsal?.sent_midi).toBe(false);
+    expect(result.operator_package_rehearsal?.rehearsal_status).toBe('mock_safe_ready');
+  });
+
+  it('round-trips an operator package sequence rehearsal command with typed ack payload', async () => {
+    const h = makeHarness();
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    const cmd: Command = {
+      type: 'rehearse_operator_package_sequence',
+      operator_package_id: 'live-kit-operator-package',
+      step_keys: [
+        'operator-step-hard-groove-lift',
+        'operator-step-industrial-pressure',
+      ],
+      package_export_keys: {
+        'operator-step-hard-groove-lift': 'operator-package-hard-groove-lift',
+        'operator-step-industrial-pressure': 'operator-package-industrial-pressure',
+      },
+      snapshot_id: 'snap-06',
+      mock_safe: true,
+    };
+    const promise = h.client.send(cmd);
+    const sent = JSON.parse(h.currentSocket().sent[0] ?? '') as {
+      request_id: string;
+      command: Command;
+    };
+    expect(sent.command).toMatchObject(cmd);
+    h.currentSocket().emitMessage(
+      ack(sent.request_id, {
+        operator_package_sequence_rehearsal: {
+          rehearsal_id: 'operator-package-sequence-rehearsal:live-kit-operator-package',
+          operator_package_id: 'live-kit-operator-package',
+          step_count: 2,
+          step_keys: [
+            'operator-step-hard-groove-lift',
+            'operator-step-industrial-pressure',
+          ],
+          snapshot_id: 'snap-06',
+          mock_safe: true,
+          rehearsal_status: 'mock_safe_ready',
+          opened_midi_port: false,
+          sent_midi: false,
+          writes_files: false,
+          step_rehearsals: [],
+        },
+      }),
+    );
+
+    const result = await promise;
+    expect(result.operator_package_sequence_rehearsal?.sent_midi).toBe(false);
+    expect(result.operator_package_sequence_rehearsal?.step_count).toBe(2);
+  });
+
+  it('round-trips an operator package apply preview command with typed ack payload', async () => {
+    const h = makeHarness();
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    const cmd: PreviewOperatorPackageApplyCommand = {
+      type: 'preview_operator_package_apply',
+      operator_package_id: 'live-kit-operator-package',
+      step_keys: [
+        'operator-step-hard-groove-lift',
+        'operator-step-industrial-pressure',
+      ],
+      package_export_keys: {
+        'operator-step-hard-groove-lift': 'operator-package-hard-groove-lift',
+        'operator-step-industrial-pressure': 'operator-package-industrial-pressure',
+      },
+      snapshot_id: 'snap-06',
+      mock_safe: true,
+    };
+    const promise = h.client.send(cmd);
+    const sent = JSON.parse(h.currentSocket().sent[0] ?? '') as {
+      request_id: string;
+      command: Command;
+    };
+    expect(sent.command).toMatchObject(cmd);
+    h.currentSocket().emitMessage(
+      ack(sent.request_id, {
+        operator_package_apply_preview: {
+          preview_id: 'operator-package-apply-preview:live-kit-operator-package',
+          operator_package_id: 'live-kit-operator-package',
+          snapshot_id: 'snap-06',
+          mock_safe: true,
+          preview_status: 'mock_safe_ready',
+          apply_policy: 'preview_only',
+          opened_midi_port: false,
+          sent_midi: false,
+          writes_files: false,
+          step_count: 2,
+          step_keys: [
+            'operator-step-hard-groove-lift',
+            'operator-step-industrial-pressure',
+          ],
+          apply_steps: [
+            {
+              step_key: 'operator-step-hard-groove-lift',
+              label: 'Hard Groove Lift',
+              slot_key: 'hard-groove-lift',
+              package_export_key: 'operator-package-hard-groove-lift',
+              order: 1,
+              local_action: 'stage-local-set-plan',
+              operator_command: 'go',
+              recovery_command: 'Z then send',
+              readiness_status: 'ready_for_mock_apply_preview',
+              blocked_action: 'real_send_blocked',
+            },
+          ],
+          readiness_checks: [
+            {
+              check: 'mock_safe',
+              status: 'passed',
+              required: true,
+            },
+          ],
+          recovery_requirements: [
+            {
+              requirement_key: 'z-then-send',
+              label: 'Recovery: Z then send',
+              command: 'Z then send',
+              required_before_send: true,
+              evidence: 'captured-base exposes recovery before staging',
+            },
+          ],
+          blocked_actions: ['open MIDI port from operator package'],
+          safety_lines: ['no MIDI sending'],
+          dry_run_summary: {
+            apply_policy: 'preview_only',
+            would_apply_steps: 2,
+            would_open_midi_port: false,
+            would_send_midi: false,
+            would_write_files: false,
+            would_mutate_snapshot: false,
+            events_emitted: false,
+          },
+        },
+      }),
+    );
+
+    const result = await promise;
+    expect(result.operator_package_apply_preview?.sent_midi).toBe(false);
+    expect(result.operator_package_apply_preview?.writes_files).toBe(false);
+    expect(result.operator_package_apply_preview?.step_count).toBe(2);
+  });
+
+  it('round-trips an operator package mock apply command with typed ack payload', async () => {
+    const h = makeHarness();
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    const cmd: MockApplyOperatorPackageCommand = {
+      type: 'mock_apply_operator_package',
+      operator_package_id: 'live-kit-operator-package',
+      step_keys: [
+        'operator-step-hard-groove-lift',
+        'operator-step-industrial-pressure',
+      ],
+      package_export_keys: {
+        'operator-step-hard-groove-lift': 'operator-package-hard-groove-lift',
+        'operator-step-industrial-pressure': 'operator-package-industrial-pressure',
+      },
+      snapshot_id: 'snap-06',
+      mock_safe: true,
+    };
+    const promise = h.client.send(cmd);
+    const sent = JSON.parse(h.currentSocket().sent[0] ?? '') as {
+      request_id: string;
+      command: Command;
+    };
+    expect(sent.command).toMatchObject(cmd);
+    h.currentSocket().emitMessage(
+      ack(sent.request_id, {
+        operator_package_mock_apply: {
+          mock_apply_id: 'operator-package-mock-apply:live-kit-operator-package',
+          operator_package_id: 'live-kit-operator-package',
+          snapshot_id: 'snap-06',
+          mock_safe: true,
+          mock_apply_status: 'mock_applied',
+          apply_policy: 'mock_apply_only',
+          opened_midi_port: false,
+          sent_midi: false,
+          writes_files: false,
+          mutated_snapshot: false,
+          applied_send_plan: false,
+          emitted_events: false,
+          step_count: 2,
+          step_keys: [
+            'operator-step-hard-groove-lift',
+            'operator-step-industrial-pressure',
+          ],
+          mock_apply_steps: [
+            {
+              step_key: 'operator-step-hard-groove-lift',
+              label: 'Hard Groove Lift',
+              slot_key: 'hard-groove-lift',
+              package_export_key: 'operator-package-hard-groove-lift',
+              order: 1,
+              local_action: 'stage-local-set-plan',
+              operator_command: 'go',
+              recovery_command: 'Z then send',
+              mock_apply_status: 'accepted_for_mock_apply',
+              blocked_action: 'real_apply_blocked',
+            },
+          ],
+          readiness_checks: [
+            {
+              check: 'mock_safe',
+              status: 'passed',
+              required: true,
+            },
+          ],
+          recovery_requirements: [
+            {
+              requirement_key: 'z-then-send',
+              label: 'Recovery: Z then send',
+              command: 'Z then send',
+              required_before_send: true,
+              evidence: 'captured-base exposes recovery before staging',
+            },
+          ],
+          blocked_actions: ['open MIDI port from operator package'],
+          safety_lines: ['no MIDI sending'],
+          dry_run_summary: {
+            apply_policy: 'mock_apply_only',
+            mock_applied_steps: 2,
+            opened_midi_port: false,
+            sent_midi: false,
+            writes_files: false,
+            mutated_snapshot: false,
+            applied_send_plan: false,
+            events_emitted: false,
+          },
+        },
+      }),
+    );
+
+    const result = await promise;
+    expect(result.operator_package_mock_apply?.sent_midi).toBe(false);
+    expect(result.operator_package_mock_apply?.applied_send_plan).toBe(false);
+    expect(result.operator_package_mock_apply?.step_count).toBe(2);
+  });
+
+  it('round-trips an operator package receipt command with typed ack payload', async () => {
+    const h = makeHarness();
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    const cmd: BuildOperatorPackageReceiptCommand = {
+      type: 'build_operator_package_receipt',
+      operator_package_id: 'live-kit-operator-package',
+      step_keys: [
+        'operator-step-hard-groove-lift',
+        'operator-step-industrial-pressure',
+      ],
+      package_export_keys: {
+        'operator-step-hard-groove-lift': 'operator-package-hard-groove-lift',
+        'operator-step-industrial-pressure': 'operator-package-industrial-pressure',
+      },
+      snapshot_id: 'snap-06',
+      mock_safe: true,
+    };
+    const promise = h.client.send(cmd);
+    const sent = JSON.parse(h.currentSocket().sent[0] ?? '') as {
+      request_id: string;
+      command: Command;
+    };
+    expect(sent.command).toMatchObject(cmd);
+    h.currentSocket().emitMessage(
+      ack(sent.request_id, {
+        operator_package_receipt: {
+          receipt_id: 'operator-package-receipt:live-kit-operator-package:snap-06:operator-step-hard-groove-lift',
+          receipt_digest: '0123456789abcdef',
+          operator_package_id: 'live-kit-operator-package',
+          snapshot_id: 'snap-06',
+          mock_safe: true,
+          receipt_status: 'mock_safe_receipt_ready',
+          receipt_policy: 'passive_audit_only',
+          opened_midi_port: false,
+          sent_midi: false,
+          writes_files: false,
+          mutated_snapshot: false,
+          applied_send_plan: false,
+          events_emitted: false,
+          step_count: 2,
+          step_keys: [
+            'operator-step-hard-groove-lift',
+            'operator-step-industrial-pressure',
+          ],
+          receipt_steps: [
+            {
+              step_key: 'operator-step-hard-groove-lift',
+              label: 'Hard Groove Lift',
+              slot_key: 'hard-groove-lift',
+              package_export_key: 'operator-package-hard-groove-lift',
+              order: 1,
+              local_action: 'stage-local-set-plan',
+              operator_command: 'go',
+              recovery_command: 'Z then send',
+              readiness_status: 'ready_for_mock_apply_preview',
+              blocked_action: 'real_send_blocked',
+              receipt_status: 'recorded_for_review',
+            },
+          ],
+          readiness_checks: [
+            {
+              check: 'mock_safe',
+              status: 'passed',
+              required: true,
+            },
+          ],
+          recovery_requirements: [
+            {
+              requirement_key: 'z-then-send',
+              label: 'Recovery: Z then send',
+              command: 'Z then send',
+              required_before_send: true,
+              evidence: 'captured-base exposes recovery before staging',
+            },
+          ],
+          blocked_actions: ['open MIDI port from operator package'],
+          safety_lines: ['no MIDI sending'],
+          audit_summary: {
+            receipt_policy: 'passive_audit_only',
+            recorded_steps: 2,
+            records_apply_preview: true,
+            would_open_midi_port: false,
+            would_send_midi: false,
+            would_write_files: false,
+            would_mutate_snapshot: false,
+            would_apply_send_plan: false,
+            events_emitted: false,
+          },
+        },
+      }),
+    );
+
+    const result = await promise;
+    expect(result.operator_package_receipt?.sent_midi).toBe(false);
+    expect(result.operator_package_receipt?.writes_files).toBe(false);
+    expect(result.operator_package_receipt?.step_count).toBe(2);
+    expect(result.operator_package_receipt?.receipt_digest).toBe('0123456789abcdef');
   });
 
   it('rejects send() when the socket is not OPEN', async () => {

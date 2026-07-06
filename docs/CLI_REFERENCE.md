@@ -372,7 +372,7 @@ The `live-gui-*` family is the GUI consumer contract — each report is one scre
 
 | Command | Surface |
 |---|---|
-| `live-gui-performance-console-report` | **Cockpit performance console packet** with device rail, 12-pad Rytm snapshot surface, passive macro action deck, controller-brain panel, A4 set-plan review, Style Crates queue, snapshot history, command queue, safety checklist, and blocked hardware actions |
+| `live-gui-performance-console-report` | **Cockpit performance console packet** with device rail, 12-pad Rytm snapshot surface, passive macro action deck, live-kit capture panel/workbench/package audition/operator package, controller-brain panel, A4 set-plan review, Style Crates queue, snapshot history, command queue, safety checklist, and blocked hardware actions |
 | `style-performance-arc-live-gui-analyzer-readiness-report` | **GUI/audio-analyzer readiness bundle** with panel manifest, stream wiring, operator workflow, **blocked active actions** |
 | `style-performance-arc-live-gui-rehearsal-session-report` | **GUI rehearsal session packet** with task cards, **listen-only rehearsal take** cards, operator checklist |
 | `style-performance-arc-live-gui-capture-queue-report` | **GUI/audio analyzer capture queue** with capture slots, suggested filenames, **analyzer job** cards |
@@ -405,8 +405,43 @@ python -m rytm_randomizer.cli live-gui-performance-console-report --json
 `live-gui-performance-console-report` is the composed Cockpit packet for the
 cinematic performance-console direction. It aggregates existing passive report
 builders instead of duplicating facts, emits a single JSON object for a GUI
-consumer, and keeps open-port, hardware send, Cockpit macro fire/prepare,
-queue dispatch, snapshot-history SEND, controller MIDI learn/input,
-controller WebSocket dispatch, and Analog Four outbound macro actions blocked.
+consumer, and includes a passive Live Kit Capture panel for the receive KIT
+SysEx, review, mutate, `go`, recover, and `resnapshot` workflow. The paired
+Live Kit Capture Workbench turns that workflow into capture slots, anchor
+verification, mutation-readiness gates, recovery gates, and future
+package-manifest metadata while keeping every apply/export/send control
+disabled. The Live Kit Package Audition surface then exposes review-only
+audition slots, queue order, package checks, disabled package/journal/send
+controls, and a journal preview seed for favorite captured-kit variations. The
+Live Kit Operator Package surface binds those audition slots into browser-local
+set-plan staging actions, recovery requirements, journal/export preview
+metadata, and local rehearsal package `auditionSource` / `operatorPackage`
+evidence while keeping real package stage/send/write controls disabled. It
+keeps open-port, hardware send, Cockpit macro fire/prepare, queue dispatch,
+snapshot-history SEND, live-kit receive/mutate/send, captured-kit package
+apply/export/audition, controller MIDI learn/input, controller WebSocket
+dispatch, and Analog Four outbound macro actions blocked.
+
+The Operator Package Apply Preview surface stays on the same mock-safe sidecar
+bridge. Its ack previews the whole package apply plan with ordered apply steps,
+validated export keys, readiness checks, recovery requirements, blocked
+real-send actions, safety lines, a dry-run summary, and proof that no port
+opened, no MIDI was sent, and no package file was written. It is intentionally
+not the real hardware apply/send path.
+
+The Operator Package Mock Apply surface is the next mock-only acknowledgement
+on that same bridge. Its `mock_apply_operator_package` ack accepts the current
+package in review mode, returns deterministic mock-apply step evidence, and
+keeps explicit proof that no MIDI port opened, no MIDI was sent, no package
+file was written, no snapshot mutated, no send plan applied, and no event
+stream emitted.
+
+The Operator Package Receipt surface records that reviewed preview as a
+passive audit packet through `build_operator_package_receipt`. The ack includes
+a deterministic receipt id, short digest, ordered receipt steps, readiness
+checks, recovery requirements, blocked actions, safety lines, and proof that
+no MIDI port opened, no MIDI was sent, no file was written, no snapshot was
+mutated, no send plan was applied, and no events were emitted. It is evidence
+for a future journal/handoff path, not a package writer or hardware sender.
 
 Run any one with `--help` for its full flag set, or check the lazy command registry in [`rytm_randomizer/cli.py`](../rytm_randomizer/cli.py) for the complete catalogue.

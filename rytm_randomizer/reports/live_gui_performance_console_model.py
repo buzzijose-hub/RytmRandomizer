@@ -53,6 +53,20 @@ from .oxi_live_macro_catalog import (
     build_oxi_live_macro_catalog_report,
 )
 from .oxi_live_set_strategy import build_oxi_live_set_strategy_payload
+from .performance_console.live_kit_capture_workbench import (
+    build_live_kit_capture_workbench,
+    live_kit_capture_workbench_lines,
+)
+from .performance_console.live_kit_operator_package import (
+    LiveKitOperatorPackagePayload,
+    build_live_kit_operator_package,
+    live_kit_operator_package_lines,
+)
+from .performance_console.live_kit_package_audition import (
+    LiveKitPackageAuditionPayload,
+    build_live_kit_package_audition,
+    live_kit_package_audition_lines,
+)
 from .rytm_live_macro_hardware_rehearsal import (
     build_rytm_live_macro_hardware_rehearsal_payload,
 )
@@ -101,6 +115,23 @@ REHEARSAL_BOARD_SAFETY_LINES: Final[tuple[str, ...]] = (
 )
 CONTROLLER_BRAIN_PANEL_VERSION: Final[str] = "performance-console-controller-brain-panel-v1"
 CONTROLLER_BRAIN_PANEL_ID: Final[str] = "controller-brain-rehearsal-panel"
+LIVE_KIT_CAPTURE_PANEL_VERSION: Final[str] = "performance-console-live-kit-capture-panel-v1"
+LIVE_KIT_CAPTURE_PANEL_ID: Final[str] = "live-kit-capture-panel"
+LIVE_KIT_CAPTURE_PANEL_STATUS: Final[str] = "passive-ready"
+LIVE_KIT_CAPTURE_BLOCKED_ACTIONS: Final[tuple[str, ...]] = (
+    "receive kit from Cockpit console",
+    "mutate captured kit from Cockpit console",
+    "send captured plan from Cockpit console",
+    "open Rytm SysEx input from passive Cockpit report",
+)
+LIVE_KIT_CAPTURE_SAFETY_LINES: Final[tuple[str, ...]] = (
+    "live kit capture panel is declarative only",
+    "no SysEx receive from passive Cockpit report",
+    "operators still run the armed snapshot shell manually",
+    "captured-anchor recovery remains explicit",
+    "no MIDI sending",
+    "no port opening",
+)
 A4_REVIEW_SURFACE_VERSION: Final[str] = "performance-console-a4-review-surface-v1"
 A4_REVIEW_SURFACE_ID: Final[str] = "a4-oxi-macro-review-surface"
 A4_REVIEW_SURFACE_STATUS: Final[str] = "review-only"
@@ -201,6 +232,10 @@ class LiveGuiPerformanceConsoleModel:
     macro_action_deck: dict[str, object]
     rehearsal_board: dict[str, object]
     controller_brain_panel: dict[str, object]
+    live_kit_capture_panel: dict[str, object]
+    live_kit_capture_workbench: dict[str, object]
+    live_kit_package_audition: LiveKitPackageAuditionPayload
+    live_kit_operator_package: LiveKitOperatorPackagePayload
     analog_four_review_surface: dict[str, object]
     style_queue: dict[str, object]
     analyzer_panel: dict[str, object]
@@ -228,6 +263,10 @@ class LiveGuiPerformanceConsoleModelDict(TypedDict):
     macro_action_deck: dict[str, object]
     rehearsal_board: dict[str, object]
     controller_brain_panel: dict[str, object]
+    live_kit_capture_panel: dict[str, object]
+    live_kit_capture_workbench: dict[str, object]
+    live_kit_package_audition: LiveKitPackageAuditionPayload
+    live_kit_operator_package: LiveKitOperatorPackagePayload
     analog_four_review_surface: dict[str, object]
     style_queue: dict[str, object]
     analyzer_panel: dict[str, object]
@@ -478,8 +517,6 @@ def _controller_template_page_cards(
         slots_by_key[page_key].append(slot)
 
     for page_key, slots in slots_by_key.items():
-        if not slots:
-            continue
         card = cards_by_key[page_key]
         card["first_slot"] = min(slots)
         card["last_slot"] = max(slots)
@@ -519,6 +556,115 @@ def _build_controller_brain_panel() -> dict[str, object]:
         "blocked_actions": list(_tuple_from_payload(source, "blocked_active_actions")),
         "safety_lines": list(_tuple_from_payload(payload, "safety")),
         "replay_commands": _payload_list(source, "replay_commands"),
+    }
+
+
+def _build_live_kit_capture_panel(
+    rehearsal_board: dict[str, object],
+) -> dict[str, object]:
+    launch_command = _payload_string(rehearsal_board, "launch_command")
+    return {
+        "panel_version": LIVE_KIT_CAPTURE_PANEL_VERSION,
+        "panel_id": LIVE_KIT_CAPTURE_PANEL_ID,
+        "panel_status": LIVE_KIT_CAPTURE_PANEL_STATUS,
+        "title": "Live Kit Capture",
+        "tagline": "Mutate the kit you are actually playing.",
+        "source_report": "rytm-live-macro-hardware-rehearsal-report",
+        "launch_command": launch_command,
+        "workflow_steps": [
+            {
+                "step_key": "receive-kit-sysex",
+                "label": "Receive Kit SysEx",
+                "operator_command": "kit",
+                "description": "Capture the currently loaded Analog Rytm kit before changing it.",
+                "cockpit_state": "anchor captured from hardware",
+                "safety_note": "Operator sends KIT SysEx in the armed shell; Cockpit stays passive.",
+            },
+            {
+                "step_key": "review-captured-kit",
+                "label": "Review Captured Kit",
+                "operator_command": "changes",
+                "description": "Inspect pad engines, pad locks, lane policy, and staged deltas.",
+                "cockpit_state": "engine-aware review",
+                "safety_note": "Review is local metadata until the armed shell sends.",
+            },
+            {
+                "step_key": "mutate-captured-kit",
+                "label": "Randomize Captured Kit",
+                "operator_command": "randomize",
+                "description": "Stage a musical mutation from the exact captured kit values.",
+                "cockpit_state": "captured-kit mutation staged",
+                "safety_note": "Mutation is planned from the anchor; no unattended hardware action.",
+            },
+            {
+                "step_key": "go-send-next-variation",
+                "label": "Go / Send Next Variation",
+                "operator_command": "go",
+                "description": "Generate and send the next operator-approved variation in the armed shell.",
+                "cockpit_state": "manual fire path",
+                "safety_note": "Only the explicitly armed shell is allowed to send MIDI.",
+            },
+            {
+                "step_key": "recover-captured-anchor",
+                "label": "Recover Captured Anchor",
+                "operator_command": "Z then send",
+                "description": "Return the Rytm to the captured safe kit state.",
+                "cockpit_state": "captured-anchor recovery",
+                "safety_note": "Recovery is visible before performance pressure starts.",
+            },
+            {
+                "step_key": "resnapshot-new-anchor",
+                "label": "Resnapshot New Anchor",
+                "operator_command": "resnapshot",
+                "description": "Promote a newly loaded or saved Rytm kit as the next mutation anchor.",
+                "cockpit_state": "new live anchor ready",
+                "safety_note": "The operator chooses when the anchor changes.",
+            },
+        ],
+        "differentiators": [
+            {
+                "name": "live-kit-capture",
+                "label": "Live kit capture",
+                "summary": "Works from the kit loaded on the Rytm right now.",
+                "controller_limit": "Fixed controller pages do not know the current kit.",
+                "why_it_matters": "No need to rebuild the set around a prepared template.",
+            },
+            {
+                "name": "engine-aware-current-kit-mutation",
+                "label": "Engine-aware current-kit mutation",
+                "summary": "Uses captured pad machines and values before proposing movement.",
+                "controller_limit": "Raw CC mapping cannot tell if a knob is musical for this engine.",
+                "why_it_matters": "The randomizer can respect live pad roles and guardrails.",
+            },
+            {
+                "name": "captured-anchor-recovery",
+                "label": "Captured-anchor recovery",
+                "summary": "Keeps `home`/`send` and `Z`/`send` tied to the live captured kit.",
+                "controller_limit": "Controller snapshots usually restore controller values only.",
+                "why_it_matters": "The performer has a trusted escape hatch during a set.",
+            },
+            {
+                "name": "twelve-pad-rytm-context",
+                "label": "12-pad Rytm context",
+                "summary": "Surfaces all 12 pads, pad policies, and supported expansion lanes.",
+                "controller_limit": "A generic controller page does not model Rytm pad roles.",
+                "why_it_matters": "Pad 12 remains product-supported while Jose-critical pads stay clear.",
+            },
+            {
+                "name": "controller-complement",
+                "label": "Controller complement",
+                "summary": "Controller gestures can drive intent after kit capture defines the truth.",
+                "controller_limit": "The controller is only the hand surface, not the kit brain.",
+                "why_it_matters": "OXI/E16-style controls become safer because the app knows the anchor.",
+            },
+        ],
+        "recovery_commands": ["home then send", "Z then send", "stop sending and reload saved kit"],
+        "blocked_actions": list(LIVE_KIT_CAPTURE_BLOCKED_ACTIONS),
+        "safety_lines": list(LIVE_KIT_CAPTURE_SAFETY_LINES),
+        "replay_commands": [
+            "python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report --json",
+            launch_command,
+        ],
     }
 
 
@@ -729,6 +875,10 @@ def _console_id(
     macro_action_deck: dict[str, object],
     rehearsal_board: dict[str, object],
     controller_brain_panel: dict[str, object],
+    live_kit_capture_panel: dict[str, object],
+    live_kit_capture_workbench: dict[str, object],
+    live_kit_package_audition: dict[str, object],
+    live_kit_operator_package: dict[str, object],
     analog_four_review_surface: dict[str, object],
     style_queue: dict[str, object],
     analyzer_panel: dict[str, object],
@@ -747,6 +897,10 @@ def _console_id(
             str(macro_action_deck.get("deck_id", "")),
             str(rehearsal_board.get("board_id", "")),
             str(controller_brain_panel.get("panel_id", "")),
+            str(live_kit_capture_panel.get("panel_id", "")),
+            str(live_kit_capture_workbench.get("workbench_id", "")),
+            str(live_kit_package_audition.get("audition_id", "")),
+            str(live_kit_operator_package.get("operator_package_id", "")),
             str(analog_four_review_surface.get("surface_id", "")),
             str(style_queue.get("deck_id", "")),
             str(analyzer_panel.get("panel_id", "")),
@@ -781,6 +935,13 @@ def build_live_gui_performance_console_model(
     rytm_lane_policy_matrix = _build_rytm_lane_policy_matrix(catalog=macro_catalog)
     rehearsal_board = _build_rehearsal_board()
     controller_brain_panel = _build_controller_brain_panel()
+    live_kit_capture_panel = _build_live_kit_capture_panel(rehearsal_board)
+    live_kit_capture_workbench = build_live_kit_capture_workbench(live_kit_capture_panel)
+    live_kit_package_audition = build_live_kit_package_audition(live_kit_capture_workbench)
+    live_kit_operator_package = build_live_kit_operator_package(
+        live_kit_capture_workbench,
+        live_kit_package_audition,
+    )
     analog_four_review_surface = _build_analog_four_review_surface()
     style_queue = to_style_crate_rehearsal_deck_json(build_style_crate_rehearsal_deck())[
         "style_crate_rehearsal_deck"
@@ -810,6 +971,10 @@ def build_live_gui_performance_console_model(
         _tuple_from_payload(rytm_lane_policy_matrix, "blocked_actions"),
         _tuple_from_payload(rehearsal_board, "blocked_actions"),
         _tuple_from_payload(controller_brain_panel, "blocked_actions"),
+        _tuple_from_payload(live_kit_capture_panel, "blocked_actions"),
+        _tuple_from_payload(live_kit_capture_workbench, "blocked_actions"),
+        _tuple_from_payload(live_kit_package_audition, "blocked_actions"),
+        _tuple_from_payload(live_kit_operator_package, "blocked_actions"),
         _tuple_from_payload(analog_four_review_surface, "blocked_actions"),
         tuple(style_queue["blocked_actions"]),
         tuple(analyzer_panel["blocked_actions"]),
@@ -826,6 +991,10 @@ def build_live_gui_performance_console_model(
         _tuple_from_payload(rytm_lane_policy_matrix, "safety_lines"),
         _tuple_from_payload(rehearsal_board, "safety_lines"),
         _tuple_from_payload(controller_brain_panel, "safety_lines"),
+        _tuple_from_payload(live_kit_capture_panel, "safety_lines"),
+        _tuple_from_payload(live_kit_capture_workbench, "safety_lines"),
+        _tuple_from_payload(live_kit_package_audition, "safety_lines"),
+        _tuple_from_payload(live_kit_operator_package, "safety_lines"),
         _tuple_from_payload(analog_four_review_surface, "safety_lines"),
         _tuple_from_payload(device_inventory, "safety"),
         _tuple_from_payload(rytm_pad_surface, "safety"),
@@ -843,6 +1012,10 @@ def build_live_gui_performance_console_model(
             macro_action_deck=macro_action_deck,
             rehearsal_board=rehearsal_board,
             controller_brain_panel=controller_brain_panel,
+            live_kit_capture_panel=live_kit_capture_panel,
+            live_kit_capture_workbench=live_kit_capture_workbench,
+            live_kit_package_audition=live_kit_package_audition,
+            live_kit_operator_package=live_kit_operator_package,
             analog_four_review_surface=analog_four_review_surface,
             style_queue=style_queue,
             analyzer_panel=analyzer_panel,
@@ -860,6 +1033,10 @@ def build_live_gui_performance_console_model(
         macro_action_deck=macro_action_deck,
         rehearsal_board=rehearsal_board,
         controller_brain_panel=controller_brain_panel,
+        live_kit_capture_panel=live_kit_capture_panel,
+        live_kit_capture_workbench=live_kit_capture_workbench,
+        live_kit_package_audition=live_kit_package_audition,
+        live_kit_operator_package=live_kit_operator_package,
         analog_four_review_surface=analog_four_review_surface,
         style_queue=style_queue,
         analyzer_panel=analyzer_panel,
@@ -893,6 +1070,10 @@ def live_gui_performance_console_model_payload(
             "macro_action_deck": source.macro_action_deck,
             "rehearsal_board": source.rehearsal_board,
             "controller_brain_panel": source.controller_brain_panel,
+            "live_kit_capture_panel": source.live_kit_capture_panel,
+            "live_kit_capture_workbench": source.live_kit_capture_workbench,
+            "live_kit_package_audition": source.live_kit_package_audition,
+            "live_kit_operator_package": source.live_kit_operator_package,
             "analog_four_review_surface": source.analog_four_review_surface,
             "style_queue": source.style_queue,
             "analyzer_panel": source.analyzer_panel,
@@ -957,6 +1138,22 @@ def _controller_brain_panel_lines(model: LiveGuiPerformanceConsoleModel) -> list
             f"- controller gesture: {outcome['assignment_key']} -> "
             f"{outcome['resolved_intent_key']}"
         )
+    return lines
+
+
+def _live_kit_capture_panel_lines(model: LiveGuiPerformanceConsoleModel) -> list[str]:
+    panel = model.live_kit_capture_panel
+    lines = [
+        "Live kit capture:",
+        f"- status: {panel['panel_status']}",
+        f"- tagline: {panel['tagline']}",
+        f"- launch: {panel['launch_command']}",
+    ]
+    for step in panel["workflow_steps"]:
+        lines.append(f"- capture step: {step['step_key']} / {step['operator_command']}")
+    for differentiator in panel["differentiators"]:
+        lines.append(f"- differentiator: {differentiator['name']}")
+    lines.extend(f"- recovery: {command}" for command in panel["recovery_commands"])
     return lines
 
 
@@ -1032,6 +1229,10 @@ def _format_console_body(model: LiveGuiPerformanceConsoleModel) -> list[str]:
         ],
         *_rehearsal_board_lines(model),
         *_controller_brain_panel_lines(model),
+        *_live_kit_capture_panel_lines(model),
+        *live_kit_capture_workbench_lines(model.live_kit_capture_workbench),
+        *live_kit_package_audition_lines(model.live_kit_package_audition),
+        *live_kit_operator_package_lines(model.live_kit_operator_package),
         *_analog_four_review_surface_lines(model),
         "A4 set plan:",
         f"- set: {a4_set_plan['set_name']}",
