@@ -25,6 +25,13 @@ LIVE_KIT_OPERATOR_PACKAGE_MODULE: Final[Path] = (
     / "performance_console"
     / "live_kit_operator_package.py"
 )
+LIVE_KIT_OPERATOR_REVIEW_LEDGER_MODULE: Final[Path] = (
+    PROJECT_ROOT
+    / "rytm_randomizer"
+    / "reports"
+    / "performance_console"
+    / "live_kit_operator_review_ledger.py"
+)
 LIVE_GUI_MODEL_MODULES: Final[tuple[Path, ...]] = (
     PROJECT_ROOT / "rytm_randomizer" / "reports" / "live_gui_12_pad_surface_model.py",
     PROJECT_ROOT / "rytm_randomizer" / "reports" / "live_gui_device_inventory_model.py",
@@ -54,6 +61,20 @@ LIVE_KIT_OPERATOR_PACKAGE_TS_INTERFACES: Final[dict[str, str]] = {
         "LiveGuiPerformanceConsoleLiveKitOperatorPackageLocalExportPreviewDict"
     ),
     "LiveKitOperatorPackagePayload": "LiveGuiPerformanceConsoleLiveKitOperatorPackageDict",
+}
+LIVE_KIT_OPERATOR_REVIEW_LEDGER_TS_INTERFACES: Final[dict[str, str]] = {
+    "LiveKitOperatorReviewLedgerStage": (
+        "LiveGuiPerformanceConsoleLiveKitOperatorReviewLedgerStageDict"
+    ),
+    "LiveKitOperatorReviewLedgerStep": (
+        "LiveGuiPerformanceConsoleLiveKitOperatorReviewLedgerStepDict"
+    ),
+    "LiveKitOperatorReviewLedgerReadinessSummary": (
+        "LiveGuiPerformanceConsoleLiveKitOperatorReviewLedgerReadinessSummaryDict"
+    ),
+    "LiveKitOperatorReviewLedgerPayload": (
+        "LiveGuiPerformanceConsoleLiveKitOperatorReviewLedgerDict"
+    ),
 }
 
 _TS_INTERFACE_RE: Final[re.Pattern[str]] = re.compile(
@@ -189,6 +210,27 @@ def test_live_kit_operator_package_typescript_protocol_mirrors_python_typeddicts
     for python_name, ts_name in LIVE_KIT_OPERATOR_PACKAGE_TS_INTERFACES.items():
         assert python_name in python_contracts, (
             f"{LIVE_KIT_OPERATOR_PACKAGE_MODULE.relative_to(PROJECT_ROOT).as_posix()} "
+            f"is missing TypedDict {python_name}."
+        )
+        assert ts_name in ts_interfaces, (
+            "desktop/web/src/types/live_gui_protocol.ts is missing interface "
+            f"{ts_name} for Python TypedDict {python_name}."
+        )
+        assert ts_interfaces[ts_name] == python_contracts[python_name], (
+            f"TypeScript interface {ts_name} must mirror {python_name} field order and names. "
+            f"Expected {python_contracts[python_name]!r}, got {ts_interfaces[ts_name]!r}."
+        )
+
+
+def test_live_kit_operator_review_ledger_typescript_protocol_mirrors_python_typeddicts() -> None:
+    """The nested operator-package review ledger contract is pinned Python -> TypeScript."""
+
+    python_contracts = _typed_dict_contracts(LIVE_KIT_OPERATOR_REVIEW_LEDGER_MODULE)
+    ts_interfaces = _ts_interfaces()
+
+    for python_name, ts_name in LIVE_KIT_OPERATOR_REVIEW_LEDGER_TS_INTERFACES.items():
+        assert python_name in python_contracts, (
+            f"{LIVE_KIT_OPERATOR_REVIEW_LEDGER_MODULE.relative_to(PROJECT_ROOT).as_posix()} "
             f"is missing TypedDict {python_name}."
         )
         assert ts_name in ts_interfaces, (

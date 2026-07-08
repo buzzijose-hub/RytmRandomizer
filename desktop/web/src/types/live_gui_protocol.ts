@@ -988,6 +988,64 @@ export interface LiveGuiPerformanceConsoleLiveKitOperatorPackageDict {
   replay_commands: ReadonlyArray<string>;
 }
 
+export interface LiveGuiPerformanceConsoleLiveKitOperatorReviewLedgerStageDict {
+  stage_key: string;
+  label: string;
+  policy: string;
+  status: string;
+  summary: string;
+  opened_midi_port: boolean;
+  sent_midi: boolean;
+  writes_files: boolean;
+  mutates_snapshot: boolean;
+  applies_send_plan: boolean;
+}
+
+export interface LiveGuiPerformanceConsoleLiveKitOperatorReviewLedgerStepDict {
+  order: number;
+  step_key: string;
+  label: string;
+  slot_key: string;
+  package_export_key: string;
+  queue_status: string;
+  local_action: string;
+  operator_command: string;
+  recovery_command: string;
+  depth_percent: number;
+  preview_status: string;
+  mock_apply_status: string;
+  receipt_status: string;
+}
+
+export interface LiveGuiPerformanceConsoleLiveKitOperatorReviewLedgerReadinessSummaryDict {
+  mock_safe: boolean;
+  opened_midi_port: boolean;
+  sent_midi: boolean;
+  writes_files: boolean;
+  mutated_snapshot: boolean;
+  applied_send_plan: boolean;
+  events_emitted: boolean;
+  required_recovery_count: number;
+}
+
+export interface LiveGuiPerformanceConsoleLiveKitOperatorReviewLedgerDict {
+  ledger_version: string;
+  ledger_id: string;
+  ledger_status: string;
+  title: string;
+  operator_package_id: string;
+  source_audition_id: string;
+  source_workbench_id: string;
+  review_stage_count: number;
+  step_count: number;
+  review_stages: ReadonlyArray<LiveGuiPerformanceConsoleLiveKitOperatorReviewLedgerStageDict>;
+  step_rows: ReadonlyArray<LiveGuiPerformanceConsoleLiveKitOperatorReviewLedgerStepDict>;
+  readiness_summary: LiveGuiPerformanceConsoleLiveKitOperatorReviewLedgerReadinessSummaryDict;
+  blocked_actions: ReadonlyArray<string>;
+  safety_lines: ReadonlyArray<string>;
+  replay_commands: ReadonlyArray<string>;
+}
+
 export interface LiveGuiPerformanceConsoleAnalogFourReviewStepDict {
   order: number;
   macro_name: string;
@@ -1093,6 +1151,7 @@ export interface LiveGuiPerformanceConsoleModelDict {
   live_kit_capture_workbench: LiveGuiPerformanceConsoleLiveKitCaptureWorkbenchDict;
   live_kit_package_audition: LiveGuiPerformanceConsoleLiveKitPackageAuditionDict;
   live_kit_operator_package: LiveGuiPerformanceConsoleLiveKitOperatorPackageDict;
+  operator_package_review_ledger: LiveGuiPerformanceConsoleLiveKitOperatorReviewLedgerDict;
   analog_four_review_surface: LiveGuiPerformanceConsoleAnalogFourReviewSurfaceDict;
   style_queue: StyleCrateRehearsalDeckDict;
   analyzer_panel: LiveGuiAnalyzerPanelModelDict;
