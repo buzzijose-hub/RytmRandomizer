@@ -13,6 +13,18 @@ Last updated: 2026-07-03. This file is a hand-authored snapshot and is meant to 
   no MIDI port opening, no hardware arm path, no patch intelligence, and no
   MIDI send. The five Synplant 2 reference screenshots are saved under
   `docs/assets/synplant-2-reference/` for future design work.
+- 2026-06-24: Controller Brain Operator Package Ledger bundle started on the
+  clean base after PR #196 merged. The new passive
+  `controller-brain-operator-package-report [--json]` composes the reviewed
+  controller-brain virtual gesture packet with the current Live Kit Operator
+  Package slots, mapping macro depth, industrial macro selection, Rytm pad-lane
+  amount gestures, A4 review-only gestures, Style Crate selection, queue
+  staging, and panic-home recovery into deterministic package-review bindings.
+  This keeps the OXI/E16-style controller story tied to RytmRandomizer's live
+  KIT/operator-package advantage while preserving side-effect proof: no
+  controller input, no raw CC capture, no WebSocket dispatch, no file writing,
+  no snapshot mutation, no hardware arming, no MIDI port opening, and no MIDI
+  sending.
 - 2026-06-24: Operator Package Review Ledger bundle prepared on the clean base
   after PR #196 merged. The passive `live-gui-performance-console-report
   [--json]` now composes a typed Operator Package Review Ledger after the Live
