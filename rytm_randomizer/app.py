@@ -1371,7 +1371,12 @@ def _run_armed_a4_patch_send_plan(
             if callable(close):
                 try:
                     close()
-                except (OSError, RuntimeError, AttributeError):  # pragma: no cover
+                # Port close is best-effort; send success is already determined.
+                except (
+                    OSError,
+                    RuntimeError,
+                    AttributeError,
+                ):  # pragma: no cover - best-effort
                     metrics.record_error("a4_patch_send_plan_port_close")
                     logger.debug("a4_patch_send_plan_port_close_failed_best_effort")
 

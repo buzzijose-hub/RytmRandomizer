@@ -339,6 +339,15 @@ backward compatibility — they delegate to the strategies.
 
 `AnalogRytmDevice` is the reference implementation; `tests/test_devices.py` and `tests/test_devices_strategies_*.py` cover the contract.
 
+FeatureReport-driven generated patch sends are a deliberately separate seam from
+the snapshot-driven `Device` renderer. These paths start with analyzed or typed
+sound traits, compile operator-reviewed CC/NRPN event plans, and remain gated by
+an explicit `app.py --arm` path plus a confirmation flag. They may use generic
+NRPN-capable sender helpers under `senders/`, but they must not become a
+parallel device package, registry, snapshot decoder, mutation planner, or
+per-device hardware sender. When a future generated patch send can be expressed
+as a snapshot mutation, move it through the `Device` strategies instead.
+
 ---
 
 ## 6.2 Cockpit & Profile-Model layer (Phase 1)

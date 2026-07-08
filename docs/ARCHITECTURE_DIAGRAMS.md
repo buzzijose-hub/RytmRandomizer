@@ -943,7 +943,7 @@ flowchart TB
         MidiTests["test_midi_io.py<br/>test_mock_*.py<br/>test_real_midi_*.py"]
     end
 
-    subgraph Layer3["Layer 3 — Architecture (638 tests, 55 files)"]
+    subgraph Layer3["Layer 3 — Architecture (647 tests, 55 files)"]
         ArchTests["tests/architecture/<br/>(Gates 6, 9, 10, 11, etc.)<br/>+ NEW test_device_protocol_enforcement<br/>(7 sub-tests)"]
     end
 
@@ -1671,7 +1671,7 @@ flowchart TB
     subgraph PytestLayers["What pytest runs"]
         PassiveTests["Layer 2 unit / behavior tests<br/>(~1500 tests)"]
         ParityTests["Layer 1 V1.34 parity tests<br/>(685 items from 505 goldens)"]
-        ArchTests["Layer 3 architecture tests<br/>(638 tests across 55 files)"]
+        ArchTests["Layer 3 architecture tests<br/>(647 tests across 55 files)"]
         E2ETests["Layer 4 e2e tests<br/>(43 tests)"]
         CovStep["Layer 5 coverage ratchet<br/>(scripts/coverage_ratchet.py)<br/>floor: ≥95% pure-branch"]
     end
