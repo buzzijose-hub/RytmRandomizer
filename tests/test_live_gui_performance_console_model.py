@@ -473,6 +473,28 @@ def test_live_kit_operator_package_contract_uses_typed_payload_and_public_helper
     )
 
 
+def test_live_kit_operator_review_ledger_contract_uses_typed_payload() -> None:
+    from rytm_randomizer.reports.live_gui_performance_console_model import (
+        LiveGuiPerformanceConsoleModel,
+        LiveGuiPerformanceConsoleModelDict,
+    )
+    from rytm_randomizer.reports.performance_console.live_kit_operator_review_ledger import (
+        LiveKitOperatorReviewLedgerPayload,
+        build_live_kit_operator_review_ledger,
+    )
+
+    assert get_type_hints(build_live_kit_operator_review_ledger)["return"] is (
+        LiveKitOperatorReviewLedgerPayload
+    )
+    assert get_type_hints(LiveGuiPerformanceConsoleModel)["operator_package_review_ledger"] is (
+        LiveKitOperatorReviewLedgerPayload
+    )
+    assert (
+        get_type_hints(LiveGuiPerformanceConsoleModelDict)["operator_package_review_ledger"]
+        is LiveKitOperatorReviewLedgerPayload
+    )
+
+
 def test_live_kit_operator_package_lines_ignore_malformed_sequences() -> None:
     from rytm_randomizer.reports.performance_console.live_kit_operator_package import (
         build_live_kit_operator_package,
@@ -673,6 +695,21 @@ def test_performance_console_payload_is_json_safe_and_passive() -> None:
     assert "Stage Operator Package" in operator_package["disabled_controls"]
     assert "send operator package from Cockpit console" in operator_package["blocked_actions"]
     assert "no MIDI sending" in operator_package["safety_lines"]
+    review_ledger = model["operator_package_review_ledger"]
+    assert review_ledger["ledger_version"] == (
+        "performance-console-operator-package-review-ledger-v1"
+    )
+    assert review_ledger["ledger_status"] == "passive-ready"
+    assert review_ledger["operator_package_id"] == "live-kit-operator-package"
+    assert review_ledger["review_stage_count"] == 3
+    assert review_ledger["step_count"] == 5
+    assert review_ledger["step_rows"][1]["package_export_key"] == (
+        "operator-package-hard-groove-lift"
+    )
+    assert review_ledger["readiness_summary"]["sent_midi"] is False
+    assert review_ledger["readiness_summary"]["writes_files"] is False
+    assert review_ledger["readiness_summary"]["required_recovery_count"] == 3
+    assert "send operator package from Cockpit console" in review_ledger["blocked_actions"]
     assert model["analog_four_review_surface"]["review_focus"]["macro_name"] == "hard-groove"
     assert model["analog_four_review_surface"]["readiness_events"][0]["status"] == "cc-ready"
     assert model["performance_flow"]["analog_four_set_plan"]["step_count"] == 5
@@ -750,6 +787,13 @@ def test_performance_console_report_is_operator_readable() -> None:
     assert "- recovery requirement: z-then-send / Z then send" in lines
     assert "- local export preview: browser-local-only / writes=False" in lines
     assert "- operator package disabled control: Stage Operator Package" in lines
+    assert "Operator package review ledger:" in lines
+    assert "- ledger status: passive-ready" in lines
+    assert "- review stage: apply-preview / preview_only / ready" in lines
+    assert "- review stage: mock-apply / mock_apply_only / ready" in lines
+    assert "- review stage: receipt-audit / passive_audit_only / ready" in lines
+    assert "- step review: hard-groove-lift / operator-package-hard-groove-lift" in lines
+    assert "- readiness: mock_safe=True / sent_midi=False / writes_files=False" in lines
     assert "A4 review surface:" in lines
     assert "- set: warehouse-arc" in lines
     assert "- review focus: hard-groove / review-ready" in lines
@@ -793,6 +837,7 @@ def test_performance_console_cli_text_and_json_modes(capsys: pytest.CaptureFixtu
     assert model["live_kit_capture_workbench"]["workbench_status"] == "passive-ready"
     assert model["live_kit_package_audition"]["audition_status"] == "passive-ready"
     assert model["live_kit_operator_package"]["operator_package_status"] == "passive-ready"
+    assert model["operator_package_review_ledger"]["ledger_status"] == "passive-ready"
     assert model["analog_four_review_surface"]["surface_status"] == "review-only"
     assert model["performance_flow"]["analog_four_set_plan"]["set_name"] == "warehouse-arc"
 

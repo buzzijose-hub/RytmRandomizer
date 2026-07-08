@@ -268,6 +268,7 @@ function performanceConsoleModelWithOptionalPackageCheck(): LiveGuiPerformanceCo
 function performanceConsoleModelWithoutOperatorPackage(): LiveGuiPerformanceConsoleModelDict {
   const legacyModel: Partial<LiveGuiPerformanceConsoleModelDict> = { ...performanceConsoleModel };
   delete legacyModel.live_kit_operator_package;
+  delete legacyModel.operator_package_review_ledger;
   return legacyModel as LiveGuiPerformanceConsoleModelDict;
 }
 
@@ -616,6 +617,25 @@ describe('PerformanceConsole', () => {
     expect(within(liveKitOperatorPackage).getByRole('button', {
       name: /send operator package/i,
     })).toBeDisabled();
+
+    const operatorPackageLedger = screen.getByTestId(
+      'performance-console-operator-package-review-ledger',
+    );
+    expect(operatorPackageLedger).toHaveTextContent('Operator Package Review Ledger');
+    expect(operatorPackageLedger).toHaveTextContent('passive-ready');
+    expect(operatorPackageLedger).toHaveTextContent('apply-preview');
+    expect(operatorPackageLedger).toHaveTextContent('mock-apply');
+    expect(operatorPackageLedger).toHaveTextContent('receipt-audit');
+    expect(operatorPackageLedger).toHaveTextContent('operator-package-hard-groove-lift');
+    expect(operatorPackageLedger).toHaveTextContent('ready_for_mock_apply_preview');
+    expect(operatorPackageLedger).toHaveTextContent('accepted_for_mock_apply');
+    expect(operatorPackageLedger).toHaveTextContent('recorded_for_review');
+    expect(operatorPackageLedger).toHaveTextContent('no MIDI sending');
+    expect(
+      within(operatorPackageLedger).getByRole('button', {
+        name: /apply operator package ledger/i,
+      }),
+    ).toBeDisabled();
 
     const styleQueue = screen.getByTestId('performance-console-style-queue');
     expect(styleQueue).toHaveTextContent('Style Crates');
@@ -2272,6 +2292,19 @@ describe('PerformanceConsole', () => {
     );
     expect(
       within(operatorPackagePanel).getByRole('button', { name: /send operator package/i }),
+    ).toBeDisabled();
+    const operatorPackageLedger = screen.getByTestId(
+      'performance-console-operator-package-review-ledger',
+    );
+    expect(operatorPackageLedger).toHaveTextContent('Operator Package Review Ledger');
+    expect(operatorPackageLedger).toHaveTextContent('unavailable');
+    expect(operatorPackageLedger).toHaveTextContent(
+      'legacy packet: no operator package review ledger present',
+    );
+    expect(
+      within(operatorPackageLedger).getByRole('button', {
+        name: /apply operator package ledger/i,
+      }),
     ).toBeDisabled();
     expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
