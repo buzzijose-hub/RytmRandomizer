@@ -173,3 +173,34 @@ def test_controller_brain_operator_package_help_mentions_passive_contract() -> N
     assert "no MIDI controller input" in help_text
     assert "no WebSocket command dispatch" in help_text
     assert "no MIDI sending" in help_text
+
+
+def test_controller_brain_operator_package_defensive_helpers_cover_unmatched_inputs(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.reports import controller_brain_operator_package as report_module
+
+    assert report_module._ledger_payload_int({"step": "not an int"}, "step") == 0
+    assert report_module._slots_by_key([{"slot_key": ""}]) == {}
+    assert report_module._steps_by_slot_key([{"slot_key": ""}]) == {}
+    assert report_module._slot_key_for_intent("macro.filtered") == "hard-groove-lift"
+    assert report_module._slot_key_for_intent("queue.next_2") == "hard-groove-lift"
+    assert report_module._operator_target_for_intent("unknown.intent") == (
+        "operator-package.review"
+    )
+    assert (
+        report_module._binding_notes(
+            intent_key="unknown.intent",
+            slot_key="",
+            operator_target="operator-package.review",
+        )
+        == "Gesture stages operator-package.review without selecting an operator package slot."
+    )
+
+    monkeypatch.setattr(
+        report_module,
+        "build_controller_brain_rehearsal_payload",
+        lambda: {"unexpected": {}},
+    )
+
+    assert report_module._source_controller_payload() == {}
