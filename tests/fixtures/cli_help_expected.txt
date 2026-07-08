@@ -53,6 +53,7 @@ Usage:
   python -m rytm_randomizer.cli oxi-live-macro-catalog-report
   python -m rytm_randomizer.cli controller-brain-mapping-report [--json]
   python -m rytm_randomizer.cli controller-brain-rehearsal-report [--json]
+  python -m rytm_randomizer.cli controller-brain-operator-package-report [--json]
   python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report [--json]
   python -m rytm_randomizer.cli live-gui-performance-flow-model-report [--json]
   python -m rytm_randomizer.cli live-gui-performance-console-report [--json]
@@ -217,6 +218,8 @@ Commands:
                      Print passive 16-encoder controller-brain intent maps.
   controller-brain-rehearsal-report
                      Print passive controller-brain rehearsal and template export packets.
+  controller-brain-operator-package-report
+                     Print passive controller-brain to operator package ledgers.
   rytm-live-macro-hardware-rehearsal-report
                      Print passive Rytm macro hardware rehearsal checklist.
   live-gui-performance-flow-model-report
