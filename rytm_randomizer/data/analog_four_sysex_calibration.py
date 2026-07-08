@@ -200,6 +200,33 @@ _FILTER1_RESONANCE_EVIDENCE: Final[tuple[AnalogFourSysexCalibrationEvidence, ...
     ),
 )
 
+_FILTER2_FREQUENCY_EVIDENCE: Final[tuple[AnalogFourSysexCalibrationEvidence, ...]] = (
+    AnalogFourSysexCalibrationEvidence(
+        track=1,
+        screen_value="0.00",
+        primary_raw_value=0x00,
+        kit_name="KIT 1",
+        source_file="A4_Test1_T1_Filter2Freq_000_Kit.syx",
+        payload_fingerprint="6818388c34db01b9",
+    ),
+    AnalogFourSysexCalibrationEvidence(
+        track=1,
+        screen_value="63.50",
+        primary_raw_value=0x3F,
+        kit_name="KIT 1",
+        source_file="A4_Test1_T1_Filter2Freq_063_50_Kit.syx",
+        payload_fingerprint="82c03587679c6ddc",
+    ),
+    AnalogFourSysexCalibrationEvidence(
+        track=1,
+        screen_value="127.00",
+        primary_raw_value=0x7F,
+        kit_name="KIT 1",
+        source_file="A4_Test1_T1_Filter2Freq_127_Kit.syx",
+        payload_fingerprint="9497709f8562f1ef",
+    ),
+)
+
 ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCalibration]] = (
     MappingProxyType(
         {
@@ -257,6 +284,35 @@ ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCal
                     "Primary packed data byte verified on Track 1 at 0, 20, and 127.",
                     "Track 2, Track 3, and Track 4 zero-value captures confirm the +400 packed-byte stride.",
                     "The decoded byte appears as 0x80 plus the screen value when Filter1 Frequency leaves the shared 7-bit group header set.",
+                    "SysEx checksum trailer bytes must be ignored or recomputed by future writers.",
+                ),
+            ),
+            "Filter2 Frequency": AnalogFourSysexFieldCalibration(
+                parameter="Filter2 Frequency",
+                section="FILTERS",
+                status=A4_SYSEX_CALIBRATION_STATUS_PENDING,
+                screen_min="0.00",
+                screen_mid="63.50",
+                screen_max="127.00",
+                primary_raw_values=_screen_value_map(
+                    {
+                        "0.00": 0x00,
+                        "63.50": 0x3F,
+                        "127.00": 0x7F,
+                    }
+                ),
+                track_1_primary_raw_offset=167,
+                track_raw_stride=400,
+                track_1_raw_group_start=160,
+                raw_group_width=12,
+                track_1_unpacked_group_start=137,
+                unpacked_group_width=7,
+                track_unpacked_stride=350,
+                evidence=_FILTER2_FREQUENCY_EVIDENCE,
+                notes=(
+                    "Primary packed data byte verified on Track 1 at 0.00, 63.50, and 127.00.",
+                    "Track stride is inferred from the promoted Filter1 Frequency and Filter1 Resonance captures until Track 2-4 Filter2 Frequency exports confirm it.",
+                    "Neighboring packed bytes move with Elektron high-bit grouping; the direct screen value appears at packed offset 167 and unpacked offset 142.",
                     "SysEx checksum trailer bytes must be ignored or recomputed by future writers.",
                 ),
             ),

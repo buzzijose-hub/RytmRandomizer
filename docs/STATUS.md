@@ -13,7 +13,11 @@ Last updated: 2026-07-08. This file is a hand-authored snapshot and is meant to 
   operator-supplied kit exports. It also records the candidate-promoted
   Filter1 Resonance offsets across the four synth tracks
   (`158`, `558`, `958`, `1358`), values `0`/`20`/`127`, and the same
-  `+400` packed-byte track stride from the Track 2-4 zero-value captures. It
+  `+400` packed-byte track stride from the Track 2-4 zero-value captures. The
+  table now also records the pending Track 1 Filter2 Frequency capture at
+  packed offset `167`, values `0.00`/`63.50`/`127.00`, and fingerprints for
+  the three new operator-supplied exports; its cross-track stride remains
+  inferred until Track 2-4 Filter2 Frequency dumps confirm it. It
   remains passive: no MIDI port opened, no MIDI sent, no SysEx written, no
   hardware mutation, and no broader A4 kit writer claim until additional
   fields are captured and validated.
