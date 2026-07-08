@@ -54,7 +54,7 @@ export function countReadyGenes(genes: ReadonlyArray<PatchGenomeGene>): number {
 
 export const DEFAULT_PATCH_GENOME_MODEL: PatchGenomeModel = {
   targetDeviceLabel: 'Analog Four MKII',
-  sourceLabel: 'Synplant-inspired design reference',
+  sourceLabel: 'Patch-family design reference',
   seedLabel: 'seed 211134509',
   designStatus: 'UI design preview',
   traits: [

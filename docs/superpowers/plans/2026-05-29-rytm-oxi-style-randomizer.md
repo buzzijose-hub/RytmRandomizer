@@ -44,7 +44,7 @@ def test_snapshot_shell_status_reports_default_randomizer_contracts(capsys) -> N
 Run:
 
 ```powershell
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" -m pytest tests\test_analog_rytm_snapshot_shell.py -n 0
+& "python" -m pytest tests\test_analog_rytm_snapshot_shell.py -n 0
 ```
 
 Expected: tests fail because `randomize`, randomizer contracts, and status output do not exist yet.
@@ -156,22 +156,22 @@ All movements still clamp to existing anchor-relative windows and value metadata
 - [ ] **Step 1: Run focused tests**
 
 ```powershell
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" -m pytest tests\test_analog_rytm_snapshot_shell.py -n 0
+& "python" -m pytest tests\test_analog_rytm_snapshot_shell.py -n 0
 ```
 
 - [ ] **Step 2: Run fast and architecture suites**
 
 ```powershell
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" -m pytest -m fast
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" -m pytest tests\architecture\ -q
+& "python" -m pytest -m fast
+& "python" -m pytest tests\architecture\ -q
 ```
 
 - [ ] **Step 3: Run style checks**
 
 ```powershell
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" -m ruff check rytm_randomizer\engines\analog_rytm_snapshot_shell.py tests\test_analog_rytm_snapshot_shell.py
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" -m black --check --target-version=py311 rytm_randomizer\engines\analog_rytm_snapshot_shell.py tests\test_analog_rytm_snapshot_shell.py
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" -m isort --profile black --check-only rytm_randomizer\engines\analog_rytm_snapshot_shell.py tests\test_analog_rytm_snapshot_shell.py
+& "python" -m ruff check rytm_randomizer\engines\analog_rytm_snapshot_shell.py tests\test_analog_rytm_snapshot_shell.py
+& "python" -m black --check --target-version=py311 rytm_randomizer\engines\analog_rytm_snapshot_shell.py tests\test_analog_rytm_snapshot_shell.py
+& "python" -m isort --profile black --check-only rytm_randomizer\engines\analog_rytm_snapshot_shell.py tests\test_analog_rytm_snapshot_shell.py
 ```
 
 - [ ] **Step 4: Provide hardware script**

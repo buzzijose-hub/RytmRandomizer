@@ -57,7 +57,7 @@ expect(screen.getByRole('button', { name: /dry-run send/i })).toBeDisabled();
 Run:
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\desktop\web'
+Set-Location '<repo-root>\desktop\web'
 npm.cmd run test:run -- tests/cockpit/PerformanceConsole.test.tsx
 ```
 
@@ -121,7 +121,7 @@ Edit the top `Recent Cleanup` section in place with the new bundle status and sa
 - [x] **Step 1: Run focused frontend checks**
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\desktop\web'
+Set-Location '<repo-root>\desktop\web'
 npm.cmd run test:run -- tests/cockpit/PerformanceConsole.test.tsx
 npm.cmd run test:coverage
 npm.cmd run typecheck
@@ -132,7 +132,7 @@ npm.cmd run lint -- --ext .ts,.tsx --max-warnings 0 src/cockpit/PerformanceConso
 - [x] **Step 2: Run repo gates**
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer'
+Set-Location '<repo-root>'
 python -m pytest tests\architecture\ -q
 python -m pytest
 python -m ruff check .

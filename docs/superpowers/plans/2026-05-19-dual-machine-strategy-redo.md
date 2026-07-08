@@ -12,7 +12,7 @@
 
 ## Preconditions
 
-- Work from the isolated worktree at `C:\Users\Jose Buzzi\Documents\RytmRandomizer\.worktrees\dual-machine-strategy-redo`.
+- Work from the isolated worktree at `<repo-root>\.worktrees\dual-machine-strategy-redo`.
 - Base branch is `origin/modularize-v1.34` at or after merge commit `6452b44`.
 - Do not send MIDI during this plan. Hardware validation is manual and comes after tested runtime paths exist.
 - Keep this as one bundled PR against `modularize-v1.34`; do not open stacked PRs.

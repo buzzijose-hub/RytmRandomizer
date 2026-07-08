@@ -49,7 +49,7 @@ expect(screen.queryByTestId('local-set-plan-step-local-step-01')).not.toBeInTheD
 Run:
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\desktop\web'
+Set-Location '<repo-root>\desktop\web'
 npm.cmd run test:run -- tests/cockpit/PerformanceConsole.test.tsx
 ```
 
@@ -98,7 +98,7 @@ expect(screen.queryByRole('button', { name: /send to hardware/i })).not.toBeInTh
 Run:
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\desktop\web'
+Set-Location '<repo-root>\desktop\web'
 npm.cmd run test:run -- tests/cockpit/PerformanceConsole.test.tsx
 ```
 
@@ -176,7 +176,7 @@ plan and verifies both current and queued local state are empty.
 Run:
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\desktop\web'
+Set-Location '<repo-root>\desktop\web'
 npm.cmd run test:run -- tests/cockpit/PerformanceConsole.test.tsx
 ```
 
@@ -231,7 +231,7 @@ Create a PR body with:
 Run:
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\desktop\web'
+Set-Location '<repo-root>\desktop\web'
 npm.cmd run test:run -- tests/cockpit/PerformanceConsole.test.tsx
 npm.cmd run typecheck
 npm.cmd run build
@@ -243,9 +243,9 @@ npm.cmd run lint -- --ext .ts,.tsx --max-warnings 0 src/cockpit/PerformanceConso
 Run:
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\desktop\web'
+Set-Location '<repo-root>\desktop\web'
 npm.cmd run test:coverage
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer'
+Set-Location '<repo-root>'
 python -m pytest tests\architecture\ -q
 python -m ruff check .
 python -m black --check --target-version=py311 .

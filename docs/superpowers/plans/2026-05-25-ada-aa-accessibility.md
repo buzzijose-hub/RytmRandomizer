@@ -11,7 +11,7 @@
 **Tech Stack:** TypeScript + React 18.3 + Vite + Vitest 2.x + Playwright 1.59+ + axe-core (direct) + @axe-core/playwright + zustand. Python arch tests with pytest + AST (no new Python deps). Pre-push hook gates on black + isort + ruff; the project enforces 100% branch coverage on `src/cockpit/**` and `src/wizard/**` via vite.config.ts thresholds.
 
 **Branch:** `feat/ada-aa-accessibility`
-**Working directory:** `C:\Users\Edward.Rosado\Desktop\MusicProduction\RytmRandomizer\RytmRandomizer-worktrees\ada-aa`
+**Working directory:** `<repo-root>\RytmRandomizer-worktrees\ada-aa`
 **Spec:** `docs/superpowers/specs/2026-05-25-ada-aa-accessibility-design.md`
 
 ---

@@ -3,7 +3,7 @@
 > Status: in-flight
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:test-driven-development. This plan is structured for one bundled PR with maximum-parallelization sidecar exploration and no stacked PRs, per docs/PLAN_REQUIREMENTS.md Gate 16.
 
-**Goal:** Add a Synplant-inspired audio/description-to-Analog-Four patch genome that produces four A4 patch candidates, a selected candidate DNA sheet, front-panel dial targets, CC/NRPN transport metadata, a learning packet that explains candidate ranking, trait-to-A4 routes, future capture steps, passive initialized-baseline comparison for clean-slate A4 SysEx exports, passive patch-corpus nearest-match ranking for starter or captured A4 audio/patch examples, the first passive SysEx field calibration facts for Filter1 Frequency, Filter1 Resonance, and Filter2 Frequency, and live-dial readiness, plus a gated send-plan bridge that can preview or explicitly arm compiler-approved live-dial rows without promoting screen-only destinations.
+**Goal:** Add a patch-family audio/description-to-Analog-Four patch genome that produces four A4 patch candidates, a selected candidate DNA sheet, front-panel dial targets, CC/NRPN transport metadata, a learning packet that explains candidate ranking, trait-to-A4 routes, future capture steps, passive initialized-baseline comparison for clean-slate A4 SysEx exports, passive patch-corpus nearest-match ranking for starter or captured A4 audio/patch examples, the first passive SysEx field calibration facts for Filter1 Frequency, Filter1 Resonance, and Filter2 Frequency, and live-dial readiness, plus a gated send-plan bridge that can preview or explicitly arm compiler-approved live-dial rows without promoting screen-only destinations.
 
 **Architecture:** Keep A4-specific facts in `rytm_randomizer/data/`, deterministic audio-intelligence translation in `rytm_randomizer/style_analysis/`, passive operator output in focused `rytm_randomizer/reports/` modules registered through `cli_registry`, and active output only in `rytm_randomizer/app.py` behind `--arm` plus a confirmation flag. Screen-only NRPN destination rows remain skipped until their ordinals are captured.
 
@@ -27,7 +27,7 @@
 
 ## Execution Shape
 
-- **Worktree assignment:** `C:\Users\Jose Buzzi\Documents\RytmRandomizer\.worktrees\a4-audio-patch-genome-passive` on branch `codex/a4-audio-patch-genome-passive`.
+- **Worktree assignment:** `<repo-root>\.worktrees\a4-audio-patch-genome-passive` on branch `codex/a4-audio-patch-genome-passive`.
 - **Disjoint ownership:** WS-A and WS-I own `data/`, WS-B owns `style_analysis/`, WS-C owns `reports/` plus CLI/help, WS-D owns docs.
 - **Agent crew:** main agent performs TDD/implementation; read-only explorers inspect CLI/report and A4 reuse points in parallel.
 - **Self-driving rules:** no human prompts; routine file edits, formatting, docs, tests, and fixes continue automatically.

@@ -176,7 +176,7 @@ describe('AddStep — picker UI', () => {
 
     fireEvent.click(screen.getByTestId('wizard-add-song'));
     fireEvent.change(screen.getByTestId('wizard-draft-location'), {
-      target: { value: 'C:\\Users\\Jose Buzzi\\Downloads\\The Bells.wav' },
+      target: { value: 'fixtures\\audio\\The Bells.wav' },
     });
     fireEvent.change(screen.getByTestId('wizard-draft-display-name'), {
       target: { value: 'The Bells' },
@@ -274,7 +274,7 @@ describe('AddStep — dialog opener (injected for determinism)', () => {
   });
 
   it('Browse button leaves the display name alone when user already typed one', async () => {
-    const openDialog = vi.fn().mockResolvedValue('C:\\kits\\name.syx');
+    const openDialog = vi.fn().mockResolvedValue('fixtures\\kits\\name.syx');
     render(
       <AddStep
         sources={[]}
@@ -295,7 +295,7 @@ describe('AddStep — dialog opener (injected for determinism)', () => {
     });
     expect(screen.getByTestId('wizard-draft-display-name')).toHaveValue('my-kit');
     // Location updates even though display name does not.
-    expect(screen.getByTestId('wizard-draft-location')).toHaveValue('C:\\kits\\name.syx');
+    expect(screen.getByTestId('wizard-draft-location')).toHaveValue('fixtures\\kits\\name.syx');
   });
 
   it('Browse button does nothing when the picker resolves to null (user cancelled)', async () => {
@@ -365,7 +365,7 @@ describe('basenameOf', () => {
   });
 
   it('extracts the trailing segment from a backslash path', () => {
-    expect(basenameOf('C:\\\\kits\\\\d.syx')).toBe('d.syx');
+    expect(basenameOf('fixtures\\\\kits\\\\d.syx')).toBe('d.syx');
   });
 
   it('returns the path verbatim when there is no separator', () => {

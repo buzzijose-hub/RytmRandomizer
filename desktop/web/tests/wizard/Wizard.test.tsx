@@ -374,7 +374,7 @@ describe('Wizard container — step handlers', () => {
 
     fireEvent.click(screen.getByTestId('wizard-add-song'));
     fireEvent.change(screen.getByTestId('wizard-draft-location'), {
-      target: { value: 'C:\\Users\\Jose Buzzi\\Downloads\\The Bells.wav' },
+      target: { value: 'fixtures\\audio\\The Bells.wav' },
     });
     fireEvent.change(screen.getByTestId('wizard-draft-display-name'), {
       target: { value: 'The Bells' },

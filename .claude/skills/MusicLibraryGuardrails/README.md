@@ -4,7 +4,7 @@ This package contains a reusable skill for analyzing a music library, folder of 
 
 Recommended local destination:
 
-`C:\Users\Jose Buzzi\Documents\RytmRandomizer\Skills\MusicLibraryGuardrails\`
+`<repo-root>\Skills\MusicLibraryGuardrails\`
 
 Files included:
 

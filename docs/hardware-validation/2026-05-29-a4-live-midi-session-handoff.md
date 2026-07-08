@@ -26,7 +26,7 @@ performance.
 
 ## Manual Facts Captured
 
-Manual source: `C:/Users/Jose Buzzi/Dropbox/Utilities/Analog-Four-MKII-User-Manual_ENG_OS1.51C_220204-1.pdf`.
+Manual source: `<local-manuals>/Analog-Four-MKII-User-Manual_ENG_OS1.51C_220204-1.pdf`.
 
 The implementation now has manual-backed A4 MIDI data:
 

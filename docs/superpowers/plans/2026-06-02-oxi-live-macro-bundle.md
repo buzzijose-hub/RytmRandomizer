@@ -1183,7 +1183,7 @@ Expected: one PR against `modularize-v1.34`. Do not open stacked PRs.
 Use only with Jose present and the Rytm powered on:
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer'
+Set-Location '<repo-root>'
 & '.\.venv\Scripts\python.exe' -m rytm_randomizer.app --arm --rytm-live-snapshot-shell --confirm-rytm-snapshot-shell-send
 ```
 

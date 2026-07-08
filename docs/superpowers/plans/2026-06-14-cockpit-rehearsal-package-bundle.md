@@ -65,7 +65,7 @@ The same test must assert the package panel shows device names, blocked actions,
 Run:
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\desktop\web'
+Set-Location '<repo-root>\desktop\web'
 npm.cmd run test:run -- tests/cockpit/PerformanceConsole.test.tsx
 ```
 
@@ -120,7 +120,7 @@ The UI may fall back to current packet defaults for display, but the warnings mu
 Run:
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\desktop\web'
+Set-Location '<repo-root>\desktop\web'
 npm.cmd run test:run -- tests/cockpit/PerformanceConsole.test.tsx
 ```
 
@@ -167,7 +167,7 @@ Create the PR body with summary, changed files, safety notes, verification, the 
 Run:
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\desktop\web'
+Set-Location '<repo-root>\desktop\web'
 npm.cmd run test:run -- tests/cockpit/PerformanceConsole.test.tsx
 npm.cmd run typecheck
 npm.cmd run build
@@ -179,9 +179,9 @@ npm.cmd run lint -- --ext .ts,.tsx --max-warnings 0 src/cockpit/PerformanceConso
 Run:
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\desktop\web'
+Set-Location '<repo-root>\desktop\web'
 npm.cmd run test:coverage
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer'
+Set-Location '<repo-root>'
 python -m pytest tests\architecture\ -q -n 0
 python -m ruff check .
 python -m black --check --target-version=py311 .

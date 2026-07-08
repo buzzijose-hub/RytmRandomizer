@@ -54,7 +54,7 @@ ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES: Final[tuple[AnalogFourPatchCandidateTempl
                 "OSC1 Pulsewidth",
                 -16,
                 _OSC,
-                "narrowed pulse adds the Synplant-like animated edge",
+                "narrowed pulse adds the organic animated edge",
             ),
             _G(
                 "OSC2 Level",
@@ -169,7 +169,7 @@ ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES: Final[tuple[AnalogFourPatchCandidateTempl
                 "LFO1 Waveform",
                 "triangle",
                 _MOD,
-                "triangle movement mirrors the smooth Synplant-style modulation",
+                "triangle movement mirrors smooth organic modulation",
             ),
             _G(
                 "LFO1 Destination A",

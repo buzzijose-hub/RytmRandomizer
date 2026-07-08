@@ -35,7 +35,7 @@ Add a test that clears `window.localStorage`, selects a crate, queued move, snap
 Run:
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\desktop\web'
+Set-Location '<repo-root>\desktop\web'
 npm.cmd run test:run -- tests/cockpit/PerformanceConsole.test.tsx
 ```
 
@@ -65,7 +65,7 @@ Add a test that types a versioned local rehearsal JSON payload into a new import
 Run:
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\desktop\web'
+Set-Location '<repo-root>\desktop\web'
 npm.cmd run test:run -- tests/cockpit/PerformanceConsole.test.tsx
 ```
 
@@ -111,7 +111,7 @@ Create a PR body with summary, changed files, safety notes, verification, the 18
 Run:
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\desktop\web'
+Set-Location '<repo-root>\desktop\web'
 npm.cmd run test:run -- tests/cockpit/PerformanceConsole.test.tsx
 npm.cmd run typecheck
 npm.cmd run build
@@ -123,9 +123,9 @@ npm.cmd run lint -- --ext .ts,.tsx --max-warnings 0 src/cockpit/PerformanceConso
 Run:
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\desktop\web'
+Set-Location '<repo-root>\desktop\web'
 npm.cmd run test:coverage
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer'
+Set-Location '<repo-root>'
 python -m pytest tests\architecture\ -q
 python -m pytest
 python -m ruff check .

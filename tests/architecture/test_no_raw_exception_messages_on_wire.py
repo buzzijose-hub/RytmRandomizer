@@ -5,7 +5,7 @@ information-disclosure path in the wizard analyzer:
 ``_handle_wizard_analyze`` caught analyzer exceptions and assigned
 ``error=str(exc)`` to the broadcast ``AnalysisJob`` event. Analyzer
 exceptions carry the *full input path* (e.g.
-``"audio path does not exist: C:/Users/.../private/..."``). Given the
+``"audio path does not exist: /private/input/..."``). Given the
 unauthenticated WS endpoint (C1) and the unconstrained path inputs
 (C2), this completed the trio: any WS peer could ask for analysis of
 ``/etc/passwd``, get back ``"audio path is not a file: /etc/passwd"``

@@ -283,7 +283,7 @@ def test_handler_raising_key_error_maps_to_validation_code(
 
     session = _make_session(tmp_path)
     recorder = _Recorder()
-    sensitive_key = "C:/Users/leakable-id-from-exc"
+    sensitive_key = "/private/leakable-id-from-exc"
 
     async def _raise(_cmd: dict, _sess: CockpitSession) -> handlers.HandlerResult:
         raise KeyError(sensitive_key)

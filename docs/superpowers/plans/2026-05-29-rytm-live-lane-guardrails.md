@@ -48,7 +48,7 @@ tune=micro, noise=normal, fx=micro, filter=normal, amp=normal, lfo=off
 Run:
 
 ```powershell
-& 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\.venv\Scripts\python.exe' -m pytest tests\test_analog_rytm_snapshot_shell.py::test_snapshot_shell_lane_guardrails_default_to_live_trust_profile tests\test_analog_rytm_snapshot_shell.py::test_snapshot_shell_status_reports_lane_guardrails -n 0
+& 'python' -m pytest tests\test_analog_rytm_snapshot_shell.py::test_snapshot_shell_lane_guardrails_default_to_live_trust_profile tests\test_analog_rytm_snapshot_shell.py::test_snapshot_shell_status_reports_lane_guardrails -n 0
 ```
 
 Expected: fail because lane state/status does not exist yet.
@@ -82,7 +82,7 @@ lfo    -> LFO section
 Run:
 
 ```powershell
-& 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\.venv\Scripts\python.exe' -m pytest tests\test_analog_rytm_snapshot_shell.py -n 0
+& 'python' -m pytest tests\test_analog_rytm_snapshot_shell.py -n 0
 ```
 
 Expected: existing tests may fail where active send counts need to include lane-off LFO behavior.
@@ -113,7 +113,7 @@ def test_snapshot_shell_lane_filter_micro_caps_filter_movement() -> None:
 Run:
 
 ```powershell
-& 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\.venv\Scripts\python.exe' -m pytest tests\test_analog_rytm_snapshot_shell.py::test_snapshot_shell_lane_lfo_off_omits_lfo_mutation_and_send tests\test_analog_rytm_snapshot_shell.py::test_snapshot_shell_lane_fx_off_omits_delay_and_reverb_sends tests\test_analog_rytm_snapshot_shell.py::test_snapshot_shell_lane_filter_micro_caps_filter_movement -n 0
+& 'python' -m pytest tests\test_analog_rytm_snapshot_shell.py::test_snapshot_shell_lane_lfo_off_omits_lfo_mutation_and_send tests\test_analog_rytm_snapshot_shell.py::test_snapshot_shell_lane_fx_off_omits_delay_and_reverb_sends tests\test_analog_rytm_snapshot_shell.py::test_snapshot_shell_lane_filter_micro_caps_filter_movement -n 0
 ```
 
 Expected: fail because lane policy is not applied yet.
@@ -129,7 +129,7 @@ depth before computing deltas.
 Run:
 
 ```powershell
-& 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\.venv\Scripts\python.exe' -m pytest tests\test_analog_rytm_snapshot_shell.py -n 0
+& 'python' -m pytest tests\test_analog_rytm_snapshot_shell.py -n 0
 ```
 
 Expected: all snapshot shell tests pass.
@@ -157,7 +157,7 @@ def test_snapshot_shell_invalid_lane_commands_do_not_mutate_or_send(capsys) -> N
 Run:
 
 ```powershell
-& 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\.venv\Scripts\python.exe' -m pytest tests\test_analog_rytm_snapshot_shell.py::test_snapshot_shell_lane_command_updates_policy_and_preserves_tune_alias tests\test_analog_rytm_snapshot_shell.py::test_snapshot_shell_invalid_lane_commands_do_not_mutate_or_send -n 0
+& 'python' -m pytest tests\test_analog_rytm_snapshot_shell.py::test_snapshot_shell_lane_command_updates_policy_and_preserves_tune_alias tests\test_analog_rytm_snapshot_shell.py::test_snapshot_shell_invalid_lane_commands_do_not_mutate_or_send -n 0
 ```
 
 Expected: fail because `lane` is unknown.
@@ -178,7 +178,7 @@ Make `lane tune VALUE` update the existing tune policy too, so the older
 Run:
 
 ```powershell
-& 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\.venv\Scripts\python.exe' -m pytest tests\test_analog_rytm_snapshot_shell.py -n 0
+& 'python' -m pytest tests\test_analog_rytm_snapshot_shell.py -n 0
 ```
 
 Expected: all snapshot shell tests pass.
@@ -215,8 +215,8 @@ send
 Run:
 
 ```powershell
-& 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\.venv\Scripts\python.exe' -m pytest tests\test_analog_rytm_snapshot_shell.py tests\test_app_validate_one_cc.py tests\test_mido_provider.py -n 0
-& 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\.venv\Scripts\python.exe' -m pytest tests\architecture\ -q
+& 'python' -m pytest tests\test_analog_rytm_snapshot_shell.py tests\test_app_validate_one_cc.py tests\test_mido_provider.py -n 0
+& 'python' -m pytest tests\architecture\ -q
 ```
 
 Expected: all pass.
@@ -226,10 +226,10 @@ Expected: all pass.
 Run:
 
 ```powershell
-& 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\.venv\Scripts\python.exe' -m ruff check .
-& 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\.venv\Scripts\python.exe' -m black --check --target-version=py311 .
-& 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\.venv\Scripts\python.exe' -m isort --profile black --check-only .
-& 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\.venv\Scripts\python.exe' -m pytest
+& 'python' -m ruff check .
+& 'python' -m black --check --target-version=py311 .
+& 'python' -m isort --profile black --check-only .
+& 'python' -m pytest
 ```
 
 Expected: all pass.

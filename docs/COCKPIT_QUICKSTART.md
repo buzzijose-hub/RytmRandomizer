@@ -162,7 +162,7 @@ on disk, set `WIZARD_SOURCE_ROOTS` before starting the sidecar:
 WIZARD_SOURCE_ROOTS="$HOME/Music/inspiration:$HOME/Sounds/kits" python -m rytm_randomizer.cockpit
 
 # Windows PowerShell
-$env:WIZARD_SOURCE_ROOTS="C:\Users\you\Music\inspiration;C:\Users\you\Sounds\kits"
+$env:WIZARD_SOURCE_ROOTS="<audio-source-root-1>;<audio-source-root-2>"
 python -m rytm_randomizer.cockpit
 ```
 

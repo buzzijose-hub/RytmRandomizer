@@ -62,7 +62,7 @@ Import a valid raw local rehearsal JSON snapshot after a package is visible. Ass
 - [ ] **Step 5: Run RED**
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\.worktrees\cockpit-package-review-workbench\desktop\web'
+Set-Location '<repo-root>\.worktrees\cockpit-package-review-workbench\desktop\web'
 npm.cmd run test:run -- tests/cockpit/PerformanceConsole.test.tsx
 ```
 
@@ -160,7 +160,7 @@ Add styles for `.performance-console-local-package-review`, `.performance-consol
 - [ ] **Step 4: Run GREEN**
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\.worktrees\cockpit-package-review-workbench\desktop\web'
+Set-Location '<repo-root>\.worktrees\cockpit-package-review-workbench\desktop\web'
 npm.cmd run test:run -- tests/cockpit/PerformanceConsole.test.tsx
 ```
 
@@ -194,14 +194,14 @@ Create the PR body with summary, test plan, 18-gate checklist, strict-rules bloc
 Run:
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\.worktrees\cockpit-package-review-workbench\desktop\web'
+Set-Location '<repo-root>\.worktrees\cockpit-package-review-workbench\desktop\web'
 npm.cmd run test:run -- tests/cockpit/PerformanceConsole.test.tsx
 npm.cmd run test:coverage
 npm.cmd run typecheck
 npm.cmd run build
 npm.cmd run lint -- --ext .ts,.tsx --max-warnings 0 src/cockpit/PerformanceConsole.tsx tests/cockpit/PerformanceConsole.test.tsx
 
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\.worktrees\cockpit-package-review-workbench'
+Set-Location '<repo-root>\.worktrees\cockpit-package-review-workbench'
 python -m pytest tests\architecture\ -q
 python -m ruff check .
 python -m black --check --target-version=py311 .
