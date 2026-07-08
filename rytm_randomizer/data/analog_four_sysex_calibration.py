@@ -225,6 +225,30 @@ _FILTER2_FREQUENCY_EVIDENCE: Final[tuple[AnalogFourSysexCalibrationEvidence, ...
         source_file="A4_Test1_T1_Filter2Freq_127_Kit.syx",
         payload_fingerprint="9497709f8562f1ef",
     ),
+    AnalogFourSysexCalibrationEvidence(
+        track=2,
+        screen_value="127.00",
+        primary_raw_value=0x7F,
+        kit_name="KIT 1",
+        source_file="A4_Test1_T2_Filter2Freq_127_Kit.syx",
+        payload_fingerprint="1f15e21e281ce000",
+    ),
+    AnalogFourSysexCalibrationEvidence(
+        track=3,
+        screen_value="127.00",
+        primary_raw_value=0x7F,
+        kit_name="KIT 1",
+        source_file="A4_Test1_T3_Filter2Freq_127_Kit.syx",
+        payload_fingerprint="fabeab5b95ed53e0",
+    ),
+    AnalogFourSysexCalibrationEvidence(
+        track=4,
+        screen_value="127.00",
+        primary_raw_value=0x7F,
+        kit_name="KIT 1",
+        source_file="A4_Test1_T4_Filter2Freq_127_Kit.syx",
+        payload_fingerprint="a52174e811260978",
+    ),
 )
 
 ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCalibration]] = (
@@ -290,7 +314,7 @@ ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCal
             "Filter2 Frequency": AnalogFourSysexFieldCalibration(
                 parameter="Filter2 Frequency",
                 section="FILTERS",
-                status=A4_SYSEX_CALIBRATION_STATUS_PENDING,
+                status=A4_SYSEX_CALIBRATION_STATUS_CANDIDATE_PROMOTED,
                 screen_min="0.00",
                 screen_mid="63.50",
                 screen_max="127.00",
@@ -311,7 +335,7 @@ ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCal
                 evidence=_FILTER2_FREQUENCY_EVIDENCE,
                 notes=(
                     "Primary packed data byte verified on Track 1 at 0.00, 63.50, and 127.00.",
-                    "Track stride is inferred from the promoted Filter1 Frequency and Filter1 Resonance captures until Track 2-4 Filter2 Frequency exports confirm it.",
+                    "Track 2, Track 3, and Track 4 127.00 captures confirm the +400 packed-byte stride.",
                     "Neighboring packed bytes move with Elektron high-bit grouping; the direct screen value appears at packed offset 167 and unpacked offset 142.",
                     "SysEx checksum trailer bytes must be ignored or recomputed by future writers.",
                 ),

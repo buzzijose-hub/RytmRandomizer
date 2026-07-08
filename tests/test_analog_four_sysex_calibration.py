@@ -140,16 +140,16 @@ def test_filter1_resonance_calibration_keeps_capture_evidence_compact() -> None:
     assert all(row.source_file.endswith("_Kit.syx") for row in calibration.evidence)
 
 
-def test_filter2_frequency_calibration_records_pending_track1_capture() -> None:
+def test_filter2_frequency_calibration_records_promoted_track_stride() -> None:
     from rytm_randomizer.data.analog_four_sysex_calibration import (
-        A4_SYSEX_CALIBRATION_STATUS_PENDING,
+        A4_SYSEX_CALIBRATION_STATUS_CANDIDATE_PROMOTED,
         analog_four_sysex_calibration_for,
     )
 
     calibration = analog_four_sysex_calibration_for("Filter2 Frequency")
 
     assert calibration.parameter == "Filter2 Frequency"
-    assert calibration.status == A4_SYSEX_CALIBRATION_STATUS_PENDING
+    assert calibration.status == A4_SYSEX_CALIBRATION_STATUS_CANDIDATE_PROMOTED
     assert calibration.screen_min == "0.00"
     assert calibration.screen_mid == "63.50"
     assert calibration.screen_max == "127.00"
@@ -193,12 +193,18 @@ def test_filter2_frequency_calibration_keeps_capture_evidence_compact() -> None:
         (1, "0.00", 0x00),
         (1, "63.50", 0x3F),
         (1, "127.00", 0x7F),
+        (2, "127.00", 0x7F),
+        (3, "127.00", 0x7F),
+        (4, "127.00", 0x7F),
     }
     assert {row.kit_name for row in calibration.evidence} == {"KIT 1"}
     assert {row.payload_fingerprint for row in calibration.evidence} == {
         "6818388c34db01b9",
         "82c03587679c6ddc",
         "9497709f8562f1ef",
+        "1f15e21e281ce000",
+        "fabeab5b95ed53e0",
+        "a52174e811260978",
     }
     assert all(row.source_file.endswith("_Kit.syx") for row in calibration.evidence)
 
