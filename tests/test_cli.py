@@ -61,6 +61,17 @@ USAGE = (
     "analog-four-style-mutation-mock-preview-report <syx-path> <style-key> "
     "[--slot N] [--discovery N] [--events] [--limit N] [--json] | "
     "analog-four-kit-catalog-report <syx-path> [--limit N] [--json] | "
+    "analog-four-baseline-report --kit <syx-path> --pattern-kit <syx-path> "
+    "--whole-project <syx-path> [--json] | "
+    "analog-four-patch-genome-report "
+    "(--description <text>|--audio <path>) [--track N] [--candidate N] [--json] | "
+    "analog-four-patch-learning-report "
+    "(--description <text>|--audio <path>) [--track N] [--candidate N] [--json] | "
+    "analog-four-patch-corpus-report "
+    "(--description <text>|--audio <path>) [--track N] [--limit N] "
+    "[--corpus-file <path>] [--json] | "
+    "analog-four-patch-send-plan-report "
+    "(--description <text>|--audio <path>) [--track N] [--candidate N] [--json] | "
     "analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] "
     "[--events] [--limit N] [--json] | "
     "analog-four-oxi-macro-readiness-report [<macro-name>] [--seed N] "
@@ -688,6 +699,36 @@ def test_top_level_help_exits_zero_and_matches_fixture():
     assert result.stderr == ""
 
 
+@pytest.mark.parametrize(
+    "command",
+    [
+        "analog-rytm-midi-catalog-report",
+        "analog-four-baseline-report",
+        "analog-four-patch-genome-report",
+        "analog-four-patch-learning-report",
+        "analog-four-patch-corpus-report",
+        "analog-four-patch-send-plan-report",
+        "analog-four-oxi-macro-report",
+        "analog-four-oxi-macro-readiness-report",
+        "analog-four-oxi-macro-set-planner-report",
+        "oxi-live-macro-catalog-report",
+        "controller-brain-mapping-report",
+        "controller-brain-rehearsal-report",
+        "rytm-live-macro-hardware-rehearsal-report",
+        "live-gui-performance-flow-model-report",
+        "live-gui-performance-console-report",
+        "oxi-live-set-strategy-report",
+    ],
+)
+def test_lazy_help_text_entries_resolve_directly(command: str):
+    from rytm_randomizer.help_text import resolve_help_text
+
+    text = resolve_help_text(command)
+
+    assert f"RytmRandomizer passive CLI: {command}" in text
+    assert "Safety:" in text
+
+
 def test_report_help_exits_zero_and_matches_fixture():
     result = run_cli("report", "--help")
 
@@ -963,6 +1004,22 @@ def test_analog_four_kit_catalog_report_help_exits_zero_and_safety_matches_repor
     assert result.returncode == 0
     help_text = normalize_newlines(result.stdout)
     assert "RytmRandomizer passive CLI: analog-four-kit-catalog-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_analog_four_baseline_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.analog_four_baseline import SAFETY_LINES
+
+    result = run_cli("analog-four-baseline-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: analog-four-baseline-report" in help_text
+    assert "--kit <syx-path>" in help_text
+    assert "--pattern-kit <syx-path>" in help_text
+    assert "--whole-project <syx-path>" in help_text
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
     assert result.stderr == ""
@@ -2069,6 +2126,35 @@ def test_analog_four_kit_catalog_report_command_can_emit_json(tmp_path):
     assert parsed["truncated_count"] == 1
     assert parsed["entries"][0]["kit_name"] == "A4ONE"
     assert parsed["entries"][0]["snapshot_layout"] == "candidate"
+    assert result.stderr == ""
+
+
+def test_analog_four_baseline_report_command_compares_three_syx_sources(tmp_path):
+    payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4INIT".ljust(16, b"\x00")
+    frame = bytes([0xF0]) + payload + bytes([0xF7])
+    kit_path = tmp_path / "A4_Test1_Init_Kit.syx"
+    pattern_kit_path = tmp_path / "A4_Test1_Init_A01_PatternKit.syx"
+    whole_project_path = tmp_path / "A4_Test1_Init_WholeProject.syx"
+    kit_path.write_bytes(frame)
+    pattern_kit_path.write_bytes(frame)
+    whole_project_path.write_bytes(frame + frame)
+
+    result = run_cli(
+        "analog-four-baseline-report",
+        "--kit",
+        str(kit_path),
+        "--pattern-kit",
+        str(pattern_kit_path),
+        "--whole-project",
+        str(whole_project_path),
+        "--json",
+    )
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["baseline_status"] == "coherent-init-baseline"
+    assert parsed["ready_for_changed_patch_diff"] is True
+    assert parsed["sources"]["whole_project"]["supported_kit_count"] == 2
     assert result.stderr == ""
 
 

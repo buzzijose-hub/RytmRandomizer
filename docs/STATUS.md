@@ -1,9 +1,68 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-24. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-07-08. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-07-08: First passive Analog Four SysEx calibration facts promoted from
+  Jose's Test 1 filter captures. The data layer now records the
+  candidate-promoted primary packed offsets for Filter1 Frequency across the
+  four synth tracks (`156`, `556`, `956`, `1356`), the `+400` packed-byte
+  track stride, the `+350` unpacked-byte stride, front-panel values
+  `0.00`/`63.50`/`127.00`, and compact evidence fingerprints for the
+  operator-supplied kit exports. It also records the candidate-promoted
+  Filter1 Resonance offsets across the four synth tracks
+  (`158`, `558`, `958`, `1358`), values `0`/`20`/`127`, and the same
+  `+400` packed-byte track stride from the Track 2-4 zero-value captures. The
+  table now also records the candidate-promoted Filter2 Frequency offsets
+  across the four synth tracks (`167`, `567`, `967`, `1367`), values
+  `0.00`/`63.50`/`127.00`, and fingerprints for the operator-supplied Track
+  1 value sweep plus Track 2-4 127.00 stride-confirmation exports. It
+  remains passive: no MIDI port opened, no MIDI sent, no SysEx written, no
+  hardware mutation, and no broader A4 kit writer claim until additional
+  fields are captured and validated.
+- 2026-07-04: Passive Analog Four initialized-baseline report prepared
+  locally from Jose's Test 1 exports. The new
+  `analog-four-baseline-report` command compares kit, pattern+kit, and
+  whole-project SysEx export scopes, decodes supported saved-kit frames, and
+  reports a coherent clean-slate fingerprint (`7006c189ecffc2a2`) that future
+  changed-patch captures can diff against. It remains passive: no MIDI port
+  opened, no MIDI sent, no SysEx written, no hardware mutation, and no
+  parameter-level A4 DNA extraction claim while saved-kit offsets are still
+  candidate-only.
+- 2026-07-03: Passive Analog Four patch capture-corpus matcher prepared
+  locally. The new `analog-four-patch-corpus-report` command ranks a
+  description or audio FeatureReport against starter or supplied A4
+  patch/audio corpus entries, recommends the nearest generated candidate, and
+  prints the missing hardware-capture gaps before any training promotion. It
+  remains passive: no MIDI port opened, no MIDI sent, no SysEx written, and
+  synthetic starter rows are labeled separately from captured hardware
+  evidence.
+- 2026-07-03: Analog Four generated patch send-plan bridge prepared locally.
+  The new `analog-four-patch-send-plan-report` command previews the selected
+  audio/description-generated candidate as ordered CC/NRPN live-dial events,
+  counts the exact transport messages, and lists skipped front-panel rows that
+  still need ordinal capture. The active app path now supports
+  `--dry-run --a4-patch-send-plan` for mock rendering and
+  `--arm --a4-patch-send-plan --confirm-a4-patch-send-plan` for explicit A4
+  output sends; it sends only compiler-approved rows and leaves screen-only
+  destination rows manual.
+- 2026-07-03: Passive Analog Four patch learning layer prepared locally. The
+  new `analog-four-patch-learning-report` command builds on the patch genome
+  by ranking all four candidates, routing measured reference traits to Analog
+  Four parameter families, printing a capture matrix for future empirical A4
+  recordings, and separating CC/NRPN-ready rows from screen-only NRPN
+  destinations before live dial-in promotion. It remains passive: no MIDI port
+  opened, no MIDI sent, no SysEx written, and no hardware state captured.
+- 2026-07-03: Passive Analog Four patch genome report prepared locally. The
+  new `analog-four-patch-genome-report` command turns a description or audio
+  FeatureReport into four Analog Four MKII single-sound candidates, then prints
+  the selected candidate as front-panel patch DNA with CC/NRPN metadata. The
+  report includes the user-reviewed A4 details that matter for manual dialing:
+  bipolar Filter Overdrive and LFO depths, Filter 2 type/resonance, EnvA/EnvF
+  shapes, EnvF release, and LFO multiplier/waveform/destination rows. It stays
+  passive: no MIDI port opened, no MIDI sent, no SysEx written, and NRPN-only
+  destination labels remain screen-only until exact ordinals are captured.
 - 2026-06-24: Passive Controller Brain Live Runbook bundle started on the clean
   base after PR #196 merged. The new
   `controller-brain-live-runbook-report [--json]` and
