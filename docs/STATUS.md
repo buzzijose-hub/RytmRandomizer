@@ -45,6 +45,30 @@ Last updated: 2026-06-24. This file is a hand-authored snapshot and is meant to 
   GUI renderer start, no runtime reducer execution, no WebSocket dispatch or
   feedback, no controller feedback, no MIDI controller output, no MIDI port
   opening, no MIDI send, no snapshot mutation, and no file writing.
+- 2026-06-24: Controller Brain Operator Package Ledger bundle started on the
+  clean base after PR #196 merged. The new passive
+  `controller-brain-operator-package-report [--json]` composes the reviewed
+  controller-brain virtual gesture packet with the current Live Kit Operator
+  Package slots, mapping macro depth, industrial macro selection, Rytm pad-lane
+  amount gestures, A4 review-only gestures, Style Crate selection, queue
+  staging, and panic-home recovery into deterministic package-review bindings.
+  This keeps the OXI/E16-style controller story tied to RytmRandomizer's live
+  KIT/operator-package advantage while preserving side-effect proof: no
+  controller input, no raw CC capture, no WebSocket dispatch, no file writing,
+  no snapshot mutation, no hardware arming, no MIDI port opening, and no MIDI
+  sending.
+- 2026-06-24: Operator Package Review Ledger bundle prepared on the clean base
+  after PR #196 merged. The passive `live-gui-performance-console-report
+  [--json]` now composes a typed Operator Package Review Ledger after the Live
+  Kit Operator Package lane. The ledger records apply-preview, mock-apply, and
+  receipt-audit stages; one review row per operator package step; package
+  export-key evidence; readiness proof; blocked actions; safety lines; and a
+  replay command. The Performance Console renders the ledger inside the
+  operator package panel with a disabled "Apply operator package ledger" control
+  and legacy-packet fallback. This remains passive/mock-safe: no package files
+  are written, no snapshots are mutated, no send plans are applied, no event
+  stream is emitted, no hardware is armed, no MIDI port is opened, and no MIDI
+  is sent.
 - 2026-06-23: Operator Package Mock Apply + Receipt bundle consolidated on
   the clean base after PR #195 merged. The Cockpit WebSocket protocol now
   includes typed `mock_apply_operator_package` and

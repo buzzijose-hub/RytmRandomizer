@@ -251,6 +251,7 @@ macro SEND` plus unattended playback blocked.
 | `controller-brain-live-desktop-component-contract-report [--component-contract-label <text>] [--selector-prefix <text>] [--json]` | Passive controller-brain desktop component API contracts, props, disabled events, test hooks, and fixture contracts |
 | `controller-brain-live-desktop-view-model-report [--view-model-label <text>] [--state-prefix <text>] [--json]` | Passive controller-brain desktop component view models, state bindings, disabled action models, render assertions, and acceptance checks |
 | `controller-brain-live-desktop-render-contract-report [--render-contract-label <text>] [--surface-prefix <text>] [--json]` | Passive controller-brain desktop render surfaces, render bindings, render guards, render assertions, and acceptance checks |
+| `controller-brain-operator-package-report [--json]` | Passive controller gestures to Live Kit Operator Package slot/readiness ledger |
 | `rytm-live-macro-hardware-rehearsal-report` | Passive next-studio Rytm macro checklist with launch command, pad-lane checks, and recovery notes |
 | `oxi-live-set-strategy-report` | Passive OXI-style set chapters, operator cues, rehearsal/replay commands, all-12-pad policy, and A4 review-only actions |
 
@@ -284,6 +285,8 @@ python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report
 python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report --view-model-label "Controller brain desktop view model" --state-prefix rr-state --json
 python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report
 python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report --render-contract-label "Controller brain desktop render contract" --surface-prefix rr-render --json
+python -m rytm_randomizer.cli controller-brain-operator-package-report
+python -m rytm_randomizer.cli controller-brain-operator-package-report --json
 python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report
 python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report --json
 python -m rytm_randomizer.cli oxi-live-set-strategy-report
@@ -431,6 +434,13 @@ render assertions, acceptance checks, replay commands, and safety evidence for
 future Cockpit renderer work while keeping GUI launch, component mounting,
 renderer execution, WebSocket dispatch, controller feedback, MIDI output,
 hardware send, snapshot mutation, and file writing blocked.
+`controller-brain-operator-package-report` composes that virtual gesture packet
+with the current Live Kit Operator Package slots. The ledger maps macro depth,
+industrial macro selection, Rytm pad-lane amount gestures, A4 review-only
+gestures, Style Crate selection, queue staging, and panic-home recovery into
+package-review targets while proving the side effects remain false: no
+controller input, no raw CC capture, no WebSocket dispatch, no file write, no
+snapshot mutation, no hardware arm, no MIDI port, and no MIDI send.
 
 ---
 
@@ -502,7 +512,7 @@ The `live-gui-*` family is the GUI consumer contract — each report is one scre
 
 | Command | Surface |
 |---|---|
-| `live-gui-performance-console-report` | **Cockpit performance console packet** with device rail, 12-pad Rytm snapshot surface, passive macro action deck, live-kit capture panel/workbench/package audition/operator package, controller-brain panel, A4 set-plan review, Style Crates queue, snapshot history, command queue, safety checklist, and blocked hardware actions |
+| `live-gui-performance-console-report` | **Cockpit performance console packet** with device rail, 12-pad Rytm snapshot surface, passive macro action deck, live-kit capture panel/workbench/package audition/operator package/review ledger, controller-brain panel, A4 set-plan review, Style Crates queue, snapshot history, command queue, safety checklist, and blocked hardware actions |
 | `style-performance-arc-live-gui-analyzer-readiness-report` | **GUI/audio-analyzer readiness bundle** with panel manifest, stream wiring, operator workflow, **blocked active actions** |
 | `style-performance-arc-live-gui-rehearsal-session-report` | **GUI rehearsal session packet** with task cards, **listen-only rehearsal take** cards, operator checklist |
 | `style-performance-arc-live-gui-capture-queue-report` | **GUI/audio analyzer capture queue** with capture slots, suggested filenames, **analyzer job** cards |
@@ -546,8 +556,11 @@ controls, and a journal preview seed for favorite captured-kit variations. The
 Live Kit Operator Package surface binds those audition slots into browser-local
 set-plan staging actions, recovery requirements, journal/export preview
 metadata, and local rehearsal package `auditionSource` / `operatorPackage`
-evidence while keeping real package stage/send/write controls disabled. It
-keeps open-port, hardware send, Cockpit macro fire/prepare, queue dispatch,
+evidence while keeping real package stage/send/write controls disabled. The
+Operator Package Review Ledger then summarizes apply-preview, mock-apply, and
+receipt-audit stages with one row per package step, package export-key evidence,
+readiness proof, blocked actions, safety lines, and a disabled ledger apply
+control. It keeps open-port, hardware send, Cockpit macro fire/prepare, queue dispatch,
 snapshot-history SEND, live-kit receive/mutate/send, captured-kit package
 apply/export/audition, controller MIDI learn/input, controller WebSocket
 dispatch, and Analog Four outbound macro actions blocked.

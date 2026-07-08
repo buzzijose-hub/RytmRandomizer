@@ -164,6 +164,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.controller_brain_rehearsal",
             "CONTROLLER_BRAIN_REHEARSAL_CLI_COMMAND",
         ),
+        "controller-brain-operator-package-report": (
+            "rytm_randomizer.reports.controller_brain_operator_package",
+            "CONTROLLER_BRAIN_OPERATOR_PACKAGE_CLI_COMMAND",
+        ),
         "controller-brain-live-runbook-report": (
             "rytm_randomizer.reports.controller_brain_live_runbook",
             "CONTROLLER_BRAIN_LIVE_RUNBOOK_CLI_COMMAND",

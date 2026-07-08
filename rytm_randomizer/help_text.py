@@ -77,6 +77,7 @@ USAGE = (
     "oxi-live-macro-catalog-report | "
     "controller-brain-mapping-report [--json] | "
     "controller-brain-rehearsal-report [--json] | "
+    "controller-brain-operator-package-report [--json] | "
     "controller-brain-live-runbook-report [--json] | "
     "controller-brain-live-state-report [--json] | "
     "controller-brain-live-bridge-readiness-report [--json] | "
@@ -1356,6 +1357,33 @@ Safety:
   no MIDI controller input
   no MIDI learn or raw CC capture
   no WebSocket command dispatch
+  no MIDI sending
+  no port opening
+  no hardware mutation
+  no hardware required"""
+
+
+def _controller_brain_operator_package_report_help():
+    return """RytmRandomizer passive CLI: controller-brain-operator-package-report
+
+Usage:
+  python -m rytm_randomizer.cli controller-brain-operator-package-report
+  python -m rytm_randomizer.cli controller-brain-operator-package-report --json
+  python -m rytm_randomizer.cli controller-brain-operator-package-report --help
+
+Behavior:
+  Prints a passive controller-brain to operator package ledger. It composes
+  virtual controller gestures with the Live Kit Operator Package slots so a
+  future hardware surface can preview macro depth, crate, queue, pad-lane,
+  A4 review, and recovery intent before any active controller or hardware path
+  exists.
+
+Safety:
+  passive/read-only
+  no MIDI controller input
+  no MIDI learn or raw CC capture
+  no WebSocket command dispatch
+  no file writing
   no MIDI sending
   no port opening
   no hardware mutation
@@ -3252,6 +3280,7 @@ Usage:
   python -m rytm_randomizer.cli oxi-live-macro-catalog-report
   python -m rytm_randomizer.cli controller-brain-mapping-report [--json]
   python -m rytm_randomizer.cli controller-brain-rehearsal-report [--json]
+  python -m rytm_randomizer.cli controller-brain-operator-package-report [--json]
   python -m rytm_randomizer.cli controller-brain-live-runbook-report [--json]
   python -m rytm_randomizer.cli controller-brain-live-state-report [--json]
   python -m rytm_randomizer.cli controller-brain-live-bridge-readiness-report [--json]
@@ -3428,6 +3457,8 @@ Commands:
                      Print passive 16-encoder controller-brain intent maps.
   controller-brain-rehearsal-report
                      Print passive controller-brain rehearsal and template export packets.
+  controller-brain-operator-package-report
+                     Print passive controller-brain to operator package ledgers.
   controller-brain-live-runbook-report
                      Print passive controller-brain live runbook steps.
   controller-brain-live-state-report
@@ -3863,6 +3894,7 @@ Safety:
     "oxi-live-macro-catalog-report": _oxi_live_macro_catalog_report_help,
     "controller-brain-mapping-report": _controller_brain_mapping_report_help,
     "controller-brain-rehearsal-report": _controller_brain_rehearsal_report_help,
+    "controller-brain-operator-package-report": _controller_brain_operator_package_report_help,
     "controller-brain-live-runbook-report": (_controller_brain_live_runbook_report_help),
     "controller-brain-live-state-report": _controller_brain_live_state_report_help,
     "controller-brain-live-bridge-readiness-report": (

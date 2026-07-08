@@ -103,6 +103,7 @@ USAGE = (
     "oxi-live-macro-catalog-report | "
     "controller-brain-mapping-report [--json] | "
     "controller-brain-rehearsal-report [--json] | "
+    "controller-brain-operator-package-report [--json] | "
     "controller-brain-live-runbook-report [--json] | "
     "controller-brain-live-state-report [--json] | "
     "controller-brain-live-bridge-readiness-report [--json] | "
