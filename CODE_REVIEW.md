@@ -182,7 +182,7 @@ except _ANALYZER_FAILURE_EXCEPTIONS as exc:
     )
 ```
 
-`extract_from_audio` and the SysEx analyzer both produce exception messages containing the full input path (e.g. `"audio path does not exist: C:\Users\Edward.Rosado\Documents\private\..."`). The terminal job is broadcast as `analysis_progress` to every connected client. Given C1 and C2 above, this is an information-disclosure path: a hostile WS peer asks for analysis of `/etc/passwd`, gets "audio path is neither a file nor a directory: /etc/passwd" back — confirmation the file exists and is not a directory.
+`extract_from_audio` and the SysEx analyzer both produce exception messages containing the full input path (e.g. `"audio path does not exist: <private-input-path>"`). The terminal job is broadcast as `analysis_progress` to every connected client. Given C1 and C2 above, this is an information-disclosure path: a hostile WS peer asks for analysis of `/etc/passwd`, gets "audio path is neither a file nor a directory: /etc/passwd" back — confirmation the file exists and is not a directory.
 
 **Fix.** Sanitize. Map analyzer exceptions to a fixed set of categorical reasons (`"path_not_found"`, `"unsupported_format"`, `"read_failed"`) and never echo the path. Log the full detail server-side via `observability/logging.py`.
 

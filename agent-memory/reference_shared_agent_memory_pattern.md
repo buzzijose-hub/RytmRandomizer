@@ -88,4 +88,4 @@ Skipped for the initial version because manual `cp` is one command and the volum
 
 ## Real-world origin
 
-Implemented in PR for CODE_REVIEW.md execution sweep (2026-05-25). 7 project-scoped memories migrated from `~/.claude/projects/c--Users-Edward-Rosado-Desktop-MusicProduction/memory/` into `agent-memory/`. CLAUDE.md + AGENTS.md updated with import sections. User-personal memories (`hardware_elektron.md`) kept local.
+Implemented in PR for CODE_REVIEW.md execution sweep (2026-05-25). 7 project-scoped memories migrated from `<local-agent-memory>/` into `agent-memory/`. CLAUDE.md + AGENTS.md updated with import sections. User-personal memories (`hardware_elektron.md`) kept local.

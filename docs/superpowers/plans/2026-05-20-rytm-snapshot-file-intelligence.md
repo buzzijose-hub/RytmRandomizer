@@ -570,7 +570,7 @@ git commit -m "feat: expose Rytm snapshot intelligence file report"
 Add the command near the passive CLI examples:
 
 ```powershell
-python -m rytm_randomizer.cli rytm-snapshot-intelligence-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx"
+python -m rytm_randomizer.cli rytm-snapshot-intelligence-report "<RYTM_KITS.syx>"
 ```
 
 Describe it as passive/read-only and file-based.

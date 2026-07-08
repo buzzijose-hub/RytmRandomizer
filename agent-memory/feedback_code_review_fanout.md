@@ -13,4 +13,4 @@ Code reviews must be done as **one targeted agent per review dimension**, dispat
 
 **How to apply:** When asked to review a PR / diff / changes (including the post-push `code-review` skill and the codex hook handoff), spawn parallel `Agent` calls — e.g. one for maintainability, one for observability, one for docs/diagram freshness, one for abstraction reuse, one for architecture/import-direction compliance, one for parity + test hygiene, one for security. Each agent gets a prompt scoped to ONLY its dimension. Then synthesize the per-dimension verdicts into the single Critical/Important/Minor/Abstraction/Docs report and post one consolidated PR comment. The 18 plan-requirement gates (`docs/PLAN_REQUIREMENTS.md`) still define the dimensions; the change is one-agent-per-dimension instead of one-agent-all-dimensions.
 
-Repo: RytmRandomizer (`C:\Users\Edward.Rosado\Desktop\MusicProduction\RytmRandomizer`).
+Repo: RytmRandomizer (`<repo-root>`).

@@ -54,7 +54,7 @@ Add a test proving `format_dual_machine_style_selection_mock_preview_event_rows(
 Run:
 
 ```powershell
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" -m pytest tests\test_dual_machine_style_selection_mock_preview_report.py::test_selection_mock_preview_formats_shared_event_rows -n 0
+& "<python>" -m pytest tests\test_dual_machine_style_selection_mock_preview_report.py::test_selection_mock_preview_formats_shared_event_rows -n 0
 ```
 
 Expected: FAIL because the shared formatter does not exist yet.
@@ -68,7 +68,7 @@ Move the existing private event-row logic into `dual_machine_style_selection_moc
 Run:
 
 ```powershell
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" -m pytest tests\test_dual_machine_style_selection_mock_preview_report.py tests\test_dual_machine_style_live_audition_report.py -n 0
+& "<python>" -m pytest tests\test_dual_machine_style_selection_mock_preview_report.py tests\test_dual_machine_style_live_audition_report.py -n 0
 ```
 
 Expected: PASS.
@@ -88,7 +88,7 @@ Test that a plan built from `("jose_core_techno", "birmingham_pressure", "wareho
 Run:
 
 ```powershell
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" -m pytest tests\test_dual_machine_style_performance_set_plan_report.py -n 0
+& "<python>" -m pytest tests\test_dual_machine_style_performance_set_plan_report.py -n 0
 ```
 
 Expected: FAIL because the module does not exist.
@@ -134,7 +134,7 @@ Add tests for:
 Run:
 
 ```powershell
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" -m pytest tests\test_cli.py::test_dual_machine_style_performance_set_plan_report_help_exits_zero_and_safety_matches_source tests\test_cli_coverage.py::test_main_dual_machine_style_performance_set_plan_report_lazy_imports_when_unloaded tests\test_real_midi_passive_cli_safety.py -n 0
+& "<python>" -m pytest tests\test_cli.py::test_dual_machine_style_performance_set_plan_report_help_exits_zero_and_safety_matches_source tests\test_cli_coverage.py::test_main_dual_machine_style_performance_set_plan_report_lazy_imports_when_unloaded tests\test_real_midi_passive_cli_safety.py -n 0
 ```
 
 Expected: FAIL because the command is not wired yet.
@@ -148,7 +148,7 @@ Add the lazy command entry to `cli.py`, add dynamic help text to `help_text.py`,
 Run:
 
 ```powershell
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" -m pytest tests\test_cli.py tests\test_cli_coverage.py tests\test_real_midi_passive_cli_safety.py -n 0
+& "<python>" -m pytest tests\test_cli.py tests\test_cli_coverage.py tests\test_real_midi_passive_cli_safety.py -n 0
 ```
 
 Expected: PASS.
@@ -169,7 +169,7 @@ Add the new command to the README examples near the existing dual-machine style 
 Run:
 
 ```powershell
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" -m pytest tests\test_dual_machine_style_performance_set_plan_report.py tests\test_dual_machine_style_live_audition_report.py tests\test_dual_machine_style_selection_mock_preview_report.py tests\test_cli.py tests\test_cli_coverage.py tests\test_real_midi_passive_cli_safety.py -n 0
+& "<python>" -m pytest tests\test_dual_machine_style_performance_set_plan_report.py tests\test_dual_machine_style_live_audition_report.py tests\test_dual_machine_style_selection_mock_preview_report.py tests\test_cli.py tests\test_cli_coverage.py tests\test_real_midi_passive_cli_safety.py -n 0
 ```
 
 Expected: PASS.
@@ -179,10 +179,10 @@ Expected: PASS.
 Run:
 
 ```powershell
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" -m pytest tests\architecture\ -q
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" -m ruff check .
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" -m black --check --target-version=py311 .
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" -m isort --profile black --check-only .
+& "<python>" -m pytest tests\architecture\ -q
+& "<python>" -m ruff check .
+& "<python>" -m black --check --target-version=py311 .
+& "<python>" -m isort --profile black --check-only .
 ```
 
 Expected: PASS.
@@ -192,10 +192,10 @@ Expected: PASS.
 Run:
 
 ```powershell
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" -m pytest -m fast
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" -m pytest
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" -m pytest --cov=rytm_randomizer --cov-branch --cov-report=term-missing
-& "C:\Users\Jose Buzzi\AppData\Local\Programs\Python\Python313\python.exe" scripts\code_review_gate.py --mode cli
+& "<python>" -m pytest -m fast
+& "<python>" -m pytest
+& "<python>" -m pytest --cov=rytm_randomizer --cov-branch --cov-report=term-missing
+& "<python>" scripts\code_review_gate.py --mode cli
 ```
 
 Expected: PASS. Do not stage CRLF-only checkout noise or V1.34 parity fixture noise.

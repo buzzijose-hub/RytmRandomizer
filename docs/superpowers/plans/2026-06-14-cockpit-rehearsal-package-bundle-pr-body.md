@@ -31,14 +31,14 @@ evidence only; it does not create a SEND path.
 ## Test plan
 
 ```powershell
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer\desktop\web'
+Set-Location '<repo-root>\desktop\web'
 npm.cmd run test:run -- tests/cockpit/PerformanceConsole.test.tsx
 npm.cmd run test:coverage
 npm.cmd run typecheck
 npm.cmd run build
 npm.cmd run lint -- --ext .ts,.tsx --max-warnings 0 src/cockpit/PerformanceConsole.tsx tests/cockpit/PerformanceConsole.test.tsx
 
-Set-Location 'C:\Users\Jose Buzzi\Documents\RytmRandomizer'
+Set-Location '<repo-root>'
 python -m pytest tests\architecture\ -q -n 0
 python -m ruff check .
 python -m black --check --target-version=py311 .

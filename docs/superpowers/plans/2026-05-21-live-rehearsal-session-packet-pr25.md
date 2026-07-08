@@ -291,7 +291,7 @@ Expected: PASS.
 Add one passive command example beside the rehearsal manifest report:
 
 ```text
-python -m rytm_randomizer.cli style-performance-arc-live-session-packet-report --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --events --limit 8
+python -m rytm_randomizer.cli style-performance-arc-live-session-packet-report --rytm "<RYTM_KITS.syx>" --analog-four "<ANALOG_FOUR_KITS.syx>" --events --limit 8
 ```
 
 - [ ] **Step 2: Add STATUS entry**

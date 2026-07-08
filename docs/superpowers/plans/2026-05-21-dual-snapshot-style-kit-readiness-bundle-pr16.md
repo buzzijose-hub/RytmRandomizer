@@ -272,8 +272,8 @@ Add both `--help` commands to the passive MIDI import sweep so the new command s
 Add operator examples for:
 
 ```bash
-python -m rytm_randomizer.cli rytm-style-kit-readiness-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" jose_core_techno --limit 16
-python -m rytm_randomizer.cli dual-machine-style-kit-readiness-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" jose_core_techno --limit 16
+python -m rytm_randomizer.cli rytm-style-kit-readiness-report "<RYTM_KITS.syx>" jose_core_techno --limit 16
+python -m rytm_randomizer.cli dual-machine-style-kit-readiness-report "<RYTM_KITS.syx>" "<ANALOG_FOUR_KITS.syx>" jose_core_techno --limit 16
 ```
 
 - [x] **Step 2: Update README behavior notes**
@@ -328,9 +328,9 @@ Expected: all commands exit 0 before staging, commit, push, and PR creation.
 - [x] Real-file passive smoke:
 
 ```bash
-python -m rytm_randomizer.cli rytm-style-kit-readiness-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" jose_core_techno --limit 3
-python -m rytm_randomizer.cli analog-four-style-kit-readiness-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" jose_core_techno --limit 3
-python -m rytm_randomizer.cli dual-machine-style-kit-readiness-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" jose_core_techno --limit 3
+python -m rytm_randomizer.cli rytm-style-kit-readiness-report "<RYTM_KITS.syx>" jose_core_techno --limit 3
+python -m rytm_randomizer.cli analog-four-style-kit-readiness-report "<ANALOG_FOUR_KITS.syx>" jose_core_techno --limit 3
+python -m rytm_randomizer.cli dual-machine-style-kit-readiness-report "<RYTM_KITS.syx>" "<ANALOG_FOUR_KITS.syx>" jose_core_techno --limit 3
 ```
 
 Expected: all commands exit 0, remain passive/read-only, and open no ports.

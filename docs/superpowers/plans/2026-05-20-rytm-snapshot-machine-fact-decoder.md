@@ -20,7 +20,7 @@ The next missing piece is the decoder bridge: turn a real Rytm kit SysEx snapsho
 
 Read-only analysis of Jose's local Rytm kit dumps on 2026-05-20 found:
 
-- `G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx` contains 128 kit SysEx messages.
+- `<RYTM_KITS.syx>` contains 128 kit SysEx messages.
 - Each kit message is 2998 bytes on the wire.
 - After stripping `F0/F7`, removing the Elektron manufacturer prefix, and unpacking the 7-bit payload, each kit body is 2618 bytes.
 - The real kit name begins at unpacked offset `8`, not offset `0`.

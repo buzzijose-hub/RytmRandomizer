@@ -4,15 +4,15 @@ Last updated: 2026-07-03. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
-- 2026-07-03: Synplant-inspired Cockpit UI design surface prepared locally.
+- 2026-07-03: Patch Genome cockpit design surface prepared locally.
   The React cockpit now has a frontend-only Patch Genome panel that groups
   Analog Four-facing design-preview genes into oscillator, envelope/LFO,
   filter/FX, and performance families; supports local family selection,
   local gene locks, and grow/reset variant controls; and keeps the surface
   mock-safe with no WebSocket command dispatch, no sidecar command execution,
   no MIDI port opening, no hardware arm path, no patch intelligence, and no
-  MIDI send. The five Synplant 2 reference screenshots are saved under
-  `docs/assets/synplant-2-reference/` for future design work.
+  MIDI send. Commercial UI screenshots and local visual references are kept
+  outside the public branch.
 - 2026-07-02: Analog Four one-shot mapping sends now have a dry-run-first
   proof path. The existing manual-backed A4 CC, synth-track NRPN, and kit
   recipe send surfaces can render through `MockMidiSender` with `--dry-run`

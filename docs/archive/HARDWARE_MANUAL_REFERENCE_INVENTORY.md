@@ -34,7 +34,7 @@ Hardware status:
 ## 3. Storage Decision
 
 The manuals should remain outside the repository at their current local
-Dropbox paths.
+local manual archive paths.
 
 Reasons:
 
@@ -53,7 +53,7 @@ explicit approval and licensing/storage decision.
 
 Local path:
 
-- `C:\Users\Jose Buzzi\Dropbox\Utilities\elektron-analog-rytm-mkii-manual.pdf`
+- `<local-manuals>/elektron-analog-rytm-mkii-manual.pdf`
 
 Device:
 
@@ -78,7 +78,7 @@ Current use:
 
 Local path:
 
-- `C:\Users\Jose Buzzi\Dropbox\Utilities\Analog-Four-MKII-User-Manual_ENG_OS1.40A_200303.pdf`
+- `<local-manuals>/Analog-Four-MKII-User-Manual_ENG_OS1.40A_200303.pdf`
 
 Device:
 

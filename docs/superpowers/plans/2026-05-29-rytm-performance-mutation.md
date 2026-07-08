@@ -46,8 +46,8 @@
 
 - [x] Run the performance planner tests, app performance tests, snapshot file tests, and style recipe tests together.
 - [x] Run ruff on touched files.
-- [x] Run `python -m rytm_randomizer.app --dry-run --rytm-performance-snapshot captures/20260528-224956-analog-rytm-current-kit-reassembled.syx --rytm-performance-mode live-safe --rytm-performance-style flow-shift`.
-- [x] Run `python -m rytm_randomizer.app --dry-run --rytm-performance-snapshot captures/20260528-232829-analog-rytm-current-kit-reassembled.syx --rytm-performance-mode live-safe --rytm-performance-style flow-shift --rytm-performance-depth safe`.
+- [x] Run `python -m rytm_randomizer.app --dry-run --rytm-performance-snapshot <local-current-kit.syx> --rytm-performance-mode live-safe --rytm-performance-style flow-shift`.
+- [x] Run `python -m rytm_randomizer.app --dry-run --rytm-performance-snapshot <local-current-kit.syx> --rytm-performance-mode live-safe --rytm-performance-style flow-shift --rytm-performance-depth safe`.
 - [x] Hardware-send the verified `live-safe` / `safe` plan only after explicit user approval.
 - [x] Document the first hardware lesson: seed `890002068` initially pushed Pad 1 filter frequency to `62`, which killed kick punch.
 - [x] Add a regression test for seed `890002068` proving Pad 1 kick filter frequency stays in `21..29` at `safe` depth.

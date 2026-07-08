@@ -62,13 +62,13 @@ the midrange unless the captured anchor itself is already there.
 Dry-run:
 
 ```powershell
-python -m rytm_randomizer.app --dry-run --rytm-snapshot-shell captures\current-kit.syx
+python -m rytm_randomizer.app --dry-run --rytm-snapshot-shell <local-current-kit.syx>
 ```
 
 Armed:
 
 ```powershell
-python -m rytm_randomizer.app --arm --rytm-snapshot-shell captures\current-kit.syx --confirm-rytm-snapshot-shell-send
+python -m rytm_randomizer.app --arm --rytm-snapshot-shell <local-current-kit.syx> --confirm-rytm-snapshot-shell-send
 ```
 
 ## Acceptance Criteria

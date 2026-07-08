@@ -780,8 +780,8 @@ The orchestrator updates the project-scoped memory directory (`.claude/projects/
 Before opening the learning PR, the orchestrator runs a fresh-clone simulation in an isolated worktree:
 
 ```powershell
-git worktree add C:\tmp\fresh-clone-test -b validate/fresh-clone modularize-v1.34
-cd C:\tmp\fresh-clone-test
+git worktree add <scratch-dir>\fresh-clone-test -b validate/fresh-clone modularize-v1.34
+cd <scratch-dir>\fresh-clone-test
 # Apply the prospective learning PR's changes
 # Try to answer these questions using ONLY files under this worktree:
 #  1. "How do I run an autonomous multi-PR refactor in this repo?" → docs/AUTONOMOUS_RUN_PLAYBOOK.md must answer it.

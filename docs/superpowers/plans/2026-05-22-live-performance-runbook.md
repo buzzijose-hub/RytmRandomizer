@@ -180,7 +180,7 @@ Map the command in `cli.py`, add top-level usage in `help_text.py`, and create `
 Add one example after reference-match:
 
 ```powershell
-python -m rytm_randomizer.cli style-performance-arc-live-runbook-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --events --limit 8
+python -m rytm_randomizer.cli style-performance-arc-live-runbook-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "<RYTM_KITS.syx>" --analog-four "<ANALOG_FOUR_KITS.syx>" --events --limit 8
 ```
 
 - [ ] **Step 2: Update status**

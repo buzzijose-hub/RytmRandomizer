@@ -17,9 +17,9 @@ context.
 ## Latest Captured Kit
 
 - SysEx file:
-  `captures/20260528-232829-analog-rytm-current-kit-reassembled.syx`
+  `<local-current-kit.syx>`
 - JSON decode:
-  `captures/20260528-232829-analog-rytm-current-kit-reassembled.json`
+  `<local-current-kit.json>`
 - Kit name decoded: `KIT 1`
 - Current raw-kit fingerprint: `e882fbf28513c226` (the older JSON sidecar was
   produced before raw-kit header/trailer stripping was corrected).
@@ -44,8 +44,8 @@ context.
 Dry-run the latest captured kit:
 
 ```powershell
-python -m rytm_randomizer.app --dry-run --rytm-performance-snapshot captures\20260528-232829-analog-rytm-current-kit-reassembled.syx --rytm-performance-mode live-safe --rytm-performance-style flow-shift --rytm-performance-depth safe --rytm-performance-seed 890002068
-python -m rytm_randomizer.app --dry-run --rytm-snapshot-shell captures\20260528-232829-analog-rytm-current-kit-reassembled.syx
+python -m rytm_randomizer.app --dry-run --rytm-performance-snapshot <local-current-kit.syx> --rytm-performance-mode live-safe --rytm-performance-style flow-shift --rytm-performance-depth safe --rytm-performance-seed 890002068
+python -m rytm_randomizer.app --dry-run --rytm-snapshot-shell <local-current-kit.syx>
 ```
 
 Fresh live snapshot shell:
@@ -61,7 +61,7 @@ staged mutation, and keeps the current session guardrails.
 Armed send of the corrected same-seed plan:
 
 ```powershell
-'2' | python -m rytm_randomizer.app --arm --rytm-performance-snapshot captures\20260528-232829-analog-rytm-current-kit-reassembled.syx --rytm-performance-mode live-safe --rytm-performance-style flow-shift --rytm-performance-depth safe --rytm-performance-seed 890002068 --confirm-rytm-performance-send
+'2' | python -m rytm_randomizer.app --arm --rytm-performance-snapshot <local-current-kit.syx> --rytm-performance-mode live-safe --rytm-performance-style flow-shift --rytm-performance-depth safe --rytm-performance-seed 890002068 --confirm-rytm-performance-send
 ```
 
 Focused verification:

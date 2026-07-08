@@ -12,4 +12,4 @@ Use it as a local reference for:
 
 Recommended local destination:
 
-`C:\Users\Jose Buzzi\Documents\RytmRandomizer\Skills\DataAnalysisGuardrails\SKILL.md`
+`<repo-root>\Skills\DataAnalysisGuardrails\SKILL.md`

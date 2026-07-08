@@ -71,7 +71,7 @@ When you see "specified disk or diskette cannot be accessed", you've hit the shi
 "$PYTHON" -c "import sys; print(sys.executable)"
 ```
 
-The output should be a path under `C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_*\python3.13.exe` (or your venv's path). If it's anything under `WindowsApps\` *without* `PythonSoftwareFoundation.` — that's the shim, and you'll hit the error.
+The output should be a path under `<real-python.exe>` (or your venv's path). If it's anything under `WindowsApps\` *without* `PythonSoftwareFoundation.` — that's the shim, and you'll hit the error.
 
 ## When to invoke this skill
 

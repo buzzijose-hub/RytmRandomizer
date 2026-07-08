@@ -19,16 +19,81 @@
 
 ---
 
+> Unofficial project. Not affiliated with, endorsed by, or sponsored by Elektron.
+
 ## What is it?
 
-You own an Analog Rytm. You also own a musical taste — a sound you keep chasing when you sit in front of the machine. RytmRandomizer is the desktop tool that **bridges the two**.
+RytmRandomizer is a Python and desktop systems project for safely rehearsing,
+previewing, and generating Elektron Analog Rytm MK2 sound-design mutations
+before any hardware send is allowed. It demonstrates a passive-by-default MIDI
+safety model, deterministic mutation logic, a mock sender test harness, a Tauri
+cockpit prototype, and a broad architecture-test suite for a hardware-adjacent
+music tool.
 
-1. **Point it at your inspiration** — a folder of tracks, a kit dump, the name of an artist you love.
-2. **It learns your style** as a deployable *Profile* (12 pads × style traits).
-3. **Mutate live** during a session: preview the change as a ghost, lock pads you love, undo any move, fire SEND only when the cockpit's pre-flight check says the plan is ready.
-4. **Export the Profile** as a tiny signed file you can share, version-pin, or load onto dedicated hardware (Phase 4).
+In recruiter terms: this is a music-tech/AV engineering portfolio repo showing
+how I build systems that sit near real hardware without treating safety as an
+afterthought.
 
-Passive by default — nothing touches MIDI unless you explicitly `--arm`. Byte-identical mutation across Python today and embedded C tomorrow.
+Core surfaces:
+
+1. **Passive CLI reports** for inspecting devices, styles, readiness, and
+   mutation plans without opening MIDI ports.
+2. **Dry-run mutation flows** that render the exact messages through
+   `MockMidiSender` before any real output path exists.
+3. **Explicitly armed hardware paths** for validated Rytm workflows only, gated
+   behind `--arm` plus confirmation flags.
+4. **Cockpit and export prototypes** that explore a future operator UI and
+   signed profile artifact pipeline.
+
+Passive by default: nothing touches MIDI unless an operator explicitly arms a
+hardware path.
+
+## Current Status
+
+**Works today:**
+
+- Passive CLI reports and architecture-enforced no-hardware default behavior.
+- Mock/dry-run rendering for mutation plans and selected Analog Four review
+  surfaces.
+- V1.34 Analog Rytm four-pad parity tests backed by frozen JSON fixtures.
+- All-12-pad Rytm style and snapshot workflows with explicit arming gates.
+- Cockpit-side data models, passive rehearsal surfaces, and frontend-local
+  interaction prototypes.
+
+**Experimental or staged:**
+
+- The desktop cockpit is a prototype surface, not a released installer.
+- Analog Four support is review/dry-run/candidate-gated unless a command
+  explicitly documents an armed path.
+- Export and future hardware-loader work are architectural prototypes for
+  portable profile workflows.
+- Real captures, local SysEx dumps, commercial UI screenshots, logs, and build
+  artifacts are intentionally kept out of the public branch.
+
+## Safety Model
+
+- **Passive by default:** normal CLI/report entry points do not import `mido`,
+  open ports, or send MIDI.
+- **Dry-run first:** mutation and send-plan paths can render through the in-memory
+  `MockMidiSender` so behavior is inspectable without hardware.
+- **Mock sender in tests:** safety tests assert that passive commands remain
+  mock-only and that real MIDI imports stay lazy.
+- **Explicit hardware arming:** real MIDI output requires `--arm` and, for the
+  higher-risk shells, an additional confirmation flag.
+- **No real hardware in CI:** tests do not require attached devices and should not
+  mutate connected hardware.
+
+## Portfolio Value
+
+This project demonstrates professional skills relevant to music-tech, AV, and
+technical systems roles:
+
+- Hardware-adjacent safety design with passive defaults and explicit arming.
+- Deterministic mutation logic and byte-frozen regression fixtures.
+- Test architecture for side-effect boundaries, import safety, and public docs.
+- Cross-platform Python packaging, CLI design, and desktop-app prototyping.
+- Practical operator UX thinking for live performance tools.
+- Long-form technical documentation for onboarding and future maintainers.
 
 ---
 
@@ -45,7 +110,7 @@ A Tauri desktop window backed by a Python sidecar that hosts the mutation engine
 |---|---|
 | **Device rail** | Switch the cockpit view between the Analog Rytm MKII 12-pad surface and the Analog Four MKII four-track mock/staged surface. |
 | **Snapshot panel** | All 12 pads at a glance, with a ghost overlay showing what the next mutation would change. Lock any pad to protect it. |
-| **Patch Genome** | Synplant-inspired design-preview surface for grouped patch genes, local locks, grow/reset variants, and Analog Four-facing dry-run review. |
+| **Patch Genome** | Frontend-only design-preview surface for grouped patch genes, local locks, grow/reset variants, and Analog Four-facing dry-run review. |
 | **Mutation panel** | Pick a profile, set depth (0.10 → 0.90), regen on demand. Every change is deterministic for a given (snapshot, profile, depth, seed). |
 | **History strip** | Saved + auto snapshots. Undo any move. Jump to any past snapshot. |
 | **SEND-plan readiness** | The cockpit refuses to fire SEND until the server confirms the plan is ready. Stale plans clear automatically after candidate or lock changes. |
@@ -53,10 +118,11 @@ A Tauri desktop window backed by a Python sidecar that hosts the mutation engine
 
 **Passive by construction.** The cockpit defaults to a mock device adapter. No MIDI port opens until you explicitly `--arm`.
 
-The Patch Genome panel is frontend-only: it translates the Synplant-inspired design language
-into grouped patch families for review and local exploration, but it does not run audio
-analysis, synthesize patches from recordings, dispatch sidecar commands, open MIDI ports,
-or send MIDI; saved visual references live in `docs/assets/synplant-2-reference/`.
+The Patch Genome panel is frontend-only: it translates a general patch-family
+metaphor into grouped controls for review and local exploration, but it does
+not run audio analysis, synthesize patches from recordings, dispatch sidecar
+commands, open MIDI ports, or send MIDI. Commercial UI screenshots and local
+visual references are intentionally not committed to the public branch.
 
 The Analog Four cockpit view is currently visibility-only. It shows four synth
 tracks, the existing A4 strategy zones, and OXI-style track macro rows for
@@ -295,8 +361,8 @@ across all 12 pads:
 
 ```bash
 python -m rytm_randomizer.app --arm --rytm-live-snapshot-shell --confirm-rytm-snapshot-shell-send
-python -m rytm_randomizer.app --dry-run --rytm-snapshot-shell captures/current-kit.syx
-python -m rytm_randomizer.app --arm --rytm-snapshot-shell captures/current-kit.syx --confirm-rytm-snapshot-shell-send
+python -m rytm_randomizer.app --dry-run --rytm-snapshot-shell <local-current-kit.syx>
+python -m rytm_randomizer.app --arm --rytm-snapshot-shell <local-current-kit.syx> --confirm-rytm-snapshot-shell-send
 ```
 
 The live command is the fresh-performance workflow: choose the Rytm input, send
@@ -569,6 +635,7 @@ dual-machine-style-kit-selection-report STYLE --rytm KITS --analog-four KITS
 # Snapshot intelligence
 rytm-snapshot-intelligence-report KITS.syx --slot N                   # one Rytm kit snapshot
 rytm-snapshot-mutation-preview-report KITS.syx --slot N --depth 2     # mock-only preview
+analog-rytm-midi-catalog-report --format markdown                    # passive Analog Rytm MIDI catalog
 ```
 
 Every command above is **passive by construction** — no MIDI port opens, no MIDI is sent. The full list is auto-discovered and swept on every PR by `tests/test_real_midi_passive_cli_safety.py`.
@@ -577,94 +644,19 @@ Every command above is **passive by construction** — no MIDI port opens, no MI
 
 ## Scenes and commands · V1.34
 
-The validated V1.34 layer is the byte-frozen reference behaviour for the interactive armed runtime. These are the canonical command tables that `rytm_randomizer.shell` dispatches.
+The validated V1.34 layer is the byte-frozen reference behavior for the
+interactive armed runtime. The canonical command tables and full passive CLI
+surface live in [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) and
+[`docs/V134_OPERATOR_COMMAND_SURFACE_REFERENCE.md`](docs/V134_OPERATOR_COMMAND_SURFACE_REFERENCE.md).
 
-<details>
-<summary><b>Scene system</b></summary>
+High-level safety rules remain:
 
-```text
-S0  = Home / Clean anchors
-S1  = Rolling          S1A = Rolling Light       S1B = Rolling Push
-S2  = Deeper           S2A = Deeper Groove       S2B = Deeper Pressure
-S3  = Intense          S3A = Intense Motion      S3B = Intense Grit
-S4  = Wild             S4A = Wild Controlled     S4B = Wild Maximum
-S5  = Back to Clean anchors
-```
-
-</details>
-
-<details>
-<summary><b>Four-lane pad layout</b></summary>
-
-```text
-Pad 1 = BD Hard      / protected kick foundation
-Pad 2 = BD Classic   / secondary percussion lane
-Pad 3 = SY Raw       / bass + synth-percussion motion lane
-Pad 4 = BD Acoustic  / body + accent pressure lane
-```
-
-</details>
-
-<details>
-<summary><b>Example scene flow</b></summary>
-
-A typical four-pad live arc:
-
-```text
-SCN     GM      S1A     S3A     S3B     S4B     S5      1       Z       Q
-```
-
-Keep volume moderate for S3B and S4B.
-
-</details>
-
-<details>
-<summary><b>Safety rules</b></summary>
-
-- No new machine profiles.
-- No new MIDI CC mappings.
-- No new parameter ranges.
-- Pads 5-12 have passive matrix/compatibility reports, curated Analog Rytm
-  style kits can actively send full 12-pad manual-backed CC MSB recipes behind
-  `--arm --confirm-rytm-kit-send`, and the all-12-pad shell can mutate loaded
-  style plans behind `--arm --rytm-12-pad-shell --confirm-rytm-12-pad-send`.
-  The all-12-pad snapshot shell can mutate a current-kit SysEx anchor behind
-  `--arm --rytm-snapshot-shell <file.syx> --confirm-rytm-snapshot-shell-send`
-  or receive that anchor live behind
-  `--arm --rytm-live-snapshot-shell --confirm-rytm-snapshot-shell-send`; in the
-  live shell, `kit` / `resnapshot` can receive a new KIT anchor without
-  restarting the process.
-- Main-prompt `1`, `2`, and `3` remain guarded and send no MIDI.
-- Four-pad scene/global commands auto-load anchors if needed.
-- Free-form all-row mutation, samples, performance macros, source level, track level, amp volume, NRPN style-kit sends, SysEx, transport, pattern changes, and kit/project writes remain out of scope.
-- Analog Four sends are candidate/manifest-gated and require either an explicit `--dry-run` mock preview or an explicit `--arm` path plus a ready plan; the passive default touches no hardware.
-- Analog Rytm CC observe is input-only: `python -m rytm_randomizer.app --arm --rytm-cc-observe` opens a Rytm MIDI input port, observes pending CC messages, prints raw CC/NRPN observations with candidate labels, optionally sharpens labels with `--rytm-cc-observe-live-snapshot` or `--rytm-cc-observe-snapshot current-kit.syx`, and sends no MIDI.
-- Analog Four soft live capture is input-only: `python -m rytm_randomizer.app --arm --a4-soft-capture` opens an A4 MIDI input port, observes pending CC messages, prints a known/unknown state report, and sends no MIDI.
-- Analog Four named parameter sends are active but dry-run first: `python -m rytm_randomizer.app --dry-run --a4-send-param --parameter "OSC1 PWM Depth" --channel 0 --value 32` records one inert mock CC, while the matching `--arm` command prompts for an A4 output port, sends one manual-backed CC MSB message, closes the port, and exits.
-- Analog Four kit recipes are active but dry-run first: `python -m rytm_randomizer.app --dry-run --a4-kit-recipe bell-techno-grid` records the coordinated manual-backed four-track CC recipe in memory, while the matching `--arm` command prompts for an A4 output port, sends the recipe, closes the port, and exits.
-
-</details>
-
-The passive CLI exposes the current machine target surface, passive 12-pad machine matrix, snapshot readiness, and Analog Rytm MIDI catalog without opening a MIDI port:
-
-```bash
-python -m rytm_randomizer.cli dual-machine-target-report rytm   # Analog Rytm only
-python -m rytm_randomizer.cli dual-machine-target-report a4     # Analog Four only
-python -m rytm_randomizer.cli dual-machine-target-report both   # both registered devices
-python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report   # passive Rytm 12-pad machine compatibility matrix
-python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report   # passive snapshot readiness per Rytm pad
-python -m rytm_randomizer.cli analog-rytm-midi-catalog-report   # passive OS 1.72 Rytm CC/NRPN catalog
-python -m rytm_randomizer.cli oxi-live-macro-catalog-report   # passive OXI live macro cards, live flow, and A4 runway state
-python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report --json   # passive next-studio Rytm macro rehearsal checklist
-python -m rytm_randomizer.cli live-gui-performance-flow-model-report --json   # cockpit-ready Rytm/A4 performance flow model
-python -m rytm_randomizer.cli live-gui-performance-console-report --json   # full passive Cockpit performance console packet with lane policy, macro action, and rehearsal boards
-python -m rytm_randomizer.cli oxi-live-set-strategy-report --json   # passive OXI set chapters, operator cues, rehearsal/replay commands, pad policy, and A4 review-only actions
-python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove --seed 23 --intensity 6 --events --limit 0
-python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4
-python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --json
-```
-
-Aliases: `rytm-only` and `a4-only` are accepted. The reports are passive: they open no MIDI port and send no MIDI. The snapshot-pad compatibility report explains which legal Rytm pad/machine combinations are snapshot-mutable today and which remain selectable-only until the follow-up runtime slice. The Analog Rytm MIDI catalog records OS 1.72 CC/NRPN rows with safety status labels; documented-only rows are not promoted to mutation until a separate approved hardware-validation pass. The live GUI performance-flow model emits the cockpit-ready sequence that joins Rytm OXI macro commands with Analog Four review-only actions. The live GUI performance-console report composes the Rytm 12-pad snapshot surface, Rytm Lane Policy Matrix, device inventory, Style Crates queue and Mutation Journal cards, snapshot history, command queue, safety checklist, Analog Four set-plan review, a passive macro action deck for `kit-core`, `hard-groove`, `industrial`, `dub-pressure`, `transition`, and `home`, and a passive Rehearsal Board that surfaces live chapters, operator cues, pad-lane checks, next hardware validations, A4 promotion gates, recovery checks, and replay commands into one GUI-ready packet; it stays passive/mock-safe and represents hardware sends, lane-policy dispatch, queue dispatch, snapshot-history SEND, Cockpit macro fire/prepare, Cockpit rehearsal launch/fire, and A4 outbound macro send as blocked actions. The lane matrix preserves the pad 5/9/10/11 SRC-first lane discipline, the pad 6-8 tom/source lane, and Pad 12 product availability directly in the console contract. The Rytm live macro hardware rehearsal report turns the macro list into a next-studio checklist with the armed shell launch command, per-macro checkpoints, Pad 5/9/10/11 SRC-first notes, Pad 6-8 tom/source notes, Pad 12 availability notes, and `home`/`Z` recovery checks. The OXI live set strategy report ties `kit/resnapshot`, `kit-core`, `hard-groove`, `industrial`, `dub-pressure`, `transition`, and `home` into operator chapters while preserving the pad 5/9/10/11 SRC+FX lane discipline, the pad 6-8 tom/source lane, Pad 12 availability for users who rely on it, the next Rytm/A4 validation runway, the A4 promotion gates, an operator cue sheet for what OXI keeps handling, what RytmRandomizer stages, what Jose inspects, what fires, what recovers, rehearsal checkpoints for capture, review, fire, recovery, A4 gating, and after-set notes, and replay/rehearsal command metadata for passive reports, A4 review, Rytm shell launch, `changes`, manual fire, and recovery. The A4 readiness report adds the soft-capture preflight command plus one-row validation commands and stop/recovery notes. The A4 set planner sequences current/up-next macros for Cockpit style-queue review while keeping full A4 macro SEND blocked. The Analog Four path is candidate/manifest-gated; do not run armed Analog Four hardware sends until a readiness report says the plan is ready.
+- No new machine profiles, MIDI CC mappings, parameter ranges, or command
+  behaviors without explicit approval.
+- Passive reports open no MIDI ports and send no MIDI.
+- Active paths require dry-run/mock preview or explicit `--arm` gates.
+- Real SysEx captures are local operator files and are not committed to this
+  public branch.
 
 ---
 

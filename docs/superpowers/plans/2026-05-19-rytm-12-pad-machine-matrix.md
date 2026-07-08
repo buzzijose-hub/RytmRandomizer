@@ -12,7 +12,7 @@
 
 ## Preconditions
 
-- Work from `C:\Users\Jose Buzzi\Documents\RytmRandomizer\.worktrees\rytm-12-pad-machine-matrix-lf`.
+- Work from `<repo-root>\.worktrees\rytm-12-pad-machine-matrix-lf`.
 - Base branch is `origin/modularize-v1.34`.
 - The worktree currently shows unrelated CRLF/LF noise from the merged base. Do not stage unrelated files. Use path-specific `git add -- <paths>`.
 - Do not run `PARITY_CAPTURE_MODE=1`.
