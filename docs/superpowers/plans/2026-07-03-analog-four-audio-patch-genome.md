@@ -3,7 +3,7 @@
 > Status: in-flight
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:test-driven-development. This plan is structured for one bundled PR with maximum-parallelization sidecar exploration and no stacked PRs, per docs/PLAN_REQUIREMENTS.md Gate 16.
 
-**Goal:** Add a Synplant-inspired audio/description-to-Analog-Four patch genome that produces four A4 patch candidates, a selected candidate DNA sheet, front-panel dial targets, CC/NRPN transport metadata, a learning packet that explains candidate ranking, trait-to-A4 routes, future capture steps, passive initialized-baseline comparison for clean-slate A4 SysEx exports, passive patch-corpus nearest-match ranking for starter or captured A4 audio/patch examples, the first passive SysEx field calibration fact for Filter1 Frequency, and live-dial readiness, plus a gated send-plan bridge that can preview or explicitly arm compiler-approved live-dial rows without promoting screen-only destinations.
+**Goal:** Add a Synplant-inspired audio/description-to-Analog-Four patch genome that produces four A4 patch candidates, a selected candidate DNA sheet, front-panel dial targets, CC/NRPN transport metadata, a learning packet that explains candidate ranking, trait-to-A4 routes, future capture steps, passive initialized-baseline comparison for clean-slate A4 SysEx exports, passive patch-corpus nearest-match ranking for starter or captured A4 audio/patch examples, the first passive SysEx field calibration facts for Filter1 Frequency and Track 1 Filter1 Resonance, and live-dial readiness, plus a gated send-plan bridge that can preview or explicitly arm compiler-approved live-dial rows without promoting screen-only destinations.
 
 **Architecture:** Keep A4-specific facts in `rytm_randomizer/data/`, deterministic audio-intelligence translation in `rytm_randomizer/style_analysis/`, passive operator output in focused `rytm_randomizer/reports/` modules registered through `cli_registry`, and active output only in `rytm_randomizer/app.py` behind `--arm` plus a confirmation flag. Screen-only NRPN destination rows remain skipped until their ordinals are captured.
 
@@ -23,7 +23,7 @@
 | WS-F | Patch send-plan bridge + gated app send | WS-A, WS-B, WS-E | WS-D | `rytm_randomizer/style_analysis/analog_four_patch_send_plan.py`, `rytm_randomizer/reports/analog_four_patch_send_plan.py`, `rytm_randomizer/senders/midi_event_plan.py`, `rytm_randomizer/app.py`, `tests/test_analog_four_patch_send_plan*.py`, `tests/test_app_validate_one_cc.py` |
 | WS-G | Patch capture-corpus nearest matching | WS-A, WS-B, WS-E | WS-D | `rytm_randomizer/data/analog_four_patch_corpus.py`, `rytm_randomizer/style_analysis/analog_four_patch_corpus.py`, `rytm_randomizer/reports/analog_four_patch_corpus.py`, `tests/test_analog_four_patch_corpus*.py` |
 | WS-H | Initialized SysEx baseline comparison | WS-G | WS-D | `rytm_randomizer/reports/analog_four_baseline.py`, `tests/test_analog_four_baseline_report.py` |
-| WS-I | First promoted A4 SysEx field calibration | WS-H | WS-D | `rytm_randomizer/data/analog_four_sysex_calibration.py`, `tests/test_analog_four_sysex_calibration.py`, `rytm_randomizer/data/__init__.py` |
+| WS-I | First A4 SysEx field calibration facts | WS-H | WS-D | `rytm_randomizer/data/analog_four_sysex_calibration.py`, `tests/test_analog_four_sysex_calibration.py`, `rytm_randomizer/data/__init__.py` |
 
 ## Execution Shape
 
@@ -53,7 +53,7 @@
 8. Implement the passive send-plan compiler/report and gated app dry-run/armed send bridge.
 9. Implement the passive capture-corpus nearest-match compiler/report with synthetic starter rows and optional captured corpus file input.
 10. Implement the passive initialized-baseline report for Jose's Test 1 kit, pattern+kit, and whole-project SysEx exports.
-11. Promote the first passive A4 SysEx field calibration fact from Jose's Filter1 Frequency captures.
+11. Promote the first passive A4 SysEx field calibration facts from Jose's Filter1 Frequency and Filter1 Resonance captures.
 12. Update operator docs and architecture/status references.
 13. Run focused tests, then fast/architecture/lint verification as feasible.
 

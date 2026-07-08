@@ -149,6 +149,33 @@ _FILTER1_FREQUENCY_EVIDENCE: Final[tuple[AnalogFourSysexCalibrationEvidence, ...
     ),
 )
 
+_FILTER1_RESONANCE_EVIDENCE: Final[tuple[AnalogFourSysexCalibrationEvidence, ...]] = (
+    AnalogFourSysexCalibrationEvidence(
+        track=1,
+        screen_value="0",
+        primary_raw_value=0x00,
+        kit_name="KIT 1",
+        source_file="A4_Test1_T1_Filter1Res_000_Kit.syx",
+        payload_fingerprint="9a5da29b4ad37008",
+    ),
+    AnalogFourSysexCalibrationEvidence(
+        track=1,
+        screen_value="20",
+        primary_raw_value=0x14,
+        kit_name="KIT 1",
+        source_file="A4_Test1_T1_Filter1Res_20_Kit.syx",
+        payload_fingerprint="67a43e126f4d0f85",
+    ),
+    AnalogFourSysexCalibrationEvidence(
+        track=1,
+        screen_value="127",
+        primary_raw_value=0x7F,
+        kit_name="KIT 1",
+        source_file="A4_Test1_T1_Filter1Res_127_Kit.syx",
+        payload_fingerprint="9f4535115136f4ec",
+    ),
+)
+
 ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCalibration]] = (
     MappingProxyType(
         {
@@ -179,7 +206,36 @@ ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCal
                     "Track 3 and Track 4 zero-value captures confirm the +400 packed-byte stride.",
                     "SysEx checksum trailer bytes must be ignored or recomputed by future writers.",
                 ),
-            )
+            ),
+            "Filter1 Resonance": AnalogFourSysexFieldCalibration(
+                parameter="Filter1 Resonance",
+                section="FILTERS",
+                status=A4_SYSEX_CALIBRATION_STATUS_PENDING,
+                screen_min="0",
+                screen_mid="20",
+                screen_max="127",
+                primary_raw_values=_screen_value_map(
+                    {
+                        "0": 0x00,
+                        "20": 0x14,
+                        "127": 0x7F,
+                    }
+                ),
+                track_1_primary_raw_offset=158,
+                track_raw_stride=400,
+                track_1_raw_group_start=156,
+                raw_group_width=8,
+                track_1_unpacked_group_start=133,
+                unpacked_group_width=7,
+                track_unpacked_stride=350,
+                evidence=_FILTER1_RESONANCE_EVIDENCE,
+                notes=(
+                    "Primary packed data byte verified on Track 1 at 0, 20, and 127.",
+                    "Track stride is inferred from the adjacent Filter1 Frequency calibration until Track 2-4 captures promote it.",
+                    "The decoded byte appears as 0x80 plus the screen value when Filter1 Frequency leaves the shared 7-bit group header set.",
+                    "SysEx checksum trailer bytes must be ignored or recomputed by future writers.",
+                ),
+            ),
         }
     )
 )

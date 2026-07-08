@@ -71,13 +71,79 @@ def test_filter1_frequency_calibration_keeps_capture_evidence_compact() -> None:
     assert all(len(row.payload_fingerprint) == 16 for row in calibration.evidence)
 
 
+def test_filter1_resonance_calibration_records_track1_pending_fact() -> None:
+    from rytm_randomizer.data.analog_four_sysex_calibration import (
+        A4_SYSEX_CALIBRATION_STATUS_PENDING,
+        analog_four_sysex_calibration_for,
+    )
+
+    calibration = analog_four_sysex_calibration_for("Filter1 Resonance")
+
+    assert calibration.parameter == "Filter1 Resonance"
+    assert calibration.status == A4_SYSEX_CALIBRATION_STATUS_PENDING
+    assert calibration.screen_min == "0"
+    assert calibration.screen_mid == "20"
+    assert calibration.screen_max == "127"
+    assert calibration.primary_raw_values == {
+        "0": 0x00,
+        "20": 0x14,
+        "127": 0x7F,
+    }
+    assert calibration.track_raw_stride == 400
+    assert calibration.track_unpacked_stride == 350
+    assert [calibration.primary_raw_offset_for_track(track) for track in range(1, 5)] == [
+        158,
+        558,
+        958,
+        1358,
+    ]
+    assert [calibration.raw_group_range_for_track(track) for track in range(1, 5)] == [
+        (156, 164),
+        (556, 564),
+        (956, 964),
+        (1356, 1364),
+    ]
+    assert [calibration.unpacked_group_range_for_track(track) for track in range(1, 5)] == [
+        (133, 140),
+        (483, 490),
+        (833, 840),
+        (1183, 1190),
+    ]
+
+
+def test_filter1_resonance_calibration_keeps_capture_evidence_compact() -> None:
+    from rytm_randomizer.data.analog_four_sysex_calibration import (
+        analog_four_sysex_calibration_for,
+    )
+
+    calibration = analog_four_sysex_calibration_for("Filter1 Resonance")
+
+    assert {
+        (row.track, row.screen_value, row.primary_raw_value) for row in calibration.evidence
+    } == {
+        (1, "0", 0x00),
+        (1, "20", 0x14),
+        (1, "127", 0x7F),
+    }
+    assert {row.kit_name for row in calibration.evidence} == {"KIT 1"}
+    assert {row.payload_fingerprint for row in calibration.evidence} == {
+        "9a5da29b4ad37008",
+        "67a43e126f4d0f85",
+        "9f4535115136f4ec",
+    }
+    assert all(row.source_file.endswith("_Kit.syx") for row in calibration.evidence)
+
+
 def test_sysex_calibration_mapping_is_reexported_from_data_layer() -> None:
     from rytm_randomizer.data import ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS
     from rytm_randomizer.data.analog_four_sysex_calibration import (
         ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS as MODULE_FIELD_CALIBRATIONS,
     )
 
-    assert "Filter1 Frequency" in ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS
+    assert set(ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS) >= {
+        "Filter1 Frequency",
+        "Filter1 Resonance",
+    }
     assert ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS is MODULE_FIELD_CALIBRATIONS
 
 
@@ -87,7 +153,7 @@ def test_sysex_calibration_rejects_tracks_outside_a4_synth_range(track: int) -> 
         analog_four_sysex_calibration_for,
     )
 
-    calibration = analog_four_sysex_calibration_for("Filter1 Frequency")
+    calibration = analog_four_sysex_calibration_for("Filter1 Resonance")
 
     with pytest.raises(ValueError, match="track must be in 1..4"):
         calibration.primary_raw_offset_for_track(track)
@@ -99,4 +165,4 @@ def test_sysex_calibration_rejects_unknown_parameters() -> None:
     )
 
     with pytest.raises(KeyError, match="Unknown Analog Four SysEx calibration"):
-        analog_four_sysex_calibration_for("Filter1 Resonance")
+        analog_four_sysex_calibration_for("Filter1 Width")
