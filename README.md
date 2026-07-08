@@ -45,6 +45,7 @@ A Tauri desktop window backed by a Python sidecar that hosts the mutation engine
 |---|---|
 | **Device rail** | Switch the cockpit view between the Analog Rytm MKII 12-pad surface and the Analog Four MKII four-track mock/staged surface. |
 | **Snapshot panel** | All 12 pads at a glance, with a ghost overlay showing what the next mutation would change. Lock any pad to protect it. |
+| **Patch Genome** | Frontend-only Synplant-inspired surface for grouped patch genes, local locks, grow/reset variants, and no-send Analog Four review. |
 | **Mutation panel** | Pick a profile, set depth (0.10 → 0.90), regen on demand. Every change is deterministic for a given (snapshot, profile, depth, seed). |
 | **History strip** | Saved + auto snapshots. Undo any move. Jump to any past snapshot. |
 | **SEND-plan readiness** | The cockpit refuses to fire SEND until the server confirms the plan is ready. Stale plans clear automatically after candidate or lock changes. |
