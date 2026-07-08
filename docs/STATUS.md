@@ -1,9 +1,18 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-07-04. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-07-08. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-07-08: First passive Analog Four SysEx calibration fact promoted from
+  Jose's Test 1 Filter1 Frequency captures. The data layer now records the
+  candidate-promoted primary packed offsets for Filter1 Frequency across the
+  four synth tracks (`156`, `556`, `956`, `1356`), the `+400` packed-byte
+  track stride, the `+350` unpacked-byte stride, front-panel values
+  `0.00`/`63.50`/`127.00`, and compact evidence fingerprints for the
+  operator-supplied kit exports. It remains passive: no MIDI port opened, no
+  MIDI sent, no SysEx written, no hardware mutation, and no broader A4 kit
+  writer claim until additional fields are captured and validated.
 - 2026-07-04: Passive Analog Four initialized-baseline report prepared
   locally from Jose's Test 1 exports. The new
   `analog-four-baseline-report` command compares kit, pattern+kit, and

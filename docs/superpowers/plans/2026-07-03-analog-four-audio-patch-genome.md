@@ -3,7 +3,7 @@
 > Status: in-flight
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:test-driven-development. This plan is structured for one bundled PR with maximum-parallelization sidecar exploration and no stacked PRs, per docs/PLAN_REQUIREMENTS.md Gate 16.
 
-**Goal:** Add a Synplant-inspired audio/description-to-Analog-Four patch genome that produces four A4 patch candidates, a selected candidate DNA sheet, front-panel dial targets, CC/NRPN transport metadata, a learning packet that explains candidate ranking, trait-to-A4 routes, future capture steps, passive initialized-baseline comparison for clean-slate A4 SysEx exports, passive patch-corpus nearest-match ranking for starter or captured A4 audio/patch examples, and live-dial readiness, plus a gated send-plan bridge that can preview or explicitly arm compiler-approved live-dial rows without promoting screen-only destinations.
+**Goal:** Add a Synplant-inspired audio/description-to-Analog-Four patch genome that produces four A4 patch candidates, a selected candidate DNA sheet, front-panel dial targets, CC/NRPN transport metadata, a learning packet that explains candidate ranking, trait-to-A4 routes, future capture steps, passive initialized-baseline comparison for clean-slate A4 SysEx exports, passive patch-corpus nearest-match ranking for starter or captured A4 audio/patch examples, the first passive SysEx field calibration fact for Filter1 Frequency, and live-dial readiness, plus a gated send-plan bridge that can preview or explicitly arm compiler-approved live-dial rows without promoting screen-only destinations.
 
 **Architecture:** Keep A4-specific facts in `rytm_randomizer/data/`, deterministic audio-intelligence translation in `rytm_randomizer/style_analysis/`, passive operator output in focused `rytm_randomizer/reports/` modules registered through `cli_registry`, and active output only in `rytm_randomizer/app.py` behind `--arm` plus a confirmation flag. Screen-only NRPN destination rows remain skipped until their ordinals are captured.
 
@@ -23,11 +23,12 @@
 | WS-F | Patch send-plan bridge + gated app send | WS-A, WS-B, WS-E | WS-D | `rytm_randomizer/style_analysis/analog_four_patch_send_plan.py`, `rytm_randomizer/reports/analog_four_patch_send_plan.py`, `rytm_randomizer/senders/midi_event_plan.py`, `rytm_randomizer/app.py`, `tests/test_analog_four_patch_send_plan*.py`, `tests/test_app_validate_one_cc.py` |
 | WS-G | Patch capture-corpus nearest matching | WS-A, WS-B, WS-E | WS-D | `rytm_randomizer/data/analog_four_patch_corpus.py`, `rytm_randomizer/style_analysis/analog_four_patch_corpus.py`, `rytm_randomizer/reports/analog_four_patch_corpus.py`, `tests/test_analog_four_patch_corpus*.py` |
 | WS-H | Initialized SysEx baseline comparison | WS-G | WS-D | `rytm_randomizer/reports/analog_four_baseline.py`, `tests/test_analog_four_baseline_report.py` |
+| WS-I | First promoted A4 SysEx field calibration | WS-H | WS-D | `rytm_randomizer/data/analog_four_sysex_calibration.py`, `tests/test_analog_four_sysex_calibration.py`, `rytm_randomizer/data/__init__.py` |
 
 ## Execution Shape
 
 - **Worktree assignment:** `C:\Users\Jose Buzzi\Documents\RytmRandomizer\.worktrees\a4-audio-patch-genome-passive` on branch `codex/a4-audio-patch-genome-passive`.
-- **Disjoint ownership:** WS-A owns `data/`, WS-B owns `style_analysis/`, WS-C owns `reports/` plus CLI/help, WS-D owns docs.
+- **Disjoint ownership:** WS-A and WS-I own `data/`, WS-B owns `style_analysis/`, WS-C owns `reports/` plus CLI/help, WS-D owns docs.
 - **Agent crew:** main agent performs TDD/implementation; read-only explorers inspect CLI/report and A4 reuse points in parallel.
 - **Self-driving rules:** no human prompts; routine file edits, formatting, docs, tests, and fixes continue automatically.
 - **Auto-merge cascade:** not used locally; PR shape is one non-stacked bundled branch.
@@ -52,8 +53,9 @@
 8. Implement the passive send-plan compiler/report and gated app dry-run/armed send bridge.
 9. Implement the passive capture-corpus nearest-match compiler/report with synthetic starter rows and optional captured corpus file input.
 10. Implement the passive initialized-baseline report for Jose's Test 1 kit, pattern+kit, and whole-project SysEx exports.
-11. Update operator docs and architecture/status references.
-12. Run focused tests, then fast/architecture/lint verification as feasible.
+11. Promote the first passive A4 SysEx field calibration fact from Jose's Filter1 Frequency captures.
+12. Update operator docs and architecture/status references.
+13. Run focused tests, then fast/architecture/lint verification as feasible.
 
 ## Safety Contract
 
@@ -68,6 +70,7 @@
 - Patch learning is explanatory and deterministic; it does not claim a trained model or hardware-captured A4 state until future capture data exists.
 - Patch corpus matching labels synthetic starter rows separately from captured hardware rows; it does not claim trained model status or hardware-backed certainty until real A4 recordings are supplied and validated.
 - Initialized-baseline comparison reads local SysEx exports and fingerprints supported saved-kit payloads only; it does not write SysEx, mutate hardware, send MIDI, or claim parameter-level A4 DNA extraction while saved-kit offsets remain candidate-only.
+- SysEx calibration facts are data-only evidence from operator-supplied exports; they do not write SysEx, mutate hardware, send MIDI, or claim a complete A4 kit writer until more fields are captured and validated.
 
 ## Plan-Requirements Conformance
 
@@ -89,5 +92,5 @@ Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 - [x] Gate 14 (maintainability) -- small focused modules; no oversized report module.
 - [x] Gate 15 (learning phase) -- review findings were captured in this plan and PR evidence; no reusable skill extraction is warranted because the patterns are feature-specific A4 patch-template data placement and send-plan observability fixes already covered by existing rules.
 - [x] Gate 16 (execution shape) -- one isolated worktree, branch `codex/a4-audio-patch-genome-passive`, one bundled PR (#206) against `modularize-v1.34`, no stacked base branch.
-- [x] Gate 17 (abstraction reuse) -- reuses A4 MIDI data, `FeatureReport`, blueprint traits, report formatter, and CLI registry.
+- [x] Gate 17 (abstraction reuse) -- reuses A4 MIDI data, `FeatureReport`, blueprint traits, report formatter, CLI registry, and passive SysEx evidence/fingerprint conventions.
 - [x] Gate 18 (architecture freshness) -- architecture docs/diagrams updated for the new passive reports, style-analysis surfaces, and gated app send bridge.
