@@ -13,6 +13,18 @@ Last updated: 2026-07-03. This file is a hand-authored snapshot and is meant to 
   no MIDI port opening, no hardware arm path, no patch intelligence, and no
   MIDI send. The five Synplant 2 reference screenshots are saved under
   `docs/assets/synplant-2-reference/` for future design work.
+- 2026-06-24: Operator Package Review Ledger bundle prepared on the clean base
+  after PR #196 merged. The passive `live-gui-performance-console-report
+  [--json]` now composes a typed Operator Package Review Ledger after the Live
+  Kit Operator Package lane. The ledger records apply-preview, mock-apply, and
+  receipt-audit stages; one review row per operator package step; package
+  export-key evidence; readiness proof; blocked actions; safety lines; and a
+  replay command. The Performance Console renders the ledger inside the
+  operator package panel with a disabled "Apply operator package ledger" control
+  and legacy-packet fallback. This remains passive/mock-safe: no package files
+  are written, no snapshots are mutated, no send plans are applied, no event
+  stream is emitted, no hardware is armed, no MIDI port is opened, and no MIDI
+  is sent.
 - 2026-06-23: Operator Package Mock Apply + Receipt bundle consolidated on
   the clean base after PR #195 merged. The Cockpit WebSocket protocol now
   includes typed `mock_apply_operator_package` and
