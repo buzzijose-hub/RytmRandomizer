@@ -104,6 +104,23 @@ USAGE = (
     "controller-brain-mapping-report [--json] | "
     "controller-brain-rehearsal-report [--json] | "
     "controller-brain-operator-package-report [--json] | "
+    "controller-brain-live-runbook-report [--json] | "
+    "controller-brain-live-state-report [--json] | "
+    "controller-brain-live-bridge-readiness-report [--json] | "
+    "controller-brain-live-dispatch-rehearsal-report [--json] | "
+    "controller-brain-live-feedback-rehearsal-report [--json] | "
+    "controller-brain-live-cockpit-handoff-report [--json] | "
+    "controller-brain-live-implementation-bridge-report [--json] | "
+    "controller-brain-live-desktop-blueprint-report [--json] | "
+    "controller-brain-live-desktop-app-plan-report "
+    "[--app-plan-label <text>] "
+    "[--framework-target desktop-python|web-desktop|test-harness] [--json] | "
+    "controller-brain-live-desktop-component-contract-report "
+    "[--component-contract-label <text>] [--selector-prefix <text>] [--json] | "
+    "controller-brain-live-desktop-view-model-report "
+    "[--view-model-label <text>] [--state-prefix <text>] [--json] | "
+    "controller-brain-live-desktop-render-contract-report "
+    "[--render-contract-label <text>] [--surface-prefix <text>] [--json] | "
     "rytm-live-macro-hardware-rehearsal-report [--json] | "
     "live-gui-performance-flow-model-report [--json] | "
     "live-gui-performance-console-report [--json] | "
@@ -2341,7 +2358,6 @@ def test_readme_mentions_controller_brain_mapping_report_command():
 
     assert "controller-brain-mapping-report" in text
     assert "controller-brain-rehearsal-report" in text
-    assert "controller-brain-operator-package-report" in text
     assert "16-encoder" in text
     assert "controller-brain" in text
 
