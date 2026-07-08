@@ -174,6 +174,30 @@ _FILTER1_RESONANCE_EVIDENCE: Final[tuple[AnalogFourSysexCalibrationEvidence, ...
         source_file="A4_Test1_T1_Filter1Res_127_Kit.syx",
         payload_fingerprint="9f4535115136f4ec",
     ),
+    AnalogFourSysexCalibrationEvidence(
+        track=2,
+        screen_value="0",
+        primary_raw_value=0x00,
+        kit_name="KIT 1",
+        source_file="A4_Test1_T2_Filter1Res_000_Kit.syx",
+        payload_fingerprint="950e8f5b65253fbb",
+    ),
+    AnalogFourSysexCalibrationEvidence(
+        track=3,
+        screen_value="0",
+        primary_raw_value=0x00,
+        kit_name="KIT 1",
+        source_file="A4_Test1_T3_Filter1Res_000_Kit.syx",
+        payload_fingerprint="cc64427123887f89",
+    ),
+    AnalogFourSysexCalibrationEvidence(
+        track=4,
+        screen_value="0",
+        primary_raw_value=0x00,
+        kit_name="KIT 1",
+        source_file="A4_Test1_T4_Filter1Res_000_Kit.syx",
+        payload_fingerprint="6818388c34db01b9",
+    ),
 )
 
 ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCalibration]] = (
@@ -210,7 +234,7 @@ ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCal
             "Filter1 Resonance": AnalogFourSysexFieldCalibration(
                 parameter="Filter1 Resonance",
                 section="FILTERS",
-                status=A4_SYSEX_CALIBRATION_STATUS_PENDING,
+                status=A4_SYSEX_CALIBRATION_STATUS_CANDIDATE_PROMOTED,
                 screen_min="0",
                 screen_mid="20",
                 screen_max="127",
@@ -231,7 +255,7 @@ ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCal
                 evidence=_FILTER1_RESONANCE_EVIDENCE,
                 notes=(
                     "Primary packed data byte verified on Track 1 at 0, 20, and 127.",
-                    "Track stride is inferred from the adjacent Filter1 Frequency calibration until Track 2-4 captures promote it.",
+                    "Track 2, Track 3, and Track 4 zero-value captures confirm the +400 packed-byte stride.",
                     "The decoded byte appears as 0x80 plus the screen value when Filter1 Frequency leaves the shared 7-bit group header set.",
                     "SysEx checksum trailer bytes must be ignored or recomputed by future writers.",
                 ),

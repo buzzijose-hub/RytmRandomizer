@@ -10,13 +10,13 @@ Last updated: 2026-07-08. This file is a hand-authored snapshot and is meant to 
   four synth tracks (`156`, `556`, `956`, `1356`), the `+400` packed-byte
   track stride, the `+350` unpacked-byte stride, front-panel values
   `0.00`/`63.50`/`127.00`, and compact evidence fingerprints for the
-  operator-supplied kit exports. It also records a pending Track 1
-  Filter1 Resonance fact at packed offset `158` with values
-  `0`/`20`/`127`; the remaining track stride is inferred from the adjacent
-  Filter1 Frequency calibration until Track 2-4 resonance captures promote
-  it. It remains passive: no MIDI port opened, no MIDI sent, no SysEx
-  written, no hardware mutation, and no broader A4 kit writer claim until
-  additional fields are captured and validated.
+  operator-supplied kit exports. It also records the candidate-promoted
+  Filter1 Resonance offsets across the four synth tracks
+  (`158`, `558`, `958`, `1358`), values `0`/`20`/`127`, and the same
+  `+400` packed-byte track stride from the Track 2-4 zero-value captures. It
+  remains passive: no MIDI port opened, no MIDI sent, no SysEx written, no
+  hardware mutation, and no broader A4 kit writer claim until additional
+  fields are captured and validated.
 - 2026-07-04: Passive Analog Four initialized-baseline report prepared
   locally from Jose's Test 1 exports. The new
   `analog-four-baseline-report` command compares kit, pattern+kit, and
