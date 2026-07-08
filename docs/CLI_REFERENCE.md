@@ -1,6 +1,6 @@
 # CLI reference
 
-This is the full passive CLI surface for RytmRandomizer. Every command here is **passive by construction** — it opens no MIDI port and sends no MIDI. The project-wide passive-safety sweep in [`tests/test_real_midi_passive_cli_safety.py`](../tests/test_real_midi_passive_cli_safety.py) auto-discovers commands from the lazy registry and runs every one in a subprocess to assert no `mido` / `rtmidi` / adapter modules load and no armed-output tokens leak.
+This is the full passive `rytm_randomizer.cli` surface for RytmRandomizer. Every CLI command here is **passive by construction** — it opens no MIDI port and sends no MIDI. Companion `rytm_randomizer.app` invocations are labeled separately when a passive report has a dry-run or armed operator bridge. The project-wide passive-safety sweep in [`tests/test_real_midi_passive_cli_safety.py`](../tests/test_real_midi_passive_cli_safety.py) auto-discovers CLI commands from the lazy registry and runs every one in a subprocess to assert no `mido` / `rtmidi` / adapter modules load and no armed-output tokens leak.
 
 For the headline commands (cockpit, wizard, export, live-set planning) see the [README](../README.md#cli-cheat-sheet).
 
@@ -195,6 +195,11 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `analog-four-style-mutation-intent-report` | Passive Analog Four track/zone mutation intent |
 | `analog-four-style-mutation-mock-preview-report` | Passive Analog Four mock CC rows (deferred while saved-kit offsets are promoted) |
 | `analog-four-kit-catalog-report` | Passive Analog Four decoded kit catalog |
+| `analog-four-baseline-report` | Passive initialized A4 SysEx baseline comparison across kit, pattern+kit, and whole-project exports |
+| `analog-four-patch-genome-report` | Passive four-candidate Analog Four single-sound patch DNA from audio or text |
+| `analog-four-patch-learning-report` | Passive Analog Four patch learning routes, capture matrix, and live-dial readiness |
+| `analog-four-patch-corpus-report` | Passive nearest-match ranking against starter or captured Analog Four patch/audio examples |
+| `analog-four-patch-send-plan-report` | Passive CC/NRPN live-dial send plan for a generated Analog Four patch |
 | `analog-four-oxi-macro-report` | Passive in-memory Analog Four OXI-style four-track macro preview |
 | `analog-four-oxi-macro-readiness-report` | Passive Analog Four OXI macro readiness, soft-capture preflight, and operator-present validation commands |
 | `analog-four-style-kit-readiness-report` | Passive per-kit Analog Four style-readiness sweep |
@@ -204,10 +209,64 @@ python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report KITS.syx
 python -m rytm_randomizer.cli analog-four-style-mutation-intent-report KITS.syx birmingham_pressure --slot 0 --discovery 45
 python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report KITS.syx jose_core_techno --slot 0 --discovery 45 --events --limit 24
 python -m rytm_randomizer.cli analog-four-kit-catalog-report KITS.syx --limit 16
+python -m rytm_randomizer.cli analog-four-baseline-report --kit A4_Test1_Init_Kit.syx --pattern-kit A4_Test1_Init_A01_PatternKit.syx --whole-project A4_Test1_Init_WholeProject.syx --json
+python -m rytm_randomizer.cli analog-four-patch-genome-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
+python -m rytm_randomizer.cli analog-four-patch-genome-report --audio reference.wav --track 2 --json
+python -m rytm_randomizer.cli analog-four-patch-learning-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
+python -m rytm_randomizer.cli analog-four-patch-learning-report --audio reference.wav --track 2 --json
+python -m rytm_randomizer.cli analog-four-patch-corpus-report --description "hypnotic metallic HP2 stab" --track 1 --limit 4
+python -m rytm_randomizer.cli analog-four-patch-corpus-report --audio reference.wav --corpus-file a4-captures.json --json
+python -m rytm_randomizer.cli analog-four-patch-send-plan-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
 python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove --seed 23 --intensity 6 --events --limit 0
 python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4
 python -m rytm_randomizer.cli analog-four-style-kit-readiness-report KITS.syx jose_core_techno --limit 16
 ```
+
+Active companion app bridge for the selected patch send plan:
+
+```bash
+python -m rytm_randomizer.app --dry-run --a4-patch-send-plan --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
+python -m rytm_randomizer.app --arm --a4-patch-send-plan --description "hypnotic metallic HP2 stab" --track 1 --candidate 1 --confirm-a4-patch-send-plan
+```
+
+`analog-four-baseline-report` is the passive clean-slate intake for A4 patch
+capture work. It reads three local SysEx export scopes - kit, pattern+kit, and
+whole-project - decodes supported saved-kit frames, compares their first kit
+payload fingerprints, and reports whether the initialized baseline is coherent
+enough for future changed-patch diffs. It does not open MIDI ports, send MIDI,
+write SysEx, or claim parameter-level DNA extraction while the A4 saved-kit
+offsets remain candidate-only.
+
+`analog-four-patch-genome-report` is the passive patch-DNA bridge for manual
+studio tests. It takes one description or audio file, builds four candidate
+columns for a selected A4 track, and prints the selected candidate with A4
+front-panel values plus CC/NRPN metadata. Bipolar screen values such as
+Filter Overdrive and LFO depths are shown as `-64..+63` targets; CC-ready rows
+also show the raw `0..127` value; NRPN-only destination labels remain
+screen-only until their exact ordinals are captured for live dial-in.
+
+`analog-four-patch-learning-report` is the passive intelligence/learning layer
+above the genome. It ranks the four candidate columns, maps measured traits
+such as metallic pressure and tempo drive to the selected A4 controls, prints a
+future capture matrix for real A4 recordings, and separates CC/NRPN-ready rows
+from screen-only NRPN destinations before any live dial-in work is promoted.
+
+`analog-four-patch-corpus-report` is the first passive corpus-learning surface.
+It ranks a description or audio reference against A4 patch/audio examples,
+using clearly labeled synthetic starter rows when no corpus file is supplied
+and operator-recorded hardware examples when `--corpus-file` is provided. It
+does not train a model, open ports, send MIDI, or write SysEx; it tells us
+which real captures are still missing before that matching can become
+hardware-backed.
+
+`analog-four-patch-send-plan-report` is the passive rehearsal surface for that
+promotion. It compiles the selected candidate into ordered CC/NRPN live-dial
+events, counts the exact transport messages, and lists skipped front-panel rows
+such as destination labels that still need ordinal capture. The matching active
+path lives in `rytm_randomizer.app`: use `--dry-run --a4-patch-send-plan` to
+render the plan through the mock sender, or `--arm --a4-patch-send-plan
+--confirm-a4-patch-send-plan` to choose an A4 output port and send only the
+compiler-approved rows.
 
 `analog-four-oxi-macro-report` is a snapshot-free planning surface for the
 Analog Four side of an OXI-style live rig. It uses existing manual-backed A4 CC

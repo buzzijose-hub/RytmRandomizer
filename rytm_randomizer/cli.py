@@ -92,6 +92,26 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.analog_four_kit_catalog",
             "ANALOG_FOUR_KIT_CATALOG_CLI_COMMAND",
         ),
+        "analog-four-baseline-report": (
+            "rytm_randomizer.reports.analog_four_baseline",
+            "ANALOG_FOUR_BASELINE_CLI_COMMAND",
+        ),
+        "analog-four-patch-genome-report": (
+            "rytm_randomizer.reports.analog_four_patch_genome",
+            "ANALOG_FOUR_PATCH_GENOME_CLI_COMMAND",
+        ),
+        "analog-four-patch-learning-report": (
+            "rytm_randomizer.reports.analog_four_patch_learning",
+            "ANALOG_FOUR_PATCH_LEARNING_CLI_COMMAND",
+        ),
+        "analog-four-patch-corpus-report": (
+            "rytm_randomizer.reports.analog_four_patch_corpus",
+            "ANALOG_FOUR_PATCH_CORPUS_CLI_COMMAND",
+        ),
+        "analog-four-patch-send-plan-report": (
+            "rytm_randomizer.reports.analog_four_patch_send_plan",
+            "ANALOG_FOUR_PATCH_SEND_PLAN_CLI_COMMAND",
+        ),
         "analog-four-oxi-macro-report": (
             "rytm_randomizer.reports.analog_four_oxi_macro_report",
             "ANALOG_FOUR_OXI_MACRO_CLI_COMMAND",
