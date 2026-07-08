@@ -92,3 +92,51 @@ def test_operator_package_review_ledger_tolerates_malformed_sequences() -> None:
     lines = live_kit_operator_review_ledger_lines(ledger)
     assert "- steps: 0" in lines
     assert not any(line.startswith("- step review:") for line in lines)
+
+
+def test_operator_package_review_ledger_falls_back_when_slot_binding_is_missing() -> None:
+    from rytm_randomizer.reports.performance_console.live_kit_operator_review_ledger import (
+        build_live_kit_operator_review_ledger,
+    )
+
+    operator_package = {
+        "operator_package_id": "operator-package",
+        "source_audition_id": "audition",
+        "source_workbench_id": "workbench",
+        "operator_steps": [
+            {
+                "step_key": "orphanned-step",
+                "label": "Orphaned Step",
+                "slot_key": "orphaned-slot",
+                "queue_status": "ready",
+                "local_action": "preview",
+                "operator_command": "hold",
+                "recovery_command": "undo",
+            },
+            {
+                "step_key": "empty-slot-step",
+                "label": "Empty Slot Step",
+                "slot_key": "",
+                "queue_status": "ignored",
+                "local_action": "ignore",
+                "operator_command": "none",
+                "recovery_command": "none",
+            },
+        ],
+        "slot_bindings": [
+            {
+                "slot_key": "",
+                "package_export_key": "ignored-empty-slot",
+                "depth_percent": 64,
+            }
+        ],
+        "recovery_requirements": [],
+        "blocked_actions": [],
+        "safety_lines": [],
+    }
+
+    ledger = build_live_kit_operator_review_ledger(operator_package)
+
+    assert ledger["step_rows"][0]["package_export_key"] == "operator-package-orphaned-slot"
+    assert ledger["step_rows"][0]["depth_percent"] == 0
+    assert ledger["step_rows"][1]["package_export_key"] == ""
