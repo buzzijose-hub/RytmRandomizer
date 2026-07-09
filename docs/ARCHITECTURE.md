@@ -140,7 +140,9 @@ on one line for an existing module, you probably need a new module instead.
 | `style_analysis/analog_four_patch_genome.py` | Passive FeatureReport -> four-column Analog Four single-sound patch DNA compiler. |
 | `style_analysis/analog_four_patch_learning.py` | Passive patch-genome learning packet compiler: candidate ranking, trait routes, capture matrix, and live-dial readiness. |
 | `style_analysis/analog_four_patch_corpus.py` | Passive A4 patch/audio corpus nearest-match ranking and calibration-gap compiler. |
+| `style_analysis/analog_four_patch_codesigner.py` | Passive A4 patch-genome co-designer packet compiler for staged local-AI review. |
 | `style_analysis/analog_four_patch_send_plan.py` | Passive selected A4 patch -> ordered CC/NRPN live-dial send-plan compiler. |
+| `local_ai/` | Passive local-AI DTOs, Ollama HTTP adapter, docs/MIDI context packets, staged mutation-intent validation, and JSON-schema helpers. |
 
 ### Upper (entry points)
 
@@ -285,6 +287,7 @@ and the parity tests run the extracted engines/runners against those goldens.
 | Add new fact table                   | A new module under `data/` + re-export in `__init__`.  | `extend-data-layer`       |
 | Change MIDI primitives               | `midi_io.py`. Keep `mido` lazy.                        | (architecture review)     |
 | Add new passive report               | A module under `reports/` + CLI wire-up only when it becomes an operator command. | (none, follow existing)   |
+| Add passive local-AI prompt workflow  | Generic DTO/provider/schema code under `local_ai/`; domain compilers stay under their owning package; report wrappers stay under `reports/`. | (architecture review) |
 | Add a new state domain               | A new module under `state/` (frozen + transitions).    | (architecture review)     |
 | Add input-only live observation       | Pure state reducer under `state/`, formatter under `reports/`, explicit armed app path. | (architecture review) |
 | Add gated generated patch send        | Pure compiler under `style_analysis/`, passive preview under `reports/`, reusable transport helpers under `senders/`, explicit `app.py --arm` path with a confirmation flag. | (architecture review) |

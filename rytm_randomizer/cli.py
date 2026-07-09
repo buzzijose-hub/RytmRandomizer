@@ -484,6 +484,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.cockpit_export_rehearsal",
             "COCKPIT_EXPORT_REHEARSAL_CLI_COMMAND",
         ),
+        "ollama-local-copilot-report": (
+            "rytm_randomizer.reports.ollama_local_copilot",
+            "OLLAMA_LOCAL_COPILOT_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])

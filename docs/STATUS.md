@@ -1,9 +1,18 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-07-03. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-07-08. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-07-08: Passive Ollama local-copilot bundle prepared locally. The new
+  `ollama-local-copilot-report` command builds deterministic docs/MIDI,
+  staged mutation-intent, and Analog Four patch co-designer packets, and only
+  contacts a local Ollama HTTP endpoint when `--ask-ollama` is explicitly set.
+  The local-AI provider, schema validators, and prompt packets live under the
+  new `rytm_randomizer/local_ai/` subpackage; the A4 co-designer reuses the
+  existing patch-genome compiler. It remains passive: no MIDI port opened, no
+  MIDI sent, no SysEx written, no hardware mutation, and no generated send plan
+  promoted from AI output.
 - 2026-07-03: Synplant-inspired Cockpit UI design surface prepared locally.
   The React cockpit now has a frontend-only Patch Genome panel that groups
   Analog Four-facing design-preview genes into oscillator, envelope/LFO,
