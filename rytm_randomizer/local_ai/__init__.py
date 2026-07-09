@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from .provider import (
     LocalAiChatRequest,
-    LocalAiEmbeddingResponse,
     LocalAiError,
     LocalAiJsonResponse,
     LocalAiMessage,
@@ -17,7 +16,6 @@ from .provider import (
 
 __all__ = [
     "LocalAiChatRequest",
-    "LocalAiEmbeddingResponse",
     "LocalAiError",
     "LocalAiJsonResponse",
     "LocalAiMessage",

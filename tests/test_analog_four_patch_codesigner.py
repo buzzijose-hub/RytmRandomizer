@@ -46,7 +46,7 @@ def test_patch_codesigner_packet_uses_existing_patch_genome_candidate() -> None:
     assert packet.reference_candidate.label == "Closest reference"
     assert packet.genome.selected_track == 2
     assert packet.ready_for_send is False
-    assert packet.readiness_reason == "ollama suggestions are staged review metadata only"
+    assert packet.readiness_reason == ("local model suggestions are staged review metadata only")
     assert "Patch DNA" in packet.messages[-1].content
     assert "Closest reference" in packet.messages[-1].content
 

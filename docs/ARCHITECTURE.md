@@ -142,7 +142,7 @@ on one line for an existing module, you probably need a new module instead.
 | `style_analysis/analog_four_patch_corpus.py` | Passive A4 patch/audio corpus nearest-match ranking and calibration-gap compiler. |
 | `style_analysis/analog_four_patch_codesigner.py` | Passive A4 patch-genome co-designer packet compiler for staged local-AI review. |
 | `style_analysis/analog_four_patch_send_plan.py` | Passive selected A4 patch -> ordered CC/NRPN live-dial send-plan compiler. |
-| `local_ai/` | Passive local-AI DTOs, Ollama HTTP adapter, docs/MIDI context packets, staged mutation-intent validation, and JSON-schema helpers. |
+| `local_ai/` | Passive local-AI DTOs, local model subprocess adapter, docs/MIDI context packets, staged mutation-intent validation, and JSON-schema helpers. |
 
 ### Upper (entry points)
 

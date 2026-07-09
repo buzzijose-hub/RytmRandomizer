@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import ClassVar, Protocol
 
@@ -60,26 +60,15 @@ class LocalAiJsonResponse:
     eval_count: int
 
 
-@dataclass(frozen=True)
-class LocalAiEmbeddingResponse:
-    """Embedding response from a local model provider."""
-
-    model: str
-    embeddings: tuple[tuple[float, ...], ...]
-
-
 class LocalAiProvider(Protocol):
     """Protocol for optional local AI providers."""
 
     def chat_json(self, request: LocalAiChatRequest) -> LocalAiJsonResponse:
         """Return a validated JSON response for ``request``."""
 
-    def embed(self, *, model: str, inputs: Sequence[str]) -> LocalAiEmbeddingResponse:
-        """Return embeddings for ``inputs``."""
-
 
 def local_ai_message_to_dict(message: LocalAiMessage) -> dict[str, str]:
-    """Return Ollama/OpenAI-compatible message JSON."""
+    """Return model-provider-compatible message JSON."""
 
     return {
         "role": message.role,
@@ -162,7 +151,6 @@ def require_mapping_list(value: object, *, label: str) -> tuple[dict[str, object
 
 __all__ = [
     "LocalAiChatRequest",
-    "LocalAiEmbeddingResponse",
     "LocalAiError",
     "LocalAiJsonResponse",
     "LocalAiMessage",

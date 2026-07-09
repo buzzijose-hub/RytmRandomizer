@@ -33,7 +33,7 @@ ANALOG_FOUR_PATCH_CODESIGNER_SAFETY: Final[tuple[str, ...]] = (
     "no SysEx written",
 )
 ANALOG_FOUR_PATCH_CODESIGNER_READINESS_REASON: Final[str] = (
-    "ollama suggestions are staged review metadata only"
+    "local model suggestions are staged review metadata only"
 )
 
 _CODESIGNER_REQUIRED: Final[list[str]] = [

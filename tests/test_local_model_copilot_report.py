@@ -1,4 +1,4 @@
-"""Tests for the passive Ollama local-copilot report."""
+"""Tests for the passive local model copilot report."""
 
 from __future__ import annotations
 
@@ -64,23 +64,23 @@ class _FakeProvider:
             model=request.model,
             data=data,
             raw_content=json.dumps(data),
-            done_reason="stop",
-            prompt_eval_count=10,
-            eval_count=5,
+            done_reason="local-command",
+            prompt_eval_count=0,
+            eval_count=0,
         )
 
 
 class _UnavailableProvider:
     def chat_json(self, request: LocalAiChatRequest) -> LocalAiJsonResponse:
-        raise LocalAiUnavailableError("ollama offline")
+        raise LocalAiUnavailableError("local model offline")
 
 
-def test_importing_ollama_local_copilot_report_prints_nothing() -> None:
+def test_importing_local_model_copilot_report_prints_nothing() -> None:
     result = subprocess.run(
         [
             sys.executable,
             "-c",
-            "import rytm_randomizer.reports.ollama_local_copilot",
+            "import rytm_randomizer.reports.local_model_copilot",
         ],
         cwd=PROJECT_ROOT,
         capture_output=True,
@@ -93,28 +93,28 @@ def test_importing_ollama_local_copilot_report_prints_nothing() -> None:
     assert result.stderr == ""
 
 
-def test_ollama_local_copilot_report_text_includes_all_three_workflows() -> None:
-    from rytm_randomizer.reports.ollama_local_copilot import (
-        build_ollama_local_copilot_report,
-        format_ollama_local_copilot_report,
+def test_local_model_copilot_report_text_includes_all_three_workflows() -> None:
+    from rytm_randomizer.reports.local_model_copilot import (
+        build_local_model_copilot_report,
+        format_local_model_copilot_report,
     )
 
-    report = build_ollama_local_copilot_report(
+    report = build_local_model_copilot_report(
         question="How can I make a darker hardware-safe groove?",
         description="dark rolling techno with metallic A4 stab",
         workflow="all",
-        model="llama3.2",
-        ask_ollama=False,
+        model="local-model",
+        ask_local_model=False,
     )
-    text = "\n".join(format_ollama_local_copilot_report(report))
+    text = "\n".join(format_local_model_copilot_report(report))
 
-    assert text.startswith("RytmRandomizer passive Ollama local copilot\n")
+    assert text.startswith("RytmRandomizer passive local model copilot\n")
     assert "Docs/MIDI assistant:" in text
     assert "Mutation intent:" in text
     assert "Analog Four patch co-designer:" in text
-    assert "- Ollama call: skipped" in text
+    assert "- Local model call: skipped" in text
     assert "- no MIDI sent" in text
-    assert "Source: rytm_randomizer.reports.ollama_local_copilot" in text
+    assert "Source: rytm_randomizer.reports.local_model_copilot" in text
 
 
 @pytest.mark.parametrize(
@@ -137,74 +137,74 @@ def test_ollama_local_copilot_report_text_includes_all_three_workflows() -> None
         ),
     ],
 )
-def test_ollama_local_copilot_report_text_matches_requested_workflow(
+def test_local_model_copilot_report_text_matches_requested_workflow(
     workflow: str,
     included: str,
     excluded: tuple[str, ...],
 ) -> None:
-    from rytm_randomizer.reports.ollama_local_copilot import (
-        build_ollama_local_copilot_report,
-        format_ollama_local_copilot_report,
+    from rytm_randomizer.reports.local_model_copilot import (
+        build_local_model_copilot_report,
+        format_local_model_copilot_report,
     )
 
-    report = build_ollama_local_copilot_report(
+    report = build_local_model_copilot_report(
         question="How can I stage this safely?",
         description="bright metallic stab",
         workflow=workflow,
-        ask_ollama=False,
+        ask_local_model=False,
     )
-    text = "\n".join(format_ollama_local_copilot_report(report))
+    text = "\n".join(format_local_model_copilot_report(report))
 
     assert included in text
     for heading in excluded:
         assert heading not in text
 
 
-def test_ollama_local_copilot_report_json_is_deterministic() -> None:
-    from rytm_randomizer.reports.ollama_local_copilot import (
-        build_ollama_local_copilot_payload,
-        build_ollama_local_copilot_report,
+def test_local_model_copilot_report_json_is_deterministic() -> None:
+    from rytm_randomizer.reports.local_model_copilot import (
+        build_local_model_copilot_payload,
+        build_local_model_copilot_report,
     )
 
-    report = build_ollama_local_copilot_report(
+    report = build_local_model_copilot_report(
         question="Which MIDI facts matter?",
         description="bright stab",
         workflow="docs",
-        model="llama3.2",
-        ask_ollama=False,
+        model="local-model",
+        ask_local_model=False,
     )
-    payload = build_ollama_local_copilot_payload(report)
+    payload = build_local_model_copilot_payload(report)
 
     assert payload["workflow"] == "docs"
-    assert payload["ollama"]["called"] is False
+    assert payload["local_model"]["called"] is False
     assert payload["docs_packet"]["version"] == "local-ai-docs-assistant-v1"
     assert json.dumps(payload, sort_keys=True) == json.dumps(
-        build_ollama_local_copilot_payload(report),
+        build_local_model_copilot_payload(report),
         sort_keys=True,
     )
 
 
-def test_ollama_local_copilot_report_can_call_injected_provider() -> None:
-    from rytm_randomizer.reports.ollama_local_copilot import build_ollama_local_copilot_report
+def test_local_model_copilot_report_can_call_injected_provider() -> None:
+    from rytm_randomizer.reports.local_model_copilot import build_local_model_copilot_report
 
     provider = _FakeProvider()
 
-    report = build_ollama_local_copilot_report(
+    report = build_local_model_copilot_report(
         question="Make this safer and darker",
         description="dark rolling techno with bright stab",
         workflow="all",
-        model="llama3.2",
-        ask_ollama=True,
+        model="local-model",
+        ask_local_model=True,
         provider=provider,
     )
 
     assert [request.workflow for request in provider.requests] == ["docs", "mutation", "patch"]
-    assert tuple(result.status for result in report.ollama_results) == (
+    assert tuple(result.status for result in report.model_results) == (
         "validated",
         "validated",
         "validated",
     )
-    assert report.ollama_results[0].data["answer"] == "Use the passive MIDI catalog first."
+    assert report.model_results[0].data["answer"] == "Use the passive MIDI catalog first."
 
 
 @pytest.mark.parametrize(
@@ -214,49 +214,49 @@ def test_ollama_local_copilot_report_can_call_injected_provider() -> None:
         ("patch", ["patch"]),
     ],
 )
-def test_ollama_local_copilot_report_calls_single_requested_workflow(
+def test_local_model_copilot_report_calls_single_requested_workflow(
     workflow: str,
     expected_requests: list[str],
 ) -> None:
-    from rytm_randomizer.reports.ollama_local_copilot import build_ollama_local_copilot_report
+    from rytm_randomizer.reports.local_model_copilot import build_local_model_copilot_report
 
     provider = _FakeProvider()
 
-    report = build_ollama_local_copilot_report(
+    report = build_local_model_copilot_report(
         question="Make this safer and darker",
         description="dark rolling techno with bright stab",
         workflow=workflow,
-        model="llama3.2",
-        ask_ollama=True,
+        model="local-model",
+        ask_local_model=True,
         provider=provider,
     )
 
     assert [request.workflow for request in provider.requests] == expected_requests
-    assert tuple(result.workflow for result in report.ollama_results) == tuple(expected_requests)
-    assert tuple(result.status for result in report.ollama_results) == ("validated",)
+    assert tuple(result.workflow for result in report.model_results) == tuple(expected_requests)
+    assert tuple(result.status for result in report.model_results) == ("validated",)
 
 
-def test_ollama_local_copilot_report_records_unavailable_provider() -> None:
-    from rytm_randomizer.reports.ollama_local_copilot import build_ollama_local_copilot_report
+def test_local_model_copilot_report_records_unavailable_provider() -> None:
+    from rytm_randomizer.reports.local_model_copilot import build_local_model_copilot_report
 
-    report = build_ollama_local_copilot_report(
-        question="Can Ollama answer?",
+    report = build_local_model_copilot_report(
+        question="Can the local model answer?",
         workflow="docs",
-        ask_ollama=True,
+        ask_local_model=True,
         provider=_UnavailableProvider(),
     )
 
-    assert len(report.ollama_results) == 1
-    assert report.ollama_results[0].status == "unavailable"
-    assert report.ollama_results[0].error == "ollama offline"
+    assert len(report.model_results) == 1
+    assert report.model_results[0].status == "unavailable"
+    assert report.model_results[0].error == "local model offline"
 
 
-def test_ollama_local_copilot_cli_json_mode(capsys: pytest.CaptureFixture[str]) -> None:
+def test_local_model_copilot_cli_json_mode(capsys: pytest.CaptureFixture[str]) -> None:
     from rytm_randomizer.cli import main
 
     exit_code = main(
         [
-            "ollama-local-copilot-report",
+            "local-model-copilot-report",
             "--question",
             "How do I keep this safe?",
             "--description",
@@ -273,16 +273,16 @@ def test_ollama_local_copilot_cli_json_mode(capsys: pytest.CaptureFixture[str]) 
     assert exit_code == 0
     assert payload["workflow"] == "mutation"
     assert payload["mutation_packet"]["intent"]["staged_only"] is True
-    assert payload["ollama"]["called"] is False
+    assert payload["local_model"]["called"] is False
     assert captured.err == ""
 
 
-def test_ollama_local_copilot_cli_text_mode(capsys: pytest.CaptureFixture[str]) -> None:
+def test_local_model_copilot_cli_text_mode(capsys: pytest.CaptureFixture[str]) -> None:
     from rytm_randomizer.cli import main
 
     exit_code = main(
         [
-            "ollama-local-copilot-report",
+            "local-model-copilot-report",
             "--question",
             "How do I keep this safe?",
             "--workflow",
@@ -293,17 +293,17 @@ def test_ollama_local_copilot_cli_text_mode(capsys: pytest.CaptureFixture[str]) 
     captured = capsys.readouterr()
 
     assert exit_code == 0
-    assert "RytmRandomizer passive Ollama local copilot" in captured.out
+    assert "RytmRandomizer passive local model copilot" in captured.out
     assert "Docs/MIDI assistant:" in captured.out
     assert captured.err == ""
 
 
-def test_ollama_local_copilot_cli_rejects_bad_arguments(
+def test_local_model_copilot_cli_rejects_bad_arguments(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     from rytm_randomizer.cli import main
 
-    exit_code = main(["ollama-local-copilot-report", "--workflow", "wrong"])
+    exit_code = main(["local-model-copilot-report", "--workflow", "wrong"])
 
     captured = capsys.readouterr()
 
@@ -321,48 +321,48 @@ def test_ollama_local_copilot_cli_rejects_bad_arguments(
         (["--workflow", "docs"], "--question requires a value"),
     ],
 )
-def test_parse_ollama_local_copilot_args_rejects_bad_shapes(
+def test_parse_local_model_copilot_args_rejects_bad_shapes(
     args: list[str],
     message: str,
 ) -> None:
-    from rytm_randomizer.reports.ollama_local_copilot import OLLAMA_LOCAL_COPILOT_CLI_COMMAND
+    from rytm_randomizer.reports.local_model_copilot import LOCAL_MODEL_COPILOT_CLI_COMMAND
 
     with pytest.raises(ValueError, match=message):
-        OLLAMA_LOCAL_COPILOT_CLI_COMMAND.args_parser(args)
+        LOCAL_MODEL_COPILOT_CLI_COMMAND.args_parser(args)
 
 
-def test_parse_ollama_local_copilot_args_accepts_model_and_ask_flag() -> None:
-    from rytm_randomizer.reports.ollama_local_copilot import OLLAMA_LOCAL_COPILOT_CLI_COMMAND
+def test_parse_local_model_copilot_args_accepts_model_and_ask_flag() -> None:
+    from rytm_randomizer.reports.local_model_copilot import LOCAL_MODEL_COPILOT_CLI_COMMAND
 
-    parsed = OLLAMA_LOCAL_COPILOT_CLI_COMMAND.args_parser(
+    parsed = LOCAL_MODEL_COPILOT_CLI_COMMAND.args_parser(
         [
             "--question",
             "How do I stage this?",
             "--model",
-            "mistral",
-            "--ask-ollama",
+            "local-7b",
+            "--ask-local-model",
             "--json",
         ]
     )
 
-    assert parsed["model"] == "mistral"
-    assert parsed["ask_ollama"] is True
+    assert parsed["model"] == "local-7b"
+    assert parsed["ask_local_model"] is True
     assert parsed["json_output"] is True
 
 
-def test_ollama_local_copilot_handler_formats_build_errors(
+def test_local_model_copilot_handler_formats_build_errors(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from rytm_randomizer.reports.ollama_local_copilot import (
-        _handle_ollama_local_copilot_report,
+    from rytm_randomizer.reports.local_model_copilot import (
+        _handle_local_model_copilot_report,
     )
 
-    exit_code = _handle_ollama_local_copilot_report(
+    exit_code = _handle_local_model_copilot_report(
         question=" ",
         description=None,
         workflow="docs",
-        model="llama3.2",
-        ask_ollama=False,
+        model="local-model",
+        ask_local_model=False,
     )
 
     captured = capsys.readouterr()

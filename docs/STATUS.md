@@ -4,10 +4,11 @@ Last updated: 2026-07-08. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
-- 2026-07-08: Passive Ollama local-copilot bundle prepared locally. The new
-  `ollama-local-copilot-report` command builds deterministic docs/MIDI,
+- 2026-07-08: Passive local model copilot bundle prepared locally. The new
+  `local-model-copilot-report` command builds deterministic docs/MIDI,
   staged mutation-intent, and Analog Four patch co-designer packets, and only
-  contacts a local Ollama HTTP endpoint when `--ask-ollama` is explicitly set.
+  runs a configured local model executable when `--ask-local-model` is
+  explicitly set.
   The local-AI provider, schema validators, and prompt packets live under the
   new `rytm_randomizer/local_ai/` subpackage; the A4 co-designer reuses the
   existing patch-genome compiler. It remains passive: no MIDI port opened, no

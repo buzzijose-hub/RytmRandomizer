@@ -1,4 +1,4 @@
-"""Passive Ollama local-copilot report."""
+"""Passive local model copilot report."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from typing import Final
 
 from ..cli_registry import CliCommand, register
 from ..local_ai import LocalAiChatRequest, LocalAiProvider
+from ..local_ai.local_model import DEFAULT_LOCAL_MODEL, LocalModelCommandProvider
 from ..local_ai.mutation_intent import (
     MutationIntentPacket,
     build_mutation_intent_packet,
@@ -17,7 +18,6 @@ from ..local_ai.mutation_intent import (
     staged_mutation_intent_to_dict,
     validate_mutation_intent_payload,
 )
-from ..local_ai.ollama import OllamaProvider
 from ..local_ai.provider import LocalAiError, LocalAiMessage, LocalAiUnavailableError
 from ..local_ai.rag import (
     DocsAssistantPacket,
@@ -36,10 +36,9 @@ from ..style_analysis.analog_four_patch_codesigner import (
 )
 from .formatter import SAFETY_SECTION_HEADER, PassiveReportHeader, passive_report_lines
 
-REPORT_TITLE: Final[str] = "RytmRandomizer passive Ollama local copilot"
-SOURCE_MODULE: Final[str] = "reports.ollama_local_copilot"
-OLLAMA_LOCAL_COPILOT_VERSION: Final[str] = "ollama-local-copilot-report-v1"
-DEFAULT_OLLAMA_MODEL: Final[str] = "llama3.2"
+REPORT_TITLE: Final[str] = "RytmRandomizer passive local model copilot"
+SOURCE_MODULE: Final[str] = "reports.local_model_copilot"
+LOCAL_MODEL_COPILOT_VERSION: Final[str] = "local-model-copilot-report-v1"
 VALID_WORKFLOWS: Final[tuple[str, ...]] = ("docs", "mutation", "patch", "all")
 SAFETY_LINES: Final[tuple[str, ...]] = (
     "passive local-AI copilot",
@@ -47,12 +46,12 @@ SAFETY_LINES: Final[tuple[str, ...]] = (
     "no MIDI ports opened",
     "no hardware mutation",
     "no SysEx written",
-    "Ollama calls are local and explicit",
+    "local model subprocess calls are explicit",
 )
 USAGE: Final[str] = (
-    "Usage: python -m rytm_randomizer.cli ollama-local-copilot-report "
+    "Usage: python -m rytm_randomizer.cli local-model-copilot-report "
     "--question <text> [--description <text>] [--workflow docs|mutation|patch|all] "
-    "[--model <name>] [--ask-ollama] [--json]"
+    "[--model <name>] [--ask-local-model] [--json]"
 )
 _HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
     title=REPORT_TITLE,
@@ -61,7 +60,7 @@ _HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
 
 
 @dataclass(frozen=True)
-class OllamaWorkflowResult:
+class LocalModelWorkflowResult:
     """Result for one optional local-model workflow."""
 
     workflow: str
@@ -74,7 +73,7 @@ class OllamaWorkflowResult:
 
 
 @dataclass(frozen=True)
-class OllamaLocalCopilotReport:
+class LocalModelCopilotReport:
     """Operator-facing bundled local-copilot report."""
 
     version: str
@@ -82,23 +81,23 @@ class OllamaLocalCopilotReport:
     description: str
     workflow: str
     model: str
-    ask_ollama: bool
+    ask_local_model: bool
     docs_packet: DocsAssistantPacket | None
     mutation_packet: MutationIntentPacket | None
     patch_packet: AnalogFourPatchCodesignerPacket | None
-    ollama_results: tuple[OllamaWorkflowResult, ...]
+    model_results: tuple[LocalModelWorkflowResult, ...]
     safety: tuple[str, ...]
 
 
-def build_ollama_local_copilot_report(
+def build_local_model_copilot_report(
     *,
     question: str,
     description: str | None = None,
     workflow: str = "all",
-    model: str = DEFAULT_OLLAMA_MODEL,
-    ask_ollama: bool = False,
+    model: str = DEFAULT_LOCAL_MODEL,
+    ask_local_model: bool = False,
     provider: LocalAiProvider | None = None,
-) -> OllamaLocalCopilotReport:
+) -> LocalModelCopilotReport:
     """Build the bundled passive local-copilot report."""
 
     normalized_workflow = _normalize_workflow(workflow)
@@ -126,36 +125,36 @@ def build_ollama_local_copilot_report(
         else None
     )
     results = (
-        _call_ollama_packets(
+        _call_local_model_packets(
             model=normalized_model,
-            provider=provider or OllamaProvider.from_env(),
+            provider=provider or LocalModelCommandProvider.from_env(),
             docs_packet=docs_packet,
             mutation_packet=mutation_packet,
             patch_packet=patch_packet,
         )
-        if ask_ollama
+        if ask_local_model
         else tuple(
             _skipped_result(workflow_name, model=normalized_model)
             for workflow_name in _requested_workflows(normalized_workflow)
         )
     )
-    return OllamaLocalCopilotReport(
-        version=OLLAMA_LOCAL_COPILOT_VERSION,
+    return LocalModelCopilotReport(
+        version=LOCAL_MODEL_COPILOT_VERSION,
         question=normalized_question,
         description=normalized_description,
         workflow=normalized_workflow,
         model=normalized_model,
-        ask_ollama=ask_ollama,
+        ask_local_model=ask_local_model,
         docs_packet=docs_packet,
         mutation_packet=mutation_packet,
         patch_packet=patch_packet,
-        ollama_results=results,
+        model_results=results,
         safety=SAFETY_LINES,
     )
 
 
-def build_ollama_local_copilot_payload(
-    report: OllamaLocalCopilotReport,
+def build_local_model_copilot_payload(
+    report: LocalModelCopilotReport,
 ) -> dict[str, object]:
     """Return a deterministic machine-readable local-copilot payload."""
 
@@ -165,9 +164,9 @@ def build_ollama_local_copilot_payload(
         "description": report.description,
         "workflow": report.workflow,
         "model": report.model,
-        "ollama": {
-            "called": report.ask_ollama,
-            "results": [_ollama_result_to_dict(result) for result in report.ollama_results],
+        "local_model": {
+            "called": report.ask_local_model,
+            "results": [_local_model_result_to_dict(result) for result in report.model_results],
         },
         "docs_packet": (
             docs_assistant_packet_to_dict(report.docs_packet)
@@ -188,14 +187,14 @@ def build_ollama_local_copilot_payload(
     }
 
 
-def format_ollama_local_copilot_report(report: OllamaLocalCopilotReport) -> list[str]:
+def format_local_model_copilot_report(report: LocalModelCopilotReport) -> list[str]:
     """Return deterministic operator-facing report lines."""
 
     lines = [
         "Summary:",
         f"- Workflow: {report.workflow}",
         f"- Model: {report.model}",
-        f"- Ollama call: {'requested' if report.ask_ollama else 'skipped'}",
+        f"- Local model call: {'requested' if report.ask_local_model else 'skipped'}",
         f"- Question: {report.question}",
     ]
     if report.docs_packet is not None:
@@ -204,22 +203,22 @@ def format_ollama_local_copilot_report(report: OllamaLocalCopilotReport) -> list
         lines.extend(_mutation_lines(report.mutation_packet))
     if report.patch_packet is not None:
         lines.extend(_patch_lines(report.patch_packet))
-    lines.append("Ollama results:")
-    lines.extend(_ollama_result_line(result) for result in report.ollama_results)
+    lines.append("Local model results:")
+    lines.extend(_local_model_result_line(result) for result in report.model_results)
     lines.append(SAFETY_SECTION_HEADER)
     lines.extend(f"- {line}" for line in report.safety)
     return passive_report_lines(_HEADER, lines)
 
 
-def _call_ollama_packets(
+def _call_local_model_packets(
     *,
     model: str,
     provider: LocalAiProvider,
     docs_packet: DocsAssistantPacket | None,
     mutation_packet: MutationIntentPacket | None,
     patch_packet: AnalogFourPatchCodesignerPacket | None,
-) -> tuple[OllamaWorkflowResult, ...]:
-    results: list[OllamaWorkflowResult] = []
+) -> tuple[LocalModelWorkflowResult, ...]:
+    results: list[LocalModelWorkflowResult] = []
     if docs_packet is not None:
         results.append(
             _call_one_workflow(
@@ -273,7 +272,7 @@ def _call_one_workflow(
     messages: tuple[LocalAiMessage, ...],
     schema: dict[str, object],
     validator,
-) -> OllamaWorkflowResult:
+) -> LocalModelWorkflowResult:
     try:
         response = provider.chat_json(
             LocalAiChatRequest(
@@ -286,7 +285,7 @@ def _call_one_workflow(
         )
         validated = validator(response)
     except LocalAiError as exc:
-        return OllamaWorkflowResult(
+        return LocalModelWorkflowResult(
             workflow=workflow,
             status="unavailable" if isinstance(exc, LocalAiUnavailableError) else "invalid",
             model=model,
@@ -295,7 +294,7 @@ def _call_one_workflow(
             prompt_eval_count=0,
             eval_count=0,
         )
-    return OllamaWorkflowResult(
+    return LocalModelWorkflowResult(
         workflow=workflow,
         status="validated",
         model=response.model,
@@ -306,8 +305,8 @@ def _call_one_workflow(
     )
 
 
-def _skipped_result(workflow: str, *, model: str) -> OllamaWorkflowResult:
-    return OllamaWorkflowResult(
+def _skipped_result(workflow: str, *, model: str) -> LocalModelWorkflowResult:
+    return LocalModelWorkflowResult(
         workflow=workflow,
         status="skipped",
         model=model,
@@ -354,12 +353,12 @@ def _patch_lines(packet: AnalogFourPatchCodesignerPacket) -> list[str]:
     ]
 
 
-def _ollama_result_line(result: OllamaWorkflowResult) -> str:
+def _local_model_result_line(result: LocalModelWorkflowResult) -> str:
     suffix = f" ({result.error})" if result.error else ""
     return f"- {result.workflow}: {result.status}{suffix}"
 
 
-def _ollama_result_to_dict(result: OllamaWorkflowResult) -> dict[str, object]:
+def _local_model_result_to_dict(result: LocalModelWorkflowResult) -> dict[str, object]:
     return {
         "workflow": result.workflow,
         "status": result.status,
@@ -385,12 +384,12 @@ def _require_non_empty(value: str, option: str) -> str:
     return normalized
 
 
-def _parse_ollama_local_copilot_args(argv: Sequence[str]) -> dict[str, object]:
+def _parse_local_model_copilot_args(argv: Sequence[str]) -> dict[str, object]:
     question = ""
     description: str | None = None
     workflow = "all"
-    model = DEFAULT_OLLAMA_MODEL
-    ask_ollama = False
+    model = DEFAULT_LOCAL_MODEL
+    ask_local_model = False
     json_output = False
     index = 0
     while index < len(argv):
@@ -399,8 +398,8 @@ def _parse_ollama_local_copilot_args(argv: Sequence[str]) -> dict[str, object]:
             json_output = True
             index += 1
             continue
-        if option == "--ask-ollama":
-            ask_ollama = True
+        if option == "--ask-local-model":
+            ask_local_model = True
             index += 1
             continue
         if option in ("--question", "--description", "--workflow", "--model"):
@@ -425,40 +424,40 @@ def _parse_ollama_local_copilot_args(argv: Sequence[str]) -> dict[str, object]:
         "description": description,
         "workflow": workflow,
         "model": model,
-        "ask_ollama": ask_ollama,
+        "ask_local_model": ask_local_model,
         "json_output": json_output,
     }
 
 
-def _format_ollama_local_copilot_error(exc: Exception) -> str:
+def _format_local_model_copilot_error(exc: Exception) -> str:
     return f"{USAGE}\nError: {exc}"
 
 
-def _handle_ollama_local_copilot_report(
+def _handle_local_model_copilot_report(
     *,
     question: str,
     description: str | None,
     workflow: str,
     model: str,
-    ask_ollama: bool,
+    ask_local_model: bool,
     json_output: bool = False,
 ) -> int:
     try:
-        report = build_ollama_local_copilot_report(
+        report = build_local_model_copilot_report(
             question=question,
             description=description,
             workflow=workflow,
             model=model,
-            ask_ollama=ask_ollama,
+            ask_local_model=ask_local_model,
         )
     except (ValueError, TypeError) as exc:
-        sys.stderr.write(f"{_format_ollama_local_copilot_error(exc)}\n")
+        sys.stderr.write(f"{_format_local_model_copilot_error(exc)}\n")
         return 2
 
     if json_output:
         sys.stdout.write(
             json.dumps(
-                build_ollama_local_copilot_payload(report),
+                build_local_model_copilot_payload(report),
                 indent=2,
                 sort_keys=True,
             )
@@ -466,33 +465,33 @@ def _handle_ollama_local_copilot_report(
         sys.stdout.write("\n")
         return 0
 
-    sys.stdout.write("\n".join(format_ollama_local_copilot_report(report)))
+    sys.stdout.write("\n".join(format_local_model_copilot_report(report)))
     sys.stdout.write("\n")
     return 0
 
 
-OLLAMA_LOCAL_COPILOT_CLI_COMMAND: Final[CliCommand] = CliCommand(
-    name="ollama-local-copilot-report",
-    summary="Build passive local Ollama copilot packets for docs, mutation, and A4 patch DNA.",
-    args_parser=_parse_ollama_local_copilot_args,
-    handler=_handle_ollama_local_copilot_report,
-    error_formatter=_format_ollama_local_copilot_error,
+LOCAL_MODEL_COPILOT_CLI_COMMAND: Final[CliCommand] = CliCommand(
+    name="local-model-copilot-report",
+    summary="Build passive local model copilot packets for docs, mutation, and A4 patch DNA.",
+    args_parser=_parse_local_model_copilot_args,
+    handler=_handle_local_model_copilot_report,
+    error_formatter=_format_local_model_copilot_error,
 )
 
-register(OLLAMA_LOCAL_COPILOT_CLI_COMMAND)
+register(LOCAL_MODEL_COPILOT_CLI_COMMAND)
 
 __all__ = [
-    "DEFAULT_OLLAMA_MODEL",
-    "OLLAMA_LOCAL_COPILOT_CLI_COMMAND",
-    "OLLAMA_LOCAL_COPILOT_VERSION",
-    "OllamaLocalCopilotReport",
-    "OllamaWorkflowResult",
+    "DEFAULT_LOCAL_MODEL",
+    "LOCAL_MODEL_COPILOT_CLI_COMMAND",
+    "LOCAL_MODEL_COPILOT_VERSION",
+    "LocalModelCopilotReport",
+    "LocalModelWorkflowResult",
     "REPORT_TITLE",
     "SAFETY_LINES",
     "SOURCE_MODULE",
     "USAGE",
     "VALID_WORKFLOWS",
-    "build_ollama_local_copilot_payload",
-    "build_ollama_local_copilot_report",
-    "format_ollama_local_copilot_report",
+    "build_local_model_copilot_payload",
+    "build_local_model_copilot_report",
+    "format_local_model_copilot_report",
 ]
