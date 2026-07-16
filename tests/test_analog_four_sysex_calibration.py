@@ -257,25 +257,59 @@ def test_filter2_resonance_calibration_keeps_capture_evidence_compact() -> None:
     calibration = analog_four_sysex_calibration_for("Filter2 Resonance")
 
     assert {
-        (row.track, row.screen_value, row.primary_raw_value) for row in calibration.evidence
+        (
+            row.track,
+            row.screen_value,
+            row.primary_raw_value,
+            row.source_file,
+            row.payload_fingerprint,
+        )
+        for row in calibration.evidence
     } == {
-        (1, "0", 0x00),
-        (1, "20", 0x14),
-        (1, "127", 0x7F),
-        (2, "127", 0x7F),
-        (3, "127", 0x7F),
-        (4, "127", 0x7F),
+        (
+            1,
+            "0",
+            0x00,
+            "A4_Test1_T1_Filter2Res_000_Kit.syx",
+            "4ec91a917cfaeab0",
+        ),
+        (
+            1,
+            "20",
+            0x14,
+            "A4_Test1_T1_Filter2Res_020_Kit.syx",
+            "ccf0acb6bb32e1b3",
+        ),
+        (
+            1,
+            "127",
+            0x7F,
+            "A4_Test1_T1_Filter2Res_127_Kit.syx",
+            "c842a01f81f1eaa8",
+        ),
+        (
+            2,
+            "127",
+            0x7F,
+            "A4_Test1_T2_Filter2Res_127_Kit.syx",
+            "8de0161d9ffd0798",
+        ),
+        (
+            3,
+            "127",
+            0x7F,
+            "A4_Test1_T3_Filter2Res_127_Kit.syx",
+            "640e4443acf81ee4",
+        ),
+        (
+            4,
+            "127",
+            0x7F,
+            "A4_Test1_T4_Filter2Res_127_Kit.syx",
+            "1f2160541d4204b0",
+        ),
     }
     assert {row.kit_name for row in calibration.evidence} == {"KIT 1"}
-    assert {row.payload_fingerprint for row in calibration.evidence} == {
-        "4ec91a917cfaeab0",
-        "ccf0acb6bb32e1b3",
-        "c842a01f81f1eaa8",
-        "8de0161d9ffd0798",
-        "640e4443acf81ee4",
-        "1f2160541d4204b0",
-    }
-    assert all(row.source_file.endswith("_Kit.syx") for row in calibration.evidence)
 
 
 def test_sysex_calibration_mapping_is_reexported_from_data_layer() -> None:
