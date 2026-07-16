@@ -70,7 +70,7 @@ def test_machine_cc_is_15_everywhere():
 def test_a4_sysex_calibration_tracks_filter2_resonance_capture():
     calibration = data.ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS["Filter2 Resonance"]
 
-    assert calibration.status == "pending"
+    assert calibration.status == "candidate-promoted"
     assert calibration.track_1_primary_raw_offset == 170
 
 
