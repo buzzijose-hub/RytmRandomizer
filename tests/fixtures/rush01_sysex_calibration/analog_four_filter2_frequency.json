@@ -1,0 +1,79 @@
+{
+  "evidence": [
+    {
+      "kit_name": "KIT 1",
+      "payload_fingerprint": "6818388c34db01b9",
+      "primary_raw_value": 0,
+      "screen_value": "0.00",
+      "source_file": "A4_Test1_T1_Filter2Freq_000_Kit.syx",
+      "track": 1
+    },
+    {
+      "kit_name": "KIT 1",
+      "payload_fingerprint": "82c03587679c6ddc",
+      "primary_raw_value": 63,
+      "screen_value": "63.50",
+      "source_file": "A4_Test1_T1_Filter2Freq_063_50_Kit.syx",
+      "track": 1
+    },
+    {
+      "kit_name": "KIT 1",
+      "payload_fingerprint": "9497709f8562f1ef",
+      "primary_raw_value": 127,
+      "screen_value": "127.00",
+      "source_file": "A4_Test1_T1_Filter2Freq_127_Kit.syx",
+      "track": 1
+    },
+    {
+      "kit_name": "KIT 1",
+      "payload_fingerprint": "1f15e21e281ce000",
+      "primary_raw_value": 127,
+      "screen_value": "127.00",
+      "source_file": "A4_Test1_T2_Filter2Freq_127_Kit.syx",
+      "track": 2
+    },
+    {
+      "kit_name": "KIT 1",
+      "payload_fingerprint": "fabeab5b95ed53e0",
+      "primary_raw_value": 127,
+      "screen_value": "127.00",
+      "source_file": "A4_Test1_T3_Filter2Freq_127_Kit.syx",
+      "track": 3
+    },
+    {
+      "kit_name": "KIT 1",
+      "payload_fingerprint": "a52174e811260978",
+      "primary_raw_value": 127,
+      "screen_value": "127.00",
+      "source_file": "A4_Test1_T4_Filter2Freq_127_Kit.syx",
+      "track": 4
+    }
+  ],
+  "notes": [
+    "Primary packed data byte verified on Track 1 at 0.00, 63.50, and 127.00.",
+    "Track 2, Track 3, and Track 4 127.00 captures confirm the +400 packed-byte stride.",
+    "Neighboring packed bytes move with Elektron high-bit grouping; the direct screen value appears at packed offset 167 and unpacked offset 142.",
+    "SysEx checksum trailer bytes must be ignored or recomputed by future writers."
+  ],
+  "parameter": "Filter2 Frequency",
+  "primary_raw_values": {
+    "0.00": 0,
+    "127.00": 127,
+    "63.50": 63
+  },
+  "raw_group_width": 12,
+  "screen_values": {
+    "maximum": "127.00",
+    "midpoint": "63.50",
+    "minimum": "0.00"
+  },
+  "section": "FILTERS",
+  "status": "candidate-promoted",
+  "track_1_primary_raw_offset": 167,
+  "track_1_raw_group_start": 160,
+  "track_1_unpacked_group_start": 137,
+  "track_raw_stride": 400,
+  "track_unpacked_stride": 350,
+  "unpacked_group_width": 7,
+  "writer_ready": false
+}
