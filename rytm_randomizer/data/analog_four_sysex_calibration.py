@@ -1,4 +1,4 @@
-"""Promoted Analog Four MKII SysEx calibration facts.
+"""Pending and candidate-promoted Analog Four MKII SysEx calibration facts.
 
 The facts in this module come from passive, operator-supplied kit exports.
 They are data only: no MIDI ports are opened, no SysEx is written, and no
@@ -33,7 +33,7 @@ class AnalogFourSysexCalibrationEvidence:
 
 @dataclass(frozen=True)
 class AnalogFourSysexFieldCalibration:
-    """Promoted or candidate-promoted A4 SysEx field location."""
+    """Pending or candidate-promoted A4 SysEx field location."""
 
     parameter: str
     section: str
@@ -402,7 +402,7 @@ ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCal
 
 
 def analog_four_sysex_calibration_for(parameter: str) -> AnalogFourSysexFieldCalibration:
-    """Return promoted A4 SysEx calibration metadata for ``parameter``."""
+    """Return pending or candidate-promoted A4 calibration metadata."""
 
     try:
         return ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS[parameter]
