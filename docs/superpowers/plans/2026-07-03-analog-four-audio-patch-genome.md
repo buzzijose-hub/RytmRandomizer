@@ -3,7 +3,7 @@
 > Status: in-flight
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:test-driven-development. This plan is structured for one bundled PR with maximum-parallelization sidecar exploration and no stacked PRs, per docs/PLAN_REQUIREMENTS.md Gate 16.
 
-**Goal:** Add a Synplant-inspired audio/description-to-Analog-Four patch genome that produces four A4 patch candidates, a selected candidate DNA sheet, front-panel dial targets, CC/NRPN transport metadata, a learning packet that explains candidate ranking, trait-to-A4 routes, future capture steps, passive initialized-baseline comparison for clean-slate A4 SysEx exports, passive patch-corpus nearest-match ranking for starter or captured A4 audio/patch examples, the first passive SysEx field calibration facts for Filter1 Frequency, Filter1 Resonance, and Filter2 Frequency, and live-dial readiness, plus a gated send-plan bridge that can preview or explicitly arm compiler-approved live-dial rows without promoting screen-only destinations.
+**Goal:** Add a Synplant-inspired audio/description-to-Analog-Four patch genome that produces four A4 patch candidates, a selected candidate DNA sheet, front-panel dial targets, CC/NRPN transport metadata, a learning packet that explains candidate ranking, trait-to-A4 routes, future capture steps, passive initialized-baseline comparison for clean-slate A4 SysEx exports, passive patch-corpus nearest-match ranking for starter or captured A4 audio/patch examples, passive SysEx field calibration facts for Filter1 Frequency, Filter1 Resonance, Filter2 Frequency, and Filter2 Resonance, and live-dial readiness, plus a gated send-plan bridge that can preview or explicitly arm compiler-approved live-dial rows without promoting screen-only destinations.
 
 **Architecture:** Keep A4-specific facts in `rytm_randomizer/data/`, deterministic audio-intelligence translation in `rytm_randomizer/style_analysis/`, passive operator output in focused `rytm_randomizer/reports/` modules registered through `cli_registry`, and active output only in `rytm_randomizer/app.py` behind `--arm` plus a confirmation flag. Screen-only NRPN destination rows remain skipped until their ordinals are captured.
 
@@ -27,17 +27,17 @@
 
 ## Execution Shape
 
-- **Worktree assignment:** `C:\Users\Jose Buzzi\Documents\RytmRandomizer\.worktrees\a4-audio-patch-genome-passive` on branch `codex/a4-audio-patch-genome-passive`.
+- **Worktree assignment:** The bundled feature landed through `.worktrees/a4-audio-patch-genome-passive` on PR #206; Filter2 Resonance calibration continues in `.worktrees/a4-filter2-resonance-calibration` on PR #212.
 - **Disjoint ownership:** WS-A and WS-I own `data/`, WS-B owns `style_analysis/`, WS-C owns `reports/` plus CLI/help, WS-D owns docs.
 - **Agent crew:** main agent performs TDD/implementation; read-only explorers inspect CLI/report and A4 reuse points in parallel.
 - **Self-driving rules:** no human prompts; routine file edits, formatting, docs, tests, and fixes continue automatically.
 - **Auto-merge cascade:** not used locally; PR shape is one non-stacked bundled branch.
 - **Auto-rebase rules:** if base drift appears, rebase/cherry-pick only this branch's commits and never reset user changes in the original checkout.
-- **On-disk state:** PR #206, branch `codex/a4-audio-patch-genome-passive`, this plan document, and the committed test/coverage evidence are the durable recovery state; no long-running monitor or external state file is required.
+- **On-disk state:** Merged PR #206, follow-up PR #212 on branch `codex/a4-filter2-resonance-calibration`, this plan document, and committed test/coverage evidence are the durable recovery state; no long-running monitor or external state file is required.
 - **Kickoff trigger:** user requested autonomous continuation on 2026-07-03.
 - **Termination condition:** tests and docs pass locally as far as feasible; final response lists changed files, verification, and residual hardware-validation limits.
 - **Hard time budget:** no wall-clock budgeted automation is running; this is a finite PR update that stops after local gates, push, and PR status checks.
-- **Recovery procedure:** read this plan, run `git status --short --branch`, inspect PR #206, then rerun the focused A4 patch tests before continuing after compaction.
+- **Recovery procedure:** read this plan, run `git status --short --branch`, inspect PR #212 for the active calibration follow-up, then rerun the focused A4 patch tests before continuing after compaction.
 - **Permission profile:** local file edits and passive tests only; refuse force-push, hardware pin bumps, parity capture, and unarmed real-MIDI sends.
 - **Stop signals:** a user "stop/wait" message pauses; otherwise continue.
 
@@ -53,7 +53,7 @@
 8. Implement the passive send-plan compiler/report and gated app dry-run/armed send bridge.
 9. Implement the passive capture-corpus nearest-match compiler/report with synthetic starter rows and optional captured corpus file input.
 10. Implement the passive initialized-baseline report for Jose's Test 1 kit, pattern+kit, and whole-project SysEx exports.
-11. Promote the first passive A4 SysEx field calibration facts from Jose's Filter1 Frequency, Filter1 Resonance, and Filter2 Frequency captures.
+11. Promote passive A4 SysEx field calibration facts from Jose's Filter1 Frequency, Filter1 Resonance, Filter2 Frequency, and Filter2 Resonance captures.
 12. Update operator docs and architecture/status references.
 13. Run focused tests, then fast/architecture/lint verification as feasible.
 
@@ -91,6 +91,6 @@ Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 - [x] Gate 13 (env vars) -- no new environment variables.
 - [x] Gate 14 (maintainability) -- small focused modules; no oversized report module.
 - [x] Gate 15 (learning phase) -- review findings were captured in this plan and PR evidence; no reusable skill extraction is warranted because the patterns are feature-specific A4 patch-template data placement and send-plan observability fixes already covered by existing rules.
-- [x] Gate 16 (execution shape) -- one isolated worktree, branch `codex/a4-audio-patch-genome-passive`, one bundled PR (#206) against `modularize-v1.34`, no stacked base branch.
+- [x] Gate 16 (execution shape) -- the bundled feature landed in PR #206; the isolated Filter2 Resonance calibration follow-up is PR #212 directly against `modularize-v1.34`, with no stacked base branch.
 - [x] Gate 17 (abstraction reuse) -- reuses A4 MIDI data, `FeatureReport`, blueprint traits, report formatter, CLI registry, and passive SysEx evidence/fingerprint conventions.
 - [x] Gate 18 (architecture freshness) -- architecture docs/diagrams updated for the new passive reports, style-analysis surfaces, and gated app send bridge.
