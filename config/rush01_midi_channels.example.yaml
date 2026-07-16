@@ -1,0 +1,25 @@
+# Copy to a local configuration file and replace every placeholder exactly.
+# Track channels are user-facing MIDI channels 1-16.
+rytm:
+  output_port: REPLACE_WITH_EXACT_PORT_NAME
+  tracks:
+    BD: REPLACE
+    SD: REPLACE
+    RS: REPLACE
+    CP: REPLACE
+    BT: REPLACE
+    LT: REPLACE
+    MT: REPLACE
+    HT: REPLACE
+    CH: REPLACE
+    OH: REPLACE
+    CY: REPLACE
+    CB: REPLACE
+
+a4:
+  output_port: REPLACE_WITH_EXACT_PORT_NAME
+  tracks:
+    T1: REPLACE
+    T2: REPLACE
+    T3: REPLACE
+    T4: REPLACE

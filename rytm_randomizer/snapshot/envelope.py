@@ -33,6 +33,7 @@ manufacturer-id constant is annotated ``Final``.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Final
 
 #: Elektron's IEEE-registered 3-byte SysEx manufacturer ID. Documented in
@@ -40,6 +41,212 @@ from typing import Final
 #: is the same value any sniffer on the MIDI cable will see in every
 #: SysEx packet the Rytm / Analog Four / Digitakt sends or receives.
 ELEKTRON_MFR_ID: Final[bytes] = bytes([0x00, 0x20, 0x3C])
+
+_SYSEX_START: Final[int] = 0xF0
+_SYSEX_END: Final[int] = 0xF7
+_INTEGRITY_TRAILER_SIZE: Final[int] = 4
+_U14_MAX: Final[int] = 0x3FFF
+
+
+@dataclass(frozen=True)
+class ElektronKitEnvelopeSpec:
+    """Verified device-specific facts for one Elektron kit envelope."""
+
+    label: str
+    required_header_prefix: bytes
+    header_size_without_f0: int
+    unpacked_size: int
+    checksum_packed_start: int
+    length_adjustment: int
+    required_unpacked_prefix: bytes = b""
+
+    def __post_init__(self) -> None:
+        if not self.label:
+            raise ValueError("ElektronKitEnvelopeSpec.label must not be empty")
+        if not self.required_header_prefix:
+            raise ValueError("ElektronKitEnvelopeSpec.required_header_prefix must not be empty")
+        if self.header_size_without_f0 < len(self.required_header_prefix):
+            raise ValueError(
+                "ElektronKitEnvelopeSpec.header_size_without_f0 must cover "
+                "required_header_prefix"
+            )
+        if self.unpacked_size <= 0:
+            raise ValueError("ElektronKitEnvelopeSpec.unpacked_size must be positive")
+        if self.checksum_packed_start < 0:
+            raise ValueError("ElektronKitEnvelopeSpec.checksum_packed_start must be non-negative")
+        if self.length_adjustment < 0:
+            raise ValueError("ElektronKitEnvelopeSpec.length_adjustment must be non-negative")
+        if len(self.required_unpacked_prefix) > self.unpacked_size:
+            raise ValueError(
+                "ElektronKitEnvelopeSpec.required_unpacked_prefix exceeds unpacked_size"
+            )
+
+
+@dataclass(frozen=True)
+class DecodedElektronKitFrame:
+    """One validated kit frame bound to the reference bytes it came from."""
+
+    spec: ElektronKitEnvelopeSpec
+    original_frame: bytes
+    header: bytes
+    packed: bytes
+    unpacked: bytes
+    checksum: int
+    encoded_length: int
+
+
+@dataclass(frozen=True)
+class ElektronKitCodec:
+    """Lossless reference-bound Elektron kit frame decoder and encoder."""
+
+    spec: ElektronKitEnvelopeSpec
+
+    def decode_frame(self, frame: bytes) -> DecodedElektronKitFrame:
+        """Validate and decode exactly one complete SysEx kit frame."""
+
+        if frame is None:  # type: ignore[unreachable]
+            raise ValueError("ElektronKitCodec.decode_frame: frame is None")
+        minimum_size = 2 + self.spec.header_size_without_f0 + _INTEGRITY_TRAILER_SIZE
+        if len(frame) < minimum_size:
+            raise ValueError(
+                f"ElektronKitCodec.decode_frame: frame has {len(frame)} byte(s), "
+                f"minimum for {self.spec.label} is {minimum_size}"
+            )
+        if frame[0] != _SYSEX_START or frame[-1] != _SYSEX_END:
+            raise ValueError(
+                "ElektronKitCodec.decode_frame: expected one complete frame with F0/F7 framing"
+            )
+
+        wire_data = frame[1:-1]
+        for index, byte in enumerate(wire_data, start=1):
+            if byte > 0x7F:
+                raise ValueError(
+                    "ElektronKitCodec.decode_frame: SysEx data byte at frame offset "
+                    f"{index} is 0x{byte:02x}, outside the 7-bit MIDI range"
+                )
+
+        header = wire_data[: self.spec.header_size_without_f0]
+        if not header.startswith(self.spec.required_header_prefix):
+            raise ValueError(
+                f"ElektronKitCodec.decode_frame: {self.spec.label} header prefix mismatch"
+            )
+
+        packed = wire_data[self.spec.header_size_without_f0 : -_INTEGRITY_TRAILER_SIZE]
+        if not packed:
+            raise ValueError("ElektronKitCodec.decode_frame: packed kit payload is empty")
+        if self.spec.checksum_packed_start > len(packed):
+            raise ValueError(
+                "ElektronKitCodec.decode_frame: checksum_packed_start exceeds packed payload"
+            )
+
+        trailer = wire_data[-_INTEGRITY_TRAILER_SIZE:]
+        checksum = decode_elektron_u14(trailer[:2])
+        encoded_length = decode_elektron_u14(trailer[2:])
+        expected_checksum = sum(packed[self.spec.checksum_packed_start :]) & _U14_MAX
+        if checksum != expected_checksum:
+            raise ValueError(
+                f"ElektronKitCodec.decode_frame: checksum mismatch for {self.spec.label}; "
+                f"stored {checksum}, expected {expected_checksum}"
+            )
+        expected_length = len(packed) + self.spec.length_adjustment
+        if encoded_length != expected_length:
+            raise ValueError(
+                f"ElektronKitCodec.decode_frame: length mismatch for {self.spec.label}; "
+                f"stored {encoded_length}, expected {expected_length}"
+            )
+
+        unpacked = unpack_elektron_7bit(packed)
+        if len(unpacked) != self.spec.unpacked_size:
+            raise ValueError(
+                f"ElektronKitCodec.decode_frame: decoded {len(unpacked)} byte(s) for "
+                f"{self.spec.label}, expected {self.spec.unpacked_size}"
+            )
+        if not unpacked.startswith(self.spec.required_unpacked_prefix):
+            raise ValueError(
+                f"ElektronKitCodec.decode_frame: {self.spec.label} object prefix mismatch"
+            )
+
+        return DecodedElektronKitFrame(
+            spec=self.spec,
+            original_frame=bytes(frame),
+            header=header,
+            packed=packed,
+            unpacked=unpacked,
+            checksum=checksum,
+            encoded_length=encoded_length,
+        )
+
+    def encode_frame(
+        self,
+        decoded: DecodedElektronKitFrame,
+        *,
+        unpacked: bytes | None = None,
+    ) -> bytes:
+        """Encode a decoded reference frame, optionally patching its object bytes."""
+
+        if decoded.spec != self.spec:
+            raise ValueError("ElektronKitCodec.encode_frame: decoded frame uses a different spec")
+        if self.decode_frame(decoded.original_frame) != decoded:
+            raise ValueError(
+                "ElektronKitCodec.encode_frame: decoded metadata does not match its reference frame"
+            )
+
+        object_bytes = decoded.unpacked if unpacked is None else bytes(unpacked)
+        if len(object_bytes) != self.spec.unpacked_size:
+            raise ValueError(
+                f"ElektronKitCodec.encode_frame: object has {len(object_bytes)} byte(s), "
+                f"expected {self.spec.unpacked_size}"
+            )
+        if not object_bytes.startswith(self.spec.required_unpacked_prefix):
+            raise ValueError(
+                f"ElektronKitCodec.encode_frame: {self.spec.label} object prefix mismatch"
+            )
+
+        packed = pack_elektron_7bit(object_bytes)
+        checksum = sum(packed[self.spec.checksum_packed_start :]) & _U14_MAX
+        encoded_length = len(packed) + self.spec.length_adjustment
+        return (
+            bytes([_SYSEX_START])
+            + decoded.header
+            + packed
+            + encode_elektron_u14(checksum)
+            + encode_elektron_u14(encoded_length)
+            + bytes([_SYSEX_END])
+        )
+
+
+def pack_elektron_7bit(unpacked: bytes) -> bytes:
+    """Pack flat bytes into Elektron's 7-bit-safe SysEx representation."""
+
+    if unpacked is None:  # type: ignore[unreachable]
+        raise ValueError("pack_elektron_7bit: unpacked payload is None")
+    out = bytearray()
+    for group_start in range(0, len(unpacked), 7):
+        group = unpacked[group_start : group_start + 7]
+        header = 0
+        for bit_index, byte in enumerate(group):
+            header |= ((byte >> 7) & 0x01) << bit_index
+        out.append(header)
+        out.extend(byte & 0x7F for byte in group)
+    return bytes(out)
+
+
+def encode_elektron_u14(value: int) -> bytes:
+    """Encode one unsigned 14-bit value as two legal SysEx data bytes."""
+
+    if not 0 <= value <= _U14_MAX:
+        raise ValueError("encode_elektron_u14: value must be in 0..16383")
+    return bytes([(value >> 7) & 0x7F, value & 0x7F])
+
+
+def decode_elektron_u14(raw: bytes) -> int:
+    """Decode two SysEx data bytes into one unsigned 14-bit value."""
+
+    if len(raw) != 2:
+        raise ValueError("decode_elektron_u14: expected exactly two bytes")
+    if any(byte > 0x7F for byte in raw):
+        raise ValueError("decode_elektron_u14: bytes must be in the 7-bit MIDI range")
+    return (raw[0] << 7) | raw[1]
 
 
 def unpack_elektron_7bit(packed: bytes) -> bytes:

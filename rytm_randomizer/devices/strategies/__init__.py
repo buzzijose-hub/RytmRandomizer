@@ -96,13 +96,16 @@ from .analog_rytm_style_snapshot_routing import (
     RytmStyleSnapshotRoutingPlan,
     plan_rytm_style_snapshot_routes,
 )
+from .elektron_kit_codecs import ANALOG_FOUR_KIT_CODEC, ANALOG_RYTM_KIT_CODEC
 
 __all__ = [
     "A4_CANDIDATE_KIT_TYPE_BYTE",
+    "ANALOG_FOUR_KIT_CODEC",
     "ANALOG_FOUR_STYLE_ZONE_AXIS_WEIGHTS",
     "MAX_A4_DEPTH",
     "MAX_DEPTH",
     "RYTM_KIT_TYPE_BYTE",
+    "ANALOG_RYTM_KIT_CODEC",
     "AnalogFourKitSnapshot",
     "AnalogFourMutationPlan",
     "AnalogFourMutationPlanner",

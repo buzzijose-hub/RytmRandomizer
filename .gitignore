@@ -60,3 +60,6 @@ docs-scratch/
 # embeds the production AST scanner; this directory is just a workspace for
 # rerunning surveys ad-hoc. See DEAD_CODE_AUDIT.md for the methodology.
 _deadcode/
+
+# Local exact MIDI port names and track channels are machine-specific.
+config/rush01_midi_channels.yaml

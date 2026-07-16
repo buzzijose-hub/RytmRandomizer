@@ -27,6 +27,23 @@ F0 00 20 3C <product_id> <device_id> <message_id> <payload...> <checksum> F7
 | `<checksum>` (2 bytes) | Sum-of-payload modulo `0x4000`, split into two 7-bit bytes. |
 | `F7` | SysEx end. |
 
+### Verified saved-kit variants in this repository
+
+Do not apply one generic header/checksum formula to every Elektron family.
+Approved exact-target-unit saved-kit exports currently prove these two
+container variants:
+
+| Device/export | Header after `F0` | Decoded object | Checksum | Stored length |
+|---|---|---:|---|---|
+| Analog Rytm MKII saved kit | `00 20 3C 07 00 52 01 01 <slot>` | 2610 bytes | `sum(packed) & 0x3fff` | `len(packed) + 5` |
+| Analog Four MKII saved kit | `00 20 3C 06` | 2415 bytes, beginning with object byte `0x52` | `sum(packed[8:]) & 0x3fff` | `len(packed)` |
+
+The A4 and Rytm bytes `0x06`/`0x07` above are observed saved-kit family bytes.
+They are not interchangeable with product/device IDs from other Elektron
+message families. Use the device-configured `ElektronKitCodec` instances and
+approved reference frames; do not choose a header from the generic product-ID
+table below.
+
 ## 7-bit packing (the only non-obvious part)
 
 MIDI SysEx payload bytes must all have their high bit clear (top bit reserved as a SysEx-status marker). Elektron's packing turns 8 source bytes into 8 SysEx bytes by:
@@ -35,7 +52,9 @@ MIDI SysEx payload bytes must all have their high bit clear (top bit reserved as
 2. Packing those 7 stripped high-bits into a single leading byte (bit 0 = first source byte's MSB, bit 1 = second, ...).
 3. The 7 low-7-bit bodies follow.
 
-Result: every 8 SysEx bytes encode 7 source bytes. Inverse: `unpack_elektron_7bit(sysex: bytes) -> bytes` (in `snapshot/envelope.py`).
+Result: every 8 SysEx bytes encode 7 source bytes. Decoding uses
+`unpack_elektron_7bit(sysex: bytes) -> bytes`; encoding uses
+`pack_elektron_7bit(unpacked: bytes) -> bytes` in `snapshot/envelope.py`.
 
 ```python
 # Reference unpack (Python). The canonical implementation lives in

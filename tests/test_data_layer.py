@@ -157,6 +157,38 @@ def test_analog_rytm_kit_layout_pins_current_sound_offsets():
     assert data.RYTM_SOUND_FIELD_BY_NRPN_LSB[27].sound_offset == 0x0052
 
 
+def test_rush01_midi_binding_tables_are_ordered_and_manual_backed():
+    """The device-assisted compiler keeps semantic order in the data layer."""
+
+    assert data.RUSH01_RYTM_TRACK_ORDER == (
+        "BD",
+        "SD",
+        "RS",
+        "CP",
+        "BT",
+        "LT",
+        "MT",
+        "HT",
+        "CH",
+        "OH",
+        "CY",
+        "CB",
+    )
+    assert tuple(binding.parameter for binding in data.RUSH01_RYTM_FILTER_BINDINGS) == (
+        "Filter Attack Time",
+        "Filter Decay Time",
+        "Filter Sustain Level",
+        "Filter Release Time",
+        "Filter Frequency",
+        "Filter Resonance",
+        "Filter Mode",
+        "Filter Env Depth",
+    )
+    assert data.RUSH01_A4_TRACK_ORDER == ("T1", "T2", "T3", "T4")
+    assert data.RUSH01_A4_BINDINGS[0].parameter == "OSC1 Pitch"
+    assert data.RUSH01_A4_BINDINGS[-1].parameter == "EnvF Gate Length"
+
+
 def test_analog_four_manual_cc_mapping_matches_pwm_depth_and_filter_frequency():
     """A4 CC labels must follow the Analog Four MKII manual, not MIDI convention."""
 

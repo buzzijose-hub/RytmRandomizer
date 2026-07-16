@@ -1,9 +1,28 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-07-03. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-07-15. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-07-16: RUSH01 device-assisted MIDI compiler completed locally. The
+  corrected Rytm and conservative A4 semantic specs now compile into
+  deterministic, unconfigured CC/CC14/NRPN review plans; unknown ports,
+  channels, and ordered bytes remain null until explicit configuration. Exact
+  port selection, interactive apply confirmation, input-only observed-value
+  learning, typed refusal statuses, and no-sample-dependency validation are
+  covered without physical MIDI access. Final verification passed 6255 tests
+  with 3 skips, 671 architecture gates, and 100% branch coverage on touched
+  compiler/transport/observation/tooling files. No MIDI port was opened and no
+  MIDI data was sent.
+- 2026-07-15: RUSH01 reference-anchored kit build audit completed locally.
+  The shared Elektron envelope now has a tested inverse packer, u14 integrity
+  helpers, and a codec that can encode only from a validated decoded reference
+  frame. The approved Rytm and A4 initialized-kit dumps round-trip
+  byte-identically while preserving all object/header bytes. Both semantic
+  builds remain blocked and no partial `.syx` was emitted: Rytm still lacks
+  critical promoted machine/level/selector evidence, and A4 still lacks
+  promoted offsets and typed conversions for nearly all requested sound
+  fields. The build and mapping-gap reports record the exact evidence needed.
 - 2026-07-03: Synplant-inspired Cockpit UI design surface prepared locally.
   The React cockpit now has a frontend-only Patch Genome panel that groups
   Analog Four-facing design-preview genes into oscillator, envelope/LFO,

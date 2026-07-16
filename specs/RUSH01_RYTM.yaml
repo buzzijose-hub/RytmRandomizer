@@ -1,0 +1,530 @@
+spec_version: 1
+spec_name: RUSH01_RYTM
+device:
+  family: Elektron
+  model: Analog Rytm MKII
+  firmware:
+    installed: UNVERIFIED_FROM_DEVICE
+    do_not_infer: true
+  value_domain: midi_cc_7bit_semantic
+  notes:
+    - Values are semantic 0-127 parameter values unless an enum is explicitly supplied.
+    - For bipolar parameters, 64 is the center/zero value unless the repository's verified converter says otherwise.
+
+reference:
+  filename: RYTM_Test1_Init_Kit.syx
+  approved_as_trusted_anchor: true
+  compatibility_basis: exact_target_unit_reference_dump
+  expected_length_bytes: 2998
+  sha256: COMPUTE_AND_RECORD_FROM_LOCAL_FILE
+  preserve_unknown_bytes: true
+
+build_policy:
+  mode: patch_reference
+  target: active_kit_test_first
+  kit_name: RUSH01
+  no_patterns: true
+  no_song_data: true
+  sample_dependencies: none
+  unsupported_noncritical_field_policy: preserve_reference_and_report
+  unsupported_critical_field_policy: fail_rytm_build
+  critical_sections:
+    - tracks.machine
+    - tracks.synth
+    - tracks.filter
+    - tracks.amp
+  preserve_reference_sections:
+    - scenes
+    - performance_macros
+    - master_delay
+    - master_reverb
+    - master_distortion
+    - master_compressor
+    - routing
+    - retrig
+    - choke_groups
+    - lfo
+    - all_unidentified_or_reserved_bytes
+
+track_levels:
+  BD: 110
+  SD: 92
+  RS: 88
+  CP: 90
+  BT: 94
+  LT: 86
+  MT: 82
+  HT: 78
+  CH: 80
+  OH: 76
+  CY: 70
+  CB: 76
+  FX: preserve_reference
+
+tracks:
+  BD:
+    sound_name: R01 PUNCH
+    machine:
+      name: BD Sharp
+      selection: catalog_verified
+    synth:
+      Level: 100
+      Tune: 59
+      Decay: 58
+      Hold Time: 40
+      Sweep Time: 81
+      Sweep Depth: 93
+      Waveform: 1
+      Tick Level: 127
+    filter:
+      ATK: 0
+      DEC: 35
+      SUS: 0
+      REL: 10
+      FRQ: 23
+      RES: 77
+      TYPE:
+        name: HP2
+        id: 4
+      ENV: 64
+    amp:
+      ATK: 0
+      HLD: 0
+      DEC: 93
+      OVR: 22
+      DEL: 0
+      REV: 0
+      PAN: 64
+      VOL: 110
+    sample:
+      level: 0
+      dependency: none
+    design_role: Main kick; sharp HP2 punch anchor captured from the user's own Rytm.
+
+  SD:
+    sound_name: R01 SNAP
+    machine:
+      name: SD Hard
+      selection: catalog_verified
+    synth:
+      Level: 100
+      Tune: 62
+      Decay: 48
+      Sweep Depth: 86
+      Tick Level: 58
+      Noise Decay: 36
+      Noise Level: 78
+      Sweep Time: 46
+    filter:
+      ATK: 0
+      DEC: 24
+      SUS: 0
+      REL: 8
+      FRQ: 48
+      RES: 18
+      TYPE:
+        name: HP1
+        id: 3
+      ENV: 64
+    amp:
+      ATK: 0
+      HLD: 0
+      DEC: 48
+      OVR: 18
+      DEL: 0
+      REV: 0
+      PAN: 64
+      VOL: 96
+    sample:
+      level: 0
+      dependency: none
+    design_role: Compact hard snare for accents and restrained backbeats.
+
+  RS:
+    sound_name: R01 CLAVE
+    machine:
+      name: RS Hard
+      selection: catalog_verified
+    synth:
+      Level: 96
+      Tune: 76
+      Decay: 22
+      Sweep Depth: 92
+      Tick Level: 78
+      Noise Level: 10
+      Symmetry: 72
+      Sweep Time: 26
+    filter:
+      ATK: 0
+      DEC: 18
+      SUS: 0
+      REL: 6
+      FRQ: 82
+      RES: 34
+      TYPE:
+        name: Bandpass
+        id: 2
+      ENV: 74
+    amp:
+      ATK: 0
+      HLD: 0
+      DEC: 24
+      OVR: 18
+      DEL: 0
+      REV: 0
+      PAN: 56
+      VOL: 90
+    sample:
+      level: 0
+      dependency: none
+    design_role: Hard clave/rim for jacking syncopation.
+
+  CP:
+    sound_name: R01 CLAP
+    machine:
+      name: CP Classic
+      selection: catalog_verified
+    synth:
+      Level: 108
+      Noise Tone: 72
+      Noise Decay: 36
+      Clap Number: 3
+      Clap Rate: 40
+      Noise Level: 84
+      Random Claps: 8
+      Clap Decay: 32
+    filter:
+      ATK: 0
+      DEC: 8
+      SUS: 0
+      REL: 6
+      FRQ: 54
+      RES: 8
+      TYPE:
+        name: HP1
+        id: 3
+      ENV: 64
+    amp:
+      ATK: 0
+      HLD: 8
+      DEC: 40
+      OVR: 14
+      DEL: 0
+      REV: 0
+      PAN: 64
+      VOL: 92
+    sample:
+      level: 0
+      dependency: none
+    design_role: Tight noisy clap; dry by design for the first hardware test.
+
+  BT:
+    sound_name: R01 JACK
+    machine:
+      name: BT Classic
+      selection: catalog_verified
+    synth:
+      Level: 100
+      Tune: 80
+      Decay: 42
+      Noise Level: 6
+      Snap Type:
+        type: enum
+        requested: preserve_reference
+        raw_midi: learn_required
+      Sweep Depth: 14
+    filter:
+      ATK: 0
+      DEC: 18
+      SUS: 0
+      REL: 8
+      FRQ: 62
+      RES: 14
+      TYPE:
+        name: LP2
+        id: 0
+      ENV: 78
+    amp:
+      ATK: 0
+      HLD: 10
+      DEC: 42
+      OVR: 24
+      DEL: 0
+      REV: 0
+      PAN: 64
+      VOL: 96
+    sample:
+      level: 0
+      dependency: none
+    design_role: Rolling low-tom/bass-drum answer; not a second simultaneous sub kick.
+
+  LT:
+    sound_name: R01 LOWTOM
+    machine:
+      name: XT Classic
+      selection: manual_setup_required
+    synth:
+      Level: 96
+      Tune: 94
+      Decay: 42
+      Sweep Depth: 32
+      Sweep Time: 82
+      Noise Decay: 4
+      Noise Level: 8
+      Noise Tone: 42
+    filter:
+      ATK: 0
+      DEC: 16
+      SUS: 0
+      REL: 6
+      FRQ: 58
+      RES: 10
+      TYPE:
+        name: LP2
+        id: 0
+      ENV: 72
+    amp:
+      ATK: 0
+      HLD: 6
+      DEC: 42
+      OVR: 18
+      DEL: 0
+      REV: 0
+      PAN: 58
+      VOL: 90
+    sample:
+      level: 0
+      dependency: none
+    design_role: Low jacking percussion.
+
+  MT:
+    sound_name: R01 MIDTOM
+    machine:
+      name: XT Classic
+      selection: manual_setup_required
+    synth:
+      Level: 92
+      Tune: 104
+      Decay: 34
+      Sweep Depth: 28
+      Sweep Time: 88
+      Noise Decay: 5
+      Noise Level: 10
+      Noise Tone: 36
+    filter:
+      ATK: 0
+      DEC: 14
+      SUS: 0
+      REL: 5
+      FRQ: 68
+      RES: 15
+      TYPE:
+        name: Bandpass
+        id: 2
+      ENV: 72
+    amp:
+      ATK: 0
+      HLD: 4
+      DEC: 34
+      OVR: 16
+      DEL: 0
+      REV: 0
+      PAN: 70
+      VOL: 86
+    sample:
+      level: 0
+      dependency: none
+    design_role: Midrange tom response.
+
+  HT:
+    sound_name: R01 HITOM
+    machine:
+      name: XT Classic
+      selection: manual_setup_required
+    synth:
+      Level: 88
+      Tune: 114
+      Decay: 24
+      Sweep Depth: 20
+      Sweep Time: 90
+      Noise Decay: 7
+      Noise Level: 14
+      Noise Tone: 28
+    filter:
+      ATK: 0
+      DEC: 12
+      SUS: 0
+      REL: 4
+      FRQ: 78
+      RES: 18
+      TYPE:
+        name: Bandpass
+        id: 2
+      ENV: 70
+    amp:
+      ATK: 0
+      HLD: 3
+      DEC: 24
+      OVR: 15
+      DEL: 0
+      REV: 0
+      PAN: 74
+      VOL: 82
+    sample:
+      level: 0
+      dependency: none
+    design_role: Short high tom/industrial percussion.
+
+  CH:
+    sound_name: R01 SHUFF
+    machine:
+      name: HH Basic
+      selection: catalog_verified
+    synth:
+      Level: 92
+      Tune: 72
+      Decay Time: 18
+      Tone: 76
+      Transient Decay: 20
+      Osc Reset: 0
+    filter:
+      ATK: 0
+      DEC: 6
+      SUS: 0
+      REL: 3
+      FRQ: 66
+      RES: 6
+      TYPE:
+        name: HP2
+        id: 4
+      ENV: 64
+    amp:
+      ATK: 0
+      HLD: 4
+      DEC: 20
+      OVR: 8
+      DEL: 0
+      REV: 0
+      PAN: 58
+      VOL: 84
+    sample:
+      level: 0
+      dependency: none
+    design_role: Dry shuffled closed hat.
+
+  OH:
+    sound_name: R01 OPEN
+    machine:
+      name: OH Classic
+      selection: catalog_verified
+    synth:
+      Level: 84
+      Tune: 69
+      Decay: 34
+      Color: 80
+    filter:
+      ATK: 0
+      DEC: 6
+      SUS: 0
+      REL: 4
+      FRQ: 60
+      RES: 4
+      TYPE:
+        name: HP2
+        id: 4
+      ENV: 64
+    amp:
+      ATK: 0
+      HLD: 8
+      DEC: 38
+      OVR: 8
+      DEL: 0
+      REV: 0
+      PAN: 72
+      VOL: 80
+    sample:
+      level: 0
+      dependency: none
+    design_role: Short open-hat punctuation rather than a wash.
+
+  CY:
+    sound_name: R01 RIDE
+    machine:
+      name: CY Ride
+      selection: catalog_verified
+    synth:
+      Level: 76
+      Tune: 60
+      Tail Decay: 52
+      Cymbal Type: 0
+      Hit Decay: 22
+      Component 1: 100
+      Component 2: 42
+      Component 3: 18
+    filter:
+      ATK: 0
+      DEC: 6
+      SUS: 0
+      REL: 5
+      FRQ: 55
+      RES: 4
+      TYPE:
+        name: HP1
+        id: 3
+      ENV: 64
+    amp:
+      ATK: 0
+      HLD: 10
+      DEC: 55
+      OVR: 6
+      DEL: 0
+      REV: 0
+      PAN: 69
+      VOL: 74
+    sample:
+      level: 0
+      dependency: none
+    design_role: Controlled peak ride. The CY Ride partial mix is an experimental sound target.
+
+  CB:
+    sound_name: R01 METAL
+    machine:
+      name: CB Metallic
+      selection: catalog_verified
+    synth:
+      Level: 84
+      Tune: 50
+      Decay Time: 26
+      Detune: 81
+    filter:
+      ATK: 0
+      DEC: 14
+      SUS: 0
+      REL: 5
+      FRQ: 72
+      RES: 36
+      TYPE:
+        name: Bandpass
+        id: 2
+      ENV: 78
+    amp:
+      ATK: 0
+      HLD: 6
+      DEC: 28
+      OVR: 22
+      DEL: 0
+      REV: 0
+      PAN: 76
+      VOL: 80
+    sample:
+      level: 0
+      dependency: none
+    design_role: Sparse industrial metallic accent.
+
+acceptance:
+  - Decode and re-encode the approved reference byte-for-byte before mutation.
+  - Every changed critical parameter must resolve through a verified semantic mapping.
+  - No unidentified byte may change except verified integrity fields.
+  - The output must be a single valid kit SysEx frame ending in F7.
+  - Decode the generated file and compare every requested critical parameter.
+  - Include a manifest of original semantic value, requested value, raw encoded value, and byte location.

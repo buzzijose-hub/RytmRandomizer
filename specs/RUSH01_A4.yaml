@@ -1,0 +1,355 @@
+spec_version: 1
+spec_name: RUSH01_A4
+device:
+  family: Elektron
+  model: Analog Four MKII
+  firmware:
+    installed: UNVERIFIED_FROM_DEVICE
+    do_not_infer: true
+  value_domain: device_display_semantic
+  notes:
+    - Signed values are written as signed display values, not presumed raw bytes.
+    - Time, waveform, filter, envelope-shape, AM, and sync values must pass through verified typed converters.
+    - This first proof is deliberately dry; track FX sends remain at zero.
+
+reference:
+  filename: A4_Test1_Init_Kit.syx
+  approved_as_trusted_anchor: true
+  compatibility_basis: exact_target_unit_reference_dump
+  expected_length_bytes: 2770
+  sha256: COMPUTE_AND_RECORD_FROM_LOCAL_FILE
+  preserve_unknown_bytes: true
+
+build_policy:
+  mode: patch_reference
+  target: active_kit_test_first
+  kit_name: RUSH01
+  no_patterns: true
+  no_song_data: true
+  unsupported_noncritical_field_policy: preserve_reference_and_report
+  unsupported_critical_field_policy: fail_a4_build
+  critical_sections:
+    - tracks.oscillator_1
+    - tracks.oscillator_2
+    - tracks.oscillator_common
+    - tracks.noise
+    - tracks.filter_1
+    - tracks.filter_2
+    - tracks.amp
+    - tracks.filter_envelope
+  preserve_reference_sections:
+    - performance_macros
+    - master_fx
+    - cv
+    - polyphony
+    - voice_routing
+    - sound_locks
+    - lfo_1
+    - lfo_2
+    - envelope_2
+    - all_unidentified_or_reserved_bytes
+
+track_levels:
+  T1: 100
+  T2: 92
+  T3: 82
+  T4: 78
+  FX: preserve_reference
+  CV: preserve_reference
+
+tracks:
+  T1:
+    sound_name: R01 JACKBASS
+    design_role: Short jacking bass-percussion voice; not a competing sub-bass.
+    oscillator_1:
+      coarse_tune_semitones: 0
+      fine_tune_cents: 0
+      linear_detune_hz: 0
+      keytrack: true
+      level: 96
+      waveform: triangle
+      sub_oscillator: "off"
+      pulse_width: 64
+      pwm_speed: 0
+      pwm_depth: 0
+    oscillator_2:
+      coarse_tune_semitones: 12
+      fine_tune_cents: -6
+      linear_detune_hz: 0
+      keytrack: true
+      level: 38
+      waveform: transistor_pulse
+      sub_oscillator: "off"
+      pulse_width: 42
+      pwm_speed: 0
+      pwm_depth: 0
+    oscillator_common:
+      osc1_am: false
+      sync_mode: "off"
+      sync_amount: 0
+      bend_depth: 7
+      note_slide_time: 10
+      osc2_am: false
+      oscillator_retrigger: true
+      vibrato_fade: 0
+      vibrato_speed: 0
+      vibrato_depth: 0
+    noise:
+      sample_and_hold: 0
+      color: 0
+      fade: 0
+      level: 0
+    filter_1:
+      frequency: 46
+      resonance: 18
+      overdrive: -16
+      keytrack: 24
+      envelope_depth: 48
+    filter_2:
+      frequency: 24
+      resonance: 6
+      type: HP1
+      keytrack: 0
+      envelope_depth: 0
+    amp:
+      attack: 0
+      decay: 32
+      sustain: 0
+      release: 6
+      envelope_shape: exponential_restart_from_zero
+      chorus_send: 0
+      delay_send: 0
+      reverb_send: 0
+      pan: 0
+      volume: 100
+    filter_envelope:
+      attack: 0
+      decay: 24
+      sustain: 0
+      release: 5
+      envelope_shape: exponential_restart_from_zero
+      gate_length: preserve_reference
+
+  T2:
+    sound_name: R01 WALKSAW
+    design_role: Short phase-rich walking saw stab; principal midrange hook.
+    oscillator_1:
+      coarse_tune_semitones: 0
+      fine_tune_cents: 0
+      linear_detune_hz: 1
+      keytrack: true
+      level: 108
+      waveform: sawtooth
+      sub_oscillator: "off"
+      pulse_width: 76
+      pwm_speed: 0
+      pwm_depth: 0
+    oscillator_2:
+      coarse_tune_semitones: 12
+      fine_tune_cents: -7
+      linear_detune_hz: 0
+      keytrack: true
+      level: 78
+      waveform: sawtooth
+      sub_oscillator: "off"
+      pulse_width: 54
+      pwm_speed: 0
+      pwm_depth: 0
+    oscillator_common:
+      osc1_am: false
+      sync_mode: "off"
+      sync_amount: 0
+      bend_depth: 18
+      note_slide_time: 7
+      osc2_am: false
+      oscillator_retrigger: true
+      vibrato_fade: 0
+      vibrato_speed: 0
+      vibrato_depth: 0
+    noise:
+      sample_and_hold: 0
+      color: 0
+      fade: 0
+      level: 0
+    filter_1:
+      frequency: 42
+      resonance: 26
+      overdrive: 24
+      keytrack: 16
+      envelope_depth: 64
+    filter_2:
+      frequency: 34
+      resonance: 8
+      type: HP1
+      keytrack: 0
+      envelope_depth: 10
+    amp:
+      attack: 0
+      decay: 18
+      sustain: 0
+      release: 5
+      envelope_shape: exponential_restart_from_zero
+      chorus_send: 0
+      delay_send: 0
+      reverb_send: 0
+      pan: 0
+      volume: 86
+    filter_envelope:
+      attack: 0
+      decay: 20
+      sustain: 0
+      release: 4
+      envelope_shape: exponential_restart_from_zero
+      gate_length: preserve_reference
+
+  T3:
+    sound_name: R01 METSYNC
+    design_role: Hollow industrial command stab using oscillator AM and Metal Sync.
+    oscillator_1:
+      coarse_tune_semitones: 0
+      fine_tune_cents: 0
+      linear_detune_hz: 0
+      keytrack: true
+      level: 100
+      waveform: transistor_pulse
+      sub_oscillator: "off"
+      pulse_width: 36
+      pwm_speed: 0
+      pwm_depth: 0
+    oscillator_2:
+      coarse_tune_semitones: 19
+      fine_tune_cents: 0
+      linear_detune_hz: 0
+      keytrack: true
+      level: 0
+      waveform: pulse
+      sub_oscillator: "off"
+      pulse_width: 74
+      pwm_speed: 0
+      pwm_depth: 0
+    oscillator_common:
+      osc1_am: true
+      sync_mode: metal
+      sync_amount: 48
+      bend_depth: 26
+      note_slide_time: 9
+      osc2_am: false
+      oscillator_retrigger: true
+      vibrato_fade: 0
+      vibrato_speed: 0
+      vibrato_depth: 0
+    noise:
+      sample_and_hold: 0
+      color: 0
+      fade: 0
+      level: 0
+    filter_1:
+      frequency: 58
+      resonance: 30
+      overdrive: 30
+      keytrack: 12
+      envelope_depth: 38
+    filter_2:
+      frequency: 78
+      resonance: 34
+      type: Bandpass
+      keytrack: 0
+      envelope_depth: 18
+    amp:
+      attack: 0
+      decay: 15
+      sustain: 0
+      release: 4
+      envelope_shape: exponential_restart_from_zero
+      chorus_send: 0
+      delay_send: 0
+      reverb_send: 0
+      pan: 5
+      volume: 76
+    filter_envelope:
+      attack: 0
+      decay: 23
+      sustain: 0
+      release: 3
+      envelope_shape: exponential_restart_from_zero
+      gate_length: preserve_reference
+
+  T4:
+    sound_name: R01 GHOST
+    design_role: Self-resonant filter/noise voice for narrow spectral knocks and screams.
+    oscillator_1:
+      coarse_tune_semitones: 0
+      fine_tune_cents: 0
+      linear_detune_hz: 0
+      keytrack: true
+      level: 0
+      waveform: sawtooth
+      sub_oscillator: "off"
+      pulse_width: 64
+      pwm_speed: 0
+      pwm_depth: 0
+    oscillator_2:
+      coarse_tune_semitones: 0
+      fine_tune_cents: 0
+      linear_detune_hz: 0
+      keytrack: true
+      level: 0
+      waveform: sawtooth
+      sub_oscillator: "off"
+      pulse_width: 64
+      pwm_speed: 0
+      pwm_depth: 0
+    oscillator_common:
+      osc1_am: false
+      sync_mode: "off"
+      sync_amount: 0
+      bend_depth: 0
+      note_slide_time: 0
+      osc2_am: false
+      oscillator_retrigger: true
+      vibrato_fade: 0
+      vibrato_speed: 0
+      vibrato_depth: 0
+    noise:
+      sample_and_hold: 64
+      color: -32
+      fade: 52
+      level: 8
+    filter_1:
+      frequency: 54
+      resonance: 112
+      overdrive: -8
+      keytrack: 32
+      envelope_depth: 58
+    filter_2:
+      frequency: 30
+      resonance: 8
+      type: HP1
+      keytrack: 0
+      envelope_depth: 6
+    amp:
+      attack: 0
+      decay: 28
+      sustain: 0
+      release: 9
+      envelope_shape: exponential_restart_from_zero
+      chorus_send: 0
+      delay_send: 0
+      reverb_send: 0
+      pan: -5
+      volume: 72
+    filter_envelope:
+      attack: 0
+      decay: 34
+      sustain: 0
+      release: 9
+      envelope_shape: exponential_restart_from_zero
+      gate_length: preserve_reference
+
+acceptance:
+  - Decode and re-encode the approved reference byte-for-byte before mutation.
+  - Every changed critical parameter must resolve through a verified semantic mapping and typed converter.
+  - No unidentified byte may change except verified integrity fields.
+  - The output must be a single valid kit SysEx frame ending in F7.
+  - Decode the generated file and compare every requested critical parameter.
+  - Include a manifest of original semantic value, requested value, raw encoded value, and byte location.

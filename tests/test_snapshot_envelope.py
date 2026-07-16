@@ -11,7 +11,9 @@ Test naming: ``test_<unit>_<behavior>_when_<condition>`` per Gate 8.
 from __future__ import annotations
 
 import sys
+from dataclasses import replace
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -52,6 +54,39 @@ def _pack_elektron_7bit(payload: bytes) -> bytes:
     return bytes(out)
 
 
+def _codec_spec(**overrides: object):
+    from rytm_randomizer.snapshot import ElektronKitEnvelopeSpec
+
+    values = {
+        "label": "Synthetic Elektron kit",
+        "required_header_prefix": b"\x00\x20\x3c\x55",
+        "header_size_without_f0": 4,
+        "unpacked_size": 9,
+        "checksum_packed_start": 0,
+        "length_adjustment": 0,
+        "required_unpacked_prefix": b"\x52",
+    }
+    values.update(overrides)
+    return ElektronKitEnvelopeSpec(**values)
+
+
+def _codec_frame(spec, unpacked: bytes = b"\x52\x80\x01\x02\x03\x04\x05\x06\x07") -> bytes:
+    from rytm_randomizer.snapshot import encode_elektron_u14, pack_elektron_7bit
+
+    header = spec.required_header_prefix.ljust(spec.header_size_without_f0, b"\x00")
+    packed = pack_elektron_7bit(unpacked)
+    checksum = sum(packed[spec.checksum_packed_start :]) & 0x3FFF
+    length = len(packed) + spec.length_adjustment
+    return (
+        b"\xf0"
+        + header
+        + packed
+        + encode_elektron_u14(checksum)
+        + encode_elektron_u14(length)
+        + b"\xf7"
+    )
+
+
 # ---------------------------------------------------------------------------
 # 1. Subpackage surface
 # ---------------------------------------------------------------------------
@@ -66,8 +101,14 @@ def test_snapshot_subpackage_exports_expected_public_names() -> None:
         "MockRuntime",
         "MutationPlanner",
         "SnapshotDecoder",
+        "DecodedElektronKitFrame",
+        "ElektronKitCodec",
+        "ElektronKitEnvelopeSpec",
+        "decode_elektron_u14",
+        "encode_elektron_u14",
         "find_kit_record",
         "format_manufacturer_id",
+        "pack_elektron_7bit",
         "read_ascii_name",
         "unpack_elektron_7bit",
     }
@@ -120,6 +161,184 @@ def test_unpack_elektron_7bit_round_trip_across_group_boundary() -> None:
     payload = bytes(range(20))  # 20 bytes -> 2 full groups + a short tail
     packed = _pack_elektron_7bit(payload)
     assert unpack_elektron_7bit(packed) == payload
+
+
+def test_pack_elektron_7bit_is_exact_inverse_across_group_boundary() -> None:
+    from rytm_randomizer.snapshot import pack_elektron_7bit, unpack_elektron_7bit
+
+    payload = bytes([0x00, 0x80, 0x7F, 0xFF, 0x01, 0x81, 0x55, 0xAA, 0x42])
+
+    assert pack_elektron_7bit(payload) == _pack_elektron_7bit(payload)
+    assert unpack_elektron_7bit(pack_elektron_7bit(payload)) == payload
+
+
+def test_pack_elektron_7bit_returns_empty_on_empty_input() -> None:
+    from rytm_randomizer.snapshot import pack_elektron_7bit
+
+    assert pack_elektron_7bit(b"") == b""
+
+
+def test_elektron_u14_round_trip_accepts_full_range() -> None:
+    from rytm_randomizer.snapshot import decode_elektron_u14, encode_elektron_u14
+
+    for value in (0, 1, 0x7F, 0x80, 0x3FFF):
+        assert decode_elektron_u14(encode_elektron_u14(value)) == value
+
+
+def test_encode_elektron_u14_rejects_out_of_range_value() -> None:
+    from rytm_randomizer.snapshot import encode_elektron_u14
+
+    with pytest.raises(ValueError, match="0..16383"):
+        encode_elektron_u14(0x4000)
+
+
+def test_decode_elektron_u14_rejects_wrong_width_and_illegal_data() -> None:
+    from rytm_randomizer.snapshot import decode_elektron_u14
+
+    with pytest.raises(ValueError, match="exactly two"):
+        decode_elektron_u14(b"\x00")
+    with pytest.raises(ValueError, match="7-bit"):
+        decode_elektron_u14(b"\x00\x80")
+
+
+@pytest.mark.parametrize(
+    ("overrides", "message"),
+    (
+        ({"label": ""}, "label"),
+        ({"required_header_prefix": b""}, "required_header_prefix"),
+        ({"header_size_without_f0": 3}, "must cover"),
+        ({"unpacked_size": 0}, "must be positive"),
+        ({"checksum_packed_start": -1}, "must be non-negative"),
+        ({"length_adjustment": -1}, "must be non-negative"),
+        ({"unpacked_size": 1, "required_unpacked_prefix": b"\x52\x01"}, "exceeds"),
+    ),
+)
+def test_elektron_kit_envelope_spec_rejects_invalid_configuration(
+    overrides: dict[str, object], message: str
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        _codec_spec(**overrides)
+
+
+def test_elektron_kit_codec_round_trip_preserves_reference_header() -> None:
+    from rytm_randomizer.snapshot import ElektronKitCodec
+
+    spec = _codec_spec(header_size_without_f0=6)
+    frame = _codec_frame(spec)
+    decoded = ElektronKitCodec(spec).decode_frame(frame)
+
+    assert decoded.header == b"\x00\x20\x3c\x55\x00\x00"
+    assert decoded.unpacked == b"\x52\x80\x01\x02\x03\x04\x05\x06\x07"
+    assert ElektronKitCodec(spec).encode_frame(decoded) == frame
+
+
+def test_elektron_kit_codec_rejects_none_short_and_bad_framing() -> None:
+    from rytm_randomizer.snapshot import ElektronKitCodec
+
+    codec = ElektronKitCodec(_codec_spec())
+    frame = _codec_frame(codec.spec)
+
+    with pytest.raises(ValueError, match="frame is None"):
+        codec.decode_frame(cast(bytes, None))
+    with pytest.raises(ValueError, match="minimum"):
+        codec.decode_frame(b"\xf0\xf7")
+    with pytest.raises(ValueError, match="F0/F7"):
+        codec.decode_frame(b"\x00" + frame[1:])
+    with pytest.raises(ValueError, match="F0/F7"):
+        codec.decode_frame(frame[:-1] + b"\x00")
+
+
+def test_elektron_kit_codec_rejects_illegal_data_and_wrong_header() -> None:
+    from rytm_randomizer.snapshot import ElektronKitCodec
+
+    spec = _codec_spec()
+    codec = ElektronKitCodec(spec)
+    frame = _codec_frame(spec)
+    illegal = bytearray(frame)
+    illegal[2] = 0x80
+    wrong_header = bytearray(frame)
+    wrong_header[4] = 0x54
+
+    with pytest.raises(ValueError, match="outside the 7-bit"):
+        codec.decode_frame(bytes(illegal))
+    with pytest.raises(ValueError, match="header prefix mismatch"):
+        codec.decode_frame(bytes(wrong_header))
+
+
+def test_elektron_kit_codec_rejects_empty_payload_and_bad_checksum_start() -> None:
+    from rytm_randomizer.snapshot import ElektronKitCodec, encode_elektron_u14
+
+    spec = _codec_spec()
+    empty = (
+        b"\xf0"
+        + spec.required_header_prefix
+        + encode_elektron_u14(0)
+        + encode_elektron_u14(0)
+        + b"\xf7"
+    )
+    with pytest.raises(ValueError, match="payload is empty"):
+        ElektronKitCodec(spec).decode_frame(empty)
+
+    bad_spec = _codec_spec(checksum_packed_start=99)
+    bad_frame = _codec_frame(bad_spec)
+    with pytest.raises(ValueError, match="exceeds packed"):
+        ElektronKitCodec(bad_spec).decode_frame(bad_frame)
+
+
+def test_elektron_kit_codec_rejects_checksum_and_length_mismatch() -> None:
+    from rytm_randomizer.snapshot import ElektronKitCodec
+
+    spec = _codec_spec()
+    codec = ElektronKitCodec(spec)
+    frame = bytearray(_codec_frame(spec))
+    bad_checksum = bytearray(frame)
+    bad_checksum[-5] ^= 0x01
+    bad_length = bytearray(frame)
+    bad_length[-3] ^= 0x01
+
+    with pytest.raises(ValueError, match="checksum mismatch"):
+        codec.decode_frame(bytes(bad_checksum))
+    with pytest.raises(ValueError, match="length mismatch"):
+        codec.decode_frame(bytes(bad_length))
+
+
+def test_elektron_kit_codec_rejects_wrong_decoded_size_and_prefix() -> None:
+    from rytm_randomizer.snapshot import ElektronKitCodec
+
+    short_spec = _codec_spec(unpacked_size=10)
+    with pytest.raises(ValueError, match="expected 10"):
+        ElektronKitCodec(short_spec).decode_frame(_codec_frame(short_spec))
+
+    prefix_spec = _codec_spec(required_unpacked_prefix=b"\x53")
+    with pytest.raises(ValueError, match="object prefix mismatch"):
+        ElektronKitCodec(prefix_spec).decode_frame(_codec_frame(prefix_spec))
+
+
+def test_elektron_kit_codec_encode_rejects_wrong_spec_and_forged_metadata() -> None:
+    from rytm_randomizer.snapshot import ElektronKitCodec
+
+    spec = _codec_spec()
+    codec = ElektronKitCodec(spec)
+    decoded = codec.decode_frame(_codec_frame(spec))
+    other_codec = ElektronKitCodec(_codec_spec(label="Other synthetic kit"))
+
+    with pytest.raises(ValueError, match="different spec"):
+        other_codec.encode_frame(decoded)
+    with pytest.raises(ValueError, match="metadata does not match"):
+        codec.encode_frame(replace(decoded, checksum=decoded.checksum + 1))
+
+
+def test_elektron_kit_codec_encode_rejects_wrong_object_size_and_prefix() -> None:
+    from rytm_randomizer.snapshot import ElektronKitCodec
+
+    spec = _codec_spec()
+    codec = ElektronKitCodec(spec)
+    decoded = codec.decode_frame(_codec_frame(spec))
+
+    with pytest.raises(ValueError, match="object has 8 byte"):
+        codec.encode_frame(decoded, unpacked=decoded.unpacked[:-1])
+    with pytest.raises(ValueError, match="object prefix mismatch"):
+        codec.encode_frame(decoded, unpacked=b"\x53" + decoded.unpacked[1:])
 
 
 def test_unpack_elektron_7bit_returns_empty_on_empty_input() -> None:
@@ -198,6 +417,21 @@ def test_find_kit_record_rejects_missing_type_byte() -> None:
         find_kit_record(ELEKTRON_MFR_ID + bytes([0x10, 0x11, 0x12]), slot=0, kit_type_byte=0x42)
 
 
+@pytest.mark.parametrize("kit_type_byte", (-1, 0x100))
+def test_find_kit_record_rejects_out_of_range_type_byte(kit_type_byte: int) -> None:
+    from rytm_randomizer.snapshot import ELEKTRON_MFR_ID, find_kit_record
+
+    with pytest.raises(ValueError, match="0x00-0xff"):
+        find_kit_record(ELEKTRON_MFR_ID, slot=0, kit_type_byte=kit_type_byte)
+
+
+def test_find_kit_record_rejects_unimplemented_nonzero_slot() -> None:
+    from rytm_randomizer.snapshot import ELEKTRON_MFR_ID, find_kit_record
+
+    with pytest.raises(NotImplementedError, match="slot-indexed"):
+        find_kit_record(ELEKTRON_MFR_ID + b"\x42", slot=1, kit_type_byte=0x42)
+
+
 # ---------------------------------------------------------------------------
 # 5. read_ascii_name
 # ---------------------------------------------------------------------------
@@ -224,6 +458,15 @@ def test_read_ascii_name_rejects_slice_past_record_end() -> None:
 
     with pytest.raises(ValueError, match="extends past"):
         read_ascii_name(b"AB", offset=0, length=4)
+
+
+def test_read_ascii_name_rejects_negative_offset_and_length() -> None:
+    from rytm_randomizer.snapshot import read_ascii_name
+
+    with pytest.raises(ValueError, match="offset must be non-negative"):
+        read_ascii_name(b"AB", offset=-1, length=1)
+    with pytest.raises(ValueError, match="length must be non-negative"):
+        read_ascii_name(b"AB", offset=0, length=-1)
 
 
 # ---------------------------------------------------------------------------
@@ -366,17 +609,20 @@ def test_base_mock_runtime_forwards_messages_from_device_to_outbox() -> None:
 
 
 def test_unpack_elektron_7bit_raises_on_none_input() -> None:
-    from typing import cast
-
     from rytm_randomizer.snapshot import unpack_elektron_7bit
 
     with pytest.raises(ValueError, match="packed payload is None"):
         unpack_elektron_7bit(cast(bytes, None))
 
 
-def test_find_kit_record_raises_on_none_raw() -> None:
-    from typing import cast
+def test_pack_elektron_7bit_raises_on_none_input() -> None:
+    from rytm_randomizer.snapshot import pack_elektron_7bit
 
+    with pytest.raises(ValueError, match="unpacked payload is None"):
+        pack_elektron_7bit(cast(bytes, None))
+
+
+def test_find_kit_record_raises_on_none_raw() -> None:
     from rytm_randomizer.snapshot import find_kit_record
 
     with pytest.raises(ValueError, match="raw payload is None"):
@@ -384,8 +630,6 @@ def test_find_kit_record_raises_on_none_raw() -> None:
 
 
 def test_read_ascii_name_raises_on_none_record() -> None:
-    from typing import cast
-
     from rytm_randomizer.snapshot import read_ascii_name
 
     with pytest.raises(ValueError, match="record is None"):
@@ -393,8 +637,6 @@ def test_read_ascii_name_raises_on_none_record() -> None:
 
 
 def test_format_manufacturer_id_raises_on_none() -> None:
-    from typing import cast
-
     from rytm_randomizer.snapshot import format_manufacturer_id
 
     with pytest.raises(ValueError, match="raw is None"):

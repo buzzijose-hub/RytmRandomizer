@@ -115,6 +115,7 @@ on one line for an existing module, you probably need a new module instead.
 | `state/selection.py`  | Frozen target-pad / channel / isolated-pad selection state + transitions.       |
 | `state/a4_soft_capture.py` | Frozen Analog Four passive CC-observation state + pure reducer.          |
 | `state/rytm_cc_observe.py` | Frozen Analog Rytm passive CC/NRPN observation state + pure reducer.    |
+| `state/midi_observation.py` | Frozen input-only CC/CC14/NRPN calibration state + pure reducer.       |
 
 ### Middle (runtime core)
 
@@ -122,6 +123,7 @@ on one line for an existing module, you probably need a new module instead.
 | ---------------------------- | --------------------------------------------------------------------------- |
 | `midi_io.py`                 | Leaf MIDI primitives: build CC, send param, apply state. `mido` is lazy.    |
 | `senders/midi_event_plan.py` | Generic CC/NRPN event-plan sender used by generated A4 patch live-dial plans. |
+| `senders/rush01_midi_transport.py` | Exact-name, CC-only transport for a reviewed RUSH01 plan.         |
 | `senders/guarded.py`, `senders/hardware.py` | Generic guarded/mock and arm-gated Device plan senders. |
 | `randomization.py`           | Pure randomization core: zone/depth mutation, waveform pick.                |
 | `mock_midi.py`               | In-memory `MockMidiSender` and `MidiMessage` for tests + passive paths.     |
@@ -141,6 +143,7 @@ on one line for an existing module, you probably need a new module instead.
 | `style_analysis/analog_four_patch_learning.py` | Passive patch-genome learning packet compiler: candidate ranking, trait routes, capture matrix, and live-dial readiness. |
 | `style_analysis/analog_four_patch_corpus.py` | Passive A4 patch/audio corpus nearest-match ranking and calibration-gap compiler. |
 | `style_analysis/analog_four_patch_send_plan.py` | Passive selected A4 patch -> ordered CC/NRPN live-dial send-plan compiler. |
+| `style_analysis/rush01_midi_compiler.py` | Passive RUSH01 YAML -> typed CC/CC14/NRPN plan compiler.       |
 
 ### Upper (entry points)
 
@@ -332,10 +335,11 @@ backward compatibility — they delegate to the strategies.
 **To add a device family:**
 
 1. Create three strategy modules under `rytm_randomizer/devices/strategies/`:
-   - `<family>_snapshot_decoder.py` — implements `SnapshotDecoder.decode`. Use the shared `snapshot/envelope.py` helpers; do NOT fork them per family.
+   - `<family>_snapshot_decoder.py` — implements `SnapshotDecoder.decode`. Use the shared `snapshot/envelope.py` helpers; do NOT fork them per family. Reference-anchored kit writers also use `ElektronKitCodec` there so 7-bit packing and u14 integrity validation remain generic while checksum/length rules stay device-configured.
    - `<family>_mutation_planner.py` — implements `MutationPlanner.plan`. The plan must carry `ready: bool` and `readiness_reason: str` so the generic guarded sender can refuse on an unfinished plan without device-specific introspection.
    - `<family>_message_renderer.py` — implements `MessageRenderer.{to_mock_message, to_cc_triple}`. Looks up CC numbers through `data/profiles.py` (or the family's own param map).
    - Family-specific pure helper modules may live beside these strategies when they support the Strategy boundary, such as `analog_rytm_snapshot_routing.py` mapping snapshot-derived machine facts into planner profile keys. These helpers must remain passive and must not become parallel registries, senders, or device packages.
+   - `elektron_kit_codecs.py` is one such passive helper: it configures the shared reference-bound codec for the verified Rytm and A4 saved-kit containers without promoting semantic parameter offsets or providing a hardware-send path.
 2. Create one device class at `rytm_randomizer/devices/<family>.py` that composes the three strategies in `__init__` and exposes the 9 Protocol attributes.
 3. Register at import time: `registry.register_device(<Family>Device())`.
 4. The `devices/__init__.py` must import the new module so the side-effect registration runs.

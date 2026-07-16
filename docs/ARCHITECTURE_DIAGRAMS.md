@@ -701,7 +701,10 @@ The shared Elektron SysEx envelope helpers + the three Protocols every per-devic
 flowchart TB
     subgraph Envelope["snapshot/envelope.py (shared)"]
         MFR_ID["ELEKTRON_MFR_ID: Final[bytes]<br/>= 0x00 0x20 0x3C"]
+        Pack["pack_elektron_7bit(unpacked)<br/>inverse of shared unpacking"]
         Unpack["unpack_elektron_7bit(packed)<br/>rejects lone trailing header<br/>(codex P2)"]
+        KitCodec["ElektronKitCodec<br/>validated reference decode/encode<br/>device-configured checksum + length"]
+        U14["encode/decode_elektron_u14<br/>two legal SysEx data bytes"]
         FindKit["find_kit_record(raw, slot, type_byte)<br/>scans for kit-type byte"]
         ReadName["read_ascii_name(record, offset, length)<br/>NUL-stripped ASCII"]
         FormatID["format_manufacturer_id(raw)"]
@@ -715,6 +718,7 @@ flowchart TB
     end
 
     subgraph RytmImpls["Rytm impls (devices/strategies/)"]
+        DeviceCodecs["elektron_kit_codecs.py<br/>A4 + Rytm envelope facts only"]
         RytmDecoder["AnalogRytmSnapshotDecoder<br/>uses envelope helpers"]
         RytmRouter["analog_rytm_snapshot_routing.py<br/>routes pad/machine values to profile keys"]
         RytmPlanner["AnalogRytmMutationPlanner<br/>(no shared planner state needed)"]
@@ -726,6 +730,7 @@ flowchart TB
     end
 
     RytmDecoder -->|"depends on"| Envelope
+    DeviceCodecs -->|"configures"| KitCodec
     RytmDecoder -.satisfies.-> SD
     RytmRouter --> RytmPlanner
     RytmPlanner -.satisfies.-> MP_proto

@@ -1,0 +1,5 @@
+schema_version: 1
+device: rytm
+verification_status: observed_only
+automatic_promotion: false
+observations: []
