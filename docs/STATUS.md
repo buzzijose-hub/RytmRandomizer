@@ -1,6 +1,6 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-07-15. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-07-16. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
@@ -10,10 +10,12 @@ Last updated: 2026-07-15. This file is a hand-authored snapshot and is meant to 
   channels, and ordered bytes remain null until explicit configuration. Exact
   port selection, interactive apply confirmation, input-only observed-value
   learning, typed refusal statuses, and no-sample-dependency validation are
-  covered without physical MIDI access. Final verification passed 6255 tests
-  with 3 skips, 671 architecture gates, and 100% branch coverage on touched
-  compiler/transport/observation/tooling files. No MIDI port was opened and no
-  MIDI data was sent.
+  covered without physical MIDI access. The preservation merge retains the
+  byte-identical reference-kit round-trip boundary without claiming complete
+  arbitrary offline KIT generation. Post-merge verification passed 193 focused
+  RUSH01 tests, 45 focused local-model tests, 678 architecture checks, all 685
+  frozen V1.34 parity items, and 6301 full-suite tests with 3 skips. Verification
+  opened no MIDI backend or physical port and sent no MIDI or SysEx.
 - 2026-07-15: RUSH01 reference-anchored kit build audit completed locally.
   The shared Elektron envelope now has a tested inverse packer, u14 integrity
   helpers, and a codec that can encode only from a validated decoded reference
@@ -23,6 +25,16 @@ Last updated: 2026-07-15. This file is a hand-authored snapshot and is meant to 
   critical promoted machine/level/selector evidence, and A4 still lacks
   promoted offsets and typed conversions for nearly all requested sound
   fields. The build and mapping-gap reports record the exact evidence needed.
+- 2026-07-08: Passive local model copilot bundle prepared locally. The new
+  `local-model-copilot-report` command builds deterministic docs/MIDI,
+  staged mutation-intent, and Analog Four patch co-designer packets, and only
+  runs a configured local model executable when `--ask-local-model` is
+  explicitly set.
+  The local-AI provider, schema validators, and prompt packets live under the
+  new `rytm_randomizer/local_ai/` subpackage; the A4 co-designer reuses the
+  existing patch-genome compiler. It remains passive: no MIDI port opened, no
+  MIDI sent, no SysEx written, no hardware mutation, and no generated send plan
+  promoted from AI output.
 - 2026-07-03: Synplant-inspired Cockpit UI design surface prepared locally.
   The React cockpit now has a frontend-only Patch Genome panel that groups
   Analog Four-facing design-preview genes into oscillator, envelope/LFO,

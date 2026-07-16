@@ -46,6 +46,9 @@ USAGE = (
     "[--corpus-file <path>] [--json] | "
     "analog-four-patch-send-plan-report "
     "(--description <text>|--audio <path>) [--track N] [--candidate N] [--json] | "
+    "local-model-copilot-report --question <text> [--description <text>] "
+    "[--workflow docs|mutation|patch|all] [--model <name>] [--ask-local-model] "
+    "[--json] | "
     "analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] "
     "[--events] [--limit N] [--json] | "
     "analog-four-oxi-macro-readiness-report [<macro-name>] [--seed N] "
@@ -1042,6 +1045,31 @@ Behavior:
   `python -m rytm_randomizer.app --dry-run --a4-patch-send-plan ...` or
   `--arm --confirm-a4-patch-send-plan`; the CLI report itself opens no MIDI
   port and sends no MIDI.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _local_model_copilot_report_help():
+    from .reports.local_model_copilot import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: local-model-copilot-report
+
+Usage:
+  python -m rytm_randomizer.cli local-model-copilot-report --question <text>
+  python -m rytm_randomizer.cli local-model-copilot-report --question <text> --workflow docs
+  python -m rytm_randomizer.cli local-model-copilot-report --question <text> --workflow mutation --description <text>
+  python -m rytm_randomizer.cli local-model-copilot-report --question <text> --workflow patch --description <text>
+  python -m rytm_randomizer.cli local-model-copilot-report --question <text> --workflow all --ask-local-model --model <name>
+  python -m rytm_randomizer.cli local-model-copilot-report --question <text> --json
+  python -m rytm_randomizer.cli local-model-copilot-report --help
+
+Behavior:
+  Builds passive local-AI packets for docs/MIDI questions, staged mutation
+  intent, and Analog Four patch-review suggestions. Without --ask-local-model
+  it prints the exact source packets and schemas only; with --ask-local-model
+  it runs the configured LOCAL_MODEL_COMMAND executable and validates
+  structured JSON stdout before returning staged review metadata.
 
 Safety:
 {_safety_block(SAFETY_LINES)}"""
@@ -3396,6 +3424,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-patch-learning-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
   python -m rytm_randomizer.cli analog-four-patch-corpus-report (--description <text>|--audio <path>) [--track N] [--limit N] [--corpus-file <path>] [--json]
   python -m rytm_randomizer.cli analog-four-patch-send-plan-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
+  python -m rytm_randomizer.cli local-model-copilot-report --question <text> [--description <text>] [--workflow docs|mutation|patch|all] [--model <name>] [--ask-local-model] [--json]
   python -m rytm_randomizer.cli analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report [<macro-name>] [--seed N] [--intensity N] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report [--set-name <text>] [--sequence <macro,...>] [--seed N] [--json]
@@ -3564,6 +3593,8 @@ Commands:
                      Rank passive Analog Four patch corpus matches from audio or text.
   analog-four-patch-send-plan-report
                      Preview generated Analog Four patch CC/NRPN live-dial events.
+  local-model-copilot-report
+                     Build passive local model copilot packets for docs, mutation, and A4 patch DNA.
   analog-four-oxi-macro-report
                      Print passive Analog Four OXI-style macro preview metadata.
   analog-four-oxi-macro-readiness-report
@@ -4020,6 +4051,7 @@ Safety:
     "analog-four-patch-learning-report": _analog_four_patch_learning_report_help,
     "analog-four-patch-corpus-report": _analog_four_patch_corpus_report_help,
     "analog-four-patch-send-plan-report": _analog_four_patch_send_plan_report_help,
+    "local-model-copilot-report": _local_model_copilot_report_help,
     "analog-four-oxi-macro-report": _analog_four_oxi_macro_report_help,
     "analog-four-oxi-macro-readiness-report": (_analog_four_oxi_macro_readiness_report_help),
     "analog-four-oxi-macro-set-planner-report": (_analog_four_oxi_macro_set_planner_report_help),
