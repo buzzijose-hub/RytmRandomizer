@@ -1,6 +1,6 @@
 # RUSH01 Device-Assisted MIDI Compiler Plan
 
-Status: archived (completed with deterministic unconfigured plans and no MIDI access)
+Status: archived (review repair completed with app-owned armed access)
 
 **Goal:** Compile the corrected RUSH01 semantic YAML into reviewable, passive
 Analog Rytm MKII and Analog Four MKII CC/CC14/NRPN plans. Keep uncertain
@@ -14,14 +14,27 @@ capture calibration observations without sending MIDI.
 2. Add ordered data-layer bindings and a pure compiler with typed statuses,
    explicit converters, deterministic serialization, and CC-only safety
    validation.
-3. Add exact-port apply and input-only learning boundaries. Dry-run remains
-   the default and no hardware path is exercised in this task.
+3. Keep standalone tools passive and route exact-port apply plus input-only
+   learning exclusively through `app.py --arm`. No hardware path is exercised
+   in tests.
 4. Generate unconfigured review plans without inventing ports or channels,
    plus a build report and observed-only calibration files.
 5. Cover encoders, ordering, config validation, machine-specific semantics,
    uncertain values, deterministic output, and all no-send guarantees.
 6. Run focused tests, architecture tests, the full suite, touched-file
    coverage, and the lint trio.
+
+## Codeowner review repair
+
+- [x] Canonical `app.py --arm` routing owns both input and output; standalone
+  tools cannot construct providers, open ports, or send.
+- [x] Unknown tracks, sections, section fields, and track-level keys compile
+  to explicit `invalid_spec_field` rows, including under narrow filters.
+- [x] Normalized values carry an explicit 7-bit or 14-bit domain; current
+  7-bit conversions cannot promote a CC14 address.
+- [x] README, CLI, architecture, diagram, build-report, and status guidance
+  describe the guarded operator flow.
+- [x] Verification counts are recorded only from the final PR tree.
 
 ## Abstraction Review
 

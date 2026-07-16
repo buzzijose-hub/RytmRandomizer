@@ -2,6 +2,10 @@
 
 Status: archived (completed with both device builds blocked by mapping gaps)
 
+Review-repair note: device-assisted MIDI does not relax this result. Offline
+KIT output remains blocked until critical saved-kit mappings are verified; the
+armed app path sends approved live CC only and never emits or saves SysEx.
+
 **Goal:** Attempt the RUSH01 Analog Rytm MKII and Analog Four MKII semantic
 kit builds from the approved local reference dumps. Generate a device output
 only when every requested critical field has a positively mapped raw location,

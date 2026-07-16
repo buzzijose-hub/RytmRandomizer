@@ -27,7 +27,7 @@
 5. **No new sibling device subpackages.** Adding an Elektron device family = one `devices/<family>.py` + three strategy modules under `devices/strategies/`. See [`.claude/rules/device-protocol-strategy.md`](.claude/rules/device-protocol-strategy.md).
 6. **No bare `Any`.** Use `Protocol`, generic dataclasses, or explicit types.
 7. **Lazy MIDI imports.** `mido` and `python-rtmidi` import only inside `real_midi_adapter.py` and `mido_provider.py`.
-8. **Passive default.** `python -m rytm_randomizer.cli ...` never opens a real MIDI port. Only `python -m rytm_randomizer.app --arm` does.
+8. **Passive default.** `python -m rytm_randomizer.cli ...` and top-level operator tools never open a real MIDI port. Only `python -m rytm_randomizer.app --arm` may construct the real provider; feature-specific send confirmation still applies.
 9. **No `--no-verify`.** Never bypass pre-commit hooks. Fix the underlying issue.
 10. **PR body must include the 18-gate conformance checklist.** See [`.claude/rules/pr-body-conformance-checklist.md`](.claude/rules/pr-body-conformance-checklist.md).
 11. **Do not pause on chained steps.** Once a multi-step task is approved, execute through to a hard stop (push, PR open, merge, force-push, dep bump, fixture regen). Hard stops are enumerated in [`.claude/rules/autonomous-agent-execution.md`](.claude/rules/autonomous-agent-execution.md).

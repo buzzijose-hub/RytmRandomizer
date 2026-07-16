@@ -13,6 +13,7 @@
       "mapping_evidence": "explicit RUSH01 manual-setup policy",
       "message_type": null,
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": null,
       "ordered_midi_bytes": null,
       "reason": "kit naming remains a front-panel step; the compiler never saves a kit",
@@ -25,6 +26,66 @@
     },
     {
       "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "RUSH01 auxiliary-track preservation policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "auxiliary track level explicitly preserves the active-kit value",
+      "requested_value": "preserve_reference",
+      "semantic_path": "track_levels.FX",
+      "sequence": 2,
+      "status": "preserve_reference",
+      "track": null,
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "explicit RUSH01 manual-setup policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "per-track sound naming has no verified MIDI mapping",
+      "requested_value": "R01 PUNCH",
+      "semantic_path": "tracks.BD.sound_name",
+      "sequence": 3,
+      "status": "manual_setup_required",
+      "track": "BD",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "RUSH01 semantic metadata policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "design_role is descriptive metadata and does not request transmission",
+      "requested_value": "Main kick; sharp HP2 punch anchor captured from the user's own Rytm.",
+      "semantic_path": "tracks.BD.design_role",
+      "sequence": 4,
+      "status": "preserve_reference",
+      "track": "BD",
+      "user_channel": null
+    },
+    {
+      "channel": null,
       "configuration_issue": "track channel must be configured before byte encoding",
       "controller": 15,
       "controller_lsb": null,
@@ -32,6 +93,7 @@
       "mapping_evidence": "repository Rytm machine catalog: BD Sharp=CC15 value 26; manual-backed Track Machine Type mapping",
       "message_type": "CC",
       "normalized_midi_value": 26,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         103
@@ -40,7 +102,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": "BD Sharp",
       "semantic_path": "tracks.BD.machine",
-      "sequence": 2,
+      "sequence": 5,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -54,6 +116,7 @@
       "mapping_evidence": "manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100",
       "message_type": "CC",
       "normalized_midi_value": 110,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         100
@@ -62,7 +125,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 110,
       "semantic_path": "track_levels.BD",
-      "sequence": 3,
+      "sequence": 6,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -76,6 +139,7 @@
       "mapping_evidence": "manual-backed Analog Rytm bd_sharp/Level: CC16, NRPN 1:0",
       "message_type": "CC",
       "normalized_midi_value": 100,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         0
@@ -84,7 +148,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 100,
       "semantic_path": "tracks.BD.synth.Level",
-      "sequence": 4,
+      "sequence": 7,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -98,6 +162,7 @@
       "mapping_evidence": "manual-backed Analog Rytm bd_sharp/Tune: CC17, NRPN 1:1",
       "message_type": "CC",
       "normalized_midi_value": 59,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         1
@@ -106,7 +171,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 59,
       "semantic_path": "tracks.BD.synth.Tune",
-      "sequence": 5,
+      "sequence": 8,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -120,6 +185,7 @@
       "mapping_evidence": "manual-backed Analog Rytm bd_sharp/Decay: CC18, NRPN 1:2",
       "message_type": "CC",
       "normalized_midi_value": 58,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         2
@@ -128,7 +194,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 58,
       "semantic_path": "tracks.BD.synth.Decay",
-      "sequence": 6,
+      "sequence": 9,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -142,6 +208,7 @@
       "mapping_evidence": "manual-backed Analog Rytm bd_sharp/Sweep Depth: CC19, NRPN 1:3",
       "message_type": "CC",
       "normalized_midi_value": 93,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         3
@@ -150,7 +217,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 93,
       "semantic_path": "tracks.BD.synth.Sweep Depth",
-      "sequence": 7,
+      "sequence": 10,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -164,6 +231,7 @@
       "mapping_evidence": "manual-backed Analog Rytm bd_sharp/Sweep Time: CC20, NRPN 1:4",
       "message_type": "CC",
       "normalized_midi_value": 81,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         4
@@ -172,7 +240,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 81,
       "semantic_path": "tracks.BD.synth.Sweep Time",
-      "sequence": 8,
+      "sequence": 11,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -186,6 +254,7 @@
       "mapping_evidence": "manual-backed Analog Rytm bd_sharp/Hold Time: CC21, NRPN 1:5",
       "message_type": "CC",
       "normalized_midi_value": 40,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         5
@@ -194,7 +263,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 40,
       "semantic_path": "tracks.BD.synth.Hold Time",
-      "sequence": 9,
+      "sequence": 12,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -208,6 +277,7 @@
       "mapping_evidence": "manual-backed Analog Rytm bd_sharp/Tick Level: CC22, NRPN 1:6",
       "message_type": "CC",
       "normalized_midi_value": 127,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         6
@@ -216,7 +286,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 127,
       "semantic_path": "tracks.BD.synth.Tick Level",
-      "sequence": 10,
+      "sequence": 13,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -230,6 +300,7 @@
       "mapping_evidence": "manual-backed Analog Rytm bd_sharp/Waveform: CC23, NRPN 1:7",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         7
@@ -238,7 +309,7 @@
       "reason": "Waveform requires a typed enum with verified raw MIDI",
       "requested_value": 1,
       "semantic_path": "tracks.BD.synth.Waveform",
-      "sequence": 11,
+      "sequence": 14,
       "status": "learn_required",
       "track": "BD",
       "user_channel": null
@@ -252,6 +323,7 @@
       "mapping_evidence": "manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         15
@@ -260,7 +332,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.BD.sample.level",
-      "sequence": 12,
+      "sequence": 15,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -274,6 +346,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Attack Time: CC70, NRPN 1:16",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         16
@@ -282,7 +355,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.BD.filter.ATK",
-      "sequence": 13,
+      "sequence": 16,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -296,6 +369,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Decay Time: CC71, NRPN 1:17",
       "message_type": "CC",
       "normalized_midi_value": 35,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         17
@@ -304,7 +378,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 35,
       "semantic_path": "tracks.BD.filter.DEC",
-      "sequence": 14,
+      "sequence": 17,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -318,6 +392,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Sustain Level: CC72, NRPN 1:18",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         18
@@ -326,7 +401,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.BD.filter.SUS",
-      "sequence": 15,
+      "sequence": 18,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -340,6 +415,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Release Time: CC73, NRPN 1:19",
       "message_type": "CC",
       "normalized_midi_value": 10,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         19
@@ -348,7 +424,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 10,
       "semantic_path": "tracks.BD.filter.REL",
-      "sequence": 16,
+      "sequence": 19,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -362,6 +438,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Frequency: CC74, NRPN 1:20",
       "message_type": "CC",
       "normalized_midi_value": 23,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         20
@@ -370,7 +447,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 23,
       "semantic_path": "tracks.BD.filter.FRQ",
-      "sequence": 17,
+      "sequence": 20,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -384,6 +461,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Resonance: CC75, NRPN 1:21",
       "message_type": "CC",
       "normalized_midi_value": 77,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         21
@@ -392,7 +470,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 77,
       "semantic_path": "tracks.BD.filter.RES",
-      "sequence": 18,
+      "sequence": 21,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -406,6 +484,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Mode: CC76, NRPN 1:22",
       "message_type": "CC",
       "normalized_midi_value": 4,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         22
@@ -417,7 +496,7 @@
         "name": "HP2"
       },
       "semantic_path": "tracks.BD.filter.TYPE",
-      "sequence": 19,
+      "sequence": 22,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -431,6 +510,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Env Depth: CC77, NRPN 1:23",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         23
@@ -439,7 +519,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 64,
       "semantic_path": "tracks.BD.filter.ENV",
-      "sequence": 20,
+      "sequence": 23,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -453,6 +533,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Attack Time: CC78, NRPN 1:24",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         24
@@ -461,7 +542,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.BD.amp.ATK",
-      "sequence": 21,
+      "sequence": 24,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -475,6 +556,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Hold Time: CC79, NRPN 1:25",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         25
@@ -483,7 +565,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.BD.amp.HLD",
-      "sequence": 22,
+      "sequence": 25,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -497,6 +579,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Decay Time: CC80, NRPN 1:26",
       "message_type": "CC",
       "normalized_midi_value": 93,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         26
@@ -505,7 +588,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 93,
       "semantic_path": "tracks.BD.amp.DEC",
-      "sequence": 23,
+      "sequence": 26,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -519,6 +602,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Overdrive: CC81, NRPN 1:27",
       "message_type": "CC",
       "normalized_midi_value": 22,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         27
@@ -527,7 +611,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 22,
       "semantic_path": "tracks.BD.amp.OVR",
-      "sequence": 24,
+      "sequence": 27,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -541,6 +625,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Delay Send: CC82, NRPN 1:28",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         28
@@ -549,7 +634,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.BD.amp.DEL",
-      "sequence": 25,
+      "sequence": 28,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -563,6 +648,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Reverb Send: CC83, NRPN 1:29",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         29
@@ -571,7 +657,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.BD.amp.REV",
-      "sequence": 26,
+      "sequence": 29,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -585,6 +671,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Pan: CC10, NRPN 1:30",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         30
@@ -593,7 +680,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 64,
       "semantic_path": "tracks.BD.amp.PAN",
-      "sequence": 27,
+      "sequence": 30,
       "status": "ready",
       "track": "BD",
       "user_channel": null
@@ -607,6 +694,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31",
       "message_type": "CC",
       "normalized_midi_value": 110,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         31
@@ -615,9 +703,49 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 110,
       "semantic_path": "tracks.BD.amp.VOL",
-      "sequence": 28,
+      "sequence": 31,
       "status": "ready",
       "track": "BD",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "explicit RUSH01 manual-setup policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "per-track sound naming has no verified MIDI mapping",
+      "requested_value": "R01 SNAP",
+      "semantic_path": "tracks.SD.sound_name",
+      "sequence": 32,
+      "status": "manual_setup_required",
+      "track": "SD",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "RUSH01 semantic metadata policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "design_role is descriptive metadata and does not request transmission",
+      "requested_value": "Compact hard snare for accents and restrained backbeats.",
+      "semantic_path": "tracks.SD.design_role",
+      "sequence": 33,
+      "status": "preserve_reference",
+      "track": "SD",
       "user_channel": null
     },
     {
@@ -629,6 +757,7 @@
       "mapping_evidence": "repository Rytm machine catalog: SD Hard=CC15 value 2; manual-backed Track Machine Type mapping",
       "message_type": "CC",
       "normalized_midi_value": 2,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         103
@@ -637,7 +766,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": "SD Hard",
       "semantic_path": "tracks.SD.machine",
-      "sequence": 29,
+      "sequence": 34,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -651,6 +780,7 @@
       "mapping_evidence": "manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100",
       "message_type": "CC",
       "normalized_midi_value": 92,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         100
@@ -659,7 +789,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 92,
       "semantic_path": "track_levels.SD",
-      "sequence": 30,
+      "sequence": 35,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -673,6 +803,7 @@
       "mapping_evidence": "manual-backed Analog Rytm sd_hard/Level: CC16, NRPN 1:0",
       "message_type": "CC",
       "normalized_midi_value": 100,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         0
@@ -681,7 +812,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 100,
       "semantic_path": "tracks.SD.synth.Level",
-      "sequence": 31,
+      "sequence": 36,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -695,6 +826,7 @@
       "mapping_evidence": "manual-backed Analog Rytm sd_hard/Tune: CC17, NRPN 1:1",
       "message_type": "CC",
       "normalized_midi_value": 62,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         1
@@ -703,7 +835,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 62,
       "semantic_path": "tracks.SD.synth.Tune",
-      "sequence": 32,
+      "sequence": 37,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -717,6 +849,7 @@
       "mapping_evidence": "manual-backed Analog Rytm sd_hard/Decay: CC18, NRPN 1:2",
       "message_type": "CC",
       "normalized_midi_value": 48,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         2
@@ -725,7 +858,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 48,
       "semantic_path": "tracks.SD.synth.Decay",
-      "sequence": 33,
+      "sequence": 38,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -739,6 +872,7 @@
       "mapping_evidence": "manual-backed Analog Rytm sd_hard/Sweep Depth: CC19, NRPN 1:3",
       "message_type": "CC",
       "normalized_midi_value": 86,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         3
@@ -747,7 +881,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 86,
       "semantic_path": "tracks.SD.synth.Sweep Depth",
-      "sequence": 34,
+      "sequence": 39,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -761,6 +895,7 @@
       "mapping_evidence": "manual-backed Analog Rytm sd_hard/Tick Level: CC20, NRPN 1:4",
       "message_type": "CC",
       "normalized_midi_value": 58,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         4
@@ -769,7 +904,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 58,
       "semantic_path": "tracks.SD.synth.Tick Level",
-      "sequence": 35,
+      "sequence": 40,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -783,6 +918,7 @@
       "mapping_evidence": "manual-backed Analog Rytm sd_hard/Noise Decay: CC21, NRPN 1:5",
       "message_type": "CC",
       "normalized_midi_value": 36,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         5
@@ -791,7 +927,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 36,
       "semantic_path": "tracks.SD.synth.Noise Decay",
-      "sequence": 36,
+      "sequence": 41,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -805,6 +941,7 @@
       "mapping_evidence": "manual-backed Analog Rytm sd_hard/Noise Level: CC22, NRPN 1:6",
       "message_type": "CC",
       "normalized_midi_value": 78,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         6
@@ -813,7 +950,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 78,
       "semantic_path": "tracks.SD.synth.Noise Level",
-      "sequence": 37,
+      "sequence": 42,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -827,6 +964,7 @@
       "mapping_evidence": "manual-backed Analog Rytm sd_hard/Sweep Time: CC23, NRPN 1:7",
       "message_type": "CC",
       "normalized_midi_value": 46,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         7
@@ -835,7 +973,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 46,
       "semantic_path": "tracks.SD.synth.Sweep Time",
-      "sequence": 38,
+      "sequence": 43,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -849,6 +987,7 @@
       "mapping_evidence": "manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         15
@@ -857,7 +996,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.SD.sample.level",
-      "sequence": 39,
+      "sequence": 44,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -871,6 +1010,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Attack Time: CC70, NRPN 1:16",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         16
@@ -879,7 +1019,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.SD.filter.ATK",
-      "sequence": 40,
+      "sequence": 45,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -893,6 +1033,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Decay Time: CC71, NRPN 1:17",
       "message_type": "CC",
       "normalized_midi_value": 24,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         17
@@ -901,7 +1042,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 24,
       "semantic_path": "tracks.SD.filter.DEC",
-      "sequence": 41,
+      "sequence": 46,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -915,6 +1056,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Sustain Level: CC72, NRPN 1:18",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         18
@@ -923,7 +1065,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.SD.filter.SUS",
-      "sequence": 42,
+      "sequence": 47,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -937,6 +1079,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Release Time: CC73, NRPN 1:19",
       "message_type": "CC",
       "normalized_midi_value": 8,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         19
@@ -945,7 +1088,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 8,
       "semantic_path": "tracks.SD.filter.REL",
-      "sequence": 43,
+      "sequence": 48,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -959,6 +1102,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Frequency: CC74, NRPN 1:20",
       "message_type": "CC",
       "normalized_midi_value": 48,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         20
@@ -967,7 +1111,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 48,
       "semantic_path": "tracks.SD.filter.FRQ",
-      "sequence": 44,
+      "sequence": 49,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -981,6 +1125,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Resonance: CC75, NRPN 1:21",
       "message_type": "CC",
       "normalized_midi_value": 18,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         21
@@ -989,7 +1134,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 18,
       "semantic_path": "tracks.SD.filter.RES",
-      "sequence": 45,
+      "sequence": 50,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -1003,6 +1148,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Mode: CC76, NRPN 1:22",
       "message_type": "CC",
       "normalized_midi_value": 3,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         22
@@ -1014,7 +1160,7 @@
         "name": "HP1"
       },
       "semantic_path": "tracks.SD.filter.TYPE",
-      "sequence": 46,
+      "sequence": 51,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -1028,6 +1174,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Env Depth: CC77, NRPN 1:23",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         23
@@ -1036,7 +1183,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 64,
       "semantic_path": "tracks.SD.filter.ENV",
-      "sequence": 47,
+      "sequence": 52,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -1050,6 +1197,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Attack Time: CC78, NRPN 1:24",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         24
@@ -1058,7 +1206,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.SD.amp.ATK",
-      "sequence": 48,
+      "sequence": 53,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -1072,6 +1220,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Hold Time: CC79, NRPN 1:25",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         25
@@ -1080,7 +1229,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.SD.amp.HLD",
-      "sequence": 49,
+      "sequence": 54,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -1094,6 +1243,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Decay Time: CC80, NRPN 1:26",
       "message_type": "CC",
       "normalized_midi_value": 48,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         26
@@ -1102,7 +1252,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 48,
       "semantic_path": "tracks.SD.amp.DEC",
-      "sequence": 50,
+      "sequence": 55,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -1116,6 +1266,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Overdrive: CC81, NRPN 1:27",
       "message_type": "CC",
       "normalized_midi_value": 18,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         27
@@ -1124,7 +1275,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 18,
       "semantic_path": "tracks.SD.amp.OVR",
-      "sequence": 51,
+      "sequence": 56,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -1138,6 +1289,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Delay Send: CC82, NRPN 1:28",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         28
@@ -1146,7 +1298,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.SD.amp.DEL",
-      "sequence": 52,
+      "sequence": 57,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -1160,6 +1312,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Reverb Send: CC83, NRPN 1:29",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         29
@@ -1168,7 +1321,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.SD.amp.REV",
-      "sequence": 53,
+      "sequence": 58,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -1182,6 +1335,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Pan: CC10, NRPN 1:30",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         30
@@ -1190,7 +1344,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 64,
       "semantic_path": "tracks.SD.amp.PAN",
-      "sequence": 54,
+      "sequence": 59,
       "status": "ready",
       "track": "SD",
       "user_channel": null
@@ -1204,6 +1358,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31",
       "message_type": "CC",
       "normalized_midi_value": 96,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         31
@@ -1212,9 +1367,49 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 96,
       "semantic_path": "tracks.SD.amp.VOL",
-      "sequence": 55,
+      "sequence": 60,
       "status": "ready",
       "track": "SD",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "explicit RUSH01 manual-setup policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "per-track sound naming has no verified MIDI mapping",
+      "requested_value": "R01 CLAVE",
+      "semantic_path": "tracks.RS.sound_name",
+      "sequence": 61,
+      "status": "manual_setup_required",
+      "track": "RS",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "RUSH01 semantic metadata policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "design_role is descriptive metadata and does not request transmission",
+      "requested_value": "Hard clave/rim for jacking syncopation.",
+      "semantic_path": "tracks.RS.design_role",
+      "sequence": 62,
+      "status": "preserve_reference",
+      "track": "RS",
       "user_channel": null
     },
     {
@@ -1226,6 +1421,7 @@
       "mapping_evidence": "repository Rytm machine catalog: RS Hard=CC15 value 4; manual-backed Track Machine Type mapping",
       "message_type": "CC",
       "normalized_midi_value": 4,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         103
@@ -1234,7 +1430,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": "RS Hard",
       "semantic_path": "tracks.RS.machine",
-      "sequence": 56,
+      "sequence": 63,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1248,6 +1444,7 @@
       "mapping_evidence": "manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100",
       "message_type": "CC",
       "normalized_midi_value": 88,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         100
@@ -1256,7 +1453,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 88,
       "semantic_path": "track_levels.RS",
-      "sequence": 57,
+      "sequence": 64,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1270,6 +1467,7 @@
       "mapping_evidence": "manual-backed Analog Rytm rs_hard/Level: CC16, NRPN 1:0",
       "message_type": "CC",
       "normalized_midi_value": 96,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         0
@@ -1278,7 +1476,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 96,
       "semantic_path": "tracks.RS.synth.Level",
-      "sequence": 58,
+      "sequence": 65,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1292,6 +1490,7 @@
       "mapping_evidence": "manual-backed Analog Rytm rs_hard/Tune: CC17, NRPN 1:1",
       "message_type": "CC",
       "normalized_midi_value": 76,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         1
@@ -1300,7 +1499,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 76,
       "semantic_path": "tracks.RS.synth.Tune",
-      "sequence": 59,
+      "sequence": 66,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1314,6 +1513,7 @@
       "mapping_evidence": "manual-backed Analog Rytm rs_hard/Decay: CC18, NRPN 1:2",
       "message_type": "CC",
       "normalized_midi_value": 22,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         2
@@ -1322,7 +1522,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 22,
       "semantic_path": "tracks.RS.synth.Decay",
-      "sequence": 60,
+      "sequence": 67,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1336,6 +1536,7 @@
       "mapping_evidence": "manual-backed Analog Rytm rs_hard/Sweep Depth: CC19, NRPN 1:3",
       "message_type": "CC",
       "normalized_midi_value": 92,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         3
@@ -1344,7 +1545,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 92,
       "semantic_path": "tracks.RS.synth.Sweep Depth",
-      "sequence": 61,
+      "sequence": 68,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1358,6 +1559,7 @@
       "mapping_evidence": "manual-backed Analog Rytm rs_hard/Tick Level: CC20, NRPN 1:4",
       "message_type": "CC",
       "normalized_midi_value": 78,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         4
@@ -1366,7 +1568,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 78,
       "semantic_path": "tracks.RS.synth.Tick Level",
-      "sequence": 62,
+      "sequence": 69,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1380,6 +1582,7 @@
       "mapping_evidence": "manual-backed Analog Rytm rs_hard/Noise Level: CC21, NRPN 1:5",
       "message_type": "CC",
       "normalized_midi_value": 10,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         5
@@ -1388,7 +1591,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 10,
       "semantic_path": "tracks.RS.synth.Noise Level",
-      "sequence": 63,
+      "sequence": 70,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1402,6 +1605,7 @@
       "mapping_evidence": "manual-backed Analog Rytm rs_hard/Symmetry: CC22, NRPN 1:6",
       "message_type": "CC",
       "normalized_midi_value": 72,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         6
@@ -1410,7 +1614,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 72,
       "semantic_path": "tracks.RS.synth.Symmetry",
-      "sequence": 64,
+      "sequence": 71,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1424,6 +1628,7 @@
       "mapping_evidence": "manual-backed Analog Rytm rs_hard/Sweep Time: CC23, NRPN 1:7",
       "message_type": "CC",
       "normalized_midi_value": 26,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         7
@@ -1432,7 +1637,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 26,
       "semantic_path": "tracks.RS.synth.Sweep Time",
-      "sequence": 65,
+      "sequence": 72,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1446,6 +1651,7 @@
       "mapping_evidence": "manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         15
@@ -1454,7 +1660,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.RS.sample.level",
-      "sequence": 66,
+      "sequence": 73,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1468,6 +1674,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Attack Time: CC70, NRPN 1:16",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         16
@@ -1476,7 +1683,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.RS.filter.ATK",
-      "sequence": 67,
+      "sequence": 74,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1490,6 +1697,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Decay Time: CC71, NRPN 1:17",
       "message_type": "CC",
       "normalized_midi_value": 18,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         17
@@ -1498,7 +1706,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 18,
       "semantic_path": "tracks.RS.filter.DEC",
-      "sequence": 68,
+      "sequence": 75,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1512,6 +1720,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Sustain Level: CC72, NRPN 1:18",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         18
@@ -1520,7 +1729,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.RS.filter.SUS",
-      "sequence": 69,
+      "sequence": 76,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1534,6 +1743,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Release Time: CC73, NRPN 1:19",
       "message_type": "CC",
       "normalized_midi_value": 6,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         19
@@ -1542,7 +1752,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 6,
       "semantic_path": "tracks.RS.filter.REL",
-      "sequence": 70,
+      "sequence": 77,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1556,6 +1766,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Frequency: CC74, NRPN 1:20",
       "message_type": "CC",
       "normalized_midi_value": 82,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         20
@@ -1564,7 +1775,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 82,
       "semantic_path": "tracks.RS.filter.FRQ",
-      "sequence": 71,
+      "sequence": 78,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1578,6 +1789,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Resonance: CC75, NRPN 1:21",
       "message_type": "CC",
       "normalized_midi_value": 34,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         21
@@ -1586,7 +1798,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 34,
       "semantic_path": "tracks.RS.filter.RES",
-      "sequence": 72,
+      "sequence": 79,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1600,6 +1812,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Mode: CC76, NRPN 1:22",
       "message_type": "CC",
       "normalized_midi_value": 2,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         22
@@ -1611,7 +1824,7 @@
         "name": "Bandpass"
       },
       "semantic_path": "tracks.RS.filter.TYPE",
-      "sequence": 73,
+      "sequence": 80,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1625,6 +1838,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Env Depth: CC77, NRPN 1:23",
       "message_type": "CC",
       "normalized_midi_value": 74,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         23
@@ -1633,7 +1847,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 74,
       "semantic_path": "tracks.RS.filter.ENV",
-      "sequence": 74,
+      "sequence": 81,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1647,6 +1861,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Attack Time: CC78, NRPN 1:24",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         24
@@ -1655,7 +1870,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.RS.amp.ATK",
-      "sequence": 75,
+      "sequence": 82,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1669,6 +1884,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Hold Time: CC79, NRPN 1:25",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         25
@@ -1677,7 +1893,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.RS.amp.HLD",
-      "sequence": 76,
+      "sequence": 83,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1691,6 +1907,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Decay Time: CC80, NRPN 1:26",
       "message_type": "CC",
       "normalized_midi_value": 24,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         26
@@ -1699,7 +1916,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 24,
       "semantic_path": "tracks.RS.amp.DEC",
-      "sequence": 77,
+      "sequence": 84,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1713,6 +1930,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Overdrive: CC81, NRPN 1:27",
       "message_type": "CC",
       "normalized_midi_value": 18,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         27
@@ -1721,7 +1939,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 18,
       "semantic_path": "tracks.RS.amp.OVR",
-      "sequence": 78,
+      "sequence": 85,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1735,6 +1953,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Delay Send: CC82, NRPN 1:28",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         28
@@ -1743,7 +1962,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.RS.amp.DEL",
-      "sequence": 79,
+      "sequence": 86,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1757,6 +1976,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Reverb Send: CC83, NRPN 1:29",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         29
@@ -1765,7 +1985,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.RS.amp.REV",
-      "sequence": 80,
+      "sequence": 87,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1779,6 +1999,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Pan: CC10, NRPN 1:30",
       "message_type": "CC",
       "normalized_midi_value": 56,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         30
@@ -1787,7 +2008,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 56,
       "semantic_path": "tracks.RS.amp.PAN",
-      "sequence": 81,
+      "sequence": 88,
       "status": "ready",
       "track": "RS",
       "user_channel": null
@@ -1801,6 +2022,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31",
       "message_type": "CC",
       "normalized_midi_value": 90,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         31
@@ -1809,9 +2031,49 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 90,
       "semantic_path": "tracks.RS.amp.VOL",
-      "sequence": 82,
+      "sequence": 89,
       "status": "ready",
       "track": "RS",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "explicit RUSH01 manual-setup policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "per-track sound naming has no verified MIDI mapping",
+      "requested_value": "R01 CLAP",
+      "semantic_path": "tracks.CP.sound_name",
+      "sequence": 90,
+      "status": "manual_setup_required",
+      "track": "CP",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "RUSH01 semantic metadata policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "design_role is descriptive metadata and does not request transmission",
+      "requested_value": "Tight noisy clap; dry by design for the first hardware test.",
+      "semantic_path": "tracks.CP.design_role",
+      "sequence": 91,
+      "status": "preserve_reference",
+      "track": "CP",
       "user_channel": null
     },
     {
@@ -1823,6 +2085,7 @@
       "mapping_evidence": "repository Rytm machine catalog: CP Classic=CC15 value 6; manual-backed Track Machine Type mapping",
       "message_type": "CC",
       "normalized_midi_value": 6,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         103
@@ -1831,7 +2094,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": "CP Classic",
       "semantic_path": "tracks.CP.machine",
-      "sequence": 83,
+      "sequence": 92,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -1845,6 +2108,7 @@
       "mapping_evidence": "manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100",
       "message_type": "CC",
       "normalized_midi_value": 90,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         100
@@ -1853,7 +2117,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 90,
       "semantic_path": "track_levels.CP",
-      "sequence": 84,
+      "sequence": 93,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -1867,6 +2131,7 @@
       "mapping_evidence": "manual-backed Analog Rytm cp_classic/Level: CC16, NRPN 1:0",
       "message_type": "CC",
       "normalized_midi_value": 108,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         0
@@ -1875,7 +2140,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 108,
       "semantic_path": "tracks.CP.synth.Level",
-      "sequence": 85,
+      "sequence": 94,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -1889,6 +2154,7 @@
       "mapping_evidence": "manual-backed Analog Rytm cp_classic/Noise Tone: CC17, NRPN 1:1",
       "message_type": "CC",
       "normalized_midi_value": 72,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         1
@@ -1897,7 +2163,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 72,
       "semantic_path": "tracks.CP.synth.Noise Tone",
-      "sequence": 86,
+      "sequence": 95,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -1911,6 +2177,7 @@
       "mapping_evidence": "manual-backed Analog Rytm cp_classic/Noise Decay: CC18, NRPN 1:2",
       "message_type": "CC",
       "normalized_midi_value": 36,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         2
@@ -1919,7 +2186,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 36,
       "semantic_path": "tracks.CP.synth.Noise Decay",
-      "sequence": 87,
+      "sequence": 96,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -1933,6 +2200,7 @@
       "mapping_evidence": "manual-backed Analog Rytm cp_classic/Clap Number: CC19, NRPN 1:3",
       "message_type": "CC",
       "normalized_midi_value": 3,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         3
@@ -1941,7 +2209,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 3,
       "semantic_path": "tracks.CP.synth.Clap Number",
-      "sequence": 88,
+      "sequence": 97,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -1955,6 +2223,7 @@
       "mapping_evidence": "manual-backed Analog Rytm cp_classic/Clap Rate: CC20, NRPN 1:4",
       "message_type": "CC",
       "normalized_midi_value": 40,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         4
@@ -1963,7 +2232,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 40,
       "semantic_path": "tracks.CP.synth.Clap Rate",
-      "sequence": 89,
+      "sequence": 98,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -1977,6 +2246,7 @@
       "mapping_evidence": "manual-backed Analog Rytm cp_classic/Noise Level: CC21, NRPN 1:5",
       "message_type": "CC",
       "normalized_midi_value": 84,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         5
@@ -1985,7 +2255,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 84,
       "semantic_path": "tracks.CP.synth.Noise Level",
-      "sequence": 90,
+      "sequence": 99,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -1999,6 +2269,7 @@
       "mapping_evidence": "manual-backed Analog Rytm cp_classic/Random Claps: CC22, NRPN 1:6",
       "message_type": "CC",
       "normalized_midi_value": 8,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         6
@@ -2007,7 +2278,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 8,
       "semantic_path": "tracks.CP.synth.Random Claps",
-      "sequence": 91,
+      "sequence": 100,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -2021,6 +2292,7 @@
       "mapping_evidence": "manual-backed Analog Rytm cp_classic/Clap Decay: CC23, NRPN 1:7",
       "message_type": "CC",
       "normalized_midi_value": 32,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         7
@@ -2029,7 +2301,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 32,
       "semantic_path": "tracks.CP.synth.Clap Decay",
-      "sequence": 92,
+      "sequence": 101,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -2043,6 +2315,7 @@
       "mapping_evidence": "manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         15
@@ -2051,7 +2324,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CP.sample.level",
-      "sequence": 93,
+      "sequence": 102,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -2065,6 +2338,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Attack Time: CC70, NRPN 1:16",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         16
@@ -2073,7 +2347,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CP.filter.ATK",
-      "sequence": 94,
+      "sequence": 103,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -2087,6 +2361,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Decay Time: CC71, NRPN 1:17",
       "message_type": "CC",
       "normalized_midi_value": 8,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         17
@@ -2095,7 +2370,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 8,
       "semantic_path": "tracks.CP.filter.DEC",
-      "sequence": 95,
+      "sequence": 104,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -2109,6 +2384,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Sustain Level: CC72, NRPN 1:18",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         18
@@ -2117,7 +2393,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CP.filter.SUS",
-      "sequence": 96,
+      "sequence": 105,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -2131,6 +2407,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Release Time: CC73, NRPN 1:19",
       "message_type": "CC",
       "normalized_midi_value": 6,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         19
@@ -2139,7 +2416,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 6,
       "semantic_path": "tracks.CP.filter.REL",
-      "sequence": 97,
+      "sequence": 106,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -2153,6 +2430,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Frequency: CC74, NRPN 1:20",
       "message_type": "CC",
       "normalized_midi_value": 54,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         20
@@ -2161,7 +2439,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 54,
       "semantic_path": "tracks.CP.filter.FRQ",
-      "sequence": 98,
+      "sequence": 107,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -2175,6 +2453,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Resonance: CC75, NRPN 1:21",
       "message_type": "CC",
       "normalized_midi_value": 8,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         21
@@ -2183,7 +2462,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 8,
       "semantic_path": "tracks.CP.filter.RES",
-      "sequence": 99,
+      "sequence": 108,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -2197,6 +2476,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Mode: CC76, NRPN 1:22",
       "message_type": "CC",
       "normalized_midi_value": 3,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         22
@@ -2208,7 +2488,7 @@
         "name": "HP1"
       },
       "semantic_path": "tracks.CP.filter.TYPE",
-      "sequence": 100,
+      "sequence": 109,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -2222,6 +2502,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Env Depth: CC77, NRPN 1:23",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         23
@@ -2230,7 +2511,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 64,
       "semantic_path": "tracks.CP.filter.ENV",
-      "sequence": 101,
+      "sequence": 110,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -2244,6 +2525,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Attack Time: CC78, NRPN 1:24",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         24
@@ -2252,7 +2534,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CP.amp.ATK",
-      "sequence": 102,
+      "sequence": 111,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -2266,6 +2548,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Hold Time: CC79, NRPN 1:25",
       "message_type": "CC",
       "normalized_midi_value": 8,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         25
@@ -2274,7 +2557,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 8,
       "semantic_path": "tracks.CP.amp.HLD",
-      "sequence": 103,
+      "sequence": 112,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -2288,6 +2571,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Decay Time: CC80, NRPN 1:26",
       "message_type": "CC",
       "normalized_midi_value": 40,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         26
@@ -2296,7 +2580,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 40,
       "semantic_path": "tracks.CP.amp.DEC",
-      "sequence": 104,
+      "sequence": 113,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -2310,6 +2594,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Overdrive: CC81, NRPN 1:27",
       "message_type": "CC",
       "normalized_midi_value": 14,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         27
@@ -2318,7 +2603,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 14,
       "semantic_path": "tracks.CP.amp.OVR",
-      "sequence": 105,
+      "sequence": 114,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -2332,6 +2617,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Delay Send: CC82, NRPN 1:28",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         28
@@ -2340,7 +2626,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CP.amp.DEL",
-      "sequence": 106,
+      "sequence": 115,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -2354,6 +2640,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Reverb Send: CC83, NRPN 1:29",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         29
@@ -2362,7 +2649,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CP.amp.REV",
-      "sequence": 107,
+      "sequence": 116,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -2376,6 +2663,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Pan: CC10, NRPN 1:30",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         30
@@ -2384,7 +2672,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 64,
       "semantic_path": "tracks.CP.amp.PAN",
-      "sequence": 108,
+      "sequence": 117,
       "status": "ready",
       "track": "CP",
       "user_channel": null
@@ -2398,6 +2686,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31",
       "message_type": "CC",
       "normalized_midi_value": 92,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         31
@@ -2406,9 +2695,49 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 92,
       "semantic_path": "tracks.CP.amp.VOL",
-      "sequence": 109,
+      "sequence": 118,
       "status": "ready",
       "track": "CP",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "explicit RUSH01 manual-setup policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "per-track sound naming has no verified MIDI mapping",
+      "requested_value": "R01 JACK",
+      "semantic_path": "tracks.BT.sound_name",
+      "sequence": 119,
+      "status": "manual_setup_required",
+      "track": "BT",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "RUSH01 semantic metadata policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "design_role is descriptive metadata and does not request transmission",
+      "requested_value": "Rolling low-tom/bass-drum answer; not a second simultaneous sub kick.",
+      "semantic_path": "tracks.BT.design_role",
+      "sequence": 120,
+      "status": "preserve_reference",
+      "track": "BT",
       "user_channel": null
     },
     {
@@ -2420,6 +2749,7 @@
       "mapping_evidence": "repository Rytm machine catalog: BT Classic=CC15 value 7; manual-backed Track Machine Type mapping",
       "message_type": "CC",
       "normalized_midi_value": 7,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         103
@@ -2428,7 +2758,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": "BT Classic",
       "semantic_path": "tracks.BT.machine",
-      "sequence": 110,
+      "sequence": 121,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2442,6 +2772,7 @@
       "mapping_evidence": "manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100",
       "message_type": "CC",
       "normalized_midi_value": 94,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         100
@@ -2450,7 +2781,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 94,
       "semantic_path": "track_levels.BT",
-      "sequence": 111,
+      "sequence": 122,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2464,6 +2795,7 @@
       "mapping_evidence": "manual-backed Analog Rytm bt_classic/Level: CC16, NRPN 1:0",
       "message_type": "CC",
       "normalized_midi_value": 100,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         0
@@ -2472,7 +2804,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 100,
       "semantic_path": "tracks.BT.synth.Level",
-      "sequence": 112,
+      "sequence": 123,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2486,6 +2818,7 @@
       "mapping_evidence": "manual-backed Analog Rytm bt_classic/Tune: CC17, NRPN 1:1",
       "message_type": "CC",
       "normalized_midi_value": 80,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         1
@@ -2494,7 +2827,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 80,
       "semantic_path": "tracks.BT.synth.Tune",
-      "sequence": 113,
+      "sequence": 124,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2508,6 +2841,7 @@
       "mapping_evidence": "manual-backed Analog Rytm bt_classic/Decay: CC18, NRPN 1:2",
       "message_type": "CC",
       "normalized_midi_value": 42,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         2
@@ -2516,7 +2850,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 42,
       "semantic_path": "tracks.BT.synth.Decay",
-      "sequence": 114,
+      "sequence": 125,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2530,6 +2864,7 @@
       "mapping_evidence": "manual-backed Analog Rytm bt_classic/Sweep Depth: CC19, NRPN 1:3",
       "message_type": "CC",
       "normalized_midi_value": 14,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         3
@@ -2538,7 +2873,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 14,
       "semantic_path": "tracks.BT.synth.Sweep Depth",
-      "sequence": 115,
+      "sequence": 126,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2552,6 +2887,7 @@
       "mapping_evidence": "manual-backed Analog Rytm bt_classic/Noise Level: CC20, NRPN 1:4",
       "message_type": "CC",
       "normalized_midi_value": 6,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         4
@@ -2560,7 +2896,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 6,
       "semantic_path": "tracks.BT.synth.Noise Level",
-      "sequence": 116,
+      "sequence": 127,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2574,6 +2910,7 @@
       "mapping_evidence": "manual-backed Analog Rytm bt_classic/Snap Type: CC21, NRPN 1:5",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         5
@@ -2586,7 +2923,7 @@
         "type": "enum"
       },
       "semantic_path": "tracks.BT.synth.Snap Type",
-      "sequence": 117,
+      "sequence": 128,
       "status": "preserve_reference",
       "track": "BT",
       "user_channel": null
@@ -2600,6 +2937,7 @@
       "mapping_evidence": "manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         15
@@ -2608,7 +2946,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.BT.sample.level",
-      "sequence": 118,
+      "sequence": 129,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2622,6 +2960,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Attack Time: CC70, NRPN 1:16",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         16
@@ -2630,7 +2969,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.BT.filter.ATK",
-      "sequence": 119,
+      "sequence": 130,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2644,6 +2983,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Decay Time: CC71, NRPN 1:17",
       "message_type": "CC",
       "normalized_midi_value": 18,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         17
@@ -2652,7 +2992,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 18,
       "semantic_path": "tracks.BT.filter.DEC",
-      "sequence": 120,
+      "sequence": 131,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2666,6 +3006,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Sustain Level: CC72, NRPN 1:18",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         18
@@ -2674,7 +3015,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.BT.filter.SUS",
-      "sequence": 121,
+      "sequence": 132,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2688,6 +3029,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Release Time: CC73, NRPN 1:19",
       "message_type": "CC",
       "normalized_midi_value": 8,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         19
@@ -2696,7 +3038,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 8,
       "semantic_path": "tracks.BT.filter.REL",
-      "sequence": 122,
+      "sequence": 133,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2710,6 +3052,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Frequency: CC74, NRPN 1:20",
       "message_type": "CC",
       "normalized_midi_value": 62,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         20
@@ -2718,7 +3061,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 62,
       "semantic_path": "tracks.BT.filter.FRQ",
-      "sequence": 123,
+      "sequence": 134,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2732,6 +3075,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Resonance: CC75, NRPN 1:21",
       "message_type": "CC",
       "normalized_midi_value": 14,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         21
@@ -2740,7 +3084,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 14,
       "semantic_path": "tracks.BT.filter.RES",
-      "sequence": 124,
+      "sequence": 135,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2754,6 +3098,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Mode: CC76, NRPN 1:22",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         22
@@ -2765,7 +3110,7 @@
         "name": "LP2"
       },
       "semantic_path": "tracks.BT.filter.TYPE",
-      "sequence": 125,
+      "sequence": 136,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2779,6 +3124,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Env Depth: CC77, NRPN 1:23",
       "message_type": "CC",
       "normalized_midi_value": 78,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         23
@@ -2787,7 +3133,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 78,
       "semantic_path": "tracks.BT.filter.ENV",
-      "sequence": 126,
+      "sequence": 137,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2801,6 +3147,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Attack Time: CC78, NRPN 1:24",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         24
@@ -2809,7 +3156,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.BT.amp.ATK",
-      "sequence": 127,
+      "sequence": 138,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2823,6 +3170,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Hold Time: CC79, NRPN 1:25",
       "message_type": "CC",
       "normalized_midi_value": 10,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         25
@@ -2831,7 +3179,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 10,
       "semantic_path": "tracks.BT.amp.HLD",
-      "sequence": 128,
+      "sequence": 139,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2845,6 +3193,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Decay Time: CC80, NRPN 1:26",
       "message_type": "CC",
       "normalized_midi_value": 42,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         26
@@ -2853,7 +3202,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 42,
       "semantic_path": "tracks.BT.amp.DEC",
-      "sequence": 129,
+      "sequence": 140,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2867,6 +3216,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Overdrive: CC81, NRPN 1:27",
       "message_type": "CC",
       "normalized_midi_value": 24,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         27
@@ -2875,7 +3225,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 24,
       "semantic_path": "tracks.BT.amp.OVR",
-      "sequence": 130,
+      "sequence": 141,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2889,6 +3239,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Delay Send: CC82, NRPN 1:28",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         28
@@ -2897,7 +3248,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.BT.amp.DEL",
-      "sequence": 131,
+      "sequence": 142,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2911,6 +3262,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Reverb Send: CC83, NRPN 1:29",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         29
@@ -2919,7 +3271,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.BT.amp.REV",
-      "sequence": 132,
+      "sequence": 143,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2933,6 +3285,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Pan: CC10, NRPN 1:30",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         30
@@ -2941,7 +3294,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 64,
       "semantic_path": "tracks.BT.amp.PAN",
-      "sequence": 133,
+      "sequence": 144,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2955,6 +3308,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31",
       "message_type": "CC",
       "normalized_midi_value": 96,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         31
@@ -2963,7 +3317,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 96,
       "semantic_path": "tracks.BT.amp.VOL",
-      "sequence": 134,
+      "sequence": 145,
       "status": "ready",
       "track": "BT",
       "user_channel": null
@@ -2977,12 +3331,53 @@
       "mapping_evidence": "explicit RUSH01 manual-setup policy",
       "message_type": null,
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "per-track sound naming has no verified MIDI mapping",
+      "requested_value": "R01 LOWTOM",
+      "semantic_path": "tracks.LT.sound_name",
+      "sequence": 146,
+      "status": "manual_setup_required",
+      "track": "LT",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "RUSH01 semantic metadata policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "design_role is descriptive metadata and does not request transmission",
+      "requested_value": "Low jacking percussion.",
+      "semantic_path": "tracks.LT.design_role",
+      "sequence": 147,
+      "status": "preserve_reference",
+      "track": "LT",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "explicit RUSH01 manual-setup policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": null,
       "ordered_midi_bytes": null,
       "reason": "select XT Classic manually before applying source controls; the specification forbids candidate-only tom machine IDs",
       "requested_value": "XT Classic",
       "semantic_path": "tracks.LT.machine",
-      "sequence": 135,
+      "sequence": 148,
       "status": "manual_setup_required",
       "track": "LT",
       "user_channel": null
@@ -2996,6 +3391,7 @@
       "mapping_evidence": "manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100",
       "message_type": "CC",
       "normalized_midi_value": 86,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         100
@@ -3004,7 +3400,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 86,
       "semantic_path": "track_levels.LT",
-      "sequence": 136,
+      "sequence": 149,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3018,6 +3414,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Level: CC16, NRPN 1:0",
       "message_type": "CC",
       "normalized_midi_value": 96,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         0
@@ -3026,7 +3423,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 96,
       "semantic_path": "tracks.LT.synth.Level",
-      "sequence": 137,
+      "sequence": 150,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3040,6 +3437,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Tune: CC17, NRPN 1:1",
       "message_type": "CC",
       "normalized_midi_value": 94,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         1
@@ -3048,7 +3446,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 94,
       "semantic_path": "tracks.LT.synth.Tune",
-      "sequence": 138,
+      "sequence": 151,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3062,6 +3460,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Decay: CC18, NRPN 1:2",
       "message_type": "CC",
       "normalized_midi_value": 42,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         2
@@ -3070,7 +3469,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 42,
       "semantic_path": "tracks.LT.synth.Decay",
-      "sequence": 139,
+      "sequence": 152,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3084,6 +3483,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Sweep Depth: CC19, NRPN 1:3",
       "message_type": "CC",
       "normalized_midi_value": 32,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         3
@@ -3092,7 +3492,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 32,
       "semantic_path": "tracks.LT.synth.Sweep Depth",
-      "sequence": 140,
+      "sequence": 153,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3106,6 +3506,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Sweep Time: CC20, NRPN 1:4",
       "message_type": "CC",
       "normalized_midi_value": 82,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         4
@@ -3114,7 +3515,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 82,
       "semantic_path": "tracks.LT.synth.Sweep Time",
-      "sequence": 141,
+      "sequence": 154,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3128,6 +3529,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Noise Decay: CC21, NRPN 1:5",
       "message_type": "CC",
       "normalized_midi_value": 4,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         5
@@ -3136,7 +3538,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 4,
       "semantic_path": "tracks.LT.synth.Noise Decay",
-      "sequence": 142,
+      "sequence": 155,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3150,6 +3552,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Noise Level: CC22, NRPN 1:6",
       "message_type": "CC",
       "normalized_midi_value": 8,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         6
@@ -3158,7 +3561,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 8,
       "semantic_path": "tracks.LT.synth.Noise Level",
-      "sequence": 143,
+      "sequence": 156,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3172,6 +3575,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Noise Tone: CC23, NRPN 1:7",
       "message_type": "CC",
       "normalized_midi_value": 42,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         7
@@ -3180,7 +3584,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 42,
       "semantic_path": "tracks.LT.synth.Noise Tone",
-      "sequence": 144,
+      "sequence": 157,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3194,6 +3598,7 @@
       "mapping_evidence": "manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         15
@@ -3202,7 +3607,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.LT.sample.level",
-      "sequence": 145,
+      "sequence": 158,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3216,6 +3621,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Attack Time: CC70, NRPN 1:16",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         16
@@ -3224,7 +3630,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.LT.filter.ATK",
-      "sequence": 146,
+      "sequence": 159,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3238,6 +3644,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Decay Time: CC71, NRPN 1:17",
       "message_type": "CC",
       "normalized_midi_value": 16,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         17
@@ -3246,7 +3653,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 16,
       "semantic_path": "tracks.LT.filter.DEC",
-      "sequence": 147,
+      "sequence": 160,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3260,6 +3667,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Sustain Level: CC72, NRPN 1:18",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         18
@@ -3268,7 +3676,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.LT.filter.SUS",
-      "sequence": 148,
+      "sequence": 161,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3282,6 +3690,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Release Time: CC73, NRPN 1:19",
       "message_type": "CC",
       "normalized_midi_value": 6,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         19
@@ -3290,7 +3699,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 6,
       "semantic_path": "tracks.LT.filter.REL",
-      "sequence": 149,
+      "sequence": 162,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3304,6 +3713,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Frequency: CC74, NRPN 1:20",
       "message_type": "CC",
       "normalized_midi_value": 58,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         20
@@ -3312,7 +3722,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 58,
       "semantic_path": "tracks.LT.filter.FRQ",
-      "sequence": 150,
+      "sequence": 163,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3326,6 +3736,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Resonance: CC75, NRPN 1:21",
       "message_type": "CC",
       "normalized_midi_value": 10,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         21
@@ -3334,7 +3745,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 10,
       "semantic_path": "tracks.LT.filter.RES",
-      "sequence": 151,
+      "sequence": 164,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3348,6 +3759,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Mode: CC76, NRPN 1:22",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         22
@@ -3359,7 +3771,7 @@
         "name": "LP2"
       },
       "semantic_path": "tracks.LT.filter.TYPE",
-      "sequence": 152,
+      "sequence": 165,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3373,6 +3785,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Env Depth: CC77, NRPN 1:23",
       "message_type": "CC",
       "normalized_midi_value": 72,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         23
@@ -3381,7 +3794,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 72,
       "semantic_path": "tracks.LT.filter.ENV",
-      "sequence": 153,
+      "sequence": 166,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3395,6 +3808,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Attack Time: CC78, NRPN 1:24",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         24
@@ -3403,7 +3817,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.LT.amp.ATK",
-      "sequence": 154,
+      "sequence": 167,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3417,6 +3831,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Hold Time: CC79, NRPN 1:25",
       "message_type": "CC",
       "normalized_midi_value": 6,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         25
@@ -3425,7 +3840,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 6,
       "semantic_path": "tracks.LT.amp.HLD",
-      "sequence": 155,
+      "sequence": 168,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3439,6 +3854,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Decay Time: CC80, NRPN 1:26",
       "message_type": "CC",
       "normalized_midi_value": 42,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         26
@@ -3447,7 +3863,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 42,
       "semantic_path": "tracks.LT.amp.DEC",
-      "sequence": 156,
+      "sequence": 169,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3461,6 +3877,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Overdrive: CC81, NRPN 1:27",
       "message_type": "CC",
       "normalized_midi_value": 18,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         27
@@ -3469,7 +3886,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 18,
       "semantic_path": "tracks.LT.amp.OVR",
-      "sequence": 157,
+      "sequence": 170,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3483,6 +3900,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Delay Send: CC82, NRPN 1:28",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         28
@@ -3491,7 +3909,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.LT.amp.DEL",
-      "sequence": 158,
+      "sequence": 171,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3505,6 +3923,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Reverb Send: CC83, NRPN 1:29",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         29
@@ -3513,7 +3932,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.LT.amp.REV",
-      "sequence": 159,
+      "sequence": 172,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3527,6 +3946,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Pan: CC10, NRPN 1:30",
       "message_type": "CC",
       "normalized_midi_value": 58,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         30
@@ -3535,7 +3955,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 58,
       "semantic_path": "tracks.LT.amp.PAN",
-      "sequence": 160,
+      "sequence": 173,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3549,6 +3969,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31",
       "message_type": "CC",
       "normalized_midi_value": 90,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         31
@@ -3557,7 +3978,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 90,
       "semantic_path": "tracks.LT.amp.VOL",
-      "sequence": 161,
+      "sequence": 174,
       "status": "ready",
       "track": "LT",
       "user_channel": null
@@ -3571,12 +3992,53 @@
       "mapping_evidence": "explicit RUSH01 manual-setup policy",
       "message_type": null,
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "per-track sound naming has no verified MIDI mapping",
+      "requested_value": "R01 MIDTOM",
+      "semantic_path": "tracks.MT.sound_name",
+      "sequence": 175,
+      "status": "manual_setup_required",
+      "track": "MT",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "RUSH01 semantic metadata policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "design_role is descriptive metadata and does not request transmission",
+      "requested_value": "Midrange tom response.",
+      "semantic_path": "tracks.MT.design_role",
+      "sequence": 176,
+      "status": "preserve_reference",
+      "track": "MT",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "explicit RUSH01 manual-setup policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": null,
       "ordered_midi_bytes": null,
       "reason": "select XT Classic manually before applying source controls; the specification forbids candidate-only tom machine IDs",
       "requested_value": "XT Classic",
       "semantic_path": "tracks.MT.machine",
-      "sequence": 162,
+      "sequence": 177,
       "status": "manual_setup_required",
       "track": "MT",
       "user_channel": null
@@ -3590,6 +4052,7 @@
       "mapping_evidence": "manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100",
       "message_type": "CC",
       "normalized_midi_value": 82,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         100
@@ -3598,7 +4061,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 82,
       "semantic_path": "track_levels.MT",
-      "sequence": 163,
+      "sequence": 178,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -3612,6 +4075,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Level: CC16, NRPN 1:0",
       "message_type": "CC",
       "normalized_midi_value": 92,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         0
@@ -3620,7 +4084,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 92,
       "semantic_path": "tracks.MT.synth.Level",
-      "sequence": 164,
+      "sequence": 179,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -3634,6 +4098,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Tune: CC17, NRPN 1:1",
       "message_type": "CC",
       "normalized_midi_value": 104,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         1
@@ -3642,7 +4107,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 104,
       "semantic_path": "tracks.MT.synth.Tune",
-      "sequence": 165,
+      "sequence": 180,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -3656,6 +4121,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Decay: CC18, NRPN 1:2",
       "message_type": "CC",
       "normalized_midi_value": 34,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         2
@@ -3664,7 +4130,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 34,
       "semantic_path": "tracks.MT.synth.Decay",
-      "sequence": 166,
+      "sequence": 181,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -3678,6 +4144,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Sweep Depth: CC19, NRPN 1:3",
       "message_type": "CC",
       "normalized_midi_value": 28,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         3
@@ -3686,7 +4153,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 28,
       "semantic_path": "tracks.MT.synth.Sweep Depth",
-      "sequence": 167,
+      "sequence": 182,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -3700,6 +4167,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Sweep Time: CC20, NRPN 1:4",
       "message_type": "CC",
       "normalized_midi_value": 88,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         4
@@ -3708,7 +4176,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 88,
       "semantic_path": "tracks.MT.synth.Sweep Time",
-      "sequence": 168,
+      "sequence": 183,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -3722,6 +4190,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Noise Decay: CC21, NRPN 1:5",
       "message_type": "CC",
       "normalized_midi_value": 5,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         5
@@ -3730,7 +4199,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 5,
       "semantic_path": "tracks.MT.synth.Noise Decay",
-      "sequence": 169,
+      "sequence": 184,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -3744,6 +4213,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Noise Level: CC22, NRPN 1:6",
       "message_type": "CC",
       "normalized_midi_value": 10,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         6
@@ -3752,7 +4222,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 10,
       "semantic_path": "tracks.MT.synth.Noise Level",
-      "sequence": 170,
+      "sequence": 185,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -3766,6 +4236,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Noise Tone: CC23, NRPN 1:7",
       "message_type": "CC",
       "normalized_midi_value": 36,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         7
@@ -3774,7 +4245,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 36,
       "semantic_path": "tracks.MT.synth.Noise Tone",
-      "sequence": 171,
+      "sequence": 186,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -3788,6 +4259,7 @@
       "mapping_evidence": "manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         15
@@ -3796,7 +4268,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.MT.sample.level",
-      "sequence": 172,
+      "sequence": 187,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -3810,6 +4282,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Attack Time: CC70, NRPN 1:16",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         16
@@ -3818,7 +4291,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.MT.filter.ATK",
-      "sequence": 173,
+      "sequence": 188,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -3832,6 +4305,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Decay Time: CC71, NRPN 1:17",
       "message_type": "CC",
       "normalized_midi_value": 14,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         17
@@ -3840,7 +4314,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 14,
       "semantic_path": "tracks.MT.filter.DEC",
-      "sequence": 174,
+      "sequence": 189,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -3854,6 +4328,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Sustain Level: CC72, NRPN 1:18",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         18
@@ -3862,7 +4337,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.MT.filter.SUS",
-      "sequence": 175,
+      "sequence": 190,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -3876,6 +4351,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Release Time: CC73, NRPN 1:19",
       "message_type": "CC",
       "normalized_midi_value": 5,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         19
@@ -3884,7 +4360,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 5,
       "semantic_path": "tracks.MT.filter.REL",
-      "sequence": 176,
+      "sequence": 191,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -3898,6 +4374,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Frequency: CC74, NRPN 1:20",
       "message_type": "CC",
       "normalized_midi_value": 68,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         20
@@ -3906,7 +4383,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 68,
       "semantic_path": "tracks.MT.filter.FRQ",
-      "sequence": 177,
+      "sequence": 192,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -3920,6 +4397,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Resonance: CC75, NRPN 1:21",
       "message_type": "CC",
       "normalized_midi_value": 15,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         21
@@ -3928,7 +4406,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 15,
       "semantic_path": "tracks.MT.filter.RES",
-      "sequence": 178,
+      "sequence": 193,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -3942,6 +4420,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Mode: CC76, NRPN 1:22",
       "message_type": "CC",
       "normalized_midi_value": 2,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         22
@@ -3953,7 +4432,7 @@
         "name": "Bandpass"
       },
       "semantic_path": "tracks.MT.filter.TYPE",
-      "sequence": 179,
+      "sequence": 194,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -3967,6 +4446,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Env Depth: CC77, NRPN 1:23",
       "message_type": "CC",
       "normalized_midi_value": 72,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         23
@@ -3975,7 +4455,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 72,
       "semantic_path": "tracks.MT.filter.ENV",
-      "sequence": 180,
+      "sequence": 195,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -3989,6 +4469,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Attack Time: CC78, NRPN 1:24",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         24
@@ -3997,7 +4478,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.MT.amp.ATK",
-      "sequence": 181,
+      "sequence": 196,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -4011,6 +4492,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Hold Time: CC79, NRPN 1:25",
       "message_type": "CC",
       "normalized_midi_value": 4,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         25
@@ -4019,7 +4501,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 4,
       "semantic_path": "tracks.MT.amp.HLD",
-      "sequence": 182,
+      "sequence": 197,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -4033,6 +4515,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Decay Time: CC80, NRPN 1:26",
       "message_type": "CC",
       "normalized_midi_value": 34,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         26
@@ -4041,7 +4524,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 34,
       "semantic_path": "tracks.MT.amp.DEC",
-      "sequence": 183,
+      "sequence": 198,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -4055,6 +4538,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Overdrive: CC81, NRPN 1:27",
       "message_type": "CC",
       "normalized_midi_value": 16,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         27
@@ -4063,7 +4547,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 16,
       "semantic_path": "tracks.MT.amp.OVR",
-      "sequence": 184,
+      "sequence": 199,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -4077,6 +4561,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Delay Send: CC82, NRPN 1:28",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         28
@@ -4085,7 +4570,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.MT.amp.DEL",
-      "sequence": 185,
+      "sequence": 200,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -4099,6 +4584,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Reverb Send: CC83, NRPN 1:29",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         29
@@ -4107,7 +4593,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.MT.amp.REV",
-      "sequence": 186,
+      "sequence": 201,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -4121,6 +4607,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Pan: CC10, NRPN 1:30",
       "message_type": "CC",
       "normalized_midi_value": 70,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         30
@@ -4129,7 +4616,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 70,
       "semantic_path": "tracks.MT.amp.PAN",
-      "sequence": 187,
+      "sequence": 202,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -4143,6 +4630,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31",
       "message_type": "CC",
       "normalized_midi_value": 86,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         31
@@ -4151,7 +4639,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 86,
       "semantic_path": "tracks.MT.amp.VOL",
-      "sequence": 188,
+      "sequence": 203,
       "status": "ready",
       "track": "MT",
       "user_channel": null
@@ -4165,12 +4653,53 @@
       "mapping_evidence": "explicit RUSH01 manual-setup policy",
       "message_type": null,
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "per-track sound naming has no verified MIDI mapping",
+      "requested_value": "R01 HITOM",
+      "semantic_path": "tracks.HT.sound_name",
+      "sequence": 204,
+      "status": "manual_setup_required",
+      "track": "HT",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "RUSH01 semantic metadata policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "design_role is descriptive metadata and does not request transmission",
+      "requested_value": "Short high tom/industrial percussion.",
+      "semantic_path": "tracks.HT.design_role",
+      "sequence": 205,
+      "status": "preserve_reference",
+      "track": "HT",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "explicit RUSH01 manual-setup policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": null,
       "ordered_midi_bytes": null,
       "reason": "select XT Classic manually before applying source controls; the specification forbids candidate-only tom machine IDs",
       "requested_value": "XT Classic",
       "semantic_path": "tracks.HT.machine",
-      "sequence": 189,
+      "sequence": 206,
       "status": "manual_setup_required",
       "track": "HT",
       "user_channel": null
@@ -4184,6 +4713,7 @@
       "mapping_evidence": "manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100",
       "message_type": "CC",
       "normalized_midi_value": 78,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         100
@@ -4192,7 +4722,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 78,
       "semantic_path": "track_levels.HT",
-      "sequence": 190,
+      "sequence": 207,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4206,6 +4736,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Level: CC16, NRPN 1:0",
       "message_type": "CC",
       "normalized_midi_value": 88,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         0
@@ -4214,7 +4745,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 88,
       "semantic_path": "tracks.HT.synth.Level",
-      "sequence": 191,
+      "sequence": 208,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4228,6 +4759,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Tune: CC17, NRPN 1:1",
       "message_type": "CC",
       "normalized_midi_value": 114,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         1
@@ -4236,7 +4768,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 114,
       "semantic_path": "tracks.HT.synth.Tune",
-      "sequence": 192,
+      "sequence": 209,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4250,6 +4782,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Decay: CC18, NRPN 1:2",
       "message_type": "CC",
       "normalized_midi_value": 24,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         2
@@ -4258,7 +4791,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 24,
       "semantic_path": "tracks.HT.synth.Decay",
-      "sequence": 193,
+      "sequence": 210,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4272,6 +4805,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Sweep Depth: CC19, NRPN 1:3",
       "message_type": "CC",
       "normalized_midi_value": 20,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         3
@@ -4280,7 +4814,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 20,
       "semantic_path": "tracks.HT.synth.Sweep Depth",
-      "sequence": 194,
+      "sequence": 211,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4294,6 +4828,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Sweep Time: CC20, NRPN 1:4",
       "message_type": "CC",
       "normalized_midi_value": 90,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         4
@@ -4302,7 +4837,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 90,
       "semantic_path": "tracks.HT.synth.Sweep Time",
-      "sequence": 195,
+      "sequence": 212,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4316,6 +4851,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Noise Decay: CC21, NRPN 1:5",
       "message_type": "CC",
       "normalized_midi_value": 7,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         5
@@ -4324,7 +4860,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 7,
       "semantic_path": "tracks.HT.synth.Noise Decay",
-      "sequence": 196,
+      "sequence": 213,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4338,6 +4874,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Noise Level: CC22, NRPN 1:6",
       "message_type": "CC",
       "normalized_midi_value": 14,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         6
@@ -4346,7 +4883,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 14,
       "semantic_path": "tracks.HT.synth.Noise Level",
-      "sequence": 197,
+      "sequence": 214,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4360,6 +4897,7 @@
       "mapping_evidence": "manual-backed Analog Rytm xt_classic/Noise Tone: CC23, NRPN 1:7",
       "message_type": "CC",
       "normalized_midi_value": 28,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         7
@@ -4368,7 +4906,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 28,
       "semantic_path": "tracks.HT.synth.Noise Tone",
-      "sequence": 198,
+      "sequence": 215,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4382,6 +4920,7 @@
       "mapping_evidence": "manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         15
@@ -4390,7 +4929,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.HT.sample.level",
-      "sequence": 199,
+      "sequence": 216,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4404,6 +4943,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Attack Time: CC70, NRPN 1:16",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         16
@@ -4412,7 +4952,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.HT.filter.ATK",
-      "sequence": 200,
+      "sequence": 217,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4426,6 +4966,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Decay Time: CC71, NRPN 1:17",
       "message_type": "CC",
       "normalized_midi_value": 12,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         17
@@ -4434,7 +4975,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 12,
       "semantic_path": "tracks.HT.filter.DEC",
-      "sequence": 201,
+      "sequence": 218,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4448,6 +4989,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Sustain Level: CC72, NRPN 1:18",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         18
@@ -4456,7 +4998,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.HT.filter.SUS",
-      "sequence": 202,
+      "sequence": 219,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4470,6 +5012,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Release Time: CC73, NRPN 1:19",
       "message_type": "CC",
       "normalized_midi_value": 4,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         19
@@ -4478,7 +5021,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 4,
       "semantic_path": "tracks.HT.filter.REL",
-      "sequence": 203,
+      "sequence": 220,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4492,6 +5035,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Frequency: CC74, NRPN 1:20",
       "message_type": "CC",
       "normalized_midi_value": 78,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         20
@@ -4500,7 +5044,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 78,
       "semantic_path": "tracks.HT.filter.FRQ",
-      "sequence": 204,
+      "sequence": 221,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4514,6 +5058,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Resonance: CC75, NRPN 1:21",
       "message_type": "CC",
       "normalized_midi_value": 18,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         21
@@ -4522,7 +5067,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 18,
       "semantic_path": "tracks.HT.filter.RES",
-      "sequence": 205,
+      "sequence": 222,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4536,6 +5081,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Mode: CC76, NRPN 1:22",
       "message_type": "CC",
       "normalized_midi_value": 2,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         22
@@ -4547,7 +5093,7 @@
         "name": "Bandpass"
       },
       "semantic_path": "tracks.HT.filter.TYPE",
-      "sequence": 206,
+      "sequence": 223,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4561,6 +5107,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Env Depth: CC77, NRPN 1:23",
       "message_type": "CC",
       "normalized_midi_value": 70,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         23
@@ -4569,7 +5116,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 70,
       "semantic_path": "tracks.HT.filter.ENV",
-      "sequence": 207,
+      "sequence": 224,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4583,6 +5130,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Attack Time: CC78, NRPN 1:24",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         24
@@ -4591,7 +5139,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.HT.amp.ATK",
-      "sequence": 208,
+      "sequence": 225,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4605,6 +5153,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Hold Time: CC79, NRPN 1:25",
       "message_type": "CC",
       "normalized_midi_value": 3,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         25
@@ -4613,7 +5162,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 3,
       "semantic_path": "tracks.HT.amp.HLD",
-      "sequence": 209,
+      "sequence": 226,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4627,6 +5176,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Decay Time: CC80, NRPN 1:26",
       "message_type": "CC",
       "normalized_midi_value": 24,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         26
@@ -4635,7 +5185,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 24,
       "semantic_path": "tracks.HT.amp.DEC",
-      "sequence": 210,
+      "sequence": 227,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4649,6 +5199,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Overdrive: CC81, NRPN 1:27",
       "message_type": "CC",
       "normalized_midi_value": 15,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         27
@@ -4657,7 +5208,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 15,
       "semantic_path": "tracks.HT.amp.OVR",
-      "sequence": 211,
+      "sequence": 228,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4671,6 +5222,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Delay Send: CC82, NRPN 1:28",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         28
@@ -4679,7 +5231,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.HT.amp.DEL",
-      "sequence": 212,
+      "sequence": 229,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4693,6 +5245,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Reverb Send: CC83, NRPN 1:29",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         29
@@ -4701,7 +5254,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.HT.amp.REV",
-      "sequence": 213,
+      "sequence": 230,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4715,6 +5268,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Pan: CC10, NRPN 1:30",
       "message_type": "CC",
       "normalized_midi_value": 74,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         30
@@ -4723,7 +5277,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 74,
       "semantic_path": "tracks.HT.amp.PAN",
-      "sequence": 214,
+      "sequence": 231,
       "status": "ready",
       "track": "HT",
       "user_channel": null
@@ -4737,6 +5291,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31",
       "message_type": "CC",
       "normalized_midi_value": 82,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         31
@@ -4745,9 +5300,49 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 82,
       "semantic_path": "tracks.HT.amp.VOL",
-      "sequence": 215,
+      "sequence": 232,
       "status": "ready",
       "track": "HT",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "explicit RUSH01 manual-setup policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "per-track sound naming has no verified MIDI mapping",
+      "requested_value": "R01 SHUFF",
+      "semantic_path": "tracks.CH.sound_name",
+      "sequence": 233,
+      "status": "manual_setup_required",
+      "track": "CH",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "RUSH01 semantic metadata policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "design_role is descriptive metadata and does not request transmission",
+      "requested_value": "Dry shuffled closed hat.",
+      "semantic_path": "tracks.CH.design_role",
+      "sequence": 234,
+      "status": "preserve_reference",
+      "track": "CH",
       "user_channel": null
     },
     {
@@ -4759,6 +5354,7 @@
       "mapping_evidence": "repository Rytm machine catalog: HH Basic=CC15 value 24; manual-backed Track Machine Type mapping",
       "message_type": "CC",
       "normalized_midi_value": 24,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         103
@@ -4767,7 +5363,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": "HH Basic",
       "semantic_path": "tracks.CH.machine",
-      "sequence": 216,
+      "sequence": 235,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -4781,6 +5377,7 @@
       "mapping_evidence": "manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100",
       "message_type": "CC",
       "normalized_midi_value": 80,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         100
@@ -4789,7 +5386,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 80,
       "semantic_path": "track_levels.CH",
-      "sequence": 217,
+      "sequence": 236,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -4803,6 +5400,7 @@
       "mapping_evidence": "manual-backed Analog Rytm hh_basic/Level: CC16, NRPN 1:0",
       "message_type": "CC",
       "normalized_midi_value": 92,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         0
@@ -4811,7 +5409,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 92,
       "semantic_path": "tracks.CH.synth.Level",
-      "sequence": 218,
+      "sequence": 237,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -4825,6 +5423,7 @@
       "mapping_evidence": "manual-backed Analog Rytm hh_basic/Tune: CC17, NRPN 1:1",
       "message_type": "CC",
       "normalized_midi_value": 72,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         1
@@ -4833,7 +5432,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 72,
       "semantic_path": "tracks.CH.synth.Tune",
-      "sequence": 219,
+      "sequence": 238,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -4847,6 +5446,7 @@
       "mapping_evidence": "manual-backed Analog Rytm hh_basic/Decay Time: CC18, NRPN 1:2",
       "message_type": "CC",
       "normalized_midi_value": 18,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         2
@@ -4855,7 +5455,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 18,
       "semantic_path": "tracks.CH.synth.Decay Time",
-      "sequence": 220,
+      "sequence": 239,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -4869,6 +5469,7 @@
       "mapping_evidence": "manual-backed Analog Rytm hh_basic/Tone: CC19, NRPN 1:3",
       "message_type": "CC",
       "normalized_midi_value": 76,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         3
@@ -4877,7 +5478,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 76,
       "semantic_path": "tracks.CH.synth.Tone",
-      "sequence": 221,
+      "sequence": 240,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -4891,6 +5492,7 @@
       "mapping_evidence": "manual-backed Analog Rytm hh_basic/Transient Decay: CC20, NRPN 1:4",
       "message_type": "CC",
       "normalized_midi_value": 20,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         4
@@ -4899,7 +5501,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 20,
       "semantic_path": "tracks.CH.synth.Transient Decay",
-      "sequence": 222,
+      "sequence": 241,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -4913,6 +5515,7 @@
       "mapping_evidence": "manual-backed Analog Rytm hh_basic/Osc Reset: CC21, NRPN 1:5",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         5
@@ -4921,7 +5524,7 @@
       "reason": "Osc Reset requires a typed enum with verified raw MIDI",
       "requested_value": 0,
       "semantic_path": "tracks.CH.synth.Osc Reset",
-      "sequence": 223,
+      "sequence": 242,
       "status": "learn_required",
       "track": "CH",
       "user_channel": null
@@ -4935,6 +5538,7 @@
       "mapping_evidence": "manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         15
@@ -4943,7 +5547,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CH.sample.level",
-      "sequence": 224,
+      "sequence": 243,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -4957,6 +5561,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Attack Time: CC70, NRPN 1:16",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         16
@@ -4965,7 +5570,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CH.filter.ATK",
-      "sequence": 225,
+      "sequence": 244,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -4979,6 +5584,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Decay Time: CC71, NRPN 1:17",
       "message_type": "CC",
       "normalized_midi_value": 6,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         17
@@ -4987,7 +5593,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 6,
       "semantic_path": "tracks.CH.filter.DEC",
-      "sequence": 226,
+      "sequence": 245,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -5001,6 +5607,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Sustain Level: CC72, NRPN 1:18",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         18
@@ -5009,7 +5616,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CH.filter.SUS",
-      "sequence": 227,
+      "sequence": 246,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -5023,6 +5630,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Release Time: CC73, NRPN 1:19",
       "message_type": "CC",
       "normalized_midi_value": 3,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         19
@@ -5031,7 +5639,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 3,
       "semantic_path": "tracks.CH.filter.REL",
-      "sequence": 228,
+      "sequence": 247,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -5045,6 +5653,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Frequency: CC74, NRPN 1:20",
       "message_type": "CC",
       "normalized_midi_value": 66,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         20
@@ -5053,7 +5662,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 66,
       "semantic_path": "tracks.CH.filter.FRQ",
-      "sequence": 229,
+      "sequence": 248,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -5067,6 +5676,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Resonance: CC75, NRPN 1:21",
       "message_type": "CC",
       "normalized_midi_value": 6,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         21
@@ -5075,7 +5685,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 6,
       "semantic_path": "tracks.CH.filter.RES",
-      "sequence": 230,
+      "sequence": 249,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -5089,6 +5699,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Mode: CC76, NRPN 1:22",
       "message_type": "CC",
       "normalized_midi_value": 4,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         22
@@ -5100,7 +5711,7 @@
         "name": "HP2"
       },
       "semantic_path": "tracks.CH.filter.TYPE",
-      "sequence": 231,
+      "sequence": 250,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -5114,6 +5725,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Env Depth: CC77, NRPN 1:23",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         23
@@ -5122,7 +5734,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 64,
       "semantic_path": "tracks.CH.filter.ENV",
-      "sequence": 232,
+      "sequence": 251,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -5136,6 +5748,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Attack Time: CC78, NRPN 1:24",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         24
@@ -5144,7 +5757,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CH.amp.ATK",
-      "sequence": 233,
+      "sequence": 252,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -5158,6 +5771,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Hold Time: CC79, NRPN 1:25",
       "message_type": "CC",
       "normalized_midi_value": 4,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         25
@@ -5166,7 +5780,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 4,
       "semantic_path": "tracks.CH.amp.HLD",
-      "sequence": 234,
+      "sequence": 253,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -5180,6 +5794,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Decay Time: CC80, NRPN 1:26",
       "message_type": "CC",
       "normalized_midi_value": 20,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         26
@@ -5188,7 +5803,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 20,
       "semantic_path": "tracks.CH.amp.DEC",
-      "sequence": 235,
+      "sequence": 254,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -5202,6 +5817,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Overdrive: CC81, NRPN 1:27",
       "message_type": "CC",
       "normalized_midi_value": 8,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         27
@@ -5210,7 +5826,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 8,
       "semantic_path": "tracks.CH.amp.OVR",
-      "sequence": 236,
+      "sequence": 255,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -5224,6 +5840,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Delay Send: CC82, NRPN 1:28",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         28
@@ -5232,7 +5849,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CH.amp.DEL",
-      "sequence": 237,
+      "sequence": 256,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -5246,6 +5863,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Reverb Send: CC83, NRPN 1:29",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         29
@@ -5254,7 +5872,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CH.amp.REV",
-      "sequence": 238,
+      "sequence": 257,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -5268,6 +5886,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Pan: CC10, NRPN 1:30",
       "message_type": "CC",
       "normalized_midi_value": 58,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         30
@@ -5276,7 +5895,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 58,
       "semantic_path": "tracks.CH.amp.PAN",
-      "sequence": 239,
+      "sequence": 258,
       "status": "ready",
       "track": "CH",
       "user_channel": null
@@ -5290,6 +5909,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31",
       "message_type": "CC",
       "normalized_midi_value": 84,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         31
@@ -5298,9 +5918,49 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 84,
       "semantic_path": "tracks.CH.amp.VOL",
-      "sequence": 240,
+      "sequence": 259,
       "status": "ready",
       "track": "CH",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "explicit RUSH01 manual-setup policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "per-track sound naming has no verified MIDI mapping",
+      "requested_value": "R01 OPEN",
+      "semantic_path": "tracks.OH.sound_name",
+      "sequence": 260,
+      "status": "manual_setup_required",
+      "track": "OH",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "RUSH01 semantic metadata policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "design_role is descriptive metadata and does not request transmission",
+      "requested_value": "Short open-hat punctuation rather than a wash.",
+      "semantic_path": "tracks.OH.design_role",
+      "sequence": 261,
+      "status": "preserve_reference",
+      "track": "OH",
       "user_channel": null
     },
     {
@@ -5312,6 +5972,7 @@
       "mapping_evidence": "repository Rytm machine catalog: OH Classic=CC15 value 10; manual-backed Track Machine Type mapping",
       "message_type": "CC",
       "normalized_midi_value": 10,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         103
@@ -5320,7 +5981,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": "OH Classic",
       "semantic_path": "tracks.OH.machine",
-      "sequence": 241,
+      "sequence": 262,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5334,6 +5995,7 @@
       "mapping_evidence": "manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100",
       "message_type": "CC",
       "normalized_midi_value": 76,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         100
@@ -5342,7 +6004,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 76,
       "semantic_path": "track_levels.OH",
-      "sequence": 242,
+      "sequence": 263,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5356,6 +6018,7 @@
       "mapping_evidence": "manual-backed Analog Rytm oh_classic/Level: CC16, NRPN 1:0",
       "message_type": "CC",
       "normalized_midi_value": 84,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         0
@@ -5364,7 +6027,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 84,
       "semantic_path": "tracks.OH.synth.Level",
-      "sequence": 243,
+      "sequence": 264,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5378,6 +6041,7 @@
       "mapping_evidence": "manual-backed Analog Rytm oh_classic/Tune: CC17, NRPN 1:1",
       "message_type": "CC",
       "normalized_midi_value": 69,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         1
@@ -5386,7 +6050,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 69,
       "semantic_path": "tracks.OH.synth.Tune",
-      "sequence": 244,
+      "sequence": 265,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5400,6 +6064,7 @@
       "mapping_evidence": "manual-backed Analog Rytm oh_classic/Decay: CC18, NRPN 1:2",
       "message_type": "CC",
       "normalized_midi_value": 34,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         2
@@ -5408,7 +6073,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 34,
       "semantic_path": "tracks.OH.synth.Decay",
-      "sequence": 245,
+      "sequence": 266,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5422,6 +6087,7 @@
       "mapping_evidence": "manual-backed Analog Rytm oh_classic/Color: CC19, NRPN 1:3",
       "message_type": "CC",
       "normalized_midi_value": 80,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         3
@@ -5430,7 +6096,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 80,
       "semantic_path": "tracks.OH.synth.Color",
-      "sequence": 246,
+      "sequence": 267,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5444,6 +6110,7 @@
       "mapping_evidence": "manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         15
@@ -5452,7 +6119,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.OH.sample.level",
-      "sequence": 247,
+      "sequence": 268,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5466,6 +6133,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Attack Time: CC70, NRPN 1:16",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         16
@@ -5474,7 +6142,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.OH.filter.ATK",
-      "sequence": 248,
+      "sequence": 269,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5488,6 +6156,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Decay Time: CC71, NRPN 1:17",
       "message_type": "CC",
       "normalized_midi_value": 6,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         17
@@ -5496,7 +6165,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 6,
       "semantic_path": "tracks.OH.filter.DEC",
-      "sequence": 249,
+      "sequence": 270,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5510,6 +6179,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Sustain Level: CC72, NRPN 1:18",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         18
@@ -5518,7 +6188,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.OH.filter.SUS",
-      "sequence": 250,
+      "sequence": 271,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5532,6 +6202,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Release Time: CC73, NRPN 1:19",
       "message_type": "CC",
       "normalized_midi_value": 4,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         19
@@ -5540,7 +6211,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 4,
       "semantic_path": "tracks.OH.filter.REL",
-      "sequence": 251,
+      "sequence": 272,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5554,6 +6225,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Frequency: CC74, NRPN 1:20",
       "message_type": "CC",
       "normalized_midi_value": 60,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         20
@@ -5562,7 +6234,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 60,
       "semantic_path": "tracks.OH.filter.FRQ",
-      "sequence": 252,
+      "sequence": 273,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5576,6 +6248,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Resonance: CC75, NRPN 1:21",
       "message_type": "CC",
       "normalized_midi_value": 4,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         21
@@ -5584,7 +6257,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 4,
       "semantic_path": "tracks.OH.filter.RES",
-      "sequence": 253,
+      "sequence": 274,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5598,6 +6271,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Mode: CC76, NRPN 1:22",
       "message_type": "CC",
       "normalized_midi_value": 4,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         22
@@ -5609,7 +6283,7 @@
         "name": "HP2"
       },
       "semantic_path": "tracks.OH.filter.TYPE",
-      "sequence": 254,
+      "sequence": 275,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5623,6 +6297,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Env Depth: CC77, NRPN 1:23",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         23
@@ -5631,7 +6306,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 64,
       "semantic_path": "tracks.OH.filter.ENV",
-      "sequence": 255,
+      "sequence": 276,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5645,6 +6320,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Attack Time: CC78, NRPN 1:24",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         24
@@ -5653,7 +6329,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.OH.amp.ATK",
-      "sequence": 256,
+      "sequence": 277,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5667,6 +6343,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Hold Time: CC79, NRPN 1:25",
       "message_type": "CC",
       "normalized_midi_value": 8,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         25
@@ -5675,7 +6352,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 8,
       "semantic_path": "tracks.OH.amp.HLD",
-      "sequence": 257,
+      "sequence": 278,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5689,6 +6366,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Decay Time: CC80, NRPN 1:26",
       "message_type": "CC",
       "normalized_midi_value": 38,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         26
@@ -5697,7 +6375,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 38,
       "semantic_path": "tracks.OH.amp.DEC",
-      "sequence": 258,
+      "sequence": 279,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5711,6 +6389,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Overdrive: CC81, NRPN 1:27",
       "message_type": "CC",
       "normalized_midi_value": 8,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         27
@@ -5719,7 +6398,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 8,
       "semantic_path": "tracks.OH.amp.OVR",
-      "sequence": 259,
+      "sequence": 280,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5733,6 +6412,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Delay Send: CC82, NRPN 1:28",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         28
@@ -5741,7 +6421,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.OH.amp.DEL",
-      "sequence": 260,
+      "sequence": 281,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5755,6 +6435,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Reverb Send: CC83, NRPN 1:29",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         29
@@ -5763,7 +6444,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.OH.amp.REV",
-      "sequence": 261,
+      "sequence": 282,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5777,6 +6458,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Pan: CC10, NRPN 1:30",
       "message_type": "CC",
       "normalized_midi_value": 72,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         30
@@ -5785,7 +6467,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 72,
       "semantic_path": "tracks.OH.amp.PAN",
-      "sequence": 262,
+      "sequence": 283,
       "status": "ready",
       "track": "OH",
       "user_channel": null
@@ -5799,6 +6481,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31",
       "message_type": "CC",
       "normalized_midi_value": 80,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         31
@@ -5807,9 +6490,49 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 80,
       "semantic_path": "tracks.OH.amp.VOL",
-      "sequence": 263,
+      "sequence": 284,
       "status": "ready",
       "track": "OH",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "explicit RUSH01 manual-setup policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "per-track sound naming has no verified MIDI mapping",
+      "requested_value": "R01 RIDE",
+      "semantic_path": "tracks.CY.sound_name",
+      "sequence": 285,
+      "status": "manual_setup_required",
+      "track": "CY",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "RUSH01 semantic metadata policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "design_role is descriptive metadata and does not request transmission",
+      "requested_value": "Controlled peak ride. The CY Ride partial mix is an experimental sound target.",
+      "semantic_path": "tracks.CY.design_role",
+      "sequence": 286,
+      "status": "preserve_reference",
+      "track": "CY",
       "user_channel": null
     },
     {
@@ -5821,6 +6544,7 @@
       "mapping_evidence": "repository Rytm machine catalog: CY Ride=CC15 value 25; manual-backed Track Machine Type mapping",
       "message_type": "CC",
       "normalized_midi_value": 25,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         103
@@ -5829,7 +6553,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": "CY Ride",
       "semantic_path": "tracks.CY.machine",
-      "sequence": 264,
+      "sequence": 287,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -5843,6 +6567,7 @@
       "mapping_evidence": "manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100",
       "message_type": "CC",
       "normalized_midi_value": 70,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         100
@@ -5851,7 +6576,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 70,
       "semantic_path": "track_levels.CY",
-      "sequence": 265,
+      "sequence": 288,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -5865,6 +6590,7 @@
       "mapping_evidence": "manual-backed Analog Rytm cy_ride/Level: CC16, NRPN 1:0",
       "message_type": "CC",
       "normalized_midi_value": 76,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         0
@@ -5873,7 +6599,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 76,
       "semantic_path": "tracks.CY.synth.Level",
-      "sequence": 266,
+      "sequence": 289,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -5887,6 +6613,7 @@
       "mapping_evidence": "manual-backed Analog Rytm cy_ride/Tune: CC17, NRPN 1:1",
       "message_type": "CC",
       "normalized_midi_value": 60,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         1
@@ -5895,7 +6622,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 60,
       "semantic_path": "tracks.CY.synth.Tune",
-      "sequence": 267,
+      "sequence": 290,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -5909,6 +6636,7 @@
       "mapping_evidence": "manual-backed Analog Rytm cy_ride/Tail Decay: CC18, NRPN 1:2",
       "message_type": "CC",
       "normalized_midi_value": 52,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         2
@@ -5917,7 +6645,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 52,
       "semantic_path": "tracks.CY.synth.Tail Decay",
-      "sequence": 268,
+      "sequence": 291,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -5931,6 +6659,7 @@
       "mapping_evidence": "manual-backed Analog Rytm cy_ride/Hit Decay: CC19, NRPN 1:3",
       "message_type": "CC",
       "normalized_midi_value": 22,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         3
@@ -5939,7 +6668,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 22,
       "semantic_path": "tracks.CY.synth.Hit Decay",
-      "sequence": 269,
+      "sequence": 292,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -5953,6 +6682,7 @@
       "mapping_evidence": "manual-backed Analog Rytm cy_ride/Cymbal Type: CC20, NRPN 1:4",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         4
@@ -5961,7 +6691,7 @@
       "reason": "Cymbal Type requires a typed enum with verified raw MIDI",
       "requested_value": 0,
       "semantic_path": "tracks.CY.synth.Cymbal Type",
-      "sequence": 270,
+      "sequence": 293,
       "status": "learn_required",
       "track": "CY",
       "user_channel": null
@@ -5975,6 +6705,7 @@
       "mapping_evidence": "manual-backed Analog Rytm cy_ride/Component 1: CC21, NRPN 1:5",
       "message_type": "CC",
       "normalized_midi_value": 100,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         5
@@ -5983,7 +6714,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 100,
       "semantic_path": "tracks.CY.synth.Component 1",
-      "sequence": 271,
+      "sequence": 294,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -5997,6 +6728,7 @@
       "mapping_evidence": "manual-backed Analog Rytm cy_ride/Component 2: CC22, NRPN 1:6",
       "message_type": "CC",
       "normalized_midi_value": 42,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         6
@@ -6005,7 +6737,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 42,
       "semantic_path": "tracks.CY.synth.Component 2",
-      "sequence": 272,
+      "sequence": 295,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -6019,6 +6751,7 @@
       "mapping_evidence": "manual-backed Analog Rytm cy_ride/Component 3: CC23, NRPN 1:7",
       "message_type": "CC",
       "normalized_midi_value": 18,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         7
@@ -6027,7 +6760,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 18,
       "semantic_path": "tracks.CY.synth.Component 3",
-      "sequence": 273,
+      "sequence": 296,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -6041,6 +6774,7 @@
       "mapping_evidence": "manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         15
@@ -6049,7 +6783,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CY.sample.level",
-      "sequence": 274,
+      "sequence": 297,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -6063,6 +6797,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Attack Time: CC70, NRPN 1:16",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         16
@@ -6071,7 +6806,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CY.filter.ATK",
-      "sequence": 275,
+      "sequence": 298,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -6085,6 +6820,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Decay Time: CC71, NRPN 1:17",
       "message_type": "CC",
       "normalized_midi_value": 6,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         17
@@ -6093,7 +6829,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 6,
       "semantic_path": "tracks.CY.filter.DEC",
-      "sequence": 276,
+      "sequence": 299,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -6107,6 +6843,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Sustain Level: CC72, NRPN 1:18",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         18
@@ -6115,7 +6852,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CY.filter.SUS",
-      "sequence": 277,
+      "sequence": 300,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -6129,6 +6866,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Release Time: CC73, NRPN 1:19",
       "message_type": "CC",
       "normalized_midi_value": 5,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         19
@@ -6137,7 +6875,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 5,
       "semantic_path": "tracks.CY.filter.REL",
-      "sequence": 278,
+      "sequence": 301,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -6151,6 +6889,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Frequency: CC74, NRPN 1:20",
       "message_type": "CC",
       "normalized_midi_value": 55,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         20
@@ -6159,7 +6898,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 55,
       "semantic_path": "tracks.CY.filter.FRQ",
-      "sequence": 279,
+      "sequence": 302,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -6173,6 +6912,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Resonance: CC75, NRPN 1:21",
       "message_type": "CC",
       "normalized_midi_value": 4,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         21
@@ -6181,7 +6921,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 4,
       "semantic_path": "tracks.CY.filter.RES",
-      "sequence": 280,
+      "sequence": 303,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -6195,6 +6935,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Mode: CC76, NRPN 1:22",
       "message_type": "CC",
       "normalized_midi_value": 3,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         22
@@ -6206,7 +6947,7 @@
         "name": "HP1"
       },
       "semantic_path": "tracks.CY.filter.TYPE",
-      "sequence": 281,
+      "sequence": 304,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -6220,6 +6961,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Env Depth: CC77, NRPN 1:23",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         23
@@ -6228,7 +6970,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 64,
       "semantic_path": "tracks.CY.filter.ENV",
-      "sequence": 282,
+      "sequence": 305,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -6242,6 +6984,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Attack Time: CC78, NRPN 1:24",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         24
@@ -6250,7 +6993,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CY.amp.ATK",
-      "sequence": 283,
+      "sequence": 306,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -6264,6 +7007,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Hold Time: CC79, NRPN 1:25",
       "message_type": "CC",
       "normalized_midi_value": 10,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         25
@@ -6272,7 +7016,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 10,
       "semantic_path": "tracks.CY.amp.HLD",
-      "sequence": 284,
+      "sequence": 307,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -6286,6 +7030,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Decay Time: CC80, NRPN 1:26",
       "message_type": "CC",
       "normalized_midi_value": 55,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         26
@@ -6294,7 +7039,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 55,
       "semantic_path": "tracks.CY.amp.DEC",
-      "sequence": 285,
+      "sequence": 308,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -6308,6 +7053,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Overdrive: CC81, NRPN 1:27",
       "message_type": "CC",
       "normalized_midi_value": 6,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         27
@@ -6316,7 +7062,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 6,
       "semantic_path": "tracks.CY.amp.OVR",
-      "sequence": 286,
+      "sequence": 309,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -6330,6 +7076,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Delay Send: CC82, NRPN 1:28",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         28
@@ -6338,7 +7085,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CY.amp.DEL",
-      "sequence": 287,
+      "sequence": 310,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -6352,6 +7099,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Reverb Send: CC83, NRPN 1:29",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         29
@@ -6360,7 +7108,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CY.amp.REV",
-      "sequence": 288,
+      "sequence": 311,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -6374,6 +7122,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Pan: CC10, NRPN 1:30",
       "message_type": "CC",
       "normalized_midi_value": 69,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         30
@@ -6382,7 +7131,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 69,
       "semantic_path": "tracks.CY.amp.PAN",
-      "sequence": 289,
+      "sequence": 312,
       "status": "ready",
       "track": "CY",
       "user_channel": null
@@ -6396,6 +7145,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31",
       "message_type": "CC",
       "normalized_midi_value": 74,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         31
@@ -6404,9 +7154,49 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 74,
       "semantic_path": "tracks.CY.amp.VOL",
-      "sequence": 290,
+      "sequence": 313,
       "status": "ready",
       "track": "CY",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "explicit RUSH01 manual-setup policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "per-track sound naming has no verified MIDI mapping",
+      "requested_value": "R01 METAL",
+      "semantic_path": "tracks.CB.sound_name",
+      "sequence": 314,
+      "status": "manual_setup_required",
+      "track": "CB",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "rytm",
+      "mapping_evidence": "RUSH01 semantic metadata policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "design_role is descriptive metadata and does not request transmission",
+      "requested_value": "Sparse industrial metallic accent.",
+      "semantic_path": "tracks.CB.design_role",
+      "sequence": 315,
+      "status": "preserve_reference",
+      "track": "CB",
       "user_channel": null
     },
     {
@@ -6418,6 +7208,7 @@
       "mapping_evidence": "repository Rytm machine catalog: CB Metallic=CC15 value 20; manual-backed Track Machine Type mapping",
       "message_type": "CC",
       "normalized_midi_value": 20,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         103
@@ -6426,7 +7217,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": "CB Metallic",
       "semantic_path": "tracks.CB.machine",
-      "sequence": 291,
+      "sequence": 316,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6440,6 +7231,7 @@
       "mapping_evidence": "manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100",
       "message_type": "CC",
       "normalized_midi_value": 76,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         100
@@ -6448,7 +7240,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 76,
       "semantic_path": "track_levels.CB",
-      "sequence": 292,
+      "sequence": 317,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6462,6 +7254,7 @@
       "mapping_evidence": "manual-backed Analog Rytm cb_metallic/Level: CC16, NRPN 1:0",
       "message_type": "CC",
       "normalized_midi_value": 84,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         0
@@ -6470,7 +7263,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 84,
       "semantic_path": "tracks.CB.synth.Level",
-      "sequence": 293,
+      "sequence": 318,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6484,6 +7277,7 @@
       "mapping_evidence": "manual-backed Analog Rytm cb_metallic/Tune: CC17, NRPN 1:1",
       "message_type": "CC",
       "normalized_midi_value": 50,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         1
@@ -6492,7 +7286,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 50,
       "semantic_path": "tracks.CB.synth.Tune",
-      "sequence": 294,
+      "sequence": 319,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6506,6 +7300,7 @@
       "mapping_evidence": "manual-backed Analog Rytm cb_metallic/Decay Time: CC18, NRPN 1:2",
       "message_type": "CC",
       "normalized_midi_value": 26,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         2
@@ -6514,7 +7309,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 26,
       "semantic_path": "tracks.CB.synth.Decay Time",
-      "sequence": 295,
+      "sequence": 320,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6528,6 +7323,7 @@
       "mapping_evidence": "manual-backed Analog Rytm cb_metallic/Detune: CC19, NRPN 1:3",
       "message_type": "CC",
       "normalized_midi_value": 81,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         3
@@ -6536,7 +7332,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 81,
       "semantic_path": "tracks.CB.synth.Detune",
-      "sequence": 296,
+      "sequence": 321,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6550,6 +7346,7 @@
       "mapping_evidence": "manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         15
@@ -6558,7 +7355,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CB.sample.level",
-      "sequence": 297,
+      "sequence": 322,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6572,6 +7369,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Attack Time: CC70, NRPN 1:16",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         16
@@ -6580,7 +7378,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CB.filter.ATK",
-      "sequence": 298,
+      "sequence": 323,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6594,6 +7392,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Decay Time: CC71, NRPN 1:17",
       "message_type": "CC",
       "normalized_midi_value": 14,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         17
@@ -6602,7 +7401,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 14,
       "semantic_path": "tracks.CB.filter.DEC",
-      "sequence": 299,
+      "sequence": 324,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6616,6 +7415,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Sustain Level: CC72, NRPN 1:18",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         18
@@ -6624,7 +7424,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CB.filter.SUS",
-      "sequence": 300,
+      "sequence": 325,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6638,6 +7438,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Release Time: CC73, NRPN 1:19",
       "message_type": "CC",
       "normalized_midi_value": 5,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         19
@@ -6646,7 +7447,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 5,
       "semantic_path": "tracks.CB.filter.REL",
-      "sequence": 301,
+      "sequence": 326,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6660,6 +7461,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Frequency: CC74, NRPN 1:20",
       "message_type": "CC",
       "normalized_midi_value": 72,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         20
@@ -6668,7 +7470,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 72,
       "semantic_path": "tracks.CB.filter.FRQ",
-      "sequence": 302,
+      "sequence": 327,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6682,6 +7484,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Resonance: CC75, NRPN 1:21",
       "message_type": "CC",
       "normalized_midi_value": 36,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         21
@@ -6690,7 +7493,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 36,
       "semantic_path": "tracks.CB.filter.RES",
-      "sequence": 303,
+      "sequence": 328,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6704,6 +7507,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Mode: CC76, NRPN 1:22",
       "message_type": "CC",
       "normalized_midi_value": 2,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         22
@@ -6715,7 +7519,7 @@
         "name": "Bandpass"
       },
       "semantic_path": "tracks.CB.filter.TYPE",
-      "sequence": 304,
+      "sequence": 329,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6729,6 +7533,7 @@
       "mapping_evidence": "manual-backed Analog Rytm FILTER/Filter Env Depth: CC77, NRPN 1:23",
       "message_type": "CC",
       "normalized_midi_value": 78,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         23
@@ -6737,7 +7542,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 78,
       "semantic_path": "tracks.CB.filter.ENV",
-      "sequence": 305,
+      "sequence": 330,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6751,6 +7556,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Attack Time: CC78, NRPN 1:24",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         24
@@ -6759,7 +7565,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CB.amp.ATK",
-      "sequence": 306,
+      "sequence": 331,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6773,6 +7579,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Hold Time: CC79, NRPN 1:25",
       "message_type": "CC",
       "normalized_midi_value": 6,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         25
@@ -6781,7 +7588,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 6,
       "semantic_path": "tracks.CB.amp.HLD",
-      "sequence": 307,
+      "sequence": 332,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6795,6 +7602,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Decay Time: CC80, NRPN 1:26",
       "message_type": "CC",
       "normalized_midi_value": 28,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         26
@@ -6803,7 +7611,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 28,
       "semantic_path": "tracks.CB.amp.DEC",
-      "sequence": 308,
+      "sequence": 333,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6817,6 +7625,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Overdrive: CC81, NRPN 1:27",
       "message_type": "CC",
       "normalized_midi_value": 22,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         27
@@ -6825,7 +7634,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 22,
       "semantic_path": "tracks.CB.amp.OVR",
-      "sequence": 309,
+      "sequence": 334,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6839,6 +7648,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Delay Send: CC82, NRPN 1:28",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         28
@@ -6847,7 +7657,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CB.amp.DEL",
-      "sequence": 310,
+      "sequence": 335,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6861,6 +7671,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Reverb Send: CC83, NRPN 1:29",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         29
@@ -6869,7 +7680,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.CB.amp.REV",
-      "sequence": 311,
+      "sequence": 336,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6883,6 +7694,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Pan: CC10, NRPN 1:30",
       "message_type": "CC",
       "normalized_midi_value": 76,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         30
@@ -6891,7 +7703,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 76,
       "semantic_path": "tracks.CB.amp.PAN",
-      "sequence": 312,
+      "sequence": 337,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6905,6 +7717,7 @@
       "mapping_evidence": "manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31",
       "message_type": "CC",
       "normalized_midi_value": 80,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         31
@@ -6913,7 +7726,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 80,
       "semantic_path": "tracks.CB.amp.VOL",
-      "sequence": 313,
+      "sequence": 338,
       "status": "ready",
       "track": "CB",
       "user_channel": null
@@ -6927,9 +7740,21 @@
   ],
   "manual_setup_checklist": [
     "build_policy.kit_name",
+    "tracks.BD.sound_name",
+    "tracks.SD.sound_name",
+    "tracks.RS.sound_name",
+    "tracks.CP.sound_name",
+    "tracks.BT.sound_name",
+    "tracks.LT.sound_name",
     "tracks.LT.machine",
+    "tracks.MT.sound_name",
     "tracks.MT.machine",
-    "tracks.HT.machine"
+    "tracks.HT.sound_name",
+    "tracks.HT.machine",
+    "tracks.CH.sound_name",
+    "tracks.OH.sound_name",
+    "tracks.CY.sound_name",
+    "tracks.CB.sound_name"
   ],
   "midi_sent": false,
   "output_port": null,
@@ -6950,10 +7775,10 @@
     "configured_ready_fields": 0,
     "invalid_spec_fields": 0,
     "learn_required_fields": 3,
-    "manual_setup_fields": 4,
-    "preserve_reference_fields": 1,
+    "manual_setup_fields": 16,
+    "preserve_reference_fields": 14,
     "ready_fields": 305,
-    "total_fields": 313,
+    "total_fields": 338,
     "transport_message_count": 0
   },
   "track_filter": null,

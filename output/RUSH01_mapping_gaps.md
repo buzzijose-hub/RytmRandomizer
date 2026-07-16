@@ -1,5 +1,12 @@
 # RUSH01 Mapping Gaps
 
+> **Historical pre-correction evidence.** This report records the original
+> reference-anchored offline KIT audit. It is not the current device-assisted
+> MIDI plan status and must not be used to infer live-MIDI readiness. The
+> current compiler evidence is `RUSH01_midi_build_report.md` plus the two
+> `RUSH01_*_midi_plan.json` files. Its core conclusion still holds: direct
+> offline KIT SysEx generation is blocked.
+
 Generated from the approved local references and semantic specifications on
 2026-07-15. Firmware is intentionally recorded as
 `UNVERIFIED_FROM_DEVICE`; no firmware version was inferred.

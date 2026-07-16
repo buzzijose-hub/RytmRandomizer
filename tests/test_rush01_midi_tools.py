@@ -1,4 +1,4 @@
-"""Port-free safety tests for the RUSH01 apply boundary and CLI."""
+"""Port-free safety tests for passive RUSH01 tools and app-owned output."""
 
 from __future__ import annotations
 
@@ -9,13 +9,14 @@ from pathlib import Path
 import pytest
 import yaml
 
+from rytm_randomizer import app, mido_provider
 from rytm_randomizer.mock_midi import MockMidiSender
 from rytm_randomizer.senders import rush01_midi_transport
 from rytm_randomizer.senders.rush01_midi_transport import (
-    Rush01ApplyResult,
     apply_rush01_plan,
     open_exact_output,
     send_rush01_plan,
+    validate_rush01_plan_for_apply,
 )
 from rytm_randomizer.style_analysis.rush01_midi_compiler import (
     compile_rush01_midi_plan,
@@ -33,7 +34,7 @@ class _FakeOutput:
         self.closed = False
 
     def send(self, _message: object) -> None:
-        raise AssertionError("test output must never send")
+        raise AssertionError("send_cc is replaced with an inert recorder in active tests")
 
     def close(self) -> None:
         self.closed = True
@@ -42,7 +43,6 @@ class _FakeOutput:
 @dataclass
 class _FakeProvider:
     output_names: tuple[str, ...] = ("Exact Device Port",)
-    input_names: tuple[str, ...] = ("Exact Device Input",)
 
     def __post_init__(self) -> None:
         self.opened_outputs: list[str] = []
@@ -51,12 +51,15 @@ class _FakeProvider:
     def list_output_names(self) -> tuple[str, ...]:
         return self.output_names
 
-    def list_input_names(self) -> tuple[str, ...]:
-        return self.input_names
-
     def open_output(self, port_name: str) -> _FakeOutput:
         self.opened_outputs.append(port_name)
         return self.port
+
+    def list_input_names(self) -> tuple[str, ...]:
+        raise AssertionError("RUSH01 output must not inspect input ports")
+
+    def open_input(self, _port_name: str) -> object:
+        raise AssertionError("RUSH01 output must not open input ports")
 
 
 def _config_payload() -> dict[str, object]:
@@ -78,8 +81,10 @@ def _config_payload() -> dict[str, object]:
     }
 
 
-def _write_config(path: Path) -> None:
-    path.write_text(yaml.safe_dump(_config_payload(), sort_keys=False), encoding="utf-8")
+def _write_config(path: Path, *, output_port: str = "Exact Device Port") -> None:
+    payload = _config_payload()
+    payload["rytm"]["output_port"] = output_port  # type: ignore[index]
+    path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
 
 
 def _load_spec(device: str) -> object:
@@ -87,426 +92,80 @@ def _load_spec(device: str) -> object:
     return yaml.safe_load((PROJECT_ROOT / "specs" / filename).read_text(encoding="utf-8"))
 
 
-def test_exact_output_port_name_is_required() -> None:
+def _app_apply_args(config_path: Path, *extra: str) -> list[str]:
+    return [
+        "--arm",
+        "--rush01-apply-plan",
+        "--rush01-device",
+        "rytm",
+        "--rush01-config",
+        str(config_path),
+        "--confirm-rush01-midi-send",
+        "--rush01-parameter",
+        "track_levels.BD",
+        *extra,
+    ]
+
+
+def test_exact_output_port_name_is_required_and_duplicates_fail_closed() -> None:
     provider = _FakeProvider(output_names=("Elektron Port 1", "Elektron Port 2"))
 
     with pytest.raises(RuntimeError, match="unknown_midi_output_port"):
         open_exact_output(provider, "Elektron")
-    assert provider.opened_outputs == []
-
-    port = open_exact_output(provider, "Elektron Port 2")
-    assert port is provider.port
-    assert provider.opened_outputs == ["Elektron Port 2"]
-
     with pytest.raises(RuntimeError, match="midi_output_port_required"):
         open_exact_output(provider, "")
+    assert provider.opened_outputs == []
+    assert open_exact_output(provider, "Elektron Port 2") is provider.port
 
-
-def test_duplicate_exact_output_names_are_rejected() -> None:
-    provider = _FakeProvider(output_names=("Duplicate", "Duplicate"))
-
+    duplicate = _FakeProvider(output_names=("Duplicate", "Duplicate"))
     with pytest.raises(RuntimeError, match="ambiguous_midi_output_port_name"):
-        open_exact_output(provider, "Duplicate")
-    assert provider.opened_outputs == []
+        open_exact_output(duplicate, "Duplicate")
+    assert duplicate.opened_outputs == []
 
 
-def test_dry_run_does_not_construct_a_provider_or_open_a_port(tmp_path: Path) -> None:
-    config_path = tmp_path / "channels.yaml"
+def test_standalone_apply_tool_is_compile_only_and_defaults_local(tmp_path: Path) -> None:
     output_path = tmp_path / "plan.json"
-    _write_config(config_path)
-    provider_calls = 0
-
-    def forbidden_provider() -> _FakeProvider:
-        nonlocal provider_calls
-        provider_calls += 1
-        raise AssertionError("dry-run must not construct a MIDI provider")
-
     stdout = StringIO()
-    stderr = StringIO()
     result = rush01_midi_apply.run(
-        (
-            "--device",
-            "rytm",
-            "--config",
-            str(config_path),
-            "--dry-run",
-            "--track",
-            "BD",
-            "--output",
-            str(output_path),
-        ),
+        ("--device", "rytm", "--parameter", "track_levels.BD", "--output", str(output_path)),
         stdout=stdout,
-        stderr=stderr,
-        provider_factory=forbidden_provider,
+        stderr=StringIO(),
     )
 
     assert result == 0
-    assert provider_calls == 0
-    assert stderr.getvalue() == ""
-    assert "No MIDI port was opened. No MIDI data was sent." in stdout.getvalue()
-    assert '"midi_sent": false' in output_path.read_text(encoding="utf-8")
+    assert output_path.is_file()
+    assert "No MIDI backend was imported, no port was opened" in stdout.getvalue()
+    assert rush01_midi_apply._local_plan_path("a4").parent.name == "local"
+    help_text = rush01_midi_apply.build_parser().format_help()
+    assert "--apply" not in help_text
+    assert "--yes-really-apply" not in help_text
 
 
-def test_cli_rejects_more_than_one_device_without_touching_midi() -> None:
-    provider_calls = 0
-
-    def forbidden_provider() -> _FakeProvider:
-        nonlocal provider_calls
-        provider_calls += 1
-        raise AssertionError("invalid invocation must not construct a provider")
-
-    stderr = StringIO()
-    result = rush01_midi_apply.run(
-        ("--device", "rytm", "--device", "a4"),
-        stdout=StringIO(),
-        stderr=stderr,
-        provider_factory=forbidden_provider,
-    )
-
-    assert result == 2
-    assert provider_calls == 0
-    assert "exactly one" in stderr.getvalue()
-
-
-def test_apply_declined_at_final_confirmation_opens_no_port(tmp_path: Path) -> None:
-    config_path = tmp_path / "channels.yaml"
+def test_standalone_apply_check_and_validation_are_passive(tmp_path: Path) -> None:
     output_path = tmp_path / "plan.json"
-    _write_config(config_path)
-    provider_calls = 0
+    args = ("--device", "a4", "--output", str(output_path))
+    assert rush01_midi_apply.run(args, stdout=StringIO(), stderr=StringIO()) == 0
+    assert rush01_midi_apply.run((*args, "--check"), stdout=StringIO(), stderr=StringIO()) == 0
+    output_path.write_text("stale", encoding="utf-8")
+    assert rush01_midi_apply.run((*args, "--check"), stdout=StringIO(), stderr=StringIO()) == 1
 
-    def forbidden_provider() -> _FakeProvider:
-        nonlocal provider_calls
-        provider_calls += 1
-        raise AssertionError("declined apply must not construct a provider")
-
-    result = rush01_midi_apply.run(
-        (
-            "--device",
-            "rytm",
-            "--config",
-            str(config_path),
-            "--apply",
-            "--track",
-            "BD",
-            "--output",
-            str(output_path),
-        ),
-        stdout=StringIO(),
-        stderr=StringIO(),
-        provider_factory=forbidden_provider,
-        input_func=lambda _prompt: "no",
-    )
-
-    assert result == 1
-    assert provider_calls == 0
-
-
-def test_ready_plan_sends_only_inert_cc_messages_in_memory() -> None:
-    config = parse_rush01_device_config(_config_payload(), "rytm")
-    plan = compile_rush01_midi_plan(
-        "rytm",
-        _load_spec("rytm"),
-        config=config,
-        track="BD",
-    )
-    sender = MockMidiSender()
-    delays: list[float] = []
-
-    result = send_rush01_plan(plan, sender, delay_ms=15, sleep=delays.append)
-
-    assert result.sent_midi is True
-    assert result.message_count == len(sender.sent_messages)
-    assert result.field_count == plan.summary.ready_fields
-    assert len(delays) == result.message_count - 1
-    assert set(delays) == {0.015}
-    assert all(message.message_type == "control_change" for message in sender.sent_messages)
-
-
-def test_invalid_a4_plan_is_rejected_before_port_discovery_or_open() -> None:
-    config = parse_rush01_device_config(_config_payload(), "a4")
-    plan = compile_rush01_midi_plan("a4", _load_spec("a4"), config=config)
-    provider = _FakeProvider()
-
-    with pytest.raises(ValueError, match="invalid specification"):
-        apply_rush01_plan(plan, provider, delay_ms=15, sleep=lambda _seconds: None)
-    assert provider.opened_outputs == []
-
-
-def test_list_ports_discovers_names_without_opening_or_sending() -> None:
-    provider = _FakeProvider(
-        output_names=("Output One",),
-        input_names=("Input One",),
-    )
-    stdout = StringIO()
-
-    result = rush01_midi_apply.run(
-        ("--list-ports",),
-        stdout=stdout,
-        stderr=StringIO(),
-        provider_factory=lambda: provider,
-    )
-
-    assert result == 0
-    assert provider.opened_outputs == []
-    assert "Input One" in stdout.getvalue()
-    assert "Output One" in stdout.getvalue()
-    assert "No MIDI data was sent." in stdout.getvalue()
-
-
-@pytest.mark.parametrize(
-    "argv",
-    (
-        (),
-        ("--device", "rytm"),
-        ("--device", "rytm", "--config", "missing.yaml", "--yes-really-apply"),
-        ("--device", "rytm", "--config", "missing.yaml", "--delay-ms", "-1"),
-    ),
-)
-def test_apply_cli_rejects_incomplete_or_unsafe_arguments_without_midi(
-    argv: tuple[str, ...],
-) -> None:
-    provider_calls = 0
-
-    def forbidden_provider() -> _FakeProvider:
-        nonlocal provider_calls
-        provider_calls += 1
-        raise AssertionError("invalid invocation must not construct a provider")
-
-    result = rush01_midi_apply.run(
-        argv,
-        stdout=StringIO(),
-        stderr=StringIO(),
-        provider_factory=forbidden_provider,
-    )
-
-    assert result == 2
-    assert provider_calls == 0
-
-
-def test_apply_cli_reports_compilation_failure_without_midi(tmp_path: Path) -> None:
-    config_path = tmp_path / "channels.yaml"
-    config_path.write_text(
-        "rytm:\n  output_port: REPLACE_WITH_EXACT_PORT_NAME\n  tracks: {}\n",
-        encoding="utf-8",
-    )
-    stderr = StringIO()
-
-    result = rush01_midi_apply.run(
-        ("--device", "rytm", "--config", str(config_path)),
-        stdout=StringIO(),
-        stderr=stderr,
-        provider_factory=lambda: (_ for _ in ()).throw(AssertionError("no provider")),
-    )
-
-    assert result == 2
-    assert "compilation failed" in stderr.getvalue()
-
-
-@pytest.mark.parametrize("confirmation_error", (EOFError, KeyboardInterrupt))
-def test_apply_confirmation_error_opens_no_port(
-    tmp_path: Path,
-    confirmation_error: type[BaseException],
-) -> None:
-    config_path = tmp_path / "channels.yaml"
-    _write_config(config_path)
-    provider_calls = 0
-
-    def forbidden_provider() -> _FakeProvider:
-        nonlocal provider_calls
-        provider_calls += 1
-        raise AssertionError("cancelled apply must not construct a provider")
-
-    def interrupted_input(_prompt: str) -> str:
-        raise confirmation_error
-
-    result = rush01_midi_apply.run(
-        (
-            "--device",
-            "rytm",
-            "--config",
-            str(config_path),
-            "--apply",
-            "--track",
-            "BD",
-            "--output",
-            str(tmp_path / "plan.json"),
-        ),
-        stdout=StringIO(),
-        stderr=StringIO(),
-        provider_factory=forbidden_provider,
-        input_func=interrupted_input,
-    )
-
-    assert result == 130
-    assert provider_calls == 0
-
-
-@pytest.mark.parametrize(
-    ("outcome", "expected_result"),
-    (("success", 0), ("interrupt", 130), ("failure", 2)),
-)
-def test_apply_cli_handles_transport_outcomes_without_real_midi(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    outcome: str,
-    expected_result: int,
-) -> None:
-    config_path = tmp_path / "channels.yaml"
-    _write_config(config_path)
-    provider = _FakeProvider()
-
-    def fake_apply(*_args: object, **_kwargs: object) -> Rush01ApplyResult:
-        if outcome == "interrupt":
-            raise KeyboardInterrupt
-        if outcome == "failure":
-            raise ValueError("blocked")
-        return Rush01ApplyResult("rytm", "Exact Device Port", 1, 1, True)
-
-    monkeypatch.setattr(rush01_midi_apply, "apply_rush01_plan", fake_apply)
-    stdout = StringIO()
-    result = rush01_midi_apply.run(
-        (
-            "--device",
-            "rytm",
-            "--config",
-            str(config_path),
-            "--apply",
-            "--yes-really-apply",
-            "--track",
-            "BD",
-            "--output",
-            str(tmp_path / "plan.json"),
-        ),
-        stdout=stdout,
-        stderr=StringIO(),
-        provider_factory=lambda: provider,
-    )
-
-    assert result == expected_result
-    if outcome == "success":
-        assert "Applied 1 fields as 1 messages" in stdout.getvalue()
-
-
-def test_apply_cli_accepts_literal_yes_at_final_confirmation(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    config_path = tmp_path / "channels.yaml"
-    _write_config(config_path)
-
-    monkeypatch.setattr(
-        rush01_midi_apply,
-        "apply_rush01_plan",
-        lambda *_args, **_kwargs: Rush01ApplyResult("rytm", "Exact Device Port", 1, 1, True),
-    )
-    result = rush01_midi_apply.run(
-        (
-            "--device",
-            "rytm",
-            "--config",
-            str(config_path),
-            "--apply",
-            "--track",
-            "BD",
-            "--output",
-            str(tmp_path / "plan.json"),
-        ),
-        stdout=StringIO(),
-        stderr=StringIO(),
-        provider_factory=_FakeProvider,
-        input_func=lambda _prompt: "YES",
-    )
-
-    assert result == 0
-
-
-def test_transport_validation_and_empty_message_guard() -> None:
-    config = parse_rush01_device_config(_config_payload(), "rytm")
-    plan = compile_rush01_midi_plan("rytm", _load_spec("rytm"), config=config, track="BD")
-
-    with pytest.raises(TypeError, match="Rush01MidiPlan"):
-        send_rush01_plan(object(), MockMidiSender(), delay_ms=15, sleep=lambda _value: None)  # type: ignore[arg-type]
-    with pytest.raises(ValueError, match="delay_ms"):
-        send_rush01_plan(plan, MockMidiSender(), delay_ms=True, sleep=lambda _value: None)
-
-    unconfigured = compile_rush01_midi_plan("rytm", _load_spec("rytm"), track="BD")
-    with pytest.raises(ValueError, match="configuration"):
-        send_rush01_plan(
-            unconfigured,
-            MockMidiSender(),
-            delay_ms=15,
-            sleep=lambda _value: None,
+    for invalid in ((), ("--device", "rytm", "--device", "a4")):
+        assert rush01_midi_apply.run(invalid, stdout=StringIO(), stderr=StringIO()) == 2
+    assert (
+        rush01_midi_apply.run(
+            ("--device", "rytm", "--config", str(tmp_path / "missing.yaml")),
+            stdout=StringIO(),
+            stderr=StringIO(),
         )
-
-    no_ready = replace(
-        plan,
-        fields=tuple(field for field in plan.fields if field.status != "ready"),
+        == 2
     )
-    with pytest.raises(ValueError, match="no configured ready"):
-        send_rush01_plan(no_ready, MockMidiSender(), delay_ms=15, sleep=lambda _value: None)
-
-    with pytest.raises(TypeError, match="Rush01MidiPlan"):
-        apply_rush01_plan(  # type: ignore[arg-type]
-            object(),
-            _FakeProvider(),
-            delay_ms=15,
-            sleep=lambda _value: None,
-        )
 
 
-def test_apply_transport_closes_exact_port_on_success_and_interrupt(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    config = parse_rush01_device_config(_config_payload(), "rytm")
-    plan = compile_rush01_midi_plan(
-        "rytm",
-        _load_spec("rytm"),
-        config=config,
-        parameter="track_levels.BD",
-    )
-    sent: list[tuple[int, int, int]] = []
-
-    def record_cc(
-        _out: object,
-        controller: int,
-        value: int,
-        *,
-        channel: int,
-        sleep: object,
-    ) -> None:
-        sent.append((channel, controller, value))
-
-    monkeypatch.setattr(rush01_midi_transport, "send_cc", record_cc)
-    provider = _FakeProvider()
-    result = apply_rush01_plan(plan, provider, delay_ms=15, sleep=lambda _value: None)
-
-    assert result.sent_midi is True
-    assert sent == [(0, 95, 110)]
-    assert provider.port.closed is True
-
-    def interrupt_cc(*_args: object, **_kwargs: object) -> None:
-        raise KeyboardInterrupt
-
-    monkeypatch.setattr(rush01_midi_transport, "send_cc", interrupt_cc)
-    interrupted_provider = _FakeProvider()
-    with pytest.raises(KeyboardInterrupt):
-        apply_rush01_plan(
-            plan,
-            interrupted_provider,
-            delay_ms=15,
-            sleep=lambda _value: None,
-        )
-    assert interrupted_provider.port.closed is True
-
-
-def test_apply_cli_helpers_cover_both_devices_and_address_shapes(
+def test_standalone_apply_helpers_cover_address_shapes_and_main(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     assert rush01_midi_apply._spec_path("rytm").name == "RUSH01_RYTM.yaml"
     assert rush01_midi_apply._spec_path("a4").name == "RUSH01_A4.yaml"
-    assert rush01_midi_apply._plan_path("rytm").name == "RUSH01_RYTM_midi_plan.json"
-    assert rush01_midi_apply._plan_path("a4").name == "RUSH01_A4_midi_plan.json"
-
     rytm_plan = compile_rush01_midi_plan("rytm", _load_spec("rytm"))
     a4_plan = compile_rush01_midi_plan("a4", _load_spec("a4"))
     assert rush01_midi_apply._address_text(rytm_plan.fields[0]) == "none"
@@ -517,12 +176,205 @@ def test_apply_cli_helpers_cover_both_devices_and_address_shapes(
         next(field for field in a4_plan.fields if field.controller_lsb is not None)
     ).startswith("CC ")
     assert rush01_midi_apply._address_text(
-        next(
-            field
-            for field in a4_plan.fields
-            if field.nrpn_address is not None and field.controller is None
-        )
+        next(field for field in a4_plan.fields if field.nrpn_address and field.controller is None)
     ).startswith("NRPN ")
-
     monkeypatch.setattr("sys.argv", ["rush01_midi_apply.py"])
     assert rush01_midi_apply.main() == 2
+
+
+def test_transport_sends_only_inert_cc_messages_and_validates_inputs() -> None:
+    config = parse_rush01_device_config(_config_payload(), "rytm")
+    plan = compile_rush01_midi_plan("rytm", _load_spec("rytm"), config=config, track="BD")
+    sender = MockMidiSender()
+    delays: list[float] = []
+
+    result = send_rush01_plan(plan, sender, delay_ms=15, sleep=delays.append)
+    assert result.message_count == len(sender.sent_messages)
+    assert result.field_count == plan.summary.ready_fields
+    assert delays == [0.015] * (result.message_count - 1)
+    assert all(message.message_type == "control_change" for message in sender.sent_messages)
+
+    with pytest.raises(TypeError, match="Rush01MidiPlan"):
+        send_rush01_plan(object(), sender, delay_ms=15, sleep=lambda _value: None)  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="delay_ms"):
+        send_rush01_plan(plan, sender, delay_ms=True, sleep=lambda _value: None)
+    with pytest.raises(TypeError, match="Rush01MidiPlan"):
+        validate_rush01_plan_for_apply(object())  # type: ignore[arg-type]
+
+    unconfigured = compile_rush01_midi_plan("rytm", _load_spec("rytm"), track="BD")
+    with pytest.raises(ValueError, match="configuration"):
+        validate_rush01_plan_for_apply(unconfigured)
+    no_ready = replace(
+        plan, fields=tuple(field for field in plan.fields if field.status != "ready")
+    )
+    with pytest.raises(ValueError, match="no configured ready"):
+        send_rush01_plan(no_ready, sender, delay_ms=15, sleep=lambda _value: None)
+
+    a4_config = parse_rush01_device_config(_config_payload(), "a4")
+    invalid_a4 = compile_rush01_midi_plan("a4", _load_spec("a4"), config=a4_config)
+    with pytest.raises(ValueError, match="invalid specification"):
+        validate_rush01_plan_for_apply(invalid_a4)
+
+
+def test_transport_closes_exact_port_on_success_and_interrupt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = parse_rush01_device_config(_config_payload(), "rytm")
+    plan = compile_rush01_midi_plan(
+        "rytm", _load_spec("rytm"), config=config, parameter="track_levels.BD"
+    )
+    sent: list[tuple[int, int, int]] = []
+
+    def record_cc(
+        _out: object, controller: int, value: int, *, channel: int, sleep: object
+    ) -> None:
+        sent.append((channel, controller, value))
+
+    monkeypatch.setattr(rush01_midi_transport, "send_cc", record_cc)
+    provider = _FakeProvider()
+    assert apply_rush01_plan(plan, provider, delay_ms=15, sleep=lambda _value: None).sent_midi
+    assert sent == [(0, 95, 110)]
+    assert provider.port.closed
+
+    monkeypatch.setattr(
+        rush01_midi_transport,
+        "send_cc",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(KeyboardInterrupt),
+    )
+    interrupted = _FakeProvider()
+    with pytest.raises(KeyboardInterrupt):
+        apply_rush01_plan(plan, interrupted, delay_ms=15, sleep=lambda _value: None)
+    assert interrupted.port.closed
+
+
+@pytest.mark.parametrize(
+    "argv",
+    (
+        ("--rush01-apply-plan", "--rush01-device", "rytm"),
+        ("--arm", "--rush01-apply-plan", "--rush01-device", "rytm"),
+        (
+            "--arm",
+            "--rush01-apply-plan",
+            "--rush01-device",
+            "rytm",
+            "--rush01-device",
+            "a4",
+        ),
+        ("--arm", "--rush01-device", "rytm"),
+        ("--arm", "--rush01-apply-plan", "--rush01-device", "rytm", "--rush01-config", "x"),
+    ),
+)
+def test_app_rejects_unarmed_incomplete_or_ambiguous_apply_before_provider(
+    argv: tuple[str, ...], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        mido_provider,
+        "build_mido_midi_port_provider",
+        lambda: (_ for _ in ()).throw(AssertionError("provider constructed")),
+    )
+    assert app.main(argv) == 1
+
+
+def test_app_confirmed_apply_uses_exact_fake_output_and_only_cc(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    config_path = tmp_path / "channels.yaml"
+    _write_config(config_path)
+    provider = _FakeProvider()
+    sent: list[tuple[int, int, int]] = []
+    monkeypatch.setattr(mido_provider, "build_mido_midi_port_provider", lambda: provider)
+    monkeypatch.setattr(
+        rush01_midi_transport,
+        "send_cc",
+        lambda _out, controller, value, *, channel, sleep: sent.append(
+            (channel, controller, value)
+        ),
+    )
+
+    assert app.main(_app_apply_args(config_path)) == 0
+    assert provider.opened_outputs == ["Exact Device Port"]
+    assert provider.port.closed
+    assert sent == [(0, 95, 110)]
+    assert "1 CC messages" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    ("names", "error"),
+    (((), "unknown_midi_output_port"), (("Duplicate", "Duplicate"), "ambiguous")),
+)
+def test_app_apply_missing_or_ambiguous_exact_port_fails_closed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    names: tuple[str, ...],
+    error: str,
+) -> None:
+    port_name = "Missing" if not names else "Duplicate"
+    config_path = tmp_path / "channels.yaml"
+    _write_config(config_path, output_port=port_name)
+    provider = _FakeProvider(output_names=names)
+    monkeypatch.setattr(mido_provider, "build_mido_midi_port_provider", lambda: provider)
+
+    assert app.main(_app_apply_args(config_path)) == 1
+    assert provider.opened_outputs == []
+    assert error in capsys.readouterr().err
+
+
+def test_app_apply_validation_and_conflicts_never_construct_provider(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config_path = tmp_path / "channels.yaml"
+    _write_config(config_path)
+    monkeypatch.setattr(
+        mido_provider,
+        "build_mido_midi_port_provider",
+        lambda: (_ for _ in ()).throw(AssertionError("provider constructed")),
+    )
+    cases = (
+        [
+            "--arm",
+            "--rush01-apply-plan",
+            "--rush01-midi-learn",
+            "--rush01-device",
+            "rytm",
+        ],
+        _app_apply_args(config_path, "--rush01-input-port", "Input"),
+        _app_apply_args(config_path, "--rush01-calibration-point", "center"),
+        _app_apply_args(config_path, "--rush01-delay-ms", "10001"),
+        _app_apply_args(config_path, "--validate-one-cc"),
+    )
+    assert all(app.main(case) == 1 for case in cases)
+
+
+def test_invalid_plan_is_rejected_before_provider_construction(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config_path = tmp_path / "channels.yaml"
+    _write_config(config_path)
+    monkeypatch.setattr(
+        app,
+        "_rush01_spec_path",
+        lambda _device: PROJECT_ROOT / "specs" / "RUSH01_A4.yaml",
+    )
+    monkeypatch.setattr(
+        mido_provider,
+        "build_mido_midi_port_provider",
+        lambda: (_ for _ in ()).throw(AssertionError("provider constructed")),
+    )
+    assert app.main(_app_apply_args(config_path)) == 1
+
+
+def test_app_apply_interrupt_and_failure_close_fake_port(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config_path = tmp_path / "channels.yaml"
+    _write_config(config_path)
+    provider = _FakeProvider()
+    monkeypatch.setattr(mido_provider, "build_mido_midi_port_provider", lambda: provider)
+    monkeypatch.setattr(
+        rush01_midi_transport,
+        "send_cc",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(KeyboardInterrupt),
+    )
+    assert app.main(_app_apply_args(config_path)) == 130
+    assert provider.port.closed

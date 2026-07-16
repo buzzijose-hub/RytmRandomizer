@@ -4,18 +4,18 @@ Last updated: 2026-07-16. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
-- 2026-07-16: RUSH01 device-assisted MIDI compiler completed locally. The
-  corrected Rytm and conservative A4 semantic specs now compile into
-  deterministic, unconfigured CC/CC14/NRPN review plans; unknown ports,
-  channels, and ordered bytes remain null until explicit configuration. Exact
-  port selection, interactive apply confirmation, input-only observed-value
-  learning, typed refusal statuses, and no-sample-dependency validation are
-  covered without physical MIDI access. The preservation merge retains the
-  byte-identical reference-kit round-trip boundary without claiming complete
-  arbitrary offline KIT generation. Post-merge verification passed 193 focused
-  RUSH01 tests, 45 focused local-model tests, 678 architecture checks, all 685
-  frozen V1.34 parity items, and 6301 full-suite tests with 3 skips. Verification
-  opened no MIDI backend or physical port and sent no MIDI or SysEx.
+- 2026-07-16: RUSH01 CODEOWNER review repair completed on the PR tree. The
+  standalone apply and learn tools are passive compile/report surfaces; exact
+  input learning and confirmed CC-only output now enter exclusively through
+  `app.py --arm`. Unknown specification content fails closed, normalized MIDI
+  values carry explicit 7-bit/14-bit domains, and unverified CC14 conversion
+  remains learn-required. Fresh verification passed 147 focused RUSH01/data
+  tests, 683 architecture tests, all 685 frozen V1.34 parity items, and 6313
+  full-suite tests with 3 skips. The three focused production modules reached
+  100% statements/branches (668 statements, 290 branches), and the app repair
+  diff covered all 144 added executable statements and 22 added branch lines.
+  Verification opened no MIDI backend or physical port and sent no MIDI or
+  SysEx. Direct offline KIT generation remains blocked.
 - 2026-07-15: RUSH01 reference-anchored kit build audit completed locally.
   The shared Elektron envelope now has a tested inverse packer, u14 integrity
   helpers, and a codec that can encode only from a validated decoded reference

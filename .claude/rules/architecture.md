@@ -41,6 +41,9 @@ a side-branch off `data/` consumed by `cli.py` and the shell.
    behavior is now the JSON goldens under `tests/fixtures/v134_parity/`.
 9. No `import mido` / `from mido` at module top level anywhere in the
    package. `mido` must be lazy, inside the methods that need it.
+10. `app.py --arm` is the sole real input/output boundary. Standalone tools,
+    including RUSH01 compile and observation-report tools, must not construct
+    `MidoMidiPortProvider`, discover or open ports, or transmit MIDI.
 
 ## House style (mechanically enforced)
 
@@ -70,6 +73,8 @@ a side-branch off `data/` consumed by `cli.py` and the shell.
 
 * Do not put `import mido` at the top of any package file.
 * Do not give `cli.py` runtime behavior (no engines, no sends, no `--arm`).
+* Do not create an independently armed top-level tool; route active input or
+  output through a guarded `app.py --arm` operation.
 * Do not redefine a name that already exists in `data/`.
 * Do not introduce a mutable module-level dict / list / set in the package.
 * Do not let a lower-layer module import from a higher layer.

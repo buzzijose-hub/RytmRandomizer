@@ -73,7 +73,7 @@ def send_rush01_plan(
         raise TypeError("plan must be a Rush01MidiPlan")
     if isinstance(delay_ms, bool) or not isinstance(delay_ms, int) or not 0 <= delay_ms <= 10_000:
         raise ValueError("delay_ms must be an integer in 0..10000")
-    _validate_applicable_plan(plan)
+    validate_rush01_plan_for_apply(plan)
 
     ready_fields = tuple(field for field in plan.fields if field.status == STATUS_READY)
     messages = tuple(
@@ -111,7 +111,7 @@ def apply_rush01_plan(
 ) -> Rush01ApplyResult:
     """Open the exact configured port, send, and always close it."""
 
-    _validate_applicable_plan(plan)
+    validate_rush01_plan_for_apply(plan)
     port = open_exact_output(provider, cast(str, plan.output_port))
     try:
         return send_rush01_plan(plan, port, delay_ms=delay_ms, sleep=sleep)
@@ -123,7 +123,9 @@ def _no_sleep(_seconds: float) -> None:
     return None
 
 
-def _validate_applicable_plan(plan: Rush01MidiPlan) -> None:
+def validate_rush01_plan_for_apply(plan: Rush01MidiPlan) -> None:
+    """Fail closed before a real provider is constructed or queried."""
+
     if not isinstance(plan, Rush01MidiPlan):
         raise TypeError("plan must be a Rush01MidiPlan")
     if not plan.configuration_ready or plan.output_port is None:
@@ -140,4 +142,5 @@ __all__ = [
     "apply_rush01_plan",
     "open_exact_output",
     "send_rush01_plan",
+    "validate_rush01_plan_for_apply",
 ]

@@ -775,11 +775,14 @@ flowchart LR
         R01Gaps["mapping-gaps report<br/>unknowns stay explicit"]
     end
 
-    subgraph R01Active["Explicit device-assisted MIDI apply"]
-        R01Confirm["exact configured port<br/>+ explicit apply confirmation"]
+    subgraph R01Active["Reachable only through app.py --arm"]
+        R01App["app.py --arm<br/>one selected device"]
+        R01Confirm["exact configured output<br/>+ --confirm-rush01-midi-send"]
         R01Transport["rush01_midi_transport.py"]
         R01MidiBoundary["midi_io.send_cc<br/>lazy backend + metrics"]
         R01Hardware["configured Elektron hardware"]
+        R01Learn["--rush01-midi-learn<br/>exact input only"]
+        R01Observed["observed-only YAML<br/>no promotion / no send"]
     end
 
     subgraph R01Reference["Reference-bound SysEx only"]
@@ -793,10 +796,13 @@ flowchart LR
     R01Specs --> R01Compiler
     R01Compiler --> R01DryRun
     R01Compiler --> R01Gaps
-    R01DryRun -.->|"only after exact-port configuration<br/>and explicit operator confirmation"| R01Confirm
+    R01DryRun -.->|"validated plan"| R01App
+    R01App --> R01Confirm
     R01Confirm --> R01Transport
     R01Transport --> R01MidiBoundary
     R01MidiBoundary --> R01Hardware
+    R01App --> R01Learn
+    R01Learn --> R01Observed
 
     R01ReferenceDump --> R01Codec
     R01Codec --> R01RoundTrip
@@ -804,15 +810,20 @@ flowchart LR
     R01SemanticGate -->|"current state: unverified"| R01Blocked
 ```
 
-The passive local-model copilot flow has no edge to `R01Confirm`,
-`R01Transport`, or `R01Hardware`. AI output remains staged review material and
-cannot promote mappings, open a port, or send MIDI/SysEx.
+The standalone RUSH01 tools and passive local-model copilot have no edge to
+`R01App`, `R01Confirm`, `R01Learn`, `R01Transport`, or `R01Hardware`. They
+cannot promote mappings, construct the provider, open a port, or send
+MIDI/SysEx.
 
 ---
 
 ## 10. Architecture Test Enforcement Graph
 
-The 16 architecture-test files (234 individual test items) under `tests/architecture/` mechanically enforce the rules in `docs/PLAN_REQUIREMENTS.md` + `CONTRIBUTING.md`. Each one uses the **drained-allowlist** pattern: violations today are explicit `frozenset` entries that PR-review must approve; the long-term state is empty allowlists.
+The 55 architecture-test files (683 individual test items) under
+`tests/architecture/` mechanically enforce the rules in
+`docs/PLAN_REQUIREMENTS.md` + `CONTRIBUTING.md`. Each uses the
+**drained-allowlist** pattern: current violations are explicit `frozenset`
+entries that PR review must approve; the long-term state is empty allowlists.
 
 ```mermaid
 flowchart TB
@@ -1751,7 +1762,7 @@ flowchart TB
     subgraph PytestLayers["What pytest runs"]
         PassiveTests["Layer 2 unit / behavior tests<br/>(~1500 tests)"]
         ParityTests["Layer 1 V1.34 parity tests<br/>(685 items from 505 goldens)"]
-        ArchTests["Layer 3 architecture tests<br/>(647 tests across 55 files)"]
+        ArchTests["Layer 3 architecture tests<br/>(683 tests across 55 files)"]
         E2ETests["Layer 4 e2e tests<br/>(43 tests)"]
         CovStep["Layer 5 coverage ratchet<br/>(scripts/coverage_ratchet.py)<br/>floor: ≥95% pure-branch"]
     end

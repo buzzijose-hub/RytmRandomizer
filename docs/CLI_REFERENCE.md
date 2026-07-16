@@ -6,6 +6,36 @@ For the headline commands (cockpit, wizard, export, live-set planning) see the [
 
 For the armed runtime (the V1.34 four-pad interactive shell), launch `rytm-randomizer --arm` and follow the in-shell menu. The armed runtime is the original V1.34 behaviour; its byte-frozen reference output lives in [`tests/fixtures/v134_parity/`](../tests/fixtures/v134_parity/).
 
+## RUSH01 compile, learn, and apply
+
+The standalone tools are passive. Compilation defaults to an ignored local
+destination under `output/local/`; an explicit `--output` is used only when
+maintaining frozen deterministic evidence. Observation inspection reads an
+existing observed-only YAML file.
+
+```bash
+python -m tools.rush01_midi_apply --device rytm
+python -m tools.rush01_midi_apply --device a4
+python -m tools.rush01_midi_learn --report output/local/rush01_rytm_midi_observations.yaml
+```
+
+Real input or output is available only from the canonical app boundary:
+
+```bash
+python -m rytm_randomizer.app --arm --rush01-midi-learn --rush01-device rytm \
+  --rush01-input-port "EXACT INPUT NAME" --rush01-parameter track_levels.BD
+
+python -m rytm_randomizer.app --arm --rush01-apply-plan --rush01-device rytm \
+  --rush01-config config/rush01_midi_channels.yaml --confirm-rush01-midi-send \
+  --rush01-track BD --rush01-parameter track_levels.BD
+```
+
+Learning is exact-name input-only and sends nothing. Application requires one
+device, exact configured output, `--arm`, and the feature-specific confirmation
+flag. It emits only approved CC messages: no Program Change, transport, SysEx,
+pattern, project, kit-write, or save messages. Offline KIT SysEx generation
+remains blocked until saved-kit semantic mappings are verified.
+
 > **Adding a new passive command:** register through `rytm_randomizer.cli_registry.CliCommand.register(...)`. Inline `if args == ["my-cmd"]` arms in `cli.py:main()` are forbidden — the architecture test `tests/architecture/test_cli_no_inline_arms.py` enforces a grandfathered-ratchet floor on the existing inline arms (PR 8, H7+IH4+IH5) and refuses any new ones. See [`CONTRIBUTING.md` § Patterns introduced by the CODE_REVIEW.md sweep](../CONTRIBUTING.md#patterns-introduced-by-the-code_reviewmd-sweep-2026-05-25).
 
 ---

@@ -46,6 +46,7 @@ Rush01FieldStatus: TypeAlias = Literal[
     "invalid_spec_field",
 ]
 Rush01MessageType: TypeAlias = Literal["CC", "CC14", "NRPN"]
+Rush01ValueDomain: TypeAlias = Literal["7bit", "14bit"]
 MidiByteMessage: TypeAlias = tuple[int, int, int]
 
 RUSH01_PLAN_VERSION: Final[str] = "rush01-device-assisted-midi-plan-v1"
@@ -61,6 +62,8 @@ STATUS_INVALID_SPEC_FIELD: Final[Rush01FieldStatus] = "invalid_spec_field"
 MESSAGE_CC: Final[Rush01MessageType] = "CC"
 MESSAGE_CC14: Final[Rush01MessageType] = "CC14"
 MESSAGE_NRPN: Final[Rush01MessageType] = "NRPN"
+VALUE_DOMAIN_7BIT: Final[Rush01ValueDomain] = "7bit"
+VALUE_DOMAIN_14BIT: Final[Rush01ValueDomain] = "14bit"
 
 _STATUS_ORDER: Final[tuple[Rush01FieldStatus, ...]] = (
     STATUS_READY,
@@ -104,6 +107,27 @@ class Rush01DeviceConfig:
 
 
 @dataclass(frozen=True)
+class Rush01NormalizedValue:
+    """A verified normalized MIDI value with an explicit bit-width domain."""
+
+    value: int
+    domain: Rush01ValueDomain
+
+    def __post_init__(self) -> None:
+        if self.domain not in {VALUE_DOMAIN_7BIT, VALUE_DOMAIN_14BIT}:
+            raise ValueError("normalized MIDI value domain must be 7bit or 14bit")
+        maximum = _MIDI_DATA_MAX if self.domain == VALUE_DOMAIN_7BIT else _MIDI_14BIT_MAX
+        if isinstance(self.value, bool) or not isinstance(self.value, int):
+            raise ValueError(
+                f"normalized {self.domain} MIDI value must be an integer in 0..{maximum}"
+            )
+        if not 0 <= self.value <= maximum:
+            raise ValueError(
+                f"normalized {self.domain} MIDI value must be an integer in 0..{maximum}"
+            )
+
+
+@dataclass(frozen=True)
 class Rush01MidiField:
     """One semantic field and its compiled or deliberately refused MIDI action."""
 
@@ -124,6 +148,7 @@ class Rush01MidiField:
     status: Rush01FieldStatus
     reason: str
     configuration_issue: str | None = None
+    normalized_value_domain: Rush01ValueDomain | None = None
 
 
 @dataclass(frozen=True)
@@ -376,6 +401,19 @@ def validate_rush01_plan_safety(plan: Rush01MidiPlan) -> None:
     for field in plan.fields:
         if field.message_type not in (None, MESSAGE_CC, MESSAGE_CC14, MESSAGE_NRPN):
             raise ValueError(f"unsupported MIDI message type: {field.message_type}")
+        if field.status == STATUS_READY:
+            if field.normalized_midi_value is None or field.normalized_value_domain is None:
+                raise ValueError("ready MIDI fields require an explicit normalized value domain")
+            if (
+                field.message_type == MESSAGE_CC14
+                and field.normalized_value_domain != VALUE_DOMAIN_14BIT
+            ):
+                raise ValueError("CC14 fields require an explicitly verified 14-bit value")
+            if (
+                field.message_type in {MESSAGE_CC, MESSAGE_NRPN}
+                and field.normalized_value_domain != VALUE_DOMAIN_7BIT
+            ):
+                raise ValueError("CC and NRPN fields require an explicitly verified 7-bit value")
         if field.ordered_midi_bytes is None:
             continue
         for message in field.ordered_midi_bytes:
@@ -407,9 +445,69 @@ def _compile_rytm_fields(
             reason="kit naming remains a front-panel step; the compiler never saves a kit",
         )
     ]
+    expected_tracks = set(RUSH01_RYTM_TRACK_ORDER)
+    for unknown_track in sorted(set(tracks) - expected_tracks):
+        fields.append(
+            _invalid_unknown_field(
+                device=RUSH01_DEVICE_RYTM,
+                track=None,
+                path=f"tracks.{unknown_track}",
+                requested=tracks[unknown_track],
+                reason="unknown Analog Rytm track in RUSH01 specification",
+            )
+        )
+    for auxiliary_track in ("FX",):
+        if auxiliary_track in track_levels:
+            fields.append(
+                _status_field(
+                    device=RUSH01_DEVICE_RYTM,
+                    track=None,
+                    path=f"track_levels.{auxiliary_track}",
+                    requested=track_levels[auxiliary_track],
+                    status=STATUS_PRESERVE_REFERENCE,
+                    reason="auxiliary track level explicitly preserves the active-kit value",
+                    channel=None,
+                    user_channel=None,
+                    evidence="RUSH01 auxiliary-track preservation policy",
+                )
+            )
+    for unknown_level in sorted(set(track_levels) - expected_tracks - {"FX"}):
+        fields.append(
+            _invalid_unknown_field(
+                device=RUSH01_DEVICE_RYTM,
+                track=None,
+                path=f"track_levels.{unknown_level}",
+                requested=track_levels[unknown_level],
+                reason="unknown Analog Rytm track-level key in RUSH01 specification",
+            )
+        )
     for pad, track in enumerate(RUSH01_RYTM_TRACK_ORDER, start=1):
         track_spec = _require_mapping(tracks.get(track), path=f"spec.tracks.{track}")
         channel, user_channel = _channel_for(track, channels)
+        fields.append(
+            _manual_field(
+                device=RUSH01_DEVICE_RYTM,
+                track=track,
+                path=f"tracks.{track}.sound_name",
+                requested=track_spec.get("sound_name"),
+                reason="per-track sound naming has no verified MIDI mapping",
+                channel=channel,
+                user_channel=user_channel,
+            )
+        )
+        fields.append(
+            _status_field(
+                device=RUSH01_DEVICE_RYTM,
+                track=track,
+                path=f"tracks.{track}.design_role",
+                requested=track_spec.get("design_role"),
+                status=STATUS_PRESERVE_REFERENCE,
+                reason="design_role is descriptive metadata and does not request transmission",
+                channel=channel,
+                user_channel=user_channel,
+                evidence="RUSH01 semantic metadata policy",
+            )
+        )
         machine = _require_mapping(track_spec.get("machine"), path=f"spec.tracks.{track}.machine")
         machine_name = _required_string(machine, "name", path=f"spec.tracks.{track}.machine.name")
         profile = _rytm_machine_profile_by_label(machine_name)
@@ -434,6 +532,18 @@ def _compile_rytm_fields(
                     machine=machine,
                     machine_name=machine_name,
                     machine_value=profile.machine_value,
+                    channel=channel,
+                    user_channel=user_channel,
+                )
+            )
+        for unknown in sorted(set(machine) - {"name", "selection"}):
+            fields.append(
+                _invalid_unknown_field(
+                    device=RUSH01_DEVICE_RYTM,
+                    track=track,
+                    path=f"tracks.{track}.machine.{unknown}",
+                    requested=machine[unknown],
+                    reason="unsupported Analog Rytm machine specification field",
                     channel=channel,
                     user_channel=user_channel,
                 )
@@ -531,6 +641,18 @@ def _compile_rytm_fields(
                     evidence="explicit RUSH01 no-external-sample policy",
                 )
             )
+        for unknown in sorted(set(sample) - {"level", "dependency"}):
+            fields.append(
+                _invalid_unknown_field(
+                    device=RUSH01_DEVICE_RYTM,
+                    track=track,
+                    path=f"tracks.{track}.sample.{unknown}",
+                    requested=sample[unknown],
+                    reason="unsupported Analog Rytm sample specification field",
+                    channel=channel,
+                    user_channel=user_channel,
+                )
+            )
         fields.extend(
             _compile_rytm_common_section(
                 track=track,
@@ -555,6 +677,27 @@ def _compile_rytm_fields(
                 user_channel=user_channel,
             )
         )
+        known_track_sections = {
+            "sound_name",
+            "design_role",
+            "machine",
+            "synth",
+            "sample",
+            "filter",
+            "amp",
+        }
+        for unknown_section in sorted(set(track_spec) - known_track_sections):
+            fields.append(
+                _invalid_unknown_field(
+                    device=RUSH01_DEVICE_RYTM,
+                    track=track,
+                    path=f"tracks.{track}.{unknown_section}",
+                    requested=track_spec[unknown_section],
+                    reason="unsupported Analog Rytm track section",
+                    channel=channel,
+                    user_channel=user_channel,
+                )
+            )
     return tuple(replace(field, sequence=index) for index, field in enumerate(fields, start=1))
 
 
@@ -612,7 +755,7 @@ def _compile_rytm_machine_field(
         track=track,
         path=path,
         requested=machine_name,
-        normalized=machine_value,
+        normalized=_normalized_7bit(machine_value),
         cc_msb=mapping.cc_msb,
         cc_lsb=mapping.cc_lsb,
         nrpn_address=_rytm_nrpn_address(mapping),
@@ -738,10 +881,71 @@ def _compile_a4_fields(
             reason="kit naming remains a front-panel step; the compiler never saves a kit",
         )
     ]
+    expected_tracks = set(RUSH01_A4_TRACK_ORDER)
+    for unknown_track in sorted(set(tracks) - expected_tracks):
+        fields.append(
+            _invalid_unknown_field(
+                device=RUSH01_DEVICE_A4,
+                track=None,
+                path=f"tracks.{unknown_track}",
+                requested=tracks[unknown_track],
+                reason="unknown Analog Four track in RUSH01 specification",
+            )
+        )
+    auxiliary_tracks = {"FX", "CV"}
+    for auxiliary_track in ("FX", "CV"):
+        if auxiliary_track in track_levels:
+            fields.append(
+                _status_field(
+                    device=RUSH01_DEVICE_A4,
+                    track=None,
+                    path=f"track_levels.{auxiliary_track}",
+                    requested=track_levels[auxiliary_track],
+                    status=STATUS_PRESERVE_REFERENCE,
+                    reason="auxiliary track level explicitly preserves the active-kit value",
+                    channel=None,
+                    user_channel=None,
+                    evidence="RUSH01 auxiliary-track preservation policy",
+                )
+            )
+    for unknown_level in sorted(set(track_levels) - expected_tracks - auxiliary_tracks):
+        fields.append(
+            _invalid_unknown_field(
+                device=RUSH01_DEVICE_A4,
+                track=None,
+                path=f"track_levels.{unknown_level}",
+                requested=track_levels[unknown_level],
+                reason="unknown Analog Four track-level key in RUSH01 specification",
+            )
+        )
     track_level_mapping = ANALOG_FOUR_MANUAL_CC["Track Level"]
     for track in RUSH01_A4_TRACK_ORDER:
         track_spec = _require_mapping(tracks.get(track), path=f"spec.tracks.{track}")
         channel, user_channel = _channel_for(track, channels)
+        fields.append(
+            _manual_field(
+                device=RUSH01_DEVICE_A4,
+                track=track,
+                path=f"tracks.{track}.sound_name",
+                requested=track_spec.get("sound_name"),
+                reason="per-track sound naming has no verified MIDI mapping",
+                channel=channel,
+                user_channel=user_channel,
+            )
+        )
+        fields.append(
+            _status_field(
+                device=RUSH01_DEVICE_A4,
+                track=track,
+                path=f"tracks.{track}.design_role",
+                requested=track_spec.get("design_role"),
+                status=STATUS_PRESERVE_REFERENCE,
+                reason="design_role is descriptive metadata and does not request transmission",
+                channel=channel,
+                user_channel=user_channel,
+                evidence="RUSH01 semantic metadata policy",
+            )
+        )
         fields.append(
             _compile_a4_mapping_field(
                 track=track,
@@ -794,6 +998,19 @@ def _compile_a4_fields(
                         evidence="RUSH01 A4 semantic binding table",
                     )
                 )
+        known_track_sections = set(binding_keys_by_section) | {"sound_name", "design_role"}
+        for unknown_section in sorted(set(track_spec) - known_track_sections):
+            fields.append(
+                _invalid_unknown_field(
+                    device=RUSH01_DEVICE_A4,
+                    track=track,
+                    path=f"tracks.{track}.{unknown_section}",
+                    requested=track_spec[unknown_section],
+                    reason="unsupported Analog Four track section",
+                    channel=channel,
+                    user_channel=user_channel,
+                )
+            )
     return tuple(replace(field, sequence=index) for index, field in enumerate(fields, start=1))
 
 
@@ -852,7 +1069,7 @@ def _convert_a4_value(
     *,
     mapping: AnalogFourCcMapping | None,
     conversion: Rush01ConversionKind,
-) -> tuple[int | None, Rush01FieldStatus, str]:
+) -> tuple[Rush01NormalizedValue | None, Rush01FieldStatus, str]:
     if requested == STATUS_PRESERVE_REFERENCE:
         return None, STATUS_PRESERVE_REFERENCE, "field explicitly preserves the active-kit value"
     if conversion == "direct_7bit":
@@ -862,7 +1079,7 @@ def _convert_a4_value(
             return None, STATUS_INVALID_SPEC_FIELD, "bipolar display value must be an integer"
         try:
             return (
-                signed_screen_to_a4_midi(requested),
+                _normalized_7bit(signed_screen_to_a4_midi(requested)),
                 STATUS_READY,
                 "repository signed Analog Four display converter",
             )
@@ -875,7 +1092,7 @@ def _convert_a4_value(
         raw_value = display.value_for_label(requested)
         if raw_value is None or not display.transport_ready:
             return None, STATUS_LEARN_REQUIRED, "typed enum label is absent from the verified table"
-        return raw_value, STATUS_READY, "repository Analog Four typed enum table"
+        return _normalized_7bit(raw_value), STATUS_READY, "repository Analog Four typed enum table"
     if conversion == "unverified_high_resolution":
         return (
             None,
@@ -893,7 +1110,7 @@ def _convert_a4_value(
 
 def _validated_rytm_filter_mode(
     requested: object,
-) -> tuple[int | None, Rush01FieldStatus, str]:
+) -> tuple[Rush01NormalizedValue | None, Rush01FieldStatus, str]:
     value = _require_mapping_or_none(requested)
     if value is None:
         return None, STATUS_INVALID_SPEC_FIELD, "Filter Mode must provide typed name and id"
@@ -903,14 +1120,14 @@ def _validated_rytm_filter_mode(
         return None, STATUS_INVALID_SPEC_FIELD, "Filter Mode must provide typed name and id"
     if FILTER_TYPE_NAMES.get(raw_id) != name:
         return None, STATUS_INVALID_SPEC_FIELD, "Filter Mode name and id disagree"
-    return raw_id, STATUS_READY, "repository Filter Mode enum table"
+    return _normalized_7bit(raw_id), STATUS_READY, "repository Filter Mode enum table"
 
 
 def _validated_typed_selector(
     requested: object,
     *,
     mapping: AnalogRytmCcMapping,
-) -> tuple[int | None, Rush01FieldStatus, str]:
+) -> tuple[Rush01NormalizedValue | None, Rush01FieldStatus, str]:
     value = _require_mapping_or_none(requested)
     if value is None:
         return (
@@ -937,19 +1154,27 @@ def _validated_typed_selector(
             STATUS_INVALID_SPEC_FIELD,
             f"typed enum raw MIDI value must be in {mapping.value_min}..{mapping.value_max}",
         )
-    return raw_midi, STATUS_READY, "typed raw MIDI enum supplied explicitly by the specification"
+    return (
+        _normalized_7bit(raw_midi),
+        STATUS_READY,
+        "typed raw MIDI enum supplied explicitly by the specification",
+    )
 
 
 def _validated_direct_7bit(
     requested: object,
-) -> tuple[int | None, Rush01FieldStatus, str]:
+) -> tuple[Rush01NormalizedValue | None, Rush01FieldStatus, str]:
     if requested == STATUS_PRESERVE_REFERENCE:
         return None, STATUS_PRESERVE_REFERENCE, "field explicitly preserves the active-kit value"
     if isinstance(requested, bool) or not isinstance(requested, int):
         return None, STATUS_INVALID_SPEC_FIELD, "direct MIDI value must be an integer in 0..127"
     if not _MIDI_DATA_MIN <= requested <= _MIDI_DATA_MAX:
         return None, STATUS_INVALID_SPEC_FIELD, "direct MIDI value must be an integer in 0..127"
-    return requested, STATUS_READY, "direct unambiguous 7-bit MIDI value"
+    return _normalized_7bit(requested), STATUS_READY, "direct unambiguous 7-bit MIDI value"
+
+
+def _normalized_7bit(value: int) -> Rush01NormalizedValue:
+    return Rush01NormalizedValue(value=value, domain=VALUE_DOMAIN_7BIT)
 
 
 def _ready_field_from_address(
@@ -958,7 +1183,7 @@ def _ready_field_from_address(
     track: str,
     path: str,
     requested: object,
-    normalized: int,
+    normalized: Rush01NormalizedValue,
     cc_msb: int | None,
     cc_lsb: int | None,
     nrpn_address: tuple[int, int] | None,
@@ -979,18 +1204,38 @@ def _ready_field_from_address(
             user_channel=user_channel,
             evidence=evidence,
         )
+    expected_domain = VALUE_DOMAIN_14BIT if message_type == MESSAGE_CC14 else VALUE_DOMAIN_7BIT
+    if normalized.domain != expected_domain:
+        return _status_field(
+            device=device,
+            track=track,
+            path=path,
+            requested=requested,
+            status=STATUS_LEARN_REQUIRED,
+            reason=(
+                f"{message_type} requires an explicitly verified {expected_domain} normalized "
+                f"value; a {normalized.domain} conversion cannot be promoted"
+            ),
+            channel=channel,
+            user_channel=user_channel,
+            evidence=evidence,
+            message_type=message_type,
+            controller=cc_msb,
+            controller_lsb=cc_lsb,
+            nrpn_address=nrpn_address,
+        )
     messages: tuple[MidiByteMessage, ...] | None = None
     configuration_issue: str | None = None
     if channel is None:
         configuration_issue = "track channel must be configured before byte encoding"
     elif message_type == MESSAGE_CC:
-        messages = encode_cc_message(channel, cast(int, cc_msb), normalized)
+        messages = encode_cc_message(channel, cast(int, cc_msb), normalized.value)
     elif message_type == MESSAGE_CC14:
         messages = encode_cc14_messages(
             channel,
             cast(int, cc_msb),
             cast(int, cc_lsb),
-            normalized,
+            normalized.value,
         )
     else:
         address = cast(tuple[int, int], nrpn_address)
@@ -998,7 +1243,7 @@ def _ready_field_from_address(
             channel,
             address[0],
             address[1],
-            normalized,
+            normalized.value,
         )
     return Rush01MidiField(
         sequence=0,
@@ -1006,7 +1251,7 @@ def _ready_field_from_address(
         track=track,
         semantic_path=path,
         requested_value=requested,
-        normalized_midi_value=normalized,
+        normalized_midi_value=normalized.value,
         message_type=message_type,
         channel=channel,
         user_channel=user_channel,
@@ -1018,6 +1263,7 @@ def _ready_field_from_address(
         status=STATUS_READY,
         reason="ready for dry-run MIDI plan",
         configuration_issue=configuration_issue,
+        normalized_value_domain=normalized.domain,
     )
 
 
@@ -1054,6 +1300,29 @@ def _status_field(
         mapping_evidence=evidence,
         status=status,
         reason=reason,
+    )
+
+
+def _invalid_unknown_field(
+    *,
+    device: Rush01Device,
+    track: str | None,
+    path: str,
+    requested: object,
+    reason: str,
+    channel: int | None = None,
+    user_channel: int | None = None,
+) -> Rush01MidiField:
+    return _status_field(
+        device=device,
+        track=track,
+        path=path,
+        requested=requested,
+        status=STATUS_INVALID_SPEC_FIELD,
+        reason=reason,
+        channel=channel,
+        user_channel=user_channel,
+        evidence="RUSH01 fail-closed specification sweep",
     )
 
 
@@ -1137,8 +1406,11 @@ def _filter_and_resequence_fields(
     selected = tuple(
         field
         for field in fields
-        if (track is None or field.track == track)
-        and (parameter is None or field.semantic_path == parameter)
+        if field.status == STATUS_INVALID_SPEC_FIELD
+        or (
+            (track is None or field.track == track)
+            and (parameter is None or field.semantic_path == parameter)
+        )
     )
     return tuple(replace(field, sequence=index) for index, field in enumerate(selected, start=1))
 
@@ -1173,6 +1445,7 @@ def _field_to_dict(field: Rush01MidiField) -> dict[str, object]:
         "semantic_path": field.semantic_path,
         "requested_value": _json_value(field.requested_value),
         "normalized_midi_value": field.normalized_midi_value,
+        "normalized_value_domain": field.normalized_value_domain,
         "message_type": field.message_type,
         "channel": field.channel,
         "user_channel": field.user_channel,
@@ -1298,6 +1571,8 @@ __all__ = [
     "STATUS_MANUAL_SETUP_REQUIRED",
     "STATUS_PRESERVE_REFERENCE",
     "STATUS_READY",
+    "VALUE_DOMAIN_14BIT",
+    "VALUE_DOMAIN_7BIT",
     "MidiByteMessage",
     "Rush01DeviceConfig",
     "Rush01FieldStatus",
@@ -1305,6 +1580,8 @@ __all__ = [
     "Rush01MidiField",
     "Rush01MidiPlan",
     "Rush01MidiPlanSummary",
+    "Rush01NormalizedValue",
+    "Rush01ValueDomain",
     "compile_rush01_midi_plan",
     "encode_cc14_messages",
     "encode_cc_message",

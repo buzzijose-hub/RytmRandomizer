@@ -26,6 +26,10 @@ Flag behavior (Wave 4 / WS-O convergence):
 * ``--arm --rytm-live-snapshot-shell``: receive one current-kit SysEx dump from
   the Rytm, decode it, and run the all-12-pad snapshot shell from that live
   anchor. Armed sends require ``--confirm-rytm-snapshot-shell-send``.
+* ``--arm --rush01-apply-plan``: compile and apply one exact-config RUSH01 plan.
+  Output requires ``--confirm-rush01-midi-send`` and remains CC-only.
+* ``--arm --rush01-midi-learn``: open one exact input, record observed-only
+  calibration rows, and send nothing.
 
 This module is import-safe: importing it does not import ``mido`` and does not
 open ports. Those happen lazily inside the ``--arm`` handler only. The
@@ -46,6 +50,7 @@ import argparse
 import logging
 import sys
 from collections.abc import Sequence
+from pathlib import Path
 from time import time_ns
 from typing import TYPE_CHECKING, Final, Protocol
 
@@ -329,6 +334,77 @@ def _build_parser() -> argparse.ArgumentParser:
         type=int,
         help="Optional Data Entry LSB value for --a4-send-nrpn-param. Must be 0 through 127.",
     )
+    parser.add_argument(
+        "--rush01-apply-plan",
+        action="store_true",
+        help=(
+            "Compile and apply one configured RUSH01 MIDI plan. Requires --arm, "
+            "--confirm-rush01-midi-send, and exactly one --rush01-device."
+        ),
+    )
+    parser.add_argument(
+        "--rush01-midi-learn",
+        action="store_true",
+        help=(
+            "Open one exact input-only port and record observed RUSH01 MIDI controls. "
+            "Requires --arm and sends no MIDI."
+        ),
+    )
+    parser.add_argument(
+        "--rush01-device",
+        choices=("rytm", "a4"),
+        action="append",
+        help="Select exactly one RUSH01 target device: rytm or a4.",
+    )
+    parser.add_argument(
+        "--rush01-config",
+        type=Path,
+        help="Exact output-port and track-channel YAML for --rush01-apply-plan.",
+    )
+    parser.add_argument(
+        "--confirm-rush01-midi-send",
+        action="store_true",
+        help="Required feature-specific confirmation for armed RUSH01 plan output.",
+    )
+    parser.add_argument(
+        "--rush01-track",
+        help="Optional exact track restriction for --rush01-apply-plan, such as BD or T1.",
+    )
+    parser.add_argument(
+        "--rush01-parameter",
+        help=(
+            "Exact semantic path to apply or learn, such as track_levels.BD or "
+            "tracks.T1.filter_2.type."
+        ),
+    )
+    parser.add_argument(
+        "--rush01-input-port",
+        help="Exact input-port name for --rush01-midi-learn; fuzzy matching is forbidden.",
+    )
+    parser.add_argument(
+        "--rush01-observation-output",
+        type=Path,
+        help=(
+            "Observed-only YAML destination for --rush01-midi-learn. Defaults to the "
+            "gitignored output/local directory."
+        ),
+    )
+    parser.add_argument(
+        "--rush01-calibration-point",
+        choices=("minimum", "center", "maximum", "enum", "selected"),
+        default="selected",
+        help="Semantic calibration point attached to learned observations.",
+    )
+    parser.add_argument(
+        "--rush01-enum-label",
+        help="Enum label required when --rush01-calibration-point enum is selected.",
+    )
+    parser.add_argument(
+        "--rush01-delay-ms",
+        type=int,
+        default=15,
+        help="Delay between confirmed RUSH01 output messages in milliseconds (0..10000).",
+    )
     return parser
 
 
@@ -380,6 +456,10 @@ def _print_passive_menu() -> None:
             "              preview a snapshot-grounded Rytm performance mutation",
             "- --arm --rytm-performance-snapshot <file.syx> --confirm-rytm-performance-send",
             "              send a snapshot-grounded Rytm performance mutation",
+            "- --arm --rush01-apply-plan --rush01-device <rytm|a4>",
+            "              apply one exact-config CC-only plan with explicit confirmation",
+            "- --arm --rush01-midi-learn --rush01-device <rytm|a4>",
+            "              observe one exact MIDI input without sending",
             "",
             USAGE,
         ]
@@ -2263,6 +2343,237 @@ def _run_validate_one_cc(args: argparse.Namespace) -> int:
     return _run_dry_run_one_cc_validation(channel, control, value)
 
 
+def _rush01_selected_device(args: argparse.Namespace) -> str | None:
+    devices = args.rush01_device or ()
+    if len(devices) != 1:
+        sys.stderr.write("RUSH01 operations require exactly one --rush01-device.\n")
+        return None
+    return devices[0]
+
+
+def _rush01_legacy_conflict(args: argparse.Namespace) -> str | None:
+    active = (
+        ("validate-one-cc", args.validate_one_cc),
+        ("a4-soft-capture", args.a4_soft_capture),
+        ("rytm-cc-observe", args.rytm_cc_observe),
+        ("a4-send-param", args.a4_send_param),
+        ("a4-send-nrpn-param", args.a4_send_nrpn_param),
+        ("a4-kit-recipe", args.a4_kit_recipe),
+        ("a4-patch-send-plan", args.a4_patch_send_plan),
+        ("rytm-kit-style", args.rytm_kit_style),
+        ("rytm-12-pad-shell", args.rytm_12_pad_shell),
+        ("rytm-snapshot-shell", args.rytm_snapshot_shell),
+        ("rytm-live-snapshot-shell", args.rytm_live_snapshot_shell),
+        ("rytm-performance-snapshot", args.rytm_performance_snapshot),
+    )
+    return next((name for name, value in active if value), None)
+
+
+def _validate_rush01_arguments(args: argparse.Namespace) -> bool:
+    apply_requested = args.rush01_apply_plan
+    learn_requested = args.rush01_midi_learn
+    operation_requested = apply_requested or learn_requested
+    if apply_requested and learn_requested:
+        sys.stderr.write("--rush01-apply-plan cannot be combined with --rush01-midi-learn.\n")
+        return False
+
+    ancillary_requested = any(
+        (
+            args.rush01_device,
+            args.rush01_config,
+            args.confirm_rush01_midi_send,
+            args.rush01_track,
+            args.rush01_parameter,
+            args.rush01_input_port,
+            args.rush01_observation_output,
+            args.rush01_enum_label,
+            args.rush01_delay_ms != 15,
+            args.rush01_calibration_point != "selected",
+        )
+    )
+    if ancillary_requested and not operation_requested:
+        sys.stderr.write("RUSH01-specific arguments require a RUSH01 operation flag.\n")
+        return False
+    if not operation_requested:
+        return True
+    if not args.arm:
+        sys.stderr.write("RUSH01 hardware operations require --arm.\n")
+        return False
+    if _rush01_selected_device(args) is None:
+        return False
+    conflict = _rush01_legacy_conflict(args)
+    if conflict is not None:
+        sys.stderr.write(f"RUSH01 operations cannot be combined with --{conflict}.\n")
+        return False
+
+    if apply_requested:
+        if args.rush01_config is None:
+            sys.stderr.write("--rush01-apply-plan requires --rush01-config.\n")
+            return False
+        if not args.confirm_rush01_midi_send:
+            sys.stderr.write(
+                "--rush01-apply-plan requires --confirm-rush01-midi-send before output.\n"
+            )
+            return False
+        if args.rush01_input_port is not None or args.rush01_observation_output is not None:
+            sys.stderr.write("RUSH01 learning arguments require --rush01-midi-learn.\n")
+            return False
+        if args.rush01_enum_label is not None or args.rush01_calibration_point != "selected":
+            sys.stderr.write("RUSH01 calibration arguments require --rush01-midi-learn.\n")
+            return False
+        if not 0 <= args.rush01_delay_ms <= 10_000:
+            sys.stderr.write("--rush01-delay-ms must be in 0..10000.\n")
+            return False
+        return True
+
+    if args.rush01_input_port is None or not args.rush01_input_port.strip():
+        sys.stderr.write("--rush01-midi-learn requires an exact --rush01-input-port.\n")
+        return False
+    if args.rush01_parameter is None or not args.rush01_parameter.strip():
+        sys.stderr.write("--rush01-midi-learn requires --rush01-parameter.\n")
+        return False
+    if args.rush01_config is not None or args.confirm_rush01_midi_send or args.rush01_track:
+        sys.stderr.write("RUSH01 output arguments require --rush01-apply-plan.\n")
+        return False
+    if args.rush01_delay_ms != 15:
+        sys.stderr.write("--rush01-delay-ms requires --rush01-apply-plan.\n")
+        return False
+    if args.rush01_calibration_point == "enum" and not args.rush01_enum_label:
+        sys.stderr.write("enum calibration requires --rush01-enum-label.\n")
+        return False
+    if args.rush01_calibration_point != "enum" and args.rush01_enum_label is not None:
+        sys.stderr.write("--rush01-enum-label requires --rush01-calibration-point enum.\n")
+        return False
+    return True
+
+
+def _rush01_spec_path(device: str) -> Path:
+    filename = "RUSH01_RYTM.yaml" if device == "rytm" else "RUSH01_A4.yaml"
+    return Path(__file__).resolve().parents[1] / "specs" / filename
+
+
+def _run_rush01_apply_plan(args: argparse.Namespace) -> int:
+    """Compile, validate, and apply one RUSH01 plan through the armed app boundary."""
+
+    from time import sleep
+
+    import yaml
+
+    from .senders.rush01_midi_transport import (
+        apply_rush01_plan,
+        validate_rush01_plan_for_apply,
+    )
+    from .style_analysis.rush01_midi_compiler import (
+        compile_rush01_midi_plan,
+        parse_rush01_device_config,
+    )
+
+    device = _rush01_selected_device(args)
+    if device is None:  # pragma: no cover - guarded before dispatch
+        return 1
+    try:
+        config_payload = yaml.safe_load(args.rush01_config.read_text(encoding="utf-8"))
+        config = parse_rush01_device_config(config_payload, device)
+        spec_payload = yaml.safe_load(_rush01_spec_path(device).read_text(encoding="utf-8"))
+        plan = compile_rush01_midi_plan(
+            device,
+            spec_payload,
+            config=config,
+            track=args.rush01_track,
+            parameter=args.rush01_parameter,
+        )
+        validate_rush01_plan_for_apply(plan)
+    except (OSError, ValueError, yaml.YAMLError) as exc:
+        sys.stderr.write(f"--arm --rush01-apply-plan validation failed: {exc}\n")
+        return 1
+
+    from .mido_provider import build_mido_midi_port_provider
+    from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
+
+    provider = build_mido_midi_port_provider()
+    try:
+        result = apply_rush01_plan(
+            plan,
+            provider,
+            delay_ms=args.rush01_delay_ms,
+            sleep=sleep,
+        )
+    except KeyboardInterrupt:
+        sys.stderr.write("--arm --rush01-apply-plan cancelled.\n")
+        return 130
+    except (RealMidiDependencyError, RealMidiPortError, OSError, RuntimeError, ValueError) as exc:
+        sys.stderr.write(f"--arm --rush01-apply-plan failed safely: {exc}\n")
+        return 1
+    sys.stdout.write(
+        f"RUSH01 {result.device} plan applied: {result.field_count} fields, "
+        f"{result.message_count} CC messages.\n"
+    )
+    return 0
+
+
+def _run_rush01_midi_learn(args: argparse.Namespace) -> int:
+    """Record input-only RUSH01 observations through the armed app boundary."""
+
+    from time import sleep
+
+    from .mido_provider import build_mido_midi_port_provider
+    from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
+    from .style_analysis.rush01_midi_learning import (
+        append_observations,
+        capture_rush01_midi_observations,
+        open_exact_input,
+    )
+
+    device = _rush01_selected_device(args)
+    if device is None:  # pragma: no cover - guarded before dispatch
+        return 1
+    provider = build_mido_midi_port_provider()
+    try:
+        port = open_exact_input(provider, args.rush01_input_port)
+    except (RealMidiDependencyError, RealMidiPortError, OSError, RuntimeError) as exc:
+        sys.stderr.write(f"--arm --rush01-midi-learn failed safely: {exc}\n")
+        return 1
+
+    capture = None
+    try:
+        capture = capture_rush01_midi_observations(port, stdout=sys.stdout, sleep=sleep)
+    except (OSError, RuntimeError, ValueError) as exc:
+        sys.stderr.write(f"--arm --rush01-midi-learn capture failed: {exc}\n")
+        return 1
+    finally:
+        try:
+            port.close()
+        except (OSError, RuntimeError, AttributeError):  # pragma: no cover - best effort
+            _observability_get_logger(__name__).debug(
+                "rush01_midi_learn_port_close_failed_best_effort"
+            )
+
+    output_path = args.rush01_observation_output or (
+        Path(__file__).resolve().parents[1]
+        / "output"
+        / "local"
+        / f"rush01_{device}_midi_observations.yaml"
+    )
+    try:
+        append_observations(
+            output_path,
+            device=device,
+            input_port=args.rush01_input_port,
+            semantic_path=args.rush01_parameter,
+            calibration_point=args.rush01_calibration_point,
+            enum_label=args.rush01_enum_label,
+            observations=capture.observations,
+        )
+    except (OSError, ValueError) as exc:
+        sys.stderr.write(f"RUSH01 observation write failed: {exc}\n")
+        return 1
+    sys.stdout.write(
+        f"Recorded {len(capture.observations)} observed-only rows to {output_path}. "
+        "No MIDI data was sent and no converter was promoted.\n"
+    )
+    return 130 if capture.interrupted else 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the RytmRandomizer entry point. Returns an int exit code."""
 
@@ -2288,6 +2599,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             "log_json": args.log_json,
         },
     )
+
+    if not _validate_rush01_arguments(args):
+        return 1
+    if args.rush01_apply_plan:
+        return _run_rush01_apply_plan(args)
+    if args.rush01_midi_learn:
+        return _run_rush01_midi_learn(args)
 
     if args.a4_soft_capture and args.validate_one_cc:
         sys.stderr.write("--a4-soft-capture cannot be combined with --validate-one-cc.\n")

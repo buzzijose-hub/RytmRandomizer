@@ -18,8 +18,8 @@ The checked-in plans intentionally have no port or channel configuration:
 
 | Device | Total | Ready mappings | Preserve | Manual | Learn | Invalid |
 |---|---:|---:|---:|---:|---:|---:|
-| Analog Rytm MKII | 313 | 305 | 1 | 4 | 3 | 0 |
-| Analog Four MKII | 245 | 149 | 4 | 1 | 85 | 6 |
+| Analog Rytm MKII | 338 | 305 | 14 | 16 | 3 | 0 |
+| Analog Four MKII | 255 | 149 | 10 | 5 | 85 | 6 |
 
 `ready` means the semantic value, conversion, and MIDI address are positively
 mapped. In the checked-in JSON, its channel and ordered bytes remain `null`
@@ -38,9 +38,9 @@ every channel, every user channel, and every ordered byte sequence remained
 `null` in the unconfigured artifacts:
 
 - `RUSH01_RYTM_midi_plan.json` SHA-256:
-  `9cfdd5a05322597ce5f52f99ec184acbbb3518bfdc85cadd388c1fc407cc3901`
+  `2e633dbb2b6b8f6f82f0301e8fe5f27dfb234aee7ba03efeb4374cdd9cf05414`
 - `RUSH01_A4_midi_plan.json` SHA-256:
-  `6ab2c945e94c10d9144d801a6da460d7772e4d495f31b3c6b388f4bb72d11c64`
+  `2fa10d4145d47ef3ec40375a4abc2b81ed80a7f375d852dcb85112c7516ad785`
 
 ## Rytm Corrections
 
@@ -59,9 +59,14 @@ every channel, every user channel, and every ordered byte sequence remained
 ### Rytm Manual Setup
 
 1. Name the active kit `RUSH01` at the front panel after validation.
-2. Select XT Classic manually on LT.
-3. Select XT Classic manually on MT.
-4. Select XT Classic manually on HT.
+2. Set each of the 12 requested track sound names at the front panel; no
+   verified MIDI sound-name mapping exists.
+3. Select XT Classic manually on LT.
+4. Select XT Classic manually on MT.
+5. Select XT Classic manually on HT.
+
+The 14 preserve rows are FX track level, all 12 descriptive `design_role`
+values, and BT Snap Type. Descriptive roles never request transmission.
 
 ### Rytm Learn Required
 
@@ -77,8 +82,10 @@ The A4 plan does not approximate high-resolution pitch/filter values,
 booleans, waveform/sub-oscillator/sync/envelope enums, linear detune, or Noise
 Color. Its 85 learn-required fields group as follows:
 
-The remaining A4 manual setup requirement is to name the validated active kit
-`RUSH01` at the front panel. The compiler never issues a save command.
+The five A4 manual setup rows are the active-kit name plus the four requested
+track sound names. The compiler never issues a save command. The ten preserve
+rows are FX/CV levels, four descriptive `design_role` values, and four filter
+envelope gate lengths.
 
 - 24 high-resolution pitch and filter-frequency conversions
 - 8 linear-detune conversions
@@ -194,7 +201,8 @@ tracks.T4.filter_envelope.envelope_shape
 ```
 
 The six invalid display-semantic values are retained as explicit
-`invalid_spec_field` rows and block `--apply` before port discovery:
+`invalid_spec_field` rows and block app-owned application before provider
+construction:
 
 - `tracks.T1.oscillator_1.pulse_width`: 64
 - `tracks.T2.oscillator_1.pulse_width`: 76
@@ -208,35 +216,38 @@ These requests are not clamped or reinterpreted as raw MIDI.
 
 ## Dry-Run Commands
 
-Populate `config/rush01_midi_channels.yaml` from the example with exact port
-names and user-facing channels 1-16, then run:
+Passive operator plans default to `output/local/`, which is gitignored. Populate
+`config/rush01_midi_channels.yaml` locally with exact port names and
+user-facing channels 1-16, then run:
 
 ```powershell
-& .\.venv\Scripts\python.exe .\tools\rush01_midi_apply.py --device rytm --config .\config\rush01_midi_channels.yaml --dry-run --output .\output\RUSH01_RYTM_midi_plan.json
-& .\.venv\Scripts\python.exe .\tools\rush01_midi_apply.py --device a4 --config .\config\rush01_midi_channels.yaml --dry-run --output .\output\RUSH01_A4_midi_plan.json
+& .\.venv\Scripts\python.exe -m tools.rush01_midi_apply --device rytm --config .\config\rush01_midi_channels.yaml
+& .\.venv\Scripts\python.exe -m tools.rush01_midi_apply --device a4 --config .\config\rush01_midi_channels.yaml
 ```
 
-The default is already dry-run; the explicit flag is shown for operator
-clarity. These commands compile and write exact channelized byte sequences
-without opening an output port.
+Dry-run is unconditional in the standalone tool. These commands compile and
+write exact channelized byte sequences without opening an output port.
 
-## List-Port Commands
+## Armed Application
+
+Only the canonical app can construct the real provider. One-device Rytm
+application uses the exact port and channels from the local config:
 
 ```powershell
-& .\.venv\Scripts\python.exe .\tools\rush01_midi_apply.py --list-ports
-& .\.venv\Scripts\python.exe .\tools\rush01_midi_learn.py --list-ports
+& .\.venv\Scripts\python.exe -m rytm_randomizer.app --arm --rush01-apply-plan --rush01-device rytm --rush01-config .\config\rush01_midi_channels.yaml --confirm-rush01-midi-send
 ```
 
-The first command lists input and output names. The second lists input names.
-Neither command opens a port or transmits MIDI.
+Optional `--rush01-track` and `--rush01-parameter` restrictions narrow the
+approved plan. Unknown specification rows remain visible and block output.
 
 ## Calibration Commands
 
-Input capture is exact-name and input-only. Example targeted observations:
+Input capture is exact-name, input-only, and app-owned. Example targeted
+observations:
 
 ```powershell
-& .\.venv\Scripts\python.exe .\tools\rush01_midi_learn.py --device rytm --input-port "EXACT INPUT NAME" --parameter "tracks.BD.synth.Waveform" --point enum --enum-label "OBSERVED LABEL"
-& .\.venv\Scripts\python.exe .\tools\rush01_midi_learn.py --device a4 --input-port "EXACT INPUT NAME" --parameter "tracks.T1.oscillator_1.coarse_tune_semitones" --point center
+& .\.venv\Scripts\python.exe -m rytm_randomizer.app --arm --rush01-midi-learn --rush01-device rytm --rush01-input-port "EXACT INPUT NAME" --rush01-parameter "tracks.BD.synth.Waveform" --rush01-calibration-point enum --rush01-enum-label "OBSERVED LABEL"
+& .\.venv\Scripts\python.exe -m rytm_randomizer.app --arm --rush01-midi-learn --rush01-device a4 --rush01-input-port "EXACT INPUT NAME" --rush01-parameter "tracks.T1.oscillator_1.coarse_tune_semitones" --rush01-calibration-point center
 ```
 
 Observations remain `observed_only`; the learner never promotes one capture
@@ -248,8 +259,10 @@ to a verified converter.
 - Output and input selection require one exact, unique name; fuzzy matching is
   rejected.
 - Dry-run constructs no MIDI provider and opens no output.
-- Apply requires a final confirmation unless the explicit long-form bypass is
-  supplied.
+- Standalone tools cannot construct the provider, discover/open ports, or send.
+- Output requires `app --arm`, one device, exact local configuration, and
+  `--confirm-rush01-midi-send`; there is no bypass flag.
+- Learning requires `app --arm`, opens one exact input only, and sends nothing.
 - Invalid specification fields block apply before port discovery.
 - The transport accepts only three-byte Control Change packets with data bytes
   in `0..127` and controllers in `0..119`. Program Change, transport, SysEx,
@@ -258,16 +271,17 @@ to a verified converter.
 
 ## Verification
 
-- Ruff, Black, and isort checks pass repository-wide. Black reported only a
-  sandbox cache-read warning; all 696 files were unchanged by its check.
-- Architecture gates: 671 passed. The existing generic-`main` abstraction
-  warning remains warn-only; pytest also reported its sandbox cache warning.
-- Focused compiler, validation, transport, observation, reference-codec, and
+- Ruff, Black, and isort checks pass repository-wide; Black checked 708 files.
+- Architecture gates: 683 passed. The existing generic-`main` abstraction
+  warning remains warn-only.
+- Focused compiler, validation, transport, observation, app-boundary, and
   data-layer suite: 147 passed.
-- Touched-file branch coverage: 140 passed, 100.00% statements and branches
-  across the data bindings, compiler, transport, observation reducer, and both
-  CLIs.
-- Complete repository suite: 6255 passed, 3 skipped, 0 failed in 181.22
-  seconds using four xdist workers. The default 24-worker attempt exhausted
-  two architecture-scanner workers; the lower-concurrency rerun passed all
-  6258 collected items.
+- Focused production-module coverage: 112 passed with 100.00% statements and
+  branches across the compiler, transport, and learning helpers (668
+  statements, 290 branches). The app repair diff covered all 144 added
+  executable statements and all 22 added branch lines.
+- V1.34 parity: all 685 byte-frozen items passed without fixture regeneration.
+- Complete repository suite: 6313 passed, 3 skipped, 0 failed in 179.05
+  seconds using four xdist workers.
+- Both unconfigured plans passed two deterministic `--check` runs. No provider,
+  backend, or physical port opened; no MIDI or SysEx was transmitted.

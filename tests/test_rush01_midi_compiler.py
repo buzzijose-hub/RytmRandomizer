@@ -128,10 +128,10 @@ def test_explicit_config_requires_exact_port_and_every_channel() -> None:
 def test_rytm_plan_resolves_machine_specific_sources_and_manual_toms() -> None:
     plan = _configured_plan("rytm")
 
-    assert plan.summary.total_fields == 313
+    assert plan.summary.total_fields == 338
     assert plan.summary.ready_fields == 305
-    assert plan.summary.preserve_reference_fields == 1
-    assert plan.summary.manual_setup_fields == 4
+    assert plan.summary.preserve_reference_fields == 14
+    assert plan.summary.manual_setup_fields == 16
     assert plan.summary.learn_required_fields == 3
     assert plan.summary.invalid_spec_fields == 0
     assert plan.configuration_ready is True
@@ -238,10 +238,10 @@ def test_numeric_selector_is_not_treated_as_a_verified_enum() -> None:
 def test_a4_plan_uses_verified_converters_and_refuses_unverified_values() -> None:
     plan = _configured_plan("a4")
 
-    assert plan.summary.total_fields == 245
+    assert plan.summary.total_fields == 255
     assert plan.summary.ready_fields == 149
-    assert plan.summary.preserve_reference_fields == 4
-    assert plan.summary.manual_setup_fields == 1
+    assert plan.summary.preserve_reference_fields == 10
+    assert plan.summary.manual_setup_fields == 5
     assert plan.summary.learn_required_fields == 85
     assert plan.summary.invalid_spec_fields == 6
 
@@ -278,6 +278,55 @@ def test_bipolar_like_value_without_a_verified_mapping_requires_learning() -> No
     assert color.ordered_midi_bytes is None
 
 
+@pytest.mark.parametrize(
+    ("device", "track", "unknown_section"),
+    (("rytm", "BD", "lfo"), ("a4", "T1", "lfo")),
+)
+def test_unknown_spec_content_is_never_silently_dropped(
+    device: str,
+    track: str,
+    unknown_section: str,
+) -> None:
+    spec = _load_spec(device)
+    baseline = compile_rush01_midi_plan(device, spec)
+    spec["tracks"][track][unknown_section] = {"speed": 12}  # type: ignore[index]
+    spec["tracks"]["XX"] = {"unexpected": True}  # type: ignore[index]
+    spec["track_levels"]["XX"] = 64  # type: ignore[index]
+
+    unfiltered = compile_rush01_midi_plan(device, spec)
+    plan = compile_rush01_midi_plan(
+        device,
+        spec,
+        parameter=f"track_levels.{track}",
+    )
+
+    invalid_paths = {
+        field.semantic_path for field in plan.fields if field.status == STATUS_INVALID_SPEC_FIELD
+    }
+    assert f"tracks.{track}.{unknown_section}" in invalid_paths
+    assert "tracks.XX" in invalid_paths
+    assert "track_levels.XX" in invalid_paths
+    assert unfiltered.summary.total_fields == baseline.summary.total_fields + 3
+    assert unfiltered.summary.invalid_spec_fields == baseline.summary.invalid_spec_fields + 3
+    assert plan.summary.invalid_spec_fields == baseline.summary.invalid_spec_fields + 3
+
+
+@pytest.mark.parametrize(("device", "track"), (("rytm", "BD"), ("a4", "T1")))
+def test_sound_name_and_design_role_have_explicit_non_transmitting_statuses(
+    device: str,
+    track: str,
+) -> None:
+    plan = compile_rush01_midi_plan(device, _load_spec(device))
+
+    sound_name = _field(plan, f"tracks.{track}.sound_name")
+    design_role = _field(plan, f"tracks.{track}.design_role")
+    assert sound_name.status == STATUS_MANUAL_SETUP_REQUIRED
+    assert sound_name.ordered_midi_bytes is None
+    assert design_role.status == STATUS_PRESERVE_REFERENCE
+    assert "descriptive metadata" in design_role.reason
+    assert design_role.ordered_midi_bytes is None
+
+
 def test_plan_output_is_deterministic_and_passive() -> None:
     first = _configured_plan("rytm")
     second = _configured_plan("rytm")
@@ -311,6 +360,7 @@ def test_checked_in_unconfigured_plan_matches_the_pure_compiler(
         "semantic_path",
         "requested_value",
         "normalized_midi_value",
+        "normalized_value_domain",
         "message_type",
         "channel",
         "controller",

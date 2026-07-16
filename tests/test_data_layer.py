@@ -184,6 +184,16 @@ def test_rush01_midi_binding_tables_are_ordered_and_manual_backed():
         "Filter Mode",
         "Filter Env Depth",
     )
+    assert tuple(binding.parameter for binding in data.RUSH01_RYTM_AMP_BINDINGS) == (
+        "Amp Attack Time",
+        "Amp Hold Time",
+        "Amp Decay Time",
+        "Amp Overdrive",
+        "Amp Delay Send",
+        "Amp Reverb Send",
+        "Amp Pan",
+        "Amp Volume",
+    )
     assert data.RUSH01_A4_TRACK_ORDER == ("T1", "T2", "T3", "T4")
     assert data.RUSH01_A4_BINDINGS[0].parameter == "OSC1 Pitch"
     assert data.RUSH01_A4_BINDINGS[-1].parameter == "EnvF Gate Length"

@@ -13,6 +13,7 @@
       "mapping_evidence": "explicit RUSH01 manual-setup policy",
       "message_type": null,
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": null,
       "ordered_midi_bytes": null,
       "reason": "kit naming remains a front-panel step; the compiler never saves a kit",
@@ -25,6 +26,86 @@
     },
     {
       "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "a4",
+      "mapping_evidence": "RUSH01 auxiliary-track preservation policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "auxiliary track level explicitly preserves the active-kit value",
+      "requested_value": "preserve_reference",
+      "semantic_path": "track_levels.FX",
+      "sequence": 2,
+      "status": "preserve_reference",
+      "track": null,
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "a4",
+      "mapping_evidence": "RUSH01 auxiliary-track preservation policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "auxiliary track level explicitly preserves the active-kit value",
+      "requested_value": "preserve_reference",
+      "semantic_path": "track_levels.CV",
+      "sequence": 3,
+      "status": "preserve_reference",
+      "track": null,
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "a4",
+      "mapping_evidence": "explicit RUSH01 manual-setup policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "per-track sound naming has no verified MIDI mapping",
+      "requested_value": "R01 JACKBASS",
+      "semantic_path": "tracks.T1.sound_name",
+      "sequence": 4,
+      "status": "manual_setup_required",
+      "track": "T1",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "a4",
+      "mapping_evidence": "RUSH01 semantic metadata policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "design_role is descriptive metadata and does not request transmission",
+      "requested_value": "Short jacking bass-percussion voice; not a competing sub-bass.",
+      "semantic_path": "tracks.T1.design_role",
+      "sequence": 5,
+      "status": "preserve_reference",
+      "track": "T1",
+      "user_channel": null
+    },
+    {
+      "channel": null,
       "configuration_issue": "track channel must be configured before byte encoding",
       "controller": 95,
       "controller_lsb": null,
@@ -32,6 +113,7 @@
       "mapping_evidence": "manual-backed Analog Four TRACK/Track Level: CC=95, CC-LSB=None, NRPN=(1, 100); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 100,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         100
@@ -40,7 +122,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 100,
       "semantic_path": "track_levels.T1",
-      "sequence": 2,
+      "sequence": 6,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -54,6 +136,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Pitch: CC=16, CC-LSB=48, NRPN=(1, 0); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         0
@@ -62,7 +145,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_1.coarse_tune_semitones",
-      "sequence": 3,
+      "sequence": 7,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -76,6 +159,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Pitch: CC=16, CC-LSB=48, NRPN=(1, 0); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         0
@@ -84,7 +168,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_1.fine_tune_cents",
-      "sequence": 4,
+      "sequence": 8,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -98,6 +182,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Detune: CC=None, CC-LSB=None, NRPN=(1, 2); conversion policy=unverified_conversion",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         2
@@ -106,7 +191,7 @@
       "reason": "display-to-MIDI conversion is not verified",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_1.linear_detune_hz",
-      "sequence": 5,
+      "sequence": 9,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -120,6 +205,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Keytracking: CC=None, CC-LSB=None, NRPN=(1, 3); conversion policy=unverified_boolean",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         3
@@ -128,7 +214,7 @@
       "reason": "boolean raw MIDI representation is not verified",
       "requested_value": true,
       "semantic_path": "tracks.T1.oscillator_1.keytrack",
-      "sequence": 6,
+      "sequence": 10,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -142,6 +228,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Level: CC=69, CC-LSB=None, NRPN=(1, 4); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 96,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         4
@@ -150,7 +237,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 96,
       "semantic_path": "tracks.T1.oscillator_1.level",
-      "sequence": 7,
+      "sequence": 11,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -164,6 +251,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Waveform: CC=70, CC-LSB=None, NRPN=(1, 5); conversion policy=unverified_enum",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         5
@@ -172,7 +260,7 @@
       "reason": "typed enum raw MIDI table is not verified",
       "requested_value": "triangle",
       "semantic_path": "tracks.T1.oscillator_1.waveform",
-      "sequence": 8,
+      "sequence": 12,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -186,6 +274,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Sub Oscillator: CC=71, CC-LSB=None, NRPN=(1, 6); conversion policy=unverified_enum",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         6
@@ -194,7 +283,7 @@
       "reason": "typed enum raw MIDI table is not verified",
       "requested_value": "off",
       "semantic_path": "tracks.T1.oscillator_1.sub_oscillator",
-      "sequence": 9,
+      "sequence": 13,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -208,6 +297,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Pulsewidth: CC=72, CC-LSB=None, NRPN=(1, 7); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         7
@@ -216,7 +306,7 @@
       "reason": "screen value must be in -64..63 for Analog Four bipolar parameters",
       "requested_value": 64,
       "semantic_path": "tracks.T1.oscillator_1.pulse_width",
-      "sequence": 10,
+      "sequence": 14,
       "status": "invalid_spec_field",
       "track": "T1",
       "user_channel": null
@@ -230,6 +320,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 PWM Speed: CC=73, CC-LSB=None, NRPN=(1, 8); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         8
@@ -238,7 +329,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_1.pwm_speed",
-      "sequence": 11,
+      "sequence": 15,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -252,6 +343,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 PWM Depth: CC=74, CC-LSB=None, NRPN=(1, 9); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         9
@@ -260,7 +352,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_1.pwm_depth",
-      "sequence": 12,
+      "sequence": 16,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -274,6 +366,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Pitch: CC=17, CC-LSB=49, NRPN=(1, 20); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         20
@@ -282,7 +375,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 12,
       "semantic_path": "tracks.T1.oscillator_2.coarse_tune_semitones",
-      "sequence": 13,
+      "sequence": 17,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -296,6 +389,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Pitch: CC=17, CC-LSB=49, NRPN=(1, 20); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         20
@@ -304,7 +398,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": -6,
       "semantic_path": "tracks.T1.oscillator_2.fine_tune_cents",
-      "sequence": 14,
+      "sequence": 18,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -318,6 +412,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Detune: CC=None, CC-LSB=None, NRPN=(1, 22); conversion policy=unverified_conversion",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         22
@@ -326,7 +421,7 @@
       "reason": "display-to-MIDI conversion is not verified",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_2.linear_detune_hz",
-      "sequence": 15,
+      "sequence": 19,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -340,6 +435,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Keytracking: CC=None, CC-LSB=None, NRPN=(1, 23); conversion policy=unverified_boolean",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         23
@@ -348,7 +444,7 @@
       "reason": "boolean raw MIDI representation is not verified",
       "requested_value": true,
       "semantic_path": "tracks.T1.oscillator_2.keytrack",
-      "sequence": 16,
+      "sequence": 20,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -362,6 +458,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Level: CC=78, CC-LSB=None, NRPN=(1, 24); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 38,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         24
@@ -370,7 +467,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 38,
       "semantic_path": "tracks.T1.oscillator_2.level",
-      "sequence": 17,
+      "sequence": 21,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -384,6 +481,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Waveform: CC=79, CC-LSB=None, NRPN=(1, 25); conversion policy=unverified_enum",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         25
@@ -392,7 +490,7 @@
       "reason": "typed enum raw MIDI table is not verified",
       "requested_value": "transistor_pulse",
       "semantic_path": "tracks.T1.oscillator_2.waveform",
-      "sequence": 18,
+      "sequence": 22,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -406,6 +504,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Sub Oscillator: CC=80, CC-LSB=None, NRPN=(1, 26); conversion policy=unverified_enum",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         26
@@ -414,7 +513,7 @@
       "reason": "typed enum raw MIDI table is not verified",
       "requested_value": "off",
       "semantic_path": "tracks.T1.oscillator_2.sub_oscillator",
-      "sequence": 19,
+      "sequence": 23,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -428,6 +527,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Pulsewidth: CC=81, CC-LSB=None, NRPN=(1, 27); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 106,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         27
@@ -436,7 +536,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 42,
       "semantic_path": "tracks.T1.oscillator_2.pulse_width",
-      "sequence": 20,
+      "sequence": 24,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -450,6 +550,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 PWM Speed: CC=82, CC-LSB=None, NRPN=(1, 28); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         28
@@ -458,7 +559,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_2.pwm_speed",
-      "sequence": 21,
+      "sequence": 25,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -472,6 +573,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 PWM Depth: CC=83, CC-LSB=None, NRPN=(1, 29); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         29
@@ -480,7 +582,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_2.pwm_depth",
-      "sequence": 22,
+      "sequence": 26,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -494,6 +596,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/OSC1 AM: CC=None, CC-LSB=None, NRPN=(1, 30); conversion policy=unverified_boolean",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         30
@@ -502,7 +605,7 @@
       "reason": "boolean raw MIDI representation is not verified",
       "requested_value": false,
       "semantic_path": "tracks.T1.oscillator_common.osc1_am",
-      "sequence": 23,
+      "sequence": 27,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -516,6 +619,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Sync Mode: CC=None, CC-LSB=None, NRPN=(1, 31); conversion policy=unverified_enum",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         31
@@ -524,7 +628,7 @@
       "reason": "typed enum raw MIDI table is not verified",
       "requested_value": "off",
       "semantic_path": "tracks.T1.oscillator_common.sync_mode",
-      "sequence": 24,
+      "sequence": 28,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -538,6 +642,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Sync Amount: CC=84, CC-LSB=None, NRPN=(1, 32); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         32
@@ -546,7 +651,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_common.sync_amount",
-      "sequence": 25,
+      "sequence": 29,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -560,6 +665,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Bend Amount: CC=85, CC-LSB=None, NRPN=(1, 33); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 71,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         33
@@ -568,7 +674,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 7,
       "semantic_path": "tracks.T1.oscillator_common.bend_depth",
-      "sequence": 26,
+      "sequence": 30,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -582,6 +688,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Slide Time: CC=5, CC-LSB=None, NRPN=(1, 34); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 10,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         34
@@ -590,7 +697,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 10,
       "semantic_path": "tracks.T1.oscillator_common.note_slide_time",
-      "sequence": 27,
+      "sequence": 31,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -604,6 +711,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/OSC2 AM: CC=None, CC-LSB=None, NRPN=(1, 35); conversion policy=unverified_boolean",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         35
@@ -612,7 +720,7 @@
       "reason": "boolean raw MIDI representation is not verified",
       "requested_value": false,
       "semantic_path": "tracks.T1.oscillator_common.osc2_am",
-      "sequence": 28,
+      "sequence": 32,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -626,6 +734,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Note Sync: CC=None, CC-LSB=None, NRPN=(1, 36); conversion policy=unverified_boolean",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         36
@@ -634,7 +743,7 @@
       "reason": "boolean raw MIDI representation is not verified",
       "requested_value": true,
       "semantic_path": "tracks.T1.oscillator_common.oscillator_retrigger",
-      "sequence": 29,
+      "sequence": 33,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -648,6 +757,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Vibrato Fade: CC=None, CC-LSB=None, NRPN=(1, 37); conversion policy=direct_7bit",
       "message_type": "NRPN",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         37
@@ -656,7 +766,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_common.vibrato_fade",
-      "sequence": 30,
+      "sequence": 34,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -670,6 +780,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Vibrato Speed: CC=87, CC-LSB=None, NRPN=(1, 38); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         38
@@ -678,7 +789,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_common.vibrato_speed",
-      "sequence": 31,
+      "sequence": 35,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -692,6 +803,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Vibrato Depth: CC=88, CC-LSB=None, NRPN=(1, 39); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         39
@@ -700,7 +812,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_common.vibrato_depth",
-      "sequence": 32,
+      "sequence": 36,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -714,6 +826,7 @@
       "mapping_evidence": "manual-backed Analog Four NOISE/Noise S&H: CC=75, CC-LSB=None, NRPN=(1, 10); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         10
@@ -722,7 +835,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.noise.sample_and_hold",
-      "sequence": 33,
+      "sequence": 37,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -736,12 +849,13 @@
       "mapping_evidence": "no Analog Four manual mapping; conversion policy=unmapped",
       "message_type": null,
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": null,
       "ordered_midi_bytes": null,
       "reason": "no documented MIDI address is present in the repository",
       "requested_value": 0,
       "semantic_path": "tracks.T1.noise.color",
-      "sequence": 34,
+      "sequence": 38,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -755,6 +869,7 @@
       "mapping_evidence": "manual-backed Analog Four NOISE/Noise Fade: CC=76, CC-LSB=None, NRPN=(1, 12); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         12
@@ -763,7 +878,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.noise.fade",
-      "sequence": 35,
+      "sequence": 39,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -777,6 +892,7 @@
       "mapping_evidence": "manual-backed Analog Four NOISE/Noise Level: CC=77, CC-LSB=None, NRPN=(1, 14); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         14
@@ -785,7 +901,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.noise.level",
-      "sequence": 36,
+      "sequence": 40,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -799,6 +915,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter1 Frequency: CC=18, CC-LSB=50, NRPN=(1, 40); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         40
@@ -807,7 +924,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 46,
       "semantic_path": "tracks.T1.filter_1.frequency",
-      "sequence": 37,
+      "sequence": 41,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -821,6 +938,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter1 Resonance: CC=89, CC-LSB=None, NRPN=(1, 41); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 18,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         41
@@ -829,7 +947,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 18,
       "semantic_path": "tracks.T1.filter_1.resonance",
-      "sequence": 38,
+      "sequence": 42,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -843,6 +961,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter Overdrive: CC=86, CC-LSB=None, NRPN=(1, 42); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 48,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         42
@@ -851,7 +970,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": -16,
       "semantic_path": "tracks.T1.filter_1.overdrive",
-      "sequence": 39,
+      "sequence": 43,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -865,6 +984,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter1 Keytracking: CC=None, CC-LSB=None, NRPN=(1, 43); conversion policy=direct_7bit",
       "message_type": "NRPN",
       "normalized_midi_value": 24,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         43
@@ -873,7 +993,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 24,
       "semantic_path": "tracks.T1.filter_1.keytrack",
-      "sequence": 40,
+      "sequence": 44,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -887,6 +1007,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter1 Envelope Amount: CC=102, CC-LSB=None, NRPN=(1, 44); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 112,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         44
@@ -895,7 +1016,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 48,
       "semantic_path": "tracks.T1.filter_1.envelope_depth",
-      "sequence": 41,
+      "sequence": 45,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -909,6 +1030,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter2 Frequency: CC=19, CC-LSB=51, NRPN=(1, 45); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         45
@@ -917,7 +1039,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 24,
       "semantic_path": "tracks.T1.filter_2.frequency",
-      "sequence": 42,
+      "sequence": 46,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -931,6 +1053,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter2 Resonance: CC=90, CC-LSB=None, NRPN=(1, 46); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 6,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         46
@@ -939,7 +1062,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 6,
       "semantic_path": "tracks.T1.filter_2.resonance",
-      "sequence": 43,
+      "sequence": 47,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -953,6 +1076,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter2 Type: CC=None, CC-LSB=None, NRPN=(1, 47); conversion policy=verified_enum",
       "message_type": "NRPN",
       "normalized_midi_value": 3,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         47
@@ -961,7 +1085,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": "HP1",
       "semantic_path": "tracks.T1.filter_2.type",
-      "sequence": 44,
+      "sequence": 48,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -975,6 +1099,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter2 Keytracking: CC=None, CC-LSB=None, NRPN=(1, 48); conversion policy=direct_7bit",
       "message_type": "NRPN",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         48
@@ -983,7 +1108,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.filter_2.keytrack",
-      "sequence": 45,
+      "sequence": 49,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -997,6 +1122,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter2 Envelope Amount: CC=103, CC-LSB=None, NRPN=(1, 49); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         49
@@ -1005,7 +1131,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.filter_2.envelope_depth",
-      "sequence": 46,
+      "sequence": 50,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -1019,6 +1145,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/EnvA Attack Time: CC=104, CC-LSB=None, NRPN=(1, 50); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         50
@@ -1027,7 +1154,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.amp.attack",
-      "sequence": 47,
+      "sequence": 51,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -1041,6 +1168,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/EnvA Decay Time: CC=105, CC-LSB=None, NRPN=(1, 51); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 32,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         51
@@ -1049,7 +1177,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 32,
       "semantic_path": "tracks.T1.amp.decay",
-      "sequence": 48,
+      "sequence": 52,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -1063,6 +1191,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/EnvA Sustain Level: CC=106, CC-LSB=None, NRPN=(1, 52); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         52
@@ -1071,7 +1200,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.amp.sustain",
-      "sequence": 49,
+      "sequence": 53,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -1085,6 +1214,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/EnvA Release Time: CC=107, CC-LSB=None, NRPN=(1, 53); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 6,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         53
@@ -1093,7 +1223,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 6,
       "semantic_path": "tracks.T1.amp.release",
-      "sequence": 50,
+      "sequence": 54,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -1107,6 +1237,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/EnvA Env Shape: CC=None, CC-LSB=None, NRPN=(1, 54); conversion policy=verified_enum",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         54
@@ -1115,7 +1246,7 @@
       "reason": "typed enum label is absent from the verified table",
       "requested_value": "exponential_restart_from_zero",
       "semantic_path": "tracks.T1.amp.envelope_shape",
-      "sequence": 51,
+      "sequence": 55,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -1129,6 +1260,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/Chorus Send Level: CC=91, CC-LSB=None, NRPN=(1, 55); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         55
@@ -1137,7 +1269,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.amp.chorus_send",
-      "sequence": 52,
+      "sequence": 56,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -1151,6 +1283,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/Delay Send Level: CC=92, CC-LSB=None, NRPN=(1, 56); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         56
@@ -1159,7 +1292,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.amp.delay_send",
-      "sequence": 53,
+      "sequence": 57,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -1173,6 +1306,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/Reverb Send Level: CC=93, CC-LSB=None, NRPN=(1, 57); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         57
@@ -1181,7 +1315,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.amp.reverb_send",
-      "sequence": 54,
+      "sequence": 58,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -1195,6 +1329,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/Pan: CC=10, CC-LSB=None, NRPN=(1, 58); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         58
@@ -1203,7 +1338,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.amp.pan",
-      "sequence": 55,
+      "sequence": 59,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -1217,6 +1352,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/Volume: CC=7, CC-LSB=None, NRPN=(1, 59); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 100,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         59
@@ -1225,7 +1361,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 100,
       "semantic_path": "tracks.T1.amp.volume",
-      "sequence": 56,
+      "sequence": 60,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -1239,6 +1375,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Attack Time: CC=108, CC-LSB=None, NRPN=(1, 60); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         60
@@ -1247,7 +1384,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.filter_envelope.attack",
-      "sequence": 57,
+      "sequence": 61,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -1261,6 +1398,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Decay Time: CC=109, CC-LSB=None, NRPN=(1, 61); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 24,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         61
@@ -1269,7 +1407,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 24,
       "semantic_path": "tracks.T1.filter_envelope.decay",
-      "sequence": 58,
+      "sequence": 62,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -1283,6 +1421,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Sustain Level: CC=110, CC-LSB=None, NRPN=(1, 62); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         62
@@ -1291,7 +1430,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T1.filter_envelope.sustain",
-      "sequence": 59,
+      "sequence": 63,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -1305,6 +1444,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Release Time: CC=111, CC-LSB=None, NRPN=(1, 63); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 5,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         63
@@ -1313,7 +1453,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 5,
       "semantic_path": "tracks.T1.filter_envelope.release",
-      "sequence": 60,
+      "sequence": 64,
       "status": "ready",
       "track": "T1",
       "user_channel": null
@@ -1327,6 +1467,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Env Shape: CC=None, CC-LSB=None, NRPN=(1, 64); conversion policy=verified_enum",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         64
@@ -1335,7 +1476,7 @@
       "reason": "typed enum label is absent from the verified table",
       "requested_value": "exponential_restart_from_zero",
       "semantic_path": "tracks.T1.filter_envelope.envelope_shape",
-      "sequence": 61,
+      "sequence": 65,
       "status": "learn_required",
       "track": "T1",
       "user_channel": null
@@ -1349,6 +1490,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Gate Length: CC=None, CC-LSB=None, NRPN=(1, 65); conversion policy=verified_enum",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         65
@@ -1357,9 +1499,49 @@
       "reason": "field explicitly preserves the active-kit value",
       "requested_value": "preserve_reference",
       "semantic_path": "tracks.T1.filter_envelope.gate_length",
-      "sequence": 62,
+      "sequence": 66,
       "status": "preserve_reference",
       "track": "T1",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "a4",
+      "mapping_evidence": "explicit RUSH01 manual-setup policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "per-track sound naming has no verified MIDI mapping",
+      "requested_value": "R01 WALKSAW",
+      "semantic_path": "tracks.T2.sound_name",
+      "sequence": 67,
+      "status": "manual_setup_required",
+      "track": "T2",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "a4",
+      "mapping_evidence": "RUSH01 semantic metadata policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "design_role is descriptive metadata and does not request transmission",
+      "requested_value": "Short phase-rich walking saw stab; principal midrange hook.",
+      "semantic_path": "tracks.T2.design_role",
+      "sequence": 68,
+      "status": "preserve_reference",
+      "track": "T2",
       "user_channel": null
     },
     {
@@ -1371,6 +1553,7 @@
       "mapping_evidence": "manual-backed Analog Four TRACK/Track Level: CC=95, CC-LSB=None, NRPN=(1, 100); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 92,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         100
@@ -1379,7 +1562,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 92,
       "semantic_path": "track_levels.T2",
-      "sequence": 63,
+      "sequence": 69,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -1393,6 +1576,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Pitch: CC=16, CC-LSB=48, NRPN=(1, 0); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         0
@@ -1401,7 +1585,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_1.coarse_tune_semitones",
-      "sequence": 64,
+      "sequence": 70,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -1415,6 +1599,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Pitch: CC=16, CC-LSB=48, NRPN=(1, 0); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         0
@@ -1423,7 +1608,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_1.fine_tune_cents",
-      "sequence": 65,
+      "sequence": 71,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -1437,6 +1622,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Detune: CC=None, CC-LSB=None, NRPN=(1, 2); conversion policy=unverified_conversion",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         2
@@ -1445,7 +1631,7 @@
       "reason": "display-to-MIDI conversion is not verified",
       "requested_value": 1,
       "semantic_path": "tracks.T2.oscillator_1.linear_detune_hz",
-      "sequence": 66,
+      "sequence": 72,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -1459,6 +1645,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Keytracking: CC=None, CC-LSB=None, NRPN=(1, 3); conversion policy=unverified_boolean",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         3
@@ -1467,7 +1654,7 @@
       "reason": "boolean raw MIDI representation is not verified",
       "requested_value": true,
       "semantic_path": "tracks.T2.oscillator_1.keytrack",
-      "sequence": 67,
+      "sequence": 73,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -1481,6 +1668,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Level: CC=69, CC-LSB=None, NRPN=(1, 4); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 108,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         4
@@ -1489,7 +1677,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 108,
       "semantic_path": "tracks.T2.oscillator_1.level",
-      "sequence": 68,
+      "sequence": 74,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -1503,6 +1691,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Waveform: CC=70, CC-LSB=None, NRPN=(1, 5); conversion policy=unverified_enum",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         5
@@ -1511,7 +1700,7 @@
       "reason": "typed enum raw MIDI table is not verified",
       "requested_value": "sawtooth",
       "semantic_path": "tracks.T2.oscillator_1.waveform",
-      "sequence": 69,
+      "sequence": 75,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -1525,6 +1714,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Sub Oscillator: CC=71, CC-LSB=None, NRPN=(1, 6); conversion policy=unverified_enum",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         6
@@ -1533,7 +1723,7 @@
       "reason": "typed enum raw MIDI table is not verified",
       "requested_value": "off",
       "semantic_path": "tracks.T2.oscillator_1.sub_oscillator",
-      "sequence": 70,
+      "sequence": 76,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -1547,6 +1737,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Pulsewidth: CC=72, CC-LSB=None, NRPN=(1, 7); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         7
@@ -1555,7 +1746,7 @@
       "reason": "screen value must be in -64..63 for Analog Four bipolar parameters",
       "requested_value": 76,
       "semantic_path": "tracks.T2.oscillator_1.pulse_width",
-      "sequence": 71,
+      "sequence": 77,
       "status": "invalid_spec_field",
       "track": "T2",
       "user_channel": null
@@ -1569,6 +1760,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 PWM Speed: CC=73, CC-LSB=None, NRPN=(1, 8); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         8
@@ -1577,7 +1769,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_1.pwm_speed",
-      "sequence": 72,
+      "sequence": 78,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -1591,6 +1783,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 PWM Depth: CC=74, CC-LSB=None, NRPN=(1, 9); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         9
@@ -1599,7 +1792,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_1.pwm_depth",
-      "sequence": 73,
+      "sequence": 79,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -1613,6 +1806,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Pitch: CC=17, CC-LSB=49, NRPN=(1, 20); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         20
@@ -1621,7 +1815,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 12,
       "semantic_path": "tracks.T2.oscillator_2.coarse_tune_semitones",
-      "sequence": 74,
+      "sequence": 80,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -1635,6 +1829,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Pitch: CC=17, CC-LSB=49, NRPN=(1, 20); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         20
@@ -1643,7 +1838,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": -7,
       "semantic_path": "tracks.T2.oscillator_2.fine_tune_cents",
-      "sequence": 75,
+      "sequence": 81,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -1657,6 +1852,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Detune: CC=None, CC-LSB=None, NRPN=(1, 22); conversion policy=unverified_conversion",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         22
@@ -1665,7 +1861,7 @@
       "reason": "display-to-MIDI conversion is not verified",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_2.linear_detune_hz",
-      "sequence": 76,
+      "sequence": 82,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -1679,6 +1875,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Keytracking: CC=None, CC-LSB=None, NRPN=(1, 23); conversion policy=unverified_boolean",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         23
@@ -1687,7 +1884,7 @@
       "reason": "boolean raw MIDI representation is not verified",
       "requested_value": true,
       "semantic_path": "tracks.T2.oscillator_2.keytrack",
-      "sequence": 77,
+      "sequence": 83,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -1701,6 +1898,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Level: CC=78, CC-LSB=None, NRPN=(1, 24); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 78,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         24
@@ -1709,7 +1907,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 78,
       "semantic_path": "tracks.T2.oscillator_2.level",
-      "sequence": 78,
+      "sequence": 84,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -1723,6 +1921,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Waveform: CC=79, CC-LSB=None, NRPN=(1, 25); conversion policy=unverified_enum",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         25
@@ -1731,7 +1930,7 @@
       "reason": "typed enum raw MIDI table is not verified",
       "requested_value": "sawtooth",
       "semantic_path": "tracks.T2.oscillator_2.waveform",
-      "sequence": 79,
+      "sequence": 85,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -1745,6 +1944,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Sub Oscillator: CC=80, CC-LSB=None, NRPN=(1, 26); conversion policy=unverified_enum",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         26
@@ -1753,7 +1953,7 @@
       "reason": "typed enum raw MIDI table is not verified",
       "requested_value": "off",
       "semantic_path": "tracks.T2.oscillator_2.sub_oscillator",
-      "sequence": 80,
+      "sequence": 86,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -1767,6 +1967,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Pulsewidth: CC=81, CC-LSB=None, NRPN=(1, 27); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 118,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         27
@@ -1775,7 +1976,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 54,
       "semantic_path": "tracks.T2.oscillator_2.pulse_width",
-      "sequence": 81,
+      "sequence": 87,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -1789,6 +1990,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 PWM Speed: CC=82, CC-LSB=None, NRPN=(1, 28); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         28
@@ -1797,7 +1999,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_2.pwm_speed",
-      "sequence": 82,
+      "sequence": 88,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -1811,6 +2013,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 PWM Depth: CC=83, CC-LSB=None, NRPN=(1, 29); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         29
@@ -1819,7 +2022,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_2.pwm_depth",
-      "sequence": 83,
+      "sequence": 89,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -1833,6 +2036,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/OSC1 AM: CC=None, CC-LSB=None, NRPN=(1, 30); conversion policy=unverified_boolean",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         30
@@ -1841,7 +2045,7 @@
       "reason": "boolean raw MIDI representation is not verified",
       "requested_value": false,
       "semantic_path": "tracks.T2.oscillator_common.osc1_am",
-      "sequence": 84,
+      "sequence": 90,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -1855,6 +2059,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Sync Mode: CC=None, CC-LSB=None, NRPN=(1, 31); conversion policy=unverified_enum",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         31
@@ -1863,7 +2068,7 @@
       "reason": "typed enum raw MIDI table is not verified",
       "requested_value": "off",
       "semantic_path": "tracks.T2.oscillator_common.sync_mode",
-      "sequence": 85,
+      "sequence": 91,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -1877,6 +2082,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Sync Amount: CC=84, CC-LSB=None, NRPN=(1, 32); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         32
@@ -1885,7 +2091,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_common.sync_amount",
-      "sequence": 86,
+      "sequence": 92,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -1899,6 +2105,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Bend Amount: CC=85, CC-LSB=None, NRPN=(1, 33); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 82,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         33
@@ -1907,7 +2114,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 18,
       "semantic_path": "tracks.T2.oscillator_common.bend_depth",
-      "sequence": 87,
+      "sequence": 93,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -1921,6 +2128,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Slide Time: CC=5, CC-LSB=None, NRPN=(1, 34); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 7,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         34
@@ -1929,7 +2137,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 7,
       "semantic_path": "tracks.T2.oscillator_common.note_slide_time",
-      "sequence": 88,
+      "sequence": 94,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -1943,6 +2151,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/OSC2 AM: CC=None, CC-LSB=None, NRPN=(1, 35); conversion policy=unverified_boolean",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         35
@@ -1951,7 +2160,7 @@
       "reason": "boolean raw MIDI representation is not verified",
       "requested_value": false,
       "semantic_path": "tracks.T2.oscillator_common.osc2_am",
-      "sequence": 89,
+      "sequence": 95,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -1965,6 +2174,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Note Sync: CC=None, CC-LSB=None, NRPN=(1, 36); conversion policy=unverified_boolean",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         36
@@ -1973,7 +2183,7 @@
       "reason": "boolean raw MIDI representation is not verified",
       "requested_value": true,
       "semantic_path": "tracks.T2.oscillator_common.oscillator_retrigger",
-      "sequence": 90,
+      "sequence": 96,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -1987,6 +2197,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Vibrato Fade: CC=None, CC-LSB=None, NRPN=(1, 37); conversion policy=direct_7bit",
       "message_type": "NRPN",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         37
@@ -1995,7 +2206,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_common.vibrato_fade",
-      "sequence": 91,
+      "sequence": 97,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2009,6 +2220,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Vibrato Speed: CC=87, CC-LSB=None, NRPN=(1, 38); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         38
@@ -2017,7 +2229,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_common.vibrato_speed",
-      "sequence": 92,
+      "sequence": 98,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2031,6 +2243,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Vibrato Depth: CC=88, CC-LSB=None, NRPN=(1, 39); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         39
@@ -2039,7 +2252,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_common.vibrato_depth",
-      "sequence": 93,
+      "sequence": 99,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2053,6 +2266,7 @@
       "mapping_evidence": "manual-backed Analog Four NOISE/Noise S&H: CC=75, CC-LSB=None, NRPN=(1, 10); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         10
@@ -2061,7 +2275,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T2.noise.sample_and_hold",
-      "sequence": 94,
+      "sequence": 100,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2075,12 +2289,13 @@
       "mapping_evidence": "no Analog Four manual mapping; conversion policy=unmapped",
       "message_type": null,
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": null,
       "ordered_midi_bytes": null,
       "reason": "no documented MIDI address is present in the repository",
       "requested_value": 0,
       "semantic_path": "tracks.T2.noise.color",
-      "sequence": 95,
+      "sequence": 101,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -2094,6 +2309,7 @@
       "mapping_evidence": "manual-backed Analog Four NOISE/Noise Fade: CC=76, CC-LSB=None, NRPN=(1, 12); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         12
@@ -2102,7 +2318,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T2.noise.fade",
-      "sequence": 96,
+      "sequence": 102,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2116,6 +2332,7 @@
       "mapping_evidence": "manual-backed Analog Four NOISE/Noise Level: CC=77, CC-LSB=None, NRPN=(1, 14); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         14
@@ -2124,7 +2341,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T2.noise.level",
-      "sequence": 97,
+      "sequence": 103,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2138,6 +2355,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter1 Frequency: CC=18, CC-LSB=50, NRPN=(1, 40); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         40
@@ -2146,7 +2364,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 42,
       "semantic_path": "tracks.T2.filter_1.frequency",
-      "sequence": 98,
+      "sequence": 104,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -2160,6 +2378,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter1 Resonance: CC=89, CC-LSB=None, NRPN=(1, 41); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 26,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         41
@@ -2168,7 +2387,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 26,
       "semantic_path": "tracks.T2.filter_1.resonance",
-      "sequence": 99,
+      "sequence": 105,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2182,6 +2401,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter Overdrive: CC=86, CC-LSB=None, NRPN=(1, 42); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 88,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         42
@@ -2190,7 +2410,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 24,
       "semantic_path": "tracks.T2.filter_1.overdrive",
-      "sequence": 100,
+      "sequence": 106,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2204,6 +2424,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter1 Keytracking: CC=None, CC-LSB=None, NRPN=(1, 43); conversion policy=direct_7bit",
       "message_type": "NRPN",
       "normalized_midi_value": 16,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         43
@@ -2212,7 +2433,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 16,
       "semantic_path": "tracks.T2.filter_1.keytrack",
-      "sequence": 101,
+      "sequence": 107,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2226,6 +2447,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter1 Envelope Amount: CC=102, CC-LSB=None, NRPN=(1, 44); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         44
@@ -2234,7 +2456,7 @@
       "reason": "screen value must be in -64..63 for Analog Four bipolar parameters",
       "requested_value": 64,
       "semantic_path": "tracks.T2.filter_1.envelope_depth",
-      "sequence": 102,
+      "sequence": 108,
       "status": "invalid_spec_field",
       "track": "T2",
       "user_channel": null
@@ -2248,6 +2470,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter2 Frequency: CC=19, CC-LSB=51, NRPN=(1, 45); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         45
@@ -2256,7 +2479,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 34,
       "semantic_path": "tracks.T2.filter_2.frequency",
-      "sequence": 103,
+      "sequence": 109,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -2270,6 +2493,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter2 Resonance: CC=90, CC-LSB=None, NRPN=(1, 46); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 8,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         46
@@ -2278,7 +2502,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 8,
       "semantic_path": "tracks.T2.filter_2.resonance",
-      "sequence": 104,
+      "sequence": 110,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2292,6 +2516,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter2 Type: CC=None, CC-LSB=None, NRPN=(1, 47); conversion policy=verified_enum",
       "message_type": "NRPN",
       "normalized_midi_value": 3,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         47
@@ -2300,7 +2525,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": "HP1",
       "semantic_path": "tracks.T2.filter_2.type",
-      "sequence": 105,
+      "sequence": 111,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2314,6 +2539,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter2 Keytracking: CC=None, CC-LSB=None, NRPN=(1, 48); conversion policy=direct_7bit",
       "message_type": "NRPN",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         48
@@ -2322,7 +2548,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T2.filter_2.keytrack",
-      "sequence": 106,
+      "sequence": 112,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2336,6 +2562,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter2 Envelope Amount: CC=103, CC-LSB=None, NRPN=(1, 49); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 74,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         49
@@ -2344,7 +2571,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 10,
       "semantic_path": "tracks.T2.filter_2.envelope_depth",
-      "sequence": 107,
+      "sequence": 113,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2358,6 +2585,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/EnvA Attack Time: CC=104, CC-LSB=None, NRPN=(1, 50); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         50
@@ -2366,7 +2594,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T2.amp.attack",
-      "sequence": 108,
+      "sequence": 114,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2380,6 +2608,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/EnvA Decay Time: CC=105, CC-LSB=None, NRPN=(1, 51); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 18,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         51
@@ -2388,7 +2617,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 18,
       "semantic_path": "tracks.T2.amp.decay",
-      "sequence": 109,
+      "sequence": 115,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2402,6 +2631,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/EnvA Sustain Level: CC=106, CC-LSB=None, NRPN=(1, 52); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         52
@@ -2410,7 +2640,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T2.amp.sustain",
-      "sequence": 110,
+      "sequence": 116,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2424,6 +2654,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/EnvA Release Time: CC=107, CC-LSB=None, NRPN=(1, 53); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 5,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         53
@@ -2432,7 +2663,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 5,
       "semantic_path": "tracks.T2.amp.release",
-      "sequence": 111,
+      "sequence": 117,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2446,6 +2677,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/EnvA Env Shape: CC=None, CC-LSB=None, NRPN=(1, 54); conversion policy=verified_enum",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         54
@@ -2454,7 +2686,7 @@
       "reason": "typed enum label is absent from the verified table",
       "requested_value": "exponential_restart_from_zero",
       "semantic_path": "tracks.T2.amp.envelope_shape",
-      "sequence": 112,
+      "sequence": 118,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -2468,6 +2700,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/Chorus Send Level: CC=91, CC-LSB=None, NRPN=(1, 55); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         55
@@ -2476,7 +2709,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T2.amp.chorus_send",
-      "sequence": 113,
+      "sequence": 119,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2490,6 +2723,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/Delay Send Level: CC=92, CC-LSB=None, NRPN=(1, 56); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         56
@@ -2498,7 +2732,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T2.amp.delay_send",
-      "sequence": 114,
+      "sequence": 120,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2512,6 +2746,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/Reverb Send Level: CC=93, CC-LSB=None, NRPN=(1, 57); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         57
@@ -2520,7 +2755,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T2.amp.reverb_send",
-      "sequence": 115,
+      "sequence": 121,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2534,6 +2769,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/Pan: CC=10, CC-LSB=None, NRPN=(1, 58); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         58
@@ -2542,7 +2778,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T2.amp.pan",
-      "sequence": 116,
+      "sequence": 122,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2556,6 +2792,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/Volume: CC=7, CC-LSB=None, NRPN=(1, 59); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 86,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         59
@@ -2564,7 +2801,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 86,
       "semantic_path": "tracks.T2.amp.volume",
-      "sequence": 117,
+      "sequence": 123,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2578,6 +2815,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Attack Time: CC=108, CC-LSB=None, NRPN=(1, 60); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         60
@@ -2586,7 +2824,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T2.filter_envelope.attack",
-      "sequence": 118,
+      "sequence": 124,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2600,6 +2838,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Decay Time: CC=109, CC-LSB=None, NRPN=(1, 61); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 20,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         61
@@ -2608,7 +2847,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 20,
       "semantic_path": "tracks.T2.filter_envelope.decay",
-      "sequence": 119,
+      "sequence": 125,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2622,6 +2861,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Sustain Level: CC=110, CC-LSB=None, NRPN=(1, 62); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         62
@@ -2630,7 +2870,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T2.filter_envelope.sustain",
-      "sequence": 120,
+      "sequence": 126,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2644,6 +2884,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Release Time: CC=111, CC-LSB=None, NRPN=(1, 63); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 4,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         63
@@ -2652,7 +2893,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 4,
       "semantic_path": "tracks.T2.filter_envelope.release",
-      "sequence": 121,
+      "sequence": 127,
       "status": "ready",
       "track": "T2",
       "user_channel": null
@@ -2666,6 +2907,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Env Shape: CC=None, CC-LSB=None, NRPN=(1, 64); conversion policy=verified_enum",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         64
@@ -2674,7 +2916,7 @@
       "reason": "typed enum label is absent from the verified table",
       "requested_value": "exponential_restart_from_zero",
       "semantic_path": "tracks.T2.filter_envelope.envelope_shape",
-      "sequence": 122,
+      "sequence": 128,
       "status": "learn_required",
       "track": "T2",
       "user_channel": null
@@ -2688,6 +2930,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Gate Length: CC=None, CC-LSB=None, NRPN=(1, 65); conversion policy=verified_enum",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         65
@@ -2696,9 +2939,49 @@
       "reason": "field explicitly preserves the active-kit value",
       "requested_value": "preserve_reference",
       "semantic_path": "tracks.T2.filter_envelope.gate_length",
-      "sequence": 123,
+      "sequence": 129,
       "status": "preserve_reference",
       "track": "T2",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "a4",
+      "mapping_evidence": "explicit RUSH01 manual-setup policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "per-track sound naming has no verified MIDI mapping",
+      "requested_value": "R01 METSYNC",
+      "semantic_path": "tracks.T3.sound_name",
+      "sequence": 130,
+      "status": "manual_setup_required",
+      "track": "T3",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "a4",
+      "mapping_evidence": "RUSH01 semantic metadata policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "design_role is descriptive metadata and does not request transmission",
+      "requested_value": "Hollow industrial command stab using oscillator AM and Metal Sync.",
+      "semantic_path": "tracks.T3.design_role",
+      "sequence": 131,
+      "status": "preserve_reference",
+      "track": "T3",
       "user_channel": null
     },
     {
@@ -2710,6 +2993,7 @@
       "mapping_evidence": "manual-backed Analog Four TRACK/Track Level: CC=95, CC-LSB=None, NRPN=(1, 100); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 82,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         100
@@ -2718,7 +3002,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 82,
       "semantic_path": "track_levels.T3",
-      "sequence": 124,
+      "sequence": 132,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -2732,6 +3016,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Pitch: CC=16, CC-LSB=48, NRPN=(1, 0); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         0
@@ -2740,7 +3025,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_1.coarse_tune_semitones",
-      "sequence": 125,
+      "sequence": 133,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -2754,6 +3039,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Pitch: CC=16, CC-LSB=48, NRPN=(1, 0); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         0
@@ -2762,7 +3048,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_1.fine_tune_cents",
-      "sequence": 126,
+      "sequence": 134,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -2776,6 +3062,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Detune: CC=None, CC-LSB=None, NRPN=(1, 2); conversion policy=unverified_conversion",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         2
@@ -2784,7 +3071,7 @@
       "reason": "display-to-MIDI conversion is not verified",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_1.linear_detune_hz",
-      "sequence": 127,
+      "sequence": 135,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -2798,6 +3085,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Keytracking: CC=None, CC-LSB=None, NRPN=(1, 3); conversion policy=unverified_boolean",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         3
@@ -2806,7 +3094,7 @@
       "reason": "boolean raw MIDI representation is not verified",
       "requested_value": true,
       "semantic_path": "tracks.T3.oscillator_1.keytrack",
-      "sequence": 128,
+      "sequence": 136,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -2820,6 +3108,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Level: CC=69, CC-LSB=None, NRPN=(1, 4); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 100,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         4
@@ -2828,7 +3117,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 100,
       "semantic_path": "tracks.T3.oscillator_1.level",
-      "sequence": 129,
+      "sequence": 137,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -2842,6 +3131,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Waveform: CC=70, CC-LSB=None, NRPN=(1, 5); conversion policy=unverified_enum",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         5
@@ -2850,7 +3140,7 @@
       "reason": "typed enum raw MIDI table is not verified",
       "requested_value": "transistor_pulse",
       "semantic_path": "tracks.T3.oscillator_1.waveform",
-      "sequence": 130,
+      "sequence": 138,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -2864,6 +3154,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Sub Oscillator: CC=71, CC-LSB=None, NRPN=(1, 6); conversion policy=unverified_enum",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         6
@@ -2872,7 +3163,7 @@
       "reason": "typed enum raw MIDI table is not verified",
       "requested_value": "off",
       "semantic_path": "tracks.T3.oscillator_1.sub_oscillator",
-      "sequence": 131,
+      "sequence": 139,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -2886,6 +3177,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Pulsewidth: CC=72, CC-LSB=None, NRPN=(1, 7); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 100,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         7
@@ -2894,7 +3186,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 36,
       "semantic_path": "tracks.T3.oscillator_1.pulse_width",
-      "sequence": 132,
+      "sequence": 140,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -2908,6 +3200,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 PWM Speed: CC=73, CC-LSB=None, NRPN=(1, 8); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         8
@@ -2916,7 +3209,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_1.pwm_speed",
-      "sequence": 133,
+      "sequence": 141,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -2930,6 +3223,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 PWM Depth: CC=74, CC-LSB=None, NRPN=(1, 9); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         9
@@ -2938,7 +3232,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_1.pwm_depth",
-      "sequence": 134,
+      "sequence": 142,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -2952,6 +3246,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Pitch: CC=17, CC-LSB=49, NRPN=(1, 20); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         20
@@ -2960,7 +3255,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 19,
       "semantic_path": "tracks.T3.oscillator_2.coarse_tune_semitones",
-      "sequence": 135,
+      "sequence": 143,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -2974,6 +3269,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Pitch: CC=17, CC-LSB=49, NRPN=(1, 20); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         20
@@ -2982,7 +3278,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_2.fine_tune_cents",
-      "sequence": 136,
+      "sequence": 144,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -2996,6 +3292,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Detune: CC=None, CC-LSB=None, NRPN=(1, 22); conversion policy=unverified_conversion",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         22
@@ -3004,7 +3301,7 @@
       "reason": "display-to-MIDI conversion is not verified",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_2.linear_detune_hz",
-      "sequence": 137,
+      "sequence": 145,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -3018,6 +3315,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Keytracking: CC=None, CC-LSB=None, NRPN=(1, 23); conversion policy=unverified_boolean",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         23
@@ -3026,7 +3324,7 @@
       "reason": "boolean raw MIDI representation is not verified",
       "requested_value": true,
       "semantic_path": "tracks.T3.oscillator_2.keytrack",
-      "sequence": 138,
+      "sequence": 146,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -3040,6 +3338,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Level: CC=78, CC-LSB=None, NRPN=(1, 24); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         24
@@ -3048,7 +3347,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_2.level",
-      "sequence": 139,
+      "sequence": 147,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3062,6 +3361,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Waveform: CC=79, CC-LSB=None, NRPN=(1, 25); conversion policy=unverified_enum",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         25
@@ -3070,7 +3370,7 @@
       "reason": "typed enum raw MIDI table is not verified",
       "requested_value": "pulse",
       "semantic_path": "tracks.T3.oscillator_2.waveform",
-      "sequence": 140,
+      "sequence": 148,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -3084,6 +3384,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Sub Oscillator: CC=80, CC-LSB=None, NRPN=(1, 26); conversion policy=unverified_enum",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         26
@@ -3092,7 +3393,7 @@
       "reason": "typed enum raw MIDI table is not verified",
       "requested_value": "off",
       "semantic_path": "tracks.T3.oscillator_2.sub_oscillator",
-      "sequence": 141,
+      "sequence": 149,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -3106,6 +3407,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Pulsewidth: CC=81, CC-LSB=None, NRPN=(1, 27); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         27
@@ -3114,7 +3416,7 @@
       "reason": "screen value must be in -64..63 for Analog Four bipolar parameters",
       "requested_value": 74,
       "semantic_path": "tracks.T3.oscillator_2.pulse_width",
-      "sequence": 142,
+      "sequence": 150,
       "status": "invalid_spec_field",
       "track": "T3",
       "user_channel": null
@@ -3128,6 +3430,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 PWM Speed: CC=82, CC-LSB=None, NRPN=(1, 28); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         28
@@ -3136,7 +3439,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_2.pwm_speed",
-      "sequence": 143,
+      "sequence": 151,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3150,6 +3453,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 PWM Depth: CC=83, CC-LSB=None, NRPN=(1, 29); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         29
@@ -3158,7 +3462,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_2.pwm_depth",
-      "sequence": 144,
+      "sequence": 152,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3172,6 +3476,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/OSC1 AM: CC=None, CC-LSB=None, NRPN=(1, 30); conversion policy=unverified_boolean",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         30
@@ -3180,7 +3485,7 @@
       "reason": "boolean raw MIDI representation is not verified",
       "requested_value": true,
       "semantic_path": "tracks.T3.oscillator_common.osc1_am",
-      "sequence": 145,
+      "sequence": 153,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -3194,6 +3499,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Sync Mode: CC=None, CC-LSB=None, NRPN=(1, 31); conversion policy=unverified_enum",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         31
@@ -3202,7 +3508,7 @@
       "reason": "typed enum raw MIDI table is not verified",
       "requested_value": "metal",
       "semantic_path": "tracks.T3.oscillator_common.sync_mode",
-      "sequence": 146,
+      "sequence": 154,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -3216,6 +3522,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Sync Amount: CC=84, CC-LSB=None, NRPN=(1, 32); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 48,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         32
@@ -3224,7 +3531,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 48,
       "semantic_path": "tracks.T3.oscillator_common.sync_amount",
-      "sequence": 147,
+      "sequence": 155,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3238,6 +3545,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Bend Amount: CC=85, CC-LSB=None, NRPN=(1, 33); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 90,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         33
@@ -3246,7 +3554,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 26,
       "semantic_path": "tracks.T3.oscillator_common.bend_depth",
-      "sequence": 148,
+      "sequence": 156,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3260,6 +3568,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Slide Time: CC=5, CC-LSB=None, NRPN=(1, 34); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 9,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         34
@@ -3268,7 +3577,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 9,
       "semantic_path": "tracks.T3.oscillator_common.note_slide_time",
-      "sequence": 149,
+      "sequence": 157,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3282,6 +3591,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/OSC2 AM: CC=None, CC-LSB=None, NRPN=(1, 35); conversion policy=unverified_boolean",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         35
@@ -3290,7 +3600,7 @@
       "reason": "boolean raw MIDI representation is not verified",
       "requested_value": false,
       "semantic_path": "tracks.T3.oscillator_common.osc2_am",
-      "sequence": 150,
+      "sequence": 158,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -3304,6 +3614,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Note Sync: CC=None, CC-LSB=None, NRPN=(1, 36); conversion policy=unverified_boolean",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         36
@@ -3312,7 +3623,7 @@
       "reason": "boolean raw MIDI representation is not verified",
       "requested_value": true,
       "semantic_path": "tracks.T3.oscillator_common.oscillator_retrigger",
-      "sequence": 151,
+      "sequence": 159,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -3326,6 +3637,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Vibrato Fade: CC=None, CC-LSB=None, NRPN=(1, 37); conversion policy=direct_7bit",
       "message_type": "NRPN",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         37
@@ -3334,7 +3646,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_common.vibrato_fade",
-      "sequence": 152,
+      "sequence": 160,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3348,6 +3660,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Vibrato Speed: CC=87, CC-LSB=None, NRPN=(1, 38); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         38
@@ -3356,7 +3669,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_common.vibrato_speed",
-      "sequence": 153,
+      "sequence": 161,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3370,6 +3683,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Vibrato Depth: CC=88, CC-LSB=None, NRPN=(1, 39); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         39
@@ -3378,7 +3692,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_common.vibrato_depth",
-      "sequence": 154,
+      "sequence": 162,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3392,6 +3706,7 @@
       "mapping_evidence": "manual-backed Analog Four NOISE/Noise S&H: CC=75, CC-LSB=None, NRPN=(1, 10); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         10
@@ -3400,7 +3715,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T3.noise.sample_and_hold",
-      "sequence": 155,
+      "sequence": 163,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3414,12 +3729,13 @@
       "mapping_evidence": "no Analog Four manual mapping; conversion policy=unmapped",
       "message_type": null,
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": null,
       "ordered_midi_bytes": null,
       "reason": "no documented MIDI address is present in the repository",
       "requested_value": 0,
       "semantic_path": "tracks.T3.noise.color",
-      "sequence": 156,
+      "sequence": 164,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -3433,6 +3749,7 @@
       "mapping_evidence": "manual-backed Analog Four NOISE/Noise Fade: CC=76, CC-LSB=None, NRPN=(1, 12); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         12
@@ -3441,7 +3758,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T3.noise.fade",
-      "sequence": 157,
+      "sequence": 165,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3455,6 +3772,7 @@
       "mapping_evidence": "manual-backed Analog Four NOISE/Noise Level: CC=77, CC-LSB=None, NRPN=(1, 14); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         14
@@ -3463,7 +3781,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T3.noise.level",
-      "sequence": 158,
+      "sequence": 166,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3477,6 +3795,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter1 Frequency: CC=18, CC-LSB=50, NRPN=(1, 40); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         40
@@ -3485,7 +3804,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 58,
       "semantic_path": "tracks.T3.filter_1.frequency",
-      "sequence": 159,
+      "sequence": 167,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -3499,6 +3818,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter1 Resonance: CC=89, CC-LSB=None, NRPN=(1, 41); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 30,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         41
@@ -3507,7 +3827,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 30,
       "semantic_path": "tracks.T3.filter_1.resonance",
-      "sequence": 160,
+      "sequence": 168,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3521,6 +3841,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter Overdrive: CC=86, CC-LSB=None, NRPN=(1, 42); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 94,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         42
@@ -3529,7 +3850,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 30,
       "semantic_path": "tracks.T3.filter_1.overdrive",
-      "sequence": 161,
+      "sequence": 169,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3543,6 +3864,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter1 Keytracking: CC=None, CC-LSB=None, NRPN=(1, 43); conversion policy=direct_7bit",
       "message_type": "NRPN",
       "normalized_midi_value": 12,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         43
@@ -3551,7 +3873,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 12,
       "semantic_path": "tracks.T3.filter_1.keytrack",
-      "sequence": 162,
+      "sequence": 170,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3565,6 +3887,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter1 Envelope Amount: CC=102, CC-LSB=None, NRPN=(1, 44); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 102,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         44
@@ -3573,7 +3896,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 38,
       "semantic_path": "tracks.T3.filter_1.envelope_depth",
-      "sequence": 163,
+      "sequence": 171,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3587,6 +3910,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter2 Frequency: CC=19, CC-LSB=51, NRPN=(1, 45); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         45
@@ -3595,7 +3919,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 78,
       "semantic_path": "tracks.T3.filter_2.frequency",
-      "sequence": 164,
+      "sequence": 172,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -3609,6 +3933,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter2 Resonance: CC=90, CC-LSB=None, NRPN=(1, 46); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 34,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         46
@@ -3617,7 +3942,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 34,
       "semantic_path": "tracks.T3.filter_2.resonance",
-      "sequence": 165,
+      "sequence": 173,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3631,6 +3956,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter2 Type: CC=None, CC-LSB=None, NRPN=(1, 47); conversion policy=verified_enum",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         47
@@ -3639,7 +3965,7 @@
       "reason": "typed enum label is absent from the verified table",
       "requested_value": "Bandpass",
       "semantic_path": "tracks.T3.filter_2.type",
-      "sequence": 166,
+      "sequence": 174,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -3653,6 +3979,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter2 Keytracking: CC=None, CC-LSB=None, NRPN=(1, 48); conversion policy=direct_7bit",
       "message_type": "NRPN",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         48
@@ -3661,7 +3988,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T3.filter_2.keytrack",
-      "sequence": 167,
+      "sequence": 175,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3675,6 +4002,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter2 Envelope Amount: CC=103, CC-LSB=None, NRPN=(1, 49); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 82,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         49
@@ -3683,7 +4011,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 18,
       "semantic_path": "tracks.T3.filter_2.envelope_depth",
-      "sequence": 168,
+      "sequence": 176,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3697,6 +4025,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/EnvA Attack Time: CC=104, CC-LSB=None, NRPN=(1, 50); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         50
@@ -3705,7 +4034,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T3.amp.attack",
-      "sequence": 169,
+      "sequence": 177,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3719,6 +4048,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/EnvA Decay Time: CC=105, CC-LSB=None, NRPN=(1, 51); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 15,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         51
@@ -3727,7 +4057,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 15,
       "semantic_path": "tracks.T3.amp.decay",
-      "sequence": 170,
+      "sequence": 178,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3741,6 +4071,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/EnvA Sustain Level: CC=106, CC-LSB=None, NRPN=(1, 52); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         52
@@ -3749,7 +4080,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T3.amp.sustain",
-      "sequence": 171,
+      "sequence": 179,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3763,6 +4094,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/EnvA Release Time: CC=107, CC-LSB=None, NRPN=(1, 53); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 4,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         53
@@ -3771,7 +4103,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 4,
       "semantic_path": "tracks.T3.amp.release",
-      "sequence": 172,
+      "sequence": 180,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3785,6 +4117,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/EnvA Env Shape: CC=None, CC-LSB=None, NRPN=(1, 54); conversion policy=verified_enum",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         54
@@ -3793,7 +4126,7 @@
       "reason": "typed enum label is absent from the verified table",
       "requested_value": "exponential_restart_from_zero",
       "semantic_path": "tracks.T3.amp.envelope_shape",
-      "sequence": 173,
+      "sequence": 181,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -3807,6 +4140,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/Chorus Send Level: CC=91, CC-LSB=None, NRPN=(1, 55); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         55
@@ -3815,7 +4149,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T3.amp.chorus_send",
-      "sequence": 174,
+      "sequence": 182,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3829,6 +4163,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/Delay Send Level: CC=92, CC-LSB=None, NRPN=(1, 56); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         56
@@ -3837,7 +4172,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T3.amp.delay_send",
-      "sequence": 175,
+      "sequence": 183,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3851,6 +4186,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/Reverb Send Level: CC=93, CC-LSB=None, NRPN=(1, 57); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         57
@@ -3859,7 +4195,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T3.amp.reverb_send",
-      "sequence": 176,
+      "sequence": 184,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3873,6 +4209,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/Pan: CC=10, CC-LSB=None, NRPN=(1, 58); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 69,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         58
@@ -3881,7 +4218,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 5,
       "semantic_path": "tracks.T3.amp.pan",
-      "sequence": 177,
+      "sequence": 185,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3895,6 +4232,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/Volume: CC=7, CC-LSB=None, NRPN=(1, 59); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 76,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         59
@@ -3903,7 +4241,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 76,
       "semantic_path": "tracks.T3.amp.volume",
-      "sequence": 178,
+      "sequence": 186,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3917,6 +4255,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Attack Time: CC=108, CC-LSB=None, NRPN=(1, 60); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         60
@@ -3925,7 +4264,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T3.filter_envelope.attack",
-      "sequence": 179,
+      "sequence": 187,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3939,6 +4278,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Decay Time: CC=109, CC-LSB=None, NRPN=(1, 61); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 23,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         61
@@ -3947,7 +4287,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 23,
       "semantic_path": "tracks.T3.filter_envelope.decay",
-      "sequence": 180,
+      "sequence": 188,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3961,6 +4301,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Sustain Level: CC=110, CC-LSB=None, NRPN=(1, 62); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         62
@@ -3969,7 +4310,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T3.filter_envelope.sustain",
-      "sequence": 181,
+      "sequence": 189,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -3983,6 +4324,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Release Time: CC=111, CC-LSB=None, NRPN=(1, 63); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 3,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         63
@@ -3991,7 +4333,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 3,
       "semantic_path": "tracks.T3.filter_envelope.release",
-      "sequence": 182,
+      "sequence": 190,
       "status": "ready",
       "track": "T3",
       "user_channel": null
@@ -4005,6 +4347,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Env Shape: CC=None, CC-LSB=None, NRPN=(1, 64); conversion policy=verified_enum",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         64
@@ -4013,7 +4356,7 @@
       "reason": "typed enum label is absent from the verified table",
       "requested_value": "exponential_restart_from_zero",
       "semantic_path": "tracks.T3.filter_envelope.envelope_shape",
-      "sequence": 183,
+      "sequence": 191,
       "status": "learn_required",
       "track": "T3",
       "user_channel": null
@@ -4027,6 +4370,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Gate Length: CC=None, CC-LSB=None, NRPN=(1, 65); conversion policy=verified_enum",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         65
@@ -4035,9 +4379,49 @@
       "reason": "field explicitly preserves the active-kit value",
       "requested_value": "preserve_reference",
       "semantic_path": "tracks.T3.filter_envelope.gate_length",
-      "sequence": 184,
+      "sequence": 192,
       "status": "preserve_reference",
       "track": "T3",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "a4",
+      "mapping_evidence": "explicit RUSH01 manual-setup policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "per-track sound naming has no verified MIDI mapping",
+      "requested_value": "R01 GHOST",
+      "semantic_path": "tracks.T4.sound_name",
+      "sequence": 193,
+      "status": "manual_setup_required",
+      "track": "T4",
+      "user_channel": null
+    },
+    {
+      "channel": null,
+      "configuration_issue": null,
+      "controller": null,
+      "controller_lsb": null,
+      "device": "a4",
+      "mapping_evidence": "RUSH01 semantic metadata policy",
+      "message_type": null,
+      "normalized_midi_value": null,
+      "normalized_value_domain": null,
+      "nrpn_address": null,
+      "ordered_midi_bytes": null,
+      "reason": "design_role is descriptive metadata and does not request transmission",
+      "requested_value": "Self-resonant filter/noise voice for narrow spectral knocks and screams.",
+      "semantic_path": "tracks.T4.design_role",
+      "sequence": 194,
+      "status": "preserve_reference",
+      "track": "T4",
       "user_channel": null
     },
     {
@@ -4049,6 +4433,7 @@
       "mapping_evidence": "manual-backed Analog Four TRACK/Track Level: CC=95, CC-LSB=None, NRPN=(1, 100); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 78,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         100
@@ -4057,7 +4442,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 78,
       "semantic_path": "track_levels.T4",
-      "sequence": 185,
+      "sequence": 195,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4071,6 +4456,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Pitch: CC=16, CC-LSB=48, NRPN=(1, 0); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         0
@@ -4079,7 +4465,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_1.coarse_tune_semitones",
-      "sequence": 186,
+      "sequence": 196,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -4093,6 +4479,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Pitch: CC=16, CC-LSB=48, NRPN=(1, 0); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         0
@@ -4101,7 +4488,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_1.fine_tune_cents",
-      "sequence": 187,
+      "sequence": 197,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -4115,6 +4502,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Detune: CC=None, CC-LSB=None, NRPN=(1, 2); conversion policy=unverified_conversion",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         2
@@ -4123,7 +4511,7 @@
       "reason": "display-to-MIDI conversion is not verified",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_1.linear_detune_hz",
-      "sequence": 188,
+      "sequence": 198,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -4137,6 +4525,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Keytracking: CC=None, CC-LSB=None, NRPN=(1, 3); conversion policy=unverified_boolean",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         3
@@ -4145,7 +4534,7 @@
       "reason": "boolean raw MIDI representation is not verified",
       "requested_value": true,
       "semantic_path": "tracks.T4.oscillator_1.keytrack",
-      "sequence": 189,
+      "sequence": 199,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -4159,6 +4548,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Level: CC=69, CC-LSB=None, NRPN=(1, 4); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         4
@@ -4167,7 +4557,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_1.level",
-      "sequence": 190,
+      "sequence": 200,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4181,6 +4571,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Waveform: CC=70, CC-LSB=None, NRPN=(1, 5); conversion policy=unverified_enum",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         5
@@ -4189,7 +4580,7 @@
       "reason": "typed enum raw MIDI table is not verified",
       "requested_value": "sawtooth",
       "semantic_path": "tracks.T4.oscillator_1.waveform",
-      "sequence": 191,
+      "sequence": 201,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -4203,6 +4594,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Sub Oscillator: CC=71, CC-LSB=None, NRPN=(1, 6); conversion policy=unverified_enum",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         6
@@ -4211,7 +4603,7 @@
       "reason": "typed enum raw MIDI table is not verified",
       "requested_value": "off",
       "semantic_path": "tracks.T4.oscillator_1.sub_oscillator",
-      "sequence": 192,
+      "sequence": 202,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -4225,6 +4617,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 Pulsewidth: CC=72, CC-LSB=None, NRPN=(1, 7); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         7
@@ -4233,7 +4626,7 @@
       "reason": "screen value must be in -64..63 for Analog Four bipolar parameters",
       "requested_value": 64,
       "semantic_path": "tracks.T4.oscillator_1.pulse_width",
-      "sequence": 193,
+      "sequence": 203,
       "status": "invalid_spec_field",
       "track": "T4",
       "user_channel": null
@@ -4247,6 +4640,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 PWM Speed: CC=73, CC-LSB=None, NRPN=(1, 8); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         8
@@ -4255,7 +4649,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_1.pwm_speed",
-      "sequence": 194,
+      "sequence": 204,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4269,6 +4663,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 1/OSC1 PWM Depth: CC=74, CC-LSB=None, NRPN=(1, 9); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         9
@@ -4277,7 +4672,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_1.pwm_depth",
-      "sequence": 195,
+      "sequence": 205,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4291,6 +4686,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Pitch: CC=17, CC-LSB=49, NRPN=(1, 20); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         20
@@ -4299,7 +4695,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_2.coarse_tune_semitones",
-      "sequence": 196,
+      "sequence": 206,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -4313,6 +4709,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Pitch: CC=17, CC-LSB=49, NRPN=(1, 20); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         20
@@ -4321,7 +4718,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_2.fine_tune_cents",
-      "sequence": 197,
+      "sequence": 207,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -4335,6 +4732,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Detune: CC=None, CC-LSB=None, NRPN=(1, 22); conversion policy=unverified_conversion",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         22
@@ -4343,7 +4741,7 @@
       "reason": "display-to-MIDI conversion is not verified",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_2.linear_detune_hz",
-      "sequence": 198,
+      "sequence": 208,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -4357,6 +4755,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Keytracking: CC=None, CC-LSB=None, NRPN=(1, 23); conversion policy=unverified_boolean",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         23
@@ -4365,7 +4764,7 @@
       "reason": "boolean raw MIDI representation is not verified",
       "requested_value": true,
       "semantic_path": "tracks.T4.oscillator_2.keytrack",
-      "sequence": 199,
+      "sequence": 209,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -4379,6 +4778,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Level: CC=78, CC-LSB=None, NRPN=(1, 24); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         24
@@ -4387,7 +4787,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_2.level",
-      "sequence": 200,
+      "sequence": 210,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4401,6 +4801,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Waveform: CC=79, CC-LSB=None, NRPN=(1, 25); conversion policy=unverified_enum",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         25
@@ -4409,7 +4810,7 @@
       "reason": "typed enum raw MIDI table is not verified",
       "requested_value": "sawtooth",
       "semantic_path": "tracks.T4.oscillator_2.waveform",
-      "sequence": 201,
+      "sequence": 211,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -4423,6 +4824,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Sub Oscillator: CC=80, CC-LSB=None, NRPN=(1, 26); conversion policy=unverified_enum",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         26
@@ -4431,7 +4833,7 @@
       "reason": "typed enum raw MIDI table is not verified",
       "requested_value": "off",
       "semantic_path": "tracks.T4.oscillator_2.sub_oscillator",
-      "sequence": 202,
+      "sequence": 212,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -4445,6 +4847,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 Pulsewidth: CC=81, CC-LSB=None, NRPN=(1, 27); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         27
@@ -4453,7 +4856,7 @@
       "reason": "screen value must be in -64..63 for Analog Four bipolar parameters",
       "requested_value": 64,
       "semantic_path": "tracks.T4.oscillator_2.pulse_width",
-      "sequence": 203,
+      "sequence": 213,
       "status": "invalid_spec_field",
       "track": "T4",
       "user_channel": null
@@ -4467,6 +4870,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 PWM Speed: CC=82, CC-LSB=None, NRPN=(1, 28); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         28
@@ -4475,7 +4879,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_2.pwm_speed",
-      "sequence": 204,
+      "sequence": 214,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4489,6 +4893,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC 2/OSC2 PWM Depth: CC=83, CC-LSB=None, NRPN=(1, 29); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         29
@@ -4497,7 +4902,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_2.pwm_depth",
-      "sequence": 205,
+      "sequence": 215,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4511,6 +4916,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/OSC1 AM: CC=None, CC-LSB=None, NRPN=(1, 30); conversion policy=unverified_boolean",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         30
@@ -4519,7 +4925,7 @@
       "reason": "boolean raw MIDI representation is not verified",
       "requested_value": false,
       "semantic_path": "tracks.T4.oscillator_common.osc1_am",
-      "sequence": 206,
+      "sequence": 216,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -4533,6 +4939,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Sync Mode: CC=None, CC-LSB=None, NRPN=(1, 31); conversion policy=unverified_enum",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         31
@@ -4541,7 +4948,7 @@
       "reason": "typed enum raw MIDI table is not verified",
       "requested_value": "off",
       "semantic_path": "tracks.T4.oscillator_common.sync_mode",
-      "sequence": 207,
+      "sequence": 217,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -4555,6 +4962,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Sync Amount: CC=84, CC-LSB=None, NRPN=(1, 32); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         32
@@ -4563,7 +4971,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_common.sync_amount",
-      "sequence": 208,
+      "sequence": 218,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4577,6 +4985,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Bend Amount: CC=85, CC-LSB=None, NRPN=(1, 33); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         33
@@ -4585,7 +4994,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_common.bend_depth",
-      "sequence": 209,
+      "sequence": 219,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4599,6 +5008,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Slide Time: CC=5, CC-LSB=None, NRPN=(1, 34); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         34
@@ -4607,7 +5017,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_common.note_slide_time",
-      "sequence": 210,
+      "sequence": 220,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4621,6 +5031,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/OSC2 AM: CC=None, CC-LSB=None, NRPN=(1, 35); conversion policy=unverified_boolean",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         35
@@ -4629,7 +5040,7 @@
       "reason": "boolean raw MIDI representation is not verified",
       "requested_value": false,
       "semantic_path": "tracks.T4.oscillator_common.osc2_am",
-      "sequence": 211,
+      "sequence": 221,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -4643,6 +5054,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Note Sync: CC=None, CC-LSB=None, NRPN=(1, 36); conversion policy=unverified_boolean",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         36
@@ -4651,7 +5063,7 @@
       "reason": "boolean raw MIDI representation is not verified",
       "requested_value": true,
       "semantic_path": "tracks.T4.oscillator_common.oscillator_retrigger",
-      "sequence": 212,
+      "sequence": 222,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -4665,6 +5077,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Vibrato Fade: CC=None, CC-LSB=None, NRPN=(1, 37); conversion policy=direct_7bit",
       "message_type": "NRPN",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         37
@@ -4673,7 +5086,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_common.vibrato_fade",
-      "sequence": 213,
+      "sequence": 223,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4687,6 +5100,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Vibrato Speed: CC=87, CC-LSB=None, NRPN=(1, 38); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         38
@@ -4695,7 +5109,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_common.vibrato_speed",
-      "sequence": 214,
+      "sequence": 224,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4709,6 +5123,7 @@
       "mapping_evidence": "manual-backed Analog Four OSC COMMON/Vibrato Depth: CC=88, CC-LSB=None, NRPN=(1, 39); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         39
@@ -4717,7 +5132,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_common.vibrato_depth",
-      "sequence": 215,
+      "sequence": 225,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4731,6 +5146,7 @@
       "mapping_evidence": "manual-backed Analog Four NOISE/Noise S&H: CC=75, CC-LSB=None, NRPN=(1, 10); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 64,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         10
@@ -4739,7 +5155,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 64,
       "semantic_path": "tracks.T4.noise.sample_and_hold",
-      "sequence": 216,
+      "sequence": 226,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4753,12 +5169,13 @@
       "mapping_evidence": "no Analog Four manual mapping; conversion policy=unmapped",
       "message_type": null,
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": null,
       "ordered_midi_bytes": null,
       "reason": "no documented MIDI address is present in the repository",
       "requested_value": -32,
       "semantic_path": "tracks.T4.noise.color",
-      "sequence": 217,
+      "sequence": 227,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -4772,6 +5189,7 @@
       "mapping_evidence": "manual-backed Analog Four NOISE/Noise Fade: CC=76, CC-LSB=None, NRPN=(1, 12); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 52,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         12
@@ -4780,7 +5198,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 52,
       "semantic_path": "tracks.T4.noise.fade",
-      "sequence": 218,
+      "sequence": 228,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4794,6 +5212,7 @@
       "mapping_evidence": "manual-backed Analog Four NOISE/Noise Level: CC=77, CC-LSB=None, NRPN=(1, 14); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 8,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         14
@@ -4802,7 +5221,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 8,
       "semantic_path": "tracks.T4.noise.level",
-      "sequence": 219,
+      "sequence": 229,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4816,6 +5235,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter1 Frequency: CC=18, CC-LSB=50, NRPN=(1, 40); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         40
@@ -4824,7 +5244,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 54,
       "semantic_path": "tracks.T4.filter_1.frequency",
-      "sequence": 220,
+      "sequence": 230,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -4838,6 +5258,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter1 Resonance: CC=89, CC-LSB=None, NRPN=(1, 41); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 112,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         41
@@ -4846,7 +5267,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 112,
       "semantic_path": "tracks.T4.filter_1.resonance",
-      "sequence": 221,
+      "sequence": 231,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4860,6 +5281,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter Overdrive: CC=86, CC-LSB=None, NRPN=(1, 42); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 56,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         42
@@ -4868,7 +5290,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": -8,
       "semantic_path": "tracks.T4.filter_1.overdrive",
-      "sequence": 222,
+      "sequence": 232,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4882,6 +5304,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter1 Keytracking: CC=None, CC-LSB=None, NRPN=(1, 43); conversion policy=direct_7bit",
       "message_type": "NRPN",
       "normalized_midi_value": 32,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         43
@@ -4890,7 +5313,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 32,
       "semantic_path": "tracks.T4.filter_1.keytrack",
-      "sequence": 223,
+      "sequence": 233,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4904,6 +5327,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter1 Envelope Amount: CC=102, CC-LSB=None, NRPN=(1, 44); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 122,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         44
@@ -4912,7 +5336,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 58,
       "semantic_path": "tracks.T4.filter_1.envelope_depth",
-      "sequence": 224,
+      "sequence": 234,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4926,6 +5350,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter2 Frequency: CC=19, CC-LSB=51, NRPN=(1, 45); conversion policy=unverified_high_resolution",
       "message_type": "CC14",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         45
@@ -4934,7 +5359,7 @@
       "reason": "high-resolution display-to-MIDI conversion is not positively verified",
       "requested_value": 30,
       "semantic_path": "tracks.T4.filter_2.frequency",
-      "sequence": 225,
+      "sequence": 235,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -4948,6 +5373,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter2 Resonance: CC=90, CC-LSB=None, NRPN=(1, 46); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 8,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         46
@@ -4956,7 +5382,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 8,
       "semantic_path": "tracks.T4.filter_2.resonance",
-      "sequence": 226,
+      "sequence": 236,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4970,6 +5396,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter2 Type: CC=None, CC-LSB=None, NRPN=(1, 47); conversion policy=verified_enum",
       "message_type": "NRPN",
       "normalized_midi_value": 3,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         47
@@ -4978,7 +5405,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": "HP1",
       "semantic_path": "tracks.T4.filter_2.type",
-      "sequence": 227,
+      "sequence": 237,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -4992,6 +5419,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter2 Keytracking: CC=None, CC-LSB=None, NRPN=(1, 48); conversion policy=direct_7bit",
       "message_type": "NRPN",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         48
@@ -5000,7 +5428,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T4.filter_2.keytrack",
-      "sequence": 228,
+      "sequence": 238,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -5014,6 +5442,7 @@
       "mapping_evidence": "manual-backed Analog Four FILTERS/Filter2 Envelope Amount: CC=103, CC-LSB=None, NRPN=(1, 49); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 70,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         49
@@ -5022,7 +5451,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 6,
       "semantic_path": "tracks.T4.filter_2.envelope_depth",
-      "sequence": 229,
+      "sequence": 239,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -5036,6 +5465,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/EnvA Attack Time: CC=104, CC-LSB=None, NRPN=(1, 50); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         50
@@ -5044,7 +5474,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T4.amp.attack",
-      "sequence": 230,
+      "sequence": 240,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -5058,6 +5488,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/EnvA Decay Time: CC=105, CC-LSB=None, NRPN=(1, 51); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 28,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         51
@@ -5066,7 +5497,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 28,
       "semantic_path": "tracks.T4.amp.decay",
-      "sequence": 231,
+      "sequence": 241,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -5080,6 +5511,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/EnvA Sustain Level: CC=106, CC-LSB=None, NRPN=(1, 52); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         52
@@ -5088,7 +5520,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T4.amp.sustain",
-      "sequence": 232,
+      "sequence": 242,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -5102,6 +5534,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/EnvA Release Time: CC=107, CC-LSB=None, NRPN=(1, 53); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 9,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         53
@@ -5110,7 +5543,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 9,
       "semantic_path": "tracks.T4.amp.release",
-      "sequence": 233,
+      "sequence": 243,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -5124,6 +5557,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/EnvA Env Shape: CC=None, CC-LSB=None, NRPN=(1, 54); conversion policy=verified_enum",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         54
@@ -5132,7 +5566,7 @@
       "reason": "typed enum label is absent from the verified table",
       "requested_value": "exponential_restart_from_zero",
       "semantic_path": "tracks.T4.amp.envelope_shape",
-      "sequence": 234,
+      "sequence": 244,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -5146,6 +5580,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/Chorus Send Level: CC=91, CC-LSB=None, NRPN=(1, 55); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         55
@@ -5154,7 +5589,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T4.amp.chorus_send",
-      "sequence": 235,
+      "sequence": 245,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -5168,6 +5603,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/Delay Send Level: CC=92, CC-LSB=None, NRPN=(1, 56); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         56
@@ -5176,7 +5612,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T4.amp.delay_send",
-      "sequence": 236,
+      "sequence": 246,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -5190,6 +5626,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/Reverb Send Level: CC=93, CC-LSB=None, NRPN=(1, 57); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         57
@@ -5198,7 +5635,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T4.amp.reverb_send",
-      "sequence": 237,
+      "sequence": 247,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -5212,6 +5649,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/Pan: CC=10, CC-LSB=None, NRPN=(1, 58); conversion policy=bipolar_7bit",
       "message_type": "CC",
       "normalized_midi_value": 59,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         58
@@ -5220,7 +5658,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": -5,
       "semantic_path": "tracks.T4.amp.pan",
-      "sequence": 238,
+      "sequence": 248,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -5234,6 +5672,7 @@
       "mapping_evidence": "manual-backed Analog Four AMP/Volume: CC=7, CC-LSB=None, NRPN=(1, 59); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 72,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         59
@@ -5242,7 +5681,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 72,
       "semantic_path": "tracks.T4.amp.volume",
-      "sequence": 239,
+      "sequence": 249,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -5256,6 +5695,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Attack Time: CC=108, CC-LSB=None, NRPN=(1, 60); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         60
@@ -5264,7 +5704,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T4.filter_envelope.attack",
-      "sequence": 240,
+      "sequence": 250,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -5278,6 +5718,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Decay Time: CC=109, CC-LSB=None, NRPN=(1, 61); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 34,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         61
@@ -5286,7 +5727,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 34,
       "semantic_path": "tracks.T4.filter_envelope.decay",
-      "sequence": 241,
+      "sequence": 251,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -5300,6 +5741,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Sustain Level: CC=110, CC-LSB=None, NRPN=(1, 62); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 0,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         62
@@ -5308,7 +5750,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 0,
       "semantic_path": "tracks.T4.filter_envelope.sustain",
-      "sequence": 242,
+      "sequence": 252,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -5322,6 +5764,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Release Time: CC=111, CC-LSB=None, NRPN=(1, 63); conversion policy=direct_7bit",
       "message_type": "CC",
       "normalized_midi_value": 9,
+      "normalized_value_domain": "7bit",
       "nrpn_address": [
         1,
         63
@@ -5330,7 +5773,7 @@
       "reason": "ready for dry-run MIDI plan",
       "requested_value": 9,
       "semantic_path": "tracks.T4.filter_envelope.release",
-      "sequence": 243,
+      "sequence": 253,
       "status": "ready",
       "track": "T4",
       "user_channel": null
@@ -5344,6 +5787,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Env Shape: CC=None, CC-LSB=None, NRPN=(1, 64); conversion policy=verified_enum",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         64
@@ -5352,7 +5796,7 @@
       "reason": "typed enum label is absent from the verified table",
       "requested_value": "exponential_restart_from_zero",
       "semantic_path": "tracks.T4.filter_envelope.envelope_shape",
-      "sequence": 244,
+      "sequence": 254,
       "status": "learn_required",
       "track": "T4",
       "user_channel": null
@@ -5366,6 +5810,7 @@
       "mapping_evidence": "manual-backed Analog Four ENVF/EnvF Gate Length: CC=None, CC-LSB=None, NRPN=(1, 65); conversion policy=verified_enum",
       "message_type": "NRPN",
       "normalized_midi_value": null,
+      "normalized_value_domain": null,
       "nrpn_address": [
         1,
         65
@@ -5374,7 +5819,7 @@
       "reason": "field explicitly preserves the active-kit value",
       "requested_value": "preserve_reference",
       "semantic_path": "tracks.T4.filter_envelope.gate_length",
-      "sequence": 245,
+      "sequence": 255,
       "status": "preserve_reference",
       "track": "T4",
       "user_channel": null
@@ -5476,7 +5921,11 @@
     "tracks.T4.filter_envelope.envelope_shape"
   ],
   "manual_setup_checklist": [
-    "build_policy.kit_name"
+    "build_policy.kit_name",
+    "tracks.T1.sound_name",
+    "tracks.T2.sound_name",
+    "tracks.T3.sound_name",
+    "tracks.T4.sound_name"
   ],
   "midi_sent": false,
   "output_port": null,
@@ -5497,10 +5946,10 @@
     "configured_ready_fields": 0,
     "invalid_spec_fields": 6,
     "learn_required_fields": 85,
-    "manual_setup_fields": 1,
-    "preserve_reference_fields": 4,
+    "manual_setup_fields": 5,
+    "preserve_reference_fields": 10,
     "ready_fields": 149,
-    "total_fields": 245,
+    "total_fields": 255,
     "transport_message_count": 0
   },
   "track_filter": null,

@@ -17,6 +17,7 @@ must happen explicitly from ``app.py`` via the ``--arm`` flag.
 
 from __future__ import annotations
 
+import ast
 import subprocess
 import sys
 from pathlib import Path
@@ -30,6 +31,10 @@ pytestmark = pytest.mark.fast
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 PACKAGE_ROOT = PROJECT_ROOT / "rytm_randomizer"
 PACKAGE_NAME = "rytm_randomizer"
+RUSH01_TOOL_PATHS = (
+    PROJECT_ROOT / "tools" / "rush01_midi_apply.py",
+    PROJECT_ROOT / "tools" / "rush01_midi_learn.py",
+)
 
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -173,3 +178,70 @@ def test_each_module_imports_cleanly_in_isolation(module_name: str) -> None:
     )
     assert result.stdout == "", f"{module_name} produced stdout: {result.stdout!r}"
     assert result.stderr == "", f"{module_name} produced stderr: {result.stderr!r}"
+
+
+@pytest.mark.parametrize("tool_path", RUSH01_TOOL_PATHS, ids=lambda path: path.stem)
+def test_rush01_top_level_tools_have_no_active_midi_calls(tool_path: Path) -> None:
+    """Standalone RUSH01 tools remain passive by construction."""
+
+    tree = ast.parse(tool_path.read_text(encoding="utf-8"), filename=str(tool_path))
+    forbidden_imports: list[str] = []
+    forbidden_calls: list[str] = []
+    forbidden_names = {
+        "MidoMidiPortProvider",
+        "build_mido_midi_port_provider",
+        "open_input",
+        "open_output",
+        "send_cc",
+        "send_param",
+        "send_nrpn",
+        "apply_rush01_plan",
+    }
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            forbidden_imports.extend(
+                alias.name for alias in node.names if alias.name.split(".")[0] in {"mido", "rtmidi"}
+            )
+        elif isinstance(node, ast.ImportFrom) and (node.module or "").split(".")[0] in {
+            "mido",
+            "rtmidi",
+        }:
+            forbidden_imports.append(node.module or "")
+        elif isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Name) and node.func.id in forbidden_names:
+                forbidden_calls.append(node.func.id)
+            elif isinstance(node.func, ast.Attribute) and node.func.attr in forbidden_names:
+                forbidden_calls.append(node.func.attr)
+
+    assert forbidden_imports == []
+    assert forbidden_calls == []
+
+
+@pytest.mark.parametrize(
+    ("module_name", "expected_code"),
+    (("tools.rush01_midi_apply", 2), ("tools.rush01_midi_learn", 0)),
+)
+def test_rush01_tool_default_paths_open_nothing(
+    module_name: str,
+    expected_code: int,
+) -> None:
+    """Import and default execution remain hardware-free with a hostile fake backend."""
+
+    code = f"""
+import sys
+import types
+fake_mido = types.ModuleType('mido')
+def explode(*args, **kwargs):
+    raise AssertionError('standalone RUSH01 tool touched MIDI')
+fake_mido.open_output = explode
+fake_mido.open_input = explode
+fake_mido.get_output_names = explode
+fake_mido.get_input_names = explode
+sys.modules['mido'] = fake_mido
+from {module_name} import run
+from io import StringIO
+result = run((), stdout=StringIO(), stderr=StringIO())
+assert result == {expected_code}, result
+"""
+    result = _run_python(code)
+    assert result.returncode == 0, result.stderr

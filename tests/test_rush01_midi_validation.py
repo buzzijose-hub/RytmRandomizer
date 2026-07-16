@@ -22,6 +22,7 @@ from rytm_randomizer.style_analysis.rush01_midi_compiler import (
     MidiByteMessage,
     Rush01DeviceConfig,
     Rush01MessageType,
+    Rush01NormalizedValue,
     compile_rush01_midi_plan,
     encode_cc14_messages,
     encode_cc_message,
@@ -225,6 +226,13 @@ def test_filter_modes_and_unknown_section_fields_are_rejected() -> None:
     assert _field(plan, "tracks.BD.filter.EXTRA").status == STATUS_INVALID_SPEC_FIELD
     assert _field(plan, "tracks.BD.amp.EXTRA").status == STATUS_INVALID_SPEC_FIELD
 
+    nested = _load_spec("rytm")
+    nested["tracks"]["BD"]["machine"]["unexpected"] = 1  # type: ignore[index]
+    nested["tracks"]["BD"]["sample"]["unexpected"] = 1  # type: ignore[index]
+    nested_plan = compile_rush01_midi_plan("rytm", nested)
+    assert _field(nested_plan, "tracks.BD.machine.unexpected").status == (STATUS_INVALID_SPEC_FIELD)
+    assert _field(nested_plan, "tracks.BD.sample.unexpected").status == (STATUS_INVALID_SPEC_FIELD)
+
     mismatch = _load_spec("rytm")
     mismatch["tracks"]["BD"]["filter"]["TYPE"] = {  # type: ignore[index]
         "name": "LP2",
@@ -276,7 +284,7 @@ def test_ready_field_address_invariants_cover_cc14_and_unmapped() -> None:
         track="T1",
         path="test.cc14",
         requested=12,
-        normalized=12,
+        normalized=Rush01NormalizedValue((12 << 7) | 34, "14bit"),
         cc_msb=18,
         cc_lsb=50,
         nrpn_address=(1, 40),
@@ -289,7 +297,7 @@ def test_ready_field_address_invariants_cover_cc14_and_unmapped() -> None:
         track="T1",
         path="test.unmapped",
         requested=12,
-        normalized=12,
+        normalized=Rush01NormalizedValue(12, "7bit"),
         cc_msb=None,
         cc_lsb=None,
         nrpn_address=None,
@@ -298,8 +306,93 @@ def test_ready_field_address_invariants_cover_cc14_and_unmapped() -> None:
         evidence="test",
     )
 
-    assert cc14.ordered_midi_bytes == ((0xB0, 18, 0), (0xB0, 50, 12))
+    seven_bit_to_cc14 = compiler._ready_field_from_address(
+        device="a4",
+        track="T1",
+        path="test.cc14.unverified",
+        requested=12,
+        normalized=Rush01NormalizedValue(12, "7bit"),
+        cc_msb=18,
+        cc_lsb=50,
+        nrpn_address=(1, 40),
+        channel=0,
+        user_channel=1,
+        evidence="test",
+    )
+
+    assert cc14.ordered_midi_bytes == ((0xB0, 18, 12), (0xB0, 50, 34))
+    assert cc14.normalized_value_domain == "14bit"
+    assert seven_bit_to_cc14.status == STATUS_LEARN_REQUIRED
+    assert seven_bit_to_cc14.ordered_midi_bytes is None
+    assert "7bit conversion cannot be promoted" in seven_bit_to_cc14.reason
     assert unmapped.status == STATUS_LEARN_REQUIRED
+
+
+@pytest.mark.parametrize(
+    ("value", "domain"),
+    (
+        (True, "7bit"),
+        (-1, "7bit"),
+        (128, "7bit"),
+        (-1, "14bit"),
+        (16_384, "14bit"),
+        (1, "bad"),
+    ),
+)
+def test_normalized_value_domains_reject_out_of_range_or_ambiguous_values(
+    value: int,
+    domain: str,
+) -> None:
+    with pytest.raises(ValueError):
+        Rush01NormalizedValue(value, cast(compiler.Rush01ValueDomain, domain))
+
+
+def test_cc14_safety_rejects_an_ambiguous_ready_value_domain() -> None:
+    plan = compile_rush01_midi_plan("rytm", _load_spec("rytm"))
+    ready = next(field for field in plan.fields if field.status == STATUS_READY)
+    ambiguous = replace(
+        ready,
+        message_type=cast(Rush01MessageType, "CC14"),
+        controller_lsb=50,
+        normalized_value_domain="7bit",
+    )
+
+    with pytest.raises(ValueError, match="explicitly verified 14-bit"):
+        validate_rush01_plan_safety(replace(plan, fields=(ambiguous,)))
+
+    wrong_cc_domain = replace(ready, normalized_value_domain="14bit")
+    with pytest.raises(ValueError, match="explicitly verified 7-bit"):
+        validate_rush01_plan_safety(replace(plan, fields=(wrong_cc_domain,)))
+
+    missing_domain = replace(ready, normalized_value_domain=None)
+    with pytest.raises(ValueError, match="explicit normalized value domain"):
+        validate_rush01_plan_safety(replace(plan, fields=(missing_domain,)))
+
+
+@pytest.mark.parametrize(
+    ("device", "auxiliary_tracks"),
+    (("rytm", ("FX",)), ("a4", ("FX", "CV"))),
+)
+def test_absent_auxiliary_levels_do_not_create_phantom_fields(
+    device: str,
+    auxiliary_tracks: tuple[str, ...],
+) -> None:
+    spec = _load_spec(device)
+    for track in auxiliary_tracks:
+        del spec["track_levels"][track]  # type: ignore[index]
+
+    plan = compile_rush01_midi_plan(device, spec)
+    paths = {field.semantic_path for field in plan.fields}
+    assert all(f"track_levels.{track}" not in paths for track in auxiliary_tracks)
+
+
+def test_committed_a4_spec_has_no_ready_cc14_from_unverified_conversion() -> None:
+    plan = compile_rush01_midi_plan("a4", _load_spec("a4"))
+    cc14_fields = tuple(field for field in plan.fields if field.message_type == "CC14")
+
+    assert cc14_fields
+    assert all(field.status == STATUS_LEARN_REQUIRED for field in cc14_fields)
+    assert all(field.normalized_value_domain is None for field in cc14_fields)
 
 
 def test_optional_address_helpers_and_json_fallbacks() -> None:

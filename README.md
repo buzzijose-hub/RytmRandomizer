@@ -234,20 +234,20 @@ pip install rytm-randomizer
 pip install -e .
 ```
 
-### Launch
+### Launch and RUSH01 operator flow
 
 ```bash
 # Passive menu — no MIDI port, no MIDI sent. Safe to explore.
 rytm-randomizer
-
-# Full interactive logic against an in-memory mock sender.
 rytm-randomizer --dry-run
-
-# Open a real MIDI port and drive the Analog Rytm.
 rytm-randomizer --arm
 ```
 
-`--arm` and `--dry-run` are mutually exclusive; pick one, or neither for the passive menu.
+`--arm` and `--dry-run` are mutually exclusive. No real MIDI port is opened
+unless `python -m rytm_randomizer.app --arm` is explicitly used. Standalone
+RUSH01 tools compile or inspect only; local plans default to `output/local/`.
+App-owned learning is exact-input and send-free; output is confirmed CC-only, one device per invocation. Offline KIT generation remains blocked, and the
+local-model copilot cannot reach hardware. See the [CLI reference](docs/CLI_REFERENCE.md#rush01-compile-learn-and-apply).
 
 ### Launching the cockpit
 
