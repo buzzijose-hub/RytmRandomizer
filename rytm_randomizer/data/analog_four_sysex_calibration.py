@@ -251,6 +251,33 @@ _FILTER2_FREQUENCY_EVIDENCE: Final[tuple[AnalogFourSysexCalibrationEvidence, ...
     ),
 )
 
+_FILTER2_RESONANCE_EVIDENCE: Final[tuple[AnalogFourSysexCalibrationEvidence, ...]] = (
+    AnalogFourSysexCalibrationEvidence(
+        track=1,
+        screen_value="0",
+        primary_raw_value=0x00,
+        kit_name="KIT 1",
+        source_file="A4_Test1_T1_Filter2Res_000_Kit.syx",
+        payload_fingerprint="4ec91a917cfaeab0",
+    ),
+    AnalogFourSysexCalibrationEvidence(
+        track=1,
+        screen_value="20",
+        primary_raw_value=0x14,
+        kit_name="KIT 1",
+        source_file="A4_Test1_T1_Filter2Res_020_Kit.syx",
+        payload_fingerprint="ccf0acb6bb32e1b3",
+    ),
+    AnalogFourSysexCalibrationEvidence(
+        track=1,
+        screen_value="127",
+        primary_raw_value=0x7F,
+        kit_name="KIT 1",
+        source_file="A4_Test1_T1_Filter2Res_127_Kit.syx",
+        payload_fingerprint="c842a01f81f1eaa8",
+    ),
+)
+
 ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCalibration]] = (
     MappingProxyType(
         {
@@ -337,6 +364,35 @@ ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCal
                     "Primary packed data byte verified on Track 1 at 0.00, 63.50, and 127.00.",
                     "Track 2, Track 3, and Track 4 127.00 captures confirm the +400 packed-byte stride.",
                     "Neighboring packed bytes move with Elektron high-bit grouping; the direct screen value appears at packed offset 167 and unpacked offset 142.",
+                    "SysEx checksum trailer bytes must be ignored or recomputed by future writers.",
+                ),
+            ),
+            "Filter2 Resonance": AnalogFourSysexFieldCalibration(
+                parameter="Filter2 Resonance",
+                section="FILTERS",
+                status=A4_SYSEX_CALIBRATION_STATUS_PENDING,
+                screen_min="0",
+                screen_mid="20",
+                screen_max="127",
+                primary_raw_values=_screen_value_map(
+                    {
+                        "0": 0x00,
+                        "20": 0x14,
+                        "127": 0x7F,
+                    }
+                ),
+                track_1_primary_raw_offset=170,
+                track_raw_stride=400,
+                track_1_raw_group_start=168,
+                raw_group_width=8,
+                track_1_unpacked_group_start=144,
+                unpacked_group_width=7,
+                track_unpacked_stride=350,
+                evidence=_FILTER2_RESONANCE_EVIDENCE,
+                notes=(
+                    "Primary packed data byte verified on Track 1 at 0, 20, and 127.",
+                    "Track 2, Track 3, and Track 4 offsets remain inferred from the established kit track strides until cross-track captures confirm them.",
+                    "The direct screen value appears at packed offset 170 and unpacked offset 145.",
                     "SysEx checksum trailer bytes must be ignored or recomputed by future writers.",
                 ),
             ),

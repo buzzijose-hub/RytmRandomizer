@@ -1,6 +1,6 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-07-03. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-07-16. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
@@ -26,10 +26,13 @@ Last updated: 2026-07-03. This file is a hand-authored snapshot and is meant to 
   table now also records the candidate-promoted Filter2 Frequency offsets
   across the four synth tracks (`167`, `567`, `967`, `1367`), values
   `0.00`/`63.50`/`127.00`, and fingerprints for the operator-supplied Track
-  1 value sweep plus Track 2-4 127.00 stride-confirmation exports. It
-  remains passive: no MIDI port opened, no MIDI sent, no SysEx written, no
-  hardware mutation, and no broader A4 kit writer claim until additional
-  fields are captured and validated.
+  1 value sweep plus Track 2-4 127.00 stride-confirmation exports. A pending
+  Filter2 Resonance calibration now records the isolated Track 1 packed
+  offset `170`, unpacked offset `145`, values `0`/`20`/`127`, and capture
+  fingerprints; its Track 2-4 offsets remain inferred until separate exports
+  confirm the established strides. It remains passive: no MIDI port opened,
+  no MIDI sent, no SysEx written, no hardware mutation, and no broader A4 kit
+  writer claim until additional fields are captured and validated.
 - 2026-07-04: Passive Analog Four initialized-baseline report prepared
   locally from Jose's Test 1 exports. The new
   `analog-four-baseline-report` command compares kit, pattern+kit, and
