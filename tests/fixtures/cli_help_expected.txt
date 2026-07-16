@@ -39,6 +39,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-patch-learning-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
   python -m rytm_randomizer.cli analog-four-patch-corpus-report (--description <text>|--audio <path>) [--track N] [--limit N] [--corpus-file <path>] [--json]
   python -m rytm_randomizer.cli analog-four-patch-send-plan-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
+  python -m rytm_randomizer.cli local-model-copilot-report --question <text> [--description <text>] [--workflow docs|mutation|patch|all] [--model <name>] [--ask-local-model] [--json]
   python -m rytm_randomizer.cli analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report [<macro-name>] [--seed N] [--intensity N] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report [--set-name <text>] [--sequence <macro,...>] [--seed N] [--json]
@@ -207,6 +208,8 @@ Commands:
                      Rank passive Analog Four patch corpus matches from audio or text.
   analog-four-patch-send-plan-report
                      Preview generated Analog Four patch CC/NRPN live-dial events.
+  local-model-copilot-report
+                     Build passive local model copilot packets for docs, mutation, and A4 patch DNA.
   analog-four-oxi-macro-report
                      Print passive Analog Four OXI-style macro preview metadata.
   analog-four-oxi-macro-readiness-report

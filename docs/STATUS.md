@@ -4,6 +4,16 @@ Last updated: 2026-07-16. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-07-08: Passive local model copilot bundle prepared locally. The new
+  `local-model-copilot-report` command builds deterministic docs/MIDI,
+  staged mutation-intent, and Analog Four patch co-designer packets, and only
+  runs a configured local model executable when `--ask-local-model` is
+  explicitly set.
+  The local-AI provider, schema validators, and prompt packets live under the
+  new `rytm_randomizer/local_ai/` subpackage; the A4 co-designer reuses the
+  existing patch-genome compiler. It remains passive: no MIDI port opened, no
+  MIDI sent, no SysEx written, no hardware mutation, and no generated send plan
+  promoted from AI output.
 - 2026-07-03: Synplant-inspired Cockpit UI design surface prepared locally.
   The React cockpit now has a frontend-only Patch Genome panel that groups
   Analog Four-facing design-preview genes into oscillator, envelope/LFO,
