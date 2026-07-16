@@ -72,6 +72,9 @@ USAGE = (
     "[--corpus-file <path>] [--json] | "
     "analog-four-patch-send-plan-report "
     "(--description <text>|--audio <path>) [--track N] [--candidate N] [--json] | "
+    "local-model-copilot-report --question <text> [--description <text>] "
+    "[--workflow docs|mutation|patch|all] [--model <name>] [--ask-local-model] "
+    "[--json] | "
     "analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] "
     "[--events] [--limit N] [--json] | "
     "analog-four-oxi-macro-readiness-report [<macro-name>] [--seed N] "
@@ -708,6 +711,7 @@ def test_top_level_help_exits_zero_and_matches_fixture():
         "analog-four-patch-learning-report",
         "analog-four-patch-corpus-report",
         "analog-four-patch-send-plan-report",
+        "local-model-copilot-report",
         "analog-four-oxi-macro-report",
         "analog-four-oxi-macro-readiness-report",
         "analog-four-oxi-macro-set-planner-report",
