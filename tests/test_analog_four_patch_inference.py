@@ -149,12 +149,22 @@ def test_audio_feature_analysis_records_bounded_failures(
     def fail(_path: Path) -> object:
         raise error
 
+    logged: list[dict[str, object]] = []
     reset_metrics()
     monkeypatch.setattr(inference, "analyze_audio", fail)
+    monkeypatch.setattr(
+        inference._logger,
+        "warning",
+        lambda _message, *, extra: logged.append(extra),
+    )
     with pytest.raises(type(error), match=str(error)):
         inference.analyze_analog_four_patch_audio(Path("reference.wav"))
 
     assert get_metrics().a4_patch_inference_errors_by_code[error_code] == 1
+    assert logged[0]["fingerprint"] == "a4.audio_patch.inference_failed"
+    assert logged[0]["error_type"] == type(error).__name__
+    assert float(logged[0]["duration_ms"]) >= 0.0
+    assert "a4_inference_errors" in str(logged[0]["metrics_summary"])
 
 
 def test_audio_feature_analysis_classifies_missing_optional_dependency() -> None:

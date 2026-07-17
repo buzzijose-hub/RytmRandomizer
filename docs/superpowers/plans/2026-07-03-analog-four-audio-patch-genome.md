@@ -108,7 +108,7 @@
 
 Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 
-- [x] Gate 1 (100% branch coverage on touched files) -- the final exact-tree suite covers 42,450 statements and 9,622 branches at 99.04% overall / 98.40% pure-branch; all 2,641 changed executable production lines and every changed behavioral branch origin have zero misses.
+- [x] Gate 1 (100% branch coverage on touched files) -- the final exact-tree suite covers 42,438 statements and 9,622 branches at 99.04% overall / 98.40% pure-branch; all 2,677 changed executable production lines and all 283 changed behavioral branch origins have zero misses.
 - [x] Gate 2 (V1.34 parity byte-identical) -- no V1.34 engine/golden paths touched.
 - [x] Gate 3 (lint/format/type clean) -- ruff/black/isort plus Pyright on every touched production path passed before closeout.
 - [x] Gate 4 (dead-code purge) -- no unused public surfaces; report and compiler are test-covered.

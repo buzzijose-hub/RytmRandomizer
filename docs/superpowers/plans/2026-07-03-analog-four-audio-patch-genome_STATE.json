@@ -15,5 +15,5 @@
     "learning_capture": "complete",
     "final_gates": "complete"
   },
-  "last_event": "Exact-tree local closeout passed: 6,508 tests, 99.04% coverage, 98.40% pure-branch, zero missed changed lines/branches, 693 architecture, 685 parity, lint, Vulture, Pyright, and mechanical review. Push, CI, and supervised physical full-plan rehearsal remain."
+  "last_event": "Post-push correction closeout passed locally: 6,515 tests, 99.04% coverage, 98.40% pure-branch, zero missed changed lines/branches, 693 architecture, 685 parity, lint, Vulture, Pyright, and mechanical review. Push, CI, and supervised physical full-plan rehearsal remain."
 }

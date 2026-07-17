@@ -68,9 +68,16 @@ def test_device_protocol_is_runtime_checkable() -> None:
 
 def test_analog_rytm_device_satisfies_protocol_attributes() -> None:
     from rytm_randomizer.devices import get_device
+    from rytm_randomizer.devices.analog_rytm import AnalogRytmDevice
 
     rytm = get_device("analog_rytm_mk2")
 
+    assert AnalogRytmDevice.device_id == "analog_rytm_mk2"
+    assert AnalogRytmDevice.display_name == "Elektron Analog Rytm MKII"
+    assert AnalogRytmDevice.default_midi_channel == 0
+    assert AnalogRytmDevice.track_count == 12
+    assert AnalogRytmDevice.sysex_manufacturer_id == bytes([0x00, 0x20, 0x3C])
+    assert AnalogRytmDevice.report_header == "RytmRandomizer Analog Rytm MK2 Guarded Send"
     assert rytm.device_id == "analog_rytm_mk2"
     assert rytm.display_name == "Elektron Analog Rytm MKII"
     assert rytm.default_midi_channel == 0

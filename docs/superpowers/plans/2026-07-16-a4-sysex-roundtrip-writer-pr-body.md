@@ -30,6 +30,9 @@ Turn the first hardware-validated Analog Four MKII saved-kit calibration into a 
 - Added bounded aliases and construction-time validation for all canonical audio-inference feature/parameter keys, preventing misspelled DNA formulas from loading.
 - Added operation-level inference, ranking, and armed-send RED summaries with typed error codes, taxonomy fingerprints, structured context, and Ctrl+C exit-130 recovery.
 - Named the 20 ms hardware pacing policy and split armed port acquisition, delivery, accounting, recovery, and close behavior into focused helpers.
+- Preserved class-level device metadata while keeping strategy capabilities read-only, and reject booleans/non-integral selectors before inference or batch reads.
+- Kept saved-kit staging render-only until immutable publication returns real write results, and resolve the registered A4 renderer once per batch operation.
+- Strengthened native tone/noise directionality, source-fixture identity, pacing-policy, batch-log, and lock-cleanup metric proofs found by the post-push review.
 
 ## Why this matters
 
@@ -74,11 +77,11 @@ $files = git diff --name-only origin/modularize-v1.34 -- 'rytm_randomizer/**/*.p
 git diff --check
 ```
 
-- [x] Full repository suite: 6,508 passed, 3 skipped.
+- [x] Full repository suite: 6,515 passed, 3 skipped.
 - [x] Architecture suite: 693 passed.
 - [x] V1.34 frozen parity: 685 passed byte-for-byte.
 - [x] Post-review codec/contracts/publication/reader/ranker/extractor slice: 100% statement and branch coverage (795 statements / 158 branches / 0 misses).
-- [x] Complete project coverage: 99.04% across 42,450 statements and 9,622 branches; pure-branch coverage is 98.40%, and all 2,641 changed executable production lines plus every changed behavioral branch origin executed.
+- [x] Complete project coverage: 99.04% across 42,438 statements and 9,622 branches; pure-branch coverage is 98.40%, and all 2,677 changed executable production lines plus all 283 changed behavioral branch origins executed.
 - [x] Existing saved-kit writer/export focused coverage remains green; the complete repository suite includes both writer and audio-batch paths.
 - [x] Pyright across every production module changed by PR #214: 0 errors, 0 warnings.
 - [x] Manifest reader rejects rehashed path escapes, transport drift, DNA/event drift, noncanonical CC/NRPN addresses, sequence drift, and coverage drift before output opens.

@@ -97,6 +97,12 @@ def test_clamp_pure_values():
 # ===========================================================================
 
 
+def test_midi_message_settle_seconds_is_twenty_milliseconds():
+    from rytm_randomizer.midi_io import MIDI_MESSAGE_SETTLE_SECONDS
+
+    assert MIDI_MESSAGE_SETTLE_SECONDS == 0.02
+
+
 def test_send_cc_builds_cc_message_and_sleeps():
     _install_fake_mido()
     from rytm_randomizer.midi_io import MIDI_MESSAGE_SETTLE_SECONDS, send_cc

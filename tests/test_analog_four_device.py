@@ -30,9 +30,16 @@ def test_analog_four_device_satisfies_device_protocol() -> None:
 
 def test_analog_four_device_exposes_expected_identity_attributes() -> None:
     from rytm_randomizer.devices import get_device
+    from rytm_randomizer.devices.analog_four import AnalogFourDevice
 
     a4 = get_device("analog_four_mk2")
 
+    assert AnalogFourDevice.device_id == "analog_four_mk2"
+    assert AnalogFourDevice.display_name == "Elektron Analog Four MKII"
+    assert AnalogFourDevice.default_midi_channel == 0
+    assert AnalogFourDevice.track_count == 4
+    assert AnalogFourDevice.sysex_manufacturer_id == bytes([0x00, 0x20, 0x3C])
+    assert AnalogFourDevice.report_header == "RytmRandomizer Analog Four MK2 Guarded Send"
     assert a4.device_id == "analog_four_mk2"
     assert a4.default_midi_channel == 0
     assert a4.track_count == 4

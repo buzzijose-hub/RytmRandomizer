@@ -75,6 +75,9 @@ def test_render_saved_kit_matches_hardware_reference_bytes_exactly() -> None:
     source = (fixture_dir / "filter2_res_000_source.syx").read_bytes()
     expected = (fixture_dir / "filter2_res_127_expected.syx").read_bytes()
 
+    assert sha256(source).hexdigest() == (
+        "a8fbb0552b953815fc1f6358299116866b0d94002692933abccf83655023cc6b"
+    )
     result = render_analog_four_saved_kit(
         source,
         (_mutation(screen_value="127"),),

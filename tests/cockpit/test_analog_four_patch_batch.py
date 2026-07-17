@@ -54,6 +54,22 @@ def _json_payload_sha256(payload: object) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def _candidate_midi_value(sidecar: dict[str, object], parameter: str) -> int:
+    candidate = sidecar["candidate_dna"]
+    assert isinstance(candidate, dict)
+    genes = candidate["genes"]
+    assert isinstance(genes, list)
+    for gene in genes:
+        assert isinstance(gene, dict)
+        value = gene["value"]
+        assert isinstance(value, dict)
+        if value["parameter"] == parameter:
+            midi_value = value["midi_value"]
+            assert isinstance(midi_value, int)
+            return midi_value
+    raise AssertionError(f"missing candidate DNA parameter: {parameter}")
+
+
 def _write_test_wav(path: Path, *, frequency: float = 220.0) -> None:
     sample_rate = 22_050
     frames = bytearray()
@@ -366,7 +382,22 @@ def test_real_audio_to_patch_batch_chain_distinguishes_tone_from_noise(tmp_path:
         )
         assert hashlib.sha256(manifest_path.read_bytes()).hexdigest() == payload["manifest_sha256"]
 
-    assert sidecars[0]["audio_features"] != sidecars[1]["audio_features"]
+    tone_features = sidecars[0]["audio_features"]
+    noise_features = sidecars[1]["audio_features"]
+    assert isinstance(tone_features, dict)
+    assert isinstance(noise_features, dict)
+    assert float(tone_features["harmonicity"]) > float(noise_features["harmonicity"]) + 0.5
+    assert float(noise_features["spectral_flatness"]) > (
+        float(tone_features["spectral_flatness"]) + 0.3
+    )
+    assert float(noise_features["noise"]) > float(tone_features["noise"]) + 0.3
+    assert float(noise_features["brightness"]) > float(tone_features["brightness"]) + 0.3
+    assert _candidate_midi_value(sidecars[0], "OSC1 Level") > (
+        _candidate_midi_value(sidecars[1], "OSC1 Level") + 30
+    )
+    assert _candidate_midi_value(sidecars[1], "Filter2 Frequency") > (
+        _candidate_midi_value(sidecars[0], "Filter2 Frequency") + 30
+    )
     assert manifests[0]["genome_sha256"] != manifests[1]["genome_sha256"]
     assert manifests[0]["candidates"][0]["sysex_sha256"] != (
         manifests[1]["candidates"][0]["sysex_sha256"]
@@ -383,6 +414,50 @@ def test_batch_records_one_export_metric_for_the_complete_transaction(
     _export(tmp_path, candidate_count=4)
 
     assert get_metrics().export_count == 1
+
+
+def test_batch_export_logs_red_context_and_stable_failure_identity(
+    tmp_path: Path,
+    _mocked_inference: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
+    from rytm_randomizer.observability.metrics import reset_metrics
+
+    info_extras: list[dict[str, object]] = []
+    warning_extras: list[dict[str, object]] = []
+    reset_metrics()
+    monkeypatch.setattr(
+        batch._logger,
+        "info",
+        lambda _message, *, extra: info_extras.append(extra),
+    )
+    monkeypatch.setattr(
+        batch._logger,
+        "warning",
+        lambda _message, *, extra: warning_extras.append(extra),
+    )
+
+    _export(tmp_path, candidate_count=1)
+    success = info_extras[-1]
+    assert float(success["duration_ms"]) >= 0.0
+    assert "export_count=1" in str(success["metrics_summary"])
+
+    failed_root = tmp_path / "failed"
+    failed_root.mkdir()
+    monkeypatch.setattr(
+        batch,
+        "_build_audio_inference",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("offline")),
+    )
+    with pytest.raises(batch.AnalogFourPatchBatchStageError, match="offline"):
+        _export(failed_root, candidate_count=1)
+
+    failure = warning_extras[-1]
+    assert failure["fingerprint"] == "a4.audio_patch_batch.stage_failed"
+    assert failure["error_type"] == "AnalogFourPatchBatchStageError"
+    assert float(failure["duration_ms"]) >= 0.0
+    assert "export_errors" in str(failure["metrics_summary"])
 
 
 def test_export_audio_patch_batch_refuses_any_collision_before_first_write(
@@ -402,7 +477,7 @@ def test_export_audio_patch_batch_refuses_any_collision_before_first_write(
     def unexpected_export(*_args: object, **_kwargs: object) -> object:
         raise AssertionError("preflight must run before saved-kit export")
 
-    monkeypatch.setattr(batch, "render_analog_four_saved_kit", unexpected_export)
+    monkeypatch.setattr(batch, "get_analog_four_saved_kit_capability", unexpected_export)
 
     with pytest.raises(FileExistsError, match="refusing to overwrite"):
         batch.export_analog_four_audio_patch_batch(
@@ -427,6 +502,29 @@ def test_export_audio_patch_batch_overwrites_only_when_explicitly_enabled(
     assert second.candidates[0].sysex_export.write.overwrote_existing is False
     assert second.candidates[0].sidecar_write.overwrote_existing is False
     assert second.manifest_write.overwrote_existing is True
+
+
+def test_export_audio_patch_batch_resolves_saved_kit_capability_per_operation(
+    tmp_path: Path,
+    _mocked_inference: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
+
+    real_resolver = batch.get_analog_four_saved_kit_capability
+    resolutions = 0
+
+    def resolve_capability():
+        nonlocal resolutions
+        resolutions += 1
+        return real_resolver()
+
+    monkeypatch.setattr(batch, "get_analog_four_saved_kit_capability", resolve_capability)
+
+    _export(tmp_path, candidate_count=1)
+    _export(tmp_path, candidate_count=1, overwrite=True)
+
+    assert resolutions == 2
 
 
 @pytest.mark.parametrize(
@@ -461,6 +559,41 @@ def test_export_audio_patch_batch_rejects_invalid_request_before_inference(
             output_dir=tmp_path / "batch",
             track=track,
             candidate_count=candidate_count,
+        )
+
+
+@pytest.mark.parametrize(
+    ("track", "candidate_count", "message"),
+    [
+        (1.5, 4, "track must be an int"),
+        (True, 4, "track must be an int"),
+        (1, 1.5, "candidate_count must be an int"),
+        (1, True, "candidate_count must be an int"),
+    ],
+)
+def test_export_audio_patch_batch_rejects_non_integer_selectors_before_inference(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    track: object,
+    candidate_count: object,
+    message: str,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
+
+    audio_path = tmp_path / "reference.wav"
+    audio_path.write_bytes(AUDIO_BYTES)
+
+    def unexpected_inference(*_args: object, **_kwargs: object) -> object:
+        raise AssertionError("request validation must precede inference")
+
+    monkeypatch.setattr(batch, "_build_audio_inference", unexpected_inference)
+    with pytest.raises(TypeError, match=message):
+        batch.export_analog_four_audio_patch_batch(
+            audio_path=audio_path,
+            source_kit_path=SOURCE_KIT,
+            output_dir=tmp_path / "batch",
+            track=track,  # type: ignore[arg-type]
+            candidate_count=candidate_count,  # type: ignore[arg-type]
         )
 
 
@@ -646,10 +779,14 @@ def test_export_audio_patch_batch_classifies_staging_file_errors_as_write_failur
     from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
     from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
+    class FailingCapability:
+        def render_saved_kit(self, *_args: object, **_kwargs: object) -> object:
+            raise OSError("staging disk failed")
+
     monkeypatch.setattr(
         batch,
-        "render_analog_four_saved_kit",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(OSError("staging disk failed")),
+        "get_analog_four_saved_kit_capability",
+        lambda: FailingCapability(),
     )
     reset_metrics()
 
@@ -864,7 +1001,7 @@ def test_private_staging_is_cleaned_before_publication_lock(
 
     def observe_stage(**kwargs: object):
         staged = real_stage(**kwargs)  # type: ignore[arg-type]
-        staged_paths.extend(item.sysex_export.write.path for item in staged.candidates)
+        staged_paths.extend(item.sysex_path for item in staged.candidates)
         return staged
 
     def assert_cleaned(lock_path: Path, **kwargs: object):
@@ -1108,8 +1245,10 @@ def test_export_audio_patch_batch_surfaces_lock_cleanup_failure(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
     logged: list[str] = []
+    reset_metrics()
     monkeypatch.setattr(batch, "_release_batch_lock", lambda _path: "lock busy")
     monkeypatch.setattr(batch._logger, "error", lambda message, **_kwargs: logged.append(message))
 
@@ -1118,6 +1257,8 @@ def test_export_audio_patch_batch_surfaces_lock_cleanup_failure(
     assert logged == ["Analog Four audio patch batch lock cleanup failed"]
     assert result.lock_cleanup_warning is not None
     assert "batch committed successfully" in result.lock_cleanup_warning
+    assert get_metrics().errors_by_kind["a4_audio_patch_batch_lock_cleanup"] == 1
+    assert get_metrics().export_count == 1
     assert (tmp_path / "batch" / ".a4-t2-audio-patch-batch.lock").exists()
     assert (tmp_path / "batch" / "a4-t2-audio-patch-batch.json").exists()
 

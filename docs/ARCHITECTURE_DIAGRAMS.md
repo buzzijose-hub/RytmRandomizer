@@ -768,12 +768,11 @@ flowchart TB
     A4Device --> A4Writer
     A4Export --> A4Device
     A4Cli --> A4Export
-    A4Inference --> A4Batch
+    A4Batch --> A4Inference
     A4Batch --> A4Device
     A4Batch --> A4BatchSupport
     A4BatchCli --> A4Batch
-    A4Batch --> A4BatchReader
-    A4BatchReader --> A4RenderRank
+    A4RenderRank --> A4BatchReader
     A4RenderRankCli --> A4RenderRank
 
     BaseMockRuntime -.satisfies.-> MockProto
@@ -787,7 +786,7 @@ flowchart TB
 
 ## 10. Architecture Test Enforcement Graph
 
-The 55 architecture-test files (690 individual test items) under `tests/architecture/` mechanically enforce the rules in `docs/PLAN_REQUIREMENTS.md` + `CONTRIBUTING.md`. Each one uses the **drained-allowlist** pattern: violations today are explicit `frozenset` entries that PR-review must approve; the long-term state is empty allowlists.
+The 55 architecture-test files (693 individual test items) under `tests/architecture/` mechanically enforce the rules in `docs/PLAN_REQUIREMENTS.md` + `CONTRIBUTING.md`. Each one uses the **drained-allowlist** pattern: violations today are explicit `frozenset` entries that PR-review must approve; the long-term state is empty allowlists.
 
 ```mermaid
 flowchart TB

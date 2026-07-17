@@ -89,7 +89,7 @@ def load_analog_four_patch_batch_candidate(
 
     if not isinstance(manifest_path, Path):
         raise TypeError("manifest_path must be a Path")
-    if not isinstance(candidate, int):
+    if isinstance(candidate, bool) or not isinstance(candidate, int):
         raise TypeError("candidate must be an int")
     if not ANALOG_FOUR_PATCH_CANDIDATE_MIN <= candidate <= ANALOG_FOUR_PATCH_CANDIDATE_MAX:
         raise ValueError(

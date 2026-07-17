@@ -81,7 +81,7 @@ A kit dump's payload (after 7-bit unpacking) typically starts with:
 | Digitone | `0x11` |
 | Syntakt | `0x14` |
 
-Add new devices by registering with `rytm_randomizer.devices.registry.register(...)` and providing the product-ID-matched `decode_snapshot` implementation.
+Add new devices by registering with `rytm_randomizer.devices.registry.register_device(...)` and providing the product-ID-matched `decode_snapshot` implementation.
 
 ## Hardware-validated Analog Four MKII saved-kit frame
 

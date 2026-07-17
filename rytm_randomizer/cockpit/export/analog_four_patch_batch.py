@@ -7,8 +7,8 @@ import secrets
 import sys
 import tempfile
 import time
-from collections.abc import Callable, Mapping
-from dataclasses import dataclass, replace
+from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
@@ -98,6 +98,8 @@ from .writer import WriteResult, atomic_write
 FILTER2_RESONANCE_PARAMETER: Final[str] = A4_FILTER2_RESONANCE_PARAMETER
 _DEFERRED_REASON: Final[str] = "not hardware-write-validated for saved-kit SysEx"
 _SAFE_SEGMENT_RE: Final[re.Pattern[str]] = re.compile(r"[^a-z0-9]+")
+_EXPORT_FAILURE_FINGERPRINT: Final[str] = "a4.audio_patch_batch.export_failed"
+_LOCK_CLEANUP_FAILURE_FINGERPRINT: Final[str] = "a4.audio_patch_batch.lock_cleanup_failed"
 _logger = get_logger(__name__)
 
 
@@ -132,7 +134,7 @@ class _PreparedCandidate:
 @dataclass(frozen=True)
 class _RenderedCandidate:
     prepared: _PreparedCandidate
-    sysex_export: AnalogFourSavedKitExportResult
+    sysex_render: AnalogFourSavedKitRenderResult
 
 
 @dataclass(frozen=True)
@@ -140,7 +142,7 @@ class _StagedCandidate:
     prepared: _PreparedCandidate
     sysex_path: Path
     sidecar_path: Path
-    sysex_export: AnalogFourSavedKitExportResult
+    sysex_render: AnalogFourSavedKitRenderResult
     sidecar_bytes: bytes
 
 
@@ -188,12 +190,6 @@ def _acquire_batch_lock(
     )
 
 
-render_analog_four_saved_kit: Callable[
-    [bytes, tuple[AnalogFourSavedKitMutation, ...]],
-    AnalogFourSavedKitRenderResult,
-] = get_analog_four_saved_kit_capability().render_saved_kit
-
-
 def _generation_id(
     *,
     audio_name: str,
@@ -223,7 +219,7 @@ def _generation_id(
     ]
     for rendered in candidates:
         prepared = rendered.prepared
-        applied_rows: Mapping[str, object] = {"rows": _applied_rows(rendered.sysex_export)}
+        applied_rows: Mapping[str, object] = {"rows": _applied_rows(rendered.sysex_render)}
         deferred_rows: Mapping[str, object] = {"rows": list(prepared.deferred_rows)}
         parts.extend(
             (
@@ -234,7 +230,7 @@ def _generation_id(
                 _payload_sha256(prepared.send_plan_payload),
                 _payload_sha256(applied_rows),
                 _payload_sha256(deferred_rows),
-                rendered.sysex_export.render.sha256,
+                rendered.sysex_render.sha256,
             )
         )
     return _sha256("\0".join(parts).encode("utf-8"))[:32]
@@ -288,6 +284,10 @@ def _build_send_plan(
 
 
 def _validate_request(*, track: int, candidate_count: int, output_dir: Path) -> None:
+    if isinstance(track, bool) or not isinstance(track, int):
+        raise TypeError("track must be an int")
+    if isinstance(candidate_count, bool) or not isinstance(candidate_count, int):
+        raise TypeError("candidate_count must be an int")
     if track < ANALOG_FOUR_TRACK_MIN or track > ANALOG_FOUR_TRACK_MAX:
         raise ValueError(f"track must be in {ANALOG_FOUR_TRACK_MIN}..{ANALOG_FOUR_TRACK_MAX}")
     if (
@@ -408,7 +408,7 @@ def _validate_unique_destinations(paths: tuple[Path, ...]) -> None:
         raise ValueError("generated batch destinations are not unique")
 
 
-def _applied_rows(export: AnalogFourSavedKitExportResult) -> list[_HardwareAppliedRowPayload]:
+def _applied_rows(render: AnalogFourSavedKitRenderResult) -> list[_HardwareAppliedRowPayload]:
     return [
         {
             "parameter": row.parameter,
@@ -418,13 +418,26 @@ def _applied_rows(export: AnalogFourSavedKitExportResult) -> list[_HardwareAppli
             "source_unpacked_value": row.source_unpacked_value,
             "rendered_unpacked_value": row.rendered_unpacked_value,
         }
-        for row in export.render.applied_mutations
+        for row in render.applied_mutations
     ]
+
+
+def _coverage_counts(
+    prepared: _PreparedCandidate,
+    render: AnalogFourSavedKitRenderResult,
+) -> _CoverageCountsPayload:
+    return {
+        "dna_row_count": len(prepared.candidate.genes),
+        "sysex_encoded_row_count": len(render.applied_mutations),
+        "deferred_row_count": len(prepared.deferred_rows),
+        "sendable_row_count": prepared.send_plan.summary.sendable_count,
+        "manual_row_count": prepared.send_plan.summary.manual_count,
+    }
 
 
 def _sidecar_payload(
     prepared: _PreparedCandidate,
-    export: AnalogFourSavedKitExportResult,
+    render: AnalogFourSavedKitRenderResult,
     inference: _AudioInference,
     *,
     sysex_path: Path,
@@ -435,14 +448,8 @@ def _sidecar_payload(
     genome_sha256: str,
     generation_id: str,
 ) -> _CandidateSidecarPayload:
-    applied_rows = _applied_rows(export)
-    coverage: _CoverageCountsPayload = {
-        "dna_row_count": len(prepared.candidate.genes),
-        "sysex_encoded_row_count": len(applied_rows),
-        "deferred_row_count": len(prepared.deferred_rows),
-        "sendable_row_count": prepared.send_plan.summary.sendable_count,
-        "manual_row_count": prepared.send_plan.summary.manual_count,
-    }
+    applied_rows = _applied_rows(render)
+    coverage = _coverage_counts(prepared, render)
     return {
         "schema_version": CANDIDATE_SCHEMA_VERSION,
         "generation_id": generation_id,
@@ -465,7 +472,7 @@ def _sidecar_payload(
             "genome_sha256": genome_sha256,
             "candidate_dna_sha256": _payload_sha256(prepared.candidate_payload),
             "send_plan_sha256": _payload_sha256(prepared.send_plan_payload),
-            "sysex_sha256": export.render.sha256,
+            "sysex_sha256": render.sha256,
         },
         "safety": [SYSEX_COVERAGE_STATEMENT, "No MIDI or network operation was performed."],
     }
@@ -473,42 +480,31 @@ def _sidecar_payload(
 
 def _candidate_result(
     prepared: _PreparedCandidate,
-    sysex_path: Path,
-    sidecar_path: Path,
-    sysex_export: AnalogFourSavedKitExportResult,
+    sysex_render: AnalogFourSavedKitRenderResult,
     sidecar_bytes: bytes,
     *,
-    sysex_write: WriteResult | None = None,
-    sidecar_write: WriteResult | None = None,
+    sysex_write: WriteResult,
+    sidecar_write: WriteResult,
 ) -> AnalogFourPatchCandidateBatchResult:
-    settled_sysex_write = sysex_write or WriteResult(
-        path=sysex_path.resolve(),
-        bytes_written=len(sysex_export.render.framed_sysex),
-        overwrote_existing=False,
-    )
-    settled_sidecar_write = sidecar_write or WriteResult(
-        path=sidecar_path.resolve(),
-        bytes_written=len(sidecar_bytes),
-        overwrote_existing=False,
-    )
+    coverage = _coverage_counts(prepared, sysex_render)
     return AnalogFourPatchCandidateBatchResult(
         column=prepared.candidate.column,
         label=prepared.candidate.label,
         filter2_resonance=prepared.resonance_gene.value.screen_value,
-        sysex_export=replace(sysex_export, write=settled_sysex_write),
-        sidecar_write=settled_sidecar_write,
+        sysex_export=AnalogFourSavedKitExportResult(render=sysex_render, write=sysex_write),
+        sidecar_write=sidecar_write,
         sidecar_sha256=_sha256(sidecar_bytes),
-        dna_row_count=len(prepared.candidate.genes),
-        sysex_encoded_row_count=len(sysex_export.render.applied_mutations),
-        deferred_row_count=len(prepared.deferred_rows),
-        sendable_row_count=prepared.send_plan.summary.sendable_count,
-        manual_row_count=prepared.send_plan.summary.manual_count,
+        dna_row_count=coverage["dna_row_count"],
+        sysex_encoded_row_count=coverage["sysex_encoded_row_count"],
+        deferred_row_count=coverage["deferred_row_count"],
+        sendable_row_count=coverage["sendable_row_count"],
+        manual_row_count=coverage["manual_row_count"],
     )
 
 
 def _manifest_payload(
     inference: _AudioInference,
-    results: tuple[AnalogFourPatchCandidateBatchResult, ...],
+    staged_candidates: tuple[_StagedCandidate, ...],
     *,
     track: int,
     audio_name: str,
@@ -518,37 +514,36 @@ def _manifest_payload(
     genome_sha256: str,
     generation_id: str,
 ) -> _BatchManifestPayload:
+    candidate_coverage = tuple(
+        _coverage_counts(item.prepared, item.sysex_render) for item in staged_candidates
+    )
     candidates: list[_ManifestCandidatePayload] = [
         {
-            "column": result.column,
-            "label": result.label,
-            "filter2_resonance": result.filter2_resonance,
-            "sysex_filename": result.sysex_export.write.path.name,
-            "sidecar_filename": result.sidecar_write.path.name,
-            "sysex_sha256": result.sysex_export.render.sha256,
-            "sidecar_sha256": result.sidecar_sha256,
-            "coverage_counts": {
-                "dna_row_count": result.dna_row_count,
-                "sysex_encoded_row_count": result.sysex_encoded_row_count,
-                "deferred_row_count": result.deferred_row_count,
-                "sendable_row_count": result.sendable_row_count,
-                "manual_row_count": result.manual_row_count,
-            },
+            "column": item.prepared.candidate.column,
+            "label": item.prepared.candidate.label,
+            "filter2_resonance": item.prepared.resonance_gene.value.screen_value,
+            "sysex_filename": item.sysex_path.name,
+            "sidecar_filename": item.sidecar_path.name,
+            "sysex_sha256": item.sysex_render.sha256,
+            "sidecar_sha256": _sha256(item.sidecar_bytes),
+            "coverage_counts": item_coverage,
         }
-        for result in results
+        for item, item_coverage in zip(staged_candidates, candidate_coverage, strict=True)
     ]
     coverage: _CoverageCountsPayload = {
-        "dna_row_count": sum(result.dna_row_count for result in results),
-        "sysex_encoded_row_count": sum(result.sysex_encoded_row_count for result in results),
-        "deferred_row_count": sum(result.deferred_row_count for result in results),
-        "sendable_row_count": sum(result.sendable_row_count for result in results),
-        "manual_row_count": sum(result.manual_row_count for result in results),
+        "dna_row_count": sum(item["dna_row_count"] for item in candidate_coverage),
+        "sysex_encoded_row_count": sum(
+            item["sysex_encoded_row_count"] for item in candidate_coverage
+        ),
+        "deferred_row_count": sum(item["deferred_row_count"] for item in candidate_coverage),
+        "sendable_row_count": sum(item["sendable_row_count"] for item in candidate_coverage),
+        "manual_row_count": sum(item["manual_row_count"] for item in candidate_coverage),
     }
     return {
         "schema_version": BATCH_SCHEMA_VERSION,
         "generation_id": generation_id,
         "track": track,
-        "candidate_count": len(results),
+        "candidate_count": len(staged_candidates),
         "audio_source": {"filename": audio_name, "sha256": audio_sha256},
         "source_kit": {"filename": source_kit_name, "sha256": source_kit_sha256},
         "feature_report_hash": inference.feature_report.content_hash,
@@ -611,10 +606,10 @@ def _stage_batch(
             track=track,
             candidate_count=candidate_count,
         )
+        saved_kit_capability = get_analog_four_saved_kit_capability()
         rendered_candidates: list[_RenderedCandidate] = []
         for item in prepared:
-            staged_sysex_path = staging_dir / f"candidate-{item.candidate.column:02d}.syx"
-            render = render_analog_four_saved_kit(
+            render = saved_kit_capability.render_saved_kit(
                 source_kit_snapshot_bytes,
                 (
                     AnalogFourSavedKitMutation(
@@ -624,17 +619,7 @@ def _stage_batch(
                     ),
                 ),
             )
-            staged_export = AnalogFourSavedKitExportResult(
-                render=render,
-                write=WriteResult(
-                    path=staged_sysex_path.resolve(),
-                    bytes_written=len(render.framed_sysex),
-                    overwrote_existing=False,
-                ),
-            )
-            rendered_candidates.append(
-                _RenderedCandidate(prepared=item, sysex_export=staged_export)
-            )
+            rendered_candidates.append(_RenderedCandidate(prepared=item, sysex_render=render))
 
         settled_rendered = tuple(rendered_candidates)
         generation_id = _generation_id(
@@ -649,7 +634,6 @@ def _stage_batch(
         )
 
         staged_candidates: list[_StagedCandidate] = []
-        planned_results: list[AnalogFourPatchCandidateBatchResult] = []
         for rendered in settled_rendered:
             item = rendered.prepared
             sysex_path, sidecar_path = _candidate_paths(
@@ -661,7 +645,7 @@ def _stage_batch(
             sidecar_bytes = _json_bytes(
                 _sidecar_payload(
                     item,
-                    rendered.sysex_export,
+                    rendered.sysex_render,
                     inference,
                     sysex_path=sysex_path,
                     audio_name=audio_path.name,
@@ -677,26 +661,17 @@ def _stage_batch(
                     prepared=item,
                     sysex_path=sysex_path,
                     sidecar_path=sidecar_path,
-                    sysex_export=rendered.sysex_export,
+                    sysex_render=rendered.sysex_render,
                     sidecar_bytes=sidecar_bytes,
                 )
             )
-            planned_results.append(
-                _candidate_result(
-                    item,
-                    sysex_path,
-                    sidecar_path,
-                    rendered.sysex_export,
-                    sidecar_bytes,
-                )
-            )
 
-        settled_planned_results = tuple(planned_results)
+        settled_staged_candidates = tuple(staged_candidates)
         manifest_path = output_dir / f"a4-t{track}-audio-patch-batch.json"
         manifest_bytes = _json_bytes(
             _manifest_payload(
                 inference,
-                settled_planned_results,
+                settled_staged_candidates,
                 track=track,
                 audio_name=audio_path.name,
                 source_kit_name=source_kit_path.name,
@@ -714,7 +689,7 @@ def _stage_batch(
             inference=inference,
             genome_sha256=genome_sha256,
             generation_id=generation_id,
-            candidates=tuple(staged_candidates),
+            candidates=settled_staged_candidates,
             manifest_path=manifest_path,
             manifest_bytes=manifest_bytes,
         )
@@ -816,7 +791,7 @@ def export_analog_four_audio_patch_batch(
                 item = staged_candidate.prepared
                 sysex_write = _publish_immutable_artifact(
                     staged_candidate.sysex_path,
-                    staged_candidate.sysex_export.render.framed_sysex,
+                    staged_candidate.sysex_render.framed_sysex,
                 )
                 sidecar_write = _publish_immutable_artifact(
                     staged_candidate.sidecar_path,
@@ -825,9 +800,7 @@ def export_analog_four_audio_patch_batch(
                 candidate_results.append(
                     _candidate_result(
                         item,
-                        staged_candidate.sysex_path,
-                        staged_candidate.sidecar_path,
-                        staged_candidate.sysex_export,
+                        staged_candidate.sysex_render,
                         staged_candidate.sidecar_bytes,
                         sysex_write=sysex_write,
                         sidecar_write=sidecar_write,
@@ -853,6 +826,7 @@ def export_analog_four_audio_patch_batch(
             if owns_lock:
                 lock_cleanup_failure = _release_batch_lock(lock_path)
             if lock_cleanup_failure is not None:
+                metrics.record_error("a4_audio_patch_batch_lock_cleanup")
                 if active_exception is not None:
                     active_exception.add_note("batch lock cleanup failure: " + lock_cleanup_failure)
                 _logger.error(
@@ -860,7 +834,9 @@ def export_analog_four_audio_patch_batch(
                     extra={
                         "operation": "a4_audio_patch_batch_lock_cleanup",
                         "error_code": "lock_cleanup_failed",
+                        "fingerprint": _LOCK_CLEANUP_FAILURE_FINGERPRINT,
                         "detail": lock_cleanup_failure,
+                        "metrics_summary": metrics.format_summary(),
                     },
                 )
 
@@ -891,21 +867,27 @@ def export_analog_four_audio_patch_batch(
             source_reads_complete=source_reads_complete,
             output_phase_started=output_phase_started,
         )
-        metrics.record_export((time.perf_counter() - started_at) * 1000.0, error_code=error_code)
+        duration_ms = (time.perf_counter() - started_at) * 1000.0
+        metrics.record_export(duration_ms, error_code=error_code)
         _logger.warning(
             "Analog Four audio patch batch export failed",
             extra={
                 "operation": "a4_audio_patch_batch_export",
                 "error_code": error_code,
+                "fingerprint": getattr(exc, "fingerprint", _EXPORT_FAILURE_FINGERPRINT),
+                "error_type": type(exc).__name__,
                 "audio_path": str(audio_path),
                 "source_kit_path": str(source_kit_path),
                 "output_dir": str(output_dir),
+                "duration_ms": duration_ms,
+                "metrics_summary": metrics.format_summary(),
             },
         )
         attach_analog_four_export_error_code(exc, error_code)
         raise
 
-    metrics.record_export((time.perf_counter() - started_at) * 1000.0)
+    duration_ms = (time.perf_counter() - started_at) * 1000.0
+    metrics.record_export(duration_ms)
     _logger.info(
         "Analog Four audio patch batch export completed",
         extra={
@@ -913,6 +895,8 @@ def export_analog_four_audio_patch_batch(
             "output_dir": str(output_dir),
             "manifest_sha256": result.manifest_sha256,
             "candidate_count": result.candidate_count,
+            "duration_ms": duration_ms,
+            "metrics_summary": metrics.format_summary(),
         },
     )
     return result

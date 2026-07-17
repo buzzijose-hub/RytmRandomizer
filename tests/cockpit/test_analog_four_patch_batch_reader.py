@@ -522,6 +522,8 @@ def test_reader_rejects_wrong_argument_types(tmp_path: Path) -> None:
         load_analog_four_patch_batch_candidate(str(manifest_path), candidate=1)  # type: ignore[arg-type]
     with pytest.raises(TypeError, match="candidate"):
         load_analog_four_patch_batch_candidate(manifest_path, candidate="1")  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="candidate"):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=True)
 
 
 @pytest.mark.parametrize("candidate", [0, 5])

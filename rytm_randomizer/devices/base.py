@@ -49,7 +49,7 @@ that consume those strategies.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, ClassVar, Protocol, runtime_checkable
 
 # Capability sub-protocols (Strategy pattern). We REUSE the WS-S6 Protocols
 # at ``rytm_randomizer.snapshot.{decoder,planner}`` instead of redefining
@@ -143,20 +143,11 @@ class Device(Protocol):
     The convenience methods are kept so WS-S5 callers do not break.
     """
 
-    @property
-    def device_id(self) -> str: ...  # pragma: no cover - protocol stub
-
-    @property
-    def display_name(self) -> str: ...  # pragma: no cover - protocol stub
-
-    @property
-    def default_midi_channel(self) -> int: ...  # pragma: no cover - protocol stub
-
-    @property
-    def track_count(self) -> int: ...  # pragma: no cover - protocol stub
-
-    @property
-    def sysex_manufacturer_id(self) -> bytes: ...  # pragma: no cover - protocol stub
+    device_id: ClassVar[str]
+    display_name: ClassVar[str]
+    default_midi_channel: ClassVar[int]
+    track_count: ClassVar[int]
+    sysex_manufacturer_id: ClassVar[bytes]
 
     @property
     def snapshot_decoder(self) -> SnapshotDecoder: ...  # pragma: no cover - protocol stub
@@ -167,8 +158,7 @@ class Device(Protocol):
     @property
     def message_renderer(self) -> MessageRenderer: ...  # pragma: no cover - protocol stub
 
-    @property
-    def report_header(self) -> str: ...  # pragma: no cover - protocol stub
+    report_header: ClassVar[str]
 
     def decode_snapshot(self, raw: bytes, slot: int) -> Any: ...
 

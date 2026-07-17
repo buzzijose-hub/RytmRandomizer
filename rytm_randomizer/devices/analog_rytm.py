@@ -15,7 +15,7 @@ methods that delegate to the strategies.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Final
+from typing import ClassVar, Final
 
 from ..mock_midi import MidiMessage
 from . import registry
@@ -49,29 +49,12 @@ class AnalogRytmDevice:
     the registry.
     """
 
-    @property
-    def device_id(self) -> str:
-        return _DEVICE_ID
-
-    @property
-    def display_name(self) -> str:
-        return _DISPLAY_NAME
-
-    @property
-    def default_midi_channel(self) -> int:
-        return _DEFAULT_MIDI_CHANNEL
-
-    @property
-    def track_count(self) -> int:
-        return _TRACK_COUNT
-
-    @property
-    def sysex_manufacturer_id(self) -> bytes:
-        return _ELEKTRON_MFR_ID
-
-    @property
-    def report_header(self) -> str:
-        return _REPORT_HEADER
+    device_id: ClassVar[str] = _DEVICE_ID
+    display_name: ClassVar[str] = _DISPLAY_NAME
+    default_midi_channel: ClassVar[int] = _DEFAULT_MIDI_CHANNEL
+    track_count: ClassVar[int] = _TRACK_COUNT
+    sysex_manufacturer_id: ClassVar[bytes] = _ELEKTRON_MFR_ID
+    report_header: ClassVar[str] = _REPORT_HEADER
 
     def __init__(self) -> None:
         """Compose the three capability strategies on this device instance."""

@@ -233,9 +233,17 @@ python -m rytm_randomizer.cli analog-four-style-kit-readiness-report KITS.syx jo
 Active companion app bridge for the selected patch send plan:
 
 ```bash
+python -m rytm_randomizer.app --dry-run --a4-patch-send-plan --batch-manifest batch/a4-t1-audio-patch-batch.json --candidate 1
+python -m rytm_randomizer.app --arm --a4-patch-send-plan --batch-manifest batch/a4-t1-audio-patch-batch.json --candidate 1 --confirm-a4-patch-send-plan
 python -m rytm_randomizer.app --dry-run --a4-patch-send-plan --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
 python -m rytm_randomizer.app --arm --a4-patch-send-plan --description "hypnotic metallic HP2 stab" --track 1 --candidate 1 --confirm-a4-patch-send-plan
 ```
+
+The manifest form is the recommended audition-to-hardware path: it verifies the
+committed batch, selected sidecar, source-audio identity, candidate DNA, and
+CC/NRPN plan before any output port opens. The direct `--description` and
+`--audio` forms are convenient one-off inference paths; they rebuild a plan and
+are not bound to a previously published or auditioned batch artifact.
 
 `analog-four-baseline-report` is the passive clean-slate intake for A4 patch
 capture work. It reads three local SysEx export scopes - kit, pattern+kit, and
@@ -274,7 +282,9 @@ such as destination labels that still need ordinal capture. The matching active
 path lives in `rytm_randomizer.app`: use `--dry-run --a4-patch-send-plan` to
 render the plan through the mock sender, or `--arm --a4-patch-send-plan
 --confirm-a4-patch-send-plan` to choose an A4 output port and send only the
-compiler-approved rows.
+compiler-approved rows. For a generated candidate that has already been
+auditioned, prefer `--batch-manifest ... --candidate N` so the active command
+uses the exact hash-verified plan stored with that batch.
 
 `analog-four-saved-kit-export` is the narrow hardware-validated file writer.
 It reads a saved-kit dump, applies explicit `TRACK:VALUE` Filter2 Resonance

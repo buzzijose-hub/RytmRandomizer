@@ -212,6 +212,12 @@ def _bounded_integer(value: str, option: str, lower: int, upper: int) -> int:
     return parsed
 
 
+def _required_batch_path(value: Path | None, option: str) -> Path:
+    if value is None:
+        raise ValueError(f"{option} is required")
+    return value
+
+
 def parse_analog_four_audio_patch_batch_args(
     args: Sequence[str],
 ) -> AnalogFourAudioPatchBatchArgs:
@@ -255,16 +261,10 @@ def parse_analog_four_audio_patch_batch_args(
         else:
             raise ValueError(f"unknown option {option!r}")
 
-    if audio_path is None:
-        raise ValueError("--audio is required")
-    if source_kit_path is None:
-        raise ValueError("--source-kit is required")
-    if output_dir is None:
-        raise ValueError("--output-dir is required")
     return {
-        "audio_path": audio_path,
-        "source_kit_path": source_kit_path,
-        "output_dir": output_dir,
+        "audio_path": _required_batch_path(audio_path, "--audio"),
+        "source_kit_path": _required_batch_path(source_kit_path, "--source-kit"),
+        "output_dir": _required_batch_path(output_dir, "--output-dir"),
         "track": track,
         "candidate_count": candidate_count,
         "overwrite": overwrite,

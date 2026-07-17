@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
-from typing import Final, Protocol, runtime_checkable
+from typing import ClassVar, Final, Protocol, runtime_checkable
 
 from ..mock_midi import MidiMessage
 from ..snapshot.envelope import ELEKTRON_MFR_ID
@@ -48,29 +48,12 @@ class AnalogFourSavedKitCapability(Protocol):
 class AnalogFourDevice:
     """The Analog Four MKII surfaced as a registered ``Device``."""
 
-    @property
-    def device_id(self) -> str:
-        return _DEVICE_ID
-
-    @property
-    def display_name(self) -> str:
-        return _DISPLAY_NAME
-
-    @property
-    def default_midi_channel(self) -> int:
-        return _DEFAULT_MIDI_CHANNEL
-
-    @property
-    def track_count(self) -> int:
-        return _TRACK_COUNT
-
-    @property
-    def sysex_manufacturer_id(self) -> bytes:
-        return ELEKTRON_MFR_ID
-
-    @property
-    def report_header(self) -> str:
-        return _REPORT_HEADER
+    device_id: ClassVar[str] = _DEVICE_ID
+    display_name: ClassVar[str] = _DISPLAY_NAME
+    default_midi_channel: ClassVar[int] = _DEFAULT_MIDI_CHANNEL
+    track_count: ClassVar[int] = _TRACK_COUNT
+    sysex_manufacturer_id: ClassVar[bytes] = ELEKTRON_MFR_ID
+    report_header: ClassVar[str] = _REPORT_HEADER
 
     def __init__(self) -> None:
         """Compose the three capability strategies on this device instance."""

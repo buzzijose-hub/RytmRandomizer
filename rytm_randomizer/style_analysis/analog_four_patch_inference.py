@@ -43,6 +43,7 @@ from .feature_report import (
 )
 
 _AUDIO_REPORT_DERIVED_AT: Final[str] = "1970-01-01T00:00:00Z"
+_INFERENCE_FAILURE_FINGERPRINT: Final[str] = "a4.audio_patch.inference_failed"
 _logger = get_logger(__name__)
 _InferenceResult = TypeVar("_InferenceResult")
 
@@ -103,6 +104,7 @@ def _recorded_a4_inference(
             extra={
                 "operation": "a4_audio_patch_inference",
                 "error_code": error_code,
+                "fingerprint": getattr(exc, "fingerprint", _INFERENCE_FAILURE_FINGERPRINT),
                 "audio_path": str(path),
                 "duration_ms": duration_ms,
                 "error_type": type(exc).__name__,
