@@ -67,6 +67,13 @@ def test_machine_cc_is_15_everywhere():
     assert pkg_constants.MACHINE_CC == 15
 
 
+def test_a4_sysex_calibration_tracks_filter2_resonance_capture():
+    calibration = data.ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS["Filter2 Resonance"]
+
+    assert calibration.status == "candidate-promoted"
+    assert calibration.track_1_primary_raw_offset == 170
+
+
 def test_profile_registry_has_expected_keys():
     """The canonical profile registry must carry all 11 V1.34 profiles."""
 

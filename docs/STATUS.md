@@ -57,10 +57,13 @@ Last updated: 2026-07-16. This file is a hand-authored snapshot and is meant to 
   table now also records the candidate-promoted Filter2 Frequency offsets
   across the four synth tracks (`167`, `567`, `967`, `1367`), values
   `0.00`/`63.50`/`127.00`, and fingerprints for the operator-supplied Track
-  1 value sweep plus Track 2-4 127.00 stride-confirmation exports. It
-  remains passive: no MIDI port opened, no MIDI sent, no SysEx written, no
-  hardware mutation, and no broader A4 kit writer claim until additional
-  fields are captured and validated.
+  1 value sweep plus Track 2-4 127.00 stride-confirmation exports. The
+  candidate-promoted Filter2 Resonance calibration records packed offsets
+  `170`, `570`, `970`, and `1370` across the four synth tracks, values
+  `0`/`20`/`127`, and fingerprints for the Track 1 value sweep plus Track 2-4
+  127 stride-confirmation exports. It remains passive: no MIDI port opened,
+  no MIDI sent, no SysEx written, no hardware mutation, and no broader A4 kit
+  writer claim until additional fields are captured and validated.
 - 2026-07-04: Passive Analog Four initialized-baseline report prepared
   locally from Jose's Test 1 exports. The new
   `analog-four-baseline-report` command compares kit, pattern+kit, and
