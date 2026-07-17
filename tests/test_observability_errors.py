@@ -199,6 +199,7 @@ def _import_taxonomy_modules() -> None:
     import rytm_randomizer.guardrails.resolver  # noqa: F401
     import rytm_randomizer.guardrails.store  # noqa: F401
     import rytm_randomizer.guardrails.validation  # noqa: F401
+    import rytm_randomizer.local_ai.provider  # noqa: F401
     import rytm_randomizer.style_analysis.extractor  # noqa: F401
 
 

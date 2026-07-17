@@ -514,7 +514,7 @@ The test suite uses `pytest-xdist` (`-n auto`) for parallel execution and a 180-
 | `rytm_randomizer/cockpit/wizard/` | Phase 2 wizard · state · analyze · sysex/reference analyzers · builder · pad mapping |
 | `rytm_randomizer/cockpit/export/` | Phase 3 export pipeline · pack · sign · write · verify · CLI |
 | `rytm_randomizer/devices/` | Cross-machine `Device` Protocol + registry (Analog Rytm + Analog Four) |
-| `rytm_randomizer/reports/` | 50+ passive reports — CLI-driven, no MIDI side effects |
+| `rytm_randomizer/local_ai/`, `reports/` | Passive local-AI packets and 50+ CLI reports — no MIDI side effects |
 | `rytm_randomizer/engines/`, `group_runner.py`, `scene_runner.py` | V1.34 Analog Rytm orchestration (byte-frozen reference) |
 | `rytm_randomizer/data/`, `state/`, `guardrails/`, `observability/` | Fact tables, runtime state, policy, logging |
 | `desktop/shell/` | Tauri 2 Rust shell — spawns the Python sidecar, wraps the web frontend |

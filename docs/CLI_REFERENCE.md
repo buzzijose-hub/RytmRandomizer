@@ -200,6 +200,7 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `analog-four-patch-learning-report` | Passive Analog Four patch learning routes, capture matrix, and live-dial readiness |
 | `analog-four-patch-corpus-report` | Passive nearest-match ranking against starter or captured Analog Four patch/audio examples |
 | `analog-four-patch-send-plan-report` | Passive CC/NRPN live-dial send plan for a generated Analog Four patch |
+| `local-model-copilot-report` | Passive local model docs, mutation-intent, and Analog Four patch-review packets; optional local model subprocess call with `--ask-local-model` |
 | `analog-four-oxi-macro-report` | Passive in-memory Analog Four OXI-style four-track macro preview |
 | `analog-four-oxi-macro-readiness-report` | Passive Analog Four OXI macro readiness, soft-capture preflight, and operator-present validation commands |
 | `analog-four-style-kit-readiness-report` | Passive per-kit Analog Four style-readiness sweep |
@@ -217,6 +218,7 @@ python -m rytm_randomizer.cli analog-four-patch-learning-report --audio referenc
 python -m rytm_randomizer.cli analog-four-patch-corpus-report --description "hypnotic metallic HP2 stab" --track 1 --limit 4
 python -m rytm_randomizer.cli analog-four-patch-corpus-report --audio reference.wav --corpus-file a4-captures.json --json
 python -m rytm_randomizer.cli analog-four-patch-send-plan-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
+python -m rytm_randomizer.cli local-model-copilot-report --question "Which A4 rows are staged only?" --workflow all --description "hypnotic metallic HP2 stab" --json
 python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove --seed 23 --intensity 6 --events --limit 0
 python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4
 python -m rytm_randomizer.cli analog-four-style-kit-readiness-report KITS.syx jose_core_techno --limit 16
@@ -267,6 +269,14 @@ path lives in `rytm_randomizer.app`: use `--dry-run --a4-patch-send-plan` to
 render the plan through the mock sender, or `--arm --a4-patch-send-plan
 --confirm-a4-patch-send-plan` to choose an A4 output port and send only the
 compiler-approved rows.
+
+`local-model-copilot-report` is the passive local-AI bridge. By default it
+does not run a model; it prints deterministic source packets and JSON schemas
+for docs/MIDI answers, staged natural-language mutation intent, and Analog Four
+patch co-design review. Add `--ask-local-model` only after `LOCAL_MODEL_COMMAND`
+points to a local model executable. The command is run as a subprocess, JSON
+stdout is validated, and the output remains staged-only: no ports open, no MIDI
+is sent, and no hardware-send plan is promoted.
 
 `analog-four-oxi-macro-report` is a snapshot-free planning surface for the
 Analog Four side of an OXI-style live rig. It uses existing manual-backed A4 CC
