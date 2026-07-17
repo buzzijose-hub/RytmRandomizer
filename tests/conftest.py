@@ -157,6 +157,46 @@ def pack_elektron_7bit(unpacked: bytes) -> bytes:
     return bytes(out)
 
 
+def analog_four_saved_kit_frame(
+    *,
+    name: bytes = b"KIT 1",
+    unpacked_overrides: dict[int, int] | None = None,
+    unpacked_size: int | None = None,
+) -> bytes:
+    """Build a framed A4 saved-kit fixture using the observed hardware layout."""
+
+    from rytm_randomizer.devices.strategies.analog_four_offset_manifest import (
+        A4_CHECKSUM_PACKED_OFFSET,
+        A4_FAMILY_BYTE,
+        A4_KIT_NAME_LENGTH,
+        A4_KIT_NAME_OFFSET,
+        A4_KIT_OBJECT_BYTE,
+        A4_SAVED_KIT_UNPACKED_SIZE,
+    )
+    from rytm_randomizer.snapshot.envelope import ELEKTRON_MFR_ID
+
+    unpacked = bytearray(A4_SAVED_KIT_UNPACKED_SIZE if unpacked_size is None else unpacked_size)
+    unpacked[0:4] = bytes([A4_KIT_OBJECT_BYTE, 0x01, 0x01, 0x00])
+    unpacked[A4_KIT_NAME_OFFSET : A4_KIT_NAME_OFFSET + A4_KIT_NAME_LENGTH] = name[
+        :A4_KIT_NAME_LENGTH
+    ].ljust(A4_KIT_NAME_LENGTH, b"\x00")
+    for offset, value in (unpacked_overrides or {}).items():
+        unpacked[offset] = value
+
+    packed = pack_elektron_7bit(bytes(unpacked))
+    checksum = sum(packed[A4_CHECKSUM_PACKED_OFFSET:]) & 0x3FFF
+    trailer = bytes(
+        [
+            (checksum >> 7) & 0x7F,
+            checksum & 0x7F,
+            (len(packed) >> 7) & 0x7F,
+            len(packed) & 0x7F,
+        ]
+    )
+    payload = ELEKTRON_MFR_ID + bytes([A4_FAMILY_BYTE]) + packed + trailer
+    return bytes([0xF0]) + payload + bytes([0xF7])
+
+
 def rytm_real_layout_kit_payload(name: bytes = b"KIT 1") -> bytes:
     """Build a packed Rytm kit body matching the observed hardware dump layout."""
 

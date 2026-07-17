@@ -1,4 +1,4 @@
-"""Pending and candidate-promoted Analog Four MKII SysEx calibration facts.
+"""Analog Four MKII SysEx calibration and write-validation facts.
 
 The facts in this module come from passive, operator-supplied kit exports.
 They are data only: no MIDI ports are opened, no SysEx is written, and no
@@ -13,6 +13,7 @@ from types import MappingProxyType
 from typing import Final
 
 A4_SYSEX_CALIBRATION_STATUS_CANDIDATE_PROMOTED: Final[str] = "candidate-promoted"
+A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED: Final[str] = "hardware-write-validated"
 A4_SYSEX_CALIBRATION_STATUS_PENDING: Final[str] = "pending"
 
 A4_SYNTH_TRACK_MIN: Final[int] = 1
@@ -33,7 +34,7 @@ class AnalogFourSysexCalibrationEvidence:
 
 @dataclass(frozen=True)
 class AnalogFourSysexFieldCalibration:
-    """Pending or candidate-promoted A4 SysEx field location."""
+    """A4 SysEx field location with its current promotion status."""
 
     parameter: str
     section: str
@@ -71,6 +72,19 @@ class AnalogFourSysexFieldCalibration:
         _validate_a4_sysex_calibration_track(track)
         start = self.track_1_unpacked_group_start + ((track - 1) * self.track_unpacked_stride)
         return start, start + self.unpacked_group_width
+
+
+@dataclass(frozen=True)
+class AnalogFourSysexWriteValidationEvidence:
+    """One operator-confirmed A4 generated-kit receive observation."""
+
+    parameter: str
+    generated_file: str
+    generated_sha256: str
+    expected_track_values: tuple[tuple[int, str], ...]
+    matched_reference_file: str | None
+    operator_confirmed: bool
+    notes: tuple[str, ...]
 
 
 def _validate_a4_sysex_calibration_track(track: int) -> None:
@@ -394,7 +408,7 @@ ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCal
             "Filter2 Resonance": AnalogFourSysexFieldCalibration(
                 parameter="Filter2 Resonance",
                 section="FILTERS",
-                status=A4_SYSEX_CALIBRATION_STATUS_CANDIDATE_PROMOTED,
+                status=A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED,
                 screen_min="0",
                 screen_mid="20",
                 screen_max="127",
@@ -417,16 +431,72 @@ ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCal
                     "Primary packed data byte verified on Track 1 at 0, 20, and 127.",
                     "Track 2, Track 3, and Track 4 127 captures confirm the +400 packed-byte stride.",
                     "The direct screen value appears at packed offset 170 and unpacked offset 145.",
-                    "SysEx checksum trailer bytes must be ignored or recomputed by future writers.",
+                    "Generated saved-kit writes were received and verified on hardware for reference, novel, and four-track values.",
                 ),
             ),
         }
     )
 )
 
+ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS: Final[
+    Mapping[str, tuple[AnalogFourSysexWriteValidationEvidence, ...]]
+] = MappingProxyType(
+    {
+        "Filter2 Resonance": (
+            AnalogFourSysexWriteValidationEvidence(
+                parameter="Filter2 Resonance",
+                generated_file="A4_CODEX_TEST_T1_Filter2Res_127_GENERATED.syx",
+                generated_sha256=(
+                    "5ebb386677aff324ef96d631e7888a9681caefbd976bdc2eac69b52a0fb0e26b"
+                ),
+                expected_track_values=((1, "127"),),
+                matched_reference_file="A4_Test1_T1_Filter2Res_127_Kit.syx",
+                operator_confirmed=True,
+                notes=(
+                    "Generated frame was byte-identical to the hardware-exported reference.",
+                    "Analog Four MKII received the file as KIT 1 and displayed Track 1 value 127.",
+                ),
+            ),
+            AnalogFourSysexWriteValidationEvidence(
+                parameter="Filter2 Resonance",
+                generated_file="A4_CODEX_TEST_T1_Filter2Res_064_GENERATED.syx",
+                generated_sha256=(
+                    "2fee1aa93c98e0221dbe7bac296c51268360c5c61e11c8eea77fd091cbbd94f7"
+                ),
+                expected_track_values=((1, "64"),),
+                matched_reference_file=None,
+                operator_confirmed=True,
+                notes=(
+                    "Novel value 64 was generated without a matching source capture.",
+                    "Analog Four MKII received the file as KIT 1 and displayed Track 1 value 64.",
+                ),
+            ),
+            AnalogFourSysexWriteValidationEvidence(
+                parameter="Filter2 Resonance",
+                generated_file=("A4_CODEX_TEST_T1-4_Filter2Res_016_048_080_112_GENERATED.syx"),
+                generated_sha256=(
+                    "0e88aa6f15fd49c36696d5b8e09bda18ce5eeb8562c1a44ce46683c6deef819b"
+                ),
+                expected_track_values=(
+                    (1, "16"),
+                    (2, "48"),
+                    (3, "80"),
+                    (4, "112"),
+                ),
+                matched_reference_file=None,
+                operator_confirmed=True,
+                notes=(
+                    "One generated frame carried four independent track mutations.",
+                    "Analog Four MKII displayed the expected value on every synth track.",
+                ),
+            ),
+        )
+    }
+)
+
 
 def analog_four_sysex_calibration_for(parameter: str) -> AnalogFourSysexFieldCalibration:
-    """Return pending or candidate-promoted A4 calibration metadata."""
+    """Return A4 calibration metadata for ``parameter``."""
 
     try:
         return ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS[parameter]
@@ -436,9 +506,12 @@ def analog_four_sysex_calibration_for(parameter: str) -> AnalogFourSysexFieldCal
 
 __all__ = [
     "A4_SYSEX_CALIBRATION_STATUS_CANDIDATE_PROMOTED",
+    "A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED",
     "A4_SYSEX_CALIBRATION_STATUS_PENDING",
     "ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS",
+    "ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS",
     "AnalogFourSysexCalibrationEvidence",
     "AnalogFourSysexFieldCalibration",
+    "AnalogFourSysexWriteValidationEvidence",
     "analog_four_sysex_calibration_for",
 ]

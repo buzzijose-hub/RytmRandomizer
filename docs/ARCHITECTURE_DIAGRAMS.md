@@ -144,11 +144,11 @@ flowchart TB
         DevRegistry["registry.py<br/>register_device, get_device, all_devices"]
         DevAR["analog_rytm.py<br/>AnalogRytmDevice"]
         DevA4["analog_four.py<br/>AnalogFourDevice"]
-        DevStrategies["strategies/<br/>analog_rytm_{snapshot_decoder,<br/>snapshot_routing,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_render_plan,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer}.py<br/>analog_four_{offset_manifest,<br/>snapshot_decoder,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer}.py"]
+        DevStrategies["strategies/<br/>analog_rytm_{snapshot_decoder,<br/>snapshot_routing,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_render_plan,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer}.py<br/>analog_four_{offset_manifest,<br/>snapshot_decoder,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer,<br/>saved_kit_writer}.py"]
     end
 
     subgraph SnapshotPkg["snapshot/ subpackage<br/>(WS-S6 envelope + 3 Protocols)"]
-        SnapEnvelope["envelope.py<br/>ELEKTRON_MFR_ID +<br/>unpack_elektron_7bit +<br/>find_kit_record +<br/>read_ascii_name"]
+        SnapEnvelope["envelope.py<br/>ELEKTRON_MFR_ID +<br/>pack/unpack_elektron_7bit +<br/>find_kit_record +<br/>read_ascii_name"]
         SnapProto["decoder / planner / mock_runtime<br/>Protocols"]
     end
 
@@ -713,6 +713,7 @@ The shared Elektron SysEx envelope helpers + the three Protocols every per-devic
 flowchart TB
     subgraph Envelope["snapshot/envelope.py (shared)"]
         MFR_ID["ELEKTRON_MFR_ID: Final[bytes]<br/>= 0x00 0x20 0x3C"]
+        Pack["pack_elektron_7bit(unpacked)<br/>emits MIDI-safe header/data groups"]
         Unpack["unpack_elektron_7bit(packed)<br/>rejects lone trailing header<br/>(codex P2)"]
         FindKit["find_kit_record(raw, slot, type_byte)<br/>scans for kit-type byte"]
         ReadName["read_ascii_name(record, offset, length)<br/>NUL-stripped ASCII"]
@@ -732,9 +733,11 @@ flowchart TB
         RytmPlanner["AnalogRytmMutationPlanner<br/>(no shared planner state needed)"]
     end
 
-    subgraph FutureImpls["Future device impls<br/>(PR #36 redo target)"]
-        A4Decoder["AnalogFourSnapshotDecoder<br/>(MUST use shared envelope helpers,<br/>not fork them)"]
-        A4Planner["AnalogFourMutationPlanner<br/>(produces ready=False<br/>while manifest-gated)"]
+    subgraph A4Impls["Analog Four impls (devices/strategies/)"]
+        A4Decoder["AnalogFourSnapshotDecoder<br/>uses shared envelope helpers"]
+        A4Planner["AnalogFourMutationPlanner"]
+        A4Writer["analog_four_saved_kit_writer.py<br/>validate -> mutate -> repack<br/>Filter2 Resonance write-validated"]
+        A4Export["cockpit/export/analog_four_kit.py<br/>validated fields only -> atomic_write"]
     end
 
     RytmDecoder -->|"depends on"| Envelope
@@ -745,11 +748,13 @@ flowchart TB
     A4Decoder -->|"MUST depend on"| Envelope
     A4Decoder -.must satisfy.-> SD
     A4Planner -.must satisfy.-> MP_proto
+    A4Writer -->|"pack + unpack"| Envelope
+    A4Export --> A4Writer
 
     BaseMockRuntime -.satisfies.-> MockProto
 ```
 
-**Gate enforced:** the upcoming codex AnalogFour work cannot fork `unpack_elektron_7bit` etc. — the architecture test `test_no_cross_family_private_api_imports` rejects any per-family decoder that imports from a sibling's privates. Shared helpers live in `snapshot/envelope.py`.
+**Gate enforced:** Analog Four code cannot fork `pack_elektron_7bit`, `unpack_elektron_7bit`, etc. — the architecture test `test_no_cross_family_private_api_imports` rejects any per-family decoder that imports from a sibling's privates. Shared helpers live in `snapshot/envelope.py`; the saved-kit renderer remains a strategy-adjacent helper rather than expanding the `Device` Protocol.
 
 **Codex P2 fix retained:** `unpack_elektron_7bit` rejects lone trailing header bytes (zero OR non-zero) so corrupt framing surfaces a `ValueError` instead of silently emitting a truncated payload.
 
@@ -1223,13 +1228,13 @@ flowchart TB
 
     subgraph CodexRedo["Future codex PR (PR #36 redo)"]
         DevA4["devices/analog_four.py<br/>(NEW: AnalogFourDevice<br/>composes 3 A4 strategies,<br/>registers at import)"]
-        DevA4_Strategies["devices/strategies/<br/>analog_four_offset_manifest<br/>analog_four_snapshot_decoder<br/>analog_four_style_snapshot_routing<br/>analog_four_style_mutation_intent<br/>analog_four_style_mutation_mock_preview<br/>analog_four_mutation_planner<br/>(ready=False while manifest-gated)<br/>analog_four_message_renderer"]
+        DevA4_Strategies["devices/strategies/<br/>analog_four_offset_manifest<br/>analog_four_snapshot_decoder<br/>analog_four_style_snapshot_routing<br/>analog_four_style_mutation_intent<br/>analog_four_style_mutation_mock_preview<br/>analog_four_mutation_planner<br/>analog_four_message_renderer<br/>analog_four_saved_kit_writer<br/>(Filter2 Resonance write-validated)"]
 
         Senders["NEW: senders/<br/>guarded.py<br/>hardware.py<br/>(generic, consume Device.message_renderer;<br/>collapses 8 per-device sender files)"]
 
         DualMachine["dual_machine/ (simplified)<br/>orchestrates over Mapping[str, Device]<br/>NO direct imports from devices/analog_*<br/>fans out to devices.all_devices()"]
 
-        Manifest["devices/strategies/analog_four_offset_manifest.py<br/>(saved-kit intake constants now;<br/>saved-offset mapping + promotion later;<br/>A4-specific, not in dual_machine/)"]
+        Manifest["devices/strategies/analog_four_offset_manifest.py<br/>(saved-kit frame constants + sizes;<br/>calibrated offsets remain in data/;<br/>A4-specific, not in dual_machine/)"]
     end
 
     subgraph Deleted["Deleted from PR #36 (LOC reduction)"]
@@ -2702,8 +2707,11 @@ sequenceDiagram
     participant Pack as serialize.py<br/>pack_profile_model<br/>(format_version: Literal[1])
     participant Sign as signing.py<br/>signed_envelope_overhead_bytes<br/>+ pack_signed
     participant Writer as writer.py<br/>atomic_write<br/>(THE canonical surface)
+    participant A4Export as analog_four_kit.py<br/>hardware-validated fields only
+    participant A4Render as devices/strategies/<br/>analog_four_saved_kit_writer.py
     participant Verifier as verifier.py<br/>verify_file (never raises)
     participant Disk as ~/exports/&lt;id&gt;.rymp
+    participant A4Disk as generated saved kit<br/>*.syx
     participant Rehearsal as reports/<br/>cockpit_export_rehearsal.py
 
     Note over CLI,Verifier: PR 3 deleted the 60-LOC fallback atomic_write<br/>from cli.py. The hard import on line 1 means a missing<br/>writer.py fails loudly at module load, never silently<br/>switches to divergent behaviour.
@@ -2722,6 +2730,14 @@ sequenceDiagram
     Verifier->>Disk: read envelope
     Verifier-->>CLI: VerificationResult(ok=True, reason="ok", signed=True)
     CLI-->>Operator: ack
+
+    Operator->>A4Export: source kit + Filter2 Resonance mutations
+    A4Export->>A4Render: validate frame + render mutations
+    A4Render-->>A4Export: rebuilt 2,770-byte frame + SHA256
+    A4Export->>Writer: atomic_write(output, frame, overwrite=False)
+    Writer->>A4Disk: sibling temp + fsync + os.replace
+    Writer-->>A4Export: WriteResult
+    A4Export-->>Operator: render + write audit result
 
     Note over Rehearsal,Sign: PARALLEL: passive rehearsal report
     Rehearsal->>Sign: signed_envelope_overhead_bytes(algo, key_id)

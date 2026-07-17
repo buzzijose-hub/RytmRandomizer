@@ -40,7 +40,10 @@ from .analog_four_oxi_macros import (
 from .analog_four_patch_corpus import ANALOG_FOUR_PATCH_CORPUS_STARTER_SPECS
 from .analog_four_patch_templates import ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES
 from .analog_four_recipes import ANALOG_FOUR_KIT_RECIPES
-from .analog_four_sysex_calibration import ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS
+from .analog_four_sysex_calibration import (
+    ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS,
+    ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS,
+)
 from .analog_rytm_kit_layout import (
     RYTM_KIT_DUMP_ID,
     RYTM_KIT_NAME_LENGTH,
@@ -220,6 +223,7 @@ __all__ = [
     "ANALOG_FOUR_LEARNING_TRANSPORT_STATUS_WEIGHTS",
     "ANALOG_FOUR_KIT_RECIPES",
     "ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS",
+    "ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS",
     "ANALOG_FOUR_OXI_MACROS",
     "DEFAULT_ANALOG_FOUR_OXI_MACRO",
     "CONTROLLER_ENCODER_COUNT",

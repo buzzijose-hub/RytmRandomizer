@@ -4,6 +4,19 @@ Last updated: 2026-07-16. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-07-16: Analog Four MKII saved-kit writing reached its first
+  hardware-validated parameter. The shared Elektron envelope now packs as well
+  as unpacks 7-bit payloads; a pure A4 renderer validates one saved-kit frame,
+  applies calibrated low-seven-bit mutations while preserving neighboring high
+  bits, and rebuilds the checksum and length trailer. The guarded file export
+  reuses the canonical atomic writer, refuses overwrite by default, and permits
+  only hardware-write-validated fields. Jose confirmed generated Filter2
+  Resonance value `127`, novel value `64`, and one four-track kit carrying
+  T1/T2/T3/T4 values `16`/`48`/`80`/`112`; every value arrived correctly.
+  Filter1 Frequency, Filter1 Resonance, and Filter2 Frequency remain
+  candidate-only. This path opens no MIDI port and performs no automatic
+  hardware send. Evidence is recorded in
+  `docs/hardware-validation/2026-07-16-a4-saved-kit-roundtrip-results.md`.
 - 2026-07-08: Passive local model copilot bundle prepared locally. The new
   `local-model-copilot-report` command builds deterministic docs/MIDI,
   staged mutation-intent, and Analog Four patch co-designer packets, and only
@@ -40,9 +53,9 @@ Last updated: 2026-07-16. This file is a hand-authored snapshot and is meant to 
   candidate-promoted Filter2 Resonance calibration records packed offsets
   `170`, `570`, `970`, and `1370` across the four synth tracks, values
   `0`/`20`/`127`, and fingerprints for the Track 1 value sweep plus Track 2-4
-  127 stride-confirmation exports. It remains passive: no MIDI port opened,
-  no MIDI sent, no SysEx written, no hardware mutation, and no broader A4 kit
-  writer claim until additional fields are captured and validated.
+  127 stride-confirmation exports. Filter2 Resonance has since advanced to the
+  narrow hardware-write-validated file path described above; the other three
+  fields remain candidate-only and blocked from operator-facing export.
 - 2026-07-04: Passive Analog Four initialized-baseline report prepared
   locally from Jose's Test 1 exports. The new
   `analog-four-baseline-report` command compares kit, pattern+kit, and

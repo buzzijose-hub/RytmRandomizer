@@ -70,8 +70,9 @@ def test_machine_cc_is_15_everywhere():
 def test_a4_sysex_calibration_tracks_filter2_resonance_capture():
     calibration = data.ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS["Filter2 Resonance"]
 
-    assert calibration.status == "candidate-promoted"
+    assert calibration.status == "hardware-write-validated"
     assert calibration.track_1_primary_raw_offset == 170
+    assert data.ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS["Filter2 Resonance"]
 
 
 def test_profile_registry_has_expected_keys():

@@ -7,6 +7,7 @@ from .envelope import (
     ELEKTRON_MFR_ID,
     find_kit_record,
     format_manufacturer_id,
+    pack_elektron_7bit,
     read_ascii_name,
     unpack_elektron_7bit,
 )
@@ -23,6 +24,7 @@ __all__ = [
     "extract_sysex_payloads",
     "find_kit_record",
     "format_manufacturer_id",
+    "pack_elektron_7bit",
     "read_ascii_name",
     "read_sysex_payloads_from_path",
     "unpack_elektron_7bit",

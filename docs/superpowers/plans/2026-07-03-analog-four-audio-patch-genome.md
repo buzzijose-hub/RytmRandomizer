@@ -3,9 +3,9 @@
 > Status: in-flight
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:test-driven-development. This plan is structured for one bundled PR with maximum-parallelization sidecar exploration and no stacked PRs, per docs/PLAN_REQUIREMENTS.md Gate 16.
 
-**Goal:** Add a Synplant-inspired audio/description-to-Analog-Four patch genome that produces four A4 patch candidates, a selected candidate DNA sheet, front-panel dial targets, CC/NRPN transport metadata, a learning packet that explains candidate ranking, trait-to-A4 routes, future capture steps, passive initialized-baseline comparison for clean-slate A4 SysEx exports, passive patch-corpus nearest-match ranking for starter or captured A4 audio/patch examples, passive SysEx field calibration facts for Filter1 Frequency, Filter1 Resonance, Filter2 Frequency, and Filter2 Resonance, and live-dial readiness, plus a gated send-plan bridge that can preview or explicitly arm compiler-approved live-dial rows without promoting screen-only destinations.
+**Goal:** Add a Synplant-inspired audio/description-to-Analog-Four patch genome that produces four A4 patch candidates, a selected candidate DNA sheet, front-panel dial targets, CC/NRPN transport metadata, a learning packet that explains candidate ranking, trait-to-A4 routes, future capture steps, passive initialized-baseline comparison for clean-slate A4 SysEx exports, passive patch-corpus nearest-match ranking for starter or captured A4 audio/patch examples, SysEx field calibration facts for Filter1 Frequency, Filter1 Resonance, Filter2 Frequency, and Filter2 Resonance, and live-dial readiness, plus a gated send-plan bridge and a narrow hardware-validated saved-kit writer for Filter2 Resonance.
 
-**Architecture:** Keep A4-specific facts in `rytm_randomizer/data/`, deterministic audio-intelligence translation in `rytm_randomizer/style_analysis/`, passive operator output in focused `rytm_randomizer/reports/` modules registered through `cli_registry`, and active output only in `rytm_randomizer/app.py` behind `--arm` plus a confirmation flag. Screen-only NRPN destination rows remain skipped until their ordinals are captured.
+**Architecture:** Keep A4-specific facts in `rytm_randomizer/data/`, deterministic audio-intelligence translation in `rytm_randomizer/style_analysis/`, passive operator output in focused `rytm_randomizer/reports/` modules registered through `cli_registry`, and active MIDI output only in `rytm_randomizer/app.py` behind `--arm` plus a confirmation flag. The pure saved-kit renderer lives beside the A4 strategies, uses the shared Elektron envelope packer, and reaches disk only through the canonical guarded `cockpit.export.writer.atomic_write`. Screen-only NRPN destination rows remain skipped until their ordinals are captured.
 
 **Tech Stack:** Python 3.11 stdlib, existing `FeatureReport` style-analysis pipeline, existing manual-backed `analog_four_midi.py`, passive CLI registry.
 
@@ -24,20 +24,21 @@
 | WS-G | Patch capture-corpus nearest matching | WS-A, WS-B, WS-E | WS-D | `rytm_randomizer/data/analog_four_patch_corpus.py`, `rytm_randomizer/style_analysis/analog_four_patch_corpus.py`, `rytm_randomizer/reports/analog_four_patch_corpus.py`, `tests/test_analog_four_patch_corpus*.py` |
 | WS-H | Initialized SysEx baseline comparison | WS-G | WS-D | `rytm_randomizer/reports/analog_four_baseline.py`, `tests/test_analog_four_baseline_report.py` |
 | WS-I | First A4 SysEx field calibration facts | WS-H | WS-D | `rytm_randomizer/data/analog_four_sysex_calibration.py`, `tests/test_analog_four_sysex_calibration.py`, `rytm_randomizer/data/__init__.py` |
+| WS-J | Hardware-validated A4 saved-kit renderer + guarded export | WS-I | WS-D | `rytm_randomizer/snapshot/envelope.py`, `rytm_randomizer/devices/strategies/analog_four_saved_kit_writer.py`, `rytm_randomizer/cockpit/export/analog_four_kit.py`, focused tests, hardware evidence |
 
 ## Execution Shape
 
-- **Worktree assignment:** The bundled feature landed through `.worktrees/a4-audio-patch-genome-passive` on PR #206; Filter2 Resonance calibration continues in `.worktrees/a4-filter2-resonance-calibration` on PR #212.
-- **Disjoint ownership:** WS-A and WS-I own `data/`, WS-B owns `style_analysis/`, WS-C owns `reports/` plus CLI/help, WS-D owns docs.
+- **Worktree assignment:** The bundled feature landed through `.worktrees/a4-audio-patch-genome-passive` on PR #206; Filter2 Resonance calibration landed in PR #212; the round-trip writer continues in `.worktrees/a4-sysex-roundtrip-writer` on branch `codex/a4-sysex-roundtrip-writer`.
+- **Disjoint ownership:** WS-A and WS-I own `data/`, WS-B owns `style_analysis/`, WS-C owns `reports/` plus CLI/help, WS-D owns docs, and WS-J owns the shared packer, A4 renderer, and file-export adapter.
 - **Agent crew:** main agent performs TDD/implementation; read-only explorers inspect CLI/report and A4 reuse points in parallel.
 - **Self-driving rules:** no human prompts; routine file edits, formatting, docs, tests, and fixes continue automatically.
 - **Auto-merge cascade:** not used locally; PR shape is one non-stacked bundled branch.
 - **Auto-rebase rules:** if base drift appears, rebase/cherry-pick only this branch's commits and never reset user changes in the original checkout.
-- **On-disk state:** Merged PR #206, follow-up PR #212 on branch `codex/a4-filter2-resonance-calibration`, this plan document, and committed test/coverage evidence are the durable recovery state; no long-running monitor or external state file is required.
+- **On-disk state:** Merged PRs #206 and #212, branch `codex/a4-sysex-roundtrip-writer`, this plan document, immutable hardware evidence, and committed test/coverage evidence are the durable recovery state; no long-running monitor or external state file is required.
 - **Kickoff trigger:** user requested autonomous continuation on 2026-07-03.
 - **Termination condition:** tests and docs pass locally as far as feasible; final response lists changed files, verification, and residual hardware-validation limits.
 - **Hard time budget:** no wall-clock budgeted automation is running; this is a finite PR update that stops after local gates, push, and PR status checks.
-- **Recovery procedure:** read this plan, run `git status --short --branch`, inspect PR #212 for the active calibration follow-up, then rerun the focused A4 patch tests before continuing after compaction.
+- **Recovery procedure:** read this plan, run `git status --short --branch`, inspect the current writer PR, then rerun the focused A4 writer/export/calibration tests before continuing after compaction.
 - **Permission profile:** local file edits and passive tests only; refuse force-push, hardware pin bumps, parity capture, and unarmed real-MIDI sends.
 - **Stop signals:** a user "stop/wait" message pauses; otherwise continue.
 
@@ -54,15 +55,19 @@
 9. Implement the passive capture-corpus nearest-match compiler/report with synthetic starter rows and optional captured corpus file input.
 10. Implement the passive initialized-baseline report for Jose's Test 1 kit, pattern+kit, and whole-project SysEx exports.
 11. Promote passive A4 SysEx field calibration facts from Jose's Filter1 Frequency, Filter1 Resonance, Filter2 Frequency, and Filter2 Resonance captures.
-12. Update operator docs and architecture/status references.
-13. Run focused tests, then fast/architecture/lint verification as feasible.
+12. Add a shared Elektron 7-bit packer and a pure A4 saved-kit renderer that validates framing, family, object, body size, checksum, and packed length before mutation.
+13. Add a guarded local-file exporter that permits only hardware-write-validated parameters and reuses the canonical atomic writer.
+14. Record byte-identical, novel-value, and four-track operator-confirmed hardware evidence.
+15. Update operator docs and architecture/status references.
+16. Run focused tests, then fast/architecture/lint verification as feasible.
 
 ## Safety Contract
 
 - Passive CLI reports open no MIDI ports and send no MIDI.
 - App dry-run sends only to the in-memory mock sender.
 - App armed send requires `--arm --a4-patch-send-plan --confirm-a4-patch-send-plan`.
-- No SysEx writing.
+- Saved-kit SysEx writing is local-file-only, atomic, refuses overwrite by default, and is limited to hardware-write-validated Filter2 Resonance mutations.
+- No generated SysEx is sent to a MIDI port by this path; hardware receipt remains an explicit operator action.
 - No parity fixture regeneration.
 - CC-ready rows are explicit `0..127` values.
 - NRPN-only enum/destination rows are represented honestly as front-panel/manual rows unless the manual-backed ordinal is known.
@@ -70,7 +75,7 @@
 - Patch learning is explanatory and deterministic; it does not claim a trained model or hardware-captured A4 state until future capture data exists.
 - Patch corpus matching labels synthetic starter rows separately from captured hardware rows; it does not claim trained model status or hardware-backed certainty until real A4 recordings are supplied and validated.
 - Initialized-baseline comparison reads local SysEx exports and fingerprints supported saved-kit payloads only; it does not write SysEx, mutate hardware, send MIDI, or claim parameter-level A4 DNA extraction while saved-kit offsets remain candidate-only.
-- SysEx calibration facts are data-only evidence from operator-supplied exports; they do not write SysEx, mutate hardware, send MIDI, or claim a complete A4 kit writer until more fields are captured and validated.
+- Candidate-only SysEx calibration facts remain blocked from operator-facing export. Filter2 Resonance alone carries immutable write-validation evidence for reference, novel, and four-track generated kits; this does not claim a complete A4 kit writer.
 
 ## Plan-Requirements Conformance
 
@@ -83,7 +88,7 @@ Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 - [x] Gate 5 (docs updated) -- README, CLI reference, STATUS, ARCHITECTURE, diagrams updated.
 - [x] Gate 6 (type-system hygiene) -- frozen dataclasses and explicit types; no `Any` aliases.
 - [x] Gate 7 (observability adoption) -- passive reports stay inert; the active send bridge wraps the armed batch in an operation span, records categorized error metrics, and reuses the existing `midi_io` per-message breadcrumbs.
-- [x] Gate 8 (test hygiene) -- tests mirror source responsibilities and use real code.
+- [x] Gate 8 (test hygiene) -- tests mirror source responsibilities, pin the observed wire format, and exercise the canonical atomic writer through the export adapter.
 - [x] Gate 9 (module organization) -- new files live under existing `data/`, `style_analysis/`, and `reports/` subpackages.
 - [x] Gate 10 (string-literal dispatch hygiene) -- no new mode/page dispatch ladder; CLI uses registry.
 - [x] Gate 11 (shared fixtures) -- no duplicated multi-file fixtures.
@@ -91,6 +96,6 @@ Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 - [x] Gate 13 (env vars) -- no new environment variables.
 - [x] Gate 14 (maintainability) -- small focused modules; no oversized report module.
 - [x] Gate 15 (learning phase) -- review findings were captured in this plan and PR evidence; no reusable skill extraction is warranted because the patterns are feature-specific A4 patch-template data placement and send-plan observability fixes already covered by existing rules.
-- [x] Gate 16 (execution shape) -- the bundled feature landed in PR #206; the isolated Filter2 Resonance calibration follow-up is PR #212 directly against `modularize-v1.34`, with no stacked base branch.
-- [x] Gate 17 (abstraction reuse) -- reuses A4 MIDI data, `FeatureReport`, blueprint traits, report formatter, CLI registry, and passive SysEx evidence/fingerprint conventions.
-- [x] Gate 18 (architecture freshness) -- architecture docs/diagrams updated for the new passive reports, style-analysis surfaces, and gated app send bridge.
+- [x] Gate 16 (execution shape) -- PRs #206 and #212 landed directly; the writer is one follow-up branch directly against `modularize-v1.34`, with no stacked base branch.
+- [x] Gate 17 (abstraction reuse) -- reuses A4 calibration facts, the shared snapshot envelope, the canonical atomic writer, A4 MIDI data, `FeatureReport`, report formatter, and CLI registry.
+- [x] Gate 18 (architecture freshness) -- architecture docs/diagrams cover the shared packer, strategy-adjacent A4 saved-kit renderer, and guarded `.syx` export path.
