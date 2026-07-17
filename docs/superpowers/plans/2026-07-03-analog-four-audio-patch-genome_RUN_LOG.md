@@ -20,3 +20,4 @@ This file is append-only. Times are America/New_York when recorded.
 - 2026-07-16: LEARNING_CAPTURED. Updated the repository Elektron SysEx skill and added run, replay, state, architecture, and maintainability artifacts.
 - 2026-07-16: REVIEW_FINDING. Added a unique acquisition nonce so interrupted same-process publishers cannot release another invocation's lock.
 - 2026-07-16: REVIEW_FINDING. Saved-kit JSON parse failures now return the bounded `invalid_input` contract.
+- 2026-07-17: CI_HARDENING. Isolated the real librosa tone/noise CLI proof in single-threaded subprocesses after one flaky Ubuntu native-library worker crash.

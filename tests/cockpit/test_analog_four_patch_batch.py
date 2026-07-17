@@ -5,8 +5,11 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import random
 import struct
+import subprocess
+import sys
 import wave
 from dataclasses import replace
 from pathlib import Path
@@ -264,50 +267,84 @@ def test_export_audio_patch_batch_writes_four_pinned_candidates_and_manifest(
 
 def test_real_audio_to_patch_batch_chain_distinguishes_tone_from_noise(tmp_path: Path) -> None:
     pytest.importorskip("librosa")
-    from rytm_randomizer.cockpit.export.analog_four_patch_batch import (
-        export_analog_four_audio_patch_batch,
-    )
 
     tone_path = tmp_path / "real-tone.wav"
     noise_path = tmp_path / "real-noise.wav"
     _write_test_wav(tone_path)
     _write_noise_wav(noise_path)
-    tone = export_analog_four_audio_patch_batch(
-        audio_path=tone_path,
-        source_kit_path=SOURCE_KIT,
-        output_dir=tmp_path / "tone-batch",
-        track=1,
-        candidate_count=1,
+    environment = os.environ.copy()
+    environment.update(
+        {
+            "MKL_NUM_THREADS": "1",
+            "NUMBA_NUM_THREADS": "1",
+            "NUMEXPR_NUM_THREADS": "1",
+            "OMP_NUM_THREADS": "1",
+            "OPENBLAS_NUM_THREADS": "1",
+        }
     )
-    noise = export_analog_four_audio_patch_batch(
-        audio_path=noise_path,
-        source_kit_path=SOURCE_KIT,
-        output_dir=tmp_path / "noise-batch",
-        track=1,
-        candidate_count=1,
-    )
+
+    payloads: list[dict[str, object]] = []
+    for audio_path, directory_name in (
+        (tone_path, "tone-batch"),
+        (noise_path, "noise-batch"),
+    ):
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "rytm_randomizer.cli",
+                "analog-four-audio-patch-batch",
+                "--audio",
+                str(audio_path),
+                "--source-kit",
+                str(SOURCE_KIT),
+                "--output-dir",
+                str(tmp_path / directory_name),
+                "--track",
+                "1",
+                "--candidates",
+                "1",
+                "--json",
+            ],
+            capture_output=True,
+            check=False,
+            env=environment,
+            text=True,
+            timeout=120,
+        )
+        assert completed.returncode == 0, completed.stderr
+        payloads.append(json.loads(completed.stdout))
 
     sidecars: list[dict[str, object]] = []
-    for result in (tone, noise):
-        manifest = json.loads(result.manifest_write.path.read_text(encoding="utf-8"))
-        candidate = result.candidates[0]
-        sidecar = json.loads(candidate.sidecar_path.read_text(encoding="utf-8"))
+    manifests: list[dict[str, object]] = []
+    for payload in payloads:
+        manifest_path = Path(str(payload["manifest_path"]))
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        candidate_output = payload["candidate_outputs"][0]  # type: ignore[index]
+        sidecar_path = Path(str(candidate_output["sidecar_path"]))
+        sysex_path = Path(str(candidate_output["sysex_path"]))
+        sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+        manifests.append(manifest)
         sidecars.append(sidecar)
-        assert len(result.generation_id) == 32
-        assert manifest["generation_id"] == sidecar["generation_id"] == result.generation_id
-        assert manifest["feature_report_hash"] == result.feature_report_hash
-        assert sidecar["audio_features"]["audio_sha256"] == result.audio_sha256
-        assert sidecar["hashes"]["genome_sha256"] == result.genome_sha256
-        assert manifest["candidates"][0]["sidecar_sha256"] == candidate.sidecar_sha256
-        assert manifest["candidates"][0]["sysex_sha256"] == candidate.sysex_export.render.sha256
-        assert hashlib.sha256(result.manifest_write.path.read_bytes()).hexdigest() == (
-            result.manifest_sha256
+        assert len(str(payload["generation_id"])) == 32
+        assert manifest["generation_id"] == sidecar["generation_id"] == payload["generation_id"]
+        assert len(manifest["feature_report_hash"]) == 64
+        assert sidecar["audio_features"]["audio_sha256"] == payload["source_hash"]
+        assert manifest["genome_sha256"] == sidecar["hashes"]["genome_sha256"]
+        assert (
+            manifest["candidates"][0]["sidecar_sha256"]
+            == hashlib.sha256(sidecar_path.read_bytes()).hexdigest()
         )
+        assert (
+            manifest["candidates"][0]["sysex_sha256"]
+            == hashlib.sha256(sysex_path.read_bytes()).hexdigest()
+        )
+        assert hashlib.sha256(manifest_path.read_bytes()).hexdigest() == payload["manifest_sha256"]
 
     assert sidecars[0]["audio_features"] != sidecars[1]["audio_features"]
-    assert tone.genome_sha256 != noise.genome_sha256
-    assert tone.candidates[0].sysex_export.render.sha256 != (
-        noise.candidates[0].sysex_export.render.sha256
+    assert manifests[0]["genome_sha256"] != manifests[1]["genome_sha256"]
+    assert manifests[0]["candidates"][0]["sysex_sha256"] != (
+        manifests[1]["candidates"][0]["sysex_sha256"]
     )
 
 
