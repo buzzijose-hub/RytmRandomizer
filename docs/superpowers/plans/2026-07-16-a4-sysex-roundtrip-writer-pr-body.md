@@ -44,7 +44,7 @@ python -m pyright --project .pyright-a4-temp.json <feature-owned production path
 git diff --check
 ```
 
-- [x] Full repository suite: 6,253 passed, 3 skipped.
+- [x] Full repository suite: 6,254 passed, 3 skipped.
 - [x] Architecture suite: 676 passed.
 - [x] V1.34 frozen parity: 685 passed byte-for-byte.
 - [x] Focused feature suite: 217 passed with 100% statement and branch coverage across 11 changed feature modules.

@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from pathlib import Path
 
 import pytest
@@ -234,7 +235,16 @@ def test_failed_overwrite_leaves_original_file_intact(
     assert leaked == [], f"leaked temp files: {leaked}"
 
 
-def test_write_error_bubbles_up_unwrapped(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("platform", "publish_name"),
+    (("win32", "rename"), ("linux", "link")),
+)
+def test_write_error_bubbles_up_unwrapped(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    platform: str,
+    publish_name: str,
+) -> None:
     """An underlying :class:`WriteError` propagates from ``save()`` as-is.
 
     Per the M7 contract: only ``FileExistsError`` is translated to
@@ -244,10 +254,11 @@ def test_write_error_bubbles_up_unwrapped(monkeypatch: pytest.MonkeyPatch, tmp_p
 
     registry = ProfileRegistry(profiles_dir=tmp_path)
 
-    def failing_rename(src: str, _dst: str | Path) -> None:
+    def failing_publish(_src: str, _dst: str | Path) -> None:
         raise OSError("ENOSPC simulated")
 
-    monkeypatch.setattr(os, "rename", failing_rename)
+    monkeypatch.setattr(sys, "platform", platform)
+    monkeypatch.setattr(os, publish_name, failing_publish)
     with pytest.raises(WriteError):
         registry.save(_make_user_profile())
 
