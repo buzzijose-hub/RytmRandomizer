@@ -159,6 +159,9 @@ on one line for an existing module, you probably need a new module instead.
 | `inspection.py`       | Consolidated passive command-metadata inspection + preview + audit.             |
 | `cockpit/export/analog_four_kit.py` | Hardware-validation-gated A4 `.syx` file adapter; reuses canonical `atomic_write` and never sends MIDI. |
 | `cockpit/export/analog_four_cli.py` | Registered local-file command for one or four validated Filter2 Resonance mutations; no MIDI I/O. |
+| `style_analysis/analog_four_patch_inference.py` | Deterministic audio measurements and audio-dependent four-column A4 patch-genome inference. |
+| `cockpit/export/analog_four_patch_batch.py` | Batch service that writes candidate saved kits, complete DNA/live-dial sidecars, and a manifest through the canonical atomic writer. |
+| `cockpit/export/analog_four_patch_batch_cli.py` | Registered passive-hardware operator command for one-to-four audio-dependent candidate exports; no MIDI I/O. |
 
 ### Frozen reference (NOT in the layered graph)
 
@@ -349,6 +352,15 @@ marked `hardware-write-validated`. It writes a local file through the canonical
 atomic writer and never opens a MIDI port. The registered
 `analog-four-saved-kit-export` command makes that guarded file path reachable
 without adding hardware I/O.
+
+The audio batch path composes the existing audio extractor, the focused A4
+audio-inference compiler, patch send-plan metadata, and guarded saved-kit
+export. It produces one to four candidate `.syx`/JSON pairs plus a manifest.
+The sidecar is the complete DNA and CC/NRPN live-dial contract; saved-kit SysEx
+still encodes only hardware-write-validated Filter2 Resonance. This is real
+audio-dependent inference, but not full saved-kit coverage or a claim of
+Synthplant-equivalent learned accuracy. `analog-four-audio-patch-batch` remains
+hardware-passive: local reads/writes only, with no MIDI port or send.
 
 **To add a device family:**
 
@@ -796,6 +808,8 @@ the implementation plan is at
 rytm_randomizer/cockpit/export/
     __init__.py            # Re-exports the public surface (Phase 1 + Phase 3)
     analog_four_kit.py     # Guarded A4 saved-kit .syx adapter -> canonical atomic_write
+    analog_four_patch_batch.py      # Audio inference -> candidate .syx/sidecars/manifest
+    analog_four_patch_batch_cli.py  # Registered passive-hardware batch command
     model_format.py        # Phase 1, existing — MAGIC=b"RYMP", format_version, build/parse header, CRC32 trailer
     serialize.py           # Phase 1, existing — pack_profile_model / unpack_profile_model
     signing.py             # Phase 3, NEW — HMAC-SHA256 signing + signed envelope (MAGIC=b"RYMS")

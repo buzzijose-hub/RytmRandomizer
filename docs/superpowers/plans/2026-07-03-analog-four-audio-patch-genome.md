@@ -3,9 +3,9 @@
 > Status: in-flight
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:test-driven-development. This plan is structured for one bundled PR with maximum-parallelization sidecar exploration and no stacked PRs, per docs/PLAN_REQUIREMENTS.md Gate 16.
 
-**Goal:** Add a Synplant-inspired audio/description-to-Analog-Four patch genome that produces four A4 patch candidates, a selected candidate DNA sheet, front-panel dial targets, CC/NRPN transport metadata, a learning packet that explains candidate ranking, trait-to-A4 routes, future capture steps, passive initialized-baseline comparison for clean-slate A4 SysEx exports, passive patch-corpus nearest-match ranking for starter or captured A4 audio/patch examples, SysEx field calibration facts for Filter1 Frequency, Filter1 Resonance, Filter2 Frequency, and Filter2 Resonance, and live-dial readiness, plus a gated send-plan bridge and a narrow hardware-validated saved-kit writer for Filter2 Resonance.
+**Goal:** Add a Synplant-inspired audio/description-to-Analog-Four patch genome and a real audio-dependent batch path that produces up to four A4 patch candidates, complete DNA sidecars, CC/NRPN live-dial plans, and narrow hardware-validated saved-kit files for Filter2 Resonance.
 
-**Architecture:** Keep A4-specific facts in `rytm_randomizer/data/`, deterministic audio-intelligence translation in `rytm_randomizer/style_analysis/`, passive operator output in focused `rytm_randomizer/reports/` modules registered through `cli_registry`, and active MIDI output only in `rytm_randomizer/app.py` behind `--arm` plus a confirmation flag. The pure saved-kit renderer lives beside the A4 strategies, uses the shared Elektron envelope packer, and reaches disk only through the canonical guarded `cockpit.export.writer.atomic_write`. Screen-only NRPN destination rows remain skipped until their ordinals are captured.
+**Architecture:** Keep A4-specific facts in `rytm_randomizer/data/`, deterministic measured-audio inference in `rytm_randomizer/style_analysis/`, and local batch orchestration under `cockpit/export/`. The registered operator CLI delegates to the batch service; every artifact reaches disk through `atomic_write`, and no MIDI path is imported or opened. Saved-kit SysEx remains Filter2-Resonance-only while each JSON sidecar carries complete DNA and its CC/NRPN plan.
 
 **Tech Stack:** Python 3.11 stdlib, existing `FeatureReport` style-analysis pipeline, existing manual-backed `analog_four_midi.py`, passive CLI registry.
 
@@ -25,6 +25,7 @@
 | WS-H | Initialized SysEx baseline comparison | WS-G | WS-D | `rytm_randomizer/reports/analog_four_baseline.py`, `tests/test_analog_four_baseline_report.py` |
 | WS-I | First A4 SysEx field calibration facts | WS-H | WS-D | `rytm_randomizer/data/analog_four_sysex_calibration.py`, `tests/test_analog_four_sysex_calibration.py`, `rytm_randomizer/data/__init__.py` |
 | WS-J | Hardware-validated A4 saved-kit renderer + guarded export | WS-I | WS-D | `data/analog_four_saved_kit_layout.py`, `snapshot/envelope.py`, `devices/strategies/{analog_four_saved_kit_codec,analog_four_saved_kit_writer}.py`, `cockpit/export/{analog_four_cli,analog_four_kit,writer}.py`, CLI/help registration, observability, exact binary fixtures, focused tests, hardware evidence, learned SysEx skill |
+| WS-K | Real audio inference + candidate batch operator path | WS-J | docs work | `style_analysis/analog_four_patch_inference.py`, `cockpit/export/analog_four_patch_batch.py`, `cockpit/export/analog_four_patch_batch_cli.py`, focused tests, CLI/help, architecture/operator docs |
 
 ## Execution Shape
 
@@ -62,6 +63,9 @@
 16. Harden canonical no-overwrite publication against races and short writes while preserving Windows removable-media support.
 17. Update operator docs, architecture/status references, observability notes, and the existing Elektron SysEx learned skill.
 18. Run focused coverage, strict typing, full suite, architecture, parity, lint, and review gates.
+19. Measure audio-dependent envelope, spectrum, noise, low-end, harmonicity, transient, and modulation evidence and use it to vary candidate DNA deterministically.
+20. Export one-to-four candidate `.syx`/JSON pairs plus a batch manifest; keep complete DNA and CC/NRPN live-dial metadata in sidecars.
+21. Register `analog-four-audio-patch-batch` with bounded track/candidate parsing, text/JSON summaries, classified file/input failures, and no MIDI behavior.
 
 ## Safety Contract
 
@@ -78,6 +82,8 @@
 - Patch corpus matching labels synthetic starter rows separately from captured hardware rows; it does not claim trained model status or hardware-backed certainty until real A4 recordings are supplied and validated.
 - Initialized-baseline comparison reads local SysEx exports and fingerprints supported saved-kit payloads only; it does not write SysEx, mutate hardware, send MIDI, or claim parameter-level A4 DNA extraction while saved-kit offsets remain candidate-only.
 - Candidate-only SysEx calibration facts remain blocked from operator-facing export. Filter2 Resonance alone carries immutable write-validation evidence for reference, novel, and four-track generated kits; this does not claim a complete A4 kit writer.
+- Audio batches are genuinely audio-dependent, but deterministic feature routing is not a trained Synthplant-equivalent model and makes no equivalent-accuracy claim.
+- Every batch `.syx` encodes only Filter2 Resonance; each sidecar is the complete DNA and live-sendable/manual/deferred plan of record.
 
 ## Plan-Requirements Conformance
 

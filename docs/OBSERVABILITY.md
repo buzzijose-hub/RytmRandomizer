@@ -186,6 +186,14 @@ code. A POSIX temp-name cleanup failure after successful hard-link publication
 is logged as `atomic_write_cleanup` but does not convert a valid output into a
 failed export.
 
+The audio patch-batch service uses the same export RED metric and emits
+`a4_audio_patch_batch_export` structured records. Success includes output
+directory, manifest SHA256, and candidate count. Failure includes audio,
+source-kit, and output paths with `source_read_failed`, `overwrite_refused`,
+`write_failed`, `validation`, or `inference_failed`. The CLI additionally
+returns stable operator-facing `error_code` values and never emits MIDI-send
+breadcrumbs because this path performs no MIDI operation.
+
 ## Adding logging to a new module
 
 ```python

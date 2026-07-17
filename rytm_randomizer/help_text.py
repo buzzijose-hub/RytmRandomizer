@@ -625,6 +625,8 @@ USAGE = (
     "analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> "
     "--filter2-resonance <track:value> [--filter2-resonance <track:value> ...] "
     "[--overwrite] [--json] | "
+    "analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> "
+    "--output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json] | "
     "cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> "
     "[--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json] | "
     "manual-feedback-packet-report "
@@ -3386,6 +3388,39 @@ Safety:
 {_safety_block(_ANALOG_FOUR_SAVED_KIT_EXPORT_SAFETY_LINES)}"""
 
 
+def _analog_four_audio_patch_batch_help():
+    from .cockpit.export.analog_four_patch_batch_cli import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: analog-four-audio-patch-batch
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir>
+  python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir> --track 2 --candidates 4 --json
+  python -m rytm_randomizer.cli analog-four-audio-patch-batch --help
+
+Arguments:
+  --audio <path>           Short reference audio clip to analyze
+  --source-kit <kit.syx>   Hardware-exported source saved kit
+  --output-dir <dir>       Destination for candidate .syx and JSON sidecar files
+  --track N                Analog Four track 1-4; default 1
+  --candidates N           Candidate count 1-4; default 4
+  --overwrite              Replace existing candidate artifacts
+  --json                   Emit a JSON acknowledgment instead of text
+
+Behavior:
+  Runs real audio-dependent inference and generates up to four candidate patch
+  genomes. Every candidate writes one saved-kit .syx file and one sidecar with
+  the complete patch DNA plus its CC/NRPN live-dial plan. The current .syx
+  writer applies only hardware-write-validated Filter2 Resonance; all other DNA
+  remains represented in the sidecar as live-sendable, manual, or deferred.
+  The acknowledgment reports the audio source hash, output paths, category
+  counts, and safety contract. This is not a claim of full saved-kit coverage
+  or Synthplant-equivalent learned accuracy.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def _cockpit_export_rehearsal_report_help():
     from .reports.cockpit_export_rehearsal import SAFETY_LINES
 
@@ -3563,6 +3598,7 @@ Usage:
   python -m rytm_randomizer.cli cockpit-send-plan-rehearsal-surface-report (--plan-json <json>|--plan-file <path>|--readiness-json <json>|--readiness-file <path>) [--label <text>] [--json]
   python -m rytm_randomizer.cli cockpit-export-profile-model --profile-id <id> --profiles-dir <path> --output <file.rymp> [--key-hex <hex> --key-id <label>] [--unsigned] [--overwrite] [--json]
   python -m rytm_randomizer.cli analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> --filter2-resonance <track:value> [--filter2-resonance <track:value> ...] [--overwrite] [--json]
+  python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json]
   python -m rytm_randomizer.cli cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> [--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
@@ -3828,6 +3864,8 @@ Commands:
                     Export a cockpit ProfileModel (pack + sign + atomic write + verify).
   analog-four-saved-kit-export
                     Render hardware-validated Analog Four values into a saved-kit SysEx file.
+  analog-four-audio-patch-batch
+                    Infer and export up to four passive Analog Four patch candidates from audio.
   cockpit-export-rehearsal-report
                     Build GUI-ready passive cockpit model-export rehearsal surface state.
   inspect-command    Inspect passive command metadata by key.
@@ -4293,6 +4331,7 @@ Safety:
     ),
     "cockpit-export-profile-model": _cockpit_export_profile_model_help,
     "analog-four-saved-kit-export": _analog_four_saved_kit_export_help,
+    "analog-four-audio-patch-batch": _analog_four_audio_patch_batch_help,
     "cockpit-export-rehearsal-report": _cockpit_export_rehearsal_report_help,
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 

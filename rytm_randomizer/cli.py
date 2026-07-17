@@ -484,6 +484,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.cockpit.export.analog_four_cli",
             "ANALOG_FOUR_SAVED_KIT_EXPORT_CLI_COMMAND",
         ),
+        "analog-four-audio-patch-batch": (
+            "rytm_randomizer.cockpit.export.analog_four_patch_batch_cli",
+            "ANALOG_FOUR_AUDIO_PATCH_BATCH_CLI_COMMAND",
+        ),
         "cockpit-export-rehearsal-report": (
             "rytm_randomizer.reports.cockpit_export_rehearsal",
             "COCKPIT_EXPORT_REHEARSAL_CLI_COMMAND",

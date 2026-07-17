@@ -379,6 +379,27 @@ Current authorization boundary:
 - Firmware and transfer-utility versions were not captured in this pass and
   should be recorded on the next validation session.
 
+### Audio-to-patch candidate batch
+
+Generate one to four audio-dependent candidates from a short reference clip:
+
+```powershell
+python -m rytm_randomizer.cli analog-four-audio-patch-batch `
+  --audio "G:\REFERENCES\short-reference.wav" `
+  --source-kit "G:\ANALOG FOUR\WHOLE PROJECT DUMP\A4_Test1_Init_Kit.syx" `
+  --output-dir "G:\ANALOG FOUR\GENERATED\reference-batch" `
+  --track 1 --candidates 4 --json
+```
+
+This is real local audio analysis and candidate inference, not a static preset
+rename. Each candidate produces a `.syx` file plus a JSON sidecar containing
+its complete patch DNA and CC/NRPN live-dial plan. At the current hardware
+validation boundary, the `.syx` encodes only Filter2 Resonance; every other DNA
+row remains live-sendable, manual, or deferred in the sidecar. The command does
+not open a MIDI port or transfer files to the Analog Four. Do not interpret the
+result as full saved-kit parameter coverage or Synthplant-equivalent learned
+accuracy. Existing artifacts are refused unless `--overwrite` is explicit.
+
 ## Canonical operator-command flow
 
 These ten commands mirror the V1.34 baseline operator flow and the

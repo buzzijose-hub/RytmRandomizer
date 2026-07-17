@@ -20,6 +20,12 @@ Last updated: 2026-07-16. This file is a hand-authored snapshot and is meant to 
   candidate-only. This path opens no MIDI port and performs no automatic
   hardware send. Evidence is recorded in
   `docs/hardware-validation/2026-07-16-a4-saved-kit-roundtrip-results.md`.
+  The follow-on `analog-four-audio-patch-batch` command now connects real local
+  audio-dependent inference to one-to-four candidate exports. Each candidate
+  has a saved-kit `.syx` plus a complete DNA/CC-NRPN sidecar; only Filter2
+  Resonance is currently written into SysEx, while the sidecar classifies the
+  remaining rows as live-sendable, manual, or deferred. The path is local-file
+  only, sends no MIDI, and makes no full-coverage or Synthplant-accuracy claim.
 - 2026-07-08: Passive local model copilot bundle prepared locally. The new
   `local-model-copilot-report` command builds deterministic docs/MIDI,
   staged mutation-intent, and Analog Four patch co-designer packets, and only

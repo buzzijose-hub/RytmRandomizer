@@ -1,6 +1,6 @@
 # Summary
 
-Turn the first hardware-validated Analog Four MKII saved-kit calibration into a guarded, operator-usable SysEx writer. This PR adds the shared Elektron 7-bit codec path, canonical A4 saved-kit layout facts, a pure validator/mutator/renderer, an atomic local-file exporter, and a passive CLI command that writes Filter2 Resonance values for one or all four tracks.
+Turn the first hardware-validated Analog Four MKII saved-kit calibration into a guarded writer and connect it to real audio-dependent, four-candidate batch generation. The complete DNA remains available in sidecars while saved-kit SysEx stays honestly limited to Filter2 Resonance.
 
 ## What changed
 
@@ -11,10 +11,17 @@ Turn the first hardware-validated Analog Four MKII saved-kit calibration into a 
 - Added `analog-four-saved-kit-export`, a passive operator command supporting repeated `track:value` assignments and text or JSON acknowledgements. It writes a `.syx` file and never opens a MIDI port.
 - Added exact source/expected binary fixtures, hardware evidence, operator documentation, architecture diagrams, and an updated reusable Elektron SysEx skill.
 - Hardened atomic publication for short writes, zero-progress writes, overwrite races, Windows FAT/exFAT removable media, and POSIX cleanup failures.
+- Added deterministic measured-audio A4 inference and a manifest-backed batch service that writes up to four candidate `.syx` files plus complete DNA/CC-NRPN sidecars.
+- Added `analog-four-audio-patch-batch` with bounded track/candidate options, text/JSON artifact summaries, classified failures, and no MIDI behavior.
 
 ## Why this matters
 
 The Analog Four can now receive exact generated saved-kit parameter values without depending on Synplant output or manual front-panel entry. The scope remains deliberately narrow: Filter2 Resonance is proven on all four tracks; every other captured parameter remains candidate-only and is blocked from operator-facing export.
+
+Audio changes candidate DNA using measured local features; this is real
+audio-dependent inference, not a trained-model or Synthplant-equivalent accuracy
+claim. Each sidecar carries the complete DNA and CC/NRPN plan. Each `.syx`
+currently applies only hardware-write-validated Filter2 Resonance.
 
 Example:
 
@@ -33,6 +40,7 @@ python -m rytm_randomizer.cli analog-four-saved-kit-export \
 
 ```bash
 python -m pytest
+python -m pytest tests/cockpit/test_analog_four_patch_batch_cli.py tests/test_cli.py -n 0
 python -m pytest tests/architecture/ -q
 python -m pytest tests/test_engines_pad*.py tests/test_group_runner.py tests/test_scene_runner.py
 python scripts/code_review_gate.py --mode cli
@@ -53,6 +61,7 @@ git diff --check
 - [x] Lint trio and `git diff --check` clean.
 - [x] Vulture at confidence 80 clean on feature paths.
 - [x] Mechanical code-review gate passed.
+- [x] Audio patch-batch CLI focused tests and command-help fixture passed locally.
 - [ ] CI matrix pending PR execution.
 
 Hardware validation:
@@ -70,11 +79,11 @@ Per [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUIREMENTS.md), every non-trivial
 - [x] **Gate 2** - V1.34 parity byte-identical across all 685 items.
 - [x] **Gate 3** - ruff, black, and isort clean; strict Pyright clean on all 10 feature-owned production modules. Legacy central aggregators remain outside project-wide strict mode and passed the full and architecture suites.
 - [x] **Gate 4** - no new dead code at vulture confidence 80.
-- [x] **Gate 5** - runbook, status, architecture, diagrams, plan, dated evidence, README, and operator help updated.
+- [x] **Gate 5** - runbook, status, architecture, diagrams, plan, dated evidence, README, and audio-batch operator help updated.
 - [x] **Gate 6** - frozen typed DTOs, `Final` constants, and no `Any` escape hatches.
 - [x] **Gate 7** - export success/failure logs and metrics added; no MIDI hot path introduced.
 - [x] **Gate 8** - exact binary, malformed-frame, mutation, CLI, atomic-write, and integration tests added.
-- [x] **Gate 9** - work is contained under existing `data/`, `devices/strategies/`, and `cockpit/export/` ownership boundaries.
+- [x] **Gate 9** - work is contained under existing `data/`, `style_analysis/`, `devices/strategies/`, and `cockpit/export/` ownership boundaries.
 - [x] **Gate 10** - the operator command uses the canonical CLI registry and adds no ad hoc mode dispatch.
 - [x] **Gate 11** - exact binary fixtures and shared fixture builders live under `tests/fixtures/` and `tests/conftest.py`.
 - [x] **Gate 12** - all new module constants use `Final`.
@@ -100,6 +109,6 @@ Plan doc: `docs/superpowers/plans/2026-07-03-analog-four-audio-patch-genome.md`
 
 ## Reviewer notes
 
-The pure renderer can exercise candidate calibrations in tests, but the operator-facing exporter rejects every field not marked `hardware-write-validated`. Filter1 Frequency, Filter1 Resonance, and Filter2 Frequency remain intentionally blocked.
+The pure renderer can exercise candidate calibrations in tests, but the operator-facing exporter rejects every field not marked `hardware-write-validated`. Filter1 Frequency, Filter1 Resonance, and Filter2 Frequency remain intentionally blocked. Batch sidecars preserve those complete DNA/live-dial rows without claiming they were encoded into SysEx.
 
 The atomic writer fsyncs file data. It does not fsync parent-directory metadata, so persistence of the final filename after sudden power loss remains filesystem-dependent.
