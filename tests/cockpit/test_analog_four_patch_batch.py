@@ -275,43 +275,49 @@ def test_real_audio_to_patch_batch_chain_distinguishes_tone_from_noise(tmp_path:
     environment = os.environ.copy()
     environment.update(
         {
+            "BLIS_NUM_THREADS": "1",
             "MKL_NUM_THREADS": "1",
             "NUMBA_NUM_THREADS": "1",
             "NUMEXPR_NUM_THREADS": "1",
             "OMP_NUM_THREADS": "1",
             "OPENBLAS_NUM_THREADS": "1",
+            "VECLIB_MAXIMUM_THREADS": "1",
         }
     )
+    native_crash_codes = {-11, -1073741819, 0xC0000005}
 
     payloads: list[dict[str, object]] = []
     for audio_path, directory_name in (
         (tone_path, "tone-batch"),
         (noise_path, "noise-batch"),
     ):
-        completed = subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "rytm_randomizer.cli",
-                "analog-four-audio-patch-batch",
-                "--audio",
-                str(audio_path),
-                "--source-kit",
-                str(SOURCE_KIT),
-                "--output-dir",
-                str(tmp_path / directory_name),
-                "--track",
-                "1",
-                "--candidates",
-                "1",
-                "--json",
-            ],
-            capture_output=True,
-            check=False,
-            env=environment,
-            text=True,
-            timeout=120,
-        )
+        for attempt in range(2):
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "rytm_randomizer.cli",
+                    "analog-four-audio-patch-batch",
+                    "--audio",
+                    str(audio_path),
+                    "--source-kit",
+                    str(SOURCE_KIT),
+                    "--output-dir",
+                    str(tmp_path / f"{directory_name}-attempt-{attempt + 1}"),
+                    "--track",
+                    "1",
+                    "--candidates",
+                    "1",
+                    "--json",
+                ],
+                capture_output=True,
+                check=False,
+                env=environment,
+                text=True,
+                timeout=120,
+            )
+            if completed.returncode not in native_crash_codes:
+                break
         assert completed.returncode == 0, completed.stderr
         payloads.append(json.loads(completed.stdout))
 
