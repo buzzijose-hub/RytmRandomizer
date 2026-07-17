@@ -254,8 +254,8 @@ def test_candidate_count_and_numeric_helpers_cover_bounds(
     assert inference._unipolar(200.0) == 127
     assert inference._bipolar(-100.0) == -64
     assert inference._bipolar(100.0) == 63
-    assert inference._clamp_unit(-1.0) == 0.0
-    assert inference._clamp_unit(2.0) == 1.0
+    assert inference._clamp_audio_feature_unit(-1.0) == 0.0
+    assert inference._clamp_audio_feature_unit(2.0) == 1.0
     assert inference._safe_ratio(1.0, 0.0) == 0.0
     assert inference._safe_ratio(1.0, 2.0) == 0.5
     assert inference._mean([]) == 0.0

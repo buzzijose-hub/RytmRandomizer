@@ -26,6 +26,10 @@ Last updated: 2026-07-16. This file is a hand-authored snapshot and is meant to 
   Resonance is currently written into SysEx, while the sidecar classifies the
   remaining rows as live-sendable, manual, or deferred. The path is local-file
   only, sends no MIDI, and makes no full-coverage or Synthplant-accuracy claim.
+  A real local tonal-versus-noise CLI smoke produced nine artifacts per clip
+  and distinct candidate DNA/SysEx: candidate 1 inferred Filter2 Resonance
+  `36` for the tonal clip and `24` for the noise clip. Genome, learning,
+  send-plan, and batch reports agreed on the same audio hash and values.
 - 2026-07-08: Passive local model copilot bundle prepared locally. The new
   `local-model-copilot-report` command builds deterministic docs/MIDI,
   staged mutation-intent, and Analog Four patch co-designer packets, and only

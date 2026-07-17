@@ -52,16 +52,18 @@ python -m pyright --project .pyright-a4-temp.json <feature-owned production path
 git diff --check
 ```
 
-- [x] Full repository suite: 6,254 passed, 3 skipped.
-- [x] Architecture suite: 676 passed.
+- [x] Full repository suite: 6,312 passed, 3 skipped.
+- [x] Architecture suite: 679 passed.
 - [x] V1.34 frozen parity: 685 passed byte-for-byte.
-- [x] Focused feature suite: 217 passed with 100% statement and branch coverage across 11 changed feature modules.
-- [x] CLI integration module: 298 passed.
-- [x] Strict Pyright on 10 feature-owned production modules: 0 errors, 0 warnings.
+- [x] Audio feature slice: 96 passed with 100% statement and branch coverage across all 7 audio inference, learning, send-plan, report, batch, and CLI modules (1,138 statements / 288 branches / 0 misses).
+- [x] Existing saved-kit writer/export focused coverage remains green; the complete repository suite includes both writer and audio-batch paths.
+- [x] Strict Pyright on all 7 audio feature production modules: 0 errors, 0 warnings.
 - [x] Lint trio and `git diff --check` clean.
-- [x] Vulture at confidence 80 clean on feature paths.
-- [x] Mechanical code-review gate passed.
+- [x] Vulture at confidence 80 clean on executable audio feature modules; typing-only protocol parameter declarations were excluded as non-runtime API declarations.
+- [x] Mechanical code-review gate passed on the final tree.
 - [x] Audio patch-batch CLI focused tests and command-help fixture passed locally.
+- [x] Real librosa/CLI smoke: tonal and noise clips each produced 4 `.syx` files, 4 complete sidecars, and 1 manifest; their DNA and SysEx hashes differed, with candidate-1 Filter2 Resonance `36` versus `24`.
+- [x] Audio genome, learning, send-plan, and batch surfaces agreed on the same source hash and inferred parameter values.
 - [ ] CI matrix pending PR execution.
 
 Hardware validation:
@@ -75,9 +77,9 @@ Hardware validation:
 
 Per [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUIREMENTS.md), every non-trivial PR must satisfy all 18 gates.
 
-- [x] **Gate 1** - 100% statement and branch coverage across the 11 changed feature modules.
+- [x] **Gate 1** - saved-kit writer/export coverage remains green and all 7 audio feature modules have 100% statement and branch coverage.
 - [x] **Gate 2** - V1.34 parity byte-identical across all 685 items.
-- [x] **Gate 3** - ruff, black, and isort clean; strict Pyright clean on all 10 feature-owned production modules. Legacy central aggregators remain outside project-wide strict mode and passed the full and architecture suites.
+- [x] **Gate 3** - ruff, black, and isort clean; strict Pyright clean on all 7 audio feature production modules. Legacy central aggregators remain outside project-wide strict mode and passed the full and architecture suites.
 - [x] **Gate 4** - no new dead code at vulture confidence 80.
 - [x] **Gate 5** - runbook, status, architecture, diagrams, plan, dated evidence, README, and audio-batch operator help updated.
 - [x] **Gate 6** - frozen typed DTOs, `Final` constants, and no `Any` escape hatches.

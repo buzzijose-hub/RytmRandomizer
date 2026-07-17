@@ -288,17 +288,17 @@ def _measure_analog_four_patch_audio(
         numpy,
         librosa.feature.spectral_centroid(y=y, sr=sample_rate),
     )
-    brightness = _clamp_unit(_mean(centroid) / (sample_rate / 2.0))
+    brightness = _clamp_audio_feature_unit(_mean(centroid) / (sample_rate / 2.0))
     flatness_values = _flat_float_values(
         numpy,
         librosa.feature.spectral_flatness(y=y),
     )
-    spectral_flatness = _clamp_unit(_mean(flatness_values))
+    spectral_flatness = _clamp_audio_feature_unit(_mean(flatness_values))
     zero_crossings = _flat_float_values(
         numpy,
         librosa.feature.zero_crossing_rate(y),
     )
-    noise = _clamp_unit(spectral_flatness * 0.75 + _mean(zero_crossings) * 0.25)
+    noise = _clamp_audio_feature_unit(spectral_flatness * 0.75 + _mean(zero_crossings) * 0.25)
 
     magnitude = _matrix_float_values(
         numpy,
@@ -333,11 +333,13 @@ def _measure_analog_four_patch_audio(
     )
     transient = _safe_ratio(_mean(onset_strength), max(onset_strength, default=0.0))
     rms_mean = _mean(rms)
-    modulation = _clamp_unit(_standard_deviation(rms, rms_mean) / max(rms_mean, 1e-12) / 2.0)
+    modulation = _clamp_audio_feature_unit(
+        _standard_deviation(rms, rms_mean) / max(rms_mean, 1e-12) / 2.0
+    )
     return _AnalogFourAudioMeasurements(
-        duration=_clamp_unit(duration_seconds / 8.0),
-        attack=_clamp_unit(attack_seconds / 2.0),
-        decay=_clamp_unit(decay_seconds / 4.0),
+        duration=_clamp_audio_feature_unit(duration_seconds / 8.0),
+        attack=_clamp_audio_feature_unit(attack_seconds / 2.0),
+        decay=_clamp_audio_feature_unit(decay_seconds / 4.0),
         sustain=sustain,
         tail=tail,
         brightness=brightness,
@@ -353,14 +355,14 @@ def _measure_analog_four_patch_audio(
 def _flat_float_values(  # pragma: no cover - optional librosa path
     numpy: _NumpyApi, value: object
 ) -> list[float]:
-    raw = cast(list[object], numpy.asarray(value).reshape(-1).tolist())
+    raw = cast(list[float], numpy.asarray(value).reshape(-1).tolist())
     return [float(item) for item in raw]
 
 
 def _matrix_float_values(  # pragma: no cover - optional librosa path
     numpy: _NumpyApi, value: object
 ) -> list[list[float]]:
-    raw = cast(list[list[object]], numpy.asarray(value).tolist())
+    raw = cast(list[list[float]], numpy.asarray(value).tolist())
     return [[float(item) for item in row] for row in raw]
 
 
@@ -382,7 +384,7 @@ def _window_level(
         return 0.0
     start = min(len(rms) - 1, int(len(rms) * start_fraction))
     end = max(start + 1, min(len(rms), int(len(rms) * end_fraction)))
-    return _clamp_unit(_mean(rms[start:end]) / peak_rms)
+    return _clamp_audio_feature_unit(_mean(rms[start:end]) / peak_rms)
 
 
 def _mean(values: list[float]) -> float:
@@ -399,7 +401,7 @@ def _standard_deviation(values: list[float], mean: float) -> float:
 def _safe_ratio(numerator: float, denominator: float) -> float:
     if denominator <= 0.0:
         return 0.0
-    return _clamp_unit(numerator / denominator)
+    return _clamp_audio_feature_unit(numerator / denominator)
 
 
 def _stable_audio_feature_report(report: FeatureReport) -> FeatureReport:
@@ -505,11 +507,11 @@ def _candidate_character(
     animation_offset = (0.0, 0.08, 0.28, -0.10)[column - 1]
     tail_offset = (0.0, -0.05, 0.12, 0.10)[column - 1]
     return (
-        _clamp_unit(features.brightness + brightness_offset),
-        _clamp_unit(features.noise + noise_offset),
-        _clamp_unit(features.low_end + low_end_offset),
-        _clamp_unit(features.modulation + animation_offset),
-        _clamp_unit(features.tail + tail_offset),
+        _clamp_audio_feature_unit(features.brightness + brightness_offset),
+        _clamp_audio_feature_unit(features.noise + noise_offset),
+        _clamp_audio_feature_unit(features.low_end + low_end_offset),
+        _clamp_audio_feature_unit(features.modulation + animation_offset),
+        _clamp_audio_feature_unit(features.tail + tail_offset),
     )
 
 
@@ -521,7 +523,7 @@ def _bipolar(value: float) -> int:
     return max(-64, min(63, int(round(value))))
 
 
-def _clamp_unit(value: float) -> float:
+def _clamp_audio_feature_unit(value: float) -> float:
     return max(0.0, min(1.0, float(value)))
 
 

@@ -215,7 +215,7 @@ def _validate_request(*, track: int, candidate_count: int, output_dir: Path) -> 
             f"{ANALOG_FOUR_PATCH_CANDIDATE_MIN}..{ANALOG_FOUR_PATCH_CANDIDATE_MAX}"
         )
     if output_dir.exists() and not output_dir.is_dir():
-        raise NotADirectoryError(f"output_dir is not a directory: {output_dir}")
+        raise ValueError(f"output_dir is not a directory: {output_dir}")
 
 
 def _filter2_resonance_gene(
@@ -249,13 +249,19 @@ def _serialized_gene_rows(
     candidate_payload: dict[str, object],
 ) -> tuple[dict[str, object], ...]:
     raw_rows = candidate_payload.get("genes")
-    if not isinstance(raw_rows, list) or len(raw_rows) != len(candidate.genes):
+    if not isinstance(raw_rows, list):
+        raise ValueError("serialized candidate DNA does not match its gene rows")
+    serialized_rows = cast(list[object], raw_rows)
+    if len(serialized_rows) != len(candidate.genes):
         raise ValueError("serialized candidate DNA does not match its gene rows")
     rows: list[dict[str, object]] = []
-    for raw_row in raw_rows:
-        if not isinstance(raw_row, dict) or not all(isinstance(key, str) for key in raw_row):
+    for raw_row in serialized_rows:
+        if not isinstance(raw_row, dict):
             raise ValueError("serialized candidate DNA contains an invalid gene row")
-        rows.append(dict(cast(dict[str, object], raw_row)))
+        untyped_row = cast(dict[object, object], raw_row)
+        if not all(isinstance(key, str) for key in untyped_row):
+            raise ValueError("serialized candidate DNA contains an invalid gene row")
+        rows.append(dict(cast(dict[str, object], untyped_row)))
     return tuple(rows)
 
 
@@ -433,7 +439,7 @@ def _manifest_payload(
     }
 
 
-def _error_code(exc: Exception, *, source_reads_complete: bool) -> str:
+def _batch_export_error_code(exc: Exception, *, source_reads_complete: bool) -> str:
     if isinstance(exc, FileExistsError):
         return "overwrite_refused"
     if isinstance(exc, OSError):
@@ -546,8 +552,11 @@ def export_analog_four_audio_patch_batch(
             manifest_write=manifest_write,
             manifest_sha256=_sha256(manifest_bytes),
         )
-    except Exception as exc:
-        error_code = _error_code(exc, source_reads_complete=source_reads_complete)
+    except (KeyError, OSError, RuntimeError, TypeError, ValueError) as exc:
+        error_code = _batch_export_error_code(
+            exc,
+            source_reads_complete=source_reads_complete,
+        )
         metrics.record_export((time.perf_counter() - started_at) * 1000.0, error_code=error_code)
         _logger.warning(
             "Analog Four audio patch batch export failed",

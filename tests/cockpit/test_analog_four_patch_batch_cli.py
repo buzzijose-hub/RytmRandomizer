@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -299,6 +300,44 @@ def test_handler_emits_compact_text_summary(
     assert "- no MIDI sending" in captured.out
 
 
+def test_lazy_export_loader_forwards_every_argument(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+
+    observed: dict[str, object] = {}
+
+    def fake_export(**kwargs: object) -> _BatchResult:
+        observed.update(kwargs)
+        return _batch_result(tmp_path)
+
+    monkeypatch.setattr(
+        cli,
+        "import_module",
+        lambda _name: SimpleNamespace(export_analog_four_audio_patch_batch=fake_export),
+    )
+
+    result = cli._export_analog_four_audio_patch_batch(
+        audio_path=tmp_path / "reference.wav",
+        source_kit_path=tmp_path / "init.syx",
+        output_dir=tmp_path / "batch",
+        track=3,
+        candidate_count=2,
+        overwrite=True,
+    )
+
+    assert result == _batch_result(tmp_path)
+    assert observed == {
+        "audio_path": tmp_path / "reference.wav",
+        "source_kit_path": tmp_path / "init.syx",
+        "output_dir": tmp_path / "batch",
+        "track": 3,
+        "candidate_count": 2,
+        "overwrite": True,
+    }
+
+
 @pytest.mark.parametrize(
     ("exc", "error_code"),
     [
@@ -335,6 +374,31 @@ def test_handler_emits_classified_json_errors(
     assert exit_code == 2
     assert json.loads(captured.out)["error_code"] == error_code
     assert captured.err == ""
+
+
+def test_handler_emits_classified_text_error_and_registry_formatter(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+
+    def fail_export(**_kwargs: object) -> _BatchResult:
+        raise ValueError("unsupported audio")
+
+    monkeypatch.setattr(cli, "_export_analog_four_audio_patch_batch", fail_export)
+
+    exit_code = cli.handle_analog_four_audio_patch_batch(
+        audio_path=tmp_path / "reference.wav",
+        source_kit_path=tmp_path / "init.syx",
+        output_dir=tmp_path / "batch",
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 2
+    assert captured.out == ""
+    assert "Error [invalid_input]: unsupported audio" in captured.err
+    assert cli._format_batch_cli_error(ValueError("bad args")) == (f"{cli.USAGE}\nError: bad args")
 
 
 def test_registered_command_dispatches_without_midi(

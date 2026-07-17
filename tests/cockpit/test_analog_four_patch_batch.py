@@ -273,7 +273,7 @@ def test_export_audio_patch_batch_rejects_output_path_that_is_a_file(tmp_path: P
 
     output_path = tmp_path / "not-a-directory"
     output_path.write_text("file", encoding="utf-8")
-    with pytest.raises(NotADirectoryError, match="output_dir is not a directory"):
+    with pytest.raises(ValueError, match="output_dir is not a directory"):
         export_analog_four_audio_patch_batch(
             audio_path=tmp_path / "unused.wav",
             source_kit_path=SOURCE_KIT,
@@ -401,6 +401,120 @@ def test_export_audio_patch_batch_rejects_incomplete_or_invalid_candidate_dna(
             candidate_count=1,
         )
     assert not (tmp_path / "batch").exists()
+
+
+@pytest.mark.parametrize(
+    ("screen_value", "message"),
+    [
+        ("not-a-number", "must be a decimal integer"),
+        ("01", "must be in 0..127"),
+        ("128", "must be in 0..127"),
+    ],
+)
+def test_filter2_resonance_gene_rejects_invalid_screen_values(
+    screen_value: str,
+    message: str,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
+
+    candidate = _inference(track=2, candidate_count=1).genome.candidates[0]
+    resonance = next(
+        gene
+        for gene in candidate.genes
+        if gene.value.parameter == batch.FILTER2_RESONANCE_PARAMETER
+    )
+    invalid_resonance = replace(
+        resonance,
+        value=replace(resonance.value, screen_value=screen_value),
+    )
+    invalid_candidate = replace(
+        candidate,
+        genes=tuple(invalid_resonance if gene is resonance else gene for gene in candidate.genes),
+    )
+
+    with pytest.raises(ValueError, match=message):
+        batch._filter2_resonance_gene(invalid_candidate, track=2)
+
+
+def test_filter2_resonance_gene_rejects_wrong_track() -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
+
+    candidate = _inference(track=2, candidate_count=1).genome.candidates[0]
+    resonance = next(
+        gene
+        for gene in candidate.genes
+        if gene.value.parameter == batch.FILTER2_RESONANCE_PARAMETER
+    )
+    invalid_resonance = replace(resonance, track=3)
+    invalid_candidate = replace(
+        candidate,
+        genes=tuple(invalid_resonance if gene is resonance else gene for gene in candidate.genes),
+    )
+
+    with pytest.raises(ValueError, match="targets track 3, expected 2"):
+        batch._filter2_resonance_gene(invalid_candidate, track=2)
+
+
+@pytest.mark.parametrize(
+    ("serialized_genes", "message"),
+    [
+        ("not-a-list", "does not match its gene rows"),
+        ([], "does not match its gene rows"),
+        (["not-a-row"], "contains an invalid gene row"),
+        ([{1: "not-a-string-key"}], "contains an invalid gene row"),
+    ],
+)
+def test_serialized_gene_rows_rejects_malformed_payloads(
+    serialized_genes: object,
+    message: str,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
+
+    candidate = replace(
+        _inference(track=2, candidate_count=1).genome.candidates[0],
+        genes=(_inference(track=2, candidate_count=1).genome.candidates[0].genes[0],),
+    )
+
+    with pytest.raises(ValueError, match=message):
+        batch._serialized_gene_rows(candidate, {"genes": serialized_genes})
+
+
+def test_prepare_candidates_requires_requested_contiguous_columns(tmp_path: Path) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
+
+    one_candidate = _inference(track=2, candidate_count=1)
+    with pytest.raises(ValueError, match="contiguous candidate columns"):
+        batch._prepare_candidates(
+            one_candidate,
+            output_dir=tmp_path,
+            track=2,
+            candidate_count=2,
+        )
+
+    two_candidates = _inference(track=2, candidate_count=2)
+    duplicate_columns = replace(
+        two_candidates.genome,
+        candidates=(
+            two_candidates.genome.candidates[0],
+            replace(two_candidates.genome.candidates[1], column=1),
+        ),
+    )
+    invalid = replace(two_candidates, genome=duplicate_columns)
+    with pytest.raises(ValueError, match="contiguous candidate columns"):
+        batch._prepare_candidates(
+            invalid,
+            output_dir=tmp_path,
+            track=2,
+            candidate_count=2,
+        )
+
+
+def test_preflight_destinations_rejects_duplicate_paths(tmp_path: Path) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
+
+    duplicate = tmp_path / "candidate.syx"
+    with pytest.raises(ValueError, match="destinations are not unique"):
+        batch._preflight_destinations((duplicate, duplicate), overwrite=True)
 
 
 def test_build_audio_inference_uses_public_audio_inference_serializers(

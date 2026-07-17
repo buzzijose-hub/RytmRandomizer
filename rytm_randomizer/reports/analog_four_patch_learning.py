@@ -13,14 +13,17 @@ from ..cli_registry import CliCommand, register
 from ..data.analog_four_display import AnalogFourPatchValue
 from ..style_analysis import (
     StyleAnalysisDependencyError,
-    extract_from_audio,
     extract_from_description,
+)
+from ..style_analysis.analog_four_patch_inference import (
+    build_analog_four_audio_patch_genome,
 )
 from ..style_analysis.analog_four_patch_learning import (
     ANALOG_FOUR_PATCH_LEARNING_SAFETY,
     AnalogFourPatchLearningPacket,
     analog_four_patch_learning_packet_to_dict,
     build_analog_four_patch_learning_packet,
+    build_analog_four_patch_learning_packet_from_genome,
 )
 from ..style_analysis.feature_report import FeatureReport
 from .formatter import SAFETY_SECTION_HEADER, PassiveReportHeader, passive_report_lines
@@ -80,17 +83,29 @@ def build_analog_four_patch_learning_report_from_source(
 
     if source_flag == "--description":
         feature_report = extract_from_description(source_value)
-    elif source_flag == "--audio":
-        feature_report = extract_from_audio(Path(source_value))
-    else:
-        raise ValueError("source_flag must be --description or --audio")
-    return build_analog_four_patch_learning_report(
-        feature_report,
-        source_label=source_flag.removeprefix("--"),
-        source_value=source_value,
-        track=track,
-        selected_candidate=selected_candidate,
-    )
+        return build_analog_four_patch_learning_report(
+            feature_report,
+            source_label="description",
+            source_value=source_value,
+            track=track,
+            selected_candidate=selected_candidate,
+        )
+    if source_flag == "--audio":
+        audio_genome = build_analog_four_audio_patch_genome(
+            Path(source_value),
+            track=track,
+        )
+        packet = build_analog_four_patch_learning_packet_from_genome(
+            audio_genome.feature_report,
+            audio_genome.genome,
+            selected_candidate=selected_candidate,
+        )
+        return AnalogFourPatchLearningReport(
+            source_label="audio",
+            source_value=source_value,
+            packet=packet,
+        )
+    raise ValueError("source_flag must be --description or --audio")
 
 
 def format_analog_four_patch_learning_report(

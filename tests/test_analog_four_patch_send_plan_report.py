@@ -6,6 +6,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -97,19 +98,30 @@ def test_patch_send_plan_report_builds_from_feature_report_directly() -> None:
     assert report.plan.selected_label == "Brighter sync"
 
 
-def test_patch_send_plan_report_audio_source_uses_audio_extractor(
+def test_patch_send_plan_report_audio_source_uses_audio_genome_inference(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer.reports import analog_four_patch_send_plan as report_module
     from rytm_randomizer.style_analysis import analog_four_patch_send_plan as send_plan_module
+    from rytm_randomizer.style_analysis.analog_four_patch_genome import (
+        build_analog_four_patch_genome,
+    )
 
     observed_paths: list[Path] = []
 
-    def _fake_extract_from_audio(path: Path) -> FeatureReport:
+    def _fake_build_audio_genome(path: Path, *, track: int) -> object:
         observed_paths.append(path)
-        return _feature_report()
+        feature_report = _feature_report()
+        return SimpleNamespace(
+            feature_report=feature_report,
+            genome=build_analog_four_patch_genome(feature_report, track=track),
+        )
 
-    monkeypatch.setattr(send_plan_module, "extract_from_audio", _fake_extract_from_audio)
+    monkeypatch.setattr(
+        send_plan_module,
+        "build_analog_four_audio_patch_genome",
+        _fake_build_audio_genome,
+    )
 
     report = report_module.build_analog_four_patch_send_plan_report_from_source(
         "--audio",

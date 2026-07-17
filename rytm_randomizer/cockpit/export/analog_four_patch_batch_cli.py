@@ -53,7 +53,7 @@ class _BatchResult(Protocol):
     safety: Sequence[str]
 
 
-class _BatchExporter(Protocol):
+class _BatchExporter(Protocol):  # pragma: no cover - typing-only lazy API
     def __call__(
         self,
         *,
@@ -92,7 +92,7 @@ def _export_analog_four_audio_patch_batch(
     )
 
 
-def _pop_value(remaining: list[str], option: str) -> str:
+def _pop_batch_cli_value(remaining: list[str], option: str) -> str:
     if not remaining:
         raise ValueError(f"{option} requires a value")
     return remaining.pop(0)
@@ -123,21 +123,21 @@ def parse_analog_four_audio_patch_batch_args(args: Sequence[str]) -> dict[str, o
     while remaining:
         option = remaining.pop(0)
         if option == "--audio":
-            audio_path = Path(_pop_value(remaining, option))
+            audio_path = Path(_pop_batch_cli_value(remaining, option))
         elif option == "--source-kit":
-            source_kit_path = Path(_pop_value(remaining, option))
+            source_kit_path = Path(_pop_batch_cli_value(remaining, option))
         elif option == "--output-dir":
-            output_dir = Path(_pop_value(remaining, option))
+            output_dir = Path(_pop_batch_cli_value(remaining, option))
         elif option == "--track":
             track = _bounded_integer(
-                _pop_value(remaining, option),
+                _pop_batch_cli_value(remaining, option),
                 option,
                 MIN_TRACK,
                 MAX_TRACK,
             )
         elif option == "--candidates":
             candidate_count = _bounded_integer(
-                _pop_value(remaining, option),
+                _pop_batch_cli_value(remaining, option),
                 option,
                 MIN_CANDIDATE_COUNT,
                 MAX_CANDIDATE_COUNT,
@@ -166,7 +166,7 @@ def parse_analog_four_audio_patch_batch_args(args: Sequence[str]) -> dict[str, o
     }
 
 
-def _candidate_payload(candidate: _CandidateOutput) -> dict[str, object]:
+def _batch_candidate_payload(candidate: _CandidateOutput) -> dict[str, object]:
     return {
         "candidate": candidate.column,
         "label": candidate.label,
@@ -185,14 +185,16 @@ def _count(
     return sum(getter(candidate) for candidate in candidate_outputs)
 
 
-def _payload_from_result(result: _BatchResult) -> dict[str, object]:
+def _batch_payload_from_result(result: _BatchResult) -> dict[str, object]:
     candidate_outputs = tuple(result.candidate_outputs)
     return {
         "ok": True,
         "source_hash": result.source_hash,
         "selected_track": result.selected_track,
         "candidate_count": len(candidate_outputs),
-        "candidate_outputs": [_candidate_payload(candidate) for candidate in candidate_outputs],
+        "candidate_outputs": [
+            _batch_candidate_payload(candidate) for candidate in candidate_outputs
+        ],
         "counts": {
             "sysex_applied": _count(
                 candidate_outputs,
@@ -215,8 +217,8 @@ def _payload_from_result(result: _BatchResult) -> dict[str, object]:
     }
 
 
-def _format_text(result: _BatchResult) -> str:
-    payload = _payload_from_result(result)
+def _format_batch_cli_text(result: _BatchResult) -> str:
+    payload = _batch_payload_from_result(result)
     counts = cast(dict[str, int], payload["counts"])
     lines = [
         "ok: true",
@@ -242,7 +244,7 @@ def _format_text(result: _BatchResult) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _error_code(exc: Exception) -> str:
+def _batch_cli_error_code(exc: Exception) -> str:
     if isinstance(exc, FileNotFoundError):
         return "input_not_found"
     if isinstance(exc, FileExistsError):
@@ -278,7 +280,7 @@ def handle_analog_four_audio_patch_batch(
             overwrite=overwrite,
         )
     except (ImportError, KeyError, ValueError, TypeError, OSError) as exc:
-        error_code = _error_code(exc)
+        error_code = _batch_cli_error_code(exc)
         if json_output:
             sys.stdout.write(
                 json.dumps(
@@ -297,14 +299,14 @@ def handle_analog_four_audio_patch_batch(
         return 2
 
     if json_output:
-        sys.stdout.write(json.dumps(_payload_from_result(result), indent=2, sort_keys=True))
+        sys.stdout.write(json.dumps(_batch_payload_from_result(result), indent=2, sort_keys=True))
         sys.stdout.write("\n")
     else:
-        sys.stdout.write(_format_text(result))
+        sys.stdout.write(_format_batch_cli_text(result))
     return 0
 
 
-def _format_error(exc: Exception) -> str:
+def _format_batch_cli_error(exc: Exception) -> str:
     return f"{USAGE}\nError: {exc}"
 
 
@@ -313,7 +315,7 @@ ANALOG_FOUR_AUDIO_PATCH_BATCH_CLI_COMMAND: Final[CliCommand] = CliCommand(
     summary="Infer and export up to four passive Analog Four patch candidates from audio.",
     args_parser=parse_analog_four_audio_patch_batch_args,
     handler=handle_analog_four_audio_patch_batch,
-    error_formatter=_format_error,
+    error_formatter=_format_batch_cli_error,
 )
 
 register(ANALOG_FOUR_AUDIO_PATCH_BATCH_CLI_COMMAND)

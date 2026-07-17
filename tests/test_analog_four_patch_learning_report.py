@@ -82,18 +82,52 @@ def test_patch_learning_report_text_shows_learning_routes_capture_and_dial_readi
     assert "- no MIDI sent" in text
 
 
-def test_patch_learning_report_audio_source_uses_audio_extractor(
+def test_patch_learning_report_audio_source_uses_inferred_audio_genome(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer.reports import analog_four_patch_learning as report_module
+    from rytm_randomizer.style_analysis.analog_four_patch_genome import (
+        build_analog_four_patch_genome,
+    )
+    from rytm_randomizer.style_analysis.analog_four_patch_inference import (
+        AnalogFourAudioPatchGenome,
+        AnalogFourPatchAudioFeatures,
+    )
 
     observed_paths: list[Path] = []
 
-    def _fake_extract_from_audio(path: Path) -> FeatureReport:
+    def _fake_build_audio_genome(
+        path: Path,
+        *,
+        track: int,
+    ) -> AnalogFourAudioPatchGenome:
         observed_paths.append(path)
-        return _feature_report()
+        feature_report = _feature_report()
+        return AnalogFourAudioPatchGenome(
+            feature_report=feature_report,
+            audio_features=AnalogFourPatchAudioFeatures(
+                audio_sha256="b" * 64,
+                duration=0.5,
+                attack=0.1,
+                decay=0.2,
+                sustain=0.3,
+                tail=0.4,
+                brightness=0.5,
+                spectral_flatness=0.6,
+                noise=0.7,
+                low_end=0.8,
+                harmonicity=0.9,
+                transient=0.4,
+                modulation=0.2,
+            ),
+            genome=build_analog_four_patch_genome(feature_report, track=track),
+        )
 
-    monkeypatch.setattr(report_module, "extract_from_audio", _fake_extract_from_audio)
+    monkeypatch.setattr(
+        report_module,
+        "build_analog_four_audio_patch_genome",
+        _fake_build_audio_genome,
+    )
 
     report = report_module.build_analog_four_patch_learning_report_from_source(
         "--audio",

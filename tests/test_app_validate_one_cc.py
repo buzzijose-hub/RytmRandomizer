@@ -728,7 +728,11 @@ def test_app_main_a4_patch_send_plan_arm_requires_confirm_before_output(
     monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_midi_call)
     monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_midi_call)
     monkeypatch.setattr(send_plan_module, "extract_from_description", fail_extraction)
-    monkeypatch.setattr(send_plan_module, "extract_from_audio", fail_extraction)
+    monkeypatch.setattr(
+        send_plan_module,
+        "build_analog_four_audio_patch_genome",
+        fail_extraction,
+    )
 
     exit_code = app.main(
         [
@@ -922,7 +926,7 @@ def test_app_main_a4_patch_send_plan_rejects_other_active_paths(capsys) -> None:
     assert captured.out == ""
 
 
-def test_app_main_dry_run_a4_patch_send_plan_audio_source_uses_audio_extractor(
+def test_app_main_dry_run_a4_patch_send_plan_audio_source_uses_audio_genome_inference(
     capsys,
     monkeypatch,
 ) -> None:
@@ -930,12 +934,15 @@ def test_app_main_dry_run_a4_patch_send_plan_audio_source_uses_audio_extractor(
     from rytm_randomizer.guardrails.schema import Confidence, SourceType
     from rytm_randomizer.style_analysis import FeatureReport
     from rytm_randomizer.style_analysis import analog_four_patch_send_plan as send_plan_module
+    from rytm_randomizer.style_analysis.analog_four_patch_genome import (
+        build_analog_four_patch_genome,
+    )
 
     observed_paths: list[Path] = []
 
-    def fake_extract_from_audio(path: Path) -> FeatureReport:
+    def fake_build_audio_genome(path: Path, *, track: int):
         observed_paths.append(path)
-        return FeatureReport(
+        feature_report = FeatureReport(
             source_type=SourceType.SINGLE_TRACK,
             confidence=Confidence.HIGH,
             bpm=134.0,
@@ -949,8 +956,16 @@ def test_app_main_dry_run_a4_patch_send_plan_audio_source_uses_audio_extractor(
             content_hash="",
             derived_at="2026-07-03T12:00:00Z",
         )
+        return types.SimpleNamespace(
+            feature_report=feature_report,
+            genome=build_analog_four_patch_genome(feature_report, track=track),
+        )
 
-    monkeypatch.setattr(send_plan_module, "extract_from_audio", fake_extract_from_audio)
+    monkeypatch.setattr(
+        send_plan_module,
+        "build_analog_four_audio_patch_genome",
+        fake_build_audio_genome,
+    )
 
     exit_code = app.main(
         [

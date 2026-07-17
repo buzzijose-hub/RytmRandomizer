@@ -13,7 +13,6 @@ from ..cli_registry import CliCommand, register
 from ..data.analog_four_display import AnalogFourPatchValue
 from ..style_analysis import (
     StyleAnalysisDependencyError,
-    extract_from_audio,
     extract_from_description,
 )
 from ..style_analysis.analog_four_patch_genome import (
@@ -23,6 +22,9 @@ from ..style_analysis.analog_four_patch_genome import (
     analog_four_patch_candidate_to_dict,
     analog_four_patch_genome_to_dict,
     build_analog_four_patch_genome,
+)
+from ..style_analysis.analog_four_patch_inference import (
+    build_analog_four_audio_patch_genome,
 )
 from ..style_analysis.feature_report import FeatureReport
 from .formatter import SAFETY_SECTION_HEADER, PassiveReportHeader, passive_report_lines
@@ -87,17 +89,26 @@ def build_analog_four_patch_genome_report_from_source(
 
     if source_flag == "--description":
         feature_report = extract_from_description(source_value)
-    elif source_flag == "--audio":
-        feature_report = extract_from_audio(Path(source_value))
-    else:
-        raise ValueError("source_flag must be --description or --audio")
-    return build_analog_four_patch_genome_report(
-        feature_report,
-        source_label=source_flag.removeprefix("--"),
-        source_value=source_value,
-        track=track,
-        selected_candidate=selected_candidate,
-    )
+        return build_analog_four_patch_genome_report(
+            feature_report,
+            source_label="description",
+            source_value=source_value,
+            track=track,
+            selected_candidate=selected_candidate,
+        )
+    if source_flag == "--audio":
+        audio_genome = build_analog_four_audio_patch_genome(
+            Path(source_value),
+            track=track,
+        )
+        _validate_selected_candidate(selected_candidate, genome=audio_genome.genome)
+        return AnalogFourPatchGenomeReport(
+            source_label="audio",
+            source_value=source_value,
+            genome=audio_genome.genome,
+            selected_candidate=selected_candidate,
+        )
+    raise ValueError("source_flag must be --description or --audio")
 
 
 def format_analog_four_patch_genome_report(
