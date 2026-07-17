@@ -14,7 +14,7 @@ Current baseline used while creating / refreshing this document:
 
 - Branch: Analog Four snapshot/style readiness bundle, built on the passive style profile/target/routing/render-plan/mock-preview and dual-machine mock-preview foundation.
 - Protected reference: `tests/fixtures/v134_parity/*.json` (the retired V1.34 monolith's behavior, captured as 505 byte-frozen JSON golden files; parametrized into 685 pytest parity test items).
-- Current package: `rytm_randomizer/` - 26 top-level Python files + 14 subpackages = 332 total Python modules. The 14 subpackages: `behavior/`, `cockpit/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `local_ai/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
+- Current package: `rytm_randomizer/` - 26 top-level Python files + 14 subpackages = 337 total Python modules. The 14 subpackages: `behavior/`, `cockpit/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `local_ai/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
 - Closeout scripts: `Scripts/closeout_check.ps1` (PowerShell, Windows) and `scripts/closeout_check.py` (Python, cross-platform).
 - This file was audited and refreshed as part of PR #43, then updated through the style-profile, style-target-vector, Rytm style snapshot routing, Analog Four style snapshot routing, dual-machine style routing, reference/discovery slider, Rytm/Analog Four style mutation-intent, dual-machine style mutation-intent, Rytm style mutation render-plan, Rytm style mutation mock-preview, Analog Four style mutation mock-preview, dual-machine style mutation mock-preview, Analog Four saved-kit SysEx readiness-intake, Analog Four kit-catalog, Analog Four initialized baseline, Analog Four patch genome, Analog Four patch learning, Analog Four patch corpus, Analog Four patch send-plan, Analog Four SysEx Filter1 Frequency/Resonance calibration, Analog Four style kit-readiness, Analog Four kit-fingerprint, Analog Four OXI macro set planner, live runbook, stage-routing, stage-rehearsal-state, live-set-cockpit, live-show-export, live-transition-timeline, live-command-deck, live-state-packet, live-readiness, live-control-surface, live-analyzer-handoff, live-analyzer-targets, live GUI analyzer readiness, live GUI rehearsal session, live GUI capture queue, live GUI capture review, live GUI sidecar session, live GUI screen contract, live GUI render tree, live GUI analyzer overlay, live GUI analyzer frame, live GUI interaction script, live GUI action reducer, live GUI controller state, live GUI playback transcript, live GUI playback validation, live GUI test-harness contract, live GUI test-harness readiness, live GUI implementation bridge, live GUI desktop blueprint, live GUI desktop app plan, live GUI desktop component contract, live GUI desktop view-model, live GUI desktop render-contract, cockpit send-plan operator-readiness, cockpit send-plan rehearsal-surface, live-kit capture workbench, live-kit package audition, live-kit operator package, live-kit operator review ledger, reference-style blueprint, manual-feedback packet, generic MIDI event-plan sender, and passive local model copilot slices so the strategy/report-module list and counts stay current.
 
@@ -24,7 +24,7 @@ Current baseline used while creating / refreshing this document:
 |---|---|
 | Package entry points | `rytm_randomizer/app.py`, `rytm_randomizer/cli.py`, `rytm_randomizer/shell.py`, `rytm_randomizer/__init__.py` |
 | Passive metadata | `rytm_randomizer/constants.py`, `rytm_randomizer/commands.py`, `rytm_randomizer/scenes.py`, `rytm_randomizer/profiles.py` |
-| Data layer (single source of truth) | `rytm_randomizer/data/{param_maps,plans,profiles,scenes,scene_display,modes,analog_four_display,analog_four_sysex_calibration,analog_four_patch_templates,analog_four_patch_corpus,analog_four_learning,analog_four_midi,rytm_machine_catalog,style_discovery,style_profiles,style_targets,manual_feedback_packet,controller_mapping_profiles,controller_rehearsal_scenarios}.py` |
+| Data layer (single source of truth) | `rytm_randomizer/data/{param_maps,plans,profiles,scenes,scene_display,modes,analog_four_display,analog_four_saved_kit_layout,analog_four_sysex_calibration,analog_four_patch_templates,analog_four_patch_corpus,analog_four_learning,analog_four_midi,rytm_machine_catalog,style_discovery,style_profiles,style_targets,manual_feedback_packet,controller_mapping_profiles,controller_rehearsal_scenarios}.py` |
 | Registry, lookup, inspection | `rytm_randomizer/registry.py`, `rytm_randomizer/profile_lookup.py`, `rytm_randomizer/inspection.py`, `rytm_randomizer/validation.py`, `rytm_randomizer/cli_registry.py` |
 | Report surfaces | `rytm_randomizer/reports/__init__.py` + `reports/{_passive_section,formatter,manual_feedback_packet,cockpit_send_plan_operator_readiness,cockpit_send_plan_rehearsal_surface,controller_brain_rehearsal,controller_mapping_profile_catalog,reference_style_blueprint,local_model_copilot,analog_four_baseline,analog_four_kit_catalog,analog_four_patch_genome,analog_four_patch_learning,analog_four_patch_corpus,analog_four_patch_send_plan,analog_four_oxi_macro_set_planner,analog_four_style_kit_readiness,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_style_snapshot_routing,dual_machine_style_kit_readiness,dual_machine_style_kit_selection,dual_machine_style_live_audition,dual_machine_style_mutation_intent,dual_machine_style_mutation_mock_preview,dual_machine_style_performance_set_plan,dual_machine_style_selection_mock_preview,dual_machine_style_snapshot_routing,live_analyzer_handoff,live_analyzer_targets,live_command_deck,live_control_surface,live_gui_action_reducer,live_gui_analyzer_frame,live_gui_analyzer_overlay,live_gui_analyzer_readiness,live_gui_capture_queue,live_gui_capture_review,live_gui_controller_state,live_gui_desktop_app_plan,live_gui_desktop_blueprint,live_gui_desktop_component_contract,live_gui_desktop_view_model,live_gui_implementation_bridge,live_gui_interaction_script,live_gui_performance_console_model,live_gui_playback_transcript,live_gui_playback_validation,live_gui_rehearsal_session,live_gui_render_tree,live_gui_screen_contract,live_gui_sidecar_session,live_gui_test_harness_contract,live_gui_test_harness_readiness,live_performance_readiness,live_performance_runbook,live_performance_state,live_set_cockpit,live_show_export,live_stage_rehearsal_state,live_stage_snapshot_routing,live_transition_timeline,rytm_machine_matrix,rytm_snapshot_pad_compatibility,rytm_snapshot_intelligence,rytm_snapshot_mutation_preview,rytm_style_kit_readiness,rytm_style_mutation_intent,rytm_style_mutation_mock_preview,rytm_style_mutation_render_plan,rytm_style_snapshot_routing,style_performance_arcs,style_profiles,style_targets}.py` plus `reports/performance_console/{live_kit_capture_workbench,live_kit_package_audition,live_kit_operator_package,live_kit_operator_review_ledger,payload_helpers}.py` (subpackage; was the old top-level `reports.py`) |
 | Local AI packets | `rytm_randomizer/local_ai/{provider,local_model,rag,mutation_intent}.py` |
@@ -34,12 +34,13 @@ Current baseline used while creating / refreshing this document:
 | Active / real MIDI boundaries | `rytm_randomizer/active_boundary.py`, `rytm_randomizer/real_midi_adapter.py`, `rytm_randomizer/mido_provider.py`, `rytm_randomizer/midi_io.py` |
 | Generic senders | `rytm_randomizer/senders/{guarded,hardware,midi_event_plan}.py` |
 | Engines (per-pad runtime cores) | `rytm_randomizer/engines/{_runtime,pad1,pad2,pad3,pad4}.py`, `rytm_randomizer/randomization.py`, `rytm_randomizer/scene_runner.py`, `rytm_randomizer/group_runner.py`, `rytm_randomizer/runtime_plan.py` |
-| Devices (cross-machine boundary) | `rytm_randomizer/devices/{base,registry,analog_rytm,analog_four}.py`, `rytm_randomizer/devices/strategies/{analog_four_offset_manifest,analog_four_snapshot_decoder,analog_four_style_snapshot_routing,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_mutation_planner,analog_four_message_renderer,analog_rytm_snapshot_decoder,analog_rytm_snapshot_routing,analog_rytm_style_snapshot_routing,analog_rytm_style_mutation_intent,analog_rytm_style_mutation_mock_preview,analog_rytm_style_mutation_render_plan,analog_rytm_mutation_planner,analog_rytm_message_renderer}.py` |
+| Devices (cross-machine boundary) | `rytm_randomizer/devices/{base,registry,analog_rytm,analog_four}.py`, `rytm_randomizer/devices/strategies/{analog_four_offset_manifest,analog_four_saved_kit_codec,analog_four_saved_kit_writer,analog_four_snapshot_decoder,analog_four_style_snapshot_routing,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_mutation_planner,analog_four_message_renderer,analog_rytm_snapshot_decoder,analog_rytm_snapshot_routing,analog_rytm_style_snapshot_routing,analog_rytm_style_mutation_intent,analog_rytm_style_mutation_mock_preview,analog_rytm_style_mutation_render_plan,analog_rytm_mutation_planner,analog_rytm_message_renderer}.py` |
 | Snapshot Protocols + envelope | `rytm_randomizer/snapshot/{envelope,decoder,planner,mock_runtime,sysex_file}.py` |
 | Guardrails | `rytm_randomizer/guardrails/{resolver,store,schema,validation}.py` |
 | Observability | `rytm_randomizer/observability/{logging,tracing,metrics,errors}.py` |
 | Style analysis | `rytm_randomizer/style_analysis/{extractor,feature_report,library,blueprint,analog_four_patch_genome,analog_four_patch_learning,analog_four_patch_corpus,analog_four_patch_send_plan,analog_four_patch_codesigner}.py` |
-| Tests | `tests/test_*.py`, `tests/architecture/test_*.py`, `tests/fixtures/v134_parity/`, `tests/_parity_worker.py`, `tests/conftest.py` |
+| Cockpit export | `rytm_randomizer/cockpit/export/{analog_four_cli,analog_four_kit,writer}.py` plus the profile-model serialization/signing/verifier modules. |
+| Tests | `tests/test_*.py`, `tests/cockpit/test_*.py`, `tests/architecture/test_*.py`, `tests/fixtures/{analog_four_saved_kit,v134_parity}/`, `tests/_parity_worker.py`, `tests/conftest.py` |
 | Project documentation | `CONTRIBUTING.md`, `docs/*.md`, `.claude/rules/*.md`, `.claude/skills/**/SKILL.md` |
 
 ---
@@ -50,8 +51,8 @@ Current baseline used while creating / refreshing this document:
 flowchart TB
     User["Operator / developer"]
     V134["V1.34 reference behavior<br/>tests/fixtures/v134_parity/<br/>(505 JSON goldens; 685 parity test items)"]
-    Package["Modular package<br/>rytm_randomizer/<br/>(14 subpackages, 332 modules)"]
-    Tests["Tests<br/>5900+ pytest tests<br/>tests/, tests/architecture/"]
+    Package["Modular package<br/>rytm_randomizer/<br/>(14 subpackages, 337 modules)"]
+    Tests["Tests<br/>6200+ pytest tests<br/>tests/, tests/architecture/"]
     CI[".github/workflows/test.yml<br/>3 OS × py3.11 matrix<br/>+ codeql, release, installers"]
     Docs["Project docs<br/>CONTRIBUTING.md, docs/*.md<br/>.claude/{rules,skills}/"]
 
@@ -102,6 +103,7 @@ flowchart TB
         DataStyleDiscovery["data/style_discovery.py<br/>reference/discovery slider policy"]
         DataA4Display["data/analog_four_display.py<br/>A4 screen scales + labels"]
         DataA4SysexCalibration["data/analog_four_sysex_calibration.py<br/>A4 SysEx calibration facts"]
+        DataA4SavedKitLayout["data/analog_four_saved_kit_layout.py<br/>A4 saved-kit wire-layout facts"]
         DataA4PatchTemplates["data/analog_four_patch_templates.py<br/>A4 patch candidate facts"]
         DataA4PatchCorpus["data/analog_four_patch_corpus.py<br/>A4 patch corpus starter vectors"]
         DataA4Learning["data/analog_four_learning.py<br/>A4 patch learning routes"]
@@ -734,10 +736,13 @@ flowchart TB
     end
 
     subgraph A4Impls["Analog Four impls (devices/strategies/)"]
-        A4Decoder["AnalogFourSnapshotDecoder<br/>uses shared envelope helpers"]
+        A4Layout["data/analog_four_saved_kit_layout.py<br/>canonical wire facts"]
+        A4Codec["analog_four_saved_kit_codec.py<br/>shared validate/decode/encode"]
+        A4Decoder["AnalogFourSnapshotDecoder<br/>uses shared saved-kit codec"]
         A4Planner["AnalogFourMutationPlanner"]
-        A4Writer["analog_four_saved_kit_writer.py<br/>validate -> mutate -> repack<br/>Filter2 Resonance write-validated"]
+        A4Writer["analog_four_saved_kit_writer.py<br/>decode -> mutate -> encode<br/>Filter2 Resonance write-validated"]
         A4Export["cockpit/export/analog_four_kit.py<br/>validated fields only -> atomic_write"]
+        A4Cli["analog-four-saved-kit-export<br/>registered local-file command"]
     end
 
     RytmDecoder -->|"depends on"| Envelope
@@ -745,16 +750,20 @@ flowchart TB
     RytmRouter --> RytmPlanner
     RytmPlanner -.satisfies.-> MP_proto
 
-    A4Decoder -->|"MUST depend on"| Envelope
+    A4Codec --> Envelope
+    A4Codec --> A4Layout
+    A4Decoder --> A4Codec
     A4Decoder -.must satisfy.-> SD
     A4Planner -.must satisfy.-> MP_proto
-    A4Writer -->|"pack + unpack"| Envelope
+    A4Writer --> A4Codec
+    A4Writer --> A4Layout
     A4Export --> A4Writer
+    A4Cli --> A4Export
 
     BaseMockRuntime -.satisfies.-> MockProto
 ```
 
-**Gate enforced:** Analog Four code cannot fork `pack_elektron_7bit`, `unpack_elektron_7bit`, etc. — the architecture test `test_no_cross_family_private_api_imports` rejects any per-family decoder that imports from a sibling's privates. Shared helpers live in `snapshot/envelope.py`; the saved-kit renderer remains a strategy-adjacent helper rather than expanding the `Device` Protocol.
+**Gate enforced:** Analog Four code cannot fork `pack_elektron_7bit`, `unpack_elektron_7bit`, etc. — the architecture test `test_no_cross_family_private_api_imports` rejects any per-family decoder that imports from a sibling's privates. Generic helpers live in `snapshot/envelope.py`; A4 saved-kit decoder/writer validation is shared by `analog_four_saved_kit_codec.py`; the renderer remains strategy-adjacent rather than expanding the `Device` Protocol.
 
 **Codex P2 fix retained:** `unpack_elektron_7bit` rejects lone trailing header bytes (zero OR non-zero) so corrupt framing surfaces a `ValueError` instead of silently emitting a truncated payload.
 
@@ -1234,7 +1243,7 @@ flowchart TB
 
         DualMachine["dual_machine/ (simplified)<br/>orchestrates over Mapping[str, Device]<br/>NO direct imports from devices/analog_*<br/>fans out to devices.all_devices()"]
 
-        Manifest["devices/strategies/analog_four_offset_manifest.py<br/>(saved-kit frame constants + sizes;<br/>calibrated offsets remain in data/;<br/>A4-specific, not in dual_machine/)"]
+        Manifest["data/analog_four_saved_kit_layout.py<br/>(saved-kit frame constants + sizes)<br/>+ strategy compatibility manifest;<br/>A4-specific, not in dual_machine/"]
     end
 
     subgraph Deleted["Deleted from PR #36 (LOC reduction)"]
@@ -2462,11 +2471,11 @@ sequenceDiagram
     Sign-->>CLI: signed envelope bytes<br/>(RYMS || ver || algo || key_id || sig || payload_len || payload)
     CLI->>Writer: atomic_write(output_path, envelope)
     activate Writer
-    Note over Writer: 1. NamedTemporaryFile in path.parent<br/>2. write + flush + fsync<br/>3. os.replace(tmp, output)<br/>4. unlink tmp on any failure
+    Note over Writer: 1. mkstemp sibling in path.parent<br/>2. complete write + file fsync<br/>3. overwrite: os.replace<br/>4. no-overwrite: Windows os.rename / POSIX os.link
     Writer->>Disk: write tmp file (same dir as output)
     Writer->>Disk: fsync tmp fd
-    Writer->>Disk: os.replace(tmp, output)
-    Writer-->>CLI: None (or OSError; tmp cleaned up)
+    Writer->>Disk: os.replace(tmp, output)<br/>or race-safe Windows os.rename / POSIX os.link
+    Writer-->>CLI: WriteResult (or classified error; tmp best-effort cleaned)
     deactivate Writer
     CLI->>Verifier: verify_file(output_path,<br/>key_resolver=lambda kid: key)
     activate Verifier
@@ -2489,7 +2498,7 @@ sequenceDiagram
   leading 4 bytes and reports `bad_magic` for anything else. The
   hardware loader does the same.
 - **Stdlib only.** `hmac` + `hashlib` (HMAC-SHA256), `zlib` (CRC32),
-  `tempfile.NamedTemporaryFile` + `os.fsync` + `os.replace` (atomic
+  `tempfile.mkstemp` + `os.fsync` + platform-native atomic publication
   write). No new third-party package, no new toolchain.
 - **Never-raises verifier.** Every kind of badness (bad magic, truncated
   envelope, wrong signature, bad CRC, unknown algo, unknown key, IO
@@ -2498,10 +2507,11 @@ sequenceDiagram
   verifier over arbitrary third-party `.rymp` files; raising would crash
   the GUI.
 - **Atomic write is load-bearing.** The temp file is opened in the
-  SAME directory as the target so the final `os.replace` is a
-  same-filesystem rename (atomic on POSIX and Windows). `os.fsync`
-  before `os.replace` guarantees no observable "renamed but truncated"
-  state after a power loss.
+  SAME directory as the target. Overwrite mode uses same-filesystem
+  `os.replace`; no-overwrite mode uses Windows `os.rename` or POSIX
+  `os.link`, so a concurrent destination creator cannot be clobbered.
+  File data is `os.fsync`ed before publication. Parent directory metadata is
+  not fsynced, so name persistence across sudden power loss is filesystem-dependent.
 - **Phase 3.5 keystore is the only deferred piece.** The CLI accepts a
   `--key-id` flag; the actual key bytes resolve from
   `~/.rytm-randomizer/keys/<key_id>.key` (raw 32-byte file in Phase 3).
@@ -2724,7 +2734,7 @@ sequenceDiagram
     CLI->>Sign: pack_signed(payload, algo, key_id, sig)
     Sign-->>CLI: signed envelope (RYMS || ... || payload)
     CLI->>Writer: atomic_write(output, envelope, overwrite=False)
-    Writer->>Disk: NamedTemporaryFile in same dir<br/>+ fsync + os.replace
+    Writer->>Disk: mkstemp sibling + file fsync<br/>+ Windows os.rename / POSIX os.link
     Writer-->>CLI: WriteResult (FileExistsError on collision,<br/>WriteError on OSError — both classified)
     CLI->>Verifier: verify_file(output, key_resolver=...)
     Verifier->>Disk: read envelope
@@ -2735,7 +2745,7 @@ sequenceDiagram
     A4Export->>A4Render: validate frame + render mutations
     A4Render-->>A4Export: rebuilt 2,770-byte frame + SHA256
     A4Export->>Writer: atomic_write(output, frame, overwrite=False)
-    Writer->>A4Disk: sibling temp + fsync + os.replace
+    Writer->>A4Disk: mkstemp sibling + file fsync<br/>+ Windows os.rename / POSIX os.link
     Writer-->>A4Export: WriteResult
     A4Export-->>Operator: render + write audit result
 
@@ -2764,8 +2774,8 @@ sequenceDiagram
 - **`pack_profile_model(format_version=)` is `Literal[1]` (M4).** The
   test-only seam that produced a blob the unpacker would reject is gone.
 - **`ProfileRegistry.save` reuses the canonical writer (PR 7, M7).** The
-  wizard's save path inherits `overwrite=False`, atomic temp + fsync +
-  os.replace, and the classified `WriteError` taxonomy.
+  wizard's save path inherits `overwrite=False`, atomic temp + file fsync +
+  Windows `os.rename` / POSIX `os.link`, and the classified `WriteError` taxonomy.
 - **`_safe_load_profile` distinguishes error classes (PR 7, M6).**
   `PermissionError` is loud (refuses to start with a denied profile dir);
   malformed JSON is warn-and-skip (the rest of the registry still loads).

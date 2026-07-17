@@ -244,10 +244,10 @@ def test_write_error_bubbles_up_unwrapped(monkeypatch: pytest.MonkeyPatch, tmp_p
 
     registry = ProfileRegistry(profiles_dir=tmp_path)
 
-    def failing_replace(src: str, _dst: str) -> None:
+    def failing_rename(src: str, _dst: str | Path) -> None:
         raise OSError("ENOSPC simulated")
 
-    monkeypatch.setattr(os, "replace", failing_replace)
+    monkeypatch.setattr(os, "rename", failing_rename)
     with pytest.raises(WriteError):
         registry.save(_make_user_profile())
 

@@ -6,6 +6,8 @@ identical to the previously inline ``*_HELP`` constants; the CLI output must
 not change by a single character.
 """
 
+from typing import Final
+
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
     "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
@@ -620,6 +622,9 @@ USAGE = (
     "cockpit-export-profile-model --profile-id <id> --profiles-dir <path> "
     "--output <file.rymp> [--key-hex <hex> --key-id <label>] "
     "[--unsigned] [--overwrite] [--json] | "
+    "analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> "
+    "--filter2-resonance <track:value> [--filter2-resonance <track:value> ...] "
+    "[--overwrite] [--json] | "
     "cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> "
     "[--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json] | "
     "manual-feedback-packet-report "
@@ -3342,6 +3347,45 @@ Safety:
 {_safety_block(_COCKPIT_EXPORT_PROFILE_MODEL_SAFETY_LINES)}"""
 
 
+_ANALOG_FOUR_SAVED_KIT_EXPORT_SAFETY_LINES: Final[tuple[str, ...]] = (
+    "reads one operator-selected Analog Four saved-kit .syx file",
+    "writes one generated .syx file via the canonical atomic writer",
+    "only hardware-write-validated parameters are accepted",
+    "no MIDI sending",
+    "no port opening",
+    "no hardware mutation",
+    "no hardware required",
+    "no network access",
+)
+
+
+def _analog_four_saved_kit_export_help():
+    return f"""RytmRandomizer passive CLI: analog-four-saved-kit-export
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> --filter2-resonance 1:64
+  python -m rytm_randomizer.cli analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> --filter2-resonance 1:16 --filter2-resonance 2:48 --filter2-resonance 3:80 --filter2-resonance 4:112 --json
+  python -m rytm_randomizer.cli analog-four-saved-kit-export --help
+
+Arguments:
+  --source <kit.syx>                 Hardware-exported source saved kit
+  --output <kit.syx>                 Destination for the generated saved kit
+  --filter2-resonance <track:value>  Track 1-4 and front-panel value 0-127; repeatable
+  --overwrite                        Replace --output if it already exists
+  --json                             Emit a JSON acknowledgment instead of text
+
+Behavior:
+  Validates and decodes one Analog Four MKII saved-kit frame, applies every
+  requested hardware-validated Filter2 Resonance value, rebuilds the Elektron
+  7-bit payload/checksum/length trailer, and atomically publishes the output.
+  The acknowledgment reports the kit name, SHA256, byte count, track values,
+  and concrete unpacked offsets. Existing output is refused unless --overwrite
+  is explicit.
+
+Safety:
+{_safety_block(_ANALOG_FOUR_SAVED_KIT_EXPORT_SAFETY_LINES)}"""
+
+
 def _cockpit_export_rehearsal_report_help():
     from .reports.cockpit_export_rehearsal import SAFETY_LINES
 
@@ -3518,6 +3562,7 @@ Usage:
   python -m rytm_randomizer.cli cockpit-send-plan-readiness-report (--plan-json <json>|--plan-file <path>) [--label <text>] [--json]
   python -m rytm_randomizer.cli cockpit-send-plan-rehearsal-surface-report (--plan-json <json>|--plan-file <path>|--readiness-json <json>|--readiness-file <path>) [--label <text>] [--json]
   python -m rytm_randomizer.cli cockpit-export-profile-model --profile-id <id> --profiles-dir <path> --output <file.rymp> [--key-hex <hex> --key-id <label>] [--unsigned] [--overwrite] [--json]
+  python -m rytm_randomizer.cli analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> --filter2-resonance <track:value> [--filter2-resonance <track:value> ...] [--overwrite] [--json]
   python -m rytm_randomizer.cli cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> [--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
@@ -3781,6 +3826,8 @@ Commands:
                     Build GUI-ready passive SEND plan rehearsal surface state.
   cockpit-export-profile-model
                     Export a cockpit ProfileModel (pack + sign + atomic write + verify).
+  analog-four-saved-kit-export
+                    Render hardware-validated Analog Four values into a saved-kit SysEx file.
   cockpit-export-rehearsal-report
                     Build GUI-ready passive cockpit model-export rehearsal surface state.
   inspect-command    Inspect passive command metadata by key.
@@ -4245,6 +4292,7 @@ Safety:
         _cockpit_send_plan_rehearsal_surface_report_help
     ),
     "cockpit-export-profile-model": _cockpit_export_profile_model_help,
+    "analog-four-saved-kit-export": _analog_four_saved_kit_export_help,
     "cockpit-export-rehearsal-report": _cockpit_export_rehearsal_report_help,
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 

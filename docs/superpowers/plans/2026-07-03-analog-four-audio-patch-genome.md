@@ -24,12 +24,12 @@
 | WS-G | Patch capture-corpus nearest matching | WS-A, WS-B, WS-E | WS-D | `rytm_randomizer/data/analog_four_patch_corpus.py`, `rytm_randomizer/style_analysis/analog_four_patch_corpus.py`, `rytm_randomizer/reports/analog_four_patch_corpus.py`, `tests/test_analog_four_patch_corpus*.py` |
 | WS-H | Initialized SysEx baseline comparison | WS-G | WS-D | `rytm_randomizer/reports/analog_four_baseline.py`, `tests/test_analog_four_baseline_report.py` |
 | WS-I | First A4 SysEx field calibration facts | WS-H | WS-D | `rytm_randomizer/data/analog_four_sysex_calibration.py`, `tests/test_analog_four_sysex_calibration.py`, `rytm_randomizer/data/__init__.py` |
-| WS-J | Hardware-validated A4 saved-kit renderer + guarded export | WS-I | WS-D | `rytm_randomizer/snapshot/envelope.py`, `rytm_randomizer/devices/strategies/analog_four_saved_kit_writer.py`, `rytm_randomizer/cockpit/export/analog_four_kit.py`, focused tests, hardware evidence |
+| WS-J | Hardware-validated A4 saved-kit renderer + guarded export | WS-I | WS-D | `data/analog_four_saved_kit_layout.py`, `snapshot/envelope.py`, `devices/strategies/{analog_four_saved_kit_codec,analog_four_saved_kit_writer}.py`, `cockpit/export/{analog_four_cli,analog_four_kit,writer}.py`, CLI/help registration, observability, exact binary fixtures, focused tests, hardware evidence, learned SysEx skill |
 
 ## Execution Shape
 
 - **Worktree assignment:** The bundled feature landed through `.worktrees/a4-audio-patch-genome-passive` on PR #206; Filter2 Resonance calibration landed in PR #212; the round-trip writer continues in `.worktrees/a4-sysex-roundtrip-writer` on branch `codex/a4-sysex-roundtrip-writer`.
-- **Disjoint ownership:** WS-A and WS-I own `data/`, WS-B owns `style_analysis/`, WS-C owns `reports/` plus CLI/help, WS-D owns docs, and WS-J owns the shared packer, A4 renderer, and file-export adapter.
+- **Disjoint ownership:** WS-A and WS-I own their established data facts, WS-B owns `style_analysis/`, WS-C owns report CLI/help surfaces, WS-D owns docs, and WS-J owns saved-kit layout facts, the shared codec/packer, A4 renderer, guarded exporter/operator command, and exact wire fixtures.
 - **Agent crew:** main agent performs TDD/implementation; read-only explorers inspect CLI/report and A4 reuse points in parallel.
 - **Self-driving rules:** no human prompts; routine file edits, formatting, docs, tests, and fixes continue automatically.
 - **Auto-merge cascade:** not used locally; PR shape is one non-stacked bundled branch.
@@ -57,9 +57,11 @@
 11. Promote passive A4 SysEx field calibration facts from Jose's Filter1 Frequency, Filter1 Resonance, Filter2 Frequency, and Filter2 Resonance captures.
 12. Add a shared Elektron 7-bit packer and a pure A4 saved-kit renderer that validates framing, family, object, body size, checksum, and packed length before mutation.
 13. Add a guarded local-file exporter that permits only hardware-write-validated parameters and reuses the canonical atomic writer.
-14. Record byte-identical, novel-value, and four-track operator-confirmed hardware evidence.
-15. Update operator docs and architecture/status references.
-16. Run focused tests, then fast/architecture/lint verification as feasible.
+14. Register an operator CLI supporting repeated Track:Value Filter2 Resonance assignments and exact JSON/text acknowledgments.
+15. Record byte-identical, novel-value, and four-track operator-confirmed hardware evidence as executable binary fixtures plus dated notes.
+16. Harden canonical no-overwrite publication against races and short writes while preserving Windows removable-media support.
+17. Update operator docs, architecture/status references, observability notes, and the existing Elektron SysEx learned skill.
+18. Run focused coverage, strict typing, full suite, architecture, parity, lint, and review gates.
 
 ## Safety Contract
 
@@ -83,19 +85,19 @@ Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 
 - [x] Gate 1 (100% branch coverage on touched files) -- focused tests cover new behavior; coverage command will be run if feasible.
 - [x] Gate 2 (V1.34 parity byte-identical) -- no V1.34 engine/golden paths touched.
-- [x] Gate 3 (lint/format/type clean) -- ruff/black/isort run before closeout as feasible.
+- [x] Gate 3 (lint/format/type clean) -- ruff/black/isort plus strict Pyright on touched production paths run before closeout.
 - [x] Gate 4 (dead-code purge) -- no unused public surfaces; report and compiler are test-covered.
 - [x] Gate 5 (docs updated) -- README, CLI reference, STATUS, ARCHITECTURE, diagrams updated.
 - [x] Gate 6 (type-system hygiene) -- frozen dataclasses and explicit types; no `Any` aliases.
-- [x] Gate 7 (observability adoption) -- passive reports stay inert; the active send bridge wraps the armed batch in an operation span, records categorized error metrics, and reuses the existing `midi_io` per-message breadcrumbs.
+- [x] Gate 7 (observability adoption) -- the active send bridge keeps its operation span and MIDI breadcrumbs; the saved-kit exporter records shared export RED metrics plus structured success/failure/cleanup logs with stable error categories.
 - [x] Gate 8 (test hygiene) -- tests mirror source responsibilities, pin the observed wire format, and exercise the canonical atomic writer through the export adapter.
-- [x] Gate 9 (module organization) -- new files live under existing `data/`, `style_analysis/`, and `reports/` subpackages.
+- [x] Gate 9 (module organization) -- new files live under existing `data/`, `style_analysis/`, `reports/`, `devices/strategies/`, and `cockpit/export/` subpackages.
 - [x] Gate 10 (string-literal dispatch hygiene) -- no new mode/page dispatch ladder; CLI uses registry.
-- [x] Gate 11 (shared fixtures) -- no duplicated multi-file fixtures.
+- [x] Gate 11 (shared fixtures) -- shared builders live in `tests/conftest.py`; sanitized source/expected A4 frames live once under `tests/fixtures/analog_four_saved_kit/`.
 - [x] Gate 12 (Final constants) -- new constants annotated.
 - [x] Gate 13 (env vars) -- no new environment variables.
 - [x] Gate 14 (maintainability) -- small focused modules; no oversized report module.
-- [x] Gate 15 (learning phase) -- review findings were captured in this plan and PR evidence; no reusable skill extraction is warranted because the patterns are feature-specific A4 patch-template data placement and send-plan observability fixes already covered by existing rules.
+- [x] Gate 15 (learning phase) -- the existing `elektron-sysex-envelope` skill now records bidirectional packing, the observed A4 saved-kit `0x06` frame/trailer, and the reference/novel/cross-track promotion workflow.
 - [x] Gate 16 (execution shape) -- PRs #206 and #212 landed directly; the writer is one follow-up branch directly against `modularize-v1.34`, with no stacked base branch.
-- [x] Gate 17 (abstraction reuse) -- reuses A4 calibration facts, the shared snapshot envelope, the canonical atomic writer, A4 MIDI data, `FeatureReport`, report formatter, and CLI registry.
+- [x] Gate 17 (abstraction reuse) -- canonical layout facts live in `data/`; decoder and renderer share one saved-kit codec; export and profile registry share one atomic writer; operator dispatch reuses `cli_registry`.
 - [x] Gate 18 (architecture freshness) -- architecture docs/diagrams cover the shared packer, strategy-adjacent A4 saved-kit renderer, and guarded `.syx` export path.

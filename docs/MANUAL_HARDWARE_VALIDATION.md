@@ -348,6 +348,19 @@ Validated setup and recovery:
   testing another file.
 - Reload the clean baseline and stop if the name, track, or value is wrong.
 
+Generate a guarded file with one or more repeatable Track:Value assignments:
+
+```powershell
+python -m rytm_randomizer.cli analog-four-saved-kit-export `
+  --source "G:\ANALOG FOUR\WHOLE PROJECT DUMP\A4_Test1_T1_Filter2Res_000_Kit.syx" `
+  --output "G:\ANALOG FOUR\WHOLE PROJECT DUMP\A4_CODEX_GENERATED.syx" `
+  --filter2-resonance 1:16 --filter2-resonance 2:48 `
+  --filter2-resonance 3:80 --filter2-resonance 4:112 --json
+```
+
+The command refuses an existing output unless `--overwrite` is explicit. It
+does not transfer the file or open a MIDI port.
+
 Passed evidence:
 
 | Scope | Expected | Result |

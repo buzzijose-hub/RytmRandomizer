@@ -75,6 +75,14 @@ def test_a4_sysex_calibration_tracks_filter2_resonance_capture():
     assert data.ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS["Filter2 Resonance"]
 
 
+def test_a4_saved_kit_layout_is_canonical_data() -> None:
+    assert data.A4_CHECKSUM_PACKED_OFFSET == 8
+    assert data.A4_SAVED_KIT_TRAILER_SIZE == 4
+    assert data.A4_SAVED_KIT_UNPACKED_SIZE == 2415
+    assert data.A4_SAVED_KIT_PACKED_SIZE == 2760
+    assert data.A4_SAVED_KIT_FRAMED_SIZE == 2770
+
+
 def test_profile_registry_has_expected_keys():
     """The canonical profile registry must carry all 11 V1.34 profiles."""
 

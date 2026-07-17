@@ -11,37 +11,27 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, TypeGuard
 
-from rytm_randomizer.data.analog_four_sysex_calibration import (
+from ...data.analog_four_saved_kit_layout import (
+    A4_PACKED_PAYLOAD_OFFSET,
+)
+from ...data.analog_four_sysex_calibration import (
     A4_SYSEX_CALIBRATION_STATUS_CANDIDATE_PROMOTED,
     A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED,
     AnalogFourSysexFieldCalibration,
     analog_four_sysex_calibration_for,
 )
-from rytm_randomizer.snapshot import (
-    ELEKTRON_MFR_ID,
-    extract_sysex_payloads,
-    pack_elektron_7bit,
-    read_ascii_name,
-    unpack_elektron_7bit,
-)
-
-from .analog_four_offset_manifest import (
-    A4_CHECKSUM_PACKED_OFFSET,
-    A4_FAMILY_BYTE,
-    A4_KIT_NAME_LENGTH,
-    A4_KIT_NAME_OFFSET,
-    A4_KIT_OBJECT_BYTE,
-    A4_PACKED_PAYLOAD_OFFSET,
-    A4_SAVED_KIT_TRAILER_SIZE,
-    A4_SAVED_KIT_UNPACKED_SIZE,
+from ...snapshot import extract_sysex_payloads
+from .analog_four_saved_kit_codec import (
+    AnalogFourSavedKitPayload,
+    decode_analog_four_saved_kit_payload,
+    encode_analog_four_saved_kit_payload,
 )
 
 _SYSEX_START: Final[int] = 0xF0
 _SYSEX_END: Final[int] = 0xF7
-_U14_MAX: Final[int] = 0x3FFF
-_SUPPORTED_CALIBRATION_STATUSES = frozenset(
+_SUPPORTED_CALIBRATION_STATUSES: Final[frozenset[str]] = frozenset(
     {
         A4_SYSEX_CALIBRATION_STATUS_CANDIDATE_PROMOTED,
         A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED,
@@ -83,38 +73,10 @@ class AnalogFourSavedKitRenderResult:
     sha256: str
 
 
-def _decode_u14(high: int, low: int) -> int:
-    return (high << 7) | low
-
-
-def _encode_u14(value: int) -> bytes:
-    return bytes(((value >> 7) & 0x7F, value & 0x7F))
-
-
-def _checksum(packed: bytes) -> int:
-    return sum(packed[A4_CHECKSUM_PACKED_OFFSET:]) & _U14_MAX
-
-
-def _raw_low7_for_screen_value(
-    calibration: AnalogFourSysexFieldCalibration,
-    screen_value: str,
-) -> int:
-    captured = calibration.primary_raw_values.get(screen_value)
-    if captured is not None:
-        return captured
-
-    integer_scale = "." not in calibration.screen_min and "." not in calibration.screen_max
-    if integer_scale:
-        try:
-            parsed = int(screen_value)
-        except ValueError as exc:
-            raise ValueError(
-                f"unsupported screen value {screen_value!r} for {calibration.parameter}"
-            ) from exc
-        if str(parsed) == screen_value and 0 <= parsed <= 0x7F:
-            return parsed
-
-    raise ValueError(f"unsupported screen value {screen_value!r} for {calibration.parameter}")
+def is_analog_four_saved_kit_mutation(
+    value: object,
+) -> TypeGuard[AnalogFourSavedKitMutation]:
+    return isinstance(value, AnalogFourSavedKitMutation)
 
 
 def _unpacked_offset_for_calibration(
@@ -131,7 +93,7 @@ def _unpacked_offset_for_calibration(
     return (group_index * 7) + position - 1
 
 
-def _validated_source(source_sysex: bytes) -> tuple[bytes, bytes, bytes, int]:
+def _validated_source(source_sysex: bytes) -> AnalogFourSavedKitPayload:
     if not source_sysex or source_sysex[0] != _SYSEX_START or source_sysex[-1] != _SYSEX_END:
         raise ValueError("Analog Four saved kit must be supplied as a framed F0/F7 SysEx file")
 
@@ -142,31 +104,7 @@ def _validated_source(source_sysex: bytes) -> tuple[bytes, bytes, bytes, int]:
     payload = payloads[0]
     if source_sysex != bytes((_SYSEX_START,)) + payload + bytes((_SYSEX_END,)):
         raise ValueError("Analog Four saved-kit writer requires exactly one isolated SysEx frame")
-    if not payload.startswith(ELEKTRON_MFR_ID):
-        raise ValueError("SysEx manufacturer is not Elektron 00:20:3C")
-    if len(payload) <= A4_PACKED_PAYLOAD_OFFSET + A4_SAVED_KIT_TRAILER_SIZE:
-        raise ValueError("Analog Four saved-kit payload is too short")
-    if payload[len(ELEKTRON_MFR_ID)] != A4_FAMILY_BYTE:
-        raise ValueError("SysEx family is not Analog Four 0x06")
-
-    packed = payload[A4_PACKED_PAYLOAD_OFFSET:-A4_SAVED_KIT_TRAILER_SIZE]
-    trailer = payload[-A4_SAVED_KIT_TRAILER_SIZE:]
-    stored_checksum = _decode_u14(trailer[0], trailer[1])
-    if stored_checksum != _checksum(packed):
-        raise ValueError("Analog Four saved-kit checksum does not match the packed payload")
-    stored_length = _decode_u14(trailer[2], trailer[3])
-    if stored_length != len(packed):
-        raise ValueError("Analog Four saved-kit packed length does not match its trailer")
-
-    unpacked = unpack_elektron_7bit(packed)
-    if len(unpacked) != A4_SAVED_KIT_UNPACKED_SIZE:
-        raise ValueError(
-            "Analog Four saved-kit unpacked payload has unexpected length "
-            f"{len(unpacked)}; expected {A4_SAVED_KIT_UNPACKED_SIZE}"
-        )
-    if unpacked[0] != A4_KIT_OBJECT_BYTE:
-        raise ValueError("Analog Four SysEx object is not a saved kit")
-    return payload[:A4_PACKED_PAYLOAD_OFFSET], packed, unpacked, stored_checksum
+    return decode_analog_four_saved_kit_payload(payload, require_trailer=True)
 
 
 def render_analog_four_saved_kit(
@@ -178,13 +116,13 @@ def render_analog_four_saved_kit(
     if not mutations:
         raise ValueError("Analog Four saved-kit rendering requires at least one mutation")
 
-    prefix, source_packed, source_unpacked, source_checksum = _validated_source(source_sysex)
-    rendered_unpacked = bytearray(source_unpacked)
+    source = _validated_source(source_sysex)
+    rendered_unpacked = bytearray(source.unpacked)
     seen: set[tuple[str, int]] = set()
     applied: list[AnalogFourSavedKitAppliedMutation] = []
 
     for mutation in mutations:
-        if not isinstance(mutation, AnalogFourSavedKitMutation):
+        if not is_analog_four_saved_kit_mutation(mutation):
             raise TypeError("mutations must contain AnalogFourSavedKitMutation records")
         key = (mutation.parameter, mutation.track)
         if key in seen:
@@ -198,7 +136,7 @@ def render_analog_four_saved_kit(
             raise ValueError(
                 f"{mutation.parameter} calibration is not promoted for saved-kit writing"
             )
-        raw_low7 = _raw_low7_for_screen_value(calibration, mutation.screen_value)
+        raw_low7 = calibration.primary_raw_value_for_screen(mutation.screen_value)
         unpacked_offset = _unpacked_offset_for_calibration(calibration, mutation.track)
         source_value = rendered_unpacked[unpacked_offset]
         rendered_value = (source_value & 0x80) | raw_low7
@@ -214,23 +152,16 @@ def render_analog_four_saved_kit(
             )
         )
 
-    rendered_packed = pack_elektron_7bit(bytes(rendered_unpacked))
-    if len(rendered_packed) != len(source_packed):
-        raise ValueError("Analog Four saved-kit repacking changed the packed payload length")
-    rendered_checksum = _checksum(rendered_packed)
-    trailer = _encode_u14(rendered_checksum) + _encode_u14(len(rendered_packed))
-    framed_sysex = (
-        bytes((_SYSEX_START,)) + prefix + rendered_packed + trailer + bytes((_SYSEX_END,))
-    )
-    kit_name = read_ascii_name(bytes(rendered_unpacked), A4_KIT_NAME_OFFSET, A4_KIT_NAME_LENGTH)
+    encoded = encode_analog_four_saved_kit_payload(source.prefix, bytes(rendered_unpacked))
+    framed_sysex = bytes((_SYSEX_START,)) + encoded.payload + bytes((_SYSEX_END,))
 
     return AnalogFourSavedKitRenderResult(
-        kit_name=kit_name,
+        kit_name=source.kit_name,
         framed_sysex=framed_sysex,
         applied_mutations=tuple(applied),
-        source_checksum=source_checksum,
-        rendered_checksum=rendered_checksum,
-        packed_length=len(rendered_packed),
+        source_checksum=source.checksum,
+        rendered_checksum=encoded.checksum,
+        packed_length=len(encoded.packed),
         sha256=hashlib.sha256(framed_sysex).hexdigest(),
     )
 
@@ -239,5 +170,6 @@ __all__ = [
     "AnalogFourSavedKitAppliedMutation",
     "AnalogFourSavedKitMutation",
     "AnalogFourSavedKitRenderResult",
+    "is_analog_four_saved_kit_mutation",
     "render_analog_four_saved_kit",
 ]

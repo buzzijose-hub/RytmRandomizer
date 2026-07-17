@@ -21,6 +21,10 @@ a complete patch-genome-to-kit compiler.
 - Clean baseline file: `A4_Test1_Init_Kit.syx`
 - Clean baseline SHA256:
   `50c753f3a2acd73ca77e2930e9b9658ea62bbe51f7cb9f7644e6f8ff2689cc5e`
+- Executable writer regression source: Filter2 Resonance `0`, SHA256
+  `a8fbb0552b953815fc1f6358299116866b0d94002692933abccf83655023cc6b`
+- Sanitized source/expected captures are committed under
+  `tests/fixtures/analog_four_saved_kit/` for exact byte-level regression.
 - Frame size: 2,770 bytes
 - Packed payload size: 2,760 bytes
 - Unpacked saved-kit body size: 2,415 bytes
@@ -51,6 +55,15 @@ Passed.
 The reference-value file proved byte-for-byte reconstruction, the value-64
 file proved synthesis beyond captured anchors, and the four-track file proved
 that independent mutations survive one shared repack/checksum operation.
+
+The same renderer is reachable through the registered local-file command:
+
+```text
+python -m rytm_randomizer.cli analog-four-saved-kit-export --source <kit.syx> --output <generated.syx> --filter2-resonance 1:16 --filter2-resonance 2:48 --filter2-resonance 3:80 --filter2-resonance 4:112 --json
+```
+
+This command writes a file only. Transfer to the A4 remains an explicit
+operator action.
 
 ## Safety Boundary
 

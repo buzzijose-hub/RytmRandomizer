@@ -29,6 +29,10 @@ contract at a glance.
 
 from __future__ import annotations
 
+from .analog_four_cli import (
+    ANALOG_FOUR_SAVED_KIT_EXPORT_CLI_COMMAND,
+    handle_analog_four_saved_kit_export,
+)
 from .analog_four_kit import (
     AnalogFourSavedKitExportResult,
     export_analog_four_saved_kit,
@@ -59,6 +63,7 @@ from .verifier import (
 
 __all__ = [
     "AnalogFourSavedKitExportResult",
+    "ANALOG_FOUR_SAVED_KIT_EXPORT_CLI_COMMAND",
     "COCKPIT_EXPORT_PROFILE_MODEL_CLI_COMMAND",
     "FORMAT_VERSION",
     "Header",
@@ -67,6 +72,7 @@ __all__ = [
     "SIGNATURE_HEADER_MAGIC",
     "SUPPORTED_FORMAT_VERSIONS",
     "handle_export_profile_model",
+    "handle_analog_four_saved_kit_export",
     "export_analog_four_saved_kit",
     "pack_profile_model",
     "pack_signed",

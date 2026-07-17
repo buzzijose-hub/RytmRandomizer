@@ -176,6 +176,16 @@ emits one `operation_error` record at `ERROR` with the elapsed time, the
 exception type, and a full traceback under `exc_info`. A debug session can
 correlate the failure to the most recent `operation_start` by `op_id`.
 
+**Export RED metrics.** Profile-model and Analog Four saved-kit file exports
+share `MidiMetrics.record_export`: one count, cumulative duration, and a stable
+categorical error counter per invocation. The A4 path emits `validation`,
+`source_read_failed`, `overwrite_refused`, or `write_failed`; success records no
+error code. Its structured success log includes output path, SHA256, and
+mutation count. Failure logs include source/output paths and the categorical
+code. A POSIX temp-name cleanup failure after successful hard-link publication
+is logged as `atomic_write_cleanup` but does not convert a valid output into a
+failed export.
+
 ## Adding logging to a new module
 
 ```python

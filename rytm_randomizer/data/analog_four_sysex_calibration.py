@@ -43,6 +43,7 @@ class AnalogFourSysexFieldCalibration:
     screen_mid: str
     screen_max: str
     primary_raw_values: Mapping[str, int]
+    allow_uncaptured_integer_values: bool
     track_1_primary_raw_offset: int
     track_raw_stride: int
     track_1_raw_group_start: int
@@ -52,6 +53,23 @@ class AnalogFourSysexFieldCalibration:
     track_unpacked_stride: int
     evidence: tuple[AnalogFourSysexCalibrationEvidence, ...]
     notes: tuple[str, ...]
+
+    def primary_raw_value_for_screen(self, screen_value: str) -> int:
+        """Return the calibrated low-seven-bit value for a screen value."""
+
+        captured = self.primary_raw_values.get(screen_value)
+        if captured is not None:
+            return captured
+        if self.allow_uncaptured_integer_values:
+            try:
+                parsed = int(screen_value)
+            except ValueError as exc:
+                raise ValueError(
+                    f"unsupported screen value {screen_value!r} for {self.parameter}"
+                ) from exc
+            if str(parsed) == screen_value and 0 <= parsed <= 0x7F:
+                return parsed
+        raise ValueError(f"unsupported screen value {screen_value!r} for {self.parameter}")
 
     def primary_raw_offset_for_track(self, track: int) -> int:
         """Return the packed primary value offset for ``track``."""
@@ -333,6 +351,7 @@ ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCal
                         "127.00": 0x7F,
                     }
                 ),
+                allow_uncaptured_integer_values=False,
                 track_1_primary_raw_offset=156,
                 track_raw_stride=400,
                 track_1_raw_group_start=152,
@@ -361,6 +380,7 @@ ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCal
                         "127": 0x7F,
                     }
                 ),
+                allow_uncaptured_integer_values=True,
                 track_1_primary_raw_offset=158,
                 track_raw_stride=400,
                 track_1_raw_group_start=156,
@@ -390,6 +410,7 @@ ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCal
                         "127.00": 0x7F,
                     }
                 ),
+                allow_uncaptured_integer_values=False,
                 track_1_primary_raw_offset=167,
                 track_raw_stride=400,
                 track_1_raw_group_start=160,
@@ -419,6 +440,7 @@ ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCal
                         "127": 0x7F,
                     }
                 ),
+                allow_uncaptured_integer_values=True,
                 track_1_primary_raw_offset=170,
                 track_raw_stride=400,
                 track_1_raw_group_start=168,

@@ -334,6 +334,21 @@ def test_filter2_resonance_records_hardware_write_validation_evidence() -> None:
     assert evidence[2].operator_confirmed is True
 
 
+def test_filter2_resonance_calibration_converts_novel_integer_screen_values() -> None:
+    from rytm_randomizer.data.analog_four_sysex_calibration import (
+        analog_four_sysex_calibration_for,
+    )
+
+    resonance = analog_four_sysex_calibration_for("Filter2 Resonance")
+    frequency = analog_four_sysex_calibration_for("Filter2 Frequency")
+
+    assert resonance.primary_raw_value_for_screen("64") == 64
+    with pytest.raises(ValueError, match="unsupported screen value"):
+        resonance.primary_raw_value_for_screen("loud")
+    with pytest.raises(ValueError, match="unsupported screen value"):
+        frequency.primary_raw_value_for_screen("64.00")
+
+
 def test_hardware_write_validation_status_requires_confirmed_hashed_evidence() -> None:
     from rytm_randomizer.data.analog_four_sysex_calibration import (
         A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED,

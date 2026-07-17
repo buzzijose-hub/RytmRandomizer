@@ -97,6 +97,7 @@ on one line for an existing module, you probably need a new module instead.
 | `data/analog_four_midi.py` | Manual-backed Analog Four CC mappings from Appendix D. Pure data.        |
 | `data/analog_four_display.py` | Analog Four front-panel scales, labels, and CC/NRPN-ready patch-value metadata. Pure data. |
 | `data/analog_four_sysex_calibration.py` | Operator-captured Analog Four SysEx field offsets plus immutable hardware-write validation evidence. Pure data. |
+| `data/analog_four_saved_kit_layout.py` | Observed A4 saved-kit family/object, packing, trailer, size, and name-field constants. Pure data. |
 | `data/analog_four_patch_templates.py` | Static Analog Four patch-genome candidate templates and rationale rows. Pure data. |
 | `data/analog_four_patch_corpus.py` | Synthetic Analog Four patch-corpus starter feature vectors. Pure data. |
 | `data/analog_four_recipes.py` | Manual-backed Analog Four kit recipe definitions. Pure data.       |
@@ -131,7 +132,8 @@ on one line for an existing module, you probably need a new module instead.
 | `engines/analog_rytm_12_pad_shell.py` | All-12-pad style/mutation shell. Consumes rendered style events; sends only through injected sender. |
 | `engines/analog_rytm_snapshot_shell.py` | All-12-pad current-kit snapshot shell. Extracts live-safe CC events from a decoded Rytm kit snapshot; sends only through injected sender. |
 | `snapshot/envelope.py` | Shared Elektron manufacturer envelope plus inverse 7-bit pack/unpack helpers. Pure bytes in/out. |
-| `devices/strategies/analog_four_saved_kit_writer.py` | Pure A4 saved-kit validator/mutator/renderer; no filesystem or MIDI I/O. |
+| `devices/strategies/analog_four_saved_kit_codec.py` | Shared A4 saved-kit payload validator/encoder used by decoder and writer; owns checksum/trailer handling. |
+| `devices/strategies/analog_four_saved_kit_writer.py` | Pure A4 saved-kit mutator/renderer consuming the shared codec, calibration, and canonical data-layer layout facts; no filesystem or MIDI I/O. |
 
 ### Mid-upper (orchestration)
 
@@ -156,6 +158,7 @@ on one line for an existing module, you probably need a new module instead.
 | `reports/`            | Passive in-memory report package + shared formatter/helper layer, including the manual feedback packet report, the reference-style blueprint report, the Analog Four initialized-baseline, patch genome, patch learning, patch corpus, and patch send-plan reports, the Analog Four OXI macro set planner report, the controller-brain mapping catalog and rehearsal/export reports, the style-performance arc chain through the live render bundle, live cue sheet, live runbook, reference match, snapshot preview, stage packet, stage snapshot-routing handoff, stage rehearsal-state packet, live set cockpit dashboard, live show export packet, live transition timeline, live command deck, live state packet, live analyzer handoff/targets, GUI readiness/session, capture queue/review, sidecar session packets, GUI screen-contract packets, GUI render-tree packets, GUI analyzer-overlay packets, GUI analyzer-frame packets, GUI interaction-script packets, GUI action-reducer packets, GUI controller-state packets, GUI playback-transcript packets, GUI playback-validation packets, GUI test-harness contract/readiness packets, GUI implementation-bridge/desktop-blueprint/desktop-app-plan/desktop-component-contract/desktop-view-model/desktop-render-contract/desktop-render-harness/cockpit-boundary-readiness packets, cockpit send-plan operator-readiness packets, cockpit send-plan rehearsal-surface packets, and the live GUI performance-console chain through live-kit capture workbench, package audition, and operator package, operator review ledger, and payload helpers under `reports/performance_console/`. Static manual feedback facts stay in `data/manual_feedback_packet.py`; static A4 patch-template facts stay in `data/analog_four_patch_templates.py`; static A4 patch-corpus facts stay in `data/analog_four_patch_corpus.py`; static A4 learning facts stay in `data/analog_four_learning.py`; static A4 SysEx calibration facts stay in `data/analog_four_sysex_calibration.py`; static GUI contract facts stay in `data/live_gui_contracts.py`; static controller-brain profiles stay in `data/controller_mapping_profiles.py`; static controller-brain rehearsal scenarios stay in `data/controller_rehearsal_scenarios.py`; repeated report CLI helpers stay in `reports/live_gui_common.py`. |
 | `inspection.py`       | Consolidated passive command-metadata inspection + preview + audit.             |
 | `cockpit/export/analog_four_kit.py` | Hardware-validation-gated A4 `.syx` file adapter; reuses canonical `atomic_write` and never sends MIDI. |
+| `cockpit/export/analog_four_cli.py` | Registered local-file command for one or four validated Filter2 Resonance mutations; no MIDI I/O. |
 
 ### Frozen reference (NOT in the layered graph)
 
@@ -336,12 +339,16 @@ The Protocol's four legacy convenience methods (`decode_snapshot`,
 backward compatibility — they delegate to the strategies.
 
 The A4 saved-kit renderer is strategy-adjacent, not a fourth `Device`
-capability. `analog_four_saved_kit_writer.py` consumes promoted calibration
-facts and shared `snapshot.envelope` helpers to validate and rebuild one frame.
+capability. `analog_four_saved_kit_codec.py` is the shared decoder/writer owner
+for frame validation, packing, checksum, and trailer reconstruction;
+`analog_four_saved_kit_writer.py` consumes that codec plus promoted calibration
+facts to mutate and rebuild one frame.
 The pure renderer may exercise candidate offsets in tests, but the
 operator-facing `cockpit.export.analog_four_kit` adapter accepts only fields
 marked `hardware-write-validated`. It writes a local file through the canonical
-atomic writer and never opens a MIDI port.
+atomic writer and never opens a MIDI port. The registered
+`analog-four-saved-kit-export` command makes that guarded file path reachable
+without adding hardware I/O.
 
 **To add a device family:**
 
@@ -793,7 +800,7 @@ rytm_randomizer/cockpit/export/
     serialize.py           # Phase 1, existing — pack_profile_model / unpack_profile_model
     signing.py             # Phase 3, NEW — HMAC-SHA256 signing + signed envelope (MAGIC=b"RYMS")
     verifier.py            # Phase 3, NEW — never-raises VerificationResult over signed envelopes and bare blobs
-    writer.py              # Phase 3, NEW — atomic_write(path, blob): temp + fsync + os.replace, never partial
+    writer.py              # Phase 3, NEW — atomic_write(path, blob): temp + fsync + race-safe atomic publish
     cli.py                 # Phase 3, NEW — cockpit-export-profile-model CLI (pack -> sign -> write -> verify)
 rytm_randomizer/reports/
     cockpit_export_rehearsal.py  # Phase 3, NEW — passive pre-flight report mirroring PR #104's panel/binding/check shape
@@ -802,7 +809,7 @@ rytm_randomizer/reports/
 The new code lives entirely under the existing `cockpit/export/` and
 `reports/` subpackages — no new top-level module (Gate 9). The pipeline
 is pure stdlib (`hmac`, `hashlib`, `zlib`, `secrets`, `os.replace`,
-`tempfile.NamedTemporaryFile`) plus the already-shipped MessagePack
+`os.rename`, `os.link`, `tempfile.mkstemp`) plus the already-shipped MessagePack
 dependency; no new third-party package and no new toolchain. Phase 3
 introduces no `mido` imports, no socket / network calls, no subprocess /
 threading / asyncio — the entire pipeline runs in-process on the
@@ -823,7 +830,10 @@ operator-selected source kit, delegates all frame validation and mutation to
 `devices/strategies/analog_four_saved_kit_writer.py`, then calls the same
 `writer.atomic_write(overwrite=False)` primitive. Its output is a 2,770-byte
 `.syx` file, not a `.rymp` model. Only Filter2 Resonance is currently admitted
-because it is the only field with operator-confirmed write evidence.
+because it is the only field with operator-confirmed write evidence. The
+adapter records shared export RED metrics and structured logs with categorical
+`validation`, `source_read_failed`, `overwrite_refused`, and `write_failed`
+failures.
 
 ---
 
@@ -946,6 +956,14 @@ from `writer.py` and fails loudly at module load if the import is broken.
 now distinguishes `PermissionError` (loud) from genuine "this one file is malformed"
 (warn, skip) so a permission-denied profile directory no longer presents identically
 to corrupted JSON.
+
+Publication is race-safe: overwrite mode uses same-filesystem `os.replace`;
+no-overwrite mode uses `os.rename` on Windows (including removable filesystems
+that do not support hard links) and create-if-absent `os.link` on POSIX. The
+temporary file data is fully written and `fsync`ed before publication. Parent
+directory metadata is not fsynced, so persistence of a newly published name
+across sudden power loss remains filesystem-dependent; process-visible output
+is still atomic and never partial.
 
 The matching arch tests `tests/architecture/test_abstraction_reuse.py` and
 `tests/architecture/test_no_silent_overwrite_writes.py` enforce that no second

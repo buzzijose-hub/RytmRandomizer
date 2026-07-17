@@ -167,7 +167,7 @@ What it does:
 
 1. **`pack`** the `ProfileModel` to MessagePack with a 4-byte magic (`RYMP`), versioned header, payload length, CRC32.
 2. **`sign`** with HMAC-SHA256 (stdlib only — no crypto library dep). Wrap in a `RYMS` envelope carrying the algorithm, key id, and 32-byte signature.
-3. **`write`** atomically: temp-file in the same directory → `fsync` → `os.replace`. **No partial files ever land on disk** — works identically on POSIX and Windows.
+3. **`write`** atomically: sibling temp file → complete write + file `fsync` → platform-native atomic publication (`os.replace` for overwrite, Windows `os.rename` / POSIX `os.link` for no-overwrite). **No partial files ever land on disk.** Parent-directory persistence after sudden power loss remains filesystem-dependent.
 4. **`verify`** the bytes that were just written. The verifier never raises; it returns a `VerificationResult` with `ok` + a `reason` from a finite set.
 
 The output is a ~8 KB file you can email, hash-check, version-pin in a sample-pack zip, and eventually load onto dedicated hardware.
@@ -477,7 +477,7 @@ target.
    shipped (PR #106)                      Phase 1 serializer: HMAC-SHA256
                                           signing (stdlib only, timing-safe),
                                           atomic file writes (sibling temp +
-                                          fsync + os.replace), never-raises
+                                          file fsync + platform-native publish), never-raises
                                           integrity verifier, CLI driver, and
                                           passive pre-flight rehearsal report.
                                           7 WSes, 1 bundled PR, Phase-4-ready

@@ -5,18 +5,17 @@ the single point of truth for *how* a finished export blob reaches disk. The
 three guarantees the writer must satisfy:
 
 1. **Never leave a half-written file on error.** If the bytes write, fsync,
-   or :func:`os.replace` fails for any reason, callers must observe the
+   or atomic publication fails for any reason, callers must observe the
    destination path in its prior state (either absent or with the prior
    bytes intact).
-2. **Survive a crash mid-write.** The bytes are durably flushed to the OS
-   (:func:`os.fsync`) *before* the atomic rename, so a power loss between
-   write and rename leaves only an orphaned temp file — not a corrupted
-   destination.
-3. **Behave identically on POSIX and Windows.** The implementation relies
-   on :func:`os.replace`, which is portable atomic replace on both
-   families (NTFS provides atomic replace at the filesystem level on
-   Windows, satisfying the same observable contract as ``rename(2)`` on
-   POSIX).
+2. **Never publish unflushed file data.** The bytes are flushed with
+   :func:`os.fsync` before atomic publication. Directory metadata is not
+   fsynced, so persistence of a newly published name across sudden power
+   loss remains filesystem-dependent.
+3. **Behave identically on POSIX and Windows.** Overwriting uses
+   :func:`os.replace`. No-overwrite publication uses :func:`os.rename`
+   on Windows and :func:`os.link` on POSIX so destination creation stays
+   race-safe without requiring hard-link support on Windows media.
 
 Public surface (re-exported from :mod:`rytm_randomizer.cockpit.export`):
 
@@ -158,16 +157,18 @@ def atomic_write(path: Path, data: bytes, *, overwrite: bool = False) -> WriteRe
     2. If ``overwrite`` is :data:`False` and the destination already
        exists, raise :class:`FileExistsError` *before* writing the temp
        file (we know we'd fail at the rename step anyway).
-    3. Create a sibling temp file in the destination directory
-       (:class:`tempfile.NamedTemporaryFile` with ``delete=False``).
+    3. Create a sibling temp file in the destination directory with
+       :func:`tempfile.mkstemp`.
        The temp file must live in the same directory as the destination
        so :func:`os.replace` stays atomic — atomic rename only holds
        within a single filesystem.
     4. Write ``data`` to the temp file, :func:`os.fsync` the descriptor
        *before* close (durability — survives a crash between write and
        rename), then close.
-    5. :func:`os.replace` the temp onto the destination. ``os.replace``
-       is portable atomic replace on both POSIX and Windows.
+    5. Publish the temp atomically. With ``overwrite=True``, use
+       :func:`os.replace`. Otherwise, use Windows :func:`os.rename` or
+       POSIX :func:`os.link`; both fail if another process created the
+       destination after the initial existence check.
     6. On any exception during steps 3-5, the temp file is best-effort
        unlinked (cleanup failures are swallowed silently — losing a
        single orphan ``.tmp`` is dramatically better than masking the
@@ -190,8 +191,8 @@ def atomic_write(path: Path, data: bytes, *, overwrite: bool = False) -> WriteRe
 
     Raises:
         FileExistsError: ``overwrite`` is :data:`False` and the
-            destination already exists. No temp file is created in this
-            path — we fail before writing anything.
+            destination exists either before writing starts or when the
+            completed temp file is published.
         WriteError: Any underlying :class:`OSError` from write / fsync /
             replace. The temp file is best-effort cleaned up. The
             original :class:`OSError` is attached via ``__cause__``.
@@ -215,12 +216,28 @@ def atomic_write(path: Path, data: bytes, *, overwrite: bool = False) -> WriteRe
     )
     try:
         try:
-            os.write(tmp_fd, data)
+            remaining = memoryview(data)
+            while remaining:
+                bytes_written = os.write(tmp_fd, remaining)
+                if bytes_written <= 0:
+                    raise WriteError("write made no progress")
+                remaining = remaining[bytes_written:]
             os.fsync(tmp_fd)
         finally:
             os.close(tmp_fd)
 
-        os.replace(tmp_name, str(path))
+        if overwrite:
+            os.replace(tmp_name, str(path))
+        else:
+            _publish_no_overwrite(tmp_name, path)
+    except FileExistsError:
+        with contextlib.suppress(OSError):
+            os.unlink(tmp_name)
+        raise
+    except WriteError:
+        with contextlib.suppress(OSError):
+            os.unlink(tmp_name)
+        raise
     except OSError as exc:
         # Best-effort cleanup of the orphan temp file. A failure here
         # (e.g. the temp was already gone, permissions revoked, etc.)
@@ -234,6 +251,27 @@ def atomic_write(path: Path, data: bytes, *, overwrite: bool = False) -> WriteRe
         bytes_written=len(data),
         overwrote_existing=overwrote_existing,
     )
+
+
+def _publish_no_overwrite(tmp_name: str, path: Path) -> None:
+    """Publish ``tmp_name`` without replacing a concurrent destination."""
+
+    if sys.platform == "win32":
+        os.rename(tmp_name, path)
+        return
+    os.link(tmp_name, path)
+    try:
+        os.unlink(tmp_name)
+    except OSError as exc:
+        _logger.warning(
+            "Atomic write temp cleanup failed after publication",
+            extra={
+                "operation": "atomic_write_cleanup",
+                "temp_path": tmp_name,
+                "output_path": str(path),
+                "error_type": type(exc).__name__,
+            },
+        )
 
 
 # ---------------------------------------------------------------------------

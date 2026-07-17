@@ -240,6 +240,81 @@ def test_atomic_write_write_failure_raises_write_error_and_cleans_temp(
     _ = real_write
 
 
+def test_atomic_write_retries_short_writes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    dest = tmp_path / "out.bin"
+    real_write = os.write
+
+    def short_write(fd: int, data: bytes | memoryview) -> int:
+        chunk_size = min(2, len(data))
+        return real_write(fd, data[:chunk_size])
+
+    monkeypatch.setattr("os.write", short_write)
+
+    result = atomic_write(dest, b"abcdef")
+
+    assert result.bytes_written == 6
+    assert dest.read_bytes() == b"abcdef"
+
+
+def test_atomic_write_zero_progress_raises_write_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    dest = tmp_path / "out.bin"
+    monkeypatch.setattr("os.write", lambda _fd, _data: 0)
+
+    with pytest.raises(WriteError, match="write made no progress"):
+        atomic_write(dest, b"hello")
+
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_atomic_write_no_overwrite_closes_publish_race(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    dest = tmp_path / "out.bin"
+    monkeypatch.setattr("sys.platform", "linux")
+
+    def racing_link(_src: str, dst: str | Path) -> None:
+        Path(dst).write_bytes(b"racer")
+        raise FileExistsError(dst)
+
+    monkeypatch.setattr("os.link", racing_link)
+
+    with pytest.raises(FileExistsError):
+        atomic_write(dest, b"ours")
+
+    assert dest.read_bytes() == b"racer"
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["out.bin"]
+
+
+def test_atomic_write_no_overwrite_cleanup_failure_keeps_published_file(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import rytm_randomizer.cockpit.export.writer as writer_module
+
+    dest = tmp_path / "out.bin"
+    monkeypatch.setattr("sys.platform", "linux")
+    warnings: list[tuple[str, dict[str, object]]] = []
+
+    def boom_unlink(_path: str, *args: object, **kwargs: object) -> None:
+        raise OSError("cleanup failed")
+
+    def capture_warning(message: str, *, extra: dict[str, object]) -> None:
+        warnings.append((message, extra))
+
+    monkeypatch.setattr("os.unlink", boom_unlink)
+    monkeypatch.setattr(writer_module._logger, "warning", capture_warning)
+
+    result = atomic_write(dest, b"published")
+
+    assert result.path == dest.resolve()
+    assert dest.read_bytes() == b"published"
+    assert len(list(tmp_path.iterdir())) == 2
+    assert warnings[0][0] == "Atomic write temp cleanup failed after publication"
+    assert warnings[0][1]["operation"] == "atomic_write_cleanup"
+
+
 def test_atomic_write_replace_failure_raises_write_error_and_cleans_temp(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -251,7 +326,7 @@ def test_atomic_write_replace_failure_raises_write_error_and_cleans_temp(
     monkeypatch.setattr("os.replace", boom_replace)
 
     with pytest.raises(WriteError) as excinfo:
-        atomic_write(dest, b"hello")
+        atomic_write(dest, b"hello", overwrite=True)
 
     # Final file was never created.
     assert not dest.exists()
@@ -279,7 +354,7 @@ def test_atomic_write_cleanup_failure_does_not_mask_write_error(
     monkeypatch.setattr("os.unlink", boom_unlink)
 
     with pytest.raises(WriteError) as excinfo:
-        atomic_write(dest, b"hello")
+        atomic_write(dest, b"hello", overwrite=True)
 
     # The first OSError (from replace) is what we wrap; the unlink failure
     # is swallowed silently.

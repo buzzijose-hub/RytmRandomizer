@@ -64,6 +64,26 @@ def test_render_saved_kit_synthesizes_novel_filter2_resonance_value() -> None:
     ] == [145]
 
 
+def test_render_saved_kit_matches_hardware_reference_bytes_exactly() -> None:
+    from pathlib import Path
+
+    from rytm_randomizer.devices.strategies.analog_four_saved_kit_writer import (
+        render_analog_four_saved_kit,
+    )
+
+    fixture_dir = Path(__file__).parent / "fixtures" / "analog_four_saved_kit"
+    source = (fixture_dir / "filter2_res_000_source.syx").read_bytes()
+    expected = (fixture_dir / "filter2_res_127_expected.syx").read_bytes()
+
+    result = render_analog_four_saved_kit(
+        source,
+        (_mutation(screen_value="127"),),
+    )
+
+    assert result.framed_sysex == expected
+    assert result.sha256 == "5ebb386677aff324ef96d631e7888a9681caefbd976bdc2eac69b52a0fb0e26b"
+
+
 def test_render_saved_kit_applies_distinct_values_to_all_four_tracks() -> None:
     from rytm_randomizer.devices.strategies.analog_four_saved_kit_writer import (
         render_analog_four_saved_kit,
@@ -267,11 +287,12 @@ def test_render_saved_kit_rejects_unpromoted_calibration(
 def test_render_saved_kit_rejects_repacked_length_change(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    import rytm_randomizer.devices.strategies.analog_four_saved_kit_codec as codec_module
     import rytm_randomizer.devices.strategies.analog_four_saved_kit_writer as writer_module
 
-    pack = writer_module.pack_elektron_7bit
+    pack = codec_module.pack_elektron_7bit
     monkeypatch.setattr(
-        writer_module,
+        codec_module,
         "pack_elektron_7bit",
         lambda unpacked: pack(unpacked) + b"\x00",
     )

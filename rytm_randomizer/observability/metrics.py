@@ -175,11 +175,11 @@ class MidiMetrics:
     ) -> None:
         """Record one export pipeline run for RED metrics.
 
-        Called from ``cockpit/export/cli.py`` after the export pipeline
-        completes (success or failure). ``duration_ms`` is wall-clock
-        pipeline runtime; ``error_code`` is a categorical label such as
-        ``"profile_load"`` / ``"pack_failed"`` / ``"write_failed"`` on
-        failure, ``None`` on success.
+        Called from the profile-model CLI and Analog Four saved-kit exporter
+        after an export pipeline completes. ``duration_ms`` is wall-clock
+        runtime; ``error_code`` is a stable category such as ``"profile_load"``,
+        ``"source_read_failed"``, ``"overwrite_refused"``, or
+        ``"write_failed"`` on failure and ``None`` on success.
         """
 
         self.export_count += 1

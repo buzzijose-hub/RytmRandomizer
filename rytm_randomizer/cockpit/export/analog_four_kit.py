@@ -2,21 +2,26 @@
 
 from __future__ import annotations
 
+import time
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from rytm_randomizer.data.analog_four_sysex_calibration import (
+from ...data.analog_four_sysex_calibration import (
     A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED,
     analog_four_sysex_calibration_for,
 )
-from rytm_randomizer.devices.strategies.analog_four_saved_kit_writer import (
+from ...devices.strategies.analog_four_saved_kit_writer import (
     AnalogFourSavedKitMutation,
     AnalogFourSavedKitRenderResult,
+    is_analog_four_saved_kit_mutation,
     render_analog_four_saved_kit,
 )
-
+from ...observability.logging import get_logger
+from ...observability.metrics import get_metrics
 from .writer import WriteResult, atomic_write
+
+_logger = get_logger(__name__)
 
 
 @dataclass(frozen=True)
@@ -25,6 +30,18 @@ class AnalogFourSavedKitExportResult:
 
     render: AnalogFourSavedKitRenderResult
     write: WriteResult
+
+
+def _a4_export_error_code(
+    exc: KeyError | ValueError | TypeError | OSError,
+    *,
+    source_read_completed: bool,
+) -> str:
+    if isinstance(exc, FileExistsError):
+        return "overwrite_refused"
+    if isinstance(exc, OSError):
+        return "write_failed" if source_read_completed else "source_read_failed"
+    return "validation"
 
 
 def export_analog_four_saved_kit(
@@ -41,18 +58,53 @@ def export_analog_four_saved_kit(
     sends to a MIDI port.
     """
 
-    for mutation in mutations:
-        if not isinstance(mutation, AnalogFourSavedKitMutation):
-            raise TypeError("mutations must contain AnalogFourSavedKitMutation records")
-        calibration = analog_four_sysex_calibration_for(mutation.parameter)
-        if calibration.status != A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED:
-            raise ValueError(
-                f"{mutation.parameter} is not hardware-write-validated for file export"
-            )
+    metrics = get_metrics()
+    started_at = time.perf_counter()
+    source_read_completed = False
+    try:
+        for mutation in mutations:
+            if not is_analog_four_saved_kit_mutation(mutation):
+                raise TypeError("mutations must contain AnalogFourSavedKitMutation records")
+            calibration = analog_four_sysex_calibration_for(mutation.parameter)
+            if calibration.status != A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED:
+                raise ValueError(
+                    f"{mutation.parameter} is not hardware-write-validated for file export"
+                )
 
-    source_sysex = source_path.read_bytes()
-    render = render_analog_four_saved_kit(source_sysex, mutations)
-    write = atomic_write(output_path, render.framed_sysex, overwrite=overwrite)
+        source_sysex = source_path.read_bytes()
+        source_read_completed = True
+        render = render_analog_four_saved_kit(source_sysex, mutations)
+        write = atomic_write(output_path, render.framed_sysex, overwrite=overwrite)
+    except (KeyError, ValueError, TypeError, OSError) as exc:
+        error_code = _a4_export_error_code(
+            exc,
+            source_read_completed=source_read_completed,
+        )
+        _logger.warning(
+            "Analog Four saved-kit export failed",
+            extra={
+                "operation": "a4_saved_kit_export",
+                "error_code": error_code,
+                "source_path": str(source_path),
+                "output_path": str(output_path),
+            },
+        )
+        metrics.record_export(
+            (time.perf_counter() - started_at) * 1000.0,
+            error_code=error_code,
+        )
+        raise
+
+    metrics.record_export((time.perf_counter() - started_at) * 1000.0)
+    _logger.info(
+        "Analog Four saved-kit export completed",
+        extra={
+            "operation": "a4_saved_kit_export",
+            "output_path": str(write.path),
+            "sha256": render.sha256,
+            "mutation_count": len(mutations),
+        },
+    )
     return AnalogFourSavedKitExportResult(render=render, write=write)
 
 

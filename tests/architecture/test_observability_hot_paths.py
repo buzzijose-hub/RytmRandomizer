@@ -64,6 +64,7 @@ _HOT_PATH_MODULES: Final[frozenset[str]] = frozenset(
         "rytm_randomizer/cockpit/ws/wizard_handlers.py",
         "rytm_randomizer/cockpit/ws/server.py",
         "rytm_randomizer/cockpit/export/cli.py",
+        "rytm_randomizer/cockpit/export/analog_four_kit.py",
         "rytm_randomizer/cockpit/export/writer.py",
         "rytm_randomizer/cockpit/export/signing.py",
         "rytm_randomizer/cockpit/export/verifier.py",

@@ -6,11 +6,14 @@ Last updated: 2026-07-16. This file is a hand-authored snapshot and is meant to 
 
 - 2026-07-16: Analog Four MKII saved-kit writing reached its first
   hardware-validated parameter. The shared Elektron envelope now packs as well
-  as unpacks 7-bit payloads; a pure A4 renderer validates one saved-kit frame,
-  applies calibrated low-seven-bit mutations while preserving neighboring high
-  bits, and rebuilds the checksum and length trailer. The guarded file export
-  reuses the canonical atomic writer, refuses overwrite by default, and permits
-  only hardware-write-validated fields. Jose confirmed generated Filter2
+  as unpacks 7-bit payloads; a shared saved-kit codec serves decoder and
+  renderer, while the renderer applies calibrated low-seven-bit mutations and
+  rebuilds the checksum/length trailer. The guarded file export reuses the
+  canonical race-safe atomic writer, refuses overwrite by default, and permits
+  only hardware-write-validated fields. The registered
+  `analog-four-saved-kit-export` command makes one- or four-track local-file
+  generation operator-reachable without opening MIDI. Exact source/expected
+  hardware frames are binary regression fixtures. Jose confirmed generated Filter2
   Resonance value `127`, novel value `64`, and one four-track kit carrying
   T1/T2/T3/T4 values `16`/`48`/`80`/`112`; every value arrived correctly.
   Filter1 Frequency, Filter1 Resonance, and Filter2 Frequency remain

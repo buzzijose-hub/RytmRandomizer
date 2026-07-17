@@ -1,6 +1,6 @@
 ---
 name: elektron-sysex-envelope
-description: Elektron device SysEx envelope reference — 3-byte manufacturer ID `00 20 3C`, 7-bit-encoded payload (8 source bytes packed as 1 high-bit byte + 7 low-7-bit bytes), kit-record layout shared across Analog Rytm / Analog Four / Digitakt / Digitone.
+description: Elektron SysEx envelope reference — manufacturer ID `00 20 3C`, canonical bidirectional 7-bit packing, device-specific frame layouts, and the hardware-validated Analog Four MKII saved-kit checksum/length trailer.
 user-invocable: false
 origin: auto-extracted-2026-05-18
 ---
@@ -35,7 +35,9 @@ MIDI SysEx payload bytes must all have their high bit clear (top bit reserved as
 2. Packing those 7 stripped high-bits into a single leading byte (bit 0 = first source byte's MSB, bit 1 = second, ...).
 3. The 7 low-7-bit bodies follow.
 
-Result: every 8 SysEx bytes encode 7 source bytes. Inverse: `unpack_elektron_7bit(sysex: bytes) -> bytes` (in `snapshot/envelope.py`).
+Result: every 8 SysEx bytes encode 7 source bytes. The canonical inverses are
+`pack_elektron_7bit(unpacked: bytes) -> bytes` and
+`unpack_elektron_7bit(packed: bytes) -> bytes` in `snapshot/envelope.py`.
 
 ```python
 # Reference unpack (Python). The canonical implementation lives in
@@ -72,7 +74,7 @@ A kit dump's payload (after 7-bit unpacking) typically starts with:
 | Device | Product ID byte |
 |---|---|
 | Analog Four MKI | `0x07` |
-| Analog Four MKII | `0x0A` |
+| Analog Four MKII | `0x0A` in the generic product-ID catalog; do not apply this blindly to saved-kit frames |
 | Analog Rytm MKI | `0x08` |
 | Analog Rytm MKII | `0x0C` |
 | Digitakt | `0x10` |
@@ -81,13 +83,43 @@ A kit dump's payload (after 7-bit unpacking) typically starts with:
 
 Add new devices by registering with `rytm_randomizer.devices.registry.register(...)` and providing the product-ID-matched `decode_snapshot` implementation.
 
+## Hardware-validated Analog Four MKII saved-kit frame
+
+The observed A4 MKII saved-kit export is a device-specific exception to the
+generic field sketch above:
+
+```
+F0 00 20 3C 06 <2760 packed bytes> <checksum_hi> <checksum_lo> <length_hi> <length_lo> F7
+```
+
+- `0x06` is the observed saved-kit family prefix after the manufacturer ID.
+  Treat it as a saved-kit wire fact, not as a replacement for every A4 product
+  ID in other message families.
+- The unpacked body is 2,415 bytes and starts with saved-kit object byte `0x52`.
+- The packed body is 2,760 bytes.
+- Checksum is `sum(packed[8:]) & 0x3FFF`, encoded high-seven bits then
+  low-seven bits. The first eight packed bytes are excluded.
+- The final two trailer bytes encode packed length `2760` as a 14-bit value.
+- The complete framed file is 2,770 bytes.
+- Canonical frame/layout constants live in
+  `data/analog_four_saved_kit_layout.py`; shared encode/decode validation lives
+  in `devices/strategies/analog_four_saved_kit_codec.py`.
+
+Do not infer a writable parameter from one changed capture. Promote a field
+only after three passes: an exact reference-value reconstruction, a novel
+uncaptured value, and independent cross-track values proving the track stride.
+Store disposable sanitized source/expected frames as executable binary fixtures
+so byte identity is tested rather than described only in prose.
+
 ## When to Use
 
 Trigger conditions:
 
 - Adding a new Elektron device implementation under `rytm_randomizer/devices/`.
 - Debugging a SysEx capture where bytes look like ASCII text but are off by one bit position (classic 7-bit-packing oversight).
-- Reviewing PR #21 (or any successor) that ships a hand-rolled `_unpack_elektron_7bit` — point them at `snapshot.envelope.unpack_elektron_7bit` instead.
+- Reviewing any change that hand-rolls pack/unpack helpers — point it at the
+  canonical `snapshot.envelope` pair instead.
+- Promoting an A4 saved-kit field from captured offsets to writable output.
 
 DO NOT use this pattern when:
 
@@ -97,6 +129,9 @@ DO NOT use this pattern when:
 ## Cross-references
 
 - `rytm_randomizer/snapshot/envelope.py` — the canonical implementation. Always import from there.
+- `rytm_randomizer/data/analog_four_saved_kit_layout.py` — canonical observed A4 saved-kit frame facts.
+- `rytm_randomizer/devices/strategies/analog_four_saved_kit_codec.py` — shared A4 saved-kit validator/encoder used by decoder and writer.
+- `docs/hardware-validation/2026-07-16-a4-saved-kit-roundtrip-results.md` — reference, novel-value, and four-track evidence pattern.
 - `rytm_randomizer/devices/base.py` — the `Device` Protocol every Elektron device implements.
 - PR #21 (codex's Analog Four work) — first downstream consumer.
 - External: `rytm-rs` and `libanalogrytm` — reference C/Rust implementations of the same format.

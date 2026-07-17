@@ -144,17 +144,11 @@ def _no_sleep(_seconds: float) -> None:
 
 
 def pack_elektron_7bit(unpacked: bytes) -> bytes:
-    """Pack bytes into Elektron's 7-bit SysEx payload encoding for tests."""
+    """Delegate shared fixtures to the production Elektron packer."""
 
-    out = bytearray()
-    for start in range(0, len(unpacked), 7):
-        group = unpacked[start : start + 7]
-        header = 0
-        for index, byte in enumerate(group):
-            header |= ((byte >> 7) & 0x01) << index
-        out.append(header)
-        out.extend(byte & 0x7F for byte in group)
-    return bytes(out)
+    from rytm_randomizer.snapshot import pack_elektron_7bit as pack
+
+    return pack(unpacked)
 
 
 def analog_four_saved_kit_frame(
