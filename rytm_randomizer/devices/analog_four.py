@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
-from typing import Final
+from collections.abc import Iterable, Sequence
+from typing import Final, Protocol, runtime_checkable
 
 from ..mock_midi import MidiMessage
 from ..snapshot.envelope import ELEKTRON_MFR_ID
@@ -16,8 +16,27 @@ from .strategies import (
     AnalogFourMutationPlanner,
     AnalogFourSnapshotDecoder,
 )
+from .strategies.analog_four_saved_kit_writer import (
+    AnalogFourSavedKitMutation,
+    AnalogFourSavedKitRenderResult,
+    is_analog_four_saved_kit_mutation,
+    render_analog_four_saved_kit,
+)
 
 _REPORT_HEADER: Final[str] = "RytmRandomizer Analog Four MK2 Guarded Send"
+
+
+@runtime_checkable
+class AnalogFourSavedKitCapability(Protocol):
+    """Optional registered-device capability for complete saved-kit frames."""
+
+    def is_saved_kit_mutation(self, mutation: object) -> bool: ...
+
+    def render_saved_kit(
+        self,
+        raw: bytes,
+        mutations: Sequence[AnalogFourSavedKitMutation],
+    ) -> AnalogFourSavedKitRenderResult: ...
 
 
 class AnalogFourDevice:
@@ -71,6 +90,20 @@ class AnalogFourDevice:
             return ()
         return tuple(self.message_renderer.to_cc_triple(event, plan) for event in plan.events)
 
+    def is_saved_kit_mutation(self, mutation: object) -> bool:
+        """Return whether ``mutation`` is accepted by the saved-kit renderer."""
+
+        return is_analog_four_saved_kit_mutation(mutation)
+
+    def render_saved_kit(
+        self,
+        raw: bytes,
+        mutations: Sequence[AnalogFourSavedKitMutation],
+    ) -> AnalogFourSavedKitRenderResult:
+        """Render a complete A4 saved-kit frame through the registered device."""
+
+        return render_analog_four_saved_kit(raw, mutations)
+
 
 registry.register_device(AnalogFourDevice())
 
@@ -85,3 +118,21 @@ def _assert_protocol_conformance() -> None:
 
 
 _assert_protocol_conformance()
+
+
+def get_analog_four_saved_kit_capability() -> AnalogFourSavedKitCapability:
+    """Resolve the specialized saved-kit renderer from the device registry."""
+
+    device = registry.get_device("analog_four_mk2")
+    if not isinstance(device, AnalogFourSavedKitCapability):
+        raise TypeError("registered Analog Four device lacks saved-kit rendering capability")
+    return device
+
+
+__all__ = [
+    "AnalogFourDevice",
+    "AnalogFourSavedKitCapability",
+    "AnalogFourSavedKitMutation",
+    "AnalogFourSavedKitRenderResult",
+    "get_analog_four_saved_kit_capability",
+]

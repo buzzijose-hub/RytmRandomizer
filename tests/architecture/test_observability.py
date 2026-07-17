@@ -345,6 +345,8 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         "AnalogFourPatchBatchStageError",
         "AnalogFourPatchBatchPublicationError",
         "AnalogFourPatchBatchLockedError",
+        "AnalogFourPatchRenderRankArtifactError",
+        "AnalogFourPatchRenderRankReferenceError",
         # Cockpit profile registry (PR 7 — M7 + M6): atomic save +
         # classified load errors. ``ProfileAlreadyExistsError``
         # multi-inherits :class:`DataError` + :class:`FileExistsError`

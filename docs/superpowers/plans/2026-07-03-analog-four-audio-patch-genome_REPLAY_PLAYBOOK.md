@@ -36,14 +36,18 @@ python -m rytm_randomizer.app --dry-run --a4-patch-send-plan `
   --batch-manifest C:\path\to\batch\a4-t1-audio-patch-batch.json `
   --candidate 1
 
+# Pending supervised physical validation only, after the dry-run and
+# single-parameter track/channel check in MANUAL_HARDWARE_VALIDATION.md:
 python -m rytm_randomizer.app --arm --a4-patch-send-plan `
   --batch-manifest C:\path\to\batch\a4-t1-audio-patch-batch.json `
   --candidate 1 --confirm-a4-patch-send-plan
 ```
 
 Candidate 1 currently contains 39 live-routable rows and 59 transport
-messages. The manifest reader verifies the sidecar and nested plan before the
-armed path opens a port.
+messages. The manifest reader verifies hashes, DNA/event identity, transport
+status, and canonical A4 addresses before the armed path opens a port. The
+complete full-patch hardware rehearsal remains pending and must use a
+disposable project with operator-present recovery.
 
 ## Rank Hardware Renders
 
@@ -63,7 +67,7 @@ recordings are available.
 
 1. Where does A4 inference live? `rytm_randomizer/style_analysis/analog_four_patch_inference.py`.
 2. Where are writable hardware facts? `rytm_randomizer/data/analog_four_sysex_calibration.py`.
-3. What writes a complete saved kit? The pure renderer under `devices/strategies/`, guarded by `cockpit/export/analog_four_kit.py`.
+3. What writes a complete saved kit? The pure renderer under `devices/strategies/`, exposed through the registered A4 saved-kit capability and guarded by `cockpit/export/analog_four_kit.py`.
 4. How is a batch committed? Immutable generation artifacts first, stable manifest last.
 5. What may currently reach A4 saved-kit SysEx? Filter2 Resonance only; every other DNA row is deferred from SysEx but live-routable through the verified sidecar.
 6. How is the auditioned candidate selected for live send? `--batch-manifest` plus `--candidate`; nested hashes and event routing are verified before output opens.

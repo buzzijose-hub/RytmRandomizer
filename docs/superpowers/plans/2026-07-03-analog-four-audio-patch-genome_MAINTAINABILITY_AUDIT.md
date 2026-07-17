@@ -2,8 +2,9 @@
 
 > Status: in-flight
 
-Date: 2026-07-03
-Scope: pre-implementation baseline for the audio-to-A4 genome, saved-kit writer, and passive batch exporter.
+Historical baseline date: 2026-07-03
+Recorded: 2026-07-16
+Scope: baseline reconstructed from the 2026-07-03 repository state after implementation had already begun, then used for the final corrective review of the audio-to-A4 genome, saved-kit writer, and passive batch exporter. This timing deviation is explicit; the document is not represented as a contemporaneous pre-implementation artifact.
 
 Scores use 1 (fragile) through 5 (clear and easy to extend).
 
@@ -20,4 +21,4 @@ Scores use 1 (fragile) through 5 (clear and easy to extend).
 | 9. Versioning and release | 4 | Package and release process remain unchanged by a passive feature. | Avoid new version sources or dependency changes. |
 | 10. Future-proofing | 2 | Each newly discovered writable parameter could tempt a bespoke mutation path. | Use calibration data plus one generic renderer; keep unvalidated parameters in sidecars only. |
 
-Baseline average: 3.2/5. No implementation work may weaken an item; the post-plan report must record corrective work for any regression.
+Baseline average: 3.2/5. The post-plan report records both the first implementation result and the corrective post-push review.

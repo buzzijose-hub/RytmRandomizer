@@ -18,6 +18,7 @@ A4_SYSEX_CALIBRATION_STATUS_PENDING: Final[str] = "pending"
 
 A4_SYNTH_TRACK_MIN: Final[int] = 1
 A4_SYNTH_TRACK_MAX: Final[int] = 4
+A4_FILTER2_RESONANCE_PARAMETER: Final[str] = "Filter2 Resonance"
 
 
 @dataclass(frozen=True)
@@ -426,8 +427,8 @@ ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCal
                     "SysEx checksum trailer bytes must be ignored or recomputed by future writers.",
                 ),
             ),
-            "Filter2 Resonance": AnalogFourSysexFieldCalibration(
-                parameter="Filter2 Resonance",
+            A4_FILTER2_RESONANCE_PARAMETER: AnalogFourSysexFieldCalibration(
+                parameter=A4_FILTER2_RESONANCE_PARAMETER,
                 section="FILTERS",
                 status=A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED,
                 screen_min="0",
@@ -464,9 +465,9 @@ ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS: Final[
     Mapping[str, tuple[AnalogFourSysexWriteValidationEvidence, ...]]
 ] = MappingProxyType(
     {
-        "Filter2 Resonance": (
+        A4_FILTER2_RESONANCE_PARAMETER: (
             AnalogFourSysexWriteValidationEvidence(
-                parameter="Filter2 Resonance",
+                parameter=A4_FILTER2_RESONANCE_PARAMETER,
                 generated_file="A4_CODEX_TEST_T1_Filter2Res_127_GENERATED.syx",
                 generated_sha256=(
                     "5ebb386677aff324ef96d631e7888a9681caefbd976bdc2eac69b52a0fb0e26b"
@@ -480,7 +481,7 @@ ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS: Final[
                 ),
             ),
             AnalogFourSysexWriteValidationEvidence(
-                parameter="Filter2 Resonance",
+                parameter=A4_FILTER2_RESONANCE_PARAMETER,
                 generated_file="A4_CODEX_TEST_T1_Filter2Res_064_GENERATED.syx",
                 generated_sha256=(
                     "2fee1aa93c98e0221dbe7bac296c51268360c5c61e11c8eea77fd091cbbd94f7"
@@ -494,7 +495,7 @@ ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS: Final[
                 ),
             ),
             AnalogFourSysexWriteValidationEvidence(
-                parameter="Filter2 Resonance",
+                parameter=A4_FILTER2_RESONANCE_PARAMETER,
                 generated_file=("A4_CODEX_TEST_T1-4_Filter2Res_016_048_080_112_GENERATED.syx"),
                 generated_sha256=(
                     "0e88aa6f15fd49c36696d5b8e09bda18ce5eeb8562c1a44ce46683c6deef819b"
@@ -527,6 +528,7 @@ def analog_four_sysex_calibration_for(parameter: str) -> AnalogFourSysexFieldCal
 
 
 __all__ = [
+    "A4_FILTER2_RESONANCE_PARAMETER",
     "A4_SYSEX_CALIBRATION_STATUS_CANDIDATE_PROMOTED",
     "A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED",
     "A4_SYSEX_CALIBRATION_STATUS_PENDING",

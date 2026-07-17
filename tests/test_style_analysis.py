@@ -36,10 +36,12 @@ import pytest
 
 from rytm_randomizer.guardrails.schema import Confidence, SourceType
 from rytm_randomizer.style_analysis import (
+    AudioSynthesisFeatures,
     FeatureReport,
     StyleAnalysisDependencyError,
     analyze_audio,
     analyze_library,
+    audio_synthesis_features_to_dict,
     compute_feature_report_hash,
     extract_from_audio,
     extract_from_description,
@@ -47,6 +49,9 @@ from rytm_randomizer.style_analysis import (
 )
 from rytm_randomizer.style_analysis import extractor as extractor_module
 from rytm_randomizer.style_analysis import feature_report as feature_report_module
+from rytm_randomizer.style_analysis import (
+    feature_report_to_dict,
+)
 from rytm_randomizer.style_analysis import library as library_module
 
 # WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
@@ -73,6 +78,46 @@ def _build_report(*, content_hash: str = "") -> FeatureReport:
         content_hash=content_hash,
         derived_at="2026-05-15T12:00:00Z",
     )
+
+
+def _build_synthesis_features() -> AudioSynthesisFeatures:
+    return AudioSynthesisFeatures(
+        audio_sha256="a" * 64,
+        duration=0.2,
+        attack=0.1,
+        decay=0.3,
+        sustain=0.4,
+        tail=0.5,
+        brightness=0.6,
+        spectral_flatness=0.7,
+        noise=0.2,
+        low_end=0.8,
+        harmonicity=0.75,
+        transient=0.35,
+        modulation=0.45,
+    )
+
+
+def test_audio_synthesis_features_validate_and_serialize_generic_contract() -> None:
+    features = _build_synthesis_features()
+
+    assert audio_synthesis_features_to_dict(features) == dataclasses.asdict(features)
+    with pytest.raises(TypeError, match="AudioSynthesisFeatures"):
+        audio_synthesis_features_to_dict(object())  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="64-character hexadecimal"):
+        dataclasses.replace(features, audio_sha256="not-a-hash")
+    with pytest.raises(ValueError, match="64-character hexadecimal"):
+        dataclasses.replace(features, audio_sha256="g" * 64)
+    with pytest.raises(ValueError, match="normalized"):
+        dataclasses.replace(features, brightness=1.01)
+
+
+def test_feature_report_serializer_exposes_generic_payload() -> None:
+    report = _build_report(content_hash="a" * 64)
+
+    assert feature_report_to_dict(report)["content_hash"] == "a" * 64
+    with pytest.raises(TypeError, match="FeatureReport"):
+        feature_report_to_dict(object())  # type: ignore[arg-type]
 
 
 # ---------------------------------------------------------------------------
@@ -428,6 +473,18 @@ def test_analyze_audio_hashes_and_measures_one_immutable_snapshot(
     analysis = analyze_audio(audio_path)
 
     assert analysis.audio_sha256 == hashlib.sha256(original).hexdigest()
+    assert analysis.duration == 0.5
+    assert analysis.attack == 0.1
+    assert analysis.decay == 0.2
+    assert analysis.sustain == 0.3
+    assert analysis.tail == 0.4
+    assert analysis.brightness == 0.7
+    assert analysis.spectral_flatness == 0.2
+    assert analysis.noise == 0.2
+    assert analysis.low_end == 0.6
+    assert analysis.harmonicity == 0.8
+    assert analysis.transient == 0.4
+    assert analysis.modulation == 0.3
     assert len(observed_snapshots) == 1
     assert not observed_snapshots[0].exists()
 
@@ -587,8 +644,10 @@ def test_package_reexports_public_surface():
     expected = {
         "AnalogFourTrackBlueprint",
         "AudioFeatureAnalysis",
+        "AudioSynthesisFeatures",
         "Confidence",
         "FeatureReport",
+        "FeatureReportPayload",
         "ReferenceStyleBlueprint",
         "ReferenceTrait",
         "RytmPadBlueprint",
@@ -596,11 +655,13 @@ def test_package_reexports_public_surface():
         "StyleAnalysisDependencyError",
         "analyze_library",
         "analyze_audio",
+        "audio_synthesis_features_to_dict",
         "build_reference_style_blueprint",
         "compute_feature_report_hash",
         "extract_from_audio",
         "extract_from_description",
         "extract_from_partial",
+        "feature_report_to_dict",
         "reference_style_blueprint_to_dict",
     }
     assert expected == set(style_analysis.__all__)

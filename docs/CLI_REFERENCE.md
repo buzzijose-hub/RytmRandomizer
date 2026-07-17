@@ -200,6 +200,9 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `analog-four-patch-learning-report` | Passive Analog Four patch learning routes, capture matrix, and live-dial readiness |
 | `analog-four-patch-corpus-report` | Passive nearest-match ranking against starter or captured Analog Four patch/audio examples |
 | `analog-four-patch-send-plan-report` | Passive CC/NRPN live-dial send plan for a generated Analog Four patch |
+| `analog-four-saved-kit-export` | Guarded local-file saved-kit export; currently admits hardware-validated Filter2 Resonance only |
+| `analog-four-audio-patch-batch` | Real local audio analysis into one-to-four immutable `.syx` candidates, complete DNA sidecars, and a committed manifest |
+| `analog-four-audio-patch-rank` | Passive acoustic ranking of recorded A4 candidates against the exact batch reference |
 | `local-model-copilot-report` | Passive local model docs, mutation-intent, and Analog Four patch-review packets; optional local model subprocess call with `--ask-local-model` |
 | `analog-four-oxi-macro-report` | Passive in-memory Analog Four OXI-style four-track macro preview |
 | `analog-four-oxi-macro-readiness-report` | Passive Analog Four OXI macro readiness, soft-capture preflight, and operator-present validation commands |
@@ -218,6 +221,9 @@ python -m rytm_randomizer.cli analog-four-patch-learning-report --audio referenc
 python -m rytm_randomizer.cli analog-four-patch-corpus-report --description "hypnotic metallic HP2 stab" --track 1 --limit 4
 python -m rytm_randomizer.cli analog-four-patch-corpus-report --audio reference.wav --corpus-file a4-captures.json --json
 python -m rytm_randomizer.cli analog-four-patch-send-plan-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
+python -m rytm_randomizer.cli analog-four-saved-kit-export --source INIT.syx --output PATCH.syx --filter2-resonance 1:64
+python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit INIT.syx --output-dir batch --track 1 --candidates 4
+python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference reference.wav --manifest batch/a4-t1-audio-patch-batch.json --render 1=candidate-1.wav
 python -m rytm_randomizer.cli local-model-copilot-report --question "Which A4 rows are staged only?" --workflow all --description "hypnotic metallic HP2 stab" --json
 python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove --seed 23 --intensity 6 --events --limit 0
 python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4
@@ -269,6 +275,25 @@ path lives in `rytm_randomizer.app`: use `--dry-run --a4-patch-send-plan` to
 render the plan through the mock sender, or `--arm --a4-patch-send-plan
 --confirm-a4-patch-send-plan` to choose an A4 output port and send only the
 compiler-approved rows.
+
+`analog-four-saved-kit-export` is the narrow hardware-validated file writer.
+It reads a saved-kit dump, applies explicit `TRACK:VALUE` Filter2 Resonance
+assignments through the registered Analog Four device capability, and writes a
+new `.syx` through the canonical atomic writer. It never opens a MIDI port and
+refuses unsupported or unvalidated saved-kit parameters.
+
+`analog-four-audio-patch-batch` is the end-to-end offline candidate generator.
+It analyzes an immutable reference-audio snapshot, builds four audio-dependent
+A4 candidates, renders the currently validated SysEx subset, and commits each
+candidate's complete DNA plus CC/NRPN plan behind a hash-addressed sidecar and
+manifest. It performs local file I/O only and does not transfer a kit or send
+MIDI.
+
+`analog-four-audio-patch-rank` closes the passive studio feedback loop. It
+verifies every candidate sidecar and the original reference hash before
+comparing recorded A4 renders across 11 normalized synthesis measurements.
+The result is an explainable ranking packet; it is not promoted into training
+data automatically.
 
 `local-model-copilot-report` is the passive local-AI bridge. By default it
 does not run a model; it prints deterministic source packets and JSON schemas

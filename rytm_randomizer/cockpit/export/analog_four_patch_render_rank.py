@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, TypedDict
 
-from ...style_analysis.analog_four_patch_inference import (
-    AnalogFourPatchAudioFeatures,
-    analyze_analog_four_patch_audio,
+from ...style_analysis.analog_four_patch_inference import analyze_analog_four_patch_audio
+from ...style_analysis.analog_four_patch_render_rank import (
+    AnalogFourPatchRenderScore,
+    AnalogFourRenderCandidateFeatures,
+    AnalogFourRenderFeatureDelta,
+    rank_analog_four_render_features,
 )
 from .analog_four_patch_batch_reader import load_analog_four_patch_batch_candidate
 
@@ -23,45 +26,6 @@ ANALOG_FOUR_RENDER_RANK_SAFETY: Final[tuple[str, ...]] = (
     "no SysEx written",
     "no hardware mutation",
 )
-_FEATURE_WEIGHTS: Final[tuple[tuple[str, float], ...]] = (
-    ("attack", 0.12),
-    ("decay", 0.09),
-    ("sustain", 0.08),
-    ("tail", 0.08),
-    ("brightness", 0.15),
-    ("spectral_flatness", 0.08),
-    ("noise", 0.10),
-    ("low_end", 0.12),
-    ("harmonicity", 0.08),
-    ("transient", 0.06),
-    ("modulation", 0.04),
-)
-
-
-@dataclass(frozen=True)
-class AnalogFourRenderFeatureDelta:
-    """One normalized reference-to-render feature difference."""
-
-    feature: str
-    reference_value: float
-    render_value: float
-    absolute_delta: float
-    weight: float
-    weighted_delta: float
-
-
-@dataclass(frozen=True)
-class AnalogFourPatchRenderScore:
-    """Acoustic match score for one rendered A4 batch candidate."""
-
-    rank: int
-    candidate: int
-    label: str
-    render_path: Path
-    render_sha256: str
-    similarity: int
-    distance: float
-    feature_deltas: tuple[AnalogFourRenderFeatureDelta, ...]
 
 
 @dataclass(frozen=True)
@@ -113,6 +77,14 @@ class AnalogFourPatchRenderRankPayload(TypedDict):
     safety: list[str]
 
 
+class AnalogFourPatchRenderRankArtifactError(ValueError):
+    """A batch manifest or candidate sidecar failed integrity validation."""
+
+
+class AnalogFourPatchRenderRankReferenceError(ValueError):
+    """The supplied reference audio does not match the committed batch."""
+
+
 def rank_analog_four_patch_renders(
     *,
     reference_audio_path: Path,
@@ -140,43 +112,37 @@ def rank_analog_four_patch_renders(
         raise ValueError("render_paths must map candidate integers 1..4 to Path values")
 
     reference = analyze_analog_four_patch_audio(reference_audio_path)
-    scores: list[AnalogFourPatchRenderScore] = []
+    measured_candidates: list[AnalogFourRenderCandidateFeatures] = []
     generation_id = ""
     selected_track = 0
     for candidate, render_path in sorted(render_paths.items()):
-        selection = load_analog_four_patch_batch_candidate(
-            manifest_path,
-            candidate=candidate,
-        )
+        try:
+            selection = load_analog_four_patch_batch_candidate(
+                manifest_path,
+                candidate=candidate,
+            )
+        except (KeyError, OSError, TypeError, ValueError) as exc:
+            raise AnalogFourPatchRenderRankArtifactError(str(exc)) from exc
         if reference.audio_sha256 != selection.audio_sha256:
-            raise ValueError("reference audio SHA-256 does not match the committed batch source")
+            raise AnalogFourPatchRenderRankReferenceError(
+                "reference audio SHA-256 does not match the committed batch source"
+            )
         if generation_id and selection.generation_id != generation_id:
-            raise ValueError("render candidates do not share one committed batch generation")
+            raise AnalogFourPatchRenderRankArtifactError(
+                "render candidates do not share one committed batch generation"
+            )
         generation_id = selection.generation_id
         selected_track = selection.plan.selected_track
-        rendered = analyze_analog_four_patch_audio(render_path)
-        deltas = _feature_deltas(reference, rendered)
-        distance = min(1.0, sum(delta.weighted_delta for delta in deltas))
-        scores.append(
-            AnalogFourPatchRenderScore(
-                rank=0,
+        measured_candidates.append(
+            AnalogFourRenderCandidateFeatures(
                 candidate=candidate,
                 label=selection.plan.selected_label,
-                render_path=render_path.resolve(),
-                render_sha256=rendered.audio_sha256,
-                similarity=max(0, min(100, int(round((1.0 - distance) * 100.0)))),
-                distance=round(distance, 6),
-                feature_deltas=deltas,
+                render_path=render_path,
+                features=analyze_analog_four_patch_audio(render_path),
             )
         )
 
-    ranked = tuple(
-        replace(score, rank=rank)
-        for rank, score in enumerate(
-            sorted(scores, key=lambda score: (score.distance, score.candidate)),
-            start=1,
-        )
-    )
+    ranked = rank_analog_four_render_features(reference, tuple(measured_candidates))
     recommended = ranked[0]
     return AnalogFourPatchRenderRankPacket(
         version=ANALOG_FOUR_RENDER_RANK_VERSION,
@@ -213,28 +179,6 @@ def analog_four_patch_render_rank_to_dict(
     }
 
 
-def _feature_deltas(
-    reference: AnalogFourPatchAudioFeatures,
-    rendered: AnalogFourPatchAudioFeatures,
-) -> tuple[AnalogFourRenderFeatureDelta, ...]:
-    rows: list[AnalogFourRenderFeatureDelta] = []
-    for feature, weight in _FEATURE_WEIGHTS:
-        reference_value = float(getattr(reference, feature))
-        render_value = float(getattr(rendered, feature))
-        absolute_delta = abs(reference_value - render_value)
-        rows.append(
-            AnalogFourRenderFeatureDelta(
-                feature=feature,
-                reference_value=round(reference_value, 6),
-                render_value=round(render_value, 6),
-                absolute_delta=round(absolute_delta, 6),
-                weight=weight,
-                weighted_delta=round(absolute_delta * weight, 6),
-            )
-        )
-    return tuple(rows)
-
-
 def _score_payload(score: AnalogFourPatchRenderScore) -> AnalogFourPatchRenderScorePayload:
     return {
         "rank": score.rank,
@@ -262,6 +206,8 @@ __all__ = [
     "ANALOG_FOUR_RENDER_RANK_SAFETY",
     "ANALOG_FOUR_RENDER_RANK_VERSION",
     "AnalogFourPatchRenderRankPacket",
+    "AnalogFourPatchRenderRankArtifactError",
+    "AnalogFourPatchRenderRankReferenceError",
     "AnalogFourPatchRenderScore",
     "AnalogFourRenderFeatureDelta",
     "analog_four_patch_render_rank_to_dict",

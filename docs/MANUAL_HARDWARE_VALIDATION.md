@@ -423,8 +423,20 @@ python -m rytm_randomizer.app --dry-run --a4-patch-send-plan `
 ```
 
 The closest-reference candidate currently reports 39 sendable rows: 29 CC,
-10 NRPN, and 59 transport messages. After reviewing the dry-run, send the same
-verified sidecar to the A4:
+10 NRPN, and 59 transport messages. That complete plan is software-verified and
+mock-replayed, but it has not yet completed a supervised physical full-patch
+rehearsal. Do not treat the following armed command as routine operation.
+
+Before the first full-plan hardware pass:
+
+1. Use a disposable initialized A4 project and keep the clean kit dump ready.
+2. Confirm the intended track/channel with one already validated named
+   parameter send, then reload the clean baseline.
+3. Run the manifest dry-run above and verify all 59 mock messages.
+4. Use the full command only with the operator present, moderate monitoring
+   level, and immediate reload/stop recovery available.
+
+The pending supervised full-plan validation command is:
 
 ```powershell
 python -m rytm_randomizer.app --arm --a4-patch-send-plan `
@@ -433,9 +445,11 @@ python -m rytm_randomizer.app --arm --a4-patch-send-plan `
 ```
 
 The reader rejects changed sidecar bytes, changed nested DNA/send-plan
-payloads, source/candidate/track mismatches, invalid event addresses, and
-coverage-count drift before opening an output port. Saved-kit SysEx coverage
-does not expand through this command; this is an explicit live MIDI path.
+payloads, source/candidate/track mismatches, false transport labels,
+noncanonical parameter CC/NRPN addresses, and coverage-count drift before
+opening an output port. Saved-kit SysEx coverage does not expand through this
+command; this is an explicit live MIDI path whose complete 39-row hardware
+rehearsal remains pending.
 
 ### Rank recorded A4 candidates
 

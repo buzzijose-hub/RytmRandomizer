@@ -10,7 +10,11 @@ from pathlib import Path
 import pytest
 
 from rytm_randomizer.guardrails.schema import Confidence, SourceType
+from rytm_randomizer.style_analysis.analog_four_patch_genome import (
+    analog_four_patch_candidate_to_dict,
+)
 from rytm_randomizer.style_analysis.analog_four_patch_send_plan import (
+    AnalogFourPatchManualEvent,
     analog_four_patch_send_plan_to_dict,
     build_analog_four_patch_send_plan,
 )
@@ -58,7 +62,9 @@ def _write_batch(tmp_path: Path) -> tuple[Path, dict[str, object], dict[str, obj
         selected_candidate=1,
     )
     plan_payload = analog_four_patch_send_plan_to_dict(plan)
-    dna: dict[str, object] = {"column": 1, "label": plan.selected_label}
+    dna: dict[str, object] = dict(
+        analog_four_patch_candidate_to_dict(plan.learning_packet.selected_patch)
+    )
     coverage: dict[str, object] = {
         "dna_row_count": plan.summary.total_rows,
         "sysex_encoded_row_count": 1,
@@ -133,6 +139,31 @@ def _rehash_sidecar(
     (tmp_path / "candidate-01.json").write_bytes(sidecar_bytes)
     _manifest_candidate(manifest)["sidecar_sha256"] = _sha256(sidecar_bytes)
     _rewrite_json(manifest_path, manifest)
+
+
+def _send_event_and_gene_value(
+    sidecar: dict[str, object],
+    *,
+    message_kind: str,
+) -> tuple[dict[str, object], dict[str, object]]:
+    plan = sidecar["dynamic_send_plan"]
+    dna = sidecar["candidate_dna"]
+    assert isinstance(plan, dict)
+    assert isinstance(dna, dict)
+    events = plan["send_events"]
+    genes = dna["genes"]
+    assert isinstance(events, list)
+    assert isinstance(genes, list)
+    event = next(
+        row for row in events if isinstance(row, dict) and row.get("message_kind") == message_kind
+    )
+    sequence = event["sequence"]
+    assert isinstance(sequence, int)
+    gene = genes[sequence - 1]
+    assert isinstance(gene, dict)
+    value = gene["value"]
+    assert isinstance(value, dict)
+    return event, value
 
 
 def test_load_batch_candidate_verifies_and_reconstructs_complete_plan(tmp_path: Path) -> None:
@@ -289,6 +320,40 @@ def test_reader_rejects_wrong_argument_types(tmp_path: Path) -> None:
         load_analog_four_patch_batch_candidate(manifest_path, candidate="1")  # type: ignore[arg-type]
 
 
+@pytest.mark.parametrize("candidate", [0, 5])
+def test_reader_rejects_out_of_range_candidate(tmp_path: Path, candidate: int) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+
+    manifest_path, _manifest, _sidecar = _write_batch(tmp_path)
+
+    with pytest.raises(ValueError, match="candidate must be in 1..4"):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=candidate)
+
+
+def test_reader_rejects_resolved_sidecar_escape(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+
+    manifest_path, _manifest, _sidecar = _write_batch(tmp_path)
+    original_resolve = Path.resolve
+
+    def resolve_with_escape(path: Path, strict: bool = False) -> Path:
+        if path.name == "candidate-01.json":
+            return tmp_path.parent / path.name
+        return original_resolve(path, strict=strict)
+
+    monkeypatch.setattr(Path, "resolve", resolve_with_escape)
+
+    with pytest.raises(ValueError, match="sidecar escapes the batch directory"):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
+
+
 @pytest.mark.parametrize(
     ("field", "expected"),
     [
@@ -375,6 +440,138 @@ def test_reader_rejects_rehashed_nrpn_event_without_address(tmp_path: Path) -> N
         load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
 
 
+def test_reader_rejects_rehashed_send_transport_status_mismatch(tmp_path: Path) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+
+    manifest_path, manifest, sidecar = _write_batch(tmp_path)
+    event, _value = _send_event_and_gene_value(sidecar, message_kind="cc")
+    event["transport_status"] = "screen-only"
+    _rehash_sidecar(tmp_path, manifest_path, manifest, sidecar)
+
+    with pytest.raises(ValueError, match="transport_status does not match message_kind"):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
+
+
+@pytest.mark.parametrize(
+    ("message_kind", "address_field", "expected"),
+    [
+        ("cc", "cc_msb", "CC address does not match"),
+        ("nrpn", "nrpn_address", "NRPN address does not match"),
+    ],
+)
+def test_reader_rejects_rehashed_noncanonical_hardware_address(
+    tmp_path: Path,
+    message_kind: str,
+    address_field: str,
+    expected: str,
+) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+
+    manifest_path, manifest, sidecar = _write_batch(tmp_path)
+    event, value = _send_event_and_gene_value(sidecar, message_kind=message_kind)
+    if address_field == "cc_msb":
+        original = event[address_field]
+        assert isinstance(original, int)
+        replacement: object = (original + 1) % 128
+    else:
+        original = event[address_field]
+        assert isinstance(original, list)
+        replacement = [original[0], (original[1] + 1) % 128]
+    event[address_field] = replacement
+    value[address_field] = replacement
+    _rehash_sidecar(tmp_path, manifest_path, manifest, sidecar)
+
+    with pytest.raises(ValueError, match=expected):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
+
+
+def test_reader_rejects_rehashed_dna_send_event_value_drift(tmp_path: Path) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+
+    manifest_path, manifest, sidecar = _write_batch(tmp_path)
+    _event, value = _send_event_and_gene_value(sidecar, message_kind="cc")
+    midi_value = value["midi_value"]
+    assert isinstance(midi_value, int)
+    value["midi_value"] = (midi_value + 1) % 128
+    _rehash_sidecar(tmp_path, manifest_path, manifest, sidecar)
+
+    with pytest.raises(ValueError, match="midi_value does not match"):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
+
+
+def test_reader_rejects_rehashed_dna_gene_count_drift(tmp_path: Path) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+
+    manifest_path, manifest, sidecar = _write_batch(tmp_path)
+    dna = sidecar["candidate_dna"]
+    assert isinstance(dna, dict)
+    genes = dna["genes"]
+    assert isinstance(genes, list)
+    genes.pop()
+    _rehash_sidecar(tmp_path, manifest_path, manifest, sidecar)
+
+    with pytest.raises(ValueError, match="gene count does not match"):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
+
+
+@pytest.mark.parametrize(
+    ("sequence_index", "replacement", "expected"),
+    [
+        (1, 1, "sequences must be unique"),
+        (-1, 40, "do not cover candidate DNA order"),
+    ],
+)
+def test_reader_rejects_rehashed_sequence_identity_drift(
+    tmp_path: Path,
+    sequence_index: int,
+    replacement: int,
+    expected: str,
+) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+
+    manifest_path, manifest, sidecar = _write_batch(tmp_path)
+    plan = sidecar["dynamic_send_plan"]
+    assert isinstance(plan, dict)
+    events = plan["send_events"]
+    assert isinstance(events, list)
+    event = events[sequence_index]
+    assert isinstance(event, dict)
+    event["sequence"] = replacement
+    _rehash_sidecar(tmp_path, manifest_path, manifest, sidecar)
+
+    with pytest.raises(ValueError, match=expected):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
+
+
+@pytest.mark.parametrize("message_kind", ["cc", "nrpn"])
+def test_reader_rejects_rehashed_parameter_without_canonical_transport(
+    tmp_path: Path,
+    message_kind: str,
+) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+
+    manifest_path, manifest, sidecar = _write_batch(tmp_path)
+    event, value = _send_event_and_gene_value(sidecar, message_kind=message_kind)
+    event["parameter"] = "Unknown Parameter"
+    value["parameter"] = "Unknown Parameter"
+    _rehash_sidecar(tmp_path, manifest_path, manifest, sidecar)
+
+    with pytest.raises(ValueError, match=f"no canonical A4 {message_kind.upper()}"):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
+
+
 @pytest.mark.parametrize("coverage_owner", ["manifest", "sidecar"])
 def test_reader_rejects_coverage_drift(tmp_path: Path, coverage_owner: str) -> None:
     from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
@@ -417,6 +614,62 @@ def test_reader_parses_manual_event_and_rejects_wrong_track() -> None:
     assert _parse_manual_event(row, track=2).parameter == "Manual"
     with pytest.raises(ValueError, match="manual event track"):
         _parse_manual_event(row, track=1)
+    row["transport_status"] = "cc-ready"
+    with pytest.raises(ValueError, match="sendable or unknown transport_status"):
+        _parse_manual_event(row, track=2)
+
+
+def test_reader_verifies_manual_only_dna_row() -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        _verify_plan_against_candidate_dna,
+    )
+
+    manual = AnalogFourPatchManualEvent(
+        sequence=1,
+        track=2,
+        parameter="Manual",
+        section="TEST",
+        encoder="A",
+        screen_value="OFF",
+        transport_status="screen-only",
+        skip_reason="test",
+        dial_direction="leave at OFF",
+        rationale="test",
+        confidence="test",
+    )
+    dna = {
+        "genes": [
+            {
+                "track": 2,
+                "value": {
+                    "parameter": "Manual",
+                    "section": "TEST",
+                    "encoder": "A",
+                    "screen_value": "OFF",
+                    "transport_status": "screen-only",
+                    "dial_direction": "leave at OFF",
+                },
+                "rationale": "test",
+                "confidence": "test",
+            }
+        ]
+    }
+
+    _verify_plan_against_candidate_dna(
+        dna,
+        track=2,
+        send_events=(),
+        manual_events=(manual,),
+    )
+
+
+def test_batch_codec_rejects_non_object_json() -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_codec import (
+        decode_analog_four_patch_batch_json,
+    )
+
+    with pytest.raises(ValueError, match="must be a JSON object"):
+        decode_analog_four_patch_batch_json(b"[]", label="test")
 
 
 @pytest.mark.parametrize(

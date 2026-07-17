@@ -2,22 +2,21 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
-import os
 import re
 import secrets
 import sys
 import tempfile
 import time
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Final, TypedDict
+from typing import Final
 
-from ...devices.strategies.analog_four_saved_kit_writer import (
+from ...data.analog_four_sysex_calibration import A4_FILTER2_RESONANCE_PARAMETER
+from ...devices.analog_four import (
     AnalogFourSavedKitMutation,
-    render_analog_four_saved_kit,
+    AnalogFourSavedKitRenderResult,
+    get_analog_four_saved_kit_capability,
 )
 from ...observability.errors import BoundaryError
 from ...observability.logging import get_logger
@@ -52,15 +51,51 @@ from .analog_four_export_contracts import (
 from .analog_four_kit import (
     AnalogFourSavedKitExportResult,
 )
+from .analog_four_patch_batch_codec import (
+    BATCH_SCHEMA_VERSION,
+    CANDIDATE_SCHEMA_VERSION,
+    analog_four_patch_batch_payload_sha256,
+    analog_four_patch_batch_sha256,
+    encode_analog_four_patch_batch_json,
+)
+from .analog_four_patch_batch_contracts import (
+    SYSEX_COVERAGE_STATEMENT,
+    AnalogFourAudioPatchBatchExportResult,
+)
+from .analog_four_patch_batch_contracts import (
+    AnalogFourBatchCandidateSidecarPayload as _CandidateSidecarPayload,
+)
+from .analog_four_patch_batch_contracts import (
+    AnalogFourBatchCoverageCountsPayload as _CoverageCountsPayload,
+)
+from .analog_four_patch_batch_contracts import (
+    AnalogFourBatchHardwareAppliedRowPayload as _HardwareAppliedRowPayload,
+)
+from .analog_four_patch_batch_contracts import (
+    AnalogFourBatchManifestCandidatePayload as _ManifestCandidatePayload,
+)
+from .analog_four_patch_batch_contracts import (
+    AnalogFourBatchManifestPayload as _BatchManifestPayload,
+)
+from .analog_four_patch_batch_contracts import AnalogFourDeferredGenePayload as _DeferredGenePayload
+from .analog_four_patch_batch_contracts import (
+    AnalogFourPatchCandidateBatchResult,
+)
+from .analog_four_patch_batch_publication import (
+    AnalogFourPatchBatchLockedError,
+    AnalogFourPatchBatchPublicationError,
+    acquire_batch_lock,
+)
+from .analog_four_patch_batch_publication import (
+    batch_lock_matches_request as _batch_lock_matches_request,
+)
+from .analog_four_patch_batch_publication import (
+    publish_immutable_artifact,
+)
+from .analog_four_patch_batch_publication import release_batch_lock as _release_batch_lock
 from .writer import WriteResult, atomic_write
 
-FILTER2_RESONANCE_PARAMETER: Final[str] = "Filter2 Resonance"
-BATCH_SCHEMA_VERSION: Final[str] = "analog-four-audio-patch-batch-v1"
-CANDIDATE_SCHEMA_VERSION: Final[str] = "analog-four-audio-patch-candidate-v1"
-SYSEX_COVERAGE_STATEMENT: Final[str] = (
-    "Only Filter2 Resonance is encoded in the saved-kit SysEx; all remaining "
-    "candidate DNA stays in this sidecar and its live-dial send plan."
-)
+FILTER2_RESONANCE_PARAMETER: Final[str] = A4_FILTER2_RESONANCE_PARAMETER
 _DEFERRED_REASON: Final[str] = "not hardware-write-validated for saved-kit SysEx"
 _SAFE_SEGMENT_RE: Final[re.Pattern[str]] = re.compile(r"[^a-z0-9]+")
 _logger = get_logger(__name__)
@@ -74,201 +109,6 @@ class AnalogFourPatchBatchStageError(BoundaryError, RuntimeError):
     def __init__(self, message: str, *, error_code: AnalogFourExportErrorCode) -> None:
         super().__init__(message, context={"error_code": error_code})
         self.error_code: AnalogFourExportErrorCode = error_code
-
-
-class AnalogFourPatchBatchPublicationError(BoundaryError, RuntimeError):
-    """A generation artifact conflicts with an immutable published path."""
-
-    fingerprint = "a4.audio_patch_batch.publication_failed"
-
-    def __init__(self, message: str, *, error_code: AnalogFourExportErrorCode) -> None:
-        super().__init__(message, context={"error_code": error_code})
-        self.error_code: AnalogFourExportErrorCode = error_code
-
-
-class AnalogFourPatchBatchLockedError(BoundaryError, FileExistsError):
-    """A cooperative A4 batch publisher already owns the track lock."""
-
-    fingerprint = "a4.audio_patch_batch.publication_locked"
-    error_code: AnalogFourExportErrorCode = "publication_locked"
-
-
-class _DeferredGenePayload(AnalogFourPatchGenePayload):
-    deferred_reason: str
-
-
-class _FilenamePayload(TypedDict):
-    filename: str
-
-
-class _HashedSourcePayload(_FilenamePayload):
-    sha256: str
-
-
-class _CoverageCountsPayload(TypedDict):
-    dna_row_count: int
-    sysex_encoded_row_count: int
-    deferred_row_count: int
-    sendable_row_count: int
-    manual_row_count: int
-
-
-class _HardwareAppliedRowPayload(TypedDict):
-    parameter: str
-    track: int
-    screen_value: str
-    unpacked_offset: int
-    source_unpacked_value: int
-    rendered_unpacked_value: int
-
-
-class _HardwareExportPayload(TypedDict):
-    sysex_filename: str
-    encoded_parameters: list[str]
-    coverage_statement: str
-
-
-class _CandidateHashesPayload(TypedDict):
-    audio_sha256: str
-    source_kit_sha256: str
-    genome_sha256: str
-    candidate_dna_sha256: str
-    send_plan_sha256: str
-    sysex_sha256: str
-
-
-class _CandidateSidecarPayload(TypedDict):
-    schema_version: str
-    generation_id: str
-    audio_source: _FilenamePayload
-    source_kit: _FilenamePayload
-    candidate_dna: AnalogFourPatchCandidatePayload
-    audio_features: AnalogFourPatchAudioFeaturesPayload
-    dynamic_send_plan: AnalogFourPatchSendPlanPayload
-    hardware_applied_rows: list[_HardwareAppliedRowPayload]
-    deferred_rows: list[_DeferredGenePayload]
-    coverage_counts: _CoverageCountsPayload
-    hardware_export: _HardwareExportPayload
-    hashes: _CandidateHashesPayload
-    safety: list[str]
-
-
-class _ManifestCandidatePayload(TypedDict):
-    column: int
-    label: str
-    filter2_resonance: str
-    sysex_filename: str
-    sidecar_filename: str
-    sysex_sha256: str
-    sidecar_sha256: str
-    coverage_counts: _CoverageCountsPayload
-
-
-class _BatchManifestPayload(TypedDict):
-    schema_version: str
-    generation_id: str
-    track: int
-    candidate_count: int
-    audio_source: _HashedSourcePayload
-    source_kit: _HashedSourcePayload
-    feature_report_hash: str
-    genome_sha256: str
-    genome: AnalogFourPatchGenomePayload
-    candidates: list[_ManifestCandidatePayload]
-    coverage_counts: _CoverageCountsPayload
-    safety: list[str]
-
-
-class _BatchLockPayload(TypedDict):
-    schema_version: str
-    generation_id: str
-    publication_nonce: str
-    process_id: int
-    created_unix_seconds: float
-    audio_sha256: str
-    source_kit_sha256: str
-
-
-@dataclass(frozen=True)
-class AnalogFourPatchCandidateBatchResult:
-    """Written artifacts and coverage for one generated patch candidate."""
-
-    column: int
-    label: str
-    filter2_resonance: str
-    sysex_export: AnalogFourSavedKitExportResult
-    sidecar_write: WriteResult
-    sidecar_sha256: str
-    dna_row_count: int
-    sysex_encoded_row_count: int
-    deferred_row_count: int
-    sendable_row_count: int
-    manual_row_count: int
-
-    @property
-    def candidate(self) -> int:
-        return self.column
-
-    @property
-    def sysex_path(self) -> Path:
-        return self.sysex_export.write.path
-
-    @property
-    def sidecar_path(self) -> Path:
-        return self.sidecar_write.path
-
-    @property
-    def sysex_applied_count(self) -> int:
-        return self.sysex_encoded_row_count
-
-    @property
-    def live_sendable_count(self) -> int:
-        return self.sendable_row_count
-
-    @property
-    def manual_count(self) -> int:
-        return self.manual_row_count
-
-    @property
-    def deferred_count(self) -> int:
-        return self.deferred_row_count
-
-
-@dataclass(frozen=True)
-class AnalogFourAudioPatchBatchExportResult:
-    """Complete, manifest-backed result for one audio candidate batch."""
-
-    track: int
-    candidate_count: int
-    audio_sha256: str
-    source_kit_sha256: str
-    feature_report_hash: str
-    genome_sha256: str
-    generation_id: str
-    candidates: tuple[AnalogFourPatchCandidateBatchResult, ...]
-    manifest_write: WriteResult
-    manifest_sha256: str
-    lock_cleanup_warning: str | None
-
-    @property
-    def source_hash(self) -> str:
-        return self.audio_sha256
-
-    @property
-    def manifest_path(self) -> Path:
-        return self.manifest_write.path
-
-    @property
-    def selected_track(self) -> int:
-        return self.track
-
-    @property
-    def candidate_outputs(self) -> tuple[AnalogFourPatchCandidateBatchResult, ...]:
-        return self.candidates
-
-    @property
-    def safety(self) -> tuple[str, ...]:
-        return (SYSEX_COVERAGE_STATEMENT, "No MIDI or network operation was performed.")
 
 
 @dataclass(frozen=True)
@@ -315,15 +155,43 @@ class _StagedBatch:
 
 
 def _json_bytes(payload: Mapping[str, object]) -> bytes:
-    return (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode("utf-8")
+    return encode_analog_four_patch_batch_json(payload)
 
 
 def _sha256(data: bytes) -> str:
-    return hashlib.sha256(data).hexdigest()
+    return analog_four_patch_batch_sha256(data)
 
 
 def _payload_sha256(payload: Mapping[str, object]) -> str:
-    return _sha256(_json_bytes(payload))
+    return analog_four_patch_batch_payload_sha256(payload)
+
+
+def _publish_immutable_artifact(path: Path, data: bytes) -> WriteResult:
+    return publish_immutable_artifact(path, data, writer=atomic_write)
+
+
+def _acquire_batch_lock(
+    lock_path: Path,
+    *,
+    generation_id: str,
+    publication_nonce: str,
+    audio_sha256: str,
+    source_kit_sha256: str,
+) -> WriteResult:
+    return acquire_batch_lock(
+        lock_path,
+        generation_id=generation_id,
+        publication_nonce=publication_nonce,
+        audio_sha256=audio_sha256,
+        source_kit_sha256=source_kit_sha256,
+        writer=atomic_write,
+    )
+
+
+render_analog_four_saved_kit: Callable[
+    [bytes, tuple[AnalogFourSavedKitMutation, ...]],
+    AnalogFourSavedKitRenderResult,
+] = get_analog_four_saved_kit_capability().render_saved_kit
 
 
 def _generation_id(
@@ -538,85 +406,6 @@ def _preflight_destinations(paths: tuple[Path, ...], *, overwrite: bool) -> None
 def _validate_unique_destinations(paths: tuple[Path, ...]) -> None:
     if len(paths) != len(set(paths)):
         raise ValueError("generated batch destinations are not unique")
-
-
-def _publish_immutable_artifact(path: Path, data: bytes) -> WriteResult:
-    expected_sha256 = _sha256(data)
-    try:
-        return atomic_write(path, data)
-    except FileExistsError as exc:
-        existing_sha256 = _sha256(path.read_bytes())
-        if existing_sha256 != expected_sha256:
-            raise AnalogFourPatchBatchPublicationError(
-                f"generation artifact collision at {path}: existing bytes do not match",
-                error_code="write_failed",
-            ) from exc
-        return WriteResult(
-            path=path.resolve(),
-            bytes_written=len(data),
-            overwrote_existing=False,
-        )
-
-
-def _release_batch_lock(lock_path: Path) -> str | None:
-    try:
-        lock_path.unlink(missing_ok=True)
-    except OSError as exc:
-        return f"{lock_path}: {exc}"
-    return None
-
-
-def _acquire_batch_lock(
-    lock_path: Path,
-    *,
-    generation_id: str,
-    publication_nonce: str,
-    audio_sha256: str,
-    source_kit_sha256: str,
-) -> WriteResult:
-    payload: _BatchLockPayload = {
-        "schema_version": "analog-four-audio-patch-batch-lock-v1",
-        "generation_id": generation_id,
-        "publication_nonce": publication_nonce,
-        "process_id": os.getpid(),
-        "created_unix_seconds": time.time(),
-        "audio_sha256": audio_sha256,
-        "source_kit_sha256": source_kit_sha256,
-    }
-    try:
-        return atomic_write(lock_path, _json_bytes(payload))
-    except FileExistsError as exc:
-        try:
-            metadata = lock_path.read_text(encoding="utf-8").strip()
-        except (OSError, UnicodeError):
-            metadata = "unavailable"
-        raise AnalogFourPatchBatchLockedError(
-            f"batch publication lock already exists: {lock_path}; "
-            "remove it only after confirming its process is no longer running; "
-            f"lock metadata: {metadata}"
-        ) from exc
-
-
-def _batch_lock_matches_request(
-    lock_path: Path,
-    *,
-    generation_id: str,
-    publication_nonce: str,
-    audio_sha256: str,
-    source_kit_sha256: str,
-) -> bool:
-    try:
-        payload = json.loads(lock_path.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError, UnicodeError):
-        return False
-    return bool(
-        isinstance(payload, dict)
-        and payload.get("generation_id") == generation_id
-        and payload.get("publication_nonce") == publication_nonce
-        and payload.get("process_id") == os.getpid()
-        and payload.get("audio_sha256") == audio_sha256
-        and payload.get("source_kit_sha256") == source_kit_sha256
-    )
 
 
 def _applied_rows(export: AnalogFourSavedKitExportResult) -> list[_HardwareAppliedRowPayload]:

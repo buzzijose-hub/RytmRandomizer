@@ -54,7 +54,6 @@ from .observability.logging import configure_logging as _configure_logging
 from .observability.logging import get_logger as _observability_get_logger
 
 if TYPE_CHECKING:
-    from .cockpit.export.analog_four_patch_batch_reader import StoredAnalogFourPatchSendPlan
     from .data.analog_four_midi import AnalogFourCcMapping
     from .data.analog_four_recipes import AnalogFourKitRecipe, AnalogFourRecipeEvent
     from .data.analog_rytm_style_recipes import (
@@ -64,9 +63,7 @@ if TYPE_CHECKING:
     from .devices.strategies import RytmPerformanceMutationPlan
     from .engines.analog_rytm_snapshot_shell import ResnapshotFunc, RytmSnapshotShellAnchor
     from .midi_io import Sender
-    from .style_analysis.analog_four_patch_send_plan import AnalogFourPatchSendPlan
-
-    AnalogFourPatchSendPlanLike = AnalogFourPatchSendPlan | StoredAnalogFourPatchSendPlan
+    from .style_analysis.analog_four_patch_send_plan import AnalogFourPatchTransportPlan
 
 
 RYTM_LIVE_SNAPSHOT_CAPTURE_TIMEOUT_SECONDS: Final[float] = 120.0
@@ -745,6 +742,7 @@ def _run_a4_soft_capture(args: argparse.Namespace) -> int:
 
     from .data import (
         ANALOG_FOUR_MANUAL_CC_BY_MSB,
+        ANALOG_FOUR_NRPN_CONTROLS,
         ANALOG_FOUR_SYNTH_TRACK_NRPN_BY_ADDRESS,
     )
     from .mido_provider import build_mido_midi_port_provider
@@ -755,6 +753,7 @@ def _run_a4_soft_capture(args: argparse.Namespace) -> int:
         observe_a4_message,
     )
 
+    logger = _observability_get_logger(__name__)
     provider = build_mido_midi_port_provider()
     try:
         input_names = provider.list_input_names()
@@ -793,6 +792,7 @@ def _run_a4_soft_capture(args: argparse.Namespace) -> int:
                 observed_at=monotonic(),
                 cc_lookup=ANALOG_FOUR_MANUAL_CC_BY_MSB,
                 nrpn_lookup=ANALOG_FOUR_SYNTH_TRACK_NRPN_BY_ADDRESS,
+                nrpn_controls=ANALOG_FOUR_NRPN_CONTROLS,
             )
     finally:
         close = getattr(port, "close", None)
@@ -802,6 +802,34 @@ def _run_a4_soft_capture(args: argparse.Namespace) -> int:
             except (OSError, RuntimeError, AttributeError):  # pragma: no cover - best-effort
                 _shutdown_logger = _observability_get_logger(__name__)
                 _shutdown_logger.debug("a4_soft_capture_port_close_failed_best_effort")
+
+    nrpn_parameter_count = sum(
+        parameter.transport == "nrpn"
+        for track in snapshot.tracks
+        for parameter in track.parameters.values()
+    )
+    logger.debug(
+        "a4_soft_capture_completed",
+        extra={
+            "operation": "a4_soft_capture",
+            "input_name": port_name,
+            "known_parameter_count": snapshot.known_parameter_count,
+            "nrpn_parameter_count": nrpn_parameter_count,
+            "unknown_control_count": len(snapshot.unknown_controls),
+            "ignored_message_count": snapshot.ignored_message_count,
+            "out_of_scope_message_count": snapshot.out_of_scope_message_count,
+        },
+    )
+    for unknown in snapshot.unknown_controls:
+        logger.debug(
+            "a4_soft_capture_unknown_control",
+            extra={
+                "operation": "a4_soft_capture",
+                "channel": unknown.channel,
+                "control": unknown.control,
+                "reason": unknown.reason,
+            },
+        )
 
     sys.stdout.write("\n".join(format_a4_soft_capture_report(snapshot, input_name=port_name)))
     sys.stdout.write("\n")
@@ -1218,7 +1246,7 @@ def _a4_patch_optional_range(
 
 def _build_a4_patch_send_plan_from_args(
     args: argparse.Namespace,
-) -> tuple[AnalogFourPatchSendPlanLike, str] | None:
+) -> tuple[AnalogFourPatchTransportPlan, str] | None:
     """Build an A4 patch send plan from app arguments without touching MIDI."""
 
     from .style_analysis.analog_four_patch_send_plan import (
@@ -1248,15 +1276,40 @@ def _build_a4_patch_send_plan_from_args(
             load_analog_four_patch_batch_candidate,
         )
 
+        logger = _observability_get_logger(__name__)
+        from .observability.metrics import get_metrics
+
+        metrics = get_metrics()
         try:
             selection = load_analog_four_patch_batch_candidate(
                 Path(source_value),
                 candidate=selected_candidate,
             )
         except (OSError, ValueError, TypeError, KeyError) as exc:
+            metrics.record_error("a4_patch_send_plan_manifest_validation")
+            logger.warning(
+                "a4_patch_send_plan_manifest_validation_failed",
+                extra={
+                    "operation": "a4_patch_send_plan_build",
+                    "error_code": "manifest_validation",
+                    "manifest_path": source_value,
+                    "candidate": selected_candidate,
+                },
+            )
             sys.stderr.write(f"--a4-patch-send-plan failed: {exc}\n")
             return None
         if args.track is not None and args.track != selection.plan.selected_track:
+            metrics.record_error("a4_patch_send_plan_track_mismatch")
+            logger.warning(
+                "a4_patch_send_plan_track_mismatch",
+                extra={
+                    "operation": "a4_patch_send_plan_build",
+                    "error_code": "track_mismatch",
+                    "manifest_path": source_value,
+                    "requested_track": args.track,
+                    "manifest_track": selection.plan.selected_track,
+                },
+            )
             sys.stderr.write("track does not match the committed batch manifest selected track.\n")
             return None
         return selection.plan, f"batch-manifest generation {selection.generation_id}"
@@ -1285,7 +1338,7 @@ def _build_a4_patch_send_plan_from_args(
     return source.plan, source.source_label
 
 
-def _send_a4_patch_send_plan_events(plan: AnalogFourPatchSendPlanLike, out: Sender) -> None:
+def _send_a4_patch_send_plan_events(plan: AnalogFourPatchTransportPlan, out: Sender) -> None:
     """Send compiler-approved A4 patch events through an injected MIDI sender."""
 
     from .senders.midi_event_plan import send_cc_nrpn_event_plan
@@ -1301,7 +1354,7 @@ def _send_a4_patch_send_plan_events(plan: AnalogFourPatchSendPlanLike, out: Send
 
 
 def _run_dry_run_a4_patch_send_plan(
-    plan: AnalogFourPatchSendPlanLike,
+    plan: AnalogFourPatchTransportPlan,
     *,
     source_label: str,
 ) -> int:
@@ -1337,7 +1390,7 @@ def _run_dry_run_a4_patch_send_plan(
 
 
 def _run_armed_a4_patch_send_plan(
-    plan: AnalogFourPatchSendPlanLike,
+    plan: AnalogFourPatchTransportPlan,
     *,
     source_label: str,
 ) -> int:

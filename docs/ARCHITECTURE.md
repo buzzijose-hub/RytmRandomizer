@@ -100,6 +100,7 @@ on one line for an existing module, you probably need a new module instead.
 | `data/analog_four_saved_kit_layout.py` | Observed A4 saved-kit family/object, packing, trailer, size, and name-field constants. Pure data. |
 | `data/analog_four_patch_templates.py` | Static Analog Four patch-genome candidate templates and rationale rows. Pure data. |
 | `data/analog_four_patch_corpus.py` | Synthetic Analog Four patch-corpus starter feature vectors. Pure data. |
+| `data/analog_four_render_rank.py` | Stable feature weights for recorded A4 candidate ranking. Pure data. |
 | `data/analog_four_recipes.py` | Manual-backed Analog Four kit recipe definitions. Pure data.       |
 | `data/analog_rytm_midi.py` | Manual-backed Analog Rytm OS 1.72 CC/NRPN catalog and safety status labels. Pure data. |
 | `data/analog_rytm_style_recipes.py` | Curated full-12-pad Analog Rytm style-kit CC MSB recipes. Pure data. |
@@ -146,6 +147,7 @@ on one line for an existing module, you probably need a new module instead.
 | `style_analysis/analog_four_patch_corpus.py` | Passive A4 patch/audio corpus nearest-match ranking and calibration-gap compiler. |
 | `style_analysis/analog_four_patch_codesigner.py` | Passive A4 patch-genome co-designer packet compiler for staged local-AI review. |
 | `style_analysis/analog_four_patch_send_plan.py` | Passive selected A4 patch -> ordered CC/NRPN live-dial send-plan compiler. |
+| `style_analysis/analog_four_patch_render_rank.py` | Pure measured-feature scoring and deterministic ranking for recorded A4 candidates. |
 | `local_ai/` | Passive local-AI DTOs, local model subprocess adapter, docs/MIDI context packets, staged mutation-intent validation, and JSON-schema helpers. |
 
 ### Upper (entry points)
@@ -162,6 +164,9 @@ on one line for an existing module, you probably need a new module instead.
 | `cockpit/export/analog_four_cli.py` | Registered local-file command for one or four validated Filter2 Resonance mutations; no MIDI I/O. |
 | `style_analysis/analog_four_patch_inference.py` | Typed, single-decode audio evidence and audio-dependent four-column A4 patch-genome inference with direct RED metrics. |
 | `cockpit/export/analog_four_patch_batch.py` | Transactional batch service that stages candidate saved kits and complete DNA/live-dial sidecars from immutable inputs, then publishes a manifest commit marker through the canonical atomic writer. |
+| `cockpit/export/analog_four_patch_batch_codec.py` | Canonical JSON encoding/decoding and SHA-256 helpers shared by batch writer and reader. |
+| `cockpit/export/analog_four_patch_batch_contracts.py` | Stable batch payload and result contracts. |
+| `cockpit/export/analog_four_patch_batch_publication.py` | Race-safe immutable artifact publication and cooperative lock ownership. |
 | `cockpit/export/analog_four_patch_batch_cli.py` | Registered passive-hardware operator command for one-to-four audio-dependent candidate exports; no MIDI I/O. |
 | `cockpit/export/analog_four_patch_batch_reader.py` | Strict manifest/sidecar reader that verifies candidate identity, nested hashes, coverage, and event routing before a stored plan can reach the app sender. |
 | `cockpit/export/analog_four_patch_render_rank.py` | Passive acoustic feedback service that compares recorded A4 candidates with the exact batch reference across weighted envelope/timbre features. |
@@ -321,7 +326,7 @@ snapshot seams.
 ## 6.1 Device Protocol + Strategy seam (WS-S5 + Strategy)
 
 The `rytm_randomizer.devices.Device` Protocol is the single cross-machine
-boundary. Every Elektron device family — Rytm today, Analog Four next —
+boundary. Every Elektron device family - Rytm and Analog Four today -
 exposes exactly one registered `Device` instance and routes its behavior
 through three Strategy sub-Protocols.
 
@@ -345,9 +350,12 @@ The Protocol's four legacy convenience methods (`decode_snapshot`,
 `plan_mutation`, `to_mock_messages`, `to_cc_messages`) remain for
 backward compatibility — they delegate to the strategies.
 
-The A4 saved-kit renderer is strategy-adjacent, not a fourth `Device`
-capability. `analog_four_saved_kit_codec.py` is the shared decoder/writer owner
-for frame validation, packing, checksum, and trailer reconstruction;
+The A4 saved-kit renderer is an optional family capability resolved from the
+registered `AnalogFourDevice` through `get_analog_four_saved_kit_capability()`;
+it does not expand the cross-machine `Device` Protocol. The guarded exporter
+and audio batch consume that capability instead of importing a concrete writer
+strategy. `analog_four_saved_kit_codec.py` remains the shared decoder/writer
+owner for frame validation, packing, checksum, and trailer reconstruction;
 `analog_four_saved_kit_writer.py` consumes that codec plus promoted calibration
 facts to mutate and rebuild one frame.
 The pure renderer may exercise candidate offsets in tests, but the
@@ -382,8 +390,9 @@ hardware-passive: local reads/writes only, with no MIDI port or send.
 The stored-plan reader treats the stable manifest as the publication commit
 marker. Before a candidate reaches dry-run or the armed sender, it verifies the
 sidecar byte hash, generation ID, source hash, candidate DNA hash, send-plan
-hash, selected column/label/track, coverage totals, and every event's
-track/channel/address shape. The current generated vocabulary is completely
+hash, selected column/label/track, coverage totals, every event's transport
+status, and each parameter's canonical A4 CC or NRPN address. The current
+generated vocabulary is completely
 live-routable (29 CC and 10 NRPN rows in the closest-reference candidate), but
 unknown enum labels remain screen-only and therefore fail closed. Incoming A4
 soft capture mirrors the transport by retaining one NRPN selector per track and
@@ -843,7 +852,13 @@ rytm_randomizer/cockpit/export/
     __init__.py            # Re-exports the public surface (Phase 1 + Phase 3)
     analog_four_kit.py     # Guarded A4 saved-kit .syx adapter -> canonical atomic_write
     analog_four_patch_batch.py      # Audio inference -> candidate .syx/sidecars/manifest
+    analog_four_patch_batch_codec.py # Canonical writer/reader JSON + hashes
+    analog_four_patch_batch_contracts.py # Stable payload/result DTOs
+    analog_four_patch_batch_publication.py # Immutable artifacts + lock ownership
+    analog_four_patch_batch_reader.py # Hash, DNA, and canonical transport verifier
     analog_four_patch_batch_cli.py  # Registered passive-hardware batch command
+    analog_four_patch_render_rank.py # Passive artifact/audio ranking orchestration
+    analog_four_patch_render_rank_cli.py # Registered ranking command
     model_format.py        # Phase 1, existing — MAGIC=b"RYMP", format_version, build/parse header, CRC32 trailer
     serialize.py           # Phase 1, existing — pack_profile_model / unpack_profile_model
     signing.py             # Phase 3, NEW — HMAC-SHA256 signing + signed envelope (MAGIC=b"RYMS")

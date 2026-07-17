@@ -4,6 +4,19 @@ Last updated: 2026-07-17. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-07-17: The A4 audio-patch feedback loop completed its post-push
+  hardening review. Saved-kit rendering now resolves through an optional
+  capability on the registered Analog Four device. Batch JSON/hashing,
+  payload contracts, immutable publication, and pure acoustic scoring have
+  separate owners. The stored-plan reader cross-checks every rehashed DNA row
+  against its event and every sendable event against the canonical A4 CC/NRPN
+  map, including transport status and path containment. Mock dry-runs no longer
+  increment real hardware-send counters; ranking and manifest failures now use
+  structured metrics and stable error classes. Focused coverage is 100% branch
+  on the new codec, contracts, publication, reader, pure ranker, and shared
+  audio extractor. The full 39-row/59-message hardware rehearsal remains an
+  explicit supervised next step, not an already validated routine send.
+
 - 2026-07-17: The generated Analog Four live-dial path advanced from partial
   to complete for the current DNA vocabulary. Official OS 1.55 NRPN addresses
   were paired with enum values inspected through the installed Elektron

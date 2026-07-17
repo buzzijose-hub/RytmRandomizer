@@ -199,7 +199,9 @@ def test_send_cc_records_midi_message_when_out_is_mock_midi_sender():
 
     from rytm_randomizer.midi_io import send_cc
     from rytm_randomizer.mock_midi import MidiMessage, MockMidiSender
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
+    reset_metrics()
     mock = MockMidiSender()
     send_cc(mock, 42, 64, channel=1, sleep=_no_sleep)
 
@@ -210,6 +212,7 @@ def test_send_cc_records_midi_message_when_out_is_mock_midi_sender():
     assert msg.channel == 1
     assert msg.control == 42
     assert msg.value == 64
+    assert get_metrics().cc_sent_by_channel == {}
 
 
 # ---------------------------------------------------------------------------
@@ -232,7 +235,9 @@ def test_send_cc_builds_mido_message_when_out_is_not_mock_midi_sender():
     fake_mido.Message = _TrackingMessage  # type: ignore[attr-defined]
 
     from rytm_randomizer.midi_io import send_cc
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
+    reset_metrics()
     out = _FakeMidoOutput()
     send_cc(out, 15, 100, channel=0, sleep=_no_sleep)
 
@@ -245,3 +250,4 @@ def test_send_cc_builds_mido_message_when_out_is_not_mock_midi_sender():
     # And it was forwarded to out.send.
     assert len(out.sent) == 1
     assert out.sent[0] is constructed[0]
+    assert get_metrics().cc_sent_by_channel[0] == 1

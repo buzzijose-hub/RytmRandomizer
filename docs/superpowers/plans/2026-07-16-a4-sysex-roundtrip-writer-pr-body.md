@@ -20,6 +20,11 @@ Turn the first hardware-validated Analog Four MKII saved-kit calibration into a 
 - Added hash-verified `--batch-manifest --candidate N` loading so dry-run and confirmed armed sends use the exact committed sidecar, nested DNA, and send plan the operator auditioned.
 - Extended passive A4 capture to reconstruct three-message NRPN observations with independent selector state on all four tracks.
 - Added `analog-four-audio-patch-rank`, a passive local feedback command that verifies the original batch source and ranks recorded A4 candidates across 11 weighted envelope/timbre features.
+- Routed saved-kit rendering through an optional capability on the registered `AnalogFourDevice`; guarded export and batching no longer import a concrete writer strategy.
+- Split canonical batch JSON/hashing, stable payload/result contracts, immutable publication locks, and pure acoustic scoring from transaction orchestration.
+- Hardened the manifest reader against fully rehashed malicious bundles by cross-checking every DNA/event field, transport status, path containment, and canonical A4 CC/NRPN address before output can open.
+- Separated mock dry-run telemetry from real hardware-send counters and added structured manifest, rank, and capture outcome metrics.
+- Completed the required eight-dimension post-push review and corrected stale command, architecture, run-state, environment-variable, and supervised-hardware-validation documentation.
 
 ## Why this matters
 
@@ -51,6 +56,8 @@ python -m pytest
 python -m pytest tests/cockpit/test_analog_four_patch_batch_cli.py tests/test_cli.py -n 0
 python -m pytest tests/cockpit/test_analog_four_patch_batch_reader.py tests/cockpit/test_analog_four_patch_render_rank.py tests/test_a4_soft_capture.py tests/test_app_validate_one_cc.py -n 0
 python -m pytest tests/cockpit/test_analog_four_kit_cli.py tests/cockpit/test_analog_four_patch_batch.py tests/cockpit/test_analog_four_patch_batch_cli.py tests/cockpit/test_export_writer.py tests/test_analog_four_patch_genome.py tests/test_analog_four_patch_inference.py tests/test_analog_four_patch_learning.py tests/test_analog_four_patch_send_plan.py tests/test_devices_strategies_analog_four_saved_kit_writer.py tests/test_observability_metrics.py tests/test_style_analysis.py --cov=rytm_randomizer.cockpit.export.analog_four_export_contracts --cov=rytm_randomizer.cockpit.export.analog_four_cli --cov=rytm_randomizer.cockpit.export.analog_four_kit --cov=rytm_randomizer.cockpit.export.analog_four_patch_batch --cov=rytm_randomizer.cockpit.export.analog_four_patch_batch_cli --cov=rytm_randomizer.cockpit.export.writer --cov=rytm_randomizer.data.analog_four_patch_templates --cov=rytm_randomizer.observability.metrics --cov=rytm_randomizer.style_analysis.analog_four_patch_genome --cov=rytm_randomizer.style_analysis.analog_four_patch_inference --cov=rytm_randomizer.style_analysis.analog_four_patch_learning --cov=rytm_randomizer.style_analysis.analog_four_patch_send_plan --cov=rytm_randomizer.style_analysis.extractor --cov=rytm_randomizer.style_analysis.library --cov-branch --cov-report=term-missing -n 0 -q
+python -m pytest tests/test_style_analysis.py tests/cockpit/test_analog_four_patch_batch.py tests/cockpit/test_analog_four_patch_batch_reader.py tests/cockpit/test_analog_four_patch_render_rank.py tests/test_analog_four_patch_inference.py tests/test_midi_sender_protocol.py -n 0 --cov=rytm_randomizer.cockpit.export.analog_four_patch_batch_codec --cov=rytm_randomizer.cockpit.export.analog_four_patch_batch_contracts --cov=rytm_randomizer.cockpit.export.analog_four_patch_batch_publication --cov=rytm_randomizer.cockpit.export.analog_four_patch_batch_reader --cov=rytm_randomizer.style_analysis.analog_four_patch_render_rank --cov=rytm_randomizer.style_analysis.extractor --cov-branch --cov-report=term-missing
+python -m pytest --cov=rytm_randomizer --cov-branch --cov-report=term-missing
 python -m pytest tests/architecture/ -q
 python -m pytest tests/test_engines_pad1.py tests/test_engines_pad2.py tests/test_engines_pad3.py tests/test_engines_pad4.py tests/test_group_runner.py tests/test_scene_runner.py
 python scripts/code_review_gate.py --mode cli
@@ -58,17 +65,18 @@ python -m ruff check .
 python -m black --check --target-version=py311 .
 python -m isort --profile black --check-only .
 python -m vulture rytm_randomizer --min-confidence 80
-python -m pyright rytm_randomizer/cockpit/export/analog_four_export_contracts.py rytm_randomizer/cockpit/export/analog_four_cli.py rytm_randomizer/cockpit/export/analog_four_kit.py rytm_randomizer/cockpit/export/analog_four_patch_batch.py rytm_randomizer/cockpit/export/analog_four_patch_batch_cli.py rytm_randomizer/cockpit/export/analog_four_patch_batch_reader.py rytm_randomizer/cockpit/export/analog_four_patch_render_rank.py rytm_randomizer/cockpit/export/analog_four_patch_render_rank_cli.py rytm_randomizer/cockpit/export/writer.py rytm_randomizer/data/analog_four_display.py rytm_randomizer/data/analog_four_patch_templates.py rytm_randomizer/help_text.py rytm_randomizer/observability/metrics.py rytm_randomizer/reports/a4_soft_capture.py rytm_randomizer/state/a4_soft_capture.py rytm_randomizer/style_analysis/__init__.py rytm_randomizer/style_analysis/analog_four_patch_genome.py rytm_randomizer/style_analysis/analog_four_patch_inference.py rytm_randomizer/style_analysis/analog_four_patch_learning.py rytm_randomizer/style_analysis/analog_four_patch_send_plan.py rytm_randomizer/style_analysis/extractor.py rytm_randomizer/style_analysis/library.py
+python -m pyright rytm_randomizer/cockpit/export/analog_four_patch_batch_codec.py rytm_randomizer/cockpit/export/analog_four_patch_batch_contracts.py rytm_randomizer/cockpit/export/analog_four_patch_batch_publication.py rytm_randomizer/cockpit/export/analog_four_patch_batch_reader.py rytm_randomizer/cockpit/export/analog_four_patch_render_rank.py rytm_randomizer/cockpit/export/analog_four_patch_render_rank_cli.py rytm_randomizer/data/analog_four_render_rank.py rytm_randomizer/state/a4_soft_capture.py rytm_randomizer/style_analysis/analog_four_patch_render_rank.py rytm_randomizer/style_analysis/extractor.py rytm_randomizer/style_analysis/feature_report.py
 git diff --check
 ```
 
-- [x] Full repository suite: 6,448 passed, 3 skipped.
-- [x] Architecture suite: 683 passed.
+- [x] Full repository suite: 6,472 passed, 3 skipped.
+- [x] Architecture suite: 690 passed.
 - [x] V1.34 frozen parity: 685 passed byte-for-byte.
-- [x] Writer/audio/batch slice: 279 passed, 1 skipped with 100% statement and branch coverage across all 14 export-contract, saved-kit, atomic writer, inference, extractor, genome, learning, send-plan, batch, CLI, metrics, library, and template modules (2,046 statements / 402 branches / 0 misses).
+- [x] Post-review codec/contracts/publication/reader/ranker/extractor slice: 100% statement and branch coverage (795 statements / 158 branches / 0 misses).
+- [x] Complete project coverage: 98.97% across 42,308 statements and 9,632 branches; the 98% configured threshold and 95% pure-branch ratchet both pass.
 - [x] Existing saved-kit writer/export focused coverage remains green; the complete repository suite includes both writer and audio-batch paths.
 - [x] Pyright across the focused A4 production modules: 0 errors, 0 warnings.
-- [x] New manifest reader, render ranker/CLI, NRPN capture state, and capture report: 100% statement and branch coverage (552 statements / 138 branches / 0 misses).
+- [x] Manifest reader rejects rehashed path escapes, transport drift, DNA/event drift, noncanonical CC/NRPN addresses, sequence drift, and coverage drift before output opens.
 - [x] Lint trio and `git diff --check` clean.
 - [x] Vulture at confidence 80 clean across `rytm_randomizer`.
 - [x] Mechanical code-review gate passed on the final tree.
@@ -86,7 +94,7 @@ Hardware validation:
 
 ## Plan-requirements conformance
 
-Per [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUIREMENTS.md), every non-trivial PR must satisfy all 18 gates.
+Per [`docs/PLAN_REQUIREMENTS.md`](https://github.com/buzzijose-hub/RytmRandomizer/blob/modularize-v1.34/docs/PLAN_REQUIREMENTS.md), every non-trivial PR must satisfy all 18 gates.
 
 - [x] **Gate 1** — 100% branch coverage on touched files; project ≥95% pure-branch.
 - [x] **Gate 2** — V1.34 parity byte-identical (505 goldens / 685 pytest items).
@@ -103,7 +111,7 @@ Per [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUIREMENTS.md), every non-trivial
 - [x] **Gate 13** — env var docs (every read env var documented in `docs/LOCAL_DEV_TOOLING_NOTES.md` or a relevant doc).
 - [x] **Gate 14** — maintainability review (timing tracked, complexity bounded).
 - [x] **Gate 15** — learning capture (extract `.claude/skills/learned/` + `.claude/rules/` where applicable).
-- [x] **Gate 16** — execution shape (cascade-merge for autonomous multi-WS; no stacked PRs).
+- [x] **Gate 16** — one comprehensive branch directly against `modularize-v1.34`; no stacked PR cascade, per the current repository anti-cascade rule.
 - [x] **Gate 17** — abstraction reuse: every new module/class surveyed against the existing-abstraction catalog (`Device` Protocol, `senders/`, `snapshot/envelope`, `cli_registry`, `data/`, `observability/metrics`, ...); no reimplementation; net-new shapes justified.
 - [x] **Gate 18** — architecture-doc + diagram freshness: `docs/ARCHITECTURE.md` + `docs/ARCHITECTURE_DIAGRAMS.md` updated for any architecture-surface change; quoted counts re-verified.
 
@@ -118,11 +126,11 @@ Per [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUIREMENTS.md), every non-trivial
 
 ## Plan document
 
-Plan doc: `docs/superpowers/plans/2026-07-03-analog-four-audio-patch-genome.md`
+Plan doc: [`docs/superpowers/plans/2026-07-03-analog-four-audio-patch-genome.md`](https://github.com/buzzijose-hub/RytmRandomizer/blob/codex/a4-sysex-roundtrip-writer/docs/superpowers/plans/2026-07-03-analog-four-audio-patch-genome.md)
 
 ## Reviewer notes
 
-The pure renderer can exercise candidate calibrations in tests, but the operator-facing exporter rejects every field not marked `hardware-write-validated`. Filter1 Frequency, Filter1 Resonance, and Filter2 Frequency remain intentionally blocked from saved-kit writing. Batch sidecars preserve the complete live-dial DNA without claiming those rows were encoded into SysEx. The current generated vocabulary is fully live-routable; unvalidated destination labels, including independently unverified LFO2 destinations, still fail closed.
+The pure renderer can exercise candidate calibrations in tests, but the operator-facing exporter rejects every field not marked `hardware-write-validated`. Filter1 Frequency, Filter1 Resonance, and Filter2 Frequency remain intentionally blocked from saved-kit writing. Batch sidecars preserve the complete live-dial DNA without claiming those rows were encoded into SysEx. The current generated vocabulary is fully software-routable; unvalidated destination labels still fail closed. The complete 39-row/59-message live plan has not yet completed a supervised physical full-patch rehearsal and is documented as a pending hardware-validation step.
 
 The atomic writer fsyncs file data. It does not fsync parent-directory metadata, so persistence of the final filename after sudden power loss remains filesystem-dependent. Under normal filesystem semantics, generation-addressed write-once candidates ensure the prior manifest never points at mixed bytes during a process-interrupted overwrite; the interruption may leave unreferenced generation files. A lock-cleanup failure does not relabel a committed batch as failed: the successful result carries a warning and the retained metadata path.
 

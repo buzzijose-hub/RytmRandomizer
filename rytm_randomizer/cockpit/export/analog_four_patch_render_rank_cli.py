@@ -4,15 +4,22 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Final, TypedDict
 
 from ...cli_registry import CliCommand, register
+from ...observability.logging import get_logger
+from ...observability.metrics import AnalogFourPatchRenderRankErrorCode, get_metrics
+from ...observability.tracing import operation
+from ...style_analysis.extractor import StyleAnalysisDependencyError
 from .analog_four_patch_render_rank import (
     ANALOG_FOUR_RENDER_RANK_SAFETY,
+    AnalogFourPatchRenderRankArtifactError,
     AnalogFourPatchRenderRankPacket,
     AnalogFourPatchRenderRankPayload,
+    AnalogFourPatchRenderRankReferenceError,
     analog_four_patch_render_rank_to_dict,
 )
 
@@ -22,6 +29,7 @@ USAGE: Final[str] = (
     "--reference <audio> --manifest <batch.json> --render <N=audio> "
     "[--render <N=audio> ...] [--json]"
 )
+_logger = get_logger(__name__)
 
 
 class AnalogFourPatchRenderRankArgs(TypedDict):
@@ -108,6 +116,20 @@ def _rank(
     )
 
 
+def _rank_error_code(exc: Exception) -> AnalogFourPatchRenderRankErrorCode:
+    if isinstance(exc, AnalogFourPatchRenderRankArtifactError):
+        return "artifact_validation"
+    if isinstance(exc, AnalogFourPatchRenderRankReferenceError):
+        return "reference_mismatch"
+    if isinstance(exc, StyleAnalysisDependencyError):
+        return "dependency_missing"
+    if isinstance(exc, OSError):
+        return "input_read_failed"
+    if isinstance(exc, (TypeError, ValueError)):
+        return "validation"
+    return "rank_failed"
+
+
 def _format_render_rank_text(packet: AnalogFourPatchRenderRankPacket) -> str:
     lines = [
         "ok: true",
@@ -137,19 +159,43 @@ def handle_analog_four_patch_render_rank(
 ) -> int:
     """Analyze and rank local A4 recordings without touching MIDI."""
 
+    metrics = get_metrics()
+    started_at = time.perf_counter()
     try:
-        packet = _rank(
-            reference_audio_path=reference_audio_path,
-            manifest_path=manifest_path,
-            render_paths=render_paths,
-        )
+        with operation(
+            "a4_patch_render_rank",
+            logger=_logger,
+            reference_path=str(reference_audio_path),
+            manifest_path=str(manifest_path),
+            render_count=len(render_paths),
+        ):
+            packet = _rank(
+                reference_audio_path=reference_audio_path,
+                manifest_path=manifest_path,
+                render_paths=render_paths,
+            )
     except (ImportError, KeyError, OSError, RuntimeError, TypeError, ValueError) as exc:
+        error_code = _rank_error_code(exc)
+        metrics.record_a4_patch_render_rank(
+            (time.perf_counter() - started_at) * 1000.0,
+            error_code=error_code,
+        )
+        _logger.warning(
+            "Analog Four patch render ranking failed",
+            extra={
+                "operation": "a4_patch_render_rank",
+                "error_code": error_code,
+                "reference_path": str(reference_audio_path),
+                "manifest_path": str(manifest_path),
+            },
+        )
         if json_output:
             sys.stdout.write(
                 json.dumps(
                     {
                         "ok": False,
                         "error": str(exc),
+                        "error_code": error_code,
                         "safety": list(ANALOG_FOUR_RENDER_RANK_SAFETY),
                     },
                     sort_keys=True,
@@ -160,6 +206,15 @@ def handle_analog_four_patch_render_rank(
             sys.stderr.write(f"{USAGE}\nError: {exc}\n")
         return 2
 
+    metrics.record_a4_patch_render_rank((time.perf_counter() - started_at) * 1000.0)
+    _logger.info(
+        "Analog Four patch render ranking completed",
+        extra={
+            "operation": "a4_patch_render_rank",
+            "generation_id": packet.generation_id,
+            "recommended_candidate": packet.recommended_candidate,
+        },
+    )
     if json_output:
         payload: AnalogFourPatchRenderRankPayload = analog_four_patch_render_rank_to_dict(packet)
         sys.stdout.write(json.dumps({"ok": True, **payload}, indent=2, sort_keys=True) + "\n")

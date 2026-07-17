@@ -9,9 +9,8 @@ from pathlib import Path
 from typing import Final, Literal, TypedDict
 
 from ...cli_registry import CliCommand, register
-from ...devices.strategies.analog_four_saved_kit_writer import (
-    AnalogFourSavedKitMutation,
-)
+from ...data.analog_four_sysex_calibration import A4_FILTER2_RESONANCE_PARAMETER
+from ...devices.analog_four import AnalogFourSavedKitMutation
 from .analog_four_export_contracts import (
     AnalogFourExportErrorCode,
     analog_four_export_error_code,
@@ -22,7 +21,7 @@ from .analog_four_kit import (
 )
 
 COMMAND_NAME: Final[str] = "analog-four-saved-kit-export"
-FILTER2_RESONANCE_PARAMETER: Final[str] = "Filter2 Resonance"
+FILTER2_RESONANCE_PARAMETER: Final[str] = A4_FILTER2_RESONANCE_PARAMETER
 USAGE: Final[str] = (
     "Usage: python -m rytm_randomizer.cli analog-four-saved-kit-export "
     "--source <kit.syx> --output <kit.syx> "

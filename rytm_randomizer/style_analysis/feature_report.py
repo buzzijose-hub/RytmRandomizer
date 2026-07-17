@@ -35,6 +35,7 @@ import json
 from collections.abc import Mapping
 from dataclasses import dataclass, fields, is_dataclass
 from enum import Enum
+from typing import TypedDict
 
 from rytm_randomizer.guardrails.schema import Confidence, SourceType
 
@@ -79,6 +80,44 @@ class FeatureReport:
     content_hash: str
     derived_at: str
     """ISO 8601 timestamp string (e.g. ``"2026-05-15T12:34:56Z"``)."""
+
+
+class FeatureReportPayload(TypedDict):
+    """Stable JSON-ready representation of :class:`FeatureReport`."""
+
+    source_type: str
+    confidence: str
+    bpm: float
+    tempo_stability: float
+    kick_density: float
+    percussion_density: float
+    low_end_weight: float
+    spectral_brightness: float
+    texture_noise: float
+    energy_arc: list[float]
+    content_hash: str
+    derived_at: str
+
+
+def feature_report_to_dict(report: FeatureReport) -> FeatureReportPayload:
+    """Return the canonical public payload for a measured feature report."""
+
+    if not isinstance(report, FeatureReport):
+        raise TypeError("report must be a FeatureReport")
+    return {
+        "source_type": report.source_type.value,
+        "confidence": report.confidence.value,
+        "bpm": report.bpm,
+        "tempo_stability": report.tempo_stability,
+        "kick_density": report.kick_density,
+        "percussion_density": report.percussion_density,
+        "low_end_weight": report.low_end_weight,
+        "spectral_brightness": report.spectral_brightness,
+        "texture_noise": report.texture_noise,
+        "energy_arc": list(report.energy_arc),
+        "content_hash": report.content_hash,
+        "derived_at": report.derived_at,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -143,5 +182,7 @@ def compute_feature_report_hash(report: FeatureReport) -> str:
 
 __all__ = [
     "FeatureReport",
+    "FeatureReportPayload",
     "compute_feature_report_hash",
+    "feature_report_to_dict",
 ]

@@ -27,6 +27,7 @@ from __future__ import annotations
 import hashlib
 import math
 import statistics
+import string
 import tempfile
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -135,10 +136,9 @@ class _LibrosaApi(Protocol):  # pragma: no cover - typing-only optional dependen
 
 
 @dataclass(frozen=True)
-class AudioFeatureAnalysis:
-    """One shared audio decode with report and synthesis-facing measurements."""
+class AudioSynthesisFeatures:
+    """Reusable normalized synthesis measurements from one audio decode."""
 
-    feature_report: FeatureReport
     audio_sha256: str
     duration: float
     attack: float
@@ -152,6 +152,128 @@ class AudioFeatureAnalysis:
     harmonicity: float
     transient: float
     modulation: float
+
+    def __post_init__(self) -> None:
+        if len(self.audio_sha256) != 64 or any(
+            character not in string.hexdigits for character in self.audio_sha256
+        ):
+            raise ValueError("audio_sha256 must be a 64-character hexadecimal digest")
+        values = (
+            self.duration,
+            self.attack,
+            self.decay,
+            self.sustain,
+            self.tail,
+            self.brightness,
+            self.spectral_flatness,
+            self.noise,
+            self.low_end,
+            self.harmonicity,
+            self.transient,
+            self.modulation,
+        )
+        if any(not 0.0 <= value <= 1.0 for value in values):
+            raise ValueError("audio feature values must be normalized to 0.0..1.0")
+
+
+class AudioSynthesisFeaturesPayload(TypedDict):
+    audio_sha256: str
+    duration: float
+    attack: float
+    decay: float
+    sustain: float
+    tail: float
+    brightness: float
+    spectral_flatness: float
+    noise: float
+    low_end: float
+    harmonicity: float
+    transient: float
+    modulation: float
+
+
+@dataclass(frozen=True)
+class AudioFeatureAnalysis:
+    """One shared audio decode with report and synthesis-facing measurements."""
+
+    feature_report: FeatureReport
+    synthesis_features: AudioSynthesisFeatures
+
+    @property
+    def audio_sha256(self) -> str:
+        return self.synthesis_features.audio_sha256
+
+    @property
+    def duration(self) -> float:
+        return self.synthesis_features.duration
+
+    @property
+    def attack(self) -> float:
+        return self.synthesis_features.attack
+
+    @property
+    def decay(self) -> float:
+        return self.synthesis_features.decay
+
+    @property
+    def sustain(self) -> float:
+        return self.synthesis_features.sustain
+
+    @property
+    def tail(self) -> float:
+        return self.synthesis_features.tail
+
+    @property
+    def brightness(self) -> float:
+        return self.synthesis_features.brightness
+
+    @property
+    def spectral_flatness(self) -> float:
+        return self.synthesis_features.spectral_flatness
+
+    @property
+    def noise(self) -> float:
+        return self.synthesis_features.noise
+
+    @property
+    def low_end(self) -> float:
+        return self.synthesis_features.low_end
+
+    @property
+    def harmonicity(self) -> float:
+        return self.synthesis_features.harmonicity
+
+    @property
+    def transient(self) -> float:
+        return self.synthesis_features.transient
+
+    @property
+    def modulation(self) -> float:
+        return self.synthesis_features.modulation
+
+
+def audio_synthesis_features_to_dict(
+    features: AudioSynthesisFeatures,
+) -> AudioSynthesisFeaturesPayload:
+    """Return the stable JSON payload for reusable synthesis measurements."""
+
+    if not isinstance(features, AudioSynthesisFeatures):
+        raise TypeError("features must be AudioSynthesisFeatures")
+    return {
+        "audio_sha256": features.audio_sha256,
+        "duration": features.duration,
+        "attack": features.attack,
+        "decay": features.decay,
+        "sustain": features.sustain,
+        "tail": features.tail,
+        "brightness": features.brightness,
+        "spectral_flatness": features.spectral_flatness,
+        "noise": features.noise,
+        "low_end": features.low_end,
+        "harmonicity": features.harmonicity,
+        "transient": features.transient,
+        "modulation": features.modulation,
+    }
 
 
 class StyleAnalysisDependencyError(DataError, RuntimeError):
@@ -524,19 +646,21 @@ def analyze_audio(path: Path) -> AudioFeatureAnalysis:
         measurements = _measure_audio_features(snapshot)
     return AudioFeatureAnalysis(
         feature_report=_audio_feature_report(measurements),
-        audio_sha256=audio_sha256,
-        duration=measurements["duration"],
-        attack=measurements["attack"],
-        decay=measurements["decay"],
-        sustain=measurements["sustain"],
-        tail=measurements["tail"],
-        brightness=measurements["spectral_brightness"],
-        spectral_flatness=measurements["spectral_flatness"],
-        noise=measurements["noise"],
-        low_end=measurements["low_end_weight"],
-        harmonicity=measurements["harmonicity"],
-        transient=measurements["transient"],
-        modulation=measurements["modulation"],
+        synthesis_features=AudioSynthesisFeatures(
+            audio_sha256=audio_sha256,
+            duration=measurements["duration"],
+            attack=measurements["attack"],
+            decay=measurements["decay"],
+            sustain=measurements["sustain"],
+            tail=measurements["tail"],
+            brightness=measurements["spectral_brightness"],
+            spectral_flatness=measurements["spectral_flatness"],
+            noise=measurements["noise"],
+            low_end=measurements["low_end_weight"],
+            harmonicity=measurements["harmonicity"],
+            transient=measurements["transient"],
+            modulation=measurements["modulation"],
+        ),
     )
 
 
@@ -680,8 +804,11 @@ def _aggregate_measurements(  # pragma: no cover - requires librosa-derived inpu
 
 __all__ = [
     "AudioFeatureAnalysis",
+    "AudioSynthesisFeatures",
+    "AudioSynthesisFeaturesPayload",
     "StyleAnalysisDependencyError",
     "analyze_audio",
+    "audio_synthesis_features_to_dict",
     "extract_from_audio",
     "extract_from_description",
     "extract_from_partial",

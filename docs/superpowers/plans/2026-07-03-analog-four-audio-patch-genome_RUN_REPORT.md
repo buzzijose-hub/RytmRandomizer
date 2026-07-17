@@ -15,6 +15,8 @@ The run produced one bundled, non-stacked PR containing a passive audio-to-A4 ca
 | 2026-07-16 | Hardware accepted reference value 127, novel value 64, and four-track values 16/48/80/112. |
 | 2026-07-16 | Real audio batch path, immutable generation publication, interruption recovery, observability, and CLI contracts completed. |
 | 2026-07-16 | Parallel architecture, safety, test, and documentation reviews were resolved before final gates. |
+| 2026-07-17 | The required post-push eight-dimension review found and resolved device-boundary, trust, observability, abstraction, coverage, maintainability, and docs issues. |
+| 2026-07-17 | Final local convergence passed: 6,472 tests, 690 architecture items, 685 byte-frozen parity items, 98.97% project coverage, focused 100% branch coverage, lint, Vulture, and Pyright. |
 
 ## Escalations Resolved
 
@@ -22,6 +24,9 @@ The run produced one bundled, non-stacked PR containing a passive audio-to-A4 ca
 - Candidate overwrite could expose mixed-generation output. Candidate files are now immutable, exact bytes may be reused after interruption, and the stable manifest commits last.
 - A catchable process interruption could leave an owned publication lock or temporary file. Acquisition and atomic-write cleanup now run in `finally` paths, and a per-acquisition nonce prevents same-process publishers from releasing each other's locks. Hard termination can still retain recovery artifacts.
 - Saved-kit and batch services classified similar failures differently. A shared bounded A4 export contract now propagates one code to metrics and CLI output.
+- A recomputed sidecar could previously carry internally consistent but redirected transport metadata. The reader now cross-checks every event against its DNA row and the canonical A4 CC/NRPN map.
+- Batch orchestration mixed schemas, locking, JSON hashing, and acoustic scoring. Contracts, canonical codec, publication, and pure scoring now have separate modules while the public API remains compatible.
+- Dry-run messages previously inflated real-send telemetry. Mock and hardware send counters now remain distinct.
 
 ## Lessons
 
@@ -32,4 +37,4 @@ The run produced one bundled, non-stacked PR containing a passive audio-to-A4 ca
 
 ## LOC Impact
 
-The bundled PR spans the A4 data, style-analysis, strategy, export, test, and documentation surfaces. The final `git diff --stat` and CI test counts are the authoritative mechanical totals; no V1.34 parity fixture or hardware-pinned dependency changed.
+The bundled PR spans the A4 data, style-analysis, strategy, export, test, and documentation surfaces. Local closeout passed 6,472 tests with 3 platform/dependency skips and 98.97% project coverage. The final `git diff --stat` and CI matrix remain the authoritative merge totals; no V1.34 parity fixture or hardware-pinned dependency changed.

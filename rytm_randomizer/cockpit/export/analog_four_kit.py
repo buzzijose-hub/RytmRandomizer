@@ -11,11 +11,10 @@ from ...data.analog_four_sysex_calibration import (
     A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED,
     analog_four_sysex_calibration_for,
 )
-from ...devices.strategies.analog_four_saved_kit_writer import (
+from ...devices.analog_four import (
     AnalogFourSavedKitMutation,
     AnalogFourSavedKitRenderResult,
-    is_analog_four_saved_kit_mutation,
-    render_analog_four_saved_kit,
+    get_analog_four_saved_kit_capability,
 )
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
@@ -69,9 +68,10 @@ def export_analog_four_saved_kit(
     metrics = get_metrics()
     started_at = time.perf_counter()
     source_read_completed = False
+    capability = get_analog_four_saved_kit_capability()
     try:
         for mutation in mutations:
-            if not is_analog_four_saved_kit_mutation(mutation):
+            if not capability.is_saved_kit_mutation(mutation):
                 raise TypeError("mutations must contain AnalogFourSavedKitMutation records")
             calibration = analog_four_sysex_calibration_for(mutation.parameter)
             if calibration.status != A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED:
@@ -81,7 +81,7 @@ def export_analog_four_saved_kit(
 
         source_sysex = source_path.read_bytes()
         source_read_completed = True
-        render = render_analog_four_saved_kit(source_sysex, mutations)
+        render = capability.render_saved_kit(source_sysex, mutations)
         write = atomic_write(output_path, render.framed_sysex, overwrite=overwrite)
     except (KeyError, ValueError, TypeError, OSError) as exc:
         error_code = _a4_export_error_code(

@@ -7,6 +7,7 @@ from types import MappingProxyType
 import pytest
 
 from rytm_randomizer.data import (
+    ANALOG_FOUR_NRPN_CONTROLS,
     ANALOG_FOUR_SYNTH_TRACK_CC_BY_MSB,
     ANALOG_FOUR_SYNTH_TRACK_NRPN_BY_ADDRESS,
 )
@@ -281,6 +282,7 @@ def test_observe_nrpn_sequence_updates_named_parameter_and_report() -> None:
             observed_at=20.0,
             cc_lookup=ANALOG_FOUR_SYNTH_TRACK_CC_BY_MSB,
             nrpn_lookup=ANALOG_FOUR_SYNTH_TRACK_NRPN_BY_ADDRESS,
+            nrpn_controls=ANALOG_FOUR_NRPN_CONTROLS,
         )
 
     parameter = snapshot.tracks[0].parameters["LFO1 Destination A"]
@@ -306,6 +308,7 @@ def test_observe_nrpn_selectors_are_isolated_per_track_channel() -> None:
                 observed_at=float(channel),
                 cc_lookup=ANALOG_FOUR_SYNTH_TRACK_CC_BY_MSB,
                 nrpn_lookup=ANALOG_FOUR_SYNTH_TRACK_NRPN_BY_ADDRESS,
+                nrpn_controls=ANALOG_FOUR_NRPN_CONTROLS,
             )
 
     assert [track.parameters["Filter2 Resonance"].value for track in snapshot.tracks] == [
@@ -329,6 +332,7 @@ def test_observe_nrpn_data_without_complete_selector_fails_closed() -> None:
         observed_at=1.0,
         cc_lookup=ANALOG_FOUR_SYNTH_TRACK_CC_BY_MSB,
         nrpn_lookup=ANALOG_FOUR_SYNTH_TRACK_NRPN_BY_ADDRESS,
+        nrpn_controls=ANALOG_FOUR_NRPN_CONTROLS,
     )
     snapshot = observe_a4_message(
         snapshot,
@@ -336,6 +340,7 @@ def test_observe_nrpn_data_without_complete_selector_fails_closed() -> None:
         observed_at=2.0,
         cc_lookup=ANALOG_FOUR_SYNTH_TRACK_CC_BY_MSB,
         nrpn_lookup=ANALOG_FOUR_SYNTH_TRACK_NRPN_BY_ADDRESS,
+        nrpn_controls=ANALOG_FOUR_NRPN_CONTROLS,
     )
 
     assert snapshot.known_parameter_count == 0
@@ -351,6 +356,7 @@ def test_observe_unknown_nrpn_address_fails_closed() -> None:
             observed_at=3.0,
             cc_lookup=ANALOG_FOUR_SYNTH_TRACK_CC_BY_MSB,
             nrpn_lookup=ANALOG_FOUR_SYNTH_TRACK_NRPN_BY_ADDRESS,
+            nrpn_controls=ANALOG_FOUR_NRPN_CONTROLS,
         )
 
     assert snapshot.known_parameter_count == 0
@@ -370,6 +376,7 @@ def test_observe_normalizes_sparse_selector_container() -> None:
         observed_at=4.0,
         cc_lookup=ANALOG_FOUR_SYNTH_TRACK_CC_BY_MSB,
         nrpn_lookup=ANALOG_FOUR_SYNTH_TRACK_NRPN_BY_ADDRESS,
+        nrpn_controls=ANALOG_FOUR_NRPN_CONTROLS,
     )
 
     assert len(observed.nrpn_selectors) == TRACK_COUNT

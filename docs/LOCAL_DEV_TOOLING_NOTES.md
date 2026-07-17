@@ -115,6 +115,17 @@ The pre-push hook has been hardened (PR #110, landed separately from the CODE_RE
 
 The same pattern is documented in `.claude/skills/python-on-windows/SKILL.md`. Any new shell-driven tooling (CI scripts, hooks, just recipes) should consult that skill before invoking `python` directly on Windows.
 
+### Native audio test subprocess controls
+
+`tests/cockpit/test_analog_four_patch_batch.py` reads `GITHUB_ACTIONS` to skip
+one known-unstable real native-audio subprocess proof on GitHub Windows. The
+same test passes these variables as `1` only to its isolated analyzer
+subprocess: `BLIS_NUM_THREADS`, `MKL_NUM_THREADS`, `NUMBA_NUM_THREADS`,
+`NUMEXPR_NUM_THREADS`, `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, and
+`VECLIB_MAXIMUM_THREADS`. They prevent native math libraries from creating a
+second thread pool under pytest-xdist. They are not runtime configuration and
+do not affect MIDI, hardware, or normal application execution.
+
 ## 9. Next Project Task
 
 The next project task remains:

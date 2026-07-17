@@ -74,19 +74,7 @@ def _analysis(*, features=None, report: FeatureReport | None = None):
     settled = features or _features()
     return AudioFeatureAnalysis(
         feature_report=report or _reference_report(),
-        audio_sha256=settled.audio_sha256,
-        duration=settled.duration,
-        attack=settled.attack,
-        decay=settled.decay,
-        sustain=settled.sustain,
-        tail=settled.tail,
-        brightness=settled.brightness,
-        spectral_flatness=settled.spectral_flatness,
-        noise=settled.noise,
-        low_end=settled.low_end,
-        harmonicity=settled.harmonicity,
-        transient=settled.transient,
-        modulation=settled.modulation,
+        synthesis_features=settled,
     )
 
 

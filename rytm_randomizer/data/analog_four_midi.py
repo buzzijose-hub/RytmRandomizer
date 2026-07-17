@@ -7,6 +7,24 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final
 
+ANALOG_FOUR_NRPN_PARAMETER_MSB_CC: Final[int] = 99
+ANALOG_FOUR_NRPN_PARAMETER_LSB_CC: Final[int] = 98
+ANALOG_FOUR_NRPN_DATA_MSB_CC: Final[int] = 6
+
+
+@dataclass(frozen=True)
+class AnalogFourNrpnControlSpec:
+    parameter_msb_cc: int
+    parameter_lsb_cc: int
+    data_msb_cc: int
+
+
+ANALOG_FOUR_NRPN_CONTROLS: Final[AnalogFourNrpnControlSpec] = AnalogFourNrpnControlSpec(
+    parameter_msb_cc=ANALOG_FOUR_NRPN_PARAMETER_MSB_CC,
+    parameter_lsb_cc=ANALOG_FOUR_NRPN_PARAMETER_LSB_CC,
+    data_msb_cc=ANALOG_FOUR_NRPN_DATA_MSB_CC,
+)
+
 
 @dataclass(frozen=True)
 class AnalogFourCcMapping:
@@ -1013,10 +1031,15 @@ ANALOG_FOUR_SYNTH_TRACK_NRPN_BY_ADDRESS: Final[Mapping[tuple[int, int], AnalogFo
 )
 
 __all__ = [
+    "ANALOG_FOUR_NRPN_CONTROLS",
+    "ANALOG_FOUR_NRPN_DATA_MSB_CC",
+    "ANALOG_FOUR_NRPN_PARAMETER_LSB_CC",
+    "ANALOG_FOUR_NRPN_PARAMETER_MSB_CC",
     "ANALOG_FOUR_MANUAL_CC",
     "ANALOG_FOUR_MANUAL_CC_BY_MSB",
     "ANALOG_FOUR_SYNTH_TRACK_CC",
     "ANALOG_FOUR_SYNTH_TRACK_CC_BY_MSB",
     "ANALOG_FOUR_SYNTH_TRACK_NRPN",
     "ANALOG_FOUR_SYNTH_TRACK_NRPN_BY_ADDRESS",
+    "AnalogFourNrpnControlSpec",
 ]

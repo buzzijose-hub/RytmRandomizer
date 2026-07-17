@@ -54,6 +54,7 @@ from typing import Final, Literal, TypeAlias, TypeVar
 
 __all__ = [
     "AnalogFourPatchInferenceErrorCode",
+    "AnalogFourPatchRenderRankErrorCode",
     "MidiMetrics",
     "get_metrics",
     "reset_metrics",
@@ -72,6 +73,16 @@ AnalogFourPatchInferenceErrorCode: TypeAlias = Literal[
     "validation",
 ]
 """Bounded failure categories for direct Analog Four patch inference."""
+
+AnalogFourPatchRenderRankErrorCode: TypeAlias = Literal[
+    "artifact_validation",
+    "dependency_missing",
+    "input_read_failed",
+    "rank_failed",
+    "reference_mismatch",
+    "validation",
+]
+"""Bounded failure categories for recorded A4 render ranking."""
 
 _CounterKey = TypeVar("_CounterKey", int, str)
 
@@ -122,6 +133,12 @@ class MidiMetrics:
         default_factory=lambda: Counter[AnalogFourPatchInferenceErrorCode]()
     )
     a4_patch_inference_duration_ms_total: float = 0.0
+
+    a4_patch_render_rank_count: int = 0
+    a4_patch_render_rank_errors_by_code: Counter[AnalogFourPatchRenderRankErrorCode] = field(
+        default_factory=lambda: Counter[AnalogFourPatchRenderRankErrorCode]()
+    )
+    a4_patch_render_rank_duration_ms_total: float = 0.0
 
     def record_cc_sent(self, channel: int) -> None:
         """Increment the per-channel CC-sent counter for ``channel``.
@@ -223,6 +240,19 @@ class MidiMetrics:
         if error_code is not None:
             self.a4_patch_inference_errors_by_code[error_code] += 1
 
+    def record_a4_patch_render_rank(
+        self,
+        duration_ms: float,
+        *,
+        error_code: AnalogFourPatchRenderRankErrorCode | None = None,
+    ) -> None:
+        """Record one complete recorded-candidate ranking operation."""
+
+        self.a4_patch_render_rank_count += 1
+        self.a4_patch_render_rank_duration_ms_total += duration_ms
+        if error_code is not None:
+            self.a4_patch_render_rank_errors_by_code[error_code] += 1
+
     def format_summary(self) -> str:
         """Return a multi-line human-readable summary of every counter.
 
@@ -247,7 +277,10 @@ class MidiMetrics:
             f"export_duration_ms={self.export_duration_ms_total:.1f}, "
             f"a4_inference_count={self.a4_patch_inference_count}, "
             f"a4_inference_errors={_format_counter(self.a4_patch_inference_errors_by_code)}, "
-            f"a4_inference_duration_ms={self.a4_patch_inference_duration_ms_total:.1f}"
+            f"a4_inference_duration_ms={self.a4_patch_inference_duration_ms_total:.1f}, "
+            f"a4_render_rank_count={self.a4_patch_render_rank_count}, "
+            f"a4_render_rank_errors={_format_counter(self.a4_patch_render_rank_errors_by_code)}, "
+            f"a4_render_rank_duration_ms={self.a4_patch_render_rank_duration_ms_total:.1f}"
         )
 
 
@@ -304,3 +337,6 @@ def reset_metrics() -> None:
     _METRICS.a4_patch_inference_count = 0
     _METRICS.a4_patch_inference_errors_by_code.clear()
     _METRICS.a4_patch_inference_duration_ms_total = 0.0
+    _METRICS.a4_patch_render_rank_count = 0
+    _METRICS.a4_patch_render_rank_errors_by_code.clear()
+    _METRICS.a4_patch_render_rank_duration_ms_total = 0.0

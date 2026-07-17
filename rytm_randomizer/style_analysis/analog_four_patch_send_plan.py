@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final, TypedDict
+from typing import Final, Protocol, TypedDict
 
 from ..data.analog_four_display import (
     TRANSPORT_CC_READY,
@@ -110,6 +110,27 @@ class AnalogFourPatchSendSummary:
     ready_percentage: int
     live_dial_path: str
     blocking_reason: str
+
+
+class AnalogFourPatchTransportPlan(Protocol):
+    """Minimal plan surface consumed by dry-run and armed MIDI senders."""
+
+    @property
+    def selected_track(self) -> int: ...  # pragma: no cover - typing protocol
+
+    @property
+    def selected_candidate(self) -> int: ...  # pragma: no cover - typing protocol
+
+    @property
+    def selected_label(self) -> str: ...  # pragma: no cover - typing protocol
+
+    @property
+    def send_events(
+        self,
+    ) -> tuple[AnalogFourPatchSendEvent, ...]: ...  # pragma: no cover - typing protocol
+
+    @property
+    def summary(self) -> AnalogFourPatchSendSummary: ...  # pragma: no cover - typing protocol
 
 
 @dataclass(frozen=True)
@@ -519,6 +540,7 @@ __all__ = [
     "AnalogFourPatchSendPlanPayload",
     "AnalogFourPatchSendPlanSource",
     "AnalogFourPatchSendSummary",
+    "AnalogFourPatchTransportPlan",
     "AnalogFourPatchSendSummaryPayload",
     "analog_four_patch_send_plan_to_dict",
     "build_analog_four_patch_send_plan",

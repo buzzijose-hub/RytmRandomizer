@@ -380,8 +380,8 @@ All tests must pass. Coverage must stay ≥95% pure-branch (the ratchet floor, e
 
 `pyproject.toml` sets `addopts = "-n auto --durations=20"`, so **bare
 `python -m pytest`** parallelizes across all available CPU cores via
-`pytest-xdist`. On a 22-core dev machine the full 2370-test suite runs in
-~30s, the fast subset in ~25s.
+`pytest-xdist`. On a multi-core dev machine the 6,400+ test suite runs in
+roughly 45-90s, while the fast subset avoids the parity worker cost.
 
 Use the right tool at each stage of the loop:
 
@@ -400,6 +400,23 @@ override when capturing parity fixtures
 (`PARITY_CAPTURE_MODE=1 python -m pytest tests/test_engines_pad*.py -o addopts=''`) —
 the capture path has a documented TOCTOU concern with concurrent xdist
 workers.
+
+The real audio differential test has a bounded subprocess environment so
+native BLAS/Numba libraries cannot multiply worker threads under pytest-xdist:
+
+| Variable | Test behavior |
+|---|---|
+| `GITHUB_ACTIONS` | GitHub sets this to `true`; the known-unstable Windows native-audio subprocess proof is skipped there while deterministic Windows coverage and the real proof on other platforms remain active. |
+| `BLIS_NUM_THREADS` | Forced to `1` inside the native-audio proof subprocess. |
+| `MKL_NUM_THREADS` | Forced to `1` inside the native-audio proof subprocess. |
+| `NUMBA_NUM_THREADS` | Forced to `1` inside the native-audio proof subprocess. |
+| `NUMEXPR_NUM_THREADS` | Forced to `1` inside the native-audio proof subprocess. |
+| `OMP_NUM_THREADS` | Forced to `1` inside the native-audio proof subprocess. |
+| `OPENBLAS_NUM_THREADS` | Forced to `1` inside the native-audio proof subprocess. |
+| `VECLIB_MAXIMUM_THREADS` | Forced to `1` inside the native-audio proof subprocess. |
+
+These are test-process controls only. The application does not read or change
+them, and contributors do not need to set them for normal runs.
 
 **On macOS / Linux**, the bare command is the same. CI runs the same
 invocation on a 4-core GitHub runner in ~30-90s depending on the OS.

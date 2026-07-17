@@ -127,6 +127,32 @@ def send_cc(
     breadcrumb in the log.
     """
 
+    from .mock_midi import (  # noqa: PLC0415 - import-safe mock boundary
+        MidiMessage,
+        MockMidiSender,
+    )
+
+    if isinstance(out, MockMidiSender):
+        _logger.debug(
+            "midi_mock_send cc",
+            extra={
+                "channel": channel,
+                "control": cc,
+                "value": value,
+                "kind": "midi_mock_send",
+            },
+        )
+        out.send(
+            MidiMessage(
+                message_type="control_change",
+                channel=channel,
+                control=cc,
+                value=value,
+            )
+        )
+        sleep(0.02)
+        return
+
     _logger.debug(
         "midi_send cc",
         extra={
@@ -142,23 +168,6 @@ def send_cc(
     )
 
     get_metrics().record_cc_sent(channel)
-
-    from .mock_midi import (  # noqa: PLC0415 - lazy import keeps midi_io import-safe; mock_midi has no mido dependency.
-        MidiMessage,
-        MockMidiSender,
-    )
-
-    if isinstance(out, MockMidiSender):
-        out.send(
-            MidiMessage(
-                message_type="control_change",
-                channel=channel,
-                control=cc,
-                value=value,
-            )
-        )
-        sleep(0.02)
-        return
 
     import mido  # noqa: PLC0415 - intentional lazy import for import-safety
 

@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import string
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Final, TypedDict, TypeVar
+from typing import Final, TypeAlias, TypedDict, TypeVar
 
 from ..data.analog_four_display import make_a4_patch_value
 from ..data.analog_four_patch_templates import ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES
@@ -21,55 +20,29 @@ from .analog_four_patch_genome import (
     analog_four_patch_genome_to_dict,
     build_analog_four_patch_genome,
 )
-from .extractor import AudioFeatureAnalysis, StyleAnalysisDependencyError, analyze_audio
-from .feature_report import FeatureReport, compute_feature_report_hash
+from .extractor import (
+    AudioFeatureAnalysis,
+    AudioSynthesisFeatures,
+    AudioSynthesisFeaturesPayload,
+    StyleAnalysisDependencyError,
+    analyze_audio,
+    audio_synthesis_features_to_dict,
+)
+from .feature_report import (
+    FeatureReport,
+    FeatureReportPayload,
+    compute_feature_report_hash,
+    feature_report_to_dict,
+)
 
 _AUDIO_REPORT_DERIVED_AT: Final[str] = "1970-01-01T00:00:00Z"
 _logger = get_logger(__name__)
 _InferenceResult = TypeVar("_InferenceResult")
 
 
-@dataclass(frozen=True)
-class AnalogFourPatchAudioFeatures:
-    """Normalized synthesis evidence measured from one audio file."""
-
-    audio_sha256: str
-    duration: float
-    attack: float
-    decay: float
-    sustain: float
-    tail: float
-    brightness: float
-    spectral_flatness: float
-    noise: float
-    low_end: float
-    harmonicity: float
-    transient: float
-    modulation: float
-
-    def __post_init__(self) -> None:
-        if (
-            not isinstance(self.audio_sha256, str)
-            or len(self.audio_sha256) != 64
-            or any(character not in string.hexdigits for character in self.audio_sha256)
-        ):
-            raise ValueError("audio_sha256 must be a 64-character hexadecimal digest")
-        normalized_values = (
-            self.duration,
-            self.attack,
-            self.decay,
-            self.sustain,
-            self.tail,
-            self.brightness,
-            self.spectral_flatness,
-            self.noise,
-            self.low_end,
-            self.harmonicity,
-            self.transient,
-            self.modulation,
-        )
-        if any(not 0.0 <= value <= 1.0 for value in normalized_values):
-            raise ValueError("audio feature values must be normalized to 0.0..1.0")
+AnalogFourPatchAudioFeatures: TypeAlias = AudioSynthesisFeatures
+AnalogFourPatchAudioFeaturesPayload: TypeAlias = AudioSynthesisFeaturesPayload
+AnalogFourFeatureReportPayload: TypeAlias = FeatureReportPayload
 
 
 @dataclass(frozen=True)
@@ -79,39 +52,6 @@ class AnalogFourAudioPatchGenome:
     feature_report: FeatureReport
     audio_features: AnalogFourPatchAudioFeatures
     genome: AnalogFourPatchGenome
-
-
-class AnalogFourPatchAudioFeaturesPayload(TypedDict):
-    """Stable JSON-ready schema for measured audio evidence."""
-
-    audio_sha256: str
-    duration: float
-    attack: float
-    decay: float
-    sustain: float
-    tail: float
-    brightness: float
-    spectral_flatness: float
-    noise: float
-    low_end: float
-    harmonicity: float
-    transient: float
-    modulation: float
-
-
-class AnalogFourFeatureReportPayload(TypedDict):
-    source_type: str
-    confidence: str
-    bpm: float
-    tempo_stability: float
-    kick_density: float
-    percussion_density: float
-    low_end_weight: float
-    spectral_brightness: float
-    texture_noise: float
-    energy_arc: list[float]
-    content_hash: str
-    derived_at: str
 
 
 class AnalogFourAudioPatchGenomePayload(TypedDict):
@@ -181,21 +121,7 @@ def _analyze_audio_for_a4(path: Path) -> AudioFeatureAnalysis:
 def _audio_features_from_analysis(
     analysis: AudioFeatureAnalysis,
 ) -> AnalogFourPatchAudioFeatures:
-    return AnalogFourPatchAudioFeatures(
-        audio_sha256=analysis.audio_sha256,
-        duration=analysis.duration,
-        attack=analysis.attack,
-        decay=analysis.decay,
-        sustain=analysis.sustain,
-        tail=analysis.tail,
-        brightness=analysis.brightness,
-        spectral_flatness=analysis.spectral_flatness,
-        noise=analysis.noise,
-        low_end=analysis.low_end,
-        harmonicity=analysis.harmonicity,
-        transient=analysis.transient,
-        modulation=analysis.modulation,
-    )
+    return analysis.synthesis_features
 
 
 def build_analog_four_audio_patch_genome(
@@ -251,23 +177,9 @@ def analog_four_patch_audio_features_to_dict(
 ) -> AnalogFourPatchAudioFeaturesPayload:
     """Return a stable JSON-ready representation of audio evidence."""
 
-    if not isinstance(features, AnalogFourPatchAudioFeatures):
+    if not isinstance(features, AudioSynthesisFeatures):
         raise TypeError("features must be AnalogFourPatchAudioFeatures")
-    return {
-        "audio_sha256": features.audio_sha256,
-        "duration": features.duration,
-        "attack": features.attack,
-        "decay": features.decay,
-        "sustain": features.sustain,
-        "tail": features.tail,
-        "brightness": features.brightness,
-        "spectral_flatness": features.spectral_flatness,
-        "noise": features.noise,
-        "low_end": features.low_end,
-        "harmonicity": features.harmonicity,
-        "transient": features.transient,
-        "modulation": features.modulation,
-    }
+    return audio_synthesis_features_to_dict(features)
 
 
 def analog_four_audio_patch_genome_to_dict(
@@ -279,20 +191,7 @@ def analog_four_audio_patch_genome_to_dict(
         raise TypeError("audio_genome must be an AnalogFourAudioPatchGenome")
     report = audio_genome.feature_report
     return {
-        "feature_report": {
-            "source_type": report.source_type.value,
-            "confidence": report.confidence.value,
-            "bpm": report.bpm,
-            "tempo_stability": report.tempo_stability,
-            "kick_density": report.kick_density,
-            "percussion_density": report.percussion_density,
-            "low_end_weight": report.low_end_weight,
-            "spectral_brightness": report.spectral_brightness,
-            "texture_noise": report.texture_noise,
-            "energy_arc": list(report.energy_arc),
-            "content_hash": report.content_hash,
-            "derived_at": report.derived_at,
-        },
+        "feature_report": feature_report_to_dict(report),
         "audio_features": analog_four_patch_audio_features_to_dict(audio_genome.audio_features),
         "genome": analog_four_patch_genome_to_dict(audio_genome.genome),
     }

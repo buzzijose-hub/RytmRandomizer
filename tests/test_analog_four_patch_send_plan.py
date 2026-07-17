@@ -246,19 +246,7 @@ def test_audio_source_profiles_change_send_event_dna(monkeypatch: pytest.MonkeyP
         features = next(profiles)
         return AudioFeatureAnalysis(
             feature_report=_reference_report(),
-            audio_sha256=features.audio_sha256,
-            duration=features.duration,
-            attack=features.attack,
-            decay=features.decay,
-            sustain=features.sustain,
-            tail=features.tail,
-            brightness=features.brightness,
-            spectral_flatness=features.spectral_flatness,
-            noise=features.noise,
-            low_end=features.low_end,
-            harmonicity=features.harmonicity,
-            transient=features.transient,
-            modulation=features.modulation,
+            synthesis_features=features,
         )
 
     monkeypatch.setattr(inference, "analyze_audio", next_analysis)

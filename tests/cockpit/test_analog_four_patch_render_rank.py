@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -13,6 +14,14 @@ from rytm_randomizer.style_analysis.analog_four_patch_inference import (
 )
 
 pytestmark = pytest.mark.fast
+
+
+@pytest.fixture(autouse=True)
+def _isolate_rank_logging() -> None:
+    from rytm_randomizer.observability.logging import configure_logging
+
+    configure_logging(stream=io.StringIO())
+
 
 REFERENCE_SHA = "1" * 64
 RENDER_1_SHA = "2" * 64
@@ -35,6 +44,30 @@ def _features(sha256: str, *, brightness: float, noise: float) -> AnalogFourPatc
         transient=0.5,
         modulation=0.2,
     )
+
+
+def test_pure_ranker_validates_inputs_and_breaks_ties_by_candidate(tmp_path: Path) -> None:
+    from rytm_randomizer.style_analysis.analog_four_patch_render_rank import (
+        AnalogFourRenderCandidateFeatures,
+        rank_analog_four_render_features,
+    )
+
+    reference = _features(REFERENCE_SHA, brightness=0.5, noise=0.2)
+    identical = _features(RENDER_1_SHA, brightness=0.5, noise=0.2)
+    candidates = (
+        AnalogFourRenderCandidateFeatures(2, "Second", tmp_path / "two.wav", identical),
+        AnalogFourRenderCandidateFeatures(1, "First", tmp_path / "one.wav", identical),
+    )
+
+    ranked = rank_analog_four_render_features(reference, candidates)
+
+    assert [score.candidate for score in ranked] == [1, 2]
+    assert [score.rank for score in ranked] == [1, 2]
+    assert ranked[0].render_path == (tmp_path / "one.wav").resolve()
+    with pytest.raises(TypeError, match="AudioSynthesisFeatures"):
+        rank_analog_four_render_features(object(), candidates)  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="at least one measured"):
+        rank_analog_four_render_features(reference, ())
 
 
 @pytest.fixture
@@ -336,7 +369,9 @@ def test_render_rank_cli_reports_service_errors(
 
     assert exit_code == 2
     if json_output:
-        assert json.loads(captured.out)["error"] == "bad"
+        payload = json.loads(captured.out)
+        assert payload["error"] == "bad"
+        assert payload["error_code"] == "validation"
         assert captured.err == ""
     else:
         assert "Error: bad" in captured.err

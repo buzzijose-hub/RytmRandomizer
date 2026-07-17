@@ -2,13 +2,27 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
 from typing import Final, cast
 
+from ...data.analog_four_display import (
+    A4_MIDI_MAX,
+    A4_MIDI_MIN,
+    TRANSPORT_CC_READY,
+    TRANSPORT_NRPN_READY,
+    TRANSPORT_SCREEN_ONLY,
+    TRANSPORT_SCREEN_ONLY_NRPN,
+)
+from ...data.analog_four_midi import ANALOG_FOUR_MANUAL_CC, ANALOG_FOUR_SYNTH_TRACK_NRPN
+from ...style_analysis.analog_four_patch_genome import (
+    ANALOG_FOUR_PATCH_CANDIDATE_MAX,
+    ANALOG_FOUR_PATCH_CANDIDATE_MIN,
+    ANALOG_FOUR_TRACK_MAX,
+    ANALOG_FOUR_TRACK_MIN,
+)
 from ...style_analysis.analog_four_patch_send_plan import (
     ANALOG_FOUR_PATCH_SEND_KIND_CC,
     ANALOG_FOUR_PATCH_SEND_KIND_NRPN,
@@ -17,11 +31,26 @@ from ...style_analysis.analog_four_patch_send_plan import (
     AnalogFourPatchSendEvent,
     AnalogFourPatchSendSummary,
 )
-from .analog_four_patch_batch import BATCH_SCHEMA_VERSION, CANDIDATE_SCHEMA_VERSION
+from .analog_four_patch_batch_codec import (
+    BATCH_SCHEMA_VERSION,
+    CANDIDATE_SCHEMA_VERSION,
+    analog_four_patch_batch_payload_sha256,
+    analog_four_patch_batch_sha256,
+    decode_analog_four_patch_batch_json,
+)
 
 _SHA256_LENGTH: Final[int] = 64
 _VALID_MESSAGE_KINDS: Final[frozenset[str]] = frozenset(
     {ANALOG_FOUR_PATCH_SEND_KIND_CC, ANALOG_FOUR_PATCH_SEND_KIND_NRPN}
+)
+_SEND_STATUS_BY_KIND: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        ANALOG_FOUR_PATCH_SEND_KIND_CC: TRANSPORT_CC_READY,
+        ANALOG_FOUR_PATCH_SEND_KIND_NRPN: TRANSPORT_NRPN_READY,
+    }
+)
+_MANUAL_TRANSPORT_STATUSES: Final[frozenset[str]] = frozenset(
+    {TRANSPORT_SCREEN_ONLY, TRANSPORT_SCREEN_ONLY_NRPN}
 )
 
 
@@ -62,13 +91,24 @@ def load_analog_four_patch_batch_candidate(
         raise TypeError("manifest_path must be a Path")
     if not isinstance(candidate, int):
         raise TypeError("candidate must be an int")
+    if not ANALOG_FOUR_PATCH_CANDIDATE_MIN <= candidate <= ANALOG_FOUR_PATCH_CANDIDATE_MAX:
+        raise ValueError(
+            "candidate must be in "
+            f"{ANALOG_FOUR_PATCH_CANDIDATE_MIN}..{ANALOG_FOUR_PATCH_CANDIDATE_MAX}"
+        )
 
     resolved_manifest = manifest_path.resolve()
     manifest_bytes = resolved_manifest.read_bytes()
     manifest = _json_object(manifest_bytes, label="batch manifest")
     _expect_equal(manifest, "schema_version", BATCH_SCHEMA_VERSION, "batch manifest")
     generation_id = _string(manifest, "generation_id", "batch manifest")
-    track = _batch_reader_bounded_int(manifest, "track", "batch manifest", low=1, high=4)
+    track = _batch_reader_bounded_int(
+        manifest,
+        "track",
+        "batch manifest",
+        low=ANALOG_FOUR_TRACK_MIN,
+        high=ANALOG_FOUR_TRACK_MAX,
+    )
     audio_source = _object_field(manifest, "audio_source", "batch manifest")
     audio_sha256 = _sha256_field(audio_source, "sha256", "batch manifest audio source")
     feature_report_hash = _sha256_field(manifest, "feature_report_hash", "batch manifest")
@@ -81,7 +121,7 @@ def load_analog_four_patch_batch_candidate(
     selected = _select_candidate(candidates, candidate)
     sidecar_name = _safe_filename(selected, "sidecar_filename", "manifest candidate")
     sidecar_path = (resolved_manifest.parent / sidecar_name).resolve()
-    if sidecar_path.parent != resolved_manifest.parent:  # pragma: no cover - symlink defense
+    if sidecar_path.parent != resolved_manifest.parent:
         raise ValueError("manifest candidate sidecar escapes the batch directory")
     sidecar_bytes = sidecar_path.read_bytes()
     sidecar_sha256 = _batch_reader_sha256(sidecar_bytes)
@@ -108,7 +148,7 @@ def load_analog_four_patch_batch_candidate(
     _expect_equal(plan_payload, "selected_candidate", candidate, "send plan")
     _expect_equal(plan_payload, "selected_label", label, "send plan")
 
-    plan = _parse_plan(plan_payload, track=track, candidate=candidate, label=label)
+    plan = _parse_plan(plan_payload, dna=dna, track=track, candidate=candidate, label=label)
     _verify_coverage(selected, sidecar, plan.summary)
     return AnalogFourPatchBatchSelection(
         manifest_path=resolved_manifest,
@@ -124,6 +164,7 @@ def load_analog_four_patch_batch_candidate(
 def _parse_plan(
     payload: Mapping[str, object],
     *,
+    dna: Mapping[str, object],
     track: int,
     candidate: int,
     label: str,
@@ -158,6 +199,12 @@ def _parse_plan(
         sorted(event.sequence for event in (*send_events, *manual_events))
     ):
         raise ValueError("send-plan event sequences are not ordered")
+    _verify_plan_against_candidate_dna(
+        dna,
+        track=track,
+        send_events=send_events,
+        manual_events=manual_events,
+    )
     return StoredAnalogFourPatchSendPlan(
         selected_track=track,
         selected_candidate=candidate,
@@ -173,10 +220,23 @@ def _parse_send_event(row: Mapping[str, object], *, track: int) -> AnalogFourPat
     message_kind = _string(row, "message_kind", "send event")
     if message_kind not in _VALID_MESSAGE_KINDS:
         raise ValueError(f"send event has unsupported message_kind {message_kind!r}")
-    event_track = _batch_reader_bounded_int(row, "track", "send event", low=1, high=4)
+    event_track = _batch_reader_bounded_int(
+        row,
+        "track",
+        "send event",
+        low=ANALOG_FOUR_TRACK_MIN,
+        high=ANALOG_FOUR_TRACK_MAX,
+    )
     if (
         event_track != track
-        or _batch_reader_bounded_int(row, "channel", "send event", low=0, high=3) != track - 1
+        or _batch_reader_bounded_int(
+            row,
+            "channel",
+            "send event",
+            low=ANALOG_FOUR_TRACK_MIN - 1,
+            high=ANALOG_FOUR_TRACK_MAX - 1,
+        )
+        != track - 1
     ):
         raise ValueError("send event track/channel does not match the selected track")
     cc_msb = _optional_midi_int(row, "cc_msb", "send event")
@@ -186,6 +246,9 @@ def _parse_send_event(row: Mapping[str, object], *, track: int) -> AnalogFourPat
         raise ValueError("CC send event is missing cc_msb")
     if message_kind == ANALOG_FOUR_PATCH_SEND_KIND_NRPN and nrpn_address is None:
         raise ValueError("NRPN send event is missing nrpn_address")
+    transport_status = _string(row, "transport_status", "send event")
+    if transport_status != _SEND_STATUS_BY_KIND[message_kind]:
+        raise ValueError("send event transport_status does not match message_kind")
     return AnalogFourPatchSendEvent(
         sequence=_batch_reader_positive_int(row, "sequence", "send event"),
         track=event_track,
@@ -194,12 +257,18 @@ def _parse_send_event(row: Mapping[str, object], *, track: int) -> AnalogFourPat
         section=_string(row, "section", "send event"),
         encoder=_string(row, "encoder", "send event"),
         screen_value=_string(row, "screen_value", "send event"),
-        midi_value=_batch_reader_bounded_int(row, "midi_value", "send event", low=0, high=127),
+        midi_value=_batch_reader_bounded_int(
+            row,
+            "midi_value",
+            "send event",
+            low=A4_MIDI_MIN,
+            high=A4_MIDI_MAX,
+        ),
         message_kind=message_kind,
         cc_msb=cc_msb,
         cc_lsb=cc_lsb,
         nrpn_address=nrpn_address,
-        transport_status=_string(row, "transport_status", "send event"),
+        transport_status=transport_status,
         dial_direction=_string(row, "dial_direction", "send event"),
         rationale=_string(row, "rationale", "send event"),
         confidence=_string(row, "confidence", "send event"),
@@ -207,9 +276,18 @@ def _parse_send_event(row: Mapping[str, object], *, track: int) -> AnalogFourPat
 
 
 def _parse_manual_event(row: Mapping[str, object], *, track: int) -> AnalogFourPatchManualEvent:
-    event_track = _batch_reader_bounded_int(row, "track", "manual event", low=1, high=4)
+    event_track = _batch_reader_bounded_int(
+        row,
+        "track",
+        "manual event",
+        low=ANALOG_FOUR_TRACK_MIN,
+        high=ANALOG_FOUR_TRACK_MAX,
+    )
     if event_track != track:
         raise ValueError("manual event track does not match the selected track")
+    transport_status = _string(row, "transport_status", "manual event")
+    if transport_status not in _MANUAL_TRANSPORT_STATUSES:
+        raise ValueError("manual event has sendable or unknown transport_status")
     return AnalogFourPatchManualEvent(
         sequence=_batch_reader_positive_int(row, "sequence", "manual event"),
         track=event_track,
@@ -217,7 +295,7 @@ def _parse_manual_event(row: Mapping[str, object], *, track: int) -> AnalogFourP
         section=_string(row, "section", "manual event"),
         encoder=_string(row, "encoder", "manual event"),
         screen_value=_string(row, "screen_value", "manual event"),
-        transport_status=_string(row, "transport_status", "manual event"),
+        transport_status=transport_status,
         skip_reason=_string(row, "skip_reason", "manual event"),
         dial_direction=_string(row, "dial_direction", "manual event"),
         rationale=_string(row, "rationale", "manual event"),
@@ -241,6 +319,64 @@ def _parse_summary(row: Mapping[str, object]) -> AnalogFourPatchSendSummary:
         live_dial_path=_string(row, "live_dial_path", "send-plan summary"),
         blocking_reason=_string(row, "blocking_reason", "send-plan summary"),
     )
+
+
+def _verify_plan_against_candidate_dna(
+    dna: Mapping[str, object],
+    *,
+    track: int,
+    send_events: tuple[AnalogFourPatchSendEvent, ...],
+    manual_events: tuple[AnalogFourPatchManualEvent, ...],
+) -> None:
+    genes = _object_list(dna, "genes", "candidate DNA")
+    events = (*send_events, *manual_events)
+    if len(genes) != len(events):
+        raise ValueError("candidate DNA gene count does not match stored send-plan events")
+    events_by_sequence = {event.sequence: event for event in events}
+    if len(events_by_sequence) != len(events):
+        raise ValueError("send-plan event sequences must be unique")
+
+    for sequence, gene in enumerate(genes, start=1):
+        event = events_by_sequence.get(sequence)
+        if event is None:
+            raise ValueError("send-plan event sequences do not cover candidate DNA order")
+        _expect_equal(gene, "track", track, "candidate DNA gene")
+        value = _object_field(gene, "value", "candidate DNA gene")
+        for key, expected in (
+            ("parameter", event.parameter),
+            ("section", event.section),
+            ("encoder", event.encoder),
+            ("screen_value", event.screen_value),
+            ("transport_status", event.transport_status),
+            ("dial_direction", event.dial_direction),
+        ):
+            _expect_equal(value, key, expected, "candidate DNA gene value")
+        _expect_equal(gene, "rationale", event.rationale, "candidate DNA gene")
+        _expect_equal(gene, "confidence", event.confidence, "candidate DNA gene")
+
+        if isinstance(event, AnalogFourPatchSendEvent):
+            _expect_equal(value, "midi_value", event.midi_value, "candidate DNA gene value")
+            _expect_equal(value, "cc_msb", event.cc_msb, "candidate DNA gene value")
+            _expect_equal(value, "cc_lsb", event.cc_lsb, "candidate DNA gene value")
+            expected_nrpn = list(event.nrpn_address) if event.nrpn_address is not None else None
+            _expect_equal(value, "nrpn_address", expected_nrpn, "candidate DNA gene value")
+            _verify_canonical_transport(event)
+
+
+def _verify_canonical_transport(event: AnalogFourPatchSendEvent) -> None:
+    if event.message_kind == ANALOG_FOUR_PATCH_SEND_KIND_CC:
+        mapping = ANALOG_FOUR_MANUAL_CC.get(event.parameter)
+        if mapping is None or mapping.cc_msb is None:
+            raise ValueError(f"send event parameter {event.parameter!r} has no canonical A4 CC")
+        if (event.cc_msb, event.cc_lsb) != (mapping.cc_msb, mapping.cc_lsb):
+            raise ValueError("send event CC address does not match the canonical A4 parameter map")
+        return
+
+    mapping = ANALOG_FOUR_SYNTH_TRACK_NRPN.get(event.parameter)
+    if mapping is None or mapping.nrpn_msb is None or mapping.nrpn_lsb is None:
+        raise ValueError(f"send event parameter {event.parameter!r} has no canonical A4 NRPN")
+    if event.nrpn_address != (mapping.nrpn_msb, mapping.nrpn_lsb):
+        raise ValueError("send event NRPN address does not match the canonical A4 parameter map")
 
 
 def _verify_coverage(
@@ -271,11 +407,7 @@ def _select_candidate(
 
 
 def _json_object(data: bytes, *, label: str) -> Mapping[str, object]:
-    try:
-        decoded = cast(object, json.loads(data.decode("utf-8")))
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise ValueError(f"{label} is not valid UTF-8 JSON") from exc
-    return _as_object(decoded, label)
+    return decode_analog_four_patch_batch_json(data, label=label)
 
 
 def _as_object(value: object, label: str) -> Mapping[str, object]:
@@ -361,7 +493,7 @@ def _safe_filename(row: Mapping[str, object], key: str, label: str) -> str:
 
 
 def _batch_reader_sha256(data: bytes) -> str:
-    return hashlib.sha256(data).hexdigest()
+    return analog_four_patch_batch_sha256(data)
 
 
 def _sha256_field(row: Mapping[str, object], key: str, label: str) -> str:
@@ -377,8 +509,9 @@ def _verify_payload_hash(
     key: str,
     label: str,
 ) -> None:
-    encoded = (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode("utf-8")
-    if _batch_reader_sha256(encoded) != _sha256_field(hashes, key, "candidate hashes"):
+    if analog_four_patch_batch_payload_sha256(payload) != _sha256_field(
+        hashes, key, "candidate hashes"
+    ):
         raise ValueError(f"{label} SHA-256 does not match the candidate sidecar")
 
 

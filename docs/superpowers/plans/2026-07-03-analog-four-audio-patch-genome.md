@@ -26,6 +26,7 @@
 | WS-I | First A4 SysEx field calibration facts | WS-H | WS-D | `rytm_randomizer/data/analog_four_sysex_calibration.py`, `tests/test_analog_four_sysex_calibration.py`, `rytm_randomizer/data/__init__.py` |
 | WS-J | Hardware-validated A4 saved-kit renderer + guarded export | WS-I | WS-D | `data/analog_four_saved_kit_layout.py`, `snapshot/envelope.py`, `devices/strategies/{analog_four_saved_kit_codec,analog_four_saved_kit_writer}.py`, `cockpit/export/{analog_four_cli,analog_four_kit,writer}.py`, CLI/help registration, observability, exact binary fixtures, focused tests, hardware evidence, learned SysEx skill |
 | WS-K | Real audio inference + candidate batch operator path | WS-J | docs work | `style_analysis/analog_four_patch_inference.py`, `cockpit/export/analog_four_patch_batch.py`, `cockpit/export/analog_four_patch_batch_cli.py`, focused tests, CLI/help, architecture/operator docs |
+| WS-L | Verified live plan + recorded-render feedback hardening | WS-K | docs work | batch reader/codec/contracts/publication, pure render ranking, NRPN capture, app telemetry, adversarial tests, operator docs |
 
 ## Execution Shape
 
@@ -34,6 +35,7 @@
 - **Agent crew:** main agent performs TDD/implementation; read-only explorers inspect CLI/report and A4 reuse points in parallel.
 - **Self-driving rules:** no human prompts; routine file edits, formatting, docs, tests, and fixes continue automatically.
 - **Auto-merge cascade:** not used locally; PR shape is one non-stacked bundled branch.
+- **Gate 16 adaptation:** the historical cascade wording is superseded here by the current repository anti-cascade rule in `AGENTS.md`; all work lands in PR #214 directly against `modularize-v1.34`.
 - **Auto-rebase rules:** if base drift appears, rebase/cherry-pick only this branch's commits and never reset user changes in the original checkout.
 - **On-disk state:** Merged PRs #206 and #212, branch `codex/a4-sysex-roundtrip-writer`, this plan document, immutable hardware evidence, and committed test/coverage evidence are the durable recovery state; no long-running monitor or external state file is required.
 - **Kickoff trigger:** user requested autonomous continuation on 2026-07-03.
@@ -77,6 +79,10 @@
 19. Measure audio-dependent envelope, spectrum, noise, low-end, harmonicity, transient, and modulation evidence and use it to vary candidate DNA deterministically.
 20. Export one-to-four candidate `.syx`/JSON pairs plus a batch manifest; keep complete DNA and CC/NRPN live-dial metadata in sidecars.
 21. Register `analog-four-audio-patch-batch` with bounded track/candidate parsing, text/JSON summaries, classified file/input failures, and no MIDI behavior.
+22. Reconstruct one committed candidate only after verifying hashes, DNA/event identity, transport status, path containment, and canonical A4 CC/NRPN addresses.
+23. Add complete per-track CC/NRPN soft capture with injected manual-backed selector facts.
+24. Add passive recorded-render ranking with pure weighted scoring, source provenance checks, stable telemetry, and no automatic corpus promotion.
+25. Split batch payload contracts, canonical JSON/hashing, publication locking, and acoustic scoring from orchestration; complete adversarial review and focused branch coverage.
 
 ## Safety Contract
 
@@ -100,7 +106,7 @@
 
 Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 
-- [x] Gate 1 (100% branch coverage on touched files) -- the final 14-module writer/audio/batch slice covers 2,046 statements and 402 branches with zero misses.
+- [x] Gate 1 (100% branch coverage on touched files) -- the post-review codec/contracts/publication/reader/ranker/extractor set covers 795 statements and 158 branches with zero misses; the complete suite passes the project ratchet at 98.97% (42,308 statements, 9,632 branches).
 - [x] Gate 2 (V1.34 parity byte-identical) -- no V1.34 engine/golden paths touched.
 - [x] Gate 3 (lint/format/type clean) -- ruff/black/isort plus Pyright on every touched production path passed before closeout.
 - [x] Gate 4 (dead-code purge) -- no unused public surfaces; report and compiler are test-covered.
@@ -112,9 +118,9 @@ Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 - [x] Gate 10 (string-literal dispatch hygiene) -- no new mode/page dispatch ladder; CLI uses registry.
 - [x] Gate 11 (shared fixtures) -- shared builders live in `tests/conftest.py`; sanitized source/expected A4 frames live once under `tests/fixtures/analog_four_saved_kit/`.
 - [x] Gate 12 (Final constants) -- new constants annotated.
-- [x] Gate 13 (env vars) -- no new environment variables.
+- [x] Gate 13 (env vars) -- no runtime environment variable was added; the native-audio test subprocess controls and `GITHUB_ACTIONS` branch are documented in `CONTRIBUTING.md` and `docs/LOCAL_DEV_TOOLING_NOTES.md`.
 - [x] Gate 14 (maintainability) -- the paired pre-plan audit and post-plan report score all ten required dimensions with no regression.
 - [x] Gate 15 (learning phase) -- the run report/log, architecture diff, replay playbook, state/schema, updated `elektron-sysex-envelope` skill, and applicable project rules are committed and linked above.
-- [x] Gate 16 (execution shape) -- PRs #206 and #212 landed directly; the writer is one follow-up branch directly against `modularize-v1.34`, with no stacked base branch.
-- [x] Gate 17 (abstraction reuse) -- canonical layout facts live in `data/`; decoder and renderer share one saved-kit codec; export and profile registry share one atomic writer; operator dispatch reuses `cli_registry`.
-- [x] Gate 18 (architecture freshness) -- architecture docs/diagrams cover the shared packer, strategy-adjacent A4 saved-kit renderer, and guarded `.syx` export path.
+- [x] Gate 16 (execution shape) -- PRs #206 and #212 landed directly; PR #214 is one comprehensive follow-up branch directly against `modularize-v1.34`, with no stacked base branch. This follows the current anti-cascade repository rule rather than the older autonomous cascade pattern.
+- [x] Gate 17 (abstraction reuse) -- canonical layout/rank/MIDI facts live in `data/`; decoder and renderer share one saved-kit codec; guarded export and batching resolve the registered A4 saved-kit capability; writer and reader share one batch codec; acoustic scoring is pure; export and profile registry share one atomic writer; operator dispatch reuses `cli_registry`.
+- [x] Gate 18 (architecture freshness) -- architecture docs/diagrams cover the shared packer, optional registered-device saved-kit capability, split batch contracts/codec/publication, verified reader, pure ranker, and guarded `.syx`/live-plan paths.
