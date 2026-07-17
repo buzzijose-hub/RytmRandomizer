@@ -9,8 +9,8 @@ Last updated: 2026-07-16. This file is a hand-authored snapshot and is meant to 
   input learning and confirmed CC-only output now enter exclusively through
   `app.py --arm`. Unknown specification content fails closed, normalized MIDI
   values carry explicit 7-bit/14-bit domains, and unverified CC14 conversion
-  remains learn-required. Fresh verification passed 147 focused RUSH01/data
-  tests, 683 architecture tests, all 685 frozen V1.34 parity items, and 6313
+  remains learn-required. Fresh verification passed 148 focused RUSH01/data
+  tests, 683 architecture tests, all 685 frozen V1.34 parity items, and 6316
   full-suite tests with 3 skips. The three focused production modules reached
   100% statements/branches (668 statements, 290 branches), and the app repair
   diff covered all 144 added executable statements and 22 added branch lines.

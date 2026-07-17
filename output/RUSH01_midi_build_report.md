@@ -275,13 +275,13 @@ to a verified converter.
 - Architecture gates: 683 passed. The existing generic-`main` abstraction
   warning remains warn-only.
 - Focused compiler, validation, transport, observation, app-boundary, and
-  data-layer suite: 147 passed.
+  data-layer suite: 148 passed.
 - Focused production-module coverage: 112 passed with 100.00% statements and
   branches across the compiler, transport, and learning helpers (668
   statements, 290 branches). The app repair diff covered all 144 added
   executable statements and all 22 added branch lines.
 - V1.34 parity: all 685 byte-frozen items passed without fixture regeneration.
-- Complete repository suite: 6313 passed, 3 skipped, 0 failed in 179.05
+- Complete repository suite: 6316 passed, 3 skipped, 0 failed in 240.62
   seconds using four xdist workers.
 - Both unconfigured plans passed two deterministic `--check` runs. No provider,
   backend, or physical port opened; no MIDI or SysEx was transmitted.
