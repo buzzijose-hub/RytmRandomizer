@@ -746,6 +746,9 @@ flowchart TB
         A4Inference["style_analysis/analog_four_patch_inference.py<br/>measured audio -> candidate DNA"]
         A4Batch["cockpit/export/analog_four_patch_batch.py<br/>.syx + complete DNA/live-dial sidecars"]
         A4BatchCli["analog-four-audio-patch-batch<br/>registered passive-hardware command"]
+        A4BatchReader["analog_four_patch_batch_reader.py<br/>verify manifest + exact sidecar plan"]
+        A4RenderRank["analog_four_patch_render_rank.py<br/>reference + A4 recordings -> acoustic rank"]
+        A4RenderRankCli["analog-four-audio-patch-rank<br/>registered passive command"]
     end
 
     RytmDecoder -->|"depends on"| Envelope
@@ -765,6 +768,9 @@ flowchart TB
     A4Inference --> A4Batch
     A4Batch --> A4Export
     A4BatchCli --> A4Batch
+    A4Batch --> A4BatchReader
+    A4BatchReader --> A4RenderRank
+    A4RenderRankCli --> A4RenderRank
 
     BaseMockRuntime -.satisfies.-> MockProto
 ```
@@ -1795,6 +1801,7 @@ flowchart LR
         A4PatchCorpus["analog-four-patch-corpus-report"]
         A4PatchSendPlan["analog-four-patch-send-plan-report"]
         A4AudioPatchBatch["analog-four-audio-patch-batch --audio A --source-kit K --output-dir D [--track N] [--candidates N] [--json]"]
+        A4AudioPatchRank["analog-four-audio-patch-rank --reference A --manifest M --render N=R [...]"]
         A4StyleKitReadiness["analog-four-style-kit-readiness-report"]
         A4OxiMacroSetPlanner["analog-four-oxi-macro-set-planner-report [--set-name N] [--sequence A,B] [--seed N] [--json]"]
         LocalModelCopilot["local-model-copilot-report --question Q [--workflow docs|mutation|patch|all] [--ask-local-model] [--json]"]
@@ -1846,6 +1853,7 @@ flowchart LR
     CliRegistry -->|"registered passive command:<br/>analog-four-patch-corpus-report"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-patch-send-plan-report"| CLI
     CliRegistry -->|"registered passive-hardware command:<br/>analog-four-audio-patch-batch"| CLI
+    CliRegistry -->|"registered passive command:<br/>analog-four-audio-patch-rank"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-style-kit-readiness-report"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-oxi-macro-set-planner-report"| CLI
     CliRegistry -->|"registered passive command:<br/>local-model-copilot-report"| CLI

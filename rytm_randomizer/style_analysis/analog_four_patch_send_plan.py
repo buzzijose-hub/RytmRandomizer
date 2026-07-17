@@ -3,8 +3,7 @@
 The compiler bridges the passive audio-to-patch learning packet to an explicit
 transport plan. It does not open MIDI ports, send messages, or write SysEx.
 It only separates the selected patch DNA into ordered CC/NRPN events that an
-armed caller may send later and manual rows that still require front-panel
-capture.
+armed caller may send later and any rows that still require front-panel work.
 """
 
 from __future__ import annotations
@@ -51,7 +50,7 @@ ANALOG_FOUR_PATCH_SEND_PLAN_SAFETY: Final[tuple[str, ...]] = (
     "no MIDI sent",
     "no SysEx written",
     "armed app path requires --confirm-a4-patch-send-plan",
-    "screen-only destination rows are skipped until ordinal capture",
+    "unknown destination labels fail closed instead of sending guessed values",
 )
 _SENDABLE_STATUSES: Final[frozenset[str]] = frozenset({TRANSPORT_CC_READY, TRANSPORT_NRPN_READY})
 _MANUAL_STATUSES: Final[frozenset[str]] = frozenset(

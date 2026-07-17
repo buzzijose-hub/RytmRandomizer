@@ -705,10 +705,10 @@ def test_app_main_dry_run_a4_patch_send_plan_records_mock_messages(capsys) -> No
     assert "no port opened: True" in captured.out
     assert "track: 1" in captured.out
     assert "candidate: 1 / Closest reference" in captured.out
-    assert "sendable events: 34" in captured.out
-    assert "transport messages: 44" in captured.out
-    assert "manual rows skipped: 5" in captured.out
-    assert "Mock sender captured 44 message(s)." in captured.out
+    assert "sendable events: 39" in captured.out
+    assert "transport messages: 59" in captured.out
+    assert "manual rows skipped: 0" in captured.out
+    assert "Mock sender captured 59 message(s)." in captured.out
     assert captured.err == ""
 
 
@@ -804,12 +804,12 @@ def test_app_main_arm_a4_patch_send_plan_sends_cc_and_nrpn_events(
     assert exit_code == 0
     assert "A4 patch send-plan send" in captured.out
     assert "Opening MIDI output: Fake A4 Out" in captured.out
-    assert "sendable events: 34" in captured.out
-    assert "transport messages: 44" in captured.out
-    assert "manual rows skipped: 5" in captured.out
+    assert "sendable events: 39" in captured.out
+    assert "transport messages: 59" in captured.out
+    assert "manual rows skipped: 0" in captured.out
     assert "Sent generated A4 patch send-plan MIDI events." in captured.out
     assert captured.err == ""
-    assert len(fake_port.sent) == 44
+    assert len(fake_port.sent) == 59
     assert [
         (message.channel, message.control, message.value) for message in fake_port.sent[:3]
     ] == [
@@ -833,6 +833,10 @@ def test_app_main_arm_a4_patch_send_plan_sends_cc_and_nrpn_events(
         ([], "requires exactly one source"),
         (
             ["--description", "x", "--audio", "reference.wav"],
+            "requires exactly one source",
+        ),
+        (
+            ["--audio", "reference.wav", "--batch-manifest", "batch.json"],
             "requires exactly one source",
         ),
         (["--description", ""], "--description requires a non-empty value"),
@@ -888,6 +892,7 @@ def test_app_main_a4_patch_send_plan_requires_dry_run_or_arm(capsys) -> None:
         ),
         (["--description", "x"], "--description requires --a4-patch-send-plan"),
         (["--audio", "reference.wav"], "--audio requires --a4-patch-send-plan"),
+        (["--batch-manifest", "batch.json"], "--batch-manifest requires --a4-patch-send-plan"),
         (["--track", "1"], "--track requires --a4-patch-send-plan"),
         (["--candidate", "1"], "--candidate requires --a4-patch-send-plan"),
     ],

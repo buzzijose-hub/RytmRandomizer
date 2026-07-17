@@ -41,6 +41,10 @@ from .analog_four_patch_batch_cli import (
     ANALOG_FOUR_AUDIO_PATCH_BATCH_CLI_COMMAND,
     handle_analog_four_audio_patch_batch,
 )
+from .analog_four_patch_render_rank_cli import (
+    ANALOG_FOUR_PATCH_RENDER_RANK_CLI_COMMAND,
+    handle_analog_four_patch_render_rank,
+)
 from .cli import (
     COCKPIT_EXPORT_PROFILE_MODEL_CLI_COMMAND,
     handle_export_profile_model,
@@ -68,6 +72,7 @@ from .verifier import (
 __all__ = [
     "AnalogFourSavedKitExportResult",
     "ANALOG_FOUR_AUDIO_PATCH_BATCH_CLI_COMMAND",
+    "ANALOG_FOUR_PATCH_RENDER_RANK_CLI_COMMAND",
     "ANALOG_FOUR_SAVED_KIT_EXPORT_CLI_COMMAND",
     "COCKPIT_EXPORT_PROFILE_MODEL_CLI_COMMAND",
     "FORMAT_VERSION",
@@ -78,6 +83,7 @@ __all__ = [
     "SUPPORTED_FORMAT_VERSIONS",
     "handle_export_profile_model",
     "handle_analog_four_audio_patch_batch",
+    "handle_analog_four_patch_render_rank",
     "handle_analog_four_saved_kit_export",
     "export_analog_four_saved_kit",
     "pack_profile_model",

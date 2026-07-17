@@ -46,6 +46,7 @@ import argparse
 import logging
 import sys
 from collections.abc import Sequence
+from pathlib import Path
 from time import time_ns
 from typing import TYPE_CHECKING, Final, Protocol
 
@@ -53,6 +54,7 @@ from .observability.logging import configure_logging as _configure_logging
 from .observability.logging import get_logger as _observability_get_logger
 
 if TYPE_CHECKING:
+    from .cockpit.export.analog_four_patch_batch_reader import StoredAnalogFourPatchSendPlan
     from .data.analog_four_midi import AnalogFourCcMapping
     from .data.analog_four_recipes import AnalogFourKitRecipe, AnalogFourRecipeEvent
     from .data.analog_rytm_style_recipes import (
@@ -63,6 +65,8 @@ if TYPE_CHECKING:
     from .engines.analog_rytm_snapshot_shell import ResnapshotFunc, RytmSnapshotShellAnchor
     from .midi_io import Sender
     from .style_analysis.analog_four_patch_send_plan import AnalogFourPatchSendPlan
+
+    AnalogFourPatchSendPlanLike = AnalogFourPatchSendPlan | StoredAnalogFourPatchSendPlan
 
 
 RYTM_LIVE_SNAPSHOT_CAPTURE_TIMEOUT_SECONDS: Final[float] = 120.0
@@ -215,6 +219,13 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--audio",
         help="Reference audio path for --a4-patch-send-plan.",
+    )
+    parser.add_argument(
+        "--batch-manifest",
+        help=(
+            "Committed Analog Four audio-patch batch manifest for "
+            "--a4-patch-send-plan. The selected --candidate sidecar is hash-verified."
+        ),
     )
     parser.add_argument(
         "--track",
@@ -732,7 +743,10 @@ def _run_a4_soft_capture(args: argparse.Namespace) -> int:
 
     from time import monotonic
 
-    from .data import ANALOG_FOUR_MANUAL_CC_BY_MSB
+    from .data import (
+        ANALOG_FOUR_MANUAL_CC_BY_MSB,
+        ANALOG_FOUR_SYNTH_TRACK_NRPN_BY_ADDRESS,
+    )
     from .mido_provider import build_mido_midi_port_provider
     from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
     from .reports.a4_soft_capture import format_a4_soft_capture_report
@@ -778,6 +792,7 @@ def _run_a4_soft_capture(args: argparse.Namespace) -> int:
                 message,
                 observed_at=monotonic(),
                 cc_lookup=ANALOG_FOUR_MANUAL_CC_BY_MSB,
+                nrpn_lookup=ANALOG_FOUR_SYNTH_TRACK_NRPN_BY_ADDRESS,
             )
     finally:
         close = getattr(port, "close", None)
@@ -1169,9 +1184,12 @@ def _resolve_a4_patch_send_plan_source(args: argparse.Namespace) -> tuple[str, s
         sources.append(("--description", args.description))
     if args.audio is not None:
         sources.append(("--audio", args.audio))
+    if args.batch_manifest is not None:
+        sources.append(("--batch-manifest", args.batch_manifest))
     if len(sources) != 1:
         sys.stderr.write(
-            "--a4-patch-send-plan requires exactly one source: --description or --audio.\n"
+            "--a4-patch-send-plan requires exactly one source: --description, --audio, "
+            "or --batch-manifest.\n"
         )
         return None
     source_flag, source_value = sources[0]
@@ -1200,7 +1218,7 @@ def _a4_patch_optional_range(
 
 def _build_a4_patch_send_plan_from_args(
     args: argparse.Namespace,
-) -> tuple[AnalogFourPatchSendPlan, str] | None:
+) -> tuple[AnalogFourPatchSendPlanLike, str] | None:
     """Build an A4 patch send plan from app arguments without touching MIDI."""
 
     from .style_analysis.analog_four_patch_send_plan import (
@@ -1214,13 +1232,6 @@ def _build_a4_patch_send_plan_from_args(
     source = _resolve_a4_patch_send_plan_source(args)
     if source is None:
         return None
-    track = _a4_patch_optional_range(
-        "track",
-        args.track,
-        default=ANALOG_FOUR_TRACK_MIN,
-        low=ANALOG_FOUR_TRACK_MIN,
-        high=ANALOG_FOUR_TRACK_MAX,
-    )
     selected_candidate = _a4_patch_optional_range(
         "candidate",
         args.candidate,
@@ -1228,13 +1239,40 @@ def _build_a4_patch_send_plan_from_args(
         low=ANALOG_FOUR_PATCH_CANDIDATE_MIN,
         high=ANALOG_FOUR_PATCH_CANDIDATE_MAX,
     )
-    if track is None or selected_candidate is None:
+    if selected_candidate is None:
         return None
 
     source_flag, source_value = source
-    try:
-        from .style_analysis import StyleAnalysisDependencyError
+    if source_flag == "--batch-manifest":
+        from .cockpit.export.analog_four_patch_batch_reader import (
+            load_analog_four_patch_batch_candidate,
+        )
 
+        try:
+            selection = load_analog_four_patch_batch_candidate(
+                Path(source_value),
+                candidate=selected_candidate,
+            )
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            sys.stderr.write(f"--a4-patch-send-plan failed: {exc}\n")
+            return None
+        if args.track is not None and args.track != selection.plan.selected_track:
+            sys.stderr.write("track does not match the committed batch manifest selected track.\n")
+            return None
+        return selection.plan, f"batch-manifest generation {selection.generation_id}"
+
+    track = _a4_patch_optional_range(
+        "track",
+        args.track,
+        default=ANALOG_FOUR_TRACK_MIN,
+        low=ANALOG_FOUR_TRACK_MIN,
+        high=ANALOG_FOUR_TRACK_MAX,
+    )
+    if track is None:
+        return None
+    from .style_analysis import StyleAnalysisDependencyError
+
+    try:
         source = build_analog_four_patch_send_plan_from_source(
             source_flag,
             source_value,
@@ -1247,7 +1285,7 @@ def _build_a4_patch_send_plan_from_args(
     return source.plan, source.source_label
 
 
-def _send_a4_patch_send_plan_events(plan: AnalogFourPatchSendPlan, out: Sender) -> None:
+def _send_a4_patch_send_plan_events(plan: AnalogFourPatchSendPlanLike, out: Sender) -> None:
     """Send compiler-approved A4 patch events through an injected MIDI sender."""
 
     from .senders.midi_event_plan import send_cc_nrpn_event_plan
@@ -1263,7 +1301,7 @@ def _send_a4_patch_send_plan_events(plan: AnalogFourPatchSendPlan, out: Sender) 
 
 
 def _run_dry_run_a4_patch_send_plan(
-    plan: AnalogFourPatchSendPlan,
+    plan: AnalogFourPatchSendPlanLike,
     *,
     source_label: str,
 ) -> int:
@@ -1299,7 +1337,7 @@ def _run_dry_run_a4_patch_send_plan(
 
 
 def _run_armed_a4_patch_send_plan(
-    plan: AnalogFourPatchSendPlan,
+    plan: AnalogFourPatchSendPlanLike,
     *,
     source_label: str,
 ) -> int:
@@ -2533,6 +2571,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 1
         if args.audio is not None:
             sys.stderr.write("--audio requires --a4-patch-send-plan.\n")
+            return 1
+        if args.batch_manifest is not None:
+            sys.stderr.write("--batch-manifest requires --a4-patch-send-plan.\n")
             return 1
         if args.track is not None:
             sys.stderr.write("--track requires --a4-patch-send-plan.\n")

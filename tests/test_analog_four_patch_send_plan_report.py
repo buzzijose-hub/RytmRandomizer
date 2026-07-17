@@ -69,12 +69,15 @@ def test_patch_send_plan_report_text_shows_sendable_and_manual_rows() -> None:
 
     assert text.startswith("RytmRandomizer passive Analog Four patch send plan\n")
     assert "Selected candidate: 1 / Closest reference" in text
-    assert "Live dial path: partial-live-dial-ready" in text
+    assert "Live dial path: transport-ready" in text
+    assert "Sendable events: 39 / 39 (100%)" in text
+    assert "Transport messages: 59" in text
     assert "Sendable MIDI events:" in text
     assert "01 T1 ch0 CC69 OSC1 Level -> 96" in text
     assert "10 T1 ch0 NRPN 1:54 EnvA Env Shape -> 0" in text
     assert "Manual/front-panel rows:" in text
-    assert "EnvF Gate Length | screen NOTE | skipped" in text
+    assert "16 T1 ch0 NRPN 1:65 EnvF Gate Length -> 0" in text
+    assert "25 T1 ch0 NRPN 1:86 LFO1 Destination A -> 34" in text
     assert "- no MIDI port opened" in text
     assert "- no MIDI sent" in text
 
@@ -168,7 +171,7 @@ def test_patch_send_plan_report_json_includes_summary_and_events() -> None:
     assert payload["selected_track"] == 3
     assert payload["send_plan"]["summary"]["sendable_count"] > 0
     assert payload["send_plan"]["send_events"][0]["track"] == 3
-    assert payload["send_plan"]["manual_events"]
+    assert payload["send_plan"]["manual_events"] == []
     assert payload["safety"][0] == "passive read-only patch send plan"
     assert json.dumps(payload, sort_keys=True) == json.dumps(
         build_analog_four_patch_send_plan_payload(report),
@@ -226,7 +229,7 @@ def test_patch_send_plan_cli_description_json_mode(capsys: pytest.CaptureFixture
     assert exit_code == 0
     assert payload["selected_track"] == 2
     assert payload["selected_candidate"] == 1
-    assert payload["send_plan"]["summary"]["transport_message_count"] == 44
+    assert payload["send_plan"]["summary"]["transport_message_count"] == 59
     assert captured.err == ""
 
 

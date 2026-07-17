@@ -45,7 +45,7 @@ def _body_lines(snapshot: A4SoftCaptureSnapshot, *, input_name: str) -> list[str
     lines.extend(
         [
             "Unknown parameters: left untouched",
-            f"Unknown raw CC observations: {len(snapshot.unknown_controls)}",
+            f"Unknown raw control observations: {len(snapshot.unknown_controls)}",
             f"Ignored non-CC messages: {snapshot.ignored_message_count}",
             f"Out-of-scope channel messages: {snapshot.out_of_scope_message_count}",
         ]
@@ -61,11 +61,16 @@ def _tracks_by_number(snapshot: A4SoftCaptureSnapshot) -> tuple[A4ObservedTrackS
     )
 
 
-def _observed_parameter_cc(parameter: ObservedA4Parameter) -> int:
-    return parameter.cc
+def _observed_parameter_cc(parameter: ObservedA4Parameter) -> tuple[int, int, int]:
+    if parameter.nrpn_address is not None:
+        return (1, parameter.nrpn_address[0], parameter.nrpn_address[1])
+    return (0, parameter.cc, 0)
 
 
 def _known_parameter_line(parameter: ObservedA4Parameter) -> str:
+    if parameter.nrpn_address is not None:
+        msb, lsb = parameter.nrpn_address
+        return f"- {parameter.parameter}: {parameter.value} (NRPN {msb}:{lsb})"
     return f"- {parameter.parameter}: {parameter.value}"
 
 

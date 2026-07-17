@@ -79,7 +79,7 @@ def test_patch_value_for_filter_overdrive_center_uses_off_label() -> None:
     assert value.dial_direction == "leave at OFF/0"
 
 
-def test_patch_value_for_nrpn_only_destination_is_not_marked_cc_ready() -> None:
+def test_patch_value_for_validated_nrpn_destination_is_transport_ready() -> None:
     from rytm_randomizer.data.analog_four_display import make_a4_patch_value
 
     value = make_a4_patch_value(
@@ -89,10 +89,47 @@ def test_patch_value_for_nrpn_only_destination_is_not_marked_cc_ready() -> None:
 
     assert value.parameter == "LFO1 Destination A"
     assert value.cc_msb is None
+    assert value.midi_value == 34
+    assert value.nrpn_address == (1, 86)
+    assert value.transport_status == "nrpn-ready"
+    assert value.screen_value == "Filter1 Frequency"
+
+
+@pytest.mark.parametrize(
+    ("parameter", "screen_target", "midi_value", "nrpn_address"),
+    [
+        ("EnvF Gate Length", "NOTE", 0, (1, 65)),
+        ("EnvF Destination A", "OFF", 96, (1, 66)),
+        ("EnvF Destination B", "OFF", 96, (1, 68)),
+        ("LFO1 Destination B", "OFF", 96, (1, 88)),
+    ],
+)
+def test_patch_value_uses_validated_overbridge_enum_ordinals(
+    parameter: str,
+    screen_target: str,
+    midi_value: int,
+    nrpn_address: tuple[int, int],
+) -> None:
+    from rytm_randomizer.data.analog_four_display import make_a4_patch_value
+
+    value = make_a4_patch_value(parameter, screen_target=screen_target)
+
+    assert value.midi_value == midi_value
+    assert value.nrpn_address == nrpn_address
+    assert value.transport_status == "nrpn-ready"
+
+
+def test_patch_value_for_unknown_destination_label_fails_closed() -> None:
+    from rytm_randomizer.data.analog_four_display import make_a4_patch_value
+
+    value = make_a4_patch_value(
+        "LFO1 Destination A",
+        screen_target="Unvalidated Destination",
+    )
+
     assert value.midi_value is None
     assert value.nrpn_address == (1, 86)
     assert value.transport_status == "screen-only-nrpn"
-    assert value.screen_value == "Filter1 Frequency"
 
 
 def test_patch_value_for_nrpn_enum_can_accept_explicit_transport_value() -> None:

@@ -33,7 +33,7 @@ pytestmark = pytest.mark.fast
 FIXTURE_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "analog_four_saved_kit"
 SOURCE_KIT = FIXTURE_DIR / "filter2_res_000_source.syx"
 AUDIO_BYTES = b"sanitized-audio-reference-for-mocked-inference\n"
-EXPECTED_GENERATION_ID = "168fd1bcff5ad54483cad130fd9515e7"
+EXPECTED_GENERATION_ID = "b5164b8b43eaaa6a37eb2287cccaccff"
 EXPECTED_SYSEX_SHA256 = (
     "2f6d97445535a1eb1f4b54e234d7b8d96b9c646c2f611a99f0e6e06a39980835",
     "16aee178243000a52cad0031429ca9768924e37c3989d1ad22c757cb7c266847",
@@ -41,12 +41,12 @@ EXPECTED_SYSEX_SHA256 = (
     "e1384abed1898010debfedf64386dd45485493cabb28b05f2e5bcd1c72096702",
 )
 EXPECTED_SIDECAR_SHA256 = (
-    "4aba8dc9f269bac833129420311634119b9cda3a8fb1d8164aae80d0a0f8265a",
-    "6ab83753bf240fd5b1c8387d39d58d6a0a6c9ce5bd575b0f7c9393fc4364ff7b",
-    "5cf80686763709cd15b6f5535532de68bf0f16552c8f6af1097f7a8a83596713",
-    "84413868c1a091b101782052424e8a9b44fa79666957362c1ba62447b5461701",
+    "b5d3560c31e8ab593b5c8cb14ccef194cbdf9071f2768408504525fded804cf5",
+    "0c67a4319c2bbbfd438fbffea0cc464050dd62f825befca8e27620beffc2ea44",
+    "f921d58c8218829b33a2ac5dcfa53eec0d92d9468ca10af2abe0c90008f30fee",
+    "f308a73c0666d47306106c6210c44ce601b38ed824b602c178c82fb35fa371f3",
 )
-EXPECTED_MANIFEST_SHA256 = "8333b76d7a32c8c6ae503828ba6bc87ee9a6de2065fd3b105afd92ef7884406b"
+EXPECTED_MANIFEST_SHA256 = "4962043d4e8d1bdcf7f95790255c1f41a9189e4b9f3c6f1fce193d467326e4f1"
 
 
 def _json_payload_sha256(payload: object) -> str:
@@ -167,6 +167,9 @@ def test_export_audio_patch_batch_writes_four_pinned_candidates_and_manifest(
         FILTER2_RESONANCE_PARAMETER,
         SYSEX_COVERAGE_STATEMENT,
     )
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
 
     result = _export(tmp_path)
     output_dir = tmp_path / "batch"
@@ -242,6 +245,14 @@ def test_export_audio_patch_batch_writes_four_pinned_candidates_and_manifest(
             "source_kit_sha256": result.source_kit_sha256,
             "sysex_sha256": hashlib.sha256(item.sysex_path.read_bytes()).hexdigest(),
         }
+        selection = load_analog_four_patch_batch_candidate(
+            result.manifest_path,
+            candidate=item.column,
+        )
+        assert selection.plan.selected_candidate == item.column
+        assert selection.plan.selected_label == item.label
+        assert selection.plan.summary.sendable_count == item.live_sendable_count
+        assert selection.plan.summary.manual_count == item.manual_count
 
     manifest = json.loads(result.manifest_write.path.read_text(encoding="utf-8"))
     assert hashlib.sha256(result.manifest_write.path.read_bytes()).hexdigest() == (

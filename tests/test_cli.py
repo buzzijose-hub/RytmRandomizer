@@ -651,6 +651,8 @@ USAGE = (
     "[--overwrite] [--json] | "
     "analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> "
     "--output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json] | "
+    "analog-four-audio-patch-rank --reference <path> --manifest <batch.json> "
+    "--render <N=path> [--render <N=path> ...] [--json] | "
     "cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> "
     "[--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json] | "
     "manual-feedback-packet-report "
@@ -721,6 +723,23 @@ def test_analog_four_audio_patch_batch_help_is_exact_and_passive():
     assert "not a claim of full saved-kit coverage" in help_text
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_analog_four_audio_patch_rank_help_is_exact_and_passive():
+    from rytm_randomizer.cockpit.export.analog_four_patch_render_rank import (
+        ANALOG_FOUR_RENDER_RANK_SAFETY,
+    )
+
+    result = run_cli("analog-four-audio-patch-rank", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: analog-four-audio-patch-rank" in help_text
+    assert "--render <N=path>" in help_text
+    assert "measures eleven envelope and timbre features" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in ANALOG_FOUR_RENDER_RANK_SAFETY]
     assert result.stderr == ""
 
 

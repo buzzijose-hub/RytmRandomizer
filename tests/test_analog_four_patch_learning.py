@@ -56,11 +56,15 @@ def test_patch_learning_packet_builds_ranked_a4_knowledge_packet() -> None:
     assert [score.column for score in packet.candidate_scores] == [1, 2, 3, 4]
     assert [score.rank for score in packet.candidate_scores] == [1, 2, 3, 4]
     assert packet.candidate_scores[0].learning_score > packet.candidate_scores[-1].learning_score
-    assert packet.candidate_scores[0].transport_readiness >= 80
-    assert packet.live_dial_readiness.ready_count > packet.live_dial_readiness.pending_count
-    assert packet.live_dial_readiness.cc_ready_count > 0
-    assert packet.live_dial_readiness.screen_only_nrpn_count > 0
-    assert "LFO1 Destination A" in packet.live_dial_readiness.pending_parameters
+    assert packet.candidate_scores[0].transport_readiness == 94
+    assert packet.live_dial_readiness.ready_count == 39
+    assert packet.live_dial_readiness.pending_count == 0
+    assert packet.live_dial_readiness.cc_ready_count == 29
+    assert packet.live_dial_readiness.nrpn_ready_count == 10
+    assert packet.live_dial_readiness.screen_only_nrpn_count == 0
+    assert packet.live_dial_readiness.pending_parameters == ()
+    assert packet.live_dial_readiness.live_dial_path == "transport-ready"
+    assert packet.live_dial_readiness.blocking_reason == "none"
     assert packet.capture_steps[0].step_id == "a4-root-short"
     assert len(packet.capture_steps) >= 6
     assert "no MIDI sent" in packet.safety

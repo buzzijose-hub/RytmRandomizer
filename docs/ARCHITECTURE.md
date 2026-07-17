@@ -154,7 +154,7 @@ on one line for an existing module, you probably need a new module instead.
 | --------------------- | ------------------------------------------------------------------------------- |
 | `shell.py`            | Interactive command loop. Owns the V1.34 command alphabet. Injected deps.       |
 | `cli.py`              | **Passive** report-only CLI. NEVER imports `mido`, `mido_provider`, or engines. |
-| `app.py`              | Top-of-stack entry point. `--arm` wires output to `shell`; `--arm --rytm-12-pad-shell --confirm-rytm-12-pad-send` runs the all-12-pad Rytm style shell; `--arm --rytm-snapshot-shell <file.syx> --confirm-rytm-snapshot-shell-send` runs the all-12-pad current-kit snapshot shell; `--arm --rytm-kit-style --confirm-rytm-kit-send` sends one curated Rytm full-kit recipe; `--arm --rytm-cc-observe` opens only Rytm input and may read or receive a snapshot for labels; `--arm --a4-soft-capture` opens only A4 input; `--arm --a4-send-param` sends one manual-backed A4 CC; `--arm --a4-kit-recipe` sends one manual-backed A4 recipe; `--arm --a4-patch-send-plan --confirm-a4-patch-send-plan` sends compiler-approved generated A4 patch rows. |
+| `app.py`              | Top-of-stack entry point. `--arm` wires output to `shell`; `--arm --rytm-12-pad-shell --confirm-rytm-12-pad-send` runs the all-12-pad Rytm style shell; `--arm --rytm-snapshot-shell <file.syx> --confirm-rytm-snapshot-shell-send` runs the all-12-pad current-kit snapshot shell; `--arm --rytm-kit-style --confirm-rytm-kit-send` sends one curated Rytm full-kit recipe; `--arm --rytm-cc-observe` opens only Rytm input and may read or receive a snapshot for labels; `--arm --a4-soft-capture` opens only A4 input and reconstructs CC/NRPN state; `--arm --a4-send-param` sends one manual-backed A4 CC; `--arm --a4-kit-recipe` sends one manual-backed A4 recipe; `--arm --a4-patch-send-plan --batch-manifest <path> --candidate N --confirm-a4-patch-send-plan` hash-verifies and sends one committed generated A4 patch candidate. |
 | `reports/`            | Passive in-memory report package + shared formatter/helper layer, including the manual feedback packet report, the reference-style blueprint report, the Analog Four initialized-baseline, patch genome, patch learning, patch corpus, and patch send-plan reports, the Analog Four OXI macro set planner report, the controller-brain mapping catalog and rehearsal/export reports, the style-performance arc chain through the live render bundle, live cue sheet, live runbook, reference match, snapshot preview, stage packet, stage snapshot-routing handoff, stage rehearsal-state packet, live set cockpit dashboard, live show export packet, live transition timeline, live command deck, live state packet, live analyzer handoff/targets, GUI readiness/session, capture queue/review, sidecar session packets, GUI screen-contract packets, GUI render-tree packets, GUI analyzer-overlay packets, GUI analyzer-frame packets, GUI interaction-script packets, GUI action-reducer packets, GUI controller-state packets, GUI playback-transcript packets, GUI playback-validation packets, GUI test-harness contract/readiness packets, GUI implementation-bridge/desktop-blueprint/desktop-app-plan/desktop-component-contract/desktop-view-model/desktop-render-contract/desktop-render-harness/cockpit-boundary-readiness packets, cockpit send-plan operator-readiness packets, cockpit send-plan rehearsal-surface packets, and the live GUI performance-console chain through live-kit capture workbench, package audition, and operator package, operator review ledger, and payload helpers under `reports/performance_console/`. Static manual feedback facts stay in `data/manual_feedback_packet.py`; static A4 patch-template facts stay in `data/analog_four_patch_templates.py`; static A4 patch-corpus facts stay in `data/analog_four_patch_corpus.py`; static A4 learning facts stay in `data/analog_four_learning.py`; static A4 SysEx calibration facts stay in `data/analog_four_sysex_calibration.py`; static GUI contract facts stay in `data/live_gui_contracts.py`; static controller-brain profiles stay in `data/controller_mapping_profiles.py`; static controller-brain rehearsal scenarios stay in `data/controller_rehearsal_scenarios.py`; repeated report CLI helpers stay in `reports/live_gui_common.py`. |
 | `inspection.py`       | Consolidated passive command-metadata inspection + preview + audit.             |
 | `cockpit/export/analog_four_export_contracts.py` | Shared bounded service/CLI failure vocabulary for passive A4 exports. |
@@ -163,6 +163,9 @@ on one line for an existing module, you probably need a new module instead.
 | `style_analysis/analog_four_patch_inference.py` | Typed, single-decode audio evidence and audio-dependent four-column A4 patch-genome inference with direct RED metrics. |
 | `cockpit/export/analog_four_patch_batch.py` | Transactional batch service that stages candidate saved kits and complete DNA/live-dial sidecars from immutable inputs, then publishes a manifest commit marker through the canonical atomic writer. |
 | `cockpit/export/analog_four_patch_batch_cli.py` | Registered passive-hardware operator command for one-to-four audio-dependent candidate exports; no MIDI I/O. |
+| `cockpit/export/analog_four_patch_batch_reader.py` | Strict manifest/sidecar reader that verifies candidate identity, nested hashes, coverage, and event routing before a stored plan can reach the app sender. |
+| `cockpit/export/analog_four_patch_render_rank.py` | Passive acoustic feedback service that compares recorded A4 candidates with the exact batch reference across weighted envelope/timbre features. |
+| `cockpit/export/analog_four_patch_render_rank_cli.py` | Registered local-only render-ranking command; no MIDI or hardware mutation. |
 
 ### Frozen reference (NOT in the layered graph)
 
@@ -375,6 +378,23 @@ still encodes only hardware-write-validated Filter2 Resonance. This is real
 audio-dependent inference, but not full saved-kit coverage or a claim of
 Synthplant-equivalent learned accuracy. `analog-four-audio-patch-batch` remains
 hardware-passive: local reads/writes only, with no MIDI port or send.
+
+The stored-plan reader treats the stable manifest as the publication commit
+marker. Before a candidate reaches dry-run or the armed sender, it verifies the
+sidecar byte hash, generation ID, source hash, candidate DNA hash, send-plan
+hash, selected column/label/track, coverage totals, and every event's
+track/channel/address shape. The current generated vocabulary is completely
+live-routable (29 CC and 10 NRPN rows in the closest-reference candidate), but
+unknown enum labels remain screen-only and therefore fail closed. Incoming A4
+soft capture mirrors the transport by retaining one NRPN selector per track and
+applying CC6 data only after a known CC99/CC98 address is complete.
+
+The render-ranking service forms the first hardware acoustic feedback loop. It
+requires the original reference bytes to match the batch source hash, verifies
+every ranked candidate through the stored-plan reader, analyzes each recorded
+A4 render locally, and returns a deterministic nearest match with all weighted
+feature deltas. It never sends MIDI and does not promote ranking results into a
+trained model automatically.
 
 **To add a device family:**
 

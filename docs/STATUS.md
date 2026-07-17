@@ -1,8 +1,25 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-07-16. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-07-17. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
+
+- 2026-07-17: The generated Analog Four live-dial path advanced from partial
+  to complete for the current DNA vocabulary. Official OS 1.55 NRPN addresses
+  were paired with enum values inspected through the installed Elektron
+  Overbridge 2.25.7 Analog Four plug-in: gate `NOTE`/Overbridge `Off` is `0`,
+  destination `OFF` is `96`, and LFO destination `F1 Frequency` is `34`.
+  Unknown enum labels still fail closed. The closest-reference patch now has
+  39 sendable rows (29 CC + 10 NRPN) and produces exactly 59 MIDI messages.
+  A hash-verifying manifest reader reconstructs the exact auditioned candidate
+  for dry-run or confirmed armed send, checking generation, source, DNA,
+  send-plan, sidecar, coverage, and track/channel identities. A4 soft capture
+  now reconstructs incoming three-message NRPN state independently for all
+  four tracks. The new passive `analog-four-audio-patch-rank` command verifies
+  the batch source and ranks recorded hardware candidates with transparent
+  deltas across 11 envelope and timbre features. Saved-kit SysEx remains
+  limited to hardware-write-validated Filter2 Resonance; a physical full-patch
+  live-dial rehearsal remains the next hardware confirmation.
 
 - 2026-07-16: Analog Four MKII saved-kit writing reached its first
   hardware-validated parameter. The shared Elektron envelope now packs as well

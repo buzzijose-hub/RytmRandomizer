@@ -45,8 +45,8 @@ ANALOG_FOUR_PATCH_LEARNING_SAFETY: Final[tuple[str, ...]] = (
     "no MIDI sent",
     "no SysEx written",
     "no hardware state captured",
-    "future live dial-in remains gated by transport readiness",
-    "NRPN-only destinations require ordinal capture before automation",
+    "live dial-in remains gated by explicit transport readiness",
+    "sparse destination ordinals validated against Elektron Overbridge 2.25.7",
 )
 _TRANSPORT_READY_STATUSES: Final[frozenset[str]] = frozenset(
     {TRANSPORT_CC_READY, TRANSPORT_NRPN_READY}

@@ -394,8 +394,9 @@ python -m rytm_randomizer.cli analog-four-audio-patch-batch `
 This is real local audio analysis and candidate inference, not a static preset
 rename. Each candidate produces a `.syx` file plus a JSON sidecar containing
 its complete patch DNA and CC/NRPN live-dial plan. At the current hardware
-validation boundary, the `.syx` encodes only Filter2 Resonance; every other DNA
-row remains live-sendable, manual, or deferred in the sidecar. The command does
+validation boundary, the `.syx` encodes only Filter2 Resonance; every current
+DNA row is live-sendable from the sidecar while non-SysEx rows remain deferred
+from the saved-kit file. The command does
 not open a MIDI port or transfer files to the Analog Four. Do not interpret the
 result as full saved-kit parameter coverage or Synthplant-equivalent learned
 accuracy. Existing artifacts are refused unless `--overwrite` is explicit.
@@ -410,6 +411,51 @@ does not replace files referenced by the prior manifest. JSON errors expose
 lock-cleanup notes in `details`; a committed batch whose lock could not be removed
 returns success plus a `warnings` entry naming the retained metadata file.
 Delete such a lock only after its recorded process ID is no longer running.
+
+### Hash-verified candidate live dial
+
+Preview the exact candidate committed by the batch manifest:
+
+```powershell
+python -m rytm_randomizer.app --dry-run --a4-patch-send-plan `
+  --batch-manifest "G:\ANALOG FOUR\GENERATED\reference-batch\a4-t1-audio-patch-batch.json" `
+  --candidate 1
+```
+
+The closest-reference candidate currently reports 39 sendable rows: 29 CC,
+10 NRPN, and 59 transport messages. After reviewing the dry-run, send the same
+verified sidecar to the A4:
+
+```powershell
+python -m rytm_randomizer.app --arm --a4-patch-send-plan `
+  --batch-manifest "G:\ANALOG FOUR\GENERATED\reference-batch\a4-t1-audio-patch-batch.json" `
+  --candidate 1 --confirm-a4-patch-send-plan
+```
+
+The reader rejects changed sidecar bytes, changed nested DNA/send-plan
+payloads, source/candidate/track mismatches, invalid event addresses, and
+coverage-count drift before opening an output port. Saved-kit SysEx coverage
+does not expand through this command; this is an explicit live MIDI path.
+
+### Rank recorded A4 candidates
+
+Record the same note and duration from each candidate, then compare those A4
+recordings with the exact original reference:
+
+```powershell
+python -m rytm_randomizer.cli analog-four-audio-patch-rank `
+  --reference "G:\REFERENCES\short-reference.wav" `
+  --manifest "G:\ANALOG FOUR\GENERATED\reference-batch\a4-t1-audio-patch-batch.json" `
+  --render "1=G:\ANALOG FOUR\RENDERS\candidate-1.wav" `
+  --render "2=G:\ANALOG FOUR\RENDERS\candidate-2.wav" `
+  --render "3=G:\ANALOG FOUR\RENDERS\candidate-3.wav" `
+  --render "4=G:\ANALOG FOUR\RENDERS\candidate-4.wav" --json
+```
+
+The command refuses a reference whose SHA-256 differs from the batch source.
+It ranks the renders using 11 normalized envelope and timbre measurements and
+exposes every weighted delta. No MIDI port is opened and no ranking is promoted
+to training evidence without a later reviewed corpus step.
 
 ## Canonical operator-command flow
 

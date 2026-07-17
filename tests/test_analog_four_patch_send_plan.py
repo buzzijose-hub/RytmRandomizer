@@ -49,12 +49,14 @@ def test_patch_send_plan_compiles_selected_candidate_into_ordered_midi_events() 
     assert plan.selected_candidate == 1
     assert plan.selected_label == "Closest reference"
     assert plan.summary.total_rows == 39
-    assert plan.summary.sendable_count == 34
-    assert plan.summary.manual_count == 5
+    assert plan.summary.sendable_count == 39
+    assert plan.summary.manual_count == 0
     assert plan.summary.cc_event_count == 29
-    assert plan.summary.nrpn_event_count == 5
-    assert plan.summary.transport_message_count == 44
-    assert plan.summary.live_dial_path == "partial-live-dial-ready"
+    assert plan.summary.nrpn_event_count == 10
+    assert plan.summary.transport_message_count == 59
+    assert plan.summary.ready_percentage == 100
+    assert plan.summary.live_dial_path == "transport-ready"
+    assert plan.summary.blocking_reason == "none"
 
     first_event = plan.send_events[0]
     assert first_event.sequence == 1
@@ -71,14 +73,26 @@ def test_patch_send_plan_compiles_selected_candidate_into_ordered_midi_events() 
     assert first_nrpn.nrpn_address == (1, 54)
     assert first_nrpn.midi_value == 0
 
-    manual_parameters = {event.parameter for event in plan.manual_events}
-    assert manual_parameters == {
-        "EnvF Gate Length",
-        "EnvF Destination A",
-        "EnvF Destination B",
-        "LFO1 Destination A",
-        "LFO1 Destination B",
+    enum_values = {
+        event.parameter: event.midi_value
+        for event in plan.send_events
+        if event.parameter
+        in {
+            "EnvF Gate Length",
+            "EnvF Destination A",
+            "EnvF Destination B",
+            "LFO1 Destination A",
+            "LFO1 Destination B",
+        }
     }
+    assert enum_values == {
+        "EnvF Gate Length": 0,
+        "EnvF Destination A": 96,
+        "EnvF Destination B": 96,
+        "LFO1 Destination A": 34,
+        "LFO1 Destination B": 96,
+    }
+    assert plan.manual_events == ()
     assert "preview before armed send" in plan.safety
 
 
@@ -101,7 +115,7 @@ def test_patch_send_plan_payload_is_stable_and_embeds_learning_context() -> None
     assert payload["selected_label"] == "Noisy texture"
     assert payload["summary"]["sendable_count"] == plan.summary.sendable_count
     assert payload["send_events"][0]["track"] == 3
-    assert payload["manual_events"]
+    assert payload["manual_events"] == []
     assert payload["learning_packet"]["selected_patch"]["label"] == "Noisy texture"
     assert json.dumps(payload, sort_keys=True) == json.dumps(
         analog_four_patch_send_plan_to_dict(plan),

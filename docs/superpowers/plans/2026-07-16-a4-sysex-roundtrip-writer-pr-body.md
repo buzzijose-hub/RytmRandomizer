@@ -16,6 +16,10 @@ Turn the first hardware-validated Analog Four MKII saved-kit calibration into a 
 - Unified report and synthesis measurements behind one typed audio decode, with direct inference RED metrics and immutable provenance.
 - Made candidate publication interruption-safe: both inputs are snapshotted, every artifact is staged and closed before publication, candidate names carry a 128-bit identity covering every sidecar/SysEx input, a metadata-rich per-track lock serializes publishers, and the stable manifest switches last.
 - Made generation artifacts write-once with exact-byte reuse, collision rejection, catchable process-interruption lock cleanup, explicit `publication_locked` classification, and committed-result lock-cleanup warnings with recovery metadata.
+- Completed the current generated live-dial vocabulary: the closest-reference candidate now compiles 39/39 rows into 29 CC plus 10 NRPN events (59 MIDI messages), with sparse destination ordinals validated through Elektron Overbridge and unknown labels still failing closed.
+- Added hash-verified `--batch-manifest --candidate N` loading so dry-run and confirmed armed sends use the exact committed sidecar, nested DNA, and send plan the operator auditioned.
+- Extended passive A4 capture to reconstruct three-message NRPN observations with independent selector state on all four tracks.
+- Added `analog-four-audio-patch-rank`, a passive local feedback command that verifies the original batch source and ranks recorded A4 candidates across 11 weighted envelope/timbre features.
 
 ## Why this matters
 
@@ -23,8 +27,9 @@ The Analog Four can now receive exact generated saved-kit parameter values witho
 
 Audio changes candidate DNA using measured local features; this is real
 audio-dependent inference, not a trained-model or Synthplant-equivalent accuracy
-claim. Each sidecar carries the complete DNA and CC/NRPN plan. Each `.syx`
-currently applies only hardware-write-validated Filter2 Resonance.
+claim. Each sidecar carries the complete DNA and CC/NRPN plan, and every
+currently generated row is live-routable. Each `.syx` still applies only
+hardware-write-validated Filter2 Resonance.
 
 Example:
 
@@ -44,6 +49,7 @@ python -m rytm_randomizer.cli analog-four-saved-kit-export \
 ```bash
 python -m pytest
 python -m pytest tests/cockpit/test_analog_four_patch_batch_cli.py tests/test_cli.py -n 0
+python -m pytest tests/cockpit/test_analog_four_patch_batch_reader.py tests/cockpit/test_analog_four_patch_render_rank.py tests/test_a4_soft_capture.py tests/test_app_validate_one_cc.py -n 0
 python -m pytest tests/cockpit/test_analog_four_kit_cli.py tests/cockpit/test_analog_four_patch_batch.py tests/cockpit/test_analog_four_patch_batch_cli.py tests/cockpit/test_export_writer.py tests/test_analog_four_patch_genome.py tests/test_analog_four_patch_inference.py tests/test_analog_four_patch_learning.py tests/test_analog_four_patch_send_plan.py tests/test_devices_strategies_analog_four_saved_kit_writer.py tests/test_observability_metrics.py tests/test_style_analysis.py --cov=rytm_randomizer.cockpit.export.analog_four_export_contracts --cov=rytm_randomizer.cockpit.export.analog_four_cli --cov=rytm_randomizer.cockpit.export.analog_four_kit --cov=rytm_randomizer.cockpit.export.analog_four_patch_batch --cov=rytm_randomizer.cockpit.export.analog_four_patch_batch_cli --cov=rytm_randomizer.cockpit.export.writer --cov=rytm_randomizer.data.analog_four_patch_templates --cov=rytm_randomizer.observability.metrics --cov=rytm_randomizer.style_analysis.analog_four_patch_genome --cov=rytm_randomizer.style_analysis.analog_four_patch_inference --cov=rytm_randomizer.style_analysis.analog_four_patch_learning --cov=rytm_randomizer.style_analysis.analog_four_patch_send_plan --cov=rytm_randomizer.style_analysis.extractor --cov=rytm_randomizer.style_analysis.library --cov-branch --cov-report=term-missing -n 0 -q
 python -m pytest tests/architecture/ -q
 python -m pytest tests/test_engines_pad1.py tests/test_engines_pad2.py tests/test_engines_pad3.py tests/test_engines_pad4.py tests/test_group_runner.py tests/test_scene_runner.py
@@ -52,16 +58,17 @@ python -m ruff check .
 python -m black --check --target-version=py311 .
 python -m isort --profile black --check-only .
 python -m vulture rytm_randomizer --min-confidence 80
-python -m pyright rytm_randomizer/cockpit/export/analog_four_export_contracts.py rytm_randomizer/cockpit/export/analog_four_cli.py rytm_randomizer/cockpit/export/analog_four_kit.py rytm_randomizer/cockpit/export/analog_four_patch_batch.py rytm_randomizer/cockpit/export/analog_four_patch_batch_cli.py rytm_randomizer/cockpit/export/writer.py rytm_randomizer/data/analog_four_patch_templates.py rytm_randomizer/help_text.py rytm_randomizer/observability/metrics.py rytm_randomizer/style_analysis/__init__.py rytm_randomizer/style_analysis/analog_four_patch_genome.py rytm_randomizer/style_analysis/analog_four_patch_inference.py rytm_randomizer/style_analysis/analog_four_patch_learning.py rytm_randomizer/style_analysis/analog_four_patch_send_plan.py rytm_randomizer/style_analysis/extractor.py rytm_randomizer/style_analysis/library.py
+python -m pyright rytm_randomizer/cockpit/export/analog_four_export_contracts.py rytm_randomizer/cockpit/export/analog_four_cli.py rytm_randomizer/cockpit/export/analog_four_kit.py rytm_randomizer/cockpit/export/analog_four_patch_batch.py rytm_randomizer/cockpit/export/analog_four_patch_batch_cli.py rytm_randomizer/cockpit/export/analog_four_patch_batch_reader.py rytm_randomizer/cockpit/export/analog_four_patch_render_rank.py rytm_randomizer/cockpit/export/analog_four_patch_render_rank_cli.py rytm_randomizer/cockpit/export/writer.py rytm_randomizer/data/analog_four_display.py rytm_randomizer/data/analog_four_patch_templates.py rytm_randomizer/help_text.py rytm_randomizer/observability/metrics.py rytm_randomizer/reports/a4_soft_capture.py rytm_randomizer/state/a4_soft_capture.py rytm_randomizer/style_analysis/__init__.py rytm_randomizer/style_analysis/analog_four_patch_genome.py rytm_randomizer/style_analysis/analog_four_patch_inference.py rytm_randomizer/style_analysis/analog_four_patch_learning.py rytm_randomizer/style_analysis/analog_four_patch_send_plan.py rytm_randomizer/style_analysis/extractor.py rytm_randomizer/style_analysis/library.py
 git diff --check
 ```
 
-- [x] Full repository suite: 6,372 passed, 4 skipped.
-- [x] Architecture suite: 680 passed.
+- [x] Full repository suite: 6,448 passed, 3 skipped.
+- [x] Architecture suite: 683 passed.
 - [x] V1.34 frozen parity: 685 passed byte-for-byte.
 - [x] Writer/audio/batch slice: 279 passed, 1 skipped with 100% statement and branch coverage across all 14 export-contract, saved-kit, atomic writer, inference, extractor, genome, learning, send-plan, batch, CLI, metrics, library, and template modules (2,046 statements / 402 branches / 0 misses).
 - [x] Existing saved-kit writer/export focused coverage remains green; the complete repository suite includes both writer and audio-batch paths.
-- [x] Pyright across every production file touched by the PR: 0 errors, 0 warnings.
+- [x] Pyright across the focused A4 production modules: 0 errors, 0 warnings.
+- [x] New manifest reader, render ranker/CLI, NRPN capture state, and capture report: 100% statement and branch coverage (552 statements / 138 branches / 0 misses).
 - [x] Lint trio and `git diff --check` clean.
 - [x] Vulture at confidence 80 clean across `rytm_randomizer`.
 - [x] Mechanical code-review gate passed on the final tree.
@@ -115,7 +122,7 @@ Plan doc: `docs/superpowers/plans/2026-07-03-analog-four-audio-patch-genome.md`
 
 ## Reviewer notes
 
-The pure renderer can exercise candidate calibrations in tests, but the operator-facing exporter rejects every field not marked `hardware-write-validated`. Filter1 Frequency, Filter1 Resonance, and Filter2 Frequency remain intentionally blocked. Batch sidecars preserve those complete DNA/live-dial rows without claiming they were encoded into SysEx.
+The pure renderer can exercise candidate calibrations in tests, but the operator-facing exporter rejects every field not marked `hardware-write-validated`. Filter1 Frequency, Filter1 Resonance, and Filter2 Frequency remain intentionally blocked from saved-kit writing. Batch sidecars preserve the complete live-dial DNA without claiming those rows were encoded into SysEx. The current generated vocabulary is fully live-routable; unvalidated destination labels, including independently unverified LFO2 destinations, still fail closed.
 
 The atomic writer fsyncs file data. It does not fsync parent-directory metadata, so persistence of the final filename after sudden power loss remains filesystem-dependent. Under normal filesystem semantics, generation-addressed write-once candidates ensure the prior manifest never points at mixed bytes during a process-interrupted overwrite; the interruption may leave unreferenced generation files. A lock-cleanup failure does not relabel a committed batch as failed: the successful result carries a warning and the retained metadata path.
 

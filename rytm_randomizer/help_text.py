@@ -627,6 +627,8 @@ USAGE = (
     "[--overwrite] [--json] | "
     "analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> "
     "--output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json] | "
+    "analog-four-audio-patch-rank --reference <path> --manifest <batch.json> "
+    "--render <N=path> [--render <N=path> ...] [--json] | "
     "cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> "
     "[--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json] | "
     "manual-feedback-packet-report "
@@ -3421,6 +3423,34 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _analog_four_audio_patch_rank_help():
+    from .cockpit.export.analog_four_patch_render_rank import (
+        ANALOG_FOUR_RENDER_RANK_SAFETY,
+    )
+
+    return f"""RytmRandomizer passive CLI: analog-four-audio-patch-rank
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference <path> --manifest <batch.json> --render <N=path>
+  python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference <path> --manifest <batch.json> --render <1=path> --render <2=path> --json
+  python -m rytm_randomizer.cli analog-four-audio-patch-rank --help
+
+Arguments:
+  --reference <path>       Original audio used to create the batch
+  --manifest <batch.json>  Committed audio-patch batch manifest
+  --render <N=path>        A4 recording for candidate 1-4; repeatable
+  --json                   Emit deterministic JSON instead of text
+
+Behavior:
+  Hash-verifies each selected candidate sidecar, proves that --reference is
+  the exact batch source, measures eleven envelope and timbre features from
+  every A4 recording, and ranks candidates by weighted acoustic distance.
+  The result identifies the closest candidate and exposes every feature delta.
+
+Safety:
+{_safety_block(ANALOG_FOUR_RENDER_RANK_SAFETY)}"""
+
+
 def _cockpit_export_rehearsal_report_help():
     from .reports.cockpit_export_rehearsal import SAFETY_LINES
 
@@ -3605,6 +3635,7 @@ Usage:
   python -m rytm_randomizer.cli cockpit-export-profile-model --profile-id <id> --profiles-dir <path> --output <file.rymp> [--key-hex <hex> --key-id <label>] [--unsigned] [--overwrite] [--json]
   python -m rytm_randomizer.cli analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> --filter2-resonance <track:value> [--filter2-resonance <track:value> ...] [--overwrite] [--json]
   python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json]
+  python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference <path> --manifest <batch.json> --render <N=path> [--render <N=path> ...] [--json]
   python -m rytm_randomizer.cli cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> [--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
@@ -3872,6 +3903,8 @@ Commands:
                     Render hardware-validated Analog Four values into a saved-kit SysEx file.
   analog-four-audio-patch-batch
                     Infer and export up to four passive Analog Four patch candidates from audio.
+  analog-four-audio-patch-rank
+                    Rank recorded Analog Four candidates against their reference audio.
   cockpit-export-rehearsal-report
                     Build GUI-ready passive cockpit model-export rehearsal surface state.
   inspect-command    Inspect passive command metadata by key.
@@ -4338,6 +4371,7 @@ Safety:
     "cockpit-export-profile-model": _cockpit_export_profile_model_help,
     "analog-four-saved-kit-export": _analog_four_saved_kit_export_help,
     "analog-four-audio-patch-batch": _analog_four_audio_patch_batch_help,
+    "analog-four-audio-patch-rank": _analog_four_audio_patch_rank_help,
     "cockpit-export-rehearsal-report": _cockpit_export_rehearsal_report_help,
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 

@@ -2,8 +2,7 @@
 
 The compiler translates a :class:`FeatureReport` into four front-panel Analog
 Four MKII patch candidates. It deliberately stops at DNA/report metadata: no
-MIDI ports are opened, no messages are sent, and NRPN-only destination rows
-remain screen-only until their exact ordinals are captured.
+MIDI ports are opened and no messages are sent.
 """
 
 from __future__ import annotations
@@ -35,8 +34,8 @@ ANALOG_FOUR_PATCH_SAFETY: Final[tuple[str, ...]] = (
     "no MIDI port opened",
     "no MIDI sent",
     "no SysEx written",
-    "manual front-panel DNA only",
-    "NRPN-only destinations require ordinal capture before live dial-in",
+    "complete front-panel DNA with CC/NRPN transport metadata",
+    "sparse destination ordinals validated against Elektron Overbridge 2.25.7",
 )
 
 

@@ -114,7 +114,18 @@ _LFO_WAVEFORM_LABELS: Final[Mapping[int, str]] = _labels(
     }
 )
 _LFO_MULTIPLIER_LABELS: Final[Mapping[int, str]] = _labels({64: "x1"})
-_OFF_ONLY_LABELS: Final[Mapping[int, str]] = _labels({0: "OFF"})
+# Analog Four OS 1.55 exposes these parameters at the manual-backed NRPN
+# addresses. Their sparse values were cross-checked against Elektron's
+# installed Overbridge 2.25.7 parameter model: F1 Frequency is 34 and the
+# destination selector's None/OFF entry is 96. Gate length 0 is the default
+# no-extra-gate state (NOTE on hardware-facing DNA, Off in Overbridge).
+_DESTINATION_OFF_LABELS: Final[Mapping[int, str]] = _labels({96: "OFF"})
+_LFO_DESTINATION_LABELS: Final[Mapping[int, str]] = _labels(
+    {
+        34: "Filter1 Frequency",
+        96: "OFF",
+    }
+)
 
 _BIPOLAR_PARAMETERS: Final[frozenset[str]] = frozenset(
     {
@@ -163,20 +174,17 @@ _EXPLICIT_DISPLAY_SPECS: Final[Mapping[str, AnalogFourDisplaySpec]] = MappingPro
         "EnvF Gate Length": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
             value_labels=_GATE_LENGTH_LABELS,
-            transport_ready=False,
-            value_note="Front-panel gate-length label; ordinal capture remains pending.",
+            value_note="No-extra-gate state; NOTE on the A4 and Off in Overbridge.",
         ),
         "EnvF Destination A": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
-            value_labels=_OFF_ONLY_LABELS,
-            transport_ready=False,
-            value_note="Destination labels are front-panel safe until full ordinal capture.",
+            value_labels=_DESTINATION_OFF_LABELS,
+            value_note="Sparse destination value validated against Elektron Overbridge.",
         ),
         "EnvF Destination B": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
-            value_labels=_OFF_ONLY_LABELS,
-            transport_ready=False,
-            value_note="Destination labels are front-panel safe until full ordinal capture.",
+            value_labels=_DESTINATION_OFF_LABELS,
+            value_note="Sparse destination value validated against Elektron Overbridge.",
         ),
         "LFO1 Speed Multiplier": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
@@ -195,15 +203,13 @@ _EXPLICIT_DISPLAY_SPECS: Final[Mapping[str, AnalogFourDisplaySpec]] = MappingPro
         ),
         "LFO1 Destination A": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
-            value_labels=_OFF_ONLY_LABELS,
-            transport_ready=False,
-            value_note="Destination labels are front-panel safe until full ordinal capture.",
+            value_labels=_LFO_DESTINATION_LABELS,
+            value_note="Sparse destination values validated against Elektron Overbridge.",
         ),
         "LFO1 Destination B": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
-            value_labels=_OFF_ONLY_LABELS,
-            transport_ready=False,
-            value_note="Destination labels are front-panel safe until full ordinal capture.",
+            value_labels=_LFO_DESTINATION_LABELS,
+            value_note="Sparse destination values validated against Elektron Overbridge.",
         ),
         "LFO2 Speed Multiplier": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
@@ -219,13 +225,15 @@ _EXPLICIT_DISPLAY_SPECS: Final[Mapping[str, AnalogFourDisplaySpec]] = MappingPro
         ),
         "LFO2 Destination A": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
-            value_labels=_OFF_ONLY_LABELS,
+            value_labels=_DESTINATION_OFF_LABELS,
             transport_ready=False,
+            value_note="LFO2 destination ordinals remain pending independent validation.",
         ),
         "LFO2 Destination B": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
-            value_labels=_OFF_ONLY_LABELS,
+            value_labels=_DESTINATION_OFF_LABELS,
             transport_ready=False,
+            value_note="LFO2 destination ordinals remain pending independent validation.",
         ),
     }
 )
