@@ -191,6 +191,7 @@ def _import_taxonomy_modules() -> None:
     errors_mod.ActiveBoundaryError  # noqa: B018
 
     # Subclass modules outside the re-export chain.
+    import rytm_randomizer.cockpit.export.analog_four_patch_render_rank  # noqa: F401
     import rytm_randomizer.cockpit.export.writer  # noqa: F401
     import rytm_randomizer.cockpit.profiles.registry  # noqa: F401
     import rytm_randomizer.cockpit.wizard.builder  # noqa: F401
@@ -314,3 +315,19 @@ def test_taxonomy_fingerprint_is_accessible_via_class_and_instance() -> None:
 
     instance = WriteError("disk full")
     assert WriteError.fingerprint == instance.fingerprint == "export.write.failed"
+
+
+def test_a4_render_rank_errors_keep_value_error_compatibility_and_context() -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_render_rank import (
+        AnalogFourPatchRenderRankArtifactError,
+        AnalogFourPatchRenderRankReferenceError,
+    )
+    from rytm_randomizer.observability.errors import RytmRandomizerError
+
+    artifact = AnalogFourPatchRenderRankArtifactError("bad", context={"candidate": 2})
+    reference = AnalogFourPatchRenderRankReferenceError("wrong")
+
+    assert isinstance(artifact, RytmRandomizerError)
+    assert isinstance(artifact, ValueError)
+    assert artifact.context["candidate"] == 2
+    assert artifact.fingerprint != reference.fingerprint

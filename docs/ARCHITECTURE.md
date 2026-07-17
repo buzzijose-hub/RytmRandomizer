@@ -367,7 +367,10 @@ without adding hardware I/O.
 
 The audio batch path composes the existing audio extractor, the focused A4
 audio-inference compiler, patch send-plan metadata, and guarded saved-kit
-export. It produces one to four candidate `.syx`/JSON pairs plus a manifest.
+export. The inference coefficients and feature terms live as immutable facts in
+`data/analog_four_audio_inference.py`; the compiler evaluates that canonical
+table instead of embedding parameter-specific conditionals. It produces one to
+four candidate `.syx`/JSON pairs plus a manifest.
 The extractor reads one immutable byte snapshot, hashes it, and decodes that
 same snapshot once into a typed report-and-synthesis measurement record. The
 batch reads the audio and source kit once, works only from private immutable
@@ -397,6 +400,10 @@ live-routable (29 CC and 10 NRPN rows in the closest-reference candidate), but
 unknown enum labels remain screen-only and therefore fail closed. Incoming A4
 soft capture mirrors the transport by retaining one NRPN selector per track and
 applying CC6 data only after a known CC99/CC98 address is complete.
+The armed sender validates the complete event sequence before opening a port,
+paces each of the 59 transport messages by 20 ms, counts only successful
+deliveries, and reports exact partial progress plus baseline-reload recovery if
+the port fails during a plan.
 
 The render-ranking service forms the first hardware acoustic feedback loop. It
 requires the original reference bytes to match the batch source hash, verifies

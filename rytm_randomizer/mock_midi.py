@@ -79,7 +79,7 @@ class MockMidiSender:
     def messages(self) -> tuple[MidiMessage, ...]:
         return self.sent_messages
 
-    def send(self, message: MidiMessage) -> None:
+    def send(self, message: object) -> None:
         if not isinstance(message, MidiMessage):
             raise TypeError("message must be a MidiMessage")
         self._messages.append(message)

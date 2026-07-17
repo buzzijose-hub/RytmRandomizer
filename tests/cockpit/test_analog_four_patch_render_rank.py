@@ -71,7 +71,7 @@ def test_pure_ranker_validates_inputs_and_breaks_ties_by_candidate(tmp_path: Pat
 
 
 @pytest.fixture
-def mocked_rank_inputs(monkeypatch: pytest.MonkeyPatch) -> None:
+def _mocked_rank_inputs(monkeypatch: pytest.MonkeyPatch) -> None:
     from rytm_randomizer.cockpit.export import analog_four_patch_render_rank as ranker
 
     by_name = {
@@ -100,7 +100,7 @@ def mocked_rank_inputs(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_rank_hardware_renders_recommends_closest_measured_candidate(
     tmp_path: Path,
-    mocked_rank_inputs: None,
+    _mocked_rank_inputs: None,
 ) -> None:
     from rytm_randomizer.cockpit.export.analog_four_patch_render_rank import (
         analog_four_patch_render_rank_to_dict,
@@ -137,7 +137,7 @@ def test_rank_hardware_renders_recommends_closest_measured_candidate(
 
 def test_rank_rejects_reference_that_is_not_the_batch_source(
     tmp_path: Path,
-    mocked_rank_inputs: None,
+    _mocked_rank_inputs: None,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer.cockpit.export import analog_four_patch_render_rank as ranker
@@ -165,7 +165,7 @@ def test_rank_rejects_reference_that_is_not_the_batch_source(
 
 def test_rank_rejects_candidates_from_different_generations(
     tmp_path: Path,
-    mocked_rank_inputs: None,
+    _mocked_rank_inputs: None,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer.cockpit.export import analog_four_patch_render_rank as ranker
@@ -192,6 +192,32 @@ def test_rank_rejects_candidates_from_different_generations(
                 2: tmp_path / "candidate-2.wav",
             },
         )
+
+
+def test_rank_wraps_manifest_reader_failures_as_artifact_errors(
+    tmp_path: Path,
+    _mocked_rank_inputs: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_render_rank as ranker
+
+    def fail_load(_path: Path, *, candidate: int) -> None:
+        del candidate
+        raise ValueError("invalid committed sidecar")
+
+    monkeypatch.setattr(ranker, "load_analog_four_patch_batch_candidate", fail_load)
+
+    with pytest.raises(
+        ranker.AnalogFourPatchRenderRankArtifactError,
+        match="invalid committed sidecar",
+    ) as exc_info:
+        ranker.rank_analog_four_patch_renders(
+            reference_audio_path=tmp_path / "reference.wav",
+            manifest_path=tmp_path / "batch.json",
+            render_paths={1: tmp_path / "candidate-1.wav"},
+        )
+
+    assert isinstance(exc_info.value.__cause__, ValueError)
 
 
 @pytest.mark.parametrize(
@@ -323,9 +349,38 @@ def test_render_rank_cli_registry_adapters() -> None:
     assert "Error: bad" in cli._format_render_rank_cli_error(ValueError("bad"))
 
 
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    [
+        (ValueError("bad artifact"), "validation"),
+        (OSError("unreadable"), "input_read_failed"),
+        (RuntimeError("unexpected"), "rank_failed"),
+    ],
+)
+def test_render_rank_cli_classifies_generic_errors(error: Exception, expected: str) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_render_rank_cli as cli
+
+    assert cli._rank_error_code(error) == expected
+
+
+def test_render_rank_cli_classifies_domain_errors() -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_render_rank_cli as cli
+    from rytm_randomizer.style_analysis.extractor import StyleAnalysisDependencyError
+
+    assert (
+        cli._rank_error_code(cli.AnalogFourPatchRenderRankArtifactError("bad artifact"))
+        == "artifact_validation"
+    )
+    assert (
+        cli._rank_error_code(cli.AnalogFourPatchRenderRankReferenceError("wrong source"))
+        == "reference_mismatch"
+    )
+    assert cli._rank_error_code(StyleAnalysisDependencyError("missing")) == "dependency_missing"
+
+
 def test_render_rank_cli_outputs_text_and_json(
     tmp_path: Path,
-    mocked_rank_inputs: None,
+    _mocked_rank_inputs: None,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     from rytm_randomizer.cockpit.export.analog_four_patch_render_rank_cli import (

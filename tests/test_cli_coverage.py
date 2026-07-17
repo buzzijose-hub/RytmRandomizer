@@ -213,6 +213,9 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
         "cockpit-send-plan-rehearsal-surface-report"
     )
     cockpit_export_rehearsal_help = resolve_help_text("cockpit-export-rehearsal-report")
+    a4_saved_kit_export_help = resolve_help_text("analog-four-saved-kit-export")
+    a4_audio_patch_batch_help = resolve_help_text("analog-four-audio-patch-batch")
+    a4_audio_patch_rank_help = resolve_help_text("analog-four-audio-patch-rank")
 
     assert top_level_help.startswith("RytmRandomizer passive CLI")
     assert "style-performance-arc-live-readiness-report" in top_level_help
@@ -247,6 +250,15 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     assert "cockpit-send-plan-readiness-report" in top_level_help
     assert "cockpit-send-plan-rehearsal-surface-report" in top_level_help
     assert "cockpit-export-rehearsal-report" in top_level_help
+    assert a4_saved_kit_export_help.startswith(
+        "RytmRandomizer passive CLI: analog-four-saved-kit-export"
+    )
+    assert a4_audio_patch_batch_help.startswith(
+        "RytmRandomizer passive CLI: analog-four-audio-patch-batch"
+    )
+    assert a4_audio_patch_rank_help.startswith(
+        "RytmRandomizer passive CLI: analog-four-audio-patch-rank"
+    )
     assert snapshot_help.startswith(
         "RytmRandomizer passive CLI: rytm-snapshot-pad-compatibility-report"
     )
@@ -511,6 +523,28 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     assert snapshot_help.split("Safety:\n", 1)[1].splitlines() == [
         f"  {line}" for line in SAFETY_LINES
     ]
+
+
+def test_resolve_help_text_rejects_provider_that_returns_non_string(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer import help_text
+
+    monkeypatch.setitem(help_text.HELP_TEXT, "invalid-provider", lambda: object())
+
+    with pytest.raises(TypeError, match="did not return a string"):
+        help_text.resolve_help_text("invalid-provider")
+
+
+def test_resolve_help_text_rejects_non_string_non_provider(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer import help_text
+
+    monkeypatch.setitem(help_text.HELP_TEXT, "invalid-value", object())
+
+    with pytest.raises(TypeError, match="did not return a string"):
+        help_text.resolve_help_text("invalid-value")
 
 
 def test_format_registry_search_report_match_returns_match_line():

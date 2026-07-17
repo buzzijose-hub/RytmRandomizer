@@ -3,16 +3,17 @@
   "plan": "docs/superpowers/plans/2026-07-03-analog-four-audio-patch-genome.md",
   "branch": "codex/a4-sysex-roundtrip-writer",
   "pull_request": 214,
-  "phase": "push",
+  "phase": "push_and_ci",
   "workstreams": {
     "audio_inference": "complete",
     "patch_genome": "complete",
     "saved_kit_writer": "complete",
     "batch_publication": "complete",
     "operator_cli": "complete",
-    "hardware_validation": "complete",
+    "saved_kit_hardware_validation": "complete",
+    "full_live_plan_hardware_validation": "pending_supervised_rehearsal",
     "learning_capture": "complete",
-    "final_gates": "in_progress"
+    "final_gates": "complete"
   },
-  "last_event": "All local correction gates passed: 6,472 tests, architecture, parity, coverage, lint, Vulture, and Pyright; commit, push, post-push review, and CI verification remain."
+  "last_event": "Exact-tree local closeout passed: 6,508 tests, 99.04% coverage, 98.40% pure-branch, zero missed changed lines/branches, 693 architecture, 685 parity, lint, Vulture, Pyright, and mechanical review. Push, CI, and supervised physical full-plan rehearsal remain."
 }

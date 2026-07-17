@@ -33,7 +33,7 @@ pytestmark = pytest.mark.fast
 FIXTURE_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "analog_four_saved_kit"
 SOURCE_KIT = FIXTURE_DIR / "filter2_res_000_source.syx"
 AUDIO_BYTES = b"sanitized-audio-reference-for-mocked-inference\n"
-EXPECTED_GENERATION_ID = "b5164b8b43eaaa6a37eb2287cccaccff"
+EXPECTED_GENERATION_ID = "df8e6bf047f0a37f792348c28405958b"
 EXPECTED_SYSEX_SHA256 = (
     "2f6d97445535a1eb1f4b54e234d7b8d96b9c646c2f611a99f0e6e06a39980835",
     "16aee178243000a52cad0031429ca9768924e37c3989d1ad22c757cb7c266847",
@@ -41,12 +41,12 @@ EXPECTED_SYSEX_SHA256 = (
     "e1384abed1898010debfedf64386dd45485493cabb28b05f2e5bcd1c72096702",
 )
 EXPECTED_SIDECAR_SHA256 = (
-    "b5d3560c31e8ab593b5c8cb14ccef194cbdf9071f2768408504525fded804cf5",
-    "0c67a4319c2bbbfd438fbffea0cc464050dd62f825befca8e27620beffc2ea44",
-    "f921d58c8218829b33a2ac5dcfa53eec0d92d9468ca10af2abe0c90008f30fee",
-    "f308a73c0666d47306106c6210c44ce601b38ed824b602c178c82fb35fa371f3",
+    "b42009be05e69af66d453b83b2c0a05a03feea5bcdac163474a9cf79d2ece14c",
+    "c16a8607de5fbfd45690fe20c5142c0d73230c1cf544afae5034a3d6aac21c52",
+    "e844d6bbee6ca036883dff061a212ae15c4186ccdf0b93988b5c75b67213be19",
+    "c01e3a830d6cfea3214d4b289ecf86221a5c0a7aafca697a08a49539b1bc56fb",
 )
-EXPECTED_MANIFEST_SHA256 = "4962043d4e8d1bdcf7f95790255c1f41a9189e4b9f3c6f1fce193d467326e4f1"
+EXPECTED_MANIFEST_SHA256 = "46ac0c66da2f55d089d5472ceef0855e735c14f0036a2072e0b207c9b079e47c"
 
 
 def _json_payload_sha256(payload: object) -> str:
@@ -100,16 +100,20 @@ def _feature_report() -> FeatureReport:
 
 def _inference(*, track: int, candidate_count: int) -> _AudioInference:
     report = _feature_report()
-    genome = build_analog_four_patch_genome(
-        report,
-        track=track,
-        candidate_count=candidate_count,
+    audio_sha256 = hashlib.sha256(AUDIO_BYTES).hexdigest()
+    genome = replace(
+        build_analog_four_patch_genome(
+            report,
+            track=track,
+            candidate_count=candidate_count,
+        ),
+        source_hash=audio_sha256,
     )
     return _AudioInference(
         feature_report=report,
         genome=genome,
         audio_features_payload={
-            "audio_sha256": hashlib.sha256(AUDIO_BYTES).hexdigest(),
+            "audio_sha256": audio_sha256,
             "duration": 1.0,
             "attack": 0.1,
             "decay": 0.2,
@@ -128,7 +132,7 @@ def _inference(*, track: int, candidate_count: int) -> _AudioInference:
 
 
 @pytest.fixture
-def mocked_inference(monkeypatch: pytest.MonkeyPatch) -> None:
+def _mocked_inference(monkeypatch: pytest.MonkeyPatch) -> None:
     from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
 
     def fake_build(
@@ -161,7 +165,7 @@ def _export(tmp_path: Path, *, candidate_count: int = 4, overwrite: bool = False
 
 def test_export_audio_patch_batch_writes_four_pinned_candidates_and_manifest(
     tmp_path: Path,
-    mocked_inference: None,
+    _mocked_inference: None,
 ) -> None:
     from rytm_randomizer.cockpit.export.analog_four_patch_batch import (
         FILTER2_RESONANCE_PARAMETER,
@@ -371,7 +375,7 @@ def test_real_audio_to_patch_batch_chain_distinguishes_tone_from_noise(tmp_path:
 
 def test_batch_records_one_export_metric_for_the_complete_transaction(
     tmp_path: Path,
-    mocked_inference: None,
+    _mocked_inference: None,
 ) -> None:
     from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
@@ -383,7 +387,7 @@ def test_batch_records_one_export_metric_for_the_complete_transaction(
 
 def test_export_audio_patch_batch_refuses_any_collision_before_first_write(
     tmp_path: Path,
-    mocked_inference: None,
+    _mocked_inference: None,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
@@ -414,7 +418,7 @@ def test_export_audio_patch_batch_refuses_any_collision_before_first_write(
 
 def test_export_audio_patch_batch_overwrites_only_when_explicitly_enabled(
     tmp_path: Path,
-    mocked_inference: None,
+    _mocked_inference: None,
 ) -> None:
     first = _export(tmp_path, candidate_count=1)
     second = _export(tmp_path, candidate_count=1, overwrite=True)
@@ -502,7 +506,7 @@ def test_export_audio_patch_batch_uses_deterministic_safe_candidate_names(
 
 def test_sidecar_failure_leaves_only_an_unreferenced_immutable_sysex(
     tmp_path: Path,
-    mocked_inference: None,
+    _mocked_inference: None,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
@@ -636,7 +640,7 @@ def test_export_audio_patch_batch_classifies_inference_file_errors(
 
 def test_export_audio_patch_batch_classifies_staging_file_errors_as_write_failures(
     tmp_path: Path,
-    mocked_inference: None,
+    _mocked_inference: None,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
@@ -715,7 +719,7 @@ def test_export_audio_patch_batch_uses_immutable_input_snapshots(
 @pytest.mark.parametrize("failure_target", ["sidecar", "manifest"])
 def test_publication_failure_leaves_prior_manifest_and_generation_unchanged(
     tmp_path: Path,
-    mocked_inference: None,
+    _mocked_inference: None,
     monkeypatch: pytest.MonkeyPatch,
     failure_target: str,
 ) -> None:
@@ -746,7 +750,7 @@ def test_publication_failure_leaves_prior_manifest_and_generation_unchanged(
 
 def test_generation_addressing_keeps_prior_manifest_valid_during_interrupt(
     tmp_path: Path,
-    mocked_inference: None,
+    _mocked_inference: None,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
@@ -797,7 +801,7 @@ def test_generation_addressing_keeps_prior_manifest_valid_during_interrupt(
 
 def test_interrupted_first_publication_reuses_exact_orphans_on_retry(
     tmp_path: Path,
-    mocked_inference: None,
+    _mocked_inference: None,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
@@ -829,7 +833,7 @@ def test_interrupted_first_publication_reuses_exact_orphans_on_retry(
 
 def test_interrupt_after_lock_publication_cleans_owned_lock(
     tmp_path: Path,
-    mocked_inference: None,
+    _mocked_inference: None,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
@@ -849,7 +853,7 @@ def test_interrupt_after_lock_publication_cleans_owned_lock(
 
 def test_private_staging_is_cleaned_before_publication_lock(
     tmp_path: Path,
-    mocked_inference: None,
+    _mocked_inference: None,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
@@ -894,7 +898,7 @@ def test_immutable_publication_reuses_matching_bytes_and_rejects_collisions(
 
 def test_publication_failure_surfaces_lock_cleanup_note(
     tmp_path: Path,
-    mocked_inference: None,
+    _mocked_inference: None,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
@@ -1060,7 +1064,7 @@ def test_batch_lock_match_rejects_malformed_metadata(tmp_path: Path) -> None:
 
 def test_batch_export_lock_contention_does_not_release_another_process_lock(
     tmp_path: Path,
-    mocked_inference: None,
+    _mocked_inference: None,
 ) -> None:
     from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
 
@@ -1076,7 +1080,7 @@ def test_batch_export_lock_contention_does_not_release_another_process_lock(
 
 def test_interrupted_acquisition_does_not_release_same_process_lock_with_other_nonce(
     tmp_path: Path,
-    mocked_inference: None,
+    _mocked_inference: None,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
@@ -1100,7 +1104,7 @@ def test_interrupted_acquisition_does_not_release_same_process_lock_with_other_n
 
 def test_export_audio_patch_batch_surfaces_lock_cleanup_failure(
     tmp_path: Path,
-    mocked_inference: None,
+    _mocked_inference: None,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch

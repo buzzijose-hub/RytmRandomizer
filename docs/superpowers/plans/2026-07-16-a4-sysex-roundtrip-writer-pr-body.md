@@ -14,6 +14,7 @@ Turn the first hardware-validated Analog Four MKII saved-kit calibration into a 
 - Added deterministic measured-audio A4 inference and a manifest-backed batch service that writes up to four candidate `.syx` files plus complete DNA/CC-NRPN sidecars.
 - Added `analog-four-audio-patch-batch` with bounded track/candidate options, text/JSON artifact summaries, classified failures, and no MIDI behavior.
 - Unified report and synthesis measurements behind one typed audio decode, with direct inference RED metrics and immutable provenance.
+- Moved all 28 audio-to-parameter inference formulas into a canonical immutable data-layer model consumed by one generic evaluator.
 - Made candidate publication interruption-safe: both inputs are snapshotted, every artifact is staged and closed before publication, candidate names carry a 128-bit identity covering every sidecar/SysEx input, a metadata-rich per-track lock serializes publishers, and the stable manifest switches last.
 - Made generation artifacts write-once with exact-byte reuse, collision rejection, catchable process-interruption lock cleanup, explicit `publication_locked` classification, and committed-result lock-cleanup warnings with recovery metadata.
 - Completed the current generated live-dial vocabulary: the closest-reference candidate now compiles 39/39 rows into 29 CC plus 10 NRPN events (59 MIDI messages), with sparse destination ordinals validated through Elektron Overbridge and unknown labels still failing closed.
@@ -24,7 +25,11 @@ Turn the first hardware-validated Analog Four MKII saved-kit calibration into a 
 - Split canonical batch JSON/hashing, stable payload/result contracts, immutable publication locks, and pure acoustic scoring from transaction orchestration.
 - Hardened the manifest reader against fully rehashed malicious bundles by cross-checking every DNA/event field, transport status, path containment, and canonical A4 CC/NRPN address before output can open.
 - Separated mock dry-run telemetry from real hardware-send counters and added structured manifest, rank, and capture outcome metrics.
-- Completed the required eight-dimension post-push review and corrected stale command, architecture, run-state, environment-variable, and supervised-hardware-validation documentation.
+- Hardened the armed live-plan boundary with complete pre-port validation, 20 ms per-message pacing, post-delivery metrics, exact partial-NRPN progress, and clean-Kit/project reload recovery.
+- Added a hash-verified manifest-to-fake-port integration proof for the exact ordered 59-message candidate, plus tamper-before-port and interrupted-send recovery coverage.
+- Added bounded aliases and construction-time validation for all canonical audio-inference feature/parameter keys, preventing misspelled DNA formulas from loading.
+- Added operation-level inference, ranking, and armed-send RED summaries with typed error codes, taxonomy fingerprints, structured context, and Ctrl+C exit-130 recovery.
+- Named the 20 ms hardware pacing policy and split armed port acquisition, delivery, accounting, recovery, and close behavior into focused helpers.
 
 ## Why this matters
 
@@ -64,21 +69,21 @@ python scripts/code_review_gate.py --mode cli
 python -m ruff check .
 python -m black --check --target-version=py311 .
 python -m isort --profile black --check-only .
-python -m vulture rytm_randomizer --min-confidence 80
-python -m pyright rytm_randomizer/cockpit/export/analog_four_patch_batch_codec.py rytm_randomizer/cockpit/export/analog_four_patch_batch_contracts.py rytm_randomizer/cockpit/export/analog_four_patch_batch_publication.py rytm_randomizer/cockpit/export/analog_four_patch_batch_reader.py rytm_randomizer/cockpit/export/analog_four_patch_render_rank.py rytm_randomizer/cockpit/export/analog_four_patch_render_rank_cli.py rytm_randomizer/data/analog_four_render_rank.py rytm_randomizer/state/a4_soft_capture.py rytm_randomizer/style_analysis/analog_four_patch_render_rank.py rytm_randomizer/style_analysis/extractor.py rytm_randomizer/style_analysis/feature_report.py
+python -m vulture rytm_randomizer tests --min-confidence 80
+$files = git diff --name-only origin/modularize-v1.34 -- 'rytm_randomizer/**/*.py' 'rytm_randomizer/*.py'; python -m pyright $files
 git diff --check
 ```
 
-- [x] Full repository suite: 6,472 passed, 3 skipped.
-- [x] Architecture suite: 690 passed.
+- [x] Full repository suite: 6,508 passed, 3 skipped.
+- [x] Architecture suite: 693 passed.
 - [x] V1.34 frozen parity: 685 passed byte-for-byte.
 - [x] Post-review codec/contracts/publication/reader/ranker/extractor slice: 100% statement and branch coverage (795 statements / 158 branches / 0 misses).
-- [x] Complete project coverage: 98.97% across 42,308 statements and 9,632 branches; the 98% configured threshold and 95% pure-branch ratchet both pass.
+- [x] Complete project coverage: 99.04% across 42,450 statements and 9,622 branches; pure-branch coverage is 98.40%, and all 2,641 changed executable production lines plus every changed behavioral branch origin executed.
 - [x] Existing saved-kit writer/export focused coverage remains green; the complete repository suite includes both writer and audio-batch paths.
-- [x] Pyright across the focused A4 production modules: 0 errors, 0 warnings.
+- [x] Pyright across every production module changed by PR #214: 0 errors, 0 warnings.
 - [x] Manifest reader rejects rehashed path escapes, transport drift, DNA/event drift, noncanonical CC/NRPN addresses, sequence drift, and coverage drift before output opens.
 - [x] Lint trio and `git diff --check` clean.
-- [x] Vulture at confidence 80 clean across `rytm_randomizer`.
+- [x] Vulture at confidence 80 clean across `rytm_randomizer` and `tests`.
 - [x] Mechanical code-review gate passed on the final tree.
 - [x] Audio patch-batch CLI focused tests and command-help fixture passed locally.
 - [x] Real librosa/CLI smoke: tonal and noise clips each produced 4 `.syx` files, 4 complete sidecars, and 1 manifest; their DNA and SysEx hashes differed, with candidate-1 Filter2 Resonance `36` versus `24`.
@@ -91,6 +96,7 @@ Hardware validation:
 - [x] Generated novel T1 value `64` displayed `64`.
 - [x] One generated kit displayed T1/T2/T3/T4 values `16`/`48`/`80`/`112` correctly.
 - [x] All four tracks independently received the requested resonance values on the Analog Four MKII.
+- [ ] Complete 39-row/59-message physical live-plan rehearsal remains pending in the disposable initialized project; exact software/fake-port delivery is verified.
 
 ## Plan-requirements conformance
 
@@ -135,3 +141,5 @@ The pure renderer can exercise candidate calibrations in tests, but the operator
 The atomic writer fsyncs file data. It does not fsync parent-directory metadata, so persistence of the final filename after sudden power loss remains filesystem-dependent. Under normal filesystem semantics, generation-addressed write-once candidates ensure the prior manifest never points at mixed bytes during a process-interrupted overwrite; the interruption may leave unreferenced generation files. A lock-cleanup failure does not relabel a committed batch as failed: the successful result carries a warning and the retained metadata path.
 
 Gate 14 and 15 evidence is committed beside the plan: maintainability audit/report, append-only run log, run report, architecture before/after, replay playbook, state/schema, and the updated repository-scoped Elektron SysEx skill. Firmware and transfer-utility versions were not recorded during the hardware studio pass; the accepted file hashes, displayed values, and that evidence limitation are documented in `docs/hardware-validation/2026-07-16-a4-saved-kit-roundtrip-results.md`.
+
+Consolidated review: [`docs/superpowers/plans/2026-07-17-a4-audio-patch-final-review.md`](https://github.com/buzzijose-hub/RytmRandomizer/blob/codex/a4-sysex-roundtrip-writer/docs/superpowers/plans/2026-07-17-a4-audio-patch-final-review.md)

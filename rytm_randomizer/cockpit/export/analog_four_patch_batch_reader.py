@@ -111,7 +111,7 @@ def load_analog_four_patch_batch_candidate(
     )
     audio_source = _object_field(manifest, "audio_source", "batch manifest")
     audio_sha256 = _sha256_field(audio_source, "sha256", "batch manifest audio source")
-    feature_report_hash = _sha256_field(manifest, "feature_report_hash", "batch manifest")
+    _sha256_field(manifest, "feature_report_hash", "batch manifest")
     candidates = _object_list(manifest, "candidates", "batch manifest")
     if _batch_reader_bounded_int(
         manifest, "candidate_count", "batch manifest", low=1, high=4
@@ -137,7 +137,7 @@ def load_analog_four_patch_batch_candidate(
     _verify_payload_hash(dna, hashes, "candidate_dna_sha256", "candidate DNA")
     _verify_payload_hash(plan_payload, hashes, "send_plan_sha256", "send plan")
     _expect_equal(hashes, "audio_sha256", audio_sha256, "candidate hashes")
-    _expect_equal(plan_payload, "source_hash", feature_report_hash, "send plan")
+    _expect_equal(plan_payload, "source_hash", audio_sha256, "send plan")
 
     label = _string(selected, "label", "manifest candidate")
     _expect_equal(selected, "column", candidate, "manifest candidate")

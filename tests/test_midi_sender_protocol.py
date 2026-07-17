@@ -251,3 +251,48 @@ def test_send_cc_builds_mido_message_when_out_is_not_mock_midi_sender():
     assert len(out.sent) == 1
     assert out.sent[0] is constructed[0]
     assert get_metrics().cc_sent_by_channel[0] == 1
+
+
+def test_send_cc_does_not_count_failed_real_delivery() -> None:
+    _install_fake_mido()
+
+    from rytm_randomizer.midi_io import send_cc
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
+    class FailingOutput:
+        def send(self, message: object) -> None:
+            del message
+            raise OSError("delivery failed")
+
+    reset_metrics()
+    with pytest.raises(OSError, match="delivery failed"):
+        send_cc(FailingOutput(), 15, 100, channel=0, sleep=_no_sleep)
+
+    assert get_metrics().cc_sent_by_channel == {}
+
+
+def test_send_nrpn_reports_each_successful_message_including_value_lsb() -> None:
+    _install_fake_mido()
+
+    from rytm_randomizer.midi_io import send_nrpn
+
+    out = _FakeMidoOutput()
+    delivered: list[str] = []
+    send_nrpn(
+        out,
+        1,
+        54,
+        64,
+        value_lsb=7,
+        channel=0,
+        sleep=_no_sleep,
+        on_message_sent=lambda: delivered.append("sent"),
+    )
+
+    assert [(message.control, message.value) for message in out.sent] == [
+        (99, 1),
+        (98, 54),
+        (6, 64),
+        (38, 7),
+    ]
+    assert delivered == ["sent"] * 4

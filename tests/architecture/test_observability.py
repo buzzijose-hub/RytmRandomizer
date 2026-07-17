@@ -347,6 +347,9 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         "AnalogFourPatchBatchLockedError",
         "AnalogFourPatchRenderRankArtifactError",
         "AnalogFourPatchRenderRankReferenceError",
+        # Generic CC/NRPN plan delivery: carries exact successful/expected
+        # message counts so an armed A4 operator can recover from a partial send.
+        "MidiEventPlanSendError",
         # Cockpit profile registry (PR 7 — M7 + M6): atomic save +
         # classified load errors. ``ProfileAlreadyExistsError``
         # multi-inherits :class:`DataError` + :class:`FileExistsError`

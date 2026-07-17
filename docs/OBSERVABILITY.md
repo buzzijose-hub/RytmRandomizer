@@ -218,6 +218,26 @@ contract failures record count and cumulative latency. Success omits
 that reach audio inference record both layers: one inference event for analysis
 and one export event for the complete batch transaction. Request-validation and
 source-read failures occur before inference and therefore record export only.
+Inference completion/failure logs include `duration_ms` and the current
+`metrics_summary`, so the in-process counters remain visible when a one-shot
+CLI exits. Recorded-candidate ranking does the same through the bounded
+`AnalogFourPatchRenderRankErrorCode` vocabulary and taxonomy-backed artifact
+and reference-mismatch fingerprints.
+
+**Analog Four live-plan delivery semantics.** A complete stored plan is
+validated before an output port is opened. The generic CC/NRPN sender counts a
+message only after the port accepts it, including each of the three CC messages
+that form an NRPN. A delivery failure reports bounded sent/expected counts and
+the app emits the underlying port error with the operator recovery action to
+reload the saved Kit or project. `cc_sent` therefore represents successful
+delivery calls, not attempted writes.
+The armed operation additionally records count, cumulative duration, and one
+bounded `AnalogFourPatchSendErrorCode` (`validation`, port discovery/selection/
+open failures, interruption, partial/generic send failure, or count mismatch).
+Every terminal success/failure record includes `duration_ms`, structured
+source/track/candidate context, and `metrics_summary`. Successful completion is
+`DEBUG` to keep the normal operator console quiet; failure records remain
+`ERROR` and include a stable fingerprint plus the relevant cause type.
 
 ## Adding logging to a new module
 

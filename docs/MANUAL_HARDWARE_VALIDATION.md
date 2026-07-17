@@ -432,7 +432,9 @@ Before the first full-plan hardware pass:
 1. Use a disposable initialized A4 project and keep the clean kit dump ready.
 2. Confirm the intended track/channel with one already validated named
    parameter send, then reload the clean baseline.
-3. Run the manifest dry-run above and verify all 59 mock messages.
+3. Run the manifest dry-run above and verify both `transport messages: 59` and
+   `Mock sender captured 59 message(s).` To audit the ordered CC stream, add
+   `--debug --log-json` and inspect the `midi_mock_send` records on stderr.
 4. Use the full command only with the operator present, moderate monitoring
    level, and immediate reload/stop recovery available.
 
@@ -447,9 +449,14 @@ python -m rytm_randomizer.app --arm --a4-patch-send-plan `
 The reader rejects changed sidecar bytes, changed nested DNA/send-plan
 payloads, source/candidate/track mismatches, false transport labels,
 noncanonical parameter CC/NRPN addresses, and coverage-count drift before
-opening an output port. Saved-kit SysEx coverage does not expand through this
-command; this is an explicit live MIDI path whose complete 39-row hardware
-rehearsal remains pending.
+opening an output port. The armed sender then spaces all 59 transport messages
+by 20 ms. If the MIDI port fails after delivery starts, the command reports the
+exact sent/expected message count; stop, reload the saved clean Kit or project,
+and begin the rehearsal again from that known baseline. Saved-kit SysEx
+coverage does not expand through this command; this is an explicit live MIDI
+path whose complete 39-row hardware rehearsal remains pending.
+Pressing Ctrl+C during delivery follows the same partial-patch recovery path
+and returns process exit code 130 after the output port is closed.
 
 ### Rank recorded A4 candidates
 

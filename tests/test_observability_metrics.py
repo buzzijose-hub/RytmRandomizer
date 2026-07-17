@@ -28,6 +28,8 @@ import pytest
 
 from rytm_randomizer.observability.metrics import (
     AnalogFourPatchInferenceErrorCode,
+    AnalogFourPatchRenderRankErrorCode,
+    AnalogFourPatchSendErrorCode,
     MidiMetrics,
     get_metrics,
     reset_metrics,
@@ -74,6 +76,8 @@ def test_public_surface_is_importable() -> None:
 
     assert isinstance(MidiMetrics, type)
     assert get_args(AnalogFourPatchInferenceErrorCode)
+    assert get_args(AnalogFourPatchRenderRankErrorCode)
+    assert get_args(AnalogFourPatchSendErrorCode)
     assert callable(get_metrics)
     assert callable(reset_metrics)
 
@@ -86,6 +90,22 @@ def test_a4_patch_inference_error_codes_are_bounded() -> None:
             "audio_read_failed",
             "dependency_missing",
             "inference_failed",
+            "validation",
+        }
+    )
+
+
+def test_a4_patch_send_error_codes_are_bounded() -> None:
+    assert frozenset(get_args(AnalogFourPatchSendErrorCode)) == frozenset(
+        {
+            "interrupted",
+            "no_output_ports",
+            "partial_send",
+            "port_list",
+            "port_open",
+            "port_selection",
+            "send_count_mismatch",
+            "send_failed",
             "validation",
         }
     )
@@ -358,6 +378,22 @@ def test_record_a4_patch_inference_error_path() -> None:
     )
 
 
+def test_record_a4_render_rank_and_patch_send_red_metrics() -> None:
+    metrics = MidiMetrics()
+
+    metrics.record_a4_patch_render_rank(12.5)
+    metrics.record_a4_patch_render_rank(7.5, error_code="reference_mismatch")
+    metrics.record_a4_patch_send(30.0)
+    metrics.record_a4_patch_send(20.0, error_code="partial_send")
+
+    assert metrics.a4_patch_render_rank_count == 2
+    assert metrics.a4_patch_render_rank_duration_ms_total == pytest.approx(20.0)
+    assert metrics.a4_patch_render_rank_errors_by_code["reference_mismatch"] == 1
+    assert metrics.a4_patch_send_count == 2
+    assert metrics.a4_patch_send_duration_ms_total == pytest.approx(50.0)
+    assert metrics.a4_patch_send_errors_by_code["partial_send"] == 1
+
+
 def test_format_summary_includes_red_metrics_sections() -> None:
     """``format_summary`` exposes every RED counter and the export scalars.
 
@@ -372,6 +408,8 @@ def test_format_summary_includes_red_metrics_sections() -> None:
     metrics.record_export(50.0, error_code="write_failed")
     metrics.record_a4_patch_inference(75.0)
     metrics.record_a4_patch_inference(25.0, error_code="dependency_missing")
+    metrics.record_a4_patch_render_rank(20.0, error_code="reference_mismatch")
+    metrics.record_a4_patch_send(15.0, error_code="partial_send")
 
     summary = metrics.format_summary()
 
@@ -388,6 +426,14 @@ def test_format_summary_includes_red_metrics_sections() -> None:
     assert "a4_inference_errors=" in summary
     assert "a4_inference_duration_ms=100.0" in summary
     assert "dependency_missing:1" in summary
+    assert "a4_render_rank_count=1" in summary
+    assert "a4_render_rank_errors=" in summary
+    assert "a4_render_rank_duration_ms=20.0" in summary
+    assert "reference_mismatch:1" in summary
+    assert "a4_patch_send_count=1" in summary
+    assert "a4_patch_send_errors=" in summary
+    assert "a4_patch_send_duration_ms=15.0" in summary
+    assert "partial_send:1" in summary
 
 
 def test_format_summary_red_metrics_empty_render_as_braces_and_zeros() -> None:
@@ -404,6 +450,12 @@ def test_format_summary_red_metrics_empty_render_as_braces_and_zeros() -> None:
     assert "a4_inference_count=0" in summary
     assert "a4_inference_errors={}" in summary
     assert "a4_inference_duration_ms=0.0" in summary
+    assert "a4_render_rank_count=0" in summary
+    assert "a4_render_rank_errors={}" in summary
+    assert "a4_render_rank_duration_ms=0.0" in summary
+    assert "a4_patch_send_count=0" in summary
+    assert "a4_patch_send_errors={}" in summary
+    assert "a4_patch_send_duration_ms=0.0" in summary
 
 
 def test_reset_metrics_clears_red_metric_counters() -> None:
@@ -413,6 +465,8 @@ def test_reset_metrics_clears_red_metric_counters() -> None:
     metrics.record_ws_command("send", 10.0, error_code="ERR_INTERNAL")
     metrics.record_export(50.0, error_code="write_failed")
     metrics.record_a4_patch_inference(25.0, error_code="inference_failed")
+    metrics.record_a4_patch_render_rank(15.0, error_code="artifact_validation")
+    metrics.record_a4_patch_send(10.0, error_code="validation")
 
     assert metrics.ws_command_count["send"] == 1
     assert metrics.ws_command_errors_by_code["ERR_INTERNAL"] == 1
@@ -423,6 +477,8 @@ def test_reset_metrics_clears_red_metric_counters() -> None:
     assert metrics.a4_patch_inference_count == 1
     assert metrics.a4_patch_inference_duration_ms_total == pytest.approx(25.0)
     assert metrics.a4_patch_inference_errors_by_code["inference_failed"] == 1
+    assert metrics.a4_patch_render_rank_errors_by_code["artifact_validation"] == 1
+    assert metrics.a4_patch_send_errors_by_code["validation"] == 1
 
     reset_metrics()
 
@@ -437,3 +493,9 @@ def test_reset_metrics_clears_red_metric_counters() -> None:
     assert metrics.a4_patch_inference_count == 0
     assert metrics.a4_patch_inference_duration_ms_total == 0.0
     assert len(metrics.a4_patch_inference_errors_by_code) == 0
+    assert metrics.a4_patch_render_rank_count == 0
+    assert metrics.a4_patch_render_rank_duration_ms_total == 0.0
+    assert len(metrics.a4_patch_render_rank_errors_by_code) == 0
+    assert metrics.a4_patch_send_count == 0
+    assert metrics.a4_patch_send_duration_ms_total == 0.0
+    assert len(metrics.a4_patch_send_errors_by_code) == 0

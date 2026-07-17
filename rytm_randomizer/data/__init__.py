@@ -19,6 +19,11 @@ the data is ever changed in a way that breaks known-good expectations.
 
 from __future__ import annotations
 
+from .analog_four_audio_inference import (
+    ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER,
+    ANALOG_FOUR_INFERENCE_FEATURE_KEYS,
+    ANALOG_FOUR_INFERENCE_PARAMETERS,
+)
 from .analog_four_display import ANALOG_FOUR_PARAMETER_DISPLAY
 from .analog_four_learning import (
     ANALOG_FOUR_LEARNING_CAPTURE_MATRIX,
@@ -231,6 +236,9 @@ from .style_targets import STYLE_TARGET_VECTOR_AXES, STYLE_TARGET_VECTORS
 
 __all__ = [
     "A4_FILTER2_RESONANCE_PARAMETER",
+    "ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER",
+    "ANALOG_FOUR_INFERENCE_FEATURE_KEYS",
+    "ANALOG_FOUR_INFERENCE_PARAMETERS",
     "ANALOG_FOUR_SYNTH_TRACK_CC",
     "ANALOG_FOUR_SYNTH_TRACK_CC_BY_MSB",
     "ANALOG_FOUR_SYNTH_TRACK_NRPN",

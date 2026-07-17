@@ -17,26 +17,51 @@ _CONTROL_CHANGE_TYPE: Final[str] = "control_change"
 
 
 class RytmObserveCcMapping(Protocol):
-    section: str
-    parameter: str
-    cc_msb: int
-    nrpn_msb: int | None
-    nrpn_lsb: int | None
-    scope: str
+    @property
+    def section(self) -> str: ...  # pragma: no cover - protocol stub
+
+    @property
+    def parameter(self) -> str: ...  # pragma: no cover - protocol stub
+
+    @property
+    def cc_msb(self) -> int: ...  # pragma: no cover - protocol stub
+
+    @property
+    def nrpn_msb(self) -> int | None: ...  # pragma: no cover - protocol stub
+
+    @property
+    def nrpn_lsb(self) -> int | None: ...  # pragma: no cover - protocol stub
+
+    @property
+    def scope(self) -> str: ...  # pragma: no cover - protocol stub
 
 
 class RytmObserveExactEvent(Protocol):
-    channel: int
-    machine_key: str
-    section: str
-    parameter: str
-    cc_msb: int
-    source: str
+    @property
+    def channel(self) -> int: ...  # pragma: no cover - protocol stub
+
+    @property
+    def machine_key(self) -> str: ...  # pragma: no cover - protocol stub
+
+    @property
+    def section(self) -> str: ...  # pragma: no cover - protocol stub
+
+    @property
+    def parameter(self) -> str: ...  # pragma: no cover - protocol stub
+
+    @property
+    def cc_msb(self) -> int: ...  # pragma: no cover - protocol stub
+
+    @property
+    def source(self) -> str: ...  # pragma: no cover - protocol stub
 
 
 class RytmObserveAnchorEvent(RytmObserveExactEvent, Protocol):
-    pad: int
-    value: int
+    @property
+    def pad(self) -> int: ...  # pragma: no cover - protocol stub
+
+    @property
+    def value(self) -> int: ...  # pragma: no cover - protocol stub
 
 
 @dataclass(frozen=True)

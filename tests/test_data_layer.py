@@ -83,6 +83,56 @@ def test_a4_saved_kit_layout_is_canonical_data() -> None:
     assert data.A4_SAVED_KIT_FRAMED_SIZE == 2770
 
 
+def test_a4_audio_inference_model_is_canonical_immutable_data() -> None:
+    model = data.ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER
+
+    assert len(model) == 28
+    assert model["Filter2 Resonance"].intercept == 6.0
+    assert model["LFO1 Depth B"].terms[0].feature_keys == ("animation", "noise")
+    assert model["OSC1 Pulsewidth"] is model["OSC2 Pulsewidth"]
+    with pytest.raises(TypeError):
+        model["Filter2 Resonance"] = model["Volume"]  # type: ignore[index]
+
+
+def test_a4_audio_inference_model_rejects_unknown_keys_at_construction() -> None:
+    from rytm_randomizer.data.analog_four_audio_inference import (
+        A4_AUDIO_INFERENCE_UNIPOLAR,
+        AnalogFourAudioInferenceSpec,
+        AnalogFourAudioInferenceTerm,
+    )
+
+    assert set(data.ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER) == set(
+        data.ANALOG_FOUR_INFERENCE_PARAMETERS
+    )
+    with pytest.raises(ValueError, match="feature keys"):
+        AnalogFourAudioInferenceTerm(("typo",), 1.0)  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="at least one feature"):
+        AnalogFourAudioInferenceTerm((), 1.0)
+    with pytest.raises(ValueError, match="at least one parameter"):
+        AnalogFourAudioInferenceSpec((), A4_AUDIO_INFERENCE_UNIPOLAR, 0.0, ())
+    with pytest.raises(ValueError, match="must be unique"):
+        AnalogFourAudioInferenceSpec(
+            ("Volume", "Volume"),
+            A4_AUDIO_INFERENCE_UNIPOLAR,
+            0.0,
+            (AnalogFourAudioInferenceTerm(("brightness",), 1.0),),
+        )
+    with pytest.raises(ValueError, match="parameters"):
+        AnalogFourAudioInferenceSpec(
+            ("Filter2 Resonanse",),  # type: ignore[arg-type]
+            A4_AUDIO_INFERENCE_UNIPOLAR,
+            0.0,
+            (AnalogFourAudioInferenceTerm(("brightness",), 1.0),),
+        )
+    with pytest.raises(ValueError, match="weighted term"):
+        AnalogFourAudioInferenceSpec(
+            ("Filter2 Resonance",),
+            A4_AUDIO_INFERENCE_UNIPOLAR,
+            0.0,
+            (),
+        )
+
+
 def test_profile_registry_has_expected_keys():
     """The canonical profile registry must carry all 11 V1.34 profiles."""
 

@@ -1,6 +1,8 @@
 # Analog Four Audio Patch Genome Run Log
 
 > Status: in-flight
+>
+> Software complete; supervised full-plan hardware rehearsal pending.
 
 This file is append-only. Times are America/New_York when recorded.
 
@@ -27,3 +29,12 @@ This file is append-only. Times are America/New_York when recorded.
 - 2026-07-17: CORRECTION. Routed saved-kit rendering through the registered A4 capability; extracted shared batch codec/contracts/publication and pure render scoring; added canonical event/DNA/address verification, structured ranking/capture metrics, and adversarial rehashed-bundle tests.
 - 2026-07-17: COVERAGE. New batch codec, contracts, publication, reader, pure render ranker, and shared audio extractor each reached 100% statement and branch coverage in focused runs.
 - 2026-07-17: LOCAL_GATES_PASSED. Full suite 6,472 passed / 3 skipped; project coverage 98.97%; architecture 690 passed; V1.34 parity 685 passed; ruff, Black, isort, Vulture, and focused Pyright passed.
+- 2026-07-17: REVIEW_FINDING. Final review found inline A4 inference coefficients, unpaced live-plan delivery, incomplete pre-port validation, attempted-write telemetry, partial-send recovery ambiguity, and focused rank/CLI coverage gaps.
+- 2026-07-17: CORRECTION. Moved 28 parameter inference formulas into an immutable data-layer model; added complete-plan prevalidation, 20 ms message pacing, exact partial NRPN progress, taxonomy-backed recovery errors, post-delivery metrics, and manifest-to-port 59-message integration proof.
+- 2026-07-17: CORRECTION. Restored read-only Device Protocol covariance while preserving its pinned runtime annotation surface; expanded ranking, CLI, transport, and defensive armed-path coverage; focused production Pyright returned zero errors.
+- 2026-07-17: LOCAL_GATES_PASSED. Final tree: 6,498 passed / 3 skipped; coverage 98.98% across 42,417 statements and 9,658 branches with every changed production line executed; architecture 693 passed; V1.34 parity 685 passed; mechanical review, lint, Vulture, and focused Pyright passed.
+- 2026-07-17: REVIEW_FINDING. Final dimension review found process-local A4 metrics, untyped rank failures, duplicated pacing literals, unchecked inference keys, overbroad hardware state, stale gate evidence, and a complex armed-send boundary.
+- 2026-07-17: CORRECTION. Added structured inference/rank/live-send RED summaries, taxonomy-backed rank errors, named pacing, construction-validated inference keys, focused port/delivery helpers, Ctrl+C exit-130 recovery, and honest split saved-kit versus full-plan hardware state.
+- 2026-07-17: LEARNING_CAPTURED. Expanded the auto-loaded Elektron skill with content-addressed batch publication, audio-hash provenance, pre-port canonical validation, per-message progress accounting, pacing, and partial-send recovery.
+- 2026-07-17: LOCAL_GATES_PASSED. Exact final tree: 6,508 passed / 3 skipped; 99.04% coverage across 42,450 statements and 9,622 branches; 98.40% pure-branch coverage; 2,641 changed executable production lines and all changed behavioral branch origins executed; architecture 693; V1.34 parity 685; lint, Vulture across production/tests, production-diff Pyright, and mechanical review passed.
+- 2026-07-17: REVIEW_VERDICT. Eight-dimension review passed after all architecture, correctness, parity, safety, observability, abstraction, docs, and maintainability findings were resolved. Complete physical 39-row/59-message rehearsal remains explicitly pending.

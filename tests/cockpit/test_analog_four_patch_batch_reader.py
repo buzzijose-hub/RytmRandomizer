@@ -15,6 +15,7 @@ from rytm_randomizer.style_analysis.analog_four_patch_genome import (
 )
 from rytm_randomizer.style_analysis.analog_four_patch_send_plan import (
     AnalogFourPatchManualEvent,
+    AnalogFourPatchSendPlan,
     analog_four_patch_send_plan_to_dict,
     build_analog_four_patch_send_plan,
 )
@@ -23,6 +24,9 @@ from rytm_randomizer.style_analysis.feature_report import FeatureReport
 pytestmark = pytest.mark.fast
 
 AUDIO_SHA256 = "a" * 64
+EXPECTED_CANDIDATE_1_TRANSPORT_SHA256 = (
+    "4eb68d3f0ad742c55bf1f383220c323ce92e9b856b596432d45d0af3325e095b"
+)
 
 
 def _json_bytes(payload: object) -> bytes:
@@ -62,6 +66,7 @@ def _write_batch(tmp_path: Path) -> tuple[Path, dict[str, object], dict[str, obj
         selected_candidate=1,
     )
     plan_payload = analog_four_patch_send_plan_to_dict(plan)
+    plan_payload["source_hash"] = AUDIO_SHA256
     dna: dict[str, object] = dict(
         analog_four_patch_candidate_to_dict(plan.learning_packet.selected_patch)
     )
@@ -217,6 +222,181 @@ def test_app_dry_run_sends_exact_hash_verified_batch_candidate(
     assert captured.err == ""
 
 
+def _expected_transport_messages(plan: AnalogFourPatchSendPlan) -> list[tuple[int, int, int]]:
+    send_events = plan.send_events
+    expected: list[tuple[int, int, int]] = []
+    for event in send_events:
+        if event.message_kind == "cc":
+            assert event.cc_msb is not None
+            expected.append((event.channel, event.cc_msb, event.midi_value))
+            continue
+        assert event.nrpn_address is not None
+        expected.extend(
+            (
+                (event.channel, 99, event.nrpn_address[0]),
+                (event.channel, 98, event.nrpn_address[1]),
+                (event.channel, 6, event.midi_value),
+            )
+        )
+    return expected
+
+
+def test_app_arm_sends_exact_hash_verified_batch_candidate(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    fake_mido_session: object,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer import app, mido_provider
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+
+    class FakeOutputPort:
+        def __init__(self) -> None:
+            self.sent: list[object] = []
+            self.closed = False
+
+        def send(self, message: object) -> None:
+            self.sent.append(message)
+
+        def close(self) -> None:
+            self.closed = True
+
+    manifest_path, _manifest, _sidecar = _write_batch(tmp_path)
+    selection = load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
+    fake_port = FakeOutputPort()
+    sleep_calls: list[float] = []
+    monkeypatch.setattr(app, "_hardware_settle_sleep", sleep_calls.append)
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_output_names",
+        lambda self: ("Fake A4 Out",),
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "open_output",
+        lambda self, port_name: fake_port,
+    )
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--a4-patch-send-plan",
+            "--batch-manifest",
+            str(manifest_path),
+            "--candidate",
+            "1",
+            "--confirm-a4-patch-send-plan",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "batch-manifest generation 0123456789abcdef0123456789abcdef" in captured.out
+    assert captured.err == ""
+    assert fake_port.closed is True
+    from rytm_randomizer.midi_io import MIDI_MESSAGE_SETTLE_SECONDS
+
+    assert sleep_calls == [MIDI_MESSAGE_SETTLE_SECONDS] * 59
+    transport_messages = [
+        (message.channel, message.control, message.value) for message in fake_port.sent
+    ]
+    assert transport_messages == _expected_transport_messages(selection.plan)
+    assert (
+        hashlib.sha256(
+            bytes(value for message in transport_messages for value in message)
+        ).hexdigest()
+        == EXPECTED_CANDIDATE_1_TRANSPORT_SHA256
+    )
+
+
+def test_app_arm_rejects_tampered_batch_before_opening_midi(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer import app, mido_provider
+
+    manifest_path, _manifest, sidecar = _write_batch(tmp_path)
+    sidecar["generation_id"] = "tampered"
+    _rewrite_json(tmp_path / "candidate-01.json", sidecar)
+
+    def fail_midi_call(self, *_args: object) -> None:
+        raise AssertionError("invalid manifest must not touch MIDI ports")
+
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_midi_call)
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--a4-patch-send-plan",
+            "--batch-manifest",
+            str(manifest_path),
+            "--confirm-a4-patch-send-plan",
+        ]
+    )
+
+    assert exit_code == 1
+    assert "sidecar SHA-256" in capsys.readouterr().err
+
+
+def test_app_arm_reports_partial_batch_send_and_recovery(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    fake_mido_session: object,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer import app, mido_provider
+
+    class FailingOutputPort:
+        def __init__(self) -> None:
+            self.sent: list[object] = []
+            self.closed = False
+
+        def send(self, message: object) -> None:
+            if len(self.sent) == 5:
+                raise OSError("cable disconnected")
+            self.sent.append(message)
+
+        def close(self) -> None:
+            self.closed = True
+
+    manifest_path, _manifest, _sidecar = _write_batch(tmp_path)
+    fake_port = FailingOutputPort()
+    monkeypatch.setattr(app, "_hardware_settle_sleep", lambda _seconds: None)
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_output_names",
+        lambda self: ("Fake A4 Out",),
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "open_output",
+        lambda self, port_name: fake_port,
+    )
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--a4-patch-send-plan",
+            "--batch-manifest",
+            str(manifest_path),
+            "--confirm-a4-patch-send-plan",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert len(fake_port.sent) == 5
+    assert fake_port.closed is True
+    assert "failed after 5 of 59 messages" in captured.err
+    assert "reload the last saved Kit or project before retrying" in captured.err
+
+
 def test_load_batch_candidate_rejects_sidecar_byte_tampering(tmp_path: Path) -> None:
     from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
         load_analog_four_patch_batch_candidate,
@@ -306,6 +486,30 @@ def test_app_batch_manifest_rejects_explicit_track_mismatch(
 
     assert exit_code == 1
     assert "track does not match the committed batch manifest" in capsys.readouterr().err
+
+
+def test_app_batch_manifest_reports_reader_failure(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from rytm_randomizer import app
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
+    reset_metrics()
+    missing_manifest = tmp_path / "missing-batch.json"
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--a4-patch-send-plan",
+            "--batch-manifest",
+            str(missing_manifest),
+        ]
+    )
+
+    assert exit_code == 1
+    assert "--a4-patch-send-plan failed:" in capsys.readouterr().err
+    assert get_metrics().errors_by_kind["a4_patch_send_plan_manifest_validation"] == 1
 
 
 def test_reader_rejects_wrong_argument_types(tmp_path: Path) -> None:

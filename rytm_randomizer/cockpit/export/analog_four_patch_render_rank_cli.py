@@ -176,10 +176,8 @@ def handle_analog_four_patch_render_rank(
             )
     except (ImportError, KeyError, OSError, RuntimeError, TypeError, ValueError) as exc:
         error_code = _rank_error_code(exc)
-        metrics.record_a4_patch_render_rank(
-            (time.perf_counter() - started_at) * 1000.0,
-            error_code=error_code,
-        )
+        duration_ms = (time.perf_counter() - started_at) * 1000.0
+        metrics.record_a4_patch_render_rank(duration_ms, error_code=error_code)
         _logger.warning(
             "Analog Four patch render ranking failed",
             extra={
@@ -187,6 +185,10 @@ def handle_analog_four_patch_render_rank(
                 "error_code": error_code,
                 "reference_path": str(reference_audio_path),
                 "manifest_path": str(manifest_path),
+                "duration_ms": duration_ms,
+                "error_type": type(exc).__name__,
+                "fingerprint": getattr(exc, "fingerprint", "a4.render_rank.failed"),
+                "metrics_summary": metrics.format_summary(),
             },
         )
         if json_output:
@@ -206,13 +208,16 @@ def handle_analog_four_patch_render_rank(
             sys.stderr.write(f"{USAGE}\nError: {exc}\n")
         return 2
 
-    metrics.record_a4_patch_render_rank((time.perf_counter() - started_at) * 1000.0)
+    duration_ms = (time.perf_counter() - started_at) * 1000.0
+    metrics.record_a4_patch_render_rank(duration_ms)
     _logger.info(
         "Analog Four patch render ranking completed",
         extra={
             "operation": "a4_patch_render_rank",
             "generation_id": packet.generation_id,
             "recommended_candidate": packet.recommended_candidate,
+            "duration_ms": duration_ms,
+            "metrics_summary": metrics.format_summary(),
         },
     )
     if json_output:

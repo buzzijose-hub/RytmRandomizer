@@ -702,7 +702,7 @@ Skills under `.claude/skills/` package repeatable knowledge so an agent (or a hu
 | [`multi-agent-work-collision-recovery`](.claude/skills/learned/multi-agent-work-collision-recovery/SKILL.md) | Recovering with git when a peer agent did your task and pushed first. |
 | [`rebase-after-squash-merge`](.claude/skills/learned/rebase-after-squash-merge/SKILL.md) | How to rebase a branch after the base squash-merged. |
 | [`coverage-py-blended-vs-pure-branch`](.claude/skills/learned/coverage-py-blended-vs-pure-branch/SKILL.md) | Why the ratchet uses pure-branch (not blended) coverage. |
-| [`elektron-sysex-envelope`](.claude/skills/learned/elektron-sysex-envelope/SKILL.md) | Elektron 7-bit SysEx envelope structure (Rytm + A4 + Digitakt). |
+| [`elektron-sysex-envelope`](.claude/skills/learned/elektron-sysex-envelope/SKILL.md) | Elektron 7-bit SysEx plus A4 content-addressed patch publication, validated live delivery, pacing, and recovery. |
 | [`pip-audit-editable-install`](.claude/skills/learned/pip-audit-editable-install/SKILL.md) | Running pip-audit when the package is editable-installed; how to handle hardware-pinned packages. |
 | [`github-actions-matrix-conditional`](.claude/skills/learned/github-actions-matrix-conditional/SKILL.md) | Conditional matrix expansion in `.github/workflows/test.yml`. |
 | [`github-token-no-workflow-trigger`](.claude/skills/learned/github-token-no-workflow-trigger/SKILL.md) | Pushing from a workflow without triggering recursive CI. |

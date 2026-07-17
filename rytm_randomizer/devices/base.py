@@ -143,16 +143,32 @@ class Device(Protocol):
     The convenience methods are kept so WS-S5 callers do not break.
     """
 
-    device_id: str
-    display_name: str
-    default_midi_channel: int
-    track_count: int
-    sysex_manufacturer_id: bytes
+    @property
+    def device_id(self) -> str: ...  # pragma: no cover - protocol stub
 
-    snapshot_decoder: SnapshotDecoder
-    mutation_planner: MutationPlanner
-    message_renderer: MessageRenderer
-    report_header: str
+    @property
+    def display_name(self) -> str: ...  # pragma: no cover - protocol stub
+
+    @property
+    def default_midi_channel(self) -> int: ...  # pragma: no cover - protocol stub
+
+    @property
+    def track_count(self) -> int: ...  # pragma: no cover - protocol stub
+
+    @property
+    def sysex_manufacturer_id(self) -> bytes: ...  # pragma: no cover - protocol stub
+
+    @property
+    def snapshot_decoder(self) -> SnapshotDecoder: ...  # pragma: no cover - protocol stub
+
+    @property
+    def mutation_planner(self) -> MutationPlanner: ...  # pragma: no cover - protocol stub
+
+    @property
+    def message_renderer(self) -> MessageRenderer: ...  # pragma: no cover - protocol stub
+
+    @property
+    def report_header(self) -> str: ...  # pragma: no cover - protocol stub
 
     def decode_snapshot(self, raw: bytes, slot: int) -> Any: ...
 
@@ -161,3 +177,20 @@ class Device(Protocol):
     def to_mock_messages(self, plan: Any) -> list[Any]: ...
 
     def to_cc_messages(self, plan: Any) -> Iterable[tuple[int, int, int]]: ...
+
+
+# Keep the runtime-inspectable public attribute surface pinned while the
+# property declarations above preserve read-only structural typing.
+Device.__annotations__.update(
+    {
+        "device_id": str,
+        "display_name": str,
+        "default_midi_channel": int,
+        "track_count": int,
+        "sysex_manufacturer_id": bytes,
+        "snapshot_decoder": SnapshotDecoder,
+        "mutation_planner": MutationPlanner,
+        "message_renderer": MessageRenderer,
+        "report_header": str,
+    }
+)

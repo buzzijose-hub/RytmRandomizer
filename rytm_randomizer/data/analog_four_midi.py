@@ -1013,11 +1013,19 @@ ANALOG_FOUR_MANUAL_CC: Final[Mapping[str, AnalogFourCcMapping]] = MappingProxyTy
 )
 
 ANALOG_FOUR_SYNTH_TRACK_CC_BY_MSB: Final[Mapping[int, AnalogFourCcMapping]] = MappingProxyType(
-    {mapping.cc_msb: mapping for mapping in ANALOG_FOUR_SYNTH_TRACK_CC.values()}
+    {
+        mapping.cc_msb: mapping
+        for mapping in ANALOG_FOUR_SYNTH_TRACK_CC.values()
+        if mapping.cc_msb is not None
+    }
 )
 
 ANALOG_FOUR_MANUAL_CC_BY_MSB: Final[Mapping[int, AnalogFourCcMapping]] = MappingProxyType(
-    {mapping.cc_msb: mapping for mapping in ANALOG_FOUR_MANUAL_CC.values()}
+    {
+        mapping.cc_msb: mapping
+        for mapping in ANALOG_FOUR_MANUAL_CC.values()
+        if mapping.cc_msb is not None
+    }
 )
 
 ANALOG_FOUR_SYNTH_TRACK_NRPN_BY_ADDRESS: Final[Mapping[tuple[int, int], AnalogFourCcMapping]] = (

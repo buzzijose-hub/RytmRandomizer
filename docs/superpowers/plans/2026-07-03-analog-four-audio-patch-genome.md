@@ -1,6 +1,8 @@
 # Analog Four Audio Patch Genome Implementation Plan
 
 > Status: in-flight
+>
+> Software complete; supervised full-plan hardware rehearsal pending.
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:test-driven-development. This plan is structured for one bundled PR with maximum-parallelization sidecar exploration and no stacked PRs, per docs/PLAN_REQUIREMENTS.md Gate 16.
 
 **Goal:** Add a Synplant-inspired audio/description-to-Analog-Four patch genome and a real audio-dependent batch path that produces up to four A4 patch candidates, complete DNA sidecars, CC/NRPN live-dial plans, and narrow hardware-validated saved-kit files for Filter2 Resonance.
@@ -106,7 +108,7 @@
 
 Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 
-- [x] Gate 1 (100% branch coverage on touched files) -- the post-review codec/contracts/publication/reader/ranker/extractor set covers 795 statements and 158 branches with zero misses; the complete suite passes the project ratchet at 98.97% (42,308 statements, 9,632 branches).
+- [x] Gate 1 (100% branch coverage on touched files) -- the final exact-tree suite covers 42,450 statements and 9,622 branches at 99.04% overall / 98.40% pure-branch; all 2,641 changed executable production lines and every changed behavioral branch origin have zero misses.
 - [x] Gate 2 (V1.34 parity byte-identical) -- no V1.34 engine/golden paths touched.
 - [x] Gate 3 (lint/format/type clean) -- ruff/black/isort plus Pyright on every touched production path passed before closeout.
 - [x] Gate 4 (dead-code purge) -- no unused public surfaces; report and compiler are test-covered.

@@ -5,8 +5,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final, TypedDict
+from typing import ClassVar, Final, TypedDict
 
+from ...observability.errors import DataError
 from ...style_analysis.analog_four_patch_inference import analyze_analog_four_patch_audio
 from ...style_analysis.analog_four_patch_render_rank import (
     AnalogFourPatchRenderScore,
@@ -77,12 +78,16 @@ class AnalogFourPatchRenderRankPayload(TypedDict):
     safety: list[str]
 
 
-class AnalogFourPatchRenderRankArtifactError(ValueError):
+class AnalogFourPatchRenderRankArtifactError(DataError, ValueError):
     """A batch manifest or candidate sidecar failed integrity validation."""
 
+    fingerprint: ClassVar[str] = "a4.render_rank.artifact_invalid"
 
-class AnalogFourPatchRenderRankReferenceError(ValueError):
+
+class AnalogFourPatchRenderRankReferenceError(DataError, ValueError):
     """The supplied reference audio does not match the committed batch."""
+
+    fingerprint: ClassVar[str] = "a4.render_rank.reference_mismatch"
 
 
 def rank_analog_four_patch_renders(
@@ -122,14 +127,31 @@ def rank_analog_four_patch_renders(
                 candidate=candidate,
             )
         except (KeyError, OSError, TypeError, ValueError) as exc:
-            raise AnalogFourPatchRenderRankArtifactError(str(exc)) from exc
+            raise AnalogFourPatchRenderRankArtifactError(
+                str(exc),
+                context={
+                    "candidate": candidate,
+                    "cause_type": type(exc).__name__,
+                    "manifest_path": str(manifest_path),
+                },
+            ) from exc
         if reference.audio_sha256 != selection.audio_sha256:
             raise AnalogFourPatchRenderRankReferenceError(
-                "reference audio SHA-256 does not match the committed batch source"
+                "reference audio SHA-256 does not match the committed batch source",
+                context={
+                    "actual_sha256": reference.audio_sha256,
+                    "expected_sha256": selection.audio_sha256,
+                    "candidate": candidate,
+                },
             )
         if generation_id and selection.generation_id != generation_id:
             raise AnalogFourPatchRenderRankArtifactError(
-                "render candidates do not share one committed batch generation"
+                "render candidates do not share one committed batch generation",
+                context={
+                    "candidate": candidate,
+                    "actual_generation_id": selection.generation_id,
+                    "expected_generation_id": generation_id,
+                },
             )
         generation_id = selection.generation_id
         selected_track = selection.plan.selected_track

@@ -34,6 +34,10 @@ _ELEKTRON_MFR_ID: Final[bytes] = bytes([0x00, 0x20, 0x3C])
 
 #: Operator-facing report header line for guarded / hardware sends.
 _REPORT_HEADER: Final[str] = "RytmRandomizer Analog Rytm MK2 Guarded Send"
+_DEVICE_ID: Final[str] = "analog_rytm_mk2"
+_DISPLAY_NAME: Final[str] = "Elektron Analog Rytm MKII"
+_DEFAULT_MIDI_CHANNEL: Final[int] = 0
+_TRACK_COUNT: Final[int] = 12
 
 
 class AnalogRytmDevice:
@@ -45,12 +49,29 @@ class AnalogRytmDevice:
     the registry.
     """
 
-    device_id: Final[str] = "analog_rytm_mk2"
-    display_name: Final[str] = "Elektron Analog Rytm MKII"
-    default_midi_channel: Final[int] = 0
-    track_count: Final[int] = 12
-    sysex_manufacturer_id: Final[bytes] = _ELEKTRON_MFR_ID
-    report_header: Final[str] = _REPORT_HEADER
+    @property
+    def device_id(self) -> str:
+        return _DEVICE_ID
+
+    @property
+    def display_name(self) -> str:
+        return _DISPLAY_NAME
+
+    @property
+    def default_midi_channel(self) -> int:
+        return _DEFAULT_MIDI_CHANNEL
+
+    @property
+    def track_count(self) -> int:
+        return _TRACK_COUNT
+
+    @property
+    def sysex_manufacturer_id(self) -> bytes:
+        return _ELEKTRON_MFR_ID
+
+    @property
+    def report_header(self) -> str:
+        return _REPORT_HEADER
 
     def __init__(self) -> None:
         """Compose the three capability strategies on this device instance."""

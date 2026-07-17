@@ -1,6 +1,8 @@
 # Analog Four Audio Patch Genome Run Report
 
 > Status: in-flight
+>
+> Software complete; supervised full-plan hardware rehearsal pending.
 
 ## Outcome
 
@@ -16,7 +18,7 @@ The run produced one bundled, non-stacked PR containing a passive audio-to-A4 ca
 | 2026-07-16 | Real audio batch path, immutable generation publication, interruption recovery, observability, and CLI contracts completed. |
 | 2026-07-16 | Parallel architecture, safety, test, and documentation reviews were resolved before final gates. |
 | 2026-07-17 | The required post-push eight-dimension review found and resolved device-boundary, trust, observability, abstraction, coverage, maintainability, and docs issues. |
-| 2026-07-17 | Final local convergence passed: 6,472 tests, 690 architecture items, 685 byte-frozen parity items, 98.97% project coverage, focused 100% branch coverage, lint, Vulture, and Pyright. |
+| 2026-07-17 | Final local convergence passed: 6,508 tests, 693 architecture items, 685 byte-frozen parity items, 99.04% project coverage, 98.40% pure-branch coverage, zero missed changed executable lines/branch origins, lint, Vulture, Pyright, and mechanical review. |
 
 ## Escalations Resolved
 
@@ -37,4 +39,4 @@ The run produced one bundled, non-stacked PR containing a passive audio-to-A4 ca
 
 ## LOC Impact
 
-The bundled PR spans the A4 data, style-analysis, strategy, export, test, and documentation surfaces. Local closeout passed 6,472 tests with 3 platform/dependency skips and 98.97% project coverage. The final `git diff --stat` and CI matrix remain the authoritative merge totals; no V1.34 parity fixture or hardware-pinned dependency changed.
+The bundled PR spans the A4 data, style-analysis, strategy, export, test, and documentation surfaces. Local closeout passed 6,508 tests with 3 platform/dependency skips and 99.04% project coverage across 42,450 statements and 9,622 branches. Pure-branch coverage is 98.40%; all 2,641 changed executable production lines and every changed behavioral branch origin executed. The final `git diff --stat` and CI matrix remain the authoritative merge totals; no V1.34 parity fixture or hardware-pinned dependency changed.

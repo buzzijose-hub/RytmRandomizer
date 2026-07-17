@@ -3,11 +3,18 @@
 from __future__ import annotations
 
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Final, TypeAlias, TypedDict, TypeVar
+from typing import Final, TypeAlias, TypedDict, TypeVar, cast
 
+from ..data.analog_four_audio_inference import (
+    A4_AUDIO_INFERENCE_BIPOLAR,
+    ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER,
+    AnalogFourAudioInferenceSpec,
+    AnalogFourInferenceFeatureKey,
+    AnalogFourInferenceParameter,
+)
 from ..data.analog_four_display import make_a4_patch_value
 from ..data.analog_four_patch_templates import ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES
 from ..observability.logging import get_logger
@@ -89,26 +96,30 @@ def _recorded_a4_inference(
         result = operation()
     except (KeyError, OSError, RuntimeError, TypeError, ValueError) as exc:
         error_code = _a4_inference_error_code(exc)
-        metrics.record_a4_patch_inference(
-            (time.perf_counter() - started_at) * 1000.0,
-            error_code=error_code,
-        )
+        duration_ms = (time.perf_counter() - started_at) * 1000.0
+        metrics.record_a4_patch_inference(duration_ms, error_code=error_code)
         _logger.warning(
             "Analog Four audio patch inference failed",
             extra={
                 "operation": "a4_audio_patch_inference",
                 "error_code": error_code,
                 "audio_path": str(path),
+                "duration_ms": duration_ms,
+                "error_type": type(exc).__name__,
+                "metrics_summary": metrics.format_summary(),
             },
         )
         raise
 
-    metrics.record_a4_patch_inference((time.perf_counter() - started_at) * 1000.0)
+    duration_ms = (time.perf_counter() - started_at) * 1000.0
+    metrics.record_a4_patch_inference(duration_ms)
     _logger.info(
         "Analog Four audio patch inference completed",
         extra={
             "operation": "a4_audio_patch_inference",
             "audio_path": str(path),
+            "duration_ms": duration_ms,
+            "metrics_summary": metrics.format_summary(),
         },
     )
     return result
@@ -233,61 +244,39 @@ def _inferred_screen_target(
     features: AnalogFourPatchAudioFeatures,
 ) -> int | None:
     brightness, noise, low_end, animation, tail = _candidate_character(features, column)
-    harmonicity = features.harmonicity
-    transient = features.transient
-    if parameter == "OSC1 Level":
-        return _unipolar(70 + harmonicity * 38 + low_end * 18 - noise * 12)
-    if parameter == "OSC2 Level":
-        return _unipolar(22 + brightness * 54 + harmonicity * 22 - low_end * 8)
-    if parameter == "Noise Level":
-        return _unipolar(8 + noise * 106)
-    if parameter == "Noise Fade":
-        return _unipolar(10 + tail * 96)
-    if parameter in {"OSC1 Pulsewidth", "OSC2 Pulsewidth"}:
-        return _bipolar(-(brightness * 28 + harmonicity * 12 - low_end * 8))
-    if parameter == "Sync Amount":
-        return _unipolar(brightness * 82 + harmonicity * 34)
-    if parameter in {"EnvA Attack Time", "EnvF Attack Time"}:
-        return _unipolar(features.attack * 112)
-    if parameter == "EnvA Decay Time":
-        return _unipolar(features.decay * 82 + features.duration * 30 + 8)
-    if parameter == "EnvF Decay Time":
-        return _unipolar(features.decay * 72 + transient * 34 + 10)
-    if parameter == "EnvA Sustain Level":
-        return _unipolar(features.sustain * 112)
-    if parameter == "EnvF Sustain Level":
-        return _unipolar(features.sustain * 92)
-    if parameter == "EnvA Release Time":
-        return _unipolar(tail * 100 + features.duration * 18)
-    if parameter == "EnvF Release Time":
-        return _unipolar(tail * 92 + features.decay * 22)
-    if parameter == "LFO1 Speed":
-        return _bipolar(animation * 48 + transient * 8)
-    if parameter == "LFO1 Depth A":
-        return _bipolar(animation * 24 + noise * 8)
-    if parameter == "LFO1 Depth B":
-        return _bipolar(animation * noise * 18)
-    if parameter == "Filter1 Frequency":
-        return _unipolar(24 + brightness * 92 - low_end * 18)
-    if parameter == "Filter2 Frequency":
-        return _unipolar(46 + brightness * 76 - low_end * 12)
-    if parameter == "Filter1 Resonance":
-        return _unipolar(8 + harmonicity * 38 + transient * 22)
-    if parameter == "Filter2 Resonance":
-        return _unipolar(6 + harmonicity * 30 + brightness * 20)
-    if parameter == "Filter Overdrive":
-        return _bipolar((harmonicity * 0.35 + noise * 0.35 + low_end * 0.30) * 34)
-    if parameter == "Filter1 Envelope Amount":
-        return _bipolar(transient * 46 + features.decay * 10 - features.sustain * 6)
-    if parameter == "Filter2 Envelope Amount":
-        return _bipolar(transient * 34 + animation * 10 - features.sustain * 5)
-    if parameter == "Delay Send Level":
-        return _unipolar(animation * 42 + tail * 35)
-    if parameter == "Reverb Send Level":
-        return _unipolar(tail * 58 + features.sustain * 28 + noise * 20)
-    if parameter == "Volume":
-        return _unipolar(88 + harmonicity * 16 - noise * 8)
-    return None
+    feature_values: Mapping[AnalogFourInferenceFeatureKey, float] = {
+        "attack": features.attack,
+        "decay": features.decay,
+        "sustain": features.sustain,
+        "duration": features.duration,
+        "brightness": brightness,
+        "noise": noise,
+        "low_end": low_end,
+        "animation": animation,
+        "tail": tail,
+        "harmonicity": features.harmonicity,
+        "transient": features.transient,
+    }
+    if parameter not in ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER:
+        return None
+    spec = ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER[cast(AnalogFourInferenceParameter, parameter)]
+    return _evaluate_inference_spec(spec, feature_values)
+
+
+def _evaluate_inference_spec(
+    spec: AnalogFourAudioInferenceSpec,
+    feature_values: Mapping[AnalogFourInferenceFeatureKey, float],
+) -> int:
+    value = spec.intercept
+    for term in spec.terms:
+        product = 1.0
+        for feature_key in term.feature_keys:
+            product *= feature_values[feature_key]
+        value += product * term.coefficient
+    value *= spec.output_multiplier
+    if spec.scale == A4_AUDIO_INFERENCE_BIPOLAR:
+        return _bipolar(value)
+    return _unipolar(value)
 
 
 def _candidate_character(

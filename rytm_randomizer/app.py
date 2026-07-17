@@ -45,8 +45,10 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
+from time import perf_counter
+from time import sleep as _hardware_settle_sleep
 from time import time_ns
 from typing import TYPE_CHECKING, Final, Protocol
 
@@ -63,6 +65,7 @@ if TYPE_CHECKING:
     from .devices.strategies import RytmPerformanceMutationPlan
     from .engines.analog_rytm_snapshot_shell import ResnapshotFunc, RytmSnapshotShellAnchor
     from .midi_io import Sender
+    from .observability.metrics import AnalogFourPatchSendErrorCode, MidiMetrics
     from .style_analysis.analog_four_patch_send_plan import AnalogFourPatchTransportPlan
 
 
@@ -76,6 +79,18 @@ class _RytmSysexCaptureProvider(Protocol):
         *,
         timeout_seconds: float,
     ) -> tuple[bytes, ...]: ...
+
+
+class _A4PatchOutputPort(Protocol):
+    def send(self, message: object) -> None: ...  # pragma: no cover - protocol stub
+
+
+class _A4PatchOutputProvider(Protocol):
+    def list_output_names(self) -> tuple[str, ...]: ...  # pragma: no cover - protocol stub
+
+    def open_output(
+        self, port_name: str
+    ) -> _A4PatchOutputPort: ...  # pragma: no cover - protocol stub
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -900,6 +915,11 @@ def _run_a4_send_param(args: argparse.Namespace) -> int:
     if mapping is None:
         sys.stderr.write(f"--a4-send-param failed: unknown A4 parameter: {args.parameter}\n")
         return 1
+    if mapping.cc_msb is None:
+        sys.stderr.write(
+            f"--a4-send-param failed: {mapping.parameter} has no direct CC transport.\n"
+        )
+        return 1
 
     from .mido_provider import build_mido_midi_port_provider
     from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
@@ -1332,22 +1352,50 @@ def _build_a4_patch_send_plan_from_args(
             track=track,
             selected_candidate=selected_candidate,
         )
-    except (StyleAnalysisDependencyError, ValueError, TypeError, KeyError) as exc:
+    except (
+        StyleAnalysisDependencyError,
+        OSError,
+        RuntimeError,
+        ValueError,
+        TypeError,
+        KeyError,
+    ) as exc:
         sys.stderr.write(f"--a4-patch-send-plan failed: {exc}\n")
         return None
     return source.plan, source.source_label
 
 
-def _send_a4_patch_send_plan_events(plan: AnalogFourPatchTransportPlan, out: Sender) -> None:
+def _validate_a4_patch_send_plan_events(plan: AnalogFourPatchTransportPlan) -> int:
+    """Validate the complete plan before a MIDI output can be opened."""
+
+    from .senders.midi_event_plan import validate_cc_nrpn_event_plan
+
+    message_count = validate_cc_nrpn_event_plan(plan.send_events)
+    if message_count != plan.summary.transport_message_count:
+        raise ValueError(
+            "A4 patch send-plan summary does not match its validated MIDI message count"
+        )
+    if len(plan.send_events) != plan.summary.sendable_count:
+        raise ValueError("A4 patch send-plan summary does not match its sendable event count")
+    return message_count
+
+
+def _send_a4_patch_send_plan_events(
+    plan: AnalogFourPatchTransportPlan,
+    out: Sender,
+    *,
+    sleep: Callable[[float], object] | None = None,
+) -> int:
     """Send compiler-approved A4 patch events through an injected MIDI sender."""
 
     from .senders.midi_event_plan import send_cc_nrpn_event_plan
 
+    sleep_callable = _skip_validation_sleep if sleep is None else sleep
     try:
-        send_cc_nrpn_event_plan(
+        return send_cc_nrpn_event_plan(
             plan.send_events,
             out,
-            sleep=_skip_validation_sleep,
+            sleep=sleep_callable,
         )
     except ValueError as exc:
         raise ValueError(f"A4 patch send-plan event failed validation: {exc}") from exc
@@ -1364,7 +1412,7 @@ def _run_dry_run_a4_patch_send_plan(
 
     sender = MockMidiSender()
     try:
-        _send_a4_patch_send_plan_events(plan, sender)
+        _send_a4_patch_send_plan_events(plan, sender, sleep=_skip_validation_sleep)
     except (OSError, RuntimeError, AttributeError, ValueError) as exc:
         sys.stderr.write(f"--dry-run --a4-patch-send-plan send failed: {exc}\n")
         return 1
@@ -1389,6 +1437,241 @@ def _run_dry_run_a4_patch_send_plan(
     return 0
 
 
+def _a4_patch_send_log_context(
+    plan: AnalogFourPatchTransportPlan,
+    source_label: str,
+) -> dict[str, object]:
+    return {
+        "operation": "a4_patch_send_plan_send",
+        "source": source_label,
+        "track": plan.selected_track,
+        "candidate": plan.selected_candidate,
+    }
+
+
+def _record_a4_patch_send_outcome(
+    metrics: MidiMetrics,
+    started_at: float,
+    *,
+    error_code: AnalogFourPatchSendErrorCode | None = None,
+) -> dict[str, object]:
+    duration_ms = (perf_counter() - started_at) * 1000.0
+    metrics.record_a4_patch_send(duration_ms, error_code=error_code)
+    return {
+        "duration_ms": duration_ms,
+        "error_code": error_code,
+        "metrics_summary": metrics.format_summary(),
+    }
+
+
+def _open_a4_patch_output(
+    provider: _A4PatchOutputProvider,
+    *,
+    logger: logging.Logger,
+    metrics: MidiMetrics,
+    started_at: float,
+    log_context: dict[str, object],
+) -> tuple[_A4PatchOutputPort, str] | None:
+    """Discover, select, and open one real A4 MIDI output."""
+
+    from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
+
+    try:
+        output_names = provider.list_output_names()
+    except (RealMidiDependencyError, RealMidiPortError) as exc:
+        metrics.record_error("a4_patch_send_plan_port_list")
+        outcome = _record_a4_patch_send_outcome(metrics, started_at, error_code="port_list")
+        logger.error(
+            "a4_patch_send_plan_port_list_failed",
+            extra={
+                **log_context,
+                **outcome,
+                "error_type": type(exc).__name__,
+                "fingerprint": exc.fingerprint,
+            },
+        )
+        sys.stderr.write(f"--arm --a4-patch-send-plan failed: {exc}\n")
+        return None
+
+    if not output_names:
+        metrics.record_error("a4_patch_send_plan_no_output_ports")
+        outcome = _record_a4_patch_send_outcome(metrics, started_at, error_code="no_output_ports")
+        logger.error(
+            "a4_patch_send_plan_no_output_ports",
+            extra={
+                **log_context,
+                **outcome,
+                "fingerprint": "a4.patch_send.no_output_ports",
+                "output_count": 0,
+            },
+        )
+        sys.stderr.write(
+            "--arm --a4-patch-send-plan failed: no real MIDI output ports available. "
+            "Connect the Analog Four and retry.\n"
+        )
+        return None
+
+    port_name = _choose_a4_output_port_name(
+        output_names,
+        error_prefix="--arm --a4-patch-send-plan",
+    )
+    if port_name is None:
+        metrics.record_error("a4_patch_send_plan_port_selection")
+        outcome = _record_a4_patch_send_outcome(metrics, started_at, error_code="port_selection")
+        logger.error(
+            "a4_patch_send_plan_port_selection_failed",
+            extra={
+                **log_context,
+                **outcome,
+                "fingerprint": "a4.patch_send.port_selection_failed",
+                "output_count": len(output_names),
+            },
+        )
+        return None
+
+    sys.stdout.write(f"\nOpening MIDI output: {port_name}\n")
+    try:
+        return provider.open_output(port_name), port_name
+    except (RealMidiDependencyError, RealMidiPortError) as exc:
+        metrics.record_error("a4_patch_send_plan_port_open")
+        outcome = _record_a4_patch_send_outcome(metrics, started_at, error_code="port_open")
+        logger.error(
+            "a4_patch_send_plan_port_open_failed",
+            extra={
+                **log_context,
+                **outcome,
+                "port_name": port_name,
+                "error_type": type(exc).__name__,
+                "fingerprint": exc.fingerprint,
+            },
+        )
+        sys.stderr.write(f"--arm --a4-patch-send-plan failed: {exc}\n")
+        return None
+
+
+def _close_a4_patch_output(
+    port: _A4PatchOutputPort,
+    *,
+    port_name: str,
+    logger: logging.Logger,
+    metrics: MidiMetrics,
+    log_context: dict[str, object],
+) -> None:
+    """Close an A4 output port without masking the delivery result."""
+
+    close = getattr(port, "close", None)
+    if not callable(close):
+        return
+    try:
+        close()
+    except (OSError, RuntimeError, AttributeError):  # pragma: no cover - best-effort
+        metrics.record_error("a4_patch_send_plan_port_close")
+        logger.debug(
+            "a4_patch_send_plan_port_close_failed_best_effort",
+            extra={**log_context, "port_name": port_name},
+        )
+
+
+def _deliver_a4_patch_send_plan(
+    plan: AnalogFourPatchTransportPlan,
+    port: _A4PatchOutputPort,
+    *,
+    port_name: str,
+    expected_message_count: int,
+    logger: logging.Logger,
+    metrics: MidiMetrics,
+    started_at: float,
+    log_context: dict[str, object],
+) -> int | None:
+    """Deliver a validated plan; return an exit code only on failure."""
+
+    from .senders.midi_event_plan import MidiEventPlanSendError
+
+    try:
+        sent_message_count = _send_a4_patch_send_plan_events(
+            plan,
+            port,
+            sleep=_hardware_settle_sleep,
+        )
+    except MidiEventPlanSendError as exc:
+        error_code: AnalogFourPatchSendErrorCode = (
+            "interrupted" if exc.interrupted else "partial_send"
+        )
+        error_kind = f"a4_patch_send_plan_{error_code}"
+        metrics.record_error(error_kind)
+        outcome = _record_a4_patch_send_outcome(metrics, started_at, error_code=error_code)
+        logger.error(
+            error_kind,
+            extra={
+                **log_context,
+                **outcome,
+                "port_name": port_name,
+                "sent_message_count": exc.sent_message_count,
+                "expected_message_count": exc.expected_message_count,
+                "interrupted": exc.interrupted,
+                "error_type": type(exc).__name__,
+                "cause_type": type(exc.__cause__).__name__ if exc.__cause__ else None,
+                "fingerprint": exc.fingerprint,
+            },
+        )
+        sys.stderr.write(
+            "--arm --a4-patch-send-plan send failed after "
+            f"{exc.sent_message_count} of {exc.expected_message_count} messages. "
+            "The Analog Four may now contain a partial patch; reload the last saved "
+            f"Kit or project before retrying. Cause: {exc.__cause__ or exc}\n"
+        )
+        return 130 if exc.interrupted else 1
+    except (OSError, RuntimeError, AttributeError, ValueError) as exc:
+        metrics.record_error("a4_patch_send_plan_send")
+        outcome = _record_a4_patch_send_outcome(metrics, started_at, error_code="send_failed")
+        logger.error(
+            "a4_patch_send_plan_send_failed",
+            extra={
+                **log_context,
+                **outcome,
+                "port_name": port_name,
+                "error_type": type(exc).__name__,
+                "fingerprint": getattr(exc, "fingerprint", "a4.patch_send.failed"),
+            },
+        )
+        sys.stderr.write(f"--arm --a4-patch-send-plan send failed: {exc}\n")
+        return 1
+    finally:
+        _close_a4_patch_output(
+            port,
+            port_name=port_name,
+            logger=logger,
+            metrics=metrics,
+            log_context=log_context,
+        )
+
+    if sent_message_count == expected_message_count:
+        return None
+
+    metrics.record_error("a4_patch_send_plan_send_count_mismatch")
+    outcome = _record_a4_patch_send_outcome(
+        metrics,
+        started_at,
+        error_code="send_count_mismatch",
+    )
+    logger.error(
+        "a4_patch_send_plan_send_count_mismatch",
+        extra={
+            **log_context,
+            **outcome,
+            "port_name": port_name,
+            "sent_message_count": sent_message_count,
+            "expected_message_count": expected_message_count,
+            "fingerprint": "a4.patch_send.message_count_mismatch",
+        },
+    )
+    sys.stderr.write(
+        "--arm --a4-patch-send-plan send failed: delivered message count did not "
+        "match the validated plan. Reload the last saved Kit or project before retrying.\n"
+    )
+    return 1
+
+
 def _run_armed_a4_patch_send_plan(
     plan: AnalogFourPatchTransportPlan,
     *,
@@ -1399,12 +1682,30 @@ def _run_armed_a4_patch_send_plan(
     from .mido_provider import build_mido_midi_port_provider
     from .observability.metrics import get_metrics
     from .observability.tracing import operation
-    from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
 
+    started_at = perf_counter()
     logger = _observability_get_logger(__name__)
     metrics = get_metrics()
-    provider = build_mido_midi_port_provider()
     summary = plan.summary
+    log_context = _a4_patch_send_log_context(plan, source_label)
+    try:
+        expected_message_count = _validate_a4_patch_send_plan_events(plan)
+    except ValueError as exc:
+        metrics.record_error("a4_patch_send_plan_validation")
+        outcome = _record_a4_patch_send_outcome(metrics, started_at, error_code="validation")
+        logger.error(
+            "a4_patch_send_plan_validation_failed",
+            extra={
+                **log_context,
+                **outcome,
+                "error_type": type(exc).__name__,
+                "fingerprint": "a4.patch_send.validation_failed",
+            },
+        )
+        sys.stderr.write(f"--arm --a4-patch-send-plan validation failed: {exc}\n")
+        return 1
+
+    provider = build_mido_midi_port_provider()
     with operation(
         "a4_patch_send_plan_send",
         logger=logger,
@@ -1415,62 +1716,39 @@ def _run_armed_a4_patch_send_plan(
         sendable_count=summary.sendable_count,
         transport_message_count=summary.transport_message_count,
     ):
-        try:
-            output_names = provider.list_output_names()
-        except (RealMidiDependencyError, RealMidiPortError) as exc:
-            metrics.record_error("a4_patch_send_plan_port_list")
-            logger.error("a4_patch_send_plan_port_list_failed")
-            sys.stderr.write(f"--arm --a4-patch-send-plan failed: {exc}\n")
-            return 1
-
-        if not output_names:
-            metrics.record_error("a4_patch_send_plan_no_output_ports")
-            logger.error("a4_patch_send_plan_no_output_ports")
-            sys.stderr.write(
-                "--arm --a4-patch-send-plan failed: no real MIDI output ports available. "
-                "Connect the Analog Four and retry.\n"
-            )
-            return 1
-
-        port_name = _choose_a4_output_port_name(
-            output_names,
-            error_prefix="--arm --a4-patch-send-plan",
+        opened = _open_a4_patch_output(
+            provider,
+            logger=logger,
+            metrics=metrics,
+            started_at=started_at,
+            log_context=log_context,
         )
-        if port_name is None:
-            metrics.record_error("a4_patch_send_plan_port_selection")
-            logger.error("a4_patch_send_plan_port_selection_failed")
+        if opened is None:
             return 1
+        port, port_name = opened
+        exit_code = _deliver_a4_patch_send_plan(
+            plan,
+            port,
+            port_name=port_name,
+            expected_message_count=expected_message_count,
+            logger=logger,
+            metrics=metrics,
+            started_at=started_at,
+            log_context=log_context,
+        )
+        if exit_code is not None:
+            return exit_code
 
-        sys.stdout.write(f"\nOpening MIDI output: {port_name}\n")
-        try:
-            port = provider.open_output(port_name)
-        except (RealMidiDependencyError, RealMidiPortError) as exc:
-            metrics.record_error("a4_patch_send_plan_port_open")
-            logger.error("a4_patch_send_plan_port_open_failed")
-            sys.stderr.write(f"--arm --a4-patch-send-plan failed: {exc}\n")
-            return 1
-
-        try:
-            _send_a4_patch_send_plan_events(plan, port)
-        except (OSError, RuntimeError, AttributeError, ValueError) as exc:
-            metrics.record_error("a4_patch_send_plan_send")
-            logger.error("a4_patch_send_plan_send_failed")
-            sys.stderr.write(f"--arm --a4-patch-send-plan send failed: {exc}\n")
-            return 1
-        finally:
-            close = getattr(port, "close", None)
-            if callable(close):
-                try:
-                    close()
-                # Port close is best-effort; send success is already determined.
-                except (
-                    OSError,
-                    RuntimeError,
-                    AttributeError,
-                ):  # pragma: no cover - best-effort
-                    metrics.record_error("a4_patch_send_plan_port_close")
-                    logger.debug("a4_patch_send_plan_port_close_failed_best_effort")
-
+    outcome = _record_a4_patch_send_outcome(metrics, started_at)
+    logger.debug(
+        "a4_patch_send_plan_completed",
+        extra={
+            **log_context,
+            **outcome,
+            "port_name": port_name,
+            "sent_message_count": expected_message_count,
+        },
+    )
     lines = [
         "RytmRandomizer A4 patch send-plan send",
         "armed: True",

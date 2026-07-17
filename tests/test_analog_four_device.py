@@ -99,3 +99,14 @@ def test_analog_four_device_rejects_wrong_plan_type_for_cc_messages() -> None:
 
     with pytest.raises(TypeError, match="AnalogFourMutationPlan"):
         tuple(a4.to_cc_messages(object()))  # type: ignore[arg-type]
+
+
+def test_saved_kit_capability_resolver_rejects_incompatible_registry_device(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.devices import analog_four
+
+    monkeypatch.setattr(analog_four.registry, "get_device", lambda _device_id: object())
+
+    with pytest.raises(TypeError, match="lacks saved-kit rendering capability"):
+        analog_four.get_analog_four_saved_kit_capability()

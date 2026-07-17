@@ -1,6 +1,6 @@
 ---
 name: elektron-sysex-envelope
-description: Elektron SysEx envelope reference — manufacturer ID `00 20 3C`, canonical bidirectional 7-bit packing, device-specific frame layouts, and the hardware-validated Analog Four MKII saved-kit checksum/length trailer.
+description: Elektron SysEx and generated-patch transport reference covering canonical 7-bit packing, hardware-validated A4 saved-kit framing, content-addressed batch publication, full-plan validation, pacing, and partial-send recovery.
 user-invocable: false
 origin: auto-extracted-2026-05-18
 ---
@@ -111,6 +111,35 @@ uncaptured value, and independent cross-track values proving the track stride.
 Store disposable sanitized source/expected frames as executable binary fixtures
 so byte identity is tested rather than described only in prose.
 
+## Generated patch batches and live-plan delivery
+
+A complete audio-derived patch is a content-addressed artifact set, not a loose
+group of JSON and SysEx files:
+
+1. Snapshot the source audio and initialized kit before inference.
+2. Use the audio SHA-256 as the generated plan's `source_hash`; keep the
+   feature-report hash as a separate manifest field.
+3. Include the audio, source kit, inference model, DNA, send plan, renderer,
+   and filenames in the generation identity.
+4. Publish immutable generation files first and atomically replace the stable
+   manifest last. The manifest is the commit marker.
+5. On read, verify outer hashes, nested DNA/send-plan hashes, source identity,
+   coverage counts, event order, and every CC/NRPN address against canonical
+   device data before opening a MIDI port.
+
+For a live plan, prevalidate the whole event sequence and expected wire-message
+count before port discovery. Use the named `MIDI_MESSAGE_SETTLE_SECONDS` policy
+after every accepted CC. NRPN progress is counted per CC99/CC98/CC6 (and CC38
+when present), so a failure reports the exact partial position. The delivery
+callback must run only after `out.send()` returns. Wrap catchable send failure
+and Ctrl+C in a taxonomy-backed error carrying sent/expected counts, close the
+port, tell the operator to reload the last saved Kit/project, and use exit code
+130 for interruption.
+
+Complete DNA does not imply complete saved-kit SysEx write coverage. Keep
+unproven saved-kit fields deferred while sending manual-backed CC/NRPN rows
+through the separately guarded live path.
+
 ## When to Use
 
 Trigger conditions:
@@ -120,6 +149,8 @@ Trigger conditions:
 - Reviewing any change that hand-rolls pack/unpack helpers — point it at the
   canonical `snapshot.envelope` pair instead.
 - Promoting an A4 saved-kit field from captured offsets to writable output.
+- Publishing or replaying an audio-derived Elektron patch batch.
+- Reviewing live CC/NRPN delivery pacing, accounting, or recovery behavior.
 
 DO NOT use this pattern when:
 
@@ -131,6 +162,9 @@ DO NOT use this pattern when:
 - `rytm_randomizer/snapshot/envelope.py` — the canonical implementation. Always import from there.
 - `rytm_randomizer/data/analog_four_saved_kit_layout.py` — canonical observed A4 saved-kit frame facts.
 - `rytm_randomizer/devices/strategies/analog_four_saved_kit_codec.py` — shared A4 saved-kit validator/encoder used by decoder and writer.
+- `rytm_randomizer/cockpit/export/analog_four_patch_batch_publication.py` - manifest-last, immutable generation publication.
+- `rytm_randomizer/cockpit/export/analog_four_patch_batch_reader.py` - hash and canonical-transport verification before replay.
+- `rytm_randomizer/senders/midi_event_plan.py` - prevalidated CC/NRPN delivery and partial progress accounting.
 - `docs/hardware-validation/2026-07-16-a4-saved-kit-roundtrip-results.md` — reference, novel-value, and four-track evidence pattern.
 - `rytm_randomizer/devices/base.py` — the `Device` Protocol every Elektron device implements.
 - PR #21 (codex's Analog Four work) — first downstream consumer.

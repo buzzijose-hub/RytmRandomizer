@@ -450,3 +450,176 @@ def test_generic_cc_nrpn_event_sender_sends_and_fails_closed() -> None:
             sender,
             sleep=lambda _seconds: None,
         )
+    with pytest.raises(ValueError, match="exactly two MIDI bytes"):
+        send_cc_nrpn_event_plan(
+            (
+                types.SimpleNamespace(
+                    message_kind="nrpn",
+                    cc_msb=None,
+                    midi_value=1,
+                    channel=0,
+                    nrpn_address=(1,),
+                ),
+            ),
+            sender,
+            sleep=lambda _seconds: None,
+        )
+
+    unsent = MockMidiSender()
+    with pytest.raises(ValueError, match="missing a CC MSB"):
+        send_cc_nrpn_event_plan(
+            (
+                types.SimpleNamespace(
+                    message_kind="cc",
+                    cc_msb=74,
+                    midi_value=96,
+                    channel=2,
+                    nrpn_address=None,
+                ),
+                types.SimpleNamespace(
+                    message_kind="cc",
+                    cc_msb=None,
+                    midi_value=1,
+                    channel=0,
+                    nrpn_address=None,
+                ),
+            ),
+            unsent,
+            sleep=lambda _seconds: None,
+        )
+    assert unsent.sent_messages == ()
+
+
+@pytest.mark.parametrize(
+    ("channel", "midi_value", "error"),
+    (
+        (True, 64, "event channel must be an integer in 0..127"),
+        (0, 128, "event MIDI value must be an integer in 0..127"),
+        (16, 64, "event channel must be an integer in 0..15"),
+    ),
+)
+def test_generic_event_sender_rejects_invalid_midi_bytes_before_delivery(
+    channel: object,
+    midi_value: object,
+    error: str,
+) -> None:
+    from rytm_randomizer.mock_midi import MockMidiSender
+    from rytm_randomizer.senders.midi_event_plan import send_cc_nrpn_event_plan
+
+    sender = MockMidiSender()
+    with pytest.raises(ValueError, match=error.replace("..", r"\.\.")):
+        send_cc_nrpn_event_plan(
+            (
+                types.SimpleNamespace(
+                    message_kind="cc",
+                    cc_msb=74,
+                    midi_value=midi_value,
+                    channel=channel,
+                    nrpn_address=None,
+                ),
+            ),
+            sender,
+            sleep=lambda _seconds: None,
+        )
+
+    assert sender.sent_messages == ()
+
+
+def test_generic_event_sender_reports_partial_nrpn_delivery() -> None:
+    from rytm_randomizer.mock_midi import MidiMessage, MockMidiSender
+    from rytm_randomizer.senders.midi_event_plan import (
+        MidiEventPlanSendError,
+        send_cc_nrpn_event_plan,
+    )
+
+    class FailAfterOneMessage(MockMidiSender):
+        def send(self, message: object) -> None:
+            if self.sent_messages:
+                raise OSError("simulated port interruption")
+            super().send(message)
+
+    sender = FailAfterOneMessage()
+    with pytest.raises(MidiEventPlanSendError) as caught:
+        send_cc_nrpn_event_plan(
+            (
+                types.SimpleNamespace(
+                    message_kind="nrpn",
+                    cc_msb=None,
+                    midi_value=64,
+                    channel=0,
+                    nrpn_address=(1, 54),
+                ),
+            ),
+            sender,
+            sleep=lambda _seconds: None,
+        )
+
+    assert caught.value.sent_message_count == 1
+    assert caught.value.expected_message_count == 3
+    assert isinstance(caught.value, RuntimeError)
+    assert "1 of 3 messages" in str(caught.value)
+    assert sender.sent_messages == (MidiMessage("control_change", 0, 99, 1),)
+
+
+def test_generic_event_sender_counts_delivery_before_pacing_failure() -> None:
+    from rytm_randomizer.mock_midi import MockMidiSender
+    from rytm_randomizer.senders.midi_event_plan import (
+        MidiEventPlanSendError,
+        send_cc_nrpn_event_plan,
+    )
+
+    sender = MockMidiSender()
+
+    def interrupt_pacing(_seconds: float) -> None:
+        raise RuntimeError("pacing interrupted")
+
+    with pytest.raises(MidiEventPlanSendError) as caught:
+        send_cc_nrpn_event_plan(
+            (
+                types.SimpleNamespace(
+                    message_kind="cc",
+                    cc_msb=74,
+                    midi_value=64,
+                    channel=0,
+                    nrpn_address=None,
+                ),
+            ),
+            sender,
+            sleep=interrupt_pacing,
+        )
+
+    assert caught.value.sent_message_count == 1
+    assert caught.value.expected_message_count == 1
+    assert len(sender.sent_messages) == 1
+
+
+def test_generic_event_sender_wraps_operator_interrupt_with_delivery_count() -> None:
+    from rytm_randomizer.mock_midi import MockMidiSender
+    from rytm_randomizer.senders.midi_event_plan import (
+        MidiEventPlanSendError,
+        send_cc_nrpn_event_plan,
+    )
+
+    sender = MockMidiSender()
+
+    def interrupt_pacing(_seconds: float) -> None:
+        raise KeyboardInterrupt
+
+    with pytest.raises(MidiEventPlanSendError) as caught:
+        send_cc_nrpn_event_plan(
+            (
+                types.SimpleNamespace(
+                    message_kind="cc",
+                    cc_msb=74,
+                    midi_value=64,
+                    channel=0,
+                    nrpn_address=None,
+                ),
+            ),
+            sender,
+            sleep=interrupt_pacing,
+        )
+
+    assert caught.value.interrupted is True
+    assert caught.value.sent_message_count == 1
+    assert caught.value.expected_message_count == 1
