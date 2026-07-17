@@ -231,20 +231,16 @@ def atomic_write(path: Path, data: bytes, *, overwrite: bool = False) -> WriteRe
         else:
             _publish_no_overwrite(tmp_name, path)
     except FileExistsError:
-        with contextlib.suppress(OSError):
-            os.unlink(tmp_name)
         raise
     except WriteError:
-        with contextlib.suppress(OSError):
-            os.unlink(tmp_name)
         raise
     except OSError as exc:
-        # Best-effort cleanup of the orphan temp file. A failure here
-        # (e.g. the temp was already gone, permissions revoked, etc.)
-        # must NOT mask the original error.
+        raise WriteError(f"atomic_write failed for {path}: {exc}") from exc
+    finally:
+        # Also runs for KeyboardInterrupt/SystemExit without broadly catching
+        # them. Cleanup must never mask the active publication outcome.
         with contextlib.suppress(OSError):
             os.unlink(tmp_name)
-        raise WriteError(f"atomic_write failed for {path}: {exc}") from exc
 
     return WriteResult(
         path=path.resolve(),

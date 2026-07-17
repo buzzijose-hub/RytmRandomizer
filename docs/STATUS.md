@@ -29,7 +29,15 @@ Last updated: 2026-07-16. This file is a hand-authored snapshot and is meant to 
   A real local tonal-versus-noise CLI smoke produced nine artifacts per clip
   and distinct candidate DNA/SysEx: candidate 1 inferred Filter2 Resonance
   `36` for the tonal clip and `24` for the noise clip. Genome, learning,
-  send-plan, and batch reports agreed on the same audio hash and values.
+  send-plan, and batch reports agreed on the same audio hash and values. The
+  analyzer now hashes and decodes the same immutable audio snapshot once for
+  both report and synthesis evidence. Batch export snapshots both inputs,
+  stages every artifact, closes temporary files before publication, and uses
+  provenance-based generation filenames behind one atomically switched
+  manifest. Interrupted overwrites cannot mix generations; generation files are
+  immutable, unreferenced interrupted output is safely orphaned, and lock
+  recovery metadata is visible in the CLI. Structured inference metrics now cover the complete genome build,
+  including post-analysis validation failures.
 - 2026-07-08: Passive local model copilot bundle prepared locally. The new
   `local-model-copilot-report` command builds deterministic docs/MIDI,
   staged mutation-intent, and Analog Four patch co-designer packets, and only

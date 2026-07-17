@@ -268,6 +268,20 @@ def test_atomic_write_zero_progress_raises_write_error(
     assert list(tmp_path.iterdir()) == []
 
 
+def test_atomic_write_cleans_temp_file_on_keyboard_interrupt(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def interrupt_write(_fd: int, _data: bytes | memoryview) -> int:
+        raise KeyboardInterrupt("operator interrupted write")
+
+    monkeypatch.setattr("os.write", interrupt_write)
+    with pytest.raises(KeyboardInterrupt, match="operator interrupted write"):
+        atomic_write(tmp_path / "out.bin", b"payload")
+
+    assert list(tmp_path.iterdir()) == []
+
+
 def test_atomic_write_no_overwrite_closes_publish_race(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -279,6 +293,25 @@ def test_atomic_write_no_overwrite_closes_publish_race(
         raise FileExistsError(dst)
 
     monkeypatch.setattr("os.link", racing_link)
+
+    with pytest.raises(FileExistsError):
+        atomic_write(dest, b"ours")
+
+    assert dest.read_bytes() == b"racer"
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["out.bin"]
+
+
+def test_atomic_write_no_overwrite_closes_windows_publish_race(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    dest = tmp_path / "out.bin"
+    monkeypatch.setattr("sys.platform", "win32")
+
+    def racing_rename(_src: str, dst: str | Path) -> None:
+        Path(dst).write_bytes(b"racer")
+        raise FileExistsError(dst)
+
+    monkeypatch.setattr("os.rename", racing_rename)
 
     with pytest.raises(FileExistsError):
         atomic_write(dest, b"ours")

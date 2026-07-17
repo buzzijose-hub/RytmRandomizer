@@ -157,6 +157,24 @@ def test_registered_cli_formats_parse_error(
     assert "unknown option" in captured.err
 
 
+def test_registered_cli_formats_json_parse_error(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from rytm_randomizer.cli import main
+
+    exit_code = main(["analog-four-saved-kit-export", "--json"])
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert exit_code == 2
+    assert payload == {
+        "error": "--source is required",
+        "error_code": "invalid_input",
+        "ok": False,
+    }
+    assert captured.err == ""
+
+
 @pytest.mark.parametrize("json_output", [False, True])
 def test_handler_reports_missing_source_file(
     tmp_path: Path,
@@ -185,8 +203,78 @@ def test_handler_reports_missing_source_file(
     captured = capsys.readouterr()
     assert exit_code == 2
     if json_output:
-        assert json.loads(captured.out)["ok"] is False
+        payload = json.loads(captured.out)
+        assert payload["ok"] is False
+        assert payload["error_code"] == "input_not_found"
         assert captured.err == ""
     else:
         assert captured.out == ""
-        assert "Error:" in captured.err
+        assert "Error [input_not_found]:" in captured.err
+
+
+@pytest.mark.parametrize(
+    ("error", "error_code"),
+    [
+        (FileNotFoundError("missing"), "input_not_found"),
+        (PermissionError("denied"), "permission_denied"),
+        (FileExistsError("exists"), "overwrite_refused"),
+        (OSError("disk"), "write_failed"),
+        (ValueError("bad value"), "validation"),
+    ],
+)
+def test_saved_kit_cli_error_codes_are_bounded(error: Exception, error_code: str) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_cli as cli
+
+    assert cli._saved_kit_cli_error_code(error) == error_code
+
+
+@pytest.mark.parametrize(
+    ("error", "source_read_completed", "error_code"),
+    [
+        (FileNotFoundError("missing"), False, "input_not_found"),
+        (PermissionError("denied"), False, "permission_denied"),
+        (FileExistsError("exists"), True, "overwrite_refused"),
+        (OSError("read"), False, "source_read_failed"),
+        (OSError("write"), True, "write_failed"),
+        (ValueError("invalid"), True, "validation"),
+    ],
+)
+def test_saved_kit_service_error_codes_cover_each_file_phase(
+    error: KeyError | ValueError | TypeError | OSError,
+    source_read_completed: bool,
+    error_code: str,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_kit
+
+    assert (
+        analog_four_kit._a4_export_error_code(
+            error,
+            source_read_completed=source_read_completed,
+        )
+        == error_code
+    )
+
+
+def test_saved_kit_service_rejects_invalid_and_unvalidated_mutations(tmp_path: Path) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_kit import export_analog_four_saved_kit
+    from rytm_randomizer.devices.strategies import AnalogFourSavedKitMutation
+
+    with pytest.raises(TypeError, match="AnalogFourSavedKitMutation"):
+        export_analog_four_saved_kit(
+            source_path=SOURCE_FIXTURE,
+            output_path=tmp_path / "invalid.syx",
+            mutations=(object(),),  # type: ignore[arg-type]
+        )
+
+    with pytest.raises(ValueError, match="not hardware-write-validated"):
+        export_analog_four_saved_kit(
+            source_path=SOURCE_FIXTURE,
+            output_path=tmp_path / "unvalidated.syx",
+            mutations=(
+                AnalogFourSavedKitMutation(
+                    parameter="Filter1 Frequency",
+                    track=1,
+                    screen_value="64.00",
+                ),
+            ),
+        )

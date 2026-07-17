@@ -124,7 +124,7 @@ def test_export_analog_four_saved_kit_surfaces_missing_source(tmp_path: Path) ->
 
     metrics = get_metrics()
     assert metrics.export_count == 1
-    assert metrics.export_errors_by_code["source_read_failed"] == 1
+    assert metrics.export_errors_by_code["input_not_found"] == 1
 
 
 def test_export_analog_four_saved_kit_rejects_candidate_only_parameter(

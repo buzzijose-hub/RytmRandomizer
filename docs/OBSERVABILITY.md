@@ -179,8 +179,9 @@ correlate the failure to the most recent `operation_start` by `op_id`.
 **Export RED metrics.** Profile-model and Analog Four saved-kit file exports
 share `MidiMetrics.record_export`: one count, cumulative duration, and a stable
 categorical error counter per invocation. The A4 path emits `validation`,
-`source_read_failed`, `overwrite_refused`, or `write_failed`; success records no
-error code. Its structured success log includes output path, SHA256, and
+`input_not_found`, `permission_denied`, `source_read_failed`,
+`overwrite_refused`, or `write_failed`; success records no error code. Its
+structured success log includes output path, SHA256, and
 mutation count. Failure logs include source/output paths and the categorical
 code. A POSIX temp-name cleanup failure after successful hard-link publication
 is logged as `atomic_write_cleanup` but does not convert a valid output into a
@@ -189,10 +190,34 @@ failed export.
 The audio patch-batch service uses the same export RED metric and emits
 `a4_audio_patch_batch_export` structured records. Success includes output
 directory, manifest SHA256, and candidate count. Failure includes audio,
-source-kit, and output paths with `source_read_failed`, `overwrite_refused`,
+source-kit, and output paths with `input_not_found`, `permission_denied`,
+`source_read_failed`, `audio_read_failed`, `dependency_missing`,
+`service_unavailable`, `overwrite_refused`, `publication_locked`,
 `write_failed`, `validation`, or `inference_failed`. The CLI additionally
 returns stable operator-facing `error_code` values and never emits MIDI-send
-breadcrumbs because this path performs no MIDI operation.
+breadcrumbs because this path performs no MIDI operation. Publication is a
+per-track transaction over immutable input snapshots: candidate files are
+generation-addressed, private staging is cleaned before publication, and the
+stable manifest is the atomic commit marker. Generation files are immutable:
+matching bytes are reused, conflicting bytes are rejected, and a failed or
+catchably interrupted publication can leave only unreferenced generation files
+while the prior manifest remains coherent. Hard process termination can also
+retain a lock or temporary file; the lock carries recovery metadata. Lock
+cleanup warnings are included in a
+successful result's `warnings` with the retained lock path; cleanup failures
+during an exception are attached to CLI JSON `details` and emitted as
+`a4_audio_patch_batch_lock_cleanup` structured records.
+
+**Analog Four inference RED metrics.** Direct audio-to-patch inference has a
+separate `MidiMetrics.record_a4_patch_inference` surface so an analysis invoked
+outside the batch exporter remains visible. Successful invocations and handled
+contract failures record count and cumulative latency. Success omits
+`error_code`; handled failures use the bounded
+`AnalogFourPatchInferenceErrorCode` vocabulary: `audio_read_failed`,
+`dependency_missing`, `inference_failed`, or `validation`. Batch operations
+that reach audio inference record both layers: one inference event for analysis
+and one export event for the complete batch transaction. Request-validation and
+source-read failures occur before inference and therefore record export only.
 
 ## Adding logging to a new module
 

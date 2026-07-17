@@ -13,6 +13,9 @@ Turn the first hardware-validated Analog Four MKII saved-kit calibration into a 
 - Hardened atomic publication for short writes, zero-progress writes, overwrite races, Windows FAT/exFAT removable media, and POSIX cleanup failures.
 - Added deterministic measured-audio A4 inference and a manifest-backed batch service that writes up to four candidate `.syx` files plus complete DNA/CC-NRPN sidecars.
 - Added `analog-four-audio-patch-batch` with bounded track/candidate options, text/JSON artifact summaries, classified failures, and no MIDI behavior.
+- Unified report and synthesis measurements behind one typed audio decode, with direct inference RED metrics and immutable provenance.
+- Made candidate publication interruption-safe: both inputs are snapshotted, every artifact is staged and closed before publication, candidate names carry a 128-bit identity covering every sidecar/SysEx input, a metadata-rich per-track lock serializes publishers, and the stable manifest switches last.
+- Made generation artifacts write-once with exact-byte reuse, collision rejection, catchable process-interruption lock cleanup, explicit `publication_locked` classification, and committed-result lock-cleanup warnings with recovery metadata.
 
 ## Why this matters
 
@@ -41,25 +44,26 @@ python -m rytm_randomizer.cli analog-four-saved-kit-export \
 ```bash
 python -m pytest
 python -m pytest tests/cockpit/test_analog_four_patch_batch_cli.py tests/test_cli.py -n 0
+python -m pytest tests/cockpit/test_analog_four_kit_cli.py tests/cockpit/test_analog_four_patch_batch.py tests/cockpit/test_analog_four_patch_batch_cli.py tests/cockpit/test_export_writer.py tests/test_analog_four_patch_genome.py tests/test_analog_four_patch_inference.py tests/test_analog_four_patch_learning.py tests/test_analog_four_patch_send_plan.py tests/test_devices_strategies_analog_four_saved_kit_writer.py tests/test_observability_metrics.py tests/test_style_analysis.py --cov=rytm_randomizer.cockpit.export.analog_four_export_contracts --cov=rytm_randomizer.cockpit.export.analog_four_cli --cov=rytm_randomizer.cockpit.export.analog_four_kit --cov=rytm_randomizer.cockpit.export.analog_four_patch_batch --cov=rytm_randomizer.cockpit.export.analog_four_patch_batch_cli --cov=rytm_randomizer.cockpit.export.writer --cov=rytm_randomizer.data.analog_four_patch_templates --cov=rytm_randomizer.observability.metrics --cov=rytm_randomizer.style_analysis.analog_four_patch_genome --cov=rytm_randomizer.style_analysis.analog_four_patch_inference --cov=rytm_randomizer.style_analysis.analog_four_patch_learning --cov=rytm_randomizer.style_analysis.analog_four_patch_send_plan --cov=rytm_randomizer.style_analysis.extractor --cov=rytm_randomizer.style_analysis.library --cov-branch --cov-report=term-missing -n 0 -q
 python -m pytest tests/architecture/ -q
-python -m pytest tests/test_engines_pad*.py tests/test_group_runner.py tests/test_scene_runner.py
+python -m pytest tests/test_engines_pad1.py tests/test_engines_pad2.py tests/test_engines_pad3.py tests/test_engines_pad4.py tests/test_group_runner.py tests/test_scene_runner.py
 python scripts/code_review_gate.py --mode cli
 python -m ruff check .
 python -m black --check --target-version=py311 .
 python -m isort --profile black --check-only .
-python -m vulture --min-confidence 80 <feature paths>
-python -m pyright --project .pyright-a4-temp.json <feature-owned production paths>
+python -m vulture rytm_randomizer --min-confidence 80
+python -m pyright rytm_randomizer/cockpit/export/analog_four_export_contracts.py rytm_randomizer/cockpit/export/analog_four_cli.py rytm_randomizer/cockpit/export/analog_four_kit.py rytm_randomizer/cockpit/export/analog_four_patch_batch.py rytm_randomizer/cockpit/export/analog_four_patch_batch_cli.py rytm_randomizer/cockpit/export/writer.py rytm_randomizer/data/analog_four_patch_templates.py rytm_randomizer/help_text.py rytm_randomizer/observability/metrics.py rytm_randomizer/style_analysis/__init__.py rytm_randomizer/style_analysis/analog_four_patch_genome.py rytm_randomizer/style_analysis/analog_four_patch_inference.py rytm_randomizer/style_analysis/analog_four_patch_learning.py rytm_randomizer/style_analysis/analog_four_patch_send_plan.py rytm_randomizer/style_analysis/extractor.py rytm_randomizer/style_analysis/library.py
 git diff --check
 ```
 
-- [x] Full repository suite: 6,312 passed, 3 skipped.
-- [x] Architecture suite: 679 passed.
+- [x] Full repository suite: 6,372 passed, 4 skipped.
+- [x] Architecture suite: 680 passed.
 - [x] V1.34 frozen parity: 685 passed byte-for-byte.
-- [x] Audio feature slice: 96 passed with 100% statement and branch coverage across all 7 audio inference, learning, send-plan, report, batch, and CLI modules (1,138 statements / 288 branches / 0 misses).
+- [x] Writer/audio/batch slice: 279 passed, 1 skipped with 100% statement and branch coverage across all 14 export-contract, saved-kit, atomic writer, inference, extractor, genome, learning, send-plan, batch, CLI, metrics, library, and template modules (2,046 statements / 402 branches / 0 misses).
 - [x] Existing saved-kit writer/export focused coverage remains green; the complete repository suite includes both writer and audio-batch paths.
-- [x] Strict Pyright on all 7 audio feature production modules: 0 errors, 0 warnings.
+- [x] Pyright across every production file touched by the PR: 0 errors, 0 warnings.
 - [x] Lint trio and `git diff --check` clean.
-- [x] Vulture at confidence 80 clean on executable audio feature modules; typing-only protocol parameter declarations were excluded as non-runtime API declarations.
+- [x] Vulture at confidence 80 clean across `rytm_randomizer`.
 - [x] Mechanical code-review gate passed on the final tree.
 - [x] Audio patch-batch CLI focused tests and command-help fixture passed locally.
 - [x] Real librosa/CLI smoke: tonal and noise clips each produced 4 `.syx` files, 4 complete sidecars, and 1 manifest; their DNA and SysEx hashes differed, with candidate-1 Filter2 Resonance `36` versus `24`.
@@ -77,33 +81,33 @@ Hardware validation:
 
 Per [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUIREMENTS.md), every non-trivial PR must satisfy all 18 gates.
 
-- [x] **Gate 1** - saved-kit writer/export coverage remains green and all 7 audio feature modules have 100% statement and branch coverage.
-- [x] **Gate 2** - V1.34 parity byte-identical across all 685 items.
-- [x] **Gate 3** - ruff, black, and isort clean; strict Pyright clean on all 7 audio feature production modules. Legacy central aggregators remain outside project-wide strict mode and passed the full and architecture suites.
-- [x] **Gate 4** - no new dead code at vulture confidence 80.
-- [x] **Gate 5** - runbook, status, architecture, diagrams, plan, dated evidence, README, and audio-batch operator help updated.
-- [x] **Gate 6** - frozen typed DTOs, `Final` constants, and no `Any` escape hatches.
-- [x] **Gate 7** - export success/failure logs and metrics added; no MIDI hot path introduced.
-- [x] **Gate 8** - exact binary, malformed-frame, mutation, CLI, atomic-write, and integration tests added.
-- [x] **Gate 9** - work is contained under existing `data/`, `style_analysis/`, `devices/strategies/`, and `cockpit/export/` ownership boundaries.
-- [x] **Gate 10** - the operator command uses the canonical CLI registry and adds no ad hoc mode dispatch.
-- [x] **Gate 11** - exact binary fixtures and shared fixture builders live under `tests/fixtures/` and `tests/conftest.py`.
-- [x] **Gate 12** - all new module constants use `Final`.
-- [x] **Gate 13** - no environment variables added.
-- [x] **Gate 14** - codec, renderer, exporter, atomic writer, and CLI remain bounded single-responsibility units.
-- [x] **Gate 15** - the existing Elektron SysEx skill now records the learned bidirectional codec and hardware-promotion workflow.
-- [x] **Gate 16** - one direct PR against `modularize-v1.34`; no stacked base branch.
-- [x] **Gate 17** - decoder and writer share one codec/layout surface and export reuses the canonical atomic writer, metrics, and CLI registry.
-- [x] **Gate 18** - architecture and diagram documentation describe the final shared path and platform-specific atomic publication.
+- [x] **Gate 1** — 100% branch coverage on touched files; project ≥95% pure-branch.
+- [x] **Gate 2** — V1.34 parity byte-identical (505 goldens / 685 pytest items).
+- [x] **Gate 3** — lint clean (ruff + black `--target-version=py311` + isort `--profile black`).
+- [x] **Gate 4** — no new dead code (vulture --min-confidence 80).
+- [x] **Gate 5** — docs updated (`README.md`, `CONTRIBUTING.md`, `docs/STATUS.md`, relevant `docs/` reflect the change).
+- [x] **Gate 6** — type-system hygiene (Protocol over ABC, `Final` constants, no bare `Any`).
+- [x] **Gate 7** — observability adoption (hot paths call `get_metrics().record_*`).
+- [x] **Gate 8** — test hygiene (`test_<unit>_<behavior>_when_<condition>` naming; shared fixtures in `tests/conftest.py`).
+- [x] **Gate 9** — module-organization hygiene (subpackages over flat top-level).
+- [x] **Gate 10** — string-literal dispatch hygiene (consume `data/modes.py` constants; allowlist drained).
+- [x] **Gate 11** — shared fixtures (canonical definitions in `tests/conftest.py`).
+- [x] **Gate 12** — `Final` constants on module-level constants.
+- [x] **Gate 13** — env var docs (every read env var documented in `docs/LOCAL_DEV_TOOLING_NOTES.md` or a relevant doc).
+- [x] **Gate 14** — maintainability review (timing tracked, complexity bounded).
+- [x] **Gate 15** — learning capture (extract `.claude/skills/learned/` + `.claude/rules/` where applicable).
+- [x] **Gate 16** — execution shape (cascade-merge for autonomous multi-WS; no stacked PRs).
+- [x] **Gate 17** — abstraction reuse: every new module/class surveyed against the existing-abstraction catalog (`Device` Protocol, `senders/`, `snapshot/envelope`, `cli_registry`, `data/`, `observability/metrics`, ...); no reimplementation; net-new shapes justified.
+- [x] **Gate 18** — architecture-doc + diagram freshness: `docs/ARCHITECTURE.md` + `docs/ARCHITECTURE_DIAGRAMS.md` updated for any architecture-surface change; quoted counts re-verified.
 
-## Strict rules
+## Strict rules — non-negotiables
 
-- [x] **No hardware in tests** - no test opens a real MIDI port or mutates a connected device.
-- [x] **Lazy MIDI imports** - `mido` and `python-rtmidi` remain confined to approved lazy boundaries.
-- [x] **Hardware-pinned packages** - `mido==1.3.3` and `python-rtmidi==1.5.8` were not changed.
-- [x] **Passive default** - `python -m rytm_randomizer.cli` does not open a real port.
-- [x] **No stacked PRs** - this PR targets `modularize-v1.34` directly.
-- [x] **No bypasses** - hooks were not bypassed.
+- [x] **No hardware in tests** — no test opens a real MIDI port; no test mutates a connected device.
+- [x] **Lazy MIDI imports** — `mido` and `python-rtmidi` imported only inside `real_midi_adapter.py` / `mido_provider.py`.
+- [x] **Hardware-pinned packages** — `mido==1.3.3` and `python-rtmidi==1.5.8` not bumped.
+- [x] **Passive default** — `python -m rytm_randomizer.cli` does not open a real port.
+- [x] **No stacked PRs** — this PR's base is `modularize-v1.34` (or the integration target), not another open PR's head.
+- [x] **No `--no-verify`** — pre-commit hooks were not bypassed.
 
 ## Plan document
 
@@ -113,4 +117,6 @@ Plan doc: `docs/superpowers/plans/2026-07-03-analog-four-audio-patch-genome.md`
 
 The pure renderer can exercise candidate calibrations in tests, but the operator-facing exporter rejects every field not marked `hardware-write-validated`. Filter1 Frequency, Filter1 Resonance, and Filter2 Frequency remain intentionally blocked. Batch sidecars preserve those complete DNA/live-dial rows without claiming they were encoded into SysEx.
 
-The atomic writer fsyncs file data. It does not fsync parent-directory metadata, so persistence of the final filename after sudden power loss remains filesystem-dependent.
+The atomic writer fsyncs file data. It does not fsync parent-directory metadata, so persistence of the final filename after sudden power loss remains filesystem-dependent. Under normal filesystem semantics, generation-addressed write-once candidates ensure the prior manifest never points at mixed bytes during a process-interrupted overwrite; the interruption may leave unreferenced generation files. A lock-cleanup failure does not relabel a committed batch as failed: the successful result carries a warning and the retained metadata path.
+
+Gate 14 and 15 evidence is committed beside the plan: maintainability audit/report, append-only run log, run report, architecture before/after, replay playbook, state/schema, and the updated repository-scoped Elektron SysEx skill. Firmware and transfer-utility versions were not recorded during the hardware studio pass; the accepted file hashes, displayed values, and that evidence limitation are documented in `docs/hardware-validation/2026-07-16-a4-saved-kit-roundtrip-results.md`.

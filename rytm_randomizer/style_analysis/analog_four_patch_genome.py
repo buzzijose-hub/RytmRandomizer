@@ -9,14 +9,16 @@ remain screen-only until their exact ordinals are captured.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import Final
+from typing import Final, TypedDict
 
 from ..data.analog_four_display import AnalogFourPatchValue, make_a4_patch_value
 from ..data.analog_four_patch_templates import (
     ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES,
+    ANALOG_FOUR_PATCH_FAMILY_ORDER,
     AnalogFourPatchCandidateTemplateSpec,
     AnalogFourPatchGeneTemplateSpec,
 )
+from ..data.analog_four_sysex_calibration import A4_SYNTH_TRACK_MAX, A4_SYNTH_TRACK_MIN
 from ..guardrails.schema import Confidence
 from .blueprint import ReferenceTrait, build_reference_style_blueprint
 from .feature_report import FeatureReport, compute_feature_report_hash
@@ -24,15 +26,10 @@ from .feature_report import FeatureReport, compute_feature_report_hash
 ANALOG_FOUR_PATCH_GENOME_VERSION: Final[str] = "analog-four-patch-genome-v1"
 ANALOG_FOUR_DEVICE_ID: Final[str] = "analog_four_mk2"
 ANALOG_FOUR_PATCH_MODE: Final[str] = "single-sound"
-ANALOG_FOUR_TRACK_MIN: Final[int] = 1
-ANALOG_FOUR_TRACK_MAX: Final[int] = 4
+ANALOG_FOUR_TRACK_MIN: Final[int] = A4_SYNTH_TRACK_MIN
+ANALOG_FOUR_TRACK_MAX: Final[int] = A4_SYNTH_TRACK_MAX
 ANALOG_FOUR_PATCH_CANDIDATE_MIN: Final[int] = 1
 ANALOG_FOUR_PATCH_CANDIDATE_MAX: Final[int] = len(ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES)
-ANALOG_FOUR_PATCH_FAMILY_ORDER: Final[tuple[str, ...]] = (
-    "Oscillators",
-    "Envelope and LFO",
-    "Filter and effects",
-)
 ANALOG_FOUR_PATCH_SAFETY: Final[tuple[str, ...]] = (
     "passive read-only patch genome",
     "no MIDI port opened",
@@ -81,6 +78,55 @@ class AnalogFourPatchGenome:
     safety: tuple[str, ...]
 
 
+class AnalogFourPatchValuePayload(TypedDict):
+    parameter: str
+    section: str
+    encoder: str
+    screen_value: str
+    midi_value: int | None
+    cc_msb: int | None
+    cc_lsb: int | None
+    nrpn_address: list[int] | None
+    transport_status: str
+    dial_direction: str
+
+
+class AnalogFourPatchGenePayload(TypedDict):
+    track: int
+    family: str
+    rationale: str
+    confidence: str
+    value: AnalogFourPatchValuePayload
+
+
+class AnalogFourPatchCandidatePayload(TypedDict):
+    column: int
+    label: str
+    role: str
+    closeness: int
+    genes: list[AnalogFourPatchGenePayload]
+
+
+class AnalogFourPatchTraitPayload(TypedDict):
+    key: str
+    label: str
+    intensity: float
+    evidence: list[str]
+
+
+class AnalogFourPatchGenomePayload(TypedDict):
+    version: str
+    device_id: str
+    mode: str
+    selected_track: int
+    source_hash: str
+    source_confidence: str
+    candidate_count: int
+    traits: list[AnalogFourPatchTraitPayload]
+    candidates: list[AnalogFourPatchCandidatePayload]
+    safety: list[str]
+
+
 def build_analog_four_patch_genome(
     report: FeatureReport,
     *,
@@ -124,7 +170,7 @@ def build_analog_four_patch_genome(
 
 def analog_four_patch_genome_to_dict(
     genome: AnalogFourPatchGenome,
-) -> dict[str, object]:
+) -> AnalogFourPatchGenomePayload:
     """Return a stable JSON-ready representation of ``genome``."""
 
     if not isinstance(genome, AnalogFourPatchGenome):
@@ -145,7 +191,7 @@ def analog_four_patch_genome_to_dict(
 
 def analog_four_patch_candidate_to_dict(
     candidate: AnalogFourPatchCandidate,
-) -> dict[str, object]:
+) -> AnalogFourPatchCandidatePayload:
     """Return a stable JSON-ready representation of ``candidate``."""
 
     if not isinstance(candidate, AnalogFourPatchCandidate):
@@ -203,7 +249,7 @@ def _gene_sort_key(gene: AnalogFourPatchGene) -> tuple[int, str, str, str]:
     )
 
 
-def _genome_trait_payload(trait: ReferenceTrait) -> dict[str, object]:
+def _genome_trait_payload(trait: ReferenceTrait) -> AnalogFourPatchTraitPayload:
     return {
         "key": trait.key,
         "label": trait.label,
@@ -212,7 +258,7 @@ def _genome_trait_payload(trait: ReferenceTrait) -> dict[str, object]:
     }
 
 
-def _candidate_payload(candidate: AnalogFourPatchCandidate) -> dict[str, object]:
+def _candidate_payload(candidate: AnalogFourPatchCandidate) -> AnalogFourPatchCandidatePayload:
     return {
         "column": candidate.column,
         "label": candidate.label,
@@ -222,7 +268,7 @@ def _candidate_payload(candidate: AnalogFourPatchCandidate) -> dict[str, object]
     }
 
 
-def _gene_payload(gene: AnalogFourPatchGene) -> dict[str, object]:
+def _gene_payload(gene: AnalogFourPatchGene) -> AnalogFourPatchGenePayload:
     return {
         "track": gene.track,
         "family": gene.family,
@@ -232,7 +278,7 @@ def _gene_payload(gene: AnalogFourPatchGene) -> dict[str, object]:
     }
 
 
-def _patch_value_payload(value: AnalogFourPatchValue) -> dict[str, object]:
+def _patch_value_payload(value: AnalogFourPatchValue) -> AnalogFourPatchValuePayload:
     return {
         "parameter": value.parameter,
         "section": value.section,
@@ -258,8 +304,13 @@ __all__ = [
     "ANALOG_FOUR_TRACK_MAX",
     "ANALOG_FOUR_TRACK_MIN",
     "AnalogFourPatchCandidate",
+    "AnalogFourPatchCandidatePayload",
     "AnalogFourPatchGene",
+    "AnalogFourPatchGenePayload",
     "AnalogFourPatchGenome",
+    "AnalogFourPatchGenomePayload",
+    "AnalogFourPatchTraitPayload",
+    "AnalogFourPatchValuePayload",
     "analog_four_patch_candidate_to_dict",
     "analog_four_patch_genome_to_dict",
     "build_analog_four_patch_genome",

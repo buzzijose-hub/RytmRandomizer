@@ -19,6 +19,10 @@ from ...devices.strategies.analog_four_saved_kit_writer import (
 )
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
+from .analog_four_export_contracts import (
+    AnalogFourExportErrorCode,
+    attach_analog_four_export_error_code,
+)
 from .writer import WriteResult, atomic_write
 
 _logger = get_logger(__name__)
@@ -36,7 +40,11 @@ def _a4_export_error_code(
     exc: KeyError | ValueError | TypeError | OSError,
     *,
     source_read_completed: bool,
-) -> str:
+) -> AnalogFourExportErrorCode:
+    if isinstance(exc, FileNotFoundError):
+        return "input_not_found"
+    if isinstance(exc, PermissionError):
+        return "permission_denied"
     if isinstance(exc, FileExistsError):
         return "overwrite_refused"
     if isinstance(exc, OSError):
@@ -93,6 +101,7 @@ def export_analog_four_saved_kit(
             (time.perf_counter() - started_at) * 1000.0,
             error_code=error_code,
         )
+        attach_analog_four_export_error_code(exc, error_code)
         raise
 
     metrics.record_export((time.perf_counter() - started_at) * 1000.0)

@@ -38,7 +38,9 @@ from .blueprint import (
     reference_style_blueprint_to_dict,
 )
 from .extractor import (
+    AudioFeatureAnalysis,
     StyleAnalysisDependencyError,
+    analyze_audio,
     extract_from_audio,
     extract_from_description,
     extract_from_partial,
@@ -47,6 +49,7 @@ from .feature_report import FeatureReport, compute_feature_report_hash
 from .library import analyze_library
 
 __all__ = [
+    "AudioFeatureAnalysis",
     "AnalogFourTrackBlueprint",
     "Confidence",
     "FeatureReport",
@@ -55,6 +58,7 @@ __all__ = [
     "RytmPadBlueprint",
     "SourceType",
     "StyleAnalysisDependencyError",
+    "analyze_audio",
     "analyze_library",
     "compute_feature_report_hash",
     "build_reference_style_blueprint",

@@ -399,6 +399,17 @@ row remains live-sendable, manual, or deferred in the sidecar. The command does
 not open a MIDI port or transfer files to the Analog Four. Do not interpret the
 result as full saved-kit parameter coverage or Synthplant-equivalent learned
 accuracy. Existing artifacts are refused unless `--overwrite` is explicit.
+The command reads each input once, analyzes private snapshots, stages all
+candidate artifacts, and closes temporary decoder/render files before
+publication. Candidate filenames carry the returned `generation_id`; the
+stable manifest is the final atomic commit marker. An interrupted overwrite
+therefore leaves the previously committed manifest internally consistent.
+Generation artifacts are write-once and are reused only when the bytes match;
+failed or interrupted publication may leave unreferenced generation files but
+does not replace files referenced by the prior manifest. JSON errors expose
+lock-cleanup notes in `details`; a committed batch whose lock could not be removed
+returns success plus a `warnings` entry naming the retained metadata file.
+Delete such a lock only after its recorded process ID is no longer running.
 
 ## Canonical operator-command flow
 

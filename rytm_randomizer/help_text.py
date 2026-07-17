@@ -3404,7 +3404,7 @@ Arguments:
   --output-dir <dir>       Destination for candidate .syx and JSON sidecar files
   --track N                Analog Four track 1-4; default 1
   --candidates N           Candidate count 1-4; default 4
-  --overwrite              Replace existing candidate artifacts
+  --overwrite              Replace the stable manifest; reuse exact generation files
   --json                   Emit a JSON acknowledgment instead of text
 
 Behavior:
@@ -3413,8 +3413,8 @@ Behavior:
   the complete patch DNA plus its CC/NRPN live-dial plan. The current .syx
   writer applies only hardware-write-validated Filter2 Resonance; all other DNA
   remains represented in the sidecar as live-sendable, manual, or deferred.
-  The acknowledgment reports the audio source hash, output paths, category
-  counts, and safety contract. This is not a claim of full saved-kit coverage
+  The acknowledgment reports the audio source hash, manifest path/hash,
+  candidate paths, category counts, and safety contract. This is not a claim of full saved-kit coverage
   or Synthplant-equivalent learned accuracy.
 
 Safety:
@@ -3458,7 +3458,13 @@ Safety:
 
 def resolve_help_text(key: str) -> str:
     text = HELP_TEXT[key]
-    return text() if callable(text) else text
+    if isinstance(text, str):
+        return text
+    if callable(text):
+        resolved = text()
+        if isinstance(resolved, str):
+            return resolved
+    raise TypeError(f"help text provider for {key!r} did not return a string")
 
 
 HELP_TEXT = {

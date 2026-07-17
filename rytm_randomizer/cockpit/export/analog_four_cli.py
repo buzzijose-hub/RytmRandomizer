@@ -6,11 +6,15 @@ import json
 import sys
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Final
+from typing import Final, Literal, TypedDict
 
 from ...cli_registry import CliCommand, register
 from ...devices.strategies.analog_four_saved_kit_writer import (
     AnalogFourSavedKitMutation,
+)
+from .analog_four_export_contracts import (
+    AnalogFourExportErrorCode,
+    analog_four_export_error_code,
 )
 from .analog_four_kit import (
     AnalogFourSavedKitExportResult,
@@ -25,6 +29,61 @@ USAGE: Final[str] = (
     "--filter2-resonance <track:value> [--filter2-resonance <track:value> ...] "
     "[--overwrite] [--json]"
 )
+
+
+class AnalogFourSavedKitExportArgs(TypedDict):
+    """Parsed keyword arguments for one guarded saved-kit export."""
+
+    source_path: Path
+    output_path: Path
+    mutations: tuple[AnalogFourSavedKitMutation, ...]
+    overwrite: bool
+    json_output: bool
+
+
+class AnalogFourSavedKitMutationPayload(TypedDict):
+    """Stable JSON record for one applied saved-kit mutation."""
+
+    parameter: str
+    track: int
+    screen_value: str
+    unpacked_offset: int
+    rendered_unpacked_value: int
+
+
+class AnalogFourSavedKitExportPayload(TypedDict):
+    """Stable successful JSON response from the saved-kit export CLI."""
+
+    ok: Literal[True]
+    kit_name: str
+    output_path: str
+    bytes_written: int
+    overwrote_existing: bool
+    sha256: str
+    mutations: list[AnalogFourSavedKitMutationPayload]
+
+
+class AnalogFourSavedKitExportErrorPayload(TypedDict):
+    """Stable failed JSON response from the saved-kit export CLI."""
+
+    ok: Literal[False]
+    error_code: AnalogFourExportErrorCode
+    error: str
+
+
+def _saved_kit_cli_error_code(exc: Exception) -> AnalogFourExportErrorCode:
+    classified_code = analog_four_export_error_code(exc)
+    if classified_code is not None:
+        return classified_code
+    if isinstance(exc, FileNotFoundError):
+        return "input_not_found"
+    if isinstance(exc, PermissionError):
+        return "permission_denied"
+    if isinstance(exc, FileExistsError):
+        return "overwrite_refused"
+    if isinstance(exc, OSError):
+        return "write_failed"
+    return "validation"
 
 
 def _pop_a4_cli_value(remaining: list[str], option: str) -> str:
@@ -53,7 +112,9 @@ def _parse_resonance_assignment(value: str) -> AnalogFourSavedKitMutation:
     )
 
 
-def parse_analog_four_saved_kit_export_args(args: Sequence[str]) -> dict[str, object]:
+def parse_analog_four_saved_kit_export_args(
+    args: Sequence[str],
+) -> AnalogFourSavedKitExportArgs:
     """Parse the registered command's argv tail into handler keyword args."""
 
     source_path: Path | None = None
@@ -93,7 +154,28 @@ def parse_analog_four_saved_kit_export_args(args: Sequence[str]) -> dict[str, ob
     }
 
 
-def _payload_from_result(result: AnalogFourSavedKitExportResult) -> dict[str, object]:
+def _parse_saved_kit_args_for_registry(args: Sequence[str]) -> dict[str, object]:
+    """Adapt the precise public parser shape to the generic CLI registry."""
+
+    try:
+        parsed = parse_analog_four_saved_kit_export_args(args)
+    except ValueError as exc:
+        if "--json" not in args:
+            raise
+        return {
+            "source_path": Path(),
+            "output_path": Path(),
+            "mutations": (),
+            "overwrite": False,
+            "json_output": True,
+            "parse_error": str(exc),
+        }
+    return {**parsed, "parse_error": None}
+
+
+def _payload_from_result(
+    result: AnalogFourSavedKitExportResult,
+) -> AnalogFourSavedKitExportPayload:
     return {
         "ok": True,
         "kit_name": result.render.kit_name,
@@ -139,8 +221,19 @@ def handle_analog_four_saved_kit_export(
     mutations: Sequence[AnalogFourSavedKitMutation],
     overwrite: bool = False,
     json_output: bool = False,
+    parse_error: str | None = None,
 ) -> int:
     """Render, write, and acknowledge one guarded A4 saved-kit export."""
+
+    if parse_error is not None:
+        error_payload: AnalogFourSavedKitExportErrorPayload = {
+            "ok": False,
+            "error_code": "invalid_input",
+            "error": parse_error,
+        }
+        sys.stdout.write(json.dumps(error_payload, sort_keys=True))
+        sys.stdout.write("\n")
+        return 2
 
     try:
         result = export_analog_four_saved_kit(
@@ -150,11 +243,17 @@ def handle_analog_four_saved_kit_export(
             overwrite=overwrite,
         )
     except (KeyError, ValueError, TypeError, OSError) as exc:
+        error_code = _saved_kit_cli_error_code(exc)
         if json_output:
-            sys.stdout.write(json.dumps({"ok": False, "error": str(exc)}, sort_keys=True))
+            error_payload: AnalogFourSavedKitExportErrorPayload = {
+                "ok": False,
+                "error_code": error_code,
+                "error": str(exc),
+            }
+            sys.stdout.write(json.dumps(error_payload, sort_keys=True))
             sys.stdout.write("\n")
         else:
-            sys.stderr.write(f"{USAGE}\nError: {exc}\n")
+            sys.stderr.write(f"{USAGE}\nError [{error_code}]: {exc}\n")
         return 2
 
     payload = _payload_from_result(result)
@@ -167,13 +266,13 @@ def handle_analog_four_saved_kit_export(
 
 
 def _format_a4_saved_kit_cli_error(exc: Exception) -> str:
-    return f"{USAGE}\nError: {exc}"
+    return f"{USAGE}\nError [invalid_input]: {exc}"
 
 
 ANALOG_FOUR_SAVED_KIT_EXPORT_CLI_COMMAND: Final[CliCommand] = CliCommand(
     name=COMMAND_NAME,
     summary="Render hardware-validated Analog Four values into a saved-kit SysEx file.",
-    args_parser=parse_analog_four_saved_kit_export_args,
+    args_parser=_parse_saved_kit_args_for_registry,
     handler=handle_analog_four_saved_kit_export,
     error_formatter=_format_a4_saved_kit_cli_error,
 )
@@ -182,6 +281,10 @@ register(ANALOG_FOUR_SAVED_KIT_EXPORT_CLI_COMMAND)
 
 __all__ = [
     "ANALOG_FOUR_SAVED_KIT_EXPORT_CLI_COMMAND",
+    "AnalogFourSavedKitExportArgs",
+    "AnalogFourSavedKitExportErrorPayload",
+    "AnalogFourSavedKitExportPayload",
+    "AnalogFourSavedKitMutationPayload",
     "COMMAND_NAME",
     "FILTER2_RESONANCE_PARAMETER",
     "USAGE",

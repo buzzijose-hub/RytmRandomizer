@@ -157,10 +157,11 @@ on one line for an existing module, you probably need a new module instead.
 | `app.py`              | Top-of-stack entry point. `--arm` wires output to `shell`; `--arm --rytm-12-pad-shell --confirm-rytm-12-pad-send` runs the all-12-pad Rytm style shell; `--arm --rytm-snapshot-shell <file.syx> --confirm-rytm-snapshot-shell-send` runs the all-12-pad current-kit snapshot shell; `--arm --rytm-kit-style --confirm-rytm-kit-send` sends one curated Rytm full-kit recipe; `--arm --rytm-cc-observe` opens only Rytm input and may read or receive a snapshot for labels; `--arm --a4-soft-capture` opens only A4 input; `--arm --a4-send-param` sends one manual-backed A4 CC; `--arm --a4-kit-recipe` sends one manual-backed A4 recipe; `--arm --a4-patch-send-plan --confirm-a4-patch-send-plan` sends compiler-approved generated A4 patch rows. |
 | `reports/`            | Passive in-memory report package + shared formatter/helper layer, including the manual feedback packet report, the reference-style blueprint report, the Analog Four initialized-baseline, patch genome, patch learning, patch corpus, and patch send-plan reports, the Analog Four OXI macro set planner report, the controller-brain mapping catalog and rehearsal/export reports, the style-performance arc chain through the live render bundle, live cue sheet, live runbook, reference match, snapshot preview, stage packet, stage snapshot-routing handoff, stage rehearsal-state packet, live set cockpit dashboard, live show export packet, live transition timeline, live command deck, live state packet, live analyzer handoff/targets, GUI readiness/session, capture queue/review, sidecar session packets, GUI screen-contract packets, GUI render-tree packets, GUI analyzer-overlay packets, GUI analyzer-frame packets, GUI interaction-script packets, GUI action-reducer packets, GUI controller-state packets, GUI playback-transcript packets, GUI playback-validation packets, GUI test-harness contract/readiness packets, GUI implementation-bridge/desktop-blueprint/desktop-app-plan/desktop-component-contract/desktop-view-model/desktop-render-contract/desktop-render-harness/cockpit-boundary-readiness packets, cockpit send-plan operator-readiness packets, cockpit send-plan rehearsal-surface packets, and the live GUI performance-console chain through live-kit capture workbench, package audition, and operator package, operator review ledger, and payload helpers under `reports/performance_console/`. Static manual feedback facts stay in `data/manual_feedback_packet.py`; static A4 patch-template facts stay in `data/analog_four_patch_templates.py`; static A4 patch-corpus facts stay in `data/analog_four_patch_corpus.py`; static A4 learning facts stay in `data/analog_four_learning.py`; static A4 SysEx calibration facts stay in `data/analog_four_sysex_calibration.py`; static GUI contract facts stay in `data/live_gui_contracts.py`; static controller-brain profiles stay in `data/controller_mapping_profiles.py`; static controller-brain rehearsal scenarios stay in `data/controller_rehearsal_scenarios.py`; repeated report CLI helpers stay in `reports/live_gui_common.py`. |
 | `inspection.py`       | Consolidated passive command-metadata inspection + preview + audit.             |
+| `cockpit/export/analog_four_export_contracts.py` | Shared bounded service/CLI failure vocabulary for passive A4 exports. |
 | `cockpit/export/analog_four_kit.py` | Hardware-validation-gated A4 `.syx` file adapter; reuses canonical `atomic_write` and never sends MIDI. |
 | `cockpit/export/analog_four_cli.py` | Registered local-file command for one or four validated Filter2 Resonance mutations; no MIDI I/O. |
-| `style_analysis/analog_four_patch_inference.py` | Deterministic audio measurements and audio-dependent four-column A4 patch-genome inference. |
-| `cockpit/export/analog_four_patch_batch.py` | Batch service that writes candidate saved kits, complete DNA/live-dial sidecars, and a manifest through the canonical atomic writer. |
+| `style_analysis/analog_four_patch_inference.py` | Typed, single-decode audio evidence and audio-dependent four-column A4 patch-genome inference with direct RED metrics. |
+| `cockpit/export/analog_four_patch_batch.py` | Transactional batch service that stages candidate saved kits and complete DNA/live-dial sidecars from immutable inputs, then publishes a manifest commit marker through the canonical atomic writer. |
 | `cockpit/export/analog_four_patch_batch_cli.py` | Registered passive-hardware operator command for one-to-four audio-dependent candidate exports; no MIDI I/O. |
 
 ### Frozen reference (NOT in the layered graph)
@@ -356,6 +357,19 @@ without adding hardware I/O.
 The audio batch path composes the existing audio extractor, the focused A4
 audio-inference compiler, patch send-plan metadata, and guarded saved-kit
 export. It produces one to four candidate `.syx`/JSON pairs plus a manifest.
+The extractor reads one immutable byte snapshot, hashes it, and decodes that
+same snapshot once into a typed report-and-synthesis measurement record. The
+batch reads the audio and source kit once, works only from private immutable
+snapshots, stages the complete output, and closes private staging before it
+acquires a per-track file lock. Candidate filenames include a provenance-based
+generation ID; the stable manifest path is switched last. An interruption can
+therefore leave unreferenced generation files, but cannot make the prior
+manifest point at a mixed generation. Generation files are write-once and are
+reused only when their bytes match exactly; a conflicting same-generation file
+is rejected. Process interruption may leave unreferenced generation files for
+later cleanup. Lock cleanup runs even while an exception propagates, and a
+cleanup failure is returned either as exception detail or as a warning on an
+otherwise successful committed result with the retained lock metadata path.
 The sidecar is the complete DNA and CC/NRPN live-dial contract; saved-kit SysEx
 still encodes only hardware-write-validated Filter2 Resonance. This is real
 audio-dependent inference, but not full saved-kit coverage or a claim of
@@ -846,8 +860,8 @@ operator-selected source kit, delegates all frame validation and mutation to
 `.syx` file, not a `.rymp` model. Only Filter2 Resonance is currently admitted
 because it is the only field with operator-confirmed write evidence. The
 adapter records shared export RED metrics and structured logs with categorical
-`validation`, `source_read_failed`, `overwrite_refused`, and `write_failed`
-failures.
+`validation`, `input_not_found`, `permission_denied`, `source_read_failed`,
+`overwrite_refused`, and `write_failed` failures.
 
 ---
 

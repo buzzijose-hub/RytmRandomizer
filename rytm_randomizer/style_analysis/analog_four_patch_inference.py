@@ -2,75 +2,31 @@
 
 from __future__ import annotations
 
-import hashlib
 import string
+import time
+from collections.abc import Callable
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Final, Protocol, cast
+from typing import Final, TypedDict, TypeVar
 
 from ..data.analog_four_display import make_a4_patch_value
+from ..data.analog_four_patch_templates import ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES
+from ..observability.logging import get_logger
+from ..observability.metrics import AnalogFourPatchInferenceErrorCode, get_metrics
 from .analog_four_patch_genome import (
     AnalogFourPatchCandidate,
     AnalogFourPatchGene,
     AnalogFourPatchGenome,
+    AnalogFourPatchGenomePayload,
     analog_four_patch_genome_to_dict,
     build_analog_four_patch_genome,
 )
-from .extractor import StyleAnalysisDependencyError, extract_from_audio
+from .extractor import AudioFeatureAnalysis, StyleAnalysisDependencyError, analyze_audio
 from .feature_report import FeatureReport, compute_feature_report_hash
 
 _AUDIO_REPORT_DERIVED_AT: Final[str] = "1970-01-01T00:00:00Z"
-_AUDIO_SAMPLE_RATE: Final[int] = 22_050
-_AUDIO_FRAME_LENGTH: Final[int] = 2_048
-_AUDIO_HOP_LENGTH: Final[int] = 512
-
-
-class _ArrayResult(Protocol):  # pragma: no cover - typing-only optional dependency API
-    def reshape(self, *shape: int) -> _ArrayResult: ...
-
-    def tolist(self) -> object: ...
-
-
-class _NumpyApi(Protocol):  # pragma: no cover - typing-only optional dependency API
-    def abs(self, value: object) -> object: ...
-
-    def asarray(self, value: object) -> _ArrayResult: ...
-
-
-class _FeatureApi(Protocol):  # pragma: no cover - typing-only optional dependency API
-    def rms(
-        self,
-        *,
-        y: object,
-        frame_length: int,
-        hop_length: int,
-    ) -> object: ...
-
-    def spectral_centroid(self, *, y: object, sr: int) -> object: ...
-
-    def spectral_flatness(self, *, y: object) -> object: ...
-
-    def zero_crossing_rate(self, y: object) -> object: ...
-
-
-class _OnsetApi(Protocol):  # pragma: no cover - typing-only optional dependency API
-    def onset_strength(self, *, y: object, sr: int) -> object: ...
-
-
-class _EffectsApi(Protocol):  # pragma: no cover - typing-only optional dependency API
-    def harmonic(self, y: object) -> object: ...
-
-
-class _LibrosaApi(Protocol):  # pragma: no cover - typing-only optional dependency API
-    feature: _FeatureApi
-    onset: _OnsetApi
-    effects: _EffectsApi
-
-    def load(self, path: str, *, sr: int, mono: bool) -> tuple[object, int]: ...
-
-    def stft(self, y: object, *, n_fft: int, hop_length: int) -> object: ...
-
-    def fft_frequencies(self, *, sr: int, n_fft: int) -> object: ...
+_logger = get_logger(__name__)
+_InferenceResult = TypeVar("_InferenceResult")
 
 
 @dataclass(frozen=True)
@@ -125,8 +81,10 @@ class AnalogFourAudioPatchGenome:
     genome: AnalogFourPatchGenome
 
 
-@dataclass(frozen=True)
-class _AnalogFourAudioMeasurements:
+class AnalogFourPatchAudioFeaturesPayload(TypedDict):
+    """Stable JSON-ready schema for measured audio evidence."""
+
+    audio_sha256: str
     duration: float
     attack: float
     decay: float
@@ -141,27 +99,102 @@ class _AnalogFourAudioMeasurements:
     modulation: float
 
 
+class AnalogFourFeatureReportPayload(TypedDict):
+    source_type: str
+    confidence: str
+    bpm: float
+    tempo_stability: float
+    kick_density: float
+    percussion_density: float
+    low_end_weight: float
+    spectral_brightness: float
+    texture_noise: float
+    energy_arc: list[float]
+    content_hash: str
+    derived_at: str
+
+
+class AnalogFourAudioPatchGenomePayload(TypedDict):
+    feature_report: AnalogFourFeatureReportPayload
+    audio_features: AnalogFourPatchAudioFeaturesPayload
+    genome: AnalogFourPatchGenomePayload
+
+
 def analyze_analog_four_patch_audio(path: Path) -> AnalogFourPatchAudioFeatures:
     """Measure normalized A4 synthesis evidence from ``path``."""
 
-    if not isinstance(path, Path):
-        raise TypeError("path must be a pathlib.Path")
-    audio_sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
-    measurements = _measure_analog_four_patch_audio(path)
+    return _recorded_a4_inference(
+        path,
+        lambda: _audio_features_from_analysis(_analyze_audio_for_a4(path)),
+    )
+
+
+def _a4_inference_error_code(exc: Exception) -> AnalogFourPatchInferenceErrorCode:
+    if isinstance(exc, StyleAnalysisDependencyError):
+        return "dependency_missing"
+    if isinstance(exc, OSError):
+        return "audio_read_failed"
+    if isinstance(exc, (TypeError, ValueError)):
+        return "validation"
+    return "inference_failed"
+
+
+def _recorded_a4_inference(
+    path: Path,
+    operation: Callable[[], _InferenceResult],
+) -> _InferenceResult:
+    started_at = time.perf_counter()
+    metrics = get_metrics()
+    try:
+        result = operation()
+    except (KeyError, OSError, RuntimeError, TypeError, ValueError) as exc:
+        error_code = _a4_inference_error_code(exc)
+        metrics.record_a4_patch_inference(
+            (time.perf_counter() - started_at) * 1000.0,
+            error_code=error_code,
+        )
+        _logger.warning(
+            "Analog Four audio patch inference failed",
+            extra={
+                "operation": "a4_audio_patch_inference",
+                "error_code": error_code,
+                "audio_path": str(path),
+            },
+        )
+        raise
+
+    metrics.record_a4_patch_inference((time.perf_counter() - started_at) * 1000.0)
+    _logger.info(
+        "Analog Four audio patch inference completed",
+        extra={
+            "operation": "a4_audio_patch_inference",
+            "audio_path": str(path),
+        },
+    )
+    return result
+
+
+def _analyze_audio_for_a4(path: Path) -> AudioFeatureAnalysis:
+    return analyze_audio(path)
+
+
+def _audio_features_from_analysis(
+    analysis: AudioFeatureAnalysis,
+) -> AnalogFourPatchAudioFeatures:
     return AnalogFourPatchAudioFeatures(
-        audio_sha256=audio_sha256,
-        duration=measurements.duration,
-        attack=measurements.attack,
-        decay=measurements.decay,
-        sustain=measurements.sustain,
-        tail=measurements.tail,
-        brightness=measurements.brightness,
-        spectral_flatness=measurements.spectral_flatness,
-        noise=measurements.noise,
-        low_end=measurements.low_end,
-        harmonicity=measurements.harmonicity,
-        transient=measurements.transient,
-        modulation=measurements.modulation,
+        audio_sha256=analysis.audio_sha256,
+        duration=analysis.duration,
+        attack=analysis.attack,
+        decay=analysis.decay,
+        sustain=analysis.sustain,
+        tail=analysis.tail,
+        brightness=analysis.brightness,
+        spectral_flatness=analysis.spectral_flatness,
+        noise=analysis.noise,
+        low_end=analysis.low_end,
+        harmonicity=analysis.harmonicity,
+        transient=analysis.transient,
+        modulation=analysis.modulation,
     )
 
 
@@ -173,8 +206,27 @@ def build_analog_four_audio_patch_genome(
 ) -> AnalogFourAudioPatchGenome:
     """Infer deterministic audio-dependent A4 candidates from ``path``."""
 
-    audio_features = analyze_analog_four_patch_audio(path)
-    feature_report = _stable_audio_feature_report(extract_from_audio(path))
+    return _recorded_a4_inference(
+        path,
+        lambda: _build_analog_four_audio_patch_genome(
+            path,
+            track=track,
+            candidate_count=candidate_count,
+        ),
+    )
+
+
+def _build_analog_four_audio_patch_genome(
+    path: Path,
+    *,
+    track: int,
+    candidate_count: int,
+) -> AnalogFourAudioPatchGenome:
+    """Build one genome inside the complete-operation metrics boundary."""
+
+    analysis = _analyze_audio_for_a4(path)
+    audio_features = _audio_features_from_analysis(analysis)
+    feature_report = _stable_audio_feature_report(analysis.feature_report)
     static_genome = build_analog_four_patch_genome(
         feature_report,
         track=track,
@@ -196,7 +248,7 @@ def build_analog_four_audio_patch_genome(
 
 def analog_four_patch_audio_features_to_dict(
     features: AnalogFourPatchAudioFeatures,
-) -> dict[str, object]:
+) -> AnalogFourPatchAudioFeaturesPayload:
     """Return a stable JSON-ready representation of audio evidence."""
 
     if not isinstance(features, AnalogFourPatchAudioFeatures):
@@ -220,7 +272,7 @@ def analog_four_patch_audio_features_to_dict(
 
 def analog_four_audio_patch_genome_to_dict(
     audio_genome: AnalogFourAudioPatchGenome,
-) -> dict[str, object]:
+) -> AnalogFourAudioPatchGenomePayload:
     """Return a stable JSON-ready representation of inferred patch DNA."""
 
     if not isinstance(audio_genome, AnalogFourAudioPatchGenome):
@@ -244,164 +296,6 @@ def analog_four_audio_patch_genome_to_dict(
         "audio_features": analog_four_patch_audio_features_to_dict(audio_genome.audio_features),
         "genome": analog_four_patch_genome_to_dict(audio_genome.genome),
     }
-
-
-def _require_audio_stack() -> tuple[_LibrosaApi, _NumpyApi]:  # pragma: no cover
-    try:
-        import librosa  # type: ignore[import-not-found]
-        import numpy  # type: ignore[import-not-found]
-    except ImportError as exc:
-        raise StyleAnalysisDependencyError(
-            "Analog Four audio inference requires the 'style' optional extra. "
-            'Install it with: pip install -e ".[style,dev]"'
-        ) from exc
-    return cast(_LibrosaApi, librosa), cast(_NumpyApi, numpy)
-
-
-def _measure_analog_four_patch_audio(
-    path: Path,
-) -> _AnalogFourAudioMeasurements:  # pragma: no cover - optional librosa path
-    librosa, numpy = _require_audio_stack()
-    y, sample_rate = librosa.load(str(path), sr=_AUDIO_SAMPLE_RATE, mono=True)
-    samples = _flat_float_values(numpy, y)
-    if not samples or sample_rate <= 0:
-        return _AnalogFourAudioMeasurements(*(0.0 for _ in range(12)))
-
-    duration_seconds = len(samples) / float(sample_rate)
-    rms = _flat_float_values(
-        numpy,
-        librosa.feature.rms(
-            y=y,
-            frame_length=_AUDIO_FRAME_LENGTH,
-            hop_length=_AUDIO_HOP_LENGTH,
-        ),
-    )
-    peak_rms = max(rms, default=0.0)
-    peak_index = rms.index(peak_rms) if peak_rms > 0.0 else 0
-    attack_seconds = peak_index * _AUDIO_HOP_LENGTH / float(sample_rate)
-    decay_frames = _decay_frames(rms, peak_index, peak_rms)
-    decay_seconds = decay_frames * _AUDIO_HOP_LENGTH / float(sample_rate)
-    sustain = _window_level(rms, peak_rms, 0.40, 0.75)
-    tail = _window_level(rms, peak_rms, 0.80, 1.00)
-
-    centroid = _flat_float_values(
-        numpy,
-        librosa.feature.spectral_centroid(y=y, sr=sample_rate),
-    )
-    brightness = _clamp_audio_feature_unit(_mean(centroid) / (sample_rate / 2.0))
-    flatness_values = _flat_float_values(
-        numpy,
-        librosa.feature.spectral_flatness(y=y),
-    )
-    spectral_flatness = _clamp_audio_feature_unit(_mean(flatness_values))
-    zero_crossings = _flat_float_values(
-        numpy,
-        librosa.feature.zero_crossing_rate(y),
-    )
-    noise = _clamp_audio_feature_unit(spectral_flatness * 0.75 + _mean(zero_crossings) * 0.25)
-
-    magnitude = _matrix_float_values(
-        numpy,
-        numpy.abs(
-            librosa.stft(
-                y,
-                n_fft=_AUDIO_FRAME_LENGTH,
-                hop_length=_AUDIO_HOP_LENGTH,
-            )
-        ),
-    )
-    frequencies = _flat_float_values(
-        numpy,
-        librosa.fft_frequencies(sr=sample_rate, n_fft=_AUDIO_FRAME_LENGTH),
-    )
-    total_spectral_energy = sum(sum(row) for row in magnitude)
-    low_spectral_energy = sum(
-        sum(row)
-        for frequency, row in zip(frequencies, magnitude, strict=False)
-        if frequency < 250.0
-    )
-    low_end = _safe_ratio(low_spectral_energy, total_spectral_energy)
-
-    harmonic = _flat_float_values(numpy, librosa.effects.harmonic(y))
-    harmonic_energy = sum(sample * sample for sample in harmonic)
-    total_sample_energy = sum(sample * sample for sample in samples)
-    harmonicity = _safe_ratio(harmonic_energy, total_sample_energy)
-
-    onset_strength = _flat_float_values(
-        numpy,
-        librosa.onset.onset_strength(y=y, sr=sample_rate),
-    )
-    transient = _safe_ratio(_mean(onset_strength), max(onset_strength, default=0.0))
-    rms_mean = _mean(rms)
-    modulation = _clamp_audio_feature_unit(
-        _standard_deviation(rms, rms_mean) / max(rms_mean, 1e-12) / 2.0
-    )
-    return _AnalogFourAudioMeasurements(
-        duration=_clamp_audio_feature_unit(duration_seconds / 8.0),
-        attack=_clamp_audio_feature_unit(attack_seconds / 2.0),
-        decay=_clamp_audio_feature_unit(decay_seconds / 4.0),
-        sustain=sustain,
-        tail=tail,
-        brightness=brightness,
-        spectral_flatness=spectral_flatness,
-        noise=noise,
-        low_end=low_end,
-        harmonicity=harmonicity,
-        transient=transient,
-        modulation=modulation,
-    )
-
-
-def _flat_float_values(  # pragma: no cover - optional librosa path
-    numpy: _NumpyApi, value: object
-) -> list[float]:
-    raw = cast(list[float], numpy.asarray(value).reshape(-1).tolist())
-    return [float(item) for item in raw]
-
-
-def _matrix_float_values(  # pragma: no cover - optional librosa path
-    numpy: _NumpyApi, value: object
-) -> list[list[float]]:
-    raw = cast(list[list[float]], numpy.asarray(value).tolist())
-    return [[float(item) for item in row] for row in raw]
-
-
-def _decay_frames(rms: list[float], peak_index: int, peak_rms: float) -> int:
-    threshold = peak_rms * 0.37
-    for index in range(peak_index, len(rms)):
-        if rms[index] <= threshold:
-            return index - peak_index
-    return max(0, len(rms) - peak_index - 1)
-
-
-def _window_level(
-    rms: list[float],
-    peak_rms: float,
-    start_fraction: float,
-    end_fraction: float,
-) -> float:
-    if not rms or peak_rms <= 0.0:
-        return 0.0
-    start = min(len(rms) - 1, int(len(rms) * start_fraction))
-    end = max(start + 1, min(len(rms), int(len(rms) * end_fraction)))
-    return _clamp_audio_feature_unit(_mean(rms[start:end]) / peak_rms)
-
-
-def _mean(values: list[float]) -> float:
-    return sum(values) / len(values) if values else 0.0
-
-
-def _standard_deviation(values: list[float], mean: float) -> float:
-    if not values:
-        return 0.0
-    variance = sum((value - mean) ** 2 for value in values) / len(values)
-    return variance**0.5
-
-
-def _safe_ratio(numerator: float, denominator: float) -> float:
-    if denominator <= 0.0:
-        return 0.0
-    return _clamp_audio_feature_unit(numerator / denominator)
 
 
 def _stable_audio_feature_report(report: FeatureReport) -> FeatureReport:
@@ -501,17 +395,20 @@ def _candidate_character(
     features: AnalogFourPatchAudioFeatures,
     column: int,
 ) -> tuple[float, float, float, float, float]:
-    brightness_offset = (0.0, 0.18, 0.04, -0.18)[column - 1]
-    noise_offset = (0.0, 0.04, 0.30, -0.12)[column - 1]
-    low_end_offset = (0.0, -0.08, -0.04, 0.20)[column - 1]
-    animation_offset = (0.0, 0.08, 0.28, -0.10)[column - 1]
-    tail_offset = (0.0, -0.05, 0.12, 0.10)[column - 1]
+    try:
+        template = ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES[column - 1]
+    except IndexError as exc:
+        raise ValueError(
+            f"candidate column must be in 1..{len(ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES)}"
+        ) from exc
+    if template.column != column:
+        raise ValueError("candidate template columns must be contiguous and one-based")
     return (
-        _clamp_audio_feature_unit(features.brightness + brightness_offset),
-        _clamp_audio_feature_unit(features.noise + noise_offset),
-        _clamp_audio_feature_unit(features.low_end + low_end_offset),
-        _clamp_audio_feature_unit(features.modulation + animation_offset),
-        _clamp_audio_feature_unit(features.tail + tail_offset),
+        _clamp_audio_feature_unit(features.brightness + template.brightness_offset),
+        _clamp_audio_feature_unit(features.noise + template.noise_offset),
+        _clamp_audio_feature_unit(features.low_end + template.low_end_offset),
+        _clamp_audio_feature_unit(features.modulation + template.animation_offset),
+        _clamp_audio_feature_unit(features.tail + template.tail_offset),
     )
 
 
@@ -529,7 +426,10 @@ def _clamp_audio_feature_unit(value: float) -> float:
 
 __all__ = [
     "AnalogFourAudioPatchGenome",
+    "AnalogFourAudioPatchGenomePayload",
+    "AnalogFourFeatureReportPayload",
     "AnalogFourPatchAudioFeatures",
+    "AnalogFourPatchAudioFeaturesPayload",
     "analog_four_audio_patch_genome_to_dict",
     "analog_four_patch_audio_features_to_dict",
     "analyze_analog_four_patch_audio",

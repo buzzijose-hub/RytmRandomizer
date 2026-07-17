@@ -4,15 +4,22 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
+import secrets
+import sys
+import tempfile
 import time
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Final, cast
+from typing import Final, TypedDict
 
 from ...devices.strategies.analog_four_saved_kit_writer import (
     AnalogFourSavedKitMutation,
+    render_analog_four_saved_kit,
 )
+from ...observability.errors import BoundaryError
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
 from ...style_analysis.analog_four_patch_genome import (
@@ -21,18 +28,29 @@ from ...style_analysis.analog_four_patch_genome import (
     ANALOG_FOUR_TRACK_MAX,
     ANALOG_FOUR_TRACK_MIN,
     AnalogFourPatchCandidate,
+    AnalogFourPatchCandidatePayload,
     AnalogFourPatchGene,
+    AnalogFourPatchGenePayload,
     AnalogFourPatchGenome,
+    AnalogFourPatchGenomePayload,
     analog_four_patch_candidate_to_dict,
+)
+from ...style_analysis.analog_four_patch_inference import (
+    AnalogFourPatchAudioFeaturesPayload,
 )
 from ...style_analysis.analog_four_patch_send_plan import (
     AnalogFourPatchSendPlan,
+    AnalogFourPatchSendPlanPayload,
     analog_four_patch_send_plan_to_dict,
 )
+from ...style_analysis.extractor import StyleAnalysisDependencyError
 from ...style_analysis.feature_report import FeatureReport
+from .analog_four_export_contracts import (
+    AnalogFourExportErrorCode,
+    attach_analog_four_export_error_code,
+)
 from .analog_four_kit import (
     AnalogFourSavedKitExportResult,
-    export_analog_four_saved_kit,
 )
 from .writer import WriteResult, atomic_write
 
@@ -46,6 +64,129 @@ SYSEX_COVERAGE_STATEMENT: Final[str] = (
 _DEFERRED_REASON: Final[str] = "not hardware-write-validated for saved-kit SysEx"
 _SAFE_SEGMENT_RE: Final[re.Pattern[str]] = re.compile(r"[^a-z0-9]+")
 _logger = get_logger(__name__)
+
+
+class AnalogFourPatchBatchStageError(BoundaryError, RuntimeError):
+    """Classified failure while analyzing or staging one A4 patch batch."""
+
+    fingerprint = "a4.audio_patch_batch.stage_failed"
+
+    def __init__(self, message: str, *, error_code: AnalogFourExportErrorCode) -> None:
+        super().__init__(message, context={"error_code": error_code})
+        self.error_code: AnalogFourExportErrorCode = error_code
+
+
+class AnalogFourPatchBatchPublicationError(BoundaryError, RuntimeError):
+    """A generation artifact conflicts with an immutable published path."""
+
+    fingerprint = "a4.audio_patch_batch.publication_failed"
+
+    def __init__(self, message: str, *, error_code: AnalogFourExportErrorCode) -> None:
+        super().__init__(message, context={"error_code": error_code})
+        self.error_code: AnalogFourExportErrorCode = error_code
+
+
+class AnalogFourPatchBatchLockedError(BoundaryError, FileExistsError):
+    """A cooperative A4 batch publisher already owns the track lock."""
+
+    fingerprint = "a4.audio_patch_batch.publication_locked"
+    error_code: AnalogFourExportErrorCode = "publication_locked"
+
+
+class _DeferredGenePayload(AnalogFourPatchGenePayload):
+    deferred_reason: str
+
+
+class _FilenamePayload(TypedDict):
+    filename: str
+
+
+class _HashedSourcePayload(_FilenamePayload):
+    sha256: str
+
+
+class _CoverageCountsPayload(TypedDict):
+    dna_row_count: int
+    sysex_encoded_row_count: int
+    deferred_row_count: int
+    sendable_row_count: int
+    manual_row_count: int
+
+
+class _HardwareAppliedRowPayload(TypedDict):
+    parameter: str
+    track: int
+    screen_value: str
+    unpacked_offset: int
+    source_unpacked_value: int
+    rendered_unpacked_value: int
+
+
+class _HardwareExportPayload(TypedDict):
+    sysex_filename: str
+    encoded_parameters: list[str]
+    coverage_statement: str
+
+
+class _CandidateHashesPayload(TypedDict):
+    audio_sha256: str
+    source_kit_sha256: str
+    genome_sha256: str
+    candidate_dna_sha256: str
+    send_plan_sha256: str
+    sysex_sha256: str
+
+
+class _CandidateSidecarPayload(TypedDict):
+    schema_version: str
+    generation_id: str
+    audio_source: _FilenamePayload
+    source_kit: _FilenamePayload
+    candidate_dna: AnalogFourPatchCandidatePayload
+    audio_features: AnalogFourPatchAudioFeaturesPayload
+    dynamic_send_plan: AnalogFourPatchSendPlanPayload
+    hardware_applied_rows: list[_HardwareAppliedRowPayload]
+    deferred_rows: list[_DeferredGenePayload]
+    coverage_counts: _CoverageCountsPayload
+    hardware_export: _HardwareExportPayload
+    hashes: _CandidateHashesPayload
+    safety: list[str]
+
+
+class _ManifestCandidatePayload(TypedDict):
+    column: int
+    label: str
+    filter2_resonance: str
+    sysex_filename: str
+    sidecar_filename: str
+    sysex_sha256: str
+    sidecar_sha256: str
+    coverage_counts: _CoverageCountsPayload
+
+
+class _BatchManifestPayload(TypedDict):
+    schema_version: str
+    generation_id: str
+    track: int
+    candidate_count: int
+    audio_source: _HashedSourcePayload
+    source_kit: _HashedSourcePayload
+    feature_report_hash: str
+    genome_sha256: str
+    genome: AnalogFourPatchGenomePayload
+    candidates: list[_ManifestCandidatePayload]
+    coverage_counts: _CoverageCountsPayload
+    safety: list[str]
+
+
+class _BatchLockPayload(TypedDict):
+    schema_version: str
+    generation_id: str
+    publication_nonce: str
+    process_id: int
+    created_unix_seconds: float
+    audio_sha256: str
+    source_kit_sha256: str
 
 
 @dataclass(frozen=True)
@@ -103,13 +244,19 @@ class AnalogFourAudioPatchBatchExportResult:
     source_kit_sha256: str
     feature_report_hash: str
     genome_sha256: str
+    generation_id: str
     candidates: tuple[AnalogFourPatchCandidateBatchResult, ...]
     manifest_write: WriteResult
     manifest_sha256: str
+    lock_cleanup_warning: str | None
 
     @property
     def source_hash(self) -> str:
         return self.audio_sha256
+
+    @property
+    def manifest_path(self) -> Path:
+        return self.manifest_write.path
 
     @property
     def selected_track(self) -> int:
@@ -128,23 +275,46 @@ class AnalogFourAudioPatchBatchExportResult:
 class _AudioInference:
     feature_report: FeatureReport
     genome: AnalogFourPatchGenome
-    audio_features_payload: dict[str, object]
-    genome_payload: dict[str, object]
+    audio_features_payload: AnalogFourPatchAudioFeaturesPayload
+    genome_payload: AnalogFourPatchGenomePayload
 
 
 @dataclass(frozen=True)
 class _PreparedCandidate:
     candidate: AnalogFourPatchCandidate
     resonance_gene: AnalogFourPatchGene
-    candidate_payload: dict[str, object]
-    deferred_rows: tuple[dict[str, object], ...]
+    candidate_payload: AnalogFourPatchCandidatePayload
+    deferred_rows: tuple[_DeferredGenePayload, ...]
     send_plan: AnalogFourPatchSendPlan
-    send_plan_payload: dict[str, object]
+    send_plan_payload: AnalogFourPatchSendPlanPayload
+
+
+@dataclass(frozen=True)
+class _RenderedCandidate:
+    prepared: _PreparedCandidate
+    sysex_export: AnalogFourSavedKitExportResult
+
+
+@dataclass(frozen=True)
+class _StagedCandidate:
+    prepared: _PreparedCandidate
     sysex_path: Path
     sidecar_path: Path
+    sysex_export: AnalogFourSavedKitExportResult
+    sidecar_bytes: bytes
 
 
-def _json_bytes(payload: dict[str, object]) -> bytes:
+@dataclass(frozen=True)
+class _StagedBatch:
+    inference: _AudioInference
+    genome_sha256: str
+    generation_id: str
+    candidates: tuple[_StagedCandidate, ...]
+    manifest_path: Path
+    manifest_bytes: bytes
+
+
+def _json_bytes(payload: Mapping[str, object]) -> bytes:
     return (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode("utf-8")
 
 
@@ -152,8 +322,54 @@ def _sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def _payload_sha256(payload: dict[str, object]) -> str:
+def _payload_sha256(payload: Mapping[str, object]) -> str:
     return _sha256(_json_bytes(payload))
+
+
+def _generation_id(
+    *,
+    audio_name: str,
+    source_kit_name: str,
+    audio_sha256: str,
+    source_kit_sha256: str,
+    genome_sha256: str,
+    inference: _AudioInference,
+    track: int,
+    candidates: tuple[_RenderedCandidate, ...],
+) -> str:
+    parts = [
+        BATCH_SCHEMA_VERSION,
+        CANDIDATE_SCHEMA_VERSION,
+        SYSEX_COVERAGE_STATEMENT,
+        _DEFERRED_REASON,
+        FILTER2_RESONANCE_PARAMETER,
+        "No MIDI or network operation was performed.",
+        str(track),
+        audio_name,
+        source_kit_name,
+        audio_sha256,
+        source_kit_sha256,
+        inference.feature_report.content_hash,
+        _payload_sha256(inference.audio_features_payload),
+        genome_sha256,
+    ]
+    for rendered in candidates:
+        prepared = rendered.prepared
+        applied_rows: Mapping[str, object] = {"rows": _applied_rows(rendered.sysex_export)}
+        deferred_rows: Mapping[str, object] = {"rows": list(prepared.deferred_rows)}
+        parts.extend(
+            (
+                str(prepared.candidate.column),
+                _safe_segment(prepared.candidate.label),
+                prepared.resonance_gene.value.screen_value,
+                _payload_sha256(prepared.candidate_payload),
+                _payload_sha256(prepared.send_plan_payload),
+                _payload_sha256(applied_rows),
+                _payload_sha256(deferred_rows),
+                rendered.sysex_export.render.sha256,
+            )
+        )
+    return _sha256("\0".join(parts).encode("utf-8"))[:32]
 
 
 def _safe_segment(label: str) -> str:
@@ -244,38 +460,32 @@ def _filter2_resonance_gene(
     return gene
 
 
-def _serialized_gene_rows(
-    candidate: AnalogFourPatchCandidate,
-    candidate_payload: dict[str, object],
-) -> tuple[dict[str, object], ...]:
-    raw_rows = candidate_payload.get("genes")
-    if not isinstance(raw_rows, list):
-        raise ValueError("serialized candidate DNA does not match its gene rows")
-    serialized_rows = cast(list[object], raw_rows)
-    if len(serialized_rows) != len(candidate.genes):
-        raise ValueError("serialized candidate DNA does not match its gene rows")
-    rows: list[dict[str, object]] = []
-    for raw_row in serialized_rows:
-        if not isinstance(raw_row, dict):
-            raise ValueError("serialized candidate DNA contains an invalid gene row")
-        untyped_row = cast(dict[object, object], raw_row)
-        if not all(isinstance(key, str) for key in untyped_row):
-            raise ValueError("serialized candidate DNA contains an invalid gene row")
-        rows.append(dict(cast(dict[str, object], untyped_row)))
-    return tuple(rows)
+def _deferred_gene_payload(row: AnalogFourPatchGenePayload) -> _DeferredGenePayload:
+    return {
+        "track": row["track"],
+        "family": row["family"],
+        "rationale": row["rationale"],
+        "confidence": row["confidence"],
+        "value": row["value"],
+        "deferred_reason": _DEFERRED_REASON,
+    }
 
 
 def _candidate_paths(
-    output_dir: Path, candidate: AnalogFourPatchCandidate, track: int
+    output_dir: Path,
+    candidate: AnalogFourPatchCandidate,
+    track: int,
+    generation_id: str,
 ) -> tuple[Path, Path]:
-    stem = f"a4-t{track}-c{candidate.column:02d}-{_safe_segment(candidate.label)}"
+    stem = (
+        f"a4-t{track}-g{generation_id}-c{candidate.column:02d}-" f"{_safe_segment(candidate.label)}"
+    )
     return output_dir / f"{stem}.syx", output_dir / f"{stem}.json"
 
 
 def _prepare_candidates(
     inference: _AudioInference,
     *,
-    output_dir: Path,
     track: int,
     candidate_count: int,
 ) -> tuple[_PreparedCandidate, ...]:
@@ -291,9 +501,9 @@ def _prepare_candidates(
     for candidate in candidates:
         resonance_gene = _filter2_resonance_gene(candidate, track=track)
         candidate_payload = analog_four_patch_candidate_to_dict(candidate)
-        rows = _serialized_gene_rows(candidate, candidate_payload)
+        rows = tuple(candidate_payload["genes"])
         deferred_rows = tuple(
-            {**row, "deferred_reason": _DEFERRED_REASON}
+            _deferred_gene_payload(row)
             for gene, row in zip(candidate.genes, rows, strict=True)
             if gene.value.parameter != FILTER2_RESONANCE_PARAMETER
         )
@@ -302,7 +512,6 @@ def _prepare_candidates(
             inference.genome,
             selected_candidate=candidate.column,
         )
-        sysex_path, sidecar_path = _candidate_paths(output_dir, candidate, track)
         prepared.append(
             _PreparedCandidate(
                 candidate=candidate,
@@ -311,16 +520,13 @@ def _prepare_candidates(
                 deferred_rows=deferred_rows,
                 send_plan=send_plan,
                 send_plan_payload=analog_four_patch_send_plan_to_dict(send_plan),
-                sysex_path=sysex_path,
-                sidecar_path=sidecar_path,
             )
         )
     return tuple(prepared)
 
 
 def _preflight_destinations(paths: tuple[Path, ...], *, overwrite: bool) -> None:
-    if len(paths) != len(set(paths)):
-        raise ValueError("generated batch destinations are not unique")
+    _validate_unique_destinations(paths)
     if not overwrite:
         for path in paths:
             if path.exists():
@@ -329,7 +535,91 @@ def _preflight_destinations(paths: tuple[Path, ...], *, overwrite: bool) -> None
                 )
 
 
-def _applied_rows(export: AnalogFourSavedKitExportResult) -> list[dict[str, object]]:
+def _validate_unique_destinations(paths: tuple[Path, ...]) -> None:
+    if len(paths) != len(set(paths)):
+        raise ValueError("generated batch destinations are not unique")
+
+
+def _publish_immutable_artifact(path: Path, data: bytes) -> WriteResult:
+    expected_sha256 = _sha256(data)
+    try:
+        return atomic_write(path, data)
+    except FileExistsError as exc:
+        existing_sha256 = _sha256(path.read_bytes())
+        if existing_sha256 != expected_sha256:
+            raise AnalogFourPatchBatchPublicationError(
+                f"generation artifact collision at {path}: existing bytes do not match",
+                error_code="write_failed",
+            ) from exc
+        return WriteResult(
+            path=path.resolve(),
+            bytes_written=len(data),
+            overwrote_existing=False,
+        )
+
+
+def _release_batch_lock(lock_path: Path) -> str | None:
+    try:
+        lock_path.unlink(missing_ok=True)
+    except OSError as exc:
+        return f"{lock_path}: {exc}"
+    return None
+
+
+def _acquire_batch_lock(
+    lock_path: Path,
+    *,
+    generation_id: str,
+    publication_nonce: str,
+    audio_sha256: str,
+    source_kit_sha256: str,
+) -> WriteResult:
+    payload: _BatchLockPayload = {
+        "schema_version": "analog-four-audio-patch-batch-lock-v1",
+        "generation_id": generation_id,
+        "publication_nonce": publication_nonce,
+        "process_id": os.getpid(),
+        "created_unix_seconds": time.time(),
+        "audio_sha256": audio_sha256,
+        "source_kit_sha256": source_kit_sha256,
+    }
+    try:
+        return atomic_write(lock_path, _json_bytes(payload))
+    except FileExistsError as exc:
+        try:
+            metadata = lock_path.read_text(encoding="utf-8").strip()
+        except (OSError, UnicodeError):
+            metadata = "unavailable"
+        raise AnalogFourPatchBatchLockedError(
+            f"batch publication lock already exists: {lock_path}; "
+            "remove it only after confirming its process is no longer running; "
+            f"lock metadata: {metadata}"
+        ) from exc
+
+
+def _batch_lock_matches_request(
+    lock_path: Path,
+    *,
+    generation_id: str,
+    publication_nonce: str,
+    audio_sha256: str,
+    source_kit_sha256: str,
+) -> bool:
+    try:
+        payload = json.loads(lock_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError, UnicodeError):
+        return False
+    return bool(
+        isinstance(payload, dict)
+        and payload.get("generation_id") == generation_id
+        and payload.get("publication_nonce") == publication_nonce
+        and payload.get("process_id") == os.getpid()
+        and payload.get("audio_sha256") == audio_sha256
+        and payload.get("source_kit_sha256") == source_kit_sha256
+    )
+
+
+def _applied_rows(export: AnalogFourSavedKitExportResult) -> list[_HardwareAppliedRowPayload]:
     return [
         {
             "parameter": row.parameter,
@@ -348,14 +638,16 @@ def _sidecar_payload(
     export: AnalogFourSavedKitExportResult,
     inference: _AudioInference,
     *,
+    sysex_path: Path,
     audio_name: str,
     source_kit_name: str,
     audio_sha256: str,
     source_kit_sha256: str,
     genome_sha256: str,
-) -> dict[str, object]:
+    generation_id: str,
+) -> _CandidateSidecarPayload:
     applied_rows = _applied_rows(export)
-    coverage = {
+    coverage: _CoverageCountsPayload = {
         "dna_row_count": len(prepared.candidate.genes),
         "sysex_encoded_row_count": len(applied_rows),
         "deferred_row_count": len(prepared.deferred_rows),
@@ -364,6 +656,7 @@ def _sidecar_payload(
     }
     return {
         "schema_version": CANDIDATE_SCHEMA_VERSION,
+        "generation_id": generation_id,
         "audio_source": {"filename": audio_name},
         "source_kit": {"filename": source_kit_name},
         "candidate_dna": prepared.candidate_payload,
@@ -373,7 +666,7 @@ def _sidecar_payload(
         "deferred_rows": list(prepared.deferred_rows),
         "coverage_counts": coverage,
         "hardware_export": {
-            "sysex_filename": prepared.sysex_path.name,
+            "sysex_filename": sysex_path.name,
             "encoded_parameters": [FILTER2_RESONANCE_PARAMETER],
             "coverage_statement": SYSEX_COVERAGE_STATEMENT,
         },
@@ -389,6 +682,41 @@ def _sidecar_payload(
     }
 
 
+def _candidate_result(
+    prepared: _PreparedCandidate,
+    sysex_path: Path,
+    sidecar_path: Path,
+    sysex_export: AnalogFourSavedKitExportResult,
+    sidecar_bytes: bytes,
+    *,
+    sysex_write: WriteResult | None = None,
+    sidecar_write: WriteResult | None = None,
+) -> AnalogFourPatchCandidateBatchResult:
+    settled_sysex_write = sysex_write or WriteResult(
+        path=sysex_path.resolve(),
+        bytes_written=len(sysex_export.render.framed_sysex),
+        overwrote_existing=False,
+    )
+    settled_sidecar_write = sidecar_write or WriteResult(
+        path=sidecar_path.resolve(),
+        bytes_written=len(sidecar_bytes),
+        overwrote_existing=False,
+    )
+    return AnalogFourPatchCandidateBatchResult(
+        column=prepared.candidate.column,
+        label=prepared.candidate.label,
+        filter2_resonance=prepared.resonance_gene.value.screen_value,
+        sysex_export=replace(sysex_export, write=settled_sysex_write),
+        sidecar_write=settled_sidecar_write,
+        sidecar_sha256=_sha256(sidecar_bytes),
+        dna_row_count=len(prepared.candidate.genes),
+        sysex_encoded_row_count=len(sysex_export.render.applied_mutations),
+        deferred_row_count=len(prepared.deferred_rows),
+        sendable_row_count=prepared.send_plan.summary.sendable_count,
+        manual_row_count=prepared.send_plan.summary.manual_count,
+    )
+
+
 def _manifest_payload(
     inference: _AudioInference,
     results: tuple[AnalogFourPatchCandidateBatchResult, ...],
@@ -399,51 +727,238 @@ def _manifest_payload(
     audio_sha256: str,
     source_kit_sha256: str,
     genome_sha256: str,
-) -> dict[str, object]:
+    generation_id: str,
+) -> _BatchManifestPayload:
+    candidates: list[_ManifestCandidatePayload] = [
+        {
+            "column": result.column,
+            "label": result.label,
+            "filter2_resonance": result.filter2_resonance,
+            "sysex_filename": result.sysex_export.write.path.name,
+            "sidecar_filename": result.sidecar_write.path.name,
+            "sysex_sha256": result.sysex_export.render.sha256,
+            "sidecar_sha256": result.sidecar_sha256,
+            "coverage_counts": {
+                "dna_row_count": result.dna_row_count,
+                "sysex_encoded_row_count": result.sysex_encoded_row_count,
+                "deferred_row_count": result.deferred_row_count,
+                "sendable_row_count": result.sendable_row_count,
+                "manual_row_count": result.manual_row_count,
+            },
+        }
+        for result in results
+    ]
+    coverage: _CoverageCountsPayload = {
+        "dna_row_count": sum(result.dna_row_count for result in results),
+        "sysex_encoded_row_count": sum(result.sysex_encoded_row_count for result in results),
+        "deferred_row_count": sum(result.deferred_row_count for result in results),
+        "sendable_row_count": sum(result.sendable_row_count for result in results),
+        "manual_row_count": sum(result.manual_row_count for result in results),
+    }
     return {
         "schema_version": BATCH_SCHEMA_VERSION,
+        "generation_id": generation_id,
         "track": track,
         "candidate_count": len(results),
         "audio_source": {"filename": audio_name, "sha256": audio_sha256},
         "source_kit": {"filename": source_kit_name, "sha256": source_kit_sha256},
-        "feature_report_hash": inference.genome.source_hash,
+        "feature_report_hash": inference.feature_report.content_hash,
         "genome_sha256": genome_sha256,
         "genome": inference.genome_payload,
-        "candidates": [
-            {
-                "column": result.column,
-                "label": result.label,
-                "filter2_resonance": result.filter2_resonance,
-                "sysex_filename": result.sysex_export.write.path.name,
-                "sidecar_filename": result.sidecar_write.path.name,
-                "sysex_sha256": result.sysex_export.render.sha256,
-                "sidecar_sha256": result.sidecar_sha256,
-                "coverage_counts": {
-                    "dna_row_count": result.dna_row_count,
-                    "sysex_encoded_row_count": result.sysex_encoded_row_count,
-                    "deferred_row_count": result.deferred_row_count,
-                    "sendable_row_count": result.sendable_row_count,
-                    "manual_row_count": result.manual_row_count,
-                },
-            }
-            for result in results
-        ],
-        "coverage_counts": {
-            "dna_row_count": sum(result.dna_row_count for result in results),
-            "sysex_encoded_row_count": sum(result.sysex_encoded_row_count for result in results),
-            "deferred_row_count": sum(result.deferred_row_count for result in results),
-            "sendable_row_count": sum(result.sendable_row_count for result in results),
-            "manual_row_count": sum(result.manual_row_count for result in results),
-        },
+        "candidates": candidates,
+        "coverage_counts": coverage,
         "safety": [SYSEX_COVERAGE_STATEMENT, "No MIDI or network operation was performed."],
     }
 
 
-def _batch_export_error_code(exc: Exception, *, source_reads_complete: bool) -> str:
+def _stage_batch(
+    *,
+    audio_path: Path,
+    source_kit_path: Path,
+    audio_bytes: bytes,
+    source_kit_bytes: bytes,
+    audio_sha256: str,
+    source_kit_sha256: str,
+    output_dir: Path,
+    track: int,
+    candidate_count: int,
+) -> _StagedBatch:
+    """Build every artifact in private storage and return only in-memory bytes."""
+
+    with tempfile.TemporaryDirectory(prefix="a4-audio-patch-batch-") as temp_name:
+        staging_dir = Path(temp_name)
+        audio_snapshot = staging_dir / f"audio{audio_path.suffix or '.bin'}"
+        source_kit_snapshot = staging_dir / "source-kit.syx"
+        atomic_write(audio_snapshot, audio_bytes)
+        atomic_write(source_kit_snapshot, source_kit_bytes)
+        source_kit_snapshot_bytes = source_kit_snapshot.read_bytes()
+
+        try:
+            inference = _build_audio_inference(
+                audio_snapshot,
+                track=track,
+                candidate_count=candidate_count,
+            )
+        except StyleAnalysisDependencyError as exc:
+            raise AnalogFourPatchBatchStageError(
+                str(exc),
+                error_code="dependency_missing",
+            ) from exc
+        except OSError as exc:
+            raise AnalogFourPatchBatchStageError(
+                str(exc),
+                error_code="audio_read_failed",
+            ) from exc
+        except RuntimeError as exc:
+            raise AnalogFourPatchBatchStageError(
+                str(exc),
+                error_code="inference_failed",
+            ) from exc
+        if inference.audio_features_payload["audio_sha256"] != audio_sha256:
+            raise ValueError("audio snapshot hash does not match patch inference provenance")
+        genome_sha256 = _payload_sha256(inference.genome_payload)
+        prepared = _prepare_candidates(
+            inference,
+            track=track,
+            candidate_count=candidate_count,
+        )
+        rendered_candidates: list[_RenderedCandidate] = []
+        for item in prepared:
+            staged_sysex_path = staging_dir / f"candidate-{item.candidate.column:02d}.syx"
+            render = render_analog_four_saved_kit(
+                source_kit_snapshot_bytes,
+                (
+                    AnalogFourSavedKitMutation(
+                        parameter=FILTER2_RESONANCE_PARAMETER,
+                        track=track,
+                        screen_value=item.resonance_gene.value.screen_value,
+                    ),
+                ),
+            )
+            staged_export = AnalogFourSavedKitExportResult(
+                render=render,
+                write=WriteResult(
+                    path=staged_sysex_path.resolve(),
+                    bytes_written=len(render.framed_sysex),
+                    overwrote_existing=False,
+                ),
+            )
+            rendered_candidates.append(
+                _RenderedCandidate(prepared=item, sysex_export=staged_export)
+            )
+
+        settled_rendered = tuple(rendered_candidates)
+        generation_id = _generation_id(
+            audio_name=audio_path.name,
+            source_kit_name=source_kit_path.name,
+            audio_sha256=audio_sha256,
+            source_kit_sha256=source_kit_sha256,
+            genome_sha256=genome_sha256,
+            inference=inference,
+            track=track,
+            candidates=settled_rendered,
+        )
+
+        staged_candidates: list[_StagedCandidate] = []
+        planned_results: list[AnalogFourPatchCandidateBatchResult] = []
+        for rendered in settled_rendered:
+            item = rendered.prepared
+            sysex_path, sidecar_path = _candidate_paths(
+                output_dir,
+                item.candidate,
+                track,
+                generation_id,
+            )
+            sidecar_bytes = _json_bytes(
+                _sidecar_payload(
+                    item,
+                    rendered.sysex_export,
+                    inference,
+                    sysex_path=sysex_path,
+                    audio_name=audio_path.name,
+                    source_kit_name=source_kit_path.name,
+                    audio_sha256=audio_sha256,
+                    source_kit_sha256=source_kit_sha256,
+                    genome_sha256=genome_sha256,
+                    generation_id=generation_id,
+                )
+            )
+            staged_candidates.append(
+                _StagedCandidate(
+                    prepared=item,
+                    sysex_path=sysex_path,
+                    sidecar_path=sidecar_path,
+                    sysex_export=rendered.sysex_export,
+                    sidecar_bytes=sidecar_bytes,
+                )
+            )
+            planned_results.append(
+                _candidate_result(
+                    item,
+                    sysex_path,
+                    sidecar_path,
+                    rendered.sysex_export,
+                    sidecar_bytes,
+                )
+            )
+
+        settled_planned_results = tuple(planned_results)
+        manifest_path = output_dir / f"a4-t{track}-audio-patch-batch.json"
+        manifest_bytes = _json_bytes(
+            _manifest_payload(
+                inference,
+                settled_planned_results,
+                track=track,
+                audio_name=audio_path.name,
+                source_kit_name=source_kit_path.name,
+                audio_sha256=audio_sha256,
+                source_kit_sha256=source_kit_sha256,
+                genome_sha256=genome_sha256,
+                generation_id=generation_id,
+            )
+        )
+        destinations = tuple(
+            path for item in staged_candidates for path in (item.sysex_path, item.sidecar_path)
+        ) + (manifest_path,)
+        _validate_unique_destinations(destinations)
+        staged = _StagedBatch(
+            inference=inference,
+            genome_sha256=genome_sha256,
+            generation_id=generation_id,
+            candidates=tuple(staged_candidates),
+            manifest_path=manifest_path,
+            manifest_bytes=manifest_bytes,
+        )
+    return staged
+
+
+def _batch_export_error_code(
+    exc: Exception,
+    *,
+    source_reads_complete: bool,
+    output_phase_started: bool,
+) -> AnalogFourExportErrorCode:
+    if isinstance(
+        exc,
+        (
+            AnalogFourPatchBatchStageError,
+            AnalogFourPatchBatchPublicationError,
+            AnalogFourPatchBatchLockedError,
+        ),
+    ):
+        return exc.error_code
+    if isinstance(exc, FileNotFoundError):
+        return "input_not_found"
+    if isinstance(exc, PermissionError):
+        return "permission_denied"
+    if isinstance(exc, ImportError):
+        return "service_unavailable"
     if isinstance(exc, FileExistsError):
         return "overwrite_refused"
     if isinstance(exc, OSError):
-        return "write_failed" if source_reads_complete else "source_read_failed"
+        if not source_reads_complete:
+            return "source_read_failed"
+        return "write_failed" if output_phase_started else "inference_failed"
     if isinstance(exc, (KeyError, TypeError, ValueError)):
         return "validation"
     return "inference_failed"
@@ -463,99 +978,129 @@ def export_analog_four_audio_patch_batch(
     started_at = time.perf_counter()
     metrics = get_metrics()
     source_reads_complete = False
+    output_phase_started = False
     try:
         _validate_request(track=track, candidate_count=candidate_count, output_dir=output_dir)
-        audio_sha256 = _sha256(audio_path.read_bytes())
-        source_kit_sha256 = _sha256(source_kit_path.read_bytes())
+        audio_bytes = audio_path.read_bytes()
+        source_kit_bytes = source_kit_path.read_bytes()
+        audio_sha256 = _sha256(audio_bytes)
+        source_kit_sha256 = _sha256(source_kit_bytes)
         source_reads_complete = True
-        inference = _build_audio_inference(
-            audio_path,
-            track=track,
-            candidate_count=candidate_count,
-        )
-        genome_sha256 = _payload_sha256(inference.genome_payload)
-        prepared = _prepare_candidates(
-            inference,
-            output_dir=output_dir,
-            track=track,
-            candidate_count=candidate_count,
-        )
         manifest_path = output_dir / f"a4-t{track}-audio-patch-batch.json"
-        destinations = tuple(
-            path for item in prepared for path in (item.sysex_path, item.sidecar_path)
-        ) + (manifest_path,)
-        _preflight_destinations(destinations, overwrite=overwrite)
-
-        candidate_results: list[AnalogFourPatchCandidateBatchResult] = []
-        for item in prepared:
-            sysex_export = export_analog_four_saved_kit(
-                source_path=source_kit_path,
-                output_path=item.sysex_path,
-                mutations=(
-                    AnalogFourSavedKitMutation(
-                        parameter=FILTER2_RESONANCE_PARAMETER,
-                        track=track,
-                        screen_value=item.resonance_gene.value.screen_value,
-                    ),
-                ),
-                overwrite=overwrite,
-            )
-            sidecar_payload = _sidecar_payload(
-                item,
-                sysex_export,
-                inference,
-                audio_name=audio_path.name,
-                source_kit_name=source_kit_path.name,
+        _preflight_destinations((manifest_path,), overwrite=overwrite)
+        try:
+            staged_batch = _stage_batch(
+                audio_path=audio_path,
+                source_kit_path=source_kit_path,
+                audio_bytes=audio_bytes,
+                source_kit_bytes=source_kit_bytes,
                 audio_sha256=audio_sha256,
                 source_kit_sha256=source_kit_sha256,
-                genome_sha256=genome_sha256,
+                output_dir=output_dir,
+                track=track,
+                candidate_count=candidate_count,
             )
-            sidecar_bytes = _json_bytes(sidecar_payload)
-            sidecar_write = atomic_write(item.sidecar_path, sidecar_bytes, overwrite=overwrite)
-            candidate_results.append(
-                AnalogFourPatchCandidateBatchResult(
-                    column=item.candidate.column,
-                    label=item.candidate.label,
-                    filter2_resonance=item.resonance_gene.value.screen_value,
-                    sysex_export=sysex_export,
-                    sidecar_write=sidecar_write,
-                    sidecar_sha256=_sha256(sidecar_bytes),
-                    dna_row_count=len(item.candidate.genes),
-                    sysex_encoded_row_count=len(sysex_export.render.applied_mutations),
-                    deferred_row_count=len(item.deferred_rows),
-                    sendable_row_count=item.send_plan.summary.sendable_count,
-                    manual_row_count=item.send_plan.summary.manual_count,
-                )
-            )
+        except AnalogFourPatchBatchStageError:
+            raise
+        except OSError as exc:
+            raise AnalogFourPatchBatchStageError(
+                str(exc),
+                error_code="write_failed",
+            ) from exc
 
-        settled_results = tuple(candidate_results)
-        manifest_payload = _manifest_payload(
-            inference,
-            settled_results,
-            track=track,
-            audio_name=audio_path.name,
-            source_kit_name=source_kit_path.name,
-            audio_sha256=audio_sha256,
-            source_kit_sha256=source_kit_sha256,
-            genome_sha256=genome_sha256,
-        )
-        manifest_bytes = _json_bytes(manifest_payload)
-        manifest_write = atomic_write(manifest_path, manifest_bytes, overwrite=overwrite)
+        output_phase_started = True
+        lock_path = output_dir / f".a4-t{track}-audio-patch-batch.lock"
+        publication_nonce = secrets.token_hex(16)
+        lock_write: WriteResult | None = None
+        lock_cleanup_failure: str | None = None
+        try:
+            lock_write = _acquire_batch_lock(
+                lock_path,
+                generation_id=staged_batch.generation_id,
+                publication_nonce=publication_nonce,
+                audio_sha256=audio_sha256,
+                source_kit_sha256=source_kit_sha256,
+            )
+            _preflight_destinations((staged_batch.manifest_path,), overwrite=overwrite)
+            candidate_results: list[AnalogFourPatchCandidateBatchResult] = []
+            for staged_candidate in staged_batch.candidates:
+                item = staged_candidate.prepared
+                sysex_write = _publish_immutable_artifact(
+                    staged_candidate.sysex_path,
+                    staged_candidate.sysex_export.render.framed_sysex,
+                )
+                sidecar_write = _publish_immutable_artifact(
+                    staged_candidate.sidecar_path,
+                    staged_candidate.sidecar_bytes,
+                )
+                candidate_results.append(
+                    _candidate_result(
+                        item,
+                        staged_candidate.sysex_path,
+                        staged_candidate.sidecar_path,
+                        staged_candidate.sysex_export,
+                        staged_candidate.sidecar_bytes,
+                        sysex_write=sysex_write,
+                        sidecar_write=sidecar_write,
+                    )
+                )
+            settled_results = tuple(candidate_results)
+            manifest_write = atomic_write(
+                staged_batch.manifest_path,
+                staged_batch.manifest_bytes,
+                overwrite=overwrite,
+            )
+        finally:
+            active_exception = sys.exception()
+            owns_lock = lock_write is not None
+            if not owns_lock and isinstance(active_exception, (KeyboardInterrupt, SystemExit)):
+                owns_lock = _batch_lock_matches_request(
+                    lock_path,
+                    generation_id=staged_batch.generation_id,
+                    publication_nonce=publication_nonce,
+                    audio_sha256=audio_sha256,
+                    source_kit_sha256=source_kit_sha256,
+                )
+            if owns_lock:
+                lock_cleanup_failure = _release_batch_lock(lock_path)
+            if lock_cleanup_failure is not None:
+                if active_exception is not None:
+                    active_exception.add_note("batch lock cleanup failure: " + lock_cleanup_failure)
+                _logger.error(
+                    "Analog Four audio patch batch lock cleanup failed",
+                    extra={
+                        "operation": "a4_audio_patch_batch_lock_cleanup",
+                        "error_code": "lock_cleanup_failed",
+                        "detail": lock_cleanup_failure,
+                    },
+                )
+
+        if lock_cleanup_failure is not None:
+            lock_cleanup_warning = (
+                "batch committed successfully but publication lock cleanup failed; "
+                f"recovery metadata remains at {lock_path}: {lock_cleanup_failure}"
+            )
+        else:
+            lock_cleanup_warning = None
+
         result = AnalogFourAudioPatchBatchExportResult(
             track=track,
             candidate_count=len(settled_results),
             audio_sha256=audio_sha256,
             source_kit_sha256=source_kit_sha256,
-            feature_report_hash=inference.genome.source_hash,
-            genome_sha256=genome_sha256,
+            feature_report_hash=staged_batch.inference.feature_report.content_hash,
+            genome_sha256=staged_batch.genome_sha256,
+            generation_id=staged_batch.generation_id,
             candidates=settled_results,
             manifest_write=manifest_write,
-            manifest_sha256=_sha256(manifest_bytes),
+            manifest_sha256=_sha256(staged_batch.manifest_bytes),
+            lock_cleanup_warning=lock_cleanup_warning,
         )
-    except (KeyError, OSError, RuntimeError, TypeError, ValueError) as exc:
+    except (ImportError, KeyError, OSError, RuntimeError, TypeError, ValueError) as exc:
         error_code = _batch_export_error_code(
             exc,
             source_reads_complete=source_reads_complete,
+            output_phase_started=output_phase_started,
         )
         metrics.record_export((time.perf_counter() - started_at) * 1000.0, error_code=error_code)
         _logger.warning(
@@ -568,6 +1113,7 @@ def export_analog_four_audio_patch_batch(
                 "output_dir": str(output_dir),
             },
         )
+        attach_analog_four_export_error_code(exc, error_code)
         raise
 
     metrics.record_export((time.perf_counter() - started_at) * 1000.0)

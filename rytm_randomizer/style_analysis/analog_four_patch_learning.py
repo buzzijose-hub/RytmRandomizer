@@ -11,7 +11,7 @@ recordings improve the mapping.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import Final
+from typing import Final, TypedDict
 
 from ..data.analog_four_display import (
     TRANSPORT_CC_READY,
@@ -27,7 +27,9 @@ from ..data.analog_four_learning import (
 from .analog_four_patch_genome import (
     ANALOG_FOUR_DEVICE_ID,
     AnalogFourPatchCandidate,
+    AnalogFourPatchCandidatePayload,
     AnalogFourPatchGenome,
+    AnalogFourPatchGenomePayload,
     analog_four_patch_candidate_to_dict,
     analog_four_patch_genome_to_dict,
     build_analog_four_patch_genome,
@@ -141,6 +143,77 @@ class AnalogFourPatchLearningPacket:
     safety: tuple[str, ...]
 
 
+class AnalogFourCandidateLearningScorePayload(TypedDict):
+    rank: int
+    column: int
+    label: str
+    role: str
+    closeness: int
+    trait_fit: int
+    transport_readiness: int
+    learning_score: int
+    cc_ready_count: int
+    nrpn_ready_count: int
+    screen_only_nrpn_count: int
+    screen_only_count: int
+    pending_parameters: list[str]
+
+
+class AnalogFourTraitLearningRoutePayload(TypedDict):
+    trait_key: str
+    trait_label: str
+    intensity: int
+    evidence: list[str]
+    parameter_focus: list[str]
+    selected_parameters: list[str]
+    learning_question: str
+    rationale: str
+
+
+class AnalogFourLearningCaptureStepPayload(TypedDict):
+    step_id: str
+    note_name: str
+    midi_note: int
+    velocity: int
+    gate_ms: int
+    repeat_count: int
+    focus: str
+    expected_evidence: list[str]
+
+
+class AnalogFourLiveDialReadinessPayload(TypedDict):
+    selected_candidate: int
+    ready_count: int
+    pending_count: int
+    cc_ready_count: int
+    nrpn_ready_count: int
+    screen_only_nrpn_count: int
+    screen_only_count: int
+    ready_percentage: int
+    live_dial_path: str
+    blocking_reason: str
+    ready_parameters: list[str]
+    pending_parameters: list[str]
+
+
+class AnalogFourPatchLearningPacketPayload(TypedDict):
+    version: str
+    device_id: str
+    mode: str
+    selected_track: int
+    selected_candidate: int
+    selected_label: str
+    source_hash: str
+    source_confidence: str
+    candidate_scores: list[AnalogFourCandidateLearningScorePayload]
+    trait_routes: list[AnalogFourTraitLearningRoutePayload]
+    capture_steps: list[AnalogFourLearningCaptureStepPayload]
+    live_dial_readiness: AnalogFourLiveDialReadinessPayload
+    selected_patch: AnalogFourPatchCandidatePayload
+    genome: AnalogFourPatchGenomePayload
+    safety: list[str]
+
+
 def build_analog_four_patch_learning_packet(
     report: FeatureReport,
     *,
@@ -200,7 +273,7 @@ def build_analog_four_patch_learning_packet_from_genome(
 
 def analog_four_patch_learning_packet_to_dict(
     packet: AnalogFourPatchLearningPacket,
-) -> dict[str, object]:
+) -> AnalogFourPatchLearningPacketPayload:
     """Return a stable JSON-ready representation of ``packet``."""
 
     if not isinstance(packet, AnalogFourPatchLearningPacket):
@@ -427,7 +500,7 @@ def _candidate_pending_parameters(
 
 def _candidate_learning_score_payload(
     score: AnalogFourCandidateLearningScore,
-) -> dict[str, object]:
+) -> AnalogFourCandidateLearningScorePayload:
     return {
         "rank": score.rank,
         "column": score.column,
@@ -445,7 +518,9 @@ def _candidate_learning_score_payload(
     }
 
 
-def _trait_learning_route_payload(route: AnalogFourTraitLearningRoute) -> dict[str, object]:
+def _trait_learning_route_payload(
+    route: AnalogFourTraitLearningRoute,
+) -> AnalogFourTraitLearningRoutePayload:
     return {
         "trait_key": route.trait_key,
         "trait_label": route.trait_label,
@@ -458,7 +533,9 @@ def _trait_learning_route_payload(route: AnalogFourTraitLearningRoute) -> dict[s
     }
 
 
-def _learning_capture_step_payload(step: AnalogFourLearningCaptureStep) -> dict[str, object]:
+def _learning_capture_step_payload(
+    step: AnalogFourLearningCaptureStep,
+) -> AnalogFourLearningCaptureStepPayload:
     return {
         "step_id": step.step_id,
         "note_name": step.note_name,
@@ -473,7 +550,7 @@ def _learning_capture_step_payload(step: AnalogFourLearningCaptureStep) -> dict[
 
 def _live_dial_readiness_payload(
     readiness: AnalogFourLiveDialReadiness,
-) -> dict[str, object]:
+) -> AnalogFourLiveDialReadinessPayload:
     return {
         "selected_candidate": readiness.selected_candidate,
         "ready_count": readiness.ready_count,
@@ -495,10 +572,15 @@ __all__ = [
     "ANALOG_FOUR_PATCH_LEARNING_SAFETY",
     "ANALOG_FOUR_PATCH_LEARNING_VERSION",
     "AnalogFourCandidateLearningScore",
+    "AnalogFourCandidateLearningScorePayload",
     "AnalogFourLearningCaptureStep",
+    "AnalogFourLearningCaptureStepPayload",
     "AnalogFourLiveDialReadiness",
+    "AnalogFourLiveDialReadinessPayload",
     "AnalogFourPatchLearningPacket",
+    "AnalogFourPatchLearningPacketPayload",
     "AnalogFourTraitLearningRoute",
+    "AnalogFourTraitLearningRoutePayload",
     "analog_four_patch_learning_packet_to_dict",
     "build_analog_four_patch_learning_packet",
     "build_analog_four_patch_learning_packet_from_genome",

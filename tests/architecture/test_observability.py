@@ -339,6 +339,12 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # WizardSourcePathError / EmptyAnalysisError dual-inheritance
         # pattern.
         "WriteError",
+        # Analog Four audio-patch batching: classified staging failures retain
+        # RuntimeError compatibility; publication locks retain FileExistsError
+        # compatibility while all remain members of the BoundaryError taxonomy.
+        "AnalogFourPatchBatchStageError",
+        "AnalogFourPatchBatchPublicationError",
+        "AnalogFourPatchBatchLockedError",
         # Cockpit profile registry (PR 7 — M7 + M6): atomic save +
         # classified load errors. ``ProfileAlreadyExistsError``
         # multi-inherits :class:`DataError` + :class:`FileExistsError`

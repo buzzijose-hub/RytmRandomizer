@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/buzzijose-hub/RytmRandomizer/analog-four-audio-patch-genome-state.schema.json",
+  "title": "Analog Four Audio Patch Genome Run State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "plan",
+    "branch",
+    "pull_request",
+    "phase",
+    "workstreams",
+    "last_event"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "plan": { "type": "string", "minLength": 1 },
+    "branch": { "type": "string", "minLength": 1 },
+    "pull_request": { "type": "integer", "minimum": 1 },
+    "phase": {
+      "enum": ["implementation", "verification", "review", "ci", "complete", "interrupted"]
+    },
+    "workstreams": {
+      "type": "object",
+      "additionalProperties": {
+        "enum": ["pending", "in_progress", "complete", "blocked"]
+      }
+    },
+    "last_event": { "type": "string", "minLength": 1 },
+    "head_sha": { "type": ["string", "null"], "pattern": "^[0-9a-f]{40}$" }
+  }
+}

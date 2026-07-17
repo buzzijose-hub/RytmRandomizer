@@ -1,4 +1,4 @@
-"""Observability-invariant arch tests for cockpit hot paths.
+"""Observability-invariant arch tests for operational hot paths.
 
 Implements OBS6 from [`OBSERVABILITY_REVIEW.md`](../../OBSERVABILITY_REVIEW.md):
 regression-proof the new observability shape so future PRs don't slip
@@ -65,6 +65,7 @@ _HOT_PATH_MODULES: Final[frozenset[str]] = frozenset(
         "rytm_randomizer/cockpit/ws/server.py",
         "rytm_randomizer/cockpit/export/cli.py",
         "rytm_randomizer/cockpit/export/analog_four_kit.py",
+        "rytm_randomizer/cockpit/export/analog_four_patch_batch.py",
         "rytm_randomizer/cockpit/export/writer.py",
         "rytm_randomizer/cockpit/export/signing.py",
         "rytm_randomizer/cockpit/export/verifier.py",
@@ -73,6 +74,7 @@ _HOT_PATH_MODULES: Final[frozenset[str]] = frozenset(
         "rytm_randomizer/cockpit/engine/mutate.py",
         "rytm_randomizer/cockpit/engine/send_plan.py",
         "rytm_randomizer/cockpit/history/store.py",
+        "rytm_randomizer/style_analysis/analog_four_patch_inference.py",
     }
 )
 
@@ -144,10 +146,10 @@ def _unstructured_logger_calls(path: Path) -> list[str]:
         if len(node.args) >= 2:
             continue
         # Pass if the single positional arg is NOT a plain string
-        if len(node.args) == 1 and not isinstance(node.args[0], ast.Constant):
-            continue
-        if len(node.args) == 1 and not isinstance(node.args[0].value, str):
-            continue
+        if len(node.args) == 1:
+            message = node.args[0]
+            if not isinstance(message, ast.Constant) or not isinstance(message.value, str):
+                continue
         rel = path.relative_to(PROJECT_ROOT).as_posix()
         snippet = ast.unparse(node)
         violations.append(
@@ -160,7 +162,7 @@ def _unstructured_logger_calls(path: Path) -> list[str]:
 
 
 def test_every_hot_path_module_binds_a_logger() -> None:
-    """Every cockpit hot-path module must bind ``_logger = get_logger(__name__)``.
+    """Every operational hot-path module binds ``_logger = get_logger(__name__)``.
 
     Regression guard: OBSERVABILITY_REVIEW.md found that 24 of 28
     cockpit modules had no logger before this sweep. PR O3 (the Phase

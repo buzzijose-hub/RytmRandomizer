@@ -14,7 +14,7 @@ Current baseline used while creating / refreshing this document:
 
 - Branch: Analog Four snapshot/style readiness bundle, built on the passive style profile/target/routing/render-plan/mock-preview and dual-machine mock-preview foundation.
 - Protected reference: `tests/fixtures/v134_parity/*.json` (the retired V1.34 monolith's behavior, captured as 505 byte-frozen JSON golden files; parametrized into 685 pytest parity test items).
-- Current package: `rytm_randomizer/` - 26 top-level Python files + 14 subpackages = 340 total Python modules. The 14 subpackages: `behavior/`, `cockpit/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `local_ai/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
+- Current package: `rytm_randomizer/` - 26 top-level Python files + 14 subpackages = 341 total Python modules. The 14 subpackages: `behavior/`, `cockpit/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `local_ai/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
 - Closeout scripts: `Scripts/closeout_check.ps1` (PowerShell, Windows) and `scripts/closeout_check.py` (Python, cross-platform).
 - This file was audited and refreshed as part of PR #43, then updated through the style-profile, style-target-vector, Rytm style snapshot routing, Analog Four style snapshot routing, dual-machine style routing, reference/discovery slider, Rytm/Analog Four style mutation-intent, dual-machine style mutation-intent, Rytm style mutation render-plan, Rytm style mutation mock-preview, Analog Four style mutation mock-preview, dual-machine style mutation mock-preview, Analog Four saved-kit SysEx readiness-intake, Analog Four kit-catalog, Analog Four initialized baseline, Analog Four patch genome, Analog Four patch learning, Analog Four patch corpus, Analog Four patch send-plan, Analog Four SysEx Filter1 Frequency/Resonance calibration, Analog Four style kit-readiness, Analog Four kit-fingerprint, Analog Four OXI macro set planner, live runbook, stage-routing, stage-rehearsal-state, live-set-cockpit, live-show-export, live-transition-timeline, live-command-deck, live-state-packet, live-readiness, live-control-surface, live-analyzer-handoff, live-analyzer-targets, live GUI analyzer readiness, live GUI rehearsal session, live GUI capture queue, live GUI capture review, live GUI sidecar session, live GUI screen contract, live GUI render tree, live GUI analyzer overlay, live GUI analyzer frame, live GUI interaction script, live GUI action reducer, live GUI controller state, live GUI playback transcript, live GUI playback validation, live GUI test-harness contract, live GUI test-harness readiness, live GUI implementation bridge, live GUI desktop blueprint, live GUI desktop app plan, live GUI desktop component contract, live GUI desktop view-model, live GUI desktop render-contract, cockpit send-plan operator-readiness, cockpit send-plan rehearsal-surface, live-kit capture workbench, live-kit package audition, live-kit operator package, live-kit operator review ledger, reference-style blueprint, manual-feedback packet, generic MIDI event-plan sender, and passive local model copilot slices so the strategy/report-module list and counts stay current.
 
@@ -39,7 +39,7 @@ Current baseline used while creating / refreshing this document:
 | Guardrails | `rytm_randomizer/guardrails/{resolver,store,schema,validation}.py` |
 | Observability | `rytm_randomizer/observability/{logging,tracing,metrics,errors}.py` |
 | Style analysis | `rytm_randomizer/style_analysis/{extractor,feature_report,library,blueprint,analog_four_patch_genome,analog_four_patch_inference,analog_four_patch_learning,analog_four_patch_corpus,analog_four_patch_send_plan,analog_four_patch_codesigner}.py` |
-| Cockpit export | `rytm_randomizer/cockpit/export/{analog_four_cli,analog_four_kit,analog_four_patch_batch,analog_four_patch_batch_cli,writer}.py` plus the profile-model serialization/signing/verifier modules. |
+| Cockpit export | `rytm_randomizer/cockpit/export/{analog_four_export_contracts,analog_four_cli,analog_four_kit,analog_four_patch_batch,analog_four_patch_batch_cli,writer}.py` plus the profile-model serialization/signing/verifier modules. |
 | Tests | `tests/test_*.py`, `tests/cockpit/test_*.py`, `tests/architecture/test_*.py`, `tests/fixtures/{analog_four_saved_kit,v134_parity}/`, `tests/_parity_worker.py`, `tests/conftest.py` |
 | Project documentation | `CONTRIBUTING.md`, `docs/*.md`, `.claude/rules/*.md`, `.claude/skills/**/SKILL.md` |
 
@@ -51,7 +51,7 @@ Current baseline used while creating / refreshing this document:
 flowchart TB
     User["Operator / developer"]
     V134["V1.34 reference behavior<br/>tests/fixtures/v134_parity/<br/>(505 JSON goldens; 685 parity test items)"]
-    Package["Modular package<br/>rytm_randomizer/<br/>(14 subpackages, 340 modules)"]
+    Package["Modular package<br/>rytm_randomizer/<br/>(14 subpackages, 341 modules)"]
     Tests["Tests<br/>6200+ pytest tests<br/>tests/, tests/architecture/"]
     CI[".github/workflows/test.yml<br/>3 OS × py3.11 matrix<br/>+ codeql, release, installers"]
     Docs["Project docs<br/>CONTRIBUTING.md, docs/*.md<br/>.claude/{rules,skills}/"]
@@ -2757,8 +2757,17 @@ sequenceDiagram
     Writer-->>A4Export: WriteResult
     A4Export-->>Operator: render + write audit result
 
-    Operator->>A4Export: audio batch service delegates each validated Filter2 Resonance mutation
-    Note over Operator,A4Export: each candidate also writes complete DNA + CC/NRPN sidecar;<br/>no MIDI, no full saved-kit coverage claim
+    Operator->>A4Export: audio + source kit + batch request
+    A4Export->>A4Export: snapshot both inputs + single audio decode<br/>stage generation-addressed SysEx/sidecar/manifest bytes
+    A4Export->>A4Export: load staged bytes + close private temp directory
+    A4Export->>A4Disk: acquire metadata-rich per-track lock
+    A4Export->>Writer: publish immutable generation candidates;<br/>atomically switch stable manifest last
+    alt publication fails or is catchably interrupted
+        A4Export->>A4Disk: keep prior manifest; leave only<br/>unreferenced immutable generation files
+    end
+    A4Export->>A4Disk: release lock or return committed-result warning<br/>with retained recovery metadata path
+    Note over A4Export,A4Disk: hard process termination can retain a lock or temp file;<br/>lock metadata supports operator recovery
+    Note over Operator,A4Export: each candidate carries complete DNA + CC/NRPN sidecar;<br/>SysEx encodes validated Filter2 Resonance only; no MIDI
 
     Note over Rehearsal,Sign: PARALLEL: passive rehearsal report
     Rehearsal->>Sign: signed_envelope_overhead_bytes(algo, key_id)

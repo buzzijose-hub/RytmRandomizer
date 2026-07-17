@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import types
+from pathlib import Path
 
 import pytest
 
@@ -190,6 +191,7 @@ def test_audio_source_profiles_change_send_event_dna(monkeypatch: pytest.MonkeyP
     from rytm_randomizer.style_analysis.analog_four_patch_send_plan import (
         build_analog_four_patch_send_plan_from_source,
     )
+    from rytm_randomizer.style_analysis.extractor import AudioFeatureAnalysis
 
     profiles = iter(
         (
@@ -225,12 +227,27 @@ def test_audio_source_profiles_change_send_event_dna(monkeypatch: pytest.MonkeyP
             ),
         )
     )
-    monkeypatch.setattr(
-        inference,
-        "analyze_analog_four_patch_audio",
-        lambda _path: next(profiles),
-    )
-    monkeypatch.setattr(inference, "extract_from_audio", lambda _path: _reference_report())
+
+    def next_analysis(_path: Path) -> AudioFeatureAnalysis:
+        features = next(profiles)
+        return AudioFeatureAnalysis(
+            feature_report=_reference_report(),
+            audio_sha256=features.audio_sha256,
+            duration=features.duration,
+            attack=features.attack,
+            decay=features.decay,
+            sustain=features.sustain,
+            tail=features.tail,
+            brightness=features.brightness,
+            spectral_flatness=features.spectral_flatness,
+            noise=features.noise,
+            low_end=features.low_end,
+            harmonicity=features.harmonicity,
+            transient=features.transient,
+            modulation=features.modulation,
+        )
+
+    monkeypatch.setattr(inference, "analyze_audio", next_analysis)
 
     first = build_analog_four_patch_send_plan_from_source("--audio", "first.wav").plan
     second = build_analog_four_patch_send_plan_from_source("--audio", "second.wav").plan

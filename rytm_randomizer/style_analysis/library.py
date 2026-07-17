@@ -95,23 +95,23 @@ def analyze_library(directory: Path) -> FeatureReport:
         return dataclasses.replace(report, content_hash=digest)
 
     # Measure each file, aggregate.
-    _, numpy = _require_librosa()
+    _require_librosa()
     per_file = [
         _measure_audio_features(p) for p in audio_files
     ]  # pragma: no cover - requires librosa
-    aggregated = _aggregate_measurements(per_file, numpy)  # pragma: no cover - requires librosa
+    aggregated = _aggregate_measurements(per_file)  # pragma: no cover - requires librosa
 
     report = FeatureReport(  # pragma: no cover - requires librosa
         source_type=SourceType.FOLDER_LIBRARY,
         confidence=Confidence.HIGH,
-        bpm=float(aggregated["bpm"]),
-        tempo_stability=float(aggregated["tempo_stability"]),
-        kick_density=float(aggregated["kick_density"]),
-        percussion_density=float(aggregated["percussion_density"]),
-        low_end_weight=float(aggregated["low_end_weight"]),
-        spectral_brightness=float(aggregated["spectral_brightness"]),
-        texture_noise=float(aggregated["texture_noise"]),
-        energy_arc=tuple(aggregated["energy_arc"]),  # type: ignore[arg-type]
+        bpm=aggregated["bpm"],
+        tempo_stability=aggregated["tempo_stability"],
+        kick_density=aggregated["kick_density"],
+        percussion_density=aggregated["percussion_density"],
+        low_end_weight=aggregated["low_end_weight"],
+        spectral_brightness=aggregated["spectral_brightness"],
+        texture_noise=aggregated["texture_noise"],
+        energy_arc=aggregated["energy_arc"],
         content_hash="",
         derived_at=_now_iso(),
     )

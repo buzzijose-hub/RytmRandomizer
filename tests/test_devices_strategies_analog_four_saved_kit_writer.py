@@ -84,6 +84,40 @@ def test_render_saved_kit_matches_hardware_reference_bytes_exactly() -> None:
     assert result.sha256 == "5ebb386677aff324ef96d631e7888a9681caefbd976bdc2eac69b52a0fb0e26b"
 
 
+def test_render_saved_kit_matches_hardware_accepted_novel_64_hash() -> None:
+    from pathlib import Path
+
+    from rytm_randomizer.devices.strategies.analog_four_saved_kit_writer import (
+        render_analog_four_saved_kit,
+    )
+
+    source = (
+        Path(__file__).parent / "fixtures" / "analog_four_saved_kit" / "filter2_res_000_source.syx"
+    ).read_bytes()
+    result = render_analog_four_saved_kit(source, (_mutation(screen_value="64"),))
+
+    assert result.sha256 == "2fee1aa93c98e0221dbe7bac296c51268360c5c61e11c8eea77fd091cbbd94f7"
+
+
+def test_render_saved_kit_matches_hardware_accepted_four_track_hash() -> None:
+    from pathlib import Path
+
+    from rytm_randomizer.devices.strategies.analog_four_saved_kit_writer import (
+        render_analog_four_saved_kit,
+    )
+
+    source = (
+        Path(__file__).parent / "fixtures" / "analog_four_saved_kit" / "filter2_res_000_source.syx"
+    ).read_bytes()
+    mutations = tuple(
+        _mutation(track=track, screen_value=str(value))
+        for track, value in ((1, 16), (2, 48), (3, 80), (4, 112))
+    )
+    result = render_analog_four_saved_kit(source, mutations)
+
+    assert result.sha256 == "0e88aa6f15fd49c36696d5b8e09bda18ce5eeb8562c1a44ce46683c6deef819b"
+
+
 def test_render_saved_kit_applies_distinct_values_to_all_four_tracks() -> None:
     from rytm_randomizer.devices.strategies.analog_four_saved_kit_writer import (
         render_analog_four_saved_kit,

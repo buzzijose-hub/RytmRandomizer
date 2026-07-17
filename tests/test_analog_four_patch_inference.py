@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import dataclasses
-import hashlib
 import json
 from pathlib import Path
 
@@ -69,6 +68,28 @@ def _features(
     )
 
 
+def _analysis(*, features=None, report: FeatureReport | None = None):
+    from rytm_randomizer.style_analysis.extractor import AudioFeatureAnalysis
+
+    settled = features or _features()
+    return AudioFeatureAnalysis(
+        feature_report=report or _reference_report(),
+        audio_sha256=settled.audio_sha256,
+        duration=settled.duration,
+        attack=settled.attack,
+        decay=settled.decay,
+        sustain=settled.sustain,
+        tail=settled.tail,
+        brightness=settled.brightness,
+        spectral_flatness=settled.spectral_flatness,
+        noise=settled.noise,
+        low_end=settled.low_end,
+        harmonicity=settled.harmonicity,
+        transient=settled.transient,
+        modulation=settled.modulation,
+    )
+
+
 def _gene(candidate, parameter: str):
     matches = [gene for gene in candidate.genes if gene.value.parameter == parameter]
     assert matches, f"Missing parameter {parameter}"
@@ -82,16 +103,14 @@ def _candidate_dna(audio_genome) -> tuple[tuple[tuple[str, int | None], ...], ..
     )
 
 
-def test_audio_feature_analysis_hashes_exact_input_bytes(
-    tmp_path: Path,
+def test_audio_feature_analysis_reuses_shared_audio_measurements(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
     from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
 
-    audio_path = tmp_path / "reference.wav"
-    audio_bytes = b"RIFF-deterministic-audio-bytes"
-    audio_path.write_bytes(audio_bytes)
-    measured = inference._AnalogFourAudioMeasurements(
+    measured = _features(
+        audio_sha256="9" * 64,
         duration=0.5,
         attack=0.1,
         decay=0.2,
@@ -105,13 +124,79 @@ def test_audio_feature_analysis_hashes_exact_input_bytes(
         transient=1.0,
         modulation=0.0,
     )
-    monkeypatch.setattr(inference, "_measure_analog_four_patch_audio", lambda _path: measured)
+    observed: list[Path] = []
+    monkeypatch.setattr(
+        inference,
+        "analyze_audio",
+        lambda path: observed.append(path) or _analysis(features=measured),
+    )
 
-    features = inference.analyze_analog_four_patch_audio(audio_path)
+    reset_metrics()
+    features = inference.analyze_analog_four_patch_audio(Path("reference.wav"))
 
-    assert features.audio_sha256 == hashlib.sha256(audio_bytes).hexdigest()
+    assert observed == [Path("reference.wav")]
+    assert features.audio_sha256 == "9" * 64
     assert features.duration == 0.5
     assert inference.analog_four_patch_audio_features_to_dict(features)["noise"] == 0.7
+    assert get_metrics().a4_patch_inference_count == 1
+
+
+@pytest.mark.parametrize(
+    ("error", "error_code"),
+    [
+        (OSError("read failed"), "audio_read_failed"),
+        (TypeError("bad path"), "validation"),
+        (KeyError("missing feature"), "inference_failed"),
+        (RuntimeError("analysis failed"), "inference_failed"),
+    ],
+)
+def test_audio_feature_analysis_records_bounded_failures(
+    monkeypatch: pytest.MonkeyPatch,
+    error: Exception,
+    error_code: str,
+) -> None:
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    def fail(_path: Path) -> object:
+        raise error
+
+    reset_metrics()
+    monkeypatch.setattr(inference, "analyze_audio", fail)
+    with pytest.raises(type(error), match=str(error)):
+        inference.analyze_analog_four_patch_audio(Path("reference.wav"))
+
+    assert get_metrics().a4_patch_inference_errors_by_code[error_code] == 1
+
+
+def test_audio_feature_analysis_classifies_missing_optional_dependency() -> None:
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+    from rytm_randomizer.style_analysis.extractor import StyleAnalysisDependencyError
+
+    assert (
+        inference._a4_inference_error_code(StyleAnalysisDependencyError("missing"))
+        == "dependency_missing"
+    )
+
+
+def test_audio_genome_metrics_cover_post_analysis_validation_failures(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    monkeypatch.setattr(inference, "analyze_audio", lambda _path: _analysis())
+    reset_metrics()
+
+    with pytest.raises(ValueError, match="track must be"):
+        inference.build_analog_four_audio_patch_genome(
+            Path("reference.wav"),
+            track=0,
+        )
+
+    metrics = get_metrics()
+    assert metrics.a4_patch_inference_count == 1
+    assert metrics.a4_patch_inference_errors_by_code["validation"] == 1
 
 
 def test_audio_features_are_frozen_normalized_and_type_checked() -> None:
@@ -146,11 +231,12 @@ def test_audio_genome_is_stable_and_preserves_enum_targets(
     from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
 
     timestamps = iter(("2026-07-16T12:00:00Z", "2026-07-16T12:00:01Z"))
-    monkeypatch.setattr(inference, "analyze_analog_four_patch_audio", lambda _path: _features())
     monkeypatch.setattr(
         inference,
-        "extract_from_audio",
-        lambda _path: _reference_report(derived_at=next(timestamps)),
+        "analyze_audio",
+        lambda _path: _analysis(
+            report=_reference_report(derived_at=next(timestamps)),
+        ),
     )
 
     first = inference.build_analog_four_audio_patch_genome(Path("reference.wav"), track=2)
@@ -219,11 +305,8 @@ def test_different_audio_profiles_produce_different_clamped_candidate_dna(
         )
     )
     monkeypatch.setattr(
-        inference,
-        "analyze_analog_four_patch_audio",
-        lambda _path: next(profiles),
+        inference, "analyze_audio", lambda _path: _analysis(features=next(profiles))
     )
-    monkeypatch.setattr(inference, "extract_from_audio", lambda _path: _reference_report())
 
     dark = inference.build_analog_four_audio_patch_genome(Path("dark.wav"))
     bright = inference.build_analog_four_audio_patch_genome(Path("bright.wav"))
@@ -241,8 +324,7 @@ def test_candidate_count_and_numeric_helpers_cover_bounds(
 ) -> None:
     from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
 
-    monkeypatch.setattr(inference, "analyze_analog_four_patch_audio", lambda _path: _features())
-    monkeypatch.setattr(inference, "extract_from_audio", lambda _path: _reference_report())
+    monkeypatch.setattr(inference, "analyze_audio", lambda _path: _analysis())
 
     result = inference.build_analog_four_audio_patch_genome(
         Path("two-columns.wav"),
@@ -256,13 +338,14 @@ def test_candidate_count_and_numeric_helpers_cover_bounds(
     assert inference._bipolar(100.0) == 63
     assert inference._clamp_audio_feature_unit(-1.0) == 0.0
     assert inference._clamp_audio_feature_unit(2.0) == 1.0
-    assert inference._safe_ratio(1.0, 0.0) == 0.0
-    assert inference._safe_ratio(1.0, 2.0) == 0.5
-    assert inference._mean([]) == 0.0
-    assert inference._mean([1.0, 3.0]) == 2.0
-    assert inference._standard_deviation([], 0.0) == 0.0
-    assert inference._standard_deviation([1.0, 3.0], 2.0) == 1.0
-    assert inference._decay_frames([1.0, 0.2], 0, 1.0) == 1
-    assert inference._decay_frames([1.0, 0.9], 0, 1.0) == 1
-    assert inference._window_level([], 0.0, 0.4, 0.8) == 0.0
-    assert inference._window_level([1.0, 0.5], 1.0, 0.4, 1.0) == 0.75
+    with pytest.raises(ValueError, match="candidate column must be"):
+        inference._candidate_character(_features(), 5)
+
+    templates = inference.ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES
+    monkeypatch.setattr(
+        inference,
+        "ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES",
+        (dataclasses.replace(templates[0], column=2), *templates[1:]),
+    )
+    with pytest.raises(ValueError, match="contiguous and one-based"):
+        inference._candidate_character(_features(), 1)

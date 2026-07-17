@@ -43,6 +43,17 @@
 - **Permission profile:** local file edits and passive tests only; refuse force-push, hardware pin bumps, parity capture, and unarmed real-MIDI sends.
 - **Stop signals:** a user "stop/wait" message pauses; otherwise continue.
 
+## Durable Run Artifacts
+
+- [Pre-plan maintainability audit](2026-07-03-analog-four-audio-patch-genome_MAINTAINABILITY_AUDIT.md)
+- [Post-plan maintainability report](2026-07-03-analog-four-audio-patch-genome_MAINTAINABILITY_REPORT.md)
+- [Run report](2026-07-03-analog-four-audio-patch-genome_RUN_REPORT.md)
+- [Append-only run log](2026-07-03-analog-four-audio-patch-genome_RUN_LOG.md)
+- [Architecture before/after](2026-07-03-analog-four-audio-patch-genome_ARCHITECTURE_BEFORE_AFTER.md)
+- [Replay playbook](2026-07-03-analog-four-audio-patch-genome_REPLAY_PLAYBOOK.md)
+- [Run state](2026-07-03-analog-four-audio-patch-genome_STATE.json) and [schema](2026-07-03-analog-four-audio-patch-genome_STATE.schema.json)
+- [Reusable Elektron SysEx skill](../../../.claude/skills/learned/elektron-sysex-envelope/SKILL.md) and [device strategy rule](../../../.claude/rules/device-protocol-strategy.md)
+
 ## Implementation Tasks
 
 1. Add failing tests for bipolar A4 screen values, enum/front-panel labels, and CC/NRPN metadata.
@@ -89,21 +100,21 @@
 
 Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 
-- [x] Gate 1 (100% branch coverage on touched files) -- focused tests cover new behavior; coverage command will be run if feasible.
+- [x] Gate 1 (100% branch coverage on touched files) -- the final 14-module writer/audio/batch slice covers 2,046 statements and 402 branches with zero misses.
 - [x] Gate 2 (V1.34 parity byte-identical) -- no V1.34 engine/golden paths touched.
-- [x] Gate 3 (lint/format/type clean) -- ruff/black/isort plus strict Pyright on touched production paths run before closeout.
+- [x] Gate 3 (lint/format/type clean) -- ruff/black/isort plus Pyright on every touched production path passed before closeout.
 - [x] Gate 4 (dead-code purge) -- no unused public surfaces; report and compiler are test-covered.
 - [x] Gate 5 (docs updated) -- README, CLI reference, STATUS, ARCHITECTURE, diagrams updated.
 - [x] Gate 6 (type-system hygiene) -- frozen dataclasses and explicit types; no `Any` aliases.
-- [x] Gate 7 (observability adoption) -- the active send bridge keeps its operation span and MIDI breadcrumbs; the saved-kit exporter records shared export RED metrics plus structured success/failure/cleanup logs with stable error categories.
-- [x] Gate 8 (test hygiene) -- tests mirror source responsibilities, pin the observed wire format, and exercise the canonical atomic writer through the export adapter.
+- [x] Gate 7 (observability adoption) -- the active send bridge keeps its operation span and MIDI breadcrumbs; saved-kit export and whole-operation audio inference record bounded RED metrics, classified errors, and lock-cleanup warnings.
+- [x] Gate 8 (test hygiene) -- tests mirror source responsibilities, pin the observed wire format, verify immutable audio provenance and generation-addressed manifest consistency, and exercise real audio plus process-interruption paths through the canonical atomic writer.
 - [x] Gate 9 (module organization) -- new files live under existing `data/`, `style_analysis/`, `reports/`, `devices/strategies/`, and `cockpit/export/` subpackages.
 - [x] Gate 10 (string-literal dispatch hygiene) -- no new mode/page dispatch ladder; CLI uses registry.
 - [x] Gate 11 (shared fixtures) -- shared builders live in `tests/conftest.py`; sanitized source/expected A4 frames live once under `tests/fixtures/analog_four_saved_kit/`.
 - [x] Gate 12 (Final constants) -- new constants annotated.
 - [x] Gate 13 (env vars) -- no new environment variables.
-- [x] Gate 14 (maintainability) -- small focused modules; no oversized report module.
-- [x] Gate 15 (learning phase) -- the existing `elektron-sysex-envelope` skill now records bidirectional packing, the observed A4 saved-kit `0x06` frame/trailer, and the reference/novel/cross-track promotion workflow.
+- [x] Gate 14 (maintainability) -- the paired pre-plan audit and post-plan report score all ten required dimensions with no regression.
+- [x] Gate 15 (learning phase) -- the run report/log, architecture diff, replay playbook, state/schema, updated `elektron-sysex-envelope` skill, and applicable project rules are committed and linked above.
 - [x] Gate 16 (execution shape) -- PRs #206 and #212 landed directly; the writer is one follow-up branch directly against `modularize-v1.34`, with no stacked base branch.
 - [x] Gate 17 (abstraction reuse) -- canonical layout facts live in `data/`; decoder and renderer share one saved-kit codec; export and profile registry share one atomic writer; operator dispatch reuses `cli_registry`.
 - [x] Gate 18 (architecture freshness) -- architecture docs/diagrams cover the shared packer, strategy-adjacent A4 saved-kit renderer, and guarded `.syx` export path.

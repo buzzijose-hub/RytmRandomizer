@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
+
+from rytm_randomizer.cockpit.export.analog_four_export_contracts import (
+    ANALOG_FOUR_EXPORT_ERROR_CODES,
+    AnalogFourExportErrorCode,
+)
 
 pytestmark = pytest.mark.fast
 
@@ -27,6 +31,10 @@ class _CandidateOutput:
 @dataclass(frozen=True)
 class _BatchResult:
     source_hash: str
+    generation_id: str
+    manifest_path: Path
+    manifest_sha256: str
+    lock_cleanup_warning: str | None
     selected_track: int
     candidate_outputs: tuple[_CandidateOutput, ...]
     safety: tuple[str, ...]
@@ -35,6 +43,10 @@ class _BatchResult:
 def _batch_result(tmp_path: Path) -> _BatchResult:
     return _BatchResult(
         source_hash="audio-sha256",
+        generation_id="generation-1234",
+        manifest_path=tmp_path / "a4-t2-audio-patch-batch.json",
+        manifest_sha256="manifest-sha256",
+        lock_cleanup_warning=None,
         selected_track=2,
         candidate_outputs=(
             _CandidateOutput(
@@ -194,6 +206,13 @@ def test_parser_rejects_invalid_input(args: list[str], message: str) -> None:
         parse_analog_four_audio_patch_batch_args(args)
 
 
+def test_registry_parser_preserves_non_json_validation_errors() -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+
+    with pytest.raises(ValueError, match="--audio is required"):
+        cli._parse_batch_args_for_registry([])
+
+
 def test_handler_forwards_to_service_and_emits_json_summary(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
@@ -259,10 +278,14 @@ def test_handler_forwards_to_service_and_emits_json_summary(
             "manual": 11,
             "sysex_applied": 2,
         },
+        "generation_id": "generation-1234",
+        "manifest_path": str(tmp_path / "a4-t2-audio-patch-batch.json"),
+        "manifest_sha256": "manifest-sha256",
         "ok": True,
         "safety": ["local files only", "no MIDI sending"],
         "selected_track": 2,
         "source_hash": "audio-sha256",
+        "warnings": [],
     }
 
 
@@ -291,6 +314,9 @@ def test_handler_emits_compact_text_summary(
     assert exit_code == 0
     assert captured.err == ""
     assert "source_hash: audio-sha256" in captured.out
+    assert "generation_id: generation-1234" in captured.out
+    assert f"manifest_path: {tmp_path / 'a4-t2-audio-patch-batch.json'}" in captured.out
+    assert "manifest_sha256: manifest-sha256" in captured.out
     assert "candidate_count: 2" in captured.out
     assert "candidate: 1 | Closest reference" in captured.out
     assert "sysex_applied_count: 2" in captured.out
@@ -298,6 +324,30 @@ def test_handler_emits_compact_text_summary(
     assert "manual_count: 11" in captured.out
     assert "deferred_count: 76" in captured.out
     assert "- no MIDI sending" in captured.out
+
+
+def test_handler_emits_lock_cleanup_warning_in_text(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+
+    warning = "committed batch retained publication lock metadata"
+    monkeypatch.setattr(
+        cli,
+        "_export_analog_four_audio_patch_batch",
+        lambda **_kwargs: replace(_batch_result(tmp_path), lock_cleanup_warning=warning),
+    )
+
+    exit_code = cli.handle_analog_four_audio_patch_batch(
+        audio_path=tmp_path / "reference.wav",
+        source_kit_path=tmp_path / "init.syx",
+        output_dir=tmp_path / "batch",
+    )
+
+    assert exit_code == 0
+    assert f"warning: {warning}" in capsys.readouterr().out
 
 
 def test_lazy_export_loader_forwards_every_argument(
@@ -314,8 +364,8 @@ def test_lazy_export_loader_forwards_every_argument(
 
     monkeypatch.setattr(
         cli,
-        "import_module",
-        lambda _name: SimpleNamespace(export_analog_four_audio_patch_batch=fake_export),
+        "_load_batch_exporter",
+        lambda: fake_export,
     )
 
     result = cli._export_analog_four_audio_patch_batch(
@@ -338,15 +388,25 @@ def test_lazy_export_loader_forwards_every_argument(
     }
 
 
+def test_lazy_export_loader_returns_the_typed_batch_service() -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch import (
+        export_analog_four_audio_patch_batch,
+    )
+
+    assert cli._load_batch_exporter() is export_analog_four_audio_patch_batch
+
+
 @pytest.mark.parametrize(
     ("exc", "error_code"),
     [
         (FileNotFoundError("missing audio"), "input_not_found"),
         (FileExistsError("candidate exists"), "overwrite_refused"),
         (PermissionError("denied"), "permission_denied"),
-        (OSError("disk error"), "file_error"),
-        (ValueError("unsupported audio"), "invalid_input"),
+        (OSError("disk error"), "write_failed"),
+        (ValueError("unsupported audio"), "validation"),
         (ImportError("service unavailable"), "service_unavailable"),
+        (RuntimeError("inference dependency unavailable"), "inference_failed"),
     ],
 )
 def test_handler_emits_classified_json_errors(
@@ -376,6 +436,78 @@ def test_handler_emits_classified_json_errors(
     assert captured.err == ""
 
 
+def test_handler_exposes_exception_notes_and_classified_stage_codes(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+
+    class ClassifiedFailure(RuntimeError):
+        error_code = "audio_read_failed"
+
+    failure = ClassifiedFailure("decode failed")
+    failure.add_note("batch lock cleanup failure: lock busy")
+    monkeypatch.setattr(
+        cli,
+        "_export_analog_four_audio_patch_batch",
+        lambda **_kwargs: (_ for _ in ()).throw(failure),
+    )
+
+    exit_code = cli.handle_analog_four_audio_patch_batch(
+        audio_path=tmp_path / "reference.wav",
+        source_kit_path=tmp_path / "init.syx",
+        output_dir=tmp_path / "batch",
+        json_output=True,
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 2
+    assert payload["error_code"] == "audio_read_failed"
+    assert payload["details"] == ["batch lock cleanup failure: lock busy"]
+
+
+def test_batch_cli_rejects_unbounded_dynamic_error_codes() -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+
+    class UnboundedFailure(RuntimeError):
+        error_code = "invented_code"
+
+    assert cli._batch_cli_error_code(UnboundedFailure("failure")) == "inference_failed"
+
+
+def test_a4_export_error_codes_share_one_bounded_vocabulary() -> None:
+    from typing import get_args
+
+    assert frozenset(get_args(AnalogFourExportErrorCode)) == ANALOG_FOUR_EXPORT_ERROR_CODES
+
+
+def test_handler_surfaces_successful_commit_lock_warning(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+
+    warning = "batch committed; stale lock metadata remains at batch.lock"
+    monkeypatch.setattr(
+        cli,
+        "_export_analog_four_audio_patch_batch",
+        lambda **_kwargs: replace(_batch_result(tmp_path), lock_cleanup_warning=warning),
+    )
+
+    exit_code = cli.handle_analog_four_audio_patch_batch(
+        audio_path=tmp_path / "reference.wav",
+        source_kit_path=tmp_path / "init.syx",
+        output_dir=tmp_path / "batch",
+        json_output=True,
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert payload["warnings"] == [warning]
+
+
 def test_handler_emits_classified_text_error_and_registry_formatter(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
@@ -383,8 +515,11 @@ def test_handler_emits_classified_text_error_and_registry_formatter(
 ) -> None:
     from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
 
+    failure = ValueError("unsupported audio")
+    failure.add_note("batch lock cleanup failure: lock busy")
+
     def fail_export(**_kwargs: object) -> _BatchResult:
-        raise ValueError("unsupported audio")
+        raise failure
 
     monkeypatch.setattr(cli, "_export_analog_four_audio_patch_batch", fail_export)
 
@@ -397,8 +532,11 @@ def test_handler_emits_classified_text_error_and_registry_formatter(
     captured = capsys.readouterr()
     assert exit_code == 2
     assert captured.out == ""
-    assert "Error [invalid_input]: unsupported audio" in captured.err
-    assert cli._format_batch_cli_error(ValueError("bad args")) == (f"{cli.USAGE}\nError: bad args")
+    assert "Error [validation]: unsupported audio" in captured.err
+    assert "Detail: batch lock cleanup failure: lock busy" in captured.err
+    assert cli._format_batch_cli_error(ValueError("bad args")) == (
+        f"{cli.USAGE}\nError [invalid_input]: bad args"
+    )
 
 
 def test_registered_command_dispatches_without_midi(
@@ -436,3 +574,19 @@ def test_registered_command_dispatches_without_midi(
     assert exit_code == 0
     assert payload["source_hash"] == "audio-sha256"
     assert payload["candidate_count"] == 2
+
+
+def test_registered_json_parse_failure_is_machine_readable(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from rytm_randomizer.cli import main
+
+    exit_code = main(["analog-four-audio-patch-batch", "--json"])
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert exit_code == 2
+    assert payload["ok"] is False
+    assert payload["error_code"] == "invalid_input"
+    assert payload["error"] == "--audio is required"
+    assert captured.err == ""

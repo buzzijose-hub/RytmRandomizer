@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Final, TypedDict
 
 from ..data.analog_four_display import (
     TRANSPORT_CC_READY,
@@ -33,6 +33,7 @@ from .analog_four_patch_genome import (
 from .analog_four_patch_inference import build_analog_four_audio_patch_genome
 from .analog_four_patch_learning import (
     AnalogFourPatchLearningPacket,
+    AnalogFourPatchLearningPacketPayload,
     analog_four_patch_learning_packet_to_dict,
     build_analog_four_patch_learning_packet_from_genome,
 )
@@ -142,6 +143,69 @@ class AnalogFourPatchSendPlanSource:
     plan: AnalogFourPatchSendPlan
 
 
+class AnalogFourPatchSendSummaryPayload(TypedDict):
+    total_rows: int
+    sendable_count: int
+    manual_count: int
+    cc_event_count: int
+    nrpn_event_count: int
+    transport_message_count: int
+    ready_percentage: int
+    live_dial_path: str
+    blocking_reason: str
+
+
+class AnalogFourPatchSendEventPayload(TypedDict):
+    sequence: int
+    track: int
+    channel: int
+    parameter: str
+    section: str
+    encoder: str
+    screen_value: str
+    midi_value: int
+    message_kind: str
+    cc_msb: int | None
+    cc_lsb: int | None
+    nrpn_address: list[int] | None
+    transport_status: str
+    dial_direction: str
+    rationale: str
+    confidence: str
+
+
+class AnalogFourPatchManualEventPayload(TypedDict):
+    sequence: int
+    track: int
+    parameter: str
+    section: str
+    encoder: str
+    screen_value: str
+    transport_status: str
+    skip_reason: str
+    dial_direction: str
+    rationale: str
+    confidence: str
+
+
+class AnalogFourPatchSendPlanPayload(TypedDict):
+    version: str
+    device_id: str
+    mode: str
+    selected_track: int
+    selected_candidate: int
+    selected_label: str
+    source_hash: str
+    source_confidence: str
+    summary: AnalogFourPatchSendSummaryPayload
+    ready: bool
+    readiness_reason: str
+    send_events: list[AnalogFourPatchSendEventPayload]
+    manual_events: list[AnalogFourPatchManualEventPayload]
+    learning_packet: AnalogFourPatchLearningPacketPayload
+    safety: list[str]
+
+
 def build_analog_four_patch_send_plan(
     report: FeatureReport,
     *,
@@ -237,7 +301,9 @@ def build_analog_four_patch_send_plan_from_source(
     )
 
 
-def analog_four_patch_send_plan_to_dict(plan: AnalogFourPatchSendPlan) -> dict[str, object]:
+def analog_four_patch_send_plan_to_dict(
+    plan: AnalogFourPatchSendPlan,
+) -> AnalogFourPatchSendPlanPayload:
     """Return a stable JSON-ready representation of ``plan``."""
 
     if not isinstance(plan, AnalogFourPatchSendPlan):
@@ -383,7 +449,9 @@ def _transport_message_count(event: AnalogFourPatchSendEvent) -> int:
     return 3
 
 
-def _send_summary_payload(summary: AnalogFourPatchSendSummary) -> dict[str, object]:
+def _send_summary_payload(
+    summary: AnalogFourPatchSendSummary,
+) -> AnalogFourPatchSendSummaryPayload:
     return {
         "total_rows": summary.total_rows,
         "sendable_count": summary.sendable_count,
@@ -397,7 +465,7 @@ def _send_summary_payload(summary: AnalogFourPatchSendSummary) -> dict[str, obje
     }
 
 
-def _send_event_payload(event: AnalogFourPatchSendEvent) -> dict[str, object]:
+def _send_event_payload(event: AnalogFourPatchSendEvent) -> AnalogFourPatchSendEventPayload:
     return {
         "sequence": event.sequence,
         "track": event.track,
@@ -418,7 +486,7 @@ def _send_event_payload(event: AnalogFourPatchSendEvent) -> dict[str, object]:
     }
 
 
-def _manual_event_payload(event: AnalogFourPatchManualEvent) -> dict[str, object]:
+def _manual_event_payload(event: AnalogFourPatchManualEvent) -> AnalogFourPatchManualEventPayload:
     return {
         "sequence": event.sequence,
         "track": event.track,
@@ -445,10 +513,14 @@ __all__ = [
     "ANALOG_FOUR_TRACK_MAX",
     "ANALOG_FOUR_TRACK_MIN",
     "AnalogFourPatchManualEvent",
+    "AnalogFourPatchManualEventPayload",
     "AnalogFourPatchSendEvent",
+    "AnalogFourPatchSendEventPayload",
     "AnalogFourPatchSendPlan",
+    "AnalogFourPatchSendPlanPayload",
     "AnalogFourPatchSendPlanSource",
     "AnalogFourPatchSendSummary",
+    "AnalogFourPatchSendSummaryPayload",
     "analog_four_patch_send_plan_to_dict",
     "build_analog_four_patch_send_plan",
     "build_analog_four_patch_send_plan_from_genome",
