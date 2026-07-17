@@ -265,6 +265,10 @@ def test_export_audio_patch_batch_writes_four_pinned_candidates_and_manifest(
         assert row["sidecar_sha256"] == hashlib.sha256(item.sidecar_path.read_bytes()).hexdigest()
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32" and os.environ.get("GITHUB_ACTIONS") == "true",
+    reason="Windows CI intermittently access-violates inside librosa's native stack",
+)
 def test_real_audio_to_patch_batch_chain_distinguishes_tone_from_noise(tmp_path: Path) -> None:
     pytest.importorskip("librosa")
 

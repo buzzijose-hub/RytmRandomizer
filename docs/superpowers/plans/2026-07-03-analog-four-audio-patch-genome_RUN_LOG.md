@@ -22,3 +22,4 @@ This file is append-only. Times are America/New_York when recorded.
 - 2026-07-16: REVIEW_FINDING. Saved-kit JSON parse failures now return the bounded `invalid_input` contract.
 - 2026-07-17: CI_HARDENING. Isolated the real librosa tone/noise CLI proof in single-threaded subprocesses after one flaky Ubuntu native-library worker crash.
 - 2026-07-17: CI_HARDENING. Added one bounded retry for recognized native analyzer crash codes after one duplicate Windows job hit `0xC0000005`; ordinary CLI failures still fail immediately.
+- 2026-07-17: CI_HARDENING. Scoped the real librosa differential proof out of GitHub Windows after both isolated attempts access-violated; Ubuntu, macOS, and local Windows retain the real proof, while deterministic pipeline coverage remains cross-platform.
