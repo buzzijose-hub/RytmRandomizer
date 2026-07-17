@@ -31,6 +31,7 @@ import { type CockpitDeviceId, RYTM_DEVICE_ID } from './devices';
 import { HeaderBar } from './HeaderBar';
 import { LiveReadinessPanel } from './LiveReadinessPanel';
 import { MutationPanel } from './MutationPanel';
+import { PatchGenomePanel } from './PatchGenomePanel';
 import { SafetyRail } from './SafetyRail';
 import { SnapshotPanel } from './SnapshotPanel';
 
@@ -79,6 +80,7 @@ export function Cockpit({
             <LiveReadinessPanel />
           </div>
           <div className="cockpit-side-stack">
+            <PatchGenomePanel previewOn={previewOn} />
             <MutationPanel
               availableProfiles={availableProfiles}
               previewOn={previewOn}

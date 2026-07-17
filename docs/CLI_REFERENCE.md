@@ -1,6 +1,6 @@
 # CLI reference
 
-This is the full passive CLI surface for RytmRandomizer. Every command here is **passive by construction** — it opens no MIDI port and sends no MIDI. The project-wide passive-safety sweep in [`tests/test_real_midi_passive_cli_safety.py`](../tests/test_real_midi_passive_cli_safety.py) auto-discovers commands from the lazy registry and runs every one in a subprocess to assert no `mido` / `rtmidi` / adapter modules load and no armed-output tokens leak.
+This is the full passive `rytm_randomizer.cli` surface for RytmRandomizer. Every CLI command here is **passive by construction** — it opens no MIDI port and sends no MIDI. Companion `rytm_randomizer.app` invocations are labeled separately when a passive report has a dry-run or armed operator bridge. The project-wide passive-safety sweep in [`tests/test_real_midi_passive_cli_safety.py`](../tests/test_real_midi_passive_cli_safety.py) auto-discovers CLI commands from the lazy registry and runs every one in a subprocess to assert no `mido` / `rtmidi` / adapter modules load and no armed-output tokens leak.
 
 For the headline commands (cockpit, wizard, export, live-set planning) see the [README](../README.md#cli-cheat-sheet).
 
@@ -195,6 +195,12 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `analog-four-style-mutation-intent-report` | Passive Analog Four track/zone mutation intent |
 | `analog-four-style-mutation-mock-preview-report` | Passive Analog Four mock CC rows (deferred while saved-kit offsets are promoted) |
 | `analog-four-kit-catalog-report` | Passive Analog Four decoded kit catalog |
+| `analog-four-baseline-report` | Passive initialized A4 SysEx baseline comparison across kit, pattern+kit, and whole-project exports |
+| `analog-four-patch-genome-report` | Passive four-candidate Analog Four single-sound patch DNA from audio or text |
+| `analog-four-patch-learning-report` | Passive Analog Four patch learning routes, capture matrix, and live-dial readiness |
+| `analog-four-patch-corpus-report` | Passive nearest-match ranking against starter or captured Analog Four patch/audio examples |
+| `analog-four-patch-send-plan-report` | Passive CC/NRPN live-dial send plan for a generated Analog Four patch |
+| `local-model-copilot-report` | Passive local model docs, mutation-intent, and Analog Four patch-review packets; optional local model subprocess call with `--ask-local-model` |
 | `analog-four-oxi-macro-report` | Passive in-memory Analog Four OXI-style four-track macro preview |
 | `analog-four-oxi-macro-readiness-report` | Passive Analog Four OXI macro readiness, soft-capture preflight, and operator-present validation commands |
 | `analog-four-style-kit-readiness-report` | Passive per-kit Analog Four style-readiness sweep |
@@ -204,10 +210,73 @@ python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report KITS.syx
 python -m rytm_randomizer.cli analog-four-style-mutation-intent-report KITS.syx birmingham_pressure --slot 0 --discovery 45
 python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report KITS.syx jose_core_techno --slot 0 --discovery 45 --events --limit 24
 python -m rytm_randomizer.cli analog-four-kit-catalog-report KITS.syx --limit 16
+python -m rytm_randomizer.cli analog-four-baseline-report --kit A4_Test1_Init_Kit.syx --pattern-kit A4_Test1_Init_A01_PatternKit.syx --whole-project A4_Test1_Init_WholeProject.syx --json
+python -m rytm_randomizer.cli analog-four-patch-genome-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
+python -m rytm_randomizer.cli analog-four-patch-genome-report --audio reference.wav --track 2 --json
+python -m rytm_randomizer.cli analog-four-patch-learning-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
+python -m rytm_randomizer.cli analog-four-patch-learning-report --audio reference.wav --track 2 --json
+python -m rytm_randomizer.cli analog-four-patch-corpus-report --description "hypnotic metallic HP2 stab" --track 1 --limit 4
+python -m rytm_randomizer.cli analog-four-patch-corpus-report --audio reference.wav --corpus-file a4-captures.json --json
+python -m rytm_randomizer.cli analog-four-patch-send-plan-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
+python -m rytm_randomizer.cli local-model-copilot-report --question "Which A4 rows are staged only?" --workflow all --description "hypnotic metallic HP2 stab" --json
 python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove --seed 23 --intensity 6 --events --limit 0
 python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4
 python -m rytm_randomizer.cli analog-four-style-kit-readiness-report KITS.syx jose_core_techno --limit 16
 ```
+
+Active companion app bridge for the selected patch send plan:
+
+```bash
+python -m rytm_randomizer.app --dry-run --a4-patch-send-plan --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
+python -m rytm_randomizer.app --arm --a4-patch-send-plan --description "hypnotic metallic HP2 stab" --track 1 --candidate 1 --confirm-a4-patch-send-plan
+```
+
+`analog-four-baseline-report` is the passive clean-slate intake for A4 patch
+capture work. It reads three local SysEx export scopes - kit, pattern+kit, and
+whole-project - decodes supported saved-kit frames, compares their first kit
+payload fingerprints, and reports whether the initialized baseline is coherent
+enough for future changed-patch diffs. It does not open MIDI ports, send MIDI,
+write SysEx, or claim parameter-level DNA extraction while the A4 saved-kit
+offsets remain candidate-only.
+
+`analog-four-patch-genome-report` is the passive patch-DNA bridge for manual
+studio tests. It takes one description or audio file, builds four candidate
+columns for a selected A4 track, and prints the selected candidate with A4
+front-panel values plus CC/NRPN metadata. Bipolar screen values such as
+Filter Overdrive and LFO depths are shown as `-64..+63` targets; CC-ready rows
+also show the raw `0..127` value; NRPN-only destination labels remain
+screen-only until their exact ordinals are captured for live dial-in.
+
+`analog-four-patch-learning-report` is the passive intelligence/learning layer
+above the genome. It ranks the four candidate columns, maps measured traits
+such as metallic pressure and tempo drive to the selected A4 controls, prints a
+future capture matrix for real A4 recordings, and separates CC/NRPN-ready rows
+from screen-only NRPN destinations before any live dial-in work is promoted.
+
+`analog-four-patch-corpus-report` is the first passive corpus-learning surface.
+It ranks a description or audio reference against A4 patch/audio examples,
+using clearly labeled synthetic starter rows when no corpus file is supplied
+and operator-recorded hardware examples when `--corpus-file` is provided. It
+does not train a model, open ports, send MIDI, or write SysEx; it tells us
+which real captures are still missing before that matching can become
+hardware-backed.
+
+`analog-four-patch-send-plan-report` is the passive rehearsal surface for that
+promotion. It compiles the selected candidate into ordered CC/NRPN live-dial
+events, counts the exact transport messages, and lists skipped front-panel rows
+such as destination labels that still need ordinal capture. The matching active
+path lives in `rytm_randomizer.app`: use `--dry-run --a4-patch-send-plan` to
+render the plan through the mock sender, or `--arm --a4-patch-send-plan
+--confirm-a4-patch-send-plan` to choose an A4 output port and send only the
+compiler-approved rows.
+
+`local-model-copilot-report` is the passive local-AI bridge. By default it
+does not run a model; it prints deterministic source packets and JSON schemas
+for docs/MIDI answers, staged natural-language mutation intent, and Analog Four
+patch co-design review. Add `--ask-local-model` only after `LOCAL_MODEL_COMMAND`
+points to a local model executable. The command is run as a subprocess, JSON
+stdout is validated, and the output remains staged-only: no ports open, no MIDI
+is sent, and no hardware-send plan is promoted.
 
 `analog-four-oxi-macro-report` is a snapshot-free planning surface for the
 Analog Four side of an OXI-style live rig. It uses existing manual-backed A4 CC
@@ -239,6 +308,19 @@ macro SEND` plus unattended playback blocked.
 | `oxi-live-macro-catalog-report` | Passive Rytm macro cards, recovery actions, live flow, and A4 runway state |
 | `controller-brain-mapping-report [--json]` | Passive 16-encoder controller-brain intent pages for Rytm, A4, crates, queue, snapshots, and journal |
 | `controller-brain-rehearsal-report [--json]` | Passive controller-template export rows plus virtual gesture outcomes for future controller software |
+| `controller-brain-live-runbook-report [--json]` | Passive controller-brain live runbook that composes controller gestures, OXI chapters, and Cockpit readiness into stage/inspect/fire/recover metadata |
+| `controller-brain-live-state-report [--json]` | Passive controller-brain live state rows, queued intents, audit events, readiness gates, and blocked bridge actions |
+| `controller-brain-live-bridge-readiness-report [--json]` | Passive controller-brain bridge contract packets, readiness gates, and blocked runtime actions |
+| `controller-brain-live-dispatch-rehearsal-report [--json]` | Passive controller-brain shadow dispatch decisions, dispatch groups, and blocked transport gates |
+| `controller-brain-live-feedback-rehearsal-report [--json]` | Passive controller-brain feedback frames, feedback zones, and blocked output gates |
+| `controller-brain-live-cockpit-handoff-report [--json]` | Passive controller-brain Cockpit handoff cards, panels, disabled controls, and replay commands |
+| `controller-brain-live-implementation-bridge-report [--json]` | Passive controller-brain GUI implementation bindings, fixture bundles, and implementation gates |
+| `controller-brain-live-desktop-blueprint-report [--json]` | Passive controller-brain desktop regions, component contracts, view-model bindings, fixture hints, and acceptance checks |
+| `controller-brain-live-desktop-app-plan-report [--app-plan-label <text>] [--framework-target desktop-python\|web-desktop\|test-harness] [--json]` | Passive controller-brain desktop app routes, component file hints, state slices, style tokens, and acceptance checks |
+| `controller-brain-live-desktop-component-contract-report [--component-contract-label <text>] [--selector-prefix <text>] [--json]` | Passive controller-brain desktop component API contracts, props, disabled events, test hooks, and fixture contracts |
+| `controller-brain-live-desktop-view-model-report [--view-model-label <text>] [--state-prefix <text>] [--json]` | Passive controller-brain desktop component view models, state bindings, disabled action models, render assertions, and acceptance checks |
+| `controller-brain-live-desktop-render-contract-report [--render-contract-label <text>] [--surface-prefix <text>] [--json]` | Passive controller-brain desktop render surfaces, render bindings, render guards, render assertions, and acceptance checks |
+| `controller-brain-operator-package-report [--json]` | Passive controller gestures to Live Kit Operator Package slot/readiness ledger |
 | `rytm-live-macro-hardware-rehearsal-report` | Passive next-studio Rytm macro checklist with launch command, pad-lane checks, and recovery notes |
 | `oxi-live-set-strategy-report` | Passive OXI-style set chapters, operator cues, rehearsal/replay commands, all-12-pad policy, and A4 review-only actions |
 
@@ -248,6 +330,32 @@ python -m rytm_randomizer.cli controller-brain-mapping-report
 python -m rytm_randomizer.cli controller-brain-mapping-report --json
 python -m rytm_randomizer.cli controller-brain-rehearsal-report
 python -m rytm_randomizer.cli controller-brain-rehearsal-report --json
+python -m rytm_randomizer.cli controller-brain-live-runbook-report
+python -m rytm_randomizer.cli controller-brain-live-runbook-report --json
+python -m rytm_randomizer.cli controller-brain-live-state-report
+python -m rytm_randomizer.cli controller-brain-live-state-report --json
+python -m rytm_randomizer.cli controller-brain-live-bridge-readiness-report
+python -m rytm_randomizer.cli controller-brain-live-bridge-readiness-report --json
+python -m rytm_randomizer.cli controller-brain-live-dispatch-rehearsal-report
+python -m rytm_randomizer.cli controller-brain-live-dispatch-rehearsal-report --json
+python -m rytm_randomizer.cli controller-brain-live-feedback-rehearsal-report
+python -m rytm_randomizer.cli controller-brain-live-feedback-rehearsal-report --json
+python -m rytm_randomizer.cli controller-brain-live-cockpit-handoff-report
+python -m rytm_randomizer.cli controller-brain-live-cockpit-handoff-report --json
+python -m rytm_randomizer.cli controller-brain-live-implementation-bridge-report
+python -m rytm_randomizer.cli controller-brain-live-implementation-bridge-report --json
+python -m rytm_randomizer.cli controller-brain-live-desktop-blueprint-report
+python -m rytm_randomizer.cli controller-brain-live-desktop-blueprint-report --json
+python -m rytm_randomizer.cli controller-brain-live-desktop-app-plan-report
+python -m rytm_randomizer.cli controller-brain-live-desktop-app-plan-report --app-plan-label "Controller brain desktop app plan" --framework-target desktop-python --json
+python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report
+python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report --component-contract-label "Controller brain desktop component contract" --selector-prefix rr-controller --json
+python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report
+python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report --view-model-label "Controller brain desktop view model" --state-prefix rr-state --json
+python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report
+python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report --render-contract-label "Controller brain desktop render contract" --surface-prefix rr-render --json
+python -m rytm_randomizer.cli controller-brain-operator-package-report
+python -m rytm_randomizer.cli controller-brain-operator-package-report --json
 python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report
 python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report --json
 python -m rytm_randomizer.cli oxi-live-set-strategy-report
@@ -301,6 +409,107 @@ their reviewed intent keys, records blocked active actions, and emits a JSON
 shape that a future Cockpit/controller bridge can render without opening
 controller input, learning raw MIDI messages, dispatching WebSocket commands,
 opening hardware ports, or sending MIDI.
+
+`controller-brain-live-runbook-report` composes the controller rehearsal packet,
+the OXI live set strategy, and the Cockpit performance console payload into a
+stage, inspect, fire, and recover runbook for a future fixed-controller
+surface. The report stays passive: it opens no controller input, performs no
+MIDI learn or raw CC capture, dispatches no WebSocket commands, opens no MIDI
+ports, sends no MIDI, and mutates no snapshots.
+
+`controller-brain-live-state-report` derives the next bridge contract from that
+runbook: deterministic `state.*` rows, `queued.*` intents, `audit.*` events,
+readiness gates, blocked active actions, and replay commands. It is still
+metadata only. It opens no controller input, performs no MIDI learn or raw CC
+capture, dispatches no WebSocket commands, opens no MIDI ports, sends no MIDI,
+and mutates no snapshots.
+
+`controller-brain-live-bridge-readiness-report` is the passive implementation
+handoff after the state report. It turns each `state.*`, `queued.*`, and
+`audit.*` row into a deterministic bridge packet, marks only the state, queue,
+and audit contracts ready, and keeps controller input, gesture reducer runtime,
+WebSocket dispatch, controller feedback, MIDI output, hardware send, and
+snapshot mutation blocked until a separate active bridge is designed and
+approved.
+
+`controller-brain-live-dispatch-rehearsal-report` is the passive dry-run after
+bridge readiness. It turns bridge packets into shadow dispatch decisions,
+summarizes state/queue/audit dispatch groups, and keeps controller input,
+runtime reducers, WebSocket dispatch, controller feedback, MIDI output, hardware
+send, and snapshot mutation blocked.
+
+`controller-brain-live-feedback-rehearsal-report` is the passive output-side
+follow-up after dispatch rehearsal. It turns shadow dispatch decisions into
+metadata-only LED, encoder-ring, and display feedback frames while keeping the
+controller output adapter, WebSocket feedback, MIDI output, hardware feedback,
+and snapshot mutation blocked.
+
+`controller-brain-live-cockpit-handoff-report` is the passive GUI handoff after
+feedback rehearsal. It turns the metadata-only feedback frames into GUI-ready
+handoff cards, Cockpit panel summaries, disabled Cockpit controls, replay
+commands, and safety evidence while keeping controller input, runtime reducers,
+WebSocket dispatch, controller feedback, MIDI output, hardware send, and
+snapshot mutation blocked.
+
+`controller-brain-live-implementation-bridge-report` is the passive GUI
+implementation handoff after the Cockpit handoff. It turns disabled handoff
+cards into deterministic implementation bindings, fixture bundles,
+implementation gates, replay commands, and safety evidence for a future GUI
+test harness while keeping GUI launch, renderer startup, runtime reducers,
+WebSocket dispatch, controller feedback, MIDI output, hardware send, and
+snapshot mutation blocked.
+
+`controller-brain-live-desktop-blueprint-report` is the passive desktop
+blueprint after the implementation bridge. It turns disabled implementation
+bindings into deterministic desktop regions, component contracts, view-model
+bindings, fixture hints, acceptance checks, replay commands, and safety evidence
+for future Cockpit desktop work while keeping GUI launch, renderer startup,
+runtime reducers, WebSocket dispatch, controller feedback, MIDI output,
+hardware send, snapshot mutation, and fixture file writing blocked.
+
+`controller-brain-live-desktop-app-plan-report` is the passive app-plan after
+the desktop blueprint. It turns disabled desktop regions and component
+contracts into deterministic app routes, component file hints, disabled state
+slices, style tokens, acceptance checks, replay commands, and safety evidence
+for future Cockpit desktop implementation work while keeping GUI launch, app
+launch, renderer startup, runtime reducers, WebSocket dispatch, controller
+feedback, MIDI output, hardware send, snapshot mutation, and file writing
+blocked.
+
+`controller-brain-live-desktop-component-contract-report` is the passive
+component-contract layer after the desktop app plan. It turns advisory
+component file hints and disabled state slices into deterministic component API
+contracts, view-model prop contracts, disabled event contracts, test hooks,
+fixture contracts, acceptance checks, replay commands, and safety evidence for
+future Cockpit desktop implementation work while keeping GUI launch, app
+launch, renderer startup, runtime reducers, WebSocket dispatch, controller
+feedback, MIDI output, hardware send, snapshot mutation, and file writing
+blocked.
+
+`controller-brain-live-desktop-view-model-report` is the passive view-model
+layer after the desktop component contract. It turns component API contracts
+into deterministic future component view models, state bindings, disabled
+action models, render assertions, acceptance checks, replay commands, and
+safety evidence for future Cockpit desktop implementation work while keeping
+GUI launch, app launch, renderer startup, runtime reducers, WebSocket dispatch,
+controller feedback, MIDI output, hardware send, snapshot mutation, and file
+writing blocked.
+
+`controller-brain-live-desktop-render-contract-report` is the passive render
+contract layer after the desktop view model. It turns component view models,
+state bindings, disabled action models, and source render assertions into
+disabled future render surfaces, one-way render bindings, render guards,
+render assertions, acceptance checks, replay commands, and safety evidence for
+future Cockpit renderer work while keeping GUI launch, component mounting,
+renderer execution, WebSocket dispatch, controller feedback, MIDI output,
+hardware send, snapshot mutation, and file writing blocked.
+`controller-brain-operator-package-report` composes that virtual gesture packet
+with the current Live Kit Operator Package slots. The ledger maps macro depth,
+industrial macro selection, Rytm pad-lane amount gestures, A4 review-only
+gestures, Style Crate selection, queue staging, and panic-home recovery into
+package-review targets while proving the side effects remain false: no
+controller input, no raw CC capture, no WebSocket dispatch, no file write, no
+snapshot mutation, no hardware arm, no MIDI port, and no MIDI send.
 
 ---
 
@@ -372,7 +581,7 @@ The `live-gui-*` family is the GUI consumer contract — each report is one scre
 
 | Command | Surface |
 |---|---|
-| `live-gui-performance-console-report` | **Cockpit performance console packet** with device rail, 12-pad Rytm snapshot surface, passive macro action deck, live-kit capture panel/workbench/package audition/operator package, controller-brain panel, A4 set-plan review, Style Crates queue, snapshot history, command queue, safety checklist, and blocked hardware actions |
+| `live-gui-performance-console-report` | **Cockpit performance console packet** with device rail, 12-pad Rytm snapshot surface, passive macro action deck, live-kit capture panel/workbench/package audition/operator package/review ledger, controller-brain panel, A4 set-plan review, Style Crates queue, snapshot history, command queue, safety checklist, and blocked hardware actions |
 | `style-performance-arc-live-gui-analyzer-readiness-report` | **GUI/audio-analyzer readiness bundle** with panel manifest, stream wiring, operator workflow, **blocked active actions** |
 | `style-performance-arc-live-gui-rehearsal-session-report` | **GUI rehearsal session packet** with task cards, **listen-only rehearsal take** cards, operator checklist |
 | `style-performance-arc-live-gui-capture-queue-report` | **GUI/audio analyzer capture queue** with capture slots, suggested filenames, **analyzer job** cards |
@@ -416,8 +625,11 @@ controls, and a journal preview seed for favorite captured-kit variations. The
 Live Kit Operator Package surface binds those audition slots into browser-local
 set-plan staging actions, recovery requirements, journal/export preview
 metadata, and local rehearsal package `auditionSource` / `operatorPackage`
-evidence while keeping real package stage/send/write controls disabled. It
-keeps open-port, hardware send, Cockpit macro fire/prepare, queue dispatch,
+evidence while keeping real package stage/send/write controls disabled. The
+Operator Package Review Ledger then summarizes apply-preview, mock-apply, and
+receipt-audit stages with one row per package step, package export-key evidence,
+readiness proof, blocked actions, safety lines, and a disabled ledger apply
+control. It keeps open-port, hardware send, Cockpit macro fire/prepare, queue dispatch,
 snapshot-history SEND, live-kit receive/mutate/send, captured-kit package
 apply/export/audition, controller MIDI learn/input, controller WebSocket
 dispatch, and Analog Four outbound macro actions blocked.

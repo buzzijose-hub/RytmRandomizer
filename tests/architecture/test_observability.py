@@ -354,6 +354,11 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # pattern.
         "ProfileAlreadyExistsError",
         "ProfileRegistryAccessError",
+        # Optional local-AI provider boundary: kept passive, taxonomy-backed,
+        # and raised only by explicit local provider calls or JSON validators.
+        "LocalAiError",
+        "LocalAiUnavailableError",
+        "LocalAiValidationError",
     }
 )
 

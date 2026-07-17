@@ -680,6 +680,526 @@ def test_app_main_arm_a4_kit_recipe_sends_recipe_events(
     assert fake_port.closed is True
 
 
+def test_app_main_dry_run_a4_patch_send_plan_records_mock_messages(capsys) -> None:
+    """``--dry-run --a4-patch-send-plan`` renders the generated patch to mock MIDI."""
+
+    from rytm_randomizer import app
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--a4-patch-send-plan",
+            "--description",
+            "hypnotic metallic techno with bright sync stab and compact envelope",
+            "--track",
+            "1",
+            "--candidate",
+            "1",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "A4 patch send-plan dry-run" in captured.out
+    assert "mock only: True" in captured.out
+    assert "no port opened: True" in captured.out
+    assert "track: 1" in captured.out
+    assert "candidate: 1 / Closest reference" in captured.out
+    assert "sendable events: 34" in captured.out
+    assert "transport messages: 44" in captured.out
+    assert "manual rows skipped: 5" in captured.out
+    assert "Mock sender captured 44 message(s)." in captured.out
+    assert captured.err == ""
+
+
+def test_app_main_a4_patch_send_plan_arm_requires_confirm_before_output(
+    capsys,
+    monkeypatch,
+) -> None:
+    from rytm_randomizer import app, mido_provider
+    from rytm_randomizer.style_analysis import analog_four_patch_send_plan as send_plan_module
+
+    def fail_midi_call(self, *_args):
+        raise AssertionError("unconfirmed A4 patch send plan must not touch MIDI ports")
+
+    def fail_extraction(*_args, **_kwargs):
+        raise AssertionError("unconfirmed A4 patch send plan must not extract source audio")
+
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_midi_call)
+    monkeypatch.setattr(send_plan_module, "extract_from_description", fail_extraction)
+    monkeypatch.setattr(send_plan_module, "extract_from_audio", fail_extraction)
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--a4-patch-send-plan",
+            "--description",
+            "hypnotic metallic techno with bright sync stab and compact envelope",
+            "--track",
+            "1",
+            "--candidate",
+            "1",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--a4-patch-send-plan armed sends require --confirm-a4-patch-send-plan" in captured.err
+    assert captured.out == ""
+
+
+def test_app_main_arm_a4_patch_send_plan_sends_cc_and_nrpn_events(
+    capsys,
+    fake_mido_session,
+    monkeypatch,
+) -> None:
+    """Confirmed A4 patch plans send CC-ready rows and NRPN-ready rows."""
+
+    from rytm_randomizer import app, mido_provider
+
+    class FakeOutputPort:
+        def __init__(self) -> None:
+            self.sent: list[object] = []
+            self.closed = False
+
+        def send(self, message: object) -> None:
+            self.sent.append(message)
+
+        def close(self) -> None:
+            self.closed = True
+
+    fake_port = FakeOutputPort()
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_output_names",
+        lambda self: ("Fake A4 Out",),
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "open_output",
+        lambda self, port_name: fake_port,
+    )
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--a4-patch-send-plan",
+            "--description",
+            "hypnotic metallic techno with bright sync stab and compact envelope",
+            "--track",
+            "1",
+            "--candidate",
+            "1",
+            "--confirm-a4-patch-send-plan",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "A4 patch send-plan send" in captured.out
+    assert "Opening MIDI output: Fake A4 Out" in captured.out
+    assert "sendable events: 34" in captured.out
+    assert "transport messages: 44" in captured.out
+    assert "manual rows skipped: 5" in captured.out
+    assert "Sent generated A4 patch send-plan MIDI events." in captured.out
+    assert captured.err == ""
+    assert len(fake_port.sent) == 44
+    assert [
+        (message.channel, message.control, message.value) for message in fake_port.sent[:3]
+    ] == [
+        (0, 69, 96),
+        (0, 72, 48),
+        (0, 78, 54),
+    ]
+    assert [
+        (message.channel, message.control, message.value) for message in fake_port.sent[9:12]
+    ] == [
+        (0, 99, 1),
+        (0, 98, 54),
+        (0, 6, 0),
+    ]
+    assert fake_port.closed is True
+
+
+@pytest.mark.parametrize(
+    "extra_args, expected",
+    [
+        ([], "requires exactly one source"),
+        (
+            ["--description", "x", "--audio", "reference.wav"],
+            "requires exactly one source",
+        ),
+        (["--description", ""], "--description requires a non-empty value"),
+        (["--description", "x", "--track", "5"], "track must be in [1, 4]"),
+        (["--description", "x", "--candidate", "0"], "candidate must be in [1, 4]"),
+    ],
+)
+def test_app_main_a4_patch_send_plan_rejects_bad_sources_before_output(
+    extra_args,
+    expected,
+    capsys,
+    monkeypatch,
+) -> None:
+    from rytm_randomizer import app, mido_provider
+
+    def fail_midi_call(self, *_args):
+        raise AssertionError("invalid A4 patch send plan must not touch MIDI ports")
+
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_midi_call)
+
+    exit_code = app.main(["--dry-run", "--a4-patch-send-plan", *extra_args])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert expected in captured.err
+    assert captured.out == ""
+
+
+def test_app_main_a4_patch_send_plan_requires_dry_run_or_arm(capsys) -> None:
+    from rytm_randomizer import app
+
+    exit_code = app.main(
+        [
+            "--a4-patch-send-plan",
+            "--description",
+            "hypnotic metallic techno with bright sync stab",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--a4-patch-send-plan requires --dry-run or --arm" in captured.err
+    assert captured.out == ""
+
+
+@pytest.mark.parametrize(
+    "orphan_args, expected",
+    [
+        (
+            ["--confirm-a4-patch-send-plan"],
+            "--confirm-a4-patch-send-plan requires --a4-patch-send-plan",
+        ),
+        (["--description", "x"], "--description requires --a4-patch-send-plan"),
+        (["--audio", "reference.wav"], "--audio requires --a4-patch-send-plan"),
+        (["--track", "1"], "--track requires --a4-patch-send-plan"),
+        (["--candidate", "1"], "--candidate requires --a4-patch-send-plan"),
+    ],
+)
+def test_app_main_a4_patch_send_plan_source_flags_require_plan_flag(
+    orphan_args,
+    expected,
+    capsys,
+) -> None:
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--dry-run", *orphan_args])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert expected in captured.err
+    assert captured.out == ""
+
+
+def test_app_main_a4_patch_send_plan_rejects_other_active_paths(capsys) -> None:
+    from rytm_randomizer import app
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--a4-patch-send-plan",
+            "--description",
+            "hypnotic metallic techno with bright sync stab",
+            "--a4-soft-capture",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--a4-patch-send-plan cannot be combined with --a4-soft-capture" in captured.err
+    assert captured.out == ""
+
+
+def test_app_main_dry_run_a4_patch_send_plan_audio_source_uses_audio_extractor(
+    capsys,
+    monkeypatch,
+) -> None:
+    from rytm_randomizer import app
+    from rytm_randomizer.guardrails.schema import Confidence, SourceType
+    from rytm_randomizer.style_analysis import FeatureReport
+    from rytm_randomizer.style_analysis import analog_four_patch_send_plan as send_plan_module
+
+    observed_paths: list[Path] = []
+
+    def fake_extract_from_audio(path: Path) -> FeatureReport:
+        observed_paths.append(path)
+        return FeatureReport(
+            source_type=SourceType.SINGLE_TRACK,
+            confidence=Confidence.HIGH,
+            bpm=134.0,
+            tempo_stability=0.9,
+            kick_density=0.4,
+            percussion_density=0.7,
+            low_end_weight=0.35,
+            spectral_brightness=0.62,
+            texture_noise=0.3,
+            energy_arc=(0.1, 0.2, 0.4, 0.6, 0.7, 0.6, 0.4, 0.2),
+            content_hash="",
+            derived_at="2026-07-03T12:00:00Z",
+        )
+
+    monkeypatch.setattr(send_plan_module, "extract_from_audio", fake_extract_from_audio)
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--a4-patch-send-plan",
+            "--audio",
+            "reference.wav",
+            "--track",
+            "4",
+            "--candidate",
+            "3",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert observed_paths == [Path("reference.wav")]
+    assert "source: audio" in captured.out
+    assert "track: 4" in captured.out
+    assert "candidate: 3 / Noisy texture" in captured.out
+    assert captured.err == ""
+
+
+def test_app_a4_patch_send_plan_sender_rejects_malformed_events(capsys) -> None:
+    from rytm_randomizer import app
+    from rytm_randomizer.style_analysis.analog_four_patch_send_plan import (
+        ANALOG_FOUR_PATCH_SEND_KIND_CC,
+    )
+
+    malformed_cc_plan = types.SimpleNamespace(
+        send_events=(
+            types.SimpleNamespace(
+                message_kind=ANALOG_FOUR_PATCH_SEND_KIND_CC,
+                cc_msb=None,
+                midi_value=1,
+                channel=0,
+                nrpn_address=None,
+            ),
+        )
+    )
+    malformed_nrpn_plan = types.SimpleNamespace(
+        send_events=(
+            types.SimpleNamespace(
+                message_kind="nrpn",
+                cc_msb=None,
+                midi_value=1,
+                channel=0,
+                nrpn_address=None,
+            ),
+        )
+    )
+    malformed_kind_plan = types.SimpleNamespace(
+        send_events=(
+            types.SimpleNamespace(
+                message_kind="sysex",
+                cc_msb=None,
+                midi_value=1,
+                channel=0,
+                nrpn_address=None,
+            ),
+        )
+    )
+
+    with pytest.raises(ValueError, match="missing a CC MSB"):
+        app._send_a4_patch_send_plan_events(malformed_cc_plan, object())  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="missing an NRPN address"):
+        app._send_a4_patch_send_plan_events(malformed_nrpn_plan, object())  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="unsupported MIDI event kind"):
+        app._send_a4_patch_send_plan_events(malformed_kind_plan, object())  # type: ignore[arg-type]
+    assert capsys.readouterr().err == ""
+
+
+def test_app_dry_run_a4_patch_send_plan_reports_send_failure(capsys, monkeypatch) -> None:
+    from rytm_randomizer import app
+
+    fake_plan = types.SimpleNamespace(
+        selected_track=1,
+        selected_candidate=1,
+        selected_label="Closest reference",
+        summary=types.SimpleNamespace(
+            sendable_count=1,
+            transport_message_count=1,
+            manual_count=0,
+        ),
+    )
+
+    def fail_send(_plan, _sender) -> None:
+        raise RuntimeError("mock-send-failed")
+
+    monkeypatch.setattr(app, "_send_a4_patch_send_plan_events", fail_send)
+
+    exit_code = app._run_dry_run_a4_patch_send_plan(fake_plan, source_label="description")
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--dry-run --a4-patch-send-plan send failed: mock-send-failed" in captured.err
+    assert captured.out == ""
+
+
+@pytest.mark.parametrize(
+    "list_outputs, expected",
+    [
+        ("raise", "--arm --a4-patch-send-plan failed: discovery_failed"),
+        ("empty", "no real MIDI output ports available"),
+    ],
+)
+def test_app_arm_a4_patch_send_plan_reports_output_discovery_failures(
+    list_outputs,
+    expected,
+    capsys,
+    monkeypatch,
+) -> None:
+    from rytm_randomizer import app, mido_provider
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+    from rytm_randomizer.real_midi_adapter import RealMidiPortError
+
+    reset_metrics()
+    fake_plan = types.SimpleNamespace(
+        selected_track=1,
+        selected_candidate=1,
+        summary=types.SimpleNamespace(
+            sendable_count=1,
+            transport_message_count=1,
+        ),
+    )
+
+    def fail_list(self) -> tuple[str, ...]:
+        raise RealMidiPortError("discovery_failed")
+
+    if list_outputs == "raise":
+        monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_list)
+    else:
+        monkeypatch.setattr(
+            mido_provider.MidoMidiPortProvider,
+            "list_output_names",
+            lambda self: (),
+        )
+
+    exit_code = app._run_armed_a4_patch_send_plan(fake_plan, source_label="description")
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert expected in captured.err
+    assert captured.out == ""
+    expected_error = (
+        "a4_patch_send_plan_port_list"
+        if list_outputs == "raise"
+        else "a4_patch_send_plan_no_output_ports"
+    )
+    assert get_metrics().errors_by_kind[expected_error] == 1
+
+
+def test_app_arm_a4_patch_send_plan_reports_invalid_port_choice(capsys, monkeypatch) -> None:
+    from rytm_randomizer import app, mido_provider
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
+    reset_metrics()
+    fake_plan = types.SimpleNamespace(
+        selected_track=1,
+        selected_candidate=1,
+        summary=types.SimpleNamespace(
+            sendable_count=1,
+            transport_message_count=1,
+        ),
+    )
+
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_output_names",
+        lambda self: ("Fake A4 Out",),
+    )
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "99")
+
+    exit_code = app._run_armed_a4_patch_send_plan(fake_plan, source_label="description")
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--arm --a4-patch-send-plan failed: invalid MIDI output choice" in captured.err
+    assert "Available MIDI outputs" in captured.out
+    assert get_metrics().errors_by_kind["a4_patch_send_plan_port_selection"] == 1
+
+
+def test_app_arm_a4_patch_send_plan_reports_open_and_send_failures(
+    capsys,
+    fake_mido_session,
+    monkeypatch,
+) -> None:
+    from rytm_randomizer import app, mido_provider
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+    from rytm_randomizer.real_midi_adapter import RealMidiPortError
+
+    reset_metrics()
+    fake_plan = types.SimpleNamespace(
+        selected_track=1,
+        selected_candidate=1,
+        selected_label="Closest reference",
+        summary=types.SimpleNamespace(
+            sendable_count=1,
+            transport_message_count=1,
+            manual_count=0,
+        ),
+    )
+
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_output_names",
+        lambda self: ("Fake A4 Out",),
+    )
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
+
+    def fail_open(self, port_name: str):
+        raise RealMidiPortError("open_failed")
+
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_open)
+    exit_code = app._run_armed_a4_patch_send_plan(fake_plan, source_label="description")
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--arm --a4-patch-send-plan failed: open_failed" in captured.err
+    assert get_metrics().errors_by_kind["a4_patch_send_plan_port_open"] == 1
+
+    class FailingOutputPort:
+        def __init__(self) -> None:
+            self.closed = False
+
+        def close(self) -> None:
+            self.closed = True
+
+    fake_port = FailingOutputPort()
+
+    def fail_send(_plan, _port) -> None:
+        raise RuntimeError("send_failed")
+
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "open_output",
+        lambda self, port_name: fake_port,
+    )
+    monkeypatch.setattr(app, "_send_a4_patch_send_plan_events", fail_send)
+
+    exit_code = app._run_armed_a4_patch_send_plan(fake_plan, source_label="description")
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--arm --a4-patch-send-plan send failed: send_failed" in captured.err
+    assert fake_port.closed is True
+    assert get_metrics().errors_by_kind["a4_patch_send_plan_send"] == 1
+
+
 def test_app_main_a4_kit_recipe_requires_arm(capsys) -> None:
     from rytm_randomizer import app
 
