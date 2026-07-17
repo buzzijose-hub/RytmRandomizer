@@ -118,9 +118,13 @@ def test_patch_learning_packet_payload_is_stable_and_selected_patch_is_embedded(
 
 
 def test_patch_learning_rejects_wrong_types_and_candidate_range() -> None:
+    from rytm_randomizer.style_analysis.analog_four_patch_genome import (
+        build_analog_four_patch_genome,
+    )
     from rytm_randomizer.style_analysis.analog_four_patch_learning import (
         analog_four_patch_learning_packet_to_dict,
         build_analog_four_patch_learning_packet,
+        build_analog_four_patch_learning_packet_from_genome,
     )
 
     with pytest.raises(TypeError, match="report must be"):
@@ -131,6 +135,64 @@ def test_patch_learning_rejects_wrong_types_and_candidate_range() -> None:
         build_analog_four_patch_learning_packet(_reference_report(), selected_candidate=0)
     with pytest.raises(ValueError, match="candidate must be in"):
         build_analog_four_patch_learning_packet(_reference_report(), selected_candidate=5)
+    genome = build_analog_four_patch_genome(_reference_report())
+    with pytest.raises(TypeError, match="report must be"):
+        build_analog_four_patch_learning_packet_from_genome(
+            object(),  # type: ignore[arg-type]
+            genome,
+            selected_candidate=1,
+        )
+    with pytest.raises(TypeError, match="genome must be"):
+        build_analog_four_patch_learning_packet_from_genome(
+            _reference_report(),
+            object(),  # type: ignore[arg-type]
+            selected_candidate=1,
+        )
+
+
+def test_patch_learning_from_genome_preserves_dynamic_candidate() -> None:
+    from dataclasses import replace
+
+    from rytm_randomizer.data.analog_four_display import make_a4_patch_value
+    from rytm_randomizer.style_analysis.analog_four_patch_genome import (
+        build_analog_four_patch_genome,
+    )
+    from rytm_randomizer.style_analysis.analog_four_patch_learning import (
+        build_analog_four_patch_learning_packet_from_genome,
+    )
+
+    report = _reference_report()
+    genome = build_analog_four_patch_genome(report)
+    candidate = genome.candidates[0]
+    genes = tuple(
+        (
+            replace(
+                gene,
+                value=make_a4_patch_value("Filter2 Resonance", screen_target=91),
+            )
+            if gene.value.parameter == "Filter2 Resonance"
+            else gene
+        )
+        for gene in candidate.genes
+    )
+    dynamic_genome = replace(
+        genome,
+        source_hash="d" * 64,
+        candidates=(replace(candidate, genes=genes), *genome.candidates[1:]),
+    )
+
+    packet = build_analog_four_patch_learning_packet_from_genome(
+        report,
+        dynamic_genome,
+        selected_candidate=1,
+    )
+
+    resonance = next(
+        gene for gene in packet.selected_patch.genes if gene.value.parameter == "Filter2 Resonance"
+    )
+    assert packet.genome is dynamic_genome
+    assert packet.source_hash == "d" * 64
+    assert resonance.value.midi_value == 91
 
 
 def test_patch_learning_defensive_helpers_cover_empty_or_unmatched_candidates() -> None:

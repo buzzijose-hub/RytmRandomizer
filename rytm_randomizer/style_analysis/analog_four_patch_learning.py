@@ -152,6 +152,25 @@ def build_analog_four_patch_learning_packet(
     if not isinstance(report, FeatureReport):
         raise TypeError("report must be a FeatureReport")
     genome = build_analog_four_patch_genome(report, track=track)
+    return build_analog_four_patch_learning_packet_from_genome(
+        report,
+        genome,
+        selected_candidate=selected_candidate,
+    )
+
+
+def build_analog_four_patch_learning_packet_from_genome(
+    report: FeatureReport,
+    genome: AnalogFourPatchGenome,
+    *,
+    selected_candidate: int,
+) -> AnalogFourPatchLearningPacket:
+    """Build learning metadata around an already-compiled A4 genome."""
+
+    if not isinstance(report, FeatureReport):
+        raise TypeError("report must be a FeatureReport")
+    if not isinstance(genome, AnalogFourPatchGenome):
+        raise TypeError("genome must be an AnalogFourPatchGenome")
     if selected_candidate < 1 or selected_candidate > genome.candidate_count:
         raise ValueError(f"candidate must be in 1..{genome.candidate_count}")
 
@@ -482,4 +501,5 @@ __all__ = [
     "AnalogFourTraitLearningRoute",
     "analog_four_patch_learning_packet_to_dict",
     "build_analog_four_patch_learning_packet",
+    "build_analog_four_patch_learning_packet_from_genome",
 ]

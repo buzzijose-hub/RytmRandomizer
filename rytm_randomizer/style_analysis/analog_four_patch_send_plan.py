@@ -27,13 +27,16 @@ from .analog_four_patch_genome import (
     ANALOG_FOUR_TRACK_MAX,
     ANALOG_FOUR_TRACK_MIN,
     AnalogFourPatchGene,
+    AnalogFourPatchGenome,
+    build_analog_four_patch_genome,
 )
+from .analog_four_patch_inference import build_analog_four_audio_patch_genome
 from .analog_four_patch_learning import (
     AnalogFourPatchLearningPacket,
     analog_four_patch_learning_packet_to_dict,
-    build_analog_four_patch_learning_packet,
+    build_analog_four_patch_learning_packet_from_genome,
 )
-from .extractor import extract_from_audio, extract_from_description
+from .extractor import extract_from_description
 from .feature_report import FeatureReport
 
 ANALOG_FOUR_PATCH_SEND_PLAN_VERSION: Final[str] = "analog-four-patch-send-plan-v1"
@@ -149,9 +152,29 @@ def build_analog_four_patch_send_plan(
 
     if not isinstance(report, FeatureReport):
         raise TypeError("report must be a FeatureReport")
-    packet = build_analog_four_patch_learning_packet(
+    genome = build_analog_four_patch_genome(report, track=track)
+    return build_analog_four_patch_send_plan_from_genome(
         report,
-        track=track,
+        genome,
+        selected_candidate=selected_candidate,
+    )
+
+
+def build_analog_four_patch_send_plan_from_genome(
+    report: FeatureReport,
+    genome: AnalogFourPatchGenome,
+    *,
+    selected_candidate: int,
+) -> AnalogFourPatchSendPlan:
+    """Compile an already-inferred A4 genome into a passive send plan."""
+
+    if not isinstance(report, FeatureReport):
+        raise TypeError("report must be a FeatureReport")
+    if not isinstance(genome, AnalogFourPatchGenome):
+        raise TypeError("genome must be an AnalogFourPatchGenome")
+    packet = build_analog_four_patch_learning_packet_from_genome(
+        report,
+        genome,
         selected_candidate=selected_candidate,
     )
     send_events, manual_events = _split_patch_events(packet.selected_patch.genes)
@@ -190,18 +213,27 @@ def build_analog_four_patch_send_plan_from_source(
 
     if source_flag == "--description":
         feature_report = extract_from_description(source_value)
+        plan = build_analog_four_patch_send_plan(
+            feature_report,
+            track=track,
+            selected_candidate=selected_candidate,
+        )
     elif source_flag == "--audio":
-        feature_report = extract_from_audio(Path(source_value))
+        audio_genome = build_analog_four_audio_patch_genome(
+            Path(source_value),
+            track=track,
+        )
+        plan = build_analog_four_patch_send_plan_from_genome(
+            audio_genome.feature_report,
+            audio_genome.genome,
+            selected_candidate=selected_candidate,
+        )
     else:
         raise ValueError("source_flag must be --description or --audio")
     return AnalogFourPatchSendPlanSource(
         source_label=source_flag.removeprefix("--"),
         source_value=source_value,
-        plan=build_analog_four_patch_send_plan(
-            feature_report,
-            track=track,
-            selected_candidate=selected_candidate,
-        ),
+        plan=plan,
     )
 
 
@@ -419,5 +451,6 @@ __all__ = [
     "AnalogFourPatchSendSummary",
     "analog_four_patch_send_plan_to_dict",
     "build_analog_four_patch_send_plan",
+    "build_analog_four_patch_send_plan_from_genome",
     "build_analog_four_patch_send_plan_from_source",
 ]

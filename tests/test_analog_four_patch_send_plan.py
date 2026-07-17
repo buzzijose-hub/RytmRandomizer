@@ -111,9 +111,13 @@ def test_patch_send_plan_payload_is_stable_and_embeds_learning_context() -> None
 
 
 def test_patch_send_plan_rejects_wrong_types_and_candidate_range() -> None:
+    from rytm_randomizer.style_analysis.analog_four_patch_genome import (
+        build_analog_four_patch_genome,
+    )
     from rytm_randomizer.style_analysis.analog_four_patch_send_plan import (
         analog_four_patch_send_plan_to_dict,
         build_analog_four_patch_send_plan,
+        build_analog_four_patch_send_plan_from_genome,
     )
 
     with pytest.raises(TypeError, match="report must be"):
@@ -122,6 +126,149 @@ def test_patch_send_plan_rejects_wrong_types_and_candidate_range() -> None:
         analog_four_patch_send_plan_to_dict(object())  # type: ignore[arg-type]
     with pytest.raises(ValueError, match="candidate must be in"):
         build_analog_four_patch_send_plan(_reference_report(), selected_candidate=0)
+    genome = build_analog_four_patch_genome(_reference_report())
+    with pytest.raises(TypeError, match="report must be"):
+        build_analog_four_patch_send_plan_from_genome(
+            object(),  # type: ignore[arg-type]
+            genome,
+            selected_candidate=1,
+        )
+    with pytest.raises(TypeError, match="genome must be"):
+        build_analog_four_patch_send_plan_from_genome(
+            _reference_report(),
+            object(),  # type: ignore[arg-type]
+            selected_candidate=1,
+        )
+
+
+def test_patch_send_plan_from_genome_uses_dynamic_candidate_values() -> None:
+    from dataclasses import replace
+
+    from rytm_randomizer.data.analog_four_display import make_a4_patch_value
+    from rytm_randomizer.style_analysis.analog_four_patch_genome import (
+        build_analog_four_patch_genome,
+    )
+    from rytm_randomizer.style_analysis.analog_four_patch_send_plan import (
+        build_analog_four_patch_send_plan_from_genome,
+    )
+
+    report = _reference_report()
+    genome = build_analog_four_patch_genome(report)
+    candidate = genome.candidates[0]
+    genes = tuple(
+        (
+            replace(
+                gene,
+                value=make_a4_patch_value("Filter2 Resonance", screen_target=101),
+            )
+            if gene.value.parameter == "Filter2 Resonance"
+            else gene
+        )
+        for gene in candidate.genes
+    )
+    dynamic_genome = replace(
+        genome,
+        candidates=(replace(candidate, genes=genes), *genome.candidates[1:]),
+    )
+
+    plan = build_analog_four_patch_send_plan_from_genome(
+        report,
+        dynamic_genome,
+        selected_candidate=1,
+    )
+
+    resonance = next(event for event in plan.send_events if event.parameter == "Filter2 Resonance")
+    assert plan.learning_packet.genome is dynamic_genome
+    assert resonance.midi_value == 101
+
+
+def test_audio_source_profiles_change_send_event_dna(monkeypatch: pytest.MonkeyPatch) -> None:
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+    from rytm_randomizer.style_analysis.analog_four_patch_inference import (
+        AnalogFourPatchAudioFeatures,
+    )
+    from rytm_randomizer.style_analysis.analog_four_patch_send_plan import (
+        build_analog_four_patch_send_plan_from_source,
+    )
+
+    profiles = iter(
+        (
+            AnalogFourPatchAudioFeatures(
+                audio_sha256="1" * 64,
+                duration=0.2,
+                attack=0.02,
+                decay=0.18,
+                sustain=0.08,
+                tail=0.1,
+                brightness=0.12,
+                spectral_flatness=0.04,
+                noise=0.05,
+                low_end=0.88,
+                harmonicity=0.92,
+                transient=0.22,
+                modulation=0.06,
+            ),
+            AnalogFourPatchAudioFeatures(
+                audio_sha256="2" * 64,
+                duration=0.72,
+                attack=0.32,
+                decay=0.75,
+                sustain=0.62,
+                tail=0.78,
+                brightness=0.91,
+                spectral_flatness=0.84,
+                noise=0.86,
+                low_end=0.14,
+                harmonicity=0.23,
+                transient=0.91,
+                modulation=0.82,
+            ),
+        )
+    )
+    monkeypatch.setattr(
+        inference,
+        "analyze_analog_four_patch_audio",
+        lambda _path: next(profiles),
+    )
+    monkeypatch.setattr(inference, "extract_from_audio", lambda _path: _reference_report())
+
+    first = build_analog_four_patch_send_plan_from_source("--audio", "first.wav").plan
+    second = build_analog_four_patch_send_plan_from_source("--audio", "second.wav").plan
+    first_values = {event.parameter: event.midi_value for event in first.send_events}
+    second_values = {event.parameter: event.midi_value for event in second.send_events}
+
+    assert first.source_hash == "1" * 64
+    assert second.source_hash == "2" * 64
+    assert first_values != second_values
+    assert first_values["Filter1 Frequency"] < second_values["Filter1 Frequency"]
+    assert first_values["EnvA Release Time"] < second_values["EnvA Release Time"]
+
+
+def test_description_source_stays_static_and_invalid_source_is_rejected() -> None:
+    from rytm_randomizer.style_analysis.analog_four_patch_send_plan import (
+        build_analog_four_patch_send_plan,
+        build_analog_four_patch_send_plan_from_source,
+    )
+    from rytm_randomizer.style_analysis.extractor import extract_from_description
+
+    description = "dark compact metallic stab"
+    sourced = build_analog_four_patch_send_plan_from_source(
+        "--description",
+        description,
+        track=2,
+        selected_candidate=2,
+    )
+    direct = build_analog_four_patch_send_plan(
+        extract_from_description(description),
+        track=2,
+        selected_candidate=2,
+    )
+
+    assert sourced.source_label == "description"
+    assert sourced.source_value == description
+    assert sourced.plan.send_events == direct.send_events
+    with pytest.raises(ValueError, match="source_flag must be"):
+        build_analog_four_patch_send_plan_from_source("--unknown", "value")
 
 
 def test_patch_send_plan_defensive_helpers_cover_malformed_rows() -> None:
