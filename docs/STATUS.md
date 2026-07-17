@@ -1,9 +1,155 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-06-23. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-07-16. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-07-08: Passive local model copilot bundle prepared locally. The new
+  `local-model-copilot-report` command builds deterministic docs/MIDI,
+  staged mutation-intent, and Analog Four patch co-designer packets, and only
+  runs a configured local model executable when `--ask-local-model` is
+  explicitly set.
+  The local-AI provider, schema validators, and prompt packets live under the
+  new `rytm_randomizer/local_ai/` subpackage; the A4 co-designer reuses the
+  existing patch-genome compiler. It remains passive: no MIDI port opened, no
+  MIDI sent, no SysEx written, no hardware mutation, and no generated send plan
+  promoted from AI output.
+- 2026-07-03: Synplant-inspired Cockpit UI design surface prepared locally.
+  The React cockpit now has a frontend-only Patch Genome panel that groups
+  Analog Four-facing design-preview genes into oscillator, envelope/LFO,
+  filter/FX, and performance families; supports local family selection,
+  local gene locks, and grow/reset variant controls; and keeps the surface
+  mock-safe with no WebSocket command dispatch, no sidecar command execution,
+  no MIDI port opening, no hardware arm path, no patch intelligence, and no
+  MIDI send. The five Synplant 2 reference screenshots are saved under
+  `docs/assets/synplant-2-reference/` for future design work.
+- 2026-07-08: First passive Analog Four SysEx calibration facts promoted from
+  Jose's Test 1 filter captures. The data layer now records the
+  candidate-promoted primary packed offsets for Filter1 Frequency across the
+  four synth tracks (`156`, `556`, `956`, `1356`), the `+400` packed-byte
+  track stride, the `+350` unpacked-byte stride, front-panel values
+  `0.00`/`63.50`/`127.00`, and compact evidence fingerprints for the
+  operator-supplied kit exports. It also records the candidate-promoted
+  Filter1 Resonance offsets across the four synth tracks
+  (`158`, `558`, `958`, `1358`), values `0`/`20`/`127`, and the same
+  `+400` packed-byte track stride from the Track 2-4 zero-value captures. The
+  table now also records the candidate-promoted Filter2 Frequency offsets
+  across the four synth tracks (`167`, `567`, `967`, `1367`), values
+  `0.00`/`63.50`/`127.00`, and fingerprints for the operator-supplied Track
+  1 value sweep plus Track 2-4 127.00 stride-confirmation exports. The
+  candidate-promoted Filter2 Resonance calibration records packed offsets
+  `170`, `570`, `970`, and `1370` across the four synth tracks, values
+  `0`/`20`/`127`, and fingerprints for the Track 1 value sweep plus Track 2-4
+  127 stride-confirmation exports. It remains passive: no MIDI port opened,
+  no MIDI sent, no SysEx written, no hardware mutation, and no broader A4 kit
+  writer claim until additional fields are captured and validated.
+- 2026-07-04: Passive Analog Four initialized-baseline report prepared
+  locally from Jose's Test 1 exports. The new
+  `analog-four-baseline-report` command compares kit, pattern+kit, and
+  whole-project SysEx export scopes, decodes supported saved-kit frames, and
+  reports a coherent clean-slate fingerprint (`7006c189ecffc2a2`) that future
+  changed-patch captures can diff against. It remains passive: no MIDI port
+  opened, no MIDI sent, no SysEx written, no hardware mutation, and no
+  parameter-level A4 DNA extraction claim while saved-kit offsets are still
+  candidate-only.
+- 2026-07-03: Passive Analog Four patch capture-corpus matcher prepared
+  locally. The new `analog-four-patch-corpus-report` command ranks a
+  description or audio FeatureReport against starter or supplied A4
+  patch/audio corpus entries, recommends the nearest generated candidate, and
+  prints the missing hardware-capture gaps before any training promotion. It
+  remains passive: no MIDI port opened, no MIDI sent, no SysEx written, and
+  synthetic starter rows are labeled separately from captured hardware
+  evidence.
+- 2026-07-03: Analog Four generated patch send-plan bridge prepared locally.
+  The new `analog-four-patch-send-plan-report` command previews the selected
+  audio/description-generated candidate as ordered CC/NRPN live-dial events,
+  counts the exact transport messages, and lists skipped front-panel rows that
+  still need ordinal capture. The active app path now supports
+  `--dry-run --a4-patch-send-plan` for mock rendering and
+  `--arm --a4-patch-send-plan --confirm-a4-patch-send-plan` for explicit A4
+  output sends; it sends only compiler-approved rows and leaves screen-only
+  destination rows manual.
+- 2026-07-03: Passive Analog Four patch learning layer prepared locally. The
+  new `analog-four-patch-learning-report` command builds on the patch genome
+  by ranking all four candidates, routing measured reference traits to Analog
+  Four parameter families, printing a capture matrix for future empirical A4
+  recordings, and separating CC/NRPN-ready rows from screen-only NRPN
+  destinations before live dial-in promotion. It remains passive: no MIDI port
+  opened, no MIDI sent, no SysEx written, and no hardware state captured.
+- 2026-07-03: Passive Analog Four patch genome report prepared locally. The
+  new `analog-four-patch-genome-report` command turns a description or audio
+  FeatureReport into four Analog Four MKII single-sound candidates, then prints
+  the selected candidate as front-panel patch DNA with CC/NRPN metadata. The
+  report includes the user-reviewed A4 details that matter for manual dialing:
+  bipolar Filter Overdrive and LFO depths, Filter 2 type/resonance, EnvA/EnvF
+  shapes, EnvF release, and LFO multiplier/waveform/destination rows. It stays
+  passive: no MIDI port opened, no MIDI sent, no SysEx written, and NRPN-only
+  destination labels remain screen-only until exact ordinals are captured.
+- 2026-06-24: Passive Controller Brain Live Runbook bundle started on the clean
+  base after PR #196 merged. The new
+  `controller-brain-live-runbook-report [--json]` and
+  `controller-brain-live-state-report [--json]` surfaces now extend through
+  `controller-brain-live-bridge-readiness-report [--json]` and
+  `controller-brain-live-dispatch-rehearsal-report [--json]` into
+  `controller-brain-live-feedback-rehearsal-report [--json]` and
+  `controller-brain-live-cockpit-handoff-report [--json]`, plus the
+  `controller-brain-live-implementation-bridge-report [--json]` and
+  `controller-brain-live-desktop-blueprint-report [--json]` follow-up and the
+  `controller-brain-live-desktop-app-plan-report [--json]` and
+  `controller-brain-live-desktop-component-contract-report [--json]` plus
+  `controller-brain-live-desktop-view-model-report [--json]` and
+  `controller-brain-live-desktop-render-contract-report [--json]`
+  continuations.
+  Together they
+  compose the existing controller-brain rehearsal packet, OXI live set strategy,
+  and Cockpit performance console model into deterministic stage, inspect, fire,
+  recover, queued-intent, audit-event, bridge contract-packet, bridge-readiness,
+  shadow-dispatch, metadata-only feedback frames, and GUI-ready disabled
+  Cockpit handoff cards, disabled GUI implementation bindings, and desktop
+  blueprint contracts, app-plan routes, component API contracts, and
+  desktop view models and disabled render contracts for future
+  fixed-controller surfaces. They record
+  gesture intent, readiness gates, blocked active actions, replay commands,
+  source report provenance, state rows, queued intents, audit events, bridge
+  packets, dispatch decisions, transport gates, feedback frames, output gates,
+  Cockpit panels, disabled controls, implementation bindings, fixture bundles,
+  implementation gates, desktop regions, component contracts, view-model
+  bindings, fixture hints, app routes, component file hints, disabled state
+  slices, style tokens, component contracts, prop contracts, disabled event
+  contracts, test hooks, fixture contracts, component view models, state
+  bindings, disabled action models, render surfaces, render bindings,
+  render guards, render assertions, acceptance checks, and
+  safety lines
+  while keeping
+  every active path blocked: no controller input, no MIDI learn/raw CC capture,
+  no GUI launch, no
+  GUI renderer start, no runtime reducer execution, no WebSocket dispatch or
+  feedback, no controller feedback, no MIDI controller output, no MIDI port
+  opening, no MIDI send, no snapshot mutation, and no file writing.
+- 2026-06-24: Controller Brain Operator Package Ledger bundle started on the
+  clean base after PR #196 merged. The new passive
+  `controller-brain-operator-package-report [--json]` composes the reviewed
+  controller-brain virtual gesture packet with the current Live Kit Operator
+  Package slots, mapping macro depth, industrial macro selection, Rytm pad-lane
+  amount gestures, A4 review-only gestures, Style Crate selection, queue
+  staging, and panic-home recovery into deterministic package-review bindings.
+  This keeps the OXI/E16-style controller story tied to RytmRandomizer's live
+  KIT/operator-package advantage while preserving side-effect proof: no
+  controller input, no raw CC capture, no WebSocket dispatch, no file writing,
+  no snapshot mutation, no hardware arming, no MIDI port opening, and no MIDI
+  sending.
+- 2026-06-24: Operator Package Review Ledger bundle prepared on the clean base
+  after PR #196 merged. The passive `live-gui-performance-console-report
+  [--json]` now composes a typed Operator Package Review Ledger after the Live
+  Kit Operator Package lane. The ledger records apply-preview, mock-apply, and
+  receipt-audit stages; one review row per operator package step; package
+  export-key evidence; readiness proof; blocked actions; safety lines; and a
+  replay command. The Performance Console renders the ledger inside the
+  operator package panel with a disabled "Apply operator package ledger" control
+  and legacy-packet fallback. This remains passive/mock-safe: no package files
+  are written, no snapshots are mutated, no send plans are applied, no event
+  stream is emitted, no hardware is armed, no MIDI port is opened, and no MIDI
+  is sent.
 - 2026-06-23: Operator Package Mock Apply + Receipt bundle consolidated on
   the clean base after PR #195 merged. The Cockpit WebSocket protocol now
   includes typed `mock_apply_operator_package` and

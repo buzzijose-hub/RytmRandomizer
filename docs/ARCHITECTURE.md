@@ -95,6 +95,10 @@ on one line for an existing module, you probably need a new module instead.
 | --------------------- | ------------------------------------------------------------------------------- |
 | `data/param_maps.py`  | Per-machine CC maps, anchors, safe ranges, deltas, zones. Pure data.            |
 | `data/analog_four_midi.py` | Manual-backed Analog Four CC mappings from Appendix D. Pure data.        |
+| `data/analog_four_display.py` | Analog Four front-panel scales, labels, and CC/NRPN-ready patch-value metadata. Pure data. |
+| `data/analog_four_sysex_calibration.py` | Passive operator-captured Analog Four SysEx field offsets and value evidence. Pure data. |
+| `data/analog_four_patch_templates.py` | Static Analog Four patch-genome candidate templates and rationale rows. Pure data. |
+| `data/analog_four_patch_corpus.py` | Synthetic Analog Four patch-corpus starter feature vectors. Pure data. |
 | `data/analog_four_recipes.py` | Manual-backed Analog Four kit recipe definitions. Pure data.       |
 | `data/analog_rytm_midi.py` | Manual-backed Analog Rytm OS 1.72 CC/NRPN catalog and safety status labels. Pure data. |
 | `data/analog_rytm_style_recipes.py` | Curated full-12-pad Analog Rytm style-kit CC MSB recipes. Pure data. |
@@ -117,6 +121,8 @@ on one line for an existing module, you probably need a new module instead.
 | Module                       | Responsibility                                                              |
 | ---------------------------- | --------------------------------------------------------------------------- |
 | `midi_io.py`                 | Leaf MIDI primitives: build CC, send param, apply state. `mido` is lazy.    |
+| `senders/midi_event_plan.py` | Generic CC/NRPN event-plan sender used by generated A4 patch live-dial plans. |
+| `senders/guarded.py`, `senders/hardware.py` | Generic guarded/mock and arm-gated Device plan senders. |
 | `randomization.py`           | Pure randomization core: zone/depth mutation, waveform pick.                |
 | `mock_midi.py`               | In-memory `MockMidiSender` and `MidiMessage` for tests + passive paths.     |
 | `real_midi_adapter.py`       | Protocol boundary: `RealMidiPortProvider`, `RealMidiSender`. NO `mido`.     |
@@ -131,6 +137,12 @@ on one line for an existing module, you probably need a new module instead.
 | --------------------- | ------------------------------------------------------------------------------- |
 | `group_runner.py`     | Four-pad group + isolated-pad orchestration. Drives `randomization` + `midi_io`.|
 | `scene_runner.py`     | Scene/preset thin layer on top of `group_runner`.                               |
+| `style_analysis/analog_four_patch_genome.py` | Passive FeatureReport -> four-column Analog Four single-sound patch DNA compiler. |
+| `style_analysis/analog_four_patch_learning.py` | Passive patch-genome learning packet compiler: candidate ranking, trait routes, capture matrix, and live-dial readiness. |
+| `style_analysis/analog_four_patch_corpus.py` | Passive A4 patch/audio corpus nearest-match ranking and calibration-gap compiler. |
+| `style_analysis/analog_four_patch_codesigner.py` | Passive A4 patch-genome co-designer packet compiler for staged local-AI review. |
+| `style_analysis/analog_four_patch_send_plan.py` | Passive selected A4 patch -> ordered CC/NRPN live-dial send-plan compiler. |
+| `local_ai/` | Passive local-AI DTOs, local model subprocess adapter, docs/MIDI context packets, staged mutation-intent validation, and JSON-schema helpers. |
 
 ### Upper (entry points)
 
@@ -138,8 +150,8 @@ on one line for an existing module, you probably need a new module instead.
 | --------------------- | ------------------------------------------------------------------------------- |
 | `shell.py`            | Interactive command loop. Owns the V1.34 command alphabet. Injected deps.       |
 | `cli.py`              | **Passive** report-only CLI. NEVER imports `mido`, `mido_provider`, or engines. |
-| `app.py`              | Top-of-stack entry point. `--arm` wires output to `shell`; `--arm --rytm-12-pad-shell --confirm-rytm-12-pad-send` runs the all-12-pad Rytm style shell; `--arm --rytm-snapshot-shell <file.syx> --confirm-rytm-snapshot-shell-send` runs the all-12-pad current-kit snapshot shell; `--arm --rytm-kit-style --confirm-rytm-kit-send` sends one curated Rytm full-kit recipe; `--arm --rytm-cc-observe` opens only Rytm input and may read or receive a snapshot for labels; `--arm --a4-soft-capture` opens only A4 input; `--arm --a4-send-param` sends one manual-backed A4 CC; `--arm --a4-kit-recipe` sends one manual-backed A4 recipe. |
-| `reports/`            | Passive in-memory report package + shared formatter/helper layer, including the manual feedback packet report, the reference-style blueprint report, the Analog Four OXI macro set planner report, the controller-brain mapping catalog and rehearsal/export reports, the style-performance arc chain through the live render bundle, live cue sheet, live runbook, reference match, snapshot preview, stage packet, stage snapshot-routing handoff, stage rehearsal-state packet, live set cockpit dashboard, live show export packet, live transition timeline, live command deck, live state packet, live analyzer handoff/targets, GUI readiness/session, capture queue/review, sidecar session packets, GUI screen-contract packets, GUI render-tree packets, GUI analyzer-overlay packets, GUI analyzer-frame packets, GUI interaction-script packets, GUI action-reducer packets, GUI controller-state packets, GUI playback-transcript packets, GUI playback-validation packets, GUI test-harness contract/readiness packets, GUI implementation-bridge/desktop-blueprint/desktop-app-plan/desktop-component-contract/desktop-view-model/desktop-render-contract/desktop-render-harness/cockpit-boundary-readiness packets, cockpit send-plan operator-readiness packets, cockpit send-plan rehearsal-surface packets, and the live GUI performance-console chain through live-kit capture workbench, package audition, and operator package payload helpers under `reports/performance_console/`. Static manual feedback facts stay in `data/manual_feedback_packet.py`; static GUI contract facts stay in `data/live_gui_contracts.py`; static controller-brain profiles stay in `data/controller_mapping_profiles.py`; static controller-brain rehearsal scenarios stay in `data/controller_rehearsal_scenarios.py`; repeated report CLI helpers stay in `reports/live_gui_common.py`. |
+| `app.py`              | Top-of-stack entry point. `--arm` wires output to `shell`; `--arm --rytm-12-pad-shell --confirm-rytm-12-pad-send` runs the all-12-pad Rytm style shell; `--arm --rytm-snapshot-shell <file.syx> --confirm-rytm-snapshot-shell-send` runs the all-12-pad current-kit snapshot shell; `--arm --rytm-kit-style --confirm-rytm-kit-send` sends one curated Rytm full-kit recipe; `--arm --rytm-cc-observe` opens only Rytm input and may read or receive a snapshot for labels; `--arm --a4-soft-capture` opens only A4 input; `--arm --a4-send-param` sends one manual-backed A4 CC; `--arm --a4-kit-recipe` sends one manual-backed A4 recipe; `--arm --a4-patch-send-plan --confirm-a4-patch-send-plan` sends compiler-approved generated A4 patch rows. |
+| `reports/`            | Passive in-memory report package + shared formatter/helper layer, including the manual feedback packet report, the reference-style blueprint report, the Analog Four initialized-baseline, patch genome, patch learning, patch corpus, and patch send-plan reports, the Analog Four OXI macro set planner report, the controller-brain mapping catalog and rehearsal/export reports, the style-performance arc chain through the live render bundle, live cue sheet, live runbook, reference match, snapshot preview, stage packet, stage snapshot-routing handoff, stage rehearsal-state packet, live set cockpit dashboard, live show export packet, live transition timeline, live command deck, live state packet, live analyzer handoff/targets, GUI readiness/session, capture queue/review, sidecar session packets, GUI screen-contract packets, GUI render-tree packets, GUI analyzer-overlay packets, GUI analyzer-frame packets, GUI interaction-script packets, GUI action-reducer packets, GUI controller-state packets, GUI playback-transcript packets, GUI playback-validation packets, GUI test-harness contract/readiness packets, GUI implementation-bridge/desktop-blueprint/desktop-app-plan/desktop-component-contract/desktop-view-model/desktop-render-contract/desktop-render-harness/cockpit-boundary-readiness packets, cockpit send-plan operator-readiness packets, cockpit send-plan rehearsal-surface packets, and the live GUI performance-console chain through live-kit capture workbench, package audition, and operator package, operator review ledger, and payload helpers under `reports/performance_console/`. Static manual feedback facts stay in `data/manual_feedback_packet.py`; static A4 patch-template facts stay in `data/analog_four_patch_templates.py`; static A4 patch-corpus facts stay in `data/analog_four_patch_corpus.py`; static A4 learning facts stay in `data/analog_four_learning.py`; static A4 SysEx calibration facts stay in `data/analog_four_sysex_calibration.py`; static GUI contract facts stay in `data/live_gui_contracts.py`; static controller-brain profiles stay in `data/controller_mapping_profiles.py`; static controller-brain rehearsal scenarios stay in `data/controller_rehearsal_scenarios.py`; repeated report CLI helpers stay in `reports/live_gui_common.py`. |
 | `inspection.py`       | Consolidated passive command-metadata inspection + preview + audit.             |
 
 ### Frozen reference (NOT in the layered graph)
@@ -275,10 +287,21 @@ and the parity tests run the extracted engines/runners against those goldens.
 | Add new fact table                   | A new module under `data/` + re-export in `__init__`.  | `extend-data-layer`       |
 | Change MIDI primitives               | `midi_io.py`. Keep `mido` lazy.                        | (architecture review)     |
 | Add new passive report               | A module under `reports/` + CLI wire-up only when it becomes an operator command. | (none, follow existing)   |
+| Add passive local-AI prompt workflow  | Generic DTO/provider/schema code under `local_ai/`; domain compilers stay under their owning package; report wrappers stay under `reports/`. | (architecture review) |
 | Add a new state domain               | A new module under `state/` (frozen + transitions).    | (architecture review)     |
 | Add input-only live observation       | Pure state reducer under `state/`, formatter under `reports/`, explicit armed app path. | (architecture review) |
+| Add gated generated patch send        | Pure compiler under `style_analysis/`, passive preview under `reports/`, reusable transport helpers under `senders/`, explicit `app.py --arm` path with a confirmation flag. | (architecture review) |
 | **Add a new Elektron device family** (Analog Four, Digitakt, ...) | One module at `devices/<family>.py` registering a `Device` instance + three Strategy modules under `devices/strategies/`. See §6.1. | (architecture review)     |
 | Music-analysis or guardrail change   | See `.claude/skills/MusicLibraryGuardrails/SKILL.md`. | `MusicLibraryGuardrails`  |
+
+The `controller_brain_live_*` report family is an explicit passive
+contract-pack exception to the default preference for generic factories. Each
+module owns one replayable CLI/report contract for future Cockpit work, stops at
+deterministic metadata, and does not open GUI runtimes, controller ports, MIDI
+ports, sockets, or hardware send paths. Do not copy this shape for active send
+paths, device families, MIDI renderers, hardware adapters, or snapshot mutation
+flows; those still route through the `Device`, strategy, sender, guardrail, and
+snapshot seams.
 
 ---
 
@@ -327,6 +350,15 @@ backward compatibility — they delegate to the strategies.
 - Do NOT introduce a second registry; only `devices/registry.py` may define `register_device`.
 
 `AnalogRytmDevice` is the reference implementation; `tests/test_devices.py` and `tests/test_devices_strategies_*.py` cover the contract.
+
+FeatureReport-driven generated patch sends are a deliberately separate seam from
+the snapshot-driven `Device` renderer. These paths start with analyzed or typed
+sound traits, compile operator-reviewed CC/NRPN event plans, and remain gated by
+an explicit `app.py --arm` path plus a confirmation flag. They may use generic
+NRPN-capable sender helpers under `senders/`, but they must not become a
+parallel device package, registry, snapshot decoder, mutation planner, or
+per-device hardware sender. When a future generated patch send can be expressed
+as a snapshot mutation, move it through the `Device` strategies instead.
 
 ---
 

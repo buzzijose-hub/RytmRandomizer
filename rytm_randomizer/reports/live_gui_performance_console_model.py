@@ -62,6 +62,11 @@ from .performance_console.live_kit_operator_package import (
     build_live_kit_operator_package,
     live_kit_operator_package_lines,
 )
+from .performance_console.live_kit_operator_review_ledger import (
+    LiveKitOperatorReviewLedgerPayload,
+    build_live_kit_operator_review_ledger,
+    live_kit_operator_review_ledger_lines,
+)
 from .performance_console.live_kit_package_audition import (
     LiveKitPackageAuditionPayload,
     build_live_kit_package_audition,
@@ -236,6 +241,7 @@ class LiveGuiPerformanceConsoleModel:
     live_kit_capture_workbench: dict[str, object]
     live_kit_package_audition: LiveKitPackageAuditionPayload
     live_kit_operator_package: LiveKitOperatorPackagePayload
+    operator_package_review_ledger: LiveKitOperatorReviewLedgerPayload
     analog_four_review_surface: dict[str, object]
     style_queue: dict[str, object]
     analyzer_panel: dict[str, object]
@@ -267,6 +273,7 @@ class LiveGuiPerformanceConsoleModelDict(TypedDict):
     live_kit_capture_workbench: dict[str, object]
     live_kit_package_audition: LiveKitPackageAuditionPayload
     live_kit_operator_package: LiveKitOperatorPackagePayload
+    operator_package_review_ledger: LiveKitOperatorReviewLedgerPayload
     analog_four_review_surface: dict[str, object]
     style_queue: dict[str, object]
     analyzer_panel: dict[str, object]
@@ -879,6 +886,7 @@ def _console_id(
     live_kit_capture_workbench: dict[str, object],
     live_kit_package_audition: dict[str, object],
     live_kit_operator_package: dict[str, object],
+    operator_package_review_ledger: dict[str, object],
     analog_four_review_surface: dict[str, object],
     style_queue: dict[str, object],
     analyzer_panel: dict[str, object],
@@ -901,6 +909,7 @@ def _console_id(
             str(live_kit_capture_workbench.get("workbench_id", "")),
             str(live_kit_package_audition.get("audition_id", "")),
             str(live_kit_operator_package.get("operator_package_id", "")),
+            str(operator_package_review_ledger.get("ledger_id", "")),
             str(analog_four_review_surface.get("surface_id", "")),
             str(style_queue.get("deck_id", "")),
             str(analyzer_panel.get("panel_id", "")),
@@ -942,6 +951,9 @@ def build_live_gui_performance_console_model(
         live_kit_capture_workbench,
         live_kit_package_audition,
     )
+    operator_package_review_ledger = build_live_kit_operator_review_ledger(
+        live_kit_operator_package
+    )
     analog_four_review_surface = _build_analog_four_review_surface()
     style_queue = to_style_crate_rehearsal_deck_json(build_style_crate_rehearsal_deck())[
         "style_crate_rehearsal_deck"
@@ -975,6 +987,7 @@ def build_live_gui_performance_console_model(
         _tuple_from_payload(live_kit_capture_workbench, "blocked_actions"),
         _tuple_from_payload(live_kit_package_audition, "blocked_actions"),
         _tuple_from_payload(live_kit_operator_package, "blocked_actions"),
+        _tuple_from_payload(operator_package_review_ledger, "blocked_actions"),
         _tuple_from_payload(analog_four_review_surface, "blocked_actions"),
         tuple(style_queue["blocked_actions"]),
         tuple(analyzer_panel["blocked_actions"]),
@@ -995,6 +1008,7 @@ def build_live_gui_performance_console_model(
         _tuple_from_payload(live_kit_capture_workbench, "safety_lines"),
         _tuple_from_payload(live_kit_package_audition, "safety_lines"),
         _tuple_from_payload(live_kit_operator_package, "safety_lines"),
+        _tuple_from_payload(operator_package_review_ledger, "safety_lines"),
         _tuple_from_payload(analog_four_review_surface, "safety_lines"),
         _tuple_from_payload(device_inventory, "safety"),
         _tuple_from_payload(rytm_pad_surface, "safety"),
@@ -1016,6 +1030,7 @@ def build_live_gui_performance_console_model(
             live_kit_capture_workbench=live_kit_capture_workbench,
             live_kit_package_audition=live_kit_package_audition,
             live_kit_operator_package=live_kit_operator_package,
+            operator_package_review_ledger=operator_package_review_ledger,
             analog_four_review_surface=analog_four_review_surface,
             style_queue=style_queue,
             analyzer_panel=analyzer_panel,
@@ -1037,6 +1052,7 @@ def build_live_gui_performance_console_model(
         live_kit_capture_workbench=live_kit_capture_workbench,
         live_kit_package_audition=live_kit_package_audition,
         live_kit_operator_package=live_kit_operator_package,
+        operator_package_review_ledger=operator_package_review_ledger,
         analog_four_review_surface=analog_four_review_surface,
         style_queue=style_queue,
         analyzer_panel=analyzer_panel,
@@ -1074,6 +1090,7 @@ def live_gui_performance_console_model_payload(
             "live_kit_capture_workbench": source.live_kit_capture_workbench,
             "live_kit_package_audition": source.live_kit_package_audition,
             "live_kit_operator_package": source.live_kit_operator_package,
+            "operator_package_review_ledger": source.operator_package_review_ledger,
             "analog_four_review_surface": source.analog_four_review_surface,
             "style_queue": source.style_queue,
             "analyzer_panel": source.analyzer_panel,
@@ -1233,6 +1250,7 @@ def _format_console_body(model: LiveGuiPerformanceConsoleModel) -> list[str]:
         *live_kit_capture_workbench_lines(model.live_kit_capture_workbench),
         *live_kit_package_audition_lines(model.live_kit_package_audition),
         *live_kit_operator_package_lines(model.live_kit_operator_package),
+        *live_kit_operator_review_ledger_lines(model.operator_package_review_ledger),
         *_analog_four_review_surface_lines(model),
         "A4 set plan:",
         f"- set: {a4_set_plan['set_name']}",

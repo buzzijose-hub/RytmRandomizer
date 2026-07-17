@@ -34,6 +34,12 @@ Usage:
   python -m rytm_randomizer.cli analog-four-style-mutation-intent-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report <syx-path> <style-key> [--slot N] [--discovery N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-kit-catalog-report <syx-path> [--limit N] [--json]
+  python -m rytm_randomizer.cli analog-four-baseline-report --kit <syx-path> --pattern-kit <syx-path> --whole-project <syx-path> [--json]
+  python -m rytm_randomizer.cli analog-four-patch-genome-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
+  python -m rytm_randomizer.cli analog-four-patch-learning-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
+  python -m rytm_randomizer.cli analog-four-patch-corpus-report (--description <text>|--audio <path>) [--track N] [--limit N] [--corpus-file <path>] [--json]
+  python -m rytm_randomizer.cli analog-four-patch-send-plan-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
+  python -m rytm_randomizer.cli local-model-copilot-report --question <text> [--description <text>] [--workflow docs|mutation|patch|all] [--model <name>] [--ask-local-model] [--json]
   python -m rytm_randomizer.cli analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report [<macro-name>] [--seed N] [--intensity N] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report [--set-name <text>] [--sequence <macro,...>] [--seed N] [--json]
@@ -53,6 +59,19 @@ Usage:
   python -m rytm_randomizer.cli oxi-live-macro-catalog-report
   python -m rytm_randomizer.cli controller-brain-mapping-report [--json]
   python -m rytm_randomizer.cli controller-brain-rehearsal-report [--json]
+  python -m rytm_randomizer.cli controller-brain-operator-package-report [--json]
+  python -m rytm_randomizer.cli controller-brain-live-runbook-report [--json]
+  python -m rytm_randomizer.cli controller-brain-live-state-report [--json]
+  python -m rytm_randomizer.cli controller-brain-live-bridge-readiness-report [--json]
+  python -m rytm_randomizer.cli controller-brain-live-dispatch-rehearsal-report [--json]
+  python -m rytm_randomizer.cli controller-brain-live-feedback-rehearsal-report [--json]
+  python -m rytm_randomizer.cli controller-brain-live-cockpit-handoff-report [--json]
+  python -m rytm_randomizer.cli controller-brain-live-implementation-bridge-report [--json]
+  python -m rytm_randomizer.cli controller-brain-live-desktop-blueprint-report [--json]
+  python -m rytm_randomizer.cli controller-brain-live-desktop-app-plan-report [--app-plan-label <text>] [--framework-target desktop-python|web-desktop|test-harness] [--json]
+  python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report [--component-contract-label <text>] [--selector-prefix <text>] [--json]
+  python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report [--view-model-label <text>] [--state-prefix <text>] [--json]
+  python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report [--render-contract-label <text>] [--surface-prefix <text>] [--json]
   python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report [--json]
   python -m rytm_randomizer.cli live-gui-performance-flow-model-report [--json]
   python -m rytm_randomizer.cli live-gui-performance-console-report [--json]
@@ -179,6 +198,18 @@ Commands:
                      Print passive Analog Four style mutation mock-preview rows for a SysEx file.
   analog-four-kit-catalog-report
                      Print passive Analog Four kit catalog metadata for a SysEx file.
+  analog-four-baseline-report
+                     Compare initialized Analog Four kit, pattern+kit, and project dumps.
+  analog-four-patch-genome-report
+                     Generate passive Analog Four patch DNA candidates from audio or text.
+  analog-four-patch-learning-report
+                     Generate passive Analog Four patch learning and live-dial readiness.
+  analog-four-patch-corpus-report
+                     Rank passive Analog Four patch corpus matches from audio or text.
+  analog-four-patch-send-plan-report
+                     Preview generated Analog Four patch CC/NRPN live-dial events.
+  local-model-copilot-report
+                     Build passive local model copilot packets for docs, mutation, and A4 patch DNA.
   analog-four-oxi-macro-report
                      Print passive Analog Four OXI-style macro preview metadata.
   analog-four-oxi-macro-readiness-report
@@ -217,6 +248,32 @@ Commands:
                      Print passive 16-encoder controller-brain intent maps.
   controller-brain-rehearsal-report
                      Print passive controller-brain rehearsal and template export packets.
+  controller-brain-operator-package-report
+                     Print passive controller-brain to operator package ledgers.
+  controller-brain-live-runbook-report
+                     Print passive controller-brain live runbook steps.
+  controller-brain-live-state-report
+                     Print passive controller-brain live state rows, queued intents, and audit events.
+  controller-brain-live-bridge-readiness-report
+                     Print passive controller-brain bridge readiness packets and gates.
+  controller-brain-live-dispatch-rehearsal-report
+                     Print passive controller-brain shadow dispatch decisions and gates.
+  controller-brain-live-feedback-rehearsal-report
+                     Print passive controller-brain feedback frames and output gates.
+  controller-brain-live-cockpit-handoff-report
+                     Print passive controller-brain Cockpit handoff cards and disabled controls.
+  controller-brain-live-implementation-bridge-report
+                     Print passive controller-brain implementation bindings and gates.
+  controller-brain-live-desktop-blueprint-report
+                     Print passive controller-brain desktop regions and component contracts.
+  controller-brain-live-desktop-app-plan-report
+                     Print passive controller-brain app routes and component file hints.
+  controller-brain-live-desktop-component-contract-report
+                     Print passive controller-brain desktop component API contracts.
+  controller-brain-live-desktop-view-model-report
+                     Print passive controller-brain desktop view models and state bindings.
+  controller-brain-live-desktop-render-contract-report
+                     Print passive controller-brain desktop render surfaces and bindings.
   rytm-live-macro-hardware-rehearsal-report
                      Print passive Rytm macro hardware rehearsal checklist.
   live-gui-performance-flow-model-report

@@ -92,6 +92,26 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.analog_four_kit_catalog",
             "ANALOG_FOUR_KIT_CATALOG_CLI_COMMAND",
         ),
+        "analog-four-baseline-report": (
+            "rytm_randomizer.reports.analog_four_baseline",
+            "ANALOG_FOUR_BASELINE_CLI_COMMAND",
+        ),
+        "analog-four-patch-genome-report": (
+            "rytm_randomizer.reports.analog_four_patch_genome",
+            "ANALOG_FOUR_PATCH_GENOME_CLI_COMMAND",
+        ),
+        "analog-four-patch-learning-report": (
+            "rytm_randomizer.reports.analog_four_patch_learning",
+            "ANALOG_FOUR_PATCH_LEARNING_CLI_COMMAND",
+        ),
+        "analog-four-patch-corpus-report": (
+            "rytm_randomizer.reports.analog_four_patch_corpus",
+            "ANALOG_FOUR_PATCH_CORPUS_CLI_COMMAND",
+        ),
+        "analog-four-patch-send-plan-report": (
+            "rytm_randomizer.reports.analog_four_patch_send_plan",
+            "ANALOG_FOUR_PATCH_SEND_PLAN_CLI_COMMAND",
+        ),
         "analog-four-oxi-macro-report": (
             "rytm_randomizer.reports.analog_four_oxi_macro_report",
             "ANALOG_FOUR_OXI_MACRO_CLI_COMMAND",
@@ -163,6 +183,58 @@ def _registered_command_exit_code(args):
         "controller-brain-rehearsal-report": (
             "rytm_randomizer.reports.controller_brain_rehearsal",
             "CONTROLLER_BRAIN_REHEARSAL_CLI_COMMAND",
+        ),
+        "controller-brain-operator-package-report": (
+            "rytm_randomizer.reports.controller_brain_operator_package",
+            "CONTROLLER_BRAIN_OPERATOR_PACKAGE_CLI_COMMAND",
+        ),
+        "controller-brain-live-runbook-report": (
+            "rytm_randomizer.reports.controller_brain_live_runbook",
+            "CONTROLLER_BRAIN_LIVE_RUNBOOK_CLI_COMMAND",
+        ),
+        "controller-brain-live-state-report": (
+            "rytm_randomizer.reports.controller_brain_live_state",
+            "CONTROLLER_BRAIN_LIVE_STATE_CLI_COMMAND",
+        ),
+        "controller-brain-live-bridge-readiness-report": (
+            "rytm_randomizer.reports.controller_brain_live_bridge_readiness",
+            "CONTROLLER_BRAIN_LIVE_BRIDGE_READINESS_CLI_COMMAND",
+        ),
+        "controller-brain-live-dispatch-rehearsal-report": (
+            "rytm_randomizer.reports.controller_brain_live_dispatch_rehearsal",
+            "CONTROLLER_BRAIN_LIVE_DISPATCH_REHEARSAL_CLI_COMMAND",
+        ),
+        "controller-brain-live-feedback-rehearsal-report": (
+            "rytm_randomizer.reports.controller_brain_live_feedback_rehearsal",
+            "CONTROLLER_BRAIN_LIVE_FEEDBACK_REHEARSAL_CLI_COMMAND",
+        ),
+        "controller-brain-live-cockpit-handoff-report": (
+            "rytm_randomizer.reports.controller_brain_live_cockpit_handoff",
+            "CONTROLLER_BRAIN_LIVE_COCKPIT_HANDOFF_CLI_COMMAND",
+        ),
+        "controller-brain-live-implementation-bridge-report": (
+            "rytm_randomizer.reports.controller_brain_live_implementation_bridge",
+            "CONTROLLER_BRAIN_LIVE_IMPLEMENTATION_BRIDGE_CLI_COMMAND",
+        ),
+        "controller-brain-live-desktop-blueprint-report": (
+            "rytm_randomizer.reports.controller_brain_live_desktop_blueprint",
+            "CONTROLLER_BRAIN_LIVE_DESKTOP_BLUEPRINT_CLI_COMMAND",
+        ),
+        "controller-brain-live-desktop-app-plan-report": (
+            "rytm_randomizer.reports.controller_brain_live_desktop_app_plan",
+            "CONTROLLER_BRAIN_LIVE_DESKTOP_APP_PLAN_CLI_COMMAND",
+        ),
+        "controller-brain-live-desktop-component-contract-report": (
+            "rytm_randomizer.reports.controller_brain_live_desktop_component_contract",
+            "CONTROLLER_BRAIN_LIVE_DESKTOP_COMPONENT_CONTRACT_CLI_COMMAND",
+        ),
+        "controller-brain-live-desktop-view-model-report": (
+            "rytm_randomizer.reports.controller_brain_live_desktop_view_model",
+            "CONTROLLER_BRAIN_LIVE_DESKTOP_VIEW_MODEL_CLI_COMMAND",
+        ),
+        "controller-brain-live-desktop-render-contract-report": (
+            "rytm_randomizer.reports.controller_brain_live_desktop_render_contract",
+            "CONTROLLER_BRAIN_LIVE_DESKTOP_RENDER_CONTRACT_CLI_COMMAND",
         ),
         "rytm-live-macro-hardware-rehearsal-report": (
             "rytm_randomizer.reports.rytm_live_macro_hardware_rehearsal",
@@ -411,6 +483,10 @@ def _registered_command_exit_code(args):
         "cockpit-export-rehearsal-report": (
             "rytm_randomizer.reports.cockpit_export_rehearsal",
             "COCKPIT_EXPORT_REHEARSAL_CLI_COMMAND",
+        ),
+        "local-model-copilot-report": (
+            "rytm_randomizer.reports.local_model_copilot",
+            "LOCAL_MODEL_COPILOT_CLI_COMMAND",
         ),
     }
     command = cli_registry.get(args[0])

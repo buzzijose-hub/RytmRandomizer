@@ -17,6 +17,21 @@ export type { PadCardProps } from './PadCard';
 export { HistoryStrip } from './HistoryStrip';
 export { MutationPanel } from './MutationPanel';
 export type { MutationPanelProps } from './MutationPanel';
+export { PatchGenomePanel } from './PatchGenomePanel';
+export type { PatchGenomePanelProps } from './PatchGenomePanel';
+export {
+  DEFAULT_PATCH_GENOME_MODEL,
+  countReadyGenes,
+  getPatchGenomeFamily,
+} from './patchGenomeModel';
+export type {
+  PatchGenomeFamily,
+  PatchGenomeFamilyKey,
+  PatchGenomeGene,
+  PatchGenomeGeneStatus,
+  PatchGenomeModel,
+  PatchGenomeTrait,
+} from './patchGenomeModel';
 export { StyleCrateQueue } from './StyleCrateQueue';
 export type { StyleCrateQueueProps } from './StyleCrateQueue';
 export {
