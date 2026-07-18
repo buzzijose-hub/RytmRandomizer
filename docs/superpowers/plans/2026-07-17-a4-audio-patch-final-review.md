@@ -2,7 +2,7 @@
 
 > Status: in-flight
 >
-> Verdict: local software review passed; CI and supervised physical full-plan rehearsal remain pending.
+> Verdict: pass for software merge; CI is green. The supervised physical full-plan rehearsal remains pending.
 
 ## Findings Resolved
 
@@ -13,21 +13,21 @@
 - Observability: inference, render ranking, and armed delivery expose bounded RED metrics. Terminal logs include duration, metric summary, structured source/track/candidate context, typed failure categories, and stable fingerprints.
 - Maintainability: inference formulas live in canonical immutable data with bounded construction-validated keys; armed port acquisition and delivery/recovery are focused helpers; the reusable Elektron skill captures publication, provenance, validation, pacing, and recovery lessons.
 - Documentation: all counts below describe the same exact tree. Hardware state distinguishes proven Filter2 Resonance saved-kit writes from the pending complete live-plan rehearsal, and the dry-run manual asks operators to verify counts actually displayed by the command.
-- Post-push corrections: class-level device metadata is compatible again; bool/float selectors fail before analysis; batch staging carries pure render state until real publication; the A4 capability resolves per operation; native audio, fixture identity, and pacing have independent assertions; logs and lock-cleanup metrics carry stable diagnostic identity; the architecture diagram and CLI manifest workflow are current.
+- Post-push corrections: class-level device metadata retains real `ClassVar` introspection while strategy capabilities remain read-only properties; bool/float selectors fail before analysis; batch staging carries pure render state until real publication; the A4 capability resolves per operation; native audio, fixture identity, and pacing have independent assertions; logs and lock-cleanup metrics carry stable diagnostic identity; the architecture diagram and CLI manifest workflow are current.
 
 ## Verification
 
 - Full suite: 6,515 passed, 3 skipped.
-- Coverage: 99.04% across 42,438 statements and 9,622 branches; 98.40% pure-branch.
-- Diff coverage: all 2,677 changed executable production lines and all 283 changed behavioral branch origins executed.
+- Coverage: 99.04% across 42,437 statements and 9,622 branches; 98.40% pure-branch.
+- Diff coverage: all 2,676 changed executable production lines and all 283 changed behavioral branch origins executed.
 - Architecture: 693 passed.
 - V1.34 parity: 685 passed byte-for-byte.
 - Ruff, Black, isort, Vulture across production/tests, production-diff Pyright, `git diff --check`, and the mechanical review gate passed.
 
 ## Abstraction
 
-Pass locally. The separate generated-plan sender is justified because the existing snapshot sender consumes snapshot-derived CC triples, while this feature requires prevalidated mixed CC/NRPN sequences with exact partial-message accounting. Batch staging now keeps render metadata separate from actual write results.
+Pass. The separate generated-plan sender is justified because the existing snapshot sender consumes snapshot-derived CC triples, while this feature requires prevalidated mixed CC/NRPN sequences with exact partial-message accounting. Batch staging now keeps render metadata separate from actual write results.
 
 ## Docs
 
-Pass for the local tree; CI remains pending. The remaining hardware item is the deliberately supervised physical 39-row/59-message rehearsal. Saved-kit SysEx hardware proof remains limited to Filter2 Resonance on all four tracks.
+Pass. CI is green for feature-code head `245a0294` across Linux, macOS, Windows, architecture, lint, desktop E2E, docs, and CodeQL. The remaining hardware item is the deliberately supervised physical 39-row/59-message rehearsal. Saved-kit SysEx hardware proof remains limited to Filter2 Resonance on all four tracks.

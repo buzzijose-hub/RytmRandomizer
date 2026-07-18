@@ -81,7 +81,7 @@ git diff --check
 - [x] Architecture suite: 693 passed.
 - [x] V1.34 frozen parity: 685 passed byte-for-byte.
 - [x] Post-review codec/contracts/publication/reader/ranker/extractor slice: 100% statement and branch coverage (795 statements / 158 branches / 0 misses).
-- [x] Complete project coverage: 99.04% across 42,438 statements and 9,622 branches; pure-branch coverage is 98.40%, and all 2,677 changed executable production lines plus all 283 changed behavioral branch origins executed.
+- [x] Complete project coverage: 99.04% across 42,437 statements and 9,622 branches; pure-branch coverage is 98.40%, and all 2,676 changed executable production lines plus all 283 changed behavioral branch origins executed.
 - [x] Existing saved-kit writer/export focused coverage remains green; the complete repository suite includes both writer and audio-batch paths.
 - [x] Pyright across every production module changed by PR #214: 0 errors, 0 warnings.
 - [x] Manifest reader rejects rehashed path escapes, transport drift, DNA/event drift, noncanonical CC/NRPN addresses, sequence drift, and coverage drift before output opens.
@@ -91,7 +91,7 @@ git diff --check
 - [x] Audio patch-batch CLI focused tests and command-help fixture passed locally.
 - [x] Real librosa/CLI smoke: tonal and noise clips each produced 4 `.syx` files, 4 complete sidecars, and 1 manifest; their DNA and SysEx hashes differed, with candidate-1 Filter2 Resonance `36` versus `24`.
 - [x] Audio genome, learning, send-plan, and batch surfaces agreed on the same source hash and inferred parameter values.
-- [ ] CI matrix pending PR execution.
+- [x] CI matrix green across Linux, macOS, Windows, architecture, lint, desktop E2E, docs, and CodeQL for feature-code head `245a0294`.
 
 Hardware validation:
 

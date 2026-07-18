@@ -2,7 +2,7 @@
 
 > Status: in-flight
 >
-> Software complete; supervised full-plan hardware rehearsal pending.
+> CI green; supervised full-plan hardware rehearsal pending.
 
 ## Outcome
 
@@ -18,7 +18,8 @@ The run produced one bundled, non-stacked PR containing a passive audio-to-A4 ca
 | 2026-07-16 | Real audio batch path, immutable generation publication, interruption recovery, observability, and CLI contracts completed. |
 | 2026-07-16 | Parallel architecture, safety, test, and documentation reviews were resolved before final gates. |
 | 2026-07-17 | The required post-push eight-dimension review opened a final correction set covering compatibility, boundary validation, staging truthfulness, capability resolution, proof strength, maintainability, and docs. |
-| 2026-07-17 | Post-push correction convergence passed locally: 6,515 tests, 693 architecture items, 685 byte-frozen parity items, 99.04% project coverage, 98.40% pure-branch coverage, zero missed changed executable lines/branch origins, lint, Vulture, Pyright, and mechanical review. CI remains in flight. |
+| 2026-07-17 | Post-push correction convergence passed locally: 6,515 tests, 693 architecture items, 685 byte-frozen parity items, 99.04% project coverage, 98.40% pure-branch coverage, zero missed changed executable lines/branch origins, lint, Vulture, Pyright, and mechanical review. |
+| 2026-07-18 | Final protocol-introspection correction passed the same local matrix; feature-code head `245a0294` then passed the complete PR CI matrix across Linux, macOS, Windows, architecture, lint, desktop E2E, docs, and CodeQL. |
 
 ## Escalations Resolved
 
@@ -40,4 +41,4 @@ The run produced one bundled, non-stacked PR containing a passive audio-to-A4 ca
 
 ## LOC Impact
 
-The bundled PR spans the A4 data, style-analysis, strategy, export, test, and documentation surfaces. Local closeout passed 6,515 tests with 3 platform/dependency skips and 99.04% project coverage across 42,438 statements and 9,622 branches. Pure-branch coverage is 98.40%; all 2,677 changed executable production lines and all 283 changed behavioral branch origins executed. The final `git diff --stat` and CI matrix remain the authoritative merge totals; no V1.34 parity fixture or hardware-pinned dependency changed.
+The bundled PR spans the A4 data, style-analysis, strategy, export, test, and documentation surfaces. Local closeout passed 6,515 tests with 3 platform/dependency skips and 99.04% project coverage across 42,437 statements and 9,622 branches. Pure-branch coverage is 98.40%; all 2,676 changed executable production lines and all 283 changed behavioral branch origins executed. Feature-code head `245a0294` passed the complete PR CI matrix; the final `git diff --stat` remains the authoritative merge total. No V1.34 parity fixture or hardware-pinned dependency changed.
