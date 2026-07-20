@@ -1,0 +1,23 @@
+RytmRandomizer passive style profile list
+Count: 10
+Items:
+- birmingham_pressure: Birmingham Pressure (birmingham, raw, hard, loop_pressure, warehouse)
+- deep_dark_hypnosis: Deep Dark Hypnosis (deep, dark, rolling, hypnotic, atmospheric)
+- detroit_minimal: Detroit Minimal (detroit, minimal, stripped, dry, repetitive)
+- hardgroove_percussive: Hardgroove Percussive (hardgroove, percussive, rolling, funky, driving)
+- hood_stripped: Hood Stripped (minimal, hard, stripped, driving, functional)
+- industrial_dark: Industrial Dark (industrial, dark, metallic, noise, severe)
+- jose_core_techno: Jose Core Techno (jose, core, jeff_mills, oscar_mulero, stigmata, glenn_wilson, nightshift, regis, surgeon, birmingham, industrial, hard_loop, warehouse)
+- mills_hypnotic: Mills Hypnotic (detroit, hypnotic, bells, motion, futurist)
+- ur_machine_funk: Machine Funk (detroit, machine_funk, syncopated, bright, electro)
+- warehouse_peak: Warehouse Peak (peak_time, warehouse, driving, intense, controlled_chaos)
+Safety:
+- passive/read-only
+- metadata only
+- no MIDI sending
+- no port opening
+- no command execution
+- no hardware mutation
+- no hardware required
+Source: rytm_randomizer.reports.style_profiles
+In-memory only: True

@@ -1,0 +1,177 @@
+{
+  "active_boundary": {
+    "accepted_key": "2",
+    "active_cli_behavior": "absent",
+    "boundary": "mock_active_boundary",
+    "hardware_required": false,
+    "mock_only": true,
+    "required_condition_count": 5,
+    "supported_candidate": "group_profile:2",
+    "title": "RytmRandomizer Active Boundary Report",
+    "unsupported_keys": [
+      "3",
+      "4"
+    ]
+  },
+  "behavior_parity": {
+    "accepted_packet_count": 12,
+    "active_behavior": "absent",
+    "cli_visibility": "present",
+    "closeout_coverage_count": 18,
+    "hardware_required": false,
+    "pad_lane_command_count": 38,
+    "pad_lane_packet_count": 4,
+    "parked_scope_count": 2,
+    "read_only": true,
+    "runtime_adjacent_safe_failure_count": 3,
+    "selected_isolated_pad_packet_count": 2,
+    "title": "V1.34 Behavior Parity Coverage Report"
+  },
+  "closeout": {
+    "closeout_contract": "present",
+    "closeout_script": "Scripts/closeout_check.ps1",
+    "failure_propagation": "guarded"
+  },
+  "collaborator_review_intake": {
+    "active_behavior": "absent",
+    "collaborator": "Eddie",
+    "findings_received": false,
+    "hardware_behavior": "absent",
+    "implementation_policy": "verify_before_implementing",
+    "package_metadata_changes": "requires_explicit_approval",
+    "port_opening": "absent",
+    "real_midi": "absent",
+    "required_format": "text_or_markdown",
+    "review_source": "external_ai_assisted_review",
+    "status": "checkpointed",
+    "triage_categories": [
+      "valid_and_urgent",
+      "valid_but_later",
+      "already_handled",
+      "needs_more_evidence",
+      "not_applicable",
+      "conflicts_with_safety_constraints",
+      "conflicts_with_project_direction"
+    ]
+  },
+  "collaborator_review_triage_template": {
+    "active_behavior": "absent",
+    "findings_recorded": false,
+    "hardware_behavior": "absent",
+    "implementation_policy": "triage_before_implementing",
+    "package_metadata_changes": "requires_explicit_approval",
+    "port_opening": "absent",
+    "real_midi": "absent",
+    "requires_text_or_markdown": true,
+    "review_gate_path": "docs/archive/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md",
+    "screenshot_only_sufficient": false,
+    "status": "accepted",
+    "template_path": "docs/archive/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md"
+  },
+  "convergence": {
+    "active_execution": "present",
+    "active_execution_gate": "--arm flag",
+    "active_modes_present": 2,
+    "default_mode": "passive",
+    "entry_point": "rytm_randomizer.app",
+    "interactive_logic_converged": true,
+    "interactive_logic_owner": "rytm_randomizer.shell",
+    "modes": [
+      "default",
+      "arm",
+      "dry-run"
+    ],
+    "real_midi_provider": "rytm_randomizer.mido_provider.MidoMidiPortProvider",
+    "total_modes": 3
+  },
+  "mock_runtime_active_bridge": {
+    "accepted_source_key": "2",
+    "constructs_sender": false,
+    "emits_messages": false,
+    "invokes_bridge": false,
+    "mock_only": true,
+    "parked_count": 1,
+    "read_only": true,
+    "rejected_count": 7,
+    "title": "RytmRandomizer Mock Runtime Active Bridge Report"
+  },
+  "passive_cli_commands": [
+    "report",
+    "project-status-report",
+    "mock-mapper-report",
+    "runtime-plan-report",
+    "active-boundary-report",
+    "mock-runtime-active-bridge-report",
+    "anchor-profile-report",
+    "behavior-parity-report",
+    "rytm-live-macro-hardware-rehearsal-report",
+    "list-commands",
+    "list-scenes",
+    "list-group-profiles",
+    "search-commands",
+    "search-scenes",
+    "search-group-profiles",
+    "inspect-command",
+    "inspect-scene",
+    "inspect-group-profile",
+    "preview-command",
+    "preview-scene",
+    "preview-group-profile"
+  ],
+  "phase": {
+    "creative_identity_candidate": "KitForge",
+    "name": "Convergence Phase (armed behind --arm flag)",
+    "package_name": "rytm_randomizer",
+    "repository_name": "RytmRandomizer",
+    "technical_name": "RytmRandomizer"
+  },
+  "public_api_hardening": {
+    "active_behavior": "absent",
+    "exports_documented": true,
+    "module_count": 3,
+    "modules": [
+      "rytm_randomizer.active_boundary",
+      "rytm_randomizer.reports",
+      "rytm_randomizer.runtime_plan"
+    ],
+    "port_opening": "absent",
+    "real_midi": "absent",
+    "status": "checkpointed"
+  },
+  "runtime_plan": {
+    "mock_only": true,
+    "parked_count": 1,
+    "reason_codes": [
+      "execution_not_implemented",
+      "unsupported_key",
+      "unsupported_source_kind",
+      "profile_4_parked",
+      "missing_arming"
+    ],
+    "runtime_execution": "absent",
+    "supported_count": 2,
+    "title": "RytmRandomizer Runtime Plan Report",
+    "unsupported_count": 2,
+    "would_execute": false
+  },
+  "safety": {
+    "active_execution": "present_behind_arm_flag",
+    "analog_four_support": "absent",
+    "command_execution": "present_behind_arm_flag",
+    "default_mode": "passive",
+    "dispatch": "present_behind_arm_flag",
+    "hardware_behavior": "opt_in_behind_arm_flag",
+    "hardware_required": false,
+    "package_metadata": "untouched",
+    "pads_5_12_support": "absent",
+    "port_opening": "present_behind_arm_flag",
+    "real_midi": "present_behind_arm_flag",
+    "v134_reference": "untouched"
+  },
+  "source": {
+    "in_memory_only": true,
+    "report_module": "rytm_randomizer.project_status_report",
+    "writes_files": false
+  },
+  "title": "RytmRandomizer Project Status Report"
+}

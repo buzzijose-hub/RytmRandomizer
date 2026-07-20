@@ -1,0 +1,189 @@
+{
+  "blocked_count": 0,
+  "event_count": 12,
+  "events": [
+    {
+      "channel": 0,
+      "control": 69,
+      "lane": "oscillator drive",
+      "parameter": "OSC1 Level",
+      "reason": "manual-backed CC MSB row is available through --a4-send-param",
+      "role": "bass foundation",
+      "status": "cc-ready",
+      "track": 1,
+      "validation_command": "python -m rytm_randomizer.app --arm --a4-send-param --track 1 --parameter 'OSC1 Level' --value 101",
+      "value": 101
+    },
+    {
+      "channel": 0,
+      "control": 86,
+      "lane": "filter pressure",
+      "parameter": "Filter Overdrive",
+      "reason": "manual-backed CC MSB row is available through --a4-send-param",
+      "role": "bass foundation",
+      "status": "cc-ready",
+      "track": 1,
+      "validation_command": "python -m rytm_randomizer.app --arm --a4-send-param --track 1 --parameter 'Filter Overdrive' --value 53",
+      "value": 53
+    },
+    {
+      "channel": 0,
+      "control": 105,
+      "lane": "amp shape",
+      "parameter": "EnvA Decay Time",
+      "reason": "manual-backed CC MSB row is available through --a4-send-param",
+      "role": "bass foundation",
+      "status": "cc-ready",
+      "track": 1,
+      "validation_command": "python -m rytm_randomizer.app --arm --a4-send-param --track 1 --parameter 'EnvA Decay Time' --value 58",
+      "value": 58
+    },
+    {
+      "channel": 1,
+      "control": 78,
+      "lane": "oscillator color",
+      "parameter": "OSC2 Level",
+      "reason": "manual-backed CC MSB row is available through --a4-send-param",
+      "role": "stab pressure",
+      "status": "cc-ready",
+      "track": 2,
+      "validation_command": "python -m rytm_randomizer.app --arm --a4-send-param --track 2 --parameter 'OSC2 Level' --value 77",
+      "value": 77
+    },
+    {
+      "channel": 1,
+      "control": 89,
+      "lane": "filter bite",
+      "parameter": "Filter1 Resonance",
+      "reason": "manual-backed CC MSB row is available through --a4-send-param",
+      "role": "stab pressure",
+      "status": "cc-ready",
+      "track": 2,
+      "validation_command": "python -m rytm_randomizer.app --arm --a4-send-param --track 2 --parameter 'Filter1 Resonance' --value 62",
+      "value": 62
+    },
+    {
+      "channel": 1,
+      "control": 92,
+      "lane": "space send",
+      "parameter": "Delay Send Level",
+      "reason": "manual-backed CC MSB row is available through --a4-send-param",
+      "role": "stab pressure",
+      "status": "cc-ready",
+      "track": 2,
+      "validation_command": "python -m rytm_randomizer.app --arm --a4-send-param --track 2 --parameter 'Delay Send Level' --value 41",
+      "value": 41
+    },
+    {
+      "channel": 2,
+      "control": 74,
+      "lane": "pulse motion",
+      "parameter": "OSC1 PWM Depth",
+      "reason": "manual-backed CC MSB row is available through --a4-send-param",
+      "role": "motion accent",
+      "status": "cc-ready",
+      "track": 3,
+      "validation_command": "python -m rytm_randomizer.app --arm --a4-send-param --track 3 --parameter 'OSC1 PWM Depth' --value 44",
+      "value": 44
+    },
+    {
+      "channel": 2,
+      "control": 116,
+      "lane": "lfo motion",
+      "parameter": "LFO1 Speed",
+      "reason": "manual-backed CC MSB row is available through --a4-send-param",
+      "role": "motion accent",
+      "status": "cc-ready",
+      "track": 3,
+      "validation_command": "python -m rytm_randomizer.app --arm --a4-send-param --track 3 --parameter 'LFO1 Speed' --value 61",
+      "value": 61
+    },
+    {
+      "channel": 2,
+      "control": 24,
+      "lane": "lfo depth",
+      "parameter": "LFO1 Depth A",
+      "reason": "manual-backed CC MSB row is available through --a4-send-param",
+      "role": "motion accent",
+      "status": "cc-ready",
+      "track": 3,
+      "validation_command": "python -m rytm_randomizer.app --arm --a4-send-param --track 3 --parameter 'LFO1 Depth A' --value 33",
+      "value": 33
+    },
+    {
+      "channel": 3,
+      "control": 77,
+      "lane": "noise texture",
+      "parameter": "Noise Level",
+      "reason": "manual-backed CC MSB row is available through --a4-send-param",
+      "role": "air and noise",
+      "status": "cc-ready",
+      "track": 4,
+      "validation_command": "python -m rytm_randomizer.app --arm --a4-send-param --track 4 --parameter 'Noise Level' --value 33",
+      "value": 33
+    },
+    {
+      "channel": 3,
+      "control": 19,
+      "lane": "filter shade",
+      "parameter": "Filter2 Frequency",
+      "reason": "manual-backed CC MSB row is available through --a4-send-param",
+      "role": "air and noise",
+      "status": "cc-ready",
+      "track": 4,
+      "validation_command": "python -m rytm_randomizer.app --arm --a4-send-param --track 4 --parameter 'Filter2 Frequency' --value 68",
+      "value": 68
+    },
+    {
+      "channel": 3,
+      "control": 93,
+      "lane": "space send",
+      "parameter": "Reverb Send Level",
+      "reason": "manual-backed CC MSB row is available through --a4-send-param",
+      "role": "air and noise",
+      "status": "cc-ready",
+      "track": 4,
+      "validation_command": "python -m rytm_randomizer.app --arm --a4-send-param --track 4 --parameter 'Reverb Send Level' --value 43",
+      "value": 43
+    }
+  ],
+  "hardware_required": false,
+  "intensity": 4,
+  "macro_name": "hard-groove",
+  "opens_ports": false,
+  "operator_present_required": true,
+  "preflight_command": "python -m rytm_randomizer.app --arm --a4-soft-capture",
+  "promotion_gates": [
+    "Every row maps to manual-backed CC metadata",
+    "At least one operator-present validation pass is clean",
+    "A recovery/stop procedure is documented."
+  ],
+  "readiness": "review-ready",
+  "ready_count": 12,
+  "recovery_notes": [
+    "Stop immediately if the A4 display shows ERR",
+    "Do not run full A4 macro SEND from this report.",
+    "Return the A4 kit manually or reload the saved kit before continuing."
+  ],
+  "review_count": 0,
+  "safety": [
+    "passive/read-only",
+    "manual-backed Analog Four CC metadata only",
+    "operator-present validation commands only",
+    "no MIDI sending",
+    "no port opening",
+    "no unattended hardware behavior",
+    "A4 full macro SEND remains unimplemented"
+  ],
+  "seed": 0,
+  "sends_midi": false,
+  "shown_count": 12,
+  "title": "RytmRandomizer passive Analog Four OXI macro readiness",
+  "truncated_count": 0,
+  "validation_steps": [
+    "Run the input-only A4 soft capture first.",
+    "Review known and unknown controls before sending one row.",
+    "Send one validation command while watching the A4 display.",
+    "Repeat only rows that remain musical and reversible."
+  ]
+}

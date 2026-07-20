@@ -1,0 +1,35 @@
+RytmRandomizer passive style performance arc report
+Summary:
+- Arcs: 4
+- Purpose: passive reference arcs for long-form live set planning
+Arcs:
+hardgroove_detroit_machine_funk: Hardgroove Detroit Machine Funk
+  Primary references: Underground Resistance, Robert Hood
+  Default plan: scope=dual, minutes=180, rank=1, discovery=30->70
+  Style sequence: hardgroove_percussive -> ur_machine_funk -> detroit_minimal -> hood_stripped
+  Summary: A funkier pressure arc balancing hardgroove percussion with Detroit machine funk and stripped minimal drive.
+jose_warehouse_five_hour: Jose Warehouse Five Hour
+  Primary references: Jeff Mills, Oscar Mulero
+  Default plan: scope=dual, minutes=300, rank=1, discovery=30->85
+  Style sequence: jose_core_techno -> mills_hypnotic -> deep_dark_hypnosis -> birmingham_pressure -> industrial_dark -> warehouse_peak -> hood_stripped
+  Summary: A five-hour warehouse arc that starts with Jose's core pressure, moves through Mills/Mulero hypnosis, peaks in Birmingham/Stigmata industrial drive, then resets into stripped hard minimal control.
+mills_mulero_tunnel: Mills Mulero Tunnel
+  Primary references: Jeff Mills, Oscar Mulero
+  Default plan: scope=dual, minutes=180, rank=1, discovery=35->75
+  Style sequence: mills_hypnotic -> deep_dark_hypnosis -> warehouse_peak -> hood_stripped
+  Summary: A shorter hypnotic tunnel arc centered on futuristic Mills motion and Oscar Mulero darkness, with deep pressure before the peak.
+stigmata_birmingham_assault: Stigmata Birmingham Assault
+  Primary references: Chris Liebing & Andre Walter Stigmata 1-10, Regis
+  Default plan: scope=dual, minutes=150, rank=1, discovery=55->95
+  Style sequence: birmingham_pressure -> industrial_dark -> warehouse_peak -> jose_core_techno
+  Summary: A hard-edged pressure arc for Stigmata, Birmingham, Regis, Surgeon, Glenn Wilson, Thomas Krome, and early Kay D Smith references.
+Safety:
+- passive/read-only
+- metadata and plan expansion only
+- no MIDI sending
+- no port opening
+- no command execution
+- no hardware mutation
+- no hardware required
+Source: rytm_randomizer.reports.style_performance_arcs
+In-memory only: True

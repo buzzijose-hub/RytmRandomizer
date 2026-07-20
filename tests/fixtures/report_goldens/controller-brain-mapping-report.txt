@@ -1,0 +1,163 @@
+RytmRandomizer passive controller brain mapping report
+Controller profile: generic-16-encoder-performance
+Label: Generic 16-Encoder Performance Brain
+Controller family: generic-16-encoder
+Layout: 4x4 encoders with paged intent mappings
+Encoder slots per page: 16
+Safety summary: passive mapping only; translates controller gestures into reviewed RytmRandomizer intent, not active MIDI sends
+
+Pages:
+Page 1: Global Brain
+  key: global-brain
+  summary: Top-level live-performance intent: depth, macro selection, safety, and preview.
+  01. Preview Depth | style_queue/global | intent=global.preview_depth | action=adjust_macro_depth | lane=depth | safety=passive | recovery=recover_anchor
+  02. Variation Amount | style_queue/global | intent=global.variation_amount | action=adjust_global_amount | lane=amount | safety=passive | recovery=recover_anchor
+  03. Density | style_queue/global | intent=global.density | action=adjust_global_density | lane=density | safety=passive | recovery=recover_anchor
+  04. Bias | style_queue/global | intent=global.bias | action=adjust_global_bias | lane=bias | safety=passive | recovery=recover_anchor
+  05. Kit Core | analog_rytm_mk2/macro_kit_core | intent=macro.kit_core | action=choose_macro | lane=macro | safety=passive | recovery=recover_anchor
+  06. Hard Groove | analog_rytm_mk2/macro_hard_groove | intent=macro.hard_groove | action=choose_macro | lane=macro | safety=passive | recovery=recover_anchor
+  07. Industrial | analog_rytm_mk2/macro_industrial | intent=macro.industrial | action=choose_macro | lane=macro | safety=passive | recovery=recover_anchor
+  08. Dub Pressure | analog_rytm_mk2/macro_dub_pressure | intent=macro.dub_pressure | action=choose_macro | lane=macro | safety=passive | recovery=recover_anchor
+  09. Transition | analog_rytm_mk2/macro_transition | intent=macro.transition | action=choose_macro | lane=macro | safety=passive | recovery=recover_anchor
+  10. Home | snapshot_recovery/anchor | intent=macro.home | action=recover_anchor | lane=recovery | safety=passive | recovery=captured_anchor
+  11. Preview | style_queue/preview | intent=global.preview | action=prepare_preview | lane=preview | safety=passive | recovery=recover_anchor
+  12. Dry Run | style_queue/dry_run | intent=global.dry_run | action=prepare_dry_run | lane=preview | safety=passive | recovery=recover_anchor
+  13. Stage | style_queue/queue | intent=global.stage | action=stage_queue_move | lane=queue | safety=passive | recovery=recover_anchor
+  14. Save Journal | snapshot_recovery/journal | intent=global.save_journal | action=save_journal_entry | lane=journal | safety=passive | recovery=recover_anchor
+  15. Undo | snapshot_recovery/history | intent=global.undo | action=recover_previous | lane=recovery | safety=passive | recovery=captured_anchor
+  16. Readiness | style_queue/safety | intent=global.readiness | action=review_readiness | lane=safety | safety=passive | recovery=recover_anchor
+Page 2: Rytm Pads 1-4
+  key: rytm-pads-1-4
+  summary: Kick-anchor and first percussion lane controls.
+  01. Pad 1 Lock | analog_rytm_mk2/rytm_pad_1 | intent=rytm.pad1.lock | action=toggle_lock | lane=lock | safety=safe | recovery=recover_anchor
+  02. Pad 1 Body | analog_rytm_mk2/rytm_pad_1 | intent=rytm.pad1.body_amount | action=adjust_pad_amount | lane=body | safety=micro | recovery=recover_anchor
+  03. Pad 1 Grit | analog_rytm_mk2/rytm_pad_1 | intent=rytm.pad1.grit_amount | action=adjust_pad_amount | lane=grit | safety=micro | recovery=recover_anchor
+  04. Pad 1 Filter | analog_rytm_mk2/rytm_pad_1 | intent=rytm.pad1.filter_amount | action=adjust_pad_amount | lane=filter | safety=micro | recovery=recover_anchor
+  05. Pad 2 Source | analog_rytm_mk2/rytm_pad_2 | intent=rytm.pad2.source_amount | action=adjust_pad_amount | lane=source | safety=wide | recovery=recover_anchor
+  06. Pad 2 Density | analog_rytm_mk2/rytm_pad_2 | intent=rytm.pad2.density | action=adjust_pad_density | lane=density | safety=normal | recovery=recover_anchor
+  07. Pad 2 Bias | analog_rytm_mk2/rytm_pad_2 | intent=rytm.pad2.bias | action=adjust_pad_bias | lane=bias | safety=normal | recovery=recover_anchor
+  08. Pad 2 FX | analog_rytm_mk2/rytm_pad_2 | intent=rytm.pad2.fx_amount | action=adjust_pad_amount | lane=fx | safety=micro | recovery=recover_anchor
+  09. Pad 3 Source | analog_rytm_mk2/rytm_pad_3 | intent=rytm.pad3.source_amount | action=adjust_pad_amount | lane=source | safety=wide | recovery=recover_anchor
+  10. Pad 3 Morph | analog_rytm_mk2/rytm_pad_3 | intent=rytm.pad3.morph_amount | action=adjust_pad_amount | lane=morph | safety=normal | recovery=recover_anchor
+  11. Pad 3 Density | analog_rytm_mk2/rytm_pad_3 | intent=rytm.pad3.density | action=adjust_pad_density | lane=density | safety=normal | recovery=recover_anchor
+  12. Pad 3 Bias | analog_rytm_mk2/rytm_pad_3 | intent=rytm.pad3.bias | action=adjust_pad_bias | lane=bias | safety=normal | recovery=recover_anchor
+  13. Pad 4 Source | analog_rytm_mk2/rytm_pad_4 | intent=rytm.pad4.source_amount | action=adjust_pad_amount | lane=source | safety=wide | recovery=recover_anchor
+  14. Pad 4 Body | analog_rytm_mk2/rytm_pad_4 | intent=rytm.pad4.body_amount | action=adjust_pad_amount | lane=body | safety=normal | recovery=recover_anchor
+  15. Pad 4 Density | analog_rytm_mk2/rytm_pad_4 | intent=rytm.pad4.density | action=adjust_pad_density | lane=density | safety=normal | recovery=recover_anchor
+  16. Pad 4 Bias | analog_rytm_mk2/rytm_pad_4 | intent=rytm.pad4.bias | action=adjust_pad_bias | lane=bias | safety=normal | recovery=recover_anchor
+Page 3: Rytm Pads 5-8
+  key: rytm-pads-5-8
+  summary: SRC-first tom and mid-kit lanes with light filter and no LFO craziness.
+  01. Pad 5 Source | analog_rytm_mk2/rytm_pad_5 | intent=rytm.pad5.source_amount | action=adjust_pad_amount | lane=source | safety=normal | recovery=recover_anchor
+  02. Pad 5 Density | analog_rytm_mk2/rytm_pad_5 | intent=rytm.pad5.density | action=adjust_pad_density | lane=density | safety=normal | recovery=recover_anchor
+  03. Pad 5 Drive | analog_rytm_mk2/rytm_pad_5 | intent=rytm.pad5.drive_amount | action=adjust_pad_amount | lane=amp_fx | safety=micro | recovery=recover_anchor
+  04. Pad 5 Lock | analog_rytm_mk2/rytm_pad_5 | intent=rytm.pad5.lock | action=toggle_lock | lane=lock | safety=safe | recovery=recover_anchor
+  05. Pad 6 Source | analog_rytm_mk2/rytm_pad_6 | intent=rytm.pad6.source_amount | action=adjust_pad_amount | lane=source | safety=wide | recovery=recover_anchor
+  06. Pad 6 Filter | analog_rytm_mk2/rytm_pad_6 | intent=rytm.pad6.filter_amount | action=adjust_pad_amount | lane=filter | safety=micro | recovery=recover_anchor
+  07. Pad 6 FX | analog_rytm_mk2/rytm_pad_6 | intent=rytm.pad6.fx_amount | action=adjust_pad_amount | lane=amp_fx | safety=micro | recovery=recover_anchor
+  08. Pad 6 Density | analog_rytm_mk2/rytm_pad_6 | intent=rytm.pad6.density | action=adjust_pad_density | lane=density | safety=high | recovery=recover_anchor
+  09. Pad 7 Source | analog_rytm_mk2/rytm_pad_7 | intent=rytm.pad7.source_amount | action=adjust_pad_amount | lane=source | safety=wide | recovery=recover_anchor
+  10. Pad 7 Filter | analog_rytm_mk2/rytm_pad_7 | intent=rytm.pad7.filter_amount | action=adjust_pad_amount | lane=filter | safety=micro | recovery=recover_anchor
+  11. Pad 7 FX | analog_rytm_mk2/rytm_pad_7 | intent=rytm.pad7.fx_amount | action=adjust_pad_amount | lane=amp_fx | safety=micro | recovery=recover_anchor
+  12. Pad 7 Density | analog_rytm_mk2/rytm_pad_7 | intent=rytm.pad7.density | action=adjust_pad_density | lane=density | safety=high | recovery=recover_anchor
+  13. Pad 8 Source | analog_rytm_mk2/rytm_pad_8 | intent=rytm.pad8.source_amount | action=adjust_pad_amount | lane=source | safety=wide | recovery=recover_anchor
+  14. Pad 8 Filter | analog_rytm_mk2/rytm_pad_8 | intent=rytm.pad8.filter_amount | action=adjust_pad_amount | lane=filter | safety=micro | recovery=recover_anchor
+  15. Pad 8 FX | analog_rytm_mk2/rytm_pad_8 | intent=rytm.pad8.fx_amount | action=adjust_pad_amount | lane=amp_fx | safety=micro | recovery=recover_anchor
+  16. Pad 8 Density | analog_rytm_mk2/rytm_pad_8 | intent=rytm.pad8.density | action=adjust_pad_density | lane=density | safety=high | recovery=recover_anchor
+Page 4: Rytm Pads 9-12
+  key: rytm-pads-9-12
+  summary: Top percussion, cymbal, and optional Pad 12 controls with SRC-first policy.
+  01. Pad 9 Source | analog_rytm_mk2/rytm_pad_9 | intent=rytm.pad9.source_amount | action=adjust_pad_amount | lane=source | safety=normal | recovery=recover_anchor
+  02. Pad 9 Density | analog_rytm_mk2/rytm_pad_9 | intent=rytm.pad9.density | action=adjust_pad_density | lane=density | safety=high | recovery=recover_anchor
+  03. Pad 9 Bright | analog_rytm_mk2/rytm_pad_9 | intent=rytm.pad9.bias | action=adjust_pad_bias | lane=bias | safety=normal | recovery=recover_anchor
+  04. Pad 9 FX | analog_rytm_mk2/rytm_pad_9 | intent=rytm.pad9.fx_amount | action=adjust_pad_amount | lane=amp_fx | safety=micro | recovery=recover_anchor
+  05. Pad 10 Source | analog_rytm_mk2/rytm_pad_10 | intent=rytm.pad10.source_amount | action=adjust_pad_amount | lane=source | safety=normal | recovery=recover_anchor
+  06. Pad 10 Density | analog_rytm_mk2/rytm_pad_10 | intent=rytm.pad10.density | action=adjust_pad_density | lane=density | safety=high | recovery=recover_anchor
+  07. Pad 10 Bright | analog_rytm_mk2/rytm_pad_10 | intent=rytm.pad10.bias | action=adjust_pad_bias | lane=bias | safety=normal | recovery=recover_anchor
+  08. Pad 10 FX | analog_rytm_mk2/rytm_pad_10 | intent=rytm.pad10.fx_amount | action=adjust_pad_amount | lane=amp_fx | safety=micro | recovery=recover_anchor
+  09. Pad 11 Source | analog_rytm_mk2/rytm_pad_11 | intent=rytm.pad11.source_amount | action=adjust_pad_amount | lane=source | safety=normal | recovery=recover_anchor
+  10. Pad 11 Density | analog_rytm_mk2/rytm_pad_11 | intent=rytm.pad11.density | action=adjust_pad_density | lane=density | safety=high | recovery=recover_anchor
+  11. Pad 11 Texture | analog_rytm_mk2/rytm_pad_11 | intent=rytm.pad11.bias | action=adjust_pad_bias | lane=bias | safety=normal | recovery=recover_anchor
+  12. Pad 11 FX | analog_rytm_mk2/rytm_pad_11 | intent=rytm.pad11.fx_amount | action=adjust_pad_amount | lane=amp_fx | safety=micro | recovery=recover_anchor
+  13. Pad 12 Source | analog_rytm_mk2/rytm_pad_12 | intent=rytm.pad12.source_amount | action=adjust_pad_amount | lane=source | safety=normal | recovery=recover_anchor
+  14. Pad 12 Density | analog_rytm_mk2/rytm_pad_12 | intent=rytm.pad12.density | action=adjust_pad_density | lane=density | safety=medium | recovery=recover_anchor
+  15. Pad 12 FX | analog_rytm_mk2/rytm_pad_12 | intent=rytm.pad12.fx_amount | action=adjust_pad_amount | lane=amp_fx | safety=micro | recovery=recover_anchor
+  16. Pad 12 Lock | analog_rytm_mk2/rytm_pad_12 | intent=rytm.pad12.lock | action=toggle_lock | lane=lock | safety=safe | recovery=recover_anchor
+Page 5: Analog Four Tracks
+  key: analog-four-tracks
+  summary: Four-track A4 runway for future dual-machine macro movement.
+  01. T1 Macro Depth | analog_four_mk2/a4_track_1 | intent=a4.track1.macro_depth | action=adjust_macro_depth | lane=depth | safety=passive | recovery=recover_anchor
+  02. T1 Tone | analog_four_mk2/a4_track_1 | intent=a4.track1.tone_bias | action=adjust_track_bias | lane=tone | safety=passive | recovery=recover_anchor
+  03. T1 Space | analog_four_mk2/a4_track_1 | intent=a4.track1.space_amount | action=adjust_track_amount | lane=space | safety=passive | recovery=recover_anchor
+  04. T1 Density | analog_four_mk2/a4_track_1 | intent=a4.track1.density | action=adjust_track_density | lane=density | safety=passive | recovery=recover_anchor
+  05. T2 Macro Depth | analog_four_mk2/a4_track_2 | intent=a4.track2.macro_depth | action=adjust_macro_depth | lane=depth | safety=passive | recovery=recover_anchor
+  06. T2 Tone | analog_four_mk2/a4_track_2 | intent=a4.track2.tone_bias | action=adjust_track_bias | lane=tone | safety=passive | recovery=recover_anchor
+  07. T2 Space | analog_four_mk2/a4_track_2 | intent=a4.track2.space_amount | action=adjust_track_amount | lane=space | safety=passive | recovery=recover_anchor
+  08. T2 Density | analog_four_mk2/a4_track_2 | intent=a4.track2.density | action=adjust_track_density | lane=density | safety=passive | recovery=recover_anchor
+  09. T3 Macro Depth | analog_four_mk2/a4_track_3 | intent=a4.track3.macro_depth | action=adjust_macro_depth | lane=depth | safety=passive | recovery=recover_anchor
+  10. T3 Motion | analog_four_mk2/a4_track_3 | intent=a4.track3.motion_amount | action=adjust_track_amount | lane=motion | safety=passive | recovery=recover_anchor
+  11. T3 Space | analog_four_mk2/a4_track_3 | intent=a4.track3.space_amount | action=adjust_track_amount | lane=space | safety=passive | recovery=recover_anchor
+  12. T3 Density | analog_four_mk2/a4_track_3 | intent=a4.track3.density | action=adjust_track_density | lane=density | safety=passive | recovery=recover_anchor
+  13. T4 Macro Depth | analog_four_mk2/a4_track_4 | intent=a4.track4.macro_depth | action=adjust_macro_depth | lane=depth | safety=passive | recovery=recover_anchor
+  14. T4 Texture | analog_four_mk2/a4_track_4 | intent=a4.track4.texture_amount | action=adjust_track_amount | lane=texture | safety=passive | recovery=recover_anchor
+  15. T4 Space | analog_four_mk2/a4_track_4 | intent=a4.track4.space_amount | action=adjust_track_amount | lane=space | safety=passive | recovery=recover_anchor
+  16. T4 Density | analog_four_mk2/a4_track_4 | intent=a4.track4.density | action=adjust_track_density | lane=density | safety=passive | recovery=recover_anchor
+Page 6: Style Crates + Queue
+  key: style-crates-queue
+  summary: Browse mutation crates and stage a live set story without active dispatch.
+  01. Hard Groove | style_queue/crate_hard_groove | intent=crate.hard_groove | action=choose_style_crate | lane=crate | safety=passive | recovery=recover_anchor
+  02. Dark Hypnotic | style_queue/crate_dark_hypnotic | intent=crate.dark_hypnotic | action=choose_style_crate | lane=crate | safety=passive | recovery=recover_anchor
+  03. Industrial | style_queue/crate_industrial | intent=crate.industrial | action=choose_style_crate | lane=crate | safety=passive | recovery=recover_anchor
+  04. Dub Pressure | style_queue/crate_dub_pressure | intent=crate.dub_pressure | action=choose_style_crate | lane=crate | safety=passive | recovery=recover_anchor
+  05. Peak Time | style_queue/crate_peak_time | intent=crate.peak_time | action=choose_style_crate | lane=crate | safety=passive | recovery=recover_anchor
+  06. Transition | style_queue/crate_transition | intent=crate.transition | action=choose_style_crate | lane=crate | safety=passive | recovery=recover_anchor
+  07. Home Reset | style_queue/crate_home | intent=crate.home | action=choose_style_crate | lane=crate | safety=passive | recovery=captured_anchor
+  08. Saved Accidents | snapshot_recovery/journal | intent=crate.saved_accidents | action=choose_style_crate | lane=journal | safety=passive | recovery=recover_anchor
+  09. Queue Current | style_queue/queue | intent=queue.current | action=stage_queue_move | lane=queue | safety=passive | recovery=recover_anchor
+  10. Queue Next 1 | style_queue/queue | intent=queue.next_1 | action=stage_next_move | lane=queue | safety=passive | recovery=recover_anchor
+  11. Queue Next 2 | style_queue/queue | intent=queue.next_2 | action=stage_next_move | lane=queue | safety=passive | recovery=recover_anchor
+  12. Queue Next 3 | style_queue/queue | intent=queue.next_3 | action=stage_next_move | lane=queue | safety=passive | recovery=recover_anchor
+  13. Skip Move | style_queue/queue | intent=queue.skip | action=skip_queue_move | lane=queue | safety=passive | recovery=recover_anchor
+  14. Clear Queue | style_queue/queue | intent=queue.clear | action=clear_queue | lane=queue | safety=passive | recovery=recover_anchor
+  15. Move Energy | style_queue/queue | intent=queue.energy | action=adjust_queue_energy | lane=energy | safety=passive | recovery=recover_anchor
+  16. Move Risk | style_queue/queue | intent=queue.risk | action=adjust_queue_risk | lane=risk | safety=passive | recovery=recover_anchor
+Page 7: Snapshot Recovery + Journal
+  key: snapshot-recovery-journal
+  summary: Captured-kit recovery, snapshots, and favorite mutation journaling.
+  01. Capture Kit | snapshot_recovery/capture | intent=snapshot.capture_kit | action=stage_snapshot | lane=capture | safety=passive | recovery=captured_anchor
+  02. Base | snapshot_recovery/anchor | intent=snapshot.base | action=recover_anchor | lane=recovery | safety=passive | recovery=captured_anchor
+  03. Snapshot 1 | snapshot_recovery/snapshot_slot_1 | intent=snapshot.slot_1 | action=stage_snapshot | lane=snapshot | safety=passive | recovery=recover_anchor
+  04. Snapshot 2 | snapshot_recovery/snapshot_slot_2 | intent=snapshot.slot_2 | action=stage_snapshot | lane=snapshot | safety=passive | recovery=recover_anchor
+  05. Snapshot 3 | snapshot_recovery/snapshot_slot_3 | intent=snapshot.slot_3 | action=stage_snapshot | lane=snapshot | safety=passive | recovery=recover_anchor
+  06. Snapshot 4 | snapshot_recovery/snapshot_slot_4 | intent=snapshot.slot_4 | action=stage_snapshot | lane=snapshot | safety=passive | recovery=recover_anchor
+  07. Snapshot 5 | snapshot_recovery/snapshot_slot_5 | intent=snapshot.slot_5 | action=stage_snapshot | lane=snapshot | safety=passive | recovery=recover_anchor
+  08. Snapshot 6 | snapshot_recovery/snapshot_slot_6 | intent=snapshot.slot_6 | action=stage_snapshot | lane=snapshot | safety=passive | recovery=recover_anchor
+  09. Journal Save | snapshot_recovery/journal | intent=journal.save | action=save_journal_entry | lane=journal | safety=passive | recovery=recover_anchor
+  10. Journal Vary | snapshot_recovery/journal | intent=journal.vary | action=vary_journal_entry | lane=journal | safety=passive | recovery=recover_anchor
+  11. Journal Tag | snapshot_recovery/journal | intent=journal.tag | action=tag_journal_entry | lane=journal | safety=passive | recovery=recover_anchor
+  12. Journal Recall | snapshot_recovery/journal | intent=journal.recall | action=stage_snapshot | lane=journal | safety=passive | recovery=recover_anchor
+  13. Undo | snapshot_recovery/history | intent=history.undo | action=recover_previous | lane=recovery | safety=passive | recovery=captured_anchor
+  14. Redo | snapshot_recovery/history | intent=history.redo | action=restore_next | lane=recovery | safety=passive | recovery=recover_anchor
+  15. Compare | snapshot_recovery/compare | intent=snapshot.compare | action=review_compare | lane=compare | safety=passive | recovery=recover_anchor
+  16. Panic Home | snapshot_recovery/anchor | intent=snapshot.panic_home | action=recover_anchor | lane=recovery | safety=passive | recovery=captured_anchor
+
+Safety:
+- controller_input: False
+- dispatches_websocket_commands: False
+- mutates_hardware: False
+- opens_ports: False
+- passive: True
+- sends_midi: False
+
+Blocked active actions:
+- open MIDI controller input
+- MIDI learn or raw CC capture
+- send controller feedback
+- open Analog Rytm output
+- open Analog Four output
+- arm hardware
+- send hardware MIDI
+- mutate a snapshot
+- dispatch Cockpit WebSocket commands
+Source: rytm_randomizer.reports.controller_mapping_profile_catalog
+In-memory only: True

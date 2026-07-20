@@ -1,0 +1,950 @@
+RytmRandomizer passive controller brain live desktop component contract
+Controller brain live desktop component contract:
+- version: controller-brain-live-desktop-component-contract-v1
+- status: desktop-component-contract-passive
+- session: Live Session
+- component contract label: Controller brain desktop component contract
+- selector prefix: rr-controller
+- source desktop app plan: controller-brain-live-desktop-app-plan-report
+- source desktop app plan version: controller-brain-live-desktop-app-plan-v1
+- source desktop app plan status: desktop-app-plan-passive
+- source app routes: 6
+- source component file hints: 27
+- source state slices: 27
+- component contracts: 27
+- prop contracts: 27
+- event contracts: 27
+- test hooks: 27
+- fixture contracts: 27
+- acceptance checks: 7
+Component contracts:
+- desktop.contract.component.state.global-preview-depth: component-contract-disabled
+  source file: desktop.file.component.state.global-preview-depth
+  source component: desktop.component.state.global-preview-depth
+  selector: rr-controller-state-global-preview-depth
+  suggested module: future_controller_brain/components/state_global_preview_depth.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.state.macro-industrial: component-contract-disabled
+  source file: desktop.file.component.state.macro-industrial
+  source component: desktop.component.state.macro-industrial
+  selector: rr-controller-state-macro-industrial
+  suggested module: future_controller_brain/components/state_macro_industrial.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.state.rytm-pad5-source-amount: component-contract-disabled
+  source file: desktop.file.component.state.rytm-pad5-source-amount
+  source component: desktop.component.state.rytm-pad5-source-amount
+  selector: rr-controller-state-rytm-pad5-source-amount
+  suggested module: future_controller_brain/components/state_rytm_pad5_source_amount.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.state.rytm-pad6-source-amount: component-contract-disabled
+  source file: desktop.file.component.state.rytm-pad6-source-amount
+  source component: desktop.component.state.rytm-pad6-source-amount
+  selector: rr-controller-state-rytm-pad6-source-amount
+  suggested module: future_controller_brain/components/state_rytm_pad6_source_amount.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.state.rytm-pad12-source-amount: component-contract-disabled
+  source file: desktop.file.component.state.rytm-pad12-source-amount
+  source component: desktop.component.state.rytm-pad12-source-amount
+  selector: rr-controller-state-rytm-pad12-source-amount
+  suggested module: future_controller_brain/components/state_rytm_pad12_source_amount.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.state.a4-track1-macro-depth: component-contract-disabled
+  source file: desktop.file.component.state.a4-track1-macro-depth
+  source component: desktop.component.state.a4-track1-macro-depth
+  selector: rr-controller-state-a4-track1-macro-depth
+  suggested module: future_controller_brain/components/state_a4_track1_macro_depth.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.state.crate-dark-hypnotic: component-contract-disabled
+  source file: desktop.file.component.state.crate-dark-hypnotic
+  source component: desktop.component.state.crate-dark-hypnotic
+  selector: rr-controller-state-crate-dark-hypnotic
+  suggested module: future_controller_brain/components/state_crate_dark_hypnotic.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.state.queue-next-1: component-contract-disabled
+  source file: desktop.file.component.state.queue-next-1
+  source component: desktop.component.state.queue-next-1
+  selector: rr-controller-state-queue-next-1
+  suggested module: future_controller_brain/components/state_queue_next_1.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.state.snapshot-panic-home: component-contract-disabled
+  source file: desktop.file.component.state.snapshot-panic-home
+  source component: desktop.component.state.snapshot-panic-home
+  selector: rr-controller-state-snapshot-panic-home
+  suggested module: future_controller_brain/components/state_snapshot_panic_home.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.queue.global-preview-depth: component-contract-disabled
+  source file: desktop.file.component.queue.global-preview-depth
+  source component: desktop.component.queue.global-preview-depth
+  selector: rr-controller-queue-global-preview-depth
+  suggested module: future_controller_brain/components/queue_global_preview_depth.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.queue.macro-industrial: component-contract-disabled
+  source file: desktop.file.component.queue.macro-industrial
+  source component: desktop.component.queue.macro-industrial
+  selector: rr-controller-queue-macro-industrial
+  suggested module: future_controller_brain/components/queue_macro_industrial.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.queue.rytm-pad5-source-amount: component-contract-disabled
+  source file: desktop.file.component.queue.rytm-pad5-source-amount
+  source component: desktop.component.queue.rytm-pad5-source-amount
+  selector: rr-controller-queue-rytm-pad5-source-amount
+  suggested module: future_controller_brain/components/queue_rytm_pad5_source_amount.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.queue.rytm-pad6-source-amount: component-contract-disabled
+  source file: desktop.file.component.queue.rytm-pad6-source-amount
+  source component: desktop.component.queue.rytm-pad6-source-amount
+  selector: rr-controller-queue-rytm-pad6-source-amount
+  suggested module: future_controller_brain/components/queue_rytm_pad6_source_amount.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.queue.rytm-pad12-source-amount: component-contract-disabled
+  source file: desktop.file.component.queue.rytm-pad12-source-amount
+  source component: desktop.component.queue.rytm-pad12-source-amount
+  selector: rr-controller-queue-rytm-pad12-source-amount
+  suggested module: future_controller_brain/components/queue_rytm_pad12_source_amount.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.queue.a4-track1-macro-depth: component-contract-disabled
+  source file: desktop.file.component.queue.a4-track1-macro-depth
+  source component: desktop.component.queue.a4-track1-macro-depth
+  selector: rr-controller-queue-a4-track1-macro-depth
+  suggested module: future_controller_brain/components/queue_a4_track1_macro_depth.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.queue.crate-dark-hypnotic: component-contract-disabled
+  source file: desktop.file.component.queue.crate-dark-hypnotic
+  source component: desktop.component.queue.crate-dark-hypnotic
+  selector: rr-controller-queue-crate-dark-hypnotic
+  suggested module: future_controller_brain/components/queue_crate_dark_hypnotic.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.queue.queue-next-1: component-contract-disabled
+  source file: desktop.file.component.queue.queue-next-1
+  source component: desktop.component.queue.queue-next-1
+  selector: rr-controller-queue-queue-next-1
+  suggested module: future_controller_brain/components/queue_queue_next_1.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.queue.snapshot-panic-home: component-contract-disabled
+  source file: desktop.file.component.queue.snapshot-panic-home
+  source component: desktop.component.queue.snapshot-panic-home
+  selector: rr-controller-queue-snapshot-panic-home
+  suggested module: future_controller_brain/components/queue_snapshot_panic_home.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.audit.global-preview-depth: component-contract-disabled
+  source file: desktop.file.component.audit.global-preview-depth
+  source component: desktop.component.audit.global-preview-depth
+  selector: rr-controller-audit-global-preview-depth
+  suggested module: future_controller_brain/components/audit_global_preview_depth.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.audit.macro-industrial: component-contract-disabled
+  source file: desktop.file.component.audit.macro-industrial
+  source component: desktop.component.audit.macro-industrial
+  selector: rr-controller-audit-macro-industrial
+  suggested module: future_controller_brain/components/audit_macro_industrial.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.audit.rytm-pad5-source-amount: component-contract-disabled
+  source file: desktop.file.component.audit.rytm-pad5-source-amount
+  source component: desktop.component.audit.rytm-pad5-source-amount
+  selector: rr-controller-audit-rytm-pad5-source-amount
+  suggested module: future_controller_brain/components/audit_rytm_pad5_source_amount.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.audit.rytm-pad6-source-amount: component-contract-disabled
+  source file: desktop.file.component.audit.rytm-pad6-source-amount
+  source component: desktop.component.audit.rytm-pad6-source-amount
+  selector: rr-controller-audit-rytm-pad6-source-amount
+  suggested module: future_controller_brain/components/audit_rytm_pad6_source_amount.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.audit.rytm-pad12-source-amount: component-contract-disabled
+  source file: desktop.file.component.audit.rytm-pad12-source-amount
+  source component: desktop.component.audit.rytm-pad12-source-amount
+  selector: rr-controller-audit-rytm-pad12-source-amount
+  suggested module: future_controller_brain/components/audit_rytm_pad12_source_amount.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.audit.a4-track1-macro-depth: component-contract-disabled
+  source file: desktop.file.component.audit.a4-track1-macro-depth
+  source component: desktop.component.audit.a4-track1-macro-depth
+  selector: rr-controller-audit-a4-track1-macro-depth
+  suggested module: future_controller_brain/components/audit_a4_track1_macro_depth.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.audit.crate-dark-hypnotic: component-contract-disabled
+  source file: desktop.file.component.audit.crate-dark-hypnotic
+  source component: desktop.component.audit.crate-dark-hypnotic
+  selector: rr-controller-audit-crate-dark-hypnotic
+  suggested module: future_controller_brain/components/audit_crate_dark_hypnotic.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.audit.queue-next-1: component-contract-disabled
+  source file: desktop.file.component.audit.queue-next-1
+  source component: desktop.component.audit.queue-next-1
+  selector: rr-controller-audit-queue-next-1
+  suggested module: future_controller_brain/components/audit_queue_next_1.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+- desktop.contract.component.audit.snapshot-panic-home: component-contract-disabled
+  source file: desktop.file.component.audit.snapshot-panic-home
+  source component: desktop.component.audit.snapshot-panic-home
+  selector: rr-controller-audit-snapshot-panic-home
+  suggested module: future_controller_brain/components/audit_snapshot_panic_home.py
+  enabled: False
+  passive: True
+  blocked: mount component contracts
+Prop contracts:
+- desktop.prop.state.global-preview-depth: viewModel
+  component: desktop.contract.component.state.global-preview-depth
+  state slice: desktop.state.state.global-preview-depth
+  initial state: disabled
+  passive: True
+- desktop.prop.state.macro-industrial: viewModel
+  component: desktop.contract.component.state.macro-industrial
+  state slice: desktop.state.state.macro-industrial
+  initial state: disabled
+  passive: True
+- desktop.prop.state.rytm-pad5-source-amount: viewModel
+  component: desktop.contract.component.state.rytm-pad5-source-amount
+  state slice: desktop.state.state.rytm-pad5-source-amount
+  initial state: disabled
+  passive: True
+- desktop.prop.state.rytm-pad6-source-amount: viewModel
+  component: desktop.contract.component.state.rytm-pad6-source-amount
+  state slice: desktop.state.state.rytm-pad6-source-amount
+  initial state: disabled
+  passive: True
+- desktop.prop.state.rytm-pad12-source-amount: viewModel
+  component: desktop.contract.component.state.rytm-pad12-source-amount
+  state slice: desktop.state.state.rytm-pad12-source-amount
+  initial state: disabled
+  passive: True
+- desktop.prop.state.a4-track1-macro-depth: viewModel
+  component: desktop.contract.component.state.a4-track1-macro-depth
+  state slice: desktop.state.state.a4-track1-macro-depth
+  initial state: disabled
+  passive: True
+- desktop.prop.state.crate-dark-hypnotic: viewModel
+  component: desktop.contract.component.state.crate-dark-hypnotic
+  state slice: desktop.state.state.crate-dark-hypnotic
+  initial state: disabled
+  passive: True
+- desktop.prop.state.queue-next-1: viewModel
+  component: desktop.contract.component.state.queue-next-1
+  state slice: desktop.state.state.queue-next-1
+  initial state: disabled
+  passive: True
+- desktop.prop.state.snapshot-panic-home: viewModel
+  component: desktop.contract.component.state.snapshot-panic-home
+  state slice: desktop.state.state.snapshot-panic-home
+  initial state: disabled
+  passive: True
+- desktop.prop.queue.global-preview-depth: viewModel
+  component: desktop.contract.component.queue.global-preview-depth
+  state slice: desktop.state.queue.global-preview-depth
+  initial state: disabled
+  passive: True
+- desktop.prop.queue.macro-industrial: viewModel
+  component: desktop.contract.component.queue.macro-industrial
+  state slice: desktop.state.queue.macro-industrial
+  initial state: disabled
+  passive: True
+- desktop.prop.queue.rytm-pad5-source-amount: viewModel
+  component: desktop.contract.component.queue.rytm-pad5-source-amount
+  state slice: desktop.state.queue.rytm-pad5-source-amount
+  initial state: disabled
+  passive: True
+- desktop.prop.queue.rytm-pad6-source-amount: viewModel
+  component: desktop.contract.component.queue.rytm-pad6-source-amount
+  state slice: desktop.state.queue.rytm-pad6-source-amount
+  initial state: disabled
+  passive: True
+- desktop.prop.queue.rytm-pad12-source-amount: viewModel
+  component: desktop.contract.component.queue.rytm-pad12-source-amount
+  state slice: desktop.state.queue.rytm-pad12-source-amount
+  initial state: disabled
+  passive: True
+- desktop.prop.queue.a4-track1-macro-depth: viewModel
+  component: desktop.contract.component.queue.a4-track1-macro-depth
+  state slice: desktop.state.queue.a4-track1-macro-depth
+  initial state: disabled
+  passive: True
+- desktop.prop.queue.crate-dark-hypnotic: viewModel
+  component: desktop.contract.component.queue.crate-dark-hypnotic
+  state slice: desktop.state.queue.crate-dark-hypnotic
+  initial state: disabled
+  passive: True
+- desktop.prop.queue.queue-next-1: viewModel
+  component: desktop.contract.component.queue.queue-next-1
+  state slice: desktop.state.queue.queue-next-1
+  initial state: disabled
+  passive: True
+- desktop.prop.queue.snapshot-panic-home: viewModel
+  component: desktop.contract.component.queue.snapshot-panic-home
+  state slice: desktop.state.queue.snapshot-panic-home
+  initial state: disabled
+  passive: True
+- desktop.prop.audit.global-preview-depth: viewModel
+  component: desktop.contract.component.audit.global-preview-depth
+  state slice: desktop.state.audit.global-preview-depth
+  initial state: disabled
+  passive: True
+- desktop.prop.audit.macro-industrial: viewModel
+  component: desktop.contract.component.audit.macro-industrial
+  state slice: desktop.state.audit.macro-industrial
+  initial state: disabled
+  passive: True
+- desktop.prop.audit.rytm-pad5-source-amount: viewModel
+  component: desktop.contract.component.audit.rytm-pad5-source-amount
+  state slice: desktop.state.audit.rytm-pad5-source-amount
+  initial state: disabled
+  passive: True
+- desktop.prop.audit.rytm-pad6-source-amount: viewModel
+  component: desktop.contract.component.audit.rytm-pad6-source-amount
+  state slice: desktop.state.audit.rytm-pad6-source-amount
+  initial state: disabled
+  passive: True
+- desktop.prop.audit.rytm-pad12-source-amount: viewModel
+  component: desktop.contract.component.audit.rytm-pad12-source-amount
+  state slice: desktop.state.audit.rytm-pad12-source-amount
+  initial state: disabled
+  passive: True
+- desktop.prop.audit.a4-track1-macro-depth: viewModel
+  component: desktop.contract.component.audit.a4-track1-macro-depth
+  state slice: desktop.state.audit.a4-track1-macro-depth
+  initial state: disabled
+  passive: True
+- desktop.prop.audit.crate-dark-hypnotic: viewModel
+  component: desktop.contract.component.audit.crate-dark-hypnotic
+  state slice: desktop.state.audit.crate-dark-hypnotic
+  initial state: disabled
+  passive: True
+- desktop.prop.audit.queue-next-1: viewModel
+  component: desktop.contract.component.audit.queue-next-1
+  state slice: desktop.state.audit.queue-next-1
+  initial state: disabled
+  passive: True
+- desktop.prop.audit.snapshot-panic-home: viewModel
+  component: desktop.contract.component.audit.snapshot-panic-home
+  state slice: desktop.state.audit.snapshot-panic-home
+  initial state: disabled
+  passive: True
+Event contracts:
+- desktop.event.state.global-preview-depth: onIntentPreview
+  component: desktop.contract.component.state.global-preview-depth
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.state.macro-industrial: onIntentPreview
+  component: desktop.contract.component.state.macro-industrial
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.state.rytm-pad5-source-amount: onIntentPreview
+  component: desktop.contract.component.state.rytm-pad5-source-amount
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.state.rytm-pad6-source-amount: onIntentPreview
+  component: desktop.contract.component.state.rytm-pad6-source-amount
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.state.rytm-pad12-source-amount: onIntentPreview
+  component: desktop.contract.component.state.rytm-pad12-source-amount
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.state.a4-track1-macro-depth: onIntentPreview
+  component: desktop.contract.component.state.a4-track1-macro-depth
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.state.crate-dark-hypnotic: onIntentPreview
+  component: desktop.contract.component.state.crate-dark-hypnotic
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.state.queue-next-1: onIntentPreview
+  component: desktop.contract.component.state.queue-next-1
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.state.snapshot-panic-home: onIntentPreview
+  component: desktop.contract.component.state.snapshot-panic-home
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.queue.global-preview-depth: onIntentPreview
+  component: desktop.contract.component.queue.global-preview-depth
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.queue.macro-industrial: onIntentPreview
+  component: desktop.contract.component.queue.macro-industrial
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.queue.rytm-pad5-source-amount: onIntentPreview
+  component: desktop.contract.component.queue.rytm-pad5-source-amount
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.queue.rytm-pad6-source-amount: onIntentPreview
+  component: desktop.contract.component.queue.rytm-pad6-source-amount
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.queue.rytm-pad12-source-amount: onIntentPreview
+  component: desktop.contract.component.queue.rytm-pad12-source-amount
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.queue.a4-track1-macro-depth: onIntentPreview
+  component: desktop.contract.component.queue.a4-track1-macro-depth
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.queue.crate-dark-hypnotic: onIntentPreview
+  component: desktop.contract.component.queue.crate-dark-hypnotic
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.queue.queue-next-1: onIntentPreview
+  component: desktop.contract.component.queue.queue-next-1
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.queue.snapshot-panic-home: onIntentPreview
+  component: desktop.contract.component.queue.snapshot-panic-home
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.audit.global-preview-depth: onIntentPreview
+  component: desktop.contract.component.audit.global-preview-depth
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.audit.macro-industrial: onIntentPreview
+  component: desktop.contract.component.audit.macro-industrial
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.audit.rytm-pad5-source-amount: onIntentPreview
+  component: desktop.contract.component.audit.rytm-pad5-source-amount
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.audit.rytm-pad6-source-amount: onIntentPreview
+  component: desktop.contract.component.audit.rytm-pad6-source-amount
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.audit.rytm-pad12-source-amount: onIntentPreview
+  component: desktop.contract.component.audit.rytm-pad12-source-amount
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.audit.a4-track1-macro-depth: onIntentPreview
+  component: desktop.contract.component.audit.a4-track1-macro-depth
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.audit.crate-dark-hypnotic: onIntentPreview
+  component: desktop.contract.component.audit.crate-dark-hypnotic
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.audit.queue-next-1: onIntentPreview
+  component: desktop.contract.component.audit.queue-next-1
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+- desktop.event.audit.snapshot-panic-home: onIntentPreview
+  component: desktop.contract.component.audit.snapshot-panic-home
+  enabled: False
+  passive: True
+  blocked: dispatch Cockpit WebSocket commands
+Test hooks:
+- desktop.test.state.global-preview-depth: rr-controller-state-global-preview-depth
+  component: desktop.contract.component.state.global-preview-depth
+  passive: True
+- desktop.test.state.macro-industrial: rr-controller-state-macro-industrial
+  component: desktop.contract.component.state.macro-industrial
+  passive: True
+- desktop.test.state.rytm-pad5-source-amount: rr-controller-state-rytm-pad5-source-amount
+  component: desktop.contract.component.state.rytm-pad5-source-amount
+  passive: True
+- desktop.test.state.rytm-pad6-source-amount: rr-controller-state-rytm-pad6-source-amount
+  component: desktop.contract.component.state.rytm-pad6-source-amount
+  passive: True
+- desktop.test.state.rytm-pad12-source-amount: rr-controller-state-rytm-pad12-source-amount
+  component: desktop.contract.component.state.rytm-pad12-source-amount
+  passive: True
+- desktop.test.state.a4-track1-macro-depth: rr-controller-state-a4-track1-macro-depth
+  component: desktop.contract.component.state.a4-track1-macro-depth
+  passive: True
+- desktop.test.state.crate-dark-hypnotic: rr-controller-state-crate-dark-hypnotic
+  component: desktop.contract.component.state.crate-dark-hypnotic
+  passive: True
+- desktop.test.state.queue-next-1: rr-controller-state-queue-next-1
+  component: desktop.contract.component.state.queue-next-1
+  passive: True
+- desktop.test.state.snapshot-panic-home: rr-controller-state-snapshot-panic-home
+  component: desktop.contract.component.state.snapshot-panic-home
+  passive: True
+- desktop.test.queue.global-preview-depth: rr-controller-queue-global-preview-depth
+  component: desktop.contract.component.queue.global-preview-depth
+  passive: True
+- desktop.test.queue.macro-industrial: rr-controller-queue-macro-industrial
+  component: desktop.contract.component.queue.macro-industrial
+  passive: True
+- desktop.test.queue.rytm-pad5-source-amount: rr-controller-queue-rytm-pad5-source-amount
+  component: desktop.contract.component.queue.rytm-pad5-source-amount
+  passive: True
+- desktop.test.queue.rytm-pad6-source-amount: rr-controller-queue-rytm-pad6-source-amount
+  component: desktop.contract.component.queue.rytm-pad6-source-amount
+  passive: True
+- desktop.test.queue.rytm-pad12-source-amount: rr-controller-queue-rytm-pad12-source-amount
+  component: desktop.contract.component.queue.rytm-pad12-source-amount
+  passive: True
+- desktop.test.queue.a4-track1-macro-depth: rr-controller-queue-a4-track1-macro-depth
+  component: desktop.contract.component.queue.a4-track1-macro-depth
+  passive: True
+- desktop.test.queue.crate-dark-hypnotic: rr-controller-queue-crate-dark-hypnotic
+  component: desktop.contract.component.queue.crate-dark-hypnotic
+  passive: True
+- desktop.test.queue.queue-next-1: rr-controller-queue-queue-next-1
+  component: desktop.contract.component.queue.queue-next-1
+  passive: True
+- desktop.test.queue.snapshot-panic-home: rr-controller-queue-snapshot-panic-home
+  component: desktop.contract.component.queue.snapshot-panic-home
+  passive: True
+- desktop.test.audit.global-preview-depth: rr-controller-audit-global-preview-depth
+  component: desktop.contract.component.audit.global-preview-depth
+  passive: True
+- desktop.test.audit.macro-industrial: rr-controller-audit-macro-industrial
+  component: desktop.contract.component.audit.macro-industrial
+  passive: True
+- desktop.test.audit.rytm-pad5-source-amount: rr-controller-audit-rytm-pad5-source-amount
+  component: desktop.contract.component.audit.rytm-pad5-source-amount
+  passive: True
+- desktop.test.audit.rytm-pad6-source-amount: rr-controller-audit-rytm-pad6-source-amount
+  component: desktop.contract.component.audit.rytm-pad6-source-amount
+  passive: True
+- desktop.test.audit.rytm-pad12-source-amount: rr-controller-audit-rytm-pad12-source-amount
+  component: desktop.contract.component.audit.rytm-pad12-source-amount
+  passive: True
+- desktop.test.audit.a4-track1-macro-depth: rr-controller-audit-a4-track1-macro-depth
+  component: desktop.contract.component.audit.a4-track1-macro-depth
+  passive: True
+- desktop.test.audit.crate-dark-hypnotic: rr-controller-audit-crate-dark-hypnotic
+  component: desktop.contract.component.audit.crate-dark-hypnotic
+  passive: True
+- desktop.test.audit.queue-next-1: rr-controller-audit-queue-next-1
+  component: desktop.contract.component.audit.queue-next-1
+  passive: True
+- desktop.test.audit.snapshot-panic-home: rr-controller-audit-snapshot-panic-home
+  component: desktop.contract.component.audit.snapshot-panic-home
+  passive: True
+Fixture contracts:
+- desktop.fixture.state.global-preview-depth: fixture.state.global-preview-depth
+  component: desktop.contract.component.state.global-preview-depth
+  write file: False
+  passive: True
+- desktop.fixture.state.macro-industrial: fixture.state.macro-industrial
+  component: desktop.contract.component.state.macro-industrial
+  write file: False
+  passive: True
+- desktop.fixture.state.rytm-pad5-source-amount: fixture.state.rytm-pad5-source-amount
+  component: desktop.contract.component.state.rytm-pad5-source-amount
+  write file: False
+  passive: True
+- desktop.fixture.state.rytm-pad6-source-amount: fixture.state.rytm-pad6-source-amount
+  component: desktop.contract.component.state.rytm-pad6-source-amount
+  write file: False
+  passive: True
+- desktop.fixture.state.rytm-pad12-source-amount: fixture.state.rytm-pad12-source-amount
+  component: desktop.contract.component.state.rytm-pad12-source-amount
+  write file: False
+  passive: True
+- desktop.fixture.state.a4-track1-macro-depth: fixture.state.a4-track1-macro-depth
+  component: desktop.contract.component.state.a4-track1-macro-depth
+  write file: False
+  passive: True
+- desktop.fixture.state.crate-dark-hypnotic: fixture.state.crate-dark-hypnotic
+  component: desktop.contract.component.state.crate-dark-hypnotic
+  write file: False
+  passive: True
+- desktop.fixture.state.queue-next-1: fixture.state.queue-next-1
+  component: desktop.contract.component.state.queue-next-1
+  write file: False
+  passive: True
+- desktop.fixture.state.snapshot-panic-home: fixture.state.snapshot-panic-home
+  component: desktop.contract.component.state.snapshot-panic-home
+  write file: False
+  passive: True
+- desktop.fixture.queue.global-preview-depth: fixture.queue.global-preview-depth
+  component: desktop.contract.component.queue.global-preview-depth
+  write file: False
+  passive: True
+- desktop.fixture.queue.macro-industrial: fixture.queue.macro-industrial
+  component: desktop.contract.component.queue.macro-industrial
+  write file: False
+  passive: True
+- desktop.fixture.queue.rytm-pad5-source-amount: fixture.queue.rytm-pad5-source-amount
+  component: desktop.contract.component.queue.rytm-pad5-source-amount
+  write file: False
+  passive: True
+- desktop.fixture.queue.rytm-pad6-source-amount: fixture.queue.rytm-pad6-source-amount
+  component: desktop.contract.component.queue.rytm-pad6-source-amount
+  write file: False
+  passive: True
+- desktop.fixture.queue.rytm-pad12-source-amount: fixture.queue.rytm-pad12-source-amount
+  component: desktop.contract.component.queue.rytm-pad12-source-amount
+  write file: False
+  passive: True
+- desktop.fixture.queue.a4-track1-macro-depth: fixture.queue.a4-track1-macro-depth
+  component: desktop.contract.component.queue.a4-track1-macro-depth
+  write file: False
+  passive: True
+- desktop.fixture.queue.crate-dark-hypnotic: fixture.queue.crate-dark-hypnotic
+  component: desktop.contract.component.queue.crate-dark-hypnotic
+  write file: False
+  passive: True
+- desktop.fixture.queue.queue-next-1: fixture.queue.queue-next-1
+  component: desktop.contract.component.queue.queue-next-1
+  write file: False
+  passive: True
+- desktop.fixture.queue.snapshot-panic-home: fixture.queue.snapshot-panic-home
+  component: desktop.contract.component.queue.snapshot-panic-home
+  write file: False
+  passive: True
+- desktop.fixture.audit.global-preview-depth: fixture.audit.global-preview-depth
+  component: desktop.contract.component.audit.global-preview-depth
+  write file: False
+  passive: True
+- desktop.fixture.audit.macro-industrial: fixture.audit.macro-industrial
+  component: desktop.contract.component.audit.macro-industrial
+  write file: False
+  passive: True
+- desktop.fixture.audit.rytm-pad5-source-amount: fixture.audit.rytm-pad5-source-amount
+  component: desktop.contract.component.audit.rytm-pad5-source-amount
+  write file: False
+  passive: True
+- desktop.fixture.audit.rytm-pad6-source-amount: fixture.audit.rytm-pad6-source-amount
+  component: desktop.contract.component.audit.rytm-pad6-source-amount
+  write file: False
+  passive: True
+- desktop.fixture.audit.rytm-pad12-source-amount: fixture.audit.rytm-pad12-source-amount
+  component: desktop.contract.component.audit.rytm-pad12-source-amount
+  write file: False
+  passive: True
+- desktop.fixture.audit.a4-track1-macro-depth: fixture.audit.a4-track1-macro-depth
+  component: desktop.contract.component.audit.a4-track1-macro-depth
+  write file: False
+  passive: True
+- desktop.fixture.audit.crate-dark-hypnotic: fixture.audit.crate-dark-hypnotic
+  component: desktop.contract.component.audit.crate-dark-hypnotic
+  write file: False
+  passive: True
+- desktop.fixture.audit.queue-next-1: fixture.audit.queue-next-1
+  component: desktop.contract.component.audit.queue-next-1
+  write file: False
+  passive: True
+- desktop.fixture.audit.snapshot-panic-home: fixture.audit.snapshot-panic-home
+  component: desktop.contract.component.audit.snapshot-panic-home
+  write file: False
+  passive: True
+Acceptance checks:
+- source-app-plan-ready: ready
+  passive: True
+  evidence: source desktop app plan is available as passive JSON
+  blocked: mount component contracts
+- component-contract-coverage: ready
+  passive: True
+  evidence: every component file hint has one disabled component contract
+  blocked: mount component contracts
+- prop-contract-coverage: ready
+  passive: True
+  evidence: every state slice has one future view-model prop contract
+  blocked: execute live state reducer
+- event-contract-coverage: ready
+  passive: True
+  evidence: every component contract has one disabled event contract
+  blocked: dispatch Cockpit WebSocket commands
+- test-hook-coverage: ready
+  passive: True
+  evidence: every component contract has one future test hook
+  blocked: start GUI renderer
+- fixture-contract-coverage: ready
+  passive: True
+  evidence: every component contract has one advisory fixture contract
+  blocked: write component files
+- passive-boundary: ready
+  passive: True
+  evidence: desktop component contract launches no GUI, writes no files, opens no ports, and sends no MIDI
+  blocked: open MIDI output
+Blocked active actions:
+- launch Cockpit GUI runtime
+- launch desktop app shell
+- start GUI renderer
+- mount component contracts
+- write component files
+- execute live state reducer
+- dispatch Cockpit WebSocket commands
+- emit controller feedback
+- open MIDI output
+- mutate a snapshot
+- mount desktop routes
+- mount desktop regions
+- write fixture files
+- mount implementation bindings
+- open controller input adapter
+- open controller output adapter
+- write controller LED state
+- write controller encoder ring state
+- write controller display text
+- dispatch Cockpit WebSocket feedback
+- dispatch controller runtime command
+- send hardware MIDI
+- write bridge audit side effects
+- apply live state reducer
+- dispatch controller runtime event
+- write controller audit ledger
+- open MIDI controller input
+- MIDI learn or raw CC capture
+- arm hardware
+- dispatch controller gesture to active runtime
+- send controller feedback
+- open Analog Rytm output
+- open Analog Four output
+- a4_outbound_macro_send
+- unattended_hardware_behavior
+- open_midi_port_without_arm
+- send_without_dry_run
+- fire macro from Cockpit console
+- prepare hardware send from Cockpit macro action
+- dispatch Rytm lane policy from Cockpit console
+- send Rytm lane policy from Cockpit console
+- fire rehearsal cue from Cockpit console
+- open MIDI port from rehearsal board
+- send MIDI from rehearsal board
+- promote A4 macro from rehearsal board
+- receive kit from Cockpit console
+- mutate captured kit from Cockpit console
+- send captured plan from Cockpit console
+- open Rytm SysEx input from passive Cockpit report
+- receive kit from Cockpit workbench
+- stage captured-kit mutation from Cockpit workbench
+- apply captured-kit package from Cockpit console
+- export captured-kit package from passive Cockpit report
+- send captured plan from Cockpit workbench
+- generate captured-kit package from Cockpit console
+- apply audition package from passive Cockpit console
+- send audition variation from Cockpit console
+- write audition package file from passive report
+- open MIDI port from package audition
+- generate operator package from Cockpit console
+- send operator package from Cockpit console
+- write operator package file from passive report
+- commit operator journal from passive report
+- open MIDI port from operator package
+- trigger A4 macro from Cockpit console
+- open A4 output port from Cockpit console
+- A4 full macro SEND
+- A4 unattended macro playback
+- fire queued style move
+- dispatch crate move
+- replay journal entry
+- persist journal entry
+- open MIDI port
+- send MIDI
+- mutate hardware
+- launch GUI
+- arm-hardware
+- open-midi-port
+- send-midi
+- record-audio
+- render-gui
+- open MIDI port from snapshot history
+- send MIDI from snapshot history
+- arm hardware from snapshot history
+- mutate hardware from snapshot history
+- launch GUI from snapshot history
+- dispatch queued command from model
+- run undo from model
+- load snapshot from model
+- open MIDI port from model
+- send MIDI from model
+- mutate hardware from model
+- launch GUI from model
+- arm hardware from safety checklist
+- open MIDI port from safety checklist
+- send MIDI from safety checklist
+- mutate hardware from safety checklist
+- launch GUI from safety checklist
+- open_midi_port
+- arm_hardware
+- send_midi
+- write_sysex
+- mutate_hardware
+Replay commands:
+- python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report
+- python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report --json
+- python -m rytm_randomizer.cli controller-brain-live-desktop-app-plan-report --json
+- python -m rytm_randomizer.cli controller-brain-live-desktop-blueprint-report --json
+Safety:
+- passive/read-only
+- controller-brain desktop component contract metadata only
+- composes controller-brain desktop app plan only
+- component contracts are declarative metadata only
+- prop contracts are declarative metadata only
+- event contracts are disabled metadata only
+- test hooks are declarative metadata only
+- fixture contracts are advisory metadata only
+- acceptance checks are metadata only
+- JSON/stdout only
+- no GUI launch
+- no app launch
+- no GUI renderer start
+- no runtime reducer execution
+- no WebSocket dispatch
+- no controller feedback emission
+- no MIDI controller output
+- no MIDI sending
+- no port opening
+- no snapshot mutation
+- no file writing
+- no hardware mutation
+- no hardware required
+- controller-brain desktop app plan metadata only
+- composes controller-brain desktop blueprint only
+- app routes are declarative metadata only
+- component file hints are advisory metadata only
+- state slices are declarative metadata only
+- style tokens are declarative metadata only
+- controller-brain desktop blueprint metadata only
+- composes controller-brain implementation bridge only
+- desktop regions are declarative metadata only
+- view-model bindings are declarative metadata only
+- fixture hints are metadata only
+- controller-brain implementation bridge metadata only
+- composes controller-brain Cockpit handoff only
+- implementation bindings are declarative metadata only
+- fixture bundles are metadata only
+- implementation gates are metadata only
+- controller-brain Cockpit handoff metadata only
+- composes controller-brain feedback rehearsal only
+- handoff cards are GUI-ready metadata only
+- Cockpit panels are metadata only
+- disabled controls are metadata only
+- no controller input
+- no WebSocket feedback dispatch
+- controller-brain feedback rehearsal metadata only
+- composes controller-brain dispatch rehearsal only
+- feedback frames are metadata only
+- output gates are metadata only
+- controller-brain dispatch rehearsal metadata only
+- composes controller-brain bridge readiness only
+- shadow dispatch decisions are metadata only
+- transport gates are metadata only
+- no MIDI controller input
+- no MIDI learn or raw CC capture
+- no WebSocket command dispatch
+- no state-store mutation
+- controller-brain bridge readiness metadata only
+- composes controller-brain live state only
+- contract packets are metadata only
+- controller-brain live state metadata only
+- composes controller-brain live runbook only
+- state rows are metadata only
+- queued intents are metadata only
+- audit events are metadata only
+- controller-brain live runbook metadata only
+- composes existing passive reports only
+- no command execution
+- controller-template rows only
+- virtual encoder gestures only
+- Cockpit performance console packet only
+- composes passive report metadata only
+- GUI performance flow metadata only
+- Rytm OXI macro command labels only
+- Analog Four review-only actions stay candidate metadata.
+- no real MIDI rendering
+- macro action cards are declarative only
+- operators still use the armed snapshot shell for real sends
+- all Cockpit macro fire controls stay disabled
+- Rytm lane policy matrix is declarative only
+- Cockpit shows macro policy before the armed snapshot shell applies anything
+- rehearsal board is declarative only
+- launch command is shown for operator copy/review only
+- real Rytm sends remain in the explicitly armed snapshot shell
+- A4 outbound macro promotion remains blocked
+- live kit capture panel is declarative only
+- no SysEx receive from passive Cockpit report
+- operators still run the armed snapshot shell manually
+- captured-anchor recovery remains explicit
+- live kit capture workbench is declarative only
+- capture slots are review metadata only
+- no package apply from passive Cockpit report
+- live kit package audition is declarative only
+- audition slots are rehearsal metadata only
+- journal preview does not write files
+- live kit operator package is declarative only
+- operator steps are browser-local rehearsal metadata
+- local export preview does not write files
+- journal commit remains preview-only
+- A4 review surface is declarative only
+- A4 validation commands are shown for operator review only
+- A4 OXI macro set planning only
+- manual-backed Analog Four CC metadata only
+- A4 full macro SEND remains blocked
+- operator-present validation commands only
+- no unattended hardware behavior
+- A4 full macro SEND remains unimplemented
+- in-memory only
+- device registry metadata only
+Source: rytm_randomizer.reports.controller_brain_live_desktop_component_contract
+In-memory only: True

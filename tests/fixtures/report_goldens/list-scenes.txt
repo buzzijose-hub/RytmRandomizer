@@ -1,0 +1,25 @@
+RytmRandomizer passive scene list
+Section: scenes
+Count: 14
+Items:
+- S0: Home / Clean
+- S1: Rolling
+- S1A: Rolling Light
+- S1B: Rolling Push
+- S2: Deeper
+- S2A: Deeper Groove
+- S2B: Deeper Pressure
+- S3: Intense
+- S3A: Intense Motion
+- S3B: Intense Grit
+- S4: Wild
+- S4A: Wild Controlled
+- S4B: Wild Maximum
+- S5: Back to Clean
+Safety:
+- passive/read-only
+- no MIDI sending
+- no port opening
+- no command execution
+- no hardware mutation
+- no hardware required

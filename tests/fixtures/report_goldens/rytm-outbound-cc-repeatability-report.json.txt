@@ -1,0 +1,144 @@
+{
+  "rytm_outbound_cc_repeatability": {
+    "blocked_actions": [
+      "open MIDI port from repeatability report",
+      "send MIDI from repeatability report",
+      "run unattended hardware loop",
+      "test new CC number in repeatability pass",
+      "run scene or group mutation",
+      "send SysEx",
+      "touch Analog Four hardware"
+    ],
+    "control": 17,
+    "model_version": "rytm-outbound-cc-repeatability-v1",
+    "next_actions": [
+      "repeat PR #133's one-CC all-12-track validation exactly",
+      "record one observation row per track",
+      "stop before testing any new CC number or mutation command"
+    ],
+    "replay_commands": [
+      "python -m rytm_randomizer.cli rytm-outbound-cc-repeatability-report"
+    ],
+    "source_evidence_path": "docs/hardware-validation/2026-05-26-outbound-12-track-cc-results.md",
+    "steps": [
+      {
+        "command": "python -m rytm_randomizer.app --arm --validate-one-cc --channel 0 --control 17 --value 64",
+        "control": 17,
+        "expected_result": "Only Track 1 changes",
+        "mido_channel": 0,
+        "track": 1,
+        "value": 64
+      },
+      {
+        "command": "python -m rytm_randomizer.app --arm --validate-one-cc --channel 1 --control 17 --value 64",
+        "control": 17,
+        "expected_result": "Only Track 2 changes",
+        "mido_channel": 1,
+        "track": 2,
+        "value": 64
+      },
+      {
+        "command": "python -m rytm_randomizer.app --arm --validate-one-cc --channel 2 --control 17 --value 64",
+        "control": 17,
+        "expected_result": "Only Track 3 changes",
+        "mido_channel": 2,
+        "track": 3,
+        "value": 64
+      },
+      {
+        "command": "python -m rytm_randomizer.app --arm --validate-one-cc --channel 3 --control 17 --value 64",
+        "control": 17,
+        "expected_result": "Only Track 4 changes",
+        "mido_channel": 3,
+        "track": 4,
+        "value": 64
+      },
+      {
+        "command": "python -m rytm_randomizer.app --arm --validate-one-cc --channel 4 --control 17 --value 64",
+        "control": 17,
+        "expected_result": "Only Track 5 changes",
+        "mido_channel": 4,
+        "track": 5,
+        "value": 64
+      },
+      {
+        "command": "python -m rytm_randomizer.app --arm --validate-one-cc --channel 5 --control 17 --value 64",
+        "control": 17,
+        "expected_result": "Only Track 6 changes",
+        "mido_channel": 5,
+        "track": 6,
+        "value": 64
+      },
+      {
+        "command": "python -m rytm_randomizer.app --arm --validate-one-cc --channel 6 --control 17 --value 64",
+        "control": 17,
+        "expected_result": "Only Track 7 changes",
+        "mido_channel": 6,
+        "track": 7,
+        "value": 64
+      },
+      {
+        "command": "python -m rytm_randomizer.app --arm --validate-one-cc --channel 7 --control 17 --value 64",
+        "control": 17,
+        "expected_result": "Only Track 8 changes",
+        "mido_channel": 7,
+        "track": 8,
+        "value": 64
+      },
+      {
+        "command": "python -m rytm_randomizer.app --arm --validate-one-cc --channel 8 --control 17 --value 64",
+        "control": 17,
+        "expected_result": "Only Track 9 changes",
+        "mido_channel": 8,
+        "track": 9,
+        "value": 64
+      },
+      {
+        "command": "python -m rytm_randomizer.app --arm --validate-one-cc --channel 9 --control 17 --value 64",
+        "control": 17,
+        "expected_result": "Only Track 10 changes",
+        "mido_channel": 9,
+        "track": 10,
+        "value": 64
+      },
+      {
+        "command": "python -m rytm_randomizer.app --arm --validate-one-cc --channel 10 --control 17 --value 64",
+        "control": 17,
+        "expected_result": "Only Track 11 changes",
+        "mido_channel": 10,
+        "track": 11,
+        "value": 64
+      },
+      {
+        "command": "python -m rytm_randomizer.app --arm --validate-one-cc --channel 11 --control 17 --value 64",
+        "control": 17,
+        "expected_result": "Only Track 12 changes",
+        "mido_channel": 11,
+        "track": 12,
+        "value": 64
+      }
+    ],
+    "stop_conditions": [
+      "any non-target pad changes",
+      "target pad does not change",
+      "hardware display or audio behaves unexpectedly",
+      "wrong MIDI output port is selected",
+      "operator cannot observe the result clearly"
+    ],
+    "track_count": 12,
+    "validation_mode": "repeatability",
+    "value": 64
+  },
+  "safety": [
+    "passive/read-only",
+    "in-memory only",
+    "GUI/operator readiness metadata only",
+    "does not run the validation",
+    "does not choose or open a MIDI port",
+    "does not import real MIDI adapters",
+    "no MIDI sending",
+    "no port opening",
+    "no hardware mutation",
+    "no hardware required"
+  ]
+}

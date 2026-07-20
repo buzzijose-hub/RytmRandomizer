@@ -1,0 +1,17 @@
+RytmRandomizer Mock Mapper Report
+Supported Mock Group Profile Mappings:
+- 2: My BD Hard (Pad 1 / BD Hard)
+- 3: My BD Classic (Pad 2 / BD Classic)
+Unsupported/Safe Group Profiles:
+- 4: My BD Acoustic (Pad 4 / BD Acoustic) - intentionally unsupported until separately approved
+Mock Mapper Boundary:
+- mock_only: True
+- real_midi: absent
+- port_opening: absent
+- cli_wiring: absent
+- active_behavior: absent
+- hardware_required: False
+- analog_four_support: absent
+- pads_5_12_support: absent
+Source: rytm_randomizer.mock_message_mapper
+In-memory only: True

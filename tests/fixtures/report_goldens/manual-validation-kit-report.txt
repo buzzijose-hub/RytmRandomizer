@@ -1,0 +1,343 @@
+RytmRandomizer passive manual validation kit report
+Model version: manual-validation-kit-v1
+Phase filter: all
+Validation phases:
+- installer_bootstrap: Installer bootstrap
+  Summary: Install or launch the desktop build and confirm the cockpit starts in mock-safe mode.
+  Step ids: install_unsigned_desktop, launch_cockpit_desktop, confirm_mock_safe_connection
+- profile_workflow: Profile workflow
+  Summary: Exercise reference-profile creation, analyzer readiness, and export affordances.
+  Step ids: create_profile_from_reference, record_analyzer_dependency_state, export_profile_model
+- mock_rehearsal: Mock rehearsal
+  Summary: Rehearse preview, regen, prepare, history, save, and disabled active controls.
+  Step ids: review_mock_dashboard_state, rehearse_preview_regen_save, check_prepare_send_controls, check_snapshot_history_recovery
+- armed_smoke: Armed smoke
+  Summary: Run one deliberate operator-armed Rytm smoke test after passive checks are complete.
+  Step ids: verify_hardware_preconditions, run_single_cc_smoke, return_to_clean_after_smoke
+- evidence_closeout: Evidence closeout
+  Summary: Collect reviewer-ready evidence, observations, and stop-condition notes.
+  Step ids: collect_validation_evidence, write_feedback_summary
+Validation steps:
+- install_unsigned_desktop: Install unsigned desktop build
+  Phase: installer_bootstrap
+  Mode: passive
+  Requires installer: True
+  Requires hardware: False
+  Operator actions:
+    - Download the Windows installer artifact from the green installer workflow.
+    - Run the unsigned installer and accept the Windows warning only for this known build.
+    - Do not connect hardware for this step.
+  Expected observations:
+    - The installer completes without requiring source checkout commands.
+    - A RytmRandomizer Cockpit shortcut or app entry is available.
+  Evidence prompts:
+    - Installer filename and workflow run id.
+    - Screenshot of any warning dialog accepted.
+  Stop conditions:
+    - Installer cannot start.
+    - Windows blocks the installer without an override option.
+  Passive commands:
+    - none
+- launch_cockpit_desktop: Launch cockpit desktop shell
+  Phase: installer_bootstrap
+  Mode: passive
+  Requires installer: True
+  Requires hardware: False
+  Operator actions:
+    - Open RytmRandomizer Cockpit from the installed app entry.
+    - Wait for the sidecar terminal to report application startup complete.
+  Expected observations:
+    - The cockpit window renders the dashboard instead of staying on Connecting.
+    - The sidecar shows a local WebSocket connection.
+  Evidence prompts:
+    - Screenshot of the cockpit dashboard.
+    - Copy of the sidecar terminal startup lines.
+  Stop conditions:
+    - Cockpit remains reconnecting for more than 30 seconds.
+    - The sidecar exits or reports an import error.
+  Passive commands:
+    - none
+- confirm_mock_safe_connection: Confirm mock-safe connection state
+  Phase: installer_bootstrap
+  Mode: mock
+  Requires installer: True
+  Requires hardware: False
+  Operator actions:
+    - Read the top status strip before touching any hardware control.
+    - Confirm the UI reports Mock or Safe state and no selected MIDI port.
+  Expected observations:
+    - Status indicates mock-safe behavior.
+    - Port status is none, closed, or not opened.
+    - No unsolicited hardware prompt appears.
+  Evidence prompts:
+    - Screenshot of the status strip.
+  Stop conditions:
+    - A MIDI port opens before explicit operator action.
+    - The UI reports unsaved sends before any operator send action.
+  Passive commands:
+    - none
+- create_profile_from_reference: Create profile from reference
+  Phase: profile_workflow
+  Mode: passive
+  Requires installer: True
+  Requires hardware: False
+  Operator actions:
+    - Open Create Profile.
+    - Name the profile after the reference vibe, not the copyrighted track.
+    - Add reference text or an owned local audio file.
+  Expected observations:
+    - The wizard advances through name, add, analyze, and review steps.
+    - Reference material is treated as inspiration only.
+  Evidence prompts:
+    - Profile name used.
+    - Screenshot of the analyze or review step.
+  Stop conditions:
+    - The wizard accepts no source input.
+    - The UI claims it will copy or recreate the reference track.
+  Passive commands:
+    - none
+- record_analyzer_dependency_state: Record analyzer dependency state
+  Phase: profile_workflow
+  Mode: passive
+  Requires installer: True
+  Requires hardware: False
+  Operator actions:
+    - Run analysis once from the profile wizard.
+    - If optional audio extraction dependencies are missing, capture the exact message.
+  Expected observations:
+    - Analysis either completes or shows a clear optional-extra requirement.
+    - The failure state remains contained to the profile wizard.
+  Evidence prompts:
+    - Analyzer success summary or exact dependency error.
+    - Whether the installed build or source checkout was used.
+  Stop conditions:
+    - Analyzer failure crashes the cockpit.
+    - Analyzer starts hardware behavior.
+  Passive commands:
+    - none
+- export_profile_model: Export profile model
+  Phase: profile_workflow
+  Mode: passive
+  Requires installer: True
+  Requires hardware: False
+  Operator actions:
+    - Click Export Model after analysis or profile review is available.
+    - If the UI does not respond, capture the click target and surrounding state.
+  Expected observations:
+    - The UI either exports a profile artifact or reports why export is disabled.
+    - No MIDI or hardware state changes occur.
+  Evidence prompts:
+    - Exported file path or disabled reason.
+    - Screenshot before and after clicking Export Model.
+  Stop conditions:
+    - Export silently does nothing.
+    - Export attempts to open hardware.
+  Passive commands:
+    - python -m rytm_randomizer.cli cockpit-export-rehearsal-report --profile-id <profile-id> --profiles-dir <profiles-dir> --key-id dev-key
+- review_mock_dashboard_state: Review mock dashboard state
+  Phase: mock_rehearsal
+  Mode: mock
+  Requires installer: True
+  Requires hardware: False
+  Operator actions:
+    - Confirm pad cards, mutation panel, reference profile, and status strip render.
+    - Note visible pad count and any locked or planned pads.
+  Expected observations:
+    - Dashboard is usable in mock mode.
+    - Any missing 12-pad coverage is visible as a product gap, not a safety failure.
+  Evidence prompts:
+    - Screenshot of the dashboard.
+    - Observed pad count and device labels.
+  Stop conditions:
+    - Dashboard controls overlap or cannot be read.
+    - SEND appears armed while no port is selected.
+  Passive commands:
+    - none
+- rehearse_preview_regen_save: Rehearse preview, regen, and save
+  Phase: mock_rehearsal
+  Mode: mock
+  Requires installer: True
+  Requires hardware: False
+  Operator actions:
+    - Toggle preview if available.
+    - Move the mutation amount slider and click Regen.
+    - Save the mock result or record why Save is disabled.
+  Expected observations:
+    - Controls update deterministic mock state without hardware output.
+    - Snapshot history or last-action state changes after mock operations.
+  Evidence prompts:
+    - Before and after screenshots.
+    - Observed snapshot-history or action-log entry.
+  Stop conditions:
+    - Preview or Regen opens a port.
+    - Save writes outside an explicitly selected profile/export path.
+  Passive commands:
+    - none
+- check_prepare_send_controls: Check prepare and send controls
+  Phase: mock_rehearsal
+  Mode: mock
+  Requires installer: True
+  Requires hardware: False
+  Operator actions:
+    - Inspect Prepare, Send, Apply, Arm, and port controls.
+    - Try disabled controls only far enough to capture their disabled reason.
+  Expected observations:
+    - Hardware-affecting controls remain disabled until explicit arming and port selection.
+    - Disabled reasons are visible or inferable from the UI state.
+  Evidence prompts:
+    - Screenshot of disabled SEND or Arm controls.
+    - Any tooltip, warning, or disabled reason text.
+  Stop conditions:
+    - A hardware-affecting control fires in mock mode.
+    - A disabled control has no visible blocked reason.
+  Passive commands:
+    - none
+- check_snapshot_history_recovery: Check snapshot history and recovery
+  Phase: mock_rehearsal
+  Mode: mock
+  Requires installer: True
+  Requires hardware: False
+  Operator actions:
+    - Create at least two mock changes.
+    - Use undo, snapshot history, or recovery controls if present.
+  Expected observations:
+    - The UI exposes a way to understand or recover from recent mock changes.
+    - Recovery does not require hardware.
+  Evidence prompts:
+    - Screenshot of history, undo stack, or recovery state.
+    - List of controls that appeared missing or confusing.
+  Stop conditions:
+    - Undo or recovery changes hardware.
+    - The UI cannot explain what changed.
+  Passive commands:
+    - none
+- verify_hardware_preconditions: Verify hardware preconditions
+  Phase: armed_smoke
+  Mode: armed-manual
+  Requires installer: False
+  Requires hardware: True
+  Operator actions:
+    - Power the Analog Rytm only when ready for a deliberate manual smoke test.
+    - Confirm audio monitoring is safe and volume is conservative.
+    - Confirm no other DAW or MIDI tool is holding the Rytm output port.
+  Expected observations:
+    - The Rytm is visible as an output port only after the operator enters the armed path.
+    - No unattended loop is running.
+  Evidence prompts:
+    - Port name shown to the operator.
+    - Current Rytm project or kit context.
+  Stop conditions:
+    - Port list is ambiguous.
+    - Another app has the port open.
+    - The Rytm is not in a state safe for a single CC smoke test.
+  Passive commands:
+    - none
+- run_single_cc_smoke: Run one single-CC smoke test
+  Phase: armed_smoke
+  Mode: armed-manual
+  Requires installer: False
+  Requires hardware: True
+  Operator actions:
+    - Run the printed armed command manually from PowerShell only after confirming the port.
+    - Select the Analog Rytm output port when prompted.
+    - Observe only the target track for the expected single parameter response.
+  Expected observations:
+    - Only Track 1 responds to CC17 value 64.
+    - No non-target pad changes.
+  Evidence prompts:
+    - Selected output port number and name.
+    - Whether only the target track changed.
+    - Terminal output from the armed smoke command.
+  Stop conditions:
+    - Any non-target pad changes.
+    - The command repeats without another explicit operator action.
+    - The selected port is not the Analog Rytm.
+  Passive commands:
+    - python -m rytm_randomizer.cli rytm-outbound-cc-repeatability-report
+- return_to_clean_after_smoke: Return to clean after smoke
+  Phase: armed_smoke
+  Mode: armed-manual
+  Requires installer: False
+  Requires hardware: True
+  Operator actions:
+    - Return the tested parameter or kit to its prior state on the hardware.
+    - Close the armed process after the one smoke test.
+  Expected observations:
+    - No background process continues after the smoke test.
+    - The Rytm returns to the expected local state.
+  Evidence prompts:
+    - Confirmation that the armed process exited.
+    - Any manual recovery performed on the Rytm.
+  Stop conditions:
+    - The process remains open unexpectedly.
+    - Hardware state cannot be returned to the expected local state.
+  Passive commands:
+    - none
+- collect_validation_evidence: Collect validation evidence
+  Phase: evidence_closeout
+  Mode: passive
+  Requires installer: False
+  Requires hardware: False
+  Operator actions:
+    - Gather screenshots, terminal logs, exported profile files, and hardware observations.
+    - Keep pass/fail notes tied to the phase and step ids in this report.
+  Expected observations:
+    - Evidence can be reviewed without rerunning hardware.
+    - Failures include enough context for a focused follow-up PR.
+  Evidence prompts:
+    - Screenshots for each failed or surprising UI state.
+    - Terminal logs for installer, sidecar, CLI, and armed smoke steps.
+    - Exported profile filename or missing-export evidence.
+  Stop conditions:
+    - Evidence contains private audio paths that should not be posted publicly.
+  Passive commands:
+    - python -m rytm_randomizer.cli manual-validation-kit-report --json
+- write_feedback_summary: Write feedback summary
+  Phase: evidence_closeout
+  Mode: passive
+  Requires installer: False
+  Requires hardware: False
+  Operator actions:
+    - Summarize the highest-impact blockers first.
+    - Separate product gaps from safety bugs.
+    - Mention whether testing used installer or source checkout.
+  Expected observations:
+    - Reviewers can prioritize the next implementation slice.
+    - Safety failures are distinguishable from UX polish requests.
+  Evidence prompts:
+    - Three-bullet pass/fail summary.
+    - Exact command or UI action that reproduced each failure.
+  Stop conditions:
+    - A safety failure occurred and needs immediate triage before more testing.
+  Passive commands:
+    - none
+Manual commands (instruction text only):
+- run_single_cc_smoke: python -m rytm_randomizer.app --arm --validate-one-cc --channel 0 --control 17 --value 64
+Blocked actions:
+- open MIDI ports
+- send MIDI
+- launch cockpit or sidecar
+- run audio analysis
+- write profile/export files
+- execute printed manual commands
+- run unattended hardware loops
+Safety:
+- passive report only
+- no MIDI ports opened
+- no MIDI sent
+- no GUI launched
+- no audio analyzer run
+- no files written
+- printed commands are not executed
+Safety flags:
+- passive_report: True
+- opens_midi_ports: False
+- sends_midi: False
+- launches_gui: False
+- runs_audio_analyzer: False
+- writes_files: False
+- executes_printed_commands: False
+Replay commands:
+- python -m rytm_randomizer.cli manual-validation-kit-report
+Source: rytm_randomizer.reports.manual_validation_kit
+In-memory only: True

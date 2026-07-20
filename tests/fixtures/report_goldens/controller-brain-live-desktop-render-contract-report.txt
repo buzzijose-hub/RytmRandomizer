@@ -1,0 +1,885 @@
+RytmRandomizer passive controller brain live desktop render contract
+Controller brain live desktop render contract:
+- version: controller-brain-live-desktop-render-contract-v1
+- status: desktop-render-contract-passive
+- session: Live Session
+- render contract label: Controller brain desktop render contract
+- surface prefix: rr-render
+- source desktop view model: controller-brain-live-desktop-view-model-report
+- source desktop view model version: controller-brain-live-desktop-view-model-v1
+- source desktop view model status: desktop-view-model-passive
+- source component view models: 27
+- source state bindings: 27
+- source disabled action models: 27
+- render surfaces: 27
+- render bindings: 27
+- render guards: 27
+- render assertions: 27
+- acceptance checks: 7
+Render surfaces:
+- desktop.render.surface.state.global-preview-depth: disabled-passive
+  view model: desktop.viewmodel.state.global-preview-depth
+  selector: rr-controller-state-global-preview-depth
+  surface test id: rr-render-state-global-preview-depth
+  state key: rr-state.state.global-preview-depth
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.state.macro-industrial: disabled-passive
+  view model: desktop.viewmodel.state.macro-industrial
+  selector: rr-controller-state-macro-industrial
+  surface test id: rr-render-state-macro-industrial
+  state key: rr-state.state.macro-industrial
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.state.rytm-pad5-source-amount: disabled-passive
+  view model: desktop.viewmodel.state.rytm-pad5-source-amount
+  selector: rr-controller-state-rytm-pad5-source-amount
+  surface test id: rr-render-state-rytm-pad5-source-amount
+  state key: rr-state.state.rytm-pad5-source-amount
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.state.rytm-pad6-source-amount: disabled-passive
+  view model: desktop.viewmodel.state.rytm-pad6-source-amount
+  selector: rr-controller-state-rytm-pad6-source-amount
+  surface test id: rr-render-state-rytm-pad6-source-amount
+  state key: rr-state.state.rytm-pad6-source-amount
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.state.rytm-pad12-source-amount: disabled-passive
+  view model: desktop.viewmodel.state.rytm-pad12-source-amount
+  selector: rr-controller-state-rytm-pad12-source-amount
+  surface test id: rr-render-state-rytm-pad12-source-amount
+  state key: rr-state.state.rytm-pad12-source-amount
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.state.a4-track1-macro-depth: disabled-passive
+  view model: desktop.viewmodel.state.a4-track1-macro-depth
+  selector: rr-controller-state-a4-track1-macro-depth
+  surface test id: rr-render-state-a4-track1-macro-depth
+  state key: rr-state.state.a4-track1-macro-depth
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.state.crate-dark-hypnotic: disabled-passive
+  view model: desktop.viewmodel.state.crate-dark-hypnotic
+  selector: rr-controller-state-crate-dark-hypnotic
+  surface test id: rr-render-state-crate-dark-hypnotic
+  state key: rr-state.state.crate-dark-hypnotic
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.state.queue-next-1: disabled-passive
+  view model: desktop.viewmodel.state.queue-next-1
+  selector: rr-controller-state-queue-next-1
+  surface test id: rr-render-state-queue-next-1
+  state key: rr-state.state.queue-next-1
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.state.snapshot-panic-home: disabled-passive
+  view model: desktop.viewmodel.state.snapshot-panic-home
+  selector: rr-controller-state-snapshot-panic-home
+  surface test id: rr-render-state-snapshot-panic-home
+  state key: rr-state.state.snapshot-panic-home
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.queue.global-preview-depth: disabled-passive
+  view model: desktop.viewmodel.queue.global-preview-depth
+  selector: rr-controller-queue-global-preview-depth
+  surface test id: rr-render-queue-global-preview-depth
+  state key: rr-state.queue.global-preview-depth
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.queue.macro-industrial: disabled-passive
+  view model: desktop.viewmodel.queue.macro-industrial
+  selector: rr-controller-queue-macro-industrial
+  surface test id: rr-render-queue-macro-industrial
+  state key: rr-state.queue.macro-industrial
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.queue.rytm-pad5-source-amount: disabled-passive
+  view model: desktop.viewmodel.queue.rytm-pad5-source-amount
+  selector: rr-controller-queue-rytm-pad5-source-amount
+  surface test id: rr-render-queue-rytm-pad5-source-amount
+  state key: rr-state.queue.rytm-pad5-source-amount
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.queue.rytm-pad6-source-amount: disabled-passive
+  view model: desktop.viewmodel.queue.rytm-pad6-source-amount
+  selector: rr-controller-queue-rytm-pad6-source-amount
+  surface test id: rr-render-queue-rytm-pad6-source-amount
+  state key: rr-state.queue.rytm-pad6-source-amount
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.queue.rytm-pad12-source-amount: disabled-passive
+  view model: desktop.viewmodel.queue.rytm-pad12-source-amount
+  selector: rr-controller-queue-rytm-pad12-source-amount
+  surface test id: rr-render-queue-rytm-pad12-source-amount
+  state key: rr-state.queue.rytm-pad12-source-amount
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.queue.a4-track1-macro-depth: disabled-passive
+  view model: desktop.viewmodel.queue.a4-track1-macro-depth
+  selector: rr-controller-queue-a4-track1-macro-depth
+  surface test id: rr-render-queue-a4-track1-macro-depth
+  state key: rr-state.queue.a4-track1-macro-depth
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.queue.crate-dark-hypnotic: disabled-passive
+  view model: desktop.viewmodel.queue.crate-dark-hypnotic
+  selector: rr-controller-queue-crate-dark-hypnotic
+  surface test id: rr-render-queue-crate-dark-hypnotic
+  state key: rr-state.queue.crate-dark-hypnotic
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.queue.queue-next-1: disabled-passive
+  view model: desktop.viewmodel.queue.queue-next-1
+  selector: rr-controller-queue-queue-next-1
+  surface test id: rr-render-queue-queue-next-1
+  state key: rr-state.queue.queue-next-1
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.queue.snapshot-panic-home: disabled-passive
+  view model: desktop.viewmodel.queue.snapshot-panic-home
+  selector: rr-controller-queue-snapshot-panic-home
+  surface test id: rr-render-queue-snapshot-panic-home
+  state key: rr-state.queue.snapshot-panic-home
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.audit.global-preview-depth: disabled-passive
+  view model: desktop.viewmodel.audit.global-preview-depth
+  selector: rr-controller-audit-global-preview-depth
+  surface test id: rr-render-audit-global-preview-depth
+  state key: rr-state.audit.global-preview-depth
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.audit.macro-industrial: disabled-passive
+  view model: desktop.viewmodel.audit.macro-industrial
+  selector: rr-controller-audit-macro-industrial
+  surface test id: rr-render-audit-macro-industrial
+  state key: rr-state.audit.macro-industrial
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.audit.rytm-pad5-source-amount: disabled-passive
+  view model: desktop.viewmodel.audit.rytm-pad5-source-amount
+  selector: rr-controller-audit-rytm-pad5-source-amount
+  surface test id: rr-render-audit-rytm-pad5-source-amount
+  state key: rr-state.audit.rytm-pad5-source-amount
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.audit.rytm-pad6-source-amount: disabled-passive
+  view model: desktop.viewmodel.audit.rytm-pad6-source-amount
+  selector: rr-controller-audit-rytm-pad6-source-amount
+  surface test id: rr-render-audit-rytm-pad6-source-amount
+  state key: rr-state.audit.rytm-pad6-source-amount
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.audit.rytm-pad12-source-amount: disabled-passive
+  view model: desktop.viewmodel.audit.rytm-pad12-source-amount
+  selector: rr-controller-audit-rytm-pad12-source-amount
+  surface test id: rr-render-audit-rytm-pad12-source-amount
+  state key: rr-state.audit.rytm-pad12-source-amount
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.audit.a4-track1-macro-depth: disabled-passive
+  view model: desktop.viewmodel.audit.a4-track1-macro-depth
+  selector: rr-controller-audit-a4-track1-macro-depth
+  surface test id: rr-render-audit-a4-track1-macro-depth
+  state key: rr-state.audit.a4-track1-macro-depth
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.audit.crate-dark-hypnotic: disabled-passive
+  view model: desktop.viewmodel.audit.crate-dark-hypnotic
+  selector: rr-controller-audit-crate-dark-hypnotic
+  surface test id: rr-render-audit-crate-dark-hypnotic
+  state key: rr-state.audit.crate-dark-hypnotic
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.audit.queue-next-1: disabled-passive
+  view model: desktop.viewmodel.audit.queue-next-1
+  selector: rr-controller-audit-queue-next-1
+  surface test id: rr-render-audit-queue-next-1
+  state key: rr-state.audit.queue-next-1
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+- desktop.render.surface.audit.snapshot-panic-home: disabled-passive
+  view model: desktop.viewmodel.audit.snapshot-panic-home
+  selector: rr-controller-audit-snapshot-panic-home
+  surface test id: rr-render-audit-snapshot-panic-home
+  state key: rr-state.audit.snapshot-panic-home
+  enabled: False
+  passive: True
+  blocked: mount render surfaces
+Render bindings:
+- desktop.render.binding.state.global-preview-depth: one-way-disabled-state-to-render
+  surface: desktop.render.surface.state.global-preview-depth
+  state binding: desktop.binding.state.global-preview-depth
+  fallback: disabled
+  passive: True
+- desktop.render.binding.state.macro-industrial: one-way-disabled-state-to-render
+  surface: desktop.render.surface.state.macro-industrial
+  state binding: desktop.binding.state.macro-industrial
+  fallback: disabled
+  passive: True
+- desktop.render.binding.state.rytm-pad5-source-amount: one-way-disabled-state-to-render
+  surface: desktop.render.surface.state.rytm-pad5-source-amount
+  state binding: desktop.binding.state.rytm-pad5-source-amount
+  fallback: disabled
+  passive: True
+- desktop.render.binding.state.rytm-pad6-source-amount: one-way-disabled-state-to-render
+  surface: desktop.render.surface.state.rytm-pad6-source-amount
+  state binding: desktop.binding.state.rytm-pad6-source-amount
+  fallback: disabled
+  passive: True
+- desktop.render.binding.state.rytm-pad12-source-amount: one-way-disabled-state-to-render
+  surface: desktop.render.surface.state.rytm-pad12-source-amount
+  state binding: desktop.binding.state.rytm-pad12-source-amount
+  fallback: disabled
+  passive: True
+- desktop.render.binding.state.a4-track1-macro-depth: one-way-disabled-state-to-render
+  surface: desktop.render.surface.state.a4-track1-macro-depth
+  state binding: desktop.binding.state.a4-track1-macro-depth
+  fallback: disabled
+  passive: True
+- desktop.render.binding.state.crate-dark-hypnotic: one-way-disabled-state-to-render
+  surface: desktop.render.surface.state.crate-dark-hypnotic
+  state binding: desktop.binding.state.crate-dark-hypnotic
+  fallback: disabled
+  passive: True
+- desktop.render.binding.state.queue-next-1: one-way-disabled-state-to-render
+  surface: desktop.render.surface.state.queue-next-1
+  state binding: desktop.binding.state.queue-next-1
+  fallback: disabled
+  passive: True
+- desktop.render.binding.state.snapshot-panic-home: one-way-disabled-state-to-render
+  surface: desktop.render.surface.state.snapshot-panic-home
+  state binding: desktop.binding.state.snapshot-panic-home
+  fallback: disabled
+  passive: True
+- desktop.render.binding.queue.global-preview-depth: one-way-disabled-state-to-render
+  surface: desktop.render.surface.queue.global-preview-depth
+  state binding: desktop.binding.queue.global-preview-depth
+  fallback: disabled
+  passive: True
+- desktop.render.binding.queue.macro-industrial: one-way-disabled-state-to-render
+  surface: desktop.render.surface.queue.macro-industrial
+  state binding: desktop.binding.queue.macro-industrial
+  fallback: disabled
+  passive: True
+- desktop.render.binding.queue.rytm-pad5-source-amount: one-way-disabled-state-to-render
+  surface: desktop.render.surface.queue.rytm-pad5-source-amount
+  state binding: desktop.binding.queue.rytm-pad5-source-amount
+  fallback: disabled
+  passive: True
+- desktop.render.binding.queue.rytm-pad6-source-amount: one-way-disabled-state-to-render
+  surface: desktop.render.surface.queue.rytm-pad6-source-amount
+  state binding: desktop.binding.queue.rytm-pad6-source-amount
+  fallback: disabled
+  passive: True
+- desktop.render.binding.queue.rytm-pad12-source-amount: one-way-disabled-state-to-render
+  surface: desktop.render.surface.queue.rytm-pad12-source-amount
+  state binding: desktop.binding.queue.rytm-pad12-source-amount
+  fallback: disabled
+  passive: True
+- desktop.render.binding.queue.a4-track1-macro-depth: one-way-disabled-state-to-render
+  surface: desktop.render.surface.queue.a4-track1-macro-depth
+  state binding: desktop.binding.queue.a4-track1-macro-depth
+  fallback: disabled
+  passive: True
+- desktop.render.binding.queue.crate-dark-hypnotic: one-way-disabled-state-to-render
+  surface: desktop.render.surface.queue.crate-dark-hypnotic
+  state binding: desktop.binding.queue.crate-dark-hypnotic
+  fallback: disabled
+  passive: True
+- desktop.render.binding.queue.queue-next-1: one-way-disabled-state-to-render
+  surface: desktop.render.surface.queue.queue-next-1
+  state binding: desktop.binding.queue.queue-next-1
+  fallback: disabled
+  passive: True
+- desktop.render.binding.queue.snapshot-panic-home: one-way-disabled-state-to-render
+  surface: desktop.render.surface.queue.snapshot-panic-home
+  state binding: desktop.binding.queue.snapshot-panic-home
+  fallback: disabled
+  passive: True
+- desktop.render.binding.audit.global-preview-depth: one-way-disabled-state-to-render
+  surface: desktop.render.surface.audit.global-preview-depth
+  state binding: desktop.binding.audit.global-preview-depth
+  fallback: disabled
+  passive: True
+- desktop.render.binding.audit.macro-industrial: one-way-disabled-state-to-render
+  surface: desktop.render.surface.audit.macro-industrial
+  state binding: desktop.binding.audit.macro-industrial
+  fallback: disabled
+  passive: True
+- desktop.render.binding.audit.rytm-pad5-source-amount: one-way-disabled-state-to-render
+  surface: desktop.render.surface.audit.rytm-pad5-source-amount
+  state binding: desktop.binding.audit.rytm-pad5-source-amount
+  fallback: disabled
+  passive: True
+- desktop.render.binding.audit.rytm-pad6-source-amount: one-way-disabled-state-to-render
+  surface: desktop.render.surface.audit.rytm-pad6-source-amount
+  state binding: desktop.binding.audit.rytm-pad6-source-amount
+  fallback: disabled
+  passive: True
+- desktop.render.binding.audit.rytm-pad12-source-amount: one-way-disabled-state-to-render
+  surface: desktop.render.surface.audit.rytm-pad12-source-amount
+  state binding: desktop.binding.audit.rytm-pad12-source-amount
+  fallback: disabled
+  passive: True
+- desktop.render.binding.audit.a4-track1-macro-depth: one-way-disabled-state-to-render
+  surface: desktop.render.surface.audit.a4-track1-macro-depth
+  state binding: desktop.binding.audit.a4-track1-macro-depth
+  fallback: disabled
+  passive: True
+- desktop.render.binding.audit.crate-dark-hypnotic: one-way-disabled-state-to-render
+  surface: desktop.render.surface.audit.crate-dark-hypnotic
+  state binding: desktop.binding.audit.crate-dark-hypnotic
+  fallback: disabled
+  passive: True
+- desktop.render.binding.audit.queue-next-1: one-way-disabled-state-to-render
+  surface: desktop.render.surface.audit.queue-next-1
+  state binding: desktop.binding.audit.queue-next-1
+  fallback: disabled
+  passive: True
+- desktop.render.binding.audit.snapshot-panic-home: one-way-disabled-state-to-render
+  surface: desktop.render.surface.audit.snapshot-panic-home
+  state binding: desktop.binding.audit.snapshot-panic-home
+  fallback: disabled
+  passive: True
+Render guards:
+- desktop.render.guard.state.global-preview-depth: blocked
+  surface: desktop.render.surface.state.global-preview-depth
+  action model: desktop.action.state.global-preview-depth
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.state.macro-industrial: blocked
+  surface: desktop.render.surface.state.macro-industrial
+  action model: desktop.action.state.macro-industrial
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.state.rytm-pad5-source-amount: blocked
+  surface: desktop.render.surface.state.rytm-pad5-source-amount
+  action model: desktop.action.state.rytm-pad5-source-amount
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.state.rytm-pad6-source-amount: blocked
+  surface: desktop.render.surface.state.rytm-pad6-source-amount
+  action model: desktop.action.state.rytm-pad6-source-amount
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.state.rytm-pad12-source-amount: blocked
+  surface: desktop.render.surface.state.rytm-pad12-source-amount
+  action model: desktop.action.state.rytm-pad12-source-amount
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.state.a4-track1-macro-depth: blocked
+  surface: desktop.render.surface.state.a4-track1-macro-depth
+  action model: desktop.action.state.a4-track1-macro-depth
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.state.crate-dark-hypnotic: blocked
+  surface: desktop.render.surface.state.crate-dark-hypnotic
+  action model: desktop.action.state.crate-dark-hypnotic
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.state.queue-next-1: blocked
+  surface: desktop.render.surface.state.queue-next-1
+  action model: desktop.action.state.queue-next-1
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.state.snapshot-panic-home: blocked
+  surface: desktop.render.surface.state.snapshot-panic-home
+  action model: desktop.action.state.snapshot-panic-home
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.queue.global-preview-depth: blocked
+  surface: desktop.render.surface.queue.global-preview-depth
+  action model: desktop.action.queue.global-preview-depth
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.queue.macro-industrial: blocked
+  surface: desktop.render.surface.queue.macro-industrial
+  action model: desktop.action.queue.macro-industrial
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.queue.rytm-pad5-source-amount: blocked
+  surface: desktop.render.surface.queue.rytm-pad5-source-amount
+  action model: desktop.action.queue.rytm-pad5-source-amount
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.queue.rytm-pad6-source-amount: blocked
+  surface: desktop.render.surface.queue.rytm-pad6-source-amount
+  action model: desktop.action.queue.rytm-pad6-source-amount
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.queue.rytm-pad12-source-amount: blocked
+  surface: desktop.render.surface.queue.rytm-pad12-source-amount
+  action model: desktop.action.queue.rytm-pad12-source-amount
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.queue.a4-track1-macro-depth: blocked
+  surface: desktop.render.surface.queue.a4-track1-macro-depth
+  action model: desktop.action.queue.a4-track1-macro-depth
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.queue.crate-dark-hypnotic: blocked
+  surface: desktop.render.surface.queue.crate-dark-hypnotic
+  action model: desktop.action.queue.crate-dark-hypnotic
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.queue.queue-next-1: blocked
+  surface: desktop.render.surface.queue.queue-next-1
+  action model: desktop.action.queue.queue-next-1
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.queue.snapshot-panic-home: blocked
+  surface: desktop.render.surface.queue.snapshot-panic-home
+  action model: desktop.action.queue.snapshot-panic-home
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.audit.global-preview-depth: blocked
+  surface: desktop.render.surface.audit.global-preview-depth
+  action model: desktop.action.audit.global-preview-depth
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.audit.macro-industrial: blocked
+  surface: desktop.render.surface.audit.macro-industrial
+  action model: desktop.action.audit.macro-industrial
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.audit.rytm-pad5-source-amount: blocked
+  surface: desktop.render.surface.audit.rytm-pad5-source-amount
+  action model: desktop.action.audit.rytm-pad5-source-amount
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.audit.rytm-pad6-source-amount: blocked
+  surface: desktop.render.surface.audit.rytm-pad6-source-amount
+  action model: desktop.action.audit.rytm-pad6-source-amount
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.audit.rytm-pad12-source-amount: blocked
+  surface: desktop.render.surface.audit.rytm-pad12-source-amount
+  action model: desktop.action.audit.rytm-pad12-source-amount
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.audit.a4-track1-macro-depth: blocked
+  surface: desktop.render.surface.audit.a4-track1-macro-depth
+  action model: desktop.action.audit.a4-track1-macro-depth
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.audit.crate-dark-hypnotic: blocked
+  surface: desktop.render.surface.audit.crate-dark-hypnotic
+  action model: desktop.action.audit.crate-dark-hypnotic
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.audit.queue-next-1: blocked
+  surface: desktop.render.surface.audit.queue-next-1
+  action model: desktop.action.audit.queue-next-1
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+- desktop.render.guard.audit.snapshot-panic-home: blocked
+  surface: desktop.render.surface.audit.snapshot-panic-home
+  action model: desktop.action.audit.snapshot-panic-home
+  blocked: dispatch Cockpit WebSocket commands
+  passive: True
+Render assertions:
+- desktop.render.assert.state.global-preview-depth: disabled
+  surface: desktop.render.surface.state.global-preview-depth
+  source assertion: desktop.assert.state.global-preview-depth
+  passive: True
+- desktop.render.assert.state.macro-industrial: disabled
+  surface: desktop.render.surface.state.macro-industrial
+  source assertion: desktop.assert.state.macro-industrial
+  passive: True
+- desktop.render.assert.state.rytm-pad5-source-amount: disabled
+  surface: desktop.render.surface.state.rytm-pad5-source-amount
+  source assertion: desktop.assert.state.rytm-pad5-source-amount
+  passive: True
+- desktop.render.assert.state.rytm-pad6-source-amount: disabled
+  surface: desktop.render.surface.state.rytm-pad6-source-amount
+  source assertion: desktop.assert.state.rytm-pad6-source-amount
+  passive: True
+- desktop.render.assert.state.rytm-pad12-source-amount: disabled
+  surface: desktop.render.surface.state.rytm-pad12-source-amount
+  source assertion: desktop.assert.state.rytm-pad12-source-amount
+  passive: True
+- desktop.render.assert.state.a4-track1-macro-depth: disabled
+  surface: desktop.render.surface.state.a4-track1-macro-depth
+  source assertion: desktop.assert.state.a4-track1-macro-depth
+  passive: True
+- desktop.render.assert.state.crate-dark-hypnotic: disabled
+  surface: desktop.render.surface.state.crate-dark-hypnotic
+  source assertion: desktop.assert.state.crate-dark-hypnotic
+  passive: True
+- desktop.render.assert.state.queue-next-1: disabled
+  surface: desktop.render.surface.state.queue-next-1
+  source assertion: desktop.assert.state.queue-next-1
+  passive: True
+- desktop.render.assert.state.snapshot-panic-home: disabled
+  surface: desktop.render.surface.state.snapshot-panic-home
+  source assertion: desktop.assert.state.snapshot-panic-home
+  passive: True
+- desktop.render.assert.queue.global-preview-depth: disabled
+  surface: desktop.render.surface.queue.global-preview-depth
+  source assertion: desktop.assert.queue.global-preview-depth
+  passive: True
+- desktop.render.assert.queue.macro-industrial: disabled
+  surface: desktop.render.surface.queue.macro-industrial
+  source assertion: desktop.assert.queue.macro-industrial
+  passive: True
+- desktop.render.assert.queue.rytm-pad5-source-amount: disabled
+  surface: desktop.render.surface.queue.rytm-pad5-source-amount
+  source assertion: desktop.assert.queue.rytm-pad5-source-amount
+  passive: True
+- desktop.render.assert.queue.rytm-pad6-source-amount: disabled
+  surface: desktop.render.surface.queue.rytm-pad6-source-amount
+  source assertion: desktop.assert.queue.rytm-pad6-source-amount
+  passive: True
+- desktop.render.assert.queue.rytm-pad12-source-amount: disabled
+  surface: desktop.render.surface.queue.rytm-pad12-source-amount
+  source assertion: desktop.assert.queue.rytm-pad12-source-amount
+  passive: True
+- desktop.render.assert.queue.a4-track1-macro-depth: disabled
+  surface: desktop.render.surface.queue.a4-track1-macro-depth
+  source assertion: desktop.assert.queue.a4-track1-macro-depth
+  passive: True
+- desktop.render.assert.queue.crate-dark-hypnotic: disabled
+  surface: desktop.render.surface.queue.crate-dark-hypnotic
+  source assertion: desktop.assert.queue.crate-dark-hypnotic
+  passive: True
+- desktop.render.assert.queue.queue-next-1: disabled
+  surface: desktop.render.surface.queue.queue-next-1
+  source assertion: desktop.assert.queue.queue-next-1
+  passive: True
+- desktop.render.assert.queue.snapshot-panic-home: disabled
+  surface: desktop.render.surface.queue.snapshot-panic-home
+  source assertion: desktop.assert.queue.snapshot-panic-home
+  passive: True
+- desktop.render.assert.audit.global-preview-depth: disabled
+  surface: desktop.render.surface.audit.global-preview-depth
+  source assertion: desktop.assert.audit.global-preview-depth
+  passive: True
+- desktop.render.assert.audit.macro-industrial: disabled
+  surface: desktop.render.surface.audit.macro-industrial
+  source assertion: desktop.assert.audit.macro-industrial
+  passive: True
+- desktop.render.assert.audit.rytm-pad5-source-amount: disabled
+  surface: desktop.render.surface.audit.rytm-pad5-source-amount
+  source assertion: desktop.assert.audit.rytm-pad5-source-amount
+  passive: True
+- desktop.render.assert.audit.rytm-pad6-source-amount: disabled
+  surface: desktop.render.surface.audit.rytm-pad6-source-amount
+  source assertion: desktop.assert.audit.rytm-pad6-source-amount
+  passive: True
+- desktop.render.assert.audit.rytm-pad12-source-amount: disabled
+  surface: desktop.render.surface.audit.rytm-pad12-source-amount
+  source assertion: desktop.assert.audit.rytm-pad12-source-amount
+  passive: True
+- desktop.render.assert.audit.a4-track1-macro-depth: disabled
+  surface: desktop.render.surface.audit.a4-track1-macro-depth
+  source assertion: desktop.assert.audit.a4-track1-macro-depth
+  passive: True
+- desktop.render.assert.audit.crate-dark-hypnotic: disabled
+  surface: desktop.render.surface.audit.crate-dark-hypnotic
+  source assertion: desktop.assert.audit.crate-dark-hypnotic
+  passive: True
+- desktop.render.assert.audit.queue-next-1: disabled
+  surface: desktop.render.surface.audit.queue-next-1
+  source assertion: desktop.assert.audit.queue-next-1
+  passive: True
+- desktop.render.assert.audit.snapshot-panic-home: disabled
+  surface: desktop.render.surface.audit.snapshot-panic-home
+  source assertion: desktop.assert.audit.snapshot-panic-home
+  passive: True
+Acceptance checks:
+- source-view-model-ready: ready
+  passive: True
+  evidence: source desktop view model is available as passive JSON
+  blocked: mount render surfaces
+- render-surface-coverage: ready
+  passive: True
+  evidence: every component view model has one disabled render surface
+  blocked: mount render surfaces
+- render-binding-coverage: ready
+  passive: True
+  evidence: every state binding has one disabled render binding
+  blocked: execute render bindings
+- render-guard-coverage: ready
+  passive: True
+  evidence: every disabled action model has one render guard
+  blocked: dispatch Cockpit WebSocket commands
+- render-assertion-coverage: ready
+  passive: True
+  evidence: every source render assertion has one render-contract assertion
+  blocked: start GUI renderer
+- replay-command: ready
+  passive: True
+  evidence: operator replay commands remain copy-ready passive CLI commands
+  blocked: dispatch Cockpit WebSocket commands
+- passive-boundary: ready
+  passive: True
+  evidence: desktop render contract launches no GUI, writes no files, opens no ports, and sends no MIDI
+  blocked: open MIDI output
+Blocked active actions:
+- launch Cockpit GUI runtime
+- launch desktop app shell
+- start GUI renderer
+- mount render surfaces
+- execute render bindings
+- dispatch Cockpit WebSocket commands
+- emit controller feedback
+- open MIDI output
+- mutate a snapshot
+- mount component view models
+- execute live state reducer
+- mount component contracts
+- write component files
+- mount desktop routes
+- mount desktop regions
+- write fixture files
+- mount implementation bindings
+- open controller input adapter
+- open controller output adapter
+- write controller LED state
+- write controller encoder ring state
+- write controller display text
+- dispatch Cockpit WebSocket feedback
+- dispatch controller runtime command
+- send hardware MIDI
+- write bridge audit side effects
+- apply live state reducer
+- dispatch controller runtime event
+- write controller audit ledger
+- open MIDI controller input
+- MIDI learn or raw CC capture
+- arm hardware
+- dispatch controller gesture to active runtime
+- send controller feedback
+- open Analog Rytm output
+- open Analog Four output
+- a4_outbound_macro_send
+- unattended_hardware_behavior
+- open_midi_port_without_arm
+- send_without_dry_run
+- fire macro from Cockpit console
+- prepare hardware send from Cockpit macro action
+- dispatch Rytm lane policy from Cockpit console
+- send Rytm lane policy from Cockpit console
+- fire rehearsal cue from Cockpit console
+- open MIDI port from rehearsal board
+- send MIDI from rehearsal board
+- promote A4 macro from rehearsal board
+- receive kit from Cockpit console
+- mutate captured kit from Cockpit console
+- send captured plan from Cockpit console
+- open Rytm SysEx input from passive Cockpit report
+- receive kit from Cockpit workbench
+- stage captured-kit mutation from Cockpit workbench
+- apply captured-kit package from Cockpit console
+- export captured-kit package from passive Cockpit report
+- send captured plan from Cockpit workbench
+- generate captured-kit package from Cockpit console
+- apply audition package from passive Cockpit console
+- send audition variation from Cockpit console
+- write audition package file from passive report
+- open MIDI port from package audition
+- generate operator package from Cockpit console
+- send operator package from Cockpit console
+- write operator package file from passive report
+- commit operator journal from passive report
+- open MIDI port from operator package
+- trigger A4 macro from Cockpit console
+- open A4 output port from Cockpit console
+- A4 full macro SEND
+- A4 unattended macro playback
+- fire queued style move
+- dispatch crate move
+- replay journal entry
+- persist journal entry
+- open MIDI port
+- send MIDI
+- mutate hardware
+- launch GUI
+- arm-hardware
+- open-midi-port
+- send-midi
+- record-audio
+- render-gui
+- open MIDI port from snapshot history
+- send MIDI from snapshot history
+- arm hardware from snapshot history
+- mutate hardware from snapshot history
+- launch GUI from snapshot history
+- dispatch queued command from model
+- run undo from model
+- load snapshot from model
+- open MIDI port from model
+- send MIDI from model
+- mutate hardware from model
+- launch GUI from model
+- arm hardware from safety checklist
+- open MIDI port from safety checklist
+- send MIDI from safety checklist
+- mutate hardware from safety checklist
+- launch GUI from safety checklist
+- open_midi_port
+- arm_hardware
+- send_midi
+- write_sysex
+- mutate_hardware
+Replay commands:
+- python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report
+- python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report --json
+- python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report --json
+- python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report --json
+Safety:
+- passive/read-only
+- controller-brain desktop render contract metadata only
+- composes controller-brain desktop view model only
+- render surfaces are declarative metadata only
+- render bindings are declarative metadata only
+- render guards are metadata only
+- render assertions are metadata only
+- acceptance checks are metadata only
+- JSON/stdout only
+- no GUI launch
+- no app launch
+- no component mount
+- no render surface mount
+- no prop binding execution
+- no GUI renderer start
+- no renderer execution
+- no runtime reducer execution
+- no WebSocket dispatch
+- no controller feedback emission
+- no MIDI controller output
+- no MIDI sending
+- no port opening
+- no snapshot mutation
+- no file writing
+- no hardware mutation
+- no hardware required
+- controller-brain desktop view model metadata only
+- composes controller-brain desktop component contract only
+- component view models are declarative metadata only
+- state bindings are declarative metadata only
+- disabled action models are metadata only
+- controller-brain desktop component contract metadata only
+- composes controller-brain desktop app plan only
+- component contracts are declarative metadata only
+- prop contracts are declarative metadata only
+- event contracts are disabled metadata only
+- test hooks are declarative metadata only
+- fixture contracts are advisory metadata only
+- controller-brain desktop app plan metadata only
+- composes controller-brain desktop blueprint only
+- app routes are declarative metadata only
+- component file hints are advisory metadata only
+- state slices are declarative metadata only
+- style tokens are declarative metadata only
+- controller-brain desktop blueprint metadata only
+- composes controller-brain implementation bridge only
+- desktop regions are declarative metadata only
+- view-model bindings are declarative metadata only
+- fixture hints are metadata only
+- controller-brain implementation bridge metadata only
+- composes controller-brain Cockpit handoff only
+- implementation bindings are declarative metadata only
+- fixture bundles are metadata only
+- implementation gates are metadata only
+- controller-brain Cockpit handoff metadata only
+- composes controller-brain feedback rehearsal only
+- handoff cards are GUI-ready metadata only
+- Cockpit panels are metadata only
+- disabled controls are metadata only
+- no controller input
+- no WebSocket feedback dispatch
+- controller-brain feedback rehearsal metadata only
+- composes controller-brain dispatch rehearsal only
+- feedback frames are metadata only
+- output gates are metadata only
+- controller-brain dispatch rehearsal metadata only
+- composes controller-brain bridge readiness only
+- shadow dispatch decisions are metadata only
+- transport gates are metadata only
+- no MIDI controller input
+- no MIDI learn or raw CC capture
+- no WebSocket command dispatch
+- no state-store mutation
+- controller-brain bridge readiness metadata only
+- composes controller-brain live state only
+- contract packets are metadata only
+- controller-brain live state metadata only
+- composes controller-brain live runbook only
+- state rows are metadata only
+- queued intents are metadata only
+- audit events are metadata only
+- controller-brain live runbook metadata only
+- composes existing passive reports only
+- no command execution
+- controller-template rows only
+- virtual encoder gestures only
+- Cockpit performance console packet only
+- composes passive report metadata only
+- GUI performance flow metadata only
+- Rytm OXI macro command labels only
+- Analog Four review-only actions stay candidate metadata.
+- no real MIDI rendering
+- macro action cards are declarative only
+- operators still use the armed snapshot shell for real sends
+- all Cockpit macro fire controls stay disabled
+- Rytm lane policy matrix is declarative only
+- Cockpit shows macro policy before the armed snapshot shell applies anything
+- rehearsal board is declarative only
+- launch command is shown for operator copy/review only
+- real Rytm sends remain in the explicitly armed snapshot shell
+- A4 outbound macro promotion remains blocked
+- live kit capture panel is declarative only
+- no SysEx receive from passive Cockpit report
+- operators still run the armed snapshot shell manually
+- captured-anchor recovery remains explicit
+- live kit capture workbench is declarative only
+- capture slots are review metadata only
+- no package apply from passive Cockpit report
+- live kit package audition is declarative only
+- audition slots are rehearsal metadata only
+- journal preview does not write files
+- live kit operator package is declarative only
+- operator steps are browser-local rehearsal metadata
+- local export preview does not write files
+- journal commit remains preview-only
+- A4 review surface is declarative only
+- A4 validation commands are shown for operator review only
+- A4 OXI macro set planning only
+- manual-backed Analog Four CC metadata only
+- A4 full macro SEND remains blocked
+- operator-present validation commands only
+- no unattended hardware behavior
+- A4 full macro SEND remains unimplemented
+- in-memory only
+- device registry metadata only
+Source: rytm_randomizer.reports.controller_brain_live_desktop_render_contract
+In-memory only: True

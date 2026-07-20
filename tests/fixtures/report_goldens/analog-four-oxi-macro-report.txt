@@ -1,0 +1,30 @@
+RytmRandomizer passive Analog Four OXI macro report
+Macro: hard-groove / Hard Groove
+Summary: OXI-style four-track pressure for bass, stab, motion, and air lanes.
+Seed: 0
+Intensity: 4
+Energy: 5
+Tracks: 4
+Event count: 12
+Shown events: 0
+Truncated events: 0
+Safety flags:
+- mock_only: True
+- hardware_required: False
+- opens_ports: False
+- sends_midi: False
+- active_behavior: False
+Events:
+- hidden; pass --events to show deterministic mock rows
+Safety:
+- passive/read-only
+- mock-only Analog Four OXI-style macro preview
+- manual-backed Analog Four CC metadata only
+- no real MIDI rendering
+- no MIDI sending
+- no port opening
+- no command execution
+- no hardware mutation
+- no hardware required
+Source: rytm_randomizer.reports.analog_four_oxi_macro_report
+In-memory only: True
