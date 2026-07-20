@@ -47,7 +47,13 @@ PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 # (see ``_IGNORED_ROOT_NAMES``) rather than allowlisted.
 _ALLOWED_ROOT_DIRS: Final[frozenset[str]] = frozenset(
     {
-        "Scripts",  # repo maintenance / CI helper scripts
+        # NOTE dual casing: git tracks BOTH ``Scripts/`` (PowerShell operator
+        # scripts) and ``scripts/`` (Python repo/CI scripts). On macOS's
+        # case-insensitive filesystem they materialize as ONE directory (the
+        # first-created casing wins in ``iterdir``); on case-sensitive Linux
+        # CI they check out as TWO. Both must therefore be allowlisted.
+        "Scripts",  # PowerShell operator scripts (closeout/quick_status)
+        "scripts",  # Python repo/CI scripts (create_pr, gates, captures)
         "agent-memory",  # shared cross-agent memory store
         "captures",  # raw operator-supplied SysEx capture evidence
         "desktop",  # Tauri shell + React cockpit
@@ -83,11 +89,9 @@ _IGNORED_ROOT_NAMES: Final[frozenset[str]] = frozenset(
 # The modules permitted to import the MIDI backend. ``real_midi_adapter`` and
 # ``mido_provider`` are the classic seam; ``midi_io`` also carries a lazy
 # in-method ``import mido`` inside ``send_cc`` (midi_io.py:163) — the real
-# critical send path. CLAUDE.md hard rule 7 names only the first two, which is
-# stale (the rules-freshness sweep in WS-0 corrects the canon text to allow
-# lazy in-method mido at the midi_io/real_midi_adapter/mido_provider boundary
-# and to ban only TOP-LEVEL mido imports elsewhere). This scan enforces the
-# real, corrected boundary.
+# critical send path. CLAUDE.md hard rule 7 (as corrected in this bundle)
+# names exactly this three-module boundary and bans top-level mido imports
+# everywhere; this scan is its repo-wide mechanical enforcement.
 _MIDI_IMPORT_BOUNDARY: Final[frozenset[str]] = frozenset(
     {
         "rytm_randomizer/real_midi_adapter.py",
@@ -159,10 +163,18 @@ def test_no_unallowlisted_repo_root_directories() -> None:
 
 
 def test_allowlisted_root_directories_still_exist() -> None:
-    """Every ``_ALLOWED_ROOT_DIRS`` entry must still exist on disk."""
+    """Every ``_ALLOWED_ROOT_DIRS`` entry must still exist on disk.
 
-    present_dirs = {e.name for e in _repo_root_entries() if e.is_dir()}
-    stale = sorted(_ALLOWED_ROOT_DIRS - present_dirs)
+    Case-insensitive comparison: on macOS the dual-cased ``Scripts``/
+    ``scripts`` pair materializes as a single directory (one casing visible in
+    ``iterdir``), while Linux checks out both. An entry counts as present if
+    any on-disk directory matches it case-insensitively.
+    """
+
+    present_casefold = {e.name.casefold() for e in _repo_root_entries() if e.is_dir()}
+    stale = sorted(
+        entry for entry in _ALLOWED_ROOT_DIRS if entry.casefold() not in present_casefold
+    )
     assert not stale, (
         "``_ALLOWED_ROOT_DIRS`` lists directories that no longer exist. "
         "Remove the stale entries in the same PR that deleted them.\n"
