@@ -1,0 +1,26 @@
+[
+  {
+    "component_key": "current-cue-panel",
+    "region_key": "region-current-cue"
+  },
+  {
+    "component_key": "machine-panels",
+    "region_key": "region-machine-grid"
+  },
+  {
+    "component_key": "analyzer-overlay",
+    "region_key": "region-analyzer"
+  },
+  {
+    "component_key": "capture-review-panel",
+    "region_key": "region-capture-review"
+  },
+  {
+    "component_key": "controller-actions",
+    "region_key": "region-controls"
+  },
+  {
+    "component_key": "test-harness-panel",
+    "region_key": "region-harness"
+  }
+]

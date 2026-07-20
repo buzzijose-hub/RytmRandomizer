@@ -1,0 +1,27 @@
+{
+  "anchor": [
+    "body",
+    "grit",
+    "filter"
+  ],
+  "filter": [
+    "filter",
+    "body",
+    "grit"
+  ],
+  "impact": [
+    "impact",
+    "grit",
+    "filter"
+  ],
+  "long": [
+    "long",
+    "body",
+    "grit"
+  ],
+  "tight": [
+    "tight",
+    "body",
+    "filter"
+  ]
+}

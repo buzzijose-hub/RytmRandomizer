@@ -1,0 +1,72 @@
+{
+  "s0": {
+    "action": "home",
+    "description": "Load or return all four pads to the validated anchors.",
+    "name": "Home / Clean"
+  },
+  "s1": {
+    "action": "balanced",
+    "description": "Balanced four-lane movement. Kick stays protected; Pads 2-4 move musically.",
+    "name": "Rolling"
+  },
+  "s1a": {
+    "action": "rolling_light",
+    "description": "Lower-risk rolling movement for subtle live variation.",
+    "name": "Rolling Light"
+  },
+  "s1b": {
+    "action": "rolling_push",
+    "description": "A stronger rolling push while keeping the kick foundation protected.",
+    "name": "Rolling Push"
+  },
+  "s2": {
+    "action": "deeper",
+    "description": "More pressure on Pads 2-4 while keeping Pad 1 bounded.",
+    "name": "Deeper"
+  },
+  "s2a": {
+    "action": "deeper_groove",
+    "description": "Deeper body movement with groove-first pressure.",
+    "name": "Deeper Groove"
+  },
+  "s2b": {
+    "action": "deeper_pressure",
+    "description": "More filter/grit pressure on the secondary lanes while Pad 1 stays bounded.",
+    "name": "Deeper Pressure"
+  },
+  "s3": {
+    "action": "intense",
+    "description": "Controlled chaos with Pad 3 carrying most of the motion.",
+    "name": "Intense"
+  },
+  "s3a": {
+    "action": "intense_motion",
+    "description": "Motion-heavy intensity with Pad 3 as the main moving lane.",
+    "name": "Intense Motion"
+  },
+  "s3b": {
+    "action": "intense_grit",
+    "description": "Grit-forward intensity while keeping the main kick controlled.",
+    "name": "Intense Grit"
+  },
+  "s4": {
+    "action": "harder",
+    "description": "The most aggressive discovery scene while keeping the kick foundation bounded.",
+    "name": "Wild"
+  },
+  "s4a": {
+    "action": "wild_controlled",
+    "description": "A wider discovery scene with the harshest guardrails still active.",
+    "name": "Wild Controlled"
+  },
+  "s4b": {
+    "action": "wild_maximum",
+    "description": "The maximum V1.34 discovery scene, using the existing wild guardrails.",
+    "name": "Wild Maximum"
+  },
+  "s5": {
+    "action": "clean",
+    "description": "Return all four pads to anchors after scene movement.",
+    "name": "Back to Clean"
+  }
+}

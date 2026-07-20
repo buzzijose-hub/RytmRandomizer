@@ -1,0 +1,245 @@
+{
+  "Filter1 Frequency": {
+    "parameter": "Filter1 Frequency",
+    "section": "FILTERS",
+    "status": "candidate-promoted",
+    "screen_min": "0.00",
+    "screen_mid": "63.50",
+    "screen_max": "127.00",
+    "primary_raw_values": {
+      "0.00": 0,
+      "127.00": 127,
+      "63.50": 63
+    },
+    "track_1_primary_raw_offset": 156,
+    "track_raw_stride": 400,
+    "track_1_raw_group_start": 152,
+    "raw_group_width": 8,
+    "track_1_unpacked_group_start": 130,
+    "unpacked_group_width": 10,
+    "track_unpacked_stride": 350,
+    "evidence": [
+      {
+        "track": 1,
+        "screen_value": "0.00",
+        "primary_raw_value": 0,
+        "kit_name": "KIT 1",
+        "source_file": "A4_Test1_T1_Filter1Freq_000_Kit.syx",
+        "payload_fingerprint": "f1a52fd48b776c6b"
+      },
+      {
+        "track": 1,
+        "screen_value": "63.50",
+        "primary_raw_value": 63,
+        "kit_name": "KIT 1",
+        "source_file": "A4_Test1_T1_Filter1Freq_063_50_Kit.syx",
+        "payload_fingerprint": "a8b78f42f690cd4c"
+      },
+      {
+        "track": 1,
+        "screen_value": "127.00",
+        "primary_raw_value": 127,
+        "kit_name": "KIT 1",
+        "source_file": "A4_Test1_T1_Filter1Freq_127_Kit.syx",
+        "payload_fingerprint": "af74207af735fe2c"
+      },
+      {
+        "track": 2,
+        "screen_value": "0.00",
+        "primary_raw_value": 0,
+        "kit_name": "KIT 1",
+        "source_file": "A4_Test1_T2_Filter1Freq_000_Kit.syx",
+        "payload_fingerprint": "ff5c907bf4a1d2cd"
+      },
+      {
+        "track": 2,
+        "screen_value": "63.50",
+        "primary_raw_value": 63,
+        "kit_name": "KIT 1",
+        "source_file": "A4_Test1_T2_Filter1Freq_63_50_Kit.syx",
+        "payload_fingerprint": "beb62ae217dedc30"
+      },
+      {
+        "track": 2,
+        "screen_value": "127.00",
+        "primary_raw_value": 127,
+        "kit_name": "KIT 1",
+        "source_file": "A4_Test1_T2_Filter1Freq_127_Kit.syx",
+        "payload_fingerprint": "ecdbd1bcea9dd440"
+      },
+      {
+        "track": 3,
+        "screen_value": "0.00",
+        "primary_raw_value": 0,
+        "kit_name": "KIT 1",
+        "source_file": "A4_Test1_T3_Filter1Freq_000_Kit.syx",
+        "payload_fingerprint": "9b0044f5fa86ae5d"
+      },
+      {
+        "track": 4,
+        "screen_value": "0.00",
+        "primary_raw_value": 0,
+        "kit_name": "KIT 1",
+        "source_file": "A4_Test1_T4_Filter1Freq_000_Kit.syx",
+        "payload_fingerprint": "67a43e126f4d0f85"
+      }
+    ],
+    "notes": [
+      "Primary packed byte verified across Track 1 and Track 2 at 0.00, 63.50, 127.00.",
+      "Track 3 and Track 4 zero-value captures confirm the +400 packed-byte stride.",
+      "SysEx checksum trailer bytes must be ignored or recomputed by future writers."
+    ]
+  },
+  "Filter1 Resonance": {
+    "parameter": "Filter1 Resonance",
+    "section": "FILTERS",
+    "status": "candidate-promoted",
+    "screen_min": "0",
+    "screen_mid": "20",
+    "screen_max": "127",
+    "primary_raw_values": {
+      "0": 0,
+      "127": 127,
+      "20": 20
+    },
+    "track_1_primary_raw_offset": 158,
+    "track_raw_stride": 400,
+    "track_1_raw_group_start": 156,
+    "raw_group_width": 8,
+    "track_1_unpacked_group_start": 133,
+    "unpacked_group_width": 7,
+    "track_unpacked_stride": 350,
+    "evidence": [
+      {
+        "track": 1,
+        "screen_value": "0",
+        "primary_raw_value": 0,
+        "kit_name": "KIT 1",
+        "source_file": "A4_Test1_T1_Filter1Res_000_Kit.syx",
+        "payload_fingerprint": "9a5da29b4ad37008"
+      },
+      {
+        "track": 1,
+        "screen_value": "20",
+        "primary_raw_value": 20,
+        "kit_name": "KIT 1",
+        "source_file": "A4_Test1_T1_Filter1Res_20_Kit.syx",
+        "payload_fingerprint": "67a43e126f4d0f85"
+      },
+      {
+        "track": 1,
+        "screen_value": "127",
+        "primary_raw_value": 127,
+        "kit_name": "KIT 1",
+        "source_file": "A4_Test1_T1_Filter1Res_127_Kit.syx",
+        "payload_fingerprint": "9f4535115136f4ec"
+      },
+      {
+        "track": 2,
+        "screen_value": "0",
+        "primary_raw_value": 0,
+        "kit_name": "KIT 1",
+        "source_file": "A4_Test1_T2_Filter1Res_000_Kit.syx",
+        "payload_fingerprint": "950e8f5b65253fbb"
+      },
+      {
+        "track": 3,
+        "screen_value": "0",
+        "primary_raw_value": 0,
+        "kit_name": "KIT 1",
+        "source_file": "A4_Test1_T3_Filter1Res_000_Kit.syx",
+        "payload_fingerprint": "cc64427123887f89"
+      },
+      {
+        "track": 4,
+        "screen_value": "0",
+        "primary_raw_value": 0,
+        "kit_name": "KIT 1",
+        "source_file": "A4_Test1_T4_Filter1Res_000_Kit.syx",
+        "payload_fingerprint": "6818388c34db01b9"
+      }
+    ],
+    "notes": [
+      "Primary packed data byte verified on Track 1 at 0, 20, and 127.",
+      "Track 2, Track 3, and Track 4 zero-value captures confirm the +400 packed-byte stride.",
+      "The decoded byte appears as 0x80 plus the screen value when Filter1 Frequency leaves the shared 7-bit group header set.",
+      "SysEx checksum trailer bytes must be ignored or recomputed by future writers."
+    ]
+  },
+  "Filter2 Frequency": {
+    "parameter": "Filter2 Frequency",
+    "section": "FILTERS",
+    "status": "candidate-promoted",
+    "screen_min": "0.00",
+    "screen_mid": "63.50",
+    "screen_max": "127.00",
+    "primary_raw_values": {
+      "0.00": 0,
+      "127.00": 127,
+      "63.50": 63
+    },
+    "track_1_primary_raw_offset": 167,
+    "track_raw_stride": 400,
+    "track_1_raw_group_start": 160,
+    "raw_group_width": 12,
+    "track_1_unpacked_group_start": 137,
+    "unpacked_group_width": 7,
+    "track_unpacked_stride": 350,
+    "evidence": [
+      {
+        "track": 1,
+        "screen_value": "0.00",
+        "primary_raw_value": 0,
+        "kit_name": "KIT 1",
+        "source_file": "A4_Test1_T1_Filter2Freq_000_Kit.syx",
+        "payload_fingerprint": "6818388c34db01b9"
+      },
+      {
+        "track": 1,
+        "screen_value": "63.50",
+        "primary_raw_value": 63,
+        "kit_name": "KIT 1",
+        "source_file": "A4_Test1_T1_Filter2Freq_063_50_Kit.syx",
+        "payload_fingerprint": "82c03587679c6ddc"
+      },
+      {
+        "track": 1,
+        "screen_value": "127.00",
+        "primary_raw_value": 127,
+        "kit_name": "KIT 1",
+        "source_file": "A4_Test1_T1_Filter2Freq_127_Kit.syx",
+        "payload_fingerprint": "9497709f8562f1ef"
+      },
+      {
+        "track": 2,
+        "screen_value": "127.00",
+        "primary_raw_value": 127,
+        "kit_name": "KIT 1",
+        "source_file": "A4_Test1_T2_Filter2Freq_127_Kit.syx",
+        "payload_fingerprint": "1f15e21e281ce000"
+      },
+      {
+        "track": 3,
+        "screen_value": "127.00",
+        "primary_raw_value": 127,
+        "kit_name": "KIT 1",
+        "source_file": "A4_Test1_T3_Filter2Freq_127_Kit.syx",
+        "payload_fingerprint": "fabeab5b95ed53e0"
+      },
+      {
+        "track": 4,
+        "screen_value": "127.00",
+        "primary_raw_value": 127,
+        "kit_name": "KIT 1",
+        "source_file": "A4_Test1_T4_Filter2Freq_127_Kit.syx",
+        "payload_fingerprint": "a52174e811260978"
+      }
+    ],
+    "notes": [
+      "Primary packed data byte verified on Track 1 at 0.00, 63.50, and 127.00.",
+      "Track 2, Track 3, and Track 4 127.00 captures confirm the +400 packed-byte stride.",
+      "Neighboring packed bytes move with Elektron high-bit grouping; the direct screen value appears at packed offset 167 and unpacked offset 142.",
+      "SysEx checksum trailer bytes must be ignored or recomputed by future writers."
+    ]
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "groove": {
+    "AMP Decay": 12,
+    "AMP Hold": 5,
+    "AMP Overdrive": 9,
+    "FLT Decay": 9,
+    "FLT Env Depth": 7,
+    "FLT Frequency": 10,
+    "FLT Resonance": 7,
+    "SRC Decay": 10,
+    "SRC FM Amount": 18,
+    "SRC FM Decay Time": 14,
+    "SRC FM Tune": 14,
+    "SRC Noise Decay": 12,
+    "SRC Noise Level": 15,
+    "SRC Tune": 5
+  },
+  "micro": {
+    "AMP Decay": 5,
+    "AMP Hold": 2,
+    "AMP Overdrive": 3,
+    "FLT Decay": 4,
+    "FLT Env Depth": 3,
+    "FLT Frequency": 4,
+    "FLT Resonance": 3,
+    "SRC Decay": 4,
+    "SRC FM Amount": 7,
+    "SRC FM Decay Time": 6,
+    "SRC FM Tune": 6,
+    "SRC Noise Decay": 5,
+    "SRC Noise Level": 6,
+    "SRC Tune": 2
+  },
+  "strong": {
+    "AMP Decay": 20,
+    "AMP Hold": 10,
+    "AMP Overdrive": 14,
+    "FLT Decay": 16,
+    "FLT Env Depth": 12,
+    "FLT Frequency": 15,
+    "FLT Resonance": 12,
+    "SRC Decay": 18,
+    "SRC FM Amount": 32,
+    "SRC FM Decay Time": 24,
+    "SRC FM Tune": 24,
+    "SRC Noise Decay": 20,
+    "SRC Noise Level": 26,
+    "SRC Tune": 8
+  }
+}

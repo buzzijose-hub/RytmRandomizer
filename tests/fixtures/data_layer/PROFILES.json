@@ -1,0 +1,3302 @@
+{
+  "1": {
+    "anchor": {
+      "AMP Attack": 0,
+      "AMP Decay": 93,
+      "AMP Delay Send": 0,
+      "AMP Hold": 0,
+      "AMP Overdrive": 22,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 35,
+      "FLT Env Depth": 64,
+      "FLT Frequency": 23,
+      "FLT Release": 10,
+      "FLT Resonance": 77,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 58,
+      "SRC Hold Time": 40,
+      "SRC Sweep Depth": 93,
+      "SRC Sweep Time": 81,
+      "SRC Tick Level": 127,
+      "SRC Tune": 59,
+      "SRC Waveform": 1
+    },
+    "deltas": {
+      "groove": {
+        "AMP Decay": 8,
+        "AMP Hold": 4,
+        "AMP Overdrive": 5,
+        "FLT Decay": 8,
+        "FLT Env Depth": 5,
+        "FLT Frequency": 4,
+        "FLT Resonance": 8,
+        "SRC Decay": 6,
+        "SRC Hold Time": 6,
+        "SRC Sweep Depth": 10,
+        "SRC Sweep Time": 10,
+        "SRC Tick Level": 10,
+        "SRC Tune": 2
+      },
+      "micro": {
+        "AMP Decay": 4,
+        "AMP Hold": 2,
+        "AMP Overdrive": 2,
+        "FLT Decay": 3,
+        "FLT Env Depth": 2,
+        "FLT Frequency": 2,
+        "FLT Resonance": 4,
+        "SRC Decay": 3,
+        "SRC Hold Time": 3,
+        "SRC Sweep Depth": 5,
+        "SRC Sweep Time": 5,
+        "SRC Tick Level": 5,
+        "SRC Tune": 1
+      },
+      "strong": {
+        "AMP Decay": 14,
+        "AMP Hold": 8,
+        "AMP Overdrive": 8,
+        "FLT Decay": 14,
+        "FLT Env Depth": 8,
+        "FLT Frequency": 7,
+        "FLT Resonance": 10,
+        "SRC Decay": 10,
+        "SRC Hold Time": 10,
+        "SRC Sweep Depth": 16,
+        "SRC Sweep Time": 16,
+        "SRC Tick Level": 18,
+        "SRC Tune": 3
+      }
+    },
+    "filter_mode": "sharp",
+    "machine_value": 26,
+    "name": "My BD Sharp",
+    "order": [
+      "SRC Tune",
+      "SRC Decay",
+      "SRC Sweep Depth",
+      "SRC Sweep Time",
+      "SRC Hold Time",
+      "SRC Tick Level",
+      "SRC Waveform",
+      "FLT Attack",
+      "FLT Decay",
+      "FLT Sustain",
+      "FLT Release",
+      "FLT Frequency",
+      "FLT Resonance",
+      "FLT Type",
+      "FLT Env Depth",
+      "AMP Attack",
+      "AMP Hold",
+      "AMP Decay",
+      "AMP Overdrive",
+      "AMP Delay Send",
+      "AMP Reverb Send",
+      "AMP Pan"
+    ],
+    "params": {
+      "AMP Attack": 78,
+      "AMP Decay": 80,
+      "AMP Delay Send": 82,
+      "AMP Hold": 79,
+      "AMP Overdrive": 81,
+      "AMP Pan": 10,
+      "AMP Reverb Send": 83,
+      "FLT Attack": 70,
+      "FLT Decay": 71,
+      "FLT Env Depth": 77,
+      "FLT Frequency": 74,
+      "FLT Release": 73,
+      "FLT Resonance": 75,
+      "FLT Sustain": 72,
+      "FLT Type": 76,
+      "SRC Decay": 18,
+      "SRC Hold Time": 21,
+      "SRC Sweep Depth": 19,
+      "SRC Sweep Time": 20,
+      "SRC Tick Level": 22,
+      "SRC Tune": 17,
+      "SRC Waveform": 23
+    },
+    "safe": {
+      "AMP Attack": [
+        0,
+        5
+      ],
+      "AMP Decay": [
+        78,
+        110
+      ],
+      "AMP Delay Send": [
+        0,
+        6
+      ],
+      "AMP Hold": [
+        0,
+        8
+      ],
+      "AMP Overdrive": [
+        16,
+        35
+      ],
+      "AMP Pan": [
+        60,
+        68
+      ],
+      "AMP Reverb Send": [
+        0,
+        6
+      ],
+      "FLT Attack": [
+        0,
+        10
+      ],
+      "FLT Decay": [
+        20,
+        55
+      ],
+      "FLT Env Depth": [
+        56,
+        72
+      ],
+      "FLT Frequency": [
+        22,
+        35
+      ],
+      "FLT Release": [
+        0,
+        20
+      ],
+      "FLT Resonance": [
+        68,
+        85
+      ],
+      "FLT Sustain": [
+        0,
+        20
+      ],
+      "FLT Type": [
+        4,
+        4
+      ],
+      "SRC Decay": [
+        48,
+        70
+      ],
+      "SRC Hold Time": [
+        28,
+        58
+      ],
+      "SRC Sweep Depth": [
+        75,
+        110
+      ],
+      "SRC Sweep Time": [
+        65,
+        100
+      ],
+      "SRC Tick Level": [
+        105,
+        127
+      ],
+      "SRC Tune": [
+        56,
+        62
+      ],
+      "SRC Waveform": [
+        1,
+        1
+      ]
+    },
+    "waveform_range": [
+      0,
+      3
+    ],
+    "zones": {
+      "amp": [
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive"
+      ],
+      "body": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Sweep Depth",
+        "SRC Sweep Time",
+        "SRC Hold Time",
+        "FLT Frequency",
+        "AMP Hold",
+        "AMP Decay"
+      ],
+      "filter": [
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Resonance",
+        "FLT Env Depth"
+      ],
+      "full": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Sweep Depth",
+        "SRC Sweep Time",
+        "SRC Hold Time",
+        "SRC Tick Level",
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Resonance",
+        "FLT Env Depth",
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive"
+      ],
+      "grit": [
+        "SRC Tick Level",
+        "FLT Resonance",
+        "AMP Overdrive"
+      ],
+      "src": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Sweep Depth",
+        "SRC Sweep Time",
+        "SRC Hold Time",
+        "SRC Tick Level"
+      ]
+    }
+  },
+  "10": {
+    "anchor": {
+      "AMP Attack": 0,
+      "AMP Decay": 64,
+      "AMP Delay Send": 0,
+      "AMP Hold": 0,
+      "AMP Overdrive": 21,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 48,
+      "FLT Env Depth": 30,
+      "FLT Frequency": 52,
+      "FLT Release": 46,
+      "FLT Resonance": 20,
+      "FLT Sustain": 0,
+      "FLT Type": 3,
+      "SRC Decay": 52,
+      "SRC Detune": 8,
+      "SRC Level": 100,
+      "SRC Noise Decay": 58,
+      "SRC Noise Level": 72,
+      "SRC Osc Balance": 64,
+      "SRC Snap Amount": 58,
+      "SRC Tune": 62
+    },
+    "deltas": {
+      "groove": {
+        "AMP Decay": 12,
+        "AMP Hold": 5,
+        "AMP Overdrive": 8,
+        "FLT Decay": 9,
+        "FLT Env Depth": 7,
+        "FLT Frequency": 9,
+        "FLT Resonance": 7,
+        "SRC Decay": 10,
+        "SRC Detune": 8,
+        "SRC Noise Decay": 12,
+        "SRC Noise Level": 14,
+        "SRC Osc Balance": 11,
+        "SRC Snap Amount": 14,
+        "SRC Tune": 5
+      },
+      "micro": {
+        "AMP Decay": 5,
+        "AMP Hold": 2,
+        "AMP Overdrive": 3,
+        "FLT Decay": 4,
+        "FLT Env Depth": 3,
+        "FLT Frequency": 4,
+        "FLT Resonance": 3,
+        "SRC Decay": 4,
+        "SRC Detune": 3,
+        "SRC Noise Decay": 5,
+        "SRC Noise Level": 6,
+        "SRC Osc Balance": 5,
+        "SRC Snap Amount": 6,
+        "SRC Tune": 2
+      },
+      "strong": {
+        "AMP Decay": 20,
+        "AMP Hold": 10,
+        "AMP Overdrive": 13,
+        "FLT Decay": 16,
+        "FLT Env Depth": 12,
+        "FLT Frequency": 14,
+        "FLT Resonance": 12,
+        "SRC Decay": 18,
+        "SRC Detune": 14,
+        "SRC Noise Decay": 20,
+        "SRC Noise Level": 24,
+        "SRC Osc Balance": 18,
+        "SRC Snap Amount": 24,
+        "SRC Tune": 8
+      }
+    },
+    "filter_mode": "classic",
+    "machine_value": 3,
+    "name": "Pad 2 SD Classic Rolling Snare",
+    "order": [
+      "SRC Level",
+      "SRC Tune",
+      "SRC Decay",
+      "SRC Detune",
+      "SRC Snap Amount",
+      "SRC Noise Decay",
+      "SRC Noise Level",
+      "SRC Osc Balance",
+      "FLT Attack",
+      "FLT Decay",
+      "FLT Sustain",
+      "FLT Release",
+      "FLT Frequency",
+      "FLT Resonance",
+      "FLT Type",
+      "FLT Env Depth",
+      "AMP Attack",
+      "AMP Hold",
+      "AMP Decay",
+      "AMP Overdrive",
+      "AMP Delay Send",
+      "AMP Reverb Send",
+      "AMP Pan"
+    ],
+    "params": {
+      "AMP Attack": 78,
+      "AMP Decay": 80,
+      "AMP Delay Send": 82,
+      "AMP Hold": 79,
+      "AMP Overdrive": 81,
+      "AMP Pan": 10,
+      "AMP Reverb Send": 83,
+      "FLT Attack": 70,
+      "FLT Decay": 71,
+      "FLT Env Depth": 77,
+      "FLT Frequency": 74,
+      "FLT Release": 73,
+      "FLT Resonance": 75,
+      "FLT Sustain": 72,
+      "FLT Type": 76,
+      "SRC Decay": 18,
+      "SRC Detune": 19,
+      "SRC Level": 16,
+      "SRC Noise Decay": 21,
+      "SRC Noise Level": 22,
+      "SRC Osc Balance": 23,
+      "SRC Snap Amount": 20,
+      "SRC Tune": 17
+    },
+    "safe": {
+      "AMP Attack": [
+        0,
+        6
+      ],
+      "AMP Decay": [
+        40,
+        92
+      ],
+      "AMP Delay Send": [
+        0,
+        8
+      ],
+      "AMP Hold": [
+        0,
+        12
+      ],
+      "AMP Overdrive": [
+        10,
+        38
+      ],
+      "AMP Pan": [
+        60,
+        68
+      ],
+      "AMP Reverb Send": [
+        0,
+        8
+      ],
+      "FLT Attack": [
+        0,
+        10
+      ],
+      "FLT Decay": [
+        22,
+        76
+      ],
+      "FLT Env Depth": [
+        10,
+        52
+      ],
+      "FLT Frequency": [
+        40,
+        76
+      ],
+      "FLT Release": [
+        24,
+        76
+      ],
+      "FLT Resonance": [
+        6,
+        40
+      ],
+      "FLT Sustain": [
+        0,
+        25
+      ],
+      "FLT Type": [
+        3,
+        4
+      ],
+      "SRC Decay": [
+        34,
+        82
+      ],
+      "SRC Detune": [
+        0,
+        24
+      ],
+      "SRC Level": [
+        100,
+        100
+      ],
+      "SRC Noise Decay": [
+        32,
+        88
+      ],
+      "SRC Noise Level": [
+        42,
+        102
+      ],
+      "SRC Osc Balance": [
+        42,
+        88
+      ],
+      "SRC Snap Amount": [
+        28,
+        94
+      ],
+      "SRC Tune": [
+        54,
+        72
+      ]
+    },
+    "zones": {
+      "amp": [
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive"
+      ],
+      "body": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Detune",
+        "SRC Noise Decay",
+        "SRC Osc Balance",
+        "FLT Frequency",
+        "AMP Decay"
+      ],
+      "filter": [
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Resonance",
+        "FLT Env Depth"
+      ],
+      "full": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Detune",
+        "SRC Snap Amount",
+        "SRC Noise Decay",
+        "SRC Noise Level",
+        "SRC Osc Balance",
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Resonance",
+        "FLT Env Depth",
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive"
+      ],
+      "grit": [
+        "SRC Snap Amount",
+        "SRC Noise Level",
+        "FLT Resonance",
+        "AMP Overdrive"
+      ],
+      "snap": [
+        "SRC Snap Amount",
+        "SRC Noise Level",
+        "SRC Osc Balance",
+        "AMP Overdrive"
+      ],
+      "src": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Detune",
+        "SRC Snap Amount",
+        "SRC Noise Decay",
+        "SRC Noise Level",
+        "SRC Osc Balance"
+      ]
+    }
+  },
+  "11": {
+    "anchor": {
+      "AMP Attack": 0,
+      "AMP Decay": 62,
+      "AMP Delay Send": 0,
+      "AMP Hold": 0,
+      "AMP Overdrive": 27,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 44,
+      "FLT Env Depth": 36,
+      "FLT Frequency": 58,
+      "FLT Release": 44,
+      "FLT Resonance": 24,
+      "FLT Sustain": 0,
+      "FLT Type": 3,
+      "SRC Decay": 48,
+      "SRC FM Amount": 54,
+      "SRC FM Decay Time": 42,
+      "SRC FM Tune": 70,
+      "SRC Level": 100,
+      "SRC Noise Decay": 52,
+      "SRC Noise Level": 74,
+      "SRC Tune": 64
+    },
+    "deltas": {
+      "groove": {
+        "AMP Decay": 12,
+        "AMP Hold": 5,
+        "AMP Overdrive": 9,
+        "FLT Decay": 9,
+        "FLT Env Depth": 7,
+        "FLT Frequency": 10,
+        "FLT Resonance": 7,
+        "SRC Decay": 10,
+        "SRC FM Amount": 18,
+        "SRC FM Decay Time": 14,
+        "SRC FM Tune": 14,
+        "SRC Noise Decay": 12,
+        "SRC Noise Level": 15,
+        "SRC Tune": 5
+      },
+      "micro": {
+        "AMP Decay": 5,
+        "AMP Hold": 2,
+        "AMP Overdrive": 3,
+        "FLT Decay": 4,
+        "FLT Env Depth": 3,
+        "FLT Frequency": 4,
+        "FLT Resonance": 3,
+        "SRC Decay": 4,
+        "SRC FM Amount": 7,
+        "SRC FM Decay Time": 6,
+        "SRC FM Tune": 6,
+        "SRC Noise Decay": 5,
+        "SRC Noise Level": 6,
+        "SRC Tune": 2
+      },
+      "strong": {
+        "AMP Decay": 20,
+        "AMP Hold": 10,
+        "AMP Overdrive": 14,
+        "FLT Decay": 16,
+        "FLT Env Depth": 12,
+        "FLT Frequency": 15,
+        "FLT Resonance": 12,
+        "SRC Decay": 18,
+        "SRC FM Amount": 32,
+        "SRC FM Decay Time": 24,
+        "SRC FM Tune": 24,
+        "SRC Noise Decay": 20,
+        "SRC Noise Level": 26,
+        "SRC Tune": 8
+      }
+    },
+    "filter_mode": "classic",
+    "machine_value": 14,
+    "name": "Pad 2 SD FM Metallic Snare",
+    "order": [
+      "SRC Level",
+      "SRC Tune",
+      "SRC Decay",
+      "SRC FM Tune",
+      "SRC FM Decay Time",
+      "SRC Noise Decay",
+      "SRC Noise Level",
+      "SRC FM Amount",
+      "FLT Attack",
+      "FLT Decay",
+      "FLT Sustain",
+      "FLT Release",
+      "FLT Frequency",
+      "FLT Resonance",
+      "FLT Type",
+      "FLT Env Depth",
+      "AMP Attack",
+      "AMP Hold",
+      "AMP Decay",
+      "AMP Overdrive",
+      "AMP Delay Send",
+      "AMP Reverb Send",
+      "AMP Pan"
+    ],
+    "params": {
+      "AMP Attack": 78,
+      "AMP Decay": 80,
+      "AMP Delay Send": 82,
+      "AMP Hold": 79,
+      "AMP Overdrive": 81,
+      "AMP Pan": 10,
+      "AMP Reverb Send": 83,
+      "FLT Attack": 70,
+      "FLT Decay": 71,
+      "FLT Env Depth": 77,
+      "FLT Frequency": 74,
+      "FLT Release": 73,
+      "FLT Resonance": 75,
+      "FLT Sustain": 72,
+      "FLT Type": 76,
+      "SRC Decay": 18,
+      "SRC FM Amount": 23,
+      "SRC FM Decay Time": 20,
+      "SRC FM Tune": 19,
+      "SRC Level": 16,
+      "SRC Noise Decay": 21,
+      "SRC Noise Level": 22,
+      "SRC Tune": 17
+    },
+    "safe": {
+      "AMP Attack": [
+        0,
+        6
+      ],
+      "AMP Decay": [
+        38,
+        94
+      ],
+      "AMP Delay Send": [
+        0,
+        8
+      ],
+      "AMP Hold": [
+        0,
+        12
+      ],
+      "AMP Overdrive": [
+        16,
+        46
+      ],
+      "AMP Pan": [
+        60,
+        68
+      ],
+      "AMP Reverb Send": [
+        0,
+        8
+      ],
+      "FLT Attack": [
+        0,
+        10
+      ],
+      "FLT Decay": [
+        20,
+        74
+      ],
+      "FLT Env Depth": [
+        12,
+        58
+      ],
+      "FLT Frequency": [
+        42,
+        82
+      ],
+      "FLT Release": [
+        24,
+        76
+      ],
+      "FLT Resonance": [
+        8,
+        46
+      ],
+      "FLT Sustain": [
+        0,
+        25
+      ],
+      "FLT Type": [
+        3,
+        4
+      ],
+      "SRC Decay": [
+        30,
+        78
+      ],
+      "SRC FM Amount": [
+        20,
+        94
+      ],
+      "SRC FM Decay Time": [
+        16,
+        84
+      ],
+      "SRC FM Tune": [
+        42,
+        96
+      ],
+      "SRC Level": [
+        100,
+        100
+      ],
+      "SRC Noise Decay": [
+        28,
+        84
+      ],
+      "SRC Noise Level": [
+        42,
+        110
+      ],
+      "SRC Tune": [
+        56,
+        74
+      ]
+    },
+    "zones": {
+      "amp": [
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive"
+      ],
+      "body": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC FM Decay Time",
+        "SRC Noise Decay",
+        "FLT Frequency",
+        "AMP Decay"
+      ],
+      "filter": [
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Resonance",
+        "FLT Env Depth"
+      ],
+      "full": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC FM Tune",
+        "SRC FM Decay Time",
+        "SRC Noise Decay",
+        "SRC Noise Level",
+        "SRC FM Amount",
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Resonance",
+        "FLT Env Depth",
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive"
+      ],
+      "grit": [
+        "SRC FM Amount",
+        "SRC FM Tune",
+        "SRC Noise Level",
+        "FLT Resonance",
+        "AMP Overdrive"
+      ],
+      "snap": [
+        "SRC FM Tune",
+        "SRC FM Amount",
+        "SRC Noise Level",
+        "AMP Overdrive"
+      ],
+      "src": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC FM Tune",
+        "SRC FM Decay Time",
+        "SRC Noise Decay",
+        "SRC Noise Level",
+        "SRC FM Amount"
+      ]
+    }
+  },
+  "2": {
+    "anchor": {
+      "AMP Attack": 0,
+      "AMP Decay": 86,
+      "AMP Delay Send": 0,
+      "AMP Hold": 0,
+      "AMP Overdrive": 22,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 64,
+      "FLT Env Depth": 63,
+      "FLT Frequency": 27,
+      "FLT Release": 64,
+      "FLT Resonance": 51,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 51,
+      "SRC Hold": 52,
+      "SRC Snap": 26,
+      "SRC Sweep Time": 90,
+      "SRC Transient Tick": 88,
+      "SRC Tune": 61,
+      "SRC Waveform": 0
+    },
+    "deltas": {
+      "groove": {
+        "AMP Decay": 8,
+        "AMP Hold": 4,
+        "AMP Overdrive": 5,
+        "FLT Decay": 10,
+        "FLT Env Depth": 5,
+        "FLT Frequency": 4,
+        "FLT Resonance": 8,
+        "SRC Decay": 7,
+        "SRC Hold": 6,
+        "SRC Snap": 8,
+        "SRC Sweep Time": 10,
+        "SRC Transient Tick": 10,
+        "SRC Tune": 2
+      },
+      "micro": {
+        "AMP Decay": 4,
+        "AMP Hold": 2,
+        "AMP Overdrive": 2,
+        "FLT Decay": 5,
+        "FLT Env Depth": 2,
+        "FLT Frequency": 2,
+        "FLT Resonance": 4,
+        "SRC Decay": 3,
+        "SRC Hold": 3,
+        "SRC Snap": 4,
+        "SRC Sweep Time": 5,
+        "SRC Transient Tick": 5,
+        "SRC Tune": 1
+      },
+      "strong": {
+        "AMP Decay": 14,
+        "AMP Hold": 8,
+        "AMP Overdrive": 8,
+        "FLT Decay": 15,
+        "FLT Env Depth": 8,
+        "FLT Frequency": 7,
+        "FLT Resonance": 10,
+        "SRC Decay": 12,
+        "SRC Hold": 10,
+        "SRC Snap": 14,
+        "SRC Sweep Time": 16,
+        "SRC Transient Tick": 16,
+        "SRC Tune": 3
+      }
+    },
+    "filter_mode": "hard",
+    "machine_value": 0,
+    "name": "My BD Hard",
+    "order": [
+      "SRC Tune",
+      "SRC Decay",
+      "SRC Hold",
+      "SRC Sweep Time",
+      "SRC Snap",
+      "SRC Waveform",
+      "SRC Transient Tick",
+      "FLT Attack",
+      "FLT Decay",
+      "FLT Sustain",
+      "FLT Release",
+      "FLT Frequency",
+      "FLT Resonance",
+      "FLT Type",
+      "FLT Env Depth",
+      "AMP Attack",
+      "AMP Hold",
+      "AMP Decay",
+      "AMP Overdrive",
+      "AMP Delay Send",
+      "AMP Reverb Send",
+      "AMP Pan"
+    ],
+    "params": {
+      "AMP Attack": 78,
+      "AMP Decay": 80,
+      "AMP Delay Send": 82,
+      "AMP Hold": 79,
+      "AMP Overdrive": 81,
+      "AMP Pan": 10,
+      "AMP Reverb Send": 83,
+      "FLT Attack": 70,
+      "FLT Decay": 71,
+      "FLT Env Depth": 77,
+      "FLT Frequency": 74,
+      "FLT Release": 73,
+      "FLT Resonance": 75,
+      "FLT Sustain": 72,
+      "FLT Type": 76,
+      "SRC Decay": 18,
+      "SRC Hold": 19,
+      "SRC Snap": 21,
+      "SRC Sweep Time": 20,
+      "SRC Transient Tick": 23,
+      "SRC Tune": 17,
+      "SRC Waveform": 22
+    },
+    "safe": {
+      "AMP Attack": [
+        0,
+        5
+      ],
+      "AMP Decay": [
+        72,
+        105
+      ],
+      "AMP Delay Send": [
+        0,
+        6
+      ],
+      "AMP Hold": [
+        0,
+        8
+      ],
+      "AMP Overdrive": [
+        16,
+        35
+      ],
+      "AMP Pan": [
+        60,
+        68
+      ],
+      "AMP Reverb Send": [
+        0,
+        6
+      ],
+      "FLT Attack": [
+        0,
+        10
+      ],
+      "FLT Decay": [
+        45,
+        80
+      ],
+      "FLT Env Depth": [
+        55,
+        72
+      ],
+      "FLT Frequency": [
+        23,
+        36
+      ],
+      "FLT Release": [
+        40,
+        80
+      ],
+      "FLT Resonance": [
+        40,
+        68
+      ],
+      "FLT Sustain": [
+        0,
+        20
+      ],
+      "FLT Type": [
+        4,
+        4
+      ],
+      "SRC Decay": [
+        38,
+        66
+      ],
+      "SRC Hold": [
+        35,
+        70
+      ],
+      "SRC Snap": [
+        8,
+        55
+      ],
+      "SRC Sweep Time": [
+        70,
+        110
+      ],
+      "SRC Transient Tick": [
+        60,
+        115
+      ],
+      "SRC Tune": [
+        58,
+        64
+      ],
+      "SRC Waveform": [
+        0,
+        0
+      ]
+    },
+    "waveform_range": [
+      0,
+      2
+    ],
+    "zones": {
+      "amp": [
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive"
+      ],
+      "body": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Hold",
+        "SRC Sweep Time",
+        "FLT Frequency",
+        "AMP Hold",
+        "AMP Decay"
+      ],
+      "filter": [
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Resonance",
+        "FLT Env Depth"
+      ],
+      "full": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Hold",
+        "SRC Sweep Time",
+        "SRC Snap",
+        "SRC Transient Tick",
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Resonance",
+        "FLT Env Depth",
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive"
+      ],
+      "grit": [
+        "SRC Snap",
+        "SRC Transient Tick",
+        "FLT Resonance",
+        "AMP Overdrive"
+      ],
+      "src": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Hold",
+        "SRC Sweep Time",
+        "SRC Snap",
+        "SRC Transient Tick"
+      ]
+    }
+  },
+  "3": {
+    "anchor": {
+      "AMP Attack": 0,
+      "AMP Decay": 93,
+      "AMP Delay Send": 0,
+      "AMP Hold": 0,
+      "AMP Overdrive": 19,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 64,
+      "FLT Env Depth": 64,
+      "FLT Frequency": 25,
+      "FLT Release": 64,
+      "FLT Resonance": 26,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 53,
+      "SRC Hold": 42,
+      "SRC Sweep Depth": 32,
+      "SRC Sweep Time": 68,
+      "SRC Transient": 24,
+      "SRC Tune": 58,
+      "SRC Waveform": 1
+    },
+    "deltas": {
+      "groove": {
+        "AMP Decay": 8,
+        "AMP Hold": 4,
+        "AMP Overdrive": 5,
+        "FLT Decay": 10,
+        "FLT Env Depth": 5,
+        "FLT Frequency": 4,
+        "FLT Resonance": 6,
+        "SRC Decay": 7,
+        "SRC Hold": 6,
+        "SRC Sweep Depth": 8,
+        "SRC Sweep Time": 9,
+        "SRC Transient": 8,
+        "SRC Tune": 2
+      },
+      "micro": {
+        "AMP Decay": 4,
+        "AMP Hold": 2,
+        "AMP Overdrive": 2,
+        "FLT Decay": 5,
+        "FLT Env Depth": 2,
+        "FLT Frequency": 2,
+        "FLT Resonance": 3,
+        "SRC Decay": 3,
+        "SRC Hold": 3,
+        "SRC Sweep Depth": 4,
+        "SRC Sweep Time": 4,
+        "SRC Transient": 4,
+        "SRC Tune": 1
+      },
+      "strong": {
+        "AMP Decay": 14,
+        "AMP Hold": 8,
+        "AMP Overdrive": 8,
+        "FLT Decay": 15,
+        "FLT Env Depth": 8,
+        "FLT Frequency": 7,
+        "FLT Resonance": 10,
+        "SRC Decay": 12,
+        "SRC Hold": 10,
+        "SRC Sweep Depth": 14,
+        "SRC Sweep Time": 15,
+        "SRC Transient": 14,
+        "SRC Tune": 4
+      }
+    },
+    "filter_mode": "classic",
+    "machine_value": 1,
+    "name": "My BD Classic",
+    "order": [
+      "SRC Tune",
+      "SRC Decay",
+      "SRC Sweep Depth",
+      "SRC Sweep Time",
+      "SRC Hold",
+      "SRC Waveform",
+      "SRC Transient",
+      "FLT Attack",
+      "FLT Decay",
+      "FLT Sustain",
+      "FLT Release",
+      "FLT Frequency",
+      "FLT Resonance",
+      "FLT Type",
+      "FLT Env Depth",
+      "AMP Attack",
+      "AMP Hold",
+      "AMP Decay",
+      "AMP Overdrive",
+      "AMP Delay Send",
+      "AMP Reverb Send",
+      "AMP Pan"
+    ],
+    "params": {
+      "AMP Attack": 78,
+      "AMP Decay": 80,
+      "AMP Delay Send": 82,
+      "AMP Hold": 79,
+      "AMP Overdrive": 81,
+      "AMP Pan": 10,
+      "AMP Reverb Send": 83,
+      "FLT Attack": 70,
+      "FLT Decay": 71,
+      "FLT Env Depth": 77,
+      "FLT Frequency": 74,
+      "FLT Release": 73,
+      "FLT Resonance": 75,
+      "FLT Sustain": 72,
+      "FLT Type": 76,
+      "SRC Decay": 18,
+      "SRC Hold": 21,
+      "SRC Sweep Depth": 19,
+      "SRC Sweep Time": 20,
+      "SRC Transient": 23,
+      "SRC Tune": 17,
+      "SRC Waveform": 22
+    },
+    "safe": {
+      "AMP Attack": [
+        0,
+        5
+      ],
+      "AMP Decay": [
+        78,
+        110
+      ],
+      "AMP Delay Send": [
+        0,
+        6
+      ],
+      "AMP Hold": [
+        0,
+        8
+      ],
+      "AMP Overdrive": [
+        14,
+        32
+      ],
+      "AMP Pan": [
+        60,
+        68
+      ],
+      "AMP Reverb Send": [
+        0,
+        6
+      ],
+      "FLT Attack": [
+        0,
+        10
+      ],
+      "FLT Decay": [
+        45,
+        80
+      ],
+      "FLT Env Depth": [
+        55,
+        72
+      ],
+      "FLT Frequency": [
+        22,
+        36
+      ],
+      "FLT Release": [
+        40,
+        80
+      ],
+      "FLT Resonance": [
+        18,
+        42
+      ],
+      "FLT Sustain": [
+        0,
+        20
+      ],
+      "FLT Type": [
+        4,
+        4
+      ],
+      "SRC Decay": [
+        42,
+        68
+      ],
+      "SRC Hold": [
+        28,
+        60
+      ],
+      "SRC Sweep Depth": [
+        18,
+        55
+      ],
+      "SRC Sweep Time": [
+        50,
+        85
+      ],
+      "SRC Transient": [
+        10,
+        45
+      ],
+      "SRC Tune": [
+        54,
+        62
+      ],
+      "SRC Waveform": [
+        1,
+        1
+      ]
+    },
+    "waveform_range": [
+      0,
+      3
+    ],
+    "zones": {
+      "amp": [
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive"
+      ],
+      "body": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Sweep Depth",
+        "SRC Sweep Time",
+        "SRC Hold",
+        "FLT Frequency",
+        "AMP Hold",
+        "AMP Decay"
+      ],
+      "filter": [
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Resonance",
+        "FLT Env Depth"
+      ],
+      "full": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Sweep Depth",
+        "SRC Sweep Time",
+        "SRC Hold",
+        "SRC Transient",
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Resonance",
+        "FLT Env Depth",
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive"
+      ],
+      "grit": [
+        "SRC Transient",
+        "FLT Resonance",
+        "AMP Overdrive"
+      ],
+      "src": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Sweep Depth",
+        "SRC Sweep Time",
+        "SRC Hold",
+        "SRC Transient"
+      ]
+    }
+  },
+  "4": {
+    "anchor": {
+      "AMP Attack": 0,
+      "AMP Decay": 81,
+      "AMP Delay Send": 0,
+      "AMP Hold": 103,
+      "AMP Overdrive": 17,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 64,
+      "FLT Env Depth": 64,
+      "FLT Frequency": 23,
+      "FLT Release": 64,
+      "FLT Resonance": 27,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 94,
+      "SRC Hold": 91,
+      "SRC Impact": 110,
+      "SRC Sweep Depth": 90,
+      "SRC Sweep Time": 95,
+      "SRC Tune": 52,
+      "SRC Waveform": 0
+    },
+    "deltas": {
+      "groove": {
+        "AMP Decay": 8,
+        "AMP Hold": 8,
+        "AMP Overdrive": 5,
+        "FLT Decay": 10,
+        "FLT Env Depth": 5,
+        "FLT Frequency": 4,
+        "FLT Resonance": 6,
+        "SRC Decay": 8,
+        "SRC Hold": 8,
+        "SRC Impact": 10,
+        "SRC Sweep Depth": 8,
+        "SRC Sweep Time": 9,
+        "SRC Tune": 2
+      },
+      "micro": {
+        "AMP Decay": 4,
+        "AMP Hold": 4,
+        "AMP Overdrive": 2,
+        "FLT Decay": 5,
+        "FLT Env Depth": 2,
+        "FLT Frequency": 2,
+        "FLT Resonance": 3,
+        "SRC Decay": 4,
+        "SRC Hold": 4,
+        "SRC Impact": 5,
+        "SRC Sweep Depth": 4,
+        "SRC Sweep Time": 4,
+        "SRC Tune": 1
+      },
+      "strong": {
+        "AMP Decay": 12,
+        "AMP Hold": 14,
+        "AMP Overdrive": 8,
+        "FLT Decay": 15,
+        "FLT Env Depth": 8,
+        "FLT Frequency": 7,
+        "FLT Resonance": 10,
+        "SRC Decay": 14,
+        "SRC Hold": 14,
+        "SRC Impact": 18,
+        "SRC Sweep Depth": 14,
+        "SRC Sweep Time": 16,
+        "SRC Tune": 4
+      }
+    },
+    "filter_mode": "acoustic",
+    "machine_value": 30,
+    "name": "My BD Acoustic",
+    "order": [
+      "SRC Tune",
+      "SRC Decay",
+      "SRC Sweep Depth",
+      "SRC Sweep Time",
+      "SRC Hold",
+      "SRC Impact",
+      "SRC Waveform",
+      "FLT Attack",
+      "FLT Decay",
+      "FLT Sustain",
+      "FLT Release",
+      "FLT Frequency",
+      "FLT Resonance",
+      "FLT Type",
+      "FLT Env Depth",
+      "AMP Attack",
+      "AMP Hold",
+      "AMP Decay",
+      "AMP Overdrive",
+      "AMP Delay Send",
+      "AMP Reverb Send",
+      "AMP Pan"
+    ],
+    "params": {
+      "AMP Attack": 78,
+      "AMP Decay": 80,
+      "AMP Delay Send": 82,
+      "AMP Hold": 79,
+      "AMP Overdrive": 81,
+      "AMP Pan": 10,
+      "AMP Reverb Send": 83,
+      "FLT Attack": 70,
+      "FLT Decay": 71,
+      "FLT Env Depth": 77,
+      "FLT Frequency": 74,
+      "FLT Release": 73,
+      "FLT Resonance": 75,
+      "FLT Sustain": 72,
+      "FLT Type": 76,
+      "SRC Decay": 18,
+      "SRC Hold": 21,
+      "SRC Impact": 22,
+      "SRC Sweep Depth": 19,
+      "SRC Sweep Time": 20,
+      "SRC Tune": 17,
+      "SRC Waveform": 23
+    },
+    "safe": {
+      "AMP Attack": [
+        0,
+        5
+      ],
+      "AMP Decay": [
+        68,
+        96
+      ],
+      "AMP Delay Send": [
+        0,
+        6
+      ],
+      "AMP Hold": [
+        80,
+        115
+      ],
+      "AMP Overdrive": [
+        12,
+        30
+      ],
+      "AMP Pan": [
+        60,
+        68
+      ],
+      "AMP Reverb Send": [
+        0,
+        6
+      ],
+      "FLT Attack": [
+        0,
+        10
+      ],
+      "FLT Decay": [
+        45,
+        80
+      ],
+      "FLT Env Depth": [
+        55,
+        72
+      ],
+      "FLT Frequency": [
+        22,
+        34
+      ],
+      "FLT Release": [
+        40,
+        80
+      ],
+      "FLT Resonance": [
+        18,
+        42
+      ],
+      "FLT Sustain": [
+        0,
+        20
+      ],
+      "FLT Type": [
+        4,
+        4
+      ],
+      "SRC Decay": [
+        78,
+        110
+      ],
+      "SRC Hold": [
+        70,
+        110
+      ],
+      "SRC Impact": [
+        90,
+        127
+      ],
+      "SRC Sweep Depth": [
+        72,
+        110
+      ],
+      "SRC Sweep Time": [
+        75,
+        115
+      ],
+      "SRC Tune": [
+        48,
+        56
+      ],
+      "SRC Waveform": [
+        0,
+        0
+      ]
+    },
+    "waveform_range": [
+      0,
+      3
+    ],
+    "zones": {
+      "amp": [
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive"
+      ],
+      "body": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Sweep Depth",
+        "SRC Sweep Time",
+        "SRC Hold",
+        "FLT Frequency",
+        "AMP Hold",
+        "AMP Decay"
+      ],
+      "filter": [
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Resonance",
+        "FLT Env Depth"
+      ],
+      "full": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Sweep Depth",
+        "SRC Sweep Time",
+        "SRC Hold",
+        "SRC Impact",
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Resonance",
+        "FLT Env Depth",
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive"
+      ],
+      "grit": [
+        "SRC Impact",
+        "FLT Resonance",
+        "AMP Overdrive"
+      ],
+      "src": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Sweep Depth",
+        "SRC Sweep Time",
+        "SRC Hold",
+        "SRC Impact"
+      ]
+    }
+  },
+  "5": {
+    "anchor": {
+      "AMP Attack": 0,
+      "AMP Decay": 25,
+      "AMP Delay Send": 5,
+      "AMP Hold": 9,
+      "AMP Overdrive": 21,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 103,
+      "FLT Attack": 12,
+      "FLT Decay": 28,
+      "FLT Env Depth": 55,
+      "FLT Frequency": 98,
+      "FLT Release": 64,
+      "FLT Resonance": 0,
+      "FLT Sustain": 0,
+      "FLT Type": 2,
+      "LFO Depth": 86,
+      "LFO Destination": 30,
+      "LFO Fade": 42,
+      "LFO Multiplier": 0,
+      "LFO Speed": 96,
+      "LFO Start Phase": 89,
+      "LFO Trig Mode": 0,
+      "LFO Waveform": 2,
+      "SRC Balance": 91,
+      "SRC Detune": 23,
+      "SRC Level": 100,
+      "SRC Noise Level": 5,
+      "SRC Osc 1 Wave": 5,
+      "SRC Osc 2 Decay": 70,
+      "SRC Osc 2 Wave": 3,
+      "SRC Tune": 69
+    },
+    "cc_map": {
+      "AMP Attack": 78,
+      "AMP Decay": 80,
+      "AMP Delay Send": 82,
+      "AMP Hold": 79,
+      "AMP Overdrive": 81,
+      "AMP Pan": 10,
+      "AMP Reverb Send": 83,
+      "FLT Attack": 70,
+      "FLT Decay": 71,
+      "FLT Env Depth": 77,
+      "FLT Frequency": 74,
+      "FLT Release": 73,
+      "FLT Resonance": 75,
+      "FLT Sustain": 72,
+      "FLT Type": 76,
+      "LFO Depth": 109,
+      "LFO Destination": 105,
+      "LFO Fade": 104,
+      "LFO Multiplier": 103,
+      "LFO Speed": 102,
+      "LFO Start Phase": 107,
+      "LFO Trig Mode": 108,
+      "LFO Waveform": 106,
+      "SRC Balance": 23,
+      "SRC Detune": 18,
+      "SRC Level": 16,
+      "SRC Noise Level": 19,
+      "SRC Osc 1 Wave": 21,
+      "SRC Osc 2 Decay": 20,
+      "SRC Osc 2 Wave": 22,
+      "SRC Tune": 17
+    },
+    "deltas": {
+      "groove": {
+        "AMP Decay": 9,
+        "AMP Delay Send": 6,
+        "AMP Hold": 7,
+        "AMP Overdrive": 6,
+        "AMP Reverb Send": 7,
+        "FLT Attack": 6,
+        "FLT Decay": 9,
+        "FLT Env Depth": 6,
+        "FLT Frequency": 9,
+        "LFO Depth": 9,
+        "LFO Fade": 10,
+        "LFO Speed": 10,
+        "LFO Start Phase": 40,
+        "SRC Balance": 10,
+        "SRC Detune": 7,
+        "SRC Noise Level": 5,
+        "SRC Osc 1 Wave": 2,
+        "SRC Osc 2 Decay": 12,
+        "SRC Osc 2 Wave": 2,
+        "SRC Tune": 5
+      },
+      "micro": {
+        "AMP Decay": 4,
+        "AMP Delay Send": 3,
+        "AMP Hold": 3,
+        "AMP Overdrive": 2,
+        "AMP Reverb Send": 3,
+        "FLT Attack": 3,
+        "FLT Decay": 4,
+        "FLT Env Depth": 3,
+        "FLT Frequency": 4,
+        "LFO Depth": 4,
+        "LFO Fade": 5,
+        "LFO Speed": 4,
+        "LFO Start Phase": 16,
+        "SRC Balance": 5,
+        "SRC Detune": 3,
+        "SRC Noise Level": 2,
+        "SRC Osc 1 Wave": 1,
+        "SRC Osc 2 Decay": 5,
+        "SRC Osc 2 Wave": 1,
+        "SRC Tune": 2
+      },
+      "strong": {
+        "AMP Decay": 16,
+        "AMP Delay Send": 10,
+        "AMP Hold": 12,
+        "AMP Overdrive": 10,
+        "AMP Reverb Send": 12,
+        "FLT Attack": 10,
+        "FLT Decay": 16,
+        "FLT Env Depth": 10,
+        "FLT Frequency": 15,
+        "LFO Depth": 16,
+        "LFO Fade": 18,
+        "LFO Speed": 18,
+        "LFO Start Phase": 70,
+        "SRC Balance": 18,
+        "SRC Detune": 12,
+        "SRC Noise Level": 10,
+        "SRC Osc 1 Wave": 3,
+        "SRC Osc 2 Decay": 22,
+        "SRC Osc 2 Wave": 3,
+        "SRC Tune": 9
+      }
+    },
+    "filter_style": "sy_raw_mid_bass",
+    "machine_value": 32,
+    "name": "Pad 3 SY Raw Mid Bass",
+    "order": [
+      "SRC Level",
+      "SRC Tune",
+      "SRC Detune",
+      "SRC Noise Level",
+      "SRC Osc 2 Decay",
+      "SRC Osc 1 Wave",
+      "SRC Osc 2 Wave",
+      "SRC Balance",
+      "FLT Attack",
+      "FLT Decay",
+      "FLT Sustain",
+      "FLT Release",
+      "FLT Frequency",
+      "FLT Resonance",
+      "FLT Type",
+      "FLT Env Depth",
+      "AMP Attack",
+      "AMP Hold",
+      "AMP Decay",
+      "AMP Overdrive",
+      "AMP Delay Send",
+      "AMP Reverb Send",
+      "AMP Pan",
+      "LFO Speed",
+      "LFO Multiplier",
+      "LFO Fade",
+      "LFO Destination",
+      "LFO Waveform",
+      "LFO Start Phase",
+      "LFO Trig Mode",
+      "LFO Depth"
+    ],
+    "params": {
+      "AMP Attack": 78,
+      "AMP Decay": 80,
+      "AMP Delay Send": 82,
+      "AMP Hold": 79,
+      "AMP Overdrive": 81,
+      "AMP Pan": 10,
+      "AMP Reverb Send": 83,
+      "FLT Attack": 70,
+      "FLT Decay": 71,
+      "FLT Env Depth": 77,
+      "FLT Frequency": 74,
+      "FLT Release": 73,
+      "FLT Resonance": 75,
+      "FLT Sustain": 72,
+      "FLT Type": 76,
+      "LFO Depth": 109,
+      "LFO Destination": 105,
+      "LFO Fade": 104,
+      "LFO Multiplier": 103,
+      "LFO Speed": 102,
+      "LFO Start Phase": 107,
+      "LFO Trig Mode": 108,
+      "LFO Waveform": 106,
+      "SRC Balance": 23,
+      "SRC Detune": 18,
+      "SRC Level": 16,
+      "SRC Noise Level": 19,
+      "SRC Osc 1 Wave": 21,
+      "SRC Osc 2 Decay": 20,
+      "SRC Osc 2 Wave": 22,
+      "SRC Tune": 17
+    },
+    "safe": {
+      "AMP Attack": [
+        0,
+        8
+      ],
+      "AMP Decay": [
+        12,
+        50
+      ],
+      "AMP Delay Send": [
+        0,
+        18
+      ],
+      "AMP Hold": [
+        2,
+        24
+      ],
+      "AMP Overdrive": [
+        12,
+        38
+      ],
+      "AMP Pan": [
+        60,
+        68
+      ],
+      "AMP Reverb Send": [
+        82,
+        118
+      ],
+      "FLT Attack": [
+        0,
+        25
+      ],
+      "FLT Decay": [
+        15,
+        55
+      ],
+      "FLT Env Depth": [
+        45,
+        68
+      ],
+      "FLT Frequency": [
+        82,
+        115
+      ],
+      "FLT Release": [
+        40,
+        85
+      ],
+      "FLT Resonance": [
+        0,
+        12
+      ],
+      "FLT Sustain": [
+        0,
+        20
+      ],
+      "FLT Type": [
+        1,
+        6
+      ],
+      "LFO Depth": [
+        68,
+        108
+      ],
+      "LFO Destination": [
+        30,
+        30
+      ],
+      "LFO Fade": [
+        15,
+        72
+      ],
+      "LFO Multiplier": [
+        0,
+        0
+      ],
+      "LFO Speed": [
+        68,
+        118
+      ],
+      "LFO Start Phase": [
+        0,
+        127
+      ],
+      "LFO Trig Mode": [
+        0,
+        0
+      ],
+      "LFO Waveform": [
+        2,
+        2
+      ],
+      "SRC Balance": [
+        70,
+        115
+      ],
+      "SRC Detune": [
+        8,
+        42
+      ],
+      "SRC Level": [
+        100,
+        100
+      ],
+      "SRC Noise Level": [
+        0,
+        24
+      ],
+      "SRC Osc 1 Wave": [
+        3,
+        6
+      ],
+      "SRC Osc 2 Decay": [
+        45,
+        100
+      ],
+      "SRC Osc 2 Wave": [
+        1,
+        3
+      ],
+      "SRC Tune": [
+        58,
+        82
+      ]
+    },
+    "safe_limits": {
+      "AMP Attack": [
+        0,
+        8
+      ],
+      "AMP Decay": [
+        12,
+        50
+      ],
+      "AMP Delay Send": [
+        0,
+        18
+      ],
+      "AMP Hold": [
+        2,
+        24
+      ],
+      "AMP Overdrive": [
+        12,
+        38
+      ],
+      "AMP Pan": [
+        60,
+        68
+      ],
+      "AMP Reverb Send": [
+        82,
+        118
+      ],
+      "FLT Attack": [
+        0,
+        25
+      ],
+      "FLT Decay": [
+        15,
+        55
+      ],
+      "FLT Env Depth": [
+        45,
+        68
+      ],
+      "FLT Frequency": [
+        82,
+        115
+      ],
+      "FLT Release": [
+        40,
+        85
+      ],
+      "FLT Resonance": [
+        0,
+        12
+      ],
+      "FLT Sustain": [
+        0,
+        20
+      ],
+      "FLT Type": [
+        1,
+        6
+      ],
+      "LFO Depth": [
+        68,
+        108
+      ],
+      "LFO Destination": [
+        30,
+        30
+      ],
+      "LFO Fade": [
+        15,
+        72
+      ],
+      "LFO Multiplier": [
+        0,
+        0
+      ],
+      "LFO Speed": [
+        68,
+        118
+      ],
+      "LFO Start Phase": [
+        0,
+        127
+      ],
+      "LFO Trig Mode": [
+        0,
+        0
+      ],
+      "LFO Waveform": [
+        2,
+        2
+      ],
+      "SRC Balance": [
+        70,
+        115
+      ],
+      "SRC Detune": [
+        8,
+        42
+      ],
+      "SRC Level": [
+        100,
+        100
+      ],
+      "SRC Noise Level": [
+        0,
+        24
+      ],
+      "SRC Osc 1 Wave": [
+        3,
+        6
+      ],
+      "SRC Osc 2 Decay": [
+        45,
+        100
+      ],
+      "SRC Osc 2 Wave": [
+        1,
+        3
+      ],
+      "SRC Tune": [
+        58,
+        82
+      ]
+    },
+    "zones": {
+      "amp": [
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive",
+        "AMP Delay Send",
+        "AMP Reverb Send"
+      ],
+      "body": [
+        "SRC Tune",
+        "SRC Detune",
+        "SRC Osc 2 Decay",
+        "SRC Balance",
+        "AMP Hold",
+        "AMP Decay"
+      ],
+      "filter": [
+        "FLT Attack",
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Env Depth"
+      ],
+      "full": [
+        "SRC Tune",
+        "SRC Detune",
+        "SRC Noise Level",
+        "SRC Osc 2 Decay",
+        "SRC Balance",
+        "FLT Frequency",
+        "FLT Env Depth",
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive",
+        "LFO Speed",
+        "LFO Fade",
+        "LFO Start Phase",
+        "LFO Depth"
+      ],
+      "grit": [
+        "SRC Noise Level",
+        "AMP Overdrive",
+        "LFO Depth"
+      ],
+      "lfo": [
+        "LFO Speed",
+        "LFO Fade",
+        "LFO Start Phase",
+        "LFO Depth"
+      ],
+      "morph": [
+        "SRC Osc 1 Wave",
+        "SRC Osc 2 Wave",
+        "SRC Balance",
+        "SRC Detune"
+      ],
+      "src": [
+        "SRC Tune",
+        "SRC Detune",
+        "SRC Noise Level",
+        "SRC Osc 2 Decay",
+        "SRC Osc 1 Wave",
+        "SRC Osc 2 Wave",
+        "SRC Balance"
+      ]
+    }
+  },
+  "6": {
+    "anchor": {
+      "AMP Attack": 0,
+      "AMP Decay": 86,
+      "AMP Delay Send": 0,
+      "AMP Hold": 0,
+      "AMP Overdrive": 24,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 58,
+      "FLT Env Depth": 63,
+      "FLT Frequency": 28,
+      "FLT Release": 64,
+      "FLT Resonance": 58,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 56,
+      "SRC FM Amount": 44,
+      "SRC FM Decay": 38,
+      "SRC FM Tune": 68,
+      "SRC Level": 100,
+      "SRC Sweep Time": 82,
+      "SRC Tick Level": 88,
+      "SRC Tune": 60
+    },
+    "deltas": {
+      "groove": {
+        "AMP Decay": 9,
+        "AMP Hold": 4,
+        "AMP Overdrive": 6,
+        "FLT Decay": 10,
+        "FLT Env Depth": 5,
+        "FLT Frequency": 5,
+        "FLT Resonance": 9,
+        "SRC Decay": 8,
+        "SRC FM Amount": 15,
+        "SRC FM Decay": 12,
+        "SRC FM Tune": 13,
+        "SRC Sweep Time": 11,
+        "SRC Tick Level": 12,
+        "SRC Tune": 2
+      },
+      "micro": {
+        "AMP Decay": 4,
+        "AMP Hold": 2,
+        "AMP Overdrive": 2,
+        "FLT Decay": 5,
+        "FLT Env Depth": 2,
+        "FLT Frequency": 2,
+        "FLT Resonance": 5,
+        "SRC Decay": 4,
+        "SRC FM Amount": 6,
+        "SRC FM Decay": 5,
+        "SRC FM Tune": 5,
+        "SRC Sweep Time": 5,
+        "SRC Tick Level": 5,
+        "SRC Tune": 1
+      },
+      "strong": {
+        "AMP Decay": 15,
+        "AMP Hold": 8,
+        "AMP Overdrive": 10,
+        "FLT Decay": 15,
+        "FLT Env Depth": 8,
+        "FLT Frequency": 8,
+        "FLT Resonance": 13,
+        "SRC Decay": 14,
+        "SRC FM Amount": 28,
+        "SRC FM Decay": 22,
+        "SRC FM Tune": 22,
+        "SRC Sweep Time": 18,
+        "SRC Tick Level": 20,
+        "SRC Tune": 4
+      }
+    },
+    "filter_mode": "fm",
+    "machine_value": 13,
+    "name": "BD FM Metallic Kick",
+    "order": [
+      "SRC Level",
+      "SRC Tune",
+      "SRC Sweep Time",
+      "SRC FM Decay",
+      "SRC Decay",
+      "SRC FM Tune",
+      "SRC FM Amount",
+      "SRC Tick Level",
+      "FLT Attack",
+      "FLT Decay",
+      "FLT Sustain",
+      "FLT Release",
+      "FLT Frequency",
+      "FLT Resonance",
+      "FLT Type",
+      "FLT Env Depth",
+      "AMP Attack",
+      "AMP Hold",
+      "AMP Decay",
+      "AMP Overdrive",
+      "AMP Delay Send",
+      "AMP Reverb Send",
+      "AMP Pan"
+    ],
+    "params": {
+      "AMP Attack": 78,
+      "AMP Decay": 80,
+      "AMP Delay Send": 82,
+      "AMP Hold": 79,
+      "AMP Overdrive": 81,
+      "AMP Pan": 10,
+      "AMP Reverb Send": 83,
+      "FLT Attack": 70,
+      "FLT Decay": 71,
+      "FLT Env Depth": 77,
+      "FLT Frequency": 74,
+      "FLT Release": 73,
+      "FLT Resonance": 75,
+      "FLT Sustain": 72,
+      "FLT Type": 76,
+      "SRC Decay": 20,
+      "SRC FM Amount": 22,
+      "SRC FM Decay": 19,
+      "SRC FM Tune": 21,
+      "SRC Level": 16,
+      "SRC Sweep Time": 18,
+      "SRC Tick Level": 23,
+      "SRC Tune": 17
+    },
+    "safe": {
+      "AMP Attack": [
+        0,
+        5
+      ],
+      "AMP Decay": [
+        72,
+        108
+      ],
+      "AMP Delay Send": [
+        0,
+        8
+      ],
+      "AMP Hold": [
+        0,
+        8
+      ],
+      "AMP Overdrive": [
+        16,
+        38
+      ],
+      "AMP Pan": [
+        60,
+        68
+      ],
+      "AMP Reverb Send": [
+        0,
+        8
+      ],
+      "FLT Attack": [
+        0,
+        10
+      ],
+      "FLT Decay": [
+        40,
+        80
+      ],
+      "FLT Env Depth": [
+        55,
+        72
+      ],
+      "FLT Frequency": [
+        23,
+        38
+      ],
+      "FLT Release": [
+        40,
+        80
+      ],
+      "FLT Resonance": [
+        42,
+        76
+      ],
+      "FLT Sustain": [
+        0,
+        20
+      ],
+      "FLT Type": [
+        4,
+        4
+      ],
+      "SRC Decay": [
+        38,
+        76
+      ],
+      "SRC FM Amount": [
+        18,
+        88
+      ],
+      "SRC FM Decay": [
+        14,
+        78
+      ],
+      "SRC FM Tune": [
+        42,
+        96
+      ],
+      "SRC Level": [
+        100,
+        100
+      ],
+      "SRC Sweep Time": [
+        55,
+        112
+      ],
+      "SRC Tick Level": [
+        55,
+        118
+      ],
+      "SRC Tune": [
+        56,
+        65
+      ]
+    },
+    "zones": {
+      "amp": [
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive"
+      ],
+      "body": [
+        "SRC Tune",
+        "SRC Sweep Time",
+        "SRC FM Decay",
+        "SRC Decay",
+        "FLT Frequency",
+        "AMP Hold",
+        "AMP Decay"
+      ],
+      "filter": [
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Resonance",
+        "FLT Env Depth"
+      ],
+      "fm": [
+        "SRC FM Decay",
+        "SRC FM Tune",
+        "SRC FM Amount",
+        "SRC Tick Level",
+        "FLT Resonance",
+        "AMP Overdrive"
+      ],
+      "full": [
+        "SRC Tune",
+        "SRC Sweep Time",
+        "SRC FM Decay",
+        "SRC Decay",
+        "SRC FM Tune",
+        "SRC FM Amount",
+        "SRC Tick Level",
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Resonance",
+        "FLT Env Depth",
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive"
+      ],
+      "grit": [
+        "SRC FM Amount",
+        "SRC Tick Level",
+        "FLT Resonance",
+        "AMP Overdrive"
+      ],
+      "src": [
+        "SRC Tune",
+        "SRC Sweep Time",
+        "SRC FM Decay",
+        "SRC Decay",
+        "SRC FM Tune",
+        "SRC FM Amount",
+        "SRC Tick Level"
+      ]
+    }
+  },
+  "7": {
+    "anchor": {
+      "AMP Attack": 0,
+      "AMP Decay": 86,
+      "AMP Delay Send": 0,
+      "AMP Hold": 0,
+      "AMP Overdrive": 23,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 60,
+      "FLT Env Depth": 63,
+      "FLT Frequency": 28,
+      "FLT Release": 64,
+      "FLT Resonance": 54,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 58,
+      "SRC Level": 100,
+      "SRC Mod Level": 38,
+      "SRC Mod Type": 0,
+      "SRC Sweep Depth": 52,
+      "SRC Sweep Time": 78,
+      "SRC Tick Level": 84,
+      "SRC Tune": 60
+    },
+    "deltas": {
+      "groove": {
+        "AMP Decay": 9,
+        "AMP Hold": 4,
+        "AMP Overdrive": 6,
+        "FLT Decay": 10,
+        "FLT Env Depth": 5,
+        "FLT Frequency": 5,
+        "FLT Resonance": 9,
+        "SRC Decay": 8,
+        "SRC Mod Level": 14,
+        "SRC Sweep Depth": 12,
+        "SRC Sweep Time": 11,
+        "SRC Tick Level": 12,
+        "SRC Tune": 2
+      },
+      "micro": {
+        "AMP Decay": 4,
+        "AMP Hold": 2,
+        "AMP Overdrive": 2,
+        "FLT Decay": 5,
+        "FLT Env Depth": 2,
+        "FLT Frequency": 2,
+        "FLT Resonance": 5,
+        "SRC Decay": 4,
+        "SRC Mod Level": 6,
+        "SRC Sweep Depth": 5,
+        "SRC Sweep Time": 5,
+        "SRC Tick Level": 5,
+        "SRC Tune": 1
+      },
+      "strong": {
+        "AMP Decay": 15,
+        "AMP Hold": 8,
+        "AMP Overdrive": 10,
+        "FLT Decay": 15,
+        "FLT Env Depth": 8,
+        "FLT Frequency": 8,
+        "FLT Resonance": 12,
+        "SRC Decay": 15,
+        "SRC Mod Level": 26,
+        "SRC Sweep Depth": 22,
+        "SRC Sweep Time": 18,
+        "SRC Tick Level": 20,
+        "SRC Tune": 4
+      }
+    },
+    "filter_mode": "plastic",
+    "machine_value": 21,
+    "name": "BD Plastic Rubber Kick",
+    "order": [
+      "SRC Level",
+      "SRC Tune",
+      "SRC Decay",
+      "SRC Sweep Depth",
+      "SRC Sweep Time",
+      "SRC Mod Type",
+      "SRC Mod Level",
+      "SRC Tick Level",
+      "FLT Attack",
+      "FLT Decay",
+      "FLT Sustain",
+      "FLT Release",
+      "FLT Frequency",
+      "FLT Resonance",
+      "FLT Type",
+      "FLT Env Depth",
+      "AMP Attack",
+      "AMP Hold",
+      "AMP Decay",
+      "AMP Overdrive",
+      "AMP Delay Send",
+      "AMP Reverb Send",
+      "AMP Pan"
+    ],
+    "params": {
+      "AMP Attack": 78,
+      "AMP Decay": 80,
+      "AMP Delay Send": 82,
+      "AMP Hold": 79,
+      "AMP Overdrive": 81,
+      "AMP Pan": 10,
+      "AMP Reverb Send": 83,
+      "FLT Attack": 70,
+      "FLT Decay": 71,
+      "FLT Env Depth": 77,
+      "FLT Frequency": 74,
+      "FLT Release": 73,
+      "FLT Resonance": 75,
+      "FLT Sustain": 72,
+      "FLT Type": 76,
+      "SRC Decay": 18,
+      "SRC Level": 16,
+      "SRC Mod Level": 22,
+      "SRC Mod Type": 21,
+      "SRC Sweep Depth": 19,
+      "SRC Sweep Time": 20,
+      "SRC Tick Level": 23,
+      "SRC Tune": 17
+    },
+    "safe": {
+      "AMP Attack": [
+        0,
+        5
+      ],
+      "AMP Decay": [
+        72,
+        108
+      ],
+      "AMP Delay Send": [
+        0,
+        8
+      ],
+      "AMP Hold": [
+        0,
+        8
+      ],
+      "AMP Overdrive": [
+        16,
+        38
+      ],
+      "AMP Pan": [
+        60,
+        68
+      ],
+      "AMP Reverb Send": [
+        0,
+        8
+      ],
+      "FLT Attack": [
+        0,
+        10
+      ],
+      "FLT Decay": [
+        40,
+        82
+      ],
+      "FLT Env Depth": [
+        55,
+        72
+      ],
+      "FLT Frequency": [
+        23,
+        38
+      ],
+      "FLT Release": [
+        40,
+        80
+      ],
+      "FLT Resonance": [
+        38,
+        74
+      ],
+      "FLT Sustain": [
+        0,
+        20
+      ],
+      "FLT Type": [
+        4,
+        4
+      ],
+      "SRC Decay": [
+        38,
+        78
+      ],
+      "SRC Level": [
+        100,
+        100
+      ],
+      "SRC Mod Level": [
+        14,
+        88
+      ],
+      "SRC Mod Type": [
+        0,
+        1
+      ],
+      "SRC Sweep Depth": [
+        24,
+        88
+      ],
+      "SRC Sweep Time": [
+        52,
+        108
+      ],
+      "SRC Tick Level": [
+        50,
+        116
+      ],
+      "SRC Tune": [
+        56,
+        65
+      ]
+    },
+    "zones": {
+      "amp": [
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive"
+      ],
+      "body": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Sweep Depth",
+        "SRC Sweep Time",
+        "FLT Frequency",
+        "AMP Hold",
+        "AMP Decay"
+      ],
+      "filter": [
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Resonance",
+        "FLT Env Depth"
+      ],
+      "full": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Sweep Depth",
+        "SRC Sweep Time",
+        "SRC Mod Type",
+        "SRC Mod Level",
+        "SRC Tick Level",
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Resonance",
+        "FLT Env Depth",
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive"
+      ],
+      "grit": [
+        "SRC Mod Level",
+        "SRC Tick Level",
+        "FLT Resonance",
+        "AMP Overdrive"
+      ],
+      "plastic": [
+        "SRC Mod Type",
+        "SRC Mod Level",
+        "SRC Sweep Depth",
+        "SRC Tick Level",
+        "FLT Resonance",
+        "AMP Overdrive"
+      ],
+      "src": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Sweep Depth",
+        "SRC Sweep Time",
+        "SRC Mod Type",
+        "SRC Mod Level",
+        "SRC Tick Level"
+      ]
+    }
+  },
+  "8": {
+    "anchor": {
+      "AMP Attack": 0,
+      "AMP Decay": 92,
+      "AMP Delay Send": 0,
+      "AMP Hold": 0,
+      "AMP Overdrive": 20,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 62,
+      "FLT Env Depth": 63,
+      "FLT Frequency": 27,
+      "FLT Release": 64,
+      "FLT Resonance": 48,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 66,
+      "SRC Dust Level": 14,
+      "SRC Hold": 24,
+      "SRC Level": 100,
+      "SRC Sweep Depth": 34,
+      "SRC Sweep Time": 82,
+      "SRC Tune": 60,
+      "SRC VCO Click": 38
+    },
+    "deltas": {
+      "groove": {
+        "AMP Decay": 9,
+        "AMP Hold": 4,
+        "AMP Overdrive": 5,
+        "FLT Decay": 10,
+        "FLT Env Depth": 5,
+        "FLT Frequency": 5,
+        "FLT Resonance": 8,
+        "SRC Decay": 9,
+        "SRC Dust Level": 8,
+        "SRC Hold": 10,
+        "SRC Sweep Depth": 12,
+        "SRC Sweep Time": 12,
+        "SRC Tune": 2,
+        "SRC VCO Click": 12
+      },
+      "micro": {
+        "AMP Decay": 4,
+        "AMP Hold": 2,
+        "AMP Overdrive": 2,
+        "FLT Decay": 5,
+        "FLT Env Depth": 2,
+        "FLT Frequency": 2,
+        "FLT Resonance": 4,
+        "SRC Decay": 4,
+        "SRC Dust Level": 3,
+        "SRC Hold": 4,
+        "SRC Sweep Depth": 5,
+        "SRC Sweep Time": 5,
+        "SRC Tune": 1,
+        "SRC VCO Click": 5
+      },
+      "strong": {
+        "AMP Decay": 16,
+        "AMP Hold": 8,
+        "AMP Overdrive": 8,
+        "FLT Decay": 16,
+        "FLT Env Depth": 8,
+        "FLT Frequency": 8,
+        "FLT Resonance": 12,
+        "SRC Decay": 18,
+        "SRC Dust Level": 18,
+        "SRC Hold": 18,
+        "SRC Sweep Depth": 22,
+        "SRC Sweep Time": 20,
+        "SRC Tune": 4,
+        "SRC VCO Click": 24
+      }
+    },
+    "filter_mode": "silky",
+    "machine_value": 22,
+    "name": "BD Silky Deep Kick",
+    "order": [
+      "SRC Level",
+      "SRC Tune",
+      "SRC Decay",
+      "SRC Sweep Depth",
+      "SRC Sweep Time",
+      "SRC Hold",
+      "SRC VCO Click",
+      "SRC Dust Level",
+      "FLT Attack",
+      "FLT Decay",
+      "FLT Sustain",
+      "FLT Release",
+      "FLT Frequency",
+      "FLT Resonance",
+      "FLT Type",
+      "FLT Env Depth",
+      "AMP Attack",
+      "AMP Hold",
+      "AMP Decay",
+      "AMP Overdrive",
+      "AMP Delay Send",
+      "AMP Reverb Send",
+      "AMP Pan"
+    ],
+    "params": {
+      "AMP Attack": 78,
+      "AMP Decay": 80,
+      "AMP Delay Send": 82,
+      "AMP Hold": 79,
+      "AMP Overdrive": 81,
+      "AMP Pan": 10,
+      "AMP Reverb Send": 83,
+      "FLT Attack": 70,
+      "FLT Decay": 71,
+      "FLT Env Depth": 77,
+      "FLT Frequency": 74,
+      "FLT Release": 73,
+      "FLT Resonance": 75,
+      "FLT Sustain": 72,
+      "FLT Type": 76,
+      "SRC Decay": 18,
+      "SRC Dust Level": 23,
+      "SRC Hold": 21,
+      "SRC Level": 16,
+      "SRC Sweep Depth": 19,
+      "SRC Sweep Time": 20,
+      "SRC Tune": 17,
+      "SRC VCO Click": 22
+    },
+    "safe": {
+      "AMP Attack": [
+        0,
+        5
+      ],
+      "AMP Decay": [
+        76,
+        114
+      ],
+      "AMP Delay Send": [
+        0,
+        8
+      ],
+      "AMP Hold": [
+        0,
+        8
+      ],
+      "AMP Overdrive": [
+        12,
+        34
+      ],
+      "AMP Pan": [
+        60,
+        68
+      ],
+      "AMP Reverb Send": [
+        0,
+        8
+      ],
+      "FLT Attack": [
+        0,
+        10
+      ],
+      "FLT Decay": [
+        40,
+        84
+      ],
+      "FLT Env Depth": [
+        55,
+        72
+      ],
+      "FLT Frequency": [
+        23,
+        37
+      ],
+      "FLT Release": [
+        40,
+        80
+      ],
+      "FLT Resonance": [
+        32,
+        68
+      ],
+      "FLT Sustain": [
+        0,
+        20
+      ],
+      "FLT Type": [
+        4,
+        4
+      ],
+      "SRC Decay": [
+        44,
+        94
+      ],
+      "SRC Dust Level": [
+        0,
+        48
+      ],
+      "SRC Hold": [
+        0,
+        54
+      ],
+      "SRC Level": [
+        100,
+        100
+      ],
+      "SRC Sweep Depth": [
+        10,
+        72
+      ],
+      "SRC Sweep Time": [
+        45,
+        106
+      ],
+      "SRC Tune": [
+        56,
+        65
+      ],
+      "SRC VCO Click": [
+        8,
+        88
+      ]
+    },
+    "zones": {
+      "amp": [
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive"
+      ],
+      "body": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Sweep Depth",
+        "SRC Sweep Time",
+        "SRC Hold",
+        "FLT Frequency",
+        "AMP Hold",
+        "AMP Decay"
+      ],
+      "filter": [
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Resonance",
+        "FLT Env Depth"
+      ],
+      "full": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Sweep Depth",
+        "SRC Sweep Time",
+        "SRC Hold",
+        "SRC VCO Click",
+        "SRC Dust Level",
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Resonance",
+        "FLT Env Depth",
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive"
+      ],
+      "grit": [
+        "SRC VCO Click",
+        "SRC Dust Level",
+        "FLT Resonance",
+        "AMP Overdrive"
+      ],
+      "silky": [
+        "SRC Hold",
+        "SRC VCO Click",
+        "SRC Dust Level",
+        "SRC Sweep Depth",
+        "FLT Resonance",
+        "AMP Overdrive"
+      ],
+      "src": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Sweep Depth",
+        "SRC Sweep Time",
+        "SRC Hold",
+        "SRC VCO Click",
+        "SRC Dust Level"
+      ]
+    }
+  },
+  "9": {
+    "anchor": {
+      "AMP Attack": 0,
+      "AMP Decay": 58,
+      "AMP Delay Send": 0,
+      "AMP Hold": 0,
+      "AMP Overdrive": 25,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 44,
+      "FLT Env Depth": 34,
+      "FLT Frequency": 56,
+      "FLT Release": 42,
+      "FLT Resonance": 22,
+      "FLT Sustain": 0,
+      "FLT Type": 3,
+      "SRC Decay": 46,
+      "SRC Level": 100,
+      "SRC Noise Decay": 54,
+      "SRC Noise Level": 78,
+      "SRC Sweep Depth": 48,
+      "SRC Sweep Time": 58,
+      "SRC Tick Level": 92,
+      "SRC Tune": 65
+    },
+    "deltas": {
+      "groove": {
+        "AMP Decay": 11,
+        "AMP Hold": 5,
+        "AMP Overdrive": 8,
+        "FLT Decay": 9,
+        "FLT Env Depth": 7,
+        "FLT Frequency": 9,
+        "FLT Resonance": 7,
+        "SRC Decay": 9,
+        "SRC Noise Decay": 11,
+        "SRC Noise Level": 13,
+        "SRC Sweep Depth": 12,
+        "SRC Sweep Time": 10,
+        "SRC Tick Level": 12,
+        "SRC Tune": 5
+      },
+      "micro": {
+        "AMP Decay": 5,
+        "AMP Hold": 2,
+        "AMP Overdrive": 3,
+        "FLT Decay": 4,
+        "FLT Env Depth": 3,
+        "FLT Frequency": 4,
+        "FLT Resonance": 3,
+        "SRC Decay": 4,
+        "SRC Noise Decay": 5,
+        "SRC Noise Level": 6,
+        "SRC Sweep Depth": 5,
+        "SRC Sweep Time": 5,
+        "SRC Tick Level": 5,
+        "SRC Tune": 2
+      },
+      "strong": {
+        "AMP Decay": 18,
+        "AMP Hold": 9,
+        "AMP Overdrive": 13,
+        "FLT Decay": 16,
+        "FLT Env Depth": 12,
+        "FLT Frequency": 14,
+        "FLT Resonance": 12,
+        "SRC Decay": 16,
+        "SRC Noise Decay": 18,
+        "SRC Noise Level": 22,
+        "SRC Sweep Depth": 22,
+        "SRC Sweep Time": 18,
+        "SRC Tick Level": 22,
+        "SRC Tune": 8
+      }
+    },
+    "filter_mode": "classic",
+    "machine_value": 2,
+    "name": "Pad 2 SD Hard Pressure Snare",
+    "order": [
+      "SRC Level",
+      "SRC Tune",
+      "SRC Decay",
+      "SRC Sweep Depth",
+      "SRC Tick Level",
+      "SRC Noise Decay",
+      "SRC Noise Level",
+      "SRC Sweep Time",
+      "FLT Attack",
+      "FLT Decay",
+      "FLT Sustain",
+      "FLT Release",
+      "FLT Frequency",
+      "FLT Resonance",
+      "FLT Type",
+      "FLT Env Depth",
+      "AMP Attack",
+      "AMP Hold",
+      "AMP Decay",
+      "AMP Overdrive",
+      "AMP Delay Send",
+      "AMP Reverb Send",
+      "AMP Pan"
+    ],
+    "params": {
+      "AMP Attack": 78,
+      "AMP Decay": 80,
+      "AMP Delay Send": 82,
+      "AMP Hold": 79,
+      "AMP Overdrive": 81,
+      "AMP Pan": 10,
+      "AMP Reverb Send": 83,
+      "FLT Attack": 70,
+      "FLT Decay": 71,
+      "FLT Env Depth": 77,
+      "FLT Frequency": 74,
+      "FLT Release": 73,
+      "FLT Resonance": 75,
+      "FLT Sustain": 72,
+      "FLT Type": 76,
+      "SRC Decay": 18,
+      "SRC Level": 16,
+      "SRC Noise Decay": 21,
+      "SRC Noise Level": 22,
+      "SRC Sweep Depth": 19,
+      "SRC Sweep Time": 23,
+      "SRC Tick Level": 20,
+      "SRC Tune": 17
+    },
+    "safe": {
+      "AMP Attack": [
+        0,
+        6
+      ],
+      "AMP Decay": [
+        36,
+        86
+      ],
+      "AMP Delay Send": [
+        0,
+        8
+      ],
+      "AMP Hold": [
+        0,
+        10
+      ],
+      "AMP Overdrive": [
+        12,
+        42
+      ],
+      "AMP Pan": [
+        60,
+        68
+      ],
+      "AMP Reverb Send": [
+        0,
+        8
+      ],
+      "FLT Attack": [
+        0,
+        10
+      ],
+      "FLT Decay": [
+        20,
+        70
+      ],
+      "FLT Env Depth": [
+        12,
+        55
+      ],
+      "FLT Frequency": [
+        42,
+        76
+      ],
+      "FLT Release": [
+        24,
+        72
+      ],
+      "FLT Resonance": [
+        8,
+        42
+      ],
+      "FLT Sustain": [
+        0,
+        25
+      ],
+      "FLT Type": [
+        3,
+        4
+      ],
+      "SRC Decay": [
+        28,
+        72
+      ],
+      "SRC Level": [
+        100,
+        100
+      ],
+      "SRC Noise Decay": [
+        30,
+        84
+      ],
+      "SRC Noise Level": [
+        48,
+        108
+      ],
+      "SRC Sweep Depth": [
+        20,
+        80
+      ],
+      "SRC Sweep Time": [
+        35,
+        90
+      ],
+      "SRC Tick Level": [
+        65,
+        118
+      ],
+      "SRC Tune": [
+        56,
+        74
+      ]
+    },
+    "zones": {
+      "amp": [
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive"
+      ],
+      "body": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Sweep Depth",
+        "SRC Sweep Time",
+        "SRC Noise Decay",
+        "FLT Frequency",
+        "AMP Decay"
+      ],
+      "filter": [
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Resonance",
+        "FLT Env Depth"
+      ],
+      "full": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Sweep Depth",
+        "SRC Tick Level",
+        "SRC Noise Decay",
+        "SRC Noise Level",
+        "SRC Sweep Time",
+        "FLT Decay",
+        "FLT Frequency",
+        "FLT Resonance",
+        "FLT Env Depth",
+        "AMP Hold",
+        "AMP Decay",
+        "AMP Overdrive"
+      ],
+      "grit": [
+        "SRC Tick Level",
+        "SRC Noise Level",
+        "FLT Resonance",
+        "AMP Overdrive"
+      ],
+      "snap": [
+        "SRC Tick Level",
+        "SRC Sweep Depth",
+        "SRC Sweep Time",
+        "AMP Overdrive"
+      ],
+      "src": [
+        "SRC Tune",
+        "SRC Decay",
+        "SRC Sweep Depth",
+        "SRC Tick Level",
+        "SRC Noise Decay",
+        "SRC Noise Level",
+        "SRC Sweep Time"
+      ]
+    }
+  }
+}

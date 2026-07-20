@@ -1,0 +1,26 @@
+[
+  {
+    "token_key": "token-surface",
+    "label": "Surface",
+    "token_type": "color",
+    "value_hint": "operator dark neutral surface"
+  },
+  {
+    "token_key": "token-panel",
+    "label": "Panel",
+    "token_type": "color",
+    "value_hint": "low-glare machine panel"
+  },
+  {
+    "token_key": "token-warning",
+    "label": "Warning",
+    "token_type": "color",
+    "value_hint": "high-contrast hold/repeat warning"
+  },
+  {
+    "token_key": "token-disabled",
+    "label": "Disabled",
+    "token_type": "state",
+    "value_hint": "disabled active-control affordance"
+  }
+]

@@ -1,0 +1,650 @@
+{
+  "Bend Amount": {
+    "parameter": "Bend Amount",
+    "section": "OSC COMMON",
+    "encoder": "D",
+    "cc_msb": 85,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 33
+  },
+  "Breath Controller": {
+    "parameter": "Breath Controller",
+    "section": "MODULATION",
+    "encoder": "-",
+    "cc_msb": 2,
+    "cc_lsb": 34,
+    "nrpn_msb": null,
+    "nrpn_lsb": null
+  },
+  "Chorus Send Level": {
+    "parameter": "Chorus Send Level",
+    "section": "AMP",
+    "encoder": "F",
+    "cc_msb": 91,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 55
+  },
+  "Delay Send Level": {
+    "parameter": "Delay Send Level",
+    "section": "AMP",
+    "encoder": "G",
+    "cc_msb": 92,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 56
+  },
+  "Env2 Attack Time": {
+    "parameter": "Env2 Attack Time",
+    "section": "ENV2",
+    "encoder": "A",
+    "cc_msb": 112,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 70
+  },
+  "Env2 Decay Time": {
+    "parameter": "Env2 Decay Time",
+    "section": "ENV2",
+    "encoder": "B",
+    "cc_msb": 113,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 71
+  },
+  "Env2 Depth A": {
+    "parameter": "Env2 Depth A",
+    "section": "ENV2",
+    "encoder": "H",
+    "cc_msb": 22,
+    "cc_lsb": 54,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 77
+  },
+  "Env2 Depth B": {
+    "parameter": "Env2 Depth B",
+    "section": "ENV2",
+    "encoder": "J",
+    "cc_msb": 23,
+    "cc_lsb": 55,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 79
+  },
+  "Env2 Release Time": {
+    "parameter": "Env2 Release Time",
+    "section": "ENV2",
+    "encoder": "D",
+    "cc_msb": 115,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 73
+  },
+  "Env2 Sustain Level": {
+    "parameter": "Env2 Sustain Level",
+    "section": "ENV2",
+    "encoder": "C",
+    "cc_msb": 114,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 72
+  },
+  "EnvA Attack Time": {
+    "parameter": "EnvA Attack Time",
+    "section": "AMP",
+    "encoder": "A",
+    "cc_msb": 104,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 50
+  },
+  "EnvA Decay Time": {
+    "parameter": "EnvA Decay Time",
+    "section": "AMP",
+    "encoder": "B",
+    "cc_msb": 105,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 51
+  },
+  "EnvA Release Time": {
+    "parameter": "EnvA Release Time",
+    "section": "AMP",
+    "encoder": "D",
+    "cc_msb": 107,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 53
+  },
+  "EnvA Sustain Level": {
+    "parameter": "EnvA Sustain Level",
+    "section": "AMP",
+    "encoder": "C",
+    "cc_msb": 106,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 52
+  },
+  "EnvF Attack Time": {
+    "parameter": "EnvF Attack Time",
+    "section": "ENVF",
+    "encoder": "A",
+    "cc_msb": 108,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 60
+  },
+  "EnvF Decay Time": {
+    "parameter": "EnvF Decay Time",
+    "section": "ENVF",
+    "encoder": "B",
+    "cc_msb": 109,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 61
+  },
+  "EnvF Depth A": {
+    "parameter": "EnvF Depth A",
+    "section": "ENVF",
+    "encoder": "H",
+    "cc_msb": 20,
+    "cc_lsb": 52,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 67
+  },
+  "EnvF Depth B": {
+    "parameter": "EnvF Depth B",
+    "section": "ENVF",
+    "encoder": "J",
+    "cc_msb": 21,
+    "cc_lsb": 53,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 69
+  },
+  "EnvF Release Time": {
+    "parameter": "EnvF Release Time",
+    "section": "ENVF",
+    "encoder": "D",
+    "cc_msb": 111,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 63
+  },
+  "EnvF Sustain Level": {
+    "parameter": "EnvF Sustain Level",
+    "section": "ENVF",
+    "encoder": "C",
+    "cc_msb": 110,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 62
+  },
+  "Filter Overdrive": {
+    "parameter": "Filter Overdrive",
+    "section": "FILTERS",
+    "encoder": "C",
+    "cc_msb": 86,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 42
+  },
+  "Filter1 Envelope Amount": {
+    "parameter": "Filter1 Envelope Amount",
+    "section": "FILTERS",
+    "encoder": "E",
+    "cc_msb": 102,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 44
+  },
+  "Filter1 Frequency": {
+    "parameter": "Filter1 Frequency",
+    "section": "FILTERS",
+    "encoder": "A",
+    "cc_msb": 18,
+    "cc_lsb": 50,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 40
+  },
+  "Filter1 Resonance": {
+    "parameter": "Filter1 Resonance",
+    "section": "FILTERS",
+    "encoder": "B",
+    "cc_msb": 89,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 41
+  },
+  "Filter2 Envelope Amount": {
+    "parameter": "Filter2 Envelope Amount",
+    "section": "FILTERS",
+    "encoder": "J",
+    "cc_msb": 103,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 49
+  },
+  "Filter2 Frequency": {
+    "parameter": "Filter2 Frequency",
+    "section": "FILTERS",
+    "encoder": "F",
+    "cc_msb": 19,
+    "cc_lsb": 51,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 45
+  },
+  "Filter2 Resonance": {
+    "parameter": "Filter2 Resonance",
+    "section": "FILTERS",
+    "encoder": "G",
+    "cc_msb": 90,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 46
+  },
+  "LFO1 Depth A": {
+    "parameter": "LFO1 Depth A",
+    "section": "LFO1",
+    "encoder": "H",
+    "cc_msb": 24,
+    "cc_lsb": 56,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 87
+  },
+  "LFO1 Depth B": {
+    "parameter": "LFO1 Depth B",
+    "section": "LFO1",
+    "encoder": "J",
+    "cc_msb": 25,
+    "cc_lsb": 57,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 89
+  },
+  "LFO1 Speed": {
+    "parameter": "LFO1 Speed",
+    "section": "LFO1",
+    "encoder": "A",
+    "cc_msb": 116,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 80
+  },
+  "LFO1 Speed Multiplier": {
+    "parameter": "LFO1 Speed Multiplier",
+    "section": "LFO1",
+    "encoder": "B",
+    "cc_msb": 117,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 81
+  },
+  "LFO2 Depth A": {
+    "parameter": "LFO2 Depth A",
+    "section": "LFO2",
+    "encoder": "H",
+    "cc_msb": 26,
+    "cc_lsb": 58,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 97
+  },
+  "LFO2 Depth B": {
+    "parameter": "LFO2 Depth B",
+    "section": "LFO2",
+    "encoder": "J",
+    "cc_msb": 27,
+    "cc_lsb": 59,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 99
+  },
+  "LFO2 Speed": {
+    "parameter": "LFO2 Speed",
+    "section": "LFO2",
+    "encoder": "A",
+    "cc_msb": 118,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 90
+  },
+  "LFO2 Speed Multiplier": {
+    "parameter": "LFO2 Speed Multiplier",
+    "section": "LFO2",
+    "encoder": "B",
+    "cc_msb": 119,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 91
+  },
+  "Modwheel": {
+    "parameter": "Modwheel",
+    "section": "MODULATION",
+    "encoder": "-",
+    "cc_msb": 1,
+    "cc_lsb": 33,
+    "nrpn_msb": null,
+    "nrpn_lsb": null
+  },
+  "Noise Fade": {
+    "parameter": "Noise Fade",
+    "section": "NOISE",
+    "encoder": "C",
+    "cc_msb": 76,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 12
+  },
+  "Noise Level": {
+    "parameter": "Noise Level",
+    "section": "NOISE",
+    "encoder": "E",
+    "cc_msb": 77,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 14
+  },
+  "Noise S&H": {
+    "parameter": "Noise S&H",
+    "section": "NOISE",
+    "encoder": "A",
+    "cc_msb": 75,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 10
+  },
+  "OSC1 Level": {
+    "parameter": "OSC1 Level",
+    "section": "OSC 1",
+    "encoder": "E",
+    "cc_msb": 69,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 4
+  },
+  "OSC1 PWM Depth": {
+    "parameter": "OSC1 PWM Depth",
+    "section": "OSC 1",
+    "encoder": "J",
+    "cc_msb": 74,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 9
+  },
+  "OSC1 PWM Speed": {
+    "parameter": "OSC1 PWM Speed",
+    "section": "OSC 1",
+    "encoder": "I",
+    "cc_msb": 73,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 8
+  },
+  "OSC1 Pitch": {
+    "parameter": "OSC1 Pitch",
+    "section": "OSC 1",
+    "encoder": "A",
+    "cc_msb": 16,
+    "cc_lsb": 48,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 0
+  },
+  "OSC1 Pulsewidth": {
+    "parameter": "OSC1 Pulsewidth",
+    "section": "OSC 1",
+    "encoder": "H",
+    "cc_msb": 72,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 7
+  },
+  "OSC1 Sub Oscillator": {
+    "parameter": "OSC1 Sub Oscillator",
+    "section": "OSC 1",
+    "encoder": "G",
+    "cc_msb": 71,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 6
+  },
+  "OSC1 Waveform": {
+    "parameter": "OSC1 Waveform",
+    "section": "OSC 1",
+    "encoder": "F",
+    "cc_msb": 70,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 5
+  },
+  "OSC2 Level": {
+    "parameter": "OSC2 Level",
+    "section": "OSC 2",
+    "encoder": "E",
+    "cc_msb": 78,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 24
+  },
+  "OSC2 PWM Depth": {
+    "parameter": "OSC2 PWM Depth",
+    "section": "OSC 2",
+    "encoder": "J",
+    "cc_msb": 83,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 29
+  },
+  "OSC2 PWM Speed": {
+    "parameter": "OSC2 PWM Speed",
+    "section": "OSC 2",
+    "encoder": "I",
+    "cc_msb": 82,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 28
+  },
+  "OSC2 Pitch": {
+    "parameter": "OSC2 Pitch",
+    "section": "OSC 2",
+    "encoder": "A",
+    "cc_msb": 17,
+    "cc_lsb": 49,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 20
+  },
+  "OSC2 Pulsewidth": {
+    "parameter": "OSC2 Pulsewidth",
+    "section": "OSC 2",
+    "encoder": "H",
+    "cc_msb": 81,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 27
+  },
+  "OSC2 Sub Oscillator": {
+    "parameter": "OSC2 Sub Oscillator",
+    "section": "OSC 2",
+    "encoder": "G",
+    "cc_msb": 80,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 26
+  },
+  "OSC2 Waveform": {
+    "parameter": "OSC2 Waveform",
+    "section": "OSC 2",
+    "encoder": "F",
+    "cc_msb": 79,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 25
+  },
+  "Pan": {
+    "parameter": "Pan",
+    "section": "AMP",
+    "encoder": "I",
+    "cc_msb": 10,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 58
+  },
+  "Performance Parameter A": {
+    "parameter": "Performance Parameter A",
+    "section": "PERFORMANCE",
+    "encoder": "A",
+    "cc_msb": 3,
+    "cc_lsb": null,
+    "nrpn_msb": 0,
+    "nrpn_lsb": 0
+  },
+  "Performance Parameter B": {
+    "parameter": "Performance Parameter B",
+    "section": "PERFORMANCE",
+    "encoder": "B",
+    "cc_msb": 4,
+    "cc_lsb": null,
+    "nrpn_msb": 0,
+    "nrpn_lsb": 1
+  },
+  "Performance Parameter C": {
+    "parameter": "Performance Parameter C",
+    "section": "PERFORMANCE",
+    "encoder": "C",
+    "cc_msb": 8,
+    "cc_lsb": null,
+    "nrpn_msb": 0,
+    "nrpn_lsb": 2
+  },
+  "Performance Parameter D": {
+    "parameter": "Performance Parameter D",
+    "section": "PERFORMANCE",
+    "encoder": "D",
+    "cc_msb": 9,
+    "cc_lsb": null,
+    "nrpn_msb": 0,
+    "nrpn_lsb": 3
+  },
+  "Performance Parameter E": {
+    "parameter": "Performance Parameter E",
+    "section": "PERFORMANCE",
+    "encoder": "E",
+    "cc_msb": 11,
+    "cc_lsb": null,
+    "nrpn_msb": 0,
+    "nrpn_lsb": 4
+  },
+  "Performance Parameter F": {
+    "parameter": "Performance Parameter F",
+    "section": "PERFORMANCE",
+    "encoder": "F",
+    "cc_msb": 64,
+    "cc_lsb": null,
+    "nrpn_msb": 0,
+    "nrpn_lsb": 5
+  },
+  "Performance Parameter G": {
+    "parameter": "Performance Parameter G",
+    "section": "PERFORMANCE",
+    "encoder": "G",
+    "cc_msb": 65,
+    "cc_lsb": null,
+    "nrpn_msb": 0,
+    "nrpn_lsb": 6
+  },
+  "Performance Parameter H": {
+    "parameter": "Performance Parameter H",
+    "section": "PERFORMANCE",
+    "encoder": "H",
+    "cc_msb": 66,
+    "cc_lsb": null,
+    "nrpn_msb": 0,
+    "nrpn_lsb": 7
+  },
+  "Performance Parameter I": {
+    "parameter": "Performance Parameter I",
+    "section": "PERFORMANCE",
+    "encoder": "I",
+    "cc_msb": 67,
+    "cc_lsb": null,
+    "nrpn_msb": 0,
+    "nrpn_lsb": 8
+  },
+  "Performance Parameter J": {
+    "parameter": "Performance Parameter J",
+    "section": "PERFORMANCE",
+    "encoder": "J",
+    "cc_msb": 68,
+    "cc_lsb": null,
+    "nrpn_msb": 0,
+    "nrpn_lsb": 9
+  },
+  "Reverb Send Level": {
+    "parameter": "Reverb Send Level",
+    "section": "AMP",
+    "encoder": "H",
+    "cc_msb": 93,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 57
+  },
+  "Slide Time": {
+    "parameter": "Slide Time",
+    "section": "OSC COMMON",
+    "encoder": "E",
+    "cc_msb": 5,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 34
+  },
+  "Sync Amount": {
+    "parameter": "Sync Amount",
+    "section": "OSC COMMON",
+    "encoder": "C",
+    "cc_msb": 84,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 32
+  },
+  "Track Level": {
+    "parameter": "Track Level",
+    "section": "TRACK",
+    "encoder": "-",
+    "cc_msb": 95,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 100
+  },
+  "Track Mute": {
+    "parameter": "Track Mute",
+    "section": "TRACK",
+    "encoder": "-",
+    "cc_msb": 94,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 101
+  },
+  "Vibrato Depth": {
+    "parameter": "Vibrato Depth",
+    "section": "OSC COMMON",
+    "encoder": "J",
+    "cc_msb": 88,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 39
+  },
+  "Vibrato Speed": {
+    "parameter": "Vibrato Speed",
+    "section": "OSC COMMON",
+    "encoder": "I",
+    "cc_msb": 87,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 38
+  },
+  "Volume": {
+    "parameter": "Volume",
+    "section": "AMP",
+    "encoder": "J",
+    "cc_msb": 7,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 59
+  }
+}

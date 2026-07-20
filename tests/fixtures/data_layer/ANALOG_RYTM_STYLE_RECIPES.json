@@ -1,0 +1,2571 @@
+{
+  "banging-warehouse": {
+    "name": "banging-warehouse",
+    "label": "Banging Warehouse",
+    "description": "Heavy, direct warehouse kit with hard attacks and controlled grit.",
+    "pads": [
+      {
+        "pad": 1,
+        "machine_key": "bd_fm",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 50,
+            "intent": "heavy FM kick root"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 76,
+            "intent": "big kick body"
+          },
+          {
+            "section": "SRC",
+            "parameter": "FM Amount",
+            "value": 42,
+            "intent": "industrial bite"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Overdrive",
+            "value": 48,
+            "intent": "warehouse pressure"
+          }
+        ]
+      },
+      {
+        "pad": 2,
+        "machine_key": "sd_fm",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 60,
+            "intent": "hard snare root"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 42,
+            "intent": "short snare slam"
+          },
+          {
+            "section": "SRC",
+            "parameter": "FM Amount",
+            "value": 50,
+            "intent": "metal snare edge"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Resonance",
+            "value": 34,
+            "intent": "snare ring"
+          }
+        ]
+      },
+      {
+        "pad": 3,
+        "machine_key": "rs_hard",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 72,
+            "intent": "hard rim"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 26,
+            "intent": "fast rim"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Symmetry",
+            "value": 70,
+            "intent": "asymmetric edge"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 16,
+            "intent": "warehouse slap"
+          }
+        ]
+      },
+      {
+        "pad": 4,
+        "machine_key": "cp_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Noise Tone",
+            "value": 86,
+            "intent": "bright clap noise"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Decay",
+            "value": 46,
+            "intent": "wide clap"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Clap Number",
+            "value": 86,
+            "intent": "dense clap hits"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 28,
+            "intent": "large room send"
+          }
+        ]
+      },
+      {
+        "pad": 5,
+        "machine_key": "ut_noise",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "LP Frequency",
+            "value": 72,
+            "intent": "noise body"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 34,
+            "intent": "short noise burst"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Sweep Depth",
+            "value": 58,
+            "intent": "noise stab motion"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Overdrive",
+            "value": 38,
+            "intent": "dirty utility hit"
+          }
+        ]
+      },
+      {
+        "pad": 6,
+        "machine_key": "xt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 48,
+            "intent": "low tom hammer"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 48,
+            "intent": "controlled low tail"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Sweep Depth",
+            "value": 52,
+            "intent": "warehouse tom bend"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Pan",
+            "value": 42,
+            "intent": "left tom lane"
+          }
+        ]
+      },
+      {
+        "pad": 7,
+        "machine_key": "xt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 66,
+            "intent": "mid tom hammer"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 44,
+            "intent": "short mid tail"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Level",
+            "value": 42,
+            "intent": "hard skin noise"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Overdrive",
+            "value": 28,
+            "intent": "tom grit"
+          }
+        ]
+      },
+      {
+        "pad": 8,
+        "machine_key": "xt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 86,
+            "intent": "high tom stab"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 34,
+            "intent": "fast high hit"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Tone",
+            "value": 84,
+            "intent": "bright hit"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 12,
+            "intent": "fast repeat"
+          }
+        ]
+      },
+      {
+        "pad": 9,
+        "machine_key": "hh_lab",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune 1",
+            "value": 84,
+            "intent": "lab hat top"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay Time",
+            "value": 14,
+            "intent": "razor hat"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Tune 3",
+            "value": 92,
+            "intent": "clustered metallicity"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 110,
+            "intent": "sharp hat"
+          }
+        ]
+      },
+      {
+        "pad": 10,
+        "machine_key": "oh_metallic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 84,
+            "intent": "metallic open hat"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay Time",
+            "value": 38,
+            "intent": "short open blast"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 22,
+            "intent": "warehouse air"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Pan",
+            "value": 72,
+            "intent": "right open lane"
+          }
+        ]
+      },
+      {
+        "pad": 11,
+        "machine_key": "cy_metallic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 82,
+            "intent": "bright crash hit"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay Time",
+            "value": 42,
+            "intent": "controlled crash"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Transient Decay",
+            "value": 24,
+            "intent": "hard transient"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 112,
+            "intent": "cutting cymbal"
+          }
+        ]
+      },
+      {
+        "pad": 12,
+        "machine_key": "cb_metallic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 86,
+            "intent": "high metal bell"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay Time",
+            "value": 26,
+            "intent": "short bell"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Detune",
+            "value": 48,
+            "intent": "warehouse clang"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 18,
+            "intent": "metal repeat"
+          }
+        ]
+      }
+    ]
+  },
+  "deeper-rolling": {
+    "name": "deeper-rolling",
+    "label": "Deeper Rolling",
+    "description": "Tunneling, rolling kit with low tom movement and smeared edges.",
+    "pads": [
+      {
+        "pad": 1,
+        "machine_key": "bd_silky",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 48,
+            "intent": "deep kick root"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 82,
+            "intent": "rolling low body"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Dust Level",
+            "value": 34,
+            "intent": "soft air"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 25,
+            "intent": "preserve rolling kick sub"
+          }
+        ]
+      },
+      {
+        "pad": 2,
+        "machine_key": "sd_natural",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 54,
+            "intent": "natural low snare"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Body Decay",
+            "value": 46,
+            "intent": "soft shell body"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Decay",
+            "value": 36,
+            "intent": "short noise tail"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 26,
+            "intent": "dub room"
+          }
+        ]
+      },
+      {
+        "pad": 3,
+        "machine_key": "rs_hard",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 58,
+            "intent": "low rim click"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 28,
+            "intent": "tight rim"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Level",
+            "value": 34,
+            "intent": "grain layer"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 18,
+            "intent": "rolling echo"
+          }
+        ]
+      },
+      {
+        "pad": 4,
+        "machine_key": "cp_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Noise Tone",
+            "value": 58,
+            "intent": "dark clap"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Decay",
+            "value": 50,
+            "intent": "wide clap noise"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Clap Rate",
+            "value": 48,
+            "intent": "slow flam"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 34,
+            "intent": "deeper clap space"
+          }
+        ]
+      },
+      {
+        "pad": 5,
+        "machine_key": "bt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 42,
+            "intent": "sub tom roll"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 70,
+            "intent": "long bass tom"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Sweep Depth",
+            "value": 18,
+            "intent": "minimal bend"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 20,
+            "intent": "rolling low echo"
+          }
+        ]
+      },
+      {
+        "pad": 6,
+        "machine_key": "xt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 50,
+            "intent": "low-mid roll"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 64,
+            "intent": "moving tom tail"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Decay",
+            "value": 28,
+            "intent": "soft skin noise"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 68,
+            "intent": "rounded tom"
+          }
+        ]
+      },
+      {
+        "pad": 7,
+        "machine_key": "xt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 62,
+            "intent": "mid roll answer"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 56,
+            "intent": "medium tom"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Sweep Time",
+            "value": 36,
+            "intent": "slow bend"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 18,
+            "intent": "tom room"
+          }
+        ]
+      },
+      {
+        "pad": 8,
+        "machine_key": "xt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 76,
+            "intent": "high roll accent"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 48,
+            "intent": "short high tom"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Level",
+            "value": 22,
+            "intent": "attack fuzz"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 16,
+            "intent": "small rolling tap"
+          }
+        ]
+      },
+      {
+        "pad": 9,
+        "machine_key": "hh_basic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 68,
+            "intent": "soft hat pitch"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay Time",
+            "value": 20,
+            "intent": "tight tick"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Tone",
+            "value": 42,
+            "intent": "muted hat tone"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Pan",
+            "value": 50,
+            "intent": "left-center pulse"
+          }
+        ]
+      },
+      {
+        "pad": 10,
+        "machine_key": "oh_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 66,
+            "intent": "dark open hat"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 52,
+            "intent": "rolling open wash"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Color",
+            "value": 42,
+            "intent": "muted metal"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 30,
+            "intent": "wash into room"
+          }
+        ]
+      },
+      {
+        "pad": 11,
+        "machine_key": "cy_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 60,
+            "intent": "low cymbal bed"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 44,
+            "intent": "medium cymbal tail"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Color",
+            "value": 38,
+            "intent": "dark cymbal color"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 76,
+            "intent": "rolled off shimmer"
+          }
+        ]
+      },
+      {
+        "pad": 12,
+        "machine_key": "cb_metallic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 64,
+            "intent": "metallic bell pulse"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay Time",
+            "value": 28,
+            "intent": "short metallic tail"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Detune",
+            "value": 30,
+            "intent": "narrow beating"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 22,
+            "intent": "echo punctuation"
+          }
+        ]
+      }
+    ]
+  },
+  "detroit-deep": {
+    "name": "detroit-deep",
+    "label": "Detroit Deep",
+    "description": "Warm, restrained 12-pad kit with woody percussion and controlled space.",
+    "pads": [
+      {
+        "pad": 1,
+        "machine_key": "bd_hard",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 52,
+            "intent": "grounded low fundamental"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 72,
+            "intent": "long but contained kick body"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Sweep Depth",
+            "value": 34,
+            "intent": "soft analog knock"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 25,
+            "intent": "preserve kick sub weight"
+          }
+        ]
+      },
+      {
+        "pad": 2,
+        "machine_key": "sd_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 58,
+            "intent": "low-mid snare pitch"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 48,
+            "intent": "short backbeat body"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Level",
+            "value": 44,
+            "intent": "muted paper edge"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 18,
+            "intent": "small room tail"
+          }
+        ]
+      },
+      {
+        "pad": 3,
+        "machine_key": "rs_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune Osc 1",
+            "value": 64,
+            "intent": "rim tuned near center"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 34,
+            "intent": "tight rim body"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Level",
+            "value": 30,
+            "intent": "soft noise edge"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 22,
+            "intent": "distant rim air"
+          }
+        ]
+      },
+      {
+        "pad": 4,
+        "machine_key": "cp_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Noise Tone",
+            "value": 68,
+            "intent": "open clap tone"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Decay",
+            "value": 40,
+            "intent": "short clap cloud"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Clap Decay",
+            "value": 46,
+            "intent": "deep but controlled clap"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 28,
+            "intent": "classic room send"
+          }
+        ]
+      },
+      {
+        "pad": 5,
+        "machine_key": "bt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 48,
+            "intent": "low tom support"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 58,
+            "intent": "rounded bass tom"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Level",
+            "value": 24,
+            "intent": "barely audible skin"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 70,
+            "intent": "warm tom focus"
+          }
+        ]
+      },
+      {
+        "pad": 6,
+        "machine_key": "xt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 46,
+            "intent": "low auxiliary tom"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 52,
+            "intent": "short rolling tail"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Sweep Depth",
+            "value": 20,
+            "intent": "gentle pitch motion"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 16,
+            "intent": "subtle tom room"
+          }
+        ]
+      },
+      {
+        "pad": 7,
+        "machine_key": "xt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 58,
+            "intent": "mid tom response"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 46,
+            "intent": "controlled body"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Level",
+            "value": 18,
+            "intent": "soft attack noise"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 10,
+            "intent": "tiny echo support"
+          }
+        ]
+      },
+      {
+        "pad": 8,
+        "machine_key": "xt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 72,
+            "intent": "high tom accent"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 40,
+            "intent": "short high tom"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Tone",
+            "value": 58,
+            "intent": "rounded attack tone"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Resonance",
+            "value": 18,
+            "intent": "mild ring"
+          }
+        ]
+      },
+      {
+        "pad": 9,
+        "machine_key": "ch_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 74,
+            "intent": "closed hat body"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 24,
+            "intent": "tight closed hat"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Color",
+            "value": 44,
+            "intent": "dusty metal color"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Pan",
+            "value": 54,
+            "intent": "slight left placement"
+          }
+        ]
+      },
+      {
+        "pad": 10,
+        "machine_key": "oh_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 70,
+            "intent": "open hat pitch"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 44,
+            "intent": "controlled open tail"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Color",
+            "value": 50,
+            "intent": "warm open metal"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 24,
+            "intent": "open hat air"
+          }
+        ]
+      },
+      {
+        "pad": 11,
+        "machine_key": "cy_ride",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 62,
+            "intent": "ride sits behind hats"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Tail Decay",
+            "value": 50,
+            "intent": "medium ride tail"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Hit Decay",
+            "value": 30,
+            "intent": "short stick click"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 84,
+            "intent": "soften ride top"
+          }
+        ]
+      },
+      {
+        "pad": 12,
+        "machine_key": "cb_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 66,
+            "intent": "muted cowbell pitch"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay Time",
+            "value": 32,
+            "intent": "short bell tail"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Detune",
+            "value": 22,
+            "intent": "slight analog wobble"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 14,
+            "intent": "small syncopated echo"
+          }
+        ]
+      }
+    ]
+  },
+  "flow-shift": {
+    "name": "flow-shift",
+    "label": "Flow Shift",
+    "description": "Machine-switch discovery kit with acoustic kick weight and synth-engine motion.",
+    "pads": [
+      {
+        "pad": 1,
+        "machine_key": "bd_acoustic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 50,
+            "intent": "round acoustic low root"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 78,
+            "intent": "longer acoustic body"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Impact",
+            "value": 86,
+            "intent": "front-loaded knock"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 25,
+            "intent": "preserve acoustic kick low end"
+          }
+        ]
+      },
+      {
+        "pad": 2,
+        "machine_key": "sd_acoustic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 56,
+            "intent": "lower acoustic snare pitch"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 42,
+            "intent": "tight shell body"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Level",
+            "value": 52,
+            "intent": "paper noise layer"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 24,
+            "intent": "small live-room tail"
+          }
+        ]
+      },
+      {
+        "pad": 3,
+        "machine_key": "dual_vco",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Osc 1 Tune",
+            "value": 38,
+            "intent": "low synth percussion root"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Balance",
+            "value": 58,
+            "intent": "second oscillator presence"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Bend",
+            "value": 22,
+            "intent": "subtle tonal movement"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 66,
+            "intent": "hold synth below the hats"
+          }
+        ]
+      },
+      {
+        "pad": 4,
+        "machine_key": "sy_chip",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 74,
+            "intent": "digital percussion pitch"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 30,
+            "intent": "short chip transient"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Speed",
+            "value": 86,
+            "intent": "animated chip rate"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 18,
+            "intent": "small digital echo"
+          }
+        ]
+      },
+      {
+        "pad": 5,
+        "machine_key": "bt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 44,
+            "intent": "bass tom undercurrent"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 62,
+            "intent": "rolling low tom"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Sweep Depth",
+            "value": 26,
+            "intent": "gentle downward bend"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 66,
+            "intent": "rounded low tom"
+          }
+        ]
+      },
+      {
+        "pad": 6,
+        "machine_key": "xt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 52,
+            "intent": "low-mid tom answer"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 50,
+            "intent": "short rolling tail"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Sweep Time",
+            "value": 42,
+            "intent": "slower pitch move"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Pan",
+            "value": 46,
+            "intent": "left tom placement"
+          }
+        ]
+      },
+      {
+        "pad": 7,
+        "machine_key": "xt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 66,
+            "intent": "mid tom response"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 42,
+            "intent": "controlled mid body"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Level",
+            "value": 26,
+            "intent": "skin attack noise"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 14,
+            "intent": "syncopated repeat"
+          }
+        ]
+      },
+      {
+        "pad": 8,
+        "machine_key": "ut_impulse",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Attack",
+            "value": 6,
+            "intent": "sharp impulse edge"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 24,
+            "intent": "short utility click"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Polarity",
+            "value": 90,
+            "intent": "forward impulse shape"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Pan",
+            "value": 80,
+            "intent": "right-side accent"
+          }
+        ]
+      },
+      {
+        "pad": 9,
+        "machine_key": "hh_lab",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune 1",
+            "value": 78,
+            "intent": "lab hat top"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay Time",
+            "value": 18,
+            "intent": "tight hat clock"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Tune 5",
+            "value": 92,
+            "intent": "upper partial shimmer"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 104,
+            "intent": "bright but controlled hat"
+          }
+        ]
+      },
+      {
+        "pad": 10,
+        "machine_key": "oh_metallic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 72,
+            "intent": "metallic open hat pitch"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay Time",
+            "value": 40,
+            "intent": "short open wash"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 22,
+            "intent": "club air"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Pan",
+            "value": 70,
+            "intent": "right open lane"
+          }
+        ]
+      },
+      {
+        "pad": 11,
+        "machine_key": "cy_ride",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 60,
+            "intent": "ride behind the groove"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Tail Decay",
+            "value": 44,
+            "intent": "contained ride tail"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Hit Decay",
+            "value": 24,
+            "intent": "short stick click"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 78,
+            "intent": "soften cymbal top"
+          }
+        ]
+      },
+      {
+        "pad": 12,
+        "machine_key": "cb_metallic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 78,
+            "intent": "metal bell punctuation"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay Time",
+            "value": 24,
+            "intent": "short bell tail"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Detune",
+            "value": 38,
+            "intent": "controlled metallic beating"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 16,
+            "intent": "small bell echo"
+          }
+        ]
+      }
+    ]
+  },
+  "hard-groove": {
+    "name": "hard-groove",
+    "label": "Hard Groove",
+    "description": "Punchy rolling groove with aggressive mid percussion and tight hats.",
+    "pads": [
+      {
+        "pad": 1,
+        "machine_key": "bd_sharp",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 54,
+            "intent": "assertive kick root"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 66,
+            "intent": "tight but heavy body"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Tick Level",
+            "value": 54,
+            "intent": "front edge"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Overdrive",
+            "value": 34,
+            "intent": "pushed kick grit"
+          }
+        ]
+      },
+      {
+        "pad": 2,
+        "machine_key": "sd_hard",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 62,
+            "intent": "snappy snare pitch"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 38,
+            "intent": "tight snare body"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Tick Level",
+            "value": 54,
+            "intent": "hard snap"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 18,
+            "intent": "small room slap"
+          }
+        ]
+      },
+      {
+        "pad": 3,
+        "machine_key": "rs_hard",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 68,
+            "intent": "hard rim pitch"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 22,
+            "intent": "short rim"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Tick Level",
+            "value": 58,
+            "intent": "rim attack"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 12,
+            "intent": "groove echo"
+          }
+        ]
+      },
+      {
+        "pad": 4,
+        "machine_key": "cp_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Noise Tone",
+            "value": 74,
+            "intent": "bright clap"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Clap Rate",
+            "value": 70,
+            "intent": "fast flam"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Random Claps",
+            "value": 42,
+            "intent": "loose human edge"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 22,
+            "intent": "club room"
+          }
+        ]
+      },
+      {
+        "pad": 5,
+        "machine_key": "bt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 50,
+            "intent": "groove low tom"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 44,
+            "intent": "short low tom"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Snap Type",
+            "value": 70,
+            "intent": "hard tom attack"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Overdrive",
+            "value": 22,
+            "intent": "tom bite"
+          }
+        ]
+      },
+      {
+        "pad": 6,
+        "machine_key": "xt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 56,
+            "intent": "low tom bounce"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 42,
+            "intent": "short bounce"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Sweep Depth",
+            "value": 42,
+            "intent": "groove pitch hit"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Resonance",
+            "value": 26,
+            "intent": "percussive ring"
+          }
+        ]
+      },
+      {
+        "pad": 7,
+        "machine_key": "xt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 68,
+            "intent": "mid tom answer"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 38,
+            "intent": "short answer"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Level",
+            "value": 32,
+            "intent": "skin attack"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 10,
+            "intent": "tight repeat"
+          }
+        ]
+      },
+      {
+        "pad": 8,
+        "machine_key": "xt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 82,
+            "intent": "high tom stab"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 34,
+            "intent": "quick high tom"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Tone",
+            "value": 72,
+            "intent": "bright attack"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Pan",
+            "value": 76,
+            "intent": "right-side accent"
+          }
+        ]
+      },
+      {
+        "pad": 9,
+        "machine_key": "ch_metallic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 80,
+            "intent": "bright closed hat"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay Time",
+            "value": 16,
+            "intent": "very tight hat"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 100,
+            "intent": "open hat top"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Pan",
+            "value": 46,
+            "intent": "left hat lane"
+          }
+        ]
+      },
+      {
+        "pad": 10,
+        "machine_key": "oh_metallic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 78,
+            "intent": "bright open hat"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay Time",
+            "value": 42,
+            "intent": "tight open hat"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 104,
+            "intent": "cut through"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 16,
+            "intent": "short bright tail"
+          }
+        ]
+      },
+      {
+        "pad": 11,
+        "machine_key": "cy_metallic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 72,
+            "intent": "metallic cymbal hit"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay Time",
+            "value": 36,
+            "intent": "quick cymbal"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Tone",
+            "value": 76,
+            "intent": "forward tone"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 8,
+            "intent": "short accent echo"
+          }
+        ]
+      },
+      {
+        "pad": 12,
+        "machine_key": "cb_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 76,
+            "intent": "classic bell groove"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay Time",
+            "value": 24,
+            "intent": "tight bell"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Detune",
+            "value": 34,
+            "intent": "wide enough to move"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Pan",
+            "value": 82,
+            "intent": "right bell lane"
+          }
+        ]
+      }
+    ]
+  },
+  "hypnotic-pressure": {
+    "name": "hypnotic-pressure",
+    "label": "Hypnotic Pressure",
+    "description": "Reduced, tunneling pressure kit with tonal repetition and restrained tops.",
+    "pads": [
+      {
+        "pad": 1,
+        "machine_key": "bd_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 46,
+            "intent": "low classic pulse"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 80,
+            "intent": "steady sub pressure"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Sweep Time",
+            "value": 34,
+            "intent": "slow kick bend"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 25,
+            "intent": "preserve hypnotic kick low end"
+          }
+        ]
+      },
+      {
+        "pad": 2,
+        "machine_key": "sd_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 50,
+            "intent": "low snare ghost"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 36,
+            "intent": "short ghost body"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Osc Balance",
+            "value": 42,
+            "intent": "rounded oscillator body"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 20,
+            "intent": "background air"
+          }
+        ]
+      },
+      {
+        "pad": 3,
+        "machine_key": "dual_vco",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Osc 1 Tune",
+            "value": 40,
+            "intent": "low tonal tick"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Balance",
+            "value": 54,
+            "intent": "balanced oscillators"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Bend",
+            "value": 18,
+            "intent": "subtle tonal drift"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 64,
+            "intent": "buried synth tick"
+          }
+        ]
+      },
+      {
+        "pad": 4,
+        "machine_key": "cp_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Noise Tone",
+            "value": 48,
+            "intent": "dark clap ghost"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Decay",
+            "value": 34,
+            "intent": "short clap ghost"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Random Claps",
+            "value": 26,
+            "intent": "small variation"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 24,
+            "intent": "distant pulse"
+          }
+        ]
+      },
+      {
+        "pad": 5,
+        "machine_key": "ut_impulse",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Attack",
+            "value": 8,
+            "intent": "tiny impulse click"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 30,
+            "intent": "short impulse body"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Polarity",
+            "value": 64,
+            "intent": "center polarity"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 18,
+            "intent": "repeating impulse"
+          }
+        ]
+      },
+      {
+        "pad": 6,
+        "machine_key": "xt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 44,
+            "intent": "low hypnotic tom"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 60,
+            "intent": "rolling tom body"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Sweep Time",
+            "value": 44,
+            "intent": "slow movement"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Resonance",
+            "value": 30,
+            "intent": "narrow ring"
+          }
+        ]
+      },
+      {
+        "pad": 7,
+        "machine_key": "xt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 62,
+            "intent": "mid hypnotic tom"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 40,
+            "intent": "short tom pulse"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Sweep Depth",
+            "value": 24,
+            "intent": "small repeating bend"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 24,
+            "intent": "hypnotic repeat"
+          }
+        ]
+      },
+      {
+        "pad": 8,
+        "machine_key": "xt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 76,
+            "intent": "high hypnotic tap"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 32,
+            "intent": "short tap"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Sweep Depth",
+            "value": 28,
+            "intent": "small pitch motion"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Pan",
+            "value": 78,
+            "intent": "right tap"
+          }
+        ]
+      },
+      {
+        "pad": 9,
+        "machine_key": "ch_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 62,
+            "intent": "low closed hat"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 18,
+            "intent": "needle hat"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Color",
+            "value": 34,
+            "intent": "muted metal"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 86,
+            "intent": "tucked top"
+          }
+        ]
+      },
+      {
+        "pad": 10,
+        "machine_key": "oh_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 60,
+            "intent": "dark open hat"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 36,
+            "intent": "short open breath"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Color",
+            "value": 30,
+            "intent": "reduced metal"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 18,
+            "intent": "short room"
+          }
+        ]
+      },
+      {
+        "pad": 11,
+        "machine_key": "cy_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 54,
+            "intent": "low cymbal pulse"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 30,
+            "intent": "short cymbal"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Tone",
+            "value": 42,
+            "intent": "muted tone"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 72,
+            "intent": "subdued cymbal"
+          }
+        ]
+      },
+      {
+        "pad": 12,
+        "machine_key": "cb_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 58,
+            "intent": "low bell motif"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay Time",
+            "value": 22,
+            "intent": "short motif"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Detune",
+            "value": 18,
+            "intent": "stable bell"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 26,
+            "intent": "motif repeat"
+          }
+        ]
+      }
+    ]
+  },
+  "mills-drive": {
+    "name": "mills-drive",
+    "label": "Mills Drive",
+    "description": "Fast, urgent, stripped kit with sharp transients and little excess.",
+    "pads": [
+      {
+        "pad": 1,
+        "machine_key": "bd_sharp",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 58,
+            "intent": "fast kick pitch"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 54,
+            "intent": "short urgent body"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Tick Level",
+            "value": 72,
+            "intent": "needle transient"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Overdrive",
+            "value": 30,
+            "intent": "tight drive"
+          }
+        ]
+      },
+      {
+        "pad": 2,
+        "machine_key": "sd_hard",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 66,
+            "intent": "high tight snare"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 26,
+            "intent": "very short snare"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Tick Level",
+            "value": 70,
+            "intent": "snap transient"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 92,
+            "intent": "forward snare"
+          }
+        ]
+      },
+      {
+        "pad": 3,
+        "machine_key": "rs_hard",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 76,
+            "intent": "rim urgency"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 18,
+            "intent": "needle rim"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Tick Level",
+            "value": 76,
+            "intent": "hard rim tick"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Pan",
+            "value": 44,
+            "intent": "left rim lane"
+          }
+        ]
+      },
+      {
+        "pad": 4,
+        "machine_key": "cp_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Noise Tone",
+            "value": 82,
+            "intent": "bright thin clap"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Clap Rate",
+            "value": 82,
+            "intent": "tight flam"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Decay",
+            "value": 24,
+            "intent": "short clap noise"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 12,
+            "intent": "minimal space"
+          }
+        ]
+      },
+      {
+        "pad": 5,
+        "machine_key": "bt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 56,
+            "intent": "fast low tom"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 34,
+            "intent": "short tom"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Snap Type",
+            "value": 84,
+            "intent": "clicky tom attack"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 8,
+            "intent": "tiny repeat"
+          }
+        ]
+      },
+      {
+        "pad": 6,
+        "machine_key": "xt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 64,
+            "intent": "fast low-mid tom"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 30,
+            "intent": "tight tom"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Sweep Depth",
+            "value": 46,
+            "intent": "quick bend"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Pan",
+            "value": 52,
+            "intent": "center tom"
+          }
+        ]
+      },
+      {
+        "pad": 7,
+        "machine_key": "xt_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 76,
+            "intent": "fast mid tom"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 28,
+            "intent": "short response"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Noise Level",
+            "value": 36,
+            "intent": "attack noise"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 10,
+            "intent": "machine repeat"
+          }
+        ]
+      },
+      {
+        "pad": 8,
+        "machine_key": "ut_impulse",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Attack",
+            "value": 4,
+            "intent": "instant impulse"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay",
+            "value": 18,
+            "intent": "tiny impulse"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Polarity",
+            "value": 96,
+            "intent": "forward click"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Pan",
+            "value": 84,
+            "intent": "right impulse"
+          }
+        ]
+      },
+      {
+        "pad": 9,
+        "machine_key": "hh_lab",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune 1",
+            "value": 92,
+            "intent": "high clock hat"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay Time",
+            "value": 10,
+            "intent": "micro hat"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Tune 5",
+            "value": 106,
+            "intent": "upper partial"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Frequency",
+            "value": 116,
+            "intent": "sharp top"
+          }
+        ]
+      },
+      {
+        "pad": 10,
+        "machine_key": "ch_metallic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 88,
+            "intent": "alternate tight hat"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay Time",
+            "value": 12,
+            "intent": "short alternate hat"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Pan",
+            "value": 74,
+            "intent": "right hat lane"
+          },
+          {
+            "section": "FILTER",
+            "parameter": "Filter Resonance",
+            "value": 20,
+            "intent": "thin edge"
+          }
+        ]
+      },
+      {
+        "pad": 11,
+        "machine_key": "cy_metallic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 88,
+            "intent": "thin metallic hit"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay Time",
+            "value": 24,
+            "intent": "short metal hit"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Tone",
+            "value": 92,
+            "intent": "bright transient"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Reverb Send",
+            "value": 10,
+            "intent": "small space"
+          }
+        ]
+      },
+      {
+        "pad": 12,
+        "machine_key": "cb_classic",
+        "parameters": [
+          {
+            "section": "SRC",
+            "parameter": "Tune",
+            "value": 92,
+            "intent": "urgent bell"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Decay Time",
+            "value": 18,
+            "intent": "short bell"
+          },
+          {
+            "section": "SRC",
+            "parameter": "Detune",
+            "value": 26,
+            "intent": "focused beat"
+          },
+          {
+            "section": "AMP",
+            "parameter": "Amp Delay Send",
+            "value": 12,
+            "intent": "tight clock echo"
+          }
+        ]
+      }
+    ]
+  }
+}
