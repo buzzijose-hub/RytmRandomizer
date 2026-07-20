@@ -41,7 +41,7 @@ dev = [
     # mirrored from the [cockpit] and [style] extras below so CI's
     # ``pip install -e .[dev]`` picks them up without chaining extras.
     "msgpack>=1.0.0,<2",
-    "fastapi>=0.110.0,<0.136.3",
+    "fastapi>=0.110.0,!=0.136.3,<0.139.2",
     "httpx>=0.27.0,<1",
     "uvicorn[standard]>=0.27.0",
     "websockets>=12.0",
@@ -70,11 +70,17 @@ style = [
 # the Profile Wizard analyzer, so the cockpit runtime includes the style
 # audio stack. None of these reach the MIDI boundary, so the versions are
 # not Elektron-critical. Pinned with floors that match the reference
-# implementation and keep the JSON protocol drop-in compatible. The upper cap
-# excludes FastAPI 0.136.3, which pip-audit currently flags as MAL-2026-4750.
+# implementation and keep the JSON protocol drop-in compatible. The
+# `!=0.136.3` exclusion skips the single FastAPI release pip-audit flags as
+# MAL-2026-4750 (the rest of the range is clean, so a blanket `<0.136.3` cap
+# would needlessly freeze the sidecar out of newer clean releases); the
+# `<0.139.2` cap tracks the newest release validated against the cockpit
+# sidecar. `.github/dependabot.yml` mirrors the exclusion so dependabot never
+# proposes the flagged release — the two are tie-tested in
+# tests/architecture/test_cockpit_runtime_dependencies.py.
 cockpit = [
     "msgpack>=1.0.0,<2",
-    "fastapi>=0.110.0,<0.136.3",
+    "fastapi>=0.110.0,!=0.136.3,<0.139.2",
     "uvicorn[standard]>=0.27.0",
     "websockets>=12.0",
     "librosa>=0.11,<2",
@@ -312,7 +318,7 @@ requires = [
     "mido==1.3.3",
     "python-rtmidi==1.5.8",
     "msgpack>=1.0.0,<2",
-    "fastapi>=0.110.0,<0.136.3",
+    "fastapi>=0.110.0,!=0.136.3,<0.139.2",
     "uvicorn[standard]>=0.27.0",
     "websockets>=12.0",
     "librosa>=0.11,<2",
@@ -339,7 +345,7 @@ requires = [
     "mido==1.3.3",
     "python-rtmidi==1.5.8",
     "msgpack>=1.0.0,<2",
-    "fastapi>=0.110.0,<0.136.3",
+    "fastapi>=0.110.0,!=0.136.3,<0.139.2",
     "uvicorn[standard]>=0.27.0",
     "websockets>=12.0",
     "librosa>=0.11,<2",
@@ -350,7 +356,7 @@ requires = [
     "mido==1.3.3",
     "python-rtmidi==1.5.8",
     "msgpack>=1.0.0,<2",
-    "fastapi>=0.110.0,<0.136.3",
+    "fastapi>=0.110.0,!=0.136.3,<0.139.2",
     "uvicorn[standard]>=0.27.0",
     "websockets>=12.0",
     "librosa>=0.11,<2",
@@ -390,7 +396,7 @@ requires = [
     "mido==1.3.3",
     "python-rtmidi==1.5.8",
     "msgpack>=1.0.0,<2",
-    "fastapi>=0.110.0,<0.136.3",
+    "fastapi>=0.110.0,!=0.136.3,<0.139.2",
     "uvicorn[standard]>=0.27.0",
     "websockets>=12.0",
     "librosa>=0.11,<2",

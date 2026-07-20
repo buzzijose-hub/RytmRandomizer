@@ -11,7 +11,12 @@ pytestmark = pytest.mark.fast
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-SAFE_FASTAPI_REQUIREMENT = "fastapi>=0.110.0,<0.136.3"
+SAFE_FASTAPI_REQUIREMENT = "fastapi>=0.110.0,!=0.136.3,<0.139.2"
+DEPENDABOT_CONFIG = PROJECT_ROOT / ".github" / "dependabot.yml"
+# The single FastAPI release pip-audit flags as MAL-2026-4750. Excluded from
+# SAFE_FASTAPI_REQUIREMENT via `!=` and mirrored in the dependabot ignore
+# list; the tie-test below keeps the two exclusions from drifting apart.
+FLAGGED_FASTAPI_VERSION = "0.136.3"
 
 
 def _pyproject() -> dict[str, object]:
@@ -93,3 +98,71 @@ def test_cockpit_fastapi_requirement_excludes_flagged_release() -> None:
         "linux": [SAFE_FASTAPI_REQUIREMENT],
         "windows": [SAFE_FASTAPI_REQUIREMENT],
     }
+
+
+def test_safe_fastapi_requirement_excludes_flagged_release() -> None:
+    """The canonical requirement must reject the MAL-2026-4750 release.
+
+    If SAFE_FASTAPI_REQUIREMENT is ever edited so the flagged version
+    slips back inside the allowed range, this fails before pip-audit
+    would catch it in CI.
+    """
+
+    from packaging.requirements import Requirement
+    from packaging.version import Version
+
+    requirement = Requirement(SAFE_FASTAPI_REQUIREMENT)
+    assert Version(FLAGGED_FASTAPI_VERSION) not in requirement.specifier, (
+        f"SAFE_FASTAPI_REQUIREMENT ({SAFE_FASTAPI_REQUIREMENT!r}) admits "
+        f"fastapi {FLAGGED_FASTAPI_VERSION}, which pip-audit flags as "
+        f"MAL-2026-4750. Restore the `!={FLAGGED_FASTAPI_VERSION}` "
+        f"exclusion (or a cap below it)."
+    )
+
+
+def test_dependabot_ignore_covers_flagged_fastapi_release() -> None:
+    """The dependabot ignore list mirrors the pyproject fastapi exclusion.
+
+    Tie-test: the `!=0.136.3` exclusion in pyproject.toml and the fastapi
+    ignore entry in .github/dependabot.yml must never drift apart. Without
+    the ignore entry, dependabot would open a PR proposing the flagged
+    release; without the pyproject exclusion, pip could resolve it.
+    """
+
+    yaml = pytest.importorskip("yaml")
+    from packaging.specifiers import SpecifierSet
+    from packaging.version import Version
+
+    config = yaml.safe_load(DEPENDABOT_CONFIG.read_text(encoding="utf-8"))
+    updates = config.get("updates") or []
+    pip_updates = [update for update in updates if update.get("package-ecosystem") == "pip"]
+    assert pip_updates, (
+        ".github/dependabot.yml has no pip package-ecosystem update block; "
+        "the fastapi ignore entry has nowhere to live."
+    )
+
+    fastapi_entries = [
+        entry
+        for update in pip_updates
+        for entry in (update.get("ignore") or [])
+        if entry.get("dependency-name") == "fastapi"
+    ]
+    assert fastapi_entries, (
+        ".github/dependabot.yml's pip ignore list has no fastapi entry. "
+        f"pyproject.toml excludes fastapi {FLAGGED_FASTAPI_VERSION} "
+        "(MAL-2026-4750); dependabot must mirror that exclusion or it "
+        "will keep proposing the flagged release."
+    )
+
+    flagged = Version(FLAGGED_FASTAPI_VERSION)
+    covered = any(
+        flagged in SpecifierSet(spec)
+        for entry in fastapi_entries
+        for spec in (entry.get("versions") or [])
+    )
+    assert covered, (
+        "The fastapi ignore entry in .github/dependabot.yml does not cover "
+        f"version {FLAGGED_FASTAPI_VERSION}. Its `versions:` specifiers "
+        f"must match the flagged release, e.g. "
+        f'[">={FLAGGED_FASTAPI_VERSION}, <0.136.4"].'
+    )

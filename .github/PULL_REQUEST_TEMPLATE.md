@@ -1,3 +1,5 @@
+<!-- Tiered templates exist for narrow PR classes: data-only calibration PRs may use `?template=calibration-data.md` and report/docs-only PRs `?template=docs-report.md` (both under .github/PULL_REQUEST_TEMPLATE/) appended to the compare URL. Everything else uses this full template. -->
+
 # Summary
 
 <!-- One paragraph: what does this PR do and why? Link the issue / Slack thread / past PR that surfaced it. -->

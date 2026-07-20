@@ -11,6 +11,17 @@ on:
     - cron: "0 6 * * 0"
   workflow_dispatch:
 
+# Cancel superseded in-flight runs of the same ref so a rapid push series
+# only pays for the newest commit. `github.event_name` is part of the group
+# key on purpose: GitHub fires BOTH a `push` run and a `pull_request` run
+# for the same PR head SHA, and the coverage-ratchet auto-commit (see the
+# `Auto-commit ratcheted coverage floor` step below) only happens on the
+# push-event run. Keying by event keeps the two runs in separate groups so
+# the pull_request run can never cancel the push run mid-ratchet.
+concurrency:
+  group: test-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
 # NOTE: This workflow runs six required-check jobs gated by path filters
 # so a docs-only change doesn't burn 30 minutes of CI on the full matrix.
 #
