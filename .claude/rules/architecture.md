@@ -14,7 +14,9 @@ group_runner  scene_runner
 shell.py
 app.py                              <-- top, imports everything
 cli.py                              <-- PASSIVE; sibling of app; NO mido, NO engines
-mido_provider.py                    <-- only constructed by app under --arm
+mido_provider.py                    <-- backend seam; real OUTPUTS only via
+                                        the senders ArmedApply arm boundary
+                                        (inputs open freely — live-but-passive)
 ```
 
 `reports.py` + `inspection.py` are passive read-only formatters; treat them as
@@ -40,7 +42,14 @@ a side-branch off `data/` consumed by `cli.py` and the shell.
    helper -- may import `rytm_hybrid_randomizer_v134`. The V1.34 reference
    behavior is now the JSON goldens under `tests/fixtures/v134_parity/`.
 9. No `import mido` / `from mido` at module top level anywhere in the
-   package. `mido` must be lazy, inside the methods that need it.
+   repo. `mido`/`rtmidi` import only inside `real_midi_adapter.py`,
+   `mido_provider.py`, and (lazily, in-method) `midi_io.py` — enforced
+   repo-wide by `tests/architecture/test_repo_root_perimeter.py`.
+   Outbound transmit (constructing a real output port / defining the
+   hardware send) is confined to the ArmedApply whitelist in
+   `tests/architecture/test_armed_entry_points.py`; opening inputs and
+   enumerating ports is passive and unrestricted. See
+   `.claude/rules/live-but-passive-midi.md`.
 
 ## House style (mechanically enforced)
 

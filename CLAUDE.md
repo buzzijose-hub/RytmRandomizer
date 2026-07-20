@@ -13,7 +13,7 @@
 3. **[`agent-memory/INDEX.md`](agent-memory/INDEX.md)** — shared agent memory (workflow feedback, project facts, reference). Same shape as Claude Code's local memory (`~/.claude/projects/<id>/memory/`); the in-repo store is the canonical version so every agent on every machine reads the same observations. Individual memories are read on demand when their `description` matches the current task.
 4. **[`CONTRIBUTING.md`](CONTRIBUTING.md)** — full developer handbook (read on demand; AGENTS.md links into the right sections).
 5. **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** + **[`docs/ARCHITECTURE_DIAGRAMS.md`](docs/ARCHITECTURE_DIAGRAMS.md)** — architecture standard + 26 mermaid diagrams.
-6. **[`.claude/rules/`](.claude/rules/)** — 11 mandatory rules (architecture, cascade-merge-pattern, coverage-gate-100pct, parity-fixture-discipline, skill-routing, device-protocol-strategy, hardware-pinned-packages, pr-body-conformance-checklist, maximize-parallelization, autonomous-agent-execution, codex-contribution-guide).
+6. **[`.claude/rules/`](.claude/rules/)** — 12 mandatory rules (architecture, cascade-merge-pattern, coverage-gate-100pct, parity-fixture-discipline, skill-routing, device-protocol-strategy, hardware-pinned-packages, live-but-passive-midi, pr-body-conformance-checklist, maximize-parallelization, autonomous-agent-execution, codex-contribution-guide).
 7. **[`.claude/skills/`](.claude/skills/)** — 19 task-specific skills, invokable via `/<skill-name>`.
 
 ## Operational guardrails — apply on every task
@@ -26,8 +26,8 @@
 4. **No new top-level modules** under `rytm_randomizer/`. Use a subpackage. Enforced by `test_no_new_top_level_modules.py`.
 5. **No new sibling device subpackages.** Adding an Elektron device family = one `devices/<family>.py` + three strategy modules under `devices/strategies/`. See [`.claude/rules/device-protocol-strategy.md`](.claude/rules/device-protocol-strategy.md).
 6. **No bare `Any`.** Use `Protocol`, generic dataclasses, or explicit types.
-7. **Lazy MIDI imports.** `mido` and `python-rtmidi` import only inside `real_midi_adapter.py` and `mido_provider.py`.
-8. **Passive default.** `python -m rytm_randomizer.cli ...` never opens a real MIDI port. Only `python -m rytm_randomizer.app --arm` does.
+7. **MIDI import boundary.** `mido`/`python-rtmidi` import only inside `real_midi_adapter.py`, `mido_provider.py`, and (lazily, in-method) `midi_io.py`. Top-level `mido` imports are banned everywhere. Enforced repo-wide by `tests/architecture/test_repo_root_perimeter.py`.
+8. **Live-but-Passive MIDI.** Launch may enumerate ports and open MIDI **inputs** freely (read-only listening — never interrupts device sound output); every **output/transmit** routes through the `senders` ArmedApply seam behind an explicit in-UI arm + confirmation, never auto-re-arms after reconnect, and takes an automatic pre-write backup before any kit/sound mutation. Enforced by `tests/architecture/test_armed_entry_points.py` + `test_repo_root_perimeter.py`. See [`.claude/rules/live-but-passive-midi.md`](.claude/rules/live-but-passive-midi.md).
 9. **No `--no-verify`.** Never bypass pre-commit hooks. Fix the underlying issue.
 10. **PR body must include the 18-gate conformance checklist.** See [`.claude/rules/pr-body-conformance-checklist.md`](.claude/rules/pr-body-conformance-checklist.md).
 11. **Do not pause on chained steps.** Once a multi-step task is approved, execute through to a hard stop (push, PR open, merge, force-push, dep bump, fixture regen). Hard stops are enumerated in [`.claude/rules/autonomous-agent-execution.md`](.claude/rules/autonomous-agent-execution.md).
