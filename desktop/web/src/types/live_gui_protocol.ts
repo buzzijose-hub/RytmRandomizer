@@ -1,6 +1,9 @@
 /**
  * Shared live-GUI protocol types.
  *
+ * GENERATED — edit the Python TypedDicts and re-run
+ * scripts/generate_live_gui_protocol_ts.py.
+ *
  * Source of truth: the sibling TypedDict contracts in
  * `rytm_randomizer/reports/live_gui_*_model.py`.
  * `tests/architecture/test_live_gui_protocol_ts_matches_python_typeddicts.py`
