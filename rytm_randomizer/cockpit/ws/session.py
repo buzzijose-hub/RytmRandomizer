@@ -25,7 +25,11 @@ collaborators return (``HistoryStore.current`` returns a fresh
 Phase 1 scope: one session per process is the only supported shape. The
 WebSocket endpoint binds to this one shared session — multi-tenant
 sessions land in a later spec (the protocol itself is already
-session-id-free, so adding one would not break the wire format).
+session-id-free, so adding one would not break the wire format). Since
+Wave 2b, each *connection* to that one session owns its own bounded
+outbound queue (see :class:`server.ConnectionQueue`); the session-level
+``pending_events`` list survives purely as the handler-facing
+compatibility surface the reader drains into the per-connection queue.
 
 See the spec §"The Three Protocols" for what each field models and how
 the handlers consume them.
@@ -102,14 +106,18 @@ class CockpitSession:
     The wire contract is "ack first, then events" (see the spec § "The
     Three Protocols"). :func:`handlers.handle_command` cannot await the
     emitter before returning the ack dict, so it stashes the queued
-    events here and the server's command loop calls
-    :func:`handlers.drain_pending_events` immediately after writing the
-    ack to the wire. The field is mutated between request/response — this
-    is intentional and matches the Phase-1 single-tenant scope documented
-    in the module docstring above ("one session per process is the only
-    supported shape"). When multi-tenant lands, the per-session
-    ``pending_events`` will move into the per-connection scope so two
-    connections cannot clobber each other's queues.
+    events here and the server's reader loop calls
+    :func:`handlers.drain_pending_events` immediately after enqueueing
+    the ack on the connection's outbound queue.
+
+    Wave 2b resolved the historical multi-connection caveat: this field
+    is no longer the transport buffer — each connection owns a bounded
+    :class:`server.ConnectionQueue` and the reader drains this list into
+    its own queue *synchronously* (the queue-backed emitter contains no
+    await point that yields to the event loop), so two connections can
+    no longer clobber each other's queued events. The field survives as
+    the handler-facing compatibility surface: handlers and the
+    dispatcher keep their exact pre-Wave-2b call shape.
     """
 
     def clear_pending_events(self) -> None:

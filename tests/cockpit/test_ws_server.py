@@ -21,13 +21,16 @@ These tests aim for 100% branch coverage on
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import json
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from starlette.websockets import WebSocketDisconnect
 
 from rytm_randomizer.cockpit.data import (
     PadState,
@@ -49,7 +52,16 @@ from rytm_randomizer.cockpit.ws.protocol import (
     EVENT_SNAPSHOT_CHANGED,
     WS_SUBPROTOCOL,
 )
-from rytm_randomizer.cockpit.ws.server import create_app
+from rytm_randomizer.cockpit.ws.server import (
+    ConnectionQueue,
+    ConnectionRegistry,
+    _parse_envelope,
+    _perform_handshake,
+    _reject_handshake,
+    _resolve_max_message_bytes,
+    _writer_loop,
+    create_app,
+)
 from rytm_randomizer.cockpit.ws.session import CockpitSession
 
 from .conftest import TEST_WS_TOKEN, complete_handshake
@@ -503,3 +515,411 @@ def test_endpoint_round_trip_supports_multiple_commands(session_factory) -> None
             ack = _send_command(ws, f"req-{i}", "set_pad_lock", pad_id=1, locked=bool(i % 2))
             assert ack["ok"] is True
             assert ack["request_id"] == f"req-{i}"
+
+
+# ---------------------------------------------------------------------------
+# Wave 2b — push-capable transport: server-side emits reach the client
+# without a client command, and concurrent connections stay isolated.
+# ---------------------------------------------------------------------------
+
+
+def _await_zero_connections(registry: ConnectionRegistry, timeout: float = 5.0) -> int:
+    """Poll until every endpoint teardown has unregistered its queue."""
+
+    deadline = time.monotonic() + timeout
+    while registry.connection_count and time.monotonic() < deadline:
+        time.sleep(0.01)
+    return registry.connection_count
+
+
+def test_server_push_reaches_client_without_a_command(session_factory) -> None:
+    """A registry broadcast arrives on the wire with no client frame in flight.
+
+    This is the ConnectionManager / live-MIDI-monitor prerequisite: the
+    old command-driven loop could only write after a client command; the
+    writer task must flush a server-side emit on its own.
+    """
+
+    session = session_factory()
+    app = create_app(session, token=TEST_WS_TOKEN)
+    client = TestClient(app)
+
+    with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        _recv_initial_events(ws)
+        # The test thread has no running event loop, so this exercises
+        # the cross-thread (call_soon_threadsafe) broadcast path.
+        delivered = app.state.connection_registry.broadcast_event({"type": "monitor_ping", "n": 1})
+        assert delivered == 1
+        pushed = ws.receive_json()
+
+    assert pushed == {"type": "monitor_ping", "n": 1}
+
+
+def test_two_connections_get_isolated_acks_and_shared_broadcasts(session_factory) -> None:
+    """Per-connection queues: A's ack/events never leak into B's stream.
+
+    B's first post-bootstrap frame is the broadcast — proving the ack
+    (and any events) from A's command were routed only to A's queue.
+    Both connections then see the same broadcast (fan-out of 2).
+    """
+
+    session = session_factory()
+    app = create_app(session, token=TEST_WS_TOKEN)
+    client = TestClient(app)
+    registry = app.state.connection_registry
+
+    with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws_a:
+        _recv_initial_events(ws_a)
+        with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws_b:
+            _recv_initial_events(ws_b)
+            assert registry.connection_count == 2
+
+            ack = _send_command(ws_a, "req-a", "set_pad_lock", pad_id=1, locked=True)
+            assert ack == {"request_id": "req-a", "ok": True}
+
+            delivered = registry.broadcast_event({"type": "monitor_ping", "n": 2})
+            assert delivered == 2
+            assert ws_b.receive_json() == {"type": "monitor_ping", "n": 2}
+            assert ws_a.receive_json() == {"type": "monitor_ping", "n": 2}
+
+    assert _await_zero_connections(registry) == 0
+
+
+def test_broadcast_after_ack_and_events_preserves_fifo_ordering(session_factory) -> None:
+    """ack → command events → later broadcast, in exactly that wire order."""
+
+    profile = _profile()
+    session = session_factory(profile=profile)
+    session.active_profile = profile
+    session.preview_on = True
+    app = create_app(session, token=TEST_WS_TOKEN)
+    client = TestClient(app)
+
+    with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        _recv_initial_events(ws)
+        ack = _send_command(ws, "req-1", "set_depth", depth=0.55)
+        event = ws.receive_json()
+        app.state.connection_registry.broadcast_event({"type": "monitor_ping", "n": 3})
+        pushed = ws.receive_json()
+
+    assert ack["ok"] is True
+    assert event["type"] == EVENT_MUTATION_PREVIEWED
+    assert pushed == {"type": "monitor_ping", "n": 3}
+
+
+def test_create_app_uses_injected_connection_registry(session_factory) -> None:
+    """An injected registry is honoured verbatim (Wave-3 ConnectionManager seam)."""
+
+    registry = ConnectionRegistry(queue_maxsize=8)
+    app = create_app(session_factory(), token=TEST_WS_TOKEN, connection_registry=registry)
+
+    assert app.state.connection_registry is registry
+
+
+def test_create_app_default_registry_is_exposed_on_app_state(session_factory) -> None:
+    """Without injection, a fresh registry is built and published on app.state."""
+
+    app = create_app(session_factory(), token=TEST_WS_TOKEN)
+
+    registry = app.state.connection_registry
+    assert isinstance(registry, ConnectionRegistry)
+    assert registry.connection_count == 0
+
+
+# ---------------------------------------------------------------------------
+# Wave 2b — ConnectionQueue unit coverage: bounding, drop-oldest, closing.
+# ---------------------------------------------------------------------------
+
+
+def test_connection_queue_drops_oldest_when_full() -> None:
+    """Overflow sheds the OLDEST frame; the newest state always survives."""
+
+    async def run() -> tuple[list[int], int]:
+        queue = ConnectionQueue(maxsize=3)
+        for i in range(5):
+            queue.put_frame({"type": "evt", "n": i})
+        size = queue.size
+        frames = [(await queue.get()).frame for _ in range(size)]
+        return [frame["n"] for frame in frames], queue.dropped_count
+
+    survivors, dropped = asyncio.run(run())
+
+    assert survivors == [2, 3, 4]
+    assert dropped == 2
+
+
+def test_connection_queue_under_capacity_never_drops() -> None:
+    """The drop loop is skipped entirely while the queue has headroom."""
+
+    async def run() -> tuple[int, int]:
+        queue = ConnectionQueue(maxsize=3)
+        queue.put_frame({"type": "evt", "n": 0})
+        queue.put_frame({"type": "evt", "n": 1})
+        return queue.size, queue.dropped_count
+
+    size, dropped = asyncio.run(run())
+
+    assert size == 2
+    assert dropped == 0
+
+
+def test_connection_queue_refuses_frames_after_close_tagged_item() -> None:
+    """Once a close-tagged frame is queued, later frames are dropped audibly."""
+
+    async def run() -> tuple[int, int, int | None]:
+        queue = ConnectionQueue(maxsize=4)
+        queue.put_frame({"ok": False, "code": "message_too_large"}, close_code=1009)
+        queue.put_frame({"type": "late-event"})
+        item = await queue.get()
+        return queue.size, queue.dropped_count, item.close_code
+
+    size, dropped, close_code = asyncio.run(run())
+
+    assert size == 0  # the late event never entered the queue
+    assert dropped == 1
+    assert close_code == 1009
+
+
+def test_connection_queue_threadsafe_put_on_the_owning_loop() -> None:
+    """From the owning loop, the thread-safe put is a direct enqueue."""
+
+    async def run() -> int:
+        queue = ConnectionQueue(maxsize=4)
+        queue.put_frame_threadsafe({"type": "evt"})
+        return queue.size
+
+    assert asyncio.run(run()) == 1
+
+
+# ---------------------------------------------------------------------------
+# Wave 2b — ConnectionRegistry unit coverage.
+# ---------------------------------------------------------------------------
+
+
+def test_connection_registry_register_broadcast_unregister_cycle() -> None:
+    """Registration hands out unique ids; broadcast fans out; unregister is idempotent."""
+
+    async def run() -> tuple[bool, int, int, int, int, int, int]:
+        registry = ConnectionRegistry(queue_maxsize=4)
+        id_a, queue_a = registry.register()
+        id_b, queue_b = registry.register()
+        count_live = registry.connection_count
+        reached = registry.broadcast_event({"type": "evt"})
+        registry.unregister(id_a)
+        count_after_one = registry.connection_count
+        registry.unregister(id_a)  # idempotent — teardown paths may race
+        return (
+            id_a != id_b,
+            count_live,
+            reached,
+            queue_a.size,
+            queue_b.size,
+            count_after_one,
+            registry.connection_count,
+        )
+
+    ids_unique, live, reached, size_a, size_b, after_one, after_dup = asyncio.run(run())
+
+    assert ids_unique
+    assert live == 2
+    assert reached == 2
+    assert size_a == 1
+    assert size_b == 1
+    assert after_one == 1
+    assert after_dup == 1
+
+
+def test_connection_registry_broadcast_with_no_connections_is_a_noop() -> None:
+    """Broadcasting into an empty registry returns a fan-out of zero."""
+
+    registry = ConnectionRegistry()
+
+    assert registry.broadcast_event({"type": "evt"}) == 0
+
+
+# ---------------------------------------------------------------------------
+# Wave 2b — writer-loop unit coverage (stub socket; no network).
+# ---------------------------------------------------------------------------
+
+
+class _StubWebSocket:
+    """Duck-typed WebSocket capturing sends/closes, with injectable failures."""
+
+    def __init__(self, *, fail_on_send: bool = False, fail_on_close: bool = False) -> None:
+        self.sent: list[dict] = []
+        self.closed_codes: list[int] = []
+        self._fail_on_send = fail_on_send
+        self._fail_on_close = fail_on_close
+
+    async def send_json(self, frame: dict) -> None:
+        if self._fail_on_send:
+            raise WebSocketDisconnect(code=1006)
+        self.sent.append(frame)
+
+    async def close(self, code: int) -> None:
+        if self._fail_on_close:
+            raise RuntimeError("Cannot call close once a close message has been sent.")
+        self.closed_codes.append(code)
+
+
+def test_writer_loop_sends_frames_in_fifo_order_then_closes() -> None:
+    """Ordinary frames flush in order; a close-tagged item closes and exits."""
+
+    async def run() -> _StubWebSocket:
+        queue = ConnectionQueue(maxsize=8)
+        stub = _StubWebSocket()
+        queue.put_frame({"type": "a"})
+        queue.put_frame({"type": "b"})
+        queue.put_frame({"ok": False, "code": "message_too_large"}, close_code=1009)
+        await _writer_loop(stub, queue)  # type: ignore[arg-type]
+        return stub
+
+    stub = asyncio.run(run())
+
+    assert stub.sent == [
+        {"type": "a"},
+        {"type": "b"},
+        {"ok": False, "code": "message_too_large"},
+    ]
+    assert stub.closed_codes == [1009]
+
+
+def test_writer_loop_exits_when_the_socket_dies_mid_send() -> None:
+    """A disconnect during send ends the writer without touching close."""
+
+    async def run() -> _StubWebSocket:
+        queue = ConnectionQueue(maxsize=8)
+        stub = _StubWebSocket(fail_on_send=True)
+        queue.put_frame({"type": "a"})
+        await _writer_loop(stub, queue)  # type: ignore[arg-type]
+        return stub
+
+    stub = asyncio.run(run())
+
+    assert stub.sent == []
+    assert stub.closed_codes == []
+
+
+def test_writer_loop_swallows_close_failure_on_half_closed_socket() -> None:
+    """A RuntimeError from close() is absorbed — the rejection frame still flushed."""
+
+    async def run() -> _StubWebSocket:
+        queue = ConnectionQueue(maxsize=8)
+        stub = _StubWebSocket(fail_on_close=True)
+        queue.put_frame({"ok": False, "code": "message_too_large"}, close_code=1009)
+        await _writer_loop(stub, queue)  # type: ignore[arg-type]
+        return stub
+
+    stub = asyncio.run(run())
+
+    assert stub.sent == [{"ok": False, "code": "message_too_large"}]
+    assert stub.closed_codes == []
+
+
+# ---------------------------------------------------------------------------
+# Handshake helper edge arms (client vanishes mid-handshake) — stub sockets.
+# ---------------------------------------------------------------------------
+
+
+class _HandshakeStubWebSocket:
+    """Duck-typed socket for the handshake helpers' disconnect edge arms."""
+
+    def __init__(
+        self,
+        *,
+        raise_on_receive: bool = False,
+        fail_on_send: bool = False,
+        fail_on_close: bool = False,
+    ) -> None:
+        self.sent: list[dict] = []
+        self.closed_codes: list[int] = []
+        self._raise_on_receive = raise_on_receive
+        self._fail_on_send = fail_on_send
+        self._fail_on_close = fail_on_close
+
+    async def receive_text(self) -> str:
+        raise WebSocketDisconnect(code=1006)
+
+    async def send_json(self, frame: dict) -> None:
+        if self._fail_on_send:
+            raise WebSocketDisconnect(code=1006)
+        self.sent.append(frame)
+
+    async def close(self, code: int) -> None:
+        if self._fail_on_close:
+            raise RuntimeError("Cannot call close once a close message has been sent.")
+        self.closed_codes.append(code)
+
+
+def test_perform_handshake_returns_false_when_client_disconnects_first() -> None:
+    """A client vanishing before its hello frame skips bootstrap cleanly."""
+
+    stub = _HandshakeStubWebSocket(raise_on_receive=True)
+
+    result = asyncio.run(_perform_handshake(stub, "expected-token"))  # type: ignore[arg-type]
+
+    assert result is False
+    assert stub.sent == []
+
+
+def test_reject_handshake_absorbs_send_failure_on_dead_socket() -> None:
+    """The rejection ack failing to send short-circuits before close."""
+
+    stub = _HandshakeStubWebSocket(fail_on_send=True)
+
+    asyncio.run(_reject_handshake(stub, "auth_required"))  # type: ignore[arg-type]
+
+    assert stub.sent == []
+    assert stub.closed_codes == []
+
+
+def test_reject_handshake_absorbs_close_failure_on_half_closed_socket() -> None:
+    """A close() failure after the ack flushed is swallowed."""
+
+    stub = _HandshakeStubWebSocket(fail_on_close=True)
+
+    asyncio.run(_reject_handshake(stub, "auth_required"))  # type: ignore[arg-type]
+
+    assert stub.sent == [{"ok": False, "code": "auth_required"}]
+    assert stub.closed_codes == []
+
+
+# ---------------------------------------------------------------------------
+# Wave 2b — envelope parsing + size-cap resolution unit coverage.
+# ---------------------------------------------------------------------------
+
+
+def test_parse_envelope_malformed_json_funnels_to_missing_key_path() -> None:
+    assert _parse_envelope("{this is not json") == {"request_id": "", "command": {}}
+
+
+def test_parse_envelope_non_dict_json_funnels_to_missing_key_path() -> None:
+    assert _parse_envelope("[1, 2, 3]") == {"request_id": "", "command": {}}
+
+
+def test_parse_envelope_passes_well_formed_envelopes_through() -> None:
+    raw = json.dumps({"request_id": "req-1", "command": {"type": "regen"}})
+
+    assert _parse_envelope(raw) == {"request_id": "req-1", "command": {"type": "regen"}}
+
+
+def test_resolve_max_message_bytes_unparseable_env_falls_back(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("RYTM_RAND_WS_MAX_MESSAGE_BYTES", "not-a-number")
+
+    assert _resolve_max_message_bytes() == 1 * 1024 * 1024
+
+
+def test_resolve_max_message_bytes_non_positive_env_falls_back(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("RYTM_RAND_WS_MAX_MESSAGE_BYTES", "-5")
+
+    assert _resolve_max_message_bytes() == 1 * 1024 * 1024
+
+
+def test_resolve_max_message_bytes_valid_env_wins(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("RYTM_RAND_WS_MAX_MESSAGE_BYTES", "4096")
+
+    assert _resolve_max_message_bytes() == 4096
