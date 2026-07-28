@@ -3,8 +3,8 @@
 Turn the first hardware-validated Analog Four MKII saved-kit calibration into a guarded writer and connect it to real audio-dependent, four-candidate batch generation. The complete DNA remains available in sidecars while saved-kit SysEx stays honestly limited to Filter2 Resonance.
 
 Closeout status: fresh focused, architecture, full-suite, touched-file
-coverage, parity, lint, typing, dead-code, and mechanical-review results are
-recorded below. The pushed commit SHA, fresh online CI, and fresh reviewer
+coverage, parity, lint, typing, dead-code, mechanical-review, and branch
+publication results are recorded below. Fresh online CI and the fresh reviewer
 verdict remain pending and are not inferred from an earlier tree.
 
 ## What changed
@@ -97,7 +97,8 @@ git diff --check
 - [x] Audio patch-batch CLI focused tests and command-help fixture passed locally.
 - [x] Native decoder abnormal-exit path is process-contained and parent-owned private staging is removed.
 - [x] Audio genome, learning, send-plan, and batch surfaces retain deterministic source/parameter identity when native analysis succeeds.
-- [ ] Pushed commit SHA, fresh online CI, and fresh reviewer verdict: pending.
+- [x] Repair branch pushed; pre-push mechanical gates passed.
+- [ ] Fresh online CI and fresh reviewer verdict: pending.
 
 Hardware validation:
 

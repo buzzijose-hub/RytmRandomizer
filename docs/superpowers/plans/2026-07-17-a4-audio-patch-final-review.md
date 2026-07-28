@@ -3,9 +3,9 @@
 > Status: in-flight
 >
 > Verdict: mechanical gates and strict production typing pass. Gates 3, 14,
-> and 16 still require explicit CODEOWNER acceptance. Push, fresh online
-> checks, the reviewer verdict, and the supervised physical full-plan rehearsal
-> remain pending.
+> and 16 still require explicit CODEOWNER acceptance. The branch is pushed;
+> fresh online checks, the reviewer verdict, and the supervised physical
+> full-plan rehearsal remain pending.
 
 ## Findings Resolved
 
@@ -63,8 +63,7 @@
 - Literal strict Pyright across all 109 touched Python paths: **4,204
   test-harness typing errors**; Gate 3 needs CODEOWNER acceptance or a
   dedicated test-typing cleanup.
-- The pushed commit SHA, online CI, and reviewer status remain pending and will
-  be recorded on PR #214.
+- The pushed SHAs, online CI, and reviewer status are tracked on PR #214.
 
 ## Abstraction
 
@@ -96,8 +95,7 @@ evidence.
 
 ## Remaining Gates
 
-1. Commit and push the locally verified tree.
-2. Synchronize the PR's unchecked Gate 3, 14, and 16 exceptions and request
+1. Synchronize the PR's unchecked Gate 3, 14, and 16 exceptions and request
    explicit CODEOWNER acceptance from Edward Rosado.
-3. Keep the supervised physical 33-row/53-message rehearsal as a separate
+2. Keep the supervised physical 33-row/53-message rehearsal as a separate
    operator-present hardware task.

@@ -2,9 +2,9 @@
 
 > Status: in-flight
 >
-> Local software closeout verified; push, online checks, and fresh reviewer
-> verdict remain pending. Supervised full-plan hardware rehearsal also remains
-> pending.
+> Local closeout and branch publication are verified; fresh online checks,
+> explicit CODEOWNER acceptance, and the reviewer verdict remain pending.
+> Supervised full-plan hardware rehearsal also remains pending.
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:test-driven-development. This plan is structured for one bundled PR with maximum-parallelization sidecar exploration and no stacked PRs, per docs/PLAN_REQUIREMENTS.md Gate 16.
 
 **Goal:** Add a Synplant-inspired audio/description-to-Analog-Four patch genome and a real audio-dependent batch path whose canonical/default invocation produces exactly four deterministic A4 patch candidates, complete DNA sidecars, CC/NRPN live-dial plans, and narrow hardware-validated saved-kit files for Filter2 Resonance.
@@ -141,8 +141,8 @@ remain independent and parallel.
 - V1.34 parity: **685 passed** byte-for-byte.
 - Vulture, strict production-diff Pyright, `git diff --check`, and the mechanical
   review gate: **passed**.
-- The pushed commit SHA, online CI, and reviewer verdict remain pending and
-  will be recorded on PR #214.
+- The branch is pushed. Fresh online CI and the reviewer verdict remain pending
+  and are tracked on PR #214.
 
 ## Plan-Requirements Conformance
 

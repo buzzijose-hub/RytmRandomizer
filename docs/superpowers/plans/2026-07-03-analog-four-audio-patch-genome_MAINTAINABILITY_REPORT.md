@@ -33,14 +33,15 @@ mechanical-review set. The literal strict audit of all 109 touched Python paths
 reports 4,204 dynamic test-harness typing errors and remains a disclosed Gate 3
 reviewer exception.
 Touched production files reached 100% statement and branch coverage across
-7,573 statements and 1,762 branches. The pushed SHA will be recorded on PR #214
-after publication.
+7,573 statements and 1,762 branches. Pushed SHAs and the fresh reviewer verdict
+are tracked on PR #214.
 
 The largest residual constraints are explicit: generated saved-kit SysEx writes
 only Filter2 Resonance until additional A4 parameters complete the same
-hardware-validation sequence, the Windows native decoder can fail safely but is
-not yet reliable, and the guarded 33-row/53-message physical rehearsal remains
-pending. Batch orchestration and verified-reader modules also remain large;
+hardware-validation sequence, Windows native-decoding success remains
+environment-dependent and unestablished, and the guarded 33-row/53-message
+physical rehearsal remains pending. Batch orchestration and verified-reader
+modules also remain large;
 their post-review splits isolate contracts, codec, publication, and ranking,
 but a future narrow refactor can reduce the remaining coordination surfaces
 without changing behavior.

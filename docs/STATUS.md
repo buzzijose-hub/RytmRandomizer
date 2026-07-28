@@ -24,8 +24,7 @@ Last updated: 2026-07-27. This file is a hand-authored snapshot and is meant to 
   modules, `git diff --check`, and the mechanical review gate passed. Literal
   strict checking across all 109 touched Python paths exposes 4,204 dynamic
   test-harness typing errors and is disclosed as a Gate 3 reviewer exception.
-  The pushed SHA and online review state will be recorded on PR #214 after
-  publication.
+  The pushed SHAs and online review state are recorded on PR #214.
 
 - 2026-07-17: The A4 audio-patch feedback loop completed its post-push
   hardening review. Saved-kit rendering now resolves through an optional

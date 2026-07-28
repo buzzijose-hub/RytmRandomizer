@@ -2,9 +2,10 @@
 
 > Status: in-flight
 
-Closeout hardening, touched-file coverage, parity, typing, lint, and mechanical
-review are locally verified. Push, online checks, and a fresh reviewer verdict
-remain pending. The physical full-patch rehearsal also remains pending.
+Closeout hardening, touched-file coverage, parity, typing, lint, mechanical
+review, and branch publication are verified. Fresh online checks and a fresh
+reviewer verdict remain pending. The physical full-patch rehearsal also remains
+pending.
 
 ## Resume This Run
 

@@ -4,7 +4,7 @@
 >
 > Closeout corrections, mechanical gates, and strict production typing are
 > verified. Gates 3, 14, and 16 still require explicit CODEOWNER acceptance.
-> Push, fresh online CI, and the fresh reviewer verdict are pending.
+> The branch is pushed; fresh online CI and the reviewer verdict are pending.
 
 ## Outcome
 
@@ -89,8 +89,7 @@ hardware only through confirmed `python -m rytm_randomizer.app --arm`.
 - Literal strict Pyright across all 109 touched Python paths reports **4,204
   dynamic test-harness typing errors** and remains an explicit Gate 3 reviewer
   exception.
-- The pushed SHA, fresh online CI, and reviewer verdict remain pending and will
-  be recorded on PR #214 after publication.
+- The pushed SHAs, fresh online CI, and reviewer verdict are tracked on PR #214.
 
 The final `git diff --stat` remains the authoritative merge total. No V1.34
 parity fixture or hardware-pinned dependency is documented as changed by this
