@@ -24,6 +24,7 @@ boundary.
 from __future__ import annotations
 
 import time
+from abc import abstractmethod
 from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import Any, Callable, Final, Protocol, runtime_checkable
@@ -90,6 +91,7 @@ class MidiSender(Protocol):
     decides which of the two branches in :func:`send_cc` to take.
     """
 
+    @abstractmethod
     def send(self, message: object) -> None: ...
 
 
@@ -161,7 +163,7 @@ def send_cc(
         sleep(MIDI_MESSAGE_SETTLE_SECONDS)
         return
 
-    import mido  # noqa: PLC0415 - intentional lazy import for import-safety
+    import mido  # pyright: ignore[reportMissingTypeStubs]  # noqa: PLC0415
 
     from .observability.metrics import (  # noqa: PLC0415 - lazy import — keep midi_io/engines import-surface clean
         get_metrics,

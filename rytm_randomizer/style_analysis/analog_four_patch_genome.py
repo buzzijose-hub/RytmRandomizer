@@ -126,6 +126,24 @@ class AnalogFourPatchGenomePayload(TypedDict):
     safety: list[str]
 
 
+def _require_genome_feature_report(value: object) -> FeatureReport:
+    if not isinstance(value, FeatureReport):
+        raise TypeError("report must be a FeatureReport")
+    return value
+
+
+def _require_serializable_patch_genome(value: object) -> AnalogFourPatchGenome:
+    if not isinstance(value, AnalogFourPatchGenome):
+        raise TypeError("genome must be an AnalogFourPatchGenome")
+    return value
+
+
+def _require_patch_candidate(value: object) -> AnalogFourPatchCandidate:
+    if not isinstance(value, AnalogFourPatchCandidate):
+        raise TypeError("candidate must be an AnalogFourPatchCandidate")
+    return value
+
+
 def build_analog_four_patch_genome(
     report: FeatureReport,
     *,
@@ -134,8 +152,7 @@ def build_analog_four_patch_genome(
 ) -> AnalogFourPatchGenome:
     """Build a deterministic passive Analog Four patch genome."""
 
-    if not isinstance(report, FeatureReport):
-        raise TypeError("report must be a FeatureReport")
+    report = _require_genome_feature_report(report)
     if track < ANALOG_FOUR_TRACK_MIN or track > ANALOG_FOUR_TRACK_MAX:
         raise ValueError(f"track must be in {ANALOG_FOUR_TRACK_MIN}..{ANALOG_FOUR_TRACK_MAX}")
     if (
@@ -172,8 +189,7 @@ def analog_four_patch_genome_to_dict(
 ) -> AnalogFourPatchGenomePayload:
     """Return a stable JSON-ready representation of ``genome``."""
 
-    if not isinstance(genome, AnalogFourPatchGenome):
-        raise TypeError("genome must be an AnalogFourPatchGenome")
+    genome = _require_serializable_patch_genome(genome)
     return {
         "version": genome.version,
         "device_id": genome.device_id,
@@ -193,8 +209,7 @@ def analog_four_patch_candidate_to_dict(
 ) -> AnalogFourPatchCandidatePayload:
     """Return a stable JSON-ready representation of ``candidate``."""
 
-    if not isinstance(candidate, AnalogFourPatchCandidate):
-        raise TypeError("candidate must be an AnalogFourPatchCandidate")
+    candidate = _require_patch_candidate(candidate)
     return _candidate_payload(candidate)
 
 

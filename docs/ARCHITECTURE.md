@@ -96,6 +96,7 @@ on one line for an existing module, you probably need a new module instead.
 | `data/param_maps.py`  | Per-machine CC maps, anchors, safe ranges, deltas, zones. Pure data.            |
 | `data/analog_four_midi.py` | Manual-backed Analog Four CC mappings from Appendix D. Pure data.        |
 | `data/analog_four_display.py` | Analog Four front-panel scales, labels, and CC/NRPN-ready patch-value metadata. Pure data. |
+| `data/midi_event_kinds.py` | Canonical typed CC/NRPN event kinds and manual skip-code vocabulary. Pure data. |
 | `data/analog_four_sysex_calibration.py` | Operator-captured Analog Four SysEx field offsets plus immutable hardware-write validation evidence. Pure data. |
 | `data/analog_four_saved_kit_layout.py` | Observed A4 saved-kit family/object, packing, trailer, size, and name-field constants. Pure data. |
 | `data/analog_four_patch_templates.py` | Static Analog Four patch-genome candidate templates and rationale rows. Pure data. |
@@ -117,17 +118,18 @@ on one line for an existing module, you probably need a new module instead.
 | `state/selection.py`  | Frozen target-pad / channel / isolated-pad selection state + transitions.       |
 | `state/a4_soft_capture.py` | Frozen Analog Four passive CC-observation state + pure reducer.          |
 | `state/rytm_cc_observe.py` | Frozen Analog Rytm passive CC/NRPN observation state + pure reducer.    |
+| `behavior/midi_event_plan.py` | Passive shared CC/NRPN event-shape selection and validation contract used by compilers, readers, app guards, and senders. |
 
 ### Middle (runtime core)
 
 | Module                       | Responsibility                                                              |
 | ---------------------------- | --------------------------------------------------------------------------- |
 | `midi_io.py`                 | Leaf MIDI primitives: build CC, send param, apply state. `mido` is lazy.    |
-| `senders/midi_event_plan.py` | Generic CC/NRPN event-plan sender used by generated A4 patch live-dial plans. |
+| `senders/midi_event_plan.py` | Generic CC/NRPN event-plan delivery loop; structural validation is owned by `behavior/midi_event_plan.py`. |
 | `senders/guarded.py`, `senders/hardware.py` | Generic guarded/mock and arm-gated Device plan senders. |
 | `randomization.py`           | Pure randomization core: zone/depth mutation, waveform pick.                |
 | `mock_midi.py`               | In-memory `MockMidiSender` and `MidiMessage` for tests + passive paths.     |
-| `real_midi_adapter.py`       | Protocol boundary: `RealMidiPortProvider`, `RealMidiSender`. NO `mido`.     |
+| `real_midi_adapter.py`       | Protocol boundary: `RealMidiPortProvider`, neutral armed-output `RealMidiOutputProvider`, and `RealMidiSender`. NO `mido`. |
 | `mido_provider.py`           | Concrete `mido`-backed input/output provider. `mido` imported lazily INSIDE methods. |
 | `engines/pad1..4.py`         | Per-pad interactive engines. Dependencies injected, no module globals.      |
 | `engines/analog_rytm_12_pad_shell.py` | All-12-pad style/mutation shell. Consumes rendered style events; sends only through injected sender. |
@@ -156,7 +158,7 @@ on one line for an existing module, you probably need a new module instead.
 | --------------------- | ------------------------------------------------------------------------------- |
 | `shell.py`            | Interactive command loop. Owns the V1.34 command alphabet. Injected deps.       |
 | `cli.py`              | **Passive** report-only CLI. NEVER imports `mido`, `mido_provider`, or engines. |
-| `app.py`              | Top-of-stack entry point. `--arm` wires output to `shell`; `--arm --rytm-12-pad-shell --confirm-rytm-12-pad-send` runs the all-12-pad Rytm style shell; `--arm --rytm-snapshot-shell <file.syx> --confirm-rytm-snapshot-shell-send` runs the all-12-pad current-kit snapshot shell; `--arm --rytm-kit-style --confirm-rytm-kit-send` sends one curated Rytm full-kit recipe; `--arm --rytm-cc-observe` opens only Rytm input and may read or receive a snapshot for labels; `--arm --a4-soft-capture` opens only A4 input and reconstructs CC/NRPN state; `--arm --a4-send-param` sends one manual-backed A4 CC; `--arm --a4-kit-recipe` sends one manual-backed A4 recipe; `--arm --a4-patch-send-plan --batch-manifest <path> --candidate N --confirm-a4-patch-send-plan` hash-verifies and sends one committed generated A4 patch candidate. |
+| `app.py`              | Top-of-stack entry point. `--arm` wires output to `shell`; `--arm --rytm-12-pad-shell --confirm-rytm-12-pad-send` runs the all-12-pad Rytm style shell; `--arm --rytm-snapshot-shell <file.syx> --confirm-rytm-snapshot-shell-send` runs the all-12-pad current-kit snapshot shell; `--arm --rytm-kit-style --confirm-rytm-kit-send` sends one curated Rytm full-kit recipe; `--arm --rytm-cc-observe` opens only Rytm input and may read or receive a snapshot for labels; `--arm --a4-soft-capture` opens only A4 input and reconstructs CC/NRPN state; `--arm --a4-send-param` sends one manual-backed A4 CC; `--arm --a4-kit-recipe` sends one manual-backed A4 recipe; `--arm --a4-patch-send-plan --batch-manifest <path> --candidate N --confirm-a4-patch-send-plan --a4-output-port "<exact configured name>"` hash-verifies and sends one committed generated A4 patch candidate. |
 | `reports/`            | Passive in-memory report package + shared formatter/helper layer, including the manual feedback packet report, the reference-style blueprint report, the Analog Four initialized-baseline, patch genome, patch learning, patch corpus, and patch send-plan reports, the Analog Four OXI macro set planner report, the controller-brain mapping catalog and rehearsal/export reports, the style-performance arc chain through the live render bundle, live cue sheet, live runbook, reference match, snapshot preview, stage packet, stage snapshot-routing handoff, stage rehearsal-state packet, live set cockpit dashboard, live show export packet, live transition timeline, live command deck, live state packet, live analyzer handoff/targets, GUI readiness/session, capture queue/review, sidecar session packets, GUI screen-contract packets, GUI render-tree packets, GUI analyzer-overlay packets, GUI analyzer-frame packets, GUI interaction-script packets, GUI action-reducer packets, GUI controller-state packets, GUI playback-transcript packets, GUI playback-validation packets, GUI test-harness contract/readiness packets, GUI implementation-bridge/desktop-blueprint/desktop-app-plan/desktop-component-contract/desktop-view-model/desktop-render-contract/desktop-render-harness/cockpit-boundary-readiness packets, cockpit send-plan operator-readiness packets, cockpit send-plan rehearsal-surface packets, and the live GUI performance-console chain through live-kit capture workbench, package audition, and operator package, operator review ledger, and payload helpers under `reports/performance_console/`. Static manual feedback facts stay in `data/manual_feedback_packet.py`; static A4 patch-template facts stay in `data/analog_four_patch_templates.py`; static A4 patch-corpus facts stay in `data/analog_four_patch_corpus.py`; static A4 learning facts stay in `data/analog_four_learning.py`; static A4 SysEx calibration facts stay in `data/analog_four_sysex_calibration.py`; static GUI contract facts stay in `data/live_gui_contracts.py`; static controller-brain profiles stay in `data/controller_mapping_profiles.py`; static controller-brain rehearsal scenarios stay in `data/controller_rehearsal_scenarios.py`; repeated report CLI helpers stay in `reports/live_gui_common.py`. |
 | `inspection.py`       | Consolidated passive command-metadata inspection + preview + audit.             |
 | `cockpit/export/analog_four_export_contracts.py` | Shared bounded service/CLI failure vocabulary for passive A4 exports. |
@@ -167,7 +169,7 @@ on one line for an existing module, you probably need a new module instead.
 | `cockpit/export/analog_four_patch_batch_codec.py` | Canonical JSON encoding/decoding and SHA-256 helpers shared by batch writer and reader. |
 | `cockpit/export/analog_four_patch_batch_contracts.py` | Stable batch payload and result contracts. |
 | `cockpit/export/analog_four_patch_batch_publication.py` | Race-safe immutable artifact publication and cooperative lock ownership. |
-| `cockpit/export/analog_four_patch_batch_cli.py` | Registered passive-hardware operator command for one-to-four audio-dependent candidate exports; no MIDI I/O. |
+| `cockpit/export/analog_four_patch_batch_cli.py` | Registered hardware-passive operator command; the documented/default path exports exactly four deterministic audio-dependent candidates and performs no MIDI I/O. |
 | `cockpit/export/analog_four_patch_batch_reader.py` | Strict manifest/sidecar reader that verifies candidate identity, nested hashes, coverage, and event routing before a stored plan can reach the app sender. |
 | `cockpit/export/analog_four_patch_render_rank.py` | Passive acoustic feedback service that compares recorded A4 candidates with the exact batch reference across weighted envelope/timbre features. |
 | `cockpit/export/analog_four_patch_render_rank_cli.py` | Registered local-only render-ranking command; no MIDI or hardware mutation. |
@@ -369,10 +371,16 @@ The audio batch path composes the existing audio extractor, the focused A4
 audio-inference compiler, patch send-plan metadata, and guarded saved-kit
 export. The inference coefficients and feature terms live as immutable facts in
 `data/analog_four_audio_inference.py`; the compiler evaluates that canonical
-table instead of embedding parameter-specific conditionals. It produces one to
-four candidate `.syx`/JSON pairs plus a manifest.
+table instead of embedding parameter-specific conditionals. The
+documented/default workflow produces exactly four deterministic candidate
+`.syx`/JSON pairs plus one manifest; the bounded candidate-count seam can
+produce a leading subset for focused compatibility tests.
 The extractor reads one immutable byte snapshot, hashes it, and decodes that
-same snapshot once into a typed report-and-synthesis measurement record. The
+same snapshot once into a typed report-and-synthesis measurement record. Native
+decoding runs in a spawned child process. An abnormal child exit becomes a
+bounded `inference_failed` result in the parent, which remains alive and removes
+its private audio/SysEx staging directory. This makes Windows failure
+crash-contained; it does not establish reliable Windows native decoding. The
 batch reads the audio and source kit once, works only from private immutable
 snapshots, stages the complete output, and closes private staging before it
 acquires a per-track file lock. Candidate filenames include a provenance-based
@@ -381,9 +389,13 @@ therefore leave unreferenced generation files, but cannot make the prior
 manifest point at a mixed generation. Generation files are write-once and are
 reused only when their bytes match exactly; a conflicting same-generation file
 is rejected. Process interruption may leave unreferenced generation files for
-later cleanup. Lock cleanup runs even while an exception propagates, and a
-cleanup failure is returned either as exception detail or as a warning on an
-otherwise successful committed result with the retained lock metadata path.
+later cleanup. Cooperative acquire/release operations serialize through an
+atomically created sibling gate directory, so a verified owner lock cannot be
+replaced between release verification and unlink. Lock cleanup runs even while
+an exception propagates, and a cleanup failure is returned either as exception
+detail or as a warning on an otherwise successful committed result. Recovery
+diagnostics expose only the lock basename plus bounded process/time/generation
+metadata; hashes and machine-local paths are not logged.
 The sidecar is the complete DNA and CC/NRPN live-dial contract; saved-kit SysEx
 still encodes only hardware-write-validated Filter2 Resonance. This is real
 audio-dependent inference, but not full saved-kit coverage or a claim of
@@ -395,15 +407,24 @@ marker. Before a candidate reaches dry-run or the armed sender, it verifies the
 sidecar byte hash, generation ID, source hash, candidate DNA hash, send-plan
 hash, selected column/label/track, coverage totals, every event's transport
 status, and each parameter's canonical A4 CC or NRPN address. The current
-generated vocabulary is completely
-live-routable (29 CC and 10 NRPN rows in the closest-reference candidate), but
-unknown enum labels remain screen-only and therefore fail closed. Incoming A4
+closest-reference candidate has 33 live-routable rows (23 CC and 10 NRPN).
+Six paired-MSB/LSB CC rows remain manual because their 14-bit conversion has
+not been hardware-verified; unknown enum labels also fail closed. Incoming A4
 soft capture mirrors the transport by retaining one NRPN selector per track and
 applying CC6 data only after a known CC99/CC98 address is complete.
 The armed sender validates the complete event sequence before opening a port,
-paces each of the 59 transport messages by 20 ms, counts only successful
+paces each of the 53 transport messages by 20 ms, counts only successful
 deliveries, and reports exact partial progress plus baseline-reload recovery if
 the port fails during a plan.
+
+The manifest reader and plan validator remain passive. They can feed a mock
+dry-run, but real CC/NRPN delivery is reachable only through
+`python -m rytm_randomizer.app --arm` with the feature-specific confirmation.
+The app validates the complete plan before constructing the real provider.
+Saved-kit export and batch SysEx writing are local-file operations, not MIDI
+SysEx transmission. The local-model copilot can propose staged review metadata,
+but it cannot construct a provider, open a port, or promote its output into a
+hardware-send plan.
 
 The render-ranking service forms the first hardware acoustic feedback loop. It
 requires the original reference bytes to match the batch source hash, verifies
@@ -1123,6 +1144,10 @@ The rules above are mechanically enforced by:
   (every live-GUI dataclass publishes a matching `*Dict` contract, the shared
   TypeScript protocol mirrors those fields, and GUI consumers import the
   shared protocol instead of declaring parallel local interfaces)
+* `tests/architecture/test_analog_four_audio_patch_state_schema.py` (the
+  persisted Analog Four audio-patch run state conforms to its declared JSON
+  schema, including required fields, closed objects, enums, and scalar
+  constraints)
 
 These tests are run by `pytest tests/architecture/` and are wired into the
 `test` job of `.github/workflows/test.yml` so a violation fails the build.

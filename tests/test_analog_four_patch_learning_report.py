@@ -125,7 +125,7 @@ def test_patch_learning_report_audio_source_uses_inferred_audio_genome(
 
     monkeypatch.setattr(
         report_module,
-        "build_analog_four_audio_patch_genome",
+        "build_analog_four_audio_patch_genome_isolated",
         _fake_build_audio_genome,
     )
 
@@ -189,6 +189,9 @@ def test_patch_learning_report_private_transport_helpers_cover_manual_rows() -> 
     )
 
     assert _learning_join_or_none(()) == "none"
+    assert _learning_join_or_none(("Osc1 Tune", "Filter1 Frequency")) == (
+        "Osc1 Tune, Filter1 Frequency"
+    )
     assert _learning_transport_phrase(front_panel_value) == "front-panel only"
     assert _learning_transport_phrase(nrpn_value) == "NRPN 1:99 -> 12"
 

@@ -11,3 +11,8 @@ to pin the first Analog Four MKII saved-kit writer result.
 The renderer test changes the source value to `127` and requires every output
 byte to match the expected hardware file. The project is initialized and the
 fixtures contain no user performance pattern or audio recording.
+
+Jose Buzzi created these sanitized fixtures from disposable initialized-kit
+captures on project-owned hardware specifically for this repository's
+round-trip tests. They contain no commercial sample-pack content and may be
+redistributed under the repository license for test and verification use.

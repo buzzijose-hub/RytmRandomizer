@@ -34,6 +34,10 @@ Every test is fast (file IO + import + a tiny in-memory ProfileModel).
 
 from __future__ import annotations
 
+import ast
+import importlib.util
+import subprocess
+import sys
 from pathlib import Path
 from typing import Final
 
@@ -189,33 +193,103 @@ def test_export_pipeline_has_no_midi_imports() -> None:
     ``real_midi_adapter`` via a lazy chain).
     """
 
-    forbidden_substrings = (
-        "import mido",
-        "from mido",
-        "import rtmidi",
-        "from rtmidi",
-        "import pythonrtmidi",
-        "from pythonrtmidi",
+    forbidden_prefixes = (
+        "mido",
+        "rtmidi",
+        "pythonrtmidi",
         "rytm_randomizer.real_midi_adapter",
         "rytm_randomizer.midi_io",
+        "rytm_randomizer.mido_provider",
         "rytm_randomizer.cockpit.ws",
-        "import socket",
-        "from socket",
-        "import subprocess",
-        "from subprocess",
-        "import asyncio",
-        "from asyncio",
+        "socket",
+        "subprocess",
+        "asyncio",
     )
     violations: list[str] = []
     for path in sorted(EXPORT_ROOT.rglob("*.py")):
-        source = path.read_text(encoding="utf-8")
-        for needle in forbidden_substrings:
-            if needle in source:
-                violations.append(f"{path.relative_to(PROJECT_ROOT)}: {needle}")
+        module_name = ".".join(path.relative_to(PROJECT_ROOT).with_suffix("").parts)
+        package_name = module_name.rpartition(".")[0]
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        imported_modules: list[str] = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                imported_modules.extend(alias.name for alias in node.names)
+            elif isinstance(node, ast.ImportFrom):
+                if node.level:
+                    relative_name = ("." * node.level) + (node.module or "")
+                    imported_modules.append(
+                        importlib.util.resolve_name(relative_name, package_name)
+                    )
+                elif node.module:
+                    imported_modules.append(node.module)
+        for imported_module in imported_modules:
+            if any(
+                imported_module == prefix or imported_module.startswith(f"{prefix}.")
+                for prefix in forbidden_prefixes
+            ):
+                violations.append(f"{path.relative_to(PROJECT_ROOT)}: {imported_module}")
     assert not violations, (
         "rytm_randomizer/cockpit/export/ must remain a pure offline "
         "encoder. Forbidden imports found:\n  " + "\n  ".join(violations)
     )
+
+
+def test_importing_every_export_module_does_not_load_active_midi() -> None:
+    """Every passive export module must remain isolated from active MIDI."""
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import sys; "
+                "import importlib, pkgutil; "
+                "import rytm_randomizer.cockpit.export as export; "
+                "[importlib.import_module(info.name) for info in "
+                "pkgutil.walk_packages(export.__path__, export.__name__ + '.')]; "
+                "forbidden=('mido','rtmidi','rytm_randomizer.midi_io',"
+                "'rytm_randomizer.mido_provider',"
+                "'rytm_randomizer.real_midi_adapter'); "
+                "loaded=tuple(name for name in sys.modules if "
+                "any(name == prefix or name.startswith(prefix + '.') "
+                "for prefix in forbidden)); "
+                "assert not loaded, loaded"
+            ),
+        ],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_importing_export_package_keeps_desktop_audio_ipc_lazy() -> None:
+    """The embedded export package root must not load desktop analysis IPC."""
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import sys; "
+                "import rytm_randomizer.cockpit.export; "
+                "forbidden=('multiprocessing','librosa','soundfile',"
+                "'rytm_randomizer.style_analysis.analog_four_patch_inference'); "
+                "loaded=tuple(name for name in sys.modules if "
+                "any(name == prefix or name.startswith(prefix + '.') "
+                "for prefix in forbidden)); "
+                "assert not loaded, loaded"
+            ),
+        ],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
 
 
 # ---------------------------------------------------------------------------

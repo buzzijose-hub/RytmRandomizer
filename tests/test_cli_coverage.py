@@ -44,6 +44,89 @@ KNOWN_SCENE_KEY = next(iter(SCENE_COMMANDS))
 KNOWN_GROUP_PROFILE_KEY = next(iter(GROUP_PROFILE_METADATA))
 
 
+@pytest.mark.parametrize(
+    ("operation", "message"),
+    (
+        (lambda: cli._require_text_lines(None), "list of strings"),
+        (lambda: cli._require_text_lines(["valid", 1]), "list of strings"),
+        (lambda: cli._require_text(1), "return text"),
+        (lambda: cli._require_no_arg_callable(object(), "missing"), "must be callable"),
+        (lambda: cli._require_status_ok([]), "boolean ok field"),
+        (lambda: cli._require_status_ok({"ok": "yes"}), "boolean ok field"),
+        (lambda: cli._require_command_preview([]), "must be a dictionary"),
+        (
+            lambda: cli._require_command_preview({"validation": []}),
+            "validation must be a dictionary",
+        ),
+        (
+            lambda: cli._require_command_preview({"validation": {"ok": "yes", "errors": []}}),
+            "validation has an invalid shape",
+        ),
+    ),
+)
+def test_cli_runtime_shape_guards_reject_invalid_values(
+    operation,
+    message: str,
+) -> None:
+    with pytest.raises(TypeError, match=message):
+        operation()
+
+
+def test_registry_formatters_reject_inconsistent_existing_sections(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer import registry
+
+    monkeypatch.setattr(
+        registry,
+        "get_registry_section",
+        lambda _section: {
+            "section": "commands",
+            "exists": True,
+            "count": 0,
+            "items": None,
+        },
+    )
+
+    with pytest.raises(TypeError, match="section is missing items"):
+        cli.format_registry_list_report("commands", "commands")
+    with pytest.raises(TypeError, match="section is missing items"):
+        cli.format_registry_search_report("commands", "commands", "query")
+    with pytest.raises(TypeError, match="registry is missing items"):
+        cli.format_preview_command_report("COMMAND")
+
+
+@pytest.mark.parametrize(
+    "formatter",
+    (
+        cli.format_inspect_command_report,
+        cli.format_inspect_scene_report,
+        cli.format_inspect_group_profile_report,
+        cli.format_preview_scene_report,
+        cli.format_preview_group_profile_report,
+    ),
+)
+def test_registry_item_formatters_reject_missing_existing_metadata(
+    formatter,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer import registry
+
+    monkeypatch.setattr(
+        registry,
+        "get_registry_item",
+        lambda _section, key: {
+            "section": "test",
+            "key": str(key),
+            "exists": True,
+            "metadata": None,
+        },
+    )
+
+    with pytest.raises(TypeError, match="missing metadata"):
+        formatter("ITEM")
+
+
 # ---------------------------------------------------------------------------
 # Helper-function coverage (the format_* builders at the top of cli.py).
 # Exercising these directly is the cheapest way to cover lines 8-345 without

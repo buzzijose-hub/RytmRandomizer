@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Final, Literal, TypeAlias, cast
 
 AnalogFourExportErrorCode: TypeAlias = Literal[
@@ -9,6 +10,7 @@ AnalogFourExportErrorCode: TypeAlias = Literal[
     "dependency_missing",
     "inference_failed",
     "input_not_found",
+    "interrupted",
     "invalid_input",
     "overwrite_refused",
     "permission_denied",
@@ -26,6 +28,7 @@ ANALOG_FOUR_EXPORT_ERROR_CODES: Final[frozenset[str]] = frozenset(
         "dependency_missing",
         "inference_failed",
         "input_not_found",
+        "interrupted",
         "invalid_input",
         "overwrite_refused",
         "permission_denied",
@@ -38,6 +41,20 @@ ANALOG_FOUR_EXPORT_ERROR_CODES: Final[frozenset[str]] = frozenset(
 )
 
 _ERROR_CODE_ATTRIBUTE: Final[str] = "error_code"
+
+
+def analog_four_export_path_name(value: object) -> str:
+    """Return a bounded filename for telemetry without trusting caller types."""
+
+    return value.name if isinstance(value, Path) else "<invalid>"
+
+
+def require_analog_four_export_path(value: object, *, field_name: str) -> Path:
+    """Validate one public export path at the recorded service boundary."""
+
+    if not isinstance(value, Path):
+        raise TypeError(f"{field_name} must be a pathlib.Path")
+    return value
 
 
 def attach_analog_four_export_error_code(
@@ -63,6 +80,8 @@ def analog_four_export_error_code(
 __all__ = [
     "ANALOG_FOUR_EXPORT_ERROR_CODES",
     "AnalogFourExportErrorCode",
+    "analog_four_export_path_name",
     "analog_four_export_error_code",
     "attach_analog_four_export_error_code",
+    "require_analog_four_export_path",
 ]

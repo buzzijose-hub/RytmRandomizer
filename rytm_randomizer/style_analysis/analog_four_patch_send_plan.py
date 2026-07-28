@@ -8,16 +8,30 @@ armed caller may send later and any rows that still require front-panel work.
 
 from __future__ import annotations
 
+from abc import abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Protocol, TypedDict
 
+from ..behavior.midi_event_plan import (
+    midi_event_kind_for_addresses,
+    validate_cc_nrpn_event,
+    validate_cc_nrpn_event_plan,
+)
 from ..data.analog_four_display import (
     TRANSPORT_CC_READY,
     TRANSPORT_NRPN_READY,
     TRANSPORT_SCREEN_ONLY,
     TRANSPORT_SCREEN_ONLY_NRPN,
     AnalogFourPatchValue,
+)
+from ..data.midi_event_kinds import (
+    MIDI_EVENT_KIND_CC,
+    MIDI_EVENT_KIND_NRPN,
+    MIDI_EVENT_SKIP_NOT_READY,
+    MIDI_EVENT_SKIP_PAIRED_CC_UNVERIFIED,
+    MidiEventKind,
+    MidiEventSkipCode,
 )
 from .analog_four_patch_genome import (
     ANALOG_FOUR_DEVICE_ID,
@@ -29,7 +43,7 @@ from .analog_four_patch_genome import (
     AnalogFourPatchGenome,
     build_analog_four_patch_genome,
 )
-from .analog_four_patch_inference import build_analog_four_audio_patch_genome
+from .analog_four_patch_inference import build_analog_four_audio_patch_genome_isolated
 from .analog_four_patch_learning import (
     AnalogFourPatchLearningPacket,
     AnalogFourPatchLearningPacketPayload,
@@ -41,8 +55,10 @@ from .feature_report import FeatureReport
 
 ANALOG_FOUR_PATCH_SEND_PLAN_VERSION: Final[str] = "analog-four-patch-send-plan-v1"
 ANALOG_FOUR_PATCH_SEND_PLAN_MODE: Final[str] = "single-sound-live-dial"
-ANALOG_FOUR_PATCH_SEND_KIND_CC: Final[str] = "cc"
-ANALOG_FOUR_PATCH_SEND_KIND_NRPN: Final[str] = "nrpn"
+# Compatibility exports for the report surface. The neutral sender module owns
+# the event-kind vocabulary.
+ANALOG_FOUR_PATCH_SEND_KIND_CC: Final[MidiEventKind] = MIDI_EVENT_KIND_CC
+ANALOG_FOUR_PATCH_SEND_KIND_NRPN: Final[MidiEventKind] = MIDI_EVENT_KIND_NRPN
 ANALOG_FOUR_PATCH_SEND_PLAN_SAFETY: Final[tuple[str, ...]] = (
     "passive read-only patch send plan",
     "preview before armed send",
@@ -70,7 +86,7 @@ class AnalogFourPatchSendEvent:
     encoder: str
     screen_value: str
     midi_value: int
-    message_kind: str
+    message_kind: MidiEventKind
     cc_msb: int | None
     cc_lsb: int | None
     nrpn_address: tuple[int, int] | None
@@ -91,6 +107,7 @@ class AnalogFourPatchManualEvent:
     encoder: str
     screen_value: str
     transport_status: str
+    skip_code: MidiEventSkipCode
     skip_reason: str
     dial_direction: str
     rationale: str
@@ -116,21 +133,24 @@ class AnalogFourPatchTransportPlan(Protocol):
     """Minimal plan surface consumed by dry-run and armed MIDI senders."""
 
     @property
-    def selected_track(self) -> int: ...  # pragma: no cover - typing protocol
+    @abstractmethod
+    def selected_track(self) -> int: ...
 
     @property
-    def selected_candidate(self) -> int: ...  # pragma: no cover - typing protocol
+    @abstractmethod
+    def selected_candidate(self) -> int: ...
 
     @property
-    def selected_label(self) -> str: ...  # pragma: no cover - typing protocol
+    @abstractmethod
+    def selected_label(self) -> str: ...
 
     @property
-    def send_events(
-        self,
-    ) -> tuple[AnalogFourPatchSendEvent, ...]: ...  # pragma: no cover - typing protocol
+    @abstractmethod
+    def send_events(self) -> tuple[AnalogFourPatchSendEvent, ...]: ...
 
     @property
-    def summary(self) -> AnalogFourPatchSendSummary: ...  # pragma: no cover - typing protocol
+    @abstractmethod
+    def summary(self) -> AnalogFourPatchSendSummary: ...
 
 
 @dataclass(frozen=True)
@@ -184,7 +204,7 @@ class AnalogFourPatchSendEventPayload(TypedDict):
     encoder: str
     screen_value: str
     midi_value: int
-    message_kind: str
+    message_kind: MidiEventKind
     cc_msb: int | None
     cc_lsb: int | None
     nrpn_address: list[int] | None
@@ -202,6 +222,7 @@ class AnalogFourPatchManualEventPayload(TypedDict):
     encoder: str
     screen_value: str
     transport_status: str
+    skip_code: MidiEventSkipCode
     skip_reason: str
     dial_direction: str
     rationale: str
@@ -226,6 +247,24 @@ class AnalogFourPatchSendPlanPayload(TypedDict):
     safety: list[str]
 
 
+def _require_send_plan_feature_report(value: object) -> FeatureReport:
+    if not isinstance(value, FeatureReport):
+        raise TypeError("report must be a FeatureReport")
+    return value
+
+
+def _require_send_plan_patch_genome(value: object) -> AnalogFourPatchGenome:
+    if not isinstance(value, AnalogFourPatchGenome):
+        raise TypeError("genome must be an AnalogFourPatchGenome")
+    return value
+
+
+def _require_send_plan(value: object) -> AnalogFourPatchSendPlan:
+    if not isinstance(value, AnalogFourPatchSendPlan):
+        raise TypeError("plan must be an AnalogFourPatchSendPlan")
+    return value
+
+
 def build_analog_four_patch_send_plan(
     report: FeatureReport,
     *,
@@ -234,8 +273,7 @@ def build_analog_four_patch_send_plan(
 ) -> AnalogFourPatchSendPlan:
     """Build a passive A4 patch send plan from a measured reference."""
 
-    if not isinstance(report, FeatureReport):
-        raise TypeError("report must be a FeatureReport")
+    report = _require_send_plan_feature_report(report)
     genome = build_analog_four_patch_genome(report, track=track)
     return build_analog_four_patch_send_plan_from_genome(
         report,
@@ -252,10 +290,8 @@ def build_analog_four_patch_send_plan_from_genome(
 ) -> AnalogFourPatchSendPlan:
     """Compile an already-inferred A4 genome into a passive send plan."""
 
-    if not isinstance(report, FeatureReport):
-        raise TypeError("report must be a FeatureReport")
-    if not isinstance(genome, AnalogFourPatchGenome):
-        raise TypeError("genome must be an AnalogFourPatchGenome")
+    report = _require_send_plan_feature_report(report)
+    genome = _require_send_plan_patch_genome(genome)
     packet = build_analog_four_patch_learning_packet_from_genome(
         report,
         genome,
@@ -303,7 +339,7 @@ def build_analog_four_patch_send_plan_from_source(
             selected_candidate=selected_candidate,
         )
     elif source_flag == "--audio":
-        audio_genome = build_analog_four_audio_patch_genome(
+        audio_genome = build_analog_four_audio_patch_genome_isolated(
             Path(source_value),
             track=track,
         )
@@ -326,8 +362,7 @@ def analog_four_patch_send_plan_to_dict(
 ) -> AnalogFourPatchSendPlanPayload:
     """Return a stable JSON-ready representation of ``plan``."""
 
-    if not isinstance(plan, AnalogFourPatchSendPlan):
-        raise TypeError("plan must be an AnalogFourPatchSendPlan")
+    plan = _require_send_plan(plan)
     return {
         "version": plan.version,
         "device_id": plan.device_id,
@@ -362,11 +397,17 @@ def _split_patch_events(
 
 
 def _is_sendable_value(value: AnalogFourPatchValue) -> bool:
-    return (
-        value.transport_status in _SENDABLE_STATUSES
-        and value.midi_value is not None
-        and (value.cc_msb is not None or value.nrpn_address is not None)
-    )
+    if value.transport_status not in _SENDABLE_STATUSES or value.midi_value is None:
+        return False
+    try:
+        midi_event_kind_for_addresses(
+            cc_msb=value.cc_msb,
+            cc_lsb=value.cc_lsb,
+            nrpn_address=value.nrpn_address,
+        )
+    except ValueError:
+        return False
+    return True
 
 
 def _send_event_from_gene(
@@ -377,7 +418,10 @@ def _send_event_from_gene(
     if value.midi_value is None:
         raise ValueError("sendable Analog Four patch value is missing a MIDI value")
     message_kind = _message_kind_for(value)
-    return AnalogFourPatchSendEvent(
+    cc_msb = value.cc_msb if message_kind == ANALOG_FOUR_PATCH_SEND_KIND_CC else None
+    cc_lsb = value.cc_lsb if message_kind == ANALOG_FOUR_PATCH_SEND_KIND_CC else None
+    nrpn_address = value.nrpn_address if message_kind == ANALOG_FOUR_PATCH_SEND_KIND_NRPN else None
+    event = AnalogFourPatchSendEvent(
         sequence=sequence,
         track=gene.track,
         channel=gene.track - 1,
@@ -387,22 +431,24 @@ def _send_event_from_gene(
         screen_value=value.screen_value,
         midi_value=value.midi_value,
         message_kind=message_kind,
-        cc_msb=value.cc_msb,
-        cc_lsb=value.cc_lsb,
-        nrpn_address=value.nrpn_address,
+        cc_msb=cc_msb,
+        cc_lsb=cc_lsb,
+        nrpn_address=nrpn_address,
         transport_status=value.transport_status,
         dial_direction=value.dial_direction,
         rationale=gene.rationale,
         confidence=gene.confidence,
     )
+    validate_cc_nrpn_event(event)
+    return event
 
 
-def _message_kind_for(value: AnalogFourPatchValue) -> str:
-    if value.cc_msb is not None:
-        return ANALOG_FOUR_PATCH_SEND_KIND_CC
-    if value.nrpn_address is not None:
-        return ANALOG_FOUR_PATCH_SEND_KIND_NRPN
-    raise ValueError("sendable Analog Four patch value has no CC or NRPN address")
+def _message_kind_for(value: AnalogFourPatchValue) -> MidiEventKind:
+    return midi_event_kind_for_addresses(
+        cc_msb=value.cc_msb,
+        cc_lsb=value.cc_lsb,
+        nrpn_address=value.nrpn_address,
+    )
 
 
 def _manual_event_from_gene(
@@ -418,6 +464,7 @@ def _manual_event_from_gene(
         encoder=value.encoder,
         screen_value=value.screen_value,
         transport_status=value.transport_status,
+        skip_code=_skip_code(value),
         skip_reason=_skip_reason(value),
         dial_direction=value.dial_direction,
         rationale=gene.rationale,
@@ -425,7 +472,15 @@ def _manual_event_from_gene(
     )
 
 
+def _skip_code(value: AnalogFourPatchValue) -> MidiEventSkipCode:
+    if value.cc_msb is not None and value.cc_lsb is not None:
+        return MIDI_EVENT_SKIP_PAIRED_CC_UNVERIFIED
+    return MIDI_EVENT_SKIP_NOT_READY
+
+
 def _skip_reason(value: AnalogFourPatchValue) -> str:
+    if value.cc_msb is not None and value.cc_lsb is not None:
+        return "paired CC LSB conversion not hardware-verified"
     if value.transport_status == TRANSPORT_SCREEN_ONLY_NRPN:
         return "NRPN destination ordinal capture pending"
     if value.transport_status in _MANUAL_STATUSES:
@@ -444,6 +499,21 @@ def _build_send_summary(
     total_rows = len(send_events) + len(manual_events)
     sendable_count = len(send_events)
     manual_count = len(manual_events)
+    if manual_count == 0:
+        live_dial_path = "transport-ready"
+        blocking_reason = "none"
+    elif sendable_count > 0:
+        live_dial_path = "partial-live-dial-ready"
+        blocking_reason = (
+            "paired CC LSB conversion requires hardware verification before full live dial-in"
+            if any(
+                event.skip_code == MIDI_EVENT_SKIP_PAIRED_CC_UNVERIFIED for event in manual_events
+            )
+            else packet.live_dial_readiness.blocking_reason
+        )
+    else:
+        live_dial_path = "manual-only"
+        blocking_reason = packet.live_dial_readiness.blocking_reason
     return AnalogFourPatchSendSummary(
         total_rows=total_rows,
         sendable_count=sendable_count,
@@ -454,19 +524,13 @@ def _build_send_summary(
         nrpn_event_count=sum(
             1 for event in send_events if event.message_kind == ANALOG_FOUR_PATCH_SEND_KIND_NRPN
         ),
-        transport_message_count=sum(_transport_message_count(event) for event in send_events),
+        transport_message_count=validate_cc_nrpn_event_plan(send_events),
         ready_percentage=(
             0 if total_rows == 0 else int(round(sendable_count / float(total_rows) * 100.0))
         ),
-        live_dial_path=packet.live_dial_readiness.live_dial_path,
-        blocking_reason=packet.live_dial_readiness.blocking_reason,
+        live_dial_path=live_dial_path,
+        blocking_reason=blocking_reason,
     )
-
-
-def _transport_message_count(event: AnalogFourPatchSendEvent) -> int:
-    if event.message_kind == ANALOG_FOUR_PATCH_SEND_KIND_CC:
-        return 1
-    return 3
 
 
 def _send_summary_payload(
@@ -515,6 +579,7 @@ def _manual_event_payload(event: AnalogFourPatchManualEvent) -> AnalogFourPatchM
         "encoder": event.encoder,
         "screen_value": event.screen_value,
         "transport_status": event.transport_status,
+        "skip_code": event.skip_code,
         "skip_reason": event.skip_reason,
         "dial_direction": event.dial_direction,
         "rationale": event.rationale,

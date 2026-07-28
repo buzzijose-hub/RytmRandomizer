@@ -11,6 +11,7 @@ from typing import Final
 
 from ..cli_registry import CliCommand, register
 from ..data.analog_four_display import AnalogFourPatchValue
+from ..observability.errors import BoundaryError
 from ..style_analysis import (
     StyleAnalysisDependencyError,
     extract_from_description,
@@ -24,7 +25,7 @@ from ..style_analysis.analog_four_patch_genome import (
     build_analog_four_patch_genome,
 )
 from ..style_analysis.analog_four_patch_inference import (
-    build_analog_four_audio_patch_genome,
+    build_analog_four_audio_patch_genome_isolated,
 )
 from ..style_analysis.feature_report import FeatureReport
 from .formatter import SAFETY_SECTION_HEADER, PassiveReportHeader, passive_report_lines
@@ -97,7 +98,7 @@ def build_analog_four_patch_genome_report_from_source(
             selected_candidate=selected_candidate,
         )
     if source_flag == "--audio":
-        audio_genome = build_analog_four_audio_patch_genome(
+        audio_genome = build_analog_four_audio_patch_genome_isolated(
             Path(source_value),
             track=track,
         )
@@ -274,7 +275,13 @@ def _handle_analog_four_patch_genome_report(
             track=track,
             selected_candidate=selected_candidate,
         )
-    except (StyleAnalysisDependencyError, ValueError, TypeError, KeyError) as exc:
+    except (
+        BoundaryError,
+        StyleAnalysisDependencyError,
+        ValueError,
+        TypeError,
+        KeyError,
+    ) as exc:
         sys.stderr.write(f"{_format_patch_genome_error(exc)}\n")
         return 2
 

@@ -548,7 +548,6 @@ _GRANDFATHERED_BARE_CONSTANTS: Final[frozenset[str]] = frozenset(
         "rytm_randomizer/project_status_report.py:PROJECT_STATUS_CHECKS",
         "rytm_randomizer/project_status_report.py:PROJECT_STATUS_SAFETY",
         "rytm_randomizer/project_status_report.py:PUBLIC_API_HARDENING_STATUS",
-        "rytm_randomizer/registry.py:REGISTRY_SECTIONS",
         "rytm_randomizer/reports/__init__.py:ACCEPTED_CANDIDATE",
         "rytm_randomizer/reports/__init__.py:ACCEPTED_PACKET_COVERAGE",
         "rytm_randomizer/reports/__init__.py:ACTIVE_BEHAVIOR_STATUS",

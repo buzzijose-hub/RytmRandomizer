@@ -32,10 +32,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, fields, is_dataclass
 from enum import Enum
-from typing import TypedDict
+from typing import TypedDict, cast
 
 from rytm_randomizer.guardrails.schema import Confidence, SourceType
 
@@ -99,11 +99,16 @@ class FeatureReportPayload(TypedDict):
     derived_at: str
 
 
+def _require_serializable_feature_report(value: object) -> FeatureReport:
+    if not isinstance(value, FeatureReport):
+        raise TypeError("report must be a FeatureReport")
+    return value
+
+
 def feature_report_to_dict(report: FeatureReport) -> FeatureReportPayload:
     """Return the canonical public payload for a measured feature report."""
 
-    if not isinstance(report, FeatureReport):
-        raise TypeError("report must be a FeatureReport")
+    report = _require_serializable_feature_report(report)
     return {
         "source_type": report.source_type.value,
         "confidence": report.confidence.value,
@@ -154,9 +159,10 @@ def _to_canonical(value: object) -> object:
             result[f.name] = _to_canonical(getattr(value, f.name))
         return result
     if isinstance(value, Mapping):
-        return {str(k): _to_canonical(v) for k, v in value.items()}
+        items = cast(Mapping[object, object], value)
+        return {str(key): _to_canonical(item) for key, item in items.items()}
     if isinstance(value, (tuple, list)):
-        return [_to_canonical(v) for v in value]
+        return [_to_canonical(item) for item in cast(Sequence[object], value)]
     if isinstance(value, (str, int, float, bool)) or value is None:
         return value
     raise TypeError(f"_to_canonical: unsupported value type {type(value).__name__!r}")

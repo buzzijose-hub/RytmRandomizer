@@ -27,13 +27,86 @@ sys.path).
 
 from __future__ import annotations
 
+import io
+import logging
 import sys
 import types
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 import pytest
+
+if TYPE_CHECKING:
+    from rytm_randomizer.devices.strategies.analog_four_saved_kit_writer import (
+        AnalogFourSavedKitMutation,
+    )
+    from rytm_randomizer.style_analysis import FeatureReport
+
+
+def analog_four_reference_feature_report(*, derived_at: str) -> FeatureReport:
+    """Build the canonical 134-BPM feature report used across A4 tests."""
+
+    from rytm_randomizer.guardrails.schema import Confidence, SourceType
+    from rytm_randomizer.style_analysis import FeatureReport
+
+    return FeatureReport(
+        source_type=SourceType.SINGLE_TRACK,
+        confidence=Confidence.HIGH,
+        bpm=134.0,
+        tempo_stability=0.91,
+        kick_density=0.48,
+        percussion_density=0.78,
+        low_end_weight=0.42,
+        spectral_brightness=0.63,
+        texture_noise=0.34,
+        energy_arc=(0.18, 0.34, 0.48, 0.72, 0.84, 0.78, 0.61, 0.4),
+        content_hash="",
+        derived_at=derived_at,
+    )
+
+
+def analog_four_saved_kit_mutation(
+    track: int = 1,
+    screen_value: str = "64",
+    parameter: str = "Filter2 Resonance",
+) -> AnalogFourSavedKitMutation:
+    """Build one shared saved-kit mutation record for A4 tests."""
+
+    from rytm_randomizer.devices.strategies.analog_four_saved_kit_writer import (
+        AnalogFourSavedKitMutation,
+    )
+
+    return AnalogFourSavedKitMutation(
+        parameter=parameter,
+        track=track,
+        screen_value=screen_value,
+    )
+
+
+@pytest.fixture
+def isolated_observability() -> Iterator[None]:
+    """Reset A4 metrics and restore package logging after observability tests."""
+
+    from rytm_randomizer.observability.logging import (
+        PACKAGE_LOGGER_NAME,
+        configure_logging,
+    )
+    from rytm_randomizer.observability.metrics import reset_metrics
+
+    package_logger = logging.getLogger(PACKAGE_LOGGER_NAME)
+    reset_metrics()
+    configure_logging(stream=io.StringIO())
+    try:
+        yield
+    finally:
+        for handler in list(package_logger.handlers):
+            package_logger.removeHandler(handler)
+            handler.close()
+        package_logger.addHandler(logging.NullHandler())
+        package_logger.setLevel(logging.NOTSET)
+        package_logger.propagate = False
+        reset_metrics()
 
 
 class _FakeMessage:

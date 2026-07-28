@@ -35,9 +35,10 @@ module performs no I/O and does not import any hardware-facing dependency.
 * ``errors_by_kind`` -- one increment per categorized error at any operator
   boundary. Keyed by a short, human-readable kind string (e.g.
   ``"port_open"``, ``"profile_load"``, ``"guardrail_lookup"``).
-* ``a4_patch_inference_*``, ``a4_patch_render_rank_*``, and
-  ``a4_patch_send_*`` -- RED metrics for the Analog Four audio feedback loop,
-  each with a typed finite error-code vocabulary and cumulative latency.
+* ``a4_patch_inference_*``, ``a4_patch_publication_*``,
+  ``a4_patch_render_rank_*``, and ``a4_patch_send_*`` -- RED metrics for the
+  Analog Four audio feedback loop, each with a typed finite error-code
+  vocabulary and cumulative latency.
 
 One-shot A4 boundaries attach a current snapshot to their structured completion
 or failure log through :meth:`MidiMetrics.format_summary`. Other callers can
@@ -51,11 +52,15 @@ snapshot the same in-process surface explicitly::
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Final, Literal, TypeAlias, TypeVar
 
 __all__ = [
     "AnalogFourPatchInferenceErrorCode",
+    "AnalogFourPatchBatchReadErrorCode",
+    "AnalogFourPatchPublicationErrorCode",
+    "AnalogFourPatchPublicationOperation",
     "AnalogFourPatchRenderRankErrorCode",
     "AnalogFourPatchSendErrorCode",
     "MidiMetrics",
@@ -73,19 +78,46 @@ AnalogFourPatchInferenceErrorCode: TypeAlias = Literal[
     "audio_read_failed",
     "dependency_missing",
     "inference_failed",
+    "interrupted",
     "validation",
 ]
 """Bounded failure categories for direct Analog Four patch inference."""
+
+AnalogFourPatchBatchReadErrorCode: TypeAlias = Literal[
+    "artifact_validation",
+    "input_read_failed",
+    "interrupted",
+    "validation",
+]
+"""Bounded failure categories for verified A4 batch candidate loading."""
 
 AnalogFourPatchRenderRankErrorCode: TypeAlias = Literal[
     "artifact_validation",
     "dependency_missing",
     "input_read_failed",
+    "interrupted",
     "rank_failed",
     "reference_mismatch",
     "validation",
 ]
 """Bounded failure categories for recorded A4 render ranking."""
+
+AnalogFourPatchPublicationOperation: TypeAlias = Literal[
+    "artifact_publish",
+    "lock_acquire",
+    "lock_release",
+]
+"""Bounded operation names for immutable A4 batch publication."""
+
+AnalogFourPatchPublicationErrorCode: TypeAlias = Literal[
+    "artifact_collision",
+    "interrupted",
+    "lock_exists",
+    "read_failed",
+    "release_failed",
+    "write_failed",
+]
+"""Bounded failure categories for immutable A4 batch publication."""
 
 AnalogFourPatchSendErrorCode: TypeAlias = Literal[
     "interrupted",
@@ -149,6 +181,30 @@ class MidiMetrics:
         default_factory=lambda: Counter[AnalogFourPatchInferenceErrorCode]()
     )
     a4_patch_inference_duration_ms_total: float = 0.0
+
+    a4_patch_batch_read_count: int = 0
+    a4_patch_batch_read_errors_by_code: Counter[AnalogFourPatchBatchReadErrorCode] = field(
+        default_factory=lambda: Counter[AnalogFourPatchBatchReadErrorCode]()
+    )
+    a4_patch_batch_read_duration_ms_total: float = 0.0
+
+    a4_patch_publication_count: Counter[AnalogFourPatchPublicationOperation] = field(
+        default_factory=lambda: Counter[AnalogFourPatchPublicationOperation]()
+    )
+    a4_patch_publication_errors_by_code: Counter[AnalogFourPatchPublicationErrorCode] = field(
+        default_factory=lambda: Counter[AnalogFourPatchPublicationErrorCode]()
+    )
+    a4_patch_publication_errors_by_operation_and_code: Counter[str] = field(
+        default_factory=lambda: Counter[str]()
+    )
+    a4_patch_publication_duration_ms_total: dict[AnalogFourPatchPublicationOperation, float] = (
+        field(
+            default_factory=lambda: dict[
+                AnalogFourPatchPublicationOperation,
+                float,
+            ]()
+        )
+    )
 
     a4_patch_render_rank_count: int = 0
     a4_patch_render_rank_errors_by_code: Counter[AnalogFourPatchRenderRankErrorCode] = field(
@@ -275,6 +331,35 @@ class MidiMetrics:
         if error_code is not None:
             self.a4_patch_render_rank_errors_by_code[error_code] += 1
 
+    def record_a4_patch_batch_read(
+        self,
+        duration_ms: float,
+        *,
+        error_code: AnalogFourPatchBatchReadErrorCode | None = None,
+    ) -> None:
+        """Record one verified A4 batch candidate load attempt."""
+
+        self.a4_patch_batch_read_count += 1
+        self.a4_patch_batch_read_duration_ms_total += duration_ms
+        if error_code is not None:
+            self.a4_patch_batch_read_errors_by_code[error_code] += 1
+
+    def record_a4_patch_publication(
+        self,
+        operation: AnalogFourPatchPublicationOperation,
+        duration_ms: float,
+        *,
+        error_code: AnalogFourPatchPublicationErrorCode | None = None,
+    ) -> None:
+        """Record one immutable artifact or cooperative-lock operation."""
+
+        self.a4_patch_publication_count[operation] += 1
+        current_duration = self.a4_patch_publication_duration_ms_total.get(operation, 0.0)
+        self.a4_patch_publication_duration_ms_total[operation] = current_duration + duration_ms
+        if error_code is not None:
+            self.a4_patch_publication_errors_by_code[error_code] += 1
+            self.a4_patch_publication_errors_by_operation_and_code[f"{operation}:{error_code}"] += 1
+
     def record_a4_patch_send(
         self,
         duration_ms: float,
@@ -313,6 +398,16 @@ class MidiMetrics:
             f"a4_inference_count={self.a4_patch_inference_count}, "
             f"a4_inference_errors={_format_counter(self.a4_patch_inference_errors_by_code)}, "
             f"a4_inference_duration_ms={self.a4_patch_inference_duration_ms_total:.1f}, "
+            f"a4_batch_read_count={self.a4_patch_batch_read_count}, "
+            f"a4_batch_read_errors={_format_counter(self.a4_patch_batch_read_errors_by_code)}, "
+            f"a4_batch_read_duration_ms={self.a4_patch_batch_read_duration_ms_total:.1f}, "
+            f"a4_publication_count={_format_counter(self.a4_patch_publication_count)}, "
+            f"a4_publication_errors="
+            f"{_format_counter(self.a4_patch_publication_errors_by_code)}, "
+            f"a4_publication_errors_by_operation="
+            f"{_format_counter(self.a4_patch_publication_errors_by_operation_and_code)}, "
+            f"a4_publication_duration_ms="
+            f"{_format_counter(self.a4_patch_publication_duration_ms_total)}, "
             f"a4_render_rank_count={self.a4_patch_render_rank_count}, "
             f"a4_render_rank_errors={_format_counter(self.a4_patch_render_rank_errors_by_code)}, "
             f"a4_render_rank_duration_ms={self.a4_patch_render_rank_duration_ms_total:.1f}, "
@@ -322,7 +417,7 @@ class MidiMetrics:
         )
 
 
-def _format_counter(counter: Counter[_CounterKey]) -> str:
+def _format_counter(counter: Mapping[_CounterKey, int | float]) -> str:
     """Render a :class:`Counter` as a deterministic ``{k:v, ...}`` string.
 
     Keys are sorted (using their natural ordering) so the output is stable
@@ -375,6 +470,13 @@ def reset_metrics() -> None:
     _METRICS.a4_patch_inference_count = 0
     _METRICS.a4_patch_inference_errors_by_code.clear()
     _METRICS.a4_patch_inference_duration_ms_total = 0.0
+    _METRICS.a4_patch_batch_read_count = 0
+    _METRICS.a4_patch_batch_read_errors_by_code.clear()
+    _METRICS.a4_patch_batch_read_duration_ms_total = 0.0
+    _METRICS.a4_patch_publication_count.clear()
+    _METRICS.a4_patch_publication_errors_by_code.clear()
+    _METRICS.a4_patch_publication_errors_by_operation_and_code.clear()
+    _METRICS.a4_patch_publication_duration_ms_total.clear()
     _METRICS.a4_patch_render_rank_count = 0
     _METRICS.a4_patch_render_rank_errors_by_code.clear()
     _METRICS.a4_patch_render_rank_duration_ms_total = 0.0

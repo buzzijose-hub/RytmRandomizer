@@ -48,8 +48,9 @@ that consume those strategies.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
-from typing import Any, ClassVar, Protocol, runtime_checkable
+from abc import abstractmethod
+from collections.abc import Iterable, Sequence
+from typing import Protocol, runtime_checkable
 
 # Capability sub-protocols (Strategy pattern). We REUSE the WS-S6 Protocols
 # at ``rytm_randomizer.snapshot.{decoder,planner}`` instead of redefining
@@ -69,6 +70,7 @@ class MidiOutbox(Protocol):
     knowing which one they are talking to.
     """
 
+    @abstractmethod
     def send(self, message: object) -> None: ...
 
 
@@ -89,9 +91,11 @@ class MessageRenderer(Protocol):
     sender owns the dispatch.
     """
 
-    def to_mock_message(self, event: Any, plan: Any) -> Any: ...
+    @abstractmethod
+    def to_mock_message(self, event: object, plan: object) -> object: ...
 
-    def to_cc_triple(self, event: Any, plan: Any) -> tuple[int, int, int]: ...
+    @abstractmethod
+    def to_cc_triple(self, event: object, plan: object) -> tuple[int, int, int]: ...
 
 
 @runtime_checkable
@@ -143,27 +147,50 @@ class Device(Protocol):
     The convenience methods are kept so WS-S5 callers do not break.
     """
 
-    device_id: ClassVar[str]
-    display_name: ClassVar[str]
-    default_midi_channel: ClassVar[int]
-    track_count: ClassVar[int]
-    sysex_manufacturer_id: ClassVar[bytes]
+    @property
+    @abstractmethod
+    def device_id(self) -> str: ...
 
     @property
-    def snapshot_decoder(self) -> SnapshotDecoder: ...  # pragma: no cover - protocol stub
+    @abstractmethod
+    def display_name(self) -> str: ...
 
     @property
-    def mutation_planner(self) -> MutationPlanner: ...  # pragma: no cover - protocol stub
+    @abstractmethod
+    def default_midi_channel(self) -> int: ...
 
     @property
-    def message_renderer(self) -> MessageRenderer: ...  # pragma: no cover - protocol stub
+    @abstractmethod
+    def track_count(self) -> int: ...
 
-    report_header: ClassVar[str]
+    @property
+    @abstractmethod
+    def sysex_manufacturer_id(self) -> bytes: ...
 
-    def decode_snapshot(self, raw: bytes, slot: int) -> Any: ...
+    @property
+    @abstractmethod
+    def snapshot_decoder(self) -> SnapshotDecoder: ...
 
-    def plan_mutation(self, snapshot: Any, depth: int) -> Any: ...
+    @property
+    @abstractmethod
+    def mutation_planner(self) -> MutationPlanner: ...
 
-    def to_mock_messages(self, plan: Any) -> list[Any]: ...
+    @property
+    @abstractmethod
+    def message_renderer(self) -> MessageRenderer: ...
 
-    def to_cc_messages(self, plan: Any) -> Iterable[tuple[int, int, int]]: ...
+    @property
+    @abstractmethod
+    def report_header(self) -> str: ...
+
+    @abstractmethod
+    def decode_snapshot(self, raw: bytes, slot: int) -> object: ...
+
+    @abstractmethod
+    def plan_mutation(self, snapshot: object, depth: int) -> object: ...
+
+    @abstractmethod
+    def to_mock_messages(self, plan: object) -> Sequence[object]: ...
+
+    @abstractmethod
+    def to_cc_messages(self, plan: object) -> Iterable[tuple[int, int, int]]: ...

@@ -320,17 +320,22 @@ def _screen_and_midi_value(
         _validate_midi_value(screen_target)
         return spec.label_for_value(screen_target), screen_target
 
-    if not isinstance(screen_target, str):
-        raise TypeError("screen_target must be an int or str")
+    screen_label = _require_screen_label(screen_target)
 
     if transport_value is not None:
         _validate_midi_value(transport_value)
-        return screen_target, transport_value
-    label_value = spec.value_for_label(screen_target)
+        return screen_label, transport_value
+    label_value = spec.value_for_label(screen_label)
     if label_value is None or not spec.transport_ready:
-        return screen_target, None
+        return screen_label, None
     _validate_midi_value(label_value)
-    return screen_target, label_value
+    return screen_label, label_value
+
+
+def _require_screen_label(value: object) -> str:
+    if not isinstance(value, str):
+        raise TypeError("screen_target must be an int or str")
+    return value
 
 
 def _format_signed_screen(value: int, spec: AnalogFourDisplaySpec) -> str:

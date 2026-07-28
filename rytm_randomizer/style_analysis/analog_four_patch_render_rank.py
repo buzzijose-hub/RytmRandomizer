@@ -43,14 +43,19 @@ class AnalogFourPatchRenderScore:
     feature_deltas: tuple[AnalogFourRenderFeatureDelta, ...]
 
 
+def _require_audio_synthesis_features(value: object) -> AudioSynthesisFeatures:
+    if not isinstance(value, AudioSynthesisFeatures):
+        raise TypeError("reference must be AudioSynthesisFeatures")
+    return value
+
+
 def rank_analog_four_render_features(
     reference: AudioSynthesisFeatures,
     candidates: tuple[AnalogFourRenderCandidateFeatures, ...],
 ) -> tuple[AnalogFourPatchRenderScore, ...]:
     """Rank already-measured A4 renders without file or manifest I/O."""
 
-    if not isinstance(reference, AudioSynthesisFeatures):
-        raise TypeError("reference must be AudioSynthesisFeatures")
+    reference = _require_audio_synthesis_features(reference)
     if not candidates:
         raise ValueError("at least one measured render candidate is required")
 

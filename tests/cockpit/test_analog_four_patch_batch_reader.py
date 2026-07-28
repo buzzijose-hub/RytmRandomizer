@@ -3,30 +3,149 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
-from rytm_randomizer.guardrails.schema import Confidence, SourceType
+from conftest import analog_four_reference_feature_report
+from rytm_randomizer.cockpit.export.analog_four_patch_batch_contracts import (
+    SYSEX_COVERAGE_STATEMENT,
+)
+from rytm_randomizer.data.analog_four_sysex_calibration import (
+    A4_FILTER2_RESONANCE_PARAMETER,
+)
 from rytm_randomizer.style_analysis.analog_four_patch_genome import (
     analog_four_patch_candidate_to_dict,
+    analog_four_patch_genome_to_dict,
+    build_analog_four_patch_genome,
 )
 from rytm_randomizer.style_analysis.analog_four_patch_send_plan import (
     AnalogFourPatchManualEvent,
+    AnalogFourPatchSendEvent,
     AnalogFourPatchSendPlan,
+    AnalogFourPatchSendSummary,
     analog_four_patch_send_plan_to_dict,
-    build_analog_four_patch_send_plan,
+    build_analog_four_patch_send_plan_from_genome,
 )
 from rytm_randomizer.style_analysis.feature_report import FeatureReport
 
 pytestmark = pytest.mark.fast
 
 AUDIO_SHA256 = "a" * 64
+SOURCE_KIT_SHA256 = "b" * 64
+SYSEX_BYTES = b"\xf0\x00\x20\x3c\x06\x00\x01\x02\x03\xf7"
 EXPECTED_CANDIDATE_1_TRANSPORT_SHA256 = (
-    "4eb68d3f0ad742c55bf1f383220c323ce92e9b856b596432d45d0af3325e095b"
+    "1e121e7a1834cee209502fed4ded31896f9367fb47690b3f293d9a52a0e5e0d3"
 )
+_COVERAGE_FIELDS = (
+    "dna_row_count",
+    "sysex_encoded_row_count",
+    "deferred_row_count",
+    "sendable_row_count",
+    "manual_row_count",
+)
+
+
+def test_candidate_coverage_requires_encoded_and_deferred_rows_to_cover_dna() -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        _verify_coverage,
+    )
+
+    counts = {
+        "dna_row_count": 2,
+        "sysex_encoded_row_count": 0,
+        "deferred_row_count": 0,
+        "sendable_row_count": 1,
+        "manual_row_count": 1,
+    }
+    candidate = {"coverage_counts": counts}
+    sidecar = {
+        "coverage_counts": counts,
+        "hardware_applied_rows": [],
+        "deferred_rows": [],
+    }
+    summary = AnalogFourPatchSendSummary(
+        total_rows=2,
+        sendable_count=1,
+        manual_count=1,
+        cc_event_count=1,
+        nrpn_event_count=0,
+        transport_message_count=1,
+        ready_percentage=50,
+        live_dial_path="app --arm",
+        blocking_reason=None,
+    )
+
+    with pytest.raises(ValueError, match="do not cover the complete DNA"):
+        _verify_coverage(candidate, sidecar, summary)
+
+
+def test_reader_records_verified_and_failed_outcomes(
+    tmp_path: Path,
+    isolated_observability: None,
+) -> None:
+    assert isolated_observability is None
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+    from rytm_randomizer.observability.logging import configure_logging
+    from rytm_randomizer.observability.metrics import get_metrics
+
+    manifest_path, _manifest, _sidecar = _write_batch(tmp_path)
+    stream = io.StringIO()
+    configure_logging(level="DEBUG", json=True, stream=stream)
+
+    load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
+    with pytest.raises(TypeError, match="candidate"):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=True)
+
+    metrics = get_metrics()
+    assert metrics.a4_patch_batch_read_count == 2
+    assert metrics.a4_patch_batch_read_errors_by_code["validation"] == 1
+    records = [json.loads(line) for line in stream.getvalue().splitlines()]
+    terminal = [
+        record
+        for record in records
+        if record.get("message")
+        in {
+            "Analog Four patch batch candidate verified",
+            "Analog Four patch batch candidate verification failed",
+        }
+    ]
+    assert [record["outcome"] for record in terminal] == ["verified", "failed"]
+    assert all(record["manifest_name"] == manifest_path.name for record in terminal)
+
+
+@pytest.mark.parametrize("exception_type", [KeyboardInterrupt, SystemExit])
+def test_reader_records_interrupted_failure_telemetry(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    isolated_observability: None,
+    exception_type: type[BaseException],
+) -> None:
+    assert isolated_observability is None
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_reader as reader
+    from rytm_randomizer.observability.metrics import get_metrics
+
+    def interrupt(_manifest_path: Path, *, candidate: int) -> None:
+        del candidate
+        raise exception_type()
+
+    monkeypatch.setattr(reader, "_load_analog_four_patch_batch_candidate", interrupt)
+
+    with pytest.raises(exception_type):
+        reader.load_analog_four_patch_batch_candidate(
+            tmp_path / "batch.json",
+            candidate=1,
+        )
+
+    metrics = get_metrics()
+    assert metrics.a4_patch_batch_read_count == 1
+    assert metrics.a4_patch_batch_read_errors_by_code["interrupted"] == 1
 
 
 def _json_bytes(payload: object) -> bytes:
@@ -38,18 +157,7 @@ def _sha256(data: bytes) -> str:
 
 
 def _reference_report() -> FeatureReport:
-    return FeatureReport(
-        source_type=SourceType.SINGLE_TRACK,
-        confidence=Confidence.HIGH,
-        bpm=134.0,
-        tempo_stability=0.91,
-        kick_density=0.48,
-        percussion_density=0.78,
-        low_end_weight=0.42,
-        spectral_brightness=0.63,
-        texture_noise=0.34,
-        energy_arc=(0.18, 0.34, 0.48, 0.72, 0.84, 0.78, 0.61, 0.4),
-        content_hash="",
+    return analog_four_reference_feature_report(
         derived_at="2026-07-17T00:00:00Z",
     )
 
@@ -60,16 +168,41 @@ def _write_batch(tmp_path: Path) -> tuple[Path, dict[str, object], dict[str, obj
         CANDIDATE_SCHEMA_VERSION,
     )
 
-    plan = build_analog_four_patch_send_plan(
-        _reference_report(),
-        track=2,
+    report = _reference_report()
+    static_genome = build_analog_four_patch_genome(report, track=2, candidate_count=1)
+    feature_report_hash = static_genome.source_hash
+    genome = replace(static_genome, source_hash=AUDIO_SHA256)
+    genome_payload = analog_four_patch_genome_to_dict(genome)
+    genome_sha256 = _sha256(_json_bytes(genome_payload))
+    plan = build_analog_four_patch_send_plan_from_genome(
+        report,
+        genome,
         selected_candidate=1,
     )
     plan_payload = analog_four_patch_send_plan_to_dict(plan)
-    plan_payload["source_hash"] = AUDIO_SHA256
     dna: dict[str, object] = dict(
         analog_four_patch_candidate_to_dict(plan.learning_packet.selected_patch)
     )
+    genes = dna["genes"]
+    assert isinstance(genes, list)
+    resonance_gene = next(
+        gene
+        for gene in genes
+        if isinstance(gene, dict)
+        and isinstance(gene.get("value"), dict)
+        and gene["value"].get("parameter") == A4_FILTER2_RESONANCE_PARAMETER
+    )
+    resonance_value = resonance_gene["value"]
+    assert isinstance(resonance_value, dict)
+    resonance_screen_value = resonance_value["screen_value"]
+    assert isinstance(resonance_screen_value, str)
+    deferred_rows = [
+        {**gene, "deferred_reason": "not hardware-write-validated for saved-kit SysEx"}
+        for gene in genes
+        if isinstance(gene, dict)
+        and isinstance(gene.get("value"), dict)
+        and gene["value"].get("parameter") != A4_FILTER2_RESONANCE_PARAMETER
+    ]
     coverage: dict[str, object] = {
         "dna_row_count": plan.summary.total_rows,
         "sysex_encoded_row_count": 1,
@@ -78,17 +211,57 @@ def _write_batch(tmp_path: Path) -> tuple[Path, dict[str, object], dict[str, obj
         "manual_row_count": plan.summary.manual_count,
     }
     generation_id = "0123456789abcdef0123456789abcdef"
+    sysex_name = "candidate-01.syx"
+    sysex_sha256 = _sha256(SYSEX_BYTES)
+    (tmp_path / sysex_name).write_bytes(SYSEX_BYTES)
     sidecar: dict[str, object] = {
         "schema_version": CANDIDATE_SCHEMA_VERSION,
         "generation_id": generation_id,
+        "audio_source": {"filename": "reference.wav"},
+        "source_kit": {"filename": "initialized-kit.syx"},
         "candidate_dna": dna,
+        "audio_features": {
+            "audio_sha256": AUDIO_SHA256,
+            "duration": 1.0,
+            "attack": 0.1,
+            "decay": 0.2,
+            "sustain": 0.7,
+            "tail": 0.3,
+            "brightness": 0.63,
+            "spectral_flatness": 0.11,
+            "noise": 0.34,
+            "low_end": 0.42,
+            "harmonicity": 0.81,
+            "transient": 0.74,
+            "modulation": 0.22,
+        },
         "dynamic_send_plan": plan_payload,
+        "hardware_applied_rows": [
+            {
+                "parameter": A4_FILTER2_RESONANCE_PARAMETER,
+                "track": 2,
+                "screen_value": resonance_screen_value,
+                "unpacked_offset": 495,
+                "source_unpacked_value": 12,
+                "rendered_unpacked_value": int(resonance_screen_value),
+            }
+        ],
+        "deferred_rows": deferred_rows,
         "coverage_counts": dict(coverage),
+        "hardware_export": {
+            "sysex_filename": sysex_name,
+            "encoded_parameters": [A4_FILTER2_RESONANCE_PARAMETER],
+            "coverage_statement": SYSEX_COVERAGE_STATEMENT,
+        },
         "hashes": {
             "audio_sha256": AUDIO_SHA256,
+            "source_kit_sha256": SOURCE_KIT_SHA256,
+            "genome_sha256": genome_sha256,
             "candidate_dna_sha256": _sha256(_json_bytes(dna)),
             "send_plan_sha256": _sha256(_json_bytes(plan_payload)),
+            "sysex_sha256": sysex_sha256,
         },
+        "safety": [SYSEX_COVERAGE_STATEMENT, "No MIDI or network operation was performed."],
     }
     sidecar_name = "candidate-01.json"
     sidecar_path = tmp_path / sidecar_name
@@ -100,16 +273,27 @@ def _write_batch(tmp_path: Path) -> tuple[Path, dict[str, object], dict[str, obj
         "track": 2,
         "candidate_count": 1,
         "audio_source": {"filename": "reference.wav", "sha256": AUDIO_SHA256},
-        "feature_report_hash": plan.source_hash,
+        "source_kit": {
+            "filename": "initialized-kit.syx",
+            "sha256": SOURCE_KIT_SHA256,
+        },
+        "feature_report_hash": feature_report_hash,
+        "genome_sha256": genome_sha256,
+        "genome": genome_payload,
         "candidates": [
             {
                 "column": 1,
                 "label": plan.selected_label,
+                "filter2_resonance": resonance_screen_value,
+                "sysex_filename": sysex_name,
                 "sidecar_filename": sidecar_name,
+                "sysex_sha256": sysex_sha256,
                 "sidecar_sha256": _sha256(sidecar_bytes),
                 "coverage_counts": dict(coverage),
             }
         ],
+        "coverage_counts": dict(coverage),
+        "safety": [SYSEX_COVERAGE_STATEMENT, "No MIDI or network operation was performed."],
     }
     manifest_path = tmp_path / "batch.json"
     manifest_path.write_bytes(_json_bytes(manifest))
@@ -126,6 +310,12 @@ def _manifest_candidate(manifest: dict[str, object]) -> dict[str, object]:
     candidate = candidates[0]
     assert isinstance(candidate, dict)
     return candidate
+
+
+def _object_field(row: dict[str, object], key: str) -> dict[str, object]:
+    value = row[key]
+    assert isinstance(value, dict)
+    return value
 
 
 def _rehash_sidecar(
@@ -189,9 +379,9 @@ def test_load_batch_candidate_verifies_and_reconstructs_complete_plan(tmp_path: 
     assert selection.plan.selected_track == 2
     assert selection.plan.selected_candidate == 1
     assert selection.plan.selected_label == "Closest reference"
-    assert len(selection.plan.send_events) == 39
-    assert selection.plan.manual_events == ()
-    assert selection.plan.summary.transport_message_count == 59
+    assert len(selection.plan.send_events) == 33
+    assert len(selection.plan.manual_events) == 6
+    assert selection.plan.summary.transport_message_count == 53
 
 
 def test_app_dry_run_sends_exact_hash_verified_batch_candidate(
@@ -218,8 +408,8 @@ def test_app_dry_run_sends_exact_hash_verified_batch_candidate(
     assert "source: batch-manifest generation 0123456789abcdef0123456789abcdef" in captured.out
     assert "track: 2" in captured.out
     assert "candidate: 1 / Closest reference" in captured.out
-    assert "Mock sender captured 59 message(s)." in captured.out
-    assert captured.err == ""
+    assert "Mock sender captured 53 message(s)." in captured.out
+    assert "Analog Four patch batch candidate verified" in captured.err
 
 
 def _expected_transport_messages(plan: AnalogFourPatchSendPlan) -> list[tuple[int, int, int]]:
@@ -289,17 +479,19 @@ def test_app_arm_sends_exact_hash_verified_batch_candidate(
             "--candidate",
             "1",
             "--confirm-a4-patch-send-plan",
+            "--a4-output-port",
+            "Fake A4 Out",
         ]
     )
     captured = capsys.readouterr()
 
     assert exit_code == 0
     assert "batch-manifest generation 0123456789abcdef0123456789abcdef" in captured.out
-    assert captured.err == ""
+    assert "Analog Four patch batch candidate verified" in captured.err
     assert fake_port.closed is True
     from rytm_randomizer.midi_io import MIDI_MESSAGE_SETTLE_SECONDS
 
-    assert sleep_calls == [MIDI_MESSAGE_SETTLE_SECONDS] * 59
+    assert sleep_calls == [MIDI_MESSAGE_SETTLE_SECONDS] * 53
     transport_messages = [
         (message.channel, message.control, message.value) for message in fake_port.sent
     ]
@@ -336,6 +528,8 @@ def test_app_arm_rejects_tampered_batch_before_opening_midi(
             "--batch-manifest",
             str(manifest_path),
             "--confirm-a4-patch-send-plan",
+            "--a4-output-port",
+            "Fake A4 Out",
         ]
     )
 
@@ -386,6 +580,8 @@ def test_app_arm_reports_partial_batch_send_and_recovery(
             "--batch-manifest",
             str(manifest_path),
             "--confirm-a4-patch-send-plan",
+            "--a4-output-port",
+            "Fake A4 Out",
         ]
     )
     captured = capsys.readouterr()
@@ -393,7 +589,7 @@ def test_app_arm_reports_partial_batch_send_and_recovery(
     assert exit_code == 1
     assert len(fake_port.sent) == 5
     assert fake_port.closed is True
-    assert "failed after 5 of 59 messages" in captured.err
+    assert "failed after 5 of 53 messages" in captured.err
     assert "reload the last saved Kit or project before retrying" in captured.err
 
 
@@ -432,6 +628,188 @@ def test_load_batch_candidate_rejects_rehashed_internal_plan_tampering(tmp_path:
         load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
 
 
+def test_load_batch_candidate_rejects_manifest_genome_byte_tampering(
+    tmp_path: Path,
+    isolated_observability: None,
+) -> None:
+    assert isolated_observability is None
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+    from rytm_randomizer.observability.metrics import get_metrics
+
+    manifest_path, manifest, _sidecar = _write_batch(tmp_path)
+    _object_field(manifest, "genome")["mode"] = "tampered"
+    _rewrite_json(manifest_path, manifest)
+
+    with pytest.raises(ValueError, match="genome SHA-256"):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
+
+    assert get_metrics().a4_patch_batch_read_errors_by_code["artifact_validation"] == 1
+
+
+def test_load_batch_candidate_rejects_rehashed_genome_candidate_drift(tmp_path: Path) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+
+    manifest_path, manifest, sidecar = _write_batch(tmp_path)
+    genome = _object_field(manifest, "genome")
+    candidates = genome["candidates"]
+    assert isinstance(candidates, list)
+    candidate = candidates[0]
+    assert isinstance(candidate, dict)
+    candidate["label"] = "Tampered candidate"
+    genome_sha256 = _sha256(_json_bytes(genome))
+    manifest["genome_sha256"] = genome_sha256
+    _object_field(sidecar, "hashes")["genome_sha256"] = genome_sha256
+    _rehash_sidecar(tmp_path, manifest_path, manifest, sidecar)
+
+    with pytest.raises(ValueError, match="candidate DNA does not match"):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
+
+
+def test_load_batch_candidate_rejects_genome_candidate_count_drift(tmp_path: Path) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+
+    manifest_path, manifest, _sidecar = _write_batch(tmp_path)
+    genome = _object_field(manifest, "genome")
+    candidates = genome["candidates"]
+    assert isinstance(candidates, list)
+    candidate = candidates[0]
+    assert isinstance(candidate, dict)
+    candidates.append(dict(candidate))
+    manifest["genome_sha256"] = _sha256(_json_bytes(genome))
+    _rewrite_json(manifest_path, manifest)
+
+    with pytest.raises(ValueError, match="genome candidate_count"):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
+
+
+def test_load_batch_candidate_rejects_candidate_sysex_byte_tampering(tmp_path: Path) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+
+    manifest_path, _manifest, _sidecar = _write_batch(tmp_path)
+    (tmp_path / "candidate-01.syx").write_bytes(SYSEX_BYTES + b"\x00")
+
+    with pytest.raises(ValueError, match="candidate SysEx SHA-256"):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
+
+
+@pytest.mark.parametrize(
+    ("mutate", "expected"),
+    [
+        (lambda manifest: manifest.pop("genome"), r"batch manifest\.genome"),
+        (lambda manifest: manifest.pop("genome_sha256"), "genome_sha256"),
+        (lambda manifest: manifest.pop("source_kit"), r"batch manifest\.source_kit"),
+        (
+            lambda manifest: _object_field(manifest, "source_kit").pop("filename"),
+            "source kit.filename",
+        ),
+        (
+            lambda manifest: _object_field(manifest, "source_kit").pop("sha256"),
+            "source kit.sha256",
+        ),
+        (
+            lambda manifest: _manifest_candidate(manifest).pop("sysex_filename"),
+            "sysex_filename",
+        ),
+        (
+            lambda manifest: _manifest_candidate(manifest).pop("sysex_sha256"),
+            "sysex_sha256",
+        ),
+    ],
+)
+def test_load_batch_candidate_rejects_missing_manifest_provenance(
+    tmp_path: Path,
+    mutate: Callable[[dict[str, object]], object],
+    expected: str,
+) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+
+    manifest_path, manifest, _sidecar = _write_batch(tmp_path)
+    mutate(manifest)
+    _rewrite_json(manifest_path, manifest)
+
+    with pytest.raises(ValueError, match=expected):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
+
+
+@pytest.mark.parametrize(
+    ("mutate", "expected"),
+    [
+        (lambda sidecar: sidecar.pop("audio_source"), r"candidate sidecar\.audio_source"),
+        (lambda sidecar: sidecar.pop("source_kit"), r"candidate sidecar\.source_kit"),
+        (
+            lambda sidecar: _object_field(sidecar, "source_kit").pop("filename"),
+            "candidate source kit.filename",
+        ),
+        (
+            lambda sidecar: _object_field(sidecar, "hashes").pop("source_kit_sha256"),
+            "candidate hashes.source_kit_sha256",
+        ),
+        (
+            lambda sidecar: _object_field(sidecar, "hashes").pop("genome_sha256"),
+            "candidate hashes.genome_sha256",
+        ),
+        (
+            lambda sidecar: _object_field(sidecar, "hashes").pop("sysex_sha256"),
+            "candidate hashes.sysex_sha256",
+        ),
+        (
+            lambda sidecar: sidecar.pop("hardware_export"),
+            r"candidate sidecar\.hardware_export",
+        ),
+    ],
+)
+def test_load_batch_candidate_rejects_missing_sidecar_provenance(
+    tmp_path: Path,
+    mutate: Callable[[dict[str, object]], object],
+    expected: str,
+) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+
+    manifest_path, manifest, sidecar = _write_batch(tmp_path)
+    mutate(sidecar)
+    _rehash_sidecar(tmp_path, manifest_path, manifest, sidecar)
+
+    with pytest.raises(ValueError, match=expected):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
+
+
+@pytest.mark.parametrize(
+    ("field", "replacement", "expected"),
+    [
+        ("filename", "different-kit.syx", "candidate source kit.filename"),
+        ("sha256", "c" * 64, "candidate hashes.source_kit_sha256"),
+    ],
+)
+def test_load_batch_candidate_rejects_source_kit_identity_drift(
+    tmp_path: Path,
+    field: str,
+    replacement: str,
+    expected: str,
+) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+
+    manifest_path, manifest, _sidecar = _write_batch(tmp_path)
+    _object_field(manifest, "source_kit")[field] = replacement
+    _rewrite_json(manifest_path, manifest)
+
+    with pytest.raises(ValueError, match=expected):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
+
+
 @pytest.mark.parametrize(
     ("mutate", "expected"),
     [
@@ -439,6 +817,12 @@ def test_load_batch_candidate_rejects_rehashed_internal_plan_tampering(tmp_path:
         (
             lambda manifest, _sidecar: _manifest_candidate(manifest).update(
                 sidecar_filename="../candidate-01.json"
+            ),
+            "plain filename",
+        ),
+        (
+            lambda manifest, _sidecar: _manifest_candidate(manifest).update(
+                sysex_filename="../candidate-01.syx"
             ),
             "plain filename",
         ),
@@ -527,15 +911,32 @@ def test_reader_rejects_wrong_argument_types(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize("candidate", [0, 5])
-def test_reader_rejects_out_of_range_candidate(tmp_path: Path, candidate: int) -> None:
-    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
-        load_analog_four_patch_batch_candidate,
-    )
+def test_reader_rejects_out_of_range_candidate(
+    tmp_path: Path,
+    candidate: int,
+    monkeypatch: pytest.MonkeyPatch,
+    isolated_observability: None,
+) -> None:
+    assert isolated_observability is None
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_reader as reader
+    from rytm_randomizer.observability.metrics import get_metrics
 
     manifest_path, _manifest, _sidecar = _write_batch(tmp_path)
+    logged: list[dict[str, object]] = []
+    monkeypatch.setattr(
+        reader._logger,
+        "warning",
+        lambda _message, *, extra: logged.append(extra),
+    )
 
     with pytest.raises(ValueError, match="candidate must be in 1..4"):
-        load_analog_four_patch_batch_candidate(manifest_path, candidate=candidate)
+        reader.load_analog_four_patch_batch_candidate(manifest_path, candidate=candidate)
+
+    metrics = get_metrics()
+    assert metrics.a4_patch_batch_read_errors_by_code["validation"] == 1
+    assert not metrics.a4_patch_batch_read_errors_by_code["artifact_validation"]
+    assert logged[0]["fingerprint"] == "a4.patch_batch.read_failed"
+    assert logged[0]["error_code"] == "validation"
 
 
 def test_reader_rejects_resolved_sidecar_escape(
@@ -557,6 +958,28 @@ def test_reader_rejects_resolved_sidecar_escape(
     monkeypatch.setattr(Path, "resolve", resolve_with_escape)
 
     with pytest.raises(ValueError, match="sidecar escapes the batch directory"):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
+
+
+def test_reader_rejects_resolved_sysex_escape(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+
+    manifest_path, _manifest, _sidecar = _write_batch(tmp_path)
+    original_resolve = Path.resolve
+
+    def resolve_with_escape(path: Path, strict: bool = False) -> Path:
+        if path.name == "candidate-01.syx":
+            return tmp_path.parent / path.name
+        return original_resolve(path, strict=strict)
+
+    monkeypatch.setattr(Path, "resolve", resolve_with_escape)
+
+    with pytest.raises(ValueError, match="SysEx escapes the batch directory"):
         load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
 
 
@@ -599,7 +1022,9 @@ def test_reader_rejects_rehashed_send_plan_summary_drift(
         (lambda event: event.update(message_kind="invalid"), "unsupported message_kind"),
         (lambda event: event.update(track=1), "track/channel"),
         (lambda event: event.update(channel=0), "track/channel"),
-        (lambda event: event.update(cc_msb=None), "missing cc_msb"),
+        (lambda event: event.update(cc_msb=None), "missing a CC MSB"),
+        (lambda event: event.update(cc_lsb=50), "verified CC14 transport"),
+        (lambda event: event.update(nrpn_address=[1, 2]), "must not include an NRPN address"),
         (lambda event: event.update(sequence=999), "sequences are not ordered"),
     ],
 )
@@ -626,6 +1051,35 @@ def test_reader_rejects_rehashed_invalid_send_events(
         load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
 
 
+def test_reader_rejects_canonical_mapping_that_requires_paired_cc() -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        _verify_canonical_transport,
+    )
+    from rytm_randomizer.data.midi_event_kinds import MIDI_EVENT_KIND_CC
+
+    event = AnalogFourPatchSendEvent(
+        sequence=1,
+        track=1,
+        channel=0,
+        parameter="Filter1 Frequency",
+        section="FILTERS",
+        encoder="A",
+        screen_value="64.00",
+        midi_value=64,
+        message_kind=MIDI_EVENT_KIND_CC,
+        cc_msb=18,
+        cc_lsb=None,
+        nrpn_address=None,
+        transport_status="cc-ready",
+        dial_direction="set to 64.00",
+        rationale="coverage",
+        confidence="test",
+    )
+
+    with pytest.raises(ValueError, match="requires unverified paired-CC transport"):
+        _verify_canonical_transport(event)
+
+
 def test_reader_rejects_rehashed_nrpn_event_without_address(tmp_path: Path) -> None:
     from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
         load_analog_four_patch_batch_candidate,
@@ -642,7 +1096,22 @@ def test_reader_rejects_rehashed_nrpn_event_without_address(tmp_path: Path) -> N
     nrpn_event["nrpn_address"] = None
     _rehash_sidecar(tmp_path, manifest_path, manifest, sidecar)
 
-    with pytest.raises(ValueError, match="missing nrpn_address"):
+    with pytest.raises(ValueError, match="missing an NRPN address"):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
+
+
+def test_reader_rejects_rehashed_nrpn_event_with_cc_address(tmp_path: Path) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+
+    manifest_path, manifest, sidecar = _write_batch(tmp_path)
+    event, value = _send_event_and_gene_value(sidecar, message_kind="nrpn")
+    event["cc_msb"] = 74
+    value["cc_msb"] = 74
+    _rehash_sidecar(tmp_path, manifest_path, manifest, sidecar)
+
+    with pytest.raises(ValueError, match="must not include a CC address"):
         load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
 
 
@@ -652,7 +1121,7 @@ def test_reader_rejects_rehashed_send_transport_status_mismatch(tmp_path: Path) 
     )
 
     manifest_path, manifest, sidecar = _write_batch(tmp_path)
-    event, _value = _send_event_and_gene_value(sidecar, message_kind="cc")
+    event, _value = _send_event_and_gene_value(sidecar, message_kind="nrpn")
     event["transport_status"] = "screen-only"
     _rehash_sidecar(tmp_path, manifest_path, manifest, sidecar)
 
@@ -701,7 +1170,7 @@ def test_reader_rejects_rehashed_dna_send_event_value_drift(tmp_path: Path) -> N
     )
 
     manifest_path, manifest, sidecar = _write_batch(tmp_path)
-    _event, value = _send_event_and_gene_value(sidecar, message_kind="cc")
+    _event, value = _send_event_and_gene_value(sidecar, message_kind="nrpn")
     midi_value = value["midi_value"]
     assert isinstance(midi_value, int)
     value["midi_value"] = (midi_value + 1) % 128
@@ -779,7 +1248,12 @@ def test_reader_rejects_rehashed_parameter_without_canonical_transport(
 
 
 @pytest.mark.parametrize("coverage_owner", ["manifest", "sidecar"])
-def test_reader_rejects_coverage_drift(tmp_path: Path, coverage_owner: str) -> None:
+@pytest.mark.parametrize("coverage_field", _COVERAGE_FIELDS)
+def test_reader_rejects_candidate_coverage_drift(
+    tmp_path: Path,
+    coverage_owner: str,
+    coverage_field: str,
+) -> None:
     from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
         load_analog_four_patch_batch_candidate,
     )
@@ -788,13 +1262,40 @@ def test_reader_rejects_coverage_drift(tmp_path: Path, coverage_owner: str) -> N
     owner = _manifest_candidate(manifest) if coverage_owner == "manifest" else sidecar
     coverage = owner["coverage_counts"]
     assert isinstance(coverage, dict)
-    coverage["sendable_row_count"] = 0
+    value = coverage[coverage_field]
+    assert isinstance(value, int)
+    coverage[coverage_field] = value + 1
     if coverage_owner == "sidecar":
         _rehash_sidecar(tmp_path, manifest_path, manifest, sidecar)
     else:
+        aggregate = _object_field(manifest, "coverage_counts")
+        aggregate[coverage_field] = value + 1
         _rewrite_json(manifest_path, manifest)
 
-    with pytest.raises(ValueError, match=f"{coverage_owner} coverage"):
+    with pytest.raises(ValueError, match=f"{coverage_owner} coverage {coverage_field}"):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
+
+
+@pytest.mark.parametrize("coverage_field", _COVERAGE_FIELDS)
+def test_reader_rejects_manifest_aggregate_coverage_drift(
+    tmp_path: Path,
+    coverage_field: str,
+) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+
+    manifest_path, manifest, _sidecar = _write_batch(tmp_path)
+    aggregate = _object_field(manifest, "coverage_counts")
+    value = aggregate[coverage_field]
+    assert isinstance(value, int)
+    aggregate[coverage_field] = value + 1
+    _rewrite_json(manifest_path, manifest)
+
+    with pytest.raises(
+        ValueError,
+        match=f"manifest aggregate coverage {coverage_field}",
+    ):
         load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
 
 
@@ -811,6 +1312,7 @@ def test_reader_parses_manual_event_and_rejects_wrong_track() -> None:
         "encoder": "A",
         "screen_value": "OFF",
         "transport_status": "screen-only",
+        "skip_code": "not-transport-ready",
         "skip_reason": "test",
         "dial_direction": "leave at OFF",
         "rationale": "test",
@@ -820,8 +1322,19 @@ def test_reader_parses_manual_event_and_rejects_wrong_track() -> None:
     assert _parse_manual_event(row, track=2).parameter == "Manual"
     with pytest.raises(ValueError, match="manual event track"):
         _parse_manual_event(row, track=1)
-    row["transport_status"] = "cc-ready"
+    row["transport_status"] = "unknown"
     with pytest.raises(ValueError, match="sendable or unknown transport_status"):
+        _parse_manual_event(row, track=2)
+    row["transport_status"] = "cc-ready"
+    row["skip_code"] = "paired-cc-unverified"
+    row["skip_reason"] = "wording is descriptive, not a discriminator"
+    assert _parse_manual_event(row, track=2).transport_status == "cc-ready"
+    row["skip_code"] = "unknown"
+    with pytest.raises(ValueError, match="unknown skip_code"):
+        _parse_manual_event(row, track=2)
+    row["skip_code"] = "paired-cc-unverified"
+    row["transport_status"] = "screen-only"
+    with pytest.raises(ValueError, match="must use CC-ready"):
         _parse_manual_event(row, track=2)
 
 
@@ -838,6 +1351,7 @@ def test_reader_verifies_manual_only_dna_row() -> None:
         encoder="A",
         screen_value="OFF",
         transport_status="screen-only",
+        skip_code="not-transport-ready",
         skip_reason="test",
         dial_direction="leave at OFF",
         rationale="test",
@@ -867,6 +1381,73 @@ def test_reader_verifies_manual_only_dna_row() -> None:
         send_events=(),
         manual_events=(manual,),
     )
+
+    paired = replace(
+        manual,
+        transport_status="cc-ready",
+        skip_code="paired-cc-unverified",
+    )
+    paired_dna = {
+        "genes": [
+            {
+                "track": 2,
+                "value": {
+                    "parameter": "Manual",
+                    "section": "TEST",
+                    "encoder": "A",
+                    "screen_value": "OFF",
+                    "transport_status": "cc-ready",
+                    "cc_msb": 10,
+                    "cc_lsb": 42,
+                    "dial_direction": "leave at OFF",
+                },
+                "rationale": "test",
+                "confidence": "test",
+            }
+        ]
+    }
+    _verify_plan_against_candidate_dna(
+        paired_dna,
+        track=2,
+        send_events=(),
+        manual_events=(paired,),
+    )
+    with pytest.raises(ValueError, match="skip_code does not match candidate DNA"):
+        _verify_plan_against_candidate_dna(
+            paired_dna,
+            track=2,
+            send_events=(),
+            manual_events=(replace(paired, skip_code="not-transport-ready"),),
+        )
+
+
+def test_reader_parses_verified_single_cc_event() -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        _parse_send_event,
+    )
+
+    row: dict[str, object] = {
+        "sequence": 1,
+        "track": 2,
+        "channel": 1,
+        "parameter": "Verified single CC",
+        "section": "TEST",
+        "encoder": "A",
+        "screen_value": "64",
+        "midi_value": 64,
+        "message_kind": "cc",
+        "cc_msb": 74,
+        "cc_lsb": None,
+        "nrpn_address": None,
+        "transport_status": "cc-ready",
+        "dial_direction": "set to 64",
+        "rationale": "test",
+        "confidence": "test",
+    }
+
+    event = _parse_send_event(row, track=2)
+    assert event.message_kind == "cc"
+    assert event.cc_msb == 74
 
 
 def test_batch_codec_rejects_non_object_json() -> None:
@@ -906,6 +1487,10 @@ def test_batch_codec_rejects_non_object_json() -> None:
         ),
         (
             lambda reader: reader._optional_nrpn_address({"value": [1]}, "value", "test"),
+            "two MIDI bytes",
+        ),
+        (
+            lambda reader: reader._optional_nrpn_address({"value": "not-a-list"}, "value", "test"),
             "two MIDI bytes",
         ),
         (

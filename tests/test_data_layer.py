@@ -25,6 +25,7 @@ import pytest
 
 import rytm_randomizer.constants as pkg_constants
 import rytm_randomizer.data as data
+import rytm_randomizer.data.analog_four_patch_templates as a4_patch_templates
 import rytm_randomizer.profiles as pkg_profiles
 import rytm_randomizer.scenes as pkg_scenes
 
@@ -92,6 +93,15 @@ def test_a4_audio_inference_model_is_canonical_immutable_data() -> None:
     assert model["OSC1 Pulsewidth"] is model["OSC2 Pulsewidth"]
     with pytest.raises(TypeError):
         model["Filter2 Resonance"] = model["Volume"]  # type: ignore[index]
+
+
+def test_a4_patch_family_order_is_canonical_data() -> None:
+    expected = ("Oscillators", "Envelope and LFO", "Filter and effects")
+
+    assert expected == data.ANALOG_FOUR_PATCH_FAMILY_ORDER
+    assert expected == a4_patch_templates.ANALOG_FOUR_PATCH_FAMILY_ORDER
+    assert "ANALOG_FOUR_PATCH_FAMILY_ORDER" in data.__all__
+    assert "ANALOG_FOUR_PATCH_FAMILY_ORDER" in a4_patch_templates.__all__
 
 
 def test_a4_audio_inference_model_rejects_unknown_keys_at_construction() -> None:

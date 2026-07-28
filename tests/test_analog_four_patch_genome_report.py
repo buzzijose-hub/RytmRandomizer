@@ -120,7 +120,7 @@ def test_patch_genome_report_audio_source_uses_inferred_audio_genome(
 
     monkeypatch.setattr(
         report_module,
-        "build_analog_four_audio_patch_genome",
+        "build_analog_four_audio_patch_genome_isolated",
         _fake_build_audio_genome,
     )
 

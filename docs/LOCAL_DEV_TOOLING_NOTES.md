@@ -101,6 +101,7 @@ The cockpit sidecar now reads four env vars at boot. See [`docs/COCKPIT_QUICKSTA
 | `RYTM_RAND_WS_TOKEN_FILE` | `~/.rytm-randomizer/cockpit-ws-token` | Path the sidecar writes the per-launch HMAC handshake token to (`0o600`). The Tauri shell sets this to a path under its app-data dir and reads the token back to seed the first WS frame. PR 1 (C1) of the CODE_REVIEW.md sweep. |
 | `RYTM_RAND_WS_MAX_MESSAGE_BYTES` | `1048576` (1 MiB) | Per-message size cap for WebSocket frames; oversize frames are rejected before `json.loads`. PR 1 (SX1). |
 | `WIZARD_SOURCE_ROOTS` | `~/.rytm-randomizer/wizard-sources` | `os.pathsep`-separated allow-list of root dirs the wizard's `WizardPathPolicy` will accept as `InspirationSource.location` values. Empty value falls back to the default so a typo never disables the policy. PR 2 (C2). |
+| `GITHUB_ACTIONS` | unset / false outside GitHub-hosted CI | Standard external-runner signal read only by the native A4 audio integration test. On Windows GitHub Actions the test skips the real decoder-plus-subprocess proof because the hosted runner cannot guarantee a stable native decoder process; unit coverage and crash-containment checks still run. Unset is the safe local and non-GitHub-runner default, and this variable never enables MIDI or hardware access. |
 
 ## 8. Pre-push hook hardening (Windows Store python shim)
 
@@ -117,14 +118,19 @@ The same pattern is documented in `.claude/skills/python-on-windows/SKILL.md`. A
 
 ### Native audio test subprocess controls
 
-`tests/cockpit/test_analog_four_patch_batch.py` reads `GITHUB_ACTIONS` to skip
-one known-unstable real native-audio subprocess proof on GitHub Windows. The
-same test passes these variables as `1` only to its isolated analyzer
-subprocess: `BLIS_NUM_THREADS`, `MKL_NUM_THREADS`, `NUMBA_NUM_THREADS`,
-`NUMEXPR_NUM_THREADS`, `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, and
-`VECLIB_MAXIMUM_THREADS`. They prevent native math libraries from creating a
-second thread pool under pytest-xdist. They are not runtime configuration and
-do not affect MIDI, hardware, or normal application execution.
+The real tone/noise integration proof passes these variables as `1` only to its
+isolated CLI subprocess: `BLIS_NUM_THREADS`, `MKL_NUM_THREADS`,
+`NUMBA_NUM_THREADS`, `NUMEXPR_NUM_THREADS`, `OMP_NUM_THREADS`,
+`OPENBLAS_NUM_THREADS`, and `VECLIB_MAXIMUM_THREADS`. They prevent native math
+libraries from creating a second thread pool under pytest-xdist. They are test
+controls, not runtime configuration, and do not affect MIDI or hardware.
+
+Production A4 audio inference also isolates native decoding in a spawned child
+process. The parent owns the private audio and SysEx staging directory, converts
+an abnormal child exit into a bounded `inference_failed` result, and removes
+that staging directory on failure. The Windows native decoder may still fail
+safely in this test; crash containment and cleanup are verified, but reliable
+Windows decoding is not claimed.
 
 ## 9. Next Project Task
 

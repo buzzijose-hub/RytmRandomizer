@@ -79,7 +79,11 @@ class AnalogFourAudioInferenceTerm:
     def __post_init__(self) -> None:
         if not self.feature_keys:
             raise ValueError("A4 inference terms require at least one feature key")
-        unknown = set(self.feature_keys) - ANALOG_FOUR_INFERENCE_FEATURE_KEYS
+        unknown = {
+            feature_key
+            for feature_key in self.feature_keys
+            if feature_key not in ANALOG_FOUR_INFERENCE_FEATURE_KEYS
+        }
         if unknown:
             raise ValueError(f"unknown A4 inference feature keys: {sorted(unknown)!r}")
 
@@ -99,9 +103,12 @@ class AnalogFourAudioInferenceSpec:
             raise ValueError("A4 inference specs require at least one parameter")
         if len(set(self.parameters)) != len(self.parameters):
             raise ValueError("A4 inference spec parameters must be unique")
-        unknown = set(self.parameters) - (
-            ANALOG_FOUR_INFERENCE_PARAMETERS & _ANALOG_FOUR_CANDIDATE_PARAMETERS
-        )
+        unknown = {
+            parameter
+            for parameter in self.parameters
+            if parameter not in ANALOG_FOUR_INFERENCE_PARAMETERS
+            or parameter not in _ANALOG_FOUR_CANDIDATE_PARAMETERS
+        }
         if unknown:
             raise ValueError(f"unknown A4 inference parameters: {sorted(unknown)!r}")
         if not self.terms:

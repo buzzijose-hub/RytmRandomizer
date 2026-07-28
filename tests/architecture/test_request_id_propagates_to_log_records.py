@@ -56,7 +56,7 @@ from typing import Final
 import pytest
 
 from rytm_randomizer.observability.logging import PACKAGE_LOGGER_NAME, get_logger
-from rytm_randomizer.observability.tracing import _OpIdFilter, operation
+from rytm_randomizer.observability.tracing import OpIdFilter, operation
 
 pytestmark = pytest.mark.fast
 
@@ -110,7 +110,7 @@ def capture_package_records() -> Iterator[_RecordCaptureHandler]:
     # AFTER adding it, or attach the filter to the probe handler
     # directly. Attaching directly is the local, explicit option that
     # makes the test independent of process-global install state.
-    handler.addFilter(_OpIdFilter())
+    handler.addFilter(OpIdFilter())
     package_logger = logging.getLogger(PACKAGE_LOGGER_NAME)
     prior_level = package_logger.level
     # Force DEBUG so the operation_start / operation_end records (at

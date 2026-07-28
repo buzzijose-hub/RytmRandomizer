@@ -64,7 +64,7 @@ from __future__ import annotations
 import ast
 import importlib
 from pathlib import Path
-from typing import ClassVar, Final, get_origin, get_type_hints
+from typing import Final, get_type_hints
 
 import pytest
 
@@ -536,16 +536,13 @@ _EXPECTED_DEVICE_ATTRIBUTES: Final[tuple[str, ...]] = (
     "report_header",
 )
 
-_EXPECTED_DEVICE_CLASSVARS: Final[tuple[str, ...]] = (
+_EXPECTED_DEVICE_PROPERTIES: Final[tuple[str, ...]] = (
     "device_id",
     "display_name",
     "default_midi_channel",
     "track_count",
     "sysex_manufacturer_id",
     "report_header",
-)
-
-_EXPECTED_DEVICE_PROPERTIES: Final[tuple[str, ...]] = (
     "snapshot_decoder",
     "mutation_planner",
     "message_renderer",
@@ -581,15 +578,6 @@ def test_device_protocol_surface_is_stable() -> None:
         "_EXPECTED_DEVICE_ATTRIBUTES in this test in the same change set."
     )
 
-    non_classvars = [
-        name
-        for name in _EXPECTED_DEVICE_CLASSVARS
-        if get_origin(annotations.get(name)) is not ClassVar
-    ]
-    assert (
-        not non_classvars
-    ), f"Device Protocol metadata must remain ClassVar attributes: {non_classvars}."
-
     non_properties = [
         name
         for name in _EXPECTED_DEVICE_PROPERTIES
@@ -597,7 +585,7 @@ def test_device_protocol_surface_is_stable() -> None:
     ]
     assert (
         not non_properties
-    ), f"Device Protocol strategies must remain read-only properties: {non_properties}."
+    ), f"Device Protocol metadata and strategies must remain read-only: {non_properties}."
 
     missing_methods = [
         m for m in _EXPECTED_DEVICE_METHODS if not callable(getattr(Device, m, None))

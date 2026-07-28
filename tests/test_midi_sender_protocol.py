@@ -109,6 +109,24 @@ def test_mock_midi_sender_conforms_to_midi_sender_protocol():
     assert isinstance(MockMidiSender(), MidiSender)
 
 
+def test_nrpn_event_rejects_non_tuple_address() -> None:
+    from types import SimpleNamespace
+
+    from rytm_randomizer.behavior.midi_event_plan import validate_cc_nrpn_event
+
+    event = SimpleNamespace(
+        message_kind="nrpn",
+        cc_msb=None,
+        cc_lsb=None,
+        nrpn_address=[1, 2],
+        midi_value=64,
+        channel=0,
+    )
+
+    with pytest.raises(ValueError, match="exactly two MIDI bytes"):
+        validate_cc_nrpn_event(event)
+
+
 # ---------------------------------------------------------------------------
 # 3. RealMidiSender conforms to MidiSender
 # ---------------------------------------------------------------------------
@@ -141,6 +159,9 @@ def test_real_midi_sender_is_not_a_midi_sender_by_design():
 
     class _FakePort:
         def send(self, message: object) -> None:
+            pass
+
+        def close(self) -> None:
             pass
 
     provider = RealMidiPortProvider(

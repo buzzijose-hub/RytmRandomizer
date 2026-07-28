@@ -352,8 +352,8 @@ Generate a guarded file with one or more repeatable Track:Value assignments:
 
 ```powershell
 python -m rytm_randomizer.cli analog-four-saved-kit-export `
-  --source "G:\ANALOG FOUR\WHOLE PROJECT DUMP\A4_Test1_T1_Filter2Res_000_Kit.syx" `
-  --output "G:\ANALOG FOUR\WHOLE PROJECT DUMP\A4_CODEX_GENERATED.syx" `
+  --source "<media-root>\ANALOG FOUR\A4_Test1_T1_Filter2Res_000_Kit.syx" `
+  --output "<media-root>\ANALOG FOUR\A4_CODEX_GENERATED.syx" `
   --filter2-resonance 1:16 --filter2-resonance 2:48 `
   --filter2-resonance 3:80 --filter2-resonance 4:112 --json
 ```
@@ -381,22 +381,25 @@ Current authorization boundary:
 
 ### Audio-to-patch candidate batch
 
-Generate one to four audio-dependent candidates from a short reference clip:
+Generate the canonical set of exactly four deterministic audio-dependent
+candidates from a short reference clip:
 
 ```powershell
 python -m rytm_randomizer.cli analog-four-audio-patch-batch `
-  --audio "G:\REFERENCES\short-reference.wav" `
-  --source-kit "G:\ANALOG FOUR\WHOLE PROJECT DUMP\A4_Test1_Init_Kit.syx" `
-  --output-dir "G:\ANALOG FOUR\GENERATED\reference-batch" `
+  --audio "<media-root>\REFERENCES\short-reference.wav" `
+  --source-kit "<media-root>\ANALOG FOUR\A4_Test1_Init_Kit.syx" `
+  --output-dir "<media-root>\ANALOG FOUR\GENERATED\reference-batch" `
   --track 1 --candidates 4 --json
 ```
 
 This is real local audio analysis and candidate inference, not a static preset
-rename. Each candidate produces a `.syx` file plus a JSON sidecar containing
+rename. The documented `--candidates 4` run produces exactly four candidates.
+Each candidate produces a `.syx` file plus a JSON sidecar containing
 its complete patch DNA and CC/NRPN live-dial plan. At the current hardware
 validation boundary, the `.syx` encodes only Filter2 Resonance; every current
-DNA row is live-sendable from the sidecar while non-SysEx rows remain deferred
-from the saved-kit file. The command does
+DNA row remains represented in the sidecar, with 33 rows live-sendable and six
+paired-CC rows explicitly manual pending 14-bit verification. All non-SysEx
+rows remain deferred from the saved-kit file. The command does
 not open a MIDI port or transfer files to the Analog Four. Do not interpret the
 result as full saved-kit parameter coverage or Synthplant-equivalent learned
 accuracy. Existing artifacts are refused unless `--overwrite` is explicit.
@@ -412,28 +415,36 @@ lock-cleanup notes in `details`; a committed batch whose lock could not be remov
 returns success plus a `warnings` entry naming the retained metadata file.
 Delete such a lock only after its recorded process ID is no longer running.
 
+Native audio decoding runs in a spawned child process. If the native decoder
+exits abnormally, including a Windows access violation, the parent command
+fails with `inference_failed` instead of crashing and removes the private
+audio/SysEx staging directory it owns. This is safe failure containment; native
+decoder reliability on Windows is not yet an accepted capability.
+
 ### Hash-verified candidate live dial
 
 Preview the exact candidate committed by the batch manifest:
 
 ```powershell
 python -m rytm_randomizer.app --dry-run --a4-patch-send-plan `
-  --batch-manifest "G:\ANALOG FOUR\GENERATED\reference-batch\a4-t1-audio-patch-batch.json" `
+  --batch-manifest "<media-root>\ANALOG FOUR\GENERATED\reference-batch\a4-t1-audio-patch-batch.json" `
   --candidate 1
 ```
 
-The closest-reference candidate currently reports 39 sendable rows: 29 CC,
-10 NRPN, and 59 transport messages. That complete plan is software-verified and
-mock-replayed, but it has not yet completed a supervised physical full-patch
-rehearsal. Do not treat the following armed command as routine operation.
+The closest-reference candidate currently reports 33 sendable rows: 23 CC,
+10 NRPN, and 53 transport messages. Six paired-MSB/LSB CC rows are deliberately
+manual until their 14-bit conversion is hardware-verified. The guarded plan is
+software-verified and mock-replayed, but it has not yet completed a supervised
+physical full-patch rehearsal. Do not treat the following armed command as
+routine operation.
 
 Before the first full-plan hardware pass:
 
 1. Use a disposable initialized A4 project and keep the clean kit dump ready.
 2. Confirm the intended track/channel with one already validated named
    parameter send, then reload the clean baseline.
-3. Run the manifest dry-run above and verify both `transport messages: 59` and
-   `Mock sender captured 59 message(s).` To audit the ordered CC stream, add
+3. Run the manifest dry-run above and verify both `transport messages: 53` and
+   `Mock sender captured 53 message(s).` To audit the ordered CC stream, add
    `--debug --log-json` and inspect the `midi_mock_send` records on stderr.
 4. Use the full command only with the operator present, moderate monitoring
    level, and immediate reload/stop recovery available.
@@ -442,21 +453,28 @@ The pending supervised full-plan validation command is:
 
 ```powershell
 python -m rytm_randomizer.app --arm --a4-patch-send-plan `
-  --batch-manifest "G:\ANALOG FOUR\GENERATED\reference-batch\a4-t1-audio-patch-batch.json" `
-  --candidate 1 --confirm-a4-patch-send-plan
+  --batch-manifest "<media-root>\ANALOG FOUR\GENERATED\reference-batch\a4-t1-audio-patch-batch.json" `
+  --candidate 1 --confirm-a4-patch-send-plan `
+  --a4-output-port "<exact configured Analog Four output name>"
 ```
 
 The reader rejects changed sidecar bytes, changed nested DNA/send-plan
 payloads, source/candidate/track mismatches, false transport labels,
 noncanonical parameter CC/NRPN addresses, and coverage-count drift before
-opening an output port. The armed sender then spaces all 59 transport messages
+constructing the real provider or opening an output port. The armed sender then
+spaces all 53 transport messages
 by 20 ms. If the MIDI port fails after delivery starts, the command reports the
 exact sent/expected message count; stop, reload the saved clean Kit or project,
 and begin the rehearsal again from that known baseline. Saved-kit SysEx
 coverage does not expand through this command; this is an explicit live MIDI
-path whose complete 39-row hardware rehearsal remains pending.
+path whose guarded 33-row transport rehearsal remains pending; the six
+paired-CC rows remain manual.
 Pressing Ctrl+C during delivery follows the same partial-patch recovery path
 and returns process exit code 130 after the output port is closed.
+
+`python -m rytm_randomizer.app --arm` is the sole real MIDI boundary. The batch
+generator, saved-kit file writer, ranker, passive reports, and local-model
+copilot never open a MIDI port or send CC, NRPN, or SysEx.
 
 ### Rank recorded A4 candidates
 
@@ -465,12 +483,12 @@ recordings with the exact original reference:
 
 ```powershell
 python -m rytm_randomizer.cli analog-four-audio-patch-rank `
-  --reference "G:\REFERENCES\short-reference.wav" `
-  --manifest "G:\ANALOG FOUR\GENERATED\reference-batch\a4-t1-audio-patch-batch.json" `
-  --render "1=G:\ANALOG FOUR\RENDERS\candidate-1.wav" `
-  --render "2=G:\ANALOG FOUR\RENDERS\candidate-2.wav" `
-  --render "3=G:\ANALOG FOUR\RENDERS\candidate-3.wav" `
-  --render "4=G:\ANALOG FOUR\RENDERS\candidate-4.wav" --json
+  --reference "<media-root>\REFERENCES\short-reference.wav" `
+  --manifest "<media-root>\ANALOG FOUR\GENERATED\reference-batch\a4-t1-audio-patch-batch.json" `
+  --render "1=<media-root>\ANALOG FOUR\RENDERS\candidate-1.wav" `
+  --render "2=<media-root>\ANALOG FOUR\RENDERS\candidate-2.wav" `
+  --render "3=<media-root>\ANALOG FOUR\RENDERS\candidate-3.wav" `
+  --render "4=<media-root>\ANALOG FOUR\RENDERS\candidate-4.wav" --json
 ```
 
 The command refuses a reference whose SHA-256 differs from the batch source.

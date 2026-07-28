@@ -6,25 +6,14 @@ import json
 
 import pytest
 
-from rytm_randomizer.guardrails.schema import Confidence, SourceType
+from conftest import analog_four_reference_feature_report
 from rytm_randomizer.style_analysis import FeatureReport
 
 pytestmark = pytest.mark.fast
 
 
 def _reference_report() -> FeatureReport:
-    return FeatureReport(
-        source_type=SourceType.SINGLE_TRACK,
-        confidence=Confidence.HIGH,
-        bpm=134.0,
-        tempo_stability=0.91,
-        kick_density=0.48,
-        percussion_density=0.78,
-        low_end_weight=0.42,
-        spectral_brightness=0.63,
-        texture_noise=0.34,
-        energy_arc=(0.18, 0.34, 0.48, 0.72, 0.84, 0.78, 0.61, 0.4),
-        content_hash="",
+    return analog_four_reference_feature_report(
         derived_at="2026-07-03T12:00:00Z",
     )
 
@@ -261,7 +250,11 @@ def test_patch_learning_defensive_helpers_cover_empty_or_unmatched_candidates() 
     assert _candidate_trait_fit(unmatched_candidate, traits=(metallic_trait,)) == 0
     assert _build_trait_routes((), unmatched_candidate) == ()
     assert _live_dial_path(1, 0) == "transport-ready"
+    assert _live_dial_path(1, 1) == "partial-live-dial-ready"
     assert _live_dial_path(0, 1) == "manual-only"
+    assert _live_dial_blocking_reason(1, 1) == (
+        "NRPN destination ordinal capture required before full live dial-in"
+    )
     assert _live_dial_blocking_reason(0, 1) == (
         "front-panel-only values require manual capture before automation"
     )

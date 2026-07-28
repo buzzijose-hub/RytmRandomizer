@@ -214,6 +214,24 @@ class AnalogFourPatchLearningPacketPayload(TypedDict):
     safety: list[str]
 
 
+def _require_learning_feature_report(value: object) -> FeatureReport:
+    if not isinstance(value, FeatureReport):
+        raise TypeError("report must be a FeatureReport")
+    return value
+
+
+def _require_learning_patch_genome(value: object) -> AnalogFourPatchGenome:
+    if not isinstance(value, AnalogFourPatchGenome):
+        raise TypeError("genome must be an AnalogFourPatchGenome")
+    return value
+
+
+def _require_learning_packet(value: object) -> AnalogFourPatchLearningPacket:
+    if not isinstance(value, AnalogFourPatchLearningPacket):
+        raise TypeError("packet must be an AnalogFourPatchLearningPacket")
+    return value
+
+
 def build_analog_four_patch_learning_packet(
     report: FeatureReport,
     *,
@@ -222,8 +240,7 @@ def build_analog_four_patch_learning_packet(
 ) -> AnalogFourPatchLearningPacket:
     """Build a passive A4 patch-learning packet from a measured reference."""
 
-    if not isinstance(report, FeatureReport):
-        raise TypeError("report must be a FeatureReport")
+    report = _require_learning_feature_report(report)
     genome = build_analog_four_patch_genome(report, track=track)
     return build_analog_four_patch_learning_packet_from_genome(
         report,
@@ -240,10 +257,8 @@ def build_analog_four_patch_learning_packet_from_genome(
 ) -> AnalogFourPatchLearningPacket:
     """Build learning metadata around an already-compiled A4 genome."""
 
-    if not isinstance(report, FeatureReport):
-        raise TypeError("report must be a FeatureReport")
-    if not isinstance(genome, AnalogFourPatchGenome):
-        raise TypeError("genome must be an AnalogFourPatchGenome")
+    report = _require_learning_feature_report(report)
+    genome = _require_learning_patch_genome(genome)
     if selected_candidate < 1 or selected_candidate > genome.candidate_count:
         raise ValueError(f"candidate must be in 1..{genome.candidate_count}")
 
@@ -276,8 +291,7 @@ def analog_four_patch_learning_packet_to_dict(
 ) -> AnalogFourPatchLearningPacketPayload:
     """Return a stable JSON-ready representation of ``packet``."""
 
-    if not isinstance(packet, AnalogFourPatchLearningPacket):
-        raise TypeError("packet must be an AnalogFourPatchLearningPacket")
+    packet = _require_learning_packet(packet)
     return {
         "version": packet.version,
         "device_id": packet.device_id,

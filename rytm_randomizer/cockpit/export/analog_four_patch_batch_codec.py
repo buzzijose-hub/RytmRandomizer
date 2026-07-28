@@ -24,9 +24,10 @@ def decode_analog_four_patch_batch_json(data: bytes, *, label: str) -> Mapping[s
         decoded = cast(object, json.loads(data.decode("utf-8")))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ValueError(f"{label} is not valid UTF-8 JSON") from exc
-    if not isinstance(decoded, dict) or not all(isinstance(key, str) for key in decoded):
+    if not isinstance(decoded, dict):
         raise ValueError(f"{label} must be a JSON object")
-    return cast(dict[str, object], decoded)
+    payload = cast(dict[object, object], decoded)
+    return cast(dict[str, object], payload)
 
 
 def analog_four_patch_batch_sha256(data: bytes) -> str:

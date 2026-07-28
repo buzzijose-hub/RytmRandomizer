@@ -7,25 +7,12 @@ from hashlib import sha256
 
 import pytest
 
-from conftest import analog_four_saved_kit_frame
+from conftest import (
+    analog_four_saved_kit_frame,
+)
+from conftest import analog_four_saved_kit_mutation as _mutation
 
 pytestmark = pytest.mark.fast
-
-
-def _mutation(
-    track: int = 1,
-    screen_value: str = "64",
-    parameter: str = "Filter2 Resonance",
-):
-    from rytm_randomizer.devices.strategies.analog_four_saved_kit_writer import (
-        AnalogFourSavedKitMutation,
-    )
-
-    return AnalogFourSavedKitMutation(
-        parameter=parameter,
-        track=track,
-        screen_value=screen_value,
-    )
 
 
 def _rendered_unpacked(frame: bytes) -> bytes:
@@ -145,20 +132,32 @@ def test_render_saved_kit_applies_distinct_values_to_all_four_tracks() -> None:
     ]
 
 
-def test_render_saved_kit_preserves_neighbor_high_bit_for_filter1_resonance() -> None:
+def test_render_saved_kit_preserves_neighbor_high_bit_for_validated_field() -> None:
     from rytm_randomizer.devices.strategies.analog_four_saved_kit_writer import (
         render_analog_four_saved_kit,
     )
 
-    source = analog_four_saved_kit_frame(unpacked_overrides={134: 0x80})
+    source = analog_four_saved_kit_frame(unpacked_overrides={145: 0x80})
     result = render_analog_four_saved_kit(
         source,
-        (_mutation(parameter="Filter1 Resonance", screen_value="20"),),
+        (_mutation(screen_value="20"),),
     )
 
-    assert result.applied_mutations[0].unpacked_offset == 134
+    assert result.applied_mutations[0].unpacked_offset == 145
     assert result.applied_mutations[0].rendered_unpacked_value == 0x94
-    assert _rendered_unpacked(result.framed_sysex)[134] == 0x94
+    assert _rendered_unpacked(result.framed_sysex)[145] == 0x94
+
+
+def test_render_saved_kit_rejects_candidate_only_calibration() -> None:
+    from rytm_randomizer.devices.strategies.analog_four_saved_kit_writer import (
+        render_analog_four_saved_kit,
+    )
+
+    with pytest.raises(ValueError, match="not hardware-write-validated"):
+        render_analog_four_saved_kit(
+            analog_four_saved_kit_frame(),
+            (_mutation(parameter="Filter1 Resonance", screen_value="20"),),
+        )
 
 
 def test_render_saved_kit_emits_valid_checksum_and_packed_length() -> None:
@@ -206,12 +205,12 @@ def test_saved_kit_manifest_constants_pin_observed_hardware_frame_shape() -> Non
         ((_mutation(screen_value="loud"),), "unsupported screen value"),
         (
             (_mutation(parameter="Filter2 Frequency", screen_value="64.00"),),
-            "unsupported screen value",
+            "not hardware-write-validated",
         ),
         ((_mutation(track=5),), "track must be in 1..4"),
         (
             (_mutation(parameter="Filter1 Frequency", screen_value="63.50"),),
-            "packed group header",
+            "not hardware-write-validated",
         ),
         ((object(),), "must contain AnalogFourSavedKitMutation"),
     ],
@@ -317,8 +316,30 @@ def test_render_saved_kit_rejects_unpromoted_calibration(
     )
     monkeypatch.setattr(writer_module, "analog_four_sysex_calibration_for", lambda _: pending)
 
-    with pytest.raises(ValueError, match="not promoted"):
+    with pytest.raises(ValueError, match="not hardware-write-validated"):
         writer_module.render_analog_four_saved_kit(analog_four_saved_kit_frame(), (_mutation(),))
+
+
+def test_saved_kit_writer_rejects_primary_offset_at_packed_group_header() -> None:
+    from dataclasses import replace
+
+    from rytm_randomizer.data.analog_four_sysex_calibration import (
+        analog_four_sysex_calibration_for,
+    )
+    from rytm_randomizer.devices.strategies.analog_four_offset_manifest import (
+        A4_PACKED_PAYLOAD_OFFSET,
+    )
+    from rytm_randomizer.devices.strategies.analog_four_saved_kit_writer import (
+        _unpacked_offset_for_calibration,
+    )
+
+    calibration = replace(
+        analog_four_sysex_calibration_for("Filter2 Resonance"),
+        track_1_primary_raw_offset=A4_PACKED_PAYLOAD_OFFSET,
+    )
+
+    with pytest.raises(ValueError, match="points to a packed group header"):
+        _unpacked_offset_for_calibration(calibration, 1)
 
 
 def test_render_saved_kit_rejects_repacked_length_change(

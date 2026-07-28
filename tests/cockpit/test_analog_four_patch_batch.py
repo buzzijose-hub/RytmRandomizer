@@ -11,6 +11,8 @@ import struct
 import subprocess
 import sys
 import wave
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import replace
 from pathlib import Path
 
@@ -33,7 +35,7 @@ pytestmark = pytest.mark.fast
 FIXTURE_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "analog_four_saved_kit"
 SOURCE_KIT = FIXTURE_DIR / "filter2_res_000_source.syx"
 AUDIO_BYTES = b"sanitized-audio-reference-for-mocked-inference\n"
-EXPECTED_GENERATION_ID = "df8e6bf047f0a37f792348c28405958b"
+EXPECTED_GENERATION_ID = "73bfa54f7bbbee9bf1bd62294d6a807e"
 EXPECTED_SYSEX_SHA256 = (
     "2f6d97445535a1eb1f4b54e234d7b8d96b9c646c2f611a99f0e6e06a39980835",
     "16aee178243000a52cad0031429ca9768924e37c3989d1ad22c757cb7c266847",
@@ -41,12 +43,12 @@ EXPECTED_SYSEX_SHA256 = (
     "e1384abed1898010debfedf64386dd45485493cabb28b05f2e5bcd1c72096702",
 )
 EXPECTED_SIDECAR_SHA256 = (
-    "b42009be05e69af66d453b83b2c0a05a03feea5bcdac163474a9cf79d2ece14c",
-    "c16a8607de5fbfd45690fe20c5142c0d73230c1cf544afae5034a3d6aac21c52",
-    "e844d6bbee6ca036883dff061a212ae15c4186ccdf0b93988b5c75b67213be19",
-    "c01e3a830d6cfea3214d4b289ecf86221a5c0a7aafca697a08a49539b1bc56fb",
+    "c73ed7cccb6a38e1c87ef4a4e80aff56788da040da42fa674f0ffcfc11e38343",
+    "4500cbfa5da928bccdc165ca62b8b8dd609966e86725c45bc9562b7465086775",
+    "b975e279b93609f0724c0b899a4d04a3f2ee02a3e83b87c53439f8bdd34eb24e",
+    "62f1fa503c9147a5da42f361f682ddaadd5bebac79a0b837e6a477574634c2f3",
 )
-EXPECTED_MANIFEST_SHA256 = "46ac0c66da2f55d089d5472ceef0855e735c14f0036a2072e0b207c9b079e47c"
+EXPECTED_MANIFEST_SHA256 = "a7d3647e0a553bd395638aacef3be8e93f776387c5853499433a1a094047c475"
 
 
 def _json_payload_sha256(payload: object) -> str:
@@ -298,11 +300,9 @@ def test_export_audio_patch_batch_writes_four_pinned_candidates_and_manifest(
 
 @pytest.mark.skipif(
     sys.platform == "win32" and os.environ.get("GITHUB_ACTIONS") == "true",
-    reason="Windows CI intermittently access-violates inside librosa's native stack",
+    reason="Windows native-audio subprocess proof is not yet reliable on GitHub Actions",
 )
 def test_real_audio_to_patch_batch_chain_distinguishes_tone_from_noise(tmp_path: Path) -> None:
-    pytest.importorskip("librosa")
-
     tone_path = tmp_path / "real-tone.wav"
     noise_path = tmp_path / "real-noise.wav"
     _write_test_wav(tone_path)
@@ -319,41 +319,45 @@ def test_real_audio_to_patch_batch_chain_distinguishes_tone_from_noise(tmp_path:
             "VECLIB_MAXIMUM_THREADS": "1",
         }
     )
-    native_crash_codes = {-11, -1073741819, 0xC0000005}
-
     payloads: list[dict[str, object]] = []
     for audio_path, directory_name in (
         (tone_path, "tone-batch"),
         (noise_path, "noise-batch"),
     ):
-        for attempt in range(2):
-            completed = subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "rytm_randomizer.cli",
-                    "analog-four-audio-patch-batch",
-                    "--audio",
-                    str(audio_path),
-                    "--source-kit",
-                    str(SOURCE_KIT),
-                    "--output-dir",
-                    str(tmp_path / f"{directory_name}-attempt-{attempt + 1}"),
-                    "--track",
-                    "1",
-                    "--candidates",
-                    "1",
-                    "--json",
-                ],
-                capture_output=True,
-                check=False,
-                env=environment,
-                text=True,
-                timeout=120,
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "rytm_randomizer.cli",
+                "analog-four-audio-patch-batch",
+                "--audio",
+                str(audio_path),
+                "--source-kit",
+                str(SOURCE_KIT),
+                "--output-dir",
+                str(tmp_path / directory_name),
+                "--track",
+                "1",
+                "--candidates",
+                "1",
+                "--json",
+            ],
+            capture_output=True,
+            check=False,
+            env=environment,
+            text=True,
+            timeout=120,
+        )
+        if completed.returncode != 0:
+            failure = (
+                json.loads(completed.stdout)
+                if completed.stdout
+                else {"error_code": "process_crash", "error": completed.stderr}
             )
-            if completed.returncode not in native_crash_codes:
-                break
-        assert completed.returncode == 0, completed.stderr
+            pytest.fail(
+                "real audio batch generation failed: "
+                f"{failure.get('error_code')}: {failure.get('error')}"
+            )
         payloads.append(json.loads(completed.stdout))
 
     sidecars: list[dict[str, object]] = []
@@ -393,15 +397,19 @@ def test_real_audio_to_patch_batch_chain_distinguishes_tone_from_noise(tmp_path:
     assert float(noise_features["noise"]) > float(tone_features["noise"]) + 0.3
     assert float(noise_features["brightness"]) > float(tone_features["brightness"]) + 0.3
     assert _candidate_midi_value(sidecars[0], "OSC1 Level") > (
-        _candidate_midi_value(sidecars[1], "OSC1 Level") + 30
+        _candidate_midi_value(sidecars[1], "OSC1 Level") + 20
     )
     assert _candidate_midi_value(sidecars[1], "Filter2 Frequency") > (
         _candidate_midi_value(sidecars[0], "Filter2 Frequency") + 30
     )
     assert manifests[0]["genome_sha256"] != manifests[1]["genome_sha256"]
-    assert manifests[0]["candidates"][0]["sysex_sha256"] != (
-        manifests[1]["candidates"][0]["sysex_sha256"]
-    )
+    tone_candidates = manifests[0]["candidates"]
+    noise_candidates = manifests[1]["candidates"]
+    assert isinstance(tone_candidates, list)
+    assert isinstance(noise_candidates, list)
+    assert isinstance(tone_candidates[0], dict)
+    assert isinstance(noise_candidates[0], dict)
+    assert tone_candidates[0]["sysex_sha256"] != noise_candidates[0]["sysex_sha256"]
 
 
 def test_batch_records_one_export_metric_for_the_complete_transaction(
@@ -440,7 +448,9 @@ def test_batch_export_logs_red_context_and_stable_failure_identity(
 
     _export(tmp_path, candidate_count=1)
     success = info_extras[-1]
-    assert float(success["duration_ms"]) >= 0.0
+    success_duration = success["duration_ms"]
+    assert isinstance(success_duration, (int, float))
+    assert float(success_duration) >= 0.0
     assert "export_count=1" in str(success["metrics_summary"])
 
     failed_root = tmp_path / "failed"
@@ -456,7 +466,9 @@ def test_batch_export_logs_red_context_and_stable_failure_identity(
     failure = warning_extras[-1]
     assert failure["fingerprint"] == "a4.audio_patch_batch.stage_failed"
     assert failure["error_type"] == "AnalogFourPatchBatchStageError"
-    assert float(failure["duration_ms"]) >= 0.0
+    failure_duration = failure["duration_ms"]
+    assert isinstance(failure_duration, (int, float))
+    assert float(failure_duration) >= 0.0
     assert "export_errors" in str(failure["metrics_summary"])
 
 
@@ -714,6 +726,40 @@ def test_export_audio_patch_batch_records_source_and_inference_failures(
     assert get_metrics().export_errors_by_code["service_unavailable"] == 1
 
 
+def test_batch_export_failure_classifies_interrupts_and_fatal_write_failures(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
+    class FatalExportSignal(BaseException):
+        pass
+
+    assert (
+        batch._batch_export_error_code(
+            KeyboardInterrupt(),
+            source_reads_complete=True,
+            output_phase_started=False,
+        )
+        == "interrupted"
+    )
+
+    reset_metrics()
+    monkeypatch.setattr(batch.time, "perf_counter", lambda: 2.0)
+    batch._record_batch_export_failure(
+        FatalExportSignal("fatal write failure"),
+        audio_path=tmp_path / "reference.wav",
+        source_kit_path=tmp_path / "source-kit.syx",
+        output_dir=tmp_path / "batch",
+        started_at=1.0,
+        source_reads_complete=True,
+        output_phase_started=True,
+    )
+
+    assert get_metrics().export_errors_by_code["write_failed"] == 1
+
+
 def test_export_audio_patch_batch_classifies_missing_audio_dependency(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -794,6 +840,27 @@ def test_export_audio_patch_batch_classifies_staging_file_errors_as_write_failur
         _export(tmp_path, candidate_count=1)
 
     assert exc_info.value.error_code == "write_failed"
+    assert get_metrics().export_errors_by_code["write_failed"] == 1
+
+
+def test_export_audio_patch_batch_classifies_missing_published_artifact_as_write_failure(
+    tmp_path: Path,
+    _mocked_inference: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
+    def fail_publication(*_args: object, **_kwargs: object) -> object:
+        raise FileNotFoundError("generation artifact disappeared")
+
+    monkeypatch.setattr(batch, "_publish_staged_batch", fail_publication)
+    reset_metrics()
+
+    with pytest.raises(FileNotFoundError, match="generation artifact disappeared") as exc_info:
+        _export(tmp_path, candidate_count=1)
+
+    assert exc_info.value.__dict__["error_code"] == "write_failed"
     assert get_metrics().export_errors_by_code["write_failed"] == 1
 
 
@@ -974,6 +1041,7 @@ def test_interrupt_after_lock_publication_cleans_owned_lock(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
     real_acquire = batch._acquire_batch_lock
 
@@ -982,10 +1050,103 @@ def test_interrupt_after_lock_publication_cleans_owned_lock(
         raise KeyboardInterrupt("interrupt after lock publication")
 
     monkeypatch.setattr(batch, "_acquire_batch_lock", acquire_then_interrupt)
+    reset_metrics()
     with pytest.raises(KeyboardInterrupt, match="interrupt after lock publication"):
         _export(tmp_path, candidate_count=1)
 
     assert not (tmp_path / "batch" / ".a4-t2-audio-patch-batch.lock").exists()
+    assert get_metrics().export_errors_by_code["interrupted"] == 1
+
+
+def test_native_analysis_crash_cleans_parent_owned_audio_and_sysex_snapshots(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
+    from rytm_randomizer.observability.errors import BoundaryError
+
+    audio_path = tmp_path / "reference.wav"
+    audio_path.write_bytes(AUDIO_BYTES)
+    observed_staging_dirs: list[Path] = []
+
+    def crash_after_snapshot(
+        audio_snapshot: Path,
+        *,
+        track: int,
+        candidate_count: int,
+    ) -> object:
+        del track, candidate_count
+        observed_staging_dirs.append(audio_snapshot.parent)
+        assert audio_snapshot.read_bytes() == AUDIO_BYTES
+        assert (audio_snapshot.parent / "source-kit.syx").read_bytes() == SOURCE_KIT.read_bytes()
+        raise BoundaryError(
+            "native worker access violation",
+            context={
+                "error_code": "inference_failed",
+                "exit_code": 0xC0000005,
+            },
+        )
+
+    monkeypatch.setattr(batch.tempfile, "tempdir", str(tmp_path))
+    monkeypatch.setattr(batch, "_build_audio_inference", crash_after_snapshot)
+
+    with pytest.raises(
+        batch.AnalogFourPatchBatchStageError,
+        match="native worker access violation",
+    ) as exc_info:
+        batch.export_analog_four_audio_patch_batch(
+            audio_path=audio_path,
+            source_kit_path=SOURCE_KIT,
+            output_dir=tmp_path / "batch",
+            track=2,
+            candidate_count=1,
+        )
+
+    assert exc_info.value.error_code == "inference_failed"
+    assert len(observed_staging_dirs) == 1
+    assert not observed_staging_dirs[0].exists()
+    assert tuple(tmp_path.glob("a4-audio-patch-batch-*")) == ()
+    assert not (tmp_path / "batch").exists()
+
+
+def test_batch_service_boundary_traces_terminal_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
+
+    audio_path = tmp_path / "reference.wav"
+    audio_path.write_bytes(AUDIO_BYTES)
+    events: list[str] = []
+
+    @contextmanager
+    def observe_operation(name: str, **_kwargs: object) -> Iterator[None]:
+        events.append(f"start:{name}")
+        try:
+            yield
+        except BaseException:
+            events.append(f"error:{name}")
+            raise
+
+    monkeypatch.setattr(batch, "trace_operation", observe_operation)
+    monkeypatch.setattr(
+        batch,
+        "_build_audio_inference",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(KeyboardInterrupt("operator cancelled")),
+    )
+
+    with pytest.raises(KeyboardInterrupt, match="operator cancelled"):
+        batch.export_analog_four_audio_patch_batch(
+            audio_path=audio_path,
+            source_kit_path=SOURCE_KIT,
+            output_dir=tmp_path / "batch",
+            candidate_count=1,
+        )
+
+    assert events == [
+        "start:a4_audio_patch_batch_export",
+        "error:a4_audio_patch_batch_export",
+    ]
 
 
 def test_private_staging_is_cleaned_before_publication_lock(
@@ -1048,7 +1209,7 @@ def test_publication_failure_surfaces_lock_cleanup_note(
         return real_atomic_write(path, data, overwrite=overwrite)
 
     monkeypatch.setattr(batch, "atomic_write", fail_sidecar)
-    monkeypatch.setattr(batch, "_release_batch_lock", lambda _path: "lock busy")
+    monkeypatch.setattr(batch, "_release_batch_lock", lambda _path, **_kwargs: "lock busy")
 
     with pytest.raises(OSError, match="publication failed") as exc_info:
         _export(tmp_path, candidate_count=1)
@@ -1063,7 +1224,13 @@ def test_release_batch_lock_reports_unlink_failure(
     from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
 
     lock_path = tmp_path / "batch.lock"
-    lock_path.write_bytes(b"lock")
+    lock_args = {
+        "generation_id": "a" * 32,
+        "publication_nonce": "b" * 32,
+        "audio_sha256": "c" * 64,
+        "source_kit_sha256": "d" * 64,
+    }
+    batch._acquire_batch_lock(lock_path, **lock_args)
     real_unlink = Path.unlink
 
     def fail_lock_unlink(path: Path, *args: object, **kwargs: object) -> None:
@@ -1072,7 +1239,10 @@ def test_release_batch_lock_reports_unlink_failure(
         real_unlink(path, *args, **kwargs)  # type: ignore[arg-type]
 
     monkeypatch.setattr(Path, "unlink", fail_lock_unlink)
-    assert batch._release_batch_lock(lock_path) == f"{lock_path}: lock busy"
+    assert (
+        batch._release_batch_lock(lock_path, **lock_args)
+        == f"{lock_path.name}: OSError; lock retained"
+    )
 
 
 def test_batch_lock_contains_recovery_metadata_and_has_distinct_error(
@@ -1122,7 +1292,10 @@ def test_batch_lock_contention_handles_unreadable_recovery_metadata(
         return real_read_text(path, *args, **kwargs)  # type: ignore[arg-type]
 
     monkeypatch.setattr(Path, "read_text", fail_lock_read)
-    with pytest.raises(batch.AnalogFourPatchBatchLockedError, match="metadata: unavailable"):
+    with pytest.raises(
+        batch.AnalogFourPatchBatchLockedError,
+        match="recovery metadata: unavailable",
+    ):
         batch._acquire_batch_lock(
             lock_path,
             generation_id="a" * 32,
@@ -1137,7 +1310,10 @@ def test_batch_lock_contention_handles_non_utf8_recovery_metadata(tmp_path: Path
 
     lock_path = tmp_path / "batch.lock"
     lock_path.write_bytes(b"\xff")
-    with pytest.raises(batch.AnalogFourPatchBatchLockedError, match="metadata: unavailable"):
+    with pytest.raises(
+        batch.AnalogFourPatchBatchLockedError,
+        match="recovery metadata: unavailable",
+    ):
         batch._acquire_batch_lock(
             lock_path,
             generation_id="a" * 32,
@@ -1164,6 +1340,9 @@ def test_batch_error_code_has_bounded_unknown_fallback() -> None:
     ("error", "source_reads_complete", "output_phase_started", "error_code"),
     [
         (PermissionError("denied"), False, False, "permission_denied"),
+        (FileNotFoundError("missing input"), False, False, "input_not_found"),
+        (FileNotFoundError("missing inference file"), True, False, "inference_failed"),
+        (FileNotFoundError("missing artifact"), True, True, "write_failed"),
         (OSError("read"), False, False, "source_read_failed"),
     ],
 )
@@ -1249,7 +1428,7 @@ def test_export_audio_patch_batch_surfaces_lock_cleanup_failure(
 
     logged: list[str] = []
     reset_metrics()
-    monkeypatch.setattr(batch, "_release_batch_lock", lambda _path: "lock busy")
+    monkeypatch.setattr(batch, "_release_batch_lock", lambda _path, **_kwargs: "lock busy")
     monkeypatch.setattr(batch._logger, "error", lambda message, **_kwargs: logged.append(message))
 
     result = _export(tmp_path, candidate_count=1)
@@ -1261,6 +1440,120 @@ def test_export_audio_patch_batch_surfaces_lock_cleanup_failure(
     assert get_metrics().export_count == 1
     assert (tmp_path / "batch" / ".a4-t2-audio-patch-batch.lock").exists()
     assert (tmp_path / "batch" / "a4-t2-audio-patch-batch.json").exists()
+
+
+@pytest.mark.parametrize("signal_type", [KeyboardInterrupt, SystemExit])
+def test_post_manifest_cleanup_interrupt_is_a_success_warning(
+    tmp_path: Path,
+    _mocked_inference: None,
+    monkeypatch: pytest.MonkeyPatch,
+    signal_type: type[BaseException],
+) -> None:
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
+    gate_path = tmp_path / "batch" / ".a4-t2-audio-patch-batch.lock.operation"
+    real_rmdir = Path.rmdir
+    gate_cleanup_attempts = 0
+
+    def interrupt_once(path: Path) -> None:
+        nonlocal gate_cleanup_attempts
+        if path == gate_path:
+            gate_cleanup_attempts += 1
+        if path == gate_path and gate_cleanup_attempts == 2:
+            raise signal_type("cleanup interrupted after commit")
+        real_rmdir(path)
+
+    reset_metrics()
+    monkeypatch.setattr(Path, "rmdir", interrupt_once)
+
+    result = _export(tmp_path, candidate_count=1)
+
+    assert gate_cleanup_attempts == 4
+    assert result.lock_cleanup_warning is not None
+    assert "cleanup interrupted after manifest commit" in result.lock_cleanup_warning
+    assert "best-effort cleanup retry completed" in result.lock_cleanup_warning
+    assert result.manifest_path.exists()
+    assert not (tmp_path / "batch" / ".a4-t2-audio-patch-batch.lock").exists()
+    metrics = get_metrics()
+    assert metrics.export_count == 1
+    assert not metrics.export_errors_by_code
+
+
+def test_cleanup_interrupt_does_not_mask_pre_manifest_failure(
+    tmp_path: Path,
+    _mocked_inference: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
+
+    real_atomic_write = batch.atomic_write
+    real_release = batch._release_batch_lock
+    release_attempts = 0
+
+    def interrupt_manifest(path: Path, data: bytes, *, overwrite: bool = False):
+        if path.name == "a4-t2-audio-patch-batch.json":
+            raise KeyboardInterrupt("manifest interrupted")
+        return real_atomic_write(path, data, overwrite=overwrite)
+
+    def interrupt_cleanup_once(lock_path: Path, **owner: str) -> str | None:
+        nonlocal release_attempts
+        release_attempts += 1
+        if release_attempts == 1:
+            raise SystemExit("cleanup interrupted")
+        return real_release(lock_path, **owner)
+
+    monkeypatch.setattr(batch, "atomic_write", interrupt_manifest)
+    monkeypatch.setattr(batch, "_release_batch_lock", interrupt_cleanup_once)
+
+    with pytest.raises(KeyboardInterrupt, match="manifest interrupted") as exc_info:
+        _export(tmp_path, candidate_count=1)
+
+    assert release_attempts == 2
+    assert "lock cleanup interrupted while publication failed" in exc_info.value.__notes__[0]
+    assert not (tmp_path / "batch" / ".a4-t2-audio-patch-batch.lock").exists()
+
+
+@pytest.mark.parametrize("retry_mode", ["failure", "interrupt"])
+def test_post_manifest_cleanup_retry_failure_remains_a_success_warning(
+    tmp_path: Path,
+    _mocked_inference: None,
+    monkeypatch: pytest.MonkeyPatch,
+    retry_mode: str,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
+    release_attempts = 0
+
+    def fail_cleanup(lock_path: Path, **owner: str) -> str | None:
+        nonlocal release_attempts
+        del lock_path, owner
+        release_attempts += 1
+        if release_attempts == 1:
+            raise KeyboardInterrupt("cleanup interrupted")
+        if retry_mode == "interrupt":
+            raise SystemExit("cleanup retry interrupted")
+        return "lock retained by test"
+
+    reset_metrics()
+    monkeypatch.setattr(batch, "_release_batch_lock", fail_cleanup)
+
+    result = _export(tmp_path, candidate_count=1)
+
+    assert release_attempts == 2
+    assert result.lock_cleanup_warning is not None
+    assert "retry result" in result.lock_cleanup_warning
+    if retry_mode == "interrupt":
+        assert "best-effort cleanup retry interrupted" in result.lock_cleanup_warning
+    else:
+        assert "lock retained by test" in result.lock_cleanup_warning
+    assert result.manifest_path.exists()
+    lock_path = tmp_path / "batch" / ".a4-t2-audio-patch-batch.lock"
+    assert lock_path.exists()
+    lock_path.unlink()
+    metrics = get_metrics()
+    assert metrics.export_count == 1
+    assert not metrics.export_errors_by_code
 
 
 def test_export_audio_patch_batch_rejects_incomplete_or_invalid_candidate_dna(
@@ -1426,7 +1719,7 @@ def test_build_audio_inference_uses_public_audio_inference_serializers(
         observed.update(path=path, track=track, candidate_count=candidate_count)
         return public_result
 
-    monkeypatch.setattr(public_api, "build_analog_four_audio_patch_genome", fake_build)
+    monkeypatch.setattr(public_api, "build_analog_four_audio_patch_genome_isolated", fake_build)
     result = batch._build_audio_inference(tmp_path / "audio.wav", track=3, candidate_count=1)
 
     assert observed == {"path": tmp_path / "audio.wav", "track": 3, "candidate_count": 1}

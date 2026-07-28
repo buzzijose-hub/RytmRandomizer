@@ -30,6 +30,7 @@ from __future__ import annotations
 import dataclasses
 import hashlib
 import sys
+from io import BytesIO
 from pathlib import Path
 
 import pytest
@@ -489,6 +490,51 @@ def test_analyze_audio_hashes_and_measures_one_immutable_snapshot(
     assert not observed_snapshots[0].exists()
 
 
+def test_analyze_audio_snapshot_uses_caller_owned_path_without_copy(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.style_analysis.extractor import analyze_audio_snapshot
+
+    audio_path = tmp_path / "parent-owned.wav"
+    original = b"parent-owned-audio"
+    audio_path.write_bytes(original)
+    observed: list[bytes] = []
+
+    def measure(snapshot: BytesIO):
+        observed.append(snapshot.getvalue())
+        audio_path.write_bytes(b"concurrent-replacement")
+        return {
+            "bpm": 126.0,
+            "tempo_stability": 0.9,
+            "kick_density": 0.4,
+            "percussion_density": 0.5,
+            "low_end_weight": 0.6,
+            "spectral_brightness": 0.7,
+            "texture_noise": 0.2,
+            "energy_arc": (0.2, 0.4, 0.6, 0.8),
+            "duration": 0.5,
+            "attack": 0.1,
+            "decay": 0.2,
+            "sustain": 0.3,
+            "tail": 0.4,
+            "spectral_flatness": 0.2,
+            "noise": 0.2,
+            "harmonicity": 0.8,
+            "transient": 0.4,
+            "modulation": 0.3,
+        }
+
+    monkeypatch.setattr(extractor_module, "_measure_audio_features", measure)
+    analysis = analyze_audio_snapshot(audio_path)
+
+    assert observed == [original]
+    assert audio_path.exists()
+    assert analysis.audio_sha256 == hashlib.sha256(original).hexdigest()
+    with pytest.raises(TypeError, match="path must be"):
+        analyze_audio_snapshot("parent-owned.wav")  # type: ignore[arg-type]
+
+
 def test_audio_synthesis_measurement_helpers_cover_bounds() -> None:
     assert extractor_module._audio_safe_ratio(1.0, 0.0) == 0.0
     assert extractor_module._audio_safe_ratio(1.0, 2.0) == 0.5
@@ -506,6 +552,11 @@ def test_audio_synthesis_measurement_helpers_cover_bounds() -> None:
     assert extractor_module._tempo_stability([]) == 0.0
     assert extractor_module._tempo_stability([0.0, 1.0, 2.0]) == 1.0
     assert extractor_module._tempo_stability([1.0, 1.0, 1.0]) == 0.0
+    assert extractor_module._tempo_from_onsets([], 22_050) == 0.0
+    assert extractor_module._tempo_from_onsets([0.0, 1.0], 0) == 0.0
+    assert extractor_module._tempo_from_onsets([2.0, 1.0], 22_050) == 0.0
+    assert 60.0 <= extractor_module._tempo_from_onsets([0.0, 43.0], 22_050) <= 200.0
+    assert 60.0 <= extractor_module._tempo_from_onsets([0.0, 100.0], 22_050) <= 200.0
     assert extractor_module._spectral_weights([], [], onset_count=0, percussion_density=0.5) == (
         0.0,
         0.0,
@@ -616,7 +667,11 @@ def test_analyze_library_raises_dependency_error_with_audio_present(
 
     # Library imports the helper from extractor; patch via the library
     # module-level name.
-    monkeypatch.setattr(library_module, "_require_librosa", _explode)
+    monkeypatch.setattr(
+        library_module,
+        "_require_library_audio_dependencies",
+        _explode,
+    )
     with pytest.raises(StyleAnalysisDependencyError):
         analyze_library(tmp_path)
 

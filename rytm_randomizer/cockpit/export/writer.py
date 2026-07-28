@@ -216,26 +216,22 @@ def atomic_write(path: Path, data: bytes, *, overwrite: bool = False) -> WriteRe
     )
     try:
         try:
-            remaining = memoryview(data)
-            while remaining:
-                bytes_written = os.write(tmp_fd, remaining)
-                if bytes_written <= 0:
-                    raise WriteError("write made no progress")
-                remaining = remaining[bytes_written:]
-            os.fsync(tmp_fd)
-        finally:
-            os.close(tmp_fd)
+            try:
+                remaining = memoryview(data)
+                while remaining:
+                    bytes_written = os.write(tmp_fd, remaining)
+                    if bytes_written <= 0:
+                        raise WriteError("write made no progress")
+                    remaining = remaining[bytes_written:]
+                os.fsync(tmp_fd)
+            finally:
+                os.close(tmp_fd)
+        except WriteError:
+            raise
+        except OSError as exc:
+            raise WriteError(f"atomic_write failed for {path}: {exc}") from exc
 
-        if overwrite:
-            os.replace(tmp_name, str(path))
-        else:
-            _publish_no_overwrite(tmp_name, path)
-    except FileExistsError:
-        raise
-    except WriteError:
-        raise
-    except OSError as exc:
-        raise WriteError(f"atomic_write failed for {path}: {exc}") from exc
+        _publish_temp_file(tmp_name, path, overwrite=overwrite)
     finally:
         # Also runs for KeyboardInterrupt/SystemExit without broadly catching
         # them. Cleanup must never mask the active publication outcome.
@@ -247,6 +243,23 @@ def atomic_write(path: Path, data: bytes, *, overwrite: bool = False) -> WriteRe
         bytes_written=len(data),
         overwrote_existing=overwrote_existing,
     )
+
+
+def _publish_temp_file(tmp_name: str, path: Path, *, overwrite: bool) -> None:
+    """Publish a completed temp file with collision-specific error handling."""
+
+    if overwrite:
+        try:
+            os.replace(tmp_name, str(path))
+        except OSError as exc:
+            raise WriteError(f"atomic_write failed for {path}: {exc}") from exc
+        return
+    try:
+        _publish_no_overwrite(tmp_name, path)
+    except FileExistsError:
+        raise
+    except OSError as exc:
+        raise WriteError(f"atomic_write failed for {path}: {exc}") from exc
 
 
 def _publish_no_overwrite(tmp_name: str, path: Path) -> None:
@@ -263,8 +276,8 @@ def _publish_no_overwrite(tmp_name: str, path: Path) -> None:
             "Atomic write temp cleanup failed after publication",
             extra={
                 "operation": "atomic_write_cleanup",
-                "temp_path": tmp_name,
-                "output_path": str(path),
+                "temp_name": Path(tmp_name).name,
+                "output_name": path.name,
                 "error_type": type(exc).__name__,
             },
         )

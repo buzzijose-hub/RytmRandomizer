@@ -12,7 +12,7 @@ feature_report.FeatureReport`-producing functions called out in
   requires the ``style`` optional extra.
 
 Determinism guarantee: the audio paths use librosa's deterministic
-algorithms (``librosa.beat.beat_track``, ``librosa.feature.spectral_centroid``,
+algorithms (``librosa.onset.onset_detect``, ``librosa.feature.spectral_centroid``,
 RMS, onset rate). Same audio in -> same :class:`FeatureReport` out. The
 non-audio path is deterministic by construction (it never reads audio).
 
@@ -29,8 +29,10 @@ import math
 import statistics
 import string
 import tempfile
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from io import BytesIO
 from pathlib import Path
 from typing import (
     ClassVar,
@@ -39,6 +41,7 @@ from typing import (
     Protocol,
     SupportsFloat,
     TypedDict,
+    TypeVar,
     cast,
 )
 
@@ -49,9 +52,12 @@ from .feature_report import FeatureReport, compute_feature_report_hash
 
 _AUDIO_SAMPLE_RATE: Final[int] = 22_050
 _AUDIO_HOP_LENGTH: Final[int] = 512
+_RuntimeValue = TypeVar("_RuntimeValue")
 
 
-class _FeatureMeasurements(TypedDict):
+class FeatureMeasurements(TypedDict):
+    """Measured feature subset shared by single-file and library analysis."""
+
     bpm: float
     tempo_stability: float
     kick_density: float
@@ -62,7 +68,9 @@ class _FeatureMeasurements(TypedDict):
     energy_arc: tuple[float, ...]
 
 
-class _AudioMeasurements(_FeatureMeasurements):
+class AudioMeasurements(FeatureMeasurements):
+    """Complete deterministic measurement payload for one audio source."""
+
     duration: float
     attack: float
     decay: float
@@ -73,6 +81,26 @@ class _AudioMeasurements(_FeatureMeasurements):
     harmonicity: float
     transient: float
     modulation: float
+
+
+def _require_extractor_runtime_type(
+    value: object,
+    expected_type: type[_RuntimeValue],
+    message: str,
+) -> _RuntimeValue:
+    if not isinstance(value, expected_type):
+        raise TypeError(message)
+    return value
+
+
+def _require_path_list(value: object) -> list[Path]:
+    if not isinstance(value, list):
+        raise TypeError("paths must be a list of Path objects")
+    raw_paths = cast(list[object], value)
+    for path in raw_paths:
+        if not isinstance(path, Path):
+            raise TypeError("every entry in paths must be a pathlib.Path")
+    return cast(list[Path], raw_paths)
 
 
 _ScalarFeatureName = Literal[
@@ -86,53 +114,34 @@ _ScalarFeatureName = Literal[
 ]
 
 
-class _ArrayResult(Protocol):  # pragma: no cover - typing-only optional dependency API
-    def reshape(self, *_shape: int) -> _ArrayResult: ...
-
-    def tolist(self) -> object: ...
-
-
-class _NumpyApi(Protocol):  # pragma: no cover - typing-only optional dependency API
-    def abs(self, *_args: object, **_kwargs: object) -> object: ...
-
-    def asarray(self, *_args: object, **_kwargs: object) -> _ArrayResult: ...
+class _ArrayResult(Protocol):
+    reshape: Callable[..., _ArrayResult]
+    tolist: Callable[[], object]
 
 
-class _BeatApi(Protocol):  # pragma: no cover - typing-only optional dependency API
-    def beat_track(self, *_args: object, **_kwargs: object) -> tuple[object, object]: ...
+class _NumpyApi(Protocol):
+    abs: Callable[..., object]
+    asarray: Callable[..., _ArrayResult]
 
 
-class _OnsetApi(Protocol):  # pragma: no cover - typing-only optional dependency API
-    def onset_strength(self, *_args: object, **_kwargs: object) -> object: ...
-
-    def onset_detect(self, *_args: object, **_kwargs: object) -> object: ...
-
-
-class _FeatureApi(Protocol):  # pragma: no cover - typing-only optional dependency API
-    def spectral_centroid(self, *_args: object, **_kwargs: object) -> object: ...
-
-    def spectral_flatness(self, *_args: object, **_kwargs: object) -> object: ...
-
-    def rms(self, *_args: object, **_kwargs: object) -> object: ...
-
-    def zero_crossing_rate(self, *_args: object, **_kwargs: object) -> object: ...
+class _OnsetApi(Protocol):
+    onset_strength: Callable[..., object]
+    onset_detect: Callable[..., object]
 
 
-class _EffectsApi(Protocol):  # pragma: no cover - typing-only optional dependency API
-    def harmonic(self, *_args: object, **_kwargs: object) -> object: ...
+class _FeatureApi(Protocol):
+    spectral_centroid: Callable[..., object]
+    spectral_flatness: Callable[..., object]
+    rms: Callable[..., object]
+    zero_crossing_rate: Callable[..., object]
 
 
-class _LibrosaApi(Protocol):  # pragma: no cover - typing-only optional dependency API
-    beat: _BeatApi
+class _LibrosaApi(Protocol):
     onset: _OnsetApi
     feature: _FeatureApi
-    effects: _EffectsApi
-
-    def load(self, *_args: object, **_kwargs: object) -> tuple[object, int]: ...
-
-    def stft(self, *_args: object, **_kwargs: object) -> object: ...
-
-    def fft_frequencies(self, *_args: object, **_kwargs: object) -> object: ...
+    load: Callable[..., tuple[object, int]]
+    stft: Callable[..., object]
+    fft_frequencies: Callable[..., object]
 
 
 @dataclass(frozen=True)
@@ -257,22 +266,25 @@ def audio_synthesis_features_to_dict(
 ) -> AudioSynthesisFeaturesPayload:
     """Return the stable JSON payload for reusable synthesis measurements."""
 
-    if not isinstance(features, AudioSynthesisFeatures):
-        raise TypeError("features must be AudioSynthesisFeatures")
+    validated_features = _require_extractor_runtime_type(
+        features,
+        AudioSynthesisFeatures,
+        "features must be AudioSynthesisFeatures",
+    )
     return {
-        "audio_sha256": features.audio_sha256,
-        "duration": features.duration,
-        "attack": features.attack,
-        "decay": features.decay,
-        "sustain": features.sustain,
-        "tail": features.tail,
-        "brightness": features.brightness,
-        "spectral_flatness": features.spectral_flatness,
-        "noise": features.noise,
-        "low_end": features.low_end,
-        "harmonicity": features.harmonicity,
-        "transient": features.transient,
-        "modulation": features.modulation,
+        "audio_sha256": validated_features.audio_sha256,
+        "duration": validated_features.duration,
+        "attack": validated_features.attack,
+        "decay": validated_features.decay,
+        "sustain": validated_features.sustain,
+        "tail": validated_features.tail,
+        "brightness": validated_features.brightness,
+        "spectral_flatness": validated_features.spectral_flatness,
+        "noise": validated_features.noise,
+        "low_end": validated_features.low_end,
+        "harmonicity": validated_features.harmonicity,
+        "transient": validated_features.transient,
+        "modulation": validated_features.modulation,
     }
 
 
@@ -341,6 +353,12 @@ def _require_librosa() -> tuple[_LibrosaApi, _NumpyApi]:
             'Install it with: pip install -e ".[style,dev]"'
         ) from exc
     return cast(_LibrosaApi, librosa), cast(_NumpyApi, numpy)
+
+
+def require_audio_analysis_dependencies() -> None:
+    """Validate that the optional audio-analysis dependencies are available."""
+
+    _require_librosa()
 
 
 def _flat_float_values(numpy: _NumpyApi, value: object) -> list[float]:
@@ -427,6 +445,29 @@ def _tempo_stability(beats: list[float]) -> float:
     return _normalize_unit(1.0 - coefficient)
 
 
+def _tempo_from_onsets(onsets: list[float], sample_rate: int) -> float:
+    """Estimate a bounded tempo from median onset spacing."""
+
+    if len(onsets) < 2 or sample_rate <= 0:
+        return 0.0
+    intervals = [
+        (right - left) * _AUDIO_HOP_LENGTH / float(sample_rate)
+        for left, right in zip(onsets, onsets[1:])
+        if right > left
+    ]
+    if not intervals:
+        return 0.0
+    ordered = sorted(intervals)
+    middle = len(ordered) // 2
+    median = ordered[middle] if len(ordered) % 2 else (ordered[middle - 1] + ordered[middle]) / 2.0
+    bpm = 60.0 / median
+    while bpm > 200.0:
+        bpm /= 2.0
+    while 0.0 < bpm < 60.0:
+        bpm *= 2.0
+    return bpm
+
+
 def _spectral_weights(
     magnitude: list[list[float]],
     frequencies: list[float],
@@ -459,7 +500,7 @@ def _energy_arc(rms: list[float]) -> tuple[float, ...]:
     return tuple(_normalize_unit(rms[index] / peak) for index in indices)
 
 
-def _measure_audio_features(path: Path) -> _AudioMeasurements:
+def _measure_audio_features(source: Path | BytesIO) -> AudioMeasurements:
     """Return the raw measurement dict for a single audio file.
 
     Pulled out so :func:`extract_from_audio`, :func:`extract_from_partial`,
@@ -478,7 +519,8 @@ def _measure_audio_features(path: Path) -> _AudioMeasurements:
 
     # ``mono=True`` and an explicit sample rate keep the measurement
     # deterministic across machines / librosa versions.
-    y, sr = librosa.load(str(path), sr=_AUDIO_SAMPLE_RATE, mono=True)
+    decode_source = str(source) if isinstance(source, Path) else source
+    y, sr = librosa.load(decode_source, sr=_AUDIO_SAMPLE_RATE, mono=True)
     samples = _flat_float_values(numpy, y)
 
     if not samples or sr <= 0:
@@ -504,23 +546,20 @@ def _measure_audio_features(path: Path) -> _AudioMeasurements:
             "modulation": 0.0,
         }
 
-    # Tempo + stability.
-    # ``beat_track`` returns the global tempo + the per-frame beat indices;
-    # the std-dev of the inter-beat interval is our stability proxy.
-    tempo, raw_beats = librosa.beat.beat_track(y=y, sr=sr)
-    tempo_values = _flat_float_values(numpy, tempo)
-    bpm = _first_finite(tempo_values)
-    beats = _flat_float_values(numpy, raw_beats)
-    tempo_stability = _tempo_stability(beats)
-
-    # Onset rate -> percussion density. Kick density is the share of
-    # onset energy concentrated in the sub band (40-120Hz).
+    # Onset spacing -> bounded tempo/stability. This avoids librosa's native
+    # beat tracker, which is unstable for broadband noise on some Windows
+    # scientific-Python builds.
     onset_env = librosa.onset.onset_strength(y=y, sr=sr)
     onset_values = _flat_float_values(numpy, onset_env)
     onsets = _flat_float_values(
         numpy,
         librosa.onset.onset_detect(onset_envelope=onset_env, sr=sr),
     )
+    bpm = _tempo_from_onsets(onsets, sr)
+    tempo_stability = _tempo_stability(onsets)
+
+    # Onset rate -> percussion density. Kick density is the share of
+    # onset energy concentrated in the sub band (40-120Hz).
     duration = len(samples) / float(sr)
     # Onsets per second; ~8 onsets/sec is "very dense" in techno.
     onsets_per_sec = float(len(onsets)) / duration
@@ -565,10 +604,9 @@ def _measure_audio_features(path: Path) -> _AudioMeasurements:
     zero_crossings = _flat_float_values(numpy, librosa.feature.zero_crossing_rate(y))
     zero_crossing_mean = _audio_mean(zero_crossings)
     noise = _normalize_unit(flatness_mean * 0.75 + zero_crossing_mean * 0.25)
-    harmonic = _flat_float_values(numpy, librosa.effects.harmonic(y))
-    harmonic_energy = sum(sample * sample for sample in harmonic)
-    sample_energy = sum(sample * sample for sample in samples)
-    harmonicity = _audio_safe_ratio(harmonic_energy, sample_energy)
+    # Spectral concentration is a stable proxy for harmonicity and avoids
+    # native HPSS code paths that can terminate the process on broadband noise.
+    harmonicity = _normalize_unit(1.0 - flatness_mean)
     transient = _audio_safe_ratio(
         _audio_mean(onset_values),
         max(onset_values, default=0.0),
@@ -600,13 +638,19 @@ def _measure_audio_features(path: Path) -> _AudioMeasurements:
     }
 
 
+def measure_audio_features(source: Path | BytesIO) -> AudioMeasurements:
+    """Measure one audio source through the shared deterministic extractor."""
+
+    return _measure_audio_features(source)
+
+
 # ---------------------------------------------------------------------------
 # Public entry points
 # ---------------------------------------------------------------------------
 
 
-def _audio_feature_report(measurements: _AudioMeasurements) -> FeatureReport:
-    report = FeatureReport(  # pragma: no cover - requires librosa
+def _audio_feature_report(measurements: AudioMeasurements) -> FeatureReport:
+    report = FeatureReport(
         source_type=SourceType.SINGLE_TRACK,
         confidence=Confidence.HIGH,
         bpm=measurements["bpm"],
@@ -623,27 +667,11 @@ def _audio_feature_report(measurements: _AudioMeasurements) -> FeatureReport:
     return _finalize(report)
 
 
-def analyze_audio(path: Path) -> AudioFeatureAnalysis:
-    """Decode one audio file into a report and reusable synthesis measurements.
-
-    Uses librosa for beat tracking, onset detection, spectral centroid,
-    STFT-based low-end share, spectral flatness, and RMS energy arc. The
-    waveform is decoded once and shared by all measurements.
-
-    Raises :class:`StyleAnalysisDependencyError` if ``librosa`` is not
-    installed -- the ``style`` optional extra brings it in
-    (``pip install -e ".[style,dev]"``).
-    """
-
-    if not isinstance(path, Path):
-        raise TypeError("path must be a pathlib.Path")
-
-    audio_bytes = path.read_bytes()
-    audio_sha256 = hashlib.sha256(audio_bytes).hexdigest()
-    with tempfile.TemporaryDirectory(prefix="style-audio-analysis-") as temp_name:
-        snapshot = Path(temp_name) / f"audio{path.suffix or '.bin'}"
-        snapshot.write_bytes(audio_bytes)
-        measurements = _measure_audio_features(snapshot)
+def _audio_feature_analysis(
+    *,
+    audio_sha256: str,
+    measurements: AudioMeasurements,
+) -> AudioFeatureAnalysis:
     return AudioFeatureAnalysis(
         feature_report=_audio_feature_report(measurements),
         synthesis_features=AudioSynthesisFeatures(
@@ -661,6 +689,59 @@ def analyze_audio(path: Path) -> AudioFeatureAnalysis:
             transient=measurements["transient"],
             modulation=measurements["modulation"],
         ),
+    )
+
+
+def analyze_audio_snapshot(path: Path) -> AudioFeatureAnalysis:
+    """Analyze a stable, caller-owned audio snapshot without copying it.
+
+    This entry point exists for process-isolated product workflows. The
+    caller must keep ``path`` immutable and alive for the complete call.
+    No temporary path is created here, so a native decoder crash cannot
+    strand an additional child-owned copy of private audio.
+    """
+
+    validated_path = _require_extractor_runtime_type(
+        path,
+        Path,
+        "path must be a pathlib.Path",
+    )
+
+    audio_bytes = validated_path.read_bytes()
+    audio_sha256 = hashlib.sha256(audio_bytes).hexdigest()
+    return _audio_feature_analysis(
+        audio_sha256=audio_sha256,
+        measurements=_measure_audio_features(BytesIO(audio_bytes)),
+    )
+
+
+def analyze_audio(path: Path) -> AudioFeatureAnalysis:
+    """Decode one audio file into a report and reusable synthesis measurements.
+
+    Uses librosa for beat tracking, onset detection, spectral centroid,
+    STFT-based low-end share, spectral flatness, and RMS energy arc. The
+    waveform is decoded once and shared by all measurements.
+
+    Raises :class:`StyleAnalysisDependencyError` if ``librosa`` is not
+    installed -- the ``style`` optional extra brings it in
+    (``pip install -e ".[style,dev]"``).
+    """
+
+    validated_path = _require_extractor_runtime_type(
+        path,
+        Path,
+        "path must be a pathlib.Path",
+    )
+
+    audio_bytes = validated_path.read_bytes()
+    audio_sha256 = hashlib.sha256(audio_bytes).hexdigest()
+    with tempfile.TemporaryDirectory(prefix="style-audio-analysis-") as temp_name:
+        snapshot = Path(temp_name) / f"audio{validated_path.suffix or '.bin'}"
+        snapshot.write_bytes(audio_bytes)
+        measurements = _measure_audio_features(snapshot)
+    return _audio_feature_analysis(
+        audio_sha256=audio_sha256,
+        measurements=measurements,
     )
 
 
@@ -683,13 +764,15 @@ def extract_from_description(
     hardware validation in lieu of the missing audio measurement).
     """
 
-    if not isinstance(text, str):
-        raise TypeError("text must be a string")
-    if not isinstance(source_type, SourceType):
-        raise TypeError("source_type must be a SourceType enum member")
+    _require_extractor_runtime_type(text, str, "text must be a string")
+    validated_source_type = _require_extractor_runtime_type(
+        source_type,
+        SourceType,
+        "source_type must be a SourceType enum member",
+    )
 
     report = FeatureReport(
-        source_type=source_type,
+        source_type=validated_source_type,
         confidence=Confidence.LOW,
         bpm=0.0,
         tempo_stability=0.0,
@@ -716,15 +799,10 @@ def extract_from_partial(paths: list[Path], notes: str) -> FeatureReport:
     the user has nominated this as a partial-audio source.
     """
 
-    if not isinstance(paths, list):
-        raise TypeError("paths must be a list of Path objects")
-    if not isinstance(notes, str):
-        raise TypeError("notes must be a string")
-    for p in paths:
-        if not isinstance(p, Path):
-            raise TypeError("every entry in paths must be a pathlib.Path")
+    validated_paths = _require_path_list(paths)
+    _require_extractor_runtime_type(notes, str, "notes must be a string")
 
-    if not paths:
+    if not validated_paths:
         report = FeatureReport(
             source_type=SourceType.SINGLE_TRACK,
             confidence=Confidence.MEDIUM,
@@ -743,10 +821,10 @@ def extract_from_partial(paths: list[Path], notes: str) -> FeatureReport:
 
     # Audio present -> measure each file, aggregate.
     _require_librosa()
-    per_file = [_measure_audio_features(p) for p in paths]  # pragma: no cover - requires librosa
-    aggregated = _aggregate_measurements(per_file)  # pragma: no cover - requires librosa
+    per_file = [_measure_audio_features(p) for p in validated_paths]
+    aggregated = _aggregate_measurements(per_file)
 
-    report = FeatureReport(  # pragma: no cover - requires librosa
+    report = FeatureReport(
         source_type=SourceType.SINGLE_TRACK,
         confidence=Confidence.MEDIUM,
         bpm=aggregated["bpm"],
@@ -760,12 +838,12 @@ def extract_from_partial(paths: list[Path], notes: str) -> FeatureReport:
         content_hash="",
         derived_at=_now_iso(),
     )
-    return _finalize(report)  # pragma: no cover - requires librosa
+    return _finalize(report)
 
 
-def _aggregate_measurements(  # pragma: no cover - requires librosa-derived inputs
-    per_file: list[_AudioMeasurements],
-) -> _FeatureMeasurements:
+def _aggregate_measurements(
+    per_file: list[AudioMeasurements],
+) -> FeatureMeasurements:
     """Aggregate a list of per-file measurement dicts into one.
 
     Uses median across files for the scalar fields (deterministic,
@@ -802,14 +880,29 @@ def _aggregate_measurements(  # pragma: no cover - requires librosa-derived inpu
     }
 
 
+def aggregate_audio_measurements(
+    per_file: list[AudioMeasurements],
+) -> FeatureMeasurements:
+    """Aggregate deterministic measurements without exposing private helpers."""
+
+    return _aggregate_measurements(per_file)
+
+
 __all__ = [
+    "AudioMeasurements",
     "AudioFeatureAnalysis",
     "AudioSynthesisFeatures",
     "AudioSynthesisFeaturesPayload",
+    "FeatureMeasurements",
     "StyleAnalysisDependencyError",
     "analyze_audio",
+    "analyze_audio_snapshot",
+    "aggregate_audio_measurements",
     "audio_synthesis_features_to_dict",
     "extract_from_audio",
     "extract_from_description",
     "extract_from_partial",
+    "_first_finite",
+    "measure_audio_features",
+    "require_audio_analysis_dependencies",
 ]

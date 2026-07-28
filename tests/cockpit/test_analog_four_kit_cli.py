@@ -212,6 +212,40 @@ def test_handler_reports_missing_source_file(
         assert "Error [input_not_found]:" in captured.err
 
 
+@pytest.mark.parametrize("json_output", [False, True])
+def test_handler_reports_operator_interrupt(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    json_output: bool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_cli as cli
+
+    monkeypatch.setattr(
+        cli,
+        "export_analog_four_saved_kit",
+        lambda **_kwargs: (_ for _ in ()).throw(KeyboardInterrupt("operator cancelled")),
+    )
+
+    exit_code = cli.handle_analog_four_saved_kit_export(
+        source_path=tmp_path / "source.syx",
+        output_path=tmp_path / "output.syx",
+        mutations=(),
+        json_output=json_output,
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 130
+    if json_output:
+        payload = json.loads(captured.out)
+        assert payload["error_code"] == "interrupted"
+        assert payload["ok"] is False
+        assert captured.err == ""
+    else:
+        assert captured.out == ""
+        assert "Error [interrupted]" in captured.err
+
+
 @pytest.mark.parametrize(
     ("error", "error_code"),
     [

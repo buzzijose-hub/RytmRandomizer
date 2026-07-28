@@ -14,7 +14,7 @@ Current baseline used while creating / refreshing this document:
 
 - Branch: Analog Four snapshot/style readiness bundle, built on the passive style profile/target/routing/render-plan/mock-preview and dual-machine mock-preview foundation.
 - Protected reference: `tests/fixtures/v134_parity/*.json` (the retired V1.34 monolith's behavior, captured as 505 byte-frozen JSON golden files; parametrized into 685 pytest parity test items).
-- Current package: `rytm_randomizer/` - 26 top-level Python files + 14 subpackages = 349 total Python modules. The 14 subpackages: `behavior/`, `cockpit/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `local_ai/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
+- Current package: `rytm_randomizer/` - 26 top-level Python files + 14 subpackages = 352 total Python modules. The 14 subpackages: `behavior/`, `cockpit/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `local_ai/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
 - Closeout scripts: `Scripts/closeout_check.ps1` (PowerShell, Windows) and `scripts/closeout_check.py` (Python, cross-platform).
 - This file was audited and refreshed as part of PR #43, then updated through the style-profile, style-target-vector, Rytm style snapshot routing, Analog Four style snapshot routing, dual-machine style routing, reference/discovery slider, Rytm/Analog Four style mutation-intent, dual-machine style mutation-intent, Rytm style mutation render-plan, Rytm style mutation mock-preview, Analog Four style mutation mock-preview, dual-machine style mutation mock-preview, Analog Four saved-kit SysEx readiness-intake, Analog Four kit-catalog, Analog Four initialized baseline, Analog Four patch genome, Analog Four patch learning, Analog Four patch corpus, Analog Four patch send-plan, Analog Four SysEx Filter1 Frequency/Resonance calibration, Analog Four style kit-readiness, Analog Four kit-fingerprint, Analog Four OXI macro set planner, live runbook, stage-routing, stage-rehearsal-state, live-set-cockpit, live-show-export, live-transition-timeline, live-command-deck, live-state-packet, live-readiness, live-control-surface, live-analyzer-handoff, live-analyzer-targets, live GUI analyzer readiness, live GUI rehearsal session, live GUI capture queue, live GUI capture review, live GUI sidecar session, live GUI screen contract, live GUI render tree, live GUI analyzer overlay, live GUI analyzer frame, live GUI interaction script, live GUI action reducer, live GUI controller state, live GUI playback transcript, live GUI playback validation, live GUI test-harness contract, live GUI test-harness readiness, live GUI implementation bridge, live GUI desktop blueprint, live GUI desktop app plan, live GUI desktop component contract, live GUI desktop view-model, live GUI desktop render-contract, cockpit send-plan operator-readiness, cockpit send-plan rehearsal-surface, live-kit capture workbench, live-kit package audition, live-kit operator package, live-kit operator review ledger, reference-style blueprint, manual-feedback packet, generic MIDI event-plan sender, and passive local model copilot slices so the strategy/report-module list and counts stay current.
 
@@ -24,7 +24,7 @@ Current baseline used while creating / refreshing this document:
 |---|---|
 | Package entry points | `rytm_randomizer/app.py`, `rytm_randomizer/cli.py`, `rytm_randomizer/shell.py`, `rytm_randomizer/__init__.py` |
 | Passive metadata | `rytm_randomizer/constants.py`, `rytm_randomizer/commands.py`, `rytm_randomizer/scenes.py`, `rytm_randomizer/profiles.py` |
-| Data layer (single source of truth) | `rytm_randomizer/data/{param_maps,plans,profiles,scenes,scene_display,modes,analog_four_display,analog_four_saved_kit_layout,analog_four_sysex_calibration,analog_four_patch_templates,analog_four_patch_corpus,analog_four_render_rank,analog_four_learning,analog_four_midi,rytm_machine_catalog,style_discovery,style_profiles,style_targets,manual_feedback_packet,controller_mapping_profiles,controller_rehearsal_scenarios}.py` |
+| Data layer (single source of truth) | `rytm_randomizer/data/{param_maps,plans,profiles,scenes,scene_display,modes,analog_four_display,analog_four_saved_kit_layout,analog_four_sysex_calibration,analog_four_patch_templates,analog_four_patch_corpus,analog_four_render_rank,analog_four_learning,analog_four_midi,analog_four_audio_inference,midi_event_kinds,rytm_machine_catalog,style_discovery,style_profiles,style_targets,manual_feedback_packet,controller_mapping_profiles,controller_rehearsal_scenarios}.py` |
 | Registry, lookup, inspection | `rytm_randomizer/registry.py`, `rytm_randomizer/profile_lookup.py`, `rytm_randomizer/inspection.py`, `rytm_randomizer/validation.py`, `rytm_randomizer/cli_registry.py` |
 | Report surfaces | `rytm_randomizer/reports/__init__.py` + `reports/{_passive_section,formatter,manual_feedback_packet,cockpit_send_plan_operator_readiness,cockpit_send_plan_rehearsal_surface,controller_brain_rehearsal,controller_mapping_profile_catalog,reference_style_blueprint,local_model_copilot,analog_four_baseline,analog_four_kit_catalog,analog_four_patch_genome,analog_four_patch_learning,analog_four_patch_corpus,analog_four_patch_send_plan,analog_four_oxi_macro_set_planner,analog_four_style_kit_readiness,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_style_snapshot_routing,dual_machine_style_kit_readiness,dual_machine_style_kit_selection,dual_machine_style_live_audition,dual_machine_style_mutation_intent,dual_machine_style_mutation_mock_preview,dual_machine_style_performance_set_plan,dual_machine_style_selection_mock_preview,dual_machine_style_snapshot_routing,live_analyzer_handoff,live_analyzer_targets,live_command_deck,live_control_surface,live_gui_action_reducer,live_gui_analyzer_frame,live_gui_analyzer_overlay,live_gui_analyzer_readiness,live_gui_capture_queue,live_gui_capture_review,live_gui_controller_state,live_gui_desktop_app_plan,live_gui_desktop_blueprint,live_gui_desktop_component_contract,live_gui_desktop_view_model,live_gui_implementation_bridge,live_gui_interaction_script,live_gui_performance_console_model,live_gui_playback_transcript,live_gui_playback_validation,live_gui_rehearsal_session,live_gui_render_tree,live_gui_screen_contract,live_gui_sidecar_session,live_gui_test_harness_contract,live_gui_test_harness_readiness,live_performance_readiness,live_performance_runbook,live_performance_state,live_set_cockpit,live_show_export,live_stage_rehearsal_state,live_stage_snapshot_routing,live_transition_timeline,rytm_machine_matrix,rytm_snapshot_pad_compatibility,rytm_snapshot_intelligence,rytm_snapshot_mutation_preview,rytm_style_kit_readiness,rytm_style_mutation_intent,rytm_style_mutation_mock_preview,rytm_style_mutation_render_plan,rytm_style_snapshot_routing,style_performance_arcs,style_profiles,style_targets}.py` plus `reports/performance_console/{live_kit_capture_workbench,live_kit_package_audition,live_kit_operator_package,live_kit_operator_review_ledger,payload_helpers}.py` (subpackage; was the old top-level `reports.py`) |
 | Local AI packets | `rytm_randomizer/local_ai/{provider,local_model,rag,mutation_intent}.py` |
@@ -39,7 +39,7 @@ Current baseline used while creating / refreshing this document:
 | Guardrails | `rytm_randomizer/guardrails/{resolver,store,schema,validation}.py` |
 | Observability | `rytm_randomizer/observability/{logging,tracing,metrics,errors}.py` |
 | Style analysis | `rytm_randomizer/style_analysis/{extractor,feature_report,library,blueprint,analog_four_patch_genome,analog_four_patch_inference,analog_four_patch_learning,analog_four_patch_corpus,analog_four_patch_send_plan,analog_four_patch_codesigner}.py` |
-| Cockpit export | `rytm_randomizer/cockpit/export/{analog_four_export_contracts,analog_four_cli,analog_four_kit,analog_four_patch_batch,analog_four_patch_batch_cli,writer}.py` plus the profile-model serialization/signing/verifier modules. |
+| Cockpit export | `rytm_randomizer/cockpit/export/{analog_four_export_contracts,analog_four_cli,analog_four_kit,analog_four_patch_batch,analog_four_patch_batch_cli,analog_four_patch_batch_codec,analog_four_patch_batch_contracts,analog_four_patch_batch_publication,analog_four_patch_batch_reader,analog_four_patch_render_rank,analog_four_patch_render_rank_cli,writer}.py` plus the profile-model serialization/signing/verifier modules. |
 | Tests | `tests/test_*.py`, `tests/cockpit/test_*.py`, `tests/architecture/test_*.py`, `tests/fixtures/{analog_four_saved_kit,v134_parity}/`, `tests/_parity_worker.py`, `tests/conftest.py` |
 | Project documentation | `CONTRIBUTING.md`, `docs/*.md`, `.claude/rules/*.md`, `.claude/skills/**/SKILL.md` |
 
@@ -51,8 +51,8 @@ Current baseline used while creating / refreshing this document:
 flowchart TB
     User["Operator / developer"]
     V134["V1.34 reference behavior<br/>tests/fixtures/v134_parity/<br/>(505 JSON goldens; 685 parity test items)"]
-    Package["Modular package<br/>rytm_randomizer/<br/>(14 subpackages, 349 modules)"]
-    Tests["Tests<br/>6200+ pytest tests<br/>tests/, tests/architecture/"]
+    Package["Modular package<br/>rytm_randomizer/<br/>(14 subpackages, 352 modules)"]
+    Tests["Tests<br/>6600+ pytest tests<br/>tests/, tests/architecture/"]
     CI[".github/workflows/test.yml<br/>3 OS × py3.11 matrix<br/>+ codeql, release, installers"]
     Docs["Project docs<br/>CONTRIBUTING.md, docs/*.md<br/>.claude/{rules,skills}/"]
 
@@ -786,7 +786,7 @@ flowchart TB
 
 ## 10. Architecture Test Enforcement Graph
 
-The 55 architecture-test files (693 individual test items) under `tests/architecture/` mechanically enforce the rules in `docs/PLAN_REQUIREMENTS.md` + `CONTRIBUTING.md`. Each one uses the **drained-allowlist** pattern: violations today are explicit `frozenset` entries that PR-review must approve; the long-term state is empty allowlists.
+The 56 architecture-test files (702 individual test items) under `tests/architecture/` mechanically enforce the rules in `docs/PLAN_REQUIREMENTS.md` + `CONTRIBUTING.md`. Each one uses the **drained-allowlist** pattern: violations today are explicit `frozenset` entries that PR-review must approve; the long-term state is empty allowlists.
 
 ```mermaid
 flowchart TB
@@ -794,7 +794,7 @@ flowchart TB
         SourceFiles["rytm_randomizer/**/*.py<br/>tests/**/*.py<br/>docs/**/*.md"]
     end
 
-    subgraph Gates["55 architecture-test modules"]
+    subgraph Gates["56 architecture-test modules"]
         Gate1["test_no_any_escape_hatches<br/>(Gate 6)"]
         Gate2["test_no_new_top_level_modules<br/>(Gate 9)"]
         Gate3["test_no_string_literal_mode_dispatch<br/>(Gate 10)"]
@@ -996,7 +996,7 @@ flowchart TB
         MidiTests["test_midi_io.py<br/>test_mock_*.py<br/>test_real_midi_*.py"]
     end
 
-    subgraph Layer3["Layer 3 — Architecture (647 tests, 55 files)"]
+    subgraph Layer3["Layer 3 — Architecture (702 tests, 56 files)"]
         ArchTests["tests/architecture/<br/>(Gates 6, 9, 10, 11, etc.)<br/>+ NEW test_device_protocol_enforcement<br/>(7 sub-tests)"]
     end
 
@@ -1090,16 +1090,24 @@ flowchart LR
         StyleTargetInspect["inspect-style-target"]
     end
 
+    subgraph A4LocalCmds["Passive Analog Four local-file and analysis commands"]
+        A4SavedKitExport["analog-four-saved-kit-export<br/>validated fields -> local .syx"]
+        A4AudioPatchBatch["analog-four-audio-patch-batch<br/>audio + source kit -> candidates + sidecars"]
+        A4AudioPatchRank["analog-four-audio-patch-rank<br/>reference + recorded renders -> ranking"]
+    end
+
     Operator --> CLI
     CLI --> ReportCmds
     CLI --> BrowseCmds
     CLI --> StyleBrowseCmds
+    CLI --> A4LocalCmds
 
     ReportCmds --> ReportsPkg["reports/<br/>(PassiveReportHeader + builders)"]
     BrowseCmds --> RegistryCore["registry.py<br/>profile_lookup.py<br/>inspection.py"]
     StyleBrowseCmds --> ReportsPkg
+    A4LocalCmds --> A4ExportPipeline["cockpit/export/<br/>saved-kit writer + batch + rank"]
 
-    CLI -.->|"safety invariants tested by<br/>test_real_midi_passive_cli_safety<br/>test_real_midi_import_safety"| Safety["no MIDI sent<br/>no ports opened<br/>no execution<br/>no hardware required"]
+    CLI -.->|"safety invariants tested by<br/>test_real_midi_passive_cli_safety<br/>test_real_midi_import_safety"| Safety["no MIDI sent<br/>no ports opened<br/>no real MIDI execution<br/>no hardware required"]
 ```
 
 **Architecture test:** `test_real_midi_import_safety.py` + `test_real_midi_passive_cli_safety.py` enforce that the passive CLI never imports `mido` or `rtmidi` and never opens a real port (hardware safety boundaries from CONTRIBUTING.md).
@@ -1122,10 +1130,19 @@ flowchart TB
         MockBridge["mock_runtime_active_bridge.py<br/>(test-only routing)"]
     end
 
-    subgraph RealPath["Real path (--arm only)"]
-        RealAdapter["real_midi_adapter.py<br/>RealMidiPortProvider<br/>RealMidiSender"]
+    subgraph A4Passive["A4 local-file path (no hardware)"]
+        A4Batch["audio patch batch<br/>exactly 4 candidates by default"]
+        A4SysEx["saved-kit writer<br/>verified fields only"]
+        A4Reader["manifest reader +<br/>CC/NRPN plan validation"]
+        A4Rank["recorded-render ranker"]
+        LocalModel["local-model copilot<br/>staged review only"]
+    end
+
+    subgraph RealPath["Real path (app --arm only)"]
+        AppArm["app.py --arm<br/>feature confirmation +<br/>complete plan validation"]
+        RealAdapter["real_midi_adapter.py<br/>RealMidiOutputProvider<br/>RealMidiSender"]
         MidoProvider["mido_provider.py<br/>get_mido_module()<br/>(lazy)"]
-        RealHardware["python-rtmidi / mido<br/>(Elektron Analog Rytm MK2)"]
+        RealHardware["python-rtmidi / mido<br/>(Elektron hardware)"]
     end
 
     subgraph Observability["Telemetry"]
@@ -1137,7 +1154,14 @@ flowchart TB
     ActiveBoundary --> MockMidi
     MockBridge --> ActiveBoundary
 
+    A4Batch --> A4SysEx
+    A4Batch --> A4Reader
+    A4Batch --> A4Rank
+    LocalModel -.->|"cannot promote or send"| A4Reader
+    A4Reader -->|"verified plan"| AppArm
+
     MidiIO -.->|"(--arm only)<br/>send to RealMidiSender"| RealAdapter
+    AppArm --> RealAdapter
     RealAdapter --> MidoProvider
     MidoProvider --> RealHardware
 
@@ -1154,19 +1178,23 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    Passive["Passive surfaces<br/>cli.py, registry.py,<br/>profile_lookup, inspection,<br/>reports/, behavior/"]
+    Passive["Passive surfaces<br/>cli.py, registry.py, reports/, behavior/,<br/>A4 batch/rank/local model"]
+
+    LocalFiles["Allowed local-file outputs<br/>verified-field saved-kit SysEx<br/>4-candidate batch + sidecars + manifest"]
 
     Mock["Mock-only surfaces<br/>mock_midi, mock_mapper,<br/>active_boundary, mock_bridge,<br/>MockMidiSender"]
 
     Adapter["Adapter boundary<br/>real_midi_adapter.py<br/>(lazy mido import;<br/>fake provider in tests)"]
 
-    Armed["Armed-only surfaces<br/>(--arm flag required)<br/>real port open,<br/>real CC send"]
+    Armed["Armed-only surface<br/>app.py --arm + feature confirmation<br/>real provider/port open,<br/>real CC/NRPN send"]
 
-    Forbidden["Still absent / not authorized<br/>real MIDI in passive CLI<br/>port discovery at import<br/>hardware send without --arm<br/>SysEx writes<br/>GUI"]
+    Forbidden["Still absent / not authorized<br/>real MIDI in passive CLI<br/>port discovery at import<br/>hardware send without app --arm<br/>automatic SysEx transfer<br/>local-model hardware access"]
 
     Tests["~30 safety tests<br/>test_no_side_effects<br/>test_real_midi_import_safety<br/>test_real_midi_passive_cli_safety<br/>test_real_midi_adapter_boundary"]
 
     Passive -.->|"must not import mido<br/>must not open ports"| Tests
+    Passive -->|"may write reviewed local artifacts"| LocalFiles
+    LocalFiles -.->|"never transfers to hardware"| Tests
     Mock -.->|"allowed but mock-only"| Tests
     Adapter -.->|"fake-provider tests only"| Tests
     Armed -.->|"only path that touches<br/>real hardware"| Tests
@@ -1718,14 +1746,14 @@ flowchart TB
     end
 
     subgraph GateSteps["Closeout gate steps (closeout_check.py)"]
-        Step1["1. pytest (full suite)<br/>with -n auto<br/>(5900+ tests)"]
+        Step1["1. pytest (full suite)<br/>with -n auto<br/>(6600+ tests)"]
         Step2["2. import smoke<br/>(import rytm_randomizer)"]
     end
 
     subgraph PytestLayers["What pytest runs"]
         PassiveTests["Layer 2 unit / behavior tests<br/>(~1500 tests)"]
         ParityTests["Layer 1 V1.34 parity tests<br/>(685 items from 505 goldens)"]
-        ArchTests["Layer 3 architecture tests<br/>(647 tests across 55 files)"]
+        ArchTests["Layer 3 architecture tests<br/>(702 tests across 56 files)"]
         E2ETests["Layer 4 e2e tests<br/>(43 tests)"]
         CovStep["Layer 5 coverage ratchet<br/>(scripts/coverage_ratchet.py)<br/>floor: ≥95% pure-branch"]
     end
@@ -1804,7 +1832,7 @@ flowchart LR
         A4PatchCorpus["analog-four-patch-corpus-report"]
         A4PatchSendPlan["analog-four-patch-send-plan-report"]
         A4SavedKitExport["analog-four-saved-kit-export --source K --output O --filter2-resonance T:V [...]"]
-        A4AudioPatchBatch["analog-four-audio-patch-batch --audio A --source-kit K --output-dir D [--track N] [--candidates N] [--json]"]
+        A4AudioPatchBatch["analog-four-audio-patch-batch --audio A --source-kit K --output-dir D [--track N] --candidates 4 [--json]"]
         A4AudioPatchRank["analog-four-audio-patch-rank --reference A --manifest M --render N=R [...]"]
         A4StyleKitReadiness["analog-four-style-kit-readiness-report"]
         A4OxiMacroSetPlanner["analog-four-oxi-macro-set-planner-report [--set-name N] [--sequence A,B] [--seed N] [--json]"]
@@ -1829,8 +1857,9 @@ flowchart LR
     end
 
     subgraph Armed["Reachable only via app.py --arm"]
-        ArmedRun["python -m rytm_randomizer.app --arm<br/>(real MIDI; requires --arm flag)"]
+        ArmedRun["python -m rytm_randomizer.app --arm<br/>(sole real MIDI boundary)"]
         DryRun["python -m rytm_randomizer.app --dry-run<br/>(MockMidiSender)"]
+        A4StoredPlan["--a4-patch-send-plan<br/>--batch-manifest M --candidate N<br/>--confirm-a4-patch-send-plan<br/>--a4-output-port EXACT_NAME"]
     end
 
     CLI --> Browse
@@ -1872,12 +1901,16 @@ flowchart LR
 
     CLI -.->|"not implemented in passive CLI"| NotPresent
     NotPresent -.->|"reachable via app.py --arm"| Armed
+    A4AudioPatchBatch -->|"manifest + sidecar"| A4StoredPlan
+    A4StoredPlan -->|"validate first; arm required for hardware"| ArmedRun
+    A4StoredPlan --> DryRun
+    LocalModelCopilot -.->|"review packets only; no hardware route"| NotPresent
 ```
 
 **Current nuance:**
 
 - The `cli.py` is visibility-first. No active execution / send / hardware-test command is wired here.
-- `app.py` is the interactive entry point and is the ONLY surface where the `--arm` flag triggers real MIDI. The passive CLI never opens a port — see §16 Safety Boundary Diagram.
+- `app.py` is the interactive entry point and is the ONLY surface where the `--arm` flag triggers real MIDI. The A4 manifest reader validates the complete stored CC/NRPN plan before the app constructs the provider; the passive CLI, local SysEx writer, batch generator, ranker, and local-model copilot never open a port.
 - `cli_registry.py` (WS-S7) is the future-extension seam. The passive Rytm 12-pad machine matrix, manual feedback packet, snapshot pad-compatibility, snapshot intelligence, snapshot mutation preview, Rytm style snapshot routing, Rytm style mutation intent/render-plan/mock-preview, Analog Four style routing/intent/mock-preview/kit-catalog/baseline/patch-genome/patch-learning/patch-send-plan/readiness/OXI macro set planner, local model copilot, dual-machine style routing/intent/mock-preview, style-profile, style-target, reference-style blueprint, and style-performance-arc commands are registered there instead of growing `cli.py` with more inline report arms. The manual feedback packet turns installer/Profile Wizard/export/pad-scope/manual hardware observations into deterministic reviewer evidence without launching the GUI, running analysis, opening MIDI, or writing files; the reference-style blueprint report turns a description/audio/library FeatureReport into an influence-only 12-pad Rytm plus 4-track Analog Four starting blueprint; the A4 initialized-baseline report compares kit/pattern+kit/whole-project dumps and publishes a stable clean-slate fingerprint for future changed-patch diffs; the A4 patch-genome report turns a description/audio FeatureReport into four passive single-sound DNA candidates with front-panel targets plus CC/NRPN metadata; the A4 patch send-plan report compiles the selected candidate into ordered CC/NRPN events while skipping screen-only destination rows; the local model copilot report composes deterministic docs/MIDI, staged mutation-intent, and A4 patch-review packets and only runs the configured `LOCAL_MODEL_COMMAND` subprocess when `--ask-local-model` is set; the A4 kit catalog/readiness reports carry stable payload fingerprints for future GUI/audio-analyzer kit-state comparison; the A4 OXI macro set planner turns curated macro sequences into exact replayable set-plan JSON and Cockpit cards; the live render bundle reuses existing segment mock previews and deferred A4 rows, the live cue sheet converts that bundle into operator risk/move/recovery cues plus compact stage cards, the live runbook turns direct arcs or reference matches into launch/timeline/recovery context, the stage-routing report turns that runbook into saved-kit slot/fingerprint route cards, the stage-rehearsal-state report turns those route cards into go/rehearse/do-not-arm cue and machine states, the live set cockpit and live show export reports climb from rehearsal state into show handoff JSON, the live transition timeline turns that export into cue-to-cue prep/launch/hold/recovery cards, the live command deck turns the timeline into current-cue command cards and lookahead, the live state packet turns that deck into GUI-ready now/next cues plus machine panels/action/warning/recovery stacks, the live readiness report turns that state packet into launch-gate confidence/warning/recovery checks, the live control surface report turns readiness into GUI/audio-analyzer cards and replayable passive commands, the live analyzer handoff report pairs reference-match FeatureReport meters with that control surface for future analyzer panels, the live analyzer target packet turns that handoff into rehearsal target bands/checkpoints/calibration/warnings for future analyzer comparison, the live GUI analyzer readiness bundle turns that target packet into panel manifests/stream wiring/operator workflow/blocked active actions for future desktop surfaces, the live GUI analyzer overlay turns render-tree nodes into meter widgets, threshold markers, selected-capture badges, and overlay annotations, the live GUI analyzer frame turns overlay metadata into ordered frame events and visual assertions for future GUI tests, the live GUI interaction script turns frame metadata into operator action bindings and disabled hardware locks for future GUI controls, the live GUI implementation bridge turns test-harness readiness into future-GUI wiring metadata, the live GUI desktop blueprint turns that bridge into desktop shell/layout/widget/binding metadata, the live GUI desktop app plan turns that blueprint into app shell/route/component/state/style-token metadata, the live GUI desktop component contract turns that app plan into component/prop/action/selector metadata, the live GUI desktop view model turns that contract into component view-model/state-binding/disabled-action/style-token metadata, the live GUI desktop render contract turns that view model into render-surface/render-binding/style-token/assertion metadata, the live GUI desktop render harness turns that render contract into surface-harness/binding-harness/style-token-check/assertion metadata, and the reference-match report turns a description/audio/library/FeatureReport reference into a ranked arc plus optional embedded cue sheet, snapshot preview, and stage packet projection. Most legacy CLI dispatch remains in-line until the broader WS-S7 refactor lands. The architecture rule `test_no_parallel_device_registry` allows `cli_registry.py` (the CLI registry) as a non-device registry.
 
 ---
@@ -2770,15 +2803,22 @@ sequenceDiagram
     Writer-->>A4Export: WriteResult
     A4Export-->>Operator: render + write audit result
 
-    Operator->>A4Export: audio + source kit + batch request
-    A4Export->>A4Export: snapshot both inputs + single audio decode<br/>stage generation-addressed SysEx/sidecar/manifest bytes
+    Operator->>A4Export: audio + source kit + canonical 4-candidate batch request
+    A4Export->>A4Export: snapshot both inputs + spawn native decoder child<br/>stage generation-addressed SysEx/sidecar/manifest bytes
+    alt native decoder exits abnormally
+        A4Export-->>Operator: inference_failed; parent survives<br/>and removes private audio/SysEx staging
+    end
     A4Export->>A4Export: load staged bytes + close private temp directory
-    A4Export->>A4Disk: acquire metadata-rich per-track lock
+    A4Export->>A4Disk: atomically acquire sibling .operation gate
+    A4Export->>A4Disk: create metadata-rich per-track lock
+    A4Export->>A4Disk: release sibling .operation gate
     A4Export->>Writer: publish immutable generation candidates;<br/>atomically switch stable manifest last
     alt publication fails or is catchably interrupted
         A4Export->>A4Disk: keep prior manifest; leave only<br/>unreferenced immutable generation files
     end
-    A4Export->>A4Disk: release lock or return committed-result warning<br/>with retained recovery metadata path
+    A4Export->>A4Disk: atomically acquire sibling .operation gate
+    A4Export->>A4Disk: verify owner + release lock, or return committed-result warning<br/>with retained recovery metadata path
+    A4Export->>A4Disk: release sibling .operation gate
     Note over A4Export,A4Disk: hard process termination can retain a lock or temp file;<br/>lock metadata supports operator recovery
     Note over Operator,A4Export: each candidate carries complete DNA + CC/NRPN sidecar;<br/>SysEx encodes validated Filter2 Resonance only; no MIDI
 

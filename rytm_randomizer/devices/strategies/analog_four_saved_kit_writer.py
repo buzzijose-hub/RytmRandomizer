@@ -17,7 +17,6 @@ from ...data.analog_four_saved_kit_layout import (
     A4_PACKED_PAYLOAD_OFFSET,
 )
 from ...data.analog_four_sysex_calibration import (
-    A4_SYSEX_CALIBRATION_STATUS_CANDIDATE_PROMOTED,
     A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED,
     AnalogFourSysexFieldCalibration,
     analog_four_sysex_calibration_for,
@@ -32,10 +31,7 @@ from .analog_four_saved_kit_codec import (
 _SYSEX_START: Final[int] = 0xF0
 _SYSEX_END: Final[int] = 0xF7
 _SUPPORTED_CALIBRATION_STATUSES: Final[frozenset[str]] = frozenset(
-    {
-        A4_SYSEX_CALIBRATION_STATUS_CANDIDATE_PROMOTED,
-        A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED,
-    }
+    {A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED}
 )
 
 
@@ -134,7 +130,8 @@ def render_analog_four_saved_kit(
         calibration = analog_four_sysex_calibration_for(mutation.parameter)
         if calibration.status not in _SUPPORTED_CALIBRATION_STATUSES:
             raise ValueError(
-                f"{mutation.parameter} calibration is not promoted for saved-kit writing"
+                f"{mutation.parameter} calibration is not hardware-write-validated "
+                "for saved-kit writing"
             )
         raw_low7 = calibration.primary_raw_value_for_screen(mutation.screen_value)
         unpacked_offset = _unpacked_offset_for_calibration(calibration, mutation.track)

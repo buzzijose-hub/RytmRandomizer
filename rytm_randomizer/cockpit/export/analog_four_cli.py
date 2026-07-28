@@ -9,7 +9,11 @@ from pathlib import Path
 from typing import Final, Literal, TypedDict
 
 from ...cli_registry import CliCommand, register
-from ...data.analog_four_sysex_calibration import A4_FILTER2_RESONANCE_PARAMETER
+from ...data.analog_four_sysex_calibration import (
+    A4_FILTER2_RESONANCE_PARAMETER,
+    A4_SYNTH_TRACK_MAX,
+    A4_SYNTH_TRACK_MIN,
+)
 from ...devices.analog_four import AnalogFourSavedKitMutation
 from .analog_four_export_contracts import (
     AnalogFourExportErrorCode,
@@ -100,8 +104,11 @@ def _parse_resonance_assignment(value: str) -> AnalogFourSavedKitMutation:
         parsed_value = int(screen_value)
     except ValueError as exc:
         raise ValueError("--filter2-resonance track and value must be decimal integers") from exc
-    if str(track) != track_text or not 1 <= track <= 4:
-        raise ValueError("--filter2-resonance track must be an integer from 1 to 4")
+    if str(track) != track_text or not A4_SYNTH_TRACK_MIN <= track <= A4_SYNTH_TRACK_MAX:
+        raise ValueError(
+            "--filter2-resonance track must be an integer from "
+            f"{A4_SYNTH_TRACK_MIN} to {A4_SYNTH_TRACK_MAX}"
+        )
     if str(parsed_value) != screen_value or not 0 <= parsed_value <= 127:
         raise ValueError("--filter2-resonance value must be an integer from 0 to 127")
     return AnalogFourSavedKitMutation(
@@ -241,6 +248,18 @@ def handle_analog_four_saved_kit_export(
             mutations=mutations,
             overwrite=overwrite,
         )
+    except KeyboardInterrupt as exc:
+        if json_output:
+            error_payload: AnalogFourSavedKitExportErrorPayload = {
+                "ok": False,
+                "error_code": "interrupted",
+                "error": str(exc) or "operator interrupted saved-kit export",
+            }
+            sys.stdout.write(json.dumps(error_payload, sort_keys=True))
+            sys.stdout.write("\n")
+        else:
+            sys.stderr.write(f"{USAGE}\nError [interrupted]: saved-kit export interrupted.\n")
+        return 130
     except (KeyError, ValueError, TypeError, OSError) as exc:
         error_code = _saved_kit_cli_error_code(exc)
         if json_output:

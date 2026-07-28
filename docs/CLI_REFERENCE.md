@@ -201,7 +201,7 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `analog-four-patch-corpus-report` | Passive nearest-match ranking against starter or captured Analog Four patch/audio examples |
 | `analog-four-patch-send-plan-report` | Passive CC/NRPN live-dial send plan for a generated Analog Four patch |
 | `analog-four-saved-kit-export` | Guarded local-file saved-kit export; currently admits hardware-validated Filter2 Resonance only |
-| `analog-four-audio-patch-batch` | Real local audio analysis into one-to-four immutable `.syx` candidates, complete DNA sidecars, and a committed manifest |
+| `analog-four-audio-patch-batch` | Real local audio analysis; the documented/default workflow deterministically commits exactly four immutable `.syx` candidates, complete DNA sidecars, and one manifest |
 | `analog-four-audio-patch-rank` | Passive acoustic ranking of recorded A4 candidates against the exact batch reference |
 | `local-model-copilot-report` | Passive local model docs, mutation-intent, and Analog Four patch-review packets; optional local model subprocess call with `--ask-local-model` |
 | `analog-four-oxi-macro-report` | Passive in-memory Analog Four OXI-style four-track macro preview |
@@ -234,9 +234,9 @@ Active companion app bridge for the selected patch send plan:
 
 ```bash
 python -m rytm_randomizer.app --dry-run --a4-patch-send-plan --batch-manifest batch/a4-t1-audio-patch-batch.json --candidate 1
-python -m rytm_randomizer.app --arm --a4-patch-send-plan --batch-manifest batch/a4-t1-audio-patch-batch.json --candidate 1 --confirm-a4-patch-send-plan
+python -m rytm_randomizer.app --arm --a4-patch-send-plan --batch-manifest batch/a4-t1-audio-patch-batch.json --candidate 1 --confirm-a4-patch-send-plan --a4-output-port "<exact configured Analog Four output name>"
 python -m rytm_randomizer.app --dry-run --a4-patch-send-plan --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
-python -m rytm_randomizer.app --arm --a4-patch-send-plan --description "hypnotic metallic HP2 stab" --track 1 --candidate 1 --confirm-a4-patch-send-plan
+python -m rytm_randomizer.app --arm --a4-patch-send-plan --description "hypnotic metallic HP2 stab" --track 1 --candidate 1 --confirm-a4-patch-send-plan --a4-output-port "<exact configured Analog Four output name>"
 ```
 
 The manifest form is the recommended audition-to-hardware path: it verifies the
@@ -244,6 +244,8 @@ committed batch, selected sidecar, source-audio identity, candidate DNA, and
 CC/NRPN plan before any output port opens. The direct `--description` and
 `--audio` forms are convenient one-off inference paths; they rebuild a plan and
 are not bound to a previously published or auditioned batch artifact.
+Armed delivery does not prompt from enumerated ports: `--a4-output-port` must
+match exactly one discovered output name or the command fails before opening it.
 
 `analog-four-baseline-report` is the passive clean-slate intake for A4 patch
 capture work. It reads three local SysEx export scopes - kit, pattern+kit, and
@@ -281,7 +283,8 @@ events, counts the exact transport messages, and lists skipped front-panel rows
 such as destination labels that still need ordinal capture. The matching active
 path lives in `rytm_randomizer.app`: use `--dry-run --a4-patch-send-plan` to
 render the plan through the mock sender, or `--arm --a4-patch-send-plan
---confirm-a4-patch-send-plan` to choose an A4 output port and send only the
+--confirm-a4-patch-send-plan --a4-output-port "<exact configured Analog Four
+output name>"` to require one exact output match and send only the
 compiler-approved rows. For a generated candidate that has already been
 auditioned, prefer `--batch-manifest ... --candidate N` so the active command
 uses the exact hash-verified plan stored with that batch.
@@ -293,11 +296,20 @@ new `.syx` through the canonical atomic writer. It never opens a MIDI port and
 refuses unsupported or unvalidated saved-kit parameters.
 
 `analog-four-audio-patch-batch` is the end-to-end offline candidate generator.
-It analyzes an immutable reference-audio snapshot, builds four audio-dependent
-A4 candidates, renders the currently validated SysEx subset, and commits each
-candidate's complete DNA plus CC/NRPN plan behind a hash-addressed sidecar and
-manifest. It performs local file I/O only and does not transfer a kit or send
-MIDI.
+With the documented/default `--candidates 4` workflow, it analyzes an immutable
+reference-audio snapshot and deterministically builds exactly four
+audio-dependent A4 candidates. It renders the currently validated SysEx subset
+and commits each candidate's complete DNA plus CC/NRPN plan behind a
+hash-addressed sidecar and one stable manifest. The bounded `--candidates`
+compatibility option can request a leading subset for focused tests, but the
+operator workflow and product contract use all four candidates.
+
+The command performs local file I/O only and does not transfer a kit or send
+MIDI. Native audio decoding runs in a spawned child process. An abnormal native
+exit becomes a classified `inference_failed` result in the parent, which owns
+and removes the private audio/SysEx staging directory. This prevents a decoder
+crash from taking down the CLI or retaining private staging, but it is not a
+claim that the native decoder is reliable on Windows.
 
 `analog-four-audio-patch-rank` closes the passive studio feedback loop. It
 verifies every candidate sidecar and the original reference hash before
@@ -311,7 +323,9 @@ for docs/MIDI answers, staged natural-language mutation intent, and Analog Four
 patch co-design review. Add `--ask-local-model` only after `LOCAL_MODEL_COMMAND`
 points to a local model executable. The command is run as a subprocess, JSON
 stdout is validated, and the output remains staged-only: no ports open, no MIDI
-is sent, and no hardware-send plan is promoted.
+is sent, and no hardware-send plan is promoted. The local model cannot invoke
+the real MIDI provider; only `python -m rytm_randomizer.app --arm` can cross the
+hardware boundary.
 
 `analog-four-oxi-macro-report` is a snapshot-free planning surface for the
 Analog Four side of an OXI-style live rig. It uses existing manual-backed A4 CC

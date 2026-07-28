@@ -6,7 +6,7 @@ import json
 import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import Final, Literal, Protocol, TypedDict
+from typing import TYPE_CHECKING, Final, Literal, Protocol, TypedDict, cast
 
 from ...cli_registry import CliCommand, register
 from ...data.analog_four_patch_templates import ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES
@@ -100,69 +100,69 @@ class AnalogFourAudioPatchBatchErrorPayload(TypedDict):
     safety: list[str]
 
 
-class _CandidateOutput(Protocol):  # pragma: no cover - typing-only lazy API
-    @property
-    def column(self) -> int: ...
+if TYPE_CHECKING:
 
-    @property
-    def label(self) -> str: ...
+    class _CandidateOutput(Protocol):
+        @property
+        def column(self) -> int: ...
 
-    @property
-    def sysex_path(self) -> Path: ...
+        @property
+        def label(self) -> str: ...
 
-    @property
-    def sidecar_path(self) -> Path: ...
+        @property
+        def sysex_path(self) -> Path: ...
 
-    @property
-    def sysex_applied_count(self) -> int: ...
+        @property
+        def sidecar_path(self) -> Path: ...
 
-    @property
-    def live_sendable_count(self) -> int: ...
+        @property
+        def sysex_applied_count(self) -> int: ...
 
-    @property
-    def manual_row_count(self) -> int: ...
+        @property
+        def live_sendable_count(self) -> int: ...
 
-    @property
-    def deferred_count(self) -> int: ...
+        @property
+        def manual_row_count(self) -> int: ...
 
+        @property
+        def deferred_count(self) -> int: ...
 
-class _BatchResult(Protocol):  # pragma: no cover - typing-only lazy API
-    @property
-    def source_hash(self) -> str: ...
+    class _BatchResult(Protocol):
+        @property
+        def source_hash(self) -> str: ...
 
-    @property
-    def generation_id(self) -> str: ...
+        @property
+        def generation_id(self) -> str: ...
 
-    @property
-    def manifest_path(self) -> Path: ...
+        @property
+        def manifest_path(self) -> Path: ...
 
-    @property
-    def manifest_sha256(self) -> str: ...
+        @property
+        def manifest_sha256(self) -> str: ...
 
-    @property
-    def lock_cleanup_warning(self) -> str | None: ...
+        @property
+        def lock_cleanup_warning(self) -> str | None: ...
 
-    @property
-    def selected_track(self) -> int: ...
+        @property
+        def selected_track(self) -> int: ...
 
-    @property
-    def candidate_outputs(self) -> Sequence[_CandidateOutput]: ...
+        @property
+        def candidate_outputs(self) -> Sequence[_CandidateOutput]: ...
 
-    @property
-    def safety(self) -> Sequence[str]: ...
+        @property
+        def safety(self) -> Sequence[str]: ...
 
-
-class _BatchExporter(Protocol):  # pragma: no cover - typing-only lazy API
-    def __call__(
-        self,
-        *,
-        audio_path: Path,
-        source_kit_path: Path,
-        output_dir: Path,
-        track: int,
-        candidate_count: int,
-        overwrite: bool,
-    ) -> _BatchResult: ...
+    class _BatchExporter(Protocol):
+        def __call__(
+            self,
+            *,
+            audio_path: Path,
+            source_kit_path: Path,
+            output_dir: Path,
+            track: int,
+            candidate_count: int,
+            overwrite: bool,
+        ) -> _BatchResult: ...
 
 
 def _load_batch_exporter() -> _BatchExporter:
@@ -170,8 +170,7 @@ def _load_batch_exporter() -> _BatchExporter:
 
     from .analog_four_patch_batch import export_analog_four_audio_patch_batch
 
-    exporter: _BatchExporter = export_analog_four_audio_patch_batch
-    return exporter
+    return export_analog_four_audio_patch_batch
 
 
 def _export_analog_four_audio_patch_batch(
@@ -412,7 +411,7 @@ def _exception_details(exc: Exception) -> list[str]:
     notes = getattr(exc, "__notes__", ())
     if not isinstance(notes, list):
         return []
-    return [note for note in notes if isinstance(note, str)]
+    return [note for note in cast(list[object], notes) if isinstance(note, str)]
 
 
 def _write_batch_error(
@@ -462,6 +461,17 @@ def handle_analog_four_audio_patch_batch(
             candidate_count=candidate_count,
             overwrite=overwrite,
         )
+    except (KeyboardInterrupt, SystemExit) as exc:
+        message = str(exc) or "operator interrupted audio patch batch"
+        if json_output:
+            _write_batch_error(
+                error_code="interrupted",
+                message=message,
+                details=[],
+            )
+        else:
+            sys.stderr.write(f"{USAGE}\nError [interrupted]: {message}\n")
+        return 130
     except (ImportError, KeyError, ValueError, TypeError, OSError, RuntimeError) as exc:
         error_code = _batch_cli_error_code(exc)
         details = _exception_details(exc)

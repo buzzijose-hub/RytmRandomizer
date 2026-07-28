@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from abc import abstractmethod
 from collections.abc import Iterable, Sequence
-from typing import ClassVar, Final, Protocol, runtime_checkable
+from typing import Final, Protocol, runtime_checkable
 
 from ..mock_midi import MidiMessage
 from ..snapshot.envelope import ELEKTRON_MFR_ID
@@ -19,7 +20,6 @@ from .strategies import (
 from .strategies.analog_four_saved_kit_writer import (
     AnalogFourSavedKitMutation,
     AnalogFourSavedKitRenderResult,
-    is_analog_four_saved_kit_mutation,
     render_analog_four_saved_kit,
 )
 
@@ -30,30 +30,53 @@ _DEFAULT_MIDI_CHANNEL: Final[int] = 0
 _TRACK_COUNT: Final[int] = 4
 
 
+def _require_analog_four_mutation_plan(
+    value: object,
+    *,
+    method_name: str,
+) -> AnalogFourMutationPlan:
+    if not isinstance(value, AnalogFourMutationPlan):
+        raise TypeError(
+            f"AnalogFourDevice.{method_name} expected AnalogFourMutationPlan, got "
+            f"{type(value).__name__}"
+        )
+    return value
+
+
+def _require_analog_four_kit_snapshot(value: object) -> AnalogFourKitSnapshot:
+    if not isinstance(value, AnalogFourKitSnapshot):
+        raise TypeError(
+            "AnalogFourDevice.plan_mutation expected AnalogFourKitSnapshot, got "
+            f"{type(value).__name__}"
+        )
+    return value
+
+
+def _is_analog_four_device(value: object) -> bool:
+    return isinstance(value, Device)
+
+
 @runtime_checkable
 class AnalogFourSavedKitCapability(Protocol):
     """Optional registered-device capability for complete saved-kit frames."""
 
-    def is_saved_kit_mutation(
-        self, mutation: object
-    ) -> bool: ...  # pragma: no cover - protocol stub
-
+    @abstractmethod
     def render_saved_kit(
         self,
         raw: bytes,
         mutations: Sequence[AnalogFourSavedKitMutation],
-    ) -> AnalogFourSavedKitRenderResult: ...  # pragma: no cover - protocol stub
+    ) -> AnalogFourSavedKitRenderResult: ...
 
 
 class AnalogFourDevice:
     """The Analog Four MKII surfaced as a registered ``Device``."""
 
-    device_id: ClassVar[str] = _DEVICE_ID
-    display_name: ClassVar[str] = _DISPLAY_NAME
-    default_midi_channel: ClassVar[int] = _DEFAULT_MIDI_CHANNEL
-    track_count: ClassVar[int] = _TRACK_COUNT
-    sysex_manufacturer_id: ClassVar[bytes] = ELEKTRON_MFR_ID
-    report_header: ClassVar[str] = _REPORT_HEADER
+    device_id: str = _DEVICE_ID
+    display_name: str = _DISPLAY_NAME
+    default_midi_channel: int = _DEFAULT_MIDI_CHANNEL
+    track_count: int = _TRACK_COUNT
+    sysex_manufacturer_id: bytes = ELEKTRON_MFR_ID
+    report_header: str = _REPORT_HEADER
 
     def __init__(self) -> None:
         """Compose the three capability strategies on this device instance."""
@@ -67,39 +90,37 @@ class AnalogFourDevice:
 
         return self.snapshot_decoder.decode(raw, slot=slot)
 
-    def plan_mutation(self, snapshot: AnalogFourKitSnapshot, depth: int) -> AnalogFourMutationPlan:
+    def plan_mutation(self, snapshot: object, depth: int) -> AnalogFourMutationPlan:
         """Delegate to the Analog Four mutation planner strategy."""
 
-        return self.mutation_planner.plan(snapshot, depth)
+        return self.mutation_planner.plan(_require_analog_four_kit_snapshot(snapshot), depth)
 
-    def to_mock_messages(self, plan: AnalogFourMutationPlan) -> list[MidiMessage]:
+    def to_mock_messages(self, plan: object) -> list[MidiMessage]:
         """Render ready plan events into inert mock MIDI messages."""
 
-        if not isinstance(plan, AnalogFourMutationPlan):
-            raise TypeError(
-                "AnalogFourDevice.to_mock_messages expected AnalogFourMutationPlan, got "
-                f"{type(plan).__name__}"
-            )
-        if not plan.ready:
+        checked_plan = _require_analog_four_mutation_plan(
+            plan,
+            method_name="to_mock_messages",
+        )
+        if not checked_plan.ready:
             return []
-        return [self.message_renderer.to_mock_message(event, plan) for event in plan.events]
+        return [
+            self.message_renderer.to_mock_message(event, checked_plan)
+            for event in checked_plan.events
+        ]
 
-    def to_cc_messages(self, plan: AnalogFourMutationPlan) -> Iterable[tuple[int, int, int]]:
+    def to_cc_messages(self, plan: object) -> Iterable[tuple[int, int, int]]:
         """Render ready plan events into ``(channel, control, value)`` triples."""
 
-        if not isinstance(plan, AnalogFourMutationPlan):
-            raise TypeError(
-                "AnalogFourDevice.to_cc_messages expected AnalogFourMutationPlan, got "
-                f"{type(plan).__name__}"
-            )
-        if not plan.ready:
+        checked_plan = _require_analog_four_mutation_plan(
+            plan,
+            method_name="to_cc_messages",
+        )
+        if not checked_plan.ready:
             return ()
-        return tuple(self.message_renderer.to_cc_triple(event, plan) for event in plan.events)
-
-    def is_saved_kit_mutation(self, mutation: object) -> bool:
-        """Return whether ``mutation`` is accepted by the saved-kit renderer."""
-
-        return is_analog_four_saved_kit_mutation(mutation)
+        return tuple(
+            self.message_renderer.to_cc_triple(event, checked_plan) for event in checked_plan.events
+        )
 
     def render_saved_kit(
         self,
@@ -117,7 +138,7 @@ registry.register_device(AnalogFourDevice())
 def _assert_protocol_conformance() -> None:
     """Sanity-check the registered instance against the structural protocol."""
 
-    if not isinstance(registry.get_device("analog_four_mk2"), Device):
+    if not _is_analog_four_device(registry.get_device("analog_four_mk2")):
         raise AssertionError(  # noqa: S101 - structural-typing invariant
             "AnalogFourDevice does not conform to Device protocol"
         )

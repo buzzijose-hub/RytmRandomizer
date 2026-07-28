@@ -2,32 +2,102 @@
 
 > Status: in-flight
 >
-> Verdict: pass for software merge; CI is green. The supervised physical full-plan rehearsal remains pending.
+> Verdict: mechanical gates and strict production typing pass. Gates 3, 14,
+> and 16 still require explicit CODEOWNER acceptance. Push, fresh online
+> checks, the reviewer verdict, and the supervised physical full-plan rehearsal
+> remain pending.
 
 ## Findings Resolved
 
-- Architecture: registered `Device` capability, existing SysEx codec/envelope, generic CC/NRPN sender, atomic writer, and batch codec/publication abstractions are reused. No parallel device package or duplicate transport abstraction was introduced.
-- Correctness: the stored plan now binds `source_hash` to the source-audio SHA-256, unreadable audio is reported, malformed NRPN addresses fail closed, and rank artifact/reference failures use the package taxonomy with immutable context.
-- Parity and tests: all 685 V1.34 items remain byte-identical. The independent 59-message SHA-256 is pinned, callbacks count only accepted messages, and full success, pre-port rejection, partial NRPN, generic failure, and Ctrl+C recovery paths are covered.
-- Safety and side effects: the complete plan is validated before provider/port access, real MIDI stays behind confirmed `--arm`, every message uses the named 20 ms pacing policy, the port closes on all catchable outcomes, and partial delivery directs the operator to reload the clean Kit/project.
-- Observability: inference, render ranking, and armed delivery expose bounded RED metrics. Terminal logs include duration, metric summary, structured source/track/candidate context, typed failure categories, and stable fingerprints.
-- Maintainability: inference formulas live in canonical immutable data with bounded construction-validated keys; armed port acquisition and delivery/recovery are focused helpers; the reusable Elektron skill captures publication, provenance, validation, pacing, and recovery lessons.
-- Documentation: all counts below describe the same exact tree. Hardware state distinguishes proven Filter2 Resonance saved-kit writes from the pending complete live-plan rehearsal, and the dry-run manual asks operators to verify counts actually displayed by the command.
-- Post-push corrections: class-level device metadata retains real `ClassVar` introspection while strategy capabilities remain read-only properties; bool/float selectors fail before analysis; batch staging carries pure render state until real publication; the A4 capability resolves per operation; native audio, fixture identity, and pacing have independent assertions; logs and lock-cleanup metrics carry stable diagnostic identity; the architecture diagram and CLI manifest workflow are current.
+- Architecture: the registered `Device` capability, shared SysEx
+  codec/envelope, canonical MIDI event-kind vocabulary, neutral real-output
+  provider protocol, generic CC/NRPN sender, atomic writer, and batch
+  codec/publication abstractions are reused. `app --arm` remains the only real
+  port boundary.
+- Candidate contract: the documented/default passive batch deterministically
+  produces exactly four candidates. Each has a local `.syx`, complete DNA and
+  CC/NRPN sidecar, and manifest identity. The bounded count seam can produce a
+  leading subset for focused compatibility tests.
+- Native safety: native audio decoding runs in a spawned child. An abnormal
+  Windows exit becomes `inference_failed`; the parent remains alive and removes
+  its private audio/SysEx staging. This proves crash containment and cleanup,
+  not reliable Windows decoding.
+- Correctness: the stored plan binds source audio, candidate DNA, send plan,
+  transport status, and canonical A4 CC/NRPN addresses before provider
+  construction. Unknown or changed content fails closed.
+- Safety and side effects: saved-kit SysEx writing is a verified-field local
+  file operation. Passive batch, rank, report, reader, validator, and
+  local-model paths open no MIDI port and send nothing. Confirmed
+  `python -m rytm_randomizer.app --arm` is required for real CC/NRPN delivery.
+- Observability: inference, batch export, immutable artifact publication/reuse,
+  lock acquire/release, recorded-render ranking, and armed delivery expose
+  bounded tracing, RED metrics, typed failures, and stable fingerprints.
+  Zero-message delivery is a failure, not a partial success.
+- Publication and cleanup: cooperative lock acquire/release share an atomic
+  sibling operation gate, so a verified owner cannot unlink a replacement
+  lock. Post-manifest cleanup interruption is reported as a successful commit
+  with an explicit recovery warning; pre-commit failures remain failures.
+- Port lifecycle and operator interruption: opened real input/output objects
+  must expose the required data method plus `close`; rejected objects are
+  closed best-effort. Batch and render-rank CLI interruptions return a
+  structured `interrupted` result with exit code 130.
+- Maintainability: native work is isolated; shared transport contracts replace
+  feature-local duplicates; staging/publication and armed delivery/recovery are
+  split into focused helpers; the run-state file validates against its schema.
+- Documentation: README, architecture/diagrams, CLI reference, manual
+  validation, Windows notes, observability, status, and PR #214 plan artifacts
+  distinguish local SysEx writing from MIDI transfer and do not claim Windows
+  decoder reliability.
 
-## Verification
+## Fresh Verification
 
-- Full suite: 6,515 passed, 3 skipped.
-- Coverage: 99.04% across 42,437 statements and 9,622 branches; 98.40% pure-branch.
-- Diff coverage: all 2,676 changed executable production lines and all 283 changed behavioral branch origins executed.
-- Architecture: 693 passed.
-- V1.34 parity: 685 passed byte-for-byte.
-- Ruff, Black, isort, Vulture across production/tests, production-diff Pyright, `git diff --check`, and the mechanical review gate passed.
+- Focused A4/operator regression suite: **1,577 passed, 1 skipped**.
+- Architecture: **702 passed**.
+- Full suite: **6,773 passed, 3 skipped**.
+- Ruff, Black, isort: **clean**.
+- Touched-file statement/branch coverage: **100%** across **7,573 statements**
+  and **1,762 branches**, zero misses.
+- V1.34 parity: **685 passed** byte-for-byte.
+- Vulture confidence 80, strict Pyright across all 60 touched production
+  modules, `git diff --check`, and the mechanical review gate: **passed**.
+- Literal strict Pyright across all 109 touched Python paths: **4,204
+  test-harness typing errors**; Gate 3 needs CODEOWNER acceptance or a
+  dedicated test-typing cleanup.
+- The pushed commit SHA, online CI, and reviewer status remain pending and will
+  be recorded on PR #214.
 
 ## Abstraction
 
-Pass. The separate generated-plan sender is justified because the existing snapshot sender consumes snapshot-derived CC triples, while this feature requires prevalidated mixed CC/NRPN sequences with exact partial-message accounting. Batch staging now keeps render metadata separate from actual write results.
+Pass for the documented architecture. The reader and validator are passive;
+the app owns provider construction and confirmed real delivery. Local saved-kit
+SysEx generation remains separate from MIDI transport. The local-model copilot
+cannot reach either route.
 
 ## Docs
 
-Pass. CI is green for feature-code head `245a0294` across Linux, macOS, Windows, architecture, lint, desktop E2E, docs, and CodeQL. The remaining hardware item is the deliberately supervised physical 39-row/59-message rehearsal. Saved-kit SysEx hardware proof remains limited to Filter2 Resonance on all four tracks.
+Pass for the current local tree. All counts above come from the fresh closeout
+runs supplied for this snapshot. Older coverage values and feature-code SHAs
+remain historical in the append-only run log and are not reused as final
+evidence.
+
+## Final Dimension Review
+
+- Critical findings: none.
+- Important code and documentation findings: resolved before closeout. Armed
+  plan-validation failures now share the send operation's `op_id`, provider
+  construction remains after validation, direct source-build failures emit
+  bounded telemetry, and the Windows decoder evidence is described precisely.
+- Remaining non-blocking code risks: three cohesive routines have complexity
+  11-12; frozen staging records contain shallowly mutable typed payloads; three
+  CLI modules repeat a small required-option parser; and `app.py` remains large
+  because it owns the sole armed hardware boundary.
+- Required exceptions: Gates 3, 14, and 16 remain unchecked and require explicit
+  CODEOWNER acceptance. They are not represented as completed work.
+
+## Remaining Gates
+
+1. Commit and push the locally verified tree.
+2. Synchronize the PR's unchecked Gate 3, 14, and 16 exceptions and request
+   explicit CODEOWNER acceptance from Edward Rosado.
+3. Keep the supervised physical 33-row/53-message rehearsal as a separate
+   operator-present hardware task.

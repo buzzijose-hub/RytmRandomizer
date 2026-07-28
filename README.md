@@ -4,8 +4,7 @@
 
 # RytmRandomizer
 
-**A creative cockpit for the Elektron Analog Rytm MK2.**
-**Author a profile · mutate live · ship to hardware as a signed file.**
+**A creative cockpit for the Elektron Analog Rytm MK2. Author a profile · mutate live · ship to hardware as a signed file.**
 
 [![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-orange.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](pyproject.toml)
@@ -530,11 +529,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow (plan → TDD → code
 
 The full surface is large - see [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) for every command and its flags. The headline ones:
 
-The scene system below is the validated V1.34 four-pad layer. These tables are
-the canonical reference for what commands exist there; `rytm_randomizer.shell`
-dispatches them. For all-12-pad style mutation, use
-`python -m rytm_randomizer.app --dry-run --rytm-12-pad-shell` first, then the
-armed form with `--confirm-rytm-12-pad-send`.
+The scene system below is the validated V1.34 four-pad layer and the canonical command reference dispatched by `rytm_randomizer.shell`. For all-12-pad style mutation, use `python -m rytm_randomizer.app --dry-run --rytm-12-pad-shell` first, then the armed form with `--confirm-rytm-12-pad-send`.
 
 ```bash
 # Cockpit + wizard + export
@@ -554,7 +549,11 @@ reference-style-blueprint-report --description "Glenn Wilson pressure" # 12-pad 
 # Dual-machine targets
 dual-machine-target-report rytm | a4 | both                           # safe target surface
 dual-machine-style-kit-selection-report STYLE --rytm KITS --analog-four KITS # A4 baseline/patch DNA/corpus/send-plan: see CLI reference
-# A4 audio workflow: analog-four-saved-kit-export -> analog-four-audio-patch-batch -> analog-four-audio-patch-rank
+
+# A4 audio workflow: local saved-kit export -> four-candidate batch -> passive rank
+python -m rytm_randomizer.cli analog-four-saved-kit-export --source source-kit.syx --output output/a4-filter2-res-64.syx --filter2-resonance 1:64
+python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit source-kit.syx --output-dir output/a4-audio-patch --candidates 4
+python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference reference.wav --manifest output/a4-audio-patch/a4-t1-audio-patch-batch.json --render 1=candidate-1.wav
 
 # Snapshot intelligence
 rytm-snapshot-intelligence-report KITS.syx --slot N                   # one Rytm kit snapshot
@@ -625,8 +624,8 @@ Keep volume moderate for S3B and S4B.
   restarting the process.
 - Main-prompt `1`, `2`, and `3` remain guarded and send no MIDI.
 - Four-pad scene/global commands auto-load anchors if needed.
-- Free-form all-row mutation, samples, performance macros, source level, track level, amp volume, NRPN style-kit sends, SysEx, transport, pattern changes, and kit/project writes remain out of scope.
-- Analog Four sends are candidate/manifest-gated and require an explicit `--arm` path plus a ready plan; generated patch sends use `--a4-patch-send-plan --confirm-a4-patch-send-plan`. The passive `analog-four-audio-patch-batch` command performs real local audio-dependent inference and writes up to four generation-addressed candidate `.syx` files plus complete DNA/live-dial sidecars. Every currently generated DNA row has a validated CC or NRPN route; the closest-reference candidate contains 39 sendable rows rendered as 59 MIDI messages. `--batch-manifest <batch.json> --candidate N` verifies the committed sidecar, nested DNA/send-plan hashes, transport status, and canonical A4 CC/NRPN address for every event before dry-run or armed send. The armed path validates the whole plan before opening the port, paces messages by 20 ms, and reports exact partial-send progress with clean-Kit/project reload recovery. It analyzes immutable audio/kit snapshots, cleans private staging before publication, and atomically switches the manifest last so an interrupted overwrite leaves the prior manifest generation consistent. Only Filter2 Resonance is encoded in SysEx today. `analog-four-audio-patch-rank` closes the passive feedback loop by comparing recorded A4 candidates with the byte-identical reference across 11 measured envelope/timbre features. The complete 39-row live plan is software-verified but still awaits a supervised physical full-patch rehearsal. This is not a claim of full saved-kit coverage or Synthplant-equivalent learned accuracy.
+- Free-form all-row mutation, samples, performance macros, source level, track level, amp volume, unverified saved-kit fields, transport, pattern changes, and automatic kit/project transfer remain out of scope. Guarded local saved-kit SysEx writing is supported only for hardware-write-validated mappings; today that is Filter2 Resonance. The documented `analog-four-audio-patch-batch --candidates 4` workflow deterministically publishes exactly four audio-dependent `.syx` candidates plus complete DNA/live-dial sidecars without opening a MIDI port. Native decoding runs in a spawned child; an abnormal Windows exit returns `inference_failed` while the parent removes private audio/SysEx staging. This is crash containment, not a claim of reliable Windows decoding, full saved-kit coverage, or Synthplant-equivalent learned accuracy.
+- Analog Four sends are candidate/manifest-gated and use `--a4-patch-send-plan --confirm-a4-patch-send-plan --a4-output-port "<exact configured output name>"`. `--batch-manifest <batch.json> --candidate N` verifies the committed sidecar, nested DNA/send-plan hashes, transport status, and canonical A4 CC/NRPN address for every event. `python -m rytm_randomizer.app --arm` is the sole real MIDI boundary; no passive command, saved-kit writer, batch generator, ranker, or local-model copilot can open a hardware port. The armed path requires the configured output name to appear exactly once, performs no interactive port selection, validates the whole plan before constructing the real provider or opening the port, paces messages by 20 ms, and reports exact partial-send progress with clean-Kit/project reload recovery. `analog-four-audio-patch-rank` compares recorded candidates with the byte-identical reference across 11 measured envelope/timbre features. The guarded closest-reference plan sends 33 rows / 53 messages; six paired-CC rows remain manual pending 14-bit hardware verification, and the transport plan still awaits a supervised physical rehearsal.
 - Analog Rytm CC observe is input-only: `python -m rytm_randomizer.app --arm --rytm-cc-observe` opens a Rytm MIDI input port, observes pending CC messages, prints raw CC/NRPN observations with candidate labels, optionally sharpens labels with `--rytm-cc-observe-live-snapshot` or `--rytm-cc-observe-snapshot current-kit.syx`, and sends no MIDI.
 - Analog Four soft live capture is input-only: `python -m rytm_randomizer.app --arm --a4-soft-capture` opens an A4 MIDI input port, reconstructs known CC and three-message NRPN observations per track, prints a known/unknown state report, and sends no MIDI.
 - Analog Four named parameter sends are active: `python -m rytm_randomizer.app --arm --a4-send-param --parameter "OSC1 PWM Depth" --channel 0 --value 32` prompts for an A4 output port, sends one manual-backed CC MSB message, closes the port, and exits.
@@ -673,6 +672,7 @@ Aliases: `rytm-only` and `a4-only` are accepted. The reports are passive: they o
 
 **Free for personal and noncommercial use. Commercial license available.**
 
+RytmRandomizer is an independent, unofficial open-source project. It is not affiliated with, sponsored by, or endorsed by Elektron. Elektron, Analog Four, and Analog Rytm are trademarks of their respective owner.
 RytmRandomizer is licensed under the [PolyForm Noncommercial License
 1.0.0](LICENSE) — a [source-available](https://en.wikipedia.org/wiki/Source-available_software)
 license that lets anyone clone, run, modify, share, and contribute to the

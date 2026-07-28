@@ -264,6 +264,7 @@ def test_no_broad_except_exception_in_package() -> None:
 # AssertionError is allowed (used for invariant assertions).
 # KeyError is allowed in registry lookup (rytm_randomizer/reports.py).
 # SystemExit is allowed in script entry points.
+# KeyboardInterrupt is allowed when a subprocess propagates operator cancellation.
 # StopIteration is allowed in generator protocols.
 _STDLIB_VALIDATION_OK: frozenset[str] = frozenset(
     {
@@ -277,6 +278,7 @@ _STDLIB_VALIDATION_OK: frozenset[str] = frozenset(
         "AssertionError",
         "KeyError",
         "SystemExit",
+        "KeyboardInterrupt",
         "StopIteration",
         "NotImplementedError",
         # Cockpit Phase 3 export writer raises FileExistsError when an
@@ -425,7 +427,7 @@ def test_raises_use_taxonomy_or_validation_stdlib() -> None:
         "Every ``raise`` in the package must use a member of the "
         "RytmRandomizerError taxonomy (rytm_randomizer.observability.errors) "
         "or a validation-allowed stdlib exception (TypeError / ValueError / "
-        "AssertionError / KeyError / SystemExit / StopIteration / "
+        "AssertionError / KeyError / SystemExit / KeyboardInterrupt / StopIteration / "
         "NotImplementedError). Violations:\n  " + "\n  ".join(violations)
     )
 

@@ -2,12 +2,14 @@
 
 > Status: in-flight
 >
-> Software complete; supervised full-plan hardware rehearsal pending.
+> Local software closeout verified; push, online checks, and fresh reviewer
+> verdict remain pending. Supervised full-plan hardware rehearsal also remains
+> pending.
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:test-driven-development. This plan is structured for one bundled PR with maximum-parallelization sidecar exploration and no stacked PRs, per docs/PLAN_REQUIREMENTS.md Gate 16.
 
-**Goal:** Add a Synplant-inspired audio/description-to-Analog-Four patch genome and a real audio-dependent batch path that produces up to four A4 patch candidates, complete DNA sidecars, CC/NRPN live-dial plans, and narrow hardware-validated saved-kit files for Filter2 Resonance.
+**Goal:** Add a Synplant-inspired audio/description-to-Analog-Four patch genome and a real audio-dependent batch path whose canonical/default invocation produces exactly four deterministic A4 patch candidates, complete DNA sidecars, CC/NRPN live-dial plans, and narrow hardware-validated saved-kit files for Filter2 Resonance.
 
-**Architecture:** Keep A4-specific facts in `rytm_randomizer/data/`, deterministic measured-audio inference in `rytm_randomizer/style_analysis/`, and local batch orchestration under `cockpit/export/`. The registered operator CLI delegates to the batch service; every artifact reaches disk through `atomic_write`, and no MIDI path is imported or opened. Saved-kit SysEx remains Filter2-Resonance-only while each JSON sidecar carries complete DNA and its CC/NRPN plan.
+**Architecture:** Keep A4-specific facts in `rytm_randomizer/data/`, deterministic measured-audio inference in `rytm_randomizer/style_analysis/`, and local batch orchestration under `cockpit/export/`. Native decoding runs in a spawned child while the parent owns and cleans private staging. The registered operator CLI delegates to the batch service; every artifact reaches disk through `atomic_write`, and no passive path imports or opens real MIDI. Saved-kit SysEx remains Filter2-Resonance-only while each JSON sidecar carries complete DNA and its CC/NRPN plan. The reader and validator remain passive; real CC/NRPN output is reachable only through confirmed `python -m rytm_randomizer.app --arm`.
 
 **Tech Stack:** Python 3.11 stdlib, existing `FeatureReport` style-analysis pipeline, existing manual-backed `analog_four_midi.py`, passive CLI registry.
 
@@ -32,20 +34,40 @@
 
 ## Execution Shape
 
-- **Worktree assignment:** The bundled feature landed through `.worktrees/a4-audio-patch-genome-passive` on PR #206; Filter2 Resonance calibration landed in PR #212; the round-trip writer continues in `.worktrees/a4-sysex-roundtrip-writer` on branch `codex/a4-sysex-roundtrip-writer`.
-- **Disjoint ownership:** WS-A and WS-I own their established data facts, WS-B owns `style_analysis/`, WS-C owns report CLI/help surfaces, WS-D owns docs, and WS-J owns saved-kit layout facts, the shared codec/packer, A4 renderer, guarded exporter/operator command, and exact wire fixtures.
-- **Agent crew:** main agent performs TDD/implementation; read-only explorers inspect CLI/report and A4 reuse points in parallel.
+- **Worktree assignment:** The bundled feature landed through `.worktrees/a4-audio-patch-genome-passive` on PR #206; Filter2 Resonance calibration landed in PR #212; the round-trip writer continues in `.worktrees/a4-sysex-roundtrip-writer` on branch `codex/a4-sysex-roundtrip-writer`. A per-workstream historical worktree/branch ledger was not retained for WS-E through WS-H or WS-K through WS-L, so this plan does not claim retroactive Gate 16 conformance.
+- **Disjoint ownership:** The workstream graph records complete logical file ownership for WS-A through WS-L. Historical execution did not preserve one isolated worktree/branch per listed workstream; coupled PR #214 implementation was consolidated in the writer worktree, while review dimensions ran independently.
 - **Self-driving rules:** no human prompts; routine file edits, formatting, docs, tests, and fixes continue automatically.
 - **Auto-merge cascade:** not used locally; PR shape is one non-stacked bundled branch.
-- **Gate 16 adaptation:** the historical cascade wording is superseded here by the current repository anti-cascade rule in `AGENTS.md`; all work lands in PR #214 directly against `modularize-v1.34`.
+- **PR topology:** all current work lands in the non-stacked PR #214 directly against `modularize-v1.34`; this satisfies the anti-cascade rule but does not erase the missing per-workstream execution ledger required by Gate 16.
 - **Auto-rebase rules:** if base drift appears, rebase/cherry-pick only this branch's commits and never reset user changes in the original checkout.
-- **On-disk state:** Merged PRs #206 and #212, branch `codex/a4-sysex-roundtrip-writer`, this plan document, immutable hardware evidence, and committed test/coverage evidence are the durable recovery state; no long-running monitor or external state file is required.
+- **On-disk state:** Merged PRs #206 and #212, branch `codex/a4-sysex-roundtrip-writer`, this plan document, immutable hardware evidence, and fresh local gate evidence are the durable recovery state; no long-running monitor or external state file is required.
 - **Kickoff trigger:** user requested autonomous continuation on 2026-07-03.
-- **Termination condition:** tests and docs pass locally as far as feasible; final response lists changed files, verification, and residual hardware-validation limits.
-- **Hard time budget:** no wall-clock budgeted automation is running; this is a finite PR update that stops after local gates, push, and PR status checks.
+- **Termination condition:** docs and local gates pass, final touched-file coverage is measured, the final commit SHA is known, and a fresh review has no Important findings. The residual supervised hardware rehearsal remains separately documented.
+- **Hard time budget:** each autonomous continuation is capped at 72 hours. At exhaustion the orchestrator writes `BUDGET_EXCEEDED` plus the current branch, SHA, dirty paths, completed gates, and blockers to the run log, then stops.
 - **Recovery procedure:** read this plan, run `git status --short --branch`, inspect the current writer PR, then rerun the focused A4 writer/export/calibration tests before continuing after compaction.
 - **Permission profile:** local file edits and passive tests only; refuse force-push, hardware pin bumps, parity capture, and unarmed real-MIDI sends.
 - **Stop signals:** a user "stop/wait" message pauses; otherwise continue.
+
+### Gate 16 Crew Matrix
+
+Each workstream follows the same explicit phase order. A role may be fulfilled
+by the main orchestrator when the work is tightly coupled, but review roles
+remain independent and parallel.
+
+| WS | Planner | TDD guide | Implementer | Refactor | Coverage | Parallel review | Docs / publish |
+|---|---|---|---|---|---|---|---|
+| A | main orchestrator | data-layer TDD worker | data implementer | refactor cleaner | coverage worker | data + architecture reviewers | doc updater / orchestrator |
+| B | main orchestrator | inference TDD worker | inference implementer | refactor cleaner | coverage worker | correctness + maintainability reviewers | doc updater / orchestrator |
+| C | main orchestrator | CLI TDD worker | report/CLI implementer | refactor cleaner | coverage worker | passive-safety + UX reviewers | doc updater / orchestrator |
+| D | main orchestrator | documentation test worker | doc updater | docs cleaner | link/test worker | docs-freshness reviewer | orchestrator |
+| E | main orchestrator | learning TDD worker | learning implementer | refactor cleaner | coverage worker | correctness + explainability reviewers | doc updater / orchestrator |
+| F | main orchestrator | active-boundary TDD worker | sender/app implementer | refactor cleaner | coverage worker | MIDI safety + architecture reviewers | doc updater / orchestrator |
+| G | main orchestrator | corpus TDD worker | corpus implementer | refactor cleaner | coverage worker | data-safety + copyright reviewers | doc updater / orchestrator |
+| H | main orchestrator | baseline TDD worker | report implementer | refactor cleaner | coverage worker | passive-safety reviewer | doc updater / orchestrator |
+| I | main orchestrator | calibration TDD worker | data implementer | refactor cleaner | coverage worker | hardware-evidence + data reviewers | doc updater / orchestrator |
+| J | main orchestrator | codec/writer TDD worker | writer implementer | refactor cleaner | coverage worker | SysEx safety + wire-format reviewers | doc updater / orchestrator |
+| K | main orchestrator | audio/batch TDD worker | batch implementer | refactor cleaner | coverage worker | native-boundary + publication reviewers | doc updater / orchestrator |
+| L | main orchestrator | adversarial TDD worker | reader/ranker implementer | refactor cleaner | coverage worker | eight-dimension review fan-out | doc updater / orchestrator |
 
 ## Durable Run Artifacts
 
@@ -79,7 +101,7 @@
 17. Update operator docs, architecture/status references, observability notes, and the existing Elektron SysEx learned skill.
 18. Run focused coverage, strict typing, full suite, architecture, parity, lint, and review gates.
 19. Measure audio-dependent envelope, spectrum, noise, low-end, harmonicity, transient, and modulation evidence and use it to vary candidate DNA deterministically.
-20. Export one-to-four candidate `.syx`/JSON pairs plus a batch manifest; keep complete DNA and CC/NRPN live-dial metadata in sidecars.
+20. Export the canonical set of exactly four candidate `.syx`/JSON pairs plus a batch manifest; keep complete DNA and CC/NRPN live-dial metadata in sidecars and retain the bounded leading-subset seam for focused compatibility tests.
 21. Register `analog-four-audio-patch-batch` with bounded track/candidate parsing, text/JSON summaries, classified file/input failures, and no MIDI behavior.
 22. Reconstruct one committed candidate only after verifying hashes, DNA/event identity, transport status, path containment, and canonical A4 CC/NRPN addresses.
 23. Add complete per-track CC/NRPN soft capture with injected manual-backed selector facts.
@@ -90,7 +112,8 @@
 
 - Passive CLI reports open no MIDI ports and send no MIDI.
 - App dry-run sends only to the in-memory mock sender.
-- App armed send requires `--arm --a4-patch-send-plan --confirm-a4-patch-send-plan`.
+- App armed send requires `--arm --a4-patch-send-plan
+  --confirm-a4-patch-send-plan --a4-output-port "<exact configured name>"`.
 - Saved-kit SysEx writing is local-file-only, atomic, refuses overwrite by default, and is limited to hardware-write-validated Filter2 Resonance mutations.
 - No generated SysEx is sent to a MIDI port by this path; hardware receipt remains an explicit operator action.
 - No parity fixture regeneration.
@@ -102,27 +125,48 @@
 - Initialized-baseline comparison reads local SysEx exports and fingerprints supported saved-kit payloads only; it does not write SysEx, mutate hardware, send MIDI, or claim parameter-level A4 DNA extraction while saved-kit offsets remain candidate-only.
 - Candidate-only SysEx calibration facts remain blocked from operator-facing export. Filter2 Resonance alone carries immutable write-validation evidence for reference, novel, and four-track generated kits; this does not claim a complete A4 kit writer.
 - Audio batches are genuinely audio-dependent, but deterministic feature routing is not a trained Synthplant-equivalent model and makes no equivalent-accuracy claim.
+- The documented/default batch produces exactly four deterministic candidates. The bounded count seam can produce a leading subset for focused compatibility tests.
+- Native decoding is crash-contained in a spawned child. An abnormal Windows exit fails as `inference_failed`; the parent survives and removes its private audio/SysEx staging. Reliable Windows decoding is not claimed.
 - Every batch `.syx` encodes only Filter2 Resonance; each sidecar is the complete DNA and live-sendable/manual/deferred plan of record.
+- The local-model copilot cannot construct a provider, open a MIDI port, send MIDI/SysEx, or promote its output into an armed plan.
+
+## Fresh Closeout Verification
+
+- Focused A4/operator regression suite: **1,577 passed, 1 skipped**.
+- Architecture suite: **702 passed**.
+- Full suite: **6,773 passed, 3 skipped**.
+- Ruff, Black, and isort: **clean**.
+- Touched-file statement/branch coverage: **100%** across **7,573 statements**
+  and **1,762 branches**, zero misses.
+- V1.34 parity: **685 passed** byte-for-byte.
+- Vulture, strict production-diff Pyright, `git diff --check`, and the mechanical
+  review gate: **passed**.
+- The pushed commit SHA, online CI, and reviewer verdict remain pending and
+  will be recorded on PR #214.
 
 ## Plan-Requirements Conformance
 
 Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 
-- [x] Gate 1 (100% branch coverage on touched files) -- the final exact-tree suite covers 42,438 statements and 9,622 branches at 99.04% overall / 98.40% pure-branch; all 2,677 changed executable production lines and all 283 changed behavioral branch origins have zero misses.
-- [x] Gate 2 (V1.34 parity byte-identical) -- no V1.34 engine/golden paths touched.
-- [x] Gate 3 (lint/format/type clean) -- ruff/black/isort plus Pyright on every touched production path passed before closeout.
-- [x] Gate 4 (dead-code purge) -- no unused public surfaces; report and compiler are test-covered.
+- [x] Gate 1 (100% branch coverage on touched files) -- 7,573 statements and 1,762 branches, zero misses.
+- [x] Gate 2 (V1.34 parity byte-identical) -- 685 items passed.
+- [ ] Gate 3 (lint/format/type clean) -- Ruff, Black, isort, and strict
+  Pyright across all 60 touched production modules pass. The literal strict
+  audit across all 109 touched Python paths reports 4,204 errors in dynamic
+  test harnesses, so complete touched-path conformance requires explicit
+  CODEOWNER acceptance or a dedicated test-typing cleanup.
+- [x] Gate 4 (dead-code purge) -- Vulture confidence 80 passed across production and tests.
 - [x] Gate 5 (docs updated) -- README, CLI reference, STATUS, ARCHITECTURE, diagrams updated.
 - [x] Gate 6 (type-system hygiene) -- frozen dataclasses and explicit types; no `Any` aliases.
-- [x] Gate 7 (observability adoption) -- the active send bridge keeps its operation span and MIDI breadcrumbs; saved-kit export and whole-operation audio inference record bounded RED metrics, classified errors, and lock-cleanup warnings.
+- [x] Gate 7 (observability adoption) -- inference, batch export, immutable publication/lock operations, ranking, and armed sends record bounded RED metrics, traces, classified errors, and lock-cleanup warnings.
 - [x] Gate 8 (test hygiene) -- tests mirror source responsibilities, pin the observed wire format, verify immutable audio provenance and generation-addressed manifest consistency, and exercise real audio plus process-interruption paths through the canonical atomic writer.
 - [x] Gate 9 (module organization) -- new files live under existing `data/`, `style_analysis/`, `reports/`, `devices/strategies/`, and `cockpit/export/` subpackages.
 - [x] Gate 10 (string-literal dispatch hygiene) -- no new mode/page dispatch ladder; CLI uses registry.
 - [x] Gate 11 (shared fixtures) -- shared builders live in `tests/conftest.py`; sanitized source/expected A4 frames live once under `tests/fixtures/analog_four_saved_kit/`.
 - [x] Gate 12 (Final constants) -- new constants annotated.
-- [x] Gate 13 (env vars) -- no runtime environment variable was added; the native-audio test subprocess controls and `GITHUB_ACTIONS` branch are documented in `CONTRIBUTING.md` and `docs/LOCAL_DEV_TOOLING_NOTES.md`.
-- [x] Gate 14 (maintainability) -- the paired pre-plan audit and post-plan report score all ten required dimensions with no regression.
+- [x] Gate 13 (env vars) -- no runtime environment variable was added; native-audio test subprocess controls are documented in `docs/LOCAL_DEV_TOOLING_NOTES.md`.
+- [ ] Gate 14 (maintainability timing exception) -- the baseline audit and post-plan report score all ten dimensions, but the baseline was reconstructed after implementation began and therefore cannot satisfy the gate's pre-implementation timing requirement retroactively.
 - [x] Gate 15 (learning phase) -- the run report/log, architecture diff, replay playbook, state/schema, updated `elektron-sysex-envelope` skill, and applicable project rules are committed and linked above.
-- [x] Gate 16 (execution shape) -- PRs #206 and #212 landed directly; PR #214 is one comprehensive follow-up branch directly against `modularize-v1.34`, with no stacked base branch. This follows the current anti-cascade repository rule rather than the older autonomous cascade pattern.
+- [ ] Gate 16 (historical evidence exception) -- PR #214 is one comprehensive, non-stacked branch directly against `modularize-v1.34`, but the run did not retain a distinct worktree/branch assignment for every listed workstream.
 - [x] Gate 17 (abstraction reuse) -- canonical layout/rank/MIDI facts live in `data/`; decoder and renderer share one saved-kit codec; guarded export and batching resolve the registered A4 saved-kit capability; writer and reader share one batch codec; acoustic scoring is pure; export and profile registry share one atomic writer; operator dispatch reuses `cli_registry`.
-- [x] Gate 18 (architecture freshness) -- architecture docs/diagrams cover the shared packer, optional registered-device saved-kit capability, split batch contracts/codec/publication, verified reader, pure ranker, and guarded `.syx`/live-plan paths.
+- [x] Gate 18 (architecture freshness) -- architecture docs/diagrams cover the shared packer, optional registered-device saved-kit capability, child-process decoder boundary, split batch contracts/codec/publication, verified reader, pure ranker, local-file SysEx route, and sole `app --arm` live-plan route.

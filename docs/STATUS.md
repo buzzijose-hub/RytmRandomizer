@@ -1,8 +1,31 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-07-17. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-07-27. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
+
+- 2026-07-27: PR #214 documentation closeout now reflects the hardened A4
+  audio-to-patch tree. The canonical passive batch produces exactly four
+  deterministic candidates, each with a local saved-kit `.syx`, complete DNA
+  and CC/NRPN sidecar, and manifest identity. Native decoding runs in a spawned
+  child; an abnormal Windows decoder exit fails safely as `inference_failed`
+  while the parent removes its private audio/SysEx staging. Reliable Windows
+  native decoding is not claimed. Saved-kit writing remains local-file-only and
+  limited to hardware-write-validated Filter2 Resonance. The manifest reader
+  and validator remain passive; only `python -m rytm_randomizer.app --arm` can
+  construct the real provider and send the confirmed CC/NRPN plan. The local
+  model copilot has no hardware route. Fresh closeout results: focused
+  A4/operator regression suites passed (1,577 passed / 1 skipped);
+  architecture 702 passed; full suite 6,773 passed / 3 skipped;
+  V1.34 parity 685 passed;
+  touched production files reached 100% statement and branch coverage across
+  7,573 statements and 1,762 branches;
+  Ruff, Black, isort, Vulture, strict Pyright across all 60 touched production
+  modules, `git diff --check`, and the mechanical review gate passed. Literal
+  strict checking across all 109 touched Python paths exposes 4,204 dynamic
+  test-harness typing errors and is disclosed as a Gate 3 reviewer exception.
+  The pushed SHA and online review state will be recorded on PR #214 after
+  publication.
 
 - 2026-07-17: The A4 audio-patch feedback loop completed its post-push
   hardening review. Saved-kit rendering now resolves through an optional
@@ -14,16 +37,19 @@ Last updated: 2026-07-17. This file is a hand-authored snapshot and is meant to 
   increment real hardware-send counters; ranking and manifest failures now use
   structured metrics and stable error classes. Focused coverage is 100% branch
   on the new codec, contracts, publication, reader, pure ranker, and shared
-  audio extractor. The full 39-row/59-message hardware rehearsal remains an
-  explicit supervised next step, not an already validated routine send.
+  audio extractor. The current guarded plan sends 33 rows / 53 messages and
+  keeps six paired-CC rows manual pending hardware verification. A supervised
+  hardware rehearsal remains an explicit next step, not a validated routine.
 
-- 2026-07-17: The generated Analog Four live-dial path advanced from partial
-  to complete for the current DNA vocabulary. Official OS 1.55 NRPN addresses
+- 2026-07-17: The generated Analog Four live-dial path initially appeared
+  complete for the current DNA vocabulary. Official OS 1.55 NRPN addresses
   were paired with enum values inspected through the installed Elektron
   Overbridge 2.25.7 Analog Four plug-in: gate `NOTE`/Overbridge `Off` is `0`,
   destination `OFF` is `96`, and LFO destination `F1 Frequency` is `34`.
-  Unknown enum labels still fail closed. The closest-reference patch now has
-  39 sendable rows (29 CC + 10 NRPN) and produces exactly 59 MIDI messages.
+  Unknown enum labels still fail closed. Later closeout review correctly
+  deferred six paired-MSB/LSB CC rows pending 14-bit hardware evidence; the
+  guarded closest-reference path is now 33 sendable rows (23 CC + 10 NRPN)
+  and 53 MIDI messages.
   A hash-verifying manifest reader reconstructs the exact auditioned candidate
   for dry-run or confirmed armed send, checking generation, source, DNA,
   send-plan, sidecar, coverage, and track/channel identities. A4 soft capture
@@ -51,15 +77,19 @@ Last updated: 2026-07-17. This file is a hand-authored snapshot and is meant to 
   hardware send. Evidence is recorded in
   `docs/hardware-validation/2026-07-16-a4-saved-kit-roundtrip-results.md`.
   The follow-on `analog-four-audio-patch-batch` command now connects real local
-  audio-dependent inference to one-to-four candidate exports. Each candidate
+  audio-dependent inference to a canonical set of exactly four deterministic
+  candidate exports; a bounded count seam can emit a leading subset for focused
+  compatibility tests. Each candidate
   has a saved-kit `.syx` plus a complete DNA/CC-NRPN sidecar; only Filter2
   Resonance is currently written into SysEx, while the sidecar classifies the
   remaining rows as live-sendable, manual, or deferred. The path is local-file
   only, sends no MIDI, and makes no full-coverage or Synthplant-accuracy claim.
-  A real local tonal-versus-noise CLI smoke produced nine artifacts per clip
-  and distinct candidate DNA/SysEx: candidate 1 inferred Filter2 Resonance
-  `36` for the tonal clip and `24` for the noise clip. Genome, learning,
-  send-plan, and batch reports agreed on the same audio hash and values. The
+  A real local tonal-versus-noise CLI smoke previously produced nine artifacts
+  per clip and distinct candidate DNA/SysEx on a working native decoder. The
+  current Windows path may instead return a controlled `inference_failed`;
+  parent survival and private-staging cleanup are verified, but Windows native
+  decoder reliability is not claimed. Genome, learning, send-plan, and batch
+  reports agree on the same audio hash and values when analysis succeeds. The
   analyzer now hashes and decodes the same immutable audio snapshot once for
   both report and synthesis evidence. Batch export snapshots both inputs,
   stages every artifact, closes temporary files before publication, and uses
@@ -130,9 +160,9 @@ Last updated: 2026-07-17. This file is a hand-authored snapshot and is meant to 
   counts the exact transport messages, and lists skipped front-panel rows that
   still need ordinal capture. The active app path now supports
   `--dry-run --a4-patch-send-plan` for mock rendering and
-  `--arm --a4-patch-send-plan --confirm-a4-patch-send-plan` for explicit A4
-  output sends; it sends only compiler-approved rows and leaves screen-only
-  destination rows manual.
+  `--arm --a4-patch-send-plan --confirm-a4-patch-send-plan --a4-output-port
+  "<exact configured name>"` for explicit A4 output sends; it sends only
+  compiler-approved rows and leaves screen-only destination rows manual.
 - 2026-07-03: Passive Analog Four patch learning layer prepared locally. The
   new `analog-four-patch-learning-report` command builds on the patch genome
   by ranking all four candidates, routing measured reference traits to Analog

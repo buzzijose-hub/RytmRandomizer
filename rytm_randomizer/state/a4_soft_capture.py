@@ -22,22 +22,14 @@ _EMPTY_NRPN_LOOKUP: Final[Mapping[tuple[int, int], A4CaptureCcMapping]] = Mappin
 
 
 class A4CaptureCcMapping(Protocol):
-    @property
-    def parameter(self) -> str: ...  # pragma: no cover - typing protocol
-
-    @property
-    def section(self) -> str: ...  # pragma: no cover - typing protocol
+    parameter: str
+    section: str
 
 
 class A4NrpnControlSpec(Protocol):
-    @property
-    def parameter_msb_cc(self) -> int: ...  # pragma: no cover - typing protocol
-
-    @property
-    def parameter_lsb_cc(self) -> int: ...  # pragma: no cover - typing protocol
-
-    @property
-    def data_msb_cc(self) -> int: ...  # pragma: no cover - typing protocol
+    parameter_msb_cc: int
+    parameter_lsb_cc: int
+    data_msb_cc: int
 
 
 @dataclass(frozen=True)

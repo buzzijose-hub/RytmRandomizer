@@ -6,6 +6,7 @@ identical to the previously inline ``*_HELP`` constants; the CLI output must
 not change by a single character.
 """
 
+from collections.abc import Sequence
 from typing import Final
 
 USAGE = (
@@ -639,7 +640,7 @@ USAGE = (
 )
 
 
-def _safety_block(lines):
+def _safety_block(lines: Sequence[str]) -> str:
     return "\n".join(f"  {line}" for line in lines)
 
 
@@ -3491,10 +3492,14 @@ def resolve_help_text(key: str) -> str:
     if isinstance(text, str):
         return text
     if callable(text):
-        resolved = text()
-        if isinstance(resolved, str):
-            return resolved
+        return _require_help_text(text(), key=key)
     raise TypeError(f"help text provider for {key!r} did not return a string")
+
+
+def _require_help_text(value: object, *, key: str) -> str:
+    if not isinstance(value, str):
+        raise TypeError(f"help text provider for {key!r} did not return a string")
+    return value
 
 
 HELP_TEXT = {

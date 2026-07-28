@@ -12,6 +12,9 @@ These tests verify the WS-H convergence wiring:
 Randomness is seeded so every test is deterministic.
 """
 
+import io
+import json
+import logging
 import random
 import subprocess
 import sys
@@ -395,6 +398,51 @@ def test_app_main_arm_rytm_cc_observe_opens_only_input_and_reports(monkeypatch, 
     assert "Sent MIDI: False" in captured.out
     assert "- Pad 2 (channel 1) CC20 value 25" in captured.out
     assert "machine:dual_vco:Osc 2 Detune" in captured.out
+    assert captured.err == ""
+
+
+def test_app_main_arm_rytm_cc_observe_close_failure_is_best_effort(
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    class CloseFailureInput(_FakeInputPort):
+        def close(self) -> None:
+            self.closed = True
+            raise OSError("close failed")
+
+    fake_input = CloseFailureInput(())
+
+    def fail_output_call(self, *_args):
+        raise AssertionError("Rytm CC observe must not touch MIDI outputs")
+
+    scripted_inputs = iter(["0", ""])
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        lambda self: ("Fake Rytm In",),
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "open_input",
+        lambda self, port_name: fake_input,
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_output_names",
+        fail_output_call,
+    )
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_output_call)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+
+    exit_code = app.main(["--arm", "--rytm-cc-observe"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert fake_input.closed is True
+    assert "Rytm CC observe" in captured.out
     assert captured.err == ""
 
 
@@ -788,10 +836,27 @@ def test_app_a4_resolvers_accept_display_labels() -> None:
     assert recipe.label == "Detroit Minimal"
 
 
-def test_app_main_arm_a4_soft_capture_opens_only_input_and_reports(monkeypatch, capsys):
+def test_app_main_arm_a4_soft_capture_opens_only_input_and_reports(
+    monkeypatch,
+    capsys,
+    isolated_observability: None,
+):
+    assert isolated_observability is None
     _seed()
     from rytm_randomizer import app, mido_provider
+    from rytm_randomizer.observability.logging import configure_logging
 
+    private_input_name = "Fake A4 In"
+    log_stream = io.StringIO()
+    monkeypatch.setattr(
+        app,
+        "_configure_logging",
+        lambda **_kwargs: configure_logging(
+            level=logging.DEBUG,
+            json=True,
+            stream=log_stream,
+        ),
+    )
     message = types.SimpleNamespace(
         type="control_change",
         channel=0,
@@ -801,10 +866,10 @@ def test_app_main_arm_a4_soft_capture_opens_only_input_and_reports(monkeypatch, 
     fake_input = _FakeInputPort((message,))
 
     def fake_list_input_names(self):
-        return ("Fake A4 In",)
+        return (private_input_name,)
 
     def fake_open_input(self, port_name):
-        assert port_name == "Fake A4 In"
+        assert port_name == private_input_name
         return fake_input
 
     def fail_output_call(self, *_args):
@@ -837,6 +902,13 @@ def test_app_main_arm_a4_soft_capture_opens_only_input_and_reports(monkeypatch, 
     assert "Track 1: 1 observed params" in captured.out
     assert "- OSC1 Pulsewidth: 96" in captured.out
     assert captured.err == ""
+    log_output = log_stream.getvalue()
+    assert private_input_name not in log_output
+    records = [json.loads(line) for line in log_output.splitlines()]
+    completed = [
+        record for record in records if record.get("message") == "a4_soft_capture_completed"
+    ]
+    assert completed[0]["outcome"] == "completed"
 
 
 def test_app_main_arm_a4_soft_capture_no_input_ports_returns_one(monkeypatch, capsys):
@@ -854,6 +926,24 @@ def test_app_main_arm_a4_soft_capture_no_input_ports_returns_one(monkeypatch, ca
 
     assert exit_code == 1
     assert "no real MIDI input ports available" in captured.err
+
+
+def test_a4_soft_capture_close_failure_is_best_effort(monkeypatch):
+    _seed()
+    from rytm_randomizer import app
+
+    class CloseFailureInput(_FakeInputPort):
+        def close(self):
+            self.closed = True
+            raise OSError("close failed")
+
+    port = CloseFailureInput(())
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "")
+
+    snapshot = app._capture_a4_soft_snapshot(port)
+
+    assert snapshot.known_parameter_count == 0
+    assert port.closed is True
 
 
 def test_app_main_arm_a4_soft_capture_invalid_input_choice_returns_one(
@@ -1315,6 +1405,36 @@ def test_app_main_passive_with_debug_and_log_json_flags(capsys):
 
     assert exit_code == 0
     assert "passive menu" in captured.out
+
+
+def test_passive_menu_rejects_missing_status_formatter(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer import app, project_status_report
+
+    monkeypatch.setattr(
+        project_status_report,
+        "format_project_status_summary",
+        None,
+    )
+
+    with pytest.raises(TypeError, match="formatter must be callable"):
+        app._print_passive_menu()
+
+
+def test_passive_menu_rejects_invalid_status_summary(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer import app, project_status_report
+
+    monkeypatch.setattr(
+        project_status_report,
+        "format_project_status_summary",
+        lambda: ["valid", 1],
+    )
+
+    with pytest.raises(TypeError, match="list of strings"):
+        app._print_passive_menu()
 
 
 if __name__ == "__main__":

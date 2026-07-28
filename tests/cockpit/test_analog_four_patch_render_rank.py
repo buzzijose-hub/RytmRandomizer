@@ -13,14 +13,10 @@ from rytm_randomizer.style_analysis.analog_four_patch_inference import (
     AnalogFourPatchAudioFeatures,
 )
 
-pytestmark = pytest.mark.fast
-
-
-@pytest.fixture(autouse=True)
-def _isolate_rank_logging() -> None:
-    from rytm_randomizer.observability.logging import configure_logging
-
-    configure_logging(stream=io.StringIO())
+pytestmark = [
+    pytest.mark.fast,
+    pytest.mark.usefixtures("isolated_observability"),
+]
 
 
 REFERENCE_SHA = "1" * 64
@@ -81,7 +77,7 @@ def _mocked_rank_inputs(monkeypatch: pytest.MonkeyPatch) -> None:
     }
     monkeypatch.setattr(
         ranker,
-        "analyze_analog_four_patch_audio",
+        "analyze_analog_four_patch_audio_isolated",
         lambda path: by_name[path.name],
     )
 
@@ -133,6 +129,11 @@ def test_rank_hardware_renders_recommends_closest_measured_candidate(
     assert payload["scores"][0]["render_sha256"] == RENDER_1_SHA
     assert payload["scores"][0]["feature_deltas"][0]["feature"] == "attack"
     assert "no MIDI sent" in payload["safety"]
+    from rytm_randomizer.observability.metrics import get_metrics
+
+    metrics = get_metrics()
+    assert metrics.a4_patch_render_rank_count == 1
+    assert not metrics.a4_patch_render_rank_errors_by_code
 
 
 def test_rank_rejects_reference_that_is_not_the_batch_source(
@@ -161,6 +162,12 @@ def test_rank_rejects_reference_that_is_not_the_batch_source(
             manifest_path=tmp_path / "batch.json",
             render_paths={1: tmp_path / "candidate-1.wav"},
         )
+
+    from rytm_randomizer.observability.metrics import get_metrics
+
+    metrics = get_metrics()
+    assert metrics.a4_patch_render_rank_count == 1
+    assert metrics.a4_patch_render_rank_errors_by_code["reference_mismatch"] == 1
 
 
 def test_rank_rejects_candidates_from_different_generations(
@@ -349,6 +356,36 @@ def test_render_rank_cli_registry_adapters() -> None:
     assert "Error: bad" in cli._format_render_rank_cli_error(ValueError("bad"))
 
 
+def test_render_rank_registry_reraises_non_json_parse_failure() -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_render_rank_cli as cli
+
+    with pytest.raises(ValueError, match="--reference is required"):
+        cli._parse_render_rank_args_for_registry(())
+
+
+def test_render_rank_registry_emits_json_for_parse_failure(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from rytm_randomizer import cli
+
+    exit_code = cli.main(
+        [
+            "analog-four-audio-patch-rank",
+            "--reference",
+            "reference.wav",
+            "--json",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    payload = json.loads(captured.out)
+    assert payload["ok"] is False
+    assert payload["error"] == "--manifest is required"
+    assert payload["error_code"] == "validation"
+    assert captured.err == ""
+
+
 @pytest.mark.parametrize(
     ("error", "expected"),
     [
@@ -357,25 +394,119 @@ def test_render_rank_cli_registry_adapters() -> None:
         (RuntimeError("unexpected"), "rank_failed"),
     ],
 )
-def test_render_rank_cli_classifies_generic_errors(error: Exception, expected: str) -> None:
-    from rytm_randomizer.cockpit.export import analog_four_patch_render_rank_cli as cli
+def test_render_rank_service_classifies_generic_errors(error: Exception, expected: str) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_render_rank import (
+        analog_four_patch_render_rank_error_code,
+    )
 
-    assert cli._rank_error_code(error) == expected
+    assert analog_four_patch_render_rank_error_code(error) == expected
 
 
-def test_render_rank_cli_classifies_domain_errors() -> None:
-    from rytm_randomizer.cockpit.export import analog_four_patch_render_rank_cli as cli
+def test_render_rank_service_classifies_domain_errors() -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_render_rank import (
+        AnalogFourPatchRenderRankArtifactError,
+        AnalogFourPatchRenderRankReferenceError,
+        analog_four_patch_render_rank_error_code,
+    )
+    from rytm_randomizer.observability.errors import BoundaryError
     from rytm_randomizer.style_analysis.extractor import StyleAnalysisDependencyError
 
     assert (
-        cli._rank_error_code(cli.AnalogFourPatchRenderRankArtifactError("bad artifact"))
+        analog_four_patch_render_rank_error_code(
+            AnalogFourPatchRenderRankArtifactError("bad artifact")
+        )
         == "artifact_validation"
     )
     assert (
-        cli._rank_error_code(cli.AnalogFourPatchRenderRankReferenceError("wrong source"))
+        analog_four_patch_render_rank_error_code(
+            AnalogFourPatchRenderRankReferenceError("wrong source")
+        )
         == "reference_mismatch"
     )
-    assert cli._rank_error_code(StyleAnalysisDependencyError("missing")) == "dependency_missing"
+    assert (
+        analog_four_patch_render_rank_error_code(StyleAnalysisDependencyError("missing"))
+        == "dependency_missing"
+    )
+    assert analog_four_patch_render_rank_error_code(BoundaryError("native crash")) == "rank_failed"
+    assert (
+        analog_four_patch_render_rank_error_code(
+            BoundaryError("read failed", context={"error_code": "audio_read_failed"})
+        )
+        == "input_read_failed"
+    )
+    assert (
+        analog_four_patch_render_rank_error_code(
+            BoundaryError("cancelled", context={"error_code": "interrupted"})
+        )
+        == "interrupted"
+    )
+    assert analog_four_patch_render_rank_error_code(KeyboardInterrupt()) == "interrupted"
+
+
+def test_render_rank_service_records_interrupt_and_trace_error(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_render_rank as ranker
+    from rytm_randomizer.observability.logging import configure_logging
+    from rytm_randomizer.observability.metrics import get_metrics
+
+    log_stream = io.StringIO()
+    configure_logging(stream=log_stream)
+    monkeypatch.setattr(
+        ranker,
+        "_rank_analog_four_patch_renders",
+        lambda **_kwargs: (_ for _ in ()).throw(KeyboardInterrupt()),
+    )
+
+    with pytest.raises(KeyboardInterrupt):
+        ranker.rank_analog_four_patch_renders(
+            reference_audio_path=tmp_path / "reference.wav",
+            manifest_path=tmp_path / "batch.json",
+            render_paths={1: tmp_path / "candidate-1.wav"},
+        )
+
+    metrics = get_metrics()
+    assert metrics.a4_patch_render_rank_count == 1
+    assert metrics.a4_patch_render_rank_errors_by_code["interrupted"] == 1
+    assert "operation_error a4_patch_render_rank" in log_stream.getvalue()
+
+
+def test_render_rank_preserves_native_analysis_failure_fingerprint(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_render_rank as ranker
+    from rytm_randomizer.observability.errors import BoundaryError
+
+    failure = BoundaryError(
+        "native analysis failed",
+        context={
+            "error_code": "inference_failed",
+            "fingerprint": "a4.audio_patch.native_analysis_failed",
+        },
+    )
+    logged: list[dict[str, object]] = []
+    monkeypatch.setattr(
+        ranker,
+        "_rank_analog_four_patch_renders",
+        lambda **_kwargs: (_ for _ in ()).throw(failure),
+    )
+    monkeypatch.setattr(
+        ranker._logger,
+        "warning",
+        lambda _message, *, extra: logged.append(extra),
+    )
+
+    with pytest.raises(BoundaryError, match="native analysis failed"):
+        ranker.rank_analog_four_patch_renders(
+            reference_audio_path=tmp_path / "reference.wav",
+            manifest_path=tmp_path / "batch.json",
+            render_paths={1: tmp_path / "candidate-1.wav"},
+        )
+
+    assert logged[0]["fingerprint"] == "a4.audio_patch.native_analysis_failed"
+    assert logged[0]["error_code"] == "rank_failed"
 
 
 def test_render_rank_cli_outputs_text_and_json(
@@ -402,6 +533,9 @@ def test_render_rank_cli_outputs_text_and_json(
     payload = json.loads(capsys.readouterr().out)
     assert payload["ok"] is True
     assert payload["recommended_candidate"] == 1
+    from rytm_randomizer.observability.metrics import get_metrics
+
+    assert get_metrics().a4_patch_render_rank_count == 2
 
 
 @pytest.mark.parametrize("json_output", [False, True])
@@ -431,3 +565,58 @@ def test_render_rank_cli_reports_service_errors(
     else:
         assert "Error: bad" in captured.err
         assert captured.out == ""
+
+
+def test_render_rank_cli_reports_native_boundary_error(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_render_rank_cli as cli
+    from rytm_randomizer.observability.errors import BoundaryError
+
+    monkeypatch.setattr(
+        cli,
+        "_rank",
+        lambda **_kwargs: (_ for _ in ()).throw(BoundaryError("native crash")),
+    )
+
+    assert (
+        cli.handle_analog_four_patch_render_rank(
+            reference_audio_path=tmp_path / "reference.wav",
+            manifest_path=tmp_path / "batch.json",
+            render_paths={1: tmp_path / "candidate.wav"},
+            json_output=True,
+        )
+        == 2
+    )
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["error_code"] == "rank_failed"
+
+
+@pytest.mark.parametrize("interruption", [KeyboardInterrupt(), SystemExit(7)])
+def test_render_rank_cli_returns_structured_interrupted_response(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    interruption: BaseException,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_render_rank_cli as cli
+
+    monkeypatch.setattr(
+        cli,
+        "_rank",
+        lambda **_kwargs: (_ for _ in ()).throw(interruption),
+    )
+
+    exit_code = cli.handle_analog_four_patch_render_rank(
+        reference_audio_path=tmp_path / "reference.wav",
+        manifest_path=tmp_path / "batch.json",
+        render_paths={1: tmp_path / "candidate.wav"},
+        json_output=True,
+    )
+
+    assert exit_code == 130
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["ok"] is False
+    assert payload["error_code"] == "interrupted"

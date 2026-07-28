@@ -8,25 +8,14 @@ from pathlib import Path
 
 import pytest
 
-from rytm_randomizer.guardrails.schema import Confidence, SourceType
+from conftest import analog_four_reference_feature_report
 from rytm_randomizer.style_analysis import FeatureReport
 
 pytestmark = pytest.mark.fast
 
 
 def _reference_report() -> FeatureReport:
-    return FeatureReport(
-        source_type=SourceType.SINGLE_TRACK,
-        confidence=Confidence.HIGH,
-        bpm=134.0,
-        tempo_stability=0.91,
-        kick_density=0.48,
-        percussion_density=0.78,
-        low_end_weight=0.42,
-        spectral_brightness=0.63,
-        texture_noise=0.34,
-        energy_arc=(0.18, 0.34, 0.48, 0.72, 0.84, 0.78, 0.61, 0.4),
-        content_hash="",
+    return analog_four_reference_feature_report(
         derived_at="2026-07-03T12:00:00Z",
     )
 
@@ -49,14 +38,17 @@ def test_patch_send_plan_compiles_selected_candidate_into_ordered_midi_events() 
     assert plan.selected_candidate == 1
     assert plan.selected_label == "Closest reference"
     assert plan.summary.total_rows == 39
-    assert plan.summary.sendable_count == 39
-    assert plan.summary.manual_count == 0
-    assert plan.summary.cc_event_count == 29
+    assert plan.summary.sendable_count == 33
+    assert plan.summary.manual_count == 6
+    assert plan.summary.cc_event_count == 23
     assert plan.summary.nrpn_event_count == 10
-    assert plan.summary.transport_message_count == 59
-    assert plan.summary.ready_percentage == 100
-    assert plan.summary.live_dial_path == "transport-ready"
-    assert plan.summary.blocking_reason == "none"
+    assert plan.summary.transport_message_count == 53
+    assert plan.summary.ready_percentage == 85
+    assert plan.summary.live_dial_path == "partial-live-dial-ready"
+    assert (
+        plan.summary.blocking_reason
+        == "paired CC LSB conversion requires hardware verification before full live dial-in"
+    )
 
     first_event = plan.send_events[0]
     assert first_event.sequence == 1
@@ -92,7 +84,16 @@ def test_patch_send_plan_compiles_selected_candidate_into_ordered_midi_events() 
         "LFO1 Destination A": 34,
         "LFO1 Destination B": 96,
     }
-    assert plan.manual_events == ()
+    assert {event.parameter for event in plan.manual_events} == {
+        "EnvF Depth A",
+        "EnvF Depth B",
+        "LFO1 Depth A",
+        "LFO1 Depth B",
+        "Filter1 Frequency",
+        "Filter2 Frequency",
+    }
+    assert {event.skip_code for event in plan.manual_events} == {"paired-cc-unverified"}
+    assert all(event.cc_lsb is None for event in plan.send_events)
     assert "preview before armed send" in plan.safety
 
 
@@ -115,7 +116,8 @@ def test_patch_send_plan_payload_is_stable_and_embeds_learning_context() -> None
     assert payload["selected_label"] == "Noisy texture"
     assert payload["summary"]["sendable_count"] == plan.summary.sendable_count
     assert payload["send_events"][0]["track"] == 3
-    assert payload["manual_events"] == []
+    assert payload["manual_events"]
+    assert {event["skip_code"] for event in payload["manual_events"]} == {"paired-cc-unverified"}
     assert payload["learning_packet"]["selected_patch"]["label"] == "Noisy texture"
     assert json.dumps(payload, sort_keys=True) == json.dumps(
         analog_four_patch_send_plan_to_dict(plan),
@@ -249,17 +251,36 @@ def test_audio_source_profiles_change_send_event_dna(monkeypatch: pytest.MonkeyP
             synthesis_features=features,
         )
 
-    monkeypatch.setattr(inference, "analyze_audio", next_analysis)
+    from rytm_randomizer.style_analysis import analog_four_patch_send_plan as send_plan_module
+
+    def next_audio_genome(path: Path, *, track: int):
+        return inference._build_analog_four_audio_patch_genome_from_analysis(
+            next_analysis(path),
+            track=track,
+            candidate_count=4,
+        )
+
+    monkeypatch.setattr(
+        send_plan_module,
+        "build_analog_four_audio_patch_genome_isolated",
+        next_audio_genome,
+    )
 
     first = build_analog_four_patch_send_plan_from_source("--audio", "first.wav").plan
     second = build_analog_four_patch_send_plan_from_source("--audio", "second.wav").plan
-    first_values = {event.parameter: event.midi_value for event in first.send_events}
-    second_values = {event.parameter: event.midi_value for event in second.send_events}
+    first_values = {
+        gene.value.parameter: gene.value.screen_value
+        for gene in first.learning_packet.selected_patch.genes
+    }
+    second_values = {
+        gene.value.parameter: gene.value.screen_value
+        for gene in second.learning_packet.selected_patch.genes
+    }
 
     assert first.source_hash == "1" * 64
     assert second.source_hash == "2" * 64
     assert first_values != second_values
-    assert first_values["Filter1 Frequency"] < second_values["Filter1 Frequency"]
+    assert first_values["OSC2 Level"] < second_values["OSC2 Level"]
     assert first_values["EnvA Release Time"] < second_values["EnvA Release Time"]
 
 
@@ -295,12 +316,14 @@ def test_patch_send_plan_defensive_helpers_cover_malformed_rows() -> None:
         TRANSPORT_CC_READY,
         TRANSPORT_NRPN_READY,
         TRANSPORT_SCREEN_ONLY,
+        TRANSPORT_SCREEN_ONLY_NRPN,
         AnalogFourPatchValue,
     )
     from rytm_randomizer.style_analysis.analog_four_patch_genome import (
         AnalogFourPatchGene,
     )
     from rytm_randomizer.style_analysis.analog_four_patch_send_plan import (
+        _build_send_summary,
         _message_kind_for,
         _send_event_from_gene,
         _skip_reason,
@@ -342,6 +365,18 @@ def test_patch_send_plan_defensive_helpers_cover_malformed_rows() -> None:
         transport_status=TRANSPORT_SCREEN_ONLY,
         dial_direction="set manually",
     )
+    screen_only_nrpn_value = AnalogFourPatchValue(
+        parameter="Screen-only NRPN",
+        section="TEST",
+        encoder="-",
+        screen_value="manual",
+        midi_value=None,
+        cc_msb=None,
+        cc_lsb=None,
+        nrpn_address=(1, 99),
+        transport_status=TRANSPORT_SCREEN_ONLY_NRPN,
+        dial_direction="set manually",
+    )
     missing_transport_value = AnalogFourPatchValue(
         parameter="Missing transport",
         section="TEST",
@@ -367,9 +402,43 @@ def test_patch_send_plan_defensive_helpers_cover_malformed_rows() -> None:
         _send_event_from_gene(1, malformed_gene)
     with pytest.raises(ValueError, match="no CC or NRPN address"):
         _message_kind_for(missing_address_value)
+    assert _skip_reason(screen_only_nrpn_value) == "NRPN destination ordinal capture pending"
     assert _skip_reason(screen_only_value) == "front-panel-only value pending capture"
     assert _skip_reason(missing_transport_value) == "transport value pending capture"
     assert _skip_reason(missing_address_value) == "transport address pending capture"
+
+    packet = types.SimpleNamespace(
+        live_dial_readiness=types.SimpleNamespace(
+            blocking_reason="front-panel-only values require manual capture before automation"
+        )
+    )
+    complete = _build_send_summary(
+        packet,
+        send_events=(
+            types.SimpleNamespace(
+                message_kind="cc",
+                cc_msb=75,
+                cc_lsb=None,
+                nrpn_address=None,
+                midi_value=64,
+                channel=0,
+            ),
+        ),
+        manual_events=(),
+    )
+    assert complete.live_dial_path == "transport-ready"
+    assert complete.blocking_reason == "none"
+
+    manual_only = _build_send_summary(
+        packet,
+        send_events=(),
+        manual_events=(types.SimpleNamespace(skip_reason="manual"),),
+    )
+    assert manual_only.live_dial_path == "manual-only"
+    assert (
+        manual_only.blocking_reason
+        == "front-panel-only values require manual capture before automation"
+    )
 
 
 def test_generic_cc_nrpn_event_sender_sends_and_fails_closed() -> None:
@@ -491,6 +560,111 @@ def test_generic_cc_nrpn_event_sender_sends_and_fails_closed() -> None:
 
 
 @pytest.mark.parametrize(
+    ("event", "expected"),
+    (
+        (
+            types.SimpleNamespace(
+                message_kind="cc",
+                cc_msb=18,
+                cc_lsb=50,
+                midi_value=64,
+                channel=0,
+                nrpn_address=None,
+            ),
+            "verified CC14 transport",
+        ),
+        (
+            types.SimpleNamespace(
+                message_kind="cc",
+                cc_msb=74,
+                cc_lsb=None,
+                midi_value=64,
+                channel=0,
+                nrpn_address=(1, 2),
+            ),
+            "must not include an NRPN address",
+        ),
+        (
+            types.SimpleNamespace(
+                message_kind="nrpn",
+                cc_msb=74,
+                cc_lsb=None,
+                midi_value=64,
+                channel=0,
+                nrpn_address=(1, 2),
+            ),
+            "must not include a CC address",
+        ),
+    ),
+)
+def test_generic_midi_event_plan_rejects_ambiguous_or_paired_addresses(
+    event: object,
+    expected: str,
+) -> None:
+    from rytm_randomizer.behavior.midi_event_plan import validate_cc_nrpn_event_plan
+
+    with pytest.raises(ValueError, match=expected):
+        validate_cc_nrpn_event_plan((event,))  # type: ignore[arg-type]
+
+
+def test_generic_midi_event_kind_rejects_cc_lsb_without_cc_msb() -> None:
+    from rytm_randomizer.behavior.midi_event_plan import midi_event_kind_for_addresses
+
+    with pytest.raises(ValueError, match="CC LSB requires a CC MSB"):
+        midi_event_kind_for_addresses(
+            cc_msb=None,
+            cc_lsb=1,
+            nrpn_address=None,
+        )
+
+
+def test_generic_sender_fails_closed_if_validated_nrpn_address_changes() -> None:
+    from rytm_randomizer.mock_midi import MockMidiSender
+    from rytm_randomizer.senders.midi_event_plan import send_cc_nrpn_event_plan
+
+    class MutableNrpnEvent:
+        message_kind = "nrpn"
+        cc_msb = None
+        midi_value = 5
+        channel = 0
+
+        def __init__(self) -> None:
+            self.read_count = 0
+
+        @property
+        def nrpn_address(self):
+            self.read_count += 1
+            return (1, 54) if self.read_count == 1 else None
+
+    sender = MockMidiSender()
+    with pytest.raises(AssertionError, match="lost its address"):
+        send_cc_nrpn_event_plan(
+            (MutableNrpnEvent(),),
+            sender,
+            sleep=lambda _seconds: None,
+        )
+    assert sender.sent_messages == ()
+
+
+def test_a4_send_plan_uses_neutral_midi_event_kind_vocabulary() -> None:
+    from typing import get_args
+
+    from rytm_randomizer.senders.midi_event_plan import (
+        MIDI_EVENT_KIND_CC,
+        MIDI_EVENT_KIND_NRPN,
+        MidiEventKind,
+    )
+    from rytm_randomizer.style_analysis.analog_four_patch_send_plan import (
+        ANALOG_FOUR_PATCH_SEND_KIND_CC,
+        ANALOG_FOUR_PATCH_SEND_KIND_NRPN,
+    )
+
+    assert frozenset(get_args(MidiEventKind)) == frozenset({"cc", "nrpn"})
+    assert ANALOG_FOUR_PATCH_SEND_KIND_CC == MIDI_EVENT_KIND_CC
+    assert ANALOG_FOUR_PATCH_SEND_KIND_NRPN == MIDI_EVENT_KIND_NRPN
+
+
+@pytest.mark.parametrize(
     ("channel", "midi_value", "error"),
     (
         (True, 64, "event channel must be an integer in 0..127"),
@@ -593,7 +767,10 @@ def test_generic_event_sender_counts_delivery_before_pacing_failure() -> None:
     assert len(sender.sent_messages) == 1
 
 
-def test_generic_event_sender_wraps_operator_interrupt_with_delivery_count() -> None:
+@pytest.mark.parametrize("interruption", [KeyboardInterrupt(), SystemExit(7)])
+def test_generic_event_sender_wraps_operator_interrupt_with_delivery_count(
+    interruption: BaseException,
+) -> None:
     from rytm_randomizer.mock_midi import MockMidiSender
     from rytm_randomizer.senders.midi_event_plan import (
         MidiEventPlanSendError,
@@ -603,7 +780,7 @@ def test_generic_event_sender_wraps_operator_interrupt_with_delivery_count() -> 
     sender = MockMidiSender()
 
     def interrupt_pacing(_seconds: float) -> None:
-        raise KeyboardInterrupt
+        raise interruption
 
     with pytest.raises(MidiEventPlanSendError) as caught:
         send_cc_nrpn_event_plan(
@@ -623,3 +800,57 @@ def test_generic_event_sender_wraps_operator_interrupt_with_delivery_count() -> 
     assert caught.value.interrupted is True
     assert caught.value.sent_message_count == 1
     assert caught.value.expected_message_count == 1
+
+
+def test_patch_send_plan_classifies_non_transport_value_with_typed_skip_code() -> None:
+    from rytm_randomizer.data.analog_four_display import (
+        TRANSPORT_SCREEN_ONLY,
+        AnalogFourPatchValue,
+    )
+    from rytm_randomizer.style_analysis.analog_four_patch_send_plan import (
+        _is_sendable_value,
+        _skip_code,
+    )
+
+    value = AnalogFourPatchValue(
+        parameter="Manual",
+        section="TEST",
+        encoder="A",
+        screen_value="OFF",
+        midi_value=None,
+        cc_msb=None,
+        cc_lsb=None,
+        nrpn_address=None,
+        transport_status=TRANSPORT_SCREEN_ONLY,
+        dial_direction="leave at OFF",
+    )
+
+    assert not _is_sendable_value(value)
+    assert _skip_code(value) == "not-transport-ready"
+
+
+def test_generic_event_sender_asserts_if_validated_cc_loses_address(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.mock_midi import MockMidiSender
+    from rytm_randomizer.senders import midi_event_plan
+
+    event = types.SimpleNamespace(
+        message_kind="cc",
+        cc_msb=None,
+        midi_value=64,
+        channel=0,
+        nrpn_address=None,
+    )
+    monkeypatch.setattr(
+        midi_event_plan,
+        "_validate_cc_nrpn_event_plan",
+        lambda _events: 1,
+    )
+
+    with pytest.raises(AssertionError, match="validated CC event lost its address"):
+        midi_event_plan.send_cc_nrpn_event_plan(
+            (event,),
+            MockMidiSender(),
+            sleep=lambda _seconds: None,
+        )

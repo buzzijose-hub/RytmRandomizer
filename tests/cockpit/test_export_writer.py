@@ -240,6 +240,62 @@ def test_atomic_write_write_failure_raises_write_error_and_cleans_temp(
     _ = real_write
 
 
+def test_atomic_write_wraps_nonpublication_file_exists_error(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dest = tmp_path / "out.bin"
+    monkeypatch.setattr(
+        "os.write",
+        lambda _fd, _data: (_ for _ in ()).throw(FileExistsError("write failed")),
+    )
+
+    with pytest.raises(WriteError) as exc_info:
+        atomic_write(dest, b"payload")
+
+    assert isinstance(exc_info.value.__cause__, FileExistsError)
+    assert not dest.exists()
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_atomic_write_wraps_overwrite_replace_file_exists_error(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dest = tmp_path / "out.bin"
+    monkeypatch.setattr(
+        "os.replace",
+        lambda _src, _dst: (_ for _ in ()).throw(FileExistsError("replace failed")),
+    )
+
+    with pytest.raises(WriteError) as exc_info:
+        atomic_write(dest, b"payload", overwrite=True)
+
+    assert isinstance(exc_info.value.__cause__, FileExistsError)
+    assert not dest.exists()
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_atomic_write_wraps_noncollision_publish_error(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dest = tmp_path / "out.bin"
+    monkeypatch.setattr("sys.platform", "linux")
+    monkeypatch.setattr(
+        "os.link",
+        lambda _src, _dst: (_ for _ in ()).throw(OSError("publish failed")),
+    )
+
+    with pytest.raises(WriteError) as exc_info:
+        atomic_write(dest, b"payload")
+
+    assert isinstance(exc_info.value.__cause__, OSError)
+    assert not isinstance(exc_info.value.__cause__, FileExistsError)
+    assert not dest.exists()
+    assert list(tmp_path.iterdir()) == []
+
+
 def test_atomic_write_retries_short_writes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     dest = tmp_path / "out.bin"
     real_write = os.write

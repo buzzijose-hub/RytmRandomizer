@@ -466,6 +466,7 @@ ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES: Final[tuple[AnalogFourPatchCandidateTempl
 
 __all__ = [
     "ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES",
+    "ANALOG_FOUR_PATCH_FAMILY_ORDER",
     "AnalogFourPatchCandidateTemplateSpec",
     "AnalogFourPatchGeneTemplateSpec",
 ]

@@ -15,7 +15,7 @@ methods that delegate to the strategies.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import ClassVar, Final
+from typing import Final
 
 from ..mock_midi import MidiMessage
 from . import registry
@@ -40,6 +40,32 @@ _DEFAULT_MIDI_CHANNEL: Final[int] = 0
 _TRACK_COUNT: Final[int] = 12
 
 
+def _require_analog_rytm_mutation_plan(
+    value: object,
+    *,
+    method_name: str,
+) -> RytmMutationPlan:
+    if not isinstance(value, RytmMutationPlan):
+        raise TypeError(
+            f"AnalogRytmDevice.{method_name} expected RytmMutationPlan, got "
+            f"{type(value).__name__}"
+        )
+    return value
+
+
+def _require_analog_rytm_kit_snapshot(value: object) -> RytmKitSnapshot:
+    if not isinstance(value, RytmKitSnapshot):
+        raise TypeError(
+            "AnalogRytmDevice.plan_mutation expected RytmKitSnapshot, got "
+            f"{type(value).__name__}"
+        )
+    return value
+
+
+def _is_analog_rytm_device(value: object) -> bool:
+    return isinstance(value, Device)
+
+
 class AnalogRytmDevice:
     """The Analog Rytm MK2 surfaced as a :class:`Device`.
 
@@ -49,12 +75,12 @@ class AnalogRytmDevice:
     the registry.
     """
 
-    device_id: ClassVar[str] = _DEVICE_ID
-    display_name: ClassVar[str] = _DISPLAY_NAME
-    default_midi_channel: ClassVar[int] = _DEFAULT_MIDI_CHANNEL
-    track_count: ClassVar[int] = _TRACK_COUNT
-    sysex_manufacturer_id: ClassVar[bytes] = _ELEKTRON_MFR_ID
-    report_header: ClassVar[str] = _REPORT_HEADER
+    device_id: str = _DEVICE_ID
+    display_name: str = _DISPLAY_NAME
+    default_midi_channel: int = _DEFAULT_MIDI_CHANNEL
+    track_count: int = _TRACK_COUNT
+    sysex_manufacturer_id: bytes = _ELEKTRON_MFR_ID
+    report_header: str = _REPORT_HEADER
 
     def __init__(self) -> None:
         """Compose the three capability strategies on this device instance."""
@@ -73,12 +99,12 @@ class AnalogRytmDevice:
 
         return self.snapshot_decoder.decode(raw, slot=slot)
 
-    def plan_mutation(self, snapshot: RytmKitSnapshot, depth: int) -> RytmMutationPlan:
+    def plan_mutation(self, snapshot: object, depth: int) -> RytmMutationPlan:
         """Delegate to :attr:`mutation_planner` (the WS-S6 ``plan``)."""
 
-        return self.mutation_planner.plan(snapshot, depth)
+        return self.mutation_planner.plan(_require_analog_rytm_kit_snapshot(snapshot), depth)
 
-    def to_mock_messages(self, plan: RytmMutationPlan) -> list[MidiMessage]:
+    def to_mock_messages(self, plan: object) -> list[MidiMessage]:
         """Render every event in ``plan`` into an inert ``MidiMessage``.
 
         Calls :meth:`AnalogRytmMessageRenderer.to_mock_message` once per
@@ -86,26 +112,29 @@ class AnalogRytmDevice:
         or mock sender) holds the list, so we can't lazily generate it.
         """
 
-        if not isinstance(plan, RytmMutationPlan):
-            raise TypeError(
-                "AnalogRytmDevice.to_mock_messages expected RytmMutationPlan, got "
-                f"{type(plan).__name__}"
-            )
-        return [self.message_renderer.to_mock_message(event, plan) for event in plan.events]
+        checked_plan = _require_analog_rytm_mutation_plan(
+            plan,
+            method_name="to_mock_messages",
+        )
+        return [
+            self.message_renderer.to_mock_message(event, checked_plan)
+            for event in checked_plan.events
+        ]
 
-    def to_cc_messages(self, plan: RytmMutationPlan) -> Iterable[tuple[int, int, int]]:
+    def to_cc_messages(self, plan: object) -> Iterable[tuple[int, int, int]]:
         """Render every event in ``plan`` into a ``(channel, control, value)``.
 
         Returns a tuple (eager materialization) so callers can iterate
         twice and assert against the same sequence.
         """
 
-        if not isinstance(plan, RytmMutationPlan):
-            raise TypeError(
-                "AnalogRytmDevice.to_cc_messages expected RytmMutationPlan, got "
-                f"{type(plan).__name__}"
-            )
-        return tuple(self.message_renderer.to_cc_triple(event, plan) for event in plan.events)
+        checked_plan = _require_analog_rytm_mutation_plan(
+            plan,
+            method_name="to_cc_messages",
+        )
+        return tuple(
+            self.message_renderer.to_cc_triple(event, checked_plan) for event in checked_plan.events
+        )
 
 
 # Register at import time so consumers see a non-empty registry.
@@ -120,7 +149,7 @@ def _assert_protocol_conformance() -> None:
     call from a consumer.
     """
 
-    if not isinstance(registry.get_device("analog_rytm_mk2"), Device):
+    if not _is_analog_rytm_device(registry.get_device("analog_rytm_mk2")):
         raise AssertionError(  # noqa: S101 - structural-typing invariant
             "AnalogRytmDevice does not conform to Device protocol -- check "
             "the attribute / method surface in rytm_randomizer/devices/base.py "

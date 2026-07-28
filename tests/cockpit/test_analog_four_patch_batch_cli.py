@@ -590,3 +590,56 @@ def test_registered_json_parse_failure_is_machine_readable(
     assert payload["error_code"] == "invalid_input"
     assert payload["error"] == "--audio is required"
     assert captured.err == ""
+
+
+@pytest.mark.parametrize("interruption", [KeyboardInterrupt(), SystemExit(7)])
+def test_batch_cli_returns_structured_interrupted_response(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    interruption: BaseException,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+
+    def interrupt_export(**_kwargs: object) -> None:
+        raise interruption
+
+    monkeypatch.setattr(cli, "_export_analog_four_audio_patch_batch", interrupt_export)
+
+    exit_code = cli.handle_analog_four_audio_patch_batch(
+        audio_path=tmp_path / "reference.wav",
+        source_kit_path=tmp_path / "init.syx",
+        output_dir=tmp_path / "batch",
+        json_output=True,
+    )
+
+    assert exit_code == 130
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["ok"] is False
+    assert payload["error_code"] == "interrupted"
+
+
+def test_batch_cli_reports_text_interrupted_response(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+
+    monkeypatch.setattr(
+        cli,
+        "_export_analog_four_audio_patch_batch",
+        lambda **_kwargs: (_ for _ in ()).throw(KeyboardInterrupt("operator cancelled")),
+    )
+
+    exit_code = cli.handle_analog_four_audio_patch_batch(
+        audio_path=tmp_path / "reference.wav",
+        source_kit_path=tmp_path / "init.syx",
+        output_dir=tmp_path / "batch",
+        json_output=False,
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 130
+    assert "Error [interrupted]: operator cancelled" in captured.err
+    assert captured.out == ""

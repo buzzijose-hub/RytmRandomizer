@@ -38,13 +38,14 @@ observed through the official plug-in. Any unknown label remains
 
 ## Outcome
 
-The current closest-reference genome is fully live-routable:
+This checkpoint originally counted every mapped row as live-routable. Final
+closeout corrected the guarded plan to:
 
 - 39 DNA rows
-- 29 CC events
+- 23 sendable CC events
 - 10 NRPN events
-- 59 transport messages
-- 0 manual rows
+- 53 transport messages
+- 6 paired-CC manual rows pending 14-bit hardware verification
 
 The direct NRPN sender and four-track routing had already been confirmed on the
 physical A4 using Filter2 Resonance values. The next hardware validation is one

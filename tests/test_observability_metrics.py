@@ -90,6 +90,7 @@ def test_a4_patch_inference_error_codes_are_bounded() -> None:
             "audio_read_failed",
             "dependency_missing",
             "inference_failed",
+            "interrupted",
             "validation",
         }
     )
@@ -378,14 +379,29 @@ def test_record_a4_patch_inference_error_path() -> None:
     )
 
 
-def test_record_a4_render_rank_and_patch_send_red_metrics() -> None:
+def test_record_a4_publication_render_rank_and_patch_send_red_metrics() -> None:
     metrics = MidiMetrics()
 
+    metrics.record_a4_patch_batch_read(4.0)
+    metrics.record_a4_patch_batch_read(6.0, error_code="artifact_validation")
+    metrics.record_a4_patch_publication("artifact_publish", 5.0)
+    metrics.record_a4_patch_publication("lock_acquire", 2.5, error_code="lock_exists")
     metrics.record_a4_patch_render_rank(12.5)
     metrics.record_a4_patch_render_rank(7.5, error_code="reference_mismatch")
     metrics.record_a4_patch_send(30.0)
     metrics.record_a4_patch_send(20.0, error_code="partial_send")
 
+    assert metrics.a4_patch_publication_count == Counter({"artifact_publish": 1, "lock_acquire": 1})
+    assert metrics.a4_patch_publication_duration_ms_total == Counter(
+        {"artifact_publish": 5.0, "lock_acquire": 2.5}
+    )
+    assert metrics.a4_patch_publication_errors_by_code["lock_exists"] == 1
+    assert (
+        metrics.a4_patch_publication_errors_by_operation_and_code["lock_acquire:lock_exists"] == 1
+    )
+    assert metrics.a4_patch_batch_read_count == 2
+    assert metrics.a4_patch_batch_read_duration_ms_total == pytest.approx(10.0)
+    assert metrics.a4_patch_batch_read_errors_by_code["artifact_validation"] == 1
     assert metrics.a4_patch_render_rank_count == 2
     assert metrics.a4_patch_render_rank_duration_ms_total == pytest.approx(20.0)
     assert metrics.a4_patch_render_rank_errors_by_code["reference_mismatch"] == 1
@@ -408,6 +424,12 @@ def test_format_summary_includes_red_metrics_sections() -> None:
     metrics.record_export(50.0, error_code="write_failed")
     metrics.record_a4_patch_inference(75.0)
     metrics.record_a4_patch_inference(25.0, error_code="dependency_missing")
+    metrics.record_a4_patch_batch_read(5.0, error_code="artifact_validation")
+    metrics.record_a4_patch_publication(
+        "artifact_publish",
+        10.0,
+        error_code="artifact_collision",
+    )
     metrics.record_a4_patch_render_rank(20.0, error_code="reference_mismatch")
     metrics.record_a4_patch_send(15.0, error_code="partial_send")
 
@@ -426,6 +448,16 @@ def test_format_summary_includes_red_metrics_sections() -> None:
     assert "a4_inference_errors=" in summary
     assert "a4_inference_duration_ms=100.0" in summary
     assert "dependency_missing:1" in summary
+    assert "a4_batch_read_count=1" in summary
+    assert "a4_batch_read_errors=" in summary
+    assert "a4_batch_read_duration_ms=5.0" in summary
+    assert "a4_publication_count=" in summary
+    assert "artifact_publish:1" in summary
+    assert "a4_publication_errors=" in summary
+    assert "a4_publication_errors_by_operation=" in summary
+    assert "artifact_publish:artifact_collision:1" in summary
+    assert "artifact_collision:1" in summary
+    assert "a4_publication_duration_ms=" in summary
     assert "a4_render_rank_count=1" in summary
     assert "a4_render_rank_errors=" in summary
     assert "a4_render_rank_duration_ms=20.0" in summary
@@ -450,6 +482,13 @@ def test_format_summary_red_metrics_empty_render_as_braces_and_zeros() -> None:
     assert "a4_inference_count=0" in summary
     assert "a4_inference_errors={}" in summary
     assert "a4_inference_duration_ms=0.0" in summary
+    assert "a4_batch_read_count=0" in summary
+    assert "a4_batch_read_errors={}" in summary
+    assert "a4_batch_read_duration_ms=0.0" in summary
+    assert "a4_publication_count={}" in summary
+    assert "a4_publication_errors={}" in summary
+    assert "a4_publication_errors_by_operation={}" in summary
+    assert "a4_publication_duration_ms={}" in summary
     assert "a4_render_rank_count=0" in summary
     assert "a4_render_rank_errors={}" in summary
     assert "a4_render_rank_duration_ms=0.0" in summary
@@ -465,6 +504,8 @@ def test_reset_metrics_clears_red_metric_counters() -> None:
     metrics.record_ws_command("send", 10.0, error_code="ERR_INTERNAL")
     metrics.record_export(50.0, error_code="write_failed")
     metrics.record_a4_patch_inference(25.0, error_code="inference_failed")
+    metrics.record_a4_patch_batch_read(4.0, error_code="input_read_failed")
+    metrics.record_a4_patch_publication("lock_release", 5.0, error_code="release_failed")
     metrics.record_a4_patch_render_rank(15.0, error_code="artifact_validation")
     metrics.record_a4_patch_send(10.0, error_code="validation")
 
@@ -477,6 +518,12 @@ def test_reset_metrics_clears_red_metric_counters() -> None:
     assert metrics.a4_patch_inference_count == 1
     assert metrics.a4_patch_inference_duration_ms_total == pytest.approx(25.0)
     assert metrics.a4_patch_inference_errors_by_code["inference_failed"] == 1
+    assert metrics.a4_patch_batch_read_errors_by_code["input_read_failed"] == 1
+    assert metrics.a4_patch_publication_errors_by_code["release_failed"] == 1
+    assert (
+        metrics.a4_patch_publication_errors_by_operation_and_code["lock_release:release_failed"]
+        == 1
+    )
     assert metrics.a4_patch_render_rank_errors_by_code["artifact_validation"] == 1
     assert metrics.a4_patch_send_errors_by_code["validation"] == 1
 
@@ -493,6 +540,13 @@ def test_reset_metrics_clears_red_metric_counters() -> None:
     assert metrics.a4_patch_inference_count == 0
     assert metrics.a4_patch_inference_duration_ms_total == 0.0
     assert len(metrics.a4_patch_inference_errors_by_code) == 0
+    assert metrics.a4_patch_batch_read_count == 0
+    assert metrics.a4_patch_batch_read_duration_ms_total == 0.0
+    assert len(metrics.a4_patch_batch_read_errors_by_code) == 0
+    assert len(metrics.a4_patch_publication_count) == 0
+    assert len(metrics.a4_patch_publication_duration_ms_total) == 0
+    assert len(metrics.a4_patch_publication_errors_by_code) == 0
+    assert len(metrics.a4_patch_publication_errors_by_operation_and_code) == 0
     assert metrics.a4_patch_render_rank_count == 0
     assert metrics.a4_patch_render_rank_duration_ms_total == 0.0
     assert len(metrics.a4_patch_render_rank_errors_by_code) == 0
