@@ -21,6 +21,7 @@ from .analog_four_patch_render_rank import (
     analog_four_patch_render_rank_error_code,
     analog_four_patch_render_rank_to_dict,
 )
+from .cli_options import pop_required_cli_value
 
 COMMAND_NAME: Final[str] = "analog-four-audio-patch-rank"
 USAGE: Final[str] = (
@@ -35,12 +36,6 @@ class AnalogFourPatchRenderRankArgs(TypedDict):
     manifest_path: Path
     render_paths: Mapping[int, Path]
     json_output: bool
-
-
-def _value(remaining: list[str], option: str) -> str:
-    if not remaining:
-        raise ValueError(f"{option} requires a value")
-    return remaining.pop(0)
 
 
 def _render_assignment(value: str) -> tuple[int, Path]:
@@ -78,11 +73,11 @@ def parse_analog_four_patch_render_rank_args(
     while remaining:
         option = remaining.pop(0)
         if option == "--reference":
-            reference_audio_path = Path(_value(remaining, option))
+            reference_audio_path = Path(pop_required_cli_value(remaining, option=option))
         elif option == "--manifest":
-            manifest_path = Path(_value(remaining, option))
+            manifest_path = Path(pop_required_cli_value(remaining, option=option))
         elif option == "--render":
-            candidate, path = _render_assignment(_value(remaining, option))
+            candidate, path = _render_assignment(pop_required_cli_value(remaining, option=option))
             if candidate in render_paths:
                 raise ValueError(f"--render candidate {candidate} was provided more than once")
             render_paths[candidate] = path

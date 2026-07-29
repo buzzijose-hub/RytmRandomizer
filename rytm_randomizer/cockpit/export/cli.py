@@ -95,14 +95,15 @@ import time
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Final, cast
 
-import msgpack
+import msgpack  # pyright: ignore[reportMissingTypeStubs]
 
 from ...cli_registry import CliCommand
 from ...cli_registry import register as _registry_register
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
+from .cli_options import pop_required_cli_value
 from .serialize import pack_profile_model
 from .signing import pack_signed, sign_profile_blob
 from .verifier import verify_signed_blob, verify_unsigned_payload
@@ -164,14 +165,6 @@ class _CliOptions:
     json_output: bool
 
 
-def _pop_value(remaining: list[str], option: str) -> str:
-    """Pop the next CLI option value or raise ``ValueError`` with usage."""
-
-    if not remaining:
-        raise ValueError(f"{option} requires a value. {_USAGE}")
-    return remaining.pop(0)
-
-
 def _parse_args(args: Sequence[str]) -> _CliOptions:
     """Walk ``args`` left-to-right collecting recognized options.
 
@@ -194,17 +187,17 @@ def _parse_args(args: Sequence[str]) -> _CliOptions:
     while remaining:
         option = remaining.pop(0)
         if option == "--profile-id":
-            profile_id = _pop_value(remaining, option)
+            profile_id = pop_required_cli_value(remaining, option=option, usage=_USAGE)
         elif option == "--profiles-dir":
-            profiles_dir = Path(_pop_value(remaining, option))
+            profiles_dir = Path(pop_required_cli_value(remaining, option=option, usage=_USAGE))
         elif option == "--output":
-            output = Path(_pop_value(remaining, option))
+            output = Path(pop_required_cli_value(remaining, option=option, usage=_USAGE))
         elif option == "--key-hex":
-            key_hex = _pop_value(remaining, option)
+            key_hex = pop_required_cli_value(remaining, option=option, usage=_USAGE)
         elif option == "--key-env":
-            key_env = _pop_value(remaining, option)
+            key_env = pop_required_cli_value(remaining, option=option, usage=_USAGE)
         elif option == "--key-id":
-            key_id = _pop_value(remaining, option)
+            key_id = pop_required_cli_value(remaining, option=option, usage=_USAGE)
         elif option == "--unsigned":
             unsigned = True
         elif option == "--overwrite":
@@ -405,8 +398,9 @@ def _format_text(payload: dict[str, object]) -> str:
         lines.append(f"error: {payload['error']}")
     verification = payload.get("verification")
     if isinstance(verification, dict):
+        verification_payload = cast(dict[str, object], verification)
         for field in ("ok", "reason", "expected_key_id", "expected_algorithm", "payload_size"):
-            lines.append(f"verification.{field}: {_json_scalar(verification[field])}")
+            lines.append(f"verification.{field}: {_json_scalar(verification_payload[field])}")
     return "\n".join(lines) + "\n"
 
 
@@ -454,10 +448,10 @@ def _classify_export_error(exc: BaseException) -> str:
         return "write_failed"
     if isinstance(exc, OverflowError):
         return "pack_overflow"
-    if isinstance(exc, msgpack.exceptions.PackException):
-        return "pack_failed"
     if isinstance(exc, (ValueError, TypeError)):
         return "validation"
+    if isinstance(exc, msgpack.exceptions.PackException):
+        return "pack_failed"
     return "unknown"  # pragma: no cover - belt-and-braces; all known paths hit above
 
 
@@ -508,7 +502,7 @@ def handle_export_profile_model(args: Sequence[str]) -> int:
 
         payload = pack_profile_model(profile)
         signed = key_bytes is not None
-        if signed and options.key_id is not None and key_bytes is not None:
+        if key_bytes is not None and options.key_id is not None:
             envelope = pack_signed(sign_profile_blob(payload, key=key_bytes, key_id=options.key_id))
         else:
             envelope = payload

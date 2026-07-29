@@ -53,9 +53,9 @@ from .analog_four_patch_batch_codec import (
     analog_four_patch_batch_payload_sha256,
     analog_four_patch_batch_sha256,
     decode_analog_four_patch_batch_json,
+    validate_analog_four_patch_batch_sha256,
 )
 
-_SHA256_LENGTH: Final[int] = 64
 _VALID_MESSAGE_KINDS: Final[frozenset[MidiEventKind]] = frozenset(
     {MIDI_EVENT_KIND_CC, MIDI_EVENT_KIND_NRPN}
 )
@@ -829,9 +829,7 @@ def _batch_reader_sha256(data: bytes) -> str:
 
 def _sha256_field(row: Mapping[str, object], key: str, label: str) -> str:
     value = _string(row, key, label)
-    if len(value) != _SHA256_LENGTH or any(char not in "0123456789abcdef" for char in value):
-        raise ValueError(f"{label}.{key} must be a lowercase SHA-256 digest")
-    return value
+    return validate_analog_four_patch_batch_sha256(value, label=f"{label}.{key}")
 
 
 def _verify_payload_hash(

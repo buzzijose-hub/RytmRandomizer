@@ -53,19 +53,18 @@
 
 ## Fresh Verification
 
-- Focused A4/operator regression suite: **1,589 passed, 1 skipped**.
-- Architecture: **703 passed**.
-- Full suite: **6,792 passed, 3 skipped**.
+- Focused touched-file A4/operator regression suite: **1,689 passed, 1 skipped**.
+- Architecture: **704 passed**.
+- Full suite: **6,804 passed, 3 skipped**.
 - Ruff, Black, isort: **clean**.
-- Touched-file statement/branch coverage: **100%** across **7,557 statements**
-  and **1,788 branches**, zero misses.
+- Touched-file statement/branch coverage: **100%** across **7,887 statements**
+  and **1,878 branches**, zero misses.
 - V1.34 parity: **685 passed** byte-for-byte.
-- Vulture confidence 80, strict Pyright across all 60 touched production
+- Vulture confidence 80, strict Pyright across all 62 touched production
   modules, `git diff --check`, and the mechanical review gate: **passed**.
-- Literal strict Pyright across all 113 touched Python paths: **4,263
-  test-harness typing errors**. The CODEOWNER accepted this scoped test-harness
-  waiver for PR #214; the clean 60-module strict production baseline is now
-  reproducible through `just typecheck` and `pyrightconfig.strict.json`.
+- Dynamic test-harness typing remains the accepted scoped Gate 3 debt. The
+  clean 62-module strict production baseline is reproducible through
+  `just typecheck` and `pyrightconfig.strict.json`.
 - Follow-up publication, online CI, and reviewer status are tracked on PR #214.
 
 ## Abstraction
@@ -102,8 +101,8 @@ evidence.
 ## Review Decisions And Remaining Gate
 
 1. **Gate 3:** accepted as a scoped CODEOWNER waiver. Production strict typing
-   is a pinned, reproducible `just typecheck` gate; the 4,263 dynamic
-   test-harness findings remain a separate cleanup.
+   is a pinned, reproducible `just typecheck` gate; dynamic test-harness typing
+   remains a separate cleanup.
 2. **RAM-only backup policy:** accepted as a scoped CODEOWNER exemption.
    Live-dial CC/NRPN changes mutate volatile kit RAM and the path sends no
    save/write command. A disposable project, saved clean baseline, and reload

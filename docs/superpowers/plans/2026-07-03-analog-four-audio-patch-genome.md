@@ -134,12 +134,12 @@ remain independent and parallel.
 
 ## Fresh Closeout Verification
 
-- Focused A4/operator regression suite: **1,589 passed, 1 skipped**.
-- Architecture suite: **703 passed**.
-- Full suite: **6,792 passed, 3 skipped**.
+- Focused touched-file A4/operator regression suite: **1,689 passed, 1 skipped**.
+- Architecture suite: **704 passed**.
+- Full suite: **6,804 passed, 3 skipped**.
 - Ruff, Black, and isort: **clean**.
-- Touched-file statement/branch coverage: **100%** across **7,557 statements**
-  and **1,788 branches**, zero misses.
+- Touched-file statement/branch coverage: **100%** across **7,887 statements**
+  and **1,878 branches**, zero misses.
 - V1.34 parity: **685 passed** byte-for-byte.
 - Vulture, strict production-diff Pyright, `git diff --check`, and the mechanical
   review gate: **passed**.
@@ -150,13 +150,12 @@ remain independent and parallel.
 
 Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 
-- [x] Gate 1 (100% branch coverage on touched files) -- 7,557 statements and 1,788 branches, zero misses.
+- [x] Gate 1 (100% branch coverage on touched files) -- 7,887 statements and 1,878 branches, zero misses.
 - [x] Gate 2 (V1.34 parity byte-identical) -- 685 items passed.
 - [x] Gate 3 (lint/format/type clean) -- Ruff, Black, isort, and strict
-  Pyright across all 60 touched production modules pass. The literal strict
-  audit across all 113 touched Python paths reports 4,263 errors in dynamic
-  test harnesses; the CODEOWNER accepted this scoped PR #214 debt, while
-  production typing remains mandatory and clean.
+  Pyright across all 62 touched production modules pass. Dynamic test-harness
+  typing remains the accepted scoped PR #214 debt; production typing remains
+  mandatory and clean.
 - [x] Gate 4 (dead-code purge) -- Vulture confidence 80 passed across production and tests.
 - [x] Gate 5 (docs updated) -- README, CLI reference, STATUS, ARCHITECTURE, diagrams updated.
 - [x] Gate 6 (type-system hygiene) -- frozen dataclasses and explicit types; no `Any` aliases.

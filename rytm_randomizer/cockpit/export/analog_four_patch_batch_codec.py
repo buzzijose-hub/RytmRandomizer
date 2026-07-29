@@ -9,6 +9,7 @@ from typing import Final, cast
 
 BATCH_SCHEMA_VERSION: Final[str] = "analog-four-audio-patch-batch-v1"
 CANDIDATE_SCHEMA_VERSION: Final[str] = "analog-four-audio-patch-candidate-v1"
+SHA256_HEX_LENGTH: Final[int] = 64
 
 
 def encode_analog_four_patch_batch_json(payload: Mapping[str, object]) -> bytes:
@@ -42,11 +43,23 @@ def analog_four_patch_batch_payload_sha256(payload: Mapping[str, object]) -> str
     return analog_four_patch_batch_sha256(encode_analog_four_patch_batch_json(payload))
 
 
+def validate_analog_four_patch_batch_sha256(value: str, *, label: str) -> str:
+    """Return one canonical lowercase SHA-256 digest or fail closed."""
+
+    if len(value) != SHA256_HEX_LENGTH or any(
+        character not in "0123456789abcdef" for character in value
+    ):
+        raise ValueError(f"{label} must be a lowercase SHA-256 digest")
+    return value
+
+
 __all__ = [
     "BATCH_SCHEMA_VERSION",
     "CANDIDATE_SCHEMA_VERSION",
+    "SHA256_HEX_LENGTH",
     "analog_four_patch_batch_payload_sha256",
     "analog_four_patch_batch_sha256",
     "decode_analog_four_patch_batch_json",
     "encode_analog_four_patch_batch_json",
+    "validate_analog_four_patch_batch_sha256",
 ]

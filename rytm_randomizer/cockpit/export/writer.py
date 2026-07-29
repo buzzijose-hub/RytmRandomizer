@@ -45,6 +45,7 @@ from typing import ClassVar, Final
 
 from ...observability.errors import DataError
 from ...observability.logging import get_logger
+from ...observability.metrics import get_metrics
 
 _logger = get_logger(__name__)
 """Module logger for the atomic export writer. Bound here so future
@@ -273,13 +274,19 @@ def _publish_no_overwrite(tmp_name: str, path: Path) -> None:
     try:
         os.unlink(tmp_name)
     except OSError as exc:
+        metrics = get_metrics()
+        metrics.record_error("atomic_write_temp_cleanup")
         _logger.warning(
             "Atomic write temp cleanup failed after publication",
             extra={
                 "operation": "atomic_write_cleanup",
+                "outcome": "residue_retained",
+                "error_code": "temp_cleanup_failed",
+                "fingerprint": "export.write.temp_cleanup_failed",
                 "temp_name": Path(tmp_name).name,
                 "output_name": path.name,
                 "error_type": type(exc).__name__,
+                "metrics_summary": metrics.format_summary(),
             },
         )
 

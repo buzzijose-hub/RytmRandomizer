@@ -24,6 +24,7 @@ from unittest.mock import patch
 import pytest
 
 from rytm_randomizer.cockpit.data import ProfileModel, StyleTrait, TraitPadWeight
+from rytm_randomizer.cockpit.export import cli as export_cli
 from rytm_randomizer.cockpit.export.cli import handle_export_profile_model
 from rytm_randomizer.cockpit.export.serialize import unpack_profile_model
 from rytm_randomizer.cockpit.export.signing import unpack_signed
@@ -79,6 +80,26 @@ def _read_json(captured: str) -> dict[str, object]:
 # ---------------------------------------------------------------------------
 # Happy paths — signed
 # ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    [
+        (FileExistsError("exists"), "overwrite_refused"),
+        (OSError("disk"), "write_failed"),
+        (OverflowError("too large"), "pack_overflow"),
+        (ValueError("invalid"), "validation"),
+        (TypeError("wrong type"), "validation"),
+        (RuntimeError("packing failed"), "pack_failed"),
+    ],
+)
+def test_export_error_categories_are_deterministic(
+    error: Exception,
+    expected: str,
+) -> None:
+    """The pinned msgpack base alias must not swallow validation failures."""
+
+    assert export_cli._classify_export_error(error) == expected
 
 
 def test_signed_export_writes_round_trippable_blob(

@@ -113,9 +113,8 @@ _review-mechanical:
 
 # NOTE: the single-line comment directly above `review:` is what
 # `just --list` shows as the recipe summary — keep it a clean one-liner.
-# Detail: `just review` runs the FULL 8-step code review with NO human
-# interaction. First the mechanical gates (_review-mechanical), then it
-# dispatches the `code-reviewer` agent — which walks all 8 steps of
+# Detail: `just review` always runs the mechanical gates. In Claude Code it
+# then dispatches the `code-reviewer` agent, which walks all 8 steps of
 # .claude/skills/code-review/SKILL.md, including the two judgement steps
 # no test can automate: Step 7 (abstraction reuse / genericization) and
 # Step 8 (architecture-doc + diagram freshness) — and emits the
@@ -133,7 +132,7 @@ _review-mechanical:
 # (non-zero exit) rather than degrading to a manual checklist — the
 # review must not be silently skipped. Rationale: docs/CODE_REVIEW_HOOK_SETUP.md.
 
-# Full pre-push code review: mechanical gates + 8-step code-reviewer agent
+# Mechanical review plus environment-specific judgement dispatch
 review: _review-mechanical
     #!/usr/bin/env bash
     set -euo pipefail

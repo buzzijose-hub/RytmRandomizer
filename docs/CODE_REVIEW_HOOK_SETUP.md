@@ -1,11 +1,10 @@
 # Code-Review Hook Setup
 
-RytmRandomizer runs an automated code review after every `git push`. The
-review is **fully automatic and needs no human interaction** — no
-copy-paste, no manual step — for both supported agents (Claude Code and
-codex) and for plain `git`. This doc explains the three mechanisms that
-make that true, how they share one implementation, and why a violation
-can never slip through even if a local hook is disabled.
+RytmRandomizer runs mechanical review gates after every `git push`. Under
+Claude Code and codex, the agent hook then re-prompts the judgement review
+without copy-paste or a manual checklist. Plain `git` receives the universal
+mechanical pre-push backstop; it cannot perform the agent-only judgement
+dimensions by itself. This document explains those three mechanisms.
 
 ## The 8-step review, and the mechanical / judgement split
 
@@ -143,16 +142,16 @@ you, so a fresh clone is one `just install` away from having it live. The
 pre-push hook covers only the *mechanical* half; the agent hooks (1 and 2)
 complete the judgement half.
 
-## `just review` — the explicit one-command full review
+## `just review` — the explicit review entry point
 
-`just review` runs the same review on demand (e.g. before you are ready to
-push). It runs the mechanical gates via the shared script, then dispatches
-the agent by **environment detection** — never a copy-paste:
+`just review` always runs the shared mechanical gates on demand. It then uses
+**environment detection** for the judgement phase:
 
 - Claude Code exports `$CLAUDE_CODE_EXECPATH`; `just review` invokes that
   binary non-interactively (`-p ... --agent code-reviewer`).
-- Under codex, `.codex/hooks.json` already runs the review on `git push`;
-  `just review` says so and exits.
+- Under codex, `just review` reports that the judgement phase is post-push and
+  exits after the mechanical gates; the next `git push` triggers
+  `.codex/hooks.json`.
 - If *no* known agent environment is detected, `just review` **fails loudly
   (exit 1)** rather than degrading to a manual checklist — the judgement
   review must not be silently skipped.

@@ -73,7 +73,7 @@ if TYPE_CHECKING:
         A4NrpnControlSpec,
         A4SoftCaptureSnapshot,
     )
-    from .state.rytm_cc_observe import (
+    from .state.rytm_cc_observe import (  # noqa: V104 - string-only cast annotations
         RytmObserveAnchorEvent,
         RytmObserveCcMapping,
         RytmObserveExactEvent,
@@ -82,6 +82,116 @@ if TYPE_CHECKING:
 
 
 RYTM_LIVE_SNAPSHOT_CAPTURE_TIMEOUT_SECONDS: Final[float] = 120.0
+
+
+def _record_a4_active_operation_outcome(
+    *,
+    operation: str,
+    started_at: float,
+    outcome: str,
+    fingerprint: str,
+    error_code: str | None = None,
+    error_type: str | None = None,
+    sent_message_count: int | None = None,
+    expected_message_count: int | None = None,
+) -> None:
+    """Record one bounded active A4 outcome without exposing operator data."""
+
+    from .observability.metrics import get_metrics
+
+    metrics = get_metrics()
+    if error_code is not None:
+        metrics.record_error(f"{operation}_{error_code}")
+    extra: dict[str, object] = {
+        "operation": operation,
+        "outcome": outcome,
+        "fingerprint": fingerprint,
+        "duration_ms": (perf_counter() - started_at) * 1000.0,
+        "metrics_summary": metrics.format_summary(),
+    }
+    if error_code is not None:
+        extra["error_code"] = error_code
+    if error_type is not None:
+        extra["error_type"] = error_type
+    if sent_message_count is not None:
+        extra["sent_message_count"] = sent_message_count
+    if expected_message_count is not None:
+        extra["expected_message_count"] = expected_message_count
+    logger = _observability_get_logger(__name__)
+    if error_code is None:
+        logger.debug("Analog Four active operation completed", extra=extra)
+    else:
+        logger.warning("Analog Four active operation failed", extra=extra)
+
+
+def _reject_a4_active_operation(
+    *,
+    operation: str,
+    started_at: float,
+    error_code: str,
+    fingerprint: str,
+    message: str | None = None,
+    error_type: str | None = None,
+    sent_message_count: int | None = None,
+    expected_message_count: int | None = None,
+) -> int:
+    """Emit one operator refusal/failure and its structured diagnostic."""
+
+    if message is not None:
+        sys.stderr.write(message)
+    _record_a4_active_operation_outcome(
+        operation=operation,
+        started_at=started_at,
+        outcome="failed",
+        error_code=error_code,
+        fingerprint=fingerprint,
+        error_type=error_type,
+        sent_message_count=sent_message_count,
+        expected_message_count=expected_message_count,
+    )
+    return 1
+
+
+def _close_a4_active_port(
+    port: object,
+    *,
+    operation: str,
+    started_at: float,
+) -> None:
+    """Close one injected active port without masking an in-flight failure."""
+
+    close = getattr(port, "close", None)
+    if not callable(close):
+        return
+    active_exception = sys.exception()
+    try:
+        close()
+    except (KeyboardInterrupt, SystemExit) as exc:
+        _record_a4_active_operation_outcome(
+            operation=operation,
+            started_at=started_at,
+            outcome="cleanup_interrupted",
+            error_code="port_close_interrupted",
+            fingerprint=f"{operation.replace('_', '.')}.port_close_interrupted",
+            error_type=type(exc).__name__,
+        )
+        if active_exception is not None:
+            active_exception.add_note(
+                f"{operation} port cleanup was interrupted by {type(exc).__name__}"
+            )
+            return
+        raise
+    except (OSError, RuntimeError, AttributeError) as exc:
+        _record_a4_active_operation_outcome(
+            operation=operation,
+            started_at=started_at,
+            outcome="cleanup_failed",
+            error_code="port_close",
+            fingerprint=f"{operation.replace('_', '.')}.port_close_failed",
+            error_type=type(exc).__name__,
+        )
+        if active_exception is not None:
+            active_exception.add_note(f"{operation} port cleanup failed with {type(exc).__name__}")
 
 
 class _RytmSysexCaptureProvider(Protocol):
@@ -790,6 +900,7 @@ def _capture_a4_soft_snapshot(port: RealMidiInputPort) -> A4SoftCaptureSnapshot:
 
     from time import monotonic
 
+    capture_started_at = perf_counter()
     from .data import (
         ANALOG_FOUR_MANUAL_CC_BY_MSB,
         ANALOG_FOUR_NRPN_CONTROLS,
@@ -823,22 +934,27 @@ def _capture_a4_soft_snapshot(port: RealMidiInputPort) -> A4SoftCaptureSnapshot:
                 nrpn_controls=cast("A4NrpnControlSpec", ANALOG_FOUR_NRPN_CONTROLS),
             )
     finally:
-        close = getattr(port, "close", None)
-        if callable(close):
-            try:
-                close()
-            except (OSError, RuntimeError, AttributeError):
-                _shutdown_logger = _observability_get_logger(__name__)
-                _shutdown_logger.debug("a4_soft_capture_port_close_failed_best_effort")
+        _close_a4_active_port(
+            port,
+            operation="a4_soft_capture",
+            started_at=capture_started_at,
+        )
     return snapshot
 
 
 def _run_a4_soft_capture(args: argparse.Namespace) -> int:
     """Open one MIDI input, observe pending A4 CCs, print a passive report."""
 
+    started_at = perf_counter()
+    operation = "a4_soft_capture"
     if not args.arm:
-        sys.stderr.write("--a4-soft-capture requires --arm.\n")
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="arm_required",
+            fingerprint="a4.soft_capture.arm_required",
+            message="--a4-soft-capture requires --arm.\n",
+        )
 
     from .data.midi_event_kinds import MIDI_EVENT_KIND_NRPN
     from .mido_provider import build_mido_midi_port_provider
@@ -850,27 +966,69 @@ def _run_a4_soft_capture(args: argparse.Namespace) -> int:
     try:
         input_names = provider.list_input_names()
     except (RealMidiDependencyError, RealMidiPortError) as exc:
-        sys.stderr.write(f"--arm --a4-soft-capture failed: {exc}\n")
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="port_list",
+            fingerprint="a4.soft_capture.port_list_failed",
+            error_type=type(exc).__name__,
+            message=f"--arm --a4-soft-capture failed: {exc}\n",
+        )
 
     if not input_names:
-        sys.stderr.write("--arm --a4-soft-capture failed: no real MIDI input ports available.\n")
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="no_input_ports",
+            fingerprint="a4.soft_capture.no_input_ports",
+            message="--arm --a4-soft-capture failed: no real MIDI input ports available.\n",
+        )
 
     port_name = _choose_input_port_name(input_names)
     if port_name is None:
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="port_selection",
+            fingerprint="a4.soft_capture.port_selection_failed",
+        )
 
     try:
         port = provider.open_input(port_name)
     except (RealMidiDependencyError, RealMidiPortError) as exc:
-        sys.stderr.write(f"--arm --a4-soft-capture failed: {exc}\n")
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="port_open",
+            fingerprint="a4.soft_capture.port_open_failed",
+            error_type=type(exc).__name__,
+            message=f"--arm --a4-soft-capture failed: {exc}\n",
+        )
 
     sys.stdout.write(f"\nOpening MIDI input: {port_name}\n")
     sys.stdout.write("Move A4 controls, then press Enter to capture observed CCs.\n")
 
-    snapshot = _capture_a4_soft_snapshot(port)
+    try:
+        snapshot = _capture_a4_soft_snapshot(port)
+    except KeyboardInterrupt as exc:
+        _record_a4_active_operation_outcome(
+            operation=operation,
+            started_at=started_at,
+            outcome="interrupted",
+            error_code="interrupted",
+            fingerprint="a4.soft_capture.interrupted",
+            error_type=type(exc).__name__,
+        )
+        raise
+    except (OSError, RuntimeError, AttributeError, ValueError) as exc:
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="capture_failed",
+            fingerprint="a4.soft_capture.capture_failed",
+            error_type=type(exc).__name__,
+            message=f"--arm --a4-soft-capture failed: {exc}\n",
+        )
 
     nrpn_parameter_count = sum(
         parameter.transport == MIDI_EVENT_KIND_NRPN
@@ -902,6 +1060,12 @@ def _run_a4_soft_capture(args: argparse.Namespace) -> int:
 
     sys.stdout.write("\n".join(format_a4_soft_capture_report(snapshot, input_name=port_name)))
     sys.stdout.write("\n")
+    _record_a4_active_operation_outcome(
+        operation=operation,
+        started_at=started_at,
+        outcome="completed",
+        fingerprint="a4.soft_capture.completed",
+    )
     return 0
 
 
@@ -1053,27 +1217,55 @@ def _run_a4_send_param(args: argparse.Namespace) -> int:
 def _run_a4_send_nrpn_param(args: argparse.Namespace) -> int:
     """Open one real MIDI output, send one named A4 synth-track NRPN, and exit."""
 
+    started_at = perf_counter()
+    operation = "a4_nrpn_param_send"
     if not args.arm:
-        sys.stderr.write("--a4-send-nrpn-param requires --arm.\n")
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="arm_required",
+            fingerprint="a4.nrpn_param_send.arm_required",
+            message="--a4-send-nrpn-param requires --arm.\n",
+        )
     if args.parameter is None or args.parameter.strip() == "":
-        sys.stderr.write("--a4-send-nrpn-param requires --parameter.\n")
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="parameter_required",
+            fingerprint="a4.nrpn_param_send.parameter_required",
+            message="--a4-send-nrpn-param requires --parameter.\n",
+        )
 
     channel = _require_validation_range("channel", args.channel, 0, 3)
     value = _require_validation_range("value", args.value, 0, 127)
     if channel is None or value is None:
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="validation",
+            fingerprint="a4.nrpn_param_send.validation_failed",
+        )
     if args.value_lsb is not None and (args.value_lsb < 0 or args.value_lsb > 127):
-        sys.stderr.write("value-lsb must be in [0, 127].\n")
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="validation",
+            fingerprint="a4.nrpn_param_send.validation_failed",
+            message="value-lsb must be in [0, 127].\n",
+        )
 
     mapping = _resolve_a4_synth_track_nrpn(args.parameter)
     if mapping is None or mapping.nrpn_msb is None or mapping.nrpn_lsb is None:
-        sys.stderr.write(
-            f"--a4-send-nrpn-param failed: unknown A4 synth NRPN parameter: {args.parameter}\n"
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="mapping_missing",
+            fingerprint="a4.nrpn_param_send.mapping_missing",
+            message=(
+                "--a4-send-nrpn-param failed: unknown A4 synth NRPN parameter: "
+                f"{args.parameter}\n"
+            ),
         )
-        return 1
 
     from .mido_provider import build_mido_midi_port_provider
     from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
@@ -1082,29 +1274,58 @@ def _run_a4_send_nrpn_param(args: argparse.Namespace) -> int:
     try:
         output_names = provider.list_output_names()
     except (RealMidiDependencyError, RealMidiPortError) as exc:
-        sys.stderr.write(f"--arm --a4-send-nrpn-param failed: {exc}\n")
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="port_list",
+            fingerprint="a4.nrpn_param_send.port_list_failed",
+            error_type=type(exc).__name__,
+            message=f"--arm --a4-send-nrpn-param failed: {exc}\n",
+        )
 
     if not output_names:
-        sys.stderr.write(
-            "--arm --a4-send-nrpn-param failed: no real MIDI output ports available. "
-            "Connect the Analog Four and retry.\n"
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="no_output_ports",
+            fingerprint="a4.nrpn_param_send.no_output_ports",
+            message=(
+                "--arm --a4-send-nrpn-param failed: no real MIDI output ports available. "
+                "Connect the Analog Four and retry.\n"
+            ),
         )
-        return 1
 
     port_name = _choose_a4_output_port_name(
         output_names,
         error_prefix="--arm --a4-send-nrpn-param",
     )
     if port_name is None:
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="port_selection",
+            fingerprint="a4.nrpn_param_send.port_selection_failed",
+        )
 
     sys.stdout.write(f"\nOpening MIDI output: {port_name}\n")
     try:
         port = provider.open_output(port_name)
     except (RealMidiDependencyError, RealMidiPortError) as exc:
-        sys.stderr.write(f"--arm --a4-send-nrpn-param failed: {exc}\n")
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="port_open",
+            fingerprint="a4.nrpn_param_send.port_open_failed",
+            error_type=type(exc).__name__,
+            message=f"--arm --a4-send-nrpn-param failed: {exc}\n",
+        )
+
+    sent_message_count = 0
+    expected_message_count = 4 if args.value_lsb is not None else 3
+
+    def note_message_sent() -> None:
+        nonlocal sent_message_count
+        sent_message_count += 1
 
     try:
         from .midi_io import send_nrpn
@@ -1116,18 +1337,43 @@ def _run_a4_send_nrpn_param(args: argparse.Namespace) -> int:
             value,
             value_lsb=args.value_lsb,
             channel=channel,
+            on_message_sent=note_message_sent,
         )
+    except (KeyboardInterrupt, SystemExit) as exc:
+        _record_a4_active_operation_outcome(
+            operation=operation,
+            started_at=started_at,
+            outcome="interrupted",
+            error_code="interrupted",
+            fingerprint="a4.nrpn_param_send.interrupted",
+            error_type=type(exc).__name__,
+            sent_message_count=sent_message_count,
+            expected_message_count=expected_message_count,
+        )
+        exc.add_note("A4 NRPN parameter hardware state is uncertain; reload the clean Kit/project")
+        raise
     except (OSError, RuntimeError, AttributeError) as exc:
-        sys.stderr.write(f"--arm --a4-send-nrpn-param send failed: {exc}\n")
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="send_failed",
+            fingerprint="a4.nrpn_param_send.failed",
+            error_type=type(exc).__name__,
+            sent_message_count=sent_message_count,
+            expected_message_count=expected_message_count,
+            message=(
+                f"--arm --a4-send-nrpn-param send failed: {exc}\n"
+                "Hardware state is uncertain after "
+                f"{sent_message_count}/{expected_message_count} accepted CC messages. "
+                "Reload the clean Kit/project before retrying.\n"
+            ),
+        )
     finally:
-        close = getattr(port, "close", None)
-        if callable(close):
-            try:
-                close()
-            except (OSError, RuntimeError, AttributeError):  # pragma: no cover - best-effort
-                _shutdown_logger = _observability_get_logger(__name__)
-                _shutdown_logger.debug("a4_nrpn_param_send_port_close_failed_best_effort")
+        _close_a4_active_port(
+            port,
+            operation=operation,
+            started_at=started_at,
+        )
 
     lines = [
         "RytmRandomizer A4 NRPN parameter send",
@@ -1146,6 +1392,14 @@ def _run_a4_send_nrpn_param(args: argparse.Namespace) -> int:
     lines.append("Sent exactly one A4 parameter NRPN sequence.")
     sys.stdout.write("\n".join(lines))
     sys.stdout.write("\n")
+    _record_a4_active_operation_outcome(
+        operation=operation,
+        started_at=started_at,
+        outcome="completed",
+        fingerprint="a4.nrpn_param_send.completed",
+        sent_message_count=sent_message_count,
+        expected_message_count=expected_message_count,
+    )
     return 0
 
 
@@ -1194,21 +1448,43 @@ def _validate_a4_recipe_events(
 def _run_a4_kit_recipe(args: argparse.Namespace) -> int:
     """Open one real MIDI output, send a named A4 recipe, and exit."""
 
+    started_at = perf_counter()
+    operation = "a4_kit_recipe_send"
     if not args.arm:
-        sys.stderr.write("--a4-kit-recipe requires --arm.\n")
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="arm_required",
+            fingerprint="a4.kit_recipe_send.arm_required",
+            message="--a4-kit-recipe requires --arm.\n",
+        )
     if args.a4_kit_recipe is None or args.a4_kit_recipe.strip() == "":
-        sys.stderr.write("--a4-kit-recipe requires a recipe name.\n")
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="recipe_required",
+            fingerprint="a4.kit_recipe_send.recipe_required",
+            message="--a4-kit-recipe requires a recipe name.\n",
+        )
 
     recipe = _resolve_a4_kit_recipe(args.a4_kit_recipe)
     if recipe is None:
-        sys.stderr.write(f"--a4-kit-recipe failed: unknown A4 kit recipe: {args.a4_kit_recipe}\n")
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="recipe_unknown",
+            fingerprint="a4.kit_recipe_send.recipe_unknown",
+            message=f"--a4-kit-recipe failed: unknown A4 kit recipe: {args.a4_kit_recipe}\n",
+        )
 
     resolved_events = _validate_a4_recipe_events(recipe, use_nrpn=args.a4_kit_recipe_nrpn)
     if resolved_events is None:
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="validation",
+            fingerprint="a4.kit_recipe_send.validation_failed",
+        )
 
     from .mido_provider import build_mido_midi_port_provider
     from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
@@ -1217,29 +1493,59 @@ def _run_a4_kit_recipe(args: argparse.Namespace) -> int:
     try:
         output_names = provider.list_output_names()
     except (RealMidiDependencyError, RealMidiPortError) as exc:
-        sys.stderr.write(f"--arm --a4-kit-recipe failed: {exc}\n")
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="port_list",
+            fingerprint="a4.kit_recipe_send.port_list_failed",
+            error_type=type(exc).__name__,
+            message=f"--arm --a4-kit-recipe failed: {exc}\n",
+        )
 
     if not output_names:
-        sys.stderr.write(
-            "--arm --a4-kit-recipe failed: no real MIDI output ports available. "
-            "Connect the Analog Four and retry.\n"
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="no_output_ports",
+            fingerprint="a4.kit_recipe_send.no_output_ports",
+            message=(
+                "--arm --a4-kit-recipe failed: no real MIDI output ports available. "
+                "Connect the Analog Four and retry.\n"
+            ),
         )
-        return 1
 
     port_name = _choose_a4_output_port_name(
         output_names,
         error_prefix="--arm --a4-kit-recipe",
     )
     if port_name is None:
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="port_selection",
+            fingerprint="a4.kit_recipe_send.port_selection_failed",
+        )
 
     sys.stdout.write(f"\nOpening MIDI output: {port_name}\n")
     try:
         port = provider.open_output(port_name)
     except (RealMidiDependencyError, RealMidiPortError) as exc:
-        sys.stderr.write(f"--arm --a4-kit-recipe failed: {exc}\n")
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="port_open",
+            fingerprint="a4.kit_recipe_send.port_open_failed",
+            error_type=type(exc).__name__,
+            message=f"--arm --a4-kit-recipe failed: {exc}\n",
+        )
+
+    sent_message_count = 0
+    messages_per_event = 3 if args.a4_kit_recipe_nrpn else 1
+    expected_message_count = len(resolved_events) * messages_per_event
+
+    def note_message_sent() -> None:
+        nonlocal sent_message_count
+        sent_message_count += 1
 
     try:
         from .midi_io import send_cc, send_nrpn
@@ -1254,22 +1560,53 @@ def _run_a4_kit_recipe(args: argparse.Namespace) -> int:
                     mapping.nrpn_lsb,
                     event.value,
                     channel=event.track - 1,
+                    on_message_sent=note_message_sent,
                 )
             else:
                 if mapping.cc_msb is None:
                     raise ValueError("validated A4 recipe event is missing a CC address")
-                send_cc(port, mapping.cc_msb, event.value, channel=event.track - 1)
+                send_cc(
+                    port,
+                    mapping.cc_msb,
+                    event.value,
+                    channel=event.track - 1,
+                    on_message_sent=note_message_sent,
+                )
+    except (KeyboardInterrupt, SystemExit) as exc:
+        _record_a4_active_operation_outcome(
+            operation=operation,
+            started_at=started_at,
+            outcome="interrupted",
+            error_code="interrupted",
+            fingerprint="a4.kit_recipe_send.interrupted",
+            error_type=type(exc).__name__,
+            sent_message_count=sent_message_count,
+            expected_message_count=expected_message_count,
+        )
+        exc.add_note("A4 kit recipe hardware state is uncertain; reload the clean Kit/project")
+        raise
     except (OSError, RuntimeError, AttributeError, ValueError) as exc:
-        sys.stderr.write(f"--arm --a4-kit-recipe send failed: {exc}\n")
-        return 1
+        return _reject_a4_active_operation(
+            operation=operation,
+            started_at=started_at,
+            error_code="send_failed",
+            fingerprint="a4.kit_recipe_send.failed",
+            error_type=type(exc).__name__,
+            sent_message_count=sent_message_count,
+            expected_message_count=expected_message_count,
+            message=(
+                f"--arm --a4-kit-recipe send failed: {exc}\n"
+                "Hardware state is uncertain after "
+                f"{sent_message_count}/{expected_message_count} accepted CC messages. "
+                "Reload the clean Kit/project before retrying.\n"
+            ),
+        )
     finally:
-        close = getattr(port, "close", None)
-        if callable(close):
-            try:
-                close()
-            except (OSError, RuntimeError, AttributeError):  # pragma: no cover - best-effort
-                _shutdown_logger = _observability_get_logger(__name__)
-                _shutdown_logger.debug("a4_kit_recipe_port_close_failed_best_effort")
+        _close_a4_active_port(
+            port,
+            operation=operation,
+            started_at=started_at,
+        )
 
     lines = [
         "RytmRandomizer A4 kit recipe send",
@@ -1288,6 +1625,14 @@ def _run_a4_kit_recipe(args: argparse.Namespace) -> int:
     ]
     sys.stdout.write("\n".join(lines))
     sys.stdout.write("\n")
+    _record_a4_active_operation_outcome(
+        operation=operation,
+        started_at=started_at,
+        outcome="completed",
+        fingerprint="a4.kit_recipe_send.completed",
+        sent_message_count=sent_message_count,
+        expected_message_count=expected_message_count,
+    )
     return 0
 
 
@@ -1361,7 +1706,16 @@ def _resolve_a4_patch_manifest_sha256(
         return True, None
     if expected is None:
         return True, None
-    if len(expected) != 64 or any(character not in "0123456789abcdef" for character in expected):
+    from .cockpit.export.analog_four_patch_batch_codec import (
+        validate_analog_four_patch_batch_sha256,
+    )
+
+    try:
+        validate_analog_four_patch_batch_sha256(
+            expected,
+            label="--batch-manifest-sha256",
+        )
+    except ValueError:
         _reject_a4_patch_send_plan_guard(
             error_code="manifest_digest_invalid",
             message=(

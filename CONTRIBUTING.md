@@ -380,7 +380,7 @@ All tests must pass. Coverage must stay ≥95% pure-branch (the ratchet floor, e
 
 `pyproject.toml` sets `addopts = "-n auto --durations=20"`, so **bare
 `python -m pytest`** parallelizes across all available CPU cores via
-`pytest-xdist`. On a multi-core dev machine the 6,400+ test suite runs in
+`pytest-xdist`. On a multi-core dev machine the 6,800+ test suite runs in
 roughly 45-90s, while the fast subset avoids the parity worker cost.
 
 Use the right tool at each stage of the loop:

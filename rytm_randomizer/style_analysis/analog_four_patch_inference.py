@@ -91,7 +91,7 @@ class _NativeAnalysisConnection(Protocol):
 class _NativeAnalysisProcessContext(Protocol):
     @abstractmethod
     def Pipe(
-        self, *, duplex: bool
+        self, *, duplex: bool  # noqa: V107 - required multiprocessing keyword contract
     ) -> tuple[_NativeAnalysisConnection, _NativeAnalysisConnection]: ...
 
     @abstractmethod

@@ -126,6 +126,11 @@ group of JSON and SysEx files:
 5. On read, verify outer hashes, nested DNA/send-plan hashes, source identity,
    coverage counts, event order, and every CC/NRPN address against canonical
    device data before opening a MIDI port.
+6. For an armed replay, require the operator to supply the SHA-256 printed by
+   the reviewed dry-run through a separate command-line value. Verify that
+   out-of-band digest before constructing the MIDI provider. Internal manifest
+   hashes protect artifact consistency, but they do not prove that a fully
+   rehashed replacement is the batch the operator reviewed.
 
 For a live plan, prevalidate the whole event sequence and expected wire-message
 count before port discovery. Use the named `MIDI_MESSAGE_SETTLE_SECONDS` policy
@@ -150,6 +155,7 @@ Trigger conditions:
   canonical `snapshot.envelope` pair instead.
 - Promoting an A4 saved-kit field from captured offsets to writable output.
 - Publishing or replaying an audio-derived Elektron patch batch.
+- Binding an armed replay to an operator-reviewed manifest digest.
 - Reviewing live CC/NRPN delivery pacing, accounting, or recovery behavior.
 
 DO NOT use this pattern when:

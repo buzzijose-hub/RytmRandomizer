@@ -499,8 +499,8 @@ See [`docs/STATUS.md`](docs/STATUS.md) for the dated activity log and the per-ph
 git clone https://github.com/buzzijose-hub/RytmRandomizer.git
 cd RytmRandomizer
 pip install -e ".[dev]"
-pytest                    # full suite — 5,900+ tests, parallelized on a multi-core machine
-just check                # pre-PR gate (ruff + black + isort + tests + arch)
+pytest                    # full suite — 6,800+ tests, parallelized on a multi-core machine
+just check                # lint + strict production typing + arch + tests + coverage
 ```
 
 The test suite uses `pytest-xdist` (`-n auto`) for parallel execution and a 180-second per-test timeout. Don't pass `-o addopts=''` for normal runs — it disables xdist and triples the runtime.
@@ -518,7 +518,7 @@ The test suite uses `pytest-xdist` (`-n auto`) for parallel execution and a 180-
 | `rytm_randomizer/data/`, `state/`, `guardrails/`, `observability/` | Fact tables, runtime state, policy, logging |
 | `desktop/shell/` | Tauri 2 Rust shell — spawns the Python sidecar, wraps the web frontend |
 | `desktop/web/` | React + TypeScript + Vite cockpit + wizard UI · vitest + Playwright |
-| `tests/` | 6,400+ tests across 350+ modules - arch invariants, V1.34 parity, integration, E2E |
+| `tests/` | 6,800+ tests across 350+ modules - arch invariants, V1.34 parity, integration, E2E |
 | `docs/` | Architecture, status, plans, specs, install + cockpit quickstart |
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow (plan → TDD → code review → ship), the parity rules around V1.34, and the per-PR gate battery. Agentic contributors should read [`AGENTS.md`](AGENTS.md) and [`docs/CODEX_CONTRIBUTING.md`](docs/CODEX_CONTRIBUTING.md).

@@ -23,6 +23,7 @@ from .analog_four_kit import (
     AnalogFourSavedKitExportResult,
     export_analog_four_saved_kit,
 )
+from .cli_options import pop_required_cli_value
 
 COMMAND_NAME: Final[str] = "analog-four-saved-kit-export"
 FILTER2_RESONANCE_PARAMETER: Final[str] = A4_FILTER2_RESONANCE_PARAMETER
@@ -89,12 +90,6 @@ def _saved_kit_cli_error_code(exc: Exception) -> AnalogFourExportErrorCode:
     return "validation"
 
 
-def _pop_a4_cli_value(remaining: list[str], option: str) -> str:
-    if not remaining:
-        raise ValueError(f"{option} requires a value")
-    return remaining.pop(0)
-
-
 def _parse_resonance_assignment(value: str) -> AnalogFourSavedKitMutation:
     track_text, separator, screen_value = value.partition(":")
     if not separator or not track_text or not screen_value:
@@ -133,11 +128,13 @@ def parse_analog_four_saved_kit_export_args(
     while remaining:
         option = remaining.pop(0)
         if option == "--source":
-            source_path = Path(_pop_a4_cli_value(remaining, option))
+            source_path = Path(pop_required_cli_value(remaining, option=option))
         elif option == "--output":
-            output_path = Path(_pop_a4_cli_value(remaining, option))
+            output_path = Path(pop_required_cli_value(remaining, option=option))
         elif option == "--filter2-resonance":
-            mutations.append(_parse_resonance_assignment(_pop_a4_cli_value(remaining, option)))
+            mutations.append(
+                _parse_resonance_assignment(pop_required_cli_value(remaining, option=option))
+            )
         elif option == "--overwrite":
             overwrite = True
         elif option == "--json":

@@ -38,8 +38,8 @@ Current baseline used while creating / refreshing this document:
 | Snapshot Protocols + envelope | `rytm_randomizer/snapshot/{envelope,decoder,planner,mock_runtime,sysex_file}.py` |
 | Guardrails | `rytm_randomizer/guardrails/{resolver,store,schema,validation}.py` |
 | Observability | `rytm_randomizer/observability/{logging,tracing,metrics,errors}.py` |
-| Style analysis | `rytm_randomizer/style_analysis/{extractor,feature_report,library,blueprint,analog_four_patch_genome,analog_four_patch_inference,analog_four_patch_learning,analog_four_patch_corpus,analog_four_patch_send_plan,analog_four_patch_codesigner}.py` |
-| Cockpit export | `rytm_randomizer/cockpit/export/{analog_four_export_contracts,analog_four_cli,analog_four_kit,analog_four_patch_batch,analog_four_patch_batch_cli,analog_four_patch_batch_codec,analog_four_patch_batch_contracts,analog_four_patch_batch_publication,analog_four_patch_batch_reader,analog_four_patch_render_rank,analog_four_patch_render_rank_cli,writer}.py` plus the profile-model serialization/signing/verifier modules. |
+| Style analysis | `rytm_randomizer/style_analysis/{extractor,feature_report,library,blueprint,analog_four_patch_genome,analog_four_patch_inference,analog_four_patch_learning,analog_four_patch_corpus,analog_four_patch_send_plan,analog_four_patch_render_rank,analog_four_patch_codesigner}.py` |
+| Cockpit export | `rytm_randomizer/cockpit/export/{analog_four_export_contracts,analog_four_cli,analog_four_kit,analog_four_patch_batch,analog_four_patch_batch_cli,analog_four_patch_batch_codec,analog_four_patch_batch_contracts,analog_four_patch_batch_publication,analog_four_patch_batch_reader,analog_four_patch_render_rank,analog_four_patch_render_rank_cli,cli_options,writer}.py` plus the profile-model serialization/signing/verifier modules. |
 | Tests | `tests/test_*.py`, `tests/cockpit/test_*.py`, `tests/architecture/test_*.py`, `tests/fixtures/{analog_four_saved_kit,v134_parity}/`, `tests/_parity_worker.py`, `tests/conftest.py` |
 | Project documentation | `CONTRIBUTING.md`, `docs/*.md`, `.claude/rules/*.md`, `.claude/skills/**/SKILL.md` |
 
@@ -52,7 +52,7 @@ flowchart TB
     User["Operator / developer"]
     V134["V1.34 reference behavior<br/>tests/fixtures/v134_parity/<br/>(505 JSON goldens; 685 parity test items)"]
     Package["Modular package<br/>rytm_randomizer/<br/>(14 subpackages, 352 modules)"]
-    Tests["Tests<br/>6600+ pytest tests<br/>tests/, tests/architecture/"]
+    Tests["Tests<br/>6800+ pytest tests<br/>tests/, tests/architecture/"]
     CI[".github/workflows/test.yml<br/>3 OS × py3.11 matrix<br/>+ codeql, release, installers"]
     Docs["Project docs<br/>CONTRIBUTING.md, docs/*.md<br/>.claude/{rules,skills}/"]
 
@@ -127,9 +127,9 @@ flowchart TB
         CliRegistry["cli_registry.py<br/>CliCommand registry"]
     end
 
-    subgraph BehaviorPkg["behavior/ subpackage (8 modules)<br/>(WS-M2 moved 11 top-level behavior_*.py here;<br/>4 pad_*_lane.py modules then consolidated<br/>into one pad_lane.py)"]
+    subgraph BehaviorPkg["behavior/ subpackage (9 modules)<br/>(WS-M2 moved 11 top-level behavior_*.py here;<br/>4 pad_*_lane.py modules then consolidated<br/>into one pad_lane.py)"]
         BehPadLane["pad_lane.py<br/>(consolidated Pad1/2/3/4 lane)"]
-        BehOther["anchor_profile<br/>mutation_depth<br/>scene_group<br/>menu_utility<br/>selected_profile<br/>selected_isolated_pad<br/>undo_commit_state"]
+        BehOther["anchor_profile<br/>midi_event_plan<br/>mutation_depth<br/>scene_group<br/>menu_utility<br/>selected_profile<br/>selected_isolated_pad<br/>undo_commit_state"]
     end
 
     subgraph StatePkg["state/ subpackage"]
@@ -787,7 +787,7 @@ flowchart TB
 
 ## 10. Architecture Test Enforcement Graph
 
-The 56 architecture-test files (702 individual test items) under `tests/architecture/` mechanically enforce the rules in `docs/PLAN_REQUIREMENTS.md` + `CONTRIBUTING.md`. Each one uses the **drained-allowlist** pattern: violations today are explicit `frozenset` entries that PR-review must approve; the long-term state is empty allowlists.
+The 56 architecture-test files (704 individual test items) under `tests/architecture/` mechanically enforce the rules in `docs/PLAN_REQUIREMENTS.md` + `CONTRIBUTING.md`. Each one uses the **drained-allowlist** pattern: violations today are explicit `frozenset` entries that PR-review must approve; the long-term state is empty allowlists.
 
 ```mermaid
 flowchart TB
@@ -872,8 +872,8 @@ flowchart TB
     subgraph Jobs["Parallel CI jobs (test.yml)"]
         Lint["lint<br/>ruff + black + isort<br/>~14s"]
         Security["security<br/>pip-audit<br/>(skipped if no deps/ci changes)"]
-        Architecture["architecture<br/>tests/architecture/<br/>~10-30s · 315+ tests"]
-        TestMatrix["test (matrix)<br/>windows + ubuntu<br/>(+ macos on push only)<br/>~60-90s · 5900+ tests"]
+        Architecture["architecture<br/>tests/architecture/<br/>~10-30s · 703 tests"]
+        TestMatrix["test (matrix)<br/>windows + ubuntu<br/>(+ macos on push only)<br/>~60-90s · 6800+ tests"]
         E2EMatrix["e2e (matrix)<br/>windows + ubuntu<br/>(+ macos on push only)<br/>~20-40s · 43 tests"]
         DocsGate["docs-gate<br/>~7s"]
         CodeQL["codeql.yml<br/>~60-75s"]
@@ -974,7 +974,7 @@ flowchart LR
 
 ---
 
-## 13. Test Suite Layers (5900+ tests)
+## 13. Test Suite Layers (6800+ tests)
 
 ```mermaid
 flowchart TB
@@ -1633,7 +1633,7 @@ flowchart TB
     Profiles["profiles.py / data/profiles.py<br/>group profile metadata"]
     StateValidation["state/{anchor,selected_target,<br/>selected_isolated_pad}_validation.py"]
 
-    subgraph BehaviorPkg["behavior/ subpackage (8 modules; WS-M2 layout)"]
+    subgraph BehaviorPkg["behavior/ subpackage (9 modules; WS-M2 layout)"]
         MenuUtility["menu_utility.py<br/>menus + T/C/Q utilities"]
         AnchorProfile["anchor_profile.py<br/>BH/BC/BS/BF/... anchor commands"]
         MutationDepth["mutation_depth.py<br/>guarded depth + mutation intent"]
@@ -1642,6 +1642,7 @@ flowchart TB
         SelectedProfile["selected_profile.py<br/>P/M profile workflow"]
         SelectedIsolated["selected_isolated_pad.py<br/>L/PZ isolated pad behavior"]
         UndoCommit["undo_commit_state.py<br/>B/E/W/U state behavior"]
+        MidiEventPlan["midi_event_plan.py<br/>shared validated CC/NRPN event contract"]
     end
 
     subgraph BehaviorReports["Aggregated read-only reports (in reports/)"]
@@ -1749,7 +1750,7 @@ flowchart TB
     end
 
     subgraph GateSteps["Closeout gate steps (closeout_check.py)"]
-        Step1["1. pytest (full suite)<br/>with -n auto<br/>(6600+ tests)"]
+        Step1["1. pytest (full suite)<br/>with -n auto<br/>(6800+ tests)"]
         Step2["2. import smoke<br/>(import rytm_randomizer)"]
     end
 
@@ -1788,7 +1789,7 @@ flowchart TB
 
 - `Scripts/closeout_check.ps1` is the original Windows-only PowerShell entry. `scripts/closeout_check.py` is the cross-platform Python equivalent added in WS-M4 (preferred for new tooling).
 - Both run pytest and an import smoke. The Python script also tests cross-platform (works on Windows / macOS / Linux without modification).
-- CI splits the 5 layers across separate jobs (test / architecture / e2e / coverage-ratchet) so a failure in one layer is visible without scrolling through 5900+ test results — see §11 (CI Pipeline) for the full job map.
+- CI splits the 5 layers across separate jobs (test / architecture / e2e / coverage-ratchet) so a failure in one layer is visible without scrolling through 6800+ test results — see §11 (CI Pipeline) for the full job map.
 
 ---
 

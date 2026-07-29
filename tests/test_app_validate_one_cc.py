@@ -4328,9 +4328,11 @@ def test_app_active_output_paths_report_send_errors(
     tmp_path: Path,
     capsys,
     fake_mido_session,
+    isolated_observability,
     monkeypatch,
 ) -> None:
     from rytm_randomizer import app, mido_provider
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
     class FailingOutputPort:
         def send(self, _message: object) -> None:
@@ -4339,7 +4341,19 @@ def test_app_active_output_paths_report_send_errors(
         def close(self) -> None:
             return None
 
+    class CapturingLogger:
+        def __init__(self) -> None:
+            self.warnings: list[tuple[str, dict[str, object]]] = []
+
+        def debug(self, _message: str, *, extra: dict[str, object]) -> None:
+            return None
+
+        def warning(self, message: str, *, extra: dict[str, object]) -> None:
+            self.warnings.append((message, extra))
+
+    logger = CapturingLogger()
     snapshot_path = _write_rytm_snapshot_file(tmp_path, name=b"SENDERR")
+    monkeypatch.setattr(app, "_observability_get_logger", lambda _name: logger)
     monkeypatch.setattr(
         mido_provider.MidoMidiPortProvider,
         "list_output_names",
@@ -4352,9 +4366,179 @@ def test_app_active_output_paths_report_send_errors(
     )
     monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
 
+    reset_metrics()
     assert app.main(_active_output_case_argv(case, snapshot_path)) == 1
     captured = capsys.readouterr()
     assert "send failed" in captured.err
+    if case in {"a4-nrpn", "a4-kit"}:
+        assert "Hardware state is uncertain after 0/" in captured.err
+        operation = "a4_nrpn_param_send" if case == "a4-nrpn" else "a4_kit_recipe_send"
+        assert get_metrics().errors_by_kind[f"{operation}_send_failed"] == 1
+        message, extra = next(
+            (message, extra)
+            for message, extra in logger.warnings
+            if message == "Analog Four active operation failed"
+            and extra["operation"] == operation
+            and extra["error_code"] == "send_failed"
+        )
+        assert message == "Analog Four active operation failed"
+        assert extra["sent_message_count"] == 0
+        assert int(extra["expected_message_count"]) > 0
+
+
+@pytest.mark.parametrize(
+    ("failure", "expected_metric"),
+    (
+        (RuntimeError("capture failed"), "a4_soft_capture_capture_failed"),
+        (KeyboardInterrupt("capture interrupted"), "a4_soft_capture_interrupted"),
+    ),
+)
+def test_app_a4_soft_capture_records_loop_failures_and_closes(
+    failure: BaseException,
+    expected_metric: str,
+    capsys,
+    isolated_observability,
+    monkeypatch,
+) -> None:
+    from rytm_randomizer import app, mido_provider
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
+    class FailingInputPort:
+        def __init__(self) -> None:
+            self.closed = False
+
+        def iter_pending(self):
+            raise failure
+
+        def close(self) -> None:
+            self.closed = True
+
+    fake_port = FailingInputPort()
+    inputs = iter(("0", ""))
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        lambda self: ("Fake In",),
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "open_input",
+        lambda self, port_name: fake_port,
+    )
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(inputs))
+    reset_metrics()
+
+    if isinstance(failure, KeyboardInterrupt):
+        with pytest.raises(KeyboardInterrupt, match="capture interrupted"):
+            app.main(["--arm", "--a4-soft-capture"])
+    else:
+        assert app.main(["--arm", "--a4-soft-capture"]) == 1
+        assert "capture failed" in capsys.readouterr().err
+
+    assert fake_port.closed is True
+    assert get_metrics().errors_by_kind[expected_metric] == 1
+
+
+@pytest.mark.parametrize("case", ("a4-nrpn", "a4-kit"))
+def test_app_a4_direct_send_interruption_reports_partial_state(
+    case: str,
+    tmp_path: Path,
+    fake_mido_session,
+    isolated_observability,
+    monkeypatch,
+) -> None:
+    from rytm_randomizer import app, mido_provider
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
+    class InterruptingOutputPort:
+        def __init__(self) -> None:
+            self.accepted = 0
+            self.closed = False
+
+        def send(self, _message: object) -> None:
+            if self.accepted == 1:
+                raise KeyboardInterrupt("operator cancelled")
+            self.accepted += 1
+
+        def close(self) -> None:
+            self.closed = True
+
+    fake_port = InterruptingOutputPort()
+    snapshot_path = _write_rytm_snapshot_file(tmp_path, name=b"INTERRUPT")
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_output_names",
+        lambda self: ("Fake Out",),
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "open_output",
+        lambda self, port_name: fake_port,
+    )
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
+    reset_metrics()
+
+    with pytest.raises(KeyboardInterrupt, match="operator cancelled") as excinfo:
+        app.main(_active_output_case_argv(case, snapshot_path))
+
+    operation = "a4_nrpn_param_send" if case == "a4-nrpn" else "a4_kit_recipe_send"
+    assert fake_port.accepted == 1
+    assert fake_port.closed is True
+    assert get_metrics().errors_by_kind[f"{operation}_interrupted"] == 1
+    assert any("hardware state is uncertain" in note for note in excinfo.value.__notes__)
+
+
+def test_close_a4_active_port_preserves_primary_failure_and_records_cleanup(
+    isolated_observability,
+    monkeypatch,
+) -> None:
+    from rytm_randomizer import app
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
+    class CloseFailure:
+        def __init__(self, failure: BaseException) -> None:
+            self.failure = failure
+
+        def close(self) -> None:
+            raise self.failure
+
+    reset_metrics()
+    app._close_a4_active_port(object(), operation="a4_test", started_at=0.0)
+    app._close_a4_active_port(
+        CloseFailure(RuntimeError("close failed")),
+        operation="a4_test",
+        started_at=0.0,
+    )
+    with pytest.raises(KeyboardInterrupt, match="close interrupted"):
+        app._close_a4_active_port(
+            CloseFailure(KeyboardInterrupt("close interrupted")),
+            operation="a4_test",
+            started_at=0.0,
+        )
+
+    try:
+        raise ValueError("primary")
+    except ValueError as primary:
+        app._close_a4_active_port(
+            CloseFailure(RuntimeError("secondary")),
+            operation="a4_test",
+            started_at=0.0,
+        )
+        assert any("port cleanup failed" in note for note in primary.__notes__)
+
+    try:
+        raise ValueError("primary")
+    except ValueError as primary:
+        app._close_a4_active_port(
+            CloseFailure(KeyboardInterrupt("secondary interrupt")),
+            operation="a4_test",
+            started_at=0.0,
+        )
+        assert any("port cleanup was interrupted" in note for note in primary.__notes__)
+
+    metrics = get_metrics()
+    assert metrics.errors_by_kind["a4_test_port_close"] == 2
+    assert metrics.errors_by_kind["a4_test_port_close_interrupted"] == 2
 
 
 @pytest.mark.parametrize("case", ("rytm-12", "rytm-snapshot"))

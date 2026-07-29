@@ -720,9 +720,11 @@ def test_batch_lock_recovery_match_requires_every_owner_field(tmp_path: Path) ->
         acquire_batch_lock,
         batch_lock_matches_request,
     )
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
     lock_path = tmp_path / "batch.lock"
     lock_args = _lock_owner()
+    reset_metrics()
     acquire_batch_lock(lock_path, **lock_args)
     assert batch_lock_matches_request(lock_path, **lock_args)
 
@@ -743,6 +745,10 @@ def test_batch_lock_recovery_match_requires_every_owner_field(tmp_path: Path) ->
     assert not batch_lock_matches_request(lock_path, **lock_args)
     lock_path.write_text("not-json", encoding="utf-8")
     assert not batch_lock_matches_request(lock_path, **lock_args)
+    metrics = get_metrics()
+    assert (
+        metrics.a4_patch_publication_errors_by_operation_and_code["lock_release:read_failed"] == 2
+    )
 
 
 def test_lock_recovery_summary_rejects_non_object_and_invalid_metadata(tmp_path: Path) -> None:

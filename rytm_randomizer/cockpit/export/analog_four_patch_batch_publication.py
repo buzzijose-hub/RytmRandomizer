@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import secrets
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar, Final, Never, Protocol, TypedDict, cast
@@ -569,11 +570,29 @@ def batch_lock_matches_request(
 ) -> bool:
     """Return whether a recoverable lock belongs to this publication attempt."""
 
+    started_at = time.perf_counter()
+    operation_id = secrets.token_hex(8)
     try:
         decoded = cast(object, json.loads(lock_path.read_text(encoding="utf-8")))
-    except (json.JSONDecodeError, OSError, UnicodeError):
+    except (json.JSONDecodeError, OSError, UnicodeError) as exc:
+        _record_publication_failure(
+            publication_operation="lock_release",
+            operation_id=operation_id,
+            started_at=started_at,
+            error_code="read_failed",
+            exc=exc,
+            artifact_name=lock_path.name,
+        )
         return False
     if not isinstance(decoded, dict):
+        _record_publication_failure(
+            publication_operation="lock_release",
+            operation_id=operation_id,
+            started_at=started_at,
+            error_code="read_failed",
+            exc=ValueError("batch lock ownership metadata must be a JSON object"),
+            artifact_name=lock_path.name,
+        )
         return False
     payload = cast(dict[object, object], decoded)
     return bool(

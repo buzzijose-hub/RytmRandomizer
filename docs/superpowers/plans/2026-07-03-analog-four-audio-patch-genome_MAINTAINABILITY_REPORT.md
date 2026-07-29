@@ -2,7 +2,7 @@
 
 > Status: in-flight
 
-Date: 2026-07-27
+Date: 2026-07-29
 Scope: current post-correction re-audit against the paired baseline.
 
 | Question | Before | After | Evidence |
@@ -26,14 +26,14 @@ child owned by a cleanup-capable parent; transport contracts are shared; batch
 staging/publication and app send responsibilities are split into focused
 helpers; and the state file has schema enforcement.
 
-The fresh focused A4/operator suite passed 1,589 tests / 1 skipped, along with
-703 architecture tests, 6,792 full-suite tests / 3 skipped, 685 V1.34 parity
-items, and a clean Ruff/Black/isort/Vulture/strict-production-Pyright/
-mechanical-review set. The literal strict audit of all 113 touched Python paths
-reports 4,263 dynamic test-harness typing errors covered by the accepted scoped
-Gate 3 decision.
+The fresh focused touched-file A4/operator suite passed 1,689 tests / 1 skipped,
+along with 704 architecture tests, 6,804 full-suite tests / 3 skipped, 685
+V1.34 parity items, and a clean Ruff/Black/isort/Vulture/
+strict-production-Pyright/mechanical-review set. Dynamic test-harness typing
+remains the accepted scoped Gate 3 debt; all 62 touched production modules pass
+strict Pyright.
 Touched production files reached 100% statement and branch coverage across
-7,557 statements and 1,788 branches. Follow-up publication, online checks, and
+7,887 statements and 1,878 branches. Follow-up publication, online checks, and
 the fresh reviewer verdict are tracked on PR #214.
 
 The largest residual constraints are explicit: generated saved-kit SysEx writes

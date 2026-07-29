@@ -91,15 +91,14 @@ recordings are available.
 
 ## Current Local Verification
 
-- Focused A4/operator regression suite: 1,589 passed, 1 skipped.
-- Architecture: 703 passed.
-- Full suite: 6,792 passed, 3 skipped.
+- Focused touched-file A4/operator regression suite: 1,689 passed, 1 skipped.
+- Architecture: 704 passed.
+- Full suite: 6,804 passed, 3 skipped.
 - Ruff, Black, isort: clean.
-- Touched-file coverage: 100% across 7,557 statements and 1,788 branches.
-- V1.34 parity: 685 passed; Vulture, strict Pyright across all 60 touched
+- Touched-file coverage: 100% across 7,887 statements and 1,878 branches.
+- V1.34 parity: 685 passed; Vulture, strict Pyright across all 62 touched
   production modules, `git diff --check`, and the mechanical review gate
   passed.
-- The literal strict audit across all 113 touched Python paths reports 4,263
-  dynamic test-harness typing errors covered by the accepted scoped Gate 3
-  decision; production typing remains clean and mandatory.
+- Dynamic test-harness typing remains the accepted scoped Gate 3 debt;
+  production typing remains clean and mandatory.
 - Follow-up publication and online reviewer status are recorded on PR #214.

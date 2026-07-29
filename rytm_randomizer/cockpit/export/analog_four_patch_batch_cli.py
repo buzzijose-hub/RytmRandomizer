@@ -15,6 +15,7 @@ from .analog_four_export_contracts import (
     AnalogFourExportErrorCode,
     analog_four_export_error_code,
 )
+from .cli_options import pop_required_cli_value
 
 COMMAND_NAME: Final[str] = "analog-four-audio-patch-batch"
 DEFAULT_TRACK: Final[int] = A4_SYNTH_TRACK_MIN
@@ -195,12 +196,6 @@ def _export_analog_four_audio_patch_batch(
     )
 
 
-def _pop_batch_cli_value(remaining: list[str], option: str) -> str:
-    if not remaining:
-        raise ValueError(f"{option} requires a value")
-    return remaining.pop(0)
-
-
 def _bounded_integer(value: str, option: str, lower: int, upper: int) -> int:
     try:
         parsed = int(value)
@@ -234,21 +229,21 @@ def parse_analog_four_audio_patch_batch_args(
     while remaining:
         option = remaining.pop(0)
         if option == "--audio":
-            audio_path = Path(_pop_batch_cli_value(remaining, option))
+            audio_path = Path(pop_required_cli_value(remaining, option=option))
         elif option == "--source-kit":
-            source_kit_path = Path(_pop_batch_cli_value(remaining, option))
+            source_kit_path = Path(pop_required_cli_value(remaining, option=option))
         elif option == "--output-dir":
-            output_dir = Path(_pop_batch_cli_value(remaining, option))
+            output_dir = Path(pop_required_cli_value(remaining, option=option))
         elif option == "--track":
             track = _bounded_integer(
-                _pop_batch_cli_value(remaining, option),
+                pop_required_cli_value(remaining, option=option),
                 option,
                 MIN_TRACK,
                 MAX_TRACK,
             )
         elif option == "--candidates":
             candidate_count = _bounded_integer(
-                _pop_batch_cli_value(remaining, option),
+                pop_required_cli_value(remaining, option=option),
                 option,
                 MIN_CANDIDATE_COUNT,
                 MAX_CANDIDATE_COUNT,

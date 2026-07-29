@@ -381,8 +381,10 @@ def test_atomic_write_no_overwrite_cleanup_failure_keeps_published_file(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     import rytm_randomizer.cockpit.export.writer as writer_module
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
     dest = tmp_path / "out.bin"
+    reset_metrics()
     monkeypatch.setattr("sys.platform", "linux")
     warnings: list[tuple[str, dict[str, object]]] = []
 
@@ -402,6 +404,10 @@ def test_atomic_write_no_overwrite_cleanup_failure_keeps_published_file(
     assert len(list(tmp_path.iterdir())) == 2
     assert warnings[0][0] == "Atomic write temp cleanup failed after publication"
     assert warnings[0][1]["operation"] == "atomic_write_cleanup"
+    assert warnings[0][1]["outcome"] == "residue_retained"
+    assert warnings[0][1]["error_code"] == "temp_cleanup_failed"
+    assert warnings[0][1]["fingerprint"] == "export.write.temp_cleanup_failed"
+    assert get_metrics().errors_by_kind["atomic_write_temp_cleanup"] == 1
 
 
 def test_atomic_write_replace_failure_raises_write_error_and_cleans_temp(
