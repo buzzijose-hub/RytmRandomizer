@@ -817,6 +817,9 @@ _PARTS: Final[tuple[_ModulePart | _LiteralPart | _RawPart, ...]] = (
         relative_path="live_gui_performance_console_model.py",
         field_overrides=_CONSOLE_MODEL_FIELD_OVERRIDES,
     ),
+    # Schema-driven cockpit panels: the generic PanelSpec vocabulary every
+    # registry panel renders from (reports/panel_spec.py).
+    _ModulePart(relative_path="panel_spec.py"),
     _RawPart(text=_FOOTER),
 )
 
@@ -926,6 +929,17 @@ def _render_type(
             key = _render_type(key_node, names, aliases, context)
             value = _render_type(value_node, names, aliases, context)
             return f"Readonly<Record<{key}, {value}>>"
+        if base == "Literal":
+            members = node.slice.elts if isinstance(node.slice, ast.Tuple) else (node.slice,)
+            rendered: list[str] = []
+            for member in members:
+                if not isinstance(member, ast.Constant) or not isinstance(member.value, str):
+                    raise ValueError(
+                        f"{context}: only string Literal members are supported, "
+                        f"got {ast.unparse(member)!r}"
+                    )
+                rendered.append(f"'{member.value}'")
+            return " | ".join(rendered)
     raise ValueError(f"{context}: unsupported annotation {ast.unparse(node)!r}")
 
 

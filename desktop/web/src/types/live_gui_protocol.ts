@@ -1166,6 +1166,35 @@ export interface LiveGuiPerformanceConsoleModelDict {
   replay_commands: ReadonlyArray<string>;
 }
 
+export interface BadgeDict {
+  label: string;
+  tone: 'ok' | 'warn' | 'risk' | 'neutral';
+  icon: string;
+}
+
+export interface TableDict {
+  columns: ReadonlyArray<string>;
+  rows: ReadonlyArray<ReadonlyArray<string>>;
+}
+
+export interface PanelSectionDict {
+  heading: string;
+  kind: 'rows' | 'table' | 'chips';
+  rows: ReadonlyArray<string>;
+  table: TableDict | null;
+  chips: ReadonlyArray<string>;
+}
+
+export interface PanelSpecDict {
+  panel_id: string;
+  title: string;
+  status_badges: ReadonlyArray<BadgeDict>;
+  sections: ReadonlyArray<PanelSectionDict>;
+  required_actions: ReadonlyArray<string>;
+  blocked_actions: ReadonlyArray<string>;
+  safety_lines: ReadonlyArray<string>;
+}
+
 export interface LiveReadinessModel {
   pad_surface: LiveGuiRytmTwelvePadSurfaceModelDict;
   device_inventory: LiveGuiDeviceInventoryModelDict;

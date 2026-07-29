@@ -21,6 +21,7 @@ codebase. Humans can use them too.
 - [Recipe 8 — Fix a coverage-ratchet CI failure](#recipe-8--fix-a-coverage-ratchet-ci-failure)
 - [Recipe 9 — Run the pre-PR verification gate cleanly](#recipe-9--run-the-pre-pr-verification-gate-cleanly)
 - [Recipe 10 — Open a PR end-to-end (no human intervention)](#recipe-10--open-a-pr-end-to-end-no-human-intervention)
+- [Recipe 11 — Add a schema-driven cockpit panel](#recipe-11--add-a-schema-driven-cockpit-panel)
 
 ---
 
@@ -396,6 +397,31 @@ All four must pass. If any fail, fix the cause (don't bypass with `--no-verify` 
 - **Do not open a stacked PR** (one whose base is another open PR's head). Bundle multi-workstream work into one PR via `git merge --no-ff`. See cascade-merge-pattern rule.
 - **Do not omit gates from the PR body.** Mark each `[x]` or `[ ] N/A — <reason>`. Enforced by reviewer discipline + `.claude/rules/pr-body-conformance-checklist.md`.
 - **Do not pause after every step.** "I've pushed the branch; should I open the PR?" is wrong if the user asked for the PR to be opened. Continue. Only stop for genuinely irreversible actions (force-push to main, bumping pinned deps, etc.).
+
+---
+
+## Recipe 11 — Add a schema-driven cockpit panel
+
+**When:** any new operator-facing UI element in the cockpit web frontend (`desktop/web`). New panels are data, not bespoke React components.
+**Skill:** invoke `/add-cockpit-panel` — it carries the full recipe plus the per-panel accessibility acceptance checklist.
+
+### Steps (summary — the skill is authoritative)
+
+1. **Model the panel as a `PanelSpecDict`** using the builders in `rytm_randomizer/reports/panel_spec.py` (`badge`, `rows_section`, `table_section`, `chips_section`, `panel_spec`). If a `reports.core.ReportSpec` already exists, bridge it with `panel_spec_from_report_spec()` so one spec feeds both the passive text report and the cockpit panel.
+2. **If the TypedDict vocabulary changed**, extend `scripts/generate_live_gui_protocol_ts.py` and regenerate:
+   ```bash
+   .venv/bin/python scripts/generate_live_gui_protocol_ts.py --fixture
+   ```
+   (`tests/architecture/test_live_gui_protocol_is_generated.py` pins the `.ts` file and JSON fixture byte-for-byte.)
+3. **Write a pure selector** `(console packet) -> PanelSpecDict` in `desktop/web/src/cockpit/panels/<name>Panel.ts`.
+4. **Add one registry entry** in `desktop/web/src/cockpit/panels/registry.ts` (`id`, `region`, `selector`, `component: PanelRenderer`). The region's `PanelHost` renders it automatically.
+5. **Test** in `desktop/web/tests/cockpit/panels/<name>Panel.test.tsx` against the committed `performance_console.json` fixture; keep cockpit coverage at 100%.
+
+### Common pitfalls
+- Don't hand-edit `desktop/web/src/types/live_gui_protocol.ts` — it is generated output.
+- Don't add bespoke `<section>` JSX to `PerformanceConsole.tsx` — the analyzer panel conversion (`panels/analyzerPanel.ts`) is the reference for going through the registry instead.
+- Don't ship a badge tone without an icon glyph — tones are icon + text, never hue alone.
+- Panels are passive: no sends, no port opens, blocked actions render as disabled buttons.
 
 ---
 
