@@ -114,6 +114,31 @@ python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report KITS.syx --s
 
 ---
 
+## Analog Rytm — scoped randomization + kit morphing (preview)
+
+The competitive-parity mask+intensity and morph surfaces, guardrailed as
+**passive previews**. Each renders a deterministic plan (no RNG) the operator
+can audit and then arm-and-send through the `senders` ArmedApply seam; neither
+command reaches a transmit path.
+
+| Command | Purpose |
+| --- | --- |
+| `scoped-randomization-preview [--json]` | Deterministic **ScopeMask + depth macro** preview: choose which of the 12 pads and which parameter groups (`src`/`filter`/`amp`/…) move, anchored on the current kit, from a single depth macro (0..1). Renders the per-parameter delta plan. |
+| `kit-morph-preview [--json]` | Deterministic **kit morph** preview: interpolate a source kit toward a target — linear on continuous params, threshold on discrete selectors — at a morph amount (0..1). Renders the per-parameter interpolation plan. |
+
+```bash
+python -m rytm_randomizer.cli scoped-randomization-preview
+python -m rytm_randomizer.cli scoped-randomization-preview --json
+python -m rytm_randomizer.cli kit-morph-preview
+python -m rytm_randomizer.cli kit-morph-preview --json
+```
+
+The interactive versions (a per-track/per-group mask grid + depth slider, and a
+morph-amount slider strip) live in the cockpit's schema-driven panels; the CLI
+surface renders the canonical demonstration plan.
+
+---
+
 ## Analog Rytm — style routing + mutation planning
 
 ```bash

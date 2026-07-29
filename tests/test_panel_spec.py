@@ -22,6 +22,7 @@ from rytm_randomizer.reports.panel_spec import (
     chips_section,
     panel_spec,
     panel_spec_from_report_spec,
+    readiness_badges,
     rows_section,
     table_section,
 )
@@ -279,6 +280,16 @@ def test_panel_spec_from_report_spec_overrides() -> None:
     assert built["status_badges"] == [{"label": "ready", "tone": "ok", "icon": "+"}]
     assert built["required_actions"] == ["review"]
     assert built["blocked_actions"] == ["send-midi"]
+
+
+def test_readiness_badges_ready() -> None:
+    badges = readiness_badges(True, "ignored when ready")
+    assert badges == ({"label": "ready", "tone": "ok", "icon": "✓"},)
+
+
+def test_readiness_badges_not_ready_carries_reason() -> None:
+    badges = readiness_badges(False, "no tracks selected")
+    assert badges == ({"label": "no tracks selected", "tone": "warn", "icon": "!"},)
 
 
 def test_panel_spec_from_report_spec_shares_section_content_with_report_lines() -> None:

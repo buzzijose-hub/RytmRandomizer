@@ -45,6 +45,20 @@ html,
   height: 100%;
 }
 
+/* ---------- Global focus indicator (WCAG 2.4.7 / 2.4.13) ----------
+   Every keyboard-focusable element gets a visible ring by default. Components
+   that render a bespoke inset focus treatment (performance-console rows,
+   patch-genome family buttons) set `outline: none` on their own more-specific
+   `:focus-visible` selectors, so this base rule is a safety net for buttons,
+   links, native range/select/checkbox controls, and any role=slider/tab/button
+   that would otherwise fall back to the (weak, dark-theme-invisible) UA ring.
+   `--accent` (#58a6ff) on `--bg` clears 3:1 for a non-text indicator. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
 /* ---------- Top-level layout ---------- */
 
 .cockpit-root {

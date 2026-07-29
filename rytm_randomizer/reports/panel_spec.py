@@ -98,6 +98,20 @@ def badge(
     return {"label": require_nonblank(label, "label"), "tone": tone, "icon": icon}
 
 
+def readiness_badges(ready: bool, reason: str) -> tuple[BadgeDict, ...]:
+    """Return the one-badge readiness signal for a plan-shaped surface.
+
+    A ready plan renders an ``ok`` "ready" badge; a not-ready plan renders a
+    ``warn`` badge carrying ``reason``. Shared so preview panels (scope, morph,
+    and future plan surfaces) do not each re-roll the same badge tuple — the
+    icon+text tone contract is applied once here.
+    """
+
+    if ready:
+        return (badge("ready", tone="ok", icon="✓"),)
+    return (badge(reason, tone="warn", icon="!"),)
+
+
 def rows_section(heading: str, rows: tuple[str, ...] = ()) -> PanelSectionDict:
     """Return a bullet-row section (the ``reports.core`` section shape)."""
 
@@ -220,6 +234,7 @@ __all__ = (
     "chips_section",
     "panel_spec",
     "panel_spec_from_report_spec",
+    "readiness_badges",
     "rows_section",
     "table_section",
 )

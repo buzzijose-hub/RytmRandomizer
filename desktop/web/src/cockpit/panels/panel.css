@@ -166,6 +166,53 @@
   font-size: 11px;
 }
 
+/* Mask toggle buttons (scoped randomization): aria-pressed buttons, never
+   div/span onClick. The pressed state is reinforced with text + border, not
+   hue alone. */
+.cockpit-mask-toggle[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--panel);
+}
+
+.cockpit-mask-toggle[aria-pressed='false'] {
+  color: var(--text-dim);
+}
+
+.cockpit-panel-fieldset {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px 8px;
+  margin: 0;
+  min-width: 0;
+}
+
+.cockpit-panel-fieldset legend {
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0 4px;
+}
+
+.cockpit-panel-toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cockpit-panel-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 180px;
+}
+
+.cockpit-panel-slider input[type='range'] {
+  width: 100%;
+}
+
 /* The activity dot flashes by class toggle only — no CSS animation, so
    prefers-reduced-motion needs no override here. */
 .midi-activity-dot {

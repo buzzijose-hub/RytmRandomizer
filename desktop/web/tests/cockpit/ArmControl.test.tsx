@@ -126,6 +126,73 @@ describe('ArmControl', () => {
     await waitFor(() => expect(fake.sent).toHaveLength(1));
   });
 
+  it('renders the arm rejection inside the dialog as a role=alert', async () => {
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionMock);
+    });
+    const fake = new FakeCockpitClient();
+    fake.ackQueue.push({ request_id: 'r1', ok: false, message: 'bad token' });
+    renderArmControl(fake);
+
+    fireEvent.click(screen.getByTestId('arm-open-button'));
+    fireEvent.change(screen.getByTestId('arm-token-input'), { target: { value: 'x' } });
+    fireEvent.click(screen.getByTestId('arm-confirm-button'));
+
+    const alert = await screen.findByTestId('arm-dialog-error');
+    expect(alert).toHaveAttribute('role', 'alert');
+    expect(alert).toHaveTextContent('bad token');
+    // Dialog stays open so the operator can retry; error is visible within it.
+    expect(screen.getByTestId('arm-dialog')).toBeInTheDocument();
+  });
+
+  it('traps Tab focus inside the dialog (forward + reverse wrap), no-op mid-list', () => {
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionMock);
+    });
+    const fake = new FakeCockpitClient();
+    renderArmControl(fake);
+    fireEvent.click(screen.getByTestId('arm-open-button'));
+    const dialog = screen.getByTestId('arm-dialog');
+    const tokenInput = screen.getByTestId('arm-token-input');
+    const cancel = screen.getByTestId('arm-cancel-button');
+
+    // Focusables (token empty → confirm disabled, so it's excluded):
+    // [token input, cancel button]. First=token, last=cancel.
+
+    // Shift+Tab on the first element wraps to the last.
+    tokenInput.focus();
+    fireEvent.keyDown(dialog, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(cancel);
+
+    // Tab on the last element wraps to the first.
+    cancel.focus();
+    fireEvent.keyDown(dialog, { key: 'Tab' });
+    expect(document.activeElement).toBe(tokenInput);
+
+    // Tab in the middle / on a non-boundary element is a no-op (default flow).
+    tokenInput.focus();
+    fireEvent.keyDown(dialog, { key: 'Tab' });
+    expect(document.activeElement).toBe(tokenInput);
+  });
+
+  it('the focus trap no-ops when the dialog momentarily has no focusable children', () => {
+    // Guard the `focusable.length === 0` branch. The real dialog always has
+    // children, so drive trapFocus against a synthetic empty container via a
+    // Tab keydown on an emptied dialog clone.
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionMock);
+    });
+    const fake = new FakeCockpitClient();
+    renderArmControl(fake);
+    fireEvent.click(screen.getByTestId('arm-open-button'));
+    const dialog = screen.getByTestId('arm-dialog');
+    // Strip every focusable child, then Tab: the early return keeps focus put.
+    dialog.querySelectorAll('button, input').forEach((el) => el.remove());
+    const before = document.activeElement;
+    fireEvent.keyDown(dialog, { key: 'Tab' });
+    expect(document.activeElement).toBe(before);
+  });
+
   it('surfaces a rejected disarm ack (message and fallback) and a send failure', async () => {
     act(() => {
       useCockpitStore.getState().setSessionStatus(sessionLive);

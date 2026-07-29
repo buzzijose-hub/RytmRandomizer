@@ -283,7 +283,9 @@ USAGE = (
     "<label>] [--unsigned] [--overwrite] [--json] | cockpit-export-rehearsal-report "
     "--profile-id <id> --profiles-dir <path> [--key-id <label>] [--unsigned] [--output "
     "<path>] [--label <text>] [--json] | manual-feedback-packet-report [--scenario "
-    "full|installer|profile|mock|hardware|review] [--json] | search-commands <query> | "
+    "full|installer|profile|mock|hardware|review] [--json] | "
+    "scoped-randomization-preview [--json] | kit-morph-preview [--json] | "
+    "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | preview-command <key> | "
     "preview-scene <key> | preview-group-profile <key>"
 )
@@ -320,6 +322,46 @@ Usage:
 
 Behavior:
   Prints the passive Analog Rytm MKII OS 1.72 MIDI CC/NRPN catalog report.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _scoped_randomization_preview_help():
+    from .reports.scoped_randomization_preview import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: scoped-randomization-preview
+
+Usage:
+  python -m rytm_randomizer.cli scoped-randomization-preview
+  python -m rytm_randomizer.cli scoped-randomization-preview --json
+  python -m rytm_randomizer.cli scoped-randomization-preview --help
+
+Behavior:
+  Prints a deterministic scoped-randomization preview: a ScopeMask (which
+  pads, which parameter groups) plus a single depth macro (0..1) over the
+  built-in V1.34 profile registry, rendering the per-parameter delta plan.
+  Preview only -- arm-and-send through the senders ArmedApply seam.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _kit_morph_preview_help():
+    from .reports.kit_morph_preview import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: kit-morph-preview
+
+Usage:
+  python -m rytm_randomizer.cli kit-morph-preview
+  python -m rytm_randomizer.cli kit-morph-preview --json
+  python -m rytm_randomizer.cli kit-morph-preview --help
+
+Behavior:
+  Prints a deterministic kit-morph preview: interpolate a source kit toward a
+  target (linear on continuous params, threshold on discrete selectors) at a
+  morph amount (0..1), rendering the per-parameter interpolation plan.
+  Preview only -- arm-and-send through the senders ArmedApply seam.
 
 Safety:
 {_safety_block(SAFETY_LINES)}"""
@@ -3074,6 +3116,8 @@ Safety:
   no hardware required""",
     "rytm-snapshot-pad-compatibility-report": _rytm_snapshot_pad_compatibility_report_help,
     "analog-rytm-midi-catalog-report": _analog_rytm_midi_catalog_report_help,
+    "scoped-randomization-preview": _scoped_randomization_preview_help,
+    "kit-morph-preview": _kit_morph_preview_help,
     "rytm-outbound-cc-repeatability-report": """RytmRandomizer passive CLI: rytm-outbound-cc-repeatability-report
 
 Usage:

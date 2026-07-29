@@ -1,0 +1,47 @@
+{
+  "cli_name": "scoped-randomization-preview",
+  "safety": [
+    "passive/read-only",
+    "preview plan only",
+    "no MIDI sending",
+    "no port opening",
+    "arm-and-send via the senders ArmedApply seam",
+    "no hardware required"
+  ],
+  "sections": {
+    "Mask": [
+      "depth 0.50; groups ['filter', 'src']; tracks [1, 2]",
+      "ready: True (ready)",
+      "total params moved: 21"
+    ],
+    "Per-track deltas": [
+      "Pad 1 (My BD Sharp): 10 params moved",
+      "  src/SRC Tune: 59 -> 61 (+2)",
+      "  src/SRC Decay: 58 -> 64 (+6)",
+      "  src/SRC Sweep Depth: 93 -> 84 (-9)",
+      "  src/SRC Sweep Time: 81 -> 91 (+10)",
+      "  src/SRC Hold Time: 40 -> 49 (+9)",
+      "  src/SRC Tick Level: 127 -> 116 (-11)",
+      "  filter/FLT Decay: 35 -> 45 (+10)",
+      "  filter/FLT Frequency: 23 -> 29 (+6)",
+      "  filter/FLT Resonance: 77 -> 73 (-4)",
+      "  filter/FLT Env Depth: 64 -> 68 (+4)",
+      "Pad 2 (BD FM Metallic Kick): 11 params moved",
+      "  src/SRC Tune: 60 -> 62 (+2)",
+      "  src/SRC Sweep Time: 82 -> 97 (+15)",
+      "  src/SRC FM Decay: 38 -> 58 (+20)",
+      "  src/SRC Decay: 56 -> 66 (+10)",
+      "  src/SRC FM Tune: 68 -> 82 (+14)",
+      "  src/SRC FM Amount: 44 -> 66 (+22)",
+      "  src/SRC Tick Level: 88 -> 72 (-16)",
+      "  filter/FLT Decay: 58 -> 69 (+11)",
+      "  filter/FLT Frequency: 28 -> 33 (+5)",
+      "  filter/FLT Resonance: 58 -> 67 (+9)",
+      "  filter/FLT Env Depth: 63 -> 67 (+4)"
+    ]
+  },
+  "source_module": "reports.scoped_randomization_preview",
+  "summary": "Deterministic ScopeMask + depth-macro randomization preview (passive).",
+  "title": "RytmRandomizer scoped-randomization preview",
+  "version": "scope-preview-v1"
+}

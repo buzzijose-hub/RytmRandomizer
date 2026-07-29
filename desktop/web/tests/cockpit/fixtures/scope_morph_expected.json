@@ -1,0 +1,259 @@
+{
+  "morph": {
+    "amount": 0.5,
+    "readinessReason": "ready",
+    "ready": true,
+    "totalMoved": 7,
+    "tracks": [
+      {
+        "movedCount": 7,
+        "params": [
+          {
+            "discrete": false,
+            "group": "src",
+            "interpolated": 58,
+            "moved": true,
+            "name": "SRC Tune",
+            "source": 59,
+            "target": 58
+          },
+          {
+            "discrete": false,
+            "group": "src",
+            "interpolated": 56,
+            "moved": true,
+            "name": "SRC Decay",
+            "source": 58,
+            "target": 53
+          },
+          {
+            "discrete": false,
+            "group": "src",
+            "interpolated": 62,
+            "moved": true,
+            "name": "SRC Sweep Depth",
+            "source": 93,
+            "target": 32
+          },
+          {
+            "discrete": false,
+            "group": "src",
+            "interpolated": 74,
+            "moved": true,
+            "name": "SRC Sweep Time",
+            "source": 81,
+            "target": 68
+          },
+          {
+            "discrete": false,
+            "group": "filter",
+            "interpolated": 50,
+            "moved": true,
+            "name": "FLT Decay",
+            "source": 35,
+            "target": 64
+          },
+          {
+            "discrete": false,
+            "group": "filter",
+            "interpolated": 24,
+            "moved": true,
+            "name": "FLT Frequency",
+            "source": 23,
+            "target": 25
+          },
+          {
+            "discrete": false,
+            "group": "filter",
+            "interpolated": 52,
+            "moved": true,
+            "name": "FLT Resonance",
+            "source": 77,
+            "target": 26
+          },
+          {
+            "discrete": false,
+            "group": "filter",
+            "interpolated": 64,
+            "moved": false,
+            "name": "FLT Env Depth",
+            "source": 64,
+            "target": 64
+          }
+        ],
+        "track": 1,
+        "unmatched": [
+          "SRC Hold Time",
+          "SRC Tick Level"
+        ]
+      }
+    ]
+  },
+  "scope": {
+    "depth": 0.5,
+    "readinessReason": "ready",
+    "ready": true,
+    "totalChanged": 21,
+    "tracks": [
+      {
+        "changedCount": 10,
+        "deltas": [
+          {
+            "anchor": 59,
+            "delta": 2,
+            "group": "src",
+            "name": "SRC Tune",
+            "planned": 61
+          },
+          {
+            "anchor": 58,
+            "delta": 6,
+            "group": "src",
+            "name": "SRC Decay",
+            "planned": 64
+          },
+          {
+            "anchor": 93,
+            "delta": -9,
+            "group": "src",
+            "name": "SRC Sweep Depth",
+            "planned": 84
+          },
+          {
+            "anchor": 81,
+            "delta": 10,
+            "group": "src",
+            "name": "SRC Sweep Time",
+            "planned": 91
+          },
+          {
+            "anchor": 40,
+            "delta": 9,
+            "group": "src",
+            "name": "SRC Hold Time",
+            "planned": 49
+          },
+          {
+            "anchor": 127,
+            "delta": -11,
+            "group": "src",
+            "name": "SRC Tick Level",
+            "planned": 116
+          },
+          {
+            "anchor": 35,
+            "delta": 10,
+            "group": "filter",
+            "name": "FLT Decay",
+            "planned": 45
+          },
+          {
+            "anchor": 23,
+            "delta": 6,
+            "group": "filter",
+            "name": "FLT Frequency",
+            "planned": 29
+          },
+          {
+            "anchor": 77,
+            "delta": -4,
+            "group": "filter",
+            "name": "FLT Resonance",
+            "planned": 73
+          },
+          {
+            "anchor": 64,
+            "delta": 4,
+            "group": "filter",
+            "name": "FLT Env Depth",
+            "planned": 68
+          }
+        ],
+        "track": 1
+      },
+      {
+        "changedCount": 11,
+        "deltas": [
+          {
+            "anchor": 60,
+            "delta": 2,
+            "group": "src",
+            "name": "SRC Tune",
+            "planned": 62
+          },
+          {
+            "anchor": 82,
+            "delta": 15,
+            "group": "src",
+            "name": "SRC Sweep Time",
+            "planned": 97
+          },
+          {
+            "anchor": 38,
+            "delta": 20,
+            "group": "src",
+            "name": "SRC FM Decay",
+            "planned": 58
+          },
+          {
+            "anchor": 56,
+            "delta": 10,
+            "group": "src",
+            "name": "SRC Decay",
+            "planned": 66
+          },
+          {
+            "anchor": 68,
+            "delta": 14,
+            "group": "src",
+            "name": "SRC FM Tune",
+            "planned": 82
+          },
+          {
+            "anchor": 44,
+            "delta": 22,
+            "group": "src",
+            "name": "SRC FM Amount",
+            "planned": 66
+          },
+          {
+            "anchor": 88,
+            "delta": -16,
+            "group": "src",
+            "name": "SRC Tick Level",
+            "planned": 72
+          },
+          {
+            "anchor": 58,
+            "delta": 11,
+            "group": "filter",
+            "name": "FLT Decay",
+            "planned": 69
+          },
+          {
+            "anchor": 28,
+            "delta": 5,
+            "group": "filter",
+            "name": "FLT Frequency",
+            "planned": 33
+          },
+          {
+            "anchor": 58,
+            "delta": 9,
+            "group": "filter",
+            "name": "FLT Resonance",
+            "planned": 67
+          },
+          {
+            "anchor": 63,
+            "delta": 4,
+            "group": "filter",
+            "name": "FLT Env Depth",
+            "planned": 67
+          }
+        ],
+        "track": 2
+      }
+    ]
+  }
+}

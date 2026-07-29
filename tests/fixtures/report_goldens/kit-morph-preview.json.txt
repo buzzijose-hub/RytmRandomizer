@@ -1,0 +1,34 @@
+{
+  "cli_name": "kit-morph-preview",
+  "safety": [
+    "passive/read-only",
+    "preview plan only",
+    "no MIDI sending",
+    "no port opening",
+    "arm-and-send via the senders ArmedApply seam",
+    "no hardware required"
+  ],
+  "sections": {
+    "Morph": [
+      "amount 0.50; groups ['filter', 'src']",
+      "ready: True (ready)",
+      "total params moved: 7"
+    ],
+    "Per-track interpolation": [
+      "Pad 1 (My BD Sharp -> My BD Classic): 7 params moved",
+      "  src/SRC Tune [linear]: 59 -> 58 = 58",
+      "  src/SRC Decay [linear]: 58 -> 53 = 56",
+      "  src/SRC Sweep Depth [linear]: 93 -> 32 = 62",
+      "  src/SRC Sweep Time [linear]: 81 -> 68 = 74",
+      "  filter/FLT Decay [linear]: 35 -> 64 = 50",
+      "  filter/FLT Frequency [linear]: 23 -> 25 = 24",
+      "  filter/FLT Resonance [linear]: 77 -> 26 = 52",
+      "  filter/FLT Env Depth [linear]: 64 -> 64 = 64",
+      "  unmatched (not morphed): SRC Hold Time, SRC Tick Level"
+    ]
+  },
+  "source_module": "reports.kit_morph_preview",
+  "summary": "Deterministic source->target kit-morph interpolation preview (passive).",
+  "title": "RytmRandomizer kit-morph preview",
+  "version": "morph-preview-v1"
+}

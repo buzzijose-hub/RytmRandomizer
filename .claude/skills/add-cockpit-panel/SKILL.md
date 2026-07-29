@@ -68,7 +68,7 @@ New cockpit UI elements are **data, not components**. The platform pieces:
 .venv/bin/python -m pytest tests/test_panel_spec.py tests/architecture/ -q
 .venv/bin/python -m ruff check . && .venv/bin/python -m black --check --target-version=py311 . \
   && .venv/bin/python -m isort --profile black --check-only .
-cd desktop/web && npm run typecheck && npm run lint && npx vitest run --coverage
+cd desktop/web && npm run typecheck && npm run lint && npm run test:a11y && npx vitest run --coverage
 ```
 
 ## Per-panel accessibility acceptance checklist
@@ -95,6 +95,26 @@ Every panel must satisfy ALL of these before it ships (the generic
 - [ ] **No redundant roles** on semantic elements
       (`test_a11y_no_role_attribute_redundancy.py`), and decorative glyphs
       are `aria-hidden="true"`.
+- [ ] **Axe gate.** The panel passes the WCAG 2.2 AA axe-core scan with
+      **zero** violations. Add one case to
+      `desktop/web/tests/a11y/cockpit_axe_audit.test.tsx` (floor 0) that
+      renders the panel and asserts `runAxe(container)` is clean. This is the
+      PR-blocking `npm run test:a11y` step in the `desktop-web` CI job. Never
+      add a non-zero floor without a dated debt note and a fix owner.
+- [ ] **Focus visible.** Any custom-focusable element the panel introduces
+      keeps the global `:focus-visible` ring (`--accent`, 3:1 on `--bg`) or
+      supplies its own visible indicator — never `outline: none` without a
+      replacement (SC 2.4.7 / 2.4.13).
+- [ ] **Custom controls follow the APG pattern.** A read-only value display
+      uses `role="img"`/`role="meter"` with an `aria-label` (not
+      `role="slider"`); an *interactive* value control uses a native range /
+      `role="slider"` with `aria-valuenow` + a human `aria-valuetext`, Arrow /
+      Home / End keys, and a ≥24px target (SC 2.5.8). See `DepthSlider.tsx`
+      (interactive) and `Knob.tsx` (read-only) as the two reference shapes.
+- [ ] **Criticals are assertive.** Arm / fault / rejection messages the
+      operator must not miss use `role="alert"` (a second, assertive channel
+      alongside the polite announcer) — see `ArmControl.tsx`. Routine status
+      still goes through the shared polite announcer.
 
 ## Hard boundaries
 

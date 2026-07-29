@@ -310,7 +310,9 @@ USAGE = (
     "<label>] [--unsigned] [--overwrite] [--json] | cockpit-export-rehearsal-report "
     "--profile-id <id> --profiles-dir <path> [--key-id <label>] [--unsigned] [--output "
     "<path>] [--label <text>] [--json] | manual-feedback-packet-report [--scenario "
-    "full|installer|profile|mock|hardware|review] [--json] | search-commands <query> | "
+    "full|installer|profile|mock|hardware|review] [--json] | "
+    "scoped-randomization-preview [--json] | kit-morph-preview [--json] | "
+    "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | preview-command <key> | "
     "preview-scene <key> | preview-group-profile <key>"
 )

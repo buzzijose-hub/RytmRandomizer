@@ -32,8 +32,10 @@ import { HeaderBar } from './HeaderBar';
 import { LiveReadinessPanel } from './LiveReadinessPanel';
 import { MutationPanel } from './MutationPanel';
 import { ConnectionDoctorPanel } from './panels/ConnectionDoctorPanel';
+import { KitMorphPanel } from './panels/KitMorphPanel';
 import { LibraryPanel } from './panels/LibraryPanel';
 import { LiveMidiMonitorPanel } from './panels/LiveMidiMonitorPanel';
+import { ScopedRandomizationPanel } from './panels/ScopedRandomizationPanel';
 import { PatchGenomePanel } from './PatchGenomePanel';
 import { SafetyRail } from './SafetyRail';
 import { SnapshotPanel } from './SnapshotPanel';
@@ -96,6 +98,8 @@ export function Cockpit({
           <LiveMidiMonitorPanel />
           <ConnectionDoctorPanel />
           <LibraryPanel />
+          <ScopedRandomizationPanel />
+          <KitMorphPanel />
         </div>
       </main>
     </CockpitClientProvider>

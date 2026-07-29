@@ -570,6 +570,16 @@ jobs:
       - name: TypeScript check
         run: npm run typecheck
 
+      # WCAG 2.2 AA gate (PR-blocking). Runs the axe-core component/panel
+      # audit + per-control a11y assertions under jsdom as a dedicated,
+      # clearly-named check so an accessibility regression fails fast and
+      # is greppable in the CI log — before the (slower) full coverage run.
+      # Colour-contrast is verified separately in real Chromium by the
+      # desktop-web-e2e `a11y_axe_scan.spec` and by the CSS-token
+      # architecture test `test_a11y_color_palette_aa.py`.
+      - name: Accessibility axe gate (WCAG 2.2 AA)
+        run: npm run test:a11y
+
       # Run Vitest under the 100% branch/line/function/statement coverage
       # gate configured in desktop/web/vite.config.ts. The previous
       # `npm run test:run` invocation skipped --coverage entirely, so the

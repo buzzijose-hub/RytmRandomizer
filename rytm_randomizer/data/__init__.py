@@ -86,6 +86,7 @@ from .manual_feedback_packet import (
     MANUAL_FEEDBACK_STEPS,
     MANUAL_FEEDBACK_STEPS_BY_KEY,
 )
+from .morph_scope_params import DISCRETE_PARAM_NAMES
 from .param_maps import (
     BD_ACOUSTIC_DELTAS,
     BD_ACOUSTIC_ORDER,
@@ -200,6 +201,7 @@ from .style_profiles import STYLE_PROFILES
 from .style_targets import STYLE_TARGET_VECTOR_AXES, STYLE_TARGET_VECTORS
 
 __all__ = [
+    "DISCRETE_PARAM_NAMES",
     "ANALOG_FOUR_SYNTH_TRACK_CC",
     "ANALOG_FOUR_SYNTH_TRACK_CC_BY_MSB",
     "ANALOG_FOUR_SYNTH_TRACK_NRPN",

@@ -48,6 +48,14 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.analog_rytm_midi_catalog",
             "ANALOG_RYTM_MIDI_CATALOG_CLI_COMMAND",
         ),
+        "scoped-randomization-preview": (
+            "rytm_randomizer.reports.scoped_randomization_preview",
+            "SCOPED_RANDOMIZATION_PREVIEW_CLI_COMMAND",
+        ),
+        "kit-morph-preview": (
+            "rytm_randomizer.reports.kit_morph_preview",
+            "KIT_MORPH_PREVIEW_CLI_COMMAND",
+        ),
         "rytm-snapshot-intelligence-report": (
             "rytm_randomizer.reports.rytm_snapshot_intelligence",
             "RYTM_SNAPSHOT_INTELLIGENCE_CLI_COMMAND",
