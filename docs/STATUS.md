@@ -1,28 +1,63 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-07-28. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-07-29. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
-- 2026-07-28: Live-GUI paper-spec retirement executed (maintainer-approved
-  Decision Gate ③; evidence + execution record in
-  `docs/superpowers/plans/2026-07-20-live-gui-retirement-evidence.md`). 18
-  passive paper-spec report modules were deleted — the 12 approved `live_gui_*`
-  desktop/harness specs, the 2 `controller_brain_live_desktop_*` re-stamps, and
-  4 audit-passed widening candidates (`live_gui_cockpit_boundary_readiness` +
-  the remaining `controller_brain_live_desktop_{component_contract,view_model,
-  render_contract}` chain) — together with their 18 test files, CLI/help
-  registrations, `docs/CLI_REFERENCE.md` rows, and the never-registered
-  `live-gui-safety-checklist-model-report` replay wiring (module kept). The two
-  kept pinning commands stay byte-frozen: `…analyzer-overlay-report` now sources
-  its screen-contract/render-tree builders from the verbatim-relocated
-  `reports/live_gui_overlay/` support subpackage, and `…action-reducer-report`
-  carries the interaction-script builders inlined verbatim; frozen-clock CLI
-  runs verified byte-identical output across text/JSON/option/error paths.
-  Net effect: 50 files deleted, ~46,300 lines removed vs ~6,800 retained
-  (relocated builders + regenerated fixtures); every `live_gui_*_model` packet
-  feeder, `live_gui_common`, and the performance-console runtime path are
-  untouched.
+- 2026-07-29: Rival-program bundle executed on the `rival-program`
+  integration branch (plan:
+  `docs/superpowers/plans/2026-07-18-rival-program.md`; 18 commits over base
+  `9978231`, one bundle PR per the cascade-merge rule). What landed, by
+  workstream:
+  - **Guardrail suite (WS-0/WS-1):** repo-root perimeter test (top-level
+    directory allowlist + repo-wide `mido`/`rtmidi` import scan),
+    armed-entry-point transmit whitelist, report-shape censuses,
+    declarative import-direction matrix, data-layer drift guard, and a
+    full-stdout golden net over the passive CLI command surface
+    (`tests/fixtures/report_goldens/`).
+  - **Paper-spec retirement (WS-1, maintainer-approved Decision Gate ③;
+    evidence + execution record in
+    `docs/superpowers/plans/2026-07-20-live-gui-retirement-evidence.md`):
+    18 passive paper-spec report modules deleted — the 12 approved
+    `live_gui_*` desktop/harness specs, the 2
+    `controller_brain_live_desktop_*` re-stamps, and 4 audit-passed
+    widening candidates — with their 18 test files, CLI/help
+    registrations, and `docs/CLI_REFERENCE.md` rows. The retirement
+    commit is 74 files, +1,349/−38,949 (net −37.6k lines). The two kept
+    pinning commands (`…analyzer-overlay-report`,
+    `…action-reducer-report`) were verified byte-identical across
+    text/JSON/option/error paths; every `live_gui_*_model` packet feeder,
+    `live_gui_common`, and the performance-console runtime path are
+    untouched.
+  - **Platforms (WS-2/WS-3):** ReportSpec core + shared
+    fingerprint/validator/option helpers; schema-driven PanelSpec panel
+    platform + registry + the `/add-cockpit-panel` skill;
+    `desktop/web/src/types/live_gui_protocol.ts` is now GENERATED from
+    the Python TypedDicts (with a console test fixture).
+  - **Live-but-Passive runtime (WS-4/5/6):** push-capable WS transport
+    (per-connection queues, reader/writer split); `ConnectionManager`
+    launch brain (`disconnected → searching → listening`, input-only
+    opens); the `senders/armed_apply.py` ArmedApply seam with an explicit
+    in-UI arm + confirmation; live MIDI monitor
+    (`cockpit/device/midi_monitor.py`); Connection Doctor + error journal
+    + `/health` (`cockpit/diagnostics.py`); sound library store
+    (`cockpit/library/store.py`).
+  - **Launch experience (WS-7):** double-click launch — bundled sidecar,
+    spawn-failure dialogs, dynamic port via `RYTM_RAND_WS_PORT`, a CI
+    launch-smoke job, and the `RYTM_RAND_MIDI_BACKEND=off` kill switch.
+  - **Accessibility + parity features (WS-8/WS-9):** WCAG 2.2 AA
+    axe gate on every route (0 violations, 44 a11y tests) with
+    `docs/ACCESSIBILITY.md`; kit morphing + scoped randomization
+    (`behavior/morph.py`, `behavior/scope.py` — passive, parity-pinned
+    cross-language).
+  - **Honest numbers:** bundle diff vs base is 420 files,
+    +94,799/−27,840 (net +66,959 lines, dominated by generated goldens,
+    fixtures, and frontend tests; production retirement above is −37.6k).
+    Gates at HEAD `ddeb8af`: full suite 6,643 green (three consecutive
+    runs), architecture suite 687 green, frontend 582 vitest + 44 a11y
+    green, V1.34 parity 685/685 byte-identical (505 golden files
+    untouched). Plan-doc discoverability: every plan is now indexed in
+    `docs/superpowers/plans/INDEX.md`.
 - 2026-07-08: Passive local model copilot bundle prepared locally. The new
   `local-model-copilot-report` command builds deterministic docs/MIDI,
   staged mutation-intent, and Analog Four patch co-designer packets, and only

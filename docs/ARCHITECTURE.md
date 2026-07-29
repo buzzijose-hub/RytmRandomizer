@@ -123,7 +123,10 @@ on one line for an existing module, you probably need a new module instead.
 | `midi_io.py`                 | Leaf MIDI primitives: build CC, send param, apply state. `mido` is lazy.    |
 | `senders/midi_event_plan.py` | Generic CC/NRPN event-plan sender used by generated A4 patch live-dial plans. |
 | `senders/guarded.py`, `senders/hardware.py` | Generic guarded/mock and arm-gated Device plan senders. |
+| `senders/armed_apply.py` | ArmedApply seam: the single arm-gated boundary every outbound hardware transmit routes through (explicit in-UI arm + confirmation; never auto-re-arms after reconnect). |
 | `randomization.py`           | Pure randomization core: zone/depth mutation, waveform pick.                |
+| `behavior/morph.py`          | Passive kit-morphing interpolation (current ↔ target, per-track/page, depth macro). Pure + deterministic; parity-pinned cross-language. |
+| `behavior/scope.py`          | Passive scoped-randomization masks + intensity scoping anchored on the current kit. Pure + deterministic. |
 | `mock_midi.py`               | In-memory `MockMidiSender` and `MidiMessage` for tests + passive paths.     |
 | `real_midi_adapter.py`       | Protocol boundary: `RealMidiPortProvider`, `RealMidiSender`. NO `mido`.     |
 | `mido_provider.py`           | Concrete `mido`-backed input/output provider. `mido` imported lazily INSIDE methods. |
@@ -365,11 +368,12 @@ as a snapshot mutation, move it through the `Device` strategies instead.
 ## 6.2 Cockpit & Profile-Model layer (Phase 1)
 
 The `rytm_randomizer.cockpit` subpackage is the live-performance GUI surface
-and the home of the portable mutation engine. It is the **active runtime
-counterpart** to the 40+ passive `live_gui_*` reports under `reports/`:
-those reports define the declarative contracts the cockpit conforms to,
-and the cockpit hosts the actual WebSocket Protocol the desktop shell
-drives.
+and the home of the portable mutation engine. It hosts the actual
+WebSocket Protocol the desktop shell drives. (The live `live_gui_*_model`
+packet feeders under `reports/` still supply the performance-console
+payloads; the superseded paper-spec `live_gui_*` report modules were
+retired in the 2026-07 rival-program bundle — see
+`docs/superpowers/plans/2026-07-20-live-gui-retirement-evidence.md`.)
 
 **Visual reference:** [`docs/ARCHITECTURE_DIAGRAMS.md`](ARCHITECTURE_DIAGRAMS.md)
 has two new mermaid diagrams that illustrate this section —
@@ -405,6 +409,12 @@ rytm_randomizer/cockpit/
         adapter.py         # DeviceAdapter Protocol
         mock.py            # MockDeviceAdapter (default, no MIDI)
         real.py            # RealMidiDeviceAdapter (wraps mido_provider)
+        connection.py      # ConnectionManager — Live-but-Passive launch brain
+                           #   (disconnected -> searching -> listening; inputs only)
+        midi_monitor.py    # Passive live MIDI monitor (bounded ring, decoded labels)
+    diagnostics.py         # Connection Doctor + error journal + /health payloads
+    library/               # Sound library store
+        store.py           # Captured-kit records: device_id, name, fingerprint, tags
     ws/                    # WebSocket Protocol surface
         server.py          # FastAPI app, single /ws endpoint
         protocol.py        # Wire-format event + command types
