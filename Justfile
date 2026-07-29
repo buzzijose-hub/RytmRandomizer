@@ -65,6 +65,10 @@ lint:
     python -m black --check --target-version=py311 .
     python -m isort --profile black --check-only .
 
+# Run the incremental strict-production type gate.
+typecheck:
+    python scripts/typecheck_touched.py
+
 # Auto-fix lint issues
 fmt:
     python -m ruff check . --fix
@@ -91,15 +95,15 @@ closeout:
 closeout-ps:
     powershell -ExecutionPolicy Bypass -File Scripts/closeout_check.ps1
 
-# Full pre-PR check: lint + arch + full test suite + coverage
-check: lint arch test cov
+# Full pre-PR check: lint + strict production typing + arch + full test suite + coverage
+check: lint typecheck arch test cov
     @echo "✓ All checks passed. Ready to push."
 
 # ─────────────────────────────────────────────────────────────────────────
 # CODE REVIEW (the post-push review gate — see docs/CODE_REVIEW_HOOK_SETUP.md)
 # ─────────────────────────────────────────────────────────────────────────
 
-# Mechanical review gates only: lint + architecture + V1.34 parity.
+# Mechanical review gates only: lint + strict production typing + architecture + V1.34 parity.
 # Delegates to scripts/code_review_gate.py — the SINGLE shared
 # implementation also used by the git pre-push hook (.githooks/pre-push)
 # and the codex PostToolUse hook (.codex/hooks.json). One script, so the

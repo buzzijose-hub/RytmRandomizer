@@ -90,15 +90,15 @@ recordings are available.
 
 ## Current Local Verification
 
-- Focused A4/operator regression suite: 1,577 passed, 1 skipped.
+- Focused A4/operator regression suite: 1,581 passed, 1 skipped.
 - Architecture: 702 passed.
-- Full suite: 6,773 passed, 3 skipped.
+- Full suite: 6,777 passed, 3 skipped.
 - Ruff, Black, isort: clean.
-- Touched-file coverage: 100% across 7,573 statements and 1,762 branches.
+- Touched-file coverage: 100% across 7,506 statements and 1,764 branches.
 - V1.34 parity: 685 passed; Vulture, strict Pyright across all 60 touched
   production modules, `git diff --check`, and the mechanical review gate
   passed.
-- The literal strict audit across all 109 touched Python paths reports 4,204
+- The literal strict audit across all 113 touched Python paths reports 4,220
   dynamic test-harness typing errors; preserve that Gate 3 exception until
   CODEOWNER acceptance or a dedicated cleanup.
 - The pushed SHA and online reviewer status will be recorded on PR #214.

@@ -236,14 +236,13 @@ Active companion app bridge for the selected patch send plan:
 python -m rytm_randomizer.app --dry-run --a4-patch-send-plan --batch-manifest batch/a4-t1-audio-patch-batch.json --candidate 1
 python -m rytm_randomizer.app --arm --a4-patch-send-plan --batch-manifest batch/a4-t1-audio-patch-batch.json --candidate 1 --confirm-a4-patch-send-plan --a4-output-port "<exact configured Analog Four output name>"
 python -m rytm_randomizer.app --dry-run --a4-patch-send-plan --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
-python -m rytm_randomizer.app --arm --a4-patch-send-plan --description "hypnotic metallic HP2 stab" --track 1 --candidate 1 --confirm-a4-patch-send-plan --a4-output-port "<exact configured Analog Four output name>"
 ```
 
-The manifest form is the recommended audition-to-hardware path: it verifies the
+The manifest form is the only armed audition-to-hardware path: it verifies the
 committed batch, selected sidecar, source-audio identity, candidate DNA, and
 CC/NRPN plan before any output port opens. The direct `--description` and
-`--audio` forms are convenient one-off inference paths; they rebuild a plan and
-are not bound to a previously published or auditioned batch artifact.
+`--audio` forms are dry-run-only one-off inference paths; they rebuild a plan
+and are not bound to a previously published or auditioned batch artifact.
 Armed delivery does not prompt from enumerated ports: `--a4-output-port` must
 match exactly one discovered output name or the command fails before opening it.
 
@@ -283,11 +282,10 @@ events, counts the exact transport messages, and lists skipped front-panel rows
 such as destination labels that still need ordinal capture. The matching active
 path lives in `rytm_randomizer.app`: use `--dry-run --a4-patch-send-plan` to
 render the plan through the mock sender, or `--arm --a4-patch-send-plan
---confirm-a4-patch-send-plan --a4-output-port "<exact configured Analog Four
-output name>"` to require one exact output match and send only the
-compiler-approved rows. For a generated candidate that has already been
-auditioned, prefer `--batch-manifest ... --candidate N` so the active command
-uses the exact hash-verified plan stored with that batch.
+--batch-manifest ... --candidate N --confirm-a4-patch-send-plan
+--a4-output-port "<exact configured Analog Four output name>"` to require one
+exact output match and send only the compiler-approved rows from the exact
+hash-verified plan stored with that batch.
 
 `analog-four-saved-kit-export` is the narrow hardware-validated file writer.
 It reads a saved-kit dump, applies explicit `TRACK:VALUE` Filter2 Resonance

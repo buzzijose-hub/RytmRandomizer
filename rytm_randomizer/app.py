@@ -214,9 +214,10 @@ def _build_parser() -> argparse.ArgumentParser:
         "--a4-patch-send-plan",
         action="store_true",
         help=(
-            "Generate an Analog Four patch from --description or --audio and "
-            "render its live-dial send plan. Use with --dry-run or with "
-            "--arm --confirm-a4-patch-send-plan --a4-output-port "
+            "Render an Analog Four live-dial send plan. Dry-runs may use "
+            "--description, --audio, or --batch-manifest; armed delivery "
+            "requires a committed --batch-manifest plus "
+            "--confirm-a4-patch-send-plan and --a4-output-port "
             '"<exact configured output name>".'
         ),
     )
@@ -234,17 +235,18 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--description",
-        help="Reference description for --a4-patch-send-plan.",
+        help="Dry-run-only reference description for --a4-patch-send-plan.",
     )
     parser.add_argument(
         "--audio",
-        help="Reference audio path for --a4-patch-send-plan.",
+        help="Dry-run-only reference audio path for --a4-patch-send-plan.",
     )
     parser.add_argument(
         "--batch-manifest",
         help=(
             "Committed Analog Four audio-patch batch manifest for "
-            "--a4-patch-send-plan. The selected --candidate sidecar is hash-verified."
+            "--a4-patch-send-plan. Required for armed delivery; the selected "
+            "--candidate sidecar is hash-verified."
         ),
     )
     parser.add_argument(
@@ -2022,6 +2024,14 @@ def _run_a4_patch_send_plan(args: argparse.Namespace) -> int:
         return _reject_a4_patch_send_plan_guard(
             error_code="confirmation_required",
             message=("--a4-patch-send-plan armed sends require " "--confirm-a4-patch-send-plan.\n"),
+        )
+    if args.arm and args.batch_manifest is None:
+        return _reject_a4_patch_send_plan_guard(
+            error_code="manifest_required",
+            message=(
+                "--a4-patch-send-plan armed sends require --batch-manifest; "
+                "--description and --audio are dry-run only.\n"
+            ),
         )
     output_port_name = args.a4_output_port
     exact_output_port_name: str | None = None

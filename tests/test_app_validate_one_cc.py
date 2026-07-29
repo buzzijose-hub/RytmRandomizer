@@ -863,51 +863,42 @@ def test_a4_patch_send_plan_confirmation_guard_is_structured(
     assert any(message.startswith("operation_end a4_patch_send_plan_guard") for message in messages)
 
 
-def test_app_main_arm_a4_patch_send_plan_sends_cc_and_nrpn_events(
+@pytest.mark.parametrize(
+    ("source_flag", "source_value"),
+    (
+        ("--description", "hypnotic metallic techno"),
+        ("--audio", "reference.wav"),
+    ),
+)
+def test_app_main_arm_a4_patch_send_plan_requires_committed_manifest(
+    source_flag: str,
+    source_value: str,
     capsys,
-    fake_mido_session,
     monkeypatch,
 ) -> None:
-    """Confirmed A4 patch plans send CC-ready rows and NRPN-ready rows."""
+    """Armed delivery cannot compile a fresh unauditioned source plan."""
 
     from rytm_randomizer import app, mido_provider
-    from rytm_randomizer.midi_io import MIDI_MESSAGE_SETTLE_SECONDS
     from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
     reset_metrics()
-    sleep_calls: list[float] = []
 
-    class FakeOutputPort:
-        def __init__(self) -> None:
-            self.sent: list[object] = []
-            self.closed = False
+    def fail_before_manifest(*_args: object, **_kwargs: object) -> object:
+        raise AssertionError("uncommitted armed source must fail before plan or provider work")
 
-        def send(self, message: object) -> None:
-            self.sent.append(message)
-
-        def close(self) -> None:
-            self.closed = True
-
-    fake_port = FakeOutputPort()
-    monkeypatch.setattr(app, "_hardware_settle_sleep", sleep_calls.append)
+    monkeypatch.setattr(app, "_build_a4_patch_send_plan_from_args", fail_before_manifest)
     monkeypatch.setattr(
-        mido_provider.MidoMidiPortProvider,
-        "list_output_names",
-        lambda self: ("Fake A4 Out",),
+        mido_provider,
+        "build_mido_midi_port_provider",
+        fail_before_manifest,
     )
-    monkeypatch.setattr(
-        mido_provider.MidoMidiPortProvider,
-        "open_output",
-        lambda self, port_name: fake_port,
-    )
-    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
 
     exit_code = app.main(
         [
             "--arm",
             "--a4-patch-send-plan",
-            "--description",
-            "hypnotic metallic techno with bright sync stab and compact envelope",
+            source_flag,
+            source_value,
             "--track",
             "1",
             "--candidate",
@@ -919,33 +910,11 @@ def test_app_main_arm_a4_patch_send_plan_sends_cc_and_nrpn_events(
     )
     captured = capsys.readouterr()
 
-    assert exit_code == 0
-    assert "A4 patch send-plan send" in captured.out
-    assert "Opening MIDI output: Fake A4 Out" in captured.out
-    assert "sendable events: 33" in captured.out
-    assert "transport messages: 53" in captured.out
-    assert "manual rows skipped: 6" in captured.out
-    assert "Sent generated A4 patch send-plan MIDI events." in captured.out
-    assert captured.err == ""
-    assert len(fake_port.sent) == 53
-    assert [
-        (message.channel, message.control, message.value) for message in fake_port.sent[:3]
-    ] == [
-        (0, 69, 96),
-        (0, 72, 48),
-        (0, 78, 54),
-    ]
-    assert [
-        (message.channel, message.control, message.value) for message in fake_port.sent[9:12]
-    ] == [
-        (0, 99, 1),
-        (0, 98, 54),
-        (0, 6, 0),
-    ]
-    assert fake_port.closed is True
-    assert sleep_calls == [MIDI_MESSAGE_SETTLE_SECONDS] * 53
-    assert get_metrics().a4_patch_send_count == 1
-    assert not get_metrics().a4_patch_send_errors_by_code
+    assert exit_code == 1
+    assert "armed sends require --batch-manifest" in captured.err
+    assert "--description and --audio are dry-run only" in captured.err
+    assert captured.out == ""
+    assert get_metrics().errors_by_kind["a4_patch_send_plan_manifest_required"] == 1
 
 
 @pytest.mark.parametrize(
@@ -1134,8 +1103,8 @@ def test_app_main_armed_a4_patch_send_plan_requires_exact_output_before_build(
         [
             "--arm",
             "--a4-patch-send-plan",
-            "--description",
-            "guarded test",
+            "--batch-manifest",
+            "missing-but-unread.json",
             "--confirm-a4-patch-send-plan",
         ]
     )

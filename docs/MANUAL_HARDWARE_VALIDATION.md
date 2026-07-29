@@ -438,6 +438,21 @@ software-verified and mock-replayed, but it has not yet completed a supervised
 physical full-patch rehearsal. Do not treat the following armed command as
 routine operation.
 
+Maintainer decisions for PR #214:
+
+- Armed delivery requires a committed `--batch-manifest`; direct
+  `--description` and `--audio` plan construction is dry-run-only. No freshly
+  inferred, unpublished plan may reach hardware.
+- The 53-message path sends live-dial CC/NRPN changes into volatile kit RAM. It
+  sends no save, kit-write, project-write, Program Change, transport, or SysEx
+  message and cannot itself persist the resulting device state. The CODEOWNER
+  therefore exempts this RAM-only path from automatic pre-send SysEx backup.
+  The exemption does not apply to any future persistent hardware writer.
+- A disposable initialized project and a saved clean Kit/project baseline are
+  still mandatory. A partial send requires an immediate reload before retry.
+- The first supervised 33-row/53-message rehearsal is a pre-merge acceptance
+  gate for PR #214. Do not merge the PR until the result is recorded here.
+
 Before the first full-plan hardware pass:
 
 1. Use a disposable initialized A4 project and keep the clean kit dump ready.
@@ -448,6 +463,11 @@ Before the first full-plan hardware pass:
    `--debug --log-json` and inspect the `midi_mock_send` records on stderr.
 4. Use the full command only with the operator present, moderate monitoring
    level, and immediate reload/stop recovery available.
+5. Record the Analog Four firmware version; Elektron Transfer version or
+   `not used`; Overbridge/driver version or `not used`; manifest generation and
+   candidate; expected and delivered counts; recovery result; and final
+   pass/fail verdict. Keep the exact machine-local MIDI port label in the
+   private operator log rather than public documentation.
 
 The pending supervised full-plan validation command is:
 
@@ -471,6 +491,16 @@ path whose guarded 33-row transport rehearsal remains pending; the six
 paired-CC rows remain manual.
 Pressing Ctrl+C during delivery follows the same partial-patch recovery path
 and returns process exit code 130 after the output port is closed.
+
+Pre-merge rehearsal record:
+
+- Status: pending.
+- Analog Four firmware: TODO at supervised session.
+- Elektron Transfer version or `not used`: TODO at supervised session.
+- Overbridge/driver version or `not used`: TODO at supervised session.
+- Manifest generation and candidate: TODO at supervised session.
+- Expected/delivered: 33 rows / 53 messages expected; delivered TODO.
+- Recovery check and final pass/fail: TODO at supervised session.
 
 `python -m rytm_randomizer.app --arm` is the sole real MIDI boundary. The batch
 generator, saved-kit file writer, ranker, passive reports, and local-model

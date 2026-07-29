@@ -1,5 +1,14 @@
 # Local Dev Tooling Notes
 
+## Incremental strict production typing
+
+`just typecheck` runs Pyright 1.1.407 against every production module discovered
+by `scripts/typecheck_touched.py` from the committed branch diff, working tree,
+and untracked files. The bare command is `python scripts/typecheck_touched.py`.
+The development extra pins Pyright and the shared pre-push review gate plus CI
+invoke the same script. Dynamic test-harness typing is intentionally outside
+this incremental production gate and remains tracked as separate cleanup debt.
+
 ## 1. Purpose
 
 Track small local developer tools that can help RytmRandomizer development

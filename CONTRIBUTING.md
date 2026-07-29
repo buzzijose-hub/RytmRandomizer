@@ -519,7 +519,20 @@ pre-commit run --all-files
 
 ### Type checking
 
-There is no `mypy` / `pyright` enforcement in CI today, but new code must:
+Whole-repository `mypy` / `pyright` enforcement is not enabled in CI today.
+The incremental strict-production baseline is reproducible with:
+
+```bash
+just typecheck
+# bare equivalent:
+python scripts/typecheck_touched.py
+```
+
+The script dynamically discovers committed, working-tree, and untracked
+production modules against the integration merge base, then invokes the pinned
+strict configuration. Dynamic test-harness typing remains a separate cleanup
+workstream; do not narrow discovery or relax the configuration to hide a new
+error. All new code must:
 
 - Use type annotations on every public function/method signature (Gate 6).
 - Prefer `@runtime_checkable Protocol` over ABCs (Gate 6).
@@ -947,7 +960,8 @@ that true:
    script runs the mechanical gates and re-prompts codex to run the
    per-dimension fan-out review.
 3. **`.githooks/pre-push`** — a universal git hook that runs the mechanical
-   gates (lint + architecture + V1.34 parity) on every `git push`, by any
+   gates (lint + strict touched-production typing + architecture + V1.34 parity)
+   on every `git push`, by any
    tool, and **blocks the push** if they fail. Activate it once with
    `git config core.hooksPath .githooks` — `just install` and the dev
    container do this for you. **The top-level `conftest.py` also

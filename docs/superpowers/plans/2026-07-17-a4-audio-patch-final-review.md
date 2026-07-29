@@ -2,10 +2,9 @@
 
 > Status: in-flight
 >
-> Verdict: mechanical gates and strict production typing pass. Gates 3, 14,
-> and 16 still require explicit CODEOWNER acceptance. The branch is pushed;
-> fresh online checks, the reviewer verdict, and the supervised physical
-> full-plan rehearsal remain pending.
+> Verdict: Edward Rosado's 2026-07-28 changes-requested review is addressed in
+> code and policy. Fresh verification, publication, re-review, and the required
+> pre-merge physical rehearsal remain pending.
 
 ## Findings Resolved
 
@@ -28,7 +27,9 @@
 - Safety and side effects: saved-kit SysEx writing is a verified-field local
   file operation. Passive batch, rank, report, reader, validator, and
   local-model paths open no MIDI port and send nothing. Confirmed
-  `python -m rytm_randomizer.app --arm` is required for real CC/NRPN delivery.
+  `python -m rytm_randomizer.app --arm` is required for real CC/NRPN delivery,
+  and armed delivery accepts only a committed, hash-verified batch manifest.
+  Direct description/audio inference is dry-run-only.
 - Observability: inference, batch export, immutable artifact publication/reuse,
   lock acquire/release, recorded-render ranking, and armed delivery expose
   bounded tracing, RED metrics, typed failures, and stable fingerprints.
@@ -51,18 +52,19 @@
 
 ## Fresh Verification
 
-- Focused A4/operator regression suite: **1,577 passed, 1 skipped**.
+- Focused A4/operator regression suite: **1,581 passed, 1 skipped**.
 - Architecture: **702 passed**.
-- Full suite: **6,773 passed, 3 skipped**.
+- Full suite: **6,777 passed, 3 skipped**.
 - Ruff, Black, isort: **clean**.
-- Touched-file statement/branch coverage: **100%** across **7,573 statements**
-  and **1,762 branches**, zero misses.
+- Touched-file statement/branch coverage: **100%** across **7,506 statements**
+  and **1,764 branches**, zero misses.
 - V1.34 parity: **685 passed** byte-for-byte.
 - Vulture confidence 80, strict Pyright across all 60 touched production
   modules, `git diff --check`, and the mechanical review gate: **passed**.
-- Literal strict Pyright across all 109 touched Python paths: **4,204
-  test-harness typing errors**; Gate 3 needs CODEOWNER acceptance or a
-  dedicated test-typing cleanup.
+- Literal strict Pyright across all 113 touched Python paths: **4,220
+  test-harness typing errors**. The CODEOWNER accepted this scoped test-harness
+  waiver for PR #214; the clean 60-module strict production baseline is now
+  reproducible through `just typecheck` and `pyrightconfig.strict.json`.
 - The pushed SHAs, online CI, and reviewer status are tracked on PR #214.
 
 ## Abstraction
@@ -90,12 +92,22 @@ evidence.
   11-12; frozen staging records contain shallowly mutable typed payloads; three
   CLI modules repeat a small required-option parser; and `app.py` remains large
   because it owns the sole armed hardware boundary.
-- Required exceptions: Gates 3, 14, and 16 remain unchecked and require explicit
-  CODEOWNER acceptance. They are not represented as completed work.
+- Required exceptions: the CODEOWNER explicitly accepts the scoped Gate 3
+  dynamic test-harness typing debt, the Gate 14 retrospective-baseline timing
+  exception, and the Gate 16 missing historical per-workstream ledger for this
+  PR. None of these decisions weakens production typing, the non-stacked branch
+  topology, or the current review evidence.
 
-## Remaining Gates
+## Review Decisions And Remaining Gate
 
-1. Synchronize the PR's unchecked Gate 3, 14, and 16 exceptions and request
-   explicit CODEOWNER acceptance from Edward Rosado.
-2. Keep the supervised physical 33-row/53-message rehearsal as a separate
-   operator-present hardware task.
+1. **Gate 3:** accepted as a scoped CODEOWNER waiver. Production strict typing
+   is a pinned, reproducible `just typecheck` gate; the 4,220 dynamic
+   test-harness findings remain a separate cleanup.
+2. **RAM-only backup policy:** accepted as a scoped CODEOWNER exemption.
+   Live-dial CC/NRPN changes mutate volatile kit RAM and the path sends no
+   save/write command. A disposable project, saved clean baseline, and reload
+   recovery remain mandatory. Future persistent writers are not exempt.
+3. **Gates 14 and 16:** accepted as historical-evidence exceptions for PR #214.
+4. **Physical rehearsal:** the supervised 33-row/53-message rehearsal must run
+   before merge. Record the Analog Four firmware and Elektron
+   Transfer/Overbridge versions in the hardware-validation runbook.

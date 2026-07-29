@@ -132,12 +132,12 @@ remain independent and parallel.
 
 ## Fresh Closeout Verification
 
-- Focused A4/operator regression suite: **1,577 passed, 1 skipped**.
+- Focused A4/operator regression suite: **1,581 passed, 1 skipped**.
 - Architecture suite: **702 passed**.
-- Full suite: **6,773 passed, 3 skipped**.
+- Full suite: **6,777 passed, 3 skipped**.
 - Ruff, Black, and isort: **clean**.
-- Touched-file statement/branch coverage: **100%** across **7,573 statements**
-  and **1,762 branches**, zero misses.
+- Touched-file statement/branch coverage: **100%** across **7,506 statements**
+  and **1,764 branches**, zero misses.
 - V1.34 parity: **685 passed** byte-for-byte.
 - Vulture, strict production-diff Pyright, `git diff --check`, and the mechanical
   review gate: **passed**.
@@ -148,11 +148,11 @@ remain independent and parallel.
 
 Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 
-- [x] Gate 1 (100% branch coverage on touched files) -- 7,573 statements and 1,762 branches, zero misses.
+- [x] Gate 1 (100% branch coverage on touched files) -- 7,506 statements and 1,764 branches, zero misses.
 - [x] Gate 2 (V1.34 parity byte-identical) -- 685 items passed.
 - [ ] Gate 3 (lint/format/type clean) -- Ruff, Black, isort, and strict
   Pyright across all 60 touched production modules pass. The literal strict
-  audit across all 109 touched Python paths reports 4,204 errors in dynamic
+  audit across all 113 touched Python paths reports 4,220 errors in dynamic
   test harnesses, so complete touched-path conformance requires explicit
   CODEOWNER acceptance or a dedicated test-typing cleanup.
 - [x] Gate 4 (dead-code purge) -- Vulture confidence 80 passed across production and tests.

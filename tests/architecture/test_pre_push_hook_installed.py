@@ -2,10 +2,11 @@
 
 The repository ships a ``.githooks/pre-push`` script (see
 ``docs/CODE_REVIEW_HOOK_SETUP.md``) that runs ruff + black --check +
-isort --check-only + the architecture suite + V1.34 parity before every
-``git push``. CI runs the same gates on the remote side; the local hook
-is the *first* place a developer learns their change is broken — saving
-a CI-minute and a fix-push round trip per regression.
+isort --check-only + strict typing on touched production modules + the
+architecture suite + V1.34 parity before every ``git push``. CI runs the same
+gates on the remote side; the local hook is the *first* place a developer
+learns their change is broken — saving a CI-minute and a fix-push round trip
+per regression.
 
 The hook is activated by ``git config core.hooksPath .githooks``. That
 config is per-worktree on Windows / Linux / macOS (each ``git worktree

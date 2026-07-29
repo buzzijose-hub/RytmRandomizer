@@ -26,14 +26,14 @@ child owned by a cleanup-capable parent; transport contracts are shared; batch
 staging/publication and app send responsibilities are split into focused
 helpers; and the state file has schema enforcement.
 
-The fresh focused A4/operator suite passed 1,577 tests / 1 skipped, along with
-702 architecture tests, 6,773 full-suite tests / 3 skipped, 685 V1.34 parity
+The fresh focused A4/operator suite passed 1,581 tests / 1 skipped, along with
+702 architecture tests, 6,777 full-suite tests / 3 skipped, 685 V1.34 parity
 items, and a clean Ruff/Black/isort/Vulture/strict-production-Pyright/
-mechanical-review set. The literal strict audit of all 109 touched Python paths
-reports 4,204 dynamic test-harness typing errors and remains a disclosed Gate 3
+mechanical-review set. The literal strict audit of all 113 touched Python paths
+reports 4,220 dynamic test-harness typing errors and remains a disclosed Gate 3
 reviewer exception.
 Touched production files reached 100% statement and branch coverage across
-7,573 statements and 1,762 branches. Pushed SHAs and the fresh reviewer verdict
+7,506 statements and 1,764 branches. Pushed SHAs and the fresh reviewer verdict
 are tracked on PR #214.
 
 The largest residual constraints are explicit: generated saved-kit SysEx writes

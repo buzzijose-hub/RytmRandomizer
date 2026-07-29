@@ -30,6 +30,7 @@ hardware only through confirmed `python -m rytm_randomizer.app --arm`.
 | 2026-07-18 | Earlier feature-code CI passed, but its counts and SHA are historical and are not reused as final closeout evidence. |
 | 2026-07-27 | Fresh review reopened closeout for native crash containment, transport abstraction reuse, observability, maintainability, state-schema validity, and stale docs. |
 | 2026-07-27 | Corrections passed the focused A4/operator suite (1,577 passed / 1 skipped), architecture (702 passed), full suite (6,773 passed / 3 skipped), 685 parity checks, 100% touched-file statement/branch coverage, lint, strict production typing, Vulture, and mechanical review. |
+| 2026-07-28 | CODEOWNER review repair passed the focused A4/operator suite (1,581 passed / 1 skipped), architecture (702 passed), full suite (6,777 passed / 3 skipped), 685 parity checks, and 100% touched-production coverage across 7,506 statements / 1,764 branches. |
 
 ## Escalations Resolved
 
@@ -77,16 +78,16 @@ hardware only through confirmed `python -m rytm_randomizer.app --arm`.
 
 ## Fresh Verification
 
-- Focused A4/operator regression suite: **1,577 passed, 1 skipped**.
+- Focused A4/operator regression suite: **1,581 passed, 1 skipped**.
 - Architecture: **702 passed**.
-- Full suite: **6,773 passed, 3 skipped**.
+- Full suite: **6,777 passed, 3 skipped**.
 - Ruff, Black, isort: **clean**.
-- Touched-file statement/branch coverage: **100%** across **7,573 statements**
-  and **1,762 branches**, zero misses.
+- Touched-file statement/branch coverage: **100%** across **7,506 statements**
+  and **1,764 branches**, zero misses.
 - V1.34 parity: **685 passed** byte-for-byte.
 - Vulture, strict Pyright across all 60 touched production modules,
   `git diff --check`, and mechanical review: **passed**.
-- Literal strict Pyright across all 109 touched Python paths reports **4,204
+- Literal strict Pyright across all 113 touched Python paths reports **4,220
   dynamic test-harness typing errors** and remains an explicit Gate 3 reviewer
   exception.
 - The pushed SHAs, fresh online CI, and reviewer verdict are tracked on PR #214.

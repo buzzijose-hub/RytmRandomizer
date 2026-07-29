@@ -126,6 +126,8 @@ jobs:
               - 'rytm_randomizer/**'
               - 'tests/architecture/**'
               - 'scripts/**'
+              - 'pyproject.toml'
+              - 'pyrightconfig.strict.json'
 
             # `e2e` -- triggers the (slow) 3-OS e2e matrix. Production code
             # or anything under tests/e2e/.
@@ -278,7 +280,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v7
@@ -292,6 +294,9 @@ jobs:
 
       - name: Install package with dev extras
         run: pip install -e ".[dev]"
+
+      - name: Run strict typing on touched production modules
+        run: python scripts/typecheck_touched.py
 
       - name: Run architecture-conformance tests
         run: pytest tests/architecture/ -q

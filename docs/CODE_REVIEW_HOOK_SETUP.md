@@ -13,10 +13,11 @@ Every review walks the 8-step procedure in
 [`.claude/skills/code-review/SKILL.md`](../.claude/skills/code-review/SKILL.md).
 The eight steps fall into two halves:
 
-- **Steps 1-6 + the lint/architecture/parity gates — *mechanical*.** A
+- **Steps 1-6 + the lint/type/architecture/parity gates — *mechanical*.** A
   script can check these: import direction, house style, data-not-code,
   side-effect freedom, no-`Any`, device-Protocol enforcement, the V1.34
-  parity goldens, the lint trio.
+  parity goldens, the lint trio, and strict Pyright on every touched
+  production module.
 - **Steps 7-8 — *judgement*.** No script can make these calls:
   - **Step 7 — abstraction reuse / genericization.** For every new
     module/class/function: could it be generalized further, AND does an
@@ -57,10 +58,11 @@ single PR comment. The dimension→step→gate table is in
 
 All three mechanisms call **one** implementation of the mechanical gates:
 [`scripts/code_review_gate.py`](../scripts/code_review_gate.py). It runs
-lint (ruff + black + isort) + `pytest tests/architecture/` + the 685 V1.34
-parity items, and has four `--mode`s — `cli`, `claude-hook`, `codex-hook`,
-`git-hook` — one per caller. Because there is a single script, the gates can never
-drift between "what `just review` runs" and "what the hook runs".
+lint (ruff + black + isort) + dynamic strict touched-production Pyright +
+`pytest tests/architecture/` + the 685 V1.34 parity items, and has four
+`--mode`s — `cli`, `claude-hook`, `codex-hook`, `git-hook` — one per caller.
+Because there is a single script, the gates can never drift between what
+`just review` runs and what the hook runs.
 
 ## The three mechanisms
 
