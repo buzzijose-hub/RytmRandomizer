@@ -336,6 +336,103 @@ def _rehash_sidecar(
     _rewrite_json(manifest_path, manifest)
 
 
+def _restore_pre_rehearsal_enum_events(
+    tmp_path: Path,
+    manifest_path: Path,
+    manifest: dict[str, object],
+    sidecar: dict[str, object],
+) -> None:
+    old_values = {
+        "EnvF Gate Length": 0,
+        "EnvF Destination A": 96,
+        "EnvF Destination B": 96,
+        "LFO1 Speed Multiplier": 64,
+        "LFO1 Destination A": 34,
+        "LFO1 Destination B": 96,
+    }
+    plan = _object_field(sidecar, "dynamic_send_plan")
+    dna = _object_field(sidecar, "candidate_dna")
+    genome = _object_field(manifest, "genome")
+    send_events = plan["send_events"]
+    manual_events = plan["manual_events"]
+    dna_genes = dna["genes"]
+    genome_candidates = genome["candidates"]
+    assert isinstance(send_events, list)
+    assert isinstance(manual_events, list)
+    assert isinstance(dna_genes, list)
+    assert isinstance(genome_candidates, list)
+    genome_candidate = genome_candidates[0]
+    assert isinstance(genome_candidate, dict)
+    genome_genes = genome_candidate["genes"]
+    assert isinstance(genome_genes, list)
+
+    promoted: list[dict[str, object]] = []
+    retained_manual: list[object] = []
+    for event in manual_events:
+        assert isinstance(event, dict)
+        parameter = event["parameter"]
+        assert isinstance(parameter, str)
+        if parameter not in old_values:
+            retained_manual.append(event)
+            continue
+        sequence = event["sequence"]
+        assert isinstance(sequence, int)
+        sidecar_gene = dna_genes[sequence - 1]
+        genome_gene = genome_genes[sequence - 1]
+        assert isinstance(sidecar_gene, dict)
+        assert isinstance(genome_gene, dict)
+        sidecar_value = _object_field(sidecar_gene, "value")
+        genome_value = _object_field(genome_gene, "value")
+        message_kind = "cc" if sidecar_value["cc_msb"] is not None else "nrpn"
+        transport_status = "cc-ready" if message_kind == "cc" else "nrpn-ready"
+        midi_value = old_values[parameter]
+        for value in (sidecar_value, genome_value):
+            value["midi_value"] = midi_value
+            value["transport_status"] = transport_status
+        promoted.append(
+            {key: value for key, value in event.items() if key not in {"skip_code", "skip_reason"}}
+            | {
+                "channel": int(event["track"]) - 1,
+                "midi_value": midi_value,
+                "message_kind": message_kind,
+                "cc_msb": sidecar_value["cc_msb"],
+                "cc_lsb": sidecar_value["cc_lsb"],
+                "nrpn_address": (sidecar_value["nrpn_address"] if message_kind == "nrpn" else None),
+                "transport_status": transport_status,
+            }
+        )
+
+    plan["send_events"] = sorted(
+        [*send_events, *promoted],
+        key=lambda event: int(event["sequence"]),
+    )
+    plan["manual_events"] = retained_manual
+    summary = _object_field(plan, "summary")
+    summary.update(
+        {
+            "sendable_count": 33,
+            "manual_count": 6,
+            "cc_event_count": 23,
+            "nrpn_event_count": 10,
+            "transport_message_count": 53,
+            "ready_percentage": 85,
+            "blocking_reason": "paired CC LSB conversion not hardware-verified",
+        }
+    )
+    for counts in (
+        _object_field(sidecar, "coverage_counts"),
+        _object_field(_manifest_candidate(manifest), "coverage_counts"),
+        _object_field(manifest, "coverage_counts"),
+    ):
+        counts["sendable_row_count"] = 33
+        counts["manual_row_count"] = 6
+
+    genome_sha256 = _sha256(_json_bytes(genome))
+    manifest["genome_sha256"] = genome_sha256
+    _object_field(sidecar, "hashes")["genome_sha256"] = genome_sha256
+    _rehash_sidecar(tmp_path, manifest_path, manifest, sidecar)
+
+
 def _send_event_and_gene_value(
     sidecar: dict[str, object],
     *,
@@ -361,6 +458,34 @@ def _send_event_and_gene_value(
     return event, value
 
 
+def _current_policy_event(
+    parameter: str,
+    *,
+    screen_value: str,
+    midi_value: int,
+    section: str,
+    encoder: str,
+) -> AnalogFourPatchSendEvent:
+    return AnalogFourPatchSendEvent(
+        sequence=1,
+        track=1,
+        channel=0,
+        parameter=parameter,
+        section=section,
+        encoder=encoder,
+        screen_value=screen_value,
+        midi_value=midi_value,
+        message_kind="nrpn",
+        cc_msb=None,
+        cc_lsb=None,
+        nrpn_address=(1, 1),
+        transport_status="nrpn-ready",
+        dial_direction=f"select {screen_value}",
+        rationale="current-policy coverage",
+        confidence="test",
+    )
+
+
 def test_load_batch_candidate_verifies_and_reconstructs_complete_plan(tmp_path: Path) -> None:
     from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
         load_analog_four_patch_batch_candidate,
@@ -382,6 +507,68 @@ def test_load_batch_candidate_verifies_and_reconstructs_complete_plan(tmp_path: 
     assert len(selection.plan.send_events) == 27
     assert len(selection.plan.manual_events) == 12
     assert selection.plan.summary.transport_message_count == 37
+
+
+def test_load_batch_candidate_rejects_pre_rehearsal_enum_plan(
+    tmp_path: Path,
+) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        load_analog_four_patch_batch_candidate,
+    )
+
+    manifest_path, manifest, sidecar = _write_batch(tmp_path)
+    _restore_pre_rehearsal_enum_events(
+        tmp_path,
+        manifest_path,
+        manifest,
+        sidecar,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=r"EnvF Gate Length.*not transport-ready under current A4 policy",
+    ):
+        load_analog_four_patch_batch_candidate(manifest_path, candidate=1)
+
+
+def test_app_arm_rejects_pre_rehearsal_enum_plan_before_provider(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer import app, mido_provider
+
+    manifest_path, manifest, sidecar = _write_batch(tmp_path)
+    _restore_pre_rehearsal_enum_events(
+        tmp_path,
+        manifest_path,
+        manifest,
+        sidecar,
+    )
+    monkeypatch.setattr(
+        mido_provider,
+        "build_mido_midi_port_provider",
+        lambda: (_ for _ in ()).throw(AssertionError("provider must not be constructed")),
+    )
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--a4-patch-send-plan",
+            "--batch-manifest",
+            str(manifest_path),
+            "--batch-manifest-sha256",
+            _sha256(manifest_path.read_bytes()),
+            "--candidate",
+            "1",
+            "--confirm-a4-patch-send-plan",
+            "--a4-output-port",
+            "Fake A4 Out",
+        ]
+    )
+
+    assert exit_code == 1
+    assert "not transport-ready under current A4 policy" in capsys.readouterr().err
 
 
 def test_app_dry_run_sends_exact_hash_verified_batch_candidate(
@@ -491,6 +678,7 @@ def test_app_arm_sends_exact_hash_verified_batch_candidate(
 
     assert exit_code == 0
     assert "batch-manifest generation 0123456789abcdef0123456789abcdef" in captured.out
+    assert "hardware semantic verification required" in captured.out
     assert "Analog Four patch batch candidate verified" in captured.err
     assert fake_port.closed is True
     from rytm_randomizer.midi_io import MIDI_MESSAGE_SETTLE_SECONDS
@@ -1129,6 +1317,58 @@ def test_reader_rejects_canonical_mapping_that_requires_paired_cc() -> None:
 
     with pytest.raises(ValueError, match="requires unverified paired-CC transport"):
         _verify_canonical_transport(event)
+
+
+def test_current_transport_policy_rejects_missing_display_spec(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_reader as reader
+
+    event = _current_policy_event(
+        "OSC1 Level",
+        screen_value="96",
+        midi_value=96,
+        section="OSC 1",
+        encoder="E",
+    )
+    monkeypatch.setattr(reader, "ANALOG_FOUR_PARAMETER_DISPLAY", {})
+
+    with pytest.raises(ValueError, match="has no current A4 policy"):
+        reader._verify_current_transport_policy(event)
+
+
+def test_current_transport_policy_rejects_current_shape_drift() -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        _verify_current_transport_policy,
+    )
+
+    event = _current_policy_event(
+        "OSC1 Level",
+        screen_value="stale-label",
+        midi_value=96,
+        section="OSC 1",
+        encoder="E",
+    )
+
+    with pytest.raises(ValueError, match="does not match current A4 policy"):
+        _verify_current_transport_policy(event)
+
+
+def test_current_transport_policy_reports_generic_blocker_without_specific_reason() -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_reader import (
+        _verify_current_transport_policy,
+    )
+
+    event = _current_policy_event(
+        "LFO2 Destination A",
+        screen_value="OFF",
+        midi_value=96,
+        section="LFO2",
+        encoder="G",
+    )
+
+    with pytest.raises(ValueError, match="current transport policy blocks this row"):
+        _verify_current_transport_policy(event)
 
 
 def test_reader_rejects_rehashed_nrpn_event_without_address(tmp_path: Path) -> None:

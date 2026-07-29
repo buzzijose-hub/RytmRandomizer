@@ -131,6 +131,11 @@ group of JSON and SysEx files:
    out-of-band digest before constructing the MIDI provider. Internal manifest
    hashes protect artifact consistency, but they do not prove that a fully
    rehashed replacement is the batch the operator reviewed.
+7. Revalidate every stored event against the current transport policy before
+   provider construction. A verified CC/NRPN address does not verify an enum
+   value's meaning. Enum ordinals require independent physical calibration;
+   when a rehearsal disproves one, remove its semantic label, fail it closed,
+   and reject older internally valid manifests that still carry it.
 
 For a live plan, prevalidate the whole event sequence and expected wire-message
 count before port discovery. Use the named `MIDI_MESSAGE_SETTLE_SECONDS` policy
@@ -140,6 +145,10 @@ callback must run only after `out.send()` returns. Wrap catchable send failure
 and Ctrl+C in a taxonomy-backed error carrying sent/expected counts, close the
 port, tell the operator to reload the last saved Kit/project, and use exit code
 130 for interruption.
+
+Successful transport of a partial plan is not semantic verification. Completion
+telemetry must retain the sendable/manual counts, a bounded complete/partial
+status, and an explicit hardware-verification-required marker.
 
 Complete DNA does not imply complete saved-kit SysEx write coverage. Keep
 unproven saved-kit fields deferred while sending manual-backed CC/NRPN rows

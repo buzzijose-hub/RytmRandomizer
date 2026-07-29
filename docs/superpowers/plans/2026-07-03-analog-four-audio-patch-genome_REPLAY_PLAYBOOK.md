@@ -84,7 +84,11 @@ recordings are available.
 3. What writes a complete saved kit? The pure renderer under `devices/strategies/`, exposed through the registered A4 saved-kit capability and guarded by `cockpit/export/analog_four_kit.py`.
 4. How is a batch committed? Immutable generation artifacts first, stable manifest last.
 5. What may currently reach A4 saved-kit SysEx? Filter2 Resonance only; every other DNA row is deferred from SysEx. The verified sidecar exposes 27 live-routable rows and keeps six disproved enum rows plus six paired-CC rows manual.
-6. How is the auditioned candidate selected for live send? `--batch-manifest`, its reviewed `--batch-manifest-sha256`, and `--candidate`; the manifest digest, nested hashes, and event routing are verified before output opens.
+6. How is the auditioned candidate selected for live send? `--batch-manifest`,
+   its reviewed `--batch-manifest-sha256`, and `--candidate`; the manifest
+   digest, nested hashes, event routing, and current A4 transport policy are
+   verified before output opens. Older rehashed plans carrying disproved enum
+   values fail closed.
 7. How does hardware feedback enter? Record candidate renders and run `analog-four-audio-patch-rank`; reviewed captures can then become corpus evidence.
 8. What can open a real MIDI port? Only `python -m rytm_randomizer.app --arm`
    after feature-specific validation/confirmation. Passive commands and the
@@ -92,13 +96,11 @@ recordings are available.
 
 ## Current Local Verification
 
-- Focused touched-file A4/operator regression suite: 1,717 passed, 1 skipped.
+- Repair-focused A4/operator regression suite: 461 passed.
 - Architecture: 705 passed.
-- Last uninterrupted production-equivalent full suite: 6,811 passed,
-  3 skipped. The exact final tree collects 6,824 tests; online CI is its
-  authoritative full-suite result.
+- Exact corrected-tree full suite: 6,838 passed, 3 skipped.
 - Ruff, Black, isort: clean.
-- Touched-file coverage: 100% across 7,952 statements and 1,884 branches.
+- Touched-file coverage: 100% across 7,911 statements and 1,898 branches.
 - V1.34 parity: 685 passed; Vulture, strict Pyright across all 63 touched
   production modules, `git diff --check`, and the mechanical review gate
   passed.

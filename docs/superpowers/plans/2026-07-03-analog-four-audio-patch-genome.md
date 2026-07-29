@@ -116,6 +116,11 @@ remain independent and parallel.
 - App armed send requires `--arm --a4-patch-send-plan --batch-manifest "<path>"
   --batch-manifest-sha256 "<reviewed digest>" --candidate N
   --confirm-a4-patch-send-plan --a4-output-port "<exact configured name>"`.
+- The reader revalidates every stored event against current A4 transport
+  policy, so an older internally valid manifest cannot replay an enum ordinal
+  that a later physical rehearsal disproved.
+- Partial-plan completion is recorded as transport delivery with sendable and
+  manual counts; it is never labeled hardware semantic verification.
 - Saved-kit SysEx writing is local-file-only, atomic, refuses overwrite by default, and is limited to hardware-write-validated Filter2 Resonance mutations.
 - No generated SysEx is sent to a MIDI port by this path; hardware receipt remains an explicit operator action.
 - No parity fixture regeneration.
@@ -134,15 +139,12 @@ remain independent and parallel.
 
 ## Fresh Closeout Verification
 
-- Focused touched-file A4/operator regression suite: **1,717 passed, 1 skipped**.
+- Repair-focused A4/operator regression suite: **461 passed**.
 - Architecture suite: **705 passed**.
-- Last uninterrupted production-equivalent full-suite run: **6,811 passed,
-  3 skipped**. The exact final tree collects **6,824 tests**; its final
-  added/changed tests are included in the focused result above, and online CI
-  is the authoritative exact-head full-suite result.
+- Exact corrected-tree full-suite run: **6,838 passed, 3 skipped**.
 - Ruff, Black, and isort: **clean**.
-- Touched-file statement/branch coverage: **100%** across **7,952 statements**
-  and **1,884 branches**, zero misses.
+- Touched-file statement/branch coverage: **100%** across **7,911 statements**
+  and **1,898 branches**, zero misses.
 - V1.34 parity: **685 passed** byte-for-byte.
 - Vulture, strict production-diff Pyright, `git diff --check`, and the mechanical
   review gate: **passed**.
@@ -153,7 +155,7 @@ remain independent and parallel.
 
 Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 
-- [x] Gate 1 (100% branch coverage on touched files) -- 7,952 statements and 1,884 branches, zero misses.
+- [x] Gate 1 (100% branch coverage on touched files) -- 7,911 statements and 1,898 branches, zero misses.
 - [x] Gate 2 (V1.34 parity byte-identical) -- 685 items passed.
 - [x] Gate 3 (lint/format/type clean) -- Ruff, Black, isort, and strict
   Pyright across all 63 touched production modules pass. Dynamic test-harness

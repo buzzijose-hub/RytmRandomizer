@@ -2151,11 +2151,17 @@ def _a4_patch_send_log_context(
     plan: AnalogFourPatchTransportPlan,
     source_label: str,
 ) -> dict[str, object]:
+    summary = plan.summary
     return {
         "operation": "a4_patch_send_plan_send",
         "source": source_label,
         "track": plan.selected_track,
         "candidate": plan.selected_candidate,
+        "sendable_count": summary.sendable_count,
+        "manual_count": summary.manual_count,
+        "transport_message_count": summary.transport_message_count,
+        "live_dial_path": summary.live_dial_path,
+        "semantic_verification_required": True,
     }
 
 
@@ -2168,7 +2174,7 @@ def _record_a4_patch_send_outcome(
     duration_ms = (perf_counter() - started_at) * 1000.0
     metrics.record_a4_patch_send(duration_ms, error_code=error_code)
     return {
-        "outcome": "sent" if error_code is None else "failed",
+        "outcome": "transport_delivered" if error_code is None else "failed",
         "duration_ms": duration_ms,
         "error_code": error_code,
         "metrics_summary": metrics.format_summary(),
@@ -2486,7 +2492,10 @@ def _run_armed_a4_patch_send_plan(
             track=plan.selected_track,
             candidate=plan.selected_candidate,
             sendable_count=summary.sendable_count,
+            manual_count=summary.manual_count,
             transport_message_count=summary.transport_message_count,
+            live_dial_path=summary.live_dial_path,
+            semantic_verification_required=True,
         ) as operation_id:
             try:
                 expected_message_count = _validate_a4_patch_send_plan_events(plan)
@@ -2565,7 +2574,7 @@ def _run_armed_a4_patch_send_plan(
         f"sendable events: {summary.sendable_count}",
         f"transport messages: {summary.transport_message_count}",
         f"manual rows skipped: {summary.manual_count}",
-        "Sent generated A4 patch send-plan MIDI events.",
+        "Delivered A4 patch send-plan MIDI transport; hardware semantic verification required.",
     ]
     sys.stdout.write("\n".join(lines))
     sys.stdout.write("\n")

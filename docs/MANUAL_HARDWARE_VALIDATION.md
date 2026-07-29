@@ -491,8 +491,12 @@ python -m rytm_randomizer.app --arm --a4-patch-send-plan `
 The reader rejects changed sidecar bytes, changed nested DNA/send-plan
 payloads, source/candidate/track mismatches, false transport labels,
 noncanonical parameter CC/NRPN addresses, and coverage-count drift before
-constructing the real provider or opening an output port. The armed sender then
-spaces all 37 transport messages by 20 ms. MIDI has no per-message
+constructing the real provider or opening an output port. It also revalidates
+each stored event against current A4 transport policy, so an older rehashed
+33/53 manifest carrying disproved enum values fails before provider
+construction. The armed sender then spaces all 37 transport messages by 20 ms.
+Successful completion means transport delivery only and still requires the
+documented front-panel semantic check. MIDI has no per-message
 acknowledgment. If delivery fails at any
 point, the command reports the exact attempted progress but hardware state is
 uncertain; stop, reload the saved clean Kit or project, and begin the rehearsal

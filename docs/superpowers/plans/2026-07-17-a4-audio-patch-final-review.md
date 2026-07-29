@@ -24,7 +24,9 @@
   not reliable Windows decoding.
 - Correctness: the stored plan binds source audio, candidate DNA, send plan,
   transport status, and canonical A4 CC/NRPN addresses before provider
-  construction. Unknown or changed content fails closed.
+  construction. Every event is also revalidated against current A4 transport
+  policy, so an older rehashed plan cannot replay a disproved enum value.
+  Unknown or changed content fails closed.
 - Safety and side effects: saved-kit SysEx writing is a verified-field local
   file operation. Passive batch, rank, report, reader, validator, and
   local-model paths open no MIDI port and send nothing. Confirmed
@@ -34,7 +36,9 @@
 - Observability: inference, batch export, immutable artifact publication/reuse,
   lock acquire/release, recorded-render ranking, and armed delivery expose
   bounded tracing, RED metrics, typed failures, and stable fingerprints.
-  Zero-message delivery is a failure, not a partial success.
+  Zero-message delivery is a failure, not a partial success. Successful
+  partial-plan output is labeled transport delivery, retains manual counts and
+  bounded readiness status, and requires hardware semantic verification.
 - Publication and cleanup: cooperative lock acquire/release share an atomic
   sibling operation gate, so a verified owner cannot unlink a replacement
   lock. Post-manifest cleanup interruption is reported as a successful commit
@@ -53,12 +57,12 @@
 
 ## Fresh Verification
 
-- Focused A4/operator regression suite: **912 passed**.
+- Repair-focused A4/operator regression suite: **461 passed**.
 - Architecture: **705 passed**.
-- Exact corrected-tree full-suite run: **6,825 passed, 3 skipped**.
+- Exact corrected-tree full-suite run: **6,838 passed, 3 skipped**.
 - Ruff, Black, isort: **clean**.
-- Touched-file statement/branch coverage: **100%** across **7,896 statements**
-  and **1,892 branches**, zero misses.
+- Touched-file statement/branch coverage: **100%** across **7,911 statements**
+  and **1,898 branches**, zero misses.
 - V1.34 parity: **685 passed** byte-for-byte.
 - Vulture confidence 80, strict Pyright across all 63 touched production
   modules, `git diff --check`, and the mechanical review gate: **passed**.

@@ -318,7 +318,11 @@ def build_analog_four_patch_send_plan_from_genome(
         manual_events=manual_events,
         summary=summary,
         ready=summary.sendable_count > 0,
-        readiness_reason="" if summary.sendable_count > 0 else summary.blocking_reason,
+        readiness_reason=(
+            summary.blocking_reason
+            if summary.manual_count > 0 or summary.sendable_count == 0
+            else ""
+        ),
         safety=ANALOG_FOUR_PATCH_SEND_PLAN_SAFETY,
     )
 

@@ -15,5 +15,5 @@
     "learning_capture": "complete",
     "final_gates": "in_progress"
   },
-  "last_event": "Follow-up repairs, exact-tree local gates, strict production typing, touched-file coverage, and CODEOWNER policy decisions pass; publication and online state are tracked on PR #214, while fresh approval and supervised physical full-plan hardware validation remain pending."
+  "last_event": "The 2026-07-29 supervised 33-row rehearsal completed transport but disproved six enum ordinals; the operator reloaded without saving. Those rows now fail closed, older internally valid manifests are revalidated against current transport policy before provider construction, and the guarded plan is reduced to 27 rows / 37 messages. Fresh CI, reviewer approval, and a successful corrected-plan physical rehearsal remain pending."
 }

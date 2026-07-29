@@ -129,6 +129,39 @@ def test_patch_value_keeps_physically_disproved_enum_ordinals_manual(
 
 
 @pytest.mark.parametrize(
+    ("parameter", "disproved_raw_value"),
+    [
+        ("EnvF Gate Length", 0),
+        ("EnvF Destination A", 96),
+        ("EnvF Destination B", 96),
+        ("LFO1 Speed Multiplier", 64),
+        ("LFO1 Destination A", 34),
+        ("LFO1 Destination B", 96),
+    ],
+)
+def test_disproved_raw_enum_values_do_not_render_as_semantic_labels(
+    parameter: str,
+    disproved_raw_value: int,
+) -> None:
+    from rytm_randomizer.data.analog_four_display import make_a4_patch_value
+
+    value = make_a4_patch_value(parameter, screen_target=disproved_raw_value)
+
+    assert value.screen_value == str(disproved_raw_value)
+    assert value.midi_value is None
+
+
+def test_lfo2_multiplier_keeps_its_independently_verified_x1_label() -> None:
+    from rytm_randomizer.data.analog_four_display import make_a4_patch_value
+
+    value = make_a4_patch_value("LFO2 Speed Multiplier", screen_target=64)
+
+    assert value.screen_value == "x1"
+    assert value.midi_value == 64
+    assert value.transport_status == "cc-ready"
+
+
+@pytest.mark.parametrize(
     ("screen_target", "transport_value"),
     [("Filter1 Frequency", 34), (34, None)],
 )

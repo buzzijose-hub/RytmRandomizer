@@ -135,7 +135,8 @@ def test_patch_send_plan_payload_is_stable_and_embeds_learning_context() -> None
         sort_keys=True,
     )
     assert payload["ready"] is True
-    assert payload["readiness_reason"] == ""
+    assert "physical A4 rehearsal disproved" in payload["readiness_reason"]
+    assert "paired CC LSB conversion not hardware-verified" in payload["readiness_reason"]
 
 
 def test_patch_send_plan_rejects_wrong_types_and_candidate_range() -> None:

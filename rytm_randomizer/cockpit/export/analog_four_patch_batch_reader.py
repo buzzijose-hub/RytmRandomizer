@@ -16,10 +16,14 @@ from ...behavior.midi_event_plan import (
 from ...data.analog_four_display import (
     A4_MIDI_MAX,
     A4_MIDI_MIN,
+    ANALOG_FOUR_PARAMETER_DISPLAY,
+    DISPLAY_SCALE_BIPOLAR,
     TRANSPORT_CC_READY,
     TRANSPORT_NRPN_READY,
     TRANSPORT_SCREEN_ONLY,
     TRANSPORT_SCREEN_ONLY_NRPN,
+    make_a4_patch_value,
+    midi_to_a4_signed_screen,
 )
 from ...data.analog_four_midi import ANALOG_FOUR_MANUAL_CC, ANALOG_FOUR_SYNTH_TRACK_NRPN
 from ...data.midi_event_kinds import (
@@ -629,6 +633,7 @@ def _verify_canonical_transport(event: AnalogFourPatchSendEvent) -> None:
             )
         if (event.cc_msb, event.cc_lsb) != (mapping.cc_msb, mapping.cc_lsb):
             raise ValueError("send event CC address does not match the canonical A4 parameter map")
+        _verify_current_transport_policy(event)
         return
 
     mapping = ANALOG_FOUR_SYNTH_TRACK_NRPN.get(event.parameter)
@@ -636,6 +641,41 @@ def _verify_canonical_transport(event: AnalogFourPatchSendEvent) -> None:
         raise ValueError(f"send event parameter {event.parameter!r} has no canonical A4 NRPN")
     if event.nrpn_address != (mapping.nrpn_msb, mapping.nrpn_lsb):
         raise ValueError("send event NRPN address does not match the canonical A4 parameter map")
+    _verify_current_transport_policy(event)
+
+
+def _verify_current_transport_policy(event: AnalogFourPatchSendEvent) -> None:
+    spec = ANALOG_FOUR_PARAMETER_DISPLAY.get(event.parameter)
+    if spec is None:
+        raise ValueError(f"send event parameter {event.parameter!r} has no current A4 policy")
+    screen_target = (
+        midi_to_a4_signed_screen(event.midi_value)
+        if spec.display_scale == DISPLAY_SCALE_BIPOLAR
+        else event.midi_value
+    )
+    current = make_a4_patch_value(event.parameter, screen_target=screen_target)
+    if current.midi_value is None:
+        reason = current.transport_blocking_reason or "current transport policy blocks this row"
+        raise ValueError(
+            f"send event parameter {event.parameter!r} is not transport-ready "
+            f"under current A4 policy: {reason}"
+        )
+    if (
+        current.section,
+        current.encoder,
+        current.screen_value,
+        current.midi_value,
+        current.transport_status,
+    ) != (
+        event.section,
+        event.encoder,
+        event.screen_value,
+        event.midi_value,
+        event.transport_status,
+    ):
+        raise ValueError(
+            f"send event parameter {event.parameter!r} does not match current A4 policy"
+        )
 
 
 def _verify_coverage(

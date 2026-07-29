@@ -39,6 +39,8 @@ def _fake_a4_transport_plan() -> types.SimpleNamespace:
             sendable_count=1,
             transport_message_count=1,
             manual_count=0,
+            live_dial_path="transport-ready",
+            blocking_reason="none",
         ),
     )
 
@@ -1452,6 +1454,28 @@ def test_app_a4_patch_send_plan_validation_rejects_summary_drift(
 
     with pytest.raises(ValueError, match=error):
         app._validate_a4_patch_send_plan_events(plan)
+
+
+def test_a4_patch_send_telemetry_distinguishes_partial_transport_delivery() -> None:
+    from rytm_randomizer import app
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
+    plan = _fake_a4_transport_plan()
+    plan.summary.sendable_count = 27
+    plan.summary.manual_count = 12
+    plan.summary.transport_message_count = 37
+    plan.summary.live_dial_path = "partial-live-dial-ready"
+
+    context = app._a4_patch_send_log_context(plan, "manifest")
+    reset_metrics()
+    outcome = app._record_a4_patch_send_outcome(get_metrics(), 0.0)
+
+    assert context["sendable_count"] == 27
+    assert context["manual_count"] == 12
+    assert context["transport_message_count"] == 37
+    assert context["live_dial_path"] == "partial-live-dial-ready"
+    assert context["semantic_verification_required"] is True
+    assert outcome["outcome"] == "transport_delivered"
 
 
 def test_app_arm_a4_patch_send_plan_rejects_empty_plan_before_provider(

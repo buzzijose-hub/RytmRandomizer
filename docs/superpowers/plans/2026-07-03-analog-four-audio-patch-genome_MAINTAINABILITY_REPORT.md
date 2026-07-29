@@ -26,14 +26,14 @@ child owned by a cleanup-capable parent; transport contracts are shared; batch
 staging/publication and app send responsibilities are split into focused
 helpers; and the state file has schema enforcement.
 
-The fresh focused A4/operator suite passed 912 tests, along with 705
+The repair-focused A4/operator suite passed 461 tests, along with 705
 architecture tests and 685 V1.34 parity items. The exact corrected-tree
-full-suite run passed 6,825 tests / 3 skipped. The Ruff/Black/isort/Vulture/
+full-suite run passed 6,838 tests / 3 skipped. The Ruff/Black/isort/Vulture/
 strict-production-Pyright/mechanical-review set is clean. Dynamic test-harness typing
 remains the accepted scoped Gate 3 debt; all 63 touched production modules pass
 strict Pyright.
 Touched production files reached 100% statement and branch coverage across
-7,896 statements and 1,892 branches. Follow-up publication, online checks, and
+7,911 statements and 1,898 branches. Follow-up publication, online checks, and
 the fresh reviewer verdict are tracked on PR #214.
 
 The largest residual constraints are explicit: generated saved-kit SysEx writes

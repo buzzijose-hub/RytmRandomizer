@@ -13,8 +13,10 @@ Last updated: 2026-07-29. This file is a hand-authored snapshot and is meant to 
   The 2026-07-29 supervised rehearsal delivered the former 33-row / 53-message
   plan but failed semantic verification for six inferred A4 enum values; those
   rows and six paired-CC rows now remain manual. The clean initialized kit was
-  reloaded without saving after the failed rehearsal. Strict production typing
-  is reproducible with
+  reloaded without saving after the failed rehearsal. Stored manifests are now
+  revalidated against current transport policy before provider construction,
+  and partial-plan success is labeled transport delivery rather than semantic
+  verification. Strict production typing is reproducible with
   `just typecheck`; the CODEOWNER accepted the separately disclosed dynamic
   test-harness typing debt and historical Gate 14/16 evidence exceptions for
   this PR. A fresh supervised rehearsal of the reduced plan remains a pre-merge
