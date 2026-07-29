@@ -391,6 +391,43 @@ def test_build_port_enumerator_falls_back_to_null_without_mido(
     assert enumerator.list_input_names() == ()
 
 
+@pytest.mark.parametrize("value", ["off", "OFF", "  Off  "])
+def test_build_port_enumerator_env_kill_switch_forces_null(
+    monkeypatch: pytest.MonkeyPatch, value: str
+) -> None:
+    """``RYTM_RAND_MIDI_BACKEND=off`` forces the null enumerator even with mido.
+
+    The escape hatch for CI/headless hosts and misbehaving OS MIDI services
+    (python-rtmidi can abort the process from C++ when the OS MIDI client
+    cannot be created — uncatchable in Python, so prevention is the fix).
+    """
+
+    monkeypatch.setenv("RYTM_RAND_MIDI_BACKEND", value)
+    # find_spec would say mido exists; the kill switch must win first.
+    monkeypatch.setattr(
+        cockpit_main.importlib.util,
+        "find_spec",
+        lambda name: pytest.fail("find_spec must not be consulted when backend=off"),
+    )
+
+    enumerator = cockpit_main._build_port_enumerator()
+
+    assert isinstance(enumerator, NullPortEnumerator)
+
+
+def test_build_port_enumerator_env_auto_keeps_real_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Values other than ``off`` behave as ``auto`` (mido-absent fallback here)."""
+
+    monkeypatch.setenv("RYTM_RAND_MIDI_BACKEND", "auto")
+    monkeypatch.setattr(cockpit_main.importlib.util, "find_spec", lambda name: None)
+
+    enumerator = cockpit_main._build_port_enumerator()
+
+    assert isinstance(enumerator, NullPortEnumerator)
+
+
 def test_connection_event_broadcaster_pushes_connection_changed() -> None:
     """The on_change adapter fans one ``connection_changed`` per diff."""
 

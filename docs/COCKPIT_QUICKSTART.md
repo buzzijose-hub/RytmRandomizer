@@ -17,6 +17,48 @@ machine.
 
 ---
 
+## 0. The double-click launch (installed bundle)
+
+If you have a CI-built cockpit bundle (the `cockpit-bundle-<OS>` artifact
+from `.github/workflows/installers.yml` — `.msi`/`.exe` on Windows,
+`.dmg`/`.app` on macOS, `.deb`/`.rpm`/AppImage on Linux), you don't need
+any of the toolchains below. Install it, double-click the app, and the
+shell does the rest:
+
+1. **Spawns the bundled sidecar.** The bundle embeds a self-contained
+   `rytm-sidecar` binary (a PyInstaller freeze of
+   `python -m rytm_randomizer.cockpit`); no Python install is required
+   on your machine. A dev checkout without the bundled binary
+   automatically falls back to `python -m rytm_randomizer.cockpit` from
+   PATH (sections 1–4 below).
+2. **Picks a free port.** The shell uses 4317 when it's free and asks
+   the OS for a free ephemeral port otherwise, passing the choice to
+   both the sidecar (`RYTM_RAND_WS_PORT`) and the webview — a busy port
+   can no longer brick the launch.
+3. **Bridges the handshake token.** The shell sets
+   `RYTM_RAND_WS_TOKEN_FILE`, reads back the per-launch token the
+   sidecar mints, and injects it into the window (§2.1).
+4. **Tells you when something is wrong.** If the sidecar fails to spawn
+   three times in a row, the shell shows an error dialog with the
+   actual OS error (and keeps retrying in the background) instead of
+   crash-looping silently.
+5. **Shuts down cleanly.** Closing the window sends the sidecar a
+   graceful shutdown (a stdin sentinel on every OS, plus SIGTERM on
+   macOS/Linux) and only hard-kills after a 5-second grace.
+
+> **Signing is currently deferred:** the CI artifacts are unsigned dev
+> builds, so expect a Gatekeeper prompt on macOS (right-click → Open)
+> and a SmartScreen prompt on Windows ("More info → Run anyway"). See
+> [`docs/BUILDING_INSTALLERS.md` § Signing](BUILDING_INSTALLERS.md#signing).
+
+Power-user overrides: `RYTM_RAND_SIDECAR_BIN=<path>` forces a specific
+sidecar binary; `RYTM_RAND_WS_PORT=<port>` forces a specific port.
+
+Everything below is the **developer path** — building the three layers
+yourself from a clone.
+
+---
+
 ## 1. Prerequisites
 
 The cockpit is a Tauri 2 desktop app (Rust) wrapping a web frontend (Vite +
@@ -211,7 +253,11 @@ cargo build --release
 
 The release binary embeds the web frontend (from `desktop/web/dist/`)
 and spawns the sidecar via the `python -m rytm_randomizer.cockpit`
-command on your PATH.
+command on your PATH — unless a bundled `rytm-sidecar` binary is
+present in `desktop/shell/binaries/` (or the app resources), in which
+case the shell prefers it. See
+[`docs/BUILDING_INSTALLERS.md` § Bundled Python sidecar](BUILDING_INSTALLERS.md#bundled-python-sidecar-pyinstaller)
+for producing that binary locally.
 
 ---
 
@@ -513,9 +559,22 @@ ECMAScript and tooling baseline.
 
 **Port 4317 is already in use**
 
-Set `RYTM_RAND_WS_PORT=<free port>` before launching both the sidecar
-and the shell, or kill the process holding 4317 (`lsof -i :4317` on
-macOS / Linux; `Get-NetTCPConnection -LocalPort 4317` on Windows).
+The Tauri shell handles this automatically: it picks a free ephemeral
+port when 4317 is busy and passes the choice to the sidecar and the
+webview. If you are running the sidecar standalone (no shell), set
+`RYTM_RAND_WS_PORT=<free port>` before launching it, or kill the
+process holding 4317 (`lsof -i :4317` on macOS / Linux;
+`Get-NetTCPConnection -LocalPort 4317` on Windows).
+
+**The window opens but a "sidecar failed to start" dialog appears**
+
+The shell could not spawn the sidecar three times in a row; the dialog
+shows the underlying OS error. In a dev checkout this almost always
+means `python` is not on PATH for GUI-launched apps, or the project is
+not installed in that Python (`pip install -e ".[dev]"`). The shell
+keeps retrying with backoff — once the spawn succeeds the window
+connects on its own. To point the shell at a specific bundled binary,
+set `RYTM_RAND_SIDECAR_BIN=<path>`.
 
 **Sidecar crashes on connect with "no profiles found"**
 

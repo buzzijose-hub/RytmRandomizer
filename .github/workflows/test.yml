@@ -68,6 +68,12 @@ concurrency:
 #   desktop-shell — validates the Tauri shell under desktop/shell with
 #       a local web build, rustfmt, cargo test, and clippy on Windows.
 #
+#   launch-smoke — fast ubuntu gate that boots the real cockpit sidecar
+#       (python -m rytm_randomizer.cockpit) on a random loopback port,
+#       polls GET /health, runs the authenticated WS bootstrap handshake,
+#       and shuts down cleanly (tests/test_launch_smoke.py). Guards the
+#       double-click launch path without building the PyInstaller binary.
+#
 #   docs-gate — pull-request-only gate that fails when production code or
 #       pyproject.toml changes without an accompanying docs/, README.md,
 #       or CONTRIBUTING.md edit. Prevents silent rot of onboarding
@@ -781,6 +787,50 @@ jobs:
         run: |
           echo "Production code change is accompanied by documentation updates."
 
+  launch-smoke:
+    # Double-click launch health gate (WS-H follow-up). Boots the REAL
+    # cockpit sidecar entry point (`python -m rytm_randomizer.cockpit`)
+    # as a subprocess on a random loopback port with a temp token file —
+    # WITHOUT building the PyInstaller binary — then polls GET /health
+    # until the sidecar answers, performs the authenticated WS bootstrap
+    # handshake (hello + ack + the 5 bootstrap events), and shuts the
+    # process down cleanly. This is the cheapest signal that the exact
+    # process the Tauri shell spawns still comes up and speaks the
+    # protocol; the logic lives in tests/test_launch_smoke.py so the
+    # same gate runs locally under `pytest -m fast`.
+    name: launch-smoke
+    needs: detect-changes
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      needs.detect-changes.outputs.code == 'true' ||
+      needs.detect-changes.outputs.tests == 'true' ||
+      needs.detect-changes.outputs.deps == 'true' ||
+      needs.detect-changes.outputs.ci == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
+
+      - name: Install ALSA dev headers
+        # python-rtmidi's C-extension wheel build links against ALSA; the
+        # sidecar's passive port enumeration imports it at launch time.
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev
+
+      - name: Install package with dev extras
+        run: pip install -e ".[dev]"
+
+      - name: Run launch smoke suite
+        run: pytest tests/test_launch_smoke.py -v
+
   required-checks:
     # Aggregate gate for branch protection. Path filters cause individual
     # upstream jobs to skip on irrelevant changes (e.g. a docs-only edit
@@ -794,7 +844,7 @@ jobs:
     # `failure` or `cancelled`. `skipped` counts as success because the
     # path filter said this category did not need to be re-validated.
     name: required-checks
-    needs: [detect-changes, lint, security, architecture, test, e2e, desktop-web, desktop-web-e2e, desktop-shell, docs-gate]
+    needs: [detect-changes, lint, security, architecture, test, e2e, desktop-web, desktop-web-e2e, desktop-shell, docs-gate, launch-smoke]
     if: always()
     runs-on: ubuntu-latest
 
@@ -813,6 +863,7 @@ jobs:
           echo "desktop-web-e2e : ${{ needs.desktop-web-e2e.result }}"
           echo "desktop-shell   : ${{ needs.desktop-shell.result }}"
           echo "docs-gate       : ${{ needs.docs-gate.result }}"
+          echo "launch-smoke    : ${{ needs.launch-smoke.result }}"
 
       - name: Fail if any upstream job failed or was cancelled
         # GitHub workflow `needs.*.result` is one of: success, failure,
@@ -830,7 +881,8 @@ jobs:
             "${{ needs.desktop-web.result }}" \
             "${{ needs.desktop-web-e2e.result }}" \
             "${{ needs.desktop-shell.result }}" \
-            "${{ needs.docs-gate.result }}"; do
+            "${{ needs.docs-gate.result }}" \
+            "${{ needs.launch-smoke.result }}"; do
             case "$result" in
               success|skipped) ;;
               *)

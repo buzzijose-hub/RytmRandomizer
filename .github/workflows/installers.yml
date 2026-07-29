@@ -199,7 +199,46 @@ jobs:
             libwebkit2gtk-4.1-dev \
             libssl-dev \
             libayatana-appindicator3-dev \
-            librsvg2-dev
+            librsvg2-dev \
+            libasound2-dev
+
+      # ----- Bundled Python sidecar (PyInstaller). -----
+      #
+      # scripts/build_sidecar_binary.py freezes `python -m
+      # rytm_randomizer.cockpit` into a one-file `rytm-sidecar` binary and
+      # drops it in desktop/shell/binaries/, where tauri.conf.json's
+      # `bundle.resources` glob picks it up. The shell then launches the
+      # bundled binary at runtime (no Python-on-PATH requirement for end
+      # users); a checkout without the binary still works via the shell's
+      # dev fallback. libasound2-dev above is needed on Linux because the
+      # editable install builds python-rtmidi's C extension against ALSA.
+      #
+      # NO signing here (matching the briefcase job): artifacts are
+      # unsigned/dev-signed by design until the signing posture decision
+      # lands. See docs/BUILDING_INSTALLERS.md § Signing.
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
+
+      - name: Install sidecar runtime + packaging toolchain
+        run: pip install -e ".[cockpit,packaging]"
+
+      - name: Build bundled sidecar binary (PyInstaller)
+        run: python scripts/build_sidecar_binary.py --output-dir desktop/shell/binaries
+
+      - name: Upload standalone sidecar binary
+        # Also published on its own so the release engineer can smoke-test
+        # the sidecar half without unpacking the full Tauri bundle.
+        uses: actions/upload-artifact@v7
+        with:
+          name: rytm-sidecar-${{ runner.os }}
+          path: desktop/shell/binaries/rytm-sidecar*
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Install web dependencies
         working-directory: desktop/web

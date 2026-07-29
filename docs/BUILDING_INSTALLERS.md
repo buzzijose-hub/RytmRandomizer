@@ -77,11 +77,62 @@ Tauri writes per-OS installers under
 
 These are GUI installers (the operator double-clicks the file), unlike
 the CLI-oriented Briefcase artifacts. They embed the web frontend from
-`desktop/web/dist/` and they expect the Python sidecar's
-`python -m rytm_randomizer.cockpit` entry point to be reachable on PATH
-at launch time - typically because the operator has also installed the
-Briefcase artifact, or has an editable `pip install -e ".[cockpit]"`
-or `pip install -e ".[dev]"` checkout active.
+`desktop/web/dist/` **and, when built through CI, the bundled
+`rytm-sidecar` Python binary** (next section) — so a released bundle is
+fully self-contained: double-click, window opens, sidecar starts. When
+the bundled binary is absent (a local `cargo tauri build` without the
+PyInstaller step), the shell falls back to spawning
+`python -m rytm_randomizer.cockpit` from PATH — typically because the
+operator has an editable `pip install -e ".[cockpit]"` or
+`pip install -e ".[dev]"` checkout active.
+
+### Bundled Python sidecar (PyInstaller)
+
+`scripts/build_sidecar_binary.py` freezes the cockpit sidecar into a
+one-file `rytm-sidecar` binary (`rytm-sidecar.exe` on Windows) with
+[PyInstaller](https://pyinstaller.org/), installed via the `packaging`
+optional-deps extra:
+
+```bash
+pip install -e ".[cockpit,packaging]"
+python scripts/build_sidecar_binary.py --output-dir desktop/shell/binaries
+```
+
+Contract details (pinned by `tests/test_launch_smoke.py`):
+
+- **Deterministic entry.** The generated entry stub calls
+  `rytm_randomizer.cockpit.__main__.main` — the exact equivalent of
+  `python -m rytm_randomizer.cockpit`. There is no second launch code
+  path to drift.
+- **Env passthrough.** The binary takes no flags. The Tauri shell
+  configures it exactly like the dev sidecar: `RYTM_RAND_WS_PORT` (the
+  shell picks a free port dynamically — 4317 when available, an
+  OS-assigned ephemeral port otherwise) and `RYTM_RAND_WS_TOKEN_FILE`
+  (the per-launch token handoff).
+- **Cross-platform graceful shutdown.** The entry stub watches stdin
+  for the `RYTM_SIDECAR_SHUTDOWN` sentinel (or pipe EOF) and raises
+  `SIGINT` in-process so uvicorn shuts down gracefully. This gives
+  Windows — which has no SIGTERM — a clean-shutdown channel before the
+  shell's 5-second hard kill. The sentinel string is pinned in lockstep
+  between `scripts/build_sidecar_binary.py` and
+  `desktop/shell/src/sidecar.rs`.
+- **Placement.** The binary lands in `desktop/shell/binaries/`
+  (gitignored). `desktop/shell/tauri.conf.json` bundles it through the
+  `bundle.resources` glob `binaries/rytm-sidecar*`; a checkout without
+  the binary still builds — the glob simply matches nothing and the
+  shell uses the PATH-python dev fallback at runtime. An explicit
+  binary can also be forced at runtime via the `RYTM_RAND_SIDECAR_BIN`
+  env var.
+- **Known limitation.** The audio-analysis stack (librosa / numba) is
+  excluded from the bundle — it is PyInstaller-hostile and only backs
+  the Profile Wizard's audio-source analyzers. Wizard audio analysis
+  requires a pip-installed sidecar until a dedicated packaging
+  workstream lands; every other cockpit surface works from the bundle.
+
+In CI, the `desktop-bundle` job in
+`.github/workflows/installers.yml` runs the script on each OS before
+`cargo tauri build`, and additionally uploads the standalone binary as
+`rytm-sidecar-<OS>` for isolated smoke-testing.
 
 ### Runtime supervision
 
@@ -106,8 +157,13 @@ the cockpit binary, the Rust shell in `desktop/shell/src/main.rs`:
    `WIZARD_SOURCE_ROOTS` (default `~/.rytm-randomizer/wizard-sources/`)
    per the operator's preferences.
 4. Starts the embedded web frontend in the Tauri window.
-5. Spawns the Python sidecar (`python -m rytm_randomizer.cockpit`) as
-   a child process with the env from steps 2–3 applied.
+5. Spawns the Python sidecar as a child process with the env from
+   steps 2–3 applied — preferring the bundled `rytm-sidecar` binary
+   from the app resources when present (see "Bundled Python sidecar"
+   above), falling back to `python -m rytm_randomizer.cockpit` from
+   PATH for dev checkouts. Repeated spawn failures surface a native
+   error dialog with the actual OS error instead of crash-looping
+   silently.
 6. **Reads the token back from the same file** (the sidecar has now
    written it) and hands it to the web frontend via Tauri's IPC so the
    first WS frame the React client sends can be
@@ -243,6 +299,16 @@ gate PRs. The installer job runs only on `v*` tags and manual dispatch.
 ---
 
 ## Signing
+
+> **Current status: DEFERRED (maintainer decision, 2026-07).** CI
+> produces unsigned / ad-hoc-signed **dev artifacts only** — no signing
+> steps run in `installers.yml` (for the Briefcase installers, the Tauri
+> bundle, or the bundled `rytm-sidecar` binary), and no signing keys
+> live in GitHub Secrets. The placeholders below document the eventual
+> workflow for when the signing/notarization posture decision lands.
+> Until then, expect SmartScreen / Gatekeeper warnings on the dev
+> artifacts (right-click → Open on macOS; "More info → Run anyway" on
+> Windows).
 
 **Required before public release.** Unsigned `.msi` / `.pkg` artifacts
 trigger SmartScreen / Gatekeeper warnings that look identical to malware

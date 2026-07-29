@@ -299,11 +299,23 @@ def _build_port_enumerator() -> PortEnumerator:
     the hardware extra), the :class:`NullPortEnumerator` keeps the
     cockpit booting with the connection phase pinned at ``searching``.
 
+    ``RYTM_RAND_MIDI_BACKEND=off`` forces the :class:`NullPortEnumerator`
+    regardless of ``mido`` availability. This is the deterministic escape
+    hatch for CI/headless hosts and for operators whose OS MIDI service is
+    misbehaving: python-rtmidi 1.5.8 can abort the whole process from its
+    C++ layer when the OS MIDI client cannot be created (observed on macOS
+    as ``MidiInCore::initialize ... (-304)`` under load), which no Python
+    ``except`` can catch — turning the backend off keeps the cockpit alive
+    so the Connection Doctor can explain the situation instead. Any value
+    other than ``off`` (case-insensitive) behaves as ``auto``.
+
     ``find_spec`` only *locates* the module — it never imports it, so
     the no-import-time-mido invariant
     (``tests/architecture/test_no_side_effects.py``) holds either way.
     """
 
+    if os.environ.get("RYTM_RAND_MIDI_BACKEND", "auto").strip().lower() == "off":
+        return NullPortEnumerator()
     if importlib.util.find_spec("mido") is None:
         return NullPortEnumerator()
     # Imported lazily so merely importing ``cockpit.__main__`` (e.g. the

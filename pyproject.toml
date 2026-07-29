@@ -92,6 +92,16 @@ cockpit = [
 installer = [
     "briefcase>=0.4,<1",
 ]
+# Bundled-sidecar packaging toolchain. scripts/build_sidecar_binary.py uses
+# PyInstaller to freeze `python -m rytm_randomizer.cockpit` into the one-file
+# `rytm-sidecar` binary the Tauri shell bundles (see installers.yml's
+# desktop-bundle job and docs/BUILDING_INSTALLERS.md § "Bundled Python
+# sidecar"). Kept separate from `dev` and `installer` so neither the test
+# suite nor the briefcase flow pays the PyInstaller install cost. PyInstaller
+# never touches MIDI encoding, so its version is not Elektron-critical.
+packaging = [
+    "pyinstaller>=6.6,<7",
+]
 
 [project.scripts]
 rytm-randomizer = "rytm_randomizer.app:main"
