@@ -354,6 +354,11 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # pattern.
         "ProfileAlreadyExistsError",
         "ProfileRegistryAccessError",
+        # Wave 4 ArmedApply seam (senders/armed_apply.py): re-homed under
+        # MidiError + RuntimeError so ``except RuntimeError`` callers still
+        # work AND the conformance check sees a taxonomy member. Mirrors
+        # the RealMidiPortError dual-inheritance pattern.
+        "ArmedApplyError",
         # Optional local-AI provider boundary: kept passive, taxonomy-backed,
         # and raised only by explicit local provider calls or JSON validators.
         "LocalAiError",

@@ -63,9 +63,11 @@ from .device.connection import (
     ProviderPortEnumerator,
     set_active_connection_manager,
 )
+from .device.midi_monitor import MidiInputOpener, MidiMonitorSupervisor
 from .history import HistoryStore
+from .library import LibraryStore, default_captures_dir, default_library_dir
 from .profiles import ProfileRegistry, default_profiles_dir
-from .ws.handlers import build_connection_changed
+from .ws.handlers import build_armed_watchdog, build_connection_changed
 from .ws.server import ConnectionRegistry, create_app
 from .ws.session import CockpitSession
 
@@ -312,6 +314,25 @@ def _build_port_enumerator() -> PortEnumerator:
     return ProviderPortEnumerator(build_mido_midi_port_provider())
 
 
+def _build_input_opener() -> MidiInputOpener | None:
+    """Pick the passive input opener for the live MIDI monitor.
+
+    ``None`` when ``mido`` is absent — the monitor supervisor is then
+    simply not wired and the cockpit runs without the ``midi_activity``
+    stream (byte-identical to the pre-Wave-4 wire surface). Opening
+    inputs is passive per the Live-but-Passive rule; the returned
+    provider surface exposes ``open_input`` only through the monitor's
+    :class:`~rytm_randomizer.cockpit.device.midi_monitor.MidiInputOpener`
+    Protocol.
+    """
+
+    if importlib.util.find_spec("mido") is None:
+        return None
+    from ..mido_provider import build_mido_midi_port_provider  # noqa: PLC0415
+
+    return build_mido_midi_port_provider()
+
+
 def _connection_event_broadcaster(
     registry: ConnectionRegistry,
 ) -> Callable[[ConnectionState], None]:
@@ -348,15 +369,39 @@ def main() -> None:
     """Mint the handshake token, build the app, run uvicorn on the resolved port."""
 
     session = build_session()
+    # Wave 4: the injected kit/sound library (JSON records under the
+    # platform config dir; importer reads ./captures). Injected on the
+    # session — the store module itself keeps zero module-level state.
+    session.library_store = LibraryStore(
+        default_library_dir(),
+        captures_dir=default_captures_dir(),
+    )
     token = _provision_token()
     connection_registry = ConnectionRegistry()
     manager = ConnectionManager(
         _build_port_enumerator(),
         on_change=_connection_event_broadcaster(connection_registry),
+        # Wave 4: enumeration faults land in the session's bounded error
+        # journal so the diagnostics command can replay them.
+        journal=session.error_journal,
     )
     set_active_connection_manager(manager)
+    # Wave 4: device gone while armed -> auto-disarm + fault signal
+    # (never auto-re-arm — the operator must arm explicitly again).
+    manager.add_notify_hook(build_armed_watchdog(session, connection_registry.broadcast_event))
     app = create_app(session, token=token, connection_registry=connection_registry)
     _install_connection_manager_lifecycle(app, manager)
+    # Wave 4: passive live MIDI input stream — one monitor follows the
+    # selected Elektron input and pushes coalesced ``midi_activity``
+    # batches to every client. Only wired when ``mido`` is importable.
+    input_opener = _build_input_opener()
+    if input_opener is not None:
+        supervisor = MidiMonitorSupervisor(
+            input_opener,
+            broadcast=connection_registry.broadcast_event,
+        )
+        manager.add_notify_hook(supervisor.notify)
+        app.router.add_event_handler("shutdown", supervisor.aclose)
     uvicorn.run(app, host=_DEFAULT_HOST, port=_resolve_port())
 
 

@@ -468,3 +468,97 @@ def test_main_registers_connection_manager_and_registry(
     # Startup/shutdown lifecycle handlers are installed.
     assert manager.start in app.router.on_startup
     assert manager.stop in app.router.on_shutdown
+
+
+# ---------------------------------------------------------------------------
+# Wave 4 — input opener + main() wiring of library / watchdog / monitor.
+# ---------------------------------------------------------------------------
+
+
+def test_build_input_opener_returns_provider_when_mido_present() -> None:
+    """mido is a required dependency in the dev env: the opener is real."""
+
+    opener = cockpit_main._build_input_opener()
+    assert opener is not None
+    assert callable(getattr(opener, "open_input", None))
+
+
+def test_build_input_opener_returns_none_when_mido_absent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(cockpit_main.importlib.util, "find_spec", lambda _n: None)
+    assert cockpit_main._build_input_opener() is None
+
+
+def test_main_wires_wave4_library_watchdog_and_monitor(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """``main()`` injects the library store and registers the Wave-4 hooks."""
+
+    monkeypatch.setattr(cockpit_main, "default_profiles_dir", lambda: tmp_path)
+    monkeypatch.setattr(cockpit_main, "default_library_dir", lambda: tmp_path / "library")
+    monkeypatch.setattr(cockpit_main, "default_captures_dir", lambda: tmp_path / "captures")
+    monkeypatch.delenv(cockpit_main._PORT_ENV_VAR, raising=False)
+    _redirect_token_file(monkeypatch, tmp_path)
+
+    captured: dict[str, Any] = {}
+    sessions: list[CockpitSession] = []
+    real_build_session = cockpit_main.build_session
+
+    def _capture_session() -> CockpitSession:
+        session = real_build_session()
+        sessions.append(session)
+        return session
+
+    def _fake_run(app: Any, *, host: str, port: int) -> None:
+        captured["app"] = app
+
+    monkeypatch.setattr(cockpit_main, "build_session", _capture_session)
+    monkeypatch.setattr(cockpit_main, "uvicorn", type("U", (), {"run": staticmethod(_fake_run)}))
+
+    cockpit_main.main()
+
+    session = sessions[0]
+    # Library store injected with the platform-dir + captures defaults.
+    assert session.library_store is not None
+    assert session.library_store.library_dir == tmp_path / "library"
+    assert session.library_store.captures_dir == tmp_path / "captures"
+    # The ConnectionManager carries the session's error journal and the
+    # Wave-4 notify hooks (armed watchdog + monitor supervisor when mido
+    # is importable — which it is in the dev env).
+    manager = active_connection_manager()
+    assert manager is not None
+    assert manager._journal is session.error_journal
+    assert len(manager._notify_hooks) == 2
+    # The supervisor's shutdown hook is installed on the app lifecycle.
+    app = captured["app"]
+    shutdown_names = [getattr(h, "__qualname__", "") for h in app.router.on_shutdown]
+    assert any("MidiMonitorSupervisor.aclose" in name for name in shutdown_names)
+
+
+def test_main_skips_monitor_supervisor_when_mido_absent(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setattr(cockpit_main, "default_profiles_dir", lambda: tmp_path)
+    monkeypatch.setattr(cockpit_main, "default_library_dir", lambda: tmp_path / "library")
+    monkeypatch.setattr(cockpit_main, "default_captures_dir", lambda: tmp_path / "captures")
+    monkeypatch.delenv(cockpit_main._PORT_ENV_VAR, raising=False)
+    _redirect_token_file(monkeypatch, tmp_path)
+    monkeypatch.setattr(cockpit_main, "_build_input_opener", lambda: None)
+
+    captured: dict[str, Any] = {}
+
+    def _fake_run(app: Any, *, host: str, port: int) -> None:
+        captured["app"] = app
+
+    monkeypatch.setattr(cockpit_main, "uvicorn", type("U", (), {"run": staticmethod(_fake_run)}))
+
+    cockpit_main.main()
+
+    manager = active_connection_manager()
+    assert manager is not None
+    # Only the armed watchdog is registered — no monitor supervisor.
+    assert len(manager._notify_hooks) == 1
+    app = captured["app"]
+    shutdown_names = [getattr(h, "__qualname__", "") for h in app.router.on_shutdown]
+    assert not any("MidiMonitorSupervisor" in name for name in shutdown_names)

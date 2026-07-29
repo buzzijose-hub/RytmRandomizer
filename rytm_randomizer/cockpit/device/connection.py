@@ -49,7 +49,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Final, Literal, Protocol, get_args, runtime_checkable
 
@@ -106,6 +106,25 @@ non-mido enumerators."""
 
 _FALLBACK_FINGERPRINT_PREFIX: Final[str] = "cockpit.connection.enumeration_failed"
 """Fingerprint stem for non-taxonomy exceptions caught during a poll."""
+
+
+@runtime_checkable
+class DiagnosticsJournal(Protocol):
+    """Duck-typed sink for wire-safe categorized error observations.
+
+    Structurally satisfied by
+    :class:`~rytm_randomizer.cockpit.diagnostics.ErrorJournal`; declared
+    here as a Protocol so the passive connection brain stays import-light
+    (no dependency edge onto the diagnostics module).
+    """
+
+    def record(
+        self,
+        fingerprint: str,
+        message: str,
+        context: Mapping[str, str] | None = None,
+    ) -> object:
+        """Append one categorized error observation."""
 
 
 @runtime_checkable
@@ -258,11 +277,14 @@ class ConnectionManager:
         poll_interval: float = DEFAULT_POLL_INTERVAL_SECONDS,
         on_change: Callable[[ConnectionState], None] | None = None,
         clock: Callable[[], float] = time.time,
+        journal: DiagnosticsJournal | None = None,
     ) -> None:
         self._enumerator = enumerator
         self._poll_interval = float(poll_interval)
         self._on_change = on_change
+        self._notify_hooks: list[Callable[[ConnectionState], None]] = []
         self._clock = clock
+        self._journal = journal
         self._task: asyncio.Task[None] | None = None
         self._state = ConnectionState(
             phase="disconnected",
@@ -285,6 +307,18 @@ class ConnectionManager:
         """Seconds between polls in :meth:`run` (fixed at construction)."""
 
         return self._poll_interval
+
+    def add_notify_hook(self, hook: Callable[[ConnectionState], None]) -> None:
+        """Register an additional per-diff observer (Wave 4).
+
+        Hooks fire after ``on_change`` on every observable diff, in
+        registration order. ``__main__`` uses this to wire the armed
+        watchdog (device gone while armed → auto-disarm + fault signal)
+        alongside the WS broadcast without composing closures by hand.
+        Purely passive: a hook can never grant transmit authority.
+        """
+
+        self._notify_hooks.append(hook)
 
     def poll_once(self) -> ConnectionState:
         """Enumerate ports once; diff; fire ``on_change`` on a real change.
@@ -311,6 +345,15 @@ class ConnectionManager:
                     "fingerprint": fingerprint,
                 },
             )
+            if self._journal is not None:
+                # Wave 4: enumeration faults land in the injected bounded
+                # error journal so the diagnostics command can replay them
+                # (fingerprints only — never raw exception text).
+                self._journal.record(
+                    fingerprint,
+                    "MIDI port enumeration failed",
+                    context={"exception_type": type(exc).__name__},
+                )
             candidate = ConnectionState(
                 phase="fault",
                 available_inputs=(),
@@ -339,6 +382,8 @@ class ConnectionManager:
         self._state = candidate
         if self._on_change is not None:
             self._on_change(candidate)
+        for hook in self._notify_hooks:
+            hook(candidate)
         return candidate
 
     async def run(self) -> None:
@@ -415,6 +460,7 @@ __all__ = [
     "ConnectionManager",
     "ConnectionPhase",
     "ConnectionState",
+    "DiagnosticsJournal",
     "NullPortEnumerator",
     "PortEnumerator",
     "ProviderPortEnumerator",

@@ -117,6 +117,7 @@ from .handlers import (
     drain_pending_events,
     emit_initial_events,
     handle_command,
+    resolve_connection_phase,
 )
 from .protocol import (
     CLOSE_CODE_MESSAGE_TOO_BIG,
@@ -141,6 +142,9 @@ _DEFAULT_MAX_MESSAGE_BYTES: Final[int] = 1 * 1024 * 1024
 
 _MAX_MESSAGE_BYTES_ENV_VAR: Final[str] = "RYTM_RAND_WS_MAX_MESSAGE_BYTES"
 """Env var an operator may set to raise (or lower) the size cap at boot."""
+
+APP_VERSION: Final[str] = "1.0.0"
+"""The cockpit sidecar's app version — surfaced by ``GET /health``."""
 
 DEFAULT_QUEUE_MAXSIZE: Final[int] = 256
 """Default per-connection outbound-queue bound (frames, not bytes).
@@ -590,8 +594,26 @@ def create_app(
 
     max_message_bytes = _resolve_max_message_bytes()
     registry = connection_registry if connection_registry is not None else ConnectionRegistry()
-    app = FastAPI(title="rytm-randomizer-cockpit", version="1.0.0")
+    app = FastAPI(title="rytm-randomizer-cockpit", version=APP_VERSION)
     app.state.connection_registry = registry
+
+    @app.get("/health")
+    async def health() -> dict:
+        """Loopback, token-free, read-only liveness probe (Wave 4).
+
+        Deliberately unauthenticated: it exposes no command surface and
+        no secrets — just enough for the Tauri shell (or an operator's
+        ``curl``) to confirm the sidecar is up, which mode the one
+        session is in, and the current passive connection phase. The
+        WS handshake token stays the sole gate on every state-changing
+        surface.
+        """
+
+        return {
+            "version": APP_VERSION,
+            "mode": "live" if session.device.is_armed else "mock",
+            "connection_phase": resolve_connection_phase(session),
+        }
 
     @app.websocket("/ws")
     async def ws_endpoint(websocket: WebSocket) -> None:
@@ -634,6 +656,7 @@ def create_app(
 
 
 __all__ = [
+    "APP_VERSION",
     "DEFAULT_QUEUE_MAXSIZE",
     "ConnectionQueue",
     "ConnectionRegistry",

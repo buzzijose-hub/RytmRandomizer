@@ -59,6 +59,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import importlib.util
 import json
 import time
 from collections import OrderedDict
@@ -72,11 +73,21 @@ from ...observability.metrics import get_metrics
 from ...observability.tracing import operation
 from ..data import CockpitSendPlan, History, MutationCandidate, Snapshot
 from ..device.connection import ConnectionState, active_connection_manager
+from ..diagnostics import build_diagnostics_payload
 from ..engine import mutate, prepare_send_plan
 from ..export import pack_profile_model
+from ..library import LibraryStore
 from .protocol import (
+    COMMAND_ARM,
     COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
+    COMMAND_DIAGNOSTICS,
+    COMMAND_DISARM,
     COMMAND_EXPORT_PROFILE_MODEL,
+    COMMAND_LIBRARY_DELETE,
+    COMMAND_LIBRARY_IMPORT_CAPTURES,
+    COMMAND_LIBRARY_LIST,
+    COMMAND_LIBRARY_SEARCH,
+    COMMAND_LIBRARY_TAG,
     COMMAND_LOAD_SNAPSHOT,
     COMMAND_MOCK_APPLY_OPERATOR_PACKAGE,
     COMMAND_PREPARE_SEND_PLAN,
@@ -97,6 +108,7 @@ from .protocol import (
     ERR_VALIDATION,
     EVENT_CONNECTION_CHANGED,
     EVENT_HISTORY_UPDATED,
+    EVENT_LIBRARY_CHANGED,
     EVENT_MUTATION_PREVIEWED,
     EVENT_PERFORMANCE_CONSOLE_CHANGED,
     EVENT_PROFILE_CHANGED,
@@ -105,7 +117,7 @@ from .protocol import (
     EVENT_SNAPSHOT_CHANGED,
     WS_ERROR_CODES,
 )
-from .session import CockpitSession
+from .session import MAX_PRE_WRITE_BACKUPS, CockpitSession
 
 _logger = get_logger(__name__)
 """Module logger for the cockpit WS command dispatcher.
@@ -172,21 +184,34 @@ def _build_session_status(session: CockpitSession) -> dict:
     }
 
 
-def _connection_phase(session: CockpitSession) -> str:
-    """Resolve the passive connection phase for ``session_status``.
+def resolve_connection_phase(session: CockpitSession) -> str:
+    """Resolve the connection phase for ``session_status`` (and /health).
 
-    When a :class:`~rytm_randomizer.cockpit.device.connection.ConnectionManager`
+    An armed device adapter is authoritative: the ConnectionManager never
+    produces the ``armed`` phase itself (arming is an explicit in-UI
+    operator decision, not an enumeration side effect), so while the
+    session is armed the phase reads ``armed`` regardless of the
+    manager's passive observation. Otherwise, when a
+    :class:`~rytm_randomizer.cockpit.device.connection.ConnectionManager`
     is registered (the ``__main__`` boot path), its latest observed phase
     is authoritative. Unwired sessions (unit tests, embedded harnesses)
-    fall back to a device-derived value: an armed adapter reports
-    ``armed``, otherwise ``disconnected`` — honest for a mock session
-    that has no hardware link at all.
+    fall back to ``disconnected`` — honest for a mock session that has
+    no hardware link at all.
     """
 
+    if session.device.is_armed:
+        return "armed"
     manager = active_connection_manager()
     if manager is not None:
         return manager.state.phase
-    return "armed" if session.device.is_armed else "disconnected"
+    return "disconnected"
+
+
+#: Backwards-compatible private alias — pre-Wave-4 callers (and tests)
+#: reached this helper as ``_connection_phase``; the public name exists so
+#: ``server.py``'s ``/health`` endpoint can share the exact same phase
+#: resolution without importing an underscore symbol.
+_connection_phase = resolve_connection_phase
 
 
 def build_connection_changed(state: ConnectionState) -> dict:
@@ -1304,6 +1329,337 @@ async def _handle_build_operator_package_receipt(
     return HandlerResult(ack={"ok": True, "operator_package_receipt": receipt})
 
 
+# ---------------------------------------------------------------------------
+# Wave-4 arm / disarm — the in-UI half of the Live-but-Passive model.
+#
+# The ``arm`` command is the ONLY path that ever constructs the real-MIDI
+# device adapter, and it does so exclusively through the ``senders``
+# ArmedApply seam: explicit token + confirm, exact-name output resolution
+# (fail-closed), a required pre-write backup hook, and auto-disarm on
+# provider error. The mock adapter stays the default; unwired sessions
+# never see any of this surface.
+# ---------------------------------------------------------------------------
+
+_ARM_FAILED_FINGERPRINT: Final[str] = "cockpit.arm.failed"
+"""Journal fingerprint for a refused/failed explicit arm attempt."""
+
+_ARM_DEVICE_LOST_FINGERPRINT: Final[str] = "cockpit.arm.device_lost"
+"""Journal fingerprint for the watchdog's device-gone auto-disarm."""
+
+
+def _make_pre_write_backup(session: CockpitSession) -> Callable[[object], bool]:
+    """Build the armed seam's required pre-write backup hook.
+
+    The hook captures the operator's **current** snapshot (from the
+    history store — the passive source of truth, never the real adapter's
+    placeholder capture) into ``session.pre_write_backups`` immediately
+    before any armed kit/sound mutation, keeping the most recent
+    :data:`~rytm_randomizer.cockpit.ws.session.MAX_PRE_WRITE_BACKUPS`.
+    Returning ``False`` (no current snapshot to back up) makes the seam
+    refuse the send — reversibility is a precondition, not best-effort.
+    """
+
+    def _backup(_plan: object) -> bool:
+        history = session.history_store.current
+        entry = next(
+            (e for e in history.entries if e.snapshot.snapshot_id == history.current_id),
+            None,
+        )
+        if entry is None:
+            return False
+        session.pre_write_backups.append(entry.snapshot.to_dict())
+        overflow = len(session.pre_write_backups) - MAX_PRE_WRITE_BACKUPS
+        if overflow > 0:
+            del session.pre_write_backups[:overflow]
+        return True
+
+    return _backup
+
+
+def _teardown_armed_state(session: CockpitSession) -> None:
+    """Return the session to the passive baseline (idempotent).
+
+    Disarms the ArmedApply seam (best-effort port close) and restores the
+    pre-arm passive device adapter. Used by the ``disarm`` handler and by
+    the armed watchdog's device-gone auto-disarm; never re-arms.
+    """
+
+    armed = session.armed_apply
+    session.armed_apply = None
+    if armed is not None:
+        armed.disarm()
+    if session.passive_device is not None:
+        session.device = session.passive_device
+        session.passive_device = None
+
+
+def build_armed_watchdog(
+    session: CockpitSession,
+    broadcaster: Callable[[dict], object] | None = None,
+) -> Callable[[ConnectionState], None]:
+    """Build the ConnectionManager notify hook that auto-disarms on loss.
+
+    Wired by ``__main__`` via
+    :meth:`~rytm_randomizer.cockpit.device.connection.ConnectionManager.add_notify_hook`.
+    When a passive poll observes the device gone while the session is
+    armed (phase dropped out of ``listening``, or the armed output port
+    vanished from the enumeration), the hook tears the armed state down,
+    records a journal entry, and broadcasts a fresh ``session_status``
+    fault signal. Reconnecting NEVER re-arms — the operator must run the
+    explicit arm sequence again.
+    """
+
+    def _on_connection_change(state: ConnectionState) -> None:
+        if session.armed_apply is None and not session.device.is_armed:
+            return
+        armed_port = None
+        if session.armed_apply is not None:
+            armed_port = session.armed_apply.port_name
+        if armed_port is None:
+            armed_port = _midi_port(session)
+        phase_lost = state.phase not in ("listening", "armed")
+        port_lost = armed_port is not None and armed_port not in state.available_outputs
+        if not phase_lost and not port_lost:
+            return
+        _teardown_armed_state(session)
+        session.error_journal.record(
+            _ARM_DEVICE_LOST_FINGERPRINT,
+            "device disappeared while armed; auto-disarmed",
+            context={
+                "phase": state.phase,
+                "port": "" if armed_port is None else armed_port,
+            },
+        )
+        get_metrics().record_error(_ARM_DEVICE_LOST_FINGERPRINT)
+        if broadcaster is not None:
+            broadcaster(_build_session_status(session))
+
+    return _on_connection_change
+
+
+def _resolve_arm_port_name(cmd: Mapping[str, object]) -> str | None:
+    """Resolve the exact output-port name an ``arm`` command targets.
+
+    An explicit wire-supplied ``port_name`` wins; otherwise the passive
+    ConnectionManager's ``selected_output`` (when one is registered).
+    ``None`` means the command must fail — arming never guesses a port.
+    """
+
+    raw = cmd.get("port_name")
+    if isinstance(raw, str) and raw:
+        return raw
+    manager = active_connection_manager()
+    if manager is not None:
+        return manager.state.selected_output
+    return None
+
+
+async def _handle_arm(cmd: dict, session: CockpitSession) -> HandlerResult:
+    """Explicit in-UI arm: token + confirm, then the ArmedApply seam."""
+
+    if cmd.get("confirm") is not True:
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, "arm requires confirm: true (explicit in-UI arm)")
+        )
+    token = cmd.get("arm_token")
+    if not isinstance(token, str) or not token:
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, "arm requires a non-empty arm_token"))
+    if session.device.is_armed or session.armed_apply is not None:
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, "session is already armed; disarm first")
+        )
+    port_name = _resolve_arm_port_name(cmd)
+    if not port_name:
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION, "no MIDI output port resolved; pass port_name explicitly"
+            )
+        )
+    provider = session.arm_port_provider
+    if provider is None:
+        if importlib.util.find_spec("mido") is None:
+            return HandlerResult(
+                ack=_error_ack(ERR_VALIDATION, "mido is not installed; cannot arm")
+            )
+        # Lazy import keeps the real-MIDI boundary module out of every
+        # session that never arms (mock stays the default).
+        from ...mido_provider import build_mido_midi_port_provider  # noqa: PLC0415
+
+        provider = build_mido_midi_port_provider()
+
+    # Local imports keep the armed seam off the passive import path.
+    from ...senders.armed_apply import ArmedApplyError, ArmedApplySession  # noqa: PLC0415
+    from ...senders.hardware import ExactOutputOpener  # noqa: PLC0415
+    from ..device.real import RealMidiDeviceAdapter  # noqa: PLC0415
+
+    armed_apply = ArmedApplySession(
+        opener=ExactOutputOpener(provider),
+        port_name=port_name,
+        backup=_make_pre_write_backup(session),
+        arm_token=token,
+    )
+    try:
+        armed_apply.arm(token)
+    except ArmedApplyError as exc:
+        # RR4f: the categorical wire message stays canonical; the full
+        # detail goes to the structured log + the error journal.
+        _logger.warning(
+            "arm_failed",
+            extra={
+                "port_name": port_name,
+                "exception_type": type(exc).__name__,
+                "exception_repr": repr(exc),
+                "fingerprint": _ARM_FAILED_FINGERPRINT,
+            },
+        )
+        session.error_journal.record(
+            _ARM_FAILED_FINGERPRINT,
+            "arm refused: output port could not be resolved or opened",
+            context={"port": port_name},
+        )
+        get_metrics().record_error(_ARM_FAILED_FINGERPRINT)
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION, "arm failed: output port could not be resolved or opened"
+            )
+        )
+    session.passive_device = session.device
+    session.device = RealMidiDeviceAdapter(provider, port_name=port_name)
+    session.armed_apply = armed_apply
+    return HandlerResult(
+        ack={"ok": True, "armed": True, "midi_port": port_name},
+        events=[_build_session_status(session)],
+    )
+
+
+async def _handle_disarm(_cmd: dict, session: CockpitSession) -> HandlerResult:
+    """Explicit disarm: tear the armed seam down, restore the passive device."""
+
+    if session.armed_apply is None and not session.device.is_armed:
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, "session is not armed"))
+    _teardown_armed_state(session)
+    return HandlerResult(
+        ack={"ok": True, "armed": False},
+        events=[_build_session_status(session)],
+    )
+
+
+async def _handle_diagnostics(_cmd: dict, session: CockpitSession) -> HandlerResult:
+    """Read-only health packet: journal + metrics + connection + hints."""
+
+    manager = active_connection_manager()
+    connection_state = None if manager is None else manager.state.to_dict()
+    payload = build_diagnostics_payload(
+        journal=session.error_journal,
+        connection_state=connection_state,
+    )
+    payload["connection_phase"] = _connection_phase(session)
+    return HandlerResult(ack={"ok": True, "diagnostics": payload})
+
+
+# ---------------------------------------------------------------------------
+# Wave-4 library commands — injected store, whole-state change events.
+# ---------------------------------------------------------------------------
+
+
+def _library_store_or_none(session: CockpitSession) -> LibraryStore | None:
+    """The session's injected library store (``None`` for unwired sessions)."""
+
+    return session.library_store
+
+
+def _library_unconfigured_ack() -> HandlerResult:
+    """The uniform refusal for library commands on an unwired session."""
+
+    return HandlerResult(
+        ack=_error_ack(ERR_VALIDATION, "library store is not configured for this session")
+    )
+
+
+def _build_library_changed(store: LibraryStore) -> dict:
+    """Construct the whole-state ``library_changed`` event payload."""
+
+    return {
+        "type": EVENT_LIBRARY_CHANGED,
+        "library": {"records": [record.to_dict() for record in store.list_records()]},
+    }
+
+
+async def _handle_library_list(_cmd: dict, session: CockpitSession) -> HandlerResult:
+    store = _library_store_or_none(session)
+    if store is None:
+        return _library_unconfigured_ack()
+    records = [record.to_dict() for record in store.list_records()]
+    return HandlerResult(ack={"ok": True, "library_records": records})
+
+
+async def _handle_library_search(cmd: dict, session: CockpitSession) -> HandlerResult:
+    store = _library_store_or_none(session)
+    if store is None:
+        return _library_unconfigured_ack()
+    query = str(cmd.get("query", ""))
+    records = [record.to_dict() for record in store.search(query)]
+    return HandlerResult(ack={"ok": True, "library_records": records})
+
+
+async def _handle_library_tag(cmd: dict, session: CockpitSession) -> HandlerResult:
+    store = _library_store_or_none(session)
+    if store is None:
+        return _library_unconfigured_ack()
+    record_id = str(cmd["record_id"])
+    tags = cmd.get("tags", [])
+    if not isinstance(tags, list):
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, "tags must be a list of strings"))
+    try:
+        record = store.tag(record_id, [str(tag) for tag in tags])
+    except ValueError:
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, f"unknown library record_id: {record_id!r}")
+        )
+    return HandlerResult(
+        ack={"ok": True, "library_record": record.to_dict()},
+        events=[_build_library_changed(store)],
+    )
+
+
+async def _handle_library_delete(cmd: dict, session: CockpitSession) -> HandlerResult:
+    store = _library_store_or_none(session)
+    if store is None:
+        return _library_unconfigured_ack()
+    record_id = str(cmd["record_id"])
+    try:
+        deleted = store.delete(record_id)
+    except ValueError:
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, f"unknown library record_id: {record_id!r}")
+        )
+    if not deleted:
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, f"unknown library record_id: {record_id!r}")
+        )
+    return HandlerResult(
+        ack={"ok": True, "library_record_id": record_id},
+        events=[_build_library_changed(store)],
+    )
+
+
+async def _handle_library_import_captures(_cmd: dict, session: CockpitSession) -> HandlerResult:
+    store = _library_store_or_none(session)
+    if store is None:
+        return _library_unconfigured_ack()
+    try:
+        result = store.import_captures()
+    except ValueError:
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, "library captures directory is not available")
+        )
+    events = [_build_library_changed(store)] if result.imported else []
+    return HandlerResult(
+        ack={"ok": True, "library_import": result.to_dict()},
+        events=events,
+    )
+
+
 HandlerFn = Callable[[dict, CockpitSession], Awaitable[HandlerResult]]
 
 _CORE_HANDLERS: dict[str, HandlerFn] = {
@@ -1323,6 +1679,14 @@ _CORE_HANDLERS: dict[str, HandlerFn] = {
     COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY: _handle_preview_operator_package_apply,
     COMMAND_MOCK_APPLY_OPERATOR_PACKAGE: _handle_mock_apply_operator_package,
     COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT: _handle_build_operator_package_receipt,
+    COMMAND_ARM: _handle_arm,
+    COMMAND_DISARM: _handle_disarm,
+    COMMAND_DIAGNOSTICS: _handle_diagnostics,
+    COMMAND_LIBRARY_LIST: _handle_library_list,
+    COMMAND_LIBRARY_SEARCH: _handle_library_search,
+    COMMAND_LIBRARY_TAG: _handle_library_tag,
+    COMMAND_LIBRARY_DELETE: _handle_library_delete,
+    COMMAND_LIBRARY_IMPORT_CAPTURES: _handle_library_import_captures,
 }
 
 #: Backwards-compatibility alias for the legacy ``_HANDLERS`` symbol some
@@ -1491,6 +1855,19 @@ async def handle_command(envelope: dict, session: CockpitSession) -> dict:
             # stays at floor 0 for this file -- ``repr`` still carries the
             # exception type + args for forensic purposes.
             code, message = _classify_handler_exception(exc)
+            # Wave 4: taxonomy errors also land in the session's bounded
+            # error journal so the ``diagnostics`` command can replay the
+            # last 50 categorized failures without log access. The
+            # fingerprint is the wire-safe taxonomy string (OBS O4);
+            # stdlib exceptions have none and are journalled by the
+            # structured log only.
+            fingerprint = _exc_fingerprint(exc)
+            if fingerprint is not None:
+                session.error_journal.record(
+                    fingerprint,
+                    message,
+                    context={"cmd_type": cmd_type, "code": code},
+                )
             _logger.warning(
                 "handler_exception",
                 extra={
@@ -1562,8 +1939,10 @@ __all__ = [
     "EventEmitter",
     "HandlerResult",
     "WS_ERROR_CODES",
+    "build_armed_watchdog",
     "build_connection_changed",
     "drain_pending_events",
     "emit_initial_events",
     "handle_command",
+    "resolve_connection_phase",
 ]

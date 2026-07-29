@@ -408,7 +408,10 @@ def test_all_sixteen_cockpit_command_types_are_exercised(cockpit_ws: object) -> 
     this test makes that drift visible at the integration boundary.
     """
 
-    assert len(COMMAND_TYPES) == 24
+    # 16 pre-Wave-4 cockpit commands round-trip in this file; the 8
+    # Wave-4 commands (arm/disarm/diagnostics/library_*) are exercised in
+    # tests/cockpit/test_ws_arm_and_library_handlers.py.
+    assert len(COMMAND_TYPES) == 32
     cockpit_native = {
         COMMAND_SELECT_PROFILE,
         COMMAND_SET_DEPTH,

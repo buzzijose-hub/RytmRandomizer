@@ -42,9 +42,13 @@ from dataclasses import dataclass, field
 from typing import Final
 
 from ...observability.logging import get_logger
+from ...senders.armed_apply import ArmedApplySession
+from ...senders.hardware import OutputOpeningProvider
 from ..data import CockpitSendPlan, MutationCandidate, ProfileModel
 from ..device import DeviceAdapter
+from ..diagnostics import ErrorJournal
 from ..history import HistoryStore
+from ..library import LibraryStore
 from ..profiles import ProfileRegistry
 from .wizard_session import WizardSession
 
@@ -59,6 +63,9 @@ DEFAULT_DEPTH: Final[float] = 0.45
 
 _SEED_BITS: Final[int] = 32
 """xorshift32 (the engine PRNG) consumes a 32-bit seed; sample exactly that width."""
+
+MAX_PRE_WRITE_BACKUPS: Final[int] = 8
+"""Bound on in-session pre-write backups kept by the armed backup hook."""
 
 
 def _fresh_seed() -> int:
@@ -100,6 +107,56 @@ class CockpitSession:
     to be non-``None`` and returns ``ok=False`` otherwise.
     """
 
+    armed_apply: ArmedApplySession | None = None
+    """The live ArmedApply seam while armed, or ``None`` in the passive state.
+
+    Set exclusively by the ``arm`` command handler after a successful
+    explicit arm; cleared by ``disarm`` and by the armed watchdog when
+    the device disappears (auto-disarm — never auto-re-arm).
+    """
+
+    passive_device: DeviceAdapter | None = None
+    """The pre-arm (mock/passive) adapter, restored on disarm.
+
+    ``None`` whenever the session is not armed; holding it as a declared
+    field keeps the arm/disarm swap out of side-channel territory
+    (``tests/architecture/test_no_side_channel_session_attrs.py``).
+    """
+
+    arm_port_provider: OutputOpeningProvider | None = None
+    """Optional injected output-port provider for the ``arm`` command.
+
+    ``None`` (production default) makes the arm handler build the real
+    ``mido``-backed provider lazily — failing cleanly when ``mido`` is
+    absent. Tests and embedded harnesses inject a fake provider here so
+    the full arm state machine is exercisable with zero hardware.
+    """
+
+    library_store: LibraryStore | None = None
+    """The injected kit/sound library store, or ``None`` when unwired.
+
+    Unwired sessions (unit tests, embedded harnesses) reject library
+    commands with a validation ack and never emit ``library_changed`` —
+    the historical wire surface stays byte-identical.
+    """
+
+    error_journal: ErrorJournal = field(default_factory=ErrorJournal)
+    """Bounded in-instance journal of the last 50 categorized errors.
+
+    Written by the WS dispatcher's taxonomy-error path, the arm/disarm
+    handlers, and (when wired by ``__main__``) the ConnectionManager's
+    enumeration-fault path. Read back by the ``diagnostics`` command.
+    """
+
+    pre_write_backups: list[dict] = field(default_factory=list)
+    """Automatic pre-write backups taken by the armed seam's backup hook.
+
+    Each entry is the current snapshot's dict form captured immediately
+    before an armed kit/sound mutation. Bounded by the arm handler's
+    backup hook (most recent :data:`MAX_PRE_WRITE_BACKUPS` kept).
+    Disk-persisted backup export is a Wave-5 follow-up.
+    """
+
     pending_events: list[dict] = field(default_factory=list)
     """Events the last handler queued for the dispatcher to broadcast post-ack.
 
@@ -133,4 +190,4 @@ class CockpitSession:
         self.pending_events = []
 
 
-__all__ = ["DEFAULT_DEPTH", "CockpitSession"]
+__all__ = ["DEFAULT_DEPTH", "MAX_PRE_WRITE_BACKUPS", "CockpitSession"]

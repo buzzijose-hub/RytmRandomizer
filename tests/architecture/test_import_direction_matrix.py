@@ -67,6 +67,9 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
         {
             "cli_registry",
             "data",
+            # Wave 4: the library importer decodes captures through the
+            # devices registry (device-generic decode).
+            "devices",
             # TODO(rival-program): review this edge — cockpit reaching the
             # armed MIDI boundary modules directly (mido_provider /
             # real_midi_adapter) should be funneled through app-owned wiring.
@@ -75,6 +78,16 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             "observability",
             "real_midi_adapter",
             "reports",
+            # Wave 4: all cockpit outbound transmit routes through the
+            # senders ArmedApply seam (the arm command constructs the
+            # real adapter through it exclusively).
+            "senders",
+            # Wave 4: the library importer extracts SysEx payloads via
+            # snapshot/sysex_file.
+            "snapshot",
+            # Wave 4: the live MIDI monitor decodes CC labels via the
+            # passive state/rytm_cc_observe helpers.
+            "state",
             "style_analysis",
         }
     ),
@@ -140,6 +153,9 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
         {
             "devices",
             "midi_io",
+            # Wave 4: ArmedApplyError is a MidiError taxonomy member
+            # (observability/errors) per the OBS O4 fingerprint discipline.
+            "observability",
         }
     ),
     "snapshot": frozenset({"devices"}),
