@@ -765,10 +765,10 @@ def test_app_main_dry_run_a4_patch_send_plan_records_mock_messages(capsys) -> No
     assert "no port opened: True" in captured.out
     assert "track: 1" in captured.out
     assert "candidate: 1 / Closest reference" in captured.out
-    assert "sendable events: 33" in captured.out
-    assert "transport messages: 53" in captured.out
-    assert "manual rows skipped: 6" in captured.out
-    assert "Mock sender captured 53 message(s)." in captured.out
+    assert "sendable events: 27" in captured.out
+    assert "transport messages: 37" in captured.out
+    assert "manual rows skipped: 12" in captured.out
+    assert "Mock sender captured 37 message(s)." in captured.out
     assert captured.err == ""
 
 

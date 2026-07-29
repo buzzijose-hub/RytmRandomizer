@@ -67,6 +67,7 @@ ANALOG_FOUR_PATCH_SEND_PLAN_SAFETY: Final[tuple[str, ...]] = (
     "no SysEx written",
     "armed app path requires --confirm-a4-patch-send-plan",
     "unknown destination labels fail closed instead of sending guessed values",
+    "physically disproved enum ordinals remain manual until calibrated",
 )
 _SENDABLE_STATUSES: Final[frozenset[str]] = frozenset({TRANSPORT_CC_READY, TRANSPORT_NRPN_READY})
 _MANUAL_STATUSES: Final[frozenset[str]] = frozenset(
@@ -479,10 +480,12 @@ def _skip_code(value: AnalogFourPatchValue) -> MidiEventSkipCode:
 
 
 def _skip_reason(value: AnalogFourPatchValue) -> str:
+    if value.transport_blocking_reason:
+        return value.transport_blocking_reason
     if value.cc_msb is not None and value.cc_lsb is not None:
         return "paired CC LSB conversion not hardware-verified"
     if value.transport_status == TRANSPORT_SCREEN_ONLY_NRPN:
-        return "NRPN destination ordinal capture pending"
+        return "NRPN enum value capture pending"
     if value.transport_status in _MANUAL_STATUSES:
         return "front-panel-only value pending capture"
     if value.midi_value is None:
@@ -504,13 +507,7 @@ def _build_send_summary(
         blocking_reason = "none"
     elif sendable_count > 0:
         live_dial_path = "partial-live-dial-ready"
-        blocking_reason = (
-            "paired CC LSB conversion requires hardware verification before full live dial-in"
-            if any(
-                event.skip_code == MIDI_EVENT_SKIP_PAIRED_CC_UNVERIFIED for event in manual_events
-            )
-            else packet.live_dial_readiness.blocking_reason
-        )
+        blocking_reason = "; ".join(dict.fromkeys(event.skip_reason for event in manual_events))
     else:
         live_dial_path = "manual-only"
         blocking_reason = packet.live_dial_readiness.blocking_reason

@@ -1,6 +1,6 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-07-28. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-07-29. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
@@ -9,11 +9,16 @@ Last updated: 2026-07-28. This file is a hand-authored snapshot and is meant to 
   DNA/CC-NRPN sidecars, immutable publication, passive recorded-render ranking,
   and a hash-verified live-dial plan. Saved-kit writing remains limited to
   hardware-validated Filter2 Resonance. Armed delivery is manifest-only,
-  guarded by `app --arm`, and limited to 33 rows / 53 CC-NRPN messages; six
-  paired-CC rows remain manual. Strict production typing is reproducible with
+  guarded by `app --arm`, and now limited to 27 rows / 37 CC-NRPN messages.
+  The 2026-07-29 supervised rehearsal delivered the former 33-row / 53-message
+  plan but failed semantic verification for six inferred A4 enum values; those
+  rows and six paired-CC rows now remain manual. The clean initialized kit was
+  reloaded without saving after the failed rehearsal. Strict production typing
+  is reproducible with
   `just typecheck`; the CODEOWNER accepted the separately disclosed dynamic
   test-harness typing debt and historical Gate 14/16 evidence exceptions for
-  this PR. The first supervised full-plan rehearsal is a pre-merge requirement.
+  this PR. A fresh supervised rehearsal of the reduced plan remains a pre-merge
+  requirement.
   Native decoder success on Windows remains environment-dependent; abnormal
   child exits fail closed and clean private staging. Detailed hardware evidence
   and current verification counts live in PR #214,

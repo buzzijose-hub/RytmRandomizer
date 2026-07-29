@@ -53,14 +53,12 @@
 
 ## Fresh Verification
 
-- Focused touched-file A4/operator regression suite: **1,717 passed, 1 skipped**.
+- Focused A4/operator regression suite: **912 passed**.
 - Architecture: **705 passed**.
-- Last uninterrupted production-equivalent full-suite run: **6,811 passed,
-  3 skipped**. The exact final tree collects **6,824 tests**; online CI is the
-  authoritative exact-head full-suite result.
+- Exact corrected-tree full-suite run: **6,825 passed, 3 skipped**.
 - Ruff, Black, isort: **clean**.
-- Touched-file statement/branch coverage: **100%** across **7,952 statements**
-  and **1,884 branches**, zero misses.
+- Touched-file statement/branch coverage: **100%** across **7,896 statements**
+  and **1,892 branches**, zero misses.
 - V1.34 parity: **685 passed** byte-for-byte.
 - Vulture confidence 80, strict Pyright across all 63 touched production
   modules, `git diff --check`, and the mechanical review gate: **passed**.
@@ -110,6 +108,8 @@ evidence.
    save/write command. A disposable project, saved clean baseline, and reload
    recovery remain mandatory. Future persistent writers are not exempt.
 3. **Gates 14 and 16:** accepted as historical-evidence exceptions for PR #214.
-4. **Physical rehearsal:** the supervised 33-row/53-message rehearsal must run
-   before merge. Record the Analog Four firmware and Elektron
-   Transfer/Overbridge versions in the hardware-validation runbook.
+4. **Physical rehearsal:** the 2026-07-29 33-row/53-message pass completed
+   transport but disproved six enum values. The corrected 27-row/37-message
+   plan must pass a fresh supervised rehearsal before merge. Firmware and
+   Elektron Transfer/Overbridge versions are recorded in the validation
+   runbook.

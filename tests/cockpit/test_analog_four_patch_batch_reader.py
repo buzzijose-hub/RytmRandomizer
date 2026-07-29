@@ -39,7 +39,7 @@ AUDIO_SHA256 = "a" * 64
 SOURCE_KIT_SHA256 = "b" * 64
 SYSEX_BYTES = b"\xf0\x00\x20\x3c\x06\x00\x01\x02\x03\xf7"
 EXPECTED_CANDIDATE_1_TRANSPORT_SHA256 = (
-    "1e121e7a1834cee209502fed4ded31896f9367fb47690b3f293d9a52a0e5e0d3"
+    "6998c9d7cc9d8d69dfd7d2e039512bc29ef82f2bba776cf9d35a2857122b3619"
 )
 _COVERAGE_FIELDS = (
     "dna_row_count",
@@ -379,9 +379,9 @@ def test_load_batch_candidate_verifies_and_reconstructs_complete_plan(tmp_path: 
     assert selection.plan.selected_track == 2
     assert selection.plan.selected_candidate == 1
     assert selection.plan.selected_label == "Closest reference"
-    assert len(selection.plan.send_events) == 33
-    assert len(selection.plan.manual_events) == 6
-    assert selection.plan.summary.transport_message_count == 53
+    assert len(selection.plan.send_events) == 27
+    assert len(selection.plan.manual_events) == 12
+    assert selection.plan.summary.transport_message_count == 37
 
 
 def test_app_dry_run_sends_exact_hash_verified_batch_candidate(
@@ -410,7 +410,7 @@ def test_app_dry_run_sends_exact_hash_verified_batch_candidate(
     assert "source: batch-manifest generation 0123456789abcdef0123456789abcdef" in captured.out
     assert "track: 2" in captured.out
     assert "candidate: 1 / Closest reference" in captured.out
-    assert "Mock sender captured 53 message(s)." in captured.out
+    assert "Mock sender captured 37 message(s)." in captured.out
     assert "Analog Four patch batch candidate verified" in captured.err
 
 
@@ -495,7 +495,7 @@ def test_app_arm_sends_exact_hash_verified_batch_candidate(
     assert fake_port.closed is True
     from rytm_randomizer.midi_io import MIDI_MESSAGE_SETTLE_SECONDS
 
-    assert sleep_calls == [MIDI_MESSAGE_SETTLE_SECONDS] * 53
+    assert sleep_calls == [MIDI_MESSAGE_SETTLE_SECONDS] * 37
     transport_messages = [
         (message.channel, message.control, message.value) for message in fake_port.sent
     ]
@@ -640,7 +640,7 @@ def test_app_arm_reports_partial_batch_send_and_recovery(
     assert exit_code == 1
     assert len(fake_port.sent) == 5
     assert fake_port.closed is True
-    assert "failed after 5 of 53 messages" in captured.err
+    assert "failed after 5 of 37 messages" in captured.err
     assert "reload the last saved Kit or project before retrying" in captured.err
 
 

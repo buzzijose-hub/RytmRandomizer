@@ -1,15 +1,18 @@
 # Analog Four Live-Dial Enum Transport Evidence
 
-Date: 2026-07-17
+Original offline inspection: 2026-07-17
+
+Physical correction: 2026-07-29
 
 ## Purpose
 
-Resolve the five generated Analog Four DNA rows that already had official NRPN
-addresses but lacked validated enum values. These rows were previously marked
-screen-only and deliberately skipped by live dial.
+Record the offline evidence that originally promoted five generated Analog
+Four DNA rows, then preserve the physical rehearsal that disproved those
+promotions and one LFO multiplier value.
 
-This is transport-schema evidence, not a physical full-patch send result. No
-MIDI output was available or opened during this inspection.
+The 2026-07-17 material was transport-schema evidence only. No MIDI output was
+available or opened during that inspection. The later physical rehearsal is
+the authoritative result for send readiness.
 
 ## Sources
 
@@ -20,7 +23,7 @@ MIDI output was available or opened during this inspection.
 - Connected-device logs identified the target firmware as OS 1.55. The plug-in
   was inspected offline with no device selected for the enum-value checks.
 
-## Results
+## Original offline inference
 
 | DNA row | Official NRPN | Overbridge label | Plug-in-observed raw value |
 |---|---:|---|---:|
@@ -30,29 +33,69 @@ MIDI output was available or opened during this inspection.
 | LFO1 Destination A | `1:86` | `F1 Frequency` | `34` |
 | LFO1 Destination B | `1:88` | `None` / DNA label `OFF` | `96` |
 
-The destination controls use sparse IDs rather than list indices. For example,
-Overbridge defaults also exposed EnvF destination raw values `12` and `13` as
-Oscillator 1/2 Pulsewidth. The implementation therefore maps only labels
-observed through the official plug-in. Any unknown label remains
-`screen-only-nrpn` and cannot be sent.
+The plug-in evidence suggested sparse IDs rather than list indices. That
+inference was plausible but was not sufficient to authorize hardware output.
+
+## Physical rehearsal correction
+
+The hash-verified candidate was sent through the sole armed boundary,
+`python -m rytm_randomizer.app --arm`. The command completed all 33 planned
+rows / 53 MIDI messages. The A4 front panel then showed:
+
+| DNA row | Planned target | Observed after send | Result |
+|---|---|---|---|
+| EnvF Gate Length | `NOTE` via raw `0` | `OFF` | disproved |
+| EnvF Destination A | `OFF` via raw `96` | raw `96` | disproved |
+| EnvF Destination B | `OFF` via raw `96` | raw `96` | disproved |
+| LFO1 Speed Multiplier | `x1` via raw `64` | `2K` | disproved |
+| LFO1 Destination A | `Filter1 Frequency` via raw `34` | raw `34` | disproved |
+| LFO1 Destination B | `OFF` via raw `96` | raw `96` | disproved |
+
+The same page review confirmed the still-sendable enum targets:
+
+- EnvA shape: triangle.
+- EnvF shape: triangle.
+- LFO1 mode: `TRG`.
+- LFO1 waveform: triangle.
+- Filter2 type: `HP2`.
+
+Continuous CC targets visible on the oscillator, filter, AMP, ENVF, and LFO1
+pages also matched. This supports the address/routing path while isolating the
+failure to enum-value interpretation.
+
+### Session record
+
+- Analog Four MKII firmware: OS 1.55, corroborated by the connected-device log
+  and current official manual; no firmware-screen photograph was taken during
+  the rehearsal.
+- Elektron Transfer: 1.9.5.
+- Elektron Overbridge: 2.25.7.
+- Generation: `b9ead39abab516cb1a13a91b11938878`.
+- Reviewed manifest SHA-256:
+  `ef2d474348415ef98b2278b28e7f10620c71a2856fe473a7cd78f5afd055376e`.
+- Candidate: 1, Closest reference.
+- Delivery: app reported 33 rows / 53 messages complete. MIDI provides no
+  per-message device acknowledgment.
+- Persistence: no Program Change, transport, SysEx, save, kit-write,
+  pattern-write, song-write, chain-write, or project-write message was sent.
+- Recovery: the operator reloaded the clean initialized kit without saving.
+- Verdict: controlled partial pass and semantic failure; not merge-ready.
 
 ## Outcome
 
-This checkpoint originally counted every mapped row as live-routable. Final
-closeout corrected the guarded plan to:
+The six disproved rows now have no sendable raw ordinal and compile to manual
+events with a calibration-required reason. The corrected guarded plan is:
 
 - 39 DNA rows
-- 23 sendable CC events
-- 10 NRPN events
-- 53 transport messages
-- 6 paired-CC manual rows pending 14-bit hardware verification
+- 22 sendable CC events
+- 5 NRPN events
+- 37 transport messages
+- 12 manual rows: six disproved enums plus six paired-CC rows pending 14-bit
+  hardware verification
 
-No reproducible physical command/output record is attached here for the direct
-NRPN sender or four-track routing. Those behaviors remain operator-reported and
-must be treated as unverified until a dated hardware record captures the exact
-command, firmware, routing, observed result, and recovery. The next hardware
-validation is one supervised complete candidate sent from a hash-verified batch
-sidecar, followed by a page review and an audio recording for acoustic ranking.
+The next hardware validation is a supervised replay of a newly generated,
+hash-reviewed 27-row / 37-message candidate, followed by the same page review.
+Audio recording and acoustic ranking remain separate pending work.
 
 ## Boundary
 

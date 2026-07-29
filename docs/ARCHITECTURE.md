@@ -409,13 +409,14 @@ marker. Before a candidate reaches dry-run or the armed sender, it verifies the
 sidecar byte hash, generation ID, source hash, candidate DNA hash, send-plan
 hash, selected column/label/track, coverage totals, every event's transport
 status, and each parameter's canonical A4 CC or NRPN address. The current
-closest-reference candidate has 33 live-routable rows (23 CC and 10 NRPN).
+closest-reference candidate has 27 live-routable rows (22 CC and 5 NRPN).
 Six paired-MSB/LSB CC rows remain manual because their 14-bit conversion has
-not been hardware-verified; unknown enum labels also fail closed. Incoming A4
+not been hardware-verified. Six enum rows disproved by the 2026-07-29 physical
+rehearsal also remain manual; unknown enum labels fail closed. Incoming A4
 soft capture mirrors the transport by retaining one NRPN selector per track and
 applying CC6 data only after a known CC99/CC98 address is complete.
 The armed sender validates the complete event sequence before opening a port,
-paces each of the 53 transport messages by 20 ms, counts only successful
+paces each of the 37 transport messages by 20 ms, counts only successful
 deliveries, and reports exact partial progress plus baseline-reload recovery if
 the port fails during a plan.
 

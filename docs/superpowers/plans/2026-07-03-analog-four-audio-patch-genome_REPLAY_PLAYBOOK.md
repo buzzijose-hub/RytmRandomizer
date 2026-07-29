@@ -55,11 +55,12 @@ python -m rytm_randomizer.app --arm --a4-patch-send-plan `
   --a4-output-port "<exact configured Analog Four output name>"
 ```
 
-Candidate 1 currently contains 33 live-routable rows and 53 transport
+Candidate 1 currently contains 27 live-routable rows and 37 transport
 messages. The manifest reader verifies hashes, DNA/event identity, transport
-status, and canonical A4 addresses before the armed path opens a port. Six
-paired-CC rows remain manual pending 14-bit hardware verification. The guarded
-transport rehearsal remains pending and must use a disposable project with
+status, and canonical A4 addresses before the armed path opens a port. Six enum
+rows disproved by the 2026-07-29 physical rehearsal and six paired-CC rows
+remain manual pending hardware verification. The reduced guarded transport
+rehearsal remains pending and must use a disposable project with
 operator-present recovery.
 
 ## Rank Hardware Renders
@@ -82,7 +83,7 @@ recordings are available.
 2. Where are writable hardware facts? `rytm_randomizer/data/analog_four_sysex_calibration.py`.
 3. What writes a complete saved kit? The pure renderer under `devices/strategies/`, exposed through the registered A4 saved-kit capability and guarded by `cockpit/export/analog_four_kit.py`.
 4. How is a batch committed? Immutable generation artifacts first, stable manifest last.
-5. What may currently reach A4 saved-kit SysEx? Filter2 Resonance only; every other DNA row is deferred from SysEx. The verified sidecar exposes 33 live-routable rows and keeps six paired-CC rows manual.
+5. What may currently reach A4 saved-kit SysEx? Filter2 Resonance only; every other DNA row is deferred from SysEx. The verified sidecar exposes 27 live-routable rows and keeps six disproved enum rows plus six paired-CC rows manual.
 6. How is the auditioned candidate selected for live send? `--batch-manifest`, its reviewed `--batch-manifest-sha256`, and `--candidate`; the manifest digest, nested hashes, and event routing are verified before output opens.
 7. How does hardware feedback enter? Record candidate renders and run `analog-four-audio-patch-rank`; reviewed captures can then become corpus evidence.
 8. What can open a real MIDI port? Only `python -m rytm_randomizer.app --arm`

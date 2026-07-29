@@ -70,16 +70,22 @@ def test_patch_send_plan_report_text_shows_sendable_and_manual_rows() -> None:
     assert text.startswith("RytmRandomizer passive Analog Four patch send plan\n")
     assert "Selected candidate: 1 / Closest reference" in text
     assert "Live dial path: partial-live-dial-ready" in text
-    assert "Sendable events: 33 / 39 (85%)" in text
-    assert "Transport messages: 53" in text
+    assert "Sendable events: 27 / 39 (69%)" in text
+    assert "Transport messages: 37" in text
     assert "Sendable MIDI events:" in text
     assert "01 T1 ch0 CC69 OSC1 Level -> 96" in text
     assert "10 T1 ch0 NRPN 1:54 EnvA Env Shape -> 0" in text
     assert "Manual/front-panel rows:" in text
     assert "18 T1 EnvF Depth A" in text
     assert "paired CC LSB conversion not hardware-verified" in text
-    assert "16 T1 ch0 NRPN 1:65 EnvF Gate Length -> 0" in text
-    assert "25 T1 ch0 NRPN 1:86 LFO1 Destination A -> 34" in text
+    assert (
+        "16 T1 EnvF Gate Length | screen NOTE | skipped | physical A4 rehearsal "
+        "disproved the inferred enum ordinal"
+    ) in text
+    assert (
+        "25 T1 LFO1 Destination A | screen Filter1 Frequency | skipped | physical "
+        "A4 rehearsal disproved the inferred enum ordinal"
+    ) in text
     assert "- no MIDI port opened" in text
     assert "- no MIDI sent" in text
 
@@ -175,7 +181,8 @@ def test_patch_send_plan_report_json_includes_summary_and_events() -> None:
     assert payload["send_plan"]["send_events"][0]["track"] == 3
     assert payload["send_plan"]["manual_events"]
     assert {event["skip_code"] for event in payload["send_plan"]["manual_events"]} == {
-        "paired-cc-unverified"
+        "not-transport-ready",
+        "paired-cc-unverified",
     }
     assert payload["safety"][0] == "passive read-only patch send plan"
     assert json.dumps(payload, sort_keys=True) == json.dumps(
@@ -234,7 +241,7 @@ def test_patch_send_plan_cli_description_json_mode(capsys: pytest.CaptureFixture
     assert exit_code == 0
     assert payload["selected_track"] == 2
     assert payload["selected_candidate"] == 1
-    assert payload["send_plan"]["summary"]["transport_message_count"] == 53
+    assert payload["send_plan"]["summary"]["transport_message_count"] == 37
     assert captured.err == ""
 
 

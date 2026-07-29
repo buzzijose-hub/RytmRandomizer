@@ -35,7 +35,7 @@ ANALOG_FOUR_PATCH_SAFETY: Final[tuple[str, ...]] = (
     "no MIDI sent",
     "no SysEx written",
     "complete front-panel DNA with CC/NRPN transport metadata",
-    "sparse destination ordinals validated against Elektron Overbridge 2.25.7",
+    "physically disproved enum ordinals remain non-transmitting",
 )
 
 

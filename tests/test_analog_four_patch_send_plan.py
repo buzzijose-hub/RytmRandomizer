@@ -38,16 +38,17 @@ def test_patch_send_plan_compiles_selected_candidate_into_ordered_midi_events() 
     assert plan.selected_candidate == 1
     assert plan.selected_label == "Closest reference"
     assert plan.summary.total_rows == 39
-    assert plan.summary.sendable_count == 33
-    assert plan.summary.manual_count == 6
-    assert plan.summary.cc_event_count == 23
-    assert plan.summary.nrpn_event_count == 10
-    assert plan.summary.transport_message_count == 53
-    assert plan.summary.ready_percentage == 85
+    assert plan.summary.sendable_count == 27
+    assert plan.summary.manual_count == 12
+    assert plan.summary.cc_event_count == 22
+    assert plan.summary.nrpn_event_count == 5
+    assert plan.summary.transport_message_count == 37
+    assert plan.summary.ready_percentage == 69
     assert plan.summary.live_dial_path == "partial-live-dial-ready"
     assert (
         plan.summary.blocking_reason
-        == "paired CC LSB conversion requires hardware verification before full live dial-in"
+        == "physical A4 rehearsal disproved the inferred enum ordinal; "
+        "hardware calibration required; paired CC LSB conversion not hardware-verified"
     )
 
     first_event = plan.send_events[0]
@@ -65,34 +66,41 @@ def test_patch_send_plan_compiles_selected_candidate_into_ordered_midi_events() 
     assert first_nrpn.nrpn_address == (1, 54)
     assert first_nrpn.midi_value == 0
 
-    enum_values = {
-        event.parameter: event.midi_value
-        for event in plan.send_events
-        if event.parameter
-        in {
-            "EnvF Gate Length",
-            "EnvF Destination A",
-            "EnvF Destination B",
-            "LFO1 Destination A",
-            "LFO1 Destination B",
-        }
-    }
-    assert enum_values == {
-        "EnvF Gate Length": 0,
-        "EnvF Destination A": 96,
-        "EnvF Destination B": 96,
-        "LFO1 Destination A": 34,
-        "LFO1 Destination B": 96,
-    }
     assert {event.parameter for event in plan.manual_events} == {
+        "EnvF Gate Length",
+        "EnvF Destination A",
+        "EnvF Destination B",
         "EnvF Depth A",
         "EnvF Depth B",
+        "LFO1 Speed Multiplier",
+        "LFO1 Destination A",
+        "LFO1 Destination B",
         "LFO1 Depth A",
         "LFO1 Depth B",
         "Filter1 Frequency",
         "Filter2 Frequency",
     }
-    assert {event.skip_code for event in plan.manual_events} == {"paired-cc-unverified"}
+    assert {event.skip_code for event in plan.manual_events} == {
+        "not-transport-ready",
+        "paired-cc-unverified",
+    }
+    disproved_enums = {
+        event.parameter: event.skip_reason
+        for event in plan.manual_events
+        if event.skip_code == "not-transport-ready"
+    }
+    assert set(disproved_enums) == {
+        "EnvF Gate Length",
+        "EnvF Destination A",
+        "EnvF Destination B",
+        "LFO1 Speed Multiplier",
+        "LFO1 Destination A",
+        "LFO1 Destination B",
+    }
+    assert set(disproved_enums.values()) == {
+        "physical A4 rehearsal disproved the inferred enum ordinal; "
+        "hardware calibration required"
+    }
     assert all(event.cc_lsb is None for event in plan.send_events)
     assert "preview before armed send" in plan.safety
 
@@ -117,7 +125,10 @@ def test_patch_send_plan_payload_is_stable_and_embeds_learning_context() -> None
     assert payload["summary"]["sendable_count"] == plan.summary.sendable_count
     assert payload["send_events"][0]["track"] == 3
     assert payload["manual_events"]
-    assert {event["skip_code"] for event in payload["manual_events"]} == {"paired-cc-unverified"}
+    assert {event["skip_code"] for event in payload["manual_events"]} == {
+        "not-transport-ready",
+        "paired-cc-unverified",
+    }
     assert payload["learning_packet"]["selected_patch"]["label"] == "Noisy texture"
     assert json.dumps(payload, sort_keys=True) == json.dumps(
         analog_four_patch_send_plan_to_dict(plan),
@@ -402,7 +413,7 @@ def test_patch_send_plan_defensive_helpers_cover_malformed_rows() -> None:
         _send_event_from_gene(1, malformed_gene)
     with pytest.raises(ValueError, match="no CC or NRPN address"):
         _message_kind_for(missing_address_value)
-    assert _skip_reason(screen_only_nrpn_value) == "NRPN destination ordinal capture pending"
+    assert _skip_reason(screen_only_nrpn_value) == "NRPN enum value capture pending"
     assert _skip_reason(screen_only_value) == "front-panel-only value pending capture"
     assert _skip_reason(missing_transport_value) == "transport value pending capture"
     assert _skip_reason(missing_address_value) == "transport address pending capture"

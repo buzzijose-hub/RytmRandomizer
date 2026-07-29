@@ -63,8 +63,8 @@ def test_first_candidate_contains_full_manual_dna_for_user_reviewed_patch() -> N
     assert filter2_resonance.value.midi_value == 24
     assert enva_shape.value.screen_value == "triangle"
     assert envf_release.value.midi_value == 12
-    assert lfo_dest.value.transport_status == "nrpn-ready"
-    assert lfo_dest.value.midi_value == 34
+    assert lfo_dest.value.transport_status == "screen-only-nrpn"
+    assert lfo_dest.value.midi_value is None
     assert lfo_depth.value.screen_value == "+3"
     assert lfo_depth.value.midi_value == 67
 

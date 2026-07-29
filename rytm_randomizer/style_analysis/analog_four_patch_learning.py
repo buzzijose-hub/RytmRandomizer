@@ -46,7 +46,7 @@ ANALOG_FOUR_PATCH_LEARNING_SAFETY: Final[tuple[str, ...]] = (
     "no SysEx written",
     "no hardware state captured",
     "live dial-in remains gated by explicit transport readiness",
-    "sparse destination ordinals validated against Elektron Overbridge 2.25.7",
+    "physically disproved enum ordinals remain non-transmitting",
 )
 _TRANSPORT_READY_STATUSES: Final[frozenset[str]] = frozenset(
     {TRANSPORT_CC_READY, TRANSPORT_NRPN_READY}
@@ -492,7 +492,7 @@ def _live_dial_path(ready_count: int, pending_count: int) -> str:
 
 def _live_dial_blocking_reason(screen_only_nrpn_count: int, pending_count: int) -> str:
     if screen_only_nrpn_count > 0:
-        return "NRPN destination ordinal capture required before full live dial-in"
+        return "A4 enum value calibration required before full live dial-in"
     if pending_count > 0:
         return "front-panel-only values require manual capture before automation"
     return "none"
