@@ -4,7 +4,7 @@ Turn the first hardware-validated Analog Four MKII saved-kit calibration into a 
 
 Closeout status: fresh focused, architecture, full-suite, touched-file
 coverage, parity, lint, typing, dead-code, mechanical-review, and branch
-publication results are recorded below. Fresh online CI and the fresh reviewer
+publication state are recorded below. Fresh online CI and the fresh reviewer
 verdict remain pending and are not inferred from an earlier tree.
 
 ## What changed
@@ -23,12 +23,13 @@ verdict remain pending and are not inferred from an earlier tree.
 - Made candidate publication interruption-safe: both inputs are snapshotted, every artifact is staged and closed before publication, candidate names carry a 128-bit identity covering every sidecar/SysEx input, a metadata-rich per-track lock serializes publishers, and the stable manifest switches last.
 - Made generation artifacts write-once with exact-byte reuse, collision rejection, catchable process-interruption lock cleanup, explicit `publication_locked` classification, and committed-result lock-cleanup warnings with recovery metadata.
 - Compiled the guarded closest-reference live-dial path into 33 sendable rows: 23 CC plus 10 NRPN events (53 MIDI messages). Six paired-MSB/LSB CC rows remain manual until their 14-bit conversion is hardware-verified; unknown labels still fail closed.
-- Added hash-verified `--batch-manifest --candidate N` loading so dry-run and confirmed armed sends use the exact committed sidecar, nested DNA, and send plan the operator auditioned.
+- Added hash-verified `--batch-manifest --batch-manifest-sha256 "<reviewed digest>" --candidate N` loading so dry-run and confirmed armed sends use the exact reviewed manifest, committed sidecar, nested DNA, and send plan the operator auditioned.
 - Extended passive A4 capture to reconstruct three-message NRPN observations with independent selector state on all four tracks.
 - Added `analog-four-audio-patch-rank`, a passive local feedback command that verifies the original batch source and ranks recorded A4 candidates across 11 weighted envelope/timbre features.
 - Routed saved-kit rendering through an optional capability on the registered `AnalogFourDevice`; guarded export and batching no longer import a concrete writer strategy.
 - Split canonical batch JSON/hashing, stable payload/result contracts, immutable publication locks, and pure acoustic scoring from transaction orchestration.
 - Hardened the manifest reader against fully rehashed malicious bundles by cross-checking every DNA/event field, transport status, path containment, and canonical A4 CC/NRPN address before output can open.
+- Bound armed delivery to the operator-supplied SHA-256 of the reviewed manifest so replacing the stable manifest cannot silently change the selected hardware plan.
 - Separated mock dry-run telemetry from real hardware-send counters and added structured manifest, rank, and capture outcome metrics.
 - Hardened the armed live-plan boundary with complete pre-port validation, 20 ms per-message pacing, post-delivery metrics, exact partial-NRPN progress, and clean-Kit/project reload recovery.
 - Added a hash-verified manifest-to-fake-port integration proof for the exact ordered 53-message candidate, plus tamper-before-port and interrupted-send recovery coverage.
@@ -85,19 +86,19 @@ python scripts/typecheck_touched.py
 git diff --check
 ```
 
-- [x] Focused A4/operator regression suite: 1,581 passed, 1 skipped.
-- [x] Full repository suite: 6,777 passed, 3 skipped.
-- [x] Architecture suite: 702 passed.
-- [x] Touched-file statement/branch coverage: 100% across 7,506 statements and 1,764 branches, zero misses.
+- [x] Focused A4/operator regression suite: 1,589 passed, 1 skipped.
+- [x] Full repository suite: 6,792 passed, 3 skipped.
+- [x] Architecture suite: 703 passed.
+- [x] Touched-file statement/branch coverage: 100% across 7,557 statements and 1,788 branches, zero misses.
 - [x] Fresh final-tree V1.34 parity: 685 passed byte-for-byte.
 - [x] Vulture confidence 80, the pinned reproducible `just typecheck` strict-production gate across all 60 touched production modules, and the mechanical review gate passed.
-- [x] CODEOWNER decision: the literal all-113-path strict audit's 4,220 dynamic test-harness typing errors are accepted as scoped PR #214 debt and remain a dedicated cleanup; production typing is not waived.
+- [x] CODEOWNER decision: the literal all-113-path strict audit's 4,263 dynamic test-harness typing errors are accepted as scoped PR #214 debt and remain a dedicated cleanup; production typing is not waived.
 - [x] Manifest reader rejects rehashed path escapes, transport drift, DNA/event drift, noncanonical CC/NRPN addresses, sequence drift, and coverage drift before output opens.
 - [x] Lint trio and `git diff --check` clean.
 - [x] Audio patch-batch CLI focused tests and command-help fixture passed locally.
 - [x] Native decoder abnormal-exit path is process-contained and parent-owned private staging is removed.
 - [x] Audio genome, learning, send-plan, and batch surfaces retain deterministic source/parameter identity when native analysis succeeds.
-- [x] Repair branch pushed; pre-push mechanical gates passed.
+- [x] This follow-up tree carries fresh local evidence; publication and online state are tracked on PR #214.
 - [ ] Fresh online CI and fresh reviewer verdict: pending.
 
 Hardware validation:
@@ -112,9 +113,9 @@ Hardware validation:
 
 Per [`docs/PLAN_REQUIREMENTS.md`](https://github.com/buzzijose-hub/RytmRandomizer/blob/modularize-v1.34/docs/PLAN_REQUIREMENTS.md), every non-trivial PR must satisfy all 18 gates.
 
-- [x] **Gate 1** — touched production files have 100% statement/branch coverage (7,506 statements / 1,764 branches).
+- [x] **Gate 1** — touched production files have 100% statement/branch coverage (7,557 statements / 1,788 branches).
 - [x] **Gate 2** — 685 V1.34 parity items passed byte-for-byte.
-- [x] **Gate 3** — Ruff, Black, and isort pass. Pinned strict Pyright 1.1.407 passes reproducibly across all 60 touched production modules via `just typecheck`. The CODEOWNER accepts the separately disclosed 4,220 dynamic test-harness errors as scoped cleanup debt for PR #214; production typing is not waived.
+- [x] **Gate 3** — Ruff, Black, and isort pass. Pinned strict Pyright 1.1.407 passes reproducibly across all 60 touched production modules via `just typecheck`. The CODEOWNER accepts the separately disclosed 4,263 dynamic test-harness errors as scoped cleanup debt for PR #214; production typing is not waived.
 - [x] **Gate 4** — Vulture confidence 80 passed across production and tests.
 - [x] **Gate 5** — docs updated (`README.md`, `CONTRIBUTING.md`, `docs/STATUS.md`, relevant `docs/` reflect the change).
 - [x] **Gate 6** — type-system hygiene (Protocol over ABC, `Final` constants, no bare `Any`).

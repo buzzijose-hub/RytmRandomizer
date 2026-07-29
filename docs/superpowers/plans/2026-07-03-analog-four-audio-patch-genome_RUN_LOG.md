@@ -2,9 +2,9 @@
 
 > Status: in-flight
 >
-> Closeout corrections and local software gates are verified; push, fresh
-> online checks, and fresh reviewer verdict remain pending. Supervised full-plan
-> hardware rehearsal also remains pending.
+> Closeout corrections, local software gates, and CODEOWNER policy decisions
+> are verified. Follow-up publication and online state are tracked on PR #214;
+> fresh approval and the supervised full-plan hardware rehearsal remain pending.
 
 This file is append-only. Times are America/New_York when recorded.
 
@@ -63,3 +63,5 @@ This file is append-only. Times are America/New_York when recorded.
 - 2026-07-28: FINAL_TYPING_AUDIT_REFRESHED. Strict Pyright 1.1.407 passes all 60 touched production modules with zero errors and zero warnings. The literal diagnostic across all 113 touched Python paths reports 4,220 dynamic test-harness findings; this is the exact scoped debt covered by the CODEOWNER Gate 3 decision.
 - 2026-07-28: CODEOWNER_REVIEW_REPAIR_VERIFIED. The final review-repair tree passed 1,581 focused A4/operator tests with 1 skip, 702 architecture tests, 6,777 full-suite tests with 3 skips, 685 byte-frozen parity items, and 100% touched-production statement/branch coverage across 7,506 statements and 1,764 branches. Ruff, Black, isort, Vulture confidence 80, strict touched-production Pyright, `git diff --check`, and the shared mechanical review gate passed. No physical MIDI port opened and no MIDI or SysEx was sent.
 - 2026-07-28: REVIEW_REPAIR. Armed A4 patch delivery now requires a committed hash-verified batch manifest; direct description/audio plan construction remains dry-run-only. The first supervised 33-row/53-message rehearsal is explicitly required before merge and must record Analog Four firmware plus Elektron Transfer/Overbridge versions.
+- 2026-07-28: FOLLOWUP_REVIEW_REPAIRED. Armed delivery now binds the selected plan to the operator-supplied SHA-256 of the reviewed manifest, rejects blank exact-port names before provider work, and treats every zero, partial, or unknown-count delivery failure as uncertain hardware state requiring a clean Kit/project reload. Native parent cleanup preserves an in-flight operator interruption while completing all resource cleanup; lock-release and render-rank failures retain structured telemetry.
+- 2026-07-28: FOLLOWUP_LOCAL_GATES_PASSED. Exact follow-up tree: focused A4/operator suite 1,589 passed / 1 skipped; architecture 703 passed; full suite 6,792 passed / 3 skipped; touched production files reached 100% across 7,557 statements and 1,788 branches; V1.34 parity 685 passed; Ruff, Black, isort, Vulture confidence 80, strict Pyright across all 60 touched production modules, and `git diff --check` passed. The accepted literal all-113-path audit reports 4,263 dynamic test-harness typing findings. No physical MIDI port opened and no MIDI or SysEx was sent.

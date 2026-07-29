@@ -3,8 +3,9 @@
 > Status: in-flight
 >
 > Closeout corrections, mechanical gates, and strict production typing are
-> verified. Gates 3, 14, and 16 still require explicit CODEOWNER acceptance.
-> The branch is pushed; fresh online CI and the reviewer verdict are pending.
+> verified, and the Gate 3/14/16 policy decisions are accepted. Follow-up
+> publication and online state are tracked on PR #214; fresh approval and the
+> supervised physical rehearsal remain pending.
 
 ## Outcome
 
@@ -31,6 +32,7 @@ hardware only through confirmed `python -m rytm_randomizer.app --arm`.
 | 2026-07-27 | Fresh review reopened closeout for native crash containment, transport abstraction reuse, observability, maintainability, state-schema validity, and stale docs. |
 | 2026-07-27 | Corrections passed the focused A4/operator suite (1,577 passed / 1 skipped), architecture (702 passed), full suite (6,773 passed / 3 skipped), 685 parity checks, 100% touched-file statement/branch coverage, lint, strict production typing, Vulture, and mechanical review. |
 | 2026-07-28 | CODEOWNER review repair passed the focused A4/operator suite (1,581 passed / 1 skipped), architecture (702 passed), full suite (6,777 passed / 3 skipped), 685 parity checks, and 100% touched-production coverage across 7,506 statements / 1,764 branches. |
+| 2026-07-28 | Follow-up repair passed the focused A4/operator suite (1,589 passed / 1 skipped), architecture (703 passed), full suite (6,792 passed / 3 skipped), 685 parity checks, and 100% touched-production coverage across 7,557 statements / 1,788 branches. |
 
 ## Escalations Resolved
 
@@ -78,19 +80,20 @@ hardware only through confirmed `python -m rytm_randomizer.app --arm`.
 
 ## Fresh Verification
 
-- Focused A4/operator regression suite: **1,581 passed, 1 skipped**.
-- Architecture: **702 passed**.
-- Full suite: **6,777 passed, 3 skipped**.
+- Focused A4/operator regression suite: **1,589 passed, 1 skipped**.
+- Architecture: **703 passed**.
+- Full suite: **6,792 passed, 3 skipped**.
 - Ruff, Black, isort: **clean**.
-- Touched-file statement/branch coverage: **100%** across **7,506 statements**
-  and **1,764 branches**, zero misses.
+- Touched-file statement/branch coverage: **100%** across **7,557 statements**
+  and **1,788 branches**, zero misses.
 - V1.34 parity: **685 passed** byte-for-byte.
 - Vulture, strict Pyright across all 60 touched production modules,
   `git diff --check`, and mechanical review: **passed**.
-- Literal strict Pyright across all 113 touched Python paths reports **4,220
-  dynamic test-harness typing errors** and remains an explicit Gate 3 reviewer
-  exception.
-- The pushed SHAs, fresh online CI, and reviewer verdict are tracked on PR #214.
+- Literal strict Pyright across all 113 touched Python paths reports **4,263
+  dynamic test-harness typing errors**, covered by the accepted scoped Gate 3
+  decision.
+- Follow-up publication, fresh online CI, and reviewer status are tracked on
+  PR #214.
 
 The final `git diff --stat` remains the authoritative merge total. No V1.34
 parity fixture or hardware-pinned dependency is documented as changed by this

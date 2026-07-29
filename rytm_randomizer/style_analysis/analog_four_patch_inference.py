@@ -315,15 +315,65 @@ def _close_native_analysis_resource(
 ) -> None:
     try:
         resource.close()
-    except (OSError, RuntimeError, ValueError, KeyboardInterrupt, SystemExit) as exc:
+    except (OSError, RuntimeError, ValueError) as exc:
         _record_native_cleanup_failure(resource_kind=resource_kind, exc=exc)
 
 
 def _terminate_native_analysis_process_safely(process: BaseProcess) -> None:
     try:
         _terminate_native_analysis_process(process)
-    except (OSError, RuntimeError, ValueError, KeyboardInterrupt, SystemExit) as exc:
+    except (OSError, RuntimeError, ValueError) as exc:
         _record_native_cleanup_failure(resource_kind="process_termination", exc=exc)
+
+
+def _cleanup_native_analysis_parent(
+    receiver: _NativeAnalysisConnection,
+    sender: _NativeAnalysisConnection,
+    process: BaseProcess,
+    *,
+    started: bool,
+) -> None:
+    """Close every parent resource, then propagate the first operator interruption."""
+
+    interruptions: list[KeyboardInterrupt | SystemExit] = []
+
+    def run_cleanup(action: Callable[[], None]) -> None:
+        try:
+            action()
+        except (KeyboardInterrupt, SystemExit) as exc:
+            if not interruptions:
+                interruptions.append(exc)
+            else:
+                _record_native_cleanup_failure(
+                    resource_kind="secondary_interruption",
+                    exc=exc,
+                )
+
+    run_cleanup(
+        lambda: _close_native_analysis_resource(
+            receiver,
+            resource_kind="parent_receiver",
+        )
+    )
+    run_cleanup(
+        lambda: _close_native_analysis_resource(
+            sender,
+            resource_kind="parent_sender",
+        )
+    )
+    if started:
+        run_cleanup(lambda: _terminate_native_analysis_process_safely(process))
+    run_cleanup(
+        lambda: _close_native_analysis_resource(
+            process,
+            resource_kind="process",
+        )
+    )
+    if interruptions:
+        interruption = interruptions[0]
+        if isinstance(interruption, KeyboardInterrupt):
+            raise KeyboardInterrupt(*interruption.args) from interruption
+        raise SystemExit(interruption.code) from interruption
 
 
 def _raise_native_analysis_failure(
@@ -495,6 +545,7 @@ def _run_native_audio_analysis_process(
         name="a4-native-audio-analysis",
     )
     started = False
+    primary_interruption: KeyboardInterrupt | SystemExit | None = None
     try:
         _start_native_analysis_process(process)
         started = True
@@ -504,12 +555,24 @@ def _run_native_audio_analysis_process(
             process,
             timeout=timeout,
         )
+    except (KeyboardInterrupt, SystemExit) as exc:
+        primary_interruption = exc
+        raise
     finally:
-        _close_native_analysis_resource(receiver, resource_kind="parent_receiver")
-        _close_native_analysis_resource(sender, resource_kind="parent_sender")
-        if started:
-            _terminate_native_analysis_process_safely(process)
-        _close_native_analysis_resource(process, resource_kind="process")
+        try:
+            _cleanup_native_analysis_parent(
+                receiver,
+                sender,
+                process,
+                started=started,
+            )
+        except (KeyboardInterrupt, SystemExit) as cleanup_exc:
+            if primary_interruption is None:
+                raise
+            primary_interruption.add_note(
+                "additional operator interruption occurred during native-analysis "
+                f"cleanup: {type(cleanup_exc).__name__}"
+            )
 
 
 def _audio_features_from_analysis(

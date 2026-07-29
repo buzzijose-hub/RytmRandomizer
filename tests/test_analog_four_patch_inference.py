@@ -104,12 +104,14 @@ class _FakeConnection:
         receive_error: OSError | EOFError | None = None,
         poll_result: bool = True,
         poll_error: OSError | EOFError | KeyboardInterrupt | None = None,
+        close_error: BaseException | None = None,
     ) -> None:
         self.incoming = incoming
         self.send_error = send_error
         self.receive_error = receive_error
         self.poll_result = poll_result
         self.poll_error = poll_error
+        self.close_error = close_error
         self.poll_timeouts: list[float | None] = []
         self.sent: list[object] = []
         self.closed = False
@@ -132,6 +134,8 @@ class _FakeConnection:
 
     def close(self) -> None:
         self.closed = True
+        if self.close_error is not None:
+            raise self.close_error
 
 
 class _FakeProcess:
@@ -624,7 +628,7 @@ def test_safe_native_process_cleanup_records_operation_failure(
 
 
 @pytest.mark.parametrize("interruption", (KeyboardInterrupt(), SystemExit(7)))
-def test_native_resource_cleanup_records_and_suppresses_interrupts(
+def test_native_resource_cleanup_propagates_interrupts(
     interruption: BaseException,
 ) -> None:
     from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
@@ -635,15 +639,16 @@ def test_native_resource_cleanup_records_and_suppresses_interrupts(
             raise interruption
 
     reset_metrics()
-    inference._close_native_analysis_resource(
-        InterruptingResource(),  # type: ignore[arg-type]
-        resource_kind="test_resource",
-    )
+    with pytest.raises(type(interruption)):
+        inference._close_native_analysis_resource(
+            InterruptingResource(),  # type: ignore[arg-type]
+            resource_kind="test_resource",
+        )
 
-    assert get_metrics().errors_by_kind["a4_native_analysis_cleanup"] == 1
+    assert get_metrics().errors_by_kind["a4_native_analysis_cleanup"] == 0
 
 
-def test_native_process_termination_cleanup_suppresses_interrupt(
+def test_native_process_termination_cleanup_propagates_interrupt(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
@@ -654,11 +659,124 @@ def test_native_process_termination_cleanup_suppresses_interrupt(
             raise KeyboardInterrupt("operator cancelled during cleanup")
 
     reset_metrics()
-    inference._terminate_native_analysis_process_safely(
-        InterruptingProcess(alive=True)  # type: ignore[arg-type]
-    )
+    with pytest.raises(KeyboardInterrupt, match="operator cancelled during cleanup"):
+        inference._terminate_native_analysis_process_safely(
+            InterruptingProcess(alive=True)  # type: ignore[arg-type]
+        )
 
+    assert get_metrics().errors_by_kind["a4_native_analysis_cleanup"] == 0
+
+
+def test_native_parent_cleanup_finishes_then_propagates_interrupt() -> None:
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    receiver = _FakeConnection(close_error=KeyboardInterrupt("operator cancelled during cleanup"))
+    sender = _FakeConnection()
+    process = _FakeProcess(alive=True, exitcode=None)
+
+    with pytest.raises(KeyboardInterrupt, match="operator cancelled during cleanup"):
+        inference._cleanup_native_analysis_parent(
+            receiver,  # type: ignore[arg-type]
+            sender,  # type: ignore[arg-type]
+            process,  # type: ignore[arg-type]
+            started=True,
+        )
+
+    assert receiver.closed is True
+    assert sender.closed is True
+    assert process.terminated is True
+    assert process.closed is True
+
+
+def test_native_parent_cleanup_propagates_system_exit_code() -> None:
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    receiver = _FakeConnection(close_error=SystemExit(7))
+    sender = _FakeConnection()
+    process = _FakeProcess()
+
+    with pytest.raises(SystemExit) as exc_info:
+        inference._cleanup_native_analysis_parent(
+            receiver,  # type: ignore[arg-type]
+            sender,  # type: ignore[arg-type]
+            process,  # type: ignore[arg-type]
+            started=False,
+        )
+
+    assert exc_info.value.code == 7
+    assert sender.closed is True
+    assert process.closed is True
+
+
+def test_native_parent_cleanup_records_secondary_interruption() -> None:
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    receiver = _FakeConnection(close_error=KeyboardInterrupt("first interruption"))
+    sender = _FakeConnection(close_error=SystemExit(9))
+    process = _FakeProcess()
+    reset_metrics()
+
+    with pytest.raises(KeyboardInterrupt, match="first interruption"):
+        inference._cleanup_native_analysis_parent(
+            receiver,  # type: ignore[arg-type]
+            sender,  # type: ignore[arg-type]
+            process,  # type: ignore[arg-type]
+            started=False,
+        )
+
+    assert process.closed is True
     assert get_metrics().errors_by_kind["a4_native_analysis_cleanup"] == 1
+
+
+def test_native_process_runner_propagates_cleanup_only_interruption() -> None:
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    receiver = _FakeConnection(
+        incoming=inference._NativeAnalysisMessage(analysis=_analysis()),
+        close_error=KeyboardInterrupt("operator cancelled during cleanup"),
+    )
+    sender = _FakeConnection()
+    process = _FakeProcess()
+    context = _FakeProcessContext(receiver, sender, process)
+
+    with pytest.raises(KeyboardInterrupt, match="operator cancelled during cleanup"):
+        inference._run_native_audio_analysis_process(
+            Path("parent-owned.wav"),
+            process_context=context,  # type: ignore[arg-type]
+        )
+
+    assert process.joined is True
+    assert sender.closed is True
+    assert process.closed is True
+
+
+def test_native_parent_cleanup_preserves_inflight_operator_interruption() -> None:
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    receiver = _FakeConnection(
+        poll_error=SystemExit(7),
+        close_error=KeyboardInterrupt("operator cancelled during cleanup"),
+    )
+    sender = _FakeConnection()
+    process = _FakeProcess(alive=True, exitcode=None)
+    context = _FakeProcessContext(receiver, sender, process)
+
+    with pytest.raises(SystemExit) as exc_info:
+        inference._run_native_audio_analysis_process(
+            Path("parent-owned.wav"),
+            process_context=context,  # type: ignore[arg-type]
+        )
+
+    assert exc_info.value.code == 7
+    assert exc_info.value.__notes__ == [
+        "additional operator interruption occurred during native-analysis cleanup: "
+        "KeyboardInterrupt"
+    ]
+    assert receiver.closed is True
+    assert sender.closed is True
+    assert process.terminated is True
+    assert process.closed is True
 
 
 def test_native_analysis_wait_times_out_and_terminates_worker() -> None:

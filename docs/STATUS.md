@@ -81,9 +81,11 @@ Last updated: 2026-07-28. This file is a hand-authored snapshot and is meant to 
   counts the exact transport messages, and lists skipped front-panel rows that
   still need ordinal capture. The active app path now supports
   `--dry-run --a4-patch-send-plan` for mock rendering and
-  `--arm --a4-patch-send-plan --confirm-a4-patch-send-plan --a4-output-port
-  "<exact configured name>"` for explicit A4 output sends; it sends only
-  compiler-approved rows and leaves screen-only destination rows manual.
+  `--arm --a4-patch-send-plan --batch-manifest <batch.json>
+  --batch-manifest-sha256 "<reviewed digest>" --candidate N
+  --confirm-a4-patch-send-plan --a4-output-port "<exact configured name>"`
+  for explicit A4 output sends; it sends only compiler-approved rows and
+  leaves screen-only destination rows manual.
 - 2026-07-03: Passive Analog Four patch learning layer prepared locally. The
   new `analog-four-patch-learning-report` command builds on the patch genome
   by ranking all four candidates, routing measured reference traits to Analog

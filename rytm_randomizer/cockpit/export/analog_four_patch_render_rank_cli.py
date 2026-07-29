@@ -210,12 +210,13 @@ def _report_render_rank_error(exc: BaseException, *, json_output: bool) -> int:
             + "\n"
         )
     else:
-        sys.stderr.write(f"{USAGE}\nError: {exc}\n")
+        sys.stderr.write(f"{USAGE}\nError [{error_code}]: {exc}\n")
     return 130 if error_code == "interrupted" else 2
 
 
 def _format_render_rank_cli_error(exc: Exception) -> str:
-    return f"{USAGE}\nError: {exc}"
+    error_code = analog_four_patch_render_rank_error_code(exc)
+    return f"{USAGE}\nError [{error_code}]: {exc}"
 
 
 ANALOG_FOUR_PATCH_RENDER_RANK_CLI_COMMAND: Final[CliCommand] = CliCommand(

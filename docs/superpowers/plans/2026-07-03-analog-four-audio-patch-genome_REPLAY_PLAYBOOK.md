@@ -2,10 +2,9 @@
 
 > Status: in-flight
 
-Closeout hardening, touched-file coverage, parity, typing, lint, mechanical
-review, and branch publication are verified. Fresh online checks and a fresh
-reviewer verdict remain pending. The physical full-patch rehearsal also remains
-pending.
+Closeout hardening, touched-file coverage, parity, typing, lint, and mechanical
+review are verified. Follow-up publication and online state are tracked on
+PR #214. Fresh approval and the physical full-patch rehearsal remain pending.
 
 ## Resume This Run
 
@@ -43,13 +42,15 @@ native decoding on Windows remains environment-dependent and is not established.
 
 ```powershell
 python -m rytm_randomizer.app --dry-run --a4-patch-send-plan `
-  --batch-manifest <batch-dir>\a4-t1-audio-patch-batch.json `
+  --batch-manifest "<batch-dir>\a4-t1-audio-patch-batch.json" `
+  --batch-manifest-sha256 "<reviewed-manifest-sha256>" `
   --candidate 1
 
 # Pending supervised physical validation only, after the dry-run and
 # single-parameter track/channel check in MANUAL_HARDWARE_VALIDATION.md:
 python -m rytm_randomizer.app --arm --a4-patch-send-plan `
-  --batch-manifest <batch-dir>\a4-t1-audio-patch-batch.json `
+  --batch-manifest "<batch-dir>\a4-t1-audio-patch-batch.json" `
+  --batch-manifest-sha256 "<reviewed-manifest-sha256>" `
   --candidate 1 --confirm-a4-patch-send-plan `
   --a4-output-port "<exact configured Analog Four output name>"
 ```
@@ -82,7 +83,7 @@ recordings are available.
 3. What writes a complete saved kit? The pure renderer under `devices/strategies/`, exposed through the registered A4 saved-kit capability and guarded by `cockpit/export/analog_four_kit.py`.
 4. How is a batch committed? Immutable generation artifacts first, stable manifest last.
 5. What may currently reach A4 saved-kit SysEx? Filter2 Resonance only; every other DNA row is deferred from SysEx. The verified sidecar exposes 33 live-routable rows and keeps six paired-CC rows manual.
-6. How is the auditioned candidate selected for live send? `--batch-manifest` plus `--candidate`; nested hashes and event routing are verified before output opens.
+6. How is the auditioned candidate selected for live send? `--batch-manifest`, its reviewed `--batch-manifest-sha256`, and `--candidate`; the manifest digest, nested hashes, and event routing are verified before output opens.
 7. How does hardware feedback enter? Record candidate renders and run `analog-four-audio-patch-rank`; reviewed captures can then become corpus evidence.
 8. What can open a real MIDI port? Only `python -m rytm_randomizer.app --arm`
    after feature-specific validation/confirmation. Passive commands and the
@@ -90,15 +91,15 @@ recordings are available.
 
 ## Current Local Verification
 
-- Focused A4/operator regression suite: 1,581 passed, 1 skipped.
-- Architecture: 702 passed.
-- Full suite: 6,777 passed, 3 skipped.
+- Focused A4/operator regression suite: 1,589 passed, 1 skipped.
+- Architecture: 703 passed.
+- Full suite: 6,792 passed, 3 skipped.
 - Ruff, Black, isort: clean.
-- Touched-file coverage: 100% across 7,506 statements and 1,764 branches.
+- Touched-file coverage: 100% across 7,557 statements and 1,788 branches.
 - V1.34 parity: 685 passed; Vulture, strict Pyright across all 60 touched
   production modules, `git diff --check`, and the mechanical review gate
   passed.
-- The literal strict audit across all 113 touched Python paths reports 4,220
-  dynamic test-harness typing errors; preserve that Gate 3 exception until
-  CODEOWNER acceptance or a dedicated cleanup.
-- The pushed SHA and online reviewer status will be recorded on PR #214.
+- The literal strict audit across all 113 touched Python paths reports 4,263
+  dynamic test-harness typing errors covered by the accepted scoped Gate 3
+  decision; production typing remains clean and mandatory.
+- Follow-up publication and online reviewer status are recorded on PR #214.

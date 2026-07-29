@@ -398,6 +398,8 @@ def test_app_dry_run_sends_exact_hash_verified_batch_candidate(
             "--a4-patch-send-plan",
             "--batch-manifest",
             str(manifest_path),
+            "--batch-manifest-sha256",
+            _sha256(manifest_path.read_bytes()),
             "--candidate",
             "1",
         ]
@@ -476,6 +478,8 @@ def test_app_arm_sends_exact_hash_verified_batch_candidate(
             "--a4-patch-send-plan",
             "--batch-manifest",
             str(manifest_path),
+            "--batch-manifest-sha256",
+            _sha256(manifest_path.read_bytes()),
             "--candidate",
             "1",
             "--confirm-a4-patch-send-plan",
@@ -504,6 +508,44 @@ def test_app_arm_sends_exact_hash_verified_batch_candidate(
     )
 
 
+def test_app_arm_rejects_unreviewed_manifest_digest_before_opening_midi(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer import app, mido_provider
+
+    manifest_path, _manifest, _sidecar = _write_batch(tmp_path)
+
+    def fail_midi_call(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("digest mismatch must fail before MIDI provider work")
+
+    monkeypatch.setattr(
+        mido_provider,
+        "build_mido_midi_port_provider",
+        fail_midi_call,
+    )
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--a4-patch-send-plan",
+            "--batch-manifest",
+            str(manifest_path),
+            "--batch-manifest-sha256",
+            "0" * 64,
+            "--candidate",
+            "1",
+            "--confirm-a4-patch-send-plan",
+            "--a4-output-port",
+            "Fake A4 Out",
+        ]
+    )
+
+    assert exit_code == 1
+    assert "SHA-256 does not match" in capsys.readouterr().err
+
+
 def test_app_arm_rejects_tampered_batch_before_opening_midi(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
@@ -515,9 +557,14 @@ def test_app_arm_rejects_tampered_batch_before_opening_midi(
     sidecar["generation_id"] = "tampered"
     _rewrite_json(tmp_path / "candidate-01.json", sidecar)
 
-    def fail_midi_call(self, *_args: object) -> None:
+    def fail_midi_call(*_args: object) -> None:
         raise AssertionError("invalid manifest must not touch MIDI ports")
 
+    monkeypatch.setattr(
+        mido_provider,
+        "build_mido_midi_port_provider",
+        fail_midi_call,
+    )
     monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_midi_call)
     monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_midi_call)
 
@@ -527,6 +574,8 @@ def test_app_arm_rejects_tampered_batch_before_opening_midi(
             "--a4-patch-send-plan",
             "--batch-manifest",
             str(manifest_path),
+            "--batch-manifest-sha256",
+            _sha256(manifest_path.read_bytes()),
             "--confirm-a4-patch-send-plan",
             "--a4-output-port",
             "Fake A4 Out",
@@ -579,6 +628,8 @@ def test_app_arm_reports_partial_batch_send_and_recovery(
             "--a4-patch-send-plan",
             "--batch-manifest",
             str(manifest_path),
+            "--batch-manifest-sha256",
+            _sha256(manifest_path.read_bytes()),
             "--confirm-a4-patch-send-plan",
             "--a4-output-port",
             "Fake A4 Out",

@@ -250,6 +250,13 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--batch-manifest-sha256",
+        help=(
+            "Expected lowercase SHA-256 printed by the reviewed Analog Four "
+            "batch. Required for armed --a4-patch-send-plan delivery."
+        ),
+    )
+    parser.add_argument(
         "--track",
         type=int,
         help="Analog Four track for --a4-patch-send-plan.",
@@ -1295,14 +1302,20 @@ def _resolve_a4_patch_send_plan_source(args: argparse.Namespace) -> tuple[str, s
     if args.batch_manifest is not None:
         sources.append(("--batch-manifest", args.batch_manifest))
     if len(sources) != 1:
-        sys.stderr.write(
-            "--a4-patch-send-plan requires exactly one source: --description, --audio, "
-            "or --batch-manifest.\n"
+        _reject_a4_patch_send_plan_guard(
+            error_code="source_count_invalid",
+            message=(
+                "--a4-patch-send-plan requires exactly one source: --description, "
+                "--audio, or --batch-manifest.\n"
+            ),
         )
         return None
     source_flag, source_value = sources[0]
     if source_value.strip() == "":
-        sys.stderr.write(f"{source_flag} requires a non-empty value.\n")
+        _reject_a4_patch_send_plan_guard(
+            error_code="source_value_required",
+            message=f"{source_flag} requires a non-empty value.\n",
+        )
         return None
     return source_flag, source_value
 
@@ -1319,9 +1332,45 @@ def _a4_patch_optional_range(
 
     resolved = default if value is None else value
     if resolved < low or resolved > high:
-        sys.stderr.write(f"{name} must be in [{low}, {high}].\n")
+        _reject_a4_patch_send_plan_guard(
+            error_code=f"{name.replace('-', '_')}_out_of_range",
+            message=f"{name} must be in [{low}, {high}].\n",
+        )
         return None
     return resolved
+
+
+def _resolve_a4_patch_manifest_sha256(
+    args: argparse.Namespace,
+    *,
+    source_flag: str,
+) -> tuple[bool, str | None]:
+    """Validate the optional expected manifest digest for the selected source."""
+
+    expected = args.batch_manifest_sha256
+    if source_flag != "--batch-manifest":
+        if expected is not None:
+            _reject_a4_patch_send_plan_guard(
+                error_code="manifest_digest_not_allowed",
+                message=(
+                    "--batch-manifest-sha256 requires --batch-manifest as the "
+                    "--a4-patch-send-plan source.\n"
+                ),
+            )
+            return False, None
+        return True, None
+    if expected is None:
+        return True, None
+    if len(expected) != 64 or any(character not in "0123456789abcdef" for character in expected):
+        _reject_a4_patch_send_plan_guard(
+            error_code="manifest_digest_invalid",
+            message=(
+                "--batch-manifest-sha256 must be the 64-character lowercase "
+                "hexadecimal digest printed by the reviewed batch.\n"
+            ),
+        )
+        return False, None
+    return True, expected
 
 
 def _build_a4_patch_send_plan_from_args(
@@ -1351,6 +1400,12 @@ def _build_a4_patch_send_plan_from_args(
         return None
 
     source_flag, source_value = source
+    digest_valid, expected_manifest_sha256 = _resolve_a4_patch_manifest_sha256(
+        args,
+        source_flag=source_flag,
+    )
+    if not digest_valid:
+        return None
     if source_flag == "--batch-manifest":
         from .cockpit.export.analog_four_patch_batch_reader import (
             load_analog_four_patch_batch_candidate,
@@ -1377,6 +1432,19 @@ def _build_a4_patch_send_plan_from_args(
                 },
             )
             sys.stderr.write(f"--a4-patch-send-plan failed: {exc}\n")
+            return None
+        if (
+            expected_manifest_sha256 is not None
+            and selection.manifest_sha256 != expected_manifest_sha256
+        ):
+            _reject_a4_patch_send_plan_guard(
+                error_code="manifest_digest_mismatch",
+                message=(
+                    "--batch-manifest SHA-256 does not match "
+                    "--batch-manifest-sha256; regenerate or re-review the dry-run "
+                    "before arming.\n"
+                ),
+            )
             return None
         if args.track is not None and args.track != selection.plan.selected_track:
             metrics.record_error("a4_patch_send_plan_track_mismatch")
@@ -1740,6 +1808,10 @@ def _deliver_a4_patch_send_plan(
 
     from .senders.midi_event_plan import MidiEventPlanSendError
 
+    uncertain_state_recovery = (
+        "MIDI delivery has no device acknowledgement, so the Analog Four state "
+        "is uncertain; reload the last saved Kit or project before retrying."
+    )
     try:
         sent_message_count = _send_a4_patch_send_plan_events(
             plan,
@@ -1770,19 +1842,10 @@ def _deliver_a4_patch_send_plan(
                 "fingerprint": exc.fingerprint,
             },
         )
-        delivery_state = (
-            "The Analog Four may now contain a partial patch; reload the last saved "
-            "Kit or project before retrying."
-            if exc.sent_message_count > 0
-            else (
-                "No MIDI messages were confirmed delivered; no reload is "
-                "required before retrying."
-            )
-        )
         sys.stderr.write(
             "--arm --a4-patch-send-plan send failed after "
             f"{exc.sent_message_count} of {exc.expected_message_count} messages. "
-            f"{delivery_state} Cause: {exc.__cause__ or exc}\n"
+            f"{uncertain_state_recovery} Cause: {exc.__cause__ or exc}\n"
         )
         raise SystemExit(130 if exc.interrupted else 1) from exc
     except (KeyboardInterrupt, SystemExit) as exc:
@@ -1802,6 +1865,10 @@ def _deliver_a4_patch_send_plan(
                 "fingerprint": "a4.patch_send.interrupted",
             },
         )
+        sys.stderr.write(
+            "--arm --a4-patch-send-plan delivery was interrupted with an unknown "
+            f"message count. {uncertain_state_recovery}\n"
+        )
         raise SystemExit(130) from exc
     except (OSError, RuntimeError, AttributeError, ValueError) as exc:
         metrics.record_error("a4_patch_send_plan_send")
@@ -1816,7 +1883,9 @@ def _deliver_a4_patch_send_plan(
                 "fingerprint": getattr(exc, "fingerprint", "a4.patch_send.failed"),
             },
         )
-        sys.stderr.write(f"--arm --a4-patch-send-plan send failed: {exc}\n")
+        sys.stderr.write(
+            f"--arm --a4-patch-send-plan send failed: {exc}. " f"{uncertain_state_recovery}\n"
+        )
         raise SystemExit(1) from exc
 
     if sent_message_count == expected_message_count:
@@ -1842,7 +1911,9 @@ def _deliver_a4_patch_send_plan(
         )
         sys.stderr.write(
             "--arm --a4-patch-send-plan send failed: no MIDI messages were "
-            "confirmed delivered. No reload is required before retrying.\n"
+            "confirmed delivered. MIDI has no device acknowledgement, so the "
+            "Analog Four state is uncertain; reload the last saved Kit or project "
+            "before retrying.\n"
         )
         raise SystemExit(1)
 
@@ -1897,7 +1968,7 @@ def _run_armed_a4_patch_send_plan(
             candidate=plan.selected_candidate,
             sendable_count=summary.sendable_count,
             transport_message_count=summary.transport_message_count,
-        ):
+        ) as operation_id:
             try:
                 expected_message_count = _validate_a4_patch_send_plan_events(plan)
             except ValueError as exc:
@@ -1912,6 +1983,7 @@ def _run_armed_a4_patch_send_plan(
                     extra={
                         **log_context,
                         **outcome,
+                        "op_id": operation_id,
                         "error_type": type(exc).__name__,
                         "fingerprint": "a4.patch_send.validation_failed",
                     },
@@ -2033,10 +2105,18 @@ def _run_a4_patch_send_plan(args: argparse.Namespace) -> int:
                 "--description and --audio are dry-run only.\n"
             ),
         )
+    if args.arm and args.batch_manifest_sha256 is None:
+        return _reject_a4_patch_send_plan_guard(
+            error_code="manifest_digest_required",
+            message=(
+                "--a4-patch-send-plan armed sends require "
+                "--batch-manifest-sha256 from the reviewed dry-run.\n"
+            ),
+        )
     output_port_name = args.a4_output_port
     exact_output_port_name: str | None = None
     if args.arm:
-        if not isinstance(output_port_name, str):
+        if not isinstance(output_port_name, str) or not output_port_name.strip():
             return _reject_a4_patch_send_plan_guard(
                 error_code="exact_output_required",
                 message=(
@@ -2083,12 +2163,19 @@ def _validate_a4_patch_send_plan_cli_args(args: argparse.Namespace) -> bool:
                 args.batch_manifest is not None,
                 "--batch-manifest requires --a4-patch-send-plan.\n",
             ),
+            (
+                args.batch_manifest_sha256 is not None,
+                "--batch-manifest-sha256 requires --a4-patch-send-plan.\n",
+            ),
             (args.track is not None, "--track requires --a4-patch-send-plan.\n"),
             (args.candidate is not None, "--candidate requires --a4-patch-send-plan.\n"),
         )
         for is_invalid, message in option_requirements:
             if is_invalid:
-                sys.stderr.write(message)
+                _reject_a4_patch_send_plan_guard(
+                    error_code="plan_flag_required",
+                    message=message,
+                )
                 return False
         return True
 
@@ -2108,7 +2195,10 @@ def _validate_a4_patch_send_plan_cli_args(args: argparse.Namespace) -> bool:
     )
     for option_name, is_active in conflicts:
         if is_active:
-            sys.stderr.write(f"--a4-patch-send-plan cannot be combined with --{option_name}.\n")
+            _reject_a4_patch_send_plan_guard(
+                error_code="active_path_conflict",
+                message=("--a4-patch-send-plan cannot be combined with " f"--{option_name}.\n"),
+            )
             return False
     return True
 

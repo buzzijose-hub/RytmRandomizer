@@ -233,12 +233,13 @@ python -m rytm_randomizer.cli analog-four-style-kit-readiness-report KITS.syx jo
 Active companion app bridge for the selected patch send plan:
 
 ```bash
-python -m rytm_randomizer.app --dry-run --a4-patch-send-plan --batch-manifest batch/a4-t1-audio-patch-batch.json --candidate 1
-python -m rytm_randomizer.app --arm --a4-patch-send-plan --batch-manifest batch/a4-t1-audio-patch-batch.json --candidate 1 --confirm-a4-patch-send-plan --a4-output-port "<exact configured Analog Four output name>"
+python -m rytm_randomizer.app --dry-run --a4-patch-send-plan --batch-manifest batch/a4-t1-audio-patch-batch.json --batch-manifest-sha256 "<reviewed manifest SHA-256>" --candidate 1
+python -m rytm_randomizer.app --arm --a4-patch-send-plan --batch-manifest batch/a4-t1-audio-patch-batch.json --batch-manifest-sha256 "<reviewed manifest SHA-256>" --candidate 1 --confirm-a4-patch-send-plan --a4-output-port "<exact configured Analog Four output name>"
 python -m rytm_randomizer.app --dry-run --a4-patch-send-plan --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
 ```
 
-The manifest form is the only armed audition-to-hardware path: it verifies the
+The manifest form is the only armed audition-to-hardware path: it requires the
+operator-supplied SHA-256 of the exact reviewed manifest, then verifies the
 committed batch, selected sidecar, source-audio identity, candidate DNA, and
 CC/NRPN plan before any output port opens. The direct `--description` and
 `--audio` forms are dry-run-only one-off inference paths; they rebuild a plan
@@ -282,7 +283,8 @@ events, counts the exact transport messages, and lists skipped front-panel rows
 such as destination labels that still need ordinal capture. The matching active
 path lives in `rytm_randomizer.app`: use `--dry-run --a4-patch-send-plan` to
 render the plan through the mock sender, or `--arm --a4-patch-send-plan
---batch-manifest ... --candidate N --confirm-a4-patch-send-plan
+--batch-manifest ... --batch-manifest-sha256 "<reviewed digest>" --candidate N
+--confirm-a4-patch-send-plan
 --a4-output-port "<exact configured Analog Four output name>"` to require one
 exact output match and send only the compiler-approved rows from the exact
 hash-verified plan stored with that batch.
@@ -301,6 +303,9 @@ and commits each candidate's complete DNA plus CC/NRPN plan behind a
 hash-addressed sidecar and one stable manifest. The bounded `--candidates`
 compatibility option can request a leading subset for focused tests, but the
 operator workflow and product contract use all four candidates.
+Local sidecars and manifests retain the reference-audio and source-kit
+basenames for operator traceability. Use neutral filenames before generation
+and review those local artifacts before sharing them outside the studio.
 
 The command performs local file I/O only and does not transfer a kit or send
 MIDI. Native audio decoding runs in a spawned child process. An abnormal native

@@ -532,7 +532,11 @@ The script dynamically discovers committed, working-tree, and untracked
 production modules against the integration merge base, then invokes the pinned
 strict configuration. Dynamic test-harness typing remains a separate cleanup
 workstream; do not narrow discovery or relax the configuration to hide a new
-error. All new code must:
+error. Base-ref precedence is `TYPECHECK_BASE_REF`, then GitHub Actions'
+`GITHUB_BASE_REF` as `origin/<branch>`, then the safe repository default
+`origin/modularize-v1.34`. Set `TYPECHECK_BASE_REF` only when intentionally
+checking against another fetched integration ref; never use it to omit files
+from a PR's real target diff. All new code must:
 
 - Use type annotations on every public function/method signature (Gate 6).
 - Prefer `@runtime_checkable Protocol` over ABCs (Gate 6).

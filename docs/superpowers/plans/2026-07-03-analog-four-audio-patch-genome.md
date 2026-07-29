@@ -2,9 +2,10 @@
 
 > Status: in-flight
 >
-> Local closeout and branch publication are verified; fresh online checks,
-> explicit CODEOWNER acceptance, and the reviewer verdict remain pending.
-> Supervised full-plan hardware rehearsal also remains pending.
+> Local closeout is verified, and the Gate 3/14/16 policy decisions are
+> accepted. Follow-up branch publication and online state are tracked on
+> PR #214; fresh approval and the supervised full-plan hardware rehearsal
+> remain pending.
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:test-driven-development. This plan is structured for one bundled PR with maximum-parallelization sidecar exploration and no stacked PRs, per docs/PLAN_REQUIREMENTS.md Gate 16.
 
 **Goal:** Add a Synplant-inspired audio/description-to-Analog-Four patch genome and a real audio-dependent batch path whose canonical/default invocation produces exactly four deterministic A4 patch candidates, complete DNA sidecars, CC/NRPN live-dial plans, and narrow hardware-validated saved-kit files for Filter2 Resonance.
@@ -112,7 +113,8 @@ remain independent and parallel.
 
 - Passive CLI reports open no MIDI ports and send no MIDI.
 - App dry-run sends only to the in-memory mock sender.
-- App armed send requires `--arm --a4-patch-send-plan
+- App armed send requires `--arm --a4-patch-send-plan --batch-manifest "<path>"
+  --batch-manifest-sha256 "<reviewed digest>" --candidate N
   --confirm-a4-patch-send-plan --a4-output-port "<exact configured name>"`.
 - Saved-kit SysEx writing is local-file-only, atomic, refuses overwrite by default, and is limited to hardware-write-validated Filter2 Resonance mutations.
 - No generated SysEx is sent to a MIDI port by this path; hardware receipt remains an explicit operator action.
@@ -132,29 +134,29 @@ remain independent and parallel.
 
 ## Fresh Closeout Verification
 
-- Focused A4/operator regression suite: **1,581 passed, 1 skipped**.
-- Architecture suite: **702 passed**.
-- Full suite: **6,777 passed, 3 skipped**.
+- Focused A4/operator regression suite: **1,589 passed, 1 skipped**.
+- Architecture suite: **703 passed**.
+- Full suite: **6,792 passed, 3 skipped**.
 - Ruff, Black, and isort: **clean**.
-- Touched-file statement/branch coverage: **100%** across **7,506 statements**
-  and **1,764 branches**, zero misses.
+- Touched-file statement/branch coverage: **100%** across **7,557 statements**
+  and **1,788 branches**, zero misses.
 - V1.34 parity: **685 passed** byte-for-byte.
 - Vulture, strict production-diff Pyright, `git diff --check`, and the mechanical
   review gate: **passed**.
-- The branch is pushed. Fresh online CI and the reviewer verdict remain pending
-  and are tracked on PR #214.
+- Follow-up branch publication, online CI, and reviewer state are tracked on
+  PR #214.
 
 ## Plan-Requirements Conformance
 
 Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 
-- [x] Gate 1 (100% branch coverage on touched files) -- 7,506 statements and 1,764 branches, zero misses.
+- [x] Gate 1 (100% branch coverage on touched files) -- 7,557 statements and 1,788 branches, zero misses.
 - [x] Gate 2 (V1.34 parity byte-identical) -- 685 items passed.
-- [ ] Gate 3 (lint/format/type clean) -- Ruff, Black, isort, and strict
+- [x] Gate 3 (lint/format/type clean) -- Ruff, Black, isort, and strict
   Pyright across all 60 touched production modules pass. The literal strict
-  audit across all 113 touched Python paths reports 4,220 errors in dynamic
-  test harnesses, so complete touched-path conformance requires explicit
-  CODEOWNER acceptance or a dedicated test-typing cleanup.
+  audit across all 113 touched Python paths reports 4,263 errors in dynamic
+  test harnesses; the CODEOWNER accepted this scoped PR #214 debt, while
+  production typing remains mandatory and clean.
 - [x] Gate 4 (dead-code purge) -- Vulture confidence 80 passed across production and tests.
 - [x] Gate 5 (docs updated) -- README, CLI reference, STATUS, ARCHITECTURE, diagrams updated.
 - [x] Gate 6 (type-system hygiene) -- frozen dataclasses and explicit types; no `Any` aliases.

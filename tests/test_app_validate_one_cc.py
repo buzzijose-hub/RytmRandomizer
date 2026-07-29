@@ -917,30 +917,86 @@ def test_app_main_arm_a4_patch_send_plan_requires_committed_manifest(
     assert get_metrics().errors_by_kind["a4_patch_send_plan_manifest_required"] == 1
 
 
+def test_app_main_arm_a4_patch_send_plan_requires_reviewed_manifest_digest(
+    capsys,
+    monkeypatch,
+) -> None:
+    from rytm_randomizer import app, mido_provider
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
+    def fail_before_digest(*_args: object, **_kwargs: object) -> object:
+        raise AssertionError("missing digest must fail before plan or provider work")
+
+    monkeypatch.setattr(app, "_build_a4_patch_send_plan_from_args", fail_before_digest)
+    monkeypatch.setattr(
+        mido_provider,
+        "build_mido_midi_port_provider",
+        fail_before_digest,
+    )
+    reset_metrics()
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--a4-patch-send-plan",
+            "--batch-manifest",
+            "batch.json",
+            "--confirm-a4-patch-send-plan",
+            "--a4-output-port",
+            "Fake A4 Out",
+        ]
+    )
+
+    assert exit_code == 1
+    assert "require --batch-manifest-sha256" in capsys.readouterr().err
+    assert get_metrics().errors_by_kind["a4_patch_send_plan_manifest_digest_required"] == 1
+
+
 @pytest.mark.parametrize(
-    "extra_args, expected",
+    ("extra_args", "expected", "expected_error_code"),
     [
-        ([], "requires exactly one source"),
+        ([], "requires exactly one source", "source_count_invalid"),
         (
             ["--description", "x", "--audio", "reference.wav"],
             "requires exactly one source",
+            "source_count_invalid",
         ),
         (
             ["--audio", "reference.wav", "--batch-manifest", "batch.json"],
             "requires exactly one source",
+            "source_count_invalid",
         ),
-        (["--description", ""], "--description requires a non-empty value"),
-        (["--description", "x", "--track", "5"], "track must be in [1, 4]"),
-        (["--description", "x", "--candidate", "0"], "candidate must be in [1, 4]"),
+        (
+            ["--description", ""],
+            "--description requires a non-empty value",
+            "source_value_required",
+        ),
+        (
+            ["--description", "x", "--track", "5"],
+            "track must be in [1, 4]",
+            "track_out_of_range",
+        ),
+        (
+            ["--description", "x", "--candidate", "0"],
+            "candidate must be in [1, 4]",
+            "candidate_out_of_range",
+        ),
+        (
+            ["--description", "x", "--batch-manifest-sha256", "a" * 64],
+            "--batch-manifest-sha256 requires --batch-manifest",
+            "manifest_digest_not_allowed",
+        ),
     ],
 )
 def test_app_main_a4_patch_send_plan_rejects_bad_sources_before_output(
     extra_args,
     expected,
+    expected_error_code,
     capsys,
     monkeypatch,
 ) -> None:
     from rytm_randomizer import app, mido_provider
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
     def fail_midi_call(self, *_args):
         raise AssertionError("invalid A4 patch send plan must not touch MIDI ports")
@@ -948,12 +1004,14 @@ def test_app_main_a4_patch_send_plan_rejects_bad_sources_before_output(
     monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_midi_call)
     monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_midi_call)
 
+    reset_metrics()
     exit_code = app.main(["--dry-run", "--a4-patch-send-plan", *extra_args])
     captured = capsys.readouterr()
 
     assert exit_code == 1
     assert expected in captured.err
     assert captured.out == ""
+    assert get_metrics().errors_by_kind[f"a4_patch_send_plan_{expected_error_code}"] == 1
 
 
 def test_app_a4_patch_manifest_track_mismatch_records_rejection_decision(
@@ -1039,6 +1097,10 @@ def test_app_main_a4_patch_send_plan_requires_dry_run_or_arm(capsys) -> None:
         (["--description", "x"], "--description requires --a4-patch-send-plan"),
         (["--audio", "reference.wav"], "--audio requires --a4-patch-send-plan"),
         (["--batch-manifest", "batch.json"], "--batch-manifest requires --a4-patch-send-plan"),
+        (
+            ["--batch-manifest-sha256", "a" * 64],
+            "--batch-manifest-sha256 requires --a4-patch-send-plan",
+        ),
         (["--track", "1"], "--track requires --a4-patch-send-plan"),
         (["--candidate", "1"], "--candidate requires --a4-patch-send-plan"),
     ],
@@ -1049,18 +1111,23 @@ def test_app_main_a4_patch_send_plan_source_flags_require_plan_flag(
     capsys,
 ) -> None:
     from rytm_randomizer import app
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
+    reset_metrics()
     exit_code = app.main(["--dry-run", *orphan_args])
     captured = capsys.readouterr()
 
     assert exit_code == 1
     assert expected in captured.err
     assert captured.out == ""
+    assert get_metrics().errors_by_kind["a4_patch_send_plan_plan_flag_required"] == 1
 
 
 def test_app_main_a4_patch_send_plan_rejects_other_active_paths(capsys) -> None:
     from rytm_randomizer import app
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
+    reset_metrics()
     exit_code = app.main(
         [
             "--dry-run",
@@ -1075,6 +1142,7 @@ def test_app_main_a4_patch_send_plan_rejects_other_active_paths(capsys) -> None:
     assert exit_code == 1
     assert "--a4-patch-send-plan cannot be combined with --a4-soft-capture" in captured.err
     assert captured.out == ""
+    assert get_metrics().errors_by_kind["a4_patch_send_plan_active_path_conflict"] == 1
 
 
 def test_app_main_armed_a4_patch_send_plan_requires_exact_output_before_build(
@@ -1105,6 +1173,8 @@ def test_app_main_armed_a4_patch_send_plan_requires_exact_output_before_build(
             "--a4-patch-send-plan",
             "--batch-manifest",
             "missing-but-unread.json",
+            "--batch-manifest-sha256",
+            "a" * 64,
             "--confirm-a4-patch-send-plan",
         ]
     )
@@ -1113,6 +1183,73 @@ def test_app_main_armed_a4_patch_send_plan_requires_exact_output_before_build(
     assert exit_code == 1
     assert "armed sends require --a4-output-port" in captured.err
     assert captured.out == ""
+
+
+@pytest.mark.parametrize("output_name", ("", "   "))
+def test_app_main_armed_a4_patch_send_plan_rejects_blank_exact_output_before_build(
+    output_name,
+    capsys,
+    monkeypatch,
+) -> None:
+    from rytm_randomizer import app, mido_provider
+
+    def fail_before_output_guard(*_args, **_kwargs):
+        raise AssertionError("blank output must fail before plan or provider work")
+
+    monkeypatch.setattr(app, "_build_a4_patch_send_plan_from_args", fail_before_output_guard)
+    monkeypatch.setattr(
+        mido_provider,
+        "build_mido_midi_port_provider",
+        fail_before_output_guard,
+    )
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--a4-patch-send-plan",
+            "--batch-manifest",
+            "batch.json",
+            "--batch-manifest-sha256",
+            "a" * 64,
+            "--candidate",
+            "1",
+            "--confirm-a4-patch-send-plan",
+            "--a4-output-port",
+            output_name,
+        ]
+    )
+
+    assert exit_code == 1
+    assert "armed sends require --a4-output-port" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    ("digest", "expected"),
+    (
+        ("ABC", "64-character lowercase hexadecimal"),
+        ("g" * 64, "64-character lowercase hexadecimal"),
+    ),
+)
+def test_app_dry_run_rejects_invalid_manifest_digest(
+    digest: str,
+    expected: str,
+    capsys,
+) -> None:
+    from rytm_randomizer import app
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--a4-patch-send-plan",
+            "--batch-manifest",
+            "batch.json",
+            "--batch-manifest-sha256",
+            digest,
+        ]
+    )
+
+    assert exit_code == 1
+    assert expected in capsys.readouterr().err
 
 
 def test_app_main_dry_run_a4_patch_send_plan_rejects_output_port(capsys) -> None:
@@ -1799,6 +1936,8 @@ def test_app_arm_a4_patch_send_plan_reports_open_and_send_failures(
 
     assert exit_code == 1
     assert "--arm --a4-patch-send-plan send failed: send_failed" in captured.err
+    assert "state is uncertain" in captured.err
+    assert "reload the last saved Kit or project" in captured.err
     assert fake_port.closed is True
     assert get_metrics().errors_by_kind["a4_patch_send_plan_send"] == 1
 
@@ -1846,7 +1985,9 @@ def test_app_arm_a4_patch_send_plan_rejects_delivery_count_mismatch(
 
     assert exit_code == 1
     assert "no MIDI messages were confirmed delivered" in captured.err
-    assert "No reload is required" in captured.err
+    assert "MIDI has no device acknowledgement" in captured.err
+    assert "state is uncertain" in captured.err
+    assert "reload the last saved Kit or project" in captured.err
     assert fake_port.closed is True
     assert get_metrics().errors_by_kind["a4_patch_send_plan_send"] == 1
     assert get_metrics().a4_patch_send_errors_by_code["send_failed"] == 1
@@ -1962,7 +2103,7 @@ def test_app_arm_a4_patch_send_plan_reports_operator_interrupt_and_recovery(
 
     assert exit_code == 130
     assert "send failed after 1 of 1 messages" in captured.err
-    assert "partial patch" in captured.err
+    assert "state is uncertain" in captured.err
     assert "reload the last saved Kit or project" in captured.err
     assert len(fake_port.sent) == 1
     assert fake_port.closed is True
@@ -1972,6 +2113,7 @@ def test_app_arm_a4_patch_send_plan_reports_operator_interrupt_and_recovery(
 @pytest.mark.parametrize("interruption", [KeyboardInterrupt(), SystemExit(7)])
 def test_app_a4_patch_delivery_classifies_unwrapped_operator_interrupt(
     interruption: BaseException,
+    capsys,
     monkeypatch,
 ) -> None:
     from rytm_randomizer import app
@@ -1997,6 +2139,10 @@ def test_app_a4_patch_delivery_classifies_unwrapped_operator_interrupt(
         )
 
     assert caught.value.code == 130
+    captured = capsys.readouterr()
+    assert "unknown message count" in captured.err
+    assert "state is uncertain" in captured.err
+    assert "reload the last saved Kit or project" in captured.err
     assert metrics.errors_by_kind["a4_patch_send_plan_interrupted"] == 1
     assert metrics.a4_patch_send_errors_by_code["interrupted"] == 1
 
@@ -2052,9 +2198,8 @@ def test_app_arm_a4_patch_send_plan_zero_delivery_is_send_failed(
 
     assert exit_code == 1
     assert "send failed after 0 of 1 messages" in captured.err
-    assert "No MIDI messages were confirmed delivered" in captured.err
-    assert "no reload is required before retrying" in captured.err
-    assert "partial patch" not in captured.err
+    assert "MIDI delivery has no device acknowledgement" in captured.err
+    assert "reload the last saved Kit or project before retrying" in captured.err
     assert fake_port.send_attempts == 1
     assert fake_port.closed is True
     assert get_metrics().a4_patch_send_errors_by_code["send_failed"] == 1
@@ -4368,7 +4513,8 @@ def test_app_a4_patch_send_plan_classifies_non_interrupted_partial_delivery(
     )
     captured = capsys.readouterr()
     assert "send failed after 1 of 2 messages" in captured.err
-    assert "partial patch" in captured.err
+    assert "state is uncertain" in captured.err
+    assert "reload the last saved Kit or project" in captured.err
     assert fake_port.closed is True
     assert get_metrics().a4_patch_send_errors_by_code["partial_send"] == 1
 

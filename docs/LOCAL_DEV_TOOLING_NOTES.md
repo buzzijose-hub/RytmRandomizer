@@ -8,6 +8,22 @@ and untracked files. The bare command is `python scripts/typecheck_touched.py`.
 The development extra pins Pyright and the shared pre-push review gate plus CI
 invoke the same script. Dynamic test-harness typing is intentionally outside
 this incremental production gate and remains tracked as separate cleanup debt.
+Base-ref precedence is:
+
+1. `TYPECHECK_BASE_REF` when a developer explicitly names a fetched ref.
+2. GitHub Actions' `GITHUB_BASE_REF`, resolved as `origin/<branch>`.
+3. The safe default `origin/modularize-v1.34`.
+
+Use `TYPECHECK_BASE_REF` only to reproduce a real alternate integration target,
+never to narrow the changed-file set or bypass a typing failure.
+
+## Atomic no-overwrite filesystem support
+
+POSIX no-overwrite publication uses a hard link for race-safe destination
+creation. Filesystems without hard-link support, including some FAT/exFAT and
+network mounts, fail closed with a write error rather than silently weakening
+the no-overwrite guarantee. Windows uses its race-safe rename path and does not
+require hard-link support.
 
 ## 1. Purpose
 

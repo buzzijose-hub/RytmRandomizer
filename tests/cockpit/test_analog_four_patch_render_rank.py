@@ -353,7 +353,7 @@ def test_render_rank_cli_registry_adapters() -> None:
             "1=c.wav",
         ]
     )["render_paths"] == {1: Path("c.wav")}
-    assert "Error: bad" in cli._format_render_rank_cli_error(ValueError("bad"))
+    assert "Error [validation]: bad" in cli._format_render_rank_cli_error(ValueError("bad"))
 
 
 def test_render_rank_registry_reraises_non_json_parse_failure() -> None:
@@ -563,7 +563,7 @@ def test_render_rank_cli_reports_service_errors(
         assert payload["error_code"] == "validation"
         assert captured.err == ""
     else:
-        assert "Error: bad" in captured.err
+        assert "Error [validation]: bad" in captured.err
         assert captured.out == ""
 
 

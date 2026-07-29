@@ -125,12 +125,20 @@ def test_lock_release_requires_complete_owner_identity(tmp_path: Path) -> None:
     from rytm_randomizer.cockpit.export.analog_four_patch_batch_publication import (
         release_batch_lock,
     )
+    from rytm_randomizer.observability.metrics import get_metrics
 
     with pytest.raises(ValueError, match="requires all owner fields"):
         release_batch_lock(
             tmp_path / "batch.lock",
             generation_id="a" * 32,
         )
+
+    metrics = get_metrics()
+    assert metrics.a4_patch_publication_count["lock_release"] == 1
+    assert (
+        metrics.a4_patch_publication_errors_by_operation_and_code["lock_release:release_failed"]
+        == 1
+    )
 
 
 def test_publication_interrupt_and_cleanup_failure_are_terminal_metrics(

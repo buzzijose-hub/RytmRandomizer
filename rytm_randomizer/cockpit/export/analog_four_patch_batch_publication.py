@@ -29,6 +29,9 @@ from .writer import WriteResult, atomic_write
 
 _logger = get_logger(__name__)
 _LOCK_OWNERSHIP_CHANGED_ERROR: Final[str] = "publication lock ownership changed"
+_LOCK_OWNER_FIELDS_REQUIRED_ERROR: Final[str] = (
+    "lock ownership verification requires all owner fields"
+)
 _LOCK_OPERATION_GATE_SUFFIX: Final[str] = ".operation"
 
 
@@ -314,27 +317,26 @@ def release_batch_lock(
 ) -> str | None:
     """Release a cooperative publication lock, returning cleanup diagnostics."""
 
+    started_at = time.perf_counter()
+    existed = False
+    gate_path: Path | None = None
+    operation_id = ""
     expected_values = (
         generation_id,
         publication_nonce,
         audio_sha256,
         source_kit_sha256,
     )
-    if any(value is not None for value in expected_values) and not all(
-        value is not None for value in expected_values
-    ):
-        raise ValueError("lock ownership verification requires all owner fields")
-
-    started_at = time.perf_counter()
-    existed = False
-    gate_path: Path | None = None
-    operation_id = ""
     try:
         with operation(
             "a4_patch_lock_release",
             logger=_logger,
             lock_name=lock_path.name,
         ) as operation_id:
+            if any(value is not None for value in expected_values) and not all(
+                value is not None for value in expected_values
+            ):
+                raise ValueError(_LOCK_OWNER_FIELDS_REQUIRED_ERROR)
             gate_path = _acquire_lock_operation_gate(lock_path)
             try:
                 existed = lock_path.exists()
@@ -416,6 +418,8 @@ def release_batch_lock(
             artifact_name=lock_path.name,
         )
         if isinstance(exc, (KeyboardInterrupt, SystemExit)):
+            raise
+        if isinstance(exc, ValueError) and exc.args == (_LOCK_OWNER_FIELDS_REQUIRED_ERROR,):
             raise
         return _safe_lock_cleanup_diagnostic(lock_path, exc)
 

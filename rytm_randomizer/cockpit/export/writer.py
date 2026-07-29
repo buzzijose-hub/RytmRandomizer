@@ -12,10 +12,11 @@ three guarantees the writer must satisfy:
    :func:`os.fsync` before atomic publication. Directory metadata is not
    fsynced, so persistence of a newly published name across sudden power
    loss remains filesystem-dependent.
-3. **Behave identically on POSIX and Windows.** Overwriting uses
+3. **Fail closed on every supported platform.** Overwriting uses
    :func:`os.replace`. No-overwrite publication uses :func:`os.rename`
    on Windows and :func:`os.link` on POSIX so destination creation stays
-   race-safe without requiring hard-link support on Windows media.
+   race-safe. POSIX filesystems without hard-link support return a write
+   failure rather than weakening the no-overwrite guarantee.
 
 Public surface (re-exported from :mod:`rytm_randomizer.cockpit.export`):
 

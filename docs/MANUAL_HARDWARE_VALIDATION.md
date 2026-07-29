@@ -394,6 +394,9 @@ python -m rytm_randomizer.cli analog-four-audio-patch-batch `
 
 This is real local audio analysis and candidate inference, not a static preset
 rename. The documented `--candidates 4` run produces exactly four candidates.
+Generated sidecars and the manifest retain the input basenames for local
+traceability. Rename private or identifying inputs to neutral basenames before
+generation, and inspect artifacts before sharing them.
 Each candidate produces a `.syx` file plus a JSON sidecar containing
 its complete patch DNA and CC/NRPN live-dial plan. At the current hardware
 validation boundary, the `.syx` encodes only Filter2 Resonance; every current
@@ -428,6 +431,7 @@ Preview the exact candidate committed by the batch manifest:
 ```powershell
 python -m rytm_randomizer.app --dry-run --a4-patch-send-plan `
   --batch-manifest "<media-root>\ANALOG FOUR\GENERATED\reference-batch\a4-t1-audio-patch-batch.json" `
+  --batch-manifest-sha256 "<reviewed manifest SHA-256>" `
   --candidate 1
 ```
 
@@ -440,9 +444,10 @@ routine operation.
 
 Maintainer decisions for PR #214:
 
-- Armed delivery requires a committed `--batch-manifest`; direct
-  `--description` and `--audio` plan construction is dry-run-only. No freshly
-  inferred, unpublished plan may reach hardware.
+- Armed delivery requires a committed `--batch-manifest` and its exact reviewed
+  `--batch-manifest-sha256`; direct `--description` and `--audio` plan
+  construction is dry-run-only. No freshly inferred, unpublished plan may
+  reach hardware.
 - The 53-message path sends live-dial CC/NRPN changes into volatile kit RAM. It
   sends no save, kit-write, project-write, Program Change, transport, or SysEx
   message and cannot itself persist the resulting device state. The CODEOWNER
@@ -474,6 +479,7 @@ The pending supervised full-plan validation command is:
 ```powershell
 python -m rytm_randomizer.app --arm --a4-patch-send-plan `
   --batch-manifest "<media-root>\ANALOG FOUR\GENERATED\reference-batch\a4-t1-audio-patch-batch.json" `
+  --batch-manifest-sha256 "<reviewed manifest SHA-256>" `
   --candidate 1 --confirm-a4-patch-send-plan `
   --a4-output-port "<exact configured Analog Four output name>"
 ```
@@ -483,9 +489,10 @@ payloads, source/candidate/track mismatches, false transport labels,
 noncanonical parameter CC/NRPN addresses, and coverage-count drift before
 constructing the real provider or opening an output port. The armed sender then
 spaces all 53 transport messages
-by 20 ms. If the MIDI port fails after delivery starts, the command reports the
-exact sent/expected message count; stop, reload the saved clean Kit or project,
-and begin the rehearsal again from that known baseline. Saved-kit SysEx
+by 20 ms. MIDI has no per-message acknowledgment. If delivery fails at any
+point, the command reports the exact attempted progress but hardware state is
+uncertain; stop, reload the saved clean Kit or project, and begin the rehearsal
+again from that known baseline. Saved-kit SysEx
 coverage does not expand through this command; this is an explicit live MIDI
 path whose guarded 33-row transport rehearsal remains pending; the six
 paired-CC rows remain manual.

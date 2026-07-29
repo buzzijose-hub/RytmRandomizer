@@ -6,7 +6,7 @@ import importlib.util
 import json
 import subprocess
 from pathlib import Path
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 from typing import Final
 
 import pytest
@@ -101,3 +101,40 @@ def test_validate_config_requires_strict_python_311(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="typeCheckingMode"):
         typecheck_touched._validate_config(config_path)
+
+
+def test_main_invokes_pyright_and_propagates_its_exit_code(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[tuple[list[str], Path, bool]] = []
+
+    monkeypatch.setattr(typecheck_touched, "_validate_config", lambda: None)
+    monkeypatch.setattr(
+        typecheck_touched,
+        "collect_touched_production_files",
+        lambda: ("rytm_randomizer/app.py",),
+    )
+
+    def fake_run(
+        command: list[str],
+        *,
+        cwd: Path,
+        check: bool,
+    ) -> SimpleNamespace:
+        calls.append((command, cwd, check))
+        return SimpleNamespace(returncode=7)
+
+    monkeypatch.setattr(typecheck_touched.subprocess, "run", fake_run)
+
+    assert typecheck_touched.main() == 7
+    command, cwd, check = calls[0]
+    assert command[:3] == [
+        typecheck_touched.sys.executable,
+        "-m",
+        "pyright",
+    ]
+    assert "--project" in command
+    assert "--pythonpath" in command
+    assert command[-1] == "rytm_randomizer/app.py"
+    assert cwd == typecheck_touched.REPO_ROOT
+    assert check is False

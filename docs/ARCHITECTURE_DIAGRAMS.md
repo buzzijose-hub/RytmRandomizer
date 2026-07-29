@@ -80,7 +80,8 @@ flowchart TB
 
 ## 2. Package Layer Map
 
-The package layout as of `modularize-v1.34` @ `df54b3f` + the Strategy seam landing on PR #43.
+Living package map for `modularize-v1.34` and the current device-strategy,
+Analog Four saved-kit, and audio-patch surfaces.
 
 ```mermaid
 flowchart TB
@@ -146,7 +147,7 @@ flowchart TB
         DevRegistry["registry.py<br/>register_device, get_device, all_devices"]
         DevAR["analog_rytm.py<br/>AnalogRytmDevice"]
         DevA4["analog_four.py<br/>AnalogFourDevice"]
-        DevStrategies["strategies/<br/>analog_rytm_{snapshot_decoder,<br/>snapshot_routing,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_render_plan,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer}.py<br/>analog_four_{offset_manifest,<br/>snapshot_decoder,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer,<br/>saved_kit_writer}.py"]
+        DevStrategies["strategies/<br/>analog_rytm_{snapshot_decoder,<br/>snapshot_routing,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_render_plan,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer}.py<br/>analog_four_{offset_manifest,<br/>snapshot_decoder,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer,<br/>saved_kit_codec,<br/>saved_kit_writer}.py"]
     end
 
     subgraph SnapshotPkg["snapshot/ subpackage<br/>(WS-S6 envelope + 3 Protocols)"]
@@ -996,7 +997,7 @@ flowchart TB
         MidiTests["test_midi_io.py<br/>test_mock_*.py<br/>test_real_midi_*.py"]
     end
 
-    subgraph Layer3["Layer 3 — Architecture (702 tests, 56 files)"]
+    subgraph Layer3["Layer 3 — Architecture (703 tests, 56 files)"]
         ArchTests["tests/architecture/<br/>(Gates 6, 9, 10, 11, etc.)<br/>+ NEW test_device_protocol_enforcement<br/>(7 sub-tests)"]
     end
 
@@ -1133,6 +1134,7 @@ flowchart TB
     subgraph A4Passive["A4 local-file path (no hardware)"]
         A4Batch["audio patch batch<br/>exactly 4 candidates by default"]
         A4SysEx["saved-kit writer<br/>verified fields only"]
+        A4Artifacts["manifest + candidate sidecars<br/>content and identity hashes"]
         A4Reader["manifest reader +<br/>CC/NRPN plan validation"]
         A4Rank["recorded-render ranker"]
         LocalModel["local-model copilot<br/>staged review only"]
@@ -1155,8 +1157,9 @@ flowchart TB
     MockBridge --> ActiveBoundary
 
     A4Batch --> A4SysEx
-    A4Batch --> A4Reader
-    A4Batch --> A4Rank
+    A4Batch --> A4Artifacts
+    A4Artifacts --> A4Reader
+    A4Artifacts --> A4Rank
     LocalModel -.->|"cannot promote or send"| A4Reader
     A4Reader -->|"verified plan"| AppArm
 
@@ -1753,7 +1756,7 @@ flowchart TB
     subgraph PytestLayers["What pytest runs"]
         PassiveTests["Layer 2 unit / behavior tests<br/>(~1500 tests)"]
         ParityTests["Layer 1 V1.34 parity tests<br/>(685 items from 505 goldens)"]
-        ArchTests["Layer 3 architecture tests<br/>(702 tests across 56 files)"]
+        ArchTests["Layer 3 architecture tests<br/>(703 tests across 56 files)"]
         E2ETests["Layer 4 e2e tests<br/>(43 tests)"]
         CovStep["Layer 5 coverage ratchet<br/>(scripts/coverage_ratchet.py)<br/>floor: ≥95% pure-branch"]
     end
@@ -1856,10 +1859,10 @@ flowchart LR
         Hardware["hardware-test"]
     end
 
-    subgraph Armed["Reachable only via app.py --arm"]
+    subgraph AppPatchPaths["App-owned A4 patch-plan paths"]
         ArmedRun["python -m rytm_randomizer.app --arm<br/>(sole real MIDI boundary)"]
         DryRun["python -m rytm_randomizer.app --dry-run<br/>(MockMidiSender)"]
-        A4StoredPlan["--a4-patch-send-plan<br/>--batch-manifest M --candidate N<br/>--confirm-a4-patch-send-plan<br/>--a4-output-port EXACT_NAME"]
+        A4StoredPlan["--a4-patch-send-plan<br/>--batch-manifest M<br/>--batch-manifest-sha256 REVIEWED_SHA<br/>--candidate N --confirm-a4-patch-send-plan<br/>--a4-output-port EXACT_NAME"]
     end
 
     CLI --> Browse
