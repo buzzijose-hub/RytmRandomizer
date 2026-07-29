@@ -167,6 +167,16 @@ EVENT_PERFORMANCE_CONSOLE_CHANGED: Final[Literal["performance_console_changed"]]
 EVENT_SESSION_STATUS: Final[Literal["session_status"]] = "session_status"
 """Emitted at connect + after SEND to refresh ``unsaved_sends`` / mode pill."""
 
+EVENT_CONNECTION_CHANGED: Final[Literal["connection_changed"]] = "connection_changed"
+"""Emitted whenever the passive :class:`ConnectionManager` observes a diff.
+
+Server-push only (no command triggers it): the Wave-3 ConnectionManager's
+poll loop broadcasts this through ``ConnectionRegistry.broadcast_event``
+so every live client tracks cable plug/unplug and device power state in
+near-real-time. Purely passive — the event never implies (or grants)
+any transmit authority.
+"""
+
 EVENT_TYPES: Final[frozenset[str]] = (
     frozenset(
         {
@@ -177,6 +187,7 @@ EVENT_TYPES: Final[frozenset[str]] = (
             EVENT_PROFILE_CHANGED,
             EVENT_PERFORMANCE_CONSOLE_CHANGED,
             EVENT_SESSION_STATUS,
+            EVENT_CONNECTION_CHANGED,
         }
     )
     | WIZARD_EVENT_TYPES
@@ -333,15 +344,54 @@ class SessionStatusEvent(TypedDict):
 
     Includes the device-adapter mode (``live`` vs ``mock``), whether the
     adapter is currently armed (real-MIDI port held open), the MIDI port
-    name (``None`` for the mock), and the count of SEND-since-last-SAVE
-    operations the operator has accumulated.
+    name (``None`` for the mock), the passive connection phase from the
+    Wave-3 ConnectionManager (derived from the adapter when no manager
+    is registered), and the count of SEND-since-last-SAVE operations the
+    operator has accumulated.
     """
 
     type: Literal["session_status"]
     armed: bool
     midi_port: str | None
     mode: Literal["live", "mock"]
+    connection_phase: Literal["disconnected", "searching", "listening", "armed", "fault"]
     unsaved_sends: int
+
+
+class ConnectionStateDict(TypedDict):
+    """Wire shape of one passive connection observation.
+
+    The JSON form of
+    :meth:`rytm_randomizer.cockpit.device.connection.ConnectionState.to_dict`.
+    The ``phase`` Literal mirrors
+    :data:`~rytm_randomizer.cockpit.device.connection.ConnectionPhase`
+    (pinned in sync by ``tests/cockpit/test_connection_manager.py``);
+    the protocol module keeps its own inline copy so the wire authority
+    stays import-free of the device layer.
+
+    ``last_error_fingerprint`` is a stable taxonomy string (never raw
+    exception text — RR4f applies to this event too); ``changed_at`` is
+    a Unix timestamp (seconds) taken when the state last changed.
+    """
+
+    phase: Literal["disconnected", "searching", "listening", "armed", "fault"]
+    available_inputs: list[str]
+    available_outputs: list[str]
+    selected_input: str | None
+    selected_output: str | None
+    last_error_fingerprint: str | None
+    changed_at: float
+
+
+class ConnectionChangedEvent(TypedDict):
+    """``connection_changed`` — the full fresh :class:`ConnectionStateDict`.
+
+    Whole-state per event (never a delta) like every other cockpit event,
+    so a UI renders purely from the latest frame without replaying.
+    """
+
+    type: Literal["connection_changed"]
+    connection: ConnectionStateDict
 
 
 # ---------------------------------------------------------------------------
@@ -602,10 +652,13 @@ __all__ = [
     "COMMAND_UNDO",
     "CommandAck",
     "CommandEnvelope",
+    "ConnectionChangedEvent",
+    "ConnectionStateDict",
     "ERR_INTERNAL",
     "ERR_MISSING_ENVELOPE_KEY",
     "ERR_UNKNOWN_COMMAND",
     "ERR_VALIDATION",
+    "EVENT_CONNECTION_CHANGED",
     "EVENT_HISTORY_UPDATED",
     "EVENT_MUTATION_PREVIEWED",
     "EVENT_PERFORMANCE_CONSOLE_CHANGED",

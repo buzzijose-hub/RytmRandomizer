@@ -429,3 +429,47 @@ def test_param_to_cc_differs_across_distinct_param_names() -> None:
     # Not every pair must differ (hash collisions allowed), but the set
     # of 8 names must produce at least 4 distinct CCs.
     assert len(seen) >= 4
+
+
+# ---------------------------------------------------------------------------
+# midi_port — feeds session_status's port field (fixes the always-null pill).
+# ---------------------------------------------------------------------------
+
+
+def test_midi_port_returns_configured_port_name_before_any_open() -> None:
+    """An explicit ``port_name`` is reported without opening anything."""
+
+    provider = _FakeProvider()
+    adapter = RealMidiDeviceAdapter(provider, port_name="Rytm MK2 Port 1")
+
+    assert adapter.midi_port == "Rytm MK2 Port 1"
+    assert provider.open_output_calls == []  # property is pure — no open
+
+
+def test_midi_port_is_none_when_unconfigured_and_unopened() -> None:
+    adapter = RealMidiDeviceAdapter(_FakeProvider())
+
+    assert adapter.midi_port is None
+
+
+def test_midi_port_reads_opened_ports_name_after_default_pick() -> None:
+    """After the lazy default-pick open, the live port's name is reported."""
+
+    class _NamedPort(_FakePort):
+        name = "Fake Rytm"
+
+    provider = _FakeProvider(output_names=("Fake Rytm",), port=_NamedPort())
+    adapter = RealMidiDeviceAdapter(provider)
+    adapter._ensure_port_open()
+
+    assert adapter.midi_port == "Fake Rytm"
+
+
+def test_midi_port_is_none_when_opened_port_has_no_name() -> None:
+    """A port object without a ``name`` attribute degrades to ``None``."""
+
+    provider = _FakeProvider(output_names=("Fake Rytm",), port=_FakePort())
+    adapter = RealMidiDeviceAdapter(provider)
+    adapter._ensure_port_open()
+
+    assert adapter.midi_port is None

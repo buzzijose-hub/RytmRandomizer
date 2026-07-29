@@ -39,22 +39,34 @@ surface stops being a localhost remote-control hole.
 
 from __future__ import annotations
 
+import importlib.util
 import os
 import secrets
 import stat
 import sys
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Final
 
 import uvicorn
+from fastapi import FastAPI
 
 from ..observability.logging import get_logger
 from .data import PadState, Snapshot, new_ulid
 from .device import MockDeviceAdapter
+from .device.connection import (
+    ConnectionManager,
+    ConnectionState,
+    NullPortEnumerator,
+    PortEnumerator,
+    ProviderPortEnumerator,
+    set_active_connection_manager,
+)
 from .history import HistoryStore
 from .profiles import ProfileRegistry, default_profiles_dir
-from .ws.server import create_app
+from .ws.handlers import build_connection_changed
+from .ws.server import ConnectionRegistry, create_app
 from .ws.session import CockpitSession
 
 _logger = get_logger(__name__)
@@ -274,12 +286,77 @@ def build_session() -> CockpitSession:
     )
 
 
+def _build_port_enumerator() -> PortEnumerator:
+    """Pick the passive port enumerator for this host.
+
+    When ``mido`` is importable, the real enumeration-only facade over
+    :class:`~rytm_randomizer.mido_provider.MidoMidiPortProvider` is used
+    — enumeration ONLY; nothing reachable through the facade can open a
+    port, and ``mido`` itself stays lazily imported inside the
+    provider's methods. When ``mido`` is absent (a bare checkout without
+    the hardware extra), the :class:`NullPortEnumerator` keeps the
+    cockpit booting with the connection phase pinned at ``searching``.
+
+    ``find_spec`` only *locates* the module — it never imports it, so
+    the no-import-time-mido invariant
+    (``tests/architecture/test_no_side_effects.py``) holds either way.
+    """
+
+    if importlib.util.find_spec("mido") is None:
+        return NullPortEnumerator()
+    # Imported lazily so merely importing ``cockpit.__main__`` (e.g. the
+    # architecture suite's per-module import scan) never pulls the
+    # real-MIDI boundary module until a launch actually happens.
+    from ..mido_provider import build_mido_midi_port_provider  # noqa: PLC0415
+
+    return ProviderPortEnumerator(build_mido_midi_port_provider())
+
+
+def _connection_event_broadcaster(
+    registry: ConnectionRegistry,
+) -> Callable[[ConnectionState], None]:
+    """Adapt a ConnectionRegistry into a ConnectionManager ``on_change``.
+
+    Every observed diff becomes one ``connection_changed`` event fanned
+    out to every live WebSocket client. ``broadcast_event`` is
+    non-blocking and thread-safe, so the callback is safe to fire from
+    the manager's poll loop on the serving event loop.
+    """
+
+    def _broadcast(state: ConnectionState) -> None:
+        registry.broadcast_event(build_connection_changed(state))
+
+    return _broadcast
+
+
+def _install_connection_manager_lifecycle(app: FastAPI, manager: ConnectionManager) -> None:
+    """Start/stop the manager's poll loop with the app's lifecycle.
+
+    Registered as FastAPI ``startup`` / ``shutdown`` handlers so the
+    poll task is created on uvicorn's serving event loop — the same
+    loop the per-connection outbound queues capture, which keeps the
+    broadcast fan-out loop-safe.
+    """
+
+    # Starlette >= 1.x dropped ``app.add_event_handler``; the router-level
+    # registration is the stable surface across the pinned FastAPI line.
+    app.router.add_event_handler("startup", manager.start)
+    app.router.add_event_handler("shutdown", manager.stop)
+
+
 def main() -> None:
     """Mint the handshake token, build the app, run uvicorn on the resolved port."""
 
     session = build_session()
     token = _provision_token()
-    app = create_app(session, token=token)
+    connection_registry = ConnectionRegistry()
+    manager = ConnectionManager(
+        _build_port_enumerator(),
+        on_change=_connection_event_broadcaster(connection_registry),
+    )
+    set_active_connection_manager(manager)
+    app = create_app(session, token=token, connection_registry=connection_registry)
+    _install_connection_manager_lifecycle(app, manager)
     uvicorn.run(app, host=_DEFAULT_HOST, port=_resolve_port())
 
 

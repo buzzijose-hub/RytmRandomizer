@@ -35,7 +35,7 @@ from rytm_randomizer.cockpit.data import (
     StyleTrait,
     TraitPadWeight,
 )
-from rytm_randomizer.cockpit.device import MockDeviceAdapter
+from rytm_randomizer.cockpit.device import MockDeviceAdapter, connection
 from rytm_randomizer.cockpit.history import HistoryStore
 from rytm_randomizer.cockpit.profiles import ProfileRegistry
 from rytm_randomizer.cockpit.ws import handlers
@@ -104,6 +104,24 @@ def test_recompute_candidate_uses_lru_cache_hit(tmp_path: Path) -> None:
     assert second is first
     assert session.current_candidate is first
     handlers._recompute_cache.clear()
+
+
+def test_recompute_candidate_evicts_oldest_when_over_capacity(tmp_path: Path) -> None:
+    """The memo cache is bounded: entry N+1 evicts the least-recently-used."""
+
+    session = _make_session(tmp_path)
+    session.active_profile = _profile()
+    session.depth = 0.5
+    handlers._recompute_cache.clear()
+    try:
+        for seed in range(handlers._RECOMPUTE_CACHE_MAXSIZE + 1):
+            session.seed = seed
+            assert handlers._recompute_candidate(session) is not None
+        assert len(handlers._recompute_cache) == handlers._RECOMPUTE_CACHE_MAXSIZE
+        # The very first key (seed 0) was the LRU entry and is gone.
+        assert all(key[3] != 0 for key in handlers._recompute_cache)
+    finally:
+        handlers._recompute_cache.clear()
 
 
 def test_handler_exception_classification_and_fingerprint_helpers() -> None:
@@ -2306,3 +2324,152 @@ def test_midi_port_helper_handles_string_port(tmp_path: Path) -> None:
     session = CockpitSession(profile_registry=registry, history_store=history, device=device)
 
     assert handlers._midi_port(session) == "42"
+
+
+# ---------------------------------------------------------------------------
+# Wave 3: passive connection wiring (ConnectionManager -> session_status /
+# connection_changed). Every test clears the process-level registration in
+# a ``finally`` so no other module can observe a leaked manager.
+# ---------------------------------------------------------------------------
+
+
+def _armed_session(tmp_path: Path) -> CockpitSession:
+    """Session over a duck-typed armed device (no real MIDI anywhere)."""
+
+    class _ArmedDevice:
+        is_armed = True
+        midi_port = "Rytm MK2 Port 1"
+
+        def capture_snapshot(self) -> Snapshot:
+            return _snapshot()
+
+        def apply(self, candidate: Any, pad_locks: Any) -> Snapshot:  # pragma: no cover - unused
+            return _snapshot()
+
+        def commit_kit(
+            self, snapshot: Snapshot, label: str | None
+        ) -> None:  # pragma: no cover - unused
+            return None
+
+    device = _ArmedDevice()
+    history = HistoryStore()
+    history.initial(device.capture_snapshot())
+    registry = ProfileRegistry(profiles_dir=tmp_path)
+    return CockpitSession(profile_registry=registry, history_store=history, device=device)
+
+
+def _listening_manager() -> connection.ConnectionManager:
+    """A manager one poll into a 'device plugged in' landscape."""
+
+    class _RytmEnumerator:
+        def list_input_names(self) -> tuple[str, ...]:
+            return ("Analog Rytm MK2 In",)
+
+        def list_output_names(self) -> tuple[str, ...]:
+            return ("Analog Rytm MK2 Out",)
+
+    manager = connection.ConnectionManager(_RytmEnumerator(), clock=lambda: 42.0)
+    manager.poll_once()
+    return manager
+
+
+def test_session_status_connection_phase_disconnected_for_unwired_mock(tmp_path: Path) -> None:
+    """No registered manager + mock adapter -> honest ``disconnected``."""
+
+    connection.set_active_connection_manager(None)
+    session = _make_session(tmp_path)
+
+    status = handlers._build_session_status(session)
+
+    assert status["connection_phase"] == "disconnected"
+    assert status["mode"] == "mock"
+
+
+def test_session_status_connection_phase_armed_for_unwired_armed_device(tmp_path: Path) -> None:
+    """No registered manager + armed adapter -> derived ``armed``."""
+
+    connection.set_active_connection_manager(None)
+    session = _armed_session(tmp_path)
+
+    status = handlers._build_session_status(session)
+
+    assert status["connection_phase"] == "armed"
+    assert status["mode"] == "live"
+
+
+def test_session_status_connection_phase_tracks_active_manager(tmp_path: Path) -> None:
+    """A registered manager's observed phase is authoritative."""
+
+    session = _make_session(tmp_path)
+    connection.set_active_connection_manager(_listening_manager())
+    try:
+        status = handlers._build_session_status(session)
+    finally:
+        connection.set_active_connection_manager(None)
+
+    assert status["connection_phase"] == "listening"
+    # The manager overrides the device-derived fallback, not the mode pill.
+    assert status["mode"] == "mock"
+
+
+def test_build_connection_changed_carries_whole_state_dict() -> None:
+    manager = _listening_manager()
+
+    event = handlers.build_connection_changed(manager.state)
+
+    assert event == {
+        "type": "connection_changed",
+        "connection": {
+            "phase": "listening",
+            "available_inputs": ["Analog Rytm MK2 In"],
+            "available_outputs": ["Analog Rytm MK2 Out"],
+            "selected_input": "Analog Rytm MK2 In",
+            "selected_output": "Analog Rytm MK2 Out",
+            "last_error_fingerprint": None,
+            "changed_at": 42.0,
+        },
+    }
+
+
+def test_emit_initial_events_appends_connection_changed_when_manager_active(
+    tmp_path: Path,
+) -> None:
+    """Wired boot path: the bootstrap grows a sixth, final connection frame."""
+
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+    connection.set_active_connection_manager(_listening_manager())
+    try:
+        _run(handlers.emit_initial_events(recorder, session))
+    finally:
+        connection.set_active_connection_manager(None)
+
+    assert [e["type"] for e in recorder.events] == [
+        EVENT_SESSION_STATUS,
+        EVENT_SNAPSHOT_CHANGED,
+        EVENT_PROFILE_CHANGED,
+        EVENT_HISTORY_UPDATED,
+        _PERFORMANCE_CONSOLE_CHANGED,
+        "connection_changed",
+    ]
+    assert recorder.events[-1]["connection"]["phase"] == "listening"
+    # The bootstrap session_status pill agrees with the manager's phase.
+    assert recorder.events[0]["connection_phase"] == "listening"
+
+
+def test_emit_initial_events_stays_five_events_when_unwired(tmp_path: Path) -> None:
+    """Unwired sessions keep the historical five-event bootstrap exactly."""
+
+    connection.set_active_connection_manager(None)
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    _run(handlers.emit_initial_events(recorder, session))
+
+    assert [e["type"] for e in recorder.events] == [
+        EVENT_SESSION_STATUS,
+        EVENT_SNAPSHOT_CHANGED,
+        EVENT_PROFILE_CHANGED,
+        EVENT_HISTORY_UPDATED,
+        _PERFORMANCE_CONSOLE_CHANGED,
+    ]

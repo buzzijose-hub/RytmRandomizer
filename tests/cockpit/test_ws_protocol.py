@@ -45,11 +45,12 @@ def test_event_types_frozenset_lists_every_event_constant() -> None:
         protocol.EVENT_PROFILE_CHANGED,
         protocol.EVENT_PERFORMANCE_CONSOLE_CHANGED,
         protocol.EVENT_SESSION_STATUS,
+        protocol.EVENT_CONNECTION_CHANGED,
     }
     assert individual <= protocol.EVENT_TYPES
     assert isinstance(protocol.EVENT_TYPES, frozenset)
-    # 7 cockpit events + 3 wizard events (folded in from wizard_protocol)
-    assert len(protocol.EVENT_TYPES) == 10
+    # 8 cockpit events + 3 wizard events (folded in from wizard_protocol)
+    assert len(protocol.EVENT_TYPES) == 11
 
 
 def test_command_types_frozenset_lists_every_command_constant() -> None:
@@ -95,6 +96,7 @@ def test_event_and_command_constants_match_spec_strings() -> None:
     assert protocol.EVENT_PROFILE_CHANGED == "profile_changed"
     assert protocol.EVENT_PERFORMANCE_CONSOLE_CHANGED == "performance_console_changed"
     assert protocol.EVENT_SESSION_STATUS == "session_status"
+    assert protocol.EVENT_CONNECTION_CHANGED == "connection_changed"
 
     assert protocol.COMMAND_SELECT_PROFILE == "select_profile"
     assert protocol.COMMAND_SET_DEPTH == "set_depth"
@@ -226,10 +228,45 @@ def test_session_status_event_dict_carries_all_fields() -> None:
         "armed": False,
         "midi_port": None,
         "mode": "mock",
+        "connection_phase": "disconnected",
         "unsaved_sends": 0,
     }
     assert event["mode"] == "mock"
+    assert event["connection_phase"] == "disconnected"
     assert event["unsaved_sends"] == 0
+
+
+def test_connection_state_dict_carries_all_fields() -> None:
+    state: protocol.ConnectionStateDict = {
+        "phase": "listening",
+        "available_inputs": ["Analog Rytm MK2 In"],
+        "available_outputs": ["Analog Rytm MK2 Out"],
+        "selected_input": "Analog Rytm MK2 In",
+        "selected_output": "Analog Rytm MK2 Out",
+        "last_error_fingerprint": None,
+        "changed_at": 1234.5,
+    }
+    assert state["phase"] == "listening"
+    assert state["selected_input"] == "Analog Rytm MK2 In"
+    assert state["last_error_fingerprint"] is None
+
+
+def test_connection_changed_event_wraps_connection_state_dict() -> None:
+    event: protocol.ConnectionChangedEvent = {
+        "type": "connection_changed",
+        "connection": {
+            "phase": "fault",
+            "available_inputs": [],
+            "available_outputs": [],
+            "selected_input": None,
+            "selected_output": None,
+            "last_error_fingerprint": "midi.port.open_failed",
+            "changed_at": 99.0,
+        },
+    }
+    assert event["type"] == protocol.EVENT_CONNECTION_CHANGED
+    assert event["connection"]["phase"] == "fault"
+    assert event["connection"]["last_error_fingerprint"] == "midi.port.open_failed"
 
 
 # ---------------------------------------------------------------------------

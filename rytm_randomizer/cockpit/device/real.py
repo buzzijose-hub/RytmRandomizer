@@ -101,6 +101,31 @@ class RealMidiDeviceAdapter:
 
         return True
 
+    @property
+    def midi_port(self) -> str | None:
+        """The MIDI output port name the adapter targets, or ``None``.
+
+        Feeds the ``session_status`` event's ``midi_port`` field (the
+        handlers probe adapters for this attribute via ``getattr``, so
+        before this property existed an armed session always rendered a
+        null port in the header strip). Resolution order:
+
+        1. The explicitly configured ``port_name`` (known before any
+           port is opened — the adapter opens lazily on first apply).
+        2. The opened port's own ``name`` attribute, when the
+           default-pick path already opened one.
+        3. ``None`` — nothing configured and nothing opened yet.
+        """
+
+        if self._port_name is not None:
+            return self._port_name
+        if self._port is None:
+            return None
+        name = getattr(self._port, "name", None)
+        if name is None:
+            return None
+        return str(name)
+
     def capture_snapshot(self) -> Snapshot:
         """Return a placeholder snapshot — real SysEx readback is Phase 1.x.
 

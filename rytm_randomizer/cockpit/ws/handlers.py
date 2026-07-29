@@ -71,6 +71,7 @@ from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
 from ...observability.tracing import operation
 from ..data import CockpitSendPlan, History, MutationCandidate, Snapshot
+from ..device.connection import ConnectionState, active_connection_manager
 from ..engine import mutate, prepare_send_plan
 from ..export import pack_profile_model
 from .protocol import (
@@ -94,6 +95,7 @@ from .protocol import (
     ERR_MISSING_ENVELOPE_KEY,
     ERR_UNKNOWN_COMMAND,
     ERR_VALIDATION,
+    EVENT_CONNECTION_CHANGED,
     EVENT_HISTORY_UPDATED,
     EVENT_MUTATION_PREVIEWED,
     EVENT_PERFORMANCE_CONSOLE_CHANGED,
@@ -165,8 +167,37 @@ def _build_session_status(session: CockpitSession) -> dict:
         "armed": session.device.is_armed,
         "midi_port": _midi_port(session),
         "mode": "live" if session.device.is_armed else "mock",
+        "connection_phase": _connection_phase(session),
         "unsaved_sends": session.unsaved_sends,
     }
+
+
+def _connection_phase(session: CockpitSession) -> str:
+    """Resolve the passive connection phase for ``session_status``.
+
+    When a :class:`~rytm_randomizer.cockpit.device.connection.ConnectionManager`
+    is registered (the ``__main__`` boot path), its latest observed phase
+    is authoritative. Unwired sessions (unit tests, embedded harnesses)
+    fall back to a device-derived value: an armed adapter reports
+    ``armed``, otherwise ``disconnected`` — honest for a mock session
+    that has no hardware link at all.
+    """
+
+    manager = active_connection_manager()
+    if manager is not None:
+        return manager.state.phase
+    return "armed" if session.device.is_armed else "disconnected"
+
+
+def build_connection_changed(state: ConnectionState) -> dict:
+    """Construct the ``connection_changed`` event payload (whole state).
+
+    Public because ``__main__`` uses it to adapt the ConnectionManager's
+    ``on_change`` callback into a ``ConnectionRegistry.broadcast_event``
+    push; :func:`emit_initial_events` reuses it for the bootstrap frame.
+    """
+
+    return {"type": EVENT_CONNECTION_CHANGED, "connection": state.to_dict()}
 
 
 def _midi_port(session: CockpitSession) -> str | None:
@@ -254,6 +285,14 @@ async def emit_initial_events(emitter: EventEmitter, session: CockpitSession) ->
     await emitter.send_event(_build_profile_changed(session.active_profile))
     await emitter.send_event(_build_history_updated(session.history_store.current))
     await emitter.send_event(_build_performance_console_changed())
+    # Wave 3: when the launch brain is wired (the ``__main__`` boot path),
+    # a freshly-connected client also receives the latest passive
+    # connection state so the header renders plug/unplug truth without
+    # waiting for the next poll diff. Unwired sessions (unit tests,
+    # embedded harnesses) keep the historical five-event bootstrap.
+    manager = active_connection_manager()
+    if manager is not None:
+        await emitter.send_event(build_connection_changed(manager.state))
 
 
 # ---------------------------------------------------------------------------
@@ -1523,6 +1562,7 @@ __all__ = [
     "EventEmitter",
     "HandlerResult",
     "WS_ERROR_CODES",
+    "build_connection_changed",
     "drain_pending_events",
     "emit_initial_events",
     "handle_command",
