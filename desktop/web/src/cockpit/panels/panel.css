@@ -95,3 +95,84 @@
   border-bottom: 1px solid var(--border);
   padding: 3px 8px 3px 0;
 }
+
+/* ---------- Bespoke control strips around passive panels (Wave 4) ---------- */
+
+.cockpit-panel-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cockpit-panel-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 8px 10px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.cockpit-panel-controls button {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--text);
+  padding: 5px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.cockpit-panel-controls button:hover:enabled {
+  border-color: var(--accent);
+}
+
+.cockpit-panel-controls button:disabled {
+  color: var(--text-dim);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.cockpit-panel-controls label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cockpit-panel-controls input,
+.cockpit-panel-controls select {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--text);
+  padding: 4px 6px;
+  font-size: 11px;
+}
+
+.cockpit-panel-inline-form {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cockpit-panel-note {
+  color: var(--text);
+  font-size: 11px;
+}
+
+/* The activity dot flashes by class toggle only — no CSS animation, so
+   prefers-reduced-motion needs no override here. */
+.midi-activity-dot {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.midi-activity-dot.flashing {
+  color: var(--green);
+}

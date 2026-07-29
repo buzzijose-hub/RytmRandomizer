@@ -140,6 +140,7 @@ describe('ActionBar', () => {
         armed: true,
         midi_port: 'IAC Driver Bus 1',
         mode: 'live',
+        connection_phase: 'armed',
         unsaved_sends: 0,
       });
     });

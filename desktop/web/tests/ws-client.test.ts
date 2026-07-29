@@ -122,6 +122,7 @@ const sessionStatusEvent: SessionStatusEvent = {
   armed: false,
   midi_port: null,
   mode: 'mock',
+  connection_phase: 'disconnected',
   unsaved_sends: 0,
 };
 

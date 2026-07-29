@@ -37,6 +37,14 @@ export type SessionMode = 'live' | 'mock';
 
 export type ExportTarget = 'binary' | 'json';
 
+/**
+ * The passive connection lifecycle vocabulary — mirrors
+ * `rytm_randomizer/cockpit/device/connection.py::ConnectionPhase` (the
+ * wire authority is the inline Literal on `ConnectionStateDict` in
+ * `cockpit/ws/protocol.py`).
+ */
+export type ConnectionPhase = 'disconnected' | 'searching' | 'listening' | 'armed' | 'fault';
+
 // ---------- Core data abstractions (spec §"Core Data Abstractions") ----------
 
 export interface PadState {
@@ -309,6 +317,93 @@ export interface OperatorPackageReceipt {
   audit_summary: OperatorPackageReceiptAuditSummary;
 }
 
+/**
+ * One passive connection observation — mirrors Python `ConnectionStateDict`
+ * (`rytm_randomizer/cockpit/ws/protocol.py`). Whole-state per event.
+ */
+export interface ConnectionStateDict {
+  phase: ConnectionPhase;
+  available_inputs: string[];
+  available_outputs: string[];
+  selected_input: string | null;
+  selected_output: string | null;
+  last_error_fingerprint: string | null;
+  changed_at: number;
+}
+
+/**
+ * One coalesced row inside a `midi_activity` batch — mirrors the row shape
+ * built by `rytm_randomizer/cockpit/device/midi_monitor.py::MidiInputMonitor.flush`.
+ */
+export interface MidiActivityRow {
+  channel: number;
+  pad: number;
+  control: number;
+  value: number;
+  repeat_count: number;
+  observed_at: number;
+  labels: string[];
+}
+
+/** The `midi_activity` payload — one coalesced batch of passive observations. */
+export interface MidiActivityBatch {
+  port: string;
+  batch: MidiActivityRow[];
+  dropped: number;
+  ignored: number;
+  read_errors: number;
+}
+
+/**
+ * One library record — mirrors
+ * `rytm_randomizer/cockpit/library/store.py::LibraryRecord.to_dict`.
+ */
+export interface LibraryRecord {
+  record_id: string;
+  device_id: string;
+  kit_name: string;
+  fingerprint: string;
+  captured_at: string;
+  tags: string[];
+  payload_hex: string;
+}
+
+/**
+ * Outcome of one captures-import run — mirrors
+ * `rytm_randomizer/cockpit/library/store.py::LibraryImportResult.to_dict`.
+ */
+export interface LibraryImportResult {
+  imported: LibraryRecord[];
+  imported_count: number;
+  skipped_existing: number;
+  failed_files: string[];
+}
+
+/**
+ * One wire-safe categorized error observation — mirrors
+ * `rytm_randomizer/cockpit/diagnostics.py::ErrorJournalEntry.to_dict`.
+ */
+export interface DiagnosticsJournalEntry {
+  fingerprint: string;
+  message: string;
+  context: Record<string, string>;
+  ts: number;
+}
+
+/**
+ * The read-only `diagnostics` command payload — mirrors
+ * `rytm_randomizer/cockpit/diagnostics.py::build_diagnostics_payload`.
+ */
+export interface DiagnosticsPayload {
+  journal: DiagnosticsJournalEntry[];
+  errors_by_kind: Record<string, number>;
+  connection: ConnectionStateDict | null;
+  available_inputs: string[];
+  available_outputs: string[];
+  platform: string;
+  driver_hint: string;
+}
+
 export interface HistoryEntry {
   snapshot: Snapshot;
   kind: HistoryEntryKind;
@@ -359,7 +454,29 @@ export interface SessionStatusEvent {
   armed: boolean;
   midi_port: string | null;
   mode: SessionMode;
+  connection_phase: ConnectionPhase;
   unsaved_sends: number;
+}
+
+/** `connection_changed` — the full fresh ConnectionStateDict (never a delta). */
+export interface ConnectionChangedEvent {
+  type: 'connection_changed';
+  connection: ConnectionStateDict;
+}
+
+/**
+ * `midi_activity` — one coalesced batch of passive input observations.
+ * The documented exception to the whole-state rule: the UI appends.
+ */
+export interface MidiActivityEvent {
+  type: 'midi_activity';
+  midi_activity: MidiActivityBatch;
+}
+
+/** `library_changed` — the full fresh library record listing. */
+export interface LibraryChangedEvent {
+  type: 'library_changed';
+  library: { records: LibraryRecord[] };
 }
 
 export type Event =
@@ -370,6 +487,9 @@ export type Event =
   | ProfileChangedEvent
   | PerformanceConsoleChangedEvent
   | SessionStatusEvent
+  | ConnectionChangedEvent
+  | MidiActivityEvent
+  | LibraryChangedEvent
   | WizardEvent;
 
 export type EventType = Event['type'];
@@ -476,6 +596,60 @@ export interface BuildOperatorPackageReceiptCommand {
   mock_safe: boolean;
 }
 
+/**
+ * `arm { arm_token, confirm, port_name? }` — explicit in-UI arm. Requires the
+ * operator token AND `confirm: true`; arming is a two-factor in-UI decision,
+ * never implicit (Live-but-Passive rule).
+ */
+export interface ArmCommand {
+  type: 'arm';
+  arm_token: string;
+  confirm: boolean;
+  port_name?: string | null;
+}
+
+/** `disarm {}` — tear down the armed seam, restore the passive device. */
+export interface DisarmCommand {
+  type: 'disarm';
+}
+
+/** `diagnostics {}` — read-only health query (journal + metrics + hints). */
+export interface DiagnosticsCommand {
+  type: 'diagnostics';
+}
+
+/** `library_list {}` — full library record listing. */
+export interface LibraryListCommand {
+  type: 'library_list';
+}
+
+/** `library_search { query }` — case-insensitive record search. */
+export interface LibrarySearchCommand {
+  type: 'library_search';
+  query: string;
+}
+
+/** `library_tag { record_id, tags }` — replace one record's tags. */
+export interface LibraryTagCommand {
+  type: 'library_tag';
+  record_id: string;
+  tags: string[];
+}
+
+/** `library_delete { record_id }` — remove one record from the library. */
+export interface LibraryDeleteCommand {
+  type: 'library_delete';
+  record_id: string;
+}
+
+/**
+ * `library_import_captures {}` — import the boot-time-configured captures dir.
+ * Deliberately carries no path field (no wire-supplied filesystem paths).
+ */
+export interface LibraryImportCapturesCommand {
+  type: 'library_import_captures';
+}
+
 export type Command =
   | SelectProfileCommand
   | SetDepthCommand
@@ -492,7 +666,15 @@ export type Command =
   | RehearseOperatorPackageSequenceCommand
   | PreviewOperatorPackageApplyCommand
   | MockApplyOperatorPackageCommand
-  | BuildOperatorPackageReceiptCommand;
+  | BuildOperatorPackageReceiptCommand
+  | ArmCommand
+  | DisarmCommand
+  | DiagnosticsCommand
+  | LibraryListCommand
+  | LibrarySearchCommand
+  | LibraryTagCommand
+  | LibraryDeleteCommand
+  | LibraryImportCapturesCommand;
 
 export type CommandType = Command['type'];
 
@@ -524,6 +706,13 @@ export interface CommandAck {
   operator_package_apply_preview?: OperatorPackageApplyPreview;
   operator_package_mock_apply?: OperatorPackageMockApply;
   operator_package_receipt?: OperatorPackageReceipt;
+  armed?: boolean;
+  midi_port?: string | null;
+  diagnostics?: DiagnosticsPayload | null;
+  library_records?: LibraryRecord[] | null;
+  library_record?: LibraryRecord | null;
+  library_record_id?: string | null;
+  library_import?: LibraryImportResult | null;
   error?: string;
   code?: string;
   message?: string;
@@ -546,6 +735,9 @@ export function isEvent(msg: unknown): msg is Event {
     'profile_changed',
     'performance_console_changed',
     'session_status',
+    'connection_changed',
+    'midi_activity',
+    'library_changed',
     'wizard_state_changed',
     'analysis_progress',
     'profile_created',
