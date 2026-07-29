@@ -402,7 +402,7 @@ def test_atomic_write_no_overwrite_cleanup_failure_keeps_published_file(
     assert result.path == dest.resolve()
     assert dest.read_bytes() == b"published"
     assert len(list(tmp_path.iterdir())) == 2
-    assert warnings[0][0] == "Atomic write temp cleanup failed after publication"
+    assert warnings[0][0] == "Atomic write temp cleanup failed"
     assert warnings[0][1]["operation"] == "atomic_write_cleanup"
     assert warnings[0][1]["outcome"] == "residue_retained"
     assert warnings[0][1]["error_code"] == "temp_cleanup_failed"
@@ -437,7 +437,10 @@ def test_atomic_write_cleanup_failure_does_not_mask_write_error(
     """The original WriteError must propagate even if the best-effort
     temp-file unlink also fails."""
 
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
     dest = tmp_path / "out.bin"
+    reset_metrics()
 
     def boom_replace(src: str, _dst: str) -> None:
         raise OSError("replace failed")
@@ -452,9 +455,34 @@ def test_atomic_write_cleanup_failure_does_not_mask_write_error(
         atomic_write(dest, b"hello", overwrite=True)
 
     # The first OSError (from replace) is what we wrap; the unlink failure
-    # is swallowed silently.
+    # is retained as an operator diagnostic without masking it.
     assert isinstance(excinfo.value.__cause__, OSError)
     assert "replace" in str(excinfo.value.__cause__).lower()
+    assert any("sibling .tmp file may remain" in note for note in excinfo.value.__notes__)
+    assert get_metrics().errors_by_kind["atomic_write_temp_cleanup"] == 1
+
+
+def test_atomic_write_cleanup_failure_does_not_mask_keyboard_interrupt(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
+    def interrupt_write(_fd: int, _data: bytes | memoryview) -> int:
+        raise KeyboardInterrupt("operator interrupted write")
+
+    def boom_unlink(_path: str, *args: object, **kwargs: object) -> None:
+        raise OSError("unlink failed too")
+
+    reset_metrics()
+    monkeypatch.setattr("os.write", interrupt_write)
+    monkeypatch.setattr("os.unlink", boom_unlink)
+
+    with pytest.raises(KeyboardInterrupt, match="operator interrupted write") as excinfo:
+        atomic_write(tmp_path / "out.bin", b"payload")
+
+    assert any("sibling .tmp file may remain" in note for note in excinfo.value.__notes__)
+    assert get_metrics().errors_by_kind["atomic_write_temp_cleanup"] == 1
 
 
 def test_atomic_write_fsync_failure_raises_write_error(

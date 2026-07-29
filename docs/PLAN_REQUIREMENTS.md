@@ -51,7 +51,11 @@ python -m isort --profile black --check-only .
 python scripts/typecheck_touched.py
 ```
 
-- `ruff` rule packs at minimum: `E,F,B,S,SIM,UP,C4,PLR,ERA,ARG`. `B904` (raise-from in except) is **always on** — no opt-out.
+- The repository-wide `ruff` configuration enables `E,F,B,S,SIM,UP,C4`.
+  `B904` (raise-from in except) is **always on** with no opt-out. Newly added
+  production modules also run an explicit `--select PLR,ERA,ARG` ratchet; these
+  packs are not yet enabled repository-wide because the inherited baseline is
+  being drained incrementally.
 - `black` `target-version` is pinned to the CI matrix (`py39, py310, py311` only — `py312`/`py313` excluded per the PR #28 lesson).
 - `scripts/typecheck_touched.py` discovers every committed, working-tree, and
   untracked production module touched against the integration merge base, then

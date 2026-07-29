@@ -103,7 +103,7 @@ class AnalogFourPatchRenderRankReferenceError(DataError, ValueError):
     fingerprint: ClassVar[str] = "a4.render_rank.reference_mismatch"
 
 
-def analog_four_patch_render_rank_error_code(
+def analog_four_patch_render_rank_error_code(  # noqa: PLR0911 - ordered classifier
     exc: BaseException,
 ) -> AnalogFourPatchRenderRankErrorCode:
     """Classify a ranking failure for metrics and presentation."""

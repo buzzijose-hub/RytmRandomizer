@@ -11,7 +11,7 @@ Scope: current post-correction re-audit against the paired baseline.
 | 2. Naming hygiene | 4 | 5 | A4 frame, calibration, genome, inference, export, and publication concepts have explicit module ownership. |
 | 3. Coupling and boundaries | 3 | 5 | Generic Elektron packing is shared; one A4 codec serves decode/render; guarded exporters resolve the registered A4 capability; the reader/sender/app reuse canonical MIDI provider/event-kind contracts; `app --arm` remains the only real-port boundary. |
 | 4. Magic numbers and strings | 2 | 5 | Frame facts and writable calibration live in typed data modules; failure categories use one bounded contract. |
-| 5. Configuration vs convention | 4 | 5 | Track, candidate count, paths, and overwrite are explicit; no environment variable was added. |
+| 5. Configuration vs convention | 4 | 5 | Track, candidate count, paths, and overwrite are explicit. The developer-only `TYPECHECK_BASE_REF` and CI-provided `GITHUB_BASE_REF` inputs are documented, optional, and safely default to `origin/modularize-v1.34`. |
 | 6. Test maintainability | 3 | 5 | Exact frame fixtures, deterministic goldens, interruption tests, child-crash containment/cleanup, real tone/noise integration, and rehashed malicious-bundle tests are isolated by responsibility. |
 | 7. Build and dev loop friction | 4 | 5 | Focused tests finish in seconds; the canonical full, architecture, parity, lint, type, coverage, and review commands are recorded. |
 | 8. Error messages | 3 | 5 | Saved-kit and batch CLIs return bounded codes, actionable text, manifest identity, retained-lock recovery details, and controlled `inference_failed` output for abnormal native exits. |
@@ -26,14 +26,16 @@ child owned by a cleanup-capable parent; transport contracts are shared; batch
 staging/publication and app send responsibilities are split into focused
 helpers; and the state file has schema enforcement.
 
-The fresh focused touched-file A4/operator suite passed 1,689 tests / 1 skipped,
-along with 704 architecture tests, 6,804 full-suite tests / 3 skipped, 685
-V1.34 parity items, and a clean Ruff/Black/isort/Vulture/
-strict-production-Pyright/mechanical-review set. Dynamic test-harness typing
-remains the accepted scoped Gate 3 debt; all 62 touched production modules pass
+The fresh focused touched-file A4/operator suite passed 1,717 tests / 1 skipped,
+along with 705 architecture tests and 685 V1.34 parity items. The last
+uninterrupted production-equivalent full-suite run passed 6,811 tests /
+3 skipped; the exact final tree collects 6,824 tests and online CI is its
+authoritative full-suite result. The Ruff/Black/isort/Vulture/
+strict-production-Pyright/mechanical-review set is clean. Dynamic test-harness typing
+remains the accepted scoped Gate 3 debt; all 63 touched production modules pass
 strict Pyright.
 Touched production files reached 100% statement and branch coverage across
-7,887 statements and 1,878 branches. Follow-up publication, online checks, and
+7,952 statements and 1,884 branches. Follow-up publication, online checks, and
 the fresh reviewer verdict are tracked on PR #214.
 
 The largest residual constraints are explicit: generated saved-kit SysEx writes

@@ -154,7 +154,7 @@ if TYPE_CHECKING:
         def safety(self) -> Sequence[str]: ...
 
     class _BatchExporter(Protocol):
-        def __call__(
+        def __call__(  # noqa: PLR0913 - protocol mirrors the typed service boundary
             self,
             *,
             audio_path: Path,
@@ -174,7 +174,7 @@ def _load_batch_exporter() -> _BatchExporter:
     return export_analog_four_audio_patch_batch
 
 
-def _export_analog_four_audio_patch_batch(
+def _export_analog_four_audio_patch_batch(  # noqa: PLR0913 - lazy service boundary
     *,
     audio_path: Path,
     source_kit_path: Path,
@@ -383,7 +383,9 @@ def _format_batch_cli_text(result: _BatchResult) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _batch_cli_error_code(exc: Exception) -> AnalogFourExportErrorCode:
+def _batch_cli_error_code(  # noqa: PLR0911 - ordered fail-closed classifier
+    exc: Exception,
+) -> AnalogFourExportErrorCode:
     classified_code = analog_four_export_error_code(exc)
     if classified_code is not None:
         return classified_code
@@ -426,7 +428,7 @@ def _write_batch_error(
     sys.stdout.write("\n")
 
 
-def handle_analog_four_audio_patch_batch(
+def handle_analog_four_audio_patch_batch(  # noqa: PLR0913 - typed CLI boundary
     *,
     audio_path: Path,
     source_kit_path: Path,

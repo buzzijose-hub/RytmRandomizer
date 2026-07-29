@@ -746,8 +746,10 @@ def test_batch_lock_recovery_match_requires_every_owner_field(tmp_path: Path) ->
     lock_path.write_text("not-json", encoding="utf-8")
     assert not batch_lock_matches_request(lock_path, **lock_args)
     metrics = get_metrics()
+    assert metrics.a4_patch_publication_count["lock_owner_check"] == 8
     assert (
-        metrics.a4_patch_publication_errors_by_operation_and_code["lock_release:read_failed"] == 2
+        metrics.a4_patch_publication_errors_by_operation_and_code["lock_owner_check:read_failed"]
+        == 2
     )
 
 

@@ -86,12 +86,12 @@ python scripts/typecheck_touched.py
 git diff --check
 ```
 
-- [x] Focused touched-file A4/operator regression suite: 1,689 passed, 1 skipped.
-- [x] Full repository suite: 6,804 passed, 3 skipped.
-- [x] Architecture suite: 704 passed.
-- [x] Touched-file statement/branch coverage: 100% across 7,887 statements and 1,878 branches, zero misses.
+- [x] Focused touched-file A4/operator regression suite: 1,717 passed, 1 skipped.
+- [x] Last uninterrupted production-equivalent full repository suite: 6,811 passed, 3 skipped. The exact final tree collects 6,824 tests; online CI is the authoritative exact-head full-suite result.
+- [x] Architecture suite: 705 passed.
+- [x] Touched-file statement/branch coverage: 100% across 7,952 statements and 1,884 branches, zero misses.
 - [x] Fresh final-tree V1.34 parity: 685 passed byte-for-byte.
-- [x] Vulture confidence 80, the pinned reproducible `just typecheck` strict-production gate across all 62 touched production modules, and the mechanical review gate passed.
+- [x] Vulture confidence 80, the pinned reproducible `just typecheck` strict-production gate across all 63 touched production modules, and the mechanical review gate passed.
 - [x] CODEOWNER decision: dynamic test-harness typing remains accepted as scoped cleanup debt for PR #214; production typing is not waived.
 - [x] Manifest reader rejects rehashed path escapes, transport drift, DNA/event drift, noncanonical CC/NRPN addresses, sequence drift, and coverage drift before output opens.
 - [x] Lint trio and `git diff --check` clean.
@@ -103,19 +103,17 @@ git diff --check
 
 Hardware validation:
 
-- [x] Generated T1 Filter2 Resonance `127` matched the hardware reference byte-for-byte and displayed `127`.
-- [x] Generated novel T1 value `64` displayed `64`.
-- [x] One generated kit displayed T1/T2/T3/T4 values `16`/`48`/`80`/`112` correctly.
-- [x] All four tracks independently received the requested resonance values on the Analog Four MKII.
+- [x] Saved-kit Filter2 Resonance evidence is limited to the committed sanitized reference, novel, and four-track fixture records.
+- [ ] Direct NRPN sender and four-track routing remain operator-reported; no reproducible physical command/output record is attached yet.
 - [ ] Guarded 33-row/53-message physical live-plan rehearsal remains a pre-merge requirement in the disposable initialized project; exact software/fake-port delivery is verified and six paired-CC rows remain manual.
 
 ## Plan-requirements conformance
 
 Per [`docs/PLAN_REQUIREMENTS.md`](https://github.com/buzzijose-hub/RytmRandomizer/blob/modularize-v1.34/docs/PLAN_REQUIREMENTS.md), every non-trivial PR must satisfy all 18 gates.
 
-- [x] **Gate 1** — touched production files have 100% statement/branch coverage (7,887 statements / 1,878 branches).
+- [x] **Gate 1** — touched production files have 100% statement/branch coverage (7,952 statements / 1,884 branches).
 - [x] **Gate 2** — 685 V1.34 parity items passed byte-for-byte.
-- [x] **Gate 3** — Ruff, Black, and isort pass. Pinned strict Pyright 1.1.407 passes reproducibly across all 62 touched production modules via `just typecheck`. The CODEOWNER accepts dynamic test-harness typing as scoped cleanup debt for PR #214; production typing is not waived.
+- [x] **Gate 3** — Ruff, Black, and isort pass. Pinned strict Pyright 1.1.407 passes reproducibly across all 63 touched production modules via `just typecheck`. The CODEOWNER accepts dynamic test-harness typing as scoped cleanup debt for PR #214; production typing is not waived.
 - [x] **Gate 4** — Vulture confidence 80 passed across production and tests.
 - [x] **Gate 5** — docs updated (`README.md`, `CONTRIBUTING.md`, `docs/STATUS.md`, relevant `docs/` reflect the change).
 - [x] **Gate 6** — type-system hygiene (Protocol over ABC, `Final` constants, no bare `Any`).

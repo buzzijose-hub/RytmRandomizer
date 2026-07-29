@@ -34,6 +34,7 @@ _LOCK_OWNER_FIELDS_REQUIRED_ERROR: Final[str] = (
     "lock ownership verification requires all owner fields"
 )
 _LOCK_OPERATION_GATE_SUFFIX: Final[str] = ".operation"
+_GENERATION_ID_HEX_LENGTH: Final[int] = 32
 
 
 class AnalogFourPatchBatchPublicationError(BoundaryError, RuntimeError):
@@ -98,7 +99,7 @@ def _lock_recovery_summary(lock_path: Path) -> str:
     if isinstance(created, (int, float)) and not isinstance(created, bool):
         fields.append(f"created_unix_seconds={created}")
     generation_id = payload.get("generation_id")
-    if isinstance(generation_id, str) and len(generation_id) == 32:
+    if isinstance(generation_id, str) and len(generation_id) == _GENERATION_ID_HEX_LENGTH:
         fields.append(f"generation_id={generation_id}")
     return ", ".join(fields) if fields else "unavailable"
 
@@ -173,7 +174,7 @@ def _raise_gate_cleanup_interruption(
     raise SystemExit(f"{exc}; {details}") from exc
 
 
-def _record_publication_failure(
+def _record_publication_failure(  # noqa: PLR0913 - bounded telemetry context
     *,
     publication_operation: AnalogFourPatchPublicationOperation,
     operation_id: str,
@@ -308,7 +309,7 @@ def publish_immutable_artifact(
     return result
 
 
-def release_batch_lock(
+def release_batch_lock(  # noqa: PLR0912 - fail-closed lock lifecycle
     lock_path: Path,
     *,
     generation_id: str | None = None,
@@ -434,7 +435,7 @@ def release_batch_lock(
     return None
 
 
-def acquire_batch_lock(
+def acquire_batch_lock(  # noqa: PLR0912,PLR0913 - fail-closed owner protocol
     lock_path: Path,
     *,
     generation_id: str,
@@ -576,7 +577,7 @@ def batch_lock_matches_request(
         decoded = cast(object, json.loads(lock_path.read_text(encoding="utf-8")))
     except (json.JSONDecodeError, OSError, UnicodeError) as exc:
         _record_publication_failure(
-            publication_operation="lock_release",
+            publication_operation="lock_owner_check",
             operation_id=operation_id,
             started_at=started_at,
             error_code="read_failed",
@@ -586,7 +587,7 @@ def batch_lock_matches_request(
         return False
     if not isinstance(decoded, dict):
         _record_publication_failure(
-            publication_operation="lock_release",
+            publication_operation="lock_owner_check",
             operation_id=operation_id,
             started_at=started_at,
             error_code="read_failed",
@@ -595,13 +596,21 @@ def batch_lock_matches_request(
         )
         return False
     payload = cast(dict[object, object], decoded)
-    return bool(
+    matches = bool(
         payload.get("generation_id") == generation_id
         and payload.get("publication_nonce") == publication_nonce
         and payload.get("process_id") == os.getpid()
         and payload.get("audio_sha256") == audio_sha256
         and payload.get("source_kit_sha256") == source_kit_sha256
     )
+    _record_publication_success(
+        publication_operation="lock_owner_check",
+        operation_id=operation_id,
+        started_at=started_at,
+        outcome="matched" if matches else "mismatch",
+        artifact_name=lock_path.name,
+    )
+    return matches
 
 
 __all__ = [

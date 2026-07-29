@@ -4,13 +4,17 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Sequence
-from typing import Protocol, cast
+from typing import Final, Protocol, cast
 
 from ..data.midi_event_kinds import (
     MIDI_EVENT_KIND_CC,
     MIDI_EVENT_KIND_NRPN,
     MidiEventKind,
 )
+
+_MIDI_DATA_MAX: Final[int] = 127
+_NRPN_ADDRESS_WIDTH: Final[int] = 2
+_MIDI_CHANNEL_MAX: Final[int] = 15
 
 
 class CcNrpnEvent(Protocol):
@@ -42,7 +46,7 @@ class CcNrpnEvent(Protocol):
 
 
 def _midi_byte(name: str, value: object) -> int:
-    if not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= 127:
+    if not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= _MIDI_DATA_MAX:
         raise ValueError(f"{name} must be an integer in 0..127")
     return value
 
@@ -51,7 +55,7 @@ def _validated_event_nrpn_address(value: object) -> tuple[int, int]:
     if not isinstance(value, tuple):
         raise ValueError("NRPN address must contain exactly two MIDI bytes")
     address = cast(tuple[object, ...], value)
-    if len(address) != 2:
+    if len(address) != _NRPN_ADDRESS_WIDTH:
         raise ValueError("NRPN address must contain exactly two MIDI bytes")
     msb = _midi_byte("NRPN MSB", address[0])
     lsb = _midi_byte("NRPN LSB", address[1])
@@ -88,7 +92,7 @@ def validate_cc_nrpn_event(event: CcNrpnEvent) -> int:
 
     cc_lsb = getattr(event, "cc_lsb", None)
     _midi_byte("event channel", event.channel)
-    if event.channel > 15:
+    if event.channel > _MIDI_CHANNEL_MAX:
         raise ValueError("event channel must be an integer in 0..15")
     _midi_byte("event MIDI value", event.midi_value)
     if event.message_kind == MIDI_EVENT_KIND_CC:

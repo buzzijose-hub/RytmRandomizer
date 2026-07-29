@@ -14,7 +14,7 @@ Current baseline used while creating / refreshing this document:
 
 - Branch: Analog Four snapshot/style readiness bundle, built on the passive style profile/target/routing/render-plan/mock-preview and dual-machine mock-preview foundation.
 - Protected reference: `tests/fixtures/v134_parity/*.json` (the retired V1.34 monolith's behavior, captured as 505 byte-frozen JSON golden files; parametrized into 685 pytest parity test items).
-- Current package: `rytm_randomizer/` - 26 top-level Python files + 14 subpackages = 352 total Python modules. The 14 subpackages: `behavior/`, `cockpit/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `local_ai/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
+- Current package: `rytm_randomizer/` - 26 top-level Python files + 14 subpackages = 354 total Python modules. The 14 subpackages: `behavior/`, `cockpit/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `local_ai/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
 - Closeout scripts: `Scripts/closeout_check.ps1` (PowerShell, Windows) and `scripts/closeout_check.py` (Python, cross-platform).
 - This file was audited and refreshed as part of PR #43, then updated through the style-profile, style-target-vector, Rytm style snapshot routing, Analog Four style snapshot routing, dual-machine style routing, reference/discovery slider, Rytm/Analog Four style mutation-intent, dual-machine style mutation-intent, Rytm style mutation render-plan, Rytm style mutation mock-preview, Analog Four style mutation mock-preview, dual-machine style mutation mock-preview, Analog Four saved-kit SysEx readiness-intake, Analog Four kit-catalog, Analog Four initialized baseline, Analog Four patch genome, Analog Four patch learning, Analog Four patch corpus, Analog Four patch send-plan, Analog Four SysEx Filter1 Frequency/Resonance calibration, Analog Four style kit-readiness, Analog Four kit-fingerprint, Analog Four OXI macro set planner, live runbook, stage-routing, stage-rehearsal-state, live-set-cockpit, live-show-export, live-transition-timeline, live-command-deck, live-state-packet, live-readiness, live-control-surface, live-analyzer-handoff, live-analyzer-targets, live GUI analyzer readiness, live GUI rehearsal session, live GUI capture queue, live GUI capture review, live GUI sidecar session, live GUI screen contract, live GUI render tree, live GUI analyzer overlay, live GUI analyzer frame, live GUI interaction script, live GUI action reducer, live GUI controller state, live GUI playback transcript, live GUI playback validation, live GUI test-harness contract, live GUI test-harness readiness, live GUI implementation bridge, live GUI desktop blueprint, live GUI desktop app plan, live GUI desktop component contract, live GUI desktop view-model, live GUI desktop render-contract, cockpit send-plan operator-readiness, cockpit send-plan rehearsal-surface, live-kit capture workbench, live-kit package audition, live-kit operator package, live-kit operator review ledger, reference-style blueprint, manual-feedback packet, generic MIDI event-plan sender, and passive local model copilot slices so the strategy/report-module list and counts stay current.
 
@@ -38,7 +38,7 @@ Current baseline used while creating / refreshing this document:
 | Snapshot Protocols + envelope | `rytm_randomizer/snapshot/{envelope,decoder,planner,mock_runtime,sysex_file}.py` |
 | Guardrails | `rytm_randomizer/guardrails/{resolver,store,schema,validation}.py` |
 | Observability | `rytm_randomizer/observability/{logging,tracing,metrics,errors}.py` |
-| Style analysis | `rytm_randomizer/style_analysis/{extractor,feature_report,library,blueprint,analog_four_patch_genome,analog_four_patch_inference,analog_four_patch_learning,analog_four_patch_corpus,analog_four_patch_send_plan,analog_four_patch_render_rank,analog_four_patch_codesigner}.py` |
+| Style analysis | `rytm_randomizer/style_analysis/{extractor,runtime_types,feature_report,library,blueprint,analog_four_patch_genome,analog_four_patch_inference,analog_four_patch_learning,analog_four_patch_corpus,analog_four_patch_send_plan,analog_four_patch_render_rank,analog_four_patch_codesigner}.py` |
 | Cockpit export | `rytm_randomizer/cockpit/export/{analog_four_export_contracts,analog_four_cli,analog_four_kit,analog_four_patch_batch,analog_four_patch_batch_cli,analog_four_patch_batch_codec,analog_four_patch_batch_contracts,analog_four_patch_batch_publication,analog_four_patch_batch_reader,analog_four_patch_render_rank,analog_four_patch_render_rank_cli,cli_options,writer}.py` plus the profile-model serialization/signing/verifier modules. |
 | Tests | `tests/test_*.py`, `tests/cockpit/test_*.py`, `tests/architecture/test_*.py`, `tests/fixtures/{analog_four_saved_kit,v134_parity}/`, `tests/_parity_worker.py`, `tests/conftest.py` |
 | Project documentation | `CONTRIBUTING.md`, `docs/*.md`, `.claude/rules/*.md`, `.claude/skills/**/SKILL.md` |
@@ -51,7 +51,7 @@ Current baseline used while creating / refreshing this document:
 flowchart TB
     User["Operator / developer"]
     V134["V1.34 reference behavior<br/>tests/fixtures/v134_parity/<br/>(505 JSON goldens; 685 parity test items)"]
-    Package["Modular package<br/>rytm_randomizer/<br/>(14 subpackages, 352 modules)"]
+    Package["Modular package<br/>rytm_randomizer/<br/>(14 subpackages, 354 modules)"]
     Tests["Tests<br/>6800+ pytest tests<br/>tests/, tests/architecture/"]
     CI[".github/workflows/test.yml<br/>3 OS × py3.11 matrix<br/>+ codeql, release, installers"]
     Docs["Project docs<br/>CONTRIBUTING.md, docs/*.md<br/>.claude/{rules,skills}/"]
@@ -787,7 +787,7 @@ flowchart TB
 
 ## 10. Architecture Test Enforcement Graph
 
-The 56 architecture-test files (704 individual test items) under `tests/architecture/` mechanically enforce the rules in `docs/PLAN_REQUIREMENTS.md` + `CONTRIBUTING.md`. Each one uses the **drained-allowlist** pattern: violations today are explicit `frozenset` entries that PR-review must approve; the long-term state is empty allowlists.
+The 56 architecture-test files (705 individual test items) under `tests/architecture/` mechanically enforce the rules in `docs/PLAN_REQUIREMENTS.md` + `CONTRIBUTING.md`. Each one uses the **drained-allowlist** pattern: violations today are explicit `frozenset` entries that PR-review must approve; the long-term state is empty allowlists.
 
 ```mermaid
 flowchart TB
@@ -872,7 +872,7 @@ flowchart TB
     subgraph Jobs["Parallel CI jobs (test.yml)"]
         Lint["lint<br/>ruff + black + isort<br/>~14s"]
         Security["security<br/>pip-audit<br/>(skipped if no deps/ci changes)"]
-        Architecture["architecture<br/>tests/architecture/<br/>~10-30s · 703 tests"]
+        Architecture["architecture<br/>tests/architecture/<br/>~10-30s · 705 tests"]
         TestMatrix["test (matrix)<br/>windows + ubuntu<br/>(+ macos on push only)<br/>~60-90s · 6800+ tests"]
         E2EMatrix["e2e (matrix)<br/>windows + ubuntu<br/>(+ macos on push only)<br/>~20-40s · 43 tests"]
         DocsGate["docs-gate<br/>~7s"]
@@ -997,7 +997,7 @@ flowchart TB
         MidiTests["test_midi_io.py<br/>test_mock_*.py<br/>test_real_midi_*.py"]
     end
 
-    subgraph Layer3["Layer 3 — Architecture (703 tests, 56 files)"]
+    subgraph Layer3["Layer 3 — Architecture (705 tests, 56 files)"]
         ArchTests["tests/architecture/<br/>(Gates 6, 9, 10, 11, etc.)<br/>+ NEW test_device_protocol_enforcement<br/>(7 sub-tests)"]
     end
 
@@ -1757,7 +1757,7 @@ flowchart TB
     subgraph PytestLayers["What pytest runs"]
         PassiveTests["Layer 2 unit / behavior tests<br/>(~1500 tests)"]
         ParityTests["Layer 1 V1.34 parity tests<br/>(685 items from 505 goldens)"]
-        ArchTests["Layer 3 architecture tests<br/>(703 tests across 56 files)"]
+        ArchTests["Layer 3 architecture tests<br/>(705 tests across 56 files)"]
         E2ETests["Layer 4 e2e tests<br/>(43 tests)"]
         CovStep["Layer 5 coverage ratchet<br/>(scripts/coverage_ratchet.py)<br/>floor: ≥95% pure-branch"]
     end

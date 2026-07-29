@@ -134,12 +134,15 @@ remain independent and parallel.
 
 ## Fresh Closeout Verification
 
-- Focused touched-file A4/operator regression suite: **1,689 passed, 1 skipped**.
-- Architecture suite: **704 passed**.
-- Full suite: **6,804 passed, 3 skipped**.
+- Focused touched-file A4/operator regression suite: **1,717 passed, 1 skipped**.
+- Architecture suite: **705 passed**.
+- Last uninterrupted production-equivalent full-suite run: **6,811 passed,
+  3 skipped**. The exact final tree collects **6,824 tests**; its final
+  added/changed tests are included in the focused result above, and online CI
+  is the authoritative exact-head full-suite result.
 - Ruff, Black, and isort: **clean**.
-- Touched-file statement/branch coverage: **100%** across **7,887 statements**
-  and **1,878 branches**, zero misses.
+- Touched-file statement/branch coverage: **100%** across **7,952 statements**
+  and **1,884 branches**, zero misses.
 - V1.34 parity: **685 passed** byte-for-byte.
 - Vulture, strict production-diff Pyright, `git diff --check`, and the mechanical
   review gate: **passed**.
@@ -150,10 +153,10 @@ remain independent and parallel.
 
 Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 
-- [x] Gate 1 (100% branch coverage on touched files) -- 7,887 statements and 1,878 branches, zero misses.
+- [x] Gate 1 (100% branch coverage on touched files) -- 7,952 statements and 1,884 branches, zero misses.
 - [x] Gate 2 (V1.34 parity byte-identical) -- 685 items passed.
 - [x] Gate 3 (lint/format/type clean) -- Ruff, Black, isort, and strict
-  Pyright across all 62 touched production modules pass. Dynamic test-harness
+  Pyright across all 63 touched production modules pass. Dynamic test-harness
   typing remains the accepted scoped PR #214 debt; production typing remains
   mandatory and clean.
 - [x] Gate 4 (dead-code purge) -- Vulture confidence 80 passed across production and tests.

@@ -41,7 +41,6 @@ from typing import (
     Protocol,
     SupportsFloat,
     TypedDict,
-    TypeVar,
     cast,
 )
 
@@ -49,10 +48,10 @@ from rytm_randomizer.guardrails.schema import Confidence, SourceType
 from rytm_randomizer.observability.errors import DataError
 
 from .feature_report import FeatureReport, compute_feature_report_hash
+from .runtime_types import require_runtime_type
 
 _AUDIO_SAMPLE_RATE: Final[int] = 22_050
 _AUDIO_HOP_LENGTH: Final[int] = 512
-_RuntimeValue = TypeVar("_RuntimeValue")
 
 
 class FeatureMeasurements(TypedDict):
@@ -81,16 +80,6 @@ class AudioMeasurements(FeatureMeasurements):
     harmonicity: float
     transient: float
     modulation: float
-
-
-def _require_extractor_runtime_type(
-    value: object,
-    expected_type: type[_RuntimeValue],
-    message: str,
-) -> _RuntimeValue:
-    if not isinstance(value, expected_type):
-        raise TypeError(message)
-    return value
 
 
 def _require_path_list(value: object) -> list[Path]:
@@ -266,7 +255,7 @@ def audio_synthesis_features_to_dict(
 ) -> AudioSynthesisFeaturesPayload:
     """Return the stable JSON payload for reusable synthesis measurements."""
 
-    validated_features = _require_extractor_runtime_type(
+    validated_features = require_runtime_type(
         features,
         AudioSynthesisFeatures,
         "features must be AudioSynthesisFeatures",
@@ -701,7 +690,7 @@ def analyze_audio_snapshot(path: Path) -> AudioFeatureAnalysis:
     strand an additional child-owned copy of private audio.
     """
 
-    validated_path = _require_extractor_runtime_type(
+    validated_path = require_runtime_type(
         path,
         Path,
         "path must be a pathlib.Path",
@@ -727,7 +716,7 @@ def analyze_audio(path: Path) -> AudioFeatureAnalysis:
     (``pip install -e ".[style,dev]"``).
     """
 
-    validated_path = _require_extractor_runtime_type(
+    validated_path = require_runtime_type(
         path,
         Path,
         "path must be a pathlib.Path",
@@ -764,8 +753,8 @@ def extract_from_description(
     hardware validation in lieu of the missing audio measurement).
     """
 
-    _require_extractor_runtime_type(text, str, "text must be a string")
-    validated_source_type = _require_extractor_runtime_type(
+    require_runtime_type(text, str, "text must be a string")
+    validated_source_type = require_runtime_type(
         source_type,
         SourceType,
         "source_type must be a SourceType enum member",
@@ -800,7 +789,7 @@ def extract_from_partial(paths: list[Path], notes: str) -> FeatureReport:
     """
 
     validated_paths = _require_path_list(paths)
-    _require_extractor_runtime_type(notes, str, "notes must be a string")
+    require_runtime_type(notes, str, "notes must be a string")
 
     if not validated_paths:
         report = FeatureReport(

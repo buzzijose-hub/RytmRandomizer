@@ -390,6 +390,13 @@ def test_record_a4_publication_render_rank_and_patch_send_red_metrics() -> None:
     metrics.record_a4_patch_render_rank(7.5, error_code="reference_mismatch")
     metrics.record_a4_patch_send(30.0)
     metrics.record_a4_patch_send(20.0, error_code="partial_send")
+    metrics.record_a4_active_operation("a4_cc_param_send", 3.0)
+    metrics.record_a4_active_operation(
+        "a4_soft_capture",
+        7.0,
+        error_code="capture_failed",
+    )
+    metrics.record_a4_active_error("port_close")
 
     assert metrics.a4_patch_publication_count == Counter({"artifact_publish": 1, "lock_acquire": 1})
     assert metrics.a4_patch_publication_duration_ms_total == Counter(
@@ -408,6 +415,15 @@ def test_record_a4_publication_render_rank_and_patch_send_red_metrics() -> None:
     assert metrics.a4_patch_send_count == 2
     assert metrics.a4_patch_send_duration_ms_total == pytest.approx(50.0)
     assert metrics.a4_patch_send_errors_by_code["partial_send"] == 1
+    assert metrics.a4_active_operation_count == Counter(
+        {"a4_cc_param_send": 1, "a4_soft_capture": 1}
+    )
+    assert metrics.a4_active_operation_duration_ms_total == Counter(
+        {"a4_cc_param_send": 3.0, "a4_soft_capture": 7.0}
+    )
+    assert metrics.a4_active_operation_errors_by_code == Counter(
+        {"capture_failed": 1, "port_close": 1}
+    )
 
 
 def test_format_summary_includes_red_metrics_sections() -> None:
@@ -432,6 +448,11 @@ def test_format_summary_includes_red_metrics_sections() -> None:
     )
     metrics.record_a4_patch_render_rank(20.0, error_code="reference_mismatch")
     metrics.record_a4_patch_send(15.0, error_code="partial_send")
+    metrics.record_a4_active_operation(
+        "a4_cc_param_send",
+        2.5,
+        error_code="send_failed",
+    )
 
     summary = metrics.format_summary()
 
@@ -466,6 +487,11 @@ def test_format_summary_includes_red_metrics_sections() -> None:
     assert "a4_patch_send_errors=" in summary
     assert "a4_patch_send_duration_ms=15.0" in summary
     assert "partial_send:1" in summary
+    assert "a4_active_count=" in summary
+    assert "a4_cc_param_send:1" in summary
+    assert "a4_active_errors=" in summary
+    assert "send_failed:1" in summary
+    assert "a4_active_duration_ms=" in summary
 
 
 def test_format_summary_red_metrics_empty_render_as_braces_and_zeros() -> None:
@@ -495,6 +521,9 @@ def test_format_summary_red_metrics_empty_render_as_braces_and_zeros() -> None:
     assert "a4_patch_send_count=0" in summary
     assert "a4_patch_send_errors={}" in summary
     assert "a4_patch_send_duration_ms=0.0" in summary
+    assert "a4_active_count={}" in summary
+    assert "a4_active_errors={}" in summary
+    assert "a4_active_duration_ms={}" in summary
 
 
 def test_reset_metrics_clears_red_metric_counters() -> None:
@@ -508,6 +537,11 @@ def test_reset_metrics_clears_red_metric_counters() -> None:
     metrics.record_a4_patch_publication("lock_release", 5.0, error_code="release_failed")
     metrics.record_a4_patch_render_rank(15.0, error_code="artifact_validation")
     metrics.record_a4_patch_send(10.0, error_code="validation")
+    metrics.record_a4_active_operation(
+        "a4_kit_recipe_send",
+        6.0,
+        error_code="send_failed",
+    )
 
     assert metrics.ws_command_count["send"] == 1
     assert metrics.ws_command_errors_by_code["ERR_INTERNAL"] == 1
@@ -526,6 +560,9 @@ def test_reset_metrics_clears_red_metric_counters() -> None:
     )
     assert metrics.a4_patch_render_rank_errors_by_code["artifact_validation"] == 1
     assert metrics.a4_patch_send_errors_by_code["validation"] == 1
+    assert metrics.a4_active_operation_count["a4_kit_recipe_send"] == 1
+    assert metrics.a4_active_operation_duration_ms_total["a4_kit_recipe_send"] == 6.0
+    assert metrics.a4_active_operation_errors_by_code["send_failed"] == 1
 
     reset_metrics()
 
@@ -553,3 +590,6 @@ def test_reset_metrics_clears_red_metric_counters() -> None:
     assert metrics.a4_patch_send_count == 0
     assert metrics.a4_patch_send_duration_ms_total == 0.0
     assert len(metrics.a4_patch_send_errors_by_code) == 0
+    assert len(metrics.a4_active_operation_count) == 0
+    assert len(metrics.a4_active_operation_duration_ms_total) == 0
+    assert len(metrics.a4_active_operation_errors_by_code) == 0

@@ -91,12 +91,14 @@ recordings are available.
 
 ## Current Local Verification
 
-- Focused touched-file A4/operator regression suite: 1,689 passed, 1 skipped.
-- Architecture: 704 passed.
-- Full suite: 6,804 passed, 3 skipped.
+- Focused touched-file A4/operator regression suite: 1,717 passed, 1 skipped.
+- Architecture: 705 passed.
+- Last uninterrupted production-equivalent full suite: 6,811 passed,
+  3 skipped. The exact final tree collects 6,824 tests; online CI is its
+  authoritative full-suite result.
 - Ruff, Black, isort: clean.
-- Touched-file coverage: 100% across 7,887 statements and 1,878 branches.
-- V1.34 parity: 685 passed; Vulture, strict Pyright across all 62 touched
+- Touched-file coverage: 100% across 7,952 statements and 1,884 branches.
+- V1.34 parity: 685 passed; Vulture, strict Pyright across all 63 touched
   production modules, `git diff --check`, and the mechanical review gate
   passed.
 - Dynamic test-harness typing remains the accepted scoped Gate 3 debt;

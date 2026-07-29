@@ -457,6 +457,22 @@ def test_operation_exposes_current_id_only_inside_span() -> None:
     assert current_op_id() == ""
 
 
+def test_traced_decorator_runs_callable_inside_operation() -> None:
+    from rytm_randomizer.observability.tracing import current_op_id, trace
+
+    observed_ids: list[str] = []
+
+    @trace("decorated_test")
+    def decorated(value: int) -> int:
+        observed_ids.append(current_op_id())
+        return value + 1
+
+    assert decorated(4) == 5
+    assert len(observed_ids) == 1
+    assert observed_ids[0] != ""
+    assert current_op_id() == ""
+
+
 def test_tracing_filter_install_accepts_preinstalled_logger_filter(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

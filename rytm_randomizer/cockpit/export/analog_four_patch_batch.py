@@ -98,6 +98,8 @@ from .analog_four_patch_batch_publication import (
 from .analog_four_patch_batch_publication import release_batch_lock as _release_batch_lock
 from .writer import WriteResult, atomic_write
 
+_MIDI_DATA_MAX: Final[int] = 127
+
 FILTER2_RESONANCE_PARAMETER: Final[str] = A4_FILTER2_RESONANCE_PARAMETER
 _DEFERRED_REASON: Final[str] = "not hardware-write-validated for saved-kit SysEx"
 _SAFE_SEGMENT_RE: Final[re.Pattern[str]] = re.compile(r"[^a-z0-9]+")
@@ -208,7 +210,7 @@ def _acquire_batch_lock(
     )
 
 
-def _generation_id(
+def _generation_id(  # noqa: PLR0913 - immutable identity includes all source hashes
     *,
     audio_name: str,
     source_kit_name: str,
@@ -345,7 +347,7 @@ def _filter2_resonance_gene(
         value = int(gene.value.screen_value)
     except ValueError as exc:
         raise ValueError("Filter2 Resonance screen value must be a decimal integer") from exc
-    if str(value) != gene.value.screen_value or not 0 <= value <= 127:
+    if str(value) != gene.value.screen_value or not 0 <= value <= _MIDI_DATA_MAX:
         raise ValueError("Filter2 Resonance screen value must be in 0..127")
     return gene
 
@@ -457,7 +459,7 @@ def _coverage_counts(
     }
 
 
-def _sidecar_payload(
+def _sidecar_payload(  # noqa: PLR0913 - schema builder mirrors artifact fields
     prepared: _PreparedCandidate,
     render: AnalogFourSavedKitRenderResult,
     inference: _AudioInference,
@@ -524,7 +526,7 @@ def _candidate_result(
     )
 
 
-def _manifest_payload(
+def _manifest_payload(  # noqa: PLR0913 - schema builder mirrors manifest fields
     inference: _AudioInference,
     staged_candidates: tuple[_StagedCandidate, ...],
     *,
@@ -622,7 +624,7 @@ def _render_inferred_candidates(
     )
 
 
-def _stage_candidate_artifacts(
+def _stage_candidate_artifacts(  # noqa: PLR0913 - staged pipeline passes immutable context
     inference: _AudioInference,
     rendered_candidates: tuple[_RenderedCandidate, ...],
     *,
@@ -670,7 +672,7 @@ def _stage_candidate_artifacts(
     return tuple(staged_candidates)
 
 
-def _assemble_staged_batch(
+def _assemble_staged_batch(  # noqa: PLR0913 - staged pipeline passes immutable context
     inference: _AudioInference,
     staged_candidates: tuple[_StagedCandidate, ...],
     *,
@@ -753,7 +755,7 @@ def _infer_parent_owned_audio_snapshot(
     return inference, _payload_sha256(inference.genome_payload)
 
 
-def _render_and_identify_batch(
+def _render_and_identify_batch(  # noqa: PLR0913 - render boundary needs source identity
     inference: _AudioInference,
     source_kit_snapshot_bytes: bytes,
     *,
@@ -784,7 +786,7 @@ def _render_and_identify_batch(
     return rendered_candidates, generation_id
 
 
-def _stage_batch(
+def _stage_batch(  # noqa: PLR0913 - private staging boundary is intentionally explicit
     *,
     audio_path: Path,
     source_kit_path: Path,
@@ -848,7 +850,7 @@ def _stage_batch(
         )
 
 
-def _batch_export_error_code(
+def _batch_export_error_code(  # noqa: PLR0911 - ordered fail-closed classifier
     exc: BaseException,
     *,
     source_reads_complete: bool,
@@ -884,7 +886,7 @@ def _batch_export_error_code(
     return "inference_failed"
 
 
-def _read_batch_sources(
+def _read_batch_sources(  # noqa: PLR0913 - source snapshot boundary is explicit
     *,
     audio_path: Path,
     source_kit_path: Path,
@@ -906,7 +908,7 @@ def _read_batch_sources(
     )
 
 
-def _stage_batch_request(
+def _stage_batch_request(  # noqa: PLR0913 - request fields remain typed and explicit
     *,
     audio_path: Path,
     source_kit_path: Path,
@@ -961,7 +963,7 @@ def _publish_candidate_artifacts(
     return tuple(results)
 
 
-def _cleanup_publication_lock(
+def _cleanup_publication_lock(  # noqa: PLR0913 - cleanup requires complete owner identity
     *,
     lock_path: Path,
     lock_write: WriteResult | None,
@@ -1098,7 +1100,7 @@ def _batch_export_result(
     )
 
 
-def _record_batch_export_failure(
+def _record_batch_export_failure(  # noqa: PLR0913 - telemetry retains bounded context
     exc: BaseException,
     *,
     audio_path: Path,
@@ -1163,7 +1165,7 @@ def _record_batch_export_success(
     )
 
 
-def _execute_analog_four_audio_patch_batch(
+def _execute_analog_four_audio_patch_batch(  # noqa: PLR0913 - service boundary mirrors request
     *,
     audio_path: Path,
     source_kit_path: Path,
@@ -1239,7 +1241,7 @@ def _execute_analog_four_audio_patch_batch(
     return result
 
 
-def export_analog_four_audio_patch_batch(
+def export_analog_four_audio_patch_batch(  # noqa: PLR0913 - public API mirrors request
     *,
     audio_path: Path,
     source_kit_path: Path,

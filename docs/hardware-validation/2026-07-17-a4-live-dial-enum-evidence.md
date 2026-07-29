@@ -22,7 +22,7 @@ MIDI output was available or opened during this inspection.
 
 ## Results
 
-| DNA row | Official NRPN | Overbridge label | Validated value |
+| DNA row | Official NRPN | Overbridge label | Plug-in-observed raw value |
 |---|---:|---|---:|
 | EnvF Gate Length | `1:65` | `Off` (front-panel DNA label `NOTE`) | `0` |
 | EnvF Destination A | `1:66` | `None` / DNA label `OFF` | `96` |
@@ -47,10 +47,12 @@ closeout corrected the guarded plan to:
 - 53 transport messages
 - 6 paired-CC manual rows pending 14-bit hardware verification
 
-The direct NRPN sender and four-track routing had already been confirmed on the
-physical A4 using Filter2 Resonance values. The next hardware validation is one
-complete candidate sent from a hash-verified batch sidecar, followed by a page
-review and an audio recording for acoustic ranking.
+No reproducible physical command/output record is attached here for the direct
+NRPN sender or four-track routing. Those behaviors remain operator-reported and
+must be treated as unverified until a dated hardware record captures the exact
+command, firmware, routing, observed result, and recovery. The next hardware
+validation is one supervised complete candidate sent from a hash-verified batch
+sidecar, followed by a page review and an audio recording for acoustic ranking.
 
 ## Boundary
 

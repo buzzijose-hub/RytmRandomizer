@@ -48,6 +48,7 @@ from .feature_report import (
     compute_feature_report_hash,
     feature_report_to_dict,
 )
+from .runtime_types import require_runtime_type
 
 _AUDIO_REPORT_DERIVED_AT: Final[str] = "1970-01-01T00:00:00Z"
 _INFERENCE_FAILURE_FINGERPRINT: Final[str] = "a4.audio_patch.inference_failed"
@@ -57,17 +58,6 @@ _NATIVE_ANALYSIS_TIMEOUT_SECONDS: Final[float] = 60.0
 _NATIVE_ANALYSIS_EXIT_TIMEOUT_SECONDS: Final[float] = 2.0
 _logger = get_logger(__name__)
 _InferenceResult = TypeVar("_InferenceResult")
-_RuntimeValue = TypeVar("_RuntimeValue")
-
-
-def _require_inference_runtime_type(
-    value: object,
-    expected_type: type[_RuntimeValue],
-    message: str,
-) -> _RuntimeValue:
-    if not isinstance(value, expected_type):
-        raise TypeError(message)
-    return value
 
 
 def _audio_path_name(value: object) -> str:
@@ -219,7 +209,7 @@ def _recorded_a4_inference(
         audio_name=_audio_path_name(path),
     ):
         try:
-            validated_path = _require_inference_runtime_type(
+            validated_path = require_runtime_type(
                 path,
                 Path,
                 "path must be a pathlib.Path",
@@ -664,7 +654,7 @@ def analog_four_patch_audio_features_to_dict(
 ) -> AnalogFourPatchAudioFeaturesPayload:
     """Return a stable JSON-ready representation of audio evidence."""
 
-    validated_features = _require_inference_runtime_type(
+    validated_features = require_runtime_type(
         features,
         AudioSynthesisFeatures,
         "features must be AnalogFourPatchAudioFeatures",
@@ -677,7 +667,7 @@ def analog_four_audio_patch_genome_to_dict(
 ) -> AnalogFourAudioPatchGenomePayload:
     """Return a stable JSON-ready representation of inferred patch DNA."""
 
-    validated_audio_genome = _require_inference_runtime_type(
+    validated_audio_genome = require_runtime_type(
         audio_genome,
         AnalogFourAudioPatchGenome,
         "audio_genome must be an AnalogFourAudioPatchGenome",

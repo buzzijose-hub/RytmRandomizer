@@ -27,6 +27,7 @@ from .cli_options import pop_required_cli_value
 
 COMMAND_NAME: Final[str] = "analog-four-saved-kit-export"
 FILTER2_RESONANCE_PARAMETER: Final[str] = A4_FILTER2_RESONANCE_PARAMETER
+_MIDI_DATA_MAX: Final[int] = 127
 USAGE: Final[str] = (
     "Usage: python -m rytm_randomizer.cli analog-four-saved-kit-export "
     "--source <kit.syx> --output <kit.syx> "
@@ -104,7 +105,7 @@ def _parse_resonance_assignment(value: str) -> AnalogFourSavedKitMutation:
             "--filter2-resonance track must be an integer from "
             f"{A4_SYNTH_TRACK_MIN} to {A4_SYNTH_TRACK_MAX}"
         )
-    if str(parsed_value) != screen_value or not 0 <= parsed_value <= 127:
+    if str(parsed_value) != screen_value or not 0 <= parsed_value <= _MIDI_DATA_MAX:
         raise ValueError("--filter2-resonance value must be an integer from 0 to 127")
     return AnalogFourSavedKitMutation(
         parameter=FILTER2_RESONANCE_PARAMETER,
@@ -217,7 +218,7 @@ def _format_a4_saved_kit_text(result: AnalogFourSavedKitExportResult) -> str:
     return "\n".join(lines) + "\n"
 
 
-def handle_analog_four_saved_kit_export(
+def handle_analog_four_saved_kit_export(  # noqa: PLR0913 - typed CLI boundary
     *,
     source_path: Path,
     output_path: Path,

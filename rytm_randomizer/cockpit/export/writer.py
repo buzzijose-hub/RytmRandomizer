@@ -35,7 +35,6 @@ Stdlib-only: ``os`` / ``tempfile`` / ``pathlib`` / ``sys`` /
 
 from __future__ import annotations
 
-import contextlib
 import os
 import sys
 import tempfile
@@ -237,8 +236,18 @@ def atomic_write(path: Path, data: bytes, *, overwrite: bool = False) -> WriteRe
     finally:
         # Also runs for KeyboardInterrupt/SystemExit without broadly catching
         # them. Cleanup must never mask the active publication outcome.
-        with contextlib.suppress(OSError):
+        active_exception = sys.exception()
+        try:
             os.unlink(tmp_name)
+        except FileNotFoundError:
+            pass
+        except OSError as exc:
+            _record_temp_cleanup_failure(
+                tmp_name,
+                path,
+                exc,
+                active_exception=active_exception,
+            )
 
     return WriteResult(
         path=path.resolve(),
@@ -273,21 +282,38 @@ def _publish_no_overwrite(tmp_name: str, path: Path) -> None:
     os.link(tmp_name, path)
     try:
         os.unlink(tmp_name)
-    except OSError as exc:
-        metrics = get_metrics()
-        metrics.record_error("atomic_write_temp_cleanup")
-        _logger.warning(
-            "Atomic write temp cleanup failed after publication",
-            extra={
-                "operation": "atomic_write_cleanup",
-                "outcome": "residue_retained",
-                "error_code": "temp_cleanup_failed",
-                "fingerprint": "export.write.temp_cleanup_failed",
-                "temp_name": Path(tmp_name).name,
-                "output_name": path.name,
-                "error_type": type(exc).__name__,
-                "metrics_summary": metrics.format_summary(),
-            },
+    except OSError:
+        # The outer atomic-write finalizer retries and records retained residue.
+        pass
+
+
+def _record_temp_cleanup_failure(
+    tmp_name: str,
+    path: Path,
+    exc: OSError,
+    *,
+    active_exception: BaseException | None,
+) -> None:
+    """Record retained temp-file residue without masking the active outcome."""
+
+    metrics = get_metrics()
+    metrics.record_error("atomic_write_temp_cleanup")
+    _logger.warning(
+        "Atomic write temp cleanup failed",
+        extra={
+            "operation": "atomic_write_cleanup",
+            "outcome": "residue_retained",
+            "error_code": "temp_cleanup_failed",
+            "fingerprint": "export.write.temp_cleanup_failed",
+            "temp_name": Path(tmp_name).name,
+            "output_name": path.name,
+            "error_type": type(exc).__name__,
+            "metrics_summary": metrics.format_summary(),
+        },
+    )
+    if active_exception is not None:
+        active_exception.add_note(
+            "Atomic-write temp cleanup also failed; a sibling .tmp file may remain."
         )
 
 

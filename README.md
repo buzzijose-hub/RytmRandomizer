@@ -8,7 +8,7 @@
 
 [![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-orange.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/tests-5%2C900%2B-9be8a0.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-6%2C800%2B-9be8a0.svg)](#testing)
 [![Phase 1 · Cockpit](https://img.shields.io/badge/Phase%201%20%C2%B7%20Cockpit-shipped-7cc4ff.svg)](#cockpit)
 [![Phase 2 · Wizard](https://img.shields.io/badge/Phase%202%20%C2%B7%20Wizard-shipped-9be8a0.svg)](#profile-wizard)
 [![Phase 3 · Export](https://img.shields.io/badge/Phase%203%20%C2%B7%20Export-shipped-9be8a0.svg)](#export-pipeline)

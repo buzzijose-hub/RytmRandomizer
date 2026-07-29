@@ -69,6 +69,7 @@ _MANUAL_TRANSPORT_STATUSES: Final[frozenset[str]] = frozenset(
     {TRANSPORT_SCREEN_ONLY, TRANSPORT_SCREEN_ONLY_NRPN}
 )
 _BATCH_READ_FAILURE_FINGERPRINT: Final[str] = "a4.patch_batch.read_failed"
+_NRPN_ADDRESS_WIDTH: Final[int] = 2
 _logger = get_logger(__name__)
 
 
@@ -185,7 +186,7 @@ def load_analog_four_patch_batch_candidate(
     return selection
 
 
-def _record_batch_read_failure(
+def _record_batch_read_failure(  # noqa: PLR0913 - bounded verification context
     *,
     started_at: float,
     manifest_name: str,
@@ -241,7 +242,7 @@ def _batch_candidate_number(candidate: object) -> int | None:
     return None
 
 
-def _load_analog_four_patch_batch_candidate(
+def _load_analog_four_patch_batch_candidate(  # noqa: PLR0915 - linear schema verification
     manifest_path: Path,
     *,
     candidate: int,
@@ -801,7 +802,7 @@ def _optional_nrpn_address(
     if not isinstance(value, list):
         raise ValueError(f"{label}.{key} must be two MIDI bytes or null")
     values = cast(list[object], value)
-    if len(values) != 2:
+    if len(values) != _NRPN_ADDRESS_WIDTH:
         raise ValueError(f"{label}.{key} must be two MIDI bytes or null")
     first, second = values
     if (
@@ -809,8 +810,8 @@ def _optional_nrpn_address(
         or isinstance(first, bool)
         or not isinstance(second, int)
         or isinstance(second, bool)
-        or not 0 <= first <= 127
-        or not 0 <= second <= 127
+        or not A4_MIDI_MIN <= first <= A4_MIDI_MAX
+        or not A4_MIDI_MIN <= second <= A4_MIDI_MAX
     ):
         raise ValueError(f"{label}.{key} must be two MIDI bytes or null")
     return (first, second)

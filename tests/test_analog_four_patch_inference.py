@@ -648,9 +648,7 @@ def test_native_resource_cleanup_propagates_interrupts(
     assert get_metrics().errors_by_kind["a4_native_analysis_cleanup"] == 0
 
 
-def test_native_process_termination_cleanup_propagates_interrupt(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_native_process_termination_cleanup_propagates_interrupt() -> None:
     from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
     from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
 

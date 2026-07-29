@@ -34,6 +34,7 @@ hardware only through confirmed `python -m rytm_randomizer.app --arm`.
 | 2026-07-28 | CODEOWNER review repair passed the focused A4/operator suite (1,581 passed / 1 skipped), architecture (702 passed), full suite (6,777 passed / 3 skipped), 685 parity checks, and 100% touched-production coverage across 7,506 statements / 1,764 branches. |
 | 2026-07-28 | Follow-up repair passed the focused A4/operator suite (1,589 passed / 1 skipped), architecture (703 passed), full suite (6,792 passed / 3 skipped), 685 parity checks, and 100% touched-production coverage across 7,557 statements / 1,788 branches. |
 | 2026-07-29 | Final post-push repair passed the focused touched-file A4/operator suite (1,689 passed / 1 skipped), architecture (704 passed), full suite (6,804 passed / 3 skipped), 685 parity checks, and 100% touched-production coverage across 7,887 statements / 1,878 branches. |
+| 2026-07-29 | Exact-head review repair passed the focused touched-file A4/operator suite (1,717 passed / 1 skipped), architecture (705 passed), 685 parity checks, strict Pyright across 63 production modules, and 100% touched-production coverage across 7,952 statements / 1,884 branches. The last uninterrupted production-equivalent full suite passed 6,811 tests / 3 skipped; the exact tree collects 6,824 tests and online CI is authoritative for its full-suite result. |
 
 ## Escalations Resolved
 
@@ -81,14 +82,16 @@ hardware only through confirmed `python -m rytm_randomizer.app --arm`.
 
 ## Fresh Verification
 
-- Focused touched-file A4/operator regression suite: **1,689 passed, 1 skipped**.
-- Architecture: **704 passed**.
-- Full suite: **6,804 passed, 3 skipped**.
+- Focused touched-file A4/operator regression suite: **1,717 passed, 1 skipped**.
+- Architecture: **705 passed**.
+- Last uninterrupted production-equivalent full-suite run: **6,811 passed,
+  3 skipped**. The exact final tree collects **6,824 tests**; online CI is the
+  authoritative exact-head full-suite result.
 - Ruff, Black, isort: **clean**.
-- Touched-file statement/branch coverage: **100%** across **7,887 statements**
-  and **1,878 branches**, zero misses.
+- Touched-file statement/branch coverage: **100%** across **7,952 statements**
+  and **1,884 branches**, zero misses.
 - V1.34 parity: **685 passed** byte-for-byte.
-- Vulture, strict Pyright across all 62 touched production modules,
+- Vulture, strict Pyright across all 63 touched production modules,
   `git diff --check`, and mechanical review: **passed**.
 - Dynamic test-harness typing remains covered by the accepted scoped Gate 3
   decision; production typing is not waived.

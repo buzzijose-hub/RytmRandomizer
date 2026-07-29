@@ -433,10 +433,10 @@ def _expected_transport_messages(plan: AnalogFourPatchSendPlan) -> list[tuple[in
     return expected
 
 
+@pytest.mark.usefixtures("fake_mido_session")
 def test_app_arm_sends_exact_hash_verified_batch_candidate(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
-    fake_mido_session: object,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer import app, mido_provider
@@ -586,10 +586,10 @@ def test_app_arm_rejects_tampered_batch_before_opening_midi(
     assert "sidecar SHA-256" in capsys.readouterr().err
 
 
+@pytest.mark.usefixtures("fake_mido_session")
 def test_app_arm_reports_partial_batch_send_and_recovery(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
-    fake_mido_session: object,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer import app, mido_provider

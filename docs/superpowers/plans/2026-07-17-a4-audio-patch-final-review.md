@@ -53,17 +53,19 @@
 
 ## Fresh Verification
 
-- Focused touched-file A4/operator regression suite: **1,689 passed, 1 skipped**.
-- Architecture: **704 passed**.
-- Full suite: **6,804 passed, 3 skipped**.
+- Focused touched-file A4/operator regression suite: **1,717 passed, 1 skipped**.
+- Architecture: **705 passed**.
+- Last uninterrupted production-equivalent full-suite run: **6,811 passed,
+  3 skipped**. The exact final tree collects **6,824 tests**; online CI is the
+  authoritative exact-head full-suite result.
 - Ruff, Black, isort: **clean**.
-- Touched-file statement/branch coverage: **100%** across **7,887 statements**
-  and **1,878 branches**, zero misses.
+- Touched-file statement/branch coverage: **100%** across **7,952 statements**
+  and **1,884 branches**, zero misses.
 - V1.34 parity: **685 passed** byte-for-byte.
-- Vulture confidence 80, strict Pyright across all 62 touched production
+- Vulture confidence 80, strict Pyright across all 63 touched production
   modules, `git diff --check`, and the mechanical review gate: **passed**.
 - Dynamic test-harness typing remains the accepted scoped Gate 3 debt. The
-  clean 62-module strict production baseline is reproducible through
+  clean 63-module strict production baseline is reproducible through
   `just typecheck` and `pyrightconfig.strict.json`.
 - Follow-up publication, online CI, and reviewer status are tracked on PR #214.
 

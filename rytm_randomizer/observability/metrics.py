@@ -57,6 +57,8 @@ from dataclasses import dataclass, field
 from typing import Final, Literal, TypeAlias, TypeVar
 
 __all__ = [
+    "AnalogFourActiveErrorCode",
+    "AnalogFourActiveOperation",
     "AnalogFourPatchInferenceErrorCode",
     "AnalogFourPatchBatchReadErrorCode",
     "AnalogFourPatchPublicationErrorCode",
@@ -73,6 +75,35 @@ __all__ = [
 # backward-incompatible change to the counter keys / summary format so a
 # future operator-side dumper can branch on it. ``Final`` per Gate 12.
 _METRICS_VERSION: Final[int] = 1
+
+AnalogFourActiveOperation: TypeAlias = Literal[
+    "a4_cc_param_send",
+    "a4_kit_recipe_send",
+    "a4_nrpn_param_send",
+    "a4_patch_send_plan_send",
+    "a4_soft_capture",
+]
+"""Bounded operation names for one-shot armed Analog Four workflows."""
+
+AnalogFourActiveErrorCode: TypeAlias = Literal[
+    "arm_required",
+    "capture_failed",
+    "interrupted",
+    "mapping_missing",
+    "no_input_ports",
+    "no_output_ports",
+    "parameter_required",
+    "port_close",
+    "port_close_interrupted",
+    "port_list",
+    "port_open",
+    "port_selection",
+    "recipe_required",
+    "recipe_unknown",
+    "send_failed",
+    "validation",
+]
+"""Bounded failures for one-shot armed Analog Four workflows."""
 
 AnalogFourPatchInferenceErrorCode: TypeAlias = Literal[
     "audio_read_failed",
@@ -105,6 +136,7 @@ AnalogFourPatchRenderRankErrorCode: TypeAlias = Literal[
 AnalogFourPatchPublicationOperation: TypeAlias = Literal[
     "artifact_publish",
     "lock_acquire",
+    "lock_owner_check",
     "lock_release",
 ]
 """Bounded operation names for immutable A4 batch publication."""
@@ -211,6 +243,16 @@ class MidiMetrics:
         default_factory=lambda: Counter[AnalogFourPatchRenderRankErrorCode]()
     )
     a4_patch_render_rank_duration_ms_total: float = 0.0
+
+    a4_active_operation_count: Counter[AnalogFourActiveOperation] = field(
+        default_factory=lambda: Counter[AnalogFourActiveOperation]()
+    )
+    a4_active_operation_errors_by_code: Counter[AnalogFourActiveErrorCode] = field(
+        default_factory=lambda: Counter[AnalogFourActiveErrorCode]()
+    )
+    a4_active_operation_duration_ms_total: dict[AnalogFourActiveOperation, float] = field(
+        default_factory=lambda: dict[AnalogFourActiveOperation, float]()
+    )
 
     a4_patch_send_count: int = 0
     a4_patch_send_errors_by_code: Counter[AnalogFourPatchSendErrorCode] = field(
@@ -373,6 +415,26 @@ class MidiMetrics:
         if error_code is not None:
             self.a4_patch_send_errors_by_code[error_code] += 1
 
+    def record_a4_active_operation(
+        self,
+        operation: AnalogFourActiveOperation,
+        duration_ms: float,
+        *,
+        error_code: AnalogFourActiveErrorCode | None = None,
+    ) -> None:
+        """Record one terminal one-shot armed Analog Four outcome."""
+
+        self.a4_active_operation_count[operation] += 1
+        current_duration = self.a4_active_operation_duration_ms_total.get(operation, 0.0)
+        self.a4_active_operation_duration_ms_total[operation] = current_duration + duration_ms
+        if error_code is not None:
+            self.a4_active_operation_errors_by_code[error_code] += 1
+
+    def record_a4_active_error(self, error_code: AnalogFourActiveErrorCode) -> None:
+        """Record an ancillary active-operation error without a second attempt."""
+
+        self.a4_active_operation_errors_by_code[error_code] += 1
+
     def format_summary(self) -> str:
         """Return a multi-line human-readable summary of every counter.
 
@@ -411,6 +473,10 @@ class MidiMetrics:
             f"a4_render_rank_count={self.a4_patch_render_rank_count}, "
             f"a4_render_rank_errors={_format_counter(self.a4_patch_render_rank_errors_by_code)}, "
             f"a4_render_rank_duration_ms={self.a4_patch_render_rank_duration_ms_total:.1f}, "
+            f"a4_active_count={_format_counter(self.a4_active_operation_count)}, "
+            f"a4_active_errors={_format_counter(self.a4_active_operation_errors_by_code)}, "
+            f"a4_active_duration_ms="
+            f"{_format_counter(self.a4_active_operation_duration_ms_total)}, "
             f"a4_patch_send_count={self.a4_patch_send_count}, "
             f"a4_patch_send_errors={_format_counter(self.a4_patch_send_errors_by_code)}, "
             f"a4_patch_send_duration_ms={self.a4_patch_send_duration_ms_total:.1f}"
@@ -480,6 +546,9 @@ def reset_metrics() -> None:
     _METRICS.a4_patch_render_rank_count = 0
     _METRICS.a4_patch_render_rank_errors_by_code.clear()
     _METRICS.a4_patch_render_rank_duration_ms_total = 0.0
+    _METRICS.a4_active_operation_count.clear()
+    _METRICS.a4_active_operation_errors_by_code.clear()
+    _METRICS.a4_active_operation_duration_ms_total.clear()
     _METRICS.a4_patch_send_count = 0
     _METRICS.a4_patch_send_errors_by_code.clear()
     _METRICS.a4_patch_send_duration_ms_total = 0.0
