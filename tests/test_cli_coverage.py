@@ -151,20 +151,11 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     live_gui_sidecar_session_help = resolve_help_text(
         "style-performance-arc-live-gui-sidecar-session-report"
     )
-    live_gui_screen_contract_help = resolve_help_text(
-        "style-performance-arc-live-gui-screen-contract-report"
-    )
-    live_gui_render_tree_help = resolve_help_text(
-        "style-performance-arc-live-gui-render-tree-report"
-    )
     live_gui_analyzer_overlay_help = resolve_help_text(
         "style-performance-arc-live-gui-analyzer-overlay-report"
     )
     live_gui_analyzer_frame_help = resolve_help_text(
         "style-performance-arc-live-gui-analyzer-frame-report"
-    )
-    live_gui_interaction_script_help = resolve_help_text(
-        "style-performance-arc-live-gui-interaction-script-report"
     )
     live_gui_action_reducer_help = resolve_help_text(
         "style-performance-arc-live-gui-action-reducer-report"
@@ -177,36 +168,6 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     live_gui_playback_validation_help = resolve_help_text(
         "style-performance-arc-live-gui-playback-validation-report"
-    )
-    live_gui_test_harness_contract_help = resolve_help_text(
-        "style-performance-arc-live-gui-test-harness-contract-report"
-    )
-    live_gui_test_harness_readiness_help = resolve_help_text(
-        "style-performance-arc-live-gui-test-harness-readiness-report"
-    )
-    live_gui_implementation_bridge_help = resolve_help_text(
-        "style-performance-arc-live-gui-implementation-bridge-report"
-    )
-    live_gui_desktop_blueprint_help = resolve_help_text(
-        "style-performance-arc-live-gui-desktop-blueprint-report"
-    )
-    live_gui_desktop_app_plan_help = resolve_help_text(
-        "style-performance-arc-live-gui-desktop-app-plan-report"
-    )
-    live_gui_desktop_component_contract_help = resolve_help_text(
-        "style-performance-arc-live-gui-desktop-component-contract-report"
-    )
-    live_gui_desktop_view_model_help = resolve_help_text(
-        "style-performance-arc-live-gui-desktop-view-model-report"
-    )
-    live_gui_desktop_render_contract_help = resolve_help_text(
-        "style-performance-arc-live-gui-desktop-render-contract-report"
-    )
-    live_gui_desktop_render_harness_help = resolve_help_text(
-        "style-performance-arc-live-gui-desktop-render-harness-report"
-    )
-    live_gui_cockpit_boundary_readiness_help = resolve_help_text(
-        "style-performance-arc-live-gui-cockpit-boundary-readiness-report"
     )
     cockpit_send_plan_readiness_help = resolve_help_text("cockpit-send-plan-readiness-report")
     cockpit_send_plan_rehearsal_surface_help = resolve_help_text(
@@ -225,25 +186,12 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     assert "style-performance-arc-live-gui-capture-queue-report" in top_level_help
     assert "style-performance-arc-live-gui-capture-review-report" in top_level_help
     assert "style-performance-arc-live-gui-sidecar-session-report" in top_level_help
-    assert "style-performance-arc-live-gui-screen-contract-report" in top_level_help
-    assert "style-performance-arc-live-gui-render-tree-report" in top_level_help
     assert "style-performance-arc-live-gui-analyzer-overlay-report" in top_level_help
     assert "style-performance-arc-live-gui-analyzer-frame-report" in top_level_help
-    assert "style-performance-arc-live-gui-interaction-script-report" in top_level_help
     assert "style-performance-arc-live-gui-action-reducer-report" in top_level_help
     assert "style-performance-arc-live-gui-controller-state-report" in top_level_help
     assert "style-performance-arc-live-gui-playback-transcript-report" in top_level_help
     assert "style-performance-arc-live-gui-playback-validation-report" in top_level_help
-    assert "style-performance-arc-live-gui-test-harness-contract-report" in top_level_help
-    assert "style-performance-arc-live-gui-test-harness-readiness-report" in top_level_help
-    assert "style-performance-arc-live-gui-implementation-bridge-report" in top_level_help
-    assert "style-performance-arc-live-gui-desktop-blueprint-report" in top_level_help
-    assert "style-performance-arc-live-gui-desktop-app-plan-report" in top_level_help
-    assert "style-performance-arc-live-gui-desktop-component-contract-report" in top_level_help
-    assert "style-performance-arc-live-gui-desktop-view-model-report" in top_level_help
-    assert "style-performance-arc-live-gui-desktop-render-contract-report" in top_level_help
-    assert "style-performance-arc-live-gui-desktop-render-harness-report" in top_level_help
-    assert "style-performance-arc-live-gui-cockpit-boundary-readiness-report" in (top_level_help)
     assert "cockpit-send-plan-readiness-report" in top_level_help
     assert "cockpit-send-plan-rehearsal-surface-report" in top_level_help
     assert "cockpit-export-rehearsal-report" in top_level_help
@@ -368,16 +316,6 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     assert "single sidecar-ready GUI state" in live_gui_sidecar_session_help
     assert "no MIDI sending" in live_gui_sidecar_session_help
-    assert live_gui_screen_contract_help.startswith(
-        "RytmRandomizer passive CLI: style-performance-arc-live-gui-screen-contract-report"
-    )
-    assert "GUI screen contract" in live_gui_screen_contract_help
-    assert "no MIDI sending" in live_gui_screen_contract_help
-    assert live_gui_render_tree_help.startswith(
-        "RytmRandomizer passive CLI: style-performance-arc-live-gui-render-tree-report"
-    )
-    assert "GUI render tree" in live_gui_render_tree_help
-    assert "no MIDI sending" in live_gui_render_tree_help
     assert live_gui_analyzer_overlay_help.startswith(
         "RytmRandomizer passive CLI: style-performance-arc-live-gui-analyzer-overlay-report"
     )
@@ -388,11 +326,6 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     assert "analyzer frame" in live_gui_analyzer_frame_help
     assert "no MIDI sending" in live_gui_analyzer_frame_help
-    assert live_gui_interaction_script_help.startswith(
-        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-interaction-script-report"
-    )
-    assert "GUI interaction script" in live_gui_interaction_script_help
-    assert "no MIDI sending" in live_gui_interaction_script_help
     assert live_gui_action_reducer_help.startswith(
         "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-action-reducer-report"
     )
@@ -413,61 +346,6 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     assert "GUI playback validation" in live_gui_playback_validation_help
     assert "no MIDI sending" in live_gui_playback_validation_help
-    assert live_gui_test_harness_contract_help.startswith(
-        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-test-harness-contract-report"
-    )
-    assert "GUI test-harness contract" in live_gui_test_harness_contract_help
-    assert "no MIDI sending" in live_gui_test_harness_contract_help
-    assert live_gui_test_harness_readiness_help.startswith(
-        "RytmRandomizer passive CLI: "
-        "style-performance-arc-live-gui-test-harness-readiness-report"
-    )
-    assert "GUI test-harness readiness" in live_gui_test_harness_readiness_help
-    assert "no MIDI sending" in live_gui_test_harness_readiness_help
-    assert live_gui_implementation_bridge_help.startswith(
-        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-implementation-bridge-report"
-    )
-    assert "GUI implementation bridge" in live_gui_implementation_bridge_help
-    assert "no MIDI sending" in live_gui_implementation_bridge_help
-    assert live_gui_desktop_blueprint_help.startswith(
-        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-desktop-blueprint-report"
-    )
-    assert "desktop GUI blueprint" in live_gui_desktop_blueprint_help
-    assert "no MIDI sending" in live_gui_desktop_blueprint_help
-    assert live_gui_desktop_app_plan_help.startswith(
-        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-desktop-app-plan-report"
-    )
-    assert "desktop app plan" in live_gui_desktop_app_plan_help
-    assert "no MIDI sending" in live_gui_desktop_app_plan_help
-    assert live_gui_desktop_component_contract_help.startswith(
-        "RytmRandomizer passive CLI: "
-        "style-performance-arc-live-gui-desktop-component-contract-report"
-    )
-    assert "desktop component contract" in live_gui_desktop_component_contract_help
-    assert "no MIDI sending" in live_gui_desktop_component_contract_help
-    assert live_gui_desktop_view_model_help.startswith(
-        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-desktop-view-model-report"
-    )
-    assert "desktop view model" in live_gui_desktop_view_model_help
-    assert "no MIDI sending" in live_gui_desktop_view_model_help
-    assert live_gui_desktop_render_contract_help.startswith(
-        "RytmRandomizer passive CLI: "
-        "style-performance-arc-live-gui-desktop-render-contract-report"
-    )
-    assert "desktop render contract" in live_gui_desktop_render_contract_help
-    assert "no MIDI sending" in live_gui_desktop_render_contract_help
-    assert live_gui_desktop_render_harness_help.startswith(
-        "RytmRandomizer passive CLI: "
-        "style-performance-arc-live-gui-desktop-render-harness-report"
-    )
-    assert "GUI desktop render harness" in live_gui_desktop_render_harness_help
-    assert "no MIDI sending" in live_gui_desktop_render_harness_help
-    assert live_gui_cockpit_boundary_readiness_help.startswith(
-        "RytmRandomizer passive CLI: "
-        "style-performance-arc-live-gui-cockpit-boundary-readiness-report"
-    )
-    assert "cockpit boundary readiness" in live_gui_cockpit_boundary_readiness_help
-    assert "no MIDI sending" in live_gui_cockpit_boundary_readiness_help
     assert cockpit_send_plan_readiness_help.startswith(
         "RytmRandomizer passive CLI: cockpit-send-plan-readiness-report"
     )

@@ -1,35 +1,35 @@
-"""Passive live GUI screen contract packet for sidecar rehearsal state."""
+"""Support module for the kept `live_gui_analyzer_overlay` report command.
+
+Relocated VERBATIM from the retired paper-spec module
+``rytm_randomizer/reports/live_gui_screen_contract.py`` (live-GUI paper-spec retirement,
+2026-07-28; maintainer-approved evidence doc:
+``docs/superpowers/plans/2026-07-20-live-gui-retirement-evidence.md``).
+
+Logic, string constants, ids, and CLI usage text are byte-for-byte
+unchanged so the kept analyzer-overlay command's output stays frozen.
+The retired module's CLI registration, text formatter, and standalone
+report command were deliberately NOT carried over.
+"""
 
 from __future__ import annotations
 
 import hashlib
-import json
-import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-from ..cli_registry import CliCommand, register
-from ..data.live_gui_contracts import LIVE_GUI_SCREEN_COMPONENT_SPECS
-from ..style_analysis.feature_report import FeatureReport
-from .dual_machine_style_kit_selection import normalize_selection_scope
-from .formatter import (
-    SAFETY_SECTION_HEADER,
-    PassiveReportHeader,
-    passive_report_lines,
-    powershell_literal_arg,
-)
-from .live_gui_common import format_cli_error as _format_cli_error
-from .live_gui_common import pop_option_value
-from .live_gui_sidecar_session import (
+from ...data.live_gui_contracts import LIVE_GUI_SCREEN_COMPONENT_SPECS
+from ...style_analysis.feature_report import FeatureReport
+from ..dual_machine_style_kit_selection import normalize_selection_scope
+from ..formatter import powershell_literal_arg
+from ..live_gui_common import pop_option_value
+from ..live_gui_sidecar_session import (
     StylePerformanceArcLiveGuiSidecarSessionReport,
     build_style_performance_arc_live_gui_sidecar_session_report,
     to_style_performance_arc_live_gui_sidecar_session_json,
 )
 
-REPORT_TITLE: Final[str] = "RytmRandomizer passive style performance arc live GUI screen contract"
-SOURCE_MODULE: Final[str] = "reports.live_gui_screen_contract"
 GUI_SCREEN_CONTRACT_VERSION: Final[str] = "live-gui-screen-contract-v1"
 SAFETY_LINES: Final[tuple[str, ...]] = (
     "passive/read-only",
@@ -52,10 +52,7 @@ SAFETY_LINES: Final[tuple[str, ...]] = (
     "no hardware mutation",
     "no hardware required",
 )
-_HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
-    title=REPORT_TITLE,
-    source_module=SOURCE_MODULE,
-)
+
 _DEFAULT_CUE_NUMBER: Final[int] = 1
 _DEFAULT_LOOKAHEAD_COUNT: Final[int] = 1
 _DEFAULT_MATCH_LIMIT: Final[int] = 3
@@ -884,106 +881,6 @@ def to_style_performance_arc_live_gui_screen_contract_json(
     }
 
 
-def _action_lines(action: StylePerformanceArcLiveGuiScreenAction) -> list[str]:
-    state = "enabled" if action.enabled else "disabled"
-    return [
-        f"- {action.key} / {action.label}: {action.status} / {state}",
-        f"  Reason: {action.reason}",
-        f"  Action: {action.operator_action}",
-    ]
-
-
-def _alert_lines(alert: StylePerformanceArcLiveGuiScreenAlert) -> list[str]:
-    return [
-        f"- {alert.key} / {alert.label}: {alert.severity}",
-        f"  Message: {alert.message}",
-        f"  Source: {alert.source}",
-    ]
-
-
-def _region_lines(region: StylePerformanceArcLiveGuiScreenRegion) -> list[str]:
-    return [
-        f"- {region.order}. {region.key} / {region.label}: {region.role}",
-        f"  Source: {region.source}",
-        f"  Components: {', '.join(region.component_keys) or 'none'}",
-    ]
-
-
-def _component_lines(component: StylePerformanceArcLiveGuiScreenComponent) -> list[str]:
-    state = "enabled" if component.enabled else "disabled"
-    return [
-        (
-            f"- {component.key} / {component.label}: {component.component_type} / "
-            f"{component.status} / {state}"
-        ),
-        f"  Region: {component.region_key}",
-        f"  Value: {component.value}",
-        f"  Action: {component.operator_action}",
-    ]
-
-
-def _table_row_lines(row: StylePerformanceArcLiveGuiScreenTableRow) -> list[str]:
-    selected = "selected" if row.selected else "available"
-    return [
-        f"- {row.key} / {row.label}: {row.row_type} / {row.status} / {selected}",
-        f"  Cells: {' | '.join(row.cells)}",
-        f"  Action: {row.operator_action}",
-    ]
-
-
-def format_style_performance_arc_live_gui_screen_contract_report(
-    report: StylePerformanceArcLiveGuiScreenContractReport,
-) -> list[str]:
-    """Return deterministic passive live GUI screen contract lines."""
-
-    lines = [
-        "Live GUI screen contract summary:",
-        f"- Screen version: {report.screen_version}",
-        f"- Screen id: {report.screen_id}",
-        f"- Screen label: {report.screen_label}",
-        f"- Screen status: {report.screen_status}",
-        f"- Layout: {report.layout_key}",
-        f"- Viewport: {report.viewport}",
-        f"- Selected arc: {report.selected_arc_key} / {report.selected_arc_name}",
-        f"- Scope: {report.scope}",
-        f"- Sidecar session id: {report.sidecar_session_id}",
-        f"- Capture review id: {report.sidecar_session.capture_review_id}",
-        f"- Current cue: {report.current_cue_label}",
-        f"- Next cues: {', '.join(report.next_cue_labels)}",
-        "Primary passive action:",
-        *_action_lines(report.primary_action),
-        "Screen alerts:",
-    ]
-    if report.alerts:
-        for alert in report.alerts:
-            lines.extend(_alert_lines(alert))
-    else:
-        lines.append("- none")
-    lines.append("Screen regions:")
-    for region in report.regions:
-        lines.extend(_region_lines(region))
-    lines.append("Screen components:")
-    for component in report.components:
-        lines.extend(_component_lines(component))
-    lines.append("Screen table rows:")
-    for row in report.table_rows:
-        lines.extend(_table_row_lines(row))
-    lines.append("Interaction contract:")
-    for component in report.interaction_controls:
-        lines.extend(_component_lines(component))
-    lines.extend(
-        [
-            "Blocked active actions:",
-            *[f"- {action}" for action in report.blocked_actions],
-            "Replayable passive commands:",
-            *[f"- {command}" for command in report.replay_commands],
-            SAFETY_SECTION_HEADER,
-            *[f"- {line}" for line in SAFETY_LINES],
-        ]
-    )
-    return passive_report_lines(_HEADER, lines)
-
-
 def _parse_nonnegative_int(value: str, *, option: str) -> int:
     try:
         parsed = int(value)
@@ -1155,109 +1052,3 @@ def parse_style_performance_arc_live_gui_screen_contract_cli_args(
     """Return parsed CLI args for screen-contract-compatible report commands."""
 
     return _parse_cli_args(argv)
-
-
-def _handle_cli_report(
-    *,
-    description: str | None,
-    audio_path: Path | None,
-    library_path: Path | None,
-    capture_description: str | None,
-    capture_audio_path: Path | None,
-    capture_library_path: Path | None,
-    rytm_sysex_path: Path | None,
-    analog_four_sysex_path: Path | None,
-    scope: str | None,
-    selection_rank: int | None,
-    total_minutes: int | None,
-    segment_minutes: int | None,
-    discovery_start: int | None,
-    discovery_end: int | None,
-    cue_number: int,
-    lookahead_count: int,
-    match_limit: int,
-    take_count: int,
-    slot_key: str,
-    queue_label: str,
-    capture_prefix: str,
-    sidecar_label: str,
-    screen_label: str,
-    layout_key: str,
-    viewport: str,
-    json_output: bool,
-) -> int:
-    try:
-        report = build_style_performance_arc_live_gui_screen_contract_report(
-            description=description,
-            audio_path=audio_path,
-            library_path=library_path,
-            capture_description=capture_description,
-            capture_audio_path=capture_audio_path,
-            capture_library_path=capture_library_path,
-            rytm_sysex_path=rytm_sysex_path,
-            analog_four_sysex_path=analog_four_sysex_path,
-            scope=scope,
-            selection_rank=selection_rank,
-            total_minutes=total_minutes,
-            segment_minutes=segment_minutes,
-            discovery_start=discovery_start,
-            discovery_end=discovery_end,
-            cue_number=cue_number,
-            lookahead_count=lookahead_count,
-            match_limit=match_limit,
-            take_count=take_count,
-            slot_key=slot_key,
-            queue_label=queue_label,
-            capture_prefix=capture_prefix,
-            sidecar_label=sidecar_label,
-            screen_label=screen_label,
-            layout_key=layout_key,
-            viewport=viewport,
-        )
-        if json_output:
-            sys.stdout.write(
-                json.dumps(
-                    to_style_performance_arc_live_gui_screen_contract_json(report),
-                    indent=2,
-                    sort_keys=True,
-                )
-            )
-            sys.stdout.write("\n")
-            return 0
-        lines = format_style_performance_arc_live_gui_screen_contract_report(report)
-    except (OSError, ValueError, RuntimeError, NotImplementedError, TypeError, KeyError) as exc:
-        sys.stderr.write(f"Error: {exc}\n")
-        return 2
-    sys.stdout.write("\n".join(lines))
-    sys.stdout.write("\n")
-    return 0
-
-
-STYLE_PERFORMANCE_ARC_LIVE_GUI_SCREEN_CONTRACT_CLI_COMMAND: Final[CliCommand] = CliCommand(
-    name="style-performance-arc-live-gui-screen-contract-report",
-    summary="Compose passive sidecar state into a deterministic GUI screen contract.",
-    args_parser=_parse_cli_args,
-    handler=_handle_cli_report,
-    error_formatter=_format_cli_error,
-)
-
-register(STYLE_PERFORMANCE_ARC_LIVE_GUI_SCREEN_CONTRACT_CLI_COMMAND)
-
-__all__ = [
-    "GUI_SCREEN_CONTRACT_VERSION",
-    "REPORT_TITLE",
-    "SAFETY_LINES",
-    "SOURCE_MODULE",
-    "STYLE_PERFORMANCE_ARC_LIVE_GUI_SCREEN_CONTRACT_CLI_COMMAND",
-    "StylePerformanceArcLiveGuiScreenAction",
-    "StylePerformanceArcLiveGuiScreenAlert",
-    "StylePerformanceArcLiveGuiScreenComponent",
-    "StylePerformanceArcLiveGuiScreenContractReport",
-    "StylePerformanceArcLiveGuiScreenRegion",
-    "StylePerformanceArcLiveGuiScreenTableRow",
-    "build_style_performance_arc_live_gui_screen_contract_from_sidecar_session",
-    "build_style_performance_arc_live_gui_screen_contract_report",
-    "format_style_performance_arc_live_gui_screen_contract_report",
-    "parse_style_performance_arc_live_gui_screen_contract_cli_args",
-    "to_style_performance_arc_live_gui_screen_contract_json",
-]

@@ -55,7 +55,7 @@ def _feature_report(
 
 def _interaction_script(tmp_path: Path):
     from conftest import dual_machine_reference_bank_files
-    from rytm_randomizer.reports.live_gui_interaction_script import (
+    from rytm_randomizer.reports.live_gui_action_reducer import (
         build_style_performance_arc_live_gui_interaction_script_report,
     )
 
@@ -173,8 +173,6 @@ def test_live_gui_action_reducer_builds_transitions_from_interaction_script(
 def test_live_gui_action_reducer_status_and_replay_fallback_edges(tmp_path: Path):
     from rytm_randomizer.reports.live_gui_action_reducer import (
         build_style_performance_arc_live_gui_action_reducer_from_interaction_script,
-    )
-    from rytm_randomizer.reports.live_gui_interaction_script import (
         build_style_performance_arc_live_gui_interaction_script_from_frame,
     )
 

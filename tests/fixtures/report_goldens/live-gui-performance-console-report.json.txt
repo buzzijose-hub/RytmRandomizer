@@ -5992,9 +5992,7 @@
         }
       ],
       "passed_count": 4,
-      "replay_commands": [
-        "python -m rytm_randomizer.cli live-gui-safety-checklist-model-report --session-label 'Live Session'"
-      ],
+      "replay_commands": [],
       "safety_checklist_id": "a375de5cc9657775",
       "safety_checklist_version": "live-gui-safety-checklist-model-v1",
       "session_label": "Live Session",

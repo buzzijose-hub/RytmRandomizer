@@ -1,26 +1,28 @@
-"""Passive live GUI render-tree packet for screen-contract rehearsal state."""
+"""Support module for the kept `live_gui_analyzer_overlay` report command.
+
+Relocated VERBATIM from the retired paper-spec module
+``rytm_randomizer/reports/live_gui_render_tree.py`` (live-GUI paper-spec retirement,
+2026-07-28; maintainer-approved evidence doc:
+``docs/superpowers/plans/2026-07-20-live-gui-retirement-evidence.md``).
+
+Logic, string constants, ids, and CLI usage text are byte-for-byte
+unchanged so the kept analyzer-overlay command's output stays frozen.
+The retired module's CLI registration, text formatter, and standalone
+report command were deliberately NOT carried over.
+"""
 
 from __future__ import annotations
 
 import hashlib
-import json
-import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-from ..cli_registry import CliCommand, register
-from ..style_analysis.feature_report import FeatureReport
-from .formatter import (
-    SAFETY_SECTION_HEADER,
-    PassiveReportHeader,
-    passive_report_lines,
-    powershell_literal_arg,
-)
-from .live_gui_common import format_cli_error as _format_cli_error
-from .live_gui_common import pop_option_value
-from .live_gui_screen_contract import (
+from ...style_analysis.feature_report import FeatureReport
+from ..formatter import powershell_literal_arg
+from ..live_gui_common import pop_option_value
+from .screen_contract import (
     StylePerformanceArcLiveGuiScreenAlert,
     StylePerformanceArcLiveGuiScreenComponent,
     StylePerformanceArcLiveGuiScreenContractReport,
@@ -31,8 +33,6 @@ from .live_gui_screen_contract import (
     to_style_performance_arc_live_gui_screen_contract_json,
 )
 
-REPORT_TITLE: Final[str] = "RytmRandomizer passive style performance arc live GUI render tree"
-SOURCE_MODULE: Final[str] = "reports.live_gui_render_tree"
 RENDER_TREE_VERSION: Final[str] = "live-gui-render-tree-v1"
 SAFETY_LINES: Final[tuple[str, ...]] = (
     "passive/read-only",
@@ -55,10 +55,7 @@ SAFETY_LINES: Final[tuple[str, ...]] = (
     "no hardware mutation",
     "no hardware required",
 )
-_HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
-    title=REPORT_TITLE,
-    source_module=SOURCE_MODULE,
-)
+
 _DEFAULT_RENDER_TARGET: Final[str] = "desktop-sidecar"
 _DEFAULT_DENSITY: Final[str] = "standard"
 _RENDER_TARGETS: Final[tuple[str, ...]] = (
@@ -748,66 +745,6 @@ def to_style_performance_arc_live_gui_render_tree_json(
     }
 
 
-def _node_lines(node: StylePerformanceArcLiveGuiRenderNode) -> list[str]:
-    state = "enabled" if node.enabled else "disabled"
-    parent = node.parent_key or "none"
-    return [
-        f"- {node.key} / {node.label}: {node.node_type} / {node.status} / {state}",
-        f"  Parent: {parent}",
-        f"  Role: {node.role}",
-        f"  Test id: {node.test_id}",
-        f"  Style tokens: {', '.join(node.style_tokens) or 'none'}",
-        f"  Bindings: {', '.join(node.binding_keys) or 'none'}",
-        f"  Children: {', '.join(node.child_keys) or 'none'}",
-        f"  Action: {node.operator_action}",
-    ]
-
-
-def _binding_lines(binding: StylePerformanceArcLiveGuiRenderBinding) -> list[str]:
-    return [
-        f"- {binding.key}: {binding.source} -> {binding.target_node_key}",
-        f"  Value: {binding.value}",
-        f"  Action: {binding.operator_action}",
-    ]
-
-
-def format_style_performance_arc_live_gui_render_tree_report(
-    report: StylePerformanceArcLiveGuiRenderTreeReport,
-) -> list[str]:
-    """Return deterministic passive live GUI render-tree lines."""
-
-    lines = [
-        "Live GUI render tree summary:",
-        f"- Render tree version: {report.render_tree_version}",
-        f"- Render tree id: {report.render_tree_id}",
-        f"- Render target: {report.render_target}",
-        f"- Density: {report.density}",
-        f"- Render status: {report.render_status}",
-        f"- Screen contract id: {report.screen_contract_id}",
-        f"- Selected arc: {report.selected_arc_key} / {report.selected_arc_name}",
-        f"- Scope: {report.scope}",
-        "Root node:",
-        *_node_lines(report.root_node),
-        "Render nodes:",
-    ]
-    for node in report.nodes:
-        lines.extend(_node_lines(node))
-    lines.append("Render bindings:")
-    for binding in report.bindings:
-        lines.extend(_binding_lines(binding))
-    lines.extend(
-        [
-            "Blocked active actions:",
-            *[f"- {action}" for action in report.blocked_actions],
-            "Replayable passive commands:",
-            *[f"- {command}" for command in report.replay_commands],
-            SAFETY_SECTION_HEADER,
-            *[f"- {line}" for line in SAFETY_LINES],
-        ]
-    )
-    return passive_report_lines(_HEADER, lines)
-
-
 def _pop_option_value(remaining: list[str]) -> str:
     return pop_option_value(remaining, usage=_USAGE)
 
@@ -839,110 +776,3 @@ def parse_style_performance_arc_live_gui_render_tree_cli_args(
     """Return parsed CLI args for render-tree-compatible report commands."""
 
     return _parse_cli_args(argv)
-
-
-def _handle_cli_report(
-    *,
-    description: str | None,
-    audio_path: Path | None,
-    library_path: Path | None,
-    capture_description: str | None,
-    capture_audio_path: Path | None,
-    capture_library_path: Path | None,
-    rytm_sysex_path: Path | None,
-    analog_four_sysex_path: Path | None,
-    scope: str | None,
-    selection_rank: int | None,
-    total_minutes: int | None,
-    segment_minutes: int | None,
-    discovery_start: int | None,
-    discovery_end: int | None,
-    cue_number: int,
-    lookahead_count: int,
-    match_limit: int,
-    take_count: int,
-    slot_key: str,
-    queue_label: str,
-    capture_prefix: str,
-    sidecar_label: str,
-    screen_label: str,
-    layout_key: str,
-    viewport: str,
-    render_target: str,
-    density: str,
-    json_output: bool,
-) -> int:
-    try:
-        report = build_style_performance_arc_live_gui_render_tree_report(
-            description=description,
-            audio_path=audio_path,
-            library_path=library_path,
-            capture_description=capture_description,
-            capture_audio_path=capture_audio_path,
-            capture_library_path=capture_library_path,
-            rytm_sysex_path=rytm_sysex_path,
-            analog_four_sysex_path=analog_four_sysex_path,
-            scope=scope,
-            selection_rank=selection_rank,
-            total_minutes=total_minutes,
-            segment_minutes=segment_minutes,
-            discovery_start=discovery_start,
-            discovery_end=discovery_end,
-            cue_number=cue_number,
-            lookahead_count=lookahead_count,
-            match_limit=match_limit,
-            take_count=take_count,
-            slot_key=slot_key,
-            queue_label=queue_label,
-            capture_prefix=capture_prefix,
-            sidecar_label=sidecar_label,
-            screen_label=screen_label,
-            layout_key=layout_key,
-            viewport=viewport,
-            render_target=render_target,
-            density=density,
-        )
-        if json_output:
-            sys.stdout.write(
-                json.dumps(
-                    to_style_performance_arc_live_gui_render_tree_json(report),
-                    indent=2,
-                    sort_keys=True,
-                )
-            )
-            sys.stdout.write("\n")
-            return 0
-        lines = format_style_performance_arc_live_gui_render_tree_report(report)
-    except (OSError, ValueError, RuntimeError, NotImplementedError, TypeError, KeyError) as exc:
-        sys.stderr.write(f"Error: {exc}\n")
-        return 2
-    for line in lines:
-        sys.stdout.write(f"{line}\n")
-    return 0
-
-
-STYLE_PERFORMANCE_ARC_LIVE_GUI_RENDER_TREE_CLI_COMMAND: Final[CliCommand] = CliCommand(
-    name="style-performance-arc-live-gui-render-tree-report",
-    summary="Compose passive screen contract into a deterministic GUI render tree.",
-    args_parser=_parse_cli_args,
-    handler=_handle_cli_report,
-    error_formatter=_format_cli_error,
-)
-
-register(STYLE_PERFORMANCE_ARC_LIVE_GUI_RENDER_TREE_CLI_COMMAND)
-
-__all__ = [
-    "RENDER_TREE_VERSION",
-    "REPORT_TITLE",
-    "SAFETY_LINES",
-    "SOURCE_MODULE",
-    "STYLE_PERFORMANCE_ARC_LIVE_GUI_RENDER_TREE_CLI_COMMAND",
-    "StylePerformanceArcLiveGuiRenderBinding",
-    "StylePerformanceArcLiveGuiRenderNode",
-    "StylePerformanceArcLiveGuiRenderTreeReport",
-    "build_style_performance_arc_live_gui_render_tree_from_screen_contract",
-    "build_style_performance_arc_live_gui_render_tree_report",
-    "format_style_performance_arc_live_gui_render_tree_report",
-    "parse_style_performance_arc_live_gui_render_tree_cli_args",
-    "to_style_performance_arc_live_gui_render_tree_json",
-]

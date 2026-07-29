@@ -1,9 +1,28 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-07-16. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-07-28. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-07-28: Live-GUI paper-spec retirement executed (maintainer-approved
+  Decision Gate ③; evidence + execution record in
+  `docs/superpowers/plans/2026-07-20-live-gui-retirement-evidence.md`). 18
+  passive paper-spec report modules were deleted — the 12 approved `live_gui_*`
+  desktop/harness specs, the 2 `controller_brain_live_desktop_*` re-stamps, and
+  4 audit-passed widening candidates (`live_gui_cockpit_boundary_readiness` +
+  the remaining `controller_brain_live_desktop_{component_contract,view_model,
+  render_contract}` chain) — together with their 18 test files, CLI/help
+  registrations, `docs/CLI_REFERENCE.md` rows, and the never-registered
+  `live-gui-safety-checklist-model-report` replay wiring (module kept). The two
+  kept pinning commands stay byte-frozen: `…analyzer-overlay-report` now sources
+  its screen-contract/render-tree builders from the verbatim-relocated
+  `reports/live_gui_overlay/` support subpackage, and `…action-reducer-report`
+  carries the interaction-script builders inlined verbatim; frozen-clock CLI
+  runs verified byte-identical output across text/JSON/option/error paths.
+  Net effect: 50 files deleted, ~46,300 lines removed vs ~6,800 retained
+  (relocated builders + regenerated fixtures); every `live_gui_*_model` packet
+  feeder, `live_gui_common`, and the performance-console runtime path are
+  untouched.
 - 2026-07-08: Passive local model copilot bundle prepared locally. The new
   `local-model-copilot-report` command builds deterministic docs/MIDI,
   staged mutation-intent, and Analog Four patch co-designer packets, and only

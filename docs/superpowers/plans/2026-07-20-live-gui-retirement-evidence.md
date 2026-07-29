@@ -4,9 +4,10 @@
 **Branch:** `rival-program` (HEAD `4e87d02`)
 **Scope:** the 12 `live_gui_*` paper-spec report modules + the 2 controller-brain
 re-stamps + the dead replay-command wiring in `live_gui_safety_checklist_model.py`.
-> Status: in-flight
-> Evidence only — no deletions in this change. The orchestrator executes the
-> retirement checklist after review.
+> Status: in-flight (retirement executed on `rival-program` 2026-07-28 — see
+> §7 for the execution record; flip to `shipped (PR #N)` when the bundle PR
+> merges). Originally evidence-only; the maintainer-approved retirement
+> (Decision Gate ③, 2026-07-22) authorized the execution.
 
 The 12-module list was confirmed against `ls rytm_randomizer/reports/live_gui_*.py`
 (38 files), excluding the `live_gui_*_model.py` data modules and the
@@ -413,3 +414,99 @@ If only the clean in-set retirements were executed *without* breaking imports
 ①-④, **zero** modules could be removed — every candidate is transitively pinned
 by one of the four kept-module imports. The entire payoff hinges on those four
 import breaks (or on widening the retire set per §1's recommendation).
+
+---
+
+## 7. Execution record (2026-07-28, branch `rival-program`)
+
+> Status of this doc: executed. Maintainer approval on record (2026-07-22,
+> Decision Gate ③): the full enumerated list was approved, with the 4
+> widening candidates to be audited under the same rubric and auto-included
+> on PASS.
+
+### 7.1 Widening-audit verdicts (all four PASS → joined the retire set)
+
+| Candidate | Verdict | Evidence |
+|---|---|---|
+| `live_gui_cockpit_boundary_readiness.py` (968 LOC) | **PASS — retired** | Paper "readiness" spec for the cockpit boundary that shipped: the real boundary is `rytm_randomizer/cockpit/ws/handlers.py` serving `live_gui_performance_console_model_payload()` over WebSocket to the React cockpit (`desktop/web/src/ws/client.ts` → `Cockpit.tsx`), with arming kept behind `python -m rytm_randomizer.app --arm`. Non-self consumers: none — only its cli.py/help_text.py registration, its own test file, and arch-test census entries (verified by repo-wide grep). Deleting it made break ① free (its import was the single pin on the 10-module desktop chain). |
+| `controller_brain_live_desktop_component_contract.py` (864 LOC) | **PASS — retired** | Same re-stamp shape as §2.3, one abstraction level over ("Passive desktop component-contract metadata for **future** controller-brain Cockpit work" — that work shipped as the 20 cockpit components under `desktop/web/src/cockpit/` + `desktop/web/tests/cockpit/*.test.tsx`). Only non-self consumer: `controller_brain_live_desktop_view_model.py` (in this candidate set). |
+| `controller_brain_live_desktop_view_model.py` (805 LOC) | **PASS — retired** | Supersession per §2.4: the real view model is `desktop/web/src/state/store.ts` fed by `live_gui_protocol.ts` dicts. Only non-self consumer: `controller_brain_live_desktop_render_contract.py` (in this candidate set). |
+| `controller_brain_live_desktop_render_contract.py` (819 LOC) | **PASS — retired** | Supersession per §2.5: render-contract fields realized as the `LiveGui*Dict` interfaces in `desktop/web/src/types/live_gui_protocol.ts`, mechanically pinned to the Python TypedDicts. Non-self consumers: none. |
+
+With ① and ④ freed by the audit, only breaks ② and ③ required code motion.
+
+### 7.2 How breaks ② and ③ were executed (byte-frozen kept commands)
+
+The kept commands embed the full upstream packet, so "drop the section"
+(option a) was ruled out by the byte-frozen goldens. Executed as verbatim
+relocation/inlining of the builder machinery (dataclasses, packet builders,
+JSON renderers, CLI arg parsers, usage/id/version constants), dropping only
+each retired module's CLI registration, text formatter, and `__all__`:
+
+- **② `live_gui_analyzer_overlay` → `live_gui_render_tree` (+ transitively
+  `live_gui_screen_contract`):** builders relocated verbatim (no renames) to
+  the new support subpackage `rytm_randomizer/reports/live_gui_overlay/`
+  (`screen_contract.py` 1054 LOC, `render_tree.py` 778 LOC — both under the
+  1,500-LOC reports comprehensibility cap; a single-file inline was rejected
+  by `tests/architecture/test_reports_max_module_size.py` at 2,630 LOC).
+  `live_gui_analyzer_overlay.py` is otherwise byte-identical to its previous
+  version except the import source.
+- **③ `live_gui_action_reducer` → `live_gui_interaction_script`:** the needed
+  interaction-script machinery was inlined verbatim into
+  `live_gui_action_reducer.py` (now 1,291 LOC, under the cap), with colliding
+  private helpers carrying an `_interaction_script` prefix and the
+  byte-identical shared `_normalize_nonblank` / `_test_id` helpers kept once.
+  `action_reducer` now imports the (kept) `live_gui_analyzer_frame` builders
+  directly.
+
+**Byte-identity verification:** with `style_analysis` clocks frozen (the
+`FeatureReport.derived_at` timestamp is second-precision wall clock), the
+pre/post outputs of `…analyzer-overlay-report`, `…action-reducer-report`,
+`…analyzer-frame-report`, and `…controller-state-report` were captured across
+14 invocations (text, JSON, option-heavy incl. `--render-target/--density/
+--viewport/--scope/--labels`, and 6 error paths incl. invalid render-target/
+density/viewport, blank label, and bad-usage) — all byte-identical, including
+the retired upstream `_USAGE` strings and replay-command text that the frozen
+outputs embed.
+
+### 7.3 Deleted set (50 files)
+
+18 report modules: the 12 §1 live_gui paper specs, `live_gui_cockpit_boundary_readiness`,
+`controller_brain_live_desktop_{blueprint,app_plan,component_contract,view_model,render_contract}`.
+18 test files (one per module). 10 controller-brain-desktop report goldens.
+4 orphaned data-layer dump fixtures (`LIVE_GUI_DESKTOP_{VIEWPORT,REGION,MOUNT_REGION,APP_STYLE_TOKEN}_SPECS.json`).
+
+Unwired in place: 18 cli.py lazy-table entries, 18 help_text.py help
+functions + registrations + 18 top-level USAGE segments + 18 `--help` usage
+lines, 32 `docs/CLI_REFERENCE.md` lines, the retired commands' entries in
+`tests/test_cli.py` (12 readme-mention tests + USAGE literal),
+`tests/test_cli_coverage.py` (65 statements), and
+`tests/test_real_midi_passive_cli_safety.py` (26 invocation tuples).
+`data/live_gui_contracts.py` kept only `LIVE_GUI_SCREEN_COMPONENT_SPECS`
+(still consumed by the relocated screen-contract builder); the four desktop
+spec tables and their dataclasses were deleted with their `data/__init__.py`
+re-exports and test.
+
+Dead wiring (§3): `_safety_checklist_replay_command()` removed from
+`live_gui_safety_checklist_model.py`; the packet now ships
+`replay_commands=()`. Regenerated nets confirmed the only kept-golden delta
+is exactly that removal (`live-gui-performance-console-report.json.txt` and
+`desktop/web/tests/cockpit/fixtures/performance_console.json`, three lines
+each); `desktop/web/src/types/live_gui_protocol.ts` regenerated identical.
+
+Arch-test allowlists: 64 census lines pruned from
+`test_report_module_shape.py`; `_GRANDFATHERED_DUPLICATE_NAMES` in
+`test_abstraction_reuse.py` updated per the test's own prescriptions (31
+entries removed outright, 21 rewritten to the surviving duplicate sets, then
+13 rewritten again for the subpackage paths); no new allowlist names added.
+
+### 7.4 Gates
+
+- `tests/architecture/` — 673 passed.
+- Affected test modules (cli, cli_coverage, passive-safety, report goldens,
+  data layer, safety-checklist, performance-console, analyzer-overlay,
+  action-reducer, analyzer-frame, controller-state) — 516 passed.
+- Full suite + ruff/black/isort — see the bundle PR gate log.
+
+Net diff (excluding pre-existing CRLF churn on untouched files):
+78 files changed, ~+6,800 / −46,300 lines; 50 files deleted.

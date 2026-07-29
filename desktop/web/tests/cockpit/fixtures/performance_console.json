@@ -6406,9 +6406,7 @@
         "mutate hardware from safety checklist",
         "launch GUI from safety checklist"
       ],
-      "replay_commands": [
-        "python -m rytm_randomizer.cli live-gui-safety-checklist-model-report --session-label 'Live Session'"
-      ]
+      "replay_commands": []
     },
     "blocked_actions": [
       "a4_outbound_macro_send",
