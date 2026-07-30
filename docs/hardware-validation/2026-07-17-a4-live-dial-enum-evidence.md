@@ -139,4 +139,6 @@ acoustic ranking remain separate pending work.
 - This evidence does not authorize any additional saved-kit SysEx field.
 - Saved-kit export remains limited to Filter2 Resonance.
 - It does not claim every possible A4 destination enum is known.
+- LFO2 Mode is absent from the current candidate and remains manual because no
+  independent physical ordinal evidence has been recorded for it.
 - It does not claim Synthplant-equivalent acoustic accuracy.

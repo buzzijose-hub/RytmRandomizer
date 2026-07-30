@@ -3,9 +3,9 @@
 > Status: in-flight
 
 Closeout hardening, touched-file coverage, parity, typing, lint, and mechanical
-review are verified. Follow-up publication and online state are tracked on
-PR #214. The final routed subset passed physical review; fresh approval remains
-pending.
+review are verified. Branch publication is complete; online CI and reviewer
+state are tracked on PR #214. The final routed subset passed physical review;
+fresh approval remains pending.
 
 ## Resume This Run
 
@@ -102,10 +102,11 @@ recordings are available.
 - Architecture: 705 passed.
 - Exact corrected-tree full suite: 6,841 passed, 3 skipped.
 - Ruff, Black, isort: clean.
-- Touched-file coverage: 100% across 7,912 statements and 1,898 branches.
+- Touched-file coverage: 100% across 7,911 statements and 1,898 branches.
 - V1.34 parity: 685 passed; Vulture, strict Pyright across all 63 touched
   production modules, `git diff --check`, and the mechanical review gate
   passed.
 - Dynamic test-harness typing remains the accepted scoped Gate 3 debt;
   production typing remains clean and mandatory.
-- Follow-up publication and online reviewer status are recorded on PR #214.
+- Branch publication is complete; online reviewer status is recorded on PR
+  #214.

@@ -33,8 +33,8 @@ strict-production-Pyright/mechanical-review set is clean. Dynamic test-harness t
 remains the accepted scoped Gate 3 debt; all 63 touched production modules pass
 strict Pyright.
 Touched production files reached 100% statement and branch coverage across
-7,912 statements and 1,898 branches. Follow-up publication, online checks, and
-the fresh reviewer verdict are tracked on PR #214.
+7,911 statements and 1,898 branches. Branch publication is complete; online
+checks and the fresh reviewer verdict are tracked on PR #214.
 
 The largest residual constraints are explicit: generated saved-kit SysEx writes
 only Filter2 Resonance until additional A4 parameters complete the same

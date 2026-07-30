@@ -3,9 +3,9 @@
 > Status: in-flight
 >
 > Verdict: Edward Rosado's 2026-07-28 changes-requested review is addressed in
-> code and policy. Exact-tree local verification is complete; follow-up
-> publication and online state are tracked on PR #214. The physical gate is
-> complete for the final 26-row routed subset; fresh approval remains pending.
+> code and policy. Exact-tree local verification and branch publication are
+> complete. Online state is tracked on PR #214; the physical gate is complete
+> for the final 26-row routed subset, and fresh approval remains pending.
 
 ## Findings Resolved
 
@@ -61,7 +61,7 @@
 - Architecture: **705 passed**.
 - Exact corrected-tree full-suite run: **6,841 passed, 3 skipped**.
 - Ruff, Black, isort: **clean**.
-- Touched-file statement/branch coverage: **100%** across **7,912 statements**
+- Touched-file statement/branch coverage: **100%** across **7,911 statements**
   and **1,898 branches**, zero misses.
 - V1.34 parity: **685 passed** byte-for-byte.
 - Vulture confidence 80, strict Pyright across all 63 touched production
@@ -69,7 +69,8 @@
 - Dynamic test-harness typing remains the accepted scoped Gate 3 debt. The
   clean 63-module strict production baseline is reproducible through
   `just typecheck` and `pyrightconfig.strict.json`.
-- Follow-up publication, online CI, and reviewer status are tracked on PR #214.
+- Branch publication is complete; online CI and reviewer status are tracked on
+  PR #214.
 
 ## Abstraction
 

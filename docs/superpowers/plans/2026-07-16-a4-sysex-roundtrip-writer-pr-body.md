@@ -3,9 +3,9 @@
 Turn the first hardware-validated Analog Four MKII saved-kit calibration into a guarded writer and connect it to real audio-dependent, four-candidate batch generation. The complete DNA remains available in sidecars while saved-kit SysEx stays honestly limited to Filter2 Resonance.
 
 Closeout status: fresh focused, architecture, full-suite, touched-file
-coverage, parity, lint, typing, dead-code, mechanical-review, and branch
-publication state are recorded below. Fresh online CI and the fresh reviewer
-verdict remain pending and are not inferred from an earlier tree.
+coverage, parity, lint, typing, dead-code, and mechanical-review results are
+recorded below. Branch publication is complete; fresh online CI and the fresh
+reviewer verdict remain pending and are not inferred from an earlier tree.
 
 ## What changed
 
@@ -98,7 +98,7 @@ git diff --check
 - [x] Repair-focused A4/operator regression suite: 454 passed.
 - [x] Exact corrected-tree full repository suite: 6,841 passed, 3 skipped.
 - [x] Architecture suite: 705 passed.
-- [x] Touched-file statement/branch coverage: 100% across 7,912 statements and 1,898 branches, zero misses.
+- [x] Touched-file statement/branch coverage: 100% across 7,911 statements and 1,898 branches, zero misses.
 - [x] Fresh final-tree V1.34 parity: 685 passed byte-for-byte.
 - [x] Vulture confidence 80, the pinned reproducible `just typecheck` strict-production gate across all 63 touched production modules, and the mechanical review gate passed.
 - [x] CODEOWNER decision: dynamic test-harness typing remains accepted as scoped cleanup debt for PR #214; production typing is not waived.
@@ -108,7 +108,7 @@ git diff --check
 - [x] Native decoder abnormal-exit path is process-contained and parent-owned private staging is removed.
 - [x] Audio genome, learning, send-plan, and batch surfaces retain deterministic source/parameter identity when native analysis succeeds.
 - [x] Corrected batch generation matched twice: fixture generation `435bb3263fc336de1eaf44aad2ec9eda`, manifest SHA-256 `1214b278d085efffd1f78ec7e14a321fc4a0beaa131a37501f5b2e9cfd387970`, and 34-message transport SHA-256 `9242c70b5439df2f2db0a7a28773e56570cb12a85eaccd04ab24a663160bdbe7`.
-- [x] This follow-up tree carries fresh local evidence; publication and online state are tracked on PR #214.
+- [x] This follow-up tree carries fresh local evidence and branch publication is complete; online state is tracked on PR #214.
 - [ ] Fresh online CI and fresh reviewer verdict: pending.
 
 Hardware validation:
@@ -121,12 +121,14 @@ Hardware validation:
 - [x] The corrected 27-row/37-message physical rehearsal verified all 26
   mappings retained by final policy, disproved LFO1 Mode, and ended with a
   confirmed clean-kit reload without saving. Thirteen rows remain manual.
+- [x] LFO2 Mode is outside the current candidate and remains non-transmitting
+  until an independent physical ordinal calibration is recorded.
 
 ## Plan-requirements conformance
 
 Per [`docs/PLAN_REQUIREMENTS.md`](https://github.com/buzzijose-hub/RytmRandomizer/blob/modularize-v1.34/docs/PLAN_REQUIREMENTS.md), every non-trivial PR must satisfy all 18 gates.
 
-- [x] **Gate 1** — touched production files have 100% statement/branch coverage (7,912 statements / 1,898 branches).
+- [x] **Gate 1** — touched production files have 100% statement/branch coverage (7,911 statements / 1,898 branches).
 - [x] **Gate 2** — 685 V1.34 parity items passed byte-for-byte.
 - [x] **Gate 3** — Ruff, Black, and isort pass. Pinned strict Pyright 1.1.407 passes reproducibly across all 63 touched production modules via `just typecheck`. The CODEOWNER accepts dynamic test-harness typing as scoped cleanup debt for PR #214; production typing is not waived.
 - [x] **Gate 4** — Vulture confidence 80 passed across production and tests.

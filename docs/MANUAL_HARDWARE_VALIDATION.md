@@ -556,6 +556,8 @@ Corrected pre-merge rehearsal record:
 - Final verdict: physical semantic acceptance passed for every mapping retained
   in the 26-row routed subset. Fresh software gates, online CI, and reviewer
   approval remain separate merge requirements.
+- LFO2 Mode is not part of this candidate and remains manual until an
+  independent physical ordinal calibration is recorded.
 
 `python -m rytm_randomizer.app --arm` is the sole real MIDI boundary. The batch
 generator, saved-kit file writer, ranker, passive reports, and local-model

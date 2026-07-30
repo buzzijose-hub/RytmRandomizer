@@ -3,9 +3,8 @@
 > Status: in-flight
 >
 > Local closeout is verified, and the Gate 3/14/16 policy decisions are
-> accepted. Follow-up branch publication and online state are tracked on
-> PR #214; fresh approval and the supervised full-plan hardware rehearsal
-> remain pending.
+> accepted. The supervised full-plan hardware gate and branch publication are
+> complete; online CI and fresh approval are tracked on PR #214.
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:test-driven-development. This plan is structured for one bundled PR with maximum-parallelization sidecar exploration and no stacked PRs, per docs/PLAN_REQUIREMENTS.md Gate 16.
 
 **Goal:** Add a Synplant-inspired audio/description-to-Analog-Four patch genome and a real audio-dependent batch path whose canonical/default invocation produces exactly four deterministic A4 patch candidates, complete DNA sidecars, CC/NRPN live-dial plans, and narrow hardware-validated saved-kit files for Filter2 Resonance.
@@ -143,19 +142,19 @@ remain independent and parallel.
 - Architecture suite: **705 passed**.
 - Exact corrected-tree full-suite run: **6,841 passed, 3 skipped**.
 - Ruff, Black, and isort: **clean**.
-- Touched-file statement/branch coverage: **100%** across **7,912 statements**
+- Touched-file statement/branch coverage: **100%** across **7,911 statements**
   and **1,898 branches**, zero misses.
 - V1.34 parity: **685 passed** byte-for-byte.
 - Vulture, strict production-diff Pyright, `git diff --check`, and the mechanical
   review gate: **passed**.
-- Follow-up branch publication, online CI, and reviewer state are tracked on
+- Branch publication is complete; online CI and reviewer state are tracked on
   PR #214.
 
 ## Plan-Requirements Conformance
 
 Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 
-- [x] Gate 1 (100% branch coverage on touched files) -- 7,912 statements and 1,898 branches, zero misses.
+- [x] Gate 1 (100% branch coverage on touched files) -- 7,911 statements and 1,898 branches, zero misses.
 - [x] Gate 2 (V1.34 parity byte-identical) -- 685 items passed.
 - [x] Gate 3 (lint/format/type clean) -- Ruff, Black, isort, and strict
   Pyright across all 63 touched production modules pass. Dynamic test-harness

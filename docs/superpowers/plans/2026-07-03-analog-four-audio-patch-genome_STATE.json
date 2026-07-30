@@ -15,5 +15,5 @@
     "learning_capture": "complete",
     "final_gates": "complete"
   },
-  "last_event": "Two supervised 2026-07-29 rehearsals completed transport. The corrected 27-row / 37-message pass verified every one of the 26 mappings retained by final policy and showed LFO1 Mode remained FREE instead of TRG; both passes ended with a reload without saving. The final 26-row / 34-message policy passed passive replay, 454 focused tests, 705 architecture tests, 6,841 full-suite tests with 3 skipped, 685 parity checks, strict typing, lint, mechanical review, and 100% touched-file coverage. Publication, online CI, and reviewer approval remain pending."
+  "last_event": "Two supervised 2026-07-29 rehearsals completed transport. The corrected 27-row / 37-message pass verified every one of the 26 mappings retained by final policy and showed LFO1 Mode remained FREE instead of TRG; both passes ended with a reload without saving. LFO2 Mode is outside the candidate and remains non-transmitting without independent physical evidence. The final 26-row / 34-message policy passed passive replay, 454 focused tests, 705 architecture tests, 6,841 full-suite tests with 3 skipped, 685 parity checks, strict typing, lint, mechanical review, and 100% touched-file coverage. Branch publication is complete; online CI and reviewer approval remain pending."
 }

@@ -163,14 +163,14 @@ def test_lfo2_multiplier_keeps_its_independently_verified_x1_label() -> None:
     assert value.transport_status == "cc-ready"
 
 
-def test_lfo2_mode_keeps_its_independent_trg_label() -> None:
+def test_lfo2_mode_remains_manual_without_independent_hardware_evidence() -> None:
     from rytm_randomizer.data.analog_four_display import make_a4_patch_value
 
     value = make_a4_patch_value("LFO2 Mode", screen_target=0)
 
-    assert value.screen_value == "TRG"
-    assert value.midi_value == 0
-    assert value.transport_status == "nrpn-ready"
+    assert value.screen_value == "0"
+    assert value.midi_value is None
+    assert value.transport_status == "screen-only-nrpn"
 
 
 @pytest.mark.parametrize(

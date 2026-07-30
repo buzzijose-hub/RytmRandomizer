@@ -3,9 +3,9 @@
 > Status: in-flight
 >
 > Closeout corrections, mechanical gates, and strict production typing are
-> verified, and the Gate 3/14/16 policy decisions are accepted. Follow-up
-> publication and online state are tracked on PR #214; fresh approval and the
-> supervised physical rehearsal remain pending.
+> verified, and the Gate 3/14/16 policy decisions are accepted. The supervised
+> physical gate and branch publication are complete; online CI and fresh
+> approval are tracked on PR #214.
 
 ## Outcome
 
@@ -39,6 +39,7 @@ every stored event is revalidated against current transport policy first.
 | 2026-07-29 | The supervised former 33-row / 53-message plan completed transport but disproved six enum ordinals; the initialized kit was reloaded without saving and those rows were demoted, leaving 27 rows / 37 messages. |
 | 2026-07-29 | Post-rehearsal review added current-policy validation for stored manifests, explicit partial-transport telemetry, raw enum-label regression pins, and synchronized learning/recovery artifacts. The exact tree passed 461 repair-focused tests, 6,838 full-suite tests / 3 skipped, and 100% coverage across 7,911 statements / 1,898 branches. |
 | 2026-07-29 | The corrected 27-row / 37-message rehearsal verified all 26 mappings retained by final policy and disproved LFO1 Mode, which remained `FREE` instead of `TRG`. The initialized kit was reloaded without saving. The final 26-row / 34-message policy passed a 34-message mock replay, 454 focused tests, 705 architecture tests, 6,841 full-suite tests / 3 skipped, 685 parity checks, and 100% coverage across 7,912 statements / 1,898 branches. |
+| 2026-07-29 | Final safety review also demoted LFO2 Mode because it has no independent physical ordinal evidence and is outside the current candidate. The post-correction tree retained the same 26-row / 34-message policy and passed 6,841 full-suite tests / 3 skipped plus 100% touched-production coverage across 7,911 statements / 1,898 branches. |
 
 ## Escalations Resolved
 
@@ -97,15 +98,15 @@ every stored event is revalidated against current transport policy first.
 - Architecture: **705 passed**.
 - Exact corrected-tree full-suite run: **6,841 passed, 3 skipped**.
 - Ruff, Black, isort: **clean**.
-- Touched-file statement/branch coverage: **100%** across **7,912 statements**
+- Touched-file statement/branch coverage: **100%** across **7,911 statements**
   and **1,898 branches**, zero misses.
 - V1.34 parity: **685 passed** byte-for-byte.
 - Vulture, strict Pyright across all 63 touched production modules,
   `git diff --check`, and mechanical review: **passed**.
 - Dynamic test-harness typing remains covered by the accepted scoped Gate 3
   decision; production typing is not waived.
-- Follow-up publication, fresh online CI, and reviewer status are tracked on
-  PR #214.
+- Branch publication is complete; fresh online CI and reviewer status are
+  tracked on PR #214.
 
 The final `git diff --stat` remains the authoritative merge total. No V1.34
 parity fixture or hardware-pinned dependency is documented as changed by this
