@@ -4,6 +4,11 @@
     "label": "Closest reference",
     "role": "compact metallic techno stab",
     "closeness": 94,
+    "brightness_offset": 0.0,
+    "noise_offset": 0.0,
+    "low_end_offset": 0.0,
+    "animation_offset": 0.0,
+    "tail_offset": 0.0,
     "genes": [
       {
         "parameter": "OSC1 Level",
@@ -285,6 +290,11 @@
     "label": "Brighter sync",
     "role": "more metallic oscillator pressure",
     "closeness": 88,
+    "brightness_offset": 0.18,
+    "noise_offset": 0.04,
+    "low_end_offset": -0.08,
+    "animation_offset": 0.08,
+    "tail_offset": -0.05,
     "genes": [
       {
         "parameter": "OSC1 Level",
@@ -510,6 +520,11 @@
     "label": "Noisy texture",
     "role": "grain and movement emphasis",
     "closeness": 82,
+    "brightness_offset": 0.04,
+    "noise_offset": 0.3,
+    "low_end_offset": -0.04,
+    "animation_offset": 0.28,
+    "tail_offset": 0.12,
     "genes": [
       {
         "parameter": "OSC1 Level",
@@ -742,6 +757,11 @@
     "label": "Rounder bass",
     "role": "warmer low-mid translation",
     "closeness": 78,
+    "brightness_offset": -0.18,
+    "noise_offset": -0.12,
+    "low_end_offset": 0.2,
+    "animation_offset": -0.1,
+    "tail_offset": 0.1,
     "genes": [
       {
         "parameter": "OSC1 Level",

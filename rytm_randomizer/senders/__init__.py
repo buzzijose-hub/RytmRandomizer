@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ..behavior.midi_event_plan import CcNrpnEvent
 from .armed_apply import (
     ArmedApplyError,
     ArmedApplyResult,
@@ -19,17 +20,14 @@ from .hardware import (
     TripleSender,
     hardware_send,
 )
-from .midi_event_plan import (
-    CcNrpnSendEvent,
-    send_cc_nrpn_event_plan,
-)
+from .midi_event_plan import send_cc_nrpn_event_plan
 
 __all__ = [
     "ArmedApplyError",
     "ArmedApplyResult",
     "ArmedApplySession",
     "BackupHook",
-    "CcNrpnSendEvent",
+    "CcNrpnEvent",
     "ExactOutputOpener",
     "ExactPortOpener",
     "GuardedSendResult",

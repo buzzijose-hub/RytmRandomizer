@@ -6,17 +6,15 @@ from dataclasses import dataclass
 from hashlib import sha256
 from typing import Final
 
-from ...snapshot.envelope import ELEKTRON_MFR_ID, read_ascii_name, unpack_elektron_7bit
+from ...snapshot.envelope import ELEKTRON_MFR_ID, read_ascii_name
 from .analog_four_offset_manifest import (
     A4_CANDIDATE_KIT_TYPE_BYTE,
     A4_FAMILY_BYTE,
     A4_KIT_NAME_LENGTH,
-    A4_KIT_NAME_OFFSET,
-    A4_KIT_OBJECT_BYTE,
-    A4_PACKED_PAYLOAD_OFFSET,
     A4_SNAPSHOT_LAYOUT_CANDIDATE,
     A4_SNAPSHOT_LAYOUT_SAVED_KIT,
 )
+from .analog_four_saved_kit_codec import decode_analog_four_saved_kit_payload
 
 _CANDIDATE_KIT_NAME_OFFSET: Final[int] = 4
 
@@ -96,49 +94,13 @@ def _decode_candidate_payload(raw: bytes, *, slot: int) -> AnalogFourKitSnapshot
     )
 
 
-def _clean_saved_kit_name(name: str) -> str:
-    cleaned: list[str] = []
-    previous_was_nul = False
-    for char in name:
-        if char == "\x00":
-            if cleaned and cleaned[-1] != " ":
-                cleaned.append(" ")
-            previous_was_nul = True
-            continue
-        if previous_was_nul and char == " " and cleaned and cleaned[-1] == " ":
-            previous_was_nul = False
-            continue
-        cleaned.append(char)
-        previous_was_nul = False
-    return "".join(cleaned).strip()
-
-
 def _decode_saved_kit_payload(raw: bytes, *, slot: int) -> AnalogFourKitSnapshot:
-    if len(raw) <= A4_PACKED_PAYLOAD_OFFSET:
-        raise ValueError("AnalogFourSnapshotDecoder.decode: payload too short for saved kit")
-
-    unpacked = unpack_elektron_7bit(raw[A4_PACKED_PAYLOAD_OFFSET:])
-    if len(unpacked) < A4_KIT_NAME_OFFSET + A4_KIT_NAME_LENGTH:
-        raise ValueError(
-            "AnalogFourSnapshotDecoder.decode: unpacked payload too short for kit name"
-        )
-    if unpacked[0] != A4_KIT_OBJECT_BYTE:
-        raise ValueError(
-            "AnalogFourSnapshotDecoder.decode: Analog Four kit object byte 0x52 not present"
-        )
-
-    kit_name = _clean_saved_kit_name(
-        read_ascii_name(
-            unpacked,
-            offset=A4_KIT_NAME_OFFSET,
-            length=A4_KIT_NAME_LENGTH,
-        )
-    )
+    decoded = decode_analog_four_saved_kit_payload(raw, require_trailer=False)
     return AnalogFourKitSnapshot(
         slot=slot,
-        kit_name=kit_name,
+        kit_name=decoded.kit_name,
         raw=bytes(raw),
         offsets_promoted=False,
-        unpacked=unpacked,
+        unpacked=decoded.unpacked,
         snapshot_layout=A4_SNAPSHOT_LAYOUT_SAVED_KIT,
     )

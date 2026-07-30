@@ -11,6 +11,7 @@
       "127.00": 127,
       "63.50": 63
     },
+    "allow_uncaptured_integer_values": false,
     "track_1_primary_raw_offset": 156,
     "track_raw_stride": 400,
     "track_1_raw_group_start": 152,
@@ -102,6 +103,7 @@
       "127": 127,
       "20": 20
     },
+    "allow_uncaptured_integer_values": true,
     "track_1_primary_raw_offset": 158,
     "track_raw_stride": 400,
     "track_1_raw_group_start": 156,
@@ -178,6 +180,7 @@
       "127.00": 127,
       "63.50": 63
     },
+    "allow_uncaptured_integer_values": false,
     "track_1_primary_raw_offset": 167,
     "track_raw_stride": 400,
     "track_1_raw_group_start": 160,
@@ -245,7 +248,7 @@
   "Filter2 Resonance": {
     "parameter": "Filter2 Resonance",
     "section": "FILTERS",
-    "status": "candidate-promoted",
+    "status": "hardware-write-validated",
     "screen_min": "0",
     "screen_mid": "20",
     "screen_max": "127",
@@ -254,6 +257,7 @@
       "127": 127,
       "20": 20
     },
+    "allow_uncaptured_integer_values": true,
     "track_1_primary_raw_offset": 170,
     "track_raw_stride": 400,
     "track_1_raw_group_start": 168,
@@ -315,7 +319,7 @@
       "Primary packed data byte verified on Track 1 at 0, 20, and 127.",
       "Track 2, Track 3, and Track 4 127 captures confirm the +400 packed-byte stride.",
       "The direct screen value appears at packed offset 170 and unpacked offset 145.",
-      "SysEx checksum trailer bytes must be ignored or recomputed by future writers."
+      "Generated saved-kit writes were received and verified on hardware for reference, novel, and four-track values."
     ]
   }
 }

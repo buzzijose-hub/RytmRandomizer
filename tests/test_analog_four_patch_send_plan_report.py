@@ -6,6 +6,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -69,11 +70,22 @@ def test_patch_send_plan_report_text_shows_sendable_and_manual_rows() -> None:
     assert text.startswith("RytmRandomizer passive Analog Four patch send plan\n")
     assert "Selected candidate: 1 / Closest reference" in text
     assert "Live dial path: partial-live-dial-ready" in text
+    assert "Sendable events: 26 / 39 (67%)" in text
+    assert "Transport messages: 34" in text
     assert "Sendable MIDI events:" in text
     assert "01 T1 ch0 CC69 OSC1 Level -> 96" in text
     assert "10 T1 ch0 NRPN 1:54 EnvA Env Shape -> 0" in text
     assert "Manual/front-panel rows:" in text
-    assert "EnvF Gate Length | screen NOTE | skipped" in text
+    assert "18 T1 EnvF Depth A" in text
+    assert "paired CC LSB conversion not hardware-verified" in text
+    assert (
+        "16 T1 EnvF Gate Length | screen NOTE | skipped | physical A4 rehearsal "
+        "disproved the inferred enum ordinal"
+    ) in text
+    assert (
+        "25 T1 LFO1 Destination A | screen Filter1 Frequency | skipped | physical "
+        "A4 rehearsal disproved the inferred enum ordinal"
+    ) in text
     assert "- no MIDI port opened" in text
     assert "- no MIDI sent" in text
 
@@ -97,19 +109,30 @@ def test_patch_send_plan_report_builds_from_feature_report_directly() -> None:
     assert report.plan.selected_label == "Brighter sync"
 
 
-def test_patch_send_plan_report_audio_source_uses_audio_extractor(
+def test_patch_send_plan_report_audio_source_uses_audio_genome_inference(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer.reports import analog_four_patch_send_plan as report_module
     from rytm_randomizer.style_analysis import analog_four_patch_send_plan as send_plan_module
+    from rytm_randomizer.style_analysis.analog_four_patch_genome import (
+        build_analog_four_patch_genome,
+    )
 
     observed_paths: list[Path] = []
 
-    def _fake_extract_from_audio(path: Path) -> FeatureReport:
+    def _fake_build_audio_genome(path: Path, *, track: int) -> object:
         observed_paths.append(path)
-        return _feature_report()
+        feature_report = _feature_report()
+        return SimpleNamespace(
+            feature_report=feature_report,
+            genome=build_analog_four_patch_genome(feature_report, track=track),
+        )
 
-    monkeypatch.setattr(send_plan_module, "extract_from_audio", _fake_extract_from_audio)
+    monkeypatch.setattr(
+        send_plan_module,
+        "build_analog_four_audio_patch_genome_isolated",
+        _fake_build_audio_genome,
+    )
 
     report = report_module.build_analog_four_patch_send_plan_report_from_source(
         "--audio",
@@ -157,6 +180,10 @@ def test_patch_send_plan_report_json_includes_summary_and_events() -> None:
     assert payload["send_plan"]["summary"]["sendable_count"] > 0
     assert payload["send_plan"]["send_events"][0]["track"] == 3
     assert payload["send_plan"]["manual_events"]
+    assert {event["skip_code"] for event in payload["send_plan"]["manual_events"]} == {
+        "not-transport-ready",
+        "paired-cc-unverified",
+    }
     assert payload["safety"][0] == "passive read-only patch send plan"
     assert json.dumps(payload, sort_keys=True) == json.dumps(
         build_analog_four_patch_send_plan_payload(report),
@@ -214,7 +241,7 @@ def test_patch_send_plan_cli_description_json_mode(capsys: pytest.CaptureFixture
     assert exit_code == 0
     assert payload["selected_track"] == 2
     assert payload["selected_candidate"] == 1
-    assert payload["send_plan"]["summary"]["transport_message_count"] == 44
+    assert payload["send_plan"]["summary"]["transport_message_count"] == 34
     assert captured.err == ""
 
 

@@ -10,7 +10,7 @@
     "hook's JSON payload on stdin, and:",
     "  * no-ops silently unless the tool call was a `git push`;",
     "  * on a `git push`, runs the mechanical review gates (lint +",
-    "    architecture + V1.34 parity) and writes a JSON response — on",
+    "    strict touched-production typing + architecture + V1.34 parity) and writes a JSON response — on",
     "    success an `additionalContext` instruction that re-prompts the",
     "    codex model to perform the code review as ONE TARGETED AGENT PER",
     "    DIMENSION in parallel (one agent per dimension in the skill's",

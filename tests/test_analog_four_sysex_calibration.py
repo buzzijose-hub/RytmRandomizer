@@ -211,14 +211,14 @@ def test_filter2_frequency_calibration_keeps_capture_evidence_compact() -> None:
 
 def test_filter2_resonance_calibration_records_promoted_track_stride() -> None:
     from rytm_randomizer.data.analog_four_sysex_calibration import (
-        A4_SYSEX_CALIBRATION_STATUS_CANDIDATE_PROMOTED,
+        A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED,
         analog_four_sysex_calibration_for,
     )
 
     calibration = analog_four_sysex_calibration_for("Filter2 Resonance")
 
     assert calibration.parameter == "Filter2 Resonance"
-    assert calibration.status == A4_SYSEX_CALIBRATION_STATUS_CANDIDATE_PROMOTED
+    assert calibration.status == A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED
     assert calibration.screen_min == "0"
     assert calibration.screen_mid == "20"
     assert calibration.screen_max == "127"
@@ -312,8 +312,74 @@ def test_filter2_resonance_calibration_keeps_capture_evidence_compact() -> None:
     assert {row.kit_name for row in calibration.evidence} == {"KIT 1"}
 
 
+def test_filter2_resonance_records_hardware_write_validation_evidence() -> None:
+    from rytm_randomizer.data.analog_four_sysex_calibration import (
+        ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS,
+    )
+
+    evidence = ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS["Filter2 Resonance"]
+
+    assert [row.expected_track_values for row in evidence] == [
+        ((1, "127"),),
+        ((1, "64"),),
+        ((1, "16"), (2, "48"), (3, "80"), (4, "112")),
+    ]
+    assert [row.generated_sha256 for row in evidence] == [
+        "5ebb386677aff324ef96d631e7888a9681caefbd976bdc2eac69b52a0fb0e26b",
+        "2fee1aa93c98e0221dbe7bac296c51268360c5c61e11c8eea77fd091cbbd94f7",
+        "0e88aa6f15fd49c36696d5b8e09bda18ce5eeb8562c1a44ce46683c6deef819b",
+    ]
+    assert evidence[0].matched_reference_file == "A4_Test1_T1_Filter2Res_127_Kit.syx"
+    assert evidence[1].matched_reference_file is None
+    assert evidence[2].operator_confirmed is True
+
+
+def test_filter2_resonance_calibration_converts_novel_integer_screen_values() -> None:
+    from rytm_randomizer.data.analog_four_sysex_calibration import (
+        analog_four_sysex_calibration_for,
+    )
+
+    resonance = analog_four_sysex_calibration_for("Filter2 Resonance")
+    frequency = analog_four_sysex_calibration_for("Filter2 Frequency")
+
+    assert resonance.primary_raw_value_for_screen("64") == 64
+    with pytest.raises(ValueError, match="unsupported screen value"):
+        resonance.primary_raw_value_for_screen("loud")
+    with pytest.raises(ValueError, match="unsupported screen value"):
+        frequency.primary_raw_value_for_screen("64.00")
+
+
+def test_hardware_write_validation_status_requires_confirmed_hashed_evidence() -> None:
+    from rytm_randomizer.data.analog_four_sysex_calibration import (
+        A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED,
+        ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS,
+        ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS,
+    )
+
+    validated_parameters = {
+        parameter
+        for parameter, calibration in ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS.items()
+        if calibration.status == A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED
+    }
+
+    assert validated_parameters == set(ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS)
+    for parameter in validated_parameters:
+        evidence = ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS[parameter]
+        assert evidence
+        assert all(row.operator_confirmed for row in evidence)
+        assert all(
+            len(row.generated_sha256) == 64
+            and row.generated_sha256 == row.generated_sha256.lower()
+            and set(row.generated_sha256) <= set("0123456789abcdef")
+            for row in evidence
+        )
+
+
 def test_sysex_calibration_mapping_is_reexported_from_data_layer() -> None:
-    from rytm_randomizer.data import ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS
+    from rytm_randomizer.data import (
+        ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS,
+        ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS,
+    )
     from rytm_randomizer.data.analog_four_sysex_calibration import (
         ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS as MODULE_FIELD_CALIBRATIONS,
     )
@@ -325,6 +391,7 @@ def test_sysex_calibration_mapping_is_reexported_from_data_layer() -> None:
         "Filter2 Resonance",
     }
     assert ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS is MODULE_FIELD_CALIBRATIONS
+    assert set(ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS) == {"Filter2 Resonance"}
 
 
 @pytest.mark.parametrize("track", [0, 5])

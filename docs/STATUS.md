@@ -58,6 +58,31 @@ Last updated: 2026-07-29. This file is a hand-authored snapshot and is meant to 
     green, V1.34 parity 685/685 byte-identical (505 golden files
     untouched). Plan-doc discoverability: every plan is now indexed in
     `docs/superpowers/plans/INDEX.md`.
+- 2026-07-28: PR #214 is the current A4 audio-to-patch milestone. It produces
+  four deterministic audio-dependent candidates with saved-kit files, complete
+  DNA/CC-NRPN sidecars, immutable publication, passive recorded-render ranking,
+  and a hash-verified live-dial plan. Saved-kit writing remains limited to
+  hardware-validated Filter2 Resonance. Armed delivery is manifest-only,
+  guarded by `app --arm`, and now limited to 26 rows / 34 CC-NRPN messages.
+  The 2026-07-29 supervised rehearsal delivered the former 33-row / 53-message
+  plan but failed semantic verification for six inferred A4 enum values; those
+  rows were demoted before a second 27-row / 37-message rehearsal. The second
+  pass verified the 26 mappings still retained in policy and disproved LFO1
+  Mode: raw `0` left the front panel at `FREE`, not `TRG`. LFO1 Mode and the
+  earlier six enum rows now remain manual alongside six paired-CC rows. Both
+  rehearsals ended with a clean initialized-kit reload without saving. Stored
+  manifests are now revalidated against current transport policy before
+  provider construction, and partial-plan success is labeled transport delivery
+  rather than semantic verification. Strict production typing is reproducible with
+  `just typecheck`; the CODEOWNER accepted the separately disclosed dynamic
+  test-harness typing debt and historical Gate 14/16 evidence exceptions for
+  this PR. The physical pre-merge gate is complete for the current 26-row
+  routed subset; fresh online CI and reviewer approval remain pending.
+  Native decoder success on Windows remains environment-dependent; abnormal
+  child exits fail closed and clean private staging. Detailed hardware evidence
+  and current verification counts live in PR #214,
+  `docs/hardware-validation/2026-07-16-a4-saved-kit-roundtrip-results.md`, and
+  `docs/superpowers/plans/2026-07-03-analog-four-audio-patch-genome_RUN_REPORT.md`.
 - 2026-07-08: Passive local model copilot bundle prepared locally. The new
   `local-model-copilot-report` command builds deterministic docs/MIDI,
   staged mutation-intent, and Analog Four patch co-designer packets, and only
@@ -94,9 +119,9 @@ Last updated: 2026-07-29. This file is a hand-authored snapshot and is meant to 
   candidate-promoted Filter2 Resonance calibration records packed offsets
   `170`, `570`, `970`, and `1370` across the four synth tracks, values
   `0`/`20`/`127`, and fingerprints for the Track 1 value sweep plus Track 2-4
-  127 stride-confirmation exports. It remains passive: no MIDI port opened,
-  no MIDI sent, no SysEx written, no hardware mutation, and no broader A4 kit
-  writer claim until additional fields are captured and validated.
+  127 stride-confirmation exports. Filter2 Resonance has since advanced to the
+  narrow hardware-write-validated file path described above; the other three
+  fields remain candidate-only and blocked from operator-facing export.
 - 2026-07-04: Passive Analog Four initialized-baseline report prepared
   locally from Jose's Test 1 exports. The new
   `analog-four-baseline-report` command compares kit, pattern+kit, and
@@ -120,9 +145,11 @@ Last updated: 2026-07-29. This file is a hand-authored snapshot and is meant to 
   counts the exact transport messages, and lists skipped front-panel rows that
   still need ordinal capture. The active app path now supports
   `--dry-run --a4-patch-send-plan` for mock rendering and
-  `--arm --a4-patch-send-plan --confirm-a4-patch-send-plan` for explicit A4
-  output sends; it sends only compiler-approved rows and leaves screen-only
-  destination rows manual.
+  `--arm --a4-patch-send-plan --batch-manifest <batch.json>
+  --batch-manifest-sha256 "<reviewed digest>" --candidate N
+  --confirm-a4-patch-send-plan --a4-output-port "<exact configured name>"`
+  for explicit A4 output sends; it sends only compiler-approved rows and
+  leaves screen-only destination rows manual.
 - 2026-07-03: Passive Analog Four patch learning layer prepared locally. The
   new `analog-four-patch-learning-report` command builds on the patch genome
   by ranking all four candidates, routing measured reference traits to Analog

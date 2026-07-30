@@ -97,9 +97,15 @@ def test_clamp_pure_values():
 # ===========================================================================
 
 
+def test_midi_message_settle_seconds_is_twenty_milliseconds():
+    from rytm_randomizer.midi_io import MIDI_MESSAGE_SETTLE_SECONDS
+
+    assert MIDI_MESSAGE_SETTLE_SECONDS == 0.02
+
+
 def test_send_cc_builds_cc_message_and_sleeps():
     _install_fake_mido()
-    from rytm_randomizer.midi_io import send_cc
+    from rytm_randomizer.midi_io import MIDI_MESSAGE_SETTLE_SECONDS, send_cc
 
     out = RecordingOut()
     sleeps: list[float] = []
@@ -111,7 +117,7 @@ def test_send_cc_builds_cc_message_and_sleeps():
     assert msg.channel == 0
     assert msg.control == 15
     assert msg.value == 64
-    assert sleeps == [0.02]
+    assert sleeps == [MIDI_MESSAGE_SETTLE_SECONDS]
 
 
 def test_send_cc_respects_injected_channel():
@@ -126,7 +132,7 @@ def test_send_cc_respects_injected_channel():
 
 def test_send_nrpn_builds_coarse_data_entry_sequence():
     _install_fake_mido()
-    from rytm_randomizer.midi_io import send_nrpn
+    from rytm_randomizer.midi_io import MIDI_MESSAGE_SETTLE_SECONDS, send_nrpn
 
     out = RecordingOut()
     sleeps: list[float] = []
@@ -137,7 +143,7 @@ def test_send_nrpn_builds_coarse_data_entry_sequence():
         ("control_change", 0, 98, 31),
         ("control_change", 0, 6, 2),
     ]
-    assert sleeps == [0.02, 0.02, 0.02]
+    assert sleeps == [MIDI_MESSAGE_SETTLE_SECONDS] * 3
 
 
 def test_send_nrpn_adds_fine_data_entry_lsb_when_requested():

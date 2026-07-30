@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from conftest import analog_four_saved_kit_frame
+
 pytestmark = pytest.mark.fast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -98,6 +100,18 @@ def test_decode_real_saved_kit_frame_unpacks_name_and_keeps_offsets_candidate() 
     assert snapshot.offsets_promoted is False
 
 
+def test_decode_hardware_saved_kit_strips_checksum_and_length_trailer() -> None:
+    from rytm_randomizer.devices.strategies import AnalogFourSnapshotDecoder
+    from rytm_randomizer.snapshot import extract_sysex_payloads
+
+    payload = extract_sysex_payloads(analog_four_saved_kit_frame())[0]
+
+    snapshot = AnalogFourSnapshotDecoder().decode(payload, slot=0)
+
+    assert snapshot.kit_name == "KIT 1"
+    assert len(snapshot.unpacked) == 2415
+
+
 def test_decode_real_saved_kit_cleans_internal_nul_name_padding() -> None:
     from rytm_randomizer.devices.strategies import AnalogFourSnapshotDecoder
 
@@ -176,3 +190,29 @@ def test_decode_is_deterministic_for_same_input() -> None:
     payload = _a4_kit_payload(b"DET")
 
     assert decoder.decode(payload, slot=1) == decoder.decode(payload, slot=1)
+
+
+def test_snapshot_payload_fingerprint_prefers_unpacked_and_falls_back_to_raw() -> None:
+    from hashlib import sha256
+
+    from rytm_randomizer.devices.strategies import AnalogFourKitSnapshot
+    from rytm_randomizer.devices.strategies.analog_four_snapshot_decoder import (
+        analog_four_snapshot_payload_fingerprint,
+    )
+
+    unpacked = AnalogFourKitSnapshot(slot=0, kit_name="A", raw=b"raw", unpacked=b"body")
+    raw_only = AnalogFourKitSnapshot(slot=0, kit_name="B", raw=b"raw")
+
+    assert analog_four_snapshot_payload_fingerprint(unpacked) == sha256(b"body").hexdigest()[:16]
+    assert analog_four_snapshot_payload_fingerprint(raw_only) == sha256(b"raw").hexdigest()[:16]
+
+
+def test_candidate_decoder_helper_rejects_wrong_type_byte() -> None:
+    from rytm_randomizer.devices.strategies.analog_four_snapshot_decoder import (
+        _decode_candidate_payload,
+    )
+
+    payload = bytes([0x00, 0x20, 0x3C, 0x06]) + bytes(16)
+
+    with pytest.raises(ValueError, match="candidate kit type byte"):
+        _decode_candidate_payload(payload, slot=0)

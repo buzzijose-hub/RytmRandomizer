@@ -65,6 +65,7 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
     ),
     "cockpit": frozenset(
         {
+            "behavior",  # PR #214 merge: cockpit/export consumes behavior.midi_event_plan validation
             "cli_registry",
             "data",
             # Wave 4: the library importer decodes captures through the
@@ -125,6 +126,7 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
     "observability": frozenset(),
     "reports": frozenset(
         {
+            "observability",  # PR #214 merge: patch-batch reports emit bounded RED telemetry
             "active_boundary",
             "behavior",
             "cli_registry",
@@ -151,6 +153,8 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
     ),
     "senders": frozenset(
         {
+            "behavior",  # PR #214 merge: CcNrpnEvent Protocol moved to behavior.midi_event_plan
+            "data",  # PR #214 merge: senders validate against canonical A4 CC/NRPN address tables
             "devices",
             "midi_io",
             # Wave 4: ArmedApplyError is a MidiError taxonomy member
@@ -169,6 +173,7 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
     ),
     "style_analysis": frozenset(
         {
+            "behavior",  # PR #214 merge: send-plan compiler validates via behavior.midi_event_plan
             "data",
             "guardrails",
             "local_ai",

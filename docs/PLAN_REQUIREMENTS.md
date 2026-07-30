@@ -48,12 +48,19 @@ pytest tests/test_engines_pad*.py tests/test_group_runner.py tests/test_scene_ru
 python -m ruff check .
 python -m black --check .
 python -m isort --profile black --check-only .
-python -m pyright --strict <touched paths>
+python scripts/typecheck_touched.py
 ```
 
-- `ruff` rule packs at minimum: `E,F,B,S,SIM,UP,C4,PLR,ERA,ARG`. `B904` (raise-from in except) is **always on** — no opt-out.
+- The repository-wide `ruff` configuration enables `E,F,B,S,SIM,UP,C4`.
+  `B904` (raise-from in except) is **always on** with no opt-out. Newly added
+  production modules also run an explicit `--select PLR,ERA,ARG` ratchet; these
+  packs are not yet enabled repository-wide because the inherited baseline is
+  being drained incrementally.
 - `black` `target-version` is pinned to the CI matrix (`py39, py310, py311` only — `py312`/`py313` excluded per the PR #28 lesson).
-- `pyright --strict` on touched paths, not the whole package (whole-package pyright is a separate future workstream).
+- `scripts/typecheck_touched.py` discovers every committed, working-tree, and
+  untracked production module touched against the integration merge base, then
+  runs the pinned strict Pyright configuration. Whole-package and dynamic
+  test-harness typing are separate workstreams.
 
 ### Gate 4 — Dead-code purge clean
 

@@ -8,6 +8,11 @@ from typing import Final
 ANALOG_FOUR_PATCH_FAMILY_OSCILLATORS: Final[str] = "Oscillators"
 ANALOG_FOUR_PATCH_FAMILY_MODULATION: Final[str] = "Envelope and LFO"
 ANALOG_FOUR_PATCH_FAMILY_EFFECTS: Final[str] = "Filter and effects"
+ANALOG_FOUR_PATCH_FAMILY_ORDER: Final[tuple[str, ...]] = (
+    ANALOG_FOUR_PATCH_FAMILY_OSCILLATORS,
+    ANALOG_FOUR_PATCH_FAMILY_MODULATION,
+    ANALOG_FOUR_PATCH_FAMILY_EFFECTS,
+)
 ANALOG_FOUR_PATCH_HIGH_CONFIDENCE: Final[str] = "manual-map + feature-trait"
 ANALOG_FOUR_PATCH_SCREEN_CONFIDENCE: Final[str] = "front-panel target; ordinal capture pending"
 
@@ -31,6 +36,11 @@ class AnalogFourPatchCandidateTemplateSpec:
     label: str
     role: str
     closeness: int
+    brightness_offset: float
+    noise_offset: float
+    low_end_offset: float
+    animation_offset: float
+    tail_offset: float
     genes: tuple[AnalogFourPatchGeneTemplateSpec, ...]
 
 
@@ -48,6 +58,11 @@ ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES: Final[tuple[AnalogFourPatchCandidateTempl
         label="Closest reference",
         role="compact metallic techno stab",
         closeness=94,
+        brightness_offset=0.0,
+        noise_offset=0.0,
+        low_end_offset=0.0,
+        animation_offset=0.0,
+        tail_offset=0.0,
         genes=(
             _G("OSC1 Level", 96, _OSC, "lead oscillator carries the audible reference body"),
             _G(
@@ -260,6 +275,11 @@ ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES: Final[tuple[AnalogFourPatchCandidateTempl
         label="Brighter sync",
         role="more metallic oscillator pressure",
         closeness=88,
+        brightness_offset=0.18,
+        noise_offset=0.04,
+        low_end_offset=-0.08,
+        animation_offset=0.08,
+        tail_offset=-0.05,
         genes=(
             _G("OSC1 Level", 100, _OSC, "stronger oscillator A body"),
             _G("OSC1 Pulsewidth", -24, _OSC, "narrower pulse increases buzz"),
@@ -310,6 +330,11 @@ ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES: Final[tuple[AnalogFourPatchCandidateTempl
         label="Noisy texture",
         role="grain and movement emphasis",
         closeness=82,
+        brightness_offset=0.04,
+        noise_offset=0.30,
+        low_end_offset=-0.04,
+        animation_offset=0.28,
+        tail_offset=0.12,
         genes=(
             _G("OSC1 Level", 88, _OSC, "slightly lower oscillator body"),
             _G("Noise Level", 26, _OSC, "adds controlled broadband texture"),
@@ -366,6 +391,11 @@ ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES: Final[tuple[AnalogFourPatchCandidateTempl
         label="Rounder bass",
         role="warmer low-mid translation",
         closeness=78,
+        brightness_offset=-0.18,
+        noise_offset=-0.12,
+        low_end_offset=0.20,
+        animation_offset=-0.10,
+        tail_offset=0.10,
         genes=(
             _G("OSC1 Level", 104, _OSC, "fuller oscillator A body"),
             _G("OSC1 Pulsewidth", -6, _OSC, "wider pulse gives a rounder core"),
@@ -436,6 +466,7 @@ ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES: Final[tuple[AnalogFourPatchCandidateTempl
 
 __all__ = [
     "ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES",
+    "ANALOG_FOUR_PATCH_FAMILY_ORDER",
     "AnalogFourPatchCandidateTemplateSpec",
     "AnalogFourPatchGeneTemplateSpec",
 ]

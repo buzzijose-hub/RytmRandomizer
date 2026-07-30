@@ -32,9 +32,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, fields, is_dataclass
 from enum import Enum
+from typing import TypedDict, cast
 
 from rytm_randomizer.guardrails.schema import Confidence, SourceType
 
@@ -81,6 +82,49 @@ class FeatureReport:
     """ISO 8601 timestamp string (e.g. ``"2026-05-15T12:34:56Z"``)."""
 
 
+class FeatureReportPayload(TypedDict):
+    """Stable JSON-ready representation of :class:`FeatureReport`."""
+
+    source_type: str
+    confidence: str
+    bpm: float
+    tempo_stability: float
+    kick_density: float
+    percussion_density: float
+    low_end_weight: float
+    spectral_brightness: float
+    texture_noise: float
+    energy_arc: list[float]
+    content_hash: str
+    derived_at: str
+
+
+def _require_serializable_feature_report(value: object) -> FeatureReport:
+    if not isinstance(value, FeatureReport):
+        raise TypeError("report must be a FeatureReport")
+    return value
+
+
+def feature_report_to_dict(report: FeatureReport) -> FeatureReportPayload:
+    """Return the canonical public payload for a measured feature report."""
+
+    report = _require_serializable_feature_report(report)
+    return {
+        "source_type": report.source_type.value,
+        "confidence": report.confidence.value,
+        "bpm": report.bpm,
+        "tempo_stability": report.tempo_stability,
+        "kick_density": report.kick_density,
+        "percussion_density": report.percussion_density,
+        "low_end_weight": report.low_end_weight,
+        "spectral_brightness": report.spectral_brightness,
+        "texture_noise": report.texture_noise,
+        "energy_arc": list(report.energy_arc),
+        "content_hash": report.content_hash,
+        "derived_at": report.derived_at,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Canonical serialization + content hashing
 # ---------------------------------------------------------------------------
@@ -115,9 +159,10 @@ def _to_canonical(value: object) -> object:
             result[f.name] = _to_canonical(getattr(value, f.name))
         return result
     if isinstance(value, Mapping):
-        return {str(k): _to_canonical(v) for k, v in value.items()}
+        items = cast(Mapping[object, object], value)
+        return {str(key): _to_canonical(item) for key, item in items.items()}
     if isinstance(value, (tuple, list)):
-        return [_to_canonical(v) for v in value]
+        return [_to_canonical(item) for item in cast(Sequence[object], value)]
     if isinstance(value, (str, int, float, bool)) or value is None:
         return value
     raise TypeError(f"_to_canonical: unsupported value type {type(value).__name__!r}")
@@ -143,5 +188,7 @@ def compute_feature_report_hash(report: FeatureReport) -> str:
 
 __all__ = [
     "FeatureReport",
+    "FeatureReportPayload",
     "compute_feature_report_hash",
+    "feature_report_to_dict",
 ]

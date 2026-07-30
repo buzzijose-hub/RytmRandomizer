@@ -8,8 +8,9 @@ output by calling :func:`configure_logging` exactly once.
 Two formatters are provided:
 
 * A **structured human-readable** formatter -- ``<ts> <level> <logger>
-  <op_id?> <message>`` -- which is the default. It is easy to read in a
-  terminal and easy to ``grep``.
+  <op_id?> <message> <context-json?>`` -- which is the default. It is easy
+  to read in a terminal and easy to ``grep`` while retaining bounded
+  ``extra={...}`` context.
 * A **JSON** formatter, behind the ``json=True`` flag on
   :func:`configure_logging`. JSON output emits one object per log record
   with the same fields, plus any ``extra={...}`` context the caller passed,
@@ -103,7 +104,15 @@ class _StructuredFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         if not hasattr(record, "op_id"):
             record.op_id = ""
-        return super().format(record)
+        rendered = super().format(record)
+        context = {
+            key: value
+            for key, value in record.__dict__.items()
+            if key not in _RESERVED_RECORD_ATTRS and key != "op_id" and not key.startswith("_")
+        }
+        if not context:
+            return rendered
+        return f"{rendered} {_json.dumps(context, sort_keys=True, default=str)}"
 
 
 class _JsonFormatter(logging.Formatter):
@@ -142,8 +151,8 @@ def _coerce_level(level: int | str) -> int:
 
     if isinstance(level, int):
         return level
-    candidate = logging.getLevelName(str(level).upper())
-    if isinstance(candidate, int):
+    candidate = logging.getLevelNamesMapping().get(level.upper())
+    if candidate is not None:
         return candidate
     raise ValueError(f"unknown log level: {level!r}")
 
@@ -199,12 +208,12 @@ def configure_logging(
     # on the new handler so trace spans started after configure_logging still
     # populate ``op_id`` on every record.
     try:
-        from .tracing import _OpIdFilter  # noqa: PLC0415 - sibling module
+        from .tracing import OpIdFilter  # noqa: PLC0415 - sibling module
     except ImportError:  # pragma: no cover - tracing always ships with us
         pass
     else:
-        if not any(isinstance(f, _OpIdFilter) for f in handler.filters):
-            handler.addFilter(_OpIdFilter())
+        if not any(isinstance(f, OpIdFilter) for f in handler.filters):
+            handler.addFilter(OpIdFilter())
 
     return package_logger
 
@@ -219,6 +228,6 @@ def get_logger(name: str) -> logging.Logger:
     call from any module is a no-op.
     """
 
-    if not isinstance(name, str) or not name:
+    if not name:
         raise ValueError("logger name must be a non-empty string")
     return logging.getLogger(name)

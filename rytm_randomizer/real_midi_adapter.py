@@ -18,7 +18,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import ClassVar, Protocol
+from typing import ClassVar, Protocol, runtime_checkable
 
 from .mock_midi import MidiMessage
 from .observability.errors import MidiError
@@ -57,17 +57,48 @@ class RealMidiSendError(MidiError, RuntimeError):
     fingerprint: ClassVar[str] = "midi.send.failed"
 
 
+@runtime_checkable
 class RealMidiOutputPort(Protocol):
-    """Minimal output-port protocol for fake-provider tests."""
+    """Armed output-port contract with mandatory deterministic cleanup."""
 
     def send(self, message: object) -> None:
-        """Record or send one backend-specific message."""
+        """Transmit one already-validated MIDI message."""
+        ...
+
+    def close(self) -> None:
+        """Close the physical or fake output port."""
+        ...
+
+
+@runtime_checkable
+class RealMidiOutputProvider(Protocol):
+    """Neutral output-provider boundary for fake and armed implementations."""
+
+    def list_output_names(self) -> Sequence[str]:
+        """Return the currently available output names."""
+        ...
+
+    def open_output(self, port_name: str) -> RealMidiOutputPort:
+        """Open exactly one named output port."""
+        ...
 
 
 def _freeze_metadata(metadata: Mapping[str, object] | None) -> Mapping[str, object]:
     if metadata is None:
         return MappingProxyType({})
     return MappingProxyType(dict(metadata))
+
+
+def _require_fake_provider(value: object) -> RealMidiPortProvider:
+    if not isinstance(value, RealMidiPortProvider):
+        raise TypeError("provider must be a fake-only RealMidiPortProvider")
+    return value
+
+
+def _require_real_midi_port_name(value: object) -> str:
+    if not isinstance(value, str) or not value:
+        raise RealMidiPortError("midi_output_port_required")
+    return value
 
 
 @dataclass(frozen=True)
@@ -108,7 +139,7 @@ class RealMidiPortProvider:
             port = self._ports[port_name]
         except KeyError as exc:
             raise RealMidiPortError(f"unavailable_midi_output_port: {port_name}") from exc
-        if not callable(getattr(port, "send", None)):
+        if not callable(getattr(port, "send", None)) or not callable(getattr(port, "close", None)):
             raise RealMidiPortError(f"invalid_midi_output_port: {port_name}")
         return port
 
@@ -117,12 +148,10 @@ class RealMidiSender:
     """Sender boundary that can be tested with fake output ports only."""
 
     def __init__(self, provider: RealMidiPortProvider, port_name: str) -> None:
-        if not isinstance(provider, RealMidiPortProvider):
-            raise TypeError("provider must be a RealMidiPortProvider")
-        if not isinstance(port_name, str) or not port_name:
-            raise RealMidiPortError("midi_output_port_required")
-        self._port_name = port_name
-        self._port = provider.open_output(port_name)
+        checked_provider = _require_fake_provider(provider)
+        checked_port_name = _require_real_midi_port_name(port_name)
+        self._port_name = checked_port_name
+        self._port = checked_provider.open_output(checked_port_name)
 
     @property
     def port_name(self) -> str:
@@ -139,8 +168,13 @@ class RealMidiSender:
             metadata={"fake_provider_only": True},
         )
 
+    def close(self) -> None:
+        """Close the injected output port deterministically."""
 
-def _translate_message(message: MidiMessage) -> Mapping[str, object]:
+        self._port.close()
+
+
+def _translate_message(message: object) -> Mapping[str, object]:
     if not isinstance(message, MidiMessage):
         raise TypeError("message must be a MidiMessage")
     if message.message_type != "cc":
@@ -168,6 +202,7 @@ def build_real_midi_sender(
 __all__ = [
     "RealMidiDependencyError",
     "RealMidiOutputPort",
+    "RealMidiOutputProvider",
     "RealMidiPortError",
     "RealMidiPortProvider",
     "RealMidiSendError",

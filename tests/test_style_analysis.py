@@ -28,16 +28,21 @@ installed and skip cleanly otherwise.
 from __future__ import annotations
 
 import dataclasses
+import hashlib
 import sys
+from io import BytesIO
 from pathlib import Path
 
 import pytest
 
 from rytm_randomizer.guardrails.schema import Confidence, SourceType
 from rytm_randomizer.style_analysis import (
+    AudioSynthesisFeatures,
     FeatureReport,
     StyleAnalysisDependencyError,
+    analyze_audio,
     analyze_library,
+    audio_synthesis_features_to_dict,
     compute_feature_report_hash,
     extract_from_audio,
     extract_from_description,
@@ -45,6 +50,9 @@ from rytm_randomizer.style_analysis import (
 )
 from rytm_randomizer.style_analysis import extractor as extractor_module
 from rytm_randomizer.style_analysis import feature_report as feature_report_module
+from rytm_randomizer.style_analysis import (
+    feature_report_to_dict,
+)
 from rytm_randomizer.style_analysis import library as library_module
 
 # WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
@@ -71,6 +79,46 @@ def _build_report(*, content_hash: str = "") -> FeatureReport:
         content_hash=content_hash,
         derived_at="2026-05-15T12:00:00Z",
     )
+
+
+def _build_synthesis_features() -> AudioSynthesisFeatures:
+    return AudioSynthesisFeatures(
+        audio_sha256="a" * 64,
+        duration=0.2,
+        attack=0.1,
+        decay=0.3,
+        sustain=0.4,
+        tail=0.5,
+        brightness=0.6,
+        spectral_flatness=0.7,
+        noise=0.2,
+        low_end=0.8,
+        harmonicity=0.75,
+        transient=0.35,
+        modulation=0.45,
+    )
+
+
+def test_audio_synthesis_features_validate_and_serialize_generic_contract() -> None:
+    features = _build_synthesis_features()
+
+    assert audio_synthesis_features_to_dict(features) == dataclasses.asdict(features)
+    with pytest.raises(TypeError, match="AudioSynthesisFeatures"):
+        audio_synthesis_features_to_dict(object())  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="64-character hexadecimal"):
+        dataclasses.replace(features, audio_sha256="not-a-hash")
+    with pytest.raises(ValueError, match="64-character hexadecimal"):
+        dataclasses.replace(features, audio_sha256="g" * 64)
+    with pytest.raises(ValueError, match="normalized"):
+        dataclasses.replace(features, brightness=1.01)
+
+
+def test_feature_report_serializer_exposes_generic_payload() -> None:
+    report = _build_report(content_hash="a" * 64)
+
+    assert feature_report_to_dict(report)["content_hash"] == "a" * 64
+    with pytest.raises(TypeError, match="FeatureReport"):
+        feature_report_to_dict(object())  # type: ignore[arg-type]
 
 
 # ---------------------------------------------------------------------------
@@ -383,6 +431,188 @@ def test_require_librosa_raises_dependency_error_when_numpy_missing(
 def test_extract_from_audio_rejects_non_path():
     with pytest.raises(TypeError):
         extract_from_audio("path.wav")  # type: ignore[arg-type]
+    with pytest.raises(TypeError):
+        analyze_audio("path.wav")  # type: ignore[arg-type]
+
+
+def test_analyze_audio_hashes_and_measures_one_immutable_snapshot(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    original = b"original-audio-bytes"
+    audio_path = tmp_path / "reference.wav"
+    audio_path.write_bytes(original)
+    observed_snapshots: list[Path] = []
+
+    def measure(snapshot: Path):
+        observed_snapshots.append(snapshot)
+        assert snapshot != audio_path
+        assert snapshot.read_bytes() == original
+        audio_path.write_bytes(b"concurrent-replacement")
+        return {
+            "bpm": 126.0,
+            "tempo_stability": 0.9,
+            "kick_density": 0.4,
+            "percussion_density": 0.5,
+            "low_end_weight": 0.6,
+            "spectral_brightness": 0.7,
+            "texture_noise": 0.2,
+            "energy_arc": (0.2, 0.4, 0.6, 0.8),
+            "duration": 0.5,
+            "attack": 0.1,
+            "decay": 0.2,
+            "sustain": 0.3,
+            "tail": 0.4,
+            "spectral_flatness": 0.2,
+            "noise": 0.2,
+            "harmonicity": 0.8,
+            "transient": 0.4,
+            "modulation": 0.3,
+        }
+
+    monkeypatch.setattr(extractor_module, "_measure_audio_features", measure)
+    analysis = analyze_audio(audio_path)
+
+    assert analysis.audio_sha256 == hashlib.sha256(original).hexdigest()
+    assert analysis.duration == 0.5
+    assert analysis.attack == 0.1
+    assert analysis.decay == 0.2
+    assert analysis.sustain == 0.3
+    assert analysis.tail == 0.4
+    assert analysis.brightness == 0.7
+    assert analysis.spectral_flatness == 0.2
+    assert analysis.noise == 0.2
+    assert analysis.low_end == 0.6
+    assert analysis.harmonicity == 0.8
+    assert analysis.transient == 0.4
+    assert analysis.modulation == 0.3
+    assert len(observed_snapshots) == 1
+    assert not observed_snapshots[0].exists()
+
+
+def test_analyze_audio_snapshot_uses_caller_owned_path_without_copy(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.style_analysis.extractor import analyze_audio_snapshot
+
+    audio_path = tmp_path / "parent-owned.wav"
+    original = b"parent-owned-audio"
+    audio_path.write_bytes(original)
+    observed: list[bytes] = []
+
+    def measure(snapshot: BytesIO):
+        observed.append(snapshot.getvalue())
+        audio_path.write_bytes(b"concurrent-replacement")
+        return {
+            "bpm": 126.0,
+            "tempo_stability": 0.9,
+            "kick_density": 0.4,
+            "percussion_density": 0.5,
+            "low_end_weight": 0.6,
+            "spectral_brightness": 0.7,
+            "texture_noise": 0.2,
+            "energy_arc": (0.2, 0.4, 0.6, 0.8),
+            "duration": 0.5,
+            "attack": 0.1,
+            "decay": 0.2,
+            "sustain": 0.3,
+            "tail": 0.4,
+            "spectral_flatness": 0.2,
+            "noise": 0.2,
+            "harmonicity": 0.8,
+            "transient": 0.4,
+            "modulation": 0.3,
+        }
+
+    monkeypatch.setattr(extractor_module, "_measure_audio_features", measure)
+    analysis = analyze_audio_snapshot(audio_path)
+
+    assert observed == [original]
+    assert audio_path.exists()
+    assert analysis.audio_sha256 == hashlib.sha256(original).hexdigest()
+    with pytest.raises(TypeError, match="path must be"):
+        analyze_audio_snapshot("parent-owned.wav")  # type: ignore[arg-type]
+
+
+def test_audio_synthesis_measurement_helpers_cover_bounds() -> None:
+    assert extractor_module._audio_safe_ratio(1.0, 0.0) == 0.0
+    assert extractor_module._audio_safe_ratio(1.0, 2.0) == 0.5
+    assert extractor_module._audio_mean([]) == 0.0
+    assert extractor_module._audio_mean([1.0, 3.0]) == 2.0
+    assert extractor_module._audio_standard_deviation([], 0.0) == 0.0
+    assert extractor_module._audio_standard_deviation([1.0, 3.0], 2.0) == 1.0
+    assert extractor_module._audio_decay_frames([1.0, 0.2], 0, 1.0) == 1
+    assert extractor_module._audio_decay_frames([1.0, 0.9], 0, 1.0) == 1
+    assert extractor_module._audio_window_level([], 0.0, 0.4, 0.8) == 0.0
+    assert extractor_module._audio_window_level([1.0, 0.5], 1.0, 0.4, 1.0) == 0.75
+    assert extractor_module._first_finite([]) == 0.0
+    assert extractor_module._first_finite([float("nan")]) == 0.0
+    assert extractor_module._first_finite([123.0]) == 123.0
+    assert extractor_module._tempo_stability([]) == 0.0
+    assert extractor_module._tempo_stability([0.0, 1.0, 2.0]) == 1.0
+    assert extractor_module._tempo_stability([1.0, 1.0, 1.0]) == 0.0
+    assert extractor_module._tempo_from_onsets([], 22_050) == 0.0
+    assert extractor_module._tempo_from_onsets([0.0, 1.0], 0) == 0.0
+    assert extractor_module._tempo_from_onsets([2.0, 1.0], 22_050) == 0.0
+    assert 60.0 <= extractor_module._tempo_from_onsets([0.0, 43.0], 22_050) <= 200.0
+    assert 60.0 <= extractor_module._tempo_from_onsets([0.0, 100.0], 22_050) <= 200.0
+    assert extractor_module._spectral_weights([], [], onset_count=0, percussion_density=0.5) == (
+        0.0,
+        0.0,
+    )
+    assert extractor_module._spectral_weights(
+        [[3.0], [1.0]],
+        [100.0, 1000.0],
+        onset_count=1,
+        percussion_density=0.5,
+    ) == (0.75, 0.75)
+    assert extractor_module._spectral_weights(
+        [[1.0]], [100.0], onset_count=0, percussion_density=0.5
+    ) == (1.0, 0.0)
+    assert extractor_module._energy_arc([0.5]) == (0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+    assert extractor_module._energy_arc([0.0] * 8) == (0.0,) * 8
+    assert extractor_module._energy_arc([float(value) for value in range(1, 9)])[-1] == 1.0
+
+
+def test_audio_array_conversion_and_empty_measurement_defenses(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeArray:
+        def __init__(self, value: object) -> None:
+            self.value = value
+
+        def reshape(self, *_shape: int):
+            return self
+
+        def tolist(self) -> object:
+            return self.value
+
+    class FakeNumpy:
+        def asarray(self, value: object) -> FakeArray:
+            return FakeArray(value)
+
+    class EmptyLibrosa:
+        def load(self, *_args: object, **_kwargs: object) -> tuple[list[float], int]:
+            return [], 22_050
+
+    numpy = FakeNumpy()
+    with pytest.raises(TypeError, match="array must serialize"):
+        extractor_module._flat_float_values(numpy, 1.0)  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="matrix must serialize"):
+        extractor_module._matrix_float_values(numpy, 1.0)  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="matrix row"):
+        extractor_module._matrix_float_values(numpy, [1.0])  # type: ignore[arg-type]
+
+    monkeypatch.setattr(
+        extractor_module,
+        "_require_librosa",
+        lambda: (EmptyLibrosa(), numpy),
+    )
+    measurements = extractor_module._measure_audio_features(tmp_path / "empty.wav")
+    assert measurements["energy_arc"] == (0.0,) * 8
+    assert measurements["harmonicity"] == 0.0
 
 
 def test_extract_from_audio_raises_dependency_error_when_librosa_missing(
@@ -437,7 +667,11 @@ def test_analyze_library_raises_dependency_error_with_audio_present(
 
     # Library imports the helper from extractor; patch via the library
     # module-level name.
-    monkeypatch.setattr(library_module, "_require_librosa", _explode)
+    monkeypatch.setattr(
+        library_module,
+        "_require_library_audio_dependencies",
+        _explode,
+    )
     with pytest.raises(StyleAnalysisDependencyError):
         analyze_library(tmp_path)
 
@@ -464,19 +698,25 @@ def test_package_reexports_public_surface():
 
     expected = {
         "AnalogFourTrackBlueprint",
+        "AudioFeatureAnalysis",
+        "AudioSynthesisFeatures",
         "Confidence",
         "FeatureReport",
+        "FeatureReportPayload",
         "ReferenceStyleBlueprint",
         "ReferenceTrait",
         "RytmPadBlueprint",
         "SourceType",
         "StyleAnalysisDependencyError",
         "analyze_library",
+        "analyze_audio",
+        "audio_synthesis_features_to_dict",
         "build_reference_style_blueprint",
         "compute_feature_report_hash",
         "extract_from_audio",
         "extract_from_description",
         "extract_from_partial",
+        "feature_report_to_dict",
         "reference_style_blueprint_to_dict",
     }
     assert expected == set(style_analysis.__all__)
@@ -532,13 +772,17 @@ def test_extract_from_audio_runs_on_synthetic_signal(tmp_path: Path):
     wav = tmp_path / "sine.wav"
     _write_sine_wave(wav, frequency=440.0, sr=22050, duration=2.0)
 
-    report = extract_from_audio(wav)
+    analysis = analyze_audio(wav)
+    report = analysis.feature_report
 
     assert report.source_type is SourceType.SINGLE_TRACK
     assert report.confidence is Confidence.HIGH
     assert len(report.energy_arc) == 8
     # The hash is settled.
     assert report.content_hash == compute_feature_report_hash(report)
+    assert analysis.audio_sha256 == hashlib.sha256(wav.read_bytes()).hexdigest()
+    assert 0.0 <= analysis.harmonicity <= 1.0
+    assert 0.0 <= analysis.modulation <= 1.0
     # Determinism: a second extraction yields the same hash modulo
     # ``derived_at`` (which is wall-clock). The non-time fields must match.
     second = extract_from_audio(wav)

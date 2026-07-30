@@ -91,6 +91,7 @@ def test_send_records_one_message_in_memory_only():
 
     assert sender.sent_messages == (message,)
     assert sender.messages == (message,)
+    assert message.type == "cc"
 
 
 def test_send_many_records_messages_in_order():

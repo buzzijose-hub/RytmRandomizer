@@ -116,8 +116,8 @@ rytm-randomizer cockpit-export-profile-model \
 ```
 
 1. **`pack`** the `ProfileModel` to MessagePack with a 4-byte magic (`RYMP`), versioned header, payload length, CRC32.
-2. **`sign`** with HMAC-SHA256 (stdlib only). Wrap in a `RYMS` envelope carrying the algorithm, key id, and 32-byte signature.
-3. **`write`** atomically: temp-file in the same directory → `fsync` → `os.replace`. No partial files ever land on disk.
+2. **`sign`** with HMAC-SHA256 (stdlib only — no crypto library dep). Wrap in a `RYMS` envelope carrying the algorithm, key id, and 32-byte signature.
+3. **`write`** atomically: sibling temp file → complete write + file `fsync` → platform-native atomic publication (`os.replace` for overwrite, Windows `os.rename` / POSIX `os.link` for no-overwrite). **No partial files ever land on disk.** Parent-directory persistence after sudden power loss remains filesystem-dependent.
 4. **`verify`** the bytes that were just written. The verifier never raises; it returns a `VerificationResult` with `ok` + a `reason` from a finite set.
 
 Rehearse before you ship: the passive `cockpit-export-rehearsal-report` shows exactly what file would land — path, payload size, format version, CRC, signing status — without writing anything. See [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md) §5c for the operator walkthrough.
@@ -227,12 +227,19 @@ rytm-snapshot-mutation-preview-report KITS.syx --slot N --depth 2     # mock-onl
 rytm-12-pad-machine-matrix-report                                     # pad/machine compatibility
 analog-rytm-midi-catalog-report                                       # Analog Rytm MIDI catalog (OS 1.72 CC/NRPN)
 
-# Style
+# Style + previews
 reference-style-blueprint-report --description "rolling warehouse"    # 12-pad + A4 blueprint
 dual-machine-style-kit-selection-report STYLE --rytm KITS --analog-four KITS
+scoped-randomization-preview                                          # mask + depth plan preview
+kit-morph-preview                                                     # current↔target morph preview
+
+# Analog Four patch pipeline (hardware-validated writers; sends stay armed-only)
+analog-four-saved-kit-export --source KIT.syx --output OUT.syx --filter2-resonance 1:64
+analog-four-audio-patch-batch --audio REF.wav --source-kit KIT.syx --output-dir batch/
+analog-four-audio-patch-rank --reference REF.wav --manifest batch.json --render 1=take1.wav
 ```
 
-Every command above is **passive by construction** — no output port opens, no MIDI is sent. The full list is auto-discovered and swept on every PR.
+Every command above is **passive by construction** — no output port opens, no MIDI is sent (armed A4 delivery requires `--arm` plus a reviewed batch manifest). The full list is auto-discovered and swept on every PR.
 
 ---
 
@@ -290,7 +297,7 @@ git clone https://github.com/buzzijose-hub/RytmRandomizer.git
 cd RytmRandomizer
 pip install -e ".[dev]"
 pytest                    # full suite, parallelized
-just check                # pre-PR gate (ruff + black + isort + tests + arch)
+just check                # lint + strict production typing + arch + tests + coverage
 ```
 
 **Repository map** (high-level):
@@ -317,6 +324,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow (plan → TDD → code
 
 **Free for personal and noncommercial use. Commercial license available.**
 
+RytmRandomizer is an independent, unofficial open-source project. It is not affiliated with, sponsored by, or endorsed by Elektron. Elektron, Analog Four, and Analog Rytm are trademarks of their respective owner.
 RytmRandomizer is licensed under the [PolyForm Noncommercial License
 1.0.0](LICENSE) — a [source-available](https://en.wikipedia.org/wiki/Source-available_software)
 license that lets anyone clone, run, modify, share, and contribute to the

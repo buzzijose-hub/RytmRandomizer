@@ -166,6 +166,91 @@ def test_rytm_cc_observer_decodes_nrpn_sequence_for_dual_vco_detune_candidate() 
     assert "machine:dual_vco:Osc 2 Detune" in nrpn.label_names
 
 
+def test_rytm_cc_observer_ignores_incomplete_nrpn_selectors() -> None:
+    lookup = build_rytm_cc_label_lookup(ANALOG_RYTM_MANUAL_CC.values())
+    snapshot = observe_rytm_cc_message(
+        empty_rytm_cc_observe_snapshot(),
+        _cc_message(channel=1, control=6, value=25),
+        observed_at=1.0,
+        cc_lookup=lookup,
+    )
+    snapshot = observe_rytm_cc_message(
+        snapshot,
+        _cc_message(channel=1, control=99, value=1),
+        observed_at=1.1,
+        cc_lookup=lookup,
+    )
+    snapshot = observe_rytm_cc_message(
+        snapshot,
+        _cc_message(channel=1, control=6, value=26),
+        observed_at=1.2,
+        cc_lookup=lookup,
+    )
+
+    assert snapshot.observed_cc_count == 3
+    assert snapshot.observed_nrpn_count == 0
+
+
+def test_rytm_cc_observer_does_not_attach_value_lsb_across_channels() -> None:
+    lookup = build_rytm_cc_label_lookup(ANALOG_RYTM_MANUAL_CC.values())
+    snapshot = empty_rytm_cc_observe_snapshot()
+    for observed_at, channel, control, value in (
+        (1.0, 1, 99, 1),
+        (1.1, 1, 98, 4),
+        (1.2, 1, 6, 25),
+        (1.3, 2, 38, 64),
+    ):
+        snapshot = observe_rytm_cc_message(
+            snapshot,
+            _cc_message(channel=channel, control=control, value=value),
+            observed_at=observed_at,
+            cc_lookup=lookup,
+        )
+
+    assert snapshot.observed_nrpn_count == 1
+    assert snapshot.nrpn_observations[0].value_lsb is None
+
+
+def test_rytm_cc_observer_ignores_other_channel_exact_nrpn_labels() -> None:
+    candidate_lookup = build_rytm_cc_label_lookup(ANALOG_RYTM_MANUAL_CC.values())
+    exact_lookup = build_rytm_cc_exact_label_lookup(
+        (
+            types.SimpleNamespace(
+                channel=2,
+                cc_msb=20,
+                section="dual_vco",
+                parameter="Osc 2 Detune",
+                source="machine_src",
+                machine_key="dual_vco",
+            ),
+            types.SimpleNamespace(
+                channel=1,
+                cc_msb=21,
+                section="dual_vco",
+                parameter="Osc 2 Tune",
+                source="machine_src",
+                machine_key="dual_vco",
+            ),
+        )
+    )
+    snapshot = empty_rytm_cc_observe_snapshot()
+    for observed_at, control, value in (
+        (1.0, 99, 1),
+        (1.1, 98, 4),
+        (1.2, 6, 25),
+    ):
+        snapshot = observe_rytm_cc_message(
+            snapshot,
+            _cc_message(channel=1, control=control, value=value),
+            observed_at=observed_at,
+            cc_lookup=candidate_lookup,
+            exact_cc_lookup=exact_lookup,
+        )
+
+    assert "SYNTH:Synth Parameter 5" in snapshot.nrpn_observations[0].label_names
+    assert "machine:dual_vco:Osc 2 Detune" in snapshot.nrpn_observations[0].label_names
+
+
 def test_rytm_cc_observer_uses_exact_snapshot_label_for_nrpn_sequence() -> None:
     candidate_lookup = build_rytm_cc_label_lookup(ANALOG_RYTM_MANUAL_CC.values())
     exact_lookup = build_rytm_cc_exact_label_lookup(

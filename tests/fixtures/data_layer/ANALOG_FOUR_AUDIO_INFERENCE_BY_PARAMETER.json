@@ -1,0 +1,629 @@
+{
+  "Delay Send Level": {
+    "parameters": [
+      "Delay Send Level"
+    ],
+    "scale": "unipolar",
+    "intercept": 0.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "animation"
+        ],
+        "coefficient": 42.0
+      },
+      {
+        "feature_keys": [
+          "tail"
+        ],
+        "coefficient": 35.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "EnvA Attack Time": {
+    "parameters": [
+      "EnvA Attack Time",
+      "EnvF Attack Time"
+    ],
+    "scale": "unipolar",
+    "intercept": 0.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "attack"
+        ],
+        "coefficient": 112.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "EnvA Decay Time": {
+    "parameters": [
+      "EnvA Decay Time"
+    ],
+    "scale": "unipolar",
+    "intercept": 8.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "decay"
+        ],
+        "coefficient": 82.0
+      },
+      {
+        "feature_keys": [
+          "duration"
+        ],
+        "coefficient": 30.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "EnvA Release Time": {
+    "parameters": [
+      "EnvA Release Time"
+    ],
+    "scale": "unipolar",
+    "intercept": 0.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "tail"
+        ],
+        "coefficient": 100.0
+      },
+      {
+        "feature_keys": [
+          "duration"
+        ],
+        "coefficient": 18.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "EnvA Sustain Level": {
+    "parameters": [
+      "EnvA Sustain Level"
+    ],
+    "scale": "unipolar",
+    "intercept": 0.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "sustain"
+        ],
+        "coefficient": 112.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "EnvF Attack Time": {
+    "parameters": [
+      "EnvA Attack Time",
+      "EnvF Attack Time"
+    ],
+    "scale": "unipolar",
+    "intercept": 0.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "attack"
+        ],
+        "coefficient": 112.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "EnvF Decay Time": {
+    "parameters": [
+      "EnvF Decay Time"
+    ],
+    "scale": "unipolar",
+    "intercept": 10.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "decay"
+        ],
+        "coefficient": 72.0
+      },
+      {
+        "feature_keys": [
+          "transient"
+        ],
+        "coefficient": 34.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "EnvF Release Time": {
+    "parameters": [
+      "EnvF Release Time"
+    ],
+    "scale": "unipolar",
+    "intercept": 0.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "tail"
+        ],
+        "coefficient": 92.0
+      },
+      {
+        "feature_keys": [
+          "decay"
+        ],
+        "coefficient": 22.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "EnvF Sustain Level": {
+    "parameters": [
+      "EnvF Sustain Level"
+    ],
+    "scale": "unipolar",
+    "intercept": 0.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "sustain"
+        ],
+        "coefficient": 92.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "Filter Overdrive": {
+    "parameters": [
+      "Filter Overdrive"
+    ],
+    "scale": "bipolar",
+    "intercept": 0.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "harmonicity"
+        ],
+        "coefficient": 0.35
+      },
+      {
+        "feature_keys": [
+          "noise"
+        ],
+        "coefficient": 0.35
+      },
+      {
+        "feature_keys": [
+          "low_end"
+        ],
+        "coefficient": 0.3
+      }
+    ],
+    "output_multiplier": 34.0
+  },
+  "Filter1 Envelope Amount": {
+    "parameters": [
+      "Filter1 Envelope Amount"
+    ],
+    "scale": "bipolar",
+    "intercept": 0.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "transient"
+        ],
+        "coefficient": 46.0
+      },
+      {
+        "feature_keys": [
+          "decay"
+        ],
+        "coefficient": 10.0
+      },
+      {
+        "feature_keys": [
+          "sustain"
+        ],
+        "coefficient": -6.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "Filter1 Frequency": {
+    "parameters": [
+      "Filter1 Frequency"
+    ],
+    "scale": "unipolar",
+    "intercept": 24.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "brightness"
+        ],
+        "coefficient": 92.0
+      },
+      {
+        "feature_keys": [
+          "low_end"
+        ],
+        "coefficient": -18.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "Filter1 Resonance": {
+    "parameters": [
+      "Filter1 Resonance"
+    ],
+    "scale": "unipolar",
+    "intercept": 8.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "harmonicity"
+        ],
+        "coefficient": 38.0
+      },
+      {
+        "feature_keys": [
+          "transient"
+        ],
+        "coefficient": 22.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "Filter2 Envelope Amount": {
+    "parameters": [
+      "Filter2 Envelope Amount"
+    ],
+    "scale": "bipolar",
+    "intercept": 0.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "transient"
+        ],
+        "coefficient": 34.0
+      },
+      {
+        "feature_keys": [
+          "animation"
+        ],
+        "coefficient": 10.0
+      },
+      {
+        "feature_keys": [
+          "sustain"
+        ],
+        "coefficient": -5.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "Filter2 Frequency": {
+    "parameters": [
+      "Filter2 Frequency"
+    ],
+    "scale": "unipolar",
+    "intercept": 46.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "brightness"
+        ],
+        "coefficient": 76.0
+      },
+      {
+        "feature_keys": [
+          "low_end"
+        ],
+        "coefficient": -12.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "Filter2 Resonance": {
+    "parameters": [
+      "Filter2 Resonance"
+    ],
+    "scale": "unipolar",
+    "intercept": 6.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "harmonicity"
+        ],
+        "coefficient": 30.0
+      },
+      {
+        "feature_keys": [
+          "brightness"
+        ],
+        "coefficient": 20.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "LFO1 Depth A": {
+    "parameters": [
+      "LFO1 Depth A"
+    ],
+    "scale": "bipolar",
+    "intercept": 0.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "animation"
+        ],
+        "coefficient": 24.0
+      },
+      {
+        "feature_keys": [
+          "noise"
+        ],
+        "coefficient": 8.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "LFO1 Depth B": {
+    "parameters": [
+      "LFO1 Depth B"
+    ],
+    "scale": "bipolar",
+    "intercept": 0.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "animation",
+          "noise"
+        ],
+        "coefficient": 18.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "LFO1 Speed": {
+    "parameters": [
+      "LFO1 Speed"
+    ],
+    "scale": "bipolar",
+    "intercept": 0.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "animation"
+        ],
+        "coefficient": 48.0
+      },
+      {
+        "feature_keys": [
+          "transient"
+        ],
+        "coefficient": 8.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "Noise Fade": {
+    "parameters": [
+      "Noise Fade"
+    ],
+    "scale": "unipolar",
+    "intercept": 10.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "tail"
+        ],
+        "coefficient": 96.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "Noise Level": {
+    "parameters": [
+      "Noise Level"
+    ],
+    "scale": "unipolar",
+    "intercept": 8.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "noise"
+        ],
+        "coefficient": 106.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "OSC1 Level": {
+    "parameters": [
+      "OSC1 Level"
+    ],
+    "scale": "unipolar",
+    "intercept": 70.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "harmonicity"
+        ],
+        "coefficient": 38.0
+      },
+      {
+        "feature_keys": [
+          "low_end"
+        ],
+        "coefficient": 18.0
+      },
+      {
+        "feature_keys": [
+          "noise"
+        ],
+        "coefficient": -12.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "OSC1 Pulsewidth": {
+    "parameters": [
+      "OSC1 Pulsewidth",
+      "OSC2 Pulsewidth"
+    ],
+    "scale": "bipolar",
+    "intercept": 0.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "brightness"
+        ],
+        "coefficient": 28.0
+      },
+      {
+        "feature_keys": [
+          "harmonicity"
+        ],
+        "coefficient": 12.0
+      },
+      {
+        "feature_keys": [
+          "low_end"
+        ],
+        "coefficient": -8.0
+      }
+    ],
+    "output_multiplier": -1.0
+  },
+  "OSC2 Level": {
+    "parameters": [
+      "OSC2 Level"
+    ],
+    "scale": "unipolar",
+    "intercept": 22.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "brightness"
+        ],
+        "coefficient": 54.0
+      },
+      {
+        "feature_keys": [
+          "harmonicity"
+        ],
+        "coefficient": 22.0
+      },
+      {
+        "feature_keys": [
+          "low_end"
+        ],
+        "coefficient": -8.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "OSC2 Pulsewidth": {
+    "parameters": [
+      "OSC1 Pulsewidth",
+      "OSC2 Pulsewidth"
+    ],
+    "scale": "bipolar",
+    "intercept": 0.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "brightness"
+        ],
+        "coefficient": 28.0
+      },
+      {
+        "feature_keys": [
+          "harmonicity"
+        ],
+        "coefficient": 12.0
+      },
+      {
+        "feature_keys": [
+          "low_end"
+        ],
+        "coefficient": -8.0
+      }
+    ],
+    "output_multiplier": -1.0
+  },
+  "Reverb Send Level": {
+    "parameters": [
+      "Reverb Send Level"
+    ],
+    "scale": "unipolar",
+    "intercept": 0.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "tail"
+        ],
+        "coefficient": 58.0
+      },
+      {
+        "feature_keys": [
+          "sustain"
+        ],
+        "coefficient": 28.0
+      },
+      {
+        "feature_keys": [
+          "noise"
+        ],
+        "coefficient": 20.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "Sync Amount": {
+    "parameters": [
+      "Sync Amount"
+    ],
+    "scale": "unipolar",
+    "intercept": 0.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "brightness"
+        ],
+        "coefficient": 82.0
+      },
+      {
+        "feature_keys": [
+          "harmonicity"
+        ],
+        "coefficient": 34.0
+      }
+    ],
+    "output_multiplier": 1.0
+  },
+  "Volume": {
+    "parameters": [
+      "Volume"
+    ],
+    "scale": "unipolar",
+    "intercept": 88.0,
+    "terms": [
+      {
+        "feature_keys": [
+          "harmonicity"
+        ],
+        "coefficient": 16.0
+      },
+      {
+        "feature_keys": [
+          "noise"
+        ],
+        "coefficient": -8.0
+      }
+    ],
+    "output_multiplier": 1.0
+  }
+}

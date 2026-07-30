@@ -4,105 +4,120 @@
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Chorus Send Level": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Delay Send Level": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Env2 Attack Time": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Env2 Decay Time": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Env2 Depth A": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Env2 Depth B": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Env2 Destination A": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Env2 Destination B": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Env2 Env Shape": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Env2 Gate Length": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Env2 Release Time": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Env2 Sustain Level": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "EnvA Attack Time": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "EnvA Decay Time": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "EnvA Env Shape": {
     "display_scale": "enum",
@@ -113,67 +128,72 @@
     },
     "center_label": null,
     "transport_ready": true,
-    "value_note": "Amp envelope curve shape."
+    "value_note": "Amp envelope curve shape.",
+    "transport_blocking_reason": ""
   },
   "EnvA Release Time": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "EnvA Sustain Level": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "EnvF Attack Time": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "EnvF Decay Time": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "EnvF Depth A": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "EnvF Depth B": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "EnvF Destination A": {
     "display_scale": "enum",
-    "value_labels": {
-      "0": "OFF"
-    },
+    "value_labels": {},
     "center_label": null,
     "transport_ready": false,
-    "value_note": "Destination labels are front-panel safe until full ordinal capture."
+    "value_note": "A4 OS 1.55 displayed raw 96 after the inferred OFF ordinal.",
+    "transport_blocking_reason": "physical A4 rehearsal disproved the inferred enum ordinal; hardware calibration required"
   },
   "EnvF Destination B": {
     "display_scale": "enum",
-    "value_labels": {
-      "0": "OFF"
-    },
+    "value_labels": {},
     "center_label": null,
     "transport_ready": false,
-    "value_note": "Destination labels are front-panel safe until full ordinal capture."
+    "value_note": "A4 OS 1.55 displayed raw 96 after the inferred OFF ordinal.",
+    "transport_blocking_reason": "physical A4 rehearsal disproved the inferred enum ordinal; hardware calibration required"
   },
   "EnvF Env Shape": {
     "display_scale": "enum",
@@ -184,93 +204,104 @@
     },
     "center_label": null,
     "transport_ready": true,
-    "value_note": "Filter envelope curve shape."
+    "value_note": "Filter envelope curve shape.",
+    "transport_blocking_reason": ""
   },
   "EnvF Gate Length": {
     "display_scale": "enum",
-    "value_labels": {
-      "0": "NOTE"
-    },
+    "value_labels": {},
     "center_label": null,
     "transport_ready": false,
-    "value_note": "Front-panel gate-length label; ordinal capture remains pending."
+    "value_note": "A4 OS 1.55 displayed OFF after raw value 0, not the NOTE target.",
+    "transport_blocking_reason": "physical A4 rehearsal disproved the inferred enum ordinal; hardware calibration required"
   },
   "EnvF Release Time": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "EnvF Sustain Level": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Filter Overdrive": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": "OFF/0",
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Filter1 Envelope Amount": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Filter1 Frequency": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Filter1 Keytracking": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Filter1 Resonance": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Filter2 Envelope Amount": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Filter2 Frequency": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Filter2 Keytracking": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Filter2 Resonance": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Filter2 Type": {
     "display_scale": "enum",
@@ -285,80 +316,80 @@
     },
     "center_label": null,
     "transport_ready": true,
-    "value_note": "Filter 2 shape; HP2 is the classic 12 dB high-pass option."
+    "value_note": "Filter 2 shape; HP2 is the classic 12 dB high-pass option.",
+    "transport_blocking_reason": ""
   },
   "LFO1 Depth A": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "LFO1 Depth B": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "LFO1 Destination A": {
     "display_scale": "enum",
-    "value_labels": {
-      "0": "OFF"
-    },
+    "value_labels": {},
     "center_label": null,
     "transport_ready": false,
-    "value_note": "Destination labels are front-panel safe until full ordinal capture."
+    "value_note": "A4 OS 1.55 displayed raw 34 after the inferred Filter1 Frequency ordinal.",
+    "transport_blocking_reason": "physical A4 rehearsal disproved the inferred enum ordinal; hardware calibration required"
   },
   "LFO1 Destination B": {
     "display_scale": "enum",
-    "value_labels": {
-      "0": "OFF"
-    },
+    "value_labels": {},
     "center_label": null,
     "transport_ready": false,
-    "value_note": "Destination labels are front-panel safe until full ordinal capture."
+    "value_note": "A4 OS 1.55 displayed raw 96 after the inferred OFF ordinal.",
+    "transport_blocking_reason": "physical A4 rehearsal disproved the inferred enum ordinal; hardware calibration required"
   },
   "LFO1 Fade": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "LFO1 Mode": {
     "display_scale": "enum",
-    "value_labels": {
-      "0": "TRG",
-      "1": "HLD",
-      "2": "ONE"
-    },
+    "value_labels": {},
     "center_label": null,
-    "transport_ready": true,
-    "value_note": "LFO trigger/playback mode."
+    "transport_ready": false,
+    "value_note": "A4 OS 1.55 remained FREE after raw value 0, not the TRG target.",
+    "transport_blocking_reason": "physical A4 rehearsal disproved the inferred enum ordinal; hardware calibration required"
   },
   "LFO1 Speed": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "LFO1 Speed Multiplier": {
     "display_scale": "enum",
-    "value_labels": {
-      "64": "x1"
-    },
+    "value_labels": {},
     "center_label": null,
-    "transport_ready": true,
-    "value_note": "Multiplier row uses the neutral x1 screen target."
+    "transport_ready": false,
+    "value_note": "A4 OS 1.55 displayed 2K after raw value 64, not the x1 target.",
+    "transport_blocking_reason": "physical A4 rehearsal disproved the inferred enum ordinal; hardware calibration required"
   },
   "LFO1 Start Phase": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "LFO1 Waveform": {
     "display_scale": "enum",
@@ -372,64 +403,64 @@
     },
     "center_label": null,
     "transport_ready": true,
-    "value_note": "LFO waveform shape."
+    "value_note": "LFO waveform shape.",
+    "transport_blocking_reason": ""
   },
   "LFO2 Depth A": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "LFO2 Depth B": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "LFO2 Destination A": {
     "display_scale": "enum",
-    "value_labels": {
-      "0": "OFF"
-    },
+    "value_labels": {},
     "center_label": null,
     "transport_ready": false,
-    "value_note": ""
+    "value_note": "LFO2 destination ordinals remain pending independent validation.",
+    "transport_blocking_reason": ""
   },
   "LFO2 Destination B": {
     "display_scale": "enum",
-    "value_labels": {
-      "0": "OFF"
-    },
+    "value_labels": {},
     "center_label": null,
     "transport_ready": false,
-    "value_note": ""
+    "value_note": "LFO2 destination ordinals remain pending independent validation.",
+    "transport_blocking_reason": ""
   },
   "LFO2 Fade": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "LFO2 Mode": {
     "display_scale": "enum",
-    "value_labels": {
-      "0": "TRG",
-      "1": "HLD",
-      "2": "ONE"
-    },
+    "value_labels": {},
     "center_label": null,
-    "transport_ready": true,
-    "value_note": ""
+    "transport_ready": false,
+    "value_note": "No LFO2 mode ordinal has independent physical A4 evidence.",
+    "transport_blocking_reason": "physical A4 rehearsal disproved the inferred enum ordinal; hardware calibration required"
   },
   "LFO2 Speed": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "LFO2 Speed Multiplier": {
     "display_scale": "enum",
@@ -438,14 +469,16 @@
     },
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "LFO2 Start Phase": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "LFO2 Waveform": {
     "display_scale": "enum",
@@ -459,237 +492,271 @@
     },
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Noise Fade": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Noise Level": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Noise S&H": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Note Sync": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "OSC1 AM": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "OSC1 Detune": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "OSC1 Keytracking": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "OSC1 Level": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "OSC1 PWM Depth": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "OSC1 PWM Speed": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "OSC1 Pitch": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "OSC1 Pulsewidth": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "OSC1 Sub Oscillator": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "OSC1 Waveform": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "OSC2 AM": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "OSC2 Detune": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "OSC2 Keytracking": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "OSC2 Level": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "OSC2 PWM Depth": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "OSC2 PWM Speed": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "OSC2 Pitch": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "OSC2 Pulsewidth": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "OSC2 Sub Oscillator": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "OSC2 Waveform": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Pan": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Reverb Send Level": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Slide Time": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Sync Amount": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Sync Mode": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Vibrato Depth": {
     "display_scale": "bipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Vibrato Fade": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Vibrato Speed": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   },
   "Volume": {
     "display_scale": "unipolar",
     "value_labels": {},
     "center_label": null,
     "transport_ready": true,
-    "value_note": ""
+    "value_note": "",
+    "transport_blocking_reason": ""
   }
 }

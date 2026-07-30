@@ -303,14 +303,24 @@ USAGE = (
     "[--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] "
     "[--playback-label <text>] [--validation-label <text>] [--json] | "
     "cockpit-send-plan-readiness-report (--plan-json <json>|--plan-file <path>) "
-    "[--label <text>] [--json] | cockpit-send-plan-rehearsal-surface-report "
-    "(--plan-json <json>|--plan-file <path>|--readiness-json <json>|--readiness-file "
-    "<path>) [--label <text>] [--json] | cockpit-export-profile-model --profile-id "
-    "<id> --profiles-dir <path> --output <file.rymp> [--key-hex <hex> --key-id "
-    "<label>] [--unsigned] [--overwrite] [--json] | cockpit-export-rehearsal-report "
-    "--profile-id <id> --profiles-dir <path> [--key-id <label>] [--unsigned] [--output "
-    "<path>] [--label <text>] [--json] | manual-feedback-packet-report [--scenario "
-    "full|installer|profile|mock|hardware|review] [--json] | "
+    "[--label <text>] [--json] | "
+    "cockpit-send-plan-rehearsal-surface-report "
+    "(--plan-json <json>|--plan-file <path>|--readiness-json <json>|--readiness-file <path>) "
+    "[--label <text>] [--json] | "
+    "cockpit-export-profile-model --profile-id <id> --profiles-dir <path> "
+    "--output <file.rymp> [--key-hex <hex> --key-id <label>] "
+    "[--unsigned] [--overwrite] [--json] | "
+    "analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> "
+    "--filter2-resonance <track:value> [--filter2-resonance <track:value> ...] "
+    "[--overwrite] [--json] | "
+    "analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> "
+    "--output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json] | "
+    "analog-four-audio-patch-rank --reference <path> --manifest <batch.json> "
+    "--render <N=path> [--render <N=path> ...] [--json] | "
+    "cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> "
+    "[--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json] | "
+    "manual-feedback-packet-report "
+    "[--scenario full|installer|profile|mock|hardware|review] [--json] | "
     "scoped-randomization-preview [--json] | kit-morph-preview [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | preview-command <key> | "
@@ -361,6 +371,40 @@ def test_top_level_help_exits_zero_and_matches_fixture():
 
     assert result.returncode == 0
     assert normalize_newlines(result.stdout) == fixture_text("cli_help_expected.txt")
+    assert result.stderr == ""
+
+
+def test_analog_four_audio_patch_batch_help_is_exact_and_passive():
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_cli import SAFETY_LINES
+
+    result = run_cli("analog-four-audio-patch-batch", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: analog-four-audio-patch-batch" in help_text
+    assert "real audio-dependent inference" in help_text
+    assert "hardware-write-validated Filter2 Resonance" in help_text
+    assert "complete patch DNA plus its CC/NRPN live-dial plan" in help_text
+    assert "not a claim of full saved-kit coverage" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_analog_four_audio_patch_rank_help_is_exact_and_passive():
+    from rytm_randomizer.cockpit.export.analog_four_patch_render_rank import (
+        ANALOG_FOUR_RENDER_RANK_SAFETY,
+    )
+
+    result = run_cli("analog-four-audio-patch-rank", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: analog-four-audio-patch-rank" in help_text
+    assert "--render <N=path>" in help_text
+    assert "measures eleven envelope and timbre features" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in ANALOG_FOUR_RENDER_RANK_SAFETY]
     assert result.stderr == ""
 
 

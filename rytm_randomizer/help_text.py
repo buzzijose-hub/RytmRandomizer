@@ -6,6 +6,9 @@ identical to the previously inline ``*_HELP`` constants; the CLI output must
 not change by a single character.
 """
 
+from collections.abc import Sequence
+from typing import Final
+
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | project-status-report "
     "[--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
@@ -276,14 +279,24 @@ USAGE = (
     "[--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] "
     "[--playback-label <text>] [--validation-label <text>] [--json] | "
     "cockpit-send-plan-readiness-report (--plan-json <json>|--plan-file <path>) "
-    "[--label <text>] [--json] | cockpit-send-plan-rehearsal-surface-report "
-    "(--plan-json <json>|--plan-file <path>|--readiness-json <json>|--readiness-file "
-    "<path>) [--label <text>] [--json] | cockpit-export-profile-model --profile-id "
-    "<id> --profiles-dir <path> --output <file.rymp> [--key-hex <hex> --key-id "
-    "<label>] [--unsigned] [--overwrite] [--json] | cockpit-export-rehearsal-report "
-    "--profile-id <id> --profiles-dir <path> [--key-id <label>] [--unsigned] [--output "
-    "<path>] [--label <text>] [--json] | manual-feedback-packet-report [--scenario "
-    "full|installer|profile|mock|hardware|review] [--json] | "
+    "[--label <text>] [--json] | "
+    "cockpit-send-plan-rehearsal-surface-report "
+    "(--plan-json <json>|--plan-file <path>|--readiness-json <json>|--readiness-file <path>) "
+    "[--label <text>] [--json] | "
+    "cockpit-export-profile-model --profile-id <id> --profiles-dir <path> "
+    "--output <file.rymp> [--key-hex <hex> --key-id <label>] "
+    "[--unsigned] [--overwrite] [--json] | "
+    "analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> "
+    "--filter2-resonance <track:value> [--filter2-resonance <track:value> ...] "
+    "[--overwrite] [--json] | "
+    "analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> "
+    "--output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json] | "
+    "analog-four-audio-patch-rank --reference <path> --manifest <batch.json> "
+    "--render <N=path> [--render <N=path> ...] [--json] | "
+    "cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> "
+    "[--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json] | "
+    "manual-feedback-packet-report "
+    "[--scenario full|installer|profile|mock|hardware|review] [--json] | "
     "scoped-randomization-preview [--json] | kit-morph-preview [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | preview-command <key> | "
@@ -291,7 +304,7 @@ USAGE = (
 )
 
 
-def _safety_block(lines):
+def _safety_block(lines: Sequence[str]) -> str:
     return "\n".join(f"  {line}" for line in lines)
 
 
@@ -2519,6 +2532,106 @@ Safety:
 {_safety_block(_COCKPIT_EXPORT_PROFILE_MODEL_SAFETY_LINES)}"""
 
 
+_ANALOG_FOUR_SAVED_KIT_EXPORT_SAFETY_LINES: Final[tuple[str, ...]] = (
+    "reads one operator-selected Analog Four saved-kit .syx file",
+    "writes one generated .syx file via the canonical atomic writer",
+    "only hardware-write-validated parameters are accepted",
+    "no MIDI sending",
+    "no port opening",
+    "no hardware mutation",
+    "no hardware required",
+    "no network access",
+)
+
+
+def _analog_four_saved_kit_export_help():
+    return f"""RytmRandomizer passive CLI: analog-four-saved-kit-export
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> --filter2-resonance 1:64
+  python -m rytm_randomizer.cli analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> --filter2-resonance 1:16 --filter2-resonance 2:48 --filter2-resonance 3:80 --filter2-resonance 4:112 --json
+  python -m rytm_randomizer.cli analog-four-saved-kit-export --help
+
+Arguments:
+  --source <kit.syx>                 Hardware-exported source saved kit
+  --output <kit.syx>                 Destination for the generated saved kit
+  --filter2-resonance <track:value>  Track 1-4 and front-panel value 0-127; repeatable
+  --overwrite                        Replace --output if it already exists
+  --json                             Emit a JSON acknowledgment instead of text
+
+Behavior:
+  Validates and decodes one Analog Four MKII saved-kit frame, applies every
+  requested hardware-validated Filter2 Resonance value, rebuilds the Elektron
+  7-bit payload/checksum/length trailer, and atomically publishes the output.
+  The acknowledgment reports the kit name, SHA256, byte count, track values,
+  and concrete unpacked offsets. Existing output is refused unless --overwrite
+  is explicit.
+
+Safety:
+{_safety_block(_ANALOG_FOUR_SAVED_KIT_EXPORT_SAFETY_LINES)}"""
+
+
+def _analog_four_audio_patch_batch_help():
+    from .cockpit.export.analog_four_patch_batch_cli import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: analog-four-audio-patch-batch
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir>
+  python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir> --track 2 --candidates 4 --json
+  python -m rytm_randomizer.cli analog-four-audio-patch-batch --help
+
+Arguments:
+  --audio <path>           Short reference audio clip to analyze
+  --source-kit <kit.syx>   Hardware-exported source saved kit
+  --output-dir <dir>       Destination for candidate .syx and JSON sidecar files
+  --track N                Analog Four track 1-4; default 1
+  --candidates N           Candidate count 1-4; default 4
+  --overwrite              Replace the stable manifest; reuse exact generation files
+  --json                   Emit a JSON acknowledgment instead of text
+
+Behavior:
+  Runs real audio-dependent inference and generates up to four candidate patch
+  genomes. Every candidate writes one saved-kit .syx file and one sidecar with
+  the complete patch DNA plus its CC/NRPN live-dial plan. The current .syx
+  writer applies only hardware-write-validated Filter2 Resonance; all other DNA
+  remains represented in the sidecar as live-sendable, manual, or deferred.
+  The acknowledgment reports the audio source hash, manifest path/hash,
+  candidate paths, category counts, and safety contract. This is not a claim of full saved-kit coverage
+  or Synthplant-equivalent learned accuracy.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _analog_four_audio_patch_rank_help():
+    from .cockpit.export.analog_four_patch_render_rank import (
+        ANALOG_FOUR_RENDER_RANK_SAFETY,
+    )
+
+    return f"""RytmRandomizer passive CLI: analog-four-audio-patch-rank
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference <path> --manifest <batch.json> --render <N=path>
+  python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference <path> --manifest <batch.json> --render <1=path> --render <2=path> --json
+  python -m rytm_randomizer.cli analog-four-audio-patch-rank --help
+
+Arguments:
+  --reference <path>       Original audio used to create the batch
+  --manifest <batch.json>  Committed audio-patch batch manifest
+  --render <N=path>        A4 recording for candidate 1-4; repeatable
+  --json                   Emit deterministic JSON instead of text
+
+Behavior:
+  Hash-verifies each selected candidate sidecar, proves that --reference is
+  the exact batch source, measures eleven envelope and timbre features from
+  every A4 recording, and ranks candidates by weighted acoustic distance.
+  The result identifies the closest candidate and exposes every feature delta.
+
+Safety:
+{_safety_block(ANALOG_FOUR_RENDER_RANK_SAFETY)}"""
+
+
 def _cockpit_export_rehearsal_report_help():
     from .reports.cockpit_export_rehearsal import SAFETY_LINES
 
@@ -2556,7 +2669,17 @@ Safety:
 
 def resolve_help_text(key: str) -> str:
     text = HELP_TEXT[key]
-    return text() if callable(text) else text
+    if isinstance(text, str):
+        return text
+    if callable(text):
+        return _require_help_text(text(), key=key)
+    raise TypeError(f"help text provider for {key!r} did not return a string")
+
+
+def _require_help_text(value: object, *, key: str) -> str:
+    if not isinstance(value, str):
+        raise TypeError(f"help text provider for {key!r} did not return a string")
+    return value
 
 
 HELP_TEXT = {
@@ -2677,6 +2800,9 @@ Usage:
   python -m rytm_randomizer.cli cockpit-send-plan-readiness-report (--plan-json <json>|--plan-file <path>) [--label <text>] [--json]
   python -m rytm_randomizer.cli cockpit-send-plan-rehearsal-surface-report (--plan-json <json>|--plan-file <path>|--readiness-json <json>|--readiness-file <path>) [--label <text>] [--json]
   python -m rytm_randomizer.cli cockpit-export-profile-model --profile-id <id> --profiles-dir <path> --output <file.rymp> [--key-hex <hex> --key-id <label>] [--unsigned] [--overwrite] [--json]
+  python -m rytm_randomizer.cli analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> --filter2-resonance <track:value> [--filter2-resonance <track:value> ...] [--overwrite] [--json]
+  python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json]
+  python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference <path> --manifest <batch.json> --render <N=path> [--render <N=path> ...] [--json]
   python -m rytm_randomizer.cli cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> [--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
@@ -2922,6 +3048,12 @@ Commands:
                     Build GUI-ready passive SEND plan rehearsal surface state.
   cockpit-export-profile-model
                     Export a cockpit ProfileModel (pack + sign + atomic write + verify).
+  analog-four-saved-kit-export
+                    Render hardware-validated Analog Four values into a saved-kit SysEx file.
+  analog-four-audio-patch-batch
+                    Infer and export up to four passive Analog Four patch candidates from audio.
+  analog-four-audio-patch-rank
+                    Rank recorded Analog Four candidates against their reference audio.
   cockpit-export-rehearsal-report
                     Build GUI-ready passive cockpit model-export rehearsal surface state.
   inspect-command    Inspect passive command metadata by key.
@@ -3334,6 +3466,9 @@ Safety:
         _cockpit_send_plan_rehearsal_surface_report_help
     ),
     "cockpit-export-profile-model": _cockpit_export_profile_model_help,
+    "analog-four-saved-kit-export": _analog_four_saved_kit_export_help,
+    "analog-four-audio-patch-batch": _analog_four_audio_patch_batch_help,
+    "analog-four-audio-patch-rank": _analog_four_audio_patch_rank_help,
     "cockpit-export-rehearsal-report": _cockpit_export_rehearsal_report_help,
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 

@@ -22,10 +22,14 @@ from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Iterator
+from typing import get_args
 
 import pytest
 
 from rytm_randomizer.observability.metrics import (
+    AnalogFourPatchInferenceErrorCode,
+    AnalogFourPatchRenderRankErrorCode,
+    AnalogFourPatchSendErrorCode,
     MidiMetrics,
     get_metrics,
     reset_metrics,
@@ -64,15 +68,48 @@ def reset_metrics_around_test() -> Iterator[None]:
 
 
 def test_public_surface_is_importable() -> None:
-    """``MidiMetrics``, ``get_metrics``, and ``reset_metrics`` are exported.
+    """The metrics class, lifecycle functions, and A4 error type are exported.
 
     A typo on any of the three would either break this import or the
     callable / class assertions below.
     """
 
     assert isinstance(MidiMetrics, type)
+    assert get_args(AnalogFourPatchInferenceErrorCode)
+    assert get_args(AnalogFourPatchRenderRankErrorCode)
+    assert get_args(AnalogFourPatchSendErrorCode)
     assert callable(get_metrics)
     assert callable(reset_metrics)
+
+
+def test_a4_patch_inference_error_codes_are_bounded() -> None:
+    """Direct inference failures use a finite, type-checkable vocabulary."""
+
+    assert frozenset(get_args(AnalogFourPatchInferenceErrorCode)) == frozenset(
+        {
+            "audio_read_failed",
+            "dependency_missing",
+            "inference_failed",
+            "interrupted",
+            "validation",
+        }
+    )
+
+
+def test_a4_patch_send_error_codes_are_bounded() -> None:
+    assert frozenset(get_args(AnalogFourPatchSendErrorCode)) == frozenset(
+        {
+            "interrupted",
+            "no_output_ports",
+            "partial_send",
+            "port_list",
+            "port_open",
+            "port_selection",
+            "send_count_mismatch",
+            "send_failed",
+            "validation",
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -307,6 +344,88 @@ def test_record_export_error_path() -> None:
     assert metrics.export_errors_by_code["pack_failed"] == 1
 
 
+def test_record_a4_patch_inference_success_path() -> None:
+    """Successful direct inference records count and latency without an error."""
+
+    metrics = MidiMetrics()
+
+    metrics.record_a4_patch_inference(125.5)
+    metrics.record_a4_patch_inference(74.25)
+
+    assert metrics.a4_patch_inference_count == 2
+    assert metrics.a4_patch_inference_duration_ms_total == pytest.approx(199.75)
+    assert not metrics.a4_patch_inference_errors_by_code
+
+
+def test_record_a4_patch_inference_error_path() -> None:
+    """Failed direct inference records count, latency, and its bounded category."""
+
+    metrics = MidiMetrics()
+
+    metrics.record_a4_patch_inference(20.0, error_code="audio_read_failed")
+    metrics.record_a4_patch_inference(30.0, error_code="dependency_missing")
+    metrics.record_a4_patch_inference(40.0, error_code="inference_failed")
+    metrics.record_a4_patch_inference(50.0, error_code="validation")
+
+    assert metrics.a4_patch_inference_count == 4
+    assert metrics.a4_patch_inference_duration_ms_total == pytest.approx(140.0)
+    assert metrics.a4_patch_inference_errors_by_code == Counter(
+        {
+            "audio_read_failed": 1,
+            "dependency_missing": 1,
+            "inference_failed": 1,
+            "validation": 1,
+        }
+    )
+
+
+def test_record_a4_publication_render_rank_and_patch_send_red_metrics() -> None:
+    metrics = MidiMetrics()
+
+    metrics.record_a4_patch_batch_read(4.0)
+    metrics.record_a4_patch_batch_read(6.0, error_code="artifact_validation")
+    metrics.record_a4_patch_publication("artifact_publish", 5.0)
+    metrics.record_a4_patch_publication("lock_acquire", 2.5, error_code="lock_exists")
+    metrics.record_a4_patch_render_rank(12.5)
+    metrics.record_a4_patch_render_rank(7.5, error_code="reference_mismatch")
+    metrics.record_a4_patch_send(30.0)
+    metrics.record_a4_patch_send(20.0, error_code="partial_send")
+    metrics.record_a4_active_operation("a4_cc_param_send", 3.0)
+    metrics.record_a4_active_operation(
+        "a4_soft_capture",
+        7.0,
+        error_code="capture_failed",
+    )
+    metrics.record_a4_active_error("port_close")
+
+    assert metrics.a4_patch_publication_count == Counter({"artifact_publish": 1, "lock_acquire": 1})
+    assert metrics.a4_patch_publication_duration_ms_total == Counter(
+        {"artifact_publish": 5.0, "lock_acquire": 2.5}
+    )
+    assert metrics.a4_patch_publication_errors_by_code["lock_exists"] == 1
+    assert (
+        metrics.a4_patch_publication_errors_by_operation_and_code["lock_acquire:lock_exists"] == 1
+    )
+    assert metrics.a4_patch_batch_read_count == 2
+    assert metrics.a4_patch_batch_read_duration_ms_total == pytest.approx(10.0)
+    assert metrics.a4_patch_batch_read_errors_by_code["artifact_validation"] == 1
+    assert metrics.a4_patch_render_rank_count == 2
+    assert metrics.a4_patch_render_rank_duration_ms_total == pytest.approx(20.0)
+    assert metrics.a4_patch_render_rank_errors_by_code["reference_mismatch"] == 1
+    assert metrics.a4_patch_send_count == 2
+    assert metrics.a4_patch_send_duration_ms_total == pytest.approx(50.0)
+    assert metrics.a4_patch_send_errors_by_code["partial_send"] == 1
+    assert metrics.a4_active_operation_count == Counter(
+        {"a4_cc_param_send": 1, "a4_soft_capture": 1}
+    )
+    assert metrics.a4_active_operation_duration_ms_total == Counter(
+        {"a4_cc_param_send": 3.0, "a4_soft_capture": 7.0}
+    )
+    assert metrics.a4_active_operation_errors_by_code == Counter(
+        {"capture_failed": 1, "port_close": 1}
+    )
+
+
 def test_format_summary_includes_red_metrics_sections() -> None:
     """``format_summary`` exposes every RED counter and the export scalars.
 
@@ -319,6 +438,21 @@ def test_format_summary_includes_red_metrics_sections() -> None:
     metrics.record_ws_command("send", 8.0, error_code="ERR_INTERNAL")
     metrics.record_export(100.0)
     metrics.record_export(50.0, error_code="write_failed")
+    metrics.record_a4_patch_inference(75.0)
+    metrics.record_a4_patch_inference(25.0, error_code="dependency_missing")
+    metrics.record_a4_patch_batch_read(5.0, error_code="artifact_validation")
+    metrics.record_a4_patch_publication(
+        "artifact_publish",
+        10.0,
+        error_code="artifact_collision",
+    )
+    metrics.record_a4_patch_render_rank(20.0, error_code="reference_mismatch")
+    metrics.record_a4_patch_send(15.0, error_code="partial_send")
+    metrics.record_a4_active_operation(
+        "a4_cc_param_send",
+        2.5,
+        error_code="send_failed",
+    )
 
     summary = metrics.format_summary()
 
@@ -331,6 +465,33 @@ def test_format_summary_includes_red_metrics_sections() -> None:
     assert "send:2" in summary
     assert "ERR_INTERNAL:1" in summary
     assert "write_failed:1" in summary
+    assert "a4_inference_count=2" in summary
+    assert "a4_inference_errors=" in summary
+    assert "a4_inference_duration_ms=100.0" in summary
+    assert "dependency_missing:1" in summary
+    assert "a4_batch_read_count=1" in summary
+    assert "a4_batch_read_errors=" in summary
+    assert "a4_batch_read_duration_ms=5.0" in summary
+    assert "a4_publication_count=" in summary
+    assert "artifact_publish:1" in summary
+    assert "a4_publication_errors=" in summary
+    assert "a4_publication_errors_by_operation=" in summary
+    assert "artifact_publish:artifact_collision:1" in summary
+    assert "artifact_collision:1" in summary
+    assert "a4_publication_duration_ms=" in summary
+    assert "a4_render_rank_count=1" in summary
+    assert "a4_render_rank_errors=" in summary
+    assert "a4_render_rank_duration_ms=20.0" in summary
+    assert "reference_mismatch:1" in summary
+    assert "a4_patch_send_count=1" in summary
+    assert "a4_patch_send_errors=" in summary
+    assert "a4_patch_send_duration_ms=15.0" in summary
+    assert "partial_send:1" in summary
+    assert "a4_active_count=" in summary
+    assert "a4_cc_param_send:1" in summary
+    assert "a4_active_errors=" in summary
+    assert "send_failed:1" in summary
+    assert "a4_active_duration_ms=" in summary
 
 
 def test_format_summary_red_metrics_empty_render_as_braces_and_zeros() -> None:
@@ -344,6 +505,25 @@ def test_format_summary_red_metrics_empty_render_as_braces_and_zeros() -> None:
     assert "export_count=0" in summary
     assert "export_errors={}" in summary
     assert "export_duration_ms=0.0" in summary
+    assert "a4_inference_count=0" in summary
+    assert "a4_inference_errors={}" in summary
+    assert "a4_inference_duration_ms=0.0" in summary
+    assert "a4_batch_read_count=0" in summary
+    assert "a4_batch_read_errors={}" in summary
+    assert "a4_batch_read_duration_ms=0.0" in summary
+    assert "a4_publication_count={}" in summary
+    assert "a4_publication_errors={}" in summary
+    assert "a4_publication_errors_by_operation={}" in summary
+    assert "a4_publication_duration_ms={}" in summary
+    assert "a4_render_rank_count=0" in summary
+    assert "a4_render_rank_errors={}" in summary
+    assert "a4_render_rank_duration_ms=0.0" in summary
+    assert "a4_patch_send_count=0" in summary
+    assert "a4_patch_send_errors={}" in summary
+    assert "a4_patch_send_duration_ms=0.0" in summary
+    assert "a4_active_count={}" in summary
+    assert "a4_active_errors={}" in summary
+    assert "a4_active_duration_ms={}" in summary
 
 
 def test_reset_metrics_clears_red_metric_counters() -> None:
@@ -352,6 +532,16 @@ def test_reset_metrics_clears_red_metric_counters() -> None:
     metrics = get_metrics()
     metrics.record_ws_command("send", 10.0, error_code="ERR_INTERNAL")
     metrics.record_export(50.0, error_code="write_failed")
+    metrics.record_a4_patch_inference(25.0, error_code="inference_failed")
+    metrics.record_a4_patch_batch_read(4.0, error_code="input_read_failed")
+    metrics.record_a4_patch_publication("lock_release", 5.0, error_code="release_failed")
+    metrics.record_a4_patch_render_rank(15.0, error_code="artifact_validation")
+    metrics.record_a4_patch_send(10.0, error_code="validation")
+    metrics.record_a4_active_operation(
+        "a4_kit_recipe_send",
+        6.0,
+        error_code="send_failed",
+    )
 
     assert metrics.ws_command_count["send"] == 1
     assert metrics.ws_command_errors_by_code["ERR_INTERNAL"] == 1
@@ -359,6 +549,20 @@ def test_reset_metrics_clears_red_metric_counters() -> None:
     assert metrics.export_count == 1
     assert metrics.export_duration_ms_total == pytest.approx(50.0)
     assert metrics.export_errors_by_code["write_failed"] == 1
+    assert metrics.a4_patch_inference_count == 1
+    assert metrics.a4_patch_inference_duration_ms_total == pytest.approx(25.0)
+    assert metrics.a4_patch_inference_errors_by_code["inference_failed"] == 1
+    assert metrics.a4_patch_batch_read_errors_by_code["input_read_failed"] == 1
+    assert metrics.a4_patch_publication_errors_by_code["release_failed"] == 1
+    assert (
+        metrics.a4_patch_publication_errors_by_operation_and_code["lock_release:release_failed"]
+        == 1
+    )
+    assert metrics.a4_patch_render_rank_errors_by_code["artifact_validation"] == 1
+    assert metrics.a4_patch_send_errors_by_code["validation"] == 1
+    assert metrics.a4_active_operation_count["a4_kit_recipe_send"] == 1
+    assert metrics.a4_active_operation_duration_ms_total["a4_kit_recipe_send"] == 6.0
+    assert metrics.a4_active_operation_errors_by_code["send_failed"] == 1
 
     reset_metrics()
 
@@ -370,3 +574,22 @@ def test_reset_metrics_clears_red_metric_counters() -> None:
     assert metrics.export_count == 0
     assert metrics.export_duration_ms_total == 0.0
     assert len(metrics.export_errors_by_code) == 0
+    assert metrics.a4_patch_inference_count == 0
+    assert metrics.a4_patch_inference_duration_ms_total == 0.0
+    assert len(metrics.a4_patch_inference_errors_by_code) == 0
+    assert metrics.a4_patch_batch_read_count == 0
+    assert metrics.a4_patch_batch_read_duration_ms_total == 0.0
+    assert len(metrics.a4_patch_batch_read_errors_by_code) == 0
+    assert len(metrics.a4_patch_publication_count) == 0
+    assert len(metrics.a4_patch_publication_duration_ms_total) == 0
+    assert len(metrics.a4_patch_publication_errors_by_code) == 0
+    assert len(metrics.a4_patch_publication_errors_by_operation_and_code) == 0
+    assert metrics.a4_patch_render_rank_count == 0
+    assert metrics.a4_patch_render_rank_duration_ms_total == 0.0
+    assert len(metrics.a4_patch_render_rank_errors_by_code) == 0
+    assert metrics.a4_patch_send_count == 0
+    assert metrics.a4_patch_send_duration_ms_total == 0.0
+    assert len(metrics.a4_patch_send_errors_by_code) == 0
+    assert len(metrics.a4_active_operation_count) == 0
+    assert len(metrics.a4_active_operation_duration_ms_total) == 0
+    assert len(metrics.a4_active_operation_errors_by_code) == 0

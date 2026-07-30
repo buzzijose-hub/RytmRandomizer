@@ -264,6 +264,7 @@ def test_no_broad_except_exception_in_package() -> None:
 # AssertionError is allowed (used for invariant assertions).
 # KeyError is allowed in registry lookup (rytm_randomizer/reports.py).
 # SystemExit is allowed in script entry points.
+# KeyboardInterrupt is allowed when a subprocess propagates operator cancellation.
 # StopIteration is allowed in generator protocols.
 _STDLIB_VALIDATION_OK: frozenset[str] = frozenset(
     {
@@ -277,6 +278,7 @@ _STDLIB_VALIDATION_OK: frozenset[str] = frozenset(
         "AssertionError",
         "KeyError",
         "SystemExit",
+        "KeyboardInterrupt",
         "StopIteration",
         "NotImplementedError",
         # Cockpit Phase 3 export writer raises FileExistsError when an
@@ -339,6 +341,17 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # WizardSourcePathError / EmptyAnalysisError dual-inheritance
         # pattern.
         "WriteError",
+        # Analog Four audio-patch batching: classified staging failures retain
+        # RuntimeError compatibility; publication locks retain FileExistsError
+        # compatibility while all remain members of the BoundaryError taxonomy.
+        "AnalogFourPatchBatchStageError",
+        "AnalogFourPatchBatchPublicationError",
+        "AnalogFourPatchBatchLockedError",
+        "AnalogFourPatchRenderRankArtifactError",
+        "AnalogFourPatchRenderRankReferenceError",
+        # Generic CC/NRPN plan delivery: carries exact successful/expected
+        # message counts so an armed A4 operator can recover from a partial send.
+        "MidiEventPlanSendError",
         # Cockpit profile registry (PR 7 — M7 + M6): atomic save +
         # classified load errors. ``ProfileAlreadyExistsError``
         # multi-inherits :class:`DataError` + :class:`FileExistsError`
@@ -419,7 +432,7 @@ def test_raises_use_taxonomy_or_validation_stdlib() -> None:
         "Every ``raise`` in the package must use a member of the "
         "RytmRandomizerError taxonomy (rytm_randomizer.observability.errors) "
         "or a validation-allowed stdlib exception (TypeError / ValueError / "
-        "AssertionError / KeyError / SystemExit / StopIteration / "
+        "AssertionError / KeyError / SystemExit / KeyboardInterrupt / StopIteration / "
         "NotImplementedError). Violations:\n  " + "\n  ".join(violations)
     )
 
