@@ -6,9 +6,9 @@ Physical correction: 2026-07-29
 
 ## Purpose
 
-Record the offline evidence that originally promoted five generated Analog
-Four DNA rows, then preserve the physical rehearsal that disproved those
-promotions and one LFO multiplier value.
+Record the offline evidence that originally promoted generated Analog Four DNA
+rows, then preserve the physical rehearsals that disproved six enum values and
+the independently inferred LFO1 Mode value.
 
 The 2026-07-17 material was transport-schema evidence only. No MIDI output was
 available or opened during that inspection. The later physical rehearsal is
@@ -51,13 +51,16 @@ rows / 53 MIDI messages. The A4 front panel then showed:
 | LFO1 Destination A | `Filter1 Frequency` via raw `34` | raw `34` | disproved |
 | LFO1 Destination B | `OFF` via raw `96` | raw `96` | disproved |
 
-The same page review confirmed the still-sendable enum targets:
+The initial page review appeared to confirm these still-sendable enum targets:
 
 - EnvA shape: triangle.
 - EnvF shape: triangle.
-- LFO1 mode: `TRG`.
 - LFO1 waveform: triangle.
 - Filter2 type: `HP2`.
+
+Later review of the retained photographs showed that LFO1 Mode had actually
+remained `FREE`; it was not `TRG`. That observation supersedes the initial
+session note.
 
 Continuous CC targets visible on the oscillator, filter, AMP, ENVF, and LFO1
 pages also matched. This supports the address/routing path while isolating the
@@ -79,23 +82,57 @@ failure to enum-value interpretation.
 - Persistence: no Program Change, transport, SysEx, save, kit-write,
   pattern-write, song-write, chain-write, or project-write message was sent.
 - Recovery: the operator reloaded the clean initialized kit without saving.
-- Verdict: controlled partial pass and semantic failure; not merge-ready.
+- Verdict: controlled partial pass and semantic failure; corrected replay
+  required.
+
+## Corrected physical rehearsal
+
+A newly generated, hash-reviewed successor plan was then sent through the same
+armed boundary. The app reported all 27 rows / 37 MIDI messages delivered.
+Front-panel photographs showed that all 26 mappings retained by the final
+policy matched their planned values across OSC1, OSC2, Filters, AMP, ENVF, and
+LFO1. The remaining row, LFO1 Mode, did not:
+
+| DNA row | Planned target | Observed after send | Result |
+|---|---|---|---|
+| LFO1 Mode | `TRG` via raw `0` | `FREE` | disproved |
+
+### Corrected session record
+
+- Analog Four MKII firmware: OS 1.55.
+- Elektron Transfer: 1.9.5.
+- Elektron Overbridge: 2.25.7.
+- Tested generation: `2c142e93007854db41dc3f32836204bb`.
+- Reviewed manifest SHA-256:
+  `83c87935d034a646b294f7b6c30e212e15898e77f7a4e86e4b4d555caa9bd280`.
+- Candidate: 1, Closest reference.
+- Delivery: app reported 27 rows / 37 messages complete. MIDI provides no
+  per-message device acknowledgment.
+- Semantic result: 26 retained mappings matched; LFO1 Mode remained `FREE`.
+- Persistence: no Program Change, transport, SysEx, save, kit-write,
+  pattern-write, song-write, chain-write, or project-write message was sent.
+- Recovery: the operator reloaded the clean initialized kit without saving.
+- Verdict: the retained routed subset passed; LFO1 Mode was demoted.
 
 ## Outcome
 
-The six disproved rows now have no sendable raw ordinal and compile to manual
-events with a calibration-required reason. The corrected guarded plan is:
+The seven disproved rows now have no sendable raw ordinal and compile to manual
+events with a calibration-required reason. The final guarded plan is:
 
 - 39 DNA rows
 - 22 sendable CC events
-- 5 NRPN events
-- 37 transport messages
-- 12 manual rows: six disproved enums plus six paired-CC rows pending 14-bit
+- 4 NRPN events
+- 34 transport messages
+- 13 manual rows: seven disproved enums plus six paired-CC rows pending 14-bit
   hardware verification
 
-The next hardware validation is a supervised replay of a newly generated,
-hash-reviewed 27-row / 37-message candidate, followed by the same page review.
-Audio recording and acoustic ranking remain separate pending work.
+The final policy was regenerated passively as generation
+`26dcc4058b0272a1e910d5b2b960a765`, manifest SHA-256
+`d503eac35e7468e9446505482ba55641cd96c55a0c095150888c35f3fa88a17e`.
+Its dry-run captured the expected 34 messages without opening a port. A second
+physical send is unnecessary because the preceding 27-row rehearsal already
+verified every one of the 26 rows retained in this policy. Audio recording and
+acoustic ranking remain separate pending work.
 
 ## Boundary
 

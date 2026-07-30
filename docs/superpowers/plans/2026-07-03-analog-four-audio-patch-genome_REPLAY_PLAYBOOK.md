@@ -4,7 +4,8 @@
 
 Closeout hardening, touched-file coverage, parity, typing, lint, and mechanical
 review are verified. Follow-up publication and online state are tracked on
-PR #214. Fresh approval and the physical full-patch rehearsal remain pending.
+PR #214. The final routed subset passed physical review; fresh approval remains
+pending.
 
 ## Resume This Run
 
@@ -46,7 +47,7 @@ python -m rytm_randomizer.app --dry-run --a4-patch-send-plan `
   --batch-manifest-sha256 "<reviewed-manifest-sha256>" `
   --candidate 1
 
-# Pending supervised physical validation only, after the dry-run and
+# Supervised physical validation only, after the dry-run and
 # single-parameter track/channel check in MANUAL_HARDWARE_VALIDATION.md:
 python -m rytm_randomizer.app --arm --a4-patch-send-plan `
   --batch-manifest "<batch-dir>\a4-t1-audio-patch-batch.json" `
@@ -55,13 +56,14 @@ python -m rytm_randomizer.app --arm --a4-patch-send-plan `
   --a4-output-port "<exact configured Analog Four output name>"
 ```
 
-Candidate 1 currently contains 27 live-routable rows and 37 transport
+Candidate 1 currently contains 26 live-routable rows and 34 transport
 messages. The manifest reader verifies hashes, DNA/event identity, transport
-status, and canonical A4 addresses before the armed path opens a port. Six enum
-rows disproved by the 2026-07-29 physical rehearsal and six paired-CC rows
-remain manual pending hardware verification. The reduced guarded transport
-rehearsal remains pending and must use a disposable project with
-operator-present recovery.
+status, and canonical A4 addresses before the armed path opens a port. Seven
+enum rows disproved by the 2026-07-29 physical rehearsals and six paired-CC
+rows remain manual pending hardware verification. The corrected 27-row /
+37-message rehearsal verified every mapping retained by this final policy;
+LFO1 Mode was the sole additional failure and was demoted. Any future replay
+must still use a disposable project with operator-present recovery.
 
 ## Rank Hardware Renders
 
@@ -83,7 +85,7 @@ recordings are available.
 2. Where are writable hardware facts? `rytm_randomizer/data/analog_four_sysex_calibration.py`.
 3. What writes a complete saved kit? The pure renderer under `devices/strategies/`, exposed through the registered A4 saved-kit capability and guarded by `cockpit/export/analog_four_kit.py`.
 4. How is a batch committed? Immutable generation artifacts first, stable manifest last.
-5. What may currently reach A4 saved-kit SysEx? Filter2 Resonance only; every other DNA row is deferred from SysEx. The verified sidecar exposes 27 live-routable rows and keeps six disproved enum rows plus six paired-CC rows manual.
+5. What may currently reach A4 saved-kit SysEx? Filter2 Resonance only; every other DNA row is deferred from SysEx. The verified sidecar exposes 26 live-routable rows and keeps seven disproved enum rows plus six paired-CC rows manual.
 6. How is the auditioned candidate selected for live send? `--batch-manifest`,
    its reviewed `--batch-manifest-sha256`, and `--candidate`; the manifest
    digest, nested hashes, event routing, and current A4 transport policy are
@@ -96,11 +98,11 @@ recordings are available.
 
 ## Current Local Verification
 
-- Repair-focused A4/operator regression suite: 461 passed.
+- Repair-focused A4/operator regression suite: 454 passed.
 - Architecture: 705 passed.
-- Exact corrected-tree full suite: 6,838 passed, 3 skipped.
+- Exact corrected-tree full suite: 6,841 passed, 3 skipped.
 - Ruff, Black, isort: clean.
-- Touched-file coverage: 100% across 7,911 statements and 1,898 branches.
+- Touched-file coverage: 100% across 7,912 statements and 1,898 branches.
 - V1.34 parity: 685 passed; Vulture, strict Pyright across all 63 touched
   production modules, `git diff --check`, and the mechanical review gate
   passed.

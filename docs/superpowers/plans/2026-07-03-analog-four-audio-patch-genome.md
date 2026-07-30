@@ -43,7 +43,7 @@
 - **Auto-rebase rules:** if base drift appears, rebase/cherry-pick only this branch's commits and never reset user changes in the original checkout.
 - **On-disk state:** Merged PRs #206 and #212, branch `codex/a4-sysex-roundtrip-writer`, this plan document, immutable hardware evidence, and fresh local gate evidence are the durable recovery state; no long-running monitor or external state file is required.
 - **Kickoff trigger:** user requested autonomous continuation on 2026-07-03.
-- **Termination condition:** docs and local gates pass, final touched-file coverage is measured, the final commit SHA is known, and a fresh review has no Important findings. The residual supervised hardware rehearsal remains separately documented.
+- **Termination condition:** docs and local gates pass, final touched-file coverage is measured, the final commit SHA is known, the retained routed subset has passed supervised hardware review, and a fresh review has no Important findings.
 - **Hard time budget:** each autonomous continuation is capped at 72 hours. At exhaustion the orchestrator writes `BUDGET_EXCEEDED` plus the current branch, SHA, dirty paths, completed gates, and blockers to the run log, then stops.
 - **Recovery procedure:** read this plan, run `git status --short --branch`, inspect the current writer PR, then rerun the focused A4 writer/export/calibration tests before continuing after compaction.
 - **Permission profile:** local file edits and passive tests only; refuse force-push, hardware pin bumps, parity capture, and unarmed real-MIDI sends.
@@ -139,11 +139,11 @@ remain independent and parallel.
 
 ## Fresh Closeout Verification
 
-- Repair-focused A4/operator regression suite: **461 passed**.
+- Repair-focused A4/operator regression suite: **454 passed**.
 - Architecture suite: **705 passed**.
-- Exact corrected-tree full-suite run: **6,838 passed, 3 skipped**.
+- Exact corrected-tree full-suite run: **6,841 passed, 3 skipped**.
 - Ruff, Black, and isort: **clean**.
-- Touched-file statement/branch coverage: **100%** across **7,911 statements**
+- Touched-file statement/branch coverage: **100%** across **7,912 statements**
   and **1,898 branches**, zero misses.
 - V1.34 parity: **685 passed** byte-for-byte.
 - Vulture, strict production-diff Pyright, `git diff --check`, and the mechanical
@@ -155,7 +155,7 @@ remain independent and parallel.
 
 Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 
-- [x] Gate 1 (100% branch coverage on touched files) -- 7,911 statements and 1,898 branches, zero misses.
+- [x] Gate 1 (100% branch coverage on touched files) -- 7,912 statements and 1,898 branches, zero misses.
 - [x] Gate 2 (V1.34 parity byte-identical) -- 685 items passed.
 - [x] Gate 3 (lint/format/type clean) -- Ruff, Black, isort, and strict
   Pyright across all 63 touched production modules pass. Dynamic test-harness

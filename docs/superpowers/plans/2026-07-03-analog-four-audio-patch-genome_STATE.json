@@ -11,9 +11,9 @@
     "batch_publication": "complete",
     "operator_cli": "complete",
     "saved_kit_hardware_validation": "complete",
-    "full_live_plan_hardware_validation": "pending",
+    "full_live_plan_hardware_validation": "complete",
     "learning_capture": "complete",
-    "final_gates": "in_progress"
+    "final_gates": "complete"
   },
-  "last_event": "The 2026-07-29 supervised 33-row rehearsal completed transport but disproved six enum ordinals; the operator reloaded without saving. Those rows now fail closed, older internally valid manifests are revalidated against current transport policy before provider construction, and the guarded plan is reduced to 27 rows / 37 messages. Fresh CI, reviewer approval, and a successful corrected-plan physical rehearsal remain pending."
+  "last_event": "Two supervised 2026-07-29 rehearsals completed transport. The corrected 27-row / 37-message pass verified every one of the 26 mappings retained by final policy and showed LFO1 Mode remained FREE instead of TRG; both passes ended with a reload without saving. The final 26-row / 34-message policy passed passive replay, 454 focused tests, 705 architecture tests, 6,841 full-suite tests with 3 skipped, 685 parity checks, strict typing, lint, mechanical review, and 100% touched-file coverage. Publication, online CI, and reviewer approval remain pending."
 }

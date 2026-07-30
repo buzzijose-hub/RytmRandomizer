@@ -107,7 +107,8 @@ _ENV_SHAPE_LABELS: Final[Mapping[int, str]] = _labels(
     }
 )
 _GATE_LENGTH_LABELS: Final[Mapping[int, str]] = _labels({})
-_LFO_MODE_LABELS: Final[Mapping[int, str]] = _labels({0: "TRG", 1: "HLD", 2: "ONE"})
+_LFO1_MODE_LABELS: Final[Mapping[int, str]] = _labels({})
+_LFO2_MODE_LABELS: Final[Mapping[int, str]] = _labels({0: "TRG", 1: "HLD", 2: "ONE"})
 _LFO_WAVEFORM_LABELS: Final[Mapping[int, str]] = _labels(
     {
         0: "triangle",
@@ -197,8 +198,10 @@ _EXPLICIT_DISPLAY_SPECS: Final[Mapping[str, AnalogFourDisplaySpec]] = MappingPro
         ),
         "LFO1 Mode": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
-            value_labels=_LFO_MODE_LABELS,
-            value_note="LFO trigger/playback mode.",
+            value_labels=_LFO1_MODE_LABELS,
+            transport_ready=False,
+            value_note="A4 OS 1.55 remained FREE after raw value 0, not the TRG target.",
+            transport_blocking_reason=A4_PHYSICAL_ENUM_CALIBRATION_REQUIRED,
         ),
         "LFO1 Waveform": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
@@ -227,7 +230,7 @@ _EXPLICIT_DISPLAY_SPECS: Final[Mapping[str, AnalogFourDisplaySpec]] = MappingPro
         ),
         "LFO2 Mode": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
-            value_labels=_LFO_MODE_LABELS,
+            value_labels=_LFO2_MODE_LABELS,
         ),
         "LFO2 Waveform": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,

@@ -400,10 +400,10 @@ generation, and inspect artifacts before sharing them.
 Each candidate produces a `.syx` file plus a JSON sidecar containing
 its complete patch DNA and CC/NRPN live-dial plan. At the current hardware
 validation boundary, the `.syx` encodes only Filter2 Resonance; every current
-DNA row remains represented in the sidecar. Regenerated sidecars expose 27
-live-sendable rows and 12 manual rows: six paired-CC rows pending 14-bit
-verification plus six inferred enum values disproved by the 2026-07-29
-physical rehearsal. All non-SysEx
+DNA row remains represented in the sidecar. Regenerated sidecars expose 26
+live-sendable rows and 13 manual rows: six paired-CC rows pending 14-bit
+verification plus seven inferred enum values disproved by the 2026-07-29
+physical rehearsals. All non-SysEx
 rows remain deferred from the saved-kit file. The command does
 not open a MIDI port or transfer files to the Analog Four. Do not interpret the
 result as full saved-kit parameter coverage or Synthplant-equivalent learned
@@ -437,12 +437,14 @@ python -m rytm_randomizer.app --dry-run --a4-patch-send-plan `
   --candidate 1
 ```
 
-The closest-reference candidate currently reports 27 sendable rows: 22 CC,
-5 NRPN, and 37 transport messages. Twelve rows are deliberately manual: six
-paired-MSB/LSB CC rows pending 14-bit verification and six enum rows whose
-inferred values failed the 2026-07-29 physical rehearsal. The reduced guarded
-plan is software-verified and mock-replayed, but it has not yet completed a
-successful supervised physical full-patch rehearsal. Do not treat the following
+The closest-reference candidate currently reports 26 sendable rows: 22 CC,
+4 NRPN, and 34 transport messages. Thirteen rows are deliberately manual: six
+paired-MSB/LSB CC rows pending 14-bit verification and seven enum rows whose
+inferred values failed the 2026-07-29 physical rehearsals. A 27-row /
+37-message predecessor was delivered under supervision; front-panel review
+verified every one of the 26 rows retained by the final policy and showed that
+LFO1 Mode remained `FREE` instead of the planned `TRG`. The current 26-row
+plan is also software-verified and mock-replayed. Do not treat the following
 armed command as routine operation.
 
 Maintainer decisions for PR #214:
@@ -451,7 +453,7 @@ Maintainer decisions for PR #214:
   `--batch-manifest-sha256`; direct `--description` and `--audio` plan
   construction is dry-run-only. No freshly inferred, unpublished plan may
   reach hardware.
-- The 37-message path sends live-dial CC/NRPN changes into volatile kit RAM. It
+- The 34-message path sends live-dial CC/NRPN changes into volatile kit RAM. It
   sends no save, kit-write, project-write, Program Change, transport, or SysEx
   message and cannot itself persist the resulting device state. The CODEOWNER
   therefore exempts this RAM-only path from automatic pre-send SysEx backup.
@@ -459,16 +461,18 @@ Maintainer decisions for PR #214:
 - A disposable initialized project and a saved clean Kit/project baseline are
   still mandatory. A partial send requires an immediate reload before retry.
 - The first supervised 33-row/53-message rehearsal completed delivery but
-  failed semantic verification. A fresh 27-row/37-message rehearsal is a
-  pre-merge acceptance gate for PR #214. Do not merge the PR until it passes.
+  failed semantic verification for six enum values. The corrected
+  27-row/37-message rehearsal verified all 26 mappings retained by the final
+  policy and disproved LFO1 Mode. The physical pre-merge gate is complete for
+  the final 26-row routed subset.
 
-Before the next full-plan hardware pass:
+Before any future full-plan hardware pass:
 
 1. Use a disposable initialized A4 project and keep the clean kit dump ready.
 2. Confirm the intended track/channel with one already validated named
    parameter send, then reload the clean baseline.
-3. Run the manifest dry-run above and verify both `transport messages: 37` and
-   `Mock sender captured 37 message(s).` To audit the ordered CC stream, add
+3. Run the manifest dry-run above and verify both `transport messages: 34` and
+   `Mock sender captured 34 message(s).` To audit the ordered CC stream, add
    `--debug --log-json` and inspect the `midi_mock_send` records on stderr.
 4. Use the full command only with the operator present, moderate monitoring
    level, and immediate reload/stop recovery available.
@@ -478,7 +482,7 @@ Before the next full-plan hardware pass:
    pass/fail verdict. Keep the exact machine-local MIDI port label in the
    private operator log rather than public documentation.
 
-The next supervised full-plan validation command is:
+The supervised full-plan validation command is:
 
 ```powershell
 python -m rytm_randomizer.app --arm --a4-patch-send-plan `
@@ -494,7 +498,7 @@ noncanonical parameter CC/NRPN addresses, and coverage-count drift before
 constructing the real provider or opening an output port. It also revalidates
 each stored event against current A4 transport policy, so an older rehashed
 33/53 manifest carrying disproved enum values fails before provider
-construction. The armed sender then spaces all 37 transport messages by 20 ms.
+construction. The armed sender then spaces all 34 transport messages by 20 ms.
 Successful completion means transport delivery only and still requires the
 documented front-panel semantic check. MIDI has no per-message
 acknowledgment. If delivery fails at any
@@ -502,12 +506,11 @@ point, the command reports the exact attempted progress but hardware state is
 uncertain; stop, reload the saved clean Kit or project, and begin the rehearsal
 again from that known baseline. Saved-kit SysEx
 coverage does not expand through this command; this is an explicit live MIDI
-path whose corrected 27-row transport rehearsal remains pending; six
-disproved enum rows and six paired-CC rows remain manual.
+path. Seven disproved enum rows and six paired-CC rows remain manual.
 Pressing Ctrl+C during delivery follows the same partial-patch recovery path
 and returns process exit code 130 after the output port is closed.
 
-Pre-merge rehearsal record:
+First pre-merge rehearsal record:
 
 - Status: 2026-07-29 controlled partial pass; semantic verification failed.
 - Analog Four firmware: OS 1.55, corroborated by the connected-device log and
@@ -521,12 +524,38 @@ Pre-merge rehearsal record:
 - Expected/delivered: app completed 33 rows / 53 messages; MIDI has no
   per-message device acknowledgment.
 - Verified matches: OSC1/OSC2 continuous targets, filter continuous targets,
-  AMP page, EnvF envelope values/shape, LFO1 speed/mode/waveform, and HP2.
+  AMP page, EnvF envelope values/shape, LFO1 speed/waveform, and HP2. Later
+  photo review corrected the initial LFO1 Mode note: the mode remained `FREE`.
 - Disproved values: EnvF Gate Length, EnvF Destination A/B, LFO1 Speed
   Multiplier, and LFO1 Destination A/B.
 - Recovery: operator reloaded the clean initialized kit without saving.
-- Final verdict: failed pre-merge acceptance. The corrected 27-row/37-message
-  plan must complete a fresh supervised rehearsal.
+- Final verdict: failed semantic acceptance; corrected rehearsal required.
+
+Corrected pre-merge rehearsal record:
+
+- Status: 2026-07-29 controlled transport and front-panel semantic review
+  completed.
+- Analog Four firmware: OS 1.55.
+- Elektron Transfer: 1.9.5.
+- Overbridge/driver: Elektron Overbridge 2.25.7.
+- Tested manifest generation: `2c142e93007854db41dc3f32836204bb`.
+- Reviewed manifest SHA-256:
+  `83c87935d034a646b294f7b6c30e212e15898e77f7a4e86e4b4d555caa9bd280`.
+- Candidate: 1, Closest reference.
+- Expected/delivered: app completed 27 rows / 37 messages; MIDI has no
+  per-message device acknowledgment.
+- Verified matches: all 26 mappings retained in the final policy across OSC1,
+  OSC2, Filters, AMP, ENVF, and LFO1.
+- Disproved value: LFO1 Mode planned as `TRG` via raw `0` remained `FREE`.
+- Recovery: operator reloaded the clean initialized kit without saving.
+- Final guarded generation: `26dcc4058b0272a1e910d5b2b960a765`.
+- Final guarded manifest SHA-256:
+  `d503eac35e7468e9446505482ba55641cd96c55a0c095150888c35f3fa88a17e`.
+- Final passive verification: 26 sendable rows, 13 manual rows, 34 transport
+  messages, and 34 mock-captured messages; no port opened and no MIDI sent.
+- Final verdict: physical semantic acceptance passed for every mapping retained
+  in the 26-row routed subset. Fresh software gates, online CI, and reviewer
+  approval remain separate merge requirements.
 
 `python -m rytm_randomizer.app --arm` is the sole real MIDI boundary. The batch
 generator, saved-kit file writer, ranker, passive reports, and local-model

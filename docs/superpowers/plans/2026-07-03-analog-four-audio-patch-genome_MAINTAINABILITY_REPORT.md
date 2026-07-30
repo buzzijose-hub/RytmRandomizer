@@ -26,22 +26,23 @@ child owned by a cleanup-capable parent; transport contracts are shared; batch
 staging/publication and app send responsibilities are split into focused
 helpers; and the state file has schema enforcement.
 
-The repair-focused A4/operator suite passed 461 tests, along with 705
+The repair-focused A4/operator suite passed 454 tests, along with 705
 architecture tests and 685 V1.34 parity items. The exact corrected-tree
-full-suite run passed 6,838 tests / 3 skipped. The Ruff/Black/isort/Vulture/
+full-suite run passed 6,841 tests / 3 skipped. The Ruff/Black/isort/Vulture/
 strict-production-Pyright/mechanical-review set is clean. Dynamic test-harness typing
 remains the accepted scoped Gate 3 debt; all 63 touched production modules pass
 strict Pyright.
 Touched production files reached 100% statement and branch coverage across
-7,911 statements and 1,898 branches. Follow-up publication, online checks, and
+7,912 statements and 1,898 branches. Follow-up publication, online checks, and
 the fresh reviewer verdict are tracked on PR #214.
 
 The largest residual constraints are explicit: generated saved-kit SysEx writes
 only Filter2 Resonance until additional A4 parameters complete the same
 hardware-validation sequence, Windows native-decoding success remains
-environment-dependent and unestablished, and the corrected 27-row/37-message
-physical rehearsal remains pending after the first pass disproved six enum
-values. Batch orchestration and verified-reader
+environment-dependent and unestablished, and 13 rows remain deliberately
+manual after the two physical rehearsals disproved seven enum mappings and
+left six paired-CC rows pending 14-bit verification. The 26-row routed subset
+retained by the final policy passed front-panel review. Batch orchestration and verified-reader
 modules also remain large;
 their post-review splits isolate contracts, codec, publication, and ranking,
 but a future narrow refactor can reduce the remaining coordination surfaces

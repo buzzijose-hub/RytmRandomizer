@@ -35,7 +35,7 @@ pytestmark = pytest.mark.fast
 FIXTURE_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "analog_four_saved_kit"
 SOURCE_KIT = FIXTURE_DIR / "filter2_res_000_source.syx"
 AUDIO_BYTES = b"sanitized-audio-reference-for-mocked-inference\n"
-EXPECTED_GENERATION_ID = "562b0248a0159abef78932dc643c870e"
+EXPECTED_GENERATION_ID = "435bb3263fc336de1eaf44aad2ec9eda"
 EXPECTED_SYSEX_SHA256 = (
     "2f6d97445535a1eb1f4b54e234d7b8d96b9c646c2f611a99f0e6e06a39980835",
     "16aee178243000a52cad0031429ca9768924e37c3989d1ad22c757cb7c266847",
@@ -43,12 +43,12 @@ EXPECTED_SYSEX_SHA256 = (
     "e1384abed1898010debfedf64386dd45485493cabb28b05f2e5bcd1c72096702",
 )
 EXPECTED_SIDECAR_SHA256 = (
-    "fa0e0f798a4aef02783faca57814819b72d2c05c52ff865fb8874c6c3ccdae9d",
-    "12855b03e43c217c66c62be553aaac1f952989b9547e1cba90a242cab5ab12db",
-    "ba7fbde3887db055d0bf56e805931b8163a2e91be1fb3066d8ffd9eb6bf35090",
-    "ff024503e8762db7dbbf2817a475a6817b97bb32eb1cceb9c6282f46131a80bf",
+    "672f02d7aa0935a5c70b333a34161b8bdf25a137d5979218db49bfb0f69d8b03",
+    "318df497797f1512c424c00c00ad42590938ea582d6abb23cbbe263f03f53352",
+    "021b0fce47d6847c8cc3eb8434a57857d6f8326afdd083129d6a6f23fba56fac",
+    "c4a1eea93244d70e7c080dbe34189495e8f7efdae7e76ebd4e716908108e4b70",
 )
-EXPECTED_MANIFEST_SHA256 = "348ea6dc2619cfa6f908af7450fd0a862d6fb360f2f334a5a5205eb7a57e57b7"
+EXPECTED_MANIFEST_SHA256 = "1214b278d085efffd1f78ec7e14a321fc4a0beaa131a37501f5b2e9cfd387970"
 
 
 def _json_payload_sha256(payload: object) -> str:

@@ -4,8 +4,8 @@
 >
 > Verdict: Edward Rosado's 2026-07-28 changes-requested review is addressed in
 > code and policy. Exact-tree local verification is complete; follow-up
-> publication and online state are tracked on PR #214. Fresh approval and the
-> required pre-merge physical rehearsal remain pending.
+> publication and online state are tracked on PR #214. The physical gate is
+> complete for the final 26-row routed subset; fresh approval remains pending.
 
 ## Findings Resolved
 
@@ -57,11 +57,11 @@
 
 ## Fresh Verification
 
-- Repair-focused A4/operator regression suite: **461 passed**.
+- Repair-focused A4/operator regression suite: **454 passed**.
 - Architecture: **705 passed**.
-- Exact corrected-tree full-suite run: **6,838 passed, 3 skipped**.
+- Exact corrected-tree full-suite run: **6,841 passed, 3 skipped**.
 - Ruff, Black, isort: **clean**.
-- Touched-file statement/branch coverage: **100%** across **7,911 statements**
+- Touched-file statement/branch coverage: **100%** across **7,912 statements**
   and **1,898 branches**, zero misses.
 - V1.34 parity: **685 passed** byte-for-byte.
 - Vulture confidence 80, strict Pyright across all 63 touched production
@@ -114,6 +114,7 @@ evidence.
 3. **Gates 14 and 16:** accepted as historical-evidence exceptions for PR #214.
 4. **Physical rehearsal:** the 2026-07-29 33-row/53-message pass completed
    transport but disproved six enum values. The corrected 27-row/37-message
-   plan must pass a fresh supervised rehearsal before merge. Firmware and
-   Elektron Transfer/Overbridge versions are recorded in the validation
-   runbook.
+   pass verified all 26 mappings retained by final policy and disproved LFO1
+   Mode. Both passes ended with a clean initialized-kit reload without saving.
+   Firmware and Elektron Transfer/Overbridge versions are recorded in the
+   validation runbook.

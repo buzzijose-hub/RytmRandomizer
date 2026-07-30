@@ -38,6 +38,7 @@ every stored event is revalidated against current transport policy first.
 | 2026-07-29 | Exact-head review repair passed the focused touched-file A4/operator suite (1,717 passed / 1 skipped), architecture (705 passed), 685 parity checks, strict Pyright across 63 production modules, and 100% touched-production coverage across 7,952 statements / 1,884 branches. The last uninterrupted production-equivalent full suite passed 6,811 tests / 3 skipped; the exact tree collects 6,824 tests and online CI is authoritative for its full-suite result. |
 | 2026-07-29 | The supervised former 33-row / 53-message plan completed transport but disproved six enum ordinals; the initialized kit was reloaded without saving and those rows were demoted, leaving 27 rows / 37 messages. |
 | 2026-07-29 | Post-rehearsal review added current-policy validation for stored manifests, explicit partial-transport telemetry, raw enum-label regression pins, and synchronized learning/recovery artifacts. The exact tree passed 461 repair-focused tests, 6,838 full-suite tests / 3 skipped, and 100% coverage across 7,911 statements / 1,898 branches. |
+| 2026-07-29 | The corrected 27-row / 37-message rehearsal verified all 26 mappings retained by final policy and disproved LFO1 Mode, which remained `FREE` instead of `TRG`. The initialized kit was reloaded without saving. The final 26-row / 34-message policy passed a 34-message mock replay, 454 focused tests, 705 architecture tests, 6,841 full-suite tests / 3 skipped, 685 parity checks, and 100% coverage across 7,912 statements / 1,898 branches. |
 
 ## Escalations Resolved
 
@@ -92,11 +93,11 @@ every stored event is revalidated against current transport policy first.
 
 ## Fresh Verification
 
-- Repair-focused A4/operator regression suite: **461 passed**.
+- Repair-focused A4/operator regression suite: **454 passed**.
 - Architecture: **705 passed**.
-- Exact corrected-tree full-suite run: **6,838 passed, 3 skipped**.
+- Exact corrected-tree full-suite run: **6,841 passed, 3 skipped**.
 - Ruff, Black, isort: **clean**.
-- Touched-file statement/branch coverage: **100%** across **7,911 statements**
+- Touched-file statement/branch coverage: **100%** across **7,912 statements**
   and **1,898 branches**, zero misses.
 - V1.34 parity: **685 passed** byte-for-byte.
 - Vulture, strict Pyright across all 63 touched production modules,

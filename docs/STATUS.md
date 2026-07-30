@@ -9,18 +9,21 @@ Last updated: 2026-07-29. This file is a hand-authored snapshot and is meant to 
   DNA/CC-NRPN sidecars, immutable publication, passive recorded-render ranking,
   and a hash-verified live-dial plan. Saved-kit writing remains limited to
   hardware-validated Filter2 Resonance. Armed delivery is manifest-only,
-  guarded by `app --arm`, and now limited to 27 rows / 37 CC-NRPN messages.
+  guarded by `app --arm`, and now limited to 26 rows / 34 CC-NRPN messages.
   The 2026-07-29 supervised rehearsal delivered the former 33-row / 53-message
   plan but failed semantic verification for six inferred A4 enum values; those
-  rows and six paired-CC rows now remain manual. The clean initialized kit was
-  reloaded without saving after the failed rehearsal. Stored manifests are now
-  revalidated against current transport policy before provider construction,
-  and partial-plan success is labeled transport delivery rather than semantic
-  verification. Strict production typing is reproducible with
+  rows were demoted before a second 27-row / 37-message rehearsal. The second
+  pass verified the 26 mappings still retained in policy and disproved LFO1
+  Mode: raw `0` left the front panel at `FREE`, not `TRG`. LFO1 Mode and the
+  earlier six enum rows now remain manual alongside six paired-CC rows. Both
+  rehearsals ended with a clean initialized-kit reload without saving. Stored
+  manifests are now revalidated against current transport policy before
+  provider construction, and partial-plan success is labeled transport delivery
+  rather than semantic verification. Strict production typing is reproducible with
   `just typecheck`; the CODEOWNER accepted the separately disclosed dynamic
   test-harness typing debt and historical Gate 14/16 evidence exceptions for
-  this PR. A fresh supervised rehearsal of the reduced plan remains a pre-merge
-  requirement.
+  this PR. The physical pre-merge gate is complete for the current 26-row
+  routed subset; fresh online CI and reviewer approval remain pending.
   Native decoder success on Windows remains environment-dependent; abnormal
   child exits fail closed and clean private staging. Detailed hardware evidence
   and current verification counts live in PR #214,

@@ -22,9 +22,9 @@ verdict remain pending and are not inferred from an earlier tree.
 - Moved all 28 audio-to-parameter inference formulas into a canonical immutable data-layer model consumed by one generic evaluator.
 - Made candidate publication interruption-safe: both inputs are snapshotted, every artifact is staged and closed before publication, candidate names carry a 128-bit identity covering every sidecar/SysEx input, a metadata-rich per-track lock serializes publishers, and the stable manifest switches last.
 - Made generation artifacts write-once with exact-byte reuse, collision rejection, catchable process-interruption lock cleanup, explicit `publication_locked` classification, and committed-result lock-cleanup warnings with recovery metadata.
-- Compiled the guarded closest-reference live-dial path into 27 sendable rows:
-  22 CC plus 5 NRPN events (37 MIDI messages). Six enum rows disproved by the
-  2026-07-29 physical rehearsal and six paired-MSB/LSB CC rows remain manual;
+- Compiled the guarded closest-reference live-dial path into 26 sendable rows:
+  22 CC plus 4 NRPN events (34 MIDI messages). Seven enum rows disproved by the
+  2026-07-29 physical rehearsals and six paired-MSB/LSB CC rows remain manual;
   unknown labels still fail closed.
 - Added hash-verified `--batch-manifest --batch-manifest-sha256 "<reviewed digest>" --candidate N` loading so dry-run and confirmed armed sends use the exact reviewed manifest, committed sidecar, nested DNA, and send plan the operator auditioned.
 - Revalidate every stored send event against current A4 transport policy before
@@ -41,7 +41,7 @@ verdict remain pending and are not inferred from an earlier tree.
 - Label successful partial-plan output as `transport_delivered`, retain
   sendable/manual counts plus the bounded live-dial status, and explicitly mark
   hardware semantic verification as required.
-- Added a hash-verified manifest-to-fake-port integration proof for the exact ordered 37-message candidate, plus tamper-before-port and interrupted-send recovery coverage.
+- Added a hash-verified manifest-to-fake-port integration proof for the exact ordered 34-message candidate, plus tamper-before-port and interrupted-send recovery coverage.
 - Added bounded aliases and construction-time validation for all canonical audio-inference feature/parameter keys, preventing misspelled DNA formulas from loading.
 - Added operation-level inference, batch, publication/lock, ranking, and armed-send RED summaries with typed error codes, taxonomy fingerprints, structured context, and Ctrl+C exit-130 recovery.
 - Named the 20 ms hardware pacing policy and split armed port acquisition, delivery, accounting, recovery, and close behavior into focused helpers.
@@ -58,7 +58,7 @@ The Analog Four can now receive exact generated saved-kit parameter values witho
 Audio changes candidate DNA using measured local features; this is real
 audio-dependent inference, not a trained-model or Synthplant-equivalent accuracy
 claim. Each sidecar carries the complete DNA and CC/NRPN plan, and every
-currently sendable row has verified 7-bit or NRPN transport semantics. Six
+currently sendable row has verified 7-bit or NRPN transport semantics. Seven
 disproved enum rows and six paired-CC rows remain explicit manual work. Each
 `.syx` still applies only hardware-write-validated Filter2 Resonance.
 
@@ -95,10 +95,10 @@ python scripts/typecheck_touched.py
 git diff --check
 ```
 
-- [x] Repair-focused A4/operator regression suite: 461 passed.
-- [x] Exact corrected-tree full repository suite: 6,838 passed, 3 skipped.
+- [x] Repair-focused A4/operator regression suite: 454 passed.
+- [x] Exact corrected-tree full repository suite: 6,841 passed, 3 skipped.
 - [x] Architecture suite: 705 passed.
-- [x] Touched-file statement/branch coverage: 100% across 7,911 statements and 1,898 branches, zero misses.
+- [x] Touched-file statement/branch coverage: 100% across 7,912 statements and 1,898 branches, zero misses.
 - [x] Fresh final-tree V1.34 parity: 685 passed byte-for-byte.
 - [x] Vulture confidence 80, the pinned reproducible `just typecheck` strict-production gate across all 63 touched production modules, and the mechanical review gate passed.
 - [x] CODEOWNER decision: dynamic test-harness typing remains accepted as scoped cleanup debt for PR #214; production typing is not waived.
@@ -107,7 +107,7 @@ git diff --check
 - [x] Audio patch-batch CLI focused tests and command-help fixture passed locally.
 - [x] Native decoder abnormal-exit path is process-contained and parent-owned private staging is removed.
 - [x] Audio genome, learning, send-plan, and batch surfaces retain deterministic source/parameter identity when native analysis succeeds.
-- [x] Corrected batch generation matched twice: fixture generation `562b0248a0159abef78932dc643c870e`, manifest SHA-256 `348ea6dc2619cfa6f908af7450fd0a862d6fb360f2f334a5a5205eb7a57e57b7`, and 37-message transport SHA-256 `6998c9d7cc9d8d69dfd7d2e039512bc29ef82f2bba776cf9d35a2857122b3619`.
+- [x] Corrected batch generation matched twice: fixture generation `435bb3263fc336de1eaf44aad2ec9eda`, manifest SHA-256 `1214b278d085efffd1f78ec7e14a321fc4a0beaa131a37501f5b2e9cfd387970`, and 34-message transport SHA-256 `9242c70b5439df2f2db0a7a28773e56570cb12a85eaccd04ab24a663160bdbe7`.
 - [x] This follow-up tree carries fresh local evidence; publication and online state are tracked on PR #214.
 - [ ] Fresh online CI and fresh reviewer verdict: pending.
 
@@ -118,14 +118,15 @@ Hardware validation:
   53-message delivery, exposed six incorrect enum values, and ended with a
   confirmed clean-kit reload without saving.
 - [ ] Four-track live-plan routing remains unverified.
-- [ ] The corrected 27-row/37-message physical rehearsal remains a pre-merge
-  requirement; 12 rows remain manual.
+- [x] The corrected 27-row/37-message physical rehearsal verified all 26
+  mappings retained by final policy, disproved LFO1 Mode, and ended with a
+  confirmed clean-kit reload without saving. Thirteen rows remain manual.
 
 ## Plan-requirements conformance
 
 Per [`docs/PLAN_REQUIREMENTS.md`](https://github.com/buzzijose-hub/RytmRandomizer/blob/modularize-v1.34/docs/PLAN_REQUIREMENTS.md), every non-trivial PR must satisfy all 18 gates.
 
-- [x] **Gate 1** — touched production files have 100% statement/branch coverage (7,911 statements / 1,898 branches).
+- [x] **Gate 1** — touched production files have 100% statement/branch coverage (7,912 statements / 1,898 branches).
 - [x] **Gate 2** — 685 V1.34 parity items passed byte-for-byte.
 - [x] **Gate 3** — Ruff, Black, and isort pass. Pinned strict Pyright 1.1.407 passes reproducibly across all 63 touched production modules via `just typecheck`. The CODEOWNER accepts dynamic test-harness typing as scoped cleanup debt for PR #214; production typing is not waived.
 - [x] **Gate 4** — Vulture confidence 80 passed across production and tests.
@@ -164,12 +165,12 @@ operator-facing exporter rejects every field not marked
 `hardware-write-validated`. Filter1 Frequency, Filter1 Resonance, and Filter2
 Frequency remain intentionally blocked from saved-kit writing. Batch sidecars
 preserve the complete live-dial DNA without claiming those rows were encoded
-into SysEx. The guarded vocabulary routes 27 rows / 37 messages; six physically
-disproved enum rows, six paired-CC rows, and unknown destination labels fail
-closed into manual work. Armed delivery requires a committed hash-verified
-manifest; direct description/audio inference is dry-run-only. The corrected
-guarded transport plan must complete a fresh supervised physical rehearsal
-before merge.
+into SysEx. The guarded vocabulary routes 26 rows / 34 messages; seven
+physically disproved enum rows, six paired-CC rows, and unknown destination
+labels fail closed into manual work. Armed delivery requires a committed
+hash-verified manifest; direct description/audio inference is dry-run-only.
+The corrected physical rehearsal verified every mapping retained by this
+final policy.
 
 The atomic writer fsyncs file data. It does not fsync parent-directory metadata, so persistence of the final filename after sudden power loss remains filesystem-dependent. Under normal filesystem semantics, generation-addressed write-once candidates ensure the prior manifest never points at mixed bytes during a process-interrupted overwrite; the interruption may leave unreferenced generation files. A lock-cleanup failure does not relabel a committed batch as failed: the successful result carries a warning and the retained metadata path.
 
@@ -177,8 +178,8 @@ The CODEOWNER accepts the Gate 3 dynamic test-harness typing debt, Gate 14
 timing exception, and Gate 16 historical-ledger exception for this PR. The
 RAM-only live-dial path is exempt from automatic pre-send SysEx backup because
 it sends no persistent save/write command; a disposable project and saved clean
-baseline remain mandatory. The failed 2026-07-29 rehearsal records A4 OS 1.55,
-Elektron Transfer 1.9.5, and Overbridge 2.25.7; the reduced-plan replay must
-record its own result before merge.
+baseline remain mandatory. Both 2026-07-29 rehearsals record A4 OS 1.55,
+Elektron Transfer 1.9.5, and Overbridge 2.25.7; both ended with a clean
+initialized-kit reload without saving.
 
 Consolidated review: [`docs/superpowers/plans/2026-07-17-a4-audio-patch-final-review.md`](https://github.com/buzzijose-hub/RytmRandomizer/blob/codex/a4-sysex-roundtrip-writer/docs/superpowers/plans/2026-07-17-a4-audio-patch-final-review.md)

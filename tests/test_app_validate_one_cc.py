@@ -767,10 +767,10 @@ def test_app_main_dry_run_a4_patch_send_plan_records_mock_messages(capsys) -> No
     assert "no port opened: True" in captured.out
     assert "track: 1" in captured.out
     assert "candidate: 1 / Closest reference" in captured.out
-    assert "sendable events: 27" in captured.out
-    assert "transport messages: 37" in captured.out
-    assert "manual rows skipped: 12" in captured.out
-    assert "Mock sender captured 37 message(s)." in captured.out
+    assert "sendable events: 26" in captured.out
+    assert "transport messages: 34" in captured.out
+    assert "manual rows skipped: 13" in captured.out
+    assert "Mock sender captured 34 message(s)." in captured.out
     assert captured.err == ""
 
 
@@ -1461,18 +1461,18 @@ def test_a4_patch_send_telemetry_distinguishes_partial_transport_delivery() -> N
     from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
     plan = _fake_a4_transport_plan()
-    plan.summary.sendable_count = 27
-    plan.summary.manual_count = 12
-    plan.summary.transport_message_count = 37
+    plan.summary.sendable_count = 26
+    plan.summary.manual_count = 13
+    plan.summary.transport_message_count = 34
     plan.summary.live_dial_path = "partial-live-dial-ready"
 
     context = app._a4_patch_send_log_context(plan, "manifest")
     reset_metrics()
     outcome = app._record_a4_patch_send_outcome(get_metrics(), 0.0)
 
-    assert context["sendable_count"] == 27
-    assert context["manual_count"] == 12
-    assert context["transport_message_count"] == 37
+    assert context["sendable_count"] == 26
+    assert context["manual_count"] == 13
+    assert context["transport_message_count"] == 34
     assert context["live_dial_path"] == "partial-live-dial-ready"
     assert context["semantic_verification_required"] is True
     assert outcome["outcome"] == "transport_delivered"

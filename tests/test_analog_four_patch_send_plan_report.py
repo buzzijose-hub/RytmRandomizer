@@ -70,8 +70,8 @@ def test_patch_send_plan_report_text_shows_sendable_and_manual_rows() -> None:
     assert text.startswith("RytmRandomizer passive Analog Four patch send plan\n")
     assert "Selected candidate: 1 / Closest reference" in text
     assert "Live dial path: partial-live-dial-ready" in text
-    assert "Sendable events: 27 / 39 (69%)" in text
-    assert "Transport messages: 37" in text
+    assert "Sendable events: 26 / 39 (67%)" in text
+    assert "Transport messages: 34" in text
     assert "Sendable MIDI events:" in text
     assert "01 T1 ch0 CC69 OSC1 Level -> 96" in text
     assert "10 T1 ch0 NRPN 1:54 EnvA Env Shape -> 0" in text
@@ -241,7 +241,7 @@ def test_patch_send_plan_cli_description_json_mode(capsys: pytest.CaptureFixture
     assert exit_code == 0
     assert payload["selected_track"] == 2
     assert payload["selected_candidate"] == 1
-    assert payload["send_plan"]["summary"]["transport_message_count"] == 37
+    assert payload["send_plan"]["summary"]["transport_message_count"] == 34
     assert captured.err == ""
 
 

@@ -45,17 +45,18 @@ def test_patch_learning_packet_builds_ranked_a4_knowledge_packet() -> None:
     assert [score.column for score in packet.candidate_scores] == [1, 2, 3, 4]
     assert [score.rank for score in packet.candidate_scores] == [1, 2, 3, 4]
     assert packet.candidate_scores[0].learning_score > packet.candidate_scores[-1].learning_score
-    assert packet.candidate_scores[0].transport_readiness == 85
-    assert packet.live_dial_readiness.ready_count == 33
-    assert packet.live_dial_readiness.pending_count == 6
+    assert packet.candidate_scores[0].transport_readiness == 84
+    assert packet.live_dial_readiness.ready_count == 32
+    assert packet.live_dial_readiness.pending_count == 7
     assert packet.live_dial_readiness.cc_ready_count == 28
-    assert packet.live_dial_readiness.nrpn_ready_count == 5
-    assert packet.live_dial_readiness.screen_only_nrpn_count == 6
+    assert packet.live_dial_readiness.nrpn_ready_count == 4
+    assert packet.live_dial_readiness.screen_only_nrpn_count == 7
     assert packet.live_dial_readiness.pending_parameters == (
         "EnvF Gate Length",
         "EnvF Destination A",
         "EnvF Destination B",
         "LFO1 Speed Multiplier",
+        "LFO1 Mode",
         "LFO1 Destination A",
         "LFO1 Destination B",
     )

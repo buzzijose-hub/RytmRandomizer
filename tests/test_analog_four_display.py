@@ -79,7 +79,7 @@ def test_patch_value_for_filter_overdrive_center_uses_off_label() -> None:
     assert value.dial_direction == "leave at OFF/0"
 
 
-def test_patch_value_for_physically_disproved_nrpn_destination_fails_closed() -> None:
+def test_patch_value_for_physically_disproved_nrpn_enum_fails_closed() -> None:
     from rytm_randomizer.data.analog_four_display import (
         A4_PHYSICAL_ENUM_CALIBRATION_REQUIRED,
         make_a4_patch_value,
@@ -106,6 +106,7 @@ def test_patch_value_for_physically_disproved_nrpn_destination_fails_closed() ->
         ("EnvF Destination A", "OFF", (1, 66)),
         ("EnvF Destination B", "OFF", (1, 68)),
         ("LFO1 Speed Multiplier", "x1", (1, 81)),
+        ("LFO1 Mode", "TRG", (1, 84)),
         ("LFO1 Destination A", "Filter1 Frequency", (1, 86)),
         ("LFO1 Destination B", "OFF", (1, 88)),
     ],
@@ -135,6 +136,7 @@ def test_patch_value_keeps_physically_disproved_enum_ordinals_manual(
         ("EnvF Destination A", 96),
         ("EnvF Destination B", 96),
         ("LFO1 Speed Multiplier", 64),
+        ("LFO1 Mode", 0),
         ("LFO1 Destination A", 34),
         ("LFO1 Destination B", 96),
     ],
@@ -159,6 +161,16 @@ def test_lfo2_multiplier_keeps_its_independently_verified_x1_label() -> None:
     assert value.screen_value == "x1"
     assert value.midi_value == 64
     assert value.transport_status == "cc-ready"
+
+
+def test_lfo2_mode_keeps_its_independent_trg_label() -> None:
+    from rytm_randomizer.data.analog_four_display import make_a4_patch_value
+
+    value = make_a4_patch_value("LFO2 Mode", screen_target=0)
+
+    assert value.screen_value == "TRG"
+    assert value.midi_value == 0
+    assert value.transport_status == "nrpn-ready"
 
 
 @pytest.mark.parametrize(

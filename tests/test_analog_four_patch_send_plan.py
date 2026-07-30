@@ -38,12 +38,12 @@ def test_patch_send_plan_compiles_selected_candidate_into_ordered_midi_events() 
     assert plan.selected_candidate == 1
     assert plan.selected_label == "Closest reference"
     assert plan.summary.total_rows == 39
-    assert plan.summary.sendable_count == 27
-    assert plan.summary.manual_count == 12
+    assert plan.summary.sendable_count == 26
+    assert plan.summary.manual_count == 13
     assert plan.summary.cc_event_count == 22
-    assert plan.summary.nrpn_event_count == 5
-    assert plan.summary.transport_message_count == 37
-    assert plan.summary.ready_percentage == 69
+    assert plan.summary.nrpn_event_count == 4
+    assert plan.summary.transport_message_count == 34
+    assert plan.summary.ready_percentage == 67
     assert plan.summary.live_dial_path == "partial-live-dial-ready"
     assert (
         plan.summary.blocking_reason
@@ -73,6 +73,7 @@ def test_patch_send_plan_compiles_selected_candidate_into_ordered_midi_events() 
         "EnvF Depth A",
         "EnvF Depth B",
         "LFO1 Speed Multiplier",
+        "LFO1 Mode",
         "LFO1 Destination A",
         "LFO1 Destination B",
         "LFO1 Depth A",
@@ -94,6 +95,7 @@ def test_patch_send_plan_compiles_selected_candidate_into_ordered_midi_events() 
         "EnvF Destination A",
         "EnvF Destination B",
         "LFO1 Speed Multiplier",
+        "LFO1 Mode",
         "LFO1 Destination A",
         "LFO1 Destination B",
     }
