@@ -29,6 +29,9 @@ TRANSPORT_CC_READY: Final[str] = "cc-ready"
 TRANSPORT_NRPN_READY: Final[str] = "nrpn-ready"
 TRANSPORT_SCREEN_ONLY_NRPN: Final[str] = "screen-only-nrpn"
 TRANSPORT_SCREEN_ONLY: Final[str] = "screen-only"
+A4_PHYSICAL_ENUM_CALIBRATION_REQUIRED: Final[str] = (
+    "physical A4 rehearsal disproved the inferred enum ordinal; hardware calibration required"
+)
 
 
 def _empty_analog_four_value_labels() -> Mapping[int, str]:
@@ -44,6 +47,7 @@ class AnalogFourDisplaySpec:
     center_label: str | None = None
     transport_ready: bool = True
     value_note: str = ""
+    transport_blocking_reason: str = ""
 
     def label_for_value(self, value: int) -> str:
         """Return the front-panel label for ``value`` when one is known."""
@@ -77,6 +81,7 @@ class AnalogFourPatchValue:
     nrpn_address: tuple[int, int] | None
     transport_status: str
     dial_direction: str
+    transport_blocking_reason: str = ""
 
 
 def _labels(labels: Mapping[int, str]) -> Mapping[int, str]:
@@ -101,8 +106,8 @@ _ENV_SHAPE_LABELS: Final[Mapping[int, str]] = _labels(
         2: "linear",
     }
 )
-_GATE_LENGTH_LABELS: Final[Mapping[int, str]] = _labels({0: "NOTE"})
-_LFO_MODE_LABELS: Final[Mapping[int, str]] = _labels({0: "TRG", 1: "HLD", 2: "ONE"})
+_GATE_LENGTH_LABELS: Final[Mapping[int, str]] = _labels({})
+_LFO_MODE_LABELS: Final[Mapping[int, str]] = _labels({})
 _LFO_WAVEFORM_LABELS: Final[Mapping[int, str]] = _labels(
     {
         0: "triangle",
@@ -113,8 +118,10 @@ _LFO_WAVEFORM_LABELS: Final[Mapping[int, str]] = _labels(
         5: "random",
     }
 )
-_LFO_MULTIPLIER_LABELS: Final[Mapping[int, str]] = _labels({64: "x1"})
-_OFF_ONLY_LABELS: Final[Mapping[int, str]] = _labels({0: "OFF"})
+_LFO1_MULTIPLIER_LABELS: Final[Mapping[int, str]] = _labels({})
+_LFO2_MULTIPLIER_LABELS: Final[Mapping[int, str]] = _labels({64: "x1"})
+_DESTINATION_OFF_LABELS: Final[Mapping[int, str]] = _labels({})
+_LFO_DESTINATION_LABELS: Final[Mapping[int, str]] = _labels({})
 
 _BIPOLAR_PARAMETERS: Final[frozenset[str]] = frozenset(
     {
@@ -164,29 +171,36 @@ _EXPLICIT_DISPLAY_SPECS: Final[Mapping[str, AnalogFourDisplaySpec]] = MappingPro
             DISPLAY_SCALE_ENUM,
             value_labels=_GATE_LENGTH_LABELS,
             transport_ready=False,
-            value_note="Front-panel gate-length label; ordinal capture remains pending.",
+            value_note="A4 OS 1.55 displayed OFF after raw value 0, not the NOTE target.",
+            transport_blocking_reason=A4_PHYSICAL_ENUM_CALIBRATION_REQUIRED,
         ),
         "EnvF Destination A": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
-            value_labels=_OFF_ONLY_LABELS,
+            value_labels=_DESTINATION_OFF_LABELS,
             transport_ready=False,
-            value_note="Destination labels are front-panel safe until full ordinal capture.",
+            value_note="A4 OS 1.55 displayed raw 96 after the inferred OFF ordinal.",
+            transport_blocking_reason=A4_PHYSICAL_ENUM_CALIBRATION_REQUIRED,
         ),
         "EnvF Destination B": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
-            value_labels=_OFF_ONLY_LABELS,
+            value_labels=_DESTINATION_OFF_LABELS,
             transport_ready=False,
-            value_note="Destination labels are front-panel safe until full ordinal capture.",
+            value_note="A4 OS 1.55 displayed raw 96 after the inferred OFF ordinal.",
+            transport_blocking_reason=A4_PHYSICAL_ENUM_CALIBRATION_REQUIRED,
         ),
         "LFO1 Speed Multiplier": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
-            value_labels=_LFO_MULTIPLIER_LABELS,
-            value_note="Multiplier row uses the neutral x1 screen target.",
+            value_labels=_LFO1_MULTIPLIER_LABELS,
+            transport_ready=False,
+            value_note="A4 OS 1.55 displayed 2K after raw value 64, not the x1 target.",
+            transport_blocking_reason=A4_PHYSICAL_ENUM_CALIBRATION_REQUIRED,
         ),
         "LFO1 Mode": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
             value_labels=_LFO_MODE_LABELS,
-            value_note="LFO trigger/playback mode.",
+            transport_ready=False,
+            value_note="A4 OS 1.55 remained FREE after raw value 0, not the TRG target.",
+            transport_blocking_reason=A4_PHYSICAL_ENUM_CALIBRATION_REQUIRED,
         ),
         "LFO1 Waveform": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
@@ -195,23 +209,30 @@ _EXPLICIT_DISPLAY_SPECS: Final[Mapping[str, AnalogFourDisplaySpec]] = MappingPro
         ),
         "LFO1 Destination A": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
-            value_labels=_OFF_ONLY_LABELS,
+            value_labels=_LFO_DESTINATION_LABELS,
             transport_ready=False,
-            value_note="Destination labels are front-panel safe until full ordinal capture.",
+            value_note=(
+                "A4 OS 1.55 displayed raw 34 after the inferred Filter1 Frequency ordinal."
+            ),
+            transport_blocking_reason=A4_PHYSICAL_ENUM_CALIBRATION_REQUIRED,
         ),
         "LFO1 Destination B": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
-            value_labels=_OFF_ONLY_LABELS,
+            value_labels=_LFO_DESTINATION_LABELS,
             transport_ready=False,
-            value_note="Destination labels are front-panel safe until full ordinal capture.",
+            value_note="A4 OS 1.55 displayed raw 96 after the inferred OFF ordinal.",
+            transport_blocking_reason=A4_PHYSICAL_ENUM_CALIBRATION_REQUIRED,
         ),
         "LFO2 Speed Multiplier": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
-            value_labels=_LFO_MULTIPLIER_LABELS,
+            value_labels=_LFO2_MULTIPLIER_LABELS,
         ),
         "LFO2 Mode": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
             value_labels=_LFO_MODE_LABELS,
+            transport_ready=False,
+            value_note="No LFO2 mode ordinal has independent physical A4 evidence.",
+            transport_blocking_reason=A4_PHYSICAL_ENUM_CALIBRATION_REQUIRED,
         ),
         "LFO2 Waveform": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
@@ -219,13 +240,15 @@ _EXPLICIT_DISPLAY_SPECS: Final[Mapping[str, AnalogFourDisplaySpec]] = MappingPro
         ),
         "LFO2 Destination A": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
-            value_labels=_OFF_ONLY_LABELS,
+            value_labels=_DESTINATION_OFF_LABELS,
             transport_ready=False,
+            value_note="LFO2 destination ordinals remain pending independent validation.",
         ),
         "LFO2 Destination B": AnalogFourDisplaySpec(
             DISPLAY_SCALE_ENUM,
-            value_labels=_OFF_ONLY_LABELS,
+            value_labels=_DESTINATION_OFF_LABELS,
             transport_ready=False,
+            value_note="LFO2 destination ordinals remain pending independent validation.",
         ),
     }
 )
@@ -288,6 +311,7 @@ def make_a4_patch_value(
         nrpn_address=_nrpn_address(mapping),
         transport_status=transport_status,
         dial_direction=_dial_direction(screen_target, spec=spec, midi_value=midi_value),
+        transport_blocking_reason=spec.transport_blocking_reason,
     )
 
 
@@ -306,23 +330,35 @@ def _screen_and_midi_value(
 ) -> tuple[str, int | None]:
     if isinstance(screen_target, int):
         if spec.display_scale == DISPLAY_SCALE_BIPOLAR:
-            return _format_signed_screen(screen_target, spec), signed_screen_to_a4_midi(
-                screen_target
-            )
-        _validate_midi_value(screen_target)
-        return spec.label_for_value(screen_target), screen_target
+            midi_value = signed_screen_to_a4_midi(screen_target)
+            screen_value = _format_signed_screen(screen_target, spec)
+        else:
+            _validate_midi_value(screen_target)
+            midi_value = screen_target
+            screen_value = spec.label_for_value(screen_target)
+        if not spec.transport_ready:
+            return screen_value, None
+        return screen_value, midi_value
 
-    if not isinstance(screen_target, str):
-        raise TypeError("screen_target must be an int or str")
+    screen_label = _require_screen_label(screen_target)
 
     if transport_value is not None:
         _validate_midi_value(transport_value)
-        return screen_target, transport_value
-    label_value = spec.value_for_label(screen_target)
-    if label_value is None or not spec.transport_ready:
-        return screen_target, None
+    if not spec.transport_ready:
+        return screen_label, None
+    if transport_value is not None:
+        return screen_label, transport_value
+    label_value = spec.value_for_label(screen_label)
+    if label_value is None:
+        return screen_label, None
     _validate_midi_value(label_value)
-    return screen_target, label_value
+    return screen_label, label_value
+
+
+def _require_screen_label(value: object) -> str:
+    if not isinstance(value, str):
+        raise TypeError("screen_target must be an int or str")
+    return value
 
 
 def _format_signed_screen(value: int, spec: AnalogFourDisplaySpec) -> str:
@@ -375,6 +411,7 @@ def _dial_direction(
 
 
 __all__ = [
+    "A4_PHYSICAL_ENUM_CALIBRATION_REQUIRED",
     "A4_MIDI_MAX",
     "A4_MIDI_MIN",
     "A4_SIGNED_SCREEN_CENTER",

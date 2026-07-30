@@ -109,6 +109,24 @@ def test_mock_midi_sender_conforms_to_midi_sender_protocol():
     assert isinstance(MockMidiSender(), MidiSender)
 
 
+def test_nrpn_event_rejects_non_tuple_address() -> None:
+    from types import SimpleNamespace
+
+    from rytm_randomizer.behavior.midi_event_plan import validate_cc_nrpn_event
+
+    event = SimpleNamespace(
+        message_kind="nrpn",
+        cc_msb=None,
+        cc_lsb=None,
+        nrpn_address=[1, 2],
+        midi_value=64,
+        channel=0,
+    )
+
+    with pytest.raises(ValueError, match="exactly two MIDI bytes"):
+        validate_cc_nrpn_event(event)
+
+
 # ---------------------------------------------------------------------------
 # 3. RealMidiSender conforms to MidiSender
 # ---------------------------------------------------------------------------
@@ -141,6 +159,9 @@ def test_real_midi_sender_is_not_a_midi_sender_by_design():
 
     class _FakePort:
         def send(self, message: object) -> None:
+            pass
+
+        def close(self) -> None:
             pass
 
     provider = RealMidiPortProvider(
@@ -199,7 +220,9 @@ def test_send_cc_records_midi_message_when_out_is_mock_midi_sender():
 
     from rytm_randomizer.midi_io import send_cc
     from rytm_randomizer.mock_midi import MidiMessage, MockMidiSender
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
+    reset_metrics()
     mock = MockMidiSender()
     send_cc(mock, 42, 64, channel=1, sleep=_no_sleep)
 
@@ -210,6 +233,7 @@ def test_send_cc_records_midi_message_when_out_is_mock_midi_sender():
     assert msg.channel == 1
     assert msg.control == 42
     assert msg.value == 64
+    assert get_metrics().cc_sent_by_channel == {}
 
 
 # ---------------------------------------------------------------------------
@@ -232,7 +256,9 @@ def test_send_cc_builds_mido_message_when_out_is_not_mock_midi_sender():
     fake_mido.Message = _TrackingMessage  # type: ignore[attr-defined]
 
     from rytm_randomizer.midi_io import send_cc
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
+    reset_metrics()
     out = _FakeMidoOutput()
     send_cc(out, 15, 100, channel=0, sleep=_no_sleep)
 
@@ -245,3 +271,49 @@ def test_send_cc_builds_mido_message_when_out_is_not_mock_midi_sender():
     # And it was forwarded to out.send.
     assert len(out.sent) == 1
     assert out.sent[0] is constructed[0]
+    assert get_metrics().cc_sent_by_channel[0] == 1
+
+
+def test_send_cc_does_not_count_failed_real_delivery() -> None:
+    _install_fake_mido()
+
+    from rytm_randomizer.midi_io import send_cc
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
+    class FailingOutput:
+        def send(self, message: object) -> None:
+            del message
+            raise OSError("delivery failed")
+
+    reset_metrics()
+    with pytest.raises(OSError, match="delivery failed"):
+        send_cc(FailingOutput(), 15, 100, channel=0, sleep=_no_sleep)
+
+    assert get_metrics().cc_sent_by_channel == {}
+
+
+def test_send_nrpn_reports_each_successful_message_including_value_lsb() -> None:
+    _install_fake_mido()
+
+    from rytm_randomizer.midi_io import send_nrpn
+
+    out = _FakeMidoOutput()
+    delivered: list[str] = []
+    send_nrpn(
+        out,
+        1,
+        54,
+        64,
+        value_lsb=7,
+        channel=0,
+        sleep=_no_sleep,
+        on_message_sent=lambda: delivered.append("sent"),
+    )
+
+    assert [(message.control, message.value) for message in out.sent] == [
+        (99, 1),
+        (98, 54),
+        (6, 64),
+        (38, 7),
+    ]
+    assert delivered == ["sent"] * 4

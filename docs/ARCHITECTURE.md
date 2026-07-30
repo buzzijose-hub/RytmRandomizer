@@ -96,9 +96,12 @@ on one line for an existing module, you probably need a new module instead.
 | `data/param_maps.py`  | Per-machine CC maps, anchors, safe ranges, deltas, zones. Pure data.            |
 | `data/analog_four_midi.py` | Manual-backed Analog Four CC mappings from Appendix D. Pure data.        |
 | `data/analog_four_display.py` | Analog Four front-panel scales, labels, and CC/NRPN-ready patch-value metadata. Pure data. |
-| `data/analog_four_sysex_calibration.py` | Passive operator-captured Analog Four SysEx field offsets and value evidence. Pure data. |
+| `data/midi_event_kinds.py` | Canonical typed CC/NRPN event kinds and manual skip-code vocabulary. Pure data. |
+| `data/analog_four_sysex_calibration.py` | Operator-captured Analog Four SysEx field offsets plus immutable hardware-write validation evidence. Pure data. |
+| `data/analog_four_saved_kit_layout.py` | Observed A4 saved-kit family/object, packing, trailer, size, and name-field constants. Pure data. |
 | `data/analog_four_patch_templates.py` | Static Analog Four patch-genome candidate templates and rationale rows. Pure data. |
 | `data/analog_four_patch_corpus.py` | Synthetic Analog Four patch-corpus starter feature vectors. Pure data. |
+| `data/analog_four_render_rank.py` | Stable feature weights for recorded A4 candidate ranking. Pure data. |
 | `data/analog_four_recipes.py` | Manual-backed Analog Four kit recipe definitions. Pure data.       |
 | `data/analog_rytm_midi.py` | Manual-backed Analog Rytm OS 1.72 CC/NRPN catalog and safety status labels. Pure data. |
 | `data/analog_rytm_style_recipes.py` | Curated full-12-pad Analog Rytm style-kit CC MSB recipes. Pure data. |
@@ -115,21 +118,25 @@ on one line for an existing module, you probably need a new module instead.
 | `state/selection.py`  | Frozen target-pad / channel / isolated-pad selection state + transitions.       |
 | `state/a4_soft_capture.py` | Frozen Analog Four passive CC-observation state + pure reducer.          |
 | `state/rytm_cc_observe.py` | Frozen Analog Rytm passive CC/NRPN observation state + pure reducer.    |
+| `behavior/midi_event_plan.py` | Passive shared CC/NRPN event-shape selection and validation contract used by compilers, readers, app guards, and senders. |
 
 ### Middle (runtime core)
 
 | Module                       | Responsibility                                                              |
 | ---------------------------- | --------------------------------------------------------------------------- |
 | `midi_io.py`                 | Leaf MIDI primitives: build CC, send param, apply state. `mido` is lazy.    |
-| `senders/midi_event_plan.py` | Generic CC/NRPN event-plan sender used by generated A4 patch live-dial plans. |
+| `senders/midi_event_plan.py` | Generic CC/NRPN event-plan delivery loop; structural validation is owned by `behavior/midi_event_plan.py`. |
 | `senders/guarded.py`, `senders/hardware.py` | Generic guarded/mock and arm-gated Device plan senders. |
 | `randomization.py`           | Pure randomization core: zone/depth mutation, waveform pick.                |
 | `mock_midi.py`               | In-memory `MockMidiSender` and `MidiMessage` for tests + passive paths.     |
-| `real_midi_adapter.py`       | Protocol boundary: `RealMidiPortProvider`, `RealMidiSender`. NO `mido`.     |
+| `real_midi_adapter.py`       | Protocol boundary: `RealMidiPortProvider`, neutral armed-output `RealMidiOutputProvider`, and `RealMidiSender`. NO `mido`. |
 | `mido_provider.py`           | Concrete `mido`-backed input/output provider. `mido` imported lazily INSIDE methods. |
 | `engines/pad1..4.py`         | Per-pad interactive engines. Dependencies injected, no module globals.      |
 | `engines/analog_rytm_12_pad_shell.py` | All-12-pad style/mutation shell. Consumes rendered style events; sends only through injected sender. |
 | `engines/analog_rytm_snapshot_shell.py` | All-12-pad current-kit snapshot shell. Extracts live-safe CC events from a decoded Rytm kit snapshot; sends only through injected sender. |
+| `snapshot/envelope.py` | Shared Elektron manufacturer envelope plus inverse 7-bit pack/unpack helpers. Pure bytes in/out. |
+| `devices/strategies/analog_four_saved_kit_codec.py` | Shared A4 saved-kit payload validator/encoder used by decoder and writer; owns checksum/trailer handling. |
+| `devices/strategies/analog_four_saved_kit_writer.py` | Pure A4 saved-kit mutator/renderer consuming the shared codec, calibration, and canonical data-layer layout facts; no filesystem or MIDI I/O. |
 
 ### Mid-upper (orchestration)
 
@@ -142,6 +149,7 @@ on one line for an existing module, you probably need a new module instead.
 | `style_analysis/analog_four_patch_corpus.py` | Passive A4 patch/audio corpus nearest-match ranking and calibration-gap compiler. |
 | `style_analysis/analog_four_patch_codesigner.py` | Passive A4 patch-genome co-designer packet compiler for staged local-AI review. |
 | `style_analysis/analog_four_patch_send_plan.py` | Passive selected A4 patch -> ordered CC/NRPN live-dial send-plan compiler. |
+| `style_analysis/analog_four_patch_render_rank.py` | Pure measured-feature scoring and deterministic ranking for recorded A4 candidates. |
 | `local_ai/` | Passive local-AI DTOs, local model subprocess adapter, docs/MIDI context packets, staged mutation-intent validation, and JSON-schema helpers. |
 
 ### Upper (entry points)
@@ -150,9 +158,23 @@ on one line for an existing module, you probably need a new module instead.
 | --------------------- | ------------------------------------------------------------------------------- |
 | `shell.py`            | Interactive command loop. Owns the V1.34 command alphabet. Injected deps.       |
 | `cli.py`              | **Passive** report-only CLI. NEVER imports `mido`, `mido_provider`, or engines. |
-| `app.py`              | Top-of-stack entry point. `--arm` wires output to `shell`; `--arm --rytm-12-pad-shell --confirm-rytm-12-pad-send` runs the all-12-pad Rytm style shell; `--arm --rytm-snapshot-shell <file.syx> --confirm-rytm-snapshot-shell-send` runs the all-12-pad current-kit snapshot shell; `--arm --rytm-kit-style --confirm-rytm-kit-send` sends one curated Rytm full-kit recipe; `--arm --rytm-cc-observe` opens only Rytm input and may read or receive a snapshot for labels; `--arm --a4-soft-capture` opens only A4 input; `--arm --a4-send-param` sends one manual-backed A4 CC; `--arm --a4-kit-recipe` sends one manual-backed A4 recipe; `--arm --a4-patch-send-plan --confirm-a4-patch-send-plan` sends compiler-approved generated A4 patch rows. |
+| `app.py`              | Top-of-stack entry point. `--arm` wires output to `shell`; `--arm --rytm-12-pad-shell --confirm-rytm-12-pad-send` runs the all-12-pad Rytm style shell; `--arm --rytm-snapshot-shell <file.syx> --confirm-rytm-snapshot-shell-send` runs the all-12-pad current-kit snapshot shell; `--arm --rytm-kit-style --confirm-rytm-kit-send` sends one curated Rytm full-kit recipe; `--arm --rytm-cc-observe` opens only Rytm input and may read or receive a snapshot for labels; `--arm --a4-soft-capture` opens only A4 input and reconstructs CC/NRPN state; `--arm --a4-send-param` sends one manual-backed A4 CC; `--arm --a4-kit-recipe` sends one manual-backed A4 recipe; `--arm --a4-patch-send-plan --batch-manifest "<path>" --batch-manifest-sha256 "<reviewed digest>" --candidate N --confirm-a4-patch-send-plan --a4-output-port "<exact configured name>"` verifies the reviewed manifest and sends one committed generated A4 patch candidate. |
 | `reports/`            | Passive in-memory report package + shared formatter/helper layer, including the manual feedback packet report, the reference-style blueprint report, the Analog Four initialized-baseline, patch genome, patch learning, patch corpus, and patch send-plan reports, the Analog Four OXI macro set planner report, the controller-brain mapping catalog and rehearsal/export reports, the style-performance arc chain through the live render bundle, live cue sheet, live runbook, reference match, snapshot preview, stage packet, stage snapshot-routing handoff, stage rehearsal-state packet, live set cockpit dashboard, live show export packet, live transition timeline, live command deck, live state packet, live analyzer handoff/targets, GUI readiness/session, capture queue/review, sidecar session packets, GUI screen-contract packets, GUI render-tree packets, GUI analyzer-overlay packets, GUI analyzer-frame packets, GUI interaction-script packets, GUI action-reducer packets, GUI controller-state packets, GUI playback-transcript packets, GUI playback-validation packets, GUI test-harness contract/readiness packets, GUI implementation-bridge/desktop-blueprint/desktop-app-plan/desktop-component-contract/desktop-view-model/desktop-render-contract/desktop-render-harness/cockpit-boundary-readiness packets, cockpit send-plan operator-readiness packets, cockpit send-plan rehearsal-surface packets, and the live GUI performance-console chain through live-kit capture workbench, package audition, and operator package, operator review ledger, and payload helpers under `reports/performance_console/`. Static manual feedback facts stay in `data/manual_feedback_packet.py`; static A4 patch-template facts stay in `data/analog_four_patch_templates.py`; static A4 patch-corpus facts stay in `data/analog_four_patch_corpus.py`; static A4 learning facts stay in `data/analog_four_learning.py`; static A4 SysEx calibration facts stay in `data/analog_four_sysex_calibration.py`; static GUI contract facts stay in `data/live_gui_contracts.py`; static controller-brain profiles stay in `data/controller_mapping_profiles.py`; static controller-brain rehearsal scenarios stay in `data/controller_rehearsal_scenarios.py`; repeated report CLI helpers stay in `reports/live_gui_common.py`. |
 | `inspection.py`       | Consolidated passive command-metadata inspection + preview + audit.             |
+| `cockpit/export/analog_four_export_contracts.py` | Shared bounded service/CLI failure vocabulary for passive A4 exports. |
+| `cockpit/export/analog_four_kit.py` | Hardware-validation-gated A4 `.syx` file adapter; reuses canonical `atomic_write` and never sends MIDI. |
+| `cockpit/export/analog_four_cli.py` | Registered local-file command for one or four validated Filter2 Resonance mutations; no MIDI I/O. |
+| `style_analysis/analog_four_patch_inference.py` | Typed, single-decode audio evidence and audio-dependent four-column A4 patch-genome inference with direct RED metrics. |
+| `style_analysis/runtime_types.py` | Shared runtime type-validation helper used by extractor and A4 inference boundaries. |
+| `cockpit/export/cli_options.py` | Shared side-effect-free option parsing helpers for registered export commands. |
+| `cockpit/export/analog_four_patch_batch.py` | Transactional batch service that stages candidate saved kits and complete DNA/live-dial sidecars from immutable inputs, then publishes a manifest commit marker through the canonical atomic writer. |
+| `cockpit/export/analog_four_patch_batch_codec.py` | Canonical JSON encoding/decoding and SHA-256 helpers shared by batch writer and reader. |
+| `cockpit/export/analog_four_patch_batch_contracts.py` | Stable batch payload and result contracts. |
+| `cockpit/export/analog_four_patch_batch_publication.py` | Race-safe immutable artifact publication and cooperative lock ownership. |
+| `cockpit/export/analog_four_patch_batch_cli.py` | Registered hardware-passive operator command; the documented/default path exports exactly four deterministic audio-dependent candidates and performs no MIDI I/O. |
+| `cockpit/export/analog_four_patch_batch_reader.py` | Strict manifest/sidecar reader that verifies candidate identity, nested hashes, coverage, and event routing before a stored plan can reach the app sender. |
+| `cockpit/export/analog_four_patch_render_rank.py` | Passive acoustic feedback service that compares recorded A4 candidates with the exact batch reference across weighted envelope/timbre features. |
+| `cockpit/export/analog_four_patch_render_rank_cli.py` | Registered local-only render-ranking command; no MIDI or hardware mutation. |
 
 ### Frozen reference (NOT in the layered graph)
 
@@ -308,7 +330,7 @@ snapshot seams.
 ## 6.1 Device Protocol + Strategy seam (WS-S5 + Strategy)
 
 The `rytm_randomizer.devices.Device` Protocol is the single cross-machine
-boundary. Every Elektron device family — Rytm today, Analog Four next —
+boundary. Every Elektron device family - Rytm and Analog Four today -
 exposes exactly one registered `Device` instance and routes its behavior
 through three Strategy sub-Protocols.
 
@@ -331,6 +353,94 @@ through three Strategy sub-Protocols.
 The Protocol's four legacy convenience methods (`decode_snapshot`,
 `plan_mutation`, `to_mock_messages`, `to_cc_messages`) remain for
 backward compatibility — they delegate to the strategies.
+
+The A4 saved-kit renderer is an optional family capability resolved from the
+registered `AnalogFourDevice` through `get_analog_four_saved_kit_capability()`;
+it does not expand the cross-machine `Device` Protocol. The guarded exporter
+and audio batch consume that capability instead of importing a concrete writer
+strategy. `analog_four_saved_kit_codec.py` remains the shared decoder/writer
+owner for frame validation, packing, checksum, and trailer reconstruction;
+`analog_four_saved_kit_writer.py` consumes that codec plus promoted calibration
+facts to mutate and rebuild one frame.
+The pure renderer may exercise candidate offsets in tests, but the
+operator-facing `cockpit.export.analog_four_kit` adapter accepts only fields
+marked `hardware-write-validated`. It writes a local file through the canonical
+atomic writer and never opens a MIDI port. The registered
+`analog-four-saved-kit-export` command makes that guarded file path reachable
+without adding hardware I/O.
+
+The audio batch path composes the existing audio extractor, the focused A4
+audio-inference compiler, patch send-plan metadata, and guarded saved-kit
+export. The inference coefficients and feature terms live as immutable facts in
+`data/analog_four_audio_inference.py`; the compiler evaluates that canonical
+table instead of embedding parameter-specific conditionals. The
+documented/default workflow produces exactly four deterministic candidate
+`.syx`/JSON pairs plus one manifest; the bounded candidate-count seam can
+produce a leading subset for focused compatibility tests.
+The extractor reads one immutable byte snapshot, hashes it, and decodes that
+same snapshot once into a typed report-and-synthesis measurement record. Native
+decoding runs in a spawned child process. An abnormal child exit becomes a
+bounded `inference_failed` result in the parent, which remains alive and removes
+its private audio/SysEx staging directory. This makes Windows failure
+crash-contained; it does not establish reliable Windows native decoding. The
+batch reads the audio and source kit once, works only from private immutable
+snapshots, stages the complete output, and closes private staging before it
+acquires a per-track file lock. Candidate filenames include a provenance-based
+generation ID; the stable manifest path is switched last. An interruption can
+therefore leave unreferenced generation files, but cannot make the prior
+manifest point at a mixed generation. Generation files are write-once and are
+reused only when their bytes match exactly; a conflicting same-generation file
+is rejected. Process interruption may leave unreferenced generation files for
+later cleanup. Cooperative acquire/release operations serialize through an
+atomically created sibling gate directory, so a verified owner lock cannot be
+replaced between release verification and unlink. Lock cleanup runs even while
+an exception propagates, and a cleanup failure is returned either as exception
+detail or as a warning on an otherwise successful committed result. Recovery
+diagnostics expose only the lock basename plus bounded process/time/generation
+metadata; hashes and machine-local paths are not logged.
+The sidecar is the complete DNA and CC/NRPN live-dial contract; saved-kit SysEx
+still encodes only hardware-write-validated Filter2 Resonance. This is real
+audio-dependent inference, but not full saved-kit coverage or a claim of
+Synthplant-equivalent learned accuracy. `analog-four-audio-patch-batch` remains
+hardware-passive: local reads/writes only, with no MIDI port or send.
+
+The stored-plan reader treats the stable manifest as the publication commit
+marker. Before a candidate reaches dry-run or the armed sender, it verifies the
+sidecar byte hash, generation ID, source hash, candidate DNA hash, send-plan
+hash, selected column/label/track, coverage totals, every event's transport
+status, and each parameter's canonical A4 CC or NRPN address. The current
+closest-reference candidate has 26 live-routable rows (22 CC and 4 NRPN).
+Six paired-MSB/LSB CC rows remain manual because their 14-bit conversion has
+not been hardware-verified. Seven enum rows disproved by the 2026-07-29
+physical rehearsals also remain manual; unknown enum labels fail closed.
+Incoming A4 soft capture mirrors the transport by retaining one NRPN selector
+per track and applying CC6 data only after a known CC99/CC98 address is complete.
+The immutable-batch reader also revalidates every stored event against current
+display/transport policy after its hash, DNA, and canonical-address checks.
+An older internally valid manifest therefore cannot replay an enum ordinal
+disproved by later physical evidence.
+The armed sender validates the complete event sequence before opening a port,
+paces each of the 34 transport messages by 20 ms, counts only successful
+deliveries, and reports exact partial progress plus baseline-reload recovery if
+the port fails during a plan. Successful partial-plan output is recorded as
+transport delivery with sendable/manual counts, bounded live-dial status, and
+an explicit hardware-semantic-verification requirement.
+
+The manifest reader and plan validator remain passive. They can feed a mock
+dry-run, but real CC/NRPN delivery is reachable only through
+`python -m rytm_randomizer.app --arm` with the feature-specific confirmation.
+The app validates the complete plan before constructing the real provider.
+Saved-kit export and batch SysEx writing are local-file operations, not MIDI
+SysEx transmission. The local-model copilot can propose staged review metadata,
+but it cannot construct a provider, open a port, or promote its output into a
+hardware-send plan.
+
+The render-ranking service forms the first hardware acoustic feedback loop. It
+requires the original reference bytes to match the batch source hash, verifies
+every ranked candidate through the stored-plan reader, analyzes each recorded
+A4 render locally, and returns a deterministic nearest match with all weighted
+feature deltas. It never sends MIDI and does not promote ranking results into a
+trained model automatically.
 
 **To add a device family:**
 
@@ -777,11 +887,20 @@ the implementation plan is at
 ```
 rytm_randomizer/cockpit/export/
     __init__.py            # Re-exports the public surface (Phase 1 + Phase 3)
+    analog_four_kit.py     # Guarded A4 saved-kit .syx adapter -> canonical atomic_write
+    analog_four_patch_batch.py      # Audio inference -> candidate .syx/sidecars/manifest
+    analog_four_patch_batch_codec.py # Canonical writer/reader JSON + hashes
+    analog_four_patch_batch_contracts.py # Stable payload/result DTOs
+    analog_four_patch_batch_publication.py # Immutable artifacts + lock ownership
+    analog_four_patch_batch_reader.py # Hash, DNA, and canonical transport verifier
+    analog_four_patch_batch_cli.py  # Registered passive-hardware batch command
+    analog_four_patch_render_rank.py # Passive artifact/audio ranking orchestration
+    analog_four_patch_render_rank_cli.py # Registered ranking command
     model_format.py        # Phase 1, existing — MAGIC=b"RYMP", format_version, build/parse header, CRC32 trailer
     serialize.py           # Phase 1, existing — pack_profile_model / unpack_profile_model
     signing.py             # Phase 3, NEW — HMAC-SHA256 signing + signed envelope (MAGIC=b"RYMS")
     verifier.py            # Phase 3, NEW — never-raises VerificationResult over signed envelopes and bare blobs
-    writer.py              # Phase 3, NEW — atomic_write(path, blob): temp + fsync + os.replace, never partial
+    writer.py              # Phase 3, NEW — atomic_write(path, blob): temp + fsync + race-safe atomic publish
     cli.py                 # Phase 3, NEW — cockpit-export-profile-model CLI (pack -> sign -> write -> verify)
 rytm_randomizer/reports/
     cockpit_export_rehearsal.py  # Phase 3, NEW — passive pre-flight report mirroring PR #104's panel/binding/check shape
@@ -790,7 +909,7 @@ rytm_randomizer/reports/
 The new code lives entirely under the existing `cockpit/export/` and
 `reports/` subpackages — no new top-level module (Gate 9). The pipeline
 is pure stdlib (`hmac`, `hashlib`, `zlib`, `secrets`, `os.replace`,
-`tempfile.NamedTemporaryFile`) plus the already-shipped MessagePack
+`os.rename`, `os.link`, `tempfile.mkstemp`) plus the already-shipped MessagePack
 dependency; no new third-party package and no new toolchain. Phase 3
 introduces no `mido` imports, no socket / network calls, no subprocess /
 threading / asyncio — the entire pipeline runs in-process on the
@@ -804,6 +923,17 @@ export-rehearsal report mirrors is also pinned) and refactors
 auto-discover passive CLI commands from `cli_registry` (so every future
 passive CLI auto-enrolls in the safety sweep instead of relying on
 contributor discipline).
+
+The later A4 saved-kit adapter also lives under `cockpit/export/`, but it is
+separate from the signed `.rymp` profile-model pipeline. It reads an
+operator-selected source kit, delegates all frame validation and mutation to
+`devices/strategies/analog_four_saved_kit_writer.py`, then calls the same
+`writer.atomic_write(overwrite=False)` primitive. Its output is a 2,770-byte
+`.syx` file, not a `.rymp` model. Only Filter2 Resonance is currently admitted
+because it is the only field with operator-confirmed write evidence. The
+adapter records shared export RED metrics and structured logs with categorical
+`validation`, `input_not_found`, `permission_denied`, `source_read_failed`,
+`overwrite_refused`, and `write_failed` failures.
 
 ---
 
@@ -927,6 +1057,14 @@ now distinguishes `PermissionError` (loud) from genuine "this one file is malfor
 (warn, skip) so a permission-denied profile directory no longer presents identically
 to corrupted JSON.
 
+Publication is race-safe: overwrite mode uses same-filesystem `os.replace`;
+no-overwrite mode uses `os.rename` on Windows (including removable filesystems
+that do not support hard links) and create-if-absent `os.link` on POSIX. The
+temporary file data is fully written and `fsync`ed before publication. Parent
+directory metadata is not fsynced, so persistence of a newly published name
+across sudden power loss remains filesystem-dependent; process-visible output
+is still atomic and never partial.
+
 The matching arch tests `tests/architecture/test_abstraction_reuse.py` and
 `tests/architecture/test_no_silent_overwrite_writes.py` enforce that no second
 canonical `atomic_write` surface appears in cockpit code and that no module
@@ -1015,6 +1153,10 @@ The rules above are mechanically enforced by:
   (every live-GUI dataclass publishes a matching `*Dict` contract, the shared
   TypeScript protocol mirrors those fields, and GUI consumers import the
   shared protocol instead of declaring parallel local interfaces)
+* `tests/architecture/test_analog_four_audio_patch_state_schema.py` (the
+  persisted Analog Four audio-patch run state conforms to its declared JSON
+  schema, including required fields, closed objects, enums, and scalar
+  constraints)
 
 These tests are run by `pytest tests/architecture/` and are wired into the
 `test` job of `.github/workflows/test.yml` so a violation fails the build.

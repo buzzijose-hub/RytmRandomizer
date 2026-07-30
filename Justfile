@@ -65,6 +65,10 @@ lint:
     python -m black --check --target-version=py311 .
     python -m isort --profile black --check-only .
 
+# Run the incremental strict-production type gate.
+typecheck:
+    python scripts/typecheck_touched.py
+
 # Auto-fix lint issues
 fmt:
     python -m ruff check . --fix
@@ -91,15 +95,15 @@ closeout:
 closeout-ps:
     powershell -ExecutionPolicy Bypass -File Scripts/closeout_check.ps1
 
-# Full pre-PR check: lint + arch + full test suite + coverage
-check: lint arch test cov
+# Full pre-PR check: lint + strict production typing + arch + full test suite + coverage
+check: lint typecheck arch test cov
     @echo "✓ All checks passed. Ready to push."
 
 # ─────────────────────────────────────────────────────────────────────────
 # CODE REVIEW (the post-push review gate — see docs/CODE_REVIEW_HOOK_SETUP.md)
 # ─────────────────────────────────────────────────────────────────────────
 
-# Mechanical review gates only: lint + architecture + V1.34 parity.
+# Mechanical review gates only: lint + strict production typing + architecture + V1.34 parity.
 # Delegates to scripts/code_review_gate.py — the SINGLE shared
 # implementation also used by the git pre-push hook (.githooks/pre-push)
 # and the codex PostToolUse hook (.codex/hooks.json). One script, so the
@@ -109,9 +113,8 @@ _review-mechanical:
 
 # NOTE: the single-line comment directly above `review:` is what
 # `just --list` shows as the recipe summary — keep it a clean one-liner.
-# Detail: `just review` runs the FULL 8-step code review with NO human
-# interaction. First the mechanical gates (_review-mechanical), then it
-# dispatches the `code-reviewer` agent — which walks all 8 steps of
+# Detail: `just review` always runs the mechanical gates. In Claude Code it
+# then dispatches the `code-reviewer` agent, which walks all 8 steps of
 # .claude/skills/code-review/SKILL.md, including the two judgement steps
 # no test can automate: Step 7 (abstraction reuse / genericization) and
 # Step 8 (architecture-doc + diagram freshness) — and emits the
@@ -129,7 +132,7 @@ _review-mechanical:
 # (non-zero exit) rather than degrading to a manual checklist — the
 # review must not be silently skipped. Rationale: docs/CODE_REVIEW_HOOK_SETUP.md.
 
-# Full pre-push code review: mechanical gates + 8-step code-reviewer agent
+# Mechanical review plus environment-specific judgement dispatch
 review: _review-mechanical
     #!/usr/bin/env bash
     set -euo pipefail

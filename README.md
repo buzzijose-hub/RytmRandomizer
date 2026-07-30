@@ -4,12 +4,11 @@
 
 # RytmRandomizer
 
-**A creative cockpit for the Elektron Analog Rytm MK2.**
-**Author a profile · mutate live · ship to hardware as a signed file.**
+**A creative cockpit for the Elektron Analog Rytm MK2. Author a profile · mutate live · ship to hardware as a signed file.**
 
 [![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-orange.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/tests-5%2C900%2B-9be8a0.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-6%2C800%2B-9be8a0.svg)](#testing)
 [![Phase 1 · Cockpit](https://img.shields.io/badge/Phase%201%20%C2%B7%20Cockpit-shipped-7cc4ff.svg)](#cockpit)
 [![Phase 2 · Wizard](https://img.shields.io/badge/Phase%202%20%C2%B7%20Wizard-shipped-9be8a0.svg)](#profile-wizard)
 [![Phase 3 · Export](https://img.shields.io/badge/Phase%203%20%C2%B7%20Export-shipped-9be8a0.svg)](#export-pipeline)
@@ -167,7 +166,7 @@ What it does:
 
 1. **`pack`** the `ProfileModel` to MessagePack with a 4-byte magic (`RYMP`), versioned header, payload length, CRC32.
 2. **`sign`** with HMAC-SHA256 (stdlib only — no crypto library dep). Wrap in a `RYMS` envelope carrying the algorithm, key id, and 32-byte signature.
-3. **`write`** atomically: temp-file in the same directory → `fsync` → `os.replace`. **No partial files ever land on disk** — works identically on POSIX and Windows.
+3. **`write`** atomically: sibling temp file → complete write + file `fsync` → platform-native atomic publication (`os.replace` for overwrite, Windows `os.rename` / POSIX `os.link` for no-overwrite). **No partial files ever land on disk.** Parent-directory persistence after sudden power loss remains filesystem-dependent.
 4. **`verify`** the bytes that were just written. The verifier never raises; it returns a `VerificationResult` with `ok` + a `reason` from a finite set.
 
 The output is a ~8 KB file you can email, hash-check, version-pin in a sample-pack zip, and eventually load onto dedicated hardware.
@@ -477,7 +476,7 @@ target.
    shipped (PR #106)                      Phase 1 serializer: HMAC-SHA256
                                           signing (stdlib only, timing-safe),
                                           atomic file writes (sibling temp +
-                                          fsync + os.replace), never-raises
+                                          file fsync + platform-native publish), never-raises
                                           integrity verifier, CLI driver, and
                                           passive pre-flight rehearsal report.
                                           7 WSes, 1 bundled PR, Phase-4-ready
@@ -500,8 +499,8 @@ See [`docs/STATUS.md`](docs/STATUS.md) for the dated activity log and the per-ph
 git clone https://github.com/buzzijose-hub/RytmRandomizer.git
 cd RytmRandomizer
 pip install -e ".[dev]"
-pytest                    # full suite — 5,900+ tests, parallelized on a multi-core machine
-just check                # pre-PR gate (ruff + black + isort + tests + arch)
+pytest                    # full suite — 6,800+ tests, parallelized on a multi-core machine
+just check                # lint + strict production typing + arch + tests + coverage
 ```
 
 The test suite uses `pytest-xdist` (`-n auto`) for parallel execution and a 180-second per-test timeout. Don't pass `-o addopts=''` for normal runs — it disables xdist and triples the runtime.
@@ -519,7 +518,7 @@ The test suite uses `pytest-xdist` (`-n auto`) for parallel execution and a 180-
 | `rytm_randomizer/data/`, `state/`, `guardrails/`, `observability/` | Fact tables, runtime state, policy, logging |
 | `desktop/shell/` | Tauri 2 Rust shell — spawns the Python sidecar, wraps the web frontend |
 | `desktop/web/` | React + TypeScript + Vite cockpit + wizard UI · vitest + Playwright |
-| `tests/` | 3,700+ tests across 170+ modules — arch invariants, V1.34 parity, integration, E2E |
+| `tests/` | 6,800+ tests across 350+ modules - arch invariants, V1.34 parity, integration, E2E |
 | `docs/` | Architecture, status, plans, specs, install + cockpit quickstart |
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow (plan → TDD → code review → ship), the parity rules around V1.34, and the per-PR gate battery. Agentic contributors should read [`AGENTS.md`](AGENTS.md) and [`docs/CODEX_CONTRIBUTING.md`](docs/CODEX_CONTRIBUTING.md).
@@ -530,11 +529,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow (plan → TDD → code
 
 The full surface is large - see [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) for every command and its flags. The headline ones:
 
-The scene system below is the validated V1.34 four-pad layer. These tables are
-the canonical reference for what commands exist there; `rytm_randomizer.shell`
-dispatches them. For all-12-pad style mutation, use
-`python -m rytm_randomizer.app --dry-run --rytm-12-pad-shell` first, then the
-armed form with `--confirm-rytm-12-pad-send`.
+The scene system below is the validated V1.34 four-pad layer and the canonical command reference dispatched by `rytm_randomizer.shell`. For all-12-pad style mutation, use `python -m rytm_randomizer.app --dry-run --rytm-12-pad-shell` first, then the armed form with `--confirm-rytm-12-pad-send`.
 
 ```bash
 # Cockpit + wizard + export
@@ -555,11 +550,15 @@ reference-style-blueprint-report --description "Glenn Wilson pressure" # 12-pad 
 dual-machine-target-report rytm | a4 | both                           # safe target surface
 dual-machine-style-kit-selection-report STYLE --rytm KITS --analog-four KITS # A4 baseline/patch DNA/corpus/send-plan: see CLI reference
 
+# A4 audio workflow: local saved-kit export -> four-candidate batch -> passive rank
+python -m rytm_randomizer.cli analog-four-saved-kit-export --source source-kit.syx --output output/a4-filter2-res-64.syx --filter2-resonance 1:64
+python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit source-kit.syx --output-dir output/a4-audio-patch --candidates 4
+python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference reference.wav --manifest output/a4-audio-patch/a4-t1-audio-patch-batch.json --render 1=candidate-1.wav
+
 # Snapshot intelligence
 rytm-snapshot-intelligence-report KITS.syx --slot N                   # one Rytm kit snapshot
 rytm-snapshot-mutation-preview-report KITS.syx --slot N --depth 2     # mock-only preview
 ```
-
 Every command above is **passive by construction** — no MIDI port opens, no MIDI is sent. The full list is auto-discovered and swept on every PR by `tests/test_real_midi_passive_cli_safety.py`.
 
 ---
@@ -625,10 +624,10 @@ Keep volume moderate for S3B and S4B.
   restarting the process.
 - Main-prompt `1`, `2`, and `3` remain guarded and send no MIDI.
 - Four-pad scene/global commands auto-load anchors if needed.
-- Free-form all-row mutation, samples, performance macros, source level, track level, amp volume, NRPN style-kit sends, SysEx, transport, pattern changes, and kit/project writes remain out of scope.
-- Analog Four sends are candidate/manifest-gated and require an explicit `--arm` path plus a ready plan; generated patch sends use `--a4-patch-send-plan --confirm-a4-patch-send-plan`; initialized-baseline comparison, patch genome, learning, and corpus matching stay passive by default.
+- Free-form all-row mutation, samples, performance macros, source level, track level, amp volume, unverified saved-kit fields, transport, pattern changes, and automatic kit/project transfer remain out of scope. Guarded local saved-kit SysEx writing is supported only for hardware-write-validated mappings; today that is Filter2 Resonance. The documented `analog-four-audio-patch-batch --candidates 4` workflow deterministically publishes exactly four audio-dependent `.syx` candidates plus complete DNA/live-dial sidecars without opening a MIDI port. Native decoding runs in a spawned child; an abnormal Windows exit returns `inference_failed` while the parent removes private audio/SysEx staging. This is crash containment, not a claim of reliable Windows decoding, full saved-kit coverage, or Synthplant-equivalent learned accuracy.
+- Analog Four sends are candidate/manifest-gated and use `--a4-patch-send-plan --batch-manifest "<batch.json>" --batch-manifest-sha256 "<reviewed digest>" --candidate N --confirm-a4-patch-send-plan --a4-output-port "<exact configured output name>"`. Armed delivery requires both the committed manifest and its exact reviewed SHA-256; direct `--description` and `--audio` plan generation is dry-run-only. The reader verifies the manifest digest, sidecar, nested DNA/send-plan hashes, transport status, canonical A4 CC/NRPN address, and current transport-policy eligibility for every event; an older internally valid manifest cannot replay a subsequently disproved enum ordinal. `python -m rytm_randomizer.app --arm` is the sole real MIDI boundary; no passive command, saved-kit writer, batch generator, ranker, or local-model copilot can open a hardware port. The armed path requires the configured output name to appear exactly once, performs no interactive port selection, validates the whole plan before constructing the real provider or opening the port, paces messages by 20 ms, and reports exact delivery progress. Partial-plan completion is labeled transport delivery, retains sendable/manual counts and bounded readiness status, and explicitly requires hardware semantic verification. MIDI has no per-message acknowledgment, so any delivery failure leaves hardware state uncertain and requires a clean-Kit/project reload before retry. Live-dial CC/NRPN changes affect volatile kit RAM and this path sends no save/write command, so the maintainer exempts it from automatic pre-send SysEx backup; a disposable project and saved clean baseline remain mandatory. `analog-four-audio-patch-rank` compares recorded candidates with the byte-identical reference across 11 measured envelope/timbre features. Two supervised 2026-07-29 rehearsals delivered the former 33-row / 53-message plan and its corrected 27-row / 37-message successor. Front-panel review disproved six enum values in the first pass and LFO1 Mode in the second; all 26 mappings retained after those corrections matched their planned targets. The current fail-closed plan therefore contains 26 sendable rows / 34 messages and 13 manual rows. Both rehearsals ended with a clean initialized-kit reload without saving.
 - Analog Rytm CC observe is input-only: `python -m rytm_randomizer.app --arm --rytm-cc-observe` opens a Rytm MIDI input port, observes pending CC messages, prints raw CC/NRPN observations with candidate labels, optionally sharpens labels with `--rytm-cc-observe-live-snapshot` or `--rytm-cc-observe-snapshot current-kit.syx`, and sends no MIDI.
-- Analog Four soft live capture is input-only: `python -m rytm_randomizer.app --arm --a4-soft-capture` opens an A4 MIDI input port, observes pending CC messages, prints a known/unknown state report, and sends no MIDI.
+- Analog Four soft live capture is input-only: `python -m rytm_randomizer.app --arm --a4-soft-capture` opens an A4 MIDI input port, reconstructs known CC and three-message NRPN observations per track, prints a known/unknown state report, and sends no MIDI.
 - Analog Four named parameter sends are active: `python -m rytm_randomizer.app --arm --a4-send-param --parameter "OSC1 PWM Depth" --channel 0 --value 32` prompts for an A4 output port, sends one manual-backed CC MSB message, closes the port, and exits.
 - Analog Four kit recipes are active: `python -m rytm_randomizer.app --arm --a4-kit-recipe bell-techno-grid` prompts for an A4 output port, sends a coordinated manual-backed four-track CC recipe, closes the port, and exits.
 
@@ -673,6 +672,7 @@ Aliases: `rytm-only` and `a4-only` are accepted. The reports are passive: they o
 
 **Free for personal and noncommercial use. Commercial license available.**
 
+RytmRandomizer is an independent, unofficial open-source project. It is not affiliated with, sponsored by, or endorsed by Elektron. Elektron, Analog Four, and Analog Rytm are trademarks of their respective owner.
 RytmRandomizer is licensed under the [PolyForm Noncommercial License
 1.0.0](LICENSE) — a [source-available](https://en.wikipedia.org/wiki/Source-available_software)
 license that lets anyone clone, run, modify, share, and contribute to the

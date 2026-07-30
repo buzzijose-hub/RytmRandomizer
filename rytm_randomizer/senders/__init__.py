@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
+from ..behavior.midi_event_plan import CcNrpnEvent
 from .guarded import GuardedSendResult, guarded_send
 from .hardware import HardwareSendResult, TripleSender, hardware_send
-from .midi_event_plan import (
-    CcNrpnSendEvent,
-    send_cc_nrpn_event_plan,
-)
+from .midi_event_plan import send_cc_nrpn_event_plan
 
 __all__ = [
-    "CcNrpnSendEvent",
+    "CcNrpnEvent",
     "GuardedSendResult",
     "HardwareSendResult",
     "TripleSender",

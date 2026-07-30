@@ -3,7 +3,7 @@
 #
 # This hook fires on EVERY `git push`, no matter what drives it: Claude Code,
 # codex, a human at a terminal, an IDE button. It runs the mechanical
-# code-review gates (lint + architecture + V1.34 parity) via the shared
+# code-review gates (lint + strict production typing + architecture + V1.34 parity) via the shared
 # scripts/code_review_gate.py and ABORTS the push (non-zero exit) if any gate
 # fails. Zero copy-paste, zero per-tool wiring.
 #

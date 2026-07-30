@@ -200,6 +200,9 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `analog-four-patch-learning-report` | Passive Analog Four patch learning routes, capture matrix, and live-dial readiness |
 | `analog-four-patch-corpus-report` | Passive nearest-match ranking against starter or captured Analog Four patch/audio examples |
 | `analog-four-patch-send-plan-report` | Passive CC/NRPN live-dial send plan for a generated Analog Four patch |
+| `analog-four-saved-kit-export` | Guarded local-file saved-kit export; currently admits hardware-validated Filter2 Resonance only |
+| `analog-four-audio-patch-batch` | Real local audio analysis; the documented/default workflow deterministically commits exactly four immutable `.syx` candidates, complete DNA sidecars, and one manifest |
+| `analog-four-audio-patch-rank` | Passive acoustic ranking of recorded A4 candidates against the exact batch reference |
 | `local-model-copilot-report` | Passive local model docs, mutation-intent, and Analog Four patch-review packets; optional local model subprocess call with `--ask-local-model` |
 | `analog-four-oxi-macro-report` | Passive in-memory Analog Four OXI-style four-track macro preview |
 | `analog-four-oxi-macro-readiness-report` | Passive Analog Four OXI macro readiness, soft-capture preflight, and operator-present validation commands |
@@ -218,6 +221,9 @@ python -m rytm_randomizer.cli analog-four-patch-learning-report --audio referenc
 python -m rytm_randomizer.cli analog-four-patch-corpus-report --description "hypnotic metallic HP2 stab" --track 1 --limit 4
 python -m rytm_randomizer.cli analog-four-patch-corpus-report --audio reference.wav --corpus-file a4-captures.json --json
 python -m rytm_randomizer.cli analog-four-patch-send-plan-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
+python -m rytm_randomizer.cli analog-four-saved-kit-export --source INIT.syx --output PATCH.syx --filter2-resonance 1:64
+python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit INIT.syx --output-dir batch --track 1 --candidates 4
+python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference reference.wav --manifest batch/a4-t1-audio-patch-batch.json --render 1=candidate-1.wav
 python -m rytm_randomizer.cli local-model-copilot-report --question "Which A4 rows are staged only?" --workflow all --description "hypnotic metallic HP2 stab" --json
 python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove --seed 23 --intensity 6 --events --limit 0
 python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4
@@ -227,9 +233,19 @@ python -m rytm_randomizer.cli analog-four-style-kit-readiness-report KITS.syx jo
 Active companion app bridge for the selected patch send plan:
 
 ```bash
+python -m rytm_randomizer.app --dry-run --a4-patch-send-plan --batch-manifest batch/a4-t1-audio-patch-batch.json --batch-manifest-sha256 "<reviewed manifest SHA-256>" --candidate 1
+python -m rytm_randomizer.app --arm --a4-patch-send-plan --batch-manifest batch/a4-t1-audio-patch-batch.json --batch-manifest-sha256 "<reviewed manifest SHA-256>" --candidate 1 --confirm-a4-patch-send-plan --a4-output-port "<exact configured Analog Four output name>"
 python -m rytm_randomizer.app --dry-run --a4-patch-send-plan --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
-python -m rytm_randomizer.app --arm --a4-patch-send-plan --description "hypnotic metallic HP2 stab" --track 1 --candidate 1 --confirm-a4-patch-send-plan
 ```
+
+The manifest form is the only armed audition-to-hardware path: it requires the
+operator-supplied SHA-256 of the exact reviewed manifest, then verifies the
+committed batch, selected sidecar, source-audio identity, candidate DNA, and
+CC/NRPN plan before any output port opens. The direct `--description` and
+`--audio` forms are dry-run-only one-off inference paths; they rebuild a plan
+and are not bound to a previously published or auditioned batch artifact.
+Armed delivery does not prompt from enumerated ports: `--a4-output-port` must
+match exactly one discovered output name or the command fails before opening it.
 
 `analog-four-baseline-report` is the passive clean-slate intake for A4 patch
 capture work. It reads three local SysEx export scopes - kit, pattern+kit, and
@@ -267,8 +283,42 @@ events, counts the exact transport messages, and lists skipped front-panel rows
 such as destination labels that still need ordinal capture. The matching active
 path lives in `rytm_randomizer.app`: use `--dry-run --a4-patch-send-plan` to
 render the plan through the mock sender, or `--arm --a4-patch-send-plan
---confirm-a4-patch-send-plan` to choose an A4 output port and send only the
-compiler-approved rows.
+--batch-manifest ... --batch-manifest-sha256 "<reviewed digest>" --candidate N
+--confirm-a4-patch-send-plan
+--a4-output-port "<exact configured Analog Four output name>"` to require one
+exact output match and send only the compiler-approved rows from the exact
+hash-verified plan stored with that batch.
+
+`analog-four-saved-kit-export` is the narrow hardware-validated file writer.
+It reads a saved-kit dump, applies explicit `TRACK:VALUE` Filter2 Resonance
+assignments through the registered Analog Four device capability, and writes a
+new `.syx` through the canonical atomic writer. It never opens a MIDI port and
+refuses unsupported or unvalidated saved-kit parameters.
+
+`analog-four-audio-patch-batch` is the end-to-end offline candidate generator.
+With the documented/default `--candidates 4` workflow, it analyzes an immutable
+reference-audio snapshot and deterministically builds exactly four
+audio-dependent A4 candidates. It renders the currently validated SysEx subset
+and commits each candidate's complete DNA plus CC/NRPN plan behind a
+hash-addressed sidecar and one stable manifest. The bounded `--candidates`
+compatibility option can request a leading subset for focused tests, but the
+operator workflow and product contract use all four candidates.
+Local sidecars and manifests retain the reference-audio and source-kit
+basenames for operator traceability. Use neutral filenames before generation
+and review those local artifacts before sharing them outside the studio.
+
+The command performs local file I/O only and does not transfer a kit or send
+MIDI. Native audio decoding runs in a spawned child process. An abnormal native
+exit becomes a classified `inference_failed` result in the parent, which owns
+and removes the private audio/SysEx staging directory. This prevents a decoder
+crash from taking down the CLI or retaining private staging, but it is not a
+claim that the native decoder is reliable on Windows.
+
+`analog-four-audio-patch-rank` closes the passive studio feedback loop. It
+verifies every candidate sidecar and the original reference hash before
+comparing recorded A4 renders across 11 normalized synthesis measurements.
+The result is an explainable ranking packet; it is not promoted into training
+data automatically.
 
 `local-model-copilot-report` is the passive local-AI bridge. By default it
 does not run a model; it prints deterministic source packets and JSON schemas
@@ -276,7 +326,9 @@ for docs/MIDI answers, staged natural-language mutation intent, and Analog Four
 patch co-design review. Add `--ask-local-model` only after `LOCAL_MODEL_COMMAND`
 points to a local model executable. The command is run as a subprocess, JSON
 stdout is validated, and the output remains staged-only: no ports open, no MIDI
-is sent, and no hardware-send plan is promoted.
+is sent, and no hardware-send plan is promoted. The local model cannot invoke
+the real MIDI provider; only `python -m rytm_randomizer.app --arm` can cross the
+hardware boundary.
 
 `analog-four-oxi-macro-report` is a snapshot-free planning surface for the
 Analog Four side of an OXI-style live rig. It uses existing manual-backed A4 CC

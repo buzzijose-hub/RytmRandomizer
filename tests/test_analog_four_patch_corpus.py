@@ -6,6 +6,7 @@ import json
 
 import pytest
 
+from conftest import analog_four_reference_feature_report
 from rytm_randomizer.guardrails.schema import Confidence, SourceType
 from rytm_randomizer.style_analysis import FeatureReport
 
@@ -13,18 +14,7 @@ pytestmark = pytest.mark.fast
 
 
 def _reference_report() -> FeatureReport:
-    return FeatureReport(
-        source_type=SourceType.SINGLE_TRACK,
-        confidence=Confidence.HIGH,
-        bpm=134.0,
-        tempo_stability=0.91,
-        kick_density=0.48,
-        percussion_density=0.78,
-        low_end_weight=0.42,
-        spectral_brightness=0.63,
-        texture_noise=0.34,
-        energy_arc=(0.18, 0.34, 0.48, 0.72, 0.84, 0.78, 0.61, 0.4),
-        content_hash="",
+    return analog_four_reference_feature_report(
         derived_at="2026-07-03T12:00:00Z",
     )
 

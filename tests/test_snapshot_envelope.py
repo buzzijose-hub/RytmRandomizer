@@ -68,6 +68,7 @@ def test_snapshot_subpackage_exports_expected_public_names() -> None:
         "SnapshotDecoder",
         "find_kit_record",
         "format_manufacturer_id",
+        "pack_elektron_7bit",
         "read_ascii_name",
         "unpack_elektron_7bit",
     }
@@ -126,6 +127,31 @@ def test_unpack_elektron_7bit_returns_empty_on_empty_input() -> None:
     from rytm_randomizer.snapshot import unpack_elektron_7bit
 
     assert unpack_elektron_7bit(b"") == b""
+
+
+def test_pack_elektron_7bit_round_trips_shared_envelope_payload() -> None:
+    from rytm_randomizer.snapshot import pack_elektron_7bit, unpack_elektron_7bit
+
+    payload = bytes([0xFF, 0x00, 0x80, 0x01, 0x00, 0xA5, 0xFF]) + bytes(range(20))
+
+    assert unpack_elektron_7bit(pack_elektron_7bit(payload)) == payload
+
+
+def test_pack_elektron_7bit_returns_empty_on_empty_input() -> None:
+    from rytm_randomizer.snapshot import pack_elektron_7bit
+
+    assert pack_elektron_7bit(b"") == b""
+
+
+def test_pack_elektron_7bit_pins_header_bit_order_and_short_tail() -> None:
+    from rytm_randomizer.snapshot import pack_elektron_7bit
+
+    unpacked = bytes([0x80, 0x01, 0xFF, 0x7F, 0x00, 0xA5, 0x55, 0x81])
+
+    packed = pack_elektron_7bit(unpacked)
+
+    assert packed == bytes([0x25, 0x00, 0x01, 0x7F, 0x7F, 0x00, 0x25, 0x55, 0x01, 0x01])
+    assert all(byte <= 0x7F for byte in packed)
 
 
 def test_unpack_elektron_7bit_raises_on_non_seven_bit_byte() -> None:
@@ -191,6 +217,13 @@ def test_find_kit_record_rejects_negative_slot() -> None:
         find_kit_record(ELEKTRON_MFR_ID + bytes([0x42]), slot=-1, kit_type_byte=0x42)
 
 
+def test_find_kit_record_rejects_type_byte_outside_byte_range() -> None:
+    from rytm_randomizer.snapshot import ELEKTRON_MFR_ID, find_kit_record
+
+    with pytest.raises(ValueError, match="0x00-0xff"):
+        find_kit_record(ELEKTRON_MFR_ID + bytes([0x42]), slot=0, kit_type_byte=0x100)
+
+
 def test_find_kit_record_rejects_missing_type_byte() -> None:
     from rytm_randomizer.snapshot import ELEKTRON_MFR_ID, find_kit_record
 
@@ -224,6 +257,15 @@ def test_read_ascii_name_rejects_slice_past_record_end() -> None:
 
     with pytest.raises(ValueError, match="extends past"):
         read_ascii_name(b"AB", offset=0, length=4)
+
+
+def test_read_ascii_name_rejects_negative_offset_and_length() -> None:
+    from rytm_randomizer.snapshot import read_ascii_name
+
+    with pytest.raises(ValueError, match="offset must be non-negative"):
+        read_ascii_name(b"AB", offset=-1, length=1)
+    with pytest.raises(ValueError, match="length must be non-negative"):
+        read_ascii_name(b"AB", offset=0, length=-1)
 
 
 # ---------------------------------------------------------------------------
@@ -372,6 +414,15 @@ def test_unpack_elektron_7bit_raises_on_none_input() -> None:
 
     with pytest.raises(ValueError, match="packed payload is None"):
         unpack_elektron_7bit(cast(bytes, None))
+
+
+def test_pack_elektron_7bit_raises_on_none_input() -> None:
+    from typing import cast
+
+    from rytm_randomizer.snapshot import pack_elektron_7bit
+
+    with pytest.raises(ValueError, match="unpacked payload is None"):
+        pack_elektron_7bit(cast(bytes, None))
 
 
 def test_find_kit_record_raises_on_none_raw() -> None:

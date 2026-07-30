@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "plan": "docs/superpowers/plans/2026-07-03-analog-four-audio-patch-genome.md",
+  "branch": "codex/a4-sysex-roundtrip-writer",
+  "pull_request": 214,
+  "phase": "review",
+  "workstreams": {
+    "audio_inference": "complete",
+    "patch_genome": "complete",
+    "saved_kit_writer": "complete",
+    "batch_publication": "complete",
+    "operator_cli": "complete",
+    "saved_kit_hardware_validation": "complete",
+    "full_live_plan_hardware_validation": "complete",
+    "learning_capture": "complete",
+    "final_gates": "complete"
+  },
+  "last_event": "Two supervised 2026-07-29 rehearsals completed transport. The corrected 27-row / 37-message pass verified every one of the 26 mappings retained by final policy and showed LFO1 Mode remained FREE instead of TRG; both passes ended with a reload without saving. LFO2 Mode is outside the candidate and remains non-transmitting without independent physical evidence. The final 26-row / 34-message policy passed passive replay, 454 focused tests, 705 architecture tests, 6,841 full-suite tests with 3 skipped, 685 parity checks, strict typing, lint, mechanical review, and 100% touched-file coverage. Branch publication is complete; online CI and reviewer approval remain pending."
+}

@@ -29,8 +29,9 @@ or what triggers it (Claude Code, codex, a human, or plain ``git``):
 The "mechanical gates" are the part a script CAN check on its own:
 
   1. lint trio   -- ruff + black --check + isort --check-only
-  2. architecture -- pytest tests/architecture/ -q
-  3. V1.34 parity -- pytest -m "not fast" -q  (the 685 parity items)
+  2. strict typing -- dynamic touched-production Pyright check
+  3. architecture -- pytest tests/architecture/ -q
+  4. V1.34 parity -- pytest -m "not fast" -q  (the 685 parity items)
 
 The two judgement steps of the 8-step review — Step 7 (abstraction reuse /
 genericization) and Step 8 (architecture-doc + diagram freshness) — are NOT
@@ -69,7 +70,8 @@ _GIT_PUSH_RE = re.compile(r"^\s*git\s+push(\s|$)")
 # re-prompts codex to run the judgement half itself.
 _CODEX_HANDOFF = (
     "A `git push` just completed. The mechanical code-review gates "
-    "(lint + architecture + V1.34 parity) PASSED. You must now complete the "
+    "(lint + strict touched-production typing + architecture + V1.34 parity) "
+    "PASSED. You must now complete the "
     "code review of the pushed commits (`git diff modularize-v1.34...HEAD`) "
     "by following .claude/skills/code-review/SKILL.md. Run it as ONE "
     "TARGETED AGENT PER REVIEW DIMENSION, in parallel — not one wide agent "
@@ -98,7 +100,8 @@ _CODEX_HANDOFF = (
 # review itself — pointing at the in-repo skill + agent it can invoke.
 _CLAUDE_HANDOFF = (
     "A `git push` just completed. The mechanical code-review gates "
-    "(lint + architecture + V1.34 parity) PASSED. Now complete the code "
+    "(lint + strict touched-production typing + architecture + V1.34 parity) "
+    "PASSED. Now complete the code "
     "review of the pushed commits (`git diff modularize-v1.34...HEAD`) by "
     "running the code-review skill (.claude/skills/code-review/SKILL.md) — or "
     "the code-reviewer agent (.claude/agents/code-reviewer.md) — as ONE "
@@ -130,6 +133,10 @@ _GATES: tuple[tuple[str, list[str]], ...] = (
     (
         "Lint: isort --check-only",
         [sys.executable, "-m", "isort", "--profile", "black", "--check-only", "."],
+    ),
+    (
+        "Typecheck: touched production",
+        [sys.executable, "scripts/typecheck_touched.py"],
     ),
     (
         "Architecture tests",
@@ -186,7 +193,7 @@ def _mode_cli() -> int:
             flush=True,
         )
         return 1
-    print("Mechanical review gates passed (lint + architecture + parity).")
+    print("Mechanical review gates passed (lint + typing + architecture + parity).")
     return 0
 
 

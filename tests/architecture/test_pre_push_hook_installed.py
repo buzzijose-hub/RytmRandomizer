@@ -2,10 +2,11 @@
 
 The repository ships a ``.githooks/pre-push`` script (see
 ``docs/CODE_REVIEW_HOOK_SETUP.md``) that runs ruff + black --check +
-isort --check-only + the architecture suite + V1.34 parity before every
-``git push``. CI runs the same gates on the remote side; the local hook
-is the *first* place a developer learns their change is broken — saving
-a CI-minute and a fix-push round trip per regression.
+isort --check-only + strict typing on touched production modules + the
+architecture suite + V1.34 parity before every ``git push``. CI runs the same
+gates on the remote side; the local hook is the *first* place a developer
+learns their change is broken — saving a CI-minute and a fix-push round trip
+per regression.
 
 The hook is activated by ``git config core.hooksPath .githooks``. That
 config is per-worktree on Windows / Linux / macOS (each ``git worktree
@@ -56,6 +57,7 @@ pytestmark = pytest.mark.fast
 _REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 _HOOKS_DIR: Final[Path] = _REPO_ROOT / ".githooks"
 _PRE_PUSH_HOOK: Final[Path] = _HOOKS_DIR / "pre-push"
+_CODE_REVIEW_GATE: Final[Path] = _REPO_ROOT / "scripts" / "code_review_gate.py"
 
 
 def _git_config_get(key: str) -> str | None:
@@ -107,6 +109,14 @@ def test_pre_push_hook_file_exists() -> None:
         f"{_PRE_PUSH_HOOK} must exist. Restore it from git history or "
         "see docs/CODE_REVIEW_HOOK_SETUP.md for the canonical template."
     )
+
+
+def test_shared_review_gate_includes_touched_production_typecheck() -> None:
+    """The shared hook implementation must retain the strict typing gate."""
+
+    gate_source = _CODE_REVIEW_GATE.read_text(encoding="utf-8")
+    assert '"scripts/typecheck_touched.py"' in gate_source
+    assert "Typecheck: touched production" in gate_source
 
 
 def test_core_hookspath_is_configured() -> None:

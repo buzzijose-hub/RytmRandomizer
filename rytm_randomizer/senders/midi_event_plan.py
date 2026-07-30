@@ -3,69 +3,87 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from typing import Final, Protocol
 
+from ..behavior.midi_event_plan import (
+    CcNrpnEvent,
+)
+from ..behavior.midi_event_plan import validate_cc_nrpn_event_plan as _validate_cc_nrpn_event_plan
+from ..data.midi_event_kinds import (
+    MIDI_EVENT_KIND_CC,
+    MIDI_EVENT_KIND_NRPN,
+    MidiEventKind,
+)
 from ..midi_io import Sender, send_cc, send_nrpn
-
-MIDI_EVENT_KIND_CC: Final[str] = "cc"
-MIDI_EVENT_KIND_NRPN: Final[str] = "nrpn"
-
-
-class CcNrpnSendEvent(Protocol):
-    """Minimum event shape required by the generic CC/NRPN sender."""
-
-    message_kind: str
-    cc_msb: int | None
-    nrpn_address: tuple[int, int] | None
-    midi_value: int
-    channel: int
-
+from ..observability.errors import MidiEventPlanSendError
 
 SleepCallable = Callable[[float], object]
 
 
 def send_cc_nrpn_event_plan(
-    events: Sequence[CcNrpnSendEvent],
+    events: Sequence[CcNrpnEvent],
     out: Sender,
     *,
     sleep: SleepCallable,
 ) -> int:
     """Send CC/NRPN events through ``out`` and return transport-message count."""
 
-    message_count = 0
-    for event in events:
-        if event.message_kind == MIDI_EVENT_KIND_CC:
-            if event.cc_msb is None:
-                raise ValueError("CC event is missing a CC MSB")
-            send_cc(
-                out,
-                event.cc_msb,
-                event.midi_value,
-                channel=event.channel,
-                sleep=sleep,
-            )
-            message_count += 1
-            continue
-        if event.message_kind == MIDI_EVENT_KIND_NRPN:
-            if event.nrpn_address is None:
-                raise ValueError("NRPN event is missing an NRPN address")
+    expected_message_count = _validate_cc_nrpn_event_plan(events)
+    sent_message_count = 0
+
+    def record_message_sent() -> None:
+        nonlocal sent_message_count
+        sent_message_count += 1
+
+    try:
+        for event in events:
+            if event.message_kind == MIDI_EVENT_KIND_CC:
+                cc_msb = event.cc_msb
+                if cc_msb is None:
+                    raise AssertionError("validated CC event lost its address")
+                send_cc(
+                    out,
+                    cc_msb,
+                    event.midi_value,
+                    channel=event.channel,
+                    sleep=sleep,
+                    on_message_sent=record_message_sent,
+                )
+                continue
+            nrpn_address = event.nrpn_address
+            if nrpn_address is None:
+                raise AssertionError("validated NRPN event lost its address")
             send_nrpn(
                 out,
-                event.nrpn_address[0],
-                event.nrpn_address[1],
+                nrpn_address[0],
+                nrpn_address[1],
                 event.midi_value,
                 channel=event.channel,
                 sleep=sleep,
+                on_message_sent=record_message_sent,
             )
-            message_count += 3
-            continue
-        raise ValueError(f"unsupported MIDI event kind: {event.message_kind}")
-    return message_count
+    except (KeyboardInterrupt, SystemExit) as exc:
+        raise MidiEventPlanSendError(
+            "MIDI event-plan delivery was interrupted after "
+            f"{sent_message_count} of {expected_message_count} messages",
+            sent_message_count=sent_message_count,
+            expected_message_count=expected_message_count,
+            interrupted=True,
+        ) from exc
+    except (AttributeError, ImportError, OSError, RuntimeError, TypeError, ValueError) as exc:
+        raise MidiEventPlanSendError(
+            "MIDI event-plan delivery failed after "
+            f"{sent_message_count} of {expected_message_count} messages",
+            sent_message_count=sent_message_count,
+            expected_message_count=expected_message_count,
+        ) from exc
+    return sent_message_count
 
 
 __all__ = [
-    "CcNrpnSendEvent",
+    "CcNrpnEvent",
     "MIDI_EVENT_KIND_CC",
     "MIDI_EVENT_KIND_NRPN",
+    "MidiEventKind",
+    "MidiEventPlanSendError",
     "send_cc_nrpn_event_plan",
 ]

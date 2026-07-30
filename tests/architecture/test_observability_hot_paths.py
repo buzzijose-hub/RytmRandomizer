@@ -1,4 +1,4 @@
-"""Observability-invariant arch tests for cockpit hot paths.
+"""Observability-invariant arch tests for operational hot paths.
 
 Implements OBS6 from [`OBSERVABILITY_REVIEW.md`](../../OBSERVABILITY_REVIEW.md):
 regression-proof the new observability shape so future PRs don't slip
@@ -64,6 +64,11 @@ _HOT_PATH_MODULES: Final[frozenset[str]] = frozenset(
         "rytm_randomizer/cockpit/ws/wizard_handlers.py",
         "rytm_randomizer/cockpit/ws/server.py",
         "rytm_randomizer/cockpit/export/cli.py",
+        "rytm_randomizer/cockpit/export/analog_four_kit.py",
+        "rytm_randomizer/cockpit/export/analog_four_patch_batch.py",
+        "rytm_randomizer/cockpit/export/analog_four_patch_batch_publication.py",
+        "rytm_randomizer/cockpit/export/analog_four_patch_batch_reader.py",
+        "rytm_randomizer/cockpit/export/analog_four_patch_render_rank.py",
         "rytm_randomizer/cockpit/export/writer.py",
         "rytm_randomizer/cockpit/export/signing.py",
         "rytm_randomizer/cockpit/export/verifier.py",
@@ -72,8 +77,37 @@ _HOT_PATH_MODULES: Final[frozenset[str]] = frozenset(
         "rytm_randomizer/cockpit/engine/mutate.py",
         "rytm_randomizer/cockpit/engine/send_plan.py",
         "rytm_randomizer/cockpit/history/store.py",
+        "rytm_randomizer/style_analysis/analog_four_patch_inference.py",
     }
 )
+
+_TRACED_BOUNDARY_FUNCTIONS: Final[dict[str, frozenset[str]]] = {
+    "rytm_randomizer/cockpit/export/analog_four_patch_batch_publication.py": frozenset(
+        {
+            "acquire_batch_lock",
+            "publish_immutable_artifact",
+            "release_batch_lock",
+        }
+    ),
+    "rytm_randomizer/cockpit/export/analog_four_patch_render_rank.py": frozenset(
+        {"rank_analog_four_patch_renders"}
+    ),
+    "rytm_randomizer/cockpit/export/analog_four_patch_batch_reader.py": frozenset(
+        {"load_analog_four_patch_batch_candidate"}
+    ),
+}
+
+_METRIC_RECORDER_BY_MODULE: Final[dict[str, str]] = {
+    "rytm_randomizer/cockpit/export/analog_four_patch_batch_publication.py": (
+        "record_a4_patch_publication"
+    ),
+    "rytm_randomizer/cockpit/export/analog_four_patch_render_rank.py": (
+        "record_a4_patch_render_rank"
+    ),
+    "rytm_randomizer/cockpit/export/analog_four_patch_batch_reader.py": (
+        "record_a4_patch_batch_read"
+    ),
+}
 
 
 def _module_has_logger_binding(path: Path) -> bool:
@@ -143,10 +177,10 @@ def _unstructured_logger_calls(path: Path) -> list[str]:
         if len(node.args) >= 2:
             continue
         # Pass if the single positional arg is NOT a plain string
-        if len(node.args) == 1 and not isinstance(node.args[0], ast.Constant):
-            continue
-        if len(node.args) == 1 and not isinstance(node.args[0].value, str):
-            continue
+        if len(node.args) == 1:
+            message = node.args[0]
+            if not isinstance(message, ast.Constant) or not isinstance(message.value, str):
+                continue
         rel = path.relative_to(PROJECT_ROOT).as_posix()
         snippet = ast.unparse(node)
         violations.append(
@@ -159,7 +193,7 @@ def _unstructured_logger_calls(path: Path) -> list[str]:
 
 
 def test_every_hot_path_module_binds_a_logger() -> None:
-    """Every cockpit hot-path module must bind ``_logger = get_logger(__name__)``.
+    """Every operational hot-path module binds ``_logger = get_logger(__name__)``.
 
     Regression guard: OBSERVABILITY_REVIEW.md found that 24 of 28
     cockpit modules had no logger before this sweep. PR O3 (the Phase
@@ -231,3 +265,56 @@ def test_hot_path_module_set_only_contains_real_files() -> None:
         "_HOT_PATH_MODULES references files that do not exist - update "  # noqa: S608
         "the set when renaming / moving:\n  " + "\n  ".join(missing)
     )
+
+
+def _call_names(node: ast.AST) -> set[str]:
+    names: set[str] = set()
+    for candidate in ast.walk(node):
+        if not isinstance(candidate, ast.Call):
+            continue
+        if isinstance(candidate.func, ast.Name):
+            names.add(candidate.func.id)
+        elif isinstance(candidate.func, ast.Attribute):
+            names.add(candidate.func.attr)
+    return names
+
+
+def test_a4_operational_boundaries_keep_tracing_and_red_metrics() -> None:
+    """A4 publication and ranking services remain observable for direct callers."""
+
+    violations: list[str] = []
+    for rel, function_names in sorted(_TRACED_BOUNDARY_FUNCTIONS.items()):
+        path = PROJECT_ROOT / rel
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        functions = {
+            node.name: node
+            for node in tree.body
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        }
+        for function_name in sorted(function_names):
+            function = functions.get(function_name)
+            if function is None:
+                violations.append(f"{rel}: missing boundary function {function_name}")
+                continue
+            if "operation" not in _call_names(function):
+                violations.append(
+                    f"{rel}:{function.lineno} {function_name} has no operation() trace span"
+                )
+
+        required_recorder = _METRIC_RECORDER_BY_MODULE[rel]
+        if required_recorder not in _call_names(tree):
+            violations.append(f"{rel}: missing RED recorder {required_recorder}()")
+
+    assert not violations, "A4 boundary observability regression:\n  " + "\n  ".join(violations)
+
+
+def test_render_rank_cli_is_presentation_only() -> None:
+    """The ranking CLI must not create a second trace or RED metric record."""
+
+    path = PROJECT_ROOT / "rytm_randomizer/cockpit/export/analog_four_patch_render_rank_cli.py"
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    call_names = _call_names(tree)
+
+    assert "operation" not in call_names
+    assert "get_metrics" not in call_names
+    assert "record_a4_patch_render_rank" not in call_names

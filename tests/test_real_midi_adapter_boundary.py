@@ -86,9 +86,28 @@ for module_name in ("mido", "rtmidi", "pythonrtmidi"):
 class FakeOutputPort:
     def __init__(self):
         self.sent = []
+        self.closed = False
 
     def send(self, message):
         self.sent.append(message)
+
+    def close(self):
+        self.closed = True
+
+
+class StructuralOutputProvider:
+    """Mido-shaped provider proving the adapter accepts the shared protocol."""
+
+    def __init__(self, port: FakeOutputPort):
+        self.port = port
+        self.opened: list[str] = []
+
+    def list_output_names(self):
+        return ("Structural A4",)
+
+    def open_output(self, port_name):
+        self.opened.append(port_name)
+        return self.port
 
 
 def test_build_real_midi_sender_requires_explicit_provider():
@@ -131,6 +150,60 @@ def test_real_midi_port_provider_rejects_configured_port_without_send():
         raise AssertionError("expected RealMidiPortError")
 
 
+def test_real_midi_port_provider_rejects_unclosable_output_port():
+    from rytm_randomizer.real_midi_adapter import RealMidiPortError, RealMidiPortProvider
+
+    class SendOnlyPort:
+        def send(self, _message):
+            return
+
+    provider = RealMidiPortProvider(
+        output_names=("Fake Rytm",),
+        ports={"Fake Rytm": SendOnlyPort()},  # type: ignore[dict-item]
+    )
+
+    with pytest.raises(RealMidiPortError, match="invalid_midi_output_port"):
+        provider.open_output("Fake Rytm")
+
+
+def test_real_midi_adapter_defensive_paths_use_structural_fakes_only():
+    from rytm_randomizer.real_midi_adapter import (
+        RealMidiPortError,
+        RealMidiPortProvider,
+        RealMidiSender,
+        RealMidiSendResult,
+    )
+
+    default_result = RealMidiSendResult(
+        port_name="Fake A4",
+        message_count=0,
+        metadata=None,  # type: ignore[arg-type]
+    )
+    assert dict(default_result.metadata) == {}
+
+    missing_port_provider = RealMidiPortProvider(output_names=("Fake A4",))
+    assert missing_port_provider.list_output_names() == ("Fake A4",)
+    with pytest.raises(RealMidiPortError, match="unavailable_midi_output_port"):
+        missing_port_provider.open_output("Fake A4")
+
+    with pytest.raises(TypeError, match="fake-only RealMidiPortProvider"):
+        RealMidiSender(object(), "Fake A4")  # type: ignore[arg-type]
+
+    fake_port = FakeOutputPort()
+    provider = RealMidiPortProvider(
+        output_names=("Fake A4",),
+        ports={"Fake A4": fake_port},
+    )
+    with pytest.raises(RealMidiPortError, match="midi_output_port_required"):
+        RealMidiSender(provider, "")
+
+    sender = RealMidiSender(provider, "Fake A4")
+    assert sender.port_name == "Fake A4"
+    with pytest.raises(TypeError, match="message must be a MidiMessage"):
+        sender.send_messages([object()])  # type: ignore[list-item]
+    assert fake_port.sent == []
+
+
 def test_real_midi_sender_records_to_fake_port_only():
     from rytm_randomizer.mock_midi import build_cc_message
     from rytm_randomizer.real_midi_adapter import RealMidiPortProvider, build_real_midi_sender
@@ -154,10 +227,12 @@ def test_real_midi_sender_records_to_fake_port_only():
     )
 
     result = sender.send_messages([message])
+    sender.close()
 
     assert result.port_name == "Fake Rytm"
     assert result.message_count == 1
     assert result.sent_real_midi is False
+    assert fake_port.closed is True
     assert fake_port.sent == [
         {
             "message_type": "cc",
@@ -167,6 +242,21 @@ def test_real_midi_sender_records_to_fake_port_only():
             "metadata": dict(message.metadata),
         }
     ]
+
+
+def test_real_midi_sender_rejects_structural_output_provider():
+    from rytm_randomizer.real_midi_adapter import build_real_midi_sender
+
+    fake_port = FakeOutputPort()
+    provider = StructuralOutputProvider(fake_port)
+    with pytest.raises(TypeError, match="fake-only RealMidiPortProvider"):
+        build_real_midi_sender(
+            provider=provider,  # type: ignore[arg-type]
+            port_name="Structural A4",
+        )
+
+    assert provider.opened == []
+    assert fake_port.sent == []
 
 
 def test_real_midi_sender_rejects_unsupported_message_type():
@@ -201,6 +291,7 @@ def test_real_midi_adapter_exposes_explicit_public_api():
     assert adapter.__all__ == [
         "RealMidiDependencyError",
         "RealMidiOutputPort",
+        "RealMidiOutputProvider",
         "RealMidiPortError",
         "RealMidiPortProvider",
         "RealMidiSendError",

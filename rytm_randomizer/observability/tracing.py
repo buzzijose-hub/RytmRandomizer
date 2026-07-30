@@ -42,7 +42,7 @@ from typing import Any, Callable, TypeVar
 
 from .logging import PACKAGE_LOGGER_NAME
 
-__all__ = ["current_op_id", "operation", "trace"]
+__all__ = ["OpIdFilter", "current_op_id", "operation", "trace"]
 
 
 _F = TypeVar("_F", bound=Callable[..., Any])
@@ -59,10 +59,10 @@ _op_counter = itertools.count()
 
 
 _filter_installed = False
-"""Whether :class:`_OpIdFilter` is installed on the package root logger."""
+"""Whether :class:`OpIdFilter` is installed on the package root logger."""
 
 
-class _OpIdFilter(logging.Filter):
+class OpIdFilter(logging.Filter):
     """Copy the current ``op_id`` :class:`ContextVar` onto every record.
 
     Installed exactly once on the package root logger. Records that already
@@ -77,7 +77,7 @@ class _OpIdFilter(logging.Filter):
 
 
 def _ensure_filter_installed() -> None:
-    """Install :class:`_OpIdFilter` once on every handler of the package logger.
+    """Install :class:`OpIdFilter` once on every handler of the package logger.
 
     A filter on a *logger* runs only for records originating directly at that
     logger -- not for records bubbling up from child loggers. To populate the
@@ -92,11 +92,11 @@ def _ensure_filter_installed() -> None:
     if _filter_installed:
         return
     package_logger = logging.getLogger(PACKAGE_LOGGER_NAME)
-    if not any(isinstance(f, _OpIdFilter) for f in package_logger.filters):
-        package_logger.addFilter(_OpIdFilter())
+    if not any(isinstance(f, OpIdFilter) for f in package_logger.filters):
+        package_logger.addFilter(OpIdFilter())
     for handler in package_logger.handlers:
-        if not any(isinstance(f, _OpIdFilter) for f in handler.filters):
-            handler.addFilter(_OpIdFilter())
+        if not any(isinstance(f, OpIdFilter) for f in handler.filters):
+            handler.addFilter(OpIdFilter())
     _filter_installed = True
 
 
@@ -114,7 +114,7 @@ def _format_kwargs(kwargs: dict[str, Any]) -> str:
     return " " + " ".join(f"{k}={v!r}" for k, v in kwargs.items())
 
 
-@contextmanager
+@contextmanager  # pyright: ignore[reportDeprecated] - supported on Python 3.11
 def operation(
     name: str,
     *,
@@ -178,7 +178,9 @@ def operation(
                 "exc_type": type(exc).__name__,
                 **kwargs,
             },
-            exc_info=True,
+            # Operation spans deliberately log the bounded exception type only.
+            # Call-site error logs carry sanitized context; tracebacks can expose
+            # operator-owned filesystem paths through OSError messages.
         )
         raise
     finally:
