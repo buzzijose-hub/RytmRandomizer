@@ -352,6 +352,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          # Full history: the Gate-1 touched-file coverage step below
+          # diffs against the base branch, which a shallow clone cannot
+          # resolve (git exits 128). Depth 0 matches the architecture job.
+          fetch-depth: 0
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v7

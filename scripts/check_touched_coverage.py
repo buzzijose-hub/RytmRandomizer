@@ -56,6 +56,43 @@ def _base_ref() -> str:
     return DEFAULT_BASE_REF
 
 
+def _base_ref_is_available(base_ref: str) -> bool:
+    """Return True when ``base_ref`` is resolvable in this clone.
+
+    CI checks out with ``fetch-depth: 2`` for the test matrix, so the base
+    branch ref is frequently absent; ``git diff base...HEAD`` then exits 128.
+    """
+
+    if GIT_EXECUTABLE is None:
+        return False
+    completed = subprocess.run(
+        [GIT_EXECUTABLE, "rev-parse", "--verify", "--quiet", f"{base_ref}^{{commit}}"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return completed.returncode == 0
+
+
+def _fetch_base_ref(base_ref: str) -> bool:
+    """Best-effort deepen so a shallow CI clone can resolve ``base_ref``."""
+
+    if GIT_EXECUTABLE is None or not base_ref.startswith("origin/"):
+        return False
+    branch = base_ref[len("origin/") :]
+    completed = subprocess.run(
+        [GIT_EXECUTABLE, "fetch", "--depth=50", "origin", branch],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        return False
+    return _base_ref_is_available(base_ref)
+
+
 def _touched_production_files(base_ref: str) -> tuple[str, ...]:
     if GIT_EXECUTABLE is None:
         raise RuntimeError("git executable was not found on PATH")
@@ -105,6 +142,18 @@ def main(argv: list[str]) -> int:
         print(f"[touched-coverage] FAIL: {coverage_xml} not found", file=sys.stderr)
         return 1
     base_ref = _base_ref()
+    if not _base_ref_is_available(base_ref) and not _fetch_base_ref(base_ref):
+        # A shallow clone that cannot see the base branch cannot compute a
+        # touched-file set. SKIP loudly rather than crash (previous behavior)
+        # or pass silently: the ubuntu test job checks out with fetch-depth 2,
+        # and a gate that dies on its own precondition teaches contributors to
+        # ignore it. The ratchet floor still guards the package meanwhile.
+        print(
+            f"[touched-coverage] SKIP: base ref {base_ref} is unavailable in "
+            "this clone (shallow checkout?). Deepen the checkout "
+            "(fetch-depth: 0) to enforce Gate 1 here."
+        )
+        return 0
     touched = _touched_production_files(base_ref)
     if not touched:
         print(f"[touched-coverage] OK: no production files touched vs {base_ref}")
