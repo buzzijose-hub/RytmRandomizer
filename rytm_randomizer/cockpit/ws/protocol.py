@@ -335,7 +335,7 @@ class SnapshotChangedEvent(TypedDict):
     """
 
     type: Literal["snapshot_changed"]
-    snapshot: dict
+    snapshot: dict[str, object]
 
 
 class MutationPreviewedEvent(TypedDict):
@@ -347,7 +347,7 @@ class MutationPreviewedEvent(TypedDict):
     """
 
     type: Literal["mutation_previewed"]
-    candidate: dict | None
+    candidate: dict[str, object] | None
 
 
 class SendPlanChangedEvent(TypedDict):
@@ -359,14 +359,14 @@ class SendPlanChangedEvent(TypedDict):
     """
 
     type: Literal["send_plan_changed"]
-    send_plan: dict | None
+    send_plan: dict[str, object] | None
 
 
 class HistoryUpdatedEvent(TypedDict):
     """``history_updated`` — full :class:`History` dict (chain + ``current_id``)."""
 
     type: Literal["history_updated"]
-    history: dict
+    history: dict[str, object]
 
 
 class ProfileChangedEvent(TypedDict):
@@ -377,7 +377,7 @@ class ProfileChangedEvent(TypedDict):
     """
 
     type: Literal["profile_changed"]
-    profile: dict | None
+    profile: dict[str, object] | None
 
 
 class PerformanceConsoleChangedEvent(TypedDict):
@@ -390,7 +390,7 @@ class PerformanceConsoleChangedEvent(TypedDict):
     """
 
     type: Literal["performance_console_changed"]
-    performance_console: dict | None
+    performance_console: dict[str, object] | None
 
 
 class SessionStatusEvent(TypedDict):
@@ -460,7 +460,7 @@ class MidiActivityEvent(TypedDict):
     """
 
     type: Literal["midi_activity"]
-    midi_activity: dict
+    midi_activity: dict[str, object]
 
 
 class LibraryChangedEvent(TypedDict):
@@ -472,7 +472,7 @@ class LibraryChangedEvent(TypedDict):
     """
 
     type: Literal["library_changed"]
-    library: dict
+    library: dict[str, object]
 
 
 # ---------------------------------------------------------------------------
@@ -495,7 +495,7 @@ class CommandEnvelope(TypedDict):
     """
 
     request_id: str
-    command: dict
+    command: dict[str, object]
 
 
 class CommandAck(TypedDict, total=False):
@@ -566,24 +566,24 @@ class CommandAck(TypedDict, total=False):
     code: str | None
     message: str | None
     error: str | None
-    candidate: dict | None
-    send_plan: dict | None
+    candidate: dict[str, object] | None
+    send_plan: dict[str, object] | None
     send_plan_id: str | None
     new_snapshot_id: str | None
     snapshot_id: str | None
     model_bytes_b64: str | None
-    operator_package_rehearsal: dict | None
-    operator_package_sequence_rehearsal: dict | None
-    operator_package_apply_preview: dict | None
-    operator_package_mock_apply: dict | None
-    operator_package_receipt: dict | None
+    operator_package_rehearsal: dict[str, object] | None
+    operator_package_sequence_rehearsal: dict[str, object] | None
+    operator_package_apply_preview: dict[str, object] | None
+    operator_package_mock_apply: dict[str, object] | None
+    operator_package_receipt: dict[str, object] | None
     armed: bool | None
     midi_port: str | None
-    diagnostics: dict | None
-    library_records: list[dict] | None
-    library_record: dict | None
+    diagnostics: dict[str, object] | None
+    library_records: list[dict[str, object]] | None
+    library_record: dict[str, object] | None
     library_record_id: str | None
-    library_import: dict | None
+    library_import: dict[str, object] | None
 
 
 # ---------------------------------------------------------------------------

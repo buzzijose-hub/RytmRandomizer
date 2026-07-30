@@ -68,8 +68,12 @@ MAX_PRE_WRITE_BACKUPS: Final[int] = 8
 """Bound on in-session pre-write backups kept by the armed backup hook."""
 
 
-def _fresh_seed() -> int:
-    """Return a fresh 32-bit unsigned seed sampled from :func:`secrets.randbits`."""
+def fresh_seed() -> int:
+    """Return a fresh 32-bit unsigned seed sampled from :func:`secrets.randbits`.
+
+    Public (not underscore-private) because the ``regen`` handler in
+    :mod:`handlers` legitimately re-seeds a live session through it.
+    """
 
     return secrets.randbits(_SEED_BITS)
 
@@ -91,8 +95,8 @@ class CockpitSession:
     device: DeviceAdapter
     active_profile: ProfileModel | None = None
     depth: float = DEFAULT_DEPTH
-    seed: int = field(default_factory=_fresh_seed)
-    pad_locks: set[int] = field(default_factory=set)
+    seed: int = field(default_factory=fresh_seed)
+    pad_locks: set[int] = field(default_factory=set[int])
     preview_on: bool = False
     current_candidate: MutationCandidate | None = None
     current_send_plan: CockpitSendPlan | None = None
@@ -148,7 +152,7 @@ class CockpitSession:
     enumeration-fault path. Read back by the ``diagnostics`` command.
     """
 
-    pre_write_backups: list[dict] = field(default_factory=list)
+    pre_write_backups: list[dict[str, object]] = field(default_factory=list[dict[str, object]])
     """Automatic pre-write backups taken by the armed seam's backup hook.
 
     Each entry is the current snapshot's dict form captured immediately
@@ -157,7 +161,7 @@ class CockpitSession:
     Disk-persisted backup export is a Wave-5 follow-up.
     """
 
-    pending_events: list[dict] = field(default_factory=list)
+    pending_events: list[dict[str, object]] = field(default_factory=list[dict[str, object]])
     """Events the last handler queued for the dispatcher to broadcast post-ack.
 
     The wire contract is "ack first, then events" (see the spec § "The
@@ -190,4 +194,4 @@ class CockpitSession:
         self.pending_events = []
 
 
-__all__ = ["DEFAULT_DEPTH", "MAX_PRE_WRITE_BACKUPS", "CockpitSession"]
+__all__ = ["DEFAULT_DEPTH", "MAX_PRE_WRITE_BACKUPS", "CockpitSession", "fresh_seed"]

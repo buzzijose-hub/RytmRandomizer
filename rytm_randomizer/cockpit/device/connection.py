@@ -140,9 +140,11 @@ class PortEnumerator(Protocol):
 
     def list_input_names(self) -> tuple[str, ...]:
         """Return the currently visible MIDI input port names."""
+        ...
 
     def list_output_names(self) -> tuple[str, ...]:
         """Return the currently visible MIDI output port names."""
+        ...
 
 
 class NullPortEnumerator:
@@ -226,7 +228,7 @@ class ConnectionState:
             and self.last_error_fingerprint == other.last_error_fingerprint
         )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, object]:
         """JSON-safe dict matching ``protocol.ConnectionStateDict`` exactly."""
 
         return {

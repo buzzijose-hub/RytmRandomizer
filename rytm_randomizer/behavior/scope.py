@@ -31,8 +31,13 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final
 
-from ..data import PROFILES
 from ..data.morph_scope_params import is_discrete_param
+from .profile_facts import (
+    profile_anchor,
+    profile_display_name,
+    profile_safe_bounds,
+    profile_zone_groups,
+)
 
 #: The Analog Rytm has 12 pads/tracks.
 TRACK_COUNT: Final[int] = 12
@@ -184,16 +189,12 @@ def build_track_scope(track: int, profile_key: str) -> TrackScope:
     unknown key (loud, not silent). The returned facts are read-only copies.
     """
 
-    profile = PROFILES[profile_key]
-    anchor = MappingProxyType(dict(profile["anchor"]))
-    safe = MappingProxyType({name: tuple(bound) for name, bound in profile["safe"].items()})
-    groups = MappingProxyType({name: tuple(params) for name, params in profile["zones"].items()})
     return TrackScope(
         track=track,
-        profile_name=profile["name"],
-        anchor=anchor,
-        safe=safe,
-        groups=groups,
+        profile_name=profile_display_name(profile_key),
+        anchor=MappingProxyType(profile_anchor(profile_key)),
+        safe=MappingProxyType(profile_safe_bounds(profile_key)),
+        groups=MappingProxyType(profile_zone_groups(profile_key)),
     )
 
 

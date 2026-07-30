@@ -35,7 +35,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
-from typing import Final
+from typing import Final, cast
 
 from ...devices import all_devices
 from ...snapshot.sysex_file import extract_sysex_payloads
@@ -88,8 +88,12 @@ def default_captures_dir() -> Path:
     return Path.cwd() / _CAPTURES_LEAF
 
 
-def _validate_record_id(record_id: str) -> str:
-    """Return ``record_id`` when it is filename-safe; raise otherwise."""
+def _validate_record_id(record_id: object) -> str:
+    """Return ``record_id`` when it is filename-safe; raise otherwise.
+
+    Typed ``object`` because ids arrive from wire/disk JSON — the
+    ``isinstance`` check is genuine runtime validation.
+    """
 
     if not isinstance(record_id, str) or _RECORD_ID_RE.match(record_id) is None:
         raise ValueError(f"invalid library record_id: {record_id!r}")
@@ -108,7 +112,7 @@ class LibraryRecord:
     tags: tuple[str, ...]
     payload_hex: str
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, object]:
         """JSON-safe dict form (the on-disk and on-wire shape)."""
 
         return {
@@ -129,13 +133,14 @@ class LibraryRecord:
         tags_raw = raw.get("tags", [])
         if not isinstance(tags_raw, (list, tuple)):
             raise ValueError(f"library record {record_id!r} has non-list tags")
+        tag_values = cast("Sequence[object]", tags_raw)
         return cls(
             record_id=record_id,
             device_id=str(raw.get("device_id", "")),
             kit_name=str(raw.get("kit_name", "")),
             fingerprint=str(raw.get("fingerprint", "")),
             captured_at=str(raw.get("captured_at", "")),
-            tags=tuple(str(tag) for tag in tags_raw),
+            tags=tuple(str(tag) for tag in tag_values),
             payload_hex=str(raw.get("payload_hex", "")),
         )
 
@@ -163,7 +168,7 @@ class LibraryImportResult:
     skipped_existing: int
     failed_files: tuple[str, ...]
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, object]:
         """JSON-safe dict form for the ``library_import_captures`` ack."""
 
         return {
@@ -371,7 +376,7 @@ def _safe_load_record(path: Path) -> LibraryRecord | None:
     if not isinstance(raw, dict):
         return None
     try:
-        return LibraryRecord.from_dict(raw)
+        return LibraryRecord.from_dict(cast("Mapping[str, object]", raw))
     except ValueError:
         return None
 

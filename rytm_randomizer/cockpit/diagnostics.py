@@ -21,10 +21,10 @@ from __future__ import annotations
 import sys
 import time
 from collections import deque
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Final
+from typing import Final, cast
 
 from ..observability.metrics import get_metrics
 
@@ -84,7 +84,7 @@ class ErrorJournalEntry:
 
     fingerprint: str
     message: str
-    context: Mapping[str, str] = field(default_factory=dict)
+    context: Mapping[str, str] = field(default_factory=dict[str, str])
     ts: float = 0.0
 
     def __post_init__(self) -> None:
@@ -92,7 +92,7 @@ class ErrorJournalEntry:
 
         object.__setattr__(self, "context", MappingProxyType(dict(self.context)))
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, object]:
         """JSON-safe dict form for the ``diagnostics`` ack payload."""
 
         return {
@@ -150,7 +150,7 @@ class ErrorJournal:
         self._entries.append(entry)
         return entry
 
-    def to_dicts(self) -> list[dict]:
+    def to_dicts(self) -> list[dict[str, object]]:
         """The journal contents as JSON-safe dicts, oldest first."""
 
         return [entry.to_dict() for entry in self._entries]
@@ -161,7 +161,7 @@ def build_diagnostics_payload(
     journal: ErrorJournal | None,
     connection_state: Mapping[str, object] | None,
     platform: str | None = None,
-) -> dict:
+) -> dict[str, object]:
     """Assemble the read-only ``diagnostics`` WS command payload.
 
     Args:
@@ -181,9 +181,9 @@ def build_diagnostics_payload(
         raw_inputs = connection_state.get("available_inputs", [])
         raw_outputs = connection_state.get("available_outputs", [])
         if isinstance(raw_inputs, (list, tuple)):
-            available_inputs = [str(name) for name in raw_inputs]
+            available_inputs = [str(name) for name in cast("Sequence[object]", raw_inputs)]
         if isinstance(raw_outputs, (list, tuple)):
-            available_outputs = [str(name) for name in raw_outputs]
+            available_outputs = [str(name) for name in cast("Sequence[object]", raw_outputs)]
     return {
         "journal": [] if journal is None else journal.to_dicts(),
         "errors_by_kind": dict(metrics.errors_by_kind),

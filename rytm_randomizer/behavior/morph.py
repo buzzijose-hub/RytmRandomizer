@@ -32,8 +32,8 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final
 
-from ..data import PROFILES
 from ..data.morph_scope_params import is_discrete_param
+from .profile_facts import profile_anchor, profile_display_name, profile_zone_groups
 
 #: Morph amount bounds.
 AMOUNT_MIN: Final[float] = 0.0
@@ -158,15 +158,13 @@ def build_morph_track(
     grouping. Raises ``KeyError`` for an unknown key (loud, not silent).
     """
 
-    source = PROFILES[source_key]
-    target = PROFILES[target_key]
     return MorphTrack(
         track=track,
-        source_name=source["name"],
-        target_name=target["name"],
-        source=MappingProxyType(dict(source["anchor"])),
-        target=MappingProxyType(dict(target["anchor"])),
-        groups=MappingProxyType({name: tuple(params) for name, params in source["zones"].items()}),
+        source_name=profile_display_name(source_key),
+        target_name=profile_display_name(target_key),
+        source=MappingProxyType(profile_anchor(source_key)),
+        target=MappingProxyType(profile_anchor(target_key)),
+        groups=MappingProxyType(profile_zone_groups(source_key)),
     )
 
 

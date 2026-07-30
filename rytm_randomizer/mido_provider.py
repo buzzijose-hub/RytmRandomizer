@@ -33,10 +33,20 @@ _logger = get_logger(__name__)
 
 
 class RealMidiInputPort(Protocol):
-    """Minimal input-port protocol for passive pending-message capture."""
+    """Minimal input-port protocol for passive pending-message capture.
 
-    iter_pending: Callable[[], Iterable[object]]
-    close: Callable[[], None]
+    Method-style members (not ``Callable`` attributes) so this protocol
+    satisfies method-style consumer seams like
+    :class:`rytm_randomizer.cockpit.device.midi_monitor.MidiInputPortLike`.
+    """
+
+    def iter_pending(self) -> Iterable[object]:
+        """Return an iterable of backend-specific pending input messages."""
+        ...
+
+    def close(self) -> None:
+        """Release the backend input port."""
+        ...
 
 
 class _MidoModule(Protocol):

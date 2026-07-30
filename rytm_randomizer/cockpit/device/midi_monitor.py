@@ -37,7 +37,7 @@ import time
 from collections import OrderedDict, deque
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
-from typing import Final, Protocol, runtime_checkable
+from typing import Final, Protocol, cast, runtime_checkable
 
 from ...observability.logging import get_logger
 from ...state.rytm_cc_observe import RytmCcLabel, build_rytm_cc_label_lookup
@@ -77,6 +77,7 @@ class MidiInputPortLike(Protocol):
 
     def iter_pending(self) -> Iterable[object]:
         """Return an iterable of backend-specific pending input messages."""
+        ...
 
 
 @runtime_checkable
@@ -91,6 +92,7 @@ class MidiInputOpener(Protocol):
 
     def open_input(self, port_name: str) -> MidiInputPortLike:
         """Open a hardware MIDI input port by name (read-only)."""
+        ...
 
 
 def default_rytm_cc_lookup() -> Mapping[int, tuple[RytmCcLabel, ...]]:
@@ -143,7 +145,7 @@ class MidiInputMonitor:
         opener: MidiInputOpener,
         *,
         port_name: str,
-        broadcast: Callable[[dict], object],
+        broadcast: Callable[[dict[str, object]], object],
         cc_lookup: Mapping[int, tuple[RytmCcLabel, ...]] | None = None,
         batch_interval: float = DEFAULT_BATCH_INTERVAL_SECONDS,
         ring_capacity: int = DEFAULT_RING_CAPACITY,
@@ -214,7 +216,7 @@ class MidiInputMonitor:
         except _READ_ERRORS:
             return
 
-    def poll_once(self) -> dict | None:
+    def poll_once(self) -> dict[str, object] | None:
         """Drain pending input into the ring, then flush one batch.
 
         Never raises for backend read failures — the reader must never
@@ -234,7 +236,7 @@ class MidiInputMonitor:
             self._buffer_message(message)
         return self.flush()
 
-    def flush(self) -> dict | None:
+    def flush(self) -> dict[str, object] | None:
         """Coalesce the ring into one ``midi_activity`` event and push it.
 
         Returns the broadcast event, or ``None`` when the ring is empty
@@ -244,7 +246,7 @@ class MidiInputMonitor:
 
         if not self._ring:
             return None
-        coalesced: OrderedDict[tuple[int, int], dict] = OrderedDict()
+        coalesced: OrderedDict[tuple[int, int], dict[str, object]] = OrderedDict()
         for item in self._ring:
             key = (item.channel, item.control)
             row = coalesced.get(key)
@@ -260,10 +262,10 @@ class MidiInputMonitor:
                 }
             else:
                 row["value"] = item.value
-                row["repeat_count"] = int(row["repeat_count"]) + 1
+                row["repeat_count"] = cast("int", row["repeat_count"]) + 1
                 row["observed_at"] = item.observed_at
         self._ring.clear()
-        event = {
+        event: dict[str, object] = {
             "type": EVENT_MIDI_ACTIVITY,
             "midi_activity": {
                 "port": self._port_name,
@@ -347,7 +349,7 @@ class MidiMonitorSupervisor:
         self,
         opener: MidiInputOpener,
         *,
-        broadcast: Callable[[dict], object],
+        broadcast: Callable[[dict[str, object]], object],
         cc_lookup: Mapping[int, tuple[RytmCcLabel, ...]] | None = None,
         batch_interval: float = DEFAULT_BATCH_INTERVAL_SECONDS,
     ) -> None:

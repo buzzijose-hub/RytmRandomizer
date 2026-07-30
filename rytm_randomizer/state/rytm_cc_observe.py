@@ -17,12 +17,26 @@ _CONTROL_CHANGE_TYPE: Final[str] = "control_change"
 
 
 class RytmObserveCcMapping(Protocol):
-    section: str
-    parameter: str
-    cc_msb: int
-    nrpn_msb: int | None
-    nrpn_lsb: int | None
-    scope: str
+    # Read-only property members so frozen-dataclass fact rows (e.g.
+    # ``data.AnalogRytmCcMapping``) satisfy the protocol — a plain
+    # attribute member would demand writability the frozen rows refuse.
+    @property
+    def section(self) -> str: ...
+
+    @property
+    def parameter(self) -> str: ...
+
+    @property
+    def cc_msb(self) -> int: ...
+
+    @property
+    def nrpn_msb(self) -> int | None: ...
+
+    @property
+    def nrpn_lsb(self) -> int | None: ...
+
+    @property
+    def scope(self) -> str: ...
 
 
 class RytmObserveExactEvent(Protocol):

@@ -42,7 +42,7 @@ from ..data import (
 from ..data.send_plan import synthetic_parameter_cc
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
-    from ...mido_provider import MidoMidiPortProvider
+    from ...senders.hardware import OutputOpeningProvider
 
 _logger = logging.getLogger(__name__)
 
@@ -78,7 +78,7 @@ class RealMidiDeviceAdapter:
 
     def __init__(
         self,
-        midi_provider: MidoMidiPortProvider,
+        midi_provider: OutputOpeningProvider,
         *,
         port_name: str | None = None,
     ) -> None:

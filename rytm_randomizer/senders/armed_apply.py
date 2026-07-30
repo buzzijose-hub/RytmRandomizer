@@ -89,6 +89,7 @@ class ExactPortOpener(Protocol):
         Must fail closed: raise :class:`ArmedApplyError` when the name is
         missing from the enumerated outputs OR matches more than one port.
         """
+        ...
 
 
 BackupHook = Callable[[object], bool]
@@ -149,11 +150,17 @@ class ArmedApplySession:
         self,
         *,
         opener: ExactPortOpener,
-        port_name: str,
+        port_name: object,
         backup: BackupHook,
-        arm_token: str,
+        arm_token: object,
     ) -> None:
-        """Capture the collaborators; refuse unusable configuration eagerly."""
+        """Capture the collaborators; refuse unusable configuration eagerly.
+
+        ``port_name`` and ``arm_token`` are typed ``object`` on purpose:
+        both originate from wire-supplied operator input, so the
+        ``isinstance`` checks below are genuine runtime validation (the
+        fail-closed refusals), not redundant defensive narrowing.
+        """
 
         if not isinstance(port_name, str) or not port_name:
             raise ArmedApplyError("armed_apply_port_name_required")
@@ -181,7 +188,7 @@ class ArmedApplySession:
 
         return self._port_name
 
-    def arm(self, token: str) -> None:
+    def arm(self, token: object) -> None:
         """Arm the session: validate the token, then open the exact port.
 
         Raises :class:`ArmedApplyError` when already armed (re-arming is
@@ -207,7 +214,7 @@ class ArmedApplySession:
         self._port = port
         self._armed = True
 
-    def confirm(self, action_id: str) -> None:
+    def confirm(self, action_id: object) -> None:
         """Record a single-use confirmation for one upcoming apply.
 
         Requires armed state — confirming while disarmed is a state-machine

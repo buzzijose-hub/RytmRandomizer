@@ -65,13 +65,13 @@ import time
 from collections import OrderedDict
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
-from typing import Any, Final, Protocol, cast, runtime_checkable
+from typing import Final, Protocol, SupportsFloat, SupportsInt, cast, runtime_checkable
 
 from ...observability.errors import RytmRandomizerError
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
 from ...observability.tracing import operation
-from ..data import CockpitSendPlan, History, MutationCandidate, Snapshot
+from ..data import CockpitSendPlan, History, MutationCandidate, ProfileModel, Snapshot
 from ..device.connection import ConnectionState, active_connection_manager
 from ..diagnostics import build_diagnostics_payload
 from ..engine import mutate, prepare_send_plan
@@ -147,7 +147,7 @@ class EventEmitter(Protocol):
     Tests: a recorder appending every emitted dict to a list.
     """
 
-    async def send_event(self, event: dict) -> None:
+    async def send_event(self, event: dict[str, object]) -> None:
         """Send one event payload (a plain dict, JSON-serialisable)."""
 
 
@@ -162,8 +162,8 @@ class HandlerResult:
     then events" wire-ordering contract.
     """
 
-    ack: dict
-    events: list[dict] = field(default_factory=list)
+    ack: dict[str, object]
+    events: list[dict[str, object]] = field(default_factory=list[dict[str, object]])
 
 
 # ---------------------------------------------------------------------------
@@ -171,7 +171,7 @@ class HandlerResult:
 # ---------------------------------------------------------------------------
 
 
-def _build_session_status(session: CockpitSession) -> dict:
+def _build_session_status(session: CockpitSession) -> dict[str, object]:
     """Construct the ``session_status`` event payload from the live session."""
 
     return {
@@ -214,7 +214,7 @@ def resolve_connection_phase(session: CockpitSession) -> str:
 _connection_phase = resolve_connection_phase
 
 
-def build_connection_changed(state: ConnectionState) -> dict:
+def build_connection_changed(state: ConnectionState) -> dict[str, object]:
     """Construct the ``connection_changed`` event payload (whole state).
 
     Public because ``__main__`` uses it to adapt the ConnectionManager's
@@ -240,13 +240,13 @@ def _midi_port(session: CockpitSession) -> str | None:
     return str(port)
 
 
-def _build_snapshot_changed(snapshot: Snapshot) -> dict:
+def _build_snapshot_changed(snapshot: Snapshot) -> dict[str, object]:
     """Construct the ``snapshot_changed`` event payload."""
 
     return {"type": EVENT_SNAPSHOT_CHANGED, "snapshot": snapshot.to_dict()}
 
 
-def _build_mutation_previewed(candidate: MutationCandidate | None) -> dict:
+def _build_mutation_previewed(candidate: MutationCandidate | None) -> dict[str, object]:
     """Construct the ``mutation_previewed`` event payload (``None`` clears)."""
 
     return {
@@ -255,7 +255,7 @@ def _build_mutation_previewed(candidate: MutationCandidate | None) -> dict:
     }
 
 
-def _build_send_plan_changed(send_plan: CockpitSendPlan | None) -> dict:
+def _build_send_plan_changed(send_plan: CockpitSendPlan | None) -> dict[str, object]:
     """Construct the ``send_plan_changed`` event payload (``None`` clears)."""
 
     return {
@@ -264,13 +264,13 @@ def _build_send_plan_changed(send_plan: CockpitSendPlan | None) -> dict:
     }
 
 
-def _build_history_updated(history: History) -> dict:
+def _build_history_updated(history: History) -> dict[str, object]:
     """Construct the ``history_updated`` event payload."""
 
     return {"type": EVENT_HISTORY_UPDATED, "history": history.to_dict()}
 
 
-def _build_profile_changed(profile: Any) -> dict:
+def _build_profile_changed(profile: ProfileModel | None) -> dict[str, object]:
     """Construct the ``profile_changed`` event payload (``None`` = no active)."""
 
     return {
@@ -279,7 +279,7 @@ def _build_profile_changed(profile: Any) -> dict:
     }
 
 
-def _build_performance_console_changed() -> dict:
+def _build_performance_console_changed() -> dict[str, object]:
     """Construct the passive performance-console packet event."""
 
     from ...reports.live_gui_performance_console_model import (  # noqa: PLC0415
@@ -396,7 +396,7 @@ def _recompute_candidate(session: CockpitSession) -> MutationCandidate | None:
     return candidate
 
 
-def _clear_send_plan_if_needed(session: CockpitSession) -> list[dict]:
+def _clear_send_plan_if_needed(session: CockpitSession) -> list[dict[str, object]]:
     """Clear a stale plan and emit one null event when a plan existed."""
 
     if session.current_send_plan is None:
@@ -418,7 +418,7 @@ def _clear_send_plan_if_needed(session: CockpitSession) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 
-def _error_ack(code: str, message: str) -> dict:
+def _error_ack(code: str, message: str) -> dict[str, object]:
     """Build the categorical-error ack body (no ``request_id`` yet).
 
     Args:
@@ -503,7 +503,7 @@ def _exc_fingerprint(exc: BaseException) -> str | None:
 # ---------------------------------------------------------------------------
 
 
-async def _handle_select_profile(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_select_profile(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     profile_id = str(cmd["profile_id"])
     profile = session.profile_registry.get(profile_id)
     if profile is None:
@@ -517,8 +517,10 @@ async def _handle_select_profile(cmd: dict, session: CockpitSession) -> HandlerR
     return HandlerResult(ack={"ok": True}, events=events)
 
 
-async def _handle_set_depth(cmd: dict, session: CockpitSession) -> HandlerResult:
-    depth = float(cmd["depth"])
+async def _handle_set_depth(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+    # ``cast`` mirrors the historical ``float(<wire value>)`` coercion
+    # exactly: a non-numeric wire value still raises through ``float``.
+    depth = float(cast("SupportsFloat", cmd["depth"]))
     events = _clear_send_plan_if_needed(session)
     session.depth = depth
     candidate = _recompute_candidate(session)
@@ -530,8 +532,8 @@ async def _handle_set_depth(cmd: dict, session: CockpitSession) -> HandlerResult
     )
 
 
-async def _handle_set_pad_lock(cmd: dict, session: CockpitSession) -> HandlerResult:
-    pad_id = int(cmd["pad_id"])
+async def _handle_set_pad_lock(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+    pad_id = int(cast("SupportsInt", cmd["pad_id"]))
     locked = bool(cmd["locked"])
     if locked:
         session.pad_locks.add(pad_id)
@@ -540,7 +542,7 @@ async def _handle_set_pad_lock(cmd: dict, session: CockpitSession) -> HandlerRes
     return HandlerResult(ack={"ok": True}, events=_clear_send_plan_if_needed(session))
 
 
-async def _handle_toggle_preview(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_toggle_preview(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     on = bool(cmd["on"])
     events = _clear_send_plan_if_needed(session)
     session.preview_on = on
@@ -561,7 +563,7 @@ async def _handle_toggle_preview(cmd: dict, session: CockpitSession) -> HandlerR
     )
 
 
-async def _handle_regen(_cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_regen(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     # regen has no body fields
     if session.active_profile is None:
         return HandlerResult(
@@ -571,10 +573,10 @@ async def _handle_regen(_cmd: dict, session: CockpitSession) -> HandlerResult:
     # Using a fresh 32-bit sample is simpler and indistinguishable from a
     # deterministic next-value, and matches the spec wording ("REGEN bumps
     # the seed to vary the output").
-    from .session import _fresh_seed  # local import to keep module surface clean
+    from .session import fresh_seed  # local import to keep module surface clean
 
     events = _clear_send_plan_if_needed(session)
-    session.seed = _fresh_seed()
+    session.seed = fresh_seed()
     candidate = _recompute_candidate(session)
     if session.preview_on:
         events.append(_build_mutation_previewed(candidate))
@@ -584,7 +586,9 @@ async def _handle_regen(_cmd: dict, session: CockpitSession) -> HandlerResult:
     )
 
 
-async def _handle_prepare_send_plan(_cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_prepare_send_plan(
+    _cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
     if session.current_candidate is None:
         return HandlerResult(
             ack=_error_ack(ERR_VALIDATION, "no current candidate; set a profile and depth first")
@@ -608,7 +612,7 @@ async def _handle_prepare_send_plan(_cmd: dict, session: CockpitSession) -> Hand
     )
 
 
-async def _handle_send(_cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_send(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     if session.current_candidate is None:
         return HandlerResult(
             ack=_error_ack(ERR_VALIDATION, "no current candidate; set a profile and depth first")
@@ -640,10 +644,9 @@ async def _handle_send(_cmd: dict, session: CockpitSession) -> HandlerResult:
     )
 
 
-async def _handle_save(cmd: dict, session: CockpitSession) -> HandlerResult:
-    label = cmd.get("label")
-    if label is not None:
-        label = str(label)
+async def _handle_save(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+    raw_label = cmd.get("label")
+    label = None if raw_label is None else str(raw_label)
     current = session.history_store.current
     if not current.entries:
         return HandlerResult(ack=_error_ack(ERR_VALIDATION, "no current snapshot to save"))
@@ -664,7 +667,7 @@ async def _handle_save(cmd: dict, session: CockpitSession) -> HandlerResult:
     )
 
 
-async def _handle_load_snapshot(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_load_snapshot(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     snapshot_id = str(cmd["snapshot_id"])
     try:
         history = session.history_store.load(snapshot_id)
@@ -712,7 +715,7 @@ async def _handle_load_snapshot(cmd: dict, session: CockpitSession) -> HandlerRe
     )
 
 
-async def _handle_undo(_cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_undo(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     if not session.history_store.can_undo:
         return HandlerResult(ack=_error_ack(ERR_VALIDATION, "nothing to undo"))
     history = session.history_store.undo()
@@ -726,7 +729,9 @@ async def _handle_undo(_cmd: dict, session: CockpitSession) -> HandlerResult:
     )
 
 
-async def _handle_export_profile_model(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_export_profile_model(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
     profile_id = str(cmd["profile_id"])
     target = str(cmd["target"])
     if target not in ("binary", "json"):
@@ -747,49 +752,52 @@ async def _handle_export_profile_model(cmd: dict, session: CockpitSession) -> Ha
     return HandlerResult(ack={"ok": True, "model_bytes_b64": encoded})
 
 
-def _live_kit_operator_package_payload() -> dict:
+def _live_kit_operator_package_payload() -> dict[str, object]:
     """Return the current passive live-kit operator package payload."""
 
     from ...reports.live_gui_performance_console_model import (  # noqa: PLC0415
         live_gui_performance_console_model_payload,
     )
 
-    console_payload = live_gui_performance_console_model_payload()["live_gui_performance_console"]
-    return console_payload["live_kit_operator_package"]
+    console_payload = cast(
+        "Mapping[str, object]",
+        live_gui_performance_console_model_payload()["live_gui_performance_console"],
+    )
+    return cast("dict[str, object]", console_payload["live_kit_operator_package"])
+
+
+def _row_objects(rows: object) -> list[object]:
+    """Narrow one wire-supplied payload field to a list of opaque rows."""
+
+    if not isinstance(rows, list):
+        return []
+    return cast("list[object]", rows)
 
 
 def _operator_package_steps(package: Mapping[str, object]) -> list[Mapping[str, object]]:
-    rows = package.get("operator_steps", [])
-    if not isinstance(rows, list):
-        return []
-    return [cast(Mapping[str, object], row) for row in rows if isinstance(row, dict)]
+    rows = _row_objects(package.get("operator_steps", []))
+    return [cast("Mapping[str, object]", row) for row in rows if isinstance(row, dict)]
 
 
 def _operator_package_bindings(package: Mapping[str, object]) -> list[Mapping[str, object]]:
-    rows = package.get("slot_bindings", [])
-    if not isinstance(rows, list):
-        return []
-    return [cast(Mapping[str, object], row) for row in rows if isinstance(row, dict)]
+    rows = _row_objects(package.get("slot_bindings", []))
+    return [cast("Mapping[str, object]", row) for row in rows if isinstance(row, dict)]
 
 
 def _operator_package_blocked_actions(package: Mapping[str, object]) -> list[str]:
-    rows = package.get("blocked_actions", [])
-    if not isinstance(rows, list):
-        return []
+    rows = _row_objects(package.get("blocked_actions", []))
     return [row for row in rows if isinstance(row, str)]
 
 
 def _operator_package_safety_lines(package: Mapping[str, object]) -> list[str]:
-    rows = package.get("safety_lines", [])
-    if not isinstance(rows, list):
-        return []
+    rows = _row_objects(package.get("safety_lines", []))
     return [row for row in rows if isinstance(row, str)]
 
 
 def _validate_operator_package_header(
     cmd: Mapping[str, object],
     package: Mapping[str, object],
-) -> dict | None:
+) -> dict[str, object] | None:
     if cmd.get("mock_safe") is not True:
         return _error_ack(ERR_VALIDATION, "mock_safe must be true for operator package rehearsal")
     operator_package_id = str(cmd["operator_package_id"])
@@ -816,9 +824,10 @@ def _operator_package_binding_by_slot(
     package: Mapping[str, object],
     slot_key: str,
 ) -> Mapping[str, object]:
+    empty_binding: Mapping[str, object] = {}
     return next(
         (row for row in _operator_package_bindings(package) if row.get("slot_key") == slot_key),
-        {},
+        empty_binding,
     )
 
 
@@ -836,7 +845,7 @@ def _operator_package_export_key_mismatch_ack(
     step_key: str,
     expected_package_export_key: str,
     provided_package_export_key: str | None,
-) -> dict | None:
+) -> dict[str, object] | None:
     if provided_package_export_key is None:
         return None
     if provided_package_export_key == expected_package_export_key:
@@ -853,10 +862,10 @@ def _operator_package_step_rehearsal(
     step: Mapping[str, object],
     binding: Mapping[str, object],
     snapshot_id: str,
-) -> dict:
+) -> dict[str, object]:
     step_key = str(step["step_key"])
     slot_key = str(step["slot_key"])
-    depth_percent = int(binding.get("depth_percent", 0))
+    depth_percent = int(cast("SupportsInt", binding.get("depth_percent", 0)))
     package_export_key = _expected_operator_package_export_key(step=step, binding=binding)
     return {
         "rehearsal_id": f"operator-package-rehearsal:{step_key}",
@@ -883,7 +892,9 @@ def _operator_package_step_rehearsal(
     }
 
 
-def _operator_package_recovery_requirements(package: Mapping[str, object]) -> list[dict]:
+def _operator_package_recovery_requirements(
+    package: Mapping[str, object],
+) -> list[dict[str, object]]:
     return [
         dict(row)
         for row in cast(
@@ -898,7 +909,7 @@ def _operator_package_apply_preview_step(
     order: int,
     step: Mapping[str, object],
     package_export_key: str,
-) -> dict:
+) -> dict[str, object]:
     return {
         "order": order,
         "step_key": str(step["step_key"]),
@@ -918,7 +929,7 @@ def _operator_package_mock_apply_step(
     order: int,
     step: Mapping[str, object],
     package_export_key: str,
-) -> dict:
+) -> dict[str, object]:
     return {
         "order": order,
         "step_key": str(step["step_key"]),
@@ -937,7 +948,7 @@ def _operator_package_apply_preview_readiness_checks(
     *,
     operator_package_id: str,
     step_count: int,
-) -> list[dict]:
+) -> list[dict[str, object]]:
     return [
         {"check": "mock_safe", "status": "passed", "required": True},
         {
@@ -954,7 +965,7 @@ def _operator_package_apply_preview_readiness_checks(
     ]
 
 
-def _operator_package_apply_preview_summary(*, step_count: int) -> dict:
+def _operator_package_apply_preview_summary(*, step_count: int) -> dict[str, object]:
     return {
         "apply_policy": "preview_only",
         "would_apply_steps": step_count,
@@ -966,7 +977,7 @@ def _operator_package_apply_preview_summary(*, step_count: int) -> dict:
     }
 
 
-def _operator_package_mock_apply_summary(*, step_count: int) -> dict:
+def _operator_package_mock_apply_summary(*, step_count: int) -> dict[str, object]:
     return {
         "apply_policy": "mock_apply_only",
         "mock_applied_steps": step_count,
@@ -979,7 +990,7 @@ def _operator_package_mock_apply_summary(*, step_count: int) -> dict:
     }
 
 
-def _operator_package_receipt_summary(*, step_count: int) -> dict:
+def _operator_package_receipt_summary(*, step_count: int) -> dict[str, object]:
     return {
         "receipt_policy": "passive_audit_only",
         "recorded_steps": step_count,
@@ -1005,18 +1016,19 @@ def _operator_package_step_keys_from_command(
     requested = cmd.get("step_keys", [])
     if not isinstance(requested, list) or not requested:
         return [str(row["step_key"]) for row in _operator_package_steps(package)]
-    return [str(step_key) for step_key in requested]
+    return [str(step_key) for step_key in cast("list[object]", requested)]
 
 
 def _operator_package_export_keys_from_command(cmd: Mapping[str, object]) -> dict[str, str]:
     provided = cmd.get("package_export_keys", {})
     if not isinstance(provided, dict):
         return {}
-    return {str(key): str(value) for key, value in provided.items()}
+    rows = cast("dict[object, object]", provided)
+    return {str(key): str(value) for key, value in rows.items()}
 
 
 async def _handle_rehearse_operator_package_step(
-    cmd: dict, _session: CockpitSession
+    cmd: dict[str, object], _session: CockpitSession
 ) -> HandlerResult:
     """Rehearse one operator package step through the WS bridge without side effects."""
 
@@ -1057,7 +1069,7 @@ async def _handle_rehearse_operator_package_step(
 
 
 async def _handle_rehearse_operator_package_sequence(
-    cmd: dict, _session: CockpitSession
+    cmd: dict[str, object], _session: CockpitSession
 ) -> HandlerResult:
     """Rehearse selected operator package steps as one mock-safe sequence."""
 
@@ -1068,7 +1080,7 @@ async def _handle_rehearse_operator_package_sequence(
     requested_step_keys = _operator_package_step_keys_from_command(cmd, package)
     provided_export_keys = _operator_package_export_keys_from_command(cmd)
     snapshot_id = str(cmd["snapshot_id"])
-    step_rehearsals: list[dict] = []
+    step_rehearsals: list[dict[str, object]] = []
     for step_key in requested_step_keys:
         step = _operator_package_step_by_key(package, step_key)
         if step is None:
@@ -1111,7 +1123,7 @@ async def _handle_rehearse_operator_package_sequence(
 
 
 async def _handle_preview_operator_package_apply(
-    cmd: dict, _session: CockpitSession
+    cmd: dict[str, object], _session: CockpitSession
 ) -> HandlerResult:
     """Preview applying selected operator package steps without side effects."""
 
@@ -1122,7 +1134,7 @@ async def _handle_preview_operator_package_apply(
     requested_step_keys = _operator_package_step_keys_from_command(cmd, package)
     provided_export_keys = _operator_package_export_keys_from_command(cmd)
     snapshot_id = str(cmd["snapshot_id"])
-    apply_steps: list[dict] = []
+    apply_steps: list[dict[str, object]] = []
     for order, step_key in enumerate(requested_step_keys, start=1):
         step = _operator_package_step_by_key(package, step_key)
         if step is None:
@@ -1175,7 +1187,9 @@ async def _handle_preview_operator_package_apply(
     return HandlerResult(ack={"ok": True, "operator_package_apply_preview": preview})
 
 
-async def _handle_mock_apply_operator_package(cmd: dict, _session: CockpitSession) -> HandlerResult:
+async def _handle_mock_apply_operator_package(
+    cmd: dict[str, object], _session: CockpitSession
+) -> HandlerResult:
     """Accept selected operator package steps in mock only without side effects."""
 
     package = _live_kit_operator_package_payload()
@@ -1185,7 +1199,7 @@ async def _handle_mock_apply_operator_package(cmd: dict, _session: CockpitSessio
     requested_step_keys = _operator_package_step_keys_from_command(cmd, package)
     provided_export_keys = _operator_package_export_keys_from_command(cmd)
     snapshot_id = str(cmd["snapshot_id"])
-    mock_apply_steps: list[dict] = []
+    mock_apply_steps: list[dict[str, object]] = []
     for order, step_key in enumerate(requested_step_keys, start=1):
         step = _operator_package_step_by_key(package, step_key)
         if step is None:
@@ -1247,7 +1261,7 @@ async def _handle_mock_apply_operator_package(cmd: dict, _session: CockpitSessio
 
 
 async def _handle_build_operator_package_receipt(
-    cmd: dict, _session: CockpitSession
+    cmd: dict[str, object], _session: CockpitSession
 ) -> HandlerResult:
     """Build a deterministic passive receipt for reviewed operator package steps."""
 
@@ -1258,7 +1272,7 @@ async def _handle_build_operator_package_receipt(
     requested_step_keys = _operator_package_step_keys_from_command(cmd, package)
     provided_export_keys = _operator_package_export_keys_from_command(cmd)
     snapshot_id = str(cmd["snapshot_id"])
-    receipt_steps: list[dict] = []
+    receipt_steps: list[dict[str, object]] = []
     for order, step_key in enumerate(requested_step_keys, start=1):
         step = _operator_package_step_by_key(package, step_key)
         if step is None:
@@ -1395,7 +1409,7 @@ def _teardown_armed_state(session: CockpitSession) -> None:
 
 def build_armed_watchdog(
     session: CockpitSession,
-    broadcaster: Callable[[dict], object] | None = None,
+    broadcaster: Callable[[dict[str, object]], object] | None = None,
 ) -> Callable[[ConnectionState], None]:
     """Build the ConnectionManager notify hook that auto-disarms on loss.
 
@@ -1454,7 +1468,7 @@ def _resolve_arm_port_name(cmd: Mapping[str, object]) -> str | None:
     return None
 
 
-async def _handle_arm(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_arm(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     """Explicit in-UI arm: token + confirm, then the ArmedApply seam."""
 
     if cmd.get("confirm") is not True:
@@ -1532,7 +1546,7 @@ async def _handle_arm(cmd: dict, session: CockpitSession) -> HandlerResult:
     )
 
 
-async def _handle_disarm(_cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_disarm(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     """Explicit disarm: tear the armed seam down, restore the passive device."""
 
     if session.armed_apply is None and not session.device.is_armed:
@@ -1544,7 +1558,7 @@ async def _handle_disarm(_cmd: dict, session: CockpitSession) -> HandlerResult:
     )
 
 
-async def _handle_diagnostics(_cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_diagnostics(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     """Read-only health packet: journal + metrics + connection + hints."""
 
     manager = active_connection_manager()
@@ -1576,7 +1590,7 @@ def _library_unconfigured_ack() -> HandlerResult:
     )
 
 
-def _build_library_changed(store: LibraryStore) -> dict:
+def _build_library_changed(store: LibraryStore) -> dict[str, object]:
     """Construct the whole-state ``library_changed`` event payload."""
 
     return {
@@ -1585,7 +1599,7 @@ def _build_library_changed(store: LibraryStore) -> dict:
     }
 
 
-async def _handle_library_list(_cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_library_list(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     store = _library_store_or_none(session)
     if store is None:
         return _library_unconfigured_ack()
@@ -1593,7 +1607,7 @@ async def _handle_library_list(_cmd: dict, session: CockpitSession) -> HandlerRe
     return HandlerResult(ack={"ok": True, "library_records": records})
 
 
-async def _handle_library_search(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_library_search(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     store = _library_store_or_none(session)
     if store is None:
         return _library_unconfigured_ack()
@@ -1602,7 +1616,7 @@ async def _handle_library_search(cmd: dict, session: CockpitSession) -> HandlerR
     return HandlerResult(ack={"ok": True, "library_records": records})
 
 
-async def _handle_library_tag(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_library_tag(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     store = _library_store_or_none(session)
     if store is None:
         return _library_unconfigured_ack()
@@ -1611,7 +1625,7 @@ async def _handle_library_tag(cmd: dict, session: CockpitSession) -> HandlerResu
     if not isinstance(tags, list):
         return HandlerResult(ack=_error_ack(ERR_VALIDATION, "tags must be a list of strings"))
     try:
-        record = store.tag(record_id, [str(tag) for tag in tags])
+        record = store.tag(record_id, [str(tag) for tag in cast("list[object]", tags)])
     except ValueError:
         return HandlerResult(
             ack=_error_ack(ERR_VALIDATION, f"unknown library record_id: {record_id!r}")
@@ -1622,7 +1636,7 @@ async def _handle_library_tag(cmd: dict, session: CockpitSession) -> HandlerResu
     )
 
 
-async def _handle_library_delete(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_library_delete(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     store = _library_store_or_none(session)
     if store is None:
         return _library_unconfigured_ack()
@@ -1643,7 +1657,9 @@ async def _handle_library_delete(cmd: dict, session: CockpitSession) -> HandlerR
     )
 
 
-async def _handle_library_import_captures(_cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_library_import_captures(
+    _cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
     store = _library_store_or_none(session)
     if store is None:
         return _library_unconfigured_ack()
@@ -1660,7 +1676,7 @@ async def _handle_library_import_captures(_cmd: dict, session: CockpitSession) -
     )
 
 
-HandlerFn = Callable[[dict, CockpitSession], Awaitable[HandlerResult]]
+HandlerFn = Callable[[dict[str, object], CockpitSession], Awaitable[HandlerResult]]
 
 _CORE_HANDLERS: dict[str, HandlerFn] = {
     COMMAND_SELECT_PROFILE: _handle_select_profile,
@@ -1716,14 +1732,21 @@ def _resolve_handler(cmd_type: str) -> HandlerFn | None:
         return _CORE_HANDLERS[cmd_type]
     if cmd_type.startswith("wizard_"):
         # Lazy import keeps the wizard dispatcher table out of the import
-        # graph of cockpit boot paths that never touch the wizard.
-        from .wizard_handlers import WIZARD_HANDLERS  # noqa: PLC0415
+        # graph of cockpit boot paths that never touch the wizard. The
+        # wizard table pre-dates the strict-typing gate (bare ``dict``
+        # command payloads); the cast re-states its runtime shape.
+        # Justified suppression: typing WIZARD_HANDLERS properly means
+        # pulling the whole wizard surface into the strict gate — a
+        # follow-up, not this zero-behavior-change pass.
+        from .wizard_handlers import (  # noqa: PLC0415 # isort: skip
+            WIZARD_HANDLERS,  # pyright: ignore[reportUnknownVariableType]
+        )
 
-        return WIZARD_HANDLERS.get(cmd_type)
+        return cast("Mapping[str, HandlerFn]", WIZARD_HANDLERS).get(cmd_type)
     return None
 
 
-async def handle_command(envelope: dict, session: CockpitSession) -> dict:
+async def handle_command(envelope: dict[str, object], session: CockpitSession) -> dict[str, object]:
     """Dispatch a command envelope; queue events on the session for post-ack drain.
 
     The envelope shape is ``{request_id, command: {type, ...}}``. The
@@ -1777,7 +1800,10 @@ async def handle_command(envelope: dict, session: CockpitSession) -> dict:
     _metrics = get_metrics()
     _t0 = time.perf_counter()
     try:
-        cmd = envelope["command"]
+        # ``cast`` mirrors the historical duck-typed access exactly: a
+        # non-dict ``command`` still raises ``TypeError`` on the ``["type"]``
+        # subscript, which the handler-exception path classifies below.
+        cmd = cast("dict[str, object]", envelope["command"])
         cmd_type = cmd["type"]
     except KeyError as exc:
         missing_key = exc.args[0] if exc.args else "<unknown>"
@@ -1863,10 +1889,12 @@ async def handle_command(envelope: dict, session: CockpitSession) -> dict:
             # structured log only.
             fingerprint = _exc_fingerprint(exc)
             if fingerprint is not None:
+                # ``_label`` equals ``cmd_type`` on every path that reaches
+                # a handler (a non-string type never resolves a handler).
                 session.error_journal.record(
                     fingerprint,
                     message,
-                    context={"cmd_type": cmd_type, "code": code},
+                    context={"cmd_type": _label, "code": code},
                 )
             _logger.warning(
                 "handler_exception",
@@ -1902,10 +1930,12 @@ async def handle_command(envelope: dict, session: CockpitSession) -> dict:
         # (ack.ok is False) we still treat it as an error bucket — handlers
         # producing ``{ok: False, code: ...}`` directly (rather than raising)
         # are the same kind of failure from a RED perspective.
-        ack_error = (
-            result.ack.get("code")
-            if isinstance(result.ack, dict) and not result.ack.get("ok", True)
-            else None
+        # ``HandlerResult.ack`` is always a dict by type; the ``code`` field
+        # only ever carries :data:`WS_ERROR_CODES` strings (``_error_ack``
+        # enforces it), so the cast re-states the runtime contract.
+        ack_error = cast(
+            "str | None",
+            result.ack.get("code") if not result.ack.get("ok", True) else None,
         )
         _metrics.record_ws_command(
             _label,

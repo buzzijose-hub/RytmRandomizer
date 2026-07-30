@@ -35,9 +35,11 @@ class OutputOpeningProvider(Protocol):
 
     def list_output_names(self) -> tuple[str, ...]:
         """Return the currently visible MIDI output port names."""
+        ...
 
     def open_output(self, port_name: str) -> object:
         """Open a hardware MIDI output port by name."""
+        ...
 
 
 class ExactOutputOpener:
@@ -55,8 +57,13 @@ class ExactOutputOpener:
 
         self._provider = provider
 
-    def open_exact(self, port_name: str) -> OutputPortLike:
-        """Open the single output named exactly ``port_name`` (fail-closed)."""
+    def open_exact(self, port_name: object) -> OutputPortLike:
+        """Open the single output named exactly ``port_name`` (fail-closed).
+
+        ``port_name`` is typed ``object`` because it can originate from
+        wire-supplied operator input — the ``isinstance`` check is genuine
+        runtime validation, not redundant narrowing.
+        """
 
         if not isinstance(port_name, str) or not port_name:
             raise ArmedApplyError("armed_apply_port_name_required")
