@@ -133,9 +133,16 @@ def test_report_command_output_matches_golden(golden_name: str) -> None:
         f"{proc.returncode}; stderr:\n{proc.stderr.decode('utf-8', errors='replace')}"
     )
     golden = (GOLDEN_DIR / golden_name).read_bytes()
-    assert proc.stdout == golden, (
+    # Newline-normalized comparison: the golden contract pins report CONTENT,
+    # not the OS newline convention. Goldens are committed LF (.gitattributes
+    # eol=lf), but Python's text-mode stdout emits \r\n on Windows, which made
+    # every golden fail on windows-latest CI while passing on POSIX. Both
+    # sides are normalized so a real content change still fails everywhere.
+    normalized_stdout = proc.stdout.replace(b"\r\n", b"\n")
+    normalized_golden = golden.replace(b"\r\n", b"\n")
+    assert normalized_stdout == normalized_golden, (
         f"stdout of `python -m rytm_randomizer.cli {' '.join(args)}` no longer "
-        f"matches {golden_name} byte-for-byte. If this output change is "
+        f"matches {golden_name} (newline-normalized). If this output change is "
         "intentional, regenerate the goldens with RYTM_REPORT_GOLDEN_CAPTURE=1 "
         ".venv/bin/python scripts/capture_report_goldens.py and commit the "
         "diff for review."

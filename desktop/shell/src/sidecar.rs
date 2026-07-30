@@ -120,10 +120,7 @@ pub fn bundled_sidecar_candidates(
 ///
 /// Pure with respect to the process environment (the override is passed
 /// in) so the priority order is unit-testable.
-pub fn resolve_sidecar_launch(
-    env_override: Option<&str>,
-    candidates: &[PathBuf],
-) -> SidecarLaunch {
+pub fn resolve_sidecar_launch(env_override: Option<&str>, candidates: &[PathBuf]) -> SidecarLaunch {
     if let Some(path) = env_override {
         let trimmed = path.trim();
         if !trimmed.is_empty() {
@@ -395,7 +392,10 @@ mod tests {
     #[test]
     fn resolve_sidecar_launch_prefers_env_override() {
         let launch = resolve_sidecar_launch(Some("/custom/rytm-sidecar"), &[]);
-        assert_eq!(launch, SidecarLaunch::Bundled(PathBuf::from("/custom/rytm-sidecar")));
+        assert_eq!(
+            launch,
+            SidecarLaunch::Bundled(PathBuf::from("/custom/rytm-sidecar"))
+        );
     }
 
     #[test]
@@ -428,7 +428,9 @@ mod tests {
         assert_eq!(
             candidates,
             vec![
-                PathBuf::from("/resources").join(SIDECAR_BINARY_DIR).join(&name),
+                PathBuf::from("/resources")
+                    .join(SIDECAR_BINARY_DIR)
+                    .join(&name),
                 PathBuf::from("/resources").join(&name),
                 PathBuf::from("/exe").join(SIDECAR_BINARY_DIR).join(&name),
                 PathBuf::from("/exe").join(&name),
