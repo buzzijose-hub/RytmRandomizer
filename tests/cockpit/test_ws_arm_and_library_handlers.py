@@ -16,6 +16,7 @@ Pins the in-UI half of the Live-but-Passive model at the handler layer:
 from __future__ import annotations
 
 import asyncio
+import importlib.machinery
 import types
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -373,6 +374,12 @@ def test_arm_builds_real_provider_when_none_injected_and_fails_closed(
 
     fake_mido_session.get_output_names = lambda: []  # type: ignore[attr-defined]
     fake_mido_session.get_input_names = lambda: []  # type: ignore[attr-defined]
+    # A bare types.ModuleType has __spec__=None, which makes
+    # importlib.util.find_spec("mido") RAISE ValueError instead of finding the
+    # module — silently routing the handler down its error path without ever
+    # exercising the real-provider build at handlers lines ~1500-1502. Give
+    # the fake a real spec so the mido-present branch genuinely runs.
+    fake_mido_session.__spec__ = importlib.machinery.ModuleSpec("mido", loader=None)
     session = _make_session(tmp_path)
     assert session.arm_port_provider is None
     ack = _arm(session, port_name="No Such Port 00-XYZ")

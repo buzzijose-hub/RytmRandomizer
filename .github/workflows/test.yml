@@ -377,6 +377,16 @@ jobs:
       - name: Run pytest with coverage
         run: pytest --cov=rytm_randomizer --cov-branch --cov-report=term-missing --cov-report=xml
 
+      # Gate 1, mechanically enforced: every production file touched vs the
+      # base branch must sit at 100% line+branch coverage. Until this step
+      # existed, the 100%-on-touched requirement was self-certified in PR
+      # bodies while CI only enforced the package-wide ratchet floor — so a
+      # PR below 100% on its own files could merge green. ubuntu-only for
+      # the same single-oracle reason as the ratchet step below.
+      - name: Touched-file coverage gate (Gate 1)
+        if: matrix.os == 'ubuntu-latest'
+        run: python scripts/check_touched_coverage.py coverage.xml
+
       # Auto-ratchet the coverage floor in .coveragerc when measured branch
       # coverage exceeds the current floor by >= 1pp. The script exits 0
       # with no change when within 1pp of the floor, exits 0 after rewriting

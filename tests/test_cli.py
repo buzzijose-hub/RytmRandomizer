@@ -428,6 +428,8 @@ def test_analog_four_audio_patch_rank_help_is_exact_and_passive():
         "live-gui-performance-flow-model-report",
         "live-gui-performance-console-report",
         "oxi-live-set-strategy-report",
+        "scoped-randomization-preview",
+        "kit-morph-preview",
     ],
 )
 def test_lazy_help_text_entries_resolve_directly(command: str):
