@@ -35,7 +35,6 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "resources": ["binaries/rytm-sidecar*"],
     "icon": [
       "icons/icon.png",
       "icons/icon.ico"

@@ -230,6 +230,34 @@ jobs:
       - name: Build bundled sidecar binary (PyInstaller)
         run: python scripts/build_sidecar_binary.py --output-dir desktop/shell/binaries
 
+      # Declare the sidecar as a bundled Tauri resource HERE rather than in
+      # the committed tauri.conf.json. Tauri's build script hard-fails when a
+      # declared resource glob matches nothing, and the source-only
+      # `cargo test` job in test.yml never builds a sidecar — a permanently
+      # committed declaration therefore broke that job. Injecting it in the
+      # one workflow that actually produces the binary keeps both paths
+      # honest: bundles always ship the sidecar, source builds never need it.
+      - name: Declare sidecar as a bundled resource
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          config_path = Path("desktop/shell/tauri.conf.json")
+          config = json.loads(config_path.read_text(encoding="utf-8"))
+          bundle = config["bundle"]
+          resources = list(bundle.get("resources", []))
+          glob = "binaries/rytm-sidecar*"
+          if glob not in resources:
+              resources.append(glob)
+          bundle["resources"] = resources
+          config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+          print(f"tauri.conf.json bundle.resources = {resources}")
+          PY
+          test -n "$(ls desktop/shell/binaries/rytm-sidecar* 2>/dev/null)" \
+            || { echo "::error::sidecar binary missing; the resource glob would fail the bundle"; exit 1; }
+
       - name: Upload standalone sidecar binary
         # Also published on its own so the release engineer can smoke-test
         # the sidecar half without unpacking the full Tauri bundle.

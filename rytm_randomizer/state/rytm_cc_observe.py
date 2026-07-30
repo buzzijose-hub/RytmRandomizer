@@ -20,23 +20,31 @@ class RytmObserveCcMapping(Protocol):
     # Read-only property members so frozen-dataclass fact rows (e.g.
     # ``data.AnalogRytmCcMapping``) satisfy the protocol — a plain
     # attribute member would demand writability the frozen rows refuse.
+    #
+    # ``pragma: no cover`` on each stub: a Protocol property body is a
+    # structural-typing declaration that is never executed (concrete
+    # implementers provide the real accessor), yet coverage records the
+    # ``...`` as a half-covered branch. Justified per
+    # docs/ARCHITECTURE.md §8 — declaration-only surface with no live
+    # caller. Removing the properties is not an option: they are what lets
+    # frozen fact rows satisfy the protocol under strict Pyright.
     @property
-    def section(self) -> str: ...
+    def section(self) -> str: ...  # pragma: no cover - protocol declaration
 
     @property
-    def parameter(self) -> str: ...
+    def parameter(self) -> str: ...  # pragma: no cover - protocol declaration
 
     @property
-    def cc_msb(self) -> int: ...
+    def cc_msb(self) -> int: ...  # pragma: no cover - protocol declaration
 
     @property
-    def nrpn_msb(self) -> int | None: ...
+    def nrpn_msb(self) -> int | None: ...  # pragma: no cover - protocol declaration
 
     @property
-    def nrpn_lsb(self) -> int | None: ...
+    def nrpn_lsb(self) -> int | None: ...  # pragma: no cover - protocol declaration
 
     @property
-    def scope(self) -> str: ...
+    def scope(self) -> str: ...  # pragma: no cover - protocol declaration
 
 
 class RytmObserveExactEvent(Protocol):
