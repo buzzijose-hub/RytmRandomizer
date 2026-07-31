@@ -38,7 +38,7 @@ dev = [
     "pytest-xdist>=3,<4",
     # Incremental strict-production type gate. scripts/typecheck_touched.py
     # selects production modules; PR #214 separately records test-harness debt.
-    "pyright==1.1.407",
+    "pyright==1.1.411",
     # WS-G/WS-E cockpit tests exercise ProfileModel export plus the
     # FastAPI/Uvicorn WebSocket sidecar and the Profile Wizard analyzer;
     # mirrored from the [cockpit] and [style] extras below so CI's
