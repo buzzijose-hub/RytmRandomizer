@@ -84,6 +84,60 @@ class _FakePort:
         self.closed = True
 
 
+class _FakeMidoMessage:
+    """Stand-in for ``mido.Message`` — the ONLY type a real port accepts.
+
+    Real ``mido`` output ports reject anything that is not a
+    ``mido.Message``; this fake plays the same role so a test can assert
+    the exact object type handed to the port without importing ``mido``.
+    """
+
+    def __init__(self, message_type: str, **fields: int) -> None:
+        self.type = message_type
+        self.channel = fields["channel"]
+        self.control = fields["control"]
+        self.value = fields["value"]
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, _FakeMidoMessage):
+            return NotImplemented
+        return (self.type, self.channel, self.control, self.value) == (
+            other.type,
+            other.channel,
+            other.control,
+            other.value,
+        )
+
+    def __repr__(self) -> str:  # pragma: no cover - debugging aid only
+        return (
+            f"_FakeMidoMessage({self.type!r}, channel={self.channel}, "
+            f"control={self.control}, value={self.value})"
+        )
+
+
+class _StrictMidoPort:
+    """A port that behaves like a real ``mido`` port: type-checks its input.
+
+    A real backend port raises ``TypeError`` when handed anything other
+    than a ``mido.Message``. Reproducing that here is what makes the wire
+    -adapter assertions meaningful — a port that silently accepts a dict
+    (like ``_FakePort``) cannot detect the defect this guards.
+    """
+
+    def __init__(self, name: str = "StrictPort") -> None:
+        self.name = name
+        self.sent: list[_FakeMidoMessage] = []
+        self.closed = False
+
+    def send(self, message: object) -> None:
+        if not isinstance(message, _FakeMidoMessage):
+            raise TypeError(f"mido port requires a mido.Message, got {type(message).__name__}")
+        self.sent.append(message)
+
+    def close(self) -> None:
+        self.closed = True
+
+
 class _FakeInputPort:
     """Stand-in for a ``mido`` input port: exposes ``iter_pending``."""
 
@@ -142,6 +196,7 @@ def _install_fake_mido(
             return _FakeInputPort(port_name)
         return open_input_factory(port_name)
 
+    fake.Message = _FakeMidoMessage  # type: ignore[attr-defined]
     fake.get_output_names = _get_output_names  # type: ignore[attr-defined]
     fake.get_input_names = _get_input_names  # type: ignore[attr-defined]
     fake.open_output = _open_output  # type: ignore[attr-defined]
@@ -237,7 +292,12 @@ def test_mido_provider_module_does_not_import_mido_at_load() -> None:
 def test_mido_provider_public_api_is_stable() -> None:
     import rytm_randomizer.mido_provider as module
 
-    assert module.__all__ == ["MidoMidiPortProvider", "build_mido_midi_port_provider"]
+    assert module.__all__ == [
+        "MidoMidiPortProvider",
+        "WireOutputPort",
+        "build_mido_midi_port_provider",
+        "neutral_cc_fields",
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -509,24 +569,140 @@ def test_open_output_rejection_does_not_mask_close_failure() -> None:
         MidoMidiPortProvider().open_output("Fake Rytm")
 
 
-def test_open_output_returns_closeable_port_with_send_method() -> None:
-    """Happy path: a known closeable sender is returned as-is."""
+def test_open_output_wraps_the_backend_port_in_the_wire_adapter() -> None:
+    """Happy path: the returned port is the ``mido.Message``-converting wrapper.
 
-    from rytm_randomizer.mido_provider import MidoMidiPortProvider
+    Regression guard for the wire-format defect: callers upstream (the
+    ArmedApply seam, the cockpit adapters) hand the port device-neutral
+    triples / inert ``MidiMessage`` dataclasses, and a real ``mido`` port
+    rejects both. ``open_output`` must therefore never hand back the raw
+    backend port.
+    """
 
-    fake_port = _FakePort("Fake Rytm")
+    from rytm_randomizer.mido_provider import MidoMidiPortProvider, WireOutputPort
+
+    backend_port = _StrictMidoPort("Fake Rytm")
     _install_fake_mido(
         output_names=("Fake Rytm",),
-        open_factory=lambda _name: fake_port,
+        open_factory=lambda _name: backend_port,
     )
     provider = MidoMidiPortProvider()
 
     result = provider.open_output("Fake Rytm")
 
-    assert result is fake_port
-    # Confirm the returned object honors the protocol: send() routes through.
-    result.send({"message_type": "cc", "channel": 0, "control": 16, "value": 0})
-    assert fake_port.sent == [{"message_type": "cc", "channel": 0, "control": 16, "value": 0}]
+    assert isinstance(result, WireOutputPort)
+    assert result is not backend_port
+    assert result.name == "Fake Rytm"
+
+    # A neutral triple — what Device.to_cc_messages / the armed seam emits.
+    result.send((0, 16, 42))
+    # The EXACT object handed to the backend port is a mido.Message, and its
+    # fields carry through unchanged.
+    assert len(backend_port.sent) == 1
+    wire = backend_port.sent[0]
+    assert isinstance(wire, _FakeMidoMessage)
+    assert (wire.type, wire.channel, wire.control, wire.value) == ("control_change", 0, 16, 42)
+
+    result.close()
+    assert backend_port.closed is True
+
+
+def test_wire_adapter_converts_the_inert_mock_midi_message_dataclass() -> None:
+    """The cockpit's ``build_cc_message`` output also converts, not leaks."""
+
+    from rytm_randomizer.mido_provider import WireOutputPort
+    from rytm_randomizer.mock_midi import build_cc_message
+
+    backend_port = _StrictMidoPort()
+    fake_mido = _install_fake_mido()
+    port = WireOutputPort(backend_port, fake_mido)  # type: ignore[arg-type]
+
+    port.send(build_cc_message(channel=9, control=74, value=100, metadata={"pad": 3}))
+
+    assert len(backend_port.sent) == 1
+    wire = backend_port.sent[0]
+    assert isinstance(wire, _FakeMidoMessage)
+    assert (wire.type, wire.channel, wire.control, wire.value) == ("control_change", 9, 74, 100)
+
+
+def test_wire_adapter_without_a_named_backend_port_reports_no_name() -> None:
+    """``name`` is ``None`` when the backend port exposes none."""
+
+    from rytm_randomizer.mido_provider import WireOutputPort
+
+    class _Nameless:
+        def __init__(self) -> None:
+            self.sent: list[object] = []
+
+        def send(self, message: object) -> None:
+            self.sent.append(message)
+
+        def close(self) -> None:
+            return None
+
+    fake_mido = _install_fake_mido()
+    assert WireOutputPort(_Nameless(), fake_mido).name is None  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    ("message", "match"),
+    [
+        ((0, 16), "midi_wire_triple_arity"),
+        ((0, 16, 42, 7), "midi_wire_triple_arity"),
+        (("0", 16, 42), "midi_wire_field_not_int: channel"),
+        ((True, 16, 42), "midi_wire_field_not_int: channel"),
+        ((16, 16, 42), "midi_wire_field_out_of_range: channel"),
+        ((-1, 16, 42), "midi_wire_field_out_of_range: channel"),
+        ((0, None, 42), "midi_wire_field_not_int: control"),
+        ((0, 128, 42), "midi_wire_field_out_of_range: control"),
+        ((0, 16, 128), "midi_wire_field_out_of_range: value"),
+        ((0, 16, "42"), "midi_wire_field_not_int: value"),
+        (object(), "midi_wire_unsupported_message"),
+    ],
+)
+def test_wire_adapter_fails_closed_on_unconvertible_messages(message: object, match: str) -> None:
+    """Anything the boundary cannot render is refused, never forwarded."""
+
+    from rytm_randomizer.mido_provider import WireOutputPort
+    from rytm_randomizer.real_midi_adapter import RealMidiSendError
+
+    backend_port = _StrictMidoPort()
+    fake_mido = _install_fake_mido()
+    port = WireOutputPort(backend_port, fake_mido)  # type: ignore[arg-type]
+
+    with pytest.raises(RealMidiSendError, match=match):
+        port.send(message)
+    assert backend_port.sent == []
+
+
+def test_wire_adapter_refuses_a_non_cc_message_type() -> None:
+    """Only control-change traffic converts; other kinds fail closed."""
+
+    from rytm_randomizer.mido_provider import WireOutputPort
+    from rytm_randomizer.mock_midi import MidiMessage
+    from rytm_randomizer.real_midi_adapter import RealMidiSendError
+
+    backend_port = _StrictMidoPort()
+    fake_mido = _install_fake_mido()
+    port = WireOutputPort(backend_port, fake_mido)  # type: ignore[arg-type]
+
+    with pytest.raises(RealMidiSendError, match="midi_wire_unsupported_message_type"):
+        port.send(MidiMessage(message_type="note_on", channel=0, control=16, value=42))
+    assert backend_port.sent == []
+
+
+def test_neutral_cc_fields_accepts_the_control_change_spelling() -> None:
+    """``midi_io``-style ``control_change`` typing normalises identically."""
+
+    from rytm_randomizer.mido_provider import neutral_cc_fields
+
+    class _ControlChangeShaped:
+        message_type = "control_change"
+        channel = 2
+        control = 33
+        value = 64
+
+    assert neutral_cc_fields(_ControlChangeShaped()) == (2, 33, 64)
 
 
 def test_open_output_propagates_dependency_error_when_mido_missing(

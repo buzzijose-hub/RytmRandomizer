@@ -517,8 +517,9 @@ rytm_randomizer/cockpit/
         store.py           # append, undo, load, promote-to-saved
     device/                # Device adapter abstraction
         adapter.py         # DeviceAdapter Protocol
-        mock.py            # MockDeviceAdapter (default, no MIDI)
-        real.py            # RealMidiDeviceAdapter (wraps mido_provider)
+        mock.py            # MockDeviceAdapter (the only adapter — state,
+                           #   never a MIDI port; the ArmedApply seam owns
+                           #   the single real output handle)
         connection.py      # ConnectionManager — Live-but-Passive launch brain
                            #   (disconnected -> searching -> listening; inputs only)
         midi_monitor.py    # Passive live MIDI monitor (bounded ring, decoded labels)
@@ -626,11 +627,17 @@ report. It sits **alongside** them:
   reducers, and test selectors directly from the corresponding
   `live_gui_*` report module. The reports stay passive and the cockpit
   is the active implementation of the same shape.
-- **The Device Protocol seam is reused.** The cockpit's `RealMidiDeviceAdapter`
-  routes hardware sends through the existing `mido_provider` + `real_midi_adapter`
-  boundary — the same one the armed CLI path uses. The `--arm` discipline
-  applies identically: passive default opens no MIDI port, only an
-  explicit arm step does.
+- **One armed output handle, owned by the seam.** The cockpit has no
+  real-MIDI device adapter. `MockDeviceAdapter` models snapshot/history
+  state whether or not the session is armed; the `senders` ArmedApply
+  seam is the only thing that transmits, and it holds the single real
+  output port (opened through `mido_provider`, exactly-named and
+  fail-closed). An adapter that opened its own port alongside the seam
+  produced two handles, one of them ungated — that adapter was deleted.
+  `handlers.session_is_armed()` is the single armed-state predicate.
+  Persistent kit/sound writes are refused outright
+  (`KitMutationUnsupportedError`); only RAM-only live-dial CC sends
+  transmit.
 - **Architecture invariants apply unchanged.** `data/` stays a leaf
   (cockpit code may read `data/profiles.py` for CC-number lookups but
   never re-defines a fact table). The `cockpit/` subpackage satisfies

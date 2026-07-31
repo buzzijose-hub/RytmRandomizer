@@ -1,12 +1,15 @@
 """``DeviceAdapter`` Protocol — the cockpit's only handle on hardware.
 
 The cockpit engine, history store, and WebSocket layer all consume the
-device through this Protocol. Two implementations live alongside it:
+device through this Protocol. One implementation lives alongside it:
 
 * :class:`~rytm_randomizer.cockpit.device.mock.MockDeviceAdapter` — the
   always-on, in-memory device for development and tests.
-* :class:`~rytm_randomizer.cockpit.device.real.RealMidiDeviceAdapter` — the
-  real-MIDI wrapper, constructed only when ``--arm`` is set.
+
+There is no real-MIDI adapter. The adapter models cockpit *state*; the
+ArmedApply seam (:mod:`rytm_randomizer.senders.armed_apply`) is the only
+thing that transmits, and it owns the single real output port. Keeping the
+two apart is what makes "exactly one armed output handle" checkable.
 
 The Protocol is ``@runtime_checkable`` so tests can confirm both adapters
 satisfy it via :func:`isinstance` without inheritance. Per
@@ -38,19 +41,24 @@ class DeviceAdapter(Protocol):
     def is_armed(self) -> bool:
         """True if this adapter actually talks to hardware.
 
-        ``False`` for the mock; ``True`` for the real-MIDI adapter. The
-        cockpit UI uses this to label the device pill (``MOCK`` vs ``LIVE``)
-        and to gate the "commit to kit" button on the operator's intent.
+        ``False`` for the mock. Whether a *session* is armed is answered by
+        :func:`rytm_randomizer.cockpit.ws.handlers.session_is_armed`, which
+        consults the ArmedApply seam — an adapter no longer changes on arm.
+        The cockpit UI uses that to label the device pill (``MOCK`` vs
+        ``LIVE``) and to gate the "commit to kit" button.
         """
+        ...
 
     def capture_snapshot(self) -> Snapshot:
         """Read the current device state and return a
         :class:`~rytm_randomizer.cockpit.data.Snapshot`.
 
-        The mock returns its in-memory state; the real adapter (Phase 1)
-        returns a placeholder because round-tripping a Rytm SysEx dump
-        lands in Phase 1.x.
+        The mock returns its in-memory state. Real SysEx-driven readback
+        from hardware is not implemented — which is exactly why the armed
+        seam refuses persistent kit/sound writes (there is no
+        capture-before-write to make them reversible).
         """
+        ...
 
     def apply(
         self,
@@ -68,6 +76,7 @@ class DeviceAdapter(Protocol):
         :class:`~rytm_randomizer.cockpit.data.Snapshot` (read back after
         apply).
         """
+        ...
 
     def apply_send_plan(self, send_plan: CockpitSendPlan) -> Snapshot:
         """Apply a prepared, ready ``CockpitSendPlan`` to the device.
@@ -76,13 +85,15 @@ class DeviceAdapter(Protocol):
         a ready inert plan. Adapters must reject blocked plans and must
         not recompute packet contents at the hardware boundary.
         """
+        ...
 
     def commit_kit(self, snapshot: Snapshot, label: str | None) -> None:
         """Write ``snapshot`` to the device's persistent kit memory.
 
-        Real adapter: emits a Rytm kit-dump SysEx. Mock: no-op (mock has
-        no persistence). Phase 1 leaves the real path as
-        ``NotImplementedError`` — kit-dump SysEx writing lands in Phase 1.x.
+        Mock: no-op (the mock has no persistence). There is no hardware
+        implementation: writing a kit dump to a real device is a
+        kit/sound mutation, and the armed seam refuses those outright
+        until a real capture-before-write plus restore path exists.
         """
 
 

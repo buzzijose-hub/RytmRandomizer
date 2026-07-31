@@ -64,13 +64,23 @@ if (( ${#real[@]} == 0 && ${#untracked[@]} == 0 )); then
 fi
 
 for file in "${real[@]}" "${untracked[@]}"; do
-    git add -- "$file"
+    if [[ -e "$file" ]]; then
+        git add -- "$file"
+    else
+        # Deleted on disk: `git add <path>` is a no-op for a vanished file,
+        # so the deletion would silently stay unstaged (caught in practice
+        # when cockpit/device/real.py was removed). Stage the removal.
+        git rm -q --cached -- "$file"
+    fi
 done
 
 # Verify every intended file actually landed in the index — the check that
-# would have caught the dropped-script incident at stage time.
+# would have caught the dropped-script incident at stage time. A staged
+# DELETION correctly leaves the path untracked, so only existing files are
+# required to be present in the index.
 missing=()
 for file in "${real[@]}" "${untracked[@]}"; do
+    [[ -e "$file" ]] || continue
     git ls-files --error-unmatch -- "$file" >/dev/null 2>&1 || missing+=("$file")
 done
 

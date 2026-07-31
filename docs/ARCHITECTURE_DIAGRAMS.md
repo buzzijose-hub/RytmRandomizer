@@ -2046,7 +2046,7 @@ flowchart TB
         Profiles["Profile registry<br/>cockpit/profiles/registry.py<br/>· built-in scenes<br/>· user profiles<br/>· $XDG_CONFIG_HOME/rytm-randomizer/profiles/"]
         History["History store<br/>cockpit/history/store.py<br/>· in-memory chain<br/>· UNDO + LOAD + SAVE"]
         Export["Model export<br/>cockpit/export/<br/>· MessagePack<br/>· header + CRC32"]
-        DeviceAdapter["Device adapter<br/>cockpit/device/adapter.py<br/>· DeviceAdapter Protocol<br/>· MockDeviceAdapter (default)<br/>· RealMidiDeviceAdapter (--arm)"]
+        DeviceAdapter["Device adapter<br/>cockpit/device/adapter.py<br/>· DeviceAdapter Protocol<br/>· MockDeviceAdapter (state only)<br/>· no real-MIDI adapter — the<br/>  ArmedApply seam owns the port"]
     end
 
     subgraph ExistingBoundary["Existing boundary (re-used)"]
@@ -2093,11 +2093,13 @@ flowchart TB
   window and supervises the sidecar; the Python sidecar process owns all
   business state. The boundary is the WebSocket. This matches the spec's
   "render-agnosticism" principle — the engine emits events, any UI renders.
-- **Mock-first, arm-on-purpose.** `MockDeviceAdapter` is the default; no
-  real MIDI port is opened until the operator (or a later flag) constructs
-  the `RealMidiDeviceAdapter`. The hardware-safety boundary from the
-  existing CLI (`--arm` discipline, lazy `mido` import) is preserved
-  identically.
+- **Mock-first, arm-on-purpose, one handle.** `MockDeviceAdapter` models
+  cockpit state at all times; no real MIDI port is opened until the
+  operator arms, and the ArmedApply seam then owns that single port.
+  There is no real-MIDI adapter to swap in — a second adapter holding its
+  own port is precisely the ungated path the seam exists to prevent. The
+  hardware-safety boundary from the existing CLI (`--arm` discipline,
+  lazy `mido` import) is preserved identically.
 - **Profile registry is disk-backed.** Built-in `kind="scene"` profiles
   ship in `cockpit/profiles/builtin.py`; user `kind="user"` profiles are
   flat JSON files under the platform-appropriate config directory

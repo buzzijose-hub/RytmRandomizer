@@ -17,9 +17,14 @@ proved out:
   ``readiness_reason`` duck the generic guarded sender uses
   (:func:`plan_readiness`); an unready plan is refused without device
   introspection.
-* **Backup before mutation.** A **required** injected backup hook runs
-  before any kit/sound-mutating apply; when the backup fails (returns
-  falsy or raises), the send is refused.
+* **Kit/sound mutation is refused, not "backed up".** The safety model
+  asks for reversibility before any persistent write. Real
+  capture-before-write (a SysEx dump read back from the device) and a
+  restore path are **not implemented**, so the seam refuses every
+  mutating apply with :class:`KitMutationUnsupportedError` rather than
+  taking a nominal backup it cannot restore from. Non-mutating live-dial
+  CC sends (``mutates_kit=False``) land in the device's working RAM only
+  and remain permitted.
 * **Never auto-re-arm.** A provider error during a send auto-disarms the
   session; re-arming requires a fresh explicit :meth:`arm` call. Nothing
   in this module re-arms as a side effect.
@@ -34,7 +39,7 @@ through the :class:`ExactPortOpener` Protocol
 from __future__ import annotations
 
 import hmac
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import ClassVar, Final, Protocol, runtime_checkable
 
@@ -45,9 +50,10 @@ __all__ = [
     "ArmedApplyError",
     "ArmedApplyResult",
     "ArmedApplySession",
-    "BackupHook",
     "ExactPortOpener",
+    "KitMutationUnsupportedError",
     "OutputPortLike",
+    "PlanRenderer",
     "plan_readiness",
 ]
 
@@ -63,6 +69,33 @@ class ArmedApplyError(MidiError, RuntimeError):
     """
 
     fingerprint: ClassVar[str] = "midi.armed_apply.refused"
+
+
+class KitMutationUnsupportedError(ArmedApplyError):
+    """A kit/sound-**mutating** armed write was refused: no restore path.
+
+    The Live-but-Passive model promises that every armed write is
+    reversible. Delivering that requires two things this codebase does
+    **not** have yet:
+
+    1. a real capture-before-write (a SysEx kit/sound dump read back
+       from the device — no such readback exists; the cockpit's former
+       real adapter only ever returned a placeholder snapshot, and was
+       deleted with this change), and
+    2. a restore path that can push a captured dump back to the device
+       (no such path exists anywhere in the package).
+
+    An in-memory history snapshot is **not** a device backup: it is
+    mock-originated state that cannot be written back to hardware.
+    Rather than ship a nominal backup that claims a reversibility it
+    cannot deliver, the seam refuses persistent kit/sound mutation
+    outright and says so in the error.
+
+    Non-mutating live-dial CC/NRPN sends stay enabled — see
+    :meth:`ArmedApplySession.apply`.
+    """
+
+    fingerprint: ClassVar[str] = "midi.armed_apply.kit_mutation_unsupported"
 
 
 @runtime_checkable
@@ -92,15 +125,30 @@ class ExactPortOpener(Protocol):
         ...
 
 
-BackupHook = Callable[[object], bool]
-"""Pre-write backup callback: receives the plan, returns ``True`` on success.
+PlanRenderer = Callable[[object], Iterable[tuple[int, int, int]]]
+"""Project one plan into the ``(channel, control, value)`` triples to send.
 
-A falsy return (or a raised error) refuses the send — the backup is the
-reversibility guarantee for every armed kit/sound mutation.
+The default projection is ``Device.to_cc_messages``. A caller supplies its
+own only when the plan already carries resolved wire packets (the cockpit's
+:class:`~rytm_randomizer.cockpit.data.CockpitSendPlan`), so the hardware
+boundary transmits exactly what preflight approved.
 """
 
-_PORT_ERRORS: Final[tuple[type[BaseException], ...]] = (OSError, RuntimeError, ValueError)
-"""Exception families a MIDI backend / injected hook can realistically raise."""
+_PORT_ERRORS: Final[tuple[type[BaseException], ...]] = (
+    OSError,
+    RuntimeError,
+    ValueError,
+    TypeError,
+)
+"""Exception families a MIDI backend / injected hook can realistically raise.
+
+``TypeError`` is in the set deliberately: a real ``mido`` output port
+rejects any object that is not a :class:`mido.Message` with a ``TypeError``.
+The wire conversion at :class:`rytm_randomizer.mido_provider.WireOutputPort`
+is what prevents that from happening, but the seam must still fail **closed**
+(refuse + auto-disarm) rather than propagate a bare ``TypeError`` if any
+future port is handed something it cannot render.
+"""
 
 
 def plan_readiness(plan: object) -> tuple[bool, str]:
@@ -119,13 +167,19 @@ def plan_readiness(plan: object) -> tuple[bool, str]:
 
 @dataclass(frozen=True)
 class ArmedApplyResult:
-    """Outcome of one :meth:`ArmedApplySession.apply` attempt."""
+    """Outcome of one :meth:`ArmedApplySession.apply` attempt.
+
+    There is deliberately no ``backup_taken`` field. An earlier revision
+    carried one, which advertised a reversibility guarantee the seam could
+    not deliver; mutating writes are now refused outright instead (see
+    :class:`KitMutationUnsupportedError`), so every successful apply is by
+    construction a non-mutating RAM-only send that needs no backup.
+    """
 
     device_id: str
     ok: bool
     sent_count: int
     reason: str = ""
-    backup_taken: bool = False
 
 
 class ArmedApplySession:
@@ -140,8 +194,10 @@ class ArmedApplySession:
       port through the injected opener (fail-closed on missing/duplicate
       names).
     * :meth:`apply` requires armed state, a prior single-use
-      :meth:`confirm` for its ``action_id``, a ready plan, and a
-      successful pre-write backup (for kit/sound-mutating applies).
+      :meth:`confirm` for its ``action_id``, and a ready plan. A
+      kit/sound-mutating apply is always refused
+      (:class:`KitMutationUnsupportedError`); only non-mutating
+      ``mutates_kit=False`` RAM-only sends reach the wire.
     * A provider error mid-send **auto-disarms**; the session never
       re-arms on its own.
     """
@@ -151,7 +207,6 @@ class ArmedApplySession:
         *,
         opener: ExactPortOpener,
         port_name: object,
-        backup: BackupHook,
         arm_token: object,
     ) -> None:
         """Capture the collaborators; refuse unusable configuration eagerly.
@@ -160,17 +215,21 @@ class ArmedApplySession:
         both originate from wire-supplied operator input, so the
         ``isinstance`` checks below are genuine runtime validation (the
         fail-closed refusals), not redundant defensive narrowing.
+
+        There is deliberately **no backup hook**. An earlier revision took
+        one, which implied the seam could make an armed kit write
+        reversible; it could not (the only available "backup" was an
+        in-memory, mock-originated history snapshot with no restore path).
+        Kit/sound mutation is now refused outright instead — see
+        :class:`KitMutationUnsupportedError`.
         """
 
         if not isinstance(port_name, str) or not port_name:
             raise ArmedApplyError("armed_apply_port_name_required")
         if not isinstance(arm_token, str) or not arm_token:
             raise ArmedApplyError("armed_apply_token_required")
-        if not callable(backup):
-            raise ArmedApplyError("armed_apply_backup_hook_required")
         self._opener = opener
         self._port_name = port_name
-        self._backup = backup
         self._arm_token = arm_token
         self._port: OutputPortLike | None = None
         self._armed = False
@@ -234,8 +293,20 @@ class ArmedApplySession:
         *,
         action_id: str,
         mutates_kit: bool = True,
+        renderer: PlanRenderer | None = None,
     ) -> ArmedApplyResult:
         """Transmit ``plan`` through ``device``'s renderer — fully gated.
+
+        ``renderer`` overrides how ``plan`` becomes wire triples. It
+        defaults to ``device.to_cc_messages`` (the Device-Protocol path
+        used by the CLI/shell senders). The cockpit passes its own
+        projection because a
+        :class:`~rytm_randomizer.cockpit.data.CockpitSendPlan` already
+        carries fully-resolved ``(channel, control, value)`` packets from
+        preflight — re-deriving them through a device strategy would
+        recompute the wire format at the hardware boundary, which the
+        SEND contract forbids. Every gate below applies identically
+        either way; only the projection differs.
 
         Gate order (each refusal is deliberate and test-pinned):
 
@@ -243,10 +314,25 @@ class ArmedApplySession:
         2. single-use per-action confirmation (raises when unconfirmed;
            the confirmation is consumed even if a later gate refuses),
         3. plan readiness (returns a refused result),
-        4. pre-write backup for kit/sound mutations (returns a refused
-           result when the hook fails or raises),
+        4. **kit/sound mutation refusal** — raises
+           :class:`KitMutationUnsupportedError` whenever ``mutates_kit``
+           is true (the default). See below.
         5. the send itself — a provider error auto-disarms and re-raises
            as :class:`ArmedApplyError`.
+
+        **What is and is not permitted on hardware.** ``mutates_kit``
+        defaults to ``True`` so a caller must *opt in* to the permitted
+        narrow case:
+
+        * ``mutates_kit=True`` — a write that changes persistent
+          kit/sound memory. **Always refused.** Reversibility requires a
+          real capture-before-write plus a restore path, neither of which
+          exists (see :class:`KitMutationUnsupportedError`). This is a
+          deliberate capability removal, not a temporary bug.
+        * ``mutates_kit=False`` — a non-mutating live-dial CC/NRPN send.
+          These land in the device's working RAM only and are undone by
+          reloading the kit from the device's own memory, so they need no
+          backup of ours. Permitted, and the only armed writes that are.
         """
 
         if not self._armed or self._port is None:
@@ -262,28 +348,21 @@ class ArmedApplySession:
                 ok=False,
                 sent_count=0,
                 reason=reason,
-                backup_taken=False,
             )
 
-        backup_taken = False
         if mutates_kit:
-            try:
-                backup_ok = bool(self._backup(plan))
-            except _PORT_ERRORS:
-                backup_ok = False
-            if not backup_ok:
-                return ArmedApplyResult(
-                    device_id=device.device_id,
-                    ok=False,
-                    sent_count=0,
-                    reason="pre-write backup failed; send refused",
-                    backup_taken=False,
-                )
-            backup_taken = True
+            raise KitMutationUnsupportedError(
+                "armed_apply_kit_mutation_unsupported: persistent kit/sound "
+                "writes are disabled because real capture-before-write and a "
+                "restore path are not implemented; only non-mutating "
+                "(RAM-only) live-dial CC sends are permitted",
+                context={"device_id": device.device_id, "action_id": action_id},
+            )
 
         port = self._port
+        emit = device.to_cc_messages if renderer is None else renderer
         sent = 0
-        for triple in device.to_cc_messages(plan):
+        for triple in emit(plan):
             try:
                 port.send(triple)
             except _PORT_ERRORS as exc:
@@ -297,7 +376,6 @@ class ArmedApplySession:
             ok=True,
             sent_count=sent,
             reason="",
-            backup_taken=backup_taken,
         )
 
     def disarm(self) -> None:

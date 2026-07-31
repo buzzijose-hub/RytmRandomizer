@@ -7,7 +7,7 @@ These tests pin the frozen contract:
 * exact-name output resolution fails closed on missing/duplicate names,
 * every apply requires a prior single-use per-action confirmation,
 * an unready plan is refused via the ReadyPlan duck,
-* a failed pre-write backup refuses the send,
+* a kit/sound-MUTATING apply is refused outright (no backup, no restore),
 * a provider error mid-send auto-disarms — and NEVER auto-re-arms,
 * guarded_send / hardware_send route readiness through the same helper.
 """
@@ -23,6 +23,7 @@ from rytm_randomizer.senders.armed_apply import (
     ArmedApplyError,
     ArmedApplyResult,
     ArmedApplySession,
+    KitMutationUnsupportedError,
     plan_readiness,
 )
 from rytm_randomizer.senders.guarded import guarded_send
@@ -94,25 +95,14 @@ class _FakeOpener:
 def _make_session(
     *,
     opener: _FakeOpener | None = None,
-    backup_ok: bool = True,
-    backup_raises: bool = False,
-) -> tuple[ArmedApplySession, _FakeOpener, list[object]]:
+) -> tuple[ArmedApplySession, _FakeOpener]:
     opener = opener if opener is not None else _FakeOpener()
-    backups: list[object] = []
-
-    def _backup(plan: object) -> bool:
-        if backup_raises:
-            raise RuntimeError("backup blew up")
-        backups.append(plan)
-        return backup_ok
-
     session = ArmedApplySession(
         opener=opener,
         port_name=_PORT,
-        backup=_backup,
         arm_token=_TOKEN,
     )
-    return session, opener, backups
+    return session, opener
 
 
 # ---------------------------------------------------------------------------
@@ -122,26 +112,12 @@ def _make_session(
 
 def test_construction_requires_port_name() -> None:
     with pytest.raises(ArmedApplyError, match="port_name_required"):
-        ArmedApplySession(
-            opener=_FakeOpener(), port_name="", backup=lambda _p: True, arm_token=_TOKEN
-        )
+        ArmedApplySession(opener=_FakeOpener(), port_name="", arm_token=_TOKEN)
 
 
 def test_construction_requires_arm_token() -> None:
     with pytest.raises(ArmedApplyError, match="token_required"):
-        ArmedApplySession(
-            opener=_FakeOpener(), port_name=_PORT, backup=lambda _p: True, arm_token=""
-        )
-
-
-def test_construction_requires_callable_backup_hook() -> None:
-    with pytest.raises(ArmedApplyError, match="backup_hook_required"):
-        ArmedApplySession(
-            opener=_FakeOpener(),
-            port_name=_PORT,
-            backup=None,  # type: ignore[arg-type]
-            arm_token=_TOKEN,
-        )
+        ArmedApplySession(opener=_FakeOpener(), port_name=_PORT, arm_token="")
 
 
 # ---------------------------------------------------------------------------
@@ -150,7 +126,7 @@ def test_construction_requires_callable_backup_hook() -> None:
 
 
 def test_arm_requires_exact_token_and_opens_port() -> None:
-    session, opener, _ = _make_session()
+    session, opener = _make_session()
     assert session.is_armed is False
     session.arm(_TOKEN)
     assert session.is_armed is True
@@ -159,7 +135,7 @@ def test_arm_requires_exact_token_and_opens_port() -> None:
 
 
 def test_arm_refuses_empty_token() -> None:
-    session, opener, _ = _make_session()
+    session, opener = _make_session()
     with pytest.raises(ArmedApplyError, match="token_required"):
         session.arm("")
     assert session.is_armed is False
@@ -167,7 +143,7 @@ def test_arm_refuses_empty_token() -> None:
 
 
 def test_arm_refuses_mismatched_token() -> None:
-    session, opener, _ = _make_session()
+    session, opener = _make_session()
     with pytest.raises(ArmedApplyError, match="token_mismatch"):
         session.arm("wrong-token")
     assert session.is_armed is False
@@ -175,14 +151,14 @@ def test_arm_refuses_mismatched_token() -> None:
 
 
 def test_arm_refuses_non_string_token() -> None:
-    session, _, _ = _make_session()
+    session, _ = _make_session()
     with pytest.raises(ArmedApplyError, match="token_required"):
         session.arm(None)  # type: ignore[arg-type]
     assert session.is_armed is False
 
 
 def test_arm_while_armed_requires_explicit_disarm_first() -> None:
-    session, _, _ = _make_session()
+    session, _ = _make_session()
     session.arm(_TOKEN)
     with pytest.raises(ArmedApplyError, match="already_armed"):
         session.arm(_TOKEN)
@@ -191,7 +167,7 @@ def test_arm_while_armed_requires_explicit_disarm_first() -> None:
 
 def test_arm_stays_disarmed_when_opener_raises_backend_error() -> None:
     opener = _FakeOpener(raises=OSError("no backend"))
-    session, _, _ = _make_session(opener=opener)
+    session, _ = _make_session(opener=opener)
     with pytest.raises(ArmedApplyError, match="port_open_failed"):
         session.arm(_TOKEN)
     assert session.is_armed is False
@@ -199,7 +175,7 @@ def test_arm_stays_disarmed_when_opener_raises_backend_error() -> None:
 
 def test_arm_stays_disarmed_when_opener_raises_armed_apply_error() -> None:
     opener = _FakeOpener(raises=ArmedApplyError("armed_apply_output_port_not_found: x"))
-    session, _, _ = _make_session(opener=opener)
+    session, _ = _make_session(opener=opener)
     with pytest.raises(ArmedApplyError, match="not_found"):
         session.arm(_TOKEN)
     assert session.is_armed is False
@@ -211,133 +187,193 @@ def test_arm_stays_disarmed_when_opener_raises_armed_apply_error() -> None:
 
 
 def test_confirm_requires_armed_state() -> None:
-    session, _, _ = _make_session()
+    session, _ = _make_session()
     with pytest.raises(ArmedApplyError, match="not_armed"):
         session.confirm("apply-1")
 
 
 def test_confirm_requires_non_empty_action_id() -> None:
-    session, _, _ = _make_session()
+    session, _ = _make_session()
     session.arm(_TOKEN)
     with pytest.raises(ArmedApplyError, match="action_id_required"):
         session.confirm("")
 
 
 def test_apply_requires_armed_state() -> None:
-    session, _, _ = _make_session()
+    session, _ = _make_session()
     with pytest.raises(ArmedApplyError, match="not_armed"):
-        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1")
+        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1", mutates_kit=False)
 
 
 def test_apply_requires_prior_confirmation() -> None:
-    session, opener, _ = _make_session()
+    session, opener = _make_session()
     session.arm(_TOKEN)
     with pytest.raises(ArmedApplyError, match="not_confirmed"):
-        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1")
+        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1", mutates_kit=False)
     assert opener.port.sent == []
 
 
 def test_confirmation_is_single_use() -> None:
-    session, opener, _ = _make_session()
+    session, opener = _make_session()
     session.arm(_TOKEN)
     session.confirm("apply-1")
-    result = session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1")
+    result = session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1", mutates_kit=False)
     assert result.ok is True
     with pytest.raises(ArmedApplyError, match="not_confirmed"):
-        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1")
+        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1", mutates_kit=False)
     assert len(opener.port.sent) == 2
 
 
 def test_confirmation_is_consumed_even_when_plan_is_refused() -> None:
-    session, _, _ = _make_session()
+    session, _ = _make_session()
     session.arm(_TOKEN)
     session.confirm("apply-1")
     refused = session.apply(
-        _FakeDevice(), _FakePlan(ready=False, readiness_reason="nope"), action_id="apply-1"
+        _FakeDevice(),
+        _FakePlan(ready=False, readiness_reason="nope"),
+        action_id="apply-1",
+        mutates_kit=False,
     )
     assert refused.ok is False
     with pytest.raises(ArmedApplyError, match="not_confirmed"):
-        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1")
+        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1", mutates_kit=False)
 
 
 # ---------------------------------------------------------------------------
-# Plan readiness + backup gates.
+# Plan readiness + the kit/sound mutation refusal.
 # ---------------------------------------------------------------------------
 
 
 def test_apply_refuses_unready_plan_with_duck_reason() -> None:
-    session, opener, backups = _make_session()
+    session, opener = _make_session()
     session.arm(_TOKEN)
     session.confirm("apply-1")
     result = session.apply(
         _FakeDevice(),
         _FakePlan(ready=False, readiness_reason="missing routing"),
         action_id="apply-1",
+        mutates_kit=False,
     )
     assert result == ArmedApplyResult(
         device_id="fake_device",
         ok=False,
         sent_count=0,
         reason="missing routing",
-        backup_taken=False,
     )
     assert opener.port.sent == []
-    assert backups == []
 
 
 def test_apply_refuses_plan_without_ready_attribute() -> None:
-    session, opener, _ = _make_session()
+    session, opener = _make_session()
     session.arm(_TOKEN)
     session.confirm("apply-1")
-    result = session.apply(_FakeDevice(), object(), action_id="apply-1")
+    result = session.apply(_FakeDevice(), object(), action_id="apply-1", mutates_kit=False)
     assert result.ok is False
     assert result.reason == "plan is not ready"
     assert opener.port.sent == []
 
 
-def test_backup_runs_before_send_and_is_recorded() -> None:
-    session, opener, backups = _make_session()
+def test_kit_mutating_apply_is_refused_outright() -> None:
+    """The headline capability removal: no persistent write reaches the wire.
+
+    An in-memory history snapshot is not a device backup and there is no
+    restore path, so the seam refuses rather than pretending the write is
+    reversible. ``mutates_kit`` defaults to ``True`` precisely so a caller
+    must opt in to the permitted non-mutating case.
+    """
+
+    session, opener = _make_session()
     session.arm(_TOKEN)
     session.confirm("apply-1")
-    plan = _FakePlan()
-    result = session.apply(_FakeDevice(), plan, action_id="apply-1")
-    assert result.ok is True
-    assert result.backup_taken is True
-    assert backups == [plan]
-    assert opener.port.sent == [(0, 10, 20), (1, 11, 21)]
-    assert result.sent_count == 2
-
-
-def test_backup_failure_refuses_send() -> None:
-    session, opener, _ = _make_session(backup_ok=False)
-    session.arm(_TOKEN)
-    session.confirm("apply-1")
-    result = session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1")
-    assert result.ok is False
-    assert result.backup_taken is False
-    assert "backup failed" in result.reason
+    with pytest.raises(KitMutationUnsupportedError, match="kit_mutation_unsupported"):
+        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1")
     assert opener.port.sent == []
-    assert session.is_armed is True  # backup refusal does not disarm
+    # The refusal is not a fault: the session stays armed for RAM-only sends.
+    assert session.is_armed is True
 
 
-def test_backup_exception_refuses_send() -> None:
-    session, opener, _ = _make_session(backup_raises=True)
+def test_kit_mutation_refusal_is_a_fingerprinted_taxonomy_member() -> None:
+    from rytm_randomizer.observability.errors import MidiError
+
+    assert issubclass(KitMutationUnsupportedError, ArmedApplyError)
+    assert issubclass(KitMutationUnsupportedError, MidiError)
+    assert KitMutationUnsupportedError.fingerprint == "midi.armed_apply.kit_mutation_unsupported"
+
+
+def test_kit_mutation_refusal_carries_structured_context() -> None:
+    session, _ = _make_session()
     session.arm(_TOKEN)
     session.confirm("apply-1")
-    result = session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1")
-    assert result.ok is False
-    assert opener.port.sent == []
+    with pytest.raises(KitMutationUnsupportedError) as excinfo:
+        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1")
+    assert excinfo.value.context == {"device_id": "fake_device", "action_id": "apply-1"}
 
 
-def test_non_mutating_apply_skips_backup() -> None:
-    session, opener, backups = _make_session(backup_ok=False)
+def test_non_mutating_apply_transmits_without_any_backup() -> None:
+    """RAM-only live-dial CC sends stay enabled — the permitted armed write."""
+
+    session, opener = _make_session()
     session.arm(_TOKEN)
     session.confirm("apply-1")
     result = session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1", mutates_kit=False)
     assert result.ok is True
-    assert result.backup_taken is False
-    assert backups == []
-    assert len(opener.port.sent) == 2
+    assert result.sent_count == 2
+    assert opener.port.sent == [(0, 10, 20), (1, 11, 21)]
+
+
+def test_apply_uses_an_injected_renderer_instead_of_the_device() -> None:
+    """A caller whose plan already carries wire packets projects them directly."""
+
+    session, opener = _make_session()
+    session.arm(_TOKEN)
+    session.confirm("apply-1")
+    seen: list[object] = []
+
+    def _renderer(plan: object) -> list[tuple[int, int, int]]:
+        seen.append(plan)
+        return [(3, 44, 55)]
+
+    plan = _FakePlan()
+    result = session.apply(
+        _FakeDevice(),
+        plan,
+        action_id="apply-1",
+        mutates_kit=False,
+        renderer=_renderer,
+    )
+    assert result.ok is True
+    assert seen == [plan]
+    # The device's own triples were NOT used.
+    assert opener.port.sent == [(3, 44, 55)]
+
+
+def test_apply_fails_closed_when_the_port_rejects_the_message_type() -> None:
+    """A ``TypeError`` from the port refuses + auto-disarms, never escapes raw.
+
+    A real ``mido`` port raises ``TypeError`` for a non-``mido.Message``.
+    The wire adapter prevents that, but the seam must still fail closed.
+    """
+
+    class _TypeStrictPort:
+        def __init__(self) -> None:
+            self.sent: list[object] = []
+
+        def send(self, message: object) -> None:
+            raise TypeError(f"mido port requires a mido.Message, got {type(message).__name__}")
+
+    @dataclass
+    class _StrictOpener:
+        port: _TypeStrictPort = field(default_factory=_TypeStrictPort)
+
+        def open_exact(self, _port_name: str) -> _TypeStrictPort:
+            return self.port
+
+    session = ArmedApplySession(opener=_StrictOpener(), port_name=_PORT, arm_token=_TOKEN)
+    session.arm(_TOKEN)
+    session.confirm("apply-1")
+    with pytest.raises(ArmedApplyError, match="auto_disarmed"):
+        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1", mutates_kit=False)
+    assert session.is_armed is False
 
 
 # ---------------------------------------------------------------------------
@@ -347,25 +383,25 @@ def test_non_mutating_apply_skips_backup() -> None:
 
 def test_provider_error_mid_send_auto_disarms() -> None:
     opener = _FakeOpener(port=_FakePort(fail_after=1))
-    session, _, _ = _make_session(opener=opener)
+    session, _ = _make_session(opener=opener)
     session.arm(_TOKEN)
     session.confirm("apply-1")
     with pytest.raises(ArmedApplyError, match="auto_disarmed"):
-        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1")
+        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1", mutates_kit=False)
     assert session.is_armed is False
     assert opener.port.sent == [(0, 10, 20)]
 
 
 def test_never_auto_re_arms_after_provider_error() -> None:
     opener = _FakeOpener(port=_FakePort(fail_after=0))
-    session, _, _ = _make_session(opener=opener)
+    session, _ = _make_session(opener=opener)
     session.arm(_TOKEN)
     session.confirm("apply-1")
     with pytest.raises(ArmedApplyError, match="auto_disarmed"):
-        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1")
+        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1", mutates_kit=False)
     # Still disarmed: apply and confirm both refuse until an explicit arm.
     with pytest.raises(ArmedApplyError, match="not_armed"):
-        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-2")
+        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-2", mutates_kit=False)
     with pytest.raises(ArmedApplyError, match="not_armed"):
         session.confirm("apply-2")
     # An explicit re-arm is required — and works.
@@ -375,7 +411,7 @@ def test_never_auto_re_arms_after_provider_error() -> None:
 
 
 def test_disarm_is_idempotent_and_closes_port() -> None:
-    session, opener, _ = _make_session()
+    session, opener = _make_session()
     session.arm(_TOKEN)
     session.disarm()
     assert session.is_armed is False
@@ -386,20 +422,20 @@ def test_disarm_is_idempotent_and_closes_port() -> None:
 
 def test_disarm_swallows_port_close_errors() -> None:
     opener = _FakeOpener(port=_FakePort(close_raises=True))
-    session, _, _ = _make_session(opener=opener)
+    session, _ = _make_session(opener=opener)
     session.arm(_TOKEN)
     session.disarm()
     assert session.is_armed is False
 
 
 def test_disarm_clears_pending_confirmations() -> None:
-    session, _, _ = _make_session()
+    session, _ = _make_session()
     session.arm(_TOKEN)
     session.confirm("apply-1")
     session.disarm()
     session.arm(_TOKEN)
     with pytest.raises(ArmedApplyError, match="not_confirmed"):
-        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1")
+        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1", mutates_kit=False)
 
 
 def test_disarm_handles_port_without_close_method() -> None:
@@ -417,9 +453,7 @@ def test_disarm_handles_port_without_close_method() -> None:
         def open_exact(self, _port_name: str) -> _NoClosePort:
             return self.port
 
-    session = ArmedApplySession(
-        opener=_NoCloseOpener(), port_name=_PORT, backup=lambda _p: True, arm_token=_TOKEN
-    )
+    session = ArmedApplySession(opener=_NoCloseOpener(), port_name=_PORT, arm_token=_TOKEN)
     session.arm(_TOKEN)
     session.disarm()
     assert session.is_armed is False

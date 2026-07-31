@@ -118,6 +118,7 @@ from .handlers import (
     emit_initial_events,
     handle_command,
     resolve_connection_phase,
+    session_is_armed,
 )
 from .protocol import (
     CLOSE_CODE_MESSAGE_TOO_BIG,
@@ -621,7 +622,7 @@ def create_app(
 
         return {
             "version": APP_VERSION,
-            "mode": "live" if session.device.is_armed else "mock",
+            "mode": "live" if session_is_armed(session) else "mock",
             "connection_phase": resolve_connection_phase(session),
         }
 

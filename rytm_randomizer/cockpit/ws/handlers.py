@@ -67,6 +67,7 @@ from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Final, Protocol, SupportsFloat, SupportsInt, cast, runtime_checkable
 
+from ...devices import get_device
 from ...observability.errors import RytmRandomizerError
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
@@ -117,7 +118,7 @@ from .protocol import (
     EVENT_SNAPSHOT_CHANGED,
     WS_ERROR_CODES,
 )
-from .session import MAX_PRE_WRITE_BACKUPS, CockpitSession
+from .session import CockpitSession
 
 _logger = get_logger(__name__)
 """Module logger for the cockpit WS command dispatcher.
@@ -171,14 +172,33 @@ class HandlerResult:
 # ---------------------------------------------------------------------------
 
 
+def session_is_armed(session: CockpitSession) -> bool:
+    """True when this session holds the one live outbound MIDI handle.
+
+    The :class:`~rytm_randomizer.senders.armed_apply.ArmedApplySession`
+    **is** the armed state: it owns the only real output port a cockpit
+    session ever opens. ``session.device`` deliberately stays the passive
+    adapter across an arm so there is exactly one output handle (a second
+    adapter holding its own port was the two-handles defect), which means
+    the device's own ``is_armed`` can no longer answer this question.
+
+    ``session.device.is_armed`` is still consulted so a directly-injected
+    live adapter (used by a handful of harnesses that never call ``arm``)
+    keeps reporting ``live``.
+    """
+
+    return session.armed_apply is not None or session.device.is_armed
+
+
 def _build_session_status(session: CockpitSession) -> dict[str, object]:
     """Construct the ``session_status`` event payload from the live session."""
 
+    armed = session_is_armed(session)
     return {
         "type": EVENT_SESSION_STATUS,
-        "armed": session.device.is_armed,
+        "armed": armed,
         "midi_port": _midi_port(session),
-        "mode": "live" if session.device.is_armed else "mock",
+        "mode": "live" if armed else "mock",
         "connection_phase": _connection_phase(session),
         "unsaved_sends": session.unsaved_sends,
     }
@@ -199,7 +219,7 @@ def resolve_connection_phase(session: CockpitSession) -> str:
     no hardware link at all.
     """
 
-    if session.device.is_armed:
+    if session_is_armed(session):
         return "armed"
     manager = active_connection_manager()
     if manager is not None:
@@ -226,14 +246,19 @@ def build_connection_changed(state: ConnectionState) -> dict[str, object]:
 
 
 def _midi_port(session: CockpitSession) -> str | None:
-    """Return the device adapter's MIDI port name, or ``None`` if not exposed.
+    """Return the armed output-port name, or ``None`` when passive.
 
-    The :class:`DeviceAdapter` Protocol doesn't require a ``midi_port``
-    attribute — only the real-MIDI adapter has one. We probe with
-    :func:`getattr` so the mock adapter (no port) and the real adapter
-    (port name string) both work without an ``isinstance`` ladder.
+    The armed session is the authority: it owns the only real output port
+    and knows the exact name the operator confirmed. Falling back to the
+    device adapter's optional ``midi_port`` attribute keeps directly-
+    injected live adapters (harnesses that never call ``arm``) rendering a
+    port in the header strip. The :class:`DeviceAdapter` Protocol doesn't
+    require ``midi_port``, so the probe stays :func:`getattr`-based rather
+    than an ``isinstance`` ladder.
     """
 
+    if session.armed_apply is not None:
+        return session.armed_apply.port_name
     port = getattr(session.device, "midi_port", None)
     if port is None:
         return None
@@ -612,7 +637,7 @@ async def _handle_prepare_send_plan(
     )
 
 
-async def _handle_send(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     if session.current_candidate is None:
         return HandlerResult(
             ack=_error_ack(ERR_VALIDATION, "no current candidate; set a profile and depth first")
@@ -622,6 +647,10 @@ async def _handle_send(_cmd: dict[str, object], session: CockpitSession) -> Hand
             ack=_error_ack(ERR_VALIDATION, "no ready send plan; run prepare_send_plan first")
         )
     sent_plan = session.current_send_plan
+    if session.armed_apply is not None:
+        refusal = _armed_send_over_seam(session, sent_plan, cmd)
+        if refusal is not None:
+            return refusal
     new_snapshot = session.device.apply_send_plan(sent_plan)
     session.history_store.append_post_send(new_snapshot, via="send")
     session.unsaved_sends += 1
@@ -1361,50 +1390,125 @@ _ARM_DEVICE_LOST_FINGERPRINT: Final[str] = "cockpit.arm.device_lost"
 """Journal fingerprint for the watchdog's device-gone auto-disarm."""
 
 
-def _make_pre_write_backup(session: CockpitSession) -> Callable[[object], bool]:
-    """Build the armed seam's required pre-write backup hook.
+_ARM_SEND_REFUSED_FINGERPRINT: Final[str] = "cockpit.arm.send_refused"
+"""Journal fingerprint for an armed SEND the seam refused."""
 
-    The hook captures the operator's **current** snapshot (from the
-    history store — the passive source of truth, never the real adapter's
-    placeholder capture) into ``session.pre_write_backups`` immediately
-    before any armed kit/sound mutation, keeping the most recent
-    :data:`~rytm_randomizer.cockpit.ws.session.MAX_PRE_WRITE_BACKUPS`.
-    Returning ``False`` (no current snapshot to back up) makes the seam
-    refuse the send — reversibility is a precondition, not best-effort.
+_ARMED_SEND_DEVICE_ID: Final[str] = "analog_rytm_mk2"
+"""Registered device the cockpit's armed send reports against.
+
+The cockpit is Rytm-only today. The device is passed to the seam purely
+for its ``device_id`` (result attribution) and readiness vocabulary — the
+wire triples come from the plan's own preflight-resolved packets via
+:func:`_send_plan_triples`, never from a device strategy.
+"""
+
+
+def _send_plan_triples(plan: object) -> list[tuple[int, int, int]]:
+    """Project a prepared :class:`CockpitSendPlan` into wire triples.
+
+    The seam's :data:`~rytm_randomizer.senders.armed_apply.PlanRenderer`
+    for the cockpit. Preflight already resolved every packet's
+    ``(channel, control, value)``; this projection transmits exactly those
+    and recomputes nothing at the hardware boundary (the SEND contract in
+    :meth:`~rytm_randomizer.cockpit.device.adapter.DeviceAdapter.apply_send_plan`).
     """
 
-    def _backup(_plan: object) -> bool:
-        history = session.history_store.current
-        entry = next(
-            (e for e in history.entries if e.snapshot.snapshot_id == history.current_id),
-            None,
-        )
-        if entry is None:
-            return False
-        session.pre_write_backups.append(entry.snapshot.to_dict())
-        overflow = len(session.pre_write_backups) - MAX_PRE_WRITE_BACKUPS
-        if overflow > 0:
-            del session.pre_write_backups[:overflow]
-        return True
+    if not isinstance(plan, CockpitSendPlan):  # pragma: no cover - defensive
+        raise TypeError("armed cockpit send requires a CockpitSendPlan")
+    return [(packet.channel, packet.control, packet.value) for packet in plan.packets]
 
-    return _backup
+
+def _armed_send_over_seam(
+    session: CockpitSession,
+    plan: CockpitSendPlan,
+    cmd: Mapping[str, object],
+) -> HandlerResult | None:
+    """Transmit ``plan`` through the ArmedApply seam; ``None`` when sent.
+
+    This is the **only** way a cockpit SEND reaches hardware. Returning a
+    :class:`HandlerResult` means the seam refused and the caller must not
+    proceed; returning ``None`` means the bytes went out and the caller
+    should update snapshot/history state as usual.
+
+    The command must carry its own ``confirm: true``: "armed" is a session
+    state, but every individual write is a separate operator decision, so
+    the per-action confirmation is minted here and consumed by
+    :meth:`~rytm_randomizer.senders.armed_apply.ArmedApplySession.apply`.
+
+    ``mutates_kit=False`` is passed deliberately and is load-bearing: a
+    cockpit SEND is a live-dial CC burst into the device's working RAM,
+    reversible by reloading the kit from the device's own memory. It is
+    **not** a persistent kit/sound write — those are refused outright by
+    the seam (:class:`~rytm_randomizer.senders.armed_apply.KitMutationUnsupportedError`)
+    because no capture-before-write or restore path exists. ``save`` /
+    ``commit_kit`` remains the un-implemented persistent path.
+    """
+
+    from ...senders.armed_apply import ArmedApplyError  # noqa: PLC0415
+
+    armed = session.armed_apply
+    if armed is None:  # pragma: no cover - guarded by the caller
+        return None
+    if cmd.get("confirm") is not True:
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION,
+                "armed send requires confirm: true (per-action operator confirmation)",
+            )
+        )
+
+    device = get_device(_ARMED_SEND_DEVICE_ID)
+    try:
+        armed.confirm(plan.plan_id)
+        result = armed.apply(
+            device,
+            plan,
+            action_id=plan.plan_id,
+            mutates_kit=False,
+            renderer=_send_plan_triples,
+        )
+    except ArmedApplyError as exc:
+        # A provider error already auto-disarmed the seam; drop the rest of
+        # the armed state so the session is honestly passive again.
+        if not armed.is_armed:
+            _teardown_armed_state(session)
+        _logger.warning(
+            "armed_send_refused",
+            extra={
+                "exception_type": type(exc).__name__,
+                "exception_repr": repr(exc),
+                "fingerprint": _ARM_SEND_REFUSED_FINGERPRINT,
+            },
+        )
+        session.error_journal.record(
+            _ARM_SEND_REFUSED_FINGERPRINT,
+            "armed send refused at the guarded seam",
+            context={"plan_id": plan.plan_id},
+        )
+        get_metrics().record_error(_ARM_SEND_REFUSED_FINGERPRINT)
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, "armed send refused at the guarded seam"),
+            events=[_build_session_status(session)],
+        )
+    if not result.ok:
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, "armed send refused: plan not ready"))
+    return None
 
 
 def _teardown_armed_state(session: CockpitSession) -> None:
     """Return the session to the passive baseline (idempotent).
 
-    Disarms the ArmedApply seam (best-effort port close) and restores the
-    pre-arm passive device adapter. Used by the ``disarm`` handler and by
-    the armed watchdog's device-gone auto-disarm; never re-arms.
+    Disarms the ArmedApply seam (best-effort port close). The device
+    adapter is never swapped on arm any more (the seam owns the only
+    output handle), so there is nothing to restore here. Used by the
+    ``disarm`` handler and by the armed watchdog's device-gone
+    auto-disarm; never re-arms.
     """
 
     armed = session.armed_apply
     session.armed_apply = None
     if armed is not None:
         armed.disarm()
-    if session.passive_device is not None:
-        session.device = session.passive_device
-        session.passive_device = None
 
 
 def build_armed_watchdog(
@@ -1451,21 +1555,49 @@ def build_armed_watchdog(
     return _on_connection_change
 
 
-def _resolve_arm_port_name(cmd: Mapping[str, object]) -> str | None:
-    """Resolve the exact output-port name an ``arm`` command targets.
+_ARM_PORT_REQUIRED: Final[str] = (
+    "arm requires an explicit port_name naming one enumerated MIDI output"
+)
+"""The single refusal text for every unusable ``port_name`` on ``arm``.
 
-    An explicit wire-supplied ``port_name`` wins; otherwise the passive
-    ConnectionManager's ``selected_output`` (when one is registered).
-    ``None`` means the command must fail — arming never guesses a port.
+Deliberately uniform: which of the four rejection reasons fired (missing,
+empty, unknown, ambiguous) is a detail the wire must not leak, and the
+operator's remedy is identical in all four cases — pick a port from the
+selector.
+"""
+
+
+def _resolve_arm_port_name(cmd: Mapping[str, object]) -> str | None:
+    """Resolve the exact output port an ``arm`` command targets, or ``None``.
+
+    **Fail closed, and never guess.** The operator must name the exact
+    instrument. With a Rytm and an Analog Four both plugged in, a
+    convenience auto-pick ("first Elektron-looking output") can arm the
+    wrong machine — so the ConnectionManager's ``selected_output`` is
+    deliberately *not* consulted here. That auto-pick still drives the
+    passive "listening" display, where guessing wrong is harmless.
+
+    ``None`` (the command must fail) whenever ``port_name`` is missing,
+    not a string, empty, absent from the live enumeration, or matches more
+    than one enumerated output.
+
+    When no ConnectionManager is registered (unit tests, embedded
+    harnesses) there is no enumeration to check against, so a well-formed
+    name is taken at face value; the seam's own
+    :class:`~rytm_randomizer.senders.hardware.ExactOutputOpener` still
+    fails closed against the provider a moment later.
     """
 
     raw = cmd.get("port_name")
-    if isinstance(raw, str) and raw:
-        return raw
+    if not isinstance(raw, str) or not raw:
+        return None
     manager = active_connection_manager()
-    if manager is not None:
-        return manager.state.selected_output
-    return None
+    if manager is None:
+        return raw
+    matches = [name for name in manager.state.available_outputs if name == raw]
+    if len(matches) != 1:
+        return None
+    return raw
 
 
 async def _handle_arm(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
@@ -1478,17 +1610,13 @@ async def _handle_arm(cmd: dict[str, object], session: CockpitSession) -> Handle
     token = cmd.get("arm_token")
     if not isinstance(token, str) or not token:
         return HandlerResult(ack=_error_ack(ERR_VALIDATION, "arm requires a non-empty arm_token"))
-    if session.device.is_armed or session.armed_apply is not None:
+    if session_is_armed(session):
         return HandlerResult(
             ack=_error_ack(ERR_VALIDATION, "session is already armed; disarm first")
         )
     port_name = _resolve_arm_port_name(cmd)
     if not port_name:
-        return HandlerResult(
-            ack=_error_ack(
-                ERR_VALIDATION, "no MIDI output port resolved; pass port_name explicitly"
-            )
-        )
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, _ARM_PORT_REQUIRED))
     provider = session.arm_port_provider
     if provider is None:
         if importlib.util.find_spec("mido") is None:
@@ -1504,12 +1632,10 @@ async def _handle_arm(cmd: dict[str, object], session: CockpitSession) -> Handle
     # Local imports keep the armed seam off the passive import path.
     from ...senders.armed_apply import ArmedApplyError, ArmedApplySession  # noqa: PLC0415
     from ...senders.hardware import ExactOutputOpener  # noqa: PLC0415
-    from ..device.real import RealMidiDeviceAdapter  # noqa: PLC0415
 
     armed_apply = ArmedApplySession(
         opener=ExactOutputOpener(provider),
         port_name=port_name,
-        backup=_make_pre_write_backup(session),
         arm_token=token,
     )
     try:
@@ -1537,8 +1663,12 @@ async def _handle_arm(cmd: dict[str, object], session: CockpitSession) -> Handle
                 ERR_VALIDATION, "arm failed: output port could not be resolved or opened"
             )
         )
-    session.passive_device = session.device
-    session.device = RealMidiDeviceAdapter(provider, port_name=port_name)
+    # The device adapter is deliberately NOT swapped for a real-MIDI one.
+    # ``armed_apply`` now owns the session's single output port; installing
+    # a second adapter here would open a second handle whose sends bypass
+    # every gate above (the defect this arm path exists to prevent). The
+    # passive adapter keeps modelling snapshot/history state; the seam does
+    # the transmitting.
     session.armed_apply = armed_apply
     return HandlerResult(
         ack={"ok": True, "armed": True, "midi_port": port_name},

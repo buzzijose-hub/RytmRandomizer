@@ -518,12 +518,24 @@ The cockpit defaults to a **mock device adapter**: it opens no MIDI port
 and sends no MIDI, even when you hit SEND. This is the same passive-
 default discipline the rest of the project uses.
 
-The real-MIDI path is gated behind an explicit arm step (configured per
-release; the design ships a tray menu item plus a settings surface). On
-the back end, arming swaps the `MockDeviceAdapter` for a
-`RealMidiDeviceAdapter` that wraps the existing
-`rytm_randomizer.mido_provider` and `rytm_randomizer.real_midi_adapter`
-boundary — the same path the armed CLI uses.
+The real-MIDI path is gated behind an explicit arm step. In the cockpit
+UI that means choosing the **exact** MIDI output port from the arm
+dialog's selector and entering the per-launch arm token — nothing is
+auto-selected, because with a Rytm and an Analog Four both connected a
+guess can arm the wrong instrument.
+
+On the back end, arming does **not** swap the device adapter. It
+constructs an `ArmedApplySession` (`rytm_randomizer.senders.armed_apply`)
+that opens the one real output port through
+`rytm_randomizer.mido_provider`, and every armed SEND routes through that
+session's `confirm()` + `apply()` lifecycle. `MockDeviceAdapter` keeps
+modelling snapshot/history state throughout.
+
+**What an armed SEND may and may not do:** live-dial CC changes (the
+device's working RAM) are sent. Writes to *saved* kits and sounds are
+refused, because capture-before-write and restore are not implemented —
+so the app cannot promise you can undo them. Reload the kit from the
+device to discard live-dial changes.
 
 **Hardware rules that do not change:**
 

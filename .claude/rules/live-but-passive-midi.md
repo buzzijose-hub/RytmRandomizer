@@ -10,14 +10,14 @@ The application is **live but passive** by default:
 - **Inputs are free.** Launch may enumerate ports (`list_input_names`, `list_output_names`) and open MIDI **inputs** at any time, without arming and without confirmation. Read-only listening (including SysEx capture) never interrupts the device's sound output and gives the operator immediate connection-health feedback. This half of the model is never restricted.
 - **Outputs are armed.** Every **outbound** transmit — constructing a real output port, defining a hardware send — routes through the `senders` ArmedApply seam, behind an explicit **in-UI arm action + confirmation**. There is no "transmit because a port happened to be open" path.
 - **Arming never survives a disconnect.** After a device reconnect (cable pull, power cycle, backend restart), the app returns to the passive state. Never auto-re-arm.
-- **Backup before mutation.** Any kit/sound mutation transmitted to hardware is preceded by an automatic pre-write backup of the affected kit/sound, so every armed write is reversible.
+- **Kit/sound mutation is DISABLED, not "backed up".** The model requires that every armed write be reversible. Reversibility needs a real capture-before-write (a SysEx kit/sound dump read back from the device) **and** a restore path that can push it back. Neither exists today, so the seam refuses every kit/sound-mutating write outright with `KitMutationUnsupportedError` (`midi.armed_apply.kit_mutation_unsupported`). An in-memory history snapshot is **not** a device backup — it is mock-originated state nothing can restore from, and shipping it as a "pre-write backup" claimed a guarantee the code could not deliver. Non-mutating live-dial CC/NRPN sends (working-RAM only, no persistent save command) remain **enabled**: they are undone by reloading the kit from the device's own memory, so they need no backup of ours. Re-enabling persistent writes requires implementing real capture + restore first, and updating this clause in the same PR.
 
 ## What you MUST do
 
 1. **Route all outbound MIDI through the `senders` ArmedApply seam** (`rytm_randomizer/senders/guarded.py` + `senders/hardware.py`). Engines, runners, and plans call `midi_io.send_cc` on a **dependency-injected** `Sender` protocol; whether that sender is a mock or a real port is decided at the armed boundary, never at the call site.
 2. **Keep the transmit whitelist shrinking.** `_ALLOWED_TRANSMIT_MODULES` in `tests/architecture/test_armed_entry_points.py` is the frozen set of modules allowed to construct real output ports or define the hardware send. Adding an entry requires reviewer sign-off recorded in the PR body; the long-term direction is that WS-4 folds entry points into the seam and entries come OFF the list.
 3. **Keep `import mido` / `import rtmidi` inside the boundary modules only** — `real_midi_adapter.py`, `mido_provider.py`, and (lazily, in-method) `midi_io.py`. Enforced repo-wide (not just package-wide) by `test_repo_root_perimeter.py`.
-4. **Precede every hardware kit/sound write with an automatic backup** of the target, taken through the passive read path.
+4. **Keep persistent kit/sound writes refused at the seam.** Call `ArmedApplySession.apply(..., mutates_kit=False)` only for genuinely RAM-only live-dial traffic; anything that changes saved kit/sound memory must keep the default `mutates_kit=True` and therefore be refused. Do not add a bypass.
 5. **Run both enforcement modules before pushing anything MIDI-adjacent:**
    ```bash
    .venv/bin/python -m pytest tests/architecture/test_armed_entry_points.py tests/architecture/test_repo_root_perimeter.py -q
@@ -28,7 +28,7 @@ The application is **live but passive** by default:
 - **Do not gate input opening or port enumeration behind arming.** Passive listening is the product's connection-health signal; restricting it breaks the model in the other direction.
 - **Do not construct a real output port or define a hardware send outside the whitelist.** No new top-level `tools/` script with its own `open_output(...)` (the PR #213 failure mode); no per-feature "quick send" helpers.
 - **Do not auto-re-arm after reconnect,** persist an armed flag across sessions, or arm implicitly as a side effect of another action. Arming is an explicit, per-session, in-UI operator decision.
-- **Do not transmit a kit/sound mutation without the pre-write backup.**
+- **Do not transmit a kit/sound mutation at all**, and do not reintroduce a nominal "backup" hook to unlock one. Do not pass `mutates_kit=False` for a write that touches persistent memory just to get past the gate.
 - **Do not put `import mido` / `from mido` at module top level anywhere in the repo,** including tooling and tests.
 - **Do not fork a second guarded-send implementation.** One ArmedApply seam; devices plug in via the `devices/` registry.
 

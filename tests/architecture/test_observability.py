@@ -352,6 +352,12 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # Generic CC/NRPN plan delivery: carries exact successful/expected
         # message counts so an armed A4 operator can recover from a partial send.
         "MidiEventPlanSendError",
+        # ArmedApply seam: a kit/sound-MUTATING armed write is refused
+        # outright because real capture-before-write + a restore path are
+        # not implemented. Subclasses ArmedApplyError -> MidiError, so it
+        # is a taxonomy member; listed here because the AST scan matches
+        # on the raised class name, not the runtime hierarchy.
+        "KitMutationUnsupportedError",
         # Cockpit profile registry (PR 7 — M7 + M6): atomic save +
         # classified load errors. ``ProfileAlreadyExistsError``
         # multi-inherits :class:`DataError` + :class:`FileExistsError`

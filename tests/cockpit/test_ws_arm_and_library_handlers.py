@@ -4,7 +4,8 @@ Pins the in-UI half of the Live-but-Passive model at the handler layer:
 
 * arm requires token + confirm and routes ONLY through the ArmedApply
   seam (injected fake provider — the mock adapter stays the default),
-* disarm tears the armed state down and restores the passive device,
+* disarm tears the armed state down (the device adapter is never
+  swapped — the seam owns the one output handle),
 * the armed watchdog auto-disarms when the device disappears (and never
   re-arms),
 * session_status / connection_phase reflect armed,
@@ -45,7 +46,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
     WS_SUBPROTOCOL,
 )
 from rytm_randomizer.cockpit.ws.server import APP_VERSION, create_app
-from rytm_randomizer.cockpit.ws.session import MAX_PRE_WRITE_BACKUPS, CockpitSession
+from rytm_randomizer.cockpit.ws.session import CockpitSession
 
 pytestmark = pytest.mark.fast
 
@@ -121,7 +122,15 @@ def _no_active_manager() -> object:
 # ---------------------------------------------------------------------------
 
 
-def test_arm_swaps_session_onto_real_adapter_via_seam(tmp_path: Path) -> None:
+def test_arm_installs_the_seam_and_never_a_second_adapter(tmp_path: Path) -> None:
+    """Arming yields exactly ONE output handle: the ArmedApply seam's.
+
+    Regression guard for the two-handles defect: arming used to swap in a
+    ``RealMidiDeviceAdapter`` that opened its own port, so cockpit sends
+    bypassed every gate on the seam. The device adapter must now be left
+    exactly as it was.
+    """
+
     session = _make_session(tmp_path)
     session.arm_port_provider = _FakeProvider()
     passive = session.device
@@ -131,8 +140,10 @@ def test_arm_swaps_session_onto_real_adapter_via_seam(tmp_path: Path) -> None:
     assert ack["midi_port"] == _OUT_PORT
     assert session.armed_apply is not None
     assert session.armed_apply.is_armed is True
-    assert session.passive_device is passive
-    assert session.device.is_armed is True
+    # The passive adapter is untouched — no second, ungated output handle.
+    assert session.device is passive
+    assert session.device.is_armed is False
+    assert handlers.session_is_armed(session) is True
     # The post-ack event reflects the armed session status.
     assert session.pending_events == [handlers._build_session_status(session)]
     status = session.pending_events[0]
@@ -150,7 +161,7 @@ def test_arm_requires_confirm_true(tmp_path: Path) -> None:
     assert ack["code"] == "validation_error"
     assert "confirm" in ack["message"]
     assert session.armed_apply is None
-    assert session.device.is_armed is False
+    assert handlers.session_is_armed(session) is False
 
 
 def test_arm_requires_non_empty_token(tmp_path: Path) -> None:
@@ -170,26 +181,115 @@ def test_arm_requires_resolved_port_name(tmp_path: Path) -> None:
     assert "port" in ack["message"]
 
 
-def test_arm_uses_connection_manager_selected_output_when_port_omitted(
-    tmp_path: Path,
-) -> None:
-    session = _make_session(tmp_path)
-    session.arm_port_provider = _FakeProvider()
+@dataclass
+class _TwoDeviceEnum:
+    """A Rytm AND an Analog Four visible at once — the ambiguous case."""
 
-    @dataclass
-    class _Enum:
-        def list_input_names(self) -> tuple[str, ...]:
-            return ("Elektron Analog Rytm MK2 In",)
+    outputs: tuple[str, ...] = (_OUT_PORT, "Elektron Analog Four MKII Out")
 
-        def list_output_names(self) -> tuple[str, ...]:
-            return (_OUT_PORT,)
+    def list_input_names(self) -> tuple[str, ...]:
+        return ("Elektron Analog Rytm MK2 In",)
 
-    manager = ConnectionManager(_Enum(), clock=lambda: 1.0)
+    def list_output_names(self) -> tuple[str, ...]:
+        return self.outputs
+
+
+def _register_manager(enum: object) -> ConnectionManager:
+    manager = ConnectionManager(enum, clock=lambda: 1.0)
     manager.poll_once()
     set_active_connection_manager(manager)
+    return manager
+
+
+def test_arm_never_auto_picks_a_port_when_port_name_is_omitted(
+    tmp_path: Path,
+) -> None:
+    """The convenience auto-pick must NOT feed the armed path.
+
+    ``ConnectionManager`` selects the first Elektron-looking output for its
+    passive ``listening`` display. With a Rytm and an A4 both connected,
+    inheriting that guess into ``arm`` can arm the wrong instrument — so
+    arming refuses rather than choosing.
+    """
+
+    session = _make_session(tmp_path)
+    session.arm_port_provider = _FakeProvider()
+    manager = _register_manager(_TwoDeviceEnum())
+    # The passive display still has its convenience pick...
+    assert manager.state.selected_output == _OUT_PORT
+
     ack = _arm(session, port_name=None)
+
+    # ...but arming does not inherit it.
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert "port_name" in ack["message"]
+    assert session.armed_apply is None
+
+
+def test_arm_accepts_an_exact_enumerated_port_name(tmp_path: Path) -> None:
+    """The operator's explicit choice arms exactly that instrument."""
+
+    session = _make_session(tmp_path)
+    session.arm_port_provider = _FakeProvider()
+    _register_manager(_TwoDeviceEnum())
+
+    ack = _arm(session, port_name=_OUT_PORT)
+
     assert ack["ok"] is True
     assert ack["midi_port"] == _OUT_PORT
+
+
+@pytest.mark.parametrize(
+    "port_name",
+    [
+        None,
+        "",
+        123,
+        "Elektron Analog Rytm",  # prefix of a real name, not an exact match
+        "elektron analog rytm mk2 out",  # case differs
+        "No Such Port",
+    ],
+)
+def test_arm_fails_closed_on_any_non_exact_port_name(tmp_path: Path, port_name: object) -> None:
+    """Missing, empty, mistyped, or unknown — all refuse identically."""
+
+    session = _make_session(tmp_path)
+    session.arm_port_provider = _FakeProvider()
+    _register_manager(_TwoDeviceEnum())
+
+    ack = _arm(session, port_name=port_name)
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert session.armed_apply is None
+
+
+def test_arm_fails_closed_when_the_enumeration_lists_the_name_twice(
+    tmp_path: Path,
+) -> None:
+    """Two identically-named outputs are ambiguous: refuse, never guess."""
+
+    session = _make_session(tmp_path)
+    session.arm_port_provider = _FakeProvider()
+    _register_manager(_TwoDeviceEnum(outputs=(_OUT_PORT, _OUT_PORT)))
+
+    ack = _arm(session, port_name=_OUT_PORT)
+
+    assert ack["ok"] is False
+    assert session.armed_apply is None
+
+
+def test_arm_without_a_connection_manager_trusts_the_seam_to_fail_closed(
+    tmp_path: Path,
+) -> None:
+    """No enumeration to check against -> the seam's opener is the gate."""
+
+    session = _make_session(tmp_path)
+    session.arm_port_provider = _FakeProvider()
+    set_active_connection_manager(None)
+
+    assert _arm(session, port_name=_OUT_PORT)["ok"] is True
 
 
 def test_arm_fails_closed_when_port_missing_from_enumeration(tmp_path: Path) -> None:
@@ -199,7 +299,7 @@ def test_arm_fails_closed_when_port_missing_from_enumeration(tmp_path: Path) -> 
     assert ack["ok"] is False
     assert ack["code"] == "validation_error"
     assert session.armed_apply is None
-    assert session.device.is_armed is False
+    assert handlers.session_is_armed(session) is False
     # The refusal lands in the bounded error journal.
     assert session.error_journal.entries[-1].fingerprint == "cockpit.arm.failed"
 
@@ -230,7 +330,7 @@ def test_arm_without_mido_and_without_injected_provider_fails_cleanly(
     assert ack["ok"] is False
     assert "mido" in ack["message"]
     assert session.armed_apply is None
-    assert session.device.is_armed is False
+    assert handlers.session_is_armed(session) is False
 
 
 # ---------------------------------------------------------------------------
@@ -238,7 +338,7 @@ def test_arm_without_mido_and_without_injected_provider_fails_cleanly(
 # ---------------------------------------------------------------------------
 
 
-def test_disarm_restores_passive_device(tmp_path: Path) -> None:
+def test_disarm_tears_down_the_seam_and_closes_the_one_port(tmp_path: Path) -> None:
     session = _make_session(tmp_path)
     provider = _FakeProvider()
     session.arm_port_provider = provider
@@ -248,8 +348,8 @@ def test_disarm_restores_passive_device(tmp_path: Path) -> None:
     assert ack["ok"] is True
     assert ack["armed"] is False
     assert session.armed_apply is None
-    assert session.passive_device is None
     assert session.device is passive
+    assert handlers.session_is_armed(session) is False
     assert provider.port.closed == 1
     status = session.pending_events[0]
     assert status["type"] == EVENT_SESSION_STATUS
@@ -290,7 +390,7 @@ def test_watchdog_auto_disarms_when_device_disappears(tmp_path: Path) -> None:
     watchdog = handlers.build_armed_watchdog(session, broadcasts.append)
     watchdog(_connection_state(phase="searching"))
     assert session.armed_apply is None
-    assert session.device.is_armed is False
+    assert handlers.session_is_armed(session) is False
     assert session.error_journal.entries[-1].fingerprint == "cockpit.arm.device_lost"
     assert len(broadcasts) == 1
     assert broadcasts[0]["type"] == EVENT_SESSION_STATUS
@@ -305,7 +405,7 @@ def test_watchdog_auto_disarms_when_armed_port_vanishes(tmp_path: Path) -> None:
     # Phase still listening, but the armed output port is gone.
     watchdog(_connection_state(phase="listening", outputs=("Some Other Port",)))
     assert session.armed_apply is None
-    assert session.device.is_armed is False
+    assert handlers.session_is_armed(session) is False
 
 
 def test_watchdog_keeps_armed_state_while_device_present(tmp_path: Path) -> None:
@@ -328,7 +428,7 @@ def test_watchdog_never_re_arms_on_reconnect(tmp_path: Path) -> None:
     # Device comes back: still disarmed (arming is an explicit operator act).
     watchdog(_connection_state(phase="listening", outputs=(_OUT_PORT,)))
     assert session.armed_apply is None
-    assert session.device.is_armed is False
+    assert handlers.session_is_armed(session) is False
 
 
 def test_watchdog_handles_armed_device_without_armed_apply_seam(tmp_path: Path) -> None:
@@ -350,10 +450,9 @@ def test_watchdog_handles_armed_device_without_armed_apply_seam(tmp_path: Path) 
     session.device = _ArmedDevice()  # type: ignore[assignment]
     watchdog = handlers.build_armed_watchdog(session)
     watchdog(_connection_state(phase="searching"))
-    # No armed_apply seam and no passive_device to restore: teardown is a
-    # safe no-op on both, and the journal still records the loss.
+    # No armed_apply seam to tear down: teardown is a safe no-op, and the
+    # journal still records the loss.
     assert session.armed_apply is None
-    assert session.passive_device is None
     assert session.error_journal.entries[-1].fingerprint == "cockpit.arm.device_lost"
 
 
@@ -386,7 +485,7 @@ def test_arm_builds_real_provider_when_none_injected_and_fails_closed(
     assert ack["ok"] is False
     assert ack["code"] == "validation_error"
     assert session.armed_apply is None
-    assert session.device.is_armed is False
+    assert handlers.session_is_armed(session) is False
 
 
 def test_connection_manager_journals_enumeration_faults(tmp_path: Path) -> None:
@@ -444,38 +543,35 @@ def test_watchdog_fires_from_connection_manager_notify_hook(tmp_path: Path) -> N
 
 
 # ---------------------------------------------------------------------------
-# Pre-write backup hook.
+# Kit/sound mutation is refused — no nominal "backup", no restore path.
 # ---------------------------------------------------------------------------
 
 
-def test_backup_hook_captures_current_snapshot_and_is_bounded(tmp_path: Path) -> None:
+@dataclass
+class _Plan:
+    ready: bool = True
+    readiness_reason: str = ""
+
+
+@dataclass
+class _Device:
+    device_id: str = "fake"
+
+    def to_cc_messages(self, _plan: object) -> tuple[tuple[int, int, int], ...]:
+        return ((0, 1, 2),)
+
+
+def test_armed_seam_refuses_a_kit_mutating_write(tmp_path: Path) -> None:
+    """End-to-end: arm through the handler, then attempt a persistent write.
+
+    The old behaviour took an in-memory history snapshot and called it a
+    "pre-write backup". It was not a device backup and nothing could
+    restore it, so the mutating write is now refused outright.
+    """
+
+    from rytm_randomizer.senders.armed_apply import KitMutationUnsupportedError
+
     session = _make_session(tmp_path)
-    hook = handlers._make_pre_write_backup(session)
-    for _ in range(MAX_PRE_WRITE_BACKUPS + 3):
-        assert hook(object()) is True
-    assert len(session.pre_write_backups) == MAX_PRE_WRITE_BACKUPS
-    current = session.history_store.current
-    assert session.pre_write_backups[-1]["snapshot_id"] == current.current_id
-
-
-def test_backup_hook_refuses_when_no_current_snapshot(tmp_path: Path) -> None:
-    session = CockpitSession(
-        profile_registry=ProfileRegistry(tmp_path / "profiles"),
-        history_store=HistoryStore(),
-        device=MockDeviceAdapter(initial=_make_default_snapshot()),
-    )
-    hook = handlers._make_pre_write_backup(session)
-    assert hook(object()) is False
-    assert session.pre_write_backups == []
-
-
-def test_armed_seam_refuses_send_when_backup_refuses(tmp_path: Path) -> None:
-    # End-to-end: arm through the handler, then drive the seam directly.
-    session = CockpitSession(
-        profile_registry=ProfileRegistry(tmp_path / "profiles"),
-        history_store=HistoryStore(),  # deliberately empty -> backup fails
-        device=MockDeviceAdapter(initial=_make_default_snapshot()),
-    )
     provider = _FakeProvider()
     session.arm_port_provider = provider
     assert _arm(session)["ok"] is True
@@ -483,22 +579,32 @@ def test_armed_seam_refuses_send_when_backup_refuses(tmp_path: Path) -> None:
     assert armed is not None
     armed.confirm("apply-1")
 
-    @dataclass
-    class _Plan:
-        ready: bool = True
-        readiness_reason: str = ""
-
-    @dataclass
-    class _Device:
-        device_id: str = "fake"
-
-        def to_cc_messages(self, _plan: object) -> tuple[tuple[int, int, int], ...]:
-            return ((0, 1, 2),)
-
-    result = armed.apply(_Device(), _Plan(), action_id="apply-1")
-    assert result.ok is False
-    assert "backup failed" in result.reason
+    with pytest.raises(KitMutationUnsupportedError):
+        armed.apply(_Device(), _Plan(), action_id="apply-1")
     assert provider.port.sent == []
+
+
+def test_armed_seam_permits_a_non_mutating_ram_only_send(tmp_path: Path) -> None:
+    """The RAM-only live-dial CC path stays enabled (maintainer-accepted)."""
+
+    session = _make_session(tmp_path)
+    provider = _FakeProvider()
+    session.arm_port_provider = provider
+    assert _arm(session)["ok"] is True
+    armed = session.armed_apply
+    assert armed is not None
+    armed.confirm("apply-1")
+
+    result = armed.apply(_Device(), _Plan(), action_id="apply-1", mutates_kit=False)
+    assert result.ok is True
+    assert provider.port.sent == [(0, 1, 2)]
+
+
+def test_session_has_no_pre_write_backup_state() -> None:
+    """The misleading backup surface is gone from the session and handlers."""
+
+    assert not hasattr(CockpitSession, "pre_write_backups")
+    assert not hasattr(handlers, "_make_pre_write_backup")
 
 
 # ---------------------------------------------------------------------------

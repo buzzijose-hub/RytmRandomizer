@@ -1,11 +1,14 @@
 """Tests for ``rytm_randomizer.cockpit.device.adapter`` — the Protocol contract.
 
-The ``DeviceAdapter`` Protocol is the cockpit's only handle on hardware.
-Both ``MockDeviceAdapter`` and ``RealMidiDeviceAdapter`` must satisfy it via
+The ``DeviceAdapter`` Protocol is how the cockpit models device state.
+``MockDeviceAdapter`` — the only implementation — must satisfy it via
 ``isinstance(adapter, DeviceAdapter)`` (the Protocol is ``@runtime_checkable``).
 
-These tests intentionally exercise only the Protocol surface — the per-
-adapter behavior tests live in ``test_device_mock.py`` and ``test_device_real.py``.
+There is deliberately no real-MIDI adapter: transmitting is the ArmedApply
+seam's exclusive job, so an adapter never holds an output port.
+
+These tests intentionally exercise only the Protocol surface — the
+adapter behavior tests live in ``test_device_mock.py``.
 """
 
 from __future__ import annotations
@@ -15,11 +18,7 @@ from datetime import datetime, timezone
 import pytest
 
 from rytm_randomizer.cockpit.data import PadState, Snapshot
-from rytm_randomizer.cockpit.device import (
-    DeviceAdapter,
-    MockDeviceAdapter,
-    RealMidiDeviceAdapter,
-)
+from rytm_randomizer.cockpit.device import DeviceAdapter, MockDeviceAdapter
 
 pytestmark = pytest.mark.fast
 
@@ -38,20 +37,6 @@ def _make_snapshot() -> Snapshot:
     )
 
 
-class _FakeMidoProvider:
-    """Minimal fake that duck-types ``MidoMidiPortProvider``.
-
-    Used by adapter-conformance tests only — no ports opened, no ``mido``
-    imported.
-    """
-
-    def list_output_names(self) -> tuple[str, ...]:
-        return ()
-
-    def open_output(self, port_name: str) -> object:  # pragma: no cover - unused here
-        raise RuntimeError("not used in conformance tests")
-
-
 # ---------------------------------------------------------------------------
 # Protocol conformance: both adapters satisfy the runtime-checkable Protocol.
 # ---------------------------------------------------------------------------
@@ -59,12 +44,6 @@ class _FakeMidoProvider:
 
 def test_mock_adapter_satisfies_device_adapter_protocol() -> None:
     adapter = MockDeviceAdapter(initial=_make_snapshot())
-
-    assert isinstance(adapter, DeviceAdapter)
-
-
-def test_real_midi_adapter_satisfies_device_adapter_protocol() -> None:
-    adapter = RealMidiDeviceAdapter(midi_provider=_FakeMidoProvider())
 
     assert isinstance(adapter, DeviceAdapter)
 
@@ -83,26 +62,25 @@ def test_device_adapter_protocol_exposes_documented_surface() -> None:
     assert expected <= actual
 
 
-def test_device_package_re_exports_three_public_names() -> None:
-    """``__all__`` is stable so callers can ``from ... import DeviceAdapter``."""
+def test_device_package_re_exports_two_public_names() -> None:
+    """``__all__`` is stable so callers can ``from ... import DeviceAdapter``.
+
+    ``RealMidiDeviceAdapter`` is deliberately absent: it was deleted once the
+    ArmedApply seam became the cockpit's only output handle.
+    """
 
     import rytm_randomizer.cockpit.device as device_pkg
 
     assert set(device_pkg.__all__) == {
         "DeviceAdapter",
         "MockDeviceAdapter",
-        "RealMidiDeviceAdapter",
     }
 
 
-def test_mock_and_real_disagree_on_is_armed() -> None:
-    """Sanity check: the two adapters expose different ``is_armed`` truthiness."""
+def test_the_adapter_is_never_armed() -> None:
+    """An adapter models state, never a live output handle."""
 
-    mock = MockDeviceAdapter(initial=_make_snapshot())
-    real = RealMidiDeviceAdapter(midi_provider=_FakeMidoProvider())
-
-    assert mock.is_armed is False
-    assert real.is_armed is True
+    assert MockDeviceAdapter(initial=_make_snapshot()).is_armed is False
 
 
 def test_a_bare_object_does_not_satisfy_device_adapter() -> None:

@@ -1,6 +1,10 @@
 /**
- * Tests for ArmControl — the two-factor arm dialog (token + confirm:true),
- * the one-click disarm, and every ack / rejection branch.
+ * Tests for ArmControl — the three-factor arm dialog (exact port + token +
+ * confirm:true), the one-click disarm, and every ack / rejection branch.
+ *
+ * The port selector is the safety control this suite guards hardest: with two
+ * Elektron machines connected, arming without naming one can arm the wrong
+ * instrument.
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -10,7 +14,32 @@ import { ArmControl } from '../../src/cockpit/ArmControl';
 import { CockpitClientProvider } from '../../src/cockpit/context';
 import { useCockpitStore } from '../../src/state';
 
-import { FakeCockpitClient, sessionLive, sessionMock } from './_fixtures';
+import {
+  FakeCockpitClient,
+  connectionListening,
+  sessionLive,
+  sessionMock,
+} from './_fixtures';
+
+const RYTM_OUT = 'Analog Rytm MK2 OUT';
+const A4_OUT = 'Analog Four MKII OUT';
+
+/** Seed the passive connection observation the selector is populated from. */
+function seedOutputs(outputs: string[] = [RYTM_OUT]): void {
+  act(() => {
+    useCockpitStore.getState().setConnection({
+      ...connectionListening,
+      available_outputs: outputs,
+    });
+  });
+}
+
+/** Open the dialog and make both required factors satisfied. */
+function fillArmDialog(port: string = RYTM_OUT, token = 'tok-123'): void {
+  fireEvent.click(screen.getByTestId('arm-open-button'));
+  fireEvent.change(screen.getByTestId('arm-port-select'), { target: { value: port } });
+  fireEvent.change(screen.getByTestId('arm-token-input'), { target: { value: token } });
+}
 
 function renderArmControl(fake: FakeCockpitClient): void {
   render(
@@ -39,25 +68,46 @@ describe('ArmControl', () => {
     expect(screen.queryByTestId('disarm-button')).not.toBeInTheDocument();
   });
 
-  it('opens the confirm dialog, requires a token, and sends arm with confirm:true', async () => {
+  it('requires BOTH an exact port and a token, then sends them with confirm:true', async () => {
     act(() => {
       useCockpitStore.getState().setSessionStatus(sessionMock);
     });
+    seedOutputs([RYTM_OUT, A4_OUT]);
     const fake = new FakeCockpitClient();
     renderArmControl(fake);
 
     fireEvent.click(screen.getByTestId('arm-open-button'));
     expect(screen.getByTestId('arm-dialog')).toBeInTheDocument();
 
-    // Token empty → confirm disabled → nothing sent.
+    // Nothing chosen → confirm disabled → nothing sent.
     expect(screen.getByTestId('arm-confirm-button')).toBeDisabled();
     expect(fake.sent).toEqual([]);
 
+    // A token alone is NOT enough — the port is still unchosen.
     fireEvent.change(screen.getByTestId('arm-token-input'), {
       target: { value: 'tok-123' },
     });
+    expect(screen.getByTestId('arm-confirm-button')).toBeDisabled();
     fireEvent.click(screen.getByTestId('arm-confirm-button'));
-    expect(fake.sent).toEqual([{ type: 'arm', arm_token: 'tok-123', confirm: true }]);
+    expect(fake.sent).toEqual([]);
+
+    // A port alone is NOT enough either.
+    fireEvent.change(screen.getByTestId('arm-token-input'), { target: { value: '' } });
+    fireEvent.change(screen.getByTestId('arm-port-select'), {
+      target: { value: A4_OUT },
+    });
+    expect(screen.getByTestId('arm-confirm-button')).toBeDisabled();
+    expect(fake.sent).toEqual([]);
+
+    // Both present → enabled, and the command carries the EXACT chosen name.
+    fireEvent.change(screen.getByTestId('arm-token-input'), {
+      target: { value: 'tok-123' },
+    });
+    expect(screen.getByTestId('arm-confirm-button')).toBeEnabled();
+    fireEvent.click(screen.getByTestId('arm-confirm-button'));
+    expect(fake.sent).toEqual([
+      { type: 'arm', arm_token: 'tok-123', port_name: A4_OUT, confirm: true },
+    ]);
 
     // ok ack → dialog closes.
     await waitFor(() =>
@@ -65,10 +115,94 @@ describe('ArmControl', () => {
     );
   });
 
+  it('re-disables confirm when the operator deselects the port again', () => {
+    // The disabled state is the control: it must track the CURRENT choice,
+    // not merely latch once both factors were briefly satisfied.
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionMock);
+    });
+    seedOutputs([RYTM_OUT]);
+    const fake = new FakeCockpitClient();
+    renderArmControl(fake);
+
+    fillArmDialog(RYTM_OUT, 'tok');
+    const confirm = screen.getByTestId('arm-confirm-button');
+    expect(confirm).toBeEnabled();
+
+    // Back to the placeholder: confirm goes disabled and nothing can be sent.
+    fireEvent.change(screen.getByTestId('arm-port-select'), { target: { value: '' } });
+    expect(confirm).toBeDisabled();
+    fireEvent.click(confirm);
+
+    expect(fake.sent).toEqual([]);
+    expect(screen.getByTestId('arm-dialog')).toBeInTheDocument();
+  });
+
+  it('renders one option per enumerated output, defaulting to none', () => {
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionMock);
+    });
+    seedOutputs([RYTM_OUT, A4_OUT]);
+    renderArmControl(new FakeCockpitClient());
+    fireEvent.click(screen.getByTestId('arm-open-button'));
+
+    const select = screen.getByTestId('arm-port-select') as HTMLSelectElement;
+    // The placeholder plus one option per enumerated output.
+    expect([...select.options].map((o) => o.value)).toEqual(['', RYTM_OUT, A4_OUT]);
+    // Nothing is pre-selected: pre-picking would reintroduce the auto-pick.
+    expect(select.value).toBe('');
+    expect(screen.queryByTestId('arm-no-ports')).not.toBeInTheDocument();
+  });
+
+  it('the port selector is a labelled, keyboard-operable control', () => {
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionMock);
+    });
+    seedOutputs([RYTM_OUT]);
+    renderArmControl(new FakeCockpitClient());
+    fireEvent.click(screen.getByTestId('arm-open-button'));
+
+    // A real <label for> association — reachable by accessible name.
+    const select = screen.getByLabelText('MIDI output port');
+    expect(select).toBe(screen.getByTestId('arm-port-select'));
+    // Natively focusable (no tabindex hack), so Tab reaches it.
+    select.focus();
+    expect(document.activeElement).toBe(select);
+    // The token input is labelled too.
+    expect(screen.getByLabelText('Arm token')).toBe(screen.getByTestId('arm-token-input'));
+  });
+
+  it('explains the empty state when no outputs are enumerated', () => {
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionMock);
+    });
+    seedOutputs([]);
+    renderArmControl(new FakeCockpitClient());
+    fireEvent.click(screen.getByTestId('arm-open-button'));
+
+    expect(screen.getByTestId('arm-no-ports')).toBeInTheDocument();
+    // With no port choosable, arming stays blocked no matter the token.
+    fireEvent.change(screen.getByTestId('arm-token-input'), { target: { value: 'x' } });
+    expect(screen.getByTestId('arm-confirm-button')).toBeDisabled();
+  });
+
+  it('blocks arming when the store carries no connection observation at all', () => {
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionMock);
+    });
+    renderArmControl(new FakeCockpitClient());
+    fireEvent.click(screen.getByTestId('arm-open-button'));
+
+    const select = screen.getByTestId('arm-port-select') as HTMLSelectElement;
+    expect([...select.options].map((o) => o.value)).toEqual(['']);
+    expect(screen.getByTestId('arm-no-ports')).toBeInTheDocument();
+  });
+
   it('cancel closes the dialog without sending; Escape also closes it', () => {
     act(() => {
       useCockpitStore.getState().setSessionStatus(sessionMock);
     });
+    seedOutputs();
     const fake = new FakeCockpitClient();
     renderArmControl(fake);
 
@@ -91,12 +225,12 @@ describe('ArmControl', () => {
     act(() => {
       useCockpitStore.getState().setSessionStatus(sessionMock);
     });
+    seedOutputs();
     const fake = new FakeCockpitClient();
     fake.ackQueue.push({ request_id: 'r1', ok: false, message: 'bad token' });
     renderArmControl(fake);
 
-    fireEvent.click(screen.getByTestId('arm-open-button'));
-    fireEvent.change(screen.getByTestId('arm-token-input'), { target: { value: 'x' } });
+    fillArmDialog(RYTM_OUT, 'x');
     fireEvent.click(screen.getByTestId('arm-confirm-button'));
     await screen.findByText('bad token');
     expect(screen.getByTestId('arm-dialog')).toBeInTheDocument();
@@ -130,12 +264,12 @@ describe('ArmControl', () => {
     act(() => {
       useCockpitStore.getState().setSessionStatus(sessionMock);
     });
+    seedOutputs();
     const fake = new FakeCockpitClient();
     fake.ackQueue.push({ request_id: 'r1', ok: false, message: 'bad token' });
     renderArmControl(fake);
 
-    fireEvent.click(screen.getByTestId('arm-open-button'));
-    fireEvent.change(screen.getByTestId('arm-token-input'), { target: { value: 'x' } });
+    fillArmDialog(RYTM_OUT, 'x');
     fireEvent.click(screen.getByTestId('arm-confirm-button'));
 
     const alert = await screen.findByTestId('arm-dialog-error');
@@ -149,25 +283,30 @@ describe('ArmControl', () => {
     act(() => {
       useCockpitStore.getState().setSessionStatus(sessionMock);
     });
+    seedOutputs();
     const fake = new FakeCockpitClient();
     renderArmControl(fake);
     fireEvent.click(screen.getByTestId('arm-open-button'));
     const dialog = screen.getByTestId('arm-dialog');
+    const portSelect = screen.getByTestId('arm-port-select');
     const tokenInput = screen.getByTestId('arm-token-input');
     const cancel = screen.getByTestId('arm-cancel-button');
 
-    // Focusables (token empty → confirm disabled, so it's excluded):
-    // [token input, cancel button]. First=token, last=cancel.
+    // Focusables in DOM order (confirm is disabled until both factors are
+    // set, so it is excluded): [port select, token input, cancel button].
+    // The select MUST be inside the trap — otherwise Tab escapes the dialog
+    // at the very control the operator has to use.
+    // First=select, last=cancel.
 
     // Shift+Tab on the first element wraps to the last.
-    tokenInput.focus();
+    portSelect.focus();
     fireEvent.keyDown(dialog, { key: 'Tab', shiftKey: true });
     expect(document.activeElement).toBe(cancel);
 
     // Tab on the last element wraps to the first.
     cancel.focus();
     fireEvent.keyDown(dialog, { key: 'Tab' });
-    expect(document.activeElement).toBe(tokenInput);
+    expect(document.activeElement).toBe(portSelect);
 
     // Tab in the middle / on a non-boundary element is a no-op (default flow).
     tokenInput.focus();
@@ -187,7 +326,7 @@ describe('ArmControl', () => {
     fireEvent.click(screen.getByTestId('arm-open-button'));
     const dialog = screen.getByTestId('arm-dialog');
     // Strip every focusable child, then Tab: the early return keeps focus put.
-    dialog.querySelectorAll('button, input').forEach((el) => el.remove());
+    dialog.querySelectorAll('button, input, select').forEach((el) => el.remove());
     const before = document.activeElement;
     fireEvent.keyDown(dialog, { key: 'Tab' });
     expect(document.activeElement).toBe(before);

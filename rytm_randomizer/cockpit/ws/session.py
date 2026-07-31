@@ -64,9 +64,6 @@ DEFAULT_DEPTH: Final[float] = 0.45
 _SEED_BITS: Final[int] = 32
 """xorshift32 (the engine PRNG) consumes a 32-bit seed; sample exactly that width."""
 
-MAX_PRE_WRITE_BACKUPS: Final[int] = 8
-"""Bound on in-session pre-write backups kept by the armed backup hook."""
-
 
 def fresh_seed() -> int:
     """Return a fresh 32-bit unsigned seed sampled from :func:`secrets.randbits`.
@@ -119,14 +116,6 @@ class CockpitSession:
     the device disappears (auto-disarm — never auto-re-arm).
     """
 
-    passive_device: DeviceAdapter | None = None
-    """The pre-arm (mock/passive) adapter, restored on disarm.
-
-    ``None`` whenever the session is not armed; holding it as a declared
-    field keeps the arm/disarm swap out of side-channel territory
-    (``tests/architecture/test_no_side_channel_session_attrs.py``).
-    """
-
     arm_port_provider: OutputOpeningProvider | None = None
     """Optional injected output-port provider for the ``arm`` command.
 
@@ -150,15 +139,6 @@ class CockpitSession:
     Written by the WS dispatcher's taxonomy-error path, the arm/disarm
     handlers, and (when wired by ``__main__``) the ConnectionManager's
     enumeration-fault path. Read back by the ``diagnostics`` command.
-    """
-
-    pre_write_backups: list[dict[str, object]] = field(default_factory=list[dict[str, object]])
-    """Automatic pre-write backups taken by the armed seam's backup hook.
-
-    Each entry is the current snapshot's dict form captured immediately
-    before an armed kit/sound mutation. Bounded by the arm handler's
-    backup hook (most recent :data:`MAX_PRE_WRITE_BACKUPS` kept).
-    Disk-persisted backup export is a Wave-5 follow-up.
     """
 
     pending_events: list[dict[str, object]] = field(default_factory=list[dict[str, object]])
@@ -194,4 +174,4 @@ class CockpitSession:
         self.pending_events = []
 
 
-__all__ = ["DEFAULT_DEPTH", "MAX_PRE_WRITE_BACKUPS", "CockpitSession", "fresh_seed"]
+__all__ = ["DEFAULT_DEPTH", "CockpitSession", "fresh_seed"]
