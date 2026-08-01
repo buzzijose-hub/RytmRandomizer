@@ -7,9 +7,15 @@ library snapshot or a randomized target), per track / per parameter group, at
 a morph amount in ``0.0..1.0``.
 
 It never sends MIDI, never opens a port, and never touches
-:mod:`rytm_randomizer.randomization`. It produces a reproducible plan the
-operator can audit and then arm-and-send through the existing ``senders``
-ArmedApply seam.
+:mod:`rytm_randomizer.randomization`.
+
+**Preview only — not sendable today.** :class:`MorphPlan` is an
+audit/inspection artefact, NOT a device plan: it is not a
+``RytmMutationPlan``, it is not compiled into one, and nothing in the
+package can hand it to the ``senders`` ArmedApply seam. Transmitting a
+morph would require a device-plan compiler that does not exist. Read the
+plan, diff it, golden it — but do not describe it to an operator as
+something they can arm and send.
 
 Interpolation rules:
 

@@ -57,9 +57,23 @@ def test_mock_adapter_satisfies_device_adapter_protocol() -> None:
 def test_device_adapter_protocol_exposes_documented_surface() -> None:
     """The Protocol carries the four members downstream code consumes."""
 
-    expected = {"is_armed", "capture_snapshot", "apply", "commit_kit"}
+    expected = {"is_armed", "capture_snapshot", "apply", "apply_send_plan"}
     actual = {name for name in dir(DeviceAdapter) if not name.startswith("_")}
     assert expected <= actual
+
+
+def test_device_adapter_protocol_has_no_persistent_write_member() -> None:
+    """The adapter is a PASSIVE state projection — not a second transport.
+
+    ``commit_kit`` was the Protocol's only persistent-write member. Its
+    sole implementation was a mock log line, while the WS ``save``
+    handler acked durable success on the strength of it. Removing it
+    keeps the adapter's surface honest: nothing here reaches hardware,
+    and nothing here promises persistence.
+    """
+
+    surface = {name for name in dir(DeviceAdapter) if not name.startswith("_")}
+    assert "commit_kit" not in surface
 
 
 def test_device_package_re_exports_two_public_names() -> None:

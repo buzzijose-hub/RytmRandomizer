@@ -374,10 +374,17 @@ def _control(
 
 
 def _control_bindings(
-    frame: StylePerformanceArcLiveGuiAnalyzerFrameReport,
     *,
     script_status: str,
 ) -> tuple[StylePerformanceArcLiveGuiControlBinding, ...]:
+    """Derive every control binding from the script status alone.
+
+    Deliberately frame-free: each binding's ``enabled`` state is a pure
+    function of ``script_status`` (itself derived from the frame), so
+    taking the frame here would be an unused argument the reader has to
+    reason about (Gate 4 / ruff ARG001).
+    """
+
     ready = script_status == "ready"
     not_blocked = script_status != "blocked"
     return (
@@ -524,7 +531,7 @@ def build_style_performance_arc_live_gui_interaction_script_from_frame(
         interaction_label=normalized_label,
         script_status=status,
         interaction_steps=_interaction_steps(frame),
-        control_bindings=_control_bindings(frame, script_status=status),
+        control_bindings=_control_bindings(script_status=status),
         blocked_actions=_interaction_script_blocked_actions(status),
         replay_commands=_interaction_script_replay_commands(
             frame, interaction_label=normalized_label

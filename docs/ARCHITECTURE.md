@@ -127,7 +127,7 @@ on one line for an existing module, you probably need a new module instead.
 | `midi_io.py`                 | Leaf MIDI primitives: build CC, send param, apply state. `mido` is lazy.    |
 | `senders/midi_event_plan.py` | Generic CC/NRPN event-plan delivery loop; structural validation is owned by `behavior/midi_event_plan.py`. |
 | `senders/guarded.py`, `senders/hardware.py` | Generic guarded/mock and arm-gated Device plan senders. |
-| `senders/armed_apply.py` | ArmedApply seam: the single arm-gated boundary every outbound hardware transmit routes through (explicit in-UI arm + confirmation; never auto-re-arms after reconnect). |
+| `senders/armed_apply.py` | ArmedApply seam: the single arm-gated boundary every **cockpit** outbound transmit routes through (explicit in-UI arm + per-action `confirm`; never auto-re-arms after reconnect; persistent kit/sound writes refused). Not repo-wide — the legacy V1.34 `app.py` / `shell.py` entry points still open their own ports under the CLI's `--arm` discipline, exempt via `_ALLOWED_TRANSMIT_MODULES` in `tests/architecture/test_armed_entry_points.py`. |
 | `randomization.py`           | Pure randomization core: zone/depth mutation, waveform pick.                |
 | `behavior/morph.py`          | Passive kit-morphing interpolation (current ↔ target, per-track/page, depth macro). Pure + deterministic; parity-pinned cross-language. |
 | `behavior/scope.py`          | Passive scoped-randomization masks + intensity scoping anchored on the current kit. Pure + deterministic. |
@@ -573,8 +573,8 @@ UI drives the engine with **typed commands** that ack synchronously.
 | `toggle_preview` | `{ ok, candidate? }` | Ghost overlay on/off |
 | `regen` | `{ ok, candidate }` | New seed, same depth |
 | `prepare_send_plan` | `{ ok, send_plan }` | Builds an inert packet plan and readiness blockers |
-| `send` | `{ ok, new_snapshot_id, send_plan_id }` | Applies the ready plan via device adapter |
-| `save` | `{ ok, snapshot_id }` | Promotes current snapshot to device kit |
+| `send` | `{ ok, new_snapshot_id, send_plan_id }` | Applies the ready plan. When the session is armed the command MUST carry `confirm: true` — the seam refuses otherwise (per-action operator confirmation); unarmed/mock sends need no `confirm`. |
+| `save` | `{ ok, snapshot_id }` | Promotes the current snapshot to a labelled `kind="saved"` **history** entry. It does **not** write to the device: a persistent kit write is refused at the seam while capture-before-write and restore do not exist. |
 | `load_snapshot` | `{ ok }` | Restores a historical snapshot |
 | `undo` | `{ ok, snapshot_id }` | Walks history back one step |
 | `export_profile_model` | `{ ok, model_bytes }` | MessagePack + header + CRC |

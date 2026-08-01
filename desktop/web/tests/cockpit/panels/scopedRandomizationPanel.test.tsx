@@ -182,4 +182,14 @@ describe('ScopedRandomizationPanel (interactive)', () => {
     expect(within(panel).getByText('depth 0.00')).toBeInTheDocument();
     expect(within(panel).getByText('depth is 0.0 (no movement)')).toBeInTheDocument();
   });
+
+  it('labels itself a static demonstration so canned values are not read as device state', () => {
+    render(<ScopedRandomizationPanel />);
+    const banner = screen.getByTestId('scope-demo-banner');
+    expect(banner).toHaveAttribute('role', 'note');
+    expect(banner).toHaveTextContent('Static demonstration.');
+    expect(banner).toHaveTextContent('scoped randomization');
+    expect(banner).toHaveTextContent('not your connected instrument');
+    expect(banner).toHaveTextContent('nothing here is armed or transmitted');
+  });
 });

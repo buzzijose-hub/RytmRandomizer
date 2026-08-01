@@ -43,15 +43,6 @@ from rytm_randomizer.real_midi_adapter import RealMidiPortError
 pytestmark = pytest.mark.fast
 
 
-@pytest.fixture(autouse=True)
-def _clean_active_manager() -> object:
-    """Every test starts and ends with no registered ConnectionManager."""
-
-    set_active_connection_manager(None)
-    yield
-    set_active_connection_manager(None)
-
-
 # ---------------------------------------------------------------------------
 # Fakes.
 # ---------------------------------------------------------------------------

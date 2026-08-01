@@ -291,8 +291,12 @@ where the A4 side will fit before any outbound A4 macro path exists.
 4. **Hit REGEN** — same depth, new seed, different candidate.
 5. **Hit SEND** — the candidate becomes the new snapshot; a grey dot
    joins the history strip; preview clears.
-6. **Hit SAVE** with a label** — promotes the current snapshot to a
-   persistent kit slot; the dot turns green.
+6. **Hit SAVE with a label** — promotes the current snapshot to a
+   `kind="saved"` history entry; the dot turns green. **SAVE does not write
+   to the instrument.** It labels a point in the cockpit's own history so
+   you can find it again; persisting a kit to device memory is refused (see
+   §6 — no capture-before-write or restore path exists). To keep a kit on
+   the hardware, save it on the device itself.
 7. **Hit UNDO** — walks the history back one step.
 
 Profiles live as flat JSON files under `~/.rytm-randomizer/profiles/` on
@@ -543,8 +547,11 @@ device to discard live-dial changes.
 - The MIDI port is opened once, when you arm; it stays open until you
   close the window or explicitly disarm.
 - Locked pads are skipped on SEND. Use this to protect your kick.
-- SAVE writes a Rytm SysEx kit dump to the device's persistent kit
-  memory. Pick the label and slot deliberately.
+- SAVE does **not** write to the device. It promotes the current snapshot
+  to a labelled `kind="saved"` entry in the cockpit's history and nothing
+  leaves the app. Writing a Rytm SysEx kit dump to persistent kit memory is
+  exactly the operation the seam refuses today; use the instrument's own
+  save to keep a kit on the hardware.
 
 ---
 

@@ -7,10 +7,12 @@ from .armed_apply import (
     ArmedApplyError,
     ArmedApplyResult,
     ArmedApplySession,
+    ArmedApplyStatus,
     ExactPortOpener,
     KitMutationUnsupportedError,
     OutputPortLike,
     PlanRenderer,
+    PortNotClosableError,
     plan_readiness,
 )
 from .guarded import GuardedSendResult, guarded_send
@@ -27,6 +29,7 @@ __all__ = [
     "ArmedApplyError",
     "ArmedApplyResult",
     "ArmedApplySession",
+    "ArmedApplyStatus",
     "CcNrpnEvent",
     "ExactOutputOpener",
     "ExactPortOpener",
@@ -36,6 +39,7 @@ __all__ = [
     "OutputOpeningProvider",
     "OutputPortLike",
     "PlanRenderer",
+    "PortNotClosableError",
     "TripleSender",
     "guarded_send",
     "hardware_send",

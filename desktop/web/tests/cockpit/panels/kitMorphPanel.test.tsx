@@ -201,4 +201,14 @@ describe('KitMorphPanel (interactive)', () => {
     expect(within(panel).getByText('amount 0.00')).toBeInTheDocument();
     expect(within(panel).getByText('amount is 0.0 (source unchanged)')).toBeInTheDocument();
   });
+
+  it('labels itself a static demonstration so canned values are not read as device state', () => {
+    render(<KitMorphPanel />);
+    const banner = screen.getByTestId('kit-morph-demo-banner');
+    expect(banner).toHaveAttribute('role', 'note');
+    expect(banner).toHaveTextContent('Static demonstration.');
+    expect(banner).toHaveTextContent('kit morphing');
+    expect(banner).toHaveTextContent('not your connected instrument');
+    expect(banner).toHaveTextContent('nothing here is armed or transmitted');
+  });
 });

@@ -28,6 +28,20 @@ proved out:
 * **Never auto-re-arm.** A provider error during a send auto-disarms the
   session; re-arming requires a fresh explicit :meth:`arm` call. Nothing
   in this module re-arms as a side effect.
+* **Deterministic teardown.** The armed port is a real, exclusive
+  hardware handle, so :meth:`ArmedApplySession.disarm` — the one place
+  it is closed — runs on *every* exit path: explicit disarm, provider
+  error, ``KeyboardInterrupt`` / ``SystemExit`` / cancellation mid-burst
+  (caught, disarmed, re-raised — never swallowed), context-manager exit,
+  WS disconnect, and app shutdown. A port that cannot be closed is
+  refused at arm time (:class:`PortNotClosableError`) rather than held
+  with no way to release it.
+* **Partial delivery is visible.** Every outcome carries
+  ``sent_count`` / ``expected_count`` and a terminal
+  :data:`ArmedApplyStatus`, including the failure paths (via
+  :attr:`ArmedApplyError.partial_outcome`), so "the burst stopped
+  half-way and the device is half-applied" is never reported as a plain
+  failure.
 
 This module deliberately contains **no transmit-boundary markers** — it
 never constructs an output port itself. Port construction stays inside
@@ -39,9 +53,9 @@ through the :class:`ExactPortOpener` Protocol
 from __future__ import annotations
 
 import hmac
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
-from typing import ClassVar, Final, Protocol, runtime_checkable
+from typing import ClassVar, Final, Literal, Protocol, runtime_checkable
 
 from ..devices import Device
 from ..observability.errors import MidiError
@@ -50,10 +64,12 @@ __all__ = [
     "ArmedApplyError",
     "ArmedApplyResult",
     "ArmedApplySession",
+    "ArmedApplyStatus",
     "ExactPortOpener",
     "KitMutationUnsupportedError",
     "OutputPortLike",
     "PlanRenderer",
+    "PortNotClosableError",
     "plan_readiness",
 ]
 
@@ -66,9 +82,28 @@ class ArmedApplyError(MidiError, RuntimeError):
     an additional base so ``except RuntimeError`` callers keep working —
     the same dual-inheritance pattern as
     :class:`~rytm_randomizer.real_midi_adapter.RealMidiPortError`.
+
+    When the failure happened **mid-burst**, :attr:`partial_outcome`
+    carries the :class:`ArmedApplyResult` describing how far the wire
+    actually got. It is ``None`` for every refusal raised before the first
+    byte (token mismatch, missing confirmation, kit-mutation refusal), so
+    ``exc.partial_outcome is not None`` is the precise test for "the
+    device may be in a half-applied state".
     """
 
     fingerprint: ClassVar[str] = "midi.armed_apply.refused"
+
+    def __init__(
+        self,
+        message: str = "",
+        *,
+        context: Mapping[str, object] | None = None,
+        partial_outcome: ArmedApplyResult | None = None,
+    ) -> None:
+        """Capture the message/context plus an optional mid-burst outcome."""
+
+        super().__init__(message, context=context)
+        self.partial_outcome: ArmedApplyResult | None = partial_outcome
 
 
 class KitMutationUnsupportedError(ArmedApplyError):
@@ -98,12 +133,44 @@ class KitMutationUnsupportedError(ArmedApplyError):
     fingerprint: ClassVar[str] = "midi.armed_apply.kit_mutation_unsupported"
 
 
+class PortNotClosableError(ArmedApplyError):
+    """Arming was refused: the resolved port cannot be deterministically closed.
+
+    An armed session owns a real, exclusive hardware handle. The safety
+    model requires that handle to be released on *every* exit path —
+    explicit disarm, provider error, WS disconnect, app shutdown, task
+    cancellation, ``KeyboardInterrupt``. A port object without a callable
+    ``close`` makes that guarantee unimplementable: the seam would drop
+    its reference and leave the OS handle open until interpreter exit,
+    holding the device's MIDI output hostage against the next arm.
+
+    So a close-less port is refused **at arm time** rather than tolerated
+    at disarm time. The canonical armed-port shape is ``send`` + ``close``
+    — the same contract
+    :class:`~rytm_randomizer.real_midi_adapter.RealMidiOutputPort`
+    declares.
+    """
+
+    fingerprint: ClassVar[str] = "midi.armed_apply.port_not_closable"
+
+
 @runtime_checkable
 class OutputPortLike(Protocol):
-    """Minimal armed-output surface: one ``send`` method."""
+    """Canonical armed-output surface: ``send`` **and** ``close``.
+
+    ``close`` is not optional. It mirrors
+    :class:`~rytm_randomizer.real_midi_adapter.RealMidiOutputPort` — the
+    one production port shape — because an armed session must be able to
+    release its exclusive hardware handle deterministically on every exit
+    path. A port that cannot be closed is refused at arm time with
+    :class:`PortNotClosableError`.
+    """
 
     def send(self, message: object) -> None:
         """Transmit one rendered message toward the hardware."""
+
+    def close(self) -> None:
+        """Release the underlying hardware handle (idempotent in practice)."""
 
 
 @runtime_checkable
@@ -165,9 +232,37 @@ def plan_readiness(plan: object) -> tuple[bool, str]:
     return ready, reason
 
 
+ArmedApplyStatus = Literal["complete", "refused", "partial", "interrupted"]
+"""Terminal outcome of one apply attempt — how far the wire actually got.
+
+* ``complete`` — every rendered triple reached the port.
+* ``refused`` — a gate refused **before** the first byte
+  (``sent_count == 0``, ``expected_count == 0``): an unready plan.
+* ``partial`` — the port raised mid-burst. ``sent_count`` triples are on
+  the wire and the device is in a half-applied state; the session
+  auto-disarmed.
+* ``interrupted`` — the send was aborted by something that is not a port
+  error (``KeyboardInterrupt``, ``SystemExit``, task cancellation). Same
+  half-applied hazard as ``partial``; the session auto-disarmed and the
+  original exception was re-raised, never swallowed.
+
+``partial`` and ``interrupted`` are surfaced through
+:class:`ArmedApplyError.partial_outcome` on the raised error, because the
+caller gets an exception rather than a returned result on those paths.
+"""
+
+
 @dataclass(frozen=True)
 class ArmedApplyResult:
     """Outcome of one :meth:`ArmedApplySession.apply` attempt.
+
+    ``sent_count`` / ``expected_count`` are always both populated so a
+    caller can tell "nothing was attempted" (``0 / 0``, a refusal) from
+    "everything landed" (``n / n``) from "the burst was cut short"
+    (``k / n`` with ``k < n``). Partial delivery used to be invisible: the
+    local counter was discarded when the port raised, so the operator was
+    told "send failed" for a device that had already received half a kit's
+    worth of CCs.
 
     There is deliberately no ``backup_taken`` field. An earlier revision
     carried one, which advertised a reversibility guarantee the seam could
@@ -180,6 +275,8 @@ class ArmedApplyResult:
     ok: bool
     sent_count: int
     reason: str = ""
+    expected_count: int = 0
+    status: ArmedApplyStatus = "complete"
 
 
 class ArmedApplySession:
@@ -254,6 +351,11 @@ class ArmedApplySession:
         an explicit disarm-then-arm sequence, never implicit), when the
         token is empty or mismatched, or when the opener fails — in which
         case the session stays disarmed (fail closed).
+
+        A resolved port that is not **closable** (no callable ``close``)
+        is refused with :class:`PortNotClosableError` and closed-over
+        immediately: the seam cannot promise deterministic teardown of a
+        handle it has no way to release, so it declines to hold one.
         """
 
         if self._armed:
@@ -270,6 +372,13 @@ class ArmedApplySession:
         except _PORT_ERRORS as exc:
             self._reset()
             raise ArmedApplyError("armed_apply_port_open_failed") from exc
+        if not callable(getattr(port, "close", None)):
+            self._reset()
+            raise PortNotClosableError(
+                "armed_apply_port_not_closable: an armed output port must expose "
+                "close() so the handle is released on every teardown path",
+                context={"port_name": self._port_name},
+            )
         self._port = port
         self._armed = True
 
@@ -313,12 +422,18 @@ class ArmedApplySession:
         1. armed state (raises when disarmed),
         2. single-use per-action confirmation (raises when unconfirmed;
            the confirmation is consumed even if a later gate refuses),
-        3. plan readiness (returns a refused result),
+        3. plan readiness (returns a ``status="refused"`` result),
         4. **kit/sound mutation refusal** — raises
            :class:`KitMutationUnsupportedError` whenever ``mutates_kit``
            is true (the default). See below.
-        5. the send itself — a provider error auto-disarms and re-raises
-           as :class:`ArmedApplyError`.
+        5. the send itself — a provider error auto-disarms (closing the
+           port) and re-raises as :class:`ArmedApplyError` carrying a
+           ``status="partial"``
+           :attr:`~ArmedApplyError.partial_outcome`; a
+           ``KeyboardInterrupt`` / ``SystemExit`` / cancellation likewise
+           auto-disarms, tags the exception with an
+           ``armed_apply_outcome`` of ``status="interrupted"``, and
+           re-raises the original exception unchanged.
 
         **What is and is not permitted on hardware.** ``mutates_kit``
         defaults to ``True`` so a caller must *opt in* to the permitted
@@ -348,6 +463,8 @@ class ArmedApplySession:
                 ok=False,
                 sent_count=0,
                 reason=reason,
+                expected_count=0,
+                status="refused",
             )
 
         if mutates_kit:
@@ -361,39 +478,116 @@ class ArmedApplySession:
 
         port = self._port
         emit = device.to_cc_messages if renderer is None else renderer
+        try:
+            triples = tuple(emit(plan))
+        except BaseException:
+            # Rendering runs while the port is ALREADY OPEN, so a renderer
+            # that raises (malformed plan, device-strategy bug, Ctrl+C
+            # between confirm and the first byte) must not leave the
+            # session armed holding an exclusive hardware handle — the
+            # same failure class the send loop below guards. Nothing has
+            # reached the wire yet, so this is a clean zero-byte refusal:
+            # disarm (closing the port) and re-raise unchanged.
+            self.disarm()
+            raise
+        expected = len(triples)
         sent = 0
-        for triple in emit(plan):
+        for triple in triples:
             try:
                 port.send(triple)
             except _PORT_ERRORS as exc:
-                # Auto-disarm on provider error. Never auto-re-arm: the
-                # operator must run the explicit arm sequence again.
+                # Auto-disarm on provider error (which closes the port).
+                # Never auto-re-arm: the operator must run the explicit
+                # arm sequence again. The count is carried on the error so
+                # a half-applied device is visible, not silently discarded.
                 self.disarm()
-                raise ArmedApplyError("armed_apply_send_failed_auto_disarmed") from exc
+                raise ArmedApplyError(
+                    "armed_apply_send_failed_auto_disarmed",
+                    context={
+                        "device_id": device.device_id,
+                        "action_id": action_id,
+                        "sent_count": sent,
+                        "expected_count": expected,
+                    },
+                    partial_outcome=ArmedApplyResult(
+                        device_id=device.device_id,
+                        ok=False,
+                        sent_count=sent,
+                        reason="armed_apply_send_failed_auto_disarmed",
+                        expected_count=expected,
+                        status="partial",
+                    ),
+                ) from exc
+            except BaseException as exc:
+                # KeyboardInterrupt / SystemExit / CancelledError land here.
+                # Without this arm the session stayed ARMED with the port
+                # OPEN — Ctrl+C during a burst left the operator holding an
+                # exclusive hardware handle with no way to release it. We
+                # disarm (which closes the port), attach the partial
+                # outcome for the caller's teardown log, and RE-RAISE:
+                # control-flow exceptions are never swallowed.
+                self.disarm()
+                exc.__dict__["armed_apply_outcome"] = ArmedApplyResult(
+                    device_id=device.device_id,
+                    ok=False,
+                    sent_count=sent,
+                    reason="armed_apply_send_interrupted_auto_disarmed",
+                    expected_count=expected,
+                    status="interrupted",
+                )
+                raise
             sent += 1
         return ArmedApplyResult(
             device_id=device.device_id,
             ok=True,
             sent_count=sent,
             reason="",
+            expected_count=expected,
+            status="complete",
         )
 
     def disarm(self) -> None:
-        """Drop to the passive state (idempotent); best-effort port close."""
+        """Drop to the passive state (idempotent) and close the port.
+
+        Deterministic teardown: this is the single place the armed
+        hardware handle is released, and every exit path routes through
+        it — explicit ``disarm``, a provider error mid-send, an
+        interrupt/cancellation mid-send, WS disconnect, app shutdown.
+        Calling it twice closes once (:meth:`_reset` drops the reference
+        before the close, so the second call has nothing to close).
+
+        A ``close()`` that itself raises a backend error is swallowed: the
+        state machine is already passive at that point, and masking the
+        disarm behind a dying port's exception would leave callers unsure
+        whether they are armed.
+        """
 
         port = self._port
         self._reset()
         if port is None:
             return
-        close = getattr(port, "close", None)
-        if not callable(close):
-            return
         try:
-            close()
+            port.close()
         except _PORT_ERRORS:
             # Closing an already-dead backend port must never mask the
             # disarm itself — the state machine is already passive.
             return
+
+    def __enter__(self) -> ArmedApplySession:
+        """Enter a scope whose exit is guaranteed to disarm.
+
+        Lets callers that own an armed session for a bounded region (app
+        shutdown paths, tests, future CLI arm blocks) express the teardown
+        guarantee structurally instead of remembering a ``finally``.
+        """
+
+        return self
+
+    def __exit__(self, *_exc_info: object) -> Literal[False]:
+        """Always disarm on scope exit; never suppress the exception."""
+
+        self.disarm()
+        return False
 
     def _reset(self) -> None:
         """Clear armed state + confirmations (the passive baseline)."""

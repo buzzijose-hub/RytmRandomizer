@@ -4,8 +4,13 @@ This is the passive, deterministic *preview* half of the classic Rytm
 mask+intensity randomizer UX (the orphaned Strom/Collider "which tracks,
 which parameter groups, how hard" surface). It never sends MIDI, never opens a
 port, and never touches :mod:`rytm_randomizer.randomization` — it re-expresses
-the anchor+depth idea as a pure, reproducible plan the operator can audit and
-then arm-and-send through the existing ``senders`` ArmedApply seam.
+the anchor+depth idea as a pure, reproducible plan the operator can audit.
+
+**Preview only — not sendable today.** :class:`ScopePlan` is an
+audit/inspection artefact, NOT a device plan: it is not a
+``RytmMutationPlan``, it is not compiled into one, and nothing in the package
+can hand it to the ``senders`` ArmedApply seam. Transmitting a scoped sweep
+would require a device-plan compiler that does not exist.
 
 The model:
 

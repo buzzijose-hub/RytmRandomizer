@@ -280,6 +280,24 @@ port close, so a close-time `KeyboardInterrupt` or `SystemExit` cannot erase
 the terminal send outcome; cleanup interruption is reported separately. Exact
 operator port names remain console-only and are excluded from structured logs.
 
+> **Known divergence — cockpit arm/send path (open).** The rule above is not
+> yet upheld by `rytm_randomizer/cockpit/ws/handlers.py`. Its arm-failure
+> record (`_logger.warning("arm_failed", ...)`) writes the **exact operator
+> port name** into the structured `extra` payload and into the error journal's
+> `context={"port": port_name}`, and several cockpit failure records — arm,
+> armed-send refusal, and the surrounding command-dispatch handlers — carry
+> `"exception_repr": repr(exc)`, i.e. **raw backend exception detail**, rather
+> than only the bounded `exception_type` + stable fingerprint this document
+> prescribes.
+>
+> Both are deliberate debugging aids that predate this rule, and both are
+> logged at `WARNING`, so they reach any configured log sink. Recorded here so
+> the doc does not overstate the guarantee: the fix is to reduce those records
+> to `exception_type` + fingerprint and to drop or hash the port name, keeping
+> the exact name on the operator console only. Until that lands, treat
+> "excluded from structured logs" as describing the Analog Four armed-send
+> path, not the cockpit WS handlers.
+
 ## Adding logging to a new module
 
 ```python

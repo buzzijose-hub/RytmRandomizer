@@ -1,4 +1,4 @@
-"""``DeviceAdapter`` Protocol — the cockpit's only handle on hardware.
+"""``DeviceAdapter`` Protocol — the cockpit's PASSIVE device-state projection.
 
 The cockpit engine, history store, and WebSocket layer all consume the
 device through this Protocol. One implementation lives alongside it:
@@ -6,13 +6,38 @@ device through this Protocol. One implementation lives alongside it:
 * :class:`~rytm_randomizer.cockpit.device.mock.MockDeviceAdapter` — the
   always-on, in-memory device for development and tests.
 
-There is no real-MIDI adapter. The adapter models cockpit *state*; the
-ArmedApply seam (:mod:`rytm_randomizer.senders.armed_apply`) is the only
-thing that transmits, and it owns the single real output port. Keeping the
-two apart is what makes "exactly one armed output handle" checkable.
+Passive by construction — this is not a transport
+--------------------------------------------------
 
-The Protocol is ``@runtime_checkable`` so tests can confirm both adapters
-satisfy it via :func:`isinstance` without inheritance. Per
+**No method on this Protocol may reach hardware.** The adapter models the
+cockpit's *view* of device state: what the pads currently hold, and what
+they would hold after a candidate or a prepared plan is applied. Every
+outbound byte goes through the ArmedApply seam
+(:mod:`rytm_randomizer.senders.armed_apply`), which owns the single real
+output port. Keeping the two apart is what makes "exactly one armed
+output handle" checkable, and it is why the arm handler deliberately does
+*not* swap in a live adapter.
+
+Consequently :meth:`DeviceAdapter.apply` and
+:meth:`DeviceAdapter.apply_send_plan` are **session-local state
+projections**: they fold a mutation into the adapter's in-memory snapshot
+and hand back the result. They are named "apply" because that is what
+they do to the projection, not because they transmit — an implementation
+that opened a port inside either would violate the Live-but-Passive rule
+and the transmit whitelist in
+``tests/architecture/test_armed_entry_points.py``.
+
+There is deliberately **no** persistent-write method on this Protocol. An
+earlier revision carried ``commit_kit``, whose only implementation was a
+mock log line while the WS ``save`` handler acked durable success — the
+adapter looked like a second transport-capable surface and promised a
+persistence nothing delivered. Persistent kit/sound writes are refused
+outright (see
+:class:`~rytm_randomizer.senders.armed_apply.KitMutationUnsupportedError`)
+until a real capture-before-write plus restore path exists.
+
+The Protocol is ``@runtime_checkable`` so tests can confirm an adapter
+satisfies it via :func:`isinstance` without inheritance. Per
 ``.claude/rules/architecture.md`` rule "Protocol (Duck Typing)" and the
 existing :class:`~rytm_randomizer.real_midi_adapter.RealMidiOutputPort`
 precedent, the shape is the contract — concrete adapters do not subclass.
@@ -27,14 +52,15 @@ from ..data import CockpitSendPlan, MutationCandidate, Snapshot
 
 @runtime_checkable
 class DeviceAdapter(Protocol):
-    """Cockpit-facing device boundary.
+    """Cockpit-facing **passive** device-state boundary.
 
-    Implementations are responsible for translating a
-    :class:`~rytm_randomizer.cockpit.data.MutationCandidate` into device
-    state changes (mock memory, or real MIDI on the wire), honoring the
-    pad-lock contract, and returning a fresh
-    :class:`~rytm_randomizer.cockpit.data.Snapshot` that describes the
-    post-apply device state.
+    Implementations fold a
+    :class:`~rytm_randomizer.cockpit.data.MutationCandidate` (or a
+    prepared plan) into their in-memory projection of device state,
+    honoring the pad-lock contract, and return a fresh
+    :class:`~rytm_randomizer.cockpit.data.Snapshot` describing the result.
+
+    No method here transmits. See the module docstring.
     """
 
     @property
@@ -65,36 +91,31 @@ class DeviceAdapter(Protocol):
         candidate: MutationCandidate,
         pad_locks: frozenset[int],
     ) -> Snapshot:
-        """Apply ``candidate`` to the device.
+        """Fold ``candidate`` into this adapter's session-local state.
 
         For each :class:`~rytm_randomizer.cockpit.data.PadDelta` whose
-        ``pad_id`` is **not** in ``pad_locks``, send the
-        ``proposed_params`` changes to the device. Pads in ``pad_locks``
-        are skipped — the operator has explicitly held them.
+        ``pad_id`` is **not** in ``pad_locks``, the ``proposed_params``
+        replace that pad's params in the projection. Pads in
+        ``pad_locks`` are skipped — the operator has explicitly held them.
 
-        Returns the new device state as a fresh
-        :class:`~rytm_randomizer.cockpit.data.Snapshot` (read back after
-        apply).
+        **Never transmits.** Returns the resulting state as a fresh
+        :class:`~rytm_randomizer.cockpit.data.Snapshot`.
         """
         ...
 
     def apply_send_plan(self, send_plan: CockpitSendPlan) -> Snapshot:
-        """Apply a prepared, ready ``CockpitSendPlan`` to the device.
+        """Fold a prepared, ready ``CockpitSendPlan`` into session-local state.
 
-        SEND uses this method once the UI/server preflight has produced
-        a ready inert plan. Adapters must reject blocked plans and must
-        not recompute packet contents at the hardware boundary.
+        SEND uses this method once the UI/server preflight has produced a
+        ready inert plan, so the cockpit's own view matches what the
+        operator asked for. Implementations must reject blocked plans and
+        must not recompute packet contents.
+
+        **Never transmits.** When the session is armed, the same plan is
+        additionally handed to the ArmedApply seam — that call, not this
+        one, is what reaches the wire.
         """
         ...
-
-    def commit_kit(self, snapshot: Snapshot, label: str | None) -> None:
-        """Write ``snapshot`` to the device's persistent kit memory.
-
-        Mock: no-op (the mock has no persistence). There is no hardware
-        implementation: writing a kit dump to a real device is a
-        kit/sound mutation, and the armed seam refuses those outright
-        until a real capture-before-write plus restore path exists.
-        """
 
 
 __all__ = ["DeviceAdapter"]

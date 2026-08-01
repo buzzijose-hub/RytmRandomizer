@@ -116,6 +116,45 @@ class CockpitSession:
     the device disappears (auto-disarm — never auto-re-arm).
     """
 
+    hardware_intent: bool = False
+    """True from a successful ``arm`` until an EXPLICIT ``disarm``.
+
+    Distinct from :attr:`armed_apply`, which an *involuntary* auto-disarm
+    (device unplugged, provider error, sibling teardown) also clears. That
+    difference is a safety boundary, not bookkeeping: ``_handle_send``
+    routes to the seam only while ``armed_apply`` is set, so after an
+    auto-disarm a SEND would otherwise fall through to the mock adapter —
+    skipping the per-action confirmation, writing nothing to hardware, and
+    still acking ``ok: True`` with a fresh snapshot id. The operator would
+    believe a live set was still landing on the device.
+
+    While this flag is set and ``armed_apply`` is ``None``, SEND is
+    REFUSED instead: the operator asked for hardware, so silently
+    downgrading to a mock write is never the right answer. Cleared only by
+    an explicit ``disarm`` (the operator choosing to go passive).
+    """
+
+    arm_secret: str | None = None
+    """The server-minted per-launch ARM secret, or ``None`` when unconfigured.
+
+    The client must echo this exact value as the ``arm`` command's
+    ``arm_token``. It is minted by ``__main__`` with
+    :func:`secrets.token_urlsafe` and written 0600 alongside the WS
+    handshake token, so only a process that can read the operator's own
+    files can arm.
+
+    The distinction from the WS handshake token is deliberate: the
+    handshake token authenticates *the connection*, this secret authorises
+    *the transmit capability*. A future spec may hand the shell the WS
+    token while withholding the arm secret; keeping them separate makes
+    that a configuration change rather than a redesign.
+
+    ``None`` **fails arming closed** — the historical behaviour (accept
+    any non-empty client-supplied string) was not authentication at all:
+    the expected value was derived from the client's own input, so the
+    constant-time comparison compared a value with itself.
+    """
+
     arm_port_provider: OutputOpeningProvider | None = None
     """Optional injected output-port provider for the ``arm`` command.
 

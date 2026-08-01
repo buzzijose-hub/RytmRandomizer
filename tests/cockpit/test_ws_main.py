@@ -31,26 +31,11 @@ from rytm_randomizer.cockpit.device.connection import (
     NullPortEnumerator,
     ProviderPortEnumerator,
     active_connection_manager,
-    set_active_connection_manager,
 )
 from rytm_randomizer.cockpit.ws.server import ConnectionRegistry
 from rytm_randomizer.cockpit.ws.session import CockpitSession
 
 pytestmark = pytest.mark.fast
-
-
-@pytest.fixture(autouse=True)
-def _reset_active_connection_manager() -> Any:
-    """``main()`` registers a process-level ConnectionManager; never leak it.
-
-    Without this reset, a ``main()`` invocation in one test would leave
-    the registered manager visible to every later test in the same
-    worker (the handlers' ``session_status`` phase would silently switch
-    from the device-derived fallback to the leaked manager's state).
-    """
-
-    yield
-    set_active_connection_manager(None)
 
 
 # ---------------------------------------------------------------------------
@@ -171,16 +156,21 @@ def test_resolve_port_rejects_non_integer_env_var(monkeypatch: pytest.MonkeyPatc
 
 
 def _redirect_token_file(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
-    """Redirect the token file path under ``tmp_path`` for the duration of one test.
+    """Redirect BOTH per-launch secret files under ``tmp_path`` for one test.
 
-    Without this redirect ``main()`` (or ``_provision_token()``) would
-    write to ``~/.rytm-randomizer/cockpit-ws-token`` on the developer's
-    machine and clobber a real running cockpit's token. Sets the
-    canonical env var so the production code path is exercised.
+    Without this redirect ``main()`` (or ``_provision_token()`` /
+    ``_provision_arm_secret()``) would write to
+    ``~/.rytm-randomizer/`` on the developer's machine and clobber a real
+    running cockpit's credentials. Sets the canonical env vars so the
+    production code paths are exercised.
+
+    Returns the WS handshake-token path (the one most tests assert on);
+    the ARM secret lands next to it as ``arm-secret``.
     """
 
     token_path = tmp_path / "ws-token"
     monkeypatch.setenv(cockpit_main._TOKEN_FILE_ENV_VAR, str(token_path))
+    monkeypatch.setenv(cockpit_main._ARM_SECRET_FILE_ENV_VAR, str(tmp_path / "arm-secret"))
     return token_path
 
 
@@ -319,6 +309,137 @@ def test_provision_token_silent_when_env_var_set(
 
     captured = capsys.readouterr()
     assert captured.out == ""
+
+
+# ---------------------------------------------------------------------------
+# The ARM secret — a SECOND, separate per-launch credential.
+#
+# The handshake token admits a connection; the ARM secret authorises the
+# transmit capability. The arm handler used to accept any non-empty
+# client-supplied string and then derive the "expected" value from that
+# same string, so ``compare_digest`` compared a value with itself. These
+# tests pin the server side of the replacement.
+# ---------------------------------------------------------------------------
+
+
+def test_arm_secret_is_written_to_its_own_file(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A separate file from the WS token, so one can be handed out without the other."""
+
+    token_path = _redirect_token_file(monkeypatch, tmp_path)
+
+    secret = cockpit_main._provision_arm_secret()
+
+    secret_path = tmp_path / "arm-secret"
+    assert secret_path.read_text(encoding="utf-8") == secret
+    assert secret_path != token_path
+
+
+def test_arm_secret_is_written_with_restrictive_mode(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """0600 on POSIX — only a process running as the operator can read it."""
+
+    _redirect_token_file(monkeypatch, tmp_path)
+
+    cockpit_main._provision_arm_secret()
+
+    if sys.platform != "win32":
+        assert stat.S_IMODE((tmp_path / "arm-secret").stat().st_mode) == 0o600
+
+
+def test_arm_secret_is_freshly_minted_per_launch(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """An arm capability must not survive a restart the operator did not authorise."""
+
+    _redirect_token_file(monkeypatch, tmp_path)
+
+    first = cockpit_main._provision_arm_secret()
+    second = cockpit_main._provision_arm_secret()
+
+    assert first != second
+    assert (tmp_path / "arm-secret").read_text(encoding="utf-8") == second
+
+
+def test_arm_secret_differs_from_the_handshake_token(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Two independent credentials, not one value written twice."""
+
+    _redirect_token_file(monkeypatch, tmp_path)
+
+    assert cockpit_main._provision_token() != cockpit_main._provision_arm_secret()
+
+
+def test_arm_secret_is_echoed_only_in_dev_mode(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Dev-mode prints it for interactive copy; the production path stays silent."""
+
+    monkeypatch.delenv(cockpit_main._ARM_SECRET_FILE_ENV_VAR, raising=False)
+    monkeypatch.setattr(cockpit_main.Path, "home", classmethod(lambda cls: tmp_path))
+    secret = cockpit_main._provision_arm_secret()
+    dev_out = capsys.readouterr().out
+    assert "[cockpit] ARM secret:" in dev_out
+    assert secret in dev_out
+
+    monkeypatch.setenv(cockpit_main._ARM_SECRET_FILE_ENV_VAR, str(tmp_path / "arm-secret"))
+    cockpit_main._provision_arm_secret()
+    assert capsys.readouterr().out == ""
+
+
+def test_main_installs_the_arm_secret_on_the_session(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Without this wiring the arm handler fails closed and nobody can arm."""
+
+    _redirect_token_file(monkeypatch, tmp_path)
+    monkeypatch.setattr(cockpit_main, "default_profiles_dir", lambda: tmp_path / "profiles")
+    monkeypatch.setattr(cockpit_main, "default_library_dir", lambda: tmp_path / "library")
+    monkeypatch.setattr(cockpit_main, "default_captures_dir", lambda: tmp_path / "captures")
+    captured: dict[str, Any] = {}
+    real_create_app = cockpit_main.create_app
+
+    def _spy_create_app(session: Any, **kwargs: Any) -> Any:
+        captured["session"] = session
+        return real_create_app(session, **kwargs)
+
+    monkeypatch.setattr(cockpit_main, "create_app", _spy_create_app)
+    monkeypatch.setattr(cockpit_main.uvicorn, "run", lambda app, *, host, port: None)
+
+    cockpit_main.main()
+
+    on_disk = (tmp_path / "arm-secret").read_text(encoding="utf-8")
+    assert on_disk
+    # The session the app serves carries exactly the secret written to disk,
+    # so a client that can read the 0600 file — and only such a client — arms.
+    assert captured["session"].arm_secret == on_disk
+    # And it is NOT the handshake token.
+    assert captured["session"].arm_secret != (tmp_path / "ws-token").read_text(encoding="utf-8")
+
+
+def test_arm_secret_path_defaults_under_home(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fresh checkout works with no env-var dance."""
+
+    monkeypatch.delenv(cockpit_main._ARM_SECRET_FILE_ENV_VAR, raising=False)
+    monkeypatch.setattr(cockpit_main.Path, "home", classmethod(lambda cls: Path("/fake/home")))
+
+    resolved = cockpit_main._resolve_arm_secret_path()
+
+    assert resolved.name == "cockpit-arm-secret"
+    assert resolved.parent.name == ".rytm-randomizer"
+
+
+def test_arm_secret_path_honours_its_env_var(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv(cockpit_main._ARM_SECRET_FILE_ENV_VAR, str(tmp_path / "elsewhere"))
+
+    assert cockpit_main._resolve_arm_secret_path() == (tmp_path / "elsewhere").absolute()
 
 
 def test_write_token_file_creates_parent_directories(tmp_path: Path) -> None:

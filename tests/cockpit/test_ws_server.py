@@ -370,11 +370,21 @@ def test_undo_after_send_emits_snapshot_and_history(session_factory) -> None:
 
 
 # ---------------------------------------------------------------------------
-# save flow.
+# save flow — refused end-to-end, and inert.
 # ---------------------------------------------------------------------------
 
 
-def test_save_promotes_entry_and_resets_unsaved_sends(session_factory) -> None:
+def test_save_is_refused_over_the_wire_and_changes_nothing(session_factory) -> None:
+    """``save`` used to ack a durable write that never happened.
+
+    The handler called ``device.commit_kit`` — a mock log line — then
+    acked ``ok: true``, promoted the history entry to ``kind="saved"``,
+    and reset ``unsaved_sends`` to zero. Operators were told their kit
+    was in the device's persistent memory. No persistent kit-write
+    capability exists, so the command now refuses and leaves every piece
+    of session state exactly where it was.
+    """
+
     session = session_factory()
     session.unsaved_sends = 2
     client = TestClient(create_app(session, token=TEST_WS_TOKEN))
@@ -382,14 +392,13 @@ def test_save_promotes_entry_and_resets_unsaved_sends(session_factory) -> None:
     with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         _recv_initial_events(ws)
         ack = _send_command(ws, "req-1", "save", label="industrial-peak")
-        events_after = _drain(ws, 2)
 
-    assert ack["ok"] is True
-    types_emitted = [e["type"] for e in events_after]
-    assert EVENT_HISTORY_UPDATED in types_emitted
-    assert EVENT_SESSION_STATUS in types_emitted
-    status_event = next(e for e in events_after if e["type"] == EVENT_SESSION_STATUS)
-    assert status_event["unsaved_sends"] == 0
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert "not supported" in ack["message"]
+    # Inert: the unsaved counter is NOT cleared and nothing was promoted.
+    assert session.unsaved_sends == 2
+    assert all(entry.kind != "saved" for entry in session.history_store.current.entries)
 
 
 # ---------------------------------------------------------------------------
@@ -528,6 +537,21 @@ def _await_zero_connections(registry: ConnectionRegistry, timeout: float = 5.0) 
 
     deadline = time.monotonic() + timeout
     while registry.connection_count and time.monotonic() < deadline:
+        time.sleep(0.01)
+    return registry.connection_count
+
+
+def _await_connection_count(
+    registry: ConnectionRegistry, expected: int, timeout: float = 5.0
+) -> int:
+    """Poll until exactly ``expected`` connections remain registered.
+
+    Endpoint teardown is asynchronous, so a test that closes one of several
+    connections must wait for that specific unregister rather than for zero.
+    """
+
+    deadline = time.monotonic() + timeout
+    while registry.connection_count != expected and time.monotonic() < deadline:
         time.sleep(0.01)
     return registry.connection_count
 
@@ -923,3 +947,80 @@ def test_resolve_max_message_bytes_valid_env_wins(monkeypatch: pytest.MonkeyPatc
     monkeypatch.setenv("RYTM_RAND_WS_MAX_MESSAGE_BYTES", "4096")
 
     assert _resolve_max_message_bytes() == 4096
+
+
+def test_sibling_disconnect_leaves_the_armed_session_armed(session_factory) -> None:
+    """Closing a SECOND connection must not disarm the performing one.
+
+    One ``CockpitSession`` is shared by every connection, so an
+    unconditional disarm in the ``/ws`` teardown let any sibling transport
+    close the armed operator's exclusive output port. Concretely: the
+    operator arms in tab A and starts a live set, glances at diagnostics in
+    tab B, closes B — and A's port dies mid-song with no warning and no
+    action of their own.
+
+    Teardown must therefore disarm only when the LAST connection leaves.
+    """
+
+    from rytm_randomizer.cockpit.ws import handlers
+
+    session = session_factory()
+    app = create_app(session, token=TEST_WS_TOKEN)
+    client = TestClient(app)
+    registry = app.state.connection_registry
+
+    class _Port:
+        name = "Elektron Analog Rytm MK2 Out"
+
+        def __init__(self) -> None:
+            self.closed = 0
+
+        def send(self, message: object) -> None:  # pragma: no cover - unused
+            raise AssertionError("this test never transmits")
+
+        def close(self) -> None:
+            self.closed += 1
+
+    class _Provider:
+        def __init__(self) -> None:
+            self.port = _Port()
+
+        def list_output_names(self) -> tuple[str, ...]:
+            return (self.port.name,)
+
+        def open_output(self, port_name: str) -> _Port:
+            assert port_name == self.port.name
+            return self.port
+
+    provider = _Provider()
+    session.arm_port_provider = provider
+    session.arm_secret = "test-arm-secret"
+
+    with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws_a:
+        _recv_initial_events(ws_a)
+        ack = _send_command(
+            ws_a,
+            "req-arm",
+            "arm",
+            arm_token="test-arm-secret",  # noqa: S106 — the session's own test secret
+            confirm=True,
+            port_name=provider.port.name,
+        )
+        assert ack["ok"] is True, ack
+        assert handlers.session_is_armed(session) is True
+
+        # A sibling connection comes and goes while A is still performing.
+        with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws_b:
+            _recv_initial_events(ws_b)
+            assert registry.connection_count == 2
+        _await_connection_count(registry, 1)
+
+        # A is untouched: still armed, port never closed.
+        assert session.armed_apply is not None
+        assert handlers.session_is_armed(session) is True
+        assert provider.port.closed == 0
+
+    # Last connection gone -> deterministic teardown still happens.
+    assert _await_zero_connections(registry) == 0
+    assert session.armed_apply is None
+    assert provider.port.closed == 1

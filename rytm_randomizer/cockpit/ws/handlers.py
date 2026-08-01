@@ -59,6 +59,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import hmac
 import importlib.util
 import json
 import time
@@ -651,6 +652,22 @@ async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> Handl
         refusal = _armed_send_over_seam(session, sent_plan, cmd)
         if refusal is not None:
             return refusal
+    elif session.hardware_intent:
+        # The operator armed and never explicitly disarmed, but the seam is
+        # gone — an INVOLUNTARY auto-disarm (device unplugged, provider
+        # error, transport teardown) cleared it. Falling through here would
+        # skip the per-action confirmation, write to the mock adapter, and
+        # ack ok:True with a new snapshot id while putting ZERO bytes on the
+        # wire: the operator keeps performing, believing the device is
+        # following. Refuse instead, and say why.
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION,
+                "hardware was disarmed automatically (device lost or send "
+                "failed); re-arm to send to hardware, or disarm explicitly "
+                "to continue in mock mode",
+            )
+        )
     new_snapshot = session.device.apply_send_plan(sent_plan)
     session.history_store.append_post_send(new_snapshot, via="send")
     session.unsaved_sends += 1
@@ -673,27 +690,51 @@ async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> Handl
     )
 
 
-async def _handle_save(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
-    raw_label = cmd.get("label")
-    label = None if raw_label is None else str(raw_label)
-    current = session.history_store.current
-    if not current.entries:
-        return HandlerResult(ack=_error_ack(ERR_VALIDATION, "no current snapshot to save"))
-    snapshot = next(
-        entry.snapshot
-        for entry in current.entries
-        if entry.snapshot.snapshot_id == current.current_id
-    )
-    session.device.commit_kit(snapshot, label)
-    session.history_store.promote_current_to_saved(label)
-    session.unsaved_sends = 0
-    return HandlerResult(
-        ack={"ok": True, "snapshot_id": current.current_id},
-        events=[
-            _build_history_updated(session.history_store.current),
-            _build_session_status(session),
-        ],
-    )
+SAVE_UNSUPPORTED_MESSAGE: Final[str] = (
+    "save is not supported: writing a kit to the device's persistent memory "
+    "requires a SysEx kit write plus a capture-before-write restore path, "
+    "neither of which exists. Nothing was written and no history entry was "
+    "promoted."
+)
+"""The single, honest refusal text for the ``save`` command.
+
+Spells out what is missing and — critically — states that **nothing
+changed**, because the previous ack said the opposite.
+"""
+
+
+async def _handle_save(_cmd: dict[str, object], _session: CockpitSession) -> HandlerResult:
+    """Refuse ``save``: no persistent kit-write capability exists.
+
+    This handler used to ack ``{"ok": true, "snapshot_id": ...}`` and
+    promote the current history entry to ``kind="saved"`` with
+    ``unsaved_sends`` reset to zero — the full vocabulary of a durable
+    write. Underneath, the only thing it called was
+    ``session.device.commit_kit``, whose sole implementation was a mock
+    ``logger.info`` line. Nothing was ever written to a device, on the
+    mock path or any other, while ``docs/COCKPIT_QUICKSTART.md`` told
+    operators "SAVE writes a Rytm SysEx kit dump to the device's
+    persistent kit memory."
+
+    That is the worst failure shape available here: an operator who
+    believes a kit is safely stored stops treating it as volatile, and
+    loses it on the next power cycle. A refusal costs them a workflow; a
+    false success costs them their work.
+
+    So ``save`` now fails closed and says why. It is deliberately
+    unconditional — refusing only "when unimplemented" would still leave
+    the mock path acking a durable write it cannot perform. The
+    capability returns when a real SysEx kit write plus the
+    capture-before-write restore path the Live-but-Passive model requires
+    both land; until then the armed seam refuses persistent kit/sound
+    mutation for exactly the same reason (see
+    :class:`~rytm_randomizer.senders.armed_apply.KitMutationUnsupportedError`).
+
+    Emits **no** events: refusing must not perturb history, the unsaved
+    counter, or the session status. Both arguments are unused by design.
+    """
+
+    return HandlerResult(ack=_error_ack(ERR_VALIDATION, SAVE_UNSUPPORTED_MESSAGE))
 
 
 async def _handle_load_snapshot(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
@@ -1375,12 +1416,19 @@ async def _handle_build_operator_package_receipt(
 # ---------------------------------------------------------------------------
 # Wave-4 arm / disarm — the in-UI half of the Live-but-Passive model.
 #
-# The ``arm`` command is the ONLY path that ever constructs the real-MIDI
-# device adapter, and it does so exclusively through the ``senders``
-# ArmedApply seam: explicit token + confirm, exact-name output resolution
-# (fail-closed), a required pre-write backup hook, and auto-disarm on
-# provider error. The mock adapter stays the default; unwired sessions
-# never see any of this surface.
+# The ``arm`` command is the ONLY path that ever opens a real output port,
+# and it does so exclusively through the ``senders`` ArmedApply seam:
+# confirm + a token checked against the SERVER-minted per-launch ARM
+# secret (``CockpitSession.arm_secret``), exact-name output resolution
+# (fail-closed), refusal of any port that cannot be closed, and
+# auto-disarm on provider error. The mock adapter stays the default;
+# unwired sessions never see any of this surface.
+#
+# The arm secret is a real authentication factor: it is minted by
+# ``__main__`` and written 0600, so a caller must be able to read the
+# operator's own files to arm. An earlier revision accepted any non-empty
+# client string and then derived the "expected" token from that same
+# string — ``compare_digest(x, x)`` — which authenticated nothing.
 # ---------------------------------------------------------------------------
 
 _ARM_FAILED_FINGERPRINT: Final[str] = "cockpit.arm.failed"
@@ -1498,17 +1546,44 @@ def _armed_send_over_seam(
 def _teardown_armed_state(session: CockpitSession) -> None:
     """Return the session to the passive baseline (idempotent).
 
-    Disarms the ArmedApply seam (best-effort port close). The device
-    adapter is never swapped on arm any more (the seam owns the only
-    output handle), so there is nothing to restore here. Used by the
-    ``disarm`` handler and by the armed watchdog's device-gone
-    auto-disarm; never re-arms.
+    Disarms the ArmedApply seam, which closes the one armed output port.
+    The device adapter is never swapped on arm any more (the seam owns
+    the only output handle), so there is nothing to restore here. Never
+    re-arms.
+
+    This is the single teardown entry point every exit path funnels
+    through: the ``disarm`` handler, the armed watchdog's device-gone
+    auto-disarm, a WebSocket disconnect, and app shutdown
+    (:func:`disarm_session_on_teardown`). Idempotent, so overlapping
+    teardowns close the port exactly once.
     """
 
     armed = session.armed_apply
     session.armed_apply = None
     if armed is not None:
         armed.disarm()
+
+
+def disarm_session_on_teardown(session: CockpitSession) -> None:
+    """Public teardown hook: drop a session to passive and close its port.
+
+    Wired by the transport and the sidecar entrypoint so an armed session
+    can never outlive the thing that armed it:
+
+    * :func:`~rytm_randomizer.cockpit.ws.server.create_app`'s ``/ws``
+      endpoint calls it in its ``finally`` — the WS disconnect that used
+      to only unregister the queue and cancel the writer now also
+      releases the hardware handle. Closing the browser tab with the
+      session armed left the port open indefinitely.
+    * ``__main__`` registers it as a FastAPI ``shutdown`` handler, so
+      Ctrl+C / SIGTERM against uvicorn tears the port down as well.
+
+    Idempotent and exception-free by construction: it delegates to
+    :func:`_teardown_armed_state`, whose ``disarm`` swallows a dying
+    port's close error. A teardown path must never raise.
+    """
+
+    _teardown_armed_state(session)
 
 
 def build_armed_watchdog(
@@ -1600,8 +1675,52 @@ def _resolve_arm_port_name(cmd: Mapping[str, object]) -> str | None:
     return raw
 
 
+_ARM_UNAVAILABLE_MESSAGE: Final[str] = (  # noqa: S105 — refusal text, not a credential
+    "arm is unavailable: no ARM secret is configured for this launch"
+)
+"""Refusal text when the session has no server-minted ARM secret.
+
+Fail closed: without a secret there is nothing to authenticate the
+client's ``arm_token`` against, so arming is simply not offered.
+"""
+
+_ARM_REJECTED_MESSAGE: Final[str] = (  # noqa: S105 — refusal text, not a credential
+    "arm refused: invalid arm_token"
+)
+"""Refusal text for a client token that does not match the ARM secret.
+
+Deliberately identical for "empty", "wrong type", and "wrong value" — the
+wire must not tell a caller which part of its guess was closer.
+"""
+
+
+def _arm_token_authorised(session: CockpitSession, supplied: object) -> bool:
+    """Validate the client's ``arm_token`` against the server's ARM secret.
+
+    The whole point of the check: the expected value comes from
+    :attr:`CockpitSession.arm_secret` — server-minted at launch and
+    written 0600 — **never** from the command. The previous
+    implementation built the expected token from the client's own
+    submission and then ran ``compare_digest(x, x)``, which is a
+    tautology: any non-empty string armed the device. Nothing was
+    authenticated.
+
+    Fails closed on a missing secret (nothing to compare against) and on
+    any non-string / empty submission, and uses
+    :func:`hmac.compare_digest` so response timing does not leak a
+    prefix of the secret.
+    """
+
+    secret = session.arm_secret
+    if not isinstance(secret, str) or not secret:
+        return False
+    if not isinstance(supplied, str) or not supplied:
+        return False
+    return hmac.compare_digest(supplied, secret)
+
+
 async def _handle_arm(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
-    """Explicit in-UI arm: token + confirm, then the ArmedApply seam."""
+    """Explicit in-UI arm: server-secret auth + confirm, then the ArmedApply seam."""
 
     if cmd.get("confirm") is not True:
         return HandlerResult(
@@ -1610,6 +1729,32 @@ async def _handle_arm(cmd: dict[str, object], session: CockpitSession) -> Handle
     token = cmd.get("arm_token")
     if not isinstance(token, str) or not token:
         return HandlerResult(ack=_error_ack(ERR_VALIDATION, "arm requires a non-empty arm_token"))
+    if session.arm_secret is None:
+        # No secret provisioned for this launch -> the transmit capability
+        # is not offered at all. Distinguished from a mismatch because the
+        # operator's remedy differs (configure the sidecar vs. re-read the
+        # secret file), and it leaks nothing about any secret's value.
+        _logger.warning(
+            "arm_refused_no_secret",
+            extra={"fingerprint": _ARM_FAILED_FINGERPRINT},
+        )
+        session.error_journal.record(
+            _ARM_FAILED_FINGERPRINT,
+            "arm refused: no ARM secret configured for this launch",
+        )
+        get_metrics().record_error(_ARM_FAILED_FINGERPRINT)
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, _ARM_UNAVAILABLE_MESSAGE))
+    if not _arm_token_authorised(session, token):
+        _logger.warning(
+            "arm_token_mismatch",
+            extra={"fingerprint": _ARM_FAILED_FINGERPRINT},
+        )
+        session.error_journal.record(
+            _ARM_FAILED_FINGERPRINT,
+            "arm refused: arm_token did not match the launch ARM secret",
+        )
+        get_metrics().record_error(_ARM_FAILED_FINGERPRINT)
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, _ARM_REJECTED_MESSAGE))
     if session_is_armed(session):
         return HandlerResult(
             ack=_error_ack(ERR_VALIDATION, "session is already armed; disarm first")
@@ -1633,10 +1778,15 @@ async def _handle_arm(cmd: dict[str, object], session: CockpitSession) -> Handle
     from ...senders.armed_apply import ArmedApplyError, ArmedApplySession  # noqa: PLC0415
     from ...senders.hardware import ExactOutputOpener  # noqa: PLC0415
 
+    # The seam is constructed with the SERVER's secret, never with the
+    # client-supplied value. ``token`` has already been proven equal to it
+    # above; passing the secret makes that explicit and keeps the seam's
+    # own token check a genuine second comparison against server state
+    # rather than a restatement of the client's input.
     armed_apply = ArmedApplySession(
         opener=ExactOutputOpener(provider),
         port_name=port_name,
-        arm_token=token,
+        arm_token=session.arm_secret,
     )
     try:
         armed_apply.arm(token)
@@ -1670,6 +1820,10 @@ async def _handle_arm(cmd: dict[str, object], session: CockpitSession) -> Handle
     # passive adapter keeps modelling snapshot/history state; the seam does
     # the transmitting.
     session.armed_apply = armed_apply
+    # Records the operator's INTENT to be live. Survives an involuntary
+    # auto-disarm so a later SEND is refused rather than silently
+    # downgraded to a mock write (see CockpitSession.hardware_intent).
+    session.hardware_intent = True
     return HandlerResult(
         ack={"ok": True, "armed": True, "midi_port": port_name},
         events=[_build_session_status(session)],
@@ -1682,6 +1836,11 @@ async def _handle_disarm(_cmd: dict[str, object], session: CockpitSession) -> Ha
     if session.armed_apply is None and not session.device.is_armed:
         return HandlerResult(ack=_error_ack(ERR_VALIDATION, "session is not armed"))
     _teardown_armed_state(session)
+    # EXPLICIT disarm is the only thing that clears hardware intent: the
+    # operator has chosen to go passive, so a subsequent mock SEND is what
+    # they asked for. Involuntary auto-disarms deliberately leave the flag
+    # set so SEND refuses instead of silently writing to the mock.
+    session.hardware_intent = False
     return HandlerResult(
         ack={"ok": True, "armed": False},
         events=[_build_session_status(session)],
@@ -1862,17 +2021,12 @@ def _resolve_handler(cmd_type: str) -> HandlerFn | None:
         return _CORE_HANDLERS[cmd_type]
     if cmd_type.startswith("wizard_"):
         # Lazy import keeps the wizard dispatcher table out of the import
-        # graph of cockpit boot paths that never touch the wizard. The
-        # wizard table pre-dates the strict-typing gate (bare ``dict``
-        # command payloads); the cast re-states its runtime shape.
-        # Justified suppression: typing WIZARD_HANDLERS properly means
-        # pulling the whole wizard surface into the strict gate — a
-        # follow-up, not this zero-behavior-change pass.
-        from .wizard_handlers import (  # noqa: PLC0415 # isort: skip
-            WIZARD_HANDLERS,  # pyright: ignore[reportUnknownVariableType]
-        )
+        # graph of cockpit boot paths that never touch the wizard.
+        # ``WIZARD_HANDLERS`` is now declared ``Mapping[str, WizardHandlerFn]``
+        # — structurally identical to ``HandlerFn`` — so no cast is needed.
+        from .wizard_handlers import WIZARD_HANDLERS  # noqa: PLC0415
 
-        return cast("Mapping[str, HandlerFn]", WIZARD_HANDLERS).get(cmd_type)
+        return WIZARD_HANDLERS.get(cmd_type)
     return None
 
 

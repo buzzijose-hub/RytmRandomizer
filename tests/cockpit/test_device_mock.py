@@ -334,40 +334,28 @@ def test_apply_send_plan_rejects_blocked_plan() -> None:
 
 
 # ---------------------------------------------------------------------------
-# commit_kit: no-op + INFO log.
+# No persistent-write surface — the adapter is a passive state projection.
 # ---------------------------------------------------------------------------
 
 
-def test_commit_kit_is_a_noop_returning_none() -> None:
-    adapter = MockDeviceAdapter(initial=_snapshot())
+def test_the_mock_has_no_commit_kit_method() -> None:
+    """``commit_kit`` is gone, and its absence is the point.
 
-    assert adapter.commit_kit(_snapshot(), label="my-label") is None
-
-
-def test_commit_kit_logs_at_info_with_snapshot_metadata(
-    capture_mock_logs: pytest.LogCaptureFixture,
-) -> None:
-    adapter = MockDeviceAdapter(initial=_snapshot())
-
-    adapter.commit_kit(_snapshot(), label="My Kit")
-
-    info_records = [r for r in capture_mock_logs.records if r.levelno == logging.INFO]
-    assert info_records
-    record = info_records[0]
-    assert record.snapshot_id == "01HXY5Q9PJM0123456789ABCD0"
-    assert record.device == "analog_rytm_mk2"
-    assert record.label == "My Kit"
-
-
-def test_commit_kit_accepts_none_label(
-    capture_mock_logs: pytest.LogCaptureFixture,
-) -> None:
-    """``label`` may be ``None`` (auto-label deferred to caller)."""
+    The mock's implementation was a ``logger.info`` line, but the WS
+    ``save`` handler called it and then acked durable success — so the
+    cockpit told operators a kit was written to the device's persistent
+    memory when nothing had been written anywhere. The method is removed
+    from the Protocol and from this adapter; ``save`` refuses instead.
+    """
 
     adapter = MockDeviceAdapter(initial=_snapshot())
 
-    adapter.commit_kit(_snapshot(), label=None)
+    assert not hasattr(adapter, "commit_kit")
 
-    info_records = [r for r in capture_mock_logs.records if r.levelno == logging.INFO]
-    assert info_records
-    assert info_records[0].label is None
+
+def test_the_mock_exposes_no_persistent_write_surface_at_all() -> None:
+    """Nothing on the adapter claims to write through to a device."""
+
+    surface = {name for name in dir(MockDeviceAdapter) if not name.startswith("_")}
+
+    assert surface == {"apply", "apply_send_plan", "capture_snapshot", "is_armed"}

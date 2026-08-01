@@ -50,26 +50,29 @@ import importlib.util
 import subprocess
 import sys
 from pathlib import Path
+from typing import Final
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[1]
 
-SIDECAR_BINARY_NAME = "rytm-sidecar"
+SIDECAR_BINARY_NAME: Final[str] = "rytm-sidecar"
 """Basename of the produced binary (PyInstaller adds ``.exe`` on Windows)."""
 
-SHUTDOWN_SENTINEL = "RYTM_SIDECAR_SHUTDOWN"
+SHUTDOWN_SENTINEL: Final[str] = "RYTM_SIDECAR_SHUTDOWN"
 """Line the Tauri shell writes to the sidecar's stdin to request shutdown.
 
 Must match ``SHUTDOWN_SENTINEL`` in ``desktop/shell/src/sidecar.rs`` —
 tests/test_launch_smoke.py pins the two in lockstep.
 """
 
-PORT_ENV_VAR = "RYTM_RAND_WS_PORT"
+PORT_ENV_VAR: Final[str] = "RYTM_RAND_WS_PORT"
 """Runtime port override the cockpit honours (passthrough, not baked in)."""
 
-TOKEN_FILE_ENV_VAR = "RYTM_RAND_WS_TOKEN_FILE"  # noqa: S105 — env var name, not a secret
+TOKEN_FILE_ENV_VAR: Final[str] = (
+    "RYTM_RAND_WS_TOKEN_FILE"  # noqa: S105 — env var name, not a secret
+)
 """Runtime token-file override the cockpit honours (passthrough, not baked in)."""
 
-_FORCE_EXIT_GRACE_SECS = 10.0
+_FORCE_EXIT_GRACE_SECS: Final[float] = 10.0
 """Watchdog delay between the graceful SIGINT and the hard os._exit fallback."""
 
 #: Packages PyInstaller must collect wholesale. ``rytm_randomizer`` is the
@@ -77,7 +80,7 @@ _FORCE_EXIT_GRACE_SECS = 10.0
 #: PyInstaller's static import scan); uvicorn/websockets are the ASGI
 #: serving stack with dynamic loader lookups; mido + rtmidi are the
 #: passive enumeration/monitor boundary; msgpack backs profile export.
-COLLECT_ALL_PACKAGES: tuple[str, ...] = (
+COLLECT_ALL_PACKAGES: Final[tuple[str, ...]] = (
     "rytm_randomizer",
     "uvicorn",
     "websockets",
@@ -88,7 +91,7 @@ COLLECT_ALL_PACKAGES: tuple[str, ...] = (
 
 #: Heavy, PyInstaller-hostile packages excluded from the bundle. librosa
 #: (and its numba/llvmlite chain) only backs the wizard's audio analyzers.
-EXCLUDED_PACKAGES: tuple[str, ...] = (
+EXCLUDED_PACKAGES: Final[tuple[str, ...]] = (
     "librosa",
     "numba",
     "llvmlite",

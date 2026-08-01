@@ -6,24 +6,39 @@ freely (passive listening — connection health is known immediately and the
 operator's sound output is never interrupted), but every **outbound** byte
 must route through the armed transmit boundary.
 
-This test freezes the set of modules allowed to **construct a real output
-port** or **define the hardware send**, so a new armed entry point cannot
-appear unnoticed the way PR #213's ``tools/rush01_midi_apply.py`` did. WS-4
-collapses these call sites into a single ``senders`` ArmedApply seam; until
-then this whitelist is the enforceable boundary, and it only ever SHRINKS.
+Scope of the single-seam claim
+------------------------------
 
-The scanned transmit markers (across ``rytm_randomizer/``) are the two that
-identify the *armed boundary itself*, not its indirect users:
+The single-seam rule is scoped to the **cockpit / live operator surface**,
+not literally every line in the repo. The retired-in-place V1.34 monolith
+path (``app.py`` + ``shell.py``) still constructs its own output ports and
+sends directly; that is legacy, it is frozen, and it is named explicitly in
+:data:`_LEGACY_V134_TRANSMIT_MODULES` below rather than being quietly folded
+into "the whitelist". Anything NEW must route through the ``senders``
+ArmedApply seam.
+
+This test freezes the set of modules allowed to **construct a real output
+port**, **send on a real port object**, or **define the hardware send**, so a
+new armed entry point cannot appear unnoticed the way PR #213's
+``tools/rush01_midi_apply.py`` did. The whitelist only ever SHRINKS —
+:func:`test_legacy_v134_transmit_allowlist_only_shrinks` pins that.
+
+The scanned transmit markers (across ``rytm_randomizer/``) identify the
+*armed boundary itself*, not its indirect users:
 
 * ``open_output(`` — constructing a real output port.
 * ``def hardware_send`` / ``def guarded`` — defining the hardware send seam.
+* ``<port-ish>.send(`` — transmitting on a real **port object**
+  (``port.send``, ``self._port.send``, ``out.send``, ``output_port.send``).
+  Membership-only markers let a module open no port yet still transmit on one
+  handed to it; this marker closes that.
 
 Deliberately NOT flagged (these are the safe seam working as designed):
 
-* ``send_cc(injected_sender, ...)`` — the engines, runners, and
-  ``senders/midi_event_plan`` call ``midi_io.send_cc`` on a **dependency-
-  injected** ``Sender`` protocol; whether that Sender is a mock or a real port
-  is decided at the armed boundary above, not at the call site. Restricting
+* ``sender.send(...)`` / ``outbox.send(...)`` — the engines, runners, and
+  ``senders/hardware`` write to a **dependency-injected** ``Sender`` /
+  ``MidiOutbox`` protocol; whether that Sender is a mock or a real port is
+  decided at the armed boundary above, not at the call site. Restricting
   these would punish the very indirection the seam exists to provide.
 * ``open_input`` / ``list_input_names`` / ``list_output_names`` /
   ``capture_sysex_messages`` — PASSIVE (enumeration or read-only input). This
@@ -43,16 +58,10 @@ pytestmark = pytest.mark.fast
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 PACKAGE_ROOT: Final[Path] = PROJECT_ROOT / "rytm_randomizer"
 
-# Modules permitted to touch the OUTPUT / transmit path. Everything else in the
-# package must stay passive. This set only shrinks: WS-4 folds the app.py /
-# shell.py / cockpit adapter call sites into the ``senders`` ArmedApply seam,
-# after which they come OFF this list.
-#
-# Categorised for reviewers:
-#   boundary   — the MIDI backend seam (constructs/holds real output ports)
-#   send seam  — defines the hardware / guarded send
-#   entrypoint — armed operator entry points that construct a provider today
-_ALLOWED_TRANSMIT_MODULES: Final[frozenset[str]] = frozenset(
+# The ArmedApply seam itself: the modules that legitimately hold, construct,
+# and write to a real output port on the cockpit / live surface. These are the
+# seam, so they are not "exceptions" to it.
+_ARMED_SEAM_MODULES: Final[frozenset[str]] = frozenset(
     {
         # boundary — constructs/holds real output ports
         "rytm_randomizer/mido_provider.py",
@@ -60,21 +69,56 @@ _ALLOWED_TRANSMIT_MODULES: Final[frozenset[str]] = frozenset(
         # send seam — defines the hardware / guarded send
         "rytm_randomizer/senders/hardware.py",
         "rytm_randomizer/senders/guarded.py",
-        # entrypoint (armed) — WS-4 will route these through the senders seam,
-        # after which they come OFF this list. The cockpit's real-MIDI adapter
-        # already came off: it was deleted once the ArmedApply seam became the
-        # cockpit's only output handle.
+        # the armed session — owns the one live port handle per armed session
+        "rytm_randomizer/senders/armed_apply.py",
+        # the injected-Sender dispatcher: ``send_cc`` writes to whichever
+        # Sender the armed boundary above chose (mock or real).
+        "rytm_randomizer/midi_io.py",
+    }
+)
+
+# LEGACY V1.34 SURFACE — explicitly OUT of the single-seam rule's scope.
+#
+# ``app.py`` and ``shell.py`` are the retired-in-place V1.34 monolith path.
+# They construct their own output ports and send directly, in many places.
+# Rather than let that quietly weaken the rule's wording, the rule text is
+# scoped to the cockpit / live surface and these two modules are named here.
+#
+# This list is FROZEN and only ever SHRINKS (pinned by
+# ``test_legacy_v134_transmit_allowlist_only_shrinks``). WS-4 folds these
+# call sites into the ``senders`` ArmedApply seam, after which they come OFF.
+# Adding an entry requires reviewer sign-off recorded in the PR body.
+_LEGACY_V134_TRANSMIT_MODULES: Final[frozenset[str]] = frozenset(
+    {
         "rytm_randomizer/app.py",
         "rytm_randomizer/shell.py",
     }
 )
 
-# Transmit markers: constructing a real output port, or defining the hardware
-# send seam. Indirect ``send_cc(injected_sender, ...)`` calls are intentionally
-# NOT flagged — that is the dependency-injected Sender seam working as designed
-# (see the module docstring).
+# The high-water mark for the legacy allowlist. Because the list only ever
+# shrinks, this number may only be lowered — never raised.
+_LEGACY_V134_ALLOWLIST_MAX_SIZE: Final[int] = 2
+
+_ALLOWED_TRANSMIT_MODULES: Final[frozenset[str]] = (
+    _ARMED_SEAM_MODULES | _LEGACY_V134_TRANSMIT_MODULES
+)
+
+# Transmit markers: constructing a real output port, sending on a real port
+# OBJECT, or defining the hardware send seam. Indirect
+# ``sender.send(injected_sender, ...)`` calls are intentionally NOT flagged —
+# that is the dependency-injected Sender seam working as designed (see the
+# module docstring).
+#
+# The port-object send marker matches the receiver names a real port is bound
+# to in this codebase (``port`` / ``out`` / ``output`` / ``outport``, with an
+# optional ``self.`` / ``self._`` prefix). It deliberately does NOT match
+# ``sender.send`` / ``outbox.send`` / ``self.send`` — those are the Protocol.
+_PORT_SEND_PATTERN: Final[str] = (
+    r"\b(?:self\s*\.\s*_?)?(?:port|out|output|outport|out_port|output_port)\s*\.\s*send\s*\("
+)
+
 _TRANSMIT_RE: Final[re.Pattern[str]] = re.compile(
-    r"\bopen_output\s*\(|\bdef\s+hardware_send\b|\bdef\s+guarded\w*\s*\(",
+    r"\bopen_output\s*\(|\bdef\s+hardware_send\b|\bdef\s+guarded\w*\s*\(|" + _PORT_SEND_PATTERN,
 )
 
 
@@ -107,12 +151,39 @@ def test_transmit_path_confined_to_whitelisted_modules() -> None:
         if _TRANSMIT_RE.search(text):
             offenders.append(rel)
     assert not offenders, (
-        "Transmit path (open_output / send_cc / hardware_send) used outside "
-        "the armed whitelist. Route outbound MIDI through the ``senders`` "
-        "ArmedApply seam, or — if this is a sanctioned armed entry point — add "
-        "it to ``_ALLOWED_TRANSMIT_MODULES`` with reviewer sign-off recorded "
-        "in the PR body (Live-but-Passive safety model, plan §1).\n"
+        "Transmit path (open_output / <port>.send / hardware_send) used "
+        "outside the armed seam. Route outbound MIDI through the ``senders`` "
+        "ArmedApply seam — write to the injected ``Sender`` protocol, never "
+        "to a real port object directly (Live-but-Passive safety model, "
+        "plan §1). The legacy V1.34 allowlist "
+        "(``_LEGACY_V134_TRANSMIT_MODULES``) is frozen and may not grow.\n"
         "  Offending modules:\n    " + "\n    ".join(sorted(offenders))
+    )
+
+
+def test_legacy_v134_transmit_allowlist_only_shrinks() -> None:
+    """The legacy V1.34 transmit allowlist is frozen and may only shrink.
+
+    The single-seam rule is scoped to the cockpit / live surface precisely
+    BECAUSE ``app.py`` / ``shell.py`` predate it. That scoping is only
+    honest while the exception list is closed: if a third module could be
+    appended, "scoped rule" becomes "rule with a growing hole".
+    """
+
+    assert len(_LEGACY_V134_TRANSMIT_MODULES) <= _LEGACY_V134_ALLOWLIST_MAX_SIZE, (
+        "``_LEGACY_V134_TRANSMIT_MODULES`` grew beyond its frozen high-water "
+        f"mark of {_LEGACY_V134_ALLOWLIST_MAX_SIZE}. This list only SHRINKS: "
+        "a NEW module that transmits belongs behind the ``senders`` "
+        "ArmedApply seam, not on the legacy V1.34 exception list. If a WS-4 "
+        "step retired an entry, lower "
+        "``_LEGACY_V134_ALLOWLIST_MAX_SIZE`` in the same commit.\n"
+        "  Current entries:\n    " + "\n    ".join(sorted(_LEGACY_V134_TRANSMIT_MODULES))
+    )
+    overlap = sorted(_LEGACY_V134_TRANSMIT_MODULES & _ARMED_SEAM_MODULES)
+    assert not overlap, (
+        "A module is listed BOTH as the armed seam and as a legacy V1.34 "
+        "exception. Pick one: seam members are the rule, legacy entries are "
+        "the scoped-out exception.\n  Both:\n    " + "\n    ".join(overlap)
     )
 
 
@@ -148,8 +219,19 @@ entry point without adding it to this tuple is exactly the regression the
 reachability tests below exist to catch.
 """
 
-_SEAM_APPLY_RE: Final[re.Pattern[str]] = re.compile(r"\.apply\s*\(")
-_SEAM_CONFIRM_RE: Final[re.Pattern[str]] = re.compile(r"\.confirm\s*\(")
+# The seam's lifecycle calls, anchored to a receiver that is demonstrably the
+# ArmedApply seam — ``armed``, ``armed_apply``, or ``session.armed_apply``.
+#
+# A bare ``\.apply\s*\(`` / ``\.confirm\s*\(`` was the hole: ANY unrelated
+# ``.apply(`` (a functools partial, a dataclass helper, a pandas-ish call) or
+# ``.confirm(`` (a UI prompt) satisfied the reachability assertion without the
+# seam being on the live path at all. Anchoring to the seam-bound receiver
+# names means only a genuine seam call counts.
+_SEAM_RECEIVER: Final[str] = r"(?:session\s*\.\s*)?armed(?:_apply)?"
+
+_SEAM_APPLY_RE: Final[re.Pattern[str]] = re.compile(rf"\b{_SEAM_RECEIVER}\s*\.\s*apply\s*\(")
+_SEAM_CONFIRM_RE: Final[re.Pattern[str]] = re.compile(rf"\b{_SEAM_RECEIVER}\s*\.\s*confirm\s*\(")
+_SEAM_ARM_RE: Final[re.Pattern[str]] = re.compile(rf"\b{_SEAM_RECEIVER}\s*\.\s*arm\s*\(")
 
 
 def _armed_send_caller_sources() -> list[tuple[str, str]]:
@@ -169,17 +251,29 @@ def test_armed_apply_seam_is_reachable_from_production_code() -> None:
     Guards the "whitelisted but dead" failure mode: the seam existed, was
     documented as THE outbound boundary, and nothing in the package ever
     invoked its lifecycle.
+
+    The lifecycle is matched on a seam-bound receiver (``armed`` /
+    ``armed_apply`` / ``session.armed_apply``), so an unrelated
+    ``.confirm(`` or ``.apply(`` elsewhere in the module cannot satisfy
+    this assertion — the earlier bare-attribute regex could be satisfied
+    by any object with those method names.
     """
 
     unreached = [
         rel
         for rel, text in _armed_send_caller_sources()
-        if not (_SEAM_CONFIRM_RE.search(text) and _SEAM_APPLY_RE.search(text))
+        if not (
+            _SEAM_ARM_RE.search(text)
+            and _SEAM_CONFIRM_RE.search(text)
+            and _SEAM_APPLY_RE.search(text)
+        )
     ]
     assert not unreached, (
         "The ArmedApply seam is whitelisted as the single outbound-transmit "
-        "boundary, but these modules never drive its confirm()+apply() "
-        "lifecycle. A seam nothing routes through does not protect anything — "
+        "boundary, but these modules never drive its arm()+confirm()+apply() "
+        "lifecycle on a seam-bound receiver (``armed`` / ``armed_apply`` / "
+        "``session.armed_apply``). A seam nothing routes through does not "
+        "protect anything — "
         "route the armed write through ``ArmedApplySession`` instead of a "
         "second output handle (Live-but-Passive safety model, plan §1).\n"
         "  Modules that must reach the seam:\n    " + "\n    ".join(sorted(unreached))

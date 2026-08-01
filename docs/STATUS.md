@@ -4,6 +4,49 @@ Last updated: 2026-07-29. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-07-31: PR #217 round-2 review fixes — cockpit frontend + docs
+  truth pass.
+  - **Armed SEND is now reachable (I2).** The sidecar's ArmedApply seam
+    refuses an armed `send` without `confirm: true`, but the UI emitted a
+    bare `{ type: 'send' }` — the live SEND button could not succeed.
+    `ActionBar` now raises an explicit per-action confirmation dialog
+    (`role="dialog"`, labelled heading, Escape + focus trap, axe-clean)
+    when the session is live and armed, and only then emits
+    `{ type: 'send', confirm: true }`. The unarmed / mock path is
+    unchanged and deliberately pinned: one click, no `confirm`, no dialog.
+    `SendCommand` in `ws/protocol.ts` carries the optional field.
+  - **New Playwright journey** `e2e/armed_send_journey.spec.ts`: the
+    unarmed leg runs everywhere against the real sidecar; the armed leg
+    (arm → exact port + token → prepare → confirmed SEND → disarm) skips
+    with a named reason on hosts with no enumerable MIDI output, rather
+    than faking a port through a sidecar backdoor.
+  - **Panel registry is no longer bypassed (I8).** `PANEL_REGISTRY` held
+    only the analyzer while five interactive panels were hand-mounted in
+    `Cockpit.tsx`. The manifest entry is now a discriminated union
+    (`model-selector` | `store-slice`) and all five bottom-rail panels are
+    registered; `Cockpit.tsx` renders `<PanelHost region="bottom" />`.
+    Rendering is byte-identical.
+  - **Demo honesty.** The scoped-randomization and kit-morph panels
+    recompute plans client-side over a committed fixture, so both now
+    carry a `DemoDataBanner` saying so in the UI.
+  - **Docs truth pass (I12).** Narrowed the single-seam claim to the
+    cockpit surface in `CLAUDE.md` rule 8, the Live-but-Passive rule,
+    `README.md`, `ARCHITECTURE.md`, and the plan — `app.py` (11
+    `open_output` sites) and `shell.py` (2) are exempt via the named
+    shrinking allowlist. Removed every backup/reversibility promise
+    (persistent writes are refused, not backed up). Corrected
+    COCKPIT_QUICKSTART's SAVE text (it does not persist to hardware).
+    Replaced the deleted cockpit RealAdapter path and the direct-SEND
+    arrow in ARCHITECTURE_DIAGRAMS and dropped every stale
+    "forward-looking" label for now-shipped packages. Narrowed the
+    never-PATH-python claim (`sidecar.rs` falls back to PATH in dev).
+    Pyright 1.1.407 → 1.1.411 in LOCAL_DEV_TOOLING_NOTES, which also
+    gained a canonical env-var index covering `RYTM_RAND_SIDECAR_BIN`,
+    `RYTM_RAND_MIDI_BACKEND`, `RYTM_REPORT_GOLDEN_CAPTURE`,
+    `RYTM_DATA_DUMP_CAPTURE`, and `TOUCHED_COV_BASE_REF`. Recorded the
+    open cockpit-log divergence (exact port name + raw `repr(exc)` in
+    structured records) in `docs/OBSERVABILITY.md`.
+
 - 2026-07-29: Rival-program bundle executed on the `rival-program`
   integration branch (plan:
   `docs/superpowers/plans/2026-07-18-rival-program.md`; 18 commits over base

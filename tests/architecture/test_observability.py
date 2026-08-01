@@ -193,6 +193,26 @@ ALLOW_LIST_BROAD_EXCEPT: frozenset[tuple[str, int]] = frozenset(
         # exception propagates. The handler re-raises; nothing is silently swallowed.
         # This is the one place in the package where catching everything is correct.
         ("rytm_randomizer/observability/tracing.py", 167),
+        # senders/armed_apply.py:510 — ArmedApplySession.apply()'s send loop
+        # intentionally catches BaseException (including KeyboardInterrupt /
+        # SystemExit / CancelledError) so the armed session DISARMS — which
+        # closes the exclusive hardware output port — before the exception
+        # propagates. Catching only the port-error families left a Ctrl+C
+        # mid-burst with the session ARMED and the port OPEN until process
+        # exit. The handler tags the exception with the partial-delivery
+        # outcome and re-raises the ORIGINAL exception; nothing is swallowed
+        # and no control-flow exception is converted. Same shape, and same
+        # justification, as the tracing entry above.
+        ("rytm_randomizer/senders/armed_apply.py", 521),
+        # senders/armed_apply.py:483 — the RENDER step of the same apply()
+        # runs while the port is already open but before any byte reaches
+        # the wire. A renderer that raises (malformed plan, device-strategy
+        # bug, Ctrl+C between confirm and first send) previously left the
+        # session ARMED holding the exclusive handle, because only the send
+        # loop below was guarded. Same justification as the entry above:
+        # disarm (closing the port), then re-raise the ORIGINAL exception
+        # unchanged — a clean zero-byte refusal, nothing swallowed.
+        ("rytm_randomizer/senders/armed_apply.py", 483),
     }
 )
 
@@ -358,6 +378,13 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # is a taxonomy member; listed here because the AST scan matches
         # on the raised class name, not the runtime hierarchy.
         "KitMutationUnsupportedError",
+        # ArmedApply seam: arming is refused when the resolved output port
+        # exposes no callable ``close``. Deterministic teardown of the
+        # exclusive hardware handle is unimplementable without it, so the
+        # seam declines to hold a port it could never release. Subclasses
+        # ArmedApplyError -> MidiError; listed here because the AST scan
+        # matches on the raised class name, not the runtime hierarchy.
+        "PortNotClosableError",
         # Cockpit profile registry (PR 7 — M7 + M6): atomic save +
         # classified load errors. ``ProfileAlreadyExistsError``
         # multi-inherits :class:`DataError` + :class:`FileExistsError`

@@ -37,9 +37,9 @@ See ``docs/superpowers/specs/2026-05-24-profile-wizard-design.md``
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from datetime import datetime, timezone
-from typing import Any, Final
+from typing import Any, Final, TypeAlias
 
 from ...observability.logging import get_logger
 from ..data.ulid import new_ulid
@@ -70,7 +70,14 @@ from .wizard_protocol import (
     EVENT_PROFILE_CREATED,
     EVENT_WIZARD_STATE_CHANGED,
 )
-from .wizard_session import WizardSession, _utcnow
+
+# ``_utcnow`` is the wizard surface's single clock seam, defined in
+# ``wizard_session``. Imported by name (not re-defined here) so Gate 17
+# sees ONE abstraction; the suppression is for the leading underscore
+# only — the symbol is module-private to the wizard pair by design, and
+# promoting it to public API would widen the surface for no caller.
+from .wizard_session import _utcnow  # pyright: ignore[reportPrivateUsage]
+from .wizard_session import WizardSession
 
 _logger = get_logger(__name__)
 """Module logger for wizard handler diagnostics.
@@ -81,6 +88,7 @@ captures the full detail (paths, exception types, ages) that the WS ack
 intentionally hides from the operator's browser.
 """
 
+
 # ---------------------------------------------------------------------------
 # Module-level wizard path policy
 # ---------------------------------------------------------------------------
@@ -88,23 +96,14 @@ intentionally hides from the operator's browser.
 #: Default policy used by :func:`_handle_wizard_add_source` when the session
 #: does not carry its own. Read from the ``WIZARD_SOURCE_ROOTS`` env var at
 #: import time so a deployment can pin the allow-list without touching code.
-#: Tests override this via :func:`_set_path_policy` so per-test ``tmp_path``
-#: roots are exercised without leaking into the global env.
+#:
+#: Tests pin a per-test ``tmp_path`` root with
+#: ``monkeypatch.setattr(wizard_handlers, "_PATH_POLICY", ...)``, which
+#: restores the import-time value at teardown. The name is deliberately NOT
+#: all-caps-with-a-setter: the previous ``_set_path_policy`` helper had no
+#: caller (every test monkeypatches the attribute directly), and an
+#: uppercase rebindable module global reads as a constant it is not.
 _PATH_POLICY: WizardPathPolicy = WizardPathPolicy.from_env()
-
-
-def _set_path_policy(policy: WizardPathPolicy) -> None:
-    """Override the module-level :class:`WizardPathPolicy` (testing only).
-
-    The production cockpit reads the policy at import time via
-    :meth:`WizardPathPolicy.from_env`. Tests that want to pin a
-    ``tmp_path`` root call this helper from their fixture; the
-    ``monkeypatch`` fixture restores the original value at teardown via
-    :meth:`pytest.MonkeyPatch.setattr`.
-    """
-
-    global _PATH_POLICY
-    _PATH_POLICY = policy
 
 
 # ---------------------------------------------------------------------------
@@ -215,25 +214,25 @@ def _categorical_reason(exc: BaseException) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _build_wizard_state_changed(state: WizardState) -> dict:
+def _build_wizard_state_changed(state: WizardState) -> dict[str, object]:
     """Construct the ``wizard_state_changed`` event payload."""
 
     return {"type": EVENT_WIZARD_STATE_CHANGED, "state": state.to_dict()}
 
 
-def _build_analysis_progress(job: AnalysisJob) -> dict:
+def _build_analysis_progress(job: AnalysisJob) -> dict[str, object]:
     """Construct the ``analysis_progress`` event payload for one job."""
 
     return {"type": EVENT_ANALYSIS_PROGRESS, "job": job.to_dict()}
 
 
-def _build_profile_created(profile: Any) -> dict:
+def _build_profile_created(profile: Any) -> dict[str, object]:
     """Construct the ``profile_created`` event payload (the saved profile)."""
 
     return {"type": EVENT_PROFILE_CREATED, "profile": profile.to_dict()}
 
 
-def _build_profile_changed(profile: Any) -> dict:
+def _build_profile_changed(profile: Any) -> dict[str, object]:
     """Construct the cockpit's existing ``profile_changed`` event for the new profile."""
 
     return {"type": EVENT_PROFILE_CHANGED, "profile": profile.to_dict()}
@@ -244,7 +243,7 @@ def _build_profile_changed(profile: Any) -> dict:
 # ---------------------------------------------------------------------------
 
 
-async def _handle_wizard_start(_cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_wizard_start(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     """Begin a fresh wizard session and attach it to ``session.active_wizard``.
 
     Replaces any in-flight wizard wholesale -- the previous session is
@@ -285,7 +284,9 @@ async def _handle_wizard_start(_cmd: dict, session: CockpitSession) -> HandlerRe
     )
 
 
-async def _handle_wizard_set_metadata(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_wizard_set_metadata(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
     """Apply ``name`` / ``description`` from the command body to the wizard state.
 
     Wire semantics (three-state, per the C4 fix in CODE_REVIEW.md PR 1):
@@ -318,7 +319,7 @@ async def _handle_wizard_set_metadata(cmd: dict, session: CockpitSession) -> Han
     )
 
 
-def _resolve_metadata_field(cmd: dict, key: str) -> str | None:
+def _resolve_metadata_field(cmd: dict[str, object], key: str) -> str | None:
     """Translate one wire-level ``set_metadata`` field into ``with_metadata`` input.
 
     Three-state wire → two-sentinel pure helper:
@@ -342,7 +343,9 @@ def _resolve_metadata_field(cmd: dict, key: str) -> str | None:
     return str(raw)
 
 
-async def _handle_wizard_add_source(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_wizard_add_source(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
     """Append an :class:`InspirationSource` to the wizard state.
 
     Field-level validation (kind/mode/location/display_name) is delegated
@@ -462,7 +465,9 @@ async def _handle_wizard_add_source(cmd: dict, session: CockpitSession) -> Handl
     )
 
 
-async def _handle_wizard_remove_source(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_wizard_remove_source(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
     """Drop one source (and its job) from the wizard state."""
 
     wizard = session.active_wizard
@@ -479,7 +484,7 @@ async def _handle_wizard_remove_source(cmd: dict, session: CockpitSession) -> Ha
     )
 
 
-async def _handle_wizard_analyze(_cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_wizard_analyze(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     """Run the analyzer across every source; emit ``analysis_progress`` per job.
 
     Per-job lifecycle: ``pending`` → ``analyzing`` (progress=0.0, traits=())
@@ -497,7 +502,7 @@ async def _handle_wizard_analyze(_cmd: dict, session: CockpitSession) -> Handler
     wizard = session.active_wizard
     if wizard is None:
         return HandlerResult(ack={"ok": False, "error": "no active wizard session"})
-    events: list[dict] = []
+    events: list[dict[str, object]] = []
     state = wizard.state
     for source in state.sources:
         # ``analyzing`` transition — visible to the UI before the blocking
@@ -557,7 +562,7 @@ async def _handle_wizard_analyze(_cmd: dict, session: CockpitSession) -> Handler
     return HandlerResult(ack={"ok": True}, events=events)
 
 
-async def _handle_wizard_review(_cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_wizard_review(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     """Build the candidate :class:`ProfileModel` from OK jobs + store it on the state."""
 
     wizard = session.active_wizard
@@ -575,7 +580,7 @@ async def _handle_wizard_review(_cmd: dict, session: CockpitSession) -> HandlerR
     )
 
 
-async def _handle_wizard_save(_cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_wizard_save(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     """Persist the candidate profile via :meth:`ProfileRegistry.save`.
 
     Emits both :data:`EVENT_PROFILE_CREATED` (wizard-specific) AND
@@ -606,7 +611,7 @@ async def _handle_wizard_save(_cmd: dict, session: CockpitSession) -> HandlerRes
     )
 
 
-async def _handle_wizard_cancel(_cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_wizard_cancel(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     """Drop the in-flight wizard session.
 
     Idempotent: cancelling when no wizard is active still returns
@@ -622,10 +627,24 @@ async def _handle_wizard_cancel(_cmd: dict, session: CockpitSession) -> HandlerR
 # Dispatcher table — consumed by :func:`handlers.handle_command`.
 # ---------------------------------------------------------------------------
 
-WIZARD_HANDLERS: dict[
-    str,
-    Callable[[dict, CockpitSession], Awaitable[HandlerResult]],
-] = {
+WizardHandlerFn: TypeAlias = Callable[[dict[str, object], CockpitSession], Awaitable[HandlerResult]]
+"""One wizard command handler: ``(command body, session) -> HandlerResult``.
+
+Structurally identical to :data:`handlers.HandlerFn` by construction — the
+dispatcher in :mod:`handlers` consumes :data:`WIZARD_HANDLERS` directly and
+must not need a ``cast`` to do it. The alias lives here (rather than being
+imported from :mod:`handlers`) so the wizard surface stays importable
+without pulling the core handler module, matching the lazy-import contract
+in :func:`handlers._resolve_handler`.
+
+Every handler takes ``dict[str, object]`` — NOT a bare ``dict``. The bare
+form was the typing escape hatch that forced a Pyright suppression plus a
+whole-registry ``cast`` at the dispatcher: ``dict`` is ``dict[Unknown,
+Unknown]`` under strict mode, so the registry's value type never matched
+``HandlerFn``.
+"""
+
+WIZARD_HANDLERS: Mapping[str, WizardHandlerFn] = {
     COMMAND_WIZARD_START: _handle_wizard_start,
     COMMAND_WIZARD_SET_METADATA: _handle_wizard_set_metadata,
     COMMAND_WIZARD_ADD_SOURCE: _handle_wizard_add_source,
@@ -648,4 +667,5 @@ __all__ = [
     "REASON_READ_FAILED",
     "REASON_UNSUPPORTED_FORMAT",
     "WIZARD_HANDLERS",
+    "WizardHandlerFn",
 ]

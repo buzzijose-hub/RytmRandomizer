@@ -82,12 +82,19 @@ class _FakeProvider:
         return self.port
 
 
-def _make_session(tmp_path: Path) -> CockpitSession:
+def _make_session(tmp_path: Path, *, arm_secret: str | None = _ARM_TOKEN) -> CockpitSession:
+    """Session wired with the server-minted ARM secret by default.
+
+    ``arm_secret=None`` models a launch where no secret was provisioned —
+    arming must then fail closed.
+    """
+
     initial = _make_default_snapshot()
     session = CockpitSession(
         profile_registry=ProfileRegistry(tmp_path / "profiles"),
         history_store=HistoryStore(),
         device=MockDeviceAdapter(initial=initial),
+        arm_secret=arm_secret,
     )
     session.history_store.initial(initial)
     return session
@@ -106,15 +113,6 @@ def _arm(session: CockpitSession, **overrides: object) -> dict:
     }
     cmd.update(overrides)
     return _dispatch(session, cmd)
-
-
-@pytest.fixture(autouse=True)
-def _no_active_manager() -> object:
-    """Every test starts (and ends) with no registered ConnectionManager."""
-
-    set_active_connection_manager(None)
-    yield
-    set_active_connection_manager(None)
 
 
 # ---------------------------------------------------------------------------
@@ -171,6 +169,83 @@ def test_arm_requires_non_empty_token(tmp_path: Path) -> None:
     assert ack["ok"] is False
     assert "arm_token" in ack["message"]
     assert session.armed_apply is None
+
+
+def test_arm_refuses_a_token_that_does_not_match_the_server_secret(tmp_path: Path) -> None:
+    """The headline fix: a client-chosen string no longer arms the hardware.
+
+    The handler used to accept any non-empty ``arm_token`` and then build
+    the "expected" token out of that same value, so ``compare_digest``
+    compared a value with itself and always passed — the token
+    authenticated *itself*. Any peer past the WS handshake could arm.
+    """
+
+    session = _make_session(tmp_path)
+    provider = _FakeProvider()
+    session.arm_port_provider = provider
+
+    ack = _arm(session, arm_token="attacker-picked-this")  # noqa: S106 — the point
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert session.armed_apply is None
+    assert handlers.session_is_armed(session) is False
+    # Fail closed BEFORE the port is touched.
+    assert provider.port.sent == []
+
+
+def test_arm_fails_closed_when_no_arm_secret_is_configured(tmp_path: Path) -> None:
+    """No server secret => the transmit capability is not offered at all."""
+
+    session = _make_session(tmp_path, arm_secret=None)
+    session.arm_port_provider = _FakeProvider()
+
+    ack = _arm(session)
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert "ARM secret" in ack["message"]
+    assert session.armed_apply is None
+
+
+def test_arm_refusals_are_journaled_and_counted(tmp_path: Path) -> None:
+    """Both auth refusals leave an operator-visible trail."""
+
+    no_secret = _make_session(tmp_path, arm_secret=None)
+    no_secret.arm_port_provider = _FakeProvider()
+    _arm(no_secret)
+    assert no_secret.error_journal.entries[-1].fingerprint == "cockpit.arm.failed"
+
+    mismatch = _make_session(tmp_path)
+    mismatch.arm_port_provider = _FakeProvider()
+    _arm(mismatch, arm_token="nope")  # noqa: S106 — a deliberately wrong guess
+    assert mismatch.error_journal.entries[-1].fingerprint == "cockpit.arm.failed"
+
+
+def test_arm_refusal_messages_do_not_leak_the_secret(tmp_path: Path) -> None:
+    """A near-miss guess must learn nothing about the real value."""
+
+    session = _make_session(tmp_path)
+    session.arm_port_provider = _FakeProvider()
+
+    near = _arm(session, arm_token=_ARM_TOKEN[:-1])
+    far = _arm(session, arm_token="z")  # noqa: S106 — a deliberately wrong guess
+
+    assert near["message"] == far["message"]
+    assert _ARM_TOKEN not in near["message"]
+
+
+def test_arm_succeeds_with_the_exact_server_minted_secret(tmp_path: Path) -> None:
+    """The positive path still works — this is authentication, not a ban."""
+
+    session = _make_session(tmp_path)
+    session.arm_port_provider = _FakeProvider()
+
+    ack = _arm(session)
+
+    assert ack["ok"] is True
+    assert ack["armed"] is True
+    assert session.armed_apply is not None
 
 
 def test_arm_requires_resolved_port_name(tmp_path: Path) -> None:
@@ -932,3 +1007,59 @@ def test_arm_round_trip_over_the_websocket(tmp_path: Path) -> None:
             assert ack["armed"] is False
             status = ws.receive_json()
             assert status["armed"] is False
+
+
+# ---------------------------------------------------------------------------
+# Arm-secret validator — the fail-closed guards, directly.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "secret",
+    [None, "", 12345],
+    ids=["unprovisioned", "empty-string", "non-string"],
+)
+def test_arm_token_is_refused_when_the_server_secret_is_unusable(
+    tmp_path: Path, secret: object
+) -> None:
+    """No usable server secret => nothing can authorise, whatever is sent.
+
+    A launch that never provisioned a secret (or provisioned junk) must
+    never be armable: with no trustworthy value to compare against, the
+    only safe answer is refusal. Guards the fail-closed half of the
+    server-minted-secret fix — the client-supplied value is irrelevant
+    here, which is exactly the property under test.
+    """
+
+    session = _make_session(tmp_path)
+    session.arm_secret = secret  # type: ignore[assignment]
+
+    assert handlers._arm_token_authorised(session, "anything-at-all") is False
+
+
+@pytest.mark.parametrize(
+    "supplied",
+    [None, "", 12345, b"operator-arm-token"],
+    ids=["missing", "empty-string", "non-string", "bytes-not-str"],
+)
+def test_arm_token_is_refused_for_a_malformed_submission(tmp_path: Path, supplied: object) -> None:
+    """A well-provisioned session still refuses non-string / empty tokens.
+
+    ``hmac.compare_digest`` raises on mixed str/bytes, so these are
+    rejected before it is reached — the guard is load-bearing, not
+    decorative.
+    """
+
+    session = _make_session(tmp_path)
+    assert session.arm_secret == _ARM_TOKEN
+
+    assert handlers._arm_token_authorised(session, supplied) is False
+
+
+def test_arm_token_authorises_only_the_exact_server_secret(tmp_path: Path) -> None:
+    """The happy path, pinned next to its refusals."""
+
+    session = _make_session(tmp_path)
+
+    assert handlers._arm_token_authorised(session, _ARM_TOKEN) is True
+    assert handlers._arm_token_authorised(session, _ARM_TOKEN + "x") is False

@@ -743,74 +743,80 @@ def test_send_without_candidate_returns_error(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# save — label / no label / no current.
+# save — refused unconditionally; no persistent kit-write capability exists.
 # ---------------------------------------------------------------------------
 
 
-def test_save_with_label_promotes_entry_and_resets_unsaved_sends(tmp_path: Path) -> None:
+def test_save_is_refused_and_promotes_nothing(tmp_path: Path) -> None:
+    """The ack no longer claims a durable write that never happened.
+
+    ``_handle_save`` called ``device.commit_kit`` — a mock ``logger.info``
+    line, the only implementation that ever existed — then acked
+    ``ok: true``, promoted the current entry to ``kind="saved"``, and
+    reset ``unsaved_sends``. Nothing reached any device.
+    """
+
     session = _make_session(tmp_path)
     session.unsaved_sends = 3
     recorder = _Recorder()
 
     ack = _dispatch(_envelope("save", label="my-kit"), session, recorder)
 
-    assert ack["ok"] is True
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
     current = session.history_store.current
     saved_entry = next(e for e in current.entries if e.snapshot.snapshot_id == current.current_id)
-    assert saved_entry.kind == "saved"
-    assert saved_entry.label == "my-kit"
-    assert session.unsaved_sends == 0
-
-
-def test_save_without_label_uses_none(tmp_path: Path) -> None:
-    session = _make_session(tmp_path)
-    recorder = _Recorder()
-
-    ack = _dispatch(_envelope("save"), session, recorder)
-
-    assert ack["ok"] is True
-    current = session.history_store.current
-    saved_entry = next(e for e in current.entries if e.snapshot.snapshot_id == current.current_id)
+    assert saved_entry.kind != "saved"
     assert saved_entry.label is None
 
 
-def test_save_with_explicit_none_label_uses_none(tmp_path: Path) -> None:
+def test_save_does_not_clear_the_unsaved_send_counter(tmp_path: Path) -> None:
+    """Zeroing the counter on a phantom write removes the operator's warning."""
+
     session = _make_session(tmp_path)
-    recorder = _Recorder()
+    session.unsaved_sends = 3
 
-    ack = _dispatch(_envelope("save", label=None), session, recorder)
+    _dispatch(_envelope("save", label="my-kit"), session, _Recorder())
 
-    assert ack["ok"] is True
-    current = session.history_store.current
-    saved_entry = next(e for e in current.entries if e.snapshot.snapshot_id == current.current_id)
-    assert saved_entry.label is None
+    assert session.unsaved_sends == 3
 
 
-def test_save_emits_history_and_session_status(tmp_path: Path) -> None:
+@pytest.mark.parametrize("body", [{}, {"label": None}, {"label": "x"}])
+def test_save_is_refused_for_every_label_shape(tmp_path: Path, body: dict[str, object]) -> None:
+    """The label never made the write real, so it cannot change the outcome."""
+
+    session = _make_session(tmp_path)
+
+    ack = _dispatch(_envelope("save", **body), session, _Recorder())
+
+    assert ack["ok"] is False
+
+
+def test_save_emits_no_events(tmp_path: Path) -> None:
+    """A refusal must not perturb history or session status on the wire."""
+
     session = _make_session(tmp_path)
     recorder = _Recorder()
 
     _dispatch(_envelope("save", label="x"), session, recorder)
 
-    types_emitted = [e["type"] for e in recorder.events]
-    assert EVENT_HISTORY_UPDATED in types_emitted
-    assert EVENT_SESSION_STATUS in types_emitted
+    assert recorder.events == []
 
 
-def test_save_with_empty_history_returns_error(tmp_path: Path) -> None:
-    """A session whose history is empty (initial not called) cannot save."""
+def test_save_is_refused_identically_on_an_empty_history(tmp_path: Path) -> None:
+    """The refusal is unconditional — history state cannot make save work."""
 
     device = MockDeviceAdapter(initial=_snapshot())
     history = HistoryStore()  # no .initial()
     registry = ProfileRegistry(profiles_dir=tmp_path)
     session = CockpitSession(profile_registry=registry, history_store=history, device=device)
-    recorder = _Recorder()
+    populated = _make_session(tmp_path)
 
-    ack = _dispatch(_envelope("save"), session, recorder)
+    empty_ack = _dispatch(_envelope("save"), session, _Recorder())
+    populated_ack = _dispatch(_envelope("save"), populated, _Recorder())
 
-    assert ack["ok"] is False
-    assert ack["code"] == "validation_error"
-    assert "no current snapshot" in ack["message"]
+    assert empty_ack["ok"] is False
+    assert empty_ack["message"] == populated_ack["message"]
 
 
 # ---------------------------------------------------------------------------
@@ -1568,7 +1574,6 @@ def test_preview_operator_package_apply_preserves_send_plan_and_never_calls_devi
 
     monkeypatch.setattr(session.device, "apply", _record_unexpected_call)
     monkeypatch.setattr(session.device, "apply_send_plan", _record_unexpected_call)
-    monkeypatch.setattr(session.device, "commit_kit", _record_unexpected_call)
     recorder = _Recorder()
 
     ack = _dispatch(
@@ -1859,7 +1864,6 @@ def test_mock_apply_operator_package_preserves_send_plan_and_never_calls_device_
 
     monkeypatch.setattr(session.device, "apply", _record_unexpected_call)
     monkeypatch.setattr(session.device, "apply_send_plan", _record_unexpected_call)
-    monkeypatch.setattr(session.device, "commit_kit", _record_unexpected_call)
     recorder = _Recorder()
 
     ack = _dispatch(
@@ -2160,7 +2164,6 @@ def test_build_operator_package_receipt_preserves_send_plan_and_device_state(
 
     monkeypatch.setattr(session.device, "apply", _record_unexpected_call)
     monkeypatch.setattr(session.device, "apply_send_plan", _record_unexpected_call)
-    monkeypatch.setattr(session.device, "commit_kit", _record_unexpected_call)
     recorder = _Recorder()
 
     ack = _dispatch(

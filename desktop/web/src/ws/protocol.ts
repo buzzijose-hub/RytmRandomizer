@@ -525,8 +525,21 @@ export interface PrepareSendPlanCommand {
   type: 'prepare_send_plan';
 }
 
+/**
+ * `send { confirm? }` — apply the current candidate to the device.
+ *
+ * `confirm` is the **per-action** operator confirmation. "Armed" is a session
+ * state; every individual write is still a separate operator decision, so the
+ * sidecar refuses an armed send unless the command itself carries
+ * `confirm: true` (`cockpit/ws/handlers.py::_armed_send_over_seam`).
+ *
+ * The field is optional because the mock / dry-run path deliberately does NOT
+ * require it: an unarmed send touches no hardware and must stay a single
+ * click. Only the ArmedApply seam reads it.
+ */
 export interface SendCommand {
   type: 'send';
+  confirm?: boolean;
 }
 
 export interface SaveCommand {

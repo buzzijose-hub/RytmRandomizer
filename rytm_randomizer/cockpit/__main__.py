@@ -35,6 +35,23 @@ shell reads the same file and includes the token in the first WS frame.
 A web tab that does not see that file cannot guess the 32-byte
 URL-safe value within any tractable budget, so the cockpit's command
 surface stops being a localhost remote-control hole.
+
+A second, separate secret for the transmit capability
+------------------------------------------------------
+
+The handshake token admits a *connection*. Arming — opening a real MIDI
+output and transmitting toward the hardware — is a strictly larger
+capability, so it gets its own per-launch secret, minted by
+:func:`_provision_arm_secret` and written 0600 to
+``RYTM_RAND_ARM_SECRET_FILE`` (or ``~/.rytm-randomizer/cockpit-arm-secret``).
+The ``arm`` command's ``arm_token`` is compared against it in constant
+time; a session with no secret configured refuses to arm at all.
+
+This closes a hole where the arm token authenticated *itself*: the
+handler accepted any non-empty client string and then built the
+"expected" token out of that same string, so ``compare_digest`` compared
+a value with itself and always passed. Any peer that got through the
+handshake could arm the hardware.
 """
 
 from __future__ import annotations
@@ -67,7 +84,11 @@ from .device.midi_monitor import MidiInputOpener, MidiMonitorSupervisor
 from .history import HistoryStore
 from .library import LibraryStore, default_captures_dir, default_library_dir
 from .profiles import ProfileRegistry, default_profiles_dir
-from .ws.handlers import build_armed_watchdog, build_connection_changed
+from .ws.handlers import (
+    build_armed_watchdog,
+    build_connection_changed,
+    disarm_session_on_teardown,
+)
 from .ws.server import ConnectionRegistry, create_app
 from .ws.session import CockpitSession
 
@@ -115,6 +136,27 @@ _DEFAULT_TOKEN_FILE_NAME: Final[str] = (
     "cockpit-ws-token"  # noqa: S105 — filename, not a secret value
 )
 """File name for the dev-mode token file inside :data:`_DEFAULT_TOKEN_REL_DIR`."""
+
+_ARM_SECRET_FILE_ENV_VAR: Final[str] = (
+    "RYTM_RAND_ARM_SECRET_FILE"  # noqa: S105 — env var name, not a secret value
+)
+"""Override for where the per-launch ARM secret is written.
+
+Same provisioning shape as :data:`_TOKEN_FILE_ENV_VAR`: ``main()`` mints
+a fresh secret every launch and writes it 0600. The Tauri shell reads it
+and sends it as the ``arm`` command's ``arm_token``.
+"""
+
+_DEFAULT_ARM_SECRET_FILE_NAME: Final[str] = (
+    "cockpit-arm-secret"  # noqa: S105 — filename, not a secret value
+)
+"""File name for the dev-mode ARM secret inside :data:`_DEFAULT_TOKEN_REL_DIR`.
+
+Deliberately a **separate file** from the WS handshake token. The two
+authorise different things — the handshake token admits a connection, the
+arm secret authorises outbound transmit — and keeping them in separate
+files means a deployment can hand out one without the other.
+"""
 
 _DEFAULT_DEVICE = "analog_rytm_mk2"
 """Identifier the bootstrap snapshot wears — matches the production hardware."""
@@ -225,10 +267,27 @@ def _resolve_token_path() -> Path:
     so a freshly-cloned repo "just works" without an env-var dance.
     """
 
-    raw = os.environ.get(_TOKEN_FILE_ENV_VAR)
+    return _resolve_secret_path(_TOKEN_FILE_ENV_VAR, _DEFAULT_TOKEN_FILE_NAME)
+
+
+def _resolve_secret_path(env_var: str, default_file_name: str) -> Path:
+    """Resolve one 0600 secret file's path: env override, else the dev default.
+
+    Shared by the WS handshake token and the ARM secret so the two
+    provisioning paths cannot drift in where they look or how they
+    expand ``~``.
+    """
+
+    raw = os.environ.get(env_var)
     if raw:
         return Path(raw).expanduser().absolute()
-    return (Path.home() / _DEFAULT_TOKEN_REL_DIR / _DEFAULT_TOKEN_FILE_NAME).absolute()
+    return (Path.home() / _DEFAULT_TOKEN_REL_DIR / default_file_name).absolute()
+
+
+def _resolve_arm_secret_path() -> Path:
+    """Return the absolute path the per-launch ARM secret is written to."""
+
+    return _resolve_secret_path(_ARM_SECRET_FILE_ENV_VAR, _DEFAULT_ARM_SECRET_FILE_NAME)
 
 
 def _write_token_file(path: Path, token: str) -> None:
@@ -272,6 +331,26 @@ def _provision_token() -> str:
         # the cockpit's wire, so this does not leak onto WS.
         print(f"[cockpit] WS token: {token}", file=sys.stdout, flush=True)
     return token
+
+
+def _provision_arm_secret() -> str:
+    """Mint a fresh per-launch ARM secret, persist it 0600, and return it.
+
+    The ``arm`` command's ``arm_token`` is validated against this value
+    (:func:`~rytm_randomizer.cockpit.ws.handlers._arm_token_authorised`).
+    Regenerated every launch for the same reason the WS token is: an arm
+    capability must not survive a restart the operator did not authorise.
+
+    Same file-permission caveats as :func:`_provision_token` — 0600 on
+    POSIX, best-effort on Windows.
+    """
+
+    secret = secrets.token_urlsafe(_TOKEN_BYTES)
+    path = _resolve_arm_secret_path()
+    _write_token_file(path, secret)
+    if _ARM_SECRET_FILE_ENV_VAR not in os.environ:
+        print(f"[cockpit] ARM secret: {secret}", file=sys.stdout, flush=True)
+    return secret
 
 
 def build_session() -> CockpitSession:
@@ -389,6 +468,10 @@ def main() -> None:
         captures_dir=default_captures_dir(),
     )
     token = _provision_token()
+    # The transmit capability gets its OWN server-minted secret. Without
+    # it the arm handler fails closed — arming is never authorised by a
+    # value the client itself supplied.
+    session.arm_secret = _provision_arm_secret()
     connection_registry = ConnectionRegistry()
     manager = ConnectionManager(
         _build_port_enumerator(),
@@ -414,7 +497,19 @@ def main() -> None:
         )
         manager.add_notify_hook(supervisor.notify)
         app.router.add_event_handler("shutdown", supervisor.aclose)
-    uvicorn.run(app, host=_DEFAULT_HOST, port=_resolve_port())
+    try:
+        uvicorn.run(app, host=_DEFAULT_HOST, port=_resolve_port())
+    finally:
+        # Deterministic teardown of the armed hardware handle on EVERY
+        # process-exit path. ``create_app`` registers the same hook as a
+        # FastAPI ``shutdown`` handler, which covers a graceful uvicorn
+        # stop; this ``finally`` additionally covers the paths where the
+        # ASGI lifespan never completes — a ``KeyboardInterrupt`` that
+        # escapes ``uvicorn.run``, a bind failure, or a crash during
+        # startup. The hook is idempotent, so the overlap closes the port
+        # exactly once. The process must never exit still holding the
+        # device's exclusive output port.
+        disarm_session_on_teardown(session)
 
 
 if __name__ == "__main__":  # pragma: no cover - exercised via ``python -m``

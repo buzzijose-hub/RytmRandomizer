@@ -56,6 +56,18 @@ requirement; multiplexing is done at the message-type layer (event
 ``type`` discriminator + command envelope ``request_id``), not by
 multiple URL paths.
 
+Armed-state teardown
+--------------------
+
+Arming is an in-UI, per-session operator decision made over this
+transport, and the armed session owns an exclusive hardware output port.
+Two teardown paths therefore call
+:func:`~rytm_randomizer.cockpit.ws.handlers.disarm_session_on_teardown`:
+the endpoint's ``finally`` (client disconnect — closing the tab must not
+leave the port open) and a FastAPI ``shutdown`` handler (Ctrl+C /
+SIGTERM against uvicorn). Both are idempotent, and neither re-arms:
+after a reconnect the session is passive until the operator arms again.
+
 Push-capable transport (Wave 2b)
 --------------------------------
 
@@ -114,6 +126,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from ...observability.logging import get_logger
 from .handlers import (
     EventEmitter,
+    disarm_session_on_teardown,
     drain_pending_events,
     emit_initial_events,
     handle_command,
@@ -664,6 +677,38 @@ def create_app(
             writer_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await writer_task
+            # Deterministic teardown of the armed hardware handle, but ONLY
+            # when this was the last connection. Arming is an in-UI operator
+            # decision; when the LAST transport goes away there is no
+            # operator left to disarm, so an armed session would otherwise
+            # sit holding the device's exclusive output port until the
+            # process exited.
+            #
+            # The count check is load-bearing: one CockpitSession is shared
+            # by every connection (see create_app), so disarming
+            # unconditionally let a SIBLING connection tear down the armed
+            # port of a still-open, actively-performing one — e.g. closing a
+            # second diagnostics tab killed the live set's output mid-song.
+            # ``registry.unregister`` above already removed this connection,
+            # so a zero count means nobody is left.
+            #
+            # Never auto-re-arms on reconnect — the operator must run the
+            # explicit arm sequence again.
+            if registry.connection_count == 0:
+                disarm_session_on_teardown(session)
+
+    def _disarm_on_shutdown() -> None:
+        """App-lifecycle teardown of the armed hardware handle.
+
+        Covers Ctrl+C / SIGTERM against uvicorn and any shutdown that
+        does not go through a client disconnect (e.g. the session was
+        armed by an embedded harness and no client ever connected).
+        Idempotent with the endpoint's ``finally``.
+        """
+
+        disarm_session_on_teardown(session)
+
+    app.router.add_event_handler("shutdown", _disarm_on_shutdown)
 
     return app
 

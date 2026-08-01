@@ -23,6 +23,13 @@ describe('analyzer registry panel', () => {
     expect(panelsForRegion('topbar')).toHaveLength(0);
   });
 
+  it('skips a model-selector entry when the region is rendered without a console packet', () => {
+    // The bottom rail has no packet; a deck render without one must degrade to
+    // "nothing rendered", never a crash.
+    const { container } = render(<PanelHost region="deck" />);
+    expect(container).toBeEmptyDOMElement();
+  });
+
   it('renders the committed fixture packet through PanelHost without enabling hardware actions', () => {
     render(<PanelHost region="deck" model={fixtureModel} />);
 

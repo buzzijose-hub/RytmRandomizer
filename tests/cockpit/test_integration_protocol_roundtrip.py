@@ -165,15 +165,21 @@ def test_send_roundtrips_with_new_snapshot_id_field(cockpit_ws: object) -> None:
     assert isinstance(ack["new_snapshot_id"], str)
 
 
-def test_save_roundtrips_with_snapshot_id_field(cockpit_ws: object) -> None:
-    """``save`` round-trip: ack carries ``snapshot_id`` of the saved entry."""
+def test_save_roundtrips_as_a_correlated_refusal(cockpit_ws: object) -> None:
+    """``save`` round-trip: a refusal ack, still correlated to the request.
+
+    The command remains part of the wire protocol (a client may send it),
+    but there is no persistent kit-write capability behind it, so the
+    ack is the standard categorical error envelope rather than a
+    ``snapshot_id`` that implied a durable write.
+    """
 
     ack = send_cmd(cockpit_ws, COMMAND_SAVE, request_id="rt-save", label="kit-A")
-    drain_events(cockpit_ws, 2)
 
     assert ack["request_id"] == "rt-save"
-    assert ack["ok"] is True
-    assert "snapshot_id" in ack
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert "snapshot_id" not in ack
 
 
 def test_load_snapshot_roundtrips_with_snapshot_id_field(cockpit_ws: object) -> None:

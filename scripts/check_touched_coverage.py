@@ -43,7 +43,19 @@ GIT_EXECUTABLE: Final[str | None] = shutil.which("git")
 DEFAULT_BASE_REF: Final[str] = "origin/modularize-v1.34"
 BASE_REF_ENV: Final[str] = "TOUCHED_COV_BASE_REF"
 GITHUB_BASE_REF_ENV: Final[str] = "GITHUB_BASE_REF"
+GITHUB_ACTIONS_ENV: Final[str] = "GITHUB_ACTIONS"
 PRODUCTION_PREFIX: Final[str] = "rytm_randomizer/"
+
+
+def _running_in_ci() -> bool:
+    """True when this run is a GitHub Actions job.
+
+    GitHub sets ``GITHUB_ACTIONS=true`` for every step of every job. On CI
+    an unresolvable base ref is a *configuration* failure (the checkout is
+    too shallow), never a reason to let Gate 1 pass silently.
+    """
+
+    return bool(os.environ.get(GITHUB_ACTIONS_ENV, "").strip())
 
 
 def _base_ref() -> str:
@@ -143,11 +155,26 @@ def main(argv: list[str]) -> int:
         return 1
     base_ref = _base_ref()
     if not _base_ref_is_available(base_ref) and not _fetch_base_ref(base_ref):
-        # A shallow clone that cannot see the base branch cannot compute a
-        # touched-file set. SKIP loudly rather than crash (previous behavior)
-        # or pass silently: the ubuntu test job checks out with fetch-depth 2,
-        # and a gate that dies on its own precondition teaches contributors to
-        # ignore it. The ratchet floor still guards the package meanwhile.
+        # A clone that cannot see the base branch cannot compute a
+        # touched-file set. The right response differs by environment:
+        #
+        # * On CI this is a FAILURE. A gate that silently returns success
+        #   when its own precondition is missing is worse than no gate —
+        #   it reports green for work it never inspected. The fix is a
+        #   deeper checkout (fetch-depth: 0), not a skip.
+        # * Locally (shallow clone, fresh worktree, detached CI-less
+        #   sandbox) a hard failure would just teach contributors to
+        #   ignore the script, so SKIP loudly instead; the package-wide
+        #   ratchet floor still guards the tree.
+        if _running_in_ci():
+            print(
+                f"[touched-coverage] FAIL: base ref {base_ref} is unavailable "
+                "in this CI checkout, so Gate 1 cannot be evaluated. Check out "
+                "with fetch-depth: 0 (or fetch the base branch) before running "
+                "this gate — refusing to report success on an unchecked diff.",
+                file=sys.stderr,
+            )
+            return 1
         print(
             f"[touched-coverage] SKIP: base ref {base_ref} is unavailable in "
             "this clone (shallow checkout?). Deepen the checkout "

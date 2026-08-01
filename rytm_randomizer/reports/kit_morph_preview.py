@@ -7,9 +7,13 @@ demonstration preview — a fixed source/target pair at a fixed amount over the
 built-in V1.34 profile registry — so the zero-argument command is
 deterministic and golden-capturable.
 
-Passive: importing this module opens no ports, sends no MIDI, and the rendered
-plan is preview-only. An operator arms-and-sends through the existing
-``senders`` ArmedApply seam; this module never reaches it.
+Passive: importing this module opens no ports and sends no MIDI.
+
+**Preview only — not sendable today.** The rendered
+:class:`~rytm_randomizer.behavior.morph.MorphPlan` is an audit artefact, NOT
+a device plan: it is not a ``RytmMutationPlan``, it is not compiled into one,
+and no code path can hand it to the ``senders`` ArmedApply seam. The report
+must not advertise arm-and-send as an available next step.
 """
 
 from __future__ import annotations
@@ -45,7 +49,10 @@ SAFETY_LINES: Final[tuple[str, ...]] = (
     "preview plan only",
     "no MIDI sending",
     "no port opening",
-    "arm-and-send via the senders ArmedApply seam",
+    # NOT "arm-and-send via the senders ArmedApply seam": a MorphPlan is not
+    # a device plan and cannot be transmitted. Advertising a send path that
+    # does not exist is the defect this line replaced.
+    "not a device plan - cannot be sent to hardware",
     "no hardware required",
 )
 

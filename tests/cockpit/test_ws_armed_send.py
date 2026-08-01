@@ -28,16 +28,18 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
-from cockpit.conftest import _make_default_snapshot
+from cockpit.conftest import TEST_WS_TOKEN, _make_default_snapshot, complete_handshake
+from fastapi.testclient import TestClient
 
 from rytm_randomizer.cockpit.data import CockpitSendPlan, SendPlanPacket
 from rytm_randomizer.cockpit.device import MockDeviceAdapter
-from rytm_randomizer.cockpit.device.connection import set_active_connection_manager
 from rytm_randomizer.cockpit.history import HistoryStore
 from rytm_randomizer.cockpit.profiles import ProfileRegistry
 from rytm_randomizer.cockpit.ws import handlers
-from rytm_randomizer.cockpit.ws.protocol import EVENT_SESSION_STATUS
+from rytm_randomizer.cockpit.ws.protocol import EVENT_SESSION_STATUS, WS_SUBPROTOCOL
+from rytm_randomizer.cockpit.ws.server import create_app
 from rytm_randomizer.cockpit.ws.session import CockpitSession
+from rytm_randomizer.devices import get_device
 
 pytestmark = pytest.mark.fast
 
@@ -85,6 +87,10 @@ def _make_session(tmp_path: Path) -> CockpitSession:
         profile_registry=ProfileRegistry(tmp_path / "profiles"),
         history_store=HistoryStore(),
         device=MockDeviceAdapter(initial=initial),
+        # The server-minted ARM secret. Production mints it in ``__main__``
+        # and writes it 0600; the arm handler compares the client's
+        # ``arm_token`` against THIS, never against the client's own input.
+        arm_secret=_ARM_TOKEN,
     )
     session.history_store.initial(initial)
     return session
@@ -135,13 +141,6 @@ def _stage_send(session: CockpitSession, *, ready: bool = True) -> CockpitSendPl
     plan = _plan(ready=ready)
     session.current_send_plan = plan
     return plan
-
-
-@pytest.fixture(autouse=True)
-def _no_active_manager() -> object:
-    set_active_connection_manager(None)
-    yield
-    set_active_connection_manager(None)
 
 
 # ---------------------------------------------------------------------------
@@ -407,3 +406,213 @@ def test_unarmed_send_needs_no_confirm_and_never_touches_the_seam(
         "send_plan_changed",
         EVENT_SESSION_STATUS,
     ]
+
+
+# ---------------------------------------------------------------------------
+# Deterministic teardown: every exit path disarms AND closes the one port.
+#
+# The armed port is an exclusive hardware handle. Before this change the
+# WS endpoint's ``finally`` only unregistered the connection queue and
+# cancelled the writer task, so closing the browser tab while armed left
+# the port open until the process exited — and the next arm attempt (or
+# any other MIDI app) could not have it.
+# ---------------------------------------------------------------------------
+
+
+def test_ws_disconnect_disarms_and_closes_the_port(tmp_path: Path) -> None:
+    """Closing the socket returns the session to passive and frees the port."""
+
+    session = _make_session(tmp_path)
+    provider = _FakeProvider()
+    session.arm_port_provider = provider
+    app = create_app(session, token=TEST_WS_TOKEN)
+
+    with (
+        TestClient(app) as client,
+        client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws,
+    ):
+        complete_handshake(ws)
+        for _ in range(5):
+            ws.receive_json()
+        assert _arm(session)["ok"] is True
+        assert handlers.session_is_armed(session) is True
+
+    assert session.armed_apply is None
+    assert handlers.session_is_armed(session) is False
+    assert provider.port.closed == 1
+
+
+def test_app_shutdown_disarms_and_closes_the_port(tmp_path: Path) -> None:
+    """An arm that no client ever disconnects from still dies with the app."""
+
+    session = _make_session(tmp_path)
+    provider = _FakeProvider()
+    session.arm_port_provider = provider
+    app = create_app(session, token=TEST_WS_TOKEN)
+
+    with TestClient(app):
+        assert _arm(session)["ok"] is True
+        assert handlers.session_is_armed(session) is True
+
+    assert session.armed_apply is None
+    assert provider.port.closed == 1
+
+
+def test_overlapping_teardowns_close_the_port_exactly_once(tmp_path: Path) -> None:
+    """Disconnect + shutdown both fire; the handle is released once, not twice."""
+
+    session = _make_session(tmp_path)
+    provider = _FakeProvider()
+    session.arm_port_provider = provider
+    app = create_app(session, token=TEST_WS_TOKEN)
+
+    with TestClient(app) as client:
+        with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+            complete_handshake(ws)
+            for _ in range(5):
+                ws.receive_json()
+            assert _arm(session)["ok"] is True
+        # Disconnect already disarmed; the shutdown hook runs next.
+
+    assert provider.port.closed == 1
+
+
+def test_teardown_never_re_arms_on_reconnect(tmp_path: Path) -> None:
+    """A fresh connection is passive — arming is always an explicit act."""
+
+    session = _make_session(tmp_path)
+    provider = _FakeProvider()
+    session.arm_port_provider = provider
+    app = create_app(session, token=TEST_WS_TOKEN)
+
+    with TestClient(app) as client:
+        with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+            complete_handshake(ws)
+            for _ in range(5):
+                ws.receive_json()
+            assert _arm(session)["ok"] is True
+
+        with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+            complete_handshake(ws)
+            status = next(
+                frame
+                for frame in (ws.receive_json() for _ in range(5))
+                if frame["type"] == EVENT_SESSION_STATUS
+            )
+
+    assert status["armed"] is False
+    assert status["mode"] == "mock"
+
+
+def test_teardown_on_a_never_armed_session_is_a_no_op(tmp_path: Path) -> None:
+    """The passive path must not be perturbed by the teardown hook."""
+
+    session = _make_session(tmp_path)
+    provider = _FakeProvider()
+    session.arm_port_provider = provider
+    app = create_app(session, token=TEST_WS_TOKEN)
+
+    with (
+        TestClient(app) as client,
+        client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws,
+    ):
+        complete_handshake(ws)
+        for _ in range(5):
+            ws.receive_json()
+
+    assert session.armed_apply is None
+    assert provider.port.closed == 0
+
+
+def test_a_partially_delivered_armed_send_reports_how_far_it_got(tmp_path: Path) -> None:
+    """The operator learns the device is half-applied, not just "failed".
+
+    The seam's local counter used to be discarded when the port raised, so
+    a burst that put 1 of 2 CCs on the wire looked identical to one that
+    put 0 — and the device was left in a state nobody was told about.
+    """
+
+    from rytm_randomizer.senders.armed_apply import ArmedApplyError
+
+    session = _make_session(tmp_path)
+    provider = _FakeProvider(port=_FakeOutPort(fail_after=1))
+    session.arm_port_provider = provider
+    assert _arm(session)["ok"] is True
+    _stage_send(session)
+
+    armed = session.armed_apply
+    assert armed is not None
+    armed.confirm("probe")
+    with pytest.raises(ArmedApplyError) as excinfo:
+        armed.apply(
+            get_device("analog_rytm_mk2"),
+            session.current_send_plan,
+            action_id="probe",
+            mutates_kit=False,
+            renderer=handlers._send_plan_triples,
+        )
+
+    outcome = excinfo.value.partial_outcome
+    assert outcome is not None
+    assert (outcome.status, outcome.sent_count, outcome.expected_count) == ("partial", 1, 2)
+    # ...and the failed burst still released the hardware handle.
+    assert provider.port.closed == 1
+
+
+# ---------------------------------------------------------------------------
+# Auto-disarm must never silently downgrade a live SEND to a mock write.
+# ---------------------------------------------------------------------------
+
+
+def test_send_after_involuntary_auto_disarm_is_refused_not_silently_mocked(
+    tmp_path: Path,
+) -> None:
+    """An auto-disarm must not turn the next SEND into a silent mock write.
+
+    ``_handle_send`` routes to the seam only while ``armed_apply`` is set.
+    Every auto-disarm (device unplugged, provider error, sibling transport
+    teardown) clears it — after which SEND used to fall through to the mock
+    adapter: no per-action confirmation, zero bytes on the wire, and an
+    ack of ``ok: True`` carrying a fresh snapshot id. Mid-performance the
+    operator would keep sending into a void believing the device followed.
+
+    The operator's INTENT to be live outlives the involuntary disarm, so
+    the send is refused with an actionable message instead.
+    """
+
+    session = _make_session(tmp_path)
+    session.arm_port_provider = _FakeProvider()
+    assert _arm(session)["ok"] is True
+    assert session.hardware_intent is True
+
+    _stage_send(session)
+
+    # Involuntary auto-disarm — exactly what the watchdog / provider-error
+    # paths do (they clear the seam but never the operator's intent).
+    _teardown = handlers._teardown_armed_state
+    _teardown(session)
+    assert session.armed_apply is None
+    assert session.hardware_intent is True
+
+    ack = _dispatch(session, {"type": "send"})
+
+    assert ack["ok"] is False
+    assert "re-arm" in ack["message"]
+    # Nothing was written and no snapshot was minted.
+    assert "new_snapshot_id" not in ack
+
+
+def test_explicit_disarm_clears_intent_so_mock_send_resumes(tmp_path: Path) -> None:
+    """After an EXPLICIT disarm, a mock SEND is what the operator asked for."""
+
+    session = _make_session(tmp_path)
+    session.arm_port_provider = _FakeProvider()
+    assert _arm(session)["ok"] is True
+    assert _dispatch(session, {"type": "disarm"})["ok"] is True
+    assert session.hardware_intent is False
+
+    _stage_send(session)
+    ack = _dispatch(session, {"type": "send"})
+
+    assert ack["ok"] is True
+    assert "new_snapshot_id" in ack

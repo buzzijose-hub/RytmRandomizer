@@ -27,10 +27,10 @@ You own an Elektron drum machine and a musical taste — a sound you keep chasin
 What the app actually does today:
 
 - **Double-click launch.** The desktop app bundles its own Python sidecar — no terminal, no interpreter setup. On launch it enumerates MIDI ports and opens **inputs only**, so you know within seconds whether your Analog Rytm MK2 or Analog Four MK2 is connected (`disconnected → searching → listening`). Passive listening never interrupts the device's sound output.
-- **Explicit in-UI arm for every send.** All outbound MIDI routes through a single ArmedApply seam behind an arm toggle + per-action confirmation. Arming never survives a reconnect, and any kit/sound mutation is preceded by an automatic pre-write backup.
+- **Explicit in-UI arm for every send.** Cockpit outbound MIDI routes through a single ArmedApply seam behind an arm toggle + per-action confirmation, and arming never survives a reconnect. Writes to **saved** kits and sounds are refused outright — there is no capture-before-write or restore path yet, so the app will not make a change it cannot undo. Only live-dial CC/NRPN into working memory is transmitted; reload the kit on the device to revert it.
 - **Live MIDI monitor.** A Protokol-grade passive monitor with timestamps, decoded parameter names, and category/channel/pad filters — see exactly what your devices are saying at all times.
 - **Connection Doctor.** When something is wrong (no ports, driver hints, wedged backend), a diagnostics panel and error journal tell you what and why, instead of a silent dead UI. The sidecar also serves a `GET /health` endpoint.
-- **Sound library.** Capture kits from the device (input-only receive), then browse, tag, search, and back them up locally.
+- **Sound library.** Capture kits from the device (input-only receive), then browse, tag, and search them locally. Captures are archived on your disk; there is no restore-to-device path, because writing a saved kit back is exactly the operation the safety model refuses today.
 - **Kit morphing + scoped randomization.** Morph between your current kit and a target per track/page with a depth macro, and scope randomization with masks + intensity anchored on the kit you are actually playing. Both are pure, deterministic, and pinned byte-identical across languages.
 - **Profile authoring + signed export.** Learn a style profile from your music (the [wizard](#profile-wizard)), mutate live against it, and ship it as a tiny signed `.rymp` file (the [export pipeline](#export-pipeline)).
 - **Accessible by gate, not by afterthought.** Every cockpit route passes a WCAG 2.2 AA axe audit in CI with zero violations. See the [accessibility statement](docs/ACCESSIBILITY.md).
@@ -41,10 +41,18 @@ The full rule lives in [`.claude/rules/live-but-passive-midi.md`](.claude/rules/
 
 | | Inputs (listening) | Outputs (transmitting) |
 |---|---|---|
-| **When** | Immediately on launch | Only after an explicit in-UI arm + confirmation |
-| **Gate** | None — passive listening is the connection-health signal | The `senders/` ArmedApply seam, the only transmit path in the repo |
+| **When** | Immediately on launch | Only after an explicit in-UI arm + per-action confirmation |
+| **Gate** | None — passive listening is the connection-health signal | The `senders/` ArmedApply seam — the only transmit path for the cockpit |
 | **After reconnect** | Resumes automatically | Never auto-re-arms |
-| **Before kit/sound writes** | — | Automatic timestamped backup of the target |
+| **Saved kit / sound writes** | — | **Refused.** No capture-before-write or restore exists, so persistent writes are blocked rather than "backed up" |
+| **What does transmit** | — | Live-dial CC/NRPN into working memory only; undo by reloading the kit on the device |
+
+The legacy V1.34 terminal entry points (`app.py`, `shell.py`) predate the seam
+and still open their own output ports behind the CLI's `--arm` flag. They are
+exempt only via the named, shrinking allowlist in
+`tests/architecture/test_armed_entry_points.py`, and folding them into the seam
+is tracked work — so "the only transmit path" is a statement about the cockpit,
+not yet about the whole repository.
 
 ---
 
@@ -152,7 +160,7 @@ The cockpit targets **WCAG 2.2 AA** and enforces it in CI: an axe audit runs aga
 
 ## Use cases
 
-**Live-set sound design.** Three hours into a warehouse set, you need the kit to evolve without losing the bones. The app is already listening to the Rytm; capture the kit you are playing, morph or scope-randomize around it, watch the ghost preview, lock the kick, arm, confirm, send. A pre-write backup means you can always get back.
+**Live-set sound design.** Three hours into a warehouse set, you need the kit to evolve without losing the bones. The app is already listening to the Rytm; capture the kit you are playing, morph or scope-randomize around it, watch the ghost preview, lock the kick, arm, confirm, send. What goes out is live-dial CC into working memory — your saved kit on the device is untouched, so reloading it is the way back.
 
 **Dual-machine rigs.** If you run an Analog Four MK2 alongside the Rytm, the same surface plans both. Analog Four sends stay candidate/manifest-gated behind their own readiness checks and the same arm boundary.
 
@@ -169,7 +177,7 @@ The cockpit targets **WCAG 2.2 AA** and enforces it in CI: an axe audit runs aga
 
 ### Desktop app (double-click launch)
 
-The Tauri bundle ships with the Python sidecar **bundled** — it spawns its own runtime, never a PATH Python. Build it locally today (signed installers wait on certificate acquisition; see [`docs/BUILDING_INSTALLERS.md`](docs/BUILDING_INSTALLERS.md) for the per-OS build matrix):
+The Tauri bundle ships with the Python sidecar **bundled**, and prefers it: the shell resolves `RYTM_RAND_SIDECAR_BIN` first, then the bundled binary next to the executable / in the resource dir. Only when no bundled binary is found does it fall back to a `python` on `PATH` — that fallback exists for development (`cargo run` against a source checkout), so a shipped bundle uses its own runtime. Build it locally today (signed installers wait on certificate acquisition; see [`docs/BUILDING_INSTALLERS.md`](docs/BUILDING_INSTALLERS.md) for the per-OS build matrix):
 
 ```bash
 cd desktop/shell && cargo build --release

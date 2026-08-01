@@ -21,7 +21,7 @@ Safety:
 - preview plan only
 - no MIDI sending
 - no port opening
-- arm-and-send via the senders ArmedApply seam
+- not a device plan - cannot be sent to hardware
 - no hardware required
 Source: rytm_randomizer.reports.kit_morph_preview
 In-memory only: True

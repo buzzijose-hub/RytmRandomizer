@@ -17,9 +17,10 @@
  * entry is a documented, dated debt with a fix owner. As of this suite's
  * introduction the audit found every scanned surface clean (all floors 0).
  */
-import { render } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { ActionBar } from '../../src/cockpit/ActionBar';
 import { CockpitClientProvider } from '../../src/cockpit/context';
 import { ArmControl } from '../../src/cockpit/ArmControl';
 import { DepthSlider } from '../../src/cockpit/DepthSlider';
@@ -27,17 +28,22 @@ import { Knob } from '../../src/cockpit/Knob';
 import { ProfileToggle } from '../../src/cockpit/ProfileToggle';
 import { LockButton } from '../../src/cockpit/LockButton';
 import { ConnectionDoctorPanel } from '../../src/cockpit/panels/ConnectionDoctorPanel';
+import { KitMorphPanel } from '../../src/cockpit/panels/KitMorphPanel';
 import { LibraryPanel } from '../../src/cockpit/panels/LibraryPanel';
 import { LiveMidiMonitorPanel } from '../../src/cockpit/panels/LiveMidiMonitorPanel';
 import { PanelRenderer } from '../../src/cockpit/panels/PanelRenderer';
+import { ScopedRandomizationPanel } from '../../src/cockpit/panels/ScopedRandomizationPanel';
 import { liveMidiMonitorPanelSpec } from '../../src/cockpit/panels/liveMidiMonitorPanelSpec';
 import { useCockpitStore } from '../../src/state';
 
 import {
+  candidate,
   connectionListening,
   diagnosticsHealthy,
   libraryRecordA,
   midiBatch,
+  sendPlan,
+  sessionLive,
   sessionMock,
 } from '../cockpit/_fixtures';
 import { runAxe, violationSummary } from './__helpers__/axe';
@@ -52,9 +58,12 @@ const FLOORS = {
   ProfileToggle: 0,
   LockButton: 0,
   ConnectionDoctorPanel: 0,
+  KitMorphPanel: 0,
   LibraryPanel: 0,
   LiveMidiMonitorPanel: 0,
   PanelRenderer: 0,
+  ScopedRandomizationPanel: 0,
+  SendConfirmDialog: 0,
 } as const;
 
 function withClient(node: React.ReactNode): JSX.Element {
@@ -134,5 +143,36 @@ describe('cockpit axe audit (WCAG 2.2 AA)', () => {
     seedStore();
     const { container } = render(withClient(<LiveMidiMonitorPanel />));
     await expectClean('LiveMidiMonitorPanel', container);
+  });
+
+  it('ScopedRandomizationPanel (with the static-demonstration banner) is clean', async () => {
+    const { container } = render(withClient(<ScopedRandomizationPanel />));
+    await expectClean('ScopedRandomizationPanel', container);
+  });
+
+  it('KitMorphPanel (with the static-demonstration banner) is clean', async () => {
+    const { container } = render(withClient(<KitMorphPanel />));
+    await expectClean('KitMorphPanel', container);
+  });
+
+  it('ArmControl open dialog is clean', async () => {
+    useCockpitStore.setState({ sessionStatus: sessionMock, connection: connectionListening });
+    const { container } = render(withClient(<ArmControl />));
+    fireEvent.click(screen.getByTestId('arm-open-button'));
+    await expectClean('ArmControlDialog', container);
+  });
+
+  it('ActionBar armed send-confirmation dialog is clean', async () => {
+    useCockpitStore.setState({
+      sessionStatus: sessionLive,
+      previewCandidate: candidate,
+      sendPlan,
+    });
+    const { container } = render(
+      withClient(<ActionBar previewOn onTogglePreview={() => {}} />),
+    );
+    fireEvent.click(screen.getByTestId('action-send'));
+    expect(screen.getByTestId('send-confirm-dialog')).toBeTruthy();
+    await expectClean('SendConfirmDialog', container);
   });
 });

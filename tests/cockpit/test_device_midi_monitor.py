@@ -16,10 +16,18 @@ import pytest
 
 from rytm_randomizer.cockpit.device.connection import ConnectionState
 from rytm_randomizer.cockpit.device.midi_monitor import (
+    ANALOG_FOUR_DEVICE_ID,
+    ANALOG_RYTM_DEVICE_ID,
     DEFAULT_BATCH_INTERVAL_SECONDS,
     DEFAULT_RING_CAPACITY,
+    UNKNOWN_DEVICE_DECODER,
+    UNKNOWN_DEVICE_ID,
     MidiInputMonitor,
     MidiMonitorSupervisor,
+    analog_four_cc_lookup,
+    build_analog_four_cc_label_lookup,
+    decoder_for_device_id,
+    decoder_for_port_name,
     default_rytm_cc_lookup,
 )
 from rytm_randomizer.cockpit.ws.protocol import EVENT_MIDI_ACTIVITY
@@ -414,3 +422,172 @@ def test_supervisor_aclose_without_monitor_is_noop() -> None:
         await supervisor.aclose()
 
     asyncio.run(_scenario())
+
+
+# ---------------------------------------------------------------------------
+# Per-family decoding (I9): the monitor must not read every connection as a
+# Rytm. A4 traffic gets A4 labels and a ``track``; an unknown device gets no
+# labels and no invented pad.
+# ---------------------------------------------------------------------------
+
+_A4_PORT = "Elektron Analog Four MKII MIDI 1"
+_UNKNOWN_PORT = "Some Generic USB MIDI 1"
+
+
+def test_decoder_for_port_name_resolves_each_registered_family() -> None:
+    rytm = decoder_for_port_name(_PORT)
+    four = decoder_for_port_name(_A4_PORT)
+    assert rytm.device_id == ANALOG_RYTM_DEVICE_ID
+    assert rytm.voice_key == "pad"
+    assert rytm.voice_count == 12
+    assert four.device_id == ANALOG_FOUR_DEVICE_ID
+    assert four.voice_key == "track"
+    assert four.voice_count == 4
+
+
+def test_decoder_for_port_name_is_neutral_for_unknown_and_none() -> None:
+    # A bare "Elektron" stem is deliberately NOT enough: it does not say
+    # which machine, and guessing is the defect being fixed.
+    for name in (_UNKNOWN_PORT, "Elektron Something New", None):
+        decoder = decoder_for_port_name(name)
+        assert decoder is UNKNOWN_DEVICE_DECODER
+        assert decoder.device_id == UNKNOWN_DEVICE_ID
+        assert decoder.voice_key is None
+        assert decoder.build_lookup() == {}
+
+
+def test_decoder_for_device_id_falls_back_to_neutral() -> None:
+    assert decoder_for_device_id(ANALOG_RYTM_DEVICE_ID).device_id == ANALOG_RYTM_DEVICE_ID
+    # Registered-but-undecodable and unregistered both read as unknown —
+    # never as Rytm.
+    assert decoder_for_device_id("digitakt_mk2") is UNKNOWN_DEVICE_DECODER
+    assert decoder_for_device_id(None) is UNKNOWN_DEVICE_DECODER
+
+
+def test_voice_for_channel_rejects_out_of_range_and_unknown_layout() -> None:
+    four = decoder_for_device_id(ANALOG_FOUR_DEVICE_ID)
+    assert four.voice_for_channel(0) == 1
+    assert four.voice_for_channel(3) == 4
+    # Channel 4 is past the A4's 4 tracks: real traffic, no invented track.
+    assert four.voice_for_channel(4) is None
+    assert four.voice_for_channel(-1) is None
+    assert UNKNOWN_DEVICE_DECODER.voice_for_channel(0) is None
+
+
+def test_analog_four_lookup_is_non_empty_and_distinct_from_rytm() -> None:
+    four = analog_four_cc_lookup()
+    rytm = default_rytm_cc_lookup()
+    assert four
+    assert four != rytm
+    for labels in four.values():
+        assert all(label.scope == "track" for label in labels)
+
+
+def _batch_for(port_name: str) -> tuple[dict, dict]:
+    """Poll one CC on channel 0 through ``port_name``; return (activity, row)."""
+
+    opener = _FakeOpener()
+    events: list[dict] = []
+    monitor = MidiInputMonitor(opener, port_name=port_name, broadcast=events.append)
+    monitor.open()
+    opener.port.pending = [_Msg(channel=0, control=16, value=42)]
+    event = monitor.poll_once()
+    assert event is not None
+    activity = event["midi_activity"]
+    return activity, activity["batch"][0]
+
+
+def test_rytm_port_reports_pad_and_rytm_identity() -> None:
+    activity, row = _batch_for(_PORT)
+    assert activity["device_id"] == ANALOG_RYTM_DEVICE_ID
+    assert activity["device_name"] == "Elektron Analog Rytm MKII"
+    assert row["pad"] == 1
+    assert "track" not in row
+
+
+def test_analog_four_port_reports_track_not_pad() -> None:
+    activity, row = _batch_for(_A4_PORT)
+    assert activity["device_id"] == ANALOG_FOUR_DEVICE_ID
+    assert activity["device_name"] == "Elektron Analog Four MKII"
+    # The regression: channel 0 used to be reported as Rytm "pad 1".
+    assert row["pad"] is None
+    assert row["track"] == 1
+
+
+def test_unknown_port_invents_no_pad_and_no_labels() -> None:
+    activity, row = _batch_for(_UNKNOWN_PORT)
+    assert activity["device_id"] == UNKNOWN_DEVICE_ID
+    assert activity["device_name"] == "Unknown MIDI device"
+    assert row["pad"] is None
+    assert "track" not in row
+    assert row["labels"] == []
+
+
+def test_rytm_channel_beyond_the_pad_grid_reports_no_pad() -> None:
+    opener = _FakeOpener()
+    events: list[dict] = []
+    monitor = MidiInputMonitor(opener, port_name=_PORT, broadcast=events.append)
+    monitor.open()
+    # Channel 12 is past the 12-pad grid: no pad 13 exists on the hardware.
+    opener.port.pending = [_Msg(channel=12, control=16, value=1)]
+    event = monitor.poll_once()
+    assert event is not None
+    assert event["midi_activity"]["batch"][0]["pad"] is None
+
+
+def test_explicit_decoder_and_cc_lookup_overrides_win() -> None:
+    four = decoder_for_device_id(ANALOG_FOUR_DEVICE_ID)
+    # An explicit decoder beats the port-name guess...
+    monitor = MidiInputMonitor(
+        _FakeOpener(), port_name=_PORT, broadcast=lambda _e: None, decoder=four
+    )
+    assert monitor.decoder is four
+    # ...and an explicit lookup replaces the decoder's own.
+    pinned = MidiInputMonitor(
+        _FakeOpener(), port_name=_PORT, broadcast=lambda _e: None, cc_lookup={}
+    )
+    assert pinned.decoder.device_id == ANALOG_RYTM_DEVICE_ID
+    assert pinned._label_names(16) == []
+
+
+def test_supervisor_redecodes_when_the_family_changes() -> None:
+    opener = _FakeOpener()
+    events: list[dict] = []
+    supervisor = MidiMonitorSupervisor(opener, broadcast=events.append)
+
+    supervisor.notify(_state(_PORT))
+    rytm_monitor = supervisor.monitor
+    assert rytm_monitor is not None
+    assert rytm_monitor.decoder.device_id == ANALOG_RYTM_DEVICE_ID
+
+    # Swapping the cable to an A4 must re-decode, not reuse Rytm labels.
+    supervisor.notify(_state(_A4_PORT))
+    four_monitor = supervisor.monitor
+    assert four_monitor is not None
+    assert four_monitor.decoder.device_id == ANALOG_FOUR_DEVICE_ID
+
+
+def test_analog_four_label_adapter_skips_nrpn_only_rows() -> None:
+    """A row with no ``cc_msb`` is skipped, not bucketed under a placeholder.
+
+    No shipped A4 fact row hits this today, but the field is ``int | None``
+    and a fabricated label for real traffic is exactly the class of defect
+    the per-family decoding work exists to remove.
+    """
+
+    @dataclass(frozen=True)
+    class _Row:
+        section: str
+        parameter: str
+        cc_msb: int | None
+        nrpn_msb: int | None = None
+        nrpn_lsb: int | None = None
+
+    lookup = build_analog_four_cc_label_lookup(
+        [
+            _Row(section="FILTER", parameter="Cutoff", cc_msb=74),
+            _Row(section="ENV", parameter="NRPN Only", cc_msb=None),
+        ]
+    )
+    assert set(lookup) == {74}
+    assert lookup[74][0].parameter == "Cutoff"

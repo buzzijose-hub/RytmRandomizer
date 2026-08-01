@@ -9,6 +9,13 @@ These tests pin the frozen contract:
 * an unready plan is refused via the ReadyPlan duck,
 * a kit/sound-MUTATING apply is refused outright (no backup, no restore),
 * a provider error mid-send auto-disarms — and NEVER auto-re-arms,
+* a close-less port is refused AT ARM TIME (deterministic teardown is
+  unimplementable without ``close``),
+* every exit path — provider error, ``KeyboardInterrupt`` / ``SystemExit``
+  mid-burst, context-manager exit — disarms and closes the port exactly
+  once, and never swallows the interrupt,
+* partial delivery is reported (``sent_count`` / ``expected_count`` /
+  ``status``), not discarded,
 * guarded_send / hardware_send route readiness through the same helper.
 """
 
@@ -24,6 +31,7 @@ from rytm_randomizer.senders.armed_apply import (
     ArmedApplyResult,
     ArmedApplySession,
     KitMutationUnsupportedError,
+    PortNotClosableError,
     plan_readiness,
 )
 from rytm_randomizer.senders.guarded import guarded_send
@@ -259,6 +267,8 @@ def test_apply_refuses_unready_plan_with_duck_reason() -> None:
         ok=False,
         sent_count=0,
         reason="missing routing",
+        expected_count=0,
+        status="refused",
     )
     assert opener.port.sent == []
 
@@ -357,9 +367,13 @@ def test_apply_fails_closed_when_the_port_rejects_the_message_type() -> None:
     class _TypeStrictPort:
         def __init__(self) -> None:
             self.sent: list[object] = []
+            self.closed = 0
 
         def send(self, message: object) -> None:
             raise TypeError(f"mido port requires a mido.Message, got {type(message).__name__}")
+
+        def close(self) -> None:
+            self.closed += 1
 
     @dataclass
     class _StrictOpener:
@@ -368,12 +382,15 @@ def test_apply_fails_closed_when_the_port_rejects_the_message_type() -> None:
         def open_exact(self, _port_name: str) -> _TypeStrictPort:
             return self.port
 
-    session = ArmedApplySession(opener=_StrictOpener(), port_name=_PORT, arm_token=_TOKEN)
+    opener = _StrictOpener()
+    session = ArmedApplySession(opener=opener, port_name=_PORT, arm_token=_TOKEN)
     session.arm(_TOKEN)
     session.confirm("apply-1")
     with pytest.raises(ArmedApplyError, match="auto_disarmed"):
         session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1", mutates_kit=False)
     assert session.is_armed is False
+    # Auto-disarm closed the port exactly once — no leaked handle.
+    assert opener.port.closed == 1
 
 
 # ---------------------------------------------------------------------------
@@ -390,6 +407,52 @@ def test_provider_error_mid_send_auto_disarms() -> None:
         session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1", mutates_kit=False)
     assert session.is_armed is False
     assert opener.port.sent == [(0, 10, 20)]
+    # Auto-disarm is a teardown path: the port is closed, not just dropped.
+    assert opener.port.closed == 1
+
+
+def test_partial_delivery_is_reported_not_discarded() -> None:
+    """ "Send failed" for a half-applied device is a lie the operator acts on.
+
+    The local ``sent`` counter used to be thrown away when the port
+    raised, so a burst that put 1 of 2 CCs on the wire was
+    indistinguishable from one that put 0. The count now rides on the
+    error.
+    """
+
+    opener = _FakeOpener(port=_FakePort(fail_after=1))
+    session, _ = _make_session(opener=opener)
+    session.arm(_TOKEN)
+    session.confirm("apply-1")
+
+    with pytest.raises(ArmedApplyError) as excinfo:
+        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1", mutates_kit=False)
+
+    outcome = excinfo.value.partial_outcome
+    assert outcome is not None
+    assert outcome.status == "partial"
+    assert outcome.sent_count == 1
+    assert outcome.expected_count == 2
+    assert outcome.ok is False
+    assert excinfo.value.context["sent_count"] == 1
+    assert excinfo.value.context["expected_count"] == 2
+
+
+def test_a_pre_wire_refusal_carries_no_partial_outcome() -> None:
+    """``partial_outcome is not None`` must mean "bytes may have landed"."""
+
+    session, _ = _make_session()
+    with pytest.raises(ArmedApplyError) as excinfo:
+        session.arm("wrong-token")
+    assert excinfo.value.partial_outcome is None
+
+
+def test_a_complete_send_reports_matching_sent_and_expected_counts() -> None:
+    session, _ = _make_session()
+    session.arm(_TOKEN)
+    session.confirm("apply-1")
+    result = session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1", mutates_kit=False)
+    assert (result.status, result.sent_count, result.expected_count) == ("complete", 2, 2)
 
 
 def test_never_auto_re_arms_after_provider_error() -> None:
@@ -438,25 +501,141 @@ def test_disarm_clears_pending_confirmations() -> None:
         session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1", mutates_kit=False)
 
 
-def test_disarm_handles_port_without_close_method() -> None:
-    @dataclass
-    class _NoClosePort:
-        sent: list[tuple[int, int, int]] = field(default_factory=list)
+@dataclass
+class _NoClosePort:
+    """A send-only port — the shape the seam must now REFUSE at arm time."""
 
-        def send(self, message: tuple[int, int, int]) -> None:
-            self.sent.append(message)
+    sent: list[tuple[int, int, int]] = field(default_factory=list)
 
-    @dataclass
-    class _NoCloseOpener:
-        port: _NoClosePort = field(default_factory=_NoClosePort)
+    def send(self, message: tuple[int, int, int]) -> None:
+        self.sent.append(message)
 
-        def open_exact(self, _port_name: str) -> _NoClosePort:
-            return self.port
+
+@dataclass
+class _NoCloseOpener:
+    port: _NoClosePort = field(default_factory=_NoClosePort)
+
+    def open_exact(self, _port_name: str) -> _NoClosePort:
+        return self.port
+
+
+def test_arm_refuses_a_port_that_cannot_be_closed() -> None:
+    """A handle the seam cannot release is a handle it must not hold.
+
+    The previous contract treated ``close`` as optional (``getattr`` at
+    disarm time), so a close-less port armed happily and then leaked the
+    OS handle forever. Deterministic teardown is only implementable if
+    every armed port is closable, so the check moved to arm time.
+    """
 
     session = ArmedApplySession(opener=_NoCloseOpener(), port_name=_PORT, arm_token=_TOKEN)
-    session.arm(_TOKEN)
-    session.disarm()
+    with pytest.raises(PortNotClosableError, match="port_not_closable"):
+        session.arm(_TOKEN)
     assert session.is_armed is False
+
+
+def test_port_not_closable_is_a_fingerprinted_armed_apply_error() -> None:
+    assert issubclass(PortNotClosableError, ArmedApplyError)
+    assert PortNotClosableError.fingerprint == "midi.armed_apply.port_not_closable"
+
+
+def test_arm_refusal_for_a_close_less_port_carries_the_port_name() -> None:
+    session = ArmedApplySession(opener=_NoCloseOpener(), port_name=_PORT, arm_token=_TOKEN)
+    with pytest.raises(PortNotClosableError) as excinfo:
+        session.arm(_TOKEN)
+    assert excinfo.value.context == {"port_name": _PORT}
+
+
+# ---------------------------------------------------------------------------
+# Deterministic teardown: every exit path disarms AND closes exactly once.
+# ---------------------------------------------------------------------------
+
+
+def test_keyboard_interrupt_mid_send_disarms_closes_and_re_raises() -> None:
+    """Ctrl+C used to leave the session ARMED with the port OPEN.
+
+    Only ``_PORT_ERRORS`` were caught, so a ``KeyboardInterrupt`` raised
+    out of ``port.send`` propagated past the state machine untouched. The
+    seam now catches ``BaseException``, disarms (closing the port), and
+    re-raises the original exception unchanged.
+    """
+
+    @dataclass
+    class _InterruptingPort:
+        sent: list[tuple[int, int, int]] = field(default_factory=list)
+        closed: int = 0
+
+        def send(self, message: tuple[int, int, int]) -> None:
+            if self.sent:
+                raise KeyboardInterrupt
+            self.sent.append(message)
+
+        def close(self) -> None:
+            self.closed += 1
+
+    port = _InterruptingPort()
+    opener = _FakeOpener()
+    opener.port = port  # type: ignore[assignment]
+    session, _ = _make_session(opener=opener)
+    session.arm(_TOKEN)
+    session.confirm("apply-1")
+
+    with pytest.raises(KeyboardInterrupt):
+        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1", mutates_kit=False)
+
+    assert session.is_armed is False
+    assert port.closed == 1
+    assert port.sent == [(0, 10, 20)]
+
+
+def test_system_exit_mid_send_records_the_interrupted_outcome() -> None:
+    """The partial count survives on the raised exception, not just in a log."""
+
+    @dataclass
+    class _ExitingPort:
+        sent: list[tuple[int, int, int]] = field(default_factory=list)
+        closed: int = 0
+
+        def send(self, message: tuple[int, int, int]) -> None:
+            raise SystemExit(2)
+
+        def close(self) -> None:
+            self.closed += 1
+
+    port = _ExitingPort()
+    opener = _FakeOpener()
+    opener.port = port  # type: ignore[assignment]
+    session, _ = _make_session(opener=opener)
+    session.arm(_TOKEN)
+    session.confirm("apply-1")
+
+    with pytest.raises(SystemExit) as excinfo:
+        session.apply(_FakeDevice(), _FakePlan(), action_id="apply-1", mutates_kit=False)
+
+    outcome = excinfo.value.__dict__["armed_apply_outcome"]
+    assert outcome.status == "interrupted"
+    assert outcome.sent_count == 0
+    assert outcome.expected_count == 2
+    assert session.is_armed is False
+    assert port.closed == 1
+
+
+def test_the_session_is_a_context_manager_that_always_disarms() -> None:
+    """Scope exit is a teardown path too — including on an exception."""
+
+    session, opener = _make_session()
+    with session:
+        session.arm(_TOKEN)
+        assert session.is_armed is True
+    assert session.is_armed is False
+    assert opener.port.closed == 1
+
+    session2, opener2 = _make_session()
+    with pytest.raises(ValueError, match="boom"), session2:
+        session2.arm(_TOKEN)
+        raise ValueError("boom")
+    assert session2.is_armed is False
+    assert opener2.port.closed == 1
 
 
 # ---------------------------------------------------------------------------
@@ -511,6 +690,43 @@ def test_exact_opener_rejects_port_without_send() -> None:
         ExactOutputOpener(provider).open_exact(_PORT)
 
 
+def test_exact_opener_rejects_a_port_without_close() -> None:
+    """Fail closed at resolution, so the seam never receives an unclosable port."""
+
+    provider = _FakeProvider(port=_NoClosePort())
+    with pytest.raises(PortNotClosableError, match="port_not_closable"):
+        ExactOutputOpener(provider).open_exact(_PORT)
+
+
+def test_exact_opener_closes_a_port_it_refuses_for_missing_send() -> None:
+    """Refusing an opened handle must not also leak it."""
+
+    class _SendlessButClosable:
+        def __init__(self) -> None:
+            self.closed = 0
+
+        def close(self) -> None:
+            self.closed += 1
+
+    port = _SendlessButClosable()
+    provider = _FakeProvider(port=port)
+    with pytest.raises(ArmedApplyError, match="invalid_output_port"):
+        ExactOutputOpener(provider).open_exact(_PORT)
+    assert port.closed == 1
+
+
+def test_exact_opener_tolerates_a_failing_close_while_refusing() -> None:
+    """A dying port's close error must not mask the refusal itself."""
+
+    class _SendlessCloseRaises:
+        def close(self) -> None:
+            raise OSError("backend already gone")
+
+    provider = _FakeProvider(port=_SendlessCloseRaises())
+    with pytest.raises(ArmedApplyError, match="invalid_output_port"):
+        ExactOutputOpener(provider).open_exact(_PORT)
+
+
 # ---------------------------------------------------------------------------
 # plan_readiness routing — guarded/hardware share the same duck.
 # ---------------------------------------------------------------------------
@@ -552,3 +768,63 @@ def test_armed_apply_error_is_taxonomy_member_with_fingerprint() -> None:
     assert issubclass(ArmedApplyError, MidiError)
     assert issubclass(ArmedApplyError, RuntimeError)
     assert ArmedApplyError.fingerprint == "midi.armed_apply.refused"
+
+
+# ---------------------------------------------------------------------------
+# Renderer failure — the port is already open when rendering runs.
+# ---------------------------------------------------------------------------
+
+
+def test_apply_disarms_and_closes_when_the_renderer_raises() -> None:
+    """A renderer that raises must not strand an armed, open port.
+
+    Rendering happens AFTER the port is opened but BEFORE the first byte
+    reaches the wire, so an exception there used to leave the session
+    armed holding an exclusive hardware handle — the same failure class
+    as an interrupted send burst, but on a path no test covered. Nothing
+    was transmitted, so this is a clean zero-byte refusal: disarm, close,
+    and re-raise the original exception unchanged.
+    """
+
+    session, opener = _make_session()
+    session.arm(_TOKEN)
+    session.confirm("act-1")
+
+    def _explode(_plan: object) -> list[tuple[int, int, int]]:
+        raise ValueError("device strategy produced a malformed plan")
+
+    with pytest.raises(ValueError, match="malformed plan"):
+        session.apply(
+            device=_FakeDevice(),
+            plan=_FakePlan(),
+            action_id="act-1",
+            mutates_kit=False,
+            renderer=_explode,
+        )
+
+    assert session.is_armed is False
+    assert opener.port.closed == 1
+    assert opener.port.sent == []
+
+
+def test_apply_disarms_and_closes_when_the_renderer_is_interrupted() -> None:
+    """KeyboardInterrupt during rendering releases the handle and propagates."""
+
+    session, opener = _make_session()
+    session.arm(_TOKEN)
+    session.confirm("act-1")
+
+    def _interrupt(_plan: object) -> list[tuple[int, int, int]]:
+        raise KeyboardInterrupt
+
+    with pytest.raises(KeyboardInterrupt):
+        session.apply(
+            device=_FakeDevice(),
+            plan=_FakePlan(),
+            action_id="act-1",
+            mutates_kit=False,
+            renderer=_interrupt,
+        )
+
+    assert session.is_armed is False
+    assert opener.port.closed == 1

@@ -12,10 +12,36 @@ keeping ``armed_apply.py`` itself free of port construction.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol, cast
+from typing import Final, Protocol, cast
 
 from ..devices import Device
-from .armed_apply import ArmedApplyError, OutputPortLike, plan_readiness
+from .armed_apply import (
+    ArmedApplyError,
+    OutputPortLike,
+    PortNotClosableError,
+    plan_readiness,
+)
+
+_CLOSE_ERRORS: Final[tuple[type[BaseException], ...]] = (OSError, RuntimeError, ValueError)
+"""Backend failures a dying port's ``close()`` can realistically raise."""
+
+
+def _close_quietly(port: object) -> None:
+    """Best-effort release of a port we are about to refuse.
+
+    Used only on the rejection paths in :meth:`ExactOutputOpener.open_exact`:
+    the provider already opened *something*, and refusing it must not also
+    leak it. A port with no ``close`` (or one whose close fails) leaves
+    nothing further we can do — the refusal is the important part.
+    """
+
+    close = getattr(port, "close", None)
+    if not callable(close):
+        return
+    try:
+        close()
+    except _CLOSE_ERRORS:
+        return
 
 
 class TripleSender(Protocol):
@@ -63,6 +89,16 @@ class ExactOutputOpener:
         ``port_name`` is typed ``object`` because it can originate from
         wire-supplied operator input — the ``isinstance`` check is genuine
         runtime validation, not redundant narrowing.
+
+        The opened object must satisfy the **whole** canonical
+        :class:`~rytm_randomizer.senders.armed_apply.OutputPortLike`
+        contract: ``send`` *and* ``close``. A provider that hands back a
+        send-only object is refused here rather than at disarm time,
+        because a handle the seam cannot close is a handle it must not
+        hold (see
+        :class:`~rytm_randomizer.senders.armed_apply.PortNotClosableError`).
+        A port that fails the check is closed if it can be, so a
+        half-usable handle is not leaked by the refusal itself.
         """
 
         if not isinstance(port_name, str) or not port_name:
@@ -75,7 +111,13 @@ class ExactOutputOpener:
             raise ArmedApplyError(f"armed_apply_output_port_ambiguous: {port_name}")
         port = self._provider.open_output(port_name)
         if not callable(getattr(port, "send", None)):
+            _close_quietly(port)
             raise ArmedApplyError(f"armed_apply_invalid_output_port: {port_name}")
+        if not callable(getattr(port, "close", None)):
+            raise PortNotClosableError(
+                f"armed_apply_port_not_closable: {port_name}",
+                context={"port_name": port_name},
+            )
         return cast(OutputPortLike, port)
 
 

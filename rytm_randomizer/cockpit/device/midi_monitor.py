@@ -23,10 +23,24 @@ Design constraints, all test-pinned:
   the latest value and a ``repeat_count``, then pushes ONE
   ``midi_activity`` event through the injected broadcast callable
   (production: :meth:`ConnectionRegistry.broadcast_event`).
-* **Decoded labels.** Rows carry the operator-facing control labels from
-  the existing passive Rytm CC lookup
-  (:func:`~rytm_randomizer.state.rytm_cc_observe.build_rytm_cc_label_lookup`
-  over :data:`~rytm_randomizer.data.ANALOG_RYTM_MANUAL_CC`).
+* **Per-family decoding.** Rows are decoded by a
+  :class:`MonitorDecoder` chosen from the ``devices`` registry for the
+  connected family — never by an unconditional Rytm assumption. The Rytm
+  decoder labels CCs from
+  :data:`~rytm_randomizer.data.ANALOG_RYTM_MANUAL_CC` and reports a
+  ``pad`` (channel + 1, 12 pads); the Analog Four decoder labels from
+  :data:`~rytm_randomizer.data.ANALOG_FOUR_MANUAL_CC` and reports a
+  ``track`` (4 tracks). An unrecognised device gets the neutral
+  :data:`UNKNOWN_DEVICE_DECODER`: no labels invented, no pad/track
+  claimed, and ``device_id`` reported as :data:`UNKNOWN_DEVICE_ID` so the
+  UI can say "unknown device" instead of silently mislabelling A4 traffic
+  as Rytm pads.
+
+Why per-family and not "Rytm plus a note": CC 16 on a Rytm is a pad
+parameter and on an Analog Four is a different control entirely, and
+``channel + 1`` is a *pad* number only on the 12-pad Rytm grid. Applying
+the Rytm reading to an A4 connection produced confidently wrong operator
+labels — the defect this seam fixes.
 """
 
 from __future__ import annotations
@@ -37,6 +51,7 @@ import time
 from collections import OrderedDict, deque
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Final, Protocol, cast, runtime_checkable
 
 from ...observability.logging import get_logger
@@ -45,14 +60,24 @@ from ..ws.protocol import EVENT_MIDI_ACTIVITY
 from .connection import ConnectionState
 
 __all__ = [
+    "ANALOG_FOUR_DEVICE_ID",
+    "ANALOG_RYTM_DEVICE_ID",
     "DEFAULT_BATCH_INTERVAL_SECONDS",
     "DEFAULT_RING_CAPACITY",
+    "UNKNOWN_DEVICE_DECODER",
+    "UNKNOWN_DEVICE_ID",
     "MidiInputMonitor",
     "MidiInputOpener",
     "MidiInputPortLike",
     "MidiMonitorSupervisor",
+    "MonitorDecoder",
     "ObservedInputMessage",
+    "AnalogFourCcRow",
+    "analog_four_cc_lookup",
+    "build_analog_four_cc_label_lookup",
     "default_rytm_cc_lookup",
+    "decoder_for_port_name",
+    "decoder_for_device_id",
 ]
 
 _logger = get_logger(__name__)
@@ -95,12 +120,219 @@ class MidiInputOpener(Protocol):
         ...
 
 
+ANALOG_RYTM_DEVICE_ID: Final[str] = "analog_rytm_mk2"
+"""Registry ``device_id`` of the Analog Rytm MKII (12 pads)."""
+
+ANALOG_FOUR_DEVICE_ID: Final[str] = "analog_four_mk2"
+"""Registry ``device_id`` of the Analog Four MKII (4 synth tracks)."""
+
+UNKNOWN_DEVICE_ID: Final[str] = "unknown"
+"""``device_id`` reported when no registered family matches the port."""
+
+_RYTM_VOICE_KEY: Final[str] = "pad"
+"""Per-voice key the Rytm decoder emits (pads, 1-based)."""
+
+_A4_VOICE_KEY: Final[str] = "track"
+"""Per-voice key the Analog Four decoder emits (tracks, 1-based)."""
+
+
 def default_rytm_cc_lookup() -> Mapping[int, tuple[RytmCcLabel, ...]]:
-    """Build the default Rytm CC label lookup from the shared fact table."""
+    """Build the Analog Rytm CC label lookup from the shared fact table."""
 
     from ...data import ANALOG_RYTM_MANUAL_CC  # noqa: PLC0415 - lazy fact-table pull
 
     return build_rytm_cc_label_lookup(ANALOG_RYTM_MANUAL_CC.values())
+
+
+class AnalogFourCcRow(Protocol):
+    """The A4 fact-table fields the monitor's label adapter reads.
+
+    Structural, so :class:`~rytm_randomizer.data.AnalogFourCcMapping`
+    satisfies it without the data layer importing the cockpit.
+    """
+
+    @property
+    def section(self) -> str: ...  # pragma: no cover - protocol declaration
+
+    @property
+    def parameter(self) -> str: ...  # pragma: no cover - protocol declaration
+
+    @property
+    def cc_msb(self) -> int | None: ...  # pragma: no cover - protocol declaration
+
+    @property
+    def nrpn_msb(self) -> int | None: ...  # pragma: no cover - protocol declaration
+
+    @property
+    def nrpn_lsb(self) -> int | None: ...  # pragma: no cover - protocol declaration
+
+
+def build_analog_four_cc_label_lookup(
+    rows: Iterable[AnalogFourCcRow],
+) -> Mapping[int, tuple[RytmCcLabel, ...]]:
+    """Adapt A4 CC fact rows into the shared ``control -> labels`` shape.
+
+    ``AnalogFourCcMapping`` rows carry no ``scope`` / ``machine_key`` (the
+    A4 has no machine-per-track concept), so they are adapted into the
+    shared :class:`RytmCcLabel` shape here rather than by widening the
+    fact table — the label vocabulary is display-only.
+
+    Rows with no ``cc_msb`` (NRPN-only parameters) are skipped: there is
+    no CC number to key a control-change observation by, and bucketing
+    them under a placeholder would fabricate a label for real traffic.
+    """
+
+    grouped: dict[int, list[RytmCcLabel]] = {}
+    for row in rows:
+        control = row.cc_msb
+        if control is None:
+            continue
+        grouped.setdefault(control, []).append(
+            RytmCcLabel(
+                section=row.section,
+                parameter=row.parameter,
+                scope="track",
+                nrpn_msb=row.nrpn_msb,
+                nrpn_lsb=row.nrpn_lsb,
+            )
+        )
+    return {
+        control: tuple(sorted(labels, key=lambda label: (label.section, label.parameter)))
+        for control, labels in sorted(grouped.items())
+    }
+
+
+def analog_four_cc_lookup() -> Mapping[int, tuple[RytmCcLabel, ...]]:
+    """Build the Analog Four CC label lookup from the shared fact table."""
+
+    from ...data import ANALOG_FOUR_MANUAL_CC  # noqa: PLC0415 - lazy fact-table pull
+
+    return build_analog_four_cc_label_lookup(ANALOG_FOUR_MANUAL_CC.values())
+
+
+def _no_cc_lookup() -> Mapping[int, tuple[RytmCcLabel, ...]]:
+    """Empty lookup — the neutral decoder invents no labels."""
+
+    return {}
+
+
+@dataclass(frozen=True)
+class MonitorDecoder:
+    """How one device family's control-change traffic is read.
+
+    Selected from the ``devices`` registry per connection; never assumed.
+
+    Attributes:
+        device_id: Registry id, or :data:`UNKNOWN_DEVICE_ID`.
+        display_name: Operator-facing family name.
+        voice_key: Row key for the per-voice number (``"pad"`` on the
+            Rytm, ``"track"`` on the Analog Four), or ``None`` when the
+            family's voice layout is unknown — in which case no voice
+            number is emitted at all rather than a guessed one.
+        voice_count: Number of addressable voices, or ``None`` when
+            unknown.
+        build_lookup: Zero-arg factory for the ``control -> labels``
+            mapping. A factory (not the mapping) so the fact tables stay
+            lazily imported.
+    """
+
+    device_id: str
+    display_name: str
+    voice_key: str | None
+    voice_count: int | None
+    build_lookup: Callable[[], Mapping[int, tuple[RytmCcLabel, ...]]]
+
+    def voice_for_channel(self, channel: int) -> int | None:
+        """Return the 1-based voice number for ``channel``, or ``None``.
+
+        ``None`` whenever the family's voice layout is unknown, or the
+        channel falls outside it — an out-of-range channel is real
+        traffic the operator should see undecorated, not forced onto a
+        pad number the hardware never used.
+        """
+
+        if self.voice_key is None or self.voice_count is None:
+            return None
+        if not 0 <= channel < self.voice_count:
+            return None
+        return channel + 1
+
+
+UNKNOWN_DEVICE_DECODER: Final[MonitorDecoder] = MonitorDecoder(
+    device_id=UNKNOWN_DEVICE_ID,
+    display_name="Unknown MIDI device",
+    voice_key=None,
+    voice_count=None,
+    build_lookup=_no_cc_lookup,
+)
+"""Neutral decoder: labels nothing, claims no pad/track, says so plainly.
+
+Deliberately NOT a Rytm fallback. Mislabelling unknown traffic with Rytm
+parameter names is worse than no label — the operator cannot tell a real
+decode from a coincidence.
+"""
+
+_DECODERS_BY_DEVICE_ID: Final[Mapping[str, MonitorDecoder]] = MappingProxyType(
+    {
+        ANALOG_RYTM_DEVICE_ID: MonitorDecoder(
+            device_id=ANALOG_RYTM_DEVICE_ID,
+            display_name="Elektron Analog Rytm MKII",
+            voice_key=_RYTM_VOICE_KEY,
+            voice_count=12,
+            build_lookup=default_rytm_cc_lookup,
+        ),
+        ANALOG_FOUR_DEVICE_ID: MonitorDecoder(
+            device_id=ANALOG_FOUR_DEVICE_ID,
+            display_name="Elektron Analog Four MKII",
+            voice_key=_A4_VOICE_KEY,
+            voice_count=4,
+            build_lookup=analog_four_cc_lookup,
+        ),
+    }
+)
+
+# Port-name stems that identify a family, longest-specific first. The
+# generic ``elektron`` stem is deliberately absent: "Elektron <something>"
+# alone does not say which machine, and guessing is the defect.
+_PORT_NAME_DEVICE_STEMS: Final[tuple[tuple[str, str], ...]] = (
+    ("analog rytm", ANALOG_RYTM_DEVICE_ID),
+    ("analog four", ANALOG_FOUR_DEVICE_ID),
+)
+
+
+def decoder_for_device_id(device_id: str | None) -> MonitorDecoder:
+    """Return the decoder for a registered ``device_id``.
+
+    Falls back to :data:`UNKNOWN_DEVICE_DECODER` for ``None`` and for any
+    id with no decoder — including a device that IS in the registry but
+    has no monitor decoding yet. A registered-but-undecodable family must
+    read as unknown, not as Rytm.
+    """
+
+    if device_id is None:
+        return UNKNOWN_DEVICE_DECODER
+    return _DECODERS_BY_DEVICE_ID.get(device_id, UNKNOWN_DEVICE_DECODER)
+
+
+def decoder_for_port_name(port_name: str | None) -> MonitorDecoder:
+    """Resolve a decoder from an OS MIDI port name.
+
+    The port name is the only family signal available on a passive
+    connection (no SysEx identity request is sent — that would be an
+    outbound byte). A matched stem is confirmed against the ``devices``
+    registry so this cannot decode a family the app does not support.
+    """
+
+    if port_name is None:
+        return UNKNOWN_DEVICE_DECODER
+    from ...devices import all_devices  # noqa: PLC0415 - lazy registry pull
+
+    registered = all_devices()
+    lowered = port_name.lower()
+    for stem, device_id in _PORT_NAME_DEVICE_STEMS:
+        if stem in lowered and device_id in registered:
+            return decoder_for_device_id(device_id)
+    return UNKNOWN_DEVICE_DECODER
 
 
 @dataclass(frozen=True)
@@ -133,8 +365,14 @@ class MidiInputMonitor:
         port_name: The input port to listen on.
         broadcast: Non-blocking event sink — production wires
             :meth:`ConnectionRegistry.broadcast_event`.
-        cc_lookup: ``control -> labels`` mapping; ``None`` uses
-            :func:`default_rytm_cc_lookup`.
+        decoder: The :class:`MonitorDecoder` for the connected family;
+            ``None`` resolves one from ``port_name`` via the ``devices``
+            registry (:func:`decoder_for_port_name`), which yields
+            :data:`UNKNOWN_DEVICE_DECODER` when the family is unknown.
+        cc_lookup: Explicit ``control -> labels`` override; ``None`` uses
+            the decoder's own lookup. Provided for tests and for a future
+            operator-chosen label set — it never changes which family the
+            monitor *reports*.
         batch_interval: Seconds between coalesced flushes.
         ring_capacity: Bound on buffered observations between flushes.
         clock: Timestamp source for ``observed_at`` (injectable).
@@ -146,6 +384,7 @@ class MidiInputMonitor:
         *,
         port_name: str,
         broadcast: Callable[[dict[str, object]], object],
+        decoder: MonitorDecoder | None = None,
         cc_lookup: Mapping[int, tuple[RytmCcLabel, ...]] | None = None,
         batch_interval: float = DEFAULT_BATCH_INTERVAL_SECONDS,
         ring_capacity: int = DEFAULT_RING_CAPACITY,
@@ -154,7 +393,8 @@ class MidiInputMonitor:
         self._opener = opener
         self._port_name = port_name
         self._broadcast = broadcast
-        self._cc_lookup = default_rytm_cc_lookup() if cc_lookup is None else cc_lookup
+        self._decoder = decoder_for_port_name(port_name) if decoder is None else decoder
+        self._cc_lookup = self._decoder.build_lookup() if cc_lookup is None else cc_lookup
         self._batch_interval = float(batch_interval)
         self._ring: deque[ObservedInputMessage] = deque()
         self._ring_capacity = int(ring_capacity)
@@ -170,6 +410,12 @@ class MidiInputMonitor:
         """The input port name this monitor listens on."""
 
         return self._port_name
+
+    @property
+    def decoder(self) -> MonitorDecoder:
+        """The per-family decoder this monitor labels traffic with."""
+
+        return self._decoder
 
     @property
     def is_open(self) -> bool:
@@ -251,15 +497,30 @@ class MidiInputMonitor:
             key = (item.channel, item.control)
             row = coalesced.get(key)
             if row is None:
-                coalesced[key] = {
+                voice = self._decoder.voice_for_channel(item.channel)
+                new_row: dict[str, object] = {
                     "channel": item.channel,
-                    "pad": item.channel + 1,
+                    # ``pad`` stays in the row shape (the wire contract the
+                    # web client types against) but is now the DECODER's
+                    # answer, not an unconditional ``channel + 1``: it is
+                    # ``None`` for an Analog Four, an unknown device, or an
+                    # out-of-range channel. A null pad renders as "no pad";
+                    # a wrong pad number reads as fact.
+                    "pad": voice if self._decoder.voice_key == _RYTM_VOICE_KEY else None,
                     "control": item.control,
                     "value": item.value,
                     "repeat_count": 1,
                     "observed_at": item.observed_at,
                     "labels": self._label_names(item.control),
                 }
+                # The family's own voice key alongside it (``track`` on an
+                # A4), so a client can render the right noun. Omitted when
+                # the family has no voice layout — nothing is invented.
+                # (On a Rytm the key IS ``pad``, so this re-states the value
+                # already set above rather than adding a second field.)
+                if self._decoder.voice_key is not None and voice is not None:
+                    new_row[self._decoder.voice_key] = voice
+                coalesced[key] = new_row
             else:
                 row["value"] = item.value
                 row["repeat_count"] = cast("int", row["repeat_count"]) + 1
@@ -269,6 +530,10 @@ class MidiInputMonitor:
             "type": EVENT_MIDI_ACTIVITY,
             "midi_activity": {
                 "port": self._port_name,
+                # Which family these rows were decoded AS. Explicit so the
+                # UI can label "unknown device" rather than implying Rytm.
+                "device_id": self._decoder.device_id,
+                "device_name": self._decoder.display_name,
                 "batch": list(coalesced.values()),
                 "dropped": self._dropped_total,
                 "ignored": self._ignored_total,
@@ -338,7 +603,10 @@ class MidiMonitorSupervisor:
 
     Registered as a ConnectionManager notify hook by ``__main__``. When a
     poll diff selects an Elektron input, the supervisor opens ONE
-    :class:`MidiInputMonitor` on it (passive — no arming involved) and
+    :class:`MidiInputMonitor` on it — which resolves its own
+    :class:`MonitorDecoder` for that port's family, so switching from a
+    Rytm to an Analog Four re-decodes rather than reusing Rytm labels —
+    (passive: no arming involved) and
     spawns its poll loop on the serving event loop; when the input
     disappears or changes, the current monitor is stopped and closed.
     Open failures are logged and swallowed — a broken input backend must
@@ -355,7 +623,11 @@ class MidiMonitorSupervisor:
     ) -> None:
         self._opener = opener
         self._broadcast = broadcast
-        self._cc_lookup = default_rytm_cc_lookup() if cc_lookup is None else cc_lookup
+        # ``None`` (the production default) means "decode per family": each
+        # monitor resolves its own decoder from the selected port name. An
+        # explicit override pins one label set across every connection and
+        # exists only for tests.
+        self._cc_lookup = cc_lookup
         self._batch_interval = float(batch_interval)
         self._monitor: MidiInputMonitor | None = None
         self._task: asyncio.Task[None] | None = None

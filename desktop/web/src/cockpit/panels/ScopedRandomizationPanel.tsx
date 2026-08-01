@@ -5,14 +5,23 @@
  * client-side; the resulting parameter-delta table renders through the generic
  * PanelRenderer.
  *
+ * **Static demonstration, and the UI says so.** The tracks come from the
+ * committed `scopeMorphDemoData.json` fixture, not the connected instrument,
+ * and the plan is recomputed in TypeScript. Cross-language parity with
+ * `behavior/scope.py` is pinned by `scopeMorphParity.test.ts`, but only over
+ * the mask/depth combinations that fixture covers — the slider and mask
+ * toggles reach states no backend computed. `DemoDataBanner` labels that in
+ * the panel so nobody mistakes illustrative arithmetic for a prepared send
+ * plan.
+ *
  * Passive per the Live-but-Passive rule: nothing here sends MIDI or reaches the
- * ArmedApply seam. The operator arms-and-sends the previewed plan through the
- * existing seam elsewhere. Slider a11y follows the house APG pattern
+ * ArmedApply seam. Slider a11y follows the house APG pattern
  * (aria-label + aria-valuetext); value/min/max are exposed cleanly.
  */
 
 import { useMemo, useState } from 'react';
 
+import { DemoDataBanner } from './DemoDataBanner';
 import { DEMO_SCOPE_TRACKS } from './scopeMorphDemoData';
 import {
   DEPTH_MAX,
@@ -69,6 +78,7 @@ export function ScopedRandomizationPanel({
 
   return (
     <div className="cockpit-panel-stack" data-testid="scoped-randomization">
+      <DemoDataBanner what="scoped randomization" testId="scope-demo-banner" />
       <div className="cockpit-panel-controls">
         <fieldset className="cockpit-panel-fieldset">
           <legend>Tracks</legend>

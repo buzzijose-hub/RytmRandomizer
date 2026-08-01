@@ -166,6 +166,20 @@
   font-size: 11px;
 }
 
+/* Static-demonstration banner. Marked with text ("Static demonstration."),
+   a border, and a background — never hue alone — so the honesty label
+   survives greyscale, high-contrast, and forced-colors rendering. */
+.cockpit-panel-demo-banner {
+  color: var(--text);
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 0 0 8px;
+  padding: 6px 10px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
 /* Mask toggle buttons (scoped randomization): aria-pressed buttons, never
    div/span onClick. The pressed state is reinforced with text + border, not
    hue alone. */
