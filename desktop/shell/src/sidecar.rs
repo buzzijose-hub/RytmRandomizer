@@ -709,9 +709,8 @@ mod tests {
         let prior = std::env::var_os(ARM_SECRET_FILE_ENV_VAR);
         std::env::set_var(ARM_SECRET_FILE_ENV_VAR, "   ");
         let resolved = resolve_arm_secret_file_path();
-        assert!(resolved.ends_with(
-            std::path::Path::new(DEFAULT_ARM_SECRET_DIR).join(DEFAULT_ARM_SECRET_FILE)
-        ));
+        assert!(resolved
+            .ends_with(std::path::Path::new(DEFAULT_ARM_SECRET_DIR).join(DEFAULT_ARM_SECRET_FILE)));
         match prior {
             Some(value) => std::env::set_var(ARM_SECRET_FILE_ENV_VAR, value),
             None => std::env::remove_var(ARM_SECRET_FILE_ENV_VAR),
