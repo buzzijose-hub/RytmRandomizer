@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Protocol, cast
 
@@ -11,6 +11,7 @@ from ..real_midi_adapter import RealMidiPortError
 from ..style_analysis.rush01_midi_compiler import (
     STATUS_INVALID_SPEC_FIELD,
     STATUS_READY,
+    MidiByteMessage,
     Rush01MidiPlan,
     validate_rush01_plan_safety,
 )
@@ -82,17 +83,7 @@ def send_rush01_plan(
     if not messages:
         raise ValueError("RUSH01 plan has no configured ready MIDI messages")
 
-    delay_seconds = delay_ms / 1000.0
-    for index, (status, controller, value) in enumerate(messages):
-        send_cc(
-            out,
-            controller,
-            value,
-            channel=status & 0x0F,
-            sleep=_no_sleep,
-        )
-        if index + 1 < len(messages):
-            sleep(delay_seconds)
+    send_rush01_messages(messages, out, delay_ms=delay_ms, sleep=sleep)
     return Rush01ApplyResult(
         device=plan.device,
         port_name=plan.output_port,
@@ -119,6 +110,50 @@ def apply_rush01_plan(
         port.close()
 
 
+def send_rush01_messages(
+    messages: Sequence[MidiByteMessage],
+    out: Sender,
+    *,
+    delay_ms: int,
+    sleep: SleepCallable,
+) -> int:
+    """Send one prevalidated CC-only packet sequence through an already open port."""
+
+    packet_tuple = tuple(messages)
+    validate_rush01_messages(packet_tuple, delay_ms=delay_ms)
+    delay_seconds = delay_ms / 1000.0
+    for index, (status, controller, value) in enumerate(packet_tuple):
+        send_cc(
+            out,
+            controller,
+            value,
+            channel=status & 0x0F,
+            sleep=_no_sleep,
+        )
+        if index + 1 < len(packet_tuple):
+            sleep(delay_seconds)
+    return len(packet_tuple)
+
+
+def apply_rush01_messages(
+    messages: Sequence[MidiByteMessage],
+    provider: Rush01PortProvider,
+    *,
+    port_name: str,
+    delay_ms: int,
+    sleep: SleepCallable,
+) -> int:
+    """Open one exact output, send reviewed CC packets, and always close it."""
+
+    packet_tuple = tuple(messages)
+    validate_rush01_messages(packet_tuple, delay_ms=delay_ms)
+    port = open_exact_output(provider, port_name)
+    try:
+        return send_rush01_messages(packet_tuple, port, delay_ms=delay_ms, sleep=sleep)
+    finally:
+        port.close()
+
+
 def _no_sleep(_seconds: float) -> None:
     return None
 
@@ -135,12 +170,38 @@ def validate_rush01_plan_for_apply(plan: Rush01MidiPlan) -> None:
     validate_rush01_plan_safety(plan)
 
 
+def validate_rush01_messages(
+    messages: Sequence[MidiByteMessage],
+    *,
+    delay_ms: int,
+) -> None:
+    """Reject empty, malformed, channel-mode, and non-CC calibration packets."""
+
+    if isinstance(delay_ms, bool) or not isinstance(delay_ms, int) or not 0 <= delay_ms <= 10_000:
+        raise ValueError("delay_ms must be an integer in 0..10000")
+    if not messages:
+        raise ValueError("RUSH01 message sequence must not be empty")
+    for message in messages:
+        if len(message) != 3:
+            raise ValueError("RUSH01 MIDI message must contain exactly three bytes")
+        status, controller, value = message
+        if status & 0xF0 != 0xB0:
+            raise ValueError("only MIDI control-change messages are allowed")
+        if not 0 <= controller <= 119:
+            raise ValueError("MIDI channel-mode and system messages are forbidden")
+        if not 0 <= value <= 127:
+            raise ValueError("MIDI data bytes must be in 0..127")
+
+
 __all__ = [
     "Rush01ApplyResult",
     "Rush01OutputPort",
     "Rush01PortProvider",
+    "apply_rush01_messages",
     "apply_rush01_plan",
     "open_exact_output",
     "send_rush01_plan",
+    "send_rush01_messages",
+    "validate_rush01_messages",
     "validate_rush01_plan_for_apply",
 ]

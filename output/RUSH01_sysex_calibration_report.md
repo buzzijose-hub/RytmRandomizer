@@ -16,7 +16,7 @@ semantic enumeration and calibration support.
 | Device | Critical | Mapped | Preserve | Capture required | Candidate only | Unresolved | Writer ready |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 | Analog Rytm MKII | 312 | 185 | 1 | 123 | 3 | 126 | False |
-| Analog Four MKII | 244 | 0 | 4 | 228 | 12 | 240 | False |
+| Analog Four MKII | 244 | 0 | 4 | 224 | 16 | 240 | False |
 
 ## Reference Round Trips
 

@@ -11,8 +11,8 @@ one semantic parameter and exports one saved/current KIT dump.
 - Critical fields: `244`
 - Mapped: `0`
 - Preserve reference: `4`
-- Capture required: `228`
-- Candidate only: `12`
+- Capture required: `224`
+- Candidate only: `16`
 - Unresolved critical fields: `240`
 - Minimal changed-dump captures: `254`
 - Supplied differential dumps decoded in this run: `0`
@@ -870,10 +870,10 @@ Capture API after each mutation:
 
 | Semantic path | Track | Converter | Required front-panel / raw MIDI values | Baseline | Changed dump filenames | Captures | Candidate location | Evidence for promotion |
 | --- | --- | --- | --- | --- | --- | ---: | --- | --- |
-| `tracks.T1.filter_2.resonance` | T1 | `direct_7bit` | 0 / raw 0<br>64 / raw 64<br>127 / raw 127<br>6 / raw 6 | `reference/A4_Test1_Init_Kit.syx` | `calibration/sysex/a4/A4_T1_tracks_t1_filter_2_resonance_min.syx`<br>`calibration/sysex/a4/A4_T1_tracks_t1_filter_2_resonance_mid.syx`<br>`calibration/sysex/a4/A4_T1_tracks_t1_filter_2_resonance_max.syx`<br>`calibration/sysex/a4/A4_T1_tracks_t1_filter_2_resonance_requested.syx` | 4 | unknown | one-parameter-at-a-time saved-kit differentials<br>same observation on a second track before promoting a track stride<br>all changed packed and unpacked bytes must be explained<br>minimum, midpoint, maximum observations for Filter2 Resonance |
-| `tracks.T2.filter_2.resonance` | T2 | `direct_7bit` | 64 / raw 64 | `reference/A4_Test1_Init_Kit.syx` | `calibration/sysex/a4/A4_T2_tracks_t2_filter_2_resonance_stride_mid.syx` | 1 | unknown | one-parameter-at-a-time saved-kit differentials<br>same observation on a second track before promoting a track stride<br>all changed packed and unpacked bytes must be explained<br>minimum, midpoint, maximum observations for Filter2 Resonance |
-| `tracks.T3.filter_2.resonance` | T3 | `direct_7bit` | reuse `tracks.T1.filter_2.resonance` converter/stride evidence | `reference/A4_Test1_Init_Kit.syx` | shared with `tracks.T1.filter_2.resonance` | 0 | unknown | one-parameter-at-a-time saved-kit differentials<br>same observation on a second track before promoting a track stride<br>all changed packed and unpacked bytes must be explained<br>minimum, midpoint, maximum observations for Filter2 Resonance |
-| `tracks.T4.filter_2.resonance` | T4 | `direct_7bit` | reuse `tracks.T1.filter_2.resonance` converter/stride evidence | `reference/A4_Test1_Init_Kit.syx` | shared with `tracks.T1.filter_2.resonance` | 0 | unknown | one-parameter-at-a-time saved-kit differentials<br>same observation on a second track before promoting a track stride<br>all changed packed and unpacked bytes must be explained<br>minimum, midpoint, maximum observations for Filter2 Resonance |
+| `tracks.T1.filter_2.resonance` | T1 | `direct_7bit` | 0 / raw 0<br>64 / raw 64<br>127 / raw 127<br>6 / raw 6 | `reference/A4_Test1_Init_Kit.syx` | `calibration/sysex/a4/A4_T1_tracks_t1_filter_2_resonance_min.syx`<br>`calibration/sysex/a4/A4_T1_tracks_t1_filter_2_resonance_mid.syx`<br>`calibration/sysex/a4/A4_T1_tracks_t1_filter_2_resonance_max.syx`<br>`calibration/sysex/a4/A4_T1_tracks_t1_filter_2_resonance_requested.syx` | 4 | packed `0x00AA`; unpacked stride `350`; packed stride `400`; not promoted for this field | supply or reproduce every recorded candidate differential dump<br>observe fine/intermediate values needed for the requested target<br>promote a typed writer only after semantic decode/encode tests pass |
+| `tracks.T2.filter_2.resonance` | T2 | `direct_7bit` | 64 / raw 64 | `reference/A4_Test1_Init_Kit.syx` | `calibration/sysex/a4/A4_T2_tracks_t2_filter_2_resonance_stride_mid.syx` | 1 | packed `0x023A`; unpacked stride `350`; packed stride `400`; not promoted for this field | supply or reproduce every recorded candidate differential dump<br>observe fine/intermediate values needed for the requested target<br>promote a typed writer only after semantic decode/encode tests pass |
+| `tracks.T3.filter_2.resonance` | T3 | `direct_7bit` | reuse `tracks.T1.filter_2.resonance` converter/stride evidence | `reference/A4_Test1_Init_Kit.syx` | shared with `tracks.T1.filter_2.resonance` | 0 | packed `0x03CA`; unpacked stride `350`; packed stride `400`; not promoted for this field | supply or reproduce every recorded candidate differential dump<br>observe fine/intermediate values needed for the requested target<br>promote a typed writer only after semantic decode/encode tests pass |
+| `tracks.T4.filter_2.resonance` | T4 | `direct_7bit` | reuse `tracks.T1.filter_2.resonance` converter/stride evidence | `reference/A4_Test1_Init_Kit.syx` | shared with `tracks.T1.filter_2.resonance` | 0 | packed `0x055A`; unpacked stride `350`; packed stride `400`; not promoted for this field | supply or reproduce every recorded candidate differential dump<br>observe fine/intermediate values needed for the requested target<br>promote a typed writer only after semantic decode/encode tests pass |
 
 Commands:
 

@@ -1,0 +1,79 @@
+{
+  "evidence": [
+    {
+      "kit_name": "KIT 1",
+      "payload_fingerprint": "4ec91a917cfaeab0",
+      "primary_raw_value": 0,
+      "screen_value": "0",
+      "source_file": "A4_Test1_T1_Filter2Res_000_Kit.syx",
+      "track": 1
+    },
+    {
+      "kit_name": "KIT 1",
+      "payload_fingerprint": "ccf0acb6bb32e1b3",
+      "primary_raw_value": 20,
+      "screen_value": "20",
+      "source_file": "A4_Test1_T1_Filter2Res_020_Kit.syx",
+      "track": 1
+    },
+    {
+      "kit_name": "KIT 1",
+      "payload_fingerprint": "c842a01f81f1eaa8",
+      "primary_raw_value": 127,
+      "screen_value": "127",
+      "source_file": "A4_Test1_T1_Filter2Res_127_Kit.syx",
+      "track": 1
+    },
+    {
+      "kit_name": "KIT 1",
+      "payload_fingerprint": "8de0161d9ffd0798",
+      "primary_raw_value": 127,
+      "screen_value": "127",
+      "source_file": "A4_Test1_T2_Filter2Res_127_Kit.syx",
+      "track": 2
+    },
+    {
+      "kit_name": "KIT 1",
+      "payload_fingerprint": "640e4443acf81ee4",
+      "primary_raw_value": 127,
+      "screen_value": "127",
+      "source_file": "A4_Test1_T3_Filter2Res_127_Kit.syx",
+      "track": 3
+    },
+    {
+      "kit_name": "KIT 1",
+      "payload_fingerprint": "1f2160541d4204b0",
+      "primary_raw_value": 127,
+      "screen_value": "127",
+      "source_file": "A4_Test1_T4_Filter2Res_127_Kit.syx",
+      "track": 4
+    }
+  ],
+  "notes": [
+    "Primary packed data byte verified on Track 1 at 0, 20, and 127.",
+    "Track 2, Track 3, and Track 4 127 captures confirm the +400 packed-byte stride.",
+    "The direct screen value appears at packed offset 170 and unpacked offset 145.",
+    "SysEx checksum trailer bytes must be ignored or recomputed by future writers."
+  ],
+  "parameter": "Filter2 Resonance",
+  "primary_raw_values": {
+    "0": 0,
+    "127": 127,
+    "20": 20
+  },
+  "raw_group_width": 8,
+  "screen_values": {
+    "maximum": "127",
+    "midpoint": "20",
+    "minimum": "0"
+  },
+  "section": "FILTERS",
+  "status": "candidate-promoted",
+  "track_1_primary_raw_offset": 170,
+  "track_1_raw_group_start": 168,
+  "track_1_unpacked_group_start": 144,
+  "track_raw_stride": 400,
+  "track_unpacked_stride": 350,
+  "unpacked_group_width": 7,
+  "writer_ready": false
+}

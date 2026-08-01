@@ -1,0 +1,2594 @@
+spec_version: 1
+spec_name: RUSH16_16_SIGNATURE_APEX_RYTM
+device:
+  family: Elektron
+  model: Analog Rytm MKII
+  firmware:
+    installed: UNVERIFIED_FROM_DEVICE
+    do_not_infer: true
+  value_domain: midi_cc_7bit_semantic
+  notes:
+  - Values are semantic 0-127 parameter values unless an enum is explicitly supplied.
+  - For bipolar parameters, 64 is the center/zero value unless the repository's verified converter says
+    otherwise.
+reference:
+  filename: RYTM_Test1_Init_Kit.syx
+  approved_as_trusted_anchor: true
+  compatibility_basis: exact_target_unit_reference_dump
+  expected_length_bytes: 2998
+  sha256: COMPUTE_AND_RECORD_FROM_LOCAL_FILE
+  preserve_unknown_bytes: true
+build_policy:
+  mode: patch_reference
+  target: active_kit_test_first
+  kit_name: R16 16 APEX
+  no_patterns: true
+  no_song_data: true
+  sample_dependencies: none
+  unsupported_noncritical_field_policy: preserve_reference_and_report
+  unsupported_critical_field_policy: fail_rytm_build
+  critical_sections:
+  - tracks.machine
+  - tracks.synth
+  - tracks.filter
+  - tracks.amp
+  preserve_reference_sections:
+  - scenes
+  - performance_macros
+  - master_delay
+  - master_reverb
+  - master_distortion
+  - master_compressor
+  - routing
+  - retrig
+  - choke_groups
+  - lfo
+  - all_unidentified_or_reserved_bytes
+track_levels:
+  BD: 112
+  SD: 80
+  RS: 88
+  CP: 92
+  BT: 94
+  LT: 88
+  MT: 84
+  HT: 80
+  CH: 80
+  OH: 76
+  CY: 76
+  CB: 82
+  FX: preserve_reference
+tracks:
+  BD:
+    sound_name: R01 PUNCH
+    machine:
+      name: BD Sharp
+      selection: catalog_verified
+    synth:
+      Level: 100
+      Tune: 59
+      Decay: 58
+      Hold Time: 40
+      Sweep Time: 81
+      Sweep Depth: 93
+      Waveform: 1
+      Tick Level: 127
+    filter:
+      ATK: 0
+      DEC: 35
+      SUS: 0
+      REL: 10
+      FRQ: 23
+      RES: 77
+      TYPE:
+        name: HP2
+        id: 4
+      ENV: 64
+    amp:
+      ATK: 0
+      HLD: 0
+      DEC: 93
+      OVR: 22
+      DEL: 0
+      REV: 0
+      PAN: 64
+      VOL: 110
+    sample:
+      level: 0
+      dependency: none
+    design_role: Main kick; sharp HP2 punch anchor captured from the user's own Rytm.
+  SD:
+    sound_name: R16 RAW
+    machine:
+      name: SY Raw
+      selection: catalog_verified
+    synth:
+      Level: 70
+      Tune: 76
+      Decay: 18
+      Noise Level: 0
+      Osc 2 Detune: 58
+      Waveform 1:
+        type: enum
+        requested: sawtooth
+        raw_midi: learn_required
+      Waveform 2:
+        type: enum
+        requested: pulse
+        raw_midi: learn_required
+      Balance: 44
+    filter:
+      ATK: 0
+      DEC: 24
+      SUS: 0
+      REL: 8
+      FRQ: 76
+      RES: 20
+      TYPE:
+        name: Bandpass
+        id: 2
+      ENV: 70
+    amp:
+      ATK: 0
+      HLD: 0
+      DEC: 20
+      OVR: 12
+      DEL: 0
+      REV: 0
+      PAN: 64
+      VOL: 72
+    sample:
+      level: 0
+      dependency: none
+    design_role: Return of the 05 walking-saw SY RAW punctuation motif at apex intensity.
+  RS:
+    sound_name: R01 CLAVE
+    machine:
+      name: RS Hard
+      selection: catalog_verified
+    synth:
+      Level: 96
+      Tune: 76
+      Decay: 22
+      Sweep Depth: 92
+      Tick Level: 78
+      Noise Level: 10
+      Symmetry: 72
+      Sweep Time: 26
+    filter:
+      ATK: 0
+      DEC: 18
+      SUS: 0
+      REL: 6
+      FRQ: 82
+      RES: 34
+      TYPE:
+        name: Bandpass
+        id: 2
+      ENV: 74
+    amp:
+      ATK: 0
+      HLD: 0
+      DEC: 24
+      OVR: 18
+      DEL: 0
+      REV: 0
+      PAN: 56
+      VOL: 90
+    sample:
+      level: 0
+      dependency: none
+    design_role: Hard clave/rim for jacking syncopation.
+  CP:
+    sound_name: R01 CLAP
+    machine:
+      name: CP Classic
+      selection: catalog_verified
+    synth:
+      Level: 108
+      Noise Tone: 72
+      Noise Decay: 36
+      Clap Number: 3
+      Clap Rate: 40
+      Noise Level: 84
+      Random Claps: 8
+      Clap Decay: 32
+    filter:
+      ATK: 0
+      DEC: 8
+      SUS: 0
+      REL: 6
+      FRQ: 54
+      RES: 8
+      TYPE:
+        name: HP1
+        id: 3
+      ENV: 64
+    amp:
+      ATK: 0
+      HLD: 8
+      DEC: 40
+      OVR: 14
+      DEL: 0
+      REV: 0
+      PAN: 64
+      VOL: 92
+    sample:
+      level: 0
+      dependency: none
+    design_role: Tight noisy clap; dry by design for the first hardware test.
+  BT:
+    sound_name: R01 JACK
+    machine:
+      name: BT Classic
+      selection: catalog_verified
+    synth:
+      Level: 100
+      Tune: 80
+      Decay: 42
+      Noise Level: 6
+      Snap Type:
+        type: enum
+        requested: preserve_reference
+        raw_midi: learn_required
+      Sweep Depth: 14
+    filter:
+      ATK: 0
+      DEC: 18
+      SUS: 0
+      REL: 8
+      FRQ: 62
+      RES: 14
+      TYPE:
+        name: LP2
+        id: 0
+      ENV: 78
+    amp:
+      ATK: 0
+      HLD: 10
+      DEC: 42
+      OVR: 24
+      DEL: 0
+      REV: 0
+      PAN: 64
+      VOL: 96
+    sample:
+      level: 0
+      dependency: none
+    design_role: Rolling low-tom/bass-drum answer; not a second simultaneous sub kick.
+  LT:
+    sound_name: R01 LOWTOM
+    machine:
+      name: XT Classic
+      selection: manual_setup_required
+    synth:
+      Level: 96
+      Tune: 94
+      Decay: 42
+      Sweep Depth: 32
+      Sweep Time: 82
+      Noise Decay: 4
+      Noise Level: 8
+      Noise Tone: 42
+    filter:
+      ATK: 0
+      DEC: 16
+      SUS: 0
+      REL: 6
+      FRQ: 58
+      RES: 10
+      TYPE:
+        name: LP2
+        id: 0
+      ENV: 72
+    amp:
+      ATK: 0
+      HLD: 6
+      DEC: 42
+      OVR: 18
+      DEL: 0
+      REV: 0
+      PAN: 58
+      VOL: 90
+    sample:
+      level: 0
+      dependency: none
+    design_role: Low jacking percussion.
+  MT:
+    sound_name: R01 MIDTOM
+    machine:
+      name: XT Classic
+      selection: manual_setup_required
+    synth:
+      Level: 92
+      Tune: 104
+      Decay: 34
+      Sweep Depth: 28
+      Sweep Time: 88
+      Noise Decay: 5
+      Noise Level: 10
+      Noise Tone: 36
+    filter:
+      ATK: 0
+      DEC: 14
+      SUS: 0
+      REL: 5
+      FRQ: 68
+      RES: 15
+      TYPE:
+        name: Bandpass
+        id: 2
+      ENV: 72
+    amp:
+      ATK: 0
+      HLD: 4
+      DEC: 34
+      OVR: 16
+      DEL: 0
+      REV: 0
+      PAN: 70
+      VOL: 86
+    sample:
+      level: 0
+      dependency: none
+    design_role: Midrange tom response.
+  HT:
+    sound_name: R01 HITOM
+    machine:
+      name: XT Classic
+      selection: manual_setup_required
+    synth:
+      Level: 88
+      Tune: 114
+      Decay: 24
+      Sweep Depth: 20
+      Sweep Time: 90
+      Noise Decay: 7
+      Noise Level: 14
+      Noise Tone: 28
+    filter:
+      ATK: 0
+      DEC: 12
+      SUS: 0
+      REL: 4
+      FRQ: 78
+      RES: 18
+      TYPE:
+        name: Bandpass
+        id: 2
+      ENV: 70
+    amp:
+      ATK: 0
+      HLD: 3
+      DEC: 24
+      OVR: 15
+      DEL: 0
+      REV: 0
+      PAN: 74
+      VOL: 82
+    sample:
+      level: 0
+      dependency: none
+    design_role: Short high tom/industrial percussion.
+  CH:
+    sound_name: R01 SHUFF
+    machine:
+      name: HH Basic
+      selection: catalog_verified
+    synth:
+      Level: 92
+      Tune: 72
+      Decay Time: 18
+      Tone: 76
+      Transient Decay: 20
+      Osc Reset: 0
+    filter:
+      ATK: 0
+      DEC: 6
+      SUS: 0
+      REL: 3
+      FRQ: 66
+      RES: 6
+      TYPE:
+        name: HP2
+        id: 4
+      ENV: 64
+    amp:
+      ATK: 0
+      HLD: 4
+      DEC: 20
+      OVR: 8
+      DEL: 0
+      REV: 0
+      PAN: 58
+      VOL: 84
+    sample:
+      level: 0
+      dependency: none
+    design_role: Dry shuffled closed hat.
+  OH:
+    sound_name: R01 OPEN
+    machine:
+      name: OH Classic
+      selection: catalog_verified
+    synth:
+      Level: 84
+      Tune: 69
+      Decay: 34
+      Color: 80
+    filter:
+      ATK: 0
+      DEC: 6
+      SUS: 0
+      REL: 4
+      FRQ: 60
+      RES: 4
+      TYPE:
+        name: HP2
+        id: 4
+      ENV: 64
+    amp:
+      ATK: 0
+      HLD: 8
+      DEC: 38
+      OVR: 8
+      DEL: 0
+      REV: 0
+      PAN: 72
+      VOL: 80
+    sample:
+      level: 0
+      dependency: none
+    design_role: Short open-hat punctuation rather than a wash.
+  CY:
+    sound_name: R01 RIDE
+    machine:
+      name: CY Ride
+      selection: catalog_verified
+    synth:
+      Level: 76
+      Tune: 60
+      Tail Decay: 52
+      Cymbal Type: 0
+      Hit Decay: 22
+      Component 1: 100
+      Component 2: 42
+      Component 3: 18
+    filter:
+      ATK: 0
+      DEC: 6
+      SUS: 0
+      REL: 5
+      FRQ: 55
+      RES: 4
+      TYPE:
+        name: HP1
+        id: 3
+      ENV: 64
+    amp:
+      ATK: 0
+      HLD: 10
+      DEC: 55
+      OVR: 6
+      DEL: 0
+      REV: 0
+      PAN: 69
+      VOL: 70
+    sample:
+      level: 0
+      dependency: none
+    design_role: Controlled peak ride. The CY Ride partial mix is an experimental sound target.
+  CB:
+    sound_name: R01 METAL
+    machine:
+      name: CB Metallic
+      selection: catalog_verified
+    synth:
+      Level: 84
+      Tune: 50
+      Decay Time: 26
+      Detune: 81
+    filter:
+      ATK: 0
+      DEC: 14
+      SUS: 0
+      REL: 5
+      FRQ: 72
+      RES: 36
+      TYPE:
+        name: Bandpass
+        id: 2
+      ENV: 78
+    amp:
+      ATK: 0
+      HLD: 6
+      DEC: 28
+      OVR: 22
+      DEL: 0
+      REV: 0
+      PAN: 76
+      VOL: 82
+    sample:
+      level: 0
+      dependency: none
+    design_role: Sparse industrial metallic accent.
+acceptance:
+- Decode and re-encode the approved reference byte-for-byte before mutation.
+- Every changed critical parameter must resolve through a verified semantic mapping.
+- No unidentified byte may change except verified integrity fields.
+- The output must be a single valid kit SysEx frame ending in F7.
+- Decode the generated file and compare every requested critical parameter.
+- Include a manifest of original semantic value, requested value, raw encoded value, and byte location.
+rush16:
+  batch_id: RUSH16_ANCHOR_AUDITION_001
+  batch_version: rush16-anchor-audition-v0.1
+  anchor_id: 16_SIGNATURE_APEX
+  device: rytm
+  device_model: Analog Rytm MKII
+  source_specification: specs/RUSH01_RYTM.yaml
+  source_specification_sha256: 2bbd2577e177baa6e5819a70575ca0e44035a64f289c127b5432c5e830cac861
+  shared_family_locks:
+  - Rytm BD remains the true sub and short authoritative kick.
+  - Rytm retains low-drum, clap, rim/clave, tom, shuffled-hat, open-hat, ride, and metallic-percussion
+    roles.
+  - A4 T1 remains the low-mid jacking bass and does not compete with Rytm BD sub energy.
+  - A4 T2 remains the principal rhythmic synth hook.
+  - A4 T3 remains the AM/Metal Sync pressure voice.
+  - A4 T4 remains the ghost-filter, noise, drone, or atmospheric tension voice.
+  - Every Rytm sample playback level is zero and every sample dependency is none.
+  - No pattern, song, chain, project, transport, Program Change, save, or SysEx message is part of an
+    apply plan.
+  - Peak intensity comes from orchestration and timbre rather than a family-wide output-gain increase.
+  kit_specific_differences:
+  - semantic_path: build_policy.kit_name
+    source_value: RUSH01
+    requested_value: R16 16 APEX
+  - semantic_path: track_levels.BD
+    source_value: 110
+    requested_value: 112
+  - semantic_path: track_levels.SD
+    source_value: 92
+    requested_value: 80
+  - semantic_path: track_levels.CP
+    source_value: 90
+    requested_value: 92
+  - semantic_path: track_levels.LT
+    source_value: 86
+    requested_value: 88
+  - semantic_path: track_levels.MT
+    source_value: 82
+    requested_value: 84
+  - semantic_path: track_levels.HT
+    source_value: 78
+    requested_value: 80
+  - semantic_path: track_levels.CY
+    source_value: 70
+    requested_value: 76
+  - semantic_path: track_levels.CB
+    source_value: 76
+    requested_value: 82
+  - semantic_path: tracks.SD.sound_name
+    source_value: R01 SNAP
+    requested_value: R16 RAW
+  - semantic_path: tracks.SD.design_role
+    source_value: Compact hard snare for accents and restrained backbeats.
+    requested_value: Return of the 05 walking-saw SY RAW punctuation motif at apex intensity.
+  - semantic_path: tracks.SD.machine
+    source_value:
+      name: SD Hard
+      selection: catalog_verified
+    requested_value:
+      name: SY Raw
+      selection: catalog_verified
+  - semantic_path: tracks.SD.synth
+    source_value:
+      Level: 100
+      Tune: 62
+      Decay: 48
+      Sweep Depth: 86
+      Tick Level: 58
+      Noise Decay: 36
+      Noise Level: 78
+      Sweep Time: 46
+    requested_value:
+      Level: 70
+      Tune: 76
+      Decay: 18
+      Noise Level: 0
+      Osc 2 Detune: 58
+      Waveform 1:
+        type: enum
+        requested: sawtooth
+        raw_midi: learn_required
+      Waveform 2:
+        type: enum
+        requested: pulse
+        raw_midi: learn_required
+      Balance: 44
+  - semantic_path: tracks.SD.filter.FRQ
+    source_value: 48
+    requested_value: 76
+  - semantic_path: tracks.SD.filter.RES
+    source_value: 18
+    requested_value: 20
+  - semantic_path: tracks.SD.filter.TYPE
+    source_value:
+      name: HP1
+      id: 3
+    requested_value:
+      name: Bandpass
+      id: 2
+  - semantic_path: tracks.SD.filter.ENV
+    source_value: 64
+    requested_value: 70
+  - semantic_path: tracks.SD.amp.DEC
+    source_value: 48
+    requested_value: 20
+  - semantic_path: tracks.SD.amp.OVR
+    source_value: 18
+    requested_value: 12
+  - semantic_path: tracks.SD.amp.VOL
+    source_value: 96
+    requested_value: 72
+  - semantic_path: tracks.CY.amp.VOL
+    source_value: 74
+    requested_value: 70
+  - semantic_path: tracks.CB.amp.VOL
+    source_value: 80
+    requested_value: 82
+  intended_frequency_owner: Rytm BD owns true sub; A4 T1 owns low-mid pulse; A4 T2/T3 share hook and metal
+    pressure; A4 T4 owns upper tension; Rytm SD/SY RAW reprises the walking-saw interlock.
+  expected_performance_role: Strongest controlled anchor, distinguished by orchestration, ride punctuation,
+    and the returning SY RAW motif.
+  external_sample_dependency: none
+  manual_sound_parameter_entry: forbidden
+  semantic_field_statuses:
+    build_policy.kit_name:
+      status: writer_ready
+      sound_critical: false
+      reason: fixed-width ASCII kit-name location is established and round-trip tested
+      evidence_source: RUSH01 saved-kit calibration status
+    track_levels.FX:
+      status: writer_ready
+      sound_critical: false
+      reason: the specification explicitly preserves this auxiliary saved-kit field
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BD.sound_name:
+      status: writer_ready
+      sound_critical: false
+      reason: noncritical sound naming remains reference-preserved; no manual sound-parameter entry is
+        required
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BD.design_role:
+      status: writer_ready
+      sound_critical: false
+      reason: design-role metadata does not request a saved-kit byte mutation
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BD.machine:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'repository Rytm machine catalog: BD Sharp=CC15 value 26; manual-backed Track Machine
+        Type mapping'
+    track_levels.BD:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100'
+    tracks.BD.synth.Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm bd_sharp/Level: CC16, NRPN 1:0'
+    tracks.BD.synth.Tune:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm bd_sharp/Tune: CC17, NRPN 1:1'
+    tracks.BD.synth.Decay:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm bd_sharp/Decay: CC18, NRPN 1:2'
+    tracks.BD.synth.Sweep Depth:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm bd_sharp/Sweep Depth: CC19, NRPN 1:3'
+    tracks.BD.synth.Sweep Time:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm bd_sharp/Sweep Time: CC20, NRPN 1:4'
+    tracks.BD.synth.Hold Time:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm bd_sharp/Hold Time: CC21, NRPN 1:5'
+    tracks.BD.synth.Tick Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm bd_sharp/Tick Level: CC22, NRPN 1:6'
+    tracks.BD.synth.Waveform:
+      status: calibration_required
+      sound_critical: true
+      reason: Waveform requires a typed enum with verified raw MIDI
+      evidence_source: 'manual-backed Analog Rytm bd_sharp/Waveform: CC23, NRPN 1:7'
+    tracks.BD.sample.level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15'
+    tracks.BD.filter.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BD.filter.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BD.filter.SUS:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BD.filter.REL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BD.filter.FRQ:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BD.filter.RES:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BD.filter.TYPE:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BD.filter.ENV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BD.amp.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BD.amp.HLD:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BD.amp.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BD.amp.OVR:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BD.amp.DEL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BD.amp.REV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BD.amp.PAN:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BD.amp.VOL:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31'
+    tracks.SD.sound_name:
+      status: writer_ready
+      sound_critical: false
+      reason: noncritical sound naming remains reference-preserved; no manual sound-parameter entry is
+        required
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.SD.design_role:
+      status: writer_ready
+      sound_critical: false
+      reason: design-role metadata does not request a saved-kit byte mutation
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.SD.machine:
+      status: writer_ready
+      sound_critical: true
+      reason: reference machine already matches the requested catalog enum; no machine write is required
+      evidence_source: RUSH01 saved-kit calibration status
+    track_levels.SD:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100'
+    tracks.SD.synth.Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm sy_raw/Level: CC16, NRPN 1:0'
+    tracks.SD.synth.Tune:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm sy_raw/Tune: CC17, NRPN 1:1'
+    tracks.SD.synth.Decay:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm sy_raw/Decay: CC18, NRPN 1:2'
+    tracks.SD.synth.Noise Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm sy_raw/Noise Level: CC19, NRPN 1:3'
+    tracks.SD.synth.Osc 2 Detune:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm sy_raw/Osc 2 Detune: CC20, NRPN 1:4'
+    tracks.SD.synth.Waveform 1:
+      status: calibration_required
+      sound_critical: true
+      reason: typed enum raw MIDI value requires calibration
+      evidence_source: 'manual-backed Analog Rytm sy_raw/Waveform 1: CC21, NRPN 1:5'
+    tracks.SD.synth.Waveform 2:
+      status: calibration_required
+      sound_critical: true
+      reason: typed enum raw MIDI value requires calibration
+      evidence_source: 'manual-backed Analog Rytm sy_raw/Waveform 2: CC22, NRPN 1:6'
+    tracks.SD.synth.Balance:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm sy_raw/Balance: CC23, NRPN 1:7'
+    tracks.SD.sample.level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15'
+    tracks.SD.filter.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.SD.filter.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.SD.filter.SUS:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.SD.filter.REL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.SD.filter.FRQ:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.SD.filter.RES:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.SD.filter.TYPE:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.SD.filter.ENV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.SD.amp.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.SD.amp.HLD:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.SD.amp.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.SD.amp.OVR:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.SD.amp.DEL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.SD.amp.REV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.SD.amp.PAN:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.SD.amp.VOL:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31'
+    tracks.RS.sound_name:
+      status: writer_ready
+      sound_critical: false
+      reason: noncritical sound naming remains reference-preserved; no manual sound-parameter entry is
+        required
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.RS.design_role:
+      status: writer_ready
+      sound_critical: false
+      reason: design-role metadata does not request a saved-kit byte mutation
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.RS.machine:
+      status: writer_ready
+      sound_critical: true
+      reason: reference machine already matches the requested catalog enum; no machine write is required
+      evidence_source: RUSH01 saved-kit calibration status
+    track_levels.RS:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100'
+    tracks.RS.synth.Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm rs_hard/Level: CC16, NRPN 1:0'
+    tracks.RS.synth.Tune:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm rs_hard/Tune: CC17, NRPN 1:1'
+    tracks.RS.synth.Decay:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm rs_hard/Decay: CC18, NRPN 1:2'
+    tracks.RS.synth.Sweep Depth:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm rs_hard/Sweep Depth: CC19, NRPN 1:3'
+    tracks.RS.synth.Tick Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm rs_hard/Tick Level: CC20, NRPN 1:4'
+    tracks.RS.synth.Noise Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm rs_hard/Noise Level: CC21, NRPN 1:5'
+    tracks.RS.synth.Symmetry:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm rs_hard/Symmetry: CC22, NRPN 1:6'
+    tracks.RS.synth.Sweep Time:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm rs_hard/Sweep Time: CC23, NRPN 1:7'
+    tracks.RS.sample.level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15'
+    tracks.RS.filter.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.RS.filter.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.RS.filter.SUS:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.RS.filter.REL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.RS.filter.FRQ:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.RS.filter.RES:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.RS.filter.TYPE:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.RS.filter.ENV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.RS.amp.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.RS.amp.HLD:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.RS.amp.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.RS.amp.OVR:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.RS.amp.DEL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.RS.amp.REV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.RS.amp.PAN:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.RS.amp.VOL:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31'
+    tracks.CP.sound_name:
+      status: writer_ready
+      sound_critical: false
+      reason: noncritical sound naming remains reference-preserved; no manual sound-parameter entry is
+        required
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CP.design_role:
+      status: writer_ready
+      sound_critical: false
+      reason: design-role metadata does not request a saved-kit byte mutation
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CP.machine:
+      status: writer_ready
+      sound_critical: true
+      reason: reference machine already matches the requested catalog enum; no machine write is required
+      evidence_source: RUSH01 saved-kit calibration status
+    track_levels.CP:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100'
+    tracks.CP.synth.Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm cp_classic/Level: CC16, NRPN 1:0'
+    tracks.CP.synth.Noise Tone:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm cp_classic/Noise Tone: CC17, NRPN 1:1'
+    tracks.CP.synth.Noise Decay:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm cp_classic/Noise Decay: CC18, NRPN 1:2'
+    tracks.CP.synth.Clap Number:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm cp_classic/Clap Number: CC19, NRPN 1:3'
+    tracks.CP.synth.Clap Rate:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm cp_classic/Clap Rate: CC20, NRPN 1:4'
+    tracks.CP.synth.Noise Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm cp_classic/Noise Level: CC21, NRPN 1:5'
+    tracks.CP.synth.Random Claps:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm cp_classic/Random Claps: CC22, NRPN 1:6'
+    tracks.CP.synth.Clap Decay:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm cp_classic/Clap Decay: CC23, NRPN 1:7'
+    tracks.CP.sample.level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15'
+    tracks.CP.filter.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CP.filter.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CP.filter.SUS:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CP.filter.REL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CP.filter.FRQ:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CP.filter.RES:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CP.filter.TYPE:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CP.filter.ENV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CP.amp.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CP.amp.HLD:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CP.amp.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CP.amp.OVR:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CP.amp.DEL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CP.amp.REV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CP.amp.PAN:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CP.amp.VOL:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31'
+    tracks.BT.sound_name:
+      status: writer_ready
+      sound_critical: false
+      reason: noncritical sound naming remains reference-preserved; no manual sound-parameter entry is
+        required
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BT.design_role:
+      status: writer_ready
+      sound_critical: false
+      reason: design-role metadata does not request a saved-kit byte mutation
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BT.machine:
+      status: writer_ready
+      sound_critical: true
+      reason: reference machine already matches the requested catalog enum; no machine write is required
+      evidence_source: RUSH01 saved-kit calibration status
+    track_levels.BT:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100'
+    tracks.BT.synth.Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm bt_classic/Level: CC16, NRPN 1:0'
+    tracks.BT.synth.Tune:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm bt_classic/Tune: CC17, NRPN 1:1'
+    tracks.BT.synth.Decay:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm bt_classic/Decay: CC18, NRPN 1:2'
+    tracks.BT.synth.Sweep Depth:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm bt_classic/Sweep Depth: CC19, NRPN 1:3'
+    tracks.BT.synth.Noise Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm bt_classic/Noise Level: CC20, NRPN 1:4'
+    tracks.BT.synth.Snap Type:
+      status: writer_ready
+      sound_critical: true
+      reason: the current specification explicitly preserves this selector
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BT.sample.level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15'
+    tracks.BT.filter.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BT.filter.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BT.filter.SUS:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BT.filter.REL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BT.filter.FRQ:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BT.filter.RES:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BT.filter.TYPE:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BT.filter.ENV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BT.amp.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BT.amp.HLD:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BT.amp.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BT.amp.OVR:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BT.amp.DEL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BT.amp.REV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BT.amp.PAN:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.BT.amp.VOL:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31'
+    tracks.LT.sound_name:
+      status: writer_ready
+      sound_critical: false
+      reason: noncritical sound naming remains reference-preserved; no manual sound-parameter entry is
+        required
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.LT.design_role:
+      status: writer_ready
+      sound_critical: false
+      reason: design-role metadata does not request a saved-kit byte mutation
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.LT.machine:
+      status: calibration_required
+      sound_critical: true
+      reason: select XT Classic manually before applying source controls; the specification forbids candidate-only
+        tom machine IDs
+      evidence_source: explicit RUSH01 manual-setup policy
+    track_levels.LT:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100'
+    tracks.LT.synth.Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Level: CC16, NRPN 1:0'
+    tracks.LT.synth.Tune:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Tune: CC17, NRPN 1:1'
+    tracks.LT.synth.Decay:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Decay: CC18, NRPN 1:2'
+    tracks.LT.synth.Sweep Depth:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Sweep Depth: CC19, NRPN 1:3'
+    tracks.LT.synth.Sweep Time:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Sweep Time: CC20, NRPN 1:4'
+    tracks.LT.synth.Noise Decay:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Noise Decay: CC21, NRPN 1:5'
+    tracks.LT.synth.Noise Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Noise Level: CC22, NRPN 1:6'
+    tracks.LT.synth.Noise Tone:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Noise Tone: CC23, NRPN 1:7'
+    tracks.LT.sample.level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15'
+    tracks.LT.filter.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.LT.filter.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.LT.filter.SUS:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.LT.filter.REL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.LT.filter.FRQ:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.LT.filter.RES:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.LT.filter.TYPE:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.LT.filter.ENV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.LT.amp.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.LT.amp.HLD:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.LT.amp.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.LT.amp.OVR:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.LT.amp.DEL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.LT.amp.REV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.LT.amp.PAN:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.LT.amp.VOL:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31'
+    tracks.MT.sound_name:
+      status: writer_ready
+      sound_critical: false
+      reason: noncritical sound naming remains reference-preserved; no manual sound-parameter entry is
+        required
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.MT.design_role:
+      status: writer_ready
+      sound_critical: false
+      reason: design-role metadata does not request a saved-kit byte mutation
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.MT.machine:
+      status: calibration_required
+      sound_critical: true
+      reason: select XT Classic manually before applying source controls; the specification forbids candidate-only
+        tom machine IDs
+      evidence_source: explicit RUSH01 manual-setup policy
+    track_levels.MT:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100'
+    tracks.MT.synth.Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Level: CC16, NRPN 1:0'
+    tracks.MT.synth.Tune:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Tune: CC17, NRPN 1:1'
+    tracks.MT.synth.Decay:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Decay: CC18, NRPN 1:2'
+    tracks.MT.synth.Sweep Depth:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Sweep Depth: CC19, NRPN 1:3'
+    tracks.MT.synth.Sweep Time:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Sweep Time: CC20, NRPN 1:4'
+    tracks.MT.synth.Noise Decay:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Noise Decay: CC21, NRPN 1:5'
+    tracks.MT.synth.Noise Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Noise Level: CC22, NRPN 1:6'
+    tracks.MT.synth.Noise Tone:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Noise Tone: CC23, NRPN 1:7'
+    tracks.MT.sample.level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15'
+    tracks.MT.filter.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.MT.filter.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.MT.filter.SUS:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.MT.filter.REL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.MT.filter.FRQ:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.MT.filter.RES:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.MT.filter.TYPE:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.MT.filter.ENV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.MT.amp.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.MT.amp.HLD:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.MT.amp.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.MT.amp.OVR:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.MT.amp.DEL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.MT.amp.REV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.MT.amp.PAN:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.MT.amp.VOL:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31'
+    tracks.HT.sound_name:
+      status: writer_ready
+      sound_critical: false
+      reason: noncritical sound naming remains reference-preserved; no manual sound-parameter entry is
+        required
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.HT.design_role:
+      status: writer_ready
+      sound_critical: false
+      reason: design-role metadata does not request a saved-kit byte mutation
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.HT.machine:
+      status: calibration_required
+      sound_critical: true
+      reason: select XT Classic manually before applying source controls; the specification forbids candidate-only
+        tom machine IDs
+      evidence_source: explicit RUSH01 manual-setup policy
+    track_levels.HT:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100'
+    tracks.HT.synth.Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Level: CC16, NRPN 1:0'
+    tracks.HT.synth.Tune:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Tune: CC17, NRPN 1:1'
+    tracks.HT.synth.Decay:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Decay: CC18, NRPN 1:2'
+    tracks.HT.synth.Sweep Depth:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Sweep Depth: CC19, NRPN 1:3'
+    tracks.HT.synth.Sweep Time:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Sweep Time: CC20, NRPN 1:4'
+    tracks.HT.synth.Noise Decay:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Noise Decay: CC21, NRPN 1:5'
+    tracks.HT.synth.Noise Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Noise Level: CC22, NRPN 1:6'
+    tracks.HT.synth.Noise Tone:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm xt_classic/Noise Tone: CC23, NRPN 1:7'
+    tracks.HT.sample.level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15'
+    tracks.HT.filter.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.HT.filter.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.HT.filter.SUS:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.HT.filter.REL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.HT.filter.FRQ:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.HT.filter.RES:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.HT.filter.TYPE:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.HT.filter.ENV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.HT.amp.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.HT.amp.HLD:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.HT.amp.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.HT.amp.OVR:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.HT.amp.DEL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.HT.amp.REV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.HT.amp.PAN:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.HT.amp.VOL:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31'
+    tracks.CH.sound_name:
+      status: writer_ready
+      sound_critical: false
+      reason: noncritical sound naming remains reference-preserved; no manual sound-parameter entry is
+        required
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CH.design_role:
+      status: writer_ready
+      sound_critical: false
+      reason: design-role metadata does not request a saved-kit byte mutation
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CH.machine:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'repository Rytm machine catalog: HH Basic=CC15 value 24; manual-backed Track Machine
+        Type mapping'
+    track_levels.CH:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100'
+    tracks.CH.synth.Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm hh_basic/Level: CC16, NRPN 1:0'
+    tracks.CH.synth.Tune:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm hh_basic/Tune: CC17, NRPN 1:1'
+    tracks.CH.synth.Decay Time:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm hh_basic/Decay Time: CC18, NRPN 1:2'
+    tracks.CH.synth.Tone:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm hh_basic/Tone: CC19, NRPN 1:3'
+    tracks.CH.synth.Transient Decay:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm hh_basic/Transient Decay: CC20, NRPN 1:4'
+    tracks.CH.synth.Osc Reset:
+      status: calibration_required
+      sound_critical: true
+      reason: Osc Reset requires a typed enum with verified raw MIDI
+      evidence_source: 'manual-backed Analog Rytm hh_basic/Osc Reset: CC21, NRPN 1:5'
+    tracks.CH.sample.level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15'
+    tracks.CH.filter.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CH.filter.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CH.filter.SUS:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CH.filter.REL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CH.filter.FRQ:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CH.filter.RES:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CH.filter.TYPE:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CH.filter.ENV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CH.amp.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CH.amp.HLD:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CH.amp.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CH.amp.OVR:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CH.amp.DEL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CH.amp.REV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CH.amp.PAN:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CH.amp.VOL:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31'
+    tracks.OH.sound_name:
+      status: writer_ready
+      sound_critical: false
+      reason: noncritical sound naming remains reference-preserved; no manual sound-parameter entry is
+        required
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.OH.design_role:
+      status: writer_ready
+      sound_critical: false
+      reason: design-role metadata does not request a saved-kit byte mutation
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.OH.machine:
+      status: writer_ready
+      sound_critical: true
+      reason: reference machine already matches the requested catalog enum; no machine write is required
+      evidence_source: RUSH01 saved-kit calibration status
+    track_levels.OH:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100'
+    tracks.OH.synth.Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm oh_classic/Level: CC16, NRPN 1:0'
+    tracks.OH.synth.Tune:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm oh_classic/Tune: CC17, NRPN 1:1'
+    tracks.OH.synth.Decay:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm oh_classic/Decay: CC18, NRPN 1:2'
+    tracks.OH.synth.Color:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm oh_classic/Color: CC19, NRPN 1:3'
+    tracks.OH.sample.level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15'
+    tracks.OH.filter.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.OH.filter.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.OH.filter.SUS:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.OH.filter.REL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.OH.filter.FRQ:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.OH.filter.RES:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.OH.filter.TYPE:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.OH.filter.ENV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.OH.amp.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.OH.amp.HLD:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.OH.amp.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.OH.amp.OVR:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.OH.amp.DEL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.OH.amp.REV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.OH.amp.PAN:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.OH.amp.VOL:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31'
+    tracks.CY.sound_name:
+      status: writer_ready
+      sound_critical: false
+      reason: noncritical sound naming remains reference-preserved; no manual sound-parameter entry is
+        required
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CY.design_role:
+      status: writer_ready
+      sound_critical: false
+      reason: design-role metadata does not request a saved-kit byte mutation
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CY.machine:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'repository Rytm machine catalog: CY Ride=CC15 value 25; manual-backed Track Machine
+        Type mapping'
+    track_levels.CY:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100'
+    tracks.CY.synth.Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm cy_ride/Level: CC16, NRPN 1:0'
+    tracks.CY.synth.Tune:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm cy_ride/Tune: CC17, NRPN 1:1'
+    tracks.CY.synth.Tail Decay:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm cy_ride/Tail Decay: CC18, NRPN 1:2'
+    tracks.CY.synth.Hit Decay:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm cy_ride/Hit Decay: CC19, NRPN 1:3'
+    tracks.CY.synth.Cymbal Type:
+      status: calibration_required
+      sound_critical: true
+      reason: Cymbal Type requires a typed enum with verified raw MIDI
+      evidence_source: 'manual-backed Analog Rytm cy_ride/Cymbal Type: CC20, NRPN 1:4'
+    tracks.CY.synth.Component 1:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm cy_ride/Component 1: CC21, NRPN 1:5'
+    tracks.CY.synth.Component 2:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm cy_ride/Component 2: CC22, NRPN 1:6'
+    tracks.CY.synth.Component 3:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm cy_ride/Component 3: CC23, NRPN 1:7'
+    tracks.CY.sample.level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15'
+    tracks.CY.filter.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CY.filter.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CY.filter.SUS:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CY.filter.REL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CY.filter.FRQ:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CY.filter.RES:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CY.filter.TYPE:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CY.filter.ENV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CY.amp.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CY.amp.HLD:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CY.amp.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CY.amp.OVR:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CY.amp.DEL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CY.amp.REV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CY.amp.PAN:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CY.amp.VOL:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31'
+    tracks.CB.sound_name:
+      status: writer_ready
+      sound_critical: false
+      reason: noncritical sound naming remains reference-preserved; no manual sound-parameter entry is
+        required
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CB.design_role:
+      status: writer_ready
+      sound_critical: false
+      reason: design-role metadata does not request a saved-kit byte mutation
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CB.machine:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'repository Rytm machine catalog: CB Metallic=CC15 value 20; manual-backed Track
+        Machine Type mapping'
+    track_levels.CB:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm COMMON/Track Level: CC95, NRPN 1:100'
+    tracks.CB.synth.Level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm cb_metallic/Level: CC16, NRPN 1:0'
+    tracks.CB.synth.Tune:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm cb_metallic/Tune: CC17, NRPN 1:1'
+    tracks.CB.synth.Decay Time:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm cb_metallic/Decay Time: CC18, NRPN 1:2'
+    tracks.CB.synth.Detune:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm cb_metallic/Detune: CC19, NRPN 1:3'
+    tracks.CB.sample.level:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm SAMPLE/Sample Level: CC31, NRPN 1:15'
+    tracks.CB.filter.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CB.filter.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CB.filter.SUS:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CB.filter.REL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CB.filter.FRQ:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CB.filter.RES:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CB.filter.TYPE:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CB.filter.ENV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CB.amp.ATK:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CB.amp.HLD:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CB.amp.DEC:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CB.amp.OVR:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CB.amp.DEL:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CB.amp.REV:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CB.amp.PAN:
+      status: writer_ready
+      sound_critical: true
+      reason: validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum
+        conversion are all present
+      evidence_source: RUSH01 saved-kit calibration status
+    tracks.CB.amp.VOL:
+      status: midi_apply_ready
+      sound_critical: true
+      reason: ready for dry-run MIDI plan
+      evidence_source: 'manual-backed Analog Rytm AMP/Amp Volume: CC7, NRPN 1:31'
+    tracks.BD.sample.dependency:
+      status: writer_ready
+      sound_critical: true
+      reason: explicit no-external-sample dependency policy requires no transmitted value
+      evidence_source: RUSH16 family policy
+    tracks.SD.sample.dependency:
+      status: writer_ready
+      sound_critical: true
+      reason: explicit no-external-sample dependency policy requires no transmitted value
+      evidence_source: RUSH16 family policy
+    tracks.RS.sample.dependency:
+      status: writer_ready
+      sound_critical: true
+      reason: explicit no-external-sample dependency policy requires no transmitted value
+      evidence_source: RUSH16 family policy
+    tracks.CP.sample.dependency:
+      status: writer_ready
+      sound_critical: true
+      reason: explicit no-external-sample dependency policy requires no transmitted value
+      evidence_source: RUSH16 family policy
+    tracks.BT.sample.dependency:
+      status: writer_ready
+      sound_critical: true
+      reason: explicit no-external-sample dependency policy requires no transmitted value
+      evidence_source: RUSH16 family policy
+    tracks.LT.sample.dependency:
+      status: writer_ready
+      sound_critical: true
+      reason: explicit no-external-sample dependency policy requires no transmitted value
+      evidence_source: RUSH16 family policy
+    tracks.MT.sample.dependency:
+      status: writer_ready
+      sound_critical: true
+      reason: explicit no-external-sample dependency policy requires no transmitted value
+      evidence_source: RUSH16 family policy
+    tracks.HT.sample.dependency:
+      status: writer_ready
+      sound_critical: true
+      reason: explicit no-external-sample dependency policy requires no transmitted value
+      evidence_source: RUSH16 family policy
+    tracks.CH.sample.dependency:
+      status: writer_ready
+      sound_critical: true
+      reason: explicit no-external-sample dependency policy requires no transmitted value
+      evidence_source: RUSH16 family policy
+    tracks.OH.sample.dependency:
+      status: writer_ready
+      sound_critical: true
+      reason: explicit no-external-sample dependency policy requires no transmitted value
+      evidence_source: RUSH16 family policy
+    tracks.CY.sample.dependency:
+      status: writer_ready
+      sound_critical: true
+      reason: explicit no-external-sample dependency policy requires no transmitted value
+      evidence_source: RUSH16 family policy
+    tracks.CB.sample.dependency:
+      status: writer_ready
+      sound_critical: true
+      reason: explicit no-external-sample dependency policy requires no transmitted value
+      evidence_source: RUSH16 family policy

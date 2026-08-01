@@ -37,6 +37,99 @@
     {
       "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
       "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.auxiliary_preserve",
+      "captures": [],
+      "catalog_parameter": "FX",
+      "changed_dump_filenames": [],
+      "converter_family": "enum",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "the specification explicitly preserves this auxiliary saved-kit field",
+      "requested_value": "preserve_reference",
+      "semantic_path": "track_levels.FX",
+      "sequence": 2,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": null
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "sound_name",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "noncritical sound naming remains reference-preserved; no manual sound-parameter entry is required",
+      "requested_value": "R01 PUNCH",
+      "semantic_path": "tracks.BD.sound_name",
+      "sequence": 3,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "BD"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "design_role",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "design-role metadata does not request a saved-kit byte mutation",
+      "requested_value": "Main kick; sharp HP2 punch anchor captured from the user's own Rytm.",
+      "semantic_path": "tracks.BD.design_role",
+      "sequence": 4,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "BD"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
         "frame_offset": 205,
         "packed_data_offset": 195,
         "packed_track_stride": null,
@@ -78,7 +171,7 @@
       "reason": "requested machine differs from the reference; the apparent machine byte and adjacent validity/high-bit behavior are not writer-promoted",
       "requested_value": "BD Sharp",
       "semantic_path": "tracks.BD.machine",
-      "sequence": 2,
+      "sequence": 5,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "BD"
@@ -155,7 +248,7 @@
       "reason": "Track Level NRPN 1:100 has no promoted saved-kit location",
       "requested_value": 110,
       "semantic_path": "track_levels.BD",
-      "sequence": 3,
+      "sequence": 6,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "BD"
@@ -232,7 +325,7 @@
       "reason": "source Level is locked for mutation and lacks a promoted saved-kit writer",
       "requested_value": 100,
       "semantic_path": "tracks.BD.synth.Level",
-      "sequence": 4,
+      "sequence": 7,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "BD"
@@ -309,7 +402,7 @@
       "reason": "live CC behavior is validated, but this machine-specific source semantic has no device differential proving its saved-kit slot and adjacent bytes",
       "requested_value": 59,
       "semantic_path": "tracks.BD.synth.Tune",
-      "sequence": 5,
+      "sequence": 8,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "BD"
@@ -386,7 +479,7 @@
       "reason": "live CC behavior is validated, but this machine-specific source semantic has no device differential proving its saved-kit slot and adjacent bytes",
       "requested_value": 58,
       "semantic_path": "tracks.BD.synth.Decay",
-      "sequence": 6,
+      "sequence": 9,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "BD"
@@ -463,7 +556,7 @@
       "reason": "live CC behavior is validated, but this machine-specific source semantic has no device differential proving its saved-kit slot and adjacent bytes",
       "requested_value": 93,
       "semantic_path": "tracks.BD.synth.Sweep Depth",
-      "sequence": 7,
+      "sequence": 10,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "BD"
@@ -540,7 +633,7 @@
       "reason": "live CC behavior is validated, but this machine-specific source semantic has no device differential proving its saved-kit slot and adjacent bytes",
       "requested_value": 81,
       "semantic_path": "tracks.BD.synth.Sweep Time",
-      "sequence": 8,
+      "sequence": 11,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "BD"
@@ -617,7 +710,7 @@
       "reason": "live CC behavior is validated, but this machine-specific source semantic has no device differential proving its saved-kit slot and adjacent bytes",
       "requested_value": 40,
       "semantic_path": "tracks.BD.synth.Hold Time",
-      "sequence": 9,
+      "sequence": 12,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "BD"
@@ -685,7 +778,7 @@
       "reason": "live CC behavior is validated, but this machine-specific source semantic has no device differential proving its saved-kit slot and adjacent bytes",
       "requested_value": 127,
       "semantic_path": "tracks.BD.synth.Tick Level",
-      "sequence": 10,
+      "sequence": 13,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "BD"
@@ -834,7 +927,7 @@
       "reason": "live CC behavior is validated, but this machine-specific source semantic has no device differential proving its saved-kit slot and adjacent bytes",
       "requested_value": 1,
       "semantic_path": "tracks.BD.synth.Waveform",
-      "sequence": 11,
+      "sequence": 14,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "BD"
@@ -902,7 +995,7 @@
       "reason": "Sample Level has a candidate sound offset but remains locked; zero playback must be proven before the no-sample-dependency requirement can pass",
       "requested_value": 0,
       "semantic_path": "tracks.BD.sample.level",
-      "sequence": 12,
+      "sequence": 15,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "BD"
@@ -936,7 +1029,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.BD.filter.ATK",
-      "sequence": 13,
+      "sequence": 16,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BD"
@@ -970,7 +1063,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 35,
       "semantic_path": "tracks.BD.filter.DEC",
-      "sequence": 14,
+      "sequence": 17,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BD"
@@ -1004,7 +1097,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.BD.filter.SUS",
-      "sequence": 15,
+      "sequence": 18,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BD"
@@ -1038,7 +1131,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 10,
       "semantic_path": "tracks.BD.filter.REL",
-      "sequence": 16,
+      "sequence": 19,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BD"
@@ -1072,7 +1165,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 23,
       "semantic_path": "tracks.BD.filter.FRQ",
-      "sequence": 17,
+      "sequence": 20,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BD"
@@ -1106,7 +1199,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 77,
       "semantic_path": "tracks.BD.filter.RES",
-      "sequence": 18,
+      "sequence": 21,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BD"
@@ -1143,7 +1236,7 @@
         "name": "HP2"
       },
       "semantic_path": "tracks.BD.filter.TYPE",
-      "sequence": 19,
+      "sequence": 22,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BD"
@@ -1177,7 +1270,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 64,
       "semantic_path": "tracks.BD.filter.ENV",
-      "sequence": 20,
+      "sequence": 23,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BD"
@@ -1211,7 +1304,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.BD.amp.ATK",
-      "sequence": 21,
+      "sequence": 24,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BD"
@@ -1245,7 +1338,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.BD.amp.HLD",
-      "sequence": 22,
+      "sequence": 25,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BD"
@@ -1279,7 +1372,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 93,
       "semantic_path": "tracks.BD.amp.DEC",
-      "sequence": 23,
+      "sequence": 26,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BD"
@@ -1313,7 +1406,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 22,
       "semantic_path": "tracks.BD.amp.OVR",
-      "sequence": 24,
+      "sequence": 27,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BD"
@@ -1347,7 +1440,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.BD.amp.DEL",
-      "sequence": 25,
+      "sequence": 28,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BD"
@@ -1381,7 +1474,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.BD.amp.REV",
-      "sequence": 26,
+      "sequence": 29,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BD"
@@ -1415,7 +1508,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 64,
       "semantic_path": "tracks.BD.amp.PAN",
-      "sequence": 27,
+      "sequence": 30,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BD"
@@ -1492,10 +1585,72 @@
       "reason": "Amp Volume is locked and has no promoted saved-kit writer contract",
       "requested_value": 110,
       "semantic_path": "tracks.BD.amp.VOL",
-      "sequence": 28,
+      "sequence": 31,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "BD"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "sound_name",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "noncritical sound naming remains reference-preserved; no manual sound-parameter entry is required",
+      "requested_value": "R01 SNAP",
+      "semantic_path": "tracks.SD.sound_name",
+      "sequence": 32,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "SD"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "design_role",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "design-role metadata does not request a saved-kit byte mutation",
+      "requested_value": "Compact hard snare for accents and restrained backbeats.",
+      "semantic_path": "tracks.SD.design_role",
+      "sequence": 33,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "SD"
     },
     {
       "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
@@ -1526,7 +1681,7 @@
       "reason": "reference machine already matches the requested catalog enum; no machine write is required",
       "requested_value": "SD Hard",
       "semantic_path": "tracks.SD.machine",
-      "sequence": 29,
+      "sequence": 34,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "SD"
@@ -1576,7 +1731,7 @@
       "reason": "Track Level NRPN 1:100 has no promoted saved-kit location",
       "requested_value": 92,
       "semantic_path": "track_levels.SD",
-      "sequence": 30,
+      "sequence": 35,
       "shared_capture_group_owner": "track_levels.BD",
       "status": "capture_required",
       "track": "SD"
@@ -1626,7 +1781,7 @@
       "reason": "source Level is locked for mutation and lacks a promoted saved-kit writer",
       "requested_value": 100,
       "semantic_path": "tracks.SD.synth.Level",
-      "sequence": 31,
+      "sequence": 36,
       "shared_capture_group_owner": "tracks.BD.synth.Level",
       "status": "capture_required",
       "track": "SD"
@@ -1676,7 +1831,7 @@
       "reason": "live CC behavior is validated, but this machine-specific source semantic has no device differential proving its saved-kit slot and adjacent bytes",
       "requested_value": 62,
       "semantic_path": "tracks.SD.synth.Tune",
-      "sequence": 32,
+      "sequence": 37,
       "shared_capture_group_owner": "tracks.BD.synth.Tune",
       "status": "capture_required",
       "track": "SD"
@@ -1726,7 +1881,7 @@
       "reason": "live CC behavior is validated, but this machine-specific source semantic has no device differential proving its saved-kit slot and adjacent bytes",
       "requested_value": 48,
       "semantic_path": "tracks.SD.synth.Decay",
-      "sequence": 33,
+      "sequence": 38,
       "shared_capture_group_owner": "tracks.BD.synth.Decay",
       "status": "capture_required",
       "track": "SD"
@@ -1776,7 +1931,7 @@
       "reason": "live CC behavior is validated, but this machine-specific source semantic has no device differential proving its saved-kit slot and adjacent bytes",
       "requested_value": 86,
       "semantic_path": "tracks.SD.synth.Sweep Depth",
-      "sequence": 34,
+      "sequence": 39,
       "shared_capture_group_owner": "tracks.BD.synth.Sweep Depth",
       "status": "capture_required",
       "track": "SD"
@@ -1826,7 +1981,7 @@
       "reason": "live CC behavior is validated, but this machine-specific source semantic has no device differential proving its saved-kit slot and adjacent bytes",
       "requested_value": 58,
       "semantic_path": "tracks.SD.synth.Tick Level",
-      "sequence": 35,
+      "sequence": 40,
       "shared_capture_group_owner": "tracks.BD.synth.Sweep Time",
       "status": "capture_required",
       "track": "SD"
@@ -1876,7 +2031,7 @@
       "reason": "live CC behavior is validated, but this machine-specific source semantic has no device differential proving its saved-kit slot and adjacent bytes",
       "requested_value": 36,
       "semantic_path": "tracks.SD.synth.Noise Decay",
-      "sequence": 36,
+      "sequence": 41,
       "shared_capture_group_owner": "tracks.BD.synth.Hold Time",
       "status": "capture_required",
       "track": "SD"
@@ -1926,7 +2081,7 @@
       "reason": "live CC behavior is validated, but this machine-specific source semantic has no device differential proving its saved-kit slot and adjacent bytes",
       "requested_value": 78,
       "semantic_path": "tracks.SD.synth.Noise Level",
-      "sequence": 37,
+      "sequence": 42,
       "shared_capture_group_owner": "tracks.BD.synth.Tick Level",
       "status": "capture_required",
       "track": "SD"
@@ -1976,7 +2131,7 @@
       "reason": "live CC behavior is validated, but this machine-specific source semantic has no device differential proving its saved-kit slot and adjacent bytes",
       "requested_value": 46,
       "semantic_path": "tracks.SD.synth.Sweep Time",
-      "sequence": 38,
+      "sequence": 43,
       "shared_capture_group_owner": "tracks.BD.synth.Waveform",
       "status": "capture_required",
       "track": "SD"
@@ -2026,7 +2181,7 @@
       "reason": "Sample Level has a candidate sound offset but remains locked; zero playback must be proven before the no-sample-dependency requirement can pass",
       "requested_value": 0,
       "semantic_path": "tracks.SD.sample.level",
-      "sequence": 39,
+      "sequence": 44,
       "shared_capture_group_owner": "tracks.BD.sample.level",
       "status": "capture_required",
       "track": "SD"
@@ -2060,7 +2215,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.SD.filter.ATK",
-      "sequence": 40,
+      "sequence": 45,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "SD"
@@ -2094,7 +2249,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 24,
       "semantic_path": "tracks.SD.filter.DEC",
-      "sequence": 41,
+      "sequence": 46,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "SD"
@@ -2128,7 +2283,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.SD.filter.SUS",
-      "sequence": 42,
+      "sequence": 47,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "SD"
@@ -2162,7 +2317,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 8,
       "semantic_path": "tracks.SD.filter.REL",
-      "sequence": 43,
+      "sequence": 48,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "SD"
@@ -2196,7 +2351,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 48,
       "semantic_path": "tracks.SD.filter.FRQ",
-      "sequence": 44,
+      "sequence": 49,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "SD"
@@ -2230,7 +2385,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 18,
       "semantic_path": "tracks.SD.filter.RES",
-      "sequence": 45,
+      "sequence": 50,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "SD"
@@ -2267,7 +2422,7 @@
         "name": "HP1"
       },
       "semantic_path": "tracks.SD.filter.TYPE",
-      "sequence": 46,
+      "sequence": 51,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "SD"
@@ -2301,7 +2456,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 64,
       "semantic_path": "tracks.SD.filter.ENV",
-      "sequence": 47,
+      "sequence": 52,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "SD"
@@ -2335,7 +2490,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.SD.amp.ATK",
-      "sequence": 48,
+      "sequence": 53,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "SD"
@@ -2369,7 +2524,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.SD.amp.HLD",
-      "sequence": 49,
+      "sequence": 54,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "SD"
@@ -2403,7 +2558,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 48,
       "semantic_path": "tracks.SD.amp.DEC",
-      "sequence": 50,
+      "sequence": 55,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "SD"
@@ -2437,7 +2592,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 18,
       "semantic_path": "tracks.SD.amp.OVR",
-      "sequence": 51,
+      "sequence": 56,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "SD"
@@ -2471,7 +2626,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.SD.amp.DEL",
-      "sequence": 52,
+      "sequence": 57,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "SD"
@@ -2505,7 +2660,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.SD.amp.REV",
-      "sequence": 53,
+      "sequence": 58,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "SD"
@@ -2539,7 +2694,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 64,
       "semantic_path": "tracks.SD.amp.PAN",
-      "sequence": 54,
+      "sequence": 59,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "SD"
@@ -2589,10 +2744,72 @@
       "reason": "Amp Volume is locked and has no promoted saved-kit writer contract",
       "requested_value": 96,
       "semantic_path": "tracks.SD.amp.VOL",
-      "sequence": 55,
+      "sequence": 60,
       "shared_capture_group_owner": "tracks.BD.amp.VOL",
       "status": "capture_required",
       "track": "SD"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "sound_name",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "noncritical sound naming remains reference-preserved; no manual sound-parameter entry is required",
+      "requested_value": "R01 CLAVE",
+      "semantic_path": "tracks.RS.sound_name",
+      "sequence": 61,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "RS"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "design_role",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "design-role metadata does not request a saved-kit byte mutation",
+      "requested_value": "Hard clave/rim for jacking syncopation.",
+      "semantic_path": "tracks.RS.design_role",
+      "sequence": 62,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "RS"
     },
     {
       "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
@@ -2623,7 +2840,7 @@
       "reason": "reference machine already matches the requested catalog enum; no machine write is required",
       "requested_value": "RS Hard",
       "semantic_path": "tracks.RS.machine",
-      "sequence": 56,
+      "sequence": 63,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "RS"
@@ -2662,7 +2879,7 @@
       "reason": "Track Level NRPN 1:100 has no promoted saved-kit location",
       "requested_value": 88,
       "semantic_path": "track_levels.RS",
-      "sequence": 57,
+      "sequence": 64,
       "shared_capture_group_owner": "track_levels.BD",
       "status": "capture_required",
       "track": "RS"
@@ -2712,7 +2929,7 @@
       "reason": "source Level is locked for mutation and lacks a promoted saved-kit writer",
       "requested_value": 96,
       "semantic_path": "tracks.RS.synth.Level",
-      "sequence": 58,
+      "sequence": 65,
       "shared_capture_group_owner": "tracks.BD.synth.Level",
       "status": "capture_required",
       "track": "RS"
@@ -2762,7 +2979,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 76,
       "semantic_path": "tracks.RS.synth.Tune",
-      "sequence": 59,
+      "sequence": 66,
       "shared_capture_group_owner": "tracks.BD.synth.Tune",
       "status": "capture_required",
       "track": "RS"
@@ -2812,7 +3029,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 22,
       "semantic_path": "tracks.RS.synth.Decay",
-      "sequence": 60,
+      "sequence": 67,
       "shared_capture_group_owner": "tracks.BD.synth.Decay",
       "status": "capture_required",
       "track": "RS"
@@ -2862,7 +3079,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 92,
       "semantic_path": "tracks.RS.synth.Sweep Depth",
-      "sequence": 61,
+      "sequence": 68,
       "shared_capture_group_owner": "tracks.BD.synth.Sweep Depth",
       "status": "capture_required",
       "track": "RS"
@@ -2912,7 +3129,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 78,
       "semantic_path": "tracks.RS.synth.Tick Level",
-      "sequence": 62,
+      "sequence": 69,
       "shared_capture_group_owner": "tracks.BD.synth.Sweep Time",
       "status": "capture_required",
       "track": "RS"
@@ -2962,7 +3179,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 10,
       "semantic_path": "tracks.RS.synth.Noise Level",
-      "sequence": 63,
+      "sequence": 70,
       "shared_capture_group_owner": "tracks.BD.synth.Hold Time",
       "status": "capture_required",
       "track": "RS"
@@ -3012,7 +3229,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 72,
       "semantic_path": "tracks.RS.synth.Symmetry",
-      "sequence": 64,
+      "sequence": 71,
       "shared_capture_group_owner": "tracks.BD.synth.Tick Level",
       "status": "capture_required",
       "track": "RS"
@@ -3062,7 +3279,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 26,
       "semantic_path": "tracks.RS.synth.Sweep Time",
-      "sequence": 65,
+      "sequence": 72,
       "shared_capture_group_owner": "tracks.BD.synth.Waveform",
       "status": "capture_required",
       "track": "RS"
@@ -3101,7 +3318,7 @@
       "reason": "Sample Level has a candidate sound offset but remains locked; zero playback must be proven before the no-sample-dependency requirement can pass",
       "requested_value": 0,
       "semantic_path": "tracks.RS.sample.level",
-      "sequence": 66,
+      "sequence": 73,
       "shared_capture_group_owner": "tracks.BD.sample.level",
       "status": "capture_required",
       "track": "RS"
@@ -3135,7 +3352,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.RS.filter.ATK",
-      "sequence": 67,
+      "sequence": 74,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "RS"
@@ -3169,7 +3386,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 18,
       "semantic_path": "tracks.RS.filter.DEC",
-      "sequence": 68,
+      "sequence": 75,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "RS"
@@ -3203,7 +3420,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.RS.filter.SUS",
-      "sequence": 69,
+      "sequence": 76,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "RS"
@@ -3237,7 +3454,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 6,
       "semantic_path": "tracks.RS.filter.REL",
-      "sequence": 70,
+      "sequence": 77,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "RS"
@@ -3271,7 +3488,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 82,
       "semantic_path": "tracks.RS.filter.FRQ",
-      "sequence": 71,
+      "sequence": 78,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "RS"
@@ -3305,7 +3522,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 34,
       "semantic_path": "tracks.RS.filter.RES",
-      "sequence": 72,
+      "sequence": 79,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "RS"
@@ -3342,7 +3559,7 @@
         "name": "Bandpass"
       },
       "semantic_path": "tracks.RS.filter.TYPE",
-      "sequence": 73,
+      "sequence": 80,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "RS"
@@ -3376,7 +3593,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 74,
       "semantic_path": "tracks.RS.filter.ENV",
-      "sequence": 74,
+      "sequence": 81,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "RS"
@@ -3410,7 +3627,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.RS.amp.ATK",
-      "sequence": 75,
+      "sequence": 82,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "RS"
@@ -3444,7 +3661,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.RS.amp.HLD",
-      "sequence": 76,
+      "sequence": 83,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "RS"
@@ -3478,7 +3695,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 24,
       "semantic_path": "tracks.RS.amp.DEC",
-      "sequence": 77,
+      "sequence": 84,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "RS"
@@ -3512,7 +3729,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 18,
       "semantic_path": "tracks.RS.amp.OVR",
-      "sequence": 78,
+      "sequence": 85,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "RS"
@@ -3546,7 +3763,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.RS.amp.DEL",
-      "sequence": 79,
+      "sequence": 86,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "RS"
@@ -3580,7 +3797,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.RS.amp.REV",
-      "sequence": 80,
+      "sequence": 87,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "RS"
@@ -3614,7 +3831,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 56,
       "semantic_path": "tracks.RS.amp.PAN",
-      "sequence": 81,
+      "sequence": 88,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "RS"
@@ -3653,10 +3870,72 @@
       "reason": "Amp Volume is locked and has no promoted saved-kit writer contract",
       "requested_value": 90,
       "semantic_path": "tracks.RS.amp.VOL",
-      "sequence": 82,
+      "sequence": 89,
       "shared_capture_group_owner": "tracks.BD.amp.VOL",
       "status": "capture_required",
       "track": "RS"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "sound_name",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "noncritical sound naming remains reference-preserved; no manual sound-parameter entry is required",
+      "requested_value": "R01 CLAP",
+      "semantic_path": "tracks.CP.sound_name",
+      "sequence": 90,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "CP"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "design_role",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "design-role metadata does not request a saved-kit byte mutation",
+      "requested_value": "Tight noisy clap; dry by design for the first hardware test.",
+      "semantic_path": "tracks.CP.design_role",
+      "sequence": 91,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "CP"
     },
     {
       "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
@@ -3687,7 +3966,7 @@
       "reason": "reference machine already matches the requested catalog enum; no machine write is required",
       "requested_value": "CP Classic",
       "semantic_path": "tracks.CP.machine",
-      "sequence": 83,
+      "sequence": 92,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CP"
@@ -3726,7 +4005,7 @@
       "reason": "Track Level NRPN 1:100 has no promoted saved-kit location",
       "requested_value": 90,
       "semantic_path": "track_levels.CP",
-      "sequence": 84,
+      "sequence": 93,
       "shared_capture_group_owner": "track_levels.BD",
       "status": "capture_required",
       "track": "CP"
@@ -3776,7 +4055,7 @@
       "reason": "source Level is locked for mutation and lacks a promoted saved-kit writer",
       "requested_value": 108,
       "semantic_path": "tracks.CP.synth.Level",
-      "sequence": 85,
+      "sequence": 94,
       "shared_capture_group_owner": "tracks.BD.synth.Level",
       "status": "capture_required",
       "track": "CP"
@@ -3826,7 +4105,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 72,
       "semantic_path": "tracks.CP.synth.Noise Tone",
-      "sequence": 86,
+      "sequence": 95,
       "shared_capture_group_owner": "tracks.BD.synth.Tune",
       "status": "capture_required",
       "track": "CP"
@@ -3876,7 +4155,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 36,
       "semantic_path": "tracks.CP.synth.Noise Decay",
-      "sequence": 87,
+      "sequence": 96,
       "shared_capture_group_owner": "tracks.BD.synth.Decay",
       "status": "capture_required",
       "track": "CP"
@@ -3926,7 +4205,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 3,
       "semantic_path": "tracks.CP.synth.Clap Number",
-      "sequence": 88,
+      "sequence": 97,
       "shared_capture_group_owner": "tracks.BD.synth.Sweep Depth",
       "status": "capture_required",
       "track": "CP"
@@ -3976,7 +4255,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 40,
       "semantic_path": "tracks.CP.synth.Clap Rate",
-      "sequence": 89,
+      "sequence": 98,
       "shared_capture_group_owner": "tracks.BD.synth.Sweep Time",
       "status": "capture_required",
       "track": "CP"
@@ -4026,7 +4305,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 84,
       "semantic_path": "tracks.CP.synth.Noise Level",
-      "sequence": 90,
+      "sequence": 99,
       "shared_capture_group_owner": "tracks.BD.synth.Hold Time",
       "status": "capture_required",
       "track": "CP"
@@ -4076,7 +4355,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 8,
       "semantic_path": "tracks.CP.synth.Random Claps",
-      "sequence": 91,
+      "sequence": 100,
       "shared_capture_group_owner": "tracks.BD.synth.Tick Level",
       "status": "capture_required",
       "track": "CP"
@@ -4126,7 +4405,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 32,
       "semantic_path": "tracks.CP.synth.Clap Decay",
-      "sequence": 92,
+      "sequence": 101,
       "shared_capture_group_owner": "tracks.BD.synth.Waveform",
       "status": "capture_required",
       "track": "CP"
@@ -4165,7 +4444,7 @@
       "reason": "Sample Level has a candidate sound offset but remains locked; zero playback must be proven before the no-sample-dependency requirement can pass",
       "requested_value": 0,
       "semantic_path": "tracks.CP.sample.level",
-      "sequence": 93,
+      "sequence": 102,
       "shared_capture_group_owner": "tracks.BD.sample.level",
       "status": "capture_required",
       "track": "CP"
@@ -4199,7 +4478,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.CP.filter.ATK",
-      "sequence": 94,
+      "sequence": 103,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CP"
@@ -4233,7 +4512,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 8,
       "semantic_path": "tracks.CP.filter.DEC",
-      "sequence": 95,
+      "sequence": 104,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CP"
@@ -4267,7 +4546,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.CP.filter.SUS",
-      "sequence": 96,
+      "sequence": 105,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CP"
@@ -4301,7 +4580,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 6,
       "semantic_path": "tracks.CP.filter.REL",
-      "sequence": 97,
+      "sequence": 106,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CP"
@@ -4335,7 +4614,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 54,
       "semantic_path": "tracks.CP.filter.FRQ",
-      "sequence": 98,
+      "sequence": 107,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CP"
@@ -4369,7 +4648,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 8,
       "semantic_path": "tracks.CP.filter.RES",
-      "sequence": 99,
+      "sequence": 108,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CP"
@@ -4406,7 +4685,7 @@
         "name": "HP1"
       },
       "semantic_path": "tracks.CP.filter.TYPE",
-      "sequence": 100,
+      "sequence": 109,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CP"
@@ -4440,7 +4719,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 64,
       "semantic_path": "tracks.CP.filter.ENV",
-      "sequence": 101,
+      "sequence": 110,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CP"
@@ -4474,7 +4753,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.CP.amp.ATK",
-      "sequence": 102,
+      "sequence": 111,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CP"
@@ -4508,7 +4787,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 8,
       "semantic_path": "tracks.CP.amp.HLD",
-      "sequence": 103,
+      "sequence": 112,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CP"
@@ -4542,7 +4821,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 40,
       "semantic_path": "tracks.CP.amp.DEC",
-      "sequence": 104,
+      "sequence": 113,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CP"
@@ -4576,7 +4855,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 14,
       "semantic_path": "tracks.CP.amp.OVR",
-      "sequence": 105,
+      "sequence": 114,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CP"
@@ -4610,7 +4889,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.CP.amp.DEL",
-      "sequence": 106,
+      "sequence": 115,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CP"
@@ -4644,7 +4923,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.CP.amp.REV",
-      "sequence": 107,
+      "sequence": 116,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CP"
@@ -4678,7 +4957,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 64,
       "semantic_path": "tracks.CP.amp.PAN",
-      "sequence": 108,
+      "sequence": 117,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CP"
@@ -4717,10 +4996,72 @@
       "reason": "Amp Volume is locked and has no promoted saved-kit writer contract",
       "requested_value": 92,
       "semantic_path": "tracks.CP.amp.VOL",
-      "sequence": 109,
+      "sequence": 118,
       "shared_capture_group_owner": "tracks.BD.amp.VOL",
       "status": "capture_required",
       "track": "CP"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "sound_name",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "noncritical sound naming remains reference-preserved; no manual sound-parameter entry is required",
+      "requested_value": "R01 JACK",
+      "semantic_path": "tracks.BT.sound_name",
+      "sequence": 119,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "BT"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "design_role",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "design-role metadata does not request a saved-kit byte mutation",
+      "requested_value": "Rolling low-tom/bass-drum answer; not a second simultaneous sub kick.",
+      "semantic_path": "tracks.BT.design_role",
+      "sequence": 120,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "BT"
     },
     {
       "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
@@ -4751,7 +5092,7 @@
       "reason": "reference machine already matches the requested catalog enum; no machine write is required",
       "requested_value": "BT Classic",
       "semantic_path": "tracks.BT.machine",
-      "sequence": 110,
+      "sequence": 121,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BT"
@@ -4790,7 +5131,7 @@
       "reason": "Track Level NRPN 1:100 has no promoted saved-kit location",
       "requested_value": 94,
       "semantic_path": "track_levels.BT",
-      "sequence": 111,
+      "sequence": 122,
       "shared_capture_group_owner": "track_levels.BD",
       "status": "capture_required",
       "track": "BT"
@@ -4840,7 +5181,7 @@
       "reason": "source Level is locked for mutation and lacks a promoted saved-kit writer",
       "requested_value": 100,
       "semantic_path": "tracks.BT.synth.Level",
-      "sequence": 112,
+      "sequence": 123,
       "shared_capture_group_owner": "tracks.BD.synth.Level",
       "status": "capture_required",
       "track": "BT"
@@ -4890,7 +5231,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 80,
       "semantic_path": "tracks.BT.synth.Tune",
-      "sequence": 113,
+      "sequence": 124,
       "shared_capture_group_owner": "tracks.BD.synth.Tune",
       "status": "capture_required",
       "track": "BT"
@@ -4940,7 +5281,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 42,
       "semantic_path": "tracks.BT.synth.Decay",
-      "sequence": 114,
+      "sequence": 125,
       "shared_capture_group_owner": "tracks.BD.synth.Decay",
       "status": "capture_required",
       "track": "BT"
@@ -4990,7 +5331,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 14,
       "semantic_path": "tracks.BT.synth.Sweep Depth",
-      "sequence": 115,
+      "sequence": 126,
       "shared_capture_group_owner": "tracks.BD.synth.Sweep Depth",
       "status": "capture_required",
       "track": "BT"
@@ -5040,7 +5381,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 6,
       "semantic_path": "tracks.BT.synth.Noise Level",
-      "sequence": 116,
+      "sequence": 127,
       "shared_capture_group_owner": "tracks.BD.synth.Sweep Time",
       "status": "capture_required",
       "track": "BT"
@@ -5078,7 +5419,7 @@
         "type": "enum"
       },
       "semantic_path": "tracks.BT.synth.Snap Type",
-      "sequence": 117,
+      "sequence": 128,
       "shared_capture_group_owner": null,
       "status": "preserve_reference",
       "track": "BT"
@@ -5117,7 +5458,7 @@
       "reason": "Sample Level has a candidate sound offset but remains locked; zero playback must be proven before the no-sample-dependency requirement can pass",
       "requested_value": 0,
       "semantic_path": "tracks.BT.sample.level",
-      "sequence": 118,
+      "sequence": 129,
       "shared_capture_group_owner": "tracks.BD.sample.level",
       "status": "capture_required",
       "track": "BT"
@@ -5151,7 +5492,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.BT.filter.ATK",
-      "sequence": 119,
+      "sequence": 130,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BT"
@@ -5185,7 +5526,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 18,
       "semantic_path": "tracks.BT.filter.DEC",
-      "sequence": 120,
+      "sequence": 131,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BT"
@@ -5219,7 +5560,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.BT.filter.SUS",
-      "sequence": 121,
+      "sequence": 132,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BT"
@@ -5253,7 +5594,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 8,
       "semantic_path": "tracks.BT.filter.REL",
-      "sequence": 122,
+      "sequence": 133,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BT"
@@ -5287,7 +5628,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 62,
       "semantic_path": "tracks.BT.filter.FRQ",
-      "sequence": 123,
+      "sequence": 134,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BT"
@@ -5321,7 +5662,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 14,
       "semantic_path": "tracks.BT.filter.RES",
-      "sequence": 124,
+      "sequence": 135,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BT"
@@ -5358,7 +5699,7 @@
         "name": "LP2"
       },
       "semantic_path": "tracks.BT.filter.TYPE",
-      "sequence": 125,
+      "sequence": 136,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BT"
@@ -5392,7 +5733,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 78,
       "semantic_path": "tracks.BT.filter.ENV",
-      "sequence": 126,
+      "sequence": 137,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BT"
@@ -5426,7 +5767,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.BT.amp.ATK",
-      "sequence": 127,
+      "sequence": 138,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BT"
@@ -5460,7 +5801,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 10,
       "semantic_path": "tracks.BT.amp.HLD",
-      "sequence": 128,
+      "sequence": 139,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BT"
@@ -5494,7 +5835,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 42,
       "semantic_path": "tracks.BT.amp.DEC",
-      "sequence": 129,
+      "sequence": 140,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BT"
@@ -5528,7 +5869,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 24,
       "semantic_path": "tracks.BT.amp.OVR",
-      "sequence": 130,
+      "sequence": 141,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BT"
@@ -5562,7 +5903,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.BT.amp.DEL",
-      "sequence": 131,
+      "sequence": 142,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BT"
@@ -5596,7 +5937,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.BT.amp.REV",
-      "sequence": 132,
+      "sequence": 143,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BT"
@@ -5630,7 +5971,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 64,
       "semantic_path": "tracks.BT.amp.PAN",
-      "sequence": 133,
+      "sequence": 144,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "BT"
@@ -5669,10 +6010,72 @@
       "reason": "Amp Volume is locked and has no promoted saved-kit writer contract",
       "requested_value": 96,
       "semantic_path": "tracks.BT.amp.VOL",
-      "sequence": 134,
+      "sequence": 145,
       "shared_capture_group_owner": "tracks.BD.amp.VOL",
       "status": "capture_required",
       "track": "BT"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "sound_name",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "noncritical sound naming remains reference-preserved; no manual sound-parameter entry is required",
+      "requested_value": "R01 LOWTOM",
+      "semantic_path": "tracks.LT.sound_name",
+      "sequence": 146,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "LT"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "design_role",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "design-role metadata does not request a saved-kit byte mutation",
+      "requested_value": "Low jacking percussion.",
+      "semantic_path": "tracks.LT.design_role",
+      "sequence": 147,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "LT"
     },
     {
       "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
@@ -5715,7 +6118,7 @@
       "reason": "tom-pad machine decode is candidate-only; a second-track differential is required before the machine stride or validity behavior can be promoted",
       "requested_value": "XT Classic",
       "semantic_path": "tracks.LT.machine",
-      "sequence": 135,
+      "sequence": 148,
       "shared_capture_group_owner": "tracks.BD.machine",
       "status": "candidate_only",
       "track": "LT"
@@ -5754,7 +6157,7 @@
       "reason": "Track Level NRPN 1:100 has no promoted saved-kit location",
       "requested_value": 86,
       "semantic_path": "track_levels.LT",
-      "sequence": 136,
+      "sequence": 149,
       "shared_capture_group_owner": "track_levels.BD",
       "status": "capture_required",
       "track": "LT"
@@ -5804,7 +6207,7 @@
       "reason": "source Level is locked for mutation and lacks a promoted saved-kit writer",
       "requested_value": 96,
       "semantic_path": "tracks.LT.synth.Level",
-      "sequence": 137,
+      "sequence": 150,
       "shared_capture_group_owner": "tracks.BD.synth.Level",
       "status": "capture_required",
       "track": "LT"
@@ -5854,7 +6257,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 94,
       "semantic_path": "tracks.LT.synth.Tune",
-      "sequence": 138,
+      "sequence": 151,
       "shared_capture_group_owner": "tracks.BD.synth.Tune",
       "status": "capture_required",
       "track": "LT"
@@ -5904,7 +6307,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 42,
       "semantic_path": "tracks.LT.synth.Decay",
-      "sequence": 139,
+      "sequence": 152,
       "shared_capture_group_owner": "tracks.BD.synth.Decay",
       "status": "capture_required",
       "track": "LT"
@@ -5954,7 +6357,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 32,
       "semantic_path": "tracks.LT.synth.Sweep Depth",
-      "sequence": 140,
+      "sequence": 153,
       "shared_capture_group_owner": "tracks.BD.synth.Sweep Depth",
       "status": "capture_required",
       "track": "LT"
@@ -6004,7 +6407,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 82,
       "semantic_path": "tracks.LT.synth.Sweep Time",
-      "sequence": 141,
+      "sequence": 154,
       "shared_capture_group_owner": "tracks.BD.synth.Sweep Time",
       "status": "capture_required",
       "track": "LT"
@@ -6054,7 +6457,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 4,
       "semantic_path": "tracks.LT.synth.Noise Decay",
-      "sequence": 142,
+      "sequence": 155,
       "shared_capture_group_owner": "tracks.BD.synth.Hold Time",
       "status": "capture_required",
       "track": "LT"
@@ -6104,7 +6507,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 8,
       "semantic_path": "tracks.LT.synth.Noise Level",
-      "sequence": 143,
+      "sequence": 156,
       "shared_capture_group_owner": "tracks.BD.synth.Tick Level",
       "status": "capture_required",
       "track": "LT"
@@ -6154,7 +6557,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 42,
       "semantic_path": "tracks.LT.synth.Noise Tone",
-      "sequence": 144,
+      "sequence": 157,
       "shared_capture_group_owner": "tracks.BD.synth.Waveform",
       "status": "capture_required",
       "track": "LT"
@@ -6193,7 +6596,7 @@
       "reason": "Sample Level has a candidate sound offset but remains locked; zero playback must be proven before the no-sample-dependency requirement can pass",
       "requested_value": 0,
       "semantic_path": "tracks.LT.sample.level",
-      "sequence": 145,
+      "sequence": 158,
       "shared_capture_group_owner": "tracks.BD.sample.level",
       "status": "capture_required",
       "track": "LT"
@@ -6227,7 +6630,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.LT.filter.ATK",
-      "sequence": 146,
+      "sequence": 159,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "LT"
@@ -6261,7 +6664,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 16,
       "semantic_path": "tracks.LT.filter.DEC",
-      "sequence": 147,
+      "sequence": 160,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "LT"
@@ -6295,7 +6698,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.LT.filter.SUS",
-      "sequence": 148,
+      "sequence": 161,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "LT"
@@ -6329,7 +6732,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 6,
       "semantic_path": "tracks.LT.filter.REL",
-      "sequence": 149,
+      "sequence": 162,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "LT"
@@ -6363,7 +6766,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 58,
       "semantic_path": "tracks.LT.filter.FRQ",
-      "sequence": 150,
+      "sequence": 163,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "LT"
@@ -6397,7 +6800,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 10,
       "semantic_path": "tracks.LT.filter.RES",
-      "sequence": 151,
+      "sequence": 164,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "LT"
@@ -6434,7 +6837,7 @@
         "name": "LP2"
       },
       "semantic_path": "tracks.LT.filter.TYPE",
-      "sequence": 152,
+      "sequence": 165,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "LT"
@@ -6468,7 +6871,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 72,
       "semantic_path": "tracks.LT.filter.ENV",
-      "sequence": 153,
+      "sequence": 166,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "LT"
@@ -6502,7 +6905,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.LT.amp.ATK",
-      "sequence": 154,
+      "sequence": 167,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "LT"
@@ -6536,7 +6939,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 6,
       "semantic_path": "tracks.LT.amp.HLD",
-      "sequence": 155,
+      "sequence": 168,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "LT"
@@ -6570,7 +6973,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 42,
       "semantic_path": "tracks.LT.amp.DEC",
-      "sequence": 156,
+      "sequence": 169,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "LT"
@@ -6604,7 +7007,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 18,
       "semantic_path": "tracks.LT.amp.OVR",
-      "sequence": 157,
+      "sequence": 170,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "LT"
@@ -6638,7 +7041,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.LT.amp.DEL",
-      "sequence": 158,
+      "sequence": 171,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "LT"
@@ -6672,7 +7075,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.LT.amp.REV",
-      "sequence": 159,
+      "sequence": 172,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "LT"
@@ -6706,7 +7109,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 58,
       "semantic_path": "tracks.LT.amp.PAN",
-      "sequence": 160,
+      "sequence": 173,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "LT"
@@ -6745,10 +7148,72 @@
       "reason": "Amp Volume is locked and has no promoted saved-kit writer contract",
       "requested_value": 90,
       "semantic_path": "tracks.LT.amp.VOL",
-      "sequence": 161,
+      "sequence": 174,
       "shared_capture_group_owner": "tracks.BD.amp.VOL",
       "status": "capture_required",
       "track": "LT"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "sound_name",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "noncritical sound naming remains reference-preserved; no manual sound-parameter entry is required",
+      "requested_value": "R01 MIDTOM",
+      "semantic_path": "tracks.MT.sound_name",
+      "sequence": 175,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "MT"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "design_role",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "design-role metadata does not request a saved-kit byte mutation",
+      "requested_value": "Midrange tom response.",
+      "semantic_path": "tracks.MT.design_role",
+      "sequence": 176,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "MT"
     },
     {
       "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
@@ -6791,7 +7256,7 @@
       "reason": "tom-pad machine decode is candidate-only; a second-track differential is required before the machine stride or validity behavior can be promoted",
       "requested_value": "XT Classic",
       "semantic_path": "tracks.MT.machine",
-      "sequence": 162,
+      "sequence": 177,
       "shared_capture_group_owner": "tracks.BD.machine",
       "status": "candidate_only",
       "track": "MT"
@@ -6830,7 +7295,7 @@
       "reason": "Track Level NRPN 1:100 has no promoted saved-kit location",
       "requested_value": 82,
       "semantic_path": "track_levels.MT",
-      "sequence": 163,
+      "sequence": 178,
       "shared_capture_group_owner": "track_levels.BD",
       "status": "capture_required",
       "track": "MT"
@@ -6880,7 +7345,7 @@
       "reason": "source Level is locked for mutation and lacks a promoted saved-kit writer",
       "requested_value": 92,
       "semantic_path": "tracks.MT.synth.Level",
-      "sequence": 164,
+      "sequence": 179,
       "shared_capture_group_owner": "tracks.BD.synth.Level",
       "status": "capture_required",
       "track": "MT"
@@ -6930,7 +7395,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 104,
       "semantic_path": "tracks.MT.synth.Tune",
-      "sequence": 165,
+      "sequence": 180,
       "shared_capture_group_owner": "tracks.BD.synth.Tune",
       "status": "capture_required",
       "track": "MT"
@@ -6980,7 +7445,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 34,
       "semantic_path": "tracks.MT.synth.Decay",
-      "sequence": 166,
+      "sequence": 181,
       "shared_capture_group_owner": "tracks.BD.synth.Decay",
       "status": "capture_required",
       "track": "MT"
@@ -7030,7 +7495,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 28,
       "semantic_path": "tracks.MT.synth.Sweep Depth",
-      "sequence": 167,
+      "sequence": 182,
       "shared_capture_group_owner": "tracks.BD.synth.Sweep Depth",
       "status": "capture_required",
       "track": "MT"
@@ -7080,7 +7545,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 88,
       "semantic_path": "tracks.MT.synth.Sweep Time",
-      "sequence": 168,
+      "sequence": 183,
       "shared_capture_group_owner": "tracks.BD.synth.Sweep Time",
       "status": "capture_required",
       "track": "MT"
@@ -7130,7 +7595,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 5,
       "semantic_path": "tracks.MT.synth.Noise Decay",
-      "sequence": 169,
+      "sequence": 184,
       "shared_capture_group_owner": "tracks.BD.synth.Hold Time",
       "status": "capture_required",
       "track": "MT"
@@ -7180,7 +7645,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 10,
       "semantic_path": "tracks.MT.synth.Noise Level",
-      "sequence": 170,
+      "sequence": 185,
       "shared_capture_group_owner": "tracks.BD.synth.Tick Level",
       "status": "capture_required",
       "track": "MT"
@@ -7230,7 +7695,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 36,
       "semantic_path": "tracks.MT.synth.Noise Tone",
-      "sequence": 171,
+      "sequence": 186,
       "shared_capture_group_owner": "tracks.BD.synth.Waveform",
       "status": "capture_required",
       "track": "MT"
@@ -7269,7 +7734,7 @@
       "reason": "Sample Level has a candidate sound offset but remains locked; zero playback must be proven before the no-sample-dependency requirement can pass",
       "requested_value": 0,
       "semantic_path": "tracks.MT.sample.level",
-      "sequence": 172,
+      "sequence": 187,
       "shared_capture_group_owner": "tracks.BD.sample.level",
       "status": "capture_required",
       "track": "MT"
@@ -7303,7 +7768,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.MT.filter.ATK",
-      "sequence": 173,
+      "sequence": 188,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "MT"
@@ -7337,7 +7802,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 14,
       "semantic_path": "tracks.MT.filter.DEC",
-      "sequence": 174,
+      "sequence": 189,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "MT"
@@ -7371,7 +7836,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.MT.filter.SUS",
-      "sequence": 175,
+      "sequence": 190,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "MT"
@@ -7405,7 +7870,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 5,
       "semantic_path": "tracks.MT.filter.REL",
-      "sequence": 176,
+      "sequence": 191,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "MT"
@@ -7439,7 +7904,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 68,
       "semantic_path": "tracks.MT.filter.FRQ",
-      "sequence": 177,
+      "sequence": 192,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "MT"
@@ -7473,7 +7938,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 15,
       "semantic_path": "tracks.MT.filter.RES",
-      "sequence": 178,
+      "sequence": 193,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "MT"
@@ -7510,7 +7975,7 @@
         "name": "Bandpass"
       },
       "semantic_path": "tracks.MT.filter.TYPE",
-      "sequence": 179,
+      "sequence": 194,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "MT"
@@ -7544,7 +8009,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 72,
       "semantic_path": "tracks.MT.filter.ENV",
-      "sequence": 180,
+      "sequence": 195,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "MT"
@@ -7578,7 +8043,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.MT.amp.ATK",
-      "sequence": 181,
+      "sequence": 196,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "MT"
@@ -7612,7 +8077,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 4,
       "semantic_path": "tracks.MT.amp.HLD",
-      "sequence": 182,
+      "sequence": 197,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "MT"
@@ -7646,7 +8111,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 34,
       "semantic_path": "tracks.MT.amp.DEC",
-      "sequence": 183,
+      "sequence": 198,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "MT"
@@ -7680,7 +8145,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 16,
       "semantic_path": "tracks.MT.amp.OVR",
-      "sequence": 184,
+      "sequence": 199,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "MT"
@@ -7714,7 +8179,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.MT.amp.DEL",
-      "sequence": 185,
+      "sequence": 200,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "MT"
@@ -7748,7 +8213,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.MT.amp.REV",
-      "sequence": 186,
+      "sequence": 201,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "MT"
@@ -7782,7 +8247,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 70,
       "semantic_path": "tracks.MT.amp.PAN",
-      "sequence": 187,
+      "sequence": 202,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "MT"
@@ -7821,10 +8286,72 @@
       "reason": "Amp Volume is locked and has no promoted saved-kit writer contract",
       "requested_value": 86,
       "semantic_path": "tracks.MT.amp.VOL",
-      "sequence": 188,
+      "sequence": 203,
       "shared_capture_group_owner": "tracks.BD.amp.VOL",
       "status": "capture_required",
       "track": "MT"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "sound_name",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "noncritical sound naming remains reference-preserved; no manual sound-parameter entry is required",
+      "requested_value": "R01 HITOM",
+      "semantic_path": "tracks.HT.sound_name",
+      "sequence": 204,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "HT"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "design_role",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "design-role metadata does not request a saved-kit byte mutation",
+      "requested_value": "Short high tom/industrial percussion.",
+      "semantic_path": "tracks.HT.design_role",
+      "sequence": 205,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "HT"
     },
     {
       "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
@@ -7867,7 +8394,7 @@
       "reason": "tom-pad machine decode is candidate-only; a second-track differential is required before the machine stride or validity behavior can be promoted",
       "requested_value": "XT Classic",
       "semantic_path": "tracks.HT.machine",
-      "sequence": 189,
+      "sequence": 206,
       "shared_capture_group_owner": "tracks.BD.machine",
       "status": "candidate_only",
       "track": "HT"
@@ -7906,7 +8433,7 @@
       "reason": "Track Level NRPN 1:100 has no promoted saved-kit location",
       "requested_value": 78,
       "semantic_path": "track_levels.HT",
-      "sequence": 190,
+      "sequence": 207,
       "shared_capture_group_owner": "track_levels.BD",
       "status": "capture_required",
       "track": "HT"
@@ -7956,7 +8483,7 @@
       "reason": "source Level is locked for mutation and lacks a promoted saved-kit writer",
       "requested_value": 88,
       "semantic_path": "tracks.HT.synth.Level",
-      "sequence": 191,
+      "sequence": 208,
       "shared_capture_group_owner": "tracks.BD.synth.Level",
       "status": "capture_required",
       "track": "HT"
@@ -8006,7 +8533,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 114,
       "semantic_path": "tracks.HT.synth.Tune",
-      "sequence": 192,
+      "sequence": 209,
       "shared_capture_group_owner": "tracks.BD.synth.Tune",
       "status": "capture_required",
       "track": "HT"
@@ -8056,7 +8583,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 24,
       "semantic_path": "tracks.HT.synth.Decay",
-      "sequence": 193,
+      "sequence": 210,
       "shared_capture_group_owner": "tracks.BD.synth.Decay",
       "status": "capture_required",
       "track": "HT"
@@ -8106,7 +8633,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 20,
       "semantic_path": "tracks.HT.synth.Sweep Depth",
-      "sequence": 194,
+      "sequence": 211,
       "shared_capture_group_owner": "tracks.BD.synth.Sweep Depth",
       "status": "capture_required",
       "track": "HT"
@@ -8156,7 +8683,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 90,
       "semantic_path": "tracks.HT.synth.Sweep Time",
-      "sequence": 195,
+      "sequence": 212,
       "shared_capture_group_owner": "tracks.BD.synth.Sweep Time",
       "status": "capture_required",
       "track": "HT"
@@ -8206,7 +8733,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 7,
       "semantic_path": "tracks.HT.synth.Noise Decay",
-      "sequence": 196,
+      "sequence": 213,
       "shared_capture_group_owner": "tracks.BD.synth.Hold Time",
       "status": "capture_required",
       "track": "HT"
@@ -8256,7 +8783,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 14,
       "semantic_path": "tracks.HT.synth.Noise Level",
-      "sequence": 197,
+      "sequence": 214,
       "shared_capture_group_owner": "tracks.BD.synth.Tick Level",
       "status": "capture_required",
       "track": "HT"
@@ -8306,7 +8833,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 28,
       "semantic_path": "tracks.HT.synth.Noise Tone",
-      "sequence": 198,
+      "sequence": 215,
       "shared_capture_group_owner": "tracks.BD.synth.Waveform",
       "status": "capture_required",
       "track": "HT"
@@ -8345,7 +8872,7 @@
       "reason": "Sample Level has a candidate sound offset but remains locked; zero playback must be proven before the no-sample-dependency requirement can pass",
       "requested_value": 0,
       "semantic_path": "tracks.HT.sample.level",
-      "sequence": 199,
+      "sequence": 216,
       "shared_capture_group_owner": "tracks.BD.sample.level",
       "status": "capture_required",
       "track": "HT"
@@ -8379,7 +8906,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.HT.filter.ATK",
-      "sequence": 200,
+      "sequence": 217,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "HT"
@@ -8413,7 +8940,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 12,
       "semantic_path": "tracks.HT.filter.DEC",
-      "sequence": 201,
+      "sequence": 218,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "HT"
@@ -8447,7 +8974,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.HT.filter.SUS",
-      "sequence": 202,
+      "sequence": 219,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "HT"
@@ -8481,7 +9008,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 4,
       "semantic_path": "tracks.HT.filter.REL",
-      "sequence": 203,
+      "sequence": 220,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "HT"
@@ -8515,7 +9042,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 78,
       "semantic_path": "tracks.HT.filter.FRQ",
-      "sequence": 204,
+      "sequence": 221,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "HT"
@@ -8549,7 +9076,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 18,
       "semantic_path": "tracks.HT.filter.RES",
-      "sequence": 205,
+      "sequence": 222,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "HT"
@@ -8586,7 +9113,7 @@
         "name": "Bandpass"
       },
       "semantic_path": "tracks.HT.filter.TYPE",
-      "sequence": 206,
+      "sequence": 223,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "HT"
@@ -8620,7 +9147,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 70,
       "semantic_path": "tracks.HT.filter.ENV",
-      "sequence": 207,
+      "sequence": 224,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "HT"
@@ -8654,7 +9181,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.HT.amp.ATK",
-      "sequence": 208,
+      "sequence": 225,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "HT"
@@ -8688,7 +9215,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 3,
       "semantic_path": "tracks.HT.amp.HLD",
-      "sequence": 209,
+      "sequence": 226,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "HT"
@@ -8722,7 +9249,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 24,
       "semantic_path": "tracks.HT.amp.DEC",
-      "sequence": 210,
+      "sequence": 227,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "HT"
@@ -8756,7 +9283,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 15,
       "semantic_path": "tracks.HT.amp.OVR",
-      "sequence": 211,
+      "sequence": 228,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "HT"
@@ -8790,7 +9317,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.HT.amp.DEL",
-      "sequence": 212,
+      "sequence": 229,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "HT"
@@ -8824,7 +9351,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.HT.amp.REV",
-      "sequence": 213,
+      "sequence": 230,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "HT"
@@ -8858,7 +9385,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 74,
       "semantic_path": "tracks.HT.amp.PAN",
-      "sequence": 214,
+      "sequence": 231,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "HT"
@@ -8897,10 +9424,72 @@
       "reason": "Amp Volume is locked and has no promoted saved-kit writer contract",
       "requested_value": 82,
       "semantic_path": "tracks.HT.amp.VOL",
-      "sequence": 215,
+      "sequence": 232,
       "shared_capture_group_owner": "tracks.BD.amp.VOL",
       "status": "capture_required",
       "track": "HT"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "sound_name",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "noncritical sound naming remains reference-preserved; no manual sound-parameter entry is required",
+      "requested_value": "R01 SHUFF",
+      "semantic_path": "tracks.CH.sound_name",
+      "sequence": 233,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "CH"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "design_role",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "design-role metadata does not request a saved-kit byte mutation",
+      "requested_value": "Dry shuffled closed hat.",
+      "semantic_path": "tracks.CH.design_role",
+      "sequence": 234,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "CH"
     },
     {
       "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
@@ -8946,7 +9535,7 @@
       "reason": "requested machine differs from the reference; the apparent machine byte and adjacent validity/high-bit behavior are not writer-promoted",
       "requested_value": "HH Basic",
       "semantic_path": "tracks.CH.machine",
-      "sequence": 216,
+      "sequence": 235,
       "shared_capture_group_owner": "tracks.BD.machine",
       "status": "capture_required",
       "track": "CH"
@@ -8985,7 +9574,7 @@
       "reason": "Track Level NRPN 1:100 has no promoted saved-kit location",
       "requested_value": 80,
       "semantic_path": "track_levels.CH",
-      "sequence": 217,
+      "sequence": 236,
       "shared_capture_group_owner": "track_levels.BD",
       "status": "capture_required",
       "track": "CH"
@@ -9035,7 +9624,7 @@
       "reason": "source Level is locked for mutation and lacks a promoted saved-kit writer",
       "requested_value": 92,
       "semantic_path": "tracks.CH.synth.Level",
-      "sequence": 218,
+      "sequence": 237,
       "shared_capture_group_owner": "tracks.BD.synth.Level",
       "status": "capture_required",
       "track": "CH"
@@ -9085,7 +9674,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 72,
       "semantic_path": "tracks.CH.synth.Tune",
-      "sequence": 219,
+      "sequence": 238,
       "shared_capture_group_owner": "tracks.BD.synth.Tune",
       "status": "capture_required",
       "track": "CH"
@@ -9135,7 +9724,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 18,
       "semantic_path": "tracks.CH.synth.Decay Time",
-      "sequence": 220,
+      "sequence": 239,
       "shared_capture_group_owner": "tracks.BD.synth.Decay",
       "status": "capture_required",
       "track": "CH"
@@ -9185,7 +9774,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 76,
       "semantic_path": "tracks.CH.synth.Tone",
-      "sequence": 221,
+      "sequence": 240,
       "shared_capture_group_owner": "tracks.BD.synth.Sweep Depth",
       "status": "capture_required",
       "track": "CH"
@@ -9235,7 +9824,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 20,
       "semantic_path": "tracks.CH.synth.Transient Decay",
-      "sequence": 222,
+      "sequence": 241,
       "shared_capture_group_owner": "tracks.BD.synth.Sweep Time",
       "status": "capture_required",
       "track": "CH"
@@ -9285,7 +9874,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 0,
       "semantic_path": "tracks.CH.synth.Osc Reset",
-      "sequence": 223,
+      "sequence": 242,
       "shared_capture_group_owner": "tracks.BD.synth.Hold Time",
       "status": "capture_required",
       "track": "CH"
@@ -9324,7 +9913,7 @@
       "reason": "Sample Level has a candidate sound offset but remains locked; zero playback must be proven before the no-sample-dependency requirement can pass",
       "requested_value": 0,
       "semantic_path": "tracks.CH.sample.level",
-      "sequence": 224,
+      "sequence": 243,
       "shared_capture_group_owner": "tracks.BD.sample.level",
       "status": "capture_required",
       "track": "CH"
@@ -9358,7 +9947,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.CH.filter.ATK",
-      "sequence": 225,
+      "sequence": 244,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CH"
@@ -9392,7 +9981,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 6,
       "semantic_path": "tracks.CH.filter.DEC",
-      "sequence": 226,
+      "sequence": 245,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CH"
@@ -9426,7 +10015,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.CH.filter.SUS",
-      "sequence": 227,
+      "sequence": 246,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CH"
@@ -9460,7 +10049,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 3,
       "semantic_path": "tracks.CH.filter.REL",
-      "sequence": 228,
+      "sequence": 247,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CH"
@@ -9494,7 +10083,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 66,
       "semantic_path": "tracks.CH.filter.FRQ",
-      "sequence": 229,
+      "sequence": 248,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CH"
@@ -9528,7 +10117,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 6,
       "semantic_path": "tracks.CH.filter.RES",
-      "sequence": 230,
+      "sequence": 249,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CH"
@@ -9565,7 +10154,7 @@
         "name": "HP2"
       },
       "semantic_path": "tracks.CH.filter.TYPE",
-      "sequence": 231,
+      "sequence": 250,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CH"
@@ -9599,7 +10188,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 64,
       "semantic_path": "tracks.CH.filter.ENV",
-      "sequence": 232,
+      "sequence": 251,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CH"
@@ -9633,7 +10222,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.CH.amp.ATK",
-      "sequence": 233,
+      "sequence": 252,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CH"
@@ -9667,7 +10256,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 4,
       "semantic_path": "tracks.CH.amp.HLD",
-      "sequence": 234,
+      "sequence": 253,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CH"
@@ -9701,7 +10290,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 20,
       "semantic_path": "tracks.CH.amp.DEC",
-      "sequence": 235,
+      "sequence": 254,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CH"
@@ -9735,7 +10324,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 8,
       "semantic_path": "tracks.CH.amp.OVR",
-      "sequence": 236,
+      "sequence": 255,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CH"
@@ -9769,7 +10358,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.CH.amp.DEL",
-      "sequence": 237,
+      "sequence": 256,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CH"
@@ -9803,7 +10392,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.CH.amp.REV",
-      "sequence": 238,
+      "sequence": 257,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CH"
@@ -9837,7 +10426,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 58,
       "semantic_path": "tracks.CH.amp.PAN",
-      "sequence": 239,
+      "sequence": 258,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CH"
@@ -9876,10 +10465,72 @@
       "reason": "Amp Volume is locked and has no promoted saved-kit writer contract",
       "requested_value": 84,
       "semantic_path": "tracks.CH.amp.VOL",
-      "sequence": 240,
+      "sequence": 259,
       "shared_capture_group_owner": "tracks.BD.amp.VOL",
       "status": "capture_required",
       "track": "CH"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "sound_name",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "noncritical sound naming remains reference-preserved; no manual sound-parameter entry is required",
+      "requested_value": "R01 OPEN",
+      "semantic_path": "tracks.OH.sound_name",
+      "sequence": 260,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "OH"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "design_role",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "design-role metadata does not request a saved-kit byte mutation",
+      "requested_value": "Short open-hat punctuation rather than a wash.",
+      "semantic_path": "tracks.OH.design_role",
+      "sequence": 261,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "OH"
     },
     {
       "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
@@ -9910,7 +10561,7 @@
       "reason": "reference machine already matches the requested catalog enum; no machine write is required",
       "requested_value": "OH Classic",
       "semantic_path": "tracks.OH.machine",
-      "sequence": 241,
+      "sequence": 262,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "OH"
@@ -9949,7 +10600,7 @@
       "reason": "Track Level NRPN 1:100 has no promoted saved-kit location",
       "requested_value": 76,
       "semantic_path": "track_levels.OH",
-      "sequence": 242,
+      "sequence": 263,
       "shared_capture_group_owner": "track_levels.BD",
       "status": "capture_required",
       "track": "OH"
@@ -9999,7 +10650,7 @@
       "reason": "source Level is locked for mutation and lacks a promoted saved-kit writer",
       "requested_value": 84,
       "semantic_path": "tracks.OH.synth.Level",
-      "sequence": 243,
+      "sequence": 264,
       "shared_capture_group_owner": "tracks.BD.synth.Level",
       "status": "capture_required",
       "track": "OH"
@@ -10049,7 +10700,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 69,
       "semantic_path": "tracks.OH.synth.Tune",
-      "sequence": 244,
+      "sequence": 265,
       "shared_capture_group_owner": "tracks.BD.synth.Tune",
       "status": "capture_required",
       "track": "OH"
@@ -10099,7 +10750,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 34,
       "semantic_path": "tracks.OH.synth.Decay",
-      "sequence": 245,
+      "sequence": 266,
       "shared_capture_group_owner": "tracks.BD.synth.Decay",
       "status": "capture_required",
       "track": "OH"
@@ -10149,7 +10800,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 80,
       "semantic_path": "tracks.OH.synth.Color",
-      "sequence": 246,
+      "sequence": 267,
       "shared_capture_group_owner": "tracks.BD.synth.Sweep Depth",
       "status": "capture_required",
       "track": "OH"
@@ -10188,7 +10839,7 @@
       "reason": "Sample Level has a candidate sound offset but remains locked; zero playback must be proven before the no-sample-dependency requirement can pass",
       "requested_value": 0,
       "semantic_path": "tracks.OH.sample.level",
-      "sequence": 247,
+      "sequence": 268,
       "shared_capture_group_owner": "tracks.BD.sample.level",
       "status": "capture_required",
       "track": "OH"
@@ -10222,7 +10873,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.OH.filter.ATK",
-      "sequence": 248,
+      "sequence": 269,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "OH"
@@ -10256,7 +10907,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 6,
       "semantic_path": "tracks.OH.filter.DEC",
-      "sequence": 249,
+      "sequence": 270,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "OH"
@@ -10290,7 +10941,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.OH.filter.SUS",
-      "sequence": 250,
+      "sequence": 271,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "OH"
@@ -10324,7 +10975,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 4,
       "semantic_path": "tracks.OH.filter.REL",
-      "sequence": 251,
+      "sequence": 272,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "OH"
@@ -10358,7 +11009,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 60,
       "semantic_path": "tracks.OH.filter.FRQ",
-      "sequence": 252,
+      "sequence": 273,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "OH"
@@ -10392,7 +11043,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 4,
       "semantic_path": "tracks.OH.filter.RES",
-      "sequence": 253,
+      "sequence": 274,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "OH"
@@ -10429,7 +11080,7 @@
         "name": "HP2"
       },
       "semantic_path": "tracks.OH.filter.TYPE",
-      "sequence": 254,
+      "sequence": 275,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "OH"
@@ -10463,7 +11114,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 64,
       "semantic_path": "tracks.OH.filter.ENV",
-      "sequence": 255,
+      "sequence": 276,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "OH"
@@ -10497,7 +11148,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.OH.amp.ATK",
-      "sequence": 256,
+      "sequence": 277,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "OH"
@@ -10531,7 +11182,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 8,
       "semantic_path": "tracks.OH.amp.HLD",
-      "sequence": 257,
+      "sequence": 278,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "OH"
@@ -10565,7 +11216,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 38,
       "semantic_path": "tracks.OH.amp.DEC",
-      "sequence": 258,
+      "sequence": 279,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "OH"
@@ -10599,7 +11250,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 8,
       "semantic_path": "tracks.OH.amp.OVR",
-      "sequence": 259,
+      "sequence": 280,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "OH"
@@ -10633,7 +11284,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.OH.amp.DEL",
-      "sequence": 260,
+      "sequence": 281,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "OH"
@@ -10667,7 +11318,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.OH.amp.REV",
-      "sequence": 261,
+      "sequence": 282,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "OH"
@@ -10701,7 +11352,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 72,
       "semantic_path": "tracks.OH.amp.PAN",
-      "sequence": 262,
+      "sequence": 283,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "OH"
@@ -10740,10 +11391,72 @@
       "reason": "Amp Volume is locked and has no promoted saved-kit writer contract",
       "requested_value": 80,
       "semantic_path": "tracks.OH.amp.VOL",
-      "sequence": 263,
+      "sequence": 284,
       "shared_capture_group_owner": "tracks.BD.amp.VOL",
       "status": "capture_required",
       "track": "OH"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "sound_name",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "noncritical sound naming remains reference-preserved; no manual sound-parameter entry is required",
+      "requested_value": "R01 RIDE",
+      "semantic_path": "tracks.CY.sound_name",
+      "sequence": 285,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "CY"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "design_role",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "design-role metadata does not request a saved-kit byte mutation",
+      "requested_value": "Controlled peak ride. The CY Ride partial mix is an experimental sound target.",
+      "semantic_path": "tracks.CY.design_role",
+      "sequence": 286,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "CY"
     },
     {
       "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
@@ -10789,7 +11502,7 @@
       "reason": "requested machine differs from the reference; the apparent machine byte and adjacent validity/high-bit behavior are not writer-promoted",
       "requested_value": "CY Ride",
       "semantic_path": "tracks.CY.machine",
-      "sequence": 264,
+      "sequence": 287,
       "shared_capture_group_owner": "tracks.BD.machine",
       "status": "capture_required",
       "track": "CY"
@@ -10828,7 +11541,7 @@
       "reason": "Track Level NRPN 1:100 has no promoted saved-kit location",
       "requested_value": 70,
       "semantic_path": "track_levels.CY",
-      "sequence": 265,
+      "sequence": 288,
       "shared_capture_group_owner": "track_levels.BD",
       "status": "capture_required",
       "track": "CY"
@@ -10878,7 +11591,7 @@
       "reason": "source Level is locked for mutation and lacks a promoted saved-kit writer",
       "requested_value": 76,
       "semantic_path": "tracks.CY.synth.Level",
-      "sequence": 266,
+      "sequence": 289,
       "shared_capture_group_owner": "tracks.BD.synth.Level",
       "status": "capture_required",
       "track": "CY"
@@ -10928,7 +11641,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 60,
       "semantic_path": "tracks.CY.synth.Tune",
-      "sequence": 267,
+      "sequence": 290,
       "shared_capture_group_owner": "tracks.BD.synth.Tune",
       "status": "capture_required",
       "track": "CY"
@@ -10978,7 +11691,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 52,
       "semantic_path": "tracks.CY.synth.Tail Decay",
-      "sequence": 268,
+      "sequence": 291,
       "shared_capture_group_owner": "tracks.BD.synth.Decay",
       "status": "capture_required",
       "track": "CY"
@@ -11028,7 +11741,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 22,
       "semantic_path": "tracks.CY.synth.Hit Decay",
-      "sequence": 269,
+      "sequence": 292,
       "shared_capture_group_owner": "tracks.BD.synth.Sweep Depth",
       "status": "capture_required",
       "track": "CY"
@@ -11078,7 +11791,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 0,
       "semantic_path": "tracks.CY.synth.Cymbal Type",
-      "sequence": 270,
+      "sequence": 293,
       "shared_capture_group_owner": "tracks.BD.synth.Sweep Time",
       "status": "capture_required",
       "track": "CY"
@@ -11128,7 +11841,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 100,
       "semantic_path": "tracks.CY.synth.Component 1",
-      "sequence": 271,
+      "sequence": 294,
       "shared_capture_group_owner": "tracks.BD.synth.Hold Time",
       "status": "capture_required",
       "track": "CY"
@@ -11178,7 +11891,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 42,
       "semantic_path": "tracks.CY.synth.Component 2",
-      "sequence": 272,
+      "sequence": 295,
       "shared_capture_group_owner": "tracks.BD.synth.Tick Level",
       "status": "capture_required",
       "track": "CY"
@@ -11228,7 +11941,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 18,
       "semantic_path": "tracks.CY.synth.Component 3",
-      "sequence": 273,
+      "sequence": 296,
       "shared_capture_group_owner": "tracks.BD.synth.Waveform",
       "status": "capture_required",
       "track": "CY"
@@ -11267,7 +11980,7 @@
       "reason": "Sample Level has a candidate sound offset but remains locked; zero playback must be proven before the no-sample-dependency requirement can pass",
       "requested_value": 0,
       "semantic_path": "tracks.CY.sample.level",
-      "sequence": 274,
+      "sequence": 297,
       "shared_capture_group_owner": "tracks.BD.sample.level",
       "status": "capture_required",
       "track": "CY"
@@ -11301,7 +12014,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.CY.filter.ATK",
-      "sequence": 275,
+      "sequence": 298,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CY"
@@ -11335,7 +12048,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 6,
       "semantic_path": "tracks.CY.filter.DEC",
-      "sequence": 276,
+      "sequence": 299,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CY"
@@ -11369,7 +12082,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.CY.filter.SUS",
-      "sequence": 277,
+      "sequence": 300,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CY"
@@ -11403,7 +12116,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 5,
       "semantic_path": "tracks.CY.filter.REL",
-      "sequence": 278,
+      "sequence": 301,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CY"
@@ -11437,7 +12150,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 55,
       "semantic_path": "tracks.CY.filter.FRQ",
-      "sequence": 279,
+      "sequence": 302,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CY"
@@ -11471,7 +12184,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 4,
       "semantic_path": "tracks.CY.filter.RES",
-      "sequence": 280,
+      "sequence": 303,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CY"
@@ -11508,7 +12221,7 @@
         "name": "HP1"
       },
       "semantic_path": "tracks.CY.filter.TYPE",
-      "sequence": 281,
+      "sequence": 304,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CY"
@@ -11542,7 +12255,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 64,
       "semantic_path": "tracks.CY.filter.ENV",
-      "sequence": 282,
+      "sequence": 305,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CY"
@@ -11576,7 +12289,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.CY.amp.ATK",
-      "sequence": 283,
+      "sequence": 306,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CY"
@@ -11610,7 +12323,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 10,
       "semantic_path": "tracks.CY.amp.HLD",
-      "sequence": 284,
+      "sequence": 307,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CY"
@@ -11644,7 +12357,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 55,
       "semantic_path": "tracks.CY.amp.DEC",
-      "sequence": 285,
+      "sequence": 308,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CY"
@@ -11678,7 +12391,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 6,
       "semantic_path": "tracks.CY.amp.OVR",
-      "sequence": 286,
+      "sequence": 309,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CY"
@@ -11712,7 +12425,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.CY.amp.DEL",
-      "sequence": 287,
+      "sequence": 310,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CY"
@@ -11746,7 +12459,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.CY.amp.REV",
-      "sequence": 288,
+      "sequence": 311,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CY"
@@ -11780,7 +12493,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 69,
       "semantic_path": "tracks.CY.amp.PAN",
-      "sequence": 289,
+      "sequence": 312,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CY"
@@ -11819,10 +12532,72 @@
       "reason": "Amp Volume is locked and has no promoted saved-kit writer contract",
       "requested_value": 74,
       "semantic_path": "tracks.CY.amp.VOL",
-      "sequence": 290,
+      "sequence": 313,
       "shared_capture_group_owner": "tracks.BD.amp.VOL",
       "status": "capture_required",
       "track": "CY"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "sound_name",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "noncritical sound naming remains reference-preserved; no manual sound-parameter entry is required",
+      "requested_value": "R01 METAL",
+      "semantic_path": "tracks.CB.sound_name",
+      "sequence": 314,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "CB"
+    },
+    {
+      "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "rytm.track_metadata",
+      "captures": [],
+      "catalog_parameter": "design_role",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "design-role metadata does not request a saved-kit byte mutation",
+      "requested_value": "Sparse industrial metallic accent.",
+      "semantic_path": "tracks.CB.design_role",
+      "sequence": 315,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "CB"
     },
     {
       "baseline_dump_filename": "reference/RYTM_Test1_Init_Kit.syx",
@@ -11868,7 +12643,7 @@
       "reason": "requested machine differs from the reference; the apparent machine byte and adjacent validity/high-bit behavior are not writer-promoted",
       "requested_value": "CB Metallic",
       "semantic_path": "tracks.CB.machine",
-      "sequence": 291,
+      "sequence": 316,
       "shared_capture_group_owner": "tracks.BD.machine",
       "status": "capture_required",
       "track": "CB"
@@ -11907,7 +12682,7 @@
       "reason": "Track Level NRPN 1:100 has no promoted saved-kit location",
       "requested_value": 76,
       "semantic_path": "track_levels.CB",
-      "sequence": 292,
+      "sequence": 317,
       "shared_capture_group_owner": "track_levels.BD",
       "status": "capture_required",
       "track": "CB"
@@ -11957,7 +12732,7 @@
       "reason": "source Level is locked for mutation and lacks a promoted saved-kit writer",
       "requested_value": 84,
       "semantic_path": "tracks.CB.synth.Level",
-      "sequence": 293,
+      "sequence": 318,
       "shared_capture_group_owner": "tracks.BD.synth.Level",
       "status": "capture_required",
       "track": "CB"
@@ -12007,7 +12782,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 50,
       "semantic_path": "tracks.CB.synth.Tune",
-      "sequence": 294,
+      "sequence": 319,
       "shared_capture_group_owner": "tracks.BD.synth.Tune",
       "status": "capture_required",
       "track": "CB"
@@ -12057,7 +12832,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 26,
       "semantic_path": "tracks.CB.synth.Decay Time",
-      "sequence": 295,
+      "sequence": 320,
       "shared_capture_group_owner": "tracks.BD.synth.Decay",
       "status": "capture_required",
       "track": "CB"
@@ -12107,7 +12882,7 @@
       "reason": "manual-backed source row is documented-only for saved-kit mutation",
       "requested_value": 81,
       "semantic_path": "tracks.CB.synth.Detune",
-      "sequence": 296,
+      "sequence": 321,
       "shared_capture_group_owner": "tracks.BD.synth.Sweep Depth",
       "status": "capture_required",
       "track": "CB"
@@ -12146,7 +12921,7 @@
       "reason": "Sample Level has a candidate sound offset but remains locked; zero playback must be proven before the no-sample-dependency requirement can pass",
       "requested_value": 0,
       "semantic_path": "tracks.CB.sample.level",
-      "sequence": 297,
+      "sequence": 322,
       "shared_capture_group_owner": "tracks.BD.sample.level",
       "status": "capture_required",
       "track": "CB"
@@ -12180,7 +12955,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.CB.filter.ATK",
-      "sequence": 298,
+      "sequence": 323,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CB"
@@ -12214,7 +12989,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 14,
       "semantic_path": "tracks.CB.filter.DEC",
-      "sequence": 299,
+      "sequence": 324,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CB"
@@ -12248,7 +13023,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.CB.filter.SUS",
-      "sequence": 300,
+      "sequence": 325,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CB"
@@ -12282,7 +13057,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 5,
       "semantic_path": "tracks.CB.filter.REL",
-      "sequence": 301,
+      "sequence": 326,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CB"
@@ -12316,7 +13091,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 72,
       "semantic_path": "tracks.CB.filter.FRQ",
-      "sequence": 302,
+      "sequence": 327,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CB"
@@ -12350,7 +13125,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 36,
       "semantic_path": "tracks.CB.filter.RES",
-      "sequence": 303,
+      "sequence": 328,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CB"
@@ -12387,7 +13162,7 @@
         "name": "Bandpass"
       },
       "semantic_path": "tracks.CB.filter.TYPE",
-      "sequence": 304,
+      "sequence": 329,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CB"
@@ -12421,7 +13196,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 78,
       "semantic_path": "tracks.CB.filter.ENV",
-      "sequence": 305,
+      "sequence": 330,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CB"
@@ -12455,7 +13230,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.CB.amp.ATK",
-      "sequence": 306,
+      "sequence": 331,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CB"
@@ -12489,7 +13264,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 6,
       "semantic_path": "tracks.CB.amp.HLD",
-      "sequence": 307,
+      "sequence": 332,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CB"
@@ -12523,7 +13298,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 28,
       "semantic_path": "tracks.CB.amp.DEC",
-      "sequence": 308,
+      "sequence": 333,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CB"
@@ -12557,7 +13332,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 22,
       "semantic_path": "tracks.CB.amp.OVR",
-      "sequence": 309,
+      "sequence": 334,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CB"
@@ -12591,7 +13366,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.CB.amp.DEL",
-      "sequence": 310,
+      "sequence": 335,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CB"
@@ -12625,7 +13400,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 0,
       "semantic_path": "tracks.CB.amp.REV",
-      "sequence": 311,
+      "sequence": 336,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CB"
@@ -12659,7 +13434,7 @@
       "reason": "validated runtime semantic, established sound-record location, and explicit 7-bit/typed-enum conversion are all present",
       "requested_value": 76,
       "semantic_path": "tracks.CB.amp.PAN",
-      "sequence": 312,
+      "sequence": 337,
       "shared_capture_group_owner": null,
       "status": "mapped",
       "track": "CB"
@@ -12698,7 +13473,7 @@
       "reason": "Amp Volume is locked and has no promoted saved-kit writer contract",
       "requested_value": 80,
       "semantic_path": "tracks.CB.amp.VOL",
-      "sequence": 313,
+      "sequence": 338,
       "shared_capture_group_owner": "tracks.BD.amp.VOL",
       "status": "capture_required",
       "track": "CB"
@@ -12723,7 +13498,7 @@
       "tracks.LT.machine",
       "tracks.MT.machine"
     ],
-    "sha256": "29381c0dcba8851390b855f3b4ef237f9b78b72a5206b5a26a35c5792c5ad0e5",
+    "sha256": "fc96fb2806ddfe4ff422fae4174723a322d2a79cc940c5c7a80bb2a34fdaa5c0",
     "superseded_by_current_specs": [
       "tracks.BD.synth.WAV",
       "tracks.BT.synth.SNP",

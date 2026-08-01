@@ -44,6 +44,130 @@
         "unpacked_offset": null,
         "unpacked_track_stride": null
       },
+      "capture_group": "a4.auxiliary_preserve",
+      "captures": [],
+      "catalog_parameter": "FX",
+      "changed_dump_filenames": [],
+      "converter_family": "enum",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "the specification explicitly preserves this auxiliary saved-kit field",
+      "requested_value": "preserve_reference",
+      "semantic_path": "track_levels.FX",
+      "sequence": 2,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": null
+    },
+    {
+      "baseline_dump_filename": "reference/A4_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "a4.auxiliary_preserve",
+      "captures": [],
+      "catalog_parameter": "CV",
+      "changed_dump_filenames": [],
+      "converter_family": "enum",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "the specification explicitly preserves this auxiliary saved-kit field",
+      "requested_value": "preserve_reference",
+      "semantic_path": "track_levels.CV",
+      "sequence": 3,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": null
+    },
+    {
+      "baseline_dump_filename": "reference/A4_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "a4.track_metadata",
+      "captures": [],
+      "catalog_parameter": "sound_name",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "noncritical sound naming remains reference-preserved; no manual sound-parameter entry is required",
+      "requested_value": "R01 JACKBASS",
+      "semantic_path": "tracks.T1.sound_name",
+      "sequence": 4,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "T1"
+    },
+    {
+      "baseline_dump_filename": "reference/A4_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "a4.track_metadata",
+      "captures": [],
+      "catalog_parameter": "design_role",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "design-role metadata does not request a saved-kit byte mutation",
+      "requested_value": "Short jacking bass-percussion voice; not a competing sub-bass.",
+      "semantic_path": "tracks.T1.design_role",
+      "sequence": 5,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "T1"
+    },
+    {
+      "baseline_dump_filename": "reference/A4_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
       "capture_group": "a4.track_level",
       "captures": [
         {
@@ -106,7 +230,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 100,
       "semantic_path": "track_levels.T1",
-      "sequence": 2,
+      "sequence": 6,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -174,7 +298,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_1.coarse_tune_semitones",
-      "sequence": 3,
+      "sequence": 7,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -242,7 +366,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_1.fine_tune_cents",
-      "sequence": 4,
+      "sequence": 8,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -310,7 +434,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_1.linear_detune_hz",
-      "sequence": 5,
+      "sequence": 9,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -369,7 +493,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": true,
       "semantic_path": "tracks.T1.oscillator_1.keytrack",
-      "sequence": 6,
+      "sequence": 10,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -446,7 +570,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 96,
       "semantic_path": "tracks.T1.oscillator_1.level",
-      "sequence": 7,
+      "sequence": 11,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -505,7 +629,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "triangle",
       "semantic_path": "tracks.T1.oscillator_1.waveform",
-      "sequence": 8,
+      "sequence": 12,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -564,7 +688,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "off",
       "semantic_path": "tracks.T1.oscillator_1.sub_oscillator",
-      "sequence": 9,
+      "sequence": 13,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -632,7 +756,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 64,
       "semantic_path": "tracks.T1.oscillator_1.pulse_width",
-      "sequence": 10,
+      "sequence": 14,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -700,7 +824,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_1.pwm_speed",
-      "sequence": 11,
+      "sequence": 15,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -768,7 +892,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_1.pwm_depth",
-      "sequence": 12,
+      "sequence": 16,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -836,7 +960,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 12,
       "semantic_path": "tracks.T1.oscillator_2.coarse_tune_semitones",
-      "sequence": 13,
+      "sequence": 17,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -904,7 +1028,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": -6,
       "semantic_path": "tracks.T1.oscillator_2.fine_tune_cents",
-      "sequence": 14,
+      "sequence": 18,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -972,7 +1096,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_2.linear_detune_hz",
-      "sequence": 15,
+      "sequence": 19,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -1031,7 +1155,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": true,
       "semantic_path": "tracks.T1.oscillator_2.keytrack",
-      "sequence": 16,
+      "sequence": 20,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -1108,7 +1232,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 38,
       "semantic_path": "tracks.T1.oscillator_2.level",
-      "sequence": 17,
+      "sequence": 21,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -1167,7 +1291,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "transistor_pulse",
       "semantic_path": "tracks.T1.oscillator_2.waveform",
-      "sequence": 18,
+      "sequence": 22,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -1226,7 +1350,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "off",
       "semantic_path": "tracks.T1.oscillator_2.sub_oscillator",
-      "sequence": 19,
+      "sequence": 23,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -1303,7 +1427,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 42,
       "semantic_path": "tracks.T1.oscillator_2.pulse_width",
-      "sequence": 20,
+      "sequence": 24,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -1371,7 +1495,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_2.pwm_speed",
-      "sequence": 21,
+      "sequence": 25,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -1439,7 +1563,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_2.pwm_depth",
-      "sequence": 22,
+      "sequence": 26,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -1498,7 +1622,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": false,
       "semantic_path": "tracks.T1.oscillator_common.osc1_am",
-      "sequence": 23,
+      "sequence": 27,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -1557,7 +1681,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "off",
       "semantic_path": "tracks.T1.oscillator_common.sync_mode",
-      "sequence": 24,
+      "sequence": 28,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -1625,7 +1749,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_common.sync_amount",
-      "sequence": 25,
+      "sequence": 29,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -1702,7 +1826,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 7,
       "semantic_path": "tracks.T1.oscillator_common.bend_depth",
-      "sequence": 26,
+      "sequence": 30,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -1779,7 +1903,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 10,
       "semantic_path": "tracks.T1.oscillator_common.note_slide_time",
-      "sequence": 27,
+      "sequence": 31,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -1838,7 +1962,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": false,
       "semantic_path": "tracks.T1.oscillator_common.osc2_am",
-      "sequence": 28,
+      "sequence": 32,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -1897,7 +2021,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": true,
       "semantic_path": "tracks.T1.oscillator_common.oscillator_retrigger",
-      "sequence": 29,
+      "sequence": 33,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -1965,7 +2089,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_common.vibrato_fade",
-      "sequence": 30,
+      "sequence": 34,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -2033,7 +2157,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_common.vibrato_speed",
-      "sequence": 31,
+      "sequence": 35,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -2101,7 +2225,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.oscillator_common.vibrato_depth",
-      "sequence": 32,
+      "sequence": 36,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -2169,7 +2293,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.noise.sample_and_hold",
-      "sequence": 33,
+      "sequence": 37,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -2234,7 +2358,7 @@
       "reason": "no manual MIDI address exists; use front-panel-only differential capture",
       "requested_value": 0,
       "semantic_path": "tracks.T1.noise.color",
-      "sequence": 34,
+      "sequence": 38,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -2302,7 +2426,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.noise.fade",
-      "sequence": 35,
+      "sequence": 39,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -2370,7 +2494,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.noise.level",
-      "sequence": 36,
+      "sequence": 40,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -2455,7 +2579,7 @@
       "reason": "Filter1 Frequency has candidate-promoted observations, but the source dumps are not supplied here and no arbitrary-value writer conversion is promoted",
       "requested_value": 46,
       "semantic_path": "tracks.T1.filter_1.frequency",
-      "sequence": 37,
+      "sequence": 41,
       "shared_capture_group_owner": null,
       "status": "candidate_only",
       "track": "T1"
@@ -2531,7 +2655,7 @@
       "reason": "Filter1 Resonance has candidate-promoted observations, but the source dumps are not supplied here and no arbitrary-value writer conversion is promoted",
       "requested_value": 18,
       "semantic_path": "tracks.T1.filter_1.resonance",
-      "sequence": 38,
+      "sequence": 42,
       "shared_capture_group_owner": null,
       "status": "candidate_only",
       "track": "T1"
@@ -2608,7 +2732,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": -16,
       "semantic_path": "tracks.T1.filter_1.overdrive",
-      "sequence": 39,
+      "sequence": 43,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -2685,7 +2809,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 24,
       "semantic_path": "tracks.T1.filter_1.keytrack",
-      "sequence": 40,
+      "sequence": 44,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -2762,7 +2886,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 48,
       "semantic_path": "tracks.T1.filter_1.envelope_depth",
-      "sequence": 41,
+      "sequence": 45,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -2847,7 +2971,7 @@
       "reason": "Filter2 Frequency has candidate-promoted observations, but the source dumps are not supplied here and no arbitrary-value writer conversion is promoted",
       "requested_value": 24,
       "semantic_path": "tracks.T1.filter_2.frequency",
-      "sequence": 42,
+      "sequence": 46,
       "shared_capture_group_owner": null,
       "status": "candidate_only",
       "track": "T1"
@@ -2855,12 +2979,12 @@
     {
       "baseline_dump_filename": "reference/A4_Test1_Init_Kit.syx",
       "candidate_byte_location": {
-        "frame_offset": null,
-        "packed_data_offset": null,
-        "packed_track_stride": null,
+        "frame_offset": 175,
+        "packed_data_offset": 170,
+        "packed_track_stride": 400,
         "promoted": false,
         "unpacked_offset": null,
-        "unpacked_track_stride": null
+        "unpacked_track_stride": 350
       },
       "capture_group": "a4.filter_2.resonance",
       "captures": [
@@ -2907,10 +3031,9 @@
       "converter_family": "direct_7bit",
       "critical": true,
       "evidence_needed": [
-        "one-parameter-at-a-time saved-kit differentials",
-        "same observation on a second track before promoting a track stride",
-        "all changed packed and unpacked bytes must be explained",
-        "minimum, midpoint, maximum observations for Filter2 Resonance"
+        "supply or reproduce every recorded candidate differential dump",
+        "observe fine/intermediate values needed for the requested target",
+        "promote a typed writer only after semantic decode/encode tests pass"
       ],
       "midi_address": {
         "controller": 90,
@@ -2921,12 +3044,12 @@
       },
       "normalized_midi_value": 6,
       "number_of_changed_captures": 4,
-      "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
+      "reason": "Filter2 Resonance has candidate-promoted observations, but the source dumps are not supplied here and no arbitrary-value writer conversion is promoted",
       "requested_value": 6,
       "semantic_path": "tracks.T1.filter_2.resonance",
-      "sequence": 43,
+      "sequence": 47,
       "shared_capture_group_owner": null,
-      "status": "capture_required",
+      "status": "candidate_only",
       "track": "T1"
     },
     {
@@ -3028,7 +3151,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "HP1",
       "semantic_path": "tracks.T1.filter_2.type",
-      "sequence": 44,
+      "sequence": 48,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -3096,7 +3219,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.filter_2.keytrack",
-      "sequence": 45,
+      "sequence": 49,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -3164,7 +3287,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.filter_2.envelope_depth",
-      "sequence": 46,
+      "sequence": 50,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -3232,7 +3355,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.amp.attack",
-      "sequence": 47,
+      "sequence": 51,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -3309,7 +3432,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 32,
       "semantic_path": "tracks.T1.amp.decay",
-      "sequence": 48,
+      "sequence": 52,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -3377,7 +3500,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.amp.sustain",
-      "sequence": 49,
+      "sequence": 53,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -3454,7 +3577,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 6,
       "semantic_path": "tracks.T1.amp.release",
-      "sequence": 50,
+      "sequence": 54,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -3522,7 +3645,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "exponential_restart_from_zero",
       "semantic_path": "tracks.T1.amp.envelope_shape",
-      "sequence": 51,
+      "sequence": 55,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -3590,7 +3713,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.amp.chorus_send",
-      "sequence": 52,
+      "sequence": 56,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -3658,7 +3781,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.amp.delay_send",
-      "sequence": 53,
+      "sequence": 57,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -3726,7 +3849,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.amp.reverb_send",
-      "sequence": 54,
+      "sequence": 58,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -3794,7 +3917,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.amp.pan",
-      "sequence": 55,
+      "sequence": 59,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -3871,7 +3994,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 100,
       "semantic_path": "tracks.T1.amp.volume",
-      "sequence": 56,
+      "sequence": 60,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -3939,7 +4062,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.filter_envelope.attack",
-      "sequence": 57,
+      "sequence": 61,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -4016,7 +4139,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 24,
       "semantic_path": "tracks.T1.filter_envelope.decay",
-      "sequence": 58,
+      "sequence": 62,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -4084,7 +4207,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T1.filter_envelope.sustain",
-      "sequence": 59,
+      "sequence": 63,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -4161,7 +4284,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 5,
       "semantic_path": "tracks.T1.filter_envelope.release",
-      "sequence": 60,
+      "sequence": 64,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -4229,7 +4352,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "exponential_restart_from_zero",
       "semantic_path": "tracks.T1.filter_envelope.envelope_shape",
-      "sequence": 61,
+      "sequence": 65,
       "shared_capture_group_owner": null,
       "status": "capture_required",
       "track": "T1"
@@ -4263,10 +4386,72 @@
       "reason": "the current specification explicitly preserves this saved-kit field",
       "requested_value": "preserve_reference",
       "semantic_path": "tracks.T1.filter_envelope.gate_length",
-      "sequence": 62,
+      "sequence": 66,
       "shared_capture_group_owner": null,
       "status": "preserve_reference",
       "track": "T1"
+    },
+    {
+      "baseline_dump_filename": "reference/A4_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "a4.track_metadata",
+      "captures": [],
+      "catalog_parameter": "sound_name",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "noncritical sound naming remains reference-preserved; no manual sound-parameter entry is required",
+      "requested_value": "R01 WALKSAW",
+      "semantic_path": "tracks.T2.sound_name",
+      "sequence": 67,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "T2"
+    },
+    {
+      "baseline_dump_filename": "reference/A4_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "a4.track_metadata",
+      "captures": [],
+      "catalog_parameter": "design_role",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "design-role metadata does not request a saved-kit byte mutation",
+      "requested_value": "Short phase-rich walking saw stab; principal midrange hook.",
+      "semantic_path": "tracks.T2.design_role",
+      "sequence": 68,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "T2"
     },
     {
       "baseline_dump_filename": "reference/A4_Test1_Init_Kit.syx",
@@ -4313,7 +4498,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 92,
       "semantic_path": "track_levels.T2",
-      "sequence": 63,
+      "sequence": 69,
       "shared_capture_group_owner": "track_levels.T1",
       "status": "capture_required",
       "track": "T2"
@@ -4363,7 +4548,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_1.coarse_tune_semitones",
-      "sequence": 64,
+      "sequence": 70,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.coarse_tune_semitones",
       "status": "capture_required",
       "track": "T2"
@@ -4413,7 +4598,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_1.fine_tune_cents",
-      "sequence": 65,
+      "sequence": 71,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.fine_tune_cents",
       "status": "capture_required",
       "track": "T2"
@@ -4463,7 +4648,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 1,
       "semantic_path": "tracks.T2.oscillator_1.linear_detune_hz",
-      "sequence": 66,
+      "sequence": 72,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.linear_detune_hz",
       "status": "capture_required",
       "track": "T2"
@@ -4513,7 +4698,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": true,
       "semantic_path": "tracks.T2.oscillator_1.keytrack",
-      "sequence": 67,
+      "sequence": 73,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.keytrack",
       "status": "capture_required",
       "track": "T2"
@@ -4563,7 +4748,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 108,
       "semantic_path": "tracks.T2.oscillator_1.level",
-      "sequence": 68,
+      "sequence": 74,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.level",
       "status": "capture_required",
       "track": "T2"
@@ -4613,7 +4798,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "sawtooth",
       "semantic_path": "tracks.T2.oscillator_1.waveform",
-      "sequence": 69,
+      "sequence": 75,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.waveform",
       "status": "capture_required",
       "track": "T2"
@@ -4663,7 +4848,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "off",
       "semantic_path": "tracks.T2.oscillator_1.sub_oscillator",
-      "sequence": 70,
+      "sequence": 76,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.sub_oscillator",
       "status": "capture_required",
       "track": "T2"
@@ -4713,7 +4898,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 76,
       "semantic_path": "tracks.T2.oscillator_1.pulse_width",
-      "sequence": 71,
+      "sequence": 77,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.pulse_width",
       "status": "capture_required",
       "track": "T2"
@@ -4763,7 +4948,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_1.pwm_speed",
-      "sequence": 72,
+      "sequence": 78,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.pwm_speed",
       "status": "capture_required",
       "track": "T2"
@@ -4813,7 +4998,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_1.pwm_depth",
-      "sequence": 73,
+      "sequence": 79,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.pwm_depth",
       "status": "capture_required",
       "track": "T2"
@@ -4863,7 +5048,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 12,
       "semantic_path": "tracks.T2.oscillator_2.coarse_tune_semitones",
-      "sequence": 74,
+      "sequence": 80,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.coarse_tune_semitones",
       "status": "capture_required",
       "track": "T2"
@@ -4913,7 +5098,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": -7,
       "semantic_path": "tracks.T2.oscillator_2.fine_tune_cents",
-      "sequence": 75,
+      "sequence": 81,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.fine_tune_cents",
       "status": "capture_required",
       "track": "T2"
@@ -4963,7 +5148,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_2.linear_detune_hz",
-      "sequence": 76,
+      "sequence": 82,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.linear_detune_hz",
       "status": "capture_required",
       "track": "T2"
@@ -5013,7 +5198,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": true,
       "semantic_path": "tracks.T2.oscillator_2.keytrack",
-      "sequence": 77,
+      "sequence": 83,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.keytrack",
       "status": "capture_required",
       "track": "T2"
@@ -5063,7 +5248,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 78,
       "semantic_path": "tracks.T2.oscillator_2.level",
-      "sequence": 78,
+      "sequence": 84,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.level",
       "status": "capture_required",
       "track": "T2"
@@ -5113,7 +5298,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "sawtooth",
       "semantic_path": "tracks.T2.oscillator_2.waveform",
-      "sequence": 79,
+      "sequence": 85,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.waveform",
       "status": "capture_required",
       "track": "T2"
@@ -5163,7 +5348,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "off",
       "semantic_path": "tracks.T2.oscillator_2.sub_oscillator",
-      "sequence": 80,
+      "sequence": 86,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.sub_oscillator",
       "status": "capture_required",
       "track": "T2"
@@ -5213,7 +5398,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 54,
       "semantic_path": "tracks.T2.oscillator_2.pulse_width",
-      "sequence": 81,
+      "sequence": 87,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.pulse_width",
       "status": "capture_required",
       "track": "T2"
@@ -5263,7 +5448,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_2.pwm_speed",
-      "sequence": 82,
+      "sequence": 88,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.pwm_speed",
       "status": "capture_required",
       "track": "T2"
@@ -5313,7 +5498,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_2.pwm_depth",
-      "sequence": 83,
+      "sequence": 89,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.pwm_depth",
       "status": "capture_required",
       "track": "T2"
@@ -5363,7 +5548,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": false,
       "semantic_path": "tracks.T2.oscillator_common.osc1_am",
-      "sequence": 84,
+      "sequence": 90,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.osc1_am",
       "status": "capture_required",
       "track": "T2"
@@ -5413,7 +5598,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "off",
       "semantic_path": "tracks.T2.oscillator_common.sync_mode",
-      "sequence": 85,
+      "sequence": 91,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.sync_mode",
       "status": "capture_required",
       "track": "T2"
@@ -5463,7 +5648,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_common.sync_amount",
-      "sequence": 86,
+      "sequence": 92,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.sync_amount",
       "status": "capture_required",
       "track": "T2"
@@ -5513,7 +5698,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 18,
       "semantic_path": "tracks.T2.oscillator_common.bend_depth",
-      "sequence": 87,
+      "sequence": 93,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.bend_depth",
       "status": "capture_required",
       "track": "T2"
@@ -5563,7 +5748,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 7,
       "semantic_path": "tracks.T2.oscillator_common.note_slide_time",
-      "sequence": 88,
+      "sequence": 94,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.note_slide_time",
       "status": "capture_required",
       "track": "T2"
@@ -5613,7 +5798,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": false,
       "semantic_path": "tracks.T2.oscillator_common.osc2_am",
-      "sequence": 89,
+      "sequence": 95,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.osc2_am",
       "status": "capture_required",
       "track": "T2"
@@ -5663,7 +5848,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": true,
       "semantic_path": "tracks.T2.oscillator_common.oscillator_retrigger",
-      "sequence": 90,
+      "sequence": 96,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.oscillator_retrigger",
       "status": "capture_required",
       "track": "T2"
@@ -5713,7 +5898,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_common.vibrato_fade",
-      "sequence": 91,
+      "sequence": 97,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.vibrato_fade",
       "status": "capture_required",
       "track": "T2"
@@ -5763,7 +5948,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_common.vibrato_speed",
-      "sequence": 92,
+      "sequence": 98,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.vibrato_speed",
       "status": "capture_required",
       "track": "T2"
@@ -5813,7 +5998,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.oscillator_common.vibrato_depth",
-      "sequence": 93,
+      "sequence": 99,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.vibrato_depth",
       "status": "capture_required",
       "track": "T2"
@@ -5863,7 +6048,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.noise.sample_and_hold",
-      "sequence": 94,
+      "sequence": 100,
       "shared_capture_group_owner": "tracks.T1.noise.sample_and_hold",
       "status": "capture_required",
       "track": "T2"
@@ -5910,7 +6095,7 @@
       "reason": "no manual MIDI address exists; use front-panel-only differential capture",
       "requested_value": 0,
       "semantic_path": "tracks.T2.noise.color",
-      "sequence": 95,
+      "sequence": 101,
       "shared_capture_group_owner": "tracks.T1.noise.color",
       "status": "capture_required",
       "track": "T2"
@@ -5960,7 +6145,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.noise.fade",
-      "sequence": 96,
+      "sequence": 102,
       "shared_capture_group_owner": "tracks.T1.noise.fade",
       "status": "capture_required",
       "track": "T2"
@@ -6010,7 +6195,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.noise.level",
-      "sequence": 97,
+      "sequence": 103,
       "shared_capture_group_owner": "tracks.T1.noise.level",
       "status": "capture_required",
       "track": "T2"
@@ -6059,7 +6244,7 @@
       "reason": "Filter1 Frequency has candidate-promoted observations, but the source dumps are not supplied here and no arbitrary-value writer conversion is promoted",
       "requested_value": 42,
       "semantic_path": "tracks.T2.filter_1.frequency",
-      "sequence": 98,
+      "sequence": 104,
       "shared_capture_group_owner": "tracks.T1.filter_1.frequency",
       "status": "candidate_only",
       "track": "T2"
@@ -6108,7 +6293,7 @@
       "reason": "Filter1 Resonance has candidate-promoted observations, but the source dumps are not supplied here and no arbitrary-value writer conversion is promoted",
       "requested_value": 26,
       "semantic_path": "tracks.T2.filter_1.resonance",
-      "sequence": 99,
+      "sequence": 105,
       "shared_capture_group_owner": "tracks.T1.filter_1.resonance",
       "status": "candidate_only",
       "track": "T2"
@@ -6158,7 +6343,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 24,
       "semantic_path": "tracks.T2.filter_1.overdrive",
-      "sequence": 100,
+      "sequence": 106,
       "shared_capture_group_owner": "tracks.T1.filter_1.overdrive",
       "status": "capture_required",
       "track": "T2"
@@ -6208,7 +6393,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 16,
       "semantic_path": "tracks.T2.filter_1.keytrack",
-      "sequence": 101,
+      "sequence": 107,
       "shared_capture_group_owner": "tracks.T1.filter_1.keytrack",
       "status": "capture_required",
       "track": "T2"
@@ -6258,7 +6443,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 64,
       "semantic_path": "tracks.T2.filter_1.envelope_depth",
-      "sequence": 102,
+      "sequence": 108,
       "shared_capture_group_owner": "tracks.T1.filter_1.envelope_depth",
       "status": "capture_required",
       "track": "T2"
@@ -6307,7 +6492,7 @@
       "reason": "Filter2 Frequency has candidate-promoted observations, but the source dumps are not supplied here and no arbitrary-value writer conversion is promoted",
       "requested_value": 34,
       "semantic_path": "tracks.T2.filter_2.frequency",
-      "sequence": 103,
+      "sequence": 109,
       "shared_capture_group_owner": "tracks.T1.filter_2.frequency",
       "status": "candidate_only",
       "track": "T2"
@@ -6315,12 +6500,12 @@
     {
       "baseline_dump_filename": "reference/A4_Test1_Init_Kit.syx",
       "candidate_byte_location": {
-        "frame_offset": null,
-        "packed_data_offset": null,
-        "packed_track_stride": null,
+        "frame_offset": 575,
+        "packed_data_offset": 570,
+        "packed_track_stride": 400,
         "promoted": false,
         "unpacked_offset": null,
-        "unpacked_track_stride": null
+        "unpacked_track_stride": 350
       },
       "capture_group": "a4.filter_2.resonance",
       "captures": [
@@ -6340,10 +6525,9 @@
       "converter_family": "direct_7bit",
       "critical": true,
       "evidence_needed": [
-        "one-parameter-at-a-time saved-kit differentials",
-        "same observation on a second track before promoting a track stride",
-        "all changed packed and unpacked bytes must be explained",
-        "minimum, midpoint, maximum observations for Filter2 Resonance"
+        "supply or reproduce every recorded candidate differential dump",
+        "observe fine/intermediate values needed for the requested target",
+        "promote a typed writer only after semantic decode/encode tests pass"
       ],
       "midi_address": {
         "controller": 90,
@@ -6354,12 +6538,12 @@
       },
       "normalized_midi_value": 8,
       "number_of_changed_captures": 1,
-      "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
+      "reason": "Filter2 Resonance has candidate-promoted observations, but the source dumps are not supplied here and no arbitrary-value writer conversion is promoted",
       "requested_value": 8,
       "semantic_path": "tracks.T2.filter_2.resonance",
-      "sequence": 104,
+      "sequence": 110,
       "shared_capture_group_owner": "tracks.T1.filter_2.resonance",
-      "status": "capture_required",
+      "status": "candidate_only",
       "track": "T2"
     },
     {
@@ -6407,7 +6591,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "HP1",
       "semantic_path": "tracks.T2.filter_2.type",
-      "sequence": 105,
+      "sequence": 111,
       "shared_capture_group_owner": "tracks.T1.filter_2.type",
       "status": "capture_required",
       "track": "T2"
@@ -6457,7 +6641,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.filter_2.keytrack",
-      "sequence": 106,
+      "sequence": 112,
       "shared_capture_group_owner": "tracks.T1.filter_2.keytrack",
       "status": "capture_required",
       "track": "T2"
@@ -6507,7 +6691,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 10,
       "semantic_path": "tracks.T2.filter_2.envelope_depth",
-      "sequence": 107,
+      "sequence": 113,
       "shared_capture_group_owner": "tracks.T1.filter_2.envelope_depth",
       "status": "capture_required",
       "track": "T2"
@@ -6557,7 +6741,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.amp.attack",
-      "sequence": 108,
+      "sequence": 114,
       "shared_capture_group_owner": "tracks.T1.amp.attack",
       "status": "capture_required",
       "track": "T2"
@@ -6607,7 +6791,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 18,
       "semantic_path": "tracks.T2.amp.decay",
-      "sequence": 109,
+      "sequence": 115,
       "shared_capture_group_owner": "tracks.T1.amp.decay",
       "status": "capture_required",
       "track": "T2"
@@ -6657,7 +6841,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.amp.sustain",
-      "sequence": 110,
+      "sequence": 116,
       "shared_capture_group_owner": "tracks.T1.amp.sustain",
       "status": "capture_required",
       "track": "T2"
@@ -6707,7 +6891,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 5,
       "semantic_path": "tracks.T2.amp.release",
-      "sequence": 111,
+      "sequence": 117,
       "shared_capture_group_owner": "tracks.T1.amp.release",
       "status": "capture_required",
       "track": "T2"
@@ -6757,7 +6941,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "exponential_restart_from_zero",
       "semantic_path": "tracks.T2.amp.envelope_shape",
-      "sequence": 112,
+      "sequence": 118,
       "shared_capture_group_owner": "tracks.T1.amp.envelope_shape",
       "status": "capture_required",
       "track": "T2"
@@ -6807,7 +6991,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.amp.chorus_send",
-      "sequence": 113,
+      "sequence": 119,
       "shared_capture_group_owner": "tracks.T1.amp.chorus_send",
       "status": "capture_required",
       "track": "T2"
@@ -6857,7 +7041,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.amp.delay_send",
-      "sequence": 114,
+      "sequence": 120,
       "shared_capture_group_owner": "tracks.T1.amp.delay_send",
       "status": "capture_required",
       "track": "T2"
@@ -6907,7 +7091,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.amp.reverb_send",
-      "sequence": 115,
+      "sequence": 121,
       "shared_capture_group_owner": "tracks.T1.amp.reverb_send",
       "status": "capture_required",
       "track": "T2"
@@ -6957,7 +7141,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.amp.pan",
-      "sequence": 116,
+      "sequence": 122,
       "shared_capture_group_owner": "tracks.T1.amp.pan",
       "status": "capture_required",
       "track": "T2"
@@ -7007,7 +7191,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 86,
       "semantic_path": "tracks.T2.amp.volume",
-      "sequence": 117,
+      "sequence": 123,
       "shared_capture_group_owner": "tracks.T1.amp.volume",
       "status": "capture_required",
       "track": "T2"
@@ -7057,7 +7241,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.filter_envelope.attack",
-      "sequence": 118,
+      "sequence": 124,
       "shared_capture_group_owner": "tracks.T1.filter_envelope.attack",
       "status": "capture_required",
       "track": "T2"
@@ -7107,7 +7291,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 20,
       "semantic_path": "tracks.T2.filter_envelope.decay",
-      "sequence": 119,
+      "sequence": 125,
       "shared_capture_group_owner": "tracks.T1.filter_envelope.decay",
       "status": "capture_required",
       "track": "T2"
@@ -7157,7 +7341,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T2.filter_envelope.sustain",
-      "sequence": 120,
+      "sequence": 126,
       "shared_capture_group_owner": "tracks.T1.filter_envelope.sustain",
       "status": "capture_required",
       "track": "T2"
@@ -7207,7 +7391,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 4,
       "semantic_path": "tracks.T2.filter_envelope.release",
-      "sequence": 121,
+      "sequence": 127,
       "shared_capture_group_owner": "tracks.T1.filter_envelope.release",
       "status": "capture_required",
       "track": "T2"
@@ -7257,7 +7441,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "exponential_restart_from_zero",
       "semantic_path": "tracks.T2.filter_envelope.envelope_shape",
-      "sequence": 122,
+      "sequence": 128,
       "shared_capture_group_owner": "tracks.T1.filter_envelope.envelope_shape",
       "status": "capture_required",
       "track": "T2"
@@ -7291,10 +7475,72 @@
       "reason": "the current specification explicitly preserves this saved-kit field",
       "requested_value": "preserve_reference",
       "semantic_path": "tracks.T2.filter_envelope.gate_length",
-      "sequence": 123,
+      "sequence": 129,
       "shared_capture_group_owner": null,
       "status": "preserve_reference",
       "track": "T2"
+    },
+    {
+      "baseline_dump_filename": "reference/A4_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "a4.track_metadata",
+      "captures": [],
+      "catalog_parameter": "sound_name",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "noncritical sound naming remains reference-preserved; no manual sound-parameter entry is required",
+      "requested_value": "R01 METSYNC",
+      "semantic_path": "tracks.T3.sound_name",
+      "sequence": 130,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "T3"
+    },
+    {
+      "baseline_dump_filename": "reference/A4_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "a4.track_metadata",
+      "captures": [],
+      "catalog_parameter": "design_role",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "design-role metadata does not request a saved-kit byte mutation",
+      "requested_value": "Hollow industrial command stab using oscillator AM and Metal Sync.",
+      "semantic_path": "tracks.T3.design_role",
+      "sequence": 131,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "T3"
     },
     {
       "baseline_dump_filename": "reference/A4_Test1_Init_Kit.syx",
@@ -7330,7 +7576,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 82,
       "semantic_path": "track_levels.T3",
-      "sequence": 124,
+      "sequence": 132,
       "shared_capture_group_owner": "track_levels.T1",
       "status": "capture_required",
       "track": "T3"
@@ -7369,7 +7615,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_1.coarse_tune_semitones",
-      "sequence": 125,
+      "sequence": 133,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.coarse_tune_semitones",
       "status": "capture_required",
       "track": "T3"
@@ -7408,7 +7654,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_1.fine_tune_cents",
-      "sequence": 126,
+      "sequence": 134,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.fine_tune_cents",
       "status": "capture_required",
       "track": "T3"
@@ -7447,7 +7693,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_1.linear_detune_hz",
-      "sequence": 127,
+      "sequence": 135,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.linear_detune_hz",
       "status": "capture_required",
       "track": "T3"
@@ -7486,7 +7732,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": true,
       "semantic_path": "tracks.T3.oscillator_1.keytrack",
-      "sequence": 128,
+      "sequence": 136,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.keytrack",
       "status": "capture_required",
       "track": "T3"
@@ -7525,7 +7771,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 100,
       "semantic_path": "tracks.T3.oscillator_1.level",
-      "sequence": 129,
+      "sequence": 137,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.level",
       "status": "capture_required",
       "track": "T3"
@@ -7564,7 +7810,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "transistor_pulse",
       "semantic_path": "tracks.T3.oscillator_1.waveform",
-      "sequence": 130,
+      "sequence": 138,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.waveform",
       "status": "capture_required",
       "track": "T3"
@@ -7603,7 +7849,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "off",
       "semantic_path": "tracks.T3.oscillator_1.sub_oscillator",
-      "sequence": 131,
+      "sequence": 139,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.sub_oscillator",
       "status": "capture_required",
       "track": "T3"
@@ -7642,7 +7888,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 36,
       "semantic_path": "tracks.T3.oscillator_1.pulse_width",
-      "sequence": 132,
+      "sequence": 140,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.pulse_width",
       "status": "capture_required",
       "track": "T3"
@@ -7681,7 +7927,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_1.pwm_speed",
-      "sequence": 133,
+      "sequence": 141,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.pwm_speed",
       "status": "capture_required",
       "track": "T3"
@@ -7720,7 +7966,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_1.pwm_depth",
-      "sequence": 134,
+      "sequence": 142,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.pwm_depth",
       "status": "capture_required",
       "track": "T3"
@@ -7759,7 +8005,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 19,
       "semantic_path": "tracks.T3.oscillator_2.coarse_tune_semitones",
-      "sequence": 135,
+      "sequence": 143,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.coarse_tune_semitones",
       "status": "capture_required",
       "track": "T3"
@@ -7798,7 +8044,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_2.fine_tune_cents",
-      "sequence": 136,
+      "sequence": 144,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.fine_tune_cents",
       "status": "capture_required",
       "track": "T3"
@@ -7837,7 +8083,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_2.linear_detune_hz",
-      "sequence": 137,
+      "sequence": 145,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.linear_detune_hz",
       "status": "capture_required",
       "track": "T3"
@@ -7876,7 +8122,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": true,
       "semantic_path": "tracks.T3.oscillator_2.keytrack",
-      "sequence": 138,
+      "sequence": 146,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.keytrack",
       "status": "capture_required",
       "track": "T3"
@@ -7915,7 +8161,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_2.level",
-      "sequence": 139,
+      "sequence": 147,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.level",
       "status": "capture_required",
       "track": "T3"
@@ -7954,7 +8200,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "pulse",
       "semantic_path": "tracks.T3.oscillator_2.waveform",
-      "sequence": 140,
+      "sequence": 148,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.waveform",
       "status": "capture_required",
       "track": "T3"
@@ -7993,7 +8239,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "off",
       "semantic_path": "tracks.T3.oscillator_2.sub_oscillator",
-      "sequence": 141,
+      "sequence": 149,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.sub_oscillator",
       "status": "capture_required",
       "track": "T3"
@@ -8032,7 +8278,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 74,
       "semantic_path": "tracks.T3.oscillator_2.pulse_width",
-      "sequence": 142,
+      "sequence": 150,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.pulse_width",
       "status": "capture_required",
       "track": "T3"
@@ -8071,7 +8317,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_2.pwm_speed",
-      "sequence": 143,
+      "sequence": 151,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.pwm_speed",
       "status": "capture_required",
       "track": "T3"
@@ -8110,7 +8356,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_2.pwm_depth",
-      "sequence": 144,
+      "sequence": 152,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.pwm_depth",
       "status": "capture_required",
       "track": "T3"
@@ -8149,7 +8395,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": true,
       "semantic_path": "tracks.T3.oscillator_common.osc1_am",
-      "sequence": 145,
+      "sequence": 153,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.osc1_am",
       "status": "capture_required",
       "track": "T3"
@@ -8188,7 +8434,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "metal",
       "semantic_path": "tracks.T3.oscillator_common.sync_mode",
-      "sequence": 146,
+      "sequence": 154,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.sync_mode",
       "status": "capture_required",
       "track": "T3"
@@ -8227,7 +8473,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 48,
       "semantic_path": "tracks.T3.oscillator_common.sync_amount",
-      "sequence": 147,
+      "sequence": 155,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.sync_amount",
       "status": "capture_required",
       "track": "T3"
@@ -8266,7 +8512,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 26,
       "semantic_path": "tracks.T3.oscillator_common.bend_depth",
-      "sequence": 148,
+      "sequence": 156,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.bend_depth",
       "status": "capture_required",
       "track": "T3"
@@ -8305,7 +8551,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 9,
       "semantic_path": "tracks.T3.oscillator_common.note_slide_time",
-      "sequence": 149,
+      "sequence": 157,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.note_slide_time",
       "status": "capture_required",
       "track": "T3"
@@ -8344,7 +8590,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": false,
       "semantic_path": "tracks.T3.oscillator_common.osc2_am",
-      "sequence": 150,
+      "sequence": 158,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.osc2_am",
       "status": "capture_required",
       "track": "T3"
@@ -8383,7 +8629,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": true,
       "semantic_path": "tracks.T3.oscillator_common.oscillator_retrigger",
-      "sequence": 151,
+      "sequence": 159,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.oscillator_retrigger",
       "status": "capture_required",
       "track": "T3"
@@ -8422,7 +8668,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_common.vibrato_fade",
-      "sequence": 152,
+      "sequence": 160,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.vibrato_fade",
       "status": "capture_required",
       "track": "T3"
@@ -8461,7 +8707,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_common.vibrato_speed",
-      "sequence": 153,
+      "sequence": 161,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.vibrato_speed",
       "status": "capture_required",
       "track": "T3"
@@ -8500,7 +8746,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.oscillator_common.vibrato_depth",
-      "sequence": 154,
+      "sequence": 162,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.vibrato_depth",
       "status": "capture_required",
       "track": "T3"
@@ -8539,7 +8785,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.noise.sample_and_hold",
-      "sequence": 155,
+      "sequence": 163,
       "shared_capture_group_owner": "tracks.T1.noise.sample_and_hold",
       "status": "capture_required",
       "track": "T3"
@@ -8575,7 +8821,7 @@
       "reason": "no manual MIDI address exists; use front-panel-only differential capture",
       "requested_value": 0,
       "semantic_path": "tracks.T3.noise.color",
-      "sequence": 156,
+      "sequence": 164,
       "shared_capture_group_owner": "tracks.T1.noise.color",
       "status": "capture_required",
       "track": "T3"
@@ -8614,7 +8860,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.noise.fade",
-      "sequence": 157,
+      "sequence": 165,
       "shared_capture_group_owner": "tracks.T1.noise.fade",
       "status": "capture_required",
       "track": "T3"
@@ -8653,7 +8899,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.noise.level",
-      "sequence": 158,
+      "sequence": 166,
       "shared_capture_group_owner": "tracks.T1.noise.level",
       "status": "capture_required",
       "track": "T3"
@@ -8691,7 +8937,7 @@
       "reason": "Filter1 Frequency has candidate-promoted observations, but the source dumps are not supplied here and no arbitrary-value writer conversion is promoted",
       "requested_value": 58,
       "semantic_path": "tracks.T3.filter_1.frequency",
-      "sequence": 159,
+      "sequence": 167,
       "shared_capture_group_owner": "tracks.T1.filter_1.frequency",
       "status": "candidate_only",
       "track": "T3"
@@ -8729,7 +8975,7 @@
       "reason": "Filter1 Resonance has candidate-promoted observations, but the source dumps are not supplied here and no arbitrary-value writer conversion is promoted",
       "requested_value": 30,
       "semantic_path": "tracks.T3.filter_1.resonance",
-      "sequence": 160,
+      "sequence": 168,
       "shared_capture_group_owner": "tracks.T1.filter_1.resonance",
       "status": "candidate_only",
       "track": "T3"
@@ -8768,7 +9014,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 30,
       "semantic_path": "tracks.T3.filter_1.overdrive",
-      "sequence": 161,
+      "sequence": 169,
       "shared_capture_group_owner": "tracks.T1.filter_1.overdrive",
       "status": "capture_required",
       "track": "T3"
@@ -8807,7 +9053,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 12,
       "semantic_path": "tracks.T3.filter_1.keytrack",
-      "sequence": 162,
+      "sequence": 170,
       "shared_capture_group_owner": "tracks.T1.filter_1.keytrack",
       "status": "capture_required",
       "track": "T3"
@@ -8846,7 +9092,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 38,
       "semantic_path": "tracks.T3.filter_1.envelope_depth",
-      "sequence": 163,
+      "sequence": 171,
       "shared_capture_group_owner": "tracks.T1.filter_1.envelope_depth",
       "status": "capture_required",
       "track": "T3"
@@ -8884,7 +9130,7 @@
       "reason": "Filter2 Frequency has candidate-promoted observations, but the source dumps are not supplied here and no arbitrary-value writer conversion is promoted",
       "requested_value": 78,
       "semantic_path": "tracks.T3.filter_2.frequency",
-      "sequence": 164,
+      "sequence": 172,
       "shared_capture_group_owner": "tracks.T1.filter_2.frequency",
       "status": "candidate_only",
       "track": "T3"
@@ -8892,12 +9138,12 @@
     {
       "baseline_dump_filename": "reference/A4_Test1_Init_Kit.syx",
       "candidate_byte_location": {
-        "frame_offset": null,
-        "packed_data_offset": null,
-        "packed_track_stride": null,
+        "frame_offset": 975,
+        "packed_data_offset": 970,
+        "packed_track_stride": 400,
         "promoted": false,
         "unpacked_offset": null,
-        "unpacked_track_stride": null
+        "unpacked_track_stride": 350
       },
       "capture_group": "a4.filter_2.resonance",
       "captures": [],
@@ -8906,10 +9152,9 @@
       "converter_family": "direct_7bit",
       "critical": true,
       "evidence_needed": [
-        "one-parameter-at-a-time saved-kit differentials",
-        "same observation on a second track before promoting a track stride",
-        "all changed packed and unpacked bytes must be explained",
-        "minimum, midpoint, maximum observations for Filter2 Resonance"
+        "supply or reproduce every recorded candidate differential dump",
+        "observe fine/intermediate values needed for the requested target",
+        "promote a typed writer only after semantic decode/encode tests pass"
       ],
       "midi_address": {
         "controller": 90,
@@ -8920,12 +9165,12 @@
       },
       "normalized_midi_value": 34,
       "number_of_changed_captures": 0,
-      "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
+      "reason": "Filter2 Resonance has candidate-promoted observations, but the source dumps are not supplied here and no arbitrary-value writer conversion is promoted",
       "requested_value": 34,
       "semantic_path": "tracks.T3.filter_2.resonance",
-      "sequence": 165,
+      "sequence": 173,
       "shared_capture_group_owner": "tracks.T1.filter_2.resonance",
-      "status": "capture_required",
+      "status": "candidate_only",
       "track": "T3"
     },
     {
@@ -8962,7 +9207,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "Bandpass",
       "semantic_path": "tracks.T3.filter_2.type",
-      "sequence": 166,
+      "sequence": 174,
       "shared_capture_group_owner": "tracks.T1.filter_2.type",
       "status": "capture_required",
       "track": "T3"
@@ -9001,7 +9246,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.filter_2.keytrack",
-      "sequence": 167,
+      "sequence": 175,
       "shared_capture_group_owner": "tracks.T1.filter_2.keytrack",
       "status": "capture_required",
       "track": "T3"
@@ -9040,7 +9285,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 18,
       "semantic_path": "tracks.T3.filter_2.envelope_depth",
-      "sequence": 168,
+      "sequence": 176,
       "shared_capture_group_owner": "tracks.T1.filter_2.envelope_depth",
       "status": "capture_required",
       "track": "T3"
@@ -9079,7 +9324,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.amp.attack",
-      "sequence": 169,
+      "sequence": 177,
       "shared_capture_group_owner": "tracks.T1.amp.attack",
       "status": "capture_required",
       "track": "T3"
@@ -9118,7 +9363,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 15,
       "semantic_path": "tracks.T3.amp.decay",
-      "sequence": 170,
+      "sequence": 178,
       "shared_capture_group_owner": "tracks.T1.amp.decay",
       "status": "capture_required",
       "track": "T3"
@@ -9157,7 +9402,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.amp.sustain",
-      "sequence": 171,
+      "sequence": 179,
       "shared_capture_group_owner": "tracks.T1.amp.sustain",
       "status": "capture_required",
       "track": "T3"
@@ -9196,7 +9441,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 4,
       "semantic_path": "tracks.T3.amp.release",
-      "sequence": 172,
+      "sequence": 180,
       "shared_capture_group_owner": "tracks.T1.amp.release",
       "status": "capture_required",
       "track": "T3"
@@ -9235,7 +9480,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "exponential_restart_from_zero",
       "semantic_path": "tracks.T3.amp.envelope_shape",
-      "sequence": 173,
+      "sequence": 181,
       "shared_capture_group_owner": "tracks.T1.amp.envelope_shape",
       "status": "capture_required",
       "track": "T3"
@@ -9274,7 +9519,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.amp.chorus_send",
-      "sequence": 174,
+      "sequence": 182,
       "shared_capture_group_owner": "tracks.T1.amp.chorus_send",
       "status": "capture_required",
       "track": "T3"
@@ -9313,7 +9558,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.amp.delay_send",
-      "sequence": 175,
+      "sequence": 183,
       "shared_capture_group_owner": "tracks.T1.amp.delay_send",
       "status": "capture_required",
       "track": "T3"
@@ -9352,7 +9597,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.amp.reverb_send",
-      "sequence": 176,
+      "sequence": 184,
       "shared_capture_group_owner": "tracks.T1.amp.reverb_send",
       "status": "capture_required",
       "track": "T3"
@@ -9391,7 +9636,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 5,
       "semantic_path": "tracks.T3.amp.pan",
-      "sequence": 177,
+      "sequence": 185,
       "shared_capture_group_owner": "tracks.T1.amp.pan",
       "status": "capture_required",
       "track": "T3"
@@ -9430,7 +9675,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 76,
       "semantic_path": "tracks.T3.amp.volume",
-      "sequence": 178,
+      "sequence": 186,
       "shared_capture_group_owner": "tracks.T1.amp.volume",
       "status": "capture_required",
       "track": "T3"
@@ -9469,7 +9714,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.filter_envelope.attack",
-      "sequence": 179,
+      "sequence": 187,
       "shared_capture_group_owner": "tracks.T1.filter_envelope.attack",
       "status": "capture_required",
       "track": "T3"
@@ -9508,7 +9753,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 23,
       "semantic_path": "tracks.T3.filter_envelope.decay",
-      "sequence": 180,
+      "sequence": 188,
       "shared_capture_group_owner": "tracks.T1.filter_envelope.decay",
       "status": "capture_required",
       "track": "T3"
@@ -9547,7 +9792,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T3.filter_envelope.sustain",
-      "sequence": 181,
+      "sequence": 189,
       "shared_capture_group_owner": "tracks.T1.filter_envelope.sustain",
       "status": "capture_required",
       "track": "T3"
@@ -9586,7 +9831,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 3,
       "semantic_path": "tracks.T3.filter_envelope.release",
-      "sequence": 182,
+      "sequence": 190,
       "shared_capture_group_owner": "tracks.T1.filter_envelope.release",
       "status": "capture_required",
       "track": "T3"
@@ -9625,7 +9870,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "exponential_restart_from_zero",
       "semantic_path": "tracks.T3.filter_envelope.envelope_shape",
-      "sequence": 183,
+      "sequence": 191,
       "shared_capture_group_owner": "tracks.T1.filter_envelope.envelope_shape",
       "status": "capture_required",
       "track": "T3"
@@ -9659,10 +9904,72 @@
       "reason": "the current specification explicitly preserves this saved-kit field",
       "requested_value": "preserve_reference",
       "semantic_path": "tracks.T3.filter_envelope.gate_length",
-      "sequence": 184,
+      "sequence": 192,
       "shared_capture_group_owner": null,
       "status": "preserve_reference",
       "track": "T3"
+    },
+    {
+      "baseline_dump_filename": "reference/A4_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "a4.track_metadata",
+      "captures": [],
+      "catalog_parameter": "sound_name",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "noncritical sound naming remains reference-preserved; no manual sound-parameter entry is required",
+      "requested_value": "R01 GHOST",
+      "semantic_path": "tracks.T4.sound_name",
+      "sequence": 193,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "T4"
+    },
+    {
+      "baseline_dump_filename": "reference/A4_Test1_Init_Kit.syx",
+      "candidate_byte_location": {
+        "frame_offset": null,
+        "packed_data_offset": null,
+        "packed_track_stride": null,
+        "promoted": false,
+        "unpacked_offset": null,
+        "unpacked_track_stride": null
+      },
+      "capture_group": "a4.track_metadata",
+      "captures": [],
+      "catalog_parameter": "design_role",
+      "changed_dump_filenames": [],
+      "converter_family": "unmapped",
+      "critical": false,
+      "evidence_needed": [],
+      "midi_address": {
+        "controller": null,
+        "nrpn": null
+      },
+      "normalized_midi_value": null,
+      "number_of_changed_captures": 0,
+      "reason": "design-role metadata does not request a saved-kit byte mutation",
+      "requested_value": "Self-resonant filter/noise voice for narrow spectral knocks and screams.",
+      "semantic_path": "tracks.T4.design_role",
+      "sequence": 194,
+      "shared_capture_group_owner": null,
+      "status": "preserve_reference",
+      "track": "T4"
     },
     {
       "baseline_dump_filename": "reference/A4_Test1_Init_Kit.syx",
@@ -9698,7 +10005,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 78,
       "semantic_path": "track_levels.T4",
-      "sequence": 185,
+      "sequence": 195,
       "shared_capture_group_owner": "track_levels.T1",
       "status": "capture_required",
       "track": "T4"
@@ -9737,7 +10044,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_1.coarse_tune_semitones",
-      "sequence": 186,
+      "sequence": 196,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.coarse_tune_semitones",
       "status": "capture_required",
       "track": "T4"
@@ -9776,7 +10083,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_1.fine_tune_cents",
-      "sequence": 187,
+      "sequence": 197,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.fine_tune_cents",
       "status": "capture_required",
       "track": "T4"
@@ -9815,7 +10122,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_1.linear_detune_hz",
-      "sequence": 188,
+      "sequence": 198,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.linear_detune_hz",
       "status": "capture_required",
       "track": "T4"
@@ -9854,7 +10161,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": true,
       "semantic_path": "tracks.T4.oscillator_1.keytrack",
-      "sequence": 189,
+      "sequence": 199,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.keytrack",
       "status": "capture_required",
       "track": "T4"
@@ -9893,7 +10200,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_1.level",
-      "sequence": 190,
+      "sequence": 200,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.level",
       "status": "capture_required",
       "track": "T4"
@@ -9932,7 +10239,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "sawtooth",
       "semantic_path": "tracks.T4.oscillator_1.waveform",
-      "sequence": 191,
+      "sequence": 201,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.waveform",
       "status": "capture_required",
       "track": "T4"
@@ -9971,7 +10278,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "off",
       "semantic_path": "tracks.T4.oscillator_1.sub_oscillator",
-      "sequence": 192,
+      "sequence": 202,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.sub_oscillator",
       "status": "capture_required",
       "track": "T4"
@@ -10010,7 +10317,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 64,
       "semantic_path": "tracks.T4.oscillator_1.pulse_width",
-      "sequence": 193,
+      "sequence": 203,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.pulse_width",
       "status": "capture_required",
       "track": "T4"
@@ -10049,7 +10356,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_1.pwm_speed",
-      "sequence": 194,
+      "sequence": 204,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.pwm_speed",
       "status": "capture_required",
       "track": "T4"
@@ -10088,7 +10395,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_1.pwm_depth",
-      "sequence": 195,
+      "sequence": 205,
       "shared_capture_group_owner": "tracks.T1.oscillator_1.pwm_depth",
       "status": "capture_required",
       "track": "T4"
@@ -10127,7 +10434,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_2.coarse_tune_semitones",
-      "sequence": 196,
+      "sequence": 206,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.coarse_tune_semitones",
       "status": "capture_required",
       "track": "T4"
@@ -10166,7 +10473,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_2.fine_tune_cents",
-      "sequence": 197,
+      "sequence": 207,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.fine_tune_cents",
       "status": "capture_required",
       "track": "T4"
@@ -10205,7 +10512,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_2.linear_detune_hz",
-      "sequence": 198,
+      "sequence": 208,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.linear_detune_hz",
       "status": "capture_required",
       "track": "T4"
@@ -10244,7 +10551,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": true,
       "semantic_path": "tracks.T4.oscillator_2.keytrack",
-      "sequence": 199,
+      "sequence": 209,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.keytrack",
       "status": "capture_required",
       "track": "T4"
@@ -10283,7 +10590,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_2.level",
-      "sequence": 200,
+      "sequence": 210,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.level",
       "status": "capture_required",
       "track": "T4"
@@ -10322,7 +10629,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "sawtooth",
       "semantic_path": "tracks.T4.oscillator_2.waveform",
-      "sequence": 201,
+      "sequence": 211,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.waveform",
       "status": "capture_required",
       "track": "T4"
@@ -10361,7 +10668,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "off",
       "semantic_path": "tracks.T4.oscillator_2.sub_oscillator",
-      "sequence": 202,
+      "sequence": 212,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.sub_oscillator",
       "status": "capture_required",
       "track": "T4"
@@ -10400,7 +10707,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 64,
       "semantic_path": "tracks.T4.oscillator_2.pulse_width",
-      "sequence": 203,
+      "sequence": 213,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.pulse_width",
       "status": "capture_required",
       "track": "T4"
@@ -10439,7 +10746,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_2.pwm_speed",
-      "sequence": 204,
+      "sequence": 214,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.pwm_speed",
       "status": "capture_required",
       "track": "T4"
@@ -10478,7 +10785,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_2.pwm_depth",
-      "sequence": 205,
+      "sequence": 215,
       "shared_capture_group_owner": "tracks.T1.oscillator_2.pwm_depth",
       "status": "capture_required",
       "track": "T4"
@@ -10517,7 +10824,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": false,
       "semantic_path": "tracks.T4.oscillator_common.osc1_am",
-      "sequence": 206,
+      "sequence": 216,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.osc1_am",
       "status": "capture_required",
       "track": "T4"
@@ -10556,7 +10863,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "off",
       "semantic_path": "tracks.T4.oscillator_common.sync_mode",
-      "sequence": 207,
+      "sequence": 217,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.sync_mode",
       "status": "capture_required",
       "track": "T4"
@@ -10595,7 +10902,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_common.sync_amount",
-      "sequence": 208,
+      "sequence": 218,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.sync_amount",
       "status": "capture_required",
       "track": "T4"
@@ -10634,7 +10941,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_common.bend_depth",
-      "sequence": 209,
+      "sequence": 219,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.bend_depth",
       "status": "capture_required",
       "track": "T4"
@@ -10673,7 +10980,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_common.note_slide_time",
-      "sequence": 210,
+      "sequence": 220,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.note_slide_time",
       "status": "capture_required",
       "track": "T4"
@@ -10712,7 +11019,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": false,
       "semantic_path": "tracks.T4.oscillator_common.osc2_am",
-      "sequence": 211,
+      "sequence": 221,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.osc2_am",
       "status": "capture_required",
       "track": "T4"
@@ -10751,7 +11058,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": true,
       "semantic_path": "tracks.T4.oscillator_common.oscillator_retrigger",
-      "sequence": 212,
+      "sequence": 222,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.oscillator_retrigger",
       "status": "capture_required",
       "track": "T4"
@@ -10790,7 +11097,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_common.vibrato_fade",
-      "sequence": 213,
+      "sequence": 223,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.vibrato_fade",
       "status": "capture_required",
       "track": "T4"
@@ -10829,7 +11136,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_common.vibrato_speed",
-      "sequence": 214,
+      "sequence": 224,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.vibrato_speed",
       "status": "capture_required",
       "track": "T4"
@@ -10868,7 +11175,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.oscillator_common.vibrato_depth",
-      "sequence": 215,
+      "sequence": 225,
       "shared_capture_group_owner": "tracks.T1.oscillator_common.vibrato_depth",
       "status": "capture_required",
       "track": "T4"
@@ -10907,7 +11214,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 64,
       "semantic_path": "tracks.T4.noise.sample_and_hold",
-      "sequence": 216,
+      "sequence": 226,
       "shared_capture_group_owner": "tracks.T1.noise.sample_and_hold",
       "status": "capture_required",
       "track": "T4"
@@ -10943,7 +11250,7 @@
       "reason": "no manual MIDI address exists; use front-panel-only differential capture",
       "requested_value": -32,
       "semantic_path": "tracks.T4.noise.color",
-      "sequence": 217,
+      "sequence": 227,
       "shared_capture_group_owner": "tracks.T1.noise.color",
       "status": "capture_required",
       "track": "T4"
@@ -10982,7 +11289,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 52,
       "semantic_path": "tracks.T4.noise.fade",
-      "sequence": 218,
+      "sequence": 228,
       "shared_capture_group_owner": "tracks.T1.noise.fade",
       "status": "capture_required",
       "track": "T4"
@@ -11021,7 +11328,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 8,
       "semantic_path": "tracks.T4.noise.level",
-      "sequence": 219,
+      "sequence": 229,
       "shared_capture_group_owner": "tracks.T1.noise.level",
       "status": "capture_required",
       "track": "T4"
@@ -11059,7 +11366,7 @@
       "reason": "Filter1 Frequency has candidate-promoted observations, but the source dumps are not supplied here and no arbitrary-value writer conversion is promoted",
       "requested_value": 54,
       "semantic_path": "tracks.T4.filter_1.frequency",
-      "sequence": 220,
+      "sequence": 230,
       "shared_capture_group_owner": "tracks.T1.filter_1.frequency",
       "status": "candidate_only",
       "track": "T4"
@@ -11097,7 +11404,7 @@
       "reason": "Filter1 Resonance has candidate-promoted observations, but the source dumps are not supplied here and no arbitrary-value writer conversion is promoted",
       "requested_value": 112,
       "semantic_path": "tracks.T4.filter_1.resonance",
-      "sequence": 221,
+      "sequence": 231,
       "shared_capture_group_owner": "tracks.T1.filter_1.resonance",
       "status": "candidate_only",
       "track": "T4"
@@ -11136,7 +11443,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": -8,
       "semantic_path": "tracks.T4.filter_1.overdrive",
-      "sequence": 222,
+      "sequence": 232,
       "shared_capture_group_owner": "tracks.T1.filter_1.overdrive",
       "status": "capture_required",
       "track": "T4"
@@ -11175,7 +11482,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 32,
       "semantic_path": "tracks.T4.filter_1.keytrack",
-      "sequence": 223,
+      "sequence": 233,
       "shared_capture_group_owner": "tracks.T1.filter_1.keytrack",
       "status": "capture_required",
       "track": "T4"
@@ -11214,7 +11521,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 58,
       "semantic_path": "tracks.T4.filter_1.envelope_depth",
-      "sequence": 224,
+      "sequence": 234,
       "shared_capture_group_owner": "tracks.T1.filter_1.envelope_depth",
       "status": "capture_required",
       "track": "T4"
@@ -11252,7 +11559,7 @@
       "reason": "Filter2 Frequency has candidate-promoted observations, but the source dumps are not supplied here and no arbitrary-value writer conversion is promoted",
       "requested_value": 30,
       "semantic_path": "tracks.T4.filter_2.frequency",
-      "sequence": 225,
+      "sequence": 235,
       "shared_capture_group_owner": "tracks.T1.filter_2.frequency",
       "status": "candidate_only",
       "track": "T4"
@@ -11260,12 +11567,12 @@
     {
       "baseline_dump_filename": "reference/A4_Test1_Init_Kit.syx",
       "candidate_byte_location": {
-        "frame_offset": null,
-        "packed_data_offset": null,
-        "packed_track_stride": null,
+        "frame_offset": 1375,
+        "packed_data_offset": 1370,
+        "packed_track_stride": 400,
         "promoted": false,
         "unpacked_offset": null,
-        "unpacked_track_stride": null
+        "unpacked_track_stride": 350
       },
       "capture_group": "a4.filter_2.resonance",
       "captures": [],
@@ -11274,10 +11581,9 @@
       "converter_family": "direct_7bit",
       "critical": true,
       "evidence_needed": [
-        "one-parameter-at-a-time saved-kit differentials",
-        "same observation on a second track before promoting a track stride",
-        "all changed packed and unpacked bytes must be explained",
-        "minimum, midpoint, maximum observations for Filter2 Resonance"
+        "supply or reproduce every recorded candidate differential dump",
+        "observe fine/intermediate values needed for the requested target",
+        "promote a typed writer only after semantic decode/encode tests pass"
       ],
       "midi_address": {
         "controller": 90,
@@ -11288,12 +11594,12 @@
       },
       "normalized_midi_value": 8,
       "number_of_changed_captures": 0,
-      "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
+      "reason": "Filter2 Resonance has candidate-promoted observations, but the source dumps are not supplied here and no arbitrary-value writer conversion is promoted",
       "requested_value": 8,
       "semantic_path": "tracks.T4.filter_2.resonance",
-      "sequence": 226,
+      "sequence": 236,
       "shared_capture_group_owner": "tracks.T1.filter_2.resonance",
-      "status": "capture_required",
+      "status": "candidate_only",
       "track": "T4"
     },
     {
@@ -11330,7 +11636,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "HP1",
       "semantic_path": "tracks.T4.filter_2.type",
-      "sequence": 227,
+      "sequence": 237,
       "shared_capture_group_owner": "tracks.T1.filter_2.type",
       "status": "capture_required",
       "track": "T4"
@@ -11369,7 +11675,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.filter_2.keytrack",
-      "sequence": 228,
+      "sequence": 238,
       "shared_capture_group_owner": "tracks.T1.filter_2.keytrack",
       "status": "capture_required",
       "track": "T4"
@@ -11408,7 +11714,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 6,
       "semantic_path": "tracks.T4.filter_2.envelope_depth",
-      "sequence": 229,
+      "sequence": 239,
       "shared_capture_group_owner": "tracks.T1.filter_2.envelope_depth",
       "status": "capture_required",
       "track": "T4"
@@ -11447,7 +11753,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.amp.attack",
-      "sequence": 230,
+      "sequence": 240,
       "shared_capture_group_owner": "tracks.T1.amp.attack",
       "status": "capture_required",
       "track": "T4"
@@ -11486,7 +11792,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 28,
       "semantic_path": "tracks.T4.amp.decay",
-      "sequence": 231,
+      "sequence": 241,
       "shared_capture_group_owner": "tracks.T1.amp.decay",
       "status": "capture_required",
       "track": "T4"
@@ -11525,7 +11831,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.amp.sustain",
-      "sequence": 232,
+      "sequence": 242,
       "shared_capture_group_owner": "tracks.T1.amp.sustain",
       "status": "capture_required",
       "track": "T4"
@@ -11564,7 +11870,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 9,
       "semantic_path": "tracks.T4.amp.release",
-      "sequence": 233,
+      "sequence": 243,
       "shared_capture_group_owner": "tracks.T1.amp.release",
       "status": "capture_required",
       "track": "T4"
@@ -11603,7 +11909,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "exponential_restart_from_zero",
       "semantic_path": "tracks.T4.amp.envelope_shape",
-      "sequence": 234,
+      "sequence": 244,
       "shared_capture_group_owner": "tracks.T1.amp.envelope_shape",
       "status": "capture_required",
       "track": "T4"
@@ -11642,7 +11948,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.amp.chorus_send",
-      "sequence": 235,
+      "sequence": 245,
       "shared_capture_group_owner": "tracks.T1.amp.chorus_send",
       "status": "capture_required",
       "track": "T4"
@@ -11681,7 +11987,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.amp.delay_send",
-      "sequence": 236,
+      "sequence": 246,
       "shared_capture_group_owner": "tracks.T1.amp.delay_send",
       "status": "capture_required",
       "track": "T4"
@@ -11720,7 +12026,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.amp.reverb_send",
-      "sequence": 237,
+      "sequence": 247,
       "shared_capture_group_owner": "tracks.T1.amp.reverb_send",
       "status": "capture_required",
       "track": "T4"
@@ -11759,7 +12065,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": -5,
       "semantic_path": "tracks.T4.amp.pan",
-      "sequence": 238,
+      "sequence": 248,
       "shared_capture_group_owner": "tracks.T1.amp.pan",
       "status": "capture_required",
       "track": "T4"
@@ -11798,7 +12104,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 72,
       "semantic_path": "tracks.T4.amp.volume",
-      "sequence": 239,
+      "sequence": 249,
       "shared_capture_group_owner": "tracks.T1.amp.volume",
       "status": "capture_required",
       "track": "T4"
@@ -11837,7 +12143,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.filter_envelope.attack",
-      "sequence": 240,
+      "sequence": 250,
       "shared_capture_group_owner": "tracks.T1.filter_envelope.attack",
       "status": "capture_required",
       "track": "T4"
@@ -11876,7 +12182,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 34,
       "semantic_path": "tracks.T4.filter_envelope.decay",
-      "sequence": 241,
+      "sequence": 251,
       "shared_capture_group_owner": "tracks.T1.filter_envelope.decay",
       "status": "capture_required",
       "track": "T4"
@@ -11915,7 +12221,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 0,
       "semantic_path": "tracks.T4.filter_envelope.sustain",
-      "sequence": 242,
+      "sequence": 252,
       "shared_capture_group_owner": "tracks.T1.filter_envelope.sustain",
       "status": "capture_required",
       "track": "T4"
@@ -11954,7 +12260,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": 9,
       "semantic_path": "tracks.T4.filter_envelope.release",
-      "sequence": 243,
+      "sequence": 253,
       "shared_capture_group_owner": "tracks.T1.filter_envelope.release",
       "status": "capture_required",
       "track": "T4"
@@ -11993,7 +12299,7 @@
       "reason": "transport conversion exists, but no saved-kit location or writer is promoted",
       "requested_value": "exponential_restart_from_zero",
       "semantic_path": "tracks.T4.filter_envelope.envelope_shape",
-      "sequence": 244,
+      "sequence": 254,
       "shared_capture_group_owner": "tracks.T1.filter_envelope.envelope_shape",
       "status": "capture_required",
       "track": "T4"
@@ -12027,7 +12333,7 @@
       "reason": "the current specification explicitly preserves this saved-kit field",
       "requested_value": "preserve_reference",
       "semantic_path": "tracks.T4.filter_envelope.gate_length",
-      "sequence": 245,
+      "sequence": 255,
       "shared_capture_group_owner": null,
       "status": "preserve_reference",
       "track": "T4"
@@ -12042,7 +12348,7 @@
       "tracks.T3.filter_1.frequency",
       "tracks.T4.filter_1.frequency"
     ],
-    "sha256": "29381c0dcba8851390b855f3b4ef237f9b78b72a5206b5a26a35c5792c5ad0e5",
+    "sha256": "fc96fb2806ddfe4ff422fae4174723a322d2a79cc940c5c7a80bb2a34fdaa5c0",
     "superseded_by_current_specs": []
   },
   "promotion_policy": {
@@ -12050,7 +12356,8 @@
     "fixture_files": [
       "tests/fixtures/rush01_sysex_calibration/analog_four_filter1_frequency.json",
       "tests/fixtures/rush01_sysex_calibration/analog_four_filter1_resonance.json",
-      "tests/fixtures/rush01_sysex_calibration/analog_four_filter2_frequency.json"
+      "tests/fixtures/rush01_sysex_calibration/analog_four_filter2_frequency.json",
+      "tests/fixtures/rush01_sysex_calibration/analog_four_filter2_resonance.json"
     ],
     "fixture_required_for_every_promoted_mapping": true,
     "multiple_observations_required": true,
@@ -12122,11 +12429,26 @@
       "reason": "second-track evidence exists in metadata, but source dumps and an arbitrary-value writer contract are still required",
       "source": "existing candidate-promoted A4 calibration metadata",
       "unpacked_stride": 350
+    },
+    {
+      "capture_group": "a4.filter_2.resonance",
+      "confirmed_on_second_track": true,
+      "distinct_tracks": [
+        "T1",
+        "T2",
+        "T3",
+        "T4"
+      ],
+      "packed_stride": 400,
+      "promoted": false,
+      "reason": "second-track evidence exists in metadata, but source dumps and an arbitrary-value writer contract are still required",
+      "source": "existing candidate-promoted A4 calibration metadata",
+      "unpacked_stride": 350
     }
   ],
   "summary": {
-    "candidate_only_fields": 12,
-    "capture_required_fields": 228,
+    "candidate_only_fields": 16,
+    "capture_required_fields": 224,
     "critical_fields": 244,
     "expected_changed_captures": 254,
     "invalid_differential_dumps": 0,

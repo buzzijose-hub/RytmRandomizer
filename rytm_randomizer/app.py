@@ -49,7 +49,7 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from time import time_ns
 from typing import TYPE_CHECKING, Final, Protocol
@@ -351,6 +351,22 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--rush16-calibrate",
+        action="store_true",
+        help=(
+            "Run one checkpointed RUSH16 apply-calibration observation. Requires "
+            "--arm, exact local config, disposable target, and confirmation."
+        ),
+    )
+    parser.add_argument(
+        "--rush16-continuous",
+        action="store_true",
+        help=(
+            "Run paired same-location witnesses in one guarded calibration session, "
+            "reusing each accepted changed KIT dump as the next baseline."
+        ),
+    )
+    parser.add_argument(
         "--rush01-device",
         choices=("rytm", "a4"),
         action="append",
@@ -360,6 +376,32 @@ def _build_parser() -> argparse.ArgumentParser:
         "--rush01-config",
         type=Path,
         help="Exact output-port and track-channel YAML for --rush01-apply-plan.",
+    )
+    parser.add_argument(
+        "--rush01-spec",
+        type=Path,
+        help=(
+            "Optional exact semantic spec for the existing --rush01-apply-plan operation. "
+            "RUSH16 specs require a complete, unfiltered plan."
+        ),
+    )
+    parser.add_argument(
+        "--rush01-disposable-target",
+        help="Required operator acknowledgement naming the disposable target for a custom spec.",
+    )
+    parser.add_argument(
+        "--rush01-capture-output",
+        type=Path,
+        help=(
+            "Optional hardware-return KIT SysEx destination after a complete custom-spec apply. "
+            "The exact input port must be present in --rush01-config."
+        ),
+    )
+    parser.add_argument(
+        "--rush01-capture-timeout",
+        type=float,
+        default=60.0,
+        help="Hardware-return SysEx capture timeout in seconds (1..300).",
     )
     parser.add_argument(
         "--confirm-rush01-midi-send",
@@ -404,6 +446,28 @@ def _build_parser() -> argparse.ArgumentParser:
         type=int,
         default=15,
         help="Delay between confirmed RUSH01 output messages in milliseconds (0..10000).",
+    )
+    parser.add_argument(
+        "--rush16-session-root",
+        type=Path,
+        default=(
+            Path(__file__).resolve().parents[1] / "output" / "local" / "RUSH16_ANCHOR_AUDITION_001"
+        ),
+        help="Local-only RUSH16 calibration, capture, receipt, and checkpoint root.",
+    )
+    parser.add_argument(
+        "--rush16-checkpoint",
+        type=Path,
+        help="Verified local calibration checkpoint overlay for a RUSH16 full-plan apply.",
+    )
+    parser.add_argument(
+        "--rush16-hardware-unit",
+        help="Operator identifier for the exact hardware unit producing calibration evidence.",
+    )
+    parser.add_argument(
+        "--confirm-rush16-calibration-send",
+        action="store_true",
+        help="Required feature-specific confirmation for one armed RUSH16 probe.",
     )
     return parser
 
@@ -460,6 +524,8 @@ def _print_passive_menu() -> None:
             "              apply one exact-config CC-only plan with explicit confirmation",
             "- --arm --rush01-midi-learn --rush01-device <rytm|a4>",
             "              observe one exact MIDI input without sending",
+            "- --arm --rush16-calibrate --rush01-device <rytm|a4>",
+            "              run one guarded, checkpointed active-kit calibration probe",
             "",
             USAGE,
         ]
@@ -2372,15 +2438,23 @@ def _rush01_legacy_conflict(args: argparse.Namespace) -> str | None:
 def _validate_rush01_arguments(args: argparse.Namespace) -> bool:
     apply_requested = args.rush01_apply_plan
     learn_requested = args.rush01_midi_learn
-    operation_requested = apply_requested or learn_requested
-    if apply_requested and learn_requested:
-        sys.stderr.write("--rush01-apply-plan cannot be combined with --rush01-midi-learn.\n")
+    calibration_requested = args.rush16_calibrate
+    operation_requested = apply_requested or learn_requested or calibration_requested
+    if sum((apply_requested, learn_requested, calibration_requested)) > 1:
+        sys.stderr.write("RUSH01/RUSH16 hardware operation flags are mutually exclusive.\n")
+        return False
+    if args.rush16_continuous and not calibration_requested:
+        sys.stderr.write("--rush16-continuous requires --rush16-calibrate.\n")
         return False
 
     ancillary_requested = any(
         (
             args.rush01_device,
             args.rush01_config,
+            args.rush01_spec,
+            args.rush01_disposable_target,
+            args.rush01_capture_output,
+            args.rush01_capture_timeout != 60.0,
             args.confirm_rush01_midi_send,
             args.rush01_track,
             args.rush01_parameter,
@@ -2389,6 +2463,10 @@ def _validate_rush01_arguments(args: argparse.Namespace) -> bool:
             args.rush01_enum_label,
             args.rush01_delay_ms != 15,
             args.rush01_calibration_point != "selected",
+            args.rush16_hardware_unit,
+            args.confirm_rush16_calibration_send,
+            args.rush16_checkpoint,
+            args.rush16_continuous,
         )
     )
     if ancillary_requested and not operation_requested:
@@ -2406,14 +2484,78 @@ def _validate_rush01_arguments(args: argparse.Namespace) -> bool:
         sys.stderr.write(f"RUSH01 operations cannot be combined with --{conflict}.\n")
         return False
 
+    if calibration_requested:
+        if args.rush01_config is None:
+            sys.stderr.write("--rush16-calibrate requires --rush01-config.\n")
+            return False
+        if args.rush01_disposable_target is None or not args.rush01_disposable_target.strip():
+            sys.stderr.write("--rush16-calibrate requires --rush01-disposable-target.\n")
+            return False
+        if args.rush16_hardware_unit is None or not args.rush16_hardware_unit.strip():
+            sys.stderr.write("--rush16-calibrate requires --rush16-hardware-unit.\n")
+            return False
+        if not args.confirm_rush16_calibration_send:
+            sys.stderr.write("--rush16-calibrate requires --confirm-rush16-calibration-send.\n")
+            return False
+        if not 1.0 <= args.rush01_capture_timeout <= 300.0:
+            sys.stderr.write("--rush01-capture-timeout must be in 1..300.\n")
+            return False
+        if not 0 <= args.rush01_delay_ms <= 10_000:
+            sys.stderr.write("--rush01-delay-ms must be in 0..10000.\n")
+            return False
+        if any(
+            (
+                args.rush01_spec,
+                args.rush01_capture_output,
+                args.confirm_rush01_midi_send,
+                args.rush01_track,
+                args.rush01_parameter,
+                args.rush01_input_port,
+                args.rush01_observation_output,
+                args.rush01_enum_label,
+                args.rush01_calibration_point != "selected",
+                args.rush16_checkpoint,
+            )
+        ):
+            sys.stderr.write(
+                "--rush16-calibrate cannot be combined with plan-apply or MIDI-learn arguments.\n"
+            )
+            return False
+        return True
+
     if apply_requested:
         if args.rush01_config is None:
             sys.stderr.write("--rush01-apply-plan requires --rush01-config.\n")
+            return False
+        if args.rush01_spec is None and args.rush01_disposable_target is not None:
+            sys.stderr.write("--rush01-disposable-target requires --rush01-spec.\n")
+            return False
+        if args.rush16_checkpoint is not None and args.rush01_spec is None:
+            sys.stderr.write("--rush16-checkpoint requires --rush01-spec.\n")
+            return False
+        if args.rush01_spec is not None:
+            if args.rush01_disposable_target is None or not args.rush01_disposable_target.strip():
+                sys.stderr.write("custom RUSH01 specs require --rush01-disposable-target.\n")
+                return False
+            if args.rush01_track is not None or args.rush01_parameter is not None:
+                sys.stderr.write("custom RUSH01 specs require a complete unfiltered plan.\n")
+                return False
+        if args.rush01_capture_output is not None and args.rush01_spec is None:
+            sys.stderr.write("--rush01-capture-output requires --rush01-spec.\n")
+            return False
+        if not 1.0 <= args.rush01_capture_timeout <= 300.0:
+            sys.stderr.write("--rush01-capture-timeout must be in 1..300.\n")
+            return False
+        if args.rush01_capture_timeout != 60.0 and args.rush01_capture_output is None:
+            sys.stderr.write("--rush01-capture-timeout requires --rush01-capture-output.\n")
             return False
         if not args.confirm_rush01_midi_send:
             sys.stderr.write(
                 "--rush01-apply-plan requires --confirm-rush01-midi-send before output.\n"
             )
+            return False
+        if args.confirm_rush16_calibration_send or args.rush16_hardware_unit is not None:
+            sys.stderr.write("RUSH16 calibration arguments require --rush16-calibrate.\n")
             return False
         if args.rush01_input_port is not None or args.rush01_observation_output is not None:
             sys.stderr.write("RUSH01 learning arguments require --rush01-midi-learn.\n")
@@ -2432,7 +2574,18 @@ def _validate_rush01_arguments(args: argparse.Namespace) -> bool:
     if args.rush01_parameter is None or not args.rush01_parameter.strip():
         sys.stderr.write("--rush01-midi-learn requires --rush01-parameter.\n")
         return False
-    if args.rush01_config is not None or args.confirm_rush01_midi_send or args.rush01_track:
+    if (
+        args.rush01_config is not None
+        or args.rush01_spec is not None
+        or args.rush01_disposable_target is not None
+        or args.rush01_capture_output is not None
+        or args.rush01_capture_timeout != 60.0
+        or args.confirm_rush01_midi_send
+        or args.rush01_track
+        or args.confirm_rush16_calibration_send
+        or args.rush16_hardware_unit is not None
+        or args.rush16_checkpoint is not None
+    ):
         sys.stderr.write("RUSH01 output arguments require --rush01-apply-plan.\n")
         return False
     if args.rush01_delay_ms != 15:
@@ -2452,9 +2605,93 @@ def _rush01_spec_path(device: str) -> Path:
     return Path(__file__).resolve().parents[1] / "specs" / filename
 
 
+def _resolve_rush01_spec_path(device: str, requested: Path | None) -> Path:
+    return requested if requested is not None else _rush01_spec_path(device)
+
+
+def _write_rush01_plan_preview(
+    plan: object,
+    *,
+    spec_path: Path,
+    disposable_target: str | None,
+) -> None:
+    from .style_analysis.rush01_midi_compiler import STATUS_READY, Rush01MidiPlan
+
+    if not isinstance(plan, Rush01MidiPlan):
+        raise TypeError("plan must be a Rush01MidiPlan")
+    lines = [
+        "RUSH01 outbound preview (provider not constructed)",
+        f"spec: {spec_path}",
+        f"device: {plan.device}",
+        f"disposable target: {disposable_target or 'not supplied'}",
+        f"exact configured output: {plan.output_port}",
+    ]
+    for field in plan.fields:
+        if field.status != STATUS_READY:
+            continue
+        packets = field.ordered_midi_bytes or ()
+        packet_text = " ".join(
+            "[" + ",".join(str(byte) for byte in packet) + "]" for packet in packets
+        )
+        lines.append(
+            f"{field.sequence:03d} {field.semantic_path} requested={field.requested_value!r} "
+            f"channel={field.channel} packets={packet_text or 'unconfigured'}"
+        )
+    lines.extend(
+        [
+            "Program Change: 0",
+            "transport/realtime: 0",
+            "SysEx output: 0",
+            "pattern/song/chain/project/save: 0",
+            f"ready fields: {plan.summary.ready_fields}",
+            f"outgoing CC packets: {plan.summary.transport_message_count}",
+        ]
+    )
+    sys.stdout.write("\n".join(lines) + "\n")
+
+
+def _capture_rush01_hardware_return(
+    provider: _RytmSysexCaptureProvider,
+    *,
+    device: str,
+    input_port: str,
+    timeout_seconds: float,
+    output_path: Path,
+) -> str:
+    from hashlib import sha256
+
+    from .devices.strategies import ANALOG_FOUR_KIT_CODEC, ANALOG_RYTM_KIT_CODEC
+
+    if output_path.suffix.lower() != ".syx":
+        raise ValueError("RUSH01 hardware-return output must use the .syx suffix")
+    if output_path.exists():
+        raise ValueError(f"RUSH01 hardware-return output already exists: {output_path}")
+    frames = provider.capture_sysex_messages(
+        input_port,
+        timeout_seconds=timeout_seconds,
+    )
+    if len(frames) != 1:
+        raise ValueError("RUSH01 hardware-return capture requires exactly one SysEx frame")
+    frame = frames[0]
+    codec = ANALOG_RYTM_KIT_CODEC if device == "rytm" else ANALOG_FOUR_KIT_CODEC
+    decoded = codec.decode_frame(frame)
+    if codec.encode_frame(decoded) != frame:
+        raise ValueError("RUSH01 hardware-return frame is not decode/encode stable")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = output_path.with_suffix(output_path.suffix + ".tmp")
+    try:
+        temporary.write_bytes(frame)
+        temporary.replace(output_path)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+    return sha256(frame).hexdigest()
+
+
 def _run_rush01_apply_plan(args: argparse.Namespace) -> int:
     """Compile, validate, and apply one RUSH01 plan through the armed app boundary."""
 
+    import json
     from time import sleep
 
     import yaml
@@ -2474,7 +2711,8 @@ def _run_rush01_apply_plan(args: argparse.Namespace) -> int:
     try:
         config_payload = yaml.safe_load(args.rush01_config.read_text(encoding="utf-8"))
         config = parse_rush01_device_config(config_payload, device)
-        spec_payload = yaml.safe_load(_rush01_spec_path(device).read_text(encoding="utf-8"))
+        spec_path = _resolve_rush01_spec_path(device, args.rush01_spec)
+        spec_payload = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
         plan = compile_rush01_midi_plan(
             device,
             spec_payload,
@@ -2482,8 +2720,37 @@ def _run_rush01_apply_plan(args: argparse.Namespace) -> int:
             track=args.rush01_track,
             parameter=args.rush01_parameter,
         )
+        is_rush16 = isinstance(spec_payload, Mapping) and "rush16" in spec_payload
+        if args.rush16_checkpoint is not None:
+            if not is_rush16:
+                raise ValueError("--rush16-checkpoint requires a RUSH16 semantic spec")
+            from .style_analysis.rush16_apply_calibration import (
+                apply_rush16_calibration_promotions,
+            )
+
+            checkpoint_payload = json.loads(args.rush16_checkpoint.read_text(encoding="utf-8"))
+            if not isinstance(checkpoint_payload, Mapping):
+                raise ValueError("RUSH16 checkpoint must contain a JSON object")
+            plan = apply_rush16_calibration_promotions(
+                plan,
+                spec_filename=spec_path.name,
+                checkpoint=checkpoint_payload,
+            )
+        _write_rush01_plan_preview(
+            plan,
+            spec_path=spec_path,
+            disposable_target=args.rush01_disposable_target,
+        )
+        if is_rush16:
+            from .style_analysis.rush16_anchor_audition import (
+                validate_rush16_plan_for_apply,
+            )
+
+            validate_rush16_plan_for_apply(spec_payload, plan)
+        if args.rush01_capture_output is not None and config.input_port is None:
+            raise ValueError(f"config.{device}.input_port is required for hardware-return capture")
         validate_rush01_plan_for_apply(plan)
-    except (OSError, ValueError, yaml.YAMLError) as exc:
+    except (OSError, ValueError, json.JSONDecodeError, yaml.YAMLError) as exc:
         sys.stderr.write(f"--arm --rush01-apply-plan validation failed: {exc}\n")
         return 1
 
@@ -2504,6 +2771,34 @@ def _run_rush01_apply_plan(args: argparse.Namespace) -> int:
     except (RealMidiDependencyError, RealMidiPortError, OSError, RuntimeError, ValueError) as exc:
         sys.stderr.write(f"--arm --rush01-apply-plan failed safely: {exc}\n")
         return 1
+    if args.rush01_capture_output is not None:
+        sys.stdout.write(
+            "Outbound plan complete and output port closed. Save the disposable active kit, "
+            "then initiate its current-kit SysEx dump now.\n"
+        )
+        try:
+            capture_sha256 = _capture_rush01_hardware_return(
+                provider,
+                device=device,
+                input_port=config.input_port,
+                timeout_seconds=args.rush01_capture_timeout,
+                output_path=args.rush01_capture_output,
+            )
+        except (
+            RealMidiDependencyError,
+            RealMidiPortError,
+            OSError,
+            RuntimeError,
+            ValueError,
+        ) as exc:
+            sys.stderr.write(
+                f"--arm --rush01-apply-plan hardware-return capture failed safely: {exc}\n"
+            )
+            return 1
+        sys.stdout.write(
+            f"Hardware-return candidate captured: {args.rush01_capture_output} "
+            f"sha256={capture_sha256}. This is not final until passive semantic validation passes.\n"
+        )
     sys.stdout.write(
         f"RUSH01 {result.device} plan applied: {result.field_count} fields, "
         f"{result.message_count} CC messages.\n"
@@ -2574,6 +2869,727 @@ def _run_rush01_midi_learn(args: argparse.Namespace) -> int:
     return 130 if capture.interrupted else 0
 
 
+def _read_rush16_operator_input(prompt: str) -> str:
+    """Read one operator response through a test-replaceable boundary."""
+
+    return input(prompt)
+
+
+def _parse_rush16_display_value(value: str) -> object:
+    """Accept exact plain-text labels while preserving typed JSON values."""
+
+    import json
+
+    normalized = value.strip()
+    if not normalized:
+        raise ValueError("RUSH16 displayed value is required")
+    try:
+        return json.loads(normalized)
+    except json.JSONDecodeError:
+        return normalized
+
+
+def _write_rush16_local_bytes(path: Path, content: bytes) -> None:
+    """Atomically write one local-only calibration artifact."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    try:
+        temporary.write_bytes(content)
+        temporary.replace(path)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+
+
+def _capture_rush16_calibration_frame(
+    provider: _RytmSysexCaptureProvider,
+    *,
+    device: str,
+    input_port: str,
+    timeout_seconds: float,
+) -> bytes:
+    """Capture and round-trip validate exactly one current KIT frame."""
+
+    from .devices.strategies import ANALOG_FOUR_KIT_CODEC, ANALOG_RYTM_KIT_CODEC
+
+    frames = provider.capture_sysex_messages(input_port, timeout_seconds=timeout_seconds)
+    if len(frames) != 1:
+        raise ValueError("RUSH16 calibration capture requires exactly one KIT SysEx frame")
+    frame = frames[0]
+    codec = ANALOG_RYTM_KIT_CODEC if device == "rytm" else ANALOG_FOUR_KIT_CODEC
+    decoded = codec.decode_frame(frame)
+    if codec.encode_frame(decoded) != frame:
+        raise ValueError("RUSH16 calibration KIT frame is not decode/encode stable")
+    return frame
+
+
+def _load_rush16_anchor_specs() -> dict[str, object]:
+    """Load the tracked eight-anchor specifications without touching MIDI."""
+
+    import yaml
+
+    spec_root = Path(__file__).resolve().parents[1] / "specs" / "rush16"
+    return {
+        path.name: yaml.safe_load(path.read_text(encoding="utf-8"))
+        for path in sorted(spec_root.glob("*.yaml"))
+        if path.name != "RUSH16_FAMILY.yaml"
+    }
+
+
+def _write_rush16_calibration_preview(
+    plan: object,
+    step: object,
+    *,
+    checkpoint_path: Path,
+    disposable_target: str,
+    provider_state: str = "not constructed",
+    evidence_mode: str = "saved-KIT certification",
+) -> None:
+    from .style_analysis.rush16_apply_calibration import (
+        Rush16CalibrationPlan,
+        Rush16CalibrationStep,
+        rush16_calibration_display_label,
+    )
+
+    if not isinstance(plan, Rush16CalibrationPlan) or not isinstance(step, Rush16CalibrationStep):
+        raise TypeError("RUSH16 calibration preview requires a plan and step")
+    context = " ".join(str(list(packet)) for packet in step.context_messages) or "none"
+    candidate = " ".join(str(list(packet)) for packet in step.candidate_messages)
+    lines = [
+        f"RUSH16 guarded calibration preview (provider {provider_state})",
+        f"device: {plan.device}",
+        f"disposable active kit: {disposable_target}",
+        f"exact configured output: {plan.output_port}",
+        f"exact configured input: {plan.input_port}",
+        f"checkpoint: {checkpoint_path}",
+        f"step: {step.sequence}/{len(plan.steps)} {step.step_id}",
+        f"semantic parameter: {step.semantic_path}",
+        f"operator display: {rush16_calibration_display_label(plan, step)}",
+        f"evidence mode: {evidence_mode}",
+        f"documented raw candidate: {step.raw_value} ({step.value_domain})",
+        f"machine/context packets first: {context}",
+        f"candidate packets second: {candidate}",
+        "Program Change: 0",
+        "transport/realtime: 0",
+        "SysEx output: 0",
+        "save/pattern/song/chain/project: 0",
+        "operator sound-parameter entry: forbidden",
+    ]
+    sys.stdout.write("\n".join(lines) + "\n")
+
+
+def _write_rush16_promoted_build_matrix(
+    root: Path,
+    *,
+    device: str,
+    specs: Mapping[str, object],
+    config: object,
+    checkpoint: Mapping[str, object],
+) -> None:
+    """Regenerate all four device plans and blocker counts after an observation."""
+
+    import json
+
+    from .style_analysis.rush01_midi_compiler import (
+        Rush01DeviceConfig,
+        compile_rush01_midi_plan,
+        rush01_midi_plan_to_dict,
+    )
+    from .style_analysis.rush16_anchor_audition import rush16_hardware_blockers
+    from .style_analysis.rush16_apply_calibration import (
+        apply_rush16_calibration_promotions,
+    )
+
+    if not isinstance(config, Rush01DeviceConfig):
+        raise TypeError("RUSH16 promoted matrix requires a device config")
+    entries: list[dict[str, object]] = []
+    for filename, spec in sorted(specs.items()):
+        if not isinstance(spec, Mapping):
+            raise ValueError(f"RUSH16 spec must be a mapping: {filename}")
+        metadata = spec.get("rush16")
+        if not isinstance(metadata, Mapping) or metadata.get("device") != device:
+            continue
+        compiled = compile_rush01_midi_plan(device, spec, config=config)
+        promoted = apply_rush16_calibration_promotions(
+            compiled,
+            spec_filename=filename,
+            checkpoint=checkpoint,
+        )
+        blockers = rush16_hardware_blockers(spec, promoted)
+        plan_document = rush01_midi_plan_to_dict(promoted)
+        _write_rush16_local_bytes(
+            root / "hardware_apply_plans" / f"{filename.removesuffix('.yaml')}.plan.json",
+            (json.dumps(plan_document, indent=2, sort_keys=True) + "\n").encode("utf-8"),
+        )
+        entries.append(
+            {
+                "spec_filename": filename,
+                "hardware_apply_blockers": list(blockers),
+                "hardware_apply_blocker_count": len(blockers),
+                "hardware_apply_ready": not blockers,
+                "ready_fields": promoted.summary.ready_fields,
+                "transport_message_count": promoted.summary.transport_message_count,
+            }
+        )
+    _write_rush16_local_bytes(
+        root / "calibration" / f"{device.upper()}_BUILD_MATRIX.json",
+        (
+            json.dumps(
+                {
+                    "device": device,
+                    "checkpoint_plan_sha256": checkpoint.get("plan_sha256"),
+                    "entries": entries,
+                },
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n"
+        ).encode("utf-8"),
+    )
+
+
+def _rush16_unique_requested_values(plan: object, step: object) -> list[object]:
+    import json
+
+    from .style_analysis.rush16_apply_calibration import (
+        Rush16CalibrationPlan,
+        Rush16CalibrationStep,
+        rush16_effective_requested_value,
+    )
+
+    if not isinstance(plan, Rush16CalibrationPlan) or not isinstance(step, Rush16CalibrationStep):
+        raise TypeError("RUSH16 requested values require a calibration plan and step")
+    requested = [
+        rush16_effective_requested_value(target.requested_value)
+        for family in plan.families
+        if family.family_id == step.family_id
+        for target in family.targets
+    ]
+    unique: list[object] = []
+    fingerprints: set[str] = set()
+    for value in requested:
+        fingerprint = json.dumps(value, sort_keys=True, separators=(",", ":"))
+        if fingerprint not in fingerprints:
+            fingerprints.add(fingerprint)
+            unique.append(value)
+    return unique
+
+
+def _read_rush16_semantic_approvals(unique_requested: Sequence[object]) -> list[object]:
+    import json
+
+    sys.stdout.write(
+        "Unique requested semantic values in this family: "
+        + json.dumps(list(unique_requested), sort_keys=True)
+        + "\n"
+    )
+    approvals_text = _read_rush16_operator_input(
+        "Approve only values for which this exact display is the intended target. Do not "
+        "enter the display label again. Enter one requested semantic value shown above "
+        "(plain text labels and JSON values are accepted), multiple values as a JSON "
+        "array, or [] when it proves none: "
+    )
+    try:
+        parsed = json.loads(approvals_text)
+    except json.JSONDecodeError as exc:
+        plain_text = approvals_text.strip()
+        if any(isinstance(value, str) and plain_text == value for value in unique_requested):
+            return [plain_text]
+        raise ValueError("RUSH16 approval must be a requested value or a JSON array") from exc
+    if isinstance(parsed, list):
+        return parsed
+    if any(parsed == value for value in unique_requested):
+        return [parsed]
+    raise ValueError(
+        "RUSH16 approval must be a requested value or a JSON array of requested values"
+    )
+
+
+def _rush16_paired_repeat_step(
+    plan: object,
+    checkpoint: Mapping[str, object],
+    step: object,
+) -> object | None:
+    from .style_analysis.rush16_apply_calibration import (
+        Rush16CalibrationPlan,
+        Rush16CalibrationStep,
+        rush16_steps_share_witness_location,
+    )
+
+    if not isinstance(plan, Rush16CalibrationPlan) or not isinstance(step, Rush16CalibrationStep):
+        raise TypeError("RUSH16 paired repeat requires a calibration plan and step")
+    observed = {
+        str(row.get("step_id"))
+        for row in checkpoint.get("observations", ())
+        if isinstance(row, Mapping)
+    }
+    matches = [
+        candidate
+        for candidate in plan.steps
+        if candidate.step_id not in observed
+        and candidate.step_id != step.step_id
+        and rush16_steps_share_witness_location(plan, step, candidate)
+    ]
+    if len(matches) > 1:
+        raise ValueError("RUSH16 candidate has multiple same-location repeat witnesses")
+    return matches[0] if matches else None
+
+
+def _run_rush16_calibration(args: argparse.Namespace) -> int:
+    """Run guarded operator-present probes through the existing armed app boundary."""
+
+    import json
+    from time import sleep
+
+    import yaml
+
+    from .senders.rush01_midi_transport import apply_rush01_messages
+    from .style_analysis.rush01_midi_compiler import parse_rush01_device_config
+    from .style_analysis.rush16_apply_calibration import (
+        Rush16CalibrationStep,
+        accept_rush16_calibration_observation,
+        analyze_rush16_kit_differential,
+        build_rush16_calibration_plan,
+        load_or_create_rush16_checkpoint,
+        next_rush16_calibration_step,
+        rush16_calibration_display_label,
+        rush16_calibration_plan_to_dict,
+        rush16_calibration_progress,
+        rush16_calibration_step_requires_saved_kit,
+        validate_rush16_calibration_baseline_continuity,
+        write_rush16_checkpoint,
+    )
+
+    device = _rush01_selected_device(args)
+    if device is None:  # pragma: no cover - guarded before dispatch
+        return 1
+    root = args.rush16_session_root.resolve()
+    checkpoint_path = root / "session_checkpoints" / f"{device}.checkpoint.json"
+    try:
+        config_payload = yaml.safe_load(args.rush01_config.read_text(encoding="utf-8"))
+        config = parse_rush01_device_config(config_payload, device)
+        specs = _load_rush16_anchor_specs()
+        plan = build_rush16_calibration_plan(device, specs, config=config)
+        checkpoint = load_or_create_rush16_checkpoint(
+            checkpoint_path,
+            plan,
+            hardware_unit=args.rush16_hardware_unit,
+            disposable_target=args.rush01_disposable_target,
+        )
+        step = next_rush16_calibration_step(plan, checkpoint)
+        plan_path = root / "calibration" / f"{device.upper()}_CALIBRATION_PLAN.json"
+        _write_rush16_local_bytes(
+            plan_path,
+            (
+                json.dumps(rush16_calibration_plan_to_dict(plan), indent=2, sort_keys=True) + "\n"
+            ).encode("utf-8"),
+        )
+        if step is None:
+            write_rush16_checkpoint(checkpoint_path, checkpoint)
+            _write_rush16_promoted_build_matrix(
+                root,
+                device=device,
+                specs=specs,
+                config=config,
+                checkpoint=checkpoint,
+            )
+            progress = rush16_calibration_progress(plan, checkpoint)
+            sys.stdout.write(
+                "RUSH16 supported calibration observations are complete. "
+                f"Families complete={progress.families_complete}; "
+                f"families remaining={progress.families_remaining}; "
+                f"blockers after={dict(progress.blocker_counts_after)}.\n"
+            )
+            return 0
+        requires_saved_kit = step is not None and rush16_calibration_step_requires_saved_kit(
+            plan, checkpoint, step
+        )
+        _write_rush16_calibration_preview(
+            plan,
+            step,
+            checkpoint_path=checkpoint_path,
+            disposable_target=args.rush01_disposable_target,
+            evidence_mode=(
+                "saved-KIT certification"
+                if requires_saved_kit
+                else "display discovery; no KIT save or SysEx capture"
+            ),
+        )
+    except (OSError, ValueError, TypeError, json.JSONDecodeError, yaml.YAMLError) as exc:
+        sys.stderr.write(f"--arm --rush16-calibrate validation failed: {exc}\n")
+        return 1
+
+    from .mido_provider import build_mido_midi_port_provider
+    from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
+
+    capture_stem = f"{step.sequence:04d}_{step.family_id}_{step.witness_role}_{step.raw_value}"
+    baseline_path = root / "captured_dumps" / f"{capture_stem}_baseline.syx"
+    try:
+        if not requires_saved_kit:
+            provider = build_mido_midi_port_provider()
+            while True:
+                ready_text = _read_rush16_operator_input(
+                    "This is a quick display-discovery probe. No KIT save or SysEx dump is "
+                    "required. Press Enter when ready to send the candidate, or enter Q to "
+                    "stop safely: "
+                )
+                if ready_text.strip().lower() == "q":
+                    sys.stdout.write("RUSH16 continuous discovery paused safely.\n")
+                    return 0
+                if ready_text.strip():
+                    raise ValueError("RUSH16 discovery prompt accepts only Enter or Q")
+                capture_stem = (
+                    f"{step.sequence:04d}_{step.family_id}_{step.witness_role}_{step.raw_value}"
+                )
+                message_count = apply_rush01_messages(
+                    step.ordered_messages,
+                    provider,
+                    port_name=plan.output_port,
+                    delay_ms=args.rush01_delay_ms,
+                    sleep=sleep,
+                )
+                display_label = rush16_calibration_display_label(plan, step)
+                display_value = _parse_rush16_display_value(
+                    _read_rush16_operator_input(
+                        f"Output port is closed. Enter the exact displayed {display_label}: "
+                    )
+                )
+                approvals = _read_rush16_semantic_approvals(
+                    _rush16_unique_requested_values(plan, step)
+                )
+                updated_checkpoint = accept_rush16_calibration_observation(
+                    plan,
+                    checkpoint,
+                    step=step,
+                    display_value=display_value,
+                    approved_requested_values=approvals,
+                    differential=None,
+                    observation_evidence_kind="display_discovery",
+                )
+                write_rush16_checkpoint(checkpoint_path, updated_checkpoint)
+                _write_rush16_promoted_build_matrix(
+                    root,
+                    device=device,
+                    specs=specs,
+                    config=config,
+                    checkpoint=updated_checkpoint,
+                )
+                _write_rush16_local_bytes(
+                    root / "hardware_receipts" / f"{capture_stem}.json",
+                    (
+                        json.dumps(
+                            {
+                                "device": device,
+                                "hardware_unit": args.rush16_hardware_unit,
+                                "disposable_target": args.rush01_disposable_target,
+                                "step_id": step.step_id,
+                                "display_value": display_value,
+                                "approved_requested_values": approvals,
+                                "ordered_midi_bytes": [
+                                    list(packet) for packet in step.ordered_messages
+                                ],
+                                "message_count": message_count,
+                                "evidence_kind": "display_discovery",
+                                "baseline_path": None,
+                                "changed_path": None,
+                                "differential": None,
+                            },
+                            indent=2,
+                            sort_keys=True,
+                        )
+                        + "\n"
+                    ).encode("utf-8"),
+                )
+                checkpoint = updated_checkpoint
+                progress = rush16_calibration_progress(plan, checkpoint)
+                next_step = next_rush16_calibration_step(plan, checkpoint)
+                next_mode = (
+                    "complete"
+                    if next_step is None
+                    else (
+                        "saved-KIT certification"
+                        if rush16_calibration_step_requires_saved_kit(plan, checkpoint, next_step)
+                        else "quick display discovery"
+                    )
+                )
+                sys.stdout.write(
+                    f"RUSH16 display discovery accepted: {step.step_id}; no KIT was saved "
+                    f"and no SysEx input was captured; next mode={next_mode}; conservative "
+                    f"next-family ceiling={progress.next_family_observations_remaining}; "
+                    f"deferred large selector families="
+                    f"{progress.deferred_large_selector_families}; total conservative "
+                    f"candidate ceiling={progress.observations_remaining}.\n"
+                )
+                if not args.rush16_continuous or next_step is None:
+                    return 0
+                if rush16_calibration_step_requires_saved_kit(plan, checkpoint, next_step):
+                    sys.stdout.write(
+                        "RUSH16 continuous discovery paused before saved-KIT certification. "
+                        "Run the command again when the disposable KIT is ready.\n"
+                    )
+                    return 0
+                step = next_step
+                _write_rush16_calibration_preview(
+                    plan,
+                    step,
+                    checkpoint_path=checkpoint_path,
+                    disposable_target=args.rush01_disposable_target,
+                    provider_state="constructed; all ports currently closed",
+                    evidence_mode="display discovery; no KIT save or SysEx capture",
+                )
+
+        _read_rush16_operator_input(
+            "Load the named disposable calibration KIT at its last accepted saved state "
+            "without changing a sound parameter. Press Enter when ready to open the "
+            "baseline input capture: "
+        )
+        provider = build_mido_midi_port_provider()
+        sys.stdout.write(
+            "Baseline MIDI input is opening now. Initiate the current-KIT SysEx dump now.\n"
+        )
+        baseline = _capture_rush16_calibration_frame(
+            provider,
+            device=device,
+            input_port=plan.input_port,
+            timeout_seconds=args.rush01_capture_timeout,
+        )
+        _write_rush16_local_bytes(baseline_path, baseline)
+        validate_rush16_calibration_baseline_continuity(checkpoint, baseline)
+        display_label = rush16_calibration_display_label(plan, step)
+        while True:
+            capture_stem = (
+                f"{step.sequence:04d}_{step.family_id}_{step.witness_role}_{step.raw_value}"
+            )
+            changed_path = root / "captured_dumps" / f"{capture_stem}_changed.syx"
+            message_count = apply_rush01_messages(
+                step.ordered_messages,
+                provider,
+                port_name=plan.output_port,
+                delay_ms=args.rush01_delay_ms,
+                sleep=sleep,
+            )
+            display_text = _read_rush16_operator_input(
+                f"Output port is closed. Enter the exact displayed {display_label}. "
+                "Plain text labels and JSON values are accepted: "
+            )
+            display_value = _parse_rush16_display_value(display_text)
+
+            repeat: Rush16CalibrationStep | None = None
+            repeat_display: object | None = None
+            repeat_message_count = 0
+            if args.rush16_continuous:
+                candidate_repeat = _rush16_paired_repeat_step(plan, checkpoint, step)
+                if candidate_repeat is not None:
+                    if not isinstance(candidate_repeat, Rush16CalibrationStep):
+                        raise TypeError("RUSH16 paired repeat is not a calibration step")
+                    repeat = candidate_repeat
+                    _write_rush16_calibration_preview(
+                        plan,
+                        repeat,
+                        checkpoint_path=checkpoint_path,
+                        disposable_target=args.rush01_disposable_target,
+                        provider_state="constructed; all ports currently closed",
+                    )
+                    _read_rush16_operator_input(
+                        "Press Enter to send the same raw candidate once more for its display "
+                        "repeat; no save or KIT dump is required between paired sends: "
+                    )
+                    repeat_message_count = apply_rush01_messages(
+                        repeat.ordered_messages,
+                        provider,
+                        port_name=plan.output_port,
+                        delay_ms=args.rush01_delay_ms,
+                        sleep=sleep,
+                    )
+                    repeat_text = _read_rush16_operator_input(
+                        f"Output port is closed. Enter the exact repeated displayed "
+                        f"{display_label}: "
+                    )
+                    repeat_display = _parse_rush16_display_value(repeat_text)
+                    if json.dumps(
+                        display_value, sort_keys=True, separators=(",", ":")
+                    ) != json.dumps(repeat_display, sort_keys=True, separators=(",", ":")):
+                        raise ValueError(
+                            "RUSH16 repeated display does not match the primary display; "
+                            "reload the last accepted saved KIT before retrying"
+                        )
+
+            approvals = _read_rush16_semantic_approvals(_rush16_unique_requested_values(plan, step))
+            _read_rush16_operator_input(
+                "Save the disposable active KIT without changing a sound parameter. "
+                "Press Enter when the save is complete and you are ready to open the changed "
+                "input capture: "
+            )
+            sys.stdout.write(
+                "Do not change the parameter by hand. Changed MIDI input is opening now. "
+                "Initiate the changed current-KIT SysEx dump now.\n"
+            )
+            changed = _capture_rush16_calibration_frame(
+                provider,
+                device=device,
+                input_port=plan.input_port,
+                timeout_seconds=args.rush01_capture_timeout,
+            )
+            _write_rush16_local_bytes(changed_path, changed)
+            differential = analyze_rush16_kit_differential(device, baseline, changed)
+            updated_checkpoint = accept_rush16_calibration_observation(
+                plan,
+                checkpoint,
+                step=step,
+                display_value=display_value,
+                approved_requested_values=approvals,
+                differential=differential,
+            )
+            if repeat is not None:
+                expected_repeat = next_rush16_calibration_step(plan, updated_checkpoint)
+                if expected_repeat is None or expected_repeat.step_id != repeat.step_id:
+                    raise ValueError("RUSH16 paired repeat is not the next checkpoint step")
+                updated_checkpoint = accept_rush16_calibration_observation(
+                    plan,
+                    updated_checkpoint,
+                    step=repeat,
+                    display_value=repeat_display,
+                    approved_requested_values=[],
+                    differential=None,
+                    evidence_reference_step_id=step.step_id,
+                )
+
+            write_rush16_checkpoint(checkpoint_path, updated_checkpoint)
+            _write_rush16_promoted_build_matrix(
+                root,
+                device=device,
+                specs=specs,
+                config=config,
+                checkpoint=updated_checkpoint,
+            )
+            receipt_path = root / "hardware_receipts" / f"{capture_stem}.json"
+            _write_rush16_local_bytes(
+                receipt_path,
+                (
+                    json.dumps(
+                        {
+                            "device": device,
+                            "hardware_unit": args.rush16_hardware_unit,
+                            "disposable_target": args.rush01_disposable_target,
+                            "step_id": step.step_id,
+                            "display_value": display_value,
+                            "approved_requested_values": approvals,
+                            "ordered_midi_bytes": [
+                                list(packet) for packet in step.ordered_messages
+                            ],
+                            "message_count": message_count,
+                            "evidence_kind": "saved_kit_differential",
+                            "paired_repeat_step_id": repeat.step_id if repeat is not None else None,
+                            "baseline_path": str(baseline_path),
+                            "changed_path": str(changed_path),
+                            "differential": differential,
+                        },
+                        indent=2,
+                        sort_keys=True,
+                    )
+                    + "\n"
+                ).encode("utf-8"),
+            )
+            if repeat is not None:
+                repeat_stem = (
+                    f"{repeat.sequence:04d}_{repeat.family_id}_{repeat.witness_role}_"
+                    f"{repeat.raw_value}"
+                )
+                _write_rush16_local_bytes(
+                    root / "hardware_receipts" / f"{repeat_stem}.json",
+                    (
+                        json.dumps(
+                            {
+                                "device": device,
+                                "hardware_unit": args.rush16_hardware_unit,
+                                "disposable_target": args.rush01_disposable_target,
+                                "step_id": repeat.step_id,
+                                "display_value": repeat_display,
+                                "approved_requested_values": [],
+                                "ordered_midi_bytes": [
+                                    list(packet) for packet in repeat.ordered_messages
+                                ],
+                                "message_count": repeat_message_count,
+                                "evidence_kind": "display_repeat",
+                                "evidence_reference_step_id": step.step_id,
+                                "shared_saved_kit_receipt": str(receipt_path),
+                                "baseline_path": None,
+                                "changed_path": None,
+                                "differential": None,
+                            },
+                            indent=2,
+                            sort_keys=True,
+                        )
+                        + "\n"
+                    ).encode("utf-8"),
+                )
+
+            checkpoint = updated_checkpoint
+            progress = rush16_calibration_progress(plan, checkpoint)
+            accepted_steps = step.step_id + (f", {repeat.step_id}" if repeat is not None else "")
+            sys.stdout.write(
+                f"RUSH16 observation accepted: {accepted_steps}; "
+                f"families complete={progress.families_complete}; "
+                f"families remaining={progress.families_remaining}; "
+                f"anchor blockers before={dict(progress.blocker_counts_before)}; "
+                f"after={dict(progress.blocker_counts_after)}; "
+                f"next family={progress.next_family_id}; next-family ceiling="
+                f"{progress.next_family_observations_remaining}; deferred large selector "
+                f"families={progress.deferred_large_selector_families}; total conservative "
+                f"candidate ceiling={progress.observations_remaining}.\n"
+            )
+            if not args.rush16_continuous:
+                return 0
+
+            next_step = next_rush16_calibration_step(plan, checkpoint)
+            if next_step is None:
+                sys.stdout.write("RUSH16 supported calibration observations are complete.\n")
+                return 0
+            if not rush16_calibration_step_requires_saved_kit(plan, checkpoint, next_step):
+                sys.stdout.write(
+                    "RUSH16 paused before the next quick display-discovery step so no "
+                    "unnecessary KIT save or SysEx capture is requested. Run the command "
+                    "again when ready.\n"
+                )
+                return 0
+            continue_text = _read_rush16_operator_input(
+                "Press Enter to continue with the next candidate in this session, or enter Q "
+                "to stop safely: "
+            ).strip()
+            if continue_text.lower() == "q":
+                sys.stdout.write("RUSH16 continuous calibration paused after an accepted cycle.\n")
+                return 0
+            if continue_text:
+                raise ValueError("RUSH16 continuous prompt accepts only Enter or Q")
+            baseline = changed
+            baseline_path = changed_path
+            step = next_step
+            _write_rush16_calibration_preview(
+                plan,
+                step,
+                checkpoint_path=checkpoint_path,
+                disposable_target=args.rush01_disposable_target,
+                provider_state="constructed; all ports currently closed",
+                evidence_mode="saved-KIT certification",
+            )
+    except KeyboardInterrupt:
+        sys.stderr.write("--arm --rush16-calibrate cancelled; accepted checkpoint is unchanged.\n")
+        return 130
+    except (
+        EOFError,
+        RealMidiDependencyError,
+        RealMidiPortError,
+        OSError,
+        RuntimeError,
+        TypeError,
+        ValueError,
+        json.JSONDecodeError,
+    ) as exc:
+        sys.stderr.write(f"--arm --rush16-calibrate failed safely: {exc}\n")
+        return 1
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the RytmRandomizer entry point. Returns an int exit code."""
 
@@ -2606,6 +3622,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _run_rush01_apply_plan(args)
     if args.rush01_midi_learn:
         return _run_rush01_midi_learn(args)
+    if args.rush16_calibrate:
+        return _run_rush16_calibration(args)
 
     if args.a4_soft_capture and args.validate_one_cc:
         sys.stderr.write("--a4-soft-capture cannot be combined with --validate-one-cc.\n")

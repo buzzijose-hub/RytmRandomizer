@@ -156,8 +156,8 @@ def test_statuses_preserve_reference_round_trips_and_exact_readiness_counts(
         "critical_fields": 244,
         "mapped_fields": 0,
         "preserve_reference_fields": 4,
-        "capture_required_fields": 228,
-        "candidate_only_fields": 12,
+        "capture_required_fields": 224,
+        "candidate_only_fields": 16,
         "unresolved_critical_fields": 240,
         "expected_changed_captures": 254,
         "supplied_differential_dumps": 0,
@@ -253,11 +253,12 @@ def test_a4_existing_calibrations_remain_candidate_only_and_fixture_backed(
     assert frequency.candidate_packed_data_offset == 156
     assert frequency.candidate_unpacked_stride == 350
     assert frequency.candidate_packed_stride == 400
-    assert len(fixtures) == len(ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS) == 3
+    assert len(fixtures) == len(ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS) == 4
     assert set(fixtures) == {
         "analog_four_filter1_frequency",
         "analog_four_filter1_resonance",
         "analog_four_filter2_frequency",
+        "analog_four_filter2_resonance",
     }
     assert all(payload["writer_ready"] is False for payload in fixtures.values())
     assert all(payload["evidence"] for payload in fixtures.values())

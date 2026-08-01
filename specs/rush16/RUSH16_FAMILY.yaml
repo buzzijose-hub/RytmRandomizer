@@ -1,0 +1,73 @@
+spec_version: 1
+family_name: RUSH16
+batch_id: RUSH16_ANCHOR_AUDITION_001
+batch_version: rush16-anchor-audition-v0.1
+source_specifications:
+  specs/RUSH01_RYTM.yaml:
+    sha256: 2bbd2577e177baa6e5819a70575ca0e44035a64f289c127b5432c5e830cac861
+    role: exact semantic source
+  specs/RUSH01_A4.yaml:
+    sha256: 2b143e89e9c44930842e0c0beb890f1179e8f7e12d5be7e752da565104b96f1f
+    role: exact semantic source
+shared_family_locks:
+- Rytm BD remains the true sub and short authoritative kick.
+- Rytm retains low-drum, clap, rim/clave, tom, shuffled-hat, open-hat, ride, and metallic-percussion roles.
+- A4 T1 remains the low-mid jacking bass and does not compete with Rytm BD sub energy.
+- A4 T2 remains the principal rhythmic synth hook.
+- A4 T3 remains the AM/Metal Sync pressure voice.
+- A4 T4 remains the ghost-filter, noise, drone, or atmospheric tension voice.
+- Every Rytm sample playback level is zero and every sample dependency is none.
+- No pattern, song, chain, project, transport, Program Change, save, or SysEx message is part of an apply
+  plan.
+- Peak intensity comes from orchestration and timbre rather than a family-wide output-gain increase.
+status_vocabulary:
+- writer_ready
+- midi_apply_ready
+- calibration_required
+- manual_menu_action_only
+- blocked_unverified
+anchors:
+- anchor_id: 01_DRY_AUTHORITY
+  frequency_owner: Rytm BD owns true sub; A4 T1 owns restrained low-mid pulse; A4 T2 owns a dark compact
+    midrange stab.
+  expected_performance_role: Lowest-density transition anchor with the driest core foundation.
+  rytm_spec: 01_DRY_AUTHORITY_RYTM.yaml
+  a4_spec: 01_DRY_AUTHORITY_A4.yaml
+- anchor_id: 05_WALKING_SAW
+  frequency_owner: Rytm BD owns true sub; A4 T1 owns low-mid pulse; A4 T2 owns the walking saw; Rytm SD/SY
+    RAW is a narrow dry interlock.
+  expected_performance_role: Primary jacking hook anchor with short SY RAW punctuation between A4 T2 events.
+  rytm_spec: 05_WALKING_SAW_RYTM.yaml
+  a4_spec: 05_WALKING_SAW_A4.yaml
+- anchor_id: 08_METAL_LOCK
+  frequency_owner: Rytm BD owns true sub; A4 T1/T2 remain subordinate; A4 T3 owns sustained metal pressure;
+    Rytm SD/SY CHIP supplies sparse commands.
+  expected_performance_role: Industrial lock anchor led by A4 T3 with sparse digital Rytm commands.
+  rytm_spec: 08_METAL_LOCK_RYTM.yaml
+  a4_spec: 08_METAL_LOCK_A4.yaml
+- anchor_id: 16_SIGNATURE_APEX
+  frequency_owner: Rytm BD owns true sub; A4 T1 owns low-mid pulse; A4 T2/T3 share hook and metal pressure;
+    A4 T4 owns upper tension; Rytm SD/SY RAW reprises the walking-saw interlock.
+  expected_performance_role: Strongest controlled anchor, distinguished by orchestration, ride punctuation,
+    and the returning SY RAW motif.
+  rytm_spec: 16_SIGNATURE_APEX_RYTM.yaml
+  a4_spec: 16_SIGNATURE_APEX_A4.yaml
+audition_lock:
+  same_oxi_pattern: true
+  same_tempo: true
+  same_root: true
+  same_velocities: true
+  same_note_lengths: true
+  same_gain_staging: true
+  octatrack_role: routing_and_recording_only
+  octatrack_forbidden:
+  - transition scenes
+  - retriggers
+  - reverb freeze
+  - master coloration
+finalization_policy:
+  direct_sysex_requires_all_critical_writer_ready: true
+  hardware_assisted_requires_all_critical_midi_ready: true
+  hardware_return_dump_is_canonical: true
+  partial_kits_are_never_final: true
+  manual_sound_parameter_entry: forbidden

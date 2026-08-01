@@ -100,6 +100,7 @@ _A4_CANDIDATE_PARAMETER_BY_FIELD: Final[Mapping[tuple[str, str], str]] = Mapping
         ("filter_1", "frequency"): "Filter1 Frequency",
         ("filter_1", "resonance"): "Filter1 Resonance",
         ("filter_2", "frequency"): "Filter2 Frequency",
+        ("filter_2", "resonance"): "Filter2 Resonance",
     }
 )
 _SAFETY: Final[tuple[str, ...]] = (
@@ -411,6 +412,14 @@ def _classify_rytm_fields(
         if plan_field.semantic_path == "build_policy.kit_name":
             fields.append(_known_kit_name_field(plan_field))
             continue
+        if plan_field.track is not None and plan_field.semantic_path.endswith(
+            (".sound_name", ".design_role")
+        ):
+            fields.append(_known_metadata_field(plan_field))
+            continue
+        if plan_field.track is None and plan_field.status == STATUS_PRESERVE_REFERENCE:
+            fields.append(_known_auxiliary_preserve_field(plan_field))
+            continue
         if plan_field.track is None:
             raise ValueError(f"Rytm critical field has no track: {plan_field.semantic_path}")
         track_index = RUSH01_RYTM_TRACK_ORDER.index(plan_field.track)
@@ -619,6 +628,14 @@ def _classify_a4_fields(
         if field.semantic_path == "build_policy.kit_name":
             fields.append(_known_kit_name_field(field))
             continue
+        if field.track is not None and field.semantic_path.endswith(
+            (".sound_name", ".design_role")
+        ):
+            fields.append(_known_metadata_field(field))
+            continue
+        if field.track is None and field.status == STATUS_PRESERVE_REFERENCE:
+            fields.append(_known_auxiliary_preserve_field(field))
+            continue
         if field.track is None:
             raise ValueError(f"A4 critical field has no track: {field.semantic_path}")
         if field.status == STATUS_PRESERVE_REFERENCE:
@@ -722,6 +739,57 @@ def _known_kit_name_field(field: Rush01MidiField) -> Rush01SysexCalibrationField
         ),
         status=FIELD_STATUS_MAPPED,
         reason="fixed-width ASCII kit-name location is established and round-trip tested",
+        evidence_needed=(),
+    )
+
+
+def _known_auxiliary_preserve_field(
+    field: Rush01MidiField,
+) -> Rush01SysexCalibrationField:
+    return replace(
+        _base_field(
+            field,
+            converter_family="enum",
+            capture_group=f"{field.device}.auxiliary_preserve",
+            catalog_parameter=_path_leaf(field.semantic_path),
+            candidate_unpacked_offset=None,
+            candidate_unpacked_stride=None,
+            candidate_packed_stride=None,
+            header_size=9 if field.device == RUSH01_DEVICE_RYTM else 4,
+            critical=False,
+        ),
+        status=FIELD_STATUS_PRESERVE,
+        reason="the specification explicitly preserves this auxiliary saved-kit field",
+        evidence_needed=(),
+    )
+
+
+def _known_metadata_field(field: Rush01MidiField) -> Rush01SysexCalibrationField:
+    base = _base_field(
+        field,
+        converter_family="unmapped",
+        capture_group=f"{field.device}.track_metadata",
+        catalog_parameter=_path_leaf(field.semantic_path),
+        candidate_unpacked_offset=None,
+        candidate_unpacked_stride=None,
+        candidate_packed_stride=None,
+        header_size=9 if field.device == RUSH01_DEVICE_RYTM else 4,
+        critical=False,
+    )
+    if field.semantic_path.endswith(".design_role"):
+        return replace(
+            base,
+            status=FIELD_STATUS_PRESERVE,
+            reason="design-role metadata does not request a saved-kit byte mutation",
+            evidence_needed=(),
+        )
+    return replace(
+        base,
+        status=FIELD_STATUS_PRESERVE,
+        reason=(
+            "noncritical sound naming remains reference-preserved; no manual sound-parameter "
+            "entry is required"
+        ),
         evidence_needed=(),
     )
 

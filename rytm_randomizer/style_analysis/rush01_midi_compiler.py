@@ -101,6 +101,7 @@ class Rush01DeviceConfig:
     device: Rush01Device
     output_port: str
     track_channels: Mapping[str, int]
+    input_port: str | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "track_channels", MappingProxyType(dict(self.track_channels)))
@@ -262,6 +263,13 @@ def parse_rush01_device_config(payload: object, device: str) -> Rush01DeviceConf
     if _is_unfilled_config_value(output_port):
         raise ValueError(f"config.{normalized_device}.output_port still contains a placeholder")
 
+    input_port = section.get("input_port")
+    if input_port is not None:
+        if not isinstance(input_port, str) or not input_port.strip():
+            raise ValueError(f"config.{normalized_device}.input_port must be an exact port name")
+        if _is_unfilled_config_value(input_port):
+            raise ValueError(f"config.{normalized_device}.input_port still contains a placeholder")
+
     track_values = _require_mapping(
         section.get("tracks"), path=f"config.{normalized_device}.tracks"
     )
@@ -289,6 +297,7 @@ def parse_rush01_device_config(payload: object, device: str) -> Rush01DeviceConf
         device=normalized_device,
         output_port=output_port,
         track_channels=channels,
+        input_port=input_port,
     )
 
 

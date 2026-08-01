@@ -36,6 +36,37 @@ flag. It emits only approved CC messages: no Program Change, transport, SysEx,
 pattern, project, kit-write, or save messages. Offline KIT SysEx generation
 remains blocked until saved-kit semantic mappings are verified.
 
+### RUSH16 guarded A4 calibration
+
+RUSH16 calibration is another app-owned `--arm` operation. The command below uses
+placeholders for the local hardware-unit and disposable-KIT names; the ignored YAML
+file supplies exact local input/output ports and channels.
+
+```bash
+python -m rytm_randomizer.app --arm --rush16-calibrate --rush16-continuous \
+  --rush01-device a4 --rush01-config config/rush01_midi_channels.yaml \
+  --rush01-disposable-target DISPOSABLE_A4_CALIBRATION_KIT \
+  --rush16-hardware-unit LOCAL_A4_UNIT \
+  --rush16-session-root output/local/RUSH16_ANCHOR_AUDITION \
+  --confirm-rush16-calibration-send
+```
+
+The app previews the next candidate before constructing the provider. Consecutive
+display-discovery candidates are output-only: each requires Enter, each closes the
+output port before asking for the displayed value, and none opens input, requests a
+KIT save, or captures SysEx. Enter `Q` at a discovery prompt to stop safely. The loop
+automatically pauses before saved-KIT certification, which is resumed by running the
+same command again. Checkpoint reload re-derives valid promotions from stored
+evidence; it does not require repeating completed numeric work.
+
+Numeric inference remains fail-closed. It requires at least three exact points on the
+representative route, a single exact affine fit, matching raw/display evidence on the
+confirmation route, and payload-changing saved-KIT evidence at both locations. Large
+selectors use a deterministic endpoint-and-midpoint search before filling unresolved
+interior candidates. The reported next-family ceiling is the useful immediate studio
+work estimate; the larger total ceiling is a conservative bound, not a required
+number of operator cycles.
+
 > **Adding a new passive command:** register through `rytm_randomizer.cli_registry.CliCommand.register(...)`. Inline `if args == ["my-cmd"]` arms in `cli.py:main()` are forbidden — the architecture test `tests/architecture/test_cli_no_inline_arms.py` enforces a grandfathered-ratchet floor on the existing inline arms (PR 8, H7+IH4+IH5) and refuses any new ones. See [`CONTRIBUTING.md` § Patterns introduced by the CODE_REVIEW.md sweep](../CONTRIBUTING.md#patterns-introduced-by-the-code_reviewmd-sweep-2026-05-25).
 
 ---
