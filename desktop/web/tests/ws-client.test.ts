@@ -13,6 +13,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   CockpitClient,
   DEFAULT_WS_URL,
+  ARM_SECRET_STORAGE_KEY,
+  resolveArmSecret,
   WS_AUTH_TOKEN_STORAGE_KEY,
   WS_SUBPROTOCOL,
   type ClientLogger,
@@ -1330,5 +1332,43 @@ describe('protocol type guards', () => {
     expect(isCommandAck(undefined)).toBe(false);
     expect(isCommandAck(42)).toBe(false);
     expect(isCommandAck('hello')).toBe(false);
+  });
+
+  it('resolveArmSecret returns null when localStorage access throws', () => {
+    // A hardened webview (or Safari private mode) can make localStorage
+    // access throw outright. The resolver must fail CLOSED — returning null
+    // so the arm dialog refuses with a real message — rather than letting
+    // the exception escape into a render.
+    delete (window as { __RYTM_RAND_ARM_SECRET__?: string }).__RYTM_RAND_ARM_SECRET__;
+    const original = Object.getOwnPropertyDescriptor(window, 'localStorage');
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      get() {
+        throw new Error('localStorage is blocked');
+      },
+    });
+    try {
+      expect(resolveArmSecret()).toBeNull();
+    } finally {
+      if (original !== undefined) Object.defineProperty(window, 'localStorage', original);
+    }
+  });
+
+  it('resolveArmSecret returns null in a non-browser global (SSR guard)', () => {
+    // Mirrors the WS auth-token resolver's own SSR guard: the module can be
+    // imported where `window` does not exist, and arming must resolve to
+    // "no secret" rather than throwing on property access.
+    vi.stubGlobal('window', undefined);
+    try {
+      expect(resolveArmSecret()).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('ARM_SECRET_STORAGE_KEY matches the key the Tauri shell writes', () => {
+    // Pinned against sidecar.rs::ARM_SECRET_STORAGE_KEY — a silent rename on
+    // either side would break arming in packaged builds only.
+    expect(ARM_SECRET_STORAGE_KEY).toBe('rytm-rand-arm-secret');
   });
 });

@@ -403,4 +403,30 @@ describe('ArmControl', () => {
     ]);
     window.localStorage.removeItem('rytm-rand-arm-secret');
   });
+
+  it('fails closed if the secret disappears between render and click', () => {
+    // The confirm button is enabled from the RENDER-time secret, but
+    // resolveArmSecret() reads live browser state at click time: a webview
+    // reload or shell restart can clear it in between. This is the guard
+    // inside submitArm — not redundant with the disabled button — and it
+    // must refuse rather than send an empty token.
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionMock);
+    });
+    seedOutputs([RYTM_OUT]);
+    const fake = new FakeCockpitClient();
+    renderArmControl(fake);
+
+    fillArmDialog(RYTM_OUT);
+    expect(screen.getByTestId('arm-confirm-button')).toBeEnabled();
+
+    // The shell's injection evaporates after the button was enabled.
+    injectArmSecret(null);
+    fireEvent.click(screen.getByTestId('arm-confirm-button'));
+
+    expect(fake.sent).toEqual([]);
+    expect(screen.getByTestId('arm-dialog-error')).toHaveTextContent(
+      /Arm secret unavailable/,
+    );
+  });
 });

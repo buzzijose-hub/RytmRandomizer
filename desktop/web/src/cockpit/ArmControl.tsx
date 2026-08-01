@@ -88,7 +88,12 @@ export function ArmControl(): JSX.Element {
   // there is the difference between a clear message and an opaque server
   // refusal.
   const submitArm = (): void => {
-    if (armSecret === null) {
+    // Re-read at CLICK time, not the render-time closure value: a webview
+    // reload or shell restart can clear the injection after the button was
+    // enabled, and sending a stale/absent secret would surface as an opaque
+    // server refusal instead of an actionable message.
+    const secretNow = resolveArmSecret();
+    if (secretNow === null) {
       // Fail closed. Sending an empty token would just surface as an opaque
       // server refusal; naming the real cause is actionable.
       setError(
@@ -99,7 +104,7 @@ export function ArmControl(): JSX.Element {
       return;
     }
     client
-      .send({ type: 'arm', arm_token: armSecret, port_name: portName, confirm: true })
+      .send({ type: 'arm', arm_token: secretNow, port_name: portName, confirm: true })
       .then((ack) => {
         if (ack.ok) {
           const armedPort = portName;
