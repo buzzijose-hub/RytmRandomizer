@@ -12,6 +12,8 @@ drift-guard test in ``tests/test_data_layer.py``.
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 # ============================================================
 # MACHINE CC
 # ============================================================
@@ -2448,7 +2450,16 @@ SY_RAW_ZONES = {
 # EXTRA MACHINES
 # ============================================================
 
-BD_EXTRA_MACHINES = {}
+
+class BdExtraMachine(TypedDict):
+    """One mutable V1.34 extra-machine discovery entry."""
+
+    name: str
+    role: str
+    machine_value: int
+
+
+BD_EXTRA_MACHINES: dict[str, BdExtraMachine] = {}
 
 
 __all__ = [

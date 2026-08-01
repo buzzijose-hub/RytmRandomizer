@@ -55,7 +55,7 @@ def _feature_report(
 
 def _interaction_script(tmp_path: Path):
     from conftest import dual_machine_reference_bank_files
-    from rytm_randomizer.reports.live_gui_interaction_script import (
+    from rytm_randomizer.reports.live_gui_action_reducer import (
         build_style_performance_arc_live_gui_interaction_script_report,
     )
 
@@ -173,8 +173,6 @@ def test_live_gui_action_reducer_builds_transitions_from_interaction_script(
 def test_live_gui_action_reducer_status_and_replay_fallback_edges(tmp_path: Path):
     from rytm_randomizer.reports.live_gui_action_reducer import (
         build_style_performance_arc_live_gui_action_reducer_from_interaction_script,
-    )
-    from rytm_randomizer.reports.live_gui_interaction_script import (
         build_style_performance_arc_live_gui_interaction_script_from_frame,
     )
 
@@ -416,3 +414,52 @@ def test_live_gui_action_reducer_help_mentions_passive_contract():
     assert "GUI action reducer" in help_text
     assert "no GUI event dispatch" in help_text
     assert "no MIDI sending" in help_text
+
+
+def test_interaction_script_replace_command_covers_all_rewrite_branches():
+    """Branch pins for the retirement-inlined replay-command rewriter.
+
+    These branches lived in the retired ``live_gui_interaction_script``
+    module's own test file; after the verbatim inline (retirement break ③)
+    they belong to this module and must stay covered here.
+    """
+
+    from rytm_randomizer.reports.live_gui_action_reducer import (
+        _interaction_script_replace_command,
+    )
+
+    # Branch 1: source command absent -> synthesized full command.
+    synthesized = _interaction_script_replace_command(
+        "python -m rytm_randomizer.cli some-unrelated-report",
+        interaction_label="edge label",
+    )
+    assert synthesized.startswith("python -m rytm_randomizer.cli ")
+    assert "interaction-script-report" in synthesized
+    assert "--interaction-label" in synthesized
+
+    # Branch 2: source present AND --interaction-label already present ->
+    # replaced without double-appending the flag.
+    already_labelled = _interaction_script_replace_command(
+        "python -m rytm_randomizer.cli "
+        "style-performance-arc-live-gui-analyzer-frame-report "
+        "--interaction-label existing",
+        interaction_label="ignored",
+    )
+    assert already_labelled.count("--interaction-label") == 1
+    assert "interaction-script-report" in already_labelled
+
+
+def test_interaction_script_replay_commands_synthesizes_on_empty_frame(tmp_path: Path):
+    """Empty ``frame.replay_commands`` -> the synthesized fallback tuple."""
+
+    import dataclasses
+
+    from rytm_randomizer.reports.live_gui_action_reducer import (
+        _interaction_script_replay_commands,
+    )
+
+    frame = dataclasses.replace(_interaction_script(tmp_path).frame, replay_commands=())
+    commands = _interaction_script_replay_commands(frame, interaction_label="fallback label")
+    assert commands
+    assert all("interaction-script-report" in command for command in commands)
+    assert all("--interaction-label" in command for command in commands)

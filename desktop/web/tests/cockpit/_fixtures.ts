@@ -13,10 +13,14 @@ import type {
 import type {
   Command,
   CommandAck,
+  ConnectionStateDict,
+  DiagnosticsPayload,
   Event as ProtocolEvent,
   EventType,
   History,
   CockpitSendPlan,
+  LibraryRecord,
+  MidiActivityBatch,
   MutationCandidate,
   ProfileModel,
   Snapshot,
@@ -139,6 +143,7 @@ export const sessionLive: SessionStatus = {
   armed: true,
   midi_port: 'IAC Driver Bus 1',
   mode: 'live',
+  connection_phase: 'armed',
   unsaved_sends: 2,
 };
 
@@ -146,7 +151,104 @@ export const sessionMock: SessionStatus = {
   armed: false,
   midi_port: null,
   mode: 'mock',
+  connection_phase: 'disconnected',
   unsaved_sends: 0,
+};
+
+// ---------- Wave-4 fixtures (connection / monitor / doctor / library) ----------
+
+export const connectionListening: ConnectionStateDict = {
+  phase: 'listening',
+  available_inputs: ['Analog Rytm MK2 IN'],
+  available_outputs: ['Analog Rytm MK2 OUT'],
+  selected_input: 'Analog Rytm MK2 IN',
+  selected_output: 'Analog Rytm MK2 OUT',
+  last_error_fingerprint: null,
+  changed_at: 1000.0,
+};
+
+export const connectionFault: ConnectionStateDict = {
+  phase: 'fault',
+  available_inputs: [],
+  available_outputs: [],
+  selected_input: null,
+  selected_output: null,
+  last_error_fingerprint: 'cockpit.connection.enumeration_failed.oserror',
+  changed_at: 999.0,
+};
+
+export const midiBatch: MidiActivityBatch = {
+  port: 'Analog Rytm MK2 IN',
+  batch: [
+    {
+      channel: 0,
+      pad: 1,
+      control: 16,
+      value: 90,
+      repeat_count: 3,
+      observed_at: 12.5,
+      labels: ['BD Tune'],
+    },
+    {
+      channel: 1,
+      pad: 2,
+      control: 24,
+      value: 64,
+      repeat_count: 1,
+      observed_at: 12.6,
+      labels: [],
+    },
+  ],
+  dropped: 0,
+  ignored: 2,
+  read_errors: 0,
+};
+
+export const libraryRecordA: LibraryRecord = {
+  record_id: 'abc123',
+  device_id: 'analog_rytm_mk2',
+  kit_name: 'INDUSTRIAL KIT',
+  fingerprint: 'abc123',
+  captured_at: '2026-07-01T10:00:00+00:00',
+  tags: ['techno'],
+  payload_hex: 'f0f7',
+};
+
+export const libraryRecordB: LibraryRecord = {
+  record_id: 'def456',
+  device_id: 'analog_four_mk2',
+  kit_name: 'ACID BANK',
+  fingerprint: 'def456',
+  captured_at: '2026-07-02T11:00:00+00:00',
+  tags: [],
+  payload_hex: 'f0f7',
+};
+
+export const diagnosticsHealthy: DiagnosticsPayload = {
+  journal: [],
+  errors_by_kind: {},
+  connection: connectionListening,
+  available_inputs: ['Analog Rytm MK2 IN'],
+  available_outputs: ['Analog Rytm MK2 OUT'],
+  platform: 'darwin',
+  driver_hint: 'macOS CoreMIDI: check Audio MIDI Setup > MIDI Studio.',
+};
+
+export const diagnosticsFaulty: DiagnosticsPayload = {
+  journal: [
+    {
+      fingerprint: 'cockpit.connection.enumeration_failed.oserror',
+      message: 'MIDI port enumeration failed',
+      context: { exception_type: 'OSError' },
+      ts: 1721900000.0,
+    },
+  ],
+  errors_by_kind: { midi_port: 2 },
+  connection: connectionFault,
+  available_inputs: [],
+  available_outputs: [],
+  platform: 'linux',
+  driver_hint: 'Linux ALSA: run `amidi -l` to confirm the kernel sees the device.',
 };
 
 export const availableProfiles = [

@@ -52,10 +52,10 @@ def test_safety_checklist_model_defaults_to_mock_safe_locked_arm_gate() -> None:
     )
     assert "arm hardware from safety checklist" in report.blocked_actions
     assert "open MIDI port from safety checklist" in report.blocked_actions
-    assert report.replay_commands == (
-        "python -m rytm_randomizer.cli live-gui-safety-checklist-model-report "
-        "--session-label 'Warehouse rehearsal'",
-    )
+    # The old replay command pointed at the never-registered
+    # `live-gui-safety-checklist-model-report` command; the dead wiring was
+    # retired (live-GUI retirement evidence doc §3), so the packet ships none.
+    assert report.replay_commands == ()
 
     lines = format_live_gui_safety_checklist_model(report)
     text = "\n".join(lines)

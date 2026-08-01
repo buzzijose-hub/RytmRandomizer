@@ -1,0 +1,110 @@
+RytmRandomizer passive manual feedback packet
+Model version: manual-feedback-packet-v1
+Scenario: full / Full manual validation feedback
+Summary: Installer, cockpit, profile wizard, analyzer, export, mock controls, and hardware boundary.
+Steps: 10
+Review focus:
+- analyzer-style-extra
+- export-model-no-op
+- pad-scope-gap
+Blockers:
+- analyzer-style-extra
+- export-model-no-op
+- hardware-arm-boundary
+- hardware-stop-conditions
+Evidence prompts:
+Step installer-artifact / Installer artifact and launch:
+- Category: installer
+- Priority: high
+- Prompt: Confirm which downloaded installer/artifact was used and whether the unsigned warning appeared.
+- Capture: installer filename, GitHub Actions run/artifact, warning screenshot if present
+- Expected: installer launches the cockpit without requiring repository source commands
+- Reviewer note: Confirms Eddie's installer path is usable before deeper product feedback.
+Step cockpit-connection-state / Cockpit connection state:
+- Category: cockpit
+- Priority: high
+- Prompt: Record whether the cockpit reaches Mock/Safe or remains reconnecting.
+- Capture: cockpit status bar plus sidecar terminal lines
+- Expected: GUI shows Mock Safe, a backend port, and no unsaved hardware sends
+- Reviewer note: Separates installer launch defects from sidecar/WebSocket startup defects.
+Step profile-create-flow / Profile wizard create flow:
+- Category: profile
+- Priority: high
+- Prompt: Walk Name -> Add -> Analyze -> Review with one reference track or text source.
+- Capture: source type, source label, wizard step, and any disabled Review/Create state
+- Expected: analysis completes or emits a specific actionable setup error
+- Reviewer note: Captures whether Phase 3 is functionally testable before UI polish.
+Step analyzer-style-extra / Analyzer dependency gate:
+- Category: analyzer
+- Priority: blocker
+- Prompt: If analysis reports a missing optional extra, record the exact extra and recovery path.
+- Capture: exact missing-extra/error text and whether retry succeeds
+- Expected: installer bundle includes analyzer dependency or the UI gives a one-click-clear next action
+- Reviewer note: Current manual test saw the style optional-extra message while analyzing The Bells.
+Step reference-analysis-result / Reference analysis result:
+- Category: analyzer
+- Priority: medium
+- Prompt: After a track such as The Bells or Doggystyle analyzes, capture the generated traits and confidence.
+- Capture: trait list, percentages, source label, and whether the result feels like inspiration rather than a copy
+- Expected: traits summarize musical behavior without claiming to recreate copyrighted material
+- Reviewer note: Feeds the future reference-track analyzer design with concrete operator feedback.
+Step export-model-no-op / Export model action:
+- Category: export
+- Priority: blocker
+- Prompt: Press Export Model after analysis and record whether a file, save dialog, toast, or error appears.
+- Capture: screenshot plus backend/console output after pressing Export Model
+- Expected: export either writes/prompts for a .rymp artifact or shows a classified error
+- Reviewer note: Manual test reported Export Model appeared to do nothing.
+Step pad-scope-gap / Pad/device scope expectation:
+- Category: cockpit
+- Priority: high
+- Prompt: Record visible pad/device coverage versus expected 12 Rytm pads plus Analog Four device visibility.
+- Capture: screenshot of pad grid/device rail and notes on missing pads or devices
+- Expected: Rytm 12-pad path is tracked separately from current 4-pad mock surface
+- Reviewer note: Keeps 4-pad legacy cockpit behavior separate from the 12-pad/A4 product goal.
+Step mock-send-controls / Mock SEND and undo controls:
+- Category: mock
+- Priority: medium
+- Prompt: Exercise Preview/Prepare/SEND/Undo/Save in Mock mode and record button state transitions.
+- Capture: button enabled/disabled states, history entries, and any no-op clicks
+- Expected: mock actions never open ports or send MIDI and give deterministic operator feedback
+- Reviewer note: Surfaces GUI control contract gaps without touching hardware.
+Step hardware-arm-boundary / Hardware arm boundary:
+- Category: hardware
+- Priority: blocker
+- Prompt: Before any hardware smoke test, confirm the path requires explicit --arm or a locked GUI hardware toggle.
+- Capture: command or GUI state showing the explicit armed boundary
+- Expected: no unattended hardware behavior; operator chooses the port and action explicitly
+- Reviewer note: Preserves the project-wide passive default while manual testing proceeds.
+Step hardware-stop-conditions / Hardware stop conditions:
+- Category: hardware
+- Priority: blocker
+- Prompt: If an approved smoke test is run, stop at the first unexpected pad/device/port behavior.
+- Capture: track, command, selected port, expected result, actual result, and stop reason
+- Expected: one observation row per action; no loops continue after unexpected behavior
+- Reviewer note: Turns manual hardware feedback into reproducible review evidence.
+Blocked active actions:
+- launch cockpit GUI from feedback report
+- open MIDI ports from feedback report
+- send MIDI from feedback report
+- write profile/export files from feedback report
+- run audio analysis from feedback report
+- run unattended hardware behavior
+Replay commands:
+- python -m rytm_randomizer.cli manual-feedback-packet-report --scenario full
+- python -m rytm_randomizer.cli manual-feedback-packet-report --scenario full --json
+Safety summary:
+No GUI would be launched.
+No MIDI would be sent.
+No MIDI port would be opened.
+No profile or export file would be written.
+Safety:
+- passive: True
+- in_memory_only: True
+- launches_gui: False
+- opens_midi_ports: False
+- sends_midi: False
+- writes_files: False
+- requires_hardware: False
+Source: rytm_randomizer.reports.manual_feedback_packet
+In-memory only: True

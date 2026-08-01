@@ -6,90 +6,72 @@ identical to the previously inline ``*_HELP`` constants; the CLI output must
 not change by a single character.
 """
 
+from collections.abc import Sequence
+from typing import Final
+
 USAGE = (
-    "Usage: python -m rytm_randomizer.cli [--help] | report | "
-    "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
+    "Usage: python -m rytm_randomizer.cli [--help] | report | project-status-report "
+    "[--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
     "active-boundary-report | mock-runtime-active-bridge-report | "
-    "anchor-profile-report | behavior-parity-report | rytm-12-pad-machine-matrix-report | "
-    "manual-feedback-packet-report "
-    "[--scenario full|installer|profile|mock|hardware|review] [--json] | "
-    "rytm-snapshot-pad-compatibility-report | "
-    "analog-rytm-midi-catalog-report | "
+    "anchor-profile-report | behavior-parity-report | "
+    "rytm-12-pad-machine-matrix-report | manual-feedback-packet-report [--scenario "
+    "full|installer|profile|mock|hardware|review] [--json] | "
+    "rytm-snapshot-pad-compatibility-report | analog-rytm-midi-catalog-report | "
     "rytm-snapshot-intelligence-report <syx-path> [--slot N|--list] | "
     "rytm-snapshot-mutation-preview-report <syx-path> [--slot N] [--depth N] "
-    "[--events] [--limit N] | "
-    "rytm-style-snapshot-routing-report <syx-path> <style-key> "
-    "[--slot N] [--discovery N] [--json] | "
-    "rytm-style-mutation-intent-report <syx-path> <style-key> "
-    "[--slot N] [--discovery N] [--json] | "
-    "rytm-style-mutation-render-plan-report <syx-path> <style-key> "
-    "[--slot N] [--discovery N] [--json] | "
-    "rytm-style-mutation-mock-preview-report <syx-path> <style-key> "
-    "[--slot N] [--discovery N] [--events] [--limit N] [--json] | "
-    "rytm-style-kit-readiness-report <syx-path> <style-key> "
-    "[--discovery N] [--limit N] [--json] | "
-    "analog-four-style-snapshot-routing-report <syx-path> <style-key> "
-    "[--slot N] [--discovery N] [--json] | "
-    "analog-four-style-mutation-intent-report <syx-path> <style-key> "
-    "[--slot N] [--discovery N] [--json] | "
-    "analog-four-style-mutation-mock-preview-report <syx-path> <style-key> "
-    "[--slot N] [--discovery N] [--events] [--limit N] [--json] | "
-    "analog-four-kit-catalog-report <syx-path> [--limit N] [--json] | "
-    "analog-four-baseline-report --kit <syx-path> --pattern-kit <syx-path> "
-    "--whole-project <syx-path> [--json] | "
-    "analog-four-patch-genome-report "
+    "[--events] [--limit N] | rytm-style-snapshot-routing-report <syx-path> "
+    "<style-key> [--slot N] [--discovery N] [--json] | "
+    "rytm-style-mutation-intent-report <syx-path> <style-key> [--slot N] [--discovery "
+    "N] [--json] | rytm-style-mutation-render-plan-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--json] | rytm-style-mutation-mock-preview-report "
+    "<syx-path> <style-key> [--slot N] [--discovery N] [--events] [--limit N] [--json] "
+    "| rytm-style-kit-readiness-report <syx-path> <style-key> [--discovery N] [--limit "
+    "N] [--json] | analog-four-style-snapshot-routing-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--json] | analog-four-style-mutation-intent-report "
+    "<syx-path> <style-key> [--slot N] [--discovery N] [--json] | "
+    "analog-four-style-mutation-mock-preview-report <syx-path> <style-key> [--slot N] "
+    "[--discovery N] [--events] [--limit N] [--json] | analog-four-kit-catalog-report "
+    "<syx-path> [--limit N] [--json] | analog-four-baseline-report --kit <syx-path> "
+    "--pattern-kit <syx-path> --whole-project <syx-path> [--json] | "
+    "analog-four-patch-genome-report (--description <text>|--audio <path>) [--track N] "
+    "[--candidate N] [--json] | analog-four-patch-learning-report (--description "
+    "<text>|--audio <path>) [--track N] [--candidate N] [--json] | "
+    "analog-four-patch-corpus-report (--description <text>|--audio <path>) [--track N] "
+    "[--limit N] [--corpus-file <path>] [--json] | analog-four-patch-send-plan-report "
     "(--description <text>|--audio <path>) [--track N] [--candidate N] [--json] | "
-    "analog-four-patch-learning-report "
-    "(--description <text>|--audio <path>) [--track N] [--candidate N] [--json] | "
-    "analog-four-patch-corpus-report "
-    "(--description <text>|--audio <path>) [--track N] [--limit N] "
-    "[--corpus-file <path>] [--json] | "
-    "analog-four-patch-send-plan-report "
-    "(--description <text>|--audio <path>) [--track N] [--candidate N] [--json] | "
-    "local-model-copilot-report --question <text> [--description <text>] "
-    "[--workflow docs|mutation|patch|all] [--model <name>] [--ask-local-model] "
-    "[--json] | "
-    "analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] "
-    "[--events] [--limit N] [--json] | "
-    "analog-four-oxi-macro-readiness-report [<macro-name>] [--seed N] "
-    "[--intensity N] [--limit N] [--json] | "
-    "analog-four-oxi-macro-set-planner-report [--set-name <text>] "
-    "[--sequence <macro,...>] [--seed N] [--json] | "
-    "analog-four-style-kit-readiness-report <syx-path> <style-key> "
-    "[--discovery N] [--limit N] [--json] | "
-    "dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> "
-    "<style-key> [--discovery N] [--limit N] [--json] | "
-    "dual-machine-style-kit-selection-report <style-key> --rytm <syx-path> "
-    "[--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--discovery N] [--limit N] [--json] | "
+    "local-model-copilot-report --question <text> [--description <text>] [--workflow "
+    "docs|mutation|patch|all] [--model <name>] [--ask-local-model] [--json] | "
+    "analog-four-oxi-macro-report [<macro-name>] [--seed N] [--intensity N] [--events] "
+    "[--limit N] [--json] | analog-four-oxi-macro-readiness-report [<macro-name>] "
+    "[--seed N] [--intensity N] [--limit N] [--json] | "
+    "analog-four-oxi-macro-set-planner-report [--set-name <text>] [--sequence "
+    "<macro,...>] [--seed N] [--json] | analog-four-style-kit-readiness-report "
+    "<syx-path> <style-key> [--discovery N] [--limit N] [--json] | "
+    "dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> <style-key> "
+    "[--discovery N] [--limit N] [--json] | dual-machine-style-kit-selection-report "
+    "<style-key> --rytm <syx-path> [--analog-four <syx-path>] [--scope "
+    "dual|rytm-only|analog-four-only|a4-only] [--discovery N] [--limit N] [--json] | "
     "dual-machine-style-selection-mock-preview-report <style-key> --rytm <syx-path> "
-    "[--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] "
     "[--rank N] [--discovery N] [--events] [--limit N] [--json] | "
-    "dual-machine-style-live-audition-report <style-key> [<style-key> ...] "
-    "--rytm <syx-path> [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--discovery N] [--events] [--limit N] [--json] | "
-    "dual-machine-style-performance-set-plan-report <style-key> [<style-key> ...] "
-    "--rytm <syx-path> [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
-    "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
-    "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
-    "dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> "
+    "dual-machine-style-live-audition-report <style-key> [<style-key> ...] --rytm "
+    "<syx-path> [--analog-four <syx-path>] [--scope "
+    "dual|rytm-only|analog-four-only|a4-only] [--rank N] [--discovery N] [--events] "
+    "[--limit N] [--json] | dual-machine-style-performance-set-plan-report <style-key> "
+    "[<style-key> ...] --rytm <syx-path> [--analog-four <syx-path>] [--scope "
+    "dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] "
+    "[--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] "
+    "[--limit N] [--json] | dual-machine-style-snapshot-routing-report <rytm-syx-path> "
+    "<a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] "
+    "| dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> "
     "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
     "dual-machine-style-mutation-mock-preview-report <rytm-syx-path> <a4-syx-path> "
-    "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] "
-    "[--events] [--limit N] [--json] | "
-    "inspect-command <key> | "
-    "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
-    "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
-    "style-profile-report | style-crates-queue-journal-report [--json] | "
-    "style-crate-rehearsal-deck-report [--crate <key>] [--json] | "
-    "oxi-live-macro-catalog-report | "
-    "controller-brain-mapping-report [--json] | "
+    "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--events] [--limit N] "
+    "[--json] | inspect-command <key> | dual-machine-target-report <rytm|a4|both> | "
+    "inspect-scene <key> | inspect-group-profile <key> | list-commands | list-scenes | "
+    "list-group-profiles | style-profile-report | style-crates-queue-journal-report "
+    "[--json] | style-crate-rehearsal-deck-report [--crate <key>] [--json] | "
+    "oxi-live-macro-catalog-report | controller-brain-mapping-report [--json] | "
     "controller-brain-rehearsal-report [--json] | "
     "controller-brain-operator-package-report [--json] | "
     "controller-brain-live-runbook-report [--json] | "
@@ -99,519 +81,203 @@ USAGE = (
     "controller-brain-live-feedback-rehearsal-report [--json] | "
     "controller-brain-live-cockpit-handoff-report [--json] | "
     "controller-brain-live-implementation-bridge-report [--json] | "
-    "controller-brain-live-desktop-blueprint-report [--json] | "
-    "controller-brain-live-desktop-app-plan-report "
-    "[--app-plan-label <text>] "
-    "[--framework-target desktop-python|web-desktop|test-harness] [--json] | "
-    "controller-brain-live-desktop-component-contract-report "
-    "[--component-contract-label <text>] [--selector-prefix <text>] [--json] | "
-    "controller-brain-live-desktop-view-model-report "
-    "[--view-model-label <text>] [--state-prefix <text>] [--json] | "
-    "controller-brain-live-desktop-render-contract-report "
-    "[--render-contract-label <text>] [--surface-prefix <text>] [--json] | "
     "rytm-live-macro-hardware-rehearsal-report [--json] | "
     "live-gui-performance-flow-model-report [--json] | "
-    "live-gui-performance-console-report [--json] | "
-    "oxi-live-set-strategy-report [--json] | "
-    "reference-style-blueprint-report "
-    "(--description <text>|--audio <path>|--library <dir>) [--json] | "
-    "list-style-profiles | inspect-style-profile <key> | "
-    "search-style-profiles <query> | style-target-report | inspect-style-target <key> | "
-    "style-performance-arc-report | list-style-performance-arcs | "
-    "inspect-style-performance-arc <key> | search-style-performance-arcs <query> | "
-    "style-performance-arc-set-plan-report <arc-key> --rytm <syx-path> "
-    "[--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
-    "style-performance-arc-readiness-report [<arc-key> ...] --rytm <syx-path> "
-    "[--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] [--limit N] [--json] | "
-    "style-performance-arc-audition-packet-report [<arc-key> ...] --rytm <syx-path> "
-    "[--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
-    "style-performance-arc-rehearsal-manifest-report [<arc-key> ...] --rytm <syx-path> "
-    "[--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
-    "style-performance-arc-live-session-packet-report [<arc-key> ...] --rytm <syx-path> "
-    "[--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
-    "style-performance-arc-live-render-bundle-report [<arc-key> ...] --rytm <syx-path> "
-    "[--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
-    "style-performance-arc-live-cue-sheet-report [<arc-key> ...] [--rytm <syx-path>] "
-    "[--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
-    "style-performance-arc-reference-match-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
-    "style-performance-arc-live-runbook-report "
-    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
-    "style-performance-arc-stage-routing-report "
-    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
-    "style-performance-arc-stage-rehearsal-state-report "
-    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
-    "style-performance-arc-live-set-cockpit-report "
-    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
-    "style-performance-arc-live-show-export-report "
-    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
-    "style-performance-arc-live-transition-timeline-report "
-    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
-    "style-performance-arc-live-command-deck-report "
-    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--events] [--limit N] [--json] | "
-    "style-performance-arc-live-state-report "
-    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--events] [--limit N] [--json] | "
-    "style-performance-arc-live-readiness-report "
-    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--json] | "
-    "style-performance-arc-live-control-surface-report "
-    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--json] | "
-    "style-performance-arc-live-analyzer-handoff-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] [--json] | "
-    "style-performance-arc-live-analyzer-targets-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] [--json] | "
-    "style-performance-arc-live-gui-analyzer-readiness-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] [--json] | "
-    "style-performance-arc-live-gui-rehearsal-session-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--label <text>] [--json] | "
-    "style-performance-arc-live-gui-capture-queue-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--label <text>] [--capture-prefix <text>] [--json] | "
-    "style-performance-arc-live-gui-capture-review-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--slot capture-001] [--label <text>] "
+    "live-gui-performance-console-report [--json] | oxi-live-set-strategy-report "
+    "[--json] | reference-style-blueprint-report (--description <text>|--audio "
+    "<path>|--library <dir>) [--json] | list-style-profiles | inspect-style-profile "
+    "<key> | search-style-profiles <query> | style-target-report | "
+    "inspect-style-target <key> | style-performance-arc-report | "
+    "list-style-performance-arcs | inspect-style-performance-arc <key> | "
+    "search-style-performance-arcs <query> | style-performance-arc-set-plan-report "
+    "<arc-key> --rytm <syx-path> [--analog-four <syx-path>] [--scope "
+    "dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] "
+    "[--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] "
+    "[--limit N] [--json] | style-performance-arc-readiness-report [<arc-key> ...] "
+    "--rytm <syx-path> [--analog-four <syx-path>] [--scope "
+    "dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] "
+    "[--segment-minutes N] [--discovery-start N] [--discovery-end N] [--limit N] "
+    "[--json] | style-performance-arc-audition-packet-report [<arc-key> ...] --rytm "
+    "<syx-path> [--analog-four <syx-path>] [--scope "
+    "dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] "
+    "[--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] "
+    "[--limit N] [--json] | style-performance-arc-rehearsal-manifest-report [<arc-key> "
+    "...] --rytm <syx-path> [--analog-four <syx-path>] [--scope "
+    "dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] "
+    "[--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] "
+    "[--limit N] [--json] | style-performance-arc-live-session-packet-report "
+    "[<arc-key> ...] --rytm <syx-path> [--analog-four <syx-path>] [--scope "
+    "dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] "
+    "[--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] "
+    "[--limit N] [--json] | style-performance-arc-live-render-bundle-report [<arc-key> "
+    "...] --rytm <syx-path> [--analog-four <syx-path>] [--scope "
+    "dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] "
+    "[--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] "
+    "[--limit N] [--json] | style-performance-arc-live-cue-sheet-report [<arc-key> "
+    "...] [--rytm <syx-path>] [--analog-four <syx-path>] [--scope "
+    "dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] "
+    "[--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] "
+    "[--limit N] [--json] | style-performance-arc-reference-match-report "
+    "(--description <text>|--audio <path>|--library <dir>) [--rytm <syx-path>] "
+    "[--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] "
+    "[--discovery-end N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-live-runbook-report (--arc <arc-key>|--description "
+    "<text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four "
+    "<syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] "
+    "[--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end "
+    "N] [--events] [--limit N] [--json] | style-performance-arc-stage-routing-report "
+    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) [--rytm "
+    "<syx-path>] [--analog-four <syx-path>] [--scope "
+    "dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] "
+    "[--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] "
+    "[--limit N] [--json] | style-performance-arc-stage-rehearsal-state-report (--arc "
+    "<arc-key>|--description <text>|--audio <path>|--library <dir>) [--rytm "
+    "<syx-path>] [--analog-four <syx-path>] [--scope "
+    "dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] "
+    "[--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] "
+    "[--limit N] [--json] | style-performance-arc-live-set-cockpit-report (--arc "
+    "<arc-key>|--description <text>|--audio <path>|--library <dir>) [--rytm "
+    "<syx-path>] [--analog-four <syx-path>] [--scope "
+    "dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] "
+    "[--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] "
+    "[--limit N] [--json] | style-performance-arc-live-show-export-report (--arc "
+    "<arc-key>|--description <text>|--audio <path>|--library <dir>) [--rytm "
+    "<syx-path>] [--analog-four <syx-path>] [--scope "
+    "dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] "
+    "[--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] "
+    "[--limit N] [--json] | style-performance-arc-live-transition-timeline-report "
+    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) [--rytm "
+    "<syx-path>] [--analog-four <syx-path>] [--scope "
+    "dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] "
+    "[--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] "
+    "[--limit N] [--json] | style-performance-arc-live-command-deck-report (--arc "
+    "<arc-key>|--description <text>|--audio <path>|--library <dir>) [--rytm "
+    "<syx-path>] [--analog-four <syx-path>] [--scope "
+    "dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] "
+    "[--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] "
+    "[--lookahead N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-live-state-report (--arc <arc-key>|--description "
+    "<text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four "
+    "<syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] "
+    "[--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end "
+    "N] [--cue N] [--lookahead N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-live-readiness-report (--arc <arc-key>|--description "
+    "<text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four "
+    "<syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] "
+    "[--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end "
+    "N] [--cue N] [--lookahead N] [--json] | "
+    "style-performance-arc-live-control-surface-report (--arc <arc-key>|--description "
+    "<text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four "
+    "<syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] "
+    "[--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end "
+    "N] [--cue N] [--lookahead N] [--json] | "
+    "style-performance-arc-live-analyzer-handoff-report (--description <text>|--audio "
+    "<path>|--library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope "
+    "dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] "
+    "[--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] "
+    "[--lookahead N] [--matches N] [--json] | "
+    "style-performance-arc-live-analyzer-targets-report (--description <text>|--audio "
+    "<path>|--library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope "
+    "dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] "
+    "[--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] "
+    "[--lookahead N] [--matches N] [--json] | "
+    "style-performance-arc-live-gui-analyzer-readiness-report (--description "
+    "<text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four "
+    "<syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] "
+    "[--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end "
+    "N] [--cue N] [--lookahead N] [--matches N] [--json] | "
+    "style-performance-arc-live-gui-rehearsal-session-report (--description "
+    "<text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four "
+    "<syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] "
+    "[--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end "
+    "N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--label <text>] [--json] "
+    "| style-performance-arc-live-gui-capture-queue-report (--description "
+    "<text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four "
+    "<syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] "
+    "[--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end "
+    "N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--label <text>] "
     "[--capture-prefix <text>] [--json] | "
-    "style-performance-arc-live-gui-sidecar-session-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--slot capture-001] [--label <text>] "
-    "[--capture-prefix <text>] [--sidecar-label <text>] [--json] | "
-    "style-performance-arc-live-gui-screen-contract-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--slot capture-001] [--label <text>] "
-    "[--capture-prefix <text>] [--sidecar-label <text>] "
-    "[--screen-label <text>] [--layout <key>] "
-    "[--viewport desktop|tablet|compact] [--json] | "
-    "style-performance-arc-live-gui-render-tree-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--slot capture-001] [--label <text>] "
-    "[--capture-prefix <text>] [--sidecar-label <text>] "
-    "[--screen-label <text>] [--layout <key>] "
-    "[--viewport desktop|tablet|compact] "
-    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
-    "[--density standard|compact] [--json] | "
-    "style-performance-arc-live-gui-analyzer-overlay-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--slot capture-001] [--label <text>] "
-    "[--capture-prefix <text>] [--sidecar-label <text>] "
-    "[--screen-label <text>] [--layout <key>] "
-    "[--viewport desktop|tablet|compact] "
-    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
-    "[--density standard|compact] [--overlay-label <text>] [--json] | "
-    "style-performance-arc-live-gui-analyzer-frame-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--slot capture-001] [--label <text>] "
-    "[--capture-prefix <text>] [--sidecar-label <text>] "
-    "[--screen-label <text>] [--layout <key>] "
-    "[--viewport desktop|tablet|compact] "
-    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
-    "[--density standard|compact] [--overlay-label <text>] "
-    "[--frame-label <text>] [--json] | "
-    "style-performance-arc-live-gui-interaction-script-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--slot capture-001] [--label <text>] "
-    "[--capture-prefix <text>] [--sidecar-label <text>] "
-    "[--screen-label <text>] [--layout <key>] "
-    "[--viewport desktop|tablet|compact] "
-    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
-    "[--density standard|compact] [--overlay-label <text>] "
-    "[--frame-label <text>] [--interaction-label <text>] [--json] | "
-    "style-performance-arc-live-gui-action-reducer-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--slot capture-001] [--label <text>] "
-    "[--capture-prefix <text>] [--sidecar-label <text>] "
-    "[--screen-label <text>] [--layout <key>] "
-    "[--viewport desktop|tablet|compact] "
-    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
-    "[--density standard|compact] [--overlay-label <text>] "
-    "[--frame-label <text>] [--interaction-label <text>] "
-    "[--reducer-label <text>] [--json] | "
-    "style-performance-arc-live-gui-controller-state-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--slot capture-001] [--label <text>] "
-    "[--capture-prefix <text>] [--sidecar-label <text>] "
-    "[--screen-label <text>] [--layout <key>] "
-    "[--viewport desktop|tablet|compact] "
-    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
-    "[--density standard|compact] [--overlay-label <text>] "
-    "[--frame-label <text>] [--interaction-label <text>] "
-    "[--reducer-label <text>] [--controller-label <text>] [--json] | "
-    "style-performance-arc-live-gui-playback-transcript-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--slot capture-001] [--label <text>] "
-    "[--capture-prefix <text>] [--sidecar-label <text>] "
-    "[--screen-label <text>] [--layout <key>] "
-    "[--viewport desktop|tablet|compact] "
-    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
-    "[--density standard|compact] [--overlay-label <text>] "
-    "[--frame-label <text>] [--interaction-label <text>] "
-    "[--reducer-label <text>] [--controller-label <text>] "
+    "style-performance-arc-live-gui-capture-review-report (--description "
+    "<text>|--audio <path>|--library <dir>) (--capture-description "
+    "<text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] "
+    "[--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] "
+    "[--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot "
+    "capture-001] [--label <text>] [--capture-prefix <text>] [--json] | "
+    "style-performance-arc-live-gui-sidecar-session-report (--description "
+    "<text>|--audio <path>|--library <dir>) (--capture-description "
+    "<text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] "
+    "[--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] "
+    "[--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot "
+    "capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--json] | style-performance-arc-live-gui-analyzer-overlay-report (--description "
+    "<text>|--audio <path>|--library <dir>) (--capture-description "
+    "<text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] "
+    "[--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] "
+    "[--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot "
+    "capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] [--density "
+    "standard|compact] [--overlay-label <text>] [--json] | "
+    "style-performance-arc-live-gui-analyzer-frame-report (--description "
+    "<text>|--audio <path>|--library <dir>) (--capture-description "
+    "<text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] "
+    "[--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] "
+    "[--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot "
+    "capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] [--density "
+    "standard|compact] [--overlay-label <text>] [--frame-label <text>] [--json] | "
+    "style-performance-arc-live-gui-action-reducer-report (--description "
+    "<text>|--audio <path>|--library <dir>) (--capture-description "
+    "<text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] "
+    "[--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] "
+    "[--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot "
+    "capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] [--density "
+    "standard|compact] [--overlay-label <text>] [--frame-label <text>] "
+    "[--interaction-label <text>] [--reducer-label <text>] [--json] | "
+    "style-performance-arc-live-gui-controller-state-report (--description "
+    "<text>|--audio <path>|--library <dir>) (--capture-description "
+    "<text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] "
+    "[--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] "
+    "[--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot "
+    "capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] [--density "
+    "standard|compact] [--overlay-label <text>] [--frame-label <text>] "
+    "[--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] "
+    "[--json] | style-performance-arc-live-gui-playback-transcript-report "
+    "(--description <text>|--audio <path>|--library <dir>) (--capture-description "
+    "<text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] "
+    "[--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] "
+    "[--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot "
+    "capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] [--density "
+    "standard|compact] [--overlay-label <text>] [--frame-label <text>] "
+    "[--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] "
     "[--playback-label <text>] [--json] | "
-    "style-performance-arc-live-gui-playback-validation-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--slot capture-001] [--label <text>] "
-    "[--capture-prefix <text>] [--sidecar-label <text>] "
-    "[--screen-label <text>] [--layout <key>] "
-    "[--viewport desktop|tablet|compact] "
-    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
-    "[--density standard|compact] [--overlay-label <text>] "
-    "[--frame-label <text>] [--interaction-label <text>] "
-    "[--reducer-label <text>] [--controller-label <text>] "
+    "style-performance-arc-live-gui-playback-validation-report (--description "
+    "<text>|--audio <path>|--library <dir>) (--capture-description "
+    "<text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] "
+    "[--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] "
+    "[--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot "
+    "capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] [--density "
+    "standard|compact] [--overlay-label <text>] [--frame-label <text>] "
+    "[--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] "
     "[--playback-label <text>] [--validation-label <text>] [--json] | "
-    "style-performance-arc-live-gui-test-harness-contract-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--slot capture-001] [--label <text>] "
-    "[--capture-prefix <text>] [--sidecar-label <text>] "
-    "[--screen-label <text>] [--layout <key>] "
-    "[--viewport desktop|tablet|compact] "
-    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
-    "[--density standard|compact] [--overlay-label <text>] "
-    "[--frame-label <text>] [--interaction-label <text>] "
-    "[--reducer-label <text>] [--controller-label <text>] "
-    "[--playback-label <text>] [--validation-label <text>] "
-    "[--harness-label <text>] [--json] | "
-    "style-performance-arc-live-gui-test-harness-readiness-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--slot capture-001] [--label <text>] "
-    "[--capture-prefix <text>] [--sidecar-label <text>] "
-    "[--screen-label <text>] [--layout <key>] "
-    "[--viewport desktop|tablet|compact] "
-    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
-    "[--density standard|compact] [--overlay-label <text>] "
-    "[--frame-label <text>] [--interaction-label <text>] "
-    "[--reducer-label <text>] [--controller-label <text>] "
-    "[--playback-label <text>] [--validation-label <text>] "
-    "[--harness-label <text>] [--readiness-label <text>] [--json] | "
-    "style-performance-arc-live-gui-implementation-bridge-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--slot capture-001] [--label <text>] "
-    "[--capture-prefix <text>] [--sidecar-label <text>] "
-    "[--screen-label <text>] [--layout <key>] "
-    "[--viewport desktop|tablet|compact] "
-    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
-    "[--density standard|compact] [--overlay-label <text>] "
-    "[--frame-label <text>] [--interaction-label <text>] "
-    "[--reducer-label <text>] [--controller-label <text>] "
-    "[--playback-label <text>] [--validation-label <text>] "
-    "[--harness-label <text>] [--readiness-label <text>] "
-    "[--bridge-label <text>] [--json] | "
-    "style-performance-arc-live-gui-desktop-blueprint-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--slot capture-001] [--label <text>] "
-    "[--capture-prefix <text>] [--sidecar-label <text>] "
-    "[--screen-label <text>] [--layout <key>] "
-    "[--viewport desktop|tablet|compact] "
-    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
-    "[--density standard|compact] [--overlay-label <text>] "
-    "[--frame-label <text>] [--interaction-label <text>] "
-    "[--reducer-label <text>] [--controller-label <text>] "
-    "[--playback-label <text>] [--validation-label <text>] "
-    "[--harness-label <text>] [--readiness-label <text>] "
-    "[--bridge-label <text>] [--blueprint-label <text>] "
-    "[--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--json] | "
-    "style-performance-arc-live-gui-desktop-app-plan-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--slot capture-001] [--label <text>] "
-    "[--capture-prefix <text>] [--sidecar-label <text>] "
-    "[--screen-label <text>] [--layout <key>] "
-    "[--viewport desktop|tablet|compact] "
-    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
-    "[--density standard|compact] [--overlay-label <text>] "
-    "[--frame-label <text>] [--interaction-label <text>] "
-    "[--reducer-label <text>] [--controller-label <text>] "
-    "[--playback-label <text>] [--validation-label <text>] "
-    "[--harness-label <text>] [--readiness-label <text>] "
-    "[--bridge-label <text>] [--blueprint-label <text>] "
-    "[--desktop-shell operator-dashboard|desktop-sidecar|test-harness] "
-    "[--app-plan-label <text>] "
-    "[--framework-target desktop-python|web-desktop|test-harness] [--json] | "
-    "style-performance-arc-live-gui-desktop-component-contract-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--slot capture-001] [--label <text>] "
-    "[--capture-prefix <text>] [--sidecar-label <text>] "
-    "[--screen-label <text>] [--layout <key>] "
-    "[--viewport desktop|tablet|compact] "
-    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
-    "[--density standard|compact] [--overlay-label <text>] "
-    "[--frame-label <text>] [--interaction-label <text>] "
-    "[--reducer-label <text>] [--controller-label <text>] "
-    "[--playback-label <text>] [--validation-label <text>] "
-    "[--harness-label <text>] [--readiness-label <text>] "
-    "[--bridge-label <text>] [--blueprint-label <text>] "
-    "[--desktop-shell operator-dashboard|desktop-sidecar|test-harness] "
-    "[--app-plan-label <text>] "
-    "[--framework-target desktop-python|web-desktop|test-harness] "
-    "[--component-contract-label <text>] [--selector-prefix <text>] [--json] | "
-    "style-performance-arc-live-gui-desktop-view-model-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--slot capture-001] [--label <text>] "
-    "[--capture-prefix <text>] [--sidecar-label <text>] "
-    "[--screen-label <text>] [--layout <key>] "
-    "[--viewport desktop|tablet|compact] "
-    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
-    "[--density standard|compact] [--overlay-label <text>] "
-    "[--frame-label <text>] [--interaction-label <text>] "
-    "[--reducer-label <text>] [--controller-label <text>] "
-    "[--playback-label <text>] [--validation-label <text>] "
-    "[--harness-label <text>] [--readiness-label <text>] "
-    "[--bridge-label <text>] [--blueprint-label <text>] "
-    "[--desktop-shell operator-dashboard|desktop-sidecar|test-harness] "
-    "[--app-plan-label <text>] "
-    "[--framework-target desktop-python|web-desktop|test-harness] "
-    "[--component-contract-label <text>] [--selector-prefix <text>] "
-    "[--view-model-label <text>] [--state-prefix <text>] [--json] | "
-    "style-performance-arc-live-gui-desktop-render-contract-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--slot capture-001] [--label <text>] "
-    "[--capture-prefix <text>] [--sidecar-label <text>] "
-    "[--screen-label <text>] [--layout <key>] "
-    "[--viewport desktop|tablet|compact] "
-    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
-    "[--density standard|compact] [--overlay-label <text>] "
-    "[--frame-label <text>] [--interaction-label <text>] "
-    "[--reducer-label <text>] [--controller-label <text>] "
-    "[--playback-label <text>] [--validation-label <text>] "
-    "[--harness-label <text>] [--readiness-label <text>] "
-    "[--bridge-label <text>] [--blueprint-label <text>] "
-    "[--desktop-shell operator-dashboard|desktop-sidecar|test-harness] "
-    "[--app-plan-label <text>] "
-    "[--framework-target desktop-python|web-desktop|test-harness] "
-    "[--component-contract-label <text>] [--selector-prefix <text>] "
-    "[--view-model-label <text>] [--state-prefix <text>] "
-    "[--render-contract-label <text>] [--json] | "
-    "style-performance-arc-live-gui-desktop-render-harness-report "
-    "(--description <text>|--audio <path>|--library <dir>) "
-    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
-    "[--rytm <syx-path>] [--analog-four <syx-path>] "
-    "[--scope dual|rytm-only|analog-four-only|a4-only] "
-    "[--rank N] [--total-minutes N] [--segment-minutes N] "
-    "[--discovery-start N] [--discovery-end N] "
-    "[--cue N] [--lookahead N] [--matches N] "
-    "[--takes N] [--slot capture-001] [--label <text>] "
-    "[--capture-prefix <text>] [--sidecar-label <text>] "
-    "[--screen-label <text>] [--layout <key>] "
-    "[--viewport desktop|tablet|compact] "
-    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
-    "[--density standard|compact] [--overlay-label <text>] "
-    "[--frame-label <text>] [--interaction-label <text>] "
-    "[--reducer-label <text>] [--controller-label <text>] "
-    "[--playback-label <text>] [--validation-label <text>] "
-    "[--harness-label <text>] [--readiness-label <text>] "
-    "[--bridge-label <text>] [--blueprint-label <text>] "
-    "[--desktop-shell operator-dashboard|desktop-sidecar|test-harness] "
-    "[--app-plan-label <text>] "
-    "[--framework-target desktop-python|web-desktop|test-harness] "
-    "[--component-contract-label <text>] [--selector-prefix <text>] "
-    "[--view-model-label <text>] [--state-prefix <text>] "
-    "[--render-contract-label <text>] "
-    "[--render-harness-label <text>] [--runner-label <text>] [--json] | "
     "cockpit-send-plan-readiness-report (--plan-json <json>|--plan-file <path>) "
     "[--label <text>] [--json] | "
     "cockpit-send-plan-rehearsal-surface-report "
@@ -620,17 +286,25 @@ USAGE = (
     "cockpit-export-profile-model --profile-id <id> --profiles-dir <path> "
     "--output <file.rymp> [--key-hex <hex> --key-id <label>] "
     "[--unsigned] [--overwrite] [--json] | "
+    "analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> "
+    "--filter2-resonance <track:value> [--filter2-resonance <track:value> ...] "
+    "[--overwrite] [--json] | "
+    "analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> "
+    "--output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json] | "
+    "analog-four-audio-patch-rank --reference <path> --manifest <batch.json> "
+    "--render <N=path> [--render <N=path> ...] [--json] | "
     "cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> "
     "[--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json] | "
     "manual-feedback-packet-report "
     "[--scenario full|installer|profile|mock|hardware|review] [--json] | "
+    "scoped-randomization-preview [--json] | kit-morph-preview [--json] | "
     "search-commands <query> | "
-    "search-scenes <query> | search-group-profiles <query> | "
-    "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
+    "search-scenes <query> | search-group-profiles <query> | preview-command <key> | "
+    "preview-scene <key> | preview-group-profile <key>"
 )
 
 
-def _safety_block(lines):
+def _safety_block(lines: Sequence[str]) -> str:
     return "\n".join(f"  {line}" for line in lines)
 
 
@@ -661,6 +335,46 @@ Usage:
 
 Behavior:
   Prints the passive Analog Rytm MKII OS 1.72 MIDI CC/NRPN catalog report.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _scoped_randomization_preview_help():
+    from .reports.scoped_randomization_preview import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: scoped-randomization-preview
+
+Usage:
+  python -m rytm_randomizer.cli scoped-randomization-preview
+  python -m rytm_randomizer.cli scoped-randomization-preview --json
+  python -m rytm_randomizer.cli scoped-randomization-preview --help
+
+Behavior:
+  Prints a deterministic scoped-randomization preview: a ScopeMask (which
+  pads, which parameter groups) plus a single depth macro (0..1) over the
+  built-in V1.34 profile registry, rendering the per-parameter delta plan.
+  Preview only -- arm-and-send through the senders ArmedApply seam.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _kit_morph_preview_help():
+    from .reports.kit_morph_preview import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: kit-morph-preview
+
+Usage:
+  python -m rytm_randomizer.cli kit-morph-preview
+  python -m rytm_randomizer.cli kit-morph-preview --json
+  python -m rytm_randomizer.cli kit-morph-preview --help
+
+Behavior:
+  Prints a deterministic kit-morph preview: interpolate a source kit toward a
+  target (linear on continuous params, threshold on discrete selectors) at a
+  morph amount (0..1), rendering the per-parameter interpolation plan.
+  Preview only -- arm-and-send through the senders ArmedApply seam.
 
 Safety:
 {_safety_block(SAFETY_LINES)}"""
@@ -1754,176 +1468,6 @@ Safety:
   no hardware required"""
 
 
-def _controller_brain_live_desktop_blueprint_report_help():
-    return """RytmRandomizer passive CLI: controller-brain-live-desktop-blueprint-report
-
-Usage:
-  python -m rytm_randomizer.cli controller-brain-live-desktop-blueprint-report
-  python -m rytm_randomizer.cli controller-brain-live-desktop-blueprint-report --json
-  python -m rytm_randomizer.cli controller-brain-live-desktop-blueprint-report --help
-
-Behavior:
-  Prints passive controller-brain live desktop blueprint metadata. It turns the
-  implementation bridge into disabled desktop regions, component contracts,
-  view-model bindings, fixture hints, acceptance checks, replay commands, and
-  safety evidence for future Cockpit desktop work without mounting the GUI.
-
-Safety:
-  passive/read-only
-  controller-brain desktop blueprint metadata only
-  desktop regions are declarative metadata only
-  component contracts are declarative metadata only
-  view-model bindings are declarative metadata only
-  fixture hints are metadata only
-  acceptance checks are metadata only
-  no GUI launch
-  no GUI renderer start
-  no runtime reducer execution
-  no WebSocket dispatch
-  no controller feedback emission
-  no MIDI controller output
-  no MIDI sending
-  no port opening
-  no snapshot mutation
-  no file writing
-  no hardware mutation
-  no hardware required"""
-
-
-def _controller_brain_live_desktop_app_plan_report_help():
-    return """RytmRandomizer passive CLI: controller-brain-live-desktop-app-plan-report
-
-Usage:
-  python -m rytm_randomizer.cli controller-brain-live-desktop-app-plan-report
-  python -m rytm_randomizer.cli controller-brain-live-desktop-app-plan-report --json
-  python -m rytm_randomizer.cli controller-brain-live-desktop-app-plan-report --app-plan-label "Controller brain desktop app plan" --framework-target desktop-python
-  python -m rytm_randomizer.cli controller-brain-live-desktop-app-plan-report --help
-
-Behavior:
-  Prints passive controller-brain live desktop app plan metadata. It turns the
-  desktop blueprint into disabled app routes, component file hints, state
-  slices, style tokens, acceptance checks, replay commands, and safety evidence
-  for future Cockpit desktop work without launching an app or writing files.
-
-Safety:
-  passive/read-only
-  controller-brain desktop app plan metadata only
-  app routes are declarative metadata only
-  component file hints are advisory metadata only
-  state slices are declarative metadata only
-  style tokens are declarative metadata only
-  acceptance checks are metadata only
-  no GUI launch
-  no app launch
-  no GUI renderer start
-  no runtime reducer execution
-  no WebSocket dispatch
-  no controller feedback emission
-  no MIDI sending
-  no port opening
-  no snapshot mutation
-  no file writing
-  no hardware mutation
-  no hardware required"""
-
-
-def _controller_brain_live_desktop_component_contract_report_help():
-    return """RytmRandomizer passive CLI: controller-brain-live-desktop-component-contract-report
-
-Usage:
-  python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report
-  python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report --json
-  python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report --component-contract-label "Controller brain desktop component contract" --selector-prefix rr-controller
-  python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report --help
-
-Behavior:
-  Prints disabled future component API contracts for the controller-brain
-  desktop surface. It turns desktop app-plan component file hints and state
-  slices into component selectors, prop contracts, event contracts, test hooks,
-  fixture contracts, acceptance checks, replay commands, and safety evidence
-  for future Cockpit desktop work without launching an app or writing files.
-
-Safety:
-  passive/read-only
-  controller-brain desktop component contract metadata only
-  component contracts are declarative metadata only
-  prop contracts are declarative metadata only
-  event contracts are disabled metadata only
-  test hooks are declarative metadata only
-  fixture contracts are advisory metadata only
-  no GUI launch
-  no app launch
-  no GUI renderer start
-  no runtime reducer execution
-  no WebSocket dispatch
-  no controller feedback emission
-  no MIDI sending
-  no port opening
-  no snapshot mutation
-  no file writing
-  no hardware mutation
-  no hardware required"""
-
-
-def _controller_brain_live_desktop_view_model_report_help():
-    return """RytmRandomizer passive CLI: controller-brain-live-desktop-view-model-report
-
-Usage:
-  python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report
-  python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report --json
-  python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report --view-model-label "Controller brain desktop view model" --state-prefix rr-state
-  python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report --help
-
-Behavior:
-  Prints disabled future component view models for the controller-brain desktop
-  surface. It turns desktop component contracts into component view models,
-  state bindings, disabled action models, render assertions, acceptance checks,
-  replay commands, and safety evidence for future Cockpit desktop work without
-  launching an app, rendering a GUI, or writing files.
-
-Safety:
-  passive/read-only
-  controller-brain desktop view model metadata only
-  component view models are declarative metadata only
-  state bindings are declarative metadata only
-  disabled action models are metadata only
-  render assertions are metadata only
-  no GUI launch
-  no app launch
-  no GUI renderer start
-  no runtime reducer execution
-  no WebSocket dispatch
-  no controller feedback emission
-  no MIDI controller output
-  no MIDI sending
-  no port opening
-  no snapshot mutation
-  no file writing
-  no hardware mutation
-  no hardware required"""
-
-
-def _controller_brain_live_desktop_render_contract_report_help():
-    return """RytmRandomizer passive CLI: controller-brain-live-desktop-render-contract-report
-
-Usage:
-  python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report
-  python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report --json
-  python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report --render-contract-label "Controller brain desktop render contract" --surface-prefix rr-render
-  python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report --help
-
-Behavior:
-  Prints future render surfaces for the controller-brain desktop UI. It composes
-  the passive desktop view-model report into disabled render bindings,
-  render guards, render assertions, acceptance checks, replay commands, and safety
-  evidence for future Cockpit desktop work.
-
-Safety:
-  This report performs no GUI launch, no renderer execution,
-  no WebSocket dispatch, no MIDI sending, and no file writing. It only prints
-  deterministic metadata to stdout/JSON."""
-
-
 def _rytm_live_macro_hardware_rehearsal_report_help():
     return """RytmRandomizer passive CLI: rytm-live-macro-hardware-rehearsal-report
 
@@ -2731,62 +2275,6 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
-def _style_performance_arc_live_gui_screen_contract_report_help():
-    from .reports.live_gui_screen_contract import SAFETY_LINES
-
-    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-screen-contract-report
-
-Usage:
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-screen-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-screen-contract-report --audio <path> --capture-audio <path> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-screen-contract-report --library <dir> --capture-library <dir> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-screen-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-screen-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --slot capture-001 --screen-label <text> --layout <key> --viewport desktop --json
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-screen-contract-report --help
-
-Arguments:
-  --description <text>|--audio <path>|--library <dir>
-  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
-
-Behavior:
-  Builds a passive GUI screen contract from the sidecar session. The report
-  emits ordered screen regions, component state, analyzer/capture table rows,
-  disabled interaction controls, blocked active actions, deterministic JSON,
-  and replayable passive commands for future desktop GUI and audio-analyzer
-  flows.
-
-Safety:
-{_safety_block(SAFETY_LINES)}"""
-
-
-def _style_performance_arc_live_gui_render_tree_report_help():
-    from .reports.live_gui_render_tree import SAFETY_LINES
-
-    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-render-tree-report
-
-Usage:
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-render-tree-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-render-tree-report --audio <path> --capture-audio <path> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-render-tree-report --library <dir> --capture-library <dir> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-render-tree-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-render-tree-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --render-target desktop-sidecar --density standard --json
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-render-tree-report --help
-
-Arguments:
-  --description <text>|--audio <path>|--library <dir>
-  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
-
-Behavior:
-  Builds a passive GUI render tree from the screen contract. The report emits
-  a deterministic root/region/component/table-row tree, source bindings,
-  disabled active controls, blocked active actions, JSON-ready node metadata,
-  and replayable passive commands for future desktop GUI and audio-analyzer
-  flows.
-
-Safety:
-{_safety_block(SAFETY_LINES)}"""
-
-
 def _style_performance_arc_live_gui_analyzer_overlay_report_help():
     from .reports.live_gui_analyzer_overlay import SAFETY_LINES
 
@@ -2836,33 +2324,6 @@ Behavior:
   ordered frame events, visual assertions, blocked active actions,
   deterministic JSON, and replayable passive commands for future desktop GUI
   and GUI test-harness flows.
-
-Safety:
-{_safety_block(SAFETY_LINES)}"""
-
-
-def _style_performance_arc_live_gui_interaction_script_report_help():
-    from .reports.live_gui_interaction_script import SAFETY_LINES
-
-    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-interaction-script-report
-
-Usage:
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-interaction-script-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-interaction-script-report --audio <path> --capture-audio <path> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-interaction-script-report --library <dir> --capture-library <dir> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-interaction-script-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-interaction-script-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --frame-label <text> --interaction-label <text> --json
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-interaction-script-report --help
-
-Arguments:
-  --description <text>|--audio <path>|--library <dir>
-  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
-
-Behavior:
-  Builds a passive GUI interaction script from the analyzer frame. The report
-  emits ordered interaction steps, GUI control bindings, disabled hardware
-  locks, deterministic JSON, and replayable passive commands for future desktop
-  GUI and GUI test-harness flows.
 
 Safety:
 {_safety_block(SAFETY_LINES)}"""
@@ -2976,277 +2437,6 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
-def _style_performance_arc_live_gui_test_harness_contract_report_help():
-    from .reports.live_gui_test_harness_contract import SAFETY_LINES
-
-    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-test-harness-contract-report
-
-Usage:
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-contract-report --audio <path> --capture-audio <path> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-contract-report --library <dir> --capture-library <dir> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --validation-label <text> --harness-label <text> --json
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-contract-report --help
-
-Arguments:
-  --description <text>|--audio <path>|--library <dir>
-  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
-
-Behavior:
-  Builds a passive GUI test-harness contract from a playback-validation matrix.
-  The report emits deterministic suites, fixtures, bindings, blocked active
-  actions, JSON, and replayable passive commands for future GUI and
-  audio-analyzer harnesses.
-
-Safety:
-{_safety_block(SAFETY_LINES)}"""
-
-
-def _style_performance_arc_live_gui_test_harness_readiness_report_help():
-    from .reports.live_gui_test_harness_readiness import SAFETY_LINES
-
-    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-test-harness-readiness-report
-
-Usage:
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-readiness-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-readiness-report --audio <path> --capture-audio <path> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-readiness-report --library <dir> --capture-library <dir> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-readiness-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-readiness-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --harness-label <text> --readiness-label <text> --json
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-readiness-report --help
-
-Arguments:
-  --description <text>|--audio <path>|--library <dir>
-  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
-
-Behavior:
-  Builds passive GUI test-harness readiness from a test-harness contract.
-  The report emits deterministic readiness gates, checks, rehearsal steps,
-  blocked active actions, JSON, and replayable passive commands for future GUI
-  and audio-analyzer harness rehearsal.
-
-Safety:
-{_safety_block(SAFETY_LINES)}"""
-
-
-def _style_performance_arc_live_gui_implementation_bridge_report_help():
-    from .reports.live_gui_implementation_bridge import SAFETY_LINES
-
-    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-implementation-bridge-report
-
-Usage:
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-implementation-bridge-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-implementation-bridge-report --audio <path> --capture-audio <path> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-implementation-bridge-report --library <dir> --capture-library <dir> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-implementation-bridge-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-implementation-bridge-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --readiness-label <text> --bridge-label <text> --json
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-implementation-bridge-report --help
-
-Arguments:
-  --description <text>|--audio <path>|--library <dir>
-  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
-
-Behavior:
-  Builds passive GUI implementation bridge metadata from test-harness readiness.
-  The report emits deterministic view-model packets, disabled component mounts,
-  fixture bundles, implementation gates, blocked active actions, JSON, and
-  replayable passive commands for future desktop GUI implementation work.
-
-Safety:
-{_safety_block(SAFETY_LINES)}"""
-
-
-def _style_performance_arc_live_gui_desktop_blueprint_report_help():
-    from .reports.live_gui_desktop_blueprint import SAFETY_LINES
-
-    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-desktop-blueprint-report
-
-Usage:
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-blueprint-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-blueprint-report --audio <path> --capture-audio <path> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-blueprint-report --library <dir> --capture-library <dir> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-blueprint-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-blueprint-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --bridge-label <text> --blueprint-label <text> --desktop-shell operator-dashboard --json
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-blueprint-report --help
-
-Arguments:
-  --description <text>|--audio <path>|--library <dir>
-  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
-
-Behavior:
-  Builds a passive desktop GUI blueprint from implementation bridge metadata.
-  The report emits deterministic desktop shell, viewport, region, widget,
-  binding, implementation task, fixture hint, acceptance check, blocked action,
-  JSON, and replayable passive command metadata for future GUI work.
-
-Safety:
-{_safety_block(SAFETY_LINES)}"""
-
-
-def _style_performance_arc_live_gui_desktop_app_plan_report_help():
-    from .reports.live_gui_desktop_app_plan import SAFETY_LINES
-
-    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-desktop-app-plan-report
-
-Usage:
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-app-plan-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-app-plan-report --audio <path> --capture-audio <path> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-app-plan-report --library <dir> --capture-library <dir> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-app-plan-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-app-plan-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --blueprint-label <text> --desktop-shell operator-dashboard --app-plan-label <text> --framework-target desktop-python --json
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-app-plan-report --help
-
-Arguments:
-  --description <text>|--audio <path>|--library <dir>
-  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
-
-Behavior:
-  Builds a passive desktop app plan from GUI desktop blueprint metadata.
-  The report emits deterministic app shell, routes, component file hints,
-  state slices, style tokens, acceptance checks, blocked actions, JSON, and
-  replayable passive command metadata for future GUI desktop app work.
-
-Safety:
-{_safety_block(SAFETY_LINES)}"""
-
-
-def _style_performance_arc_live_gui_desktop_component_contract_report_help():
-    from .reports.live_gui_desktop_component_contract import SAFETY_LINES
-
-    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-desktop-component-contract-report
-
-Usage:
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-component-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-component-contract-report --audio <path> --capture-audio <path> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-component-contract-report --library <dir> --capture-library <dir> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-component-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-component-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --app-plan-label <text> --component-contract-label <text> --selector-prefix <text> --json
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-component-contract-report --help
-
-Arguments:
-  --description <text>|--audio <path>|--library <dir>
-  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
-
-Behavior:
-  Builds a passive desktop component contract from GUI desktop app plan metadata.
-  The report emits deterministic component contracts, prop contracts, disabled
-  action contracts, test selectors, acceptance checks, blocked actions, JSON,
-  and replayable passive command metadata for future GUI desktop implementation work.
-
-Safety:
-{_safety_block(SAFETY_LINES)}"""
-
-
-def _style_performance_arc_live_gui_desktop_view_model_report_help():
-    from .reports.live_gui_desktop_view_model import SAFETY_LINES
-
-    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-desktop-view-model-report
-
-Usage:
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-view-model-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-view-model-report --audio <path> --capture-audio <path> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-view-model-report --library <dir> --capture-library <dir> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-view-model-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-view-model-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --component-contract-label <text> --selector-prefix <text> --view-model-label <text> --state-prefix <text> --json
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-view-model-report --help
-
-Arguments:
-  --description <text>|--audio <path>|--library <dir>
-  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
-
-Behavior:
-  Builds a passive desktop view model from GUI desktop component-contract metadata.
-  The report emits deterministic component view models, state bindings,
-  disabled action view models, style tokens, acceptance checks, blocked actions,
-  JSON, and replayable passive command metadata for future GUI desktop work.
-
-Safety:
-{_safety_block(SAFETY_LINES)}"""
-
-
-def _style_performance_arc_live_gui_desktop_render_contract_report_help():
-    from .reports.live_gui_desktop_render_contract import SAFETY_LINES
-
-    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-desktop-render-contract-report
-
-Usage:
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-contract-report --audio <path> --capture-audio <path> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-contract-report --library <dir> --capture-library <dir> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --component-contract-label <text> --selector-prefix <text> --view-model-label <text> --state-prefix <text> --render-contract-label <text> --json
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-contract-report --help
-
-Arguments:
-  --description <text>|--audio <path>|--library <dir>
-  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
-
-Behavior:
-  Builds a passive desktop render contract from GUI desktop view-model metadata.
-  The report emits deterministic render surfaces, render bindings,
-  style-token bindings, render assertions, blocked actions, JSON, and
-  replayable passive command metadata for future GUI desktop renderer work.
-
-Safety:
-{_safety_block(SAFETY_LINES)}"""
-
-
-def _style_performance_arc_live_gui_desktop_render_harness_report_help():
-    from .reports.live_gui_desktop_render_harness import SAFETY_LINES
-
-    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-desktop-render-harness-report
-
-Usage:
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-harness-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-harness-report --audio <path> --capture-audio <path> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-harness-report --library <dir> --capture-library <dir> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-harness-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-harness-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --render-contract-label <text> --render-harness-label <text> --runner-label <text> --json
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-harness-report --help
-
-Arguments:
-  --description <text>|--audio <path>|--library <dir>
-  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
-
-Behavior:
-  Builds a passive GUI desktop render harness from GUI desktop render-contract metadata.
-  The report emits deterministic surface harnesses, binding harnesses,
-  style-token checks, harness assertions, blocked actions, JSON, and replayable
-  passive command metadata for future GUI desktop harness work.
-
-Safety:
-{_safety_block(SAFETY_LINES)}"""
-
-
-def _style_performance_arc_live_gui_cockpit_boundary_readiness_report_help():
-    from .reports.live_gui_cockpit_boundary_readiness import SAFETY_LINES
-
-    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-cockpit-boundary-readiness-report
-
-Usage:
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-cockpit-boundary-readiness-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-cockpit-boundary-readiness-report --audio <path> --capture-audio <path> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-cockpit-boundary-readiness-report --library <dir> --capture-library <dir> --rytm <syx-path>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-cockpit-boundary-readiness-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --render-harness-label <text> --boundary-label <text> --json
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-cockpit-boundary-readiness-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --hardware-entrypoint <command> --passive-entrypoint <command> --ws-port-env <name>
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-cockpit-boundary-readiness-report --help
-
-Arguments:
-  --description <text>|--audio <path>|--library <dir>
-  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
-
-Behavior:
-  Builds passive cockpit boundary readiness from GUI desktop render-harness metadata.
-  The report keeps active hardware remains app --arm only, makes Rytm 12-pad and
-  Analog Four 4-track scope explicit, captures future WebSocket/env documentation
-  expectations, records optional Tauri/web toolchain guardrails, and emits blocked
-  actions, JSON, and replayable passive command metadata.
-
-Safety:
-{_safety_block(SAFETY_LINES)}"""
-
-
 def _cockpit_send_plan_readiness_report_help():
     from .reports.cockpit_send_plan_operator_readiness import SAFETY_LINES
 
@@ -3342,6 +2532,106 @@ Safety:
 {_safety_block(_COCKPIT_EXPORT_PROFILE_MODEL_SAFETY_LINES)}"""
 
 
+_ANALOG_FOUR_SAVED_KIT_EXPORT_SAFETY_LINES: Final[tuple[str, ...]] = (
+    "reads one operator-selected Analog Four saved-kit .syx file",
+    "writes one generated .syx file via the canonical atomic writer",
+    "only hardware-write-validated parameters are accepted",
+    "no MIDI sending",
+    "no port opening",
+    "no hardware mutation",
+    "no hardware required",
+    "no network access",
+)
+
+
+def _analog_four_saved_kit_export_help():
+    return f"""RytmRandomizer passive CLI: analog-four-saved-kit-export
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> --filter2-resonance 1:64
+  python -m rytm_randomizer.cli analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> --filter2-resonance 1:16 --filter2-resonance 2:48 --filter2-resonance 3:80 --filter2-resonance 4:112 --json
+  python -m rytm_randomizer.cli analog-four-saved-kit-export --help
+
+Arguments:
+  --source <kit.syx>                 Hardware-exported source saved kit
+  --output <kit.syx>                 Destination for the generated saved kit
+  --filter2-resonance <track:value>  Track 1-4 and front-panel value 0-127; repeatable
+  --overwrite                        Replace --output if it already exists
+  --json                             Emit a JSON acknowledgment instead of text
+
+Behavior:
+  Validates and decodes one Analog Four MKII saved-kit frame, applies every
+  requested hardware-validated Filter2 Resonance value, rebuilds the Elektron
+  7-bit payload/checksum/length trailer, and atomically publishes the output.
+  The acknowledgment reports the kit name, SHA256, byte count, track values,
+  and concrete unpacked offsets. Existing output is refused unless --overwrite
+  is explicit.
+
+Safety:
+{_safety_block(_ANALOG_FOUR_SAVED_KIT_EXPORT_SAFETY_LINES)}"""
+
+
+def _analog_four_audio_patch_batch_help():
+    from .cockpit.export.analog_four_patch_batch_cli import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: analog-four-audio-patch-batch
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir>
+  python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir> --track 2 --candidates 4 --json
+  python -m rytm_randomizer.cli analog-four-audio-patch-batch --help
+
+Arguments:
+  --audio <path>           Short reference audio clip to analyze
+  --source-kit <kit.syx>   Hardware-exported source saved kit
+  --output-dir <dir>       Destination for candidate .syx and JSON sidecar files
+  --track N                Analog Four track 1-4; default 1
+  --candidates N           Candidate count 1-4; default 4
+  --overwrite              Replace the stable manifest; reuse exact generation files
+  --json                   Emit a JSON acknowledgment instead of text
+
+Behavior:
+  Runs real audio-dependent inference and generates up to four candidate patch
+  genomes. Every candidate writes one saved-kit .syx file and one sidecar with
+  the complete patch DNA plus its CC/NRPN live-dial plan. The current .syx
+  writer applies only hardware-write-validated Filter2 Resonance; all other DNA
+  remains represented in the sidecar as live-sendable, manual, or deferred.
+  The acknowledgment reports the audio source hash, manifest path/hash,
+  candidate paths, category counts, and safety contract. This is not a claim of full saved-kit coverage
+  or Synthplant-equivalent learned accuracy.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _analog_four_audio_patch_rank_help():
+    from .cockpit.export.analog_four_patch_render_rank import (
+        ANALOG_FOUR_RENDER_RANK_SAFETY,
+    )
+
+    return f"""RytmRandomizer passive CLI: analog-four-audio-patch-rank
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference <path> --manifest <batch.json> --render <N=path>
+  python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference <path> --manifest <batch.json> --render <1=path> --render <2=path> --json
+  python -m rytm_randomizer.cli analog-four-audio-patch-rank --help
+
+Arguments:
+  --reference <path>       Original audio used to create the batch
+  --manifest <batch.json>  Committed audio-patch batch manifest
+  --render <N=path>        A4 recording for candidate 1-4; repeatable
+  --json                   Emit deterministic JSON instead of text
+
+Behavior:
+  Hash-verifies each selected candidate sidecar, proves that --reference is
+  the exact batch source, measures eleven envelope and timbre features from
+  every A4 recording, and ranks candidates by weighted acoustic distance.
+  The result identifies the closest candidate and exposes every feature delta.
+
+Safety:
+{_safety_block(ANALOG_FOUR_RENDER_RANK_SAFETY)}"""
+
+
 def _cockpit_export_rehearsal_report_help():
     from .reports.cockpit_export_rehearsal import SAFETY_LINES
 
@@ -3379,7 +2669,17 @@ Safety:
 
 def resolve_help_text(key: str) -> str:
     text = HELP_TEXT[key]
-    return text() if callable(text) else text
+    if isinstance(text, str):
+        return text
+    if callable(text):
+        return _require_help_text(text(), key=key)
+    raise TypeError(f"help text provider for {key!r} did not return a string")
+
+
+def _require_help_text(value: object, *, key: str) -> str:
+    if not isinstance(value, str):
+        raise TypeError(f"help text provider for {key!r} did not return a string")
+    return value
 
 
 HELP_TEXT = {
@@ -3452,11 +2752,6 @@ Usage:
   python -m rytm_randomizer.cli controller-brain-live-feedback-rehearsal-report [--json]
   python -m rytm_randomizer.cli controller-brain-live-cockpit-handoff-report [--json]
   python -m rytm_randomizer.cli controller-brain-live-implementation-bridge-report [--json]
-  python -m rytm_randomizer.cli controller-brain-live-desktop-blueprint-report [--json]
-  python -m rytm_randomizer.cli controller-brain-live-desktop-app-plan-report [--app-plan-label <text>] [--framework-target desktop-python|web-desktop|test-harness] [--json]
-  python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report [--component-contract-label <text>] [--selector-prefix <text>] [--json]
-  python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report [--view-model-label <text>] [--state-prefix <text>] [--json]
-  python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report [--render-contract-label <text>] [--surface-prefix <text>] [--json]
   python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report [--json]
   python -m rytm_randomizer.cli live-gui-performance-flow-model-report [--json]
   python -m rytm_randomizer.cli live-gui-performance-console-report [--json]
@@ -3496,28 +2791,18 @@ Usage:
   python -m rytm_randomizer.cli style-performance-arc-live-gui-capture-queue-report (--description <text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--label <text>] [--capture-prefix <text>] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-gui-capture-review-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-gui-sidecar-session-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--json]
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-screen-contract-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--json]
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-render-tree-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-overlay-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-frame-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--json]
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-interaction-script-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-gui-action-reducer-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-gui-controller-state-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-gui-playback-transcript-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-gui-playback-validation-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--json]
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-contract-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--json]
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-readiness-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--json]
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-implementation-bridge-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--bridge-label <text>] [--json]
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-blueprint-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--bridge-label <text>] [--blueprint-label <text>] [--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--json]
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-app-plan-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--bridge-label <text>] [--blueprint-label <text>] [--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--app-plan-label <text>] [--framework-target desktop-python|web-desktop|test-harness] [--json]
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-component-contract-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--bridge-label <text>] [--blueprint-label <text>] [--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--app-plan-label <text>] [--framework-target desktop-python|web-desktop|test-harness] [--component-contract-label <text>] [--selector-prefix <text>] [--json]
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-view-model-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--bridge-label <text>] [--blueprint-label <text>] [--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--app-plan-label <text>] [--framework-target desktop-python|web-desktop|test-harness] [--component-contract-label <text>] [--selector-prefix <text>] [--view-model-label <text>] [--state-prefix <text>] [--json]
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-contract-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--bridge-label <text>] [--blueprint-label <text>] [--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--app-plan-label <text>] [--framework-target desktop-python|web-desktop|test-harness] [--component-contract-label <text>] [--selector-prefix <text>] [--view-model-label <text>] [--state-prefix <text>] [--render-contract-label <text>] [--json]
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-harness-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--bridge-label <text>] [--blueprint-label <text>] [--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--app-plan-label <text>] [--framework-target desktop-python|web-desktop|test-harness] [--component-contract-label <text>] [--selector-prefix <text>] [--view-model-label <text>] [--state-prefix <text>] [--render-contract-label <text>] [--render-harness-label <text>] [--runner-label <text>] [--json]
-  python -m rytm_randomizer.cli style-performance-arc-live-gui-cockpit-boundary-readiness-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--bridge-label <text>] [--blueprint-label <text>] [--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--app-plan-label <text>] [--framework-target desktop-python|web-desktop|test-harness] [--component-contract-label <text>] [--selector-prefix <text>] [--view-model-label <text>] [--state-prefix <text>] [--render-contract-label <text>] [--render-harness-label <text>] [--runner-label <text>] [--boundary-label <text>] [--hardware-entrypoint <command>] [--passive-entrypoint <command>] [--ws-port-env <name>] [--json]
   python -m rytm_randomizer.cli cockpit-send-plan-readiness-report (--plan-json <json>|--plan-file <path>) [--label <text>] [--json]
   python -m rytm_randomizer.cli cockpit-send-plan-rehearsal-surface-report (--plan-json <json>|--plan-file <path>|--readiness-json <json>|--readiness-file <path>) [--label <text>] [--json]
   python -m rytm_randomizer.cli cockpit-export-profile-model --profile-id <id> --profiles-dir <path> --output <file.rymp> [--key-hex <hex> --key-id <label>] [--unsigned] [--overwrite] [--json]
+  python -m rytm_randomizer.cli analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> --filter2-resonance <track:value> [--filter2-resonance <track:value> ...] [--overwrite] [--json]
+  python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json]
+  python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference <path> --manifest <batch.json> --render <N=path> [--render <N=path> ...] [--json]
   python -m rytm_randomizer.cli cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> [--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
@@ -3649,15 +2934,10 @@ Commands:
                      Print passive controller-brain Cockpit handoff cards and disabled controls.
   controller-brain-live-implementation-bridge-report
                      Print passive controller-brain implementation bindings and gates.
-  controller-brain-live-desktop-blueprint-report
                      Print passive controller-brain desktop regions and component contracts.
-  controller-brain-live-desktop-app-plan-report
                      Print passive controller-brain app routes and component file hints.
-  controller-brain-live-desktop-component-contract-report
                      Print passive controller-brain desktop component API contracts.
-  controller-brain-live-desktop-view-model-report
                      Print passive controller-brain desktop view models and state bindings.
-  controller-brain-live-desktop-render-contract-report
                      Print passive controller-brain desktop render surfaces and bindings.
   rytm-live-macro-hardware-rehearsal-report
                      Print passive Rytm macro hardware rehearsal checklist.
@@ -3737,15 +3017,12 @@ Commands:
                      Review passive GUI/audio-analyzer captures with go/repeat/hold decisions.
   style-performance-arc-live-gui-sidecar-session-report
                      Compose passive capture review into one sidecar-ready GUI state.
-  style-performance-arc-live-gui-screen-contract-report
                      Compose passive sidecar state into a deterministic GUI screen contract.
-  style-performance-arc-live-gui-render-tree-report
                      Compose passive screen contract into a deterministic GUI render tree.
   style-performance-arc-live-gui-analyzer-overlay-report
                      Compose passive render tree into GUI analyzer overlay metadata.
   style-performance-arc-live-gui-analyzer-frame-report
                      Compose passive analyzer overlay into GUI frame metadata.
-  style-performance-arc-live-gui-interaction-script-report
                      Compose passive analyzer frame into GUI interaction metadata.
   style-performance-arc-live-gui-action-reducer-report
                      Compose passive interaction script into GUI action reducer metadata.
@@ -3755,25 +3032,15 @@ Commands:
                      Compose passive controller state into GUI playback transcript metadata.
   style-performance-arc-live-gui-playback-validation-report
                      Compose passive playback transcript into GUI validation matrix metadata.
-  style-performance-arc-live-gui-test-harness-contract-report
                      Compose passive validation matrix into GUI test-harness contract metadata.
-  style-performance-arc-live-gui-test-harness-readiness-report
                      Compose passive GUI test-harness contract into readiness metadata.
-  style-performance-arc-live-gui-implementation-bridge-report
                      Compose passive GUI readiness into future implementation wiring metadata.
-  style-performance-arc-live-gui-desktop-blueprint-report
                      Compose passive GUI implementation metadata into a future desktop blueprint.
-  style-performance-arc-live-gui-desktop-app-plan-report
                      Compose passive GUI desktop blueprint metadata into a future desktop app plan.
-  style-performance-arc-live-gui-desktop-component-contract-report
                      Compose passive GUI desktop app plan metadata into future component contracts.
-  style-performance-arc-live-gui-desktop-view-model-report
                      Compose passive GUI desktop component contracts into future view models.
-  style-performance-arc-live-gui-desktop-render-contract-report
                     Compose passive GUI desktop view models into future render contracts.
-  style-performance-arc-live-gui-desktop-render-harness-report
                     Compose passive GUI desktop render contracts into future render harnesses.
-  style-performance-arc-live-gui-cockpit-boundary-readiness-report
                     Compose passive GUI desktop render harnesses into cockpit boundary readiness.
   cockpit-send-plan-readiness-report
                     Explain prepared cockpit SEND plan readiness for operator review.
@@ -3781,6 +3048,12 @@ Commands:
                     Build GUI-ready passive SEND plan rehearsal surface state.
   cockpit-export-profile-model
                     Export a cockpit ProfileModel (pack + sign + atomic write + verify).
+  analog-four-saved-kit-export
+                    Render hardware-validated Analog Four values into a saved-kit SysEx file.
+  analog-four-audio-patch-batch
+                    Infer and export up to four passive Analog Four patch candidates from audio.
+  analog-four-audio-patch-rank
+                    Rank recorded Analog Four candidates against their reference audio.
   cockpit-export-rehearsal-report
                     Build GUI-ready passive cockpit model-export rehearsal surface state.
   inspect-command    Inspect passive command metadata by key.
@@ -3975,6 +3248,8 @@ Safety:
   no hardware required""",
     "rytm-snapshot-pad-compatibility-report": _rytm_snapshot_pad_compatibility_report_help,
     "analog-rytm-midi-catalog-report": _analog_rytm_midi_catalog_report_help,
+    "scoped-randomization-preview": _scoped_randomization_preview_help,
+    "kit-morph-preview": _kit_morph_preview_help,
     "rytm-outbound-cc-repeatability-report": """RytmRandomizer passive CLI: rytm-outbound-cc-repeatability-report
 
 Usage:
@@ -4094,21 +3369,6 @@ Safety:
     "controller-brain-live-implementation-bridge-report": (
         _controller_brain_live_implementation_bridge_report_help
     ),
-    "controller-brain-live-desktop-blueprint-report": (
-        _controller_brain_live_desktop_blueprint_report_help
-    ),
-    "controller-brain-live-desktop-app-plan-report": (
-        _controller_brain_live_desktop_app_plan_report_help
-    ),
-    "controller-brain-live-desktop-component-contract-report": (
-        _controller_brain_live_desktop_component_contract_report_help
-    ),
-    "controller-brain-live-desktop-view-model-report": (
-        _controller_brain_live_desktop_view_model_report_help
-    ),
-    "controller-brain-live-desktop-render-contract-report": (
-        _controller_brain_live_desktop_render_contract_report_help
-    ),
     "rytm-live-macro-hardware-rehearsal-report": (_rytm_live_macro_hardware_rehearsal_report_help),
     "live-gui-performance-flow-model-report": _live_gui_performance_flow_model_report_help,
     "live-gui-performance-console-report": _live_gui_performance_console_report_help,
@@ -4183,20 +3443,11 @@ Safety:
     "style-performance-arc-live-gui-sidecar-session-report": (
         _style_performance_arc_live_gui_sidecar_session_report_help
     ),
-    "style-performance-arc-live-gui-screen-contract-report": (
-        _style_performance_arc_live_gui_screen_contract_report_help
-    ),
-    "style-performance-arc-live-gui-render-tree-report": (
-        _style_performance_arc_live_gui_render_tree_report_help
-    ),
     "style-performance-arc-live-gui-analyzer-overlay-report": (
         _style_performance_arc_live_gui_analyzer_overlay_report_help
     ),
     "style-performance-arc-live-gui-analyzer-frame-report": (
         _style_performance_arc_live_gui_analyzer_frame_report_help
-    ),
-    "style-performance-arc-live-gui-interaction-script-report": (
-        _style_performance_arc_live_gui_interaction_script_report_help
     ),
     "style-performance-arc-live-gui-action-reducer-report": (
         _style_performance_arc_live_gui_action_reducer_report_help
@@ -4210,41 +3461,14 @@ Safety:
     "style-performance-arc-live-gui-playback-validation-report": (
         _style_performance_arc_live_gui_playback_validation_report_help
     ),
-    "style-performance-arc-live-gui-test-harness-contract-report": (
-        _style_performance_arc_live_gui_test_harness_contract_report_help
-    ),
-    "style-performance-arc-live-gui-test-harness-readiness-report": (
-        _style_performance_arc_live_gui_test_harness_readiness_report_help
-    ),
-    "style-performance-arc-live-gui-implementation-bridge-report": (
-        _style_performance_arc_live_gui_implementation_bridge_report_help
-    ),
-    "style-performance-arc-live-gui-desktop-blueprint-report": (
-        _style_performance_arc_live_gui_desktop_blueprint_report_help
-    ),
-    "style-performance-arc-live-gui-desktop-app-plan-report": (
-        _style_performance_arc_live_gui_desktop_app_plan_report_help
-    ),
-    "style-performance-arc-live-gui-desktop-component-contract-report": (
-        _style_performance_arc_live_gui_desktop_component_contract_report_help
-    ),
-    "style-performance-arc-live-gui-desktop-view-model-report": (
-        _style_performance_arc_live_gui_desktop_view_model_report_help
-    ),
-    "style-performance-arc-live-gui-desktop-render-contract-report": (
-        _style_performance_arc_live_gui_desktop_render_contract_report_help
-    ),
-    "style-performance-arc-live-gui-desktop-render-harness-report": (
-        _style_performance_arc_live_gui_desktop_render_harness_report_help
-    ),
-    "style-performance-arc-live-gui-cockpit-boundary-readiness-report": (
-        _style_performance_arc_live_gui_cockpit_boundary_readiness_report_help
-    ),
     "cockpit-send-plan-readiness-report": _cockpit_send_plan_readiness_report_help,
     "cockpit-send-plan-rehearsal-surface-report": (
         _cockpit_send_plan_rehearsal_surface_report_help
     ),
     "cockpit-export-profile-model": _cockpit_export_profile_model_help,
+    "analog-four-saved-kit-export": _analog_four_saved_kit_export_help,
+    "analog-four-audio-patch-batch": _analog_four_audio_patch_batch_help,
+    "analog-four-audio-patch-rank": _analog_four_audio_patch_rank_help,
     "cockpit-export-rehearsal-report": _cockpit_export_rehearsal_report_help,
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 

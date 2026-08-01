@@ -1,0 +1,27 @@
+{
+  "anchor": [
+    "body",
+    "lfo",
+    "morph"
+  ],
+  "bandpass": [
+    "bandpass",
+    "body",
+    "morph"
+  ],
+  "lp1": [
+    "lp1",
+    "body",
+    "lfo"
+  ],
+  "scifi": [
+    "scifi",
+    "lfo",
+    "grit"
+  ],
+  "wave": [
+    "wave",
+    "morph",
+    "body"
+  ]
+}

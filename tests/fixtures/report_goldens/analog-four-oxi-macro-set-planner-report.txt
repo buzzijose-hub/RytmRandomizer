@@ -1,0 +1,50 @@
+RytmRandomizer passive Analog Four OXI macro set planner
+Set: warehouse-arc
+Step count: 5
+Current: home / Home
+Up next: hard-groove, dub-pressure, industrial-transition, home
+Plan steps:
+1. home / Home | seed=0 | intensity=2 | energy=2 | readiness=review-ready | events=8
+  summary: Gentle four-track reset-adjacent motion for a stable live anchor.
+  validation: analog-four-oxi-macro-readiness-report home --seed 0 --intensity 2 --limit 4
+  recovery: reload saved A4 kit or return to home macro
+  readiness counts: ready=8, review=0, blocked=0
+2. hard-groove / Hard Groove | seed=1 | intensity=5 | energy=5 | readiness=review-ready | events=12
+  summary: OXI-style four-track pressure for bass, stab, motion, and air lanes.
+  validation: analog-four-oxi-macro-readiness-report hard-groove --seed 1 --intensity 5 --limit 4
+  recovery: reload saved A4 kit or return to home macro
+  readiness counts: ready=12, review=0, blocked=0
+3. dub-pressure / Dub Pressure | seed=2 | intensity=4 | energy=4 | readiness=review-ready | events=8
+  summary: Delay/reverb-led A4 macro for cavernous but controlled hypnosis.
+  validation: analog-four-oxi-macro-readiness-report dub-pressure --seed 2 --intensity 4 --limit 4
+  recovery: reload saved A4 kit or return to home macro
+  readiness counts: ready=8, review=0, blocked=0
+4. industrial-transition / Industrial Transition | seed=3 | intensity=7 | energy=7 | readiness=review-ready | events=9
+  summary: Tense four-track riser macro for transitions and breakdown pressure.
+  validation: analog-four-oxi-macro-readiness-report industrial-transition --seed 3 --intensity 7 --limit 4
+  recovery: reload saved A4 kit or return to home macro
+  readiness counts: ready=9, review=0, blocked=0
+5. home / Home | seed=4 | intensity=2 | energy=2 | readiness=review-ready | events=8
+  summary: Gentle four-track reset-adjacent motion for a stable live anchor.
+  validation: analog-four-oxi-macro-readiness-report home --seed 4 --intensity 2 --limit 4
+  recovery: reload saved A4 kit or return to home macro
+  readiness counts: ready=8, review=0, blocked=0
+Blocked active actions:
+- A4 full macro SEND
+- A4 unattended macro playback
+Replay command: python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --json
+Safety flags:
+- opens_ports: False
+- sends_midi: False
+- hardware_required: False
+Safety:
+- passive/read-only
+- A4 OXI macro set planning only
+- manual-backed Analog Four CC metadata only
+- no MIDI sending
+- no port opening
+- no command execution
+- no hardware mutation
+- A4 full macro SEND remains blocked
+Source: rytm_randomizer.reports.analog_four_oxi_macro_set_planner
+In-memory only: True

@@ -49,6 +49,11 @@ export function DepthSlider({ initial = DEFAULT_DEPTH }: DepthSliderProps): JSX.
           step={STEP}
           value={depth}
           aria-label="Mutation amount"
+          // Native range reports aria-valuenow as the raw 0.10–0.90 float,
+          // which a screen reader speaks as "0.45". aria-valuetext overrides
+          // that with the human-facing percentage the sighted chip shows,
+          // satisfying WCAG 4.1.2 name/role/value parity (APG slider pattern).
+          aria-valuetext={`${Math.round(depth * 100)} percent`}
           className={active ? 'depth-slider-range active' : 'depth-slider-range'}
           onChange={handleChange}
           onPointerDown={() => setActive(true)}

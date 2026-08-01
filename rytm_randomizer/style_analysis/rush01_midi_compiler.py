@@ -117,14 +117,12 @@ class Rush01NormalizedValue:
         if self.domain not in {VALUE_DOMAIN_7BIT, VALUE_DOMAIN_14BIT}:
             raise ValueError("normalized MIDI value domain must be 7bit or 14bit")
         maximum = _MIDI_DATA_MAX if self.domain == VALUE_DOMAIN_7BIT else _MIDI_14BIT_MAX
-        if isinstance(self.value, bool) or not isinstance(self.value, int):
-            raise ValueError(
-                f"normalized {self.domain} MIDI value must be an integer in 0..{maximum}"
-            )
-        if not 0 <= self.value <= maximum:
-            raise ValueError(
-                f"normalized {self.domain} MIDI value must be an integer in 0..{maximum}"
-            )
+        _validated_integer(
+            self.value,
+            minimum=0,
+            maximum=maximum,
+            label=f"normalized {self.domain} MIDI value",
+        )
 
 
 @dataclass(frozen=True)
@@ -183,42 +181,80 @@ class Rush01MidiPlan:
     parameter_filter: str | None
     safety: tuple[str, ...]
 
+    @property
+    def ready(self) -> bool:
+        """Whether this immutable plan may enter the armed apply seam."""
 
-def user_channel_to_midi(channel: int) -> int:
+        return (
+            self.configuration_ready
+            and self.output_port is not None
+            and self.summary.invalid_spec_fields == 0
+            and self.summary.ready_fields > 0
+            and self.summary.transport_message_count > 0
+        )
+
+    @property
+    def readiness_reason(self) -> str:
+        """Return the first fail-closed reason used by the armed apply seam."""
+
+        if not self.configuration_ready or self.output_port is None:
+            return "RUSH01 plan requires exact port and track-channel configuration"
+        if self.summary.invalid_spec_fields:
+            return "RUSH01 plan contains invalid specification fields"
+        if not self.summary.ready_fields or not self.summary.transport_message_count:
+            return "RUSH01 plan has no configured ready MIDI messages"
+        return ""
+
+
+def user_channel_to_midi(channel: object) -> int:
     """Convert a user-facing MIDI channel in ``1..16`` to ``0..15``."""
 
-    if isinstance(channel, bool) or not isinstance(channel, int) or not 1 <= channel <= 16:
-        raise ValueError("MIDI track channel must be an integer in 1..16")
-    return channel - 1
+    validated_channel = _validated_integer(
+        channel,
+        minimum=1,
+        maximum=16,
+        label="MIDI track channel",
+    )
+    return validated_channel - 1
 
 
 def encode_cc_message(channel: int, controller: int, value: int) -> tuple[MidiByteMessage, ...]:
     """Encode one ordinary control-change message."""
 
-    _validate_midi_channel(channel)
-    _validate_midi_data(controller, label="controller")
-    _validate_midi_data(value, label="value")
-    return ((_MIDI_CC_STATUS | channel, controller, value),)
+    validated_channel = _validate_midi_channel(channel)
+    validated_controller = _validate_midi_data(controller, label="controller")
+    validated_value = _validate_midi_data(value, label="value")
+    return ((_MIDI_CC_STATUS | validated_channel, validated_controller, validated_value),)
 
 
 def encode_cc14_messages(
     channel: int,
     controller_msb: int,
     controller_lsb: int,
-    value_14bit: int,
+    value_14bit: object,
 ) -> tuple[MidiByteMessage, ...]:
     """Encode a high-resolution CC pair in MSB then LSB order."""
 
-    _validate_midi_channel(channel)
-    _validate_midi_data(controller_msb, label="controller_msb")
-    _validate_midi_data(controller_lsb, label="controller_lsb")
-    if isinstance(value_14bit, bool) or not isinstance(value_14bit, int):
-        raise ValueError("value_14bit must be an integer in 0..16383")
-    if not 0 <= value_14bit <= _MIDI_14BIT_MAX:
-        raise ValueError("value_14bit must be an integer in 0..16383")
+    validated_channel = _validate_midi_channel(channel)
+    validated_controller_msb = _validate_midi_data(controller_msb, label="controller_msb")
+    validated_controller_lsb = _validate_midi_data(controller_lsb, label="controller_lsb")
+    validated_value = _validated_integer(
+        value_14bit,
+        minimum=0,
+        maximum=_MIDI_14BIT_MAX,
+        label="value_14bit",
+    )
     return (
-        (_MIDI_CC_STATUS | channel, controller_msb, (value_14bit >> 7) & 0x7F),
-        (_MIDI_CC_STATUS | channel, controller_lsb, value_14bit & 0x7F),
+        (
+            _MIDI_CC_STATUS | validated_channel,
+            validated_controller_msb,
+            (validated_value >> 7) & 0x7F,
+        ),
+        (
+            _MIDI_CC_STATUS | validated_channel,
+            validated_controller_lsb,
+            validated_value & 0x7F,
+        ),
     )
 
 
@@ -232,22 +268,19 @@ def encode_nrpn_messages(
 ) -> tuple[MidiByteMessage, ...]:
     """Encode NRPN select then Data Entry MSB and optional LSB messages."""
 
-    _validate_midi_channel(channel)
-    for label, value in (
-        ("nrpn_msb", nrpn_msb),
-        ("nrpn_lsb", nrpn_lsb),
-        ("value_msb", value_msb),
-    ):
-        _validate_midi_data(value, label=label)
+    validated_channel = _validate_midi_channel(channel)
+    validated_nrpn_msb = _validate_midi_data(nrpn_msb, label="nrpn_msb")
+    validated_nrpn_lsb = _validate_midi_data(nrpn_lsb, label="nrpn_lsb")
+    validated_value_msb = _validate_midi_data(value_msb, label="value_msb")
     messages: tuple[MidiByteMessage, ...] = (
-        (_MIDI_CC_STATUS | channel, 99, nrpn_msb),
-        (_MIDI_CC_STATUS | channel, 98, nrpn_lsb),
-        (_MIDI_CC_STATUS | channel, 6, value_msb),
+        (_MIDI_CC_STATUS | validated_channel, 99, validated_nrpn_msb),
+        (_MIDI_CC_STATUS | validated_channel, 98, validated_nrpn_lsb),
+        (_MIDI_CC_STATUS | validated_channel, 6, validated_value_msb),
     )
     if value_lsb is None:
         return messages
-    _validate_midi_data(value_lsb, label="value_lsb")
-    return messages + ((_MIDI_CC_STATUS | channel, 38, value_lsb),)
+    validated_value_lsb = _validate_midi_data(value_lsb, label="value_lsb")
+    return messages + ((_MIDI_CC_STATUS | validated_channel, 38, validated_value_lsb),)
 
 
 def parse_rush01_device_config(payload: object, device: str) -> Rush01DeviceConfig:
@@ -349,7 +382,7 @@ def compile_rush01_midi_plan(
     return plan
 
 
-def rush01_midi_plan_to_dict(plan: Rush01MidiPlan) -> dict[str, object]:
+def rush01_midi_plan_to_dict(plan: object) -> dict[str, object]:
     """Return a stable JSON-ready representation of one plan."""
 
     if not isinstance(plan, Rush01MidiPlan):
@@ -1466,9 +1499,11 @@ def _field_to_dict(field: Rush01MidiField) -> dict[str, object]:
 
 def _json_value(value: object) -> object:
     if isinstance(value, Mapping):
-        return {str(key): _json_value(item) for key, item in value.items()}
+        mapping = cast(Mapping[object, object], value)
+        return {str(key): _json_value(item) for key, item in mapping.items()}
     if isinstance(value, (list, tuple)):
-        return [_json_value(item) for item in value]
+        sequence = cast(Sequence[object], value)
+        return [_json_value(item) for item in sequence]
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
     return str(value)
@@ -1528,8 +1563,9 @@ def _required_string(mapping: Mapping[str, object], key: str, *, path: str) -> s
 def _require_mapping(value: object, *, path: str) -> Mapping[str, object]:
     if not isinstance(value, Mapping):
         raise ValueError(f"{path} must be a mapping")
+    mapping = cast(Mapping[object, object], value)
     normalized: dict[str, object] = {}
-    for key, item in value.items():
+    for key, item in mapping.items():
         if not isinstance(key, str):
             raise ValueError(f"{path} keys must be strings")
         normalized[key] = item
@@ -1539,24 +1575,32 @@ def _require_mapping(value: object, *, path: str) -> Mapping[str, object]:
 def _require_mapping_or_none(value: object) -> Mapping[str, object] | None:
     if not isinstance(value, Mapping):
         return None
+    mapping = cast(Mapping[object, object], value)
     normalized: dict[str, object] = {}
-    for key, item in value.items():
+    for key, item in mapping.items():
         if not isinstance(key, str):
             return None
         normalized[key] = item
     return MappingProxyType(normalized)
 
 
-def _validate_midi_channel(channel: int) -> None:
-    if isinstance(channel, bool) or not isinstance(channel, int):
-        raise ValueError("MIDI channel must be an integer in 0..15")
-    if not _MIDI_CHANNEL_MIN <= channel <= _MIDI_CHANNEL_MAX:
-        raise ValueError("MIDI channel must be an integer in 0..15")
+def _validate_midi_channel(channel: object) -> int:
+    return _validated_integer(
+        channel,
+        minimum=_MIDI_CHANNEL_MIN,
+        maximum=_MIDI_CHANNEL_MAX,
+        label="MIDI channel",
+    )
 
 
-def _validate_midi_data(value: int, *, label: str) -> None:
-    if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= 127:
-        raise ValueError(f"{label} must be an integer in 0..127")
+def _validate_midi_data(value: object, *, label: str) -> int:
+    return _validated_integer(value, minimum=0, maximum=127, label=label)
+
+
+def _validated_integer(value: object, *, minimum: int, maximum: int, label: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or not minimum <= value <= maximum:
+        raise ValueError(f"{label} must be an integer in {minimum}..{maximum}")
+    return value
 
 
 __all__ = [

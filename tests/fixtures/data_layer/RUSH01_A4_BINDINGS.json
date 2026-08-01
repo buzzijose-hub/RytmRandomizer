@@ -1,0 +1,362 @@
+[
+  {
+    "section_key": "oscillator_1",
+    "field_key": "coarse_tune_semitones",
+    "parameter": "OSC1 Pitch",
+    "conversion": "unverified_high_resolution"
+  },
+  {
+    "section_key": "oscillator_1",
+    "field_key": "fine_tune_cents",
+    "parameter": "OSC1 Pitch",
+    "conversion": "unverified_high_resolution"
+  },
+  {
+    "section_key": "oscillator_1",
+    "field_key": "linear_detune_hz",
+    "parameter": "OSC1 Detune",
+    "conversion": "unverified_conversion"
+  },
+  {
+    "section_key": "oscillator_1",
+    "field_key": "keytrack",
+    "parameter": "OSC1 Keytracking",
+    "conversion": "unverified_boolean"
+  },
+  {
+    "section_key": "oscillator_1",
+    "field_key": "level",
+    "parameter": "OSC1 Level",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "oscillator_1",
+    "field_key": "waveform",
+    "parameter": "OSC1 Waveform",
+    "conversion": "unverified_enum"
+  },
+  {
+    "section_key": "oscillator_1",
+    "field_key": "sub_oscillator",
+    "parameter": "OSC1 Sub Oscillator",
+    "conversion": "unverified_enum"
+  },
+  {
+    "section_key": "oscillator_1",
+    "field_key": "pulse_width",
+    "parameter": "OSC1 Pulsewidth",
+    "conversion": "bipolar_7bit"
+  },
+  {
+    "section_key": "oscillator_1",
+    "field_key": "pwm_speed",
+    "parameter": "OSC1 PWM Speed",
+    "conversion": "bipolar_7bit"
+  },
+  {
+    "section_key": "oscillator_1",
+    "field_key": "pwm_depth",
+    "parameter": "OSC1 PWM Depth",
+    "conversion": "bipolar_7bit"
+  },
+  {
+    "section_key": "oscillator_2",
+    "field_key": "coarse_tune_semitones",
+    "parameter": "OSC2 Pitch",
+    "conversion": "unverified_high_resolution"
+  },
+  {
+    "section_key": "oscillator_2",
+    "field_key": "fine_tune_cents",
+    "parameter": "OSC2 Pitch",
+    "conversion": "unverified_high_resolution"
+  },
+  {
+    "section_key": "oscillator_2",
+    "field_key": "linear_detune_hz",
+    "parameter": "OSC2 Detune",
+    "conversion": "unverified_conversion"
+  },
+  {
+    "section_key": "oscillator_2",
+    "field_key": "keytrack",
+    "parameter": "OSC2 Keytracking",
+    "conversion": "unverified_boolean"
+  },
+  {
+    "section_key": "oscillator_2",
+    "field_key": "level",
+    "parameter": "OSC2 Level",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "oscillator_2",
+    "field_key": "waveform",
+    "parameter": "OSC2 Waveform",
+    "conversion": "unverified_enum"
+  },
+  {
+    "section_key": "oscillator_2",
+    "field_key": "sub_oscillator",
+    "parameter": "OSC2 Sub Oscillator",
+    "conversion": "unverified_enum"
+  },
+  {
+    "section_key": "oscillator_2",
+    "field_key": "pulse_width",
+    "parameter": "OSC2 Pulsewidth",
+    "conversion": "bipolar_7bit"
+  },
+  {
+    "section_key": "oscillator_2",
+    "field_key": "pwm_speed",
+    "parameter": "OSC2 PWM Speed",
+    "conversion": "bipolar_7bit"
+  },
+  {
+    "section_key": "oscillator_2",
+    "field_key": "pwm_depth",
+    "parameter": "OSC2 PWM Depth",
+    "conversion": "bipolar_7bit"
+  },
+  {
+    "section_key": "oscillator_common",
+    "field_key": "osc1_am",
+    "parameter": "OSC1 AM",
+    "conversion": "unverified_boolean"
+  },
+  {
+    "section_key": "oscillator_common",
+    "field_key": "sync_mode",
+    "parameter": "Sync Mode",
+    "conversion": "unverified_enum"
+  },
+  {
+    "section_key": "oscillator_common",
+    "field_key": "sync_amount",
+    "parameter": "Sync Amount",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "oscillator_common",
+    "field_key": "bend_depth",
+    "parameter": "Bend Amount",
+    "conversion": "bipolar_7bit"
+  },
+  {
+    "section_key": "oscillator_common",
+    "field_key": "note_slide_time",
+    "parameter": "Slide Time",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "oscillator_common",
+    "field_key": "osc2_am",
+    "parameter": "OSC2 AM",
+    "conversion": "unverified_boolean"
+  },
+  {
+    "section_key": "oscillator_common",
+    "field_key": "oscillator_retrigger",
+    "parameter": "Note Sync",
+    "conversion": "unverified_boolean"
+  },
+  {
+    "section_key": "oscillator_common",
+    "field_key": "vibrato_fade",
+    "parameter": "Vibrato Fade",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "oscillator_common",
+    "field_key": "vibrato_speed",
+    "parameter": "Vibrato Speed",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "oscillator_common",
+    "field_key": "vibrato_depth",
+    "parameter": "Vibrato Depth",
+    "conversion": "bipolar_7bit"
+  },
+  {
+    "section_key": "noise",
+    "field_key": "sample_and_hold",
+    "parameter": "Noise S&H",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "noise",
+    "field_key": "color",
+    "parameter": null,
+    "conversion": "unmapped"
+  },
+  {
+    "section_key": "noise",
+    "field_key": "fade",
+    "parameter": "Noise Fade",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "noise",
+    "field_key": "level",
+    "parameter": "Noise Level",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "filter_1",
+    "field_key": "frequency",
+    "parameter": "Filter1 Frequency",
+    "conversion": "unverified_high_resolution"
+  },
+  {
+    "section_key": "filter_1",
+    "field_key": "resonance",
+    "parameter": "Filter1 Resonance",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "filter_1",
+    "field_key": "overdrive",
+    "parameter": "Filter Overdrive",
+    "conversion": "bipolar_7bit"
+  },
+  {
+    "section_key": "filter_1",
+    "field_key": "keytrack",
+    "parameter": "Filter1 Keytracking",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "filter_1",
+    "field_key": "envelope_depth",
+    "parameter": "Filter1 Envelope Amount",
+    "conversion": "bipolar_7bit"
+  },
+  {
+    "section_key": "filter_2",
+    "field_key": "frequency",
+    "parameter": "Filter2 Frequency",
+    "conversion": "unverified_high_resolution"
+  },
+  {
+    "section_key": "filter_2",
+    "field_key": "resonance",
+    "parameter": "Filter2 Resonance",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "filter_2",
+    "field_key": "type",
+    "parameter": "Filter2 Type",
+    "conversion": "verified_enum"
+  },
+  {
+    "section_key": "filter_2",
+    "field_key": "keytrack",
+    "parameter": "Filter2 Keytracking",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "filter_2",
+    "field_key": "envelope_depth",
+    "parameter": "Filter2 Envelope Amount",
+    "conversion": "bipolar_7bit"
+  },
+  {
+    "section_key": "amp",
+    "field_key": "attack",
+    "parameter": "EnvA Attack Time",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "amp",
+    "field_key": "decay",
+    "parameter": "EnvA Decay Time",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "amp",
+    "field_key": "sustain",
+    "parameter": "EnvA Sustain Level",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "amp",
+    "field_key": "release",
+    "parameter": "EnvA Release Time",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "amp",
+    "field_key": "envelope_shape",
+    "parameter": "EnvA Env Shape",
+    "conversion": "verified_enum"
+  },
+  {
+    "section_key": "amp",
+    "field_key": "chorus_send",
+    "parameter": "Chorus Send Level",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "amp",
+    "field_key": "delay_send",
+    "parameter": "Delay Send Level",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "amp",
+    "field_key": "reverb_send",
+    "parameter": "Reverb Send Level",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "amp",
+    "field_key": "pan",
+    "parameter": "Pan",
+    "conversion": "bipolar_7bit"
+  },
+  {
+    "section_key": "amp",
+    "field_key": "volume",
+    "parameter": "Volume",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "filter_envelope",
+    "field_key": "attack",
+    "parameter": "EnvF Attack Time",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "filter_envelope",
+    "field_key": "decay",
+    "parameter": "EnvF Decay Time",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "filter_envelope",
+    "field_key": "sustain",
+    "parameter": "EnvF Sustain Level",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "filter_envelope",
+    "field_key": "release",
+    "parameter": "EnvF Release Time",
+    "conversion": "direct_7bit"
+  },
+  {
+    "section_key": "filter_envelope",
+    "field_key": "envelope_shape",
+    "parameter": "EnvF Env Shape",
+    "conversion": "verified_enum"
+  },
+  {
+    "section_key": "filter_envelope",
+    "field_key": "gate_length",
+    "parameter": "EnvF Gate Length",
+    "conversion": "verified_enum"
+  }
+]

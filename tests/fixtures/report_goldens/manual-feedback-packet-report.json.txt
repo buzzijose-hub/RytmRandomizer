@@ -1,0 +1,145 @@
+{
+  "blocked_actions": [
+    "launch cockpit GUI from feedback report",
+    "open MIDI ports from feedback report",
+    "send MIDI from feedback report",
+    "write profile/export files from feedback report",
+    "run audio analysis from feedback report",
+    "run unattended hardware behavior"
+  ],
+  "model_version": "manual-feedback-packet-v1",
+  "replay_commands": [
+    "python -m rytm_randomizer.cli manual-feedback-packet-report --scenario full",
+    "python -m rytm_randomizer.cli manual-feedback-packet-report --scenario full --json"
+  ],
+  "safety": {
+    "in_memory_only": true,
+    "launches_gui": false,
+    "opens_midi_ports": false,
+    "passive": true,
+    "requires_hardware": false,
+    "sends_midi": false,
+    "writes_files": false
+  },
+  "scenario": {
+    "key": "full",
+    "summary": "Installer, cockpit, profile wizard, analyzer, export, mock controls, and hardware boundary.",
+    "title": "Full manual validation feedback"
+  },
+  "steps": [
+    {
+      "capture": "installer filename, GitHub Actions run/artifact, warning screenshot if present",
+      "category": "installer",
+      "expected": "installer launches the cockpit without requiring repository source commands",
+      "key": "installer-artifact",
+      "priority": "high",
+      "prompt": "Confirm which downloaded installer/artifact was used and whether the unsigned warning appeared.",
+      "reviewer_note": "Confirms Eddie's installer path is usable before deeper product feedback.",
+      "title": "Installer artifact and launch"
+    },
+    {
+      "capture": "cockpit status bar plus sidecar terminal lines",
+      "category": "cockpit",
+      "expected": "GUI shows Mock Safe, a backend port, and no unsaved hardware sends",
+      "key": "cockpit-connection-state",
+      "priority": "high",
+      "prompt": "Record whether the cockpit reaches Mock/Safe or remains reconnecting.",
+      "reviewer_note": "Separates installer launch defects from sidecar/WebSocket startup defects.",
+      "title": "Cockpit connection state"
+    },
+    {
+      "capture": "source type, source label, wizard step, and any disabled Review/Create state",
+      "category": "profile",
+      "expected": "analysis completes or emits a specific actionable setup error",
+      "key": "profile-create-flow",
+      "priority": "high",
+      "prompt": "Walk Name -> Add -> Analyze -> Review with one reference track or text source.",
+      "reviewer_note": "Captures whether Phase 3 is functionally testable before UI polish.",
+      "title": "Profile wizard create flow"
+    },
+    {
+      "capture": "exact missing-extra/error text and whether retry succeeds",
+      "category": "analyzer",
+      "expected": "installer bundle includes analyzer dependency or the UI gives a one-click-clear next action",
+      "key": "analyzer-style-extra",
+      "priority": "blocker",
+      "prompt": "If analysis reports a missing optional extra, record the exact extra and recovery path.",
+      "reviewer_note": "Current manual test saw the style optional-extra message while analyzing The Bells.",
+      "title": "Analyzer dependency gate"
+    },
+    {
+      "capture": "trait list, percentages, source label, and whether the result feels like inspiration rather than a copy",
+      "category": "analyzer",
+      "expected": "traits summarize musical behavior without claiming to recreate copyrighted material",
+      "key": "reference-analysis-result",
+      "priority": "medium",
+      "prompt": "After a track such as The Bells or Doggystyle analyzes, capture the generated traits and confidence.",
+      "reviewer_note": "Feeds the future reference-track analyzer design with concrete operator feedback.",
+      "title": "Reference analysis result"
+    },
+    {
+      "capture": "screenshot plus backend/console output after pressing Export Model",
+      "category": "export",
+      "expected": "export either writes/prompts for a .rymp artifact or shows a classified error",
+      "key": "export-model-no-op",
+      "priority": "blocker",
+      "prompt": "Press Export Model after analysis and record whether a file, save dialog, toast, or error appears.",
+      "reviewer_note": "Manual test reported Export Model appeared to do nothing.",
+      "title": "Export model action"
+    },
+    {
+      "capture": "screenshot of pad grid/device rail and notes on missing pads or devices",
+      "category": "cockpit",
+      "expected": "Rytm 12-pad path is tracked separately from current 4-pad mock surface",
+      "key": "pad-scope-gap",
+      "priority": "high",
+      "prompt": "Record visible pad/device coverage versus expected 12 Rytm pads plus Analog Four device visibility.",
+      "reviewer_note": "Keeps 4-pad legacy cockpit behavior separate from the 12-pad/A4 product goal.",
+      "title": "Pad/device scope expectation"
+    },
+    {
+      "capture": "button enabled/disabled states, history entries, and any no-op clicks",
+      "category": "mock",
+      "expected": "mock actions never open ports or send MIDI and give deterministic operator feedback",
+      "key": "mock-send-controls",
+      "priority": "medium",
+      "prompt": "Exercise Preview/Prepare/SEND/Undo/Save in Mock mode and record button state transitions.",
+      "reviewer_note": "Surfaces GUI control contract gaps without touching hardware.",
+      "title": "Mock SEND and undo controls"
+    },
+    {
+      "capture": "command or GUI state showing the explicit armed boundary",
+      "category": "hardware",
+      "expected": "no unattended hardware behavior; operator chooses the port and action explicitly",
+      "key": "hardware-arm-boundary",
+      "priority": "blocker",
+      "prompt": "Before any hardware smoke test, confirm the path requires explicit --arm or a locked GUI hardware toggle.",
+      "reviewer_note": "Preserves the project-wide passive default while manual testing proceeds.",
+      "title": "Hardware arm boundary"
+    },
+    {
+      "capture": "track, command, selected port, expected result, actual result, and stop reason",
+      "category": "hardware",
+      "expected": "one observation row per action; no loops continue after unexpected behavior",
+      "key": "hardware-stop-conditions",
+      "priority": "blocker",
+      "prompt": "If an approved smoke test is run, stop at the first unexpected pad/device/port behavior.",
+      "reviewer_note": "Turns manual hardware feedback into reproducible review evidence.",
+      "title": "Hardware stop conditions"
+    }
+  ],
+  "summary": {
+    "blocker_keys": [
+      "analyzer-style-extra",
+      "export-model-no-op",
+      "hardware-arm-boundary",
+      "hardware-stop-conditions"
+    ],
+    "review_focus_keys": [
+      "analyzer-style-extra",
+      "export-model-no-op",
+      "pad-scope-gap"
+    ],
+    "step_count": 10
+  }
+}

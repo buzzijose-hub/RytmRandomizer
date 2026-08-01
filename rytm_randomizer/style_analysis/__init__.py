@@ -38,25 +38,40 @@ from .blueprint import (
     reference_style_blueprint_to_dict,
 )
 from .extractor import (
+    AudioFeatureAnalysis,
+    AudioSynthesisFeatures,
     StyleAnalysisDependencyError,
+    analyze_audio,
+    audio_synthesis_features_to_dict,
     extract_from_audio,
     extract_from_description,
     extract_from_partial,
 )
-from .feature_report import FeatureReport, compute_feature_report_hash
+from .feature_report import (
+    FeatureReport,
+    FeatureReportPayload,
+    compute_feature_report_hash,
+    feature_report_to_dict,
+)
 from .library import analyze_library
 
 __all__ = [
+    "AudioFeatureAnalysis",
+    "AudioSynthesisFeatures",
     "AnalogFourTrackBlueprint",
     "Confidence",
     "FeatureReport",
+    "FeatureReportPayload",
     "ReferenceStyleBlueprint",
     "ReferenceTrait",
     "RytmPadBlueprint",
     "SourceType",
     "StyleAnalysisDependencyError",
+    "analyze_audio",
+    "audio_synthesis_features_to_dict",
     "analyze_library",
     "compute_feature_report_hash",
+    "feature_report_to_dict",
     "build_reference_style_blueprint",
     "extract_from_audio",
     "extract_from_description",

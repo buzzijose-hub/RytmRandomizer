@@ -1,0 +1,420 @@
+RytmRandomizer passive Cockpit performance console model
+Console summary:
+- console id: 30ba524365955734
+- session: Live Session
+- status: mock-safe
+- hardware mode: passive
+Device rail:
+- analog_rytm_mk2 / Elektron Analog Rytm MKII / 12 tracks
+- analog_four_mk2 / Elektron Analog Four MKII / 4 tracks
+Rytm pad surface:
+- pads: 12
+- active V1.34 pads: 4
+- planned pads: 8
+Rytm lane policy matrix:
+- status: passive-ready
+- macros: 6
+- source: oxi-live-macro-catalog-report
+- pad group: reserved-src-fx / pads 5, 9, 10, 11
+- pad group: tom-source / pads 6, 7, 8
+- pad group: pad-12-supported / pads 12
+- macro policy: kit-core / pads 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+- macro policy: hard-groove / pads 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+- macro policy: industrial / pads 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+- macro policy: dub-pressure / pads 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+- macro policy: transition / pads 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+- macro policy: home / pads 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+Performance flow:
+- current: capture-anchor
+- steps: 7
+Macro actions:
+- kit-core: kit-core / stage-review-send / blocked
+- hard-groove: hard-groove / stage-review-send / blocked
+- industrial: industrial / stage-review-send / blocked
+- dub-pressure: dub-pressure / stage-review-send / blocked
+- transition: transition / stage-review-send / blocked
+- home: home / restore-anchor / blocked
+Rehearsal board:
+- status: passive-ready
+- chapters: 7
+- next hardware validations: 2
+- launch: python -m rytm_randomizer.app --arm --rytm-live-snapshot-shell --confirm-rytm-snapshot-shell-send
+- pad lane: Pads 5, 9, 10, 11: SRC stays important
+- pad lane: Pads 6-8: tom/source movement
+- pad lane: Pads 2-4: proven discovery lanes
+- pad lane: Pad 12: supported but not Jose-critical
+- hardware validation: rytm-kit-core-smoke / Analog Rytm MKII / operator-present armed Rytm shell
+- hardware validation: rytm-dual-vco-center-band / Analog Rytm MKII / operator-present one-CC or shell smoke test
+- hardware validation: a4-soft-capture / Analog Four MKII / input-only
+- hardware validation: a4-macro-dry-run / Analog Four MKII / passive CLI
+Controller brain panel:
+- status: passive-ready
+- profile: generic-16-encoder-performance
+- scenario: warehouse-controller-brain-rehearsal
+- controller template rows: 112
+- controller pages: 7
+- controller gestures: 9
+- controller page: global-brain / 16 rows / slots 1-16
+- controller page: rytm-pads-1-4 / 16 rows / slots 1-16
+- controller page: rytm-pads-5-8 / 16 rows / slots 1-16
+- controller page: rytm-pads-9-12 / 16 rows / slots 1-16
+- controller page: analog-four-tracks / 16 rows / slots 1-16
+- controller page: style-crates-queue / 16 rows / slots 1-16
+- controller page: snapshot-recovery-journal / 16 rows / slots 1-16
+- controller gesture: global-brain:01 -> global.preview_depth
+- controller gesture: global-brain:07 -> macro.industrial
+- controller gesture: rytm-pads-5-8:01 -> rytm.pad5.source_amount
+- controller gesture: rytm-pads-5-8:05 -> rytm.pad6.source_amount
+- controller gesture: rytm-pads-9-12:13 -> rytm.pad12.source_amount
+- controller gesture: analog-four-tracks:01 -> a4.track1.macro_depth
+- controller gesture: style-crates-queue:02 -> crate.dark_hypnotic
+- controller gesture: style-crates-queue:10 -> queue.next_1
+- controller gesture: snapshot-recovery-journal:16 -> snapshot.panic_home
+Live kit capture:
+- status: passive-ready
+- tagline: Mutate the kit you are actually playing.
+- launch: python -m rytm_randomizer.app --arm --rytm-live-snapshot-shell --confirm-rytm-snapshot-shell-send
+- capture step: receive-kit-sysex / kit
+- capture step: review-captured-kit / changes
+- capture step: mutate-captured-kit / randomize
+- capture step: go-send-next-variation / go
+- capture step: recover-captured-anchor / Z then send
+- capture step: resnapshot-new-anchor / resnapshot
+- differentiator: live-kit-capture
+- differentiator: engine-aware-current-kit-mutation
+- differentiator: captured-anchor-recovery
+- differentiator: twelve-pad-rytm-context
+- differentiator: controller-complement
+- recovery: home then send
+- recovery: Z then send
+- recovery: stop sending and reload saved kit
+Live kit capture workbench:
+- workbench status: passive-ready
+- source panel: live-kit-capture-panel
+- anchor fingerprint source: received-kit-sysex
+- mutation readiness: operator-gated
+- capture slot: current-live-kit / kit / review-ready
+- capture slot: candidate-variation / randomize / staged-only
+- capture slot: recovery-anchor / Z then send / review-ready
+- capture slot: resnapshot-target / resnapshot / operator-only
+- anchor check: kit-sysex-received / review-ready
+- anchor check: fingerprint-recorded / review-ready
+- anchor check: twelve-pad-context / review-ready
+- anchor check: lane-policy-attached / review-ready
+- anchor check: recovery-command-visible / review-ready
+- readiness gate: capture-current-kit / kit / blocked
+- readiness gate: review-current-deltas / changes / blocked
+- readiness gate: stage-candidate / randomize / blocked
+- readiness gate: manual-fire / go / blocked
+- readiness gate: recover-anchor / Z then send / blocked
+- readiness gate: resnapshot-anchor / resnapshot / blocked
+- recovery gate: home-send / home then send
+- recovery gate: z-send / Z then send
+- recovery gate: reload-saved-kit / stop sending and reload saved kit
+- recovery gate: resnapshot-before-next-run / resnapshot
+- package manifest: live-kit-capture-workbench-package-v1 / exports=False
+- workbench blocked: receive kit from Cockpit workbench
+- workbench blocked: stage captured-kit mutation from Cockpit workbench
+- workbench blocked: apply captured-kit package from Cockpit console
+- workbench blocked: export captured-kit package from passive Cockpit report
+- workbench blocked: send captured plan from Cockpit workbench
+- workbench safety: live kit capture workbench is declarative only
+- workbench safety: capture slots are review metadata only
+- workbench safety: no package apply from passive Cockpit report
+- workbench safety: no SysEx receive from passive Cockpit report
+- workbench safety: no MIDI sending
+- workbench safety: no port opening
+Live kit package audition:
+- audition status: passive-ready
+- source workbench: live-kit-capture-workbench
+- source package: live-kit-capture-workbench-package-v1
+- audition slots: 5
+- audition queue: 4
+- audition slot: captured-base / Home / Reset / review-only
+- audition slot: hard-groove-lift / Hard Groove / review-only
+- audition slot: industrial-pressure / Industrial/Broken / review-only
+- audition slot: dub-reset / Dub Pressure / review-only
+- audition slot: recovery-return / Home / Reset / review-only
+- audition queue: hard-groove-lift / current / go
+- audition queue: industrial-pressure / up-next / go
+- audition queue: dub-reset / up-next / go
+- audition queue: recovery-return / recovery / send
+- package check: source-workbench-passive / review-only
+- package check: anchor-fingerprint-required / review-only
+- package check: recovery-visible-before-fire / review-only
+- package check: send-controls-disabled / blocked
+- package check: export-controls-disabled / blocked
+- package check: journal-preview-only / review-only
+- journal preview: Captured Kit Audition 0001 / live-kit-audition-0001
+- audition disabled control: Generate Package
+- audition disabled control: Audition Variation
+- audition disabled control: Commit Favorite
+- audition disabled control: Write Journal
+- audition disabled control: Send Variation
+- audition blocked: generate captured-kit package from Cockpit console
+- audition blocked: apply audition package from passive Cockpit console
+- audition blocked: send audition variation from Cockpit console
+- audition blocked: write audition package file from passive report
+- audition blocked: open MIDI port from package audition
+- audition safety: live kit package audition is declarative only
+- audition safety: audition slots are rehearsal metadata only
+- audition safety: journal preview does not write files
+- audition safety: no package apply from passive Cockpit report
+- audition safety: no MIDI sending
+- audition safety: no port opening
+Live kit operator package:
+- operator package status: passive-ready
+- source audition: live-kit-package-audition
+- source workbench: live-kit-capture-workbench
+- package kind: rytmrandomizer.live-kit.operator-package
+- operator steps: 5
+- slot bindings: 5
+- recovery requirements: 3
+- operator step: captured-base / review-captured-anchor / changes
+- operator step: hard-groove-lift / stage-local-set-plan / go
+- operator step: industrial-pressure / stage-local-set-plan / go
+- operator step: dub-reset / stage-local-set-plan / go
+- operator step: recovery-return / stage-recovery / send
+- slot binding: captured-base / operator-package-captured-base
+- slot binding: hard-groove-lift / operator-package-hard-groove-lift
+- slot binding: industrial-pressure / operator-package-industrial-pressure
+- slot binding: dub-reset / operator-package-dub-reset
+- slot binding: recovery-return / operator-package-recovery-return
+- recovery requirement: z-then-send / Z then send
+- recovery requirement: home-then-send / home then send
+- recovery requirement: reload-saved-kit-if-needed / reload saved kit if needed
+- journal commit preview: Captured Kit Audition 0001 / preview-only
+- local export preview: browser-local-only / writes=False
+- operator package disabled control: Stage Operator Package
+- operator package disabled control: Commit Operator Journal
+- operator package disabled control: Write Operator Package
+- operator package disabled control: Send Operator Package
+- operator package disabled control: Open MIDI Port
+- operator package blocked: generate operator package from Cockpit console
+- operator package blocked: send operator package from Cockpit console
+- operator package blocked: write operator package file from passive report
+- operator package blocked: commit operator journal from passive report
+- operator package blocked: open MIDI port from operator package
+- operator package safety: live kit operator package is declarative only
+- operator package safety: operator steps are browser-local rehearsal metadata
+- operator package safety: local export preview does not write files
+- operator package safety: journal commit remains preview-only
+- operator package safety: no MIDI sending
+- operator package safety: no port opening
+Operator package review ledger:
+- ledger status: passive-ready
+- operator package: live-kit-operator-package
+- review stages: 3
+- steps: 5
+- review stage: apply-preview / preview_only / ready
+- review stage: mock-apply / mock_apply_only / ready
+- review stage: receipt-audit / passive_audit_only / ready
+- step review: captured-base / operator-package-captured-base
+- step review: hard-groove-lift / operator-package-hard-groove-lift
+- step review: industrial-pressure / operator-package-industrial-pressure
+- step review: dub-reset / operator-package-dub-reset
+- step review: recovery-return / operator-package-recovery-return
+- readiness: mock_safe=True / sent_midi=False / writes_files=False
+- ledger blocked: generate operator package from Cockpit console
+- ledger blocked: send operator package from Cockpit console
+- ledger blocked: write operator package file from passive report
+- ledger blocked: commit operator journal from passive report
+- ledger blocked: open MIDI port from operator package
+- ledger safety: live kit operator package is declarative only
+- ledger safety: operator steps are browser-local rehearsal metadata
+- ledger safety: local export preview does not write files
+- ledger safety: journal commit remains preview-only
+- ledger safety: no MIDI sending
+- ledger safety: no port opening
+A4 review surface:
+- status: review-only
+- set: warehouse-arc
+- steps: 5
+- review focus: hard-groove / review-ready
+- shown readiness events: 4
+- validation preflight: python -m rytm_randomizer.app --arm --a4-soft-capture
+- readiness replay: python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 1 --intensity 5 --limit 4 --json
+- A4 step: 1 / home / review-ready / events=8
+- A4 step: 2 / hard-groove / review-ready / events=12
+- A4 step: 3 / dub-pressure / review-ready / events=8
+- A4 step: 4 / industrial-transition / review-ready / events=9
+- A4 step: 5 / home / review-ready / events=8
+- blocked: trigger A4 macro from Cockpit console
+- blocked: open A4 output port from Cockpit console
+- blocked: A4 full macro SEND
+- blocked: A4 unattended macro playback
+- safety: A4 review surface is declarative only
+- safety: A4 validation commands are shown for operator review only
+- safety: no MIDI sending
+- safety: no port opening
+- safety: passive/read-only
+- safety: A4 OXI macro set planning only
+- safety: manual-backed Analog Four CC metadata only
+- safety: no command execution
+- safety: no hardware mutation
+- safety: A4 full macro SEND remains blocked
+- safety: operator-present validation commands only
+- safety: no unattended hardware behavior
+- safety: A4 full macro SEND remains unimplemented
+A4 set plan:
+- set: warehouse-arc
+- current macro: home
+- up next: hard-groove, dub-pressure, industrial-transition, home
+Style queue and journal:
+- crates: 9
+- queued moves: 4
+- journal entries: 2
+Analyzer panel:
+- analyzer status: empty
+- analyzer mode: split
+- analyzer reference: No reference loaded
+- analyzer required actions: load-reference
+Snapshot history:
+- current: console-snap-03
+- entries: 3
+Command queue:
+- status: queued
+- queued commands: 4
+Safety checklist:
+- 4 / 4 passed
+- arm gate: locked
+Blocked active actions:
+- a4_outbound_macro_send
+- unattended_hardware_behavior
+- open_midi_port_without_arm
+- send_without_dry_run
+- fire macro from Cockpit console
+- prepare hardware send from Cockpit macro action
+- dispatch Rytm lane policy from Cockpit console
+- send Rytm lane policy from Cockpit console
+- fire rehearsal cue from Cockpit console
+- open MIDI port from rehearsal board
+- send MIDI from rehearsal board
+- promote A4 macro from rehearsal board
+- open MIDI controller input
+- MIDI learn or raw CC capture
+- send controller feedback
+- open Analog Rytm output
+- open Analog Four output
+- arm hardware
+- send hardware MIDI
+- mutate a snapshot
+- dispatch Cockpit WebSocket commands
+- open MIDI output
+- receive kit from Cockpit console
+- mutate captured kit from Cockpit console
+- send captured plan from Cockpit console
+- open Rytm SysEx input from passive Cockpit report
+- receive kit from Cockpit workbench
+- stage captured-kit mutation from Cockpit workbench
+- apply captured-kit package from Cockpit console
+- export captured-kit package from passive Cockpit report
+- send captured plan from Cockpit workbench
+- generate captured-kit package from Cockpit console
+- apply audition package from passive Cockpit console
+- send audition variation from Cockpit console
+- write audition package file from passive report
+- open MIDI port from package audition
+- generate operator package from Cockpit console
+- send operator package from Cockpit console
+- write operator package file from passive report
+- commit operator journal from passive report
+- open MIDI port from operator package
+- trigger A4 macro from Cockpit console
+- open A4 output port from Cockpit console
+- A4 full macro SEND
+- A4 unattended macro playback
+- fire queued style move
+- dispatch crate move
+- replay journal entry
+- persist journal entry
+- open MIDI port
+- send MIDI
+- mutate hardware
+- launch GUI
+- arm-hardware
+- open-midi-port
+- send-midi
+- record-audio
+- render-gui
+- open MIDI port from snapshot history
+- send MIDI from snapshot history
+- arm hardware from snapshot history
+- mutate hardware from snapshot history
+- launch GUI from snapshot history
+- dispatch queued command from model
+- run undo from model
+- load snapshot from model
+- open MIDI port from model
+- send MIDI from model
+- mutate hardware from model
+- launch GUI from model
+- arm hardware from safety checklist
+- open MIDI port from safety checklist
+- send MIDI from safety checklist
+- mutate hardware from safety checklist
+- launch GUI from safety checklist
+- open_midi_port
+- arm_hardware
+- send_midi
+- write_sysex
+- mutate_hardware
+Replay commands:
+- python -m rytm_randomizer.cli live-gui-performance-console-report
+- python -m rytm_randomizer.cli live-gui-performance-console-report --json
+Safety:
+- passive/read-only
+- Cockpit performance console packet only
+- composes passive report metadata only
+- JSON/stdout only
+- no GUI launch
+- no file writing
+- no command execution
+- no MIDI sending
+- no port opening
+- no hardware mutation
+- no hardware required
+- GUI performance flow metadata only
+- Rytm OXI macro command labels only
+- Analog Four review-only actions stay candidate metadata.
+- no real MIDI rendering
+- macro action cards are declarative only
+- operators still use the armed snapshot shell for real sends
+- all Cockpit macro fire controls stay disabled
+- Rytm lane policy matrix is declarative only
+- Cockpit shows macro policy before the armed snapshot shell applies anything
+- rehearsal board is declarative only
+- launch command is shown for operator copy/review only
+- real Rytm sends remain in the explicitly armed snapshot shell
+- A4 outbound macro promotion remains blocked
+- controller-template rows only
+- virtual encoder gestures only
+- no MIDI controller input
+- no MIDI learn or raw CC capture
+- no WebSocket command dispatch
+- live kit capture panel is declarative only
+- no SysEx receive from passive Cockpit report
+- operators still run the armed snapshot shell manually
+- captured-anchor recovery remains explicit
+- live kit capture workbench is declarative only
+- capture slots are review metadata only
+- no package apply from passive Cockpit report
+- live kit package audition is declarative only
+- audition slots are rehearsal metadata only
+- journal preview does not write files
+- live kit operator package is declarative only
+- operator steps are browser-local rehearsal metadata
+- local export preview does not write files
+- journal commit remains preview-only
+- A4 review surface is declarative only
+- A4 validation commands are shown for operator review only
+- A4 OXI macro set planning only
+- manual-backed Analog Four CC metadata only
+- A4 full macro SEND remains blocked
+- operator-present validation commands only
+- no unattended hardware behavior
+- A4 full macro SEND remains unimplemented
+- in-memory only
+- device registry metadata only
+Source: rytm_randomizer.reports.live_gui_performance_console_model
+In-memory only: True

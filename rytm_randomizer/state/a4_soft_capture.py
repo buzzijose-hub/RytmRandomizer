@@ -1,26 +1,35 @@
-"""Pure passive Analog Four control-change capture state."""
+"""Pure passive Analog Four CC and NRPN capture state."""
 
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from types import MappingProxyType
 from typing import Final, Protocol
 
 from .message_values import coerce_int as _coerce_int
 
-SOURCE: Final[str] = "passive_cc_observation"
+SOURCE: Final[str] = "passive_cc_nrpn_observation"
 UNKNOWN_POLICY: Final[str] = "unknown_parameters_untouched"
 TRACK_COUNT: Final[int] = 4
 
 _CONTROL_CHANGE_TYPE: Final[str] = "control_change"
 _UNKNOWN_CONTROL_REASON: Final[str] = "unknown_cc"
+_UNKNOWN_NRPN_REASON: Final[str] = "unknown_nrpn"
+_INCOMPLETE_NRPN_REASON: Final[str] = "incomplete_nrpn_address"
 _EMPTY_PARAMETERS: Final[Mapping[str, ObservedA4Parameter]] = MappingProxyType({})
+_EMPTY_NRPN_LOOKUP: Final[Mapping[tuple[int, int], A4CaptureCcMapping]] = MappingProxyType({})
 
 
 class A4CaptureCcMapping(Protocol):
     parameter: str
     section: str
+
+
+class A4NrpnControlSpec(Protocol):
+    parameter_msb_cc: int
+    parameter_lsb_cc: int
+    data_msb_cc: int
 
 
 @dataclass(frozen=True)
@@ -31,6 +40,8 @@ class ObservedA4Parameter:
     cc: int
     value: int
     observed_at: float
+    transport: str = "cc"
+    nrpn_address: tuple[int, int] | None = None
 
 
 @dataclass(frozen=True)
@@ -56,8 +67,23 @@ class A4ObservedTrackState:
 
 
 @dataclass(frozen=True)
+class A4NrpnSelector:
+    """Most recently observed NRPN address bytes for one synth track."""
+
+    msb: int | None = None
+    lsb: int | None = None
+
+    @property
+    def address(self) -> tuple[int, int] | None:
+        if self.msb is None or self.lsb is None:
+            return None
+        return (self.msb, self.lsb)
+
+
+@dataclass(frozen=True)
 class A4SoftCaptureSnapshot:
     tracks: tuple[A4ObservedTrackState, ...]
+    nrpn_selectors: tuple[A4NrpnSelector, ...] = ()
     source: str = SOURCE
     unknown_policy: str = UNKNOWN_POLICY
     unknown_controls: tuple[UnknownA4Control, ...] = ()
@@ -66,6 +92,7 @@ class A4SoftCaptureSnapshot:
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "tracks", tuple(self.tracks))
+        object.__setattr__(self, "nrpn_selectors", tuple(self.nrpn_selectors))
         object.__setattr__(self, "unknown_controls", tuple(self.unknown_controls))
 
     @property
@@ -74,7 +101,10 @@ class A4SoftCaptureSnapshot:
 
 
 def empty_a4_soft_capture_snapshot() -> A4SoftCaptureSnapshot:
-    return A4SoftCaptureSnapshot(tracks=_empty_tracks())
+    return A4SoftCaptureSnapshot(
+        tracks=_empty_tracks(),
+        nrpn_selectors=_empty_nrpn_selectors(),
+    )
 
 
 def observe_a4_message(
@@ -83,30 +113,55 @@ def observe_a4_message(
     *,
     observed_at: float,
     cc_lookup: Mapping[int, A4CaptureCcMapping],
+    nrpn_lookup: Mapping[tuple[int, int], A4CaptureCcMapping] = _EMPTY_NRPN_LOOKUP,
+    nrpn_controls: A4NrpnControlSpec | None = None,
 ) -> A4SoftCaptureSnapshot:
     if getattr(message, "type", None) != _CONTROL_CHANGE_TYPE:
-        return A4SoftCaptureSnapshot(
+        return replace(
+            snapshot,
             tracks=_ensure_four_tracks(snapshot.tracks),
-            source=snapshot.source,
-            unknown_policy=snapshot.unknown_policy,
-            unknown_controls=snapshot.unknown_controls,
+            nrpn_selectors=_ensure_four_nrpn_selectors(snapshot.nrpn_selectors),
             ignored_message_count=snapshot.ignored_message_count + 1,
-            out_of_scope_message_count=snapshot.out_of_scope_message_count,
         )
 
     channel = _coerce_int(getattr(message, "channel", None))
     control = _coerce_int(getattr(message, "control", None))
     value = _coerce_int(getattr(message, "value", None))
     tracks = _ensure_four_tracks(snapshot.tracks)
+    nrpn_selectors = _ensure_four_nrpn_selectors(snapshot.nrpn_selectors)
 
     if channel not in range(TRACK_COUNT):
-        return A4SoftCaptureSnapshot(
+        return replace(
+            snapshot,
             tracks=tracks,
-            source=snapshot.source,
-            unknown_policy=snapshot.unknown_policy,
-            unknown_controls=snapshot.unknown_controls,
-            ignored_message_count=snapshot.ignored_message_count,
+            nrpn_selectors=nrpn_selectors,
             out_of_scope_message_count=snapshot.out_of_scope_message_count + 1,
+        )
+
+    if nrpn_controls is not None and control in {
+        nrpn_controls.parameter_msb_cc,
+        nrpn_controls.parameter_lsb_cc,
+    }:
+        return _observe_nrpn_selector(
+            snapshot,
+            tracks=tracks,
+            selectors=nrpn_selectors,
+            channel=channel,
+            control=control,
+            value=value,
+            nrpn_controls=nrpn_controls,
+        )
+
+    if nrpn_controls is not None and control == nrpn_controls.data_msb_cc:
+        return _observe_nrpn_data(
+            snapshot,
+            tracks=tracks,
+            selectors=nrpn_selectors,
+            channel=channel,
+            value=value,
+            observed_at=observed_at,
+            nrpn_lookup=nrpn_lookup,
+            nrpn_controls=nrpn_controls,
         )
 
     mapping = cc_lookup.get(control)
@@ -118,13 +173,11 @@ def observe_a4_message(
             observed_at=observed_at,
             reason=_UNKNOWN_CONTROL_REASON,
         )
-        return A4SoftCaptureSnapshot(
+        return replace(
+            snapshot,
             tracks=tracks,
-            source=snapshot.source,
-            unknown_policy=snapshot.unknown_policy,
+            nrpn_selectors=nrpn_selectors,
             unknown_controls=(*snapshot.unknown_controls, unknown),
-            ignored_message_count=snapshot.ignored_message_count,
-            out_of_scope_message_count=snapshot.out_of_scope_message_count,
         )
 
     track_index = channel
@@ -145,18 +198,92 @@ def observe_a4_message(
         next_track,
         *tracks[track_index + 1 :],
     )
-    return A4SoftCaptureSnapshot(
+    return replace(
+        snapshot,
         tracks=next_tracks,
-        source=snapshot.source,
-        unknown_policy=snapshot.unknown_policy,
-        unknown_controls=snapshot.unknown_controls,
-        ignored_message_count=snapshot.ignored_message_count,
-        out_of_scope_message_count=snapshot.out_of_scope_message_count,
+        nrpn_selectors=nrpn_selectors,
+    )
+
+
+def _observe_nrpn_selector(
+    snapshot: A4SoftCaptureSnapshot,
+    *,
+    tracks: tuple[A4ObservedTrackState, ...],
+    selectors: tuple[A4NrpnSelector, ...],
+    channel: int,
+    control: int,
+    value: int,
+    nrpn_controls: A4NrpnControlSpec,
+) -> A4SoftCaptureSnapshot:
+    selector = selectors[channel]
+    if control == nrpn_controls.parameter_msb_cc:
+        next_selector = replace(selector, msb=value)
+    else:
+        next_selector = replace(selector, lsb=value)
+    next_selectors = (*selectors[:channel], next_selector, *selectors[channel + 1 :])
+    return replace(
+        snapshot,
+        tracks=tracks,
+        nrpn_selectors=next_selectors,
+    )
+
+
+def _observe_nrpn_data(
+    snapshot: A4SoftCaptureSnapshot,
+    *,
+    tracks: tuple[A4ObservedTrackState, ...],
+    selectors: tuple[A4NrpnSelector, ...],
+    channel: int,
+    value: int,
+    observed_at: float,
+    nrpn_lookup: Mapping[tuple[int, int], A4CaptureCcMapping],
+    nrpn_controls: A4NrpnControlSpec,
+) -> A4SoftCaptureSnapshot:
+    address = selectors[channel].address
+    mapping = None if address is None else nrpn_lookup.get(address)
+    if mapping is None:
+        unknown = UnknownA4Control(
+            channel=channel,
+            control=nrpn_controls.data_msb_cc,
+            value=value,
+            observed_at=observed_at,
+            reason=_INCOMPLETE_NRPN_REASON if address is None else _UNKNOWN_NRPN_REASON,
+        )
+        return replace(
+            snapshot,
+            tracks=tracks,
+            nrpn_selectors=selectors,
+            unknown_controls=(*snapshot.unknown_controls, unknown),
+        )
+
+    track = tracks[channel]
+    observed = ObservedA4Parameter(
+        track=track.track,
+        parameter=mapping.parameter,
+        section=mapping.section,
+        cc=nrpn_controls.data_msb_cc,
+        value=value,
+        observed_at=observed_at,
+        transport="nrpn",
+        nrpn_address=address,
+    )
+    parameters = dict(track.parameters)
+    parameters[mapping.parameter] = observed
+    next_track = A4ObservedTrackState(track=track.track, parameters=parameters)
+    next_tracks = (*tracks[:channel], next_track, *tracks[channel + 1 :])
+    return replace(
+        snapshot,
+        tracks=next_tracks,
+        nrpn_selectors=selectors,
     )
 
 
 def _empty_tracks() -> tuple[A4ObservedTrackState, ...]:
     return tuple(A4ObservedTrackState(track=track) for track in range(1, TRACK_COUNT + 1))
+
+
+def _empty_nrpn_selectors() -> tuple[A4NrpnSelector, ...]:
+    return tuple(A4NrpnSelector() for _ in range(TRACK_COUNT))
 
 
 def _ensure_four_tracks(
@@ -172,6 +299,17 @@ def _ensure_four_tracks(
     )
 
 
+def _ensure_four_nrpn_selectors(
+    selectors: tuple[A4NrpnSelector, ...],
+) -> tuple[A4NrpnSelector, ...]:
+    if len(selectors) == TRACK_COUNT:
+        return selectors
+    return tuple(
+        selectors[index] if index < len(selectors) else A4NrpnSelector()
+        for index in range(TRACK_COUNT)
+    )
+
+
 __all__ = [
     "SOURCE",
     "UNKNOWN_POLICY",
@@ -180,6 +318,8 @@ __all__ = [
     "ObservedA4Parameter",
     "UnknownA4Control",
     "A4ObservedTrackState",
+    "A4NrpnControlSpec",
+    "A4NrpnSelector",
     "A4SoftCaptureSnapshot",
     "empty_a4_soft_capture_snapshot",
     "observe_a4_message",

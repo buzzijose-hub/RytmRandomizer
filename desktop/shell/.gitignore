@@ -1,5 +1,8 @@
 target/
 dist/
+# Bundled Python sidecar binaries (built per-OS in CI by
+# scripts/build_sidecar_binary.py; never committed).
+binaries/
 Cargo.lock
 gen/
 .tauri/

@@ -24,15 +24,17 @@ boundary.
 from __future__ import annotations
 
 import time
+from abc import abstractmethod
 from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
-from typing import Any, Callable, Protocol, runtime_checkable
+from typing import Any, Callable, Final, Protocol, runtime_checkable
 
 from .data import MACHINE_CC
 from .observability.logging import get_logger
 
 __all__ = [
     "ApplyStateResult",
+    "MIDI_MESSAGE_SETTLE_SECONDS",
     "MidiSender",
     "Sender",
     "apply_state",
@@ -42,6 +44,10 @@ __all__ = [
     "send_nrpn",
     "send_param",
 ]
+
+
+MIDI_MESSAGE_SETTLE_SECONDS: Final[float] = 0.02
+"""Delay after each accepted MIDI message so hardware can settle."""
 
 
 # Module logger for MIDI I/O diagnostic output. Records sit alongside the
@@ -85,6 +91,7 @@ class MidiSender(Protocol):
     decides which of the two branches in :func:`send_cc` to take.
     """
 
+    @abstractmethod
     def send(self, message: object) -> None: ...
 
 
@@ -111,6 +118,7 @@ def send_cc(
     *,
     channel: int = 0,
     sleep: SleepFunc = time.sleep,
+    on_message_sent: Callable[[], object] | None = None,
 ) -> None:
     """Build a control-change message and send it through ``out``.
 
@@ -127,23 +135,7 @@ def send_cc(
     breadcrumb in the log.
     """
 
-    _logger.debug(
-        "midi_send cc",
-        extra={
-            "channel": channel,
-            "control": cc,
-            "value": value,
-            "kind": "midi_send",
-        },
-    )
-
-    from .observability.metrics import (  # noqa: PLC0415 - lazy import — keep midi_io/engines import-surface clean
-        get_metrics,
-    )
-
-    get_metrics().record_cc_sent(channel)
-
-    from .mock_midi import (  # noqa: PLC0415 - lazy import keeps midi_io import-safe; mock_midi has no mido dependency.
+    from .mock_midi import (  # noqa: PLC0415 - import-safe mock boundary
         MidiMessage,
         MockMidiSender,
     )
@@ -157,10 +149,25 @@ def send_cc(
                 value=value,
             )
         )
-        sleep(0.02)
+        if on_message_sent is not None:
+            on_message_sent()
+        _logger.debug(
+            "midi_mock_send cc",
+            extra={
+                "channel": channel,
+                "control": cc,
+                "value": value,
+                "kind": "midi_mock_send",
+            },
+        )
+        sleep(MIDI_MESSAGE_SETTLE_SECONDS)
         return
 
-    import mido  # noqa: PLC0415 - intentional lazy import for import-safety
+    import mido  # pyright: ignore[reportMissingTypeStubs]  # noqa: PLC0415
+
+    from .observability.metrics import (  # noqa: PLC0415 - lazy import — keep midi_io/engines import-surface clean
+        get_metrics,
+    )
 
     msg = mido.Message(
         "control_change",
@@ -169,7 +176,19 @@ def send_cc(
         value=value,
     )
     out.send(msg)
-    sleep(0.02)
+    get_metrics().record_cc_sent(channel)
+    if on_message_sent is not None:
+        on_message_sent()
+    _logger.debug(
+        "midi_send cc",
+        extra={
+            "channel": channel,
+            "control": cc,
+            "value": value,
+            "kind": "midi_send",
+        },
+    )
+    sleep(MIDI_MESSAGE_SETTLE_SECONDS)
 
 
 def send_nrpn(
@@ -181,6 +200,7 @@ def send_nrpn(
     value_lsb: int | None = None,
     channel: int = 0,
     sleep: SleepFunc = time.sleep,
+    on_message_sent: Callable[[], object] | None = None,
 ) -> None:
     """Send one NRPN parameter update as control-change messages.
 
@@ -189,11 +209,39 @@ def send_nrpn(
     CC38 (Data Entry LSB) follows as the optional 14-bit data component.
     """
 
-    send_cc(out, 99, nrpn_msb, channel=channel, sleep=sleep)
-    send_cc(out, 98, nrpn_lsb, channel=channel, sleep=sleep)
-    send_cc(out, 6, value_msb, channel=channel, sleep=sleep)
+    send_cc(
+        out,
+        99,
+        nrpn_msb,
+        channel=channel,
+        sleep=sleep,
+        on_message_sent=on_message_sent,
+    )
+    send_cc(
+        out,
+        98,
+        nrpn_lsb,
+        channel=channel,
+        sleep=sleep,
+        on_message_sent=on_message_sent,
+    )
+    send_cc(
+        out,
+        6,
+        value_msb,
+        channel=channel,
+        sleep=sleep,
+        on_message_sent=on_message_sent,
+    )
     if value_lsb is not None:
-        send_cc(out, 38, value_lsb, channel=channel, sleep=sleep)
+        send_cc(
+            out,
+            38,
+            value_lsb,
+            channel=channel,
+            sleep=sleep,
+            on_message_sent=on_message_sent,
+        )
 
 
 def send_machine(

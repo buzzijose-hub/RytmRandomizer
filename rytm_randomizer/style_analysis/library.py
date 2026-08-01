@@ -24,10 +24,26 @@ from pathlib import Path
 
 from rytm_randomizer.guardrails.schema import Confidence, SourceType
 
-from .extractor import _aggregate_measurements, _measure_audio_features, _require_librosa
+from .extractor import (
+    aggregate_audio_measurements,
+    measure_audio_features,
+    require_audio_analysis_dependencies,
+)
 from .feature_report import FeatureReport, compute_feature_report_hash
 
 _AUDIO_EXTENSIONS: tuple[str, ...] = (".wav", ".aif", ".aiff", ".flac", ".mp3")
+
+
+def _require_directory(value: object) -> Path:
+    if not isinstance(value, Path):
+        raise TypeError("directory must be a pathlib.Path")
+    return value
+
+
+def _require_library_audio_dependencies() -> None:
+    """Compatibility hook around the extractor's public dependency check."""
+
+    require_audio_analysis_dependencies()
 
 
 def _now_iso() -> str:
@@ -65,12 +81,11 @@ def analyze_library(directory: Path) -> FeatureReport:
     when audio files are present but ``librosa`` is missing.
     """
 
-    if not isinstance(directory, Path):
-        raise TypeError("directory must be a pathlib.Path")
+    validated_directory = _require_directory(directory)
 
     audio_files: list[Path] = []
-    if directory.is_dir():
-        audio_files = _collect_audio_files(directory)
+    if validated_directory.is_dir():
+        audio_files = _collect_audio_files(validated_directory)
 
     if not audio_files:
         # Empty library -> LOW-confidence zeroed report. The Layer 2 skill
@@ -95,23 +110,23 @@ def analyze_library(directory: Path) -> FeatureReport:
         return dataclasses.replace(report, content_hash=digest)
 
     # Measure each file, aggregate.
-    _, numpy = _require_librosa()
+    _require_library_audio_dependencies()
     per_file = [
-        _measure_audio_features(p) for p in audio_files
+        measure_audio_features(p) for p in audio_files
     ]  # pragma: no cover - requires librosa
-    aggregated = _aggregate_measurements(per_file, numpy)  # pragma: no cover - requires librosa
+    aggregated = aggregate_audio_measurements(per_file)
 
     report = FeatureReport(  # pragma: no cover - requires librosa
         source_type=SourceType.FOLDER_LIBRARY,
         confidence=Confidence.HIGH,
-        bpm=float(aggregated["bpm"]),
-        tempo_stability=float(aggregated["tempo_stability"]),
-        kick_density=float(aggregated["kick_density"]),
-        percussion_density=float(aggregated["percussion_density"]),
-        low_end_weight=float(aggregated["low_end_weight"]),
-        spectral_brightness=float(aggregated["spectral_brightness"]),
-        texture_noise=float(aggregated["texture_noise"]),
-        energy_arc=tuple(aggregated["energy_arc"]),  # type: ignore[arg-type]
+        bpm=aggregated["bpm"],
+        tempo_stability=aggregated["tempo_stability"],
+        kick_density=aggregated["kick_density"],
+        percussion_density=aggregated["percussion_density"],
+        low_end_weight=aggregated["low_end_weight"],
+        spectral_brightness=aggregated["spectral_brightness"],
+        texture_noise=aggregated["texture_noise"],
+        energy_arc=aggregated["energy_arc"],
         content_hash="",
         derived_at=_now_iso(),
     )

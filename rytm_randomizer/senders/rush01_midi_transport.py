@@ -1,146 +1,84 @@
-"""Explicit, exact-port transport for a precompiled RUSH01 MIDI plan."""
+"""Pure RUSH01 plan validation and rendering for the armed send seam."""
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
-from typing import Protocol, cast
+from collections.abc import Sequence
+from typing import Final, Protocol, runtime_checkable
 
-from ..midi_io import Sender, send_cc
-from ..real_midi_adapter import RealMidiPortError
-from ..style_analysis.rush01_midi_compiler import (
-    STATUS_INVALID_SPEC_FIELD,
-    STATUS_READY,
-    Rush01MidiPlan,
-    validate_rush01_plan_safety,
-)
+from .armed_apply import PlanRenderer
+
+_STATUS_READY: Final[str] = "ready"
 
 
-class Rush01OutputPort(Sender, Protocol):
-    """Minimal send/close surface needed by the RUSH01 apply boundary."""
+class _Rush01MidiFieldLike(Protocol):
+    """Read-only field surface consumed by the passive renderer."""
 
-    def close(self) -> None:
-        """Close the explicitly opened port."""
-
-
-class Rush01PortProvider(Protocol):
-    """Exact-name output discovery/opening surface used by the apply tool."""
-
-    def list_output_names(self) -> tuple[str, ...]:
-        """Return available output names without selecting one."""
-
-    def open_output(self, port_name: str) -> Rush01OutputPort:
-        """Open exactly ``port_name`` or fail."""
+    status: str
+    ordered_midi_bytes: tuple[tuple[int, int, int], ...] | None
 
 
-SleepCallable = Callable[[float], object]
+@runtime_checkable
+class _Rush01MidiPlanLike(Protocol):
+    """Structural plan contract that keeps senders independent of compilers."""
+
+    @property
+    def ready(self) -> bool:
+        """Whether the compiler approved the plan for armed delivery."""
+
+        ...
+
+    @property
+    def readiness_reason(self) -> str:
+        """Return the compiler's first fail-closed readiness reason."""
+
+        ...
+
+    @property
+    def fields(self) -> Sequence[_Rush01MidiFieldLike]:
+        """Return the compiled semantic fields in deterministic order."""
+
+        ...
 
 
-@dataclass(frozen=True)
-class Rush01ApplyResult:
-    """Outcome of one explicitly confirmed transport operation."""
+def render_rush01_plan(plan: object) -> tuple[tuple[int, int, int], ...]:
+    """Render configured ready fields as neutral CC triples without I/O."""
 
-    device: str
-    port_name: str
-    field_count: int
-    message_count: int
-    sent_midi: bool
-
-
-def open_exact_output(provider: Rush01PortProvider, port_name: str) -> Rush01OutputPort:
-    """Open one exact, unique configured output name without fuzzy matching."""
-
-    if not isinstance(port_name, str) or not port_name:
-        raise RealMidiPortError("midi_output_port_required")
-    matches = tuple(name for name in provider.list_output_names() if name == port_name)
-    if not matches:
-        raise RealMidiPortError(f"unknown_midi_output_port: {port_name}")
-    if len(matches) > 1:
-        raise RealMidiPortError(f"ambiguous_midi_output_port_name: {port_name}")
-    return provider.open_output(port_name)
-
-
-def send_rush01_plan(
-    plan: Rush01MidiPlan,
-    out: Sender,
-    *,
-    delay_ms: int,
-    sleep: SleepCallable,
-) -> Rush01ApplyResult:
-    """Send only configured ready CC bytes from one reviewed plan."""
-
-    if not isinstance(plan, Rush01MidiPlan):
+    if not isinstance(plan, _Rush01MidiPlanLike):
         raise TypeError("plan must be a Rush01MidiPlan")
-    if isinstance(delay_ms, bool) or not isinstance(delay_ms, int) or not 0 <= delay_ms <= 10_000:
-        raise ValueError("delay_ms must be an integer in 0..10000")
     validate_rush01_plan_for_apply(plan)
-
-    ready_fields = tuple(field for field in plan.fields if field.status == STATUS_READY)
-    messages = tuple(
-        message for field in ready_fields for message in (field.ordered_midi_bytes or ())
-    )
+    messages: list[tuple[int, int, int]] = []
+    for field in plan.fields:
+        if field.status != _STATUS_READY:
+            continue
+        if not field.ordered_midi_bytes:
+            raise ValueError("ready RUSH01 fields require compiled MIDI messages")
+        for message in field.ordered_midi_bytes:
+            status, controller, value = message
+            if status & 0xF0 != 0xB0:
+                raise ValueError("only MIDI control-change messages are allowed")
+            if not 0 <= controller <= 119:
+                raise ValueError("MIDI channel-mode and system messages are forbidden")
+            if not 0 <= value <= 127:
+                raise ValueError("MIDI data bytes must be in 0..127")
+            messages.append((status & 0x0F, controller, value))
     if not messages:
         raise ValueError("RUSH01 plan has no configured ready MIDI messages")
-
-    delay_seconds = delay_ms / 1000.0
-    for index, (status, controller, value) in enumerate(messages):
-        send_cc(
-            out,
-            controller,
-            value,
-            channel=status & 0x0F,
-            sleep=_no_sleep,
-        )
-        if index + 1 < len(messages):
-            sleep(delay_seconds)
-    return Rush01ApplyResult(
-        device=plan.device,
-        port_name=plan.output_port,
-        field_count=len(ready_fields),
-        message_count=len(messages),
-        sent_midi=True,
-    )
+    return tuple(messages)
 
 
-def apply_rush01_plan(
-    plan: Rush01MidiPlan,
-    provider: Rush01PortProvider,
-    *,
-    delay_ms: int,
-    sleep: SleepCallable,
-) -> Rush01ApplyResult:
-    """Open the exact configured port, send, and always close it."""
+def validate_rush01_plan_for_apply(plan: object) -> None:
+    """Fail closed before an armed session constructs or queries a provider."""
 
-    validate_rush01_plan_for_apply(plan)
-    port = open_exact_output(provider, cast(str, plan.output_port))
-    try:
-        return send_rush01_plan(plan, port, delay_ms=delay_ms, sleep=sleep)
-    finally:
-        port.close()
-
-
-def _no_sleep(_seconds: float) -> None:
-    return None
-
-
-def validate_rush01_plan_for_apply(plan: Rush01MidiPlan) -> None:
-    """Fail closed before a real provider is constructed or queried."""
-
-    if not isinstance(plan, Rush01MidiPlan):
+    if not isinstance(plan, _Rush01MidiPlanLike):
         raise TypeError("plan must be a Rush01MidiPlan")
-    if not plan.configuration_ready or plan.output_port is None:
-        raise ValueError("RUSH01 plan requires exact port and track-channel configuration")
-    if any(field.status == STATUS_INVALID_SPEC_FIELD for field in plan.fields):
-        raise ValueError("RUSH01 plan contains invalid specification fields")
-    validate_rush01_plan_safety(plan)
+    if not plan.ready:
+        raise ValueError(plan.readiness_reason or "RUSH01 plan is not ready for apply")
 
+
+RUSH01_PLAN_RENDERER: PlanRenderer = render_rush01_plan
 
 __all__ = [
-    "Rush01ApplyResult",
-    "Rush01OutputPort",
-    "Rush01PortProvider",
-    "apply_rush01_plan",
-    "open_exact_output",
-    "send_rush01_plan",
+    "RUSH01_PLAN_RENDERER",
+    "render_rush01_plan",
     "validate_rush01_plan_for_apply",
 ]

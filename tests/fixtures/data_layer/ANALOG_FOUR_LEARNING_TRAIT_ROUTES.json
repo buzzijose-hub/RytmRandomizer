@@ -1,0 +1,76 @@
+[
+  {
+    "trait_key": "low_end_pressure",
+    "parameter_focus": [
+      "Filter2 Type",
+      "Filter2 Frequency",
+      "Filter2 Resonance",
+      "Volume",
+      "OSC1 Level",
+      "OSC2 Level"
+    ],
+    "learning_question": "Which HP2/base-level balance preserves body without masking the stab?",
+    "rationale": "Low-end pressure is translated through level balance and Filter 2 shape."
+  },
+  {
+    "trait_key": "groove_density",
+    "parameter_focus": [
+      "EnvA Decay Time",
+      "EnvA Release Time",
+      "EnvF Decay Time",
+      "EnvF Release Time",
+      "Delay Send Level"
+    ],
+    "learning_question": "How short can the amp and filter envelopes stay while the groove remains legible?",
+    "rationale": "Dense references need compact envelopes and restrained delay spill."
+  },
+  {
+    "trait_key": "metallic_pressure",
+    "parameter_focus": [
+      "Sync Amount",
+      "OSC1 Pulsewidth",
+      "OSC2 Pulsewidth",
+      "Filter1 Frequency",
+      "Filter1 Resonance",
+      "Filter Overdrive"
+    ],
+    "learning_question": "How much sync, pulse narrowing, resonance, and overdrive creates the metallic edge?",
+    "rationale": "Metallic pressure is the main oscillator and first-filter bite route."
+  },
+  {
+    "trait_key": "texture_noise",
+    "parameter_focus": [
+      "Noise Level",
+      "Noise Fade",
+      "Chorus Send Level",
+      "Reverb Send Level",
+      "LFO1 Depth A"
+    ],
+    "learning_question": "How much noise and space can be added before the patch stops reading as a tight stab?",
+    "rationale": "Texture is learned through noise amount, ambience sends, and subtle drift."
+  },
+  {
+    "trait_key": "arrangement_energy",
+    "parameter_focus": [
+      "Filter1 Envelope Amount",
+      "Filter2 Envelope Amount",
+      "Filter Overdrive",
+      "LFO1 Destination A",
+      "LFO1 Depth A"
+    ],
+    "learning_question": "Which modulation rows should carry phrase pressure without changing the core tone?",
+    "rationale": "Energy is routed through envelope depth, overdrive, and validated modulation rows."
+  },
+  {
+    "trait_key": "tempo_drive",
+    "parameter_focus": [
+      "LFO1 Speed",
+      "LFO1 Speed Multiplier",
+      "LFO1 Waveform",
+      "LFO1 Mode",
+      "LFO1 Fade"
+    ],
+    "learning_question": "What slow motion rate locks to the reference tempo without sounding like a wobble?",
+    "rationale": "Tempo drive informs LFO rate, multiplier, waveform, and retrigger behavior."
+  }
+]

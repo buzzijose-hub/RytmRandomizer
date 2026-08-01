@@ -39,7 +39,7 @@ python -m rytm_randomizer.app --arm --debug   # real MIDI, full diagnostics
 The default formatter produces:
 
 ```
-<asctime> <levelname> <logger_name> <op_id> <message>
+<asctime> <levelname> <logger_name> <op_id> <message> <context-json?>
 ```
 
 - `asctime` -- ISO-ish local timestamp, e.g. `2026-05-15 09:14:02,317`.
@@ -50,8 +50,10 @@ The default formatter produces:
   [`get_logger`](../rytm_randomizer/observability/logging.py).
 - `op_id` -- the current `operation()` span id (e.g. `scene_run/12`) or empty
   if not inside a span. See [tracing](#operation-tracing) below.
-- `message` -- the log call's message, including any structured fields appended
-  through `logger.X(msg, extra={...})`.
+- `message` -- the log call's message.
+- `context-json` -- a deterministic JSON object containing any bounded
+  `logger.X(msg, extra={...})` fields other than the already-rendered `op_id`.
+  It is omitted when a record has no extra context.
 
 The JSON formatter emits the same fields plus any caller-supplied `extra` keys:
 
@@ -154,6 +156,16 @@ Tracing is currently wired at the following boundaries:
 - `MidoMidiPortProvider.open_output` -- one span per real-port open.
 - `tests/_parity_worker.py::ParityWorker.request` -- one span per parity
   round-trip, for diagnosing slow parity checks.
+- Analog Four audio inference -- one parent-visible operation around the
+  spawned native decoder and deterministic candidate compiler.
+- Analog Four audio patch batch export -- one transaction span around
+  immutable input snapshots, staging, and manifest-last publication.
+- Analog Four publication -- separate bounded operations for immutable
+  artifact publish/reuse and cooperative lock acquire/release.
+- Analog Four recorded-render ranking -- one span around verified artifact
+  loading, local feature analysis, and deterministic scoring.
+- Analog Four live-plan delivery -- guard, validation, port acquisition, and
+  confirmed armed-send operations under the sole `app --arm` boundary.
 
 ## Standard log-message patterns
 
@@ -173,8 +185,118 @@ re-run with `--debug --log-json` and pipe through `jq 'select(.kind ==
 
 **Operation errors.** When an `operation()`-wrapped block raises, the span
 emits one `operation_error` record at `ERROR` with the elapsed time, the
-exception type, and a full traceback under `exc_info`. A debug session can
+bounded exception type, and no traceback or exception message. Call-site
+failure records add only sanitized names, counts, codes, and fingerprints so
+operator-owned absolute paths are not copied into logs. A debug session can
 correlate the failure to the most recent `operation_start` by `op_id`.
+
+**Export RED metrics.** Profile-model and Analog Four saved-kit file exports
+share `MidiMetrics.record_export`: one count, cumulative duration, and a stable
+categorical error counter per invocation. The A4 path emits `validation`,
+`input_not_found`, `permission_denied`, `source_read_failed`,
+`overwrite_refused`, `write_failed`, or `interrupted`; success records no error
+code. Its structured success log includes the output filename, SHA256, and
+mutation count. Failure logs include source/output filenames and the
+categorical code. A POSIX temp-name cleanup failure after successful hard-link
+publication is logged as `atomic_write_cleanup` but does not convert a valid
+output into a failed export.
+
+The audio patch-batch service uses the same export RED metric and emits
+`a4_audio_patch_batch_export` structured records. Success includes output
+directory name, manifest SHA256, and candidate count. Failure includes audio,
+source-kit, and output names with `input_not_found`, `permission_denied`,
+`source_read_failed`, `audio_read_failed`, `dependency_missing`,
+`service_unavailable`, `overwrite_refused`, `publication_locked`,
+`write_failed`, `validation`, or `inference_failed`. The CLI additionally
+returns stable operator-facing `error_code` values and never emits MIDI-send
+breadcrumbs because this path performs no MIDI operation. Publication is a
+per-track transaction over immutable input snapshots: candidate files are
+generation-addressed, private staging is cleaned before publication, and the
+  stable manifest is the atomic commit marker. Native audio decoding is isolated
+  in a child process; abnormal exit records `inference_failed`, while the parent
+  remains alive and cleans its private audio/SysEx staging directory. Simulated
+  abnormal child-exit tests verify that containment. The measurement core avoids
+  the unstable native beat-tracker and HPSS paths; a real tone-versus-noise
+  subprocess test covers successful audio differentiation where native decoding
+  is available and is skipped on GitHub Windows. Successful Windows decoding
+  remains environment-dependent and is not established. Generation files are immutable:
+matching bytes are reused, conflicting bytes are rejected, and a failed or
+catchably interrupted publication can leave only unreferenced generation files
+while the prior manifest remains coherent. Hard process termination can also
+retain a lock or temporary file; the lock carries recovery metadata. Lock
+cleanup warnings are included in a
+successful result's `warnings` with the retained lock name; cleanup failures
+during an exception are attached to CLI JSON `details` and emitted as
+`a4_audio_patch_batch_lock_cleanup` structured records.
+
+Artifact publish/reuse and lock acquire/release also have a dedicated bounded
+`record_a4_patch_publication` counter, duration total, and error vocabulary.
+Those operations emit structured completion/failure records with artifact
+names and stable fingerprints, never candidate bytes or private audio. Error
+metrics retain both the bounded code total and an operation-plus-code key so
+artifact, lock-acquire, and lock-release failures remain distinguishable.
+Terminal records carry the same explicit `op_id` as their start/error/end span
+even though metric accounting occurs after the timed operation body exits.
+Verified batch-candidate reads use `record_a4_patch_batch_read` with bounded
+`artifact_validation`, `input_read_failed`, `interrupted`, and `validation`
+failures. Reader logs retain only the manifest filename and candidate number.
+
+**Analog Four inference RED metrics.** Direct audio-to-patch inference has a
+separate `MidiMetrics.record_a4_patch_inference` surface so an analysis invoked
+outside the batch exporter remains visible. Successful invocations and handled
+contract failures record count and cumulative latency. Success omits
+`error_code`; handled failures use the bounded
+`AnalogFourPatchInferenceErrorCode` vocabulary: `audio_read_failed`,
+`dependency_missing`, `inference_failed`, `interrupted`, or `validation`. Batch operations
+that reach audio inference record both layers: one inference event for analysis
+and one export event for the complete batch transaction. Request-validation and
+source-read failures occur before inference and therefore record export only.
+Inference completion/failure logs include `duration_ms` and the current
+`metrics_summary`, so the in-process counters remain visible when a one-shot
+CLI exits. Recorded-candidate ranking does the same through the bounded
+`AnalogFourPatchRenderRankErrorCode` vocabulary and taxonomy-backed artifact
+and reference-mismatch fingerprints. Ranking telemetry is owned by the service,
+so CLI wrappers do not double-count it.
+
+**Analog Four live-plan delivery semantics.** A complete stored plan is
+validated before an output port is opened. The armed command requires an exact
+configured output name that appears exactly once; it never prompts from the
+enumerated port list. The generic CC/NRPN sender counts a
+message only after the port accepts it, including each of the three CC messages
+that form an NRPN. A delivery failure reports bounded sent/expected counts and
+the app emits the underlying port error with the operator recovery action to
+reload the saved Kit or project. `cc_sent` therefore represents successful
+delivery calls, not attempted writes.
+The armed operation additionally records count, cumulative duration, and one
+bounded `AnalogFourPatchSendErrorCode` (`validation`, port discovery/selection/
+open failures, interruption, partial/generic send failure, or count mismatch).
+Every terminal success/failure record includes `duration_ms`, structured
+source/track/candidate context, and `metrics_summary`. Successful completion is
+`DEBUG` to keep the normal operator console quiet; failure records remain
+`ERROR`, emit an `operation_error`, and include a stable fingerprint plus the
+relevant cause type. Zero accepted messages are classified as `send_failed`,
+not partial delivery. A successful delivery is recorded before best-effort
+port close, so a close-time `KeyboardInterrupt` or `SystemExit` cannot erase
+the terminal send outcome; cleanup interruption is reported separately. Exact
+operator port names remain console-only and are excluded from structured logs.
+
+> **Known divergence — cockpit arm/send path (open).** The rule above is not
+> yet upheld by `rytm_randomizer/cockpit/ws/handlers.py`. Its arm-failure
+> record (`_logger.warning("arm_failed", ...)`) writes the **exact operator
+> port name** into the structured `extra` payload and into the error journal's
+> `context={"port": port_name}`, and several cockpit failure records — arm,
+> armed-send refusal, and the surrounding command-dispatch handlers — carry
+> `"exception_repr": repr(exc)`, i.e. **raw backend exception detail**, rather
+> than only the bounded `exception_type` + stable fingerprint this document
+> prescribes.
+>
+> Both are deliberate debugging aids that predate this rule, and both are
+> logged at `WARNING`, so they reach any configured log sink. Recorded here so
+> the doc does not overstate the guarantee: the fix is to reduce those records
+> to `exception_type` + fingerprint and to drop or hash the port name, keeping
+> the exact name on the operator console only. Until that lands, treat
+> "excluded from structured logs" as describing the Analog Four armed-send
+> path, not the cockpit WS handlers.
 
 ## Adding logging to a new module
 

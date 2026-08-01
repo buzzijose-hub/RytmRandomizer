@@ -1,0 +1,47 @@
+{
+  "groove": {
+    "AMP Decay": 8,
+    "AMP Hold": 4,
+    "AMP Overdrive": 5,
+    "FLT Decay": 10,
+    "FLT Env Depth": 5,
+    "FLT Frequency": 4,
+    "FLT Resonance": 6,
+    "SRC Decay": 7,
+    "SRC Hold": 6,
+    "SRC Sweep Depth": 8,
+    "SRC Sweep Time": 9,
+    "SRC Transient": 8,
+    "SRC Tune": 2
+  },
+  "micro": {
+    "AMP Decay": 4,
+    "AMP Hold": 2,
+    "AMP Overdrive": 2,
+    "FLT Decay": 5,
+    "FLT Env Depth": 2,
+    "FLT Frequency": 2,
+    "FLT Resonance": 3,
+    "SRC Decay": 3,
+    "SRC Hold": 3,
+    "SRC Sweep Depth": 4,
+    "SRC Sweep Time": 4,
+    "SRC Transient": 4,
+    "SRC Tune": 1
+  },
+  "strong": {
+    "AMP Decay": 14,
+    "AMP Hold": 8,
+    "AMP Overdrive": 8,
+    "FLT Decay": 15,
+    "FLT Env Depth": 8,
+    "FLT Frequency": 7,
+    "FLT Resonance": 10,
+    "SRC Decay": 12,
+    "SRC Hold": 10,
+    "SRC Sweep Depth": 14,
+    "SRC Sweep Time": 15,
+    "SRC Transient": 14,
+    "SRC Tune": 4
+  }
+}

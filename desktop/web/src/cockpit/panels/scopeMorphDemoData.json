@@ -1,0 +1,221 @@
+{
+  "morphTracks": [
+    {
+      "groups": [
+        [
+          "src",
+          [
+            "SRC Tune",
+            "SRC Decay",
+            "SRC Sweep Depth",
+            "SRC Sweep Time",
+            "SRC Hold Time",
+            "SRC Tick Level"
+          ]
+        ],
+        [
+          "filter",
+          [
+            "FLT Decay",
+            "FLT Frequency",
+            "FLT Resonance",
+            "FLT Env Depth"
+          ]
+        ]
+      ],
+      "source": {
+        "FLT Decay": 35,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 23,
+        "FLT Resonance": 77,
+        "SRC Decay": 58,
+        "SRC Hold Time": 40,
+        "SRC Sweep Depth": 93,
+        "SRC Sweep Time": 81,
+        "SRC Tick Level": 127,
+        "SRC Tune": 59
+      },
+      "sourceName": "My BD Sharp",
+      "target": {
+        "FLT Decay": 64,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 25,
+        "FLT Resonance": 26,
+        "SRC Decay": 53,
+        "SRC Sweep Depth": 32,
+        "SRC Sweep Time": 68,
+        "SRC Tune": 58
+      },
+      "targetName": "My BD Classic",
+      "track": 1
+    }
+  ],
+  "scopeTracks": [
+    {
+      "anchor": {
+        "FLT Decay": 35,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 23,
+        "FLT Resonance": 77,
+        "SRC Decay": 58,
+        "SRC Hold Time": 40,
+        "SRC Sweep Depth": 93,
+        "SRC Sweep Time": 81,
+        "SRC Tick Level": 127,
+        "SRC Tune": 59
+      },
+      "groups": [
+        [
+          "src",
+          [
+            "SRC Tune",
+            "SRC Decay",
+            "SRC Sweep Depth",
+            "SRC Sweep Time",
+            "SRC Hold Time",
+            "SRC Tick Level"
+          ]
+        ],
+        [
+          "filter",
+          [
+            "FLT Decay",
+            "FLT Frequency",
+            "FLT Resonance",
+            "FLT Env Depth"
+          ]
+        ]
+      ],
+      "profileName": "My BD Sharp",
+      "safe": {
+        "FLT Decay": [
+          20,
+          55
+        ],
+        "FLT Env Depth": [
+          56,
+          72
+        ],
+        "FLT Frequency": [
+          22,
+          35
+        ],
+        "FLT Resonance": [
+          68,
+          85
+        ],
+        "SRC Decay": [
+          48,
+          70
+        ],
+        "SRC Hold Time": [
+          28,
+          58
+        ],
+        "SRC Sweep Depth": [
+          75,
+          110
+        ],
+        "SRC Sweep Time": [
+          65,
+          100
+        ],
+        "SRC Tick Level": [
+          105,
+          127
+        ],
+        "SRC Tune": [
+          56,
+          62
+        ]
+      },
+      "track": 1
+    },
+    {
+      "anchor": {
+        "FLT Decay": 58,
+        "FLT Env Depth": 63,
+        "FLT Frequency": 28,
+        "FLT Resonance": 58,
+        "SRC Decay": 56,
+        "SRC FM Amount": 44,
+        "SRC FM Decay": 38,
+        "SRC FM Tune": 68,
+        "SRC Sweep Time": 82,
+        "SRC Tick Level": 88,
+        "SRC Tune": 60
+      },
+      "groups": [
+        [
+          "src",
+          [
+            "SRC Tune",
+            "SRC Sweep Time",
+            "SRC FM Decay",
+            "SRC Decay",
+            "SRC FM Tune",
+            "SRC FM Amount",
+            "SRC Tick Level"
+          ]
+        ],
+        [
+          "filter",
+          [
+            "FLT Decay",
+            "FLT Frequency",
+            "FLT Resonance",
+            "FLT Env Depth"
+          ]
+        ]
+      ],
+      "profileName": "BD FM Metallic Kick",
+      "safe": {
+        "FLT Decay": [
+          40,
+          80
+        ],
+        "FLT Env Depth": [
+          55,
+          72
+        ],
+        "FLT Frequency": [
+          23,
+          38
+        ],
+        "FLT Resonance": [
+          42,
+          76
+        ],
+        "SRC Decay": [
+          38,
+          76
+        ],
+        "SRC FM Amount": [
+          18,
+          88
+        ],
+        "SRC FM Decay": [
+          14,
+          78
+        ],
+        "SRC FM Tune": [
+          42,
+          96
+        ],
+        "SRC Sweep Time": [
+          55,
+          112
+        ],
+        "SRC Tick Level": [
+          55,
+          118
+        ],
+        "SRC Tune": [
+          56,
+          65
+        ]
+      },
+      "track": 2
+    }
+  ]
+}

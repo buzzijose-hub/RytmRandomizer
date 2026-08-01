@@ -12,9 +12,14 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 
 
-def _validate_integer(name: str, value: int) -> None:
+def _validate_integer(name: str, value: object) -> None:
     if not isinstance(value, int):
         raise TypeError(f"{name} must be an integer")
+
+
+def _validate_message_type(value: object) -> None:
+    if not isinstance(value, str):
+        raise TypeError("message_type must be a string")
 
 
 def _freeze_metadata(metadata: Mapping[str, object] | None) -> Mapping[str, object]:
@@ -34,8 +39,7 @@ class MidiMessage:
     metadata: Mapping[str, object] = field(default_factory=lambda: MappingProxyType({}))
 
     def __post_init__(self) -> None:
-        if not isinstance(self.message_type, str):
-            raise TypeError("message_type must be a string")
+        _validate_message_type(self.message_type)
         _validate_integer("channel", self.channel)
         _validate_integer("control", self.control)
         _validate_integer("value", self.value)
@@ -79,7 +83,7 @@ class MockMidiSender:
     def messages(self) -> tuple[MidiMessage, ...]:
         return self.sent_messages
 
-    def send(self, message: MidiMessage) -> None:
+    def send(self, message: object) -> None:
         if not isinstance(message, MidiMessage):
             raise TypeError("message must be a MidiMessage")
         self._messages.append(message)

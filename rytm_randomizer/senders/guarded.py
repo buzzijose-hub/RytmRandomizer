@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from ..devices import Device
+from .armed_apply import plan_readiness
 
 
 @dataclass(frozen=True)
@@ -19,10 +20,14 @@ class GuardedSendResult:
 
 
 def guarded_send(device: Device, plan: object) -> GuardedSendResult:
-    """Render ``plan`` through ``device`` without opening hardware."""
+    """Render ``plan`` through ``device`` without opening hardware.
 
-    ready = bool(getattr(plan, "ready", False))
-    reason = str(getattr(plan, "readiness_reason", "plan is not ready"))
+    Plan readiness is validated through the ArmedApply seam's shared
+    :func:`~rytm_randomizer.senders.armed_apply.plan_readiness` duck so
+    the guarded (mock) and armed (hardware) paths can never drift apart.
+    """
+
+    ready, reason = plan_readiness(plan)
     if not ready:
         return GuardedSendResult(
             device_id=device.device_id,

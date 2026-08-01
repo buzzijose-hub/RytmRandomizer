@@ -46,6 +46,8 @@ Memories about the human's hardware setup, personal preferences across multiple 
 
 - [Analog Rytm SysEx project](project_rytm_sysex.md) — kit-first generator, offline-only, file-drop loading workflow.
 - [Python tooling pitfalls](python_tooling_pitfalls.md) — black target-version must match CI py3.11; don't suppress xdist with `-o addopts=''` for normal runs (3× slowdown); only suppress for `PARITY_CAPTURE_MODE=1`.
+- [Armed entry-point seam](project_armed_entry_point_seam.md) — Live-but-Passive MIDI boundary: inputs open freely, all transmit routes through the `senders` ArmedApply seam; enforced by `test_armed_entry_points.py` + `test_repo_root_perimeter.py`.
+- [Security-cap mirroring](project_security_cap_mirroring.md) — every pyproject security upper-cap needs a dependabot ignore twin + a tie-test, or dependabot opens PRs that defeat the cap (PR #211 / MAL-2026-4750).
 
 ### Reference (where to look up things)
 

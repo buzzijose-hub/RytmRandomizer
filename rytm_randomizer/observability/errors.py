@@ -1,3 +1,4 @@
+# pyright: reportUnsupportedDunderAll=false
 """Unified error taxonomy for the RytmRandomizer package.
 
 WHAT
@@ -80,6 +81,7 @@ __all__ = [
     "ConfigError",
     "DataError",
     "MidiError",
+    "MidiEventPlanSendError",
     "MockMessageMappingError",
     "RealMidiDependencyError",
     "RealMidiPortError",
@@ -144,6 +146,32 @@ class MidiError(RytmRandomizerError):
     """Base for failures at the MIDI boundary (port open, send, translate)."""
 
     fingerprint: ClassVar[str] = "midi.error.unspecified"
+
+
+class MidiEventPlanSendError(MidiError, RuntimeError):
+    """A validated MIDI event plan failed after partial or zero delivery."""
+
+    fingerprint: ClassVar[str] = "midi.event_plan.send_failed"
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        sent_message_count: int,
+        expected_message_count: int,
+        interrupted: bool = False,
+    ) -> None:
+        super().__init__(
+            message,
+            context={
+                "sent_message_count": sent_message_count,
+                "expected_message_count": expected_message_count,
+                "interrupted": interrupted,
+            },
+        )
+        self.sent_message_count = sent_message_count
+        self.expected_message_count = expected_message_count
+        self.interrupted = interrupted
 
 
 class StateError(RytmRandomizerError):

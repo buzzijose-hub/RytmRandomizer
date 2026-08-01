@@ -25,7 +25,11 @@ collaborators return (``HistoryStore.current`` returns a fresh
 Phase 1 scope: one session per process is the only supported shape. The
 WebSocket endpoint binds to this one shared session — multi-tenant
 sessions land in a later spec (the protocol itself is already
-session-id-free, so adding one would not break the wire format).
+session-id-free, so adding one would not break the wire format). Since
+Wave 2b, each *connection* to that one session owns its own bounded
+outbound queue (see :class:`server.ConnectionQueue`); the session-level
+``pending_events`` list survives purely as the handler-facing
+compatibility surface the reader drains into the per-connection queue.
 
 See the spec §"The Three Protocols" for what each field models and how
 the handlers consume them.
@@ -38,9 +42,13 @@ from dataclasses import dataclass, field
 from typing import Final
 
 from ...observability.logging import get_logger
+from ...senders.armed_apply import ArmedApplySession
+from ...senders.hardware import OutputOpeningProvider
 from ..data import CockpitSendPlan, MutationCandidate, ProfileModel
 from ..device import DeviceAdapter
+from ..diagnostics import ErrorJournal
 from ..history import HistoryStore
+from ..library import LibraryStore
 from ..profiles import ProfileRegistry
 from .wizard_session import WizardSession
 
@@ -57,8 +65,12 @@ _SEED_BITS: Final[int] = 32
 """xorshift32 (the engine PRNG) consumes a 32-bit seed; sample exactly that width."""
 
 
-def _fresh_seed() -> int:
-    """Return a fresh 32-bit unsigned seed sampled from :func:`secrets.randbits`."""
+def fresh_seed() -> int:
+    """Return a fresh 32-bit unsigned seed sampled from :func:`secrets.randbits`.
+
+    Public (not underscore-private) because the ``regen`` handler in
+    :mod:`handlers` legitimately re-seeds a live session through it.
+    """
 
     return secrets.randbits(_SEED_BITS)
 
@@ -80,8 +92,8 @@ class CockpitSession:
     device: DeviceAdapter
     active_profile: ProfileModel | None = None
     depth: float = DEFAULT_DEPTH
-    seed: int = field(default_factory=_fresh_seed)
-    pad_locks: set[int] = field(default_factory=set)
+    seed: int = field(default_factory=fresh_seed)
+    pad_locks: set[int] = field(default_factory=set[int])
     preview_on: bool = False
     current_candidate: MutationCandidate | None = None
     current_send_plan: CockpitSendPlan | None = None
@@ -96,20 +108,96 @@ class CockpitSession:
     to be non-``None`` and returns ``ok=False`` otherwise.
     """
 
-    pending_events: list[dict] = field(default_factory=list)
+    armed_apply: ArmedApplySession | None = None
+    """The live ArmedApply seam while armed, or ``None`` in the passive state.
+
+    Set exclusively by the ``arm`` command handler after a successful
+    explicit arm; cleared by ``disarm`` and by the armed watchdog when
+    the device disappears (auto-disarm — never auto-re-arm).
+    """
+
+    hardware_intent: bool = False
+    """True from a successful ``arm`` until an EXPLICIT ``disarm``.
+
+    Distinct from :attr:`armed_apply`, which an *involuntary* auto-disarm
+    (device unplugged, provider error, sibling teardown) also clears. That
+    difference is a safety boundary, not bookkeeping: ``_handle_send``
+    routes to the seam only while ``armed_apply`` is set, so after an
+    auto-disarm a SEND would otherwise fall through to the mock adapter —
+    skipping the per-action confirmation, writing nothing to hardware, and
+    still acking ``ok: True`` with a fresh snapshot id. The operator would
+    believe a live set was still landing on the device.
+
+    While this flag is set and ``armed_apply`` is ``None``, SEND is
+    REFUSED instead: the operator asked for hardware, so silently
+    downgrading to a mock write is never the right answer. Cleared only by
+    an explicit ``disarm`` (the operator choosing to go passive).
+    """
+
+    arm_secret: str | None = None
+    """The server-minted per-launch ARM secret, or ``None`` when unconfigured.
+
+    The client must echo this exact value as the ``arm`` command's
+    ``arm_token``. It is minted by ``__main__`` with
+    :func:`secrets.token_urlsafe` and written 0600 alongside the WS
+    handshake token, so only a process that can read the operator's own
+    files can arm.
+
+    The distinction from the WS handshake token is deliberate: the
+    handshake token authenticates *the connection*, this secret authorises
+    *the transmit capability*. A future spec may hand the shell the WS
+    token while withholding the arm secret; keeping them separate makes
+    that a configuration change rather than a redesign.
+
+    ``None`` **fails arming closed** — the historical behaviour (accept
+    any non-empty client-supplied string) was not authentication at all:
+    the expected value was derived from the client's own input, so the
+    constant-time comparison compared a value with itself.
+    """
+
+    arm_port_provider: OutputOpeningProvider | None = None
+    """Optional injected output-port provider for the ``arm`` command.
+
+    ``None`` (production default) makes the arm handler build the real
+    ``mido``-backed provider lazily — failing cleanly when ``mido`` is
+    absent. Tests and embedded harnesses inject a fake provider here so
+    the full arm state machine is exercisable with zero hardware.
+    """
+
+    library_store: LibraryStore | None = None
+    """The injected kit/sound library store, or ``None`` when unwired.
+
+    Unwired sessions (unit tests, embedded harnesses) reject library
+    commands with a validation ack and never emit ``library_changed`` —
+    the historical wire surface stays byte-identical.
+    """
+
+    error_journal: ErrorJournal = field(default_factory=ErrorJournal)
+    """Bounded in-instance journal of the last 50 categorized errors.
+
+    Written by the WS dispatcher's taxonomy-error path, the arm/disarm
+    handlers, and (when wired by ``__main__``) the ConnectionManager's
+    enumeration-fault path. Read back by the ``diagnostics`` command.
+    """
+
+    pending_events: list[dict[str, object]] = field(default_factory=list[dict[str, object]])
     """Events the last handler queued for the dispatcher to broadcast post-ack.
 
     The wire contract is "ack first, then events" (see the spec § "The
     Three Protocols"). :func:`handlers.handle_command` cannot await the
     emitter before returning the ack dict, so it stashes the queued
-    events here and the server's command loop calls
-    :func:`handlers.drain_pending_events` immediately after writing the
-    ack to the wire. The field is mutated between request/response — this
-    is intentional and matches the Phase-1 single-tenant scope documented
-    in the module docstring above ("one session per process is the only
-    supported shape"). When multi-tenant lands, the per-session
-    ``pending_events`` will move into the per-connection scope so two
-    connections cannot clobber each other's queues.
+    events here and the server's reader loop calls
+    :func:`handlers.drain_pending_events` immediately after enqueueing
+    the ack on the connection's outbound queue.
+
+    Wave 2b resolved the historical multi-connection caveat: this field
+    is no longer the transport buffer — each connection owns a bounded
+    :class:`server.ConnectionQueue` and the reader drains this list into
+    its own queue *synchronously* (the queue-backed emitter contains no
+    await point that yields to the event loop), so two connections can
+    no longer clobber each other's queued events. The field survives as
+    the handler-facing compatibility surface: handlers and the
+    dispatcher keep their exact pre-Wave-2b call shape.
     """
 
     def clear_pending_events(self) -> None:
@@ -125,4 +213,4 @@ class CockpitSession:
         self.pending_events = []
 
 
-__all__ = ["DEFAULT_DEPTH", "CockpitSession"]
+__all__ = ["DEFAULT_DEPTH", "CockpitSession", "fresh_seed"]

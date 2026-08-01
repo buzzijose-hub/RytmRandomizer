@@ -1,0 +1,113 @@
+RytmRandomizer Project Status Report
+Phase:
+- name: Convergence Phase (armed behind --arm flag)
+- technical_name: RytmRandomizer
+- creative_identity_candidate: KitForge
+Passive CLI Visibility:
+- report
+- project-status-report
+- mock-mapper-report
+- runtime-plan-report
+- active-boundary-report
+- mock-runtime-active-bridge-report
+- anchor-profile-report
+- behavior-parity-report
+- rytm-live-macro-hardware-rehearsal-report
+- list-commands
+- list-scenes
+- list-group-profiles
+- search-commands
+- search-scenes
+- search-group-profiles
+- inspect-command
+- inspect-scene
+- inspect-group-profile
+- preview-command
+- preview-scene
+- preview-group-profile
+Behavior Parity:
+- accepted_packet_count: 12
+- selected_isolated_pad_packet_count: 2
+- pad_lane_packet_count: 4
+- pad_lane_command_count: 38
+- runtime_adjacent_safe_failure_count: 3
+- parked_scope_count: 2
+Runtime Plan:
+- supported_count: 2
+- parked_count: 1
+- unsupported_count: 2
+- runtime_execution: absent
+Active Boundary:
+- supported_candidate: group_profile:2
+- unsupported_keys: 3, 4
+- active_cli_behavior: absent
+Mock Runtime Active Bridge:
+- accepted_source_key: 2
+- rejected_count: 7
+- parked_count: 1
+- emits_messages: False
+Public API Hardening:
+- status: checkpointed
+- module_count: 3
+- exports_documented: True
+- modules: rytm_randomizer.active_boundary, rytm_randomizer.reports, rytm_randomizer.runtime_plan
+- real_midi: absent
+- port_opening: absent
+- active_behavior: absent
+Collaborator Review Intake:
+- status: checkpointed
+- collaborator: Eddie
+- review_source: external_ai_assisted_review
+- findings_received: False
+- required_format: text_or_markdown
+- implementation_policy: verify_before_implementing
+- triage_categories: valid_and_urgent, valid_but_later, already_handled, needs_more_evidence, not_applicable, conflicts_with_safety_constraints, conflicts_with_project_direction
+- real_midi: absent
+- port_opening: absent
+- active_behavior: absent
+- hardware_behavior: absent
+- package_metadata_changes: requires_explicit_approval
+Collaborator Review Triage Template:
+- status: accepted
+- template_path: docs/archive/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md
+- review_gate_path: docs/archive/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md
+- findings_recorded: False
+- requires_text_or_markdown: True
+- screenshot_only_sufficient: False
+- implementation_policy: triage_before_implementing
+- real_midi: absent
+- port_opening: absent
+- active_behavior: absent
+- hardware_behavior: absent
+- package_metadata_changes: requires_explicit_approval
+Closeout:
+- closeout_contract: present
+- failure_propagation: guarded
+- closeout_script: Scripts/closeout_check.ps1
+Convergence:
+- active_execution: present
+- active_execution_gate: --arm flag
+- entry_point: rytm_randomizer.app
+- default_mode: passive
+- modes: default, arm, dry-run
+- active_modes_present: 2
+- total_modes: 3
+- real_midi_provider: rytm_randomizer.mido_provider.MidoMidiPortProvider
+- interactive_logic_owner: rytm_randomizer.shell
+- interactive_logic_converged: True
+Safety:
+- real_midi: present_behind_arm_flag
+- port_opening: present_behind_arm_flag
+- active_execution: present_behind_arm_flag
+- dispatch: present_behind_arm_flag
+- command_execution: present_behind_arm_flag
+- default_mode: passive
+- hardware_required: False
+- hardware_behavior: opt_in_behind_arm_flag
+- analog_four_support: absent
+- pads_5_12_support: absent
+- v134_reference: untouched
+- package_metadata: untouched
+Source:
+- in_memory_only: True
+- writes_files: False

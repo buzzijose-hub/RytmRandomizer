@@ -183,8 +183,8 @@ def test_print_allowlist_files_actually_exist() -> None:
 # entire package where it would be defensible is best-effort cleanup paths
 # (e.g. closing a MIDI port during shutdown); even those have been narrowed
 # in WS-U to the realistic OSError/RuntimeError/AttributeError family. The
-# allow-list below is empty; we keep the constant so a future principled
-# exception can be added with a clear comment.
+# allow-list below contains only the tracing context manager's principled
+# broad catch.
 ALLOW_LIST_BROAD_EXCEPT: frozenset[tuple[str, int]] = frozenset(
     {
         # observability/tracing.py:167 — the operation() context manager intentionally
@@ -264,6 +264,7 @@ def test_no_broad_except_exception_in_package() -> None:
 # AssertionError is allowed (used for invariant assertions).
 # KeyError is allowed in registry lookup (rytm_randomizer/reports.py).
 # SystemExit is allowed in script entry points.
+# KeyboardInterrupt is allowed when a subprocess propagates operator cancellation.
 # StopIteration is allowed in generator protocols.
 _STDLIB_VALIDATION_OK: frozenset[str] = frozenset(
     {
@@ -277,6 +278,7 @@ _STDLIB_VALIDATION_OK: frozenset[str] = frozenset(
         "AssertionError",
         "KeyError",
         "SystemExit",
+        "KeyboardInterrupt",
         "StopIteration",
         "NotImplementedError",
         # Cockpit Phase 3 export writer raises FileExistsError when an
@@ -339,6 +341,30 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # WizardSourcePathError / EmptyAnalysisError dual-inheritance
         # pattern.
         "WriteError",
+        # Analog Four audio-patch batching: classified staging failures retain
+        # RuntimeError compatibility; publication locks retain FileExistsError
+        # compatibility while all remain members of the BoundaryError taxonomy.
+        "AnalogFourPatchBatchStageError",
+        "AnalogFourPatchBatchPublicationError",
+        "AnalogFourPatchBatchLockedError",
+        "AnalogFourPatchRenderRankArtifactError",
+        "AnalogFourPatchRenderRankReferenceError",
+        # Generic CC/NRPN plan delivery: carries exact successful/expected
+        # message counts so an armed A4 operator can recover from a partial send.
+        "MidiEventPlanSendError",
+        # ArmedApply seam: a kit/sound-MUTATING armed write is refused
+        # outright because real capture-before-write + a restore path are
+        # not implemented. Subclasses ArmedApplyError -> MidiError, so it
+        # is a taxonomy member; listed here because the AST scan matches
+        # on the raised class name, not the runtime hierarchy.
+        "KitMutationUnsupportedError",
+        # ArmedApply seam: arming is refused when the resolved output port
+        # exposes no callable ``close``. Deterministic teardown of the
+        # exclusive hardware handle is unimplementable without it, so the
+        # seam declines to hold a port it could never release. Subclasses
+        # ArmedApplyError -> MidiError; listed here because the AST scan
+        # matches on the raised class name, not the runtime hierarchy.
+        "PortNotClosableError",
         # Cockpit profile registry (PR 7 — M7 + M6): atomic save +
         # classified load errors. ``ProfileAlreadyExistsError``
         # multi-inherits :class:`DataError` + :class:`FileExistsError`
@@ -354,6 +380,11 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # pattern.
         "ProfileAlreadyExistsError",
         "ProfileRegistryAccessError",
+        # Wave 4 ArmedApply seam (senders/armed_apply.py): re-homed under
+        # MidiError + RuntimeError so ``except RuntimeError`` callers still
+        # work AND the conformance check sees a taxonomy member. Mirrors
+        # the RealMidiPortError dual-inheritance pattern.
+        "ArmedApplyError",
         # Optional local-AI provider boundary: kept passive, taxonomy-backed,
         # and raised only by explicit local provider calls or JSON validators.
         "LocalAiError",
@@ -414,7 +445,7 @@ def test_raises_use_taxonomy_or_validation_stdlib() -> None:
         "Every ``raise`` in the package must use a member of the "
         "RytmRandomizerError taxonomy (rytm_randomizer.observability.errors) "
         "or a validation-allowed stdlib exception (TypeError / ValueError / "
-        "AssertionError / KeyError / SystemExit / StopIteration / "
+        "AssertionError / KeyError / SystemExit / KeyboardInterrupt / StopIteration / "
         "NotImplementedError). Violations:\n  " + "\n  ".join(violations)
     )
 

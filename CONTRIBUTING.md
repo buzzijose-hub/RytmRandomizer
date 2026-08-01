@@ -380,8 +380,8 @@ All tests must pass. Coverage must stay ≥95% pure-branch (the ratchet floor, e
 
 `pyproject.toml` sets `addopts = "-n auto --durations=20"`, so **bare
 `python -m pytest`** parallelizes across all available CPU cores via
-`pytest-xdist`. On a 22-core dev machine the full 2370-test suite runs in
-~30s, the fast subset in ~25s.
+`pytest-xdist`. On a multi-core dev machine the 6,800+ test suite runs in
+roughly 45-90s, while the fast subset avoids the parity worker cost.
 
 Use the right tool at each stage of the loop:
 
@@ -400,6 +400,23 @@ override when capturing parity fixtures
 (`PARITY_CAPTURE_MODE=1 python -m pytest tests/test_engines_pad*.py -o addopts=''`) —
 the capture path has a documented TOCTOU concern with concurrent xdist
 workers.
+
+The real audio differential test has a bounded subprocess environment so
+native BLAS/Numba libraries cannot multiply worker threads under pytest-xdist:
+
+| Variable | Test behavior |
+|---|---|
+| `GITHUB_ACTIONS` | GitHub sets this to `true`; the known-unstable Windows native-audio subprocess proof is skipped there while deterministic Windows coverage and the real proof on other platforms remain active. |
+| `BLIS_NUM_THREADS` | Forced to `1` inside the native-audio proof subprocess. |
+| `MKL_NUM_THREADS` | Forced to `1` inside the native-audio proof subprocess. |
+| `NUMBA_NUM_THREADS` | Forced to `1` inside the native-audio proof subprocess. |
+| `NUMEXPR_NUM_THREADS` | Forced to `1` inside the native-audio proof subprocess. |
+| `OMP_NUM_THREADS` | Forced to `1` inside the native-audio proof subprocess. |
+| `OPENBLAS_NUM_THREADS` | Forced to `1` inside the native-audio proof subprocess. |
+| `VECLIB_MAXIMUM_THREADS` | Forced to `1` inside the native-audio proof subprocess. |
+
+These are test-process controls only. The application does not read or change
+them, and contributors do not need to set them for normal runs.
 
 **On macOS / Linux**, the bare command is the same. CI runs the same
 invocation on a 4-core GitHub runner in ~30-90s depending on the OS.
@@ -502,7 +519,24 @@ pre-commit run --all-files
 
 ### Type checking
 
-There is no `mypy` / `pyright` enforcement in CI today, but new code must:
+Whole-repository `mypy` / `pyright` enforcement is not enabled in CI today.
+The incremental strict-production baseline is reproducible with:
+
+```bash
+just typecheck
+# bare equivalent:
+python scripts/typecheck_touched.py
+```
+
+The script dynamically discovers committed, working-tree, and untracked
+production modules against the integration merge base, then invokes the pinned
+strict configuration. Dynamic test-harness typing remains a separate cleanup
+workstream; do not narrow discovery or relax the configuration to hide a new
+error. Base-ref precedence is `TYPECHECK_BASE_REF`, then GitHub Actions'
+`GITHUB_BASE_REF` as `origin/<branch>`, then the safe repository default
+`origin/modularize-v1.34`. Set `TYPECHECK_BASE_REF` only when intentionally
+checking against another fetched integration ref; never use it to omit files
+from a PR's real target diff. All new code must:
 
 - Use type annotations on every public function/method signature (Gate 6).
 - Prefer `@runtime_checkable Protocol` over ABCs (Gate 6).
@@ -685,7 +719,7 @@ Skills under `.claude/skills/` package repeatable knowledge so an agent (or a hu
 | [`multi-agent-work-collision-recovery`](.claude/skills/learned/multi-agent-work-collision-recovery/SKILL.md) | Recovering with git when a peer agent did your task and pushed first. |
 | [`rebase-after-squash-merge`](.claude/skills/learned/rebase-after-squash-merge/SKILL.md) | How to rebase a branch after the base squash-merged. |
 | [`coverage-py-blended-vs-pure-branch`](.claude/skills/learned/coverage-py-blended-vs-pure-branch/SKILL.md) | Why the ratchet uses pure-branch (not blended) coverage. |
-| [`elektron-sysex-envelope`](.claude/skills/learned/elektron-sysex-envelope/SKILL.md) | Elektron 7-bit SysEx envelope structure (Rytm + A4 + Digitakt). |
+| [`elektron-sysex-envelope`](.claude/skills/learned/elektron-sysex-envelope/SKILL.md) | Elektron 7-bit SysEx plus A4 content-addressed patch publication, validated live delivery, pacing, and recovery. |
 | [`pip-audit-editable-install`](.claude/skills/learned/pip-audit-editable-install/SKILL.md) | Running pip-audit when the package is editable-installed; how to handle hardware-pinned packages. |
 | [`github-actions-matrix-conditional`](.claude/skills/learned/github-actions-matrix-conditional/SKILL.md) | Conditional matrix expansion in `.github/workflows/test.yml`. |
 | [`github-token-no-workflow-trigger`](.claude/skills/learned/github-token-no-workflow-trigger/SKILL.md) | Pushing from a workflow without triggering recursive CI. |
@@ -930,7 +964,8 @@ that true:
    script runs the mechanical gates and re-prompts codex to run the
    per-dimension fan-out review.
 3. **`.githooks/pre-push`** — a universal git hook that runs the mechanical
-   gates (lint + architecture + V1.34 parity) on every `git push`, by any
+   gates (lint + strict touched-production typing + architecture + V1.34 parity)
+   on every `git push`, by any
    tool, and **blocks the push** if they fail. Activate it once with
    `git config core.hooksPath .githooks` — `just install` and the dev
    container do this for you. **The top-level `conftest.py` also

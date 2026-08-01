@@ -7,6 +7,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 
 import { CockpitClientProvider } from '../../src/cockpit/context';
 import { DepthSlider } from '../../src/cockpit/DepthSlider';
+import { runAxe } from '../a11y/__helpers__/axe';
 
 import { FakeCockpitClient } from './_fixtures';
 
@@ -64,4 +65,30 @@ describe('DepthSlider', () => {
       expect(screen.getByText(t)).toBeInTheDocument();
     }
   });
+
+  it('exposes aria-valuetext as a human percentage (APG slider name/role/value)', () => {
+    renderWith(0.45);
+    const input = screen.getByRole('slider');
+    // Native range reports aria-valuenow as the raw float; aria-valuetext
+    // gives the SR the "45 percent" the sighted chip shows.
+    expect(input).toHaveAttribute('aria-valuetext', '45 percent');
+    fireEvent.change(input, { target: { value: '0.7' } });
+    expect(input).toHaveAttribute('aria-valuetext', '70 percent');
+  });
+
+  it('has no axe (WCAG 2.2 AA) violations', async () => {
+    const container = renderAsElement();
+    const results = await runAxe(container);
+    expect(results.violations).toEqual([]);
+  });
 });
+
+function renderAsElement(): HTMLElement {
+  const fake = new FakeCockpitClient();
+  const { container } = render(
+    <CockpitClientProvider client={fake.asClient()}>
+      <DepthSlider />
+    </CockpitClientProvider>,
+  );
+  return container;
+}

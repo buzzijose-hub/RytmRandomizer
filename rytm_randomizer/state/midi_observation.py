@@ -58,7 +58,7 @@ def empty_midi_observation_state() -> MidiObservationState:
 
 
 def consume_midi_cc_bytes(
-    state: MidiObservationState,
+    state: object,
     message: tuple[int, int, int],
     *,
     timestamp: float,
@@ -152,7 +152,7 @@ def consume_midi_cc_bytes(
     return MidiObservationState(channels=new_channels), tuple(observations)
 
 
-def midi_observation_to_dict(observation: DecodedMidiObservation) -> dict[str, object]:
+def midi_observation_to_dict(observation: object) -> dict[str, object]:
     """Return a stable YAML/JSON-ready observation payload."""
 
     if not isinstance(observation, DecodedMidiObservation):
@@ -219,7 +219,7 @@ def _replace_tuple_value(
     return values[:index] + (value,) + values[index + 1 :]
 
 
-def _validate_data_byte(value: int, *, label: str) -> None:
+def _validate_data_byte(value: object, *, label: str) -> None:
     if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= 127:
         raise ValueError(f"{label} must be an integer in 0..127")
 

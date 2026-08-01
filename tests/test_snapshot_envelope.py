@@ -347,6 +347,25 @@ def test_unpack_elektron_7bit_returns_empty_on_empty_input() -> None:
     assert unpack_elektron_7bit(b"") == b""
 
 
+def test_pack_elektron_7bit_round_trips_shared_envelope_payload() -> None:
+    from rytm_randomizer.snapshot import pack_elektron_7bit, unpack_elektron_7bit
+
+    payload = bytes([0xFF, 0x00, 0x80, 0x01, 0x00, 0xA5, 0xFF]) + bytes(range(20))
+
+    assert unpack_elektron_7bit(pack_elektron_7bit(payload)) == payload
+
+
+def test_pack_elektron_7bit_pins_header_bit_order_and_short_tail() -> None:
+    from rytm_randomizer.snapshot import pack_elektron_7bit
+
+    unpacked = bytes([0x80, 0x01, 0xFF, 0x7F, 0x00, 0xA5, 0x55, 0x81])
+
+    packed = pack_elektron_7bit(unpacked)
+
+    assert packed == bytes([0x25, 0x00, 0x01, 0x7F, 0x7F, 0x00, 0x25, 0x55, 0x01, 0x01])
+    assert all(byte <= 0x7F for byte in packed)
+
+
 def test_unpack_elektron_7bit_raises_on_non_seven_bit_byte() -> None:
     """An input byte > 0x7F means the payload was not 7-bit MIDI to begin with."""
 
@@ -408,6 +427,13 @@ def test_find_kit_record_rejects_negative_slot() -> None:
 
     with pytest.raises(ValueError, match="non-negative"):
         find_kit_record(ELEKTRON_MFR_ID + bytes([0x42]), slot=-1, kit_type_byte=0x42)
+
+
+def test_find_kit_record_rejects_type_byte_outside_byte_range() -> None:
+    from rytm_randomizer.snapshot import ELEKTRON_MFR_ID, find_kit_record
+
+    with pytest.raises(ValueError, match="0x00-0xff"):
+        find_kit_record(ELEKTRON_MFR_ID + bytes([0x42]), slot=0, kit_type_byte=0x100)
 
 
 def test_find_kit_record_rejects_missing_type_byte() -> None:

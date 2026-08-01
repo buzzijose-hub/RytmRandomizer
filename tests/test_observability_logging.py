@@ -194,6 +194,28 @@ def test_configure_logging_stream_override_writes_to_provided_stream() -> None:
     assert PACKAGE_LOGGER_NAME in output
 
 
+def test_configure_logging_structured_output_retains_extra_context() -> None:
+    """Default terminal logs retain the same bounded context as JSON logs."""
+
+    sink = io.StringIO()
+    configure_logging(level=logging.INFO, stream=sink)
+    package_logger = logging.getLogger(PACKAGE_LOGGER_NAME)
+
+    package_logger.info(
+        "structured context",
+        extra={
+            "operation": "unit_test",
+            "outcome": "completed",
+            "metrics_summary": "count:1",
+        },
+    )
+
+    output = sink.getvalue()
+    assert '"metrics_summary": "count:1"' in output
+    assert '"operation": "unit_test"' in output
+    assert '"outcome": "completed"' in output
+
+
 # ---------------------------------------------------------------------------
 # configure_logging: re-call replaces (never stacks) the handler list.
 # ---------------------------------------------------------------------------
@@ -362,29 +384,29 @@ def test_structured_formatter_defaults_missing_op_id() -> None:
 
 
 # ---------------------------------------------------------------------------
-# configure_logging: defensive "already has _OpIdFilter" branch.
+# configure_logging: defensive "already has OpIdFilter" branch.
 # ---------------------------------------------------------------------------
 
 
 def test_configure_logging_does_not_double_attach_op_id_filter(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """If the new handler already carries an ``_OpIdFilter`` (because some
+    """If the new handler already carries an ``OpIdFilter`` (because some
     other layer wired one before configure_logging stamped it on), the
-    defensive ``not any(isinstance(f, _OpIdFilter) ...)`` guard must skip
+    defensive ``not any(isinstance(f, OpIdFilter) ...)`` guard must skip
     the second add. We force the precondition by monkeypatching
-    ``logging.StreamHandler`` to attach an ``_OpIdFilter`` at construction
+    ``logging.StreamHandler`` to attach an ``OpIdFilter`` at construction
     time and assert configure_logging leaves exactly one filter on the
     resulting handler."""
 
-    from rytm_randomizer.observability.tracing import _OpIdFilter
+    from rytm_randomizer.observability.tracing import OpIdFilter
 
     real_stream_handler = logging.StreamHandler
 
     class _PreFilteredStreamHandler(real_stream_handler):  # type: ignore[misc, valid-type]
         def __init__(self, *args: object, **kwargs: object) -> None:
             super().__init__(*args, **kwargs)
-            self.addFilter(_OpIdFilter())
+            self.addFilter(OpIdFilter())
 
     monkeypatch.setattr(logging, "StreamHandler", _PreFilteredStreamHandler)
 
@@ -393,10 +415,77 @@ def test_configure_logging_does_not_double_attach_op_id_filter(
     package_logger = logging.getLogger(PACKAGE_LOGGER_NAME)
     assert len(package_logger.handlers) == 1
     handler = package_logger.handlers[0]
-    op_id_filters = [f for f in handler.filters if isinstance(f, _OpIdFilter)]
+    op_id_filters = [f for f in handler.filters if isinstance(f, OpIdFilter)]
     assert (
         len(op_id_filters) == 1
-    ), "configure_logging must not stack a second _OpIdFilter on a handler that already has one."
+    ), "configure_logging must not stack a second OpIdFilter on a handler that already has one."
+
+
+def test_operation_error_omits_exception_message_and_traceback() -> None:
+    from rytm_randomizer.observability.tracing import operation
+
+    records: list[logging.LogRecord] = []
+
+    class RecordHandler(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
+            records.append(record)
+
+    logger = logging.Logger("rytm_randomizer.test_privacy", level=logging.DEBUG)
+    logger.addHandler(RecordHandler())
+    private_path = r"C:\Users\operator\private-reference.wav"
+
+    with pytest.raises(OSError):
+        with operation("privacy_test", logger=logger):
+            raise OSError(f"could not read {private_path}")
+
+    error_record = next(
+        record
+        for record in records
+        if record.getMessage().startswith("operation_error privacy_test")
+    )
+    assert error_record.exc_type == "OSError"
+    assert error_record.exc_info is None
+    assert private_path not in error_record.getMessage()
+
+
+def test_operation_exposes_current_id_only_inside_span() -> None:
+    from rytm_randomizer.observability.tracing import current_op_id, operation
+
+    assert current_op_id() == ""
+    with operation("current_id_test") as op_id:
+        assert current_op_id() == op_id
+    assert current_op_id() == ""
+
+
+def test_traced_decorator_runs_callable_inside_operation() -> None:
+    from rytm_randomizer.observability.tracing import current_op_id, trace
+
+    observed_ids: list[str] = []
+
+    @trace("decorated_test")
+    def decorated(value: int) -> int:
+        observed_ids.append(current_op_id())
+        return value + 1
+
+    assert decorated(4) == 5
+    assert len(observed_ids) == 1
+    assert observed_ids[0] != ""
+    assert current_op_id() == ""
+
+
+def test_tracing_filter_install_accepts_preinstalled_logger_filter(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import rytm_randomizer.observability.tracing as tracing
+
+    package_logger = logging.getLogger(PACKAGE_LOGGER_NAME)
+    package_logger.addFilter(tracing.OpIdFilter())
+    monkeypatch.setattr(tracing, "_filter_installed", False)
+
+    tracing._ensure_filter_installed()
+
+    assert tracing._filter_installed is True
+    assert any(isinstance(filt, tracing.OpIdFilter) for filt in package_logger.filters)
 
 
 # ---------------------------------------------------------------------------

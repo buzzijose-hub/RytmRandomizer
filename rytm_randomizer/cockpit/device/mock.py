@@ -7,17 +7,16 @@ candidate's ``proposed_params``. Locked pads keep their current params
 unchanged.
 
 ``is_armed`` is always ``False`` — this adapter never talks to hardware.
-``commit_kit`` is a no-op (mock has no persistent kit memory) but logs at
-INFO so operators see the intent in dev mode.
+
+There is no ``commit_kit``: the Protocol dropped its persistent-write
+method because no implementation could deliver one (see
+:mod:`rytm_randomizer.cockpit.device.adapter`). The mock's version was a
+log line the WS ``save`` handler nonetheless acked as durable success.
 """
 
 from __future__ import annotations
 
-import logging
-
 from ..data import CockpitSendPlan, MutationCandidate, PadState, Snapshot, new_ulid
-
-_logger = logging.getLogger(__name__)
 
 
 class MockDeviceAdapter:
@@ -32,7 +31,18 @@ class MockDeviceAdapter:
     return that updated state.
     """
 
-    def __init__(self, initial: Snapshot) -> None:
+    def __init__(self, initial: object) -> None:
+        """Seed the projection; refuse anything that is not a Snapshot.
+
+        ``initial`` is typed ``object`` on purpose: the bootstrap snapshot
+        reaches this constructor from ``__main__`` and from test
+        harnesses, so the ``isinstance`` check below is genuine runtime
+        validation rather than redundant narrowing of an already-``Snapshot``
+        parameter. (Same reasoning as
+        :class:`rytm_randomizer.senders.armed_apply.ArmedApplySession`'s
+        ``port_name`` / ``arm_token``.)
+        """
+
         if not isinstance(initial, Snapshot):
             raise TypeError(f"initial must be a Snapshot; got {type(initial).__name__}")
         self._state: Snapshot = initial
@@ -138,18 +148,6 @@ class MockDeviceAdapter:
         )
         self._state = new_snapshot
         return new_snapshot
-
-    def commit_kit(self, snapshot: Snapshot, label: str | None) -> None:
-        """No-op for the mock; logs the intent at INFO for visibility."""
-
-        _logger.info(
-            "mock_commit_kit",
-            extra={
-                "snapshot_id": snapshot.snapshot_id,
-                "device": snapshot.device,
-                "label": label,
-            },
-        )
 
 
 __all__ = ["MockDeviceAdapter"]

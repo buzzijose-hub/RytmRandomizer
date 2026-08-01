@@ -32,8 +32,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 PACKAGE_ROOT = PROJECT_ROOT / "rytm_randomizer"
 PACKAGE_NAME = "rytm_randomizer"
 RUSH01_TOOL_PATHS = (
-    PROJECT_ROOT / "tools" / "rush01_midi_apply.py",
-    PROJECT_ROOT / "tools" / "rush01_midi_learn.py",
+    PROJECT_ROOT / "scripts" / "rush01_midi_apply.py",
+    PROJECT_ROOT / "scripts" / "rush01_midi_learn.py",
 )
 
 if str(PROJECT_ROOT) not in sys.path:
@@ -218,11 +218,12 @@ def test_rush01_top_level_tools_have_no_active_midi_calls(tool_path: Path) -> No
 
 
 @pytest.mark.parametrize(
-    ("module_name", "expected_code"),
-    (("tools.rush01_midi_apply", 2), ("tools.rush01_midi_learn", 0)),
+    ("tool_path", "expected_code"),
+    ((RUSH01_TOOL_PATHS[0], 2), (RUSH01_TOOL_PATHS[1], 0)),
+    ids=("rush01_midi_apply", "rush01_midi_learn"),
 )
 def test_rush01_tool_default_paths_open_nothing(
-    module_name: str,
+    tool_path: Path,
     expected_code: int,
 ) -> None:
     """Import and default execution remain hardware-free with a hostile fake backend."""
@@ -230,6 +231,7 @@ def test_rush01_tool_default_paths_open_nothing(
     code = f"""
 import sys
 import types
+import importlib.util
 fake_mido = types.ModuleType('mido')
 def explode(*args, **kwargs):
     raise AssertionError('standalone RUSH01 tool touched MIDI')
@@ -238,9 +240,12 @@ fake_mido.open_input = explode
 fake_mido.get_output_names = explode
 fake_mido.get_input_names = explode
 sys.modules['mido'] = fake_mido
-from {module_name} import run
+spec = importlib.util.spec_from_file_location('rush01_tool_under_test', {str(tool_path)!r})
+assert spec is not None and spec.loader is not None
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
 from io import StringIO
-result = run((), stdout=StringIO(), stderr=StringIO())
+result = module.run((), stdout=StringIO(), stderr=StringIO())
 assert result == {expected_code}, result
 """
     result = _run_python(code)

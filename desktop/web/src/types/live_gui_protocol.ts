@@ -1,6 +1,9 @@
 /**
  * Shared live-GUI protocol types.
  *
+ * GENERATED — edit the Python TypedDicts and re-run
+ * scripts/generate_live_gui_protocol_ts.py.
+ *
  * Source of truth: the sibling TypedDict contracts in
  * `rytm_randomizer/reports/live_gui_*_model.py`.
  * `tests/architecture/test_live_gui_protocol_ts_matches_python_typeddicts.py`
@@ -1161,6 +1164,35 @@ export interface LiveGuiPerformanceConsoleModelDict {
   blocked_actions: ReadonlyArray<string>;
   safety_lines: ReadonlyArray<string>;
   replay_commands: ReadonlyArray<string>;
+}
+
+export interface BadgeDict {
+  label: string;
+  tone: 'ok' | 'warn' | 'risk' | 'neutral';
+  icon: string;
+}
+
+export interface TableDict {
+  columns: ReadonlyArray<string>;
+  rows: ReadonlyArray<ReadonlyArray<string>>;
+}
+
+export interface PanelSectionDict {
+  heading: string;
+  kind: 'rows' | 'table' | 'chips';
+  rows: ReadonlyArray<string>;
+  table: TableDict | null;
+  chips: ReadonlyArray<string>;
+}
+
+export interface PanelSpecDict {
+  panel_id: string;
+  title: string;
+  status_badges: ReadonlyArray<BadgeDict>;
+  sections: ReadonlyArray<PanelSectionDict>;
+  required_actions: ReadonlyArray<string>;
+  blocked_actions: ReadonlyArray<string>;
+  safety_lines: ReadonlyArray<string>;
 }
 
 export interface LiveReadinessModel {

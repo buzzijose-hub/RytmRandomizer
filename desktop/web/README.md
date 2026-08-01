@@ -1,11 +1,12 @@
-# Cockpit Web Frontend (WS-I scaffold)
+# Cockpit Web Frontend
 
-Vite + React 18 + TypeScript 5 scaffold for the RytmRandomizer cockpit. Talks to the
+Vite + React 18 + TypeScript 5 frontend for the RytmRandomizer cockpit. Talks to the
 Python sidecar over WebSocket (`ws://127.0.0.1:4317/ws` by default; override with
 `RYTM_RAND_WS_PORT` on the sidecar side).
 
-This directory is the **scaffold only** (WS-I). The v10 cockpit UI components land in
-`src/cockpit/**` from **WS-J**.
+The WS-I scaffold grew into the full cockpit surface: the performance console
+(`src/cockpit/**`), the schema-driven panel platform (`src/cockpit/panels/**`), the
+profile wizard (`src/wizard/**`), and the shared a11y utilities (`src/a11y/**`).
 
 ## Layout
 
@@ -14,35 +15,48 @@ desktop/web/
 ├── index.html               # Vite entry
 ├── package.json
 ├── tsconfig.json
-├── vite.config.ts
+├── vite.config.ts           # Vite + Vitest config (coverage thresholds live here)
+├── playwright.config.ts     # e2e (axe-core accessibility sweeps included)
 ├── .eslintrc.json
 ├── README.md
 ├── src/
 │   ├── main.tsx             # React root bootstrap
-│   ├── App.tsx              # Placeholder — "Connecting…" until first session_status
+│   ├── App.tsx              # Hash router: Cockpit by default, #/wizard for the wizard
+│   ├── a11y/                # LiveRegion announcer, focus + title hooks, sr-only css
 │   ├── ws/
 │   │   ├── client.ts        # Typed WebSocket client (Command / Event)
 │   │   └── protocol.ts      # TS types one-to-one with Python dataclasses
 │   ├── state/
 │   │   ├── store.ts         # Zustand store: snapshot / preview / send plan / history / profile / session
 │   │   └── index.ts         # bindClientToStore + re-exports
+│   ├── cockpit/             # Performance console + cockpit components
+│   │   ├── PerformanceConsole.tsx
+│   │   ├── panels/          # Schema-driven panel platform (see below)
+│   │   └── styles.css       # Documented color tokens (WCAG AA checked in CI)
+│   ├── wizard/              # Guardrail-profile wizard
 │   └── types/
-│       └── index.ts         # Public type re-exports
-└── tests/
-    ├── ws-client.test.ts    # Vitest with mocked WebSocket — 100% branch
-    ├── store.test.ts        # Vitest — 100% branch
-    └── setup.ts             # @testing-library/jest-dom matchers
+│       ├── index.ts             # Public type re-exports
+│       ├── live_gui_protocol.ts # GENERATED — see below
+│       ├── style_crate_rehearsal_deck.ts
+│       └── wizard_protocol.ts
+├── tests/                   # Vitest + @testing-library/react (jsdom)
+│   ├── cockpit/             # incl. panels/ tests + fixtures/performance_console.json (GENERATED)
+│   ├── wizard/
+│   ├── a11y/
+│   └── setup.ts
+└── e2e/                     # Playwright specs
 ```
 
 ## Tech stack
 
 | Layer | Choice | Why |
 |---|---|---|
-| Build | Vite 5 | Fast dev loop, ESM-first, Rollup under the hood |
+| Build | Vite 8 | Fast dev loop, ESM-first, Rollup under the hood |
 | UI | React 18 | Ecosystem + concurrent rendering for ghost-overlay perf |
 | Lang | TypeScript 5 (strict) | Mirrors the Python dataclass types end-to-end |
 | State | Zustand 4 | Tiny, no provider, perfect for "one slice per event" |
-| Test | Vitest 2 + jsdom + @testing-library/react | Vite-native, fast |
+| Test | Vitest 4 + jsdom + @testing-library/react | Vite-native, fast |
+| e2e | Playwright + @axe-core/playwright | Real-browser + accessibility sweeps |
 | Lint | ESLint 8 + @typescript-eslint | Standard |
 
 ## Develop
@@ -55,8 +69,42 @@ npm run typecheck         # tsc -b --noEmit
 npm run lint              # eslint . --max-warnings 0
 npm run test              # vitest watch
 npm run test:run          # vitest --run (CI)
-npm run test:coverage     # vitest --run --coverage  (≥ 100% on ws/** and state/**)
+npm run test:coverage     # vitest --run --coverage (100% — see Coverage policy)
+npm run e2e               # playwright test
 ```
+
+## Generated protocol types
+
+`src/types/live_gui_protocol.ts` and `tests/cockpit/fixtures/performance_console.json`
+are **generated artifacts** of `scripts/generate_live_gui_protocol_ts.py` (repo root).
+The source of truth is the Python TypedDict contracts in
+`rytm_randomizer/reports/live_gui_*_model.py` and
+`rytm_randomizer/reports/panel_spec.py`. Regenerate with:
+
+```bash
+python scripts/generate_live_gui_protocol_ts.py --fixture
+```
+
+`tests/architecture/test_live_gui_protocol_is_generated.py` pins both files
+byte-for-byte — hand edits fail CI.
+
+## Schema-driven panels
+
+New cockpit UI elements are data, not bespoke components. A panel is:
+
+1. a `PanelSpecDict` built in Python (`rytm_randomizer/reports/panel_spec.py`;
+   `panel_spec_from_report_spec()` bridges an existing `ReportSpec` so one spec
+   feeds both the passive text report and the cockpit panel),
+2. a pure selector `(console packet) -> PanelSpecDict` in `src/cockpit/panels/`,
+3. one entry in `src/cockpit/panels/registry.ts` (`id`, `region`, `selector`,
+   `component: PanelRenderer`).
+
+`PanelHost` renders every registered panel for its region
+(`topbar | left-rail | deck | bottom`); the generic `PanelRenderer` handles badges
+(icon + text, never hue alone), row/table/chip sections, required/blocked actions
+(blocked = disabled buttons), and safety lines. The analyzer panel
+(`panels/analyzerPanel.ts`) is the worked example. Full recipe + accessibility
+acceptance checklist: `.claude/skills/add-cockpit-panel/SKILL.md`.
 
 ## Wire protocol
 
@@ -115,14 +163,5 @@ the store. Returns an unsubscribe function.
 ## Coverage policy
 
 `vite.config.ts` enforces **100% branch / line / function / statement** coverage on
-`src/ws/**` and `src/state/**`. CI fails if it slips below.
-
-## WS-J handoff
-
-`src/cockpit/**` is reserved for WS-J. This scaffold leaves the directory untouched and
-exposes everything WS-J needs through:
-
-- `src/types/index.ts` — full type surface
-- `src/state/index.ts` — store + binder
-- `src/ws/client.ts` — `CockpitClient` + `ConnectionStatus`
-- `src/App.tsx` — replace contents with `<Cockpit />` mount when WS-J lands
+`src/ws/**`, `src/state/**`, `src/cockpit/**`, `src/wizard/**`, and
+`src/types/wizard_protocol.ts`. CI fails if it slips below.

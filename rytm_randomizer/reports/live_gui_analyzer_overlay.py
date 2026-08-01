@@ -24,7 +24,12 @@ from .live_gui_capture_review import (
 )
 from .live_gui_common import format_cli_error as _format_cli_error
 from .live_gui_common import pop_option_value
-from .live_gui_render_tree import (
+
+# The render-tree/screen-contract builder machinery was relocated verbatim
+# to reports/live_gui_overlay/ when the standalone paper-spec report
+# commands were retired (2026-07-28; see
+# docs/superpowers/plans/2026-07-20-live-gui-retirement-evidence.md).
+from .live_gui_overlay.render_tree import (
     StylePerformanceArcLiveGuiRenderNode,
     StylePerformanceArcLiveGuiRenderTreeReport,
     build_style_performance_arc_live_gui_render_tree_report,

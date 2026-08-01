@@ -1,0 +1,17 @@
+RytmRandomizer passive style performance arc list
+Count: 4
+Items:
+- hardgroove_detroit_machine_funk: Hardgroove Detroit Machine Funk (hardgroove, detroit, machine_funk, minimal, rolling, percussive)
+- jose_warehouse_five_hour: Jose Warehouse Five Hour (jose, warehouse, five_hour, jeff_mills, oscar_mulero, stigmata, birmingham, industrial, hard_loop, hypnotic)
+- mills_mulero_tunnel: Mills Mulero Tunnel (jeff_mills, oscar_mulero, detroit, dark, hypnotic, tunnel)
+- stigmata_birmingham_assault: Stigmata Birmingham Assault (stigmata, birmingham, regis, surgeon, glenn_wilson, thomas_krome, kay_d_smith, industrial, hard)
+Safety:
+- passive/read-only
+- metadata and plan expansion only
+- no MIDI sending
+- no port opening
+- no command execution
+- no hardware mutation
+- no hardware required
+Source: rytm_randomizer.reports.style_performance_arcs
+In-memory only: True

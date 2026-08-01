@@ -1,0 +1,42 @@
+[
+  {
+    "spec_key": "ATK",
+    "section": "AMP",
+    "parameter": "Amp Attack Time"
+  },
+  {
+    "spec_key": "HLD",
+    "section": "AMP",
+    "parameter": "Amp Hold Time"
+  },
+  {
+    "spec_key": "DEC",
+    "section": "AMP",
+    "parameter": "Amp Decay Time"
+  },
+  {
+    "spec_key": "OVR",
+    "section": "AMP",
+    "parameter": "Amp Overdrive"
+  },
+  {
+    "spec_key": "DEL",
+    "section": "AMP",
+    "parameter": "Amp Delay Send"
+  },
+  {
+    "spec_key": "REV",
+    "section": "AMP",
+    "parameter": "Amp Reverb Send"
+  },
+  {
+    "spec_key": "PAN",
+    "section": "AMP",
+    "parameter": "Amp Pan"
+  },
+  {
+    "spec_key": "VOL",
+    "section": "AMP",
+    "parameter": "Amp Volume"
+  }
+]

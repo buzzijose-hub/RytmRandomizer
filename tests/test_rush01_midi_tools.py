@@ -2,39 +2,59 @@
 
 from __future__ import annotations
 
+import importlib.util
 from dataclasses import dataclass, replace
 from io import StringIO
 from pathlib import Path
+from types import ModuleType
+from typing import cast
 
 import pytest
 import yaml
 
 from rytm_randomizer import app, mido_provider
-from rytm_randomizer.mock_midi import MockMidiSender
-from rytm_randomizer.senders import rush01_midi_transport
 from rytm_randomizer.senders.rush01_midi_transport import (
-    apply_rush01_plan,
-    open_exact_output,
-    send_rush01_plan,
+    render_rush01_plan,
     validate_rush01_plan_for_apply,
 )
 from rytm_randomizer.style_analysis.rush01_midi_compiler import (
     compile_rush01_midi_plan,
     parse_rush01_device_config,
 )
-from tools import rush01_midi_apply
 
 pytestmark = pytest.mark.fast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
+def _load_script(name: str) -> ModuleType:
+    script_path = PROJECT_ROOT / "scripts" / f"{name}.py"
+    spec = importlib.util.spec_from_file_location(name, script_path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+rush01_midi_apply = _load_script("rush01_midi_apply")
+
+
 class _FakeOutput:
     def __init__(self) -> None:
         self.closed = False
+        self.interrupt = False
+        self.sent: list[tuple[int, int, int]] = []
 
-    def send(self, _message: object) -> None:
-        raise AssertionError("send_cc is replaced with an inert recorder in active tests")
+    def send(self, message: object) -> None:
+        if self.interrupt:
+            raise KeyboardInterrupt
+        if not (
+            isinstance(message, tuple)
+            and len(message) == 3
+            and all(isinstance(value, int) for value in message)
+        ):
+            raise TypeError("expected a neutral CC triple")
+        self.sent.append(cast(tuple[int, int, int], message))
 
     def close(self) -> None:
         self.closed = True
@@ -107,20 +127,24 @@ def _app_apply_args(config_path: Path, *extra: str) -> list[str]:
     ]
 
 
-def test_exact_output_port_name_is_required_and_duplicates_fail_closed() -> None:
-    provider = _FakeProvider(output_names=("Elektron Port 1", "Elektron Port 2"))
+def test_rush01_plan_exposes_fail_closed_armed_readiness() -> None:
+    unconfigured = compile_rush01_midi_plan("rytm", _load_spec("rytm"), track="BD")
+    assert unconfigured.ready is False
+    assert "configuration" in unconfigured.readiness_reason
 
-    with pytest.raises(RuntimeError, match="unknown_midi_output_port"):
-        open_exact_output(provider, "Elektron")
-    with pytest.raises(RuntimeError, match="midi_output_port_required"):
-        open_exact_output(provider, "")
-    assert provider.opened_outputs == []
-    assert open_exact_output(provider, "Elektron Port 2") is provider.port
+    config = parse_rush01_device_config(_config_payload(), "rytm")
+    configured = compile_rush01_midi_plan(
+        "rytm", _load_spec("rytm"), config=config, parameter="track_levels.BD"
+    )
+    assert configured.ready is True
+    assert configured.readiness_reason == ""
 
-    duplicate = _FakeProvider(output_names=("Duplicate", "Duplicate"))
-    with pytest.raises(RuntimeError, match="ambiguous_midi_output_port_name"):
-        open_exact_output(duplicate, "Duplicate")
-    assert duplicate.opened_outputs == []
+    no_transport = replace(
+        configured,
+        summary=replace(configured.summary, ready_fields=0, transport_message_count=0),
+    )
+    assert no_transport.ready is False
+    assert "no configured ready" in no_transport.readiness_reason
 
 
 def test_standalone_apply_tool_is_compile_only_and_defaults_local(tmp_path: Path) -> None:
@@ -182,22 +206,18 @@ def test_standalone_apply_helpers_cover_address_shapes_and_main(
     assert rush01_midi_apply.main() == 2
 
 
-def test_transport_sends_only_inert_cc_messages_and_validates_inputs() -> None:
+def test_transport_renderer_emits_only_neutral_cc_triples_and_validates_inputs() -> None:
     config = parse_rush01_device_config(_config_payload(), "rytm")
     plan = compile_rush01_midi_plan("rytm", _load_spec("rytm"), config=config, track="BD")
-    sender = MockMidiSender()
-    delays: list[float] = []
-
-    result = send_rush01_plan(plan, sender, delay_ms=15, sleep=delays.append)
-    assert result.message_count == len(sender.sent_messages)
-    assert result.field_count == plan.summary.ready_fields
-    assert delays == [0.015] * (result.message_count - 1)
-    assert all(message.message_type == "control_change" for message in sender.sent_messages)
+    messages = render_rush01_plan(plan)
+    assert len(messages) == plan.summary.transport_message_count
+    assert all(
+        0 <= channel <= 15 and 0 <= controller <= 127 and 0 <= value <= 127
+        for channel, controller, value in messages
+    )
 
     with pytest.raises(TypeError, match="Rush01MidiPlan"):
-        send_rush01_plan(object(), sender, delay_ms=15, sleep=lambda _value: None)  # type: ignore[arg-type]
-    with pytest.raises(ValueError, match="delay_ms"):
-        send_rush01_plan(plan, sender, delay_ms=True, sleep=lambda _value: None)
+        render_rush01_plan(object())
     with pytest.raises(TypeError, match="Rush01MidiPlan"):
         validate_rush01_plan_for_apply(object())  # type: ignore[arg-type]
 
@@ -208,7 +228,24 @@ def test_transport_sends_only_inert_cc_messages_and_validates_inputs() -> None:
         plan, fields=tuple(field for field in plan.fields if field.status != "ready")
     )
     with pytest.raises(ValueError, match="no configured ready"):
-        send_rush01_plan(no_ready, sender, delay_ms=15, sleep=lambda _value: None)
+        render_rush01_plan(no_ready)
+
+    ready_index = next(index for index, field in enumerate(plan.fields) if field.status == "ready")
+    ready_field = plan.fields[ready_index]
+
+    def malformed_plan(messages: tuple[tuple[int, int, int], ...] | None) -> object:
+        fields = list(plan.fields)
+        fields[ready_index] = replace(ready_field, ordered_midi_bytes=messages)
+        return replace(plan, fields=tuple(fields))
+
+    for messages, error in (
+        (None, "require compiled MIDI"),
+        (((0x90, 1, 1),), "only MIDI control-change"),
+        (((0xB0, 120, 1),), "channel-mode"),
+        (((0xB0, 1, 128),), "data bytes"),
+    ):
+        with pytest.raises(ValueError, match=error):
+            render_rush01_plan(malformed_plan(messages))  # type: ignore[arg-type]
 
     a4_config = parse_rush01_device_config(_config_payload(), "a4")
     invalid_a4 = compile_rush01_midi_plan("a4", _load_spec("a4"), config=a4_config)
@@ -216,35 +253,12 @@ def test_transport_sends_only_inert_cc_messages_and_validates_inputs() -> None:
         validate_rush01_plan_for_apply(invalid_a4)
 
 
-def test_transport_closes_exact_port_on_success_and_interrupt(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_transport_renderer_is_passive_and_does_not_need_a_provider() -> None:
     config = parse_rush01_device_config(_config_payload(), "rytm")
     plan = compile_rush01_midi_plan(
         "rytm", _load_spec("rytm"), config=config, parameter="track_levels.BD"
     )
-    sent: list[tuple[int, int, int]] = []
-
-    def record_cc(
-        _out: object, controller: int, value: int, *, channel: int, sleep: object
-    ) -> None:
-        sent.append((channel, controller, value))
-
-    monkeypatch.setattr(rush01_midi_transport, "send_cc", record_cc)
-    provider = _FakeProvider()
-    assert apply_rush01_plan(plan, provider, delay_ms=15, sleep=lambda _value: None).sent_midi
-    assert sent == [(0, 95, 110)]
-    assert provider.port.closed
-
-    monkeypatch.setattr(
-        rush01_midi_transport,
-        "send_cc",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(KeyboardInterrupt),
-    )
-    interrupted = _FakeProvider()
-    with pytest.raises(KeyboardInterrupt):
-        apply_rush01_plan(plan, interrupted, delay_ms=15, sleep=lambda _value: None)
-    assert interrupted.port.closed
+    assert render_rush01_plan(plan) == ((0, 95, 110),)
 
 
 @pytest.mark.parametrize(
@@ -281,26 +295,38 @@ def test_app_confirmed_apply_uses_exact_fake_output_and_only_cc(
     config_path = tmp_path / "channels.yaml"
     _write_config(config_path)
     provider = _FakeProvider()
-    sent: list[tuple[int, int, int]] = []
     monkeypatch.setattr(mido_provider, "build_mido_midi_port_provider", lambda: provider)
-    monkeypatch.setattr(
-        rush01_midi_transport,
-        "send_cc",
-        lambda _out, controller, value, *, channel, sleep: sent.append(
-            (channel, controller, value)
-        ),
-    )
 
     assert app.main(_app_apply_args(config_path)) == 0
     assert provider.opened_outputs == ["Exact Device Port"]
     assert provider.port.closed
-    assert sent == [(0, 95, 110)]
+    assert provider.port.sent == [(0, 95, 110)]
     assert "1 CC messages" in capsys.readouterr().out
+
+
+def test_app_confirmed_apply_preserves_inter_message_pacing_through_seam(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config_path = tmp_path / "channels.yaml"
+    _write_config(config_path)
+    provider = _FakeProvider()
+    delays: list[float] = []
+    monkeypatch.setattr(mido_provider, "build_mido_midi_port_provider", lambda: provider)
+    monkeypatch.setattr("time.sleep", delays.append)
+    argv = _app_apply_args(config_path)
+    parameter_index = argv.index("--rush01-parameter")
+    del argv[parameter_index : parameter_index + 2]
+    argv.extend(("--rush01-track", "BD", "--rush01-delay-ms", "7"))
+
+    assert app.main(argv) == 0
+    assert len(provider.port.sent) > 1
+    assert delays == [0.007] * (len(provider.port.sent) - 1)
+    assert provider.port.closed
 
 
 @pytest.mark.parametrize(
     ("names", "error"),
-    (((), "unknown_midi_output_port"), (("Duplicate", "Duplicate"), "ambiguous")),
+    (((), "output_port_not_found"), (("Duplicate", "Duplicate"), "ambiguous")),
 )
 def test_app_apply_missing_or_ambiguous_exact_port_fails_closed(
     tmp_path: Path,
@@ -371,10 +397,6 @@ def test_app_apply_interrupt_and_failure_close_fake_port(
     _write_config(config_path)
     provider = _FakeProvider()
     monkeypatch.setattr(mido_provider, "build_mido_midi_port_provider", lambda: provider)
-    monkeypatch.setattr(
-        rush01_midi_transport,
-        "send_cc",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(KeyboardInterrupt),
-    )
+    provider.port.interrupt = True
     assert app.main(_app_apply_args(config_path)) == 130
     assert provider.port.closed

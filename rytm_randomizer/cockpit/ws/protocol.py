@@ -167,6 +167,36 @@ EVENT_PERFORMANCE_CONSOLE_CHANGED: Final[Literal["performance_console_changed"]]
 EVENT_SESSION_STATUS: Final[Literal["session_status"]] = "session_status"
 """Emitted at connect + after SEND to refresh ``unsaved_sends`` / mode pill."""
 
+EVENT_CONNECTION_CHANGED: Final[Literal["connection_changed"]] = "connection_changed"
+"""Emitted whenever the passive :class:`ConnectionManager` observes a diff.
+
+Server-push only (no command triggers it): the Wave-3 ConnectionManager's
+poll loop broadcasts this through ``ConnectionRegistry.broadcast_event``
+so every live client tracks cable plug/unplug and device power state in
+near-real-time. Purely passive — the event never implies (or grants)
+any transmit authority.
+"""
+
+EVENT_MIDI_ACTIVITY: Final[Literal["midi_activity"]] = "midi_activity"
+"""Emitted by the passive live MIDI input monitor (Wave 4).
+
+Server-push only, and only when the boot path actually wires a
+:class:`~rytm_randomizer.cockpit.device.midi_monitor.MidiInputMonitor`
+(unwired sessions never see this frame — the bootstrap stays
+byte-identical). Each frame carries one coalesced batch of decoded
+control-change observations; read-only listening per the
+Live-but-Passive rule, never any transmit authority.
+"""
+
+EVENT_LIBRARY_CHANGED: Final[Literal["library_changed"]] = "library_changed"
+"""Emitted after any library mutation (tag / delete / import).
+
+Whole-state per event like every other cockpit event: the payload
+carries the full fresh record listing. Only emitted when a
+:class:`~rytm_randomizer.cockpit.library.LibraryStore` is wired on the
+session — unwired sessions stay byte-identical on the wire.
+"""
+
 EVENT_TYPES: Final[frozenset[str]] = (
     frozenset(
         {
@@ -177,6 +207,9 @@ EVENT_TYPES: Final[frozenset[str]] = (
             EVENT_PROFILE_CHANGED,
             EVENT_PERFORMANCE_CONSOLE_CHANGED,
             EVENT_SESSION_STATUS,
+            EVENT_CONNECTION_CHANGED,
+            EVENT_MIDI_ACTIVITY,
+            EVENT_LIBRARY_CHANGED,
         }
     )
     | WIZARD_EVENT_TYPES
@@ -222,6 +255,30 @@ COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT: Final[Literal["build_operator_package_re
     "build_operator_package_receipt"
 )
 
+COMMAND_ARM: Final[Literal["arm"]] = "arm"
+"""Explicit in-UI arm: swap the session onto the real-MIDI adapter.
+
+The only path that ever constructs the real device adapter — and it does
+so exclusively through the ``senders`` ArmedApply seam (Live-but-Passive
+rule). Requires an operator token AND ``confirm: true``; fails cleanly
+when ``mido`` is absent. Arming never survives a disconnect and never
+re-arms automatically.
+"""
+
+COMMAND_DISARM: Final[Literal["disarm"]] = "disarm"
+"""Explicit disarm: tear down the armed seam, restore the passive device."""
+
+COMMAND_DIAGNOSTICS: Final[Literal["diagnostics"]] = "diagnostics"
+"""Read-only health query: error journal + metrics + connection + hints."""
+
+COMMAND_LIBRARY_LIST: Final[Literal["library_list"]] = "library_list"
+COMMAND_LIBRARY_SEARCH: Final[Literal["library_search"]] = "library_search"
+COMMAND_LIBRARY_TAG: Final[Literal["library_tag"]] = "library_tag"
+COMMAND_LIBRARY_DELETE: Final[Literal["library_delete"]] = "library_delete"
+COMMAND_LIBRARY_IMPORT_CAPTURES: Final[Literal["library_import_captures"]] = (
+    "library_import_captures"
+)
+
 COMMAND_TYPES: Final[frozenset[str]] = (
     frozenset(
         {
@@ -241,13 +298,21 @@ COMMAND_TYPES: Final[frozenset[str]] = (
             COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
             COMMAND_MOCK_APPLY_OPERATOR_PACKAGE,
             COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
+            COMMAND_ARM,
+            COMMAND_DISARM,
+            COMMAND_DIAGNOSTICS,
+            COMMAND_LIBRARY_LIST,
+            COMMAND_LIBRARY_SEARCH,
+            COMMAND_LIBRARY_TAG,
+            COMMAND_LIBRARY_DELETE,
+            COMMAND_LIBRARY_IMPORT_CAPTURES,
         }
     )
     | WIZARD_COMMAND_TYPES
 )
 """Frozen set of every supported command-type discriminator (cockpit + wizard).
 
-15 cockpit commands + 8 wizard commands = 23 total. The wizard commands are
+24 cockpit commands + 8 wizard commands = 32 total. The wizard commands are
 folded in from :data:`wizard_protocol.WIZARD_COMMAND_TYPES` so the cockpit's
 single ``COMMAND_TYPES`` constant remains the wire-format authority.
 """
@@ -270,7 +335,7 @@ class SnapshotChangedEvent(TypedDict):
     """
 
     type: Literal["snapshot_changed"]
-    snapshot: dict
+    snapshot: dict[str, object]
 
 
 class MutationPreviewedEvent(TypedDict):
@@ -282,7 +347,7 @@ class MutationPreviewedEvent(TypedDict):
     """
 
     type: Literal["mutation_previewed"]
-    candidate: dict | None
+    candidate: dict[str, object] | None
 
 
 class SendPlanChangedEvent(TypedDict):
@@ -294,14 +359,14 @@ class SendPlanChangedEvent(TypedDict):
     """
 
     type: Literal["send_plan_changed"]
-    send_plan: dict | None
+    send_plan: dict[str, object] | None
 
 
 class HistoryUpdatedEvent(TypedDict):
     """``history_updated`` — full :class:`History` dict (chain + ``current_id``)."""
 
     type: Literal["history_updated"]
-    history: dict
+    history: dict[str, object]
 
 
 class ProfileChangedEvent(TypedDict):
@@ -312,7 +377,7 @@ class ProfileChangedEvent(TypedDict):
     """
 
     type: Literal["profile_changed"]
-    profile: dict | None
+    profile: dict[str, object] | None
 
 
 class PerformanceConsoleChangedEvent(TypedDict):
@@ -325,7 +390,7 @@ class PerformanceConsoleChangedEvent(TypedDict):
     """
 
     type: Literal["performance_console_changed"]
-    performance_console: dict | None
+    performance_console: dict[str, object] | None
 
 
 class SessionStatusEvent(TypedDict):
@@ -333,15 +398,81 @@ class SessionStatusEvent(TypedDict):
 
     Includes the device-adapter mode (``live`` vs ``mock``), whether the
     adapter is currently armed (real-MIDI port held open), the MIDI port
-    name (``None`` for the mock), and the count of SEND-since-last-SAVE
-    operations the operator has accumulated.
+    name (``None`` for the mock), the passive connection phase from the
+    Wave-3 ConnectionManager (derived from the adapter when no manager
+    is registered), and the count of SEND-since-last-SAVE operations the
+    operator has accumulated.
     """
 
     type: Literal["session_status"]
     armed: bool
     midi_port: str | None
     mode: Literal["live", "mock"]
+    connection_phase: Literal["disconnected", "searching", "listening", "armed", "fault"]
     unsaved_sends: int
+
+
+class ConnectionStateDict(TypedDict):
+    """Wire shape of one passive connection observation.
+
+    The JSON form of
+    :meth:`rytm_randomizer.cockpit.device.connection.ConnectionState.to_dict`.
+    The ``phase`` Literal mirrors
+    :data:`~rytm_randomizer.cockpit.device.connection.ConnectionPhase`
+    (pinned in sync by ``tests/cockpit/test_connection_manager.py``);
+    the protocol module keeps its own inline copy so the wire authority
+    stays import-free of the device layer.
+
+    ``last_error_fingerprint`` is a stable taxonomy string (never raw
+    exception text — RR4f applies to this event too); ``changed_at`` is
+    a Unix timestamp (seconds) taken when the state last changed.
+    """
+
+    phase: Literal["disconnected", "searching", "listening", "armed", "fault"]
+    available_inputs: list[str]
+    available_outputs: list[str]
+    selected_input: str | None
+    selected_output: str | None
+    last_error_fingerprint: str | None
+    changed_at: float
+
+
+class ConnectionChangedEvent(TypedDict):
+    """``connection_changed`` — the full fresh :class:`ConnectionStateDict`.
+
+    Whole-state per event (never a delta) like every other cockpit event,
+    so a UI renders purely from the latest frame without replaying.
+    """
+
+    type: Literal["connection_changed"]
+    connection: ConnectionStateDict
+
+
+class MidiActivityEvent(TypedDict):
+    """``midi_activity`` — one coalesced batch of passive input observations.
+
+    ``midi_activity`` carries ``{port, batch, dropped, ignored,
+    read_errors}`` where ``batch`` rows are ``{channel, pad, control,
+    value, repeat_count, observed_at, labels}``. The documented exception
+    to the whole-state rule: activity is a stream by nature, so each
+    frame is one batch — the UI appends rather than replaces. Read-only
+    listening; never implies transmit authority.
+    """
+
+    type: Literal["midi_activity"]
+    midi_activity: dict[str, object]
+
+
+class LibraryChangedEvent(TypedDict):
+    """``library_changed`` — the full fresh library record listing.
+
+    ``library`` carries ``{"records": [...]}`` (each row a
+    :meth:`~rytm_randomizer.cockpit.library.LibraryRecord.to_dict`
+    payload) so a UI renders the library purely from the latest frame.
+    """
+
+    type: Literal["library_changed"]
+    library: dict[str, object]
 
 
 # ---------------------------------------------------------------------------
@@ -364,7 +495,7 @@ class CommandEnvelope(TypedDict):
     """
 
     request_id: str
-    command: dict
+    command: dict[str, object]
 
 
 class CommandAck(TypedDict, total=False):
@@ -415,6 +546,19 @@ class CommandAck(TypedDict, total=False):
       preview; it records reviewed steps and safety evidence while proving no
       port opened, no MIDI was sent, no files were written, no send plan was
       applied, and no events were emitted).
+    * ``arm`` / ``disarm`` — ``armed`` (the post-command armed flag) and,
+      for ``arm``, ``midi_port`` (the exact output-port name the armed
+      seam resolved).
+    * ``diagnostics`` — ``diagnostics`` (the read-only health packet:
+      error journal, ``errors_by_kind``, connection state, enumerated
+      ports, per-OS driver hint).
+    * ``library_list`` / ``library_search`` — ``library_records`` (the
+      matching record dicts).
+    * ``library_tag`` — ``library_record`` (the updated record dict).
+    * ``library_delete`` — ``library_record_id`` (the removed record id).
+    * ``library_import_captures`` — ``library_import`` (the
+      :meth:`~rytm_randomizer.cockpit.library.LibraryImportResult.to_dict`
+      packet).
     """
 
     request_id: str
@@ -422,17 +566,24 @@ class CommandAck(TypedDict, total=False):
     code: str | None
     message: str | None
     error: str | None
-    candidate: dict | None
-    send_plan: dict | None
+    candidate: dict[str, object] | None
+    send_plan: dict[str, object] | None
     send_plan_id: str | None
     new_snapshot_id: str | None
     snapshot_id: str | None
     model_bytes_b64: str | None
-    operator_package_rehearsal: dict | None
-    operator_package_sequence_rehearsal: dict | None
-    operator_package_apply_preview: dict | None
-    operator_package_mock_apply: dict | None
-    operator_package_receipt: dict | None
+    operator_package_rehearsal: dict[str, object] | None
+    operator_package_sequence_rehearsal: dict[str, object] | None
+    operator_package_apply_preview: dict[str, object] | None
+    operator_package_mock_apply: dict[str, object] | None
+    operator_package_receipt: dict[str, object] | None
+    armed: bool | None
+    midi_port: str | None
+    diagnostics: dict[str, object] | None
+    library_records: list[dict[str, object]] | None
+    library_record: dict[str, object] | None
+    library_record_id: str | None
+    library_import: dict[str, object] | None
 
 
 # ---------------------------------------------------------------------------
@@ -580,11 +731,87 @@ class BuildOperatorPackageReceiptCommand(TypedDict):
     mock_safe: bool
 
 
+class ArmCommand(TypedDict, total=False):
+    """``arm { arm_token, confirm, port_name? }`` — explicit in-UI arm.
+
+    ``arm_token`` is the operator's explicit arm token (non-empty);
+    ``confirm`` MUST be ``true`` — arming is a two-factor in-UI decision,
+    never implicit. ``port_name`` optionally names the exact output port;
+    when absent the passive ConnectionManager's ``selected_output`` is
+    used, and the command fails when neither resolves.
+    """
+
+    type: Literal["arm"]
+    arm_token: str
+    confirm: bool
+    port_name: str | None
+
+
+class DisarmCommand(TypedDict):
+    """``disarm {}`` — tear down the armed seam, restore the passive device."""
+
+    type: Literal["disarm"]
+
+
+class DiagnosticsCommand(TypedDict):
+    """``diagnostics {}`` — read-only health query (journal + metrics + hints)."""
+
+    type: Literal["diagnostics"]
+
+
+class LibraryListCommand(TypedDict):
+    """``library_list {}`` — full library record listing."""
+
+    type: Literal["library_list"]
+
+
+class LibrarySearchCommand(TypedDict):
+    """``library_search { query }`` — case-insensitive record search."""
+
+    type: Literal["library_search"]
+    query: str
+
+
+class LibraryTagCommand(TypedDict):
+    """``library_tag { record_id, tags }`` — replace one record's tags."""
+
+    type: Literal["library_tag"]
+    record_id: str
+    tags: list[str]
+
+
+class LibraryDeleteCommand(TypedDict):
+    """``library_delete { record_id }`` — remove one record from the library."""
+
+    type: Literal["library_delete"]
+    record_id: str
+
+
+class LibraryImportCapturesCommand(TypedDict):
+    """``library_import_captures {}`` — import the configured captures dir.
+
+    Deliberately carries **no path field**: the importer only ever reads
+    the store's boot-time-configured captures directory, so no
+    wire-supplied path can reach the filesystem (the C2 lesson applied).
+    """
+
+    type: Literal["library_import_captures"]
+
+
 __all__ = [
+    "ArmCommand",
+    "COMMAND_ARM",
     "COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT",
     "CLOSE_CODE_MESSAGE_TOO_BIG",
     "CLOSE_CODE_POLICY_VIOLATION",
+    "COMMAND_DIAGNOSTICS",
+    "COMMAND_DISARM",
     "COMMAND_EXPORT_PROFILE_MODEL",
+    "COMMAND_LIBRARY_DELETE",
+    "COMMAND_LIBRARY_IMPORT_CAPTURES",
+    "COMMAND_LIBRARY_LIST",
+    "COMMAND_LIBRARY_SEARCH",
+    "COMMAND_LIBRARY_TAG",
     "COMMAND_LOAD_SNAPSHOT",
     "COMMAND_MOCK_APPLY_OPERATOR_PACKAGE",
     "COMMAND_PREPARE_SEND_PLAN",
@@ -602,11 +829,18 @@ __all__ = [
     "COMMAND_UNDO",
     "CommandAck",
     "CommandEnvelope",
+    "ConnectionChangedEvent",
+    "ConnectionStateDict",
+    "DiagnosticsCommand",
+    "DisarmCommand",
     "ERR_INTERNAL",
     "ERR_MISSING_ENVELOPE_KEY",
     "ERR_UNKNOWN_COMMAND",
     "ERR_VALIDATION",
+    "EVENT_CONNECTION_CHANGED",
     "EVENT_HISTORY_UPDATED",
+    "EVENT_LIBRARY_CHANGED",
+    "EVENT_MIDI_ACTIVITY",
     "EVENT_MUTATION_PREVIEWED",
     "EVENT_PERFORMANCE_CONSOLE_CHANGED",
     "EVENT_PROFILE_CHANGED",
@@ -620,8 +854,15 @@ __all__ = [
     "HANDSHAKE_AUTH_REQUIRED",
     "HELLO_FRAME_TYPE",
     "HistoryUpdatedEvent",
+    "LibraryChangedEvent",
+    "LibraryDeleteCommand",
+    "LibraryImportCapturesCommand",
+    "LibraryListCommand",
+    "LibrarySearchCommand",
+    "LibraryTagCommand",
     "LoadSnapshotCommand",
     "MESSAGE_TOO_LARGE_CODE",
+    "MidiActivityEvent",
     "MockApplyOperatorPackageCommand",
     "MutationPreviewedEvent",
     "PerformanceConsoleChangedEvent",

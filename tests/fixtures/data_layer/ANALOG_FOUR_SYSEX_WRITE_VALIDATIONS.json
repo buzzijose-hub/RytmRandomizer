@@ -1,0 +1,67 @@
+{
+  "Filter2 Resonance": [
+    {
+      "parameter": "Filter2 Resonance",
+      "generated_file": "A4_CODEX_TEST_T1_Filter2Res_127_GENERATED.syx",
+      "generated_sha256": "5ebb386677aff324ef96d631e7888a9681caefbd976bdc2eac69b52a0fb0e26b",
+      "expected_track_values": [
+        [
+          1,
+          "127"
+        ]
+      ],
+      "matched_reference_file": "A4_Test1_T1_Filter2Res_127_Kit.syx",
+      "operator_confirmed": true,
+      "notes": [
+        "Generated frame was byte-identical to the hardware-exported reference.",
+        "Analog Four MKII received the file as KIT 1 and displayed Track 1 value 127."
+      ]
+    },
+    {
+      "parameter": "Filter2 Resonance",
+      "generated_file": "A4_CODEX_TEST_T1_Filter2Res_064_GENERATED.syx",
+      "generated_sha256": "2fee1aa93c98e0221dbe7bac296c51268360c5c61e11c8eea77fd091cbbd94f7",
+      "expected_track_values": [
+        [
+          1,
+          "64"
+        ]
+      ],
+      "matched_reference_file": null,
+      "operator_confirmed": true,
+      "notes": [
+        "Novel value 64 was generated without a matching source capture.",
+        "Analog Four MKII received the file as KIT 1 and displayed Track 1 value 64."
+      ]
+    },
+    {
+      "parameter": "Filter2 Resonance",
+      "generated_file": "A4_CODEX_TEST_T1-4_Filter2Res_016_048_080_112_GENERATED.syx",
+      "generated_sha256": "0e88aa6f15fd49c36696d5b8e09bda18ce5eeb8562c1a44ce46683c6deef819b",
+      "expected_track_values": [
+        [
+          1,
+          "16"
+        ],
+        [
+          2,
+          "48"
+        ],
+        [
+          3,
+          "80"
+        ],
+        [
+          4,
+          "112"
+        ]
+      ],
+      "matched_reference_file": null,
+      "operator_confirmed": true,
+      "notes": [
+        "One generated frame carried four independent track mutations.",
+        "Analog Four MKII displayed the expected value on every synth track."
+      ]
+    }
+  ]
+}

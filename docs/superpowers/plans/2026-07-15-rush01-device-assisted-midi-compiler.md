@@ -40,7 +40,8 @@ capture calibration observations without sending MIDI.
 
 - Ordered MIDI facts live under `data/`; the pure semantic compiler lives in
   `style_analysis/`; exact-port transport lives in `senders/`; immutable input
-  observation state lives in `state/`; CLIs remain under `tools/`.
+  observation state lives in `state/`; passive entry scripts live under
+  `scripts/`.
 - Existing Analog Rytm and Analog Four MIDI catalogs and display converters
   are reused. No duplicate device registry or raw mapping table is introduced.
 - The existing reference-bound SysEx codecs remain unchanged by this phase.
@@ -58,7 +59,7 @@ capture calibration observations without sending MIDI.
   explicit CLI output supplies operator evidence at the hardware boundary.
 - [x] Gate 8 - focused intent-named tests use only local specs and fakes.
 - [x] Gate 9 - work stays in established `data/`, `style_analysis/`,
-  `senders/`, `state/`, `tools/`, and `tests/` locations.
+  `senders/`, `state/`, `scripts/`, and `tests/` locations.
 - [x] Gate 10 - typed status and device values replace string mode dispatch.
 - [x] Gate 11 - repeated test setup is centralized in local helpers.
 - [x] Gate 12 - module constants use `Final`; runtime DTOs are frozen.

@@ -1,0 +1,135 @@
+RytmRandomizer passive style crates queue journal report
+Summary:
+- Version: style-crates-queue-journal-v1
+- Crates: 9
+- Moves: 9
+- Staged queue moves: 4
+- Journal entries: 2
+- Reference analyzer: future: not implemented in passive MVP
+Style Crates:
+dark_hypnotic: Dark Hypnotic (1 move(s))
+  Tags: dark, hypnotic, tunnel, low_end
+  Summary: Low-light tunnel pressure with slow motion and protected kick weight.
+  Moves:
+    - shadow_filter_pressure: Shadow Filter Pressure | energy 5/10 | risk 3/10 | pads 1, 3, 11 | mode mutation
+      Recovery: return to Live Safe anchors or Back to Clean
+      Notes: Good first darkening move before heavier pressure.
+peak_time: Peak Time (1 move(s))
+  Tags: peak, warehouse, drive, energy
+  Summary: High-energy warehouse drive with guarded chaos and hard transient focus.
+  Moves:
+    - warehouse_lift: Warehouse Lift | energy 9/10 | risk 6/10 | pads 1, 2, 3, 4, 9, 11 | mode scene
+      Recovery: stage a transition reset or queue Back to Clean
+      Notes: Intended as a visible set-story lift, not an unattended loop.
+hard_groove: Hard Groove (1 move(s))
+  Tags: hardgroove, rolling, percussion, funk
+  Summary: Rolling percussion density with push, swing, and dry machine funk.
+  Moves:
+    - rolling_perc_push: Rolling Perc Push | energy 7/10 | risk 4/10 | pads 2, 3, 5, 6, 7, 9 | mode mutation
+      Recovery: mute dense lanes or return percussion pads to journaled baseline
+      Notes: Useful for studio 12-pad work once Pads 5-12 are promoted.
+dub_pressure: Dub Pressure (1 move(s))
+  Tags: dub, space, delay, low_end
+  Summary: Space, delay pressure, sub weight, and restrained movement.
+  Moves:
+    - sub_space_bloom: Sub Space Bloom | energy 4/10 | risk 3/10 | pads 1, 3, 12 | mode mutation
+      Recovery: cut delay/reverb sends and return filter to Live Safe
+      Notes: Reference-analyzer future can suggest this from low brightness and high space.
+industrial_broken: Industrial/Broken (1 move(s))
+  Tags: industrial, broken, metallic, grit
+  Summary: Broken-grid impact, metallic grit, and unstable machine pressure.
+  Moves:
+    - broken_metal_stress: Broken Metal Stress | energy 8/10 | risk 7/10 | pads 3, 4, 8, 10, 11 | mode mutation
+      Recovery: skip queued move or fire a transition reset before arming hardware
+      Notes: High-risk live move; safer as a studio exploration until proven.
+deep_minimal: Deep Minimal (1 move(s))
+  Tags: deep, minimal, sparse, patient
+  Summary: Sparse, patient, low-risk motion for long-form hypnotic sections.
+  Moves:
+    - micro_motion_hold: Micro Motion Hold | energy 3/10 | risk 2/10 | pads 1, 2, 3 | mode mutation
+      Recovery: hold current state; no urgent recovery expected
+      Notes: Designed for Evolve Mode later, but passive-only now.
+chaos_fills: Chaos Fills (1 move(s))
+  Tags: chaos, fills, release, accent
+  Summary: Explicit opt-in fills and accents for brief release moments.
+  Moves:
+    - one_bar_flash: One-Bar Flash | energy 10/10 | risk 9/10 | pads 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 | mode transition
+      Recovery: One-Shot Blast must auto-stop and queue Back to Clean
+      Notes: Documentation-only until the one-shot hardware contract is approved.
+transitions: Transitions (1 move(s))
+  Tags: transition, reset, handoff, chapter
+  Summary: Moves for leaving, entering, or resetting a section.
+  Moves:
+    - back_to_clean_handoff: Back To Clean Handoff | energy 2/10 | risk 1/10 | pads 1, 2, 3, 4 | mode recovery
+      Recovery: already a recovery move; verify anchors before any SEND
+      Notes: Should remain available near every high-risk queue entry.
+saved_accidents: Saved Accidents (1 move(s))
+  Tags: journal, favorite, accident, replay
+  Summary: Favorite accidents worth replaying, varying, or re-crating.
+  Moves:
+    - journaled_pressure_rattle: Journaled Pressure Rattle | energy 6/10 | risk 5/10 | pads 3, 9, 11 | mode journal
+      Recovery: load the journal seed's Live Safe baseline first
+      Notes: Represents the bridge from journal entry to future crate move.
+Staged Queue:
+1. set_story / opening tunnel / dark_hypnotic.shadow_filter_pressure -> Shadow Filter Pressure
+   status=staged, amount=28%, pads=1, 3, 11
+   note=Start with a low-risk darkening move and listen before adding density.
+2. set_story / pressure lift / hard_groove.rolling_perc_push -> Rolling Perc Push
+   status=staged, amount=45%, pads=2, 3, 5, 6, 7, 9
+   note=Use as the first 12-pad studio-work target once support is promoted.
+3. set_story / peak stress / industrial_broken.broken_metal_stress -> Broken Metal Stress
+   status=staged, amount=64%, pads=3, 4, 8, 10, 11
+   note=Keep Back To Clean staged before this is ever armed.
+4. live_scratchpad / scratchpad recovery / transitions.back_to_clean_handoff -> Back To Clean Handoff
+   status=scratchpad, amount=0%, pads=1, 2, 3, 4
+   note=Manual recovery candidate; passive queue does not fire it.
+Mutation Journal:
+- warehouse_accident_01: Warehouse Accident 01
+  Tags: warehouse, accident, hypnotic, keeper
+  Seed: style-journal-warehouse-0001
+  Pads: 1, 3, 11 | depth=groove | guardrail=live_safe
+  Values: pad_11_noise_level=7, pad_1_filter_frequency=26, pad_3_lfo_depth=92
+  Notes: Useful metallic motion that stayed controlled after returning to clean.
+- broken_fill_seed_02: Broken Fill Seed 02
+  Tags: industrial, fill, one_shot, review
+  Seed: style-journal-broken-0002
+  Pads: 4, 8, 10, 11 | depth=strong | guardrail=studio_wild
+  Values: pad_10_hat_density=64, pad_11_drive=81, pad_4_decay=87, pad_8_accent_pressure=72
+  Notes: Save for studio exploration; too risky for Live Safe without a reset cue.
+Future Danger Modes:
+- Live Safe
+- Studio Wild
+- Chaos
+- One-Shot Blast
+- Evolve Mode
+Blocked Actions:
+- dispatch queued move
+- fire staged move
+- save journal entry to disk
+- run reference-track analyzer
+- open MIDI port
+- send MIDI
+- mutate hardware
+- launch GUI
+Replay Commands:
+- python -m rytm_randomizer.cli style-crates-queue-journal-report
+- python -m rytm_randomizer.cli style-crates-queue-journal-report --json
+Safety:
+- passive/read-only
+- metadata only
+- mock-first planning only
+- queue entries are declarative only
+- journal entries are replay metadata only
+- reference analyzer is not implemented in this passive MVP
+- JSON/stdout only
+- no audio analyzer invocation
+- no GUI launch
+- no queue dispatch
+- no journal persistence writes
+- no command execution
+- no MIDI sending
+- no port opening
+- no hardware mutation
+- no hardware required
+Source: rytm_randomizer.reports.style_crates_queue_journal
+In-memory only: True

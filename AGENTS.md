@@ -16,7 +16,7 @@ All other agents (Claude Code, etc.) follow the same rules; the codex guide simp
 
 ### Post-push code review — automatic for codex, zero setup
 
-The code review runs **automatically after every `git push`** — no manual step. Codex reads [`.codex/hooks.json`](.codex/hooks.json) from the repo root automatically (the codex analogue of Claude Code's `.claude/settings.json`). Its `PostToolUse` hook runs [`scripts/code_review_gate.py`](scripts/code_review_gate.py), which executes the mechanical gates (lint + architecture + V1.34 parity) and then — via the hook's `additionalContext` channel — **re-prompts you to run the review as one targeted agent per dimension** (per the "Execution model" section of [`.claude/skills/code-review/SKILL.md`](.claude/skills/code-review/SKILL.md)) — not one wide agent. Each dimension agent covers its slice (architecture, house style, parity/tests, side effects, observability, abstraction reuse, docs freshness, and string-literal/env/maintainability/learning). When the hook re-prompts you, run the fan-out, **synthesize the per-dimension findings**, and **post the consolidated verdict (with the Abstraction and Docs sections) as a PR comment.**
+The code review runs **automatically after every `git push`** — no manual step. Codex reads [`.codex/hooks.json`](.codex/hooks.json) from the repo root automatically (the codex analogue of Claude Code's `.claude/settings.json`). Its `PostToolUse` hook runs [`scripts/code_review_gate.py`](scripts/code_review_gate.py), which executes the mechanical gates (lint + strict touched-production typing + architecture + V1.34 parity) and then — via the hook's `additionalContext` channel — **re-prompts you to run the review as one targeted agent per dimension** (per the "Execution model" section of [`.claude/skills/code-review/SKILL.md`](.claude/skills/code-review/SKILL.md)) — not one wide agent. Each dimension agent covers its slice (architecture, house style, parity/tests, side effects, observability, abstraction reuse, docs freshness, and string-literal/env/maintainability/learning). When the hook re-prompts you, run the fan-out, **synthesize the per-dimension findings**, and **post the consolidated verdict (with the Abstraction and Docs sections) as a PR comment.**
 
 A second backstop: [`.githooks/pre-push`](.githooks/pre-push) runs the mechanical gates on *every* `git push` (any tool) and blocks the push if they fail. It is activated by `git config core.hooksPath .githooks`, which `just install` and the dev container run for you — so after `just install` the gate is live.
 
@@ -244,18 +244,18 @@ git checkout -b <type>/<short-slug>
 # 2. Implement (TDD where applicable)
 just watch            # optional: re-run fast tests on file change during inner-loop work
 
-# 3. Verify locally (one command bundles tests + architecture gate + lint trio)
-just check            # = `just test` + `just lint` (matches CI; the canonical pre-push gate)
+# 3. Verify locally (one command bundles every pre-PR mechanical gate)
+just check            # lint + strict production typing + arch + tests + coverage
 # or run the pieces individually:
 just test             # full pytest suite (with -n auto xdist parallelization)
 just lint             # ruff + black --check + isort --check-only
 
-# 4. Code review — REQUIRED. Claude Code's post-push hook does this
-#    automatically; codex and other agents must run it explicitly.
-just review           # lint + architecture + V1.34 parity (the mechanical gates)
-                      # then walk the 8-step .claude/skills/code-review/SKILL.md by
-                      # hand (Steps 7-8 are judgment calls) and post the verdict on
-                      # the PR. See docs/CODE_REVIEW_HOOK_SETUP.md.
+# 4. Code review — REQUIRED. Agent hooks complete the judgement review after
+#    push; plain git receives the mechanical pre-push backstop only.
+just review           # lint + strict production typing + architecture + V1.34 parity
+                      # Claude dispatches judgement here; under Codex, push to
+                      # trigger the post-push judgement review. See
+                      # docs/CODE_REVIEW_HOOK_SETUP.md.
 
 # 5. Push + open PR with conformance checklist
 just pr               # prints the canonical helper command; run

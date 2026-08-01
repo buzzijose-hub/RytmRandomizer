@@ -1,3 +1,5 @@
+<!-- Tiered templates exist for narrow PR classes: data-only calibration PRs may use `?template=calibration-data.md` and report/docs-only PRs `?template=docs-report.md` (both under .github/PULL_REQUEST_TEMPLATE/) appended to the compare URL. Everything else uses this full template. -->
+
 # Summary
 
 <!-- One paragraph: what does this PR do and why? Link the issue / Slack thread / past PR that surfaced it. -->
@@ -20,6 +22,7 @@
 # Example: paste actual commands you ran.
 python -m pytest
 python -m pytest tests/architecture/ -q
+python scripts/typecheck_touched.py
 python -m ruff check . && python -m black --check --target-version=py311 . && python -m isort --profile black --check-only .
 ```
 
@@ -37,7 +40,7 @@ Per [`docs/PLAN_REQUIREMENTS.md`](../docs/PLAN_REQUIREMENTS.md) — every non-tr
 
 - [ ] **Gate 1** — 100% branch coverage on touched files; project ≥95% pure-branch.
 - [ ] **Gate 2** — V1.34 parity byte-identical (505 goldens / 685 pytest items).
-- [ ] **Gate 3** — lint clean (ruff + black `--target-version=py311` + isort `--profile black`).
+- [ ] **Gate 3** — lint clean and strict Pyright clean on every touched production module (`python scripts/typecheck_touched.py`).
 - [ ] **Gate 4** — no new dead code (vulture --min-confidence 80).
 - [ ] **Gate 5** — docs updated (`README.md`, `CONTRIBUTING.md`, `docs/STATUS.md`, relevant `docs/` reflect the change).
 - [ ] **Gate 6** — type-system hygiene (Protocol over ABC, `Final` constants, no bare `Any`).

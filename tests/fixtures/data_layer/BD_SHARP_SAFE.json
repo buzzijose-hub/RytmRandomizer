@@ -1,0 +1,90 @@
+{
+  "AMP Attack": [
+    0,
+    5
+  ],
+  "AMP Decay": [
+    78,
+    110
+  ],
+  "AMP Delay Send": [
+    0,
+    6
+  ],
+  "AMP Hold": [
+    0,
+    8
+  ],
+  "AMP Overdrive": [
+    16,
+    35
+  ],
+  "AMP Pan": [
+    60,
+    68
+  ],
+  "AMP Reverb Send": [
+    0,
+    6
+  ],
+  "FLT Attack": [
+    0,
+    10
+  ],
+  "FLT Decay": [
+    20,
+    55
+  ],
+  "FLT Env Depth": [
+    56,
+    72
+  ],
+  "FLT Frequency": [
+    22,
+    35
+  ],
+  "FLT Release": [
+    0,
+    20
+  ],
+  "FLT Resonance": [
+    68,
+    85
+  ],
+  "FLT Sustain": [
+    0,
+    20
+  ],
+  "FLT Type": [
+    4,
+    4
+  ],
+  "SRC Decay": [
+    48,
+    70
+  ],
+  "SRC Hold Time": [
+    28,
+    58
+  ],
+  "SRC Sweep Depth": [
+    75,
+    110
+  ],
+  "SRC Sweep Time": [
+    65,
+    100
+  ],
+  "SRC Tick Level": [
+    105,
+    127
+  ],
+  "SRC Tune": [
+    56,
+    62
+  ],
+  "SRC Waveform": [
+    1,
+    1
+  ]
+}

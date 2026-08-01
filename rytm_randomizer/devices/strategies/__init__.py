@@ -22,6 +22,12 @@ from .analog_four_mutation_planner import (
     AnalogFourMutationPlanner,
     AnalogFourPlanEvent,
 )
+from .analog_four_saved_kit_writer import (
+    AnalogFourSavedKitAppliedMutation,
+    AnalogFourSavedKitMutation,
+    AnalogFourSavedKitRenderResult,
+    render_analog_four_saved_kit,
+)
 from .analog_four_snapshot_decoder import (
     A4_CANDIDATE_KIT_TYPE_BYTE,
     AnalogFourKitSnapshot,
@@ -111,6 +117,9 @@ __all__ = [
     "AnalogFourMutationPlanner",
     "AnalogFourPlanEvent",
     "AnalogFourMessageRenderer",
+    "AnalogFourSavedKitAppliedMutation",
+    "AnalogFourSavedKitMutation",
+    "AnalogFourSavedKitRenderResult",
     "AnalogFourSnapshotDecoder",
     "AnalogFourStyleMutationIntentPlan",
     "AnalogFourStyleMutationIntentRow",
@@ -154,6 +163,7 @@ __all__ = [
     "plan_rytm_style_mutation_intent",
     "plan_rytm_style_mutation_render_plan",
     "plan_rytm_style_snapshot_routes",
+    "render_analog_four_saved_kit",
     "route_rytm_snapshot_machine_values",
     "rytm_snapshot_payload_fingerprint",
 ]

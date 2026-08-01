@@ -240,6 +240,176 @@ def test_atomic_write_write_failure_raises_write_error_and_cleans_temp(
     _ = real_write
 
 
+def test_atomic_write_wraps_nonpublication_file_exists_error(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dest = tmp_path / "out.bin"
+    monkeypatch.setattr(
+        "os.write",
+        lambda _fd, _data: (_ for _ in ()).throw(FileExistsError("write failed")),
+    )
+
+    with pytest.raises(WriteError) as exc_info:
+        atomic_write(dest, b"payload")
+
+    assert isinstance(exc_info.value.__cause__, FileExistsError)
+    assert not dest.exists()
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_atomic_write_wraps_overwrite_replace_file_exists_error(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dest = tmp_path / "out.bin"
+    monkeypatch.setattr(
+        "os.replace",
+        lambda _src, _dst: (_ for _ in ()).throw(FileExistsError("replace failed")),
+    )
+
+    with pytest.raises(WriteError) as exc_info:
+        atomic_write(dest, b"payload", overwrite=True)
+
+    assert isinstance(exc_info.value.__cause__, FileExistsError)
+    assert not dest.exists()
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_atomic_write_wraps_noncollision_publish_error(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dest = tmp_path / "out.bin"
+    monkeypatch.setattr("sys.platform", "linux")
+    monkeypatch.setattr(
+        "os.link",
+        lambda _src, _dst: (_ for _ in ()).throw(OSError("publish failed")),
+    )
+
+    with pytest.raises(WriteError) as exc_info:
+        atomic_write(dest, b"payload")
+
+    assert isinstance(exc_info.value.__cause__, OSError)
+    assert not isinstance(exc_info.value.__cause__, FileExistsError)
+    assert not dest.exists()
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_atomic_write_retries_short_writes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    dest = tmp_path / "out.bin"
+    real_write = os.write
+
+    def short_write(fd: int, data: bytes | memoryview) -> int:
+        chunk_size = min(2, len(data))
+        return real_write(fd, data[:chunk_size])
+
+    monkeypatch.setattr("os.write", short_write)
+
+    result = atomic_write(dest, b"abcdef")
+
+    assert result.bytes_written == 6
+    assert dest.read_bytes() == b"abcdef"
+
+
+def test_atomic_write_zero_progress_raises_write_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    dest = tmp_path / "out.bin"
+    monkeypatch.setattr("os.write", lambda _fd, _data: 0)
+
+    with pytest.raises(WriteError, match="write made no progress"):
+        atomic_write(dest, b"hello")
+
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_atomic_write_cleans_temp_file_on_keyboard_interrupt(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def interrupt_write(_fd: int, _data: bytes | memoryview) -> int:
+        raise KeyboardInterrupt("operator interrupted write")
+
+    monkeypatch.setattr("os.write", interrupt_write)
+    with pytest.raises(KeyboardInterrupt, match="operator interrupted write"):
+        atomic_write(tmp_path / "out.bin", b"payload")
+
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_atomic_write_no_overwrite_closes_publish_race(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    dest = tmp_path / "out.bin"
+    monkeypatch.setattr("sys.platform", "linux")
+
+    def racing_link(_src: str, dst: str | Path) -> None:
+        Path(dst).write_bytes(b"racer")
+        raise FileExistsError(dst)
+
+    monkeypatch.setattr("os.link", racing_link)
+
+    with pytest.raises(FileExistsError):
+        atomic_write(dest, b"ours")
+
+    assert dest.read_bytes() == b"racer"
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["out.bin"]
+
+
+def test_atomic_write_no_overwrite_closes_windows_publish_race(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    dest = tmp_path / "out.bin"
+    monkeypatch.setattr("sys.platform", "win32")
+
+    def racing_rename(_src: str, dst: str | Path) -> None:
+        Path(dst).write_bytes(b"racer")
+        raise FileExistsError(dst)
+
+    monkeypatch.setattr("os.rename", racing_rename)
+
+    with pytest.raises(FileExistsError):
+        atomic_write(dest, b"ours")
+
+    assert dest.read_bytes() == b"racer"
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["out.bin"]
+
+
+def test_atomic_write_no_overwrite_cleanup_failure_keeps_published_file(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import rytm_randomizer.cockpit.export.writer as writer_module
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
+    dest = tmp_path / "out.bin"
+    reset_metrics()
+    monkeypatch.setattr("sys.platform", "linux")
+    warnings: list[tuple[str, dict[str, object]]] = []
+
+    def boom_unlink(_path: str, *args: object, **kwargs: object) -> None:
+        raise OSError("cleanup failed")
+
+    def capture_warning(message: str, *, extra: dict[str, object]) -> None:
+        warnings.append((message, extra))
+
+    monkeypatch.setattr("os.unlink", boom_unlink)
+    monkeypatch.setattr(writer_module._logger, "warning", capture_warning)
+
+    result = atomic_write(dest, b"published")
+
+    assert result.path == dest.resolve()
+    assert dest.read_bytes() == b"published"
+    assert len(list(tmp_path.iterdir())) == 2
+    assert warnings[0][0] == "Atomic write temp cleanup failed"
+    assert warnings[0][1]["operation"] == "atomic_write_cleanup"
+    assert warnings[0][1]["outcome"] == "residue_retained"
+    assert warnings[0][1]["error_code"] == "temp_cleanup_failed"
+    assert warnings[0][1]["fingerprint"] == "export.write.temp_cleanup_failed"
+    assert get_metrics().errors_by_kind["atomic_write_temp_cleanup"] == 1
+
+
 def test_atomic_write_replace_failure_raises_write_error_and_cleans_temp(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -251,7 +421,7 @@ def test_atomic_write_replace_failure_raises_write_error_and_cleans_temp(
     monkeypatch.setattr("os.replace", boom_replace)
 
     with pytest.raises(WriteError) as excinfo:
-        atomic_write(dest, b"hello")
+        atomic_write(dest, b"hello", overwrite=True)
 
     # Final file was never created.
     assert not dest.exists()
@@ -267,7 +437,10 @@ def test_atomic_write_cleanup_failure_does_not_mask_write_error(
     """The original WriteError must propagate even if the best-effort
     temp-file unlink also fails."""
 
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
     dest = tmp_path / "out.bin"
+    reset_metrics()
 
     def boom_replace(src: str, _dst: str) -> None:
         raise OSError("replace failed")
@@ -279,12 +452,37 @@ def test_atomic_write_cleanup_failure_does_not_mask_write_error(
     monkeypatch.setattr("os.unlink", boom_unlink)
 
     with pytest.raises(WriteError) as excinfo:
-        atomic_write(dest, b"hello")
+        atomic_write(dest, b"hello", overwrite=True)
 
     # The first OSError (from replace) is what we wrap; the unlink failure
-    # is swallowed silently.
+    # is retained as an operator diagnostic without masking it.
     assert isinstance(excinfo.value.__cause__, OSError)
     assert "replace" in str(excinfo.value.__cause__).lower()
+    assert any("sibling .tmp file may remain" in note for note in excinfo.value.__notes__)
+    assert get_metrics().errors_by_kind["atomic_write_temp_cleanup"] == 1
+
+
+def test_atomic_write_cleanup_failure_does_not_mask_keyboard_interrupt(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
+    def interrupt_write(_fd: int, _data: bytes | memoryview) -> int:
+        raise KeyboardInterrupt("operator interrupted write")
+
+    def boom_unlink(_path: str, *args: object, **kwargs: object) -> None:
+        raise OSError("unlink failed too")
+
+    reset_metrics()
+    monkeypatch.setattr("os.write", interrupt_write)
+    monkeypatch.setattr("os.unlink", boom_unlink)
+
+    with pytest.raises(KeyboardInterrupt, match="operator interrupted write") as excinfo:
+        atomic_write(tmp_path / "out.bin", b"payload")
+
+    assert any("sibling .tmp file may remain" in note for note in excinfo.value.__notes__)
+    assert get_metrics().errors_by_kind["atomic_write_temp_cleanup"] == 1
 
 
 def test_atomic_write_fsync_failure_raises_write_error(

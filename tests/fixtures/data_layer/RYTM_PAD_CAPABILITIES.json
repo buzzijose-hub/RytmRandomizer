@@ -1,0 +1,202 @@
+[
+  {
+    "pad": 1,
+    "track_code": "BD",
+    "label": "Bass Drum",
+    "allowed_machine_keys": [
+      "bd_hard",
+      "bd_classic",
+      "bd_fm",
+      "bd_plastic",
+      "bd_silky",
+      "bd_sharp",
+      "bd_acoustic",
+      "dual_vco",
+      "sy_chip",
+      "sy_raw",
+      "sd_hard",
+      "sd_classic",
+      "sd_fm",
+      "sd_natural",
+      "sd_acoustic",
+      "ut_noise",
+      "ut_impulse"
+    ]
+  },
+  {
+    "pad": 2,
+    "track_code": "SD",
+    "label": "Snare Drum",
+    "allowed_machine_keys": [
+      "sd_hard",
+      "sd_classic",
+      "sd_fm",
+      "sd_natural",
+      "sd_acoustic",
+      "dual_vco",
+      "sy_chip",
+      "sy_raw",
+      "bd_hard",
+      "bd_classic",
+      "bd_fm",
+      "bd_plastic",
+      "bd_silky",
+      "bd_sharp",
+      "bd_acoustic",
+      "ut_noise",
+      "ut_impulse"
+    ]
+  },
+  {
+    "pad": 3,
+    "track_code": "RS",
+    "label": "Rim Shot",
+    "allowed_machine_keys": [
+      "rs_hard",
+      "rs_classic",
+      "dual_vco",
+      "sy_chip",
+      "sy_raw",
+      "bd_hard",
+      "bd_classic",
+      "bd_fm",
+      "bd_plastic",
+      "bd_silky",
+      "bd_sharp",
+      "bd_acoustic",
+      "sd_hard",
+      "sd_classic",
+      "sd_fm",
+      "sd_natural",
+      "sd_acoustic",
+      "cp_classic",
+      "ut_noise",
+      "ut_impulse"
+    ]
+  },
+  {
+    "pad": 4,
+    "track_code": "CP",
+    "label": "Hand Clap",
+    "allowed_machine_keys": [
+      "cp_classic",
+      "dual_vco",
+      "sy_chip",
+      "sy_raw",
+      "bd_hard",
+      "bd_classic",
+      "bd_fm",
+      "bd_plastic",
+      "bd_silky",
+      "bd_sharp",
+      "bd_acoustic",
+      "sd_hard",
+      "sd_classic",
+      "sd_fm",
+      "sd_natural",
+      "sd_acoustic",
+      "rs_hard",
+      "rs_classic",
+      "ut_noise",
+      "ut_impulse"
+    ]
+  },
+  {
+    "pad": 5,
+    "track_code": "BT",
+    "label": "Bass Tom",
+    "allowed_machine_keys": [
+      "bt_classic",
+      "ut_noise",
+      "ut_impulse"
+    ]
+  },
+  {
+    "pad": 6,
+    "track_code": "LT",
+    "label": "Low Tom",
+    "allowed_machine_keys": [
+      "xt_classic",
+      "ut_noise",
+      "ut_impulse"
+    ]
+  },
+  {
+    "pad": 7,
+    "track_code": "MT",
+    "label": "Mid Tom",
+    "allowed_machine_keys": [
+      "xt_classic",
+      "ut_noise",
+      "ut_impulse"
+    ]
+  },
+  {
+    "pad": 8,
+    "track_code": "HT",
+    "label": "Hi Tom",
+    "allowed_machine_keys": [
+      "xt_classic",
+      "ut_noise",
+      "ut_impulse"
+    ]
+  },
+  {
+    "pad": 9,
+    "track_code": "CH",
+    "label": "Closed Hihat",
+    "allowed_machine_keys": [
+      "ch_classic",
+      "ch_metallic",
+      "hh_basic",
+      "hh_lab",
+      "oh_classic",
+      "oh_metallic",
+      "ut_noise",
+      "ut_impulse"
+    ]
+  },
+  {
+    "pad": 10,
+    "track_code": "OH",
+    "label": "Open Hihat",
+    "allowed_machine_keys": [
+      "oh_classic",
+      "oh_metallic",
+      "hh_basic",
+      "hh_lab",
+      "ch_classic",
+      "ch_metallic",
+      "ut_noise",
+      "ut_impulse"
+    ]
+  },
+  {
+    "pad": 11,
+    "track_code": "CY",
+    "label": "Cymbal",
+    "allowed_machine_keys": [
+      "cy_classic",
+      "cy_metallic",
+      "cy_ride",
+      "cb_classic",
+      "cb_metallic",
+      "ut_noise",
+      "ut_impulse"
+    ]
+  },
+  {
+    "pad": 12,
+    "track_code": "CB",
+    "label": "Cow Bell",
+    "allowed_machine_keys": [
+      "cb_classic",
+      "cb_metallic",
+      "cy_classic",
+      "cy_metallic",
+      "cy_ride",
+      "ut_noise",
+      "ut_impulse"
+    ]
+  }
+]

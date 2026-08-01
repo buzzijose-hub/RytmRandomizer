@@ -6,25 +6,14 @@ import json
 
 import pytest
 
-from rytm_randomizer.guardrails.schema import Confidence, SourceType
+from conftest import analog_four_reference_feature_report
 from rytm_randomizer.style_analysis import FeatureReport
 
 pytestmark = pytest.mark.fast
 
 
 def _reference_report() -> FeatureReport:
-    return FeatureReport(
-        source_type=SourceType.SINGLE_TRACK,
-        confidence=Confidence.HIGH,
-        bpm=134.0,
-        tempo_stability=0.91,
-        kick_density=0.48,
-        percussion_density=0.78,
-        low_end_weight=0.42,
-        spectral_brightness=0.63,
-        texture_noise=0.34,
-        energy_arc=(0.18, 0.34, 0.48, 0.72, 0.84, 0.78, 0.61, 0.4),
-        content_hash="",
+    return analog_four_reference_feature_report(
         derived_at="2026-07-03T12:00:00Z",
     )
 
@@ -56,11 +45,26 @@ def test_patch_learning_packet_builds_ranked_a4_knowledge_packet() -> None:
     assert [score.column for score in packet.candidate_scores] == [1, 2, 3, 4]
     assert [score.rank for score in packet.candidate_scores] == [1, 2, 3, 4]
     assert packet.candidate_scores[0].learning_score > packet.candidate_scores[-1].learning_score
-    assert packet.candidate_scores[0].transport_readiness >= 80
-    assert packet.live_dial_readiness.ready_count > packet.live_dial_readiness.pending_count
-    assert packet.live_dial_readiness.cc_ready_count > 0
-    assert packet.live_dial_readiness.screen_only_nrpn_count > 0
-    assert "LFO1 Destination A" in packet.live_dial_readiness.pending_parameters
+    assert packet.candidate_scores[0].transport_readiness == 84
+    assert packet.live_dial_readiness.ready_count == 32
+    assert packet.live_dial_readiness.pending_count == 7
+    assert packet.live_dial_readiness.cc_ready_count == 28
+    assert packet.live_dial_readiness.nrpn_ready_count == 4
+    assert packet.live_dial_readiness.screen_only_nrpn_count == 7
+    assert packet.live_dial_readiness.pending_parameters == (
+        "EnvF Gate Length",
+        "EnvF Destination A",
+        "EnvF Destination B",
+        "LFO1 Speed Multiplier",
+        "LFO1 Mode",
+        "LFO1 Destination A",
+        "LFO1 Destination B",
+    )
+    assert packet.live_dial_readiness.live_dial_path == "partial-live-dial-ready"
+    assert (
+        packet.live_dial_readiness.blocking_reason
+        == "A4 enum value calibration required before full live dial-in"
+    )
     assert packet.capture_steps[0].step_id == "a4-root-short"
     assert len(packet.capture_steps) >= 6
     assert "no MIDI sent" in packet.safety
@@ -118,9 +122,13 @@ def test_patch_learning_packet_payload_is_stable_and_selected_patch_is_embedded(
 
 
 def test_patch_learning_rejects_wrong_types_and_candidate_range() -> None:
+    from rytm_randomizer.style_analysis.analog_four_patch_genome import (
+        build_analog_four_patch_genome,
+    )
     from rytm_randomizer.style_analysis.analog_four_patch_learning import (
         analog_four_patch_learning_packet_to_dict,
         build_analog_four_patch_learning_packet,
+        build_analog_four_patch_learning_packet_from_genome,
     )
 
     with pytest.raises(TypeError, match="report must be"):
@@ -131,6 +139,64 @@ def test_patch_learning_rejects_wrong_types_and_candidate_range() -> None:
         build_analog_four_patch_learning_packet(_reference_report(), selected_candidate=0)
     with pytest.raises(ValueError, match="candidate must be in"):
         build_analog_four_patch_learning_packet(_reference_report(), selected_candidate=5)
+    genome = build_analog_four_patch_genome(_reference_report())
+    with pytest.raises(TypeError, match="report must be"):
+        build_analog_four_patch_learning_packet_from_genome(
+            object(),  # type: ignore[arg-type]
+            genome,
+            selected_candidate=1,
+        )
+    with pytest.raises(TypeError, match="genome must be"):
+        build_analog_four_patch_learning_packet_from_genome(
+            _reference_report(),
+            object(),  # type: ignore[arg-type]
+            selected_candidate=1,
+        )
+
+
+def test_patch_learning_from_genome_preserves_dynamic_candidate() -> None:
+    from dataclasses import replace
+
+    from rytm_randomizer.data.analog_four_display import make_a4_patch_value
+    from rytm_randomizer.style_analysis.analog_four_patch_genome import (
+        build_analog_four_patch_genome,
+    )
+    from rytm_randomizer.style_analysis.analog_four_patch_learning import (
+        build_analog_four_patch_learning_packet_from_genome,
+    )
+
+    report = _reference_report()
+    genome = build_analog_four_patch_genome(report)
+    candidate = genome.candidates[0]
+    genes = tuple(
+        (
+            replace(
+                gene,
+                value=make_a4_patch_value("Filter2 Resonance", screen_target=91),
+            )
+            if gene.value.parameter == "Filter2 Resonance"
+            else gene
+        )
+        for gene in candidate.genes
+    )
+    dynamic_genome = replace(
+        genome,
+        source_hash="d" * 64,
+        candidates=(replace(candidate, genes=genes), *genome.candidates[1:]),
+    )
+
+    packet = build_analog_four_patch_learning_packet_from_genome(
+        report,
+        dynamic_genome,
+        selected_candidate=1,
+    )
+
+    resonance = next(
+        gene for gene in packet.selected_patch.genes if gene.value.parameter == "Filter2 Resonance"
+    )
+    assert packet.genome is dynamic_genome
+    assert packet.source_hash == "d" * 64
+    assert resonance.value.midi_value == 91
 
 
 def test_patch_learning_defensive_helpers_cover_empty_or_unmatched_candidates() -> None:
@@ -195,7 +261,11 @@ def test_patch_learning_defensive_helpers_cover_empty_or_unmatched_candidates() 
     assert _candidate_trait_fit(unmatched_candidate, traits=(metallic_trait,)) == 0
     assert _build_trait_routes((), unmatched_candidate) == ()
     assert _live_dial_path(1, 0) == "transport-ready"
+    assert _live_dial_path(1, 1) == "partial-live-dial-ready"
     assert _live_dial_path(0, 1) == "manual-only"
+    assert _live_dial_blocking_reason(1, 1) == (
+        "A4 enum value calibration required before full live dial-in"
+    )
     assert _live_dial_blocking_reason(0, 1) == (
         "front-panel-only values require manual capture before automation"
     )

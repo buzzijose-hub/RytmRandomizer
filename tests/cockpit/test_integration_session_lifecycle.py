@@ -126,23 +126,34 @@ def test_history_chain_persists_across_reconnect(cockpit_client: TestClient) -> 
     assert len(history["entries"]) == 3
 
 
-def test_saved_entry_persists_across_reconnect(cockpit_client: TestClient) -> None:
-    """A SAVE done in connection #1 is reflected in connection #2's bootstrap."""
+def test_history_growth_persists_across_reconnect(cockpit_client: TestClient) -> None:
+    """A SEND done in connection #1 is reflected in connection #2's bootstrap.
+
+    Previously written against ``save``, whose ack claimed a durable write
+    it never performed; ``save`` is now refused outright. ``send`` is the
+    right probe anyway — it is a genuine session-state mutation, which is
+    what this test is actually about.
+    """
 
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
         collect_initial_events(ws, count=5)
-        ack = send_cmd(ws, "save", label="boot-kit")
+        send_cmd(ws, "select_profile", profile_id="scene-industrial")
+        drain_events(ws, 1)
+        send_cmd(ws, "set_depth", depth=0.45)
+        prepare_send_plan(ws)
+        ack = send_cmd(ws, "send", request_id="req-send")
         assert ack["ok"] is True
-        drain_events(ws, 2)
+        drain_events(ws, 5)
+        sent_snapshot_id = ack["new_snapshot_id"]
 
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
         bootstrap = collect_initial_events(ws, count=5)
 
     history = next(e for e in bootstrap if e["type"] == EVENT_HISTORY_UPDATED)["history"]
-    saved = next(e for e in history["entries"] if e["kind"] == "saved")
-    assert saved["label"] == "boot-kit"
+    assert history["current_id"] == sent_snapshot_id
+    assert any(e["snapshot"]["snapshot_id"] == sent_snapshot_id for e in history["entries"])
 
 
 def test_clean_disconnect_does_not_leak_pending_events(
@@ -199,13 +210,23 @@ def test_two_concurrent_clients_see_same_bootstrap_snapshot(
 def test_concurrent_clients_share_session_state_after_command(
     cockpit_client: TestClient,
 ) -> None:
-    """A SAVE issued by client A is observable on client B's next bootstrap."""
+    """A SEND issued by client A is observable on client B's next bootstrap.
+
+    Previously probed with ``save``; that command is now refused (its ack
+    claimed a durable write nothing performed), and a refusal mutates no
+    state, so it cannot demonstrate cross-connection sharing. ``send`` is
+    a real mutation and tests the same invariant.
+    """
 
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws_a:
         complete_handshake(ws_a)
         collect_initial_events(ws_a, count=5)
-        send_cmd(ws_a, "save", label="from-client-a")
-        drain_events(ws_a, 2)
+        send_cmd(ws_a, "select_profile", profile_id="scene-industrial")
+        drain_events(ws_a, 1)
+        send_cmd(ws_a, "set_depth", depth=0.45)
+        prepare_send_plan(ws_a)
+        ack_a = send_cmd(ws_a, "send", request_id="req-send-a")
+        drain_events(ws_a, 5)
 
         # Open a brand-new connection while the first is still alive.
         with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws_b:
@@ -213,8 +234,7 @@ def test_concurrent_clients_share_session_state_after_command(
             events_b = collect_initial_events(ws_b, count=5)
 
     history_b = next(e for e in events_b if e["type"] == EVENT_HISTORY_UPDATED)["history"]
-    saved_b = next(e for e in history_b["entries"] if e["kind"] == "saved")
-    assert saved_b["label"] == "from-client-a"
+    assert history_b["current_id"] == ack_a["new_snapshot_id"]
 
 
 def test_concurrent_clients_independent_command_loops(cockpit_client: TestClient) -> None:

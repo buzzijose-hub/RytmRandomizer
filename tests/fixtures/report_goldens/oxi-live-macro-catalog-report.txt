@@ -1,0 +1,115 @@
+RytmRandomizer OXI live macro catalog
+
+Rytm macros:
+- kit-core | live-safe | recovery=home | pads=2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+  crate=Core Tools | energy=5 | risk=2
+  locked pads: 1
+  tags: full-kit, src-first, live-safe, anchor-recovery
+  global lanes: fx=micro, lfo=off
+  pad 2: amount=wide, density=full, lanes=none
+  pad 3: amount=wide, density=full, lanes=none
+  pad 4: amount=wide, density=full, lanes=none
+  pad 5: amount=normal, density=high, lanes=filter=off/lfo=off
+  pad 6: amount=wide, density=full, lanes=filter=micro/lfo=off
+  pad 7: amount=wide, density=full, lanes=filter=micro/lfo=off
+  pad 8: amount=wide, density=full, lanes=filter=micro/lfo=off
+  pad 9: amount=normal, density=high, lanes=filter=off/lfo=off
+  pad 10: amount=normal, density=high, lanes=filter=off/lfo=off
+  pad 11: amount=normal, density=high, lanes=filter=off/lfo=off
+  Full-kit live-safe discovery with Jose's pad 5-11 lane discipline.
+- hard-groove | live-safe | recovery=home | pads=2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+  crate=Hard Groove | energy=7 | risk=3
+  locked pads: 1
+  tags: dry-pressure, source-motion, locked-kick
+  global lanes: fx=micro, lfo=off
+  pad 2: amount=normal, density=high, lanes=none
+  pad 3: amount=normal, density=high, lanes=none
+  pad 4: amount=normal, density=high, lanes=none
+  pad 5: amount=normal, density=high, lanes=filter=off/lfo=off
+  pad 6: amount=wide, density=full, lanes=filter=micro/lfo=off
+  pad 7: amount=wide, density=full, lanes=filter=micro/lfo=off
+  pad 8: amount=wide, density=full, lanes=filter=micro/lfo=off
+  pad 9: amount=normal, density=high, lanes=filter=off/lfo=off
+  pad 10: amount=normal, density=high, lanes=filter=off/lfo=off
+  pad 11: amount=normal, density=high, lanes=filter=off/lfo=off
+  pad 12: amount=normal, density=medium, lanes=none
+  Dry pressure macro for OXI patterns that already carry the groove.
+- industrial | edge | recovery=home | pads=2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+  crate=Industrial Warehouse | energy=8 | risk=5
+  locked pads: 1
+  tags: metallic, grit, pressure, locked-kick
+  global lanes: fx=micro, lfo=off
+  pad 2: amount=wide, density=full, lanes=none
+  pad 3: amount=wide, density=full, lanes=none
+  pad 4: amount=wide, density=full, lanes=none
+  pad 5: amount=normal, density=high, lanes=filter=off/lfo=off
+  pad 6: amount=wide, density=full, lanes=filter=micro/lfo=off
+  pad 7: amount=wide, density=full, lanes=filter=micro/lfo=off
+  pad 8: amount=wide, density=full, lanes=filter=micro/lfo=off
+  pad 9: amount=normal, density=high, lanes=filter=off/lfo=off
+  pad 10: amount=normal, density=high, lanes=filter=off/lfo=off
+  pad 11: amount=normal, density=high, lanes=filter=off/lfo=off
+  pad 12: amount=wide, density=high, lanes=none
+  Metallic pressure and controlled grit without releasing the kick anchor.
+- dub-pressure | live-safe | recovery=home | pads=2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+  crate=Dub Pressure | energy=6 | risk=3
+  locked pads: 1
+  tags: delay, reverb, space, darker
+  global lanes: fx=normal, lfo=off
+  pad 2: amount=normal, density=medium, lanes=none
+  pad 3: amount=normal, density=medium, lanes=none
+  pad 4: amount=normal, density=medium, lanes=none
+  pad 5: amount=normal, density=medium, lanes=filter=off/lfo=off
+  pad 6: amount=normal, density=high, lanes=filter=micro/lfo=off
+  pad 7: amount=normal, density=high, lanes=filter=micro/lfo=off
+  pad 8: amount=normal, density=high, lanes=filter=micro/lfo=off
+  pad 9: amount=micro, density=medium, lanes=filter=off/lfo=off
+  pad 10: amount=micro, density=medium, lanes=filter=off/lfo=off
+  pad 11: amount=micro, density=medium, lanes=filter=off/lfo=off
+  pad 12: amount=normal, density=medium, lanes=none
+  Darker pressure with more delay/reverb influence and small filter motion.
+- transition | edge | recovery=home | pads=2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+  crate=Transition / Build | energy=7 | risk=5
+  locked pads: 1
+  tags: bridge, fill, movement, home-recovery
+  global lanes: fx=normal, lfo=micro
+  pad 2: amount=wide, density=full, lanes=none
+  pad 3: amount=wide, density=full, lanes=none
+  pad 4: amount=wide, density=full, lanes=none
+  pad 5: amount=normal, density=high, lanes=filter=off/lfo=off
+  pad 6: amount=wide, density=high, lanes=filter=micro/lfo=off
+  pad 7: amount=wide, density=high, lanes=filter=micro/lfo=off
+  pad 8: amount=wide, density=high, lanes=filter=micro/lfo=off
+  pad 9: amount=normal, density=high, lanes=filter=off/lfo=off
+  pad 10: amount=normal, density=high, lanes=filter=off/lfo=off
+  pad 11: amount=normal, density=high, lanes=filter=off/lfo=off
+  pad 12: amount=wide, density=medium, lanes=none
+  Set-section movement with obvious recovery through home.
+- home | live-safe | recovery=home | pads=1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+  crate=Home / Reset | energy=1 | risk=1
+  locked pads: none
+  tags: restore, anchor, recovery
+  global lanes: none
+  Return the current staged plan to the captured anchor.
+
+Live performance flow:
+- 1. capture-anchor | command=kit/resnapshot | send=receive-only | recovery=captured-anchor
+  Capture the current Rytm kit as the safe anchor.
+- 2. kit-core | command=kit-core | send=stage-review-send | recovery=home
+  Normalize live guardrails and stage the first full-kit idea.
+- 3. hard-groove | command=hard-groove | send=stage-review-send | recovery=home
+  Push source-first rhythm movement while the kick stays protected.
+- 4. industrial | command=industrial | send=stage-review-send | recovery=home
+  Raise grit, pressure, and texture inside the live-safe guardrails.
+- 5. dub-pressure | command=dub-pressure | send=stage-review-send | recovery=home
+  Pull the kit toward space, delay, reverb, and lower-end pressure.
+- 6. transition | command=transition | send=stage-review-send | recovery=home
+  Create a short bridge or fill lane before returning to the groove.
+- 7. home | command=home | send=restore-anchor | recovery=captured-anchor
+  Return the staged plan to the captured safe kit.
+
+Analog Four runway: candidate-only
+  tracks: 1, 2, 3, 4
+  A4 macro planning is passive/mock-only until hardware validation.
+
+blocked active actions: A4 outbound macro send

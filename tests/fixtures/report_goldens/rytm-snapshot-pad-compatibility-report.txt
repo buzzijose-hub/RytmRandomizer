@@ -1,0 +1,216 @@
+RytmRandomizer passive Rytm snapshot pad compatibility
+Summary:
+- Pads: 12
+- Snapshot-ready pads: 4
+- Blocked pads: 8
+- Allowed pad-machine slots: 116
+Pads:
+Pad 1 / BD / Bass Drum:
+  Snapshot ready: True
+  Allowed machines: 17
+  Snapshot-mutable machines: 11
+  Selectable-only machines: 6
+  Reason: Snapshot-ready: 11 V1.34-backed legal machine(s); 6 legal machine(s) are selectable only.
+  Machines:
+    - BD Hard (CC15 0, mutable_v134)
+    - BD Classic (CC15 1, mutable_v134)
+    - BD FM (CC15 13, mutable_v134)
+    - BD Plastic (CC15 21, mutable_v134)
+    - BD Silky (CC15 22, mutable_v134)
+    - BD Sharp (CC15 26, mutable_v134)
+    - BD Acoustic (CC15 30, mutable_v134)
+    - SY Dual VCO (CC15 28, machine_selectable)
+    - SY Chip (CC15 29, machine_selectable)
+    - SY Raw (CC15 32, mutable_v134)
+    - SD Hard (CC15 2, mutable_v134)
+    - SD Classic (CC15 3, mutable_v134)
+    - SD FM (CC15 14, mutable_v134)
+    - SD Natural (CC15 23, machine_selectable)
+    - SD Acoustic (CC15 31, machine_selectable)
+    - UT Noise (CC15 15, machine_selectable)
+    - UT Impulse (CC15 16, machine_selectable)
+Pad 2 / SD / Snare Drum:
+  Snapshot ready: True
+  Allowed machines: 17
+  Snapshot-mutable machines: 11
+  Selectable-only machines: 6
+  Reason: Snapshot-ready: 11 V1.34-backed legal machine(s); 6 legal machine(s) are selectable only.
+  Machines:
+    - SD Hard (CC15 2, mutable_v134)
+    - SD Classic (CC15 3, mutable_v134)
+    - SD FM (CC15 14, mutable_v134)
+    - SD Natural (CC15 23, machine_selectable)
+    - SD Acoustic (CC15 31, machine_selectable)
+    - SY Dual VCO (CC15 28, machine_selectable)
+    - SY Chip (CC15 29, machine_selectable)
+    - SY Raw (CC15 32, mutable_v134)
+    - BD Hard (CC15 0, mutable_v134)
+    - BD Classic (CC15 1, mutable_v134)
+    - BD FM (CC15 13, mutable_v134)
+    - BD Plastic (CC15 21, mutable_v134)
+    - BD Silky (CC15 22, mutable_v134)
+    - BD Sharp (CC15 26, mutable_v134)
+    - BD Acoustic (CC15 30, mutable_v134)
+    - UT Noise (CC15 15, machine_selectable)
+    - UT Impulse (CC15 16, machine_selectable)
+Pad 3 / RS / Rim Shot:
+  Snapshot ready: True
+  Allowed machines: 20
+  Snapshot-mutable machines: 11
+  Selectable-only machines: 9
+  Reason: Snapshot-ready: 11 V1.34-backed legal machine(s); 9 legal machine(s) are selectable only.
+  Machines:
+    - RS Hard (CC15 4, machine_selectable)
+    - RS Classic (CC15 5, machine_selectable)
+    - SY Dual VCO (CC15 28, machine_selectable)
+    - SY Chip (CC15 29, machine_selectable)
+    - SY Raw (CC15 32, mutable_v134)
+    - BD Hard (CC15 0, mutable_v134)
+    - BD Classic (CC15 1, mutable_v134)
+    - BD FM (CC15 13, mutable_v134)
+    - BD Plastic (CC15 21, mutable_v134)
+    - BD Silky (CC15 22, mutable_v134)
+    - BD Sharp (CC15 26, mutable_v134)
+    - BD Acoustic (CC15 30, mutable_v134)
+    - SD Hard (CC15 2, mutable_v134)
+    - SD Classic (CC15 3, mutable_v134)
+    - SD FM (CC15 14, mutable_v134)
+    - SD Natural (CC15 23, machine_selectable)
+    - SD Acoustic (CC15 31, machine_selectable)
+    - CP Classic (CC15 6, machine_selectable)
+    - UT Noise (CC15 15, machine_selectable)
+    - UT Impulse (CC15 16, machine_selectable)
+Pad 4 / CP / Hand Clap:
+  Snapshot ready: True
+  Allowed machines: 20
+  Snapshot-mutable machines: 11
+  Selectable-only machines: 9
+  Reason: Snapshot-ready: 11 V1.34-backed legal machine(s); 9 legal machine(s) are selectable only.
+  Machines:
+    - CP Classic (CC15 6, machine_selectable)
+    - SY Dual VCO (CC15 28, machine_selectable)
+    - SY Chip (CC15 29, machine_selectable)
+    - SY Raw (CC15 32, mutable_v134)
+    - BD Hard (CC15 0, mutable_v134)
+    - BD Classic (CC15 1, mutable_v134)
+    - BD FM (CC15 13, mutable_v134)
+    - BD Plastic (CC15 21, mutable_v134)
+    - BD Silky (CC15 22, mutable_v134)
+    - BD Sharp (CC15 26, mutable_v134)
+    - BD Acoustic (CC15 30, mutable_v134)
+    - SD Hard (CC15 2, mutable_v134)
+    - SD Classic (CC15 3, mutable_v134)
+    - SD FM (CC15 14, mutable_v134)
+    - SD Natural (CC15 23, machine_selectable)
+    - SD Acoustic (CC15 31, machine_selectable)
+    - RS Hard (CC15 4, machine_selectable)
+    - RS Classic (CC15 5, machine_selectable)
+    - UT Noise (CC15 15, machine_selectable)
+    - UT Impulse (CC15 16, machine_selectable)
+Pad 5 / BT / Bass Tom:
+  Snapshot ready: False
+  Allowed machines: 3
+  Snapshot-mutable machines: 0
+  Selectable-only machines: 3
+  Reason: Blocked: legal machines are selectable on this pad, but none are snapshot-mutable yet.
+  Machines:
+    - BT Classic (CC15 7, machine_selectable)
+    - UT Noise (CC15 15, machine_selectable)
+    - UT Impulse (CC15 16, machine_selectable)
+Pad 6 / LT / Low Tom:
+  Snapshot ready: False
+  Allowed machines: 3
+  Snapshot-mutable machines: 0
+  Selectable-only machines: 3
+  Reason: Blocked: legal machines are selectable on this pad, but none are snapshot-mutable yet.
+  Machines:
+    - XT Classic (CC15 8, machine_selectable)
+    - UT Noise (CC15 15, machine_selectable)
+    - UT Impulse (CC15 16, machine_selectable)
+Pad 7 / MT / Mid Tom:
+  Snapshot ready: False
+  Allowed machines: 3
+  Snapshot-mutable machines: 0
+  Selectable-only machines: 3
+  Reason: Blocked: legal machines are selectable on this pad, but none are snapshot-mutable yet.
+  Machines:
+    - XT Classic (CC15 8, machine_selectable)
+    - UT Noise (CC15 15, machine_selectable)
+    - UT Impulse (CC15 16, machine_selectable)
+Pad 8 / HT / Hi Tom:
+  Snapshot ready: False
+  Allowed machines: 3
+  Snapshot-mutable machines: 0
+  Selectable-only machines: 3
+  Reason: Blocked: legal machines are selectable on this pad, but none are snapshot-mutable yet.
+  Machines:
+    - XT Classic (CC15 8, machine_selectable)
+    - UT Noise (CC15 15, machine_selectable)
+    - UT Impulse (CC15 16, machine_selectable)
+Pad 9 / CH / Closed Hihat:
+  Snapshot ready: False
+  Allowed machines: 8
+  Snapshot-mutable machines: 0
+  Selectable-only machines: 8
+  Reason: Blocked: legal machines are selectable on this pad, but none are snapshot-mutable yet.
+  Machines:
+    - CH Classic (CC15 9, machine_selectable)
+    - CH Metallic (CC15 17, machine_selectable)
+    - HH Basic (CC15 24, machine_selectable)
+    - HH Lab (CC15 33, machine_selectable)
+    - OH Classic (CC15 10, machine_selectable)
+    - OH Metallic (CC15 18, machine_selectable)
+    - UT Noise (CC15 15, machine_selectable)
+    - UT Impulse (CC15 16, machine_selectable)
+Pad 10 / OH / Open Hihat:
+  Snapshot ready: False
+  Allowed machines: 8
+  Snapshot-mutable machines: 0
+  Selectable-only machines: 8
+  Reason: Blocked: legal machines are selectable on this pad, but none are snapshot-mutable yet.
+  Machines:
+    - OH Classic (CC15 10, machine_selectable)
+    - OH Metallic (CC15 18, machine_selectable)
+    - HH Basic (CC15 24, machine_selectable)
+    - HH Lab (CC15 33, machine_selectable)
+    - CH Classic (CC15 9, machine_selectable)
+    - CH Metallic (CC15 17, machine_selectable)
+    - UT Noise (CC15 15, machine_selectable)
+    - UT Impulse (CC15 16, machine_selectable)
+Pad 11 / CY / Cymbal:
+  Snapshot ready: False
+  Allowed machines: 7
+  Snapshot-mutable machines: 0
+  Selectable-only machines: 7
+  Reason: Blocked: legal machines are selectable on this pad, but none are snapshot-mutable yet.
+  Machines:
+    - CY Classic (CC15 11, machine_selectable)
+    - CY Metallic (CC15 19, machine_selectable)
+    - CY Ride (CC15 25, machine_selectable)
+    - CB Classic (CC15 12, machine_selectable)
+    - CB Metallic (CC15 20, machine_selectable)
+    - UT Noise (CC15 15, machine_selectable)
+    - UT Impulse (CC15 16, machine_selectable)
+Pad 12 / CB / Cow Bell:
+  Snapshot ready: False
+  Allowed machines: 7
+  Snapshot-mutable machines: 0
+  Selectable-only machines: 7
+  Reason: Blocked: legal machines are selectable on this pad, but none are snapshot-mutable yet.
+  Machines:
+    - CB Classic (CC15 12, machine_selectable)
+    - CB Metallic (CC15 20, machine_selectable)
+    - CY Classic (CC15 11, machine_selectable)
+    - CY Metallic (CC15 19, machine_selectable)
+    - CY Ride (CC15 25, machine_selectable)
+    - UT Noise (CC15 15, machine_selectable)
+    - UT Impulse (CC15 16, machine_selectable)
+Safety:
+- passive/read-only
+- no MIDI sending
+- no port opening
+- no command execution
+- no hardware mutation
+- no hardware required
+Source: rytm_randomizer.reports.rytm_snapshot_pad_compatibility
+In-memory only: True

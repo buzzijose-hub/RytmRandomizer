@@ -64,7 +64,7 @@ from __future__ import annotations
 import ast
 import importlib
 from pathlib import Path
-from typing import Final
+from typing import Final, get_type_hints
 
 import pytest
 
@@ -536,6 +536,18 @@ _EXPECTED_DEVICE_ATTRIBUTES: Final[tuple[str, ...]] = (
     "report_header",
 )
 
+_EXPECTED_DEVICE_PROPERTIES: Final[tuple[str, ...]] = (
+    "device_id",
+    "display_name",
+    "default_midi_channel",
+    "track_count",
+    "sysex_manufacturer_id",
+    "report_header",
+    "snapshot_decoder",
+    "mutation_planner",
+    "message_renderer",
+)
+
 _EXPECTED_DEVICE_METHODS: Final[tuple[str, ...]] = (
     "decode_snapshot",
     "plan_mutation",
@@ -554,14 +566,26 @@ def test_device_protocol_surface_is_stable() -> None:
     devices_mod = importlib.import_module("rytm_randomizer.devices")
     Device = devices_mod.Device  # noqa: N806 - mirroring the class name
 
-    # __annotations__ exposes the Protocol's attribute surface.
-    annotations = getattr(Device, "__annotations__", {})
-    missing_attrs = [a for a in _EXPECTED_DEVICE_ATTRIBUTES if a not in annotations]
+    annotations = get_type_hints(Device, include_extras=True)
+    missing_attrs = [
+        name
+        for name in _EXPECTED_DEVICE_ATTRIBUTES
+        if name not in annotations and not hasattr(Device, name)
+    ]
     assert not missing_attrs, (
         f"Device Protocol is missing expected attributes: {missing_attrs}. "
         "If you intentionally renamed or removed one, update "
         "_EXPECTED_DEVICE_ATTRIBUTES in this test in the same change set."
     )
+
+    non_properties = [
+        name
+        for name in _EXPECTED_DEVICE_PROPERTIES
+        if not isinstance(getattr(Device, name, None), property)
+    ]
+    assert (
+        not non_properties
+    ), f"Device Protocol metadata and strategies must remain read-only: {non_properties}."
 
     missing_methods = [
         m for m in _EXPECTED_DEVICE_METHODS if not callable(getattr(Device, m, None))

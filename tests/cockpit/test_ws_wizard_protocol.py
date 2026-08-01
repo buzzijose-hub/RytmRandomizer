@@ -88,16 +88,16 @@ def test_cockpit_command_types_includes_wizard_commands() -> None:
     """All 8 wizard commands must appear in :data:`protocol.COMMAND_TYPES`."""
 
     assert wizard_protocol.WIZARD_COMMAND_TYPES <= protocol.COMMAND_TYPES
-    # 16 cockpit-native commands + 8 wizard commands = 24 total
-    assert len(protocol.COMMAND_TYPES) == 16 + 8
+    # 24 cockpit-native commands + 8 wizard commands = 32 total
+    assert len(protocol.COMMAND_TYPES) == 24 + 8
 
 
 def test_cockpit_event_types_includes_wizard_events() -> None:
     """All 3 wizard events must appear in :data:`protocol.EVENT_TYPES`."""
 
     assert wizard_protocol.WIZARD_EVENT_TYPES <= protocol.EVENT_TYPES
-    # 7 cockpit-native events + 3 wizard events = 10 total
-    assert len(protocol.EVENT_TYPES) == 7 + 3
+    # 10 cockpit-native events + 3 wizard events = 13 total
+    assert len(protocol.EVENT_TYPES) == 10 + 3
 
 
 def test_cockpit_command_and_event_types_remain_disjoint_with_wizard_folded_in() -> None:

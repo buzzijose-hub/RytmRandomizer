@@ -1,0 +1,30 @@
+RytmRandomizer Active Boundary Report
+Accepted Active Boundary Candidate:
+- group_profile 2: My BD Hard (Pad 1 / BD Hard)
+Unsupported Active Boundary Profiles:
+- 3: My BD Classic (Pad 2 / BD Classic) - mock mapper/report scope only; not active-boundary supported
+- 4: My BD Acoustic (Pad 4 / BD Acoustic) - parked until separately approved
+Result Metadata:
+- boundary: mock_active_boundary
+- supported_candidate: group_profile:2
+- fields: source_kind, source_key, target, armed, dry_run_confirmed, operator_intent, mock_only, sends_real_midi
+- failure_reason: included on failure paths
+Required Conditions:
+- explicit arming
+- dry-run confirmation
+- supported source kind
+- supported source key
+- injected MockMidiSender
+Active Boundary Safety:
+- mock_only: True
+- hardware_required: False
+- real_midi: absent
+- port_opening: absent
+- active_cli_behavior: absent
+- dispatch: absent
+- command_execution: absent
+- scene_execution: absent
+- hardware_behavior: absent
+Closeout Coverage:
+- Mock-Only Active Candidate
+- Active Boundary

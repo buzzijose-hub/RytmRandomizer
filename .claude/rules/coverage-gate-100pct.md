@@ -5,19 +5,21 @@
 
 ## The rule
 
-New or modified production code reaches 100% **branch** coverage (not line coverage) on the set of files the WS actually touched. The whole-package floor in `.coveragerc` is a separate, weaker ratchet; this gate is stricter and per-WS.
+New or modified production code reaches 100% **branch** coverage (not line coverage) on the set of files the WS actually touched. The ratcheted whole-package floor in `.coveragerc` (currently `fail_under = 98`) is a separate, weaker gate; this gate is stricter and per-WS.
 
 ## How to compute and run
 
-```powershell
+```bash
 # 1. Compute the touched-file set against the base branch.
-$touched = git diff --name-only origin/modularize-v1.34...HEAD -- 'rytm_randomizer/*.py'
+touched=$(git diff --name-only origin/modularize-v1.34...HEAD -- 'rytm_randomizer/*.py')
 
-# 2. Turn each path into a coverage source argument.
-$cov_args = $touched | ForEach-Object { "--cov=$($_ -replace '/', '.' -replace '\.py$','')" }
+# 2. Turn each path into a coverage source argument (path -> dotted module).
+cov_args=$(for f in $touched; do
+  printf -- '--cov=%s ' "$(echo "$f" | sed -e 's#/#.#g' -e 's#\.py$##')"
+done)
 
 # 3. Run with branch coverage AND fail-under set to 100.
-pytest @cov_args --cov-branch --cov-fail-under=100 --cov-report=term-missing
+.venv/bin/python -m pytest $cov_args --cov-branch --cov-fail-under=100 --cov-report=term-missing
 ```
 
 If `--cov-fail-under=100` fails, the orchestrator re-dispatches `tdd-guide` with the missing-branch output. Max 2 retries before escalating to `architect`.
@@ -45,5 +47,5 @@ Without the justification, the architecture test `tests/architecture/test_no_unj
 
 - `docs/PLAN_REQUIREMENTS.md` Gate 1 — canonical rule definition.
 - `docs/COVERAGE_POLICY.md` — whole-package ratchet policy.
-- `.coveragerc` — the package-wide floor (currently 87%, targeted to 100% post-WS-S8).
+- `.coveragerc` — the ratcheted package-wide floor (currently 98%; `scripts/coverage_ratchet.py` only ever moves it up).
 - `.claude/skills/learned/coverage-py-blended-vs-pure-branch/` — why pure-branch and blended numbers disagree.

@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import importlib.util
+from dataclasses import replace
 from io import StringIO
 from pathlib import Path
+from types import ModuleType, SimpleNamespace
 
 import pytest
 import yaml
@@ -21,9 +24,22 @@ from rytm_randomizer.state.midi_observation import (
     midi_observation_to_dict,
 )
 from rytm_randomizer.style_analysis import rush01_midi_learning
-from tools import rush01_midi_learn
 
 pytestmark = pytest.mark.fast
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load_script(name: str) -> ModuleType:
+    script_path = PROJECT_ROOT / "scripts" / f"{name}.py"
+    spec = importlib.util.spec_from_file_location(name, script_path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+rush01_midi_learn = _load_script("rush01_midi_learn")
 
 
 def test_ordinary_cc_observation_reports_user_facing_channel_and_raw_value() -> None:
@@ -44,6 +60,7 @@ def test_cc14_and_nrpn_observations_assemble_in_order() -> None:
     state, cc14_rows = consume_midi_cc_bytes(state, (0xB0, 50, 34), timestamp=2.0)
     cc14 = next(row for row in cc14_rows if row.message_type == OBSERVATION_CC14)
     assert cc14.value_14bit == (12 << 7) | 34
+    assert "CC14 18/50" in format_midi_observation(cc14)
 
     all_rows: list[DecodedMidiObservation] = []
     for timestamp, message in enumerate(
@@ -54,6 +71,8 @@ def test_cc14_and_nrpn_observations_assemble_in_order() -> None:
     nrpn = tuple(row for row in all_rows if row.message_type == OBSERVATION_NRPN)
     assert nrpn[0].nrpn_address == (1, 47)
     assert nrpn[1].value_14bit == (3 << 7) | 7
+    assert "NRPN 1:47" in format_midi_observation(nrpn[1])
+    assert "NRPN ?:?" in format_midi_observation(replace(nrpn[1], nrpn_address=None))
 
 
 @pytest.mark.parametrize(
@@ -78,6 +97,9 @@ def test_unmatched_values_and_rpn_selection_do_not_create_nrpn_rows() -> None:
     state = empty_midi_observation_state()
     state, lsb_only = consume_midi_cc_bytes(state, (0xB0, 50, 1), timestamp=1.0)
     assert tuple(row.message_type for row in lsb_only) == (OBSERVATION_CC,)
+    state, _ = consume_midi_cc_bytes(state, (0xB0, 6, 3), timestamp=1.0)
+    state, data_lsb_without_address = consume_midi_cc_bytes(state, (0xB0, 38, 7), timestamp=1.0)
+    assert all(row.message_type != OBSERVATION_NRPN for row in data_lsb_without_address)
     for message in ((0xB0, 99, 1), (0xB0, 98, 47), (0xB0, 101, 0)):
         state, _ = consume_midi_cc_bytes(state, message, timestamp=1.0)
     _, rows = consume_midi_cc_bytes(state, (0xB0, 6, 3), timestamp=2.0)
@@ -152,14 +174,14 @@ def _learning_args(output_path: Path, *extra: str) -> list[str]:
 
 def test_learning_exact_name_is_required_and_duplicates_fail_closed() -> None:
     provider = _FakeInputProvider(("Input 1", "Input 2"))
-    with pytest.raises(RuntimeError, match="unknown_midi_input_port"):
+    with pytest.raises(ValueError, match="unknown_midi_input_port"):
         rush01_midi_learning.open_exact_input(provider, "Input")
-    with pytest.raises(RuntimeError, match="midi_input_port_required"):
+    with pytest.raises(ValueError, match="midi_input_port_required"):
         rush01_midi_learning.open_exact_input(provider, "")
     assert rush01_midi_learning.open_exact_input(provider, "Input 2") is provider.port
 
     duplicate = _FakeInputProvider(("Duplicate", "Duplicate"))
-    with pytest.raises(RuntimeError, match="ambiguous_midi_input_port_name"):
+    with pytest.raises(ValueError, match="ambiguous_midi_input_port_name"):
         rush01_midi_learning.open_exact_input(duplicate, "Duplicate")
 
 
@@ -193,14 +215,17 @@ def test_control_change_conversion_rejects_invalid_messages(message: object) -> 
     assert rush01_midi_learning.control_change_bytes(message) is None
 
 
-def test_control_change_conversion_rejects_non_integer_fields() -> None:
-    class InvalidControlChange:
-        type = "control_change"
-        channel = "0"
-        control = 1
-        value = 1
-
-    assert rush01_midi_learning.control_change_bytes(InvalidControlChange()) is None
+@pytest.mark.parametrize(
+    ("channel", "controller", "value"),
+    (("0", 1, 1), (0, "1", 1), (0, 1, "1")),
+)
+def test_control_change_conversion_rejects_non_integer_fields(
+    channel: object, controller: object, value: object
+) -> None:
+    message = SimpleNamespace(
+        type="control_change", channel=channel, control=controller, value=value
+    )
+    assert rush01_midi_learning.control_change_bytes(message) is None
 
 
 def test_append_observations_is_observed_only_and_validates_existing_file(tmp_path: Path) -> None:

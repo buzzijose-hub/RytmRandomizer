@@ -215,22 +215,6 @@ class ElektronKitCodec:
         )
 
 
-def pack_elektron_7bit(unpacked: bytes) -> bytes:
-    """Pack flat bytes into Elektron's 7-bit-safe SysEx representation."""
-
-    if unpacked is None:  # type: ignore[unreachable]
-        raise ValueError("pack_elektron_7bit: unpacked payload is None")
-    out = bytearray()
-    for group_start in range(0, len(unpacked), 7):
-        group = unpacked[group_start : group_start + 7]
-        header = 0
-        for bit_index, byte in enumerate(group):
-            header |= ((byte >> 7) & 0x01) << bit_index
-        out.append(header)
-        out.extend(byte & 0x7F for byte in group)
-    return bytes(out)
-
-
 def encode_elektron_u14(value: int) -> bytes:
     """Encode one unsigned 14-bit value as two legal SysEx data bytes."""
 
@@ -247,6 +231,30 @@ def decode_elektron_u14(raw: bytes) -> int:
     if any(byte > 0x7F for byte in raw):
         raise ValueError("decode_elektron_u14: bytes must be in the 7-bit MIDI range")
     return (raw[0] << 7) | raw[1]
+
+
+def pack_elektron_7bit(unpacked: bytes) -> bytes:
+    """Pack arbitrary bytes into Elektron's 7-bit SysEx payload encoding.
+
+    Each group of up to seven input bytes becomes one high-bit header followed
+    by the seven low-bit data bytes. Empty input returns empty output.
+
+    Raises:
+        ValueError: if ``unpacked`` is ``None``.
+    """
+
+    if unpacked is None:  # type: ignore[unreachable]
+        raise ValueError("pack_elektron_7bit: unpacked payload is None")
+
+    out = bytearray()
+    for start in range(0, len(unpacked), 7):
+        group = unpacked[start : start + 7]
+        header = 0
+        for bit_index, byte in enumerate(group):
+            header |= ((byte >> 7) & 0x01) << bit_index
+        out.append(header)
+        out.extend(byte & 0x7F for byte in group)
+    return bytes(out)
 
 
 def unpack_elektron_7bit(packed: bytes) -> bytes:

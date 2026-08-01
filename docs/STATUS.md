@@ -1,30 +1,157 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-07-16. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-08-01. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-07-31: PR #217 round-2 review fixes — cockpit frontend + docs
+  truth pass.
+  - **Armed SEND is now reachable (I2).** The sidecar's ArmedApply seam
+    refuses an armed `send` without `confirm: true`, but the UI emitted a
+    bare `{ type: 'send' }` — the live SEND button could not succeed.
+    `ActionBar` now raises an explicit per-action confirmation dialog
+    (`role="dialog"`, labelled heading, Escape + focus trap, axe-clean)
+    when the session is live and armed, and only then emits
+    `{ type: 'send', confirm: true }`. The unarmed / mock path is
+    unchanged and deliberately pinned: one click, no `confirm`, no dialog.
+    `SendCommand` in `ws/protocol.ts` carries the optional field.
+  - **New Playwright journey** `e2e/armed_send_journey.spec.ts`: the
+    unarmed leg runs everywhere against the real sidecar; the armed leg
+    (arm → exact port + token → prepare → confirmed SEND → disarm) skips
+    with a named reason on hosts with no enumerable MIDI output, rather
+    than faking a port through a sidecar backdoor.
+  - **Panel registry is no longer bypassed (I8).** `PANEL_REGISTRY` held
+    only the analyzer while five interactive panels were hand-mounted in
+    `Cockpit.tsx`. The manifest entry is now a discriminated union
+    (`model-selector` | `store-slice`) and all five bottom-rail panels are
+    registered; `Cockpit.tsx` renders `<PanelHost region="bottom" />`.
+    Rendering is byte-identical.
+  - **Demo honesty.** The scoped-randomization and kit-morph panels
+    recompute plans client-side over a committed fixture, so both now
+    carry a `DemoDataBanner` saying so in the UI.
+  - **Docs truth pass (I12).** Narrowed the single-seam claim to the
+    cockpit surface in `CLAUDE.md` rule 8, the Live-but-Passive rule,
+    `README.md`, `ARCHITECTURE.md`, and the plan — `app.py` (11
+    `open_output` sites) and `shell.py` (2) are exempt via the named
+    shrinking allowlist. Removed every backup/reversibility promise
+    (persistent writes are refused, not backed up). Corrected
+    COCKPIT_QUICKSTART's SAVE text (it does not persist to hardware).
+    Replaced the deleted cockpit RealAdapter path and the direct-SEND
+    arrow in ARCHITECTURE_DIAGRAMS and dropped every stale
+    "forward-looking" label for now-shipped packages. Narrowed the
+    never-PATH-python claim (`sidecar.rs` falls back to PATH in dev).
+    Pyright 1.1.407 → 1.1.411 in LOCAL_DEV_TOOLING_NOTES, which also
+    gained a canonical env-var index covering `RYTM_RAND_SIDECAR_BIN`,
+    `RYTM_RAND_MIDI_BACKEND`, `RYTM_REPORT_GOLDEN_CAPTURE`,
+    `RYTM_DATA_DUMP_CAPTURE`, and `TOUCHED_COV_BASE_REF`. Recorded the
+    open cockpit-log divergence (exact port name + raw `repr(exc)` in
+    structured records) in `docs/OBSERVABILITY.md`.
+
+- 2026-07-29: Rival-program bundle executed on the `rival-program`
+  integration branch (plan:
+  `docs/superpowers/plans/2026-07-18-rival-program.md`; 18 commits over base
+  `9978231`, one bundle PR per the cascade-merge rule). What landed, by
+  workstream:
+  - **Guardrail suite (WS-0/WS-1):** repo-root perimeter test (top-level
+    directory allowlist + repo-wide `mido`/`rtmidi` import scan),
+    armed-entry-point transmit whitelist, report-shape censuses,
+    declarative import-direction matrix, data-layer drift guard, and a
+    full-stdout golden net over the passive CLI command surface
+    (`tests/fixtures/report_goldens/`).
+  - **Paper-spec retirement (WS-1, maintainer-approved Decision Gate ③;
+    evidence + execution record in
+    `docs/superpowers/plans/2026-07-20-live-gui-retirement-evidence.md`):
+    18 passive paper-spec report modules deleted — the 12 approved
+    `live_gui_*` desktop/harness specs, the 2
+    `controller_brain_live_desktop_*` re-stamps, and 4 audit-passed
+    widening candidates — with their 18 test files, CLI/help
+    registrations, and `docs/CLI_REFERENCE.md` rows. The retirement
+    commit is 74 files, +1,349/−38,949 (net −37.6k lines). The two kept
+    pinning commands (`…analyzer-overlay-report`,
+    `…action-reducer-report`) were verified byte-identical across
+    text/JSON/option/error paths; every `live_gui_*_model` packet feeder,
+    `live_gui_common`, and the performance-console runtime path are
+    untouched.
+  - **Platforms (WS-2/WS-3):** ReportSpec core + shared
+    fingerprint/validator/option helpers; schema-driven PanelSpec panel
+    platform + registry + the `/add-cockpit-panel` skill;
+    `desktop/web/src/types/live_gui_protocol.ts` is now GENERATED from
+    the Python TypedDicts (with a console test fixture).
+  - **Live-but-Passive runtime (WS-4/5/6):** push-capable WS transport
+    (per-connection queues, reader/writer split); `ConnectionManager`
+    launch brain (`disconnected → searching → listening`, input-only
+    opens); the `senders/armed_apply.py` ArmedApply seam with an explicit
+    in-UI arm + confirmation; live MIDI monitor
+    (`cockpit/device/midi_monitor.py`); Connection Doctor + error journal
+    + `/health` (`cockpit/diagnostics.py`); sound library store
+    (`cockpit/library/store.py`).
+  - **Launch experience (WS-7):** double-click launch — bundled sidecar,
+    spawn-failure dialogs, dynamic port via `RYTM_RAND_WS_PORT`, a CI
+    launch-smoke job, and the `RYTM_RAND_MIDI_BACKEND=off` kill switch.
+  - **Accessibility + parity features (WS-8/WS-9):** WCAG 2.2 AA
+    axe gate on every route (0 violations, 44 a11y tests) with
+    `docs/ACCESSIBILITY.md`; kit morphing + scoped randomization
+    (`behavior/morph.py`, `behavior/scope.py` — passive, parity-pinned
+    cross-language).
+  - **Honest numbers:** bundle diff vs base is 420 files,
+    +94,799/−27,840 (net +66,959 lines, dominated by generated goldens,
+    fixtures, and frontend tests; production retirement above is −37.6k).
+    Gates at HEAD `ddeb8af`: full suite 6,643 green (three consecutive
+    runs), architecture suite 687 green, frontend 582 vitest + 44 a11y
+    green, V1.34 parity 685/685 byte-identical (505 golden files
+    untouched). Plan-doc discoverability: every plan is now indexed in
+    `docs/superpowers/plans/INDEX.md`.
+- 2026-07-28: PR #214 is the current A4 audio-to-patch milestone. It produces
+  four deterministic audio-dependent candidates with saved-kit files, complete
+  DNA/CC-NRPN sidecars, immutable publication, passive recorded-render ranking,
+  and a hash-verified live-dial plan. Saved-kit writing remains limited to
+  hardware-validated Filter2 Resonance. Armed delivery is manifest-only,
+  guarded by `app --arm`, and now limited to 26 rows / 34 CC-NRPN messages.
+  The 2026-07-29 supervised rehearsal delivered the former 33-row / 53-message
+  plan but failed semantic verification for six inferred A4 enum values; those
+  rows were demoted before a second 27-row / 37-message rehearsal. The second
+  pass verified the 26 mappings still retained in policy and disproved LFO1
+  Mode: raw `0` left the front panel at `FREE`, not `TRG`. LFO1 Mode and the
+  earlier six enum rows now remain manual alongside six paired-CC rows. Both
+  rehearsals ended with a clean initialized-kit reload without saving. Stored
+  manifests are now revalidated against current transport policy before
+  provider construction, and partial-plan success is labeled transport delivery
+  rather than semantic verification. Strict production typing is reproducible with
+  `just typecheck`; the CODEOWNER accepted the separately disclosed dynamic
+  test-harness typing debt and historical Gate 14/16 evidence exceptions for
+  this PR. The physical pre-merge gate is complete for the current 26-row
+  routed subset; fresh online CI and reviewer approval remain pending.
+  Native decoder success on Windows remains environment-dependent; abnormal
+  child exits fail closed and clean private staging. Detailed hardware evidence
+  and current verification counts live in PR #214,
+  `docs/hardware-validation/2026-07-16-a4-saved-kit-roundtrip-results.md`, and
+  `docs/superpowers/plans/2026-07-03-analog-four-audio-patch-genome_RUN_REPORT.md`.
 - 2026-07-16: RUSH01 CODEOWNER review repair completed on the PR tree. The
-  standalone apply and learn tools are passive compile/report surfaces; exact
-  input learning and confirmed CC-only output now enter exclusively through
-  `app.py --arm`. Unknown specification content fails closed, normalized MIDI
-  values carry explicit 7-bit/14-bit domains, and unverified CC14 conversion
-  remains learn-required. Fresh verification passed 148 focused RUSH01/data
-  tests, 683 architecture tests, all 685 frozen V1.34 parity items, and 6316
-  full-suite tests with 3 skips. The three focused production modules reached
-  100% statements/branches (668 statements, 290 branches), and the app repair
-  diff covered all 144 added executable statements and 22 added branch lines.
-  Verification opened no MIDI backend or physical port and sent no MIDI or
-  SysEx. Direct offline KIT generation remains blocked.
+  standalone compile and observation-report surfaces are passive; exact-input
+  learning and confirmed CC-only output are app-owned operations under
+  `app.py --arm` with feature-specific guards. Unknown specification content
+  fails closed, normalized MIDI values carry explicit 7-bit/14-bit domains,
+  and unverified CC14 conversion remains learn-required. Fresh post-merge
+  verification on the exact repaired tree: 7,598 tests passed with 3 skipped;
+  744 architecture tests passed; all 685 V1.34 parity cases remained
+  byte-identical; strict Pyright passed for 105 touched production modules;
+  total branch coverage was 99.44%, with all 13 touched production files at
+  100% line and branch coverage; Ruff, Black, and isort passed. Repeated
+  passive compilation produced byte-identical plans: Rytm SHA-256
+  `2e633dbb2b6b8f6f82f0301e8fe5f27dfb234aee7ba03efeb4374cdd9cf05414`
+  (305 ready, 16 manual, 3 learn-required, 0 invalid) and A4 SHA-256
+  `2fa10d4145d47ef3ec40375a4abc2b81ed80a7f375d852dcb85112c7516ad785`
+  (149 ready, 5 manual, 85 learn-required, 6 invalid). Both frozen plans
+  contain zero transport messages, no assigned channels, no output port,
+  `dry_run=true`, and `midi_sent=false`. Verification opened no physical port
+  and sent no MIDI or SysEx. Direct offline KIT generation remains blocked.
 - 2026-07-15: RUSH01 reference-anchored kit build audit completed locally.
-  The shared Elektron envelope now has a tested inverse packer, u14 integrity
+  The shared Elektron envelope has a tested inverse packer, u14 integrity
   helpers, and a codec that can encode only from a validated decoded reference
-  frame. The approved Rytm and A4 initialized-kit dumps round-trip
-  byte-identically while preserving all object/header bytes. Both semantic
-  builds remain blocked and no partial `.syx` was emitted: Rytm still lacks
-  critical promoted machine/level/selector evidence, and A4 still lacks
-  promoted offsets and typed conversions for nearly all requested sound
-  fields. The build and mapping-gap reports record the exact evidence needed.
+  frame. Approved local Rytm and A4 initialized-kit dumps round-trip
+  byte-identically while preserving object/header bytes, but the private dumps
+  are not tracked. Both semantic builds remain blocked and no partial `.syx`
+  is emitted; the build and mapping-gap reports record the required evidence.
 - 2026-07-08: Passive local model copilot bundle prepared locally. The new
   `local-model-copilot-report` command builds deterministic docs/MIDI,
   staged mutation-intent, and Analog Four patch co-designer packets, and only
@@ -61,9 +188,9 @@ Last updated: 2026-07-16. This file is a hand-authored snapshot and is meant to 
   candidate-promoted Filter2 Resonance calibration records packed offsets
   `170`, `570`, `970`, and `1370` across the four synth tracks, values
   `0`/`20`/`127`, and fingerprints for the Track 1 value sweep plus Track 2-4
-  127 stride-confirmation exports. It remains passive: no MIDI port opened,
-  no MIDI sent, no SysEx written, no hardware mutation, and no broader A4 kit
-  writer claim until additional fields are captured and validated.
+  127 stride-confirmation exports. Filter2 Resonance has since advanced to the
+  narrow hardware-write-validated file path described above; the other three
+  fields remain candidate-only and blocked from operator-facing export.
 - 2026-07-04: Passive Analog Four initialized-baseline report prepared
   locally from Jose's Test 1 exports. The new
   `analog-four-baseline-report` command compares kit, pattern+kit, and
@@ -87,9 +214,11 @@ Last updated: 2026-07-16. This file is a hand-authored snapshot and is meant to 
   counts the exact transport messages, and lists skipped front-panel rows that
   still need ordinal capture. The active app path now supports
   `--dry-run --a4-patch-send-plan` for mock rendering and
-  `--arm --a4-patch-send-plan --confirm-a4-patch-send-plan` for explicit A4
-  output sends; it sends only compiler-approved rows and leaves screen-only
-  destination rows manual.
+  `--arm --a4-patch-send-plan --batch-manifest <batch.json>
+  --batch-manifest-sha256 "<reviewed digest>" --candidate N
+  --confirm-a4-patch-send-plan --a4-output-port "<exact configured name>"`
+  for explicit A4 output sends; it sends only compiler-approved rows and
+  leaves screen-only destination rows manual.
 - 2026-07-03: Passive Analog Four patch learning layer prepared locally. The
   new `analog-four-patch-learning-report` command builds on the patch genome
   by ranking all four candidates, routing measured reference traits to Analog

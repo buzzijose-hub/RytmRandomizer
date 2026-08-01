@@ -25,6 +25,7 @@ import pytest
 
 import rytm_randomizer.constants as pkg_constants
 import rytm_randomizer.data as data
+import rytm_randomizer.data.analog_four_patch_templates as a4_patch_templates
 import rytm_randomizer.profiles as pkg_profiles
 import rytm_randomizer.scenes as pkg_scenes
 
@@ -70,8 +71,76 @@ def test_machine_cc_is_15_everywhere():
 def test_a4_sysex_calibration_tracks_filter2_resonance_capture():
     calibration = data.ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS["Filter2 Resonance"]
 
-    assert calibration.status == "candidate-promoted"
+    assert calibration.status == "hardware-write-validated"
     assert calibration.track_1_primary_raw_offset == 170
+    assert data.ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS["Filter2 Resonance"]
+
+
+def test_a4_saved_kit_layout_is_canonical_data() -> None:
+    assert data.A4_CHECKSUM_PACKED_OFFSET == 8
+    assert data.A4_SAVED_KIT_TRAILER_SIZE == 4
+    assert data.A4_SAVED_KIT_UNPACKED_SIZE == 2415
+    assert data.A4_SAVED_KIT_PACKED_SIZE == 2760
+    assert data.A4_SAVED_KIT_FRAMED_SIZE == 2770
+
+
+def test_a4_audio_inference_model_is_canonical_immutable_data() -> None:
+    model = data.ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER
+
+    assert len(model) == 28
+    assert model["Filter2 Resonance"].intercept == 6.0
+    assert model["LFO1 Depth B"].terms[0].feature_keys == ("animation", "noise")
+    assert model["OSC1 Pulsewidth"] is model["OSC2 Pulsewidth"]
+    with pytest.raises(TypeError):
+        model["Filter2 Resonance"] = model["Volume"]  # type: ignore[index]
+
+
+def test_a4_patch_family_order_is_canonical_data() -> None:
+    expected = ("Oscillators", "Envelope and LFO", "Filter and effects")
+
+    assert expected == data.ANALOG_FOUR_PATCH_FAMILY_ORDER
+    assert expected == a4_patch_templates.ANALOG_FOUR_PATCH_FAMILY_ORDER
+    assert "ANALOG_FOUR_PATCH_FAMILY_ORDER" in data.__all__
+    assert "ANALOG_FOUR_PATCH_FAMILY_ORDER" in a4_patch_templates.__all__
+
+
+def test_a4_audio_inference_model_rejects_unknown_keys_at_construction() -> None:
+    from rytm_randomizer.data.analog_four_audio_inference import (
+        A4_AUDIO_INFERENCE_UNIPOLAR,
+        AnalogFourAudioInferenceSpec,
+        AnalogFourAudioInferenceTerm,
+    )
+
+    assert set(data.ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER) == set(
+        data.ANALOG_FOUR_INFERENCE_PARAMETERS
+    )
+    with pytest.raises(ValueError, match="feature keys"):
+        AnalogFourAudioInferenceTerm(("typo",), 1.0)  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="at least one feature"):
+        AnalogFourAudioInferenceTerm((), 1.0)
+    with pytest.raises(ValueError, match="at least one parameter"):
+        AnalogFourAudioInferenceSpec((), A4_AUDIO_INFERENCE_UNIPOLAR, 0.0, ())
+    with pytest.raises(ValueError, match="must be unique"):
+        AnalogFourAudioInferenceSpec(
+            ("Volume", "Volume"),
+            A4_AUDIO_INFERENCE_UNIPOLAR,
+            0.0,
+            (AnalogFourAudioInferenceTerm(("brightness",), 1.0),),
+        )
+    with pytest.raises(ValueError, match="parameters"):
+        AnalogFourAudioInferenceSpec(
+            ("Filter2 Resonanse",),  # type: ignore[arg-type]
+            A4_AUDIO_INFERENCE_UNIPOLAR,
+            0.0,
+            (AnalogFourAudioInferenceTerm(("brightness",), 1.0),),
+        )
+    with pytest.raises(ValueError, match="weighted term"):
+        AnalogFourAudioInferenceSpec(
+            ("Filter2 Resonance",),
+            A4_AUDIO_INFERENCE_UNIPOLAR,
+            0.0,
+            (),
+        )
 
 
 def test_profile_registry_has_expected_keys():

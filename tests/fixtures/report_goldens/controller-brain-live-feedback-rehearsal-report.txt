@@ -1,0 +1,433 @@
+RytmRandomizer passive controller brain live feedback rehearsal
+Controller brain live feedback rehearsal:
+- version: controller-brain-live-feedback-rehearsal-v1
+- status: feedback-output-blocked
+- session: Live Session
+- source dispatch: controller-brain-live-dispatch-rehearsal-report
+- source dispatch version: controller-brain-live-dispatch-rehearsal-v1
+- source dispatch status: shadow-dispatch-blocked
+- source dispatch decisions: 27
+- feedback frames: 27
+- feedback zones: 3
+- output gates: 6
+- blocked output gates: 6
+Feedback frames:
+- feedback.frame.state.global-preview-depth: state-reducer / blocked-metadata-only
+  source: dispatch.decision.state.global-preview-depth
+  led: safe-ready
+  ring: preview-depth
+  display: global preview depth -> blocked shadow state-reducer
+  evidence: dispatch.decision.state.global-preview-depth rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.state.macro-industrial: state-reducer / blocked-metadata-only
+  source: dispatch.decision.state.macro-industrial
+  led: safe-ready
+  ring: macro-industrial
+  display: macro industrial -> blocked shadow state-reducer
+  evidence: dispatch.decision.state.macro-industrial rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.state.rytm-pad5-source-amount: state-reducer / blocked-metadata-only
+  source: dispatch.decision.state.rytm-pad5-source-amount
+  led: safe-ready
+  ring: source-amount
+  display: rytm pad5 source amount -> blocked shadow state-reducer
+  evidence: dispatch.decision.state.rytm-pad5-source-amount rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.state.rytm-pad6-source-amount: state-reducer / blocked-metadata-only
+  source: dispatch.decision.state.rytm-pad6-source-amount
+  led: safe-ready
+  ring: source-amount
+  display: rytm pad6 source amount -> blocked shadow state-reducer
+  evidence: dispatch.decision.state.rytm-pad6-source-amount rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.state.rytm-pad12-source-amount: state-reducer / blocked-metadata-only
+  source: dispatch.decision.state.rytm-pad12-source-amount
+  led: safe-ready
+  ring: source-amount
+  display: rytm pad12 source amount -> blocked shadow state-reducer
+  evidence: dispatch.decision.state.rytm-pad12-source-amount rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.state.a4-track1-macro-depth: state-reducer / blocked-metadata-only
+  source: dispatch.decision.state.a4-track1-macro-depth
+  led: safe-ready
+  ring: macro-depth
+  display: a4 track1 macro depth -> blocked shadow state-reducer
+  evidence: dispatch.decision.state.a4-track1-macro-depth rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.state.crate-dark-hypnotic: state-reducer / blocked-metadata-only
+  source: dispatch.decision.state.crate-dark-hypnotic
+  led: safe-ready
+  ring: dark-hypnotic
+  display: crate dark hypnotic -> blocked shadow state-reducer
+  evidence: dispatch.decision.state.crate-dark-hypnotic rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.state.queue-next-1: state-reducer / blocked-metadata-only
+  source: dispatch.decision.state.queue-next-1
+  led: safe-ready
+  ring: next-1
+  display: queue next 1 -> blocked shadow state-reducer
+  evidence: dispatch.decision.state.queue-next-1 rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.state.snapshot-panic-home: state-reducer / blocked-metadata-only
+  source: dispatch.decision.state.snapshot-panic-home
+  led: safe-ready
+  ring: panic
+  display: snapshot panic home -> blocked shadow state-reducer
+  evidence: dispatch.decision.state.snapshot-panic-home rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.queue.global-preview-depth: queue-reducer / blocked-metadata-only
+  source: dispatch.decision.queue.global-preview-depth
+  led: queued-armed
+  ring: preview-depth
+  display: global preview depth -> blocked shadow queue-reducer
+  evidence: dispatch.decision.queue.global-preview-depth rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.queue.macro-industrial: queue-reducer / blocked-metadata-only
+  source: dispatch.decision.queue.macro-industrial
+  led: queued-armed
+  ring: macro-industrial
+  display: macro industrial -> blocked shadow queue-reducer
+  evidence: dispatch.decision.queue.macro-industrial rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.queue.rytm-pad5-source-amount: queue-reducer / blocked-metadata-only
+  source: dispatch.decision.queue.rytm-pad5-source-amount
+  led: queued-armed
+  ring: source-amount
+  display: rytm pad5 source amount -> blocked shadow queue-reducer
+  evidence: dispatch.decision.queue.rytm-pad5-source-amount rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.queue.rytm-pad6-source-amount: queue-reducer / blocked-metadata-only
+  source: dispatch.decision.queue.rytm-pad6-source-amount
+  led: queued-armed
+  ring: source-amount
+  display: rytm pad6 source amount -> blocked shadow queue-reducer
+  evidence: dispatch.decision.queue.rytm-pad6-source-amount rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.queue.rytm-pad12-source-amount: queue-reducer / blocked-metadata-only
+  source: dispatch.decision.queue.rytm-pad12-source-amount
+  led: queued-armed
+  ring: source-amount
+  display: rytm pad12 source amount -> blocked shadow queue-reducer
+  evidence: dispatch.decision.queue.rytm-pad12-source-amount rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.queue.a4-track1-macro-depth: queue-reducer / blocked-metadata-only
+  source: dispatch.decision.queue.a4-track1-macro-depth
+  led: queued-armed
+  ring: macro-depth
+  display: a4 track1 macro depth -> blocked shadow queue-reducer
+  evidence: dispatch.decision.queue.a4-track1-macro-depth rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.queue.crate-dark-hypnotic: queue-reducer / blocked-metadata-only
+  source: dispatch.decision.queue.crate-dark-hypnotic
+  led: queued-armed
+  ring: dark-hypnotic
+  display: crate dark hypnotic -> blocked shadow queue-reducer
+  evidence: dispatch.decision.queue.crate-dark-hypnotic rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.queue.queue-next-1: queue-reducer / blocked-metadata-only
+  source: dispatch.decision.queue.queue-next-1
+  led: queued-armed
+  ring: next-1
+  display: queue next 1 -> blocked shadow queue-reducer
+  evidence: dispatch.decision.queue.queue-next-1 rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.queue.snapshot-panic-home: queue-reducer / blocked-metadata-only
+  source: dispatch.decision.queue.snapshot-panic-home
+  led: queued-armed
+  ring: panic
+  display: snapshot panic home -> blocked shadow queue-reducer
+  evidence: dispatch.decision.queue.snapshot-panic-home rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.audit.global-preview-depth: audit-ledger / blocked-metadata-only
+  source: dispatch.decision.audit.global-preview-depth
+  led: audit-muted
+  ring: preview-depth
+  display: global preview depth -> blocked shadow audit-ledger
+  evidence: dispatch.decision.audit.global-preview-depth rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.audit.macro-industrial: audit-ledger / blocked-metadata-only
+  source: dispatch.decision.audit.macro-industrial
+  led: audit-muted
+  ring: macro-industrial
+  display: macro industrial -> blocked shadow audit-ledger
+  evidence: dispatch.decision.audit.macro-industrial rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.audit.rytm-pad5-source-amount: audit-ledger / blocked-metadata-only
+  source: dispatch.decision.audit.rytm-pad5-source-amount
+  led: audit-muted
+  ring: source-amount
+  display: rytm pad5 source amount -> blocked shadow audit-ledger
+  evidence: dispatch.decision.audit.rytm-pad5-source-amount rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.audit.rytm-pad6-source-amount: audit-ledger / blocked-metadata-only
+  source: dispatch.decision.audit.rytm-pad6-source-amount
+  led: audit-muted
+  ring: source-amount
+  display: rytm pad6 source amount -> blocked shadow audit-ledger
+  evidence: dispatch.decision.audit.rytm-pad6-source-amount rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.audit.rytm-pad12-source-amount: audit-ledger / blocked-metadata-only
+  source: dispatch.decision.audit.rytm-pad12-source-amount
+  led: audit-muted
+  ring: source-amount
+  display: rytm pad12 source amount -> blocked shadow audit-ledger
+  evidence: dispatch.decision.audit.rytm-pad12-source-amount rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.audit.a4-track1-macro-depth: audit-ledger / blocked-metadata-only
+  source: dispatch.decision.audit.a4-track1-macro-depth
+  led: audit-muted
+  ring: macro-depth
+  display: a4 track1 macro depth -> blocked shadow audit-ledger
+  evidence: dispatch.decision.audit.a4-track1-macro-depth rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.audit.crate-dark-hypnotic: audit-ledger / blocked-metadata-only
+  source: dispatch.decision.audit.crate-dark-hypnotic
+  led: audit-muted
+  ring: dark-hypnotic
+  display: crate dark hypnotic -> blocked shadow audit-ledger
+  evidence: dispatch.decision.audit.crate-dark-hypnotic rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.audit.queue-next-1: audit-ledger / blocked-metadata-only
+  source: dispatch.decision.audit.queue-next-1
+  led: audit-muted
+  ring: next-1
+  display: queue next 1 -> blocked shadow audit-ledger
+  evidence: dispatch.decision.audit.queue-next-1 rehearses controller feedback without output
+  blocked: emit controller feedback
+- feedback.frame.audit.snapshot-panic-home: audit-ledger / blocked-metadata-only
+  source: dispatch.decision.audit.snapshot-panic-home
+  led: audit-muted
+  ring: panic
+  display: snapshot panic home -> blocked shadow audit-ledger
+  evidence: dispatch.decision.audit.snapshot-panic-home rehearses controller feedback without output
+  blocked: emit controller feedback
+Feedback zones:
+- state-reducer: 9 frame(s)
+  led: safe-ready
+  ring: preview-depth
+  status: blocked-metadata-only
+  blocked: write controller LED state
+  safety: state-reducer feedback stays passive metadata only
+- queue-reducer: 9 frame(s)
+  led: queued-armed
+  ring: preview-depth
+  status: blocked-metadata-only
+  blocked: write controller encoder ring state
+  safety: queue-reducer feedback stays passive metadata only
+- audit-ledger: 9 frame(s)
+  led: audit-muted
+  ring: preview-depth
+  status: blocked-metadata-only
+  blocked: write controller display text
+  safety: audit-ledger feedback stays passive metadata only
+Output gates:
+- controller-output: blocked / blocked=True
+  evidence: no controller output adapter is opened
+  operator action: approve an output adapter before feedback emission
+  blocked: open controller output adapter
+  safety: this report opens no controller output adapter
+- led-output: blocked / blocked=True
+  evidence: LED states are rendered as metadata only
+  operator action: define LED semantics before writing controller LEDs
+  blocked: write controller LED state
+  safety: this report writes no LEDs
+- ring-output: blocked / blocked=True
+  evidence: encoder ring states are rendered as metadata only
+  operator action: define ring scaling before writing controller rings
+  blocked: write controller encoder ring state
+  safety: this report writes no encoder rings
+- display-output: blocked / blocked=True
+  evidence: display text is rendered as metadata only
+  operator action: define display layout before writing controller displays
+  blocked: write controller display text
+  safety: this report writes no controller displays
+- websocket-feedback: blocked / blocked=True
+  evidence: no Cockpit WebSocket feedback packet is dispatched
+  operator action: define feedback acknowledgements before dispatch
+  blocked: dispatch Cockpit WebSocket feedback
+  safety: this report dispatches no WebSocket feedback
+- hardware-feedback: blocked / blocked=True
+  evidence: hardware output remains outside this passive rehearsal
+  operator action: emit feedback only through a separately approved armed path
+  blocked: emit controller feedback
+  safety: this report emits no controller feedback
+Blocked active actions:
+- open controller output adapter
+- emit controller feedback
+- write controller LED state
+- write controller encoder ring state
+- write controller display text
+- dispatch Cockpit WebSocket feedback
+- open controller input adapter
+- execute live state reducer
+- dispatch controller runtime command
+- dispatch Cockpit WebSocket commands
+- open MIDI output
+- send hardware MIDI
+- mutate a snapshot
+- write bridge audit side effects
+- apply live state reducer
+- dispatch controller runtime event
+- write controller audit ledger
+- open MIDI controller input
+- MIDI learn or raw CC capture
+- arm hardware
+- dispatch controller gesture to active runtime
+- send controller feedback
+- open Analog Rytm output
+- open Analog Four output
+- a4_outbound_macro_send
+- unattended_hardware_behavior
+- open_midi_port_without_arm
+- send_without_dry_run
+- fire macro from Cockpit console
+- prepare hardware send from Cockpit macro action
+- dispatch Rytm lane policy from Cockpit console
+- send Rytm lane policy from Cockpit console
+- fire rehearsal cue from Cockpit console
+- open MIDI port from rehearsal board
+- send MIDI from rehearsal board
+- promote A4 macro from rehearsal board
+- receive kit from Cockpit console
+- mutate captured kit from Cockpit console
+- send captured plan from Cockpit console
+- open Rytm SysEx input from passive Cockpit report
+- receive kit from Cockpit workbench
+- stage captured-kit mutation from Cockpit workbench
+- apply captured-kit package from Cockpit console
+- export captured-kit package from passive Cockpit report
+- send captured plan from Cockpit workbench
+- generate captured-kit package from Cockpit console
+- apply audition package from passive Cockpit console
+- send audition variation from Cockpit console
+- write audition package file from passive report
+- open MIDI port from package audition
+- generate operator package from Cockpit console
+- send operator package from Cockpit console
+- write operator package file from passive report
+- commit operator journal from passive report
+- open MIDI port from operator package
+- trigger A4 macro from Cockpit console
+- open A4 output port from Cockpit console
+- A4 full macro SEND
+- A4 unattended macro playback
+- fire queued style move
+- dispatch crate move
+- replay journal entry
+- persist journal entry
+- open MIDI port
+- send MIDI
+- mutate hardware
+- launch GUI
+- arm-hardware
+- open-midi-port
+- send-midi
+- record-audio
+- render-gui
+- open MIDI port from snapshot history
+- send MIDI from snapshot history
+- arm hardware from snapshot history
+- mutate hardware from snapshot history
+- launch GUI from snapshot history
+- dispatch queued command from model
+- run undo from model
+- load snapshot from model
+- open MIDI port from model
+- send MIDI from model
+- mutate hardware from model
+- launch GUI from model
+- arm hardware from safety checklist
+- open MIDI port from safety checklist
+- send MIDI from safety checklist
+- mutate hardware from safety checklist
+- launch GUI from safety checklist
+- open_midi_port
+- arm_hardware
+- send_midi
+- write_sysex
+- mutate_hardware
+Replay commands:
+- python -m rytm_randomizer.cli controller-brain-live-feedback-rehearsal-report
+- python -m rytm_randomizer.cli controller-brain-live-feedback-rehearsal-report --json
+- python -m rytm_randomizer.cli controller-brain-live-dispatch-rehearsal-report --json
+- python -m rytm_randomizer.cli controller-brain-live-bridge-readiness-report --json
+Safety:
+- passive/read-only
+- controller-brain feedback rehearsal metadata only
+- composes controller-brain dispatch rehearsal only
+- feedback frames are metadata only
+- output gates are metadata only
+- JSON/stdout only
+- no MIDI controller output
+- no controller feedback emission
+- no WebSocket feedback dispatch
+- no runtime reducer execution
+- no MIDI sending
+- no port opening
+- no snapshot mutation
+- no hardware mutation
+- no hardware required
+- controller-brain dispatch rehearsal metadata only
+- composes controller-brain bridge readiness only
+- shadow dispatch decisions are metadata only
+- transport gates are metadata only
+- no MIDI controller input
+- no MIDI learn or raw CC capture
+- no WebSocket command dispatch
+- no state-store mutation
+- controller-brain bridge readiness metadata only
+- composes controller-brain live state only
+- contract packets are metadata only
+- controller-brain live state metadata only
+- composes controller-brain live runbook only
+- state rows are metadata only
+- queued intents are metadata only
+- audit events are metadata only
+- controller-brain live runbook metadata only
+- composes existing passive reports only
+- no command execution
+- controller-template rows only
+- virtual encoder gestures only
+- Cockpit performance console packet only
+- composes passive report metadata only
+- no GUI launch
+- no file writing
+- GUI performance flow metadata only
+- Rytm OXI macro command labels only
+- Analog Four review-only actions stay candidate metadata.
+- no real MIDI rendering
+- macro action cards are declarative only
+- operators still use the armed snapshot shell for real sends
+- all Cockpit macro fire controls stay disabled
+- Rytm lane policy matrix is declarative only
+- Cockpit shows macro policy before the armed snapshot shell applies anything
+- rehearsal board is declarative only
+- launch command is shown for operator copy/review only
+- real Rytm sends remain in the explicitly armed snapshot shell
+- A4 outbound macro promotion remains blocked
+- live kit capture panel is declarative only
+- no SysEx receive from passive Cockpit report
+- operators still run the armed snapshot shell manually
+- captured-anchor recovery remains explicit
+- live kit capture workbench is declarative only
+- capture slots are review metadata only
+- no package apply from passive Cockpit report
+- live kit package audition is declarative only
+- audition slots are rehearsal metadata only
+- journal preview does not write files
+- live kit operator package is declarative only
+- operator steps are browser-local rehearsal metadata
+- local export preview does not write files
+- journal commit remains preview-only
+- A4 review surface is declarative only
+- A4 validation commands are shown for operator review only
+- A4 OXI macro set planning only
+- manual-backed Analog Four CC metadata only
+- A4 full macro SEND remains blocked
+- operator-present validation commands only
+- no unattended hardware behavior
+- A4 full macro SEND remains unimplemented
+- in-memory only
+- device registry metadata only
+Source: rytm_randomizer.reports.controller_brain_live_feedback_rehearsal
+In-memory only: True

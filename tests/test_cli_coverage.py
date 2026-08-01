@@ -44,6 +44,89 @@ KNOWN_SCENE_KEY = next(iter(SCENE_COMMANDS))
 KNOWN_GROUP_PROFILE_KEY = next(iter(GROUP_PROFILE_METADATA))
 
 
+@pytest.mark.parametrize(
+    ("operation", "message"),
+    (
+        (lambda: cli._require_text_lines(None), "list of strings"),
+        (lambda: cli._require_text_lines(["valid", 1]), "list of strings"),
+        (lambda: cli._require_text(1), "return text"),
+        (lambda: cli._require_no_arg_callable(object(), "missing"), "must be callable"),
+        (lambda: cli._require_status_ok([]), "boolean ok field"),
+        (lambda: cli._require_status_ok({"ok": "yes"}), "boolean ok field"),
+        (lambda: cli._require_command_preview([]), "must be a dictionary"),
+        (
+            lambda: cli._require_command_preview({"validation": []}),
+            "validation must be a dictionary",
+        ),
+        (
+            lambda: cli._require_command_preview({"validation": {"ok": "yes", "errors": []}}),
+            "validation has an invalid shape",
+        ),
+    ),
+)
+def test_cli_runtime_shape_guards_reject_invalid_values(
+    operation,
+    message: str,
+) -> None:
+    with pytest.raises(TypeError, match=message):
+        operation()
+
+
+def test_registry_formatters_reject_inconsistent_existing_sections(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer import registry
+
+    monkeypatch.setattr(
+        registry,
+        "get_registry_section",
+        lambda _section: {
+            "section": "commands",
+            "exists": True,
+            "count": 0,
+            "items": None,
+        },
+    )
+
+    with pytest.raises(TypeError, match="section is missing items"):
+        cli.format_registry_list_report("commands", "commands")
+    with pytest.raises(TypeError, match="section is missing items"):
+        cli.format_registry_search_report("commands", "commands", "query")
+    with pytest.raises(TypeError, match="registry is missing items"):
+        cli.format_preview_command_report("COMMAND")
+
+
+@pytest.mark.parametrize(
+    "formatter",
+    (
+        cli.format_inspect_command_report,
+        cli.format_inspect_scene_report,
+        cli.format_inspect_group_profile_report,
+        cli.format_preview_scene_report,
+        cli.format_preview_group_profile_report,
+    ),
+)
+def test_registry_item_formatters_reject_missing_existing_metadata(
+    formatter,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer import registry
+
+    monkeypatch.setattr(
+        registry,
+        "get_registry_item",
+        lambda _section, key: {
+            "section": "test",
+            "key": str(key),
+            "exists": True,
+            "metadata": None,
+        },
+    )
+
+    with pytest.raises(TypeError, match="missing metadata"):
+        formatter("ITEM")
+
+
 # ---------------------------------------------------------------------------
 # Helper-function coverage (the format_* builders at the top of cli.py).
 # Exercising these directly is the cheapest way to cover lines 8-345 without
@@ -151,20 +234,11 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     live_gui_sidecar_session_help = resolve_help_text(
         "style-performance-arc-live-gui-sidecar-session-report"
     )
-    live_gui_screen_contract_help = resolve_help_text(
-        "style-performance-arc-live-gui-screen-contract-report"
-    )
-    live_gui_render_tree_help = resolve_help_text(
-        "style-performance-arc-live-gui-render-tree-report"
-    )
     live_gui_analyzer_overlay_help = resolve_help_text(
         "style-performance-arc-live-gui-analyzer-overlay-report"
     )
     live_gui_analyzer_frame_help = resolve_help_text(
         "style-performance-arc-live-gui-analyzer-frame-report"
-    )
-    live_gui_interaction_script_help = resolve_help_text(
-        "style-performance-arc-live-gui-interaction-script-report"
     )
     live_gui_action_reducer_help = resolve_help_text(
         "style-performance-arc-live-gui-action-reducer-report"
@@ -178,41 +252,14 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     live_gui_playback_validation_help = resolve_help_text(
         "style-performance-arc-live-gui-playback-validation-report"
     )
-    live_gui_test_harness_contract_help = resolve_help_text(
-        "style-performance-arc-live-gui-test-harness-contract-report"
-    )
-    live_gui_test_harness_readiness_help = resolve_help_text(
-        "style-performance-arc-live-gui-test-harness-readiness-report"
-    )
-    live_gui_implementation_bridge_help = resolve_help_text(
-        "style-performance-arc-live-gui-implementation-bridge-report"
-    )
-    live_gui_desktop_blueprint_help = resolve_help_text(
-        "style-performance-arc-live-gui-desktop-blueprint-report"
-    )
-    live_gui_desktop_app_plan_help = resolve_help_text(
-        "style-performance-arc-live-gui-desktop-app-plan-report"
-    )
-    live_gui_desktop_component_contract_help = resolve_help_text(
-        "style-performance-arc-live-gui-desktop-component-contract-report"
-    )
-    live_gui_desktop_view_model_help = resolve_help_text(
-        "style-performance-arc-live-gui-desktop-view-model-report"
-    )
-    live_gui_desktop_render_contract_help = resolve_help_text(
-        "style-performance-arc-live-gui-desktop-render-contract-report"
-    )
-    live_gui_desktop_render_harness_help = resolve_help_text(
-        "style-performance-arc-live-gui-desktop-render-harness-report"
-    )
-    live_gui_cockpit_boundary_readiness_help = resolve_help_text(
-        "style-performance-arc-live-gui-cockpit-boundary-readiness-report"
-    )
     cockpit_send_plan_readiness_help = resolve_help_text("cockpit-send-plan-readiness-report")
     cockpit_send_plan_rehearsal_surface_help = resolve_help_text(
         "cockpit-send-plan-rehearsal-surface-report"
     )
     cockpit_export_rehearsal_help = resolve_help_text("cockpit-export-rehearsal-report")
+    a4_saved_kit_export_help = resolve_help_text("analog-four-saved-kit-export")
+    a4_audio_patch_batch_help = resolve_help_text("analog-four-audio-patch-batch")
+    a4_audio_patch_rank_help = resolve_help_text("analog-four-audio-patch-rank")
 
     assert top_level_help.startswith("RytmRandomizer passive CLI")
     assert "style-performance-arc-live-readiness-report" in top_level_help
@@ -225,28 +272,24 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     assert "style-performance-arc-live-gui-capture-queue-report" in top_level_help
     assert "style-performance-arc-live-gui-capture-review-report" in top_level_help
     assert "style-performance-arc-live-gui-sidecar-session-report" in top_level_help
-    assert "style-performance-arc-live-gui-screen-contract-report" in top_level_help
-    assert "style-performance-arc-live-gui-render-tree-report" in top_level_help
     assert "style-performance-arc-live-gui-analyzer-overlay-report" in top_level_help
     assert "style-performance-arc-live-gui-analyzer-frame-report" in top_level_help
-    assert "style-performance-arc-live-gui-interaction-script-report" in top_level_help
     assert "style-performance-arc-live-gui-action-reducer-report" in top_level_help
     assert "style-performance-arc-live-gui-controller-state-report" in top_level_help
     assert "style-performance-arc-live-gui-playback-transcript-report" in top_level_help
     assert "style-performance-arc-live-gui-playback-validation-report" in top_level_help
-    assert "style-performance-arc-live-gui-test-harness-contract-report" in top_level_help
-    assert "style-performance-arc-live-gui-test-harness-readiness-report" in top_level_help
-    assert "style-performance-arc-live-gui-implementation-bridge-report" in top_level_help
-    assert "style-performance-arc-live-gui-desktop-blueprint-report" in top_level_help
-    assert "style-performance-arc-live-gui-desktop-app-plan-report" in top_level_help
-    assert "style-performance-arc-live-gui-desktop-component-contract-report" in top_level_help
-    assert "style-performance-arc-live-gui-desktop-view-model-report" in top_level_help
-    assert "style-performance-arc-live-gui-desktop-render-contract-report" in top_level_help
-    assert "style-performance-arc-live-gui-desktop-render-harness-report" in top_level_help
-    assert "style-performance-arc-live-gui-cockpit-boundary-readiness-report" in (top_level_help)
     assert "cockpit-send-plan-readiness-report" in top_level_help
     assert "cockpit-send-plan-rehearsal-surface-report" in top_level_help
     assert "cockpit-export-rehearsal-report" in top_level_help
+    assert a4_saved_kit_export_help.startswith(
+        "RytmRandomizer passive CLI: analog-four-saved-kit-export"
+    )
+    assert a4_audio_patch_batch_help.startswith(
+        "RytmRandomizer passive CLI: analog-four-audio-patch-batch"
+    )
+    assert a4_audio_patch_rank_help.startswith(
+        "RytmRandomizer passive CLI: analog-four-audio-patch-rank"
+    )
     assert snapshot_help.startswith(
         "RytmRandomizer passive CLI: rytm-snapshot-pad-compatibility-report"
     )
@@ -368,16 +411,6 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     assert "single sidecar-ready GUI state" in live_gui_sidecar_session_help
     assert "no MIDI sending" in live_gui_sidecar_session_help
-    assert live_gui_screen_contract_help.startswith(
-        "RytmRandomizer passive CLI: style-performance-arc-live-gui-screen-contract-report"
-    )
-    assert "GUI screen contract" in live_gui_screen_contract_help
-    assert "no MIDI sending" in live_gui_screen_contract_help
-    assert live_gui_render_tree_help.startswith(
-        "RytmRandomizer passive CLI: style-performance-arc-live-gui-render-tree-report"
-    )
-    assert "GUI render tree" in live_gui_render_tree_help
-    assert "no MIDI sending" in live_gui_render_tree_help
     assert live_gui_analyzer_overlay_help.startswith(
         "RytmRandomizer passive CLI: style-performance-arc-live-gui-analyzer-overlay-report"
     )
@@ -388,11 +421,6 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     assert "analyzer frame" in live_gui_analyzer_frame_help
     assert "no MIDI sending" in live_gui_analyzer_frame_help
-    assert live_gui_interaction_script_help.startswith(
-        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-interaction-script-report"
-    )
-    assert "GUI interaction script" in live_gui_interaction_script_help
-    assert "no MIDI sending" in live_gui_interaction_script_help
     assert live_gui_action_reducer_help.startswith(
         "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-action-reducer-report"
     )
@@ -413,61 +441,6 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     assert "GUI playback validation" in live_gui_playback_validation_help
     assert "no MIDI sending" in live_gui_playback_validation_help
-    assert live_gui_test_harness_contract_help.startswith(
-        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-test-harness-contract-report"
-    )
-    assert "GUI test-harness contract" in live_gui_test_harness_contract_help
-    assert "no MIDI sending" in live_gui_test_harness_contract_help
-    assert live_gui_test_harness_readiness_help.startswith(
-        "RytmRandomizer passive CLI: "
-        "style-performance-arc-live-gui-test-harness-readiness-report"
-    )
-    assert "GUI test-harness readiness" in live_gui_test_harness_readiness_help
-    assert "no MIDI sending" in live_gui_test_harness_readiness_help
-    assert live_gui_implementation_bridge_help.startswith(
-        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-implementation-bridge-report"
-    )
-    assert "GUI implementation bridge" in live_gui_implementation_bridge_help
-    assert "no MIDI sending" in live_gui_implementation_bridge_help
-    assert live_gui_desktop_blueprint_help.startswith(
-        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-desktop-blueprint-report"
-    )
-    assert "desktop GUI blueprint" in live_gui_desktop_blueprint_help
-    assert "no MIDI sending" in live_gui_desktop_blueprint_help
-    assert live_gui_desktop_app_plan_help.startswith(
-        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-desktop-app-plan-report"
-    )
-    assert "desktop app plan" in live_gui_desktop_app_plan_help
-    assert "no MIDI sending" in live_gui_desktop_app_plan_help
-    assert live_gui_desktop_component_contract_help.startswith(
-        "RytmRandomizer passive CLI: "
-        "style-performance-arc-live-gui-desktop-component-contract-report"
-    )
-    assert "desktop component contract" in live_gui_desktop_component_contract_help
-    assert "no MIDI sending" in live_gui_desktop_component_contract_help
-    assert live_gui_desktop_view_model_help.startswith(
-        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-desktop-view-model-report"
-    )
-    assert "desktop view model" in live_gui_desktop_view_model_help
-    assert "no MIDI sending" in live_gui_desktop_view_model_help
-    assert live_gui_desktop_render_contract_help.startswith(
-        "RytmRandomizer passive CLI: "
-        "style-performance-arc-live-gui-desktop-render-contract-report"
-    )
-    assert "desktop render contract" in live_gui_desktop_render_contract_help
-    assert "no MIDI sending" in live_gui_desktop_render_contract_help
-    assert live_gui_desktop_render_harness_help.startswith(
-        "RytmRandomizer passive CLI: "
-        "style-performance-arc-live-gui-desktop-render-harness-report"
-    )
-    assert "GUI desktop render harness" in live_gui_desktop_render_harness_help
-    assert "no MIDI sending" in live_gui_desktop_render_harness_help
-    assert live_gui_cockpit_boundary_readiness_help.startswith(
-        "RytmRandomizer passive CLI: "
-        "style-performance-arc-live-gui-cockpit-boundary-readiness-report"
-    )
-    assert "cockpit boundary readiness" in live_gui_cockpit_boundary_readiness_help
-    assert "no MIDI sending" in live_gui_cockpit_boundary_readiness_help
     assert cockpit_send_plan_readiness_help.startswith(
         "RytmRandomizer passive CLI: cockpit-send-plan-readiness-report"
     )
@@ -511,6 +484,28 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     assert snapshot_help.split("Safety:\n", 1)[1].splitlines() == [
         f"  {line}" for line in SAFETY_LINES
     ]
+
+
+def test_resolve_help_text_rejects_provider_that_returns_non_string(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer import help_text
+
+    monkeypatch.setitem(help_text.HELP_TEXT, "invalid-provider", lambda: object())
+
+    with pytest.raises(TypeError, match="did not return a string"):
+        help_text.resolve_help_text("invalid-provider")
+
+
+def test_resolve_help_text_rejects_non_string_non_provider(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer import help_text
+
+    monkeypatch.setitem(help_text.HELP_TEXT, "invalid-value", object())
+
+    with pytest.raises(TypeError, match="did not return a string"):
+        help_text.resolve_help_text("invalid-value")
 
 
 def test_format_registry_search_report_match_returns_match_line():

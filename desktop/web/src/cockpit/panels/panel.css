@@ -1,0 +1,239 @@
+/**
+ * Schema-driven panel styles (PanelRenderer).
+ *
+ * Uses only the documented cockpit tokens from `src/cockpit/styles.css`
+ * (--panel, --panel-2, --border, --text, --text-dim, --green, --amber,
+ * --danger, --accent). Tones are ALWAYS paired with an icon glyph in the
+ * markup — color is reinforcement, never the only signal.
+ */
+
+.cockpit-panel-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.cockpit-panel-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 11px;
+}
+
+.cockpit-panel-badge-ok {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.cockpit-panel-badge-warn {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.cockpit-panel-badge-risk {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.cockpit-panel-badge-neutral {
+  border-color: var(--border);
+  color: var(--text-dim);
+}
+
+.cockpit-panel-section {
+  margin-top: 8px;
+}
+
+.cockpit-panel-section-heading {
+  margin: 0 0 4px;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cockpit-panel-rows {
+  margin: 0;
+  padding-left: 16px;
+  color: var(--text);
+  font-size: 12px;
+  display: grid;
+  gap: 2px;
+}
+
+.cockpit-panel-row-empty {
+  color: var(--text-dim);
+}
+
+.cockpit-panel-table-scroll {
+  overflow-x: auto;
+}
+
+.cockpit-panel-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.cockpit-panel-table th {
+  color: var(--text-dim);
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  padding: 3px 8px 3px 0;
+}
+
+.cockpit-panel-table td {
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  padding: 3px 8px 3px 0;
+}
+
+/* ---------- Bespoke control strips around passive panels (Wave 4) ---------- */
+
+.cockpit-panel-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cockpit-panel-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 8px 10px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.cockpit-panel-controls button {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--text);
+  padding: 5px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.cockpit-panel-controls button:hover:enabled {
+  border-color: var(--accent);
+}
+
+.cockpit-panel-controls button:disabled {
+  color: var(--text-dim);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.cockpit-panel-controls label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cockpit-panel-controls input,
+.cockpit-panel-controls select {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--text);
+  padding: 4px 6px;
+  font-size: 11px;
+}
+
+.cockpit-panel-inline-form {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cockpit-panel-note {
+  color: var(--text);
+  font-size: 11px;
+}
+
+/* Static-demonstration banner. Marked with text ("Static demonstration."),
+   a border, and a background — never hue alone — so the honesty label
+   survives greyscale, high-contrast, and forced-colors rendering. */
+.cockpit-panel-demo-banner {
+  color: var(--text);
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 0 0 8px;
+  padding: 6px 10px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+/* Mask toggle buttons (scoped randomization): aria-pressed buttons, never
+   div/span onClick. The pressed state is reinforced with text + border, not
+   hue alone. */
+.cockpit-mask-toggle[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--panel);
+}
+
+.cockpit-mask-toggle[aria-pressed='false'] {
+  color: var(--text-dim);
+}
+
+.cockpit-panel-fieldset {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px 8px;
+  margin: 0;
+  min-width: 0;
+}
+
+.cockpit-panel-fieldset legend {
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0 4px;
+}
+
+.cockpit-panel-toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cockpit-panel-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 180px;
+}
+
+.cockpit-panel-slider input[type='range'] {
+  width: 100%;
+}
+
+/* The activity dot flashes by class toggle only — no CSS animation, so
+   prefers-reduced-motion needs no override here. */
+.midi-activity-dot {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.midi-activity-dot.flashing {
+  color: var(--green);
+}

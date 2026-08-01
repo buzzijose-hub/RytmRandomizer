@@ -1,11 +1,97 @@
 """Passive report-only CLI entrypoint for RytmRandomizer."""
 
+from __future__ import annotations
+
 import sys
+from collections.abc import Callable, Mapping, Sequence
+from typing import TypedDict, cast
 
 from .help_text import HELP_TEXT, USAGE, resolve_help_text
 
 
-def _registered_command_exit_code(args):
+class _RegistrySectionReport(TypedDict):
+    exists: bool
+    section: str
+    items: Mapping[str, Mapping[str, object]] | None
+    count: int
+
+
+class _RegistryItemReport(TypedDict):
+    exists: bool
+    section_exists: bool
+    section: str
+    key: str
+    metadata: Mapping[str, object] | None
+
+
+class _ValidationReport(TypedDict):
+    ok: bool
+    errors: list[str]
+
+
+class _CommandPreviewReport(TypedDict):
+    exists: bool
+    category: object | None
+    scope: object | None
+    target: object | None
+    pad: object | None
+    scaffold_only: object | None
+    executable: object | None
+    forbidden_or_no_touch: bool
+    validation: _ValidationReport
+    safety_summary: str
+
+
+def _require_text_lines(value: object) -> list[str]:
+    if not isinstance(value, list):
+        raise TypeError("report formatter must return a list of strings")
+    lines: list[str] = []
+    for line in cast(list[object], value):
+        if not isinstance(line, str):
+            raise TypeError("report formatter must return a list of strings")
+        lines.append(line)
+    return lines
+
+
+def _require_text(value: object) -> str:
+    if not isinstance(value, str):
+        raise TypeError("report formatter must return text")
+    return value
+
+
+def _require_no_arg_callable(module: object, attribute: str) -> Callable[[], object]:
+    formatter = getattr(module, attribute, None)
+    if not callable(formatter):
+        raise TypeError(f"{attribute} must be callable")
+    return cast(Callable[[], object], formatter)
+
+
+def _require_status_ok(value: object) -> bool:
+    if not isinstance(value, Mapping):
+        raise TypeError("project status check must contain a boolean ok field")
+    ok = cast(Mapping[object, object], value).get("ok")
+    if not isinstance(ok, bool):
+        raise TypeError("project status check must contain a boolean ok field")
+    return ok
+
+
+def _require_command_preview(value: object) -> _CommandPreviewReport:
+    if not isinstance(value, dict):
+        raise TypeError("command preview must be a dictionary")
+    payload = cast(dict[object, object], value)
+    validation = payload.get("validation")
+    if not isinstance(validation, dict):
+        raise TypeError("command preview validation must be a dictionary")
+    validation_payload = cast(dict[object, object], validation)
+    if not isinstance(validation_payload.get("ok"), bool) or not isinstance(
+        validation_payload.get("errors"),
+        list,
+    ):
+        raise TypeError("command preview validation has an invalid shape")
+    return cast(_CommandPreviewReport, value)
+
+
+def _registered_command_exit_code(args: Sequence[str]) -> int | None:
     if not args:
         return None
 
@@ -47,6 +133,14 @@ def _registered_command_exit_code(args):
         "analog-rytm-midi-catalog-report": (
             "rytm_randomizer.reports.analog_rytm_midi_catalog",
             "ANALOG_RYTM_MIDI_CATALOG_CLI_COMMAND",
+        ),
+        "scoped-randomization-preview": (
+            "rytm_randomizer.reports.scoped_randomization_preview",
+            "SCOPED_RANDOMIZATION_PREVIEW_CLI_COMMAND",
+        ),
+        "kit-morph-preview": (
+            "rytm_randomizer.reports.kit_morph_preview",
+            "KIT_MORPH_PREVIEW_CLI_COMMAND",
         ),
         "rytm-snapshot-intelligence-report": (
             "rytm_randomizer.reports.rytm_snapshot_intelligence",
@@ -216,26 +310,6 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.controller_brain_live_implementation_bridge",
             "CONTROLLER_BRAIN_LIVE_IMPLEMENTATION_BRIDGE_CLI_COMMAND",
         ),
-        "controller-brain-live-desktop-blueprint-report": (
-            "rytm_randomizer.reports.controller_brain_live_desktop_blueprint",
-            "CONTROLLER_BRAIN_LIVE_DESKTOP_BLUEPRINT_CLI_COMMAND",
-        ),
-        "controller-brain-live-desktop-app-plan-report": (
-            "rytm_randomizer.reports.controller_brain_live_desktop_app_plan",
-            "CONTROLLER_BRAIN_LIVE_DESKTOP_APP_PLAN_CLI_COMMAND",
-        ),
-        "controller-brain-live-desktop-component-contract-report": (
-            "rytm_randomizer.reports.controller_brain_live_desktop_component_contract",
-            "CONTROLLER_BRAIN_LIVE_DESKTOP_COMPONENT_CONTRACT_CLI_COMMAND",
-        ),
-        "controller-brain-live-desktop-view-model-report": (
-            "rytm_randomizer.reports.controller_brain_live_desktop_view_model",
-            "CONTROLLER_BRAIN_LIVE_DESKTOP_VIEW_MODEL_CLI_COMMAND",
-        ),
-        "controller-brain-live-desktop-render-contract-report": (
-            "rytm_randomizer.reports.controller_brain_live_desktop_render_contract",
-            "CONTROLLER_BRAIN_LIVE_DESKTOP_RENDER_CONTRACT_CLI_COMMAND",
-        ),
         "rytm-live-macro-hardware-rehearsal-report": (
             "rytm_randomizer.reports.rytm_live_macro_hardware_rehearsal",
             "RYTM_LIVE_MACRO_HARDWARE_REHEARSAL_CLI_COMMAND",
@@ -392,14 +466,6 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.live_gui_sidecar_session",
             "STYLE_PERFORMANCE_ARC_LIVE_GUI_SIDECAR_SESSION_CLI_COMMAND",
         ),
-        "style-performance-arc-live-gui-screen-contract-report": (
-            "rytm_randomizer.reports.live_gui_screen_contract",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_SCREEN_CONTRACT_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-render-tree-report": (
-            "rytm_randomizer.reports.live_gui_render_tree",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_RENDER_TREE_CLI_COMMAND",
-        ),
         "style-performance-arc-live-gui-analyzer-overlay-report": (
             "rytm_randomizer.reports.live_gui_analyzer_overlay",
             "STYLE_PERFORMANCE_ARC_LIVE_GUI_ANALYZER_OVERLAY_CLI_COMMAND",
@@ -407,10 +473,6 @@ def _registered_command_exit_code(args):
         "style-performance-arc-live-gui-analyzer-frame-report": (
             "rytm_randomizer.reports.live_gui_analyzer_frame",
             "STYLE_PERFORMANCE_ARC_LIVE_GUI_ANALYZER_FRAME_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-interaction-script-report": (
-            "rytm_randomizer.reports.live_gui_interaction_script",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_INTERACTION_SCRIPT_CLI_COMMAND",
         ),
         "style-performance-arc-live-gui-action-reducer-report": (
             "rytm_randomizer.reports.live_gui_action_reducer",
@@ -428,46 +490,6 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.live_gui_playback_validation",
             "STYLE_PERFORMANCE_ARC_LIVE_GUI_PLAYBACK_VALIDATION_CLI_COMMAND",
         ),
-        "style-performance-arc-live-gui-test-harness-contract-report": (
-            "rytm_randomizer.reports.live_gui_test_harness_contract",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_TEST_HARNESS_CONTRACT_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-test-harness-readiness-report": (
-            "rytm_randomizer.reports.live_gui_test_harness_readiness",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_TEST_HARNESS_READINESS_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-implementation-bridge-report": (
-            "rytm_randomizer.reports.live_gui_implementation_bridge",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_IMPLEMENTATION_BRIDGE_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-desktop-blueprint-report": (
-            "rytm_randomizer.reports.live_gui_desktop_blueprint",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_BLUEPRINT_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-desktop-app-plan-report": (
-            "rytm_randomizer.reports.live_gui_desktop_app_plan",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_APP_PLAN_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-desktop-component-contract-report": (
-            "rytm_randomizer.reports.live_gui_desktop_component_contract",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_COMPONENT_CONTRACT_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-desktop-view-model-report": (
-            "rytm_randomizer.reports.live_gui_desktop_view_model",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_VIEW_MODEL_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-desktop-render-contract-report": (
-            "rytm_randomizer.reports.live_gui_desktop_render_contract",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_RENDER_CONTRACT_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-desktop-render-harness-report": (
-            "rytm_randomizer.reports.live_gui_desktop_render_harness",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_RENDER_HARNESS_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-cockpit-boundary-readiness-report": (
-            "rytm_randomizer.reports.live_gui_cockpit_boundary_readiness",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_COCKPIT_BOUNDARY_READINESS_CLI_COMMAND",
-        ),
         "cockpit-send-plan-readiness-report": (
             "rytm_randomizer.reports.cockpit_send_plan_operator_readiness",
             "COCKPIT_SEND_PLAN_OPERATOR_READINESS_CLI_COMMAND",
@@ -480,6 +502,18 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.cockpit.export.cli",
             "COCKPIT_EXPORT_PROFILE_MODEL_CLI_COMMAND",
         ),
+        "analog-four-saved-kit-export": (
+            "rytm_randomizer.cockpit.export.analog_four_cli",
+            "ANALOG_FOUR_SAVED_KIT_EXPORT_CLI_COMMAND",
+        ),
+        "analog-four-audio-patch-batch": (
+            "rytm_randomizer.cockpit.export.analog_four_patch_batch_cli",
+            "ANALOG_FOUR_AUDIO_PATCH_BATCH_CLI_COMMAND",
+        ),
+        "analog-four-audio-patch-rank": (
+            "rytm_randomizer.cockpit.export.analog_four_patch_render_rank_cli",
+            "ANALOG_FOUR_PATCH_RENDER_RANK_CLI_COMMAND",
+        ),
         "cockpit-export-rehearsal-report": (
             "rytm_randomizer.reports.cockpit_export_rehearsal",
             "COCKPIT_EXPORT_REHEARSAL_CLI_COMMAND",
@@ -488,7 +522,7 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.local_model_copilot",
             "LOCAL_MODEL_COPILOT_CLI_COMMAND",
         ),
-    }
+    }  # type: dict[str, tuple[str, str]]  # pyright: ignore[reportTypeCommentUsage]
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])
     if command is None and lazy_command is not None:
@@ -497,7 +531,7 @@ def _registered_command_exit_code(args):
         module_name, command_attr = lazy_command
         module = import_module(module_name)
         if cli_registry.get(args[0]) is None:
-            cli_registry.register(getattr(module, command_attr))
+            cli_registry.register(cast(cli_registry.CliCommand, getattr(module, command_attr)))
         command = cli_registry.get(args[0])
 
     if command is None:
@@ -515,21 +549,22 @@ def _registered_command_exit_code(args):
     return command.handler(**kwargs)
 
 
-def _format_list_label(metadata):
-    return metadata.get("label") or metadata.get("name") or ""
+def _format_list_label(metadata: Mapping[str, object]) -> str:
+    label = metadata.get("label") or metadata.get("name")
+    return label if isinstance(label, str) else ""
 
 
-def _metadata_search_text(key, metadata):
+def _metadata_search_text(key: object, metadata: Mapping[str, object]) -> str:
     values = [str(key)]
     values.extend(value for value in metadata.values() if isinstance(value, str))
     return "\n".join(values).lower()
 
 
-def format_registry_list_report(section_name, title):
+def format_registry_list_report(section_name: str, title: str) -> list[str]:
     """Return deterministic passive registry list lines."""
     from .registry import get_registry_section
 
-    report = get_registry_section(section_name)
+    report = cast(_RegistrySectionReport, get_registry_section(section_name))
     if not report["exists"]:
         return [
             f"RytmRandomizer passive {title}",
@@ -539,6 +574,8 @@ def format_registry_list_report(section_name, title):
         ]
 
     items = report["items"]
+    if items is None:
+        raise TypeError("existing registry section is missing items")
     lines = [
         f"RytmRandomizer passive {title}",
         f"Section: {report['section']}",
@@ -563,11 +600,11 @@ def format_registry_list_report(section_name, title):
     return lines
 
 
-def format_registry_search_report(section_name, title, query):
+def format_registry_search_report(section_name: str, title: str, query: object) -> list[str]:
     """Return deterministic passive registry search lines."""
     from .registry import get_registry_section
 
-    report = get_registry_section(section_name)
+    report = cast(_RegistrySectionReport, get_registry_section(section_name))
     normalized_query = str(query)
     search_query = normalized_query.lower()
     if not report["exists"]:
@@ -581,6 +618,8 @@ def format_registry_search_report(section_name, title, query):
         ]
 
     items = report["items"]
+    if items is None:
+        raise TypeError("existing registry section is missing items")
     matches = [
         (key, _format_list_label(metadata))
         for key, metadata in items.items()
@@ -614,11 +653,11 @@ def format_registry_search_report(section_name, title, query):
     return lines
 
 
-def format_inspect_command_report(command_key):
+def format_inspect_command_report(command_key: object) -> list[str]:
     """Return deterministic passive command metadata lines."""
     from .registry import get_registry_item
 
-    report = get_registry_item("commands", command_key)
+    report = cast(_RegistryItemReport, get_registry_item("commands", command_key))
     key = report["key"]
 
     if not report["exists"]:
@@ -630,6 +669,8 @@ def format_inspect_command_report(command_key):
         ]
 
     metadata = report["metadata"]
+    if metadata is None:
+        raise TypeError("existing command is missing metadata")
     return [
         "RytmRandomizer passive command inspection",
         f"Command: {key}",
@@ -651,11 +692,11 @@ def format_inspect_command_report(command_key):
     ]
 
 
-def format_inspect_scene_report(scene_key):
+def format_inspect_scene_report(scene_key: object) -> list[str]:
     """Return deterministic passive scene metadata lines."""
     from .registry import get_registry_item
 
-    report = get_registry_item("scenes", scene_key)
+    report = cast(_RegistryItemReport, get_registry_item("scenes", scene_key))
     key = report["key"]
 
     if not report["exists"]:
@@ -667,6 +708,8 @@ def format_inspect_scene_report(scene_key):
         ]
 
     metadata = report["metadata"]
+    if metadata is None:
+        raise TypeError("existing scene is missing metadata")
     return [
         "RytmRandomizer passive scene inspection",
         f"Scene: {key}",
@@ -688,11 +731,11 @@ def format_inspect_scene_report(scene_key):
     ]
 
 
-def format_inspect_group_profile_report(profile_key):
+def format_inspect_group_profile_report(profile_key: object) -> list[str]:
     """Return deterministic passive group profile metadata lines."""
     from .registry import get_registry_item
 
-    report = get_registry_item("group_profiles", profile_key)
+    report = cast(_RegistryItemReport, get_registry_item("group_profiles", profile_key))
     key = report["key"]
 
     if not report["exists"]:
@@ -704,6 +747,8 @@ def format_inspect_group_profile_report(profile_key):
         ]
 
     metadata = report["metadata"]
+    if metadata is None:
+        raise TypeError("existing group profile is missing metadata")
     return [
         "RytmRandomizer passive group profile inspection",
         f"Group profile: {key}",
@@ -721,15 +766,22 @@ def format_inspect_group_profile_report(profile_key):
     ]
 
 
-def format_preview_command_report(command_key):
+def format_preview_command_report(command_key: object) -> list[str]:
     """Return deterministic passive command preview lines."""
-    from .inspection import preview_command
+    from .inspection import preview_command  # pyright: ignore[reportUnknownVariableType]
     from .registry import get_registry_section
 
     command = str(command_key).upper()
-    registry_report = get_registry_section("commands")
-    registry = registry_report["items"] if registry_report["exists"] else {}
-    report = preview_command(registry, command)
+    registry_report = cast(_RegistrySectionReport, get_registry_section("commands"))
+    registry_items = registry_report["items"]
+    if registry_report["exists"] and registry_items is None:
+        raise TypeError("existing command registry is missing items")
+    registry: Mapping[str, Mapping[str, object]] = registry_items or {}
+    preview = cast(
+        Callable[[Mapping[str, Mapping[str, object]], str], object],
+        preview_command,
+    )
+    report = _require_command_preview(preview(registry, command))
 
     if not report["exists"]:
         return [
@@ -768,11 +820,11 @@ def format_preview_command_report(command_key):
     ]
 
 
-def format_preview_scene_report(scene_key):
+def format_preview_scene_report(scene_key: object) -> list[str]:
     """Return deterministic passive scene preview lines."""
     from .registry import get_registry_item
 
-    report = get_registry_item("scenes", scene_key)
+    report = cast(_RegistryItemReport, get_registry_item("scenes", scene_key))
     key = report["key"]
 
     if not report["exists"]:
@@ -784,6 +836,8 @@ def format_preview_scene_report(scene_key):
         ]
 
     metadata = report["metadata"]
+    if metadata is None:
+        raise TypeError("existing scene is missing metadata")
     return [
         "RytmRandomizer passive scene preview",
         f"Scene: {key}",
@@ -810,11 +864,11 @@ def format_preview_scene_report(scene_key):
     ]
 
 
-def format_preview_group_profile_report(profile_key):
+def format_preview_group_profile_report(profile_key: object) -> list[str]:
     """Return deterministic passive group profile preview lines."""
     from .registry import get_registry_item
 
-    report = get_registry_item("group_profiles", profile_key)
+    report = cast(_RegistryItemReport, get_registry_item("group_profiles", profile_key))
     key = report["key"]
 
     if not report["exists"]:
@@ -826,6 +880,8 @@ def format_preview_group_profile_report(profile_key):
         ]
 
     metadata = report["metadata"]
+    if metadata is None:
+        raise TypeError("existing group profile is missing metadata")
     return [
         "RytmRandomizer passive group profile preview",
         f"Group profile: {key}",
@@ -846,7 +902,7 @@ def format_preview_group_profile_report(profile_key):
     ]
 
 
-def main(argv=None):
+def main(argv: Sequence[str] | None = None) -> int:
     """Run the passive report-only CLI."""
     args = sys.argv[1:] if argv is None else list(argv)
 
@@ -863,59 +919,89 @@ def main(argv=None):
         return registered_exit_code
 
     if args == ["report"]:
-        from .reports import format_registry_report
+        from . import reports
 
-        sys.stdout.write("\n".join(format_registry_report()))
+        formatter = _require_no_arg_callable(reports, "format_registry_report")
+        sys.stdout.write("\n".join(_require_text_lines(formatter())))
         sys.stdout.write("\n")
         return 0
 
     if args == ["project-status-report"]:
-        from .project_status_report import format_project_status_report
+        from . import project_status_report
 
-        sys.stdout.write("\n".join(format_project_status_report()))
+        formatter = _require_no_arg_callable(
+            project_status_report,
+            "format_project_status_report",
+        )
+        sys.stdout.write("\n".join(_require_text_lines(formatter())))
         sys.stdout.write("\n")
         return 0
 
     if args == ["project-status-report", "--summary"]:
-        from .project_status_report import format_project_status_summary
+        from . import project_status_report
 
-        sys.stdout.write("\n".join(format_project_status_summary()))
+        formatter = _require_no_arg_callable(
+            project_status_report,
+            "format_project_status_summary",
+        )
+        sys.stdout.write("\n".join(_require_text_lines(formatter())))
         sys.stdout.write("\n")
         return 0
 
     if args == ["project-status-report", "--check"]:
-        from .project_status_report import check_project_status_report, format_project_status_check
+        from . import project_status_report
 
-        check = check_project_status_report()
-        sys.stdout.write("\n".join(format_project_status_check()))
+        checker = _require_no_arg_callable(
+            project_status_report,
+            "check_project_status_report",
+        )
+        formatter = _require_no_arg_callable(
+            project_status_report,
+            "format_project_status_check",
+        )
+        check = checker()
+        sys.stdout.write("\n".join(_require_text_lines(formatter())))
         sys.stdout.write("\n")
-        return 0 if check["ok"] else 1
+        return 0 if _require_status_ok(check) else 1
 
     if args == ["project-status-report", "--json"]:
-        from .project_status_report import format_project_status_report_json
+        from . import project_status_report
 
-        sys.stdout.write(format_project_status_report_json())
+        formatter = _require_no_arg_callable(
+            project_status_report,
+            "format_project_status_report_json",
+        )
+        sys.stdout.write(_require_text(formatter()))
         sys.stdout.write("\n")
         return 0
 
     if args == ["mock-runtime-active-bridge-report"]:
-        from .reports import format_mock_runtime_active_bridge_report
+        from . import reports
 
-        sys.stdout.write("\n".join(format_mock_runtime_active_bridge_report()))
+        formatter = _require_no_arg_callable(
+            reports,
+            "format_mock_runtime_active_bridge_report",
+        )
+        sys.stdout.write("\n".join(_require_text_lines(formatter())))
         sys.stdout.write("\n")
         return 0
 
     if args == ["anchor-profile-report"]:
-        from .reports import format_anchor_profile_report
+        from . import reports
 
-        sys.stdout.write("\n".join(format_anchor_profile_report()))
+        formatter = _require_no_arg_callable(reports, "format_anchor_profile_report")
+        sys.stdout.write("\n".join(_require_text_lines(formatter())))
         sys.stdout.write("\n")
         return 0
 
     if args == ["behavior-parity-report"]:
-        from .reports import format_behavior_parity_coverage_report
+        from . import reports
 
-        sys.stdout.write("\n".join(format_behavior_parity_coverage_report()))
+        formatter = _require_no_arg_callable(
+            reports,
+            "format_behavior_parity_coverage_report",
+        )
+        sys.stdout.write("\n".join(_require_text_lines(formatter())))
         sys.stdout.write("\n")
         return 0
 

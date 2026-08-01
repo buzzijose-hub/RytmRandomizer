@@ -1,0 +1,42 @@
+[
+  {
+    "band": "reference",
+    "min_amount": 0,
+    "max_amount": 20,
+    "zone_limit": 2,
+    "candidate_limit": 1,
+    "machine_switching_allowed": false,
+    "mutation_depth": "micro",
+    "summary": "preserve current machines and apply tiny style pressure"
+  },
+  {
+    "band": "balanced",
+    "min_amount": 21,
+    "max_amount": 60,
+    "zone_limit": 3,
+    "candidate_limit": 3,
+    "machine_switching_allowed": false,
+    "mutation_depth": "groove",
+    "summary": "keep the live kit identity while widening style movement"
+  },
+  {
+    "band": "discovery",
+    "min_amount": 61,
+    "max_amount": 85,
+    "zone_limit": 4,
+    "candidate_limit": 5,
+    "machine_switching_allowed": true,
+    "mutation_depth": "strong",
+    "summary": "allow broader compatible candidates and stronger zone movement"
+  },
+  {
+    "band": "wild_discovery",
+    "min_amount": 86,
+    "max_amount": 100,
+    "zone_limit": 5,
+    "candidate_limit": 7,
+    "machine_switching_allowed": true,
+    "mutation_depth": "wild",
+    "summary": "maximum guardrailed exploration inside compatibility limits"
+  }
+]

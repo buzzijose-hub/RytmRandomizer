@@ -1,0 +1,55 @@
+RytmRandomizer passive Rytm live macro hardware rehearsal
+
+Launch command: python -m rytm_randomizer.app --arm --rytm-live-snapshot-shell --confirm-rytm-snapshot-shell-send
+
+Studio workflow:
+- Capture the current Rytm kit with KIT SysEx before changing anything.
+- Use `kit` or `resnapshot` whenever the hardware kit changes.
+- Run `changes` before `send` or `go`.
+- Fire one macro at a time and write musical notes before moving on.
+- Keep OXI handling notes, triggers, mutes, and pattern motion.
+
+Macro rehearsal cards:
+- kit-core | live-safe | recovery=home | pads=2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+  Full-kit live-safe discovery with Jose's pad 5-11 lane discipline.
+  checkpoints: capture anchor first, run changes before send, listen for musicality, recover with home
+- hard-groove | live-safe | recovery=home | pads=2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+  Dry pressure macro for OXI patterns that already carry the groove.
+  checkpoints: capture anchor first, run changes before send, listen for musicality, recover with home
+- industrial | edge | recovery=home | pads=2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+  Metallic pressure and controlled grit without releasing the kick anchor.
+  checkpoints: capture anchor first, run changes before send, listen for musicality, recover with home
+- dub-pressure | live-safe | recovery=home | pads=2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+  Darker pressure with more delay/reverb influence and small filter motion.
+  checkpoints: capture anchor first, run changes before send, listen for musicality, recover with home
+- transition | edge | recovery=home | pads=2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+  Set-section movement with obvious recovery through home.
+  checkpoints: capture anchor first, run changes before send, listen for musicality, recover with home
+- home | live-safe | recovery=home | pads=1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+  Return the current staged plan to the captured anchor.
+  checkpoints: capture anchor first, run changes before send, listen for musicality, recover with home
+
+Pad lane checks:
+- Pads 5, 9, 10, 11: SRC stays important (pads 5, 9, 10, 11)
+  expect: source movement plus overdrive, delay, and reverb; filter/LFO remain restrained
+  watch: Flag any macro that forgets SRC or pushes filter/LFO movement too hard.
+- Pads 6-8: tom/source movement (pads 6, 7, 8)
+  expect: useful tom/source discovery with light filter movement and no LFO craziness
+  watch: Flag any XT/tom lane that loses its drum identity or gets too animated.
+- Pads 2-4: proven discovery lanes (pads 2, 3, 4)
+  expect: wide discovery is acceptable as long as Pad 1 remains the kick anchor
+  watch: Listen for Dual VCO detune behavior and any non-recovering hardware display issue.
+- Pad 12: supported but not Jose-critical (pads 12)
+  expect: may move for users who rely on it, but it should never be required for Jose's core flow
+  watch: Do not remove Pad 12 from the product just because this setup rarely uses it.
+
+Recovery checks:
+- `home` then `send` returns to the captured safe kit.
+- `Z` then `send` is still the emergency return-to-anchor path.
+- If anything sounds wrong, stop sending and reload the saved Rytm kit.
+
+Safety:
+- passive/read-only report
+- does not open MIDI ports
+- does not send MIDI
+- operator must run the armed shell manually

@@ -1,0 +1,42 @@
+[
+  {
+    "spec_key": "ATK",
+    "section": "FILTER",
+    "parameter": "Filter Attack Time"
+  },
+  {
+    "spec_key": "DEC",
+    "section": "FILTER",
+    "parameter": "Filter Decay Time"
+  },
+  {
+    "spec_key": "SUS",
+    "section": "FILTER",
+    "parameter": "Filter Sustain Level"
+  },
+  {
+    "spec_key": "REL",
+    "section": "FILTER",
+    "parameter": "Filter Release Time"
+  },
+  {
+    "spec_key": "FRQ",
+    "section": "FILTER",
+    "parameter": "Filter Frequency"
+  },
+  {
+    "spec_key": "RES",
+    "section": "FILTER",
+    "parameter": "Filter Resonance"
+  },
+  {
+    "spec_key": "TYPE",
+    "section": "FILTER",
+    "parameter": "Filter Mode"
+  },
+  {
+    "spec_key": "ENV",
+    "section": "FILTER",
+    "parameter": "Filter Env Depth"
+  }
+]

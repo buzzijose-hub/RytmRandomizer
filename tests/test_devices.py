@@ -66,11 +66,29 @@ def test_device_protocol_is_runtime_checkable() -> None:
     assert isinstance(rytm, Device)
 
 
+def test_analog_rytm_device_protocol_guard_fails_closed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.devices import analog_rytm
+
+    monkeypatch.setattr(analog_rytm.registry, "get_device", lambda _device_id: object())
+
+    with pytest.raises(AssertionError, match="does not conform to Device protocol"):
+        analog_rytm._assert_protocol_conformance()
+
+
 def test_analog_rytm_device_satisfies_protocol_attributes() -> None:
     from rytm_randomizer.devices import get_device
+    from rytm_randomizer.devices.analog_rytm import AnalogRytmDevice
 
     rytm = get_device("analog_rytm_mk2")
 
+    assert AnalogRytmDevice.device_id == "analog_rytm_mk2"
+    assert AnalogRytmDevice.display_name == "Elektron Analog Rytm MKII"
+    assert AnalogRytmDevice.default_midi_channel == 0
+    assert AnalogRytmDevice.track_count == 12
+    assert AnalogRytmDevice.sysex_manufacturer_id == bytes([0x00, 0x20, 0x3C])
+    assert AnalogRytmDevice.report_header == "RytmRandomizer Analog Rytm MK2 Guarded Send"
     assert rytm.device_id == "analog_rytm_mk2"
     assert rytm.display_name == "Elektron Analog Rytm MKII"
     assert rytm.default_midi_channel == 0
@@ -191,6 +209,14 @@ def test_plan_mutation_delegates_to_strategy_and_returns_mutation_plan() -> None
     assert plan.snapshot is snap
     assert plan.ready is True
     assert len(plan.events) > 0
+
+
+def test_plan_mutation_rejects_wrong_snapshot_type() -> None:
+    from rytm_randomizer.devices import get_device
+
+    rytm = get_device("analog_rytm_mk2")
+    with pytest.raises(TypeError, match="RytmKitSnapshot"):
+        rytm.plan_mutation(object(), depth=1)
 
 
 def test_to_mock_messages_renders_one_message_per_plan_event() -> None:

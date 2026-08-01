@@ -1,0 +1,61 @@
+RytmRandomizer passive live GUI performance flow model
+
+Flow: oxi-rytm-a4-performance-flow / mock-safe
+Current step: capture-anchor
+
+Performance flow:
+- current: capture-anchor | kit/resnapshot | receive-only | safe
+  Capture Anchor / setup; A4: A4 soft-capture reference; recovery: Z + send
+- next: kit-core | kit-core | stage-review-send | staged
+  Kit Core / foundation; A4: review bass/stab candidates; recovery: home
+- next: hard-groove | hard-groove | stage-review-send | staged
+  Hard Groove / pressure; A4: review rhythmic contour; recovery: home
+- next: industrial | industrial | stage-review-send | staged
+  Industrial / texture; A4: review texture motion; recovery: home
+- next: dub-pressure | dub-pressure | stage-review-send | staged
+  Dub Pressure / space; A4: review delay/reverb space; recovery: home
+- next: transition | transition | dry-run-only | review
+  Transition / handoff; A4: review bridge candidate; recovery: home
+- next: home | Z + send | restore-anchor | safe
+  Home / recovery; A4: keep A4 review-only; recovery: kit/resnapshot
+
+A4 macro readiness:
+- readiness: review-ready
+- command: python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4
+- summary: A4 macro rows are CC-ready for operator-present validation; full macro SEND remains blocked.
+- blocked active actions: a4_outbound_macro_send
+
+A4 set plan:
+- set: warehouse-arc
+- current macro: home
+- up next: hard-groove, dub-pressure, industrial-transition, home
+- replay: python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --json
+- summary: warehouse-arc stages 5 A4 macro moves; current home; full macro SEND remains blocked.
+- blocked active actions: A4 full macro SEND, A4 unattended macro playback
+
+Replay commands:
+- python -m rytm_randomizer.cli live-gui-performance-flow-model-report --json
+- python -m rytm_randomizer.cli oxi-live-macro-catalog-report
+- python -m rytm_randomizer.cli analog-four-oxi-macro-report --json
+- python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --json
+- python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4
+
+Passive safety:
+- passive/read-only
+- GUI performance flow metadata only
+- Rytm OXI macro command labels only
+- Analog Four review-only actions stay candidate metadata.
+- JSON/stdout only
+- no GUI launch
+- no file writing
+- no real MIDI rendering
+- no MIDI sending
+- no port opening
+- no hardware mutation
+- no hardware required
+
+Blocked actions:
+- a4_outbound_macro_send
+- unattended_hardware_behavior
+- open_midi_port_without_arm
+- send_without_dry_run

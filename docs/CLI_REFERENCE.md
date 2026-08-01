@@ -14,9 +14,9 @@ maintaining frozen deterministic evidence. Observation inspection reads an
 existing observed-only YAML file.
 
 ```bash
-python -m tools.rush01_midi_apply --device rytm
-python -m tools.rush01_midi_apply --device a4
-python -m tools.rush01_midi_learn --report output/local/rush01_rytm_midi_observations.yaml
+python scripts/rush01_midi_apply.py --device rytm
+python scripts/rush01_midi_apply.py --device a4
+python scripts/rush01_midi_learn.py --report output/local/rush01_rytm_midi_observations.yaml
 ```
 
 Real input or output is available only from the canonical app boundary:
@@ -32,7 +32,8 @@ python -m rytm_randomizer.app --arm --rush01-apply-plan --rush01-device rytm \
 
 Learning is exact-name input-only and sends nothing. Application requires one
 device, exact configured output, `--arm`, and the feature-specific confirmation
-flag. It emits only approved CC messages: no Program Change, transport, SysEx,
+flag. The app validates and renders the plan before provider construction, then
+delivers it through `ArmedApplySession`. It emits only approved CC messages: no Program Change, transport, SysEx,
 pattern, project, kit-write, or save messages. Offline KIT SysEx generation
 remains blocked until saved-kit semantic mappings are verified.
 
@@ -144,6 +145,31 @@ python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report KITS.syx --s
 
 ---
 
+## Analog Rytm — scoped randomization + kit morphing (preview)
+
+The competitive-parity mask+intensity and morph surfaces, guardrailed as
+**passive previews**. Each renders a deterministic plan (no RNG) the operator
+can audit and then arm-and-send through the `senders` ArmedApply seam; neither
+command reaches a transmit path.
+
+| Command | Purpose |
+| --- | --- |
+| `scoped-randomization-preview [--json]` | Deterministic **ScopeMask + depth macro** preview: choose which of the 12 pads and which parameter groups (`src`/`filter`/`amp`/…) move, anchored on the current kit, from a single depth macro (0..1). Renders the per-parameter delta plan. |
+| `kit-morph-preview [--json]` | Deterministic **kit morph** preview: interpolate a source kit toward a target — linear on continuous params, threshold on discrete selectors — at a morph amount (0..1). Renders the per-parameter interpolation plan. |
+
+```bash
+python -m rytm_randomizer.cli scoped-randomization-preview
+python -m rytm_randomizer.cli scoped-randomization-preview --json
+python -m rytm_randomizer.cli kit-morph-preview
+python -m rytm_randomizer.cli kit-morph-preview --json
+```
+
+The interactive versions (a per-track/per-group mask grid + depth slider, and a
+morph-amount slider strip) live in the cockpit's schema-driven panels; the CLI
+surface renders the canonical demonstration plan.
+
+---
+
 ## Analog Rytm — style routing + mutation planning
 
 ```bash
@@ -230,6 +256,9 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `analog-four-patch-learning-report` | Passive Analog Four patch learning routes, capture matrix, and live-dial readiness |
 | `analog-four-patch-corpus-report` | Passive nearest-match ranking against starter or captured Analog Four patch/audio examples |
 | `analog-four-patch-send-plan-report` | Passive CC/NRPN live-dial send plan for a generated Analog Four patch |
+| `analog-four-saved-kit-export` | Guarded local-file saved-kit export; currently admits hardware-validated Filter2 Resonance only |
+| `analog-four-audio-patch-batch` | Real local audio analysis; the documented/default workflow deterministically commits exactly four immutable `.syx` candidates, complete DNA sidecars, and one manifest |
+| `analog-four-audio-patch-rank` | Passive acoustic ranking of recorded A4 candidates against the exact batch reference |
 | `local-model-copilot-report` | Passive local model docs, mutation-intent, and Analog Four patch-review packets; optional local model subprocess call with `--ask-local-model` |
 | `analog-four-oxi-macro-report` | Passive in-memory Analog Four OXI-style four-track macro preview |
 | `analog-four-oxi-macro-readiness-report` | Passive Analog Four OXI macro readiness, soft-capture preflight, and operator-present validation commands |
@@ -248,6 +277,9 @@ python -m rytm_randomizer.cli analog-four-patch-learning-report --audio referenc
 python -m rytm_randomizer.cli analog-four-patch-corpus-report --description "hypnotic metallic HP2 stab" --track 1 --limit 4
 python -m rytm_randomizer.cli analog-four-patch-corpus-report --audio reference.wav --corpus-file a4-captures.json --json
 python -m rytm_randomizer.cli analog-four-patch-send-plan-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
+python -m rytm_randomizer.cli analog-four-saved-kit-export --source INIT.syx --output PATCH.syx --filter2-resonance 1:64
+python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit INIT.syx --output-dir batch --track 1 --candidates 4
+python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference reference.wav --manifest batch/a4-t1-audio-patch-batch.json --render 1=candidate-1.wav
 python -m rytm_randomizer.cli local-model-copilot-report --question "Which A4 rows are staged only?" --workflow all --description "hypnotic metallic HP2 stab" --json
 python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove --seed 23 --intensity 6 --events --limit 0
 python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4
@@ -257,9 +289,19 @@ python -m rytm_randomizer.cli analog-four-style-kit-readiness-report KITS.syx jo
 Active companion app bridge for the selected patch send plan:
 
 ```bash
+python -m rytm_randomizer.app --dry-run --a4-patch-send-plan --batch-manifest batch/a4-t1-audio-patch-batch.json --batch-manifest-sha256 "<reviewed manifest SHA-256>" --candidate 1
+python -m rytm_randomizer.app --arm --a4-patch-send-plan --batch-manifest batch/a4-t1-audio-patch-batch.json --batch-manifest-sha256 "<reviewed manifest SHA-256>" --candidate 1 --confirm-a4-patch-send-plan --a4-output-port "<exact configured Analog Four output name>"
 python -m rytm_randomizer.app --dry-run --a4-patch-send-plan --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
-python -m rytm_randomizer.app --arm --a4-patch-send-plan --description "hypnotic metallic HP2 stab" --track 1 --candidate 1 --confirm-a4-patch-send-plan
 ```
+
+The manifest form is the only armed audition-to-hardware path: it requires the
+operator-supplied SHA-256 of the exact reviewed manifest, then verifies the
+committed batch, selected sidecar, source-audio identity, candidate DNA, and
+CC/NRPN plan before any output port opens. The direct `--description` and
+`--audio` forms are dry-run-only one-off inference paths; they rebuild a plan
+and are not bound to a previously published or auditioned batch artifact.
+Armed delivery does not prompt from enumerated ports: `--a4-output-port` must
+match exactly one discovered output name or the command fails before opening it.
 
 `analog-four-baseline-report` is the passive clean-slate intake for A4 patch
 capture work. It reads three local SysEx export scopes - kit, pattern+kit, and
@@ -297,8 +339,42 @@ events, counts the exact transport messages, and lists skipped front-panel rows
 such as destination labels that still need ordinal capture. The matching active
 path lives in `rytm_randomizer.app`: use `--dry-run --a4-patch-send-plan` to
 render the plan through the mock sender, or `--arm --a4-patch-send-plan
---confirm-a4-patch-send-plan` to choose an A4 output port and send only the
-compiler-approved rows.
+--batch-manifest ... --batch-manifest-sha256 "<reviewed digest>" --candidate N
+--confirm-a4-patch-send-plan
+--a4-output-port "<exact configured Analog Four output name>"` to require one
+exact output match and send only the compiler-approved rows from the exact
+hash-verified plan stored with that batch.
+
+`analog-four-saved-kit-export` is the narrow hardware-validated file writer.
+It reads a saved-kit dump, applies explicit `TRACK:VALUE` Filter2 Resonance
+assignments through the registered Analog Four device capability, and writes a
+new `.syx` through the canonical atomic writer. It never opens a MIDI port and
+refuses unsupported or unvalidated saved-kit parameters.
+
+`analog-four-audio-patch-batch` is the end-to-end offline candidate generator.
+With the documented/default `--candidates 4` workflow, it analyzes an immutable
+reference-audio snapshot and deterministically builds exactly four
+audio-dependent A4 candidates. It renders the currently validated SysEx subset
+and commits each candidate's complete DNA plus CC/NRPN plan behind a
+hash-addressed sidecar and one stable manifest. The bounded `--candidates`
+compatibility option can request a leading subset for focused tests, but the
+operator workflow and product contract use all four candidates.
+Local sidecars and manifests retain the reference-audio and source-kit
+basenames for operator traceability. Use neutral filenames before generation
+and review those local artifacts before sharing them outside the studio.
+
+The command performs local file I/O only and does not transfer a kit or send
+MIDI. Native audio decoding runs in a spawned child process. An abnormal native
+exit becomes a classified `inference_failed` result in the parent, which owns
+and removes the private audio/SysEx staging directory. This prevents a decoder
+crash from taking down the CLI or retaining private staging, but it is not a
+claim that the native decoder is reliable on Windows.
+
+`analog-four-audio-patch-rank` closes the passive studio feedback loop. It
+verifies every candidate sidecar and the original reference hash before
+comparing recorded A4 renders across 11 normalized synthesis measurements.
+The result is an explainable ranking packet; it is not promoted into training
+data automatically.
 
 `local-model-copilot-report` is the passive local-AI bridge. By default it
 does not run a model; it prints deterministic source packets and JSON schemas
@@ -306,7 +382,9 @@ for docs/MIDI answers, staged natural-language mutation intent, and Analog Four
 patch co-design review. Add `--ask-local-model` only after `LOCAL_MODEL_COMMAND`
 points to a local model executable. The command is run as a subprocess, JSON
 stdout is validated, and the output remains staged-only: no ports open, no MIDI
-is sent, and no hardware-send plan is promoted.
+is sent, and no hardware-send plan is promoted. The local model cannot invoke
+the real MIDI provider; only `python -m rytm_randomizer.app --arm` can cross the
+hardware boundary.
 
 `analog-four-oxi-macro-report` is a snapshot-free planning surface for the
 Analog Four side of an OXI-style live rig. It uses existing manual-backed A4 CC
@@ -345,11 +423,6 @@ macro SEND` plus unattended playback blocked.
 | `controller-brain-live-feedback-rehearsal-report [--json]` | Passive controller-brain feedback frames, feedback zones, and blocked output gates |
 | `controller-brain-live-cockpit-handoff-report [--json]` | Passive controller-brain Cockpit handoff cards, panels, disabled controls, and replay commands |
 | `controller-brain-live-implementation-bridge-report [--json]` | Passive controller-brain GUI implementation bindings, fixture bundles, and implementation gates |
-| `controller-brain-live-desktop-blueprint-report [--json]` | Passive controller-brain desktop regions, component contracts, view-model bindings, fixture hints, and acceptance checks |
-| `controller-brain-live-desktop-app-plan-report [--app-plan-label <text>] [--framework-target desktop-python\|web-desktop\|test-harness] [--json]` | Passive controller-brain desktop app routes, component file hints, state slices, style tokens, and acceptance checks |
-| `controller-brain-live-desktop-component-contract-report [--component-contract-label <text>] [--selector-prefix <text>] [--json]` | Passive controller-brain desktop component API contracts, props, disabled events, test hooks, and fixture contracts |
-| `controller-brain-live-desktop-view-model-report [--view-model-label <text>] [--state-prefix <text>] [--json]` | Passive controller-brain desktop component view models, state bindings, disabled action models, render assertions, and acceptance checks |
-| `controller-brain-live-desktop-render-contract-report [--render-contract-label <text>] [--surface-prefix <text>] [--json]` | Passive controller-brain desktop render surfaces, render bindings, render guards, render assertions, and acceptance checks |
 | `controller-brain-operator-package-report [--json]` | Passive controller gestures to Live Kit Operator Package slot/readiness ledger |
 | `rytm-live-macro-hardware-rehearsal-report` | Passive next-studio Rytm macro checklist with launch command, pad-lane checks, and recovery notes |
 | `oxi-live-set-strategy-report` | Passive OXI-style set chapters, operator cues, rehearsal/replay commands, all-12-pad policy, and A4 review-only actions |
@@ -374,16 +447,6 @@ python -m rytm_randomizer.cli controller-brain-live-cockpit-handoff-report
 python -m rytm_randomizer.cli controller-brain-live-cockpit-handoff-report --json
 python -m rytm_randomizer.cli controller-brain-live-implementation-bridge-report
 python -m rytm_randomizer.cli controller-brain-live-implementation-bridge-report --json
-python -m rytm_randomizer.cli controller-brain-live-desktop-blueprint-report
-python -m rytm_randomizer.cli controller-brain-live-desktop-blueprint-report --json
-python -m rytm_randomizer.cli controller-brain-live-desktop-app-plan-report
-python -m rytm_randomizer.cli controller-brain-live-desktop-app-plan-report --app-plan-label "Controller brain desktop app plan" --framework-target desktop-python --json
-python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report
-python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report --component-contract-label "Controller brain desktop component contract" --selector-prefix rr-controller --json
-python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report
-python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report --view-model-label "Controller brain desktop view model" --state-prefix rr-state --json
-python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report
-python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report --render-contract-label "Controller brain desktop render contract" --surface-prefix rr-render --json
 python -m rytm_randomizer.cli controller-brain-operator-package-report
 python -m rytm_randomizer.cli controller-brain-operator-package-report --json
 python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report
@@ -489,58 +552,6 @@ test harness while keeping GUI launch, renderer startup, runtime reducers,
 WebSocket dispatch, controller feedback, MIDI output, hardware send, and
 snapshot mutation blocked.
 
-`controller-brain-live-desktop-blueprint-report` is the passive desktop
-blueprint after the implementation bridge. It turns disabled implementation
-bindings into deterministic desktop regions, component contracts, view-model
-bindings, fixture hints, acceptance checks, replay commands, and safety evidence
-for future Cockpit desktop work while keeping GUI launch, renderer startup,
-runtime reducers, WebSocket dispatch, controller feedback, MIDI output,
-hardware send, snapshot mutation, and fixture file writing blocked.
-
-`controller-brain-live-desktop-app-plan-report` is the passive app-plan after
-the desktop blueprint. It turns disabled desktop regions and component
-contracts into deterministic app routes, component file hints, disabled state
-slices, style tokens, acceptance checks, replay commands, and safety evidence
-for future Cockpit desktop implementation work while keeping GUI launch, app
-launch, renderer startup, runtime reducers, WebSocket dispatch, controller
-feedback, MIDI output, hardware send, snapshot mutation, and file writing
-blocked.
-
-`controller-brain-live-desktop-component-contract-report` is the passive
-component-contract layer after the desktop app plan. It turns advisory
-component file hints and disabled state slices into deterministic component API
-contracts, view-model prop contracts, disabled event contracts, test hooks,
-fixture contracts, acceptance checks, replay commands, and safety evidence for
-future Cockpit desktop implementation work while keeping GUI launch, app
-launch, renderer startup, runtime reducers, WebSocket dispatch, controller
-feedback, MIDI output, hardware send, snapshot mutation, and file writing
-blocked.
-
-`controller-brain-live-desktop-view-model-report` is the passive view-model
-layer after the desktop component contract. It turns component API contracts
-into deterministic future component view models, state bindings, disabled
-action models, render assertions, acceptance checks, replay commands, and
-safety evidence for future Cockpit desktop implementation work while keeping
-GUI launch, app launch, renderer startup, runtime reducers, WebSocket dispatch,
-controller feedback, MIDI output, hardware send, snapshot mutation, and file
-writing blocked.
-
-`controller-brain-live-desktop-render-contract-report` is the passive render
-contract layer after the desktop view model. It turns component view models,
-state bindings, disabled action models, and source render assertions into
-disabled future render surfaces, one-way render bindings, render guards,
-render assertions, acceptance checks, replay commands, and safety evidence for
-future Cockpit renderer work while keeping GUI launch, component mounting,
-renderer execution, WebSocket dispatch, controller feedback, MIDI output,
-hardware send, snapshot mutation, and file writing blocked.
-`controller-brain-operator-package-report` composes that virtual gesture packet
-with the current Live Kit Operator Package slots. The ledger maps macro depth,
-industrial macro selection, Rytm pad-lane amount gestures, A4 review-only
-gestures, Style Crate selection, queue staging, and panic-home recovery into
-package-review targets while proving the side effects remain false: no
-controller input, no raw CC capture, no WebSocket dispatch, no file write, no
-snapshot mutation, no hardware arm, no MIDI port, and no MIDI send.
-
 ---
 
 ## Rig-level (Rytm + Analog Four together)
@@ -617,24 +628,12 @@ The `live-gui-*` family is the GUI consumer contract — each report is one scre
 | `style-performance-arc-live-gui-capture-queue-report` | **GUI/audio analyzer capture queue** with capture slots, suggested filenames, **analyzer job** cards |
 | `style-performance-arc-live-gui-capture-review-report` | **GUI/audio analyzer capture review** with **go/repeat/hold** decisions, metric drift notes, hold reasons |
 | `style-performance-arc-live-gui-sidecar-session-report` | **sidecar-ready GUI state** with panels, analyzer rows, capture decisions, **disabled active controls** |
-| `style-performance-arc-live-gui-screen-contract-report` | **GUI screen contract** with ordered regions, component state, table rows, **disabled interaction controls** |
-| `style-performance-arc-live-gui-render-tree-report` | **GUI render tree** — **deterministic root/region/component tree**, source bindings, disabled controls |
 | `style-performance-arc-live-gui-analyzer-overlay-report` | **GUI analyzer overlay** with **meter widgets**, threshold markers, selected capture badge, node annotations |
 | `style-performance-arc-live-gui-analyzer-frame-report` | **GUI analyzer frame** with ordered **frame events**, visual assertions, blocked actions |
-| `style-performance-arc-live-gui-interaction-script-report` | **GUI interaction script** with ordered interaction steps, **control bindings**, disabled hardware locks |
 | `style-performance-arc-live-gui-action-reducer-report` | **GUI action reducer** with deterministic **control transition** decisions, disabled hardware locks |
 | `style-performance-arc-live-gui-controller-state-report` | **GUI controller state** with deterministic **control-state** rows, queued allowed actions, blocked controls |
 | `style-performance-arc-live-gui-playback-transcript-report` | **GUI playback transcript** with deterministic **playback transcript** events, GUI assertions, analyzer checkpoints |
 | `style-performance-arc-live-gui-playback-validation-report` | **GUI playback validation** matrix with deterministic future test-harness cases, harness steps (**validation matrix**) |
-| `style-performance-arc-live-gui-test-harness-contract-report` | **GUI test-harness contract** with **Harness suites**, fixtures, bindings, blocked actions |
-| `style-performance-arc-live-gui-test-harness-readiness-report` | **GUI test-harness readiness** with **readiness gates**, checks, rehearsal steps |
-| `style-performance-arc-live-gui-implementation-bridge-report` | **GUI implementation bridge** with **view-model packets**, disabled component mounts, fixture bundles |
-| `style-performance-arc-live-gui-desktop-blueprint-report` | **GUI desktop blueprint** with **desktop shell**, viewports, regions, widgets, bindings |
-| `style-performance-arc-live-gui-desktop-app-plan-report` | **GUI desktop app plan** with **app shell**, routes, component file hints, state slices, style tokens |
-| `style-performance-arc-live-gui-desktop-component-contract-report` | **GUI desktop component contract** with **component props**, disabled actions, test selectors |
-| `style-performance-arc-live-gui-desktop-view-model-report` | **GUI desktop view model** with component view models, **state bindings**, disabled actions, style tokens |
-| `style-performance-arc-live-gui-desktop-render-contract-report` | **GUI desktop render contract** with **render surfaces**, render bindings, style-token bindings |
-| `style-performance-arc-live-gui-desktop-render-harness-report` | **GUI desktop render harness** with **surface harnesses**, binding harnesses, style-token checks |
 
 ```bash
 python -m rytm_randomizer.cli live-gui-performance-console-report

@@ -6,11 +6,10 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from time import time
-from typing import Protocol, TextIO
+from typing import Protocol, TextIO, cast
 
 import yaml
 
-from ..real_midi_adapter import RealMidiPortError
 from ..state.midi_observation import (
     DecodedMidiObservation,
     consume_midi_cc_bytes,
@@ -26,8 +25,12 @@ class Rush01LearningInputPort(Protocol):
     def iter_pending(self) -> Iterable[object]:
         """Return currently pending backend messages."""
 
+        ...
+
     def close(self) -> None:
         """Close the input port."""
+
+        ...
 
 
 class Rush01LearningPortProvider(Protocol):
@@ -36,8 +39,12 @@ class Rush01LearningPortProvider(Protocol):
     def list_input_names(self) -> tuple[str, ...]:
         """Return input names without opening them."""
 
+        ...
+
     def open_input(self, port_name: str) -> Rush01LearningInputPort:
         """Open exactly one input name."""
+
+        ...
 
 
 SleepCallable = Callable[[float], object]
@@ -58,13 +65,13 @@ def open_exact_input(
 ) -> Rush01LearningInputPort:
     """Open one exact, unique input name without fuzzy selection."""
 
-    if not isinstance(port_name, str) or not port_name:
-        raise RealMidiPortError("midi_input_port_required")
+    if not port_name:
+        raise ValueError("midi_input_port_required")
     matches = tuple(name for name in provider.list_input_names() if name == port_name)
     if not matches:
-        raise RealMidiPortError(f"unknown_midi_input_port: {port_name}")
+        raise ValueError(f"unknown_midi_input_port: {port_name}")
     if len(matches) > 1:
-        raise RealMidiPortError(f"ambiguous_midi_input_port_name: {port_name}")
+        raise ValueError(f"ambiguous_midi_input_port_name: {port_name}")
     return provider.open_input(port_name)
 
 
@@ -119,8 +126,9 @@ def append_observations(
     rows = root["observations"]
     if not isinstance(rows, list):
         raise ValueError("calibration observations must be a list")
+    observation_rows = cast(list[object], rows)
     for observation in observations:
-        rows.append(
+        observation_rows.append(
             {
                 "semantic_path": semantic_path,
                 "calibration_point": calibration_point,
@@ -151,7 +159,8 @@ def observation_root(existing: object, *, device: str) -> dict[str, object]:
         }
     if not isinstance(existing, Mapping):
         raise ValueError("calibration file must contain a mapping")
-    normalized = {str(key): value for key, value in existing.items()}
+    existing_mapping = cast(Mapping[object, object], existing)
+    normalized: dict[str, object] = {str(key): value for key, value in existing_mapping.items()}
     if normalized.get("device") != device:
         raise ValueError("calibration file device does not match selected device")
     if normalized.get("verification_status") != "observed_only":
@@ -166,12 +175,14 @@ def control_change_bytes(message: object) -> tuple[int, int, int] | None:
 
     if getattr(message, "type", None) != "control_change":
         return None
-    channel = getattr(message, "channel", None)
-    controller = getattr(message, "control", None)
-    value = getattr(message, "value", None)
-    if any(
-        isinstance(item, bool) or not isinstance(item, int) for item in (channel, controller, value)
-    ):
+    channel: object = getattr(message, "channel", None)
+    controller: object = getattr(message, "control", None)
+    value: object = getattr(message, "value", None)
+    if isinstance(channel, bool) or not isinstance(channel, int):
+        return None
+    if isinstance(controller, bool) or not isinstance(controller, int):
+        return None
+    if isinstance(value, bool) or not isinstance(value, int):
         return None
     if not 0 <= channel <= 15 or not 0 <= controller <= 127 or not 0 <= value <= 127:
         return None

@@ -1,0 +1,267 @@
+"""Build the bundled ``rytm-sidecar`` one-file binary with PyInstaller.
+
+CI-first tool: ``.github/workflows/installers.yml`` runs this script on
+each OS of the desktop-bundle matrix and drops the resulting binary into
+``desktop/shell/binaries/`` so ``cargo tauri build`` picks it up through
+the ``bundle.resources`` glob in ``desktop/shell/tauri.conf.json``. The
+Tauri shell then spawns the bundled binary at launch time instead of
+requiring a ``python`` on the operator's PATH — that is the whole
+double-click story (see docs/BUILDING_INSTALLERS.md § "Bundled Python
+sidecar").
+
+Design constraints honoured here:
+
+* **Deterministic entry point.** The generated entry stub is the exact
+  equivalent of ``python -m rytm_randomizer.cockpit`` — it imports and
+  calls :func:`rytm_randomizer.cockpit.__main__.main`. No logic forks
+  between the dev path and the bundled path.
+* **Environment passthrough.** The binary needs zero flags: the cockpit
+  reads ``RYTM_RAND_WS_PORT`` and ``RYTM_RAND_WS_TOKEN_FILE`` from the
+  environment at runtime (same contract as the dev path), so the Tauri
+  shell configures the child identically either way.
+* **Cross-platform graceful shutdown.** The entry stub watches stdin for
+  the ``RYTM_SIDECAR_SHUTDOWN`` sentinel (or EOF — the pipe closing when
+  the shell exits). Either trigger raises ``SIGINT`` in-process so
+  uvicorn runs its normal graceful shutdown; a watchdog timer hard-exits
+  if the loop wedges. This is what gives Windows — where the shell has
+  no SIGTERM — a clean-shutdown channel before the 5-second kill.
+* **PyInstaller stays optional.** PyInstaller lives in the ``packaging``
+  optional-dependency extra (``pip install -e ".[packaging]"``) and is
+  imported nowhere at module level, so this script is importable (and
+  structurally testable — see tests/test_launch_smoke.py) in
+  environments that never install it.
+
+Usage (from the repo root, with ``.[cockpit,packaging]`` installed)::
+
+    python scripts/build_sidecar_binary.py \
+        --output-dir desktop/shell/binaries
+
+The audio-analysis stack (librosa / numba) is deliberately excluded from
+the bundle: it is PyInstaller-hostile and only backs the Profile
+Wizard's audio-source analyzers. Bundled-sidecar operators still get
+every other cockpit surface; audio analysis requires a pip-installed
+sidecar until a dedicated packaging workstream lands.
+"""
+
+from __future__ import annotations
+
+import argparse
+import importlib.util
+import subprocess
+import sys
+from pathlib import Path
+from typing import Final
+
+PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[1]
+
+SIDECAR_BINARY_NAME: Final[str] = "rytm-sidecar"
+"""Basename of the produced binary (PyInstaller adds ``.exe`` on Windows)."""
+
+SHUTDOWN_SENTINEL: Final[str] = "RYTM_SIDECAR_SHUTDOWN"
+"""Line the Tauri shell writes to the sidecar's stdin to request shutdown.
+
+Must match ``SHUTDOWN_SENTINEL`` in ``desktop/shell/src/sidecar.rs`` —
+tests/test_launch_smoke.py pins the two in lockstep.
+"""
+
+PORT_ENV_VAR: Final[str] = "RYTM_RAND_WS_PORT"
+"""Runtime port override the cockpit honours (passthrough, not baked in)."""
+
+TOKEN_FILE_ENV_VAR: Final[str] = (
+    "RYTM_RAND_WS_TOKEN_FILE"  # noqa: S105 — env var name, not a secret
+)
+"""Runtime token-file override the cockpit honours (passthrough, not baked in)."""
+
+_FORCE_EXIT_GRACE_SECS: Final[float] = 10.0
+"""Watchdog delay between the graceful SIGINT and the hard os._exit fallback."""
+
+#: Packages PyInstaller must collect wholesale. ``rytm_randomizer`` is the
+#: app itself (its cockpit tree lazy-imports aggressively, which defeats
+#: PyInstaller's static import scan); uvicorn/websockets are the ASGI
+#: serving stack with dynamic loader lookups; mido + rtmidi are the
+#: passive enumeration/monitor boundary; msgpack backs profile export.
+COLLECT_ALL_PACKAGES: Final[tuple[str, ...]] = (
+    "rytm_randomizer",
+    "uvicorn",
+    "websockets",
+    "mido",
+    "rtmidi",
+    "msgpack",
+)
+
+#: Heavy, PyInstaller-hostile packages excluded from the bundle. librosa
+#: (and its numba/llvmlite chain) only backs the wizard's audio analyzers.
+EXCLUDED_PACKAGES: Final[tuple[str, ...]] = (
+    "librosa",
+    "numba",
+    "llvmlite",
+    "matplotlib",
+    "IPython",
+)
+
+
+def entry_source() -> str:
+    """Return the deterministic PyInstaller entry-stub source.
+
+    Written to the work directory at build time and handed to
+    PyInstaller as the program entry. Kept as a generated string (not a
+    committed module) so the stub can never drift into a second
+    launch-behaviour fork — the only committed launch contract is
+    ``rytm_randomizer.cockpit.__main__.main``.
+    """
+
+    return f'''"""Generated entry stub for the bundled rytm-sidecar binary.
+
+Equivalent to ``python -m rytm_randomizer.cockpit`` plus a stdin
+shutdown channel for the Tauri shell (cross-platform: works on Windows
+where SIGTERM does not exist). Generated by
+scripts/build_sidecar_binary.py — do not edit or commit.
+"""
+
+import os
+import signal
+import sys
+import threading
+
+SHUTDOWN_SENTINEL = {SHUTDOWN_SENTINEL!r}
+_FORCE_EXIT_GRACE_SECS = {_FORCE_EXIT_GRACE_SECS!r}
+
+
+def _watch_stdin() -> None:
+    """Block until the shell writes the sentinel (or closes the pipe)."""
+
+    try:
+        for line in sys.stdin:
+            if line.strip() == SHUTDOWN_SENTINEL:
+                break
+    except Exception:  # noqa: BLE001 — any stdin fault means the shell is gone
+        pass
+    # Graceful first: SIGINT drives uvicorn's normal shutdown path. The
+    # watchdog hard-exits if the serving loop wedges past the grace.
+    watchdog = threading.Timer(_FORCE_EXIT_GRACE_SECS, os._exit, args=(0,))
+    watchdog.daemon = True
+    watchdog.start()
+    try:
+        signal.raise_signal(signal.SIGINT)
+    except (ValueError, OSError):
+        os._exit(0)
+
+
+def main() -> None:
+    if sys.stdin is not None:
+        threading.Thread(
+            target=_watch_stdin, name="sidecar-shutdown-watch", daemon=True
+        ).start()
+    from rytm_randomizer.cockpit.__main__ import main as cockpit_main
+
+    cockpit_main()
+
+
+if __name__ == "__main__":
+    main()
+'''
+
+
+def pyinstaller_command(
+    entry_path: Path,
+    *,
+    output_dir: Path,
+    work_dir: Path,
+    name: str = SIDECAR_BINARY_NAME,
+    python: str | None = None,
+) -> list[str]:
+    """Build the PyInstaller argv (pure — structurally testable without PyInstaller)."""
+
+    interpreter = python if python is not None else sys.executable
+    command = [
+        interpreter,
+        "-m",
+        "PyInstaller",
+        "--onefile",
+        "--name",
+        name,
+        "--noconfirm",
+        "--clean",
+        "--console",
+        "--distpath",
+        str(output_dir),
+        "--workpath",
+        str(work_dir / "build"),
+        "--specpath",
+        str(work_dir),
+    ]
+    for package in COLLECT_ALL_PACKAGES:
+        command.extend(["--collect-all", package])
+    for package in EXCLUDED_PACKAGES:
+        command.extend(["--exclude-module", package])
+    command.append(str(entry_path))
+    return command
+
+
+def pyinstaller_available() -> bool:
+    """True when PyInstaller is importable in the current environment."""
+
+    return importlib.util.find_spec("PyInstaller") is not None
+
+
+def build(output_dir: Path, work_dir: Path) -> Path:
+    """Write the entry stub, run PyInstaller, and return the binary path.
+
+    Raises :class:`RuntimeError` when PyInstaller is missing (install the
+    ``packaging`` extra) or when the expected binary does not exist after
+    a zero-exit build (a packaging regression worth failing loudly on).
+    """
+
+    if not pyinstaller_available():
+        raise RuntimeError(
+            "PyInstaller is not installed. Install the packaging extra first:\n"
+            '    pip install -e ".[cockpit,packaging]"'
+        )
+    work_dir.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    entry_path = work_dir / "rytm_sidecar_entry.py"
+    entry_path.write_text(entry_source(), encoding="utf-8")
+    command = pyinstaller_command(entry_path, output_dir=output_dir, work_dir=work_dir)
+    print(f"[build-sidecar] running: {' '.join(command)}", flush=True)
+    subprocess.run(command, check=True, cwd=PROJECT_ROOT)
+    suffix = ".exe" if sys.platform == "win32" else ""
+    binary = output_dir / f"{SIDECAR_BINARY_NAME}{suffix}"
+    if not binary.is_file():
+        raise RuntimeError(f"PyInstaller reported success but {binary} does not exist")
+    print(f"[build-sidecar] built {binary}", flush=True)
+    return binary
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    """Parse the CLI surface (kept tiny: an output dir and a work dir)."""
+
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=PROJECT_ROOT / "desktop" / "shell" / "binaries",
+        help="Directory the one-file binary lands in (default: desktop/shell/binaries).",
+    )
+    parser.add_argument(
+        "--work-dir",
+        type=Path,
+        default=PROJECT_ROOT / "build" / "sidecar-pyinstaller",
+        help="Scratch directory for the entry stub, spec file, and PyInstaller work tree.",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    """CLI entry: build the binary, return a process exit code."""
+
+    args = parse_args(argv)
+    try:
+        build(args.output_dir.resolve(), args.work_dir.resolve())
+    except (RuntimeError, subprocess.CalledProcessError) as err:
+        print(f"[build-sidecar] FAILED: {err}", file=sys.stderr, flush=True)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
