@@ -29,6 +29,7 @@ fn supervise<F>(
     shutdown: Arc<AtomicBool>,
     child_slot: Arc<Mutex<Option<std::process::Child>>>,
     token_file: PathBuf,
+    arm_secret_file: PathBuf,
     launch: SidecarLaunch,
     port: u16,
     on_spawn_failure: F,
@@ -42,7 +43,12 @@ fn supervise<F>(
         if let Err(err) = sidecar::clear_token_file(&token_file) {
             log::warn!("failed to clear stale sidecar token file: {err}");
         }
-        match sidecar::spawn_sidecar(&launch, &token_file, port) {
+        // Same reason as the token: a secret left over from the previous
+        // launch must never be injected as if it authorised this one.
+        if let Err(err) = sidecar::clear_token_file(&arm_secret_file) {
+            log::warn!("failed to clear stale sidecar arm-secret file: {err}");
+        }
+        match sidecar::spawn_sidecar(&launch, &token_file, &arm_secret_file, port) {
             Ok(child) => {
                 spawn_failures = 0;
                 *child_slot.lock().expect("child slot poisoned") = Some(child);
@@ -88,31 +94,48 @@ fn supervise<F>(
     }
 }
 
-fn start_token_bridge(
+/// Poll one sidecar-written credential file and inject it into the webview
+/// whenever its value changes.
+///
+/// Shared by the WS handshake token and the ARM secret. Both are written by
+/// the sidecar *after* the shell has already started, and both are rewritten
+/// on every sidecar restart, so the contract is identical: poll, skip while
+/// the file is missing or blank (`read_token_file` returns `None`), inject on
+/// first sight and again on any change, and never latch a value the sidecar
+/// has since replaced. Injecting on change — not just once — is what makes a
+/// mid-session sidecar restart recover without the operator relaunching.
+///
+/// `label` only names the credential in the logs; the value itself is never
+/// logged.
+fn start_credential_bridge<S>(
     shutdown: Arc<AtomicBool>,
     window: WebviewWindow,
-    token_file: PathBuf,
-    port: u16,
-) -> JoinHandle<()> {
+    credential_file: PathBuf,
+    label: &'static str,
+    build_script: S,
+) -> JoinHandle<()>
+where
+    S: Fn(&str) -> String + Send + 'static,
+{
     thread::spawn(move || {
-        let mut injected_token: Option<String> = None;
+        let mut injected: Option<String> = None;
         while !shutdown.load(Ordering::SeqCst) {
-            match sidecar::read_token_file(&token_file) {
-                Ok(Some(token)) if injected_token.as_deref() != Some(token.as_str()) => {
-                    let script = sidecar::token_bootstrap_script(&token, port);
+            match sidecar::read_token_file(&credential_file) {
+                Ok(Some(value)) if injected.as_deref() != Some(value.as_str()) => {
+                    let script = build_script(&value);
                     match window.eval(&script) {
                         Ok(()) => {
-                            injected_token = Some(token);
-                            log::info!("bridged sidecar websocket token into cockpit webview");
+                            injected = Some(value);
+                            log::info!("bridged sidecar {label} into cockpit webview");
                         }
                         Err(err) => {
-                            log::warn!("failed to inject sidecar websocket token: {err}");
+                            log::warn!("failed to inject sidecar {label}: {err}");
                         }
                     }
                 }
                 Ok(_) => {}
                 Err(err) => {
-                    log::warn!("failed to read sidecar websocket token file: {err}");
+                    log::warn!("failed to read sidecar {label} file: {err}");
                 }
             }
             thread::sleep(Duration::from_millis(TOKEN_BRIDGE_POLL_MS));
@@ -125,11 +148,14 @@ fn main() {
     let shutdown = Arc::new(AtomicBool::new(false));
     let child_slot: Arc<Mutex<Option<std::process::Child>>> = Arc::new(Mutex::new(None));
     let token_bridge_slot: Arc<Mutex<Option<JoinHandle<()>>>> = Arc::new(Mutex::new(None));
+    let arm_bridge_slot: Arc<Mutex<Option<JoinHandle<()>>>> = Arc::new(Mutex::new(None));
     let token_file = sidecar::resolve_token_file_path();
+    let arm_secret_file = sidecar::resolve_arm_secret_file_path();
     let teardown = {
         let shutdown = Arc::clone(&shutdown);
         let slot = Arc::clone(&child_slot);
         let bridge_slot = Arc::clone(&token_bridge_slot);
+        let arm_slot = Arc::clone(&arm_bridge_slot);
         move || {
             shutdown.store(true, Ordering::SeqCst);
             if let Some(mut child) = slot.lock().expect("child slot poisoned").take() {
@@ -138,6 +164,13 @@ fn main() {
             if let Some(handle) = bridge_slot
                 .lock()
                 .expect("token bridge slot poisoned")
+                .take()
+            {
+                let _ = handle.join();
+            }
+            if let Some(handle) = arm_slot
+                .lock()
+                .expect("arm secret bridge slot poisoned")
                 .take()
             {
                 let _ = handle.join();
@@ -205,19 +238,47 @@ fn main() {
                 let shutdown = Arc::clone(&shutdown);
                 let slot = Arc::clone(&child_slot);
                 let token_file = token_file.clone();
+                let arm_secret_file = arm_secret_file.clone();
                 thread::spawn(move || {
-                    supervise(shutdown, slot, token_file, launch, port, on_spawn_failure)
+                    supervise(
+                        shutdown,
+                        slot,
+                        token_file,
+                        arm_secret_file,
+                        launch,
+                        port,
+                        on_spawn_failure,
+                    )
                 });
             }
 
             if let Some(window) = app.get_webview_window("main") {
-                let handle =
-                    start_token_bridge(Arc::clone(&shutdown), window, token_file.clone(), port);
+                let handle = start_credential_bridge(
+                    Arc::clone(&shutdown),
+                    window.clone(),
+                    token_file.clone(),
+                    "websocket token",
+                    move |token| sidecar::token_bootstrap_script(token, port),
+                );
                 *token_bridge_slot
                     .lock()
                     .expect("token bridge slot poisoned") = Some(handle);
+                // The ARM secret rides its own bridge: it is written a moment
+                // later than the token and authorises transmit rather than
+                // connection, so a shared bridge would either delay the
+                // handshake or couple the two credentials' lifetimes.
+                let arm_handle = start_credential_bridge(
+                    Arc::clone(&shutdown),
+                    window,
+                    arm_secret_file.clone(),
+                    "arm secret",
+                    sidecar::arm_secret_bootstrap_script,
+                );
+                *arm_bridge_slot
+                    .lock()
+                    .expect("arm secret bridge slot poisoned") = Some(arm_handle);
             } else {
-                log::warn!("main webview not found; websocket token bridge not started");
+                log::warn!("main webview not found; credential bridges not started");
             }
             Ok(())
         })

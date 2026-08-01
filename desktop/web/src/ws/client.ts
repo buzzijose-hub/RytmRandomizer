@@ -54,6 +54,17 @@ export interface ClientLogger {
 declare global {
   interface Window {
     __RYTM_RAND_WS_TOKEN__?: string;
+    /**
+     * Per-launch ARM secret, injected by the Tauri shell.
+     *
+     * Distinct from the WS token: that one only admits a connection, this
+     * one authorises outbound transmit to hardware. The sidecar mints it and
+     * writes it 0600; the shell reads that file and injects it
+     * (`sidecar.rs::arm_secret_bootstrap_script`). Injection is what makes
+     * arming reachable in a packaged double-click build — there is no
+     * terminal there for an operator to read a secret from.
+     */
+    __RYTM_RAND_ARM_SECRET__?: string;
   }
 }
 
@@ -98,6 +109,8 @@ export const DEFAULT_WS_URL = 'ws://127.0.0.1:4317/ws';
 export const WS_SUBPROTOCOL = 'rytm-rand-cockpit-v1';
 export const HELLO_FRAME_TYPE = 'hello';
 export const WS_AUTH_TOKEN_STORAGE_KEY = 'rytm-rand-ws-token';
+/** Storage key the Tauri shell writes the per-launch ARM secret to. */
+export const ARM_SECRET_STORAGE_KEY = 'rytm-rand-arm-secret';
 const DEFAULT_INITIAL_RECONNECT_DELAY_MS = 500;
 const DEFAULT_MAX_RECONNECT_DELAY_MS = 10_000;
 const DEFAULT_ACK_TIMEOUT_MS = 5_000;
@@ -122,6 +135,29 @@ function defaultAuthTokenResolver(): string | null {
   }
   try {
     const stored = window.localStorage.getItem(WS_AUTH_TOKEN_STORAGE_KEY);
+    return stored !== null && stored !== '' ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Resolve the per-launch ARM secret the shell injected, or `null`.
+ *
+ * Same precedence as {@link defaultAuthTokenResolver}: window property
+ * first (set before any app code runs), then localStorage (survives a
+ * webview reload). `null` means "no secret available" — callers MUST fail
+ * closed and never send an empty token, because the server treats an empty
+ * or missing secret as unauthorised anyway and a blank submission would
+ * just surface as a confusing refusal.
+ */
+export function resolveArmSecret(): string | null {
+  if (typeof window === 'undefined') return null;
+  if (typeof window.__RYTM_RAND_ARM_SECRET__ === 'string' && window.__RYTM_RAND_ARM_SECRET__ !== '') {
+    return window.__RYTM_RAND_ARM_SECRET__;
+  }
+  try {
+    const stored = window.localStorage.getItem(ARM_SECRET_STORAGE_KEY);
     return stored !== null && stored !== '' ? stored : null;
   } catch {
     return null;

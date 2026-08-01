@@ -9,13 +9,40 @@ must route through the armed transmit boundary.
 Scope of the single-seam claim
 ------------------------------
 
-The single-seam rule is scoped to the **cockpit / live operator surface**,
-not literally every line in the repo. The retired-in-place V1.34 monolith
-path (``app.py`` + ``shell.py``) still constructs its own output ports and
-sends directly; that is legacy, it is frozen, and it is named explicitly in
+The single-seam rule is scoped to the **cockpit / live operator surface**
+plus one named legacy exception. The retired-in-place V1.34 monolith entry
+point (``app.py``) still constructs its own output ports and sends directly;
+that is legacy, it is frozen, and it is named explicitly in
 :data:`_LEGACY_V134_TRANSMIT_MODULES` below rather than being quietly folded
 into "the whitelist". Anything NEW must route through the ``senders``
 ArmedApply seam.
+
+Why ``app.py`` is still here
+----------------------------
+
+Not inertia — a wire-format difference that has to be closed before the
+exemption can be. ``app.py``'s ten armed subcommands transmit through
+:func:`rytm_randomizer.midi_io.send_cc`, which per message constructs a
+``mido.Message``, records ``get_metrics().record_cc_sent(channel)``, and
+then sleeps ``MIDI_MESSAGE_SETTLE_SECONDS`` (0.02s) so the Rytm firmware
+sees discrete messages rather than one burst. The ArmedApply seam's
+``apply`` loop does none of those three: it writes bare
+``(channel, control, value)`` triples straight to ``port.send`` with no
+inter-message pacing. Re-pointing ``app.py`` at the seam as it stands today
+would drop the settle delay and the metric on every armed CLI send — an
+observable behaviour change on hardware, which the V1.34 parity contract
+forbids. Three of the ten sites (``_run_arm``, ``--rytm-12-pad-shell``,
+``--rytm-snapshot-shell``) additionally hand the port to a long-lived
+interactive shell that streams operator-driven messages for minutes, a shape
+the seam's render-a-plan-then-burst ``apply`` does not model at all.
+
+Closing this properly means teaching the seam paced delivery (an injected
+per-message ``sleep`` + the ``record_cc_sent`` hook) and a streaming-session
+mode, then migrating the ten sites — a behavioural change to the seam, which
+belongs in its own reviewed change rather than riding along here.
+
+``shell.py`` was removed from the exception list in this change: it never
+transmitted at all (see the note on :data:`_LEGACY_V134_TRANSMIT_MODULES`).
 
 This test freezes the set of modules allowed to **construct a real output
 port**, **send on a real port object**, or **define the hardware send**, so a
@@ -47,7 +74,9 @@ Deliberately NOT flagged (these are the safe seam working as designed):
 
 from __future__ import annotations
 
+import io
 import re
+import tokenize
 from pathlib import Path
 from typing import Final
 
@@ -79,25 +108,33 @@ _ARMED_SEAM_MODULES: Final[frozenset[str]] = frozenset(
 
 # LEGACY V1.34 SURFACE — explicitly OUT of the single-seam rule's scope.
 #
-# ``app.py`` and ``shell.py`` are the retired-in-place V1.34 monolith path.
-# They construct their own output ports and send directly, in many places.
-# Rather than let that quietly weaken the rule's wording, the rule text is
-# scoped to the cockpit / live surface and these two modules are named here.
+# ``app.py`` is the retired-in-place V1.34 monolith entry point. It resolves
+# and opens its own output ports at ten CLI subcommand sites and drives them
+# through ``midi_io.send_cc`` (which constructs the ``mido.Message``, records
+# the ``record_cc_sent`` metric, and paces each message by
+# ``MIDI_MESSAGE_SETTLE_SECONDS``). The ArmedApply seam transmits raw
+# ``(channel, control, value)`` triples with no pacing and no metric, so
+# routing these sites through it today would change the observable wire
+# timing — see the module docstring's "Why app.py is still here" note.
+#
+# ``shell.py`` came OFF this list: it never transmitted. It receives an
+# already-opened port as an injected ``Sender`` and writes only through
+# ``midi_io``; its two regex hits were prose in a docstring and a comment
+# quoting the monolith's ``with mido.open_output(...)`` line. A module that
+# does not transmit does not need a transmit exemption.
 #
 # This list is FROZEN and only ever SHRINKS (pinned by
-# ``test_legacy_v134_transmit_allowlist_only_shrinks``). WS-4 folds these
-# call sites into the ``senders`` ArmedApply seam, after which they come OFF.
-# Adding an entry requires reviewer sign-off recorded in the PR body.
+# ``test_legacy_v134_transmit_allowlist_only_shrinks``). Adding an entry
+# requires reviewer sign-off recorded in the PR body.
 _LEGACY_V134_TRANSMIT_MODULES: Final[frozenset[str]] = frozenset(
     {
         "rytm_randomizer/app.py",
-        "rytm_randomizer/shell.py",
     }
 )
 
 # The high-water mark for the legacy allowlist. Because the list only ever
 # shrinks, this number may only be lowered — never raised.
-_LEGACY_V134_ALLOWLIST_MAX_SIZE: Final[int] = 2
+_LEGACY_V134_ALLOWLIST_MAX_SIZE: Final[int] = 1
 
 _ALLOWED_TRANSMIT_MODULES: Final[frozenset[str]] = (
     _ARMED_SEAM_MODULES | _LEGACY_V134_TRANSMIT_MODULES
@@ -128,6 +165,42 @@ def _package_python_files() -> list[Path]:
     return sorted(p for p in PACKAGE_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
 
 
+def executable_source(text: str) -> str:
+    """Return ``text`` with comments and string literals blanked out.
+
+    The raw-text scan cannot tell ``provider.open_output(name)`` from a
+    docstring line *quoting* ``with mido.open_output(port_name) as out:``.
+    That mattered: ``shell.py``'s only two "transmit sites" were both prose,
+    and the false positives were what justified giving a module that never
+    transmits a transmit exemption.
+
+    Tokenizing is exact where a regex over raw text cannot be — it knows what
+    is a ``STRING``/``COMMENT`` token and what is code. Blanked tokens are
+    replaced by same-length filler that preserves newlines, so reported line
+    numbers still line up with the file on disk. A file that does not parse is
+    returned unchanged: an unparseable module should be scanned conservatively
+    (every match kept) rather than silently exempted.
+    """
+
+    try:
+        tokens = list(tokenize.generate_tokens(io.StringIO(text).readline))
+    except (tokenize.TokenError, IndentationError, SyntaxError):
+        return text
+
+    lines = text.splitlines(keepends=True)
+    for token in tokens:
+        if token.type not in (tokenize.STRING, tokenize.COMMENT):
+            continue
+        (start_row, start_col), (end_row, end_col) = token.start, token.end
+        for row in range(start_row, end_row + 1):
+            line = lines[row - 1]
+            begin = start_col if row == start_row else 0
+            finish = end_col if row == end_row else len(line.rstrip("\r\n"))
+            keep_eol = line[finish:] if row == end_row else line[len(line.rstrip("\r\n")) :]
+            lines[row - 1] = line[:begin] + " " * (finish - begin) + keep_eol
+    return "".join(lines)
+
+
 def test_transmit_path_confined_to_whitelisted_modules() -> None:
     """No module outside the whitelist may construct output or send.
 
@@ -143,11 +216,11 @@ def test_transmit_path_confined_to_whitelisted_modules() -> None:
         rel = path.relative_to(PROJECT_ROOT).as_posix()
         if rel in _ALLOWED_TRANSMIT_MODULES:
             continue
-        text = path.read_text(encoding="utf-8", errors="ignore")
-        # Ignore matches inside strings/docstrings is out of scope for a static
-        # scan; the whitelist absorbs the small number of data-field mentions
-        # (e.g. ``hardware_send_enabled``) — those use ``hardware_send`` only as
-        # an identifier fragment, not the ``hardware_send(`` call form.
+        # Comments and string literals are blanked first: a docstring that
+        # *quotes* ``open_output(...)`` is documentation, not a transmit site,
+        # and treating prose as a violation is what previously forced a
+        # transmit-free module onto the exemption list.
+        text = executable_source(path.read_text(encoding="utf-8", errors="ignore"))
         if _TRANSMIT_RE.search(text):
             offenders.append(rel)
     assert not offenders, (
@@ -165,9 +238,9 @@ def test_legacy_v134_transmit_allowlist_only_shrinks() -> None:
     """The legacy V1.34 transmit allowlist is frozen and may only shrink.
 
     The single-seam rule is scoped to the cockpit / live surface precisely
-    BECAUSE ``app.py`` / ``shell.py`` predate it. That scoping is only
-    honest while the exception list is closed: if a third module could be
-    appended, "scoped rule" becomes "rule with a growing hole".
+    BECAUSE ``app.py`` predates it. That scoping is only honest while the
+    exception list is closed: if another module could be appended,
+    "scoped rule" becomes "rule with a growing hole".
     """
 
     assert len(_LEGACY_V134_TRANSMIT_MODULES) <= _LEGACY_V134_ALLOWLIST_MAX_SIZE, (
@@ -184,6 +257,68 @@ def test_legacy_v134_transmit_allowlist_only_shrinks() -> None:
         "A module is listed BOTH as the armed seam and as a legacy V1.34 "
         "exception. Pick one: seam members are the rule, legacy entries are "
         "the scoped-out exception.\n  Both:\n    " + "\n    ".join(overlap)
+    )
+
+
+# Retired exemptions. Once a module comes OFF the legacy list, nothing stops a
+# later edit from reintroducing a direct port write there — the generic scan
+# would then simply report it as a new offender with no memory that this module
+# was *deliberately* cleared. These tests keep that history enforceable.
+
+_RETIRED_LEGACY_TRANSMIT_MODULES: Final[frozenset[str]] = frozenset(
+    {
+        "rytm_randomizer/shell.py",
+    }
+)
+"""Modules removed from :data:`_LEGACY_V134_TRANSMIT_MODULES`, and why.
+
+* ``shell.py`` — never transmitted. It receives an already-opened port as an
+  injected ``Sender`` and writes only through ``midi_io``; the two hits the
+  scanner reported were a module-docstring line and a method-docstring line
+  quoting the monolith's ``with mido.open_output(port_name) as out:`` block.
+  An exemption for a module that does not transmit overstated the size of the
+  hole in the single-seam claim.
+"""
+
+
+def test_retired_legacy_modules_are_no_longer_exempt() -> None:
+    """A retired module must not quietly return to the exception list."""
+
+    resurrected = sorted(_RETIRED_LEGACY_TRANSMIT_MODULES & _LEGACY_V134_TRANSMIT_MODULES)
+    assert not resurrected, (
+        "A module was retired from the legacy transmit exemption and has been "
+        "re-added. The list only shrinks; if this module genuinely transmits "
+        "again, that is a regression in the module, not a reason to re-open "
+        "its exemption.\n  Re-added:\n    " + "\n    ".join(resurrected)
+    )
+
+
+def test_retired_legacy_modules_still_do_not_transmit() -> None:
+    """``shell.py`` must stay transmit-free now that it has no exemption.
+
+    This is the assertion that made dropping the exemption safe: the removal
+    is only correct while the module genuinely holds no real port. A future
+    edit that adds ``provider.open_output(...)`` or a ``port.send(...)`` to
+    ``shell.py`` must fail *here*, naming the retired exemption, rather than
+    surfacing as an anonymous whitelist violation.
+    """
+
+    offenders: list[str] = []
+    for rel in sorted(_RETIRED_LEGACY_TRANSMIT_MODULES):
+        path = PROJECT_ROOT / rel
+        assert path.exists(), f"retired legacy module is missing: {rel}"
+        # Prose mentions are exactly what the exemption was wrongly granted
+        # for, so scan executable code only.
+        code = executable_source(path.read_text(encoding="utf-8"))
+        for number, line in enumerate(code.splitlines(), start=1):
+            if _TRANSMIT_RE.search(line):
+                offenders.append(f"{rel}:{number}: {line.strip()}")
+    assert not offenders, (
+        "A module that was retired from the legacy transmit exemption now "
+        "constructs or writes to a real output port again. Route the write "
+        "through the ``senders`` ArmedApply seam — do NOT restore the "
+        "exemption (the list only shrinks).\n"
+        "  Offending lines:\n    " + "\n    ".join(offenders)
     )
 
 

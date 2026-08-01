@@ -34,11 +34,24 @@ function seedOutputs(outputs: string[] = [RYTM_OUT]): void {
   });
 }
 
-/** Open the dialog and make both required factors satisfied. */
-function fillArmDialog(port: string = RYTM_OUT, token = 'tok-123'): void {
+/** The per-launch ARM secret the shell injects before any app code runs. */
+const INJECTED_ARM_SECRET = 'injected-arm-secret';
+
+/** Simulate the Tauri shell's injection (sidecar.rs::arm_secret_bootstrap_script). */
+function injectArmSecret(secret: string | null = INJECTED_ARM_SECRET): void {
+  const w = window as { __RYTM_RAND_ARM_SECRET__?: string };
+  if (secret === null) {
+    delete w.__RYTM_RAND_ARM_SECRET__;
+    window.localStorage.removeItem('rytm-rand-arm-secret');
+    return;
+  }
+  w.__RYTM_RAND_ARM_SECRET__ = secret;
+}
+
+/** Open the dialog and choose the exact port (the only operator input now). */
+function fillArmDialog(port: string = RYTM_OUT): void {
   fireEvent.click(screen.getByTestId('arm-open-button'));
   fireEvent.change(screen.getByTestId('arm-port-select'), { target: { value: port } });
-  fireEvent.change(screen.getByTestId('arm-token-input'), { target: { value: token } });
 }
 
 function renderArmControl(fake: FakeCockpitClient): void {
@@ -51,6 +64,9 @@ function renderArmControl(fake: FakeCockpitClient): void {
 
 describe('ArmControl', () => {
   beforeEach(() => {
+    // The shell injects the ARM secret before app code runs; the
+    // missing-secret test clears it explicitly.
+    injectArmSecret();
     act(() => {
       useCockpitStore.getState().reset();
     });
@@ -79,34 +95,28 @@ describe('ArmControl', () => {
     fireEvent.click(screen.getByTestId('arm-open-button'));
     expect(screen.getByTestId('arm-dialog')).toBeInTheDocument();
 
-    // Nothing chosen → confirm disabled → nothing sent.
-    expect(screen.getByTestId('arm-confirm-button')).toBeDisabled();
-    expect(fake.sent).toEqual([]);
-
-    // A token alone is NOT enough — the port is still unchosen.
-    fireEvent.change(screen.getByTestId('arm-token-input'), {
-      target: { value: 'tok-123' },
-    });
+    // No port chosen → confirm disabled → nothing sent. An injected secret
+    // alone is NOT enough: naming the exact instrument is the operator's
+    // deliberate act, and there is no default selection.
     expect(screen.getByTestId('arm-confirm-button')).toBeDisabled();
     fireEvent.click(screen.getByTestId('arm-confirm-button'));
     expect(fake.sent).toEqual([]);
 
-    // A port alone is NOT enough either.
-    fireEvent.change(screen.getByTestId('arm-token-input'), { target: { value: '' } });
+    // Choosing the port satisfies the last factor.
     fireEvent.change(screen.getByTestId('arm-port-select'), {
       target: { value: A4_OUT },
     });
-    expect(screen.getByTestId('arm-confirm-button')).toBeDisabled();
-    expect(fake.sent).toEqual([]);
-
-    // Both present → enabled, and the command carries the EXACT chosen name.
-    fireEvent.change(screen.getByTestId('arm-token-input'), {
-      target: { value: 'tok-123' },
-    });
     expect(screen.getByTestId('arm-confirm-button')).toBeEnabled();
     fireEvent.click(screen.getByTestId('arm-confirm-button'));
+    // The token is the SHELL-INJECTED secret, never anything the operator
+    // typed, and the port is the exact chosen name.
     expect(fake.sent).toEqual([
-      { type: 'arm', arm_token: 'tok-123', port_name: A4_OUT, confirm: true },
+      {
+        type: 'arm',
+        arm_token: INJECTED_ARM_SECRET,
+        port_name: A4_OUT,
+        confirm: true,
+      },
     ]);
 
     // ok ack → dialog closes.
@@ -125,7 +135,7 @@ describe('ArmControl', () => {
     const fake = new FakeCockpitClient();
     renderArmControl(fake);
 
-    fillArmDialog(RYTM_OUT, 'tok');
+    fillArmDialog(RYTM_OUT);
     const confirm = screen.getByTestId('arm-confirm-button');
     expect(confirm).toBeEnabled();
 
@@ -169,7 +179,8 @@ describe('ArmControl', () => {
     select.focus();
     expect(document.activeElement).toBe(select);
     // The token input is labelled too.
-    expect(screen.getByLabelText('Arm token')).toBe(screen.getByTestId('arm-token-input'));
+    // The arm secret is injected, so there is no token field to label.
+    expect(screen.queryByTestId('arm-token-input')).toBeNull();
   });
 
   it('explains the empty state when no outputs are enumerated', () => {
@@ -182,7 +193,6 @@ describe('ArmControl', () => {
 
     expect(screen.getByTestId('arm-no-ports')).toBeInTheDocument();
     // With no port choosable, arming stays blocked no matter the token.
-    fireEvent.change(screen.getByTestId('arm-token-input'), { target: { value: 'x' } });
     expect(screen.getByTestId('arm-confirm-button')).toBeDisabled();
   });
 
@@ -230,7 +240,7 @@ describe('ArmControl', () => {
     fake.ackQueue.push({ request_id: 'r1', ok: false, message: 'bad token' });
     renderArmControl(fake);
 
-    fillArmDialog(RYTM_OUT, 'x');
+    fillArmDialog(RYTM_OUT);
     fireEvent.click(screen.getByTestId('arm-confirm-button'));
     await screen.findByText('bad token');
     expect(screen.getByTestId('arm-dialog')).toBeInTheDocument();
@@ -269,7 +279,7 @@ describe('ArmControl', () => {
     fake.ackQueue.push({ request_id: 'r1', ok: false, message: 'bad token' });
     renderArmControl(fake);
 
-    fillArmDialog(RYTM_OUT, 'x');
+    fillArmDialog(RYTM_OUT);
     fireEvent.click(screen.getByTestId('arm-confirm-button'));
 
     const alert = await screen.findByTestId('arm-dialog-error');
@@ -289,29 +299,29 @@ describe('ArmControl', () => {
     fireEvent.click(screen.getByTestId('arm-open-button'));
     const dialog = screen.getByTestId('arm-dialog');
     const portSelect = screen.getByTestId('arm-port-select');
-    const tokenInput = screen.getByTestId('arm-token-input');
     const cancel = screen.getByTestId('arm-cancel-button');
-
-    // Focusables in DOM order (confirm is disabled until both factors are
-    // set, so it is excluded): [port select, token input, cancel button].
-    // The select MUST be inside the trap — otherwise Tab escapes the dialog
-    // at the very control the operator has to use.
-    // First=select, last=cancel.
+    // Choosing a port enables confirm, giving the trap a real mid-list
+    // element: [port select, cancel, confirm]. The select MUST be inside the
+    // trap — otherwise Tab escapes the dialog at the very control the
+    // operator has to use.
+    fireEvent.change(portSelect, { target: { value: RYTM_OUT } });
+    const confirm = screen.getByTestId('arm-confirm-button');
+    expect(confirm).toBeEnabled();
 
     // Shift+Tab on the first element wraps to the last.
     portSelect.focus();
     fireEvent.keyDown(dialog, { key: 'Tab', shiftKey: true });
-    expect(document.activeElement).toBe(cancel);
+    expect(document.activeElement).toBe(confirm);
 
     // Tab on the last element wraps to the first.
-    cancel.focus();
+    confirm.focus();
     fireEvent.keyDown(dialog, { key: 'Tab' });
     expect(document.activeElement).toBe(portSelect);
 
     // Tab in the middle / on a non-boundary element is a no-op (default flow).
-    tokenInput.focus();
+    cancel.focus();
     fireEvent.keyDown(dialog, { key: 'Tab' });
-    expect(document.activeElement).toBe(tokenInput);
+    expect(document.activeElement).toBe(cancel);
   });
 
   it('the focus trap no-ops when the dialog momentarily has no focusable children', () => {
@@ -350,5 +360,47 @@ describe('ArmControl', () => {
     fake.nextRejection = new Error('socket not open');
     fireEvent.click(screen.getByTestId('disarm-button'));
     await screen.findByText('Disarm request failed to send');
+  });
+
+  it('falls closed and explains itself when no arm secret was injected', () => {
+    // A packaged build always injects; a bare browser / stale webview may
+    // not. Sending an empty token would surface as an opaque server refusal,
+    // so the dialog names the real cause and refuses to send at all.
+    injectArmSecret(null);
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionMock);
+    });
+    seedOutputs([RYTM_OUT]);
+    const fake = new FakeCockpitClient();
+    renderArmControl(fake);
+
+    fillArmDialog(RYTM_OUT);
+
+    expect(screen.getByTestId('arm-no-secret')).toBeInTheDocument();
+    // Confirm stays disabled even with a valid port chosen.
+    expect(screen.getByTestId('arm-confirm-button')).toBeDisabled();
+    fireEvent.click(screen.getByTestId('arm-confirm-button'));
+    expect(fake.sent).toEqual([]);
+  });
+
+  it('reads the injected arm secret from localStorage after a webview reload', () => {
+    // The window property is set once at injection; localStorage is the
+    // survivor across a reload. Precedence mirrors the WS auth token.
+    injectArmSecret(null);
+    window.localStorage.setItem('rytm-rand-arm-secret', 'stored-secret');
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionMock);
+    });
+    seedOutputs([RYTM_OUT]);
+    const fake = new FakeCockpitClient();
+    renderArmControl(fake);
+
+    fillArmDialog(RYTM_OUT);
+    fireEvent.click(screen.getByTestId('arm-confirm-button'));
+
+    expect(fake.sent).toEqual([
+      { type: 'arm', arm_token: 'stored-secret', port_name: RYTM_OUT, confirm: true },
+    ]);
+    window.localStorage.removeItem('rytm-rand-arm-secret');
   });
 });

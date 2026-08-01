@@ -8,6 +8,16 @@
 //! 16s, resets after 60s of clean uptime), and shuts it down cleanly on
 //! window close (stdin shutdown sentinel on every OS, plus SIGTERM on
 //! unix, then a hard kill after 5s).
+//!
+//! It also owns the two per-launch credential handoffs. The sidecar mints
+//! both and writes each 0600; the shell tells it *where* (via
+//! [`TOKEN_FILE_ENV_VAR`] / [`ARM_SECRET_FILE_ENV_VAR`]), reads them back as
+//! they appear, and injects them into the webview
+//! ([`token_bootstrap_script`] / [`arm_secret_bootstrap_script`]). The WS
+//! token admits a connection; the ARM secret authorises outbound transmit.
+//! Injection is what makes arming reachable in a packaged double-click
+//! build — there is no terminal there to print a secret the operator could
+//! transcribe.
 
 use std::env;
 use std::fs;
@@ -28,6 +38,12 @@ pub const BACKOFF_RESET_SECS: u64 = 60;
 pub const SHUTDOWN_GRACE_SECS: u64 = 5;
 /// Environment variable consumed by the Python cockpit sidecar for token handoff.
 pub const TOKEN_FILE_ENV_VAR: &str = "RYTM_RAND_WS_TOKEN_FILE";
+/// Environment variable consumed by the Python cockpit sidecar for ARM-secret handoff.
+///
+/// Mirrors `_ARM_SECRET_FILE_ENV_VAR` in `rytm_randomizer/cockpit/__main__.py`.
+/// The secret authorises *transmit*; the WS token only admits a connection,
+/// so the two live in separate files and are handed over separately.
+pub const ARM_SECRET_FILE_ENV_VAR: &str = "RYTM_RAND_ARM_SECRET_FILE";
 /// Environment variable consumed by the Python cockpit sidecar for the WS port.
 pub const PORT_ENV_VAR: &str = "RYTM_RAND_WS_PORT";
 /// Operator override pointing at a specific bundled sidecar binary.
@@ -47,6 +63,10 @@ pub const TOKEN_WINDOW_PROPERTY: &str = "__RYTM_RAND_WS_TOKEN__";
 pub const PORT_STORAGE_KEY: &str = "rytm-rand-ws-port";
 /// Window property the cockpit WebSocket client may read the port from.
 pub const PORT_WINDOW_PROPERTY: &str = "__RYTM_RAND_WS_PORT__";
+/// Browser storage key the cockpit arm dialog reads the ARM secret from.
+pub const ARM_SECRET_STORAGE_KEY: &str = "rytm-rand-arm-secret";
+/// Window property the cockpit arm dialog reads the ARM secret from.
+pub const ARM_SECRET_WINDOW_PROPERTY: &str = "__RYTM_RAND_ARM_SECRET__";
 /// The sidecar's default WS port (mirrors `_DEFAULT_PORT` in `cockpit/__main__.py`).
 pub const DEFAULT_WS_PORT: u16 = 4317;
 /// Consecutive spawn failures before the shell surfaces an error dialog.
@@ -59,6 +79,12 @@ pub const SIDECAR_BINARY_DIR: &str = "binaries";
 pub const PYTHON_BIN: &str = "python";
 const DEFAULT_TOKEN_DIR: &str = "RytmRandomizer";
 const DEFAULT_TOKEN_FILE: &str = "cockpit-ws-token.txt";
+/// Home-relative directory the Python sidecar defaults its secrets into.
+///
+/// Mirrors `_DEFAULT_TOKEN_REL_DIR` in `rytm_randomizer/cockpit/__main__.py`.
+const DEFAULT_ARM_SECRET_DIR: &str = ".rytm-randomizer";
+/// Default ARM-secret filename — mirrors `_DEFAULT_ARM_SECRET_FILE_NAME`.
+const DEFAULT_ARM_SECRET_FILE: &str = "cockpit-arm-secret";
 
 /// How the sidecar process is launched.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -196,6 +222,34 @@ pub fn resolve_token_file_path() -> PathBuf {
     base.join(DEFAULT_TOKEN_DIR).join(DEFAULT_TOKEN_FILE)
 }
 
+/// Resolve the per-launch ARM-secret handoff path.
+///
+/// Deliberately mirrors `_resolve_arm_secret_path()` in
+/// `rytm_randomizer/cockpit/__main__.py`: `RYTM_RAND_ARM_SECRET_FILE` when
+/// set and non-blank, otherwise `$HOME/.rytm-randomizer/cockpit-arm-secret`.
+/// The shell also *exports* the resolved path to the sidecar (see
+/// [`sidecar_command`]), so shell and sidecar cannot disagree even if the
+/// home-directory probe differs between the two runtimes; the default here
+/// matters only for the dev case where an operator started the sidecar by
+/// hand and the shell has to find the file it already wrote.
+///
+/// `$HOME` (POSIX) / `USERPROFILE` (Windows) is what Python's `Path.home()`
+/// consults first; a home-less environment degrades to the process temp dir
+/// rather than panicking, matching [`resolve_token_file_path`]'s posture.
+pub fn resolve_arm_secret_file_path() -> PathBuf {
+    if let Ok(path) = env::var(ARM_SECRET_FILE_ENV_VAR) {
+        if !path.trim().is_empty() {
+            return PathBuf::from(path);
+        }
+    }
+    let home = env::var_os("HOME")
+        .or_else(|| env::var_os("USERPROFILE"))
+        .map(PathBuf::from)
+        .unwrap_or_else(env::temp_dir);
+    home.join(DEFAULT_ARM_SECRET_DIR)
+        .join(DEFAULT_ARM_SECRET_FILE)
+}
+
 /// Remove a stale token before launching a fresh sidecar. Missing files are fine.
 pub fn clear_token_file(path: &Path) -> io::Result<()> {
     match fs::remove_file(path) {
@@ -205,7 +259,13 @@ pub fn clear_token_file(path: &Path) -> io::Result<()> {
     }
 }
 
-/// Read and trim the sidecar token file. Missing or whitespace-only files are "not ready".
+/// Read and trim a sidecar secret file. Missing or whitespace-only files are "not ready".
+///
+/// Used for both the WS handshake token and the ARM secret: the sidecar
+/// writes each with the same "mint, then write 0600" shape, so the reader
+/// has the same job in both cases — return `None` until the file exists and
+/// holds non-blank content, so the caller polls instead of injecting an
+/// empty credential.
 pub fn read_token_file(path: &Path) -> io::Result<Option<String>> {
     match fs::read_to_string(path) {
         Ok(contents) => {
@@ -233,11 +293,40 @@ pub fn token_bootstrap_script(token: &str, port: u16) -> String {
     )
 }
 
+/// JavaScript injected into the WebView once the Python sidecar writes its
+/// per-launch ARM secret.
+///
+/// Kept separate from [`token_bootstrap_script`] because the two credentials
+/// land at different moments and authorise different things: the WS token
+/// admits the connection, the ARM secret authorises outbound transmit. One
+/// combined script would have to wait for the slower of the two, delaying
+/// the handshake for no reason.
+///
+/// Injection — rather than asking the operator to transcribe the secret —
+/// is what makes the transmit capability reachable in a packaged
+/// double-click build, where there is no terminal printing the value and no
+/// obvious file to open.
+pub fn arm_secret_bootstrap_script(secret: &str) -> String {
+    let secret_json = serde_json::to_string(secret).expect("serialize arm secret");
+    let key_json = serde_json::to_string(ARM_SECRET_STORAGE_KEY).expect("serialize arm secret key");
+    format!(
+        "(() => {{ window.{ARM_SECRET_WINDOW_PROPERTY} = {secret_json}; try {{ window.localStorage.setItem({key_json}, {secret_json}); }} catch (_err) {{}} }})();"
+    )
+}
+
 /// Build the sidecar command so tests can inspect env propagation without spawning.
 ///
 /// stdin is piped: it is the cross-platform graceful-shutdown channel
 /// ([`shutdown_child`] writes [`SHUTDOWN_SENTINEL`] then closes the pipe).
-pub fn sidecar_command(launch: &SidecarLaunch, token_file: &Path, port: u16) -> Command {
+/// `arm_secret_file` is exported too, so the sidecar writes the ARM secret
+/// exactly where the shell's credential bridge polls for it. Letting each
+/// side independently derive a default is how the two would drift.
+pub fn sidecar_command(
+    launch: &SidecarLaunch,
+    token_file: &Path,
+    arm_secret_file: &Path,
+    port: u16,
+) -> Command {
     let mut command = match launch {
         SidecarLaunch::Bundled(path) => Command::new(path),
         SidecarLaunch::DevPython(python) => {
@@ -248,6 +337,7 @@ pub fn sidecar_command(launch: &SidecarLaunch, token_file: &Path, port: u16) -> 
     };
     command
         .env(TOKEN_FILE_ENV_VAR, token_file)
+        .env(ARM_SECRET_FILE_ENV_VAR, arm_secret_file)
         .env(PORT_ENV_VAR, port.to_string())
         .stdin(Stdio::piped())
         .stdout(Stdio::inherit())
@@ -257,12 +347,20 @@ pub fn sidecar_command(launch: &SidecarLaunch, token_file: &Path, port: u16) -> 
 
 /// Spawn the sidecar process and return the handle. Caller owns the
 /// child and is responsible for tearing it down via [`shutdown_child`].
-pub fn spawn_sidecar(launch: &SidecarLaunch, token_file: &Path, port: u16) -> io::Result<Child> {
+pub fn spawn_sidecar(
+    launch: &SidecarLaunch,
+    token_file: &Path,
+    arm_secret_file: &Path,
+    port: u16,
+) -> io::Result<Child> {
     log::info!("spawning sidecar on port {port}: {}", launch.describe());
     if let Some(parent) = token_file.parent() {
         fs::create_dir_all(parent)?;
     }
-    sidecar_command(launch, token_file, port).spawn()
+    if let Some(parent) = arm_secret_file.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    sidecar_command(launch, token_file, arm_secret_file, port).spawn()
 }
 
 /// Request a graceful shutdown on every OS: write the stdin sentinel and
@@ -354,7 +452,12 @@ mod tests {
     #[test]
     fn sidecar_command_sets_token_file_and_port_env() {
         let launch = SidecarLaunch::DevPython(PYTHON_BIN.to_string());
-        let command = sidecar_command(&launch, std::path::Path::new("C:/tmp/ws-token.txt"), 4444);
+        let command = sidecar_command(
+            &launch,
+            std::path::Path::new("C:/tmp/ws-token.txt"),
+            std::path::Path::new("C:/tmp/arm-secret"),
+            4444,
+        );
         let envs: Vec<_> = command
             .get_envs()
             .map(|(key, value)| {
@@ -372,9 +475,52 @@ mod tests {
     }
 
     #[test]
+    fn sidecar_command_exports_the_arm_secret_file_the_shell_will_read() {
+        // Without this env export the sidecar would write the secret to its
+        // own default path while the shell polled a different one, and the
+        // arm dialog would never receive a secret — the exact unreachable-
+        // transmit failure this handoff exists to close.
+        let launch = SidecarLaunch::DevPython(PYTHON_BIN.to_string());
+        let command = sidecar_command(
+            &launch,
+            std::path::Path::new("/tmp/tok"),
+            std::path::Path::new("/tmp/arm-secret"),
+            4317,
+        );
+        let envs: Vec<_> = command
+            .get_envs()
+            .map(|(key, value)| {
+                (
+                    key.to_string_lossy().to_string(),
+                    value.map(|v| v.to_string_lossy().to_string()),
+                )
+            })
+            .collect();
+        assert!(envs.contains(&(
+            ARM_SECRET_FILE_ENV_VAR.to_string(),
+            Some("/tmp/arm-secret".to_string()),
+        )));
+    }
+
+    #[test]
+    fn arm_secret_env_var_matches_the_python_sidecar_contract() {
+        // Lockstep with `_ARM_SECRET_FILE_ENV_VAR` in
+        // rytm_randomizer/cockpit/__main__.py. A rename on either side that
+        // is not mirrored here silently disables the handoff.
+        assert_eq!(ARM_SECRET_FILE_ENV_VAR, "RYTM_RAND_ARM_SECRET_FILE");
+        assert_eq!(DEFAULT_ARM_SECRET_DIR, ".rytm-randomizer");
+        assert_eq!(DEFAULT_ARM_SECRET_FILE, "cockpit-arm-secret");
+    }
+
+    #[test]
     fn sidecar_command_dev_fallback_runs_module_entry() {
         let launch = SidecarLaunch::DevPython("python".to_string());
-        let command = sidecar_command(&launch, std::path::Path::new("/tmp/tok"), 4317);
+        let command = sidecar_command(
+            &launch,
+            std::path::Path::new("/tmp/tok"),
+            std::path::Path::new("/tmp/arm"),
+            4317,
+        );
         let args: Vec<String> = command
             .get_args()
             .map(|a| a.to_string_lossy().to_string())
@@ -385,7 +531,12 @@ mod tests {
     #[test]
     fn sidecar_command_bundled_has_no_module_args() {
         let launch = SidecarLaunch::Bundled(PathBuf::from("/opt/app/binaries/rytm-sidecar"));
-        let command = sidecar_command(&launch, std::path::Path::new("/tmp/tok"), 4317);
+        let command = sidecar_command(
+            &launch,
+            std::path::Path::new("/tmp/tok"),
+            std::path::Path::new("/tmp/arm"),
+            4317,
+        );
         assert_eq!(command.get_args().count(), 0);
     }
 
@@ -510,6 +661,85 @@ mod tests {
         assert!(script.contains("localStorage.setItem"));
         assert!(script.contains("tok'en\\\\value"));
         assert!(script.contains("\"4919\""));
+    }
+
+    #[test]
+    fn arm_secret_bootstrap_script_sets_window_property_and_storage_key() {
+        let script = arm_secret_bootstrap_script("s3cr'et\\value");
+        assert!(script.contains("__RYTM_RAND_ARM_SECRET__"));
+        assert!(script.contains("rytm-rand-arm-secret"));
+        assert!(script.contains("localStorage.setItem"));
+        // JSON-escaped, so a quote/backslash in the secret cannot break out
+        // of the literal and inject script into the webview.
+        assert!(script.contains("s3cr'et\\\\value"));
+        // The ARM secret must NOT ride along on the WS-token channel: the
+        // arm dialog and the handshake read different keys on purpose.
+        assert!(!script.contains("__RYTM_RAND_WS_TOKEN__"));
+    }
+
+    #[test]
+    fn token_bootstrap_script_never_carries_the_arm_secret_keys() {
+        // The two credentials authorise different things (connect vs.
+        // transmit); crossing them would hand transmit authority to anything
+        // that only needed to connect.
+        let script = token_bootstrap_script("tok", 4317);
+        assert!(!script.contains(ARM_SECRET_WINDOW_PROPERTY));
+        assert!(!script.contains(ARM_SECRET_STORAGE_KEY));
+    }
+
+    #[test]
+    fn resolve_arm_secret_file_path_honors_env_override() {
+        let prior = std::env::var_os(ARM_SECRET_FILE_ENV_VAR);
+        std::env::set_var(ARM_SECRET_FILE_ENV_VAR, "/tmp/override-arm-secret");
+        assert_eq!(
+            resolve_arm_secret_file_path(),
+            std::path::PathBuf::from("/tmp/override-arm-secret")
+        );
+        match prior {
+            Some(value) => std::env::set_var(ARM_SECRET_FILE_ENV_VAR, value),
+            None => std::env::remove_var(ARM_SECRET_FILE_ENV_VAR),
+        }
+    }
+
+    #[test]
+    fn resolve_arm_secret_file_path_falls_back_to_the_python_default_layout() {
+        // A blank override is treated as unset (same posture as the WS
+        // token), and the fallback must land on the Python sidecar's own
+        // dev-mode default so a hand-started sidecar is still discoverable.
+        let prior = std::env::var_os(ARM_SECRET_FILE_ENV_VAR);
+        std::env::set_var(ARM_SECRET_FILE_ENV_VAR, "   ");
+        let resolved = resolve_arm_secret_file_path();
+        assert!(resolved.ends_with(
+            std::path::Path::new(DEFAULT_ARM_SECRET_DIR).join(DEFAULT_ARM_SECRET_FILE)
+        ));
+        match prior {
+            Some(value) => std::env::set_var(ARM_SECRET_FILE_ENV_VAR, value),
+            None => std::env::remove_var(ARM_SECRET_FILE_ENV_VAR),
+        }
+    }
+
+    #[test]
+    fn read_token_file_reads_the_arm_secret_with_the_same_not_ready_semantics() {
+        // The arm-secret bridge shares this reader: it must report "not
+        // ready" (None) for a missing or blank file rather than handing the
+        // webview an empty credential, which would fail closed at the server
+        // but only after presenting the operator with a working-looking arm.
+        let dir = std::env::temp_dir().join(format!(
+            "rytm-randomizer-arm-secret-test-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("create temp arm secret dir");
+        let missing = dir.join("cockpit-arm-secret");
+        assert_eq!(read_token_file(&missing).expect("read missing"), None);
+        std::fs::write(&missing, "\n \t\n").expect("write blank arm secret");
+        assert_eq!(read_token_file(&missing).expect("read blank"), None);
+        std::fs::write(&missing, " s3cret \n").expect("write arm secret");
+        assert_eq!(
+            read_token_file(&missing).expect("read arm secret"),
+            Some("s3cret".to_string())
+        );
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]

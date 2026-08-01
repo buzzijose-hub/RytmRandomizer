@@ -1,11 +1,18 @@
 /**
  * ArmControl — the explicit in-UI arm/disarm affordance (Live-but-Passive).
  *
- * Arming is a three-factor operator decision: an explicit "Arm…" click opens
- * a confirmation dialog demanding (1) the exact MIDI output port, chosen from
- * the live enumeration, and (2) the per-launch arm token; only then does
- * (3) the "Confirm arm" button send
+ * Arming is an explicit operator decision: an "Arm…" click opens a
+ * confirmation dialog demanding the exact MIDI output port, chosen from the
+ * live enumeration; only then does the "Confirm arm" button send
  * `{ type: 'arm', arm_token, port_name, confirm: true }`.
+ *
+ * The `arm_token` is the per-launch ARM secret, which is DELIVERED rather
+ * than typed: the sidecar mints it and writes it 0600, and the Tauri shell
+ * injects it into this window before any app code runs
+ * (`resolveArmSecret`). Requiring transcription made arming impossible in a
+ * packaged double-click build — there is no terminal there to read it from.
+ * When no secret was injected the dialog says so and refuses, rather than
+ * sending an empty token that the server would reject opaquely.
  *
  * The port selector is not a convenience — it is a safety control. With a
  * Rytm and an Analog Four both connected, a server-side "first Elektron-
@@ -25,6 +32,7 @@ import { useState } from 'react';
 import { announce } from '../a11y';
 import { useCockpitStore } from '../state';
 
+import { resolveArmSecret } from '../ws/client';
 import { useCockpitClient } from './context';
 
 /** Keep Tab / Shift+Tab focus inside the arm dialog (WCAG 2.4.3 / 2.1.2). */
@@ -51,30 +59,47 @@ export function ArmControl(): JSX.Element {
   const availableOutputs = useCockpitStore((s) => s.connection?.available_outputs);
   const outputs = availableOutputs ?? [];
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [token, setToken] = useState('');
   const [portName, setPortName] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  // Both factors are required. There is deliberately no default selection:
-  // pre-selecting an output would reintroduce the auto-pick the server-side
-  // fix removed, just one layer up.
-  const canConfirm = token !== '' && portName !== '';
+  // The ARM secret is DELIVERED, never typed. The sidecar mints it and
+  // writes it 0600; the Tauri shell reads that file and injects it before
+  // any app code runs. Requiring the operator to transcribe it made arming
+  // impossible in a packaged double-click build (no terminal to read it
+  // from), so the deliberate operator gesture is choosing the exact output
+  // port and confirming — not copying a secret.
+  const armSecret = resolveArmSecret();
+
+  // No default port selection on purpose: pre-selecting an output would
+  // reintroduce the auto-pick the server-side fix removed, one layer up.
+  const canConfirm = armSecret !== null && portName !== '';
 
   const closeDialog = (): void => {
     setDialogOpen(false);
-    setToken('');
     setPortName('');
     setError(null);
   };
 
-  // Reachable only from the confirm button, which stays `disabled` until
-  // `canConfirm` — so this never runs without an exact port AND a token.
-  // (A redundant in-handler re-check was removed: it was unreachable, and an
-  // unreachable guard is exactly the kind of dead safety code this change set
-  // is eliminating elsewhere.)
+  // Reached from the confirm button, which stays `disabled` until
+  // `canConfirm` (exact port chosen AND a secret was injected). The
+  // null-secret re-check below is NOT redundant with that: `resolveArmSecret`
+  // reads live browser state, so a secret can disappear between render and
+  // click (webview reload clearing storage, a shell restart). Failing closed
+  // there is the difference between a clear message and an opaque server
+  // refusal.
   const submitArm = (): void => {
+    if (armSecret === null) {
+      // Fail closed. Sending an empty token would just surface as an opaque
+      // server refusal; naming the real cause is actionable.
+      setError(
+        'Arm secret unavailable — the cockpit sidecar did not hand one to this ' +
+          'window. Relaunch the desktop app, or see docs/COCKPIT_QUICKSTART.md ' +
+          'for the two-terminal dev flow.',
+      );
+      return;
+    }
     client
-      .send({ type: 'arm', arm_token: token, port_name: portName, confirm: true })
+      .send({ type: 'arm', arm_token: armSecret, port_name: portName, confirm: true })
       .then((ack) => {
         if (ack.ok) {
           const armedPort = portName;
@@ -149,10 +174,9 @@ export function ArmControl(): JSX.Element {
           <h2 id="arm-dialog-title">Arm hardware output</h2>
           <p id="arm-dialog-desc">
             Arming opens a real MIDI output through the guarded seam. Choose the
-            exact instrument to arm, then enter the per-launch arm token. Only
-            live-dial CC changes are sent — writes to saved kits and sounds are
-            disabled because they cannot yet be undone. Arming never survives a
-            disconnect.
+            exact instrument to arm, then confirm. Only live-dial CC changes are
+            sent — writes to saved kits and sounds are disabled because they
+            cannot yet be undone. Arming never survives a disconnect.
           </p>
           <label htmlFor="arm-port-select">MIDI output port</label>
           <select
@@ -175,13 +199,12 @@ export function ArmControl(): JSX.Element {
               connection status to report it.
             </p>
           )}
-          <label htmlFor="arm-token-input">Arm token</label>
-          <input
-            id="arm-token-input"
-            value={token}
-            onChange={(ev) => setToken(ev.target.value)}
-            data-testid="arm-token-input"
-          />
+          {armSecret === null && (
+            <p data-testid="arm-no-secret">
+              Arm secret unavailable — this window was not handed one by the
+              cockpit sidecar. Relaunch the desktop app to arm.
+            </p>
+          )}
           {error !== null && (
             <span className="arm-error" role="alert" data-testid="arm-dialog-error">
               {error}

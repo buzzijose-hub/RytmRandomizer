@@ -349,7 +349,18 @@ def _provision_arm_secret() -> str:
     path = _resolve_arm_secret_path()
     _write_token_file(path, secret)
     if _ARM_SECRET_FILE_ENV_VAR not in os.environ:
-        print(f"[cockpit] ARM secret: {secret}", file=sys.stdout, flush=True)
+        # Dev path: announce WHERE the secret is, never WHAT it is.
+        #
+        # Deliberately unlike the WS-token print above. The WS token only
+        # admits a connection; this secret authorises outbound TRANSMIT to
+        # hardware, so echoing it would strand a live-fire capability in
+        # terminal scrollback, shell history, and any CI log that captures
+        # stdout — for no benefit, because the packaged shell reads the
+        # file directly and injects it (sidecar.rs::arm_secret_bootstrap_script).
+        # A dev running the two-terminal flow reads the file instead.
+        # CodeQL py/clear-text-logging-sensitive-data flagged the old line
+        # and was right.
+        print(f"[cockpit] ARM secret written to: {path}", file=sys.stdout, flush=True)
     return secret
 
 

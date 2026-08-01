@@ -384,8 +384,12 @@ def test_arm_secret_is_echoed_only_in_dev_mode(
     monkeypatch.setattr(cockpit_main.Path, "home", classmethod(lambda cls: tmp_path))
     secret = cockpit_main._provision_arm_secret()
     dev_out = capsys.readouterr().out
-    assert "[cockpit] ARM secret:" in dev_out
-    assert secret in dev_out
+    # The dev banner names the FILE, never the value: this secret authorises
+    # transmit to hardware, so echoing it would strand a live-fire capability
+    # in scrollback / shell history / CI logs. (CodeQL
+    # py/clear-text-logging-sensitive-data flagged the old behaviour.)
+    assert "[cockpit] ARM secret written to:" in dev_out
+    assert secret not in dev_out
 
     monkeypatch.setenv(cockpit_main._ARM_SECRET_FILE_ENV_VAR, str(tmp_path / "arm-secret"))
     cockpit_main._provision_arm_secret()
