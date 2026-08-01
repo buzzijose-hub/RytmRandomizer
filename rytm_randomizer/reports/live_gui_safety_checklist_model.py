@@ -10,7 +10,6 @@ from .formatter import (
     SAFETY_SECTION_HEADER,
     PassiveReportHeader,
     passive_report_lines,
-    powershell_literal_arg,
 )
 
 REPORT_TITLE: Final[str] = "RytmRandomizer passive live GUI safety-checklist model"
@@ -297,13 +296,6 @@ def _safety_checklist_id(
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
 
 
-def _safety_checklist_replay_command(session_label: str) -> str:
-    return (
-        "python -m rytm_randomizer.cli live-gui-safety-checklist-model-report "
-        f"--session-label {powershell_literal_arg(session_label)}"
-    )
-
-
 def build_live_gui_safety_checklist_model(
     *,
     session_label: str = "Live Session",
@@ -362,7 +354,10 @@ def build_live_gui_safety_checklist_model(
         arm_gate=arm_gate,
         safety_lines=SAFETY_LINES,
         blocked_actions=BLOCKED_ACTIONS,
-        replay_commands=(_safety_checklist_replay_command(normalized_session_label),),
+        # The former replay command pointed at the never-registered
+        # `live-gui-safety-checklist-model-report` CLI command (dead wiring,
+        # retired 2026-07-28 per the live-GUI retirement evidence doc §3).
+        replay_commands=(),
     )
 
 

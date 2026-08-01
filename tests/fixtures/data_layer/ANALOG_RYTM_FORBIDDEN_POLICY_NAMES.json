@@ -1,0 +1,12 @@
+[
+  "transport",
+  "clock",
+  "program change",
+  "pattern change",
+  "project write",
+  "kit save",
+  "kit clear",
+  "factory reset",
+  "calibration",
+  "unvalidated sysex write"
+]

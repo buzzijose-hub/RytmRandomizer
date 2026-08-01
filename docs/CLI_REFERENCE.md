@@ -114,6 +114,31 @@ python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report KITS.syx --s
 
 ---
 
+## Analog Rytm — scoped randomization + kit morphing (preview)
+
+The competitive-parity mask+intensity and morph surfaces, guardrailed as
+**passive previews**. Each renders a deterministic plan (no RNG) the operator
+can audit and then arm-and-send through the `senders` ArmedApply seam; neither
+command reaches a transmit path.
+
+| Command | Purpose |
+| --- | --- |
+| `scoped-randomization-preview [--json]` | Deterministic **ScopeMask + depth macro** preview: choose which of the 12 pads and which parameter groups (`src`/`filter`/`amp`/…) move, anchored on the current kit, from a single depth macro (0..1). Renders the per-parameter delta plan. |
+| `kit-morph-preview [--json]` | Deterministic **kit morph** preview: interpolate a source kit toward a target — linear on continuous params, threshold on discrete selectors — at a morph amount (0..1). Renders the per-parameter interpolation plan. |
+
+```bash
+python -m rytm_randomizer.cli scoped-randomization-preview
+python -m rytm_randomizer.cli scoped-randomization-preview --json
+python -m rytm_randomizer.cli kit-morph-preview
+python -m rytm_randomizer.cli kit-morph-preview --json
+```
+
+The interactive versions (a per-track/per-group mask grid + depth slider, and a
+morph-amount slider strip) live in the cockpit's schema-driven panels; the CLI
+surface renders the canonical demonstration plan.
+
+---
+
 ## Analog Rytm — style routing + mutation planning
 
 ```bash
@@ -367,11 +392,6 @@ macro SEND` plus unattended playback blocked.
 | `controller-brain-live-feedback-rehearsal-report [--json]` | Passive controller-brain feedback frames, feedback zones, and blocked output gates |
 | `controller-brain-live-cockpit-handoff-report [--json]` | Passive controller-brain Cockpit handoff cards, panels, disabled controls, and replay commands |
 | `controller-brain-live-implementation-bridge-report [--json]` | Passive controller-brain GUI implementation bindings, fixture bundles, and implementation gates |
-| `controller-brain-live-desktop-blueprint-report [--json]` | Passive controller-brain desktop regions, component contracts, view-model bindings, fixture hints, and acceptance checks |
-| `controller-brain-live-desktop-app-plan-report [--app-plan-label <text>] [--framework-target desktop-python\|web-desktop\|test-harness] [--json]` | Passive controller-brain desktop app routes, component file hints, state slices, style tokens, and acceptance checks |
-| `controller-brain-live-desktop-component-contract-report [--component-contract-label <text>] [--selector-prefix <text>] [--json]` | Passive controller-brain desktop component API contracts, props, disabled events, test hooks, and fixture contracts |
-| `controller-brain-live-desktop-view-model-report [--view-model-label <text>] [--state-prefix <text>] [--json]` | Passive controller-brain desktop component view models, state bindings, disabled action models, render assertions, and acceptance checks |
-| `controller-brain-live-desktop-render-contract-report [--render-contract-label <text>] [--surface-prefix <text>] [--json]` | Passive controller-brain desktop render surfaces, render bindings, render guards, render assertions, and acceptance checks |
 | `controller-brain-operator-package-report [--json]` | Passive controller gestures to Live Kit Operator Package slot/readiness ledger |
 | `rytm-live-macro-hardware-rehearsal-report` | Passive next-studio Rytm macro checklist with launch command, pad-lane checks, and recovery notes |
 | `oxi-live-set-strategy-report` | Passive OXI-style set chapters, operator cues, rehearsal/replay commands, all-12-pad policy, and A4 review-only actions |
@@ -396,16 +416,6 @@ python -m rytm_randomizer.cli controller-brain-live-cockpit-handoff-report
 python -m rytm_randomizer.cli controller-brain-live-cockpit-handoff-report --json
 python -m rytm_randomizer.cli controller-brain-live-implementation-bridge-report
 python -m rytm_randomizer.cli controller-brain-live-implementation-bridge-report --json
-python -m rytm_randomizer.cli controller-brain-live-desktop-blueprint-report
-python -m rytm_randomizer.cli controller-brain-live-desktop-blueprint-report --json
-python -m rytm_randomizer.cli controller-brain-live-desktop-app-plan-report
-python -m rytm_randomizer.cli controller-brain-live-desktop-app-plan-report --app-plan-label "Controller brain desktop app plan" --framework-target desktop-python --json
-python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report
-python -m rytm_randomizer.cli controller-brain-live-desktop-component-contract-report --component-contract-label "Controller brain desktop component contract" --selector-prefix rr-controller --json
-python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report
-python -m rytm_randomizer.cli controller-brain-live-desktop-view-model-report --view-model-label "Controller brain desktop view model" --state-prefix rr-state --json
-python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report
-python -m rytm_randomizer.cli controller-brain-live-desktop-render-contract-report --render-contract-label "Controller brain desktop render contract" --surface-prefix rr-render --json
 python -m rytm_randomizer.cli controller-brain-operator-package-report
 python -m rytm_randomizer.cli controller-brain-operator-package-report --json
 python -m rytm_randomizer.cli rytm-live-macro-hardware-rehearsal-report
@@ -511,58 +521,6 @@ test harness while keeping GUI launch, renderer startup, runtime reducers,
 WebSocket dispatch, controller feedback, MIDI output, hardware send, and
 snapshot mutation blocked.
 
-`controller-brain-live-desktop-blueprint-report` is the passive desktop
-blueprint after the implementation bridge. It turns disabled implementation
-bindings into deterministic desktop regions, component contracts, view-model
-bindings, fixture hints, acceptance checks, replay commands, and safety evidence
-for future Cockpit desktop work while keeping GUI launch, renderer startup,
-runtime reducers, WebSocket dispatch, controller feedback, MIDI output,
-hardware send, snapshot mutation, and fixture file writing blocked.
-
-`controller-brain-live-desktop-app-plan-report` is the passive app-plan after
-the desktop blueprint. It turns disabled desktop regions and component
-contracts into deterministic app routes, component file hints, disabled state
-slices, style tokens, acceptance checks, replay commands, and safety evidence
-for future Cockpit desktop implementation work while keeping GUI launch, app
-launch, renderer startup, runtime reducers, WebSocket dispatch, controller
-feedback, MIDI output, hardware send, snapshot mutation, and file writing
-blocked.
-
-`controller-brain-live-desktop-component-contract-report` is the passive
-component-contract layer after the desktop app plan. It turns advisory
-component file hints and disabled state slices into deterministic component API
-contracts, view-model prop contracts, disabled event contracts, test hooks,
-fixture contracts, acceptance checks, replay commands, and safety evidence for
-future Cockpit desktop implementation work while keeping GUI launch, app
-launch, renderer startup, runtime reducers, WebSocket dispatch, controller
-feedback, MIDI output, hardware send, snapshot mutation, and file writing
-blocked.
-
-`controller-brain-live-desktop-view-model-report` is the passive view-model
-layer after the desktop component contract. It turns component API contracts
-into deterministic future component view models, state bindings, disabled
-action models, render assertions, acceptance checks, replay commands, and
-safety evidence for future Cockpit desktop implementation work while keeping
-GUI launch, app launch, renderer startup, runtime reducers, WebSocket dispatch,
-controller feedback, MIDI output, hardware send, snapshot mutation, and file
-writing blocked.
-
-`controller-brain-live-desktop-render-contract-report` is the passive render
-contract layer after the desktop view model. It turns component view models,
-state bindings, disabled action models, and source render assertions into
-disabled future render surfaces, one-way render bindings, render guards,
-render assertions, acceptance checks, replay commands, and safety evidence for
-future Cockpit renderer work while keeping GUI launch, component mounting,
-renderer execution, WebSocket dispatch, controller feedback, MIDI output,
-hardware send, snapshot mutation, and file writing blocked.
-`controller-brain-operator-package-report` composes that virtual gesture packet
-with the current Live Kit Operator Package slots. The ledger maps macro depth,
-industrial macro selection, Rytm pad-lane amount gestures, A4 review-only
-gestures, Style Crate selection, queue staging, and panic-home recovery into
-package-review targets while proving the side effects remain false: no
-controller input, no raw CC capture, no WebSocket dispatch, no file write, no
-snapshot mutation, no hardware arm, no MIDI port, and no MIDI send.
-
 ---
 
 ## Rig-level (Rytm + Analog Four together)
@@ -639,24 +597,12 @@ The `live-gui-*` family is the GUI consumer contract — each report is one scre
 | `style-performance-arc-live-gui-capture-queue-report` | **GUI/audio analyzer capture queue** with capture slots, suggested filenames, **analyzer job** cards |
 | `style-performance-arc-live-gui-capture-review-report` | **GUI/audio analyzer capture review** with **go/repeat/hold** decisions, metric drift notes, hold reasons |
 | `style-performance-arc-live-gui-sidecar-session-report` | **sidecar-ready GUI state** with panels, analyzer rows, capture decisions, **disabled active controls** |
-| `style-performance-arc-live-gui-screen-contract-report` | **GUI screen contract** with ordered regions, component state, table rows, **disabled interaction controls** |
-| `style-performance-arc-live-gui-render-tree-report` | **GUI render tree** — **deterministic root/region/component tree**, source bindings, disabled controls |
 | `style-performance-arc-live-gui-analyzer-overlay-report` | **GUI analyzer overlay** with **meter widgets**, threshold markers, selected capture badge, node annotations |
 | `style-performance-arc-live-gui-analyzer-frame-report` | **GUI analyzer frame** with ordered **frame events**, visual assertions, blocked actions |
-| `style-performance-arc-live-gui-interaction-script-report` | **GUI interaction script** with ordered interaction steps, **control bindings**, disabled hardware locks |
 | `style-performance-arc-live-gui-action-reducer-report` | **GUI action reducer** with deterministic **control transition** decisions, disabled hardware locks |
 | `style-performance-arc-live-gui-controller-state-report` | **GUI controller state** with deterministic **control-state** rows, queued allowed actions, blocked controls |
 | `style-performance-arc-live-gui-playback-transcript-report` | **GUI playback transcript** with deterministic **playback transcript** events, GUI assertions, analyzer checkpoints |
 | `style-performance-arc-live-gui-playback-validation-report` | **GUI playback validation** matrix with deterministic future test-harness cases, harness steps (**validation matrix**) |
-| `style-performance-arc-live-gui-test-harness-contract-report` | **GUI test-harness contract** with **Harness suites**, fixtures, bindings, blocked actions |
-| `style-performance-arc-live-gui-test-harness-readiness-report` | **GUI test-harness readiness** with **readiness gates**, checks, rehearsal steps |
-| `style-performance-arc-live-gui-implementation-bridge-report` | **GUI implementation bridge** with **view-model packets**, disabled component mounts, fixture bundles |
-| `style-performance-arc-live-gui-desktop-blueprint-report` | **GUI desktop blueprint** with **desktop shell**, viewports, regions, widgets, bindings |
-| `style-performance-arc-live-gui-desktop-app-plan-report` | **GUI desktop app plan** with **app shell**, routes, component file hints, state slices, style tokens |
-| `style-performance-arc-live-gui-desktop-component-contract-report` | **GUI desktop component contract** with **component props**, disabled actions, test selectors |
-| `style-performance-arc-live-gui-desktop-view-model-report` | **GUI desktop view model** with component view models, **state bindings**, disabled actions, style tokens |
-| `style-performance-arc-live-gui-desktop-render-contract-report` | **GUI desktop render contract** with **render surfaces**, render bindings, style-token bindings |
-| `style-performance-arc-live-gui-desktop-render-harness-report` | **GUI desktop render harness** with **surface harnesses**, binding harnesses, style-token checks |
 
 ```bash
 python -m rytm_randomizer.cli live-gui-performance-console-report

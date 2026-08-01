@@ -1,0 +1,985 @@
+[
+  {
+    "column": 1,
+    "label": "Closest reference",
+    "role": "compact metallic techno stab",
+    "closeness": 94,
+    "brightness_offset": 0.0,
+    "noise_offset": 0.0,
+    "low_end_offset": 0.0,
+    "animation_offset": 0.0,
+    "tail_offset": 0.0,
+    "genes": [
+      {
+        "parameter": "OSC1 Level",
+        "screen_target": 96,
+        "family": "Oscillators",
+        "rationale": "lead oscillator carries the audible reference body",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "OSC1 Pulsewidth",
+        "screen_target": -16,
+        "family": "Oscillators",
+        "rationale": "narrowed pulse adds the Synplant-like animated edge",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "OSC2 Level",
+        "screen_target": 54,
+        "family": "Oscillators",
+        "rationale": "second oscillator stays supportive instead of washing out the stab",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "OSC2 Pulsewidth",
+        "screen_target": -22,
+        "family": "Oscillators",
+        "rationale": "offset width keeps oscillator B thinner and more synthetic",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Sync Amount",
+        "screen_target": 64,
+        "family": "Oscillators",
+        "rationale": "moderate sync supplies the bright bite heard in the reference",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvA Attack Time",
+        "screen_target": 0,
+        "family": "Envelope and LFO",
+        "rationale": "instant attack preserves the percussive onset",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvA Decay Time",
+        "screen_target": 28,
+        "family": "Envelope and LFO",
+        "rationale": "short amp decay keeps the phrase clipped and sequencer-friendly",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvA Sustain Level",
+        "screen_target": 0,
+        "family": "Envelope and LFO",
+        "rationale": "zero sustain makes the sound a stab rather than a pad",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvA Release Time",
+        "screen_target": 8,
+        "family": "Envelope and LFO",
+        "rationale": "brief release avoids clicks without smearing the groove",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvA Env Shape",
+        "screen_target": "triangle",
+        "family": "Envelope and LFO",
+        "rationale": "neutral amp shape matches the manual front-panel triangle target",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Attack Time",
+        "screen_target": 0,
+        "family": "Envelope and LFO",
+        "rationale": "filter movement starts with the note transient",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Decay Time",
+        "screen_target": 38,
+        "family": "Envelope and LFO",
+        "rationale": "filter closes quickly enough to create the compact sweep",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Sustain Level",
+        "screen_target": 0,
+        "family": "Envelope and LFO",
+        "rationale": "filter sustain stays off for the plucked shape",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Release Time",
+        "screen_target": 12,
+        "family": "Envelope and LFO",
+        "rationale": "filter release follows the short amp tail without hanging open",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Env Shape",
+        "screen_target": "triangle",
+        "family": "Envelope and LFO",
+        "rationale": "neutral filter-envelope shape is the safest starting point",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Gate Length",
+        "screen_target": "NOTE",
+        "family": "Envelope and LFO",
+        "rationale": "front-panel note gate keeps the envelope tied to the trig",
+        "confidence": "front-panel target; ordinal capture pending"
+      },
+      {
+        "parameter": "EnvF Destination A",
+        "screen_target": "OFF",
+        "family": "Envelope and LFO",
+        "rationale": "leave filter envelope destination A unused until auditioned",
+        "confidence": "front-panel target; ordinal capture pending"
+      },
+      {
+        "parameter": "EnvF Depth A",
+        "screen_target": 0,
+        "family": "Envelope and LFO",
+        "rationale": "center depth prevents an unverified destination from moving",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Destination B",
+        "screen_target": "OFF",
+        "family": "Envelope and LFO",
+        "rationale": "leave filter envelope destination B unused until auditioned",
+        "confidence": "front-panel target; ordinal capture pending"
+      },
+      {
+        "parameter": "EnvF Depth B",
+        "screen_target": 0,
+        "family": "Envelope and LFO",
+        "rationale": "center depth prevents an unverified destination from moving",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "LFO1 Speed",
+        "screen_target": 18,
+        "family": "Envelope and LFO",
+        "rationale": "slow positive LFO rate gives barely moving techno pressure",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "LFO1 Speed Multiplier",
+        "screen_target": "x1",
+        "family": "Envelope and LFO",
+        "rationale": "x1 keeps the motion playable and not audio-rate",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "LFO1 Mode",
+        "screen_target": "TRG",
+        "family": "Envelope and LFO",
+        "rationale": "triggered motion restarts predictably on each note",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "LFO1 Waveform",
+        "screen_target": "triangle",
+        "family": "Envelope and LFO",
+        "rationale": "triangle movement mirrors the smooth Synplant-style modulation",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "LFO1 Destination A",
+        "screen_target": "Filter1 Frequency",
+        "family": "Envelope and LFO",
+        "rationale": "manual dial-in target for subtle filter drift",
+        "confidence": "front-panel target; ordinal capture pending"
+      },
+      {
+        "parameter": "LFO1 Depth A",
+        "screen_target": 3,
+        "family": "Envelope and LFO",
+        "rationale": "small positive depth keeps the modulation audible but close",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "LFO1 Destination B",
+        "screen_target": "OFF",
+        "family": "Envelope and LFO",
+        "rationale": "second destination is held back for a focused starting point",
+        "confidence": "front-panel target; ordinal capture pending"
+      },
+      {
+        "parameter": "LFO1 Depth B",
+        "screen_target": 0,
+        "family": "Envelope and LFO",
+        "rationale": "center depth keeps destination B inactive",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter1 Frequency",
+        "screen_target": 74,
+        "family": "Filter and effects",
+        "rationale": "filter 1 stays open enough for the bright sync edge",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter1 Resonance",
+        "screen_target": 34,
+        "family": "Filter and effects",
+        "rationale": "moderate resonance outlines the acid/techno contour",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter Overdrive",
+        "screen_target": 10,
+        "family": "Filter and effects",
+        "rationale": "slight right-of-off drive adds body without flattening the transient",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter1 Envelope Amount",
+        "screen_target": 12,
+        "family": "Filter and effects",
+        "rationale": "small positive envelope amount creates the opening snap",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter2 Frequency",
+        "screen_target": 88,
+        "family": "Filter and effects",
+        "rationale": "high second filter cutoff preserves the upper harmonic bite",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter2 Resonance",
+        "screen_target": 24,
+        "family": "Filter and effects",
+        "rationale": "filter 2 resonance is included explicitly for manual review",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter2 Type",
+        "screen_target": "HP2",
+        "family": "Filter and effects",
+        "rationale": "HP2 trims low-mid smear while keeping the stab cutting",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter2 Envelope Amount",
+        "screen_target": 8,
+        "family": "Filter and effects",
+        "rationale": "small positive amount keeps HP2 movement from becoming hollow",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Delay Send Level",
+        "screen_target": 15,
+        "family": "Filter and effects",
+        "rationale": "short delay send suggests space without turning into an echo patch",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Reverb Send Level",
+        "screen_target": 22,
+        "family": "Filter and effects",
+        "rationale": "light reverb tail approximates the sampled room around the stab",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Volume",
+        "screen_target": 94,
+        "family": "Filter and effects",
+        "rationale": "track volume leaves headroom for manual A/B matching",
+        "confidence": "manual-map + feature-trait"
+      }
+    ]
+  },
+  {
+    "column": 2,
+    "label": "Brighter sync",
+    "role": "more metallic oscillator pressure",
+    "closeness": 88,
+    "brightness_offset": 0.18,
+    "noise_offset": 0.04,
+    "low_end_offset": -0.08,
+    "animation_offset": 0.08,
+    "tail_offset": -0.05,
+    "genes": [
+      {
+        "parameter": "OSC1 Level",
+        "screen_target": 100,
+        "family": "Oscillators",
+        "rationale": "stronger oscillator A body",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "OSC1 Pulsewidth",
+        "screen_target": -24,
+        "family": "Oscillators",
+        "rationale": "narrower pulse increases buzz",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "OSC2 Level",
+        "screen_target": 62,
+        "family": "Oscillators",
+        "rationale": "louder oscillator B raises sync color",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "OSC2 Pulsewidth",
+        "screen_target": -30,
+        "family": "Oscillators",
+        "rationale": "offset width creates sharper beating",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Sync Amount",
+        "screen_target": 78,
+        "family": "Oscillators",
+        "rationale": "higher sync pushes metallic edge",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvA Attack Time",
+        "screen_target": 0,
+        "family": "Envelope and LFO",
+        "rationale": "instant attack keeps bite",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvA Decay Time",
+        "screen_target": 24,
+        "family": "Envelope and LFO",
+        "rationale": "shorter decay tightens the stab",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvA Sustain Level",
+        "screen_target": 0,
+        "family": "Envelope and LFO",
+        "rationale": "zero sustain keeps it percussive",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvA Release Time",
+        "screen_target": 6,
+        "family": "Envelope and LFO",
+        "rationale": "short release avoids wash",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvA Env Shape",
+        "screen_target": "triangle",
+        "family": "Envelope and LFO",
+        "rationale": "neutral amp curve",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Attack Time",
+        "screen_target": 0,
+        "family": "Envelope and LFO",
+        "rationale": "filter opens immediately",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Decay Time",
+        "screen_target": 34,
+        "family": "Envelope and LFO",
+        "rationale": "compact filter sweep",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Sustain Level",
+        "screen_target": 0,
+        "family": "Envelope and LFO",
+        "rationale": "zero sustain closes the filter",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Release Time",
+        "screen_target": 10,
+        "family": "Envelope and LFO",
+        "rationale": "short filter tail",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Env Shape",
+        "screen_target": "triangle",
+        "family": "Envelope and LFO",
+        "rationale": "neutral filter curve",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "LFO1 Speed",
+        "screen_target": 22,
+        "family": "Envelope and LFO",
+        "rationale": "slightly quicker filter motion",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "LFO1 Speed Multiplier",
+        "screen_target": "x1",
+        "family": "Envelope and LFO",
+        "rationale": "keeps movement musical",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "LFO1 Waveform",
+        "screen_target": "triangle",
+        "family": "Envelope and LFO",
+        "rationale": "smooth repeating motion",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "LFO1 Destination A",
+        "screen_target": "Filter1 Frequency",
+        "family": "Envelope and LFO",
+        "rationale": "front-panel filter target",
+        "confidence": "front-panel target; ordinal capture pending"
+      },
+      {
+        "parameter": "LFO1 Depth A",
+        "screen_target": 5,
+        "family": "Envelope and LFO",
+        "rationale": "more audible filter animation",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter1 Frequency",
+        "screen_target": 82,
+        "family": "Filter and effects",
+        "rationale": "brighter first filter",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter1 Resonance",
+        "screen_target": 40,
+        "family": "Filter and effects",
+        "rationale": "more pronounced peak",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter Overdrive",
+        "screen_target": 14,
+        "family": "Filter and effects",
+        "rationale": "extra harmonic bite",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter1 Envelope Amount",
+        "screen_target": 16,
+        "family": "Filter and effects",
+        "rationale": "snappier filter envelope",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter2 Frequency",
+        "screen_target": 96,
+        "family": "Filter and effects",
+        "rationale": "keeps top end open",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter2 Resonance",
+        "screen_target": 28,
+        "family": "Filter and effects",
+        "rationale": "clearer HP contour",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter2 Type",
+        "screen_target": "HP2",
+        "family": "Filter and effects",
+        "rationale": "same high-pass contour as the closest candidate",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter2 Envelope Amount",
+        "screen_target": 10,
+        "family": "Filter and effects",
+        "rationale": "small HP2 movement",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Delay Send Level",
+        "screen_target": 18,
+        "family": "Filter and effects",
+        "rationale": "slightly wider echo space",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Reverb Send Level",
+        "screen_target": 18,
+        "family": "Filter and effects",
+        "rationale": "less verb for a sharper front edge",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Volume",
+        "screen_target": 92,
+        "family": "Filter and effects",
+        "rationale": "headroom for the brighter patch",
+        "confidence": "manual-map + feature-trait"
+      }
+    ]
+  },
+  {
+    "column": 3,
+    "label": "Noisy texture",
+    "role": "grain and movement emphasis",
+    "closeness": 82,
+    "brightness_offset": 0.04,
+    "noise_offset": 0.3,
+    "low_end_offset": -0.04,
+    "animation_offset": 0.28,
+    "tail_offset": 0.12,
+    "genes": [
+      {
+        "parameter": "OSC1 Level",
+        "screen_target": 88,
+        "family": "Oscillators",
+        "rationale": "slightly lower oscillator body",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Noise Level",
+        "screen_target": 26,
+        "family": "Oscillators",
+        "rationale": "adds controlled broadband texture",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Noise Fade",
+        "screen_target": 18,
+        "family": "Oscillators",
+        "rationale": "noise decays into the stab tail",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "OSC1 Pulsewidth",
+        "screen_target": -12,
+        "family": "Oscillators",
+        "rationale": "less narrow pulse leaves room for noise",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "OSC2 Level",
+        "screen_target": 48,
+        "family": "Oscillators",
+        "rationale": "keeps oscillator B behind the texture",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Sync Amount",
+        "screen_target": 58,
+        "family": "Oscillators",
+        "rationale": "moderate sync under noise layer",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvA Attack Time",
+        "screen_target": 0,
+        "family": "Envelope and LFO",
+        "rationale": "instant texture onset",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvA Decay Time",
+        "screen_target": 34,
+        "family": "Envelope and LFO",
+        "rationale": "longer decay lets texture breathe",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvA Sustain Level",
+        "screen_target": 0,
+        "family": "Envelope and LFO",
+        "rationale": "still a stab, not a pad",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvA Release Time",
+        "screen_target": 12,
+        "family": "Envelope and LFO",
+        "rationale": "slightly longer release for grit",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvA Env Shape",
+        "screen_target": "triangle",
+        "family": "Envelope and LFO",
+        "rationale": "neutral amp shape",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Attack Time",
+        "screen_target": 0,
+        "family": "Envelope and LFO",
+        "rationale": "filter movement starts immediately",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Decay Time",
+        "screen_target": 44,
+        "family": "Envelope and LFO",
+        "rationale": "longer sweep exposes texture",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Sustain Level",
+        "screen_target": 0,
+        "family": "Envelope and LFO",
+        "rationale": "filter closes after the hit",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Release Time",
+        "screen_target": 16,
+        "family": "Envelope and LFO",
+        "rationale": "filter release follows the noisy tail",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Env Shape",
+        "screen_target": "triangle",
+        "family": "Envelope and LFO",
+        "rationale": "neutral filter curve",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "LFO1 Speed",
+        "screen_target": 14,
+        "family": "Envelope and LFO",
+        "rationale": "slower wobble reads as drifting texture",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "LFO1 Speed Multiplier",
+        "screen_target": "x1",
+        "family": "Envelope and LFO",
+        "rationale": "keeps the movement slow",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "LFO1 Waveform",
+        "screen_target": "random",
+        "family": "Envelope and LFO",
+        "rationale": "manual target for less periodic texture",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "LFO1 Destination A",
+        "screen_target": "Filter1 Frequency",
+        "family": "Envelope and LFO",
+        "rationale": "front-panel filter target",
+        "confidence": "front-panel target; ordinal capture pending"
+      },
+      {
+        "parameter": "LFO1 Depth A",
+        "screen_target": 4,
+        "family": "Envelope and LFO",
+        "rationale": "subtle drift",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter1 Frequency",
+        "screen_target": 68,
+        "family": "Filter and effects",
+        "rationale": "slightly darker first filter",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter1 Resonance",
+        "screen_target": 30,
+        "family": "Filter and effects",
+        "rationale": "less peaky to let noise through",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter Overdrive",
+        "screen_target": 8,
+        "family": "Filter and effects",
+        "rationale": "light saturation for grain",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter1 Envelope Amount",
+        "screen_target": 10,
+        "family": "Filter and effects",
+        "rationale": "small opening gesture",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter2 Frequency",
+        "screen_target": 78,
+        "family": "Filter and effects",
+        "rationale": "lower HP2 trims body but preserves texture",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter2 Resonance",
+        "screen_target": 20,
+        "family": "Filter and effects",
+        "rationale": "less resonance avoids whistling",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter2 Type",
+        "screen_target": "HP2",
+        "family": "Filter and effects",
+        "rationale": "high-pass texture contour",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter2 Envelope Amount",
+        "screen_target": 6,
+        "family": "Filter and effects",
+        "rationale": "light second-filter motion",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Delay Send Level",
+        "screen_target": 22,
+        "family": "Filter and effects",
+        "rationale": "delay catches noisy grains",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Reverb Send Level",
+        "screen_target": 30,
+        "family": "Filter and effects",
+        "rationale": "more space around texture",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Volume",
+        "screen_target": 90,
+        "family": "Filter and effects",
+        "rationale": "headroom for noise and effects",
+        "confidence": "manual-map + feature-trait"
+      }
+    ]
+  },
+  {
+    "column": 4,
+    "label": "Rounder bass",
+    "role": "warmer low-mid translation",
+    "closeness": 78,
+    "brightness_offset": -0.18,
+    "noise_offset": -0.12,
+    "low_end_offset": 0.2,
+    "animation_offset": -0.1,
+    "tail_offset": 0.1,
+    "genes": [
+      {
+        "parameter": "OSC1 Level",
+        "screen_target": 104,
+        "family": "Oscillators",
+        "rationale": "fuller oscillator A body",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "OSC1 Pulsewidth",
+        "screen_target": -6,
+        "family": "Oscillators",
+        "rationale": "wider pulse gives a rounder core",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "OSC2 Level",
+        "screen_target": 44,
+        "family": "Oscillators",
+        "rationale": "quieter oscillator B lowers metallic pressure",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "OSC2 Pulsewidth",
+        "screen_target": -10,
+        "family": "Oscillators",
+        "rationale": "less offset keeps the sound smoother",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Sync Amount",
+        "screen_target": 46,
+        "family": "Oscillators",
+        "rationale": "less sync for a rounder timbre",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvA Attack Time",
+        "screen_target": 0,
+        "family": "Envelope and LFO",
+        "rationale": "keeps onset tight",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvA Decay Time",
+        "screen_target": 42,
+        "family": "Envelope and LFO",
+        "rationale": "slightly longer body",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvA Sustain Level",
+        "screen_target": 0,
+        "family": "Envelope and LFO",
+        "rationale": "still one-shot shaped",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvA Release Time",
+        "screen_target": 14,
+        "family": "Envelope and LFO",
+        "rationale": "rounder tail without pad smear",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvA Env Shape",
+        "screen_target": "triangle",
+        "family": "Envelope and LFO",
+        "rationale": "neutral amp shape",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Attack Time",
+        "screen_target": 0,
+        "family": "Envelope and LFO",
+        "rationale": "filter starts with transient",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Decay Time",
+        "screen_target": 48,
+        "family": "Envelope and LFO",
+        "rationale": "slower closure keeps low-mid warmth",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Sustain Level",
+        "screen_target": 0,
+        "family": "Envelope and LFO",
+        "rationale": "filter eventually closes",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Release Time",
+        "screen_target": 18,
+        "family": "Envelope and LFO",
+        "rationale": "warmer filter tail",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "EnvF Env Shape",
+        "screen_target": "triangle",
+        "family": "Envelope and LFO",
+        "rationale": "neutral filter curve",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "LFO1 Speed",
+        "screen_target": 10,
+        "family": "Envelope and LFO",
+        "rationale": "slower movement for bass support",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "LFO1 Speed Multiplier",
+        "screen_target": "x1",
+        "family": "Envelope and LFO",
+        "rationale": "keeps movement controlled",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "LFO1 Waveform",
+        "screen_target": "triangle",
+        "family": "Envelope and LFO",
+        "rationale": "smooth tonal drift",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "LFO1 Destination A",
+        "screen_target": "Filter1 Frequency",
+        "family": "Envelope and LFO",
+        "rationale": "front-panel filter target",
+        "confidence": "front-panel target; ordinal capture pending"
+      },
+      {
+        "parameter": "LFO1 Depth A",
+        "screen_target": 2,
+        "family": "Envelope and LFO",
+        "rationale": "tiny movement keeps bass stable",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter1 Frequency",
+        "screen_target": 58,
+        "family": "Filter and effects",
+        "rationale": "darker filter for warmer body",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter1 Resonance",
+        "screen_target": 26,
+        "family": "Filter and effects",
+        "rationale": "less peak for bass smoothness",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter Overdrive",
+        "screen_target": 6,
+        "family": "Filter and effects",
+        "rationale": "mild saturation without harshness",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter1 Envelope Amount",
+        "screen_target": 8,
+        "family": "Filter and effects",
+        "rationale": "small pluck remains audible",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter2 Frequency",
+        "screen_target": 70,
+        "family": "Filter and effects",
+        "rationale": "HP2 sits lower for weight control",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter2 Resonance",
+        "screen_target": 18,
+        "family": "Filter and effects",
+        "rationale": "subtle second-filter definition",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter2 Type",
+        "screen_target": "HP2",
+        "family": "Filter and effects",
+        "rationale": "same high-pass cleanup, warmer setting",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Filter2 Envelope Amount",
+        "screen_target": 4,
+        "family": "Filter and effects",
+        "rationale": "minimal HP movement",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Delay Send Level",
+        "screen_target": 10,
+        "family": "Filter and effects",
+        "rationale": "keeps bass candidate dry",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Reverb Send Level",
+        "screen_target": 14,
+        "family": "Filter and effects",
+        "rationale": "minimal space for live low-end clarity",
+        "confidence": "manual-map + feature-trait"
+      },
+      {
+        "parameter": "Volume",
+        "screen_target": 96,
+        "family": "Filter and effects",
+        "rationale": "slightly louder warm candidate",
+        "confidence": "manual-map + feature-trait"
+      }
+    ]
+  }
+]

@@ -1,0 +1,469 @@
+{
+  "chapters": [
+    {
+      "a4_review_action": "hold-current-a4-patch",
+      "label": "Capture Anchor",
+      "macro_sequence": [
+        "kit-core"
+      ],
+      "name": "capture-anchor",
+      "operator_intent": "Capture the current Rytm kit before any set movement.",
+      "order": 1,
+      "recovery_action": "captured anchor",
+      "rytm_command": "kit/resnapshot"
+    },
+    {
+      "a4_review_action": "review hard-groove A4 macro",
+      "label": "Establish Groove",
+      "macro_sequence": [
+        "kit-core",
+        "hard-groove"
+      ],
+      "name": "establish-groove",
+      "operator_intent": "Let OXI keep the groove while Rytm tightens source-first pressure.",
+      "order": 2,
+      "recovery_action": "home",
+      "rytm_command": "macro hard-groove"
+    },
+    {
+      "a4_review_action": "review industrial-transition A4 macro",
+      "label": "Pressure Build",
+      "macro_sequence": [
+        "hard-groove",
+        "industrial"
+      ],
+      "name": "pressure-build",
+      "operator_intent": "Raise grit, metal, and energy without releasing the kick anchor.",
+      "order": 3,
+      "recovery_action": "home",
+      "rytm_command": "macro industrial"
+    },
+    {
+      "a4_review_action": "review pressure macro only",
+      "label": "Peak Texture",
+      "macro_sequence": [
+        "industrial",
+        "transition"
+      ],
+      "name": "peak-texture",
+      "operator_intent": "Use stronger Rytm sound design as the peak while OXI carries timing.",
+      "order": 4,
+      "recovery_action": "home",
+      "rytm_command": "macro industrial"
+    },
+    {
+      "a4_review_action": "review dub-pressure A4 macro",
+      "label": "Space Release",
+      "macro_sequence": [
+        "dub-pressure"
+      ],
+      "name": "space-release",
+      "operator_intent": "Pull the kit toward space, delay, reverb, and lower-end pressure.",
+      "order": 5,
+      "recovery_action": "home",
+      "rytm_command": "macro dub-pressure"
+    },
+    {
+      "a4_review_action": "review transition-only",
+      "label": "Transition Fill",
+      "macro_sequence": [
+        "transition"
+      ],
+      "name": "transition-fill",
+      "operator_intent": "Create a short bridge or fill before the next OXI pattern decision.",
+      "order": 6,
+      "recovery_action": "home",
+      "rytm_command": "macro transition"
+    },
+    {
+      "a4_review_action": "no A4 send",
+      "label": "Home Reset",
+      "macro_sequence": [
+        "home"
+      ],
+      "name": "home-reset",
+      "operator_intent": "Return to the captured safe kit before the next chapter.",
+      "order": 7,
+      "recovery_action": "Z + send",
+      "rytm_command": "home"
+    }
+  ],
+  "hardware_validation_runway": [
+    {
+      "device": "Analog Rytm MKII",
+      "expected_evidence": "full-kit macro sounds musical and returns to no parameter changes staged",
+      "name": "rytm-kit-core-smoke",
+      "operator_path": "kit-core -> changes -> send -> go -> Z + send",
+      "safety_boundary": "requires --arm and explicit shell send/go commands",
+      "validation_mode": "operator-present armed Rytm shell"
+    },
+    {
+      "device": "Analog Rytm MKII",
+      "expected_evidence": "no visible ERR and detune movement remains useful at the chosen amount",
+      "name": "rytm-dual-vco-center-band",
+      "operator_path": "validate current Pad 2/3 Dual VCO CC20 center-band movement",
+      "safety_boundary": "stay in proven center band before widening any low-anchor lane",
+      "validation_mode": "operator-present one-CC or shell smoke test"
+    },
+    {
+      "device": "Analog Four MKII",
+      "expected_evidence": "tracks 1-4 emit known Appendix D labels for moved controls",
+      "name": "a4-soft-capture",
+      "operator_path": "--arm --a4-soft-capture",
+      "safety_boundary": "opens A4 input only; no output and no MIDI send",
+      "validation_mode": "input-only"
+    },
+    {
+      "device": "Analog Four MKII",
+      "expected_evidence": "A4 macro rows match the intended OXI companion role before hardware promotion",
+      "name": "a4-macro-dry-run",
+      "operator_path": "analog-four-oxi-macro-report hard-groove --events --limit 0",
+      "safety_boundary": "report-only; no A4 output path",
+      "validation_mode": "passive CLI"
+    }
+  ],
+  "next_hardware_validations": [
+    "Rytm full-kit macro smoke test from a fresh current-kit capture",
+    "A4 input-only soft-capture pass before any outbound macro promotion"
+  ],
+  "operator_cues": [
+    {
+      "a4_action": "hold-current-a4-patch",
+      "blocked_action": "no mutation before anchor capture",
+      "chapter_name": "capture-anchor",
+      "expected_result": "current Rytm kit becomes the safe anchor before the set moves",
+      "fire_command": "no send",
+      "inspect_command": "status",
+      "label": "Capture Anchor",
+      "oxi_action": "hold or prepare the first pattern",
+      "recovery_command": "captured anchor",
+      "rytm_stage_command": "kit/resnapshot"
+    },
+    {
+      "a4_action": "review hard-groove A4 macro",
+      "blocked_action": "no unattended sends",
+      "chapter_name": "establish-groove",
+      "expected_result": "tight source-first Rytm pressure over the OXI pattern",
+      "fire_command": "send or go",
+      "inspect_command": "changes",
+      "label": "Establish Groove",
+      "oxi_action": "keep groove, triggers, mutes, and pattern motion running",
+      "recovery_command": "home + send or Z + send",
+      "rytm_stage_command": "macro hard-groove"
+    },
+    {
+      "a4_action": "review industrial-transition A4 macro",
+      "blocked_action": "no A4 outbound macro",
+      "chapter_name": "pressure-build",
+      "expected_result": "metallic grit rises while Pad 1 remains protected",
+      "fire_command": "send or go",
+      "inspect_command": "changes",
+      "label": "Pressure Build",
+      "oxi_action": "increase pattern density or mute tension externally",
+      "recovery_command": "home + send or Z + send",
+      "rytm_stage_command": "macro industrial"
+    },
+    {
+      "a4_action": "review pressure macro only",
+      "blocked_action": "no chaos mode without explicit future opt-in",
+      "chapter_name": "peak-texture",
+      "expected_result": "stronger Rytm pressure without releasing recovery",
+      "fire_command": "send or go",
+      "inspect_command": "changes",
+      "label": "Peak Texture",
+      "oxi_action": "hold the peak pattern while sound design carries the lift",
+      "recovery_command": "home + send or Z + send",
+      "rytm_stage_command": "macro industrial"
+    },
+    {
+      "a4_action": "review dub-pressure A4 macro",
+      "blocked_action": "no unattended sends",
+      "chapter_name": "space-release",
+      "expected_result": "delay/reverb pressure without losing the captured-kit anchor",
+      "fire_command": "send or go",
+      "inspect_command": "changes",
+      "label": "Space Release",
+      "oxi_action": "thin triggers or open mutes for the release",
+      "recovery_command": "home + send or Z + send",
+      "rytm_stage_command": "macro dub-pressure"
+    },
+    {
+      "a4_action": "review transition-only",
+      "blocked_action": "no transport or pattern writes",
+      "chapter_name": "transition-fill",
+      "expected_result": "short section movement before the next OXI decision",
+      "fire_command": "send or go",
+      "inspect_command": "changes",
+      "label": "Transition Fill",
+      "oxi_action": "prepare or launch the next pattern change",
+      "recovery_command": "home + send or Z + send",
+      "rytm_stage_command": "macro transition"
+    },
+    {
+      "a4_action": "no A4 send",
+      "blocked_action": "no persistent kit/project write",
+      "chapter_name": "home-reset",
+      "expected_result": "captured Rytm anchor restored",
+      "fire_command": "send",
+      "inspect_command": "changes",
+      "label": "Home Reset",
+      "oxi_action": "settle the groove or prepare the next chapter",
+      "recovery_command": "Z + send",
+      "rytm_stage_command": "home"
+    }
+  ],
+  "pad_policies": [
+    {
+      "amp_policy": "foundation only",
+      "filter_policy": "protected",
+      "lfo_policy": "off",
+      "name": "kick-anchor",
+      "pads": [
+        1
+      ],
+      "primary_lane": "SRC micro",
+      "product_note": "Pad 1 stays protected as the kick anchor"
+    },
+    {
+      "amp_policy": "overdrive/delay/reverb only",
+      "filter_policy": "light",
+      "lfo_policy": "off",
+      "name": "tom-source-motion",
+      "pads": [
+        6,
+        7,
+        8
+      ],
+      "primary_lane": "SRC",
+      "product_note": "tom/discovery lanes can move usefully without LFO craziness"
+    },
+    {
+      "amp_policy": "overdrive/delay/reverb only",
+      "filter_policy": "off",
+      "lfo_policy": "off",
+      "name": "reserved-src-fx",
+      "pads": [
+        5,
+        9,
+        10,
+        11
+      ],
+      "primary_lane": "SRC",
+      "product_note": "common Jose live lane, not a product limitation"
+    },
+    {
+      "amp_policy": "overdrive/delay/reverb only",
+      "filter_policy": "macro-dependent",
+      "lfo_policy": "off by default",
+      "name": "pad-12-optional",
+      "pads": [
+        12
+      ],
+      "primary_lane": "SRC/AMP FX",
+      "product_note": "available for users who rely on Pad 12"
+    }
+  ],
+  "promotion_criteria": [
+    {
+      "current_status": "blocked",
+      "device": "Analog Four MKII",
+      "name": "a4-input-label-coverage",
+      "promotes_to": "A4 macro readiness review",
+      "required_evidence": "known labels for moved controls on tracks 1-4",
+      "safety_note": "input-only evidence comes before any outbound A4 macro path"
+    },
+    {
+      "current_status": "blocked",
+      "device": "Analog Four MKII",
+      "name": "a4-macro-review",
+      "promotes_to": "single-macro outbound rehearsal",
+      "required_evidence": "operator-approved passive macro rows for home and one pressure macro",
+      "safety_note": "macro rows stay report-only until the review is explicit"
+    },
+    {
+      "current_status": "blocked",
+      "device": "Analog Four MKII",
+      "name": "a4-explicit-arm-gate",
+      "promotes_to": "armed one-shot A4 macro validation",
+      "required_evidence": "operator-confirmed --arm path with no unattended behavior",
+      "safety_note": "no A4 outbound macro send until this gate is satisfied"
+    },
+    {
+      "current_status": "blocked",
+      "device": "Analog Four MKII",
+      "name": "a4-recovery-path",
+      "promotes_to": "candidate live companion macro",
+      "required_evidence": "documented return-to-anchor or neutral macro after a sent A4 change",
+      "safety_note": "no live A4 macro without a tested recovery move"
+    }
+  ],
+  "rehearsal_checkpoints": [
+    {
+      "blocked_action": "do not mutate before a captured anchor exists",
+      "name": "capture-current-kit",
+      "operator_confirmation": "Rytm sent the intended KIT SysEx",
+      "phase": "pre-set",
+      "required_command": "kit/resnapshot",
+      "success_signal": "new kit name and fingerprint are visible"
+    },
+    {
+      "blocked_action": "do not type send before reviewing changes",
+      "name": "stage-first-macro",
+      "operator_confirmation": "macro matches the first planned chapter",
+      "phase": "pre-set",
+      "required_command": "kit-core or macro hard-groove",
+      "success_signal": "changes shows staged sound-design movement"
+    },
+    {
+      "blocked_action": "no blind sends",
+      "name": "inspect-before-send",
+      "operator_confirmation": "staged rows match the intended chapter",
+      "phase": "before-send",
+      "required_command": "changes",
+      "success_signal": "operator can name the pads and lanes that will move"
+    },
+    {
+      "blocked_action": "no unattended hardware behavior",
+      "name": "fire-manually",
+      "operator_confirmation": "Jose is listening with the machines on",
+      "phase": "send",
+      "required_command": "send or go",
+      "success_signal": "variation sounds useful without visible hardware errors"
+    },
+    {
+      "blocked_action": "do not continue if recovery is unclear",
+      "name": "recover-anchor",
+      "operator_confirmation": "recovery command sent after the audition",
+      "phase": "recovery",
+      "required_command": "home + send or Z + send",
+      "success_signal": "no parameter changes staged after recovery"
+    },
+    {
+      "blocked_action": "no A4 outbound macro during Rytm-only rehearsal",
+      "name": "promote-a4-only-after-evidence",
+      "operator_confirmation": "A4 labels and recovery path are documented",
+      "phase": "a4-gate",
+      "required_command": "--arm --a4-soft-capture",
+      "success_signal": "A4 remains review-only until promotion criteria pass"
+    },
+    {
+      "blocked_action": "do not promote untested behavior from memory alone",
+      "name": "document-after-set",
+      "operator_confirmation": "musical notes and hardware symptoms are captured",
+      "phase": "after-set",
+      "required_command": "write down useful macros, bad rows, and recovery notes",
+      "success_signal": "notes captured for the next bundle"
+    }
+  ],
+  "replay_commands": [
+    {
+      "command": "python -m rytm_randomizer.cli oxi-live-set-strategy-report",
+      "execution_mode": "passive-cli",
+      "expected_observation": "report prints OXI roles, chapters, pad policies, and safety notes",
+      "name": "read-strategy",
+      "opens_ports": false,
+      "purpose": "Read the operator strategy in text form before a rehearsal.",
+      "safety_note": "metadata-only report",
+      "sends_midi": "never"
+    },
+    {
+      "command": "python -m rytm_randomizer.cli oxi-live-set-strategy-report --json",
+      "execution_mode": "passive-cli",
+      "expected_observation": "JSON contains chapters, cues, checkpoints, and replay commands",
+      "name": "read-strategy-json",
+      "opens_ports": false,
+      "purpose": "Expose deterministic JSON for the future GUI/control surface.",
+      "safety_note": "metadata-only report",
+      "sends_midi": "never"
+    },
+    {
+      "command": "python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove --seed 23 --intensity 6 --events --limit 0",
+      "execution_mode": "passive-cli",
+      "expected_observation": "A4 rows render as dry-run metadata only",
+      "name": "review-a4-hard-groove",
+      "opens_ports": false,
+      "purpose": "Review the A4 companion idea without promoting an outbound path.",
+      "safety_note": "A4 remains review-only",
+      "sends_midi": "never"
+    },
+    {
+      "command": "python -m rytm_randomizer.app --arm --rytm-live-snapshot-shell --confirm-rytm-snapshot-shell-send",
+      "execution_mode": "armed-operator-shell",
+      "expected_observation": "loaded kit name and fingerprint are visible",
+      "name": "start-rytm-live-shell",
+      "opens_ports": true,
+      "purpose": "Capture the current Rytm kit and enter the operator-present shell.",
+      "safety_note": "requires Jose present with hardware on",
+      "sends_midi": "only after explicit in-shell send/go"
+    },
+    {
+      "command": "macro hard-groove",
+      "execution_mode": "in-shell",
+      "expected_observation": "macro is staged but not sent",
+      "name": "stage-hard-groove",
+      "opens_ports": true,
+      "purpose": "Stage the first OXI-style sound-design move.",
+      "safety_note": "inspect before send",
+      "sends_midi": "not by itself"
+    },
+    {
+      "command": "changes",
+      "execution_mode": "in-shell",
+      "expected_observation": "staged rows are printed for operator review",
+      "name": "inspect-staged-plan",
+      "opens_ports": true,
+      "purpose": "Review pads, lanes, and values before firing.",
+      "safety_note": "must happen before fire-manually",
+      "sends_midi": "never"
+    },
+    {
+      "command": "send or go",
+      "execution_mode": "in-shell",
+      "expected_observation": "Rytm changes audibly without unattended behavior",
+      "name": "fire-manually",
+      "opens_ports": true,
+      "purpose": "Fire the staged plan only after listening readiness is confirmed.",
+      "safety_note": "Jose must be present and listening",
+      "sends_midi": "operator-confirmed"
+    },
+    {
+      "command": "home + send or Z + send",
+      "execution_mode": "in-shell",
+      "expected_observation": "changes returns to no parameter changes staged",
+      "name": "recover-anchor",
+      "opens_ports": true,
+      "purpose": "Return the hardware to the captured safe kit.",
+      "safety_note": "recovery path must stay available",
+      "sends_midi": "operator-confirmed"
+    }
+  ],
+  "rig_roles": [
+    {
+      "label": "OXI One",
+      "name": "oxi-one",
+      "responsibility": "notes, triggers, mutes, pattern motion",
+      "status": "external sequencer"
+    },
+    {
+      "label": "Analog Rytm MKII",
+      "name": "analog-rytm-mkii",
+      "responsibility": "captured-kit sound-design mutation",
+      "status": "live-safe active target"
+    },
+    {
+      "label": "Analog Four MKII",
+      "name": "analog-four-mkii",
+      "responsibility": "tonal companion macro planning",
+      "status": "review-only"
+    }
+  ],
+  "safety": {
+    "a4_outbound": "blocked",
+    "mutates_hardware": false,
+    "opens_ports": false,
+    "passive": true,
+    "requires_hardware": false,
+    "sends_midi": false
+  },
+  "title": "RytmRandomizer OXI live set strategy report"
+}

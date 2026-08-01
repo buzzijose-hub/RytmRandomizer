@@ -1,0 +1,343 @@
+[
+  {
+    "key": "bd_hard",
+    "label": "BD Hard",
+    "family": "BD",
+    "machine_value": 0,
+    "support_status": "mutable_v134",
+    "role_tags": [
+      "kick"
+    ]
+  },
+  {
+    "key": "bd_classic",
+    "label": "BD Classic",
+    "family": "BD",
+    "machine_value": 1,
+    "support_status": "mutable_v134",
+    "role_tags": [
+      "kick"
+    ]
+  },
+  {
+    "key": "sd_hard",
+    "label": "SD Hard",
+    "family": "SD",
+    "machine_value": 2,
+    "support_status": "mutable_v134",
+    "role_tags": [
+      "snare"
+    ]
+  },
+  {
+    "key": "sd_classic",
+    "label": "SD Classic",
+    "family": "SD",
+    "machine_value": 3,
+    "support_status": "mutable_v134",
+    "role_tags": [
+      "snare"
+    ]
+  },
+  {
+    "key": "rs_hard",
+    "label": "RS Hard",
+    "family": "RS",
+    "machine_value": 4,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "rim"
+    ]
+  },
+  {
+    "key": "rs_classic",
+    "label": "RS Classic",
+    "family": "RS",
+    "machine_value": 5,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "rim"
+    ]
+  },
+  {
+    "key": "cp_classic",
+    "label": "CP Classic",
+    "family": "CP",
+    "machine_value": 6,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "clap"
+    ]
+  },
+  {
+    "key": "bt_classic",
+    "label": "BT Classic",
+    "family": "BT",
+    "machine_value": 7,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "tom"
+    ]
+  },
+  {
+    "key": "xt_classic",
+    "label": "XT Classic",
+    "family": "XT",
+    "machine_value": 8,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "tom"
+    ]
+  },
+  {
+    "key": "ch_classic",
+    "label": "CH Classic",
+    "family": "CH",
+    "machine_value": 9,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "hihat"
+    ]
+  },
+  {
+    "key": "oh_classic",
+    "label": "OH Classic",
+    "family": "OH",
+    "machine_value": 10,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "hihat"
+    ]
+  },
+  {
+    "key": "cy_classic",
+    "label": "CY Classic",
+    "family": "CY",
+    "machine_value": 11,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "cymbal"
+    ]
+  },
+  {
+    "key": "cb_classic",
+    "label": "CB Classic",
+    "family": "CB",
+    "machine_value": 12,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "cowbell"
+    ]
+  },
+  {
+    "key": "bd_fm",
+    "label": "BD FM",
+    "family": "BD",
+    "machine_value": 13,
+    "support_status": "mutable_v134",
+    "role_tags": [
+      "kick",
+      "fm"
+    ]
+  },
+  {
+    "key": "sd_fm",
+    "label": "SD FM",
+    "family": "SD",
+    "machine_value": 14,
+    "support_status": "mutable_v134",
+    "role_tags": [
+      "snare",
+      "fm"
+    ]
+  },
+  {
+    "key": "ut_noise",
+    "label": "UT Noise",
+    "family": "UT",
+    "machine_value": 15,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "utility",
+      "noise"
+    ]
+  },
+  {
+    "key": "ut_impulse",
+    "label": "UT Impulse",
+    "family": "UT",
+    "machine_value": 16,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "utility",
+      "impulse"
+    ]
+  },
+  {
+    "key": "ch_metallic",
+    "label": "CH Metallic",
+    "family": "CH",
+    "machine_value": 17,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "hihat",
+      "metallic"
+    ]
+  },
+  {
+    "key": "oh_metallic",
+    "label": "OH Metallic",
+    "family": "OH",
+    "machine_value": 18,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "hihat",
+      "metallic"
+    ]
+  },
+  {
+    "key": "cy_metallic",
+    "label": "CY Metallic",
+    "family": "CY",
+    "machine_value": 19,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "cymbal",
+      "metallic"
+    ]
+  },
+  {
+    "key": "cb_metallic",
+    "label": "CB Metallic",
+    "family": "CB",
+    "machine_value": 20,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "cowbell",
+      "metallic"
+    ]
+  },
+  {
+    "key": "bd_plastic",
+    "label": "BD Plastic",
+    "family": "BD",
+    "machine_value": 21,
+    "support_status": "mutable_v134",
+    "role_tags": [
+      "kick"
+    ]
+  },
+  {
+    "key": "bd_silky",
+    "label": "BD Silky",
+    "family": "BD",
+    "machine_value": 22,
+    "support_status": "mutable_v134",
+    "role_tags": [
+      "kick"
+    ]
+  },
+  {
+    "key": "sd_natural",
+    "label": "SD Natural",
+    "family": "SD",
+    "machine_value": 23,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "snare"
+    ]
+  },
+  {
+    "key": "hh_basic",
+    "label": "HH Basic",
+    "family": "HH",
+    "machine_value": 24,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "hihat"
+    ]
+  },
+  {
+    "key": "cy_ride",
+    "label": "CY Ride",
+    "family": "CY",
+    "machine_value": 25,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "cymbal",
+      "ride"
+    ]
+  },
+  {
+    "key": "bd_sharp",
+    "label": "BD Sharp",
+    "family": "BD",
+    "machine_value": 26,
+    "support_status": "mutable_v134",
+    "role_tags": [
+      "kick"
+    ]
+  },
+  {
+    "key": "dual_vco",
+    "label": "SY Dual VCO",
+    "family": "SY",
+    "machine_value": 28,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "synth"
+    ]
+  },
+  {
+    "key": "sy_chip",
+    "label": "SY Chip",
+    "family": "SY",
+    "machine_value": 29,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "synth"
+    ]
+  },
+  {
+    "key": "bd_acoustic",
+    "label": "BD Acoustic",
+    "family": "BD",
+    "machine_value": 30,
+    "support_status": "mutable_v134",
+    "role_tags": [
+      "kick",
+      "acoustic"
+    ]
+  },
+  {
+    "key": "sd_acoustic",
+    "label": "SD Acoustic",
+    "family": "SD",
+    "machine_value": 31,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "snare",
+      "acoustic"
+    ]
+  },
+  {
+    "key": "sy_raw",
+    "label": "SY Raw",
+    "family": "SY",
+    "machine_value": 32,
+    "support_status": "mutable_v134",
+    "role_tags": [
+      "synth"
+    ]
+  },
+  {
+    "key": "hh_lab",
+    "label": "HH Lab",
+    "family": "HH",
+    "machine_value": 33,
+    "support_status": "machine_selectable",
+    "role_tags": [
+      "hihat"
+    ]
+  }
+]

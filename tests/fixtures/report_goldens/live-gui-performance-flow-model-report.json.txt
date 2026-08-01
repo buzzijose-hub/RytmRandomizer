@@ -1,0 +1,140 @@
+{
+  "live_gui_performance_flow_model": {
+    "analog_four_readiness": {
+      "blocked_active_actions": [
+        "a4_outbound_macro_send"
+      ],
+      "command": "python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4",
+      "readiness": "review-ready",
+      "summary": "A4 macro rows are CC-ready for operator-present validation; full macro SEND remains blocked."
+    },
+    "analog_four_set_plan": {
+      "blocked_active_actions": [
+        "A4 full macro SEND",
+        "A4 unattended macro playback"
+      ],
+      "current_macro": "home",
+      "replay_command": "python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --json",
+      "set_name": "warehouse-arc",
+      "step_count": 5,
+      "summary": "warehouse-arc stages 5 A4 macro moves; current home; full macro SEND remains blocked.",
+      "up_next_macros": [
+        "hard-groove",
+        "dub-pressure",
+        "industrial-transition",
+        "home"
+      ]
+    },
+    "blocked_actions": [
+      "a4_outbound_macro_send",
+      "unattended_hardware_behavior",
+      "open_midi_port_without_arm",
+      "send_without_dry_run"
+    ],
+    "current_step_key": "capture-anchor",
+    "flow_id": "oxi-rytm-a4-performance-flow",
+    "flow_status": "mock-safe",
+    "model_version": "live-gui-performance-flow-model-v1",
+    "replay_commands": [
+      "python -m rytm_randomizer.cli live-gui-performance-flow-model-report --json",
+      "python -m rytm_randomizer.cli oxi-live-macro-catalog-report",
+      "python -m rytm_randomizer.cli analog-four-oxi-macro-report --json",
+      "python -m rytm_randomizer.cli analog-four-oxi-macro-set-planner-report --json",
+      "python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4"
+    ],
+    "safety_lines": [
+      "passive/read-only",
+      "GUI performance flow metadata only",
+      "Rytm OXI macro command labels only",
+      "Analog Four review-only actions stay candidate metadata.",
+      "JSON/stdout only",
+      "no GUI launch",
+      "no file writing",
+      "no real MIDI rendering",
+      "no MIDI sending",
+      "no port opening",
+      "no hardware mutation",
+      "no hardware required"
+    ],
+    "source_module": "reports.live_gui_performance_flow_model",
+    "steps": [
+      {
+        "analog_four_action": "A4 soft-capture reference",
+        "key": "capture-anchor",
+        "label": "Capture Anchor",
+        "order": 1,
+        "phase": "setup",
+        "recovery_action": "Z + send",
+        "rytm_command": "kit/resnapshot",
+        "send_policy": "receive-only",
+        "status": "safe"
+      },
+      {
+        "analog_four_action": "review bass/stab candidates",
+        "key": "kit-core",
+        "label": "Kit Core",
+        "order": 2,
+        "phase": "foundation",
+        "recovery_action": "home",
+        "rytm_command": "kit-core",
+        "send_policy": "stage-review-send",
+        "status": "staged"
+      },
+      {
+        "analog_four_action": "review rhythmic contour",
+        "key": "hard-groove",
+        "label": "Hard Groove",
+        "order": 3,
+        "phase": "pressure",
+        "recovery_action": "home",
+        "rytm_command": "hard-groove",
+        "send_policy": "stage-review-send",
+        "status": "staged"
+      },
+      {
+        "analog_four_action": "review texture motion",
+        "key": "industrial",
+        "label": "Industrial",
+        "order": 4,
+        "phase": "texture",
+        "recovery_action": "home",
+        "rytm_command": "industrial",
+        "send_policy": "stage-review-send",
+        "status": "staged"
+      },
+      {
+        "analog_four_action": "review delay/reverb space",
+        "key": "dub-pressure",
+        "label": "Dub Pressure",
+        "order": 5,
+        "phase": "space",
+        "recovery_action": "home",
+        "rytm_command": "dub-pressure",
+        "send_policy": "stage-review-send",
+        "status": "staged"
+      },
+      {
+        "analog_four_action": "review bridge candidate",
+        "key": "transition",
+        "label": "Transition",
+        "order": 6,
+        "phase": "handoff",
+        "recovery_action": "home",
+        "rytm_command": "transition",
+        "send_policy": "dry-run-only",
+        "status": "review"
+      },
+      {
+        "analog_four_action": "keep A4 review-only",
+        "key": "home",
+        "label": "Home",
+        "order": 7,
+        "phase": "recovery",
+        "recovery_action": "kit/resnapshot",
+        "rytm_command": "Z + send",
+        "send_policy": "restore-anchor",
+        "status": "safe"
+      }
+    ]
+  }
+}

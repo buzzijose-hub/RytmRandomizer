@@ -1,0 +1,61 @@
+{
+  "amp": [
+    "AMP Hold",
+    "AMP Decay",
+    "AMP Overdrive"
+  ],
+  "body": [
+    "SRC Tune",
+    "SRC Sweep Time",
+    "SRC FM Decay",
+    "SRC Decay",
+    "FLT Frequency",
+    "AMP Hold",
+    "AMP Decay"
+  ],
+  "filter": [
+    "FLT Decay",
+    "FLT Frequency",
+    "FLT Resonance",
+    "FLT Env Depth"
+  ],
+  "fm": [
+    "SRC FM Decay",
+    "SRC FM Tune",
+    "SRC FM Amount",
+    "SRC Tick Level",
+    "FLT Resonance",
+    "AMP Overdrive"
+  ],
+  "full": [
+    "SRC Tune",
+    "SRC Sweep Time",
+    "SRC FM Decay",
+    "SRC Decay",
+    "SRC FM Tune",
+    "SRC FM Amount",
+    "SRC Tick Level",
+    "FLT Decay",
+    "FLT Frequency",
+    "FLT Resonance",
+    "FLT Env Depth",
+    "AMP Hold",
+    "AMP Decay",
+    "AMP Overdrive"
+  ],
+  "grit": [
+    "SRC FM Amount",
+    "SRC Tick Level",
+    "FLT Resonance",
+    "AMP Overdrive"
+  ],
+  "src": [
+    "SRC Tune",
+    "SRC Sweep Time",
+    "SRC FM Decay",
+    "SRC Decay",
+    "SRC FM Tune",
+    "SRC FM Amount",
+    "SRC Tick Level"
+  ]
+}

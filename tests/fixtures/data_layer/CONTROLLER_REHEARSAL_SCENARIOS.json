@@ -1,0 +1,115 @@
+{
+  "warehouse-controller-brain-rehearsal": {
+    "key": "warehouse-controller-brain-rehearsal",
+    "label": "Warehouse Controller Brain Rehearsal",
+    "profile_key": "generic-16-encoder-performance",
+    "summary": "Virtual 16-encoder rehearsal that resolves controller pages into Rytm, Analog Four, Style Crates, queue, and recovery intent.",
+    "gestures": [
+      {
+        "step": 1,
+        "page_key": "global-brain",
+        "slot": 1,
+        "gesture": "turn clockwise",
+        "value_delta": 12,
+        "operator_goal": "raise passive preview depth before choosing a direction",
+        "expected_intent_key": "global.preview_depth",
+        "notes": "Depth is staged only; no preview or send is executed."
+      },
+      {
+        "step": 2,
+        "page_key": "global-brain",
+        "slot": 7,
+        "gesture": "press",
+        "value_delta": 0,
+        "operator_goal": "choose the industrial macro direction",
+        "expected_intent_key": "macro.industrial",
+        "notes": "Macro selection resolves to intent without mutating a snapshot."
+      },
+      {
+        "step": 3,
+        "page_key": "rytm-pads-5-8",
+        "slot": 1,
+        "gesture": "turn clockwise",
+        "value_delta": 9,
+        "operator_goal": "bring Pad 5 into SRC-first movement",
+        "expected_intent_key": "rytm.pad5.source_amount",
+        "notes": "Pad 5 keeps filter and LFO de-emphasized while SRC stays primary."
+      },
+      {
+        "step": 4,
+        "page_key": "rytm-pads-5-8",
+        "slot": 5,
+        "gesture": "turn clockwise",
+        "value_delta": 14,
+        "operator_goal": "push Pad 6 tom/source movement",
+        "expected_intent_key": "rytm.pad6.source_amount",
+        "notes": "Pad 6 is eligible for useful tom source movement and light filter only."
+      },
+      {
+        "step": 5,
+        "page_key": "rytm-pads-9-12",
+        "slot": 13,
+        "gesture": "turn counterclockwise",
+        "value_delta": -7,
+        "operator_goal": "prove Pad 12 remains optional but mapped",
+        "expected_intent_key": "rytm.pad12.source_amount",
+        "notes": "Pad 12 stays in the product even when an operator leaves it quiet."
+      },
+      {
+        "step": 6,
+        "page_key": "analog-four-tracks",
+        "slot": 1,
+        "gesture": "turn clockwise",
+        "value_delta": 10,
+        "operator_goal": "stage future Analog Four Track 1 macro movement",
+        "expected_intent_key": "a4.track1.macro_depth",
+        "notes": "Analog Four is still a passive runway in this rehearsal packet."
+      },
+      {
+        "step": 7,
+        "page_key": "style-crates-queue",
+        "slot": 2,
+        "gesture": "press",
+        "value_delta": 0,
+        "operator_goal": "browse the Dark Hypnotic crate",
+        "expected_intent_key": "crate.dark_hypnotic",
+        "notes": "Crate browse remains a local intent selection."
+      },
+      {
+        "step": 8,
+        "page_key": "style-crates-queue",
+        "slot": 10,
+        "gesture": "press",
+        "value_delta": 0,
+        "operator_goal": "stage the first upcoming queue move",
+        "expected_intent_key": "queue.next_1",
+        "notes": "Queue staging does not dispatch Cockpit commands."
+      },
+      {
+        "step": 9,
+        "page_key": "snapshot-recovery-journal",
+        "slot": 16,
+        "gesture": "press and hold",
+        "value_delta": 0,
+        "operator_goal": "verify panic home always resolves to captured anchor intent",
+        "expected_intent_key": "snapshot.panic_home",
+        "notes": "Recovery target is passive until an approved armed bridge exists."
+      }
+    ],
+    "operator_notes": [
+      "Treat the controller as an intent browser, not as a live MIDI input device.",
+      "Use SRC-first Rytm pad controls for Pads 5-12 before broad filter or LFO moves.",
+      "Keep Pad 12 available for users who want it, while allowing local lock/exclusion.",
+      "Analog Four controls are staged as runway intent until a validated A4 hardware path exists."
+    ],
+    "blocked_active_actions": [
+      "open MIDI controller input",
+      "MIDI learn or raw CC capture",
+      "send controller feedback",
+      "dispatch Cockpit WebSocket commands",
+      "open MIDI output",
+      "arm hardware",
+      "send hardware MIDI"
+    ]
+  }
+}

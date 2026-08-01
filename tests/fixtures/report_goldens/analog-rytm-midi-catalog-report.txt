@@ -1,0 +1,24 @@
+RytmRandomizer passive Analog Rytm MIDI catalog
+Summary:
+- General CC/NRPN rows: 99
+- Machine SRC rows: 224
+- Total CC/NRPN rows: 323
+- Validated runtime rows: 99
+- Locked-default rows: 58
+- Documented-only rows: 166
+- Machine profiles with SRC rows: 33 / 33
+- MIDI note trigger rows: 13
+- Pads: 12
+Promotion boundary:
+- Validated runtime rows stay limited to the existing V1.34 mutation maps.
+- Documented-only rows require separate approval and hardware validation before mutation.
+Safety:
+- passive/read-only
+- manual-backed catalog only
+- no MIDI sending
+- no port opening
+- no command execution
+- no hardware mutation
+- no hardware required
+Source: rytm_randomizer.reports.analog_rytm_midi_catalog
+In-memory only: True

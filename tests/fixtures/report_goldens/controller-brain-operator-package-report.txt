@@ -1,0 +1,77 @@
+RytmRandomizer passive controller brain operator package ledger
+Ledger version: controller-brain-operator-package-ledger-v1
+Ledger status: passive-ready
+Controller source: controller-brain-rehearsal-report
+Controller profile: generic-16-encoder-performance
+Controller scenario: warehouse-controller-brain-rehearsal
+Operator package source: live-kit-operator-package
+Operator package id: live-kit-operator-package
+Operator package status: passive-ready
+Operator slots: 5
+Controller gestures bound: 9
+
+Gesture package bindings:
+- global-brain:01: global.preview_depth -> operator-package.depth-review / slot=captured-base / export=operator-package-captured-base / status=mock-safe-staged
+- global-brain:07: macro.industrial -> operator-package.slot-selection / slot=industrial-pressure / export=operator-package-industrial-pressure / status=mock-safe-staged
+- rytm-pads-5-8:01: rytm.pad5.source_amount -> operator-package.pad-lane-review / slot=hard-groove-lift / export=operator-package-hard-groove-lift / status=mock-safe-staged
+- rytm-pads-5-8:05: rytm.pad6.source_amount -> operator-package.pad-lane-review / slot=hard-groove-lift / export=operator-package-hard-groove-lift / status=mock-safe-staged
+- rytm-pads-9-12:13: rytm.pad12.source_amount -> operator-package.pad-lane-review / slot=hard-groove-lift / export=operator-package-hard-groove-lift / status=mock-safe-staged
+- analog-four-tracks:01: a4.track1.macro_depth -> operator-package.a4-review-only / slot=no-slot / export=no-export / status=mock-safe-staged
+- style-crates-queue:02: crate.dark_hypnotic -> operator-package.crate-review / slot=no-slot / export=no-export / status=mock-safe-staged
+- style-crates-queue:10: queue.next_1 -> operator-package.queue-stage / slot=industrial-pressure / export=operator-package-industrial-pressure / status=mock-safe-staged
+- snapshot-recovery-journal:16: snapshot.panic_home -> operator-package.recovery / slot=recovery-return / export=operator-package-recovery-return / status=mock-safe-staged
+
+Readiness:
+- Status: mock-safe
+- Ready for Cockpit preview: True
+- Ready for hardware send: False
+- Opened controller input: False
+- Captured raw CC: False
+- Dispatched WebSocket: False
+- Opened MIDI port: False
+- Sent MIDI: False
+- Wrote files: False
+- Mutated snapshot: False
+- Armed hardware: False
+
+Blocked active actions:
+- open MIDI controller input
+- MIDI learn or raw CC capture
+- send controller feedback
+- open Analog Rytm output
+- open Analog Four output
+- arm hardware
+- send hardware MIDI
+- mutate a snapshot
+- dispatch Cockpit WebSocket commands
+- open MIDI output
+- generate operator package from Cockpit console
+- send operator package from Cockpit console
+- write operator package file from passive report
+- commit operator journal from passive report
+- open MIDI port from operator package
+
+Safety:
+- passive/read-only
+- controller/package ledger only
+- virtual controller gestures only
+- operator package metadata only
+- no MIDI controller input
+- no MIDI learn or raw CC capture
+- no WebSocket command dispatch
+- no file writing
+- no MIDI sending
+- no port opening
+- no hardware mutation
+- no hardware required
+- live kit operator package is declarative only
+- operator steps are browser-local rehearsal metadata
+- local export preview does not write files
+- journal commit remains preview-only
+
+Replay commands:
+- python -m rytm_randomizer.cli controller-brain-rehearsal-report --json
+- python -m rytm_randomizer.cli live-gui-performance-console-report --json
+- python -m rytm_randomizer.cli controller-brain-operator-package-report --json
+Source: rytm_randomizer.reports.controller_brain_operator_package
+In-memory only: True

@@ -1,0 +1,25 @@
+RytmRandomizer passive style target vector report
+Summary:
+- Purpose: numeric style intent for future snapshot mutation planning
+- Targets: 10
+Targets:
+- birmingham_pressure: drive_pressure=95, industrial_edge=95, warehouse_intensity=95
+- deep_dark_hypnosis: repetition_hypnosis=100, darkness=95, low_end_weight=85
+- detroit_minimal: minimal_restraint=95, repetition_hypnosis=90, low_end_weight=70
+- hardgroove_percussive: percussive_density=95, transient_density=85, attack_sharpness=75
+- hood_stripped: minimal_restraint=100, repetition_hypnosis=90, attack_sharpness=80
+- industrial_dark: darkness=100, industrial_edge=100, noise_grit=100
+- jose_core_techno: drive_pressure=95, repetition_hypnosis=95, warehouse_intensity=95
+- mills_hypnotic: repetition_hypnosis=100, motion_amount=90, attack_sharpness=85
+- ur_machine_funk: attack_sharpness=75, percussive_density=75, repetition_hypnosis=75
+- warehouse_peak: warehouse_intensity=100, attack_sharpness=90, low_end_weight=90
+Safety:
+- passive/read-only
+- metadata only
+- no MIDI sending
+- no port opening
+- no command execution
+- no hardware mutation
+- no hardware required
+Source: rytm_randomizer.reports.style_targets
+In-memory only: True

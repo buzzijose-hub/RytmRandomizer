@@ -25,6 +25,14 @@ from typing import Any
 import pytest
 
 from rytm_randomizer.cockpit import __main__ as cockpit_main
+from rytm_randomizer.cockpit.device.connection import (
+    ConnectionManager,
+    ConnectionState,
+    NullPortEnumerator,
+    ProviderPortEnumerator,
+    active_connection_manager,
+)
+from rytm_randomizer.cockpit.ws.server import ConnectionRegistry
 from rytm_randomizer.cockpit.ws.session import CockpitSession
 
 pytestmark = pytest.mark.fast
@@ -148,16 +156,21 @@ def test_resolve_port_rejects_non_integer_env_var(monkeypatch: pytest.MonkeyPatc
 
 
 def _redirect_token_file(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
-    """Redirect the token file path under ``tmp_path`` for the duration of one test.
+    """Redirect BOTH per-launch secret files under ``tmp_path`` for one test.
 
-    Without this redirect ``main()`` (or ``_provision_token()``) would
-    write to ``~/.rytm-randomizer/cockpit-ws-token`` on the developer's
-    machine and clobber a real running cockpit's token. Sets the
-    canonical env var so the production code path is exercised.
+    Without this redirect ``main()`` (or ``_provision_token()`` /
+    ``_provision_arm_secret()``) would write to
+    ``~/.rytm-randomizer/`` on the developer's machine and clobber a real
+    running cockpit's credentials. Sets the canonical env vars so the
+    production code paths are exercised.
+
+    Returns the WS handshake-token path (the one most tests assert on);
+    the ARM secret lands next to it as ``arm-secret``.
     """
 
     token_path = tmp_path / "ws-token"
     monkeypatch.setenv(cockpit_main._TOKEN_FILE_ENV_VAR, str(token_path))
+    monkeypatch.setenv(cockpit_main._ARM_SECRET_FILE_ENV_VAR, str(tmp_path / "arm-secret"))
     return token_path
 
 
@@ -298,6 +311,141 @@ def test_provision_token_silent_when_env_var_set(
     assert captured.out == ""
 
 
+# ---------------------------------------------------------------------------
+# The ARM secret — a SECOND, separate per-launch credential.
+#
+# The handshake token admits a connection; the ARM secret authorises the
+# transmit capability. The arm handler used to accept any non-empty
+# client-supplied string and then derive the "expected" value from that
+# same string, so ``compare_digest`` compared a value with itself. These
+# tests pin the server side of the replacement.
+# ---------------------------------------------------------------------------
+
+
+def test_arm_secret_is_written_to_its_own_file(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A separate file from the WS token, so one can be handed out without the other."""
+
+    token_path = _redirect_token_file(monkeypatch, tmp_path)
+
+    secret = cockpit_main._provision_arm_secret()
+
+    secret_path = tmp_path / "arm-secret"
+    assert secret_path.read_text(encoding="utf-8") == secret
+    assert secret_path != token_path
+
+
+def test_arm_secret_is_written_with_restrictive_mode(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """0600 on POSIX — only a process running as the operator can read it."""
+
+    _redirect_token_file(monkeypatch, tmp_path)
+
+    cockpit_main._provision_arm_secret()
+
+    if sys.platform != "win32":
+        assert stat.S_IMODE((tmp_path / "arm-secret").stat().st_mode) == 0o600
+
+
+def test_arm_secret_is_freshly_minted_per_launch(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """An arm capability must not survive a restart the operator did not authorise."""
+
+    _redirect_token_file(monkeypatch, tmp_path)
+
+    first = cockpit_main._provision_arm_secret()
+    second = cockpit_main._provision_arm_secret()
+
+    assert first != second
+    assert (tmp_path / "arm-secret").read_text(encoding="utf-8") == second
+
+
+def test_arm_secret_differs_from_the_handshake_token(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Two independent credentials, not one value written twice."""
+
+    _redirect_token_file(monkeypatch, tmp_path)
+
+    assert cockpit_main._provision_token() != cockpit_main._provision_arm_secret()
+
+
+def test_arm_secret_is_echoed_only_in_dev_mode(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Dev-mode prints it for interactive copy; the production path stays silent."""
+
+    monkeypatch.delenv(cockpit_main._ARM_SECRET_FILE_ENV_VAR, raising=False)
+    monkeypatch.setattr(cockpit_main.Path, "home", classmethod(lambda cls: tmp_path))
+    secret = cockpit_main._provision_arm_secret()
+    dev_out = capsys.readouterr().out
+    # The dev banner names the FILE, never the value: this secret authorises
+    # transmit to hardware, so echoing it would strand a live-fire capability
+    # in scrollback / shell history / CI logs. (CodeQL
+    # py/clear-text-logging-sensitive-data flagged the old behaviour.)
+    assert "[cockpit] ARM secret written to:" in dev_out
+    assert secret not in dev_out
+
+    monkeypatch.setenv(cockpit_main._ARM_SECRET_FILE_ENV_VAR, str(tmp_path / "arm-secret"))
+    cockpit_main._provision_arm_secret()
+    assert capsys.readouterr().out == ""
+
+
+def test_main_installs_the_arm_secret_on_the_session(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Without this wiring the arm handler fails closed and nobody can arm."""
+
+    _redirect_token_file(monkeypatch, tmp_path)
+    monkeypatch.setattr(cockpit_main, "default_profiles_dir", lambda: tmp_path / "profiles")
+    monkeypatch.setattr(cockpit_main, "default_library_dir", lambda: tmp_path / "library")
+    monkeypatch.setattr(cockpit_main, "default_captures_dir", lambda: tmp_path / "captures")
+    captured: dict[str, Any] = {}
+    real_create_app = cockpit_main.create_app
+
+    def _spy_create_app(session: Any, **kwargs: Any) -> Any:
+        captured["session"] = session
+        return real_create_app(session, **kwargs)
+
+    monkeypatch.setattr(cockpit_main, "create_app", _spy_create_app)
+    monkeypatch.setattr(cockpit_main.uvicorn, "run", lambda app, *, host, port: None)
+
+    cockpit_main.main()
+
+    on_disk = (tmp_path / "arm-secret").read_text(encoding="utf-8")
+    assert on_disk
+    # The session the app serves carries exactly the secret written to disk,
+    # so a client that can read the 0600 file — and only such a client — arms.
+    assert captured["session"].arm_secret == on_disk
+    # And it is NOT the handshake token.
+    assert captured["session"].arm_secret != (tmp_path / "ws-token").read_text(encoding="utf-8")
+
+
+def test_arm_secret_path_defaults_under_home(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fresh checkout works with no env-var dance."""
+
+    monkeypatch.delenv(cockpit_main._ARM_SECRET_FILE_ENV_VAR, raising=False)
+    monkeypatch.setattr(cockpit_main.Path, "home", classmethod(lambda cls: Path("/fake/home")))
+
+    resolved = cockpit_main._resolve_arm_secret_path()
+
+    assert resolved.name == "cockpit-arm-secret"
+    assert resolved.parent.name == ".rytm-randomizer"
+
+
+def test_arm_secret_path_honours_its_env_var(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv(cockpit_main._ARM_SECRET_FILE_ENV_VAR, str(tmp_path / "elsewhere"))
+
+    assert cockpit_main._resolve_arm_secret_path() == (tmp_path / "elsewhere").absolute()
+
+
 def test_write_token_file_creates_parent_directories(tmp_path: Path) -> None:
     """``_write_token_file`` mkdirs parents on demand for a fresh checkout."""
 
@@ -306,3 +454,273 @@ def test_write_token_file_creates_parent_directories(tmp_path: Path) -> None:
     cockpit_main._write_token_file(nested, "abc")
 
     assert nested.read_text(encoding="utf-8") == "abc"
+
+
+def test_write_token_file_tolerates_chmod_failure(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A filesystem that rejects ``chmod`` must not abort the launch.
+
+    Windows / exotic mounts can refuse the bit-precise ``0o600``; the
+    token still lands on disk (a partially-restricted file beats a
+    cockpit that refuses to boot).
+    """
+
+    target = tmp_path / "token"
+
+    def _refuse_chmod(self: Path, mode: int) -> None:
+        raise OSError("chmod not supported on this filesystem")
+
+    monkeypatch.setattr(cockpit_main.Path, "chmod", _refuse_chmod)
+
+    cockpit_main._write_token_file(target, "tok")
+
+    assert target.read_text(encoding="utf-8") == "tok"
+
+
+# ---------------------------------------------------------------------------
+# Wave 3: passive ConnectionManager wiring (enumerator pick, broadcast
+# adapter, lifecycle handlers, main() registration).
+# ---------------------------------------------------------------------------
+
+
+def test_build_port_enumerator_wraps_real_provider_when_mido_present() -> None:
+    """The dev venv ships ``mido``: the enumeration-only facade is picked.
+
+    Constructing the facade must NOT import ``mido`` (the provider's
+    methods import lazily) and must never open a port — building it is
+    pure object wiring.
+    """
+
+    import sys
+
+    had_mido = "mido" in sys.modules
+    enumerator = cockpit_main._build_port_enumerator()
+
+    assert isinstance(enumerator, ProviderPortEnumerator)
+    if not had_mido:
+        # Building the facade must not have pulled ``mido`` in.
+        assert "mido" not in sys.modules
+
+
+def test_build_port_enumerator_falls_back_to_null_without_mido(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Hosts without the hardware extra still boot (null enumerator)."""
+
+    monkeypatch.setattr(cockpit_main.importlib.util, "find_spec", lambda name: None)
+
+    enumerator = cockpit_main._build_port_enumerator()
+
+    assert isinstance(enumerator, NullPortEnumerator)
+    assert enumerator.list_input_names() == ()
+
+
+@pytest.mark.parametrize("value", ["off", "OFF", "  Off  "])
+def test_build_port_enumerator_env_kill_switch_forces_null(
+    monkeypatch: pytest.MonkeyPatch, value: str
+) -> None:
+    """``RYTM_RAND_MIDI_BACKEND=off`` forces the null enumerator even with mido.
+
+    The escape hatch for CI/headless hosts and misbehaving OS MIDI services
+    (python-rtmidi can abort the process from C++ when the OS MIDI client
+    cannot be created — uncatchable in Python, so prevention is the fix).
+    """
+
+    monkeypatch.setenv("RYTM_RAND_MIDI_BACKEND", value)
+    # find_spec would say mido exists; the kill switch must win first.
+    monkeypatch.setattr(
+        cockpit_main.importlib.util,
+        "find_spec",
+        lambda name: pytest.fail("find_spec must not be consulted when backend=off"),
+    )
+
+    enumerator = cockpit_main._build_port_enumerator()
+
+    assert isinstance(enumerator, NullPortEnumerator)
+
+
+def test_build_port_enumerator_env_auto_keeps_real_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Values other than ``off`` behave as ``auto`` (mido-absent fallback here)."""
+
+    monkeypatch.setenv("RYTM_RAND_MIDI_BACKEND", "auto")
+    monkeypatch.setattr(cockpit_main.importlib.util, "find_spec", lambda name: None)
+
+    enumerator = cockpit_main._build_port_enumerator()
+
+    assert isinstance(enumerator, NullPortEnumerator)
+
+
+def test_connection_event_broadcaster_pushes_connection_changed() -> None:
+    """The on_change adapter fans one ``connection_changed`` per diff."""
+
+    class _RecordingRegistry:
+        def __init__(self) -> None:
+            self.events: list[dict] = []
+
+        def broadcast_event(self, event: dict) -> int:
+            self.events.append(event)
+            return 0
+
+    registry = _RecordingRegistry()
+    broadcast = cockpit_main._connection_event_broadcaster(registry)
+    state = ConnectionState(
+        phase="searching",
+        available_inputs=(),
+        available_outputs=(),
+        selected_input=None,
+        selected_output=None,
+        last_error_fingerprint=None,
+        changed_at=7.0,
+    )
+
+    broadcast(state)
+
+    assert len(registry.events) == 1
+    event = registry.events[0]
+    assert event["type"] == "connection_changed"
+    assert event["connection"]["phase"] == "searching"
+    assert event["connection"]["changed_at"] == 7.0
+
+
+def test_install_connection_manager_lifecycle_registers_startup_and_shutdown() -> None:
+    from fastapi import FastAPI
+
+    app = FastAPI()
+    manager = ConnectionManager(NullPortEnumerator())
+
+    cockpit_main._install_connection_manager_lifecycle(app, manager)
+
+    assert manager.start in app.router.on_startup
+    assert manager.stop in app.router.on_shutdown
+
+
+def test_main_registers_connection_manager_and_registry(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """``main()`` wires the launch brain without starting its poll loop.
+
+    The poll loop only starts on the app's ``startup`` event (uvicorn is
+    monkeypatched away here), so no enumeration happens during the test
+    — passive even at wiring time.
+    """
+
+    monkeypatch.setattr(cockpit_main, "default_profiles_dir", lambda: tmp_path)
+    monkeypatch.delenv(cockpit_main._PORT_ENV_VAR, raising=False)
+    _redirect_token_file(monkeypatch, tmp_path)
+
+    captured: dict[str, Any] = {}
+
+    def _fake_run(app: Any, *, host: str, port: int) -> None:
+        captured["app"] = app
+
+    monkeypatch.setattr(cockpit_main, "uvicorn", type("U", (), {"run": staticmethod(_fake_run)}))
+
+    cockpit_main.main()
+
+    manager = active_connection_manager()
+    assert manager is not None
+    # The manager never polls (and never arms) before uvicorn starts it.
+    assert manager.state.phase == "disconnected"
+    # The app exposes the same registry the manager broadcasts through.
+    app = captured["app"]
+    assert isinstance(app.state.connection_registry, ConnectionRegistry)
+    # Startup/shutdown lifecycle handlers are installed.
+    assert manager.start in app.router.on_startup
+    assert manager.stop in app.router.on_shutdown
+
+
+# ---------------------------------------------------------------------------
+# Wave 4 — input opener + main() wiring of library / watchdog / monitor.
+# ---------------------------------------------------------------------------
+
+
+def test_build_input_opener_returns_provider_when_mido_present() -> None:
+    """mido is a required dependency in the dev env: the opener is real."""
+
+    opener = cockpit_main._build_input_opener()
+    assert opener is not None
+    assert callable(getattr(opener, "open_input", None))
+
+
+def test_build_input_opener_returns_none_when_mido_absent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(cockpit_main.importlib.util, "find_spec", lambda _n: None)
+    assert cockpit_main._build_input_opener() is None
+
+
+def test_main_wires_wave4_library_watchdog_and_monitor(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """``main()`` injects the library store and registers the Wave-4 hooks."""
+
+    monkeypatch.setattr(cockpit_main, "default_profiles_dir", lambda: tmp_path)
+    monkeypatch.setattr(cockpit_main, "default_library_dir", lambda: tmp_path / "library")
+    monkeypatch.setattr(cockpit_main, "default_captures_dir", lambda: tmp_path / "captures")
+    monkeypatch.delenv(cockpit_main._PORT_ENV_VAR, raising=False)
+    _redirect_token_file(monkeypatch, tmp_path)
+
+    captured: dict[str, Any] = {}
+    sessions: list[CockpitSession] = []
+    real_build_session = cockpit_main.build_session
+
+    def _capture_session() -> CockpitSession:
+        session = real_build_session()
+        sessions.append(session)
+        return session
+
+    def _fake_run(app: Any, *, host: str, port: int) -> None:
+        captured["app"] = app
+
+    monkeypatch.setattr(cockpit_main, "build_session", _capture_session)
+    monkeypatch.setattr(cockpit_main, "uvicorn", type("U", (), {"run": staticmethod(_fake_run)}))
+
+    cockpit_main.main()
+
+    session = sessions[0]
+    # Library store injected with the platform-dir + captures defaults.
+    assert session.library_store is not None
+    assert session.library_store.library_dir == tmp_path / "library"
+    assert session.library_store.captures_dir == tmp_path / "captures"
+    # The ConnectionManager carries the session's error journal and the
+    # Wave-4 notify hooks (armed watchdog + monitor supervisor when mido
+    # is importable — which it is in the dev env).
+    manager = active_connection_manager()
+    assert manager is not None
+    assert manager._journal is session.error_journal
+    assert len(manager._notify_hooks) == 2
+    # The supervisor's shutdown hook is installed on the app lifecycle.
+    app = captured["app"]
+    shutdown_names = [getattr(h, "__qualname__", "") for h in app.router.on_shutdown]
+    assert any("MidiMonitorSupervisor.aclose" in name for name in shutdown_names)
+
+
+def test_main_skips_monitor_supervisor_when_mido_absent(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setattr(cockpit_main, "default_profiles_dir", lambda: tmp_path)
+    monkeypatch.setattr(cockpit_main, "default_library_dir", lambda: tmp_path / "library")
+    monkeypatch.setattr(cockpit_main, "default_captures_dir", lambda: tmp_path / "captures")
+    monkeypatch.delenv(cockpit_main._PORT_ENV_VAR, raising=False)
+    _redirect_token_file(monkeypatch, tmp_path)
+    monkeypatch.setattr(cockpit_main, "_build_input_opener", lambda: None)
+
+    captured: dict[str, Any] = {}
+
+    def _fake_run(app: Any, *, host: str, port: int) -> None:
+        captured["app"] = app
+
+    monkeypatch.setattr(cockpit_main, "uvicorn", type("U", (), {"run": staticmethod(_fake_run)}))
+
+    cockpit_main.main()
+
+    manager = active_connection_manager()
+    assert manager is not None
+    # Only the armed watchdog is registered — no monitor supervisor.
+    assert len(manager._notify_hooks) == 1
+    app = captured["app"]
+    shutdown_names = [getattr(h, "__qualname__", "") for h in app.router.on_shutdown]
+    assert not any("MidiMonitorSupervisor" in name for name in shutdown_names)

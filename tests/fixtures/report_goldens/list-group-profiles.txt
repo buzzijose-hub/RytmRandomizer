@@ -1,0 +1,15 @@
+RytmRandomizer passive group profile list
+Section: group_profiles
+Count: 4
+Items:
+- 2: My BD Hard
+- 3: My BD Classic
+- 4: My BD Acoustic
+- 5: Pad 3 SY Raw Mid Bass
+Safety:
+- passive/read-only
+- no MIDI sending
+- no port opening
+- no command execution
+- no hardware mutation
+- no hardware required

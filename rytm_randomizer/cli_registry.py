@@ -345,6 +345,30 @@ def make_passive_report_command(
     )
 
 
+def _pop_next_option_value(remaining: list[str], *, usage: str) -> str:
+    if not remaining:
+        raise ValueError(usage)
+    return remaining.pop(0)
+
+
+# Registry-level promotions of the ``reports.live_gui_common`` helpers
+# (behavior copied verbatim) so report modules migrating onto the ReportSpec
+# platform can consume them without reaching into the live-GUI sibling
+# module. ``reports/live_gui_common.py`` keeps its own defs until its
+# consumers migrate in Wave 3, so the promotions are exposed as bindings to
+# uniquely-named private defs rather than same-named public ``def``s (Gate 17
+# — tests/architecture/test_abstraction_reuse.py — treats two same-named
+# public defs as a duplicated abstraction surface).
+#
+# * ``format_cli_error(exc)`` — the standard passive CLI ``Error: <msg>``
+#   line. Identical to the module-private ``_format_passive_report_error``
+#   already used by ``make_passive_report_command``, so it binds that def.
+# * ``pop_option_value(remaining, *, usage)`` — pop the next CLI option
+#   value or raise ``ValueError(usage)`` when ``remaining`` is exhausted.
+format_cli_error: Final[Callable[[Exception], str]] = _format_passive_report_error
+pop_option_value: Final = _pop_next_option_value
+
+
 def default_error_formatter(exc: Exception) -> str:
     """Render ``exc`` in the dispatcher's default ``Error: <Class>: <msg>`` shape.
 

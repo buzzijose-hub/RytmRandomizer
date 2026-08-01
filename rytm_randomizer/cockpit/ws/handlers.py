@@ -59,23 +59,37 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import hmac
+import importlib.util
 import json
 import time
 from collections import OrderedDict
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
-from typing import Any, Final, Protocol, cast, runtime_checkable
+from typing import Final, Protocol, SupportsFloat, SupportsInt, cast, runtime_checkable
 
+from ...devices import get_device
 from ...observability.errors import RytmRandomizerError
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
 from ...observability.tracing import operation
-from ..data import CockpitSendPlan, History, MutationCandidate, Snapshot
+from ..data import CockpitSendPlan, History, MutationCandidate, ProfileModel, Snapshot
+from ..device.connection import ConnectionState, active_connection_manager
+from ..diagnostics import build_diagnostics_payload
 from ..engine import mutate, prepare_send_plan
 from ..export import pack_profile_model
+from ..library import LibraryStore
 from .protocol import (
+    COMMAND_ARM,
     COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
+    COMMAND_DIAGNOSTICS,
+    COMMAND_DISARM,
     COMMAND_EXPORT_PROFILE_MODEL,
+    COMMAND_LIBRARY_DELETE,
+    COMMAND_LIBRARY_IMPORT_CAPTURES,
+    COMMAND_LIBRARY_LIST,
+    COMMAND_LIBRARY_SEARCH,
+    COMMAND_LIBRARY_TAG,
     COMMAND_LOAD_SNAPSHOT,
     COMMAND_MOCK_APPLY_OPERATOR_PACKAGE,
     COMMAND_PREPARE_SEND_PLAN,
@@ -94,7 +108,9 @@ from .protocol import (
     ERR_MISSING_ENVELOPE_KEY,
     ERR_UNKNOWN_COMMAND,
     ERR_VALIDATION,
+    EVENT_CONNECTION_CHANGED,
     EVENT_HISTORY_UPDATED,
+    EVENT_LIBRARY_CHANGED,
     EVENT_MUTATION_PREVIEWED,
     EVENT_PERFORMANCE_CONSOLE_CHANGED,
     EVENT_PROFILE_CHANGED,
@@ -133,7 +149,7 @@ class EventEmitter(Protocol):
     Tests: a recorder appending every emitted dict to a list.
     """
 
-    async def send_event(self, event: dict) -> None:
+    async def send_event(self, event: dict[str, object]) -> None:
         """Send one event payload (a plain dict, JSON-serialisable)."""
 
 
@@ -148,8 +164,8 @@ class HandlerResult:
     then events" wire-ordering contract.
     """
 
-    ack: dict
-    events: list[dict] = field(default_factory=list)
+    ack: dict[str, object]
+    events: list[dict[str, object]] = field(default_factory=list[dict[str, object]])
 
 
 # ---------------------------------------------------------------------------
@@ -157,40 +173,106 @@ class HandlerResult:
 # ---------------------------------------------------------------------------
 
 
-def _build_session_status(session: CockpitSession) -> dict:
+def session_is_armed(session: CockpitSession) -> bool:
+    """True when this session holds the one live outbound MIDI handle.
+
+    The :class:`~rytm_randomizer.senders.armed_apply.ArmedApplySession`
+    **is** the armed state: it owns the only real output port a cockpit
+    session ever opens. ``session.device`` deliberately stays the passive
+    adapter across an arm so there is exactly one output handle (a second
+    adapter holding its own port was the two-handles defect), which means
+    the device's own ``is_armed`` can no longer answer this question.
+
+    ``session.device.is_armed`` is still consulted so a directly-injected
+    live adapter (used by a handful of harnesses that never call ``arm``)
+    keeps reporting ``live``.
+    """
+
+    return session.armed_apply is not None or session.device.is_armed
+
+
+def _build_session_status(session: CockpitSession) -> dict[str, object]:
     """Construct the ``session_status`` event payload from the live session."""
 
+    armed = session_is_armed(session)
     return {
         "type": EVENT_SESSION_STATUS,
-        "armed": session.device.is_armed,
+        "armed": armed,
         "midi_port": _midi_port(session),
-        "mode": "live" if session.device.is_armed else "mock",
+        "mode": "live" if armed else "mock",
+        "connection_phase": _connection_phase(session),
         "unsaved_sends": session.unsaved_sends,
     }
 
 
-def _midi_port(session: CockpitSession) -> str | None:
-    """Return the device adapter's MIDI port name, or ``None`` if not exposed.
+def resolve_connection_phase(session: CockpitSession) -> str:
+    """Resolve the connection phase for ``session_status`` (and /health).
 
-    The :class:`DeviceAdapter` Protocol doesn't require a ``midi_port``
-    attribute — only the real-MIDI adapter has one. We probe with
-    :func:`getattr` so the mock adapter (no port) and the real adapter
-    (port name string) both work without an ``isinstance`` ladder.
+    An armed device adapter is authoritative: the ConnectionManager never
+    produces the ``armed`` phase itself (arming is an explicit in-UI
+    operator decision, not an enumeration side effect), so while the
+    session is armed the phase reads ``armed`` regardless of the
+    manager's passive observation. Otherwise, when a
+    :class:`~rytm_randomizer.cockpit.device.connection.ConnectionManager`
+    is registered (the ``__main__`` boot path), its latest observed phase
+    is authoritative. Unwired sessions (unit tests, embedded harnesses)
+    fall back to ``disconnected`` — honest for a mock session that has
+    no hardware link at all.
     """
 
+    if session_is_armed(session):
+        return "armed"
+    manager = active_connection_manager()
+    if manager is not None:
+        return manager.state.phase
+    return "disconnected"
+
+
+#: Backwards-compatible private alias — pre-Wave-4 callers (and tests)
+#: reached this helper as ``_connection_phase``; the public name exists so
+#: ``server.py``'s ``/health`` endpoint can share the exact same phase
+#: resolution without importing an underscore symbol.
+_connection_phase = resolve_connection_phase
+
+
+def build_connection_changed(state: ConnectionState) -> dict[str, object]:
+    """Construct the ``connection_changed`` event payload (whole state).
+
+    Public because ``__main__`` uses it to adapt the ConnectionManager's
+    ``on_change`` callback into a ``ConnectionRegistry.broadcast_event``
+    push; :func:`emit_initial_events` reuses it for the bootstrap frame.
+    """
+
+    return {"type": EVENT_CONNECTION_CHANGED, "connection": state.to_dict()}
+
+
+def _midi_port(session: CockpitSession) -> str | None:
+    """Return the armed output-port name, or ``None`` when passive.
+
+    The armed session is the authority: it owns the only real output port
+    and knows the exact name the operator confirmed. Falling back to the
+    device adapter's optional ``midi_port`` attribute keeps directly-
+    injected live adapters (harnesses that never call ``arm``) rendering a
+    port in the header strip. The :class:`DeviceAdapter` Protocol doesn't
+    require ``midi_port``, so the probe stays :func:`getattr`-based rather
+    than an ``isinstance`` ladder.
+    """
+
+    if session.armed_apply is not None:
+        return session.armed_apply.port_name
     port = getattr(session.device, "midi_port", None)
     if port is None:
         return None
     return str(port)
 
 
-def _build_snapshot_changed(snapshot: Snapshot) -> dict:
+def _build_snapshot_changed(snapshot: Snapshot) -> dict[str, object]:
     """Construct the ``snapshot_changed`` event payload."""
 
     return {"type": EVENT_SNAPSHOT_CHANGED, "snapshot": snapshot.to_dict()}
 
 
-def _build_mutation_previewed(candidate: MutationCandidate | None) -> dict:
+def _build_mutation_previewed(candidate: MutationCandidate | None) -> dict[str, object]:
     """Construct the ``mutation_previewed`` event payload (``None`` clears)."""
 
     return {
@@ -199,7 +281,7 @@ def _build_mutation_previewed(candidate: MutationCandidate | None) -> dict:
     }
 
 
-def _build_send_plan_changed(send_plan: CockpitSendPlan | None) -> dict:
+def _build_send_plan_changed(send_plan: CockpitSendPlan | None) -> dict[str, object]:
     """Construct the ``send_plan_changed`` event payload (``None`` clears)."""
 
     return {
@@ -208,13 +290,13 @@ def _build_send_plan_changed(send_plan: CockpitSendPlan | None) -> dict:
     }
 
 
-def _build_history_updated(history: History) -> dict:
+def _build_history_updated(history: History) -> dict[str, object]:
     """Construct the ``history_updated`` event payload."""
 
     return {"type": EVENT_HISTORY_UPDATED, "history": history.to_dict()}
 
 
-def _build_profile_changed(profile: Any) -> dict:
+def _build_profile_changed(profile: ProfileModel | None) -> dict[str, object]:
     """Construct the ``profile_changed`` event payload (``None`` = no active)."""
 
     return {
@@ -223,7 +305,7 @@ def _build_profile_changed(profile: Any) -> dict:
     }
 
 
-def _build_performance_console_changed() -> dict:
+def _build_performance_console_changed() -> dict[str, object]:
     """Construct the passive performance-console packet event."""
 
     from ...reports.live_gui_performance_console_model import (  # noqa: PLC0415
@@ -254,6 +336,14 @@ async def emit_initial_events(emitter: EventEmitter, session: CockpitSession) ->
     await emitter.send_event(_build_profile_changed(session.active_profile))
     await emitter.send_event(_build_history_updated(session.history_store.current))
     await emitter.send_event(_build_performance_console_changed())
+    # Wave 3: when the launch brain is wired (the ``__main__`` boot path),
+    # a freshly-connected client also receives the latest passive
+    # connection state so the header renders plug/unplug truth without
+    # waiting for the next poll diff. Unwired sessions (unit tests,
+    # embedded harnesses) keep the historical five-event bootstrap.
+    manager = active_connection_manager()
+    if manager is not None:
+        await emitter.send_event(build_connection_changed(manager.state))
 
 
 # ---------------------------------------------------------------------------
@@ -332,7 +422,7 @@ def _recompute_candidate(session: CockpitSession) -> MutationCandidate | None:
     return candidate
 
 
-def _clear_send_plan_if_needed(session: CockpitSession) -> list[dict]:
+def _clear_send_plan_if_needed(session: CockpitSession) -> list[dict[str, object]]:
     """Clear a stale plan and emit one null event when a plan existed."""
 
     if session.current_send_plan is None:
@@ -354,7 +444,7 @@ def _clear_send_plan_if_needed(session: CockpitSession) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 
-def _error_ack(code: str, message: str) -> dict:
+def _error_ack(code: str, message: str) -> dict[str, object]:
     """Build the categorical-error ack body (no ``request_id`` yet).
 
     Args:
@@ -439,7 +529,7 @@ def _exc_fingerprint(exc: BaseException) -> str | None:
 # ---------------------------------------------------------------------------
 
 
-async def _handle_select_profile(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_select_profile(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     profile_id = str(cmd["profile_id"])
     profile = session.profile_registry.get(profile_id)
     if profile is None:
@@ -453,8 +543,10 @@ async def _handle_select_profile(cmd: dict, session: CockpitSession) -> HandlerR
     return HandlerResult(ack={"ok": True}, events=events)
 
 
-async def _handle_set_depth(cmd: dict, session: CockpitSession) -> HandlerResult:
-    depth = float(cmd["depth"])
+async def _handle_set_depth(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+    # ``cast`` mirrors the historical ``float(<wire value>)`` coercion
+    # exactly: a non-numeric wire value still raises through ``float``.
+    depth = float(cast("SupportsFloat", cmd["depth"]))
     events = _clear_send_plan_if_needed(session)
     session.depth = depth
     candidate = _recompute_candidate(session)
@@ -466,8 +558,8 @@ async def _handle_set_depth(cmd: dict, session: CockpitSession) -> HandlerResult
     )
 
 
-async def _handle_set_pad_lock(cmd: dict, session: CockpitSession) -> HandlerResult:
-    pad_id = int(cmd["pad_id"])
+async def _handle_set_pad_lock(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+    pad_id = int(cast("SupportsInt", cmd["pad_id"]))
     locked = bool(cmd["locked"])
     if locked:
         session.pad_locks.add(pad_id)
@@ -476,7 +568,7 @@ async def _handle_set_pad_lock(cmd: dict, session: CockpitSession) -> HandlerRes
     return HandlerResult(ack={"ok": True}, events=_clear_send_plan_if_needed(session))
 
 
-async def _handle_toggle_preview(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_toggle_preview(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     on = bool(cmd["on"])
     events = _clear_send_plan_if_needed(session)
     session.preview_on = on
@@ -497,7 +589,7 @@ async def _handle_toggle_preview(cmd: dict, session: CockpitSession) -> HandlerR
     )
 
 
-async def _handle_regen(_cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_regen(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     # regen has no body fields
     if session.active_profile is None:
         return HandlerResult(
@@ -507,10 +599,10 @@ async def _handle_regen(_cmd: dict, session: CockpitSession) -> HandlerResult:
     # Using a fresh 32-bit sample is simpler and indistinguishable from a
     # deterministic next-value, and matches the spec wording ("REGEN bumps
     # the seed to vary the output").
-    from .session import _fresh_seed  # local import to keep module surface clean
+    from .session import fresh_seed  # local import to keep module surface clean
 
     events = _clear_send_plan_if_needed(session)
-    session.seed = _fresh_seed()
+    session.seed = fresh_seed()
     candidate = _recompute_candidate(session)
     if session.preview_on:
         events.append(_build_mutation_previewed(candidate))
@@ -520,7 +612,9 @@ async def _handle_regen(_cmd: dict, session: CockpitSession) -> HandlerResult:
     )
 
 
-async def _handle_prepare_send_plan(_cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_prepare_send_plan(
+    _cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
     if session.current_candidate is None:
         return HandlerResult(
             ack=_error_ack(ERR_VALIDATION, "no current candidate; set a profile and depth first")
@@ -544,7 +638,7 @@ async def _handle_prepare_send_plan(_cmd: dict, session: CockpitSession) -> Hand
     )
 
 
-async def _handle_send(_cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     if session.current_candidate is None:
         return HandlerResult(
             ack=_error_ack(ERR_VALIDATION, "no current candidate; set a profile and depth first")
@@ -554,6 +648,26 @@ async def _handle_send(_cmd: dict, session: CockpitSession) -> HandlerResult:
             ack=_error_ack(ERR_VALIDATION, "no ready send plan; run prepare_send_plan first")
         )
     sent_plan = session.current_send_plan
+    if session.armed_apply is not None:
+        refusal = _armed_send_over_seam(session, sent_plan, cmd)
+        if refusal is not None:
+            return refusal
+    elif session.hardware_intent:
+        # The operator armed and never explicitly disarmed, but the seam is
+        # gone — an INVOLUNTARY auto-disarm (device unplugged, provider
+        # error, transport teardown) cleared it. Falling through here would
+        # skip the per-action confirmation, write to the mock adapter, and
+        # ack ok:True with a new snapshot id while putting ZERO bytes on the
+        # wire: the operator keeps performing, believing the device is
+        # following. Refuse instead, and say why.
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION,
+                "hardware was disarmed automatically (device lost or send "
+                "failed); re-arm to send to hardware, or disarm explicitly "
+                "to continue in mock mode",
+            )
+        )
     new_snapshot = session.device.apply_send_plan(sent_plan)
     session.history_store.append_post_send(new_snapshot, via="send")
     session.unsaved_sends += 1
@@ -576,31 +690,54 @@ async def _handle_send(_cmd: dict, session: CockpitSession) -> HandlerResult:
     )
 
 
-async def _handle_save(cmd: dict, session: CockpitSession) -> HandlerResult:
-    label = cmd.get("label")
-    if label is not None:
-        label = str(label)
-    current = session.history_store.current
-    if not current.entries:
-        return HandlerResult(ack=_error_ack(ERR_VALIDATION, "no current snapshot to save"))
-    snapshot = next(
-        entry.snapshot
-        for entry in current.entries
-        if entry.snapshot.snapshot_id == current.current_id
-    )
-    session.device.commit_kit(snapshot, label)
-    session.history_store.promote_current_to_saved(label)
-    session.unsaved_sends = 0
-    return HandlerResult(
-        ack={"ok": True, "snapshot_id": current.current_id},
-        events=[
-            _build_history_updated(session.history_store.current),
-            _build_session_status(session),
-        ],
-    )
+SAVE_UNSUPPORTED_MESSAGE: Final[str] = (
+    "save is not supported: writing a kit to the device's persistent memory "
+    "requires a SysEx kit write plus a capture-before-write restore path, "
+    "neither of which exists. Nothing was written and no history entry was "
+    "promoted."
+)
+"""The single, honest refusal text for the ``save`` command.
+
+Spells out what is missing and — critically — states that **nothing
+changed**, because the previous ack said the opposite.
+"""
 
 
-async def _handle_load_snapshot(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_save(_cmd: dict[str, object], _session: CockpitSession) -> HandlerResult:
+    """Refuse ``save``: no persistent kit-write capability exists.
+
+    This handler used to ack ``{"ok": true, "snapshot_id": ...}`` and
+    promote the current history entry to ``kind="saved"`` with
+    ``unsaved_sends`` reset to zero — the full vocabulary of a durable
+    write. Underneath, the only thing it called was
+    ``session.device.commit_kit``, whose sole implementation was a mock
+    ``logger.info`` line. Nothing was ever written to a device, on the
+    mock path or any other, while ``docs/COCKPIT_QUICKSTART.md`` told
+    operators "SAVE writes a Rytm SysEx kit dump to the device's
+    persistent kit memory."
+
+    That is the worst failure shape available here: an operator who
+    believes a kit is safely stored stops treating it as volatile, and
+    loses it on the next power cycle. A refusal costs them a workflow; a
+    false success costs them their work.
+
+    So ``save`` now fails closed and says why. It is deliberately
+    unconditional — refusing only "when unimplemented" would still leave
+    the mock path acking a durable write it cannot perform. The
+    capability returns when a real SysEx kit write plus the
+    capture-before-write restore path the Live-but-Passive model requires
+    both land; until then the armed seam refuses persistent kit/sound
+    mutation for exactly the same reason (see
+    :class:`~rytm_randomizer.senders.armed_apply.KitMutationUnsupportedError`).
+
+    Emits **no** events: refusing must not perturb history, the unsaved
+    counter, or the session status. Both arguments are unused by design.
+    """
+
+    return HandlerResult(ack=_error_ack(ERR_VALIDATION, SAVE_UNSUPPORTED_MESSAGE))
+
+
+async def _handle_load_snapshot(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     snapshot_id = str(cmd["snapshot_id"])
     try:
         history = session.history_store.load(snapshot_id)
@@ -648,7 +785,7 @@ async def _handle_load_snapshot(cmd: dict, session: CockpitSession) -> HandlerRe
     )
 
 
-async def _handle_undo(_cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_undo(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     if not session.history_store.can_undo:
         return HandlerResult(ack=_error_ack(ERR_VALIDATION, "nothing to undo"))
     history = session.history_store.undo()
@@ -662,7 +799,9 @@ async def _handle_undo(_cmd: dict, session: CockpitSession) -> HandlerResult:
     )
 
 
-async def _handle_export_profile_model(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_export_profile_model(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
     profile_id = str(cmd["profile_id"])
     target = str(cmd["target"])
     if target not in ("binary", "json"):
@@ -683,49 +822,52 @@ async def _handle_export_profile_model(cmd: dict, session: CockpitSession) -> Ha
     return HandlerResult(ack={"ok": True, "model_bytes_b64": encoded})
 
 
-def _live_kit_operator_package_payload() -> dict:
+def _live_kit_operator_package_payload() -> dict[str, object]:
     """Return the current passive live-kit operator package payload."""
 
     from ...reports.live_gui_performance_console_model import (  # noqa: PLC0415
         live_gui_performance_console_model_payload,
     )
 
-    console_payload = live_gui_performance_console_model_payload()["live_gui_performance_console"]
-    return console_payload["live_kit_operator_package"]
+    console_payload = cast(
+        "Mapping[str, object]",
+        live_gui_performance_console_model_payload()["live_gui_performance_console"],
+    )
+    return cast("dict[str, object]", console_payload["live_kit_operator_package"])
+
+
+def _row_objects(rows: object) -> list[object]:
+    """Narrow one wire-supplied payload field to a list of opaque rows."""
+
+    if not isinstance(rows, list):
+        return []
+    return cast("list[object]", rows)
 
 
 def _operator_package_steps(package: Mapping[str, object]) -> list[Mapping[str, object]]:
-    rows = package.get("operator_steps", [])
-    if not isinstance(rows, list):
-        return []
-    return [cast(Mapping[str, object], row) for row in rows if isinstance(row, dict)]
+    rows = _row_objects(package.get("operator_steps", []))
+    return [cast("Mapping[str, object]", row) for row in rows if isinstance(row, dict)]
 
 
 def _operator_package_bindings(package: Mapping[str, object]) -> list[Mapping[str, object]]:
-    rows = package.get("slot_bindings", [])
-    if not isinstance(rows, list):
-        return []
-    return [cast(Mapping[str, object], row) for row in rows if isinstance(row, dict)]
+    rows = _row_objects(package.get("slot_bindings", []))
+    return [cast("Mapping[str, object]", row) for row in rows if isinstance(row, dict)]
 
 
 def _operator_package_blocked_actions(package: Mapping[str, object]) -> list[str]:
-    rows = package.get("blocked_actions", [])
-    if not isinstance(rows, list):
-        return []
+    rows = _row_objects(package.get("blocked_actions", []))
     return [row for row in rows if isinstance(row, str)]
 
 
 def _operator_package_safety_lines(package: Mapping[str, object]) -> list[str]:
-    rows = package.get("safety_lines", [])
-    if not isinstance(rows, list):
-        return []
+    rows = _row_objects(package.get("safety_lines", []))
     return [row for row in rows if isinstance(row, str)]
 
 
 def _validate_operator_package_header(
     cmd: Mapping[str, object],
     package: Mapping[str, object],
-) -> dict | None:
+) -> dict[str, object] | None:
     if cmd.get("mock_safe") is not True:
         return _error_ack(ERR_VALIDATION, "mock_safe must be true for operator package rehearsal")
     operator_package_id = str(cmd["operator_package_id"])
@@ -752,9 +894,10 @@ def _operator_package_binding_by_slot(
     package: Mapping[str, object],
     slot_key: str,
 ) -> Mapping[str, object]:
+    empty_binding: Mapping[str, object] = {}
     return next(
         (row for row in _operator_package_bindings(package) if row.get("slot_key") == slot_key),
-        {},
+        empty_binding,
     )
 
 
@@ -772,7 +915,7 @@ def _operator_package_export_key_mismatch_ack(
     step_key: str,
     expected_package_export_key: str,
     provided_package_export_key: str | None,
-) -> dict | None:
+) -> dict[str, object] | None:
     if provided_package_export_key is None:
         return None
     if provided_package_export_key == expected_package_export_key:
@@ -789,10 +932,10 @@ def _operator_package_step_rehearsal(
     step: Mapping[str, object],
     binding: Mapping[str, object],
     snapshot_id: str,
-) -> dict:
+) -> dict[str, object]:
     step_key = str(step["step_key"])
     slot_key = str(step["slot_key"])
-    depth_percent = int(binding.get("depth_percent", 0))
+    depth_percent = int(cast("SupportsInt", binding.get("depth_percent", 0)))
     package_export_key = _expected_operator_package_export_key(step=step, binding=binding)
     return {
         "rehearsal_id": f"operator-package-rehearsal:{step_key}",
@@ -819,7 +962,9 @@ def _operator_package_step_rehearsal(
     }
 
 
-def _operator_package_recovery_requirements(package: Mapping[str, object]) -> list[dict]:
+def _operator_package_recovery_requirements(
+    package: Mapping[str, object],
+) -> list[dict[str, object]]:
     return [
         dict(row)
         for row in cast(
@@ -834,7 +979,7 @@ def _operator_package_apply_preview_step(
     order: int,
     step: Mapping[str, object],
     package_export_key: str,
-) -> dict:
+) -> dict[str, object]:
     return {
         "order": order,
         "step_key": str(step["step_key"]),
@@ -854,7 +999,7 @@ def _operator_package_mock_apply_step(
     order: int,
     step: Mapping[str, object],
     package_export_key: str,
-) -> dict:
+) -> dict[str, object]:
     return {
         "order": order,
         "step_key": str(step["step_key"]),
@@ -873,7 +1018,7 @@ def _operator_package_apply_preview_readiness_checks(
     *,
     operator_package_id: str,
     step_count: int,
-) -> list[dict]:
+) -> list[dict[str, object]]:
     return [
         {"check": "mock_safe", "status": "passed", "required": True},
         {
@@ -890,7 +1035,7 @@ def _operator_package_apply_preview_readiness_checks(
     ]
 
 
-def _operator_package_apply_preview_summary(*, step_count: int) -> dict:
+def _operator_package_apply_preview_summary(*, step_count: int) -> dict[str, object]:
     return {
         "apply_policy": "preview_only",
         "would_apply_steps": step_count,
@@ -902,7 +1047,7 @@ def _operator_package_apply_preview_summary(*, step_count: int) -> dict:
     }
 
 
-def _operator_package_mock_apply_summary(*, step_count: int) -> dict:
+def _operator_package_mock_apply_summary(*, step_count: int) -> dict[str, object]:
     return {
         "apply_policy": "mock_apply_only",
         "mock_applied_steps": step_count,
@@ -915,7 +1060,7 @@ def _operator_package_mock_apply_summary(*, step_count: int) -> dict:
     }
 
 
-def _operator_package_receipt_summary(*, step_count: int) -> dict:
+def _operator_package_receipt_summary(*, step_count: int) -> dict[str, object]:
     return {
         "receipt_policy": "passive_audit_only",
         "recorded_steps": step_count,
@@ -941,18 +1086,19 @@ def _operator_package_step_keys_from_command(
     requested = cmd.get("step_keys", [])
     if not isinstance(requested, list) or not requested:
         return [str(row["step_key"]) for row in _operator_package_steps(package)]
-    return [str(step_key) for step_key in requested]
+    return [str(step_key) for step_key in cast("list[object]", requested)]
 
 
 def _operator_package_export_keys_from_command(cmd: Mapping[str, object]) -> dict[str, str]:
     provided = cmd.get("package_export_keys", {})
     if not isinstance(provided, dict):
         return {}
-    return {str(key): str(value) for key, value in provided.items()}
+    rows = cast("dict[object, object]", provided)
+    return {str(key): str(value) for key, value in rows.items()}
 
 
 async def _handle_rehearse_operator_package_step(
-    cmd: dict, _session: CockpitSession
+    cmd: dict[str, object], _session: CockpitSession
 ) -> HandlerResult:
     """Rehearse one operator package step through the WS bridge without side effects."""
 
@@ -993,7 +1139,7 @@ async def _handle_rehearse_operator_package_step(
 
 
 async def _handle_rehearse_operator_package_sequence(
-    cmd: dict, _session: CockpitSession
+    cmd: dict[str, object], _session: CockpitSession
 ) -> HandlerResult:
     """Rehearse selected operator package steps as one mock-safe sequence."""
 
@@ -1004,7 +1150,7 @@ async def _handle_rehearse_operator_package_sequence(
     requested_step_keys = _operator_package_step_keys_from_command(cmd, package)
     provided_export_keys = _operator_package_export_keys_from_command(cmd)
     snapshot_id = str(cmd["snapshot_id"])
-    step_rehearsals: list[dict] = []
+    step_rehearsals: list[dict[str, object]] = []
     for step_key in requested_step_keys:
         step = _operator_package_step_by_key(package, step_key)
         if step is None:
@@ -1047,7 +1193,7 @@ async def _handle_rehearse_operator_package_sequence(
 
 
 async def _handle_preview_operator_package_apply(
-    cmd: dict, _session: CockpitSession
+    cmd: dict[str, object], _session: CockpitSession
 ) -> HandlerResult:
     """Preview applying selected operator package steps without side effects."""
 
@@ -1058,7 +1204,7 @@ async def _handle_preview_operator_package_apply(
     requested_step_keys = _operator_package_step_keys_from_command(cmd, package)
     provided_export_keys = _operator_package_export_keys_from_command(cmd)
     snapshot_id = str(cmd["snapshot_id"])
-    apply_steps: list[dict] = []
+    apply_steps: list[dict[str, object]] = []
     for order, step_key in enumerate(requested_step_keys, start=1):
         step = _operator_package_step_by_key(package, step_key)
         if step is None:
@@ -1111,7 +1257,9 @@ async def _handle_preview_operator_package_apply(
     return HandlerResult(ack={"ok": True, "operator_package_apply_preview": preview})
 
 
-async def _handle_mock_apply_operator_package(cmd: dict, _session: CockpitSession) -> HandlerResult:
+async def _handle_mock_apply_operator_package(
+    cmd: dict[str, object], _session: CockpitSession
+) -> HandlerResult:
     """Accept selected operator package steps in mock only without side effects."""
 
     package = _live_kit_operator_package_payload()
@@ -1121,7 +1269,7 @@ async def _handle_mock_apply_operator_package(cmd: dict, _session: CockpitSessio
     requested_step_keys = _operator_package_step_keys_from_command(cmd, package)
     provided_export_keys = _operator_package_export_keys_from_command(cmd)
     snapshot_id = str(cmd["snapshot_id"])
-    mock_apply_steps: list[dict] = []
+    mock_apply_steps: list[dict[str, object]] = []
     for order, step_key in enumerate(requested_step_keys, start=1):
         step = _operator_package_step_by_key(package, step_key)
         if step is None:
@@ -1183,7 +1331,7 @@ async def _handle_mock_apply_operator_package(cmd: dict, _session: CockpitSessio
 
 
 async def _handle_build_operator_package_receipt(
-    cmd: dict, _session: CockpitSession
+    cmd: dict[str, object], _session: CockpitSession
 ) -> HandlerResult:
     """Build a deterministic passive receipt for reviewed operator package steps."""
 
@@ -1194,7 +1342,7 @@ async def _handle_build_operator_package_receipt(
     requested_step_keys = _operator_package_step_keys_from_command(cmd, package)
     provided_export_keys = _operator_package_export_keys_from_command(cmd)
     snapshot_id = str(cmd["snapshot_id"])
-    receipt_steps: list[dict] = []
+    receipt_steps: list[dict[str, object]] = []
     for order, step_key in enumerate(requested_step_keys, start=1):
         step = _operator_package_step_by_key(package, step_key)
         if step is None:
@@ -1265,7 +1413,559 @@ async def _handle_build_operator_package_receipt(
     return HandlerResult(ack={"ok": True, "operator_package_receipt": receipt})
 
 
-HandlerFn = Callable[[dict, CockpitSession], Awaitable[HandlerResult]]
+# ---------------------------------------------------------------------------
+# Wave-4 arm / disarm — the in-UI half of the Live-but-Passive model.
+#
+# The ``arm`` command is the ONLY path that ever opens a real output port,
+# and it does so exclusively through the ``senders`` ArmedApply seam:
+# confirm + a token checked against the SERVER-minted per-launch ARM
+# secret (``CockpitSession.arm_secret``), exact-name output resolution
+# (fail-closed), refusal of any port that cannot be closed, and
+# auto-disarm on provider error. The mock adapter stays the default;
+# unwired sessions never see any of this surface.
+#
+# The arm secret is a real authentication factor: it is minted by
+# ``__main__`` and written 0600, so a caller must be able to read the
+# operator's own files to arm. An earlier revision accepted any non-empty
+# client string and then derived the "expected" token from that same
+# string — ``compare_digest(x, x)`` — which authenticated nothing.
+# ---------------------------------------------------------------------------
+
+_ARM_FAILED_FINGERPRINT: Final[str] = "cockpit.arm.failed"
+"""Journal fingerprint for a refused/failed explicit arm attempt."""
+
+_ARM_DEVICE_LOST_FINGERPRINT: Final[str] = "cockpit.arm.device_lost"
+"""Journal fingerprint for the watchdog's device-gone auto-disarm."""
+
+
+_ARM_SEND_REFUSED_FINGERPRINT: Final[str] = "cockpit.arm.send_refused"
+"""Journal fingerprint for an armed SEND the seam refused."""
+
+_ARMED_SEND_DEVICE_ID: Final[str] = "analog_rytm_mk2"
+"""Registered device the cockpit's armed send reports against.
+
+The cockpit is Rytm-only today. The device is passed to the seam purely
+for its ``device_id`` (result attribution) and readiness vocabulary — the
+wire triples come from the plan's own preflight-resolved packets via
+:func:`_send_plan_triples`, never from a device strategy.
+"""
+
+
+def _send_plan_triples(plan: object) -> list[tuple[int, int, int]]:
+    """Project a prepared :class:`CockpitSendPlan` into wire triples.
+
+    The seam's :data:`~rytm_randomizer.senders.armed_apply.PlanRenderer`
+    for the cockpit. Preflight already resolved every packet's
+    ``(channel, control, value)``; this projection transmits exactly those
+    and recomputes nothing at the hardware boundary (the SEND contract in
+    :meth:`~rytm_randomizer.cockpit.device.adapter.DeviceAdapter.apply_send_plan`).
+    """
+
+    if not isinstance(plan, CockpitSendPlan):  # pragma: no cover - defensive
+        raise TypeError("armed cockpit send requires a CockpitSendPlan")
+    return [(packet.channel, packet.control, packet.value) for packet in plan.packets]
+
+
+def _armed_send_over_seam(
+    session: CockpitSession,
+    plan: CockpitSendPlan,
+    cmd: Mapping[str, object],
+) -> HandlerResult | None:
+    """Transmit ``plan`` through the ArmedApply seam; ``None`` when sent.
+
+    This is the **only** way a cockpit SEND reaches hardware. Returning a
+    :class:`HandlerResult` means the seam refused and the caller must not
+    proceed; returning ``None`` means the bytes went out and the caller
+    should update snapshot/history state as usual.
+
+    The command must carry its own ``confirm: true``: "armed" is a session
+    state, but every individual write is a separate operator decision, so
+    the per-action confirmation is minted here and consumed by
+    :meth:`~rytm_randomizer.senders.armed_apply.ArmedApplySession.apply`.
+
+    ``mutates_kit=False`` is passed deliberately and is load-bearing: a
+    cockpit SEND is a live-dial CC burst into the device's working RAM,
+    reversible by reloading the kit from the device's own memory. It is
+    **not** a persistent kit/sound write — those are refused outright by
+    the seam (:class:`~rytm_randomizer.senders.armed_apply.KitMutationUnsupportedError`)
+    because no capture-before-write or restore path exists. ``save`` /
+    ``commit_kit`` remains the un-implemented persistent path.
+    """
+
+    from ...senders.armed_apply import ArmedApplyError  # noqa: PLC0415
+
+    armed = session.armed_apply
+    if armed is None:  # pragma: no cover - guarded by the caller
+        return None
+    if cmd.get("confirm") is not True:
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION,
+                "armed send requires confirm: true (per-action operator confirmation)",
+            )
+        )
+
+    device = get_device(_ARMED_SEND_DEVICE_ID)
+    try:
+        armed.confirm(plan.plan_id)
+        result = armed.apply(
+            device,
+            plan,
+            action_id=plan.plan_id,
+            mutates_kit=False,
+            renderer=_send_plan_triples,
+        )
+    except ArmedApplyError as exc:
+        # A provider error already auto-disarmed the seam; drop the rest of
+        # the armed state so the session is honestly passive again.
+        if not armed.is_armed:
+            _teardown_armed_state(session)
+        _logger.warning(
+            "armed_send_refused",
+            extra={
+                "exception_type": type(exc).__name__,
+                "exception_repr": repr(exc),
+                "fingerprint": _ARM_SEND_REFUSED_FINGERPRINT,
+            },
+        )
+        session.error_journal.record(
+            _ARM_SEND_REFUSED_FINGERPRINT,
+            "armed send refused at the guarded seam",
+            context={"plan_id": plan.plan_id},
+        )
+        get_metrics().record_error(_ARM_SEND_REFUSED_FINGERPRINT)
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, "armed send refused at the guarded seam"),
+            events=[_build_session_status(session)],
+        )
+    if not result.ok:
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, "armed send refused: plan not ready"))
+    return None
+
+
+def _teardown_armed_state(session: CockpitSession) -> None:
+    """Return the session to the passive baseline (idempotent).
+
+    Disarms the ArmedApply seam, which closes the one armed output port.
+    The device adapter is never swapped on arm any more (the seam owns
+    the only output handle), so there is nothing to restore here. Never
+    re-arms.
+
+    This is the single teardown entry point every exit path funnels
+    through: the ``disarm`` handler, the armed watchdog's device-gone
+    auto-disarm, a WebSocket disconnect, and app shutdown
+    (:func:`disarm_session_on_teardown`). Idempotent, so overlapping
+    teardowns close the port exactly once.
+    """
+
+    armed = session.armed_apply
+    session.armed_apply = None
+    if armed is not None:
+        armed.disarm()
+
+
+def disarm_session_on_teardown(session: CockpitSession) -> None:
+    """Public teardown hook: drop a session to passive and close its port.
+
+    Wired by the transport and the sidecar entrypoint so an armed session
+    can never outlive the thing that armed it:
+
+    * :func:`~rytm_randomizer.cockpit.ws.server.create_app`'s ``/ws``
+      endpoint calls it in its ``finally`` — the WS disconnect that used
+      to only unregister the queue and cancel the writer now also
+      releases the hardware handle. Closing the browser tab with the
+      session armed left the port open indefinitely.
+    * ``__main__`` registers it as a FastAPI ``shutdown`` handler, so
+      Ctrl+C / SIGTERM against uvicorn tears the port down as well.
+
+    Idempotent and exception-free by construction: it delegates to
+    :func:`_teardown_armed_state`, whose ``disarm`` swallows a dying
+    port's close error. A teardown path must never raise.
+    """
+
+    _teardown_armed_state(session)
+
+
+def build_armed_watchdog(
+    session: CockpitSession,
+    broadcaster: Callable[[dict[str, object]], object] | None = None,
+) -> Callable[[ConnectionState], None]:
+    """Build the ConnectionManager notify hook that auto-disarms on loss.
+
+    Wired by ``__main__`` via
+    :meth:`~rytm_randomizer.cockpit.device.connection.ConnectionManager.add_notify_hook`.
+    When a passive poll observes the device gone while the session is
+    armed (phase dropped out of ``listening``, or the armed output port
+    vanished from the enumeration), the hook tears the armed state down,
+    records a journal entry, and broadcasts a fresh ``session_status``
+    fault signal. Reconnecting NEVER re-arms — the operator must run the
+    explicit arm sequence again.
+    """
+
+    def _on_connection_change(state: ConnectionState) -> None:
+        if session.armed_apply is None and not session.device.is_armed:
+            return
+        armed_port = None
+        if session.armed_apply is not None:
+            armed_port = session.armed_apply.port_name
+        if armed_port is None:
+            armed_port = _midi_port(session)
+        phase_lost = state.phase not in ("listening", "armed")
+        port_lost = armed_port is not None and armed_port not in state.available_outputs
+        if not phase_lost and not port_lost:
+            return
+        _teardown_armed_state(session)
+        session.error_journal.record(
+            _ARM_DEVICE_LOST_FINGERPRINT,
+            "device disappeared while armed; auto-disarmed",
+            context={
+                "phase": state.phase,
+                "port": "" if armed_port is None else armed_port,
+            },
+        )
+        get_metrics().record_error(_ARM_DEVICE_LOST_FINGERPRINT)
+        if broadcaster is not None:
+            broadcaster(_build_session_status(session))
+
+    return _on_connection_change
+
+
+_ARM_PORT_REQUIRED: Final[str] = (
+    "arm requires an explicit port_name naming one enumerated MIDI output"
+)
+"""The single refusal text for every unusable ``port_name`` on ``arm``.
+
+Deliberately uniform: which of the four rejection reasons fired (missing,
+empty, unknown, ambiguous) is a detail the wire must not leak, and the
+operator's remedy is identical in all four cases — pick a port from the
+selector.
+"""
+
+
+def _resolve_arm_port_name(cmd: Mapping[str, object]) -> str | None:
+    """Resolve the exact output port an ``arm`` command targets, or ``None``.
+
+    **Fail closed, and never guess.** The operator must name the exact
+    instrument. With a Rytm and an Analog Four both plugged in, a
+    convenience auto-pick ("first Elektron-looking output") can arm the
+    wrong machine — so the ConnectionManager's ``selected_output`` is
+    deliberately *not* consulted here. That auto-pick still drives the
+    passive "listening" display, where guessing wrong is harmless.
+
+    ``None`` (the command must fail) whenever ``port_name`` is missing,
+    not a string, empty, absent from the live enumeration, or matches more
+    than one enumerated output.
+
+    When no ConnectionManager is registered (unit tests, embedded
+    harnesses) there is no enumeration to check against, so a well-formed
+    name is taken at face value; the seam's own
+    :class:`~rytm_randomizer.senders.hardware.ExactOutputOpener` still
+    fails closed against the provider a moment later.
+    """
+
+    raw = cmd.get("port_name")
+    if not isinstance(raw, str) or not raw:
+        return None
+    manager = active_connection_manager()
+    if manager is None:
+        return raw
+    matches = [name for name in manager.state.available_outputs if name == raw]
+    if len(matches) != 1:
+        return None
+    return raw
+
+
+_ARM_UNAVAILABLE_MESSAGE: Final[str] = (  # noqa: S105 — refusal text, not a credential
+    "arm is unavailable: no ARM secret is configured for this launch"
+)
+"""Refusal text when the session has no server-minted ARM secret.
+
+Fail closed: without a secret there is nothing to authenticate the
+client's ``arm_token`` against, so arming is simply not offered.
+"""
+
+_ARM_REJECTED_MESSAGE: Final[str] = (  # noqa: S105 — refusal text, not a credential
+    "arm refused: invalid arm_token"
+)
+"""Refusal text for a client token that does not match the ARM secret.
+
+Deliberately identical for "empty", "wrong type", and "wrong value" — the
+wire must not tell a caller which part of its guess was closer.
+"""
+
+
+def _arm_token_authorised(session: CockpitSession, supplied: object) -> bool:
+    """Validate the client's ``arm_token`` against the server's ARM secret.
+
+    The whole point of the check: the expected value comes from
+    :attr:`CockpitSession.arm_secret` — server-minted at launch and
+    written 0600 — **never** from the command. The previous
+    implementation built the expected token from the client's own
+    submission and then ran ``compare_digest(x, x)``, which is a
+    tautology: any non-empty string armed the device. Nothing was
+    authenticated.
+
+    Fails closed on a missing secret (nothing to compare against) and on
+    any non-string / empty submission, and uses
+    :func:`hmac.compare_digest` so response timing does not leak a
+    prefix of the secret.
+    """
+
+    secret = session.arm_secret
+    if not isinstance(secret, str) or not secret:
+        return False
+    if not isinstance(supplied, str) or not supplied:
+        return False
+    return hmac.compare_digest(supplied, secret)
+
+
+async def _handle_arm(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+    """Explicit in-UI arm: server-secret auth + confirm, then the ArmedApply seam."""
+
+    if cmd.get("confirm") is not True:
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, "arm requires confirm: true (explicit in-UI arm)")
+        )
+    token = cmd.get("arm_token")
+    if not isinstance(token, str) or not token:
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, "arm requires a non-empty arm_token"))
+    if session.arm_secret is None:
+        # No secret provisioned for this launch -> the transmit capability
+        # is not offered at all. Distinguished from a mismatch because the
+        # operator's remedy differs (configure the sidecar vs. re-read the
+        # secret file), and it leaks nothing about any secret's value.
+        _logger.warning(
+            "arm_refused_no_secret",
+            extra={"fingerprint": _ARM_FAILED_FINGERPRINT},
+        )
+        session.error_journal.record(
+            _ARM_FAILED_FINGERPRINT,
+            "arm refused: no ARM secret configured for this launch",
+        )
+        get_metrics().record_error(_ARM_FAILED_FINGERPRINT)
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, _ARM_UNAVAILABLE_MESSAGE))
+    if not _arm_token_authorised(session, token):
+        _logger.warning(
+            "arm_token_mismatch",
+            extra={"fingerprint": _ARM_FAILED_FINGERPRINT},
+        )
+        session.error_journal.record(
+            _ARM_FAILED_FINGERPRINT,
+            "arm refused: arm_token did not match the launch ARM secret",
+        )
+        get_metrics().record_error(_ARM_FAILED_FINGERPRINT)
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, _ARM_REJECTED_MESSAGE))
+    if session_is_armed(session):
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, "session is already armed; disarm first")
+        )
+    port_name = _resolve_arm_port_name(cmd)
+    if not port_name:
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, _ARM_PORT_REQUIRED))
+    provider = session.arm_port_provider
+    if provider is None:
+        if importlib.util.find_spec("mido") is None:
+            return HandlerResult(
+                ack=_error_ack(ERR_VALIDATION, "mido is not installed; cannot arm")
+            )
+        # Lazy import keeps the real-MIDI boundary module out of every
+        # session that never arms (mock stays the default).
+        from ...mido_provider import build_mido_midi_port_provider  # noqa: PLC0415
+
+        provider = build_mido_midi_port_provider()
+
+    # Local imports keep the armed seam off the passive import path.
+    from ...senders.armed_apply import ArmedApplyError, ArmedApplySession  # noqa: PLC0415
+    from ...senders.hardware import ExactOutputOpener  # noqa: PLC0415
+
+    # The seam is constructed with the SERVER's secret, never with the
+    # client-supplied value. ``token`` has already been proven equal to it
+    # above; passing the secret makes that explicit and keeps the seam's
+    # own token check a genuine second comparison against server state
+    # rather than a restatement of the client's input.
+    armed_apply = ArmedApplySession(
+        opener=ExactOutputOpener(provider),
+        port_name=port_name,
+        arm_token=session.arm_secret,
+    )
+    try:
+        armed_apply.arm(token)
+    except ArmedApplyError as exc:
+        # RR4f: the categorical wire message stays canonical; the full
+        # detail goes to the structured log + the error journal.
+        _logger.warning(
+            "arm_failed",
+            extra={
+                "port_name": port_name,
+                "exception_type": type(exc).__name__,
+                "exception_repr": repr(exc),
+                "fingerprint": _ARM_FAILED_FINGERPRINT,
+            },
+        )
+        session.error_journal.record(
+            _ARM_FAILED_FINGERPRINT,
+            "arm refused: output port could not be resolved or opened",
+            context={"port": port_name},
+        )
+        get_metrics().record_error(_ARM_FAILED_FINGERPRINT)
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION, "arm failed: output port could not be resolved or opened"
+            )
+        )
+    # The device adapter is deliberately NOT swapped for a real-MIDI one.
+    # ``armed_apply`` now owns the session's single output port; installing
+    # a second adapter here would open a second handle whose sends bypass
+    # every gate above (the defect this arm path exists to prevent). The
+    # passive adapter keeps modelling snapshot/history state; the seam does
+    # the transmitting.
+    session.armed_apply = armed_apply
+    # Records the operator's INTENT to be live. Survives an involuntary
+    # auto-disarm so a later SEND is refused rather than silently
+    # downgraded to a mock write (see CockpitSession.hardware_intent).
+    session.hardware_intent = True
+    return HandlerResult(
+        ack={"ok": True, "armed": True, "midi_port": port_name},
+        events=[_build_session_status(session)],
+    )
+
+
+async def _handle_disarm(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+    """Explicit disarm: tear the armed seam down, restore the passive device."""
+
+    if session.armed_apply is None and not session.device.is_armed:
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, "session is not armed"))
+    _teardown_armed_state(session)
+    # EXPLICIT disarm is the only thing that clears hardware intent: the
+    # operator has chosen to go passive, so a subsequent mock SEND is what
+    # they asked for. Involuntary auto-disarms deliberately leave the flag
+    # set so SEND refuses instead of silently writing to the mock.
+    session.hardware_intent = False
+    return HandlerResult(
+        ack={"ok": True, "armed": False},
+        events=[_build_session_status(session)],
+    )
+
+
+async def _handle_diagnostics(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+    """Read-only health packet: journal + metrics + connection + hints."""
+
+    manager = active_connection_manager()
+    connection_state = None if manager is None else manager.state.to_dict()
+    payload = build_diagnostics_payload(
+        journal=session.error_journal,
+        connection_state=connection_state,
+    )
+    payload["connection_phase"] = _connection_phase(session)
+    return HandlerResult(ack={"ok": True, "diagnostics": payload})
+
+
+# ---------------------------------------------------------------------------
+# Wave-4 library commands — injected store, whole-state change events.
+# ---------------------------------------------------------------------------
+
+
+def _library_store_or_none(session: CockpitSession) -> LibraryStore | None:
+    """The session's injected library store (``None`` for unwired sessions)."""
+
+    return session.library_store
+
+
+def _library_unconfigured_ack() -> HandlerResult:
+    """The uniform refusal for library commands on an unwired session."""
+
+    return HandlerResult(
+        ack=_error_ack(ERR_VALIDATION, "library store is not configured for this session")
+    )
+
+
+def _build_library_changed(store: LibraryStore) -> dict[str, object]:
+    """Construct the whole-state ``library_changed`` event payload."""
+
+    return {
+        "type": EVENT_LIBRARY_CHANGED,
+        "library": {"records": [record.to_dict() for record in store.list_records()]},
+    }
+
+
+async def _handle_library_list(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+    store = _library_store_or_none(session)
+    if store is None:
+        return _library_unconfigured_ack()
+    records = [record.to_dict() for record in store.list_records()]
+    return HandlerResult(ack={"ok": True, "library_records": records})
+
+
+async def _handle_library_search(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+    store = _library_store_or_none(session)
+    if store is None:
+        return _library_unconfigured_ack()
+    query = str(cmd.get("query", ""))
+    records = [record.to_dict() for record in store.search(query)]
+    return HandlerResult(ack={"ok": True, "library_records": records})
+
+
+async def _handle_library_tag(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+    store = _library_store_or_none(session)
+    if store is None:
+        return _library_unconfigured_ack()
+    record_id = str(cmd["record_id"])
+    tags = cmd.get("tags", [])
+    if not isinstance(tags, list):
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, "tags must be a list of strings"))
+    try:
+        record = store.tag(record_id, [str(tag) for tag in cast("list[object]", tags)])
+    except ValueError:
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, f"unknown library record_id: {record_id!r}")
+        )
+    return HandlerResult(
+        ack={"ok": True, "library_record": record.to_dict()},
+        events=[_build_library_changed(store)],
+    )
+
+
+async def _handle_library_delete(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+    store = _library_store_or_none(session)
+    if store is None:
+        return _library_unconfigured_ack()
+    record_id = str(cmd["record_id"])
+    try:
+        deleted = store.delete(record_id)
+    except ValueError:
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, f"unknown library record_id: {record_id!r}")
+        )
+    if not deleted:
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, f"unknown library record_id: {record_id!r}")
+        )
+    return HandlerResult(
+        ack={"ok": True, "library_record_id": record_id},
+        events=[_build_library_changed(store)],
+    )
+
+
+async def _handle_library_import_captures(
+    _cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    store = _library_store_or_none(session)
+    if store is None:
+        return _library_unconfigured_ack()
+    try:
+        result = store.import_captures()
+    except ValueError:
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, "library captures directory is not available")
+        )
+    events = [_build_library_changed(store)] if result.imported else []
+    return HandlerResult(
+        ack={"ok": True, "library_import": result.to_dict()},
+        events=events,
+    )
+
+
+HandlerFn = Callable[[dict[str, object], CockpitSession], Awaitable[HandlerResult]]
 
 _CORE_HANDLERS: dict[str, HandlerFn] = {
     COMMAND_SELECT_PROFILE: _handle_select_profile,
@@ -1284,6 +1984,14 @@ _CORE_HANDLERS: dict[str, HandlerFn] = {
     COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY: _handle_preview_operator_package_apply,
     COMMAND_MOCK_APPLY_OPERATOR_PACKAGE: _handle_mock_apply_operator_package,
     COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT: _handle_build_operator_package_receipt,
+    COMMAND_ARM: _handle_arm,
+    COMMAND_DISARM: _handle_disarm,
+    COMMAND_DIAGNOSTICS: _handle_diagnostics,
+    COMMAND_LIBRARY_LIST: _handle_library_list,
+    COMMAND_LIBRARY_SEARCH: _handle_library_search,
+    COMMAND_LIBRARY_TAG: _handle_library_tag,
+    COMMAND_LIBRARY_DELETE: _handle_library_delete,
+    COMMAND_LIBRARY_IMPORT_CAPTURES: _handle_library_import_captures,
 }
 
 #: Backwards-compatibility alias for the legacy ``_HANDLERS`` symbol some
@@ -1314,13 +2022,15 @@ def _resolve_handler(cmd_type: str) -> HandlerFn | None:
     if cmd_type.startswith("wizard_"):
         # Lazy import keeps the wizard dispatcher table out of the import
         # graph of cockpit boot paths that never touch the wizard.
+        # ``WIZARD_HANDLERS`` is now declared ``Mapping[str, WizardHandlerFn]``
+        # — structurally identical to ``HandlerFn`` — so no cast is needed.
         from .wizard_handlers import WIZARD_HANDLERS  # noqa: PLC0415
 
         return WIZARD_HANDLERS.get(cmd_type)
     return None
 
 
-async def handle_command(envelope: dict, session: CockpitSession) -> dict:
+async def handle_command(envelope: dict[str, object], session: CockpitSession) -> dict[str, object]:
     """Dispatch a command envelope; queue events on the session for post-ack drain.
 
     The envelope shape is ``{request_id, command: {type, ...}}``. The
@@ -1374,7 +2084,10 @@ async def handle_command(envelope: dict, session: CockpitSession) -> dict:
     _metrics = get_metrics()
     _t0 = time.perf_counter()
     try:
-        cmd = envelope["command"]
+        # ``cast`` mirrors the historical duck-typed access exactly: a
+        # non-dict ``command`` still raises ``TypeError`` on the ``["type"]``
+        # subscript, which the handler-exception path classifies below.
+        cmd = cast("dict[str, object]", envelope["command"])
         cmd_type = cmd["type"]
     except KeyError as exc:
         missing_key = exc.args[0] if exc.args else "<unknown>"
@@ -1452,6 +2165,21 @@ async def handle_command(envelope: dict, session: CockpitSession) -> dict:
             # stays at floor 0 for this file -- ``repr`` still carries the
             # exception type + args for forensic purposes.
             code, message = _classify_handler_exception(exc)
+            # Wave 4: taxonomy errors also land in the session's bounded
+            # error journal so the ``diagnostics`` command can replay the
+            # last 50 categorized failures without log access. The
+            # fingerprint is the wire-safe taxonomy string (OBS O4);
+            # stdlib exceptions have none and are journalled by the
+            # structured log only.
+            fingerprint = _exc_fingerprint(exc)
+            if fingerprint is not None:
+                # ``_label`` equals ``cmd_type`` on every path that reaches
+                # a handler (a non-string type never resolves a handler).
+                session.error_journal.record(
+                    fingerprint,
+                    message,
+                    context={"cmd_type": _label, "code": code},
+                )
             _logger.warning(
                 "handler_exception",
                 extra={
@@ -1486,10 +2214,12 @@ async def handle_command(envelope: dict, session: CockpitSession) -> dict:
         # (ack.ok is False) we still treat it as an error bucket — handlers
         # producing ``{ok: False, code: ...}`` directly (rather than raising)
         # are the same kind of failure from a RED perspective.
-        ack_error = (
-            result.ack.get("code")
-            if isinstance(result.ack, dict) and not result.ack.get("ok", True)
-            else None
+        # ``HandlerResult.ack`` is always a dict by type; the ``code`` field
+        # only ever carries :data:`WS_ERROR_CODES` strings (``_error_ack``
+        # enforces it), so the cast re-states the runtime contract.
+        ack_error = cast(
+            "str | None",
+            result.ack.get("code") if not result.ack.get("ok", True) else None,
         )
         _metrics.record_ws_command(
             _label,
@@ -1523,7 +2253,10 @@ __all__ = [
     "EventEmitter",
     "HandlerResult",
     "WS_ERROR_CODES",
+    "build_armed_watchdog",
+    "build_connection_changed",
     "drain_pending_events",
     "emit_initial_events",
     "handle_command",
+    "resolve_connection_phase",
 ]

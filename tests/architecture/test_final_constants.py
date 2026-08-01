@@ -403,7 +403,6 @@ _GRANDFATHERED_BARE_CONSTANTS: Final[frozenset[str]] = frozenset(
         "rytm_randomizer/cockpit/__main__.py:_DEFAULT_HOST",
         "rytm_randomizer/cockpit/__main__.py:_DEFAULT_PORT",
         "rytm_randomizer/cockpit/__main__.py:_PORT_ENV_VAR",
-        "rytm_randomizer/cockpit/device/real.py:_DEFAULT_MIDI_CHANNEL",
         "rytm_randomizer/commands.py:CURRENT_PROFILE_PAGE_MUTATION_COMMANDS",
         "rytm_randomizer/commands.py:FORBIDDEN_ACTIONS",
         "rytm_randomizer/commands.py:GROUP_COMMANDS",

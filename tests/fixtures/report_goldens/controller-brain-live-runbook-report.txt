@@ -1,0 +1,246 @@
+RytmRandomizer passive controller brain live runbook
+Controller brain live runbook:
+- version: controller-brain-live-runbook-v1
+- status: passive-ready
+- session: Live Session
+- source reports: controller-brain-rehearsal-report, oxi-live-set-strategy-report, live-gui-performance-console-report
+Controller profile: generic-16-encoder-performance
+- profile label: Generic 16-Encoder Performance Brain
+- controller family: generic-16-encoder
+- controller layout: 4x4 encoders with paged intent mappings
+- template rows: 112
+- controller pages: 7
+- virtual gestures: 9
+- live chapters: 7
+- console status: mock-safe
+- console hardware mode: passive
+Runbook steps:
+- runbook step: global.preview_depth -> adjust passive preview depth
+  controller: global-brain:01 / turn clockwise / delta +12
+  inspect: review staged intent before any send decision
+  fire: blocked until approved controller bridge
+  recover: recover_anchor
+  target: style_queue / global
+- runbook step: macro.industrial -> stage Rytm macro industrial
+  controller: global-brain:07 / press / delta +0
+  inspect: review staged intent before any send decision
+  fire: blocked until approved controller bridge
+  recover: recover_anchor
+  target: analog_rytm_mk2 / macro_industrial
+- runbook step: rytm.pad5.source_amount -> stage Pad 5 SRC movement
+  controller: rytm-pads-5-8:01 / turn clockwise / delta +9
+  inspect: review staged intent before any send decision
+  fire: blocked until approved controller bridge
+  recover: recover_anchor
+  target: analog_rytm_mk2 / rytm_pad_5
+- runbook step: rytm.pad6.source_amount -> stage Pad 6 SRC movement
+  controller: rytm-pads-5-8:05 / turn clockwise / delta +14
+  inspect: review staged intent before any send decision
+  fire: blocked until approved controller bridge
+  recover: recover_anchor
+  target: analog_rytm_mk2 / rytm_pad_6
+- runbook step: rytm.pad12.source_amount -> confirm optional Pad 12 SRC mapping
+  controller: rytm-pads-9-12:13 / turn counterclockwise / delta -7
+  inspect: review staged intent before any send decision
+  fire: blocked until approved controller bridge
+  recover: recover_anchor
+  target: analog_rytm_mk2 / rytm_pad_12
+- runbook step: a4.track1.macro_depth -> review A4 macro runway
+  controller: analog-four-tracks:01 / turn clockwise / delta +10
+  inspect: review staged intent before any send decision
+  fire: blocked until approved controller bridge
+  recover: recover_anchor
+  target: analog_four_mk2 / a4_track_1
+- runbook step: crate.dark_hypnotic -> select Dark Hypnotic crate
+  controller: style-crates-queue:02 / press / delta +0
+  inspect: review staged intent before any send decision
+  fire: blocked until approved controller bridge
+  recover: recover_anchor
+  target: style_queue / crate_dark_hypnotic
+- runbook step: queue.next_1 -> stage upcoming queue move
+  controller: style-crates-queue:10 / press / delta +0
+  inspect: review staged intent before any send decision
+  fire: blocked until approved controller bridge
+  recover: recover_anchor
+  target: style_queue / queue
+- runbook step: snapshot.panic_home -> recover captured anchor
+  controller: snapshot-recovery-journal:16 / press and hold / delta +0
+  inspect: review staged intent before any send decision
+  fire: blocked until approved controller bridge
+  recover: captured_anchor
+  target: snapshot_recovery / anchor
+Readiness gates:
+- controller-template: ready / ready=True
+  evidence: 112 template rows across 7 pages; 9 virtual gestures resolved
+  blocked: none
+  safety: template rows are passive metadata only
+- controller-input: blocked / ready=False
+  evidence: no raw controller input bridge is active
+  blocked: open MIDI controller input
+  safety: future controller input needs an explicit approved design
+- raw-cc-capture: blocked / ready=False
+  evidence: controller mapping stores intent keys, not raw CC/channel numbers
+  blocked: MIDI learn or raw CC capture
+  safety: do not learn controller messages in this passive report
+- websocket-dispatch: blocked / ready=False
+  evidence: runbook does not dispatch Cockpit commands
+  blocked: dispatch Cockpit WebSocket commands
+  safety: future WS dispatch must keep ack/event safety gates
+- midi-output: blocked / ready=False
+  evidence: no MIDI output path is opened by this CLI command
+  blocked: open MIDI output
+  safety: passive CLI must never open real MIDI ports
+- hardware-send: blocked / ready=False
+  evidence: hardware send remains confined to explicit --arm app paths
+  blocked: send hardware MIDI
+  safety: operator must use an approved armed path for real sends
+- snapshot-mutation: blocked / ready=False
+  evidence: Cockpit console status is mock-safe; this packet mutates nothing
+  blocked: mutate a snapshot
+  safety: runbook explains intent only
+Blocked active actions:
+- open MIDI controller input
+- MIDI learn or raw CC capture
+- dispatch Cockpit WebSocket commands
+- open MIDI output
+- arm hardware
+- send hardware MIDI
+- mutate a snapshot
+- dispatch controller gesture to active runtime
+- send controller feedback
+- open Analog Rytm output
+- open Analog Four output
+- a4_outbound_macro_send
+- unattended_hardware_behavior
+- open_midi_port_without_arm
+- send_without_dry_run
+- fire macro from Cockpit console
+- prepare hardware send from Cockpit macro action
+- dispatch Rytm lane policy from Cockpit console
+- send Rytm lane policy from Cockpit console
+- fire rehearsal cue from Cockpit console
+- open MIDI port from rehearsal board
+- send MIDI from rehearsal board
+- promote A4 macro from rehearsal board
+- receive kit from Cockpit console
+- mutate captured kit from Cockpit console
+- send captured plan from Cockpit console
+- open Rytm SysEx input from passive Cockpit report
+- receive kit from Cockpit workbench
+- stage captured-kit mutation from Cockpit workbench
+- apply captured-kit package from Cockpit console
+- export captured-kit package from passive Cockpit report
+- send captured plan from Cockpit workbench
+- generate captured-kit package from Cockpit console
+- apply audition package from passive Cockpit console
+- send audition variation from Cockpit console
+- write audition package file from passive report
+- open MIDI port from package audition
+- generate operator package from Cockpit console
+- send operator package from Cockpit console
+- write operator package file from passive report
+- commit operator journal from passive report
+- open MIDI port from operator package
+- trigger A4 macro from Cockpit console
+- open A4 output port from Cockpit console
+- A4 full macro SEND
+- A4 unattended macro playback
+- fire queued style move
+- dispatch crate move
+- replay journal entry
+- persist journal entry
+- open MIDI port
+- send MIDI
+- mutate hardware
+- launch GUI
+- arm-hardware
+- open-midi-port
+- send-midi
+- record-audio
+- render-gui
+- open MIDI port from snapshot history
+- send MIDI from snapshot history
+- arm hardware from snapshot history
+- mutate hardware from snapshot history
+- launch GUI from snapshot history
+- dispatch queued command from model
+- run undo from model
+- load snapshot from model
+- open MIDI port from model
+- send MIDI from model
+- mutate hardware from model
+- launch GUI from model
+- arm hardware from safety checklist
+- open MIDI port from safety checklist
+- send MIDI from safety checklist
+- mutate hardware from safety checklist
+- launch GUI from safety checklist
+- open_midi_port
+- arm_hardware
+- send_midi
+- write_sysex
+- mutate_hardware
+Replay commands:
+- python -m rytm_randomizer.cli controller-brain-live-runbook-report
+- python -m rytm_randomizer.cli controller-brain-live-runbook-report --json
+- python -m rytm_randomizer.cli controller-brain-rehearsal-report --json
+- python -m rytm_randomizer.cli oxi-live-set-strategy-report --json
+- python -m rytm_randomizer.cli live-gui-performance-console-report --json
+Safety:
+- passive/read-only
+- controller-brain live runbook metadata only
+- composes existing passive reports only
+- JSON/stdout only
+- no MIDI controller input
+- no MIDI learn or raw CC capture
+- no WebSocket command dispatch
+- no MIDI sending
+- no port opening
+- no command execution
+- no hardware mutation
+- no hardware required
+- controller-template rows only
+- virtual encoder gestures only
+- Cockpit performance console packet only
+- composes passive report metadata only
+- no GUI launch
+- no file writing
+- GUI performance flow metadata only
+- Rytm OXI macro command labels only
+- Analog Four review-only actions stay candidate metadata.
+- no real MIDI rendering
+- macro action cards are declarative only
+- operators still use the armed snapshot shell for real sends
+- all Cockpit macro fire controls stay disabled
+- Rytm lane policy matrix is declarative only
+- Cockpit shows macro policy before the armed snapshot shell applies anything
+- rehearsal board is declarative only
+- launch command is shown for operator copy/review only
+- real Rytm sends remain in the explicitly armed snapshot shell
+- A4 outbound macro promotion remains blocked
+- live kit capture panel is declarative only
+- no SysEx receive from passive Cockpit report
+- operators still run the armed snapshot shell manually
+- captured-anchor recovery remains explicit
+- live kit capture workbench is declarative only
+- capture slots are review metadata only
+- no package apply from passive Cockpit report
+- live kit package audition is declarative only
+- audition slots are rehearsal metadata only
+- journal preview does not write files
+- live kit operator package is declarative only
+- operator steps are browser-local rehearsal metadata
+- local export preview does not write files
+- journal commit remains preview-only
+- A4 review surface is declarative only
+- A4 validation commands are shown for operator review only
+- A4 OXI macro set planning only
+- manual-backed Analog Four CC metadata only
+- A4 full macro SEND remains blocked
+- operator-present validation commands only
+- no unattended hardware behavior
+- A4 full macro SEND remains unimplemented
+- in-memory only
+- device registry metadata only
+Source: rytm_randomizer.reports.controller_brain_live_runbook
+In-memory only: True

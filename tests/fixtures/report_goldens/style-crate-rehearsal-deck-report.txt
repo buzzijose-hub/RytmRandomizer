@@ -1,0 +1,99 @@
+RytmRandomizer passive style crate rehearsal deck
+Deck summary:
+- Version: style-crate-rehearsal-deck-v1
+- Deck ID: be49cc8427336b86
+- Status: passive-ready
+- Crate filter: all
+- Crate cards: 9
+- Queue rehearsal cards: 4
+- Journal replay cards: 2
+Crate cards:
+- dark_hypnotic: Dark Hypnotic | risk=safe | energy=5/10 | pads=1, 3, 11
+  Primary move: shadow_filter_pressure -> Shadow Filter Pressure
+  Operator action: Ready for passive preview; no hardware action available.
+- peak_time: Peak Time | risk=review-ready | energy=9/10 | pads=1, 2, 3, 4, 9, 11
+  Primary move: warehouse_lift -> Warehouse Lift
+  Operator action: Review and dry-run before any future hardware arm.
+- hard_groove: Hard Groove | risk=review-ready | energy=7/10 | pads=2, 3, 5, 6, 7, 9
+  Primary move: rolling_perc_push -> Rolling Perc Push
+  Operator action: Review and dry-run before any future hardware arm.
+- dub_pressure: Dub Pressure | risk=safe | energy=4/10 | pads=1, 3, 12
+  Primary move: sub_space_bloom -> Sub Space Bloom
+  Operator action: Ready for passive preview; no hardware action available.
+- industrial_broken: Industrial/Broken | risk=high-risk | energy=8/10 | pads=3, 4, 8, 10, 11
+  Primary move: broken_metal_stress -> Broken Metal Stress
+  Operator action: Stage recovery first; keep this move in dry-run review.
+- deep_minimal: Deep Minimal | risk=safe | energy=3/10 | pads=1, 2, 3
+  Primary move: micro_motion_hold -> Micro Motion Hold
+  Operator action: Ready for passive preview; no hardware action available.
+- chaos_fills: Chaos Fills | risk=high-risk | energy=10/10 | pads=2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+  Primary move: one_bar_flash -> One-Bar Flash
+  Operator action: Stage recovery first; keep this move in dry-run review.
+- transitions: Transitions | risk=safe | energy=2/10 | pads=1, 2, 3, 4
+  Primary move: back_to_clean_handoff -> Back To Clean Handoff
+  Operator action: Ready for passive preview; no hardware action available.
+- saved_accidents: Saved Accidents | risk=review-ready | energy=6/10 | pads=3, 9, 11
+  Primary move: journaled_pressure_rattle -> Journaled Pressure Rattle
+  Operator action: Review and dry-run before any future hardware arm.
+Queue rehearsal cards:
+1. queue-opening-shadow -> Shadow Filter Pressure | safe | amount=28%
+   Chapter: opening tunnel / set_story / status=staged
+   Pads: 1, 3, 11
+   Operator action: Ready for passive preview; no hardware action available.
+   Recovery: return to Live Safe anchors or Back to Clean
+2. queue-groove-pressure -> Rolling Perc Push | review-ready | amount=45%
+   Chapter: pressure lift / set_story / status=staged
+   Pads: 2, 3, 5, 6, 7, 9
+   Operator action: Review and dry-run before any future hardware arm.
+   Recovery: mute dense lanes or return percussion pads to journaled baseline
+3. queue-peak-metal -> Broken Metal Stress | high-risk | amount=64%
+   Chapter: peak stress / set_story / status=staged
+   Pads: 3, 4, 8, 10, 11
+   Operator action: Stage recovery first; keep this move in dry-run review.
+   Recovery: skip queued move or fire a transition reset before arming hardware
+4. queue-scratchpad-clean -> Back To Clean Handoff | safe | amount=0%
+   Chapter: scratchpad recovery / live_scratchpad / status=scratchpad
+   Pads: 1, 2, 3, 4
+   Operator action: Ready for passive preview; no hardware action available.
+   Recovery: already a recovery move; verify anchors before any SEND
+Journal replay cards:
+- warehouse_accident_01: Warehouse Accident 01 | safe
+  Seed: style-journal-warehouse-0001
+  Pads: 1, 3, 11 | depth=groove
+  Values: pad_11_noise_level=7, pad_1_filter_frequency=26, pad_3_lfo_depth=92
+  Operator action: Can be reviewed as a passive replay seed.
+- broken_fill_seed_02: Broken Fill Seed 02 | studio-only
+  Seed: style-journal-broken-0002
+  Pads: 4, 8, 10, 11 | depth=strong
+  Values: pad_10_hat_density=64, pad_11_drive=81, pad_4_decay=87, pad_8_accent_pressure=72
+  Operator action: Keep in studio review; do not arm as a Live Safe replay.
+Blocked Actions:
+- fire queued style move
+- dispatch crate move
+- replay journal entry
+- persist journal entry
+- open MIDI port
+- send MIDI
+- mutate hardware
+- launch GUI
+Replay Commands:
+- python -m rytm_randomizer.cli style-crate-rehearsal-deck-report
+- python -m rytm_randomizer.cli style-crate-rehearsal-deck-report --json
+Safety:
+- passive/read-only
+- GUI-ready rehearsal cards only
+- uses existing Style Crates metadata only
+- uses staged queue metadata only
+- uses Mutation Journal replay metadata only
+- JSON/stdout only
+- no GUI launch
+- no analyzer invocation
+- no queue dispatch
+- no journal persistence writes
+- no command execution
+- no MIDI sending
+- no port opening
+- no hardware mutation
+- no hardware required
+Source: rytm_randomizer.reports.style_crate_rehearsal_deck
+In-memory only: True

@@ -114,6 +114,7 @@ const session: SessionStatus = {
   armed: true,
   midi_port: 'IAC Driver Bus 1',
   mode: 'live',
+  connection_phase: 'armed',
   unsaved_sends: 2,
 };
 
@@ -142,6 +143,14 @@ describe('cockpit store — actions write each slice', () => {
       sessionStatus: null,
       connectionStatus: 'closed',
       operatorLog: [],
+      connection: null,
+      reconnectNotice: null,
+      midiActivityRows: [],
+      midiActivityMeta: null,
+      midiActivityBatchCount: 0,
+      midiActivityPaused: false,
+      libraryRecords: null,
+      diagnostics: null,
     });
   });
 
@@ -426,6 +435,7 @@ describe('bindClientToStore', () => {
       armed: false,
       midi_port: null,
       mode: 'mock',
+      connection_phase: 'disconnected',
       unsaved_sends: 0,
     };
     fire('session_status', sessionEvent);
@@ -433,6 +443,7 @@ describe('bindClientToStore', () => {
       armed: false,
       midi_port: null,
       mode: 'mock',
+      connection_phase: 'disconnected',
       unsaved_sends: 0,
     });
 
@@ -445,7 +456,7 @@ describe('bindClientToStore', () => {
 
     // Unsubscribe should call client's individual unsubs.
     unbind();
-    expect(client.unsubCalls).toBe(8);
+    expect(client.unsubCalls).toBe(11);
   });
 
   it('falls back to the module-level singleton store when no store is provided', () => {

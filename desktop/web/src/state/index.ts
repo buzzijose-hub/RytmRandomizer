@@ -15,6 +15,8 @@ export {
   createCockpitStore,
   useCockpitStore,
   INITIAL_STATE,
+  MIDI_ACTIVITY_RING_LIMIT,
+  RECONNECT_NOTICE,
   selectIsConnected,
   selectIsArmed,
   selectUnsavedSends,
@@ -24,12 +26,15 @@ export {
   selectCanSend,
   selectHasHistory,
   selectCanUndo,
+  selectConnectionPhase,
 } from './store';
 
 export type {
   CockpitState,
   CockpitActions,
   CockpitStore,
+  MidiActivityMeta,
+  MonitorRow,
   OperatorLogEntry,
   SessionStatus,
 } from './store';
@@ -87,9 +92,27 @@ export function bindClientToStore(
         armed: ev.armed,
         midi_port: ev.midi_port,
         mode: ev.mode,
+        connection_phase: ev.connection_phase,
         unsaved_sends: ev.unsaved_sends,
       });
-      announce(`Session status updated, mode ${ev.mode}`);
+      announce(
+        `Session status updated, mode ${ev.mode}, ${ev.armed ? 'armed' : 'passive'}`,
+      );
+    }),
+    client.on('connection_changed', (ev) => {
+      store.getState().setConnection(ev.connection);
+      // Single coalesced live region: the announcer debounces bursts so a
+      // reconnect (fault → searching → listening) reads as one message.
+      announce(`Connection ${ev.connection.phase}`);
+    }),
+    client.on('midi_activity', (ev) => {
+      // Deliberately silent for screen readers: activity batches arrive up
+      // to ~16×/s and would flood the polite region.
+      store.getState().appendMidiActivity(ev.midi_activity);
+    }),
+    client.on('library_changed', (ev) => {
+      store.getState().setLibraryRecords(ev.library.records);
+      announce(`Library updated, ${ev.library.records.length} records`);
     }),
   ];
   return () => {

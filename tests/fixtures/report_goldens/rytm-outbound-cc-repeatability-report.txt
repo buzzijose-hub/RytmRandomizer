@@ -1,0 +1,54 @@
+RytmRandomizer passive Rytm outbound CC repeatability report
+Summary:
+- Model version: rytm-outbound-cc-repeatability-v1
+- Validation mode: repeatability
+- Tracks: 12
+- Control: 17
+- Value: 64
+- Source evidence: docs/hardware-validation/2026-05-26-outbound-12-track-cc-results.md
+Track steps:
+- Track 01 -> mido channel 0 / CC 17 / value 64: Only Track 1 changes
+- Track 02 -> mido channel 1 / CC 17 / value 64: Only Track 2 changes
+- Track 03 -> mido channel 2 / CC 17 / value 64: Only Track 3 changes
+- Track 04 -> mido channel 3 / CC 17 / value 64: Only Track 4 changes
+- Track 05 -> mido channel 4 / CC 17 / value 64: Only Track 5 changes
+- Track 06 -> mido channel 5 / CC 17 / value 64: Only Track 6 changes
+- Track 07 -> mido channel 6 / CC 17 / value 64: Only Track 7 changes
+- Track 08 -> mido channel 7 / CC 17 / value 64: Only Track 8 changes
+- Track 09 -> mido channel 8 / CC 17 / value 64: Only Track 9 changes
+- Track 10 -> mido channel 9 / CC 17 / value 64: Only Track 10 changes
+- Track 11 -> mido channel 10 / CC 17 / value 64: Only Track 11 changes
+- Track 12 -> mido channel 11 / CC 17 / value 64: Only Track 12 changes
+Stop conditions:
+- any non-target pad changes
+- target pad does not change
+- hardware display or audio behaves unexpectedly
+- wrong MIDI output port is selected
+- operator cannot observe the result clearly
+Next actions:
+- repeat PR #133's one-CC all-12-track validation exactly
+- record one observation row per track
+- stop before testing any new CC number or mutation command
+Blocked active actions:
+- open MIDI port from repeatability report
+- send MIDI from repeatability report
+- run unattended hardware loop
+- test new CC number in repeatability pass
+- run scene or group mutation
+- send SysEx
+- touch Analog Four hardware
+Replay commands:
+- python -m rytm_randomizer.cli rytm-outbound-cc-repeatability-report
+Safety:
+- passive/read-only
+- in-memory only
+- GUI/operator readiness metadata only
+- does not run the validation
+- does not choose or open a MIDI port
+- does not import real MIDI adapters
+- no MIDI sending
+- no port opening
+- no hardware mutation
+- no hardware required
+Source: rytm_randomizer.reports.rytm_outbound_cc_repeatability
+In-memory only: True

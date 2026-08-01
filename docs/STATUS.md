@@ -4,6 +4,103 @@ Last updated: 2026-07-29. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-07-31: PR #217 round-2 review fixes — cockpit frontend + docs
+  truth pass.
+  - **Armed SEND is now reachable (I2).** The sidecar's ArmedApply seam
+    refuses an armed `send` without `confirm: true`, but the UI emitted a
+    bare `{ type: 'send' }` — the live SEND button could not succeed.
+    `ActionBar` now raises an explicit per-action confirmation dialog
+    (`role="dialog"`, labelled heading, Escape + focus trap, axe-clean)
+    when the session is live and armed, and only then emits
+    `{ type: 'send', confirm: true }`. The unarmed / mock path is
+    unchanged and deliberately pinned: one click, no `confirm`, no dialog.
+    `SendCommand` in `ws/protocol.ts` carries the optional field.
+  - **New Playwright journey** `e2e/armed_send_journey.spec.ts`: the
+    unarmed leg runs everywhere against the real sidecar; the armed leg
+    (arm → exact port + token → prepare → confirmed SEND → disarm) skips
+    with a named reason on hosts with no enumerable MIDI output, rather
+    than faking a port through a sidecar backdoor.
+  - **Panel registry is no longer bypassed (I8).** `PANEL_REGISTRY` held
+    only the analyzer while five interactive panels were hand-mounted in
+    `Cockpit.tsx`. The manifest entry is now a discriminated union
+    (`model-selector` | `store-slice`) and all five bottom-rail panels are
+    registered; `Cockpit.tsx` renders `<PanelHost region="bottom" />`.
+    Rendering is byte-identical.
+  - **Demo honesty.** The scoped-randomization and kit-morph panels
+    recompute plans client-side over a committed fixture, so both now
+    carry a `DemoDataBanner` saying so in the UI.
+  - **Docs truth pass (I12).** Narrowed the single-seam claim to the
+    cockpit surface in `CLAUDE.md` rule 8, the Live-but-Passive rule,
+    `README.md`, `ARCHITECTURE.md`, and the plan — `app.py` (11
+    `open_output` sites) and `shell.py` (2) are exempt via the named
+    shrinking allowlist. Removed every backup/reversibility promise
+    (persistent writes are refused, not backed up). Corrected
+    COCKPIT_QUICKSTART's SAVE text (it does not persist to hardware).
+    Replaced the deleted cockpit RealAdapter path and the direct-SEND
+    arrow in ARCHITECTURE_DIAGRAMS and dropped every stale
+    "forward-looking" label for now-shipped packages. Narrowed the
+    never-PATH-python claim (`sidecar.rs` falls back to PATH in dev).
+    Pyright 1.1.407 → 1.1.411 in LOCAL_DEV_TOOLING_NOTES, which also
+    gained a canonical env-var index covering `RYTM_RAND_SIDECAR_BIN`,
+    `RYTM_RAND_MIDI_BACKEND`, `RYTM_REPORT_GOLDEN_CAPTURE`,
+    `RYTM_DATA_DUMP_CAPTURE`, and `TOUCHED_COV_BASE_REF`. Recorded the
+    open cockpit-log divergence (exact port name + raw `repr(exc)` in
+    structured records) in `docs/OBSERVABILITY.md`.
+
+- 2026-07-29: Rival-program bundle executed on the `rival-program`
+  integration branch (plan:
+  `docs/superpowers/plans/2026-07-18-rival-program.md`; 18 commits over base
+  `9978231`, one bundle PR per the cascade-merge rule). What landed, by
+  workstream:
+  - **Guardrail suite (WS-0/WS-1):** repo-root perimeter test (top-level
+    directory allowlist + repo-wide `mido`/`rtmidi` import scan),
+    armed-entry-point transmit whitelist, report-shape censuses,
+    declarative import-direction matrix, data-layer drift guard, and a
+    full-stdout golden net over the passive CLI command surface
+    (`tests/fixtures/report_goldens/`).
+  - **Paper-spec retirement (WS-1, maintainer-approved Decision Gate ③;
+    evidence + execution record in
+    `docs/superpowers/plans/2026-07-20-live-gui-retirement-evidence.md`):
+    18 passive paper-spec report modules deleted — the 12 approved
+    `live_gui_*` desktop/harness specs, the 2
+    `controller_brain_live_desktop_*` re-stamps, and 4 audit-passed
+    widening candidates — with their 18 test files, CLI/help
+    registrations, and `docs/CLI_REFERENCE.md` rows. The retirement
+    commit is 74 files, +1,349/−38,949 (net −37.6k lines). The two kept
+    pinning commands (`…analyzer-overlay-report`,
+    `…action-reducer-report`) were verified byte-identical across
+    text/JSON/option/error paths; every `live_gui_*_model` packet feeder,
+    `live_gui_common`, and the performance-console runtime path are
+    untouched.
+  - **Platforms (WS-2/WS-3):** ReportSpec core + shared
+    fingerprint/validator/option helpers; schema-driven PanelSpec panel
+    platform + registry + the `/add-cockpit-panel` skill;
+    `desktop/web/src/types/live_gui_protocol.ts` is now GENERATED from
+    the Python TypedDicts (with a console test fixture).
+  - **Live-but-Passive runtime (WS-4/5/6):** push-capable WS transport
+    (per-connection queues, reader/writer split); `ConnectionManager`
+    launch brain (`disconnected → searching → listening`, input-only
+    opens); the `senders/armed_apply.py` ArmedApply seam with an explicit
+    in-UI arm + confirmation; live MIDI monitor
+    (`cockpit/device/midi_monitor.py`); Connection Doctor + error journal
+    + `/health` (`cockpit/diagnostics.py`); sound library store
+    (`cockpit/library/store.py`).
+  - **Launch experience (WS-7):** double-click launch — bundled sidecar,
+    spawn-failure dialogs, dynamic port via `RYTM_RAND_WS_PORT`, a CI
+    launch-smoke job, and the `RYTM_RAND_MIDI_BACKEND=off` kill switch.
+  - **Accessibility + parity features (WS-8/WS-9):** WCAG 2.2 AA
+    axe gate on every route (0 violations, 44 a11y tests) with
+    `docs/ACCESSIBILITY.md`; kit morphing + scoped randomization
+    (`behavior/morph.py`, `behavior/scope.py` — passive, parity-pinned
+    cross-language).
+  - **Honest numbers:** bundle diff vs base is 420 files,
+    +94,799/−27,840 (net +66,959 lines, dominated by generated goldens,
+    fixtures, and frontend tests; production retirement above is −37.6k).
+    Gates at HEAD `ddeb8af`: full suite 6,643 green (three consecutive
+    runs), architecture suite 687 green, frontend 582 vitest + 44 a11y
+    green, V1.34 parity 685/685 byte-identical (505 golden files
+    untouched). Plan-doc discoverability: every plan is now indexed in
+    `docs/superpowers/plans/INDEX.md`.
 - 2026-07-28: PR #214 is the current A4 audio-to-patch milestone. It produces
   four deterministic audio-dependent candidates with saved-kit files, complete
   DNA/CC-NRPN sidecars, immutable publication, passive recorded-render ranking,

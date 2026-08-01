@@ -39,6 +39,11 @@ DOCUMENTED_PAIRS: Final[list[tuple[str, str, bool]]] = [
     ("--green", "--panel-2", False),
     ("--amber", "--panel-2", False),
     ("--danger", "--panel-2", False),
+    # Global :focus-visible ring is `--accent` drawn over the `--bg` page and
+    # over raised panels; a non-text focus indicator must clear 3:1 (SC 1.4.11
+    # / 2.4.13) everywhere it can land.
+    ("--accent", "--bg", False),
+    ("--accent", "--panel", False),
 ]
 
 # Floor map: pair-key → 1 (currently failing) or 0 (passing). Cluster 2

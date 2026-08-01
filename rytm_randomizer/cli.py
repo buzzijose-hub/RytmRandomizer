@@ -134,6 +134,14 @@ def _registered_command_exit_code(args: Sequence[str]) -> int | None:
             "rytm_randomizer.reports.analog_rytm_midi_catalog",
             "ANALOG_RYTM_MIDI_CATALOG_CLI_COMMAND",
         ),
+        "scoped-randomization-preview": (
+            "rytm_randomizer.reports.scoped_randomization_preview",
+            "SCOPED_RANDOMIZATION_PREVIEW_CLI_COMMAND",
+        ),
+        "kit-morph-preview": (
+            "rytm_randomizer.reports.kit_morph_preview",
+            "KIT_MORPH_PREVIEW_CLI_COMMAND",
+        ),
         "rytm-snapshot-intelligence-report": (
             "rytm_randomizer.reports.rytm_snapshot_intelligence",
             "RYTM_SNAPSHOT_INTELLIGENCE_CLI_COMMAND",
@@ -302,26 +310,6 @@ def _registered_command_exit_code(args: Sequence[str]) -> int | None:
             "rytm_randomizer.reports.controller_brain_live_implementation_bridge",
             "CONTROLLER_BRAIN_LIVE_IMPLEMENTATION_BRIDGE_CLI_COMMAND",
         ),
-        "controller-brain-live-desktop-blueprint-report": (
-            "rytm_randomizer.reports.controller_brain_live_desktop_blueprint",
-            "CONTROLLER_BRAIN_LIVE_DESKTOP_BLUEPRINT_CLI_COMMAND",
-        ),
-        "controller-brain-live-desktop-app-plan-report": (
-            "rytm_randomizer.reports.controller_brain_live_desktop_app_plan",
-            "CONTROLLER_BRAIN_LIVE_DESKTOP_APP_PLAN_CLI_COMMAND",
-        ),
-        "controller-brain-live-desktop-component-contract-report": (
-            "rytm_randomizer.reports.controller_brain_live_desktop_component_contract",
-            "CONTROLLER_BRAIN_LIVE_DESKTOP_COMPONENT_CONTRACT_CLI_COMMAND",
-        ),
-        "controller-brain-live-desktop-view-model-report": (
-            "rytm_randomizer.reports.controller_brain_live_desktop_view_model",
-            "CONTROLLER_BRAIN_LIVE_DESKTOP_VIEW_MODEL_CLI_COMMAND",
-        ),
-        "controller-brain-live-desktop-render-contract-report": (
-            "rytm_randomizer.reports.controller_brain_live_desktop_render_contract",
-            "CONTROLLER_BRAIN_LIVE_DESKTOP_RENDER_CONTRACT_CLI_COMMAND",
-        ),
         "rytm-live-macro-hardware-rehearsal-report": (
             "rytm_randomizer.reports.rytm_live_macro_hardware_rehearsal",
             "RYTM_LIVE_MACRO_HARDWARE_REHEARSAL_CLI_COMMAND",
@@ -478,14 +466,6 @@ def _registered_command_exit_code(args: Sequence[str]) -> int | None:
             "rytm_randomizer.reports.live_gui_sidecar_session",
             "STYLE_PERFORMANCE_ARC_LIVE_GUI_SIDECAR_SESSION_CLI_COMMAND",
         ),
-        "style-performance-arc-live-gui-screen-contract-report": (
-            "rytm_randomizer.reports.live_gui_screen_contract",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_SCREEN_CONTRACT_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-render-tree-report": (
-            "rytm_randomizer.reports.live_gui_render_tree",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_RENDER_TREE_CLI_COMMAND",
-        ),
         "style-performance-arc-live-gui-analyzer-overlay-report": (
             "rytm_randomizer.reports.live_gui_analyzer_overlay",
             "STYLE_PERFORMANCE_ARC_LIVE_GUI_ANALYZER_OVERLAY_CLI_COMMAND",
@@ -493,10 +473,6 @@ def _registered_command_exit_code(args: Sequence[str]) -> int | None:
         "style-performance-arc-live-gui-analyzer-frame-report": (
             "rytm_randomizer.reports.live_gui_analyzer_frame",
             "STYLE_PERFORMANCE_ARC_LIVE_GUI_ANALYZER_FRAME_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-interaction-script-report": (
-            "rytm_randomizer.reports.live_gui_interaction_script",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_INTERACTION_SCRIPT_CLI_COMMAND",
         ),
         "style-performance-arc-live-gui-action-reducer-report": (
             "rytm_randomizer.reports.live_gui_action_reducer",
@@ -513,46 +489,6 @@ def _registered_command_exit_code(args: Sequence[str]) -> int | None:
         "style-performance-arc-live-gui-playback-validation-report": (
             "rytm_randomizer.reports.live_gui_playback_validation",
             "STYLE_PERFORMANCE_ARC_LIVE_GUI_PLAYBACK_VALIDATION_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-test-harness-contract-report": (
-            "rytm_randomizer.reports.live_gui_test_harness_contract",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_TEST_HARNESS_CONTRACT_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-test-harness-readiness-report": (
-            "rytm_randomizer.reports.live_gui_test_harness_readiness",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_TEST_HARNESS_READINESS_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-implementation-bridge-report": (
-            "rytm_randomizer.reports.live_gui_implementation_bridge",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_IMPLEMENTATION_BRIDGE_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-desktop-blueprint-report": (
-            "rytm_randomizer.reports.live_gui_desktop_blueprint",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_BLUEPRINT_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-desktop-app-plan-report": (
-            "rytm_randomizer.reports.live_gui_desktop_app_plan",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_APP_PLAN_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-desktop-component-contract-report": (
-            "rytm_randomizer.reports.live_gui_desktop_component_contract",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_COMPONENT_CONTRACT_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-desktop-view-model-report": (
-            "rytm_randomizer.reports.live_gui_desktop_view_model",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_VIEW_MODEL_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-desktop-render-contract-report": (
-            "rytm_randomizer.reports.live_gui_desktop_render_contract",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_RENDER_CONTRACT_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-desktop-render-harness-report": (
-            "rytm_randomizer.reports.live_gui_desktop_render_harness",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_RENDER_HARNESS_CLI_COMMAND",
-        ),
-        "style-performance-arc-live-gui-cockpit-boundary-readiness-report": (
-            "rytm_randomizer.reports.live_gui_cockpit_boundary_readiness",
-            "STYLE_PERFORMANCE_ARC_LIVE_GUI_COCKPIT_BOUNDARY_READINESS_CLI_COMMAND",
         ),
         "cockpit-send-plan-readiness-report": (
             "rytm_randomizer.reports.cockpit_send_plan_operator_readiness",

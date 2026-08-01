@@ -14,6 +14,11 @@
  *   - `previewOn` local state (lifted from ActionBar so SnapshotPanel can render ghosts)
  *   - `availableProfiles` prop list passed down to the right panel
  *
+ * The bottom rail is NOT hand-mounted: it renders whatever the panel registry
+ * (`panels/registry.ts`) declares for the `bottom` region, via `PanelHost`.
+ * That keeps the registry the one extension seam for adding cockpit panels
+ * instead of a manifest the real layout quietly bypasses.
+ *
  * Wires the WebSocket client into a React Context so children can emit commands without
  * prop-drilling.
  */
@@ -31,6 +36,7 @@ import { type CockpitDeviceId, RYTM_DEVICE_ID } from './devices';
 import { HeaderBar } from './HeaderBar';
 import { LiveReadinessPanel } from './LiveReadinessPanel';
 import { MutationPanel } from './MutationPanel';
+import { PanelHost } from './panels/PanelHost';
 import { PatchGenomePanel } from './PatchGenomePanel';
 import { SafetyRail } from './SafetyRail';
 import { SnapshotPanel } from './SnapshotPanel';
@@ -88,6 +94,15 @@ export function Cockpit({
             />
             <SafetyRail />
           </div>
+        </div>
+        <div className="cockpit-bottom-stack">
+          {/*
+            Bottom-rail panels mount through the schema-driven registry, not by
+            hand. Ordering is the manifest's order in `panels/registry.ts`, so
+            adding or reordering a bottom panel is a registry edit — no change
+            to this file. See `.claude/skills/add-cockpit-panel/SKILL.md`.
+          */}
+          <PanelHost region="bottom" />
         </div>
       </main>
     </CockpitClientProvider>

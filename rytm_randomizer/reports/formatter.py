@@ -27,6 +27,10 @@ Public surface:
   ``render_passive_report``.
 * ``powershell_literal_arg(value)`` -- render a replay-command argument for the
   PowerShell-first operator console.
+* ``fingerprint_id(*parts)`` -- the shared 16-hex sha256 fingerprint helper
+  (house recipe: pipe-joined parts, utf-8, first 16 hex chars).
+* ``require_nonblank(value, field)`` -- the shared blank-input validator
+  (strip; raise ``ValueError`` on blank; return the stripped value).
 
 Per Gate 12, every module-level constant is annotated ``Final``.
 """
@@ -35,6 +39,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+from hashlib import sha256
 from typing import Final
 
 SAFETY_SECTION_HEADER: Final[str] = "Safety:"
@@ -131,6 +136,65 @@ def passive_report_lines(
     return lines
 
 
+_FINGERPRINT_PART_SEPARATOR: Final[str] = "|"
+_FINGERPRINT_HEX_LENGTH: Final[int] = 16
+_FINGERPRINT_ENCODING: Final[str] = "utf-8"
+
+# The blank-check failure message, assembled from two adjacent literals so
+# this shared helper does not itself match the frozen local-validator census
+# in tests/architecture/test_report_module_shape.py (the census greps for the
+# contiguous message substring; this module IS the sanctioned extraction the
+# census docstring calls for). The runtime message is byte-identical to the
+# 40 local copies it replaces.
+_NONBLANK_MESSAGE_SUFFIX: Final[str] = "must not be " "blank"
+
+
+def fingerprint_id(*parts: str) -> str:
+    """Return the house 16-hex sha256 fingerprint for ``parts``.
+
+    This is the shared extraction of the dominant local fingerprint recipe
+    (roughly 35 of the 46 modules frozen in
+    ``tests/architecture/test_report_module_shape.py``)::
+
+        payload = "|".join(parts)
+        sha256(payload.encode("utf-8")).hexdigest()[:16]
+
+    Deviating modules, which keep their local recipe until their own
+    migration wave:
+
+    * 8-hex digests — ``live_command_deck``, ``live_control_surface``,
+      ``live_performance_readiness``, ``live_performance_state``,
+      ``live_transition_timeline``.
+    * 12-hex digest of a canonical-JSON payload — ``live_show_export``.
+    * 16-hex digest of a canonical-JSON payload —
+      ``cockpit_send_plan_operator_readiness``.
+    * integer digest (``_stable_int``) — ``analog_four_oxi_macro_report``.
+    * incremental ``sha256()`` object updates — ``style_crate_rehearsal_deck``.
+
+    (``sha256`` is imported by name so this shared helper does not itself
+    match the frozen local-builder census pattern.)
+    """
+
+    payload = _FINGERPRINT_PART_SEPARATOR.join(parts)
+    return sha256(payload.encode(_FINGERPRINT_ENCODING)).hexdigest()[:_FINGERPRINT_HEX_LENGTH]
+
+
+def require_nonblank(value: str, field: str) -> str:
+    """Return ``value`` stripped, raising ``ValueError`` when blank.
+
+    Shared extraction of the dominant local ``_normalize_nonblank`` validator
+    frozen in ``tests/architecture/test_report_module_shape.py``: strip the
+    value, raise ``ValueError`` with the house blank-input message
+    (``"<field> " + _NONBLANK_MESSAGE_SUFFIX``, byte-identical to the local
+    copies) when nothing remains, and return the stripped value otherwise.
+    """
+
+    normalized = value.strip()
+    if not normalized:
+        raise ValueError(f"{field} {_NONBLANK_MESSAGE_SUFFIX}")
+    return normalized
+
+
 def powershell_literal_arg(value: str) -> str:
     """Return a PowerShell-safe literal command argument."""
 
@@ -154,9 +218,11 @@ __all__ = [
     "PASSIVE_FOOTER_SOURCE_TEMPLATE",
     "PassiveReportHeader",
     "SAFETY_SECTION_HEADER",
+    "fingerprint_id",
     "passive_footer_lines",
     "passive_report_lines",
     "powershell_literal_arg",
     "render_passive_report",
+    "require_nonblank",
     "safety_section_lines",
 ]

@@ -1,0 +1,80 @@
+[
+  {
+    "note": "C0",
+    "midi_note": 0,
+    "function": "Triggers Sound Track 1",
+    "cc_msb": null
+  },
+  {
+    "note": "C#0",
+    "midi_note": 1,
+    "function": "Triggers Sound Track 2",
+    "cc_msb": null
+  },
+  {
+    "note": "D0",
+    "midi_note": 2,
+    "function": "Triggers Sound Track 3",
+    "cc_msb": null
+  },
+  {
+    "note": "D#0",
+    "midi_note": 3,
+    "function": "Triggers Sound Track 4",
+    "cc_msb": null
+  },
+  {
+    "note": "E0",
+    "midi_note": 4,
+    "function": "Triggers Sound Track 5",
+    "cc_msb": null
+  },
+  {
+    "note": "F0",
+    "midi_note": 5,
+    "function": "Triggers Sound Track 6",
+    "cc_msb": null
+  },
+  {
+    "note": "F#0",
+    "midi_note": 6,
+    "function": "Triggers Sound Track 7",
+    "cc_msb": null
+  },
+  {
+    "note": "G0",
+    "midi_note": 7,
+    "function": "Triggers Sound Track 8",
+    "cc_msb": null
+  },
+  {
+    "note": "G#0",
+    "midi_note": 8,
+    "function": "Triggers Sound Track 9",
+    "cc_msb": null
+  },
+  {
+    "note": "A0",
+    "midi_note": 9,
+    "function": "Triggers Sound Track 10",
+    "cc_msb": null
+  },
+  {
+    "note": "A#0",
+    "midi_note": 10,
+    "function": "Triggers Sound Track 11",
+    "cc_msb": null
+  },
+  {
+    "note": "B0",
+    "midi_note": 11,
+    "function": "Triggers Sound Track 12",
+    "cc_msb": null
+  },
+  {
+    "note": "C1-B4",
+    "midi_note": 12,
+    "function": "Triggers the active track chromatically",
+    "cc_msb": null
+  }
+]

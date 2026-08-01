@@ -1,0 +1,65 @@
+{
+  "amp": [
+    "AMP Hold",
+    "AMP Decay",
+    "AMP Overdrive",
+    "AMP Delay Send",
+    "AMP Reverb Send"
+  ],
+  "body": [
+    "SRC Tune",
+    "SRC Detune",
+    "SRC Osc 2 Decay",
+    "SRC Balance",
+    "AMP Hold",
+    "AMP Decay"
+  ],
+  "filter": [
+    "FLT Attack",
+    "FLT Decay",
+    "FLT Frequency",
+    "FLT Env Depth"
+  ],
+  "full": [
+    "SRC Tune",
+    "SRC Detune",
+    "SRC Noise Level",
+    "SRC Osc 2 Decay",
+    "SRC Balance",
+    "FLT Frequency",
+    "FLT Env Depth",
+    "AMP Hold",
+    "AMP Decay",
+    "AMP Overdrive",
+    "LFO Speed",
+    "LFO Fade",
+    "LFO Start Phase",
+    "LFO Depth"
+  ],
+  "grit": [
+    "SRC Noise Level",
+    "AMP Overdrive",
+    "LFO Depth"
+  ],
+  "lfo": [
+    "LFO Speed",
+    "LFO Fade",
+    "LFO Start Phase",
+    "LFO Depth"
+  ],
+  "morph": [
+    "SRC Osc 1 Wave",
+    "SRC Osc 2 Wave",
+    "SRC Balance",
+    "SRC Detune"
+  ],
+  "src": [
+    "SRC Tune",
+    "SRC Detune",
+    "SRC Noise Level",
+    "SRC Osc 2 Decay",
+    "SRC Osc 1 Wave",
+    "SRC Osc 2 Wave",
+    "SRC Balance"
+  ]
+}

@@ -17,6 +17,48 @@ machine.
 
 ---
 
+## 0. The double-click launch (installed bundle)
+
+If you have a CI-built cockpit bundle (the `cockpit-bundle-<OS>` artifact
+from `.github/workflows/installers.yml` — `.msi`/`.exe` on Windows,
+`.dmg`/`.app` on macOS, `.deb`/`.rpm`/AppImage on Linux), you don't need
+any of the toolchains below. Install it, double-click the app, and the
+shell does the rest:
+
+1. **Spawns the bundled sidecar.** The bundle embeds a self-contained
+   `rytm-sidecar` binary (a PyInstaller freeze of
+   `python -m rytm_randomizer.cockpit`); no Python install is required
+   on your machine. A dev checkout without the bundled binary
+   automatically falls back to `python -m rytm_randomizer.cockpit` from
+   PATH (sections 1–4 below).
+2. **Picks a free port.** The shell uses 4317 when it's free and asks
+   the OS for a free ephemeral port otherwise, passing the choice to
+   both the sidecar (`RYTM_RAND_WS_PORT`) and the webview — a busy port
+   can no longer brick the launch.
+3. **Bridges the handshake token.** The shell sets
+   `RYTM_RAND_WS_TOKEN_FILE`, reads back the per-launch token the
+   sidecar mints, and injects it into the window (§2.1).
+4. **Tells you when something is wrong.** If the sidecar fails to spawn
+   three times in a row, the shell shows an error dialog with the
+   actual OS error (and keeps retrying in the background) instead of
+   crash-looping silently.
+5. **Shuts down cleanly.** Closing the window sends the sidecar a
+   graceful shutdown (a stdin sentinel on every OS, plus SIGTERM on
+   macOS/Linux) and only hard-kills after a 5-second grace.
+
+> **Signing is currently deferred:** the CI artifacts are unsigned dev
+> builds, so expect a Gatekeeper prompt on macOS (right-click → Open)
+> and a SmartScreen prompt on Windows ("More info → Run anyway"). See
+> [`docs/BUILDING_INSTALLERS.md` § Signing](BUILDING_INSTALLERS.md#signing).
+
+Power-user overrides: `RYTM_RAND_SIDECAR_BIN=<path>` forces a specific
+sidecar binary; `RYTM_RAND_WS_PORT=<port>` forces a specific port.
+
+Everything below is the **developer path** — building the three layers
+yourself from a clone.
+
+---
+
 ## 1. Prerequisites
 
 The cockpit is a Tauri 2 desktop app (Rust) wrapping a web frontend (Vite +
@@ -211,7 +253,11 @@ cargo build --release
 
 The release binary embeds the web frontend (from `desktop/web/dist/`)
 and spawns the sidecar via the `python -m rytm_randomizer.cockpit`
-command on your PATH.
+command on your PATH — unless a bundled `rytm-sidecar` binary is
+present in `desktop/shell/binaries/` (or the app resources), in which
+case the shell prefers it. See
+[`docs/BUILDING_INSTALLERS.md` § Bundled Python sidecar](BUILDING_INSTALLERS.md#bundled-python-sidecar-pyinstaller)
+for producing that binary locally.
 
 ---
 
@@ -245,8 +291,12 @@ where the A4 side will fit before any outbound A4 macro path exists.
 4. **Hit REGEN** — same depth, new seed, different candidate.
 5. **Hit SEND** — the candidate becomes the new snapshot; a grey dot
    joins the history strip; preview clears.
-6. **Hit SAVE** with a label** — promotes the current snapshot to a
-   persistent kit slot; the dot turns green.
+6. **Hit SAVE with a label** — promotes the current snapshot to a
+   `kind="saved"` history entry; the dot turns green. **SAVE does not write
+   to the instrument.** It labels a point in the cockpit's own history so
+   you can find it again; persisting a kit to device memory is refused (see
+   §6 — no capture-before-write or restore path exists). To keep a kit on
+   the hardware, save it on the device itself.
 7. **Hit UNDO** — walks the history back one step.
 
 Profiles live as flat JSON files under `~/.rytm-randomizer/profiles/` on
@@ -472,12 +522,24 @@ The cockpit defaults to a **mock device adapter**: it opens no MIDI port
 and sends no MIDI, even when you hit SEND. This is the same passive-
 default discipline the rest of the project uses.
 
-The real-MIDI path is gated behind an explicit arm step (configured per
-release; the design ships a tray menu item plus a settings surface). On
-the back end, arming swaps the `MockDeviceAdapter` for a
-`RealMidiDeviceAdapter` that wraps the existing
-`rytm_randomizer.mido_provider` and `rytm_randomizer.real_midi_adapter`
-boundary — the same path the armed CLI uses.
+The real-MIDI path is gated behind an explicit arm step. In the cockpit
+UI that means choosing the **exact** MIDI output port from the arm
+dialog's selector and entering the per-launch arm token — nothing is
+auto-selected, because with a Rytm and an Analog Four both connected a
+guess can arm the wrong instrument.
+
+On the back end, arming does **not** swap the device adapter. It
+constructs an `ArmedApplySession` (`rytm_randomizer.senders.armed_apply`)
+that opens the one real output port through
+`rytm_randomizer.mido_provider`, and every armed SEND routes through that
+session's `confirm()` + `apply()` lifecycle. `MockDeviceAdapter` keeps
+modelling snapshot/history state throughout.
+
+**What an armed SEND may and may not do:** live-dial CC changes (the
+device's working RAM) are sent. Writes to *saved* kits and sounds are
+refused, because capture-before-write and restore are not implemented —
+so the app cannot promise you can undo them. Reload the kit from the
+device to discard live-dial changes.
 
 **Hardware rules that do not change:**
 
@@ -485,8 +547,11 @@ boundary — the same path the armed CLI uses.
 - The MIDI port is opened once, when you arm; it stays open until you
   close the window or explicitly disarm.
 - Locked pads are skipped on SEND. Use this to protect your kick.
-- SAVE writes a Rytm SysEx kit dump to the device's persistent kit
-  memory. Pick the label and slot deliberately.
+- SAVE does **not** write to the device. It promotes the current snapshot
+  to a labelled `kind="saved"` entry in the cockpit's history and nothing
+  leaves the app. Writing a Rytm SysEx kit dump to persistent kit memory is
+  exactly the operation the seam refuses today; use the instrument's own
+  save to keep a kit on the hardware.
 
 ---
 
@@ -513,9 +578,22 @@ ECMAScript and tooling baseline.
 
 **Port 4317 is already in use**
 
-Set `RYTM_RAND_WS_PORT=<free port>` before launching both the sidecar
-and the shell, or kill the process holding 4317 (`lsof -i :4317` on
-macOS / Linux; `Get-NetTCPConnection -LocalPort 4317` on Windows).
+The Tauri shell handles this automatically: it picks a free ephemeral
+port when 4317 is busy and passes the choice to the sidecar and the
+webview. If you are running the sidecar standalone (no shell), set
+`RYTM_RAND_WS_PORT=<free port>` before launching it, or kill the
+process holding 4317 (`lsof -i :4317` on macOS / Linux;
+`Get-NetTCPConnection -LocalPort 4317` on Windows).
+
+**The window opens but a "sidecar failed to start" dialog appears**
+
+The shell could not spawn the sidecar three times in a row; the dialog
+shows the underlying OS error. In a dev checkout this almost always
+means `python` is not on PATH for GUI-launched apps, or the project is
+not installed in that Python (`pip install -e ".[dev]"`). The shell
+keeps retrying with backoff — once the spawn succeeds the window
+connects on its own. To point the shell at a specific bundled binary,
+set `RYTM_RAND_SIDECAR_BIN=<path>`.
 
 **Sidecar crashes on connect with "no profiles found"**
 

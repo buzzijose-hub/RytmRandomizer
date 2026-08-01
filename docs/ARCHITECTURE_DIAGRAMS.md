@@ -7,8 +7,10 @@ code, tests, scripts, and documentation structure present in this repository.
 
 It does not describe desired future behavior as if it already exists. When a
 component is a mock, report, passive preview, or guarded boundary, the diagram
-labels it that way. Diagrams describing the upcoming codex dual-machine work
-(§22) are explicitly labeled as forward-looking.
+labels it that way. Every diagram in this file now describes **present**
+structure: the dual-machine, cockpit, Profile Wizard, and export-pipeline
+diagrams were once labeled forward-looking, and all four have since landed.
+See "Explicit non-claims" for the audited list of what is still absent.
 
 Current baseline used while creating / refreshing this document:
 
@@ -1268,9 +1270,18 @@ flowchart TB
 
 ---
 
-## 18. Future Codex PR Shape (post-PR #43, dual-machine redo)
+## 18. Dual-Machine Shape (the PR #36 redo, as landed)
 
-**Forward-looking diagram.** This is what PR #36's redo should look like after PR #43 merges. See the [architecture review on PR #36](https://github.com/buzzijose-hub/RytmRandomizer/pull/36#issuecomment-4490858526) for the file-by-file authoritative plan.
+**Present structure, not a plan.** This was authored as the forward-looking
+target for PR #36's redo; that shape has since landed. `devices/analog_four.py`,
+its strategy modules, the generic `senders/guarded.py` + `senders/hardware.py`,
+and the simplified `dual_machine/` orchestrator all exist on this branch, and
+the rejected `essence/` / `analog_four/` / `rytm/` subpackages are absent (the
+"Deleted" cluster below records what was removed). The
+[architecture review on PR #36](https://github.com/buzzijose-hub/RytmRandomizer/pull/36#issuecomment-4490858526)
+remains the file-by-file rationale. The `NEW:` prefixes below are historical
+markers for what this change set added — they are not claims that the modules
+are still unwritten.
 
 ```mermaid
 flowchart TB
@@ -1281,7 +1292,7 @@ flowchart TB
         DevAR_Strategies["devices/strategies/<br/>analog_rytm_{snapshot_decoder,<br/>snapshot_routing,style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_render_plan,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer}"]
     end
 
-    subgraph CodexRedo["Future codex PR (PR #36 redo)"]
+    subgraph CodexRedo["Landed (was: PR #36 redo target)"]
         DevA4["devices/analog_four.py<br/>(NEW: AnalogFourDevice<br/>composes 3 A4 strategies,<br/>registers at import)"]
         DevA4_Strategies["devices/strategies/<br/>analog_four_offset_manifest<br/>analog_four_snapshot_decoder<br/>analog_four_style_snapshot_routing<br/>analog_four_style_mutation_intent<br/>analog_four_style_mutation_mock_preview<br/>analog_four_mutation_planner<br/>analog_four_message_renderer<br/>analog_four_saved_kit_writer<br/>(Filter2 Resonance write-validated)"]
 
@@ -1997,28 +2008,34 @@ flowchart LR
 
 The diagrams DO NOT claim that the project currently has:
 
-- Real MIDI sending in passive default (only `--arm` triggers real ports)
-- Automatic hardware port discovery
-- A working `AnalogFourDevice` (forward-looking in §18; PR #36 redo target)
-- Pads 5-12 in the live mutation path (work-in-progress on PR #36)
-- A shipped Tauri + web cockpit (forward-looking in §28 and §29; in active implementation against `feat/cockpit-and-profile-model-bundle`)
-- Generic `senders/guarded.py` + `senders/hardware.py` (forward-looking in §18)
-- A nested `dual_machine/` subpackage (forward-looking in §18)
-- `analog_four/` / `rytm/` / `essence/` subpackages (anti-pattern, rejected by arch tests in §10)
+- Real MIDI sending in the passive default (an explicit arm is always required)
+- Automatic *output* arming from port discovery (enumeration and input opens are passive; nothing arms itself)
+- Pads 5-12 in the live mutation path
+- Restore-to-device / persistent kit writes (refused at the seam — no capture-before-write or restore path exists)
+- A repo-wide single transmit path (the cockpit routes through the ArmedApply seam; legacy `app.py` / `shell.py` still open their own ports under the allowlist)
+- `analog_four/` / `rytm/` / `essence/` top-level subpackages (anti-pattern, rejected by arch tests in §10)
 
 These remain absent unless a later committed code change and CI evidence prove
-otherwise. The forward-looking diagrams (§18, §19, §28, §29) are labeled as
-such and describe the intended shape, not the current shape.
+otherwise.
+
+**Previously listed here, now shipped** (kept visible so the delta is
+auditable rather than silently edited away): `AnalogFourDevice`
+(`devices/analog_four.py`), the generic `senders/guarded.py` +
+`senders/hardware.py`, the nested `dual_machine/` subpackage, and the Tauri
+shell + web cockpit (`desktop/shell/`, `desktop/web/`) all exist on this
+branch, as do the Profile Wizard (`cockpit/wizard/`, `cockpit/ws/wizard_*.py`,
+`desktop/web/src/wizard/`) and the export pipeline (`cockpit/export/`). No
+diagram in this file carries a forward-looking label any more.
 
 ---
 
 ## 28. Cockpit & Profile-Model C4 Component Diagram (Phase 1)
 
-> **Forward-looking diagram.** The Phase 1 cockpit is in active
-> implementation (12 parallel workstreams against
-> `feat/cockpit-and-profile-model-bundle`); not all of these components
-> exist on `modularize-v1.34` yet. This diagram describes the intended
-> Phase 1 shape; the source spec is the authoritative reference.
+> **Shipped.** This diagram describes present structure, not intent: the
+> Tauri shell (`desktop/shell/`), the web frontend (`desktop/web/`), the
+> Python sidecar (`rytm_randomizer/cockpit/`), and the ArmedApply seam
+> (`rytm_randomizer/senders/`) all exist on this branch. The source spec
+> remains the reference for *why* the shape is what it is.
 
 The Phase 1 cockpit — Tauri shell + web frontend + Python sidecar over
 WebSocket — is the active-runtime counterpart to the 40+ passive
@@ -2046,12 +2063,13 @@ flowchart TB
         Profiles["Profile registry<br/>cockpit/profiles/registry.py<br/>· built-in scenes<br/>· user profiles<br/>· $XDG_CONFIG_HOME/rytm-randomizer/profiles/"]
         History["History store<br/>cockpit/history/store.py<br/>· in-memory chain<br/>· UNDO + LOAD + SAVE"]
         Export["Model export<br/>cockpit/export/<br/>· MessagePack<br/>· header + CRC32"]
-        DeviceAdapter["Device adapter<br/>cockpit/device/adapter.py<br/>· DeviceAdapter Protocol<br/>· MockDeviceAdapter (default)<br/>· RealMidiDeviceAdapter (--arm)"]
+        DeviceAdapter["Device adapter<br/>cockpit/device/adapter.py<br/>· DeviceAdapter Protocol<br/>· MockDeviceAdapter (state only)<br/>· no real-MIDI adapter — the<br/>  ArmedApply seam owns the port"]
     end
 
-    subgraph ExistingBoundary["Existing boundary (re-used)"]
+    subgraph ArmedSeam["ArmedApply seam (the cockpit's only output path)"]
+        ArmedApply["senders/armed_apply.py<br/>· ArmedApplySession<br/>· arm(token) + confirm(action) + apply()<br/>· refuses persistent kit writes"]
+        ExactOpener["senders/hardware.py<br/>ExactOutputOpener<br/>· fail-closed exact-name match"]
         MidoProvider["mido_provider.py<br/>· lazy mido import<br/>· real MIDI port lifecycle"]
-        RealAdapter["real_midi_adapter.py<br/>· RealMidiSender<br/>· RealMidiPortProvider Protocol"]
     end
 
     Rytm["Elektron Analog Rytm MK2<br/>(USB MIDI)"]
@@ -2072,9 +2090,11 @@ flowchart TB
 
     Profiles <-->|"read / write"| Disk
 
-    DeviceAdapter -->|"only when --arm"| RealAdapter
-    RealAdapter --> MidoProvider
-    MidoProvider -->|"USB MIDI<br/>(CC + SysEx)"| Rytm
+    Handlers -->|"only after in-UI arm<br/>+ per-action confirm: true"| ArmedApply
+    DeviceAdapter -. "models snapshot/history state only —<br/>never holds an output port" .-> Handlers
+    ArmedApply --> ExactOpener
+    ExactOpener --> MidoProvider
+    MidoProvider -->|"USB MIDI<br/>(live-dial CC only)"| Rytm
 
     Operator -. "sees current state<br/>+ mutation preview<br/>+ history strip" .-> WebFrontend
 
@@ -2083,6 +2103,7 @@ flowchart TB
     style WSServer fill:#eef,stroke:#447
     style Engine fill:#eef,stroke:#447
     style DeviceAdapter fill:#ffe,stroke:#774
+    style ArmedApply fill:#fee,stroke:#a44
     style Rytm fill:#fee,stroke:#a44
     style Disk fill:#fee,stroke:#a44
 ```
@@ -2093,11 +2114,24 @@ flowchart TB
   window and supervises the sidecar; the Python sidecar process owns all
   business state. The boundary is the WebSocket. This matches the spec's
   "render-agnosticism" principle — the engine emits events, any UI renders.
-- **Mock-first, arm-on-purpose.** `MockDeviceAdapter` is the default; no
-  real MIDI port is opened until the operator (or a later flag) constructs
-  the `RealMidiDeviceAdapter`. The hardware-safety boundary from the
-  existing CLI (`--arm` discipline, lazy `mido` import) is preserved
-  identically.
+- **Mock-first, arm-on-purpose, one handle.** `MockDeviceAdapter` models
+  cockpit state at all times; no real MIDI port is opened until the
+  operator arms, and the ArmedApply seam then owns that single port.
+  There is no real-MIDI adapter to swap in — the cockpit's one was deleted
+  when the seam became its only output handle, because a second adapter
+  holding its own port is precisely the ungated path the seam exists to
+  prevent. `real_midi_adapter.py` still exists for the legacy V1.34 CLI
+  path (`app.py` / `shell.py`), but nothing in `cockpit/` reaches it.
+- **Two gates, not one.** Arming is a session state (`arm { arm_token,
+  port_name, confirm: true }`); each individual SEND additionally carries
+  its own `confirm: true`, minted per action and consumed by
+  `ArmedApplySession.apply`. An armed session does not make the next write
+  automatic.
+- **Persistent kit writes are refused.** Only `mutates_kit=False`
+  live-dial CC reaches the wire. A saved kit/sound write raises
+  `KitMutationUnsupportedError` — there is no capture-before-write or
+  restore path, so the seam refuses rather than performing something it
+  cannot undo.
 - **Profile registry is disk-backed.** Built-in `kind="scene"` profiles
   ship in `cockpit/profiles/builtin.py`; user `kind="user"` profiles are
   flat JSON files under the platform-appropriate config directory
@@ -2125,7 +2159,8 @@ sequenceDiagram
     participant WS as WebSocket server<br/>(cockpit/ws/server.py)
     participant Handler as command handlers<br/>(cockpit/ws/handlers.py)
     participant Engine as Mutation + send-plan engine<br/>(cockpit/engine/)
-    participant Device as DeviceAdapter<br/>(mock or real)
+    participant Seam as ArmedApply seam<br/>(senders/armed_apply.py)<br/>[only when armed]
+    participant Device as MockDeviceAdapter<br/>(snapshot/history state)
     participant History as HistoryStore<br/>(cockpit/history/store.py)
 
     Operator->>UI: clicks PREPARE
@@ -2141,11 +2176,25 @@ sequenceDiagram
     UI->>UI: SEND enabled only if send_plan.ready
 
     Operator->>UI: clicks SEND
-    UI->>WS: send { } (typed command)
+    alt session armed (live hardware)
+        UI->>Operator: per-action confirmation dialog
+        Operator->>UI: "Confirm send"
+        UI->>WS: send { confirm: true }
+    else unarmed (mock / dry run)
+        UI->>WS: send { }
+    end
     WS->>Handler: dispatch("send", payload)
+
+    opt session armed
+        Note over Handler,Seam: refuses unless the command itself<br/>carries confirm: true — "armed" is a<br/>session state, each write its own decision
+        Handler->>Seam: confirm(plan_id) then apply(plan, mutates_kit=false)
+        Note over Seam: persistent kit/sound writes raise<br/>KitMutationUnsupportedError;<br/>only live-dial CC reaches the wire
+        Seam-->>Handler: ArmedApplyResult (bytes sent) | refusal
+    end
+
     Handler->>Device: apply_send_plan(send_plan)
-    Note over Device: the adapter consumes<br/>prepared packet rows; locked pads<br/>were already excluded by preflight
-    Device-->>Handler: new Snapshot (post-send device state)
+    Note over Device: models the resulting state; locked pads<br/>were already excluded by preflight.<br/>The adapter never holds an output port.
+    Device-->>Handler: new Snapshot (post-send state)
 
     Handler->>History: append(new_snapshot, kind="auto", via="send")
     History-->>Handler: updated History
@@ -2187,18 +2236,25 @@ sequenceDiagram
   plan without recomputing CC/channel/value data at the hardware boundary.
 - **History entry kind = "auto".** Post-SEND entries are `kind="auto"`
   with `via="send"`. Only explicit SAVE promotes a snapshot to
-  `kind="saved"` with an optional label; only SAVE writes the snapshot
-  to the device's persistent kit memory (Rytm SysEx kit dump).
+  `kind="saved"` with an optional label. **SAVE does not write to the
+  device** — persisting a kit to hardware is a kit mutation, which the
+  ArmedApply seam refuses outright while capture-before-write and restore
+  do not exist. SAVE is a label on the cockpit's own history chain.
+- **Armed SEND needs its own `confirm`.** The seam refuses an armed send
+  whose command omits `confirm: true`, so the UI raises a per-action
+  confirmation dialog before emitting it. The unarmed / dry-run path stays
+  a single click and carries no `confirm` — nothing reaches hardware, so
+  there is nothing to confirm.
 
 ---
 
 ## 30. Profile Wizard Sequence (Name → Add → Analyze → Review → Save, Phase 2)
 
-> **Forward-looking diagram.** The Phase 2 Profile Wizard is in active
-> implementation (7 parallel workstreams against
-> `feat/profile-wizard-bundle`); not all of these components exist on
-> `modularize-v1.34` yet. This diagram describes the intended Phase 2
-> shape; the source spec is the authoritative reference.
+> **Shipped.** The Phase 2 Profile Wizard exists on this branch:
+> `cockpit/ws/wizard_handlers.py`, `cockpit/ws/wizard_session.py`,
+> `cockpit/wizard/` (analyze + builder), and the four-step React flow under
+> `desktop/web/src/wizard/`. This diagram describes present structure; the
+> source spec remains the reference for the design rationale.
 
 The wizard's four-step lifecycle, from operator clicking "Create
 profile…" through `profile_created`. The pattern mirrors §29's SEND
@@ -2332,11 +2388,11 @@ sequenceDiagram
 
 ## 31. Profile Wizard Component Diagram (Phase 2)
 
-> **Forward-looking diagram.** The Phase 2 Profile Wizard is in active
-> implementation (7 parallel workstreams against
-> `feat/profile-wizard-bundle`); not all of these components exist on
-> `modularize-v1.34` yet. This diagram describes the intended Phase 2
-> shape; the source spec is the authoritative reference.
+> **Shipped.** The Phase 2 Profile Wizard exists on this branch:
+> `cockpit/ws/wizard_handlers.py`, `cockpit/ws/wizard_session.py`,
+> `cockpit/wizard/` (analyze + builder), and the four-step React flow under
+> `desktop/web/src/wizard/`. This diagram describes present structure; the
+> source spec remains the reference for the design rationale.
 
 The Phase 2 Profile Wizard sits inside the existing cockpit subpackage
 and extends the cockpit's WebSocket Protocol. This diagram shows the
@@ -2482,13 +2538,12 @@ flowchart TB
 
 ## 32. Cockpit · Export Pipeline (Phase 3)
 
-> **Forward-looking diagram.** The Phase 3 Model Export Pipeline is in
-> active implementation (7 parallel workstreams against
-> `feat/phase-3-export-pipeline`); not all of these components exist on
-> `modularize-v1.34` yet. This diagram describes the intended Phase 3
-> shape; the source spec at
+> **Shipped.** The Phase 3 export pipeline exists on this branch under
+> `rytm_randomizer/cockpit/export/` (header + MessagePack payload + CRC32,
+> HMAC signing, atomic write, verify). This diagram describes present
+> structure; the source spec at
 > [`docs/superpowers/specs/2026-05-24-phase-3-export-pipeline-design.md`](superpowers/specs/2026-05-24-phase-3-export-pipeline-design.md)
-> is the authoritative reference.
+> remains the design reference.
 
 The Phase 3 export pipeline lives inside the existing
 `cockpit/export/` subpackage and drives the operator's end-to-end

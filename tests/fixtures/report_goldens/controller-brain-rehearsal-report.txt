@@ -1,0 +1,55 @@
+RytmRandomizer passive controller brain rehearsal report
+Controller profile: generic-16-encoder-performance
+Scenario: warehouse-controller-brain-rehearsal
+Rehearsal version: controller-brain-rehearsal-v1
+Rehearsal status: passive-ready
+Controller template rows: 112
+Pages: 7
+Virtual gestures: 9
+
+Gesture outcomes:
+- global-brain:01 -> global.preview_depth (passive-intent-staged; turn clockwise; delta +12)
+- global-brain:07 -> macro.industrial (passive-intent-staged; press; delta +0)
+- rytm-pads-5-8:01 -> rytm.pad5.source_amount (passive-intent-staged; turn clockwise; delta +9)
+- rytm-pads-5-8:05 -> rytm.pad6.source_amount (passive-intent-staged; turn clockwise; delta +14)
+- rytm-pads-9-12:13 -> rytm.pad12.source_amount (passive-intent-staged; turn counterclockwise; delta -7)
+- analog-four-tracks:01 -> a4.track1.macro_depth (passive-intent-staged; turn clockwise; delta +10)
+- style-crates-queue:02 -> crate.dark_hypnotic (passive-intent-staged; press; delta +0)
+- style-crates-queue:10 -> queue.next_1 (passive-intent-staged; press; delta +0)
+- snapshot-recovery-journal:16 -> snapshot.panic_home (passive-intent-staged; press and hold; delta +0)
+
+Operator notes:
+- Treat the controller as an intent browser, not as a live MIDI input device.
+- Use SRC-first Rytm pad controls for Pads 5-12 before broad filter or LFO moves.
+- Keep Pad 12 available for users who want it, while allowing local lock/exclusion.
+- Analog Four controls are staged as runway intent until a validated A4 hardware path exists.
+
+Blocked active actions:
+- open MIDI controller input
+- MIDI learn or raw CC capture
+- send controller feedback
+- open Analog Rytm output
+- open Analog Four output
+- arm hardware
+- send hardware MIDI
+- mutate a snapshot
+- dispatch Cockpit WebSocket commands
+- open MIDI output
+
+Safety:
+- passive/read-only
+- controller-template rows only
+- virtual encoder gestures only
+- no MIDI controller input
+- no MIDI learn or raw CC capture
+- no WebSocket command dispatch
+- no MIDI sending
+- no port opening
+- no hardware mutation
+- no hardware required
+
+Replay commands:
+- python -m rytm_randomizer.cli controller-brain-mapping-report --json
+- python -m rytm_randomizer.cli controller-brain-rehearsal-report --json
+Source: rytm_randomizer.reports.controller_brain_rehearsal
+In-memory only: True

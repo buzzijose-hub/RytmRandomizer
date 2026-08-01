@@ -1,0 +1,97 @@
+[
+  {
+    "key": "full",
+    "title": "Full manual validation feedback",
+    "summary": "Installer, cockpit, profile wizard, analyzer, export, mock controls, and hardware boundary.",
+    "step_keys": [
+      "installer-artifact",
+      "cockpit-connection-state",
+      "profile-create-flow",
+      "analyzer-style-extra",
+      "reference-analysis-result",
+      "export-model-no-op",
+      "pad-scope-gap",
+      "mock-send-controls",
+      "hardware-arm-boundary",
+      "hardware-stop-conditions"
+    ],
+    "review_focus_keys": [
+      "analyzer-style-extra",
+      "export-model-no-op",
+      "pad-scope-gap"
+    ]
+  },
+  {
+    "key": "installer",
+    "title": "Installer and sidecar feedback",
+    "summary": "Installer artifact, unsigned warning, cockpit launch, and WebSocket/sidecar state.",
+    "step_keys": [
+      "installer-artifact",
+      "cockpit-connection-state"
+    ],
+    "review_focus_keys": [
+      "installer-artifact",
+      "cockpit-connection-state"
+    ]
+  },
+  {
+    "key": "profile",
+    "title": "Profile wizard and analyzer feedback",
+    "summary": "Profile creation, reference analysis, export action, and pad-scope product gaps.",
+    "step_keys": [
+      "profile-create-flow",
+      "analyzer-style-extra",
+      "reference-analysis-result",
+      "export-model-no-op",
+      "pad-scope-gap"
+    ],
+    "review_focus_keys": [
+      "analyzer-style-extra",
+      "export-model-no-op",
+      "pad-scope-gap"
+    ]
+  },
+  {
+    "key": "mock",
+    "title": "Mock cockpit control feedback",
+    "summary": "Mock-safe button, history, snapshot, and no-send control behavior.",
+    "step_keys": [
+      "cockpit-connection-state",
+      "mock-send-controls",
+      "pad-scope-gap"
+    ],
+    "review_focus_keys": [
+      "mock-send-controls",
+      "pad-scope-gap"
+    ]
+  },
+  {
+    "key": "hardware",
+    "title": "Hardware-boundary smoke feedback",
+    "summary": "Explicit arm boundary and stop-condition capture for approved manual hardware passes.",
+    "step_keys": [
+      "hardware-arm-boundary",
+      "hardware-stop-conditions",
+      "pad-scope-gap"
+    ],
+    "review_focus_keys": [
+      "hardware-arm-boundary",
+      "hardware-stop-conditions"
+    ]
+  },
+  {
+    "key": "review",
+    "title": "Reviewer triage feedback",
+    "summary": "The current highest-priority defects to hand back to review.",
+    "step_keys": [
+      "analyzer-style-extra",
+      "export-model-no-op",
+      "pad-scope-gap"
+    ],
+    "review_focus_keys": [
+      "analyzer-style-extra",
+      "export-model-no-op",
+      "pad-scope-gap"
+    ]
+  }
+]

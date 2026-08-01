@@ -1,0 +1,52 @@
+[
+  {
+    "key": "warehouse_accident_01",
+    "name": "Warehouse Accident 01",
+    "tags": [
+      "warehouse",
+      "accident",
+      "hypnotic",
+      "keeper"
+    ],
+    "seed": "style-journal-warehouse-0001",
+    "pads": [
+      1,
+      3,
+      11
+    ],
+    "values": {
+      "pad_11_noise_level": 7,
+      "pad_1_filter_frequency": 26,
+      "pad_3_lfo_depth": 92
+    },
+    "depth": "groove",
+    "guardrail_mode": "live_safe",
+    "notes": "Useful metallic motion that stayed controlled after returning to clean."
+  },
+  {
+    "key": "broken_fill_seed_02",
+    "name": "Broken Fill Seed 02",
+    "tags": [
+      "industrial",
+      "fill",
+      "one_shot",
+      "review"
+    ],
+    "seed": "style-journal-broken-0002",
+    "pads": [
+      4,
+      8,
+      10,
+      11
+    ],
+    "values": {
+      "pad_10_hat_density": 64,
+      "pad_11_drive": 81,
+      "pad_4_decay": 87,
+      "pad_8_accent_pressure": 72
+    },
+    "depth": "strong",
+    "guardrail_mode": "studio_wild",
+    "notes": "Save for studio exploration; too risky for Live Safe without a reset cue."
+  }
+]

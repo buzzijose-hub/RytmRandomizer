@@ -127,7 +127,10 @@ on one line for an existing module, you probably need a new module instead.
 | `midi_io.py`                 | Leaf MIDI primitives: build CC, send param, apply state. `mido` is lazy.    |
 | `senders/midi_event_plan.py` | Generic CC/NRPN event-plan delivery loop; structural validation is owned by `behavior/midi_event_plan.py`. |
 | `senders/guarded.py`, `senders/hardware.py` | Generic guarded/mock and arm-gated Device plan senders. |
+| `senders/armed_apply.py` | ArmedApply seam: the single arm-gated boundary every **cockpit** outbound transmit routes through (explicit in-UI arm + per-action `confirm`; never auto-re-arms after reconnect; persistent kit/sound writes refused). Not repo-wide — the legacy V1.34 `app.py` entry point still opens its own ports at 10 sites under the CLI's `--arm` discipline, exempt via `_LEGACY_V134_TRANSMIT_MODULES` in `tests/architecture/test_armed_entry_points.py`. Migrating it requires teaching the seam paced delivery first: `app.py` sends through `midi_io.send_cc` (0.02s `MIDI_MESSAGE_SETTLE_SECONDS` per message + `record_cc_sent`), the seam writes raw triples unpaced. `shell.py` is **not** exempt — it transmits nothing, receiving an injected `Sender` from `app.py`. |
 | `randomization.py`           | Pure randomization core: zone/depth mutation, waveform pick.                |
+| `behavior/morph.py`          | Passive kit-morphing interpolation (current ↔ target, per-track/page, depth macro). Pure + deterministic; parity-pinned cross-language. |
+| `behavior/scope.py`          | Passive scoped-randomization masks + intensity scoping anchored on the current kit. Pure + deterministic. |
 | `mock_midi.py`               | In-memory `MockMidiSender` and `MidiMessage` for tests + passive paths.     |
 | `real_midi_adapter.py`       | Protocol boundary: `RealMidiPortProvider`, neutral armed-output `RealMidiOutputProvider`, and `RealMidiSender`. NO `mido`. |
 | `mido_provider.py`           | Concrete `mido`-backed input/output provider. `mido` imported lazily INSIDE methods. |
@@ -475,11 +478,12 @@ as a snapshot mutation, move it through the `Device` strategies instead.
 ## 6.2 Cockpit & Profile-Model layer (Phase 1)
 
 The `rytm_randomizer.cockpit` subpackage is the live-performance GUI surface
-and the home of the portable mutation engine. It is the **active runtime
-counterpart** to the 40+ passive `live_gui_*` reports under `reports/`:
-those reports define the declarative contracts the cockpit conforms to,
-and the cockpit hosts the actual WebSocket Protocol the desktop shell
-drives.
+and the home of the portable mutation engine. It hosts the actual
+WebSocket Protocol the desktop shell drives. (The live `live_gui_*_model`
+packet feeders under `reports/` still supply the performance-console
+payloads; the superseded paper-spec `live_gui_*` report modules were
+retired in the 2026-07 rival-program bundle — see
+`docs/superpowers/plans/2026-07-20-live-gui-retirement-evidence.md`.)
 
 **Visual reference:** [`docs/ARCHITECTURE_DIAGRAMS.md`](ARCHITECTURE_DIAGRAMS.md)
 has two new mermaid diagrams that illustrate this section —
@@ -513,8 +517,15 @@ rytm_randomizer/cockpit/
         store.py           # append, undo, load, promote-to-saved
     device/                # Device adapter abstraction
         adapter.py         # DeviceAdapter Protocol
-        mock.py            # MockDeviceAdapter (default, no MIDI)
-        real.py            # RealMidiDeviceAdapter (wraps mido_provider)
+        mock.py            # MockDeviceAdapter (the only adapter — state,
+                           #   never a MIDI port; the ArmedApply seam owns
+                           #   the single real output handle)
+        connection.py      # ConnectionManager — Live-but-Passive launch brain
+                           #   (disconnected -> searching -> listening; inputs only)
+        midi_monitor.py    # Passive live MIDI monitor (bounded ring, decoded labels)
+    diagnostics.py         # Connection Doctor + error journal + /health payloads
+    library/               # Sound library store
+        store.py           # Captured-kit records: device_id, name, fingerprint, tags
     ws/                    # WebSocket Protocol surface
         server.py          # FastAPI app, single /ws endpoint
         protocol.py        # Wire-format event + command types
@@ -562,8 +573,8 @@ UI drives the engine with **typed commands** that ack synchronously.
 | `toggle_preview` | `{ ok, candidate? }` | Ghost overlay on/off |
 | `regen` | `{ ok, candidate }` | New seed, same depth |
 | `prepare_send_plan` | `{ ok, send_plan }` | Builds an inert packet plan and readiness blockers |
-| `send` | `{ ok, new_snapshot_id, send_plan_id }` | Applies the ready plan via device adapter |
-| `save` | `{ ok, snapshot_id }` | Promotes current snapshot to device kit |
+| `send` | `{ ok, new_snapshot_id, send_plan_id }` | Applies the ready plan. When the session is armed the command MUST carry `confirm: true` — the seam refuses otherwise (per-action operator confirmation); unarmed/mock sends need no `confirm`. |
+| `save` | `{ ok, snapshot_id }` | Promotes the current snapshot to a labelled `kind="saved"` **history** entry. It does **not** write to the device: a persistent kit write is refused at the seam while capture-before-write and restore do not exist. |
 | `load_snapshot` | `{ ok }` | Restores a historical snapshot |
 | `undo` | `{ ok, snapshot_id }` | Walks history back one step |
 | `export_profile_model` | `{ ok, model_bytes }` | MessagePack + header + CRC |
@@ -616,11 +627,17 @@ report. It sits **alongside** them:
   reducers, and test selectors directly from the corresponding
   `live_gui_*` report module. The reports stay passive and the cockpit
   is the active implementation of the same shape.
-- **The Device Protocol seam is reused.** The cockpit's `RealMidiDeviceAdapter`
-  routes hardware sends through the existing `mido_provider` + `real_midi_adapter`
-  boundary — the same one the armed CLI path uses. The `--arm` discipline
-  applies identically: passive default opens no MIDI port, only an
-  explicit arm step does.
+- **One armed output handle, owned by the seam.** The cockpit has no
+  real-MIDI device adapter. `MockDeviceAdapter` models snapshot/history
+  state whether or not the session is armed; the `senders` ArmedApply
+  seam is the only thing that transmits, and it holds the single real
+  output port (opened through `mido_provider`, exactly-named and
+  fail-closed). An adapter that opened its own port alongside the seam
+  produced two handles, one of them ungated — that adapter was deleted.
+  `handlers.session_is_armed()` is the single armed-state predicate.
+  Persistent kit/sound writes are refused outright
+  (`KitMutationUnsupportedError`); only RAM-only live-dial CC sends
+  transmit.
 - **Architecture invariants apply unchanged.** `data/` stays a leaf
   (cockpit code may read `data/profiles.py` for CC-number lookups but
   never re-defines a fact table). The `cockpit/` subpackage satisfies

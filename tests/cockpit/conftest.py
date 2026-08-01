@@ -16,6 +16,18 @@ The two top-level fixtures:
   :func:`cockpit_client`, **drains the five bootstrap events** so tests
   start at the "live command loop" cursor, and yields the live socket.
 
+One autouse fixture every cockpit test module inherits:
+
+* :func:`_reset_active_connection_manager` — clears the process-level
+  :class:`ConnectionManager` registration before and after each test.
+  Four modules used to carry a private copy of this fixture under four
+  different names (``_reset_active_connection_manager``,
+  ``_clean_active_manager``, ``_no_active_manager`` ×2), three of which
+  only cleaned up on the way out. Autouse in the package conftest is the
+  Gate-11 single source of truth: a module that registers a manager
+  cannot leak it into a sibling module's worker regardless of whether
+  its author remembered the fixture.
+
 Four helpers that integration tests call directly:
 
 * :func:`send_cmd` — write a command envelope, read the matching ack frame.
@@ -42,6 +54,7 @@ from fastapi.testclient import TestClient
 
 from rytm_randomizer.cockpit.data import PadState, Snapshot
 from rytm_randomizer.cockpit.device import MockDeviceAdapter
+from rytm_randomizer.cockpit.device.connection import set_active_connection_manager
 from rytm_randomizer.cockpit.history import HistoryStore
 from rytm_randomizer.cockpit.profiles import ProfileRegistry
 from rytm_randomizer.cockpit.ws.protocol import HELLO_FRAME_TYPE, WS_SUBPROTOCOL
@@ -111,6 +124,28 @@ def _seed_for_test_node(nodeid: str) -> int:
 
     seed = int.from_bytes(hashlib.sha256(nodeid.encode("utf-8")).digest()[:4], "big")
     return seed or 1
+
+
+@pytest.fixture(autouse=True)
+def _reset_active_connection_manager() -> Iterator[None]:
+    """Every cockpit test starts AND ends with no registered ConnectionManager.
+
+    ``set_active_connection_manager`` writes process-level state. A test
+    that registers a manager and does not clear it changes what every
+    later test in the same xdist worker observes: the handlers'
+    ``session_status`` phase silently switches from the device-derived
+    fallback to the leaked manager's state, so failures land in an
+    unrelated module and depend on collection order.
+
+    Autouse and package-wide so the guarantee does not depend on each
+    module remembering to opt in. Clearing on the way *in* as well as out
+    means a leak from a non-cockpit test cannot poison this package
+    either.
+    """
+
+    set_active_connection_manager(None)
+    yield
+    set_active_connection_manager(None)
 
 
 @pytest.fixture

@@ -1,0 +1,166 @@
+{
+  "0": {
+    "nrpn_lsb": 0,
+    "sound_offset": 28
+  },
+  "1": {
+    "nrpn_lsb": 1,
+    "sound_offset": 30
+  },
+  "10": {
+    "nrpn_lsb": 10,
+    "sound_offset": 50
+  },
+  "103": {
+    "nrpn_lsb": 103,
+    "sound_offset": 124
+  },
+  "11": {
+    "nrpn_lsb": 11,
+    "sound_offset": 48
+  },
+  "12": {
+    "nrpn_lsb": 12,
+    "sound_offset": 52
+  },
+  "13": {
+    "nrpn_lsb": 13,
+    "sound_offset": 54
+  },
+  "14": {
+    "nrpn_lsb": 14,
+    "sound_offset": 56
+  },
+  "15": {
+    "nrpn_lsb": 15,
+    "sound_offset": 58
+  },
+  "16": {
+    "nrpn_lsb": 16,
+    "sound_offset": 60
+  },
+  "17": {
+    "nrpn_lsb": 17,
+    "sound_offset": 64
+  },
+  "18": {
+    "nrpn_lsb": 18,
+    "sound_offset": 62
+  },
+  "19": {
+    "nrpn_lsb": 19,
+    "sound_offset": 66
+  },
+  "2": {
+    "nrpn_lsb": 2,
+    "sound_offset": 32
+  },
+  "20": {
+    "nrpn_lsb": 20,
+    "sound_offset": 68
+  },
+  "21": {
+    "nrpn_lsb": 21,
+    "sound_offset": 70
+  },
+  "22": {
+    "nrpn_lsb": 22,
+    "sound_offset": 72
+  },
+  "23": {
+    "nrpn_lsb": 23,
+    "sound_offset": 74
+  },
+  "24": {
+    "nrpn_lsb": 24,
+    "sound_offset": 76
+  },
+  "25": {
+    "nrpn_lsb": 25,
+    "sound_offset": 78
+  },
+  "26": {
+    "nrpn_lsb": 26,
+    "sound_offset": 80
+  },
+  "27": {
+    "nrpn_lsb": 27,
+    "sound_offset": 82
+  },
+  "28": {
+    "nrpn_lsb": 28,
+    "sound_offset": 84
+  },
+  "29": {
+    "nrpn_lsb": 29,
+    "sound_offset": 86
+  },
+  "3": {
+    "nrpn_lsb": 3,
+    "sound_offset": 34
+  },
+  "30": {
+    "nrpn_lsb": 30,
+    "sound_offset": 88
+  },
+  "31": {
+    "nrpn_lsb": 31,
+    "sound_offset": 90
+  },
+  "32": {
+    "nrpn_lsb": 32,
+    "sound_offset": 94
+  },
+  "33": {
+    "nrpn_lsb": 33,
+    "sound_offset": 96
+  },
+  "34": {
+    "nrpn_lsb": 34,
+    "sound_offset": 98
+  },
+  "35": {
+    "nrpn_lsb": 35,
+    "sound_offset": 100
+  },
+  "36": {
+    "nrpn_lsb": 36,
+    "sound_offset": 102
+  },
+  "37": {
+    "nrpn_lsb": 37,
+    "sound_offset": 104
+  },
+  "38": {
+    "nrpn_lsb": 38,
+    "sound_offset": 106
+  },
+  "39": {
+    "nrpn_lsb": 39,
+    "sound_offset": 108
+  },
+  "4": {
+    "nrpn_lsb": 4,
+    "sound_offset": 36
+  },
+  "5": {
+    "nrpn_lsb": 5,
+    "sound_offset": 38
+  },
+  "6": {
+    "nrpn_lsb": 6,
+    "sound_offset": 40
+  },
+  "7": {
+    "nrpn_lsb": 7,
+    "sound_offset": 42
+  },
+  "8": {
+    "nrpn_lsb": 8,
+    "sound_offset": 44
+  },
+  "9": {
+    "nrpn_lsb": 9,
+    "sound_offset": 46
+  }
+}

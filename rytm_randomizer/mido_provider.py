@@ -22,26 +22,42 @@ from typing import TYPE_CHECKING, Protocol, cast
 
 from .observability.logging import get_logger
 from .observability.tracing import operation
-from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
+from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError, RealMidiSendError
 
 if TYPE_CHECKING:
     from .real_midi_adapter import RealMidiOutputPort
 
-__all__ = ["MidoMidiPortProvider", "build_mido_midi_port_provider"]
+__all__ = [
+    "MidoMidiPortProvider",
+    "WireOutputPort",
+    "build_mido_midi_port_provider",
+    "neutral_cc_fields",
+]
 
 _logger = get_logger(__name__)
 
 
 class RealMidiInputPort(Protocol):
-    """Minimal input-port protocol for passive pending-message capture."""
+    """Minimal input-port protocol for passive pending-message capture.
 
-    iter_pending: Callable[[], Iterable[object]]
-    close: Callable[[], None]
+    Method-style members (not ``Callable`` attributes) so this protocol
+    satisfies method-style consumer seams like
+    :class:`rytm_randomizer.cockpit.device.midi_monitor.MidiInputPortLike`.
+    """
+
+    def iter_pending(self) -> Iterable[object]:
+        """Return an iterable of backend-specific pending input messages."""
+        ...
+
+    def close(self) -> None:
+        """Release the backend input port."""
+        ...
 
 
 class _MidoModule(Protocol):
     """Typed surface used from the lazily imported ``mido`` module."""
 
+    Message: Callable[..., object]
     get_output_names: Callable[[], Iterable[str]]
     get_input_names: Callable[[], Iterable[str]]
     open_output: Callable[[str], RealMidiOutputPort]
@@ -177,6 +193,113 @@ def _require_mido_port_name(value: object, *, direction: str) -> str:
     return value
 
 
+def _require_7bit(value: object, *, field: str) -> int:
+    """Coerce one wire field to a 7-bit int, or refuse (fail closed)."""
+
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise RealMidiSendError(f"midi_wire_field_not_int: {field}")
+    if not 0 <= value <= 127:
+        raise RealMidiSendError(f"midi_wire_field_out_of_range: {field}")
+    return value
+
+
+def _require_channel(value: object) -> int:
+    """Coerce a MIDI channel to ``0..15``, or refuse (fail closed)."""
+
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise RealMidiSendError("midi_wire_field_not_int: channel")
+    if not 0 <= value <= 15:
+        raise RealMidiSendError("midi_wire_field_out_of_range: channel")
+    return value
+
+
+def neutral_cc_fields(message: object) -> tuple[int, int, int]:
+    """Normalise one neutral CC message to ``(channel, control, value)``.
+
+    The armed path carries device-neutral messages in exactly two shapes,
+    and **neither is acceptable to a real ``mido`` output port**:
+
+    * a ``(channel, control, value)`` triple — what
+      :meth:`rytm_randomizer.devices.Device.to_cc_messages` renders, and
+      what the ArmedApply seam iterates;
+    * a :class:`~rytm_randomizer.mock_midi.MidiMessage` — the inert
+      dataclass the cockpit adapters build via ``build_cc_message``.
+
+    Both are normalised here, at the lazy real-MIDI boundary, so the
+    conversion to :class:`mido.Message` happens in exactly one place
+    (:class:`WireOutputPort`). Anything else fails closed with
+    :exc:`~rytm_randomizer.real_midi_adapter.RealMidiSendError`.
+    """
+
+    if isinstance(message, tuple):
+        fields = cast(tuple[object, ...], message)
+        if len(fields) != 3:
+            raise RealMidiSendError("midi_wire_triple_arity")
+        return (
+            _require_channel(fields[0]),
+            _require_7bit(fields[1], field="control"),
+            _require_7bit(fields[2], field="value"),
+        )
+
+    message_type = getattr(message, "message_type", None)
+    if message_type is None:
+        raise RealMidiSendError(f"midi_wire_unsupported_message: {type(message).__name__}")
+    if message_type not in ("cc", "control_change"):
+        raise RealMidiSendError(f"midi_wire_unsupported_message_type: {message_type!s}")
+    return (
+        _require_channel(getattr(message, "channel", None)),
+        _require_7bit(getattr(message, "control", None), field="control"),
+        _require_7bit(getattr(message, "value", None), field="value"),
+    )
+
+
+class WireOutputPort:
+    """The one place a neutral message becomes a real ``mido.Message``.
+
+    A real ``mido`` output port rejects anything that is not a
+    :class:`mido.Message`; the armed path upstream deliberately speaks in
+    device-neutral triples / inert :class:`~rytm_randomizer.mock_midi.MidiMessage`
+    dataclasses so no engine, runner, or cockpit adapter has to know about
+    ``mido``. This wrapper closes that gap at the lazy real-MIDI boundary —
+    the same shape :func:`rytm_randomizer.midi_io.send_cc` already uses for
+    its real branch (build ``mido.Message`` immediately before ``send``).
+
+    Wrapping (rather than converting at each call site) means the armed
+    seam holds a port that *is* the conversion, so a future message kind
+    cannot silently bypass it.
+    """
+
+    def __init__(self, port: RealMidiOutputPort, mido_module: _MidoModule) -> None:
+        """Capture the opened backend port plus the already-imported ``mido``."""
+
+        self._port = port
+        self._mido = mido_module
+
+    @property
+    def name(self) -> str | None:
+        """The backend port's own name, when it exposes one."""
+
+        name = getattr(self._port, "name", None)
+        return None if name is None else str(name)
+
+    def send(self, message: object) -> None:
+        """Convert ``message`` to a ``mido.Message`` and transmit it."""
+
+        channel, control, value = neutral_cc_fields(message)
+        wire_message = self._mido.Message(
+            "control_change",
+            channel=channel,
+            control=control,
+            value=value,
+        )
+        self._port.send(wire_message)
+
+    def close(self) -> None:
+        """Close the wrapped backend port."""
+
+        self._port.close()
+
+
 class MidoMidiPortProvider:
     """Real MIDI port provider backed by ``mido``.
 
@@ -231,6 +354,13 @@ class MidoMidiPortProvider:
     def open_output(self, port_name: str) -> RealMidiOutputPort:
         """Open a hardware MIDI output port by name (lazy ``mido``).
 
+        The returned port is a :class:`WireOutputPort` wrapper, not the raw
+        backend port: every armed caller upstream speaks in device-neutral
+        triples / inert ``MidiMessage`` dataclasses, and a real ``mido`` port
+        accepts only :class:`mido.Message`. The wrapper performs that
+        conversion here, at the single lazy real-MIDI boundary, so no caller
+        can hand a real port an object it rejects.
+
         Wrapped in an :func:`~rytm_randomizer.observability.tracing.operation`
         span so a ``--debug`` log records when the backend opened the selected
         port and how long it took, without persisting the machine-local port
@@ -265,7 +395,7 @@ class MidoMidiPortProvider:
             ):
                 _close_rejected_port(port, direction="output")
                 raise RealMidiPortError(f"invalid_midi_output_port: {checked_port_name}")
-            return port
+            return WireOutputPort(port, mido)
 
     def open_input(self, port_name: str) -> RealMidiInputPort:
         """Open a hardware MIDI input port by name (lazy ``mido``)."""

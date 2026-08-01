@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import type {
-  LiveGuiAnalyzerPanelControlDict,
   LiveGuiDeviceInventoryCardDict,
   LiveGuiPerformanceConsoleLiveKitOperatorPackageDict,
   LiveGuiPerformanceConsoleLiveKitOperatorPackageSlotBindingDict,
@@ -29,6 +28,7 @@ import type {
   RehearseOperatorPackageStepCommand,
 } from '../ws/protocol';
 import { ANALOG_FOUR_DEVICE_ID, RYTM_DEVICE_ID } from './devices';
+import { PanelHost } from './panels/PanelHost';
 import { RYTM_PARAMETER_GROUPS } from './parameterGroups';
 
 export interface PerformanceConsoleProps {
@@ -51,7 +51,6 @@ export interface PerformanceConsoleProps {
   ) => Promise<CommandAck>;
 }
 
-const ANALYZER_CONTROL_ORDER: ReadonlyArray<string> = ['preview', 'dry_run', 'arm_hardware'];
 const SNAPSHOT_DECK_PREVIEW_PARAMETER_COUNT = 3;
 const PREVIEW_DEPTH_MIN = 10;
 const PREVIEW_DEPTH_MAX = 90;
@@ -1380,17 +1379,6 @@ function removeLocalRehearsalSnapshot(): void {
   }
 }
 
-function orderedAnalyzerControls(
-  controls: Readonly<Record<string, LiveGuiAnalyzerPanelControlDict>>,
-): ReadonlyArray<LiveGuiAnalyzerPanelControlDict> {
-  const ordered = ANALYZER_CONTROL_ORDER.map((key) => controls[key]).filter(
-    (control): control is LiveGuiAnalyzerPanelControlDict => control !== undefined,
-  );
-  const remaining = Object.values(controls).filter(
-    (control) => !ANALYZER_CONTROL_ORDER.includes(control.key),
-  );
-  return [...ordered, ...remaining];
-}
 
 function formatLanePolicies(lanes: Readonly<Record<string, string>>): string {
   const entries = Object.entries(lanes).sort(([left], [right]) => left.localeCompare(right));
@@ -4357,57 +4345,7 @@ export function PerformanceConsole({
         </div>
       </section>
 
-      <section
-        className="performance-console-surface"
-        data-testid="performance-console-analyzer-panel"
-        aria-labelledby="console-analyzer-panel-title"
-      >
-        <header className="performance-console-section-header">
-          <h2 id="console-analyzer-panel-title">{model.analyzer_panel.title}</h2>
-          <span>
-            {model.analyzer_panel.panel_status} / {model.analyzer_panel.panel_mode}
-          </span>
-        </header>
-        <p className="panel-meta">{model.analyzer_panel.reference_label}</p>
-        <div className="performance-console-list" aria-label="Analyzer spectrum">
-          {model.analyzer_panel.spectrum_bands.map((band) => (
-            <article key={band.key}>
-              <strong>{band.label}</strong>
-              <span>
-                {band.low_hz}-{band.high_hz} Hz / {band.status}
-              </span>
-              <small>{band.value_percent}%</small>
-            </article>
-          ))}
-        </div>
-        <div className="live-chip-row" aria-label="Analyzer required actions">
-          {model.analyzer_panel.required_actions.map((action) => (
-            <span key={action} className="live-chip">
-              {action}
-            </span>
-          ))}
-        </div>
-        <div className="live-chip-row" aria-label="Analyzer blocked actions">
-          {model.analyzer_panel.blocked_actions.map((action) => (
-            <span key={action} className="live-chip live-chip-blocked">
-              {action}
-            </span>
-          ))}
-        </div>
-        <div className="performance-console-macro-actions">
-          {orderedAnalyzerControls(model.analyzer_panel.controls).map((control) => (
-            <button
-              key={control.key}
-              type="button"
-              className="live-readiness-action"
-              disabled={!control.enabled}
-              title={control.status}
-            >
-              {control.label} analyzer
-            </button>
-          ))}
-        </div>
-      </section>
+      <PanelHost region="deck" model={model} />
 
       <section
         className="performance-console-surface"

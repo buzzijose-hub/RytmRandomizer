@@ -13,6 +13,16 @@ updates:
     ignore:
       - dependency-name: "mido"
       - dependency-name: "python-rtmidi"
+      # FastAPI 0.136.3 is excluded from every pyproject.toml requirement
+      # (`fastapi>=0.110.0,!=0.136.3,<0.139.2`) because pip-audit flags it
+      # as MAL-2026-4750. Mirror the exclusion here so dependabot never
+      # proposes the flagged release. The range form (rather than a bare
+      # exact pin) is used because pip-ecosystem `versions` entries take
+      # Python requirement specifiers. Tie-tested against the pyproject cap
+      # in tests/architecture/test_cockpit_runtime_dependencies.py so the
+      # two can never drift apart.
+      - dependency-name: "fastapi"
+        versions: [">=0.136.3, <0.136.4"]
 
   - package-ecosystem: "github-actions"
     directory: "/"

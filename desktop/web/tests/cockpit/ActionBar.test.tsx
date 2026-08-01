@@ -129,7 +129,11 @@ describe('ActionBar', () => {
     expect(send).toHaveTextContent('DRY-RUN SEND');
     expect(send).toHaveTextContent('(2 pads)');
     fireEvent.click(send);
+    // Pinned: the unarmed / mock path is ONE click and carries NO `confirm`.
+    // Nothing reaches hardware, and the sidecar only demands the per-action
+    // confirmation on the armed seam — an extra gesture here would be theatre.
     expect(fake.sent).toEqual([{ type: 'send' }]);
+    expect(screen.queryByTestId('send-confirm-dialog')).toBeNull();
   });
 
   it('SEND shows the live-hardware label only when the session is live and armed', () => {
@@ -140,12 +144,162 @@ describe('ActionBar', () => {
         armed: true,
         midi_port: 'IAC Driver Bus 1',
         mode: 'live',
+        connection_phase: 'armed',
         unsaved_sends: 0,
       });
     });
     renderWith(true);
     expect(screen.getByTestId('action-send')).toHaveTextContent('SEND');
     expect(screen.getByTestId('action-send')).not.toHaveTextContent('DRY-RUN SEND');
+  });
+
+  describe('armed per-action send confirmation', () => {
+    const armLiveSession = (port: string | null = 'IAC Driver Bus 1'): void => {
+      updateStore(() => {
+        useCockpitStore.getState().setPreviewCandidate(candidate);
+        useCockpitStore.getState().setSendPlan(sendPlan);
+        useCockpitStore.getState().setSessionStatus({
+          armed: true,
+          midi_port: port,
+          mode: 'live',
+          connection_phase: 'armed',
+          unsaved_sends: 0,
+        });
+      });
+    };
+
+    it('armed SEND opens the confirm dialog and emits nothing until confirmed', () => {
+      armLiveSession();
+      const { fake } = renderWith(true);
+      fireEvent.click(screen.getByTestId('action-send'));
+      expect(fake.sent).toEqual([]);
+      const dialog = screen.getByTestId('send-confirm-dialog');
+      expect(dialog).toHaveAttribute('role', 'dialog');
+      expect(dialog).toHaveAttribute('aria-modal', 'true');
+      // Real label, not a testid-only affordance.
+      expect(screen.getByRole('heading', { name: 'Confirm send to hardware' })).toBeTruthy();
+      expect(dialog).toHaveTextContent('IAC Driver Bus 1');
+    });
+
+    it('confirming an armed SEND emits send with confirm: true and closes the dialog', () => {
+      armLiveSession();
+      const { fake } = renderWith(true);
+      fireEvent.click(screen.getByTestId('action-send'));
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm send' }));
+      expect(fake.sent).toEqual([{ type: 'send', confirm: true }]);
+      expect(screen.queryByTestId('send-confirm-dialog')).toBeNull();
+    });
+
+    it('cancelling an armed SEND emits nothing and closes the dialog', () => {
+      armLiveSession();
+      const { fake } = renderWith(true);
+      fireEvent.click(screen.getByTestId('action-send'));
+      fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+      expect(fake.sent).toEqual([]);
+      expect(screen.queryByTestId('send-confirm-dialog')).toBeNull();
+    });
+
+    it('Escape closes the confirm dialog without sending', () => {
+      armLiveSession();
+      const { fake } = renderWith(true);
+      fireEvent.click(screen.getByTestId('action-send'));
+      fireEvent.keyDown(screen.getByTestId('send-confirm-dialog'), { key: 'Escape' });
+      expect(fake.sent).toEqual([]);
+      expect(screen.queryByTestId('send-confirm-dialog')).toBeNull();
+    });
+
+    it('Tab wraps focus from the last control back to the first (focus trap)', () => {
+      armLiveSession();
+      renderWith(true);
+      fireEvent.click(screen.getByTestId('action-send'));
+      const dialog = screen.getByTestId('send-confirm-dialog');
+      const cancel = screen.getByTestId('send-cancel-button');
+      const confirm = screen.getByTestId('send-confirm-button');
+      confirm.focus();
+      fireEvent.keyDown(dialog, { key: 'Tab' });
+      expect(document.activeElement).toBe(cancel);
+    });
+
+    it('Shift+Tab wraps focus from the first control back to the last (focus trap)', () => {
+      armLiveSession();
+      renderWith(true);
+      fireEvent.click(screen.getByTestId('action-send'));
+      const dialog = screen.getByTestId('send-confirm-dialog');
+      const cancel = screen.getByTestId('send-cancel-button');
+      const confirm = screen.getByTestId('send-confirm-button');
+      cancel.focus();
+      fireEvent.keyDown(dialog, { key: 'Tab', shiftKey: true });
+      expect(document.activeElement).toBe(confirm);
+    });
+
+    it('Tab is left alone when focus is not on either edge control', () => {
+      armLiveSession();
+      renderWith(true);
+      fireEvent.click(screen.getByTestId('action-send'));
+      const dialog = screen.getByTestId('send-confirm-dialog');
+      // Focus parked outside the dialog's focusable set: neither the
+      // first-control nor last-control wrap applies, so the browser's own Tab
+      // handling stands and focus must not be forced anywhere.
+      const outside = screen.getByTestId('action-regen');
+      outside.focus();
+      fireEvent.keyDown(dialog, { key: 'Tab' });
+      expect(document.activeElement).toBe(outside);
+      expect(screen.getByTestId('send-confirm-dialog')).toBeTruthy();
+    });
+
+    it('other keys inside the dialog neither close it nor move focus', () => {
+      armLiveSession();
+      const { fake } = renderWith(true);
+      fireEvent.click(screen.getByTestId('action-send'));
+      fireEvent.keyDown(screen.getByTestId('send-confirm-dialog'), { key: 'a' });
+      expect(screen.getByTestId('send-confirm-dialog')).toBeTruthy();
+      expect(fake.sent).toEqual([]);
+    });
+
+    it('drops the open confirm dialog if the session disarms underneath it', () => {
+      armLiveSession();
+      renderWith(true);
+      fireEvent.click(screen.getByTestId('action-send'));
+      expect(screen.getByTestId('send-confirm-dialog')).toBeTruthy();
+
+      // Cable pull / explicit disarm while the dialog is up.
+      updateStore(() => {
+        useCockpitStore.getState().setSessionStatus({
+          armed: false,
+          midi_port: null,
+          mode: 'mock',
+          connection_phase: 'disconnected',
+          unsaved_sends: 0,
+        });
+      });
+
+      expect(screen.queryByTestId('send-confirm-dialog')).toBeNull();
+      expect(screen.getByTestId('action-send')).toHaveTextContent('DRY-RUN SEND');
+    });
+
+    it('falls back to generic port wording when the armed session reports no port', () => {
+      armLiveSession(null);
+      renderWith(true);
+      fireEvent.click(screen.getByTestId('action-send'));
+      expect(screen.getByTestId('send-confirm-dialog')).toHaveTextContent('the selected output');
+    });
+
+    it('omits the pad-count phrase in the dialog when the plan has zero pads', () => {
+      updateStore(() => {
+        useCockpitStore.getState().setPreviewCandidate(candidate);
+        useCockpitStore.getState().setSendPlan({ ...sendPlan, pad_count: 0, packets: [] });
+        useCockpitStore.getState().setSessionStatus({
+          armed: true,
+          midi_port: 'IAC Driver Bus 1',
+          mode: 'live',
+          connection_phase: 'armed',
+          unsaved_sends: 0,
+        });
+      });
+      renderWith(true);
+      fireEvent.click(screen.getByTestId('action-send'));
+      expect(screen.getByTestId('send-confirm-dialog').textContent).not.toMatch(/\(\d+ pad/);
+    });
   });
 
   it('logs rejected command acks for operator troubleshooting', async () => {

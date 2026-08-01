@@ -1,0 +1,566 @@
+{
+  "balanced": {
+    "1": [
+      [
+        "body",
+        "micro"
+      ]
+    ],
+    "2": [
+      [
+        "body",
+        "groove"
+      ]
+    ],
+    "3": [
+      [
+        "lfo",
+        "groove"
+      ],
+      [
+        "body",
+        "micro"
+      ]
+    ],
+    "4": [
+      [
+        "body",
+        "micro"
+      ]
+    ]
+  },
+  "deeper": {
+    "1": [
+      [
+        "body",
+        "micro"
+      ]
+    ],
+    "2": [
+      [
+        "body",
+        "strong"
+      ],
+      [
+        "grit",
+        "micro"
+      ]
+    ],
+    "3": [
+      [
+        "body",
+        "groove"
+      ],
+      [
+        "lfo",
+        "groove"
+      ],
+      [
+        "morph",
+        "micro"
+      ]
+    ],
+    "4": [
+      [
+        "body",
+        "groove"
+      ],
+      [
+        "grit",
+        "micro"
+      ]
+    ]
+  },
+  "deeper_groove": {
+    "1": [
+      [
+        "body",
+        "micro"
+      ]
+    ],
+    "2": [
+      [
+        "body",
+        "groove"
+      ],
+      [
+        "grit",
+        "micro"
+      ]
+    ],
+    "3": [
+      [
+        "body",
+        "groove"
+      ],
+      [
+        "lfo",
+        "groove"
+      ]
+    ],
+    "4": [
+      [
+        "body",
+        "groove"
+      ]
+    ]
+  },
+  "deeper_pressure": {
+    "1": [
+      [
+        "body",
+        "micro"
+      ],
+      [
+        "filter",
+        "micro"
+      ]
+    ],
+    "2": [
+      [
+        "body",
+        "strong"
+      ],
+      [
+        "filter",
+        "groove"
+      ],
+      [
+        "grit",
+        "micro"
+      ]
+    ],
+    "3": [
+      [
+        "body",
+        "groove"
+      ],
+      [
+        "lfo",
+        "groove"
+      ],
+      [
+        "morph",
+        "micro"
+      ],
+      [
+        "filter",
+        "micro"
+      ]
+    ],
+    "4": [
+      [
+        "body",
+        "groove"
+      ],
+      [
+        "grit",
+        "groove"
+      ]
+    ]
+  },
+  "harder": {
+    "1": [
+      [
+        "body",
+        "groove"
+      ],
+      [
+        "filter",
+        "micro"
+      ]
+    ],
+    "2": [
+      [
+        "full",
+        "strong"
+      ],
+      [
+        "grit",
+        "strong"
+      ]
+    ],
+    "3": [
+      [
+        "src",
+        "strong"
+      ],
+      [
+        "filter",
+        "strong"
+      ],
+      [
+        "morph",
+        "strong"
+      ],
+      [
+        "lfo",
+        "strong"
+      ],
+      [
+        "grit",
+        "strong"
+      ]
+    ],
+    "4": [
+      [
+        "full",
+        "strong"
+      ],
+      [
+        "body",
+        "strong"
+      ],
+      [
+        "grit",
+        "strong"
+      ]
+    ]
+  },
+  "intense": {
+    "1": [
+      [
+        "body",
+        "micro"
+      ],
+      [
+        "filter",
+        "micro"
+      ]
+    ],
+    "2": [
+      [
+        "body",
+        "strong"
+      ],
+      [
+        "filter",
+        "groove"
+      ],
+      [
+        "grit",
+        "groove"
+      ]
+    ],
+    "3": [
+      [
+        "body",
+        "strong"
+      ],
+      [
+        "filter",
+        "groove"
+      ],
+      [
+        "morph",
+        "groove"
+      ],
+      [
+        "lfo",
+        "strong"
+      ],
+      [
+        "grit",
+        "groove"
+      ]
+    ],
+    "4": [
+      [
+        "body",
+        "strong"
+      ],
+      [
+        "filter",
+        "groove"
+      ],
+      [
+        "grit",
+        "groove"
+      ]
+    ]
+  },
+  "intense_grit": {
+    "1": [
+      [
+        "body",
+        "micro"
+      ],
+      [
+        "grit",
+        "micro"
+      ]
+    ],
+    "2": [
+      [
+        "body",
+        "strong"
+      ],
+      [
+        "grit",
+        "groove"
+      ],
+      [
+        "filter",
+        "groove"
+      ]
+    ],
+    "3": [
+      [
+        "grit",
+        "groove"
+      ],
+      [
+        "morph",
+        "groove"
+      ],
+      [
+        "lfo",
+        "groove"
+      ]
+    ],
+    "4": [
+      [
+        "body",
+        "strong"
+      ],
+      [
+        "grit",
+        "groove"
+      ],
+      [
+        "filter",
+        "groove"
+      ]
+    ]
+  },
+  "intense_motion": {
+    "1": [
+      [
+        "body",
+        "micro"
+      ]
+    ],
+    "2": [
+      [
+        "body",
+        "groove"
+      ],
+      [
+        "filter",
+        "groove"
+      ]
+    ],
+    "3": [
+      [
+        "lfo",
+        "strong"
+      ],
+      [
+        "morph",
+        "groove"
+      ],
+      [
+        "body",
+        "groove"
+      ],
+      [
+        "filter",
+        "groove"
+      ]
+    ],
+    "4": [
+      [
+        "body",
+        "groove"
+      ],
+      [
+        "filter",
+        "groove"
+      ]
+    ]
+  },
+  "rolling_light": {
+    "1": [
+      [
+        "body",
+        "micro"
+      ]
+    ],
+    "2": [
+      [
+        "body",
+        "micro"
+      ]
+    ],
+    "3": [
+      [
+        "lfo",
+        "micro"
+      ],
+      [
+        "body",
+        "micro"
+      ]
+    ],
+    "4": [
+      [
+        "body",
+        "micro"
+      ]
+    ]
+  },
+  "rolling_push": {
+    "1": [
+      [
+        "body",
+        "micro"
+      ]
+    ],
+    "2": [
+      [
+        "body",
+        "groove"
+      ],
+      [
+        "src",
+        "micro"
+      ]
+    ],
+    "3": [
+      [
+        "lfo",
+        "groove"
+      ],
+      [
+        "morph",
+        "micro"
+      ],
+      [
+        "body",
+        "micro"
+      ]
+    ],
+    "4": [
+      [
+        "body",
+        "groove"
+      ]
+    ]
+  },
+  "wild_controlled": {
+    "1": [
+      [
+        "body",
+        "groove"
+      ],
+      [
+        "filter",
+        "micro"
+      ]
+    ],
+    "2": [
+      [
+        "body",
+        "strong"
+      ],
+      [
+        "filter",
+        "groove"
+      ],
+      [
+        "grit",
+        "groove"
+      ]
+    ],
+    "3": [
+      [
+        "morph",
+        "strong"
+      ],
+      [
+        "lfo",
+        "strong"
+      ],
+      [
+        "filter",
+        "groove"
+      ],
+      [
+        "body",
+        "groove"
+      ]
+    ],
+    "4": [
+      [
+        "body",
+        "strong"
+      ],
+      [
+        "filter",
+        "groove"
+      ],
+      [
+        "grit",
+        "groove"
+      ]
+    ]
+  },
+  "wild_maximum": {
+    "1": [
+      [
+        "body",
+        "groove"
+      ],
+      [
+        "filter",
+        "micro"
+      ]
+    ],
+    "2": [
+      [
+        "full",
+        "strong"
+      ],
+      [
+        "grit",
+        "strong"
+      ]
+    ],
+    "3": [
+      [
+        "src",
+        "strong"
+      ],
+      [
+        "filter",
+        "strong"
+      ],
+      [
+        "morph",
+        "strong"
+      ],
+      [
+        "lfo",
+        "strong"
+      ],
+      [
+        "grit",
+        "strong"
+      ]
+    ],
+    "4": [
+      [
+        "full",
+        "strong"
+      ],
+      [
+        "body",
+        "strong"
+      ],
+      [
+        "grit",
+        "strong"
+      ]
+    ]
+  }
+}

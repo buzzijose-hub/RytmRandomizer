@@ -1,0 +1,100 @@
+[
+  {
+    "step_id": "a4-root-short",
+    "note_name": "C2",
+    "midi_note": 36,
+    "velocity": 96,
+    "gate_ms": 120,
+    "repeat_count": 1,
+    "focus": "root transient and low body",
+    "expected_evidence": [
+      "attack shape",
+      "pitch center",
+      "low-end tail"
+    ]
+  },
+  {
+    "step_id": "a4-mid-short",
+    "note_name": "C3",
+    "midi_note": 48,
+    "velocity": 96,
+    "gate_ms": 120,
+    "repeat_count": 1,
+    "focus": "main reference register",
+    "expected_evidence": [
+      "oscillator body",
+      "filter bite",
+      "envelope closure"
+    ]
+  },
+  {
+    "step_id": "a4-high-short",
+    "note_name": "C4",
+    "midi_note": 60,
+    "velocity": 96,
+    "gate_ms": 120,
+    "repeat_count": 1,
+    "focus": "brightness and key tracking",
+    "expected_evidence": [
+      "brightness",
+      "key follow",
+      "alias-free edge"
+    ]
+  },
+  {
+    "step_id": "a4-soft-velocity",
+    "note_name": "C3",
+    "midi_note": 48,
+    "velocity": 48,
+    "gate_ms": 120,
+    "repeat_count": 1,
+    "focus": "velocity sensitivity",
+    "expected_evidence": [
+      "attack variation",
+      "filter response",
+      "level change"
+    ]
+  },
+  {
+    "step_id": "a4-held-tail",
+    "note_name": "C3",
+    "midi_note": 48,
+    "velocity": 100,
+    "gate_ms": 900,
+    "repeat_count": 1,
+    "focus": "release, ambience, and modulation tail",
+    "expected_evidence": [
+      "release length",
+      "delay/reverb trail",
+      "slow LFO motion"
+    ]
+  },
+  {
+    "step_id": "a4-retrigger-grid",
+    "note_name": "C3",
+    "midi_note": 48,
+    "velocity": 104,
+    "gate_ms": 90,
+    "repeat_count": 4,
+    "focus": "sequenced retrigger behavior",
+    "expected_evidence": [
+      "envelope reset",
+      "groove density",
+      "filter recovery"
+    ]
+  },
+  {
+    "step_id": "a4-bright-pressure",
+    "note_name": "G3",
+    "midi_note": 55,
+    "velocity": 118,
+    "gate_ms": 180,
+    "repeat_count": 2,
+    "focus": "metallic pressure at performance velocity",
+    "expected_evidence": [
+      "sync bite",
+      "filter peak",
+      "overdrive saturation"
+    ]
+  }
+]

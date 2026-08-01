@@ -1,0 +1,367 @@
+{
+  "dub-pressure": {
+    "name": "dub-pressure",
+    "label": "Dub Pressure",
+    "summary": "Delay/reverb-led A4 macro for cavernous but controlled hypnosis.",
+    "energy": 4,
+    "events": [
+      {
+        "track": 1,
+        "role": "sub anchor",
+        "lane": "filter shade",
+        "parameter": "Filter1 Frequency",
+        "value_min": 30,
+        "value_max": 58,
+        "intent": "keep the sub lane rounded and steady"
+      },
+      {
+        "track": 1,
+        "role": "sub anchor",
+        "lane": "space send",
+        "parameter": "Delay Send Level",
+        "value_min": 8,
+        "value_max": 34,
+        "intent": "add only short ghost repeats under the bass"
+      },
+      {
+        "track": 2,
+        "role": "dub stab",
+        "lane": "amp shape",
+        "parameter": "EnvA Release Time",
+        "value_min": 34,
+        "value_max": 82,
+        "intent": "let the stab bloom into the delay"
+      },
+      {
+        "track": 2,
+        "role": "dub stab",
+        "lane": "space send",
+        "parameter": "Delay Send Level",
+        "value_min": 54,
+        "value_max": 110,
+        "intent": "make the delay lane the main dub gesture"
+      },
+      {
+        "track": 3,
+        "role": "ripple motion",
+        "lane": "lfo motion",
+        "parameter": "LFO2 Speed",
+        "value_min": 20,
+        "value_max": 72,
+        "intent": "move the secondary modulation in slow waves"
+      },
+      {
+        "track": 3,
+        "role": "ripple motion",
+        "lane": "lfo depth",
+        "parameter": "LFO2 Depth A",
+        "value_min": 14,
+        "value_max": 58,
+        "intent": "keep modulation audible but not chaotic"
+      },
+      {
+        "track": 4,
+        "role": "wash layer",
+        "lane": "noise texture",
+        "parameter": "Noise Fade",
+        "value_min": 32,
+        "value_max": 88,
+        "intent": "fade noise into the tail of the groove"
+      },
+      {
+        "track": 4,
+        "role": "wash layer",
+        "lane": "space send",
+        "parameter": "Reverb Send Level",
+        "value_min": 58,
+        "value_max": 118,
+        "intent": "build the wide dub room without touching hardware"
+      }
+    ]
+  },
+  "hard-groove": {
+    "name": "hard-groove",
+    "label": "Hard Groove",
+    "summary": "OXI-style four-track pressure for bass, stab, motion, and air lanes.",
+    "energy": 5,
+    "events": [
+      {
+        "track": 1,
+        "role": "bass foundation",
+        "lane": "oscillator drive",
+        "parameter": "OSC1 Level",
+        "value_min": 92,
+        "value_max": 122,
+        "intent": "push the bass voice forward"
+      },
+      {
+        "track": 1,
+        "role": "bass foundation",
+        "lane": "filter pressure",
+        "parameter": "Filter Overdrive",
+        "value_min": 34,
+        "value_max": 78,
+        "intent": "add controlled grit to the low lane"
+      },
+      {
+        "track": 1,
+        "role": "bass foundation",
+        "lane": "amp shape",
+        "parameter": "EnvA Decay Time",
+        "value_min": 32,
+        "value_max": 72,
+        "intent": "shape tight pressure around the kick"
+      },
+      {
+        "track": 2,
+        "role": "stab pressure",
+        "lane": "oscillator color",
+        "parameter": "OSC2 Level",
+        "value_min": 54,
+        "value_max": 96,
+        "intent": "blend a second oscillator into the stab lane"
+      },
+      {
+        "track": 2,
+        "role": "stab pressure",
+        "lane": "filter bite",
+        "parameter": "Filter1 Resonance",
+        "value_min": 36,
+        "value_max": 82,
+        "intent": "make the stab answer the groove"
+      },
+      {
+        "track": 2,
+        "role": "stab pressure",
+        "lane": "space send",
+        "parameter": "Delay Send Level",
+        "value_min": 20,
+        "value_max": 66,
+        "intent": "stage rhythmic repeats without washing out"
+      },
+      {
+        "track": 3,
+        "role": "motion accent",
+        "lane": "pulse motion",
+        "parameter": "OSC1 PWM Depth",
+        "value_min": 18,
+        "value_max": 76,
+        "intent": "move the accent lane with OXI-like pulse animation"
+      },
+      {
+        "track": 3,
+        "role": "motion accent",
+        "lane": "lfo motion",
+        "parameter": "LFO1 Speed",
+        "value_min": 18,
+        "value_max": 86,
+        "intent": "let the accent breathe against the sequence"
+      },
+      {
+        "track": 3,
+        "role": "motion accent",
+        "lane": "lfo depth",
+        "parameter": "LFO1 Depth A",
+        "value_min": 18,
+        "value_max": 78,
+        "intent": "scale motion without losing pad identity"
+      },
+      {
+        "track": 4,
+        "role": "air and noise",
+        "lane": "noise texture",
+        "parameter": "Noise Level",
+        "value_min": 10,
+        "value_max": 66,
+        "intent": "give the top lane industrial dust"
+      },
+      {
+        "track": 4,
+        "role": "air and noise",
+        "lane": "filter shade",
+        "parameter": "Filter2 Frequency",
+        "value_min": 44,
+        "value_max": 96,
+        "intent": "tilt the air lane without becoming harsh"
+      },
+      {
+        "track": 4,
+        "role": "air and noise",
+        "lane": "space send",
+        "parameter": "Reverb Send Level",
+        "value_min": 16,
+        "value_max": 56,
+        "intent": "give the high layer a controlled room"
+      }
+    ]
+  },
+  "home": {
+    "name": "home",
+    "label": "Home",
+    "summary": "Gentle four-track reset-adjacent motion for a stable live anchor.",
+    "energy": 2,
+    "events": [
+      {
+        "track": 1,
+        "role": "bass foundation",
+        "lane": "oscillator balance",
+        "parameter": "OSC1 Level",
+        "value_min": 84,
+        "value_max": 112,
+        "intent": "keep the bass present without stealing the mix"
+      },
+      {
+        "track": 1,
+        "role": "bass foundation",
+        "lane": "filter shade",
+        "parameter": "Filter1 Frequency",
+        "value_min": 38,
+        "value_max": 62,
+        "intent": "park the low voice in a controlled pocket"
+      },
+      {
+        "track": 2,
+        "role": "soft stab",
+        "lane": "filter shade",
+        "parameter": "Filter1 Resonance",
+        "value_min": 24,
+        "value_max": 54,
+        "intent": "add a touch of contour without peak-time bite"
+      },
+      {
+        "track": 2,
+        "role": "soft stab",
+        "lane": "space send",
+        "parameter": "Reverb Send Level",
+        "value_min": 18,
+        "value_max": 50,
+        "intent": "leave air around the chord lane"
+      },
+      {
+        "track": 3,
+        "role": "motion accent",
+        "lane": "lfo motion",
+        "parameter": "LFO1 Depth A",
+        "value_min": 10,
+        "value_max": 32,
+        "intent": "keep movement subtle and predictable"
+      },
+      {
+        "track": 3,
+        "role": "motion accent",
+        "lane": "amp shape",
+        "parameter": "EnvA Decay Time",
+        "value_min": 28,
+        "value_max": 58,
+        "intent": "preserve short rhythmic punctuation"
+      },
+      {
+        "track": 4,
+        "role": "air layer",
+        "lane": "noise texture",
+        "parameter": "Noise Level",
+        "value_min": 0,
+        "value_max": 28,
+        "intent": "add a barely-there top layer"
+      },
+      {
+        "track": 4,
+        "role": "air layer",
+        "lane": "space send",
+        "parameter": "Delay Send Level",
+        "value_min": 12,
+        "value_max": 38,
+        "intent": "keep delays tucked behind the groove"
+      }
+    ]
+  },
+  "industrial-transition": {
+    "name": "industrial-transition",
+    "label": "Industrial Transition",
+    "summary": "Tense four-track riser macro for transitions and breakdown pressure.",
+    "energy": 7,
+    "events": [
+      {
+        "track": 1,
+        "role": "pressure bass",
+        "lane": "oscillator tension",
+        "parameter": "OSC2 Pitch",
+        "value_min": 48,
+        "value_max": 76,
+        "intent": "lean the bass into a tense transition color"
+      },
+      {
+        "track": 1,
+        "role": "pressure bass",
+        "lane": "filter pressure",
+        "parameter": "Filter Overdrive",
+        "value_min": 54,
+        "value_max": 112,
+        "intent": "increase controlled industrial pressure"
+      },
+      {
+        "track": 2,
+        "role": "metallic stab",
+        "lane": "oscillator edge",
+        "parameter": "Sync Amount",
+        "value_min": 28,
+        "value_max": 92,
+        "intent": "turn the stab lane into metallic movement"
+      },
+      {
+        "track": 2,
+        "role": "metallic stab",
+        "lane": "filter bite",
+        "parameter": "Filter2 Resonance",
+        "value_min": 34,
+        "value_max": 90,
+        "intent": "add narrow peak-time bite"
+      },
+      {
+        "track": 3,
+        "role": "machine motion",
+        "lane": "pulse motion",
+        "parameter": "OSC2 PWM Depth",
+        "value_min": 22,
+        "value_max": 104,
+        "intent": "animate the machine lane for rising tension"
+      },
+      {
+        "track": 3,
+        "role": "machine motion",
+        "lane": "lfo motion",
+        "parameter": "LFO1 Speed Multiplier",
+        "value_min": 1,
+        "value_max": 20,
+        "intent": "accelerate modulation without guessing a port"
+      },
+      {
+        "track": 4,
+        "role": "noise sweep",
+        "lane": "noise texture",
+        "parameter": "Noise Level",
+        "value_min": 32,
+        "value_max": 108,
+        "intent": "raise industrial air for a transition"
+      },
+      {
+        "track": 4,
+        "role": "noise sweep",
+        "lane": "filter shade",
+        "parameter": "Filter2 Frequency",
+        "value_min": 58,
+        "value_max": 118,
+        "intent": "open the top layer as the transition builds"
+      },
+      {
+        "track": 4,
+        "role": "noise sweep",
+        "lane": "space send",
+        "parameter": "Reverb Send Level",
+        "value_min": 30,
+        "value_max": 96,
+        "intent": "stretch the transition tail safely"
+      }
+    ]
+  }
+}

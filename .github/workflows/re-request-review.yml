@@ -1,0 +1,35 @@
+name: re-request-review
+
+# Every push to a PR branch dismisses the prior review approval (branch
+# protection dismisses stale reviews), which leaves the PR with no pending
+# required reviewer until someone manually re-requests one. This workflow
+# re-requests edward-rosado on every non-draft, non-dependabot PR push so
+# the review queue signal (pending reviewRequests) never silently drops.
+#
+# This file is deliberately a SEPARATE workflow from test.yml: it is
+# convenience automation, not a merge gate, so it must never appear in the
+# `required-checks` aggregate (tests/architecture/test_ci_workflow.py only
+# governs test.yml's job list).
+on:
+  pull_request:
+    types: [synchronize]
+
+jobs:
+  re-request-review:
+    name: re-request-review
+    if: github.actor != 'dependabot[bot]' && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Re-request review from edward-rosado
+        # `|| true`: the gh call can 422 when the reviewer is the PR author
+        # or a request is already pending. This job is best-effort glue and
+        # must never block or redden CI.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api \
+            "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/requested_reviewers" \
+            -X POST \
+            -f 'reviewers[]=edward-rosado' || true

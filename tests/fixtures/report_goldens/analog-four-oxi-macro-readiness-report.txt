@@ -1,0 +1,66 @@
+RytmRandomizer passive Analog Four OXI macro readiness
+Macro: hard-groove
+Seed: 0
+Intensity: 4
+Readiness: review-ready
+Event count: 12
+Ready events: 12
+Review events: 0
+Blocked events: 0
+Shown events: 12
+Truncated events: 0
+Safety flags:
+- opens_ports: False
+- sends_midi: False
+- hardware_required: False
+- operator_present_required: True
+Validation workflow:
+- Preflight: python -m rytm_randomizer.app --arm --a4-soft-capture
+- Run the input-only A4 soft capture first.
+- Review known and unknown controls before sending one row.
+- Send one validation command while watching the A4 display.
+- Repeat only rows that remain musical and reversible.
+Readiness events:
+- Track 1 | bass foundation | oscillator drive | OSC1 Level | ch 0 | CC69 -> 101 | cc-ready | manual-backed CC MSB row is available through --a4-send-param
+- Track 1 | bass foundation | filter pressure | Filter Overdrive | ch 0 | CC86 -> 53 | cc-ready | manual-backed CC MSB row is available through --a4-send-param
+- Track 1 | bass foundation | amp shape | EnvA Decay Time | ch 0 | CC105 -> 58 | cc-ready | manual-backed CC MSB row is available through --a4-send-param
+- Track 2 | stab pressure | oscillator color | OSC2 Level | ch 1 | CC78 -> 77 | cc-ready | manual-backed CC MSB row is available through --a4-send-param
+- Track 2 | stab pressure | filter bite | Filter1 Resonance | ch 1 | CC89 -> 62 | cc-ready | manual-backed CC MSB row is available through --a4-send-param
+- Track 2 | stab pressure | space send | Delay Send Level | ch 1 | CC92 -> 41 | cc-ready | manual-backed CC MSB row is available through --a4-send-param
+- Track 3 | motion accent | pulse motion | OSC1 PWM Depth | ch 2 | CC74 -> 44 | cc-ready | manual-backed CC MSB row is available through --a4-send-param
+- Track 3 | motion accent | lfo motion | LFO1 Speed | ch 2 | CC116 -> 61 | cc-ready | manual-backed CC MSB row is available through --a4-send-param
+- Track 3 | motion accent | lfo depth | LFO1 Depth A | ch 2 | CC24 -> 33 | cc-ready | manual-backed CC MSB row is available through --a4-send-param
+- Track 4 | air and noise | noise texture | Noise Level | ch 3 | CC77 -> 33 | cc-ready | manual-backed CC MSB row is available through --a4-send-param
+- Track 4 | air and noise | filter shade | Filter2 Frequency | ch 3 | CC19 -> 68 | cc-ready | manual-backed CC MSB row is available through --a4-send-param
+- Track 4 | air and noise | space send | Reverb Send Level | ch 3 | CC93 -> 43 | cc-ready | manual-backed CC MSB row is available through --a4-send-param
+Validation commands:
+- python -m rytm_randomizer.app --arm --a4-send-param --track 1 --parameter 'OSC1 Level' --value 101
+- python -m rytm_randomizer.app --arm --a4-send-param --track 1 --parameter 'Filter Overdrive' --value 53
+- python -m rytm_randomizer.app --arm --a4-send-param --track 1 --parameter 'EnvA Decay Time' --value 58
+- python -m rytm_randomizer.app --arm --a4-send-param --track 2 --parameter 'OSC2 Level' --value 77
+- python -m rytm_randomizer.app --arm --a4-send-param --track 2 --parameter 'Filter1 Resonance' --value 62
+- python -m rytm_randomizer.app --arm --a4-send-param --track 2 --parameter 'Delay Send Level' --value 41
+- python -m rytm_randomizer.app --arm --a4-send-param --track 3 --parameter 'OSC1 PWM Depth' --value 44
+- python -m rytm_randomizer.app --arm --a4-send-param --track 3 --parameter 'LFO1 Speed' --value 61
+- python -m rytm_randomizer.app --arm --a4-send-param --track 3 --parameter 'LFO1 Depth A' --value 33
+- python -m rytm_randomizer.app --arm --a4-send-param --track 4 --parameter 'Noise Level' --value 33
+- python -m rytm_randomizer.app --arm --a4-send-param --track 4 --parameter 'Filter2 Frequency' --value 68
+- python -m rytm_randomizer.app --arm --a4-send-param --track 4 --parameter 'Reverb Send Level' --value 43
+Recovery notes:
+- Stop immediately if the A4 display shows ERR
+- Do not run full A4 macro SEND from this report.
+- Return the A4 kit manually or reload the saved kit before continuing.
+Promotion gates:
+- Every row maps to manual-backed CC metadata
+- At least one operator-present validation pass is clean
+- A recovery/stop procedure is documented.
+Safety:
+- passive/read-only
+- manual-backed Analog Four CC metadata only
+- operator-present validation commands only
+- no MIDI sending
+- no port opening
+- no unattended hardware behavior
+- A4 full macro SEND remains unimplemented
+Source: rytm_randomizer.reports.analog_four_oxi_macro_readiness
+In-memory only: True
