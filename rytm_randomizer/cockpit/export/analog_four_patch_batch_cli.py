@@ -530,7 +530,7 @@ def _format_studio_handoff(handoff: AnalogFourStudioHandoffPayload) -> list[str]
         f"calibration_rounds_required: {handoff['calibration_rounds_required']}",
         f"candidate_auditions_required: {handoff['candidate_auditions_required']}",
         "powershell_setup: Set-Location "
-        f"{powershell_literal_arg(handoff['powershell_workdir'])}",
+        f"{powershell_literal_arg(handoff['powershell_workdir'], always_quote=True)}",
     ]
     for candidate in handoff["candidates"]:
         prefix = f"candidate_{candidate['candidate']}"

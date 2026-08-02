@@ -9,10 +9,10 @@ _POWERSHELL_BARE_ARG_CHARS: Final[frozenset[str]] = frozenset(
 )
 
 
-def powershell_literal_arg(value: str) -> str:
+def powershell_literal_arg(value: str, *, always_quote: bool = False) -> str:
     """Return a PowerShell-safe literal command argument."""
 
-    if value and all(char in _POWERSHELL_BARE_ARG_CHARS for char in value):
+    if not always_quote and value and all(char in _POWERSHELL_BARE_ARG_CHARS for char in value):
         return value
     return "'" + value.replace("'", "''") + "'"
 

@@ -488,6 +488,14 @@ def test_shared_powershell_literal_argument_formatting(value: str, expected: str
     assert powershell_literal_arg(value) == expected
 
 
+def test_shared_powershell_literal_argument_can_force_stable_quoting() -> None:
+    from rytm_randomizer.behavior.operator_console import powershell_literal_arg
+
+    assert powershell_literal_arg("/workspace/repository", always_quote=True) == (
+        "'/workspace/repository'"
+    )
+
+
 def test_studio_handoff_commands_round_trip_through_their_real_parsers(
     tmp_path: Path,
 ) -> None:
