@@ -521,7 +521,9 @@ def _batch_payload_from_result(result: _BatchResult) -> AnalogFourAudioPatchBatc
 
 
 def _powershell_command(argv: Sequence[str]) -> str:
-    return "& " + " ".join(powershell_literal_arg(value) for value in argv)
+    return "& " + " ".join(
+        powershell_literal_arg(value, always_quote=index == 0) for index, value in enumerate(argv)
+    )
 
 
 def _format_studio_handoff(handoff: AnalogFourStudioHandoffPayload) -> list[str]:
