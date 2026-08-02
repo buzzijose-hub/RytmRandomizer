@@ -1,8 +1,17 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-07-29. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-08-02. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
+
+- 2026-08-02: Added a bounded Analog Four audio-to-patch studio handoff.
+  - `analog-four-audio-patch-batch --studio-handoff` now turns the existing
+    deterministic four-candidate batch into full-path dry-run, guarded
+    audition, recording, and acoustic-ranking commands.
+  - The handoff is passive and requires an exact output-port name only for
+    the printed `app --arm` commands. It does not enumerate or open MIDI.
+  - The operator contract is four candidate auditions and zero calibration
+    rounds; retired Rush16 calibration evidence is not a prerequisite.
 
 - 2026-07-31: PR #217 round-2 review fixes — cockpit frontend + docs
   truth pass.

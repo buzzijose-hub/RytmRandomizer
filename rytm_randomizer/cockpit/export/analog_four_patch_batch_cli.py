@@ -6,8 +6,9 @@ import json
 import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, Literal, NotRequired, Protocol, TypedDict, cast
+from typing import TYPE_CHECKING, Final, Literal, Protocol, TypedDict, cast
 
+from ...behavior.operator_console import powershell_literal_arg
 from ...cli_registry import CliCommand, register
 from ...data.analog_four_patch_templates import ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES
 from ...data.analog_four_sysex_calibration import A4_SYNTH_TRACK_MAX, A4_SYNTH_TRACK_MIN
@@ -99,7 +100,11 @@ class AnalogFourStudioHandoffPayload(TypedDict):
     rank_argv: list[str]
 
 
-class AnalogFourAudioPatchBatchPayload(TypedDict):
+class _AnalogFourAudioPatchBatchOptionalPayload(TypedDict, total=False):
+    studio_handoff: AnalogFourStudioHandoffPayload
+
+
+class AnalogFourAudioPatchBatchPayload(_AnalogFourAudioPatchBatchOptionalPayload):
     """Stable successful JSON response from the batch CLI."""
 
     ok: Literal[True]
@@ -113,7 +118,6 @@ class AnalogFourAudioPatchBatchPayload(TypedDict):
     counts: AnalogFourAudioPatchBatchCountsPayload
     warnings: list[str]
     safety: list[str]
-    studio_handoff: NotRequired[AnalogFourStudioHandoffPayload]
 
 
 class AnalogFourAudioPatchBatchErrorPayload(TypedDict):
@@ -237,6 +241,21 @@ def _required_batch_path(value: Path | None, option: str) -> Path:
     return value
 
 
+def _studio_handoff_error(
+    *,
+    studio_handoff: bool,
+    a4_output_port: str | None,
+    candidate_count: int,
+) -> str | None:
+    if studio_handoff and candidate_count != DEFAULT_CANDIDATE_COUNT:
+        return "--studio-handoff requires exactly four candidates"
+    if studio_handoff and a4_output_port is None:
+        return "--studio-handoff requires --a4-output-port"
+    if not studio_handoff and a4_output_port is not None:
+        return "--a4-output-port requires --studio-handoff"
+    return None
+
+
 def parse_analog_four_audio_patch_batch_args(
     args: Sequence[str],
 ) -> AnalogFourAudioPatchBatchArgs:
@@ -286,12 +305,13 @@ def parse_analog_four_audio_patch_batch_args(
         else:
             raise ValueError(f"unknown option {option!r}")
 
-    if studio_handoff and candidate_count != DEFAULT_CANDIDATE_COUNT:
-        raise ValueError("--studio-handoff requires exactly four candidates")
-    if studio_handoff and a4_output_port is None:
-        raise ValueError("--studio-handoff requires --a4-output-port")
-    if not studio_handoff and a4_output_port is not None:
-        raise ValueError("--a4-output-port requires --studio-handoff")
+    studio_error = _studio_handoff_error(
+        studio_handoff=studio_handoff,
+        a4_output_port=a4_output_port,
+        candidate_count=candidate_count,
+    )
+    if studio_error is not None:
+        raise ValueError(studio_error)
 
     return {
         "audio_path": _required_batch_path(audio_path, "--audio"),
@@ -416,6 +436,8 @@ def _studio_handoff_payload(
 ) -> AnalogFourStudioHandoffPayload:
     """Build a finite four-audition handoff without touching MIDI or audio I/O."""
 
+    from .analog_four_patch_render_rank_cli import COMMAND_NAME as RANK_COMMAND_NAME
+
     python_executable = str(Path(sys.executable).resolve())
     manifest_path = str(result.manifest_path.resolve())
     render_dir = output_dir.resolve() / "renders"
@@ -447,7 +469,7 @@ def _studio_handoff_payload(
         python_executable,
         "-m",
         "rytm_randomizer.cli",
-        "analog-four-audio-patch-rank",
+        RANK_COMMAND_NAME,
         "--reference",
         str(audio_path.resolve()),
         "--manifest",
@@ -498,20 +520,17 @@ def _batch_payload_from_result(result: _BatchResult) -> AnalogFourAudioPatchBatc
     return payload
 
 
-def _powershell_quote(value: str) -> str:
-    return "'" + value.replace("'", "''") + "'"
-
-
 def _powershell_command(argv: Sequence[str]) -> str:
-    return "& " + " ".join(_powershell_quote(value) for value in argv)
+    return "& " + " ".join(powershell_literal_arg(value) for value in argv)
 
 
 def _format_studio_handoff(handoff: AnalogFourStudioHandoffPayload) -> list[str]:
     lines = [
         "studio_handoff:",
-        "calibration_rounds_required: 0",
+        f"calibration_rounds_required: {handoff['calibration_rounds_required']}",
         f"candidate_auditions_required: {handoff['candidate_auditions_required']}",
-        f"powershell_setup: Set-Location {_powershell_quote(handoff['powershell_workdir'])}",
+        "powershell_setup: Set-Location "
+        f"{powershell_literal_arg(handoff['powershell_workdir'])}",
     ]
     for candidate in handoff["candidates"]:
         prefix = f"candidate_{candidate['candidate']}"
@@ -633,13 +652,11 @@ def handle_analog_four_audio_patch_batch(  # noqa: PLR0913 - typed CLI boundary
         )
         return 2
 
-    studio_error: str | None = None
-    if studio_handoff and candidate_count != DEFAULT_CANDIDATE_COUNT:
-        studio_error = "--studio-handoff requires exactly four candidates"
-    elif studio_handoff and a4_output_port is None:
-        studio_error = "--studio-handoff requires --a4-output-port"
-    elif not studio_handoff and a4_output_port is not None:
-        studio_error = "--a4-output-port requires --studio-handoff"
+    studio_error = _studio_handoff_error(
+        studio_handoff=studio_handoff,
+        a4_output_port=a4_output_port,
+        candidate_count=candidate_count,
+    )
     if studio_error is not None:
         if json_output:
             _write_batch_error(

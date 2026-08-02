@@ -124,6 +124,15 @@ def test_parser_uses_safe_single_track_four_candidate_defaults() -> None:
     }
 
 
+def test_batch_payload_keeps_studio_handoff_optional_without_python_311_typing() -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_cli import (
+        AnalogFourAudioPatchBatchPayload,
+    )
+
+    assert AnalogFourAudioPatchBatchPayload.__optional_keys__ == frozenset({"studio_handoff"})
+    assert "studio_handoff" not in AnalogFourAudioPatchBatchPayload.__required_keys__
+
+
 def test_parser_accepts_every_documented_option() -> None:
     from rytm_randomizer.cockpit.export.analog_four_patch_batch_cli import (
         parse_analog_four_audio_patch_batch_args,
@@ -463,6 +472,73 @@ def test_studio_handoff_text_is_copyable_powershell_with_full_paths(
     assert "candidate_4_armed_audition: & '" in output
     assert "'Jose''s A4'" in output
     assert "rank_after_recording: & '" in output
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("candidate-1.wav", "candidate-1.wav"),
+        ("Jose's A4", "'Jose''s A4'"),
+        ("", "''"),
+    ],
+)
+def test_shared_powershell_literal_argument_formatting(value: str, expected: str) -> None:
+    from rytm_randomizer.behavior.operator_console import powershell_literal_arg
+
+    assert powershell_literal_arg(value) == expected
+
+
+def test_studio_handoff_commands_round_trip_through_their_real_parsers(
+    tmp_path: Path,
+) -> None:
+    from rytm_randomizer import app
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+    from rytm_randomizer.cockpit.export.analog_four_patch_render_rank_cli import (
+        parse_analog_four_patch_render_rank_args,
+    )
+
+    audio_path = tmp_path / "reference.wav"
+    output_dir = tmp_path / "batch"
+    result = _studio_batch_result(tmp_path)
+    handoff = cli._studio_handoff_payload(
+        result=result,
+        audio_path=audio_path,
+        output_dir=output_dir,
+        a4_output_port="Elektron Analog Four MKII 2",
+    )
+    app_parser = app._build_parser()
+
+    for column, candidate in enumerate(handoff["candidates"], start=1):
+        dry_run = app_parser.parse_args(candidate["dry_run_argv"][3:])
+        assert dry_run.dry_run is True
+        assert dry_run.arm is False
+        assert dry_run.a4_patch_send_plan is True
+        assert dry_run.batch_manifest == str(result.manifest_path.resolve())
+        assert dry_run.batch_manifest_sha256 == result.manifest_sha256
+        assert dry_run.candidate == column
+        assert dry_run.confirm_a4_patch_send_plan is False
+        assert dry_run.a4_output_port is None
+
+        armed = app_parser.parse_args(candidate["armed_audition_argv"][3:])
+        assert armed.arm is True
+        assert armed.dry_run is False
+        assert armed.a4_patch_send_plan is True
+        assert armed.batch_manifest == str(result.manifest_path.resolve())
+        assert armed.batch_manifest_sha256 == result.manifest_sha256
+        assert armed.candidate == column
+        assert armed.confirm_a4_patch_send_plan is True
+        assert armed.a4_output_port == "Elektron Analog Four MKII 2"
+
+    rank = parse_analog_four_patch_render_rank_args(handoff["rank_argv"][4:])
+    assert rank == {
+        "reference_audio_path": audio_path.resolve(),
+        "manifest_path": result.manifest_path.resolve(),
+        "render_paths": {
+            column: output_dir.resolve() / "renders" / f"candidate-{column}.wav"
+            for column in range(1, 5)
+        },
+        "json_output": True,
+    }
 
 
 @pytest.mark.parametrize(
