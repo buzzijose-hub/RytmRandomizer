@@ -426,6 +426,35 @@ fails with `inference_failed` instead of crashing and removes the private
 audio/SysEx staging directory it owns. This is safe failure containment; native
 decoder reliability on Windows is not yet an accepted capability.
 
+### One-command studio handoff
+
+Use the bounded studio mode when the goal is to turn one reference into four
+A4 auditions without resuming the retired calibration sweep:
+
+```powershell
+Set-Location "<repo-root>"
+python -m rytm_randomizer.cli analog-four-audio-patch-batch `
+  --audio "<media-root>\REFERENCES\short-reference.wav" `
+  --source-kit "<media-root>\ANALOG FOUR\A4_Test1_Init_Kit.syx" `
+  --output-dir "<media-root>\ANALOG FOUR\GENERATED\reference-batch" `
+  --track 1 --studio-handoff `
+  --a4-output-port "<exact configured Analog Four output name>"
+```
+
+This command performs the analysis and batch export, then prints a complete
+PowerShell handoff. The packet reports `calibration_rounds_required: 0` and
+`candidate_auditions_required: 4`; includes the repository path and absolute
+Python executable; and supplies the dry-run, guarded armed audition, recording
+destination, and final ranking command for every candidate. The batch command
+does not open the named port. Only a printed command that the operator later
+runs through `python -m rytm_randomizer.app --arm` can reach hardware.
+
+The bounded session replaces hundreds of speculative manual calibration
+probes with four musically meaningful comparisons. Play and record the same
+note or phrase for each candidate, then run the generated ranking command.
+Rush16 evidence can remain archived for future mapping research; it is not a
+prerequisite for audio-to-patch generation, guarded live delivery, or ranking.
+
 ### Hash-verified candidate live dial
 
 Preview the exact candidate committed by the batch manifest:

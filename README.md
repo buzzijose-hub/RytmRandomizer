@@ -244,10 +244,15 @@ kit-morph-preview                                                     # currentâ
 # Analog Four patch pipeline (hardware-validated writers; sends stay armed-only)
 analog-four-saved-kit-export --source KIT.syx --output OUT.syx --filter2-resonance 1:64
 analog-four-audio-patch-batch --audio REF.wav --source-kit KIT.syx --output-dir batch/
+analog-four-audio-patch-batch --audio REF.wav --source-kit KIT.syx --output-dir batch/ --studio-handoff --a4-output-port "<exact A4 output>"
 analog-four-audio-patch-rank --reference REF.wav --manifest batch.json --render 1=take1.wav
 ```
 
 Every command above is **passive by construction** â€” no output port opens, no MIDI is sent (armed A4 delivery requires `--arm` plus a reviewed batch manifest). The full list is auto-discovered and swept on every PR.
+
+The optional studio handoff requires exactly four candidates, requires zero
+calibration rounds, and prints the full-path dry-run, guarded audition,
+recording, and ranking commands for one bounded session.
 
 ---
 
