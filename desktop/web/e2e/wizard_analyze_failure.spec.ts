@@ -8,7 +8,7 @@
  * status and a Retry button (see `wizard-job-retry-<id>`).
  */
 
-import { writeFileSync } from 'node:fs';
+import { realpathSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
 
 import { expect, test } from './fixtures/wizard_fixture';
@@ -19,7 +19,13 @@ test.describe('wizard analyze failure', () => {
     sidecar,
   }) => {
     test.setTimeout(45_000);
-    const unsupportedSource = path.join(sidecar.profilesRoot, 'unsupported-artist.bin');
+    // macOS tmpdir symlink normalization: os.tmpdir() hands out /var/... which
+    // is a symlink to /private/var, and WizardPathPolicy rejects any path that
+    // traverses a symlink. realpathSync gives the policy the /private/var form.
+    const unsupportedSource = path.join(
+      realpathSync(sidecar.profilesRoot),
+      'unsupported-artist.bin',
+    );
     writeFileSync(unsupportedSource, 'not an analyzer-supported artist reference');
 
     await page.goto('/');

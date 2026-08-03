@@ -12,6 +12,8 @@ export type { CockpitProps } from './Cockpit';
 export { HeaderBar } from './HeaderBar';
 export { OfflineShell, OFFLINE_STATUS_DISPLAY } from './OfflineShell';
 export type { OfflineShellProps } from './OfflineShell';
+export { ReconnectBanner, RECONNECT_BANNER_DISPLAY } from './ReconnectBanner';
+export type { ReconnectBannerProps, ReconnectBannerStatus } from './ReconnectBanner';
 export { SnapshotPanel } from './SnapshotPanel';
 export type { SnapshotPanelProps } from './SnapshotPanel';
 export { PadCard } from './PadCard';

@@ -161,13 +161,17 @@ files means a deployment can hand out one without the other.
 """
 
 _MIDI_BACKEND_ENV_VAR: Final[str] = "RYTM_RAND_MIDI_BACKEND"
-"""Backend selector for the passive port enumerator.
+"""Backend selector for the passive MIDI seams (enumerator AND input opener).
 
 ``off`` → :class:`NullPortEnumerator` (kill switch for CI / misbehaving
 OS MIDI services); ``fake`` → :class:`FakePortEnumerator` (the
 no-hardware e2e seam); anything else → ``auto`` (real enumeration when
 ``mido`` is importable, null otherwise). See
 :func:`_build_port_enumerator`.
+
+The same value gates :func:`_build_input_opener`: ``fake`` and ``off``
+yield no opener at all, so the live MIDI monitor is never wired and can
+never open a *real* rtmidi input for a fake/absent port name.
 """
 
 _FAKE_PORTS_ENV_VAR: Final[str] = "RYTM_RAND_FAKE_PORTS"
@@ -476,8 +480,28 @@ def _build_input_opener() -> MidiInputOpener | None:
     provider surface exposes ``open_input`` only through the monitor's
     :class:`~rytm_randomizer.cockpit.device.midi_monitor.MidiInputOpener`
     Protocol.
+
+    ``RYTM_RAND_MIDI_BACKEND=fake`` / ``off`` also return ``None`` — the
+    same env seam :func:`_build_port_enumerator` honours. The ``fake``
+    backend enumerates port *names* that no OS MIDI service knows about;
+    handing the monitor a real opener would make it dial a REAL rtmidi
+    input for a nonexistent fake port the moment the phase reaches
+    ``listening`` (observed on macOS as the transient
+    ``MidiInCore::initialize ... (-304)`` process abort; on CI it would
+    target a port that isn't there). Live-but-Passive says inputs are
+    *free* to open — for non-real backends we simply choose not to,
+    because there is nothing real to listen to. ``None`` is this
+    module's existing null-object shape for the opener: ``main()``
+    skips wiring the supervisor entirely.
+
+    Any other value (case-insensitive, whitespace-stripped) behaves as
+    ``auto`` — mirroring :func:`_build_port_enumerator` exactly so the
+    two seams can never disagree about what "fake" means.
     """
 
+    backend = os.environ.get(_MIDI_BACKEND_ENV_VAR, "auto").strip().lower()
+    if backend in ("off", "fake"):
+        return None
     if importlib.util.find_spec("mido") is None:
         return None
     from ..mido_provider import build_mido_midi_port_provider  # noqa: PLC0415

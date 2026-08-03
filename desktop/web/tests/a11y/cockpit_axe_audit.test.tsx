@@ -33,6 +33,7 @@ import { LibraryPanel } from '../../src/cockpit/panels/LibraryPanel';
 import { LiveMidiMonitorPanel } from '../../src/cockpit/panels/LiveMidiMonitorPanel';
 import { DeviceRail } from '../../src/cockpit/DeviceRail';
 import { OfflineShell } from '../../src/cockpit/OfflineShell';
+import { ReconnectBanner } from '../../src/cockpit/ReconnectBanner';
 import { PanelRenderer } from '../../src/cockpit/panels/PanelRenderer';
 import { ScopedRandomizationPanel } from '../../src/cockpit/panels/ScopedRandomizationPanel';
 import { liveMidiMonitorPanelSpec } from '../../src/cockpit/panels/liveMidiMonitorPanelSpec';
@@ -67,6 +68,7 @@ const FLOORS = {
   ScopedRandomizationPanel: 0,
   SendConfirmDialog: 0,
   OfflineShell: 0,
+  ReconnectBanner: 0,
   DeviceRailNoHardware: 0,
 } as const;
 
@@ -173,6 +175,15 @@ describe('cockpit axe audit (WCAG 2.2 AA)', () => {
       <OfflineShell client={fake.asClient()} status="reconnecting" />,
     );
     await expectClean('OfflineShell', container);
+  });
+
+  it('ReconnectBanner (mid-session sidecar loss) is clean', async () => {
+    const fake = new FakeCockpitClient();
+    fake.reconnectState = { attempt: 2, nextDelayMs: 4000 };
+    const { container } = render(
+      <ReconnectBanner client={fake.asClient()} status="reconnecting" />,
+    );
+    await expectClean('ReconnectBanner', container);
   });
 
   it('DeviceRail with the no-hardware banner is clean', async () => {

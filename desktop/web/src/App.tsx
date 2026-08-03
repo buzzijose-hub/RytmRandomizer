@@ -23,7 +23,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { LiveRegion, useDocumentTitle, useFocusOnRouteChange } from './a11y';
-import { Cockpit, OfflineShell, PerformanceConsole, performanceConsoleDemoModel } from './cockpit';
+import {
+  Cockpit,
+  OfflineShell,
+  PerformanceConsole,
+  ReconnectBanner,
+  performanceConsoleDemoModel,
+} from './cockpit';
 import { bindClientToStore, useCockpitStore } from './state';
 import type { LiveGuiPerformanceConsoleModelDict } from './types/live_gui_protocol';
 import { Wizard } from './wizard';
@@ -134,10 +140,16 @@ export function App({ client: injected, performanceConsole }: AppProps = {}): JS
     );
   }
 
+  // Mid-session surfaces (wizard + cockpit) reach here only with a non-null
+  // sessionStatus, so a reconnecting/closed WS status means the sidecar was
+  // lost MID-SESSION. The cockpit deliberately stays mounted on its stale
+  // data (losing panel context mid-performance is worse); the banner is the
+  // loud, actionable reconnect surface for that state.
   if (isWizardRoute(route)) {
     return (
       <>
         <LiveRegion />
+        <ReconnectBanner client={client} status={connStatus} />
         <div ref={routeRootRef} tabIndex={-1}>
           <Wizard client={client} />
         </div>
@@ -148,6 +160,7 @@ export function App({ client: injected, performanceConsole }: AppProps = {}): JS
   return (
     <>
       <LiveRegion />
+      <ReconnectBanner client={client} status={connStatus} />
       <div ref={routeRootRef} tabIndex={-1}>
         <Cockpit client={client} />
       </div>

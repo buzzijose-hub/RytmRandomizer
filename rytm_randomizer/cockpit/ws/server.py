@@ -20,15 +20,18 @@ The single endpoint at ``/ws`` performs **four** steps on every connection:
    ``new WebSocket(url)`` connections from a browser tab omit the
    subprotocol and fail the upgrade before our handler runs (L8).
 2. **Handshake** — the client's FIRST frame must be
-   ``{"type": "hello", "token": "<urlsafe>"}``. The token is compared
-   against the per-launch token loaded at server boot with
-   :func:`hmac.compare_digest`. A missing / malformed / mismatched
-   token is rejected with ``{"ok": false, "code": "auth_required" |
-   "auth_failed"}`` and the socket is closed with policy-violation
-   code 1008 (C1). No cockpit command can fire until handshake
-   completes. The handshake frames are exchanged directly on the
-   socket — the outbound queue does not exist until authentication
-   succeeds, so an unauthenticated peer can never occupy a queue slot.
+   ``{"type": "hello", "token": "<urlsafe>"}`` and must arrive within
+   :data:`HANDSHAKE_FIRST_FRAME_TIMEOUT_SECONDS` of the upgrade. The
+   token is compared against the per-launch token loaded at server
+   boot with :func:`hmac.compare_digest`. A missing / malformed /
+   mismatched token — or a peer that never sends a first frame before
+   the deadline — is rejected with ``{"ok": false, "code":
+   "auth_required" | "auth_failed"}`` and the socket is closed with
+   policy-violation code 1008 (C1). No cockpit command can fire until
+   handshake completes. The handshake frames are exchanged directly on
+   the socket — the outbound queue does not exist until authentication
+   succeeds, so an unauthenticated peer can never occupy a queue slot,
+   and a silent peer can never park an OPEN socket forever.
 3. **Enqueue the bootstrap event set** —
    :func:`emit_initial_events` pushes ``session_status``,
    ``snapshot_changed``, ``profile_changed``, ``history_updated``, and
@@ -157,6 +160,34 @@ _DEFAULT_MAX_MESSAGE_BYTES: Final[int] = 1 * 1024 * 1024
 _MAX_MESSAGE_BYTES_ENV_VAR: Final[str] = "RYTM_RAND_WS_MAX_MESSAGE_BYTES"
 """Env var an operator may set to raise (or lower) the size cap at boot."""
 
+HANDSHAKE_FIRST_FRAME_TIMEOUT_SECONDS: Final[float] = 10.0
+"""Deadline for the client's first (``hello``) frame after the upgrade.
+
+Without a deadline, a client that never sends its first frame holds an
+authenticated-*looking* OPEN socket forever — the browser client
+deliberately withholds ``hello`` when it has no token in hand, so a
+token-less webview used to park silently on "connected" with no
+actionable signal. After this many seconds with no first frame the
+server rejects with the existing ``auth_required`` ack and closes at
+1008, which lands the client in its *visible* reconnecting loop.
+
+Post-auth traffic is untouched: the deadline applies to exactly one
+read — the handshake frame. 10 s is orders of magnitude above any real
+client's open→hello latency (the shell sends ``hello`` synchronously
+from the ``open`` event) while still bounded enough that a stuck peer
+is surfaced within one operator glance.
+"""
+
+_HANDSHAKE_TIMEOUT_ENV_VAR: Final[str] = "RYTM_RAND_WS_HANDSHAKE_TIMEOUT_SECONDS"
+"""Test-only override for :data:`HANDSHAKE_FIRST_FRAME_TIMEOUT_SECONDS`.
+
+Exists so the e2e suite can exercise the no-token → deadline → 1008 →
+reconnect loop in ~1 s instead of 10 s per cycle (the Playwright spec
+sets it on the sidecar spawn env). Production launches never set it;
+non-positive or unparseable values fall back to the default, same
+policy as :data:`_MAX_MESSAGE_BYTES_ENV_VAR`.
+"""
+
 APP_VERSION: Final[str] = "1.0.0"
 """The cockpit sidecar's app version — surfaced by ``GET /health``."""
 
@@ -191,6 +222,27 @@ def _resolve_max_message_bytes() -> int:
         return _DEFAULT_MAX_MESSAGE_BYTES
     if parsed <= 0:
         return _DEFAULT_MAX_MESSAGE_BYTES
+    return parsed
+
+
+def _resolve_handshake_timeout_seconds() -> float:
+    """Return the first-frame deadline, honouring the test-only env override.
+
+    Parsed once per :func:`create_app` call (same lifecycle as
+    :func:`_resolve_max_message_bytes`). Invalid values — unparseable or
+    non-positive — fall back to the production default rather than
+    crashing the boot path or, worse, disabling the deadline.
+    """
+
+    raw = os.environ.get(_HANDSHAKE_TIMEOUT_ENV_VAR)
+    if raw is None:
+        return HANDSHAKE_FIRST_FRAME_TIMEOUT_SECONDS
+    try:
+        parsed = float(raw)
+    except ValueError:
+        return HANDSHAKE_FIRST_FRAME_TIMEOUT_SECONDS
+    if parsed <= 0:
+        return HANDSHAKE_FIRST_FRAME_TIMEOUT_SECONDS
     return parsed
 
 
@@ -395,13 +447,21 @@ class _QueueEmitter:
         self._queue.put_frame(event)
 
 
-async def _perform_handshake(websocket: WebSocket, expected_token: str) -> bool:
+async def _perform_handshake(
+    websocket: WebSocket,
+    expected_token: str,
+    *,
+    first_frame_timeout_seconds: float = HANDSHAKE_FIRST_FRAME_TIMEOUT_SECONDS,
+) -> bool:
     """Run the auth handshake; return ``True`` iff the client is authenticated.
 
     Wire contract (CODE_REVIEW.md PR 1 — C1):
 
     * The first frame MUST be a JSON object of shape
       ``{"type": "hello", "token": "<urlsafe>"}``.
+    * The first frame MUST arrive within ``first_frame_timeout_seconds``
+      of the upgrade (see
+      :data:`HANDSHAKE_FIRST_FRAME_TIMEOUT_SECONDS`).
     * The token MUST equal ``expected_token`` under
       :func:`hmac.compare_digest` (constant-time comparison — naive
       ``==`` leaks timing).
@@ -409,6 +469,12 @@ async def _perform_handshake(websocket: WebSocket, expected_token: str) -> bool:
     Rejection paths (each closes the socket with code 1008 after writing
     a typed ack so a programmatic client can branch on the ``code``):
 
+    * **No first frame within the deadline** → ``code: auth_required``.
+      A silent peer is indistinguishable from a client with no
+      credentials (the browser client withholds ``hello`` exactly when
+      it has no token), so it gets the same categorical code — and the
+      1008 close pushes the client into its visible reconnecting loop
+      instead of a false "connected" park.
     * **Missing key, wrong type, or non-string token** → ``code:
       auth_required``. We treat "well-formed but wrong shape" as
       "no auth attempted" — the operator's mental model is "I have no
@@ -422,7 +488,13 @@ async def _perform_handshake(websocket: WebSocket, expected_token: str) -> bool:
     """
 
     try:
-        raw = await websocket.receive_text()
+        raw = await asyncio.wait_for(websocket.receive_text(), timeout=first_frame_timeout_seconds)
+    except TimeoutError:
+        # ``asyncio.wait_for`` raises the builtin TimeoutError on 3.11+.
+        # The deadline expired with no first frame: reject exactly like a
+        # credential-less hello so programmatic clients see one code.
+        await _reject_handshake(websocket, HANDSHAKE_AUTH_REQUIRED)
+        return False
     except WebSocketDisconnect:
         return False
     try:
@@ -614,6 +686,7 @@ def create_app(
     expected_token = token
 
     max_message_bytes = _resolve_max_message_bytes()
+    handshake_timeout_seconds = _resolve_handshake_timeout_seconds()
     registry = connection_registry if connection_registry is not None else ConnectionRegistry()
     app = FastAPI(title="rytm-randomizer-cockpit", version=APP_VERSION)
     app.state.connection_registry = registry
@@ -653,7 +726,11 @@ def create_app(
         """
 
         await websocket.accept(subprotocol=WS_SUBPROTOCOL)
-        if not await _perform_handshake(websocket, expected_token):
+        if not await _perform_handshake(
+            websocket,
+            expected_token,
+            first_frame_timeout_seconds=handshake_timeout_seconds,
+        ):
             return
         connection_id, queue = registry.register()
         emitter: EventEmitter = _QueueEmitter(queue)

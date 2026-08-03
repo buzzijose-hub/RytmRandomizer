@@ -3037,6 +3037,61 @@ html,
   border-color: var(--danger);
 }
 
+/* ---------- ReconnectBanner (mid-session sidecar loss) ----------
+   Fixed-position so it stays visible over the mounted cockpit no matter
+   where the operator has scrolled. Danger border + amber-free palette:
+   the banner is a fault surface, not an armed indicator. */
+
+.reconnect-banner {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  max-width: min(760px, calc(100vw - 32px));
+  padding: 10px 16px;
+  background: var(--panel);
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 55%);
+}
+
+.reconnect-banner-alert {
+  color: var(--text);
+}
+
+.reconnect-banner-headline {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.reconnect-banner-detail {
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.reconnect-banner-retry-line {
+  margin: 0;
+  color: var(--text);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.reconnect-banner-retry-button {
+  background: var(--accent);
+  color: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 /* ---------- DeviceRail hardware honesty (banner + preview badge) ---------- */
 
 .device-hardware-banner {

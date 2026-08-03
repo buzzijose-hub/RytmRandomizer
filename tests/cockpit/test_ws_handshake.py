@@ -23,6 +23,7 @@ port.
 from __future__ import annotations
 
 import json
+import time
 from collections.abc import Generator
 from datetime import datetime, timezone
 from pathlib import Path
@@ -212,6 +213,66 @@ def test_handshake_malformed_json_first_frame_is_rejected(client: TestClient) ->
             ack = ws.receive_json()
             assert ack == {"ok": False, "code": HANDSHAKE_AUTH_REQUIRED}
             ws.receive_json()
+
+
+def test_handshake_silent_client_hits_first_frame_deadline_and_closes(
+    session: CockpitSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A client that never sends its first frame is closed at 1008 (C1).
+
+    Pins the fix for the "no-token park": the browser client withholds
+    its ``hello`` when it has no token, and the server used to wait
+    forever — an authenticated-looking OPEN socket showing a false
+    "connected" in the UI. The first-frame deadline converts the park
+    into the visible auth_required → 1008 → reconnect loop. The tiny
+    deadline is injected through the test-only env override so the test
+    stays fast.
+    """
+
+    monkeypatch.setenv("RYTM_RAND_WS_HANDSHAKE_TIMEOUT_SECONDS", "0.05")
+    app = create_app(session, token=_TOKEN)
+
+    with TestClient(app) as testclient, pytest.raises(WebSocketDisconnect) as excinfo:
+        with testclient.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+            # Deliberately send NOTHING — the deadline must fire on its own.
+            ack = ws.receive_json()
+            assert ack == {"ok": False, "code": HANDSHAKE_AUTH_REQUIRED}
+            ws.receive_json()  # triggers the WebSocketDisconnect
+
+    assert excinfo.value.code == CLOSE_CODE_POLICY_VIOLATION
+
+
+def test_handshake_deadline_does_not_touch_the_post_auth_path(
+    session: CockpitSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The deadline applies to exactly ONE read: the handshake frame.
+
+    An authenticated connection that idles far longer than the deadline
+    must stay open and keep serving commands — an operator staring at
+    the cockpit between actions is not a silent unauthenticated peer.
+    """
+
+    monkeypatch.setenv("RYTM_RAND_WS_HANDSHAKE_TIMEOUT_SECONDS", "0.2")
+    app = create_app(session, token=_TOKEN)
+
+    with TestClient(app) as testclient:
+        with testclient.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+            ws.send_json(_hello(_TOKEN))
+            assert ws.receive_json() == {"ok": True}
+            for _ in range(5):
+                ws.receive_json()  # drain bootstrap
+
+            time.sleep(0.5)  # idle well past the handshake deadline
+
+            ws.send_json(
+                {
+                    "request_id": "req-after-idle",
+                    "command": {"type": "set_pad_lock", "pad_id": 1, "locked": True},
+                }
+            )
+            ack = ws.receive_json()
+            assert ack["ok"] is True
+            assert ack["request_id"] == "req-after-idle"
 
 
 def test_create_app_rejects_empty_token() -> None:

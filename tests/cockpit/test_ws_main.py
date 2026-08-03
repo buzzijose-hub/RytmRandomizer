@@ -738,8 +738,12 @@ def test_main_registers_connection_manager_and_registry(
 # ---------------------------------------------------------------------------
 
 
-def test_build_input_opener_returns_provider_when_mido_present() -> None:
+def test_build_input_opener_returns_provider_when_mido_present(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """mido is a required dependency in the dev env: the opener is real."""
+
+    monkeypatch.delenv("RYTM_RAND_MIDI_BACKEND", raising=False)
 
     opener = cockpit_main._build_input_opener()
     assert opener is not None
@@ -749,7 +753,44 @@ def test_build_input_opener_returns_provider_when_mido_present() -> None:
 def test_build_input_opener_returns_none_when_mido_absent(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.delenv("RYTM_RAND_MIDI_BACKEND", raising=False)
     monkeypatch.setattr(cockpit_main.importlib.util, "find_spec", lambda _n: None)
+    assert cockpit_main._build_input_opener() is None
+
+
+@pytest.mark.parametrize("value", ["off", "OFF", "  Off  ", "fake", "FAKE", "  Fake  "])
+def test_build_input_opener_returns_none_for_fake_and_off_backends(
+    monkeypatch: pytest.MonkeyPatch, value: str
+) -> None:
+    """``RYTM_RAND_MIDI_BACKEND=fake``/``off`` must never yield a real opener.
+
+    The fake backend enumerates port names no OS MIDI service knows;
+    with a real opener the monitor would dial a REAL rtmidi input for a
+    nonexistent port the moment the phase reaches ``listening``
+    (observed on macOS as the transient CoreMIDI ``-304`` process
+    abort; on CI it would target a port that isn't there). Same env
+    seam as :func:`_build_port_enumerator` — and like there, ``mido``
+    availability must not even be consulted.
+    """
+
+    monkeypatch.setenv("RYTM_RAND_MIDI_BACKEND", value)
+    monkeypatch.setattr(
+        cockpit_main.importlib.util,
+        "find_spec",
+        lambda name: pytest.fail("find_spec must not be consulted when backend=fake/off"),
+    )
+
+    assert cockpit_main._build_input_opener() is None
+
+
+def test_build_input_opener_env_auto_keeps_real_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Values other than ``off``/``fake`` behave as ``auto`` (mido-absent here)."""
+
+    monkeypatch.setenv("RYTM_RAND_MIDI_BACKEND", "auto")
+    monkeypatch.setattr(cockpit_main.importlib.util, "find_spec", lambda _n: None)
+
     assert cockpit_main._build_input_opener() is None
 
 
@@ -762,6 +803,7 @@ def test_main_wires_wave4_library_watchdog_and_monitor(
     monkeypatch.setattr(cockpit_main, "default_library_dir", lambda: tmp_path / "library")
     monkeypatch.setattr(cockpit_main, "default_captures_dir", lambda: tmp_path / "captures")
     monkeypatch.delenv(cockpit_main._PORT_ENV_VAR, raising=False)
+    monkeypatch.delenv("RYTM_RAND_MIDI_BACKEND", raising=False)
     _redirect_token_file(monkeypatch, tmp_path)
 
     captured: dict[str, Any] = {}
@@ -821,6 +863,43 @@ def test_main_skips_monitor_supervisor_when_mido_absent(
     manager = active_connection_manager()
     assert manager is not None
     # Only the armed watchdog is registered — no monitor supervisor.
+    assert len(manager._notify_hooks) == 1
+    app = captured["app"]
+    shutdown_names = [getattr(h, "__qualname__", "") for h in app.router.on_shutdown]
+    assert not any("MidiMonitorSupervisor" in name for name in shutdown_names)
+
+
+def test_main_skips_monitor_supervisor_when_backend_is_fake(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A ``fake`` launch must never wire the real-input monitor.
+
+    End-to-end pin of the FIX-1 defect: with ``RYTM_RAND_MIDI_BACKEND=fake``
+    the fake enumerator reaches ``listening``, and a wired monitor would
+    then open a REAL rtmidi input for the fake port name. ``main()`` must
+    therefore skip the supervisor entirely — the fake launch runs with no
+    ``midi_activity`` stream, by design.
+    """
+
+    monkeypatch.setattr(cockpit_main, "default_profiles_dir", lambda: tmp_path)
+    monkeypatch.setattr(cockpit_main, "default_library_dir", lambda: tmp_path / "library")
+    monkeypatch.setattr(cockpit_main, "default_captures_dir", lambda: tmp_path / "captures")
+    monkeypatch.delenv(cockpit_main._PORT_ENV_VAR, raising=False)
+    monkeypatch.setenv("RYTM_RAND_MIDI_BACKEND", "fake")
+    _redirect_token_file(monkeypatch, tmp_path)
+
+    captured: dict[str, Any] = {}
+
+    def _fake_run(app: Any, *, host: str, port: int) -> None:
+        captured["app"] = app
+
+    monkeypatch.setattr(cockpit_main, "uvicorn", type("U", (), {"run": staticmethod(_fake_run)}))
+
+    cockpit_main.main()
+
+    manager = active_connection_manager()
+    assert manager is not None
+    # Only the armed watchdog hook — no monitor supervisor for fake backends.
     assert len(manager._notify_hooks) == 1
     app = captured["app"]
     shutdown_names = [getattr(h, "__qualname__", "") for h in app.router.on_shutdown]
