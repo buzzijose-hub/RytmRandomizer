@@ -1,6 +1,6 @@
 # AL16 Phase R1 Offline Analog Rytm Kit Exporter
 
-> Status: implementation complete - AL02 correctly blocked by verified mapping gaps; ready for review
+> Status: in-flight - implementation complete; AL02 correctly blocked by verified mapping gaps; ready for review
 >
 > Offline audit implemented; AL02 output remains blocked by verified mapping gaps.
 
