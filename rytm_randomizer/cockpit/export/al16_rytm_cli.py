@@ -8,10 +8,7 @@ from pathlib import Path
 from typing import Final, TypedDict
 
 from ...cli_registry import CliCommand, register
-from ...devices.analog_rytm import (
-    Al16BuildResult,
-    build_al16_rytm_kit,
-)
+from .al16_rytm_kit import Al16BuildResult, build_al16_rytm_kit
 from .cli_options import pop_required_cli_value
 
 COMMAND_NAME: Final[str] = "al16-rytm-kit-export"

@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Final, cast
 
 from ...data.al16_rytm import (
+    AL16_BANK_STATES,
     AL16_PAD_ROLES,
     AL16_PRESERVED_GLOBAL_SECTIONS,
     AL16_RYTM_APPROVED_TUNING,
@@ -31,10 +32,8 @@ from ...data.rytm_machine_catalog import (
     get_rytm_machine_profile,
     is_machine_allowed_on_pad,
 )
-from .analog_rytm_saved_kit_codec import (
-    decode_analog_rytm_saved_kit_frame,
-    encode_analog_rytm_saved_kit_frame,
-)
+from ...devices.analog_rytm import get_analog_rytm_saved_kit_codec_capability
+from .writer import atomic_write
 
 _REFERENCE_EXPECTED_SHA256: Final[str] = (
     "8bda94d6d5031e038c8d810789301f35242ed539338a0399548869a34e1dc4dd"
@@ -103,6 +102,33 @@ def _as_int(value: object, label: str) -> int:
     return value
 
 
+def _as_string_list(value: object, label: str) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        raise ValueError(f"{label} must be an array of strings")
+    items = cast(list[object], value)
+    if not all(isinstance(item, str) for item in items):
+        raise ValueError(f"{label} must be an array of strings")
+    return tuple(cast(str, item) for item in items)
+
+
+def _require_exact_keys(
+    value: Mapping[str, object],
+    label: str,
+    expected: set[str],
+) -> None:
+    actual = set(value)
+    if actual == expected:
+        return
+    missing = sorted(expected - actual)
+    unknown = sorted(actual - expected)
+    details: list[str] = []
+    if missing:
+        details.append(f"missing={missing}")
+    if unknown:
+        details.append(f"unknown={unknown}")
+    raise ValueError(f"{label} keys are invalid: {', '.join(details)}")
+
+
 def _load_recipe(path: Path) -> Mapping[str, object]:
     # JSON is a strict YAML subset, keeping the public recipe dependency-free.
     parsed = cast(object, json.loads(path.read_text(encoding="utf-8")))
@@ -123,6 +149,10 @@ def _build_timestamp() -> str:
 
 def _portable_reference_path(reference: Path) -> str:
     return f"reference/{reference.name}"
+
+
+def _atomic_write_text(path: Path, value: str) -> None:
+    atomic_write(path, value.encode("utf-8"), overwrite=True)
 
 
 def _track_offset(pad: int, sound_offset: int) -> int:
@@ -396,13 +426,44 @@ def _inspect_recipe(
 ) -> tuple[list[FieldAudit], list[MappingGap], list[int]]:
     if not 0 <= destination_slot <= 127:
         raise ValueError("destination slot must be in 0..127")
+    _require_exact_keys(
+        recipe,
+        "recipe",
+        {"schema_version", "project_id", "kit", "preserve", "tracks"},
+    )
+    if _as_int(recipe.get("schema_version"), "schema_version") != 1:
+        raise ValueError("recipe schema_version must be 1")
     project_id = _as_string(recipe.get("project_id"), "project_id")
     if project_id != "AL16":
         raise ValueError("recipe project_id must be AL16")
     kit = _as_mapping(recipe.get("kit"), "kit")
+    _require_exact_keys(
+        kit,
+        "kit",
+        {"state", "name", "tonal_zone", "performance_context_bpm", "description"},
+    )
+    state_number = _as_int(kit.get("state"), "kit.state")
+    if not 1 <= state_number <= len(AL16_BANK_STATES):
+        raise ValueError("kit.state must be in 1..16")
+    state = AL16_BANK_STATES[state_number - 1]
     kit_name = _as_string(kit.get("name"), "kit.name")
-    if len(kit_name.encode("ascii")) > RYTM_KIT_NAME_LENGTH:
+    try:
+        encoded_kit_name = kit_name.encode("ascii")
+    except UnicodeEncodeError as exc:
+        raise ValueError("kit.name must fit the 16-byte ASCII Rytm name field") from exc
+    if len(encoded_kit_name) > RYTM_KIT_NAME_LENGTH:
         raise ValueError("kit.name must fit the 16-byte ASCII Rytm name field")
+    if kit_name != f"AL{state.number:02d} {state.name}":
+        raise ValueError("kit.name must match the reserved AL16 bank state")
+    tonal_zone = _as_string(kit.get("tonal_zone"), "kit.tonal_zone")
+    if tonal_zone != state.tonal_zone:
+        raise ValueError("kit.tonal_zone must match the reserved AL16 bank state")
+    if _as_int(kit.get("performance_context_bpm"), "kit.performance_context_bpm") != 138:
+        raise ValueError("kit.performance_context_bpm must be 138")
+    _as_string(kit.get("description"), "kit.description")
+    preserve = _as_string_list(recipe.get("preserve"), "preserve")
+    if preserve != AL16_PRESERVED_GLOBAL_SECTIONS:
+        raise ValueError("preserve must list the complete ordered AL16 preservation boundary")
 
     original_name = (
         raw[RYTM_KIT_NAME_OFFSET : RYTM_KIT_NAME_OFFSET + RYTM_KIT_NAME_LENGTH]
@@ -415,7 +476,7 @@ def _inspect_recipe(
             original_semantic_value=original_name,
             requested_semantic_value=kit_name,
             normalized_semantic_value=kit_name,
-            encoded_raw_value_or_bytes=list(kit_name.encode("ascii").ljust(16, b"\x00")),
+            encoded_raw_value_or_bytes=list(encoded_kit_name.ljust(16, b"\x00")),
             raw_location=f"unpacked[{RYTM_KIT_NAME_OFFSET}:{RYTM_KIT_NAME_OFFSET + 16}]",
             converter_or_enumeration="ascii_16",
             verification_status="resolved_but_not_emitted_while_preflight_is_blocked",
@@ -444,10 +505,16 @@ def _inspect_recipe(
             raise ValueError(f"tracks.{pad}.role does not match the permanent AL16 pad role")
         mode = _as_string(track.get("mode"), f"tracks.{pad}.mode")
         if mode == "preserve":
+            _require_exact_keys(track, f"tracks.{pad}", {"role", "mode"})
             preserved.append(pad)
             continue
         if mode != "patch":
             raise ValueError(f"tracks.{pad}.mode must be patch or preserve")
+        _require_exact_keys(
+            track,
+            f"tracks.{pad}",
+            {"role", "mode", "machine", "source", "filter", "amp"},
+        )
 
         machine_key = _record_machine(raw, pad, track, audits, gaps)
         source = _as_mapping(track.get("source", {}), f"tracks.{pad}.source")
@@ -474,15 +541,16 @@ def _write_blocked_artifacts(
     manifest: Mapping[str, object],
     gaps: Sequence[MappingGap],
 ) -> None:
-    manifest_path.write_text(
+    _atomic_write_text(
+        manifest_path,
         json.dumps(manifest, indent=2, sort_keys=True, ensure_ascii=True) + "\n",
-        encoding="utf-8",
     )
     gap_lines = [
         f"- `{gap.semantic_path}`: {gap.reason} Evidence required: {gap.evidence_required}"
         for gap in gaps
     ]
-    validation_path.write_text(
+    _atomic_write_text(
+        validation_path,
         "\n".join(
             [
                 "# AL02 LOCK Rytm Validation",
@@ -524,16 +592,15 @@ def _write_blocked_artifacts(
                 "",
             ]
         ),
-        encoding="utf-8",
     )
-    byte_diff_path.write_text(
+    _atomic_write_text(
+        byte_diff_path,
         "AL16 AL02 LOCK byte-diff report\n"
         "status: blocked before mutation\n"
         "intentionally changed raw bytes: 0\n"
         "unknown or reserved bytes changed: 0\n"
         "output SysEx emitted: no\n"
         "reason: critical saved-kit mappings are not positively verified\n",
-        encoding="utf-8",
     )
 
 
@@ -548,8 +615,14 @@ def build_al16_rytm_kit(
 
     reference_bytes = reference_path.read_bytes()
     reference_sha256 = hashlib.sha256(reference_bytes).hexdigest()
-    decoded = decode_analog_rytm_saved_kit_frame(reference_bytes)
-    if encode_analog_rytm_saved_kit_frame(decoded.header, decoded.unpacked) != reference_bytes:
+    if reference_sha256 != _REFERENCE_EXPECTED_SHA256:
+        raise ValueError(
+            "initialized Analog Rytm reference SHA-256 mismatch: "
+            f"expected {_REFERENCE_EXPECTED_SHA256}, got {reference_sha256}"
+        )
+    codec = get_analog_rytm_saved_kit_codec_capability()
+    decoded = codec.decode_saved_kit_frame(reference_bytes)
+    if codec.encode_saved_kit_frame(decoded.header, decoded.unpacked) != reference_bytes:
         raise ValueError("Analog Rytm reference decode/encode is not byte-identical")
 
     recipe = _load_recipe(recipe_path)
@@ -558,7 +631,6 @@ def build_al16_rytm_kit(
         decoded.unpacked,
         destination_slot,
     )
-    output_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path = output_path.with_name(f"{output_path.stem}_manifest.json")
     validation_path = output_path.with_name(f"{output_path.stem}_validation.md")
     byte_diff_path = output_path.with_name(f"{output_path.stem}_byte_diff.txt")

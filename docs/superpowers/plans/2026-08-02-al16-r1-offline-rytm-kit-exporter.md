@@ -24,9 +24,9 @@ real-device adapter.
    byte-diff allowlist.
 8. For this evidence-limited proof, write a manifest, validation report, and
    zero-mutation byte-diff report while withholding the `.syx` file.
-9. Expose the compiler through the registered passive
-   `al16-rytm-kit-export` command adapter under `cockpit/export`; keep argument
-   parsing and process exit behavior out of the device strategy.
+9. Keep build/report orchestration under `cockpit/export`, separate from the
+   registered passive `al16-rytm-kit-export` command adapter that owns argument
+   parsing and process exit behavior.
 
 ## Evidence boundary
 

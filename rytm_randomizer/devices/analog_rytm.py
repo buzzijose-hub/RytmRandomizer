@@ -15,7 +15,7 @@ methods that delegate to the strategies.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Final
+from typing import Final, Protocol, runtime_checkable
 
 from ..mock_midi import MidiMessage
 from . import registry
@@ -27,10 +27,10 @@ from .strategies import (
     RytmKitSnapshot,
     RytmMutationPlan,
 )
-from .strategies.al16_rytm_export import (
-    Al16BuildResult,
-    MappingGap,
-    build_al16_rytm_kit,
+from .strategies.analog_rytm_saved_kit_codec import (
+    AnalogRytmSavedKitFrame,
+    decode_analog_rytm_saved_kit_frame,
+    encode_analog_rytm_saved_kit_frame,
 )
 
 #: Elektron's 3-byte SysEx manufacturer ID. Documented in the Analog Rytm
@@ -43,6 +43,21 @@ _DEVICE_ID: Final[str] = "analog_rytm_mk2"
 _DISPLAY_NAME: Final[str] = "Elektron Analog Rytm MKII"
 _DEFAULT_MIDI_CHANNEL: Final[int] = 0
 _TRACK_COUNT: Final[int] = 12
+
+
+@runtime_checkable
+class AnalogRytmSavedKitCodecCapability(Protocol):
+    """Specialized pure saved-KIT codec exposed through the device boundary."""
+
+    def decode_saved_kit_frame(self, frame: bytes) -> AnalogRytmSavedKitFrame:
+        """Decode one validated Analog Rytm saved-KIT SysEx frame."""
+
+        ...
+
+    def encode_saved_kit_frame(self, header: bytes, unpacked: bytes) -> bytes:
+        """Encode one validated Analog Rytm saved-KIT SysEx frame."""
+
+        ...
 
 
 def _require_analog_rytm_mutation_plan(
@@ -93,6 +108,16 @@ class AnalogRytmDevice:
         self.snapshot_decoder: AnalogRytmSnapshotDecoder = AnalogRytmSnapshotDecoder()
         self.mutation_planner: AnalogRytmMutationPlanner = AnalogRytmMutationPlanner()
         self.message_renderer: AnalogRytmMessageRenderer = AnalogRytmMessageRenderer()
+
+    def decode_saved_kit_frame(self, frame: bytes) -> AnalogRytmSavedKitFrame:
+        """Delegate saved-KIT decoding to the pure Rytm codec strategy."""
+
+        return decode_analog_rytm_saved_kit_frame(frame)
+
+    def encode_saved_kit_frame(self, header: bytes, unpacked: bytes) -> bytes:
+        """Delegate saved-KIT encoding to the pure Rytm codec strategy."""
+
+        return encode_analog_rytm_saved_kit_frame(header, unpacked)
 
     # ------------------------------------------------------------------
     # WS-S5 convenience methods. Each delegates to the matching strategy
@@ -165,9 +190,17 @@ def _assert_protocol_conformance() -> None:
 _assert_protocol_conformance()
 
 
+def get_analog_rytm_saved_kit_codec_capability() -> AnalogRytmSavedKitCodecCapability:
+    """Resolve the specialized saved-KIT codec from the device registry."""
+
+    device = registry.get_device("analog_rytm_mk2")
+    if not isinstance(device, AnalogRytmSavedKitCodecCapability):
+        raise TypeError("registered Analog Rytm device lacks saved-KIT codec capability")
+    return device
+
+
 __all__ = [
-    "Al16BuildResult",
     "AnalogRytmDevice",
-    "MappingGap",
-    "build_al16_rytm_kit",
+    "AnalogRytmSavedKitCodecCapability",
+    "get_analog_rytm_saved_kit_codec_capability",
 ]

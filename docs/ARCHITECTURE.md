@@ -143,7 +143,6 @@ on one line for an existing module, you probably need a new module instead.
 | `devices/strategies/analog_four_saved_kit_codec.py` | Shared A4 saved-kit payload validator/encoder used by decoder and writer; owns checksum/trailer handling. |
 | `devices/strategies/analog_four_saved_kit_writer.py` | Pure A4 saved-kit mutator/renderer consuming the shared codec, calibration, and canonical data-layer layout facts; no filesystem or MIDI I/O. |
 | `devices/strategies/analog_rytm_saved_kit_codec.py` | Pure initialized Rytm saved-kit frame codec; validates envelope, length, and checksum while providing byte-identical decode/encode. |
-| `devices/strategies/al16_rytm_export.py` | Pure fail-closed AL16 recipe compiler/auditor; uses verified layout facts, withholds SysEx while critical mappings remain unresolved, and performs no filesystem or MIDI I/O. |
 
 ### Mid-upper (orchestration)
 
@@ -171,6 +170,7 @@ on one line for an existing module, you probably need a new module instead.
 | `cockpit/export/analog_four_export_contracts.py` | Shared bounded service/CLI failure vocabulary for passive A4 exports. |
 | `cockpit/export/analog_four_kit.py` | Hardware-validation-gated A4 `.syx` file adapter; reuses canonical `atomic_write` and never sends MIDI. |
 | `cockpit/export/analog_four_cli.py` | Registered local-file command for one or four validated Filter2 Resonance mutations; no MIDI I/O. |
+| `cockpit/export/al16_rytm_kit.py` | Fail-closed AL16 recipe auditor and local evidence publisher; resolves the pure Rytm codec through the public device capability, consumes data-layer facts, withholds SysEx while critical mappings remain unresolved, and publishes reports through the canonical atomic writer. |
 | `cockpit/export/al16_rytm_cli.py` | Registered passive local-file adapter for AL16 Rytm kit export evidence; writes a `.syx` only after every critical field verifies, otherwise writes mapping-gap artifacts. |
 | `style_analysis/analog_four_patch_inference.py` | Typed, single-decode audio evidence and audio-dependent four-column A4 patch-genome inference with direct RED metrics. |
 | `style_analysis/runtime_types.py` | Shared runtime type-validation helper used by extractor and A4 inference boundaries. |
@@ -377,14 +377,16 @@ atomic writer and never opens a MIDI port. The registered
 `analog-four-saved-kit-export` command makes that guarded file path reachable
 without adding hardware I/O.
 
-The AL16 Rytm exporter is an optional pure offline capability exposed by
-`AnalogRytmDevice`, not a new `Device` Protocol member. It composes the Rytm
-saved-kit codec, data-layer allowlists, shared Elektron envelope/u14 helpers,
-and a registered `cockpit/export` CLI. The compiler copies an initialized kit,
-mutates only verified allowlisted locations, repacks and rechecks the frame,
-decodes it for semantic verification, and fails closed with deterministic
-evidence when any critical mapping is missing. It never imports or constructs
-a MIDI provider.
+The AL16 Rytm exporter is a passive local-file workflow under `cockpit/export`,
+not a new `Device` Protocol member or device strategy. Its build service
+resolves the specialized saved-kit codec through the public
+`AnalogRytmDevice` capability, then composes data-layer allowlists, shared
+Elektron envelope/u14 helpers, and the canonical atomic writer. The compiler
+copies an initialized kit, mutates only verified allowlisted locations, repacks
+and rechecks the frame, decodes it for semantic verification, and fails closed
+with deterministic evidence when any critical mapping is missing. The
+registered CLI is only an argument/process-status adapter. Neither module
+imports or constructs a MIDI provider.
 
 The audio batch path composes the existing audio extractor, the focused A4
 audio-inference compiler, patch send-plan metadata, and guarded saved-kit

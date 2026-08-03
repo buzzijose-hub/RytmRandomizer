@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import cast
@@ -7,6 +8,11 @@ from typing import cast
 import pytest
 from pytest import MonkeyPatch
 
+from rytm_randomizer.cockpit.export import al16_rytm_kit as exporter
+from rytm_randomizer.cockpit.export.al16_rytm_kit import (
+    build_al16_rytm_kit,
+    deterministic_recipe_identifier,
+)
 from rytm_randomizer.data.al16_rytm import AL16_BANK_STATES, AL16_PAD_ROLES
 from rytm_randomizer.data.analog_rytm_kit_layout import (
     RYTM_KIT_RAW_SIZE,
@@ -15,11 +21,6 @@ from rytm_randomizer.data.analog_rytm_kit_layout import (
 from rytm_randomizer.data.rytm_machine_catalog import (
     RYTM_MACHINE_PROFILES,
     is_machine_allowed_on_pad,
-)
-from rytm_randomizer.devices.strategies import al16_rytm_export as exporter
-from rytm_randomizer.devices.strategies.al16_rytm_export import (
-    build_al16_rytm_kit,
-    deterministic_recipe_identifier,
 )
 from rytm_randomizer.devices.strategies.analog_rytm_saved_kit_codec import (
     encode_analog_rytm_saved_kit_frame,
@@ -81,6 +82,11 @@ def test_al02_build_fails_closed_and_writes_precise_reports(
     monkeypatch.setenv("SOURCE_DATE_EPOCH", "1785628800")
     reference_path = tmp_path / "RYTM_Test1_Init_Kit.syx"
     reference = _synthetic_reference(reference_path)
+    monkeypatch.setattr(
+        exporter,
+        "_REFERENCE_EXPECTED_SHA256",
+        hashlib.sha256(reference).hexdigest(),
+    )
     output_path = tmp_path / "output" / "AL02_LOCK_RYTM.syx"
 
     result = build_al16_rytm_kit(
@@ -128,9 +134,9 @@ def test_al02_build_fails_closed_and_writes_precise_reports(
 
 
 def test_offline_exporter_has_no_midi_backend_dependency() -> None:
-    source = (
-        _REPO_ROOT / "rytm_randomizer" / "devices" / "strategies" / "al16_rytm_export.py"
-    ).read_text(encoding="utf-8")
+    source = (_REPO_ROOT / "rytm_randomizer" / "cockpit" / "export" / "al16_rytm_kit.py").read_text(
+        encoding="utf-8"
+    )
 
     assert "import mido" not in source
     assert "import rtmidi" not in source
@@ -147,6 +153,18 @@ def test_al16_value_readers_and_converters_fail_closed() -> None:
     for value in (True, "1"):
         with pytest.raises(ValueError, match="must be an integer"):
             exporter._as_int(value, "test")
+    assert exporter._as_string_list(["a", "b"], "test") == ("a", "b")
+    for value in ("a", ["a", 1]):
+        with pytest.raises(ValueError, match="array of strings"):
+            exporter._as_string_list(value, "test")
+
+    exporter._require_exact_keys({"a": 1}, "test", {"a"})
+    with pytest.raises(ValueError, match=r"missing=\['b'\]"):
+        exporter._require_exact_keys({"a": 1}, "test", {"a", "b"})
+    with pytest.raises(ValueError, match=r"unknown=\['b'\]"):
+        exporter._require_exact_keys({"a": 1, "b": 2}, "test", {"a"})
+    with pytest.raises(ValueError, match=r"missing=\['b'\].*unknown=\['c'\]"):
+        exporter._require_exact_keys({"a": 1, "c": 3}, "test", {"a", "b"})
 
     assert exporter._convert_supported_value("verified_7bit", 127) == (127, 127)
     with pytest.raises(ValueError, match="0..127"):
@@ -234,11 +252,40 @@ def test_al16_tuning_resolution_requires_an_approved_machine_table(
 @pytest.mark.parametrize(
     ("mutate", "message"),
     [
+        (lambda recipe: recipe.update(unexpected=True), "recipe keys are invalid"),
+        (lambda recipe: recipe.update(schema_version=2), "schema_version must be 1"),
         (lambda recipe: recipe.update(project_id="OTHER"), "project_id must be AL16"),
+        (
+            lambda recipe: cast(dict[str, object], recipe["kit"]).update(unexpected=True),
+            "kit keys are invalid",
+        ),
+        (
+            lambda recipe: cast(dict[str, object], recipe["kit"]).update(state=17),
+            "kit.state must be in 1..16",
+        ),
+        (
+            lambda recipe: cast(dict[str, object], recipe["kit"]).update(name="AL02 OTHER"),
+            "kit.name must match",
+        ),
+        (
+            lambda recipe: cast(dict[str, object], recipe["kit"]).update(tonal_zone="Other"),
+            "kit.tonal_zone must match",
+        ),
+        (
+            lambda recipe: cast(dict[str, object], recipe["kit"]).update(
+                performance_context_bpm=140
+            ),
+            "performance_context_bpm must be 138",
+        ),
         (
             lambda recipe: cast(dict[str, object], recipe["kit"]).update(name="X" * 17),
             "16-byte ASCII",
         ),
+        (
+            lambda recipe: cast(dict[str, object], recipe["kit"]).update(name="AL02 L\u00d6CK"),
+            "16-byte ASCII",
+        ),
+        (lambda recipe: recipe.update(preserve=[]), "complete ordered AL16"),
         (lambda recipe: cast(dict[str, object], recipe["tracks"]).pop("12"), "pads 1..12"),
         (
             lambda recipe: cast(
@@ -251,6 +298,18 @@ def test_al16_tuning_resolution_requires_an_approved_machine_table(
                 dict[str, object], cast(dict[str, object], recipe["tracks"])["1"]
             ).update(mode="other"),
             "must be patch or preserve",
+        ),
+        (
+            lambda recipe: cast(
+                dict[str, object], cast(dict[str, object], recipe["tracks"])["1"]
+            ).update(unexpected=True),
+            "tracks.1 keys are invalid",
+        ),
+        (
+            lambda recipe: cast(
+                dict[str, object], cast(dict[str, object], recipe["tracks"])["2"]
+            ).update(unexpected=True),
+            "tracks.2 keys are invalid",
         ),
     ],
 )
@@ -277,13 +336,27 @@ def test_al16_build_refuses_round_trip_drift_and_stale_output(
     monkeypatch: MonkeyPatch,
 ) -> None:
     reference_path = tmp_path / "RYTM_Test1_Init_Kit.syx"
-    _synthetic_reference(reference_path)
-    output_path = tmp_path / "AL02_LOCK_RYTM.syx"
-    original_encoder = exporter.encode_analog_rytm_saved_kit_frame
+    reference = _synthetic_reference(reference_path)
     monkeypatch.setattr(
         exporter,
-        "encode_analog_rytm_saved_kit_frame",
-        lambda header, unpacked: original_encoder(header, unpacked)[:-1] + b"\x00",
+        "_REFERENCE_EXPECTED_SHA256",
+        hashlib.sha256(reference).hexdigest(),
+    )
+    output_path = tmp_path / "AL02_LOCK_RYTM.syx"
+    original_codec = exporter.get_analog_rytm_saved_kit_codec_capability()
+
+    class _DriftingCodec:
+        def decode_saved_kit_frame(self, frame: bytes):
+            return original_codec.decode_saved_kit_frame(frame)
+
+        def encode_saved_kit_frame(self, header: bytes, unpacked: bytes) -> bytes:
+            encoded = original_codec.encode_saved_kit_frame(header, unpacked)
+            return encoded[:-1] + b"\x00"
+
+    monkeypatch.setattr(
+        exporter,
+        "get_analog_rytm_saved_kit_codec_capability",
+        _DriftingCodec,
     )
     with pytest.raises(ValueError, match="not byte-identical"):
         build_al16_rytm_kit(
@@ -293,7 +366,11 @@ def test_al16_build_refuses_round_trip_drift_and_stale_output(
             output_path=output_path,
         )
 
-    monkeypatch.setattr(exporter, "encode_analog_rytm_saved_kit_frame", original_encoder)
+    monkeypatch.setattr(
+        exporter,
+        "get_analog_rytm_saved_kit_codec_capability",
+        lambda: original_codec,
+    )
     output_path.write_bytes(b"stale")
     with pytest.raises(FileExistsError, match="potentially stale output"):
         build_al16_rytm_kit(
@@ -311,3 +388,20 @@ def test_al16_build_timestamp_supports_reproducible_and_live_modes(
     assert exporter._build_timestamp() == "1970-01-01T00:00:00+00:00"
     monkeypatch.delenv("SOURCE_DATE_EPOCH")
     assert exporter._build_timestamp().endswith("+00:00")
+
+
+def test_al16_build_rejects_an_unexpected_initialized_reference(tmp_path: Path) -> None:
+    reference_path = tmp_path / "wrong.syx"
+    _synthetic_reference(reference_path)
+    output_path = tmp_path / "AL02_LOCK_RYTM.syx"
+
+    with pytest.raises(ValueError, match="reference SHA-256 mismatch"):
+        build_al16_rytm_kit(
+            reference_path=reference_path,
+            recipe_path=_AL02_RECIPE,
+            destination_slot=127,
+            output_path=output_path,
+        )
+
+    assert not output_path.exists()
+    assert not output_path.with_name("AL02_LOCK_RYTM_manifest.json").exists()

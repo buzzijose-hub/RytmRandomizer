@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from rytm_randomizer.devices.strategies.al16_rytm_export import (
+from rytm_randomizer.cockpit.export.al16_rytm_kit import (
     Al16BuildResult,
     MappingGap,
 )

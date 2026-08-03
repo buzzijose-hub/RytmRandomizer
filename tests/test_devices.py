@@ -77,6 +77,17 @@ def test_analog_rytm_device_protocol_guard_fails_closed(
         analog_rytm._assert_protocol_conformance()
 
 
+def test_analog_rytm_saved_kit_codec_capability_fails_closed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.devices import analog_rytm
+
+    monkeypatch.setattr(analog_rytm.registry, "get_device", lambda _device_id: object())
+
+    with pytest.raises(TypeError, match="lacks saved-KIT codec capability"):
+        analog_rytm.get_analog_rytm_saved_kit_codec_capability()
+
+
 def test_analog_rytm_device_satisfies_protocol_attributes() -> None:
     from rytm_randomizer.devices import get_device
     from rytm_randomizer.devices.analog_rytm import AnalogRytmDevice
