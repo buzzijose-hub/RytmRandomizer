@@ -1,6 +1,6 @@
 # AL16 Phase R1 Offline Analog Rytm Kit Exporter
 
-> Status: implementation complete; final integration verification in progress
+> Status: in-flight - implementation and integrated verification complete
 >
 > Offline audit implemented; AL02 output remains blocked by verified mapping gaps.
 
@@ -42,11 +42,16 @@ exist; substituting candidate offsets would violate the project safety policy.
   explicit mapping gaps, absence of `.syx`, unchanged reference bytes, and
   zero MIDI dependencies.
 - Focused tests run single-process to avoid unnecessary workstation load.
-- Focused exporter and codec tests: 34 passed.
-- Relevant Rytm layout, codec, envelope, data, and device tests: 191 passed.
-- Architecture tests: 736 passed with one unrelated warn-only result.
-- Touched production coverage: 438 statements and 130 branches at 100%.
+- Focused exporter, codec, writer, and data tests: 112 passed, 1 optional
+  private-reference test skipped.
+- Relevant Rytm layout, codec, envelope, data, snapshot, and device tests with
+  the local initialized reference enabled: 236 passed.
+- Architecture tests: 737 passed with one unrelated warn-only result.
+- V1.34 byte-frozen parity: 685 passed.
+- Full repository suite: 7,494 passed, 4 skipped.
+- Touched production coverage: 439 statements and 130 branches at 100%.
 - Strict touched-production type check: 6 modules, 0 errors.
 - Ruff, Black, isort, and `git diff --check`: passed.
-- Two deterministic blocked builds produced byte-identical reports; no `.syx`
-  was emitted and the initialized reference SHA-256 remained unchanged.
+- Two deterministic blocked builds produced byte-identical reports, recording
+  18 critical mapping gaps and zero intentionally changed bytes. No `.syx` was
+  emitted and the initialized reference SHA-256 remained unchanged.
