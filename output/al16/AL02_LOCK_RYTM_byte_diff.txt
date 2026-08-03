@@ -1,0 +1,6 @@
+AL16 AL02 LOCK byte-diff report
+status: blocked before mutation
+intentionally changed raw bytes: 0
+unknown or reserved bytes changed: 0
+output SysEx emitted: no
+reason: critical saved-kit mappings are not positively verified

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final
 
 from ...data.analog_four_saved_kit_layout import (
     A4_CHECKSUM_PACKED_OFFSET,
@@ -22,8 +21,11 @@ from ...snapshot import (
     read_ascii_name,
     unpack_elektron_7bit,
 )
-
-_U14_MAX: Final[int] = 0x3FFF
+from ...snapshot.elektron_u14 import (
+    ELEKTRON_U14_MAX,
+    decode_elektron_u14,
+    encode_elektron_u14,
+)
 
 
 @dataclass(frozen=True)
@@ -51,15 +53,7 @@ class AnalogFourEncodedSavedKitPayload:
 def analog_four_saved_kit_checksum(packed: bytes) -> int:
     """Return the observed 14-bit A4 saved-kit checksum."""
 
-    return sum(packed[A4_CHECKSUM_PACKED_OFFSET:]) & _U14_MAX
-
-
-def _decode_u14(high: int, low: int) -> int:
-    return (high << 7) | low
-
-
-def _encode_u14(value: int) -> bytes:
-    return bytes(((value >> 7) & 0x7F, value & 0x7F))
+    return sum(packed[A4_CHECKSUM_PACKED_OFFSET:]) & ELEKTRON_U14_MAX
 
 
 def _clean_saved_kit_name(name: str) -> str:
@@ -67,10 +61,10 @@ def _clean_saved_kit_name(name: str) -> str:
 
 
 def _validated_trailer(packed: bytes, trailer: bytes) -> tuple[int, int]:
-    stored_checksum = _decode_u14(trailer[0], trailer[1])
+    stored_checksum = decode_elektron_u14(trailer[0], trailer[1])
     if stored_checksum != analog_four_saved_kit_checksum(packed):
         raise ValueError("Analog Four saved-kit checksum does not match the packed payload")
-    stored_length = _decode_u14(trailer[2], trailer[3])
+    stored_length = decode_elektron_u14(trailer[2], trailer[3])
     if stored_length != len(packed):
         raise ValueError("Analog Four saved-kit packed length does not match its trailer")
     return stored_checksum, stored_length
@@ -148,7 +142,7 @@ def encode_analog_four_saved_kit_payload(
     if len(packed) != A4_SAVED_KIT_PACKED_SIZE:
         raise ValueError("Analog Four saved-kit repacking changed the packed payload length")
     checksum = analog_four_saved_kit_checksum(packed)
-    trailer = _encode_u14(checksum) + _encode_u14(len(packed))
+    trailer = encode_elektron_u14(checksum) + encode_elektron_u14(len(packed))
     return AnalogFourEncodedSavedKitPayload(
         payload=prefix + packed + trailer,
         packed=packed,

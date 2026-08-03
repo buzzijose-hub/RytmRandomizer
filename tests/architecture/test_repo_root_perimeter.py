@@ -59,7 +59,9 @@ _ALLOWED_ROOT_DIRS: Final[frozenset[str]] = frozenset(
         "desktop",  # Tauri shell + React cockpit
         "docs",  # documentation, plans, diagrams
         "installer-assets",  # packaging icons / metadata
+        "output",  # deterministic public evidence + gitignored local operator output
         "rytm_randomizer",  # the Python package
+        "specs",  # declarative public musical/device recipes; no executable code
         "tests",  # the test suite
         "tooling",  # dev tooling (see _SCHEDULED_FOR_RETIREMENT below)
     }
