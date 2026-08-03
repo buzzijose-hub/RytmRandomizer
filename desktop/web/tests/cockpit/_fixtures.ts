@@ -8,6 +8,7 @@ import type {
   CockpitClient,
   ConnectionStatus,
   EventHandler,
+  ReconnectState,
   Unsubscribe,
 } from '../../src/ws/client';
 import type {
@@ -267,8 +268,16 @@ export class FakeCockpitClient {
   /** When true, send() returns a never-resolving promise (used to test no-ack paths). */
   hang = false;
 
+  /** retryNow() invocations (asserted by OfflineShell tests). */
+  retryCalls = 0;
+  /** URL reported by getUrl(). */
+  url = 'ws://127.0.0.1:4317/ws';
+  /** Reconnect snapshot returned by getReconnectState(). */
+  reconnectState: ReconnectState = { attempt: 0, nextDelayMs: null };
+
   private readonly listeners = new Map<EventType, Set<EventHandler>>();
   private readonly statusListeners = new Set<(s: ConnectionStatus) => void>();
+  private readonly reconnectListeners = new Set<(state: ReconnectState) => void>();
   private status: ConnectionStatus = 'connected';
 
   send(command: Command): Promise<CommandAck> {
@@ -313,6 +322,31 @@ export class FakeCockpitClient {
 
   getStatus(): ConnectionStatus {
     return this.status;
+  }
+
+  getUrl(): string {
+    return this.url;
+  }
+
+  getReconnectState(): ReconnectState {
+    return this.reconnectState;
+  }
+
+  onReconnectStateChange(handler: (state: ReconnectState) => void): Unsubscribe {
+    this.reconnectListeners.add(handler);
+    return () => {
+      this.reconnectListeners.delete(handler);
+    };
+  }
+
+  /** Test helper: update the reconnect snapshot and notify subscribers. */
+  emitReconnectState(state: ReconnectState): void {
+    this.reconnectState = state;
+    for (const handler of this.reconnectListeners) handler(state);
+  }
+
+  retryNow(): void {
+    this.retryCalls += 1;
   }
 
   connect(): void {

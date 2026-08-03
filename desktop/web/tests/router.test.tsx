@@ -6,8 +6,9 @@
  *   - A `#/wizard` hash mounts the Wizard surface.
  *   - Mutating `window.location.hash` after mount + dispatching `hashchange` swaps the
  *     surface in place (the same behaviour MutationPanel's launcher relies on).
- *   - Without a sessionStatus the connecting placeholder still shows except for the
- *     passive performance-console route, which can render the bundled demo model.
+ *   - Without a sessionStatus the OfflineShell shows (live status + retry visibility,
+ *     not a dead placeholder) except for the passive performance-console route, which
+ *     can render the bundled demo model.
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -41,11 +42,34 @@ describe('App hash router', () => {
     useWizardStore.getState().reset();
   });
 
-  it('shows the connecting placeholder until session_status arrives', () => {
+  it('shows the OfflineShell until session_status arrives', () => {
     const fake = new FakeCockpitClient();
     render(<App client={fake.asClient()} />);
-    expect(screen.getByText(/Connecting/)).toBeInTheDocument();
+    expect(screen.getByTestId('offline-shell')).toBeInTheDocument();
+    expect(screen.getByTestId('offline-retry-now')).toBeInTheDocument();
     expect(screen.queryByTestId('cockpit-root')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('wizard-root')).not.toBeInTheDocument();
+  });
+
+  it('recovers from the OfflineShell to the Cockpit when session_status arrives', () => {
+    const fake = new FakeCockpitClient();
+    render(<App client={fake.asClient()} />);
+    expect(screen.getByTestId('offline-shell')).toBeInTheDocument();
+
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionLive);
+      useCockpitStore.getState().setSnapshot(snapshot);
+    });
+
+    expect(screen.getByTestId('cockpit-root')).toBeInTheDocument();
+    expect(screen.queryByTestId('offline-shell')).not.toBeInTheDocument();
+  });
+
+  it('keeps the OfflineShell ahead of the wizard route while the sidecar is unreachable', () => {
+    setHash('/wizard');
+    const fake = new FakeCockpitClient();
+    render(<App client={fake.asClient()} />);
+    expect(screen.getByTestId('offline-shell')).toBeInTheDocument();
     expect(screen.queryByTestId('wizard-root')).not.toBeInTheDocument();
   });
 

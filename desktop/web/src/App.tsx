@@ -1,6 +1,7 @@
 /**
  * Top-level App. Mounts <Cockpit /> once the engine has pushed a session_status; otherwise
- * shows a small connecting placeholder.
+ * shows the OfflineShell — a live surface with WS status, retry visibility (attempt count +
+ * next-dial countdown), a manual "Retry now" action, and client-side connection help.
  *
  * Hash routing
  * ------------
@@ -22,7 +23,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { LiveRegion, useDocumentTitle, useFocusOnRouteChange } from './a11y';
-import { Cockpit, PerformanceConsole, performanceConsoleDemoModel } from './cockpit';
+import {
+  Cockpit,
+  OfflineShell,
+  PerformanceConsole,
+  ReconnectBanner,
+  performanceConsoleDemoModel,
+} from './cockpit';
 import { bindClientToStore, useCockpitStore } from './state';
 import type { LiveGuiPerformanceConsoleModelDict } from './types/live_gui_protocol';
 import { Wizard } from './wizard';
@@ -127,20 +134,22 @@ export function App({ client: injected, performanceConsole }: AppProps = {}): JS
       <>
         <LiveRegion />
         <div ref={routeRootRef} tabIndex={-1}>
-          <main className="cockpit-placeholder">
-            <h1>RytmRandomizer · Cockpit</h1>
-            <p>Connecting…</p>
-            <small>status: {connStatus}</small>
-          </main>
+          <OfflineShell client={client} status={connStatus} />
         </div>
       </>
     );
   }
 
+  // Mid-session surfaces (wizard + cockpit) reach here only with a non-null
+  // sessionStatus, so a reconnecting/closed WS status means the sidecar was
+  // lost MID-SESSION. The cockpit deliberately stays mounted on its stale
+  // data (losing panel context mid-performance is worse); the banner is the
+  // loud, actionable reconnect surface for that state.
   if (isWizardRoute(route)) {
     return (
       <>
         <LiveRegion />
+        <ReconnectBanner client={client} status={connStatus} />
         <div ref={routeRootRef} tabIndex={-1}>
           <Wizard client={client} />
         </div>
@@ -151,6 +160,7 @@ export function App({ client: injected, performanceConsole }: AppProps = {}): JS
   return (
     <>
       <LiveRegion />
+      <ReconnectBanner client={client} status={connStatus} />
       <div ref={routeRootRef} tabIndex={-1}>
         <Cockpit client={client} />
       </div>

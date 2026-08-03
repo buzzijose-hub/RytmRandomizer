@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { useCockpitStore } from '../state';
+import type { ConnectionPhase, ConnectionStateDict } from '../ws/protocol';
 import type {
   LiveGuiDeviceInventoryCardDict,
   LiveGuiDualDeviceRigDeviceDict,
@@ -23,9 +24,35 @@ import {
 const DEFAULT_SESSION_LABEL = 'Live Session';
 const RYTM_PAD_COUNT = 12;
 
+/**
+ * Operator-facing hardware notice per no-hardware connection phase.
+ * `null` means real hardware is reachable (listening/armed) and the rail
+ * shows the actual port name(s) instead of a notice.
+ */
+export const HARDWARE_NOTICE_BY_PHASE: Readonly<Record<ConnectionPhase, string | null>> = {
+  disconnected: 'No hardware detected — device scan idle',
+  searching: 'No hardware detected — still scanning (every 2 s)',
+  listening: null,
+  armed: null,
+  fault: 'Connection fault — open the Connection Doctor for details',
+};
+
+/**
+ * The rail's connection phase: prefer the live `connection_changed` slice,
+ * fall back to the session_status snapshot, then 'disconnected' (same
+ * precedence as `selectConnectionPhase`, kept pure for the model builder).
+ */
+export function resolveConnectionPhase(
+  connection: ConnectionStateDict | null,
+  session: SessionStatus | null,
+): ConnectionPhase {
+  return connection?.phase ?? session?.connection_phase ?? 'disconnected';
+}
+
 interface BuildDeviceRailReadinessModelOptions {
   snapshot: Snapshot | null;
   session: SessionStatus | null;
+  connection: ConnectionStateDict | null;
 }
 
 export interface DeviceRailProps {
@@ -36,7 +63,9 @@ export interface DeviceRailProps {
 export function DeviceRail({ activeDeviceId, onSelectDevice }: DeviceRailProps): JSX.Element {
   const snapshot = useCockpitStore((s) => s.snapshot);
   const session = useCockpitStore((s) => s.sessionStatus);
-  const model = buildDeviceRailReadinessModel({ snapshot, session });
+  const connection = useCockpitStore((s) => s.connection);
+  const model = buildDeviceRailReadinessModel({ snapshot, session, connection });
+  const hardwareNotice = HARDWARE_NOTICE_BY_PHASE[resolveConnectionPhase(connection, session)];
   const rytmDevice = model.devices.find(
     (device) => device.device_id === RYTM_DEVICE_ID,
   ) as LiveGuiDualDeviceRigDeviceDict;
@@ -58,6 +87,7 @@ export function DeviceRail({ activeDeviceId, onSelectDevice }: DeviceRailProps):
         active={activeDeviceId === RYTM_DEVICE_ID}
         testId={rytmDevice.test_id}
         selectTestId="device-select-analog-rytm-mk2"
+        banner={hardwareNotice}
         onSelect={() => onSelectDevice(RYTM_DEVICE_ID)}
       >
         <div className="device-chip-grid" aria-label="Analog Rytm pad map">
@@ -72,7 +102,11 @@ export function DeviceRail({ activeDeviceId, onSelectDevice }: DeviceRailProps):
             </span>
           ))}
         </div>
-        <p className="device-port-state">{rytmDevice.port_state}</p>
+        {hardwareNotice === null && (
+          <p className="device-port-state" data-testid="device-rail-rytm-port-state">
+            Port: {rytmDevice.port_state}
+          </p>
+        )}
       </DeviceCard>
       <DeviceCard
         name={analogFourDevice.display_name}
@@ -81,6 +115,7 @@ export function DeviceRail({ activeDeviceId, onSelectDevice }: DeviceRailProps):
         active={activeDeviceId === ANALOG_FOUR_DEVICE_ID}
         testId={analogFourDevice.test_id}
         selectTestId="device-select-analog-four-mk2"
+        banner={hardwareNotice}
         onSelect={() => onSelectDevice(ANALOG_FOUR_DEVICE_ID)}
       >
         <div className="device-chip-grid" aria-label="Analog Four staged track map">
@@ -91,7 +126,11 @@ export function DeviceRail({ activeDeviceId, onSelectDevice }: DeviceRailProps):
             </span>
           ))}
         </div>
-        <p className="device-port-state">{analogFourDevice.port_state}</p>
+        {hardwareNotice === null && (
+          <p className="device-port-state" data-testid="device-rail-a4-port-state">
+            {analogFourDevice.port_state}
+          </p>
+        )}
       </DeviceCard>
     </aside>
   );
@@ -100,9 +139,20 @@ export function DeviceRail({ activeDeviceId, onSelectDevice }: DeviceRailProps):
 export function buildDeviceRailReadinessModel({
   snapshot,
   session,
+  connection,
 }: BuildDeviceRailReadinessModelOptions): LiveGuiDualDeviceRigReadinessModelDict {
   const pads = [...(snapshot?.pads ?? [])].sort((left, right) => left.pad_id - right.pad_id);
-  const portState = session?.midi_port ?? 'No MIDI port open';
+  const phase = resolveConnectionPhase(connection, session);
+  const hardwareNotice = HARDWARE_NOTICE_BY_PHASE[phase];
+  const detectedOutputs = connection?.available_outputs ?? [];
+  const selectedPort = connection?.selected_output ?? session?.midi_port ?? null;
+  const portState =
+    hardwareNotice !== null
+      ? hardwareNotice
+      : selectedPort ??
+        (detectedOutputs.length > 0
+          ? detectedOutputs.join(', ')
+          : 'Hardware detected — no port name reported');
   const hardwareState = session?.mode === 'live' && session.armed ? 'armed' : 'mock-safe';
   const padSurfaceCards = Object.fromEntries(
     pads.map((pad) => [pad.pad_id, rytmPadSurfaceCard(pad)]),
@@ -223,8 +273,8 @@ export function buildDeviceRailReadinessModel({
       dry_run_active: true,
       hardware_requested: false,
       port_status: portState,
-      selected_port_name: session?.midi_port ?? null,
-      available_ports: [],
+      selected_port_name: selectedPort,
+      available_ports: detectedOutputs,
       safety_checks: [
         {
           key: 'mock-first',
@@ -392,6 +442,7 @@ function DeviceCard({
   active,
   testId,
   selectTestId,
+  banner,
   onSelect,
   children,
 }: {
@@ -401,6 +452,8 @@ function DeviceCard({
   active: boolean;
   testId: string;
   selectTestId: string;
+  /** Hardware honesty notice; null when real hardware is reachable. */
+  banner: string | null;
   onSelect: () => void;
   children: ReactNode;
 }): JSX.Element {
@@ -426,6 +479,18 @@ function DeviceCard({
       >
         {active ? 'Viewing' : 'View'}
       </button>
+      {banner !== null && (
+        <div
+          className="device-hardware-banner"
+          role="note"
+          data-testid={`${testId}-hardware-banner`}
+        >
+          <p className="device-hardware-banner-text">
+            <span aria-hidden="true">◌</span> {banner}
+          </p>
+          <span className="device-preview-badge">Preview — mock data</span>
+        </div>
+      )}
       {children}
     </section>
   );

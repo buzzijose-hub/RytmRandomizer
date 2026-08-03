@@ -1,11 +1,27 @@
 import { act, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { DeviceRail, buildDeviceRailReadinessModel } from '../../src/cockpit/DeviceRail';
+import {
+  DeviceRail,
+  HARDWARE_NOTICE_BY_PHASE,
+  buildDeviceRailReadinessModel,
+  resolveConnectionPhase,
+} from '../../src/cockpit/DeviceRail';
 import { ANALOG_FOUR_DEVICE_ID, RYTM_DEVICE_ID } from '../../src/cockpit/devices';
 import { useCockpitStore } from '../../src/state';
+import type { ConnectionStateDict } from '../../src/ws/protocol';
 
-import { sessionMock, snapshot } from './_fixtures';
+import { connectionFault, connectionListening, sessionLive, sessionMock, snapshot } from './_fixtures';
+
+const connectionSearching: ConnectionStateDict = {
+  phase: 'searching',
+  available_inputs: [],
+  available_outputs: [],
+  selected_input: null,
+  selected_output: null,
+  last_error_fingerprint: null,
+  changed_at: 500.0,
+};
 
 describe('DeviceRail', () => {
   beforeEach(() => {
@@ -75,6 +91,7 @@ describe('DeviceRail', () => {
     const model = buildDeviceRailReadinessModel({
       session: sessionMock,
       snapshot,
+      connection: null,
     });
 
     expect(model.model_version).toBe('live-gui-dual-device-rig-readiness-v1');
@@ -93,7 +110,8 @@ describe('DeviceRail', () => {
       active_track_count: 12,
       planned_track_count: 0,
       status: 'mock-safe',
-      port_state: 'No MIDI port open',
+      // sessionMock reports phase 'disconnected' → honest no-hardware notice.
+      port_state: 'No hardware detected — device scan idle',
     });
     expect(model.devices[1]).toMatchObject({
       display_name: 'Analog Four MKII',
@@ -128,6 +146,7 @@ describe('DeviceRail', () => {
     const model = buildDeviceRailReadinessModel({
       session: null,
       snapshot: null,
+      connection: null,
     });
 
     expect(model.rig_status).toBe('mock-safe');
@@ -138,7 +157,8 @@ describe('DeviceRail', () => {
       mapped_track_count: 12,
       active_track_count: 0,
       planned_track_count: 12,
-      port_state: 'No MIDI port open',
+      // No session + no connection slice → phase defaults to 'disconnected'.
+      port_state: 'No hardware detected — device scan idle',
       status: 'not-loaded',
     });
     expect(model.tracks[0]).toMatchObject({
@@ -157,7 +177,7 @@ describe('DeviceRail', () => {
     });
   });
 
-  it('keeps both device cards mock-safe when no MIDI port is open', () => {
+  it('shows an explicit no-hardware banner on both cards when disconnected (no port open)', () => {
     act(() => {
       useCockpitStore.getState().setSessionStatus(sessionMock);
       useCockpitStore.getState().setSnapshot(snapshot);
@@ -167,7 +187,129 @@ describe('DeviceRail', () => {
 
     expect(screen.getByTestId('device-card-analog-rytm-mk2')).toHaveTextContent('Mock Safe');
     expect(screen.getByTestId('device-card-analog-four-mk2')).toHaveTextContent('Mock Staged');
-    expect(screen.getByTestId('device-rail')).toHaveTextContent('No MIDI port open');
+    expect(
+      screen.getByTestId('device-card-analog-rytm-mk2-hardware-banner'),
+    ).toHaveTextContent('No hardware detected — device scan idle');
+    expect(
+      screen.getByTestId('device-card-analog-four-mk2-hardware-banner'),
+    ).toHaveTextContent('No hardware detected — device scan idle');
+    // The mock preview content stays, but is labelled as preview data.
+    expect(screen.getAllByText('Preview — mock data')).toHaveLength(2);
+    // No real port line while nothing is detected.
+    expect(screen.queryByTestId('device-rail-rytm-port-state')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('device-rail-a4-port-state')).not.toBeInTheDocument();
+  });
+
+  it('says "still scanning" on every card while the sidecar searches for hardware', () => {
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionMock);
+      useCockpitStore.getState().setConnection(connectionSearching);
+    });
+
+    render(<DeviceRail activeDeviceId={RYTM_DEVICE_ID} onSelectDevice={() => undefined} />);
+
+    expect(
+      screen.getByTestId('device-card-analog-rytm-mk2-hardware-banner'),
+    ).toHaveTextContent('No hardware detected — still scanning (every 2 s)');
+    expect(
+      screen.getByTestId('device-card-analog-four-mk2-hardware-banner'),
+    ).toHaveTextContent('No hardware detected — still scanning (every 2 s)');
+  });
+
+  it('names the real port and drops the banner when the connection is listening', () => {
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionMock);
+      useCockpitStore.getState().setSnapshot(snapshot);
+      useCockpitStore.getState().setConnection(connectionListening);
+    });
+
+    render(<DeviceRail activeDeviceId={RYTM_DEVICE_ID} onSelectDevice={() => undefined} />);
+
+    expect(screen.queryByTestId('device-card-analog-rytm-mk2-hardware-banner')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('device-card-analog-four-mk2-hardware-banner')).not.toBeInTheDocument();
+    expect(screen.getByTestId('device-rail-rytm-port-state')).toHaveTextContent(
+      'Port: Analog Rytm MK2 OUT',
+    );
+    expect(screen.getByTestId('device-rail-a4-port-state')).toHaveTextContent('No MIDI port open');
+  });
+
+  it('surfaces a fault banner pointing at the Connection Doctor', () => {
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionMock);
+      useCockpitStore.getState().setConnection(connectionFault);
+    });
+
+    render(<DeviceRail activeDeviceId={RYTM_DEVICE_ID} onSelectDevice={() => undefined} />);
+
+    expect(
+      screen.getByTestId('device-card-analog-rytm-mk2-hardware-banner'),
+    ).toHaveTextContent('Connection fault — open the Connection Doctor for details');
+  });
+
+  it('resolves the phase from connection first, then session, then disconnected', () => {
+    expect(resolveConnectionPhase(connectionListening, sessionMock)).toBe('listening');
+    expect(resolveConnectionPhase(null, sessionLive)).toBe('armed');
+    expect(resolveConnectionPhase(null, null)).toBe('disconnected');
+  });
+
+  it('maps every no-hardware phase to a notice and every live phase to null', () => {
+    expect(HARDWARE_NOTICE_BY_PHASE.listening).toBeNull();
+    expect(HARDWARE_NOTICE_BY_PHASE.armed).toBeNull();
+    expect(HARDWARE_NOTICE_BY_PHASE.disconnected).toContain('No hardware detected');
+    expect(HARDWARE_NOTICE_BY_PHASE.searching).toContain('still scanning');
+    expect(HARDWARE_NOTICE_BY_PHASE.fault).toContain('Connection Doctor');
+  });
+
+  it('builds port facts from the live connection slice when listening', () => {
+    const model = buildDeviceRailReadinessModel({
+      session: sessionMock,
+      snapshot: null,
+      connection: connectionListening,
+    });
+
+    expect(model.devices[0]).toMatchObject({ port_state: 'Analog Rytm MK2 OUT' });
+    expect(model.hardware_rail.selected_port_name).toBe('Analog Rytm MK2 OUT');
+    expect(model.hardware_rail.available_ports).toEqual(['Analog Rytm MK2 OUT']);
+  });
+
+  it('joins enumerated output names when nothing is selected yet', () => {
+    const model = buildDeviceRailReadinessModel({
+      session: null,
+      snapshot: null,
+      connection: {
+        ...connectionListening,
+        selected_output: null,
+        available_outputs: ['Rytm OUT', 'IAC Bus 1'],
+      },
+    });
+
+    expect(model.devices[0]).toMatchObject({ port_state: 'Rytm OUT, IAC Bus 1' });
+    expect(model.hardware_rail.selected_port_name).toBeNull();
+    expect(model.hardware_rail.available_ports).toEqual(['Rytm OUT', 'IAC Bus 1']);
+  });
+
+  it('admits when listening hardware reports no output name at all', () => {
+    const model = buildDeviceRailReadinessModel({
+      session: null,
+      snapshot: null,
+      connection: { ...connectionListening, selected_output: null, available_outputs: [] },
+    });
+
+    expect(model.devices[0]).toMatchObject({
+      port_state: 'Hardware detected — no port name reported',
+    });
+  });
+
+  it('falls back to the session midi_port when armed without a connection slice', () => {
+    const model = buildDeviceRailReadinessModel({
+      session: sessionLive,
+      snapshot,
+      connection: null,
+    });
+
+    expect(model.devices[0]).toMatchObject({ port_state: 'IAC Driver Bus 1' });
+    expect(model.hardware_rail.selected_port_name).toBe('IAC Driver Bus 1');
+    expect(model.hardware_rail.available_ports).toEqual([]);
   });
 
   it('renders planned Rytm pads as locked before a snapshot is loaded', () => {
