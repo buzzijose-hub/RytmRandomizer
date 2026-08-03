@@ -1,6 +1,6 @@
 # AL16 Phase R1 Offline Analog Rytm Kit Exporter
 
-> Status: in-flight - implementation complete; AL02 correctly blocked by verified mapping gaps; ready for review
+> Status: in-flight - implementation, review repairs, and bounded closeout verification passed; AL02 correctly remains blocked by 18 verified mapping gaps
 >
 > Offline audit implemented; AL02 output remains blocked by verified mapping gaps.
 
@@ -45,16 +45,103 @@ exist; substituting candidate offsets would violate the project safety policy.
   explicit mapping gaps, absence of `.syx`, unchanged reference bytes, and
   zero MIDI dependencies.
 - Focused tests run single-process to avoid unnecessary workstation load.
-- Focused exporter, Rytm layout, codec, envelope, writer, data, snapshot, and
-  device tests with the local initialized reference enabled: 270 passed.
-- Passive CLI and report-golden integration tests: 362 passed.
-- Command-specific CLI/help tests: 18 passed.
+- Focused exporter tests: 35 passed.
+- Data-layer drift tests: 199 passed.
 - Architecture tests: 738 passed with one unrelated warn-only result.
 - V1.34 byte-frozen parity: 685 passed.
-- Full repository suite: 7,510 passed, 4 skipped.
+- Full repository suite: 7,577 passed, 4 skipped.
 - Touched production coverage: 10 modules at 100% line and branch coverage.
-- Strict touched-production type check: 10 modules, 0 errors.
+- Strict touched-production type check: 11 modules, 0 errors and 0 warnings.
 - Ruff, Black, isort, and `git diff --check`: passed.
 - Two deterministic blocked builds produced byte-identical reports, recording
   18 critical mapping gaps and zero intentionally changed bytes. No `.syx` was
   emitted and the initialized reference SHA-256 remained unchanged.
+- Deterministic evidence SHA-256 values were
+  `9cb6f07e182aa6192f311e19a731e18997d6db2b0436a8885b444ea59cfe8a4a`
+  for the manifest,
+  `268a100f4f4a8bd12e3456bef9001dd4e164f6a0418f66f72296a287e91446fd`
+  for the validation report, and
+  `5263e9042b091fb89a1a6da005e5056909a3a9a37f12490900c4b2422703701f`
+  for the byte-diff report.
+
+## Maintainability review (Gate 14)
+
+| Dimension | Before | After |
+| --- | --- | --- |
+| Fact ownership | Exporter-local strings and sizes | Typed converter/mode facts and Rytm layout constants in `data/` |
+| Dispatch | Repeated raw strings | `Literal`-typed canonical constants |
+| Name decoding | Local byte slicing | Shared `snapshot.envelope.read_ascii_name` |
+| Pad iteration | Hard-coded numeric range | Canonical `AL16_PAD_ROLES` order |
+| Observability | Blocked result only | One traced operation, bounded logs, and one blocked metric |
+| Determinism | Same-key-order fixture | Reordered-key recipe plus fixed `SOURCE_DATE_EPOCH` proof |
+| Failure evidence | Loose lower-bound assertion | Exact 18-path mapping-gap assertion |
+| Hardware boundary | Passive by convention | Architecture tests and import surface prove no MIDI dependency |
+| Documentation | Future writer wording mixed with current behavior | Current audit-only behavior separated from future writer work |
+| Recovery | Implicit rerun | Immutable reference, atomic reports, deterministic recipe ID, rerunnable command |
+
+The exporter remains deliberately small and fail-closed. No abstraction was
+added beyond typed fact vocabulary and reuse of the existing Rytm codec,
+Elektron envelope/u14 helpers, observability primitives, and atomic writer.
+
+## Execution and recovery (Gates 15-16)
+
+This was one tightly coupled workstream in one isolated feature worktree and
+one non-stacked PR. Parallel work was limited to read-only review dimensions
+(architecture, types, tests, side effects, observability, abstraction reuse,
+documentation, and maintainability); there were no sibling writer branches to
+merge. That shape avoids conflicting edits across the exporter, its canonical
+data facts, and its exact evidence tests.
+
+The durable state is the Git branch plus deterministic evidence artifacts. A
+run may be restarted from the same immutable reference, recipe, destination
+slot, and `SOURCE_DATE_EPOCH`; no hardware state is involved. Terminal success
+for Phase R1 means all verification gates are green, the exact 18 critical
+gaps are reported, zero raw bytes are changed, and no `.syx` is emitted.
+Unexpected positive output, reference drift, a changed gap set, or any MIDI
+dependency is a hard failure. Verification uses at most two pytest workers to
+respect workstation stability. The review/verification budget is 72 hours;
+the work stops rather than weakening a gate when that budget is exhausted.
+
+No new learned skill is warranted. Existing repository rules already cover
+the reusable lessons: passive hardware boundaries, shared Elektron codecs,
+data-not-code facts, Python-on-Windows execution, deterministic artifacts, and
+bounded verification. The implementation adds enforcement and documentation
+to those existing patterns instead of creating a duplicate skill.
+
+## Replay log
+
+The closeout resolved the repository and Python interpreter from the current
+workspace, bounded pytest at two workers, and never invoked the armed
+application entry point, enumerated ports, or transmitted MIDI/SysEx.
+
+```powershell
+$repoRoot = git rev-parse --show-toplevel
+$python = (Get-Command python).Source
+$reference = Join-Path $repoRoot "reference\RYTM_Test1_Init_Kit.syx"
+
+& $python -m pytest tests/test_al16_rytm_export.py -n 0 -q
+& $python -m pytest tests/test_data_layer_drift.py -n 0 -q
+& $python -m pytest tests/architecture/ -n 2 -q
+& $python -m pytest -m "not fast" -n 2 -q
+& $python -m pytest -n 2 --cov=rytm_randomizer --cov-branch `
+  --cov-report=term-missing --cov-report=xml:coverage.xml -q
+& $python scripts/typecheck_touched.py
+& $python scripts/check_touched_coverage.py coverage.xml
+& $python scripts/coverage_ratchet.py coverage.xml
+& $python -m ruff check .
+& $python -m black --check --target-version=py311 .
+& $python -m isort --profile black --check-only .
+git diff --check
+
+$env:SOURCE_DATE_EPOCH = "1785628800"
+& $python -m rytm_randomizer.cli al16-rytm-kit-export `
+  --reference $reference `
+  --recipe specs/al16/AL02_LOCK_RYTM.yaml `
+  --destination-slot 127 `
+  --output output/local/al16-r1-audit-1/AL02_LOCK_RYTM.syx
+```
+
+The final command intentionally returned the blocked status, wrote only the
+three deterministic evidence reports, reported the exact 18 mapping gaps, and
+left the `.syx` output absent. Repeating it in a second clean output directory
+produced the same three hashes recorded above.

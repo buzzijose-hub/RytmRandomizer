@@ -2574,8 +2574,8 @@ Safety:
 
 
 _AL16_RYTM_KIT_EXPORT_SAFETY_LINES: Final[tuple[str, ...]] = (
-    "reads one operator-selected Analog Rytm saved-kit .syx file",
-    "writes a .syx only when every critical writer mapping verifies",
+    "reads only the exact initialized Analog Rytm reference for Phase R1",
+    "audit/evidence only; current Phase R1 never writes a .syx",
     "writes deterministic mapping-gap evidence when the build is blocked",
     "no MIDI backend imports",
     "no MIDI port enumeration or opening",
@@ -2593,19 +2593,21 @@ Usage:
   python -m rytm_randomizer.cli al16-rytm-kit-export --help
 
 Arguments:
-  --reference <kit.syx>       Initialized Analog Rytm saved-kit reference
+  --reference <kit.syx>       Exact reference/RYTM_Test1_Init_Kit.syx input
   --recipe <recipe.yaml>      JSON-compatible YAML AL16 musical recipe
   --destination-slot <0..127> Explicit destination kit slot for the build
   --output <kit.syx>          Destination for a fully verified generated kit
 
 Behavior:
-  Decodes and byte-round-trips the reference, validates the recipe, permanent
+  Requires reference SHA-256
+  8bda94d6d5031e038c8d810789301f35242ed539338a0399548869a34e1dc4dd.
+  Decodes and byte-round-trips that reference, validates the recipe, permanent
   pad roles, machine compatibility, typed values, tuning evidence, and the
-  strict byte-diff allowlist. A .syx is emitted only when every critical field
-  is positively writer-validated and round-trip verified. A blocked build
-  writes a manifest, validation report, and byte-diff report, then returns 2.
-  The current AL02 proof is intentionally blocked by 18 mapping gaps and emits
-  no .syx; its reports are evidence, not an authorized hardware import.
+  strict byte-diff allowlist. Phase R1 is audit/evidence only: it writes a
+  manifest, validation report, and byte-diff report, then returns 2. The
+  current AL02 proof is intentionally blocked by 18 mapping gaps and emits no
+  .syx; positive kit generation is future work after writer verification. Its
+  reports are evidence, not an authorized hardware import.
 
 Safety:
 {_safety_block(_AL16_RYTM_KIT_EXPORT_SAFETY_LINES)}"""
@@ -3098,7 +3100,7 @@ Commands:
   analog-four-saved-kit-export
                     Render hardware-validated Analog Four values into a saved-kit SysEx file.
   al16-rytm-kit-export
-                    Compile a verified AL16 Rytm kit or emit mapping-gap evidence.
+                    Audit AL16 Rytm inputs and emit deterministic mapping-gap evidence.
   analog-four-audio-patch-batch
                     Infer and export up to four passive Analog Four patch candidates from audio.
   analog-four-audio-patch-rank

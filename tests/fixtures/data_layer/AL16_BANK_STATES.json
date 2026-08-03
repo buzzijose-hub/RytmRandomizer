@@ -1,0 +1,82 @@
+[
+  {
+    "number": 1,
+    "name": "AIRLOCK",
+    "tonal_zone": "F Phrygian"
+  },
+  {
+    "number": 2,
+    "name": "LOCK",
+    "tonal_zone": "F Phrygian"
+  },
+  {
+    "number": 3,
+    "name": "ROTATION",
+    "tonal_zone": "F Phrygian"
+  },
+  {
+    "number": 4,
+    "name": "PRESSURE",
+    "tonal_zone": "F Phrygian"
+  },
+  {
+    "number": 5,
+    "name": "ORBIT",
+    "tonal_zone": "F# Dorian"
+  },
+  {
+    "number": 6,
+    "name": "OFFSET",
+    "tonal_zone": "F# Dorian"
+  },
+  {
+    "number": 7,
+    "name": "SURGE",
+    "tonal_zone": "F# Dorian"
+  },
+  {
+    "number": 8,
+    "name": "CROSSING",
+    "tonal_zone": "F# Dorian into harmonic-minor tension"
+  },
+  {
+    "number": 9,
+    "name": "COMPRESSION",
+    "tonal_zone": "F# harmonic minor"
+  },
+  {
+    "number": 10,
+    "name": "RITUAL",
+    "tonal_zone": "F# harmonic minor"
+  },
+  {
+    "number": 11,
+    "name": "APEX",
+    "tonal_zone": "F# harmonic minor"
+  },
+  {
+    "number": 12,
+    "name": "VACUUM",
+    "tonal_zone": "reduced-pitch F# corridor"
+  },
+  {
+    "number": 13,
+    "name": "REENTRY",
+    "tonal_zone": "A minor"
+  },
+  {
+    "number": 14,
+    "name": "TERMINAL",
+    "tonal_zone": "A minor"
+  },
+  {
+    "number": 15,
+    "name": "FRACTURE",
+    "tonal_zone": "A minor with borrowed Bb/Eb friction"
+  },
+  {
+    "number": 16,
+    "name": "SHUTDOWN",
+    "tonal_zone": "ambiguous A-centered ending"
+  }
+]

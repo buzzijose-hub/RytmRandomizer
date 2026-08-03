@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
 from pathlib import Path
 from typing import cast
 
@@ -13,13 +15,22 @@ from rytm_randomizer.cockpit.export.al16_rytm_kit import (
     build_al16_rytm_kit,
     deterministic_recipe_identifier,
 )
-from rytm_randomizer.data.al16_rytm import AL16_BANK_STATES, AL16_PAD_ROLES
+from rytm_randomizer.data.al16_rytm import (
+    AL16_BANK_STATES,
+    AL16_PAD_ROLES,
+    AL16_TRACK_MODE_PRESERVE,
+    RYTM_CONVERTER_CENTERED_7BIT,
+    RYTM_CONVERTER_FILTER_TYPE_ENUM,
+    RYTM_CONVERTER_VERIFIED_7BIT,
+    RytmValueConverter,
+)
 from rytm_randomizer.data.analog_rytm_kit_layout import (
     RYTM_KIT_RAW_SIZE,
     RYTM_SOUND_MACHINE_TYPE_OFFSET,
 )
 from rytm_randomizer.data.rytm_machine_catalog import (
     RYTM_MACHINE_PROFILES,
+    get_rytm_machine_profile,
     is_machine_allowed_on_pad,
 )
 from rytm_randomizer.devices.strategies.analog_rytm_saved_kit_codec import (
@@ -27,6 +38,12 @@ from rytm_randomizer.devices.strategies.analog_rytm_saved_kit_codec import (
 )
 
 pytestmark = pytest.mark.fast
+
+
+@pytest.fixture(autouse=True)
+def _isolate_observability(isolated_observability: None) -> None:
+    """Keep exporter metrics and tracing isolated for every test."""
+
 
 _HEADER = bytes((0x00, 0x20, 0x3C, 0x07, 0x00, 0x52, 0x01, 0x01, 0x00))
 _REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -39,8 +56,25 @@ def _recipe() -> dict[str, object]:
     return cast(dict[str, object], parsed)
 
 
+def _requested_audit_paths(recipe: Mapping[str, object]) -> set[str]:
+    expected = {"kit.name", "destination_slot"}
+    tracks = cast(Mapping[str, object], recipe["tracks"])
+    for pad, value in tracks.items():
+        track = cast(Mapping[str, object], value)
+        if track["mode"] == AL16_TRACK_MODE_PRESERVE:
+            continue
+        expected.add(f"tracks.{pad}.machine")
+        for section_name in ("source", "filter", "amp"):
+            section = cast(Mapping[str, object], track[section_name])
+            expected.update(f"tracks.{pad}.{section_name}.{field}" for field in section)
+    return expected
+
+
 def _synthetic_reference(path: Path) -> bytes:
-    reference = encode_analog_rytm_saved_kit_frame(_HEADER, bytes(RYTM_KIT_RAW_SIZE))
+    raw = bytearray(RYTM_KIT_RAW_SIZE)
+    pad6_machine_offset = exporter._track_offset(6, RYTM_SOUND_MACHINE_TYPE_OFFSET)
+    raw[pad6_machine_offset] = get_rytm_machine_profile("xt_classic").machine_value
+    reference = encode_analog_rytm_saved_kit_frame(_HEADER, bytes(raw))
     path.write_bytes(reference)
     return reference
 
@@ -71,8 +105,9 @@ def test_al16_bank_reserves_exact_operating_states_and_roles() -> None:
 
 def test_al02_recipe_identifier_is_deterministic() -> None:
     recipe = _recipe()
+    reordered = {key: recipe[key] for key in reversed(recipe)}
 
-    assert deterministic_recipe_identifier(recipe) == deterministic_recipe_identifier(recipe)
+    assert deterministic_recipe_identifier(recipe) == deterministic_recipe_identifier(reordered)
 
 
 def test_al02_build_fails_closed_and_writes_precise_reports(
@@ -110,7 +145,8 @@ def test_al02_build_fails_closed_and_writes_precise_reports(
     assert manifest["preserved_tracks"] == [2, 4, 5, 7, 8, 10, 11, 12]
     assert manifest["reference_round_trip_byte_identical"] is True
     assert manifest["changed_semantic_fields"] == []
-    assert manifest["semantic_field_audits"]
+    audit_paths = {audit["semantic_path"] for audit in manifest["semantic_field_audits"]}
+    assert audit_paths == _requested_audit_paths(_recipe())
     assert manifest["intentionally_changed_raw_bytes"] == 0
     assert manifest["output_emitted"] is False
     assert manifest["unknown_and_reserved_bytes_unchanged"] is True
@@ -118,12 +154,28 @@ def test_al02_build_fails_closed_and_writes_precise_reports(
     assert manifest["midi_ports_enumerated"] == 0
     assert manifest["midi_ports_opened"] == 0
     assert manifest["midi_messages_sent"] == 0
+    assert manifest["critical_mapping_gap_count"] == 18
     gap_paths = {gap["semantic_path"] for gap in manifest["critical_mapping_gaps"]}
-    assert "destination_slot" in gap_paths
-    assert "tracks.1.machine" in gap_paths
-    assert "tracks.6.source.target_note" in gap_paths
-    assert "tracks.9.machine" in gap_paths
-    assert "tracks.1.amp.vol" in gap_paths
+    assert gap_paths == {
+        "destination_slot",
+        "tracks.1.machine",
+        "tracks.1.source.tun",
+        "tracks.1.source.dec",
+        "tracks.1.source.swd",
+        "tracks.1.source.swt",
+        "tracks.1.source.hld",
+        "tracks.1.source.wav",
+        "tracks.1.source.trn",
+        "tracks.1.amp.vol",
+        "tracks.3.machine",
+        "tracks.3.amp.vol",
+        "tracks.6.source.target_note",
+        "tracks.6.source.decay",
+        "tracks.6.amp.vol",
+        "tracks.9.machine",
+        "tracks.9.source.decay",
+        "tracks.9.amp.vol",
+    }
     validation = result.validation_path.read_text(encoding="utf-8")
     assert "BLOCKED: no SysEx was emitted" in validation
     assert "MIDI ports opened: 0" in validation
@@ -131,6 +183,103 @@ def test_al02_build_fails_closed_and_writes_precise_reports(
     assert "CH BASIC" in validation
     assert "CH Classic or HH Basic" in validation
     assert "intentionally changed raw bytes: 0" in result.byte_diff_path.read_text(encoding="utf-8")
+
+
+def test_al02_blocked_evidence_is_byte_identical_across_repeated_builds(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("SOURCE_DATE_EPOCH", "1785628800")
+    reference_path = tmp_path / "RYTM_Test1_Init_Kit.syx"
+    reference = _synthetic_reference(reference_path)
+    monkeypatch.setattr(
+        exporter,
+        "_REFERENCE_EXPECTED_SHA256",
+        hashlib.sha256(reference).hexdigest(),
+    )
+
+    first = build_al16_rytm_kit(
+        reference_path=reference_path,
+        recipe_path=_AL02_RECIPE,
+        destination_slot=127,
+        output_path=tmp_path / "first" / "AL02_LOCK_RYTM.syx",
+    )
+    second = build_al16_rytm_kit(
+        reference_path=reference_path,
+        recipe_path=_AL02_RECIPE,
+        destination_slot=127,
+        output_path=tmp_path / "second" / "AL02_LOCK_RYTM.syx",
+    )
+
+    assert first.manifest_path.read_bytes() == second.manifest_path.read_bytes()
+    assert first.validation_path.read_bytes() == second.validation_path.read_bytes()
+    assert first.byte_diff_path.read_bytes() == second.byte_diff_path.read_bytes()
+
+
+def test_al02_build_records_one_operation_and_one_blocked_metric(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    from rytm_randomizer.observability.metrics import get_metrics
+
+    reference_path = tmp_path / "RYTM_Test1_Init_Kit.syx"
+    reference = _synthetic_reference(reference_path)
+    monkeypatch.setattr(
+        exporter,
+        "_REFERENCE_EXPECTED_SHA256",
+        hashlib.sha256(reference).hexdigest(),
+    )
+    traced: list[tuple[str, str]] = []
+    logged: list[dict[str, object]] = []
+
+    @contextmanager
+    def observe_operation(name: str, **_kwargs: object) -> Iterator[None]:
+        traced.append(("start", name))
+        yield
+        traced.append(("end", name))
+
+    monkeypatch.setattr(exporter, "operation", observe_operation)
+    monkeypatch.setattr(
+        exporter._logger,
+        "info",
+        lambda _message, *, extra: logged.append(extra),
+    )
+
+    build_al16_rytm_kit(
+        reference_path=reference_path,
+        recipe_path=_AL02_RECIPE,
+        destination_slot=127,
+        output_path=tmp_path / "AL02_LOCK_RYTM.syx",
+    )
+
+    metrics = get_metrics()
+    assert metrics.export_count == 1
+    assert metrics.export_errors_by_code["mapping_blocked"] == 1
+    assert traced == [
+        ("start", "al16_rytm_kit_export"),
+        ("end", "al16_rytm_kit_export"),
+    ]
+    assert logged[0]["outcome"] == "blocked"
+    assert logged[0]["mapping_gap_count"] == 18
+    assert "mapping_blocked:1" in str(logged[0]["metrics_summary"])
+
+
+@pytest.mark.parametrize(
+    ("exc", "recipe_inspected", "expected"),
+    [
+        (KeyboardInterrupt(), False, "interrupted"),
+        (FileNotFoundError(), False, "input_not_found"),
+        (PermissionError(), False, "permission_denied"),
+        (OSError(), False, "source_read_failed"),
+        (OSError(), True, "write_failed"),
+    ],
+)
+def test_al16_export_error_codes_are_stable(
+    exc: BaseException,
+    recipe_inspected: bool,
+    expected: str,
+) -> None:
+    assert exporter._al16_export_error_code(exc, recipe_inspected=recipe_inspected) == expected
 
 
 def test_offline_exporter_has_no_midi_backend_dependency() -> None:
@@ -166,26 +315,38 @@ def test_al16_value_readers_and_converters_fail_closed() -> None:
     with pytest.raises(ValueError, match=r"missing=\['b'\].*unknown=\['c'\]"):
         exporter._require_exact_keys({"a": 1, "c": 3}, "test", {"a", "b"})
 
-    assert exporter._convert_supported_value("verified_7bit", 127) == (127, 127)
+    assert exporter._convert_supported_value(RYTM_CONVERTER_VERIFIED_7BIT, 127) == (127, 127)
     with pytest.raises(ValueError, match="0..127"):
-        exporter._convert_supported_value("verified_7bit", 128)
-    assert exporter._convert_supported_value("centered_7bit", "neutral") == (0, 64)
-    assert exporter._convert_supported_value("centered_7bit", "center") == (0, 64)
-    assert exporter._convert_supported_value("centered_7bit", -64) == (-64, 0)
+        exporter._convert_supported_value(RYTM_CONVERTER_VERIFIED_7BIT, 128)
+    assert exporter._convert_supported_value(RYTM_CONVERTER_CENTERED_7BIT, "neutral") == (
+        0,
+        64,
+    )
+    assert exporter._convert_supported_value(RYTM_CONVERTER_CENTERED_7BIT, "center") == (
+        0,
+        64,
+    )
+    assert exporter._convert_supported_value(RYTM_CONVERTER_CENTERED_7BIT, -64) == (-64, 0)
     with pytest.raises(ValueError, match="-64..63"):
-        exporter._convert_supported_value("centered_7bit", 64)
-    assert exporter._convert_supported_value("filter_type_enum", "hp2") == ("HP2", 4)
+        exporter._convert_supported_value(RYTM_CONVERTER_CENTERED_7BIT, 64)
+    assert exporter._convert_supported_value(RYTM_CONVERTER_FILTER_TYPE_ENUM, "hp2") == (
+        "HP2",
+        4,
+    )
     with pytest.raises(ValueError, match="unsupported filter type"):
-        exporter._convert_supported_value("filter_type_enum", "unknown")
+        exporter._convert_supported_value(RYTM_CONVERTER_FILTER_TYPE_ENUM, "unknown")
     with pytest.raises(ValueError, match="unknown AL16 converter"):
-        exporter._convert_supported_value("missing", 0)
+        exporter._convert_supported_value(cast(RytmValueConverter, "missing"), 0)
 
 
 def test_al16_original_semantic_and_machine_labels_are_explicit() -> None:
-    assert exporter._original_semantic("centered_7bit", 0) == -64
-    assert exporter._original_semantic("filter_type_enum", 4) == "HP2"
-    assert exporter._original_semantic("filter_type_enum", 127) == "unknown filter type 127"
-    assert exporter._original_semantic("verified_7bit", 129) == 1
+    assert exporter._original_semantic(RYTM_CONVERTER_CENTERED_7BIT, 0) == -64
+    assert exporter._original_semantic(RYTM_CONVERTER_FILTER_TYPE_ENUM, 4) == "HP2"
+    assert (
+        exporter._original_semantic(RYTM_CONVERTER_FILTER_TYPE_ENUM, 127)
+        == "unknown filter type 127"
+    )
+    assert exporter._original_semantic(RYTM_CONVERTER_VERIFIED_7BIT, 129) == 1
     assert exporter._machine_label_for_raw(RYTM_MACHINE_PROFILES[0].machine_value) == (
         RYTM_MACHINE_PROFILES[0].label
     )
@@ -208,7 +369,7 @@ def test_al16_machine_validation_covers_preserve_and_wrong_pad() -> None:
 
     disallowed_pad, disallowed = next(
         (pad, profile)
-        for pad in range(1, 13)
+        for pad in AL16_PAD_ROLES
         for profile in RYTM_MACHINE_PROFILES
         if not is_machine_allowed_on_pad(pad, profile.key)
     )

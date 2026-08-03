@@ -140,6 +140,7 @@ on one line for an existing module, you probably need a new module instead.
 | `engines/analog_rytm_12_pad_shell.py` | All-12-pad style/mutation shell. Consumes rendered style events; sends only through injected sender. |
 | `engines/analog_rytm_snapshot_shell.py` | All-12-pad current-kit snapshot shell. Extracts live-safe CC events from a decoded Rytm kit snapshot; sends only through injected sender. |
 | `snapshot/envelope.py` | Shared Elektron manufacturer envelope plus inverse 7-bit pack/unpack helpers. Pure bytes in/out. |
+| `snapshot/elektron_u14.py` | Shared pure Elektron 14-bit integer validation and packing helpers used across saved-kit families. |
 | `devices/strategies/analog_four_saved_kit_codec.py` | Shared A4 saved-kit payload validator/encoder used by decoder and writer; owns checksum/trailer handling. |
 | `devices/strategies/analog_four_saved_kit_writer.py` | Pure A4 saved-kit mutator/renderer consuming the shared codec, calibration, and canonical data-layer layout facts; no filesystem or MIDI I/O. |
 | `devices/strategies/analog_rytm_saved_kit_codec.py` | Pure initialized Rytm saved-kit frame codec; validates envelope, length, and checksum while providing byte-identical decode/encode. |
@@ -171,7 +172,7 @@ on one line for an existing module, you probably need a new module instead.
 | `cockpit/export/analog_four_kit.py` | Hardware-validation-gated A4 `.syx` file adapter; reuses canonical `atomic_write` and never sends MIDI. |
 | `cockpit/export/analog_four_cli.py` | Registered local-file command for one or four validated Filter2 Resonance mutations; no MIDI I/O. |
 | `cockpit/export/al16_rytm_kit.py` | Fail-closed AL16 recipe auditor and local evidence publisher; resolves the pure Rytm codec through the public device capability, consumes data-layer facts, withholds SysEx while critical mappings remain unresolved, and publishes reports through the canonical atomic writer. |
-| `cockpit/export/al16_rytm_cli.py` | Registered passive local-file adapter for AL16 Rytm kit export evidence; writes a `.syx` only after every critical field verifies, otherwise writes mapping-gap artifacts. |
+| `cockpit/export/al16_rytm_cli.py` | Registered passive local-file adapter for Phase R1 AL16 Rytm audit evidence; validates the exact initialized reference, writes mapping-gap artifacts, and emits no `.syx`. |
 | `style_analysis/analog_four_patch_inference.py` | Typed, single-decode audio evidence and audio-dependent four-column A4 patch-genome inference with direct RED metrics. |
 | `style_analysis/runtime_types.py` | Shared runtime type-validation helper used by extractor and A4 inference boundaries. |
 | `cockpit/export/cli_options.py` | Shared side-effect-free option parsing helpers for registered export commands. |
@@ -381,12 +382,15 @@ The AL16 Rytm exporter is a passive local-file workflow under `cockpit/export`,
 not a new `Device` Protocol member or device strategy. Its build service
 resolves the specialized saved-kit codec through the public
 `AnalogRytmDevice` capability, then composes data-layer allowlists, shared
-Elektron envelope/u14 helpers, and the canonical atomic writer. The compiler
-copies an initialized kit, mutates only verified allowlisted locations, repacks
-and rechecks the frame, decodes it for semantic verification, and fails closed
-with deterministic evidence when any critical mapping is missing. The
-registered CLI is only an argument/process-status adapter. Neither module
-imports or constructs a MIDI provider.
+Elektron envelope/u14 helpers, and the canonical atomic writer. Phase R1 is an
+audit/evidence compiler: it accepts only the initialized reference at the
+documented SHA-256, validates the complete AL02 recipe, and fails closed with
+deterministic evidence for the 18 unresolved critical mappings. It does not
+currently enter a positive mutation path or emit `.syx`. Copying, allowlisted
+mutation, repacking, and semantic re-verification remain the future writer path
+after every critical mapping is positively verified. The registered CLI is
+only an argument/process-status adapter. Neither module imports or constructs a
+MIDI provider.
 
 The audio batch path composes the existing audio extractor, the focused A4
 audio-inference compiler, patch send-plan metadata, and guarded saved-kit

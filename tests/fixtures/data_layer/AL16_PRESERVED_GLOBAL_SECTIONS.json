@@ -1,0 +1,12 @@
+[
+  "scenes",
+  "performance_macros",
+  "master_delay",
+  "master_reverb",
+  "master_distortion",
+  "master_compressor",
+  "routing",
+  "retrig_configuration",
+  "choke_configuration",
+  "unknown_and_reserved_bytes"
+]

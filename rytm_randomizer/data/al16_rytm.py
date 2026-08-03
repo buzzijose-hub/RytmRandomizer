@@ -5,7 +5,20 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Final
+from typing import Final, Literal, TypeAlias
+
+RytmValueConverter: TypeAlias = Literal[
+    "verified_7bit",
+    "centered_7bit",
+    "filter_type_enum",
+]
+Al16TrackMode: TypeAlias = Literal["preserve", "patch"]
+
+RYTM_CONVERTER_VERIFIED_7BIT: Final[RytmValueConverter] = "verified_7bit"
+RYTM_CONVERTER_CENTERED_7BIT: Final[RytmValueConverter] = "centered_7bit"
+RYTM_CONVERTER_FILTER_TYPE_ENUM: Final[RytmValueConverter] = "filter_type_enum"
+AL16_TRACK_MODE_PRESERVE: Final[Al16TrackMode] = "preserve"
+AL16_TRACK_MODE_PATCH: Final[Al16TrackMode] = "patch"
 
 
 @dataclass(frozen=True)
@@ -22,7 +35,7 @@ class RytmWritableField:
     """One saved-kit field supported by positive layout evidence."""
 
     nrpn_lsb: int
-    converter: str
+    converter: RytmValueConverter
 
 
 AL16_BANK_STATES: Final = (
@@ -63,21 +76,21 @@ AL16_PAD_ROLES: Final[Mapping[int, str]] = MappingProxyType(
 
 AL16_RYTM_WRITABLE_FIELDS: Final[Mapping[str, RytmWritableField]] = MappingProxyType(
     {
-        "filter.atk": RytmWritableField(16, "verified_7bit"),
-        "filter.dec": RytmWritableField(17, "verified_7bit"),
-        "filter.sus": RytmWritableField(18, "verified_7bit"),
-        "filter.rel": RytmWritableField(19, "verified_7bit"),
-        "filter.frq": RytmWritableField(20, "verified_7bit"),
-        "filter.res": RytmWritableField(21, "verified_7bit"),
-        "filter.type": RytmWritableField(22, "filter_type_enum"),
-        "filter.env": RytmWritableField(23, "centered_7bit"),
-        "amp.atk": RytmWritableField(24, "verified_7bit"),
-        "amp.hld": RytmWritableField(25, "verified_7bit"),
-        "amp.dec": RytmWritableField(26, "verified_7bit"),
-        "amp.ovr": RytmWritableField(27, "verified_7bit"),
-        "amp.del": RytmWritableField(28, "verified_7bit"),
-        "amp.rev": RytmWritableField(29, "verified_7bit"),
-        "amp.pan": RytmWritableField(30, "centered_7bit"),
+        "filter.atk": RytmWritableField(16, RYTM_CONVERTER_VERIFIED_7BIT),
+        "filter.dec": RytmWritableField(17, RYTM_CONVERTER_VERIFIED_7BIT),
+        "filter.sus": RytmWritableField(18, RYTM_CONVERTER_VERIFIED_7BIT),
+        "filter.rel": RytmWritableField(19, RYTM_CONVERTER_VERIFIED_7BIT),
+        "filter.frq": RytmWritableField(20, RYTM_CONVERTER_VERIFIED_7BIT),
+        "filter.res": RytmWritableField(21, RYTM_CONVERTER_VERIFIED_7BIT),
+        "filter.type": RytmWritableField(22, RYTM_CONVERTER_FILTER_TYPE_ENUM),
+        "filter.env": RytmWritableField(23, RYTM_CONVERTER_CENTERED_7BIT),
+        "amp.atk": RytmWritableField(24, RYTM_CONVERTER_VERIFIED_7BIT),
+        "amp.hld": RytmWritableField(25, RYTM_CONVERTER_VERIFIED_7BIT),
+        "amp.dec": RytmWritableField(26, RYTM_CONVERTER_VERIFIED_7BIT),
+        "amp.ovr": RytmWritableField(27, RYTM_CONVERTER_VERIFIED_7BIT),
+        "amp.del": RytmWritableField(28, RYTM_CONVERTER_VERIFIED_7BIT),
+        "amp.rev": RytmWritableField(29, RYTM_CONVERTER_VERIFIED_7BIT),
+        "amp.pan": RytmWritableField(30, RYTM_CONVERTER_CENTERED_7BIT),
     }
 )
 
@@ -109,6 +122,13 @@ __all__ = [
     "AL16_RYTM_APPROVED_TUNING",
     "AL16_RYTM_FILTER_TYPES",
     "AL16_RYTM_WRITABLE_FIELDS",
+    "AL16_TRACK_MODE_PATCH",
+    "AL16_TRACK_MODE_PRESERVE",
     "Al16BankState",
+    "Al16TrackMode",
+    "RYTM_CONVERTER_CENTERED_7BIT",
+    "RYTM_CONVERTER_FILTER_TYPE_ENUM",
+    "RYTM_CONVERTER_VERIFIED_7BIT",
+    "RytmValueConverter",
     "RytmWritableField",
 ]

@@ -1,0 +1,62 @@
+{
+  "amp.atk": {
+    "nrpn_lsb": 24,
+    "converter": "verified_7bit"
+  },
+  "amp.dec": {
+    "nrpn_lsb": 26,
+    "converter": "verified_7bit"
+  },
+  "amp.del": {
+    "nrpn_lsb": 28,
+    "converter": "verified_7bit"
+  },
+  "amp.hld": {
+    "nrpn_lsb": 25,
+    "converter": "verified_7bit"
+  },
+  "amp.ovr": {
+    "nrpn_lsb": 27,
+    "converter": "verified_7bit"
+  },
+  "amp.pan": {
+    "nrpn_lsb": 30,
+    "converter": "centered_7bit"
+  },
+  "amp.rev": {
+    "nrpn_lsb": 29,
+    "converter": "verified_7bit"
+  },
+  "filter.atk": {
+    "nrpn_lsb": 16,
+    "converter": "verified_7bit"
+  },
+  "filter.dec": {
+    "nrpn_lsb": 17,
+    "converter": "verified_7bit"
+  },
+  "filter.env": {
+    "nrpn_lsb": 23,
+    "converter": "centered_7bit"
+  },
+  "filter.frq": {
+    "nrpn_lsb": 20,
+    "converter": "verified_7bit"
+  },
+  "filter.rel": {
+    "nrpn_lsb": 19,
+    "converter": "verified_7bit"
+  },
+  "filter.res": {
+    "nrpn_lsb": 21,
+    "converter": "verified_7bit"
+  },
+  "filter.sus": {
+    "nrpn_lsb": 18,
+    "converter": "verified_7bit"
+  },
+  "filter.type": {
+    "nrpn_lsb": 22,
+    "converter": "filter_type_enum"
+  }
+}

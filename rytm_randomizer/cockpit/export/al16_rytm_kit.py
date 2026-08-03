@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import time
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
@@ -18,6 +19,12 @@ from ...data.al16_rytm import (
     AL16_RYTM_APPROVED_TUNING,
     AL16_RYTM_FILTER_TYPES,
     AL16_RYTM_WRITABLE_FIELDS,
+    AL16_TRACK_MODE_PATCH,
+    AL16_TRACK_MODE_PRESERVE,
+    RYTM_CONVERTER_CENTERED_7BIT,
+    RYTM_CONVERTER_FILTER_TYPE_ENUM,
+    RYTM_CONVERTER_VERIFIED_7BIT,
+    RytmValueConverter,
 )
 from ...data.analog_rytm_kit_layout import (
     RYTM_KIT_NAME_LENGTH,
@@ -33,12 +40,20 @@ from ...data.rytm_machine_catalog import (
     is_machine_allowed_on_pad,
 )
 from ...devices.analog_rytm import get_analog_rytm_saved_kit_codec_capability
+from ...observability.logging import get_logger
+from ...observability.metrics import get_metrics
+from ...observability.tracing import operation
+from ...snapshot import read_ascii_name
 from .writer import atomic_write
 
 _REFERENCE_EXPECTED_SHA256: Final[str] = (
     "8bda94d6d5031e038c8d810789301f35242ed539338a0399548869a34e1dc4dd"
 )
 _SOURCE_DATE_EPOCH: Final[str] = "SOURCE_DATE_EPOCH"
+_AL16_EXPORT_FAILURE_FINGERPRINT: Final[str] = "al16.rytm_kit_export.failed"
+_AL16_MAPPING_BLOCKED_ERROR_CODE: Final[str] = "mapping_blocked"
+
+_logger = get_logger(__name__)
 
 
 @dataclass(frozen=True)
@@ -155,6 +170,24 @@ def _atomic_write_text(path: Path, value: str) -> None:
     atomic_write(path, value.encode("utf-8"), overwrite=True)
 
 
+def _al16_export_error_code(
+    exc: BaseException,
+    *,
+    recipe_inspected: bool,
+) -> str:
+    if isinstance(exc, (KeyboardInterrupt, SystemExit)):
+        return "interrupted"
+    if isinstance(exc, FileNotFoundError):
+        return "input_not_found"
+    if isinstance(exc, PermissionError):
+        return "permission_denied"
+    if isinstance(exc, FileExistsError):
+        return "overwrite_refused"
+    if isinstance(exc, OSError):
+        return "write_failed" if recipe_inspected else "source_read_failed"
+    return "validation"
+
+
 def _track_offset(pad: int, sound_offset: int) -> int:
     return RYTM_KIT_TRACKS_OFFSET + ((pad - 1) * RYTM_KIT_TRACK_SOUND_SIZE) + sound_offset
 
@@ -168,22 +201,22 @@ def _machine_label_for_raw(raw_value: int) -> str:
 
 
 def _convert_supported_value(
-    converter: str,
+    converter: RytmValueConverter,
     requested: object,
 ) -> tuple[object, int]:
-    if converter == "verified_7bit":
+    if converter == RYTM_CONVERTER_VERIFIED_7BIT:
         raw = _as_int(requested, "verified 7-bit value")
         if not 0 <= raw <= 127:
             raise ValueError("verified 7-bit value must be in 0..127")
         return raw, raw
-    if converter == "centered_7bit":
+    if converter == RYTM_CONVERTER_CENTERED_7BIT:
         if requested in ("neutral", "center"):
             return 0, 64
         displayed = _as_int(requested, "centered display value")
         if not -64 <= displayed <= 63:
             raise ValueError("centered display value must be in -64..63")
         return displayed, displayed + 64
-    if converter == "filter_type_enum":
+    if converter == RYTM_CONVERTER_FILTER_TYPE_ENUM:
         label = _as_string(requested, "filter type").upper()
         try:
             return label, AL16_RYTM_FILTER_TYPES[label]
@@ -192,11 +225,11 @@ def _convert_supported_value(
     raise ValueError(f"unknown AL16 converter: {converter}")
 
 
-def _original_semantic(converter: str, raw_value: int) -> object:
+def _original_semantic(converter: RytmValueConverter, raw_value: int) -> object:
     low7 = raw_value & 0x7F
-    if converter == "centered_7bit":
+    if converter == RYTM_CONVERTER_CENTERED_7BIT:
         return low7 - 64
-    if converter == "filter_type_enum":
+    if converter == RYTM_CONVERTER_FILTER_TYPE_ENUM:
         for label, encoded in AL16_RYTM_FILTER_TYPES.items():
             if encoded == low7:
                 return label
@@ -465,19 +498,18 @@ def _inspect_recipe(
     if preserve != AL16_PRESERVED_GLOBAL_SECTIONS:
         raise ValueError("preserve must list the complete ordered AL16 preservation boundary")
 
-    original_name = (
-        raw[RYTM_KIT_NAME_OFFSET : RYTM_KIT_NAME_OFFSET + RYTM_KIT_NAME_LENGTH]
-        .split(b"\x00", 1)[0]
-        .decode("ascii")
-    )
+    original_name = read_ascii_name(raw, RYTM_KIT_NAME_OFFSET, RYTM_KIT_NAME_LENGTH)
     audits = [
         FieldAudit(
             semantic_path="kit.name",
             original_semantic_value=original_name,
             requested_semantic_value=kit_name,
             normalized_semantic_value=kit_name,
-            encoded_raw_value_or_bytes=list(encoded_kit_name.ljust(16, b"\x00")),
-            raw_location=f"unpacked[{RYTM_KIT_NAME_OFFSET}:{RYTM_KIT_NAME_OFFSET + 16}]",
+            encoded_raw_value_or_bytes=list(encoded_kit_name.ljust(RYTM_KIT_NAME_LENGTH, b"\x00")),
+            raw_location=(
+                f"unpacked[{RYTM_KIT_NAME_OFFSET}:"
+                f"{RYTM_KIT_NAME_OFFSET + RYTM_KIT_NAME_LENGTH}]"
+            ),
             converter_or_enumeration="ascii_16",
             verification_status="resolved_but_not_emitted_while_preflight_is_blocked",
         ),
@@ -495,20 +527,21 @@ def _inspect_recipe(
     ]
 
     tracks = _as_mapping(recipe.get("tracks"), "tracks")
-    if set(tracks) != {str(pad) for pad in range(1, 13)}:
+    expected_pads = tuple(AL16_PAD_ROLES)
+    if set(tracks) != {str(pad) for pad in expected_pads}:
         raise ValueError("recipe must describe exactly pads 1..12")
     preserved: list[int] = []
-    for pad in range(1, 13):
+    for pad in expected_pads:
         track = _as_mapping(tracks[str(pad)], f"tracks.{pad}")
         role = _as_string(track.get("role"), f"tracks.{pad}.role")
         if role != AL16_PAD_ROLES[pad]:
             raise ValueError(f"tracks.{pad}.role does not match the permanent AL16 pad role")
         mode = _as_string(track.get("mode"), f"tracks.{pad}.mode")
-        if mode == "preserve":
+        if mode == AL16_TRACK_MODE_PRESERVE:
             _require_exact_keys(track, f"tracks.{pad}", {"role", "mode"})
             preserved.append(pad)
             continue
-        if mode != "patch":
+        if mode != AL16_TRACK_MODE_PATCH:
             raise ValueError(f"tracks.{pad}.mode must be patch or preserve")
         _require_exact_keys(
             track,
@@ -613,89 +646,143 @@ def build_al16_rytm_kit(
 ) -> Al16BuildResult:
     """Compile one AL16 Rytm recipe or emit an exact fail-closed gap report."""
 
-    reference_bytes = reference_path.read_bytes()
-    reference_sha256 = hashlib.sha256(reference_bytes).hexdigest()
-    if reference_sha256 != _REFERENCE_EXPECTED_SHA256:
-        raise ValueError(
-            "initialized Analog Rytm reference SHA-256 mismatch: "
-            f"expected {_REFERENCE_EXPECTED_SHA256}, got {reference_sha256}"
-        )
-    codec = get_analog_rytm_saved_kit_codec_capability()
-    decoded = codec.decode_saved_kit_frame(reference_bytes)
-    if codec.encode_saved_kit_frame(decoded.header, decoded.unpacked) != reference_bytes:
-        raise ValueError("Analog Rytm reference decode/encode is not byte-identical")
+    metrics = get_metrics()
+    started_at = time.perf_counter()
+    recipe_inspected = False
+    operation_id = ""
+    result: Al16BuildResult
+    try:
+        with operation(
+            "al16_rytm_kit_export",
+            logger=_logger,
+            reference_name=reference_path.name,
+            recipe_name=recipe_path.name,
+            output_name=output_path.name,
+            destination_slot=destination_slot,
+        ) as operation_id:
+            reference_bytes = reference_path.read_bytes()
+            reference_sha256 = hashlib.sha256(reference_bytes).hexdigest()
+            if reference_sha256 != _REFERENCE_EXPECTED_SHA256:
+                raise ValueError(
+                    "initialized Analog Rytm reference SHA-256 mismatch: "
+                    f"expected {_REFERENCE_EXPECTED_SHA256}, got {reference_sha256}"
+                )
+            codec = get_analog_rytm_saved_kit_codec_capability()
+            decoded = codec.decode_saved_kit_frame(reference_bytes)
+            if codec.encode_saved_kit_frame(decoded.header, decoded.unpacked) != reference_bytes:
+                raise ValueError("Analog Rytm reference decode/encode is not byte-identical")
 
-    recipe = _load_recipe(recipe_path)
-    audits, gaps, preserved_tracks = _inspect_recipe(
-        recipe,
-        decoded.unpacked,
-        destination_slot,
-    )
-    manifest_path = output_path.with_name(f"{output_path.stem}_manifest.json")
-    validation_path = output_path.with_name(f"{output_path.stem}_validation.md")
-    byte_diff_path = output_path.with_name(f"{output_path.stem}_byte_diff.txt")
-    if output_path.exists():
-        raise FileExistsError(
-            f"refusing a blocked build while a potentially stale output exists: {output_path}"
-        )
+            recipe = _load_recipe(recipe_path)
+            audits, gaps, preserved_tracks = _inspect_recipe(
+                recipe,
+                decoded.unpacked,
+                destination_slot,
+            )
+            recipe_inspected = True
+            manifest_path = output_path.with_name(f"{output_path.stem}_manifest.json")
+            validation_path = output_path.with_name(f"{output_path.stem}_validation.md")
+            byte_diff_path = output_path.with_name(f"{output_path.stem}_byte_diff.txt")
+            if output_path.exists():
+                raise FileExistsError(
+                    "refusing a blocked build while a potentially stale output exists: "
+                    f"{output_path}"
+                )
 
-    kit = _as_mapping(recipe.get("kit"), "kit")
-    manifest: dict[str, object] = {
-        "schema_version": 1,
-        "project_id": "AL16",
-        "build_status": "blocked",
-        "build_timestamp": _build_timestamp(),
-        "deterministic_recipe_identifier": deterministic_recipe_identifier(recipe),
-        "reference_file": _portable_reference_path(reference_path),
-        "reference_sha256": reference_sha256,
-        "expected_initialized_reference_sha256": _REFERENCE_EXPECTED_SHA256,
-        "initialized_reference_sha256_matches_expected": (
-            reference_sha256 == _REFERENCE_EXPECTED_SHA256
-        ),
-        "reference_sysex_length": len(reference_bytes),
-        "output_emitted": False,
-        "output_sha256": None,
-        "output_sysex_length": None,
-        "destination_slot": destination_slot,
-        "kit_name": _as_string(kit.get("name"), "kit.name"),
-        "changed_semantic_fields": [],
-        "semantic_field_audits": [asdict(audit) for audit in audits],
-        "intentionally_changed_raw_bytes": 0,
-        "critical_mapping_gaps": [asdict(gap) for gap in gaps],
-        "critical_mapping_gap_count": len(gaps),
-        "preserved_tracks": preserved_tracks,
-        "preserved_sections": list(AL16_PRESERVED_GLOBAL_SECTIONS),
-        "unsupported_optional_fields": [
-            "sample playback level preserved because saved-kit writing is not positively mapped"
-        ],
-        "tuning_table_source": (
-            "none: no approved XT Classic F2 saved-kit tuning observation is present"
-        ),
-        "reference_round_trip_byte_identical": True,
-        "unknown_and_reserved_bytes_unchanged": True,
-        "generated_output_checks": "not_applicable_blocked_before_mutation",
-        "manual_hardware_import_authorized": False,
-        "midi_ports_enumerated": 0,
-        "midi_ports_opened": 0,
-        "midi_messages_sent": 0,
-    }
-    _write_blocked_artifacts(
-        manifest_path=manifest_path,
-        validation_path=validation_path,
-        byte_diff_path=byte_diff_path,
-        manifest=manifest,
-        gaps=gaps,
+            kit = _as_mapping(recipe.get("kit"), "kit")
+            manifest: dict[str, object] = {
+                "schema_version": 1,
+                "project_id": "AL16",
+                "build_status": "blocked",
+                "build_timestamp": _build_timestamp(),
+                "deterministic_recipe_identifier": deterministic_recipe_identifier(recipe),
+                "reference_file": _portable_reference_path(reference_path),
+                "reference_sha256": reference_sha256,
+                "expected_initialized_reference_sha256": _REFERENCE_EXPECTED_SHA256,
+                "initialized_reference_sha256_matches_expected": (
+                    reference_sha256 == _REFERENCE_EXPECTED_SHA256
+                ),
+                "reference_sysex_length": len(reference_bytes),
+                "output_emitted": False,
+                "output_sha256": None,
+                "output_sysex_length": None,
+                "destination_slot": destination_slot,
+                "kit_name": _as_string(kit.get("name"), "kit.name"),
+                "changed_semantic_fields": [],
+                "semantic_field_audits": [asdict(audit) for audit in audits],
+                "intentionally_changed_raw_bytes": 0,
+                "critical_mapping_gaps": [asdict(gap) for gap in gaps],
+                "critical_mapping_gap_count": len(gaps),
+                "preserved_tracks": preserved_tracks,
+                "preserved_sections": list(AL16_PRESERVED_GLOBAL_SECTIONS),
+                "unsupported_optional_fields": [
+                    "sample playback level preserved because saved-kit writing is not positively mapped"
+                ],
+                "tuning_table_source": (
+                    "none: no approved XT Classic F2 saved-kit tuning observation is present"
+                ),
+                "reference_round_trip_byte_identical": True,
+                "unknown_and_reserved_bytes_unchanged": True,
+                "generated_output_checks": "not_applicable_blocked_before_mutation",
+                "manual_hardware_import_authorized": False,
+                "midi_ports_enumerated": 0,
+                "midi_ports_opened": 0,
+                "midi_messages_sent": 0,
+            }
+            _write_blocked_artifacts(
+                manifest_path=manifest_path,
+                validation_path=validation_path,
+                byte_diff_path=byte_diff_path,
+                manifest=manifest,
+                gaps=gaps,
+            )
+            result = Al16BuildResult(
+                status="blocked",
+                output_path=output_path,
+                manifest_path=manifest_path,
+                validation_path=validation_path,
+                byte_diff_path=byte_diff_path,
+                reference_sha256=reference_sha256,
+                output_sha256=None,
+                gaps=tuple(gaps),
+            )
+    except (KeyError, ValueError, TypeError, OSError, KeyboardInterrupt, SystemExit) as exc:
+        error_code = _al16_export_error_code(exc, recipe_inspected=recipe_inspected)
+        duration_ms = (time.perf_counter() - started_at) * 1000.0
+        metrics.record_export(duration_ms, error_code=error_code)
+        _logger.warning(
+            "AL16 Analog Rytm kit export failed",
+            extra={
+                "op_id": operation_id,
+                "operation": "al16_rytm_kit_export",
+                "outcome": "failed",
+                "error_code": error_code,
+                "fingerprint": _AL16_EXPORT_FAILURE_FINGERPRINT,
+                "reference_name": reference_path.name,
+                "recipe_name": recipe_path.name,
+                "output_name": output_path.name,
+                "error_type": type(exc).__name__,
+                "duration_ms": duration_ms,
+                "metrics_summary": metrics.format_summary(),
+            },
+        )
+        raise
+
+    duration_ms = (time.perf_counter() - started_at) * 1000.0
+    metrics.record_export(duration_ms, error_code=_AL16_MAPPING_BLOCKED_ERROR_CODE)
+    _logger.info(
+        "AL16 Analog Rytm kit export blocked by verified mapping gaps",
+        extra={
+            "op_id": operation_id,
+            "operation": "al16_rytm_kit_export",
+            "outcome": "blocked",
+            "error_code": _AL16_MAPPING_BLOCKED_ERROR_CODE,
+            "output_name": output_path.name,
+            "mapping_gap_count": len(result.gaps),
+            "duration_ms": duration_ms,
+            "metrics_summary": metrics.format_summary(),
+        },
     )
-    return Al16BuildResult(
-        status="blocked",
-        output_path=output_path,
-        manifest_path=manifest_path,
-        validation_path=validation_path,
-        byte_diff_path=byte_diff_path,
-        reference_sha256=reference_sha256,
-        output_sha256=None,
-        gaps=tuple(gaps),
-    )
+    return result
 
 
 __all__ = [

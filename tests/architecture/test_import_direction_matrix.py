@@ -126,6 +126,9 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             "data",
             "devices",
             "observability",
+            # AL16 offline export reads the shared Elektron ASCII-name
+            # envelope primitive while auditing saved-kit payloads.
+            "snapshot",
             "style_analysis",
         }
     ),
