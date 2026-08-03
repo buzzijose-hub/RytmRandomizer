@@ -119,6 +119,7 @@ on one line for an existing module, you probably need a new module instead.
 | `state/a4_soft_capture.py` | Frozen Analog Four passive CC-observation state + pure reducer.          |
 | `state/rytm_cc_observe.py` | Frozen Analog Rytm passive CC/NRPN observation state + pure reducer.    |
 | `behavior/midi_event_plan.py` | Passive shared CC/NRPN event-shape selection and validation contract used by compilers, readers, app guards, and senders. |
+| `behavior/operator_console.py` | Passive PowerShell literal-argument formatting shared by reports and operator handoffs. |
 
 ### Middle (runtime core)
 

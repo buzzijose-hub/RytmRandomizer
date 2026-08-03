@@ -42,6 +42,8 @@ from dataclasses import dataclass
 from hashlib import sha256
 from typing import Final
 
+from ..behavior.operator_console import powershell_literal_arg
+
 SAFETY_SECTION_HEADER: Final[str] = "Safety:"
 
 # The two-line trailer used by mock_mapper / runtime_plan /
@@ -59,9 +61,6 @@ PASSIVE_FOOTER: Final[tuple[str, str]] = (
     PASSIVE_FOOTER_MEMORY_LINE,
 )
 _OPERATOR_CONSOLE_ENCODING: Final[str] = "cp1252"
-_POWERSHELL_BARE_ARG_CHARS: Final[frozenset[str]] = frozenset(
-    "abcdefghijklmnopqrstuvwxyz" "ABCDEFGHIJKLMNOPQRSTUVWXYZ" "0123456789" "-_./\\:+=,@%"
-)
 
 
 @dataclass(frozen=True)
@@ -193,14 +192,6 @@ def require_nonblank(value: str, field: str) -> str:
     if not normalized:
         raise ValueError(f"{field} {_NONBLANK_MESSAGE_SUFFIX}")
     return normalized
-
-
-def powershell_literal_arg(value: str) -> str:
-    """Return a PowerShell-safe literal command argument."""
-
-    if value and all(char in _POWERSHELL_BARE_ARG_CHARS for char in value):
-        return value
-    return "'" + value.replace("'", "''") + "'"
 
 
 def render_passive_report(

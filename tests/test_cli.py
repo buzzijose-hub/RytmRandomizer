@@ -385,6 +385,10 @@ def test_analog_four_audio_patch_batch_help_is_exact_and_passive():
     assert "real audio-dependent inference" in help_text
     assert "hardware-write-validated Filter2 Resonance" in help_text
     assert "complete patch DNA plus its CC/NRPN live-dial plan" in help_text
+    assert "--studio-handoff" in help_text
+    assert "--a4-output-port <name>" in help_text
+    assert "zero calibration" in help_text
+    assert "generated app --arm commands" in help_text
     assert "not a claim of full saved-kit coverage" in help_text
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
