@@ -479,6 +479,8 @@ def test_studio_handoff_text_is_copyable_powershell_with_full_paths(
     [
         ("candidate-1.wav", "candidate-1.wav"),
         ("Jose's A4", "'Jose''s A4'"),
+        (r"C:\music\kits,drafts\manifest.json", r"'C:\music\kits,drafts\manifest.json'"),
+        ("@splat", "'@splat'"),
         ("", "''"),
     ],
 )
