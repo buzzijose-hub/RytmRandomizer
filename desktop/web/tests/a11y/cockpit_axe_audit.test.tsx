@@ -31,6 +31,8 @@ import { ConnectionDoctorPanel } from '../../src/cockpit/panels/ConnectionDoctor
 import { KitMorphPanel } from '../../src/cockpit/panels/KitMorphPanel';
 import { LibraryPanel } from '../../src/cockpit/panels/LibraryPanel';
 import { LiveMidiMonitorPanel } from '../../src/cockpit/panels/LiveMidiMonitorPanel';
+import { DeviceRail } from '../../src/cockpit/DeviceRail';
+import { OfflineShell } from '../../src/cockpit/OfflineShell';
 import { PanelRenderer } from '../../src/cockpit/panels/PanelRenderer';
 import { ScopedRandomizationPanel } from '../../src/cockpit/panels/ScopedRandomizationPanel';
 import { liveMidiMonitorPanelSpec } from '../../src/cockpit/panels/liveMidiMonitorPanelSpec';
@@ -64,6 +66,8 @@ const FLOORS = {
   PanelRenderer: 0,
   ScopedRandomizationPanel: 0,
   SendConfirmDialog: 0,
+  OfflineShell: 0,
+  DeviceRailNoHardware: 0,
 } as const;
 
 function withClient(node: React.ReactNode): JSX.Element {
@@ -160,6 +164,23 @@ describe('cockpit axe audit (WCAG 2.2 AA)', () => {
     const { container } = render(withClient(<ArmControl />));
     fireEvent.click(screen.getByTestId('arm-open-button'));
     await expectClean('ArmControlDialog', container);
+  });
+
+  it('OfflineShell (sidecar unreachable) is clean', async () => {
+    const fake = new FakeCockpitClient();
+    fake.reconnectState = { attempt: 2, nextDelayMs: 4000 };
+    const { container } = render(
+      <OfflineShell client={fake.asClient()} status="reconnecting" />,
+    );
+    await expectClean('OfflineShell', container);
+  });
+
+  it('DeviceRail with the no-hardware banner is clean', async () => {
+    useCockpitStore.setState({ sessionStatus: sessionMock });
+    const { container } = render(
+      <DeviceRail activeDeviceId="analog_rytm_mk2" onSelectDevice={() => {}} />,
+    );
+    await expectClean('DeviceRailNoHardware', container);
   });
 
   it('ActionBar armed send-confirmation dialog is clean', async () => {

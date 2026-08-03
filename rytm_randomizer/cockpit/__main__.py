@@ -73,8 +73,10 @@ from ..observability.logging import get_logger
 from .data import PadState, Snapshot, new_ulid
 from .device import MockDeviceAdapter
 from .device.connection import (
+    DEFAULT_FAKE_PORT_NAMES,
     ConnectionManager,
     ConnectionState,
+    FakePortEnumerator,
     NullPortEnumerator,
     PortEnumerator,
     ProviderPortEnumerator,
@@ -156,6 +158,25 @@ Deliberately a **separate file** from the WS handshake token. The two
 authorise different things — the handshake token admits a connection, the
 arm secret authorises outbound transmit — and keeping them in separate
 files means a deployment can hand out one without the other.
+"""
+
+_MIDI_BACKEND_ENV_VAR: Final[str] = "RYTM_RAND_MIDI_BACKEND"
+"""Backend selector for the passive port enumerator.
+
+``off`` → :class:`NullPortEnumerator` (kill switch for CI / misbehaving
+OS MIDI services); ``fake`` → :class:`FakePortEnumerator` (the
+no-hardware e2e seam); anything else → ``auto`` (real enumeration when
+``mido`` is importable, null otherwise). See
+:func:`_build_port_enumerator`.
+"""
+
+_FAKE_PORTS_ENV_VAR: Final[str] = "RYTM_RAND_FAKE_PORTS"
+"""Comma-separated port-name override for the ``fake`` backend.
+
+Only consulted when :data:`_MIDI_BACKEND_ENV_VAR` is ``fake``. Entries
+are whitespace-stripped; empty entries are dropped; the empty string
+means zero ports (a ``fake`` launch that starts in ``searching``).
+Unset → :data:`DEFAULT_FAKE_PORT_NAMES`.
 """
 
 _DEFAULT_DEVICE = "analog_rytm_mk2"
@@ -378,6 +399,23 @@ def build_session() -> CockpitSession:
     )
 
 
+def _resolve_fake_port_names() -> tuple[str, ...]:
+    """Resolve the port list the ``fake`` backend presents.
+
+    Unset ``RYTM_RAND_FAKE_PORTS`` → :data:`DEFAULT_FAKE_PORT_NAMES`
+    (one Elektron-shaped name, so the connection phase reaches
+    ``listening``). When set, the value is split on commas; each entry
+    is whitespace-stripped and empty entries are dropped. The empty
+    string therefore yields **zero** ports — the deliberate way for an
+    e2e spec to start the ``fake`` backend in the ``searching`` phase.
+    """
+
+    raw = os.environ.get(_FAKE_PORTS_ENV_VAR)
+    if raw is None:
+        return DEFAULT_FAKE_PORT_NAMES
+    return tuple(stripped for entry in raw.split(",") if (stripped := entry.strip()))
+
+
 def _build_port_enumerator() -> PortEnumerator:
     """Pick the passive port enumerator for this host.
 
@@ -396,16 +434,28 @@ def _build_port_enumerator() -> PortEnumerator:
     C++ layer when the OS MIDI client cannot be created (observed on macOS
     as ``MidiInCore::initialize ... (-304)`` under load), which no Python
     ``except`` can catch — turning the backend off keeps the cockpit alive
-    so the Connection Doctor can explain the situation instead. Any value
-    other than ``off`` (case-insensitive) behaves as ``auto``.
+    so the Connection Doctor can explain the situation instead.
+
+    ``RYTM_RAND_MIDI_BACKEND=fake`` selects the list-only
+    :class:`FakePortEnumerator` — the e2e/no-hardware seam that makes the
+    ``listening`` phase reachable with zero devices. Its port list comes
+    from :func:`_resolve_fake_port_names` (``RYTM_RAND_FAKE_PORTS``
+    override; Elektron-shaped default). Like ``off``, it never consults
+    ``mido``, so it works on hosts without the hardware extra.
+
+    Any value other than ``off`` / ``fake`` (case-insensitive) behaves
+    as ``auto``.
 
     ``find_spec`` only *locates* the module — it never imports it, so
     the no-import-time-mido invariant
     (``tests/architecture/test_no_side_effects.py``) holds either way.
     """
 
-    if os.environ.get("RYTM_RAND_MIDI_BACKEND", "auto").strip().lower() == "off":
+    backend = os.environ.get(_MIDI_BACKEND_ENV_VAR, "auto").strip().lower()
+    if backend == "off":
         return NullPortEnumerator()
+    if backend == "fake":
+        return FakePortEnumerator(_resolve_fake_port_names())
     if importlib.util.find_spec("mido") is None:
         return NullPortEnumerator()
     # Imported lazily so merely importing ``cockpit.__main__`` (e.g. the

@@ -1,6 +1,7 @@
 /**
  * Top-level App. Mounts <Cockpit /> once the engine has pushed a session_status; otherwise
- * shows a small connecting placeholder.
+ * shows the OfflineShell — a live surface with WS status, retry visibility (attempt count +
+ * next-dial countdown), a manual "Retry now" action, and client-side connection help.
  *
  * Hash routing
  * ------------
@@ -22,7 +23,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { LiveRegion, useDocumentTitle, useFocusOnRouteChange } from './a11y';
-import { Cockpit, PerformanceConsole, performanceConsoleDemoModel } from './cockpit';
+import { Cockpit, OfflineShell, PerformanceConsole, performanceConsoleDemoModel } from './cockpit';
 import { bindClientToStore, useCockpitStore } from './state';
 import type { LiveGuiPerformanceConsoleModelDict } from './types/live_gui_protocol';
 import { Wizard } from './wizard';
@@ -127,11 +128,7 @@ export function App({ client: injected, performanceConsole }: AppProps = {}): JS
       <>
         <LiveRegion />
         <div ref={routeRootRef} tabIndex={-1}>
-          <main className="cockpit-placeholder">
-            <h1>RytmRandomizer · Cockpit</h1>
-            <p>Connecting…</p>
-            <small>status: {connStatus}</small>
-          </main>
+          <OfflineShell client={client} status={connStatus} />
         </div>
       </>
     );

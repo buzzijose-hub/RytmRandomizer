@@ -27,6 +27,18 @@ import {
 /** Connection lifecycle, surfaced to the UI for the connecting/connected/reconnecting chip. */
 export type ConnectionStatus = 'connecting' | 'connected' | 'reconnecting' | 'closed';
 
+/**
+ * Reconnect visibility snapshot for UI surfaces (offline shell).
+ *
+ * `attempt` counts dials since the last successful open (resets to 0 on open).
+ * `nextDelayMs` is the backoff delay of the currently scheduled dial, or `null`
+ * when no dial is pending (connected, dialing right now, or closed).
+ */
+export interface ReconnectState {
+  attempt: number;
+  nextDelayMs: number | null;
+}
+
 /** Subscriber for a single event type. Unsubscribe via the returned function. */
 export type EventHandler<E extends Event = Event> = (event: E) => void;
 
@@ -191,10 +203,12 @@ export class CockpitClient {
   private status: ConnectionStatus = 'closed';
   private reconnectAttempt = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private nextReconnectDelayMs: number | null = null;
   private closedByUser = false;
 
   private readonly eventHandlers = new Map<EventType, Set<EventHandler>>();
   private readonly statusHandlers = new Set<(status: ConnectionStatus) => void>();
+  private readonly reconnectStateHandlers = new Set<(state: ReconnectState) => void>();
   private readonly pending = new Map<string, PendingCommand>();
 
   // Bound DOM-style handlers so we can add/remove them deterministically.
@@ -236,6 +250,7 @@ export class CockpitClient {
       this.clearTimeoutImpl(this.reconnectTimer);
       this.reconnectTimer = null;
     }
+    this.setNextReconnectDelay(null);
     this.rejectAllPending(new Error('client closed'));
     if (this.socket !== null) {
       try {
@@ -251,6 +266,41 @@ export class CockpitClient {
   /** Current connection status. */
   getStatus(): ConnectionStatus {
     return this.status;
+  }
+
+  /** The WebSocket URL this client dials (surfaced by the offline shell). */
+  getUrl(): string {
+    return this.url;
+  }
+
+  /** Current reconnect visibility snapshot (see {@link ReconnectState}). */
+  getReconnectState(): ReconnectState {
+    return { attempt: this.reconnectAttempt, nextDelayMs: this.nextReconnectDelayMs };
+  }
+
+  /** Subscribe to reconnect-state changes (attempt count / next-retry delay). */
+  onReconnectStateChange(handler: (state: ReconnectState) => void): Unsubscribe {
+    this.reconnectStateHandlers.add(handler);
+    return () => {
+      this.reconnectStateHandlers.delete(handler);
+    };
+  }
+
+  /**
+   * Cancel any pending backoff timer and dial immediately.
+   *
+   * No-op while a socket already exists (connecting/connected) or after a
+   * user-initiated `close()` — auto-reconnect must never resurrect a
+   * deliberately closed client.
+   */
+  retryNow(): void {
+    if (this.socket !== null || this.closedByUser) return;
+    if (this.reconnectTimer !== null) {
+      this.clearTimeoutImpl(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+    this.setNextReconnectDelay(null);
+    this.openSocket();
   }
 
   /** Subscribe to one event type. Returns an unsubscribe function. */
@@ -346,6 +396,7 @@ export class CockpitClient {
   private handleOpen(): void {
     this.logger.info?.('cockpit ws connected', this.url);
     this.reconnectAttempt = 0;
+    this.setNextReconnectDelay(null);
     try {
       this.sendHandshake();
     } catch (err) {
@@ -418,10 +469,25 @@ export class CockpitClient {
       this.maxReconnectDelayMs,
     );
     this.reconnectAttempt += 1;
+    this.setNextReconnectDelay(delay);
     this.reconnectTimer = this.setTimeoutImpl(() => {
       this.reconnectTimer = null;
+      this.setNextReconnectDelay(null);
       this.openSocket();
     }, delay);
+  }
+
+  /** Record the pending backoff delay and notify reconnect-state subscribers. */
+  private setNextReconnectDelay(delayMs: number | null): void {
+    this.nextReconnectDelayMs = delayMs;
+    const state = this.getReconnectState();
+    for (const handler of this.reconnectStateHandlers) {
+      try {
+        handler(state);
+      } catch (err) {
+        this.logger.error?.('cockpit ws reconnect-state handler threw', err);
+      }
+    }
   }
 
   private dispatchEvent(event: Event): void {

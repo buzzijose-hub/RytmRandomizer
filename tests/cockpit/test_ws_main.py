@@ -26,11 +26,14 @@ import pytest
 
 from rytm_randomizer.cockpit import __main__ as cockpit_main
 from rytm_randomizer.cockpit.device.connection import (
+    DEFAULT_FAKE_PORT_NAMES,
     ConnectionManager,
     ConnectionState,
+    FakePortEnumerator,
     NullPortEnumerator,
     ProviderPortEnumerator,
     active_connection_manager,
+    is_elektron_port_name,
 )
 from rytm_randomizer.cockpit.ws.server import ConnectionRegistry
 from rytm_randomizer.cockpit.ws.session import CockpitSession
@@ -551,6 +554,104 @@ def test_build_port_enumerator_env_auto_keeps_real_path(
     enumerator = cockpit_main._build_port_enumerator()
 
     assert isinstance(enumerator, NullPortEnumerator)
+
+
+@pytest.mark.parametrize("value", ["fake", "FAKE", "  Fake  "])
+def test_build_port_enumerator_env_fake_returns_elektron_shaped_defaults(
+    monkeypatch: pytest.MonkeyPatch, value: str
+) -> None:
+    """``RYTM_RAND_MIDI_BACKEND=fake`` → the no-hardware e2e seam.
+
+    Default port names must satisfy the Elektron heuristic (so the
+    manager reaches ``listening``), appear identically on inputs and
+    outputs, and never consult ``mido`` — the fake works on hosts
+    without the hardware extra.
+    """
+
+    monkeypatch.setenv("RYTM_RAND_MIDI_BACKEND", value)
+    monkeypatch.delenv("RYTM_RAND_FAKE_PORTS", raising=False)
+    monkeypatch.setattr(
+        cockpit_main.importlib.util,
+        "find_spec",
+        lambda name: pytest.fail("find_spec must not be consulted when backend=fake"),
+    )
+
+    enumerator = cockpit_main._build_port_enumerator()
+
+    assert isinstance(enumerator, FakePortEnumerator)
+    assert enumerator.list_input_names() == DEFAULT_FAKE_PORT_NAMES
+    assert enumerator.list_output_names() == enumerator.list_input_names()
+    assert all(is_elektron_port_name(name) for name in enumerator.list_input_names())
+
+
+def test_build_port_enumerator_fake_ports_env_overrides_names(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """``RYTM_RAND_FAKE_PORTS`` replaces the default fake port list."""
+
+    monkeypatch.setenv("RYTM_RAND_MIDI_BACKEND", "fake")
+    monkeypatch.setenv("RYTM_RAND_FAKE_PORTS", "Custom Port A,Custom Port B")
+
+    enumerator = cockpit_main._build_port_enumerator()
+
+    assert isinstance(enumerator, FakePortEnumerator)
+    assert enumerator.list_input_names() == ("Custom Port A", "Custom Port B")
+    assert enumerator.list_output_names() == ("Custom Port A", "Custom Port B")
+
+
+def test_build_port_enumerator_fake_ports_empty_string_means_zero_ports(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Empty override → no ports: a ``fake`` launch that starts ``searching``."""
+
+    monkeypatch.setenv("RYTM_RAND_MIDI_BACKEND", "fake")
+    monkeypatch.setenv("RYTM_RAND_FAKE_PORTS", "")
+
+    enumerator = cockpit_main._build_port_enumerator()
+
+    assert isinstance(enumerator, FakePortEnumerator)
+    assert enumerator.list_input_names() == ()
+    assert enumerator.list_output_names() == ()
+
+
+def test_resolve_fake_port_names_defaults_when_env_unset(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("RYTM_RAND_FAKE_PORTS", raising=False)
+
+    assert cockpit_main._resolve_fake_port_names() == DEFAULT_FAKE_PORT_NAMES
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("  Elektron Analog Rytm MKII  ", ("Elektron Analog Rytm MKII",)),
+        (" , Fake In ,, Fake Out ,", ("Fake In", "Fake Out")),
+        (",,,", ()),
+        ("   ", ()),
+    ],
+)
+def test_resolve_fake_port_names_strips_whitespace_and_drops_empty_entries(
+    monkeypatch: pytest.MonkeyPatch, raw: str, expected: tuple[str, ...]
+) -> None:
+    monkeypatch.setenv("RYTM_RAND_FAKE_PORTS", raw)
+
+    assert cockpit_main._resolve_fake_port_names() == expected
+
+
+def test_build_port_enumerator_fake_ports_env_ignored_outside_fake_backend(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A stray ``RYTM_RAND_FAKE_PORTS`` never leaks into the auto path."""
+
+    monkeypatch.delenv("RYTM_RAND_MIDI_BACKEND", raising=False)
+    monkeypatch.setenv("RYTM_RAND_FAKE_PORTS", "Ghost Port")
+    monkeypatch.setattr(cockpit_main.importlib.util, "find_spec", lambda name: None)
+
+    enumerator = cockpit_main._build_port_enumerator()
+
+    assert isinstance(enumerator, NullPortEnumerator)
+    assert enumerator.list_input_names() == ()
 
 
 def test_connection_event_broadcaster_pushes_connection_changed() -> None:
