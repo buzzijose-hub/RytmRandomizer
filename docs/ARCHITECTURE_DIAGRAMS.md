@@ -129,9 +129,9 @@ flowchart TB
         CliRegistry["cli_registry.py<br/>CliCommand registry"]
     end
 
-    subgraph BehaviorPkg["behavior/ subpackage (9 modules)<br/>(WS-M2 moved 11 top-level behavior_*.py here;<br/>4 pad_*_lane.py modules then consolidated<br/>into one pad_lane.py)"]
+    subgraph BehaviorPkg["behavior/ subpackage (13 modules)<br/>(WS-M2 moved 11 top-level behavior_*.py here;<br/>4 pad_*_lane.py modules then consolidated<br/>into one pad_lane.py)"]
         BehPadLane["pad_lane.py<br/>(consolidated Pad1/2/3/4 lane)"]
-        BehOther["anchor_profile<br/>midi_event_plan<br/>mutation_depth<br/>scene_group<br/>menu_utility<br/>selected_profile<br/>selected_isolated_pad<br/>undo_commit_state"]
+        BehOther["anchor_profile<br/>midi_event_plan<br/>morph<br/>mutation_depth<br/>operator_console<br/>profile_facts<br/>scene_group<br/>scope<br/>menu_utility<br/>selected_profile<br/>selected_isolated_pad<br/>undo_commit_state"]
     end
 
     subgraph StatePkg["state/ subpackage"]
@@ -1644,12 +1644,16 @@ flowchart TB
     Profiles["profiles.py / data/profiles.py<br/>group profile metadata"]
     StateValidation["state/{anchor,selected_target,<br/>selected_isolated_pad}_validation.py"]
 
-    subgraph BehaviorPkg["behavior/ subpackage (9 modules; WS-M2 layout)"]
+    subgraph BehaviorPkg["behavior/ subpackage (13 modules; WS-M2 layout)"]
         MenuUtility["menu_utility.py<br/>menus + T/C/Q utilities"]
         AnchorProfile["anchor_profile.py<br/>BH/BC/BS/BF/... anchor commands"]
+        Morph["morph.py<br/>bounded profile interpolation"]
         MutationDepth["mutation_depth.py<br/>guarded depth + mutation intent"]
+        OperatorConsole["operator_console.py<br/>passive operator command formatting"]
         SceneGroup["scene_group.py<br/>scene/group/lane-aware intent"]
         PadLane["pad_lane.py<br/>(WS-S2 consolidation:<br/>Pad1+Pad2+Pad3+Pad4 lane commands<br/>previously in 4 separate files)"]
+        ProfileFacts["profile_facts.py<br/>profile fact evaluation"]
+        Scope["scope.py<br/>mutation scope evaluation"]
         SelectedProfile["selected_profile.py<br/>P/M profile workflow"]
         SelectedIsolated["selected_isolated_pad.py<br/>L/PZ isolated pad behavior"]
         UndoCommit["undo_commit_state.py<br/>B/E/W/U state behavior"]
@@ -1847,7 +1851,7 @@ flowchart LR
         A4PatchCorpus["analog-four-patch-corpus-report"]
         A4PatchSendPlan["analog-four-patch-send-plan-report"]
         A4SavedKitExport["analog-four-saved-kit-export --source K --output O --filter2-resonance T:V [...]"]
-        A4AudioPatchBatch["analog-four-audio-patch-batch --audio A --source-kit K --output-dir D [--track N] --candidates 4 [--json]"]
+        A4AudioPatchBatch["analog-four-audio-patch-batch --audio A --source-kit K --output-dir D [--track N] --candidates 4 [--studio-handoff --a4-output-port EXACT_NAME] [--json]"]
         A4AudioPatchRank["analog-four-audio-patch-rank --reference A --manifest M --render N=R [...]"]
         A4StyleKitReadiness["analog-four-style-kit-readiness-report"]
         A4OxiMacroSetPlanner["analog-four-oxi-macro-set-planner-report [--set-name N] [--sequence A,B] [--seed N] [--json]"]

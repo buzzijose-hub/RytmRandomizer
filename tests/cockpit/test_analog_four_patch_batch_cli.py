@@ -77,6 +77,24 @@ def _batch_result(tmp_path: Path) -> _BatchResult:
     )
 
 
+def _studio_batch_result(tmp_path: Path) -> _BatchResult:
+    base = _batch_result(tmp_path)
+    candidate_template = base.candidate_outputs[0]
+    return replace(
+        base,
+        candidate_outputs=tuple(
+            replace(
+                candidate_template,
+                column=column,
+                label=f"Candidate {column}",
+                sysex_path=tmp_path / f"candidate-{column}.syx",
+                sidecar_path=tmp_path / f"candidate-{column}.json",
+            )
+            for column in range(1, 5)
+        ),
+    )
+
+
 def test_parser_uses_safe_single_track_four_candidate_defaults() -> None:
     from rytm_randomizer.cockpit.export.analog_four_patch_batch_cli import (
         parse_analog_four_audio_patch_batch_args,
@@ -100,8 +118,19 @@ def test_parser_uses_safe_single_track_four_candidate_defaults() -> None:
         "track": 1,
         "candidate_count": 4,
         "overwrite": False,
+        "studio_handoff": False,
+        "a4_output_port": None,
         "json_output": False,
     }
+
+
+def test_batch_payload_keeps_studio_handoff_optional_without_python_311_typing() -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch_cli import (
+        AnalogFourAudioPatchBatchPayload,
+    )
+
+    assert AnalogFourAudioPatchBatchPayload.__optional_keys__ == frozenset({"studio_handoff"})
+    assert "studio_handoff" not in AnalogFourAudioPatchBatchPayload.__required_keys__
 
 
 def test_parser_accepts_every_documented_option() -> None:
@@ -120,15 +149,20 @@ def test_parser_accepts_every_documented_option() -> None:
             "--track",
             "4",
             "--candidates",
-            "1",
+            "4",
             "--overwrite",
+            "--studio-handoff",
+            "--a4-output-port",
+            "Elektron Analog Four MKII 2",
             "--json",
         ]
     )
 
     assert options["track"] == 4
-    assert options["candidate_count"] == 1
+    assert options["candidate_count"] == 4
     assert options["overwrite"] is True
+    assert options["studio_handoff"] is True
+    assert options["a4_output_port"] == "Elektron Analog Four MKII 2"
     assert options["json_output"] is True
 
 
@@ -181,6 +215,47 @@ def test_parser_accepts_every_documented_option() -> None:
                 "5",
             ],
             "--candidates must be an integer from 1 to 4",
+        ),
+        (
+            [
+                "--audio",
+                "clip.wav",
+                "--source-kit",
+                "init.syx",
+                "--output-dir",
+                "out",
+                "--studio-handoff",
+            ],
+            "--studio-handoff requires --a4-output-port",
+        ),
+        (
+            [
+                "--audio",
+                "clip.wav",
+                "--source-kit",
+                "init.syx",
+                "--output-dir",
+                "out",
+                "--a4-output-port",
+                "A4 Port",
+            ],
+            "--a4-output-port requires --studio-handoff",
+        ),
+        (
+            [
+                "--audio",
+                "clip.wav",
+                "--source-kit",
+                "init.syx",
+                "--output-dir",
+                "out",
+                "--candidates",
+                "3",
+                "--studio-handoff",
+                "--a4-output-port",
+                "A4 Port",
+            ],
+            "--studio-handoff requires exactly four candidates",
         ),
         (
             [
@@ -324,6 +399,209 @@ def test_handler_emits_compact_text_summary(
     assert "manual_count: 11" in captured.out
     assert "deferred_count: 76" in captured.out
     assert "- no MIDI sending" in captured.out
+
+
+def test_handler_emits_zero_calibration_four_candidate_studio_handoff(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+
+    monkeypatch.setattr(
+        cli,
+        "_export_analog_four_audio_patch_batch",
+        lambda **_kwargs: _studio_batch_result(tmp_path),
+    )
+
+    exit_code = cli.handle_analog_four_audio_patch_batch(
+        audio_path=tmp_path / "reference.wav",
+        source_kit_path=tmp_path / "init.syx",
+        output_dir=tmp_path / "batch",
+        candidate_count=4,
+        studio_handoff=True,
+        a4_output_port="Elektron Analog Four MKII 2",
+        json_output=True,
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    handoff = payload["studio_handoff"]
+    assert exit_code == 0
+    assert handoff["calibration_rounds_required"] == 0
+    assert handoff["candidate_auditions_required"] == 4
+    assert len(handoff["candidates"]) == 4
+    for column, candidate in enumerate(handoff["candidates"], start=1):
+        assert candidate["candidate"] == column
+        assert "--dry-run" in candidate["dry_run_argv"]
+        assert "--confirm-a4-patch-send-plan" not in candidate["dry_run_argv"]
+        assert "--arm" in candidate["armed_audition_argv"]
+        assert "--confirm-a4-patch-send-plan" in candidate["armed_audition_argv"]
+        assert candidate["armed_audition_argv"][-1] == "Elektron Analog Four MKII 2"
+        assert candidate["render_path"].endswith(f"candidate-{column}.wav")
+    assert handoff["rank_argv"].count("--render") == 4
+    assert handoff["rank_argv"][-1] == "--json"
+
+
+def test_studio_handoff_text_is_copyable_powershell_with_full_paths(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+
+    monkeypatch.setattr(
+        cli,
+        "_export_analog_four_audio_patch_batch",
+        lambda **_kwargs: _studio_batch_result(tmp_path),
+    )
+
+    exit_code = cli.handle_analog_four_audio_patch_batch(
+        audio_path=tmp_path / "reference.wav",
+        source_kit_path=tmp_path / "init.syx",
+        output_dir=tmp_path / "Jose's batch",
+        studio_handoff=True,
+        a4_output_port="Jose's A4",
+    )
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert "calibration_rounds_required: 0" in output
+    assert "candidate_auditions_required: 4" in output
+    assert "powershell_setup: Set-Location '" in output
+    assert "candidate_1_dry_run: & '" in output
+    assert "candidate_4_armed_audition: & '" in output
+    assert "'Jose''s A4'" in output
+    assert "rank_after_recording: & '" in output
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("candidate-1.wav", "candidate-1.wav"),
+        ("Jose's A4", "'Jose''s A4'"),
+        (r"C:\music\kits,drafts\manifest.json", r"'C:\music\kits,drafts\manifest.json'"),
+        ("@splat", "'@splat'"),
+        ("", "''"),
+    ],
+)
+def test_shared_powershell_literal_argument_formatting(value: str, expected: str) -> None:
+    from rytm_randomizer.behavior.operator_console import powershell_literal_arg
+
+    assert powershell_literal_arg(value) == expected
+
+
+def test_shared_powershell_literal_argument_can_force_stable_quoting() -> None:
+    from rytm_randomizer.behavior.operator_console import powershell_literal_arg
+
+    assert powershell_literal_arg("/workspace/repository", always_quote=True) == (
+        "'/workspace/repository'"
+    )
+
+
+def test_studio_handoff_commands_round_trip_through_their_real_parsers(
+    tmp_path: Path,
+) -> None:
+    from rytm_randomizer import app
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+    from rytm_randomizer.cockpit.export.analog_four_patch_render_rank_cli import (
+        parse_analog_four_patch_render_rank_args,
+    )
+
+    audio_path = tmp_path / "reference.wav"
+    output_dir = tmp_path / "batch"
+    result = _studio_batch_result(tmp_path)
+    handoff = cli._studio_handoff_payload(
+        result=result,
+        audio_path=audio_path,
+        output_dir=output_dir,
+        a4_output_port="Elektron Analog Four MKII 2",
+    )
+    app_parser = app._build_parser()
+
+    for column, candidate in enumerate(handoff["candidates"], start=1):
+        dry_run = app_parser.parse_args(candidate["dry_run_argv"][3:])
+        assert dry_run.dry_run is True
+        assert dry_run.arm is False
+        assert dry_run.a4_patch_send_plan is True
+        assert dry_run.batch_manifest == str(result.manifest_path.resolve())
+        assert dry_run.batch_manifest_sha256 == result.manifest_sha256
+        assert dry_run.candidate == column
+        assert dry_run.confirm_a4_patch_send_plan is False
+        assert dry_run.a4_output_port is None
+
+        armed = app_parser.parse_args(candidate["armed_audition_argv"][3:])
+        assert armed.arm is True
+        assert armed.dry_run is False
+        assert armed.a4_patch_send_plan is True
+        assert armed.batch_manifest == str(result.manifest_path.resolve())
+        assert armed.batch_manifest_sha256 == result.manifest_sha256
+        assert armed.candidate == column
+        assert armed.confirm_a4_patch_send_plan is True
+        assert armed.a4_output_port == "Elektron Analog Four MKII 2"
+
+    rank = parse_analog_four_patch_render_rank_args(handoff["rank_argv"][4:])
+    assert rank == {
+        "reference_audio_path": audio_path.resolve(),
+        "manifest_path": result.manifest_path.resolve(),
+        "render_paths": {
+            column: output_dir.resolve() / "renders" / f"candidate-{column}.wav"
+            for column in range(1, 5)
+        },
+        "json_output": True,
+    }
+
+
+@pytest.mark.parametrize(
+    ("studio_handoff", "a4_output_port", "candidate_count", "message"),
+    [
+        (True, None, 4, "--studio-handoff requires --a4-output-port"),
+        (False, "A4 Port", 4, "--a4-output-port requires --studio-handoff"),
+        (True, "A4 Port", 3, "--studio-handoff requires exactly four candidates"),
+    ],
+)
+def test_handler_rejects_invalid_direct_studio_handoff_calls(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    studio_handoff: bool,
+    a4_output_port: str | None,
+    candidate_count: int,
+    message: str,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+
+    exit_code = cli.handle_analog_four_audio_patch_batch(
+        audio_path=tmp_path / "reference.wav",
+        source_kit_path=tmp_path / "init.syx",
+        output_dir=tmp_path / "batch",
+        candidate_count=candidate_count,
+        studio_handoff=studio_handoff,
+        a4_output_port=a4_output_port,
+        json_output=True,
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 2
+    assert payload["error_code"] == "invalid_input"
+    assert payload["error"] == message
+
+
+def test_handler_reports_invalid_studio_handoff_as_text(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+
+    exit_code = cli.handle_analog_four_audio_patch_batch(
+        audio_path=tmp_path / "reference.wav",
+        source_kit_path=tmp_path / "init.syx",
+        output_dir=tmp_path / "batch",
+        studio_handoff=True,
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 2
+    assert captured.out == ""
+    assert "Error [invalid_input]: --studio-handoff requires --a4-output-port" in (captured.err)
 
 
 def test_handler_emits_lock_cleanup_warning_in_text(

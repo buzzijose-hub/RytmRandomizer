@@ -226,7 +226,7 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `analog-four-patch-corpus-report` | Passive nearest-match ranking against starter or captured Analog Four patch/audio examples |
 | `analog-four-patch-send-plan-report` | Passive CC/NRPN live-dial send plan for a generated Analog Four patch |
 | `analog-four-saved-kit-export` | Guarded local-file saved-kit export; currently admits hardware-validated Filter2 Resonance only |
-| `analog-four-audio-patch-batch` | Real local audio analysis; the documented/default workflow deterministically commits exactly four immutable `.syx` candidates, complete DNA sidecars, and one manifest |
+| `analog-four-audio-patch-batch` | Real local audio analysis; the documented/default workflow deterministically commits exactly four immutable `.syx` candidates, complete DNA sidecars, and one manifest; `--studio-handoff` prints the bounded four-audition workflow with zero calibration rounds |
 | `analog-four-audio-patch-rank` | Passive acoustic ranking of recorded A4 candidates against the exact batch reference |
 | `local-model-copilot-report` | Passive local model docs, mutation-intent, and Analog Four patch-review packets; optional local model subprocess call with `--ask-local-model` |
 | `analog-four-oxi-macro-report` | Passive in-memory Analog Four OXI-style four-track macro preview |
@@ -248,6 +248,7 @@ python -m rytm_randomizer.cli analog-four-patch-corpus-report --audio reference.
 python -m rytm_randomizer.cli analog-four-patch-send-plan-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
 python -m rytm_randomizer.cli analog-four-saved-kit-export --source INIT.syx --output PATCH.syx --filter2-resonance 1:64
 python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit INIT.syx --output-dir batch --track 1 --candidates 4
+python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit INIT.syx --output-dir batch --track 1 --studio-handoff --a4-output-port "<exact configured Analog Four output name>"
 python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference reference.wav --manifest batch/a4-t1-audio-patch-batch.json --render 1=candidate-1.wav
 python -m rytm_randomizer.cli local-model-copilot-report --question "Which A4 rows are staged only?" --workflow all --description "hypnotic metallic HP2 stab" --json
 python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove --seed 23 --intensity 6 --events --limit 0
@@ -331,6 +332,16 @@ operator workflow and product contract use all four candidates.
 Local sidecars and manifests retain the reference-audio and source-kit
 basenames for operator traceability. Use neutral filenames before generation
 and review those local artifacts before sharing them outside the studio.
+
+`--studio-handoff` turns the successful four-candidate batch into one finite
+operator packet. It requires exactly four candidates and an exact
+`--a4-output-port` string, then emits `calibration_rounds_required: 0`, four
+full-path dry-run commands, four guarded `app --arm` audition commands, four
+deterministic recording destinations, and the final acoustic-ranking command.
+The option remains passive: the port name is copied into the prepared armed
+commands but is not enumerated, opened, or contacted by the batch process.
+The only required human comparison is the four-candidate audition; the retired
+Rush16 calibration sweep is not part of this workflow.
 
 The command performs local file I/O only and does not transfer a kit or send
 MIDI. Native audio decoding runs in a spawned child process. An abnormal native

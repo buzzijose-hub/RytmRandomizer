@@ -2579,6 +2579,7 @@ def _analog_four_audio_patch_batch_help():
 Usage:
   python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir>
   python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir> --track 2 --candidates 4 --json
+  python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir> --studio-handoff --a4-output-port <exact-name>
   python -m rytm_randomizer.cli analog-four-audio-patch-batch --help
 
 Arguments:
@@ -2588,6 +2589,8 @@ Arguments:
   --track N                Analog Four track 1-4; default 1
   --candidates N           Candidate count 1-4; default 4
   --overwrite              Replace the stable manifest; reuse exact generation files
+  --studio-handoff         Emit a bounded four-audition PowerShell handoff
+  --a4-output-port <name>  Exact A4 MIDI output copied into guarded audition commands
   --json                   Emit a JSON acknowledgment instead of text
 
 Behavior:
@@ -2596,6 +2599,9 @@ Behavior:
   the complete patch DNA plus its CC/NRPN live-dial plan. The current .syx
   writer applies only hardware-write-validated Filter2 Resonance; all other DNA
   remains represented in the sidecar as live-sendable, manual, or deferred.
+  Studio handoff mode requires exactly four candidates and reports zero calibration
+  rounds. Batch generation remains passive; only its generated app --arm commands
+  may open the exact named port after the operator reviews each dry run.
   The acknowledgment reports the audio source hash, manifest path/hash,
   candidate paths, category counts, and safety contract. This is not a claim of full saved-kit coverage
   or Synthplant-equivalent learned accuracy.
