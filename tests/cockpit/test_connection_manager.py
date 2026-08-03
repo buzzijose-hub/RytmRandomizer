@@ -28,8 +28,10 @@ import pytest
 from rytm_randomizer.cockpit.device import connection as conn
 from rytm_randomizer.cockpit.device.connection import (
     CONNECTION_PHASES,
+    DEFAULT_FAKE_PORT_NAMES,
     ConnectionManager,
     ConnectionState,
+    FakePortEnumerator,
     NullPortEnumerator,
     PortEnumerator,
     ProviderPortEnumerator,
@@ -139,6 +141,64 @@ def test_provider_port_enumerator_exposes_no_open_surface() -> None:
     facade = ProviderPortEnumerator(_FullProvider())
     assert not hasattr(facade, "open_output")
     assert not hasattr(facade, "open_input")
+
+
+def test_fake_port_enumerator_default_ports_are_elektron_shaped() -> None:
+    """The fake's whole purpose: default names must satisfy the heuristic."""
+
+    fake = FakePortEnumerator()
+    assert fake.list_input_names() == DEFAULT_FAKE_PORT_NAMES
+    assert fake.list_output_names() == fake.list_input_names()
+    assert fake.list_input_names() != ()
+    assert all(is_elektron_port_name(name) for name in fake.list_input_names())
+    assert isinstance(fake, PortEnumerator)
+
+
+def test_fake_port_enumerator_reports_injected_names_on_both_sides() -> None:
+    fake = FakePortEnumerator(("Custom A", "Custom B"))
+    assert fake.list_input_names() == ("Custom A", "Custom B")
+    assert fake.list_output_names() == ("Custom A", "Custom B")
+
+
+def test_fake_port_enumerator_is_frozen_and_exposes_no_open_surface() -> None:
+    """List-only + immutable: the fake can never become a transmit path."""
+
+    fake = FakePortEnumerator()
+    with pytest.raises(FrozenInstanceError):
+        fake.port_names = ()  # type: ignore[misc]
+    assert not hasattr(fake, "open_output")
+    assert not hasattr(fake, "open_input")
+    assert not hasattr(fake, "send")
+
+
+def test_manager_with_fake_enumerator_reaches_listening_via_poll_once() -> None:
+    """One poll against the default fake lands in ``listening`` — the
+    phase WS-B exists to make reachable with zero hardware."""
+
+    manager = ConnectionManager(FakePortEnumerator(), clock=_TickClock())
+
+    state = manager.poll_once()
+
+    assert state.phase == "listening"
+    assert state.available_inputs == DEFAULT_FAKE_PORT_NAMES
+    assert state.available_outputs == DEFAULT_FAKE_PORT_NAMES
+    assert state.selected_input == DEFAULT_FAKE_PORT_NAMES[0]
+    assert state.selected_output == DEFAULT_FAKE_PORT_NAMES[0]
+    assert state.last_error_fingerprint is None
+
+
+def test_manager_with_empty_fake_enumerator_stays_searching() -> None:
+    """A zero-port fake (``RYTM_RAND_FAKE_PORTS=""``) polls to ``searching``."""
+
+    manager = ConnectionManager(FakePortEnumerator(()), clock=_TickClock())
+
+    state = manager.poll_once()
+
+    assert state.phase == "searching"
+    assert state.available_inputs == ()
+    assert state.available_outputs == ()
+    assert state.selected_input is None
+    assert state.selected_output is None
 
 
 @pytest.mark.parametrize(

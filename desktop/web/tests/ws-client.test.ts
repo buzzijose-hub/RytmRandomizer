@@ -19,6 +19,7 @@ import {
   WS_SUBPROTOCOL,
   type ClientLogger,
   type ConnectionStatus,
+  type ReconnectState,
   type WebSocketLike,
 } from '../src/ws/client';
 import {
@@ -1370,5 +1371,138 @@ describe('protocol type guards', () => {
     // Pinned against sidecar.rs::ARM_SECRET_STORAGE_KEY — a silent rename on
     // either side would break arming in packaged builds only.
     expect(ARM_SECRET_STORAGE_KEY).toBe('rytm-rand-arm-secret');
+  });
+});
+
+describe('CockpitClient — reconnect visibility & retryNow', () => {
+  it('getUrl() reports the dialed URL (custom + default)', () => {
+    const h = makeHarness();
+    expect(h.client.getUrl()).toBe('ws://test/ws');
+    expect(new CockpitClient().getUrl()).toBe(DEFAULT_WS_URL);
+  });
+
+  it('emits attempt + delay when a reconnect is scheduled, null delay when it dials, and a reset on open', () => {
+    const h = makeHarness({ initialReconnectDelayMs: 100 });
+    const seen: ReconnectState[] = [];
+    h.client.onReconnectStateChange((state) => seen.push(state));
+
+    h.client.connect();
+    h.currentSocket().emitClose();
+    expect(seen).toEqual([{ attempt: 1, nextDelayMs: 100 }]);
+    expect(h.client.getReconnectState()).toEqual({ attempt: 1, nextDelayMs: 100 });
+
+    vi.advanceTimersByTime(100);
+    expect(seen).toEqual([
+      { attempt: 1, nextDelayMs: 100 },
+      { attempt: 1, nextDelayMs: null },
+    ]);
+
+    h.currentSocket().emitOpen();
+    expect(seen[seen.length - 1]).toEqual({ attempt: 0, nextDelayMs: null });
+    expect(h.client.getReconnectState()).toEqual({ attempt: 0, nextDelayMs: null });
+  });
+
+  it('starts with a zeroed reconnect state', () => {
+    const h = makeHarness();
+    expect(h.client.getReconnectState()).toEqual({ attempt: 0, nextDelayMs: null });
+  });
+
+  it('retryNow() cancels the pending backoff timer and dials immediately', () => {
+    const h = makeHarness({ initialReconnectDelayMs: 10_000 });
+    const seen: ReconnectState[] = [];
+    h.client.onReconnectStateChange((state) => seen.push(state));
+    h.client.connect();
+    h.currentSocket().emitClose();
+    expect(h.fakes.length).toBe(1);
+    expect(h.client.getReconnectState()).toEqual({ attempt: 1, nextDelayMs: 10_000 });
+
+    h.client.retryNow();
+    expect(h.fakes.length).toBe(2); // dialed without advancing timers
+    expect(h.client.getStatus()).toBe('reconnecting');
+    expect(seen[seen.length - 1]).toEqual({ attempt: 1, nextDelayMs: null });
+
+    // The cancelled timer must not fire a second dial later.
+    vi.advanceTimersByTime(20_000);
+    expect(h.fakes.length).toBe(2);
+  });
+
+  it('retryNow() is a no-op while a socket already exists', () => {
+    const h = makeHarness();
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    h.client.retryNow();
+    expect(h.fakes.length).toBe(1);
+    expect(h.client.getStatus()).toBe('connected');
+  });
+
+  it('retryNow() is a no-op after a user-initiated close()', () => {
+    const h = makeHarness();
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    h.client.close();
+    h.client.retryNow();
+    expect(h.fakes.length).toBe(1);
+    expect(h.client.getStatus()).toBe('closed');
+  });
+
+  it('retryNow() dials from a gave-up closed state (no pending timer)', () => {
+    const h = makeHarness({ maxReconnectAttempts: 0, logger: { error: () => {} } });
+    h.client.connect();
+    h.currentSocket().emitClose(); // max attempts reached → closed, no timer
+    expect(h.client.getStatus()).toBe('closed');
+    h.client.retryNow();
+    expect(h.fakes.length).toBe(2);
+  });
+
+  it('close() during a pending backoff resets the published reconnect delay', () => {
+    const h = makeHarness({ initialReconnectDelayMs: 500 });
+    const seen: ReconnectState[] = [];
+    h.client.onReconnectStateChange((state) => seen.push(state));
+    h.client.connect();
+    h.currentSocket().emitClose();
+    expect(h.client.getReconnectState()).toEqual({ attempt: 1, nextDelayMs: 500 });
+    h.client.close();
+    expect(h.client.getReconnectState()).toEqual({ attempt: 1, nextDelayMs: null });
+    expect(seen[seen.length - 1]).toEqual({ attempt: 1, nextDelayMs: null });
+  });
+
+  it('unsubscribing a reconnect-state handler stops its notifications', () => {
+    const h = makeHarness({ initialReconnectDelayMs: 100 });
+    const seen: ReconnectState[] = [];
+    const off = h.client.onReconnectStateChange((state) => seen.push(state));
+    off();
+    h.client.connect();
+    h.currentSocket().emitClose();
+    expect(seen).toEqual([]);
+  });
+
+  it('a throwing reconnect-state handler is caught and logged', () => {
+    const errors: unknown[] = [];
+    const h = makeHarness({
+      initialReconnectDelayMs: 100,
+      logger: { error: (...args) => errors.push(args) },
+    });
+    const seen: ReconnectState[] = [];
+    h.client.onReconnectStateChange(() => {
+      throw new Error('handler boom');
+    });
+    h.client.onReconnectStateChange((state) => seen.push(state));
+    h.client.connect();
+    h.currentSocket().emitClose();
+    expect(seen).toEqual([{ attempt: 1, nextDelayMs: 100 }]);
+    expect(
+      errors.some(
+        (e) => Array.isArray(e) && String(e[0]).includes('reconnect-state handler threw'),
+      ),
+    ).toBe(true);
+  });
+
+  it('a throwing reconnect-state handler without a logger is still swallowed', () => {
+    const h = makeHarness({ initialReconnectDelayMs: 100 });
+    h.client.onReconnectStateChange(() => {
+      throw new Error('handler boom');
+    });
+    h.client.connect();
+    expect(() => h.currentSocket().emitClose()).not.toThrow();
   });
 });

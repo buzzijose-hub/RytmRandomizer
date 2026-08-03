@@ -166,6 +166,47 @@ class NullPortEnumerator:
         return ()
 
 
+DEFAULT_FAKE_PORT_NAMES: Final[tuple[str, ...]] = ("Elektron Analog Rytm MKII",)
+"""Default port list for :class:`FakePortEnumerator`.
+
+Deliberately Elektron-shaped: the name contains two of the
+:data:`ELEKTRON_PORT_NAME_PATTERNS` stems (``"elektron"`` and
+``"analog rytm"``) so :func:`is_elektron_port_name` matches it and a
+manager polling the fake reaches the ``listening`` phase — the whole
+point of the ``fake`` backend is making that phase reachable with zero
+hardware.
+"""
+
+
+@dataclass(frozen=True)
+class FakePortEnumerator:
+    """Deterministic enumerator for e2e / no-hardware runs.
+
+    Selected by ``RYTM_RAND_MIDI_BACKEND=fake`` in ``cockpit.__main__``
+    so CI and local e2e specs can drive the ``listening`` connection
+    phase without a device or even a MIDI stack. The same names are
+    reported on inputs and outputs, mirroring how CoreMIDI/ALSA/WinMM
+    present a connected Elektron box.
+
+    List-only by construction: like every :class:`PortEnumerator`, the
+    surface is exactly the two enumeration methods — no ``open_*``, no
+    ``send`` — so the fake can never create a transmit path and the
+    Live-but-Passive enforcement modules stay untouched.
+    """
+
+    port_names: tuple[str, ...] = DEFAULT_FAKE_PORT_NAMES
+
+    def list_input_names(self) -> tuple[str, ...]:
+        """The configured fake port names, presented as inputs."""
+
+        return self.port_names
+
+    def list_output_names(self) -> tuple[str, ...]:
+        """The configured fake port names, presented as outputs."""
+
+        return self.port_names
+
+
 class ProviderPortEnumerator:
     """Enumeration-only facade over a ``MidoMidiPortProvider``-shaped provider.
 
@@ -457,12 +498,14 @@ def active_connection_manager() -> ConnectionManager | None:
 
 __all__ = [
     "CONNECTION_PHASES",
+    "DEFAULT_FAKE_PORT_NAMES",
     "DEFAULT_POLL_INTERVAL_SECONDS",
     "ELEKTRON_PORT_NAME_PATTERNS",
     "ConnectionManager",
     "ConnectionPhase",
     "ConnectionState",
     "DiagnosticsJournal",
+    "FakePortEnumerator",
     "NullPortEnumerator",
     "PortEnumerator",
     "ProviderPortEnumerator",

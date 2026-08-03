@@ -555,6 +555,42 @@ device to discard live-dial changes.
 
 ---
 
+## 6b. Running the end-to-end suite (Playwright)
+
+The e2e suite drives a real Chromium against the Vite dev server and a
+real per-test sidecar (spawned by the fixture with an isolated config
+dir — your own profiles and library are never touched).
+
+```bash
+cd desktop/web
+npx playwright install chromium   # first time only
+npm run e2e                       # headless run, list reporter
+npx playwright test --ui          # interactive UI mode for authoring/debugging
+npx playwright test e2e/no_device_journey.spec.ts   # a single spec
+```
+
+Requirements: the repo venv installed (`pip install -e ".[dev]"`),
+`npm ci` done, and **port 4317 free** (the fixture spawns its own
+sidecar there; stop any standalone sidecar first). The same suite runs
+in CI in the `desktop-web-e2e` job.
+
+No hardware is ever needed. Two sidecar env seams make every device
+state reachable:
+
+- `RYTM_RAND_MIDI_BACKEND=off` — MIDI discovery disabled; the UI shows
+  the honest "No hardware detected" scanning state.
+- `RYTM_RAND_MIDI_BACKEND=fake` — a list-only fake enumerator presents
+  an Elektron-shaped port (`Elektron Analog Rytm MKII` by default;
+  override with `RYTM_RAND_FAKE_PORTS="Name A,Name B"`), so the
+  `listening` phase and the arm dialog's port list are testable with
+  zero devices. The fake has no transmit surface — it can only be
+  *listed*, never opened for output.
+
+Both values also work for manual testing: launch the sidecar with
+either env var and explore the corresponding UI state.
+
+---
+
 ## 7. Troubleshooting
 
 **"Cockpit WebSocket server listening on 127.0.0.1:4317" but the window

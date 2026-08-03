@@ -189,7 +189,8 @@ Launch the produced app: it opens in **listening** mode, shows detected Elektron
 
 - If the sidecar fails to spawn, the shell shows a native failure dialog with the reason — no silent blank window.
 - Port conflict? Set `RYTM_RAND_WS_PORT` to override the sidecar's WebSocket port.
-- Suspect the MIDI backend itself (driver crash loops, CI, containers)? `RYTM_RAND_MIDI_BACKEND=off` starts the app with MIDI discovery disabled entirely — the UI runs with an explicit "no backend" state.
+- Suspect the MIDI backend itself (driver crash loops, CI, containers)? `RYTM_RAND_MIDI_BACKEND=off` starts the app with MIDI discovery disabled entirely — the UI runs with an explicit "no backend" state. For development and e2e testing, `RYTM_RAND_MIDI_BACKEND=fake` presents a list-only fake Elektron port (no transmit surface) so device-present flows work with zero hardware.
+- Sidecar unreachable? The window shows a live **offline shell** instead of a dead "Connecting…" screen: connection status, the retry attempt counter with a next-dial countdown (retries never give up), a Retry-now button, and per-OS connection help. With the sidecar up but no device plugged in, the device rail says so honestly — "No hardware detected — still scanning (every 2 s)" — and everything device-independent (sound library, profiles, wizard, reports, exports) keeps working.
 
 ### Dev loop (two terminals)
 

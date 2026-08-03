@@ -53,11 +53,13 @@ from rytm_randomizer.cockpit.ws.protocol import (
     WS_SUBPROTOCOL,
 )
 from rytm_randomizer.cockpit.ws.server import (
+    HANDSHAKE_FIRST_FRAME_TIMEOUT_SECONDS,
     ConnectionQueue,
     ConnectionRegistry,
     _parse_envelope,
     _perform_handshake,
     _reject_handshake,
+    _resolve_handshake_timeout_seconds,
     _resolve_max_message_bytes,
     _writer_loop,
     create_app,
@@ -852,16 +854,22 @@ class _HandshakeStubWebSocket:
         self,
         *,
         raise_on_receive: bool = False,
+        hang_on_receive: bool = False,
         fail_on_send: bool = False,
         fail_on_close: bool = False,
     ) -> None:
         self.sent: list[dict] = []
         self.closed_codes: list[int] = []
         self._raise_on_receive = raise_on_receive
+        self._hang_on_receive = hang_on_receive
         self._fail_on_send = fail_on_send
         self._fail_on_close = fail_on_close
 
     async def receive_text(self) -> str:
+        if self._hang_on_receive:
+            # A silent peer: never produces a first frame. Cancellable so
+            # ``asyncio.wait_for`` can enforce the handshake deadline.
+            await asyncio.Event().wait()
         raise WebSocketDisconnect(code=1006)
 
     async def send_json(self, frame: dict) -> None:
@@ -884,6 +892,31 @@ def test_perform_handshake_returns_false_when_client_disconnects_first() -> None
 
     assert result is False
     assert stub.sent == []
+
+
+def test_perform_handshake_times_out_silent_peer_with_auth_required() -> None:
+    """No first frame before the deadline → auth_required ack + close 1008.
+
+    The defect this pins: a client that never sends its hello (the
+    browser client withholds it when it has no token) used to hold an
+    authenticated-looking OPEN socket forever, so the UI showed a false
+    "connected". The deadline turns that park into the same visible
+    reject → close → redial loop a wrong token produces.
+    """
+
+    stub = _HandshakeStubWebSocket(hang_on_receive=True)
+
+    result = asyncio.run(
+        _perform_handshake(
+            stub,  # type: ignore[arg-type]
+            "expected-token",
+            first_frame_timeout_seconds=0.01,
+        )
+    )
+
+    assert result is False
+    assert stub.sent == [{"ok": False, "code": "auth_required"}]
+    assert stub.closed_codes == [1008]
 
 
 def test_reject_handshake_absorbs_send_failure_on_dead_socket() -> None:
@@ -947,6 +980,38 @@ def test_resolve_max_message_bytes_valid_env_wins(monkeypatch: pytest.MonkeyPatc
     monkeypatch.setenv("RYTM_RAND_WS_MAX_MESSAGE_BYTES", "4096")
 
     assert _resolve_max_message_bytes() == 4096
+
+
+def test_resolve_handshake_timeout_defaults_when_env_unset(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("RYTM_RAND_WS_HANDSHAKE_TIMEOUT_SECONDS", raising=False)
+
+    assert _resolve_handshake_timeout_seconds() == HANDSHAKE_FIRST_FRAME_TIMEOUT_SECONDS
+
+
+def test_resolve_handshake_timeout_unparseable_env_falls_back(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("RYTM_RAND_WS_HANDSHAKE_TIMEOUT_SECONDS", "not-a-number")
+
+    assert _resolve_handshake_timeout_seconds() == HANDSHAKE_FIRST_FRAME_TIMEOUT_SECONDS
+
+
+def test_resolve_handshake_timeout_non_positive_env_falls_back(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A zero/negative override would disable the deadline — refuse it."""
+
+    monkeypatch.setenv("RYTM_RAND_WS_HANDSHAKE_TIMEOUT_SECONDS", "0")
+
+    assert _resolve_handshake_timeout_seconds() == HANDSHAKE_FIRST_FRAME_TIMEOUT_SECONDS
+
+
+def test_resolve_handshake_timeout_valid_env_wins(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("RYTM_RAND_WS_HANDSHAKE_TIMEOUT_SECONDS", "0.25")
+
+    assert _resolve_handshake_timeout_seconds() == 0.25
 
 
 def test_sibling_disconnect_leaves_the_armed_session_armed(session_factory) -> None:
