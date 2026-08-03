@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import argparse
 import hashlib
 import json
 import os
@@ -32,13 +31,11 @@ from ...data.rytm_machine_catalog import (
     get_rytm_machine_profile,
     is_machine_allowed_on_pad,
 )
-from ...observability.logging import configure_logging, get_logger
 from .analog_rytm_saved_kit_codec import (
     decode_analog_rytm_saved_kit_frame,
     encode_analog_rytm_saved_kit_frame,
 )
 
-_LOGGER = get_logger(__name__)
 _REFERENCE_EXPECTED_SHA256: Final[str] = (
     "8bda94d6d5031e038c8d810789301f35242ed539338a0399548869a34e1dc4dd"
 )
@@ -629,58 +626,10 @@ def build_al16_rytm_kit(
     )
 
 
-def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Passive AL16 Analog Rytm kit exporter")
-    subparsers = parser.add_subparsers(dest="command", required=True)
-    build = subparsers.add_parser(
-        "build-rytm-kit",
-        help="compile one recipe offline or write a precise mapping-gap report",
-    )
-    build.add_argument("--reference", type=Path, required=True, help="initialized Rytm kit dump")
-    build.add_argument("--recipe", type=Path, required=True, help="JSON-compatible YAML recipe")
-    build.add_argument(
-        "--destination-slot",
-        type=int,
-        required=True,
-        help="explicit scratch kit slot in the range 0..127",
-    )
-    build.add_argument("--output", type=Path, required=True, help="requested output SysEx path")
-    return parser
-
-
-def run_al16_rytm_export_cli(argv: Sequence[str] | None = None) -> int:
-    configure_logging(level="INFO")
-    args = _parser().parse_args(argv)
-    if args.command != "build-rytm-kit":
-        raise ValueError(f"unsupported command: {args.command}")
-    result = build_al16_rytm_kit(
-        reference_path=cast(Path, args.reference),
-        recipe_path=cast(Path, args.recipe),
-        destination_slot=cast(int, args.destination_slot),
-        output_path=cast(Path, args.output),
-    )
-    _LOGGER.info(
-        "AL16 Rytm offline build completed",
-        extra={
-            "build_status": result.status,
-            "critical_mapping_gaps": len(result.gaps),
-            "manifest": str(result.manifest_path),
-            "validation": str(result.validation_path),
-            "sysex_output_emitted": False,
-        },
-    )
-    return 2
-
-
-if __name__ == "__main__":
-    raise SystemExit(run_al16_rytm_export_cli())
-
-
 __all__ = [
     "Al16BuildResult",
     "FieldAudit",
     "MappingGap",
     "build_al16_rytm_kit",
     "deterministic_recipe_identifier",
-    "run_al16_rytm_export_cli",
 ]

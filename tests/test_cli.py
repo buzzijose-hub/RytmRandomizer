@@ -313,6 +313,8 @@ USAGE = (
     "analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> "
     "--filter2-resonance <track:value> [--filter2-resonance <track:value> ...] "
     "[--overwrite] [--json] | "
+    "al16-rytm-kit-export --reference <kit.syx> --recipe <recipe.yaml> "
+    "--destination-slot <0..127> --output <kit.syx> | "
     "analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> "
     "--output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json] | "
     "analog-four-audio-patch-rank --reference <path> --manifest <batch.json> "

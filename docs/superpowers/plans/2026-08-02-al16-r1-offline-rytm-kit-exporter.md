@@ -1,6 +1,6 @@
 # AL16 Phase R1 Offline Analog Rytm Kit Exporter
 
-> Status: in-flight - implementation and integrated verification complete
+> Status: implementation complete - AL02 correctly blocked by verified mapping gaps; ready for review
 >
 > Offline audit implemented; AL02 output remains blocked by verified mapping gaps.
 
@@ -24,6 +24,9 @@ real-device adapter.
    byte-diff allowlist.
 8. For this evidence-limited proof, write a manifest, validation report, and
    zero-mutation byte-diff report while withholding the `.syx` file.
+9. Expose the compiler through the registered passive
+   `al16-rytm-kit-export` command adapter under `cockpit/export`; keep argument
+   parsing and process exit behavior out of the device strategy.
 
 ## Evidence boundary
 
@@ -42,15 +45,15 @@ exist; substituting candidate offsets would violate the project safety policy.
   explicit mapping gaps, absence of `.syx`, unchanged reference bytes, and
   zero MIDI dependencies.
 - Focused tests run single-process to avoid unnecessary workstation load.
-- Focused exporter, codec, writer, and data tests: 112 passed, 1 optional
-  private-reference test skipped.
-- Relevant Rytm layout, codec, envelope, data, snapshot, and device tests with
-  the local initialized reference enabled: 236 passed.
-- Architecture tests: 737 passed with one unrelated warn-only result.
+- Focused exporter, Rytm layout, codec, envelope, writer, data, snapshot, and
+  device tests with the local initialized reference enabled: 270 passed.
+- Passive CLI and report-golden integration tests: 362 passed.
+- Command-specific CLI/help tests: 18 passed.
+- Architecture tests: 738 passed with one unrelated warn-only result.
 - V1.34 byte-frozen parity: 685 passed.
-- Full repository suite: 7,494 passed, 4 skipped.
-- Touched production coverage: 439 statements and 130 branches at 100%.
-- Strict touched-production type check: 6 modules, 0 errors.
+- Full repository suite: 7,510 passed, 4 skipped.
+- Touched production coverage: 10 modules at 100% line and branch coverage.
+- Strict touched-production type check: 10 modules, 0 errors.
 - Ruff, Black, isort, and `git diff --check`: passed.
 - Two deterministic blocked builds produced byte-identical reports, recording
   18 critical mapping gaps and zero intentionally changed bytes. No `.syx` was

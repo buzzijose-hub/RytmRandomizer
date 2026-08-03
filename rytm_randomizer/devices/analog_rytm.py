@@ -27,6 +27,11 @@ from .strategies import (
     RytmKitSnapshot,
     RytmMutationPlan,
 )
+from .strategies.al16_rytm_export import (
+    Al16BuildResult,
+    MappingGap,
+    build_al16_rytm_kit,
+)
 
 #: Elektron's 3-byte SysEx manufacturer ID. Documented in the Analog Rytm
 #: MKII MIDI spec and reused across every Elektron device. NOT secret.
@@ -158,3 +163,11 @@ def _assert_protocol_conformance() -> None:
 
 
 _assert_protocol_conformance()
+
+
+__all__ = [
+    "Al16BuildResult",
+    "AnalogRytmDevice",
+    "MappingGap",
+    "build_al16_rytm_kit",
+]

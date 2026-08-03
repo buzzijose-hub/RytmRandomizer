@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import json
-from argparse import Namespace
 from pathlib import Path
-from types import SimpleNamespace
 from typing import cast
 
 import pytest
@@ -20,7 +18,6 @@ from rytm_randomizer.data.rytm_machine_catalog import (
 )
 from rytm_randomizer.devices.strategies import al16_rytm_export as exporter
 from rytm_randomizer.devices.strategies.al16_rytm_export import (
-    Al16BuildResult,
     build_al16_rytm_kit,
     deterministic_recipe_identifier,
 )
@@ -314,64 +311,3 @@ def test_al16_build_timestamp_supports_reproducible_and_live_modes(
     assert exporter._build_timestamp() == "1970-01-01T00:00:00+00:00"
     monkeypatch.delenv("SOURCE_DATE_EPOCH")
     assert exporter._build_timestamp().endswith("+00:00")
-
-
-def test_al16_cli_parser_and_main_return_blocked_status(
-    tmp_path: Path,
-    monkeypatch: MonkeyPatch,
-) -> None:
-    parsed = exporter._parser().parse_args(
-        [
-            "build-rytm-kit",
-            "--reference",
-            "reference.syx",
-            "--recipe",
-            "recipe.yaml",
-            "--destination-slot",
-            "127",
-            "--output",
-            "output.syx",
-        ]
-    )
-    assert parsed.command == "build-rytm-kit"
-    manifest = tmp_path / "manifest.json"
-    validation = tmp_path / "validation.md"
-    byte_diff = tmp_path / "byte_diff.txt"
-    monkeypatch.setattr(
-        exporter,
-        "build_al16_rytm_kit",
-        lambda **_kwargs: Al16BuildResult(
-            status="blocked",
-            output_path=tmp_path / "output.syx",
-            manifest_path=manifest,
-            validation_path=validation,
-            byte_diff_path=byte_diff,
-            reference_sha256="abc",
-            output_sha256=None,
-            gaps=(),
-        ),
-    )
-    assert (
-        exporter.run_al16_rytm_export_cli(
-            [
-                "build-rytm-kit",
-                "--reference",
-                "reference.syx",
-                "--recipe",
-                "recipe.yaml",
-                "--destination-slot",
-                "127",
-                "--output",
-                "output.syx",
-            ]
-        )
-        == 2
-    )
-
-
-def test_al16_main_rejects_unexpected_dispatch(monkeypatch: MonkeyPatch) -> None:
-    parser = SimpleNamespace(parse_args=lambda _argv: Namespace(command="unexpected"))
-    monkeypatch.setattr(exporter, "_parser", lambda: parser)
-
-    with pytest.raises(ValueError, match="unsupported command"):
-        exporter.run_al16_rytm_export_cli([])

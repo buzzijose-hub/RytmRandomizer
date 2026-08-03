@@ -289,6 +289,8 @@ USAGE = (
     "analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> "
     "--filter2-resonance <track:value> [--filter2-resonance <track:value> ...] "
     "[--overwrite] [--json] | "
+    "al16-rytm-kit-export --reference <kit.syx> --recipe <recipe.yaml> "
+    "--destination-slot <0..127> --output <kit.syx> | "
     "analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> "
     "--output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json] | "
     "analog-four-audio-patch-rank --reference <path> --manifest <batch.json> "
@@ -2571,6 +2573,44 @@ Safety:
 {_safety_block(_ANALOG_FOUR_SAVED_KIT_EXPORT_SAFETY_LINES)}"""
 
 
+_AL16_RYTM_KIT_EXPORT_SAFETY_LINES: Final[tuple[str, ...]] = (
+    "reads one operator-selected Analog Rytm saved-kit .syx file",
+    "writes a .syx only when every critical writer mapping verifies",
+    "writes deterministic mapping-gap evidence when the build is blocked",
+    "no MIDI backend imports",
+    "no MIDI port enumeration or opening",
+    "no MIDI or SysEx transmission",
+    "no hardware required",
+    "no network access",
+)
+
+
+def _al16_rytm_kit_export_help():
+    return f"""RytmRandomizer passive CLI: al16-rytm-kit-export
+
+Usage:
+  python -m rytm_randomizer.cli al16-rytm-kit-export --reference <kit.syx> --recipe <recipe.yaml> --destination-slot <0..127> --output <kit.syx>
+  python -m rytm_randomizer.cli al16-rytm-kit-export --help
+
+Arguments:
+  --reference <kit.syx>       Initialized Analog Rytm saved-kit reference
+  --recipe <recipe.yaml>      JSON-compatible YAML AL16 musical recipe
+  --destination-slot <0..127> Explicit destination kit slot for the build
+  --output <kit.syx>          Destination for a fully verified generated kit
+
+Behavior:
+  Decodes and byte-round-trips the reference, validates the recipe, permanent
+  pad roles, machine compatibility, typed values, tuning evidence, and the
+  strict byte-diff allowlist. A .syx is emitted only when every critical field
+  is positively writer-validated and round-trip verified. A blocked build
+  writes a manifest, validation report, and byte-diff report, then returns 2.
+  The current AL02 proof is intentionally blocked by 18 mapping gaps and emits
+  no .syx; its reports are evidence, not an authorized hardware import.
+
+Safety:
+{_safety_block(_AL16_RYTM_KIT_EXPORT_SAFETY_LINES)}"""
+
+
 def _analog_four_audio_patch_batch_help():
     from .cockpit.export.analog_four_patch_batch_cli import SAFETY_LINES
 
@@ -2807,6 +2847,7 @@ Usage:
   python -m rytm_randomizer.cli cockpit-send-plan-rehearsal-surface-report (--plan-json <json>|--plan-file <path>|--readiness-json <json>|--readiness-file <path>) [--label <text>] [--json]
   python -m rytm_randomizer.cli cockpit-export-profile-model --profile-id <id> --profiles-dir <path> --output <file.rymp> [--key-hex <hex> --key-id <label>] [--unsigned] [--overwrite] [--json]
   python -m rytm_randomizer.cli analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> --filter2-resonance <track:value> [--filter2-resonance <track:value> ...] [--overwrite] [--json]
+  python -m rytm_randomizer.cli al16-rytm-kit-export --reference <kit.syx> --recipe <recipe.yaml> --destination-slot <0..127> --output <kit.syx>
   python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json]
   python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference <path> --manifest <batch.json> --render <N=path> [--render <N=path> ...] [--json]
   python -m rytm_randomizer.cli cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> [--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json]
@@ -3056,6 +3097,8 @@ Commands:
                     Export a cockpit ProfileModel (pack + sign + atomic write + verify).
   analog-four-saved-kit-export
                     Render hardware-validated Analog Four values into a saved-kit SysEx file.
+  al16-rytm-kit-export
+                    Compile a verified AL16 Rytm kit or emit mapping-gap evidence.
   analog-four-audio-patch-batch
                     Infer and export up to four passive Analog Four patch candidates from audio.
   analog-four-audio-patch-rank
@@ -3473,6 +3516,7 @@ Safety:
     ),
     "cockpit-export-profile-model": _cockpit_export_profile_model_help,
     "analog-four-saved-kit-export": _analog_four_saved_kit_export_help,
+    "al16-rytm-kit-export": _al16_rytm_kit_export_help,
     "analog-four-audio-patch-batch": _analog_four_audio_patch_batch_help,
     "analog-four-audio-patch-rank": _analog_four_audio_patch_rank_help,
     "cockpit-export-rehearsal-report": _cockpit_export_rehearsal_report_help,
