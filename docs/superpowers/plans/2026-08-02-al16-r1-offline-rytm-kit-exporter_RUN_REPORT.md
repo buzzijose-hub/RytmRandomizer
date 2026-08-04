@@ -19,14 +19,14 @@ not positively verified. Zero raw bytes changed and no `.syx` was emitted.
 
 ## Final local verification
 
-- Focused exporter tests: 44 passed.
-- Expanded related tests: 434 passed.
+- Focused exporter and CLI regression tests: 116 passed.
+- Exporter and saved-kit codec proof tests: 94 passed, 1 skipped.
 - Architecture: 739 passed with one unrelated warn-only result.
 - V1.34 byte-frozen parity: 685 passed.
-- Full suite: 7,586 passed, 4 skipped.
-- Touched production coverage: 11 instrumented modules at 100% line and branch coverage.
-- Strict typing: 13 touched production modules, 0 errors and 0 warnings.
-- Total coverage: 99.44%; pure branch coverage: 98.91%.
+- Full suite: 7,605 passed, 4 skipped.
+- Touched production coverage: 13 files at 100% line and branch coverage.
+- Strict typing: 14 touched production modules, 0 errors and 0 warnings.
+- Total coverage: 99.44%; pure branch coverage: 98.92%.
 - Deterministic blocked-build evidence: 18 critical gaps, zero changed raw bytes, no `.syx`.
 
 ## Recovery and replay
@@ -46,10 +46,12 @@ state is part of this run.
 
 ## Learning extraction
 
-No new skill or rule is warranted. Existing passive-hardware, codec reuse,
-data-layer, Python-on-Windows, deterministic-artifact, and bounded-verification
-rules already cover the reusable lessons. This run strengthens their mechanical
-tests and documentation instead of creating another overlapping rule.
+No new skill or rule is warranted yet. Existing passive-hardware, codec reuse,
+data-layer, Python-on-Windows, and bounded-verification rules cover the base
+workflow. This run records deterministic nested-mapping canonicalization and
+canonical-path collision checks in its plan/report, shared export contract, and
+regression tests. A generalized learned skill should wait until those lessons
+recur in another independent workflow.
 
 ## Fresh-clone questions
 

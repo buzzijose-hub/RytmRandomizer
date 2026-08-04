@@ -44,7 +44,12 @@ from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
 from ...observability.tracing import operation
 from ...snapshot import read_ascii_name
-from .file_export_contracts import classify_local_file_export_error
+from .file_export_contracts import (
+    LocalFileExportPhase,
+    attach_local_file_export_error_context,
+    classify_local_file_export_error,
+    local_file_export_error_context,
+)
 from .writer import atomic_write
 
 _REFERENCE_EXPECTED_SHA256: Final[str] = (
@@ -153,9 +158,22 @@ def _load_recipe(path: Path) -> Mapping[str, object]:
     return _as_mapping(parsed, "recipe")
 
 
+def _canonical_recipe_value(value: object) -> object:
+    if isinstance(value, Mapping):
+        canonical: dict[str, object] = {}
+        for key, item in cast(Mapping[object, object], value).items():
+            if not isinstance(key, str):
+                raise ValueError("deterministic recipe mappings require string keys")
+            canonical[key] = _canonical_recipe_value(item)
+        return canonical
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+        return [_canonical_recipe_value(item) for item in cast(Sequence[object], value)]
+    return value
+
+
 def deterministic_recipe_identifier(recipe: Mapping[str, object]) -> str:
     canonical = json.dumps(
-        dict(recipe),
+        _canonical_recipe_value(recipe),
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=True,
@@ -176,7 +194,17 @@ def _portable_reference_path(reference: Path) -> str:
 
 
 def _atomic_write_text(path: Path, value: str) -> None:
-    atomic_write(path, value.encode("utf-8"), overwrite=True)
+    try:
+        atomic_write(path, value.encode("utf-8"), overwrite=True)
+    except (ValueError, TypeError, OSError) as exc:
+        phase: LocalFileExportPhase = "output_write"
+        attach_local_file_export_error_context(
+            exc,
+            error_code=classify_local_file_export_error(exc, phase=phase),
+            phase=phase,
+            artifact_name=path.name,
+        )
+        raise
 
 
 def _artifact_paths(output_path: Path) -> tuple[Path, Path, Path]:
@@ -688,7 +716,8 @@ def build_al16_rytm_kit(
 
     metrics = get_metrics()
     started_at = time.perf_counter()
-    recipe_inspected = False
+    export_phase: LocalFileExportPhase = "validation"
+    failure_artifact_name = output_path.name
     operation_id = ""
     result: Al16BuildResult
     try:
@@ -709,11 +738,15 @@ def build_al16_rytm_kit(
                 validation_path=validation_path,
                 byte_diff_path=byte_diff_path,
             )
+            export_phase = "output_write"
+            failure_artifact_name = output_path.name
             if output_path.exists():
                 raise FileExistsError(
                     "refusing a blocked build while a potentially stale output exists: "
                     f"{output_path}"
                 )
+            export_phase = "source_read"
+            failure_artifact_name = reference_path.name
             reference_bytes = reference_path.read_bytes()
             reference_sha256 = hashlib.sha256(reference_bytes).hexdigest()
             if reference_sha256 != _REFERENCE_EXPECTED_SHA256:
@@ -726,13 +759,15 @@ def build_al16_rytm_kit(
             if codec.encode_saved_kit_frame(decoded.header, decoded.unpacked) != reference_bytes:
                 raise ValueError("Analog Rytm reference decode/encode is not byte-identical")
 
+            export_phase = "source_read"
+            failure_artifact_name = recipe_path.name
             recipe = _load_recipe(recipe_path)
+            export_phase = "validation"
             audits, gaps, preserved_tracks = _inspect_recipe(
                 recipe,
                 decoded.unpacked,
                 destination_slot,
             )
-            recipe_inspected = True
 
             kit = _as_mapping(recipe.get("kit"), "kit")
             manifest: dict[str, object] = {
@@ -774,6 +809,8 @@ def build_al16_rytm_kit(
                 "midi_ports_opened": 0,
                 "midi_messages_sent": 0,
             }
+            export_phase = "output_write"
+            failure_artifact_name = manifest_path.name
             _write_blocked_artifacts(
                 manifest_path=manifest_path,
                 validation_path=validation_path,
@@ -792,19 +829,29 @@ def build_al16_rytm_kit(
                 gaps=tuple(gaps),
             )
     except (KeyError, ValueError, TypeError, OSError, KeyboardInterrupt, SystemExit) as exc:
-        error_code = classify_local_file_export_error(
-            exc,
-            source_read_completed=recipe_inspected,
-        )
+        error_context = local_file_export_error_context(exc)
+        if error_context is None:
+            error_code = classify_local_file_export_error(exc, phase=export_phase)
+            attach_local_file_export_error_context(
+                exc,
+                error_code=error_code,
+                phase=export_phase,
+                artifact_name=failure_artifact_name,
+            )
+            error_context = local_file_export_error_context(exc)
+        if error_context is None:
+            raise AssertionError("failed to attach bounded AL16 export error context") from exc
         duration_ms = (time.perf_counter() - started_at) * 1000.0
-        metrics.record_export(duration_ms, error_code=error_code)
+        metrics.record_export(duration_ms, error_code=error_context.error_code)
         _logger.warning(
             "AL16 Analog Rytm kit export failed",
             extra={
                 "op_id": operation_id,
                 "operation": "al16_rytm_kit_export",
                 "outcome": "failed",
-                "error_code": error_code,
+                "error_code": error_context.error_code,
+                "failure_phase": error_context.phase,
+                "artifact_name": error_context.artifact_name,
                 "fingerprint": _AL16_EXPORT_FAILURE_FINGERPRINT,
                 "reference_name": reference_path.name,
                 "recipe_name": recipe_path.name,

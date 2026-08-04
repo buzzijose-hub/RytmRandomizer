@@ -5,6 +5,7 @@ import json
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
+from types import MappingProxyType
 from typing import cast
 
 import pytest
@@ -16,7 +17,11 @@ from rytm_randomizer.cockpit.export.al16_rytm_kit import (
     deterministic_recipe_identifier,
 )
 from rytm_randomizer.cockpit.export.file_export_contracts import (
+    LocalFileExportErrorCode,
+    LocalFileExportPhase,
+    attach_local_file_export_error_context,
     classify_local_file_export_error,
+    local_file_export_error_context,
 )
 from rytm_randomizer.data.al16_rytm import (
     AL16_BANK_STATES,
@@ -123,6 +128,26 @@ def test_al02_recipe_identifier_is_deterministic() -> None:
     reordered = {key: recipe[key] for key in reversed(recipe)}
 
     assert deterministic_recipe_identifier(recipe) == deterministic_recipe_identifier(reordered)
+
+
+def test_al02_recipe_identifier_canonicalizes_recursive_mapping_interfaces() -> None:
+    first = MappingProxyType(
+        {
+            "kit": MappingProxyType({"name": "AL02 LOCK", "slot": 127}),
+            "values": (MappingProxyType({"value": 12}),),
+        }
+    )
+    second = MappingProxyType(
+        {
+            "values": (MappingProxyType({"value": 12}),),
+            "kit": MappingProxyType({"slot": 127, "name": "AL02 LOCK"}),
+        }
+    )
+
+    assert deterministic_recipe_identifier(first) == deterministic_recipe_identifier(second)
+
+    with pytest.raises(ValueError, match="string keys"):
+        exporter._canonical_recipe_value(MappingProxyType({1: "invalid"}))
 
 
 def test_al02_audits_are_independent_of_nested_field_order() -> None:
@@ -297,30 +322,248 @@ def test_al02_build_records_one_operation_and_one_blocked_metric(
 
 
 @pytest.mark.parametrize(
-    ("exc", "source_read_completed", "expected"),
+    ("exc", "phase", "expected"),
     [
-        (KeyboardInterrupt(), False, "interrupted"),
-        (FileNotFoundError(), False, "input_not_found"),
-        (FileNotFoundError(), True, "write_failed"),
-        (PermissionError(), False, "permission_denied"),
-        (FileExistsError(), True, "overwrite_refused"),
-        (OSError(), False, "source_read_failed"),
-        (OSError(), True, "write_failed"),
-        (ValueError(), True, "validation"),
+        (KeyboardInterrupt(), "validation", "interrupted"),
+        (FileNotFoundError(), "source_read", "input_not_found"),
+        (FileNotFoundError(), "output_write", "write_failed"),
+        (PermissionError(), "source_read", "permission_denied"),
+        (FileExistsError(), "output_write", "overwrite_refused"),
+        (OSError(), "source_read", "source_read_failed"),
+        (OSError(), "output_write", "write_failed"),
+        (OSError(), "validation", "validation"),
+        (ValueError(), "output_write", "validation"),
     ],
 )
 def test_local_file_export_error_codes_are_stable(
     exc: BaseException,
-    source_read_completed: bool,
+    phase: LocalFileExportPhase,
     expected: str,
 ) -> None:
     assert (
         classify_local_file_export_error(
             exc,
-            source_read_completed=source_read_completed,
+            phase=phase,
         )
         == expected
     )
+
+
+def test_local_file_export_error_context_is_bounded_and_fail_closed() -> None:
+    exc = OSError(r"private path C:\\Users\\Jose Buzzi\\secret.txt")
+    attach_local_file_export_error_context(
+        exc,
+        error_code="write_failed",
+        phase="output_write",
+        artifact_name="AL02_LOCK_RYTM_manifest.json",
+    )
+
+    context = local_file_export_error_context(exc)
+    assert context is not None
+    assert context.error_code == "write_failed"
+    assert context.phase == "output_write"
+    assert context.artifact_name == "AL02_LOCK_RYTM_manifest.json"
+
+    with pytest.raises(ValueError, match="error code"):
+        attach_local_file_export_error_context(
+            OSError(),
+            error_code=cast(LocalFileExportErrorCode, "unknown"),
+            phase="validation",
+            artifact_name="artifact.json",
+        )
+    with pytest.raises(ValueError, match="phase"):
+        attach_local_file_export_error_context(
+            OSError(),
+            error_code="validation",
+            phase=cast(LocalFileExportPhase, "unknown"),
+            artifact_name="artifact.json",
+        )
+    for artifact_name in ("", "nested/artifact.json"):
+        with pytest.raises(ValueError, match="filename"):
+            attach_local_file_export_error_context(
+                OSError(),
+                error_code="validation",
+                phase="validation",
+                artifact_name=artifact_name,
+            )
+
+
+@pytest.mark.parametrize(
+    ("error_code", "phase", "artifact_name"),
+    [
+        (None, None, None),
+        ("unknown", "validation", "artifact.json"),
+        ("validation", None, "artifact.json"),
+        ("validation", "unknown", "artifact.json"),
+        ("validation", "validation", None),
+        ("validation", "validation", ""),
+        ("validation", "validation", "nested/artifact.json"),
+    ],
+)
+def test_local_file_export_error_context_rejects_malformed_metadata(
+    error_code: object,
+    phase: object,
+    artifact_name: object,
+) -> None:
+    exc = OSError()
+    exc.__dict__["local_file_export_error_code"] = error_code
+    exc.__dict__["local_file_export_phase"] = phase
+    exc.__dict__["local_file_export_artifact_name"] = artifact_name
+
+    assert local_file_export_error_context(exc) is None
+
+
+def test_al16_atomic_writer_attaches_bounded_failure_context(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    def fail_atomic_write(
+        _path: Path,
+        _data: bytes,
+        *,
+        overwrite: bool,
+    ) -> None:
+        assert overwrite is True
+        raise OSError(r"private path C:\\Users\\Jose Buzzi\\secret.txt")
+
+    monkeypatch.setattr(exporter, "atomic_write", fail_atomic_write)
+
+    with pytest.raises(OSError) as raised:
+        exporter._atomic_write_text(tmp_path / "manifest.json", "{}\n")
+
+    context = local_file_export_error_context(raised.value)
+    assert context is not None
+    assert context.error_code == "write_failed"
+    assert context.phase == "output_write"
+    assert context.artifact_name == "manifest.json"
+
+
+@pytest.mark.parametrize(
+    ("failure_target", "expected_error_code"),
+    [
+        ("_validate_artifact_paths", "validation"),
+        ("_write_blocked_artifacts", "write_failed"),
+    ],
+)
+def test_al16_service_classifies_failures_by_actual_caller_phase(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+    failure_target: str,
+    expected_error_code: str,
+) -> None:
+    reference_path = tmp_path / "RYTM_Test1_Init_Kit.syx"
+    reference = _synthetic_reference(reference_path)
+    monkeypatch.setattr(
+        exporter,
+        "_REFERENCE_EXPECTED_SHA256",
+        hashlib.sha256(reference).hexdigest(),
+    )
+    logged_codes: list[object] = []
+    monkeypatch.setattr(
+        exporter._logger,
+        "warning",
+        lambda _message, *, extra: logged_codes.append(extra["error_code"]),
+    )
+
+    def fail_current_phase(**_kwargs: object) -> None:
+        raise OSError("injected local-file failure")
+
+    monkeypatch.setattr(exporter, failure_target, fail_current_phase)
+
+    with pytest.raises(OSError, match="injected local-file failure") as raised:
+        build_al16_rytm_kit(
+            reference_path=reference_path,
+            recipe_path=_AL02_RECIPE,
+            destination_slot=127,
+            output_path=tmp_path / "AL02_LOCK_RYTM.syx",
+        )
+
+    assert logged_codes == [expected_error_code]
+    context = local_file_export_error_context(raised.value)
+    assert context is not None
+    assert context.error_code == expected_error_code
+    assert context.phase == (
+        "validation" if failure_target == "_validate_artifact_paths" else "output_write"
+    )
+    expected_artifact_name = (
+        "AL02_LOCK_RYTM.syx"
+        if failure_target == "_validate_artifact_paths"
+        else "AL02_LOCK_RYTM_manifest.json"
+    )
+    assert context.artifact_name == expected_artifact_name
+
+
+def test_al16_service_preserves_existing_bounded_failure_context(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    reference_path = tmp_path / "RYTM_Test1_Init_Kit.syx"
+    reference = _synthetic_reference(reference_path)
+    monkeypatch.setattr(
+        exporter,
+        "_REFERENCE_EXPECTED_SHA256",
+        hashlib.sha256(reference).hexdigest(),
+    )
+    logged_codes: list[object] = []
+    monkeypatch.setattr(
+        exporter._logger,
+        "warning",
+        lambda _message, *, extra: logged_codes.append(extra["error_code"]),
+    )
+
+    def fail_with_bounded_context(**_kwargs: object) -> None:
+        exc = OSError("injected local-file failure")
+        attach_local_file_export_error_context(
+            exc,
+            error_code="permission_denied",
+            phase="source_read",
+            artifact_name="safe-input.syx",
+        )
+        raise exc
+
+    monkeypatch.setattr(exporter, "_validate_artifact_paths", fail_with_bounded_context)
+
+    with pytest.raises(OSError, match="injected local-file failure") as raised:
+        build_al16_rytm_kit(
+            reference_path=reference_path,
+            recipe_path=_AL02_RECIPE,
+            destination_slot=127,
+            output_path=tmp_path / "AL02_LOCK_RYTM.syx",
+        )
+
+    assert logged_codes == ["permission_denied"]
+    context = local_file_export_error_context(raised.value)
+    assert context is not None
+    assert context.error_code == "permission_denied"
+    assert context.phase == "source_read"
+    assert context.artifact_name == "safe-input.syx"
+
+
+def test_al16_service_fails_closed_when_error_context_cannot_be_attached(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    reference_path = tmp_path / "RYTM_Test1_Init_Kit.syx"
+    reference = _synthetic_reference(reference_path)
+    monkeypatch.setattr(
+        exporter,
+        "_REFERENCE_EXPECTED_SHA256",
+        hashlib.sha256(reference).hexdigest(),
+    )
+    monkeypatch.setattr(exporter, "local_file_export_error_context", lambda _exc: None)
+    monkeypatch.setattr(
+        exporter,
+        "_validate_artifact_paths",
+        lambda **_kwargs: (_ for _ in ()).throw(OSError("injected failure")),
+    )
+
+    with pytest.raises(AssertionError, match="bounded AL16 export error context"):
+        build_al16_rytm_kit(
+            reference_path=reference_path,
+            recipe_path=_AL02_RECIPE,
+            destination_slot=127,
+            output_path=tmp_path / "AL02_LOCK_RYTM.syx",
+        )
 
 
 def test_offline_exporter_has_no_midi_backend_dependency() -> None:
@@ -587,7 +830,7 @@ def test_al16_build_refuses_round_trip_drift_and_stale_output(
         )
 
 
-def test_al16_build_timestamp_supports_reproducible_and_live_modes(
+def test_al16_build_timestamp_supports_explicit_and_default_reproducible_modes(
     monkeypatch: MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("SOURCE_DATE_EPOCH", "0")
@@ -650,6 +893,20 @@ def test_al16_build_rejects_artifact_path_collisions(tmp_path: Path) -> None:
             manifest_path=duplicate_sidecar,
             validation_path=duplicate_sidecar,
             byte_diff_path=tmp_path / "AL02_LOCK_RYTM_byte_diff.txt",
+        )
+
+
+def test_al16_build_rejects_canonical_artifact_path_aliases(tmp_path: Path) -> None:
+    evidence_dir = tmp_path / "evidence"
+
+    with pytest.raises(ValueError, match="validation artifact path collides with manifest"):
+        exporter._validate_artifact_paths(
+            reference_path=tmp_path / "reference.syx",
+            recipe_path=tmp_path / "recipe.yaml",
+            output_path=tmp_path / "AL02_LOCK_RYTM.syx",
+            manifest_path=evidence_dir / "alias.json",
+            validation_path=evidence_dir / ".." / "evidence" / "alias.json",
+            byte_diff_path=evidence_dir / "AL02_LOCK_RYTM_byte_diff.txt",
         )
 
 

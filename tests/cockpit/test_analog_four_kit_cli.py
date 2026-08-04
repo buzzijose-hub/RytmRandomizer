@@ -7,6 +7,11 @@ from pathlib import Path
 
 import pytest
 
+from rytm_randomizer.cockpit.export.file_export_contracts import (
+    LocalFileExportPhase,
+    classify_local_file_export_error,
+)
+
 pytestmark = pytest.mark.fast
 
 FIXTURE_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "analog_four_saved_kit"
@@ -263,32 +268,58 @@ def test_saved_kit_cli_error_codes_are_bounded(error: Exception, error_code: str
 
 
 @pytest.mark.parametrize(
-    ("error", "source_read_completed", "error_code"),
+    ("error", "phase", "error_code"),
     [
-        (FileNotFoundError("missing"), False, "input_not_found"),
-        (PermissionError("denied"), False, "permission_denied"),
-        (FileExistsError("exists"), True, "overwrite_refused"),
-        (OSError("read"), False, "source_read_failed"),
-        (OSError("write"), True, "write_failed"),
-        (ValueError("invalid"), True, "validation"),
+        (FileNotFoundError("missing"), "source_read", "input_not_found"),
+        (PermissionError("denied"), "source_read", "permission_denied"),
+        (FileExistsError("exists"), "output_write", "overwrite_refused"),
+        (OSError("read"), "source_read", "source_read_failed"),
+        (OSError("write"), "output_write", "write_failed"),
+        (ValueError("invalid"), "validation", "validation"),
     ],
 )
 def test_saved_kit_service_error_codes_cover_each_file_phase(
     error: KeyError | ValueError | TypeError | OSError,
-    source_read_completed: bool,
+    phase: LocalFileExportPhase,
     error_code: str,
 ) -> None:
-    from rytm_randomizer.cockpit.export.file_export_contracts import (
-        classify_local_file_export_error,
-    )
-
     assert (
         classify_local_file_export_error(
             error,
-            source_read_completed=source_read_completed,
+            phase=phase,
         )
         == error_code
     )
+
+
+def test_saved_kit_service_attaches_output_phase_collision_code(tmp_path: Path) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_cli import (
+        FILTER2_RESONANCE_PARAMETER,
+    )
+    from rytm_randomizer.cockpit.export.analog_four_export_contracts import (
+        analog_four_export_error_code,
+    )
+    from rytm_randomizer.cockpit.export.analog_four_kit import export_analog_four_saved_kit
+    from rytm_randomizer.devices.strategies import AnalogFourSavedKitMutation
+
+    output = tmp_path / "existing.syx"
+    output.write_bytes(b"preserve")
+
+    with pytest.raises(FileExistsError) as raised:
+        export_analog_four_saved_kit(
+            source_path=SOURCE_FIXTURE,
+            output_path=output,
+            mutations=(
+                AnalogFourSavedKitMutation(
+                    parameter=FILTER2_RESONANCE_PARAMETER,
+                    track=1,
+                    screen_value="64",
+                ),
+            ),
+        )
+
+    assert analog_four_export_error_code(raised.value) == "overwrite_refused"
+    assert output.read_bytes() == b"preserve"
 
 
 def test_saved_kit_service_rejects_invalid_and_unvalidated_mutations(tmp_path: Path) -> None:

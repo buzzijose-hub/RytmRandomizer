@@ -10,6 +10,9 @@ from rytm_randomizer.cockpit.export.al16_rytm_kit import (
     Al16BuildResult,
     MappingGap,
 )
+from rytm_randomizer.cockpit.export.file_export_contracts import (
+    attach_local_file_export_error_context,
+)
 
 pytestmark = pytest.mark.fast
 
@@ -207,7 +210,11 @@ def test_registered_cli_formats_parse_error(capsys: pytest.CaptureFixture[str]) 
 @pytest.mark.parametrize(
     ("error", "exit_code", "message"),
     [
-        (ValueError("bad recipe"), 2, "Error [offline_build_failed]: bad recipe"),
+        (
+            ValueError(r"bad recipe at C:\\Users\\Jose Buzzi\\private.yaml"),
+            2,
+            "Error [offline_build_failed]: AL16 offline build failed for output.syx.",
+        ),
         (KeyboardInterrupt(), 130, "Error [interrupted]: AL16 kit export interrupted"),
     ],
 )
@@ -237,3 +244,41 @@ def test_handler_reports_bounded_failures(
     assert actual_exit_code == exit_code
     assert captured.out == ""
     assert message in captured.err
+    assert "Jose Buzzi" not in captured.err
+
+
+def test_handler_reports_attached_failure_context_without_private_paths(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import al16_rytm_cli as cli
+
+    error = OSError(r"private path C:\\Users\\Jose Buzzi\\secret.txt")
+    attach_local_file_export_error_context(
+        error,
+        error_code="write_failed",
+        phase="output_write",
+        artifact_name="AL02_LOCK_RYTM_manifest.json",
+    )
+
+    def raise_error(**_kwargs: object) -> Al16BuildResult:
+        raise error
+
+    monkeypatch.setattr(cli, "build_al16_rytm_kit", raise_error)
+
+    exit_code = cli.handle_al16_rytm_kit_export(
+        reference_path=tmp_path / "reference.syx",
+        recipe_path=tmp_path / "recipe.yaml",
+        destination_slot=127,
+        output_path=tmp_path / "output.syx",
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 2
+    assert captured.out == ""
+    assert (
+        "Error [write_failed]: Passive export failed during output_write "
+        "for AL02_LOCK_RYTM_manifest.json."
+    ) in captured.err
+    assert "Jose Buzzi" not in captured.err

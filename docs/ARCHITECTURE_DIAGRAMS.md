@@ -41,7 +41,7 @@ Current baseline used while creating / refreshing this document:
 | Guardrails | `rytm_randomizer/guardrails/{resolver,store,schema,validation}.py` |
 | Observability | `rytm_randomizer/observability/{logging,tracing,metrics,errors}.py` |
 | Style analysis | `rytm_randomizer/style_analysis/{extractor,runtime_types,feature_report,library,blueprint,analog_four_patch_genome,analog_four_patch_inference,analog_four_patch_learning,analog_four_patch_corpus,analog_four_patch_send_plan,analog_four_patch_render_rank,analog_four_patch_codesigner}.py` |
-| Cockpit export | `rytm_randomizer/cockpit/export/{analog_four_export_contracts,analog_four_cli,analog_four_kit,analog_four_patch_batch,analog_four_patch_batch_cli,analog_four_patch_batch_codec,analog_four_patch_batch_contracts,analog_four_patch_batch_publication,analog_four_patch_batch_reader,analog_four_patch_render_rank,analog_four_patch_render_rank_cli,cli_options,writer}.py` plus the profile-model serialization/signing/verifier modules. |
+| Cockpit export | `rytm_randomizer/cockpit/export/{file_export_contracts,analog_four_export_contracts,analog_four_cli,analog_four_kit,al16_rytm_cli,al16_rytm_kit,analog_four_patch_batch,analog_four_patch_batch_cli,analog_four_patch_batch_codec,analog_four_patch_batch_contracts,analog_four_patch_batch_publication,analog_four_patch_batch_reader,analog_four_patch_render_rank,analog_four_patch_render_rank_cli,cli_options,writer}.py` plus the profile-model serialization/signing/verifier modules. |
 | Tests | `tests/test_*.py`, `tests/cockpit/test_*.py`, `tests/architecture/test_*.py`, `tests/fixtures/{analog_four_saved_kit,v134_parity}/`, `tests/_parity_worker.py`, `tests/conftest.py` |
 | Project documentation | `CONTRIBUTING.md`, `docs/*.md`, `.claude/rules/*.md`, `.claude/skills/**/SKILL.md` |
 
@@ -789,7 +789,7 @@ flowchart TB
 
 ## 10. Architecture Test Enforcement Graph
 
-The 61 architecture-test files (738 individual test items) under `tests/architecture/` mechanically enforce the rules in `docs/PLAN_REQUIREMENTS.md` + `CONTRIBUTING.md`. Each one uses the **drained-allowlist** pattern: violations today are explicit `frozenset` entries that PR-review must approve; the long-term state is empty allowlists.
+The 61 architecture-test files (739 individual test items) under `tests/architecture/` mechanically enforce the rules in `docs/PLAN_REQUIREMENTS.md` + `CONTRIBUTING.md`. Each one uses the **drained-allowlist** pattern: violations today are explicit `frozenset` entries that PR-review must approve; the long-term state is empty allowlists.
 
 ```mermaid
 flowchart TB
@@ -874,7 +874,7 @@ flowchart TB
     subgraph Jobs["Parallel CI jobs (test.yml)"]
         Lint["lint<br/>ruff + black + isort<br/>~14s"]
         Security["security<br/>pip-audit<br/>(skipped if no deps/ci changes)"]
-        Architecture["architecture<br/>tests/architecture/<br/>~10-30s · 738 tests"]
+        Architecture["architecture<br/>tests/architecture/<br/>~10-30s · 739 tests"]
         TestMatrix["test (matrix)<br/>windows + ubuntu<br/>(+ macos on push only)<br/>~60-90s · 6800+ tests"]
         E2EMatrix["e2e (matrix)<br/>windows + ubuntu<br/>(+ macos on push only)<br/>~20-40s · 43 tests"]
         DocsGate["docs-gate<br/>~7s"]
@@ -999,7 +999,7 @@ flowchart TB
         MidiTests["test_midi_io.py<br/>test_mock_*.py<br/>test_real_midi_*.py"]
     end
 
-    subgraph Layer3["Layer 3 — Architecture (738 tests, 61 files)"]
+    subgraph Layer3["Layer 3 — Architecture (739 tests, 61 files)"]
         ArchTests["tests/architecture/<br/>(Gates 6, 9, 10, 11, etc.)<br/>+ NEW test_device_protocol_enforcement<br/>(7 sub-tests)"]
     end
 
@@ -1116,6 +1116,9 @@ flowchart LR
     A4LocalCmds --> A4ExportPipeline["cockpit/export/<br/>saved-kit writer + batch + rank"]
     RytmLocalCmds --> RytmExportAdapter["cockpit/export/al16_rytm_cli.py<br/>arguments + process status"]
     RytmExportAdapter --> RytmExportService["cockpit/export/al16_rytm_kit.py<br/>fail-closed audit + atomic evidence"]
+    A4LocalCmds --> FileExportContract["cockpit/export/file_export_contracts.py<br/>bounded phase + error code + basename context"]
+    RytmExportAdapter --> FileExportContract
+    RytmExportService --> FileExportContract
     RytmExportService --> RytmCapability["AnalogRytmDevice<br/>saved-KIT codec capability"]
     RytmCapability --> RytmCodec["devices/strategies/analog_rytm_saved_kit_codec.py<br/>pure frame codec"]
 
@@ -1781,7 +1784,7 @@ flowchart TB
     subgraph PytestLayers["What pytest runs"]
         PassiveTests["Layer 2 unit / behavior tests<br/>(~1500 tests)"]
         ParityTests["Layer 1 V1.34 parity tests<br/>(685 items from 505 goldens)"]
-        ArchTests["Layer 3 architecture tests<br/>(738 tests across 61 files)"]
+        ArchTests["Layer 3 architecture tests<br/>(739 tests across 61 files)"]
         E2ETests["Layer 4 e2e tests<br/>(43 tests)"]
         CovStep["Layer 5 coverage ratchet<br/>(scripts/coverage_ratchet.py)<br/>floor: ≥95% pure-branch"]
     end
@@ -2845,6 +2848,7 @@ sequenceDiagram
     participant Pack as serialize.py<br/>pack_profile_model<br/>(format_version: Literal[1])
     participant Sign as signing.py<br/>signed_envelope_overhead_bytes<br/>+ pack_signed
     participant Writer as writer.py<br/>atomic_write<br/>(THE canonical surface)
+    participant FileContract as file_export_contracts.py<br/>bounded phase/error/basename context
     participant A4Export as analog_four_kit.py<br/>hardware-validated fields only
     participant A4Render as devices/strategies/<br/>analog_four_saved_kit_writer.py
     participant Verifier as verifier.py<br/>verify_file (never raises)
@@ -2873,6 +2877,7 @@ sequenceDiagram
     A4Export->>A4Render: validate frame + render mutations
     A4Render-->>A4Export: rebuilt 2,770-byte frame + SHA256
     A4Export->>Writer: atomic_write(output, frame, overwrite=False)
+    A4Export->>FileContract: classify local-file failures by caller phase
     Writer->>A4Disk: mkstemp sibling + file fsync<br/>+ Windows os.rename / POSIX os.link
     Writer-->>A4Export: WriteResult
     A4Export-->>Operator: render + write audit result

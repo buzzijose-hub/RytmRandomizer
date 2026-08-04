@@ -10,12 +10,12 @@ Last updated: 2026-08-03. This file is a hand-authored snapshot and is meant to 
   - The AL02 proof audit found 18 critical mapping gaps, emitted deterministic
     manifest, validation, and byte-diff evidence, and correctly withheld the
     `.syx`; zero raw bytes were intentionally changed.
-  - Fresh closeout verification passed 44 focused exporter tests, 434 expanded
-    related tests, 739 architecture tests, 685 frozen V1.34 parity tests, and
-    the 7,586-test full suite with 4 skips. All 11 executable touched production
-    modules have 100 percent statement and branch coverage; all 13 touched
-    production modules pass strict typing. Total coverage is 99.44 percent and
-    pure branch coverage is 98.91 percent.
+  - Fresh closeout verification passed 116 focused exporter/CLI tests,
+    94 exporter/codec proof tests with 1 skip, 739 architecture tests,
+    685 frozen V1.34 parity tests, and the 7,605-test full suite with 4 skips.
+    All 13 touched production files have 100 percent statement and branch
+    coverage; all 14 touched production modules pass strict typing. Total
+    coverage is 99.44 percent and pure branch coverage is 98.92 percent.
 
 - 2026-08-02: Added a bounded Analog Four audio-to-patch studio handoff.
   - `analog-four-audio-patch-batch --studio-handoff` now turns the existing

@@ -5,38 +5,31 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final, Literal, TypeAlias, cast
 
-AnalogFourExportErrorCode: TypeAlias = Literal[
+from .file_export_contracts import (
+    LOCAL_FILE_EXPORT_ERROR_CODES,
+    LocalFileExportErrorCode,
+)
+
+AnalogFourSpecificExportErrorCode: TypeAlias = Literal[
     "audio_read_failed",
     "dependency_missing",
     "inference_failed",
-    "input_not_found",
-    "interrupted",
     "invalid_input",
-    "overwrite_refused",
-    "permission_denied",
     "publication_locked",
     "service_unavailable",
-    "source_read_failed",
-    "validation",
-    "write_failed",
 ]
+AnalogFourExportErrorCode: TypeAlias = LocalFileExportErrorCode | AnalogFourSpecificExportErrorCode
 """Bounded failure categories shared by A4 export services and CLIs."""
 
 ANALOG_FOUR_EXPORT_ERROR_CODES: Final[frozenset[str]] = frozenset(
-    {
+    LOCAL_FILE_EXPORT_ERROR_CODES
+    | {
         "audio_read_failed",
         "dependency_missing",
         "inference_failed",
-        "input_not_found",
-        "interrupted",
         "invalid_input",
-        "overwrite_refused",
-        "permission_denied",
         "publication_locked",
         "service_unavailable",
-        "source_read_failed",
-        "validation",
-        "write_failed",
     }
 )
 

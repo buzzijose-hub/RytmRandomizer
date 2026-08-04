@@ -757,7 +757,13 @@ def test_batch_cli_rejects_unbounded_dynamic_error_codes() -> None:
 def test_a4_export_error_codes_share_one_bounded_vocabulary() -> None:
     from typing import get_args
 
-    assert frozenset(get_args(AnalogFourExportErrorCode)) == ANALOG_FOUR_EXPORT_ERROR_CODES
+    declared_codes = frozenset(
+        code
+        for literal_alias in get_args(AnalogFourExportErrorCode)
+        for code in get_args(literal_alias)
+    )
+
+    assert declared_codes == ANALOG_FOUR_EXPORT_ERROR_CODES
 
 
 def test_handler_surfaces_successful_commit_lock_warning(

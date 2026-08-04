@@ -10,6 +10,7 @@ from typing import Final, TypedDict
 from ...cli_registry import CliCommand, register
 from .al16_rytm_kit import Al16BuildResult, build_al16_rytm_kit
 from .cli_options import pop_required_cli_value
+from .file_export_contracts import local_file_export_error_context
 
 COMMAND_NAME: Final[str] = "al16-rytm-kit-export"
 USAGE: Final[str] = (
@@ -119,7 +120,17 @@ def handle_al16_rytm_kit_export(
         sys.stderr.write(f"{USAGE}\nError [interrupted]: AL16 kit export interrupted.\n")
         return 130
     except (KeyError, ValueError, TypeError, OSError) as exc:
-        sys.stderr.write(f"{USAGE}\nError [offline_build_failed]: {exc}\n")
+        error_context = local_file_export_error_context(exc)
+        if error_context is None:
+            error_code = "offline_build_failed"
+            detail = f"AL16 offline build failed for {output_path.name}."
+        else:
+            error_code = error_context.error_code
+            detail = (
+                f"Passive export failed during {error_context.phase} "
+                f"for {error_context.artifact_name}."
+            )
+        sys.stderr.write(f"{USAGE}\nError [{error_code}]: {detail}\n")
         return 2
 
     sys.stdout.write(_format_al16_rytm_result(result))

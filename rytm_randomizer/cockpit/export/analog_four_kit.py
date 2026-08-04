@@ -21,7 +21,7 @@ from .analog_four_export_contracts import (
     attach_analog_four_export_error_code,
     require_analog_four_export_path,
 )
-from .file_export_contracts import classify_local_file_export_error
+from .file_export_contracts import LocalFileExportPhase, classify_local_file_export_error
 from .writer import WriteResult, atomic_write
 
 _logger = get_logger(__name__)
@@ -52,7 +52,7 @@ def export_analog_four_saved_kit(
 
     metrics = get_metrics()
     started_at = time.perf_counter()
-    source_read_completed = False
+    export_phase: LocalFileExportPhase = "validation"
     source_name = analog_four_export_path_name(source_path)
     output_name = analog_four_export_path_name(output_path)
     operation_id = ""
@@ -72,14 +72,16 @@ def export_analog_four_saved_kit(
                 field_name="output_path",
             )
             capability = get_analog_four_saved_kit_capability()
+            export_phase = "source_read"
             source_sysex = source_path.read_bytes()
-            source_read_completed = True
+            export_phase = "validation"
             render = capability.render_saved_kit(source_sysex, mutations)
+            export_phase = "output_write"
             write = atomic_write(output_path, render.framed_sysex, overwrite=overwrite)
     except (KeyError, ValueError, TypeError, OSError, KeyboardInterrupt, SystemExit) as exc:
         error_code = classify_local_file_export_error(
             exc,
-            source_read_completed=source_read_completed,
+            phase=export_phase,
         )
         duration_ms = (time.perf_counter() - started_at) * 1000.0
         metrics.record_export(duration_ms, error_code=error_code)

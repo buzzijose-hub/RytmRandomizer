@@ -45,14 +45,14 @@ exist; substituting candidate offsets would violate the project safety policy.
   explicit mapping gaps, absence of `.syx`, unchanged reference bytes, and
   zero MIDI dependencies.
 - Focused tests run single-process to avoid unnecessary workstation load.
-- Focused exporter tests: 44 passed.
-- Expanded exporter, codec, envelope, data-layer, and safety tests: 434 passed.
+- Focused exporter and CLI regression tests: 116 passed.
+- Exporter and saved-kit codec proof tests: 94 passed, 1 skipped.
 - Architecture tests: 739 passed with one unrelated warn-only result.
 - V1.34 byte-frozen parity: 685 passed.
-- Full repository suite: 7,586 passed, 4 skipped.
-- Total coverage: 99.44%; pure branch coverage: 98.91% against the 98% floor.
-- Touched executable production coverage: 11 instrumented modules at 100% line and branch coverage.
-- Strict touched-production type check: 13 modules, 0 errors and 0 warnings.
+- Full repository suite: 7,605 passed, 4 skipped.
+- Total coverage: 99.44%; pure branch coverage: 98.92% against the 98% floor.
+- Touched production coverage: 13 files at 100% line and branch coverage.
+- Strict touched-production type check: 14 modules, 0 errors and 0 warnings.
 - Ruff, Black, isort, and `git diff --check`: passed.
 - Two deterministic blocked builds produced byte-identical reports, recording
   18 critical mapping gaps and zero intentionally changed bytes. No `.syx` was
@@ -135,11 +135,13 @@ Durable execution artifacts:
 - [`2026-08-02-al16-r1-offline-rytm-kit-exporter_STATE.schema.json`](2026-08-02-al16-r1-offline-rytm-kit-exporter_STATE.schema.json)
 - [`2026-08-02-al16-r1-offline-rytm-kit-exporter_STATE.json`](2026-08-02-al16-r1-offline-rytm-kit-exporter_STATE.json)
 
-No new learned skill is warranted. Existing repository rules already cover
-the reusable lessons: passive hardware boundaries, shared Elektron codecs,
-data-not-code facts, Python-on-Windows execution, deterministic artifacts, and
-bounded verification. The implementation adds enforcement and documentation
-to those existing patterns instead of creating a duplicate skill.
+No new learned skill is warranted yet. Existing repository rules cover the
+passive hardware boundary, shared Elektron codecs, data-not-code facts,
+Python-on-Windows execution, and bounded verification. This run additionally
+captures deterministic nested-mapping canonicalization and canonical-path
+collision checks in this plan, the run report, the shared export contract, and
+regression tests. Those lessons should become a generalized learned skill only
+after they recur in another independent workflow.
 
 ## Replay log
 
