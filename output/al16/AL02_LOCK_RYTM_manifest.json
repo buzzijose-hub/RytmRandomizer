@@ -153,6 +153,9 @@
   "deterministic_recipe_identifier": "62335879ac1a6121d011cf676a7fa2a807b543ccb1ab16f9276cd9f08e3cef45",
   "expected_initialized_reference_sha256": "8bda94d6d5031e038c8d810789301f35242ed539338a0399548869a34e1dc4dd",
   "generated_output_checks": "not_applicable_blocked_before_mutation",
+  "generator_contract": "al16_rytm_blocked_evidence_v2",
+  "generator_module": "rytm_randomizer/cockpit/export/al16_rytm_kit.py",
+  "generator_module_sha256": "f1c2697703bfb0bce8bb49e31b02c3f025bb318940fe3ef897ccea161be15aed",
   "initialized_reference_sha256_matches_expected": true,
   "intentionally_changed_raw_bytes": 0,
   "kit_name": "AL02 LOCK",
@@ -186,6 +189,8 @@
     12
   ],
   "project_id": "AL16",
+  "recipe_file": "specs/al16/AL02_LOCK_RYTM.yaml",
+  "recipe_sha256": "a64345eb131bdc5fd63bef27fb90ce08d96b638aa6c1d2ba7bd943b7392aa11a",
   "reference_file": "reference/RYTM_Test1_Init_Kit.syx",
   "reference_round_trip_byte_identical": true,
   "reference_sha256": "8bda94d6d5031e038c8d810789301f35242ed539338a0399548869a34e1dc4dd",

@@ -361,6 +361,9 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # WizardSourcePathError / EmptyAnalysisError dual-inheritance
         # pattern.
         "WriteError",
+        # Transactional multi-artifact publication retains the WriteError
+        # taxonomy while exposing bounded rollback context to operators.
+        "WriteSetError",
         # Analog Four audio-patch batching: classified staging failures retain
         # RuntimeError compatibility; publication locks retain FileExistsError
         # compatibility while all remain members of the BoundaryError taxonomy.

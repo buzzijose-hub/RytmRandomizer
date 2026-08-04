@@ -53,6 +53,22 @@ def test_decode_rejects_unpacked_body_too_short_for_name() -> None:
         decode_analog_four_saved_kit_payload(payload, require_trailer=False)
 
 
+def test_decode_rejects_required_trailer_with_wrong_unpacked_size(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import rytm_randomizer.devices.strategies.analog_four_saved_kit_codec as codec
+    from rytm_randomizer.devices.strategies.analog_four_saved_kit_codec import (
+        decode_analog_four_saved_kit_payload,
+    )
+    from rytm_randomizer.snapshot import extract_sysex_payloads
+
+    payload = extract_sysex_payloads(analog_four_saved_kit_frame())[0]
+    monkeypatch.setattr(codec, "unpack_elektron_7bit", lambda _packed: b"\x52")
+
+    with pytest.raises(ValueError, match="unexpected length"):
+        decode_analog_four_saved_kit_payload(payload, require_trailer=True)
+
+
 @pytest.mark.parametrize(
     ("prefix", "message"),
     [

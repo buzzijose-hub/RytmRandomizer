@@ -212,11 +212,17 @@ def test_registered_cli_formats_parse_error(capsys: pytest.CaptureFixture[str]) 
     ("error", "exit_code", "message"),
     [
         (
-            ValueError(r"bad recipe at C:\\Users\\Jose Buzzi\\private.yaml"),
+            ValueError(r"bad recipe at C:\\Users\\Example User\\private.yaml"),
             2,
-            "Error [offline_build_failed]: AL16 offline build failed for output.syx.",
+            "Error [offline_build_failed]: AL16 offline build failed for output.syx "
+            "(reason=recipe_schema_invalid; destination_slot=127).",
         ),
-        (KeyboardInterrupt(), 130, "Error [interrupted]: AL16 kit export interrupted"),
+        (
+            KeyboardInterrupt(),
+            130,
+            "Error [interrupted]: AL16 kit export interrupted "
+            "(reason=build_interrupted; destination_slot=127).",
+        ),
     ],
 )
 def test_handler_reports_bounded_failures(
@@ -245,7 +251,7 @@ def test_handler_reports_bounded_failures(
     assert actual_exit_code == exit_code
     assert captured.out == ""
     assert message in captured.err
-    assert "Jose Buzzi" not in captured.err
+    assert "Example User" not in captured.err
 
 
 def test_handler_uses_safe_fallback_for_output_without_a_filename(
@@ -279,7 +285,7 @@ def test_handler_reports_attached_failure_context_without_private_paths(
 ) -> None:
     from rytm_randomizer.cockpit.export import al16_rytm_cli as cli
 
-    error = OSError(r"private path C:\\Users\\Jose Buzzi\\secret.txt")
+    error = OSError(r"private path C:\\Users\\Example User\\secret.txt")
     attach_local_file_export_error_context(
         error,
         error_code="write_failed",
@@ -304,6 +310,7 @@ def test_handler_reports_attached_failure_context_without_private_paths(
     assert captured.out == ""
     assert (
         "Error [write_failed]: Passive export failed during output_write "
-        "for AL02_LOCK_RYTM_manifest.json."
+        "for AL02_LOCK_RYTM_manifest.json "
+        "(reason=artifact_publication_failed; destination_slot=127)."
     ) in captured.err
-    assert "Jose Buzzi" not in captured.err
+    assert "Example User" not in captured.err

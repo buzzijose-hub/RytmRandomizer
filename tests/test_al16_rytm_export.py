@@ -11,6 +11,7 @@ from typing import cast
 import pytest
 from pytest import MonkeyPatch
 
+from conftest import ANALOG_RYTM_SAVED_KIT_TEST_HEADER
 from rytm_randomizer.cockpit.export import al16_rytm_kit as exporter
 from rytm_randomizer.cockpit.export.al16_rytm_kit import (
     Al16BuildResult,
@@ -24,6 +25,10 @@ from rytm_randomizer.cockpit.export.file_export_contracts import (
     attach_local_file_export_error_context,
     classify_local_file_export_error,
     local_file_export_error_context,
+)
+from rytm_randomizer.cockpit.export.writer import (
+    WriteSetError,
+    WriteSetFailureContext,
 )
 from rytm_randomizer.data.al16_rytm import (
     AL16_BANK_STATES,
@@ -56,13 +61,13 @@ def _isolate_observability(isolated_observability: None) -> None:
     """Keep exporter metrics and tracing isolated for every test."""
 
 
-_HEADER = bytes((0x00, 0x20, 0x3C, 0x07, 0x00, 0x52, 0x01, 0x01, 0x00))
+_HEADER = ANALOG_RYTM_SAVED_KIT_TEST_HEADER
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _BANK_SPEC = _REPO_ROOT / "specs" / "al16" / "AL16_BANK.yaml"
 _AL02_RECIPE = _REPO_ROOT / "specs" / "al16" / "AL02_LOCK_RYTM.yaml"
 _COMMITTED_EVIDENCE_HASHES = {
     "output/al16/AL02_LOCK_RYTM_manifest.json": (
-        "80e264e151846452970cacd9d1e22f309befe15072d2f654b3fe436966077d37"
+        "1d3d99013a9f8d719d3e8b4a6b9f4f15ea0a365ef1c5095b862c7c9f8a6dda2e"
     ),
     "output/al16/AL02_LOCK_RYTM_validation.md": (
         "bcf04d1a77c412d93efa1ec558a817df6656ea000d0fb8b337efc992eabbe6e5"
@@ -143,6 +148,22 @@ def test_committed_al02_blocked_evidence_hashes_are_frozen() -> None:
         relative_path: hashlib.sha256((_REPO_ROOT / relative_path).read_bytes()).hexdigest()
         for relative_path in _COMMITTED_EVIDENCE_HASHES
     } == _COMMITTED_EVIDENCE_HASHES
+
+
+def test_committed_al02_evidence_is_bound_to_current_inputs_and_generator() -> None:
+    manifest_path = _REPO_ROOT / "output" / "al16" / "AL02_LOCK_RYTM_manifest.json"
+    parsed = cast(object, json.loads(manifest_path.read_text(encoding="utf-8")))
+    manifest = exporter._as_mapping(parsed, "committed AL02 manifest")
+
+    assert manifest["generator_contract"] == exporter.AL16_GENERATOR_CONTRACT
+    assert manifest["generator_module"] == exporter.AL16_GENERATOR_MODULE
+    assert manifest["generator_module_sha256"] == exporter._normalized_text_sha256(
+        _REPO_ROOT / exporter.AL16_GENERATOR_MODULE
+    )
+    assert manifest["recipe_file"] == "specs/al16/AL02_LOCK_RYTM.yaml"
+    assert manifest["recipe_sha256"] == hashlib.sha256(_AL02_RECIPE.read_bytes()).hexdigest()
+    assert manifest["reference_file"] == "reference/RYTM_Test1_Init_Kit.syx"
+    assert manifest["reference_sha256"] == exporter._REFERENCE_EXPECTED_SHA256
 
 
 def test_al16_build_result_rejects_inconsistent_hash_states(tmp_path: Path) -> None:
@@ -250,6 +271,13 @@ def test_al02_build_fails_closed_and_writes_precise_reports(
 
     manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
     assert manifest["build_status"] == "blocked"
+    assert manifest["generator_contract"] == exporter.AL16_GENERATOR_CONTRACT
+    assert manifest["generator_module"] == exporter.AL16_GENERATOR_MODULE
+    assert manifest["generator_module_sha256"] == exporter._normalized_text_sha256(
+        _REPO_ROOT / exporter.AL16_GENERATOR_MODULE
+    )
+    assert manifest["recipe_file"] == "specs/al16/AL02_LOCK_RYTM.yaml"
+    assert manifest["recipe_sha256"] == hashlib.sha256(_AL02_RECIPE.read_bytes()).hexdigest()
     assert manifest["destination_slot"] == 127
     assert manifest["kit_name"] == "AL02 LOCK"
     assert manifest["preserved_tracks"] == [2, 4, 5, 7, 8, 10, 11, 12]
@@ -402,8 +430,25 @@ def test_local_file_export_error_codes_are_stable(
     )
 
 
+@pytest.mark.parametrize(
+    ("exc", "phase", "expected"),
+    [
+        (KeyboardInterrupt(), "validation", "build_interrupted"),
+        (FileNotFoundError(), "source_read", "source_input_unavailable"),
+        (ValueError("destination slot is invalid"), "validation", "destination_slot_invalid"),
+        (ValueError("SysEx frame is invalid"), "validation", "reference_sysex_invalid"),
+    ],
+)
+def test_al16_failure_reasons_cover_bounded_operator_categories(
+    exc: BaseException,
+    phase: LocalFileExportPhase,
+    expected: str,
+) -> None:
+    assert exporter.classify_al16_failure_reason(exc, phase=phase) == expected
+
+
 def test_local_file_export_error_context_is_bounded_and_fail_closed() -> None:
-    exc = OSError(r"private path C:\\Users\\Jose Buzzi\\secret.txt")
+    exc = OSError(r"private path C:\\Users\\Example User\\secret.txt")
     attach_local_file_export_error_context(
         exc,
         error_code="write_failed",
@@ -481,164 +526,89 @@ def test_local_file_export_error_context_rejects_malformed_metadata(
     assert local_file_export_error_context(exc) is None
 
 
-def test_al16_atomic_writer_attaches_bounded_failure_context(
-    tmp_path: Path,
-    monkeypatch: MonkeyPatch,
-) -> None:
-    def fail_atomic_write(
-        _path: Path,
-        _data: bytes,
-        *,
-        overwrite: bool,
-    ) -> None:
-        assert overwrite is True
-        raise OSError(r"private path C:\\Users\\Jose Buzzi\\secret.txt")
-
-    monkeypatch.setattr(exporter, "atomic_write", fail_atomic_write)
-
-    with pytest.raises(OSError) as raised:
-        exporter._atomic_write_text(tmp_path / "manifest.json", "{}\n")
-
-    context = local_file_export_error_context(raised.value)
-    assert context is not None
-    assert context.error_code == "write_failed"
-    assert context.phase == "output_write"
-    assert context.artifact_name == "manifest.json"
-
-
-@pytest.mark.parametrize("interruption", [KeyboardInterrupt(), SystemExit()])
-def test_al16_atomic_writer_attaches_context_to_interruptions(
-    tmp_path: Path,
-    monkeypatch: MonkeyPatch,
-    interruption: BaseException,
-) -> None:
-    def interrupt_atomic_write(
-        _path: Path,
-        _data: bytes,
-        *,
-        overwrite: bool,
-    ) -> None:
-        assert overwrite is True
-        raise interruption
-
-    monkeypatch.setattr(exporter, "atomic_write", interrupt_atomic_write)
-
-    with pytest.raises(type(interruption)) as raised:
-        exporter._atomic_write_text(tmp_path / "manifest.json", "{}\n")
-
-    context = local_file_export_error_context(raised.value)
-    assert context is not None
-    assert context.error_code == "interrupted"
-    assert context.phase == "output_write"
-    assert context.artifact_name == "manifest.json"
-
-
 def test_local_file_export_rejects_unsafe_fallback_artifact_name() -> None:
     with pytest.raises(ValueError, match="fallback artifact name is not safe"):
         exporter.safe_local_file_export_artifact_name(Path("."), fallback="..")
 
 
-def test_al16_artifact_set_requires_one_shared_destination_directory(
-    tmp_path: Path,
-) -> None:
-    with pytest.raises(ValueError, match="at least one destination"):
-        exporter._publish_artifact_set({})
-
-    with pytest.raises(ValueError, match="share one directory"):
-        exporter._publish_artifact_set(
-            {
-                tmp_path / "one" / "manifest.json": "one\n",
-                tmp_path / "two" / "validation.md": "two\n",
-            }
-        )
-
-
-@pytest.mark.parametrize("failure_call", [2, 3])
-def test_al16_artifact_set_staging_failure_preserves_previous_generation(
-    tmp_path: Path,
-    monkeypatch: MonkeyPatch,
-    failure_call: int,
-) -> None:
-    destinations = tuple(tmp_path / name for name in ("one.txt", "two.txt", "three.txt"))
-    for destination in destinations:
-        destination.write_text(f"old-{destination.name}", encoding="utf-8")
-    original_atomic_write_text = exporter._atomic_write_text
-    call_count = 0
-
-    def fail_during_staging(path: Path, value: str) -> None:
-        nonlocal call_count
-        call_count += 1
-        if call_count == failure_call:
-            raise OSError("injected staging failure")
-        original_atomic_write_text(path, value)
-
-    monkeypatch.setattr(exporter, "_atomic_write_text", fail_during_staging)
-
-    with pytest.raises(OSError, match="injected staging failure"):
-        exporter._publish_artifact_set(
-            {destination: f"new-{destination.name}" for destination in destinations}
-        )
-
-    assert [destination.read_text(encoding="utf-8") for destination in destinations] == [
-        f"old-{destination.name}" for destination in destinations
-    ]
-    assert not tuple(tmp_path.glob(".al16-evidence-*"))
-
-
-def test_al16_artifact_set_publish_failure_removes_new_partial_generation(
+def test_al16_artifact_set_delegates_utf8_payloads_to_shared_writer(
     tmp_path: Path,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    destinations = tuple(tmp_path / name for name in ("one.txt", "two.txt"))
-    original_replace = exporter.os.replace
-    call_count = 0
+    captured: dict[str, object] = {}
 
-    def fail_after_first_publish(source: Path, destination: Path) -> None:
-        nonlocal call_count
-        call_count += 1
-        if call_count == 4:
-            raise OSError("injected second publish failure")
-        original_replace(source, destination)
+    def capture_write_set(
+        artifacts: Mapping[Path, bytes],
+        *,
+        overwrite: bool,
+    ) -> tuple[object, ...]:
+        captured["artifacts"] = artifacts
+        captured["overwrite"] = overwrite
+        return ()
 
-    monkeypatch.setattr(exporter.os, "replace", fail_after_first_publish)
+    monkeypatch.setattr(exporter, "atomic_write_set", capture_write_set)
+    manifest_path = tmp_path / "manifest.json"
+    validation_path = tmp_path / "validation.md"
 
-    with pytest.raises(OSError, match="injected second publish failure"):
-        exporter._publish_artifact_set(
-            {destination: f"new-{destination.name}" for destination in destinations}
-        )
+    exporter._publish_artifact_set(
+        {
+            manifest_path: '{"name":"AL02 LOCK"}\n',
+            validation_path: "verified: no\n",
+        }
+    )
 
-    assert not any(destination.exists() for destination in destinations)
-    assert not tuple(tmp_path.glob(".al16-evidence-*"))
+    assert captured == {
+        "artifacts": {
+            manifest_path: b'{"name":"AL02 LOCK"}\n',
+            validation_path: b"verified: no\n",
+        },
+        "overwrite": True,
+    }
 
 
-def test_al16_artifact_set_publish_failure_rolls_back_previous_generation(
+def test_al16_write_set_failure_reports_the_actual_failed_artifact(
     tmp_path: Path,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    destinations = tuple(tmp_path / name for name in ("one.txt", "two.txt", "three.txt"))
-    for destination in destinations:
-        destination.write_text(f"old-{destination.name}", encoding="utf-8")
-    original_replace = exporter.os.replace
-    call_count = 0
+    reference_path = tmp_path / "RYTM_Test1_Init_Kit.syx"
+    reference = _synthetic_reference(reference_path)
+    monkeypatch.setattr(
+        exporter,
+        "_REFERENCE_EXPECTED_SHA256",
+        hashlib.sha256(reference).hexdigest(),
+    )
+    logged: list[dict[str, object]] = []
+    monkeypatch.setattr(
+        exporter._logger,
+        "warning",
+        lambda _message, *, extra: logged.append(extra),
+    )
 
-    def fail_during_publish(source: Path, destination: Path) -> None:
-        nonlocal call_count
-        call_count += 1
-        if call_count == 8:
-            raise OSError("injected publish failure")
-        original_replace(source, destination)
-
-    monkeypatch.setattr(exporter.os, "replace", fail_during_publish)
-
-    with pytest.raises(OSError, match="injected publish failure"):
-        exporter._publish_artifact_set(
-            {destination: f"new-{destination.name}" for destination in destinations}
+    def fail_publication(**_kwargs: object) -> None:
+        raise WriteSetError(
+            WriteSetFailureContext(
+                phase="publication",
+                artifact_name="AL02_LOCK_RYTM_validation.md",
+            )
         )
 
-    assert [destination.read_text(encoding="utf-8") for destination in destinations] == [
-        f"old-{destination.name}" for destination in destinations
-    ]
-    assert not tuple(tmp_path.glob(".al16-evidence-*"))
+    monkeypatch.setattr(exporter, "_write_blocked_artifacts", fail_publication)
+
+    with pytest.raises(WriteSetError) as raised:
+        build_al16_rytm_kit(
+            reference_path=reference_path,
+            recipe_path=_AL02_RECIPE,
+            destination_slot=127,
+            output_path=tmp_path / "AL02_LOCK_RYTM.syx",
+        )
+
+    context = local_file_export_error_context(raised.value)
+    assert context is not None
+    assert context.error_code == "write_failed"
+    assert context.phase == "output_write"
+    assert context.artifact_name == "AL02_LOCK_RYTM_validation.md"
+    assert logged[0]["artifact_name"] == "AL02_LOCK_RYTM_validation.md"
+    assert logged[0]["failure_reason"] == "artifact_publication_failed"
 
 
 @pytest.mark.parametrize(
@@ -826,6 +796,18 @@ def test_al16_value_readers_and_converters_fail_closed() -> None:
         exporter._convert_supported_value(cast(RytmValueConverter, "missing"), 0)
 
 
+def test_al16_audit_values_are_deeply_immutable() -> None:
+    assert exporter._freeze_audit_value(None) is None
+    assert exporter._freeze_audit_value("HP2") == "HP2"
+    assert exporter._freeze_audit_value(True) is True
+    assert exporter._freeze_audit_value(64) == 64
+    assert exporter._freeze_audit_value((0, 64, 127)) == (0, 64, 127)
+
+    for value in ([0, 64], (0, True), (-1,), (256,)):
+        with pytest.raises(TypeError, match="immutable scalars or byte tuples"):
+            exporter._freeze_audit_value(value)
+
+
 def test_al16_original_semantic_and_machine_labels_are_explicit() -> None:
     assert exporter._original_semantic(RYTM_CONVERTER_CENTERED_7BIT, 0) == -64
     assert exporter._original_semantic(RYTM_CONVERTER_FILTER_TYPE_ENUM, 4) == "HP2"
@@ -888,7 +870,7 @@ def test_al16_tuning_resolution_requires_an_approved_machine_table(
             original_semantic_value=None,
             requested_semantic_value="F2",
             normalized_semantic_value="F2",
-            encoded_raw_value_or_bytes=[42],
+            encoded_raw_value_or_bytes=(42,),
             raw_location=None,
             converter_or_enumeration="approved_tuning_table:xt_classic",
             verification_status="resolved_tuning_pending_source_writer",

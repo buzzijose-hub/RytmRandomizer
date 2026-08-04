@@ -5,10 +5,14 @@ from __future__ import annotations
 import sys
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Final, TypedDict
+from typing import Final, Literal, TypeAlias, TypedDict
 
 from ...cli_registry import CliCommand, register
-from .al16_rytm_kit import Al16BuildResult, build_al16_rytm_kit
+from .al16_rytm_kit import (
+    Al16BuildResult,
+    build_al16_rytm_kit,
+    classify_al16_failure_reason,
+)
 from .cli_options import pop_required_cli_value
 from .file_export_contracts import (
     local_file_export_error_context,
@@ -21,6 +25,18 @@ USAGE: Final[str] = (
     "--reference <kit.syx> --recipe <recipe.yaml> --destination-slot <0..127> "
     "--output <kit.syx>"
 )
+
+Al16RytmCliErrorCode: TypeAlias = Literal[
+    "input_not_found",
+    "interrupted",
+    "invalid_input",
+    "offline_build_failed",
+    "overwrite_refused",
+    "permission_denied",
+    "source_read_failed",
+    "validation",
+    "write_failed",
+]
 
 
 class Al16RytmKitExportArgs(TypedDict):
@@ -120,22 +136,36 @@ def handle_al16_rytm_kit_export(
             output_path=output_path,
         )
     except KeyboardInterrupt:
-        sys.stderr.write(f"{USAGE}\nError [interrupted]: AL16 kit export interrupted.\n")
+        interrupted_code: Al16RytmCliErrorCode = "interrupted"
+        sys.stderr.write(
+            f"{USAGE}\nError [{interrupted_code}]: AL16 kit export interrupted "
+            f"(reason=build_interrupted; destination_slot={destination_slot}).\n"
+        )
         return 130
     except (KeyError, ValueError, TypeError, OSError) as exc:
         error_context = local_file_export_error_context(exc)
+        error_code: Al16RytmCliErrorCode
         if error_context is None:
             error_code = "offline_build_failed"
+            failure_reason = classify_al16_failure_reason(exc, phase="validation")
             output_name = safe_local_file_export_artifact_name(
                 output_path,
                 fallback="output.syx",
             )
-            detail = f"AL16 offline build failed for {output_name}."
+            detail = (
+                f"AL16 offline build failed for {output_name} "
+                f"(reason={failure_reason}; destination_slot={destination_slot})."
+            )
         else:
             error_code = error_context.error_code
+            failure_reason = classify_al16_failure_reason(
+                exc,
+                phase=error_context.phase,
+            )
             detail = (
                 f"Passive export failed during {error_context.phase} "
-                f"for {error_context.artifact_name}."
+                f"for {error_context.artifact_name} "
+                f"(reason={failure_reason}; destination_slot={destination_slot})."
             )
         sys.stderr.write(f"{USAGE}\nError [{error_code}]: {detail}\n")
         return 2
@@ -145,7 +175,8 @@ def handle_al16_rytm_kit_export(
 
 
 def _format_al16_rytm_cli_error(exc: Exception) -> str:
-    return f"{USAGE}\nError [invalid_input]: {exc}"
+    error_code: Al16RytmCliErrorCode = "invalid_input"
+    return f"{USAGE}\nError [{error_code}]: {exc}"
 
 
 AL16_RYTM_KIT_EXPORT_CLI_COMMAND: Final[CliCommand] = CliCommand(
@@ -160,6 +191,7 @@ register(AL16_RYTM_KIT_EXPORT_CLI_COMMAND)
 
 __all__ = [
     "AL16_RYTM_KIT_EXPORT_CLI_COMMAND",
+    "Al16RytmCliErrorCode",
     "Al16RytmKitExportArgs",
     "COMMAND_NAME",
     "USAGE",

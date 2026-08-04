@@ -10,7 +10,6 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import Final, Literal, TypeAlias, cast
 
 from ...data.al16_rytm import (
@@ -54,7 +53,7 @@ from .file_export_contracts import (
     safe_local_file_export_artifact_name,
     validate_local_file_export_artifact_path,
 )
-from .writer import atomic_write
+from .writer import WriteSetError, atomic_write_set
 
 _REFERENCE_EXPECTED_SHA256: Final[str] = (
     "8bda94d6d5031e038c8d810789301f35242ed539338a0399548869a34e1dc4dd"
@@ -64,8 +63,26 @@ _DEFAULT_BUILD_EPOCH: Final[int] = 0
 _PHASE_R1_STATE_NUMBER: Final[int] = 2
 _AL16_EXPORT_FAILURE_FINGERPRINT: Final[str] = "al16.rytm_kit_export.failed"
 _AL16_MAPPING_BLOCKED_ERROR_CODE: Final[str] = "mapping_blocked"
+AL16_GENERATOR_CONTRACT: Final[str] = "al16_rytm_blocked_evidence_v2"
+AL16_GENERATOR_MODULE: Final[str] = "rytm_randomizer/cockpit/export/al16_rytm_kit.py"
 
 Al16BuildStatus: TypeAlias = Literal["blocked", "built"]
+Al16AuditScalar: TypeAlias = str | int | bool | None
+Al16AuditValue: TypeAlias = Al16AuditScalar | tuple[int, ...]
+Al16FailureReason: TypeAlias = Literal[
+    "artifact_path_collision",
+    "artifact_publication_failed",
+    "build_interrupted",
+    "build_validation_failed",
+    "destination_slot_invalid",
+    "recipe_schema_invalid",
+    "reference_hash_mismatch",
+    "reference_round_trip_mismatch",
+    "reference_sysex_invalid",
+    "source_input_unavailable",
+    "source_read_failed",
+    "stale_output_present",
+]
 FieldVerificationStatus: TypeAlias = Literal[
     "critical_mapping_gap",
     "invalid_machine_for_pad",
@@ -94,10 +111,10 @@ class FieldAudit:
     """Resolution record for one requested semantic field."""
 
     semantic_path: str
-    original_semantic_value: object
-    requested_semantic_value: object
-    normalized_semantic_value: object
-    encoded_raw_value_or_bytes: object
+    original_semantic_value: Al16AuditValue
+    requested_semantic_value: Al16AuditValue
+    normalized_semantic_value: Al16AuditValue
+    encoded_raw_value_or_bytes: Al16AuditValue
     raw_location: str | None
     converter_or_enumeration: str
     verification_status: FieldVerificationStatus
@@ -173,9 +190,9 @@ def _require_exact_keys(
     raise ValueError(f"{label} keys are invalid: {', '.join(details)}")
 
 
-def _load_recipe(path: Path) -> Mapping[str, object]:
+def _load_recipe_bytes(payload: bytes) -> Mapping[str, object]:
     # JSON is a strict YAML subset, keeping the public recipe dependency-free.
-    parsed = cast(object, json.loads(path.read_text(encoding="utf-8")))
+    parsed = cast(object, json.loads(payload.decode("utf-8")))
     return _as_mapping(parsed, "recipe")
 
 
@@ -218,21 +235,79 @@ def _portable_reference_path(reference: Path) -> str:
     return f"reference/{artifact_name}"
 
 
-def _atomic_write_text(path: Path, value: str) -> None:
-    try:
-        atomic_write(path, value.encode("utf-8"), overwrite=True)
-    except (ValueError, TypeError, OSError, KeyboardInterrupt, SystemExit) as exc:
-        phase: LocalFileExportPhase = "output_write"
-        attach_local_file_export_error_context(
-            exc,
-            error_code=classify_local_file_export_error(exc, phase=phase),
-            phase=phase,
-            artifact_name=safe_local_file_export_artifact_name(
-                path,
-                fallback="artifact",
-            ),
+def _portable_recipe_path(recipe: Path) -> str:
+    artifact_name = safe_local_file_export_artifact_name(
+        recipe,
+        fallback="recipe.yaml",
+    )
+    return f"specs/al16/{artifact_name}"
+
+
+def _normalized_text_sha256(path: Path) -> str:
+    normalized = path.read_text(encoding="utf-8").replace("\r\n", "\n")
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
+def _freeze_audit_value(value: object) -> Al16AuditValue:
+    if value is None or isinstance(value, (str, bool)):
+        return value
+    if isinstance(value, int):
+        return value
+    if isinstance(value, tuple):
+        items = cast(tuple[object, ...], value)
+        if all(
+            isinstance(item, int) and not isinstance(item, bool) and 0 <= item <= 255
+            for item in items
+        ):
+            return cast(tuple[int, ...], items)
+    raise TypeError("AL16 audit values must be immutable scalars or byte tuples")
+
+
+def classify_al16_failure_reason(
+    exc: BaseException,
+    *,
+    phase: LocalFileExportPhase,
+) -> Al16FailureReason:
+    """Return a bounded, path-free reason for one AL16 export failure."""
+
+    if isinstance(exc, (KeyboardInterrupt, SystemExit)):
+        return "build_interrupted"
+    if isinstance(exc, FileExistsError):
+        return "stale_output_present"
+    if phase == "source_read" and isinstance(exc, FileNotFoundError):
+        return "source_input_unavailable"
+    if phase == "output_write" and isinstance(exc, OSError):
+        return "artifact_publication_failed"
+    if phase == "source_read" and isinstance(exc, OSError):
+        return "source_read_failed"
+
+    message = str(exc).lower()
+    if "artifact path collides" in message:
+        return "artifact_path_collision"
+    if "destination slot" in message:
+        return "destination_slot_invalid"
+    if "reference sha-256 mismatch" in message:
+        return "reference_hash_mismatch"
+    if "decode/encode is not byte-identical" in message:
+        return "reference_round_trip_mismatch"
+    if any(
+        marker in message
+        for marker in ("sysex", "checksum", "encoded length", "payload size", "frame")
+    ):
+        return "reference_sysex_invalid"
+    if any(
+        marker in message
+        for marker in (
+            "recipe",
+            "schema_version",
+            "project_id",
+            "kit.",
+            "preserve",
+            "tracks.",
         )
-        raise
+    ):
+        return "recipe_schema_invalid"
+    return "build_validation_failed"
 
 
 def _artifact_paths(output_path: Path) -> tuple[Path, Path, Path]:
@@ -304,7 +379,7 @@ def _machine_label_for_raw(raw_value: int) -> str:
 def _convert_supported_value(
     converter: RytmValueConverter,
     requested: object,
-) -> tuple[object, int]:
+) -> tuple[Al16AuditScalar, int]:
     if converter == RYTM_CONVERTER_VERIFIED_7BIT:
         raw = _as_int(requested, "verified 7-bit value")
         if not 0 <= raw <= 127:
@@ -326,7 +401,10 @@ def _convert_supported_value(
     raise ValueError(f"unknown AL16 converter: {converter}")
 
 
-def _original_semantic(converter: RytmValueConverter, raw_value: int) -> object:
+def _original_semantic(
+    converter: RytmValueConverter,
+    raw_value: int,
+) -> Al16AuditScalar:
     low7 = raw_value & 0x7F
     if converter == RYTM_CONVERTER_CENTERED_7BIT:
         return low7 - 64
@@ -346,7 +424,7 @@ def _gap_audit(
     return FieldAudit(
         semantic_path=path,
         original_semantic_value=None,
-        requested_semantic_value=requested,
+        requested_semantic_value=_freeze_audit_value(requested),
         normalized_semantic_value=None,
         encoded_raw_value_or_bytes=None,
         raw_location=None,
@@ -370,9 +448,9 @@ def _supported_audit(
     return FieldAudit(
         semantic_path=semantic_path,
         original_semantic_value=_original_semantic(writable.converter, raw[offset]),
-        requested_semantic_value=requested,
+        requested_semantic_value=_freeze_audit_value(requested),
         normalized_semantic_value=normalized,
-        encoded_raw_value_or_bytes=[encoded],
+        encoded_raw_value_or_bytes=(encoded,),
         raw_location=f"unpacked[{offset}] (track sound + 0x{layout.sound_offset:04X})",
         converter_or_enumeration=writable.converter,
         verification_status="resolved_but_not_emitted_while_preflight_is_blocked",
@@ -439,7 +517,7 @@ def _record_machine(
                 original_semantic_value=original_label,
                 requested_semantic_value=profile.label,
                 normalized_semantic_value=profile.machine_value,
-                encoded_raw_value_or_bytes=[raw[machine_offset]],
+                encoded_raw_value_or_bytes=(raw[machine_offset],),
                 raw_location=f"unpacked[{machine_offset}]",
                 converter_or_enumeration="verified_machine_catalog_preserve",
                 verification_status="verified_preserved_machine",
@@ -484,7 +562,7 @@ def _record_source_fields(
                         original_semantic_value=None,
                         requested_semantic_value=note,
                         normalized_semantic_value=note,
-                        encoded_raw_value_or_bytes=[raw_tune],
+                        encoded_raw_value_or_bytes=(raw_tune,),
                         raw_location=None,
                         converter_or_enumeration=f"approved_tuning_table:{machine_key}",
                         verification_status="resolved_tuning_pending_source_writer",
@@ -617,7 +695,7 @@ def _inspect_recipe(
             original_semantic_value=original_name,
             requested_semantic_value=kit_name,
             normalized_semantic_value=kit_name,
-            encoded_raw_value_or_bytes=list(encoded_kit_name.ljust(RYTM_KIT_NAME_LENGTH, b"\x00")),
+            encoded_raw_value_or_bytes=tuple(encoded_kit_name.ljust(RYTM_KIT_NAME_LENGTH, b"\x00")),
             raw_location=(
                 f"unpacked[{RYTM_KIT_NAME_OFFSET}:"
                 f"{RYTM_KIT_NAME_OFFSET + RYTM_KIT_NAME_LENGTH}]"
@@ -750,45 +828,12 @@ def _write_blocked_artifacts(
 
 
 def _publish_artifact_set(artifacts: Mapping[Path, str]) -> None:
-    """Stage and publish one complete evidence generation with rollback."""
+    """Publish one complete evidence generation through the shared writer."""
 
-    destinations = tuple(artifacts)
-    if not destinations:
-        raise ValueError("artifact publication requires at least one destination")
-    parent_keys = {_canonical_path_key(path.parent) for path in destinations}
-    if len(parent_keys) != 1:
-        raise ValueError("artifact publication destinations must share one directory")
-    parent = destinations[0].parent
-    parent.mkdir(parents=True, exist_ok=True)
-    with TemporaryDirectory(prefix=".al16-evidence-", dir=parent) as temporary:
-        temporary_root = Path(temporary)
-        staged_root = temporary_root / "staged"
-        backup_root = temporary_root / "backups"
-        staged_root.mkdir()
-        backup_root.mkdir()
-        staged_paths: dict[Path, Path] = {}
-        for destination, value in artifacts.items():
-            staged_path = staged_root / destination.name
-            _atomic_write_text(staged_path, value)
-            staged_paths[destination] = staged_path
-
-        backups: list[tuple[Path, Path]] = []
-        published: list[Path] = []
-        try:
-            for destination in destinations:
-                if destination.exists():
-                    backup_path = backup_root / destination.name
-                    os.replace(destination, backup_path)
-                    backups.append((destination, backup_path))
-            for destination in destinations:
-                os.replace(staged_paths[destination], destination)
-                published.append(destination)
-        except (OSError, KeyboardInterrupt, SystemExit):
-            for destination in reversed(published):
-                destination.unlink(missing_ok=True)
-            for destination, backup_path in reversed(backups):
-                os.replace(backup_path, destination)
-            raise
+    atomic_write_set(
+        {path: value.encode("utf-8") for path, value in artifacts.items()},
+        overwrite=True,
+    )
 
 
 def build_al16_rytm_kit(
@@ -871,7 +916,9 @@ def build_al16_rytm_kit(
 
             export_phase = "source_read"
             failure_artifact_name = recipe_name
-            recipe = _load_recipe(recipe_path)
+            recipe_bytes = recipe_path.read_bytes()
+            recipe = _load_recipe_bytes(recipe_bytes)
+            recipe_sha256 = hashlib.sha256(recipe_bytes).hexdigest()
             export_phase = "validation"
             audits, gaps, preserved_tracks = _inspect_recipe(
                 recipe,
@@ -885,7 +932,12 @@ def build_al16_rytm_kit(
                 "project_id": "AL16",
                 "build_status": "blocked",
                 "build_timestamp": _build_timestamp(),
+                "generator_contract": AL16_GENERATOR_CONTRACT,
+                "generator_module": AL16_GENERATOR_MODULE,
+                "generator_module_sha256": _normalized_text_sha256(Path(__file__)),
                 "deterministic_recipe_identifier": deterministic_recipe_identifier(recipe),
+                "recipe_file": _portable_recipe_path(recipe_path),
+                "recipe_sha256": recipe_sha256,
                 "reference_file": _portable_reference_path(reference_path),
                 "reference_sha256": reference_sha256,
                 "expected_initialized_reference_sha256": _REFERENCE_EXPECTED_SHA256,
@@ -942,6 +994,8 @@ def build_al16_rytm_kit(
                 gaps=tuple(gaps),
             )
     except (KeyError, ValueError, TypeError, OSError, KeyboardInterrupt, SystemExit) as exc:
+        if isinstance(exc, WriteSetError):
+            failure_artifact_name = exc.failure_context.artifact_name
         error_context = local_file_export_error_context(exc)
         if error_context is None:
             error_code = classify_local_file_export_error(exc, phase=export_phase)
@@ -964,6 +1018,10 @@ def build_al16_rytm_kit(
                 "outcome": "failed",
                 "error_code": error_context.error_code,
                 "failure_phase": error_context.phase,
+                "failure_reason": classify_al16_failure_reason(
+                    exc,
+                    phase=error_context.phase,
+                ),
                 "artifact_name": error_context.artifact_name,
                 "fingerprint": _AL16_EXPORT_FAILURE_FINGERPRINT,
                 "reference_name": reference_name,
@@ -995,11 +1053,17 @@ def build_al16_rytm_kit(
 
 
 __all__ = [
+    "AL16_GENERATOR_CONTRACT",
+    "AL16_GENERATOR_MODULE",
+    "Al16AuditScalar",
+    "Al16AuditValue",
     "Al16BuildStatus",
     "Al16BuildResult",
+    "Al16FailureReason",
     "FieldAudit",
     "FieldVerificationStatus",
     "MappingGap",
     "build_al16_rytm_kit",
+    "classify_al16_failure_reason",
     "deterministic_recipe_identifier",
 ]

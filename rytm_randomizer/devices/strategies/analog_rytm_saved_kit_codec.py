@@ -16,14 +16,15 @@ from ...data.analog_rytm_kit_layout import (
     RYTM_KIT_WORK_BUFFER_DUMP_ID,
     RYTM_SYSEX_PRODUCT_ID,
 )
-from ...snapshot import ELEKTRON_MFR_ID, pack_elektron_7bit, unpack_elektron_7bit
-from ...snapshot.elektron_u14 import (
-    ELEKTRON_U14_MAX,
-    decode_elektron_u14,
-    encode_elektron_u14,
+from ...snapshot import ELEKTRON_MFR_ID, unpack_elektron_7bit
+from ...snapshot.elektron_packed_payload import (
+    elektron_packed_payload_checksum,
+    encode_elektron_packed_payload,
+    validate_elektron_packed_payload,
 )
 
 _DUMP_ID_INDEX: Final[int] = 5
+_DEVICE_LABEL: Final[str] = "Analog Rytm saved-kit"
 
 
 @dataclass(frozen=True)
@@ -40,7 +41,11 @@ class AnalogRytmSavedKitFrame:
 def analog_rytm_saved_kit_checksum(packed: bytes) -> int:
     """Return the verified 14-bit checksum for a packed Rytm kit body."""
 
-    return sum(packed[RYTM_KIT_CHECKSUM_PACKED_START:]) & ELEKTRON_U14_MAX
+    return elektron_packed_payload_checksum(
+        packed,
+        checksum_start=RYTM_KIT_CHECKSUM_PACKED_START,
+        device_label=_DEVICE_LABEL,
+    )
 
 
 def _validate_header(header: bytes) -> None:
@@ -73,14 +78,14 @@ def decode_analog_rytm_saved_kit_frame(frame: bytes) -> AnalogRytmSavedKitFrame:
     if len(packed) != RYTM_KIT_PACKED_SIZE:
         raise ValueError("Analog Rytm saved-kit packed payload has an unexpected length")
 
-    stored_checksum = decode_elektron_u14(trailer[0], trailer[1])
-    expected_checksum = analog_rytm_saved_kit_checksum(packed)
-    if stored_checksum != expected_checksum:
-        raise ValueError("Analog Rytm saved-kit checksum does not match the packed payload")
-    stored_length = decode_elektron_u14(trailer[2], trailer[3])
-    expected_length = len(packed) + RYTM_KIT_LENGTH_ADJUSTMENT
-    if stored_length != expected_length:
-        raise ValueError("Analog Rytm saved-kit encoded length does not match its trailer")
+    validated = validate_elektron_packed_payload(
+        packed,
+        trailer,
+        checksum_start=RYTM_KIT_CHECKSUM_PACKED_START,
+        length_adjustment=RYTM_KIT_LENGTH_ADJUSTMENT,
+        expected_packed_size=RYTM_KIT_PACKED_SIZE,
+        device_label=_DEVICE_LABEL,
+    )
 
     unpacked = unpack_elektron_7bit(packed)
     if len(unpacked) != RYTM_KIT_RAW_SIZE:
@@ -89,8 +94,8 @@ def decode_analog_rytm_saved_kit_frame(frame: bytes) -> AnalogRytmSavedKitFrame:
         header=header,
         packed=packed,
         unpacked=unpacked,
-        checksum=stored_checksum,
-        encoded_length=stored_length,
+        checksum=validated.checksum,
+        encoded_length=validated.encoded_length,
     )
 
 
@@ -100,19 +105,14 @@ def encode_analog_rytm_saved_kit_frame(header: bytes, unpacked: bytes) -> bytes:
     _validate_header(header)
     if len(unpacked) != RYTM_KIT_RAW_SIZE:
         raise ValueError("Analog Rytm saved-kit body has an unexpected unpacked length")
-    packed = pack_elektron_7bit(unpacked)
-    if len(packed) != RYTM_KIT_PACKED_SIZE:
-        raise ValueError("Analog Rytm saved-kit repacking changed the packed payload length")
-    checksum = analog_rytm_saved_kit_checksum(packed)
-    encoded_length = len(packed) + RYTM_KIT_LENGTH_ADJUSTMENT
-    frame = (
-        bytes((0xF0,))
-        + header
-        + packed
-        + encode_elektron_u14(checksum)
-        + encode_elektron_u14(encoded_length)
-        + bytes((0xF7,))
+    encoded = encode_elektron_packed_payload(
+        unpacked,
+        checksum_start=RYTM_KIT_CHECKSUM_PACKED_START,
+        length_adjustment=RYTM_KIT_LENGTH_ADJUSTMENT,
+        expected_packed_size=RYTM_KIT_PACKED_SIZE,
+        device_label=_DEVICE_LABEL,
     )
+    frame = bytes((0xF0,)) + header + encoded.packed + encoded.trailer + bytes((0xF7,))
     decode_analog_rytm_saved_kit_frame(frame)
     return frame
 

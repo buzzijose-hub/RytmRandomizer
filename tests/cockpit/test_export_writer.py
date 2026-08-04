@@ -23,6 +23,7 @@ from pathlib import Path
 
 import pytest
 
+import rytm_randomizer.cockpit.export.writer as writer_module
 from rytm_randomizer.cockpit.data import (
     ProfileModel,
     StyleTrait,
@@ -39,7 +40,9 @@ from rytm_randomizer.cockpit.export.writer import (
     DEFAULT_EXPORT_SUBDIR,
     WriteError,
     WriteResult,
+    WriteSetError,
     atomic_write,
+    atomic_write_set,
     default_export_dir,
     write_signed_export,
 )
@@ -501,6 +504,247 @@ def test_atomic_write_fsync_failure_raises_write_error(
     assert not dest.exists()
     leftover = sorted(p.name for p in tmp_path.iterdir())
     assert leftover == []
+
+
+# ---------------------------------------------------------------------------
+# atomic_write_set — transactional multi-artifact publication
+# ---------------------------------------------------------------------------
+
+
+def test_atomic_write_set_publishes_all_bytes_in_mapping_order(tmp_path: Path) -> None:
+    first = tmp_path / "first.json"
+    second = tmp_path / "second.md"
+    first.write_bytes(b"old-first")
+
+    results = atomic_write_set(
+        {first: b"new-first", second: b"new-second"},
+        overwrite=True,
+    )
+
+    assert first.read_bytes() == b"new-first"
+    assert second.read_bytes() == b"new-second"
+    assert tuple(result.path for result in results) == (
+        first.resolve(),
+        second.resolve(),
+    )
+    assert tuple(result.bytes_written for result in results) == (9, 10)
+    assert tuple(result.overwrote_existing for result in results) == (True, False)
+    assert not any(path.name.startswith(".write-set-") for path in tmp_path.iterdir())
+
+
+def test_atomic_write_set_rejects_non_byte_payloads_before_staging(tmp_path: Path) -> None:
+    destination = tmp_path / "report.json"
+    artifacts: dict[Path, object] = {destination: "not bytes"}
+
+    with pytest.raises(TypeError, match="payloads must be bytes"):
+        atomic_write_set(artifacts)
+
+    assert not destination.exists()
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_atomic_write_set_staging_failure_names_actual_artifact(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    first = tmp_path / "first.json"
+    second = tmp_path / "second.md"
+    real_atomic_write = writer_module.atomic_write
+    calls = 0
+
+    def fail_second_stage(
+        path: Path,
+        data: bytes,
+        *,
+        overwrite: bool = False,
+    ) -> WriteResult:
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise WriteError("bounded staging failure")
+        return real_atomic_write(path, data, overwrite=overwrite)
+
+    monkeypatch.setattr(writer_module, "atomic_write", fail_second_stage)
+
+    with pytest.raises(WriteSetError) as exc_info:
+        atomic_write_set({first: b"first", second: b"second"}, overwrite=True)
+
+    assert exc_info.value.failure_context.phase == "staging"
+    assert exc_info.value.failure_context.artifact_name == "second.md"
+    assert str(tmp_path) not in str(exc_info.value)
+    assert not first.exists()
+    assert not second.exists()
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_atomic_write_set_keyboard_interrupt_rolls_back_staged_artifacts(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    first = tmp_path / "first.json"
+
+    def interrupt_stage(
+        _path: Path,
+        _data: bytes,
+        *,
+        overwrite: bool = False,
+    ) -> WriteResult:
+        del overwrite
+        raise KeyboardInterrupt("operator interrupted write set")
+
+    monkeypatch.setattr(writer_module, "atomic_write", interrupt_stage)
+
+    with pytest.raises(KeyboardInterrupt, match="operator interrupted write set") as exc_info:
+        atomic_write_set({first: b"first"}, overwrite=True)
+
+    assert any("staging for first.json" in note for note in exc_info.value.__notes__)
+    assert not first.exists()
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_atomic_write_set_backup_failure_restores_prior_files_and_names_artifact(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    first = tmp_path / "first.json"
+    second = tmp_path / "second.md"
+    first.write_bytes(b"old-first")
+    second.write_bytes(b"old-second")
+    real_replace = os.replace
+
+    def fail_second_backup(source: str | Path, destination: str | Path) -> None:
+        if Path(source).name == "second.md" and Path(destination).suffix == ".backup":
+            raise OSError("backup failed")
+        real_replace(source, destination)
+
+    monkeypatch.setattr("os.replace", fail_second_backup)
+
+    with pytest.raises(WriteSetError) as exc_info:
+        atomic_write_set(
+            {first: b"new-first", second: b"new-second"},
+            overwrite=True,
+        )
+
+    assert exc_info.value.failure_context.phase == "backup"
+    assert exc_info.value.failure_context.artifact_name == "second.md"
+    assert str(tmp_path) not in str(exc_info.value)
+    assert first.read_bytes() == b"old-first"
+    assert second.read_bytes() == b"old-second"
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["first.json", "second.md"]
+
+
+def test_atomic_write_set_publication_failure_restores_all_prior_files(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    first = tmp_path / "first.json"
+    second = tmp_path / "second.md"
+    first.write_bytes(b"old-first")
+    second.write_bytes(b"old-second")
+    real_replace = os.replace
+
+    def fail_second_publication(source: str | Path, destination: str | Path) -> None:
+        if Path(source).suffix == ".stage" and Path(destination).name == "second.md":
+            raise OSError("publication failed")
+        real_replace(source, destination)
+
+    monkeypatch.setattr("os.replace", fail_second_publication)
+
+    with pytest.raises(WriteSetError) as exc_info:
+        atomic_write_set(
+            {first: b"new-first", second: b"new-second"},
+            overwrite=True,
+        )
+
+    assert exc_info.value.failure_context.phase == "publication"
+    assert exc_info.value.failure_context.artifact_name == "second.md"
+    assert str(tmp_path) not in str(exc_info.value)
+    assert isinstance(exc_info.value.__cause__, OSError)
+    assert "publication failed" in str(exc_info.value.__cause__)
+    assert first.read_bytes() == b"old-first"
+    assert second.read_bytes() == b"old-second"
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["first.json", "second.md"]
+
+
+def test_atomic_write_set_publication_failure_removes_newly_created_files(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    first = tmp_path / "first.json"
+    second = tmp_path / "second.md"
+    real_replace = os.replace
+
+    def fail_second_publication(source: str | Path, destination: str | Path) -> None:
+        if Path(source).suffix == ".stage" and Path(destination).name == "second.md":
+            raise OSError("publication failed")
+        real_replace(source, destination)
+
+    monkeypatch.setattr("os.replace", fail_second_publication)
+
+    with pytest.raises(WriteSetError):
+        atomic_write_set(
+            {first: b"new-first", second: b"new-second"},
+            overwrite=True,
+        )
+
+    assert not first.exists()
+    assert not second.exists()
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_atomic_write_set_rollback_failure_preserves_original_error_and_backup(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    first = tmp_path / "first.json"
+    second = tmp_path / "second.md"
+    first.write_bytes(b"old-first")
+    second.write_bytes(b"old-second")
+    real_replace = os.replace
+
+    def fail_publication_and_first_restore(
+        source: str | Path,
+        destination: str | Path,
+    ) -> None:
+        source_path = Path(source)
+        destination_path = Path(destination)
+        if source_path.suffix == ".stage" and destination_path.name == "second.md":
+            raise OSError("original publication failure")
+        if source_path.name == "0000.backup" and destination_path.name == "first.json":
+            raise PermissionError("rollback restore failure")
+        real_replace(source, destination)
+
+    monkeypatch.setattr("os.replace", fail_publication_and_first_restore)
+
+    with pytest.raises(WriteSetError) as exc_info:
+        atomic_write_set(
+            {first: b"new-first", second: b"new-second"},
+            overwrite=True,
+        )
+
+    error = exc_info.value
+    assert error.failure_context.phase == "publication"
+    assert error.failure_context.artifact_name == "second.md"
+    assert isinstance(error.__cause__, OSError)
+    assert "original publication failure" in str(error.__cause__)
+    assert error.failure_context.rollback_failures == (
+        writer_module.WriteSetRollbackFailure(
+            artifact_name="first.json",
+            operation="restore_backup",
+            error_type="PermissionError",
+        ),
+    )
+    assert error.failure_context.recovery_directory_name is not None
+    assert str(tmp_path) not in str(error)
+    assert any("Rollback was incomplete" in note for note in error.__notes__)
+    assert "/" not in error.failure_context.recovery_directory_name
+    assert "\\" not in error.failure_context.recovery_directory_name
+
+    recovery_dir = tmp_path / error.failure_context.recovery_directory_name
+    assert recovery_dir.is_dir()
+    assert (recovery_dir / "0000.backup").read_bytes() == b"old-first"
+    assert first.read_bytes() == b"new-first"
+    assert second.read_bytes() == b"old-second"
 
 
 # ---------------------------------------------------------------------------
