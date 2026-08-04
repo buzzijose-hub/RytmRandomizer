@@ -10,7 +10,7 @@ not positively verified. Zero raw bytes changed and no `.syx` was emitted.
 
 ## Timeline
 
-1. Audited the existing Rytm codec, saved-kit layout, envelope, and reference.
+1. Audited the existing Rytm saved-KIT layout, envelope, and reference, then added the missing strict codec.
 2. Added canonical AL16 bank and recipe facts plus the passive command.
 3. Implemented strict validation, mapping-gap evidence, and deterministic sidecars.
 4. Proved reference preservation, no-MIDI behavior, parity, typing, and coverage.
@@ -19,12 +19,14 @@ not positively verified. Zero raw bytes changed and no `.syx` was emitted.
 
 ## Final local verification
 
-- Focused exporter and CLI regression tests: 116 passed.
-- Exporter and saved-kit codec proof tests: 94 passed, 1 skipped.
+- Focused exporter, saved-kit codec, and CLI regression tests: 115 passed,
+  1 skipped.
+- Exporter and saved-kit codec proof tests: 95 passed, 1 skipped.
+- Data-layer drift tests: 200 passed.
 - Architecture: 739 passed with one unrelated warn-only result.
 - V1.34 byte-frozen parity: 685 passed.
-- Full suite: 7,605 passed, 4 skipped.
-- Touched production coverage: 13 files at 100% line and branch coverage.
+- Full suite: 7,627 passed, 4 skipped.
+- Touched production coverage: 14 files at 100% line and branch coverage.
 - Strict typing: 14 touched production modules, 0 errors and 0 warnings.
 - Total coverage: 99.44%; pure branch coverage: 98.92%.
 - Deterministic blocked-build evidence: 18 critical gaps, zero changed raw bytes, no `.syx`.
@@ -46,12 +48,12 @@ state is part of this run.
 
 ## Learning extraction
 
-No new skill or rule is warranted yet. Existing passive-hardware, codec reuse,
-data-layer, Python-on-Windows, and bounded-verification rules cover the base
-workflow. This run records deterministic nested-mapping canonicalization and
-canonical-path collision checks in its plan/report, shared export contract, and
-regression tests. A generalized learned skill should wait until those lessons
-recur in another independent workflow.
+The existing `elektron-sysex-envelope` skill now records the reusable
+multi-file publication lesson: validate bounded portable names, stage the
+complete sidecar set, preserve the previous generation, roll back partial
+publication, and hash-lock committed evidence. Recipe canonicalization and
+canonical-path collision detection remain local to this exporter until another
+independent workflow proves a genuinely shared abstraction.
 
 ## Fresh-clone questions
 

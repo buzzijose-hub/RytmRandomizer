@@ -10,6 +10,6 @@
     "hosted_ci": "pending",
     "codeowner_review": "pending"
   },
-  "last_event": "Review repairs and bounded final local verification passed; hosted CI and CODEOWNER review remain pending.",
-  "review_base_head_sha": "87d669845e1861c2c9b2d6b013216a8fbfde0d78"
+  "last_event": "Transactional evidence hardening and bounded local verification are complete; hosted CI and exact-head review are pending after push.",
+  "review_base_head_sha": "cedb936d836cfb58f1a1d0c161a437cb6a8790d0"
 }

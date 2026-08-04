@@ -8,6 +8,7 @@ import pytest
 
 from rytm_randomizer.cockpit.export.al16_rytm_kit import (
     Al16BuildResult,
+    Al16BuildStatus,
     MappingGap,
 )
 from rytm_randomizer.cockpit.export.file_export_contracts import (
@@ -17,7 +18,7 @@ from rytm_randomizer.cockpit.export.file_export_contracts import (
 pytestmark = pytest.mark.fast
 
 
-def _result(tmp_path: Path, *, status: str) -> Al16BuildResult:
+def _result(tmp_path: Path, *, status: Al16BuildStatus) -> Al16BuildResult:
     return Al16BuildResult(
         status=status,
         output_path=tmp_path / "AL02_LOCK_RYTM.syx",
@@ -245,6 +246,30 @@ def test_handler_reports_bounded_failures(
     assert captured.out == ""
     assert message in captured.err
     assert "Jose Buzzi" not in captured.err
+
+
+def test_handler_uses_safe_fallback_for_output_without_a_filename(
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import al16_rytm_cli as cli
+
+    def raise_error(**_kwargs: object) -> Al16BuildResult:
+        raise ValueError("unsafe output")
+
+    monkeypatch.setattr(cli, "build_al16_rytm_kit", raise_error)
+
+    exit_code = cli.handle_al16_rytm_kit_export(
+        reference_path=Path("reference.syx"),
+        recipe_path=Path("recipe.yaml"),
+        destination_slot=127,
+        output_path=Path("."),
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 2
+    assert captured.out == ""
+    assert "AL16 offline build failed for output.syx" in captured.err
 
 
 def test_handler_reports_attached_failure_context_without_private_paths(

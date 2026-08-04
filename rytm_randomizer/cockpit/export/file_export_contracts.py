@@ -40,6 +40,7 @@ LOCAL_FILE_EXPORT_PHASES: Final[frozenset[str]] = frozenset(
 _ERROR_CODE_ATTRIBUTE: Final[str] = "local_file_export_error_code"
 _ERROR_PHASE_ATTRIBUTE: Final[str] = "local_file_export_phase"
 _ERROR_ARTIFACT_ATTRIBUTE: Final[str] = "local_file_export_artifact_name"
+MAX_LOCAL_FILE_EXPORT_ARTIFACT_NAME_LENGTH: Final[int] = 255
 
 
 @dataclass(frozen=True)
@@ -52,7 +53,31 @@ class LocalFileExportErrorContext:
 
 
 def _is_safe_artifact_name(value: object) -> bool:
-    return isinstance(value, str) and bool(value) and Path(value).name == value
+    return (
+        isinstance(value, str)
+        and value not in {"", ".", ".."}
+        and len(value) <= MAX_LOCAL_FILE_EXPORT_ARTIFACT_NAME_LENGTH
+        and "/" not in value
+        and "\\" not in value
+        and ":" not in value
+        and all(ord(character) >= 32 and ord(character) != 127 for character in value)
+        and Path(value).name == value
+    )
+
+
+def safe_local_file_export_artifact_name(path: Path, *, fallback: str) -> str:
+    """Return one bounded filename for logs and attached failure context."""
+
+    if not _is_safe_artifact_name(fallback):
+        raise ValueError("local file export fallback artifact name is not safe")
+    return path.name if _is_safe_artifact_name(path.name) else fallback
+
+
+def validate_local_file_export_artifact_path(path: Path, *, label: str) -> None:
+    """Reject paths whose final component cannot be reported safely."""
+
+    if not _is_safe_artifact_name(path.name):
+        raise ValueError(f"{label} must identify a safe filename")
 
 
 def attach_local_file_export_error_context(
@@ -124,10 +149,13 @@ def classify_local_file_export_error(
 __all__ = [
     "LOCAL_FILE_EXPORT_ERROR_CODES",
     "LOCAL_FILE_EXPORT_PHASES",
+    "MAX_LOCAL_FILE_EXPORT_ARTIFACT_NAME_LENGTH",
     "LocalFileExportErrorCode",
     "LocalFileExportErrorContext",
     "LocalFileExportPhase",
     "attach_local_file_export_error_context",
     "classify_local_file_export_error",
     "local_file_export_error_context",
+    "safe_local_file_export_artifact_name",
+    "validate_local_file_export_artifact_path",
 ]

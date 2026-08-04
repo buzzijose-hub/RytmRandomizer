@@ -45,13 +45,15 @@ exist; substituting candidate offsets would violate the project safety policy.
   explicit mapping gaps, absence of `.syx`, unchanged reference bytes, and
   zero MIDI dependencies.
 - Focused tests run single-process to avoid unnecessary workstation load.
-- Focused exporter and CLI regression tests: 116 passed.
-- Exporter and saved-kit codec proof tests: 94 passed, 1 skipped.
+- Focused exporter, saved-kit codec, and CLI regression tests: 115 passed,
+  1 skipped.
+- Exporter and saved-kit codec proof tests: 95 passed, 1 skipped.
+- Data-layer drift tests: 200 passed.
 - Architecture tests: 739 passed with one unrelated warn-only result.
 - V1.34 byte-frozen parity: 685 passed.
-- Full repository suite: 7,605 passed, 4 skipped.
+- Full repository suite: 7,627 passed, 4 skipped.
 - Total coverage: 99.44%; pure branch coverage: 98.92% against the 98% floor.
-- Touched production coverage: 13 files at 100% line and branch coverage.
+- Touched production coverage: 14 files at 100% line and branch coverage.
 - Strict touched-production type check: 14 modules, 0 errors and 0 warnings.
 - Ruff, Black, isort, and `git diff --check`: passed.
 - Two deterministic blocked builds produced byte-identical reports, recording
@@ -85,9 +87,10 @@ The paired audit and closeout report are durable review artifacts:
 | Documentation | Future writer wording mixed with current behavior | Current audit-only behavior separated from future writer work |
 | Recovery | Implicit rerun | Immutable reference, atomic reports, deterministic recipe ID, rerunnable command |
 
-The exporter remains deliberately small and fail-closed. No abstraction was
-added beyond typed fact vocabulary and reuse of the existing Rytm codec,
-Elektron envelope/u14 helpers, observability primitives, and atomic writer.
+The exporter remains deliberately small and fail-closed. It adds the contained
+strict Rytm saved-KIT codec required by this phase while reusing the existing
+layout metadata, Elektron envelope/u14 helpers, observability primitives, and
+local-file export contracts.
 
 ## Execution and recovery (Gates 15-16)
 
@@ -103,7 +106,7 @@ data facts, and its exact evidence tests.
 | R1 exporter | Single writer worktree | Existing codec/layout evidence | Complete, fail-closed |
 | Mechanical verification | Read-only commands | R1 exporter | Complete on the current local tree |
 | Dimension reviews | Parallel read-only agents | Pushed PR head | Complete; findings repaired by the single writer |
-| Hosted CI | GitHub Actions | Pushed repair head | Pending final push |
+| Hosted CI | GitHub Actions | Exact pushed head | Must be green before the final CODEOWNER request |
 | CODEOWNER review | Edward Rosado | Green exact PR head | Pending |
 
 The durable state is the Git branch plus deterministic evidence artifacts. A
@@ -135,13 +138,12 @@ Durable execution artifacts:
 - [`2026-08-02-al16-r1-offline-rytm-kit-exporter_STATE.schema.json`](2026-08-02-al16-r1-offline-rytm-kit-exporter_STATE.schema.json)
 - [`2026-08-02-al16-r1-offline-rytm-kit-exporter_STATE.json`](2026-08-02-al16-r1-offline-rytm-kit-exporter_STATE.json)
 
-No new learned skill is warranted yet. Existing repository rules cover the
-passive hardware boundary, shared Elektron codecs, data-not-code facts,
-Python-on-Windows execution, and bounded verification. This run additionally
-captures deterministic nested-mapping canonicalization and canonical-path
-collision checks in this plan, the run report, the shared export contract, and
-regression tests. Those lessons should become a generalized learned skill only
-after they recur in another independent workflow.
+The existing `elektron-sysex-envelope` learned skill now records the reusable
+multi-file evidence-publication rule: validate bounded portable names, stage
+the complete sidecar set, preserve the previous generation, roll back a partial
+publish, and hash-lock committed evidence. Recipe canonicalization and
+canonical-path collision detection remain exporter-local because they have not
+yet recurred as a stable cross-workflow abstraction.
 
 ## Replay log
 
@@ -154,7 +156,11 @@ $repoRoot = git rev-parse --show-toplevel
 $python = (Get-Command python).Source
 $reference = Join-Path $repoRoot "reference\RYTM_Test1_Init_Kit.syx"
 
-& $python -m pytest tests/test_al16_rytm_export.py -n 0 -q
+& $python -m pytest tests/test_al16_rytm_export.py `
+  tests/test_analog_rytm_saved_kit_codec.py `
+  tests/cockpit/test_al16_rytm_cli.py -n 0 -q
+& $python -m pytest tests/test_al16_rytm_export.py `
+  tests/test_analog_rytm_saved_kit_codec.py -n 0 -q
 & $python -m pytest tests/test_data_layer_drift.py -n 0 -q
 & $python -m pytest tests/architecture/ -n 2 -q
 & $python -m pytest -m "not fast" -n 2 -q

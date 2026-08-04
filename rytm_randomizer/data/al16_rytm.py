@@ -19,6 +19,7 @@ RYTM_CONVERTER_CENTERED_7BIT: Final[RytmValueConverter] = "centered_7bit"
 RYTM_CONVERTER_FILTER_TYPE_ENUM: Final[RytmValueConverter] = "filter_type_enum"
 AL16_TRACK_MODE_PRESERVE: Final[Al16TrackMode] = "preserve"
 AL16_TRACK_MODE_PATCH: Final[Al16TrackMode] = "patch"
+AL16_PERFORMANCE_CONTEXT_BPM: Final[int] = 138
 
 
 @dataclass(frozen=True)
@@ -118,6 +119,7 @@ AL16_PRESERVED_GLOBAL_SECTIONS: Final = (
 __all__ = [
     "AL16_BANK_STATES",
     "AL16_PAD_ROLES",
+    "AL16_PERFORMANCE_CONTEXT_BPM",
     "AL16_PRESERVED_GLOBAL_SECTIONS",
     "AL16_RYTM_APPROVED_TUNING",
     "AL16_RYTM_FILTER_TYPES",

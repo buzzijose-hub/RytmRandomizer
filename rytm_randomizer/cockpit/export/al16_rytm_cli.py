@@ -10,7 +10,10 @@ from typing import Final, TypedDict
 from ...cli_registry import CliCommand, register
 from .al16_rytm_kit import Al16BuildResult, build_al16_rytm_kit
 from .cli_options import pop_required_cli_value
-from .file_export_contracts import local_file_export_error_context
+from .file_export_contracts import (
+    local_file_export_error_context,
+    safe_local_file_export_artifact_name,
+)
 
 COMMAND_NAME: Final[str] = "al16-rytm-kit-export"
 USAGE: Final[str] = (
@@ -123,7 +126,11 @@ def handle_al16_rytm_kit_export(
         error_context = local_file_export_error_context(exc)
         if error_context is None:
             error_code = "offline_build_failed"
-            detail = f"AL16 offline build failed for {output_path.name}."
+            output_name = safe_local_file_export_artifact_name(
+                output_path,
+                fallback="output.syx",
+            )
+            detail = f"AL16 offline build failed for {output_name}."
         else:
             error_code = error_context.error_code
             detail = (

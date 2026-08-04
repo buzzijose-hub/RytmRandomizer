@@ -10,11 +10,13 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Final, cast
+from tempfile import TemporaryDirectory
+from typing import Final, Literal, TypeAlias, cast
 
 from ...data.al16_rytm import (
     AL16_BANK_STATES,
     AL16_PAD_ROLES,
+    AL16_PERFORMANCE_CONTEXT_BPM,
     AL16_PRESERVED_GLOBAL_SECTIONS,
     AL16_RYTM_APPROVED_TUNING,
     AL16_RYTM_FILTER_TYPES,
@@ -49,6 +51,8 @@ from .file_export_contracts import (
     attach_local_file_export_error_context,
     classify_local_file_export_error,
     local_file_export_error_context,
+    safe_local_file_export_artifact_name,
+    validate_local_file_export_artifact_path,
 )
 from .writer import atomic_write
 
@@ -60,6 +64,15 @@ _DEFAULT_BUILD_EPOCH: Final[int] = 0
 _PHASE_R1_STATE_NUMBER: Final[int] = 2
 _AL16_EXPORT_FAILURE_FINGERPRINT: Final[str] = "al16.rytm_kit_export.failed"
 _AL16_MAPPING_BLOCKED_ERROR_CODE: Final[str] = "mapping_blocked"
+
+Al16BuildStatus: TypeAlias = Literal["blocked", "built"]
+FieldVerificationStatus: TypeAlias = Literal[
+    "critical_mapping_gap",
+    "invalid_machine_for_pad",
+    "resolved_but_not_emitted_while_preflight_is_blocked",
+    "resolved_tuning_pending_source_writer",
+    "verified_preserved_machine",
+]
 
 _logger = get_logger(__name__)
 
@@ -87,14 +100,14 @@ class FieldAudit:
     encoded_raw_value_or_bytes: object
     raw_location: str | None
     converter_or_enumeration: str
-    verification_status: str
+    verification_status: FieldVerificationStatus
 
 
 @dataclass(frozen=True)
 class Al16BuildResult:
     """Paths and status produced by one offline AL16 build attempt."""
 
-    status: str
+    status: Al16BuildStatus
     output_path: Path
     manifest_path: Path
     validation_path: Path
@@ -102,6 +115,14 @@ class Al16BuildResult:
     reference_sha256: str
     output_sha256: str | None
     gaps: tuple[MappingGap, ...]
+
+    def __post_init__(self) -> None:
+        if self.status not in ("blocked", "built"):
+            raise ValueError(f"unsupported AL16 build status: {self.status}")
+        if self.status == "built" and self.output_sha256 is None:
+            raise ValueError("a built AL16 result requires an output SHA-256")
+        if self.status == "blocked" and self.output_sha256 is not None:
+            raise ValueError("a blocked AL16 result cannot carry an output SHA-256")
 
 
 def _as_mapping(value: object, label: str) -> Mapping[str, object]:
@@ -190,19 +211,26 @@ def _build_timestamp() -> str:
 
 
 def _portable_reference_path(reference: Path) -> str:
-    return f"reference/{reference.name}"
+    artifact_name = safe_local_file_export_artifact_name(
+        reference,
+        fallback="reference.syx",
+    )
+    return f"reference/{artifact_name}"
 
 
 def _atomic_write_text(path: Path, value: str) -> None:
     try:
         atomic_write(path, value.encode("utf-8"), overwrite=True)
-    except (ValueError, TypeError, OSError) as exc:
+    except (ValueError, TypeError, OSError, KeyboardInterrupt, SystemExit) as exc:
         phase: LocalFileExportPhase = "output_write"
         attach_local_file_export_error_context(
             exc,
             error_code=classify_local_file_export_error(exc, phase=phase),
             phase=phase,
-            artifact_name=path.name,
+            artifact_name=safe_local_file_export_artifact_name(
+                path,
+                fallback="artifact",
+            ),
         )
         raise
 
@@ -228,6 +256,15 @@ def _validate_artifact_paths(
     validation_path: Path,
     byte_diff_path: Path,
 ) -> None:
+    for label, path in (
+        ("reference input", reference_path),
+        ("recipe input", recipe_path),
+        ("output artifact", output_path),
+        ("manifest artifact", manifest_path),
+        ("validation artifact", validation_path),
+        ("byte-diff artifact", byte_diff_path),
+    ):
+        validate_local_file_export_artifact_path(path, label=label)
     inputs = {"reference": reference_path, "recipe": recipe_path}
     artifacts = {
         "output": output_path,
@@ -301,7 +338,11 @@ def _original_semantic(converter: RytmValueConverter, raw_value: int) -> object:
     return low7
 
 
-def _gap_audit(path: str, requested: object, status: str = "critical_mapping_gap") -> FieldAudit:
+def _gap_audit(
+    path: str,
+    requested: object,
+    status: FieldVerificationStatus = "critical_mapping_gap",
+) -> FieldAudit:
     return FieldAudit(
         semantic_path=path,
         original_semantic_value=None,
@@ -559,8 +600,11 @@ def _inspect_recipe(
     tonal_zone = _as_string(kit.get("tonal_zone"), "kit.tonal_zone")
     if tonal_zone != state.tonal_zone:
         raise ValueError("kit.tonal_zone must match the reserved AL16 bank state")
-    if _as_int(kit.get("performance_context_bpm"), "kit.performance_context_bpm") != 138:
-        raise ValueError("kit.performance_context_bpm must be 138")
+    if (
+        _as_int(kit.get("performance_context_bpm"), "kit.performance_context_bpm")
+        != AL16_PERFORMANCE_CONTEXT_BPM
+    ):
+        raise ValueError(f"kit.performance_context_bpm must be {AL16_PERFORMANCE_CONTEXT_BPM}")
     _as_string(kit.get("description"), "kit.description")
     preserve = _as_string_list(recipe.get("preserve"), "preserve")
     if preserve != AL16_PRESERVED_GLOBAL_SECTIONS:
@@ -642,17 +686,19 @@ def _write_blocked_artifacts(
     manifest: Mapping[str, object],
     gaps: Sequence[MappingGap],
 ) -> None:
-    _atomic_write_text(
-        manifest_path,
-        json.dumps(manifest, indent=2, sort_keys=True, ensure_ascii=True) + "\n",
-    )
     gap_lines = [
         f"- `{gap.semantic_path}`: {gap.reason} Evidence required: {gap.evidence_required}"
         for gap in gaps
     ]
-    _atomic_write_text(
-        validation_path,
-        "\n".join(
+    artifacts = {
+        manifest_path: json.dumps(
+            manifest,
+            indent=2,
+            sort_keys=True,
+            ensure_ascii=True,
+        )
+        + "\n",
+        validation_path: "\n".join(
             [
                 "# AL02 LOCK Rytm Validation",
                 "",
@@ -693,16 +739,56 @@ def _write_blocked_artifacts(
                 "",
             ]
         ),
-    )
-    _atomic_write_text(
-        byte_diff_path,
-        "AL16 AL02 LOCK byte-diff report\n"
+        byte_diff_path: "AL16 AL02 LOCK byte-diff report\n"
         "status: blocked before mutation\n"
         "intentionally changed raw bytes: 0\n"
         "unknown or reserved bytes changed: 0\n"
         "output SysEx emitted: no\n"
         "reason: critical saved-kit mappings are not positively verified\n",
-    )
+    }
+    _publish_artifact_set(artifacts)
+
+
+def _publish_artifact_set(artifacts: Mapping[Path, str]) -> None:
+    """Stage and publish one complete evidence generation with rollback."""
+
+    destinations = tuple(artifacts)
+    if not destinations:
+        raise ValueError("artifact publication requires at least one destination")
+    parent_keys = {_canonical_path_key(path.parent) for path in destinations}
+    if len(parent_keys) != 1:
+        raise ValueError("artifact publication destinations must share one directory")
+    parent = destinations[0].parent
+    parent.mkdir(parents=True, exist_ok=True)
+    with TemporaryDirectory(prefix=".al16-evidence-", dir=parent) as temporary:
+        temporary_root = Path(temporary)
+        staged_root = temporary_root / "staged"
+        backup_root = temporary_root / "backups"
+        staged_root.mkdir()
+        backup_root.mkdir()
+        staged_paths: dict[Path, Path] = {}
+        for destination, value in artifacts.items():
+            staged_path = staged_root / destination.name
+            _atomic_write_text(staged_path, value)
+            staged_paths[destination] = staged_path
+
+        backups: list[tuple[Path, Path]] = []
+        published: list[Path] = []
+        try:
+            for destination in destinations:
+                if destination.exists():
+                    backup_path = backup_root / destination.name
+                    os.replace(destination, backup_path)
+                    backups.append((destination, backup_path))
+            for destination in destinations:
+                os.replace(staged_paths[destination], destination)
+                published.append(destination)
+        except (OSError, KeyboardInterrupt, SystemExit):
+            for destination in reversed(published):
+                destination.unlink(missing_ok=True)
+            for destination, backup_path in reversed(backups):
+                os.replace(backup_path, destination)
+            raise
 
 
 def build_al16_rytm_kit(
@@ -717,18 +803,42 @@ def build_al16_rytm_kit(
     metrics = get_metrics()
     started_at = time.perf_counter()
     export_phase: LocalFileExportPhase = "validation"
-    failure_artifact_name = output_path.name
+    reference_name = safe_local_file_export_artifact_name(
+        reference_path,
+        fallback="reference.syx",
+    )
+    recipe_name = safe_local_file_export_artifact_name(
+        recipe_path,
+        fallback="recipe.yaml",
+    )
+    output_name = safe_local_file_export_artifact_name(
+        output_path,
+        fallback="output.syx",
+    )
+    failure_artifact_name = output_name
     operation_id = ""
     result: Al16BuildResult
     try:
         with operation(
             "al16_rytm_kit_export",
             logger=_logger,
-            reference_name=reference_path.name,
-            recipe_name=recipe_path.name,
-            output_name=output_path.name,
+            reference_name=reference_name,
+            recipe_name=recipe_name,
+            output_name=output_name,
             destination_slot=destination_slot,
         ) as operation_id:
+            validate_local_file_export_artifact_path(
+                reference_path,
+                label="reference input",
+            )
+            validate_local_file_export_artifact_path(
+                recipe_path,
+                label="recipe input",
+            )
+            validate_local_file_export_artifact_path(
+                output_path,
+                label="output artifact",
+            )
             manifest_path, validation_path, byte_diff_path = _artifact_paths(output_path)
             _validate_artifact_paths(
                 reference_path=reference_path,
@@ -739,14 +849,14 @@ def build_al16_rytm_kit(
                 byte_diff_path=byte_diff_path,
             )
             export_phase = "output_write"
-            failure_artifact_name = output_path.name
+            failure_artifact_name = output_name
             if output_path.exists():
                 raise FileExistsError(
                     "refusing a blocked build while a potentially stale output exists: "
-                    f"{output_path}"
+                    f"{output_name}"
                 )
             export_phase = "source_read"
-            failure_artifact_name = reference_path.name
+            failure_artifact_name = reference_name
             reference_bytes = reference_path.read_bytes()
             reference_sha256 = hashlib.sha256(reference_bytes).hexdigest()
             if reference_sha256 != _REFERENCE_EXPECTED_SHA256:
@@ -760,7 +870,7 @@ def build_al16_rytm_kit(
                 raise ValueError("Analog Rytm reference decode/encode is not byte-identical")
 
             export_phase = "source_read"
-            failure_artifact_name = recipe_path.name
+            failure_artifact_name = recipe_name
             recipe = _load_recipe(recipe_path)
             export_phase = "validation"
             audits, gaps, preserved_tracks = _inspect_recipe(
@@ -810,7 +920,10 @@ def build_al16_rytm_kit(
                 "midi_messages_sent": 0,
             }
             export_phase = "output_write"
-            failure_artifact_name = manifest_path.name
+            failure_artifact_name = safe_local_file_export_artifact_name(
+                manifest_path,
+                fallback="manifest.json",
+            )
             _write_blocked_artifacts(
                 manifest_path=manifest_path,
                 validation_path=validation_path,
@@ -853,9 +966,9 @@ def build_al16_rytm_kit(
                 "failure_phase": error_context.phase,
                 "artifact_name": error_context.artifact_name,
                 "fingerprint": _AL16_EXPORT_FAILURE_FINGERPRINT,
-                "reference_name": reference_path.name,
-                "recipe_name": recipe_path.name,
-                "output_name": output_path.name,
+                "reference_name": reference_name,
+                "recipe_name": recipe_name,
+                "output_name": output_name,
                 "error_type": type(exc).__name__,
                 "duration_ms": duration_ms,
                 "metrics_summary": metrics.format_summary(),
@@ -872,7 +985,7 @@ def build_al16_rytm_kit(
             "operation": "al16_rytm_kit_export",
             "outcome": "blocked",
             "error_code": _AL16_MAPPING_BLOCKED_ERROR_CODE,
-            "output_name": output_path.name,
+            "output_name": output_name,
             "mapping_gap_count": len(result.gaps),
             "duration_ms": duration_ms,
             "metrics_summary": metrics.format_summary(),
@@ -882,8 +995,10 @@ def build_al16_rytm_kit(
 
 
 __all__ = [
+    "Al16BuildStatus",
     "Al16BuildResult",
     "FieldAudit",
+    "FieldVerificationStatus",
     "MappingGap",
     "build_al16_rytm_kit",
     "deterministic_recipe_identifier",

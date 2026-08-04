@@ -24,6 +24,10 @@
       "additionalProperties": { "enum": ["pending", "in_progress", "complete", "blocked"] }
     },
     "last_event": { "type": "string", "minLength": 1 },
-    "review_base_head_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+    "review_base_head_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "Exact pushed PR head used as the base for the latest completed review; later local hardening remains pending until pushed and reviewed."
+    }
   }
 }

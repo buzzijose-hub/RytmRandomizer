@@ -154,6 +154,24 @@ Complete DNA does not imply complete saved-kit SysEx write coverage. Keep
 unproven saved-kit fields deferred while sending manual-backed CC/NRPN rows
 through the separately guarded live path.
 
+## Transactional evidence sidecars
+
+When a blocked offline build publishes several evidence sidecars without a
+single manifest commit marker, treat the files as one generation:
+
+1. Validate every artifact basename with a bounded, portable policy before any
+   read or write. Reject empty names, dot entries, separators, drive syntax,
+   control bytes, and overlong names.
+2. Render every sidecar into a temporary staging directory first.
+3. Preserve any previous complete generation before replacing destinations.
+4. If any replacement or interruption fails, restore the previous generation
+   and remove newly published partial files.
+5. Pin SHA-256 values for committed evidence in tests so prose, JSON, and
+   byte-diff reports cannot drift independently.
+
+Atomic replacement of each file is not sufficient by itself; generation-level
+consistency is the contract.
+
 ## When to Use
 
 Trigger conditions:

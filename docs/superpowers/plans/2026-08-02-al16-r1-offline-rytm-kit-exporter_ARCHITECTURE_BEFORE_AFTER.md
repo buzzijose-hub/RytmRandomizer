@@ -5,11 +5,11 @@
 | Concern | Before | After |
 | --- | --- | --- |
 | Recipe facts | No canonical AL16 bank contract | `data.al16_rytm` owns states, pad roles, value domains, and known mappings |
-| Export contract | No Rytm evidence result | `Al16RytmKitExportResult` records blocked output and deterministic sidecars |
+| Export contract | No AL16 Rytm evidence result | `Al16BuildResult` records a closed `blocked` or `built` outcome and deterministic sidecars |
 | File failures | A4-local classifier | Neutral `LocalFileExportErrorCode` is shared by A4 and AL16 adapters |
-| Codec use | Existing Rytm codec only | Exporter composes the codec without changing its format contract |
+| Codec use | No strict Analog Rytm saved-kit codec | A dedicated Rytm codec composes the shared Elektron envelope helpers without changing their format contract |
 | Hardware boundary | Passive CLI invariant | AL16 imports and tests prove zero MIDI dependency or port access |
-| Output safety | Sidecar paths could collide | Canonical path checks reject reference, recipe, output, or sidecar overlap |
+| Output safety | Sidecar paths could collide or publish partially | Canonical path checks reject overlap; bounded portable names and transactional publication preserve one complete evidence generation |
 | Scope | Future sixteen-kit bank | Phase R1 mechanically permits only the AL02 evidence audit |
 
 No device subpackage, top-level module, MIDI adapter, or alternate codec was
