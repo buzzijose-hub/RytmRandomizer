@@ -58,6 +58,7 @@ from .file_export_contracts import (
     classify_local_file_export_error,
     local_file_export_error_context,
     safe_local_file_export_artifact_name,
+    validate_distinct_local_file_export_paths,
     validate_local_file_export_artifact_path,
 )
 from .writer import WriteSetError, atomic_write_set
@@ -365,10 +366,6 @@ def _artifact_paths(output_path: Path) -> tuple[Path, Path, Path]:
     )
 
 
-def _canonical_path_key(path: Path) -> str:
-    return os.path.normcase(str(path.resolve(strict=False)))
-
-
 def _validate_artifact_paths(
     *,
     reference_path: Path,
@@ -387,30 +384,19 @@ def _validate_artifact_paths(
         ("byte-diff artifact", byte_diff_path),
     ):
         validate_local_file_export_artifact_path(path, label=label)
-    inputs = {"reference": reference_path, "recipe": recipe_path}
-    artifacts = {
-        "output": output_path,
-        "manifest": manifest_path,
-        "validation": validation_path,
-        "byte diff": byte_diff_path,
-    }
-    input_keys = {label: _canonical_path_key(path) for label, path in inputs.items()}
-    artifact_keys: dict[str, str] = {}
-    for artifact_label, artifact_path in artifacts.items():
-        artifact_key = _canonical_path_key(artifact_path)
-        for input_label, input_key in input_keys.items():
-            if artifact_key == input_key:
-                raise Al16BuildError(
-                    "artifact_path_collision",
-                    f"{artifact_label} artifact path collides with {input_label} input",
-                )
-        for other_label, other_key in artifact_keys.items():
-            if artifact_key == other_key:
-                raise Al16BuildError(
-                    "artifact_path_collision",
-                    f"{artifact_label} artifact path collides with {other_label} artifact",
-                )
-        artifact_keys[artifact_label] = artifact_key
+    try:
+        validate_distinct_local_file_export_paths(
+            {
+                "reference input": reference_path,
+                "recipe input": recipe_path,
+                "output artifact": output_path,
+                "manifest artifact": manifest_path,
+                "validation artifact": validation_path,
+                "byte-diff artifact": byte_diff_path,
+            }
+        )
+    except ValueError as exc:
+        raise Al16BuildError("artifact_path_collision", str(exc)) from exc
 
 
 def _machine_label_for_raw(raw_value: int) -> str:

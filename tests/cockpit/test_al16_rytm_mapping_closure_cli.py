@@ -137,6 +137,42 @@ def test_registered_command_writes_review_only_report(
     assert "Error [overwrite_refused]" in captured.err
 
 
+def test_command_rejects_colliding_path_roles_before_source_read(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import al16_rytm_mapping_closure_cli as cli
+
+    reference, _configured, recipe, manifest = _write_inputs(tmp_path)
+    report_path = tmp_path / "mapping-evidence.json"
+    analyzer_called = False
+
+    def forbidden_analyzer(**_kwargs: object) -> object:
+        nonlocal analyzer_called
+        analyzer_called = True
+        raise AssertionError("source analyzer must not run for colliding path roles")
+
+    monkeypatch.setattr(cli, "analyze_mapping_capture_files", forbidden_analyzer)
+
+    assert (
+        cli.handle_al16_rytm_mapping_evidence(
+            reference_path=reference,
+            configured_path=reference,
+            recipe_path=recipe,
+            gap_manifest_path=manifest,
+            report_path=report_path,
+        )
+        == 2
+    )
+    captured = capsys.readouterr()
+    assert analyzer_called is False
+    assert captured.out == ""
+    assert "Error [validation]" in captured.err
+    assert str(tmp_path) not in captured.err
+    assert not report_path.exists()
+
+
 @pytest.mark.parametrize(
     ("args", "message"),
     [

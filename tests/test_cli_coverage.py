@@ -96,18 +96,38 @@ def test_registry_formatters_reject_inconsistent_existing_sections(
         cli.format_preview_command_report("COMMAND")
 
 
+def test_canonical_registry_key_rejects_a_missing_section(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer import registry
+
+    monkeypatch.setattr(
+        registry,
+        "get_registry_section",
+        lambda section: {
+            "section": str(section),
+            "exists": False,
+            "count": 0,
+            "items": None,
+        },
+    )
+
+    assert cli._canonical_registry_key("commands", KNOWN_COMMAND_KEY) is None
+
+
 @pytest.mark.parametrize(
-    "formatter",
+    ("formatter", "known_key"),
     (
-        cli.format_inspect_command_report,
-        cli.format_inspect_scene_report,
-        cli.format_inspect_group_profile_report,
-        cli.format_preview_scene_report,
-        cli.format_preview_group_profile_report,
+        (cli.format_inspect_command_report, KNOWN_COMMAND_KEY),
+        (cli.format_inspect_scene_report, KNOWN_SCENE_KEY),
+        (cli.format_inspect_group_profile_report, KNOWN_GROUP_PROFILE_KEY),
+        (cli.format_preview_scene_report, KNOWN_SCENE_KEY),
+        (cli.format_preview_group_profile_report, KNOWN_GROUP_PROFILE_KEY),
     ),
 )
 def test_registry_item_formatters_reject_missing_existing_metadata(
     formatter,
+    known_key: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from rytm_randomizer import registry
@@ -124,7 +144,114 @@ def test_registry_item_formatters_reject_missing_existing_metadata(
     )
 
     with pytest.raises(TypeError, match="missing metadata"):
-        formatter("ITEM")
+        formatter(known_key)
+
+
+@pytest.mark.parametrize(
+    ("formatter", "known_key"),
+    (
+        (cli.format_inspect_command_report, KNOWN_COMMAND_KEY),
+        (cli.format_inspect_scene_report, KNOWN_SCENE_KEY),
+        (cli.format_inspect_group_profile_report, KNOWN_GROUP_PROFILE_KEY),
+        (cli.format_preview_scene_report, KNOWN_SCENE_KEY),
+        (cli.format_preview_group_profile_report, KNOWN_GROUP_PROFILE_KEY),
+    ),
+)
+def test_registry_item_formatters_reject_missing_canonical_items(
+    formatter,
+    known_key: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer import registry
+
+    monkeypatch.setattr(
+        registry,
+        "get_registry_item",
+        lambda section, key: {
+            "section": str(section),
+            "section_exists": True,
+            "key": str(key),
+            "exists": False,
+            "metadata": None,
+        },
+    )
+
+    with pytest.raises(ValueError, match="canonical"):
+        formatter(known_key)
+
+
+def test_command_preview_rejects_a_registry_that_loses_its_items(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer import registry
+
+    valid_report = registry.get_registry_section("commands")
+    reports = iter(
+        (
+            valid_report,
+            {
+                "section": "commands",
+                "exists": True,
+                "count": 0,
+                "items": None,
+            },
+        )
+    )
+    monkeypatch.setattr(registry, "get_registry_section", lambda _section: next(reports))
+
+    with pytest.raises(TypeError, match="command registry is missing items"):
+        cli.format_preview_command_report(KNOWN_COMMAND_KEY)
+
+
+def test_command_preview_rejects_a_missing_canonical_preview(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer import inspection
+
+    monkeypatch.setattr(
+        inspection,
+        "preview_command",
+        lambda _registry, _command: {
+            "exists": False,
+            "category": None,
+            "scope": None,
+            "target": None,
+            "pad": None,
+            "scaffold_only": None,
+            "executable": None,
+            "forbidden_or_no_touch": False,
+            "validation": {"ok": False, "errors": []},
+            "safety_summary": "",
+        },
+    )
+
+    with pytest.raises(ValueError, match="canonical command key has no preview"):
+        cli.format_preview_command_report(KNOWN_COMMAND_KEY)
+
+
+@pytest.mark.parametrize(
+    ("alias", "canonical_target"),
+    (("rytm-only", "rytm"), ("a4-only", "a4")),
+)
+def test_dual_machine_target_report_accepts_explicit_aliases(
+    alias: str,
+    canonical_target: str,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from rytm_randomizer.dual_machine import reports
+
+    observed: list[str] = []
+
+    def fake_target_report(target: str) -> str:
+        observed.append(target)
+        return "passive target report"
+
+    monkeypatch.setattr(reports, "target_report", fake_target_report)
+
+    assert cli.main(["dual-machine-target-report", alias]) == 0
+    assert observed == [canonical_target]
+    assert capsys.readouterr().out == "passive target report\n"
 
 
 # ---------------------------------------------------------------------------
@@ -513,7 +640,7 @@ def test_format_registry_search_report_match_returns_match_line():
 
     assert lines[0] == "RytmRandomizer passive command search"
     assert lines[1] == "Section: commands"
-    assert lines[2] == f"Query: {KNOWN_COMMAND_KEY}"
+    assert lines[2] == "Query: <input omitted>"
     assert lines[3].startswith("Match count: ")
     # At least one match line because we searched for a known key.
     assert any(line.startswith(f"- {KNOWN_COMMAND_KEY}: ") for line in lines)
@@ -538,7 +665,7 @@ def test_format_registry_search_report_unknown_section_branch():
 
     assert lines[0] == "RytmRandomizer passive command search"
     assert lines[1] == "Section: missing-section"
-    assert lines[2] == "Query: anything"
+    assert lines[2] == "Query: <input omitted>"
     assert lines[3] == "Match count: 0"
     assert lines[4] == "Matches:"
     assert any(line.startswith("- no matches found.") for line in lines)
@@ -1420,7 +1547,7 @@ def test_main_search_commands_writes_search_results(capsys):
     captured = capsys.readouterr()
     assert rc == 0
     assert "RytmRandomizer passive command search" in captured.out
-    assert f"Query: {KNOWN_COMMAND_KEY}" in captured.out
+    assert "Query: <input omitted>" in captured.out
     assert captured.out.endswith("\n")
 
 
@@ -1430,7 +1557,7 @@ def test_main_search_scenes_writes_search_results(capsys):
     captured = capsys.readouterr()
     assert rc == 0
     assert "RytmRandomizer passive scene search" in captured.out
-    assert f"Query: {KNOWN_SCENE_KEY}" in captured.out
+    assert "Query: <input omitted>" in captured.out
     assert captured.out.endswith("\n")
 
 
@@ -1440,8 +1567,37 @@ def test_main_search_group_profiles_writes_search_results(capsys):
     captured = capsys.readouterr()
     assert rc == 0
     assert "RytmRandomizer passive group profile search" in captured.out
-    assert f"Query: {KNOWN_GROUP_PROFILE_KEY}" in captured.out
+    assert "Query: <input omitted>" in captured.out
     assert captured.out.endswith("\n")
+
+
+@pytest.mark.parametrize(
+    ("command", "expected_exit_code"),
+    [
+        ("search-commands", 0),
+        ("search-scenes", 0),
+        ("search-group-profiles", 0),
+        ("inspect-command", 1),
+        ("inspect-scene", 1),
+        ("inspect-group-profile", 1),
+        ("preview-command", 1),
+        ("preview-scene", 1),
+        ("preview-group-profile", 1),
+        ("dual-machine-target-report", 2),
+    ],
+)
+def test_passive_registry_commands_never_echo_caller_text(
+    command: str,
+    expected_exit_code: int,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    caller_text = "secret-token-do-not-log-123"
+
+    assert cli.main([command, caller_text]) == expected_exit_code
+
+    captured = capsys.readouterr()
+    assert caller_text not in captured.out
+    assert caller_text not in captured.err
 
 
 def test_main_inspect_command_known_key_returns_zero(capsys):

@@ -21,6 +21,7 @@ from .file_export_contracts import (
     LocalFileExportPhase,
     classify_local_file_export_error,
     safe_local_file_export_artifact_name,
+    validate_distinct_local_file_export_paths,
     validate_local_file_export_artifact_path,
 )
 from .writer import atomic_write
@@ -131,6 +132,15 @@ def handle_al16_rytm_mapping_evidence(
                 (report_path, "report_path"),
             ):
                 validate_local_file_export_artifact_path(path, label=label)
+            validate_distinct_local_file_export_paths(
+                {
+                    "reference input": reference_path,
+                    "configured input": configured_path,
+                    "recipe input": recipe_path,
+                    "gap-manifest input": gap_manifest_path,
+                    "report artifact": report_path,
+                }
+            )
             export_phase = "source_read"
             report = analyze_mapping_capture_files(
                 reference_path=reference_path,

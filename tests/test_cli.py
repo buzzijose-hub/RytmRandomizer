@@ -2427,6 +2427,7 @@ def test_dual_machine_target_report_rejects_unknown_target(capsys) -> None:
     err = capsys.readouterr().err
     assert exit_code == 2
     assert "unknown target" in err
+    assert "octatrack" not in err
 
 
 def test_dual_machine_target_report_requires_target_arg(capsys) -> None:
@@ -3455,9 +3456,8 @@ def test_search_commands_are_case_insensitive_and_deterministic():
 
     assert first.returncode == 0
     assert second.returncode == 0
-    assert normalize_newlines(first.stdout).replace("Query: guarded", "Query: QUERY") == (
-        normalize_newlines(second.stdout).replace("Query: GUARDED", "Query: QUERY")
-    )
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert "Query: <input omitted>" in normalize_newlines(first.stdout)
     assert first.stderr == ""
     assert second.stderr == ""
 

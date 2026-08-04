@@ -10,17 +10,18 @@ Last updated: 2026-08-04. This file is a hand-authored snapshot and is meant to 
   - Bound every mapping-evidence report to the exact recipe bytes, R1 gap
     manifest, deterministic recipe identifier, and initialized-reference SHA.
   - Added pre-I/O path validation, bounded error output, operation/metric
-    observability, independent test oracles, and a positive destination-slot
-    header proof.
+    observability, independent test oracles, and synthetic destination-slot
+    header-diff analyzer coverage. Hardware ownership remains pending review.
   - The operator workflow is one multi-gap configured saved-KIT capture plus
     one separate scratch-slot proof, not hundreds of single-parameter rounds.
     It remains passive and cannot open MIDI, transmit SysEx, promote mappings,
     or emit the blocked AL02 kit.
   - Fresh single-process verification passed 195 focused AL16 tests, 742
     architecture tests, 685 frozen V1.34 parity tests, and the 7,733-test full
-    suite with 4 skips. All 4 touched production modules have 100 percent
-    statement and branch coverage, all 10 touched production modules pass
-    strict typing, and total package coverage is 99.45 percent.
+    suite with 4 skips. The four production modules changed by the initial
+    review-repair commit have 100 percent statement and branch coverage; all
+    11 production modules touched across the PR pass strict typing. Total
+    package coverage is 99.45 percent.
 
 - 2026-08-03: Prepared the fail-closed AL16 Phase R1 offline Analog Rytm kit exporter for review.
   - Registered the passive `al16-rytm-kit-export` command and the pure Rytm

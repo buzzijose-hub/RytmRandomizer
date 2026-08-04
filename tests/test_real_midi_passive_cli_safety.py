@@ -27,6 +27,8 @@ the passive CLI is passive).
 from __future__ import annotations
 
 import ast
+import hashlib
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -431,6 +433,64 @@ def test_live_gui_full_handlers_do_not_import_real_midi_or_adapter_modules(tmp_p
 
         assert result.returncode == 0, (command, result.stderr)
         assert result.stderr == ""
+
+
+def test_al16_mapping_evidence_full_handler_imports_no_real_midi_modules(
+    tmp_path: Path,
+) -> None:
+    from conftest import ANALOG_RYTM_SAVED_KIT_TEST_HEADER
+    from rytm_randomizer.cockpit.export.al16_rytm_kit import (
+        deterministic_recipe_identifier,
+    )
+    from rytm_randomizer.data.analog_rytm_kit_layout import RYTM_KIT_RAW_SIZE
+    from rytm_randomizer.devices.strategies.analog_rytm_saved_kit_codec import (
+        encode_analog_rytm_saved_kit_frame,
+    )
+
+    reference_path = tmp_path / "reference.syx"
+    configured_path = tmp_path / "configured.syx"
+    recipe_path = tmp_path / "recipe.yaml"
+    manifest_path = tmp_path / "manifest.json"
+    report_path = tmp_path / "mapping-evidence.json"
+    frame = encode_analog_rytm_saved_kit_frame(
+        header=ANALOG_RYTM_SAVED_KIT_TEST_HEADER,
+        unpacked=bytes(RYTM_KIT_RAW_SIZE),
+    )
+    recipe: dict[str, object] = {}
+    recipe_payload = json.dumps(recipe, sort_keys=True).encode("utf-8")
+    reference_path.write_bytes(frame)
+    configured_path.write_bytes(frame)
+    recipe_path.write_bytes(recipe_payload)
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "critical_mapping_gaps": [{"semantic_path": "destination_slot"}],
+                "deterministic_recipe_identifier": deterministic_recipe_identifier(recipe),
+                "recipe_sha256": hashlib.sha256(recipe_payload).hexdigest(),
+                "reference_sha256": hashlib.sha256(frame).hexdigest(),
+            },
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+
+    result = run_cli_in_process_and_check_no_real_midi_or_adapter_modules(
+        "al16-rytm-mapping-evidence",
+        "--reference",
+        str(reference_path),
+        "--configured",
+        str(configured_path),
+        "--recipe",
+        str(recipe_path),
+        "--gap-manifest",
+        str(manifest_path),
+        "--report",
+        str(report_path),
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stderr == ""
+    assert report_path.exists()
 
 
 def test_passive_cli_sweep_exposes_no_active_or_port_commands():

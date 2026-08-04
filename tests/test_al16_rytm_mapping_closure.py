@@ -53,6 +53,116 @@ _GAP_PATHS = (
     "tracks.9.source.decay",
     "tracks.9.amp.vol",
 )
+_EXPECTED_GAP_LOCATIONS = {
+    "destination_slot": (
+        "destination_header_proof_required",
+        None,
+        None,
+        "separate user-selected scratch-slot header proof",
+    ),
+    "tracks.1.machine": (
+        "candidate_location",
+        170,
+        1,
+        "existing decoded-kit machine-type candidate offset; adjacent flag validity still requires review",
+    ),
+    "tracks.1.source.dec": (
+        "candidate_location",
+        78,
+        1,
+        "manual-backed bd_classic Decay NRPN 1:2 plus candidate saved-kit sound offset 0x0020",
+    ),
+    "tracks.1.source.hld": (
+        "candidate_location",
+        80,
+        1,
+        "manual-backed bd_classic Hold NRPN 1:3 plus candidate saved-kit sound offset 0x0022",
+    ),
+    "tracks.1.source.swd": (
+        "candidate_location",
+        84,
+        1,
+        "manual-backed bd_classic Sweep Depth NRPN 1:5 plus candidate saved-kit sound offset 0x0026",
+    ),
+    "tracks.1.source.swt": (
+        "candidate_location",
+        82,
+        1,
+        "manual-backed bd_classic Sweep Time NRPN 1:4 plus candidate saved-kit sound offset 0x0024",
+    ),
+    "tracks.1.source.trn": (
+        "candidate_location",
+        88,
+        1,
+        "manual-backed bd_classic Transient Tick NRPN 1:7 plus candidate saved-kit sound offset 0x002A",
+    ),
+    "tracks.1.source.tun": (
+        "candidate_location",
+        76,
+        1,
+        "manual-backed bd_classic Tune NRPN 1:1 plus candidate saved-kit sound offset 0x001E",
+    ),
+    "tracks.1.source.wav": (
+        "candidate_location",
+        86,
+        1,
+        "manual-backed bd_classic Waveform NRPN 1:6 plus candidate saved-kit sound offset 0x0028",
+    ),
+    "tracks.1.amp.vol": (
+        "candidate_location",
+        136,
+        1,
+        "manual-backed Amp Volume NRPN 1:31 plus candidate saved-kit sound offset 0x005A",
+    ),
+    "tracks.3.machine": (
+        "candidate_location",
+        494,
+        1,
+        "existing decoded-kit machine-type candidate offset; adjacent flag validity still requires review",
+    ),
+    "tracks.3.amp.vol": (
+        "candidate_location",
+        460,
+        1,
+        "manual-backed Amp Volume NRPN 1:31 plus candidate saved-kit sound offset 0x005A",
+    ),
+    "tracks.6.source.decay": (
+        "candidate_location",
+        888,
+        1,
+        "manual-backed xt_classic Decay NRPN 1:2 plus candidate saved-kit sound offset 0x0020",
+    ),
+    "tracks.6.source.target_note": (
+        "candidate_location",
+        886,
+        1,
+        "manual-backed xt_classic Tune NRPN 1:1 plus candidate saved-kit sound offset 0x001E",
+    ),
+    "tracks.6.amp.vol": (
+        "candidate_location",
+        946,
+        1,
+        "manual-backed Amp Volume NRPN 1:31 plus candidate saved-kit sound offset 0x005A",
+    ),
+    "tracks.9.machine": (
+        "candidate_location",
+        1466,
+        1,
+        "existing decoded-kit machine-type candidate offset; adjacent flag validity still requires review",
+    ),
+    "tracks.9.source.decay": (
+        "unresolved_recipe_machine",
+        None,
+        None,
+        "recipe selects unknown machine ch_basic",
+    ),
+    "tracks.9.amp.vol": (
+        "candidate_location",
+        1432,
+        1,
+        "manual-backed Amp Volume NRPN 1:31 plus candidate saved-kit sound offset 0x005A",
+    ),
+}
 
 
 def _recipe() -> dict[str, object]:
@@ -269,6 +379,22 @@ def test_candidate_locations_use_existing_catalog_and_keep_ambiguity_unresolved(
     assert ambiguous_hat.unpacked_offset is None
     assert "ch_basic" in ambiguous_hat.source
     assert destination.status == "destination_header_proof_required"
+
+
+def test_all_gap_locations_match_explicit_review_oracle() -> None:
+    recipe = _recipe()
+
+    actual = {}
+    for path in _GAP_PATHS:
+        location = candidate_location_for_path(path, recipe)
+        actual[path] = (
+            location.status,
+            location.unpacked_offset,
+            location.width,
+            location.source,
+        )
+
+    assert actual == _EXPECTED_GAP_LOCATIONS
 
 
 def test_offline_capture_analyzer_reports_candidates_without_promoting_them() -> None:

@@ -568,6 +568,26 @@ def _metadata_search_text(key: object, metadata: Mapping[str, object]) -> str:
     return "\n".join(values).lower()
 
 
+def _canonical_registry_key(section_name: str, requested_key: object) -> str | None:
+    """Return a matching key sourced from the static registry, never caller text."""
+    from .registry import get_registry_section
+
+    report = cast(_RegistrySectionReport, get_registry_section(section_name))
+    items = report["items"]
+    if not report["exists"]:
+        return None
+    if items is None:
+        raise TypeError("existing registry is missing items")
+
+    normalized_key = str(requested_key)
+    if section_name in ("commands", "scenes"):
+        normalized_key = normalized_key.upper()
+    for registry_key in items:
+        if registry_key == normalized_key:
+            return registry_key
+    return None
+
+
 def format_registry_list_report(section_name: str, title: str) -> list[str]:
     """Return deterministic passive registry list lines."""
     from .registry import get_registry_section
@@ -619,7 +639,7 @@ def format_registry_search_report(section_name: str, title: str, query: object) 
         return [
             f"RytmRandomizer passive {title}",
             f"Section: {report['section']}",
-            f"Query: {normalized_query}",
+            "Query: <input omitted>",
             "Match count: 0",
             "Matches:",
             "- no matches found. No MIDI was sent. No command executed.",
@@ -638,7 +658,7 @@ def format_registry_search_report(section_name: str, title: str, query: object) 
     lines = [
         f"RytmRandomizer passive {title}",
         f"Section: {report['section']}",
-        f"Query: {normalized_query}",
+        "Query: <input omitted>",
         f"Match count: {len(matches)}",
         "Matches:",
     ]
@@ -665,16 +685,18 @@ def format_inspect_command_report(command_key: object) -> list[str]:
     """Return deterministic passive command metadata lines."""
     from .registry import get_registry_item
 
-    report = cast(_RegistryItemReport, get_registry_item("commands", command_key))
-    key = report["key"]
-
-    if not report["exists"]:
+    key = _canonical_registry_key("commands", command_key)
+    if key is None:
         return [
             "RytmRandomizer passive command inspection",
-            f"Command: {key}",
+            "Command: <unrecognized>",
             "Found: False",
             "Message: Command metadata not found. No MIDI was sent. No command executed.",
         ]
+
+    report = cast(_RegistryItemReport, get_registry_item("commands", key))
+    if not report["exists"]:
+        raise ValueError("canonical command key is missing from the registry")
 
     metadata = report["metadata"]
     if metadata is None:
@@ -704,16 +726,18 @@ def format_inspect_scene_report(scene_key: object) -> list[str]:
     """Return deterministic passive scene metadata lines."""
     from .registry import get_registry_item
 
-    report = cast(_RegistryItemReport, get_registry_item("scenes", scene_key))
-    key = report["key"]
-
-    if not report["exists"]:
+    key = _canonical_registry_key("scenes", scene_key)
+    if key is None:
         return [
             "RytmRandomizer passive scene inspection",
-            f"Scene: {key}",
+            "Scene: <unrecognized>",
             "Found: False",
             "Message: Scene metadata not found. No MIDI was sent. No command executed.",
         ]
+
+    report = cast(_RegistryItemReport, get_registry_item("scenes", key))
+    if not report["exists"]:
+        raise ValueError("canonical scene key is missing from the registry")
 
     metadata = report["metadata"]
     if metadata is None:
@@ -743,16 +767,18 @@ def format_inspect_group_profile_report(profile_key: object) -> list[str]:
     """Return deterministic passive group profile metadata lines."""
     from .registry import get_registry_item
 
-    report = cast(_RegistryItemReport, get_registry_item("group_profiles", profile_key))
-    key = report["key"]
-
-    if not report["exists"]:
+    key = _canonical_registry_key("group_profiles", profile_key)
+    if key is None:
         return [
             "RytmRandomizer passive group profile inspection",
-            f"Group profile: {key}",
+            "Group profile: <unrecognized>",
             "Found: False",
             "Message: Group profile metadata not found. No MIDI was sent. No command executed.",
         ]
+
+    report = cast(_RegistryItemReport, get_registry_item("group_profiles", key))
+    if not report["exists"]:
+        raise ValueError("canonical group profile key is missing from the registry")
 
     metadata = report["metadata"]
     if metadata is None:
@@ -779,7 +805,15 @@ def format_preview_command_report(command_key: object) -> list[str]:
     from .inspection import preview_command  # pyright: ignore[reportUnknownVariableType]
     from .registry import get_registry_section
 
-    command = str(command_key).upper()
+    command = _canonical_registry_key("commands", command_key)
+    if command is None:
+        return [
+            "RytmRandomizer passive command preview",
+            "Command: <unrecognized>",
+            "Found: False",
+            "Message: Command preview not found. No MIDI was sent. No command executed. No hardware was mutated.",
+            "Safety summary: No MIDI would be sent. No command would execute.",
+        ]
     registry_report = cast(_RegistrySectionReport, get_registry_section("commands"))
     registry_items = registry_report["items"]
     if registry_report["exists"] and registry_items is None:
@@ -792,13 +826,7 @@ def format_preview_command_report(command_key: object) -> list[str]:
     report = _require_command_preview(preview(registry, command))
 
     if not report["exists"]:
-        return [
-            "RytmRandomizer passive command preview",
-            f"Command: {command}",
-            "Found: False",
-            "Message: Command preview not found. No MIDI was sent. No command executed. No hardware was mutated.",
-            f"Safety summary: {report['safety_summary']}",
-        ]
+        raise ValueError("canonical command key has no preview")
 
     validation = report["validation"]
     return [
@@ -832,16 +860,18 @@ def format_preview_scene_report(scene_key: object) -> list[str]:
     """Return deterministic passive scene preview lines."""
     from .registry import get_registry_item
 
-    report = cast(_RegistryItemReport, get_registry_item("scenes", scene_key))
-    key = report["key"]
-
-    if not report["exists"]:
+    key = _canonical_registry_key("scenes", scene_key)
+    if key is None:
         return [
             "RytmRandomizer passive scene preview",
-            f"Scene: {key}",
+            "Scene: <unrecognized>",
             "Found: False",
             "Message: Scene preview not found. No MIDI was sent. No scene executed. No command executed. No hardware was mutated.",
         ]
+
+    report = cast(_RegistryItemReport, get_registry_item("scenes", key))
+    if not report["exists"]:
+        raise ValueError("canonical scene key is missing from the registry")
 
     metadata = report["metadata"]
     if metadata is None:
@@ -876,16 +906,18 @@ def format_preview_group_profile_report(profile_key: object) -> list[str]:
     """Return deterministic passive group profile preview lines."""
     from .registry import get_registry_item
 
-    report = cast(_RegistryItemReport, get_registry_item("group_profiles", profile_key))
-    key = report["key"]
-
-    if not report["exists"]:
+    key = _canonical_registry_key("group_profiles", profile_key)
+    if key is None:
         return [
             "RytmRandomizer passive group profile preview",
-            f"Group profile: {key}",
+            "Group profile: <unrecognized>",
             "Found: False",
             "Message: Group profile preview not found. No MIDI was sent. No command executed. No hardware was mutated.",
         ]
+
+    report = cast(_RegistryItemReport, get_registry_item("group_profiles", key))
+    if not report["exists"]:
+        raise ValueError("canonical group profile key is missing from the registry")
 
     metadata = report["metadata"]
     if metadata is None:
@@ -1020,14 +1052,21 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
             return 2
 
+        requested_target = args[1].strip().lower()
+        if requested_target in ("rytm", "rytm-only"):
+            target = "rytm"
+        elif requested_target in ("a4", "a4-only"):
+            target = "a4"
+        elif requested_target == "both":
+            target = "both"
+        else:
+            sys.stderr.write("unknown target; expected rytm, a4, or both\n")
+            return 2
+
         from .dual_machine.reports import target_report
 
-        try:
-            sys.stdout.write(target_report(args[1]))
-            sys.stdout.write("\n")
-        except ValueError as exc:
-            sys.stderr.write(f"{exc}\n")
-            return 2
+        sys.stdout.write(target_report(target))
+        sys.stdout.write("\n")
         return 0
 
     if args == ["list-commands"]:
