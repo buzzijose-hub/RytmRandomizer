@@ -28,6 +28,9 @@ import rytm_randomizer.data as data
 import rytm_randomizer.data.analog_four_patch_templates as a4_patch_templates
 import rytm_randomizer.profiles as pkg_profiles
 import rytm_randomizer.scenes as pkg_scenes
+from rytm_randomizer.data.analog_rytm_kit_layout import (
+    analog_rytm_track_sound_offset,
+)
 
 # WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
 # warm-worker V1.34 parity fixtures and runs in <60s.
@@ -227,7 +230,12 @@ def test_analog_rytm_kit_layout_pins_current_sound_offsets():
     assert data.RYTM_KIT_RAW_SIZE == 0x0A32
     assert data.RYTM_KIT_TRACKS_OFFSET == 0x002E
     assert data.RYTM_KIT_TRACK_SOUND_SIZE == 162
+    assert data.RYTM_KIT_TRACK_COUNT == 12
     assert data.RYTM_KIT_TRACK_MACHINE_VALUE_OFFSET == 0x00AA
+    assert analog_rytm_track_sound_offset(3, 0x005A) == 460
+    assert analog_rytm_track_sound_offset(6, 0x001E) == 886
+    with pytest.raises(ValueError, match="pad must be in"):
+        analog_rytm_track_sound_offset(13, 0)
     assert data.RYTM_SOUND_FIELD_BY_NRPN_LSB[1].sound_offset == 0x001E
     assert data.RYTM_SOUND_FIELD_BY_NRPN_LSB[20].sound_offset == 0x0044
     assert data.RYTM_SOUND_FIELD_BY_NRPN_LSB[27].sound_offset == 0x0052

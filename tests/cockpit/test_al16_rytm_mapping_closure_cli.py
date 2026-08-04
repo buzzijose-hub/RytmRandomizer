@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
 import pytest
 
 from conftest import ANALOG_RYTM_SAVED_KIT_TEST_HEADER
-from rytm_randomizer.data.analog_rytm_kit_layout import (
-    RYTM_KIT_RAW_SIZE,
-    RYTM_KIT_TRACKS_OFFSET,
-    RYTM_SOUND_MACHINE_TYPE_OFFSET,
+from rytm_randomizer.cockpit.export.al16_rytm_kit import (
+    deterministic_recipe_identifier,
 )
+from rytm_randomizer.data.analog_rytm_kit_layout import RYTM_KIT_RAW_SIZE
 from rytm_randomizer.devices.strategies.analog_rytm_saved_kit_codec import (
     encode_analog_rytm_saved_kit_frame,
 )
@@ -52,26 +52,34 @@ _GAP_PATHS = (
 def _write_inputs(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
     baseline = bytes(RYTM_KIT_RAW_SIZE)
     configured = bytearray(baseline)
-    configured[RYTM_KIT_TRACKS_OFFSET + RYTM_SOUND_MACHINE_TYPE_OFFSET] = 1
+    configured[170] = 1
     reference_path = tmp_path / "reference.syx"
     configured_path = tmp_path / "configured.syx"
     recipe_path = tmp_path / "recipe.yaml"
     manifest_path = tmp_path / "manifest.json"
-    reference_path.write_bytes(
-        encode_analog_rytm_saved_kit_frame(
-            header=ANALOG_RYTM_SAVED_KIT_TEST_HEADER,
-            unpacked=baseline,
-        )
+    reference_frame = encode_analog_rytm_saved_kit_frame(
+        header=ANALOG_RYTM_SAVED_KIT_TEST_HEADER,
+        unpacked=baseline,
     )
+    reference_path.write_bytes(reference_frame)
     configured_path.write_bytes(
         encode_analog_rytm_saved_kit_frame(
             header=ANALOG_RYTM_SAVED_KIT_TEST_HEADER,
             unpacked=bytes(configured),
         )
     )
-    recipe_path.write_text(json.dumps(_RECIPE), encoding="utf-8")
+    recipe_payload = json.dumps(_RECIPE, sort_keys=True).encode("utf-8")
+    recipe_path.write_bytes(recipe_payload)
     manifest_path.write_text(
-        json.dumps({"critical_mapping_gaps": [{"semantic_path": path} for path in _GAP_PATHS]}),
+        json.dumps(
+            {
+                "critical_mapping_gaps": [{"semantic_path": path} for path in _GAP_PATHS],
+                "deterministic_recipe_identifier": deterministic_recipe_identifier(_RECIPE),
+                "recipe_sha256": hashlib.sha256(recipe_payload).hexdigest(),
+                "reference_sha256": hashlib.sha256(reference_frame).hexdigest(),
+            },
+            sort_keys=True,
+        ),
         encoding="utf-8",
     )
     return reference_path, configured_path, recipe_path, manifest_path
@@ -120,11 +128,13 @@ def test_registered_command_writes_review_only_report(
     assert "promotion_status: review_required" in captured.out
     assert "midi_ports_opened: 0" in captured.out
     assert report["promotion_status"] == "review_required"
+    assert report["provenance"]["recipe_artifact"] == "recipe.yaml"
+    assert str(tmp_path) not in captured.out
 
     assert main(args) == 2
     captured = capsys.readouterr()
     assert captured.out == ""
-    assert "FileExistsError" in captured.err
+    assert "Error [overwrite_refused]" in captured.err
 
 
 @pytest.mark.parametrize(
@@ -153,10 +163,12 @@ def test_registered_command_formats_invalid_input(
 ) -> None:
     from rytm_randomizer.cli import main
 
-    assert main(["al16-rytm-mapping-evidence", "--unknown"]) == 2
+    secret = "--secret=C:\\private\\evidence.syx"
+    assert main(["al16-rytm-mapping-evidence", secret]) == 2
     captured = capsys.readouterr()
     assert captured.out == ""
     assert "Error [invalid_input]: unknown option" in captured.err
+    assert secret not in captured.err
 
 
 def test_command_rejects_malformed_gap_manifest(
@@ -168,7 +180,9 @@ def test_command_rejects_malformed_gap_manifest(
     )
 
     reference, configured, recipe, manifest = _write_inputs(tmp_path)
-    manifest.write_text('{"critical_mapping_gaps": []}', encoding="utf-8")
+    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+    manifest_payload["critical_mapping_gaps"] = []
+    manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
     report_path = tmp_path / "mapping-evidence.json"
 
     assert (
@@ -183,7 +197,7 @@ def test_command_rejects_malformed_gap_manifest(
     )
     captured = capsys.readouterr()
     assert captured.out == ""
-    assert "offline_evidence_failed" in captured.err
+    assert "Error [validation]" in captured.err
     assert not report_path.exists()
 
 
@@ -210,8 +224,39 @@ def test_command_rejects_non_object_recipe(
         == 2
     )
     captured = capsys.readouterr()
-    assert "offline_evidence_failed" in captured.err
+    assert "Error [validation]" in captured.err
     assert not report_path.exists()
+
+
+def test_command_rejects_unsafe_path_before_reading_inputs(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import al16_rytm_mapping_closure_cli as cli
+
+    reference, configured, recipe, manifest = _write_inputs(tmp_path)
+
+    def unexpected_analysis(**_kwargs: object) -> None:
+        pytest.fail("input analysis must not begin before path validation")
+
+    monkeypatch.setattr(cli, "analyze_mapping_capture_files", unexpected_analysis)
+
+    assert (
+        cli.handle_al16_rytm_mapping_evidence(
+            reference_path=tmp_path / "unsafe\nreference.syx",
+            configured_path=configured,
+            recipe_path=recipe,
+            gap_manifest_path=manifest,
+            report_path=tmp_path / "mapping-evidence.json",
+        )
+        == 2
+    )
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "Error [validation]" in captured.err
+    assert str(tmp_path) not in captured.err
+    assert reference.exists()
 
 
 def test_command_handles_operator_interrupt(
@@ -243,3 +288,43 @@ def test_command_handles_operator_interrupt(
     assert captured.out == ""
     assert "Error [interrupted]" in captured.err
     assert not report_path.exists()
+
+
+def test_command_records_success_and_validation_metrics(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from rytm_randomizer.cockpit.export.al16_rytm_mapping_closure_cli import (
+        handle_al16_rytm_mapping_evidence,
+    )
+    from rytm_randomizer.observability.metrics import get_metrics
+
+    reference, configured, recipe, manifest = _write_inputs(tmp_path)
+    report_path = tmp_path / "mapping-evidence.json"
+    metrics = get_metrics()
+    initial_count = metrics.export_count
+    initial_overwrite_errors = metrics.export_errors_by_code["overwrite_refused"]
+    assert (
+        handle_al16_rytm_mapping_evidence(
+            reference_path=reference,
+            configured_path=configured,
+            recipe_path=recipe,
+            gap_manifest_path=manifest,
+            report_path=report_path,
+        )
+        == 0
+    )
+    assert (
+        handle_al16_rytm_mapping_evidence(
+            reference_path=reference,
+            configured_path=configured,
+            recipe_path=recipe,
+            gap_manifest_path=manifest,
+            report_path=report_path,
+        )
+        == 2
+    )
+    capsys.readouterr()
+
+    assert metrics.export_count == initial_count + 2
+    assert metrics.export_errors_by_code["overwrite_refused"] == initial_overwrite_errors + 1

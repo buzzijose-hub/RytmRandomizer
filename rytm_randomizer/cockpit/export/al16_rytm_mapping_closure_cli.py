@@ -2,20 +2,27 @@
 
 from __future__ import annotations
 
-import json
 import sys
-from collections.abc import Mapping, Sequence
+import time
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Final, TypedDict, cast
 
 from ...cli_registry import CliCommand, register
+from ...observability.logging import get_logger
+from ...observability.metrics import get_metrics
+from ...observability.tracing import operation
 from .al16_rytm_mapping_closure import (
     analyze_mapping_capture_files,
-    load_mapping_gap_paths,
     render_mapping_capture_report,
 )
 from .cli_options import pop_required_cli_value
-from .file_export_contracts import safe_local_file_export_artifact_name
+from .file_export_contracts import (
+    LocalFileExportPhase,
+    classify_local_file_export_error,
+    safe_local_file_export_artifact_name,
+    validate_local_file_export_artifact_path,
+)
 from .writer import atomic_write
 
 COMMAND_NAME: Final[str] = "al16-rytm-mapping-evidence"
@@ -24,6 +31,9 @@ USAGE: Final[str] = (
     "--reference <baseline.syx> --configured <configured.syx> "
     "--recipe <recipe.yaml> --gap-manifest <manifest.json> --report <report.json>"
 )
+_OPERATION: Final[str] = "al16_rytm_mapping_evidence"
+_FAILURE_FINGERPRINT: Final[str] = "al16.rytm_mapping_evidence.failed"
+_logger = get_logger(__name__)
 
 
 class Al16RytmMappingEvidenceArgs(TypedDict):
@@ -54,7 +64,7 @@ def parse_al16_rytm_mapping_evidence_args(
         option = remaining.pop(0)
         key = option_keys.get(option)
         if key is None:
-            raise ValueError(f"unknown option {option!r}")
+            raise ValueError("unknown option")
         if key in values:
             raise ValueError(f"{option} may be supplied only once")
         values[key] = Path(pop_required_cli_value(remaining, option=option))
@@ -69,13 +79,6 @@ def _parse_args_for_registry(args: Sequence[str]) -> dict[str, object]:
     return dict(parse_al16_rytm_mapping_evidence_args(args))
 
 
-def _load_json_mapping(path: Path, *, label: str) -> Mapping[str, object]:
-    value = cast(object, json.loads(path.read_text(encoding="utf-8")))
-    if not isinstance(value, Mapping):
-        raise ValueError(f"{label} must contain a JSON object")
-    return cast(Mapping[str, object], value)
-
-
 def handle_al16_rytm_mapping_evidence(
     *,
     reference_path: Path,
@@ -86,46 +89,112 @@ def handle_al16_rytm_mapping_evidence(
 ) -> int:
     """Analyze two local frames and atomically publish review-only evidence."""
 
+    metrics = get_metrics()
+    started_at = time.perf_counter()
+    export_phase: LocalFileExportPhase = "validation"
+    operation_id = ""
+    reference_name = safe_local_file_export_artifact_name(
+        reference_path,
+        fallback="reference.syx",
+    )
+    configured_name = safe_local_file_export_artifact_name(
+        configured_path,
+        fallback="configured.syx",
+    )
+    recipe_name = safe_local_file_export_artifact_name(
+        recipe_path,
+        fallback="recipe.yaml",
+    )
+    gap_manifest_name = safe_local_file_export_artifact_name(
+        gap_manifest_path,
+        fallback="manifest.json",
+    )
+    report_name = safe_local_file_export_artifact_name(
+        report_path,
+        fallback="mapping-evidence.json",
+    )
     try:
-        recipe = _load_json_mapping(recipe_path, label="AL16 recipe")
-        manifest = _load_json_mapping(gap_manifest_path, label="AL16 manifest")
-        semantic_paths = load_mapping_gap_paths(manifest)
-        report = analyze_mapping_capture_files(
-            reference_path=reference_path,
-            configured_path=configured_path,
-            recipe=recipe,
-            semantic_paths=semantic_paths,
-        )
-        payload = render_mapping_capture_report(report).encode("utf-8")
-        result = atomic_write(report_path, payload)
-    except KeyboardInterrupt:
-        sys.stderr.write(f"{USAGE}\nError [interrupted]: comparison interrupted.\n")
-        return 130
-    except (json.JSONDecodeError, KeyError, OSError, TypeError, ValueError) as exc:
-        report_name = safe_local_file_export_artifact_name(
-            report_path,
-            fallback="mapping-evidence.json",
+        with operation(
+            _OPERATION,
+            logger=_logger,
+            reference_name=reference_name,
+            configured_name=configured_name,
+            recipe_name=recipe_name,
+            gap_manifest_name=gap_manifest_name,
+            report_name=report_name,
+        ) as operation_id:
+            for path, label in (
+                (reference_path, "reference_path"),
+                (configured_path, "configured_path"),
+                (recipe_path, "recipe_path"),
+                (gap_manifest_path, "gap_manifest_path"),
+                (report_path, "report_path"),
+            ):
+                validate_local_file_export_artifact_path(path, label=label)
+            export_phase = "source_read"
+            report = analyze_mapping_capture_files(
+                reference_path=reference_path,
+                configured_path=configured_path,
+                recipe_path=recipe_path,
+                gap_manifest_path=gap_manifest_path,
+            )
+            payload = render_mapping_capture_report(report).encode("utf-8")
+            export_phase = "output_write"
+            result = atomic_write(report_path, payload)
+    except (KeyError, OSError, TypeError, ValueError, KeyboardInterrupt, SystemExit) as exc:
+        error_code = classify_local_file_export_error(exc, phase=export_phase)
+        duration_ms = (time.perf_counter() - started_at) * 1000.0
+        metrics.record_export(duration_ms, error_code=error_code)
+        _logger.warning(
+            "AL16 Rytm mapping evidence failed",
+            extra={
+                "op_id": operation_id,
+                "operation": _OPERATION,
+                "outcome": "failed",
+                "error_code": error_code,
+                "failure_phase": export_phase,
+                "fingerprint": _FAILURE_FINGERPRINT,
+                "reference_name": reference_name,
+                "configured_name": configured_name,
+                "recipe_name": recipe_name,
+                "gap_manifest_name": gap_manifest_name,
+                "report_name": report_name,
+                "error_type": type(exc).__name__,
+                "duration_ms": duration_ms,
+                "metrics_summary": metrics.format_summary(),
+            },
         )
         sys.stderr.write(
-            f"{USAGE}\nError [offline_evidence_failed]: "
+            f"{USAGE}\nError [{error_code}]: "
             f"could not produce {report_name} ({type(exc).__name__}).\n"
         )
-        return 2
+        return 130 if error_code == "interrupted" else 2
 
-    changed = sum(
-        observation.status == "candidate_changed" for observation in report.candidate_observations
-    )
-    unresolved = sum(
-        observation.status == "not_located" for observation in report.candidate_observations
+    duration_ms = (time.perf_counter() - started_at) * 1000.0
+    metrics.record_export(duration_ms)
+    _logger.info(
+        "AL16 Rytm mapping evidence completed",
+        extra={
+            "op_id": operation_id,
+            "operation": _OPERATION,
+            "outcome": "completed",
+            "report_name": result.path.name,
+            "mapping_gap_count": report.mapping_gap_count,
+            "candidate_changed_count": report.candidate_changed_count,
+            "unresolved_location_count": report.unresolved_location_count,
+            "promotion_status": report.promotion_status,
+            "duration_ms": duration_ms,
+            "metrics_summary": metrics.format_summary(),
+        },
     )
     sys.stdout.write(
         "AL16 Rytm mapping evidence written\n"
-        f"report: {result.path}\n"
-        f"mapping_gaps: {len(semantic_paths)}\n"
-        f"candidate_locations_changed: {changed}\n"
-        f"unresolved_locations: {unresolved}\n"
+        f"report: {result.path.name}\n"
+        f"mapping_gaps: {report.mapping_gap_count}\n"
+        f"candidate_locations_changed: {report.candidate_changed_count}\n"
+        f"unresolved_locations: {report.unresolved_location_count}\n"
         f"other_changed_unpacked_offsets: {len(report.other_changed_unpacked_offsets)}\n"
-        "promotion_status: review_required\n"
+        f"promotion_status: {report.promotion_status}\n"
         "midi_ports_opened: 0\n"
     )
     return 0

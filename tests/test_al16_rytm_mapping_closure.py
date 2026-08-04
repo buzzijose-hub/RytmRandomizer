@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import cast
@@ -8,7 +9,9 @@ import pytest
 
 from conftest import ANALOG_RYTM_SAVED_KIT_TEST_HEADER
 from rytm_randomizer.cockpit.export import al16_rytm_mapping_closure as mapping_closure
+from rytm_randomizer.cockpit.export.al16_rytm_kit import deterministic_recipe_identifier
 from rytm_randomizer.cockpit.export.al16_rytm_mapping_closure import (
+    MappingEvidenceProvenance,
     analyze_mapping_capture,
     analyze_mapping_capture_files,
     build_mapping_closure_plan,
@@ -16,7 +19,11 @@ from rytm_randomizer.cockpit.export.al16_rytm_mapping_closure import (
     load_mapping_gap_paths,
     render_mapping_capture_report,
 )
-from rytm_randomizer.data.analog_rytm_kit_layout import RYTM_KIT_RAW_SIZE
+from rytm_randomizer.data.analog_rytm_kit_layout import (
+    RYTM_KIT_RAW_SIZE,
+    analog_rytm_track_sound_offset,
+)
+from rytm_randomizer.data.analog_rytm_midi import AnalogRytmCcMapping
 from rytm_randomizer.devices.strategies.analog_rytm_saved_kit_codec import (
     AnalogRytmSavedKitCodecError,
     encode_analog_rytm_saved_kit_frame,
@@ -61,6 +68,48 @@ def _frame(raw: bytes) -> bytes:
     )
 
 
+def _provenance() -> MappingEvidenceProvenance:
+    return MappingEvidenceProvenance(
+        recipe_artifact="recipe.yaml",
+        recipe_sha256="recipe-sha256",
+        gap_manifest_artifact="manifest.json",
+        gap_manifest_sha256="manifest-sha256",
+        deterministic_recipe_identifier="recipe-id",
+        manifest_reference_sha256="reference-sha256",
+    )
+
+
+def _write_bound_inputs(
+    tmp_path: Path,
+    *,
+    reference_frame: bytes,
+    configured_frame: bytes,
+    semantic_paths: tuple[str, ...],
+) -> tuple[Path, Path, Path, Path]:
+    recipe_payload = _RECIPE_PATH.read_bytes()
+    recipe = _recipe()
+    reference_path = tmp_path / "reference.syx"
+    configured_path = tmp_path / "configured.syx"
+    recipe_path = tmp_path / "recipe.yaml"
+    manifest_path = tmp_path / "manifest.json"
+    reference_path.write_bytes(reference_frame)
+    configured_path.write_bytes(configured_frame)
+    recipe_path.write_bytes(recipe_payload)
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "critical_mapping_gaps": [{"semantic_path": path} for path in semantic_paths],
+                "deterministic_recipe_identifier": deterministic_recipe_identifier(recipe),
+                "recipe_sha256": hashlib.sha256(recipe_payload).hexdigest(),
+                "reference_sha256": hashlib.sha256(reference_frame).hexdigest(),
+            },
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    return reference_path, configured_path, recipe_path, manifest_path
+
+
 def test_closure_plan_covers_all_eighteen_gaps_in_two_sessions() -> None:
     plan = build_mapping_closure_plan(_GAP_PATHS)
 
@@ -99,8 +148,8 @@ def test_candidate_location_rejects_invalid_track_paths_and_recipe_shapes() -> N
         candidate_location_for_path("tracks.X.source.dec", _recipe())
     with pytest.raises(ValueError, match="pad must be in 1..12"):
         candidate_location_for_path("tracks.13.machine", _recipe())
-    with pytest.raises(ValueError, match="pad must be in 1..12"):
-        mapping_closure._mapping_evidence_track_offset(0, 0)
+    with pytest.raises(ValueError, match=r"pad must be in \[1, 12\]"):
+        analog_rytm_track_sound_offset(0, 0)
     with pytest.raises(ValueError, match="tracks must be a mapping"):
         candidate_location_for_path("tracks.1.source.dec", {})
     with pytest.raises(ValueError, match="keys must be numeric strings"):
@@ -136,6 +185,49 @@ def test_candidate_location_reports_unresolved_machine_and_source_fields() -> No
     assert unknown_alias.status == "unresolved_machine_parameter"
     assert unknown_machine.status == "unresolved_recipe_machine"
     assert unsupported_parameter.status == "unresolved_machine_parameter"
+
+
+def test_source_location_fails_closed_for_broken_canonical_mapping(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def raise_missing_mapping(_machine: str, _parameter: str) -> AnalogRytmCcMapping | None:
+        raise ValueError("broken canonical table")
+
+    monkeypatch.setattr(mapping_closure, "cockpit_parameter_mapping", raise_missing_mapping)
+
+    location = candidate_location_for_path("tracks.1.source.dec", _recipe())
+
+    assert location.status == "unresolved_machine_parameter"
+    assert location.unpacked_offset is None
+
+
+def test_source_location_fails_closed_without_saved_kit_layout(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    mapping = AnalogRytmCcMapping(
+        section="SYNTH",
+        parameter="Decay",
+        cc_msb=0,
+        cc_lsb=None,
+        nrpn_msb=1,
+        nrpn_lsb=999,
+        scope="track",
+        risk="low",
+        mutation_status="documented_only",
+    )
+    monkeypatch.setattr(mapping_closure, "cockpit_parameter_mapping", lambda *_args: mapping)
+
+    location = candidate_location_for_path("tracks.1.source.dec", _recipe())
+
+    assert location.status == "unresolved_machine_parameter"
+    assert "no approved saved-kit layout" in location.source
+
+
+def test_amp_volume_requires_canonical_mapping(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(mapping_closure, "cockpit_parameter_mapping", lambda *_args: None)
+
+    with pytest.raises(ValueError, match="canonical Amp Volume mapping is unavailable"):
+        candidate_location_for_path("tracks.3.amp.vol", _recipe())
 
 
 @pytest.mark.parametrize(
@@ -190,15 +282,13 @@ def test_offline_capture_analyzer_reports_candidates_without_promoting_them() ->
         "tracks.9.source.decay",
     )
     configured = bytearray(RYTM_KIT_RAW_SIZE)
-    for semantic_path, value in (
-        ("tracks.1.machine", 1),
-        ("tracks.1.source.dec", 53),
-        ("tracks.3.amp.vol", 56),
-        ("tracks.6.source.target_note", 41),
+    for unpacked_offset, value in (
+        (170, 1),
+        (78, 53),
+        (460, 56),
+        (886, 41),
     ):
-        location = candidate_location_for_path(semantic_path, recipe)
-        assert location.unpacked_offset is not None
-        configured[location.unpacked_offset] = value
+        configured[unpacked_offset] = value
     configured[10] = 99
 
     report = analyze_mapping_capture(
@@ -206,6 +296,7 @@ def test_offline_capture_analyzer_reports_candidates_without_promoting_them() ->
         configured_frame=_frame(bytes(configured)),
         recipe=recipe,
         semantic_paths=paths,
+        provenance=_provenance(),
     )
     statuses = {
         observation.semantic_path: observation.status
@@ -223,6 +314,20 @@ def test_offline_capture_analyzer_reports_candidates_without_promoting_them() ->
     }
     assert report.other_changed_unpacked_offsets == (10,)
     assert report.changed_header_indices == ()
+    assert report.mapping_gap_count == 6
+    assert report.candidate_changed_count == 4
+    assert report.unresolved_location_count == 2
+    assert {
+        observation.semantic_path: observation.location.unpacked_offset
+        for observation in report.candidate_observations
+    } == {
+        "destination_slot": None,
+        "tracks.1.machine": 170,
+        "tracks.1.source.dec": 78,
+        "tracks.3.amp.vol": 460,
+        "tracks.6.source.target_note": 886,
+        "tracks.9.source.decay": None,
+    }
 
 
 def test_offline_capture_analyzer_reports_unchanged_candidates() -> None:
@@ -233,6 +338,7 @@ def test_offline_capture_analyzer_reports_unchanged_candidates() -> None:
         configured_frame=frame,
         recipe=_recipe(),
         semantic_paths=("tracks.1.source.dec",),
+        provenance=_provenance(),
     )
 
     assert report.candidate_observations[0].status == "candidate_unchanged"
@@ -241,27 +347,145 @@ def test_offline_capture_analyzer_reports_unchanged_candidates() -> None:
 
 def test_file_analyzer_and_renderer_are_deterministic(tmp_path: Path) -> None:
     frame = _frame(bytes(RYTM_KIT_RAW_SIZE))
-    reference_path = tmp_path / "reference.syx"
-    configured_path = tmp_path / "configured.syx"
-    reference_path.write_bytes(frame)
-    configured_path.write_bytes(frame)
+    reference_path, configured_path, recipe_path, manifest_path = _write_bound_inputs(
+        tmp_path,
+        reference_frame=frame,
+        configured_frame=frame,
+        semantic_paths=("tracks.1.machine",),
+    )
 
     first = analyze_mapping_capture_files(
         reference_path=reference_path,
         configured_path=configured_path,
-        recipe=_recipe(),
-        semantic_paths=("tracks.1.machine",),
+        recipe_path=recipe_path,
+        gap_manifest_path=manifest_path,
     )
     second = analyze_mapping_capture_files(
         reference_path=reference_path,
         configured_path=configured_path,
-        recipe=_recipe(),
-        semantic_paths=("tracks.1.machine",),
+        recipe_path=recipe_path,
+        gap_manifest_path=manifest_path,
     )
 
     assert first == second
     assert render_mapping_capture_report(first) == render_mapping_capture_report(second)
-    assert '"promotion_status": "review_required"' in render_mapping_capture_report(first)
+    rendered = render_mapping_capture_report(first)
+    assert '"promotion_status": "review_required"' in rendered
+    assert '"recipe_artifact": "recipe.yaml"' in rendered
+    assert f'"recipe_sha256": "{hashlib.sha256(recipe_path.read_bytes()).hexdigest()}"' in rendered
+
+
+def test_file_analyzer_rejects_recipe_and_reference_identity_drift(tmp_path: Path) -> None:
+    frame = _frame(bytes(RYTM_KIT_RAW_SIZE))
+    reference_path, configured_path, recipe_path, manifest_path = _write_bound_inputs(
+        tmp_path,
+        reference_frame=frame,
+        configured_frame=frame,
+        semantic_paths=("tracks.1.machine",),
+    )
+    recipe_path.write_text('{"tracks": {}}', encoding="utf-8")
+
+    with pytest.raises(ValueError, match="recipe does not match"):
+        analyze_mapping_capture_files(
+            reference_path=reference_path,
+            configured_path=configured_path,
+            recipe_path=recipe_path,
+            gap_manifest_path=manifest_path,
+        )
+
+    recipe_path.write_bytes(_RECIPE_PATH.read_bytes())
+    reference_path.write_bytes(_frame(bytes([1]) + bytes(RYTM_KIT_RAW_SIZE - 1)))
+    with pytest.raises(ValueError, match="reference does not match"):
+        analyze_mapping_capture_files(
+            reference_path=reference_path,
+            configured_path=configured_path,
+            recipe_path=recipe_path,
+            gap_manifest_path=manifest_path,
+        )
+
+
+@pytest.mark.parametrize(
+    ("manifest_payload", "message"),
+    [
+        (b"{", "must be valid UTF-8 JSON"),
+        (b"[]", "must be a JSON object"),
+    ],
+)
+def test_file_analyzer_rejects_malformed_manifest_documents(
+    tmp_path: Path,
+    manifest_payload: bytes,
+    message: str,
+) -> None:
+    frame = _frame(bytes(RYTM_KIT_RAW_SIZE))
+    reference_path, configured_path, recipe_path, manifest_path = _write_bound_inputs(
+        tmp_path,
+        reference_frame=frame,
+        configured_frame=frame,
+        semantic_paths=("tracks.1.machine",),
+    )
+    manifest_path.write_bytes(manifest_payload)
+
+    with pytest.raises(ValueError, match=message):
+        analyze_mapping_capture_files(
+            reference_path=reference_path,
+            configured_path=configured_path,
+            recipe_path=recipe_path,
+            gap_manifest_path=manifest_path,
+        )
+
+
+@pytest.mark.parametrize(
+    ("manifest_update", "message"),
+    [
+        (
+            {"deterministic_recipe_identifier": "wrong-recipe"},
+            "deterministic recipe identifier does not match",
+        ),
+        ({"recipe_sha256": None}, "recipe_sha256 must be a string"),
+    ],
+)
+def test_file_analyzer_rejects_invalid_manifest_identity_fields(
+    tmp_path: Path,
+    manifest_update: dict[str, object],
+    message: str,
+) -> None:
+    frame = _frame(bytes(RYTM_KIT_RAW_SIZE))
+    reference_path, configured_path, recipe_path, manifest_path = _write_bound_inputs(
+        tmp_path,
+        reference_frame=frame,
+        configured_frame=frame,
+        semantic_paths=("tracks.1.machine",),
+    )
+    manifest = cast(dict[str, object], json.loads(manifest_path.read_text(encoding="utf-8")))
+    manifest.update(manifest_update)
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        analyze_mapping_capture_files(
+            reference_path=reference_path,
+            configured_path=configured_path,
+            recipe_path=recipe_path,
+            gap_manifest_path=manifest_path,
+        )
+
+
+def test_destination_slot_proof_reports_exact_header_byte() -> None:
+    reference_header = ANALOG_RYTM_SAVED_KIT_TEST_HEADER
+    configured_header = reference_header[:-1] + bytes((7,))
+    raw = bytes(RYTM_KIT_RAW_SIZE)
+
+    report = analyze_mapping_capture(
+        reference_frame=encode_analog_rytm_saved_kit_frame(reference_header, raw),
+        configured_frame=encode_analog_rytm_saved_kit_frame(configured_header, raw),
+        recipe=_recipe(),
+        semantic_paths=("destination_slot",),
+        provenance=_provenance(),
+    )
+
+    assert report.changed_header_indices == (8,)
+    assert report.reference_header[8] == 0
+    assert report.configured_header[8] == 7
+    assert report.changed_unpacked_offsets == ()
 
 
 def test_capture_analyzer_rejects_invalid_saved_kit_frames() -> None:
@@ -273,4 +497,5 @@ def test_capture_analyzer_rejects_invalid_saved_kit_frames() -> None:
             configured_frame=valid,
             recipe=_recipe(),
             semantic_paths=("tracks.1.machine",),
+            provenance=_provenance(),
         )

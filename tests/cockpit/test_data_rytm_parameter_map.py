@@ -7,6 +7,7 @@ import pytest
 from rytm_randomizer.cockpit.data.rytm_parameter_map import (
     cockpit_pad_channel,
     cockpit_parameter_control,
+    cockpit_parameter_mapping,
 )
 from rytm_randomizer.data.analog_rytm_midi import (
     ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER,
@@ -42,6 +43,20 @@ def test_cockpit_parameter_control_returns_none_for_unsendable_keys() -> None:
     assert cockpit_parameter_control("SD Classic", "swt") is None
     assert cockpit_parameter_control("unknown future machine", "tun") is None
     assert cockpit_parameter_control("unknown future machine", "flt") == 74
+
+
+def test_cockpit_parameter_mapping_returns_canonical_catalog_rows() -> None:
+    tune = cockpit_parameter_mapping("XT Classic", "target_note")
+    decay = cockpit_parameter_mapping("XT Classic", "decay")
+    amp_volume = cockpit_parameter_mapping("XT Classic", "amp_volume")
+
+    assert tune is not None
+    assert tune.parameter == "Tune"
+    assert tune.nrpn_lsb == 1
+    assert decay is not None
+    assert decay.parameter == "Decay"
+    assert decay.nrpn_lsb == 2
+    assert amp_volume is ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER[("AMP", "Amp Volume")]
 
 
 @pytest.mark.parametrize(

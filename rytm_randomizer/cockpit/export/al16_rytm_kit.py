@@ -34,10 +34,9 @@ from ...data.al16_rytm import (
 from ...data.analog_rytm_kit_layout import (
     RYTM_KIT_NAME_LENGTH,
     RYTM_KIT_NAME_OFFSET,
-    RYTM_KIT_TRACK_SOUND_SIZE,
-    RYTM_KIT_TRACKS_OFFSET,
     RYTM_SOUND_FIELD_BY_NRPN_LSB,
     RYTM_SOUND_MACHINE_TYPE_OFFSET,
+    analog_rytm_track_sound_offset,
 )
 from ...data.rytm_machine_catalog import (
     RYTM_MACHINE_PROFILES,
@@ -246,7 +245,9 @@ def _require_exact_keys(
     )
 
 
-def _load_recipe_bytes(payload: bytes) -> Mapping[str, object]:
+def load_al16_recipe_bytes(payload: bytes) -> Mapping[str, object]:
+    """Load one dependency-free JSON-compatible AL16 YAML recipe."""
+
     # JSON is a strict YAML subset, keeping the public recipe dependency-free.
     try:
         parsed = cast(object, json.loads(payload.decode("utf-8")))
@@ -412,10 +413,6 @@ def _validate_artifact_paths(
         artifact_keys[artifact_label] = artifact_key
 
 
-def _track_offset(pad: int, sound_offset: int) -> int:
-    return RYTM_KIT_TRACKS_OFFSET + ((pad - 1) * RYTM_KIT_TRACK_SOUND_SIZE) + sound_offset
-
-
 def _machine_label_for_raw(raw_value: int) -> str:
     machine_value = raw_value & 0x7F
     for profile in RYTM_MACHINE_PROFILES:
@@ -503,7 +500,7 @@ def _supported_audit(
 ) -> FieldAudit:
     writable = AL16_RYTM_WRITABLE_FIELDS[field_key]
     layout = RYTM_SOUND_FIELD_BY_NRPN_LSB[writable.nrpn_lsb]
-    offset = _track_offset(pad, layout.sound_offset)
+    offset = analog_rytm_track_sound_offset(pad, layout.sound_offset)
     normalized, encoded = _convert_supported_value(writable.converter, requested)
     return FieldAudit(
         semantic_path=semantic_path,
@@ -526,7 +523,7 @@ def _record_machine(
 ) -> str | None:
     requested_key = _as_string(track.get("machine"), f"tracks.{pad}.machine")
     path = f"tracks.{pad}.machine"
-    machine_offset = _track_offset(pad, RYTM_SOUND_MACHINE_TYPE_OFFSET)
+    machine_offset = analog_rytm_track_sound_offset(pad, RYTM_SOUND_MACHINE_TYPE_OFFSET)
     original_label = _machine_label_for_raw(raw[machine_offset])
     try:
         profile = get_rytm_machine_profile(requested_key)
@@ -1073,7 +1070,7 @@ def build_al16_rytm_kit(
             failure_artifact_name = recipe_name
             recipe_bytes = recipe_path.read_bytes()
             export_phase = "validation"
-            recipe = _load_recipe_bytes(recipe_bytes)
+            recipe = load_al16_recipe_bytes(recipe_bytes)
             recipe_sha256 = hashlib.sha256(recipe_bytes).hexdigest()
             audits, gaps, preserved_tracks = _inspect_recipe(
                 recipe,
@@ -1235,4 +1232,5 @@ __all__ = [
     "build_al16_rytm_kit",
     "classify_al16_failure_reason",
     "deterministic_recipe_identifier",
+    "load_al16_recipe_bytes",
 ]

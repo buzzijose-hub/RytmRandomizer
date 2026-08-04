@@ -227,7 +227,7 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `analog-four-patch-send-plan-report` | Passive CC/NRPN live-dial send plan for a generated Analog Four patch |
 | `analog-four-saved-kit-export` | Guarded local-file saved-kit export; currently admits hardware-validated Filter2 Resonance only |
 | `al16-rytm-kit-export` | Offline AL16 Analog Rytm audit/evidence compiler; Phase R1 validates the exact initialized reference, writes deterministic mapping-gap evidence, and emits no `.syx` |
-| `al16-rytm-mapping-evidence` | Passive AL16 Rytm mapping-closure analyzer; compares initialized and manually configured saved-kit dumps against the R1 gaps without promoting offsets or writing SysEx |
+| `al16-rytm-mapping-evidence` | Passive AL16 Rytm mapping-closure analyzer; cryptographically binds initialized/configured saved-kit evidence to the exact recipe, R1 gap manifest, recipe identity, and reference SHA without promoting offsets or writing SysEx |
 | `analog-four-audio-patch-batch` | Real local audio analysis; the documented/default workflow deterministically commits exactly four immutable `.syx` candidates, complete DNA sidecars, and one manifest; `--studio-handoff` prints the bounded four-audition workflow with zero calibration rounds |
 | `analog-four-audio-patch-rank` | Passive acoustic ranking of recorded A4 candidates against the exact batch reference |
 | `local-model-copilot-report` | Passive local model docs, mutation-intent, and Analog Four patch-review packets; optional local model subprocess call with `--ask-local-model` |
@@ -344,12 +344,19 @@ future work after those writer mappings are verified.
 `al16-rytm-mapping-evidence` is the passive Phase R2 mapping-closure analyzer.
 It compares the initialized saved-kit dump with one manually configured
 AL02-like dump, limits candidate locations to the existing Rytm layout
-metadata, and writes a deterministic JSON review packet covering the R1
-mapping gaps. A second scratch-slot import/dump supplies the bounded
-destination-slot proof described in the linked plan. The command never opens
-or enumerates MIDI ports, writes SysEx, or promotes a candidate mapping; the
-ambiguous Pad 9 `ch_basic` machine request remains explicitly unresolved until
-device evidence identifies the intended machine.
+metadata and canonical parameter resolver, and writes a deterministic JSON
+review packet covering the R1 mapping gaps. Before comparing payloads it
+verifies SHA-256 provenance for the exact recipe and gap-manifest files, the
+deterministic recipe identifier, and the initialized-reference SHA recorded in
+the manifest. Path roles are validated before file I/O; failures use bounded
+error codes and safe basenames, and success/failure metrics are recorded under
+the mapping-evidence operation. A second scratch-slot import/dump supplies the
+bounded destination-slot proof described in the linked plan. The command never
+opens or enumerates MIDI ports, writes SysEx, or promotes a candidate mapping;
+the ambiguous Pad 9 machine request remains explicitly unresolved until device
+evidence identifies the intended machine. One configured saved-KIT capture is
+intended to close many gaps together; repeated single-parameter calibration
+rounds are not the operator workflow.
 
 `analog-four-audio-patch-batch` is the end-to-end offline candidate generator.
 With the documented/default `--candidates 4` workflow, it analyzes an immutable

@@ -172,6 +172,28 @@ single manifest commit marker, treat the files as one generation:
 Atomic replacement of each file is not sufficient by itself; generation-level
 consistency is the contract.
 
+## Multi-gap saved-KIT mapping closure
+
+Do not turn an unresolved saved-KIT writer into hundreds of operator-driven
+single-parameter calibration rounds. When the device can export a complete
+saved object, prefer one bounded multi-gap capture:
+
+1. Start from a known initialized saved KIT and record its SHA-256.
+2. Configure every safe, requested proof field in one disposable KIT, save it
+   once, and export one changed saved-KIT dump.
+3. Compare the two decoded payloads offline using only canonical layout and
+   parameter-map facts. Unknown bytes remain evidence, never inferred fields.
+4. Bind the report to the exact recipe bytes, gap-manifest bytes, deterministic
+   recipe identifier, and reference SHA-256 before interpreting any diff.
+5. Keep every candidate `review_required`; a comparison must never update the
+   writer allowlist automatically.
+6. Prove destination-slot/header behavior separately with one harmless scratch
+   slot because object identity and sound-parameter layout are different claims.
+
+This pattern compresses human work without weakening evidence. It remains
+offline: no MIDI enumeration, port access, SysEx transmission, or implicit
+hardware mutation belongs in the analyzer.
+
 ## When to Use
 
 Trigger conditions:
@@ -184,6 +206,7 @@ Trigger conditions:
 - Publishing or replaying an audio-derived Elektron patch batch.
 - Binding an armed replay to an operator-reviewed manifest digest.
 - Reviewing live CC/NRPN delivery pacing, accounting, or recovery behavior.
+- Closing multiple Rytm saved-KIT writer gaps from one configured capture.
 
 DO NOT use this pattern when:
 

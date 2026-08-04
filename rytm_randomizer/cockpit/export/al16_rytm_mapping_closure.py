@@ -11,13 +11,14 @@ from types import MappingProxyType
 from typing import Final, Literal, TypeAlias, cast
 
 from ...data.analog_rytm_kit_layout import (
-    RYTM_KIT_TRACK_SOUND_SIZE,
-    RYTM_KIT_TRACKS_OFFSET,
+    RYTM_KIT_TRACK_COUNT,
     RYTM_SOUND_FIELD_BY_NRPN_LSB,
     RYTM_SOUND_MACHINE_TYPE_OFFSET,
+    analog_rytm_track_sound_offset,
 )
-from ...data.analog_rytm_midi import get_machine_src_mappings
 from ...devices.analog_rytm import get_analog_rytm_saved_kit_codec_capability
+from ..data.rytm_parameter_map import cockpit_machine_is_known, cockpit_parameter_mapping
+from .al16_rytm_kit import deterministic_recipe_identifier, load_al16_recipe_bytes
 
 EvidenceClass: TypeAlias = Literal[
     "destination_slot",
@@ -37,22 +38,11 @@ CandidateObservationStatus: TypeAlias = Literal[
     "candidate_unchanged",
     "not_located",
 ]
+MappingPromotionStatus: TypeAlias = Literal["review_required"]
 
 _SESSION_CONFIGURED_KIT: Final[int] = 1
 _SESSION_DESTINATION_SLOT: Final[int] = 2
-_SOURCE_PARAMETER_LABELS: Final[Mapping[str, str]] = MappingProxyType(
-    {
-        "dec": "Decay",
-        "decay": "Decay",
-        "hld": "Hold",
-        "swd": "Sweep Depth",
-        "swt": "Sweep Time",
-        "target_note": "Tune",
-        "trn": "Transient Tick",
-        "tun": "Tune",
-        "wav": "Waveform",
-    }
-)
+MAPPING_PROMOTION_REVIEW_REQUIRED: Final[MappingPromotionStatus] = "review_required"
 _GROUP_ORDER: Final[tuple[EvidenceClass, ...]] = (
     "machine_selection",
     "machine_source",
@@ -105,6 +95,18 @@ class CandidateObservation:
 
 
 @dataclass(frozen=True)
+class MappingEvidenceProvenance:
+    """Immutable identities binding evidence to its reviewed build inputs."""
+
+    recipe_artifact: str
+    recipe_sha256: str
+    gap_manifest_artifact: str
+    gap_manifest_sha256: str
+    deterministic_recipe_identifier: str
+    manifest_reference_sha256: str
+
+
+@dataclass(frozen=True)
 class MappingCaptureReport:
     """Deterministic offline comparison requiring review before promotion."""
 
@@ -116,7 +118,11 @@ class MappingCaptureReport:
     changed_unpacked_offsets: tuple[int, ...]
     candidate_observations: tuple[CandidateObservation, ...]
     other_changed_unpacked_offsets: tuple[int, ...]
-    promotion_status: Literal["review_required"] = "review_required"
+    provenance: MappingEvidenceProvenance
+    mapping_gap_count: int
+    candidate_changed_count: int
+    unresolved_location_count: int
+    promotion_status: MappingPromotionStatus = MAPPING_PROMOTION_REVIEW_REQUIRED
 
 
 def _classify_path(semantic_path: str) -> EvidenceClass:
@@ -199,12 +205,6 @@ def build_mapping_closure_plan(semantic_paths: Sequence[str]) -> MappingClosureP
     )
 
 
-def _mapping_evidence_track_offset(pad: int, sound_offset: int) -> int:
-    if not 1 <= pad <= 12:
-        raise ValueError(f"Analog Rytm pad must be in 1..12: {pad}")
-    return RYTM_KIT_TRACKS_OFFSET + ((pad - 1) * RYTM_KIT_TRACK_SOUND_SIZE) + sound_offset
-
-
 def _recipe_track_machines(recipe: Mapping[str, object]) -> Mapping[int, str]:
     tracks_value = recipe.get("tracks")
     if not isinstance(tracks_value, Mapping):
@@ -231,8 +231,8 @@ def _path_pad(semantic_path: str) -> int:
     if len(parts) < 3 or parts[0] != "tracks" or not parts[1].isdigit():
         raise ValueError(f"invalid AL16 track semantic path: {semantic_path}")
     pad = int(parts[1])
-    if not 1 <= pad <= 12:
-        raise ValueError(f"Analog Rytm pad must be in 1..12: {pad}")
+    if not 1 <= pad <= RYTM_KIT_TRACK_COUNT:
+        raise ValueError(f"Analog Rytm pad must be in 1..{RYTM_KIT_TRACK_COUNT}: {pad}")
     return pad
 
 
@@ -249,46 +249,49 @@ def _source_location(
             status="unresolved_recipe_machine",
             source="recipe does not select an exact machine",
         )
-    field_name = semantic_path.rsplit(".", 1)[-1]
-    parameter_label = _SOURCE_PARAMETER_LABELS.get(field_name)
-    if parameter_label is None:
-        return CandidateLocation(
-            semantic_path=semantic_path,
-            unpacked_offset=None,
-            width=None,
-            status="unresolved_machine_parameter",
-            source=f"no manual-backed source alias for {field_name}",
-        )
-    try:
-        mappings = get_machine_src_mappings(machine_key)
-    except KeyError:
+    if not cockpit_machine_is_known(machine_key):
         return CandidateLocation(
             semantic_path=semantic_path,
             unpacked_offset=None,
             width=None,
             status="unresolved_recipe_machine",
-            source=f"unknown exact machine key: {machine_key}",
+            source=f"recipe selects unknown machine {machine_key}",
         )
-    mapping = next(
-        (candidate for candidate in mappings if candidate.parameter == parameter_label),
-        None,
-    )
+    field_name = semantic_path.rsplit(".", 1)[-1]
+    try:
+        mapping = cockpit_parameter_mapping(machine_key, field_name)
+    except (KeyError, ValueError):
+        return CandidateLocation(
+            semantic_path=semantic_path,
+            unpacked_offset=None,
+            width=None,
+            status="unresolved_machine_parameter",
+            source=f"no canonical manual-backed mapping for {machine_key}:{field_name}",
+        )
     if mapping is None or mapping.nrpn_lsb is None:
         return CandidateLocation(
             semantic_path=semantic_path,
             unpacked_offset=None,
             width=None,
             status="unresolved_machine_parameter",
-            source=f"{machine_key} has no manual-backed {parameter_label} source mapping",
+            source=f"no canonical manual-backed mapping for {machine_key}:{field_name}",
         )
-    layout = RYTM_SOUND_FIELD_BY_NRPN_LSB[mapping.nrpn_lsb]
+    layout = RYTM_SOUND_FIELD_BY_NRPN_LSB.get(mapping.nrpn_lsb)
+    if layout is None:
+        return CandidateLocation(
+            semantic_path=semantic_path,
+            unpacked_offset=None,
+            width=None,
+            status="unresolved_machine_parameter",
+            source=(f"manual-backed {machine_key}:{field_name} has no approved saved-kit layout"),
+        )
     return CandidateLocation(
         semantic_path=semantic_path,
-        unpacked_offset=_mapping_evidence_track_offset(pad, layout.sound_offset),
+        unpacked_offset=analog_rytm_track_sound_offset(pad, layout.sound_offset),
         width=1,
         status="candidate_location",
         source=(
-            f"manual-backed {machine_key} {parameter_label} NRPN 1:{mapping.nrpn_lsb} "
+            f"manual-backed {machine_key} {mapping.parameter} NRPN 1:{mapping.nrpn_lsb} "
             f"plus candidate saved-kit sound offset 0x{layout.sound_offset:04X}"
         ),
     )
@@ -313,7 +316,10 @@ def candidate_location_for_path(
     if evidence_class == "machine_selection":
         return CandidateLocation(
             semantic_path=semantic_path,
-            unpacked_offset=_mapping_evidence_track_offset(pad, RYTM_SOUND_MACHINE_TYPE_OFFSET),
+            unpacked_offset=analog_rytm_track_sound_offset(
+                pad,
+                RYTM_SOUND_MACHINE_TYPE_OFFSET,
+            ),
             width=1,
             status="candidate_location",
             source=(
@@ -322,14 +328,17 @@ def candidate_location_for_path(
             ),
         )
     if evidence_class == "amp_volume":
-        layout = RYTM_SOUND_FIELD_BY_NRPN_LSB[31]
+        mapping = cockpit_parameter_mapping("", "amp_volume")
+        if mapping is None or mapping.nrpn_lsb is None:
+            raise ValueError("canonical Amp Volume mapping is unavailable")
+        layout = RYTM_SOUND_FIELD_BY_NRPN_LSB[mapping.nrpn_lsb]
         return CandidateLocation(
             semantic_path=semantic_path,
-            unpacked_offset=_mapping_evidence_track_offset(pad, layout.sound_offset),
+            unpacked_offset=analog_rytm_track_sound_offset(pad, layout.sound_offset),
             width=1,
             status="candidate_location",
             source=(
-                "manual-backed Amp Volume NRPN 1:31 plus candidate saved-kit sound "
+                f"manual-backed Amp Volume NRPN 1:{mapping.nrpn_lsb} plus candidate saved-kit sound "
                 f"offset 0x{layout.sound_offset:04X}"
             ),
         )
@@ -343,6 +352,7 @@ def analyze_mapping_capture(
     configured_frame: bytes,
     recipe: Mapping[str, object],
     semantic_paths: Sequence[str],
+    provenance: MappingEvidenceProvenance,
 ) -> MappingCaptureReport:
     """Compare two valid saved-kit frames without promoting candidate evidence."""
 
@@ -392,6 +402,7 @@ def analyze_mapping_capture(
                 status=status,
             )
         )
+    frozen_observations = tuple(observations)
     return MappingCaptureReport(
         reference_sha256=hashlib.sha256(reference_frame).hexdigest(),
         configured_sha256=hashlib.sha256(configured_frame).hexdigest(),
@@ -399,9 +410,17 @@ def analyze_mapping_capture(
         configured_header=tuple(configured.header),
         changed_header_indices=changed_header_indices,
         changed_unpacked_offsets=changed_unpacked_offsets,
-        candidate_observations=tuple(observations),
+        candidate_observations=frozen_observations,
         other_changed_unpacked_offsets=tuple(
             offset for offset in changed_unpacked_offsets if offset not in located_offsets
+        ),
+        provenance=provenance,
+        mapping_gap_count=len(semantic_paths),
+        candidate_changed_count=sum(
+            observation.status == "candidate_changed" for observation in frozen_observations
+        ),
+        unresolved_location_count=sum(
+            observation.status == "not_located" for observation in frozen_observations
         ),
     )
 
@@ -410,17 +429,60 @@ def analyze_mapping_capture_files(
     *,
     reference_path: Path,
     configured_path: Path,
-    recipe: Mapping[str, object],
-    semantic_paths: Sequence[str],
+    recipe_path: Path,
+    gap_manifest_path: Path,
 ) -> MappingCaptureReport:
-    """Read and compare two local saved-kit files without hardware access."""
+    """Read and compare local saved-kit evidence bound to reviewed build inputs."""
+
+    reference_frame = reference_path.read_bytes()
+    recipe_payload = recipe_path.read_bytes()
+    manifest_payload = gap_manifest_path.read_bytes()
+    recipe = load_al16_recipe_bytes(recipe_payload)
+    try:
+        parsed_manifest = cast(object, json.loads(manifest_payload.decode("utf-8")))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError("AL16 mapping-gap manifest must be valid UTF-8 JSON") from exc
+    if not isinstance(parsed_manifest, Mapping):
+        raise ValueError("AL16 mapping-gap manifest must be a JSON object")
+    manifest = cast(Mapping[str, object], parsed_manifest)
+    semantic_paths = load_mapping_gap_paths(manifest)
+    recipe_sha256 = hashlib.sha256(recipe_payload).hexdigest()
+    manifest_recipe_sha256 = _required_manifest_string(manifest, "recipe_sha256")
+    if recipe_sha256 != manifest_recipe_sha256:
+        raise ValueError("AL16 recipe does not match the mapping-gap manifest")
+    recipe_identifier = deterministic_recipe_identifier(recipe)
+    manifest_recipe_identifier = _required_manifest_string(
+        manifest,
+        "deterministic_recipe_identifier",
+    )
+    if recipe_identifier != manifest_recipe_identifier:
+        raise ValueError("AL16 deterministic recipe identifier does not match the manifest")
+    reference_sha256 = hashlib.sha256(reference_frame).hexdigest()
+    manifest_reference_sha256 = _required_manifest_string(manifest, "reference_sha256")
+    if reference_sha256 != manifest_reference_sha256:
+        raise ValueError("AL16 reference does not match the mapping-gap manifest")
 
     return analyze_mapping_capture(
-        reference_frame=reference_path.read_bytes(),
+        reference_frame=reference_frame,
         configured_frame=configured_path.read_bytes(),
         recipe=recipe,
         semantic_paths=semantic_paths,
+        provenance=MappingEvidenceProvenance(
+            recipe_artifact=recipe_path.name,
+            recipe_sha256=recipe_sha256,
+            gap_manifest_artifact=gap_manifest_path.name,
+            gap_manifest_sha256=hashlib.sha256(manifest_payload).hexdigest(),
+            deterministic_recipe_identifier=recipe_identifier,
+            manifest_reference_sha256=manifest_reference_sha256,
+        ),
     )
+
+
+def _required_manifest_string(manifest: Mapping[str, object], key: str) -> str:
+    value = manifest.get(key)
+    if not isinstance(value, str) or not value:
+        raise ValueError(f"AL16 mapping-gap manifest {key} must be a string")
+    return value
 
 
 def load_mapping_gap_paths(manifest: Mapping[str, object]) -> tuple[str, ...]:
@@ -455,6 +517,8 @@ __all__ = [
     "CandidateObservation",
     "MappingCaptureReport",
     "MappingClosurePlan",
+    "MappingEvidenceProvenance",
+    "MAPPING_PROMOTION_REVIEW_REQUIRED",
     "MappingProofGroup",
     "analyze_mapping_capture",
     "analyze_mapping_capture_files",

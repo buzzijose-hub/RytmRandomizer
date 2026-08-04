@@ -1,6 +1,8 @@
 # AL16 R2 Analog Rytm Mapping Closure
 
-> Status: in-flight (implementation complete; studio evidence pending)
+> Status: in-flight
+>
+> Review repair is complete; studio evidence is pending.
 
 ## Goal
 
@@ -19,12 +21,13 @@ does not promote candidate offsets as verified mappings.
 - Keep the ambiguous `ch_basic` recipe key unresolved. It must not be silently
   translated to `ch_classic` or `hh_basic`.
 
-## Two-session proof plan
+## Bounded proof plan
 
 ### Session 1: configured saved-kit capture
 
 Create one disposable AL02-like kit by hand, save it once, and export one
-saved-kit dump. Compare that dump with the initialized reference offline. One
+saved-kit dump. Compare that dump with the initialized reference offline. This
+is a multi-gap capture, not a sequence of independent calibration rounds. One
 comparison can provide candidate evidence for:
 
 - machine selection on pads 1, 3, and 9;
@@ -37,6 +40,13 @@ comparison can provide candidate evidence for:
 The analyzer reports candidate changed/unchanged locations and all other raw
 changes. A human review remains required before any location or converter is
 added to the strict writer allowlist.
+
+The report is accepted only when its inputs agree on four provenance facts:
+
+- SHA-256 of the exact recipe bytes;
+- SHA-256 of the exact R1 gap-manifest bytes;
+- the deterministic recipe identifier recomputed from the recipe; and
+- the initialized-reference SHA-256 recorded in the manifest.
 
 ### Session 2: destination-slot proof
 
@@ -53,7 +63,26 @@ header byte owns the destination slot.
 - Unknown blocker paths fail closed.
 - Ambiguous machine/source combinations remain unlocated.
 - Reports are deterministic and explicitly marked `review_required`.
+- Report provenance, evidence counts, status literals, and review state are
+  typed and tested.
+- Path-role collisions and unsafe paths fail before file I/O; operator output
+  uses safe basenames and structured error codes.
+- The CLI records one observability operation and bounded success/failure
+  metrics without exposing machine-local paths.
 - Focused tests run single-process to keep workstation load bounded.
+
+## Plan-requirement decisions
+
+- **Gate 14 - maintainability:** canonical Rytm track layout, machine aliases,
+  and CC/NRPN mappings are reused; duplicate exporter offsets, pad bounds, and
+  controls are removed. The learned Elektron workflow records the multi-gap
+  capture pattern below.
+- **Gate 15 - dependency policy:** no dependency or lock-file change is part of
+  R2. The hardware-pinned `mido` and `python-rtmidi` versions remain untouched,
+  and the passive command does not import either backend.
+- **Gate 16 - integration strategy:** this is one direct PR against
+  `modularize-v1.34`, not a stacked PR. The implementation, tests, deterministic
+  evidence, docs, and learned workflow ship together on the same branch.
 
 ## Exit criteria
 
@@ -79,5 +108,6 @@ Set-Location (Join-Path $env:USERPROFILE "Documents\RytmRandomizer")
 ```
 
 This command only decodes local files and writes a review-required JSON
-report. It does not enumerate MIDI ports, open hardware, transmit MIDI, or
-promote candidate mappings automatically.
+report. Its inputs are provenance-bound before comparison. It does not
+enumerate MIDI ports, open hardware, transmit MIDI, or promote candidate
+mappings automatically.
