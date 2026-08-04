@@ -37,6 +37,7 @@ from ...data.analog_rytm_kit_layout import (
     RYTM_KIT_WORK_BUFFER_DUMP_ID,
     RYTM_SYSEX_PRODUCT_ID,
 )
+from ...snapshot.elektron_packed_payload import split_elektron_packed_payload_body
 from ...snapshot.envelope import (
     ELEKTRON_MFR_ID,
     find_kit_record,
@@ -186,8 +187,13 @@ def _looks_like_full_kit_dump(raw: bytes) -> bool:
 
 
 def _unpack_full_kit_dump(raw: bytes) -> bytes:
-    packed = raw[RYTM_KIT_SYSEX_HEADER_SIZE_WITHOUT_F0:-RYTM_KIT_SYSEX_TRAILER_SIZE_WITHOUT_F7]
-    unpacked = unpack_elektron_7bit(packed)
+    body = split_elektron_packed_payload_body(
+        raw,
+        header_size=RYTM_KIT_SYSEX_HEADER_SIZE_WITHOUT_F0,
+        trailer_size=RYTM_KIT_SYSEX_TRAILER_SIZE_WITHOUT_F7,
+        device_label="Analog Rytm kit snapshot",
+    )
+    unpacked = unpack_elektron_7bit(body.packed)
     if len(unpacked) != RYTM_KIT_RAW_SIZE:
         raise ValueError(
             "AnalogRytmSnapshotDecoder.decode: decoded kit payload has "

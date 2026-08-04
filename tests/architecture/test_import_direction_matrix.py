@@ -126,6 +126,9 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             "data",
             "devices",
             "observability",
+            # AL16 offline export reads the shared Elektron ASCII-name
+            # envelope primitive while auditing saved-kit payloads.
+            "snapshot",
             "style_analysis",
         }
     ),
@@ -274,7 +277,14 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             "observability",
         }
     ),
-    "snapshot": frozenset({"devices"}),
+    "snapshot": frozenset(
+        {
+            "devices",
+            # Typed packed-payload validation failures participate in the
+            # package-wide BoundaryError taxonomy.
+            "observability",
+        }
+    ),
     "state": frozenset(
         {
             # TODO(rival-program): review this edge — the original layer

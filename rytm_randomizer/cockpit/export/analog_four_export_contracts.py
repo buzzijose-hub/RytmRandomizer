@@ -5,38 +5,32 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final, Literal, TypeAlias, cast
 
-AnalogFourExportErrorCode: TypeAlias = Literal[
+from .file_export_contracts import (
+    LOCAL_FILE_EXPORT_ERROR_CODES,
+    LocalFileExportErrorCode,
+    safe_local_file_export_artifact_name,
+)
+
+AnalogFourSpecificExportErrorCode: TypeAlias = Literal[
     "audio_read_failed",
     "dependency_missing",
     "inference_failed",
-    "input_not_found",
-    "interrupted",
     "invalid_input",
-    "overwrite_refused",
-    "permission_denied",
     "publication_locked",
     "service_unavailable",
-    "source_read_failed",
-    "validation",
-    "write_failed",
 ]
+AnalogFourExportErrorCode: TypeAlias = LocalFileExportErrorCode | AnalogFourSpecificExportErrorCode
 """Bounded failure categories shared by A4 export services and CLIs."""
 
 ANALOG_FOUR_EXPORT_ERROR_CODES: Final[frozenset[str]] = frozenset(
-    {
+    LOCAL_FILE_EXPORT_ERROR_CODES
+    | {
         "audio_read_failed",
         "dependency_missing",
         "inference_failed",
-        "input_not_found",
-        "interrupted",
         "invalid_input",
-        "overwrite_refused",
-        "permission_denied",
         "publication_locked",
         "service_unavailable",
-        "source_read_failed",
-        "validation",
-        "write_failed",
     }
 )
 
@@ -46,7 +40,9 @@ _ERROR_CODE_ATTRIBUTE: Final[str] = "error_code"
 def analog_four_export_path_name(value: object) -> str:
     """Return a bounded filename for telemetry without trusting caller types."""
 
-    return value.name if isinstance(value, Path) else "<invalid>"
+    if not isinstance(value, Path):
+        return "<invalid>"
+    return safe_local_file_export_artifact_name(value, fallback="<invalid>")
 
 
 def require_analog_four_export_path(value: object, *, field_name: str) -> Path:

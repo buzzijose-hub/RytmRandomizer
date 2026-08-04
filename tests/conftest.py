@@ -84,6 +84,17 @@ def analog_four_saved_kit_mutation(
     )
 
 
+ANALOG_RYTM_SAVED_KIT_TEST_HEADER = bytes((0x00, 0x20, 0x3C, 0x07, 0x00, 0x52, 0x01, 0x01, 0x00))
+
+
+def analog_rytm_saved_kit_test_raw() -> bytes:
+    """Build the deterministic unpacked Rytm body shared by codec tests."""
+
+    from rytm_randomizer.data.analog_rytm_kit_layout import RYTM_KIT_RAW_SIZE
+
+    return bytes(((index * 37) + 193) & 0xFF for index in range(RYTM_KIT_RAW_SIZE))
+
+
 @pytest.fixture
 def isolated_observability() -> Iterator[None]:
     """Reset A4 metrics and restore package logging after observability tests."""

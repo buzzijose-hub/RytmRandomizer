@@ -149,6 +149,8 @@ something to set to make a red gate go green.
 | `TOUCHED_COV_BASE_REF` | `origin/modularize-v1.34` | Base ref for the Gate-1 touched-file coverage check (`scripts/check_touched_coverage.py`). Precedence: `GITHUB_BASE_REF` on PR events → this override → the default. Use it only to reproduce a real alternate integration target, never to narrow the touched-file set past a coverage failure (the sibling rule to `TYPECHECK_BASE_REF`, §"Incremental strict production typing"). |
 | `TYPECHECK_BASE_REF` | `origin/modularize-v1.34` | Base ref for the strict-typing gate (`scripts/typecheck_touched.py`). Same precedence and same caveat — see §"Incremental strict production typing". |
 | `PARITY_CAPTURE_MODE` | unset | `1` rewrites **every** V1.34 parity golden under `tests/fixtures/v134_parity/` from current engine output. A hard stop: it requires explicit maintainer go-ahead and its own isolated PR. See [`.claude/rules/parity-fixture-discipline.md`](../.claude/rules/parity-fixture-discipline.md). |
+| `SOURCE_DATE_EPOCH` | unset | Optional Unix epoch used by the passive AL16 Rytm kit exporter to freeze manifest timestamps for reproducible evidence. When unset, the exporter uses Unix epoch 0 for deterministic evidence. It never enables MIDI or hardware access. |
+| `RYTM_TEST_REFERENCE` | unset | Optional path to a private local initialized Analog Rytm saved-kit SysEx dump used only by the opt-in codec integration test. When unset, the test skips. Never commit the referenced dump; this variable does not enable MIDI or hardware access. |
 
 ## 8. Pre-push hook hardening (Windows Store python shim)
 

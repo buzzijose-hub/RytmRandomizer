@@ -226,6 +226,7 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `analog-four-patch-corpus-report` | Passive nearest-match ranking against starter or captured Analog Four patch/audio examples |
 | `analog-four-patch-send-plan-report` | Passive CC/NRPN live-dial send plan for a generated Analog Four patch |
 | `analog-four-saved-kit-export` | Guarded local-file saved-kit export; currently admits hardware-validated Filter2 Resonance only |
+| `al16-rytm-kit-export` | Offline AL16 Analog Rytm audit/evidence compiler; Phase R1 validates the exact initialized reference, writes deterministic mapping-gap evidence, and emits no `.syx` |
 | `analog-four-audio-patch-batch` | Real local audio analysis; the documented/default workflow deterministically commits exactly four immutable `.syx` candidates, complete DNA sidecars, and one manifest; `--studio-handoff` prints the bounded four-audition workflow with zero calibration rounds |
 | `analog-four-audio-patch-rank` | Passive acoustic ranking of recorded A4 candidates against the exact batch reference |
 | `local-model-copilot-report` | Passive local model docs, mutation-intent, and Analog Four patch-review packets; optional local model subprocess call with `--ask-local-model` |
@@ -247,6 +248,7 @@ python -m rytm_randomizer.cli analog-four-patch-corpus-report --description "hyp
 python -m rytm_randomizer.cli analog-four-patch-corpus-report --audio reference.wav --corpus-file a4-captures.json --json
 python -m rytm_randomizer.cli analog-four-patch-send-plan-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
 python -m rytm_randomizer.cli analog-four-saved-kit-export --source INIT.syx --output PATCH.syx --filter2-resonance 1:64
+python -m rytm_randomizer.cli al16-rytm-kit-export --reference output/local/reference/RYTM_Test1_Init_Kit.syx --recipe specs/al16/AL02_LOCK_RYTM.yaml --destination-slot 127 --output output/local/al16/AL02_LOCK_RYTM.syx
 python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit INIT.syx --output-dir batch --track 1 --candidates 4
 python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit INIT.syx --output-dir batch --track 1 --studio-handoff --a4-output-port "<exact configured Analog Four output name>"
 python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference reference.wav --manifest batch/a4-t1-audio-patch-batch.json --render 1=candidate-1.wav
@@ -320,6 +322,22 @@ It reads a saved-kit dump, applies explicit `TRACK:VALUE` Filter2 Resonance
 assignments through the registered Analog Four device capability, and writes a
 new `.syx` through the canonical atomic writer. It never opens a MIDI port and
 refuses unsupported or unvalidated saved-kit parameters.
+
+`al16-rytm-kit-export` is the offline Analog Rytm audit/evidence compiler for
+the original AL16 Reference -> Discovery performance bank. It is not a
+forensic recreation workflow. Store the private initialized reference under
+the gitignored `output/local/reference/` subtree so following this operator
+workflow cannot create an unallowlisted repo-root directory or stage the dump.
+Phase R1 requires `output/local/reference/RYTM_Test1_Init_Kit.syx` with SHA-256
+`8bda94d6d5031e038c8d810789301f35242ed539338a0399548869a34e1dc4dd`, and the
+destination slot is always explicit. The compiler round-trips that initialized
+reference, validates permanent pad roles, machine-specific fields, typed
+converters, tuning evidence, and a strict known-byte allowlist. It opens no
+MIDI backend or port. The current `AL02 LOCK` proof is deliberately
+fail-closed: 18 critical writer mappings remain unverified, so the command
+returns `2`, writes manifest/validation/byte-diff evidence, emits no `.syx`,
+and authorizes no manual hardware import. Positive kit generation remains
+future work after those writer mappings are verified.
 
 `analog-four-audio-patch-batch` is the end-to-end offline candidate generator.
 With the documented/default `--candidates 4` workflow, it analyzes an immutable

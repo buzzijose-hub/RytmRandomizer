@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "project_id": "AL16",
+  "kit": {
+    "state": 2,
+    "name": "AL02 LOCK",
+    "tonal_zone": "F Phrygian",
+    "performance_context_bpm": 138,
+    "description": "Dry F-Phrygian foundation and original Reference to Discovery starting point; not a forensic recreation."
+  },
+  "preserve": [
+    "scenes",
+    "performance_macros",
+    "master_delay",
+    "master_reverb",
+    "master_distortion",
+    "master_compressor",
+    "routing",
+    "retrig_configuration",
+    "choke_configuration",
+    "unknown_and_reserved_bytes"
+  ],
+  "tracks": {
+    "1": {
+      "role": "Main kick",
+      "mode": "patch",
+      "machine": "bd_classic",
+      "source": {"tun": -6, "dec": 53, "swd": 32, "swt": 68, "hld": 42, "wav": 1, "trn": 24},
+      "filter": {"type": "HP2", "frq": 25, "res": 26, "atk": 0, "dec": 64, "sus": 0, "rel": 64, "env": "neutral"},
+      "amp": {"atk": 0, "hld": 0, "dec": 86, "ovr": 19, "del": 0, "rev": 0, "pan": "center", "vol": 108}
+    },
+    "2": {"role": "Secondary impact / restrained snare", "mode": "preserve"},
+    "3": {
+      "role": "Rim / synth percussion / dry punctuation",
+      "mode": "patch",
+      "machine": "rs_classic",
+      "source": {},
+      "filter": {"type": "HP2", "frq": 70, "res": 12, "env": "neutral"},
+      "amp": {"atk": 0, "hld": 0, "dec": 24, "ovr": 8, "del": 0, "rev": 0, "pan": "center", "vol": 56}
+    },
+    "4": {"role": "Clap / impulse / noise / transition utility", "mode": "preserve"},
+    "5": {"role": "Bass tom / primary tuned low body", "mode": "preserve"},
+    "6": {
+      "role": "Low tom / secondary tuned body",
+      "mode": "patch",
+      "machine": "xt_classic",
+      "source": {"target_note": "F2", "decay": 34},
+      "filter": {"type": "LP2", "frq": 48, "res": 8, "env": "neutral"},
+      "amp": {"atk": 0, "hld": 0, "dec": 44, "ovr": 10, "del": 0, "rev": 0, "pan": "center", "vol": 72}
+    },
+    "7": {"role": "Mid tom / rotating tonal percussion", "mode": "preserve"},
+    "8": {"role": "High tom / transition accent", "mode": "preserve"},
+    "9": {
+      "role": "Closed-hat clock",
+      "mode": "patch",
+      "machine": "ch_basic",
+      "source": {"decay": 20},
+      "filter": {"type": "LP2", "frq": 104, "res": 6, "env": "neutral"},
+      "amp": {"atk": 0, "hld": 0, "dec": 18, "ovr": 3, "del": 0, "rev": 0, "pan": "center", "vol": 64}
+    },
+    "10": {"role": "Open hat / air", "mode": "preserve"},
+    "11": {"role": "Cymbal / ride / upper pressure", "mode": "preserve"},
+    "12": {"role": "Cowbell / metallic punctuation / alarm tone", "mode": "preserve"}
+  }
+}

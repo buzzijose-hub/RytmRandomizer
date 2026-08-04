@@ -322,6 +322,13 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         "DataError",
         "BoundaryError",
         "ConfigError",
+        # AL16 offline exporter: one typed BoundaryError carrying a bounded
+        # failure reason instead of classifying human-readable prose.
+        "Al16BuildError",
+        # Passive Elektron codec boundaries retain ValueError compatibility
+        # while exposing typed BoundaryError subclasses to their callers.
+        "ElektronPackedPayloadError",
+        "AnalogRytmSavedKitCodecError",
         # Re-homed legacy classes (still raisable by their original name):
         "RealMidiDependencyError",
         "RealMidiPortError",
@@ -361,6 +368,9 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # WizardSourcePathError / EmptyAnalysisError dual-inheritance
         # pattern.
         "WriteError",
+        # Transactional multi-artifact publication retains the WriteError
+        # taxonomy while exposing bounded rollback context to operators.
+        "WriteSetError",
         # Analog Four audio-patch batching: classified staging failures retain
         # RuntimeError compatibility; publication locks retain FileExistsError
         # compatibility while all remain members of the BoundaryError taxonomy.

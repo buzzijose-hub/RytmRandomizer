@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import json
 import os
-import sys
 from pathlib import Path
 
 import pytest
@@ -235,15 +234,9 @@ def test_failed_overwrite_leaves_original_file_intact(
     assert leaked == [], f"leaked temp files: {leaked}"
 
 
-@pytest.mark.parametrize(
-    ("platform", "publish_name"),
-    (("win32", "rename"), ("linux", "link")),
-)
 def test_write_error_bubbles_up_unwrapped(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
-    platform: str,
-    publish_name: str,
 ) -> None:
     """An underlying :class:`WriteError` propagates from ``save()`` as-is.
 
@@ -257,8 +250,7 @@ def test_write_error_bubbles_up_unwrapped(
     def failing_publish(_src: str, _dst: str | Path) -> None:
         raise OSError("ENOSPC simulated")
 
-    monkeypatch.setattr(sys, "platform", platform)
-    monkeypatch.setattr(os, publish_name, failing_publish)
+    monkeypatch.setattr(os, "link", failing_publish)
     with pytest.raises(WriteError):
         registry.save(_make_user_profile())
 

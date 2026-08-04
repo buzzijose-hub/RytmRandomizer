@@ -345,12 +345,12 @@ def test_saved_kit_writer_rejects_primary_offset_at_packed_group_header() -> Non
 def test_render_saved_kit_rejects_repacked_length_change(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    import rytm_randomizer.devices.strategies.analog_four_saved_kit_codec as codec_module
     import rytm_randomizer.devices.strategies.analog_four_saved_kit_writer as writer_module
+    import rytm_randomizer.snapshot.elektron_packed_payload as packed_payload_module
 
-    pack = codec_module.pack_elektron_7bit
+    pack = packed_payload_module.pack_elektron_7bit
     monkeypatch.setattr(
-        codec_module,
+        packed_payload_module,
         "pack_elektron_7bit",
         lambda unpacked: pack(unpacked) + b"\x00",
     )

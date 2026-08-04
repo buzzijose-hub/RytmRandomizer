@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "project_id": "AL16",
+  "performance_context_bpm": 138,
+  "concept": "One machine moving through sixteen operating states; original Reference to Discovery material, not a forensic recreation.",
+  "adjacent_sonic_dna_target_percent": [
+    70,
+    85
+  ],
+  "states": [
+    {
+      "number": 1,
+      "name": "AIRLOCK",
+      "tonal_zone": "F Phrygian"
+    },
+    {
+      "number": 2,
+      "name": "LOCK",
+      "tonal_zone": "F Phrygian"
+    },
+    {
+      "number": 3,
+      "name": "ROTATION",
+      "tonal_zone": "F Phrygian"
+    },
+    {
+      "number": 4,
+      "name": "PRESSURE",
+      "tonal_zone": "F Phrygian"
+    },
+    {
+      "number": 5,
+      "name": "ORBIT",
+      "tonal_zone": "F# Dorian"
+    },
+    {
+      "number": 6,
+      "name": "OFFSET",
+      "tonal_zone": "F# Dorian"
+    },
+    {
+      "number": 7,
+      "name": "SURGE",
+      "tonal_zone": "F# Dorian"
+    },
+    {
+      "number": 8,
+      "name": "CROSSING",
+      "tonal_zone": "F# Dorian into harmonic-minor tension"
+    },
+    {
+      "number": 9,
+      "name": "COMPRESSION",
+      "tonal_zone": "F# harmonic minor"
+    },
+    {
+      "number": 10,
+      "name": "RITUAL",
+      "tonal_zone": "F# harmonic minor"
+    },
+    {
+      "number": 11,
+      "name": "APEX",
+      "tonal_zone": "F# harmonic minor"
+    },
+    {
+      "number": 12,
+      "name": "VACUUM",
+      "tonal_zone": "reduced-pitch F# corridor"
+    },
+    {
+      "number": 13,
+      "name": "REENTRY",
+      "tonal_zone": "A minor"
+    },
+    {
+      "number": 14,
+      "name": "TERMINAL",
+      "tonal_zone": "A minor"
+    },
+    {
+      "number": 15,
+      "name": "FRACTURE",
+      "tonal_zone": "A minor with borrowed Bb/Eb friction"
+    },
+    {
+      "number": 16,
+      "name": "SHUTDOWN",
+      "tonal_zone": "ambiguous A-centered ending"
+    }
+  ],
+  "permanent_pad_roles": {
+    "1": "Main kick",
+    "2": "Secondary impact / restrained snare",
+    "3": "Rim / synth percussion / dry punctuation",
+    "4": "Clap / impulse / noise / transition utility",
+    "5": "Bass tom / primary tuned low body",
+    "6": "Low tom / secondary tuned body",
+    "7": "Mid tom / rotating tonal percussion",
+    "8": "High tom / transition accent",
+    "9": "Closed-hat clock",
+    "10": "Open hat / air",
+    "11": "Cymbal / ride / upper pressure",
+    "12": "Cowbell / metallic punctuation / alarm tone"
+  }
+}

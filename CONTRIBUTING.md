@@ -545,6 +545,18 @@ from a PR's real target diff. All new code must:
 
 The `tests/architecture/test_no_any_escape_hatches.py` test mechanically rejects new `Any` introductions outside the allowlist.
 
+Reproducible AL16 evidence may set `SOURCE_DATE_EPOCH` to a Unix epoch. When
+unset, the passive exporter uses Unix epoch 0 so its evidence remains
+deterministic. This variable changes only manifest timestamps and never enables
+MIDI or hardware access. The canonical environment-variable index is
+[`docs/LOCAL_DEV_TOOLING_NOTES.md` §7](docs/LOCAL_DEV_TOOLING_NOTES.md#7-environment-variables).
+
+The optional `RYTM_TEST_REFERENCE` variable may point to a private, local
+initialized Analog Rytm saved-kit SysEx dump for the opt-in codec integration
+test. When unset, that integration test skips with a precise reason. Never
+commit the referenced dump; the variable is test-only and does not enumerate,
+open, or write a MIDI port.
+
 ## Plan requirements — the 18 gates every PR must satisfy
 
 [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md) is the contract

@@ -18,12 +18,16 @@ from ...data.analog_four_saved_kit_layout import (
 )
 from ...snapshot import (
     ELEKTRON_MFR_ID,
-    pack_elektron_7bit,
     read_ascii_name,
     unpack_elektron_7bit,
 )
+from ...snapshot.elektron_packed_payload import (
+    elektron_packed_payload_checksum,
+    encode_elektron_packed_payload,
+    validate_elektron_packed_payload,
+)
 
-_U14_MAX: Final[int] = 0x3FFF
+_DEVICE_LABEL: Final[str] = "Analog Four saved-kit"
 
 
 @dataclass(frozen=True)
@@ -51,15 +55,11 @@ class AnalogFourEncodedSavedKitPayload:
 def analog_four_saved_kit_checksum(packed: bytes) -> int:
     """Return the observed 14-bit A4 saved-kit checksum."""
 
-    return sum(packed[A4_CHECKSUM_PACKED_OFFSET:]) & _U14_MAX
-
-
-def _decode_u14(high: int, low: int) -> int:
-    return (high << 7) | low
-
-
-def _encode_u14(value: int) -> bytes:
-    return bytes(((value >> 7) & 0x7F, value & 0x7F))
+    return elektron_packed_payload_checksum(
+        packed,
+        checksum_start=A4_CHECKSUM_PACKED_OFFSET,
+        device_label=_DEVICE_LABEL,
+    )
 
 
 def _clean_saved_kit_name(name: str) -> str:
@@ -67,13 +67,16 @@ def _clean_saved_kit_name(name: str) -> str:
 
 
 def _validated_trailer(packed: bytes, trailer: bytes) -> tuple[int, int]:
-    stored_checksum = _decode_u14(trailer[0], trailer[1])
-    if stored_checksum != analog_four_saved_kit_checksum(packed):
-        raise ValueError("Analog Four saved-kit checksum does not match the packed payload")
-    stored_length = _decode_u14(trailer[2], trailer[3])
-    if stored_length != len(packed):
-        raise ValueError("Analog Four saved-kit packed length does not match its trailer")
-    return stored_checksum, stored_length
+    validated = validate_elektron_packed_payload(
+        packed,
+        trailer,
+        checksum_start=A4_CHECKSUM_PACKED_OFFSET,
+        length_adjustment=0,
+        expected_packed_size=A4_SAVED_KIT_PACKED_SIZE,
+        expected_trailer_size=A4_SAVED_KIT_TRAILER_SIZE,
+        device_label=_DEVICE_LABEL,
+    )
+    return validated.checksum, validated.encoded_length
 
 
 def decode_analog_four_saved_kit_payload(
@@ -144,15 +147,17 @@ def encode_analog_four_saved_kit_payload(
     if unpacked[0] != A4_KIT_OBJECT_BYTE:
         raise ValueError("Analog Four kit object byte is not a saved kit")
 
-    packed = pack_elektron_7bit(unpacked)
-    if len(packed) != A4_SAVED_KIT_PACKED_SIZE:
-        raise ValueError("Analog Four saved-kit repacking changed the packed payload length")
-    checksum = analog_four_saved_kit_checksum(packed)
-    trailer = _encode_u14(checksum) + _encode_u14(len(packed))
+    encoded = encode_elektron_packed_payload(
+        unpacked,
+        checksum_start=A4_CHECKSUM_PACKED_OFFSET,
+        length_adjustment=0,
+        expected_packed_size=A4_SAVED_KIT_PACKED_SIZE,
+        device_label=_DEVICE_LABEL,
+    )
     return AnalogFourEncodedSavedKitPayload(
-        payload=prefix + packed + trailer,
-        packed=packed,
-        checksum=checksum,
+        payload=prefix + encoded.packed + encoded.trailer,
+        packed=encoded.packed,
+        checksum=encoded.checksum,
     )
 
 

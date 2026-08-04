@@ -247,7 +247,26 @@ analog-four-saved-kit-export --source KIT.syx --output OUT.syx --filter2-resonan
 analog-four-audio-patch-batch --audio REF.wav --source-kit KIT.syx --output-dir batch/
 analog-four-audio-patch-batch --audio REF.wav --source-kit KIT.syx --output-dir batch/ --studio-handoff --a4-output-port "<exact A4 output>"
 analog-four-audio-patch-rank --reference REF.wav --manifest batch.json --render 1=take1.wav
+
+# AL16 Analog Rytm offline audit proof (no MIDI; current AL02 build is blocked)
+al16-rytm-kit-export --reference output/local/reference/RYTM_Test1_Init_Kit.syx --recipe specs/al16/AL02_LOCK_RYTM.yaml --destination-slot 127 --output output/local/al16/AL02_LOCK_RYTM.syx
 ```
+
+The AL16 command is currently an offline audit/evidence compiler, not a
+positive kit writer or hardware sender. Keep the operator-local initialized
+reference under the gitignored `output/local/reference/` subtree. Phase R1
+accepts only `output/local/reference/RYTM_Test1_Init_Kit.syx` with SHA-256
+`8bda94d6d5031e038c8d810789301f35242ed539338a0399548869a34e1dc4dd`.
+The current `AL02 LOCK` proof validates that initialized reference and writes
+deterministic mapping-gap evidence, but intentionally returns `2` and emits no
+`.syx` while 18 critical writer mappings remain unverified. Positive kit
+generation is future work after those writer mappings are verified. The
+current reports are not an authorized hardware import. Operator runs belong
+under the gitignored `output/local/` subtree; `output/al16/` is frozen review
+evidence and is regenerated only by the repository's deterministic artifact
+workflow. Evidence timestamps default to the reproducible Unix epoch; set
+`SOURCE_DATE_EPOCH` to an in-range Unix timestamp when a deterministic release
+timestamp is required.
 
 Every command above is **passive by construction** — no output port opens, no MIDI is sent (armed A4 delivery requires `--arm` plus a reviewed batch manifest). The full list is auto-discovered and swept on every PR.
 

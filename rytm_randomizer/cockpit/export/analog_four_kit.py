@@ -17,11 +17,11 @@ from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
 from ...observability.tracing import operation
 from .analog_four_export_contracts import (
-    AnalogFourExportErrorCode,
     analog_four_export_path_name,
     attach_analog_four_export_error_code,
     require_analog_four_export_path,
 )
+from .file_export_contracts import LocalFileExportPhase, classify_local_file_export_error
 from .writer import WriteResult, atomic_write
 
 _logger = get_logger(__name__)
@@ -34,24 +34,6 @@ class AnalogFourSavedKitExportResult:
 
     render: AnalogFourSavedKitRenderResult
     write: WriteResult
-
-
-def _a4_export_error_code(
-    exc: BaseException,
-    *,
-    source_read_completed: bool,
-) -> AnalogFourExportErrorCode:
-    if isinstance(exc, (KeyboardInterrupt, SystemExit)):
-        return "interrupted"
-    if isinstance(exc, FileNotFoundError):
-        return "write_failed" if source_read_completed else "input_not_found"
-    if isinstance(exc, PermissionError):
-        return "permission_denied"
-    if isinstance(exc, FileExistsError):
-        return "overwrite_refused"
-    if isinstance(exc, OSError):
-        return "write_failed" if source_read_completed else "source_read_failed"
-    return "validation"
 
 
 def export_analog_four_saved_kit(
@@ -70,7 +52,7 @@ def export_analog_four_saved_kit(
 
     metrics = get_metrics()
     started_at = time.perf_counter()
-    source_read_completed = False
+    export_phase: LocalFileExportPhase = "validation"
     source_name = analog_four_export_path_name(source_path)
     output_name = analog_four_export_path_name(output_path)
     operation_id = ""
@@ -90,14 +72,16 @@ def export_analog_four_saved_kit(
                 field_name="output_path",
             )
             capability = get_analog_four_saved_kit_capability()
+            export_phase = "source_read"
             source_sysex = source_path.read_bytes()
-            source_read_completed = True
+            export_phase = "validation"
             render = capability.render_saved_kit(source_sysex, mutations)
+            export_phase = "output_write"
             write = atomic_write(output_path, render.framed_sysex, overwrite=overwrite)
     except (KeyError, ValueError, TypeError, OSError, KeyboardInterrupt, SystemExit) as exc:
-        error_code = _a4_export_error_code(
+        error_code = classify_local_file_export_error(
             exc,
-            source_read_completed=source_read_completed,
+            phase=export_phase,
         )
         duration_ms = (time.perf_counter() - started_at) * 1000.0
         metrics.record_export(duration_ms, error_code=error_code)

@@ -175,6 +175,35 @@ def test_decode_marks_tom_pads_candidate_only_until_verified() -> None:
         assert "candidate-only" in fact.reason
 
 
+def test_snapshot_decoder_strips_legacy_embedded_kit_header() -> None:
+    from rytm_randomizer.data.analog_rytm_kit_layout import (
+        RYTM_KIT_DUMP_ID,
+        RYTM_KIT_NAME_OFFSET,
+        RYTM_KIT_RAW_SIZE,
+    )
+    from rytm_randomizer.devices.strategies import AnalogRytmSnapshotDecoder
+    from rytm_randomizer.devices.strategies.analog_rytm_snapshot_decoder import (
+        RYTM_KIT_TYPE_BYTE,
+    )
+    from rytm_randomizer.snapshot import ELEKTRON_MFR_ID
+
+    unpacked = bytearray(RYTM_KIT_RAW_SIZE)
+    unpacked[RYTM_KIT_NAME_OFFSET : RYTM_KIT_NAME_OFFSET + 11] = b"LEGACY TEST"
+    embedded_header = bytes([RYTM_KIT_DUMP_ID, 0x01, 0x01, 0x00])
+    raw = (
+        ELEKTRON_MFR_ID
+        + b"\x00"
+        + bytes([RYTM_KIT_TYPE_BYTE])
+        + pack_elektron_7bit(embedded_header + bytes(unpacked))
+    )
+
+    snapshot = AnalogRytmSnapshotDecoder().decode(raw, slot=4)
+
+    assert snapshot.slot == 4
+    assert snapshot.kit_name == "LEGACY TEST"
+    assert snapshot.unpacked == bytes(unpacked)
+
+
 # ---------------------------------------------------------------------------
 # 2. Error paths
 # ---------------------------------------------------------------------------
