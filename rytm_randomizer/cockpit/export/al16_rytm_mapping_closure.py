@@ -42,6 +42,7 @@ MappingPromotionStatus: TypeAlias = Literal["review_required"]
 
 _SESSION_CONFIGURED_KIT: Final[int] = 1
 _SESSION_DESTINATION_SLOT: Final[int] = 2
+MAPPING_CAPTURE_REPORT_SCHEMA_VERSION: Final[int] = 1
 MAPPING_PROMOTION_REVIEW_REQUIRED: Final[MappingPromotionStatus] = "review_required"
 _GROUP_ORDER: Final[tuple[EvidenceClass, ...]] = (
     "machine_selection",
@@ -84,10 +85,19 @@ class CandidateLocation:
 
 
 @dataclass(frozen=True)
+class MappingGapRequest:
+    """One blocked semantic field and its manifest-authoritative request."""
+
+    semantic_path: str
+    requested_semantic_value: str
+
+
+@dataclass(frozen=True)
 class CandidateObservation:
     """Observed baseline/configured bytes for one candidate location."""
 
     semantic_path: str
+    requested_semantic_value: str
     location: CandidateLocation
     baseline_bytes: tuple[int, ...]
     configured_bytes: tuple[int, ...]
@@ -110,6 +120,7 @@ class MappingEvidenceProvenance:
 class MappingCaptureReport:
     """Deterministic offline comparison requiring review before promotion."""
 
+    schema_version: int
     reference_sha256: str
     configured_sha256: str
     reference_header: tuple[int, ...]
@@ -351,33 +362,40 @@ def analyze_mapping_capture(
     reference_frame: bytes,
     configured_frame: bytes,
     recipe: Mapping[str, object],
-    semantic_paths: Sequence[str],
+    requests: Sequence[MappingGapRequest],
     provenance: MappingEvidenceProvenance,
 ) -> MappingCaptureReport:
     """Compare two valid saved-kit frames without promoting candidate evidence."""
 
+    semantic_paths = tuple(request.semantic_path for request in requests)
     build_mapping_closure_plan(semantic_paths)
     codec = get_analog_rytm_saved_kit_codec_capability()
     reference = codec.decode_saved_kit_frame(reference_frame)
     configured = codec.decode_saved_kit_frame(configured_frame)
     changed_header_indices = tuple(
         index
-        for index, (before, after) in enumerate(zip(reference.header, configured.header))
+        for index, (before, after) in enumerate(
+            zip(reference.header, configured.header, strict=True)
+        )
         if before != after
     )
     changed_unpacked_offsets = tuple(
         index
-        for index, (before, after) in enumerate(zip(reference.unpacked, configured.unpacked))
+        for index, (before, after) in enumerate(
+            zip(reference.unpacked, configured.unpacked, strict=True)
+        )
         if before != after
     )
     observations: list[CandidateObservation] = []
     located_offsets: set[int] = set()
-    for semantic_path in semantic_paths:
+    for request in requests:
+        semantic_path = request.semantic_path
         location = candidate_location_for_path(semantic_path, recipe)
         if location.unpacked_offset is None or location.width is None:
             observations.append(
                 CandidateObservation(
                     semantic_path=semantic_path,
+                    requested_semantic_value=request.requested_semantic_value,
                     location=location,
                     baseline_bytes=(),
                     configured_bytes=(),
@@ -387,6 +405,15 @@ def analyze_mapping_capture(
             continue
         start = location.unpacked_offset
         stop = start + location.width
+        if (
+            start < 0
+            or location.width <= 0
+            or stop > len(reference.unpacked)
+            or stop > len(configured.unpacked)
+        ):
+            raise ValueError(
+                f"candidate location for {semantic_path} exceeds decoded saved-kit bounds"
+            )
         located_offsets.update(range(start, stop))
         baseline_bytes = tuple(reference.unpacked[start:stop])
         configured_bytes = tuple(configured.unpacked[start:stop])
@@ -396,6 +423,7 @@ def analyze_mapping_capture(
         observations.append(
             CandidateObservation(
                 semantic_path=semantic_path,
+                requested_semantic_value=request.requested_semantic_value,
                 location=location,
                 baseline_bytes=baseline_bytes,
                 configured_bytes=configured_bytes,
@@ -404,6 +432,7 @@ def analyze_mapping_capture(
         )
     frozen_observations = tuple(observations)
     return MappingCaptureReport(
+        schema_version=MAPPING_CAPTURE_REPORT_SCHEMA_VERSION,
         reference_sha256=hashlib.sha256(reference_frame).hexdigest(),
         configured_sha256=hashlib.sha256(configured_frame).hexdigest(),
         reference_header=tuple(reference.header),
@@ -415,7 +444,7 @@ def analyze_mapping_capture(
             offset for offset in changed_unpacked_offsets if offset not in located_offsets
         ),
         provenance=provenance,
-        mapping_gap_count=len(semantic_paths),
+        mapping_gap_count=len(requests),
         candidate_changed_count=sum(
             observation.status == "candidate_changed" for observation in frozen_observations
         ),
@@ -445,7 +474,7 @@ def analyze_mapping_capture_files(
     if not isinstance(parsed_manifest, Mapping):
         raise ValueError("AL16 mapping-gap manifest must be a JSON object")
     manifest = cast(Mapping[str, object], parsed_manifest)
-    semantic_paths = load_mapping_gap_paths(manifest)
+    requests = load_mapping_gap_requests(manifest)
     recipe_sha256 = hashlib.sha256(recipe_payload).hexdigest()
     manifest_recipe_sha256 = _required_manifest_string(manifest, "recipe_sha256")
     if recipe_sha256 != manifest_recipe_sha256:
@@ -466,7 +495,7 @@ def analyze_mapping_capture_files(
         reference_frame=reference_frame,
         configured_frame=configured_path.read_bytes(),
         recipe=recipe,
-        semantic_paths=semantic_paths,
+        requests=requests,
         provenance=MappingEvidenceProvenance(
             recipe_artifact=recipe_path.name,
             recipe_sha256=recipe_sha256,
@@ -485,8 +514,24 @@ def _required_manifest_string(manifest: Mapping[str, object], key: str) -> str:
     return value
 
 
-def load_mapping_gap_paths(manifest: Mapping[str, object]) -> tuple[str, ...]:
-    """Load the exact unique semantic paths from one blocked AL16 manifest."""
+def _manifest_scalar_text(value: object, *, semantic_path: str) -> str:
+    if isinstance(value, str):
+        return value
+    if value is None or isinstance(value, bool | int | float):
+        try:
+            return json.dumps(value, allow_nan=False, separators=(",", ":"))
+        except ValueError as exc:
+            raise ValueError(
+                f"AL16 manifest requested_semantic_value for {semantic_path} "
+                "must be a finite JSON scalar"
+            ) from exc
+    raise ValueError(
+        f"AL16 manifest requested_semantic_value for {semantic_path} must be a JSON scalar"
+    )
+
+
+def load_mapping_gap_requests(manifest: Mapping[str, object]) -> tuple[MappingGapRequest, ...]:
+    """Load blocked paths with their manifest-authoritative requested values."""
 
     gaps_value = manifest.get("critical_mapping_gaps")
     if not isinstance(gaps_value, list) or not gaps_value:
@@ -502,7 +547,55 @@ def load_mapping_gap_paths(manifest: Mapping[str, object]) -> tuple[str, ...]:
             raise ValueError(f"AL16 manifest mapping gap {index} semantic_path must be a string")
         paths.append(semantic_path)
     build_mapping_closure_plan(paths)
-    return tuple(paths)
+
+    audits_value = manifest.get("semantic_field_audits")
+    if not isinstance(audits_value, list) or not audits_value:
+        raise ValueError("AL16 manifest semantic_field_audits must be a non-empty list")
+    requested_values: dict[str, str] = {}
+    audits = cast(list[object], audits_value)
+    for index, audit_value in enumerate(audits):
+        if not isinstance(audit_value, Mapping):
+            raise ValueError(f"AL16 manifest semantic field audit {index} must be a mapping")
+        audit = cast(Mapping[object, object], audit_value)
+        if audit.get("verification_status") != "critical_mapping_gap":
+            continue
+        semantic_path = audit.get("semantic_path")
+        if not isinstance(semantic_path, str) or not semantic_path:
+            raise ValueError(
+                f"AL16 manifest semantic field audit {index} semantic_path must be a string"
+            )
+        if semantic_path in requested_values:
+            raise ValueError(
+                f"AL16 manifest has duplicate critical mapping-gap audit for {semantic_path}"
+            )
+        if "requested_semantic_value" not in audit:
+            raise ValueError(
+                f"AL16 manifest critical mapping-gap audit for {semantic_path} "
+                "must include requested_semantic_value"
+            )
+        requested_values[semantic_path] = _manifest_scalar_text(
+            audit["requested_semantic_value"],
+            semantic_path=semantic_path,
+        )
+
+    requests: list[MappingGapRequest] = []
+    for semantic_path in paths:
+        requested_value = requested_values.get(semantic_path)
+        if requested_value is None:
+            raise ValueError(f"AL16 manifest has no critical mapping-gap audit for {semantic_path}")
+        requests.append(
+            MappingGapRequest(
+                semantic_path=semantic_path,
+                requested_semantic_value=requested_value,
+            )
+        )
+    return tuple(requests)
+
+
+def load_mapping_gap_paths(manifest: Mapping[str, object]) -> tuple[str, ...]:
+    """Load exact unique blocker paths while retaining the compatibility API."""
+
+    return tuple(request.semantic_path for request in load_mapping_gap_requests(manifest))
 
 
 def render_mapping_capture_report(report: MappingCaptureReport) -> str:
@@ -515,9 +608,11 @@ def render_mapping_capture_report(report: MappingCaptureReport) -> str:
 __all__ = [
     "CandidateLocation",
     "CandidateObservation",
+    "MAPPING_CAPTURE_REPORT_SCHEMA_VERSION",
     "MappingCaptureReport",
     "MappingClosurePlan",
     "MappingEvidenceProvenance",
+    "MappingGapRequest",
     "MAPPING_PROMOTION_REVIEW_REQUIRED",
     "MappingProofGroup",
     "analyze_mapping_capture",
@@ -525,5 +620,6 @@ __all__ = [
     "build_mapping_closure_plan",
     "candidate_location_for_path",
     "load_mapping_gap_paths",
+    "load_mapping_gap_requests",
     "render_mapping_capture_report",
 ]

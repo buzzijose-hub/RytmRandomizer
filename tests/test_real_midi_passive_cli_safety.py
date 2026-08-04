@@ -468,6 +468,13 @@ def test_al16_mapping_evidence_full_handler_imports_no_real_midi_modules(
                 "deterministic_recipe_identifier": deterministic_recipe_identifier(recipe),
                 "recipe_sha256": hashlib.sha256(recipe_payload).hexdigest(),
                 "reference_sha256": hashlib.sha256(frame).hexdigest(),
+                "semantic_field_audits": [
+                    {
+                        "requested_semantic_value": 1,
+                        "semantic_path": "destination_slot",
+                        "verification_status": "critical_mapping_gap",
+                    }
+                ],
             },
             sort_keys=True,
         ),

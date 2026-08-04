@@ -73,16 +73,34 @@ header byte owns the destination slot.
 
 ## Plan-requirement decisions
 
-- **Gate 14 - maintainability:** canonical Rytm track layout, machine aliases,
-  and CC/NRPN mappings are reused; duplicate exporter offsets, pad bounds, and
-  controls are removed. The learned Elektron workflow records the multi-gap
-  capture pattern below.
-- **Gate 15 - dependency policy:** no dependency or lock-file change is part of
-  R2. The hardware-pinned `mido` and `python-rtmidi` versions remain untouched,
-  and the passive command does not import either backend.
-- **Gate 16 - integration strategy:** this is one direct PR against
-  `modularize-v1.34`, not a stacked PR. The implementation, tests, deterministic
-  evidence, docs, and learned workflow ship together on the same branch.
+- **Gate 14 - maintainability review:** the ten-question pre-plan audit is in
+  [the maintainability audit](2026-08-04-al16-r2-rytm-mapping-closure_MAINTAINABILITY_AUDIT.md).
+  The post-plan comparison is in
+  [the maintainability report](2026-08-04-al16-r2-rytm-mapping-closure_MAINTAINABILITY_REPORT.md).
+  Canonical Rytm layout, codec, machine aliases, and parameter mappings remain
+  the sources of truth; no exporter-local offsets were added.
+- **Gate 15 - learning phase:** the run ships a preserved
+  [run log](2026-08-04-al16-r2-rytm-mapping-closure_RUN_LOG.md),
+  [run report](2026-08-04-al16-r2-rytm-mapping-closure_RUN_REPORT.md),
+  [architecture comparison](2026-08-04-al16-r2-rytm-mapping-closure_ARCHITECTURE_BEFORE_AFTER.md),
+  [replay playbook](2026-08-04-al16-r2-rytm-mapping-closure_REPLAY_PLAYBOOK.md),
+  [state schema](2026-08-04-al16-r2-rytm-mapping-closure_STATE.schema.json),
+  and [current state](2026-08-04-al16-r2-rytm-mapping-closure_STATE.json).
+  The existing repo-scoped `elektron-sysex-envelope` skill already records the
+  reusable multi-gap closure pattern, so this run reuses it instead of creating
+  a competing skill or rule.
+- **Gate 16 - execution shape:** one tightly coupled implementation workstream
+  owns the analyzer, passive adapter, tests, and these plan artifacts in the
+  isolated `.worktrees/al16-r2-rytm-mapping-closure` worktree on branch
+  `codex/al16-r2-rytm-mapping-closure`. Independent review dimensions run in
+  parallel and are read-only. The state file, append-only run log, and replay
+  playbook define crash recovery. The hard budget is 72 hours; `STOP`, closing
+  PR #224, or setting state phase to `interrupted` halts the run. Termination is
+  a green exact head with fresh CODEOWNER approval and a final state update.
+
+No dependency or lock-file change is part of R2. The hardware-pinned `mido`
+and `python-rtmidi` versions remain untouched, and the passive command imports
+neither backend.
 
 ## Exit criteria
 

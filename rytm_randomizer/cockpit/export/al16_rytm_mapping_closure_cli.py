@@ -6,7 +6,7 @@ import sys
 import time
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Final, TypedDict, cast
+from typing import Final, TypedDict
 
 from ...cli_registry import CliCommand, register
 from ...observability.logging import get_logger
@@ -73,7 +73,13 @@ def parse_al16_rytm_mapping_evidence_args(
     for option, key in option_keys.items():
         if key not in values:
             raise ValueError(f"{option} is required")
-    return cast(Al16RytmMappingEvidenceArgs, values)
+    return Al16RytmMappingEvidenceArgs(
+        reference_path=values["reference_path"],
+        configured_path=values["configured_path"],
+        recipe_path=values["recipe_path"],
+        gap_manifest_path=values["gap_manifest_path"],
+        report_path=values["report_path"],
+    )
 
 
 def _parse_args_for_registry(args: Sequence[str]) -> dict[str, object]:
@@ -203,6 +209,7 @@ def handle_al16_rytm_mapping_evidence(
         f"mapping_gaps: {report.mapping_gap_count}\n"
         f"candidate_locations_changed: {report.candidate_changed_count}\n"
         f"unresolved_locations: {report.unresolved_location_count}\n"
+        f"changed_header_indices: {len(report.changed_header_indices)}\n"
         f"other_changed_unpacked_offsets: {len(report.other_changed_unpacked_offsets)}\n"
         f"promotion_status: {report.promotion_status}\n"
         "midi_ports_opened: 0\n"

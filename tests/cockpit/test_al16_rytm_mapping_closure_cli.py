@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from conftest import ANALOG_RYTM_SAVED_KIT_TEST_HEADER
+from conftest import AL16_RYTM_MAPPING_GAP_PATHS, ANALOG_RYTM_SAVED_KIT_TEST_HEADER
 from rytm_randomizer.cockpit.export.al16_rytm_kit import (
     deterministic_recipe_identifier,
 )
@@ -27,26 +27,6 @@ _RECIPE = {
         "9": {"machine": "ch_basic"},
     }
 }
-_GAP_PATHS = (
-    "destination_slot",
-    "tracks.1.machine",
-    "tracks.1.source.dec",
-    "tracks.1.source.hld",
-    "tracks.1.source.swd",
-    "tracks.1.source.swt",
-    "tracks.1.source.trn",
-    "tracks.1.source.tun",
-    "tracks.1.source.wav",
-    "tracks.1.amp.vol",
-    "tracks.3.machine",
-    "tracks.3.amp.vol",
-    "tracks.6.source.decay",
-    "tracks.6.source.target_note",
-    "tracks.6.amp.vol",
-    "tracks.9.machine",
-    "tracks.9.source.decay",
-    "tracks.9.amp.vol",
-)
 
 
 def _write_inputs(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
@@ -73,7 +53,19 @@ def _write_inputs(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
     manifest_path.write_text(
         json.dumps(
             {
-                "critical_mapping_gaps": [{"semantic_path": path} for path in _GAP_PATHS],
+                "critical_mapping_gaps": [
+                    {"semantic_path": path} for path in AL16_RYTM_MAPPING_GAP_PATHS
+                ],
+                "semantic_field_audits": [
+                    {
+                        "semantic_path": path,
+                        "requested_semantic_value": (
+                            "BD Classic" if path == "tracks.1.machine" else f"requested:{path}"
+                        ),
+                        "verification_status": "critical_mapping_gap",
+                    }
+                    for path in AL16_RYTM_MAPPING_GAP_PATHS
+                ],
                 "deterministic_recipe_identifier": deterministic_recipe_identifier(_RECIPE),
                 "recipe_sha256": hashlib.sha256(recipe_payload).hexdigest(),
                 "reference_sha256": hashlib.sha256(reference_frame).hexdigest(),
@@ -125,10 +117,17 @@ def test_registered_command_writes_review_only_report(
     assert captured.err == ""
     assert "mapping_gaps: 18" in captured.out
     assert "candidate_locations_changed: 1" in captured.out
+    assert "changed_header_indices: 0" in captured.out
     assert "promotion_status: review_required" in captured.out
     assert "midi_ports_opened: 0" in captured.out
     assert report["promotion_status"] == "review_required"
+    assert report["schema_version"] == 1
     assert report["provenance"]["recipe_artifact"] == "recipe.yaml"
+    observations = {
+        observation["semantic_path"]: observation
+        for observation in report["candidate_observations"]
+    }
+    assert observations["tracks.1.machine"]["requested_semantic_value"] == "BD Classic"
     assert str(tmp_path) not in captured.out
 
     assert main(args) == 2

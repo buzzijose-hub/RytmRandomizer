@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/buzzijose-hub/RytmRandomizer/al16-r2-rytm-mapping-closure-state.schema.json",
+  "title": "AL16 R2 Analog Rytm Mapping Closure Run State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "plan",
+    "branch",
+    "pull_request",
+    "phase",
+    "workstreams",
+    "last_event"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "plan": { "type": "string", "minLength": 1 },
+    "branch": { "const": "codex/al16-r2-rytm-mapping-closure" },
+    "pull_request": { "const": 224 },
+    "phase": {
+      "enum": ["implementation", "verification", "review", "ci", "complete", "interrupted"]
+    },
+    "workstreams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_contract", "tests", "learning_artifacts", "final_gates"],
+      "properties": {
+        "evidence_contract": { "enum": ["pending", "in_progress", "complete", "blocked"] },
+        "tests": { "enum": ["pending", "in_progress", "complete", "blocked"] },
+        "learning_artifacts": { "enum": ["pending", "in_progress", "complete", "blocked"] },
+        "final_gates": { "enum": ["pending", "in_progress", "complete", "blocked"] }
+      }
+    },
+    "last_event": { "type": "string", "minLength": 1 }
+  }
+}

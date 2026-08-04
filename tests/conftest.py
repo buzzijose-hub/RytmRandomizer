@@ -85,6 +85,26 @@ def analog_four_saved_kit_mutation(
 
 
 ANALOG_RYTM_SAVED_KIT_TEST_HEADER = bytes((0x00, 0x20, 0x3C, 0x07, 0x00, 0x52, 0x01, 0x01, 0x00))
+AL16_RYTM_MAPPING_GAP_PATHS = (
+    "destination_slot",
+    "tracks.1.machine",
+    "tracks.1.source.dec",
+    "tracks.1.source.hld",
+    "tracks.1.source.swd",
+    "tracks.1.source.swt",
+    "tracks.1.source.trn",
+    "tracks.1.source.tun",
+    "tracks.1.source.wav",
+    "tracks.1.amp.vol",
+    "tracks.3.machine",
+    "tracks.3.amp.vol",
+    "tracks.6.source.decay",
+    "tracks.6.source.target_note",
+    "tracks.6.amp.vol",
+    "tracks.9.machine",
+    "tracks.9.source.decay",
+    "tracks.9.amp.vol",
+)
 
 
 def analog_rytm_saved_kit_test_raw() -> bytes:

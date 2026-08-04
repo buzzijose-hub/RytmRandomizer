@@ -7,16 +7,19 @@ from typing import cast
 
 import pytest
 
-from conftest import ANALOG_RYTM_SAVED_KIT_TEST_HEADER
+from conftest import AL16_RYTM_MAPPING_GAP_PATHS, ANALOG_RYTM_SAVED_KIT_TEST_HEADER
 from rytm_randomizer.cockpit.export import al16_rytm_mapping_closure as mapping_closure
 from rytm_randomizer.cockpit.export.al16_rytm_kit import deterministic_recipe_identifier
 from rytm_randomizer.cockpit.export.al16_rytm_mapping_closure import (
+    CandidateLocation,
     MappingEvidenceProvenance,
+    MappingGapRequest,
     analyze_mapping_capture,
     analyze_mapping_capture_files,
     build_mapping_closure_plan,
     candidate_location_for_path,
     load_mapping_gap_paths,
+    load_mapping_gap_requests,
     render_mapping_capture_report,
 )
 from rytm_randomizer.data.analog_rytm_kit_layout import (
@@ -33,26 +36,6 @@ pytestmark = pytest.mark.fast
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _RECIPE_PATH = _REPO_ROOT / "specs" / "al16" / "AL02_LOCK_RYTM.yaml"
-_GAP_PATHS = (
-    "destination_slot",
-    "tracks.1.machine",
-    "tracks.1.source.dec",
-    "tracks.1.source.hld",
-    "tracks.1.source.swd",
-    "tracks.1.source.swt",
-    "tracks.1.source.trn",
-    "tracks.1.source.tun",
-    "tracks.1.source.wav",
-    "tracks.1.amp.vol",
-    "tracks.3.machine",
-    "tracks.3.amp.vol",
-    "tracks.6.source.decay",
-    "tracks.6.source.target_note",
-    "tracks.6.amp.vol",
-    "tracks.9.machine",
-    "tracks.9.source.decay",
-    "tracks.9.amp.vol",
-)
 _EXPECTED_GAP_LOCATIONS = {
     "destination_slot": (
         "destination_header_proof_required",
@@ -189,6 +172,25 @@ def _provenance() -> MappingEvidenceProvenance:
     )
 
 
+def _requested_manifest_value(semantic_path: str) -> object:
+    values: dict[str, object] = {
+        "destination_slot": 127,
+        "tracks.1.machine": "BD Classic",
+        "tracks.1.source.dec": 53,
+    }
+    return values.get(semantic_path, f"requested:{semantic_path}")
+
+
+def _requests(semantic_paths: tuple[str, ...]) -> tuple[MappingGapRequest, ...]:
+    return tuple(
+        MappingGapRequest(
+            semantic_path=semantic_path,
+            requested_semantic_value=str(_requested_manifest_value(semantic_path)),
+        )
+        for semantic_path in semantic_paths
+    )
+
+
 def _write_bound_inputs(
     tmp_path: Path,
     *,
@@ -209,6 +211,14 @@ def _write_bound_inputs(
         json.dumps(
             {
                 "critical_mapping_gaps": [{"semantic_path": path} for path in semantic_paths],
+                "semantic_field_audits": [
+                    {
+                        "semantic_path": path,
+                        "requested_semantic_value": _requested_manifest_value(path),
+                        "verification_status": "critical_mapping_gap",
+                    }
+                    for path in semantic_paths
+                ],
                 "deterministic_recipe_identifier": deterministic_recipe_identifier(recipe),
                 "recipe_sha256": hashlib.sha256(recipe_payload).hexdigest(),
                 "reference_sha256": hashlib.sha256(reference_frame).hexdigest(),
@@ -221,7 +231,7 @@ def _write_bound_inputs(
 
 
 def test_closure_plan_covers_all_eighteen_gaps_in_two_sessions() -> None:
-    plan = build_mapping_closure_plan(_GAP_PATHS)
+    plan = build_mapping_closure_plan(AL16_RYTM_MAPPING_GAP_PATHS)
 
     assert plan.manual_sessions_required == 2
     assert {group.evidence_class: len(group.semantic_paths) for group in plan.groups} == {
@@ -232,7 +242,7 @@ def test_closure_plan_covers_all_eighteen_gaps_in_two_sessions() -> None:
         "destination_slot": 1,
     }
     assert len(plan.covered_paths) == 18
-    assert set(plan.covered_paths) == set(_GAP_PATHS)
+    assert set(plan.covered_paths) == set(AL16_RYTM_MAPPING_GAP_PATHS)
 
 
 def test_closure_plan_rejects_duplicate_and_unknown_paths() -> None:
@@ -359,6 +369,152 @@ def test_mapping_gap_loader_rejects_malformed_entries(
         load_mapping_gap_paths(manifest)
 
 
+def test_mapping_gap_loader_preserves_manifest_authoritative_scalar_values() -> None:
+    paths = (
+        "destination_slot",
+        "tracks.1.machine",
+        "tracks.1.source.dec",
+        "tracks.1.source.hld",
+        "tracks.1.source.swd",
+    )
+    requested_values: tuple[object, ...] = (127, "BD Classic", True, None, 32.5)
+    manifest = {
+        "critical_mapping_gaps": [{"semantic_path": path} for path in paths],
+        "semantic_field_audits": [
+            {
+                "semantic_path": path,
+                "requested_semantic_value": value,
+                "verification_status": "critical_mapping_gap",
+            }
+            for path, value in zip(paths, requested_values, strict=True)
+        ]
+        + [
+            {
+                "semantic_path": "tracks.1.filter.frq",
+                "requested_semantic_value": 25,
+                "verification_status": "verified",
+            }
+        ],
+    }
+
+    requests = load_mapping_gap_requests(manifest)
+
+    assert requests == (
+        MappingGapRequest("destination_slot", "127"),
+        MappingGapRequest("tracks.1.machine", "BD Classic"),
+        MappingGapRequest("tracks.1.source.dec", "true"),
+        MappingGapRequest("tracks.1.source.hld", "null"),
+        MappingGapRequest("tracks.1.source.swd", "32.5"),
+    )
+    assert load_mapping_gap_paths(manifest) == paths
+
+
+@pytest.mark.parametrize(
+    ("audits", "message"),
+    [
+        (None, "semantic_field_audits must be a non-empty list"),
+        (["bad"], "semantic field audit 0 must be a mapping"),
+        (
+            [
+                {
+                    "semantic_path": "",
+                    "requested_semantic_value": 53,
+                    "verification_status": "critical_mapping_gap",
+                }
+            ],
+            "semantic field audit 0 semantic_path must be a string",
+        ),
+        (
+            [
+                {
+                    "semantic_path": "tracks.1.source.dec",
+                    "verification_status": "critical_mapping_gap",
+                }
+            ],
+            "must include requested_semantic_value",
+        ),
+        (
+            [
+                {
+                    "semantic_path": "tracks.1.source.dec",
+                    "requested_semantic_value": 53,
+                    "verification_status": "critical_mapping_gap",
+                },
+                {
+                    "semantic_path": "tracks.1.source.dec",
+                    "requested_semantic_value": 54,
+                    "verification_status": "critical_mapping_gap",
+                },
+            ],
+            "duplicate critical mapping-gap audit",
+        ),
+        (
+            [
+                {
+                    "semantic_path": "tracks.1.source.dec",
+                    "requested_semantic_value": [53],
+                    "verification_status": "critical_mapping_gap",
+                }
+            ],
+            "must be a JSON scalar",
+        ),
+        (
+            [
+                {
+                    "semantic_path": "tracks.1.source.dec",
+                    "requested_semantic_value": float("nan"),
+                    "verification_status": "critical_mapping_gap",
+                }
+            ],
+            "must be a finite JSON scalar",
+        ),
+    ],
+)
+def test_mapping_gap_request_loader_rejects_malformed_audits(
+    audits: object,
+    message: str,
+) -> None:
+    manifest = {
+        "critical_mapping_gaps": [{"semantic_path": "tracks.1.source.dec"}],
+        "semantic_field_audits": audits,
+    }
+
+    with pytest.raises(ValueError, match=message):
+        load_mapping_gap_requests(manifest)
+
+
+def test_mapping_gap_request_loader_requires_an_audit_for_every_gap() -> None:
+    manifest = {
+        "critical_mapping_gaps": [{"semantic_path": "tracks.1.source.dec"}],
+        "semantic_field_audits": [
+            {
+                "semantic_path": "tracks.1.source.hld",
+                "requested_semantic_value": 42,
+                "verification_status": "critical_mapping_gap",
+            }
+        ],
+    }
+
+    with pytest.raises(ValueError, match="no critical mapping-gap audit"):
+        load_mapping_gap_requests(manifest)
+
+
+def test_real_al02_manifest_preserves_requested_decay_value() -> None:
+    manifest_path = _REPO_ROOT / "output" / "al16" / "AL02_LOCK_RYTM_manifest.json"
+    manifest = cast(
+        dict[str, object],
+        json.loads(manifest_path.read_text(encoding="utf-8")),
+    )
+
+    requests = {
+        request.semantic_path: request.requested_semantic_value
+        for request in load_mapping_gap_requests(manifest)
+    }
+
+    assert requests["tracks.1.source.dec"] == "53"
+    assert requests["tracks.1.machine"] == "BD Classic"
+
+
 def test_candidate_locations_use_existing_catalog_and_keep_ambiguity_unresolved() -> None:
     recipe = _recipe()
     machine = candidate_location_for_path("tracks.1.machine", recipe)
@@ -385,7 +541,7 @@ def test_all_gap_locations_match_explicit_review_oracle() -> None:
     recipe = _recipe()
 
     actual = {}
-    for path in _GAP_PATHS:
+    for path in AL16_RYTM_MAPPING_GAP_PATHS:
         location = candidate_location_for_path(path, recipe)
         actual[path] = (
             location.status,
@@ -421,7 +577,7 @@ def test_offline_capture_analyzer_reports_candidates_without_promoting_them() ->
         reference_frame=_frame(bytes(RYTM_KIT_RAW_SIZE)),
         configured_frame=_frame(bytes(configured)),
         recipe=recipe,
-        semantic_paths=paths,
+        requests=_requests(paths),
         provenance=_provenance(),
     )
     statuses = {
@@ -444,6 +600,17 @@ def test_offline_capture_analyzer_reports_candidates_without_promoting_them() ->
     assert report.candidate_changed_count == 4
     assert report.unresolved_location_count == 2
     assert {
+        observation.semantic_path: observation.requested_semantic_value
+        for observation in report.candidate_observations
+    } == {
+        "destination_slot": "127",
+        "tracks.1.machine": "BD Classic",
+        "tracks.1.source.dec": "53",
+        "tracks.3.amp.vol": "requested:tracks.3.amp.vol",
+        "tracks.6.source.target_note": "requested:tracks.6.source.target_note",
+        "tracks.9.source.decay": "requested:tracks.9.source.decay",
+    }
+    assert {
         observation.semantic_path: observation.location.unpacked_offset
         for observation in report.candidate_observations
     } == {
@@ -463,7 +630,7 @@ def test_offline_capture_analyzer_reports_unchanged_candidates() -> None:
         reference_frame=frame,
         configured_frame=frame,
         recipe=_recipe(),
-        semantic_paths=("tracks.1.source.dec",),
+        requests=_requests(("tracks.1.source.dec",)),
         provenance=_provenance(),
     )
 
@@ -496,7 +663,9 @@ def test_file_analyzer_and_renderer_are_deterministic(tmp_path: Path) -> None:
     assert first == second
     assert render_mapping_capture_report(first) == render_mapping_capture_report(second)
     rendered = render_mapping_capture_report(first)
+    assert '"schema_version": 1' in rendered
     assert '"promotion_status": "review_required"' in rendered
+    assert '"requested_semantic_value": "BD Classic"' in rendered
     assert '"recipe_artifact": "recipe.yaml"' in rendered
     assert f'"recipe_sha256": "{hashlib.sha256(recipe_path.read_bytes()).hexdigest()}"' in rendered
 
@@ -604,7 +773,7 @@ def test_destination_slot_proof_reports_exact_header_byte() -> None:
         reference_frame=encode_analog_rytm_saved_kit_frame(reference_header, raw),
         configured_frame=encode_analog_rytm_saved_kit_frame(configured_header, raw),
         recipe=_recipe(),
-        semantic_paths=("destination_slot",),
+        requests=_requests(("destination_slot",)),
         provenance=_provenance(),
     )
 
@@ -612,6 +781,32 @@ def test_destination_slot_proof_reports_exact_header_byte() -> None:
     assert report.reference_header[8] == 0
     assert report.configured_header[8] == 7
     assert report.changed_unpacked_offsets == ()
+
+
+def test_capture_analyzer_rejects_candidate_locations_beyond_saved_kit_bounds(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    frame = _frame(bytes(RYTM_KIT_RAW_SIZE))
+    monkeypatch.setattr(
+        mapping_closure,
+        "candidate_location_for_path",
+        lambda semantic_path, _recipe_value: CandidateLocation(
+            semantic_path=semantic_path,
+            unpacked_offset=RYTM_KIT_RAW_SIZE,
+            width=1,
+            status="candidate_location",
+            source="test-only out-of-bounds location",
+        ),
+    )
+
+    with pytest.raises(ValueError, match="exceeds decoded saved-kit bounds"):
+        analyze_mapping_capture(
+            reference_frame=frame,
+            configured_frame=frame,
+            recipe=_recipe(),
+            requests=_requests(("tracks.1.source.dec",)),
+            provenance=_provenance(),
+        )
 
 
 def test_capture_analyzer_rejects_invalid_saved_kit_frames() -> None:
@@ -622,6 +817,6 @@ def test_capture_analyzer_rejects_invalid_saved_kit_frames() -> None:
             reference_frame=valid[:-1],
             configured_frame=valid,
             recipe=_recipe(),
-            semantic_paths=("tracks.1.machine",),
+            requests=_requests(("tracks.1.machine",)),
             provenance=_provenance(),
         )
