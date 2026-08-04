@@ -204,3 +204,7 @@ Requirements gates for all plans: [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUI
 | 2026-07-08 | [local-model-copilot](2026-07-08-local-model-copilot.md) | in-flight |  |
 | 2026-07-18 | [rival-program](2026-07-18-rival-program.md) | in-flight — bundle executed on the `rival-program` integration branch (18 commits over ... |  |
 | 2026-07-20 | [live-gui-retirement-evidence](2026-07-20-live-gui-retirement-evidence.md) | in-flight (retirement executed on `rival-program` 2026-07-28 — see |  |
+| 2026-08-02 | [al16-r1-offline-rytm-kit-exporter](2026-08-02-al16-r1-offline-rytm-kit-exporter.md) | in-flight — AL02 correctly blocked on 18 verified mapping gaps (PR #222) |  |
+| 2026-08-02 | [audio-patch-studio-handoff](2026-08-02-audio-patch-studio-handoff.md) | in-flight (shipped via PR #220; status flip lands in PR #223) |  |
+| 2026-08-03 | [e2e-no-device-experience](2026-08-03-e2e-no-device-experience.md) | in-flight — WS-A first form merged in PR #221; no-gate final form in flight |  |
+| 2026-08-03 | [autoupdate-distribution](2026-08-03-autoupdate-distribution.md) | proposed |  |
