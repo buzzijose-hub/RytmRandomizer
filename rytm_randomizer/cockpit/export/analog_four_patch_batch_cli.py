@@ -8,7 +8,7 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Literal, Protocol, TypedDict, cast
 
-from ...behavior.operator_console import powershell_literal_arg
+from ...behavior.operator_console import powershell_command, powershell_literal_arg
 from ...cli_registry import CliCommand, register
 from ...data.analog_four_patch_templates import ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES
 from ...data.analog_four_sysex_calibration import A4_SYNTH_TRACK_MAX, A4_SYNTH_TRACK_MIN
@@ -25,6 +25,29 @@ MIN_TRACK: Final[int] = A4_SYNTH_TRACK_MIN
 MAX_TRACK: Final[int] = A4_SYNTH_TRACK_MAX
 MIN_CANDIDATE_COUNT: Final[int] = 1
 MAX_CANDIDATE_COUNT: Final[int] = len(ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES)
+
+_COUNT_WORDS: Final[dict[int, str]] = {2: "two", 3: "three", 4: "four", 5: "five", 6: "six"}
+
+
+def _count_word(count: int) -> str:
+    """English word for small candidate counts; digits past the table.
+
+    Operator-facing prose ("exactly four candidates") derives from
+    ``DEFAULT_CANDIDATE_COUNT`` through this helper so the wording tracks
+    ``data/analog_four_patch_templates.py`` instead of drifting silently
+    when the template table grows.
+    """
+
+    return _COUNT_WORDS.get(count, str(count))
+
+
+DEFAULT_CANDIDATE_COUNT_WORD: Final[str] = _count_word(DEFAULT_CANDIDATE_COUNT)
+
+# Repo root when running from a source checkout (this file sits four levels
+# below it). Under a site-packages install this resolves into the environment
+# instead — harmless for the generated Set-Location + `python -m` commands,
+# but the repo's only parents[N] derivation, so keep it named and documented.
+_POWERSHELL_WORKDIR: Final[Path] = Path(__file__).resolve().parents[3]
 USAGE: Final[str] = (
     "Usage: python -m rytm_randomizer.cli analog-four-audio-patch-batch "
     "--audio <path> --source-kit <kit.syx> --output-dir <dir> "
@@ -33,7 +56,8 @@ USAGE: Final[str] = (
 )
 SAFETY_LINES: Final[tuple[str, ...]] = (
     "reads one operator-selected audio file and Analog Four saved-kit file",
-    "writes up to four candidate .syx files and complete DNA/live-dial sidecars",
+    f"writes up to {DEFAULT_CANDIDATE_COUNT_WORD} candidate .syx files "
+    "and complete DNA/live-dial sidecars",
     "saved-kit SysEx applies hardware-write-validated Filter2 Resonance only",
     "no claim of full saved-kit parameter coverage or learned Synthplant accuracy",
     "no MIDI sending",
@@ -248,7 +272,7 @@ def _studio_handoff_error(
     candidate_count: int,
 ) -> str | None:
     if studio_handoff and candidate_count != DEFAULT_CANDIDATE_COUNT:
-        return "--studio-handoff requires exactly four candidates"
+        return f"--studio-handoff requires exactly {DEFAULT_CANDIDATE_COUNT_WORD} candidates"
     if studio_handoff and a4_output_port is None:
         return "--studio-handoff requires --a4-output-port"
     if not studio_handoff and a4_output_port is not None:
@@ -300,6 +324,12 @@ def parse_analog_four_audio_patch_batch_args(
             studio_handoff = True
         elif option == "--a4-output-port":
             a4_output_port = pop_required_cli_value(remaining, option=option)
+            if any(ord(char) < 32 or ord(char) == 127 for char in a4_output_port):
+                # A control character (esp. \n) in the port name would split
+                # the generated copy-paste command across output lines. The
+                # quoting never terminates early, so this is a paste-usability
+                # guard, not an injection one.
+                raise ValueError("--a4-output-port must not contain control characters")
         elif option == "--json":
             json_output = True
         else:
@@ -486,12 +516,13 @@ def _studio_handoff_payload(
     return {
         "calibration_rounds_required": 0,
         "candidate_auditions_required": len(candidates),
-        "powershell_workdir": str(Path(__file__).resolve().parents[3]),
+        "powershell_workdir": str(_POWERSHELL_WORKDIR),
         "workflow": [
             "review each passive dry-run plan",
             "send each guarded candidate to the disposable A4 sound",
-            "play and record the same note or phrase for all four candidates",
-            "rank the four renders against the reference audio",
+            "play and record the same note or phrase for all "
+            f"{DEFAULT_CANDIDATE_COUNT_WORD} candidates",
+            f"rank the {DEFAULT_CANDIDATE_COUNT_WORD} renders against the reference audio",
         ],
         "candidates": candidates,
         "rank_argv": rank_argv,
@@ -520,12 +551,6 @@ def _batch_payload_from_result(result: _BatchResult) -> AnalogFourAudioPatchBatc
     return payload
 
 
-def _powershell_command(argv: Sequence[str]) -> str:
-    return "& " + " ".join(
-        powershell_literal_arg(value, always_quote=index == 0) for index, value in enumerate(argv)
-    )
-
-
 def _format_studio_handoff(handoff: AnalogFourStudioHandoffPayload) -> list[str]:
     lines = [
         "studio_handoff:",
@@ -539,13 +564,13 @@ def _format_studio_handoff(handoff: AnalogFourStudioHandoffPayload) -> list[str]
         lines.extend(
             (
                 f"{prefix}_label: {candidate['label']}",
-                f"{prefix}_dry_run: " f"{_powershell_command(candidate['dry_run_argv'])}",
+                f"{prefix}_dry_run: " f"{powershell_command(candidate['dry_run_argv'])}",
                 f"{prefix}_armed_audition: "
-                f"{_powershell_command(candidate['armed_audition_argv'])}",
+                f"{powershell_command(candidate['armed_audition_argv'])}",
                 f"{prefix}_record_to: {candidate['render_path']}",
             )
         )
-    lines.append(f"rank_after_recording: {_powershell_command(handoff['rank_argv'])}")
+    lines.append(f"rank_after_recording: {powershell_command(handoff['rank_argv'])}")
     return lines
 
 
@@ -631,6 +656,23 @@ def _write_batch_error(
     sys.stdout.write("\n")
 
 
+def _emit_batch_input_error(
+    *,
+    error_code: AnalogFourExportErrorCode,
+    message: str,
+    details: list[str],
+    json_output: bool,
+) -> None:
+    """Emit one batch failure in the caller-selected format (JSON or stderr text)."""
+
+    if json_output:
+        _write_batch_error(error_code=error_code, message=message, details=details)
+        return
+    sys.stderr.write(f"{USAGE}\nError [{error_code}]: {message}\n")
+    for detail in details:
+        sys.stderr.write(f"Detail: {detail}\n")
+
+
 def handle_analog_four_audio_patch_batch(  # noqa: PLR0913 - typed CLI boundary
     *,
     audio_path: Path,
@@ -660,14 +702,12 @@ def handle_analog_four_audio_patch_batch(  # noqa: PLR0913 - typed CLI boundary
         candidate_count=candidate_count,
     )
     if studio_error is not None:
-        if json_output:
-            _write_batch_error(
-                error_code="invalid_input",
-                message=studio_error,
-                details=[],
-            )
-        else:
-            sys.stderr.write(f"{USAGE}\nError [invalid_input]: {studio_error}\n")
+        _emit_batch_input_error(
+            error_code="invalid_input",
+            message=studio_error,
+            details=[],
+            json_output=json_output,
+        )
         return 2
 
     try:
@@ -681,28 +721,20 @@ def handle_analog_four_audio_patch_batch(  # noqa: PLR0913 - typed CLI boundary
         )
     except (KeyboardInterrupt, SystemExit) as exc:
         message = str(exc) or "operator interrupted audio patch batch"
-        if json_output:
-            _write_batch_error(
-                error_code="interrupted",
-                message=message,
-                details=[],
-            )
-        else:
-            sys.stderr.write(f"{USAGE}\nError [interrupted]: {message}\n")
+        _emit_batch_input_error(
+            error_code="interrupted",
+            message=message,
+            details=[],
+            json_output=json_output,
+        )
         return 130
     except (ImportError, KeyError, ValueError, TypeError, OSError, RuntimeError) as exc:
-        error_code = _batch_cli_error_code(exc)
-        details = _exception_details(exc)
-        if json_output:
-            _write_batch_error(
-                error_code=error_code,
-                message=str(exc),
-                details=details,
-            )
-        else:
-            sys.stderr.write(f"{USAGE}\nError [{error_code}]: {exc}\n")
-            for detail in details:
-                sys.stderr.write(f"Detail: {detail}\n")
+        _emit_batch_input_error(
+            error_code=_batch_cli_error_code(exc),
+            message=str(exc),
+            details=_exception_details(exc),
+            json_output=json_output,
+        )
         return 2
 
     handoff = (

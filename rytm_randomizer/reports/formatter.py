@@ -25,8 +25,10 @@ Public surface:
   into a single newline-separated string.
 * ``passive_report_lines(header, body_lines)`` -- list-returning sibling of
   ``render_passive_report``.
-* ``powershell_literal_arg(value)`` -- render a replay-command argument for the
-  PowerShell-first operator console.
+* ``powershell_literal_arg(value, *, always_quote=False)`` -- render a
+  replay-command argument for the PowerShell-first operator console.
+  Re-exported from ``behavior.operator_console`` (the single implementation;
+  do not re-define it here).
 * ``fingerprint_id(*parts)`` -- the shared 16-hex sha256 fingerprint helper
   (house recipe: pipe-joined parts, utf-8, first 16 hex chars).
 * ``require_nonblank(value, field)`` -- the shared blank-input validator
