@@ -329,11 +329,13 @@ jobs:
       needs.detect-changes.outputs.deps == 'true' ||
       needs.detect-changes.outputs.ci == 'true'
     runs-on: ${{ matrix.os }}
-    # `contents: write` is needed so the coverage-ratchet auto-commit step
-    # (see below) can push the bumped .coveragerc back to the PR branch.
-    # All other steps are read-only; this is the minimum scope required.
+    # `contents: write` lets the coverage-ratchet auto-commit step push the
+    # bumped .coveragerc back to the PR branch. `checks: write` lets that
+    # same job propagate required-checks to the bot commit, whose token push
+    # intentionally does not trigger another workflow run.
     permissions:
       contents: write
+      checks: write
     strategy:
       fail-fast: false
       matrix:
