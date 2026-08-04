@@ -2596,7 +2596,7 @@ Arguments:
   --reference <kit.syx>       Exact reference/RYTM_Test1_Init_Kit.syx input
   --recipe <recipe.yaml>      JSON-compatible YAML AL16 musical recipe
   --destination-slot <0..127> Explicit destination kit slot for the build
-  --output <kit.syx>          Destination for a fully verified generated kit
+  --output <kit.syx>          Naming path/stem for Phase R1 evidence artifacts
 
 Behavior:
   Requires reference SHA-256

@@ -26,7 +26,7 @@
       "machine": "bd_classic",
       "pad": 1,
       "reason": "Rytm source parameters are live-addressed but not saved-kit writer-validated.",
-      "semantic_path": "tracks.1.source.tun"
+      "semantic_path": "tracks.1.source.dec"
     },
     {
       "evidence_required": "A saved-kit before/after capture proving the machine-specific field location and typed display-to-raw conversion.",
@@ -34,7 +34,7 @@
       "machine": "bd_classic",
       "pad": 1,
       "reason": "Rytm source parameters are live-addressed but not saved-kit writer-validated.",
-      "semantic_path": "tracks.1.source.dec"
+      "semantic_path": "tracks.1.source.hld"
     },
     {
       "evidence_required": "A saved-kit before/after capture proving the machine-specific field location and typed display-to-raw conversion.",
@@ -58,7 +58,15 @@
       "machine": "bd_classic",
       "pad": 1,
       "reason": "Rytm source parameters are live-addressed but not saved-kit writer-validated.",
-      "semantic_path": "tracks.1.source.hld"
+      "semantic_path": "tracks.1.source.trn"
+    },
+    {
+      "evidence_required": "A saved-kit before/after capture proving the machine-specific field location and typed display-to-raw conversion.",
+      "expected_behavior": "Write the selected machine-specific source parameter.",
+      "machine": "bd_classic",
+      "pad": 1,
+      "reason": "Rytm source parameters are live-addressed but not saved-kit writer-validated.",
+      "semantic_path": "tracks.1.source.tun"
     },
     {
       "evidence_required": "A saved-kit before/after capture proving the machine-specific field location and typed display-to-raw conversion.",
@@ -67,14 +75,6 @@
       "pad": 1,
       "reason": "Rytm source parameters are live-addressed but not saved-kit writer-validated.",
       "semantic_path": "tracks.1.source.wav"
-    },
-    {
-      "evidence_required": "A saved-kit before/after capture proving the machine-specific field location and typed display-to-raw conversion.",
-      "expected_behavior": "Write the selected machine-specific source parameter.",
-      "machine": "bd_classic",
-      "pad": 1,
-      "reason": "Rytm source parameters are live-addressed but not saved-kit writer-validated.",
-      "semantic_path": "tracks.1.source.trn"
     },
     {
       "evidence_required": "A promoted saved-kit location and converter with round-trip evidence.",
@@ -101,20 +101,20 @@
       "semantic_path": "tracks.3.amp.vol"
     },
     {
-      "evidence_required": "A hardware-verified displayed-note/raw-tune observation for this machine.",
-      "expected_behavior": "Resolve F2 through a xt_classic-specific tuning table.",
-      "machine": "xt_classic",
-      "pad": 6,
-      "reason": "No approved tuning observation exists for this machine/note pair.",
-      "semantic_path": "tracks.6.source.target_note"
-    },
-    {
       "evidence_required": "A saved-kit before/after capture proving the machine-specific field location and typed display-to-raw conversion.",
       "expected_behavior": "Write the selected machine-specific source parameter.",
       "machine": "xt_classic",
       "pad": 6,
       "reason": "Rytm source parameters are live-addressed but not saved-kit writer-validated.",
       "semantic_path": "tracks.6.source.decay"
+    },
+    {
+      "evidence_required": "A hardware-verified displayed-note/raw-tune observation for this machine.",
+      "expected_behavior": "Resolve F2 through a xt_classic-specific tuning table.",
+      "machine": "xt_classic",
+      "pad": 6,
+      "reason": "No approved tuning observation exists for this machine/note pair.",
+      "semantic_path": "tracks.6.source.target_note"
     },
     {
       "evidence_required": "A promoted saved-kit location and converter with round-trip evidence.",
@@ -245,8 +245,8 @@
       "normalized_semantic_value": null,
       "original_semantic_value": null,
       "raw_location": null,
-      "requested_semantic_value": -6,
-      "semantic_path": "tracks.1.source.tun",
+      "requested_semantic_value": 53,
+      "semantic_path": "tracks.1.source.dec",
       "verification_status": "critical_mapping_gap"
     },
     {
@@ -255,8 +255,8 @@
       "normalized_semantic_value": null,
       "original_semantic_value": null,
       "raw_location": null,
-      "requested_semantic_value": 53,
-      "semantic_path": "tracks.1.source.dec",
+      "requested_semantic_value": 42,
+      "semantic_path": "tracks.1.source.hld",
       "verification_status": "critical_mapping_gap"
     },
     {
@@ -285,8 +285,18 @@
       "normalized_semantic_value": null,
       "original_semantic_value": null,
       "raw_location": null,
-      "requested_semantic_value": 42,
-      "semantic_path": "tracks.1.source.hld",
+      "requested_semantic_value": 24,
+      "semantic_path": "tracks.1.source.trn",
+      "verification_status": "critical_mapping_gap"
+    },
+    {
+      "converter_or_enumeration": "none_unverified",
+      "encoded_raw_value_or_bytes": null,
+      "normalized_semantic_value": null,
+      "original_semantic_value": null,
+      "raw_location": null,
+      "requested_semantic_value": -6,
+      "semantic_path": "tracks.1.source.tun",
       "verification_status": "critical_mapping_gap"
     },
     {
@@ -298,52 +308,6 @@
       "requested_semantic_value": 1,
       "semantic_path": "tracks.1.source.wav",
       "verification_status": "critical_mapping_gap"
-    },
-    {
-      "converter_or_enumeration": "none_unverified",
-      "encoded_raw_value_or_bytes": null,
-      "normalized_semantic_value": null,
-      "original_semantic_value": null,
-      "raw_location": null,
-      "requested_semantic_value": 24,
-      "semantic_path": "tracks.1.source.trn",
-      "verification_status": "critical_mapping_gap"
-    },
-    {
-      "converter_or_enumeration": "filter_type_enum",
-      "encoded_raw_value_or_bytes": [
-        4
-      ],
-      "normalized_semantic_value": "HP2",
-      "original_semantic_value": "LP2",
-      "raw_location": "unpacked[118] (track sound + 0x0048)",
-      "requested_semantic_value": "HP2",
-      "semantic_path": "tracks.1.filter.type",
-      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
-    },
-    {
-      "converter_or_enumeration": "verified_7bit",
-      "encoded_raw_value_or_bytes": [
-        25
-      ],
-      "normalized_semantic_value": 25,
-      "original_semantic_value": 127,
-      "raw_location": "unpacked[114] (track sound + 0x0044)",
-      "requested_semantic_value": 25,
-      "semantic_path": "tracks.1.filter.frq",
-      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
-    },
-    {
-      "converter_or_enumeration": "verified_7bit",
-      "encoded_raw_value_or_bytes": [
-        26
-      ],
-      "normalized_semantic_value": 26,
-      "original_semantic_value": 0,
-      "raw_location": "unpacked[116] (track sound + 0x0046)",
-      "requested_semantic_value": 26,
-      "semantic_path": "tracks.1.filter.res",
-      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
       "converter_or_enumeration": "verified_7bit",
@@ -370,15 +334,27 @@
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
-      "converter_or_enumeration": "verified_7bit",
+      "converter_or_enumeration": "centered_7bit",
       "encoded_raw_value_or_bytes": [
-        0
+        64
       ],
       "normalized_semantic_value": 0,
       "original_semantic_value": 0,
-      "raw_location": "unpacked[108] (track sound + 0x003E)",
-      "requested_semantic_value": 0,
-      "semantic_path": "tracks.1.filter.sus",
+      "raw_location": "unpacked[120] (track sound + 0x004A)",
+      "requested_semantic_value": "neutral",
+      "semantic_path": "tracks.1.filter.env",
+      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
+    },
+    {
+      "converter_or_enumeration": "verified_7bit",
+      "encoded_raw_value_or_bytes": [
+        25
+      ],
+      "normalized_semantic_value": 25,
+      "original_semantic_value": 127,
+      "raw_location": "unpacked[114] (track sound + 0x0044)",
+      "requested_semantic_value": 25,
+      "semantic_path": "tracks.1.filter.frq",
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
@@ -394,15 +370,39 @@
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
-      "converter_or_enumeration": "centered_7bit",
+      "converter_or_enumeration": "verified_7bit",
       "encoded_raw_value_or_bytes": [
-        64
+        26
+      ],
+      "normalized_semantic_value": 26,
+      "original_semantic_value": 0,
+      "raw_location": "unpacked[116] (track sound + 0x0046)",
+      "requested_semantic_value": 26,
+      "semantic_path": "tracks.1.filter.res",
+      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
+    },
+    {
+      "converter_or_enumeration": "verified_7bit",
+      "encoded_raw_value_or_bytes": [
+        0
       ],
       "normalized_semantic_value": 0,
       "original_semantic_value": 0,
-      "raw_location": "unpacked[120] (track sound + 0x004A)",
-      "requested_semantic_value": "neutral",
-      "semantic_path": "tracks.1.filter.env",
+      "raw_location": "unpacked[108] (track sound + 0x003E)",
+      "requested_semantic_value": 0,
+      "semantic_path": "tracks.1.filter.sus",
+      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
+    },
+    {
+      "converter_or_enumeration": "filter_type_enum",
+      "encoded_raw_value_or_bytes": [
+        4
+      ],
+      "normalized_semantic_value": "HP2",
+      "original_semantic_value": "LP2",
+      "raw_location": "unpacked[118] (track sound + 0x0048)",
+      "requested_semantic_value": "HP2",
+      "semantic_path": "tracks.1.filter.type",
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
@@ -420,18 +420,6 @@
     {
       "converter_or_enumeration": "verified_7bit",
       "encoded_raw_value_or_bytes": [
-        0
-      ],
-      "normalized_semantic_value": 0,
-      "original_semantic_value": 0,
-      "raw_location": "unpacked[124] (track sound + 0x004E)",
-      "requested_semantic_value": 0,
-      "semantic_path": "tracks.1.amp.hld",
-      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
-    },
-    {
-      "converter_or_enumeration": "verified_7bit",
-      "encoded_raw_value_or_bytes": [
         86
       ],
       "normalized_semantic_value": 86,
@@ -439,18 +427,6 @@
       "raw_location": "unpacked[126] (track sound + 0x0050)",
       "requested_semantic_value": 86,
       "semantic_path": "tracks.1.amp.dec",
-      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
-    },
-    {
-      "converter_or_enumeration": "verified_7bit",
-      "encoded_raw_value_or_bytes": [
-        19
-      ],
-      "normalized_semantic_value": 19,
-      "original_semantic_value": 0,
-      "raw_location": "unpacked[128] (track sound + 0x0052)",
-      "requested_semantic_value": 19,
-      "semantic_path": "tracks.1.amp.ovr",
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
@@ -472,9 +448,21 @@
       ],
       "normalized_semantic_value": 0,
       "original_semantic_value": 0,
-      "raw_location": "unpacked[132] (track sound + 0x0056)",
+      "raw_location": "unpacked[124] (track sound + 0x004E)",
       "requested_semantic_value": 0,
-      "semantic_path": "tracks.1.amp.rev",
+      "semantic_path": "tracks.1.amp.hld",
+      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
+    },
+    {
+      "converter_or_enumeration": "verified_7bit",
+      "encoded_raw_value_or_bytes": [
+        19
+      ],
+      "normalized_semantic_value": 19,
+      "original_semantic_value": 0,
+      "raw_location": "unpacked[128] (track sound + 0x0052)",
+      "requested_semantic_value": 19,
+      "semantic_path": "tracks.1.amp.ovr",
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
@@ -487,6 +475,18 @@
       "raw_location": "unpacked[134] (track sound + 0x0058)",
       "requested_semantic_value": "center",
       "semantic_path": "tracks.1.amp.pan",
+      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
+    },
+    {
+      "converter_or_enumeration": "verified_7bit",
+      "encoded_raw_value_or_bytes": [
+        0
+      ],
+      "normalized_semantic_value": 0,
+      "original_semantic_value": 0,
+      "raw_location": "unpacked[132] (track sound + 0x0056)",
+      "requested_semantic_value": 0,
+      "semantic_path": "tracks.1.amp.rev",
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
@@ -510,15 +510,15 @@
       "verification_status": "critical_mapping_gap"
     },
     {
-      "converter_or_enumeration": "filter_type_enum",
+      "converter_or_enumeration": "centered_7bit",
       "encoded_raw_value_or_bytes": [
-        4
+        64
       ],
-      "normalized_semantic_value": "HP2",
-      "original_semantic_value": "LP2",
-      "raw_location": "unpacked[442] (track sound + 0x0048)",
-      "requested_semantic_value": "HP2",
-      "semantic_path": "tracks.3.filter.type",
+      "normalized_semantic_value": 0,
+      "original_semantic_value": 0,
+      "raw_location": "unpacked[444] (track sound + 0x004A)",
+      "requested_semantic_value": "neutral",
+      "semantic_path": "tracks.3.filter.env",
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
@@ -546,15 +546,15 @@
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
-      "converter_or_enumeration": "centered_7bit",
+      "converter_or_enumeration": "filter_type_enum",
       "encoded_raw_value_or_bytes": [
-        64
+        4
       ],
-      "normalized_semantic_value": 0,
-      "original_semantic_value": 0,
-      "raw_location": "unpacked[444] (track sound + 0x004A)",
-      "requested_semantic_value": "neutral",
-      "semantic_path": "tracks.3.filter.env",
+      "normalized_semantic_value": "HP2",
+      "original_semantic_value": "LP2",
+      "raw_location": "unpacked[442] (track sound + 0x0048)",
+      "requested_semantic_value": "HP2",
+      "semantic_path": "tracks.3.filter.type",
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
@@ -572,18 +572,6 @@
     {
       "converter_or_enumeration": "verified_7bit",
       "encoded_raw_value_or_bytes": [
-        0
-      ],
-      "normalized_semantic_value": 0,
-      "original_semantic_value": 0,
-      "raw_location": "unpacked[448] (track sound + 0x004E)",
-      "requested_semantic_value": 0,
-      "semantic_path": "tracks.3.amp.hld",
-      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
-    },
-    {
-      "converter_or_enumeration": "verified_7bit",
-      "encoded_raw_value_or_bytes": [
         24
       ],
       "normalized_semantic_value": 24,
@@ -591,18 +579,6 @@
       "raw_location": "unpacked[450] (track sound + 0x0050)",
       "requested_semantic_value": 24,
       "semantic_path": "tracks.3.amp.dec",
-      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
-    },
-    {
-      "converter_or_enumeration": "verified_7bit",
-      "encoded_raw_value_or_bytes": [
-        8
-      ],
-      "normalized_semantic_value": 8,
-      "original_semantic_value": 0,
-      "raw_location": "unpacked[452] (track sound + 0x0052)",
-      "requested_semantic_value": 8,
-      "semantic_path": "tracks.3.amp.ovr",
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
@@ -624,9 +600,21 @@
       ],
       "normalized_semantic_value": 0,
       "original_semantic_value": 0,
-      "raw_location": "unpacked[456] (track sound + 0x0056)",
+      "raw_location": "unpacked[448] (track sound + 0x004E)",
       "requested_semantic_value": 0,
-      "semantic_path": "tracks.3.amp.rev",
+      "semantic_path": "tracks.3.amp.hld",
+      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
+    },
+    {
+      "converter_or_enumeration": "verified_7bit",
+      "encoded_raw_value_or_bytes": [
+        8
+      ],
+      "normalized_semantic_value": 8,
+      "original_semantic_value": 0,
+      "raw_location": "unpacked[452] (track sound + 0x0052)",
+      "requested_semantic_value": 8,
+      "semantic_path": "tracks.3.amp.ovr",
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
@@ -639,6 +627,18 @@
       "raw_location": "unpacked[458] (track sound + 0x0058)",
       "requested_semantic_value": "center",
       "semantic_path": "tracks.3.amp.pan",
+      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
+    },
+    {
+      "converter_or_enumeration": "verified_7bit",
+      "encoded_raw_value_or_bytes": [
+        0
+      ],
+      "normalized_semantic_value": 0,
+      "original_semantic_value": 0,
+      "raw_location": "unpacked[456] (track sound + 0x0056)",
+      "requested_semantic_value": 0,
+      "semantic_path": "tracks.3.amp.rev",
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
@@ -669,8 +669,8 @@
       "normalized_semantic_value": null,
       "original_semantic_value": null,
       "raw_location": null,
-      "requested_semantic_value": "F2",
-      "semantic_path": "tracks.6.source.target_note",
+      "requested_semantic_value": 34,
+      "semantic_path": "tracks.6.source.decay",
       "verification_status": "critical_mapping_gap"
     },
     {
@@ -679,20 +679,20 @@
       "normalized_semantic_value": null,
       "original_semantic_value": null,
       "raw_location": null,
-      "requested_semantic_value": 34,
-      "semantic_path": "tracks.6.source.decay",
+      "requested_semantic_value": "F2",
+      "semantic_path": "tracks.6.source.target_note",
       "verification_status": "critical_mapping_gap"
     },
     {
-      "converter_or_enumeration": "filter_type_enum",
+      "converter_or_enumeration": "centered_7bit",
       "encoded_raw_value_or_bytes": [
-        0
+        64
       ],
-      "normalized_semantic_value": "LP2",
-      "original_semantic_value": "LP2",
-      "raw_location": "unpacked[928] (track sound + 0x0048)",
-      "requested_semantic_value": "LP2",
-      "semantic_path": "tracks.6.filter.type",
+      "normalized_semantic_value": 0,
+      "original_semantic_value": 0,
+      "raw_location": "unpacked[930] (track sound + 0x004A)",
+      "requested_semantic_value": "neutral",
+      "semantic_path": "tracks.6.filter.env",
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
@@ -720,15 +720,15 @@
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
-      "converter_or_enumeration": "centered_7bit",
+      "converter_or_enumeration": "filter_type_enum",
       "encoded_raw_value_or_bytes": [
-        64
+        0
       ],
-      "normalized_semantic_value": 0,
-      "original_semantic_value": 0,
-      "raw_location": "unpacked[930] (track sound + 0x004A)",
-      "requested_semantic_value": "neutral",
-      "semantic_path": "tracks.6.filter.env",
+      "normalized_semantic_value": "LP2",
+      "original_semantic_value": "LP2",
+      "raw_location": "unpacked[928] (track sound + 0x0048)",
+      "requested_semantic_value": "LP2",
+      "semantic_path": "tracks.6.filter.type",
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
@@ -746,18 +746,6 @@
     {
       "converter_or_enumeration": "verified_7bit",
       "encoded_raw_value_or_bytes": [
-        0
-      ],
-      "normalized_semantic_value": 0,
-      "original_semantic_value": 0,
-      "raw_location": "unpacked[934] (track sound + 0x004E)",
-      "requested_semantic_value": 0,
-      "semantic_path": "tracks.6.amp.hld",
-      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
-    },
-    {
-      "converter_or_enumeration": "verified_7bit",
-      "encoded_raw_value_or_bytes": [
         44
       ],
       "normalized_semantic_value": 44,
@@ -765,18 +753,6 @@
       "raw_location": "unpacked[936] (track sound + 0x0050)",
       "requested_semantic_value": 44,
       "semantic_path": "tracks.6.amp.dec",
-      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
-    },
-    {
-      "converter_or_enumeration": "verified_7bit",
-      "encoded_raw_value_or_bytes": [
-        10
-      ],
-      "normalized_semantic_value": 10,
-      "original_semantic_value": 0,
-      "raw_location": "unpacked[938] (track sound + 0x0052)",
-      "requested_semantic_value": 10,
-      "semantic_path": "tracks.6.amp.ovr",
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
@@ -798,9 +774,21 @@
       ],
       "normalized_semantic_value": 0,
       "original_semantic_value": 0,
-      "raw_location": "unpacked[942] (track sound + 0x0056)",
+      "raw_location": "unpacked[934] (track sound + 0x004E)",
       "requested_semantic_value": 0,
-      "semantic_path": "tracks.6.amp.rev",
+      "semantic_path": "tracks.6.amp.hld",
+      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
+    },
+    {
+      "converter_or_enumeration": "verified_7bit",
+      "encoded_raw_value_or_bytes": [
+        10
+      ],
+      "normalized_semantic_value": 10,
+      "original_semantic_value": 0,
+      "raw_location": "unpacked[938] (track sound + 0x0052)",
+      "requested_semantic_value": 10,
+      "semantic_path": "tracks.6.amp.ovr",
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
@@ -813,6 +801,18 @@
       "raw_location": "unpacked[944] (track sound + 0x0058)",
       "requested_semantic_value": "center",
       "semantic_path": "tracks.6.amp.pan",
+      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
+    },
+    {
+      "converter_or_enumeration": "verified_7bit",
+      "encoded_raw_value_or_bytes": [
+        0
+      ],
+      "normalized_semantic_value": 0,
+      "original_semantic_value": 0,
+      "raw_location": "unpacked[942] (track sound + 0x0056)",
+      "requested_semantic_value": 0,
+      "semantic_path": "tracks.6.amp.rev",
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
@@ -846,15 +846,15 @@
       "verification_status": "critical_mapping_gap"
     },
     {
-      "converter_or_enumeration": "filter_type_enum",
+      "converter_or_enumeration": "centered_7bit",
       "encoded_raw_value_or_bytes": [
-        0
+        64
       ],
-      "normalized_semantic_value": "LP2",
-      "original_semantic_value": "LP2",
-      "raw_location": "unpacked[1414] (track sound + 0x0048)",
-      "requested_semantic_value": "LP2",
-      "semantic_path": "tracks.9.filter.type",
+      "normalized_semantic_value": 0,
+      "original_semantic_value": 0,
+      "raw_location": "unpacked[1416] (track sound + 0x004A)",
+      "requested_semantic_value": "neutral",
+      "semantic_path": "tracks.9.filter.env",
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
@@ -882,15 +882,15 @@
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
-      "converter_or_enumeration": "centered_7bit",
+      "converter_or_enumeration": "filter_type_enum",
       "encoded_raw_value_or_bytes": [
-        64
+        0
       ],
-      "normalized_semantic_value": 0,
-      "original_semantic_value": 0,
-      "raw_location": "unpacked[1416] (track sound + 0x004A)",
-      "requested_semantic_value": "neutral",
-      "semantic_path": "tracks.9.filter.env",
+      "normalized_semantic_value": "LP2",
+      "original_semantic_value": "LP2",
+      "raw_location": "unpacked[1414] (track sound + 0x0048)",
+      "requested_semantic_value": "LP2",
+      "semantic_path": "tracks.9.filter.type",
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
@@ -908,18 +908,6 @@
     {
       "converter_or_enumeration": "verified_7bit",
       "encoded_raw_value_or_bytes": [
-        0
-      ],
-      "normalized_semantic_value": 0,
-      "original_semantic_value": 0,
-      "raw_location": "unpacked[1420] (track sound + 0x004E)",
-      "requested_semantic_value": 0,
-      "semantic_path": "tracks.9.amp.hld",
-      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
-    },
-    {
-      "converter_or_enumeration": "verified_7bit",
-      "encoded_raw_value_or_bytes": [
         18
       ],
       "normalized_semantic_value": 18,
@@ -927,18 +915,6 @@
       "raw_location": "unpacked[1422] (track sound + 0x0050)",
       "requested_semantic_value": 18,
       "semantic_path": "tracks.9.amp.dec",
-      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
-    },
-    {
-      "converter_or_enumeration": "verified_7bit",
-      "encoded_raw_value_or_bytes": [
-        3
-      ],
-      "normalized_semantic_value": 3,
-      "original_semantic_value": 0,
-      "raw_location": "unpacked[1424] (track sound + 0x0052)",
-      "requested_semantic_value": 3,
-      "semantic_path": "tracks.9.amp.ovr",
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
@@ -960,9 +936,21 @@
       ],
       "normalized_semantic_value": 0,
       "original_semantic_value": 0,
-      "raw_location": "unpacked[1428] (track sound + 0x0056)",
+      "raw_location": "unpacked[1420] (track sound + 0x004E)",
       "requested_semantic_value": 0,
-      "semantic_path": "tracks.9.amp.rev",
+      "semantic_path": "tracks.9.amp.hld",
+      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
+    },
+    {
+      "converter_or_enumeration": "verified_7bit",
+      "encoded_raw_value_or_bytes": [
+        3
+      ],
+      "normalized_semantic_value": 3,
+      "original_semantic_value": 0,
+      "raw_location": "unpacked[1424] (track sound + 0x0052)",
+      "requested_semantic_value": 3,
+      "semantic_path": "tracks.9.amp.ovr",
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {
@@ -975,6 +963,18 @@
       "raw_location": "unpacked[1430] (track sound + 0x0058)",
       "requested_semantic_value": "center",
       "semantic_path": "tracks.9.amp.pan",
+      "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
+    },
+    {
+      "converter_or_enumeration": "verified_7bit",
+      "encoded_raw_value_or_bytes": [
+        0
+      ],
+      "normalized_semantic_value": 0,
+      "original_semantic_value": 0,
+      "raw_location": "unpacked[1428] (track sound + 0x0056)",
+      "requested_semantic_value": 0,
+      "semantic_path": "tracks.9.amp.rev",
       "verification_status": "resolved_but_not_emitted_while_preflight_is_blocked"
     },
     {

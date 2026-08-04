@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "plan": "docs/superpowers/plans/2026-08-02-al16-r1-offline-rytm-kit-exporter.md",
+  "branch": "codex/al16-r1-offline-rytm-kit-exporter",
+  "pull_request": 222,
+  "phase": "review",
+  "workstreams": {
+    "r1_exporter": "complete",
+    "local_verification": "complete",
+    "hosted_ci": "pending",
+    "codeowner_review": "pending"
+  },
+  "last_event": "Review repairs and bounded final local verification passed; hosted CI and CODEOWNER review remain pending.",
+  "review_base_head_sha": "87d669845e1861c2c9b2d6b013216a8fbfde0d78"
+}

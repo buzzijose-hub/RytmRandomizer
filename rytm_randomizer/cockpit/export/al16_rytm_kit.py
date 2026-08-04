@@ -44,12 +44,15 @@ from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
 from ...observability.tracing import operation
 from ...snapshot import read_ascii_name
+from .file_export_contracts import classify_local_file_export_error
 from .writer import atomic_write
 
 _REFERENCE_EXPECTED_SHA256: Final[str] = (
     "8bda94d6d5031e038c8d810789301f35242ed539338a0399548869a34e1dc4dd"
 )
 _SOURCE_DATE_EPOCH: Final[str] = "SOURCE_DATE_EPOCH"
+_DEFAULT_BUILD_EPOCH: Final[int] = 0
+_PHASE_R1_STATE_NUMBER: Final[int] = 2
 _AL16_EXPORT_FAILURE_FINGERPRINT: Final[str] = "al16.rytm_kit_export.failed"
 _AL16_MAPPING_BLOCKED_ERROR_CODE: Final[str] = "mapping_blocked"
 
@@ -151,15 +154,21 @@ def _load_recipe(path: Path) -> Mapping[str, object]:
 
 
 def deterministic_recipe_identifier(recipe: Mapping[str, object]) -> str:
-    canonical = json.dumps(recipe, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    canonical = json.dumps(
+        dict(recipe),
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+    )
     return hashlib.sha256(canonical.encode("ascii")).hexdigest()
 
 
 def _build_timestamp() -> str:
-    epoch = os.environ.get(_SOURCE_DATE_EPOCH)
-    if epoch is not None:
-        return datetime.fromtimestamp(int(epoch), tz=UTC).isoformat()
-    return datetime.now(tz=UTC).replace(microsecond=0).isoformat()
+    raw_epoch = os.environ.get(_SOURCE_DATE_EPOCH, str(_DEFAULT_BUILD_EPOCH))
+    try:
+        return datetime.fromtimestamp(int(raw_epoch), tz=UTC).isoformat()
+    except (ValueError, OverflowError, OSError) as exc:
+        raise ValueError("SOURCE_DATE_EPOCH must be an in-range integer Unix timestamp") from exc
 
 
 def _portable_reference_path(reference: Path) -> str:
@@ -170,22 +179,49 @@ def _atomic_write_text(path: Path, value: str) -> None:
     atomic_write(path, value.encode("utf-8"), overwrite=True)
 
 
-def _al16_export_error_code(
-    exc: BaseException,
+def _artifact_paths(output_path: Path) -> tuple[Path, Path, Path]:
+    return (
+        output_path.with_name(f"{output_path.stem}_manifest.json"),
+        output_path.with_name(f"{output_path.stem}_validation.md"),
+        output_path.with_name(f"{output_path.stem}_byte_diff.txt"),
+    )
+
+
+def _canonical_path_key(path: Path) -> str:
+    return os.path.normcase(str(path.resolve(strict=False)))
+
+
+def _validate_artifact_paths(
     *,
-    recipe_inspected: bool,
-) -> str:
-    if isinstance(exc, (KeyboardInterrupt, SystemExit)):
-        return "interrupted"
-    if isinstance(exc, FileNotFoundError):
-        return "input_not_found"
-    if isinstance(exc, PermissionError):
-        return "permission_denied"
-    if isinstance(exc, FileExistsError):
-        return "overwrite_refused"
-    if isinstance(exc, OSError):
-        return "write_failed" if recipe_inspected else "source_read_failed"
-    return "validation"
+    reference_path: Path,
+    recipe_path: Path,
+    output_path: Path,
+    manifest_path: Path,
+    validation_path: Path,
+    byte_diff_path: Path,
+) -> None:
+    inputs = {"reference": reference_path, "recipe": recipe_path}
+    artifacts = {
+        "output": output_path,
+        "manifest": manifest_path,
+        "validation": validation_path,
+        "byte diff": byte_diff_path,
+    }
+    input_keys = {label: _canonical_path_key(path) for label, path in inputs.items()}
+    artifact_keys: dict[str, str] = {}
+    for artifact_label, artifact_path in artifacts.items():
+        artifact_key = _canonical_path_key(artifact_path)
+        for input_label, input_key in input_keys.items():
+            if artifact_key == input_key:
+                raise ValueError(
+                    f"{artifact_label} artifact path collides with {input_label} input"
+                )
+        for other_label, other_key in artifact_keys.items():
+            if artifact_key == other_key:
+                raise ValueError(
+                    f"{artifact_label} artifact path collides with {other_label} artifact"
+                )
+        artifact_keys[artifact_label] = artifact_key
 
 
 def _track_offset(pad: int, sound_offset: int) -> int:
@@ -365,7 +401,8 @@ def _record_source_fields(
     audits: list[FieldAudit],
     gaps: list[MappingGap],
 ) -> None:
-    for field_name, requested in source.items():
+    for field_name in sorted(source):
+        requested = source[field_name]
         path = f"tracks.{pad}.source.{field_name}"
         if field_name == "target_note" and machine_key is not None:
             note = _as_string(requested, path).upper()
@@ -425,7 +462,8 @@ def _record_common_fields(
     gaps: list[MappingGap],
     machine_key: str | None,
 ) -> None:
-    for field_name, requested in section.items():
+    for field_name in sorted(section):
+        requested = section[field_name]
         field_key = f"{section_name}.{field_name}"
         semantic_path = f"tracks.{pad}.{field_key}"
         if field_key in AL16_RYTM_WRITABLE_FIELDS:
@@ -478,6 +516,8 @@ def _inspect_recipe(
     state_number = _as_int(kit.get("state"), "kit.state")
     if not 1 <= state_number <= len(AL16_BANK_STATES):
         raise ValueError("kit.state must be in 1..16")
+    if state_number != _PHASE_R1_STATE_NUMBER:
+        raise ValueError("Phase R1 supports only the AL02 LOCK proof recipe")
     state = AL16_BANK_STATES[state_number - 1]
     kit_name = _as_string(kit.get("name"), "kit.name")
     try:
@@ -660,6 +700,20 @@ def build_al16_rytm_kit(
             output_name=output_path.name,
             destination_slot=destination_slot,
         ) as operation_id:
+            manifest_path, validation_path, byte_diff_path = _artifact_paths(output_path)
+            _validate_artifact_paths(
+                reference_path=reference_path,
+                recipe_path=recipe_path,
+                output_path=output_path,
+                manifest_path=manifest_path,
+                validation_path=validation_path,
+                byte_diff_path=byte_diff_path,
+            )
+            if output_path.exists():
+                raise FileExistsError(
+                    "refusing a blocked build while a potentially stale output exists: "
+                    f"{output_path}"
+                )
             reference_bytes = reference_path.read_bytes()
             reference_sha256 = hashlib.sha256(reference_bytes).hexdigest()
             if reference_sha256 != _REFERENCE_EXPECTED_SHA256:
@@ -679,14 +733,6 @@ def build_al16_rytm_kit(
                 destination_slot,
             )
             recipe_inspected = True
-            manifest_path = output_path.with_name(f"{output_path.stem}_manifest.json")
-            validation_path = output_path.with_name(f"{output_path.stem}_validation.md")
-            byte_diff_path = output_path.with_name(f"{output_path.stem}_byte_diff.txt")
-            if output_path.exists():
-                raise FileExistsError(
-                    "refusing a blocked build while a potentially stale output exists: "
-                    f"{output_path}"
-                )
 
             kit = _as_mapping(recipe.get("kit"), "kit")
             manifest: dict[str, object] = {
@@ -746,7 +792,10 @@ def build_al16_rytm_kit(
                 gaps=tuple(gaps),
             )
     except (KeyError, ValueError, TypeError, OSError, KeyboardInterrupt, SystemExit) as exc:
-        error_code = _al16_export_error_code(exc, recipe_inspected=recipe_inspected)
+        error_code = classify_local_file_export_error(
+            exc,
+            source_read_completed=recipe_inspected,
+        )
         duration_ms = (time.perf_counter() - started_at) * 1000.0
         metrics.record_export(duration_ms, error_code=error_code)
         _logger.warning(

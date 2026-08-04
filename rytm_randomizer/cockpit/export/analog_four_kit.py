@@ -17,11 +17,11 @@ from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
 from ...observability.tracing import operation
 from .analog_four_export_contracts import (
-    AnalogFourExportErrorCode,
     analog_four_export_path_name,
     attach_analog_four_export_error_code,
     require_analog_four_export_path,
 )
+from .file_export_contracts import classify_local_file_export_error
 from .writer import WriteResult, atomic_write
 
 _logger = get_logger(__name__)
@@ -34,24 +34,6 @@ class AnalogFourSavedKitExportResult:
 
     render: AnalogFourSavedKitRenderResult
     write: WriteResult
-
-
-def _a4_export_error_code(
-    exc: BaseException,
-    *,
-    source_read_completed: bool,
-) -> AnalogFourExportErrorCode:
-    if isinstance(exc, (KeyboardInterrupt, SystemExit)):
-        return "interrupted"
-    if isinstance(exc, FileNotFoundError):
-        return "write_failed" if source_read_completed else "input_not_found"
-    if isinstance(exc, PermissionError):
-        return "permission_denied"
-    if isinstance(exc, FileExistsError):
-        return "overwrite_refused"
-    if isinstance(exc, OSError):
-        return "write_failed" if source_read_completed else "source_read_failed"
-    return "validation"
 
 
 def export_analog_four_saved_kit(
@@ -95,7 +77,7 @@ def export_analog_four_saved_kit(
             render = capability.render_saved_kit(source_sysex, mutations)
             write = atomic_write(output_path, render.framed_sysex, overwrite=overwrite)
     except (KeyError, ValueError, TypeError, OSError, KeyboardInterrupt, SystemExit) as exc:
-        error_code = _a4_export_error_code(
+        error_code = classify_local_file_export_error(
             exc,
             source_read_completed=source_read_completed,
         )

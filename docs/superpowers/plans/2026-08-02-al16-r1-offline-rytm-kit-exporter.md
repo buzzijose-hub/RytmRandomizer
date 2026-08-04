@@ -45,26 +45,32 @@ exist; substituting candidate offsets would violate the project safety policy.
   explicit mapping gaps, absence of `.syx`, unchanged reference bytes, and
   zero MIDI dependencies.
 - Focused tests run single-process to avoid unnecessary workstation load.
-- Focused exporter tests: 35 passed.
-- Data-layer drift tests: 199 passed.
-- Architecture tests: 738 passed with one unrelated warn-only result.
+- Focused exporter tests: 44 passed.
+- Expanded exporter, codec, envelope, data-layer, and safety tests: 434 passed.
+- Architecture tests: 739 passed with one unrelated warn-only result.
 - V1.34 byte-frozen parity: 685 passed.
-- Full repository suite: 7,577 passed, 4 skipped.
-- Touched production coverage: 10 modules at 100% line and branch coverage.
-- Strict touched-production type check: 11 modules, 0 errors and 0 warnings.
+- Full repository suite: 7,586 passed, 4 skipped.
+- Total coverage: 99.44%; pure branch coverage: 98.91% against the 98% floor.
+- Touched executable production coverage: 11 instrumented modules at 100% line and branch coverage.
+- Strict touched-production type check: 13 modules, 0 errors and 0 warnings.
 - Ruff, Black, isort, and `git diff --check`: passed.
 - Two deterministic blocked builds produced byte-identical reports, recording
   18 critical mapping gaps and zero intentionally changed bytes. No `.syx` was
   emitted and the initialized reference SHA-256 remained unchanged.
 - Deterministic evidence SHA-256 values were
-  `9cb6f07e182aa6192f311e19a731e18997d6db2b0436a8885b444ea59cfe8a4a`
+  `80e264e151846452970cacd9d1e22f309befe15072d2f654b3fe436966077d37`
   for the manifest,
-  `268a100f4f4a8bd12e3456bef9001dd4e164f6a0418f66f72296a287e91446fd`
+  `bcf04d1a77c412d93efa1ec558a817df6656ea000d0fb8b337efc992eabbe6e5`
   for the validation report, and
   `5263e9042b091fb89a1a6da005e5056909a3a9a37f12490900c4b2422703701f`
   for the byte-diff report.
 
 ## Maintainability review (Gate 14)
+
+The paired audit and closeout report are durable review artifacts:
+
+- [`2026-08-02-al16-r1-offline-rytm-kit-exporter_MAINTAINABILITY_AUDIT.md`](2026-08-02-al16-r1-offline-rytm-kit-exporter_MAINTAINABILITY_AUDIT.md)
+- [`2026-08-02-al16-r1-offline-rytm-kit-exporter_MAINTAINABILITY_REPORT.md`](2026-08-02-al16-r1-offline-rytm-kit-exporter_MAINTAINABILITY_REPORT.md)
 
 | Dimension | Before | After |
 | --- | --- | --- |
@@ -92,6 +98,14 @@ documentation, and maintainability); there were no sibling writer branches to
 merge. That shape avoids conflicting edits across the exporter, its canonical
 data facts, and its exact evidence tests.
 
+| Workstream | Ownership | Dependency | Result |
+| --- | --- | --- | --- |
+| R1 exporter | Single writer worktree | Existing codec/layout evidence | Complete, fail-closed |
+| Mechanical verification | Read-only commands | R1 exporter | Complete on the current local tree |
+| Dimension reviews | Parallel read-only agents | Pushed PR head | Complete; findings repaired by the single writer |
+| Hosted CI | GitHub Actions | Pushed repair head | Pending final push |
+| CODEOWNER review | Edward Rosado | Green exact PR head | Pending |
+
 The durable state is the Git branch plus deterministic evidence artifacts. A
 run may be restarted from the same immutable reference, recipe, destination
 slot, and `SOURCE_DATE_EPOCH`; no hardware state is involved. Terminal success
@@ -101,6 +115,25 @@ Unexpected positive output, reference drift, a changed gap set, or any MIDI
 dependency is a hard failure. Verification uses at most two pytest workers to
 respect workstation stability. The review/verification budget is 72 hours;
 the work stops rather than weakening a gate when that budget is exhausted.
+
+Autonomous execution rules for this run:
+
+1. Kickoff only from the verified integration base in one isolated worktree.
+2. Record scope decisions in this plan before adding a production path.
+3. Rebase only when required by the base and never rewrite a reviewed remote head.
+4. Persist recovery state in the schema-checked state file after phase changes.
+5. Recover from the immutable reference, recipe identifier, branch, and evidence hashes.
+6. Keep permissions passive; never invoke `app --arm`, enumerate ports, or transmit MIDI/SysEx.
+7. Stop on reference drift, unexpected positive output, gap-set drift, or an exhausted budget.
+8. Terminate Phase R1 only after local gates, hosted CI, and CODEOWNER approval are complete.
+
+Durable execution artifacts:
+
+- [`2026-08-02-al16-r1-offline-rytm-kit-exporter_ARCHITECTURE_BEFORE_AFTER.md`](2026-08-02-al16-r1-offline-rytm-kit-exporter_ARCHITECTURE_BEFORE_AFTER.md)
+- [`2026-08-02-al16-r1-offline-rytm-kit-exporter_RUN_REPORT.md`](2026-08-02-al16-r1-offline-rytm-kit-exporter_RUN_REPORT.md)
+- [`2026-08-02-al16-r1-offline-rytm-kit-exporter_RUN_LOG.md`](2026-08-02-al16-r1-offline-rytm-kit-exporter_RUN_LOG.md)
+- [`2026-08-02-al16-r1-offline-rytm-kit-exporter_STATE.schema.json`](2026-08-02-al16-r1-offline-rytm-kit-exporter_STATE.schema.json)
+- [`2026-08-02-al16-r1-offline-rytm-kit-exporter_STATE.json`](2026-08-02-al16-r1-offline-rytm-kit-exporter_STATE.json)
 
 No new learned skill is warranted. Existing repository rules already cover
 the reusable lessons: passive hardware boundaries, shared Elektron codecs,

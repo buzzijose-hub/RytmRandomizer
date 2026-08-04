@@ -278,10 +278,12 @@ def test_saved_kit_service_error_codes_cover_each_file_phase(
     source_read_completed: bool,
     error_code: str,
 ) -> None:
-    from rytm_randomizer.cockpit.export import analog_four_kit
+    from rytm_randomizer.cockpit.export.file_export_contracts import (
+        classify_local_file_export_error,
+    )
 
     assert (
-        analog_four_kit._a4_export_error_code(
+        classify_local_file_export_error(
             error,
             source_read_completed=source_read_completed,
         )

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AL16 R1 autonomous run state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "plan",
+    "branch",
+    "pull_request",
+    "phase",
+    "workstreams",
+    "last_event",
+    "review_base_head_sha"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "plan": { "type": "string", "minLength": 1 },
+    "branch": { "const": "codex/al16-r1-offline-rytm-kit-exporter" },
+    "pull_request": { "const": 222 },
+    "phase": { "enum": ["implementation", "verification", "review", "complete"] },
+    "workstreams": {
+      "type": "object",
+      "additionalProperties": { "enum": ["pending", "in_progress", "complete", "blocked"] }
+    },
+    "last_event": { "type": "string", "minLength": 1 },
+    "review_base_head_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+  }
+}

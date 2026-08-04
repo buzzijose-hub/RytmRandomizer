@@ -15,6 +15,9 @@ from rytm_randomizer.cockpit.export.al16_rytm_kit import (
     build_al16_rytm_kit,
     deterministic_recipe_identifier,
 )
+from rytm_randomizer.cockpit.export.file_export_contracts import (
+    classify_local_file_export_error,
+)
 from rytm_randomizer.data.al16_rytm import (
     AL16_BANK_STATES,
     AL16_PAD_ROLES,
@@ -47,6 +50,7 @@ def _isolate_observability(isolated_observability: None) -> None:
 
 _HEADER = bytes((0x00, 0x20, 0x3C, 0x07, 0x00, 0x52, 0x01, 0x01, 0x00))
 _REPO_ROOT = Path(__file__).resolve().parents[1]
+_BANK_SPEC = _REPO_ROOT / "specs" / "al16" / "AL16_BANK.yaml"
 _AL02_RECIPE = _REPO_ROOT / "specs" / "al16" / "AL02_LOCK_RYTM.yaml"
 
 
@@ -103,11 +107,39 @@ def test_al16_bank_reserves_exact_operating_states_and_roles() -> None:
     assert AL16_PAD_ROLES[12] == "Cowbell / metallic punctuation / alarm tone"
 
 
+def test_al16_bank_spec_matches_canonical_data_layer() -> None:
+    parsed = cast(object, json.loads(_BANK_SPEC.read_text(encoding="utf-8")))
+    bank = exporter._as_mapping(parsed, "AL16 bank spec")
+
+    assert bank["states"] == [
+        {"number": state.number, "name": state.name, "tonal_zone": state.tonal_zone}
+        for state in AL16_BANK_STATES
+    ]
+    assert bank["permanent_pad_roles"] == {str(pad): role for pad, role in AL16_PAD_ROLES.items()}
+
+
 def test_al02_recipe_identifier_is_deterministic() -> None:
     recipe = _recipe()
     reordered = {key: recipe[key] for key in reversed(recipe)}
 
     assert deterministic_recipe_identifier(recipe) == deterministic_recipe_identifier(reordered)
+
+
+def test_al02_audits_are_independent_of_nested_field_order() -> None:
+    recipe = _recipe()
+    reordered = _recipe()
+    tracks = cast(dict[str, object], reordered["tracks"])
+    for track_value in tracks.values():
+        track = cast(dict[str, object], track_value)
+        if track["mode"] == AL16_TRACK_MODE_PRESERVE:
+            continue
+        for section_name in ("source", "filter", "amp"):
+            section = cast(dict[str, object], track[section_name])
+            track[section_name] = {key: section[key] for key in reversed(section)}
+
+    assert exporter._inspect_recipe(
+        recipe, bytes(RYTM_KIT_RAW_SIZE), 127
+    ) == exporter._inspect_recipe(reordered, bytes(RYTM_KIT_RAW_SIZE), 127)
 
 
 def test_al02_build_fails_closed_and_writes_precise_reports(
@@ -265,21 +297,30 @@ def test_al02_build_records_one_operation_and_one_blocked_metric(
 
 
 @pytest.mark.parametrize(
-    ("exc", "recipe_inspected", "expected"),
+    ("exc", "source_read_completed", "expected"),
     [
         (KeyboardInterrupt(), False, "interrupted"),
         (FileNotFoundError(), False, "input_not_found"),
+        (FileNotFoundError(), True, "write_failed"),
         (PermissionError(), False, "permission_denied"),
+        (FileExistsError(), True, "overwrite_refused"),
         (OSError(), False, "source_read_failed"),
         (OSError(), True, "write_failed"),
+        (ValueError(), True, "validation"),
     ],
 )
-def test_al16_export_error_codes_are_stable(
+def test_local_file_export_error_codes_are_stable(
     exc: BaseException,
-    recipe_inspected: bool,
+    source_read_completed: bool,
     expected: str,
 ) -> None:
-    assert exporter._al16_export_error_code(exc, recipe_inspected=recipe_inspected) == expected
+    assert (
+        classify_local_file_export_error(
+            exc,
+            source_read_completed=source_read_completed,
+        )
+        == expected
+    )
 
 
 def test_offline_exporter_has_no_midi_backend_dependency() -> None:
@@ -425,6 +466,10 @@ def test_al16_tuning_resolution_requires_an_approved_machine_table(
             "kit.state must be in 1..16",
         ),
         (
+            lambda recipe: cast(dict[str, object], recipe["kit"]).update(state=1),
+            "Phase R1 supports only the AL02 LOCK proof recipe",
+        ),
+        (
             lambda recipe: cast(dict[str, object], recipe["kit"]).update(name="AL02 OTHER"),
             "kit.name must match",
         ),
@@ -548,7 +593,64 @@ def test_al16_build_timestamp_supports_reproducible_and_live_modes(
     monkeypatch.setenv("SOURCE_DATE_EPOCH", "0")
     assert exporter._build_timestamp() == "1970-01-01T00:00:00+00:00"
     monkeypatch.delenv("SOURCE_DATE_EPOCH")
-    assert exporter._build_timestamp().endswith("+00:00")
+    assert exporter._build_timestamp() == "1970-01-01T00:00:00+00:00"
+    monkeypatch.setenv("SOURCE_DATE_EPOCH", "9" * 100)
+    with pytest.raises(ValueError, match="in-range integer Unix timestamp"):
+        exporter._build_timestamp()
+
+
+@pytest.mark.parametrize("collision_input", ["reference", "recipe"])
+def test_al16_build_rejects_evidence_path_input_collisions(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+    collision_input: str,
+) -> None:
+    output_path = tmp_path / "AL02_LOCK_RYTM.syx"
+    manifest_path = tmp_path / "AL02_LOCK_RYTM_manifest.json"
+    reference_path = tmp_path / "reference.syx"
+    recipe_path = tmp_path / "recipe.json"
+    if collision_input == "reference":
+        reference_path = manifest_path
+        reference = _synthetic_reference(reference_path)
+        recipe_path.write_bytes(_AL02_RECIPE.read_bytes())
+    else:
+        reference = _synthetic_reference(reference_path)
+        recipe_path = manifest_path
+        recipe_path.write_bytes(_AL02_RECIPE.read_bytes())
+    input_path = reference_path if collision_input == "reference" else recipe_path
+    input_bytes = input_path.read_bytes()
+    monkeypatch.setattr(
+        exporter,
+        "_REFERENCE_EXPECTED_SHA256",
+        hashlib.sha256(reference).hexdigest(),
+    )
+
+    with pytest.raises(ValueError, match=f"collides with {collision_input} input"):
+        build_al16_rytm_kit(
+            reference_path=reference_path,
+            recipe_path=recipe_path,
+            destination_slot=127,
+            output_path=output_path,
+        )
+
+    assert input_path.read_bytes() == input_bytes
+    assert not output_path.exists()
+    assert not output_path.with_name("AL02_LOCK_RYTM_validation.md").exists()
+    assert not output_path.with_name("AL02_LOCK_RYTM_byte_diff.txt").exists()
+
+
+def test_al16_build_rejects_artifact_path_collisions(tmp_path: Path) -> None:
+    duplicate_sidecar = tmp_path / "AL02_LOCK_RYTM_evidence.json"
+
+    with pytest.raises(ValueError, match="validation artifact path collides with manifest"):
+        exporter._validate_artifact_paths(
+            reference_path=tmp_path / "reference.syx",
+            recipe_path=tmp_path / "recipe.yaml",
+            output_path=tmp_path / "AL02_LOCK_RYTM.syx",
+            manifest_path=duplicate_sidecar,
+            validation_path=duplicate_sidecar,
+            byte_diff_path=tmp_path / "AL02_LOCK_RYTM_byte_diff.txt",
+        )
 
 
 def test_al16_build_rejects_an_unexpected_initialized_reference(tmp_path: Path) -> None:
