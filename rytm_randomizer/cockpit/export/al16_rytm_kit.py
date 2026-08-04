@@ -41,6 +41,9 @@ from ...data.rytm_machine_catalog import (
     is_machine_allowed_on_pad,
 )
 from ...devices.analog_rytm import get_analog_rytm_saved_kit_codec_capability
+from ...devices.strategies.analog_rytm_saved_kit_codec import (
+    AnalogRytmSavedKitCodecError,
+)
 from ...observability.errors import BoundaryError
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
@@ -76,6 +79,7 @@ AL16_GENERATOR_DEPENDENCIES: Final[tuple[str, ...]] = (
     "rytm_randomizer/devices/__init__.py",
     "rytm_randomizer/devices/analog_rytm.py",
     "rytm_randomizer/devices/registry.py",
+    "rytm_randomizer/devices/strategies/__init__.py",
     "rytm_randomizer/devices/strategies/analog_rytm_saved_kit_codec.py",
     "rytm_randomizer/observability/errors.py",
     "rytm_randomizer/snapshot/__init__.py",
@@ -987,6 +991,7 @@ def build_al16_rytm_kit(
             export_phase = "source_read"
             failure_artifact_name = reference_name
             reference_bytes = reference_path.read_bytes()
+            export_phase = "validation"
             reference_sha256 = hashlib.sha256(reference_bytes).hexdigest()
             if reference_sha256 != _REFERENCE_EXPECTED_SHA256:
                 raise Al16BuildError(
@@ -1001,7 +1006,7 @@ def build_al16_rytm_kit(
                     decoded.header,
                     decoded.unpacked,
                 )
-            except (KeyError, ValueError, TypeError) as exc:
+            except AnalogRytmSavedKitCodecError as exc:
                 raise Al16BuildError(
                     "reference_sysex_invalid",
                     "initialized Analog Rytm reference SysEx is invalid",
@@ -1015,9 +1020,9 @@ def build_al16_rytm_kit(
             export_phase = "source_read"
             failure_artifact_name = recipe_name
             recipe_bytes = recipe_path.read_bytes()
+            export_phase = "validation"
             recipe = _load_recipe_bytes(recipe_bytes)
             recipe_sha256 = hashlib.sha256(recipe_bytes).hexdigest()
-            export_phase = "validation"
             audits, gaps, preserved_tracks = _inspect_recipe(
                 recipe,
                 decoded.unpacked,

@@ -100,6 +100,9 @@ def _data_layer_names() -> dict[str, Path]:
 
 # Names of well-known fact tables that we expect to live under data/.
 _CANONICAL_FACT_TABLES: tuple[str, ...] = (
+    "AL16_ADJACENT_SONIC_DNA_TARGET_PERCENT",
+    "AL16_BANK_CONCEPT",
+    "AL16_BANK_SCHEMA_VERSION",
     "AL16_BANK_STATES",
     "AL16_PAD_ROLES",
     "AL16_PRESERVED_GLOBAL_SECTIONS",
@@ -108,6 +111,7 @@ _CANONICAL_FACT_TABLES: tuple[str, ...] = (
     "AL16_RYTM_WRITABLE_FIELDS",
     "AL16_TRACK_MODE_PATCH",
     "AL16_TRACK_MODE_PRESERVE",
+    "AL16_PROJECT_ID",
     "RYTM_CONVERTER_CENTERED_7BIT",
     "RYTM_CONVERTER_FILTER_TYPE_ENUM",
     "RYTM_CONVERTER_VERIFIED_7BIT",

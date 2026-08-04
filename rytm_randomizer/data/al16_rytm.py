@@ -6,7 +6,7 @@ import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Final, Literal, TypeAlias
+from typing import Final, Literal, TypeAlias, TypedDict
 
 RytmValueConverter: TypeAlias = Literal[
     "verified_7bit",
@@ -37,6 +37,26 @@ class Al16BankState:
     number: int
     name: str
     tonal_zone: str
+
+
+class Al16BankStatePayload(TypedDict):
+    """Serializable form of one reserved AL16 operating state."""
+
+    number: int
+    name: str
+    tonal_zone: str
+
+
+class Al16BankSpecPayload(TypedDict):
+    """Typed serializable form of the canonical AL16 bank reservation."""
+
+    schema_version: int
+    project_id: str
+    performance_context_bpm: int
+    concept: str
+    adjacent_sonic_dna_target_percent: list[int]
+    states: list[Al16BankStatePayload]
+    permanent_pad_roles: dict[str, str]
 
 
 @dataclass(frozen=True)
@@ -124,7 +144,7 @@ AL16_PRESERVED_GLOBAL_SECTIONS: Final[tuple[str, ...]] = (
 )
 
 
-def al16_bank_spec_payload() -> dict[str, object]:
+def al16_bank_spec_payload() -> Al16BankSpecPayload:
     """Return the canonical serializable AL16 bank reservation."""
 
     return {
@@ -161,7 +181,9 @@ __all__ = [
     "AL16_TRACK_MODE_PATCH",
     "AL16_TRACK_MODE_PRESERVE",
     "AL16_PROJECT_ID",
+    "Al16BankSpecPayload",
     "Al16BankState",
+    "Al16BankStatePayload",
     "Al16TrackMode",
     "RYTM_CONVERTER_CENTERED_7BIT",
     "RYTM_CONVERTER_FILTER_TYPE_ENUM",

@@ -325,6 +325,10 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # AL16 offline exporter: one typed BoundaryError carrying a bounded
         # failure reason instead of classifying human-readable prose.
         "Al16BuildError",
+        # Passive Elektron codec boundaries retain ValueError compatibility
+        # while exposing typed BoundaryError subclasses to their callers.
+        "ElektronPackedPayloadError",
+        "AnalogRytmSavedKitCodecError",
         # Re-homed legacy classes (still raisable by their original name):
         "RealMidiDependencyError",
         "RealMidiPortError",

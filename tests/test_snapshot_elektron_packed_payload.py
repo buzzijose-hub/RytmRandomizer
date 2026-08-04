@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import pytest
+from pytest import MonkeyPatch
 
+from rytm_randomizer.snapshot import elektron_packed_payload as payload_contract
 from rytm_randomizer.snapshot.elektron_packed_payload import (
     ELEKTRON_CHECKSUM_LENGTH_TRAILER_SIZE,
+    ElektronPackedPayloadError,
     elektron_packed_payload_checksum,
     encode_elektron_packed_payload,
     split_elektron_packed_payload_body,
@@ -46,7 +49,7 @@ def test_packed_payload_contract_round_trips_device_facts() -> None:
 
 
 def test_checksum_rejects_negative_device_slice() -> None:
-    with pytest.raises(ValueError, match="checksum start"):
+    with pytest.raises(ElektronPackedPayloadError, match="checksum start"):
         elektron_packed_payload_checksum(
             _PACKED,
             checksum_start=-1,
@@ -66,7 +69,7 @@ def test_checksum_preserves_empty_slice_behavior_for_short_payloads() -> None:
 
 
 def test_encoder_rejects_unexpected_device_packed_size() -> None:
-    with pytest.raises(ValueError, match="repacking changed"):
+    with pytest.raises(ElektronPackedPayloadError, match="repacking changed"):
         encode_elektron_packed_payload(
             _UNPACKED,
             checksum_start=0,
@@ -98,7 +101,7 @@ def test_validator_rejects_integrity_mismatches(
     trailer: bytes,
     message: str,
 ) -> None:
-    with pytest.raises(ValueError, match=message):
+    with pytest.raises(ElektronPackedPayloadError, match=message):
         validate_elektron_packed_payload(
             packed,
             trailer,
@@ -136,7 +139,7 @@ def test_packed_payload_body_split_rejects_invalid_device_sizes(
     trailer_size: int,
     message: str,
 ) -> None:
-    with pytest.raises(ValueError, match=message):
+    with pytest.raises(ElektronPackedPayloadError, match=message):
         split_elektron_packed_payload_body(
             b"short",
             header_size=header_size,
@@ -146,7 +149,7 @@ def test_packed_payload_body_split_rejects_invalid_device_sizes(
 
 
 def test_validator_rejects_a_noncanonical_expected_trailer_size() -> None:
-    with pytest.raises(ValueError, match="expected trailer size"):
+    with pytest.raises(ElektronPackedPayloadError, match="expected trailer size"):
         validate_elektron_packed_payload(
             _PACKED,
             bytes(4),
@@ -154,5 +157,25 @@ def test_validator_rejects_a_noncanonical_expected_trailer_size() -> None:
             length_adjustment=0,
             expected_packed_size=len(_PACKED),
             expected_trailer_size=3,
+            device_label=_LABEL,
+        )
+
+
+def test_validator_translates_invalid_u14_integrity_values(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    def fail_u14_decoder(_high: int, _low: int) -> int:
+        raise ValueError("invalid u14")
+
+    monkeypatch.setattr(payload_contract, "decode_elektron_u14", fail_u14_decoder)
+
+    with pytest.raises(ElektronPackedPayloadError, match="invalid 14-bit value"):
+        validate_elektron_packed_payload(
+            _PACKED,
+            bytes(ELEKTRON_CHECKSUM_LENGTH_TRAILER_SIZE),
+            checksum_start=0,
+            length_adjustment=0,
+            expected_packed_size=len(_PACKED),
+            expected_trailer_size=ELEKTRON_CHECKSUM_LENGTH_TRAILER_SIZE,
             device_label=_LABEL,
         )

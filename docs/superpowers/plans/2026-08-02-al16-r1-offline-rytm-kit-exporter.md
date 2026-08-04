@@ -59,7 +59,7 @@ exist; substituting candidate offsets would violate the project safety policy.
   18 critical mapping gaps and zero intentionally changed bytes. No `.syx` was
   emitted and the initialized reference SHA-256 remained unchanged.
 - Deterministic evidence SHA-256 values were
-  `e44018fda79a1c3338b1f0460ec369639eaac6034412baa2a8b6528c6f186e41`
+  `d052a213227070cf21f180fc27d100f9051ad8e9d12b4135889a5bb5a4183d06`
   for the manifest,
   `bcf04d1a77c412d93efa1ec558a817df6656ea000d0fb8b337efc992eabbe6e5`
   for the validation report, and

@@ -16,10 +16,12 @@ from rytm_randomizer.data.analog_rytm_kit_layout import (
 )
 from rytm_randomizer.devices.strategies import analog_rytm_saved_kit_codec as codec
 from rytm_randomizer.devices.strategies.analog_rytm_saved_kit_codec import (
+    AnalogRytmSavedKitCodecError,
     analog_rytm_saved_kit_checksum,
     decode_analog_rytm_saved_kit_frame,
     encode_analog_rytm_saved_kit_frame,
 )
+from rytm_randomizer.snapshot.elektron_packed_payload import ElektronPackedPayloadError
 from rytm_randomizer.snapshot.elektron_u14 import (
     decode_elektron_u14,
     encode_elektron_u14,
@@ -79,7 +81,7 @@ def test_analog_rytm_saved_kit_frame_rejects_checksum_corruption() -> None:
     frame = bytearray(encode_analog_rytm_saved_kit_frame(_HEADER, analog_rytm_saved_kit_test_raw()))
     frame[-5] ^= 1
 
-    with pytest.raises(ValueError, match="checksum"):
+    with pytest.raises(AnalogRytmSavedKitCodecError, match="checksum"):
         decode_analog_rytm_saved_kit_frame(bytes(frame))
 
 
@@ -104,12 +106,15 @@ def test_analog_rytm_saved_kit_frame_rejects_invalid_envelopes(
     mutate = mutation
     assert callable(mutate)
 
-    with pytest.raises(ValueError, match=message):
+    with pytest.raises(AnalogRytmSavedKitCodecError, match=message):
         decode_analog_rytm_saved_kit_frame(mutate(frame))
 
 
 def test_analog_rytm_saved_kit_header_requires_exact_length() -> None:
-    with pytest.raises(ValueError, match="header has an unexpected length"):
+    with pytest.raises(
+        AnalogRytmSavedKitCodecError,
+        match="header has an unexpected length",
+    ):
         codec._validate_header(_HEADER[:-1])
 
 
@@ -117,7 +122,7 @@ def test_analog_rytm_saved_kit_frame_rejects_wrong_encoded_length() -> None:
     frame = bytearray(encode_analog_rytm_saved_kit_frame(_HEADER, analog_rytm_saved_kit_test_raw()))
     frame[-2] ^= 1
 
-    with pytest.raises(ValueError, match="encoded length"):
+    with pytest.raises(AnalogRytmSavedKitCodecError, match="encoded length"):
         decode_analog_rytm_saved_kit_frame(bytes(frame))
 
 
@@ -129,30 +134,69 @@ def test_analog_rytm_saved_kit_frame_checks_packed_and_unpacked_sizes(
         analog_rytm_saved_kit_test_raw(),
     )
     monkeypatch.setattr(codec, "RYTM_KIT_PACKED_SIZE", RYTM_KIT_PACKED_SIZE + 1)
-    with pytest.raises(ValueError, match="packed payload"):
+    with pytest.raises(AnalogRytmSavedKitCodecError, match="packed payload"):
         decode_analog_rytm_saved_kit_frame(frame)
 
     monkeypatch.setattr(codec, "RYTM_KIT_PACKED_SIZE", RYTM_KIT_PACKED_SIZE)
     monkeypatch.setattr(codec, "RYTM_KIT_RAW_SIZE", RYTM_KIT_RAW_SIZE + 1)
-    with pytest.raises(ValueError, match="unexpected unpacked length"):
+    with pytest.raises(AnalogRytmSavedKitCodecError, match="unexpected unpacked length"):
         decode_analog_rytm_saved_kit_frame(frame)
 
 
 def test_analog_rytm_saved_kit_encoder_rejects_invalid_sizes(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    with pytest.raises(ValueError, match="body has an unexpected unpacked length"):
+    with pytest.raises(
+        AnalogRytmSavedKitCodecError,
+        match="body has an unexpected unpacked length",
+    ):
         encode_analog_rytm_saved_kit_frame(
             _HEADER,
             analog_rytm_saved_kit_test_raw()[:-1],
         )
 
     monkeypatch.setattr(codec, "RYTM_KIT_PACKED_SIZE", RYTM_KIT_PACKED_SIZE + 1)
-    with pytest.raises(ValueError, match="repacking changed"):
+    with pytest.raises(AnalogRytmSavedKitCodecError, match="repacking changed"):
         encode_analog_rytm_saved_kit_frame(
             _HEADER,
             analog_rytm_saved_kit_test_raw(),
         )
+
+
+def test_analog_rytm_saved_kit_codec_does_not_mask_unexpected_validator_failure(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    frame = encode_analog_rytm_saved_kit_frame(
+        _HEADER,
+        analog_rytm_saved_kit_test_raw(),
+    )
+
+    def fail_validator(*_args: object, **_kwargs: object) -> None:
+        raise ValueError("unexpected validator defect")
+
+    monkeypatch.setattr(codec, "validate_elektron_packed_payload", fail_validator)
+
+    with pytest.raises(ValueError, match="unexpected validator defect") as exc_info:
+        decode_analog_rytm_saved_kit_frame(frame)
+
+    assert not isinstance(exc_info.value, AnalogRytmSavedKitCodecError)
+
+
+def test_analog_rytm_saved_kit_codec_translates_packed_body_errors(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    frame = encode_analog_rytm_saved_kit_frame(
+        _HEADER,
+        analog_rytm_saved_kit_test_raw(),
+    )
+
+    def fail_splitter(*_args: object, **_kwargs: object) -> None:
+        raise ElektronPackedPayloadError("invalid packed body")
+
+    monkeypatch.setattr(codec, "split_elektron_packed_payload_body", fail_splitter)
+
+    with pytest.raises(AnalogRytmSavedKitCodecError, match="invalid packed body"):
+        decode_analog_rytm_saved_kit_frame(frame)
 
 
 @pytest.mark.parametrize(("high", "low"), [(-1, 0), (0, 128)])

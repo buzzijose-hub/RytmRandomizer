@@ -19,6 +19,7 @@ OS-specific resolution is exercised via ``monkeypatch.setattr`` against
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -648,10 +649,19 @@ def test_atomic_write_set_refuses_concurrent_destination_without_overwrite(
     second = tmp_path / "second.md"
     publish_no_overwrite = writer_module._publish_no_overwrite
 
-    def collide_on_second_publication(tmp_name: str, destination: Path) -> None:
+    def collide_on_second_publication(
+        tmp_name: str,
+        destination: Path,
+        *,
+        on_published: Callable[[], None] | None = None,
+    ) -> None:
         if destination == second:
             destination.write_bytes(b"concurrent")
-        publish_no_overwrite(tmp_name, destination)
+        publish_no_overwrite(
+            tmp_name,
+            destination,
+            on_published=on_published,
+        )
 
     monkeypatch.setattr(
         writer_module,
@@ -665,6 +675,42 @@ def test_atomic_write_set_refuses_concurrent_destination_without_overwrite(
     assert not first.exists()
     assert second.read_bytes() == b"concurrent"
     assert sorted(path.name for path in tmp_path.iterdir()) == ["second.md"]
+
+
+def test_atomic_write_set_interrupt_after_link_rolls_back_published_destination(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    destination = tmp_path / "artifact.json"
+    publish_no_overwrite = writer_module._publish_no_overwrite
+
+    def interrupt_after_link(
+        tmp_name: str,
+        path: Path,
+        *,
+        on_published: Callable[[], None] | None = None,
+    ) -> None:
+        publish_no_overwrite(
+            tmp_name,
+            path,
+            on_published=on_published,
+        )
+        raise KeyboardInterrupt("operator interrupted after publication")
+
+    monkeypatch.setattr(
+        writer_module,
+        "_publish_no_overwrite",
+        interrupt_after_link,
+    )
+
+    with pytest.raises(
+        KeyboardInterrupt,
+        match="operator interrupted after publication",
+    ):
+        atomic_write_set({destination: b"payload"})
+
+    assert not destination.exists()
+    assert list(tmp_path.iterdir()) == []
 
 
 def test_atomic_write_set_wraps_transaction_directory_creation_failure(

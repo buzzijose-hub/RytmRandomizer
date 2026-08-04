@@ -17,8 +17,10 @@ from ...data.analog_rytm_kit_layout import (
     RYTM_KIT_WORK_BUFFER_DUMP_ID,
     RYTM_SYSEX_PRODUCT_ID,
 )
+from ...observability.errors import BoundaryError
 from ...snapshot import ELEKTRON_MFR_ID, unpack_elektron_7bit
 from ...snapshot.elektron_packed_payload import (
+    ElektronPackedPayloadError,
     elektron_packed_payload_checksum,
     encode_elektron_packed_payload,
     split_elektron_packed_payload_body,
@@ -27,6 +29,12 @@ from ...snapshot.elektron_packed_payload import (
 
 _DUMP_ID_INDEX: Final[int] = 5
 _DEVICE_LABEL: Final[str] = "Analog Rytm saved-kit"
+
+
+class AnalogRytmSavedKitCodecError(BoundaryError, ValueError):
+    """Expected malformed-input failure at the Rytm saved-kit boundary."""
+
+    fingerprint = "snapshot.analog_rytm_saved_kit.invalid"
 
 
 @dataclass(frozen=True)
@@ -52,47 +60,57 @@ def analog_rytm_saved_kit_checksum(packed: bytes) -> int:
 
 def _validate_header(header: bytes) -> None:
     if len(header) != RYTM_KIT_SYSEX_HEADER_SIZE_WITHOUT_F0:
-        raise ValueError("Analog Rytm kit SysEx header has an unexpected length")
+        raise AnalogRytmSavedKitCodecError("Analog Rytm kit SysEx header has an unexpected length")
     if not header.startswith(ELEKTRON_MFR_ID + bytes((RYTM_SYSEX_PRODUCT_ID,))):
-        raise ValueError("SysEx header is not an Analog Rytm Elektron kit header")
+        raise AnalogRytmSavedKitCodecError("SysEx header is not an Analog Rytm Elektron kit header")
     if header[_DUMP_ID_INDEX] not in (RYTM_KIT_DUMP_ID, RYTM_KIT_WORK_BUFFER_DUMP_ID):
-        raise ValueError("Analog Rytm SysEx object is not a kit dump")
+        raise AnalogRytmSavedKitCodecError("Analog Rytm SysEx object is not a kit dump")
 
 
 def decode_analog_rytm_saved_kit_frame(frame: bytes) -> AnalogRytmSavedKitFrame:
     """Decode and validate one complete F0/F7-framed Rytm saved-kit dump."""
 
     if len(frame) != RYTM_KIT_FRAME_SIZE:
-        raise ValueError(
+        raise AnalogRytmSavedKitCodecError(
             f"Analog Rytm saved-kit frame length is {len(frame)}; "
             f"expected {RYTM_KIT_FRAME_SIZE}"
         )
     if frame[0] != 0xF0 or frame[-1] != 0xF7:
-        raise ValueError("Analog Rytm saved-kit SysEx framing is invalid")
+        raise AnalogRytmSavedKitCodecError("Analog Rytm saved-kit SysEx framing is invalid")
     if any(value > 0x7F for value in frame[1:-1]):
-        raise ValueError("Analog Rytm saved-kit SysEx contains an illegal data byte")
+        raise AnalogRytmSavedKitCodecError(
+            "Analog Rytm saved-kit SysEx contains an illegal data byte"
+        )
 
-    body = split_elektron_packed_payload_body(
-        frame[1:-1],
-        header_size=RYTM_KIT_SYSEX_HEADER_SIZE_WITHOUT_F0,
-        trailer_size=RYTM_KIT_SYSEX_TRAILER_SIZE_WITHOUT_F7,
-        device_label=_DEVICE_LABEL,
-    )
+    try:
+        body = split_elektron_packed_payload_body(
+            frame[1:-1],
+            header_size=RYTM_KIT_SYSEX_HEADER_SIZE_WITHOUT_F0,
+            trailer_size=RYTM_KIT_SYSEX_TRAILER_SIZE_WITHOUT_F7,
+            device_label=_DEVICE_LABEL,
+        )
+    except ElektronPackedPayloadError as exc:
+        raise AnalogRytmSavedKitCodecError(str(exc)) from exc
     _validate_header(body.header)
 
-    validated = validate_elektron_packed_payload(
-        body.packed,
-        body.trailer,
-        checksum_start=RYTM_KIT_CHECKSUM_PACKED_START,
-        length_adjustment=RYTM_KIT_LENGTH_ADJUSTMENT,
-        expected_packed_size=RYTM_KIT_PACKED_SIZE,
-        expected_trailer_size=RYTM_KIT_SYSEX_TRAILER_SIZE_WITHOUT_F7,
-        device_label=_DEVICE_LABEL,
-    )
+    try:
+        validated = validate_elektron_packed_payload(
+            body.packed,
+            body.trailer,
+            checksum_start=RYTM_KIT_CHECKSUM_PACKED_START,
+            length_adjustment=RYTM_KIT_LENGTH_ADJUSTMENT,
+            expected_packed_size=RYTM_KIT_PACKED_SIZE,
+            expected_trailer_size=RYTM_KIT_SYSEX_TRAILER_SIZE_WITHOUT_F7,
+            device_label=_DEVICE_LABEL,
+        )
+    except ElektronPackedPayloadError as exc:
+        raise AnalogRytmSavedKitCodecError(str(exc)) from exc
 
     unpacked = unpack_elektron_7bit(body.packed)
     if len(unpacked) != RYTM_KIT_RAW_SIZE:
-        raise ValueError("Analog Rytm saved-kit payload has an unexpected unpacked length")
+        raise AnalogRytmSavedKitCodecError(
+            "Analog Rytm saved-kit payload has an unexpected unpacked length"
+        )
     return AnalogRytmSavedKitFrame(
         header=body.header,
         packed=body.packed,
@@ -107,20 +125,26 @@ def encode_analog_rytm_saved_kit_frame(header: bytes, unpacked: bytes) -> bytes:
 
     _validate_header(header)
     if len(unpacked) != RYTM_KIT_RAW_SIZE:
-        raise ValueError("Analog Rytm saved-kit body has an unexpected unpacked length")
-    encoded = encode_elektron_packed_payload(
-        unpacked,
-        checksum_start=RYTM_KIT_CHECKSUM_PACKED_START,
-        length_adjustment=RYTM_KIT_LENGTH_ADJUSTMENT,
-        expected_packed_size=RYTM_KIT_PACKED_SIZE,
-        device_label=_DEVICE_LABEL,
-    )
+        raise AnalogRytmSavedKitCodecError(
+            "Analog Rytm saved-kit body has an unexpected unpacked length"
+        )
+    try:
+        encoded = encode_elektron_packed_payload(
+            unpacked,
+            checksum_start=RYTM_KIT_CHECKSUM_PACKED_START,
+            length_adjustment=RYTM_KIT_LENGTH_ADJUSTMENT,
+            expected_packed_size=RYTM_KIT_PACKED_SIZE,
+            device_label=_DEVICE_LABEL,
+        )
+    except ElektronPackedPayloadError as exc:
+        raise AnalogRytmSavedKitCodecError(str(exc)) from exc
     frame = bytes((0xF0,)) + header + encoded.packed + encoded.trailer + bytes((0xF7,))
     decode_analog_rytm_saved_kit_frame(frame)
     return frame
 
 
 __all__ = [
+    "AnalogRytmSavedKitCodecError",
     "AnalogRytmSavedKitFrame",
     "analog_rytm_saved_kit_checksum",
     "decode_analog_rytm_saved_kit_frame",

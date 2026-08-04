@@ -125,6 +125,9 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             "cockpit.profiles",
             "data",
             "devices",
+            # AL16 offline export composes the shared passive Rytm saved-kit
+            # codec; this edge never enters the armed MIDI boundary.
+            "devices.strategies",
             "observability",
             # AL16 offline export reads the shared Elektron ASCII-name
             # envelope primitive while auditing saved-kit payloads.
@@ -277,7 +280,14 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             "observability",
         }
     ),
-    "snapshot": frozenset({"devices"}),
+    "snapshot": frozenset(
+        {
+            "devices",
+            # Typed packed-payload validation failures participate in the
+            # package-wide BoundaryError taxonomy.
+            "observability",
+        }
+    ),
     "state": frozenset(
         {
             # TODO(rival-program): review this edge — the original layer

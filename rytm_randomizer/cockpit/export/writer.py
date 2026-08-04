@@ -39,7 +39,7 @@ import os
 import shutil
 import sys
 import tempfile
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import ClassVar, Final, Literal, TypeAlias
@@ -327,15 +327,17 @@ def _publish_temp_file(tmp_name: str, path: Path, *, overwrite: bool) -> None:
         raise WriteError(f"atomic_write failed for {path}: {exc}") from exc
 
 
-def _publish_no_overwrite(tmp_name: str, path: Path) -> None:
+def _publish_no_overwrite(
+    tmp_name: str,
+    path: Path,
+    *,
+    on_published: Callable[[], None] | None = None,
+) -> None:
     """Publish ``tmp_name`` without replacing a concurrent destination."""
 
     os.link(tmp_name, path)
-    try:
-        os.unlink(tmp_name)
-    except OSError:
-        # The outer atomic-write finalizer retries and records retained residue.
-        pass
+    if on_published is not None:
+        on_published()
 
 
 def _record_temp_cleanup_failure(
@@ -482,9 +484,13 @@ def atomic_write_set(
             active_destination = destination
             if overwrite:
                 os.replace(staged[destination], destination)
+                published.add(destination)
             else:
-                _publish_no_overwrite(str(staged[destination]), destination)
-            published.add(destination)
+                _publish_no_overwrite(
+                    str(staged[destination]),
+                    destination,
+                    on_published=lambda destination=destination: published.add(destination),
+                )
     except (OSError, KeyboardInterrupt, SystemExit) as exc:
         rollback_failures = _rollback_write_set(
             items,
