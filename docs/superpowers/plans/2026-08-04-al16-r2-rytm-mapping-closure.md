@@ -1,0 +1,83 @@
+# AL16 R2 Analog Rytm Mapping Closure
+
+> Status: in-flight (implementation complete; studio evidence pending)
+
+## Goal
+
+Replace the Phase R1 list of 18 independent Analog Rytm writer blockers with a
+bounded, offline evidence workflow. This phase does not emit an AL02 kit and
+does not promote candidate offsets as verified mappings.
+
+## Safety boundary
+
+- Decode saved-kit files offline through the existing validated codec.
+- Never enumerate, open, or write a MIDI port.
+- Never transmit MIDI or SysEx.
+- Never mutate the initialized reference file.
+- Treat manual-backed addresses plus decoded-kit layout offsets as candidate
+  evidence until a saved-kit before/after comparison is reviewed.
+- Keep the ambiguous `ch_basic` recipe key unresolved. It must not be silently
+  translated to `ch_classic` or `hh_basic`.
+
+## Two-session proof plan
+
+### Session 1: configured saved-kit capture
+
+Create one disposable AL02-like kit by hand, save it once, and export one
+saved-kit dump. Compare that dump with the initialized reference offline. One
+comparison can provide candidate evidence for:
+
+- machine selection on pads 1, 3, and 9;
+- BD Classic source parameters on pad 1;
+- XT Classic decay and F2 tuning on pad 6;
+- the selected pad-9 hat decay parameter after the machine ambiguity is
+  resolved; and
+- amp volume on pads 1, 3, 6, and 9.
+
+The analyzer reports candidate changed/unchanged locations and all other raw
+changes. A human review remains required before any location or converter is
+added to the strict writer allowlist.
+
+### Session 2: destination-slot proof
+
+Import one harmless scratch kit into an explicitly selected scratch slot,
+dump it back, and compare only the object-number/header evidence. This is a
+separate proof because the Phase R1 codec deliberately does not claim which
+header byte owns the destination slot.
+
+## Verification strategy
+
+- Synthetic saved-kit frames exercise the analyzer without private reference
+  dumps.
+- Every current blocker must be assigned to exactly one evidence class.
+- Unknown blocker paths fail closed.
+- Ambiguous machine/source combinations remain unlocated.
+- Reports are deterministic and explicitly marked `review_required`.
+- Focused tests run single-process to keep workstation load bounded.
+
+## Exit criteria
+
+R2 is ready for a studio handoff when the offline analyzer and tests pass and
+the operator can complete the two proof sessions without running hundreds of
+single-parameter calibration rounds. AL02 compilation remains blocked until
+the resulting evidence is reviewed and promoted in a later writer change.
+
+## Passive comparison command
+
+After the single manually configured AL02 saved-kit dump is available, run:
+
+```powershell
+Set-Location (Join-Path $env:USERPROFILE "Documents\RytmRandomizer")
+
+.\.venv\Scripts\python.exe -m rytm_randomizer.cli `
+  al16-rytm-mapping-evidence `
+  --reference output\local\reference\RYTM_Test1_Init_Kit.syx `
+  --configured output\local\al16\AL02_LOCK_RYTM_CONFIGURED.syx `
+  --recipe specs\al16\AL02_LOCK_RYTM.yaml `
+  --gap-manifest output\al16\AL02_LOCK_RYTM_manifest.json `
+  --report output\local\al16\AL02_LOCK_RYTM_mapping_evidence.json
+```
+
+This command only decodes local files and writes a review-required JSON
+report. It does not enumerate MIDI ports, open hardware, transmit MIDI, or
+promote candidate mappings automatically.

@@ -510,6 +510,10 @@ def _registered_command_exit_code(args: Sequence[str]) -> int | None:
             "rytm_randomizer.cockpit.export.al16_rytm_cli",
             "AL16_RYTM_KIT_EXPORT_CLI_COMMAND",
         ),
+        "al16-rytm-mapping-evidence": (
+            "rytm_randomizer.cockpit.export.al16_rytm_mapping_closure_cli",
+            "AL16_RYTM_MAPPING_EVIDENCE_CLI_COMMAND",
+        ),
         "analog-four-audio-patch-batch": (
             "rytm_randomizer.cockpit.export.analog_four_patch_batch_cli",
             "ANALOG_FOUR_AUDIO_PATCH_BATCH_CLI_COMMAND",

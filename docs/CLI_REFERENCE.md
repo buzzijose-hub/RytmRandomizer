@@ -227,6 +227,7 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `analog-four-patch-send-plan-report` | Passive CC/NRPN live-dial send plan for a generated Analog Four patch |
 | `analog-four-saved-kit-export` | Guarded local-file saved-kit export; currently admits hardware-validated Filter2 Resonance only |
 | `al16-rytm-kit-export` | Offline AL16 Analog Rytm audit/evidence compiler; Phase R1 validates the exact initialized reference, writes deterministic mapping-gap evidence, and emits no `.syx` |
+| `al16-rytm-mapping-evidence` | Passive AL16 Rytm mapping-closure analyzer; compares initialized and manually configured saved-kit dumps against the R1 gaps without promoting offsets or writing SysEx |
 | `analog-four-audio-patch-batch` | Real local audio analysis; the documented/default workflow deterministically commits exactly four immutable `.syx` candidates, complete DNA sidecars, and one manifest; `--studio-handoff` prints the bounded four-audition workflow with zero calibration rounds |
 | `analog-four-audio-patch-rank` | Passive acoustic ranking of recorded A4 candidates against the exact batch reference |
 | `local-model-copilot-report` | Passive local model docs, mutation-intent, and Analog Four patch-review packets; optional local model subprocess call with `--ask-local-model` |
@@ -249,6 +250,7 @@ python -m rytm_randomizer.cli analog-four-patch-corpus-report --audio reference.
 python -m rytm_randomizer.cli analog-four-patch-send-plan-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
 python -m rytm_randomizer.cli analog-four-saved-kit-export --source INIT.syx --output PATCH.syx --filter2-resonance 1:64
 python -m rytm_randomizer.cli al16-rytm-kit-export --reference output/local/reference/RYTM_Test1_Init_Kit.syx --recipe specs/al16/AL02_LOCK_RYTM.yaml --destination-slot 127 --output output/local/al16/AL02_LOCK_RYTM.syx
+python -m rytm_randomizer.cli al16-rytm-mapping-evidence --reference output/local/reference/RYTM_Test1_Init_Kit.syx --configured output/local/al16/AL02_LOCK_RYTM_CONFIGURED.syx --recipe specs/al16/AL02_LOCK_RYTM.yaml --gap-manifest output/al16/AL02_LOCK_RYTM_manifest.json --report output/local/al16/AL02_LOCK_RYTM_mapping_evidence.json
 python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit INIT.syx --output-dir batch --track 1 --candidates 4
 python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit INIT.syx --output-dir batch --track 1 --studio-handoff --a4-output-port "<exact configured Analog Four output name>"
 python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference reference.wav --manifest batch/a4-t1-audio-patch-batch.json --render 1=candidate-1.wav
@@ -338,6 +340,16 @@ fail-closed: 18 critical writer mappings remain unverified, so the command
 returns `2`, writes manifest/validation/byte-diff evidence, emits no `.syx`,
 and authorizes no manual hardware import. Positive kit generation remains
 future work after those writer mappings are verified.
+
+`al16-rytm-mapping-evidence` is the passive Phase R2 mapping-closure analyzer.
+It compares the initialized saved-kit dump with one manually configured
+AL02-like dump, limits candidate locations to the existing Rytm layout
+metadata, and writes a deterministic JSON review packet covering the R1
+mapping gaps. A second scratch-slot import/dump supplies the bounded
+destination-slot proof described in the linked plan. The command never opens
+or enumerates MIDI ports, writes SysEx, or promotes a candidate mapping; the
+ambiguous Pad 9 `ch_basic` machine request remains explicitly unresolved until
+device evidence identifies the intended machine.
 
 `analog-four-audio-patch-batch` is the end-to-end offline candidate generator.
 With the documented/default `--candidates 4` workflow, it analyzes an immutable

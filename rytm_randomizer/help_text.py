@@ -291,6 +291,9 @@ USAGE = (
     "[--overwrite] [--json] | "
     "al16-rytm-kit-export --reference <kit.syx> --recipe <recipe.yaml> "
     "--destination-slot <0..127> --output <kit.syx> | "
+    "al16-rytm-mapping-evidence --reference <baseline.syx> "
+    "--configured <configured.syx> --recipe <recipe.yaml> "
+    "--gap-manifest <manifest.json> --report <report.json> | "
     "analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> "
     "--output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json] | "
     "analog-four-audio-patch-rank --reference <path> --manifest <batch.json> "
@@ -2613,6 +2616,28 @@ Safety:
 {_safety_block(_AL16_RYTM_KIT_EXPORT_SAFETY_LINES)}"""
 
 
+def _al16_rytm_mapping_evidence_help():
+    return """RytmRandomizer passive CLI: al16-rytm-mapping-evidence
+
+Usage:
+  python -m rytm_randomizer.cli al16-rytm-mapping-evidence --reference <baseline.syx> --configured <configured.syx> --recipe <recipe.yaml> --gap-manifest <manifest.json> --report <report.json>
+  python -m rytm_randomizer.cli al16-rytm-mapping-evidence --help
+
+Behavior:
+  Compares an initialized Analog Rytm saved-kit dump with one manually
+  configured saved-kit dump. Candidate offsets come only from existing layout
+  metadata and manual-backed MIDI catalogs. Evidence remains review_required;
+  this command never promotes mappings or emits a kit.
+
+Safety:
+  local-file analysis only
+  no MIDI backend imports
+  no MIDI port enumeration or opening
+  no MIDI or SysEx transmission
+  no hardware required
+  no network access"""
+
+
 def _analog_four_audio_patch_batch_help():
     from .cockpit.export.analog_four_patch_batch_cli import SAFETY_LINES
 
@@ -2850,6 +2875,7 @@ Usage:
   python -m rytm_randomizer.cli cockpit-export-profile-model --profile-id <id> --profiles-dir <path> --output <file.rymp> [--key-hex <hex> --key-id <label>] [--unsigned] [--overwrite] [--json]
   python -m rytm_randomizer.cli analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> --filter2-resonance <track:value> [--filter2-resonance <track:value> ...] [--overwrite] [--json]
   python -m rytm_randomizer.cli al16-rytm-kit-export --reference <kit.syx> --recipe <recipe.yaml> --destination-slot <0..127> --output <kit.syx>
+  python -m rytm_randomizer.cli al16-rytm-mapping-evidence --reference <baseline.syx> --configured <configured.syx> --recipe <recipe.yaml> --gap-manifest <manifest.json> --report <report.json>
   python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json]
   python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference <path> --manifest <batch.json> --render <N=path> [--render <N=path> ...] [--json]
   python -m rytm_randomizer.cli cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> [--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json]
@@ -3101,6 +3127,8 @@ Commands:
                     Render hardware-validated Analog Four values into a saved-kit SysEx file.
   al16-rytm-kit-export
                     Audit AL16 Rytm inputs and emit deterministic mapping-gap evidence.
+  al16-rytm-mapping-evidence
+                    Compare two local Rytm kits for review-only mapping evidence.
   analog-four-audio-patch-batch
                     Infer and export up to four passive Analog Four patch candidates from audio.
   analog-four-audio-patch-rank
@@ -3519,6 +3547,7 @@ Safety:
     "cockpit-export-profile-model": _cockpit_export_profile_model_help,
     "analog-four-saved-kit-export": _analog_four_saved_kit_export_help,
     "al16-rytm-kit-export": _al16_rytm_kit_export_help,
+    "al16-rytm-mapping-evidence": _al16_rytm_mapping_evidence_help,
     "analog-four-audio-patch-batch": _analog_four_audio_patch_batch_help,
     "analog-four-audio-patch-rank": _analog_four_audio_patch_rank_help,
     "cockpit-export-rehearsal-report": _cockpit_export_rehearsal_report_help,

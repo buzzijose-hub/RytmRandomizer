@@ -1,5 +1,6 @@
 {
   "active-boundary-report --json": "exit 2: Usage: python -m rytm_randomizer.cli [--help] | report | project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | active-boundary-report | mock-runtime-active-brid...",
+  "al16-rytm-mapping-evidence": "requires explicit baseline, configured saved-kit, recipe, mapping-gap manifest, and report paths; deterministic behavior is covered by dedicated analyzer and CLI tests",
   "al16-rytm-kit-export": "requires explicit --reference, --recipe, --destination-slot, and --output build inputs; deterministic blocked-build behavior is covered by dedicated exporter tests",
   "analog-four-audio-patch-batch": "exit 2: Usage: python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json]",
   "analog-four-audio-patch-rank": "exit 2: Usage: python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference <audio> --manifest <batch.json> --render <N=audio> [--render <N=audio> ...] [--json]",
