@@ -2,13 +2,14 @@
  * Tests for the App-level hash router.
  *
  * Verifies:
- *   - With sessionStatus seeded, an empty / `#/` hash mounts the Cockpit surface.
- *   - A `#/wizard` hash mounts the Wizard surface.
+ *   - An empty / `#/` hash mounts the Cockpit surface, and a `#/wizard` hash mounts
+ *     the Wizard surface — IMMEDIATELY, with or without a sessionStatus. There is no
+ *     session gate: the cockpit is usable offline and the ReconnectBanner is the
+ *     connection surface.
  *   - Mutating `window.location.hash` after mount + dispatching `hashchange` swaps the
  *     surface in place (the same behaviour MutationPanel's launcher relies on).
- *   - Without a sessionStatus the OfflineShell shows (live status + retry visibility,
- *     not a dead placeholder) except for the passive performance-console route, which
- *     can render the bundled demo model.
+ *   - The passive performance-console route renders the bundled demo model with no
+ *     session at all.
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -42,19 +43,32 @@ describe('App hash router', () => {
     useWizardStore.getState().reset();
   });
 
-  it('shows the OfflineShell until session_status arrives', () => {
+  it('mounts the Cockpit immediately with NO session (no gate)', () => {
     const fake = new FakeCockpitClient();
     render(<App client={fake.asClient()} />);
-    expect(screen.getByTestId('offline-shell')).toBeInTheDocument();
-    expect(screen.getByTestId('offline-retry-now')).toBeInTheDocument();
-    expect(screen.queryByTestId('cockpit-root')).not.toBeInTheDocument();
+    expect(screen.getByTestId('cockpit-root')).toBeInTheDocument();
+    // Honest degraded surfaces instead of a gate:
+    expect(screen.getByTestId('header-bar')).toHaveTextContent('disconnected');
+    expect(screen.getByTestId('snapshot-panel')).toHaveTextContent('Waiting for snapshot…');
     expect(screen.queryByTestId('wizard-root')).not.toBeInTheDocument();
   });
 
-  it('recovers from the OfflineShell to the Cockpit when session_status arrives', () => {
+  it('shows the ReconnectBanner over the mounted cockpit while the WS is down', () => {
+    const fake = new FakeCockpitClient();
+    fake.setStatus('reconnecting');
+    render(<App client={fake.asClient()} />);
+    expect(screen.getByTestId('cockpit-root')).toBeInTheDocument();
+    expect(screen.getByTestId('reconnect-banner')).toBeInTheDocument();
+    expect(screen.getByTestId('reconnect-banner-retry-now')).toBeInTheDocument();
+    // Pre-session: the banner carries the connection-help disclosure.
+    expect(screen.getByTestId('reconnect-banner-help')).toBeInTheDocument();
+  });
+
+  it('hydrates the already-mounted Cockpit in place when session_status arrives', () => {
     const fake = new FakeCockpitClient();
     render(<App client={fake.asClient()} />);
-    expect(screen.getByTestId('offline-shell')).toBeInTheDocument();
+    expect(screen.getByTestId('cockpit-root')).toBeInTheDocument();
+    expect(screen.getByTestId('header-bar')).toHaveTextContent('disconnected');
 
     act(() => {
       useCockpitStore.getState().setSessionStatus(sessionLive);
@@ -62,15 +76,20 @@ describe('App hash router', () => {
     });
 
     expect(screen.getByTestId('cockpit-root')).toBeInTheDocument();
-    expect(screen.queryByTestId('offline-shell')).not.toBeInTheDocument();
+    expect(screen.getByTestId('header-bar')).toHaveTextContent('RytmRandomizer · Live');
+    expect(screen.getByTestId('snapshot-panel')).not.toHaveTextContent(
+      'Waiting for snapshot…',
+    );
   });
 
-  it('keeps the OfflineShell ahead of the wizard route while the sidecar is unreachable', () => {
+  it('mounts the Wizard at #/wizard even while the sidecar is unreachable', () => {
     setHash('/wizard');
     const fake = new FakeCockpitClient();
+    fake.setStatus('reconnecting');
     render(<App client={fake.asClient()} />);
-    expect(screen.getByTestId('offline-shell')).toBeInTheDocument();
-    expect(screen.queryByTestId('wizard-root')).not.toBeInTheDocument();
+    expect(screen.getByTestId('wizard-root')).toBeInTheDocument();
+    expect(screen.getByTestId('reconnect-banner')).toBeInTheDocument();
+    expect(screen.queryByTestId('cockpit-root')).not.toBeInTheDocument();
   });
 
   it('mounts the Performance Console preview route from an injected passive model before session_status arrives', () => {

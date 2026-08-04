@@ -34,6 +34,7 @@ import { useCockpitStore } from '../state';
 
 import { resolveArmSecret } from '../ws/client';
 import { useCockpitClient } from './context';
+import { SIDECAR_REQUIRED_REASON } from './ReconnectBanner';
 
 /** Keep Tab / Shift+Tab focus inside the arm dialog (WCAG 2.4.3 / 2.1.2). */
 function trapFocus(container: HTMLElement, event: React.KeyboardEvent): void {
@@ -55,7 +56,8 @@ function trapFocus(container: HTMLElement, event: React.KeyboardEvent): void {
 
 export function ArmControl(): JSX.Element {
   const client = useCockpitClient();
-  const armed = useCockpitStore((s) => s.sessionStatus?.armed ?? false);
+  const session = useCockpitStore((s) => s.sessionStatus);
+  const armed = session?.armed ?? false;
   const availableOutputs = useCockpitStore((s) => s.connection?.available_outputs);
   const outputs = availableOutputs ?? [];
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -129,6 +131,27 @@ export function ArmControl(): JSX.Element {
       })
       .catch(() => setError('Disarm request failed to send'));
   };
+
+  // No session at all (sidecar never answered): there is no arm path — no
+  // ports, no session, no ARM secret handshake. Degrade to a disabled,
+  // reason-carrying affordance rather than hiding the control or letting a
+  // click open a dialog that could only refuse.
+  if (session === null) {
+    return (
+      <div className="arm-control">
+        <button
+          type="button"
+          className="arm-button"
+          disabled
+          aria-disabled="true"
+          title={SIDECAR_REQUIRED_REASON}
+          data-testid="arm-open-button"
+        >
+          <span aria-hidden="true">○</span> Arm…
+        </button>
+      </div>
+    );
+  }
 
   if (armed) {
     return (

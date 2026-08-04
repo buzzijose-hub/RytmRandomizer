@@ -7,11 +7,15 @@
  * Local state mirrors the engine's last-applied depth; if the engine acks with a different
  * value (e.g. clamped) we'll see it via the next `mutation_previewed` event. For v10 we
  * don't surface that round-trip — the slider trusts the operator.
+ *
+ * Dispatch goes through `useLoggedCommand` so a send while the sidecar is
+ * unreachable degrades to an operator-log entry instead of an unhandled
+ * promise rejection (the cockpit mounts with no sidecar at all now).
  */
 
 import { useState, type ChangeEvent } from 'react';
 
-import { useCockpitClient } from './context';
+import { useLoggedCommand } from './useLoggedCommand';
 
 const MIN = 0.1;
 const MAX = 0.9;
@@ -25,12 +29,12 @@ export interface DepthSliderProps {
 export function DepthSlider({ initial = DEFAULT_DEPTH }: DepthSliderProps): JSX.Element {
   const [depth, setDepth] = useState<number>(initial);
   const [active, setActive] = useState<boolean>(false);
-  const client = useCockpitClient();
+  const sendCommand = useLoggedCommand();
 
   const handleChange = (ev: ChangeEvent<HTMLInputElement>): void => {
     const next = Number.parseFloat(ev.target.value);
     setDepth(next);
-    void client.send({ type: 'set_depth', depth: next });
+    sendCommand({ type: 'set_depth', depth: next });
   };
 
   return (
