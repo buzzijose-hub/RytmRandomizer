@@ -6,7 +6,7 @@ from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
 from types import MappingProxyType
-from typing import cast
+from typing import Never, cast
 
 import pytest
 from pytest import MonkeyPatch
@@ -14,6 +14,7 @@ from pytest import MonkeyPatch
 from conftest import ANALOG_RYTM_SAVED_KIT_TEST_HEADER
 from rytm_randomizer.cockpit.export import al16_rytm_kit as exporter
 from rytm_randomizer.cockpit.export.al16_rytm_kit import (
+    Al16BuildError,
     Al16BuildResult,
     Al16BuildStatus,
     build_al16_rytm_kit,
@@ -67,7 +68,7 @@ _BANK_SPEC = _REPO_ROOT / "specs" / "al16" / "AL16_BANK.yaml"
 _AL02_RECIPE = _REPO_ROOT / "specs" / "al16" / "AL02_LOCK_RYTM.yaml"
 _COMMITTED_EVIDENCE_HASHES = {
     "output/al16/AL02_LOCK_RYTM_manifest.json": (
-        "1d3d99013a9f8d719d3e8b4a6b9f4f15ea0a365ef1c5095b862c7c9f8a6dda2e"
+        "fcae007d626e4d9969e58112fd9ff290872f30092ec923412a5fa10d6b569fb4"
     ),
     "output/al16/AL02_LOCK_RYTM_validation.md": (
         "bcf04d1a77c412d93efa1ec558a817df6656ea000d0fb8b337efc992eabbe6e5"
@@ -160,13 +161,14 @@ def test_committed_al02_evidence_is_bound_to_current_inputs_and_generator() -> N
     assert manifest["generator_module_sha256"] == exporter._normalized_text_sha256(
         _REPO_ROOT / exporter.AL16_GENERATOR_MODULE
     )
+    assert manifest["generator_dependency_sha256"] == exporter._generator_dependency_hashes()
     assert manifest["recipe_file"] == "specs/al16/AL02_LOCK_RYTM.yaml"
     assert manifest["recipe_sha256"] == hashlib.sha256(_AL02_RECIPE.read_bytes()).hexdigest()
-    assert manifest["reference_file"] == "reference/RYTM_Test1_Init_Kit.syx"
+    assert manifest["reference_file"] == ("output/local/reference/RYTM_Test1_Init_Kit.syx")
     assert manifest["reference_sha256"] == exporter._REFERENCE_EXPECTED_SHA256
 
 
-def test_al16_build_result_rejects_inconsistent_hash_states(tmp_path: Path) -> None:
+def test_al16_build_result_rejects_output_hash_for_blocked_contract(tmp_path: Path) -> None:
     common = {
         "output_path": tmp_path / "AL02_LOCK_RYTM.syx",
         "manifest_path": tmp_path / "AL02_LOCK_RYTM_manifest.json",
@@ -176,10 +178,12 @@ def test_al16_build_result_rejects_inconsistent_hash_states(tmp_path: Path) -> N
         "gaps": (),
     }
 
-    with pytest.raises(ValueError, match="built AL16 result requires"):
-        Al16BuildResult(status="built", output_sha256=None, **common)
     with pytest.raises(ValueError, match="blocked AL16 result cannot"):
-        Al16BuildResult(status="blocked", output_sha256="output-sha", **common)
+        Al16BuildResult(
+            status="blocked",
+            output_sha256=cast(None, "output-sha"),
+            **common,
+        )
 
 
 def test_al16_build_result_rejects_unknown_runtime_status(tmp_path: Path) -> None:
@@ -276,6 +280,7 @@ def test_al02_build_fails_closed_and_writes_precise_reports(
     assert manifest["generator_module_sha256"] == exporter._normalized_text_sha256(
         _REPO_ROOT / exporter.AL16_GENERATOR_MODULE
     )
+    assert manifest["generator_dependency_sha256"] == exporter._generator_dependency_hashes()
     assert manifest["recipe_file"] == "specs/al16/AL02_LOCK_RYTM.yaml"
     assert manifest["recipe_sha256"] == hashlib.sha256(_AL02_RECIPE.read_bytes()).hexdigest()
     assert manifest["destination_slot"] == 127
@@ -435,8 +440,17 @@ def test_local_file_export_error_codes_are_stable(
     [
         (KeyboardInterrupt(), "validation", "build_interrupted"),
         (FileNotFoundError(), "source_read", "source_input_unavailable"),
-        (ValueError("destination slot is invalid"), "validation", "destination_slot_invalid"),
-        (ValueError("SysEx frame is invalid"), "validation", "reference_sysex_invalid"),
+        (
+            Al16BuildError("destination_slot_invalid", "invalid"),
+            "validation",
+            "destination_slot_invalid",
+        ),
+        (
+            Al16BuildError("reference_sysex_invalid", "invalid"),
+            "validation",
+            "reference_sysex_invalid",
+        ),
+        (ValueError("destination slot is invalid"), "validation", "build_validation_failed"),
     ],
 )
 def test_al16_failure_reasons_cover_bounded_operator_categories(
@@ -531,6 +545,38 @@ def test_local_file_export_rejects_unsafe_fallback_artifact_name() -> None:
         exporter.safe_local_file_export_artifact_name(Path("."), fallback="..")
 
 
+def test_local_file_export_artifact_name_uses_shared_middle_truncation() -> None:
+    bounded = exporter.safe_local_file_export_artifact_name(
+        Path("abcdefghijklmnopqrstuvwxyz.json"),
+        fallback="output.json",
+        max_length=20,
+    )
+
+    assert bounded == "abcdefgh...wxyz.json"
+    assert len(bounded) == 20
+
+
+@pytest.mark.parametrize("max_length", [True, 6, 256])
+def test_local_file_export_rejects_invalid_artifact_name_bounds(
+    max_length: object,
+) -> None:
+    with pytest.raises(ValueError, match="length bound"):
+        exporter.safe_local_file_export_artifact_name(
+            Path("artifact.json"),
+            fallback="output.json",
+            max_length=cast(int, max_length),
+        )
+
+
+def test_local_file_export_rejects_fallback_longer_than_requested_bound() -> None:
+    with pytest.raises(ValueError, match="fallback artifact name is not safe"):
+        exporter.safe_local_file_export_artifact_name(
+            Path("."),
+            fallback="fallback.json",
+            max_length=10,
+        )
+
+
 def test_al16_artifact_set_delegates_utf8_payloads_to_shared_writer(
     tmp_path: Path,
     monkeypatch: MonkeyPatch,
@@ -609,6 +655,8 @@ def test_al16_write_set_failure_reports_the_actual_failed_artifact(
     assert context.artifact_name == "AL02_LOCK_RYTM_validation.md"
     assert logged[0]["artifact_name"] == "AL02_LOCK_RYTM_validation.md"
     assert logged[0]["failure_reason"] == "artifact_publication_failed"
+    assert logged[0]["transaction_phase"] == "publication"
+    assert logged[0]["fingerprint"] == WriteSetError.fingerprint
 
 
 @pytest.mark.parametrize(
@@ -994,7 +1042,10 @@ def test_al16_build_rejects_unsafe_output_names_with_bounded_context(
     assert context is not None
     assert context.error_code == "validation"
     assert context.phase == "validation"
-    assert context.artifact_name == "output.syx"
+    assert context.artifact_name == exporter.safe_local_file_export_artifact_name(
+        unsafe_output,
+        fallback="output.syx",
+    )
 
 
 def test_al16_build_refuses_round_trip_drift_and_stale_output(
@@ -1142,3 +1193,128 @@ def test_al16_build_rejects_an_unexpected_initialized_reference(tmp_path: Path) 
 
     assert not output_path.exists()
     assert not output_path.with_name("AL02_LOCK_RYTM_manifest.json").exists()
+
+
+def test_al16_build_classifies_invalid_reference_sysex_with_typed_error(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    reference_path = tmp_path / "reference.syx"
+    reference = _synthetic_reference(reference_path)
+    output_path = tmp_path / "AL02_LOCK_RYTM.syx"
+
+    class InvalidCodec:
+        def decode_saved_kit_frame(self, _frame: bytes) -> Never:
+            raise ValueError("invalid saved-KIT envelope")
+
+    monkeypatch.setattr(
+        exporter,
+        "_REFERENCE_EXPECTED_SHA256",
+        hashlib.sha256(reference).hexdigest(),
+    )
+    monkeypatch.setattr(
+        exporter,
+        "get_analog_rytm_saved_kit_codec_capability",
+        InvalidCodec,
+    )
+
+    with pytest.raises(Al16BuildError) as exc_info:
+        build_al16_rytm_kit(
+            reference_path=reference_path,
+            recipe_path=_AL02_RECIPE,
+            destination_slot=127,
+            output_path=output_path,
+        )
+
+    assert exc_info.value.reason == "reference_sysex_invalid"
+    assert isinstance(exc_info.value.__cause__, ValueError)
+
+
+def test_al16_build_classifies_recipe_load_failure_with_typed_error(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    reference_path = tmp_path / "reference.syx"
+    reference = _synthetic_reference(reference_path)
+    output_path = tmp_path / "AL02_LOCK_RYTM.syx"
+
+    def fail_recipe_load(_recipe_bytes: bytes) -> Never:
+        raise KeyError("missing recipe root")
+
+    monkeypatch.setattr(
+        exporter,
+        "_REFERENCE_EXPECTED_SHA256",
+        hashlib.sha256(reference).hexdigest(),
+    )
+    monkeypatch.setattr(exporter, "_load_recipe_bytes", fail_recipe_load)
+
+    with pytest.raises(Al16BuildError) as exc_info:
+        build_al16_rytm_kit(
+            reference_path=reference_path,
+            recipe_path=_AL02_RECIPE,
+            destination_slot=127,
+            output_path=output_path,
+        )
+
+    assert exc_info.value.reason == "recipe_schema_invalid"
+    assert isinstance(exc_info.value.__cause__, KeyError)
+
+
+def test_al16_build_classifies_unexpected_recipe_inspection_failure(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    reference_path = tmp_path / "reference.syx"
+    reference = _synthetic_reference(reference_path)
+    output_path = tmp_path / "AL02_LOCK_RYTM.syx"
+
+    def fail_inspection(*_args: object) -> Never:
+        raise TypeError("unexpected recipe shape")
+
+    monkeypatch.setattr(
+        exporter,
+        "_REFERENCE_EXPECTED_SHA256",
+        hashlib.sha256(reference).hexdigest(),
+    )
+    monkeypatch.setattr(exporter, "_inspect_recipe", fail_inspection)
+
+    with pytest.raises(Al16BuildError) as exc_info:
+        build_al16_rytm_kit(
+            reference_path=reference_path,
+            recipe_path=_AL02_RECIPE,
+            destination_slot=127,
+            output_path=output_path,
+        )
+
+    assert exc_info.value.reason == "recipe_schema_invalid"
+    assert isinstance(exc_info.value.__cause__, TypeError)
+
+
+def test_al16_build_preserves_typed_recipe_inspection_error(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    reference_path = tmp_path / "reference.syx"
+    reference = _synthetic_reference(reference_path)
+    output_path = tmp_path / "AL02_LOCK_RYTM.syx"
+    expected = Al16BuildError("destination_slot_invalid", "typed validation failure")
+
+    def fail_inspection(*_args: object) -> Never:
+        raise expected
+
+    monkeypatch.setattr(
+        exporter,
+        "_REFERENCE_EXPECTED_SHA256",
+        hashlib.sha256(reference).hexdigest(),
+    )
+    monkeypatch.setattr(exporter, "_inspect_recipe", fail_inspection)
+
+    with pytest.raises(Al16BuildError) as exc_info:
+        build_al16_rytm_kit(
+            reference_path=reference_path,
+            recipe_path=_AL02_RECIPE,
+            destination_slot=127,
+            output_path=output_path,
+        )
+
+    assert exc_info.value is expected

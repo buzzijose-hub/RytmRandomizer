@@ -322,6 +322,9 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         "DataError",
         "BoundaryError",
         "ConfigError",
+        # AL16 offline exporter: one typed BoundaryError carrying a bounded
+        # failure reason instead of classifying human-readable prose.
+        "Al16BuildError",
         # Re-homed legacy classes (still raisable by their original name):
         "RealMidiDependencyError",
         "RealMidiPortError",

@@ -15,6 +15,7 @@ from .al16_rytm_kit import (
 )
 from .cli_options import pop_required_cli_value
 from .file_export_contracts import (
+    LocalFileExportErrorCode,
     local_file_export_error_context,
     safe_local_file_export_artifact_name,
 )
@@ -26,17 +27,13 @@ USAGE: Final[str] = (
     "--output <kit.syx>"
 )
 
-Al16RytmCliErrorCode: TypeAlias = Literal[
-    "input_not_found",
-    "interrupted",
-    "invalid_input",
-    "offline_build_failed",
-    "overwrite_refused",
-    "permission_denied",
-    "source_read_failed",
-    "validation",
-    "write_failed",
-]
+Al16RytmCliErrorCode: TypeAlias = (
+    LocalFileExportErrorCode
+    | Literal[
+        "invalid_input",
+        "offline_build_failed",
+    ]
+)
 
 
 class Al16RytmKitExportArgs(TypedDict):
@@ -103,12 +100,11 @@ def _parse_al16_rytm_args_for_registry(args: Sequence[str]) -> dict[str, object]
 
 
 def _format_al16_rytm_result(result: Al16BuildResult) -> str:
-    output_emitted = result.output_sha256 is not None
     lines = [
         f"build_status: {result.status}",
         f"output_path: {result.output_path}",
-        f"output_emitted: {str(output_emitted).lower()}",
-        f"output_sha256: {result.output_sha256 or 'none'}",
+        "output_emitted: false",
+        "output_sha256: none",
         f"reference_sha256: {result.reference_sha256}",
         f"manifest: {result.manifest_path}",
         f"validation: {result.validation_path}",
@@ -171,7 +167,7 @@ def handle_al16_rytm_kit_export(
         return 2
 
     sys.stdout.write(_format_al16_rytm_result(result))
-    return 0 if result.status == "built" else 2
+    return 2
 
 
 def _format_al16_rytm_cli_error(exc: Exception) -> str:

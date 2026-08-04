@@ -60,6 +60,33 @@ def test_default_export_subdir_constant() -> None:
     assert DEFAULT_EXPORT_SUBDIR == "exports"
 
 
+def test_bounded_artifact_name_delegates_to_shared_contract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    def capture_name(path: Path, *, fallback: str, max_length: int) -> str:
+        captured.update(
+            path=path,
+            fallback=fallback,
+            max_length=max_length,
+        )
+        return "bounded-artifact"
+
+    monkeypatch.setattr(
+        writer_module,
+        "safe_local_file_export_artifact_name",
+        capture_name,
+    )
+
+    assert writer_module._bounded_artifact_name(Path("artifact.json")) == ("bounded-artifact")
+    assert captured == {
+        "path": Path("artifact.json"),
+        "fallback": "unnamed-artifact",
+        "max_length": 120,
+    }
+
+
 # ---------------------------------------------------------------------------
 # WriteResult dataclass shape
 # ---------------------------------------------------------------------------
@@ -543,6 +570,95 @@ def test_atomic_write_set_rejects_non_byte_payloads_before_staging(tmp_path: Pat
     assert list(tmp_path.iterdir()) == []
 
 
+def test_atomic_write_set_rejects_empty_artifact_mapping() -> None:
+    with pytest.raises(ValueError, match="at least one artifact"):
+        atomic_write_set({})
+
+
+def test_atomic_write_set_rejects_destination_without_filename() -> None:
+    drive_root = Path(Path.cwd().anchor)
+
+    with pytest.raises(ValueError, match="must name files"):
+        atomic_write_set({drive_root: b"payload"})
+
+
+def test_atomic_write_set_rejects_duplicate_canonical_destinations() -> None:
+    relative = Path("duplicate-artifact.json")
+    absolute = relative.absolute()
+
+    with pytest.raises(ValueError, match="must be unique"):
+        atomic_write_set({relative: b"first", absolute: b"second"})
+
+
+def test_atomic_write_set_rejects_destinations_with_different_parents(
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(ValueError, match="share one parent"):
+        atomic_write_set(
+            {
+                tmp_path / "first" / "artifact.json": b"first",
+                tmp_path / "second" / "artifact.json": b"second",
+            }
+        )
+
+
+def test_atomic_write_set_wraps_parent_creation_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    destination = tmp_path / "blocked" / "artifact.json"
+    real_mkdir = Path.mkdir
+
+    def fail_target_mkdir(
+        path: Path,
+        *args: object,
+        **kwargs: object,
+    ) -> None:
+        if path == destination.parent:
+            raise PermissionError("parent creation denied")
+        real_mkdir(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "mkdir", fail_target_mkdir)
+
+    with pytest.raises(WriteSetError) as exc_info:
+        atomic_write_set({destination: b"payload"})
+
+    assert exc_info.value.failure_context.phase == "staging"
+    assert exc_info.value.failure_context.artifact_name == "artifact.json"
+    assert isinstance(exc_info.value.__cause__, PermissionError)
+
+
+def test_atomic_write_set_refuses_existing_destination_without_overwrite(
+    tmp_path: Path,
+) -> None:
+    destination = tmp_path / "artifact.json"
+    destination.write_bytes(b"existing")
+
+    with pytest.raises(FileExistsError, match="artifact.json"):
+        atomic_write_set({destination: b"replacement"})
+
+    assert destination.read_bytes() == b"existing"
+
+
+def test_atomic_write_set_wraps_transaction_directory_creation_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    destination = tmp_path / "artifact.json"
+
+    def fail_mkdtemp(*_args: object, **_kwargs: object) -> str:
+        raise PermissionError("transaction directory denied")
+
+    monkeypatch.setattr(writer_module.tempfile, "mkdtemp", fail_mkdtemp)
+
+    with pytest.raises(WriteSetError) as exc_info:
+        atomic_write_set({destination: b"payload"})
+
+    assert exc_info.value.failure_context.phase == "staging"
+    assert exc_info.value.failure_context.artifact_name == "artifact.json"
+    assert isinstance(exc_info.value.__cause__, PermissionError)
+
+
 def test_atomic_write_set_staging_failure_names_actual_artifact(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -745,6 +861,88 @@ def test_atomic_write_set_rollback_failure_preserves_original_error_and_backup(
     assert (recovery_dir / "0000.backup").read_bytes() == b"old-first"
     assert first.read_bytes() == b"new-first"
     assert second.read_bytes() == b"old-second"
+
+
+def test_atomic_write_set_records_new_file_removal_rollback_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    destination = tmp_path / "new-artifact.json"
+
+    def fail_unlink(_path: str | Path) -> None:
+        raise PermissionError("rollback removal denied")
+
+    monkeypatch.setattr(os, "unlink", fail_unlink)
+
+    failures = writer_module._rollback_write_set(
+        ((destination, b"payload"),),
+        backups={},
+        published={destination},
+    )
+
+    assert failures == (
+        writer_module.WriteSetRollbackFailure(
+            artifact_name="new-artifact.json",
+            operation="remove_new_file",
+            error_type="PermissionError",
+        ),
+    )
+
+
+def test_atomic_write_set_cleanup_ignores_missing_transaction_directory(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def raise_missing(_path: Path) -> None:
+        raise FileNotFoundError("already removed")
+
+    monkeypatch.setattr(writer_module.shutil, "rmtree", raise_missing)
+
+    writer_module._cleanup_write_set_directory(
+        tmp_path / ".write-set-missing",
+        active_exception=None,
+    )
+
+
+@pytest.mark.parametrize("with_active_exception", [False, True])
+def test_atomic_write_set_cleanup_failure_is_observable_without_masking_outcome(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    with_active_exception: bool,
+) -> None:
+    recorded_errors: list[str] = []
+    warnings: list[tuple[str, dict[str, object]]] = []
+
+    class FakeMetrics:
+        def record_error(self, kind: str) -> None:
+            recorded_errors.append(kind)
+
+        def format_summary(self) -> dict[str, int]:
+            return {"recorded_errors": len(recorded_errors)}
+
+    def fail_cleanup(_path: Path) -> None:
+        raise PermissionError("cleanup denied")
+
+    def capture_warning(message: str, *, extra: dict[str, object]) -> None:
+        warnings.append((message, extra))
+
+    active_exception = RuntimeError("active failure") if with_active_exception else None
+    monkeypatch.setattr(writer_module.shutil, "rmtree", fail_cleanup)
+    monkeypatch.setattr(writer_module, "get_metrics", FakeMetrics)
+    monkeypatch.setattr(writer_module._logger, "warning", capture_warning)
+
+    writer_module._cleanup_write_set_directory(
+        tmp_path / ".write-set-residue",
+        active_exception=active_exception,
+    )
+
+    assert recorded_errors == ["atomic_write_set_cleanup"]
+    assert warnings[0][0] == "Atomic write-set cleanup failed"
+    assert warnings[0][1]["error_code"] == "transaction_cleanup_failed"
+    assert warnings[0][1]["transaction_name"] == ".write-set-residue"
+    if active_exception is None:
+        return
+    assert any("transaction residue may remain" in note for note in active_exception.__notes__)
 
 
 # ---------------------------------------------------------------------------

@@ -39,7 +39,7 @@ class RytmWritableField:
     converter: RytmValueConverter
 
 
-AL16_BANK_STATES: Final = (
+AL16_BANK_STATES: Final[tuple[Al16BankState, ...]] = (
     Al16BankState(1, "AIRLOCK", "F Phrygian"),
     Al16BankState(2, "LOCK", "F Phrygian"),
     Al16BankState(3, "ROTATION", "F Phrygian"),
@@ -102,7 +102,7 @@ AL16_RYTM_FILTER_TYPES: Final[Mapping[str, int]] = MappingProxyType(
 # Intentionally empty until a machine-specific hardware calibration is approved.
 AL16_RYTM_APPROVED_TUNING: Final[Mapping[tuple[str, str], int]] = MappingProxyType({})
 
-AL16_PRESERVED_GLOBAL_SECTIONS: Final = (
+AL16_PRESERVED_GLOBAL_SECTIONS: Final[tuple[str, ...]] = (
     "scenes",
     "performance_macros",
     "master_delay",

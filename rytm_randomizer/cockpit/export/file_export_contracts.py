@@ -52,11 +52,10 @@ class LocalFileExportErrorContext:
     artifact_name: str
 
 
-def _is_safe_artifact_name(value: object) -> bool:
+def _has_safe_artifact_name_syntax(value: object) -> bool:
     return (
         isinstance(value, str)
         and value not in {"", ".", ".."}
-        and len(value) <= MAX_LOCAL_FILE_EXPORT_ARTIFACT_NAME_LENGTH
         and "/" not in value
         and "\\" not in value
         and ":" not in value
@@ -65,12 +64,36 @@ def _is_safe_artifact_name(value: object) -> bool:
     )
 
 
-def safe_local_file_export_artifact_name(path: Path, *, fallback: str) -> str:
+def _is_safe_artifact_name(value: object) -> bool:
+    return (
+        _has_safe_artifact_name_syntax(value)
+        and isinstance(value, str)
+        and len(value) <= MAX_LOCAL_FILE_EXPORT_ARTIFACT_NAME_LENGTH
+    )
+
+
+def safe_local_file_export_artifact_name(
+    path: Path,
+    *,
+    fallback: str,
+    max_length: int = MAX_LOCAL_FILE_EXPORT_ARTIFACT_NAME_LENGTH,
+) -> str:
     """Return one bounded filename for logs and attached failure context."""
 
-    if not _is_safe_artifact_name(fallback):
+    if (
+        isinstance(max_length, bool)
+        or max_length < 7
+        or max_length > MAX_LOCAL_FILE_EXPORT_ARTIFACT_NAME_LENGTH
+    ):
+        raise ValueError("local file export artifact length bound is invalid")
+    if not _has_safe_artifact_name_syntax(fallback) or len(fallback) > max_length:
         raise ValueError("local file export fallback artifact name is not safe")
-    return path.name if _is_safe_artifact_name(path.name) else fallback
+    candidate = path.name if _has_safe_artifact_name_syntax(path.name) else fallback
+    if len(candidate) <= max_length:
+        return candidate
+    prefix_length = (max_length - 3) // 2
+    suffix_length = max_length - 3 - prefix_length
+    return f"{candidate[:prefix_length]}...{candidate[-suffix_length:]}"
 
 
 def validate_local_file_export_artifact_path(path: Path, *, label: str) -> None:

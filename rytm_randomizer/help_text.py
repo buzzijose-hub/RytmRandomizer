@@ -2593,7 +2593,7 @@ Usage:
   python -m rytm_randomizer.cli al16-rytm-kit-export --help
 
 Arguments:
-  --reference <kit.syx>       Exact reference/RYTM_Test1_Init_Kit.syx input
+  --reference <kit.syx>       Exact output/local/reference/RYTM_Test1_Init_Kit.syx input
   --recipe <recipe.yaml>      JSON-compatible YAML AL16 musical recipe
   --destination-slot <0..127> Explicit destination kit slot for the build
   --output <kit.syx>          Naming path/stem for Phase R1 evidence artifacts

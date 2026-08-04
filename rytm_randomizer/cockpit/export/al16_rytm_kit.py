@@ -41,6 +41,7 @@ from ...data.rytm_machine_catalog import (
     is_machine_allowed_on_pad,
 )
 from ...devices.analog_rytm import get_analog_rytm_saved_kit_codec_capability
+from ...observability.errors import Al16BuildError, Al16FailureReason
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
 from ...observability.tracing import operation
@@ -63,26 +64,26 @@ _DEFAULT_BUILD_EPOCH: Final[int] = 0
 _PHASE_R1_STATE_NUMBER: Final[int] = 2
 _AL16_EXPORT_FAILURE_FINGERPRINT: Final[str] = "al16.rytm_kit_export.failed"
 _AL16_MAPPING_BLOCKED_ERROR_CODE: Final[str] = "mapping_blocked"
-AL16_GENERATOR_CONTRACT: Final[str] = "al16_rytm_blocked_evidence_v2"
+AL16_GENERATOR_CONTRACT: Final[str] = "al16_rytm_blocked_evidence_v3"
 AL16_GENERATOR_MODULE: Final[str] = "rytm_randomizer/cockpit/export/al16_rytm_kit.py"
+AL16_GENERATOR_DEPENDENCIES: Final[tuple[str, ...]] = (
+    AL16_GENERATOR_MODULE,
+    "rytm_randomizer/cockpit/export/file_export_contracts.py",
+    "rytm_randomizer/cockpit/export/writer.py",
+    "rytm_randomizer/data/al16_rytm.py",
+    "rytm_randomizer/data/analog_rytm_kit_layout.py",
+    "rytm_randomizer/data/rytm_machine_catalog.py",
+    "rytm_randomizer/devices/analog_rytm.py",
+    "rytm_randomizer/devices/strategies/analog_rytm_saved_kit_codec.py",
+    "rytm_randomizer/observability/errors.py",
+    "rytm_randomizer/snapshot/elektron_packed_payload.py",
+    "rytm_randomizer/snapshot/elektron_u14.py",
+    "rytm_randomizer/snapshot/envelope.py",
+)
 
-Al16BuildStatus: TypeAlias = Literal["blocked", "built"]
+Al16BuildStatus: TypeAlias = Literal["blocked"]
 Al16AuditScalar: TypeAlias = str | int | bool | None
 Al16AuditValue: TypeAlias = Al16AuditScalar | tuple[int, ...]
-Al16FailureReason: TypeAlias = Literal[
-    "artifact_path_collision",
-    "artifact_publication_failed",
-    "build_interrupted",
-    "build_validation_failed",
-    "destination_slot_invalid",
-    "recipe_schema_invalid",
-    "reference_hash_mismatch",
-    "reference_round_trip_mismatch",
-    "reference_sysex_invalid",
-    "source_input_unavailable",
-    "source_read_failed",
-    "stale_output_present",
-]
 FieldVerificationStatus: TypeAlias = Literal[
     "critical_mapping_gap",
     "invalid_machine_for_pad",
@@ -130,15 +131,13 @@ class Al16BuildResult:
     validation_path: Path
     byte_diff_path: Path
     reference_sha256: str
-    output_sha256: str | None
+    output_sha256: None
     gaps: tuple[MappingGap, ...]
 
     def __post_init__(self) -> None:
-        if self.status not in ("blocked", "built"):
+        if self.status != "blocked":
             raise ValueError(f"unsupported AL16 build status: {self.status}")
-        if self.status == "built" and self.output_sha256 is None:
-            raise ValueError("a built AL16 result requires an output SHA-256")
-        if self.status == "blocked" and self.output_sha256 is not None:
+        if self.output_sha256 is not None:
             raise ValueError("a blocked AL16 result cannot carry an output SHA-256")
 
 
@@ -232,7 +231,7 @@ def _portable_reference_path(reference: Path) -> str:
         reference,
         fallback="reference.syx",
     )
-    return f"reference/{artifact_name}"
+    return f"output/local/reference/{artifact_name}"
 
 
 def _portable_recipe_path(recipe: Path) -> str:
@@ -246,6 +245,14 @@ def _portable_recipe_path(recipe: Path) -> str:
 def _normalized_text_sha256(path: Path) -> str:
     normalized = path.read_text(encoding="utf-8").replace("\r\n", "\n")
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
+def _generator_dependency_hashes() -> dict[str, str]:
+    repository_root = Path(__file__).resolve().parents[3]
+    return {
+        relative_path: _normalized_text_sha256(repository_root / relative_path)
+        for relative_path in AL16_GENERATOR_DEPENDENCIES
+    }
 
 
 def _freeze_audit_value(value: object) -> Al16AuditValue:
@@ -270,6 +277,8 @@ def classify_al16_failure_reason(
 ) -> Al16FailureReason:
     """Return a bounded, path-free reason for one AL16 export failure."""
 
+    if isinstance(exc, Al16BuildError):
+        return exc.reason
     if isinstance(exc, (KeyboardInterrupt, SystemExit)):
         return "build_interrupted"
     if isinstance(exc, FileExistsError):
@@ -281,32 +290,6 @@ def classify_al16_failure_reason(
     if phase == "source_read" and isinstance(exc, OSError):
         return "source_read_failed"
 
-    message = str(exc).lower()
-    if "artifact path collides" in message:
-        return "artifact_path_collision"
-    if "destination slot" in message:
-        return "destination_slot_invalid"
-    if "reference sha-256 mismatch" in message:
-        return "reference_hash_mismatch"
-    if "decode/encode is not byte-identical" in message:
-        return "reference_round_trip_mismatch"
-    if any(
-        marker in message
-        for marker in ("sysex", "checksum", "encoded length", "payload size", "frame")
-    ):
-        return "reference_sysex_invalid"
-    if any(
-        marker in message
-        for marker in (
-            "recipe",
-            "schema_version",
-            "project_id",
-            "kit.",
-            "preserve",
-            "tracks.",
-        )
-    ):
-        return "recipe_schema_invalid"
     return "build_validation_failed"
 
 
@@ -353,13 +336,15 @@ def _validate_artifact_paths(
         artifact_key = _canonical_path_key(artifact_path)
         for input_label, input_key in input_keys.items():
             if artifact_key == input_key:
-                raise ValueError(
-                    f"{artifact_label} artifact path collides with {input_label} input"
+                raise Al16BuildError(
+                    "artifact_path_collision",
+                    f"{artifact_label} artifact path collides with {input_label} input",
                 )
         for other_label, other_key in artifact_keys.items():
             if artifact_key == other_key:
-                raise ValueError(
-                    f"{artifact_label} artifact path collides with {other_label} artifact"
+                raise Al16BuildError(
+                    "artifact_path_collision",
+                    f"{artifact_label} artifact path collides with {other_label} artifact",
                 )
         artifact_keys[artifact_label] = artifact_key
 
@@ -643,7 +628,10 @@ def _inspect_recipe(
     destination_slot: int,
 ) -> tuple[list[FieldAudit], list[MappingGap], list[int]]:
     if not 0 <= destination_slot <= 127:
-        raise ValueError("destination slot must be in 0..127")
+        raise Al16BuildError(
+            "destination_slot_invalid",
+            "destination slot must be in 0..127",
+        )
     _require_exact_keys(
         recipe,
         "recipe",
@@ -905,28 +893,55 @@ def build_al16_rytm_kit(
             reference_bytes = reference_path.read_bytes()
             reference_sha256 = hashlib.sha256(reference_bytes).hexdigest()
             if reference_sha256 != _REFERENCE_EXPECTED_SHA256:
-                raise ValueError(
+                raise Al16BuildError(
+                    "reference_hash_mismatch",
                     "initialized Analog Rytm reference SHA-256 mismatch: "
-                    f"expected {_REFERENCE_EXPECTED_SHA256}, got {reference_sha256}"
+                    f"expected {_REFERENCE_EXPECTED_SHA256}, got {reference_sha256}",
                 )
             codec = get_analog_rytm_saved_kit_codec_capability()
-            decoded = codec.decode_saved_kit_frame(reference_bytes)
-            if codec.encode_saved_kit_frame(decoded.header, decoded.unpacked) != reference_bytes:
-                raise ValueError("Analog Rytm reference decode/encode is not byte-identical")
+            try:
+                decoded = codec.decode_saved_kit_frame(reference_bytes)
+                encoded_reference = codec.encode_saved_kit_frame(
+                    decoded.header,
+                    decoded.unpacked,
+                )
+            except (KeyError, ValueError, TypeError) as exc:
+                raise Al16BuildError(
+                    "reference_sysex_invalid",
+                    "initialized Analog Rytm reference SysEx is invalid",
+                ) from exc
+            if encoded_reference != reference_bytes:
+                raise Al16BuildError(
+                    "reference_round_trip_mismatch",
+                    "Analog Rytm reference decode/encode is not byte-identical",
+                )
 
             export_phase = "source_read"
             failure_artifact_name = recipe_name
             recipe_bytes = recipe_path.read_bytes()
-            recipe = _load_recipe_bytes(recipe_bytes)
+            try:
+                recipe = _load_recipe_bytes(recipe_bytes)
+            except (KeyError, ValueError, TypeError) as exc:
+                raise Al16BuildError(
+                    "recipe_schema_invalid",
+                    "AL16 recipe schema is invalid",
+                ) from exc
             recipe_sha256 = hashlib.sha256(recipe_bytes).hexdigest()
             export_phase = "validation"
-            audits, gaps, preserved_tracks = _inspect_recipe(
-                recipe,
-                decoded.unpacked,
-                destination_slot,
-            )
-
-            kit = _as_mapping(recipe.get("kit"), "kit")
+            try:
+                audits, gaps, preserved_tracks = _inspect_recipe(
+                    recipe,
+                    decoded.unpacked,
+                    destination_slot,
+                )
+                kit = _as_mapping(recipe.get("kit"), "kit")
+            except Al16BuildError:
+                raise
+            except (KeyError, ValueError, TypeError) as exc:
+                raise Al16BuildError(
+                    "recipe_schema_invalid",
+                    "AL16 recipe schema is invalid",
+                ) from exc
             manifest: dict[str, object] = {
                 "schema_version": 1,
                 "project_id": "AL16",
@@ -935,6 +950,7 @@ def build_al16_rytm_kit(
                 "generator_contract": AL16_GENERATOR_CONTRACT,
                 "generator_module": AL16_GENERATOR_MODULE,
                 "generator_module_sha256": _normalized_text_sha256(Path(__file__)),
+                "generator_dependency_sha256": _generator_dependency_hashes(),
                 "deterministic_recipe_identifier": deterministic_recipe_identifier(recipe),
                 "recipe_file": _portable_recipe_path(recipe_path),
                 "recipe_sha256": recipe_sha256,
@@ -994,8 +1010,12 @@ def build_al16_rytm_kit(
                 gaps=tuple(gaps),
             )
     except (KeyError, ValueError, TypeError, OSError, KeyboardInterrupt, SystemExit) as exc:
+        transaction_phase: str | None = None
+        failure_fingerprint = _AL16_EXPORT_FAILURE_FINGERPRINT
         if isinstance(exc, WriteSetError):
             failure_artifact_name = exc.failure_context.artifact_name
+            transaction_phase = exc.failure_context.phase
+            failure_fingerprint = exc.fingerprint
         error_context = local_file_export_error_context(exc)
         if error_context is None:
             error_code = classify_local_file_export_error(exc, phase=export_phase)
@@ -1022,8 +1042,9 @@ def build_al16_rytm_kit(
                     exc,
                     phase=error_context.phase,
                 ),
+                "transaction_phase": transaction_phase,
                 "artifact_name": error_context.artifact_name,
-                "fingerprint": _AL16_EXPORT_FAILURE_FINGERPRINT,
+                "fingerprint": failure_fingerprint,
                 "reference_name": reference_name,
                 "recipe_name": recipe_name,
                 "output_name": output_name,
@@ -1054,11 +1075,13 @@ def build_al16_rytm_kit(
 
 __all__ = [
     "AL16_GENERATOR_CONTRACT",
+    "AL16_GENERATOR_DEPENDENCIES",
     "AL16_GENERATOR_MODULE",
     "Al16AuditScalar",
     "Al16AuditValue",
     "Al16BuildStatus",
     "Al16BuildResult",
+    "Al16BuildError",
     "Al16FailureReason",
     "FieldAudit",
     "FieldVerificationStatus",

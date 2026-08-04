@@ -26,7 +26,7 @@ Current baseline used while creating / refreshing this document:
 |---|---|
 | Package entry points | `rytm_randomizer/app.py`, `rytm_randomizer/cli.py`, `rytm_randomizer/shell.py`, `rytm_randomizer/__init__.py` |
 | Passive metadata | `rytm_randomizer/constants.py`, `rytm_randomizer/commands.py`, `rytm_randomizer/scenes.py`, `rytm_randomizer/profiles.py` |
-| Data layer (single source of truth) | `rytm_randomizer/data/{param_maps,plans,profiles,scenes,scene_display,modes,analog_four_display,analog_four_saved_kit_layout,analog_four_sysex_calibration,analog_four_patch_templates,analog_four_patch_corpus,analog_four_render_rank,analog_four_learning,analog_four_midi,analog_four_audio_inference,midi_event_kinds,rytm_machine_catalog,style_discovery,style_profiles,style_targets,manual_feedback_packet,controller_mapping_profiles,controller_rehearsal_scenarios}.py` |
+| Data layer (single source of truth) | `rytm_randomizer/data/{param_maps,plans,profiles,scenes,scene_display,modes,al16_rytm,analog_four_display,analog_four_saved_kit_layout,analog_four_sysex_calibration,analog_four_patch_templates,analog_four_patch_corpus,analog_four_render_rank,analog_four_learning,analog_four_midi,analog_four_audio_inference,midi_event_kinds,rytm_machine_catalog,style_discovery,style_profiles,style_targets,manual_feedback_packet,controller_mapping_profiles,controller_rehearsal_scenarios}.py` |
 | Registry, lookup, inspection | `rytm_randomizer/registry.py`, `rytm_randomizer/profile_lookup.py`, `rytm_randomizer/inspection.py`, `rytm_randomizer/validation.py`, `rytm_randomizer/cli_registry.py` |
 | Report surfaces | `rytm_randomizer/reports/__init__.py` + `reports/{_passive_section,formatter,manual_feedback_packet,cockpit_send_plan_operator_readiness,cockpit_send_plan_rehearsal_surface,controller_brain_rehearsal,controller_mapping_profile_catalog,reference_style_blueprint,local_model_copilot,analog_four_baseline,analog_four_kit_catalog,analog_four_patch_genome,analog_four_patch_learning,analog_four_patch_corpus,analog_four_patch_send_plan,analog_four_oxi_macro_set_planner,analog_four_style_kit_readiness,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_style_snapshot_routing,dual_machine_style_kit_readiness,dual_machine_style_kit_selection,dual_machine_style_live_audition,dual_machine_style_mutation_intent,dual_machine_style_mutation_mock_preview,dual_machine_style_performance_set_plan,dual_machine_style_selection_mock_preview,dual_machine_style_snapshot_routing,live_analyzer_handoff,live_analyzer_targets,live_command_deck,live_control_surface,live_gui_action_reducer,live_gui_analyzer_frame,live_gui_analyzer_overlay,live_gui_analyzer_readiness,live_gui_capture_queue,live_gui_capture_review,live_gui_controller_state,live_gui_desktop_app_plan,live_gui_desktop_blueprint,live_gui_desktop_component_contract,live_gui_desktop_view_model,live_gui_implementation_bridge,live_gui_interaction_script,live_gui_performance_console_model,live_gui_playback_transcript,live_gui_playback_validation,live_gui_rehearsal_session,live_gui_render_tree,live_gui_screen_contract,live_gui_sidecar_session,live_gui_test_harness_contract,live_gui_test_harness_readiness,live_performance_readiness,live_performance_runbook,live_performance_state,live_set_cockpit,live_show_export,live_stage_rehearsal_state,live_stage_snapshot_routing,live_transition_timeline,rytm_machine_matrix,rytm_snapshot_pad_compatibility,rytm_snapshot_intelligence,rytm_snapshot_mutation_preview,rytm_style_kit_readiness,rytm_style_mutation_intent,rytm_style_mutation_mock_preview,rytm_style_mutation_render_plan,rytm_style_snapshot_routing,style_performance_arcs,style_profiles,style_targets}.py` plus `reports/performance_console/{live_kit_capture_workbench,live_kit_package_audition,live_kit_operator_package,live_kit_operator_review_ledger,payload_helpers}.py` (subpackage; was the old top-level `reports.py`) |
 | Local AI packets | `rytm_randomizer/local_ai/{provider,local_model,rag,mutation_intent}.py` |
@@ -36,8 +36,8 @@ Current baseline used while creating / refreshing this document:
 | Active / real MIDI boundaries | `rytm_randomizer/active_boundary.py`, `rytm_randomizer/real_midi_adapter.py`, `rytm_randomizer/mido_provider.py`, `rytm_randomizer/midi_io.py` |
 | Generic senders | `rytm_randomizer/senders/{guarded,hardware,midi_event_plan}.py` |
 | Engines (per-pad runtime cores) | `rytm_randomizer/engines/{_runtime,pad1,pad2,pad3,pad4}.py`, `rytm_randomizer/randomization.py`, `rytm_randomizer/scene_runner.py`, `rytm_randomizer/group_runner.py`, `rytm_randomizer/runtime_plan.py` |
-| Devices (cross-machine boundary) | `rytm_randomizer/devices/{base,registry,analog_rytm,analog_four}.py`, `rytm_randomizer/devices/strategies/{analog_four_offset_manifest,analog_four_saved_kit_codec,analog_four_saved_kit_writer,analog_four_snapshot_decoder,analog_four_style_snapshot_routing,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_mutation_planner,analog_four_message_renderer,analog_rytm_snapshot_decoder,analog_rytm_snapshot_routing,analog_rytm_style_snapshot_routing,analog_rytm_style_mutation_intent,analog_rytm_style_mutation_mock_preview,analog_rytm_style_mutation_render_plan,analog_rytm_mutation_planner,analog_rytm_message_renderer}.py` |
-| Snapshot Protocols + envelope | `rytm_randomizer/snapshot/{envelope,decoder,planner,mock_runtime,sysex_file}.py` |
+| Devices (cross-machine boundary) | `rytm_randomizer/devices/{base,registry,analog_rytm,analog_four}.py`, `rytm_randomizer/devices/strategies/{analog_four_offset_manifest,analog_four_saved_kit_codec,analog_four_saved_kit_writer,analog_four_snapshot_decoder,analog_four_style_snapshot_routing,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_mutation_planner,analog_four_message_renderer,analog_rytm_saved_kit_codec,analog_rytm_snapshot_decoder,analog_rytm_snapshot_routing,analog_rytm_style_snapshot_routing,analog_rytm_style_mutation_intent,analog_rytm_style_mutation_mock_preview,analog_rytm_style_mutation_render_plan,analog_rytm_mutation_planner,analog_rytm_message_renderer}.py` |
+| Snapshot Protocols + envelope | `rytm_randomizer/snapshot/{envelope,elektron_packed_payload,elektron_u14,decoder,planner,mock_runtime,sysex_file}.py` |
 | Guardrails | `rytm_randomizer/guardrails/{resolver,store,schema,validation}.py` |
 | Observability | `rytm_randomizer/observability/{logging,tracing,metrics,errors}.py` |
 | Style analysis | `rytm_randomizer/style_analysis/{extractor,runtime_types,feature_report,library,blueprint,analog_four_patch_genome,analog_four_patch_inference,analog_four_patch_learning,analog_four_patch_corpus,analog_four_patch_send_plan,analog_four_patch_render_rank,analog_four_patch_codesigner}.py` |
@@ -101,6 +101,7 @@ flowchart TB
         DataScenes["data/scenes.py + scene_display.py"]
         DataPlans["data/plans.py"]
         DataModes["data/modes.py<br/>Literal aliases + Final tuples"]
+        DataAL16Rytm["data/al16_rytm.py<br/>AL16 bank + Rytm proof facts"]
         DataStyleProfiles["data/style_profiles.py<br/>passive techno style intent catalog"]
         DataStyleTargets["data/style_targets.py<br/>passive numeric style target vectors"]
         DataStyleDiscovery["data/style_discovery.py<br/>reference/discovery slider policy"]
@@ -150,10 +151,12 @@ flowchart TB
         DevAR["analog_rytm.py<br/>AnalogRytmDevice"]
         DevA4["analog_four.py<br/>AnalogFourDevice"]
         DevStrategies["strategies/<br/>analog_rytm_{snapshot_decoder,<br/>snapshot_routing,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_render_plan,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer}.py<br/>analog_four_{offset_manifest,<br/>snapshot_decoder,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer,<br/>saved_kit_codec,<br/>saved_kit_writer}.py"]
+        DevRytmSavedKit["strategies/analog_rytm_saved_kit_codec.py<br/>pure saved-KIT frame codec"]
     end
 
     subgraph SnapshotPkg["snapshot/ subpackage<br/>(WS-S6 envelope + 3 Protocols)"]
         SnapEnvelope["envelope.py<br/>ELEKTRON_MFR_ID +<br/>pack/unpack_elektron_7bit +<br/>find_kit_record +<br/>read_ascii_name"]
+        SnapPackedPayload["elektron_packed_payload.py + elektron_u14.py<br/>shared packed-payload integrity + u14"]
         SnapProto["decoder / planner / mock_runtime<br/>Protocols"]
     end
 
@@ -375,6 +378,18 @@ classDiagram
         +decode(raw, slot) RytmKitSnapshot
     }
 
+    class AnalogRytmSavedKitCodecCapability {
+        <<Protocol @runtime_checkable>>
+        +decode_saved_kit_frame(frame) AnalogRytmSavedKitFrame
+        +encode_saved_kit_frame(header, unpacked) bytes
+    }
+
+    class AnalogRytmSavedKitCodec {
+        <<module>>
+        +decode_analog_rytm_saved_kit_frame(frame) AnalogRytmSavedKitFrame
+        +encode_analog_rytm_saved_kit_frame(header, unpacked) bytes
+    }
+
     class AnalogRytmMutationPlanner {
         +seed
         +plan(snapshot, depth) RytmMutationPlan
@@ -408,6 +423,8 @@ classDiagram
     AnalogRytmDevice o-- AnalogRytmSnapshotDecoder : composes
     AnalogRytmDevice o-- AnalogRytmMutationPlanner : composes
     AnalogRytmDevice o-- AnalogRytmMessageRenderer : composes
+    AnalogRytmDevice ..|> AnalogRytmSavedKitCodecCapability : structurally satisfies
+    AnalogRytmDevice --> AnalogRytmSavedKitCodec : delegates saved-KIT frames
 
     AnalogRytmSnapshotDecoder ..|> SnapshotDecoder : satisfies
     AnalogRytmMutationPlanner --> RytmSnapshotRouting : routes snapshot machines
@@ -421,7 +438,7 @@ classDiagram
 **Key:**
 
 - **Protocol vs class.** `Device`, `SnapshotDecoder`, `MutationPlanner`, `MessageRenderer`, `MidiOutbox` are `@runtime_checkable Protocol`s. They're not inherited from — concrete classes match structurally. This is Gate 6 (type-system hygiene) and lets PR #21 / PR #36's `AnalogFourDevice` drop in without inheritance gymnastics.
-- **Composition over inheritance.** `AnalogRytmDevice` and `AnalogFourDevice` construct strategy instances in `__init__` and delegate their convenience methods to them. The strategies don't know about each other except through their shared device-family types (`RytmKitSnapshot`, `RytmMutationPlan`, `RytmPlanEvent`, `AnalogFourKitSnapshot`, and `AnalogFourMutationPlan`).
+- **Composition over inheritance.** `AnalogRytmDevice` and `AnalogFourDevice` construct strategy instances in `__init__` and delegate their convenience methods to them. The Rytm device also exposes the narrow optional `AnalogRytmSavedKitCodecCapability`, which delegates pure saved-KIT frame work to `analog_rytm_saved_kit_codec.py` without widening the base `Device` Protocol. The strategies don't know about each other except through their shared device-family types (`RytmKitSnapshot`, `RytmMutationPlan`, `RytmPlanEvent`, `AnalogFourKitSnapshot`, and `AnalogFourMutationPlan`).
 - **Import-time registration.** `analog_rytm.py` calls `register_device(AnalogRytmDevice())` at module load. The `devices/__init__.py` imports `analog_rytm` for the side effect; consumers get a non-empty registry on first import.
 - **Adding a new family** = one device class + three strategy modules + register at import. No parallel sibling subpackages allowed (enforced by `test_device_protocol_enforcement.py`).
 

@@ -73,6 +73,7 @@ def _validated_trailer(packed: bytes, trailer: bytes) -> tuple[int, int]:
         checksum_start=A4_CHECKSUM_PACKED_OFFSET,
         length_adjustment=0,
         expected_packed_size=A4_SAVED_KIT_PACKED_SIZE,
+        expected_trailer_size=A4_SAVED_KIT_TRAILER_SIZE,
         device_label=_DEVICE_LABEL,
     )
     return validated.checksum, validated.encoded_length

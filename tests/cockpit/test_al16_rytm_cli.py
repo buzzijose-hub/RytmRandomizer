@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 
 from rytm_randomizer.cockpit.export.al16_rytm_kit import (
+    Al16BuildError,
     Al16BuildResult,
-    Al16BuildStatus,
     MappingGap,
 )
 from rytm_randomizer.cockpit.export.file_export_contracts import (
@@ -18,28 +18,24 @@ from rytm_randomizer.cockpit.export.file_export_contracts import (
 pytestmark = pytest.mark.fast
 
 
-def _result(tmp_path: Path, *, status: Al16BuildStatus) -> Al16BuildResult:
+def _result(tmp_path: Path) -> Al16BuildResult:
     return Al16BuildResult(
-        status=status,
+        status="blocked",
         output_path=tmp_path / "AL02_LOCK_RYTM.syx",
         manifest_path=tmp_path / "AL02_LOCK_RYTM_manifest.json",
         validation_path=tmp_path / "AL02_LOCK_RYTM_validation.md",
         byte_diff_path=tmp_path / "AL02_LOCK_RYTM_byte_diff.txt",
         reference_sha256="reference-sha",
-        output_sha256="output-sha" if status == "built" else None,
+        output_sha256=None,
         gaps=(
-            (
-                MappingGap(
-                    semantic_path="tracks.1.machine",
-                    pad=1,
-                    machine="bd_classic",
-                    expected_behavior="select BD Classic",
-                    reason="writer evidence missing",
-                    evidence_required="saved-kit writer observation",
-                ),
-            )
-            if status == "blocked"
-            else ()
+            MappingGap(
+                semantic_path="tracks.1.machine",
+                pad=1,
+                machine="bd_classic",
+                expected_behavior="select BD Classic",
+                reason="writer evidence missing",
+                evidence_required="saved-kit writer observation",
+            ),
         ),
     )
 
@@ -66,9 +62,7 @@ def test_registered_cli_reports_blocked_evidence(
     from rytm_randomizer.cli import main
     from rytm_randomizer.cockpit.export import al16_rytm_cli as cli
 
-    monkeypatch.setattr(
-        cli, "build_al16_rytm_kit", lambda **_kwargs: _result(tmp_path, status="blocked")
-    )
+    monkeypatch.setattr(cli, "build_al16_rytm_kit", lambda **_kwargs: _result(tmp_path))
 
     exit_code = main(
         [
@@ -90,32 +84,6 @@ def test_registered_cli_reports_blocked_evidence(
     assert "build_status: blocked" in captured.out
     assert "output_emitted: false" in captured.out
     assert "mapping_gap: tracks.1.machine: writer evidence missing" in captured.out
-
-
-def test_handler_returns_success_for_future_verified_build(
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    from rytm_randomizer.cockpit.export import al16_rytm_cli as cli
-
-    monkeypatch.setattr(
-        cli, "build_al16_rytm_kit", lambda **_kwargs: _result(tmp_path, status="built")
-    )
-
-    exit_code = cli.handle_al16_rytm_kit_export(
-        reference_path=Path("reference.syx"),
-        recipe_path=Path("recipe.yaml"),
-        destination_slot=127,
-        output_path=Path("output.syx"),
-    )
-
-    captured = capsys.readouterr()
-    assert exit_code == 0
-    assert captured.err == ""
-    assert "build_status: built" in captured.out
-    assert "output_emitted: true" in captured.out
-    assert "output_sha256: output-sha" in captured.out
 
 
 @pytest.mark.parametrize(
@@ -212,7 +180,10 @@ def test_registered_cli_formats_parse_error(capsys: pytest.CaptureFixture[str]) 
     ("error", "exit_code", "message"),
     [
         (
-            ValueError(r"bad recipe at C:\\Users\\Example User\\private.yaml"),
+            Al16BuildError(
+                "recipe_schema_invalid",
+                r"bad recipe at C:\\Users\\Example User\\private.yaml",
+            ),
             2,
             "Error [offline_build_failed]: AL16 offline build failed for output.syx "
             "(reason=recipe_schema_invalid; destination_slot=127).",

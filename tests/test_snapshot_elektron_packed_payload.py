@@ -5,8 +5,10 @@ from __future__ import annotations
 import pytest
 
 from rytm_randomizer.snapshot.elektron_packed_payload import (
+    ELEKTRON_CHECKSUM_LENGTH_TRAILER_SIZE,
     elektron_packed_payload_checksum,
     encode_elektron_packed_payload,
+    split_elektron_packed_payload_body,
     validate_elektron_packed_payload,
 )
 from rytm_randomizer.snapshot.elektron_u14 import encode_elektron_u14
@@ -34,6 +36,7 @@ def test_packed_payload_contract_round_trips_device_facts() -> None:
         checksum_start=1,
         length_adjustment=5,
         expected_packed_size=len(_PACKED),
+        expected_trailer_size=ELEKTRON_CHECKSUM_LENGTH_TRAILER_SIZE,
         device_label=_LABEL,
     )
 
@@ -102,5 +105,54 @@ def test_validator_rejects_integrity_mismatches(
             checksum_start=0,
             length_adjustment=0,
             expected_packed_size=len(_PACKED),
+            expected_trailer_size=ELEKTRON_CHECKSUM_LENGTH_TRAILER_SIZE,
+            device_label=_LABEL,
+        )
+
+
+def test_packed_payload_body_split_uses_explicit_device_sizes() -> None:
+    split = split_elektron_packed_payload_body(
+        b"HEAD" + _PACKED + b"TAIL",
+        header_size=4,
+        trailer_size=4,
+        device_label=_LABEL,
+    )
+
+    assert split.header == b"HEAD"
+    assert split.packed == _PACKED
+    assert split.trailer == b"TAIL"
+
+
+@pytest.mark.parametrize(
+    ("header_size", "trailer_size", "message"),
+    [
+        (-1, 4, "header size"),
+        (0, 0, "trailer size"),
+        (4, 4, "too short"),
+    ],
+)
+def test_packed_payload_body_split_rejects_invalid_device_sizes(
+    header_size: int,
+    trailer_size: int,
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        split_elektron_packed_payload_body(
+            b"short",
+            header_size=header_size,
+            trailer_size=trailer_size,
+            device_label=_LABEL,
+        )
+
+
+def test_validator_rejects_a_noncanonical_expected_trailer_size() -> None:
+    with pytest.raises(ValueError, match="expected trailer size"):
+        validate_elektron_packed_payload(
+            _PACKED,
+            bytes(4),
+            checksum_start=0,
+            length_adjustment=0,
+            expected_packed_size=len(_PACKED),
+            expected_trailer_size=3,
             device_label=_LABEL,
         )

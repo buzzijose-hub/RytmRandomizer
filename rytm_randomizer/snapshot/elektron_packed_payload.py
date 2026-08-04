@@ -8,7 +8,7 @@ from typing import Final
 from .elektron_u14 import ELEKTRON_U14_MAX, decode_elektron_u14, encode_elektron_u14
 from .envelope import pack_elektron_7bit
 
-_TRAILER_SIZE: Final[int] = 4
+ELEKTRON_CHECKSUM_LENGTH_TRAILER_SIZE: Final[int] = 4
 
 
 @dataclass(frozen=True)
@@ -19,6 +19,38 @@ class ElektronPackedPayload:
     checksum: int
     encoded_length: int
     trailer: bytes
+
+
+@dataclass(frozen=True)
+class ElektronPackedPayloadBody:
+    """One device envelope body split around its packed payload."""
+
+    header: bytes
+    packed: bytes
+    trailer: bytes
+
+
+def split_elektron_packed_payload_body(
+    body: bytes,
+    *,
+    header_size: int,
+    trailer_size: int,
+    device_label: str,
+) -> ElektronPackedPayloadBody:
+    """Split a device body using explicit, device-owned envelope sizes."""
+
+    if header_size < 0:
+        raise ValueError(f"{device_label} header size cannot be negative")
+    if trailer_size <= 0:
+        raise ValueError(f"{device_label} trailer size must be positive")
+    if len(body) < header_size + trailer_size:
+        raise ValueError(f"{device_label} body is too short for its envelope")
+    packed_end = len(body) - trailer_size
+    return ElektronPackedPayloadBody(
+        header=body[:header_size],
+        packed=body[header_size:packed_end],
+        trailer=body[packed_end:],
+    )
 
 
 def elektron_packed_payload_checksum(
@@ -69,13 +101,19 @@ def validate_elektron_packed_payload(
     checksum_start: int,
     length_adjustment: int,
     expected_packed_size: int,
+    expected_trailer_size: int,
     device_label: str,
 ) -> ElektronPackedPayload:
     """Validate one packed body against its device-defined integrity trailer."""
 
     if len(packed) != expected_packed_size:
         raise ValueError(f"{device_label} packed payload has an unexpected length")
-    if len(trailer) != _TRAILER_SIZE:
+    if expected_trailer_size != ELEKTRON_CHECKSUM_LENGTH_TRAILER_SIZE:
+        raise ValueError(
+            f"{device_label} expected trailer size must be "
+            f"{ELEKTRON_CHECKSUM_LENGTH_TRAILER_SIZE}"
+        )
+    if len(trailer) != expected_trailer_size:
         raise ValueError(f"{device_label} integrity trailer has an unexpected length")
 
     checksum = decode_elektron_u14(trailer[0], trailer[1])
@@ -102,8 +140,11 @@ def validate_elektron_packed_payload(
 
 
 __all__ = [
+    "ELEKTRON_CHECKSUM_LENGTH_TRAILER_SIZE",
     "ElektronPackedPayload",
+    "ElektronPackedPayloadBody",
     "elektron_packed_payload_checksum",
     "encode_elektron_packed_payload",
+    "split_elektron_packed_payload_body",
     "validate_elektron_packed_payload",
 ]

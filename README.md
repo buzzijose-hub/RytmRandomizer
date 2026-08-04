@@ -249,12 +249,13 @@ analog-four-audio-patch-batch --audio REF.wav --source-kit KIT.syx --output-dir 
 analog-four-audio-patch-rank --reference REF.wav --manifest batch.json --render 1=take1.wav
 
 # AL16 Analog Rytm offline audit proof (no MIDI; current AL02 build is blocked)
-al16-rytm-kit-export --reference reference/RYTM_Test1_Init_Kit.syx --recipe specs/al16/AL02_LOCK_RYTM.yaml --destination-slot 127 --output output/local/al16/AL02_LOCK_RYTM.syx
+al16-rytm-kit-export --reference output/local/reference/RYTM_Test1_Init_Kit.syx --recipe specs/al16/AL02_LOCK_RYTM.yaml --destination-slot 127 --output output/local/al16/AL02_LOCK_RYTM.syx
 ```
 
 The AL16 command is currently an offline audit/evidence compiler, not a
-positive kit writer or hardware sender. Phase R1 accepts only
-`reference/RYTM_Test1_Init_Kit.syx` with SHA-256
+positive kit writer or hardware sender. Keep the operator-local initialized
+reference under the gitignored `output/local/reference/` subtree. Phase R1
+accepts only `output/local/reference/RYTM_Test1_Init_Kit.syx` with SHA-256
 `8bda94d6d5031e038c8d810789301f35242ed539338a0399548869a34e1dc4dd`.
 The current `AL02 LOCK` proof validates that initialized reference and writes
 deterministic mapping-gap evidence, but intentionally returns `2` and emits no

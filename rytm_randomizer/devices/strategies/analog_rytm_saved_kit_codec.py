@@ -13,6 +13,7 @@ from ...data.analog_rytm_kit_layout import (
     RYTM_KIT_PACKED_SIZE,
     RYTM_KIT_RAW_SIZE,
     RYTM_KIT_SYSEX_HEADER_SIZE_WITHOUT_F0,
+    RYTM_KIT_SYSEX_TRAILER_SIZE_WITHOUT_F7,
     RYTM_KIT_WORK_BUFFER_DUMP_ID,
     RYTM_SYSEX_PRODUCT_ID,
 )
@@ -20,6 +21,7 @@ from ...snapshot import ELEKTRON_MFR_ID, unpack_elektron_7bit
 from ...snapshot.elektron_packed_payload import (
     elektron_packed_payload_checksum,
     encode_elektron_packed_payload,
+    split_elektron_packed_payload_body,
     validate_elektron_packed_payload,
 )
 
@@ -70,29 +72,30 @@ def decode_analog_rytm_saved_kit_frame(frame: bytes) -> AnalogRytmSavedKitFrame:
     if any(value > 0x7F for value in frame[1:-1]):
         raise ValueError("Analog Rytm saved-kit SysEx contains an illegal data byte")
 
-    body = frame[1:-1]
-    header = body[:RYTM_KIT_SYSEX_HEADER_SIZE_WITHOUT_F0]
-    _validate_header(header)
-    packed = body[RYTM_KIT_SYSEX_HEADER_SIZE_WITHOUT_F0:-4]
-    trailer = body[-4:]
-    if len(packed) != RYTM_KIT_PACKED_SIZE:
-        raise ValueError("Analog Rytm saved-kit packed payload has an unexpected length")
+    body = split_elektron_packed_payload_body(
+        frame[1:-1],
+        header_size=RYTM_KIT_SYSEX_HEADER_SIZE_WITHOUT_F0,
+        trailer_size=RYTM_KIT_SYSEX_TRAILER_SIZE_WITHOUT_F7,
+        device_label=_DEVICE_LABEL,
+    )
+    _validate_header(body.header)
 
     validated = validate_elektron_packed_payload(
-        packed,
-        trailer,
+        body.packed,
+        body.trailer,
         checksum_start=RYTM_KIT_CHECKSUM_PACKED_START,
         length_adjustment=RYTM_KIT_LENGTH_ADJUSTMENT,
         expected_packed_size=RYTM_KIT_PACKED_SIZE,
+        expected_trailer_size=RYTM_KIT_SYSEX_TRAILER_SIZE_WITHOUT_F7,
         device_label=_DEVICE_LABEL,
     )
 
-    unpacked = unpack_elektron_7bit(packed)
+    unpacked = unpack_elektron_7bit(body.packed)
     if len(unpacked) != RYTM_KIT_RAW_SIZE:
         raise ValueError("Analog Rytm saved-kit payload has an unexpected unpacked length")
     return AnalogRytmSavedKitFrame(
-        header=header,
-        packed=packed,
+        header=body.header,
+        packed=body.packed,
         unpacked=unpacked,
         checksum=validated.checksum,
         encoded_length=validated.encoded_length,

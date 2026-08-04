@@ -48,6 +48,7 @@ from typing import ClassVar, Final, Literal, TypeAlias
 from ...observability.errors import DataError
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
+from .file_export_contracts import safe_local_file_export_artifact_name
 
 _logger = get_logger(__name__)
 """Module logger for the atomic export writer. Bound here so future
@@ -567,11 +568,11 @@ def _rollback_write_set(
 def _bounded_artifact_name(path: Path) -> str:
     """Return a deterministic basename without exposing its parent path."""
 
-    name = path.name or "<unnamed>"
-    if len(name) <= _WRITE_SET_CONTEXT_LIMIT:
-        return name
-    retained = (_WRITE_SET_CONTEXT_LIMIT - 3) // 2
-    return f"{name[:retained]}...{name[-retained:]}"
+    return safe_local_file_export_artifact_name(
+        path,
+        fallback="unnamed-artifact",
+        max_length=_WRITE_SET_CONTEXT_LIMIT,
+    )
 
 
 def _cleanup_write_set_directory(
