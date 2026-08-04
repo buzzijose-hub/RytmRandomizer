@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import stat
 import sys
 import tempfile
 from collections.abc import Callable, Mapping
@@ -440,7 +441,11 @@ def atomic_write_set(
             )
         ) from exc
 
-    existed = {path: path.exists() for path in destinations}
+    existed = {path: os.path.lexists(path) for path in destinations}
+    if overwrite:
+        for path in destinations:
+            if existed[path]:
+                _require_regular_overwrite_destination(path)
     if not overwrite:
         for path in destinations:
             if existed[path]:
@@ -475,9 +480,10 @@ def atomic_write_set(
         for index, destination in enumerate(destinations):
             active_destination = destination
             if existed[destination]:
+                _require_regular_overwrite_destination(destination)
                 backup_path = transaction_dir / f"{index:04d}.backup"
-                os.replace(destination, backup_path)
                 backups[destination] = backup_path
+                os.replace(destination, backup_path)
 
         phase = "publication"
         for destination in destinations:
@@ -496,6 +502,7 @@ def atomic_write_set(
             items,
             backups=backups,
             published=published,
+            staged=staged,
         )
         recovery_name = transaction_dir.name if rollback_failures else None
         if rollback_failures:
@@ -541,13 +548,14 @@ def _rollback_write_set(
     *,
     backups: Mapping[Path, Path],
     published: set[Path],
+    staged: Mapping[Path, Path],
 ) -> tuple[WriteSetRollbackFailure, ...]:
     """Best-effort rollback that retains every failed backup operation."""
 
     failures: list[WriteSetRollbackFailure] = []
     for destination, _payload in reversed(items):
         backup_path = backups.get(destination)
-        if backup_path is not None:
+        if backup_path is not None and backup_path.exists():
             try:
                 os.replace(backup_path, destination)
             except OSError as exc:  # rollback must not mask the first failure
@@ -559,7 +567,11 @@ def _rollback_write_set(
                     )
                 )
             continue
-        if destination not in published:
+        if not _stage_reached_destination(
+            destination,
+            staged.get(destination),
+            published=published,
+        ):
             continue
         try:
             os.unlink(destination)
@@ -572,6 +584,42 @@ def _rollback_write_set(
                 )
             )
     return tuple(failures)
+
+
+def _require_regular_overwrite_destination(path: Path) -> None:
+    """Reject directories, symlinks, and other non-regular artifacts."""
+
+    try:
+        mode = os.lstat(path).st_mode
+    except FileNotFoundError:
+        return
+    if not stat.S_ISREG(mode):
+        raise WriteSetError(
+            WriteSetFailureContext(
+                phase="backup",
+                artifact_name=_bounded_artifact_name(path),
+            )
+        )
+
+
+def _stage_reached_destination(
+    destination: Path,
+    stage_path: Path | None,
+    *,
+    published: set[Path],
+) -> bool:
+    """Infer publication when interruption precedes bookkeeping."""
+
+    if destination in published:
+        return True
+    if stage_path is None or not destination.exists():
+        return False
+    if not stage_path.exists():
+        return True
+    try:
+        return os.path.samefile(stage_path, destination)
+    except OSError:
+        return False
 
 
 def _bounded_artifact_name(path: Path) -> str:

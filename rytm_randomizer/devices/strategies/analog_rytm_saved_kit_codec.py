@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final
+from typing import ClassVar, Final
 
 from ...data.analog_rytm_kit_layout import (
     RYTM_KIT_CHECKSUM_PACKED_START,
@@ -34,7 +34,7 @@ _DEVICE_LABEL: Final[str] = "Analog Rytm saved-kit"
 class AnalogRytmSavedKitCodecError(BoundaryError, ValueError):
     """Expected malformed-input failure at the Rytm saved-kit boundary."""
 
-    fingerprint = "snapshot.analog_rytm_saved_kit.invalid"
+    fingerprint: ClassVar[str] = "snapshot.analog_rytm_saved_kit.invalid"
 
 
 @dataclass(frozen=True)

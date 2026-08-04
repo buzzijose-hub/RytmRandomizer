@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final
+from typing import ClassVar, Final
 
 from ..observability.errors import BoundaryError
 from .elektron_u14 import ELEKTRON_U14_MAX, decode_elektron_u14, encode_elektron_u14
@@ -15,7 +15,7 @@ ELEKTRON_CHECKSUM_LENGTH_TRAILER_SIZE: Final[int] = 4
 class ElektronPackedPayloadError(BoundaryError, ValueError):
     """Expected validation failure at the packed-payload boundary."""
 
-    fingerprint = "snapshot.elektron_packed_payload.invalid"
+    fingerprint: ClassVar[str] = "snapshot.elektron_packed_payload.invalid"
 
 
 @dataclass(frozen=True)

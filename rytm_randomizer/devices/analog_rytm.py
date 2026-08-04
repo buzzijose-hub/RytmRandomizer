@@ -28,6 +28,7 @@ from .strategies import (
     RytmMutationPlan,
 )
 from .strategies.analog_rytm_saved_kit_codec import (
+    AnalogRytmSavedKitCodecError,
     AnalogRytmSavedKitFrame,
     decode_analog_rytm_saved_kit_frame,
     encode_analog_rytm_saved_kit_frame,
@@ -202,5 +203,6 @@ def get_analog_rytm_saved_kit_codec_capability() -> AnalogRytmSavedKitCodecCapab
 __all__ = [
     "AnalogRytmDevice",
     "AnalogRytmSavedKitCodecCapability",
+    "AnalogRytmSavedKitCodecError",
     "get_analog_rytm_saved_kit_codec_capability",
 ]

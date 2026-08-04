@@ -125,9 +125,6 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             "cockpit.profiles",
             "data",
             "devices",
-            # AL16 offline export composes the shared passive Rytm saved-kit
-            # codec; this edge never enters the armed MIDI boundary.
-            "devices.strategies",
             "observability",
             # AL16 offline export reads the shared Elektron ASCII-name
             # envelope primitive while auditing saved-kit payloads.

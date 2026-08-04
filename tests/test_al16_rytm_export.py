@@ -70,7 +70,7 @@ _BANK_SPEC = _REPO_ROOT / "specs" / "al16" / "AL16_BANK.yaml"
 _AL02_RECIPE = _REPO_ROOT / "specs" / "al16" / "AL02_LOCK_RYTM.yaml"
 _COMMITTED_EVIDENCE_HASHES = {
     "output/al16/AL02_LOCK_RYTM_manifest.json": (
-        "d052a213227070cf21f180fc27d100f9051ad8e9d12b4135889a5bb5a4183d06"
+        "173f67f921c266cfa2fa54bd450864ee6fa708fd2c298df9014e3e9fb6e00f9f"
     ),
     "output/al16/AL02_LOCK_RYTM_validation.md": (
         "bcf04d1a77c412d93efa1ec558a817df6656ea000d0fb8b337efc992eabbe6e5"
@@ -290,6 +290,9 @@ def test_al02_build_fails_closed_and_writes_precise_reports(
     assert result.manifest_path.is_file()
     assert result.validation_path.is_file()
     assert result.byte_diff_path.is_file()
+    assert not output_path.with_name(
+        f".{output_path.name}{exporter._AL16_OUTPUT_LOCK_SUFFIX}"
+    ).exists()
 
     manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
     assert manifest["build_status"] == "blocked"
@@ -1120,6 +1123,82 @@ def test_al16_build_refuses_round_trip_drift_and_stale_output(
         )
 
 
+def test_al16_build_refuses_an_existing_output_lock_without_removing_it(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    reference_path = tmp_path / "RYTM_Test1_Init_Kit.syx"
+    reference = _synthetic_reference(reference_path)
+    monkeypatch.setattr(
+        exporter,
+        "_REFERENCE_EXPECTED_SHA256",
+        hashlib.sha256(reference).hexdigest(),
+    )
+    output_path = tmp_path / "AL02_LOCK_RYTM.syx"
+    lock_path = output_path.with_name(f".{output_path.name}{exporter._AL16_OUTPUT_LOCK_SUFFIX}")
+    lock_path.mkdir()
+
+    with pytest.raises(Al16BuildError) as exc_info:
+        build_al16_rytm_kit(
+            reference_path=reference_path,
+            recipe_path=_AL02_RECIPE,
+            destination_slot=127,
+            output_path=output_path,
+        )
+
+    assert exc_info.value.reason == "artifact_path_collision"
+    assert lock_path.is_dir()
+    assert not output_path.exists()
+    assert not output_path.with_name("AL02_LOCK_RYTM_manifest.json").exists()
+    assert not output_path.with_name("AL02_LOCK_RYTM_validation.md").exists()
+    assert not output_path.with_name("AL02_LOCK_RYTM_byte_diff.txt").exists()
+
+
+def test_al16_build_rechecks_stale_output_inside_publication_lock(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    reference_path = tmp_path / "RYTM_Test1_Init_Kit.syx"
+    reference = _synthetic_reference(reference_path)
+    monkeypatch.setattr(
+        exporter,
+        "_REFERENCE_EXPECTED_SHA256",
+        hashlib.sha256(reference).hexdigest(),
+    )
+    output_path = tmp_path / "AL02_LOCK_RYTM.syx"
+    inspect_recipe = exporter._inspect_recipe
+
+    def create_racing_output(
+        recipe: Mapping[str, object],
+        reference_raw: bytes,
+        destination_slot: int,
+    ) -> tuple[
+        list[exporter.FieldAudit],
+        list[exporter.MappingGap],
+        list[int],
+    ]:
+        result = inspect_recipe(recipe, reference_raw, destination_slot)
+        output_path.write_bytes(b"concurrent-output")
+        return result
+
+    monkeypatch.setattr(exporter, "_inspect_recipe", create_racing_output)
+
+    with pytest.raises(FileExistsError, match="potentially stale output"):
+        build_al16_rytm_kit(
+            reference_path=reference_path,
+            recipe_path=_AL02_RECIPE,
+            destination_slot=127,
+            output_path=output_path,
+        )
+
+    lock_path = output_path.with_name(f".{output_path.name}{exporter._AL16_OUTPUT_LOCK_SUFFIX}")
+    assert output_path.read_bytes() == b"concurrent-output"
+    assert not lock_path.exists()
+    assert not output_path.with_name("AL02_LOCK_RYTM_manifest.json").exists()
+    assert not output_path.with_name("AL02_LOCK_RYTM_validation.md").exists()
+    assert not output_path.with_name("AL02_LOCK_RYTM_byte_diff.txt").exists()
+
+
 def test_al16_build_timestamp_supports_explicit_and_default_reproducible_modes(
     monkeypatch: MonkeyPatch,
 ) -> None:
@@ -1198,6 +1277,53 @@ def test_al16_build_rejects_canonical_artifact_path_aliases(tmp_path: Path) -> N
             validation_path=evidence_dir / ".." / "evidence" / "alias.json",
             byte_diff_path=evidence_dir / "AL02_LOCK_RYTM_byte_diff.txt",
         )
+
+
+def test_al16_output_lock_cleanup_failure_preserves_active_exception(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    output_path = tmp_path / "AL02_LOCK_RYTM.syx"
+    lock_path = output_path.with_name(f".{output_path.name}.al16-build.lock")
+    path_type = type(lock_path)
+    real_rmdir = path_type.rmdir
+
+    def fail_lock_cleanup(_path: Path) -> None:
+        raise PermissionError("lock cleanup denied")
+
+    monkeypatch.setattr(path_type, "rmdir", fail_lock_cleanup)
+
+    with pytest.raises(RuntimeError, match="primary build failure") as exc_info:
+        with exporter._exclusive_al16_output_lock(output_path):
+            raise RuntimeError("primary build failure")
+
+    assert any("output lock cleanup also failed" in note for note in exc_info.value.__notes__)
+    assert lock_path.is_dir()
+    real_rmdir(lock_path)
+
+
+def test_al16_output_lock_cleanup_failure_is_typed_without_active_exception(
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    output_path = tmp_path / "AL02_LOCK_RYTM.syx"
+    lock_path = output_path.with_name(f".{output_path.name}.al16-build.lock")
+    path_type = type(lock_path)
+    real_rmdir = path_type.rmdir
+
+    def fail_lock_cleanup(_path: Path) -> None:
+        raise PermissionError("lock cleanup denied")
+
+    monkeypatch.setattr(path_type, "rmdir", fail_lock_cleanup)
+
+    with pytest.raises(Al16BuildError, match="output lock cleanup failed") as exc_info:
+        with exporter._exclusive_al16_output_lock(output_path):
+            pass
+
+    assert exc_info.value.reason == "artifact_publication_failed"
+    assert isinstance(exc_info.value.__cause__, PermissionError)
+    assert lock_path.is_dir()
+    real_rmdir(lock_path)
 
 
 def test_al16_build_rejects_an_unexpected_initialized_reference(tmp_path: Path) -> None:

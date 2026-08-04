@@ -5,7 +5,7 @@
 | Concern | Before | After |
 | --- | --- | --- |
 | Recipe facts | No canonical AL16 bank contract | `data.al16_rytm` owns states, pad roles, value domains, and known mappings |
-| Export contract | No AL16 Rytm evidence result | `Al16BuildResult` records a closed `blocked` or `built` outcome and deterministic sidecars |
+| Export contract | No AL16 Rytm evidence result | `Al16BuildResult` records the closed Phase-R1 `blocked` outcome and deterministic sidecars |
 | File failures | A4-local classifier | Neutral `LocalFileExportErrorCode` is shared by A4 and AL16 adapters |
 | Codec use | No strict Analog Rytm saved-kit codec | A dedicated Rytm codec composes the shared Elektron envelope helpers without changing their format contract |
 | Hardware boundary | Passive CLI invariant | AL16 imports and tests prove zero MIDI dependency or port access |

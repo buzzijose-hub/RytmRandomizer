@@ -42,6 +42,7 @@ from rytm_randomizer.cockpit.export.writer import (
     WriteError,
     WriteResult,
     WriteSetError,
+    WriteSetFailureContext,
     atomic_write,
     atomic_write_set,
     default_export_dir,
@@ -641,6 +642,63 @@ def test_atomic_write_set_refuses_existing_destination_without_overwrite(
     assert destination.read_bytes() == b"existing"
 
 
+def test_atomic_write_set_refuses_directory_destination_with_overwrite(
+    tmp_path: Path,
+) -> None:
+    destination = tmp_path / "artifact.json"
+    destination.mkdir()
+    marker = destination / "keep.txt"
+    marker.write_bytes(b"keep")
+
+    with pytest.raises(WriteSetError) as exc_info:
+        atomic_write_set({destination: b"replacement"}, overwrite=True)
+
+    assert exc_info.value.failure_context == WriteSetFailureContext(
+        phase="backup",
+        artifact_name="artifact.json",
+    )
+    assert destination.is_dir()
+    assert marker.read_bytes() == b"keep"
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["artifact.json"]
+
+
+def test_overwrite_preflight_accepts_a_missing_destination(tmp_path: Path) -> None:
+    writer_module._require_regular_overwrite_destination(tmp_path / "missing.json")
+
+
+def test_publication_inference_handles_defensive_filesystem_states(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    destination = tmp_path / "artifact.json"
+    stage_path = tmp_path / "artifact.stage"
+
+    assert not writer_module._stage_reached_destination(
+        destination,
+        None,
+        published=set(),
+    )
+
+    destination.write_bytes(b"published")
+    assert writer_module._stage_reached_destination(
+        destination,
+        stage_path,
+        published=set(),
+    )
+
+    stage_path.write_bytes(b"staged")
+
+    def fail_samefile(_first: str | Path, _second: str | Path) -> bool:
+        raise OSError("samefile unavailable")
+
+    monkeypatch.setattr(os.path, "samefile", fail_samefile)
+    assert not writer_module._stage_reached_destination(
+        destination,
+        stage_path,
+        published=set(),
+    )
+
+
 def test_atomic_write_set_refuses_concurrent_destination_without_overwrite(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -690,11 +748,8 @@ def test_atomic_write_set_interrupt_after_link_rolls_back_published_destination(
         *,
         on_published: Callable[[], None] | None = None,
     ) -> None:
-        publish_no_overwrite(
-            tmp_name,
-            path,
-            on_published=on_published,
-        )
+        del on_published
+        publish_no_overwrite(tmp_name, path)
         raise KeyboardInterrupt("operator interrupted after publication")
 
     monkeypatch.setattr(
@@ -711,6 +766,31 @@ def test_atomic_write_set_interrupt_after_link_rolls_back_published_destination(
 
     assert not destination.exists()
     assert list(tmp_path.iterdir()) == []
+
+
+def test_atomic_write_set_interrupt_after_replace_restores_prior_file(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    destination = tmp_path / "artifact.json"
+    destination.write_bytes(b"old")
+    real_replace = os.replace
+
+    def interrupt_after_publication(
+        source: str | Path,
+        target: str | Path,
+    ) -> None:
+        real_replace(source, target)
+        if Path(source).suffix == ".stage":
+            raise KeyboardInterrupt("operator interrupted after replace")
+
+    monkeypatch.setattr(os, "replace", interrupt_after_publication)
+
+    with pytest.raises(KeyboardInterrupt, match="operator interrupted after replace"):
+        atomic_write_set({destination: b"new"}, overwrite=True)
+
+    assert destination.read_bytes() == b"old"
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["artifact.json"]
 
 
 def test_atomic_write_set_wraps_transaction_directory_creation_failure(
@@ -951,6 +1031,7 @@ def test_atomic_write_set_records_new_file_removal_rollback_failure(
         ((destination, b"payload"),),
         backups={},
         published={destination},
+        staged={},
     )
 
     assert failures == (

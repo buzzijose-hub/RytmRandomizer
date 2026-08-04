@@ -5,18 +5,22 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import sys
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Generator, Mapping, Sequence
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import ClassVar, Final, Literal, TypeAlias, cast
 
 from ...data.al16_rytm import (
+    AL16_BANK_SCHEMA_VERSION,
     AL16_BANK_STATES,
     AL16_PAD_ROLES,
     AL16_PERFORMANCE_CONTEXT_BPM,
     AL16_PRESERVED_GLOBAL_SECTIONS,
+    AL16_PROJECT_ID,
     AL16_RYTM_APPROVED_TUNING,
     AL16_RYTM_FILTER_TYPES,
     AL16_RYTM_WRITABLE_FIELDS,
@@ -40,9 +44,9 @@ from ...data.rytm_machine_catalog import (
     get_rytm_machine_profile,
     is_machine_allowed_on_pad,
 )
-from ...devices.analog_rytm import get_analog_rytm_saved_kit_codec_capability
-from ...devices.strategies.analog_rytm_saved_kit_codec import (
+from ...devices.analog_rytm import (
     AnalogRytmSavedKitCodecError,
+    get_analog_rytm_saved_kit_codec_capability,
 )
 from ...observability.errors import BoundaryError
 from ...observability.logging import get_logger
@@ -67,6 +71,7 @@ _DEFAULT_BUILD_EPOCH: Final[int] = 0
 _PHASE_R1_STATE_NUMBER: Final[int] = 2
 _AL16_EXPORT_FAILURE_FINGERPRINT: Final[str] = "al16.rytm_kit_export.failed"
 _AL16_MAPPING_BLOCKED_ERROR_CODE: Final[str] = "mapping_blocked"
+_AL16_OUTPUT_LOCK_SUFFIX: Final[str] = ".al16-build.lock"
 AL16_GENERATOR_CONTRACT: Final[str] = "al16_rytm_blocked_evidence_v3"
 AL16_GENERATOR_MODULE: Final[str] = "rytm_randomizer/cockpit/export/al16_rytm_kit.py"
 AL16_GENERATOR_DEPENDENCIES: Final[tuple[str, ...]] = (
@@ -707,11 +712,17 @@ def _inspect_recipe(
         "recipe",
         {"schema_version", "project_id", "kit", "preserve", "tracks"},
     )
-    if _as_int(recipe.get("schema_version"), "schema_version") != 1:
-        raise Al16BuildError("recipe_schema_invalid", "recipe schema_version must be 1")
+    if _as_int(recipe.get("schema_version"), "schema_version") != AL16_BANK_SCHEMA_VERSION:
+        raise Al16BuildError(
+            "recipe_schema_invalid",
+            f"recipe schema_version must be {AL16_BANK_SCHEMA_VERSION}",
+        )
     project_id = _as_string(recipe.get("project_id"), "project_id")
-    if project_id != "AL16":
-        raise Al16BuildError("recipe_schema_invalid", "recipe project_id must be AL16")
+    if project_id != AL16_PROJECT_ID:
+        raise Al16BuildError(
+            "recipe_schema_invalid",
+            f"recipe project_id must be {AL16_PROJECT_ID}",
+        )
     kit = _as_mapping(recipe.get("kit"), "kit")
     _require_exact_keys(
         kit,
@@ -924,6 +935,44 @@ def _publish_artifact_set(artifacts: Mapping[Path, str]) -> None:
     )
 
 
+@contextmanager
+def _exclusive_al16_output_lock(output_path: Path) -> Generator[None, None, None]:
+    """Serialize one AL16 output name without deleting an unknown lock."""
+
+    validate_local_file_export_artifact_path(
+        output_path,
+        label="output artifact",
+    )
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = output_path.with_name(f".{output_path.name}{_AL16_OUTPUT_LOCK_SUFFIX}")
+    lock_name = safe_local_file_export_artifact_name(
+        lock_path,
+        fallback="al16-build.lock",
+    )
+    try:
+        lock_path.mkdir()
+    except FileExistsError as exc:
+        raise Al16BuildError(
+            "artifact_path_collision",
+            f"AL16 output is already locked: {lock_name}",
+        ) from exc
+
+    try:
+        yield
+    finally:
+        active_exception = sys.exception()
+        try:
+            lock_path.rmdir()
+        except OSError as exc:
+            if active_exception is not None:
+                active_exception.add_note(f"AL16 output lock cleanup also failed: {lock_name}.")
+            else:
+                raise Al16BuildError(
+                    "artifact_publication_failed",
+                    f"AL16 output lock cleanup failed: {lock_name}",
+                ) from exc
+
+
 def build_al16_rytm_kit(
     *,
     reference_path: Path,
@@ -952,14 +1001,17 @@ def build_al16_rytm_kit(
     operation_id = ""
     result: Al16BuildResult
     try:
-        with operation(
-            "al16_rytm_kit_export",
-            logger=_logger,
-            reference_name=reference_name,
-            recipe_name=recipe_name,
-            output_name=output_name,
-            destination_slot=destination_slot,
-        ) as operation_id:
+        with (
+            operation(
+                "al16_rytm_kit_export",
+                logger=_logger,
+                reference_name=reference_name,
+                recipe_name=recipe_name,
+                output_name=output_name,
+                destination_slot=destination_slot,
+            ) as operation_id,
+            _exclusive_al16_output_lock(output_path),
+        ):
             validate_local_file_export_artifact_path(
                 reference_path,
                 label="reference input",
@@ -1030,8 +1082,8 @@ def build_al16_rytm_kit(
             )
             kit = _as_mapping(recipe.get("kit"), "kit")
             manifest: dict[str, object] = {
-                "schema_version": 1,
-                "project_id": "AL16",
+                "schema_version": AL16_BANK_SCHEMA_VERSION,
+                "project_id": AL16_PROJECT_ID,
                 "build_status": "blocked",
                 "build_timestamp": _build_timestamp(),
                 "generator_contract": AL16_GENERATOR_CONTRACT,
@@ -1079,6 +1131,11 @@ def build_al16_rytm_kit(
                 manifest_path,
                 fallback="manifest.json",
             )
+            if output_path.exists():
+                raise FileExistsError(
+                    "refusing a blocked build while a potentially stale output exists: "
+                    f"{output_name}"
+                )
             _write_blocked_artifacts(
                 manifest_path=manifest_path,
                 validation_path=validation_path,
