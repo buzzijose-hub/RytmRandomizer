@@ -6,8 +6,8 @@
  * The operator report that drove this plan was "I can't even use the app
  * without a device" — this spec pins the fixed behavior:
  *
- *  - the app mounts PAST the offline shell (session status arrives even
- *    with zero hardware);
+ *  - the cockpit mounts AND the session hydrates (session status arrives
+ *    even with zero hardware) — no ReconnectBanner in sight;
  *  - the header pill + device rail reach the honest `searching`
  *    presentation ("No hardware detected — still scanning (every 2 s)")
  *    with the "Preview — mock data" badges;
@@ -36,9 +36,11 @@ test.describe('no-device journey (backend off)', () => {
 
     await page.goto('/');
 
-    // The app mounts past the offline shell: no device ≠ no session.
+    // The cockpit mounts and the session hydrates: no device ≠ no session.
+    // With the sidecar up throughout, the ReconnectBanner never appears
+    // (the initial-connect grace absorbs the fast healthy dial).
     await expect(page.getByTestId('cockpit-root')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByTestId('offline-shell')).toHaveCount(0);
+    await expect(page.getByTestId('reconnect-banner')).toHaveCount(0);
 
     // Header pill reaches the searching phase (first poll lands within 2 s).
     await expect(page.getByTestId('connection-pill')).toHaveText(/searching/, {
