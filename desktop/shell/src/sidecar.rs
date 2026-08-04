@@ -468,8 +468,7 @@ mod tests {
     #[test]
     fn resolve_token_file_path_honors_env_override() {
         let _env_guard = lock_process_env();
-        let _env_override =
-            ScopedEnvVar::set(TOKEN_FILE_ENV_VAR, "C:/tmp/override-token.txt");
+        let _env_override = ScopedEnvVar::set(TOKEN_FILE_ENV_VAR, "C:/tmp/override-token.txt");
         assert_eq!(
             resolve_token_file_path(),
             std::path::PathBuf::from("C:/tmp/override-token.txt")
@@ -717,8 +716,7 @@ mod tests {
     #[test]
     fn resolve_arm_secret_file_path_honors_env_override() {
         let _env_guard = lock_process_env();
-        let _env_override =
-            ScopedEnvVar::set(ARM_SECRET_FILE_ENV_VAR, "/tmp/override-arm-secret");
+        let _env_override = ScopedEnvVar::set(ARM_SECRET_FILE_ENV_VAR, "/tmp/override-arm-secret");
         assert_eq!(
             resolve_arm_secret_file_path(),
             std::path::PathBuf::from("/tmp/override-arm-secret")
