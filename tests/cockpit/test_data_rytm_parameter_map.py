@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from rytm_randomizer.cockpit.data import rytm_parameter_map as mapmod
 from rytm_randomizer.cockpit.data.rytm_parameter_map import (
     cockpit_pad_channel,
     cockpit_parameter_control,
@@ -57,6 +58,20 @@ def test_cockpit_parameter_mapping_returns_canonical_catalog_rows() -> None:
     assert decay.parameter == "Decay"
     assert decay.nrpn_lsb == 2
     assert amp_volume is ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER[("AMP", "Amp Volume")]
+
+
+def test_cockpit_parameter_mapping_rejects_a_dangling_alias(monkeypatch) -> None:
+    catalog = dict(mapmod.ANALOG_RYTM_MACHINE_SRC_BY_MACHINE)
+    catalog["bd_hard"] = ()
+    monkeypatch.setattr(mapmod, "ANALOG_RYTM_MACHINE_SRC_BY_MACHINE", catalog)
+
+    with pytest.raises(ValueError, match="missing Analog Rytm catalog row"):
+        mapmod.cockpit_parameter_mapping("BD Hard", "tun")
+
+
+def test_cockpit_machine_known_uses_the_canonical_catalog() -> None:
+    assert mapmod.cockpit_machine_is_known("BD Hard") is True
+    assert mapmod.cockpit_machine_is_known("unknown future machine") is False
 
 
 @pytest.mark.parametrize(
