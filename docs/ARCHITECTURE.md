@@ -140,6 +140,7 @@ on one line for an existing module, you probably need a new module instead.
 | `engines/analog_rytm_12_pad_shell.py` | All-12-pad style/mutation shell. Consumes rendered style events; sends only through injected sender. |
 | `engines/analog_rytm_snapshot_shell.py` | All-12-pad current-kit snapshot shell. Extracts live-safe CC events from a decoded Rytm kit snapshot; sends only through injected sender. |
 | `snapshot/envelope.py` | Shared Elektron manufacturer envelope plus inverse 7-bit pack/unpack helpers. Pure bytes in/out. |
+| `snapshot/elektron_packed_payload.py` | Shared pure packed-payload/trailer splitter and integrity contract used by A4 and Analog Rytm saved-kit codecs. |
 | `snapshot/elektron_u14.py` | Shared pure Elektron 14-bit integer validation and packing helpers used across saved-kit families. |
 | `devices/strategies/analog_four_saved_kit_codec.py` | Shared A4 saved-kit payload validator/encoder used by decoder and writer; owns checksum/trailer handling. |
 | `devices/strategies/analog_four_saved_kit_writer.py` | Pure A4 saved-kit mutator/renderer consuming the shared codec, calibration, and canonical data-layer layout facts; no filesystem or MIDI I/O. |
@@ -942,7 +943,7 @@ rytm_randomizer/cockpit/export/
     serialize.py           # Phase 1, existing — pack_profile_model / unpack_profile_model
     signing.py             # Phase 3, NEW — HMAC-SHA256 signing + signed envelope (MAGIC=b"RYMS")
     verifier.py            # Phase 3, NEW — never-raises VerificationResult over signed envelopes and bare blobs
-    writer.py              # Phase 3, NEW — atomic_write(path, blob): temp + fsync + race-safe atomic publish
+    writer.py              # Phase 3, NEW — atomic_write + transactional atomic_write_set with rollback
     cli.py                 # Phase 3, NEW — cockpit-export-profile-model CLI (pack -> sign -> write -> verify)
 rytm_randomizer/reports/
     cockpit_export_rehearsal.py  # Phase 3, NEW — passive pre-flight report mirroring PR #104's panel/binding/check shape
@@ -951,7 +952,7 @@ rytm_randomizer/reports/
 The new code lives entirely under the existing `cockpit/export/` and
 `reports/` subpackages — no new top-level module (Gate 9). The pipeline
 is pure stdlib (`hmac`, `hashlib`, `zlib`, `secrets`, `os.replace`,
-`os.rename`, `os.link`, `tempfile.mkstemp`) plus the already-shipped MessagePack
+`os.link`, `tempfile.mkstemp`) plus the already-shipped MessagePack
 dependency; no new third-party package and no new toolchain. Phase 3
 introduces no `mido` imports, no socket / network calls, no subprocess /
 threading / asyncio — the entire pipeline runs in-process on the
@@ -1100,12 +1101,16 @@ now distinguishes `PermissionError` (loud) from genuine "this one file is malfor
 to corrupted JSON.
 
 Publication is race-safe: overwrite mode uses same-filesystem `os.replace`;
-no-overwrite mode uses `os.rename` on Windows (including removable filesystems
-that do not support hard links) and create-if-absent `os.link` on POSIX. The
-temporary file data is fully written and `fsync`ed before publication. Parent
-directory metadata is not fsynced, so persistence of a newly published name
-across sudden power loss remains filesystem-dependent; process-visible output
-is still atomic and never partial.
+no-overwrite mode uses create-if-absent `os.link` on every supported platform,
+then removes the staged name. A filesystem without hard-link support fails
+closed instead of weakening collision safety. The temporary file data is fully
+written and `fsync`ed before publication. `atomic_write_set` first stages every
+artifact in a sibling transaction directory, publishes in mapping order, and
+rolls back all prior publications if any destination collides or publication
+fails; recovery data is retained only when rollback itself is incomplete.
+Parent directory metadata is not fsynced, so persistence of a newly published
+name across sudden power loss remains filesystem-dependent; process-visible
+output is still atomic and never partial.
 
 The matching arch tests `tests/architecture/test_abstraction_reuse.py` and
 `tests/architecture/test_no_silent_overwrite_writes.py` enforce that no second

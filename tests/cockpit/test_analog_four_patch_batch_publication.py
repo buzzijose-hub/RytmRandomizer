@@ -25,6 +25,16 @@ class _LockOwner(TypedDict):
     source_kit_sha256: str
 
 
+def test_export_path_name_uses_shared_filename_safety() -> None:
+    from rytm_randomizer.cockpit.export.analog_four_export_contracts import (
+        analog_four_export_path_name,
+    )
+
+    assert analog_four_export_path_name(Path("unsafe\nname.wav")) == "<invalid>"
+    assert analog_four_export_path_name(Path("safe.wav")) == "safe.wav"
+    assert analog_four_export_path_name(object()) == "<invalid>"
+
+
 def _lock_owner(seed: str = "a") -> _LockOwner:
     return {
         "generation_id": seed * 32,

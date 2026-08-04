@@ -14,8 +14,8 @@
   requested transactional sidecar publication, bounded portable names, closed
   result typing, committed-evidence hash locks, and documentation corrections.
 - 2026-08-03: Transactional evidence hardening completed. Fresh local gates
-  passed: 115 focused exporter/codec/CLI tests, 95 exporter/codec proof tests,
-  200 data-drift tests, 739 architecture tests, 685 frozen V1.34 parity tests,
-  and the 7,627-test full suite with 4 skips. All 14 touched production modules
-  retained 100% line and branch coverage, and deterministic blocked-build
-  sidecar hashes remained byte-identical across two runs.
+  passed: 93 AL16 exporter tests, 75 transactional-publication tests with 1
+  skip, 740 architecture tests, 685 frozen V1.34 parity tests, and the
+  7,678-test full suite with 4 skips. All 18 touched production modules retained
+  100% line and branch coverage, and deterministic blocked-build sidecar hashes
+  remained byte-identical across two runs.

@@ -387,17 +387,17 @@ def test_atomic_write_no_overwrite_closes_publish_race(
     assert sorted(path.name for path in tmp_path.iterdir()) == ["out.bin"]
 
 
-def test_atomic_write_no_overwrite_closes_windows_publish_race(
+def test_atomic_write_no_overwrite_closes_publish_race_on_windows(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     dest = tmp_path / "out.bin"
     monkeypatch.setattr("sys.platform", "win32")
 
-    def racing_rename(_src: str, dst: str | Path) -> None:
+    def racing_link(_src: str, dst: str | Path) -> None:
         Path(dst).write_bytes(b"racer")
         raise FileExistsError(dst)
 
-    monkeypatch.setattr("os.rename", racing_rename)
+    monkeypatch.setattr("os.link", racing_link)
 
     with pytest.raises(FileExistsError):
         atomic_write(dest, b"ours")
@@ -638,6 +638,33 @@ def test_atomic_write_set_refuses_existing_destination_without_overwrite(
         atomic_write_set({destination: b"replacement"})
 
     assert destination.read_bytes() == b"existing"
+
+
+def test_atomic_write_set_refuses_concurrent_destination_without_overwrite(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    first = tmp_path / "first.json"
+    second = tmp_path / "second.md"
+    publish_no_overwrite = writer_module._publish_no_overwrite
+
+    def collide_on_second_publication(tmp_name: str, destination: Path) -> None:
+        if destination == second:
+            destination.write_bytes(b"concurrent")
+        publish_no_overwrite(tmp_name, destination)
+
+    monkeypatch.setattr(
+        writer_module,
+        "_publish_no_overwrite",
+        collide_on_second_publication,
+    )
+
+    with pytest.raises(FileExistsError, match="second.md"):
+        atomic_write_set({first: b"first", second: b"second"})
+
+    assert not first.exists()
+    assert second.read_bytes() == b"concurrent"
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["second.md"]
 
 
 def test_atomic_write_set_wraps_transaction_directory_creation_failure(

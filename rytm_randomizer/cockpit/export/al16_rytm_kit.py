@@ -10,7 +10,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Final, Literal, TypeAlias, cast
+from typing import ClassVar, Final, Literal, TypeAlias, cast
 
 from ...data.al16_rytm import (
     AL16_BANK_STATES,
@@ -41,7 +41,7 @@ from ...data.rytm_machine_catalog import (
     is_machine_allowed_on_pad,
 )
 from ...devices.analog_rytm import get_analog_rytm_saved_kit_codec_capability
-from ...observability.errors import Al16BuildError, Al16FailureReason
+from ...observability.errors import BoundaryError
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
 from ...observability.tracing import operation
@@ -73,14 +73,31 @@ AL16_GENERATOR_DEPENDENCIES: Final[tuple[str, ...]] = (
     "rytm_randomizer/data/al16_rytm.py",
     "rytm_randomizer/data/analog_rytm_kit_layout.py",
     "rytm_randomizer/data/rytm_machine_catalog.py",
+    "rytm_randomizer/devices/__init__.py",
     "rytm_randomizer/devices/analog_rytm.py",
+    "rytm_randomizer/devices/registry.py",
     "rytm_randomizer/devices/strategies/analog_rytm_saved_kit_codec.py",
     "rytm_randomizer/observability/errors.py",
+    "rytm_randomizer/snapshot/__init__.py",
     "rytm_randomizer/snapshot/elektron_packed_payload.py",
     "rytm_randomizer/snapshot/elektron_u14.py",
     "rytm_randomizer/snapshot/envelope.py",
 )
 
+Al16FailureReason: TypeAlias = Literal[
+    "artifact_path_collision",
+    "artifact_publication_failed",
+    "build_interrupted",
+    "build_validation_failed",
+    "destination_slot_invalid",
+    "recipe_schema_invalid",
+    "reference_hash_mismatch",
+    "reference_round_trip_mismatch",
+    "reference_sysex_invalid",
+    "source_input_unavailable",
+    "source_read_failed",
+    "stale_output_present",
+]
 Al16BuildStatus: TypeAlias = Literal["blocked"]
 Al16AuditScalar: TypeAlias = str | int | bool | None
 Al16AuditValue: TypeAlias = Al16AuditScalar | tuple[int, ...]
@@ -93,6 +110,16 @@ FieldVerificationStatus: TypeAlias = Literal[
 ]
 
 _logger = get_logger(__name__)
+
+
+class Al16BuildError(BoundaryError, ValueError):
+    """One typed, bounded AL16 offline-build failure owned by this exporter."""
+
+    fingerprint: ClassVar[str] = "al16.rytm_kit_export.validation_failed"
+
+    def __init__(self, reason: Al16FailureReason, message: str) -> None:
+        super().__init__(message, context={"reason": reason})
+        self.reason: Al16FailureReason = reason
 
 
 @dataclass(frozen=True)
@@ -143,31 +170,49 @@ class Al16BuildResult:
 
 def _as_mapping(value: object, label: str) -> Mapping[str, object]:
     if not isinstance(value, dict):
-        raise ValueError(f"{label} must be an object with string keys")
+        raise Al16BuildError(
+            "recipe_schema_invalid",
+            f"{label} must be an object with string keys",
+        )
     untyped = cast(dict[object, object], value)
     if not all(isinstance(key, str) for key in untyped):
-        raise ValueError(f"{label} must be an object with string keys")
+        raise Al16BuildError(
+            "recipe_schema_invalid",
+            f"{label} must be an object with string keys",
+        )
     return cast(Mapping[str, object], untyped)
 
 
 def _as_string(value: object, label: str) -> str:
     if not isinstance(value, str) or not value:
-        raise ValueError(f"{label} must be a non-empty string")
+        raise Al16BuildError(
+            "recipe_schema_invalid",
+            f"{label} must be a non-empty string",
+        )
     return value
 
 
 def _as_int(value: object, label: str) -> int:
     if isinstance(value, bool) or not isinstance(value, int):
-        raise ValueError(f"{label} must be an integer")
+        raise Al16BuildError(
+            "recipe_schema_invalid",
+            f"{label} must be an integer",
+        )
     return value
 
 
 def _as_string_list(value: object, label: str) -> tuple[str, ...]:
     if not isinstance(value, list):
-        raise ValueError(f"{label} must be an array of strings")
+        raise Al16BuildError(
+            "recipe_schema_invalid",
+            f"{label} must be an array of strings",
+        )
     items = cast(list[object], value)
     if not all(isinstance(item, str) for item in items):
-        raise ValueError(f"{label} must be an array of strings")
+        raise Al16BuildError(
+            "recipe_schema_invalid",
+            f"{label} must be an array of strings",
+        )
     return tuple(cast(str, item) for item in items)
 
 
@@ -186,12 +231,21 @@ def _require_exact_keys(
         details.append(f"missing={missing}")
     if unknown:
         details.append(f"unknown={unknown}")
-    raise ValueError(f"{label} keys are invalid: {', '.join(details)}")
+    raise Al16BuildError(
+        "recipe_schema_invalid",
+        f"{label} keys are invalid: {', '.join(details)}",
+    )
 
 
 def _load_recipe_bytes(payload: bytes) -> Mapping[str, object]:
     # JSON is a strict YAML subset, keeping the public recipe dependency-free.
-    parsed = cast(object, json.loads(payload.decode("utf-8")))
+    try:
+        parsed = cast(object, json.loads(payload.decode("utf-8")))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise Al16BuildError(
+            "recipe_schema_invalid",
+            "AL16 recipe must be valid UTF-8 JSON",
+        ) from exc
     return _as_mapping(parsed, "recipe")
 
 
@@ -368,22 +422,34 @@ def _convert_supported_value(
     if converter == RYTM_CONVERTER_VERIFIED_7BIT:
         raw = _as_int(requested, "verified 7-bit value")
         if not 0 <= raw <= 127:
-            raise ValueError("verified 7-bit value must be in 0..127")
+            raise Al16BuildError(
+                "recipe_schema_invalid",
+                "verified 7-bit value must be in 0..127",
+            )
         return raw, raw
     if converter == RYTM_CONVERTER_CENTERED_7BIT:
         if requested in ("neutral", "center"):
             return 0, 64
         displayed = _as_int(requested, "centered display value")
         if not -64 <= displayed <= 63:
-            raise ValueError("centered display value must be in -64..63")
+            raise Al16BuildError(
+                "recipe_schema_invalid",
+                "centered display value must be in -64..63",
+            )
         return displayed, displayed + 64
     if converter == RYTM_CONVERTER_FILTER_TYPE_ENUM:
         label = _as_string(requested, "filter type").upper()
         try:
             return label, AL16_RYTM_FILTER_TYPES[label]
         except KeyError as exc:
-            raise ValueError(f"unsupported filter type: {label}") from exc
-    raise ValueError(f"unknown AL16 converter: {converter}")
+            raise Al16BuildError(
+                "recipe_schema_invalid",
+                f"unsupported filter type: {label}",
+            ) from exc
+    raise Al16BuildError(
+        "recipe_schema_invalid",
+        f"unknown AL16 converter: {converter}",
+    )
 
 
 def _original_semantic(
@@ -638,10 +704,10 @@ def _inspect_recipe(
         {"schema_version", "project_id", "kit", "preserve", "tracks"},
     )
     if _as_int(recipe.get("schema_version"), "schema_version") != 1:
-        raise ValueError("recipe schema_version must be 1")
+        raise Al16BuildError("recipe_schema_invalid", "recipe schema_version must be 1")
     project_id = _as_string(recipe.get("project_id"), "project_id")
     if project_id != "AL16":
-        raise ValueError("recipe project_id must be AL16")
+        raise Al16BuildError("recipe_schema_invalid", "recipe project_id must be AL16")
     kit = _as_mapping(recipe.get("kit"), "kit")
     _require_exact_keys(
         kit,
@@ -650,31 +716,52 @@ def _inspect_recipe(
     )
     state_number = _as_int(kit.get("state"), "kit.state")
     if not 1 <= state_number <= len(AL16_BANK_STATES):
-        raise ValueError("kit.state must be in 1..16")
+        raise Al16BuildError("recipe_schema_invalid", "kit.state must be in 1..16")
     if state_number != _PHASE_R1_STATE_NUMBER:
-        raise ValueError("Phase R1 supports only the AL02 LOCK proof recipe")
+        raise Al16BuildError(
+            "recipe_schema_invalid",
+            "Phase R1 supports only the AL02 LOCK proof recipe",
+        )
     state = AL16_BANK_STATES[state_number - 1]
     kit_name = _as_string(kit.get("name"), "kit.name")
     try:
         encoded_kit_name = kit_name.encode("ascii")
     except UnicodeEncodeError as exc:
-        raise ValueError("kit.name must fit the 16-byte ASCII Rytm name field") from exc
+        raise Al16BuildError(
+            "recipe_schema_invalid",
+            "kit.name must fit the 16-byte ASCII Rytm name field",
+        ) from exc
     if len(encoded_kit_name) > RYTM_KIT_NAME_LENGTH:
-        raise ValueError("kit.name must fit the 16-byte ASCII Rytm name field")
+        raise Al16BuildError(
+            "recipe_schema_invalid",
+            "kit.name must fit the 16-byte ASCII Rytm name field",
+        )
     if kit_name != f"AL{state.number:02d} {state.name}":
-        raise ValueError("kit.name must match the reserved AL16 bank state")
+        raise Al16BuildError(
+            "recipe_schema_invalid",
+            "kit.name must match the reserved AL16 bank state",
+        )
     tonal_zone = _as_string(kit.get("tonal_zone"), "kit.tonal_zone")
     if tonal_zone != state.tonal_zone:
-        raise ValueError("kit.tonal_zone must match the reserved AL16 bank state")
+        raise Al16BuildError(
+            "recipe_schema_invalid",
+            "kit.tonal_zone must match the reserved AL16 bank state",
+        )
     if (
         _as_int(kit.get("performance_context_bpm"), "kit.performance_context_bpm")
         != AL16_PERFORMANCE_CONTEXT_BPM
     ):
-        raise ValueError(f"kit.performance_context_bpm must be {AL16_PERFORMANCE_CONTEXT_BPM}")
+        raise Al16BuildError(
+            "recipe_schema_invalid",
+            f"kit.performance_context_bpm must be {AL16_PERFORMANCE_CONTEXT_BPM}",
+        )
     _as_string(kit.get("description"), "kit.description")
     preserve = _as_string_list(recipe.get("preserve"), "preserve")
     if preserve != AL16_PRESERVED_GLOBAL_SECTIONS:
-        raise ValueError("preserve must list the complete ordered AL16 preservation boundary")
+        raise Al16BuildError(
+            "recipe_schema_invalid",
+            "preserve must list the complete ordered AL16 preservation boundary",
+        )
 
     original_name = read_ascii_name(raw, RYTM_KIT_NAME_OFFSET, RYTM_KIT_NAME_LENGTH)
     audits = [
@@ -707,20 +794,29 @@ def _inspect_recipe(
     tracks = _as_mapping(recipe.get("tracks"), "tracks")
     expected_pads = tuple(AL16_PAD_ROLES)
     if set(tracks) != {str(pad) for pad in expected_pads}:
-        raise ValueError("recipe must describe exactly pads 1..12")
+        raise Al16BuildError(
+            "recipe_schema_invalid",
+            "recipe must describe exactly pads 1..12",
+        )
     preserved: list[int] = []
     for pad in expected_pads:
         track = _as_mapping(tracks[str(pad)], f"tracks.{pad}")
         role = _as_string(track.get("role"), f"tracks.{pad}.role")
         if role != AL16_PAD_ROLES[pad]:
-            raise ValueError(f"tracks.{pad}.role does not match the permanent AL16 pad role")
+            raise Al16BuildError(
+                "recipe_schema_invalid",
+                f"tracks.{pad}.role does not match the permanent AL16 pad role",
+            )
         mode = _as_string(track.get("mode"), f"tracks.{pad}.mode")
         if mode == AL16_TRACK_MODE_PRESERVE:
             _require_exact_keys(track, f"tracks.{pad}", {"role", "mode"})
             preserved.append(pad)
             continue
         if mode != AL16_TRACK_MODE_PATCH:
-            raise ValueError(f"tracks.{pad}.mode must be patch or preserve")
+            raise Al16BuildError(
+                "recipe_schema_invalid",
+                f"tracks.{pad}.mode must be patch or preserve",
+            )
         _require_exact_keys(
             track,
             f"tracks.{pad}",
@@ -919,29 +1015,15 @@ def build_al16_rytm_kit(
             export_phase = "source_read"
             failure_artifact_name = recipe_name
             recipe_bytes = recipe_path.read_bytes()
-            try:
-                recipe = _load_recipe_bytes(recipe_bytes)
-            except (KeyError, ValueError, TypeError) as exc:
-                raise Al16BuildError(
-                    "recipe_schema_invalid",
-                    "AL16 recipe schema is invalid",
-                ) from exc
+            recipe = _load_recipe_bytes(recipe_bytes)
             recipe_sha256 = hashlib.sha256(recipe_bytes).hexdigest()
             export_phase = "validation"
-            try:
-                audits, gaps, preserved_tracks = _inspect_recipe(
-                    recipe,
-                    decoded.unpacked,
-                    destination_slot,
-                )
-                kit = _as_mapping(recipe.get("kit"), "kit")
-            except Al16BuildError:
-                raise
-            except (KeyError, ValueError, TypeError) as exc:
-                raise Al16BuildError(
-                    "recipe_schema_invalid",
-                    "AL16 recipe schema is invalid",
-                ) from exc
+            audits, gaps, preserved_tracks = _inspect_recipe(
+                recipe,
+                decoded.unpacked,
+                destination_slot,
+            )
+            kit = _as_mapping(recipe.get("kit"), "kit")
             manifest: dict[str, object] = {
                 "schema_version": 1,
                 "project_id": "AL16",
@@ -1012,7 +1094,9 @@ def build_al16_rytm_kit(
     except (KeyError, ValueError, TypeError, OSError, KeyboardInterrupt, SystemExit) as exc:
         transaction_phase: str | None = None
         failure_fingerprint = _AL16_EXPORT_FAILURE_FINGERPRINT
-        if isinstance(exc, WriteSetError):
+        if isinstance(exc, Al16BuildError):
+            failure_fingerprint = exc.fingerprint
+        elif isinstance(exc, WriteSetError):
             failure_artifact_name = exc.failure_context.artifact_name
             transaction_phase = exc.failure_context.phase
             failure_fingerprint = exc.fingerprint

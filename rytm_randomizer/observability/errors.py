@@ -73,12 +73,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from types import MappingProxyType
-from typing import ClassVar, Literal, TypeAlias
+from typing import ClassVar
 
 __all__ = [
     "ActiveBoundaryError",
-    "Al16BuildError",
-    "Al16FailureReason",
     "BoundaryError",
     "ConfigError",
     "DataError",
@@ -90,21 +88,6 @@ __all__ = [
     "RealMidiSendError",
     "RytmRandomizerError",
     "StateError",
-]
-
-Al16FailureReason: TypeAlias = Literal[
-    "artifact_path_collision",
-    "artifact_publication_failed",
-    "build_interrupted",
-    "build_validation_failed",
-    "destination_slot_invalid",
-    "recipe_schema_invalid",
-    "reference_hash_mismatch",
-    "reference_round_trip_mismatch",
-    "reference_sysex_invalid",
-    "source_input_unavailable",
-    "source_read_failed",
-    "stale_output_present",
 ]
 
 
@@ -207,16 +190,6 @@ class BoundaryError(RytmRandomizerError):
     """Generic boundary / contract violation that is not MIDI- or data-shaped."""
 
     fingerprint: ClassVar[str] = "boundary.error.unspecified"
-
-
-class Al16BuildError(BoundaryError, ValueError):
-    """One typed, bounded AL16 offline-build failure."""
-
-    fingerprint: ClassVar[str] = "al16.rytm_kit_export.validation_failed"
-
-    def __init__(self, reason: Al16FailureReason, message: str) -> None:
-        super().__init__(message, context={"reason": reason})
-        self.reason: Al16FailureReason = reason
 
 
 class ConfigError(RytmRandomizerError):

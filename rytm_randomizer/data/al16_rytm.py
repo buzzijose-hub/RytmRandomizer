@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
@@ -19,7 +20,14 @@ RYTM_CONVERTER_CENTERED_7BIT: Final[RytmValueConverter] = "centered_7bit"
 RYTM_CONVERTER_FILTER_TYPE_ENUM: Final[RytmValueConverter] = "filter_type_enum"
 AL16_TRACK_MODE_PRESERVE: Final[Al16TrackMode] = "preserve"
 AL16_TRACK_MODE_PATCH: Final[Al16TrackMode] = "patch"
+AL16_BANK_SCHEMA_VERSION: Final[int] = 1
+AL16_PROJECT_ID: Final[str] = "AL16"
 AL16_PERFORMANCE_CONTEXT_BPM: Final[int] = 138
+AL16_BANK_CONCEPT: Final[str] = (
+    "One machine moving through sixteen operating states; original Reference to "
+    "Discovery material, not a forensic recreation."
+)
+AL16_ADJACENT_SONIC_DNA_TARGET_PERCENT: Final[tuple[int, int]] = (70, 85)
 
 
 @dataclass(frozen=True)
@@ -116,7 +124,33 @@ AL16_PRESERVED_GLOBAL_SECTIONS: Final[tuple[str, ...]] = (
 )
 
 
+def al16_bank_spec_payload() -> dict[str, object]:
+    """Return the canonical serializable AL16 bank reservation."""
+
+    return {
+        "schema_version": AL16_BANK_SCHEMA_VERSION,
+        "project_id": AL16_PROJECT_ID,
+        "performance_context_bpm": AL16_PERFORMANCE_CONTEXT_BPM,
+        "concept": AL16_BANK_CONCEPT,
+        "adjacent_sonic_dna_target_percent": list(AL16_ADJACENT_SONIC_DNA_TARGET_PERCENT),
+        "states": [
+            {"number": state.number, "name": state.name, "tonal_zone": state.tonal_zone}
+            for state in AL16_BANK_STATES
+        ],
+        "permanent_pad_roles": {str(pad): role for pad, role in AL16_PAD_ROLES.items()},
+    }
+
+
+def render_al16_bank_spec() -> str:
+    """Render the checked-in JSON-compatible YAML from canonical data."""
+
+    return json.dumps(al16_bank_spec_payload(), indent=2, ensure_ascii=True) + "\n"
+
+
 __all__ = [
+    "AL16_ADJACENT_SONIC_DNA_TARGET_PERCENT",
+    "AL16_BANK_CONCEPT",
+    "AL16_BANK_SCHEMA_VERSION",
     "AL16_BANK_STATES",
     "AL16_PAD_ROLES",
     "AL16_PERFORMANCE_CONTEXT_BPM",
@@ -126,6 +160,7 @@ __all__ = [
     "AL16_RYTM_WRITABLE_FIELDS",
     "AL16_TRACK_MODE_PATCH",
     "AL16_TRACK_MODE_PRESERVE",
+    "AL16_PROJECT_ID",
     "Al16BankState",
     "Al16TrackMode",
     "RYTM_CONVERTER_CENTERED_7BIT",
@@ -133,4 +168,6 @@ __all__ = [
     "RYTM_CONVERTER_VERIFIED_7BIT",
     "RytmValueConverter",
     "RytmWritableField",
+    "al16_bank_spec_payload",
+    "render_al16_bank_spec",
 ]

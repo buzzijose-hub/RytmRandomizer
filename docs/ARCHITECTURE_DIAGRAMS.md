@@ -2619,10 +2619,10 @@ sequenceDiagram
     Sign-->>CLI: signed envelope bytes<br/>(RYMS || ver || algo || key_id || sig || payload_len || payload)
     CLI->>Writer: atomic_write(output_path, envelope)
     activate Writer
-    Note over Writer: 1. mkstemp sibling in path.parent<br/>2. complete write + file fsync<br/>3. overwrite: os.replace<br/>4. no-overwrite: Windows os.rename / POSIX os.link
+    Note over Writer: 1. mkstemp sibling in path.parent<br/>2. complete write + file fsync<br/>3. overwrite: os.replace<br/>4. no-overwrite: create-if-absent os.link
     Writer->>Disk: write tmp file (same dir as output)
     Writer->>Disk: fsync tmp fd
-    Writer->>Disk: os.replace(tmp, output)<br/>or race-safe Windows os.rename / POSIX os.link
+    Writer->>Disk: os.replace(tmp, output)<br/>or race-safe create-if-absent os.link
     Writer-->>CLI: WriteResult (or classified error; tmp best-effort cleaned)
     deactivate Writer
     CLI->>Verifier: verify_file(output_path,<br/>key_resolver=lambda kid: key)
@@ -2656,8 +2656,8 @@ sequenceDiagram
   the GUI.
 - **Atomic write is load-bearing.** The temp file is opened in the
   SAME directory as the target. Overwrite mode uses same-filesystem
-  `os.replace`; no-overwrite mode uses Windows `os.rename` or POSIX
-  `os.link`, so a concurrent destination creator cannot be clobbered.
+  `os.replace`; no-overwrite mode uses create-if-absent `os.link` on every
+  supported platform, so a concurrent destination creator cannot be clobbered.
   File data is `os.fsync`ed before publication. Parent directory metadata is
   not fsynced, so name persistence across sudden power loss is filesystem-dependent.
 - **Phase 3.5 keystore is the only deferred piece.** The CLI accepts a
@@ -2883,7 +2883,7 @@ sequenceDiagram
     CLI->>Sign: pack_signed(payload, algo, key_id, sig)
     Sign-->>CLI: signed envelope (RYMS || ... || payload)
     CLI->>Writer: atomic_write(output, envelope, overwrite=False)
-    Writer->>Disk: mkstemp sibling + file fsync<br/>+ Windows os.rename / POSIX os.link
+    Writer->>Disk: mkstemp sibling + file fsync<br/>+ create-if-absent os.link
     Writer-->>CLI: WriteResult (FileExistsError on collision,<br/>WriteError on OSError — both classified)
     CLI->>Verifier: verify_file(output, key_resolver=...)
     Verifier->>Disk: read envelope
@@ -2895,7 +2895,7 @@ sequenceDiagram
     A4Render-->>A4Export: rebuilt 2,770-byte frame + SHA256
     A4Export->>Writer: atomic_write(output, frame, overwrite=False)
     A4Export->>FileContract: classify local-file failures by caller phase
-    Writer->>A4Disk: mkstemp sibling + file fsync<br/>+ Windows os.rename / POSIX os.link
+    Writer->>A4Disk: mkstemp sibling + file fsync<br/>+ create-if-absent os.link
     Writer-->>A4Export: WriteResult
     A4Export-->>Operator: render + write audit result
 
@@ -2944,7 +2944,7 @@ sequenceDiagram
   test-only seam that produced a blob the unpacker would reject is gone.
 - **`ProfileRegistry.save` reuses the canonical writer (PR 7, M7).** The
   wizard's save path inherits `overwrite=False`, atomic temp + file fsync +
-  Windows `os.rename` / POSIX `os.link`, and the classified `WriteError` taxonomy.
+  create-if-absent `os.link`, and the classified `WriteError` taxonomy.
 - **`_safe_load_profile` distinguishes error classes (PR 7, M6).**
   `PermissionError` is loud (refuses to start with a denied profile dir);
   malformed JSON is warn-and-skip (the rest of the registry still loads).

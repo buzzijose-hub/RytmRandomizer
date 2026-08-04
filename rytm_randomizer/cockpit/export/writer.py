@@ -13,10 +13,9 @@ three guarantees the writer must satisfy:
    fsynced, so persistence of a newly published name across sudden power
    loss remains filesystem-dependent.
 3. **Fail closed on every supported platform.** Overwriting uses
-   :func:`os.replace`. No-overwrite publication uses :func:`os.rename`
-   on Windows and :func:`os.link` on POSIX so destination creation stays
-   race-safe. POSIX filesystems without hard-link support return a write
-   failure rather than weakening the no-overwrite guarantee.
+   :func:`os.replace`. No-overwrite publication uses :func:`os.link` so
+   destination creation stays race-safe. Filesystems without hard-link
+   support return a write failure rather than weakening the guarantee.
 
 Public surface:
 
@@ -222,9 +221,9 @@ def atomic_write(path: Path, data: bytes, *, overwrite: bool = False) -> WriteRe
        *before* close (durability — survives a crash between write and
        rename), then close.
     5. Publish the temp atomically. With ``overwrite=True``, use
-       :func:`os.replace`. Otherwise, use Windows :func:`os.rename` or
-       POSIX :func:`os.link`; both fail if another process created the
-       destination after the initial existence check.
+       :func:`os.replace`. Otherwise, use :func:`os.link`, which fails if
+       another process created the destination after the initial existence
+       check.
     6. On any exception during steps 3-5, the temp file is best-effort
        unlinked (cleanup failures are swallowed silently — losing a
        single orphan ``.tmp`` is dramatically better than masking the
@@ -331,9 +330,6 @@ def _publish_temp_file(tmp_name: str, path: Path, *, overwrite: bool) -> None:
 def _publish_no_overwrite(tmp_name: str, path: Path) -> None:
     """Publish ``tmp_name`` without replacing a concurrent destination."""
 
-    if sys.platform == "win32":
-        os.rename(tmp_name, path)
-        return
     os.link(tmp_name, path)
     try:
         os.unlink(tmp_name)
@@ -484,7 +480,10 @@ def atomic_write_set(
         phase = "publication"
         for destination in destinations:
             active_destination = destination
-            os.replace(staged[destination], destination)
+            if overwrite:
+                os.replace(staged[destination], destination)
+            else:
+                _publish_no_overwrite(str(staged[destination]), destination)
             published.add(destination)
     except (OSError, KeyboardInterrupt, SystemExit) as exc:
         rollback_failures = _rollback_write_set(
@@ -513,6 +512,10 @@ def atomic_write_set(
                 "Atomic write-set failure context: " f"{context.phase} for {context.artifact_name}."
             )
             raise
+        if isinstance(exc, FileExistsError) and not overwrite and not rollback_failures:
+            raise FileExistsError(
+                f"refusing to overwrite existing artifact: {context.artifact_name}"
+            ) from exc
         raise WriteSetError(context) from exc
 
     results = tuple(

@@ -34,12 +34,13 @@ from rytm_randomizer.cockpit.export.writer import (
 from rytm_randomizer.data.al16_rytm import (
     AL16_BANK_STATES,
     AL16_PAD_ROLES,
-    AL16_PERFORMANCE_CONTEXT_BPM,
     AL16_TRACK_MODE_PRESERVE,
     RYTM_CONVERTER_CENTERED_7BIT,
     RYTM_CONVERTER_FILTER_TYPE_ENUM,
     RYTM_CONVERTER_VERIFIED_7BIT,
     RytmValueConverter,
+    al16_bank_spec_payload,
+    render_al16_bank_spec,
 )
 from rytm_randomizer.data.analog_rytm_kit_layout import (
     RYTM_KIT_RAW_SIZE,
@@ -68,7 +69,7 @@ _BANK_SPEC = _REPO_ROOT / "specs" / "al16" / "AL16_BANK.yaml"
 _AL02_RECIPE = _REPO_ROOT / "specs" / "al16" / "AL02_LOCK_RYTM.yaml"
 _COMMITTED_EVIDENCE_HASHES = {
     "output/al16/AL02_LOCK_RYTM_manifest.json": (
-        "fcae007d626e4d9969e58112fd9ff290872f30092ec923412a5fa10d6b569fb4"
+        "e44018fda79a1c3338b1f0460ec369639eaac6034412baa2a8b6528c6f186e41"
     ),
     "output/al16/AL02_LOCK_RYTM_validation.md": (
         "bcf04d1a77c412d93efa1ec558a817df6656ea000d0fb8b337efc992eabbe6e5"
@@ -133,15 +134,27 @@ def test_al16_bank_reserves_exact_operating_states_and_roles() -> None:
 
 
 def test_al16_bank_spec_matches_canonical_data_layer() -> None:
-    parsed = cast(object, json.loads(_BANK_SPEC.read_text(encoding="utf-8")))
-    bank = exporter._as_mapping(parsed, "AL16 bank spec")
+    rendered = render_al16_bank_spec()
 
-    assert bank["states"] == [
-        {"number": state.number, "name": state.name, "tonal_zone": state.tonal_zone}
-        for state in AL16_BANK_STATES
-    ]
-    assert bank["permanent_pad_roles"] == {str(pad): role for pad, role in AL16_PAD_ROLES.items()}
-    assert bank["performance_context_bpm"] == AL16_PERFORMANCE_CONTEXT_BPM
+    assert _BANK_SPEC.read_text(encoding="utf-8") == rendered
+    assert json.loads(rendered) == al16_bank_spec_payload()
+
+
+def test_al16_generator_dependencies_include_behavior_controllers() -> None:
+    required_dependencies = {
+        exporter.AL16_GENERATOR_MODULE,
+        "rytm_randomizer/cockpit/export/writer.py",
+        "rytm_randomizer/data/al16_rytm.py",
+        "rytm_randomizer/devices/__init__.py",
+        "rytm_randomizer/devices/analog_rytm.py",
+        "rytm_randomizer/devices/registry.py",
+        "rytm_randomizer/devices/strategies/analog_rytm_saved_kit_codec.py",
+        "rytm_randomizer/snapshot/__init__.py",
+        "rytm_randomizer/snapshot/elektron_packed_payload.py",
+        "rytm_randomizer/snapshot/envelope.py",
+    }
+
+    assert required_dependencies <= set(exporter.AL16_GENERATOR_DEPENDENCIES)
 
 
 def test_committed_al02_blocked_evidence_hashes_are_frozen() -> None:
@@ -1230,7 +1243,19 @@ def test_al16_build_classifies_invalid_reference_sysex_with_typed_error(
     assert isinstance(exc_info.value.__cause__, ValueError)
 
 
-def test_al16_build_classifies_recipe_load_failure_with_typed_error(
+@pytest.mark.parametrize("payload", (b"\xff", b"{"))
+def test_al16_recipe_loader_classifies_expected_decode_failures(payload: bytes) -> None:
+    with pytest.raises(Al16BuildError) as exc_info:
+        exporter._load_recipe_bytes(payload)
+
+    assert exc_info.value.reason == "recipe_schema_invalid"
+    assert isinstance(
+        exc_info.value.__cause__,
+        (UnicodeDecodeError, json.JSONDecodeError),
+    )
+
+
+def test_al16_build_does_not_mask_unexpected_recipe_load_failure(
     tmp_path: Path,
     monkeypatch: MonkeyPatch,
 ) -> None:
@@ -1248,7 +1273,7 @@ def test_al16_build_classifies_recipe_load_failure_with_typed_error(
     )
     monkeypatch.setattr(exporter, "_load_recipe_bytes", fail_recipe_load)
 
-    with pytest.raises(Al16BuildError) as exc_info:
+    with pytest.raises(KeyError, match="missing recipe root"):
         build_al16_rytm_kit(
             reference_path=reference_path,
             recipe_path=_AL02_RECIPE,
@@ -1256,11 +1281,8 @@ def test_al16_build_classifies_recipe_load_failure_with_typed_error(
             output_path=output_path,
         )
 
-    assert exc_info.value.reason == "recipe_schema_invalid"
-    assert isinstance(exc_info.value.__cause__, KeyError)
 
-
-def test_al16_build_classifies_unexpected_recipe_inspection_failure(
+def test_al16_build_does_not_mask_unexpected_recipe_inspection_failure(
     tmp_path: Path,
     monkeypatch: MonkeyPatch,
 ) -> None:
@@ -1278,16 +1300,13 @@ def test_al16_build_classifies_unexpected_recipe_inspection_failure(
     )
     monkeypatch.setattr(exporter, "_inspect_recipe", fail_inspection)
 
-    with pytest.raises(Al16BuildError) as exc_info:
+    with pytest.raises(TypeError, match="unexpected recipe shape"):
         build_al16_rytm_kit(
             reference_path=reference_path,
             recipe_path=_AL02_RECIPE,
             destination_slot=127,
             output_path=output_path,
         )
-
-    assert exc_info.value.reason == "recipe_schema_invalid"
-    assert isinstance(exc_info.value.__cause__, TypeError)
 
 
 def test_al16_build_preserves_typed_recipe_inspection_error(
@@ -1298,6 +1317,7 @@ def test_al16_build_preserves_typed_recipe_inspection_error(
     reference = _synthetic_reference(reference_path)
     output_path = tmp_path / "AL02_LOCK_RYTM.syx"
     expected = Al16BuildError("destination_slot_invalid", "typed validation failure")
+    logged: list[dict[str, object]] = []
 
     def fail_inspection(*_args: object) -> Never:
         raise expected
@@ -1308,6 +1328,11 @@ def test_al16_build_preserves_typed_recipe_inspection_error(
         hashlib.sha256(reference).hexdigest(),
     )
     monkeypatch.setattr(exporter, "_inspect_recipe", fail_inspection)
+    monkeypatch.setattr(
+        exporter._logger,
+        "warning",
+        lambda _message, *, extra: logged.append(extra),
+    )
 
     with pytest.raises(Al16BuildError) as exc_info:
         build_al16_rytm_kit(
@@ -1318,3 +1343,4 @@ def test_al16_build_preserves_typed_recipe_inspection_error(
         )
 
     assert exc_info.value is expected
+    assert logged[0]["fingerprint"] == expected.fingerprint

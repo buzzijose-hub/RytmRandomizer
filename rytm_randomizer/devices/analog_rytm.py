@@ -179,7 +179,7 @@ def _assert_protocol_conformance() -> None:
     call from a consumer.
     """
 
-    if not _is_analog_rytm_device(registry.get_device("analog_rytm_mk2")):
+    if not _is_analog_rytm_device(registry.get_device(_DEVICE_ID)):
         raise AssertionError(  # noqa: S101 - structural-typing invariant
             "AnalogRytmDevice does not conform to Device protocol -- check "
             "the attribute / method surface in rytm_randomizer/devices/base.py "
@@ -193,7 +193,7 @@ _assert_protocol_conformance()
 def get_analog_rytm_saved_kit_codec_capability() -> AnalogRytmSavedKitCodecCapability:
     """Resolve the specialized saved-KIT codec from the device registry."""
 
-    device = registry.get_device("analog_rytm_mk2")
+    device = registry.get_device(_DEVICE_ID)
     if not isinstance(device, AnalogRytmSavedKitCodecCapability):
         raise TypeError("registered Analog Rytm device lacks saved-KIT codec capability")
     return device

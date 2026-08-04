@@ -19,15 +19,14 @@ not positively verified. Zero raw bytes changed and no `.syx` was emitted.
 
 ## Final local verification
 
-- Focused exporter, saved-kit codec, and CLI regression tests: 115 passed,
-  1 skipped.
-- Exporter and saved-kit codec proof tests: 95 passed, 1 skipped.
+- AL16 exporter regression tests: 93 passed.
+- Transactional publication regression tests: 75 passed, 1 skipped.
 - Data-layer drift tests: 200 passed.
-- Architecture: 739 passed with one unrelated warn-only result.
+- Architecture: 740 passed with one unrelated warn-only result.
 - V1.34 byte-frozen parity: 685 passed.
-- Full suite: 7,627 passed, 4 skipped.
-- Touched production coverage: 14 files at 100% line and branch coverage.
-- Strict typing: 14 touched production modules, 0 errors and 0 warnings.
+- Full suite: 7,678 passed, 4 skipped.
+- Touched production coverage: 18 files at 100% line and branch coverage.
+- Strict typing: 18 touched production modules, 0 errors and 0 warnings.
 - Total coverage: 99.44%; pure branch coverage: 98.92%.
 - Deterministic blocked-build evidence: 18 critical gaps, zero changed raw bytes, no `.syx`.
 

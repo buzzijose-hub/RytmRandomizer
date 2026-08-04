@@ -45,22 +45,21 @@ exist; substituting candidate offsets would violate the project safety policy.
   explicit mapping gaps, absence of `.syx`, unchanged reference bytes, and
   zero MIDI dependencies.
 - Focused tests run single-process to avoid unnecessary workstation load.
-- Focused exporter, saved-kit codec, and CLI regression tests: 115 passed,
-  1 skipped.
-- Exporter and saved-kit codec proof tests: 95 passed, 1 skipped.
+- AL16 exporter regression tests: 93 passed.
+- Transactional publication regression tests: 75 passed, 1 skipped.
 - Data-layer drift tests: 200 passed.
-- Architecture tests: 739 passed with one unrelated warn-only result.
+- Architecture tests: 740 passed with one unrelated warn-only result.
 - V1.34 byte-frozen parity: 685 passed.
-- Full repository suite: 7,627 passed, 4 skipped.
+- Full repository suite: 7,678 passed, 4 skipped.
 - Total coverage: 99.44%; pure branch coverage: 98.92% against the 98% floor.
-- Touched production coverage: 14 files at 100% line and branch coverage.
-- Strict touched-production type check: 14 modules, 0 errors and 0 warnings.
+- Touched production coverage: 18 files at 100% line and branch coverage.
+- Strict touched-production type check: 18 modules, 0 errors and 0 warnings.
 - Ruff, Black, isort, and `git diff --check`: passed.
 - Two deterministic blocked builds produced byte-identical reports, recording
   18 critical mapping gaps and zero intentionally changed bytes. No `.syx` was
   emitted and the initialized reference SHA-256 remained unchanged.
 - Deterministic evidence SHA-256 values were
-  `80e264e151846452970cacd9d1e22f309befe15072d2f654b3fe436966077d37`
+  `e44018fda79a1c3338b1f0460ec369639eaac6034412baa2a8b6528c6f186e41`
   for the manifest,
   `bcf04d1a77c412d93efa1ec558a817df6656ea000d0fb8b337efc992eabbe6e5`
   for the validation report, and
