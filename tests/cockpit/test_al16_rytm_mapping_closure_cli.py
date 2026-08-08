@@ -8,11 +8,17 @@ from pathlib import Path
 
 import pytest
 
-from conftest import AL16_RYTM_MAPPING_GAP_PATHS, ANALOG_RYTM_SAVED_KIT_TEST_HEADER
-from rytm_randomizer.cockpit.export.al16_rytm_kit import (
-    deterministic_recipe_identifier,
+from conftest import (
+    ANALOG_RYTM_SAVED_KIT_TEST_HEADER,
+    Al16RytmMappingTestInputs,
+    write_al16_rytm_mapping_test_inputs,
 )
-from rytm_randomizer.data.analog_rytm_kit_layout import RYTM_KIT_RAW_SIZE
+from rytm_randomizer.data.al16_rytm import AL16_RYTM_MAPPING_GAP_PATHS
+from rytm_randomizer.data.analog_rytm_kit_layout import (
+    RYTM_KIT_RAW_SIZE,
+    RYTM_SOUND_MACHINE_TYPE_OFFSET,
+    analog_rytm_track_sound_offset,
+)
 from rytm_randomizer.devices.strategies.analog_rytm_saved_kit_codec import (
     encode_analog_rytm_saved_kit_frame,
 )
@@ -29,52 +35,28 @@ _RECIPE = {
 }
 
 
-def _write_inputs(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
+def _write_inputs(tmp_path: Path) -> Al16RytmMappingTestInputs:
     baseline = bytes(RYTM_KIT_RAW_SIZE)
     configured = bytearray(baseline)
-    configured[170] = 1
-    reference_path = tmp_path / "reference.syx"
-    configured_path = tmp_path / "configured.syx"
-    recipe_path = tmp_path / "recipe.yaml"
-    manifest_path = tmp_path / "manifest.json"
+    configured[analog_rytm_track_sound_offset(1, RYTM_SOUND_MACHINE_TYPE_OFFSET)] = 1
     reference_frame = encode_analog_rytm_saved_kit_frame(
         header=ANALOG_RYTM_SAVED_KIT_TEST_HEADER,
         unpacked=baseline,
     )
-    reference_path.write_bytes(reference_frame)
-    configured_path.write_bytes(
-        encode_analog_rytm_saved_kit_frame(
-            header=ANALOG_RYTM_SAVED_KIT_TEST_HEADER,
-            unpacked=bytes(configured),
-        )
+    configured_frame = encode_analog_rytm_saved_kit_frame(
+        header=ANALOG_RYTM_SAVED_KIT_TEST_HEADER,
+        unpacked=bytes(configured),
     )
     recipe_payload = json.dumps(_RECIPE, sort_keys=True).encode("utf-8")
-    recipe_path.write_bytes(recipe_payload)
-    manifest_path.write_text(
-        json.dumps(
-            {
-                "critical_mapping_gaps": [
-                    {"semantic_path": path} for path in AL16_RYTM_MAPPING_GAP_PATHS
-                ],
-                "semantic_field_audits": [
-                    {
-                        "semantic_path": path,
-                        "requested_semantic_value": (
-                            "BD Classic" if path == "tracks.1.machine" else f"requested:{path}"
-                        ),
-                        "verification_status": "critical_mapping_gap",
-                    }
-                    for path in AL16_RYTM_MAPPING_GAP_PATHS
-                ],
-                "deterministic_recipe_identifier": deterministic_recipe_identifier(_RECIPE),
-                "recipe_sha256": hashlib.sha256(recipe_payload).hexdigest(),
-                "reference_sha256": hashlib.sha256(reference_frame).hexdigest(),
-            },
-            sort_keys=True,
-        ),
-        encoding="utf-8",
+    return write_al16_rytm_mapping_test_inputs(
+        tmp_path,
+        reference_frame=reference_frame,
+        configured_frame=configured_frame,
+        recipe=_RECIPE,
+        recipe_payload=recipe_payload,
+        semantic_paths=AL16_RYTM_MAPPING_GAP_PATHS,
+        requested_values={"tracks.1.machine": "BD Classic"},
     )
-    return reference_path, configured_path, recipe_path, manifest_path
 
 
 def test_registered_help_states_passive_boundary(
@@ -95,18 +77,20 @@ def test_registered_command_writes_review_only_report(
 ) -> None:
     from rytm_randomizer.cli import main
 
-    reference, configured, recipe, manifest = _write_inputs(tmp_path)
+    inputs = _write_inputs(tmp_path)
     report_path = tmp_path / "mapping-evidence.json"
     args = [
         "al16-rytm-mapping-evidence",
         "--reference",
-        str(reference),
+        str(inputs.reference_path),
         "--configured",
-        str(configured),
+        str(inputs.configured_path),
         "--recipe",
-        str(recipe),
+        str(inputs.recipe_path),
         "--gap-manifest",
-        str(manifest),
+        str(inputs.manifest_path),
+        "--expected-gap-manifest-sha256",
+        inputs.manifest_sha256,
         "--report",
         str(report_path),
     ]
@@ -143,7 +127,7 @@ def test_command_rejects_colliding_path_roles_before_source_read(
 ) -> None:
     from rytm_randomizer.cockpit.export import al16_rytm_mapping_closure_cli as cli
 
-    reference, _configured, recipe, manifest = _write_inputs(tmp_path)
+    inputs = _write_inputs(tmp_path)
     report_path = tmp_path / "mapping-evidence.json"
     analyzer_called = False
 
@@ -156,10 +140,11 @@ def test_command_rejects_colliding_path_roles_before_source_read(
 
     assert (
         cli.handle_al16_rytm_mapping_evidence(
-            reference_path=reference,
-            configured_path=reference,
-            recipe_path=recipe,
-            gap_manifest_path=manifest,
+            reference_path=inputs.reference_path,
+            configured_path=inputs.reference_path,
+            recipe_path=inputs.recipe_path,
+            gap_manifest_path=inputs.manifest_path,
+            expected_gap_manifest_sha256=inputs.manifest_sha256,
             report_path=report_path,
         )
         == 2
@@ -177,10 +162,34 @@ def test_command_rejects_colliding_path_roles_before_source_read(
     [
         ([], "--reference is required"),
         (["--reference"], "--reference requires a value"),
+        (
+            [
+                "--reference",
+                "reference.syx",
+                "--configured",
+                "configured.syx",
+                "--recipe",
+                "recipe.yaml",
+                "--gap-manifest",
+                "manifest.json",
+                "--report",
+                "report.json",
+            ],
+            "--expected-gap-manifest-sha256 is required",
+        ),
         (["--unknown"], "unknown option"),
         (
             ["--reference", "one.syx", "--reference", "two.syx"],
             "--reference may be supplied only once",
+        ),
+        (
+            [
+                "--expected-gap-manifest-sha256",
+                "a" * 64,
+                "--expected-gap-manifest-sha256",
+                "b" * 64,
+            ],
+            "--expected-gap-manifest-sha256 may be supplied only once",
         ),
     ],
 )
@@ -214,18 +223,21 @@ def test_command_rejects_malformed_gap_manifest(
         handle_al16_rytm_mapping_evidence,
     )
 
-    reference, configured, recipe, manifest = _write_inputs(tmp_path)
-    manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+    inputs = _write_inputs(tmp_path)
+    manifest_payload = json.loads(inputs.manifest_path.read_text(encoding="utf-8"))
     manifest_payload["critical_mapping_gaps"] = []
-    manifest.write_text(json.dumps(manifest_payload), encoding="utf-8")
+    manifest_bytes = json.dumps(manifest_payload).encode("utf-8")
+    inputs.manifest_path.write_bytes(manifest_bytes)
+    manifest_sha256 = hashlib.sha256(manifest_bytes).hexdigest()
     report_path = tmp_path / "mapping-evidence.json"
 
     assert (
         handle_al16_rytm_mapping_evidence(
-            reference_path=reference,
-            configured_path=configured,
-            recipe_path=recipe,
-            gap_manifest_path=manifest,
+            reference_path=inputs.reference_path,
+            configured_path=inputs.configured_path,
+            recipe_path=inputs.recipe_path,
+            gap_manifest_path=inputs.manifest_path,
+            expected_gap_manifest_sha256=manifest_sha256,
             report_path=report_path,
         )
         == 2
@@ -244,16 +256,17 @@ def test_command_rejects_non_object_recipe(
         handle_al16_rytm_mapping_evidence,
     )
 
-    reference, configured, recipe, manifest = _write_inputs(tmp_path)
-    recipe.write_text("[]", encoding="utf-8")
+    inputs = _write_inputs(tmp_path)
+    inputs.recipe_path.write_text("[]", encoding="utf-8")
     report_path = tmp_path / "mapping-evidence.json"
 
     assert (
         handle_al16_rytm_mapping_evidence(
-            reference_path=reference,
-            configured_path=configured,
-            recipe_path=recipe,
-            gap_manifest_path=manifest,
+            reference_path=inputs.reference_path,
+            configured_path=inputs.configured_path,
+            recipe_path=inputs.recipe_path,
+            gap_manifest_path=inputs.manifest_path,
+            expected_gap_manifest_sha256=inputs.manifest_sha256,
             report_path=report_path,
         )
         == 2
@@ -270,7 +283,7 @@ def test_command_rejects_unsafe_path_before_reading_inputs(
 ) -> None:
     from rytm_randomizer.cockpit.export import al16_rytm_mapping_closure_cli as cli
 
-    reference, configured, recipe, manifest = _write_inputs(tmp_path)
+    inputs = _write_inputs(tmp_path)
 
     def unexpected_analysis(**_kwargs: object) -> None:
         pytest.fail("input analysis must not begin before path validation")
@@ -280,9 +293,10 @@ def test_command_rejects_unsafe_path_before_reading_inputs(
     assert (
         cli.handle_al16_rytm_mapping_evidence(
             reference_path=tmp_path / "unsafe\nreference.syx",
-            configured_path=configured,
-            recipe_path=recipe,
-            gap_manifest_path=manifest,
+            configured_path=inputs.configured_path,
+            recipe_path=inputs.recipe_path,
+            gap_manifest_path=inputs.manifest_path,
+            expected_gap_manifest_sha256=inputs.manifest_sha256,
             report_path=tmp_path / "mapping-evidence.json",
         )
         == 2
@@ -291,7 +305,7 @@ def test_command_rejects_unsafe_path_before_reading_inputs(
     assert captured.out == ""
     assert "Error [validation]" in captured.err
     assert str(tmp_path) not in captured.err
-    assert reference.exists()
+    assert inputs.reference_path.exists()
 
 
 def test_command_handles_operator_interrupt(
@@ -301,7 +315,7 @@ def test_command_handles_operator_interrupt(
 ) -> None:
     from rytm_randomizer.cockpit.export import al16_rytm_mapping_closure_cli as cli
 
-    reference, configured, recipe, manifest = _write_inputs(tmp_path)
+    inputs = _write_inputs(tmp_path)
     report_path = tmp_path / "mapping-evidence.json"
 
     def interrupt(**_kwargs: object) -> None:
@@ -311,10 +325,11 @@ def test_command_handles_operator_interrupt(
 
     assert (
         cli.handle_al16_rytm_mapping_evidence(
-            reference_path=reference,
-            configured_path=configured,
-            recipe_path=recipe,
-            gap_manifest_path=manifest,
+            reference_path=inputs.reference_path,
+            configured_path=inputs.configured_path,
+            recipe_path=inputs.recipe_path,
+            gap_manifest_path=inputs.manifest_path,
+            expected_gap_manifest_sha256=inputs.manifest_sha256,
             report_path=report_path,
         )
         == 130
@@ -334,27 +349,29 @@ def test_command_records_success_and_validation_metrics(
     )
     from rytm_randomizer.observability.metrics import get_metrics
 
-    reference, configured, recipe, manifest = _write_inputs(tmp_path)
+    inputs = _write_inputs(tmp_path)
     report_path = tmp_path / "mapping-evidence.json"
     metrics = get_metrics()
     initial_count = metrics.export_count
     initial_overwrite_errors = metrics.export_errors_by_code["overwrite_refused"]
     assert (
         handle_al16_rytm_mapping_evidence(
-            reference_path=reference,
-            configured_path=configured,
-            recipe_path=recipe,
-            gap_manifest_path=manifest,
+            reference_path=inputs.reference_path,
+            configured_path=inputs.configured_path,
+            recipe_path=inputs.recipe_path,
+            gap_manifest_path=inputs.manifest_path,
+            expected_gap_manifest_sha256=inputs.manifest_sha256,
             report_path=report_path,
         )
         == 0
     )
     assert (
         handle_al16_rytm_mapping_evidence(
-            reference_path=reference,
-            configured_path=configured,
-            recipe_path=recipe,
-            gap_manifest_path=manifest,
+            reference_path=inputs.reference_path,
+            configured_path=inputs.configured_path,
+            recipe_path=inputs.recipe_path,
+            gap_manifest_path=inputs.manifest_path,
+            expected_gap_manifest_sha256=inputs.manifest_sha256,
             report_path=report_path,
         )
         == 2

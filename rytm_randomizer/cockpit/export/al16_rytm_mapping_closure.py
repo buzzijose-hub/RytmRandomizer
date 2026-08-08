@@ -10,6 +10,10 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Final, Literal, TypeAlias, cast
 
+from ...data.al16_rytm import (
+    AL16_RYTM_EVIDENCE_GROUPS,
+    Al16RytmEvidenceClass,
+)
 from ...data.analog_rytm_kit_layout import (
     RYTM_KIT_TRACK_COUNT,
     RYTM_SOUND_FIELD_BY_NRPN_LSB,
@@ -20,13 +24,7 @@ from ...devices.analog_rytm import get_analog_rytm_saved_kit_codec_capability
 from ..data.rytm_parameter_map import cockpit_machine_is_known, cockpit_parameter_mapping
 from .al16_rytm_kit import deterministic_recipe_identifier, load_al16_recipe_bytes
 
-EvidenceClass: TypeAlias = Literal[
-    "destination_slot",
-    "machine_selection",
-    "machine_source",
-    "amp_volume",
-    "machine_tuning",
-]
+EvidenceClass: TypeAlias = Al16RytmEvidenceClass
 CandidateLocationStatus: TypeAlias = Literal[
     "candidate_location",
     "destination_header_proof_required",
@@ -40,16 +38,20 @@ CandidateObservationStatus: TypeAlias = Literal[
 ]
 MappingPromotionStatus: TypeAlias = Literal["review_required"]
 
-_SESSION_CONFIGURED_KIT: Final[int] = 1
-_SESSION_DESTINATION_SLOT: Final[int] = 2
 MAPPING_CAPTURE_REPORT_SCHEMA_VERSION: Final[int] = 1
 MAPPING_PROMOTION_REVIEW_REQUIRED: Final[MappingPromotionStatus] = "review_required"
-_GROUP_ORDER: Final[tuple[EvidenceClass, ...]] = (
-    "machine_selection",
-    "machine_source",
-    "amp_volume",
-    "machine_tuning",
-    "destination_slot",
+_GROUP_ORDER: Final[tuple[EvidenceClass, ...]] = tuple(
+    group.evidence_class for group in AL16_RYTM_EVIDENCE_GROUPS
+)
+_GROUP_METADATA: Final[Mapping[EvidenceClass, tuple[int, str, str]]] = MappingProxyType(
+    {
+        group.evidence_class: (
+            group.session_number,
+            group.session_label,
+            group.expected_evidence,
+        )
+        for group in AL16_RYTM_EVIDENCE_GROUPS
+    }
 )
 
 
@@ -139,42 +141,26 @@ class MappingCaptureReport:
 def _classify_path(semantic_path: str) -> EvidenceClass:
     if semantic_path == "destination_slot":
         return "destination_slot"
-    if semantic_path.startswith("tracks.") and semantic_path.endswith(".machine"):
+    if not semantic_path.startswith("tracks."):
+        raise ValueError(f"unsupported AL16 mapping-gap path: {semantic_path}")
+    try:
+        _path_pad(semantic_path)
+    except ValueError as exc:
+        raise ValueError(f"unsupported AL16 mapping-gap path: {semantic_path}") from exc
+    parts = semantic_path.split(".")
+    if len(parts) == 3 and parts[2] == "machine":
         return "machine_selection"
-    if semantic_path.startswith("tracks.") and semantic_path.endswith(".amp.vol"):
+    if len(parts) == 4 and parts[2:] == ["amp", "vol"]:
         return "amp_volume"
-    if semantic_path.startswith("tracks.") and semantic_path.endswith(".source.target_note"):
+    if len(parts) == 4 and parts[2] == "source" and parts[3] == "target_note":
         return "machine_tuning"
-    if semantic_path.startswith("tracks.") and ".source." in semantic_path:
+    if len(parts) == 4 and parts[2] == "source" and parts[3]:
         return "machine_source"
     raise ValueError(f"unsupported AL16 mapping-gap path: {semantic_path}")
 
 
 def _group_metadata(evidence_class: EvidenceClass) -> tuple[int, str, str]:
-    if evidence_class == "destination_slot":
-        return (
-            _SESSION_DESTINATION_SLOT,
-            "destination-slot scratch proof",
-            "One user-selected scratch-slot import and dump-back header comparison.",
-        )
-    descriptions: Mapping[EvidenceClass, str] = {
-        "machine_selection": (
-            "One initialized/configured saved-kit comparison showing machine bytes."
-        ),
-        "machine_source": (
-            "One initialized/configured saved-kit comparison showing source-field bytes."
-        ),
-        "amp_volume": ("One initialized/configured saved-kit comparison showing amp-volume bytes."),
-        "machine_tuning": (
-            "One XT Classic F2 display/raw observation in the configured saved kit."
-        ),
-        "destination_slot": "",
-    }
-    return (
-        _SESSION_CONFIGURED_KIT,
-        "configured AL02 saved-kit capture",
-        descriptions[evidence_class],
-    )
+    return _GROUP_METADATA[evidence_class]
 
 
 def build_mapping_closure_plan(semantic_paths: Sequence[str]) -> MappingClosurePlan:
@@ -460,12 +446,20 @@ def analyze_mapping_capture_files(
     configured_path: Path,
     recipe_path: Path,
     gap_manifest_path: Path,
+    expected_gap_manifest_sha256: str,
 ) -> MappingCaptureReport:
     """Read and compare local saved-kit evidence bound to reviewed build inputs."""
 
     reference_frame = reference_path.read_bytes()
     recipe_payload = recipe_path.read_bytes()
     manifest_payload = gap_manifest_path.read_bytes()
+    expected_manifest_sha256 = _validated_sha256(
+        expected_gap_manifest_sha256,
+        label="expected gap-manifest SHA-256",
+    )
+    manifest_sha256 = hashlib.sha256(manifest_payload).hexdigest()
+    if manifest_sha256 != expected_manifest_sha256:
+        raise ValueError("AL16 mapping-gap manifest does not match the expected SHA-256")
     recipe = load_al16_recipe_bytes(recipe_payload)
     try:
         parsed_manifest = cast(object, json.loads(manifest_payload.decode("utf-8")))
@@ -500,7 +494,7 @@ def analyze_mapping_capture_files(
             recipe_artifact=recipe_path.name,
             recipe_sha256=recipe_sha256,
             gap_manifest_artifact=gap_manifest_path.name,
-            gap_manifest_sha256=hashlib.sha256(manifest_payload).hexdigest(),
+            gap_manifest_sha256=manifest_sha256,
             deterministic_recipe_identifier=recipe_identifier,
             manifest_reference_sha256=manifest_reference_sha256,
         ),
@@ -512,6 +506,15 @@ def _required_manifest_string(manifest: Mapping[str, object], key: str) -> str:
     if not isinstance(value, str) or not value:
         raise ValueError(f"AL16 mapping-gap manifest {key} must be a string")
     return value
+
+
+def _validated_sha256(value: str, *, label: str) -> str:
+    normalized = value.lower()
+    if len(normalized) != 64 or any(
+        character not in "0123456789abcdef" for character in normalized
+    ):
+        raise ValueError(f"AL16 {label} must be exactly 64 hexadecimal characters")
+    return normalized
 
 
 def _manifest_scalar_text(value: object, *, semantic_path: str) -> str:
@@ -579,6 +582,10 @@ def load_mapping_gap_requests(manifest: Mapping[str, object]) -> tuple[MappingGa
         )
 
     requests: list[MappingGapRequest] = []
+    extra_audits = set(requested_values).difference(paths)
+    if extra_audits:
+        extra = sorted(extra_audits)[0]
+        raise ValueError(f"AL16 manifest has an unlisted critical mapping-gap audit for {extra}")
     for semantic_path in paths:
         requested_value = requested_values.get(semantic_path)
         if requested_value is None:
@@ -606,13 +613,17 @@ def render_mapping_capture_report(report: MappingCaptureReport) -> str:
 
 
 __all__ = [
+    "CandidateLocationStatus",
+    "CandidateObservationStatus",
     "CandidateLocation",
     "CandidateObservation",
+    "EvidenceClass",
     "MAPPING_CAPTURE_REPORT_SCHEMA_VERSION",
     "MappingCaptureReport",
     "MappingClosurePlan",
     "MappingEvidenceProvenance",
     "MappingGapRequest",
+    "MappingPromotionStatus",
     "MAPPING_PROMOTION_REVIEW_REQUIRED",
     "MappingProofGroup",
     "analyze_mapping_capture",

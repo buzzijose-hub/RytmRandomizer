@@ -402,9 +402,11 @@ closure service compares one initialized saved KIT with one manually
 configured AL02-like saved KIT so a single capture can address many gaps. The
 service does not own offsets: track strides come from
 `data/analog_rytm_kit_layout.py`, and source/control aliases resolve through
-`cockpit/data/rytm_parameter_map.py`. Before analysis, it verifies the exact
-recipe bytes, gap-manifest bytes, deterministic recipe identifier, and the
-manifest's initialized-reference SHA-256. Candidate evidence remains
+`cockpit/data/rytm_parameter_map.py`; the finite evidence groups and semantic
+gap paths come from `data/al16_rytm.py`. Before analysis, it verifies the exact
+recipe bytes, the operator-pinned SHA-256 of the exact gap-manifest bytes, the
+deterministic recipe identifier, and the manifest's initialized-reference
+SHA-256. Candidate evidence remains
 `review_required`; no result can mutate the allowlist, emit a kit, or contact
 hardware. The CLI validates all path roles before opening files, reports
 taxonomy-backed failures without echoing sensitive paths, and records the

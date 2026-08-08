@@ -14,6 +14,13 @@ RytmValueConverter: TypeAlias = Literal[
     "filter_type_enum",
 ]
 Al16TrackMode: TypeAlias = Literal["preserve", "patch"]
+Al16RytmEvidenceClass: TypeAlias = Literal[
+    "destination_slot",
+    "machine_selection",
+    "machine_source",
+    "amp_volume",
+    "machine_tuning",
+]
 
 RYTM_CONVERTER_VERIFIED_7BIT: Final[RytmValueConverter] = "verified_7bit"
 RYTM_CONVERTER_CENTERED_7BIT: Final[RytmValueConverter] = "centered_7bit"
@@ -67,6 +74,16 @@ class RytmWritableField:
     converter: RytmValueConverter
 
 
+@dataclass(frozen=True)
+class Al16RytmEvidenceGroup:
+    """Canonical operator-session metadata for one R2 evidence class."""
+
+    evidence_class: Al16RytmEvidenceClass
+    session_number: int
+    session_label: str
+    expected_evidence: str
+
+
 AL16_BANK_STATES: Final[tuple[Al16BankState, ...]] = (
     Al16BankState(1, "AIRLOCK", "F Phrygian"),
     Al16BankState(2, "LOCK", "F Phrygian"),
@@ -101,6 +118,60 @@ AL16_PAD_ROLES: Final[Mapping[int, str]] = MappingProxyType(
         11: "Cymbal / ride / upper pressure",
         12: "Cowbell / metallic punctuation / alarm tone",
     }
+)
+
+AL16_RYTM_MAPPING_GAP_PATHS: Final[tuple[str, ...]] = (
+    "destination_slot",
+    "tracks.1.machine",
+    "tracks.1.source.dec",
+    "tracks.1.source.hld",
+    "tracks.1.source.swd",
+    "tracks.1.source.swt",
+    "tracks.1.source.trn",
+    "tracks.1.source.tun",
+    "tracks.1.source.wav",
+    "tracks.1.amp.vol",
+    "tracks.3.machine",
+    "tracks.3.amp.vol",
+    "tracks.6.source.decay",
+    "tracks.6.source.target_note",
+    "tracks.6.amp.vol",
+    "tracks.9.machine",
+    "tracks.9.source.decay",
+    "tracks.9.amp.vol",
+)
+
+AL16_RYTM_EVIDENCE_GROUPS: Final[tuple[Al16RytmEvidenceGroup, ...]] = (
+    Al16RytmEvidenceGroup(
+        "machine_selection",
+        1,
+        "configured AL02 saved-kit capture",
+        "One initialized/configured saved-kit comparison showing machine bytes.",
+    ),
+    Al16RytmEvidenceGroup(
+        "machine_source",
+        1,
+        "configured AL02 saved-kit capture",
+        "One initialized/configured saved-kit comparison showing source-field bytes.",
+    ),
+    Al16RytmEvidenceGroup(
+        "amp_volume",
+        1,
+        "configured AL02 saved-kit capture",
+        "One initialized/configured saved-kit comparison showing amp-volume bytes.",
+    ),
+    Al16RytmEvidenceGroup(
+        "machine_tuning",
+        1,
+        "configured AL02 saved-kit capture",
+        "One XT Classic F2 display/raw observation in the configured saved kit.",
+    ),
+    Al16RytmEvidenceGroup(
+        "destination_slot",
+        2,
+        "destination-slot scratch proof",
+        "One user-selected scratch-slot import and dump-back header comparison.",
+    ),
 )
 
 AL16_RYTM_WRITABLE_FIELDS: Final[Mapping[str, RytmWritableField]] = MappingProxyType(
@@ -176,7 +247,9 @@ __all__ = [
     "AL16_PERFORMANCE_CONTEXT_BPM",
     "AL16_PRESERVED_GLOBAL_SECTIONS",
     "AL16_RYTM_APPROVED_TUNING",
+    "AL16_RYTM_EVIDENCE_GROUPS",
     "AL16_RYTM_FILTER_TYPES",
+    "AL16_RYTM_MAPPING_GAP_PATHS",
     "AL16_RYTM_WRITABLE_FIELDS",
     "AL16_TRACK_MODE_PATCH",
     "AL16_TRACK_MODE_PRESERVE",
@@ -185,6 +258,8 @@ __all__ = [
     "Al16BankState",
     "Al16BankStatePayload",
     "Al16TrackMode",
+    "Al16RytmEvidenceClass",
+    "Al16RytmEvidenceGroup",
     "RYTM_CONVERTER_CENTERED_7BIT",
     "RYTM_CONVERTER_FILTER_TYPE_ENUM",
     "RYTM_CONVERTER_VERIFIED_7BIT",

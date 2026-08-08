@@ -17,6 +17,9 @@
 
 ```powershell
 Set-Location (Join-Path $env:USERPROFILE "Documents\RytmRandomizer")
+$gapManifestSha = (Get-FileHash `
+  output\al16\AL02_LOCK_RYTM_manifest.json `
+  -Algorithm SHA256).Hash.ToLowerInvariant()
 
 .\.venv\Scripts\python.exe -m rytm_randomizer.cli `
   al16-rytm-mapping-evidence `
@@ -24,6 +27,7 @@ Set-Location (Join-Path $env:USERPROFILE "Documents\RytmRandomizer")
   --configured output\local\al16\AL02_LOCK_RYTM_CONFIGURED.syx `
   --recipe specs\al16\AL02_LOCK_RYTM.yaml `
   --gap-manifest output\al16\AL02_LOCK_RYTM_manifest.json `
+  --expected-gap-manifest-sha256 $gapManifestSha `
   --report output\local\al16\AL02_LOCK_RYTM_mapping_evidence.json
 ```
 

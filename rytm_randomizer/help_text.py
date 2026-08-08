@@ -293,7 +293,8 @@ USAGE = (
     "--destination-slot <0..127> --output <kit.syx> | "
     "al16-rytm-mapping-evidence --reference <baseline.syx> "
     "--configured <configured.syx> --recipe <recipe.yaml> "
-    "--gap-manifest <manifest.json> --report <report.json> | "
+    "--gap-manifest <manifest.json> --expected-gap-manifest-sha256 <sha256> "
+    "--report <report.json> | "
     "analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> "
     "--output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json] | "
     "analog-four-audio-patch-rank --reference <path> --manifest <batch.json> "
@@ -2620,14 +2621,15 @@ def _al16_rytm_mapping_evidence_help():
     return """RytmRandomizer passive CLI: al16-rytm-mapping-evidence
 
 Usage:
-  python -m rytm_randomizer.cli al16-rytm-mapping-evidence --reference <baseline.syx> --configured <configured.syx> --recipe <recipe.yaml> --gap-manifest <manifest.json> --report <report.json>
+  python -m rytm_randomizer.cli al16-rytm-mapping-evidence --reference <baseline.syx> --configured <configured.syx> --recipe <recipe.yaml> --gap-manifest <manifest.json> --expected-gap-manifest-sha256 <sha256> --report <report.json>
   python -m rytm_randomizer.cli al16-rytm-mapping-evidence --help
 
 Behavior:
   Compares an initialized Analog Rytm saved-kit dump with one manually
   configured saved-kit dump. Candidate offsets come only from existing layout
   metadata and manual-backed MIDI catalogs. Evidence remains review_required;
-  this command never promotes mappings or emits a kit.
+  this command never promotes mappings or emits a kit. The operator must pin
+  the exact expected SHA-256 of the gap-manifest bytes.
 
 Safety:
   local-file analysis only
@@ -2875,7 +2877,7 @@ Usage:
   python -m rytm_randomizer.cli cockpit-export-profile-model --profile-id <id> --profiles-dir <path> --output <file.rymp> [--key-hex <hex> --key-id <label>] [--unsigned] [--overwrite] [--json]
   python -m rytm_randomizer.cli analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> --filter2-resonance <track:value> [--filter2-resonance <track:value> ...] [--overwrite] [--json]
   python -m rytm_randomizer.cli al16-rytm-kit-export --reference <kit.syx> --recipe <recipe.yaml> --destination-slot <0..127> --output <kit.syx>
-  python -m rytm_randomizer.cli al16-rytm-mapping-evidence --reference <baseline.syx> --configured <configured.syx> --recipe <recipe.yaml> --gap-manifest <manifest.json> --report <report.json>
+  python -m rytm_randomizer.cli al16-rytm-mapping-evidence --reference <baseline.syx> --configured <configured.syx> --recipe <recipe.yaml> --gap-manifest <manifest.json> --expected-gap-manifest-sha256 <sha256> --report <report.json>
   python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json]
   python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference <path> --manifest <batch.json> --render <N=path> [--render <N=path> ...] [--json]
   python -m rytm_randomizer.cli cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> [--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json]

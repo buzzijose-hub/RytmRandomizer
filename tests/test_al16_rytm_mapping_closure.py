@@ -7,9 +7,12 @@ from typing import cast
 
 import pytest
 
-from conftest import AL16_RYTM_MAPPING_GAP_PATHS, ANALOG_RYTM_SAVED_KIT_TEST_HEADER
+from conftest import (
+    ANALOG_RYTM_SAVED_KIT_TEST_HEADER,
+    Al16RytmMappingTestInputs,
+    write_al16_rytm_mapping_test_inputs,
+)
 from rytm_randomizer.cockpit.export import al16_rytm_mapping_closure as mapping_closure
-from rytm_randomizer.cockpit.export.al16_rytm_kit import deterministic_recipe_identifier
 from rytm_randomizer.cockpit.export.al16_rytm_mapping_closure import (
     CandidateLocation,
     MappingEvidenceProvenance,
@@ -22,6 +25,7 @@ from rytm_randomizer.cockpit.export.al16_rytm_mapping_closure import (
     load_mapping_gap_requests,
     render_mapping_capture_report,
 )
+from rytm_randomizer.data.al16_rytm import AL16_RYTM_MAPPING_GAP_PATHS
 from rytm_randomizer.data.analog_rytm_kit_layout import (
     RYTM_KIT_RAW_SIZE,
     analog_rytm_track_sound_offset,
@@ -197,37 +201,21 @@ def _write_bound_inputs(
     reference_frame: bytes,
     configured_frame: bytes,
     semantic_paths: tuple[str, ...],
-) -> tuple[Path, Path, Path, Path]:
+) -> Al16RytmMappingTestInputs:
     recipe_payload = _RECIPE_PATH.read_bytes()
     recipe = _recipe()
-    reference_path = tmp_path / "reference.syx"
-    configured_path = tmp_path / "configured.syx"
-    recipe_path = tmp_path / "recipe.yaml"
-    manifest_path = tmp_path / "manifest.json"
-    reference_path.write_bytes(reference_frame)
-    configured_path.write_bytes(configured_frame)
-    recipe_path.write_bytes(recipe_payload)
-    manifest_path.write_text(
-        json.dumps(
-            {
-                "critical_mapping_gaps": [{"semantic_path": path} for path in semantic_paths],
-                "semantic_field_audits": [
-                    {
-                        "semantic_path": path,
-                        "requested_semantic_value": _requested_manifest_value(path),
-                        "verification_status": "critical_mapping_gap",
-                    }
-                    for path in semantic_paths
-                ],
-                "deterministic_recipe_identifier": deterministic_recipe_identifier(recipe),
-                "recipe_sha256": hashlib.sha256(recipe_payload).hexdigest(),
-                "reference_sha256": hashlib.sha256(reference_frame).hexdigest(),
-            },
-            sort_keys=True,
-        ),
-        encoding="utf-8",
+    return write_al16_rytm_mapping_test_inputs(
+        tmp_path,
+        reference_frame=reference_frame,
+        configured_frame=configured_frame,
+        recipe=recipe,
+        recipe_payload=recipe_payload,
+        semantic_paths=semantic_paths,
+        requested_values={
+            semantic_path: _requested_manifest_value(semantic_path)
+            for semantic_path in semantic_paths
+        },
     )
-    return reference_path, configured_path, recipe_path, manifest_path
 
 
 def test_closure_plan_covers_all_eighteen_gaps_in_two_sessions() -> None:
@@ -245,11 +233,24 @@ def test_closure_plan_covers_all_eighteen_gaps_in_two_sessions() -> None:
     assert set(plan.covered_paths) == set(AL16_RYTM_MAPPING_GAP_PATHS)
 
 
-def test_closure_plan_rejects_duplicate_and_unknown_paths() -> None:
+def test_closure_plan_rejects_duplicate_paths() -> None:
     with pytest.raises(ValueError, match="must be unique"):
         build_mapping_closure_plan(("destination_slot", "destination_slot"))
+
+
+@pytest.mark.parametrize(
+    "semantic_path",
+    (
+        "kit.name",
+        "tracks.1.filter.frq",
+        "tracks.1.source.dec.extra",
+        "tracks.1.machine.extra",
+        "tracks.13.machine",
+    ),
+)
+def test_closure_plan_rejects_unknown_or_malformed_paths(semantic_path: str) -> None:
     with pytest.raises(ValueError, match="unsupported AL16 mapping-gap path"):
-        build_mapping_closure_plan(("tracks.1.filter.frq",))
+        build_mapping_closure_plan((semantic_path,))
 
 
 def test_closure_plan_defensive_coverage_invariant(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -264,9 +265,9 @@ def test_closure_plan_defensive_coverage_invariant(monkeypatch: pytest.MonkeyPat
 
 
 def test_candidate_location_rejects_invalid_track_paths_and_recipe_shapes() -> None:
-    with pytest.raises(ValueError, match="invalid AL16 track semantic path"):
+    with pytest.raises(ValueError, match="unsupported AL16 mapping-gap path"):
         candidate_location_for_path("tracks.X.source.dec", _recipe())
-    with pytest.raises(ValueError, match="pad must be in 1..12"):
+    with pytest.raises(ValueError, match="unsupported AL16 mapping-gap path"):
         candidate_location_for_path("tracks.13.machine", _recipe())
     with pytest.raises(ValueError, match=r"pad must be in \[1, 12\]"):
         analog_rytm_track_sound_offset(0, 0)
@@ -488,14 +489,35 @@ def test_mapping_gap_request_loader_requires_an_audit_for_every_gap() -> None:
         "critical_mapping_gaps": [{"semantic_path": "tracks.1.source.dec"}],
         "semantic_field_audits": [
             {
-                "semantic_path": "tracks.1.source.hld",
-                "requested_semantic_value": 42,
-                "verification_status": "critical_mapping_gap",
+                "semantic_path": "tracks.1.source.dec",
+                "requested_semantic_value": 53,
+                "verification_status": "preserved",
             }
         ],
     }
 
     with pytest.raises(ValueError, match="no critical mapping-gap audit"):
+        load_mapping_gap_requests(manifest)
+
+
+def test_mapping_gap_request_loader_rejects_unlisted_critical_audit() -> None:
+    manifest = {
+        "critical_mapping_gaps": [{"semantic_path": "tracks.1.source.dec"}],
+        "semantic_field_audits": [
+            {
+                "semantic_path": "tracks.1.source.dec",
+                "requested_semantic_value": 53,
+                "verification_status": "critical_mapping_gap",
+            },
+            {
+                "semantic_path": "tracks.1.source.hld",
+                "requested_semantic_value": 42,
+                "verification_status": "critical_mapping_gap",
+            },
+        ],
+    }
+
+    with pytest.raises(ValueError, match="unlisted critical mapping-gap audit"):
         load_mapping_gap_requests(manifest)
 
 
@@ -640,7 +662,7 @@ def test_offline_capture_analyzer_reports_unchanged_candidates() -> None:
 
 def test_file_analyzer_and_renderer_are_deterministic(tmp_path: Path) -> None:
     frame = _frame(bytes(RYTM_KIT_RAW_SIZE))
-    reference_path, configured_path, recipe_path, manifest_path = _write_bound_inputs(
+    inputs = _write_bound_inputs(
         tmp_path,
         reference_frame=frame,
         configured_frame=frame,
@@ -648,16 +670,18 @@ def test_file_analyzer_and_renderer_are_deterministic(tmp_path: Path) -> None:
     )
 
     first = analyze_mapping_capture_files(
-        reference_path=reference_path,
-        configured_path=configured_path,
-        recipe_path=recipe_path,
-        gap_manifest_path=manifest_path,
+        reference_path=inputs.reference_path,
+        configured_path=inputs.configured_path,
+        recipe_path=inputs.recipe_path,
+        gap_manifest_path=inputs.manifest_path,
+        expected_gap_manifest_sha256=inputs.manifest_sha256,
     )
     second = analyze_mapping_capture_files(
-        reference_path=reference_path,
-        configured_path=configured_path,
-        recipe_path=recipe_path,
-        gap_manifest_path=manifest_path,
+        reference_path=inputs.reference_path,
+        configured_path=inputs.configured_path,
+        recipe_path=inputs.recipe_path,
+        gap_manifest_path=inputs.manifest_path,
+        expected_gap_manifest_sha256=inputs.manifest_sha256,
     )
 
     assert first == second
@@ -667,35 +691,94 @@ def test_file_analyzer_and_renderer_are_deterministic(tmp_path: Path) -> None:
     assert '"promotion_status": "review_required"' in rendered
     assert '"requested_semantic_value": "BD Classic"' in rendered
     assert '"recipe_artifact": "recipe.yaml"' in rendered
-    assert f'"recipe_sha256": "{hashlib.sha256(recipe_path.read_bytes()).hexdigest()}"' in rendered
+    assert (
+        f'"recipe_sha256": "{hashlib.sha256(inputs.recipe_path.read_bytes()).hexdigest()}"'
+        in rendered
+    )
 
 
-def test_file_analyzer_rejects_recipe_and_reference_identity_drift(tmp_path: Path) -> None:
+@pytest.mark.parametrize("expected_sha256", ("not-a-digest", "f" * 63, "g" * 64))
+def test_file_analyzer_rejects_invalid_expected_manifest_digest(
+    tmp_path: Path,
+    expected_sha256: str,
+) -> None:
     frame = _frame(bytes(RYTM_KIT_RAW_SIZE))
-    reference_path, configured_path, recipe_path, manifest_path = _write_bound_inputs(
+    inputs = _write_bound_inputs(
         tmp_path,
         reference_frame=frame,
         configured_frame=frame,
         semantic_paths=("tracks.1.machine",),
     )
-    recipe_path.write_text('{"tracks": {}}', encoding="utf-8")
+
+    with pytest.raises(ValueError, match="exactly 64 hexadecimal characters"):
+        analyze_mapping_capture_files(
+            reference_path=inputs.reference_path,
+            configured_path=inputs.configured_path,
+            recipe_path=inputs.recipe_path,
+            gap_manifest_path=inputs.manifest_path,
+            expected_gap_manifest_sha256=expected_sha256,
+        )
+
+
+def test_file_analyzer_rejects_manifest_that_does_not_match_trust_anchor(
+    tmp_path: Path,
+) -> None:
+    frame = _frame(bytes(RYTM_KIT_RAW_SIZE))
+    inputs = _write_bound_inputs(
+        tmp_path,
+        reference_frame=frame,
+        configured_frame=frame,
+        semantic_paths=("tracks.1.machine",),
+    )
+    inputs.manifest_path.write_bytes(b"not even JSON")
+
+    with pytest.raises(ValueError, match="does not match the expected SHA-256"):
+        analyze_mapping_capture_files(
+            reference_path=inputs.reference_path,
+            configured_path=inputs.configured_path,
+            recipe_path=inputs.recipe_path,
+            gap_manifest_path=inputs.manifest_path,
+            expected_gap_manifest_sha256=inputs.manifest_sha256,
+        )
+
+
+def test_mapping_closure_exports_public_type_aliases() -> None:
+    assert {
+        "CandidateLocationStatus",
+        "CandidateObservationStatus",
+        "EvidenceClass",
+        "MappingPromotionStatus",
+    }.issubset(mapping_closure.__all__)
+
+
+def test_file_analyzer_rejects_recipe_and_reference_identity_drift(tmp_path: Path) -> None:
+    frame = _frame(bytes(RYTM_KIT_RAW_SIZE))
+    inputs = _write_bound_inputs(
+        tmp_path,
+        reference_frame=frame,
+        configured_frame=frame,
+        semantic_paths=("tracks.1.machine",),
+    )
+    inputs.recipe_path.write_text('{"tracks": {}}', encoding="utf-8")
 
     with pytest.raises(ValueError, match="recipe does not match"):
         analyze_mapping_capture_files(
-            reference_path=reference_path,
-            configured_path=configured_path,
-            recipe_path=recipe_path,
-            gap_manifest_path=manifest_path,
+            reference_path=inputs.reference_path,
+            configured_path=inputs.configured_path,
+            recipe_path=inputs.recipe_path,
+            gap_manifest_path=inputs.manifest_path,
+            expected_gap_manifest_sha256=inputs.manifest_sha256,
         )
 
-    recipe_path.write_bytes(_RECIPE_PATH.read_bytes())
-    reference_path.write_bytes(_frame(bytes([1]) + bytes(RYTM_KIT_RAW_SIZE - 1)))
+    inputs.recipe_path.write_bytes(_RECIPE_PATH.read_bytes())
+    inputs.reference_path.write_bytes(_frame(bytes([1]) + bytes(RYTM_KIT_RAW_SIZE - 1)))
     with pytest.raises(ValueError, match="reference does not match"):
         analyze_mapping_capture_files(
-            reference_path=reference_path,
-            configured_path=configured_path,
-            recipe_path=recipe_path,
-            gap_manifest_path=manifest_path,
+            reference_path=inputs.reference_path,
+            configured_path=inputs.configured_path,
+            recipe_path=inputs.recipe_path,
+            gap_manifest_path=inputs.manifest_path,
+            expected_gap_manifest_sha256=inputs.manifest_sha256,
         )
 
 
@@ -712,20 +795,21 @@ def test_file_analyzer_rejects_malformed_manifest_documents(
     message: str,
 ) -> None:
     frame = _frame(bytes(RYTM_KIT_RAW_SIZE))
-    reference_path, configured_path, recipe_path, manifest_path = _write_bound_inputs(
+    inputs = _write_bound_inputs(
         tmp_path,
         reference_frame=frame,
         configured_frame=frame,
         semantic_paths=("tracks.1.machine",),
     )
-    manifest_path.write_bytes(manifest_payload)
+    inputs.manifest_path.write_bytes(manifest_payload)
 
     with pytest.raises(ValueError, match=message):
         analyze_mapping_capture_files(
-            reference_path=reference_path,
-            configured_path=configured_path,
-            recipe_path=recipe_path,
-            gap_manifest_path=manifest_path,
+            reference_path=inputs.reference_path,
+            configured_path=inputs.configured_path,
+            recipe_path=inputs.recipe_path,
+            gap_manifest_path=inputs.manifest_path,
+            expected_gap_manifest_sha256=hashlib.sha256(manifest_payload).hexdigest(),
         )
 
 
@@ -745,22 +829,27 @@ def test_file_analyzer_rejects_invalid_manifest_identity_fields(
     message: str,
 ) -> None:
     frame = _frame(bytes(RYTM_KIT_RAW_SIZE))
-    reference_path, configured_path, recipe_path, manifest_path = _write_bound_inputs(
+    inputs = _write_bound_inputs(
         tmp_path,
         reference_frame=frame,
         configured_frame=frame,
         semantic_paths=("tracks.1.machine",),
     )
-    manifest = cast(dict[str, object], json.loads(manifest_path.read_text(encoding="utf-8")))
+    manifest = cast(
+        dict[str, object],
+        json.loads(inputs.manifest_path.read_text(encoding="utf-8")),
+    )
     manifest.update(manifest_update)
-    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    manifest_payload = json.dumps(manifest).encode("utf-8")
+    inputs.manifest_path.write_bytes(manifest_payload)
 
     with pytest.raises(ValueError, match=message):
         analyze_mapping_capture_files(
-            reference_path=reference_path,
-            configured_path=configured_path,
-            recipe_path=recipe_path,
-            gap_manifest_path=manifest_path,
+            reference_path=inputs.reference_path,
+            configured_path=inputs.configured_path,
+            recipe_path=inputs.recipe_path,
+            gap_manifest_path=inputs.manifest_path,
+            expected_gap_manifest_sha256=hashlib.sha256(manifest_payload).hexdigest(),
         )
 
 

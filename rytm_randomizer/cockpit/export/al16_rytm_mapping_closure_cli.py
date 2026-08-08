@@ -30,7 +30,8 @@ COMMAND_NAME: Final[str] = "al16-rytm-mapping-evidence"
 USAGE: Final[str] = (
     "Usage: python -m rytm_randomizer.cli al16-rytm-mapping-evidence "
     "--reference <baseline.syx> --configured <configured.syx> "
-    "--recipe <recipe.yaml> --gap-manifest <manifest.json> --report <report.json>"
+    "--recipe <recipe.yaml> --gap-manifest <manifest.json> "
+    "--expected-gap-manifest-sha256 <sha256> --report <report.json>"
 )
 _OPERATION: Final[str] = "al16_rytm_mapping_evidence"
 _FAILURE_FINGERPRINT: Final[str] = "al16.rytm_mapping_evidence.failed"
@@ -44,6 +45,7 @@ class Al16RytmMappingEvidenceArgs(TypedDict):
     configured_path: Path
     recipe_path: Path
     gap_manifest_path: Path
+    expected_gap_manifest_sha256: str
     report_path: Path
 
 
@@ -53,6 +55,7 @@ def parse_al16_rytm_mapping_evidence_args(
     """Parse explicit input and report paths for the passive evidence command."""
 
     values: dict[str, Path] = {}
+    expected_gap_manifest_sha256: str | None = None
     option_keys = {
         "--reference": "reference_path",
         "--configured": "configured_path",
@@ -63,6 +66,11 @@ def parse_al16_rytm_mapping_evidence_args(
     remaining = list(args)
     while remaining:
         option = remaining.pop(0)
+        if option == "--expected-gap-manifest-sha256":
+            if expected_gap_manifest_sha256 is not None:
+                raise ValueError(f"{option} may be supplied only once")
+            expected_gap_manifest_sha256 = pop_required_cli_value(remaining, option=option)
+            continue
         key = option_keys.get(option)
         if key is None:
             raise ValueError("unknown option")
@@ -73,11 +81,14 @@ def parse_al16_rytm_mapping_evidence_args(
     for option, key in option_keys.items():
         if key not in values:
             raise ValueError(f"{option} is required")
+    if expected_gap_manifest_sha256 is None:
+        raise ValueError("--expected-gap-manifest-sha256 is required")
     return Al16RytmMappingEvidenceArgs(
         reference_path=values["reference_path"],
         configured_path=values["configured_path"],
         recipe_path=values["recipe_path"],
         gap_manifest_path=values["gap_manifest_path"],
+        expected_gap_manifest_sha256=expected_gap_manifest_sha256,
         report_path=values["report_path"],
     )
 
@@ -92,6 +103,7 @@ def handle_al16_rytm_mapping_evidence(
     configured_path: Path,
     recipe_path: Path,
     gap_manifest_path: Path,
+    expected_gap_manifest_sha256: str,
     report_path: Path,
 ) -> int:
     """Analyze two local frames and atomically publish review-only evidence."""
@@ -153,6 +165,7 @@ def handle_al16_rytm_mapping_evidence(
                 configured_path=configured_path,
                 recipe_path=recipe_path,
                 gap_manifest_path=gap_manifest_path,
+                expected_gap_manifest_sha256=expected_gap_manifest_sha256,
             )
             payload = render_mapping_capture_report(report).encode("utf-8")
             export_phase = "output_write"

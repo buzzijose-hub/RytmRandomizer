@@ -480,6 +480,7 @@ def test_al16_mapping_evidence_full_handler_imports_no_real_midi_modules(
         ),
         encoding="utf-8",
     )
+    manifest_sha256 = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
 
     result = run_cli_in_process_and_check_no_real_midi_or_adapter_modules(
         "al16-rytm-mapping-evidence",
@@ -491,6 +492,8 @@ def test_al16_mapping_evidence_full_handler_imports_no_real_midi_modules(
         str(recipe_path),
         "--gap-manifest",
         str(manifest_path),
+        "--expected-gap-manifest-sha256",
+        manifest_sha256,
         "--report",
         str(report_path),
     )
