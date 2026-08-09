@@ -12,7 +12,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { useCockpitStore } from '../state';
-import type { CockpitClient } from '../ws/client';
+import type { CockpitClient, Unsubscribe } from '../ws/client';
 import type { CommandAck } from '../ws/protocol';
 import {
   bindWizardClient,
@@ -137,11 +137,32 @@ export function Wizard({
     }
   };
 
-  // Bind WS events into the store + start a wizard session on mount.
+  // Bind WS events into the store + start a wizard session. The wizard
+  // mounts even with no sidecar (App has no session gate anymore), so
+  // `wizard_start` is sent when the socket is OPEN: immediately if already
+  // connected, otherwise once on the first `connected` transition. The
+  // catch swallows a race where the socket drops between the status check
+  // and the send — the step surfaces its own error on the next dispatch.
   useEffect(() => {
     const unbind = bindWizardClient(client, store);
-    void sendWizardCommand(client, { type: 'wizard_start' });
+    const startWizardSession = (): void => {
+      void sendWizardCommand(client, { type: 'wizard_start' }).catch(() => {
+        // Best-effort: offline mount is a supported state, not an error.
+      });
+    };
+    let offStatus: Unsubscribe | null = null;
+    if (client.getStatus() === 'connected') {
+      startWizardSession();
+    } else {
+      offStatus = client.onStatusChange((status) => {
+        if (status !== 'connected') return;
+        startWizardSession();
+        offStatus?.();
+        offStatus = null;
+      });
+    }
     return () => {
+      offStatus?.();
       unbind();
     };
   }, [client, store]);
@@ -167,7 +188,9 @@ export function Wizard({
   }, [lastCreated, navigate, store]);
 
   const handleCancel = (): void => {
-    void sendWizardCommand(client, { type: 'wizard_cancel' });
+    void sendWizardCommand(client, { type: 'wizard_cancel' }).catch(() => {
+      // Best-effort: cancelling offline just resets local state below.
+    });
     setCommandError(null);
     (store as unknown as { getState: () => WizardStore }).getState().reset();
     const go = navigate ?? ((hash: string) => {

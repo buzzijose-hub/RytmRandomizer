@@ -12,7 +12,7 @@ import { CockpitClientProvider } from '../../src/cockpit/context';
 import { MutationPanel } from '../../src/cockpit/MutationPanel';
 import { useCockpitStore } from '../../src/state';
 
-import { FakeCockpitClient, availableProfiles } from './_fixtures';
+import { FakeCockpitClient, availableProfiles, sessionMock } from './_fixtures';
 
 function renderWith(
   previewOn = false,
@@ -103,6 +103,8 @@ describe('MutationPanel', () => {
   });
 
   it('forwards onTogglePreview to the ActionBar', () => {
+    // PREVIEW is disabled while no session ever arrived, so seed one.
+    useCockpitStore.getState().setSessionStatus(sessionMock);
     const { togglePreview } = renderWith(false);
     fireEvent.click(screen.getByTestId('action-preview'));
     expect(togglePreview).toHaveBeenCalledWith(true);

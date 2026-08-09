@@ -26,6 +26,7 @@ import type {
 } from '../../src/types/wizard_protocol';
 import type {
   CockpitClient,
+  ConnectionStatus,
   EventHandler,
   Unsubscribe,
 } from '../../src/ws/client';
@@ -101,7 +102,28 @@ class FakeClient {
   readonly ackQueue: CommandAck[] = [];
   readonly rejectionQueue: unknown[] = [];
   readonly sent: WizardCommand[] = [];
+  readonly statusHandlers = new Set<(status: ConnectionStatus) => void>();
+  status: ConnectionStatus = 'connected';
   unsubCalls = 0;
+  statusUnsubCalls = 0;
+
+  getStatus(): ConnectionStatus {
+    return this.status;
+  }
+
+  onStatusChange(handler: (status: ConnectionStatus) => void): Unsubscribe {
+    this.statusHandlers.add(handler);
+    return () => {
+      this.statusHandlers.delete(handler);
+      this.statusUnsubCalls += 1;
+    };
+  }
+
+  /** Test helper: change the reported status and notify subscribers. */
+  setStatus(status: ConnectionStatus): void {
+    this.status = status;
+    for (const handler of this.statusHandlers) handler(status);
+  }
 
   on<T extends EventType>(
     eventType: T,
@@ -176,6 +198,70 @@ describe('Wizard container — mount + WS lifecycle', () => {
     expect(screen.getByTestId('wizard-root')).toBeInTheDocument();
     expect(screen.getByTestId('wizard-name-step')).toBeInTheDocument();
     expect(client.sent).toContainEqual({ type: 'wizard_start' });
+  });
+
+  it('mounts OFFLINE and defers wizard_start to the first connected transition', () => {
+    const client = new FakeClient();
+    client.status = 'reconnecting';
+    const store = createWizardStore();
+    render(
+      <Wizard
+        client={client.asClient()}
+        store={store as unknown as typeof useWizardStore}
+        navigate={vi.fn()}
+      />,
+    );
+
+    // The wizard UI is fully mounted with no sidecar; nothing was sent yet.
+    expect(screen.getByTestId('wizard-root')).toBeInTheDocument();
+    expect(client.sent).toEqual([]);
+
+    // A non-connected transition is ignored…
+    act(() => client.setStatus('closed'));
+    expect(client.sent).toEqual([]);
+
+    // …the first connected transition starts the session, exactly once.
+    act(() => client.setStatus('connected'));
+    expect(client.sent).toEqual([{ type: 'wizard_start' }]);
+    act(() => client.setStatus('reconnecting'));
+    act(() => client.setStatus('connected'));
+    expect(client.sent).toEqual([{ type: 'wizard_start' }]);
+  });
+
+  it('unmounting before the sidecar connects detaches the deferred start', () => {
+    const client = new FakeClient();
+    client.status = 'connecting';
+    const store = createWizardStore();
+    const { unmount } = render(
+      <Wizard
+        client={client.asClient()}
+        store={store as unknown as typeof useWizardStore}
+        navigate={vi.fn()}
+      />,
+    );
+    unmount();
+    expect(client.statusUnsubCalls).toBe(1);
+
+    client.setStatus('connected');
+    expect(client.sent).toEqual([]);
+  });
+
+  it('swallows a wizard_start rejection (offline race) without crashing the surface', async () => {
+    const client = new FakeClient();
+    client.rejectionQueue.push(new Error('socket not open'));
+    const store = createWizardStore();
+    render(
+      <Wizard
+        client={client.asClient()}
+        store={store as unknown as typeof useWizardStore}
+        navigate={vi.fn()}
+      />,
+    );
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(client.sent).toEqual([{ type: 'wizard_start' }]);
+    expect(screen.getByTestId('wizard-root')).toBeInTheDocument();
   });
 
   it('binds three wizard event subscriptions and detaches them on unmount', () => {
@@ -263,6 +349,19 @@ describe('Wizard container — step handlers', () => {
     const { client } = renderWizard({ navigate });
     fireEvent.click(screen.getByTestId('wizard-cancel'));
     expect(client.sent).toContainEqual({ type: 'wizard_cancel' });
+    expect(navigate).toHaveBeenCalledWith('/');
+  });
+
+  it('NameStep cancel still resets + navigates when wizard_cancel cannot be sent (offline)', async () => {
+    const navigate = vi.fn();
+    const { client, store } = renderWizard({ navigate });
+    client.rejectionQueue.push(new Error('socket not open'));
+    fireEvent.click(screen.getByTestId('wizard-cancel'));
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(client.sent).toContainEqual({ type: 'wizard_cancel' });
+    expect(store.getState().state).toBeNull();
     expect(navigate).toHaveBeenCalledWith('/');
   });
 

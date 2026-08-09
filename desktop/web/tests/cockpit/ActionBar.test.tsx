@@ -15,6 +15,7 @@ import {
   candidate,
   history,
   sendPlan,
+  sessionMock,
 } from './_fixtures';
 
 interface Harness {
@@ -36,6 +37,11 @@ function renderWith(previewOn: boolean): Harness {
 describe('ActionBar', () => {
   const updateStore = (update: () => void): void => {
     act(update);
+  };
+
+  /** Most tests exercise a connected (mock) session; offline tests skip this. */
+  const seedSession = (): void => {
+    updateStore(() => useCockpitStore.getState().setSessionStatus(sessionMock));
   };
 
   beforeEach(() => {
@@ -62,6 +68,7 @@ describe('ActionBar', () => {
   });
 
   it('clicking PREVIEW calls onTogglePreview(true) and emits toggle_preview {on: true} when off', () => {
+    seedSession();
     const { fake, toggle } = renderWith(false);
     fireEvent.click(screen.getByTestId('action-preview'));
     expect(toggle).toHaveBeenCalledWith(true);
@@ -69,6 +76,7 @@ describe('ActionBar', () => {
   });
 
   it('clicking PREVIEW when on emits toggle_preview {on: false}', () => {
+    seedSession();
     const { fake, toggle } = renderWith(true);
     fireEvent.click(screen.getByTestId('action-preview'));
     expect(toggle).toHaveBeenCalledWith(false);
@@ -76,6 +84,7 @@ describe('ActionBar', () => {
   });
 
   it('REGEN emits regen', () => {
+    seedSession();
     const { fake } = renderWith(false);
     fireEvent.click(screen.getByTestId('action-regen'));
     expect(fake.sent).toEqual([{ type: 'regen' }]);
@@ -336,6 +345,7 @@ describe('ActionBar', () => {
   });
 
   it('logs Error command rejections for operator troubleshooting', async () => {
+    seedSession();
     const { fake } = renderWith(true);
     fake.nextRejection = new Error('socket closed');
     await act(async () => {
@@ -349,6 +359,7 @@ describe('ActionBar', () => {
   });
 
   it('logs non-Error command rejections for operator troubleshooting', async () => {
+    seedSession();
     const { fake } = renderWith(true);
     fake.nextRejection = 'transport closed';
     await act(async () => {
@@ -397,8 +408,40 @@ describe('ActionBar', () => {
   });
 
   it('SAVE emits save (no label arg)', () => {
+    seedSession();
     const { fake } = renderWith(false);
     fireEvent.click(screen.getByTestId('action-save'));
     expect(fake.sent).toEqual([{ type: 'save' }]);
+  });
+
+  describe('offline (no session ever arrived)', () => {
+    it('disables the sidecar-requiring buttons with an accessible reason — never hides them', () => {
+      const { fake } = renderWith(false);
+
+      for (const testId of ['action-preview', 'action-regen', 'action-save']) {
+        const button = screen.getByTestId(testId);
+        expect(button).toBeInTheDocument();
+        expect(button).toBeDisabled();
+        expect(button).toHaveAttribute('title', 'Requires sidecar connection');
+        fireEvent.click(button);
+      }
+      expect(fake.sent).toEqual([]);
+      // Data-driven buttons are disabled by their empty slices as before.
+      expect(screen.getByTestId('action-prepare-send-plan')).toBeDisabled();
+      expect(screen.getByTestId('action-send')).toBeDisabled();
+      expect(screen.getByTestId('action-undo')).toBeDisabled();
+    });
+
+    it('re-enables the gated buttons the moment a session arrives', () => {
+      renderWith(false);
+      expect(screen.getByTestId('action-regen')).toBeDisabled();
+
+      updateStore(() => useCockpitStore.getState().setSessionStatus(sessionMock));
+
+      expect(screen.getByTestId('action-regen')).toBeEnabled();
+      expect(screen.getByTestId('action-save')).toBeEnabled();
+      expect(screen.getByTestId('action-preview')).toBeEnabled();
+      expect(screen.getByTestId('action-regen')).not.toHaveAttribute('title');
+    });
   });
 });
