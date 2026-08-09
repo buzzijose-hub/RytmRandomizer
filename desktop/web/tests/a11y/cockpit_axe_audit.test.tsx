@@ -32,7 +32,6 @@ import { KitMorphPanel } from '../../src/cockpit/panels/KitMorphPanel';
 import { LibraryPanel } from '../../src/cockpit/panels/LibraryPanel';
 import { LiveMidiMonitorPanel } from '../../src/cockpit/panels/LiveMidiMonitorPanel';
 import { DeviceRail } from '../../src/cockpit/DeviceRail';
-import { OfflineShell } from '../../src/cockpit/OfflineShell';
 import { ReconnectBanner } from '../../src/cockpit/ReconnectBanner';
 import { PanelRenderer } from '../../src/cockpit/panels/PanelRenderer';
 import { ScopedRandomizationPanel } from '../../src/cockpit/panels/ScopedRandomizationPanel';
@@ -67,8 +66,8 @@ const FLOORS = {
   PanelRenderer: 0,
   ScopedRandomizationPanel: 0,
   SendConfirmDialog: 0,
-  OfflineShell: 0,
   ReconnectBanner: 0,
+  ReconnectBannerPreSession: 0,
   DeviceRailNoHardware: 0,
 } as const;
 
@@ -168,22 +167,25 @@ describe('cockpit axe audit (WCAG 2.2 AA)', () => {
     await expectClean('ArmControlDialog', container);
   });
 
-  it('OfflineShell (sidecar unreachable) is clean', async () => {
-    const fake = new FakeCockpitClient();
-    fake.reconnectState = { attempt: 2, nextDelayMs: 4000 };
-    const { container } = render(
-      <OfflineShell client={fake.asClient()} status="reconnecting" />,
-    );
-    await expectClean('OfflineShell', container);
-  });
-
   it('ReconnectBanner (mid-session sidecar loss) is clean', async () => {
+    useCockpitStore.setState({ sessionStatus: sessionMock });
     const fake = new FakeCockpitClient();
     fake.reconnectState = { attempt: 2, nextDelayMs: 4000 };
     const { container } = render(
       <ReconnectBanner client={fake.asClient()} status="reconnecting" />,
     );
     await expectClean('ReconnectBanner', container);
+  });
+
+  it('ReconnectBanner (never connected, help disclosure open) is clean', async () => {
+    const fake = new FakeCockpitClient();
+    fake.reconnectState = { attempt: 2, nextDelayMs: 4000 };
+    const { container } = render(
+      <ReconnectBanner client={fake.asClient()} status="reconnecting" />,
+    );
+    // Open the pre-session connection-help disclosure so its contents are scanned.
+    fireEvent.click(screen.getByText('Connection help'));
+    await expectClean('ReconnectBannerPreSession', container);
   });
 
   it('DeviceRail with the no-hardware banner is clean', async () => {

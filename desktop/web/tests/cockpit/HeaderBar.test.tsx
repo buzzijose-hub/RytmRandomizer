@@ -48,6 +48,13 @@ describe('HeaderBar', () => {
     expect(screen.queryByTestId('connection-pill')).not.toBeInTheDocument();
   });
 
+  it('keeps the Arm affordance present-but-disabled (with a reason) when session is null', () => {
+    renderHeaderBar();
+    const arm = screen.getByTestId('arm-open-button');
+    expect(arm).toBeDisabled();
+    expect(arm).toHaveAttribute('title', 'Requires sidecar connection');
+  });
+
   it('renders live + armed + unsaved badges when session is live and unsaved>0', () => {
     act(() => {
       useCockpitStore.getState().setSessionStatus(sessionLive);

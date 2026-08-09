@@ -77,11 +77,21 @@ describe('ArmControl', () => {
     });
   });
 
-  it('defaults to the passive Arm affordance before any session_status arrives', () => {
+  it('degrades to a disabled, reason-carrying Arm affordance before any session_status arrives', () => {
+    // No session = no arm path at all (no ports, no session, no secret
+    // handshake). The affordance stays PRESENT — never hidden — but is
+    // disabled with an accessible reason, and a click cannot open the dialog.
     const fake = new FakeCockpitClient();
     renderArmControl(fake);
-    expect(screen.getByTestId('arm-open-button')).toBeInTheDocument();
+    const arm = screen.getByTestId('arm-open-button');
+    expect(arm).toBeInTheDocument();
+    expect(arm).toBeDisabled();
+    expect(arm).toHaveAttribute('aria-disabled', 'true');
+    expect(arm).toHaveAttribute('title', 'Requires sidecar connection');
+    fireEvent.click(arm);
+    expect(screen.queryByTestId('arm-dialog')).not.toBeInTheDocument();
     expect(screen.queryByTestId('disarm-button')).not.toBeInTheDocument();
+    expect(fake.sent).toEqual([]);
   });
 
   it('requires BOTH an exact port and a token, then sends them with confirm:true', async () => {

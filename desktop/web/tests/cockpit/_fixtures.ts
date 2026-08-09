@@ -268,7 +268,7 @@ export class FakeCockpitClient {
   /** When true, send() returns a never-resolving promise (used to test no-ack paths). */
   hang = false;
 
-  /** retryNow() invocations (asserted by OfflineShell tests). */
+  /** retryNow() invocations (asserted by ReconnectBanner tests). */
   retryCalls = 0;
   /** URL reported by getUrl(). */
   url = 'ws://127.0.0.1:4317/ws';
@@ -318,6 +318,12 @@ export class FakeCockpitClient {
     return () => {
       this.statusListeners.delete(handler);
     };
+  }
+
+  /** Test helper: change the reported connection status and notify subscribers. */
+  setStatus(status: ConnectionStatus): void {
+    this.status = status;
+    for (const handler of this.statusListeners) handler(status);
   }
 
   getStatus(): ConnectionStatus {
