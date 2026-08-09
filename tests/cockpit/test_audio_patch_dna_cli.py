@@ -8,10 +8,13 @@ from pathlib import Path
 
 import pytest
 
+from rytm_randomizer import cli as root_cli
 from rytm_randomizer.cockpit.export import audio_patch_dna_cli as cli
 from rytm_randomizer.cockpit.export.analog_four_export_contracts import (
     attach_analog_four_export_error_code,
 )
+from rytm_randomizer.observability.errors import BoundaryError
+from rytm_randomizer.style_analysis.extractor import StyleAnalysisDependencyError
 
 pytestmark = pytest.mark.fast
 
@@ -287,6 +290,8 @@ def test_handler_returns_structured_parse_error(capsys: pytest.CaptureFixture[st
         (PermissionError("denied"), "permission_denied"),
         (OSError("write"), "write_failed"),
         (ImportError("missing dependency"), "service_unavailable"),
+        (StyleAnalysisDependencyError("librosa missing"), "dependency_missing"),
+        (BoundaryError("analysis boundary failed"), "inference_failed"),
         (RuntimeError("inference"), "inference_failed"),
         (ValueError("invalid"), "invalid_input"),
     ],
@@ -332,6 +337,29 @@ def test_json_error_includes_string_notes(
     assert exit_code == 2
     assert payload["error_code"] == "inference_failed"
     assert payload["details"] == ["decode the operator-selected file"]
+
+
+def test_handler_reports_native_analysis_boundary_error(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    def fail(**_kwargs: object) -> _Result:
+        raise BoundaryError("audio analysis boundary failed")
+
+    monkeypatch.setattr(cli, "_export_audio_patch_dna", fail)
+
+    assert (
+        cli.handle_audio_patch_dna(
+            audio_path=tmp_path / "reference.wav",
+            output_dir=tmp_path,
+            json_output=True,
+        )
+        == 2
+    )
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["error_code"] == "inference_failed"
+    assert payload["error"] == "audio analysis boundary failed"
 
 
 def test_text_error_includes_usage_and_details(
@@ -411,6 +439,39 @@ def test_lazy_export_boundary_calls_loaded_service(
     assert result.json_path == tmp_path / "audio-patch-dna.json"
     assert calls[0]["track"] == 3
     assert calls[0]["overwrite"] is True
+
+
+def test_public_cli_dispatches_audio_patch_dna_command(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    calls: list[dict[str, object]] = []
+
+    def exporter(**kwargs: object) -> _Result:
+        calls.append(kwargs)
+        return _result(tmp_path)
+
+    audio_path = tmp_path / "reference.wav"
+    monkeypatch.setattr(cli, "_load_dna_exporter", lambda: exporter)
+
+    exit_code = root_cli.main(
+        [
+            "audio-patch-dna",
+            "--audio",
+            str(audio_path),
+            "--output-dir",
+            str(tmp_path),
+            "--json",
+        ]
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert payload["candidate_count"] == 8
+    assert len(calls) == 1
+    assert calls[0]["audio_path"] == audio_path
+    assert calls[0]["output_dir"] == tmp_path
 
 
 def test_registered_command_contract_and_error_formatter() -> None:

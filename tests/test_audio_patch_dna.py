@@ -6,13 +6,10 @@ import dataclasses
 
 import pytest
 
-from rytm_randomizer.guardrails.schema import Confidence, SourceType
 from rytm_randomizer.style_analysis import (
     AUDIO_PATCH_DNA_CANDIDATE_COUNT,
     AudioDnaEvidence,
     AudioFeatureAnalysis,
-    AudioSynthesisFeatures,
-    FeatureReport,
     audio_patch_dna_workspace_to_dict,
     build_audio_patch_dna_workspace,
     render_audio_patch_dna_markdown,
@@ -22,57 +19,15 @@ from rytm_randomizer.style_analysis import (
 pytestmark = pytest.mark.fast
 
 
-def _analysis(*, features: AudioSynthesisFeatures | None = None) -> AudioFeatureAnalysis:
-    return AudioFeatureAnalysis(
-        feature_report=FeatureReport(
-            source_type=SourceType.SINGLE_TRACK,
-            confidence=Confidence.HIGH,
-            bpm=138.0,
-            tempo_stability=0.92,
-            kick_density=0.31,
-            percussion_density=0.48,
-            low_end_weight=0.61,
-            spectral_brightness=0.57,
-            texture_noise=0.23,
-            energy_arc=(0.2, 0.4, 0.7, 0.6),
-            content_hash="placeholder",
-            derived_at="2026-08-09T00:00:00Z",
-        ),
-        synthesis_features=features
-        or AudioSynthesisFeatures(
-            audio_sha256="b" * 64,
-            duration=0.40,
-            attack=0.18,
-            decay=0.42,
-            sustain=0.38,
-            tail=0.36,
-            brightness=0.55,
-            spectral_flatness=0.20,
-            noise=0.24,
-            low_end=0.58,
-            harmonicity=0.68,
-            transient=0.62,
-            modulation=0.27,
-        ),
-        dna_evidence=AudioDnaEvidence(
-            dominant_frequency_hz=87.31,
-            dominant_note="F2",
-            pitch_confidence=0.81,
-            tonal_stability=0.72,
-            spectral_movement=0.19,
-        ),
-    )
-
-
-def test_workspace_builds_ordered_eight_direction_comparison() -> None:
-    analysis = _analysis()
-
-    workspace = build_audio_patch_dna_workspace(analysis, track=3)
+def test_workspace_builds_ordered_eight_direction_comparison(
+    audio_patch_dna_analysis: AudioFeatureAnalysis,
+) -> None:
+    workspace = build_audio_patch_dna_workspace(audio_patch_dna_analysis, track=3)
 
     assert AUDIO_PATCH_DNA_CANDIDATE_COUNT == 8
     assert workspace.selected_track == 3
-    assert workspace.dna_evidence is analysis.dna_evidence
-    assert workspace.base_audio_features is analysis.synthesis_features
+    assert workspace.dna_evidence is audio_patch_dna_analysis.dna_evidence
+    assert workspace.base_audio_features is audio_patch_dna_analysis.synthesis_features
     assert [candidate.key for candidate in workspace.candidates] == [
         "closest",
         "darker",
@@ -88,7 +43,7 @@ def test_workspace_builds_ordered_eight_direction_comparison() -> None:
     assert all(
         gene.track == 3 for candidate in workspace.candidates for gene in candidate.patch.genes
     )
-    assert workspace.candidates[0].audio_features == analysis.synthesis_features
+    assert workspace.candidates[0].audio_features == audio_patch_dna_analysis.synthesis_features
     assert workspace.candidates[1].audio_features.brightness == pytest.approx(0.33)
     assert workspace.candidates[2].audio_features.brightness == pytest.approx(0.77)
     assert workspace.candidates[4].audio_features.transient == pytest.approx(0.86)
@@ -97,9 +52,11 @@ def test_workspace_builds_ordered_eight_direction_comparison() -> None:
     assert workspace.candidates[7].audio_features.modulation == pytest.approx(0.55)
 
 
-def test_workspace_clamps_all_directional_evidence_to_unit_interval() -> None:
+def test_workspace_clamps_all_directional_evidence_to_unit_interval(
+    audio_patch_dna_analysis: AudioFeatureAnalysis,
+) -> None:
     features = dataclasses.replace(
-        _analysis().synthesis_features,
+        audio_patch_dna_analysis.synthesis_features,
         attack=0.05,
         decay=0.05,
         sustain=0.05,
@@ -112,7 +69,8 @@ def test_workspace_clamps_all_directional_evidence_to_unit_interval() -> None:
         modulation=0.90,
     )
 
-    workspace = build_audio_patch_dna_workspace(_analysis(features=features))
+    analysis = dataclasses.replace(audio_patch_dna_analysis, synthesis_features=features)
+    workspace = build_audio_patch_dna_workspace(analysis)
 
     assert workspace.candidates[2].audio_features.brightness == 1.0
     assert workspace.candidates[3].audio_features.noise == 1.0
@@ -126,8 +84,10 @@ def test_workspace_clamps_all_directional_evidence_to_unit_interval() -> None:
     assert workspace.candidates[7].audio_features.modulation == 1.0
 
 
-def test_workspace_serializers_are_stable_and_readable() -> None:
-    workspace = build_audio_patch_dna_workspace(_analysis())
+def test_workspace_serializers_are_stable_and_readable(
+    audio_patch_dna_analysis: AudioFeatureAnalysis,
+) -> None:
+    workspace = build_audio_patch_dna_workspace(audio_patch_dna_analysis)
 
     payload = audio_patch_dna_workspace_to_dict(workspace)
     markdown = render_audio_patch_dna_markdown(workspace)
@@ -145,9 +105,11 @@ def test_workspace_serializers_are_stable_and_readable() -> None:
     assert render_audio_patch_dna_markdown(workspace) == markdown
 
 
-def test_markdown_handles_unresolved_pitch() -> None:
+def test_markdown_handles_unresolved_pitch(
+    audio_patch_dna_analysis: AudioFeatureAnalysis,
+) -> None:
     analysis = dataclasses.replace(
-        _analysis(),
+        audio_patch_dna_analysis,
         dna_evidence=AudioDnaEvidence(None, None, 0.0, 0.0, 0.0),
     )
 
@@ -156,8 +118,10 @@ def test_markdown_handles_unresolved_pitch() -> None:
     assert "Dominant pitch: unresolved (unresolved)" in markdown
 
 
-def test_selected_candidate_uses_existing_single_export_shape() -> None:
-    workspace = build_audio_patch_dna_workspace(_analysis(), track=2)
+def test_selected_candidate_uses_existing_single_export_shape(
+    audio_patch_dna_analysis: AudioFeatureAnalysis,
+) -> None:
+    workspace = build_audio_patch_dna_workspace(audio_patch_dna_analysis, track=2)
 
     selected = select_audio_patch_dna_candidate(workspace, 6)
 
@@ -170,16 +134,23 @@ def test_selected_candidate_uses_existing_single_export_shape() -> None:
 
 
 @pytest.mark.parametrize("selection", [0, 9])
-def test_selection_rejects_out_of_range_values(selection: int) -> None:
+def test_selection_rejects_out_of_range_values(
+    selection: int,
+    audio_patch_dna_analysis: AudioFeatureAnalysis,
+) -> None:
     with pytest.raises(ValueError, match="selection must be in 1..8"):
-        select_audio_patch_dna_candidate(build_audio_patch_dna_workspace(_analysis()), selection)
+        select_audio_patch_dna_candidate(
+            build_audio_patch_dna_workspace(audio_patch_dna_analysis), selection
+        )
 
 
-def test_workspace_public_boundaries_reject_wrong_types_and_tracks() -> None:
+def test_workspace_public_boundaries_reject_wrong_types_and_tracks(
+    audio_patch_dna_analysis: AudioFeatureAnalysis,
+) -> None:
     with pytest.raises(TypeError, match="AudioFeatureAnalysis"):
         build_audio_patch_dna_workspace(object())  # type: ignore[arg-type]
     with pytest.raises(ValueError, match="track must be in 1..4"):
-        build_audio_patch_dna_workspace(_analysis(), track=5)
+        build_audio_patch_dna_workspace(audio_patch_dna_analysis, track=5)
     with pytest.raises(TypeError, match="AudioPatchDnaWorkspace"):
         audio_patch_dna_workspace_to_dict(object())  # type: ignore[arg-type]
     with pytest.raises(TypeError, match="AudioPatchDnaWorkspace"):

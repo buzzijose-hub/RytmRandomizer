@@ -10,6 +10,11 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from typing import Final, TypedDict
 
+from ..data.audio_patch_dna import (
+    AUDIO_PATCH_DNA_CANDIDATE_COUNT,
+    AUDIO_PATCH_DNA_DIRECTION_SPECS,
+    AudioPatchDnaDirectionSpec,
+)
 from .analog_four_patch_genome import (
     AnalogFourPatchCandidate,
     AnalogFourPatchCandidatePayload,
@@ -34,106 +39,12 @@ from .feature_report import FeatureReport, FeatureReportPayload, feature_report_
 from .runtime_types import require_runtime_type
 
 AUDIO_PATCH_DNA_SCHEMA_VERSION: Final[str] = "audio-patch-dna-v1"
-AUDIO_PATCH_DNA_CANDIDATE_COUNT: Final[int] = 8
 AUDIO_PATCH_DNA_SAFETY: Final[tuple[str, ...]] = (
     "passive offline audio analysis",
     "one shared audio decode",
     "no MIDI port enumerated or opened",
     "no MIDI or SysEx sent",
     "candidate selection is explicit",
-)
-
-
-@dataclass(frozen=True)
-class _AudioPatchDirection:
-    key: str
-    label: str
-    role: str
-    closeness: int
-    duration: float = 0.0
-    attack: float = 0.0
-    decay: float = 0.0
-    sustain: float = 0.0
-    tail: float = 0.0
-    brightness: float = 0.0
-    noise: float = 0.0
-    low_end: float = 0.0
-    harmonicity: float = 0.0
-    transient: float = 0.0
-    modulation: float = 0.0
-
-
-_AUDIO_PATCH_DIRECTIONS: Final[tuple[_AudioPatchDirection, ...]] = (
-    _AudioPatchDirection("closest", "Closest", "closest measured match", 96),
-    _AudioPatchDirection(
-        "darker",
-        "Darker",
-        "reduced high-frequency energy",
-        86,
-        brightness=-0.22,
-        low_end=0.10,
-        tail=0.04,
-    ),
-    _AudioPatchDirection(
-        "brighter",
-        "Brighter",
-        "sharper and more exposed",
-        84,
-        brightness=0.22,
-        noise=0.04,
-        transient=0.04,
-    ),
-    _AudioPatchDirection(
-        "metallic",
-        "Metallic",
-        "inharmonic infrastructure texture",
-        80,
-        brightness=0.16,
-        noise=0.14,
-        harmonicity=0.08,
-        modulation=0.10,
-    ),
-    _AudioPatchDirection(
-        "percussive",
-        "Percussive",
-        "shorter and more transient-led",
-        82,
-        attack=-0.12,
-        decay=-0.16,
-        sustain=-0.16,
-        tail=-0.18,
-        transient=0.24,
-    ),
-    _AudioPatchDirection(
-        "atmospheric",
-        "Atmospheric",
-        "slower envelope and longer pressure",
-        76,
-        attack=0.16,
-        decay=0.18,
-        sustain=0.18,
-        tail=0.28,
-        transient=-0.12,
-        modulation=0.10,
-    ),
-    _AudioPatchDirection(
-        "deeper",
-        "Deeper",
-        "heavier low-frequency body",
-        81,
-        duration=0.08,
-        brightness=-0.12,
-        low_end=0.22,
-    ),
-    _AudioPatchDirection(
-        "animated",
-        "Animated",
-        "more spectral motion and modulation",
-        78,
-        tail=0.08,
-        noise=0.06,
-        modulation=0.28,
-    ),
 )
 
 
@@ -199,7 +110,7 @@ def build_audio_patch_dna_workspace(
     )
     inferred = tuple(
         _infer_direction(validated_analysis, direction, column=index, track=track)
-        for index, direction in enumerate(_AUDIO_PATCH_DIRECTIONS, start=1)
+        for index, direction in enumerate(AUDIO_PATCH_DNA_DIRECTION_SPECS, start=1)
     )
     return AudioPatchDnaWorkspace(
         schema_version=AUDIO_PATCH_DNA_SCHEMA_VERSION,
@@ -325,7 +236,7 @@ def render_audio_patch_dna_markdown(workspace: AudioPatchDnaWorkspace) -> str:
 
 def _infer_direction(
     analysis: AudioFeatureAnalysis,
-    direction: _AudioPatchDirection,
+    direction: AudioPatchDnaDirectionSpec,
     *,
     column: int,
     track: int,
@@ -357,7 +268,7 @@ def _infer_direction(
 
 def _transform_features(
     features: AudioSynthesisFeatures,
-    direction: _AudioPatchDirection,
+    direction: AudioPatchDnaDirectionSpec,
 ) -> AudioSynthesisFeatures:
     return replace(
         features,

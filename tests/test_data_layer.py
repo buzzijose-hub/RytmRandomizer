@@ -26,6 +26,7 @@ import pytest
 import rytm_randomizer.constants as pkg_constants
 import rytm_randomizer.data as data
 import rytm_randomizer.data.analog_four_patch_templates as a4_patch_templates
+import rytm_randomizer.data.audio_patch_dna as audio_patch_dna_data
 import rytm_randomizer.profiles as pkg_profiles
 import rytm_randomizer.scenes as pkg_scenes
 
@@ -677,6 +678,174 @@ def test_package_scene_commands_derive_from_scene_presets():
         assert command["executable"] is False
         assert command["v134_reference_command"] is True
         assert command["scaffold_only"] is True
+
+
+def test_audio_patch_dna_directions_are_canonical_immutable_data():
+    direction_rows = tuple(
+        (
+            spec.key,
+            spec.label,
+            spec.role,
+            spec.closeness,
+            spec.duration,
+            spec.attack,
+            spec.decay,
+            spec.sustain,
+            spec.tail,
+            spec.brightness,
+            spec.noise,
+            spec.low_end,
+            spec.harmonicity,
+            spec.transient,
+            spec.modulation,
+        )
+        for spec in data.AUDIO_PATCH_DNA_DIRECTION_SPECS
+    )
+
+    assert data.AUDIO_PATCH_DNA_CANDIDATE_COUNT == 8
+    assert direction_rows == (
+        (
+            "closest",
+            "Closest",
+            "closest measured match",
+            96,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+        ),
+        (
+            "darker",
+            "Darker",
+            "reduced high-frequency energy",
+            86,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.04,
+            -0.22,
+            0.0,
+            0.10,
+            0.0,
+            0.0,
+            0.0,
+        ),
+        (
+            "brighter",
+            "Brighter",
+            "sharper and more exposed",
+            84,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.22,
+            0.04,
+            0.0,
+            0.0,
+            0.04,
+            0.0,
+        ),
+        (
+            "metallic",
+            "Metallic",
+            "inharmonic infrastructure texture",
+            80,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.16,
+            0.14,
+            0.0,
+            0.08,
+            0.0,
+            0.10,
+        ),
+        (
+            "percussive",
+            "Percussive",
+            "shorter and more transient-led",
+            82,
+            0.0,
+            -0.12,
+            -0.16,
+            -0.16,
+            -0.18,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.24,
+            0.0,
+        ),
+        (
+            "atmospheric",
+            "Atmospheric",
+            "slower envelope and longer pressure",
+            76,
+            0.0,
+            0.16,
+            0.18,
+            0.18,
+            0.28,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            -0.12,
+            0.10,
+        ),
+        (
+            "deeper",
+            "Deeper",
+            "heavier low-frequency body",
+            81,
+            0.08,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            -0.12,
+            0.0,
+            0.22,
+            0.0,
+            0.0,
+            0.0,
+        ),
+        (
+            "animated",
+            "Animated",
+            "more spectral motion and modulation",
+            78,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.08,
+            0.0,
+            0.06,
+            0.0,
+            0.0,
+            0.0,
+            0.28,
+        ),
+    )
+    assert {
+        "AUDIO_PATCH_DNA_CANDIDATE_COUNT",
+        "AUDIO_PATCH_DNA_DIRECTION_SPECS",
+    }.issubset(data.__all__)
+    assert "AudioPatchDnaDirectionSpec" in audio_patch_dna_data.__all__
 
 
 if __name__ == "__main__":

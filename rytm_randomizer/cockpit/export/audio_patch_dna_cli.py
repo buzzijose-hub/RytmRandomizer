@@ -10,9 +10,11 @@ from typing import TYPE_CHECKING, Final, Literal, Protocol, TypedDict
 
 from ...cli_registry import CliCommand, register
 from ...data.analog_four_sysex_calibration import A4_SYNTH_TRACK_MAX, A4_SYNTH_TRACK_MIN
+from ...data.audio_patch_dna import AUDIO_PATCH_DNA_CANDIDATE_COUNT
+from ...observability.errors import BoundaryError
 from .analog_four_export_contracts import (
     AnalogFourExportErrorCode,
-    analog_four_export_error_code,
+    classify_analog_four_cli_error,
 )
 from .cli_options import exception_notes, parse_bounded_integer, pop_required_cli_value
 
@@ -21,7 +23,7 @@ DEFAULT_TRACK: Final[int] = A4_SYNTH_TRACK_MIN
 MIN_TRACK: Final[int] = A4_SYNTH_TRACK_MIN
 MAX_TRACK: Final[int] = A4_SYNTH_TRACK_MAX
 MIN_SELECTION: Final[int] = 1
-MAX_SELECTION: Final[int] = 8
+MAX_SELECTION: Final[int] = AUDIO_PATCH_DNA_CANDIDATE_COUNT
 USAGE: Final[str] = (
     "Usage: python -m rytm_randomizer.cli audio-patch-dna "
     "--audio <path> --output-dir <dir> [--track N] "
@@ -339,22 +341,7 @@ def _format_cli_text(result: _DnaResult) -> str:
 
 
 def _dna_cli_error_code(exc: Exception) -> AnalogFourExportErrorCode:
-    classified_code = analog_four_export_error_code(exc)
-    if classified_code is not None:
-        return classified_code
-    if isinstance(exc, FileNotFoundError):
-        return "input_not_found"
-    if isinstance(exc, FileExistsError):
-        return "overwrite_refused"
-    if isinstance(exc, PermissionError):
-        return "permission_denied"
-    if isinstance(exc, OSError):
-        return "write_failed"
-    if isinstance(exc, ImportError):
-        return "service_unavailable"
-    if isinstance(exc, RuntimeError):
-        return "inference_failed"
-    return "invalid_input"
+    return classify_analog_four_cli_error(exc, default_error_code="invalid_input")
 
 
 def _write_error(
@@ -407,7 +394,15 @@ def handle_audio_patch_dna(  # noqa: PLR0913 - typed CLI boundary
         else:
             sys.stderr.write(f"{USAGE}\nError [interrupted]: {message}\n")
         return 130
-    except (ImportError, KeyError, ValueError, TypeError, OSError, RuntimeError) as exc:
+    except (
+        BoundaryError,
+        ImportError,
+        KeyError,
+        ValueError,
+        TypeError,
+        OSError,
+        RuntimeError,
+    ) as exc:
         error_code = _dna_cli_error_code(exc)
         details = exception_notes(exc)
         if json_output:

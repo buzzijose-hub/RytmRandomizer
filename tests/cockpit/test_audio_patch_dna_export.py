@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
@@ -10,60 +12,17 @@ from typing import cast
 import pytest
 
 from rytm_randomizer.cockpit.export import audio_patch_dna as service
-from rytm_randomizer.guardrails.schema import Confidence, SourceType
+from rytm_randomizer.observability.errors import BoundaryError
+from rytm_randomizer.observability.metrics import get_metrics
 from rytm_randomizer.style_analysis import (
-    AudioDnaEvidence,
     AudioFeatureAnalysis,
-    AudioSynthesisFeatures,
-    FeatureReport,
     build_audio_patch_dna_workspace,
 )
 from rytm_randomizer.style_analysis.analog_four_patch_inference import (
     AnalogFourAudioPatchGenome,
 )
 
-pytestmark = pytest.mark.fast
-
-
-def _analysis() -> AudioFeatureAnalysis:
-    return AudioFeatureAnalysis(
-        feature_report=FeatureReport(
-            source_type=SourceType.SINGLE_TRACK,
-            confidence=Confidence.HIGH,
-            bpm=138.0,
-            tempo_stability=0.92,
-            kick_density=0.31,
-            percussion_density=0.48,
-            low_end_weight=0.61,
-            spectral_brightness=0.57,
-            texture_noise=0.23,
-            energy_arc=(0.2, 0.4, 0.7, 0.6),
-            content_hash="placeholder",
-            derived_at="2026-08-09T00:00:00Z",
-        ),
-        synthesis_features=AudioSynthesisFeatures(
-            audio_sha256="b" * 64,
-            duration=0.40,
-            attack=0.18,
-            decay=0.42,
-            sustain=0.38,
-            tail=0.36,
-            brightness=0.55,
-            spectral_flatness=0.20,
-            noise=0.24,
-            low_end=0.58,
-            harmonicity=0.68,
-            transient=0.62,
-            modulation=0.27,
-        ),
-        dna_evidence=AudioDnaEvidence(
-            dominant_frequency_hz=87.31,
-            dominant_note="F2",
-            pitch_confidence=0.81,
-            tonal_stability=0.72,
-            spectral_movement=0.19,
-        ),
-    )
+pytestmark = [pytest.mark.fast, pytest.mark.usefixtures("isolated_observability")]
 
 
 @dataclass(frozen=True)
@@ -99,6 +58,7 @@ def _fake_a4_export(output_dir: Path) -> _FakeA4Export:
 def test_compare_only_analyzes_once_and_writes_exactly_eight_directions(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    audio_patch_dna_analysis: AudioFeatureAnalysis,
 ) -> None:
     audio_path = tmp_path / "reference.wav"
     output_dir = tmp_path / "dna"
@@ -106,7 +66,7 @@ def test_compare_only_analyzes_once_and_writes_exactly_eight_directions(
 
     def fake_analyze(path: Path) -> AudioFeatureAnalysis:
         analyzed.append(path)
-        return _analysis()
+        return audio_patch_dna_analysis
 
     def unexpected_export(**_kwargs: object) -> None:
         pytest.fail("compare-only mode must not invoke the A4 exporter")
@@ -136,11 +96,12 @@ def test_compare_only_analyzes_once_and_writes_exactly_eight_directions(
 def test_compare_only_outputs_are_deterministic_for_the_same_destination(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    audio_patch_dna_analysis: AudioFeatureAnalysis,
 ) -> None:
     monkeypatch.setattr(
         service,
         "analyze_analog_four_patch_audio_analysis_isolated",
-        lambda _path: _analysis(),
+        lambda _path: audio_patch_dna_analysis,
     )
     output_dir = tmp_path / "dna"
 
@@ -163,6 +124,7 @@ def test_compare_only_outputs_are_deterministic_for_the_same_destination(
 def test_selected_direction_exports_only_one_precomputed_a4_candidate(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    audio_patch_dna_analysis: AudioFeatureAnalysis,
 ) -> None:
     audio_path = tmp_path / "reference.wav"
     source_kit_path = tmp_path / "source.syx"
@@ -172,7 +134,7 @@ def test_selected_direction_exports_only_one_precomputed_a4_candidate(
 
     def fake_analyze(path: Path) -> AudioFeatureAnalysis:
         analyzed.append(path)
-        return _analysis()
+        return audio_patch_dna_analysis
 
     def fake_export(**kwargs: object) -> _FakeA4Export:
         export_calls.append(kwargs)
@@ -261,8 +223,10 @@ def test_public_path_inputs_require_pathlib_paths(field_name: str) -> None:
         service.export_audio_patch_dna_workspace(**kwargs)  # type: ignore[arg-type]
 
 
-def test_defensive_selected_export_requires_source_kit() -> None:
-    workspace = build_audio_patch_dna_workspace(_analysis())
+def test_defensive_selected_export_requires_source_kit(
+    audio_patch_dna_analysis: AudioFeatureAnalysis,
+) -> None:
+    workspace = build_audio_patch_dna_workspace(audio_patch_dna_analysis)
 
     with pytest.raises(ValueError, match="source_kit_path is required"):
         service._export_selected_candidate(
@@ -275,8 +239,10 @@ def test_defensive_selected_export_requires_source_kit() -> None:
         )
 
 
-def test_selected_report_can_describe_selection_before_a4_export() -> None:
-    workspace = build_audio_patch_dna_workspace(_analysis())
+def test_selected_report_can_describe_selection_before_a4_export(
+    audio_patch_dna_analysis: AudioFeatureAnalysis,
+) -> None:
+    workspace = build_audio_patch_dna_workspace(audio_patch_dna_analysis)
     selected = workspace.candidates[2]
 
     payload = service._audio_patch_dna_export_payload(
@@ -293,3 +259,119 @@ def test_selected_report_can_describe_selection_before_a4_export() -> None:
     assert payload["selected_candidate"]["label"] == "Brighter"
     assert "Candidate: 3. Brighter" in markdown
     assert "A4 manifest:" not in markdown
+
+
+def test_export_records_one_terminal_success_with_trace_and_metrics(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    audio_patch_dna_analysis: AudioFeatureAnalysis,
+) -> None:
+    traced: list[tuple[str, str]] = []
+    logged: list[dict[str, object]] = []
+
+    @contextmanager
+    def observe_operation(name: str, **_kwargs: object) -> Iterator[None]:
+        traced.append(("start", name))
+        yield
+        traced.append(("end", name))
+
+    monkeypatch.setattr(service, "trace_operation", observe_operation)
+    monkeypatch.setattr(
+        service,
+        "analyze_analog_four_patch_audio_analysis_isolated",
+        lambda _path: audio_patch_dna_analysis,
+    )
+    monkeypatch.setattr(
+        service._logger,
+        "info",
+        lambda _message, *, extra: logged.append(extra),
+    )
+
+    service.export_audio_patch_dna_workspace(
+        audio_path=tmp_path / "reference.wav",
+        output_dir=tmp_path / "dna",
+    )
+
+    metrics = get_metrics()
+    assert metrics.export_count == 1
+    assert not metrics.export_errors_by_code
+    assert traced == [
+        ("start", "a4_audio_patch_dna_export"),
+        ("end", "a4_audio_patch_dna_export"),
+    ]
+    assert len(logged) == 1
+    assert logged[0]["outcome"] == "completed"
+    assert logged[0]["candidate_count"] == 8
+    assert logged[0]["selected"] is False
+    assert float(logged[0]["duration_ms"]) >= 0.0
+    assert "export_count=1" in str(logged[0]["metrics_summary"])
+
+
+def test_export_records_one_terminal_boundary_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    logged: list[dict[str, object]] = []
+
+    def fail_analysis(_path: Path) -> AudioFeatureAnalysis:
+        raise BoundaryError("native analysis failed")
+
+    monkeypatch.setattr(
+        service,
+        "analyze_analog_four_patch_audio_analysis_isolated",
+        fail_analysis,
+    )
+    monkeypatch.setattr(
+        service._logger,
+        "warning",
+        lambda _message, *, extra: logged.append(extra),
+    )
+
+    with pytest.raises(BoundaryError, match="native analysis failed"):
+        service.export_audio_patch_dna_workspace(
+            audio_path=tmp_path / "reference.wav",
+            output_dir=tmp_path / "dna",
+        )
+
+    metrics = get_metrics()
+    assert metrics.export_count == 1
+    assert metrics.export_errors_by_code["inference_failed"] == 1
+    assert len(logged) == 1
+    assert logged[0]["outcome"] == "failed"
+    assert logged[0]["error_code"] == "inference_failed"
+    assert float(logged[0]["duration_ms"]) >= 0.0
+    assert "inference_failed:1" in str(logged[0]["metrics_summary"])
+
+
+def test_export_records_one_terminal_operator_interrupt(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    logged: list[dict[str, object]] = []
+
+    def interrupt_analysis(_path: Path) -> AudioFeatureAnalysis:
+        raise KeyboardInterrupt("operator cancelled")
+
+    monkeypatch.setattr(
+        service,
+        "analyze_analog_four_patch_audio_analysis_isolated",
+        interrupt_analysis,
+    )
+    monkeypatch.setattr(
+        service._logger,
+        "warning",
+        lambda _message, *, extra: logged.append(extra),
+    )
+
+    with pytest.raises(KeyboardInterrupt, match="operator cancelled"):
+        service.export_audio_patch_dna_workspace(
+            audio_path=tmp_path / "reference.wav",
+            output_dir=tmp_path / "dna",
+        )
+
+    metrics = get_metrics()
+    assert metrics.export_count == 1
+    assert metrics.export_errors_by_code["interrupted"] == 1
+    assert len(logged) == 1
+    assert logged[0]["outcome"] == "failed"
+    assert logged[0]["error_code"] == "interrupted"

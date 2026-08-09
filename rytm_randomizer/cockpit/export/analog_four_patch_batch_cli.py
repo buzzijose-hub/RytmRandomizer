@@ -14,7 +14,7 @@ from ...data.analog_four_patch_templates import ANALOG_FOUR_PATCH_CANDIDATE_TEMP
 from ...data.analog_four_sysex_calibration import A4_SYNTH_TRACK_MAX, A4_SYNTH_TRACK_MIN
 from .analog_four_export_contracts import (
     AnalogFourExportErrorCode,
-    analog_four_export_error_code,
+    classify_analog_four_cli_error,
 )
 from .cli_options import exception_notes, parse_bounded_integer, pop_required_cli_value
 
@@ -576,25 +576,8 @@ def _format_batch_cli_text(
     return "\n".join(lines) + "\n"
 
 
-def _batch_cli_error_code(  # noqa: PLR0911 - ordered fail-closed classifier
-    exc: Exception,
-) -> AnalogFourExportErrorCode:
-    classified_code = analog_four_export_error_code(exc)
-    if classified_code is not None:
-        return classified_code
-    if isinstance(exc, FileNotFoundError):
-        return "input_not_found"
-    if isinstance(exc, FileExistsError):
-        return "overwrite_refused"
-    if isinstance(exc, PermissionError):
-        return "permission_denied"
-    if isinstance(exc, OSError):
-        return "write_failed"
-    if isinstance(exc, ImportError):
-        return "service_unavailable"
-    if isinstance(exc, RuntimeError):
-        return "inference_failed"
-    return "validation"
+def _batch_cli_error_code(exc: Exception) -> AnalogFourExportErrorCode:
+    return classify_analog_four_cli_error(exc, default_error_code="validation")
 
 
 def _write_batch_error(

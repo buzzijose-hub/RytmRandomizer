@@ -270,9 +270,7 @@ def _build_audio_inference(
     track: int,
     candidate_count: int,
 ) -> _AudioInference:
-    from ...style_analysis.analog_four_patch_genome import analog_four_patch_genome_to_dict
     from ...style_analysis.analog_four_patch_inference import (
-        analog_four_patch_audio_features_to_dict,
         build_analog_four_audio_patch_genome_isolated,
     )
 
@@ -281,19 +279,12 @@ def _build_audio_inference(
         track=track,
         candidate_count=candidate_count,
     )
-    return _AudioInference(
-        feature_report=result.feature_report,
-        genome=result.genome,
-        audio_features_payload=analog_four_patch_audio_features_to_dict(result.audio_features),
-        genome_payload=analog_four_patch_genome_to_dict(result.genome),
-    )
+    return _audio_inference_from_genome(result)
 
 
 def _build_precomputed_audio_inference(value: object) -> _AudioInference:
-    from ...style_analysis.analog_four_patch_genome import analog_four_patch_genome_to_dict
     from ...style_analysis.analog_four_patch_inference import (
         AnalogFourAudioPatchGenome,
-        analog_four_patch_audio_features_to_dict,
     )
 
     if not isinstance(value, AnalogFourAudioPatchGenome):
@@ -301,6 +292,15 @@ def _build_precomputed_audio_inference(value: object) -> _AudioInference:
     candidates = value.genome.candidates
     if len(candidates) != 1 or candidates[0].column != 1:
         raise ValueError("audio_genome must contain exactly one candidate in column 1")
+    return _audio_inference_from_genome(value)
+
+
+def _audio_inference_from_genome(value: AnalogFourAudioPatchGenome) -> _AudioInference:
+    from ...style_analysis.analog_four_patch_genome import analog_four_patch_genome_to_dict
+    from ...style_analysis.analog_four_patch_inference import (
+        analog_four_patch_audio_features_to_dict,
+    )
+
     return _AudioInference(
         feature_report=value.feature_report,
         genome=value.genome,

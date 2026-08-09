@@ -822,6 +822,12 @@ def test_extract_from_audio_runs_on_synthetic_signal(tmp_path: Path):
     assert analysis.audio_sha256 == hashlib.sha256(wav.read_bytes()).hexdigest()
     assert 0.0 <= analysis.harmonicity <= 1.0
     assert 0.0 <= analysis.modulation <= 1.0
+    assert analysis.dna_evidence.dominant_frequency_hz == pytest.approx(
+        440.0,
+        rel=0.02,
+    )
+    assert analysis.dna_evidence.dominant_note == "A4"
+    assert analysis.dna_evidence.pitch_confidence > 0.0
     # Determinism: a second extraction yields the same hash modulo
     # ``derived_at`` (which is wall-clock). The non-time fields must match.
     second = extract_from_audio(wav)
