@@ -15,6 +15,7 @@ Requirements gates for all plans: [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUI
 
 | Date | Plan | Status | PR |
 |---|---|---|---|
+| 2026-08-08 | [rio145-dual-kit-codec-integration](2026-08-08-rio145-dual-kit-codec-integration.md) | in-flight |  |
 | 2026-05-19 | [dual-machine-strategy-redo-pr-body](2026-05-19-dual-machine-strategy-redo-pr-body.md) | (PR body draft — no lifecycle) |  |
 | 2026-05-19 | [dual-machine-strategy-redo](2026-05-19-dual-machine-strategy-redo.md) | legacy (pre-status convention; grandfathered) |  |
 | 2026-05-19 | [rytm-12-pad-machine-matrix-pr-body](2026-05-19-rytm-12-pad-machine-matrix-pr-body.md) | (PR body draft — no lifecycle) |  |

@@ -250,6 +250,13 @@ analog-four-audio-patch-rank --reference REF.wav --manifest batch.json --render 
 
 # AL16 Analog Rytm offline audit proof (no MIDI; current AL02 build is blocked)
 al16-rytm-kit-export --reference output/local/reference/RYTM_Test1_Init_Kit.syx --recipe specs/al16/AL02_LOCK_RYTM.yaml --destination-slot 127 --output output/local/al16/AL02_LOCK_RYTM.syx
+
+# RIO145 offline native-KIT codec and target-return evidence (no MIDI)
+rio145-inspect-sysex --input A4_NATIVE.syx
+rio145-validate-roundtrip --input A4_NATIVE.syx
+rio145-build-a4-kit --reference A4_NATIVE.syx --recipe specs/rio145/come_to_rio_a4_core.json --destination-slot 0 --output output/local/rio145/RIO_A4_CORE.syx
+rio145-build-rytm-kit --reference RYTM_NATIVE.syx --recipe specs/rio145/come_to_rio_rytm_core.json --destination-slot 0 --output output/local/rio145/RIO_RYTM_CORE.syx
+rio145-validate-a4-return --reference A4_NATIVE.syx --recipe specs/rio145/come_to_rio_a4_core.json --returned A4_TARGET_RETURN.syx
 ```
 
 The AL16 command is currently an offline audit/evidence compiler, not a
@@ -267,6 +274,18 @@ evidence and is regenerated only by the repository's deterministic artifact
 workflow. Evidence timestamps default to the reproducible Unix epoch; set
 `SOURCE_DATE_EPOCH` to an in-range Unix timestamp when a deterministic release
 timestamp is required.
+
+The RIO145 command family is a separate passive, file-only workflow for the
+target-return-validated Analog Four and Analog Rytm KIT codec foundation. It
+can inspect and diff native SysEx, prove byte-identical decode/encode
+roundtrips, build deterministic KIT files from strict JSON recipes, validate
+target-unit returns after normalizing the explicit destination slot, and
+export the checked OXI evidence bundle. Builds require an explicit slot and
+output path, refuse to overwrite by default, and never enumerate, open, or
+write a MIDI port. The OXI evidence owns the sequence; these commands do not
+generate Elektron patterns. Binary target-return validation establishes
+native payload identity, not sonic equivalence; listening refinement remains
+an operator task.
 
 Every command above is **passive by construction** — no output port opens, no MIDI is sent (armed A4 delivery requires `--arm` plus a reviewed batch manifest). The full list is auto-discovered and swept on every PR.
 

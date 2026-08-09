@@ -1,0 +1,723 @@
+{
+  "schema": "elektron.rytm.kit-recipe.v1",
+  "title": "Nitrosound - Come To Rio - Analog Rytm MKII core kit",
+  "description": "Twelve synthesized drum/percussion Sounds and mapped kit FX for OXI One sequencing at 145 BPM.",
+  "firmware": "Analog Rytm MKII OS 1.72 target-unit baseline",
+  "compatibility_basis": "User-supplied initialized OS 1.72-size Kit dump plus lossless target-unit codec",
+  "baseline_fixture": "RYTM_Test1_Init_Kit.syx",
+  "kit_name": "RIO145 AR CORE",
+  "track_levels": [
+    112,
+    86,
+    88,
+    82,
+    96,
+    84,
+    80,
+    76,
+    84,
+    76,
+    70,
+    72
+  ],
+  "fx_track_level": 100,
+  "preservation_policy": "Preserve all unknown/reserved bytes, routing, scenes, performances, retrig defaults and control-input mappings from the initialized baseline.",
+  "tracks": [
+    {
+      "name": "A SHARP KICK",
+      "machine": "BD_SHARP",
+      "machine_parameters": {
+        "LEV": 110,
+        "TUN": -5,
+        "DEC": 58,
+        "HLD": 40,
+        "SWT": 81,
+        "SWD": 93,
+        "WAV": 1,
+        "TIC": 127
+      },
+      "sample": {
+        "tune": 0,
+        "fine": 0,
+        "bit_reduction": 0,
+        "slot": 0,
+        "start": 0,
+        "end": 120,
+        "loop": false,
+        "level": 0
+      },
+      "filter": {
+        "attack": 0,
+        "decay": 35,
+        "sustain": 0,
+        "release": 10,
+        "frequency": 23,
+        "resonance": 77,
+        "type": "HP2",
+        "envelope_depth": 0
+      },
+      "amp": {
+        "attack": 0,
+        "hold": 1,
+        "decay": 93,
+        "overdrive": 22,
+        "delay_send": 0,
+        "reverb_send": 2,
+        "pan": 0,
+        "volume": 112,
+        "accent_level": 32
+      },
+      "lfo": {
+        "speed": 32,
+        "multiplier": "X1",
+        "fade": 0,
+        "destination": "SYNTH_PARAM_2",
+        "waveform": "EXP",
+        "phase": 0,
+        "mode": "ONE",
+        "depth": -3
+      }
+    },
+    {
+      "name": "CLIP IMPACT",
+      "machine": "SD_HARD",
+      "machine_parameters": {
+        "LEV": 86,
+        "TUN": 7,
+        "DEC": 34,
+        "SWD": 26,
+        "TIC": 84,
+        "NOD": 28,
+        "NOL": 60,
+        "SWT": 30
+      },
+      "sample": {
+        "tune": 0,
+        "fine": 0,
+        "bit_reduction": 0,
+        "slot": 0,
+        "start": 0,
+        "end": 120,
+        "loop": false,
+        "level": 0
+      },
+      "filter": {
+        "attack": 0,
+        "decay": 24,
+        "sustain": 0,
+        "release": 8,
+        "frequency": 70,
+        "resonance": 18,
+        "type": "HP1",
+        "envelope_depth": 18
+      },
+      "amp": {
+        "attack": 0,
+        "hold": 1,
+        "decay": 34,
+        "overdrive": 30,
+        "delay_send": 4,
+        "reverb_send": 14,
+        "pan": 0,
+        "volume": 88,
+        "accent_level": 32
+      },
+      "lfo": {
+        "speed": 32,
+        "multiplier": "X2",
+        "fade": 0,
+        "destination": "SYNTH_PARAM_7",
+        "waveform": "EXP",
+        "phase": 0,
+        "mode": "ONE",
+        "depth": 12
+      }
+    },
+    {
+      "name": "TRIBAL RIM",
+      "machine": "RS_HARD",
+      "machine_parameters": {
+        "LEV": 88,
+        "TUN": 10,
+        "DEC": 22,
+        "SWD": 14,
+        "TIC": 96,
+        "NOL": 28,
+        "SYM": 80,
+        "SWT": 18
+      },
+      "sample": {
+        "tune": 0,
+        "fine": 0,
+        "bit_reduction": 0,
+        "slot": 0,
+        "start": 0,
+        "end": 120,
+        "loop": false,
+        "level": 0
+      },
+      "filter": {
+        "attack": 0,
+        "decay": 20,
+        "sustain": 0,
+        "release": 6,
+        "frequency": 82,
+        "resonance": 42,
+        "type": "BP",
+        "envelope_depth": -12
+      },
+      "amp": {
+        "attack": 0,
+        "hold": 1,
+        "decay": 20,
+        "overdrive": 34,
+        "delay_send": 8,
+        "reverb_send": 8,
+        "pan": -8,
+        "volume": 90,
+        "accent_level": 32
+      },
+      "lfo": {
+        "speed": 8,
+        "multiplier": "X1",
+        "fade": 0,
+        "destination": "AMP_PAN",
+        "waveform": "RND",
+        "phase": 20,
+        "mode": "HOLD",
+        "depth": 10
+      }
+    },
+    {
+      "name": "MUTED CLAP",
+      "machine": "CP_CLASSIC",
+      "machine_parameters": {
+        "LEV": 84,
+        "TON": 82,
+        "NOD": 30,
+        "NUM": 53,
+        "RAT": 74,
+        "NOL": 70,
+        "RND": 18,
+        "CPD": 34
+      },
+      "sample": {
+        "tune": 0,
+        "fine": 0,
+        "bit_reduction": 0,
+        "slot": 0,
+        "start": 0,
+        "end": 120,
+        "loop": false,
+        "level": 0
+      },
+      "filter": {
+        "attack": 0,
+        "decay": 18,
+        "sustain": 0,
+        "release": 7,
+        "frequency": 76,
+        "resonance": 16,
+        "type": "HP2",
+        "envelope_depth": 8
+      },
+      "amp": {
+        "attack": 0,
+        "hold": 1,
+        "decay": 30,
+        "overdrive": 26,
+        "delay_send": 10,
+        "reverb_send": 20,
+        "pan": 8,
+        "volume": 86,
+        "accent_level": 32
+      },
+      "lfo": {
+        "speed": 8,
+        "multiplier": "X1",
+        "fade": 0,
+        "destination": "SYNTH_PARAM_2",
+        "waveform": "RND",
+        "phase": 28,
+        "mode": "HOLD",
+        "depth": 8
+      }
+    },
+    {
+      "name": "PREKICK RUMBLE",
+      "machine": "BT_CLASSIC",
+      "machine_parameters": {
+        "LEV": 104,
+        "TUN": -8,
+        "DEC": 112,
+        "NOL": 22,
+        "SNP": 2,
+        "SWD": 20
+      },
+      "sample": {
+        "tune": 0,
+        "fine": 0,
+        "bit_reduction": 0,
+        "slot": 0,
+        "start": 0,
+        "end": 120,
+        "loop": false,
+        "level": 0
+      },
+      "filter": {
+        "attack": 0,
+        "decay": 72,
+        "sustain": 0,
+        "release": 18,
+        "frequency": 40,
+        "resonance": 36,
+        "type": "LP2",
+        "envelope_depth": -24
+      },
+      "amp": {
+        "attack": 0,
+        "hold": 8,
+        "decay": 112,
+        "overdrive": 45,
+        "delay_send": 4,
+        "reverb_send": 22,
+        "pan": 0,
+        "volume": 100,
+        "accent_level": 32
+      },
+      "lfo": {
+        "speed": 16,
+        "multiplier": "X1",
+        "fade": 0,
+        "destination": "FILTER_FREQUENCY",
+        "waveform": "RMP",
+        "phase": 0,
+        "mode": "ONE",
+        "depth": -22
+      }
+    },
+    {
+      "name": "LOW TRIBAL",
+      "machine": "XT_CLASSIC",
+      "machine_parameters": {
+        "LEV": 88,
+        "TUN": -18,
+        "DEC": 64,
+        "SWD": 28,
+        "SWT": 36,
+        "NOD": 28,
+        "NOL": 18,
+        "TON": -30
+      },
+      "sample": {
+        "tune": 0,
+        "fine": 0,
+        "bit_reduction": 0,
+        "slot": 0,
+        "start": 0,
+        "end": 120,
+        "loop": false,
+        "level": 0
+      },
+      "filter": {
+        "attack": 0,
+        "decay": 30,
+        "sustain": 0,
+        "release": 10,
+        "frequency": 46,
+        "resonance": 22,
+        "type": "LP2",
+        "envelope_depth": 14
+      },
+      "amp": {
+        "attack": 0,
+        "hold": 1,
+        "decay": 56,
+        "overdrive": 32,
+        "delay_send": 4,
+        "reverb_send": 10,
+        "pan": -10,
+        "volume": 86,
+        "accent_level": 32
+      },
+      "lfo": {
+        "speed": 32,
+        "multiplier": "X1",
+        "fade": 0,
+        "destination": "SYNTH_PARAM_2",
+        "waveform": "TRI",
+        "phase": 0,
+        "mode": "TRIG",
+        "depth": -3
+      }
+    },
+    {
+      "name": "MID TRIBAL",
+      "machine": "XT_CLASSIC",
+      "machine_parameters": {
+        "LEV": 82,
+        "TUN": -4,
+        "DEC": 44,
+        "SWD": 20,
+        "SWT": 26,
+        "NOD": 20,
+        "NOL": 20,
+        "TON": -8
+      },
+      "sample": {
+        "tune": 0,
+        "fine": 0,
+        "bit_reduction": 0,
+        "slot": 0,
+        "start": 0,
+        "end": 120,
+        "loop": false,
+        "level": 0
+      },
+      "filter": {
+        "attack": 0,
+        "decay": 24,
+        "sustain": 0,
+        "release": 8,
+        "frequency": 58,
+        "resonance": 30,
+        "type": "BP",
+        "envelope_depth": 18
+      },
+      "amp": {
+        "attack": 0,
+        "hold": 1,
+        "decay": 38,
+        "overdrive": 30,
+        "delay_send": 5,
+        "reverb_send": 12,
+        "pan": 10,
+        "volume": 82,
+        "accent_level": 32
+      },
+      "lfo": {
+        "speed": 8,
+        "multiplier": "X1",
+        "fade": 0,
+        "destination": "FILTER_FREQUENCY",
+        "waveform": "RND",
+        "phase": 18,
+        "mode": "HOLD",
+        "depth": 6
+      }
+    },
+    {
+      "name": "HIGH TRIBAL",
+      "machine": "XT_CLASSIC",
+      "machine_parameters": {
+        "LEV": 76,
+        "TUN": 14,
+        "DEC": 32,
+        "SWD": 14,
+        "SWT": 18,
+        "NOD": 18,
+        "NOL": 24,
+        "TON": 18
+      },
+      "sample": {
+        "tune": 0,
+        "fine": 0,
+        "bit_reduction": 0,
+        "slot": 0,
+        "start": 0,
+        "end": 120,
+        "loop": false,
+        "level": 0
+      },
+      "filter": {
+        "attack": 0,
+        "decay": 20,
+        "sustain": 0,
+        "release": 6,
+        "frequency": 72,
+        "resonance": 34,
+        "type": "BP",
+        "envelope_depth": 22
+      },
+      "amp": {
+        "attack": 0,
+        "hold": 1,
+        "decay": 26,
+        "overdrive": 36,
+        "delay_send": 7,
+        "reverb_send": 14,
+        "pan": -4,
+        "volume": 78,
+        "accent_level": 32
+      },
+      "lfo": {
+        "speed": 16,
+        "multiplier": "X1",
+        "fade": 0,
+        "destination": "SYNTH_PARAM_2",
+        "waveform": "SQR",
+        "phase": 0,
+        "mode": "TRIG",
+        "depth": 3
+      }
+    },
+    {
+      "name": "MAIN HAT",
+      "machine": "CH_CLASSIC",
+      "machine_parameters": {
+        "LEV": 86,
+        "TUN": 20,
+        "DEC": 18,
+        "COL": 36
+      },
+      "sample": {
+        "tune": 0,
+        "fine": 0,
+        "bit_reduction": 0,
+        "slot": 0,
+        "start": 0,
+        "end": 120,
+        "loop": false,
+        "level": 0
+      },
+      "filter": {
+        "attack": 0,
+        "decay": 12,
+        "sustain": 0,
+        "release": 4,
+        "frequency": 84,
+        "resonance": 8,
+        "type": "HP2",
+        "envelope_depth": 0
+      },
+      "amp": {
+        "attack": 0,
+        "hold": 1,
+        "decay": 15,
+        "overdrive": 26,
+        "delay_send": 2,
+        "reverb_send": 6,
+        "pan": -8,
+        "volume": 84,
+        "accent_level": 32
+      },
+      "lfo": {
+        "speed": 8,
+        "multiplier": "X1",
+        "fade": 0,
+        "destination": "AMP_PAN",
+        "waveform": "RND",
+        "phase": 16,
+        "mode": "HOLD",
+        "depth": 6
+      }
+    },
+    {
+      "name": "OPEN HAT",
+      "machine": "OH_CLASSIC",
+      "machine_parameters": {
+        "LEV": 78,
+        "TUN": 12,
+        "DEC": 38,
+        "COL": 24
+      },
+      "sample": {
+        "tune": 0,
+        "fine": 0,
+        "bit_reduction": 0,
+        "slot": 0,
+        "start": 0,
+        "end": 120,
+        "loop": false,
+        "level": 0
+      },
+      "filter": {
+        "attack": 0,
+        "decay": 18,
+        "sustain": 0,
+        "release": 5,
+        "frequency": 76,
+        "resonance": 10,
+        "type": "HP1",
+        "envelope_depth": 0
+      },
+      "amp": {
+        "attack": 0,
+        "hold": 1,
+        "decay": 34,
+        "overdrive": 20,
+        "delay_send": 5,
+        "reverb_send": 10,
+        "pan": 8,
+        "volume": 78,
+        "accent_level": 32
+      },
+      "lfo": {
+        "speed": 16,
+        "multiplier": "X1",
+        "fade": 0,
+        "destination": "AMP_PAN",
+        "waveform": "TRI",
+        "phase": 0,
+        "mode": "FREE",
+        "depth": 5
+      }
+    },
+    {
+      "name": "PEAK RIDE",
+      "machine": "CY_RIDE",
+      "machine_parameters": {
+        "LEV": 76,
+        "TUN": -2,
+        "DEC": 72,
+        "TYP": 1,
+        "HIT": 36,
+        "C1": 72,
+        "C2": 42,
+        "C3": 30
+      },
+      "sample": {
+        "tune": 0,
+        "fine": 0,
+        "bit_reduction": 0,
+        "slot": 0,
+        "start": 0,
+        "end": 120,
+        "loop": false,
+        "level": 0
+      },
+      "filter": {
+        "attack": 0,
+        "decay": 18,
+        "sustain": 0,
+        "release": 10,
+        "frequency": 66,
+        "resonance": 10,
+        "type": "HP1",
+        "envelope_depth": 0
+      },
+      "amp": {
+        "attack": 0,
+        "hold": 1,
+        "decay": 68,
+        "overdrive": 18,
+        "delay_send": 8,
+        "reverb_send": 18,
+        "pan": -4,
+        "volume": 76,
+        "accent_level": 32
+      },
+      "lfo": {
+        "speed": 8,
+        "multiplier": "X1",
+        "fade": 0,
+        "destination": "SYNTH_PARAM_2",
+        "waveform": "RND",
+        "phase": 22,
+        "mode": "HOLD",
+        "depth": 2
+      }
+    },
+    {
+      "name": "METAL BELL",
+      "machine": "CB_METALLIC",
+      "machine_parameters": {
+        "LEV": 72,
+        "TUN": 8,
+        "DEC": 36,
+        "DET": 82,
+        "PW1": -12,
+        "PW2": 12
+      },
+      "sample": {
+        "tune": 0,
+        "fine": 0,
+        "bit_reduction": 0,
+        "slot": 0,
+        "start": 0,
+        "end": 120,
+        "loop": false,
+        "level": 0
+      },
+      "filter": {
+        "attack": 0,
+        "decay": 28,
+        "sustain": 0,
+        "release": 8,
+        "frequency": 66,
+        "resonance": 48,
+        "type": "BP",
+        "envelope_depth": 20
+      },
+      "amp": {
+        "attack": 0,
+        "hold": 1,
+        "decay": 30,
+        "overdrive": 40,
+        "delay_send": 18,
+        "reverb_send": 16,
+        "pan": 5,
+        "volume": 76,
+        "accent_level": 32
+      },
+      "lfo": {
+        "speed": 16,
+        "multiplier": "X1",
+        "fade": 0,
+        "destination": "SYNTH_PARAM_2",
+        "waveform": "SQR",
+        "phase": 0,
+        "mode": "TRIG",
+        "depth": 3
+      }
+    }
+  ],
+  "fx": {
+    "delay": {
+      "time": 24,
+      "pingpong": true,
+      "width": 44,
+      "feedback": 34,
+      "hpf": 62,
+      "lpf": 94,
+      "reverb_send": 16,
+      "volume": 20,
+      "overdrive": 24,
+      "route": "PRE"
+    },
+    "reverb": {
+      "predelay": 18,
+      "decay": 62,
+      "shelving_frequency": 72,
+      "shelving_gain": 48,
+      "hpf": 48,
+      "lpf": 92,
+      "volume": 28,
+      "route": "POST"
+    },
+    "distortion": {
+      "amount": 42,
+      "symmetry": -6
+    },
+    "compressor": {
+      "threshold": 96,
+      "attack": "MS_10",
+      "release": "A1",
+      "makeup_gain": 12,
+      "ratio": "RATIO_1_4",
+      "sidechain": "LPF",
+      "mix": 76,
+      "volume": 100
+    },
+    "lfo": {
+      "speed": 8,
+      "multiplier": "X1",
+      "fade": 0,
+      "destination": "DISTORTION_AMOUNT",
+      "waveform": "TRI",
+      "phase": 0,
+      "mode": "FREE",
+      "depth": 3
+    }
+  }
+}

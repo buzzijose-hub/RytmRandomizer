@@ -518,6 +518,38 @@ def _registered_command_exit_code(args: Sequence[str]) -> int | None:
             "rytm_randomizer.cockpit.export.analog_four_patch_render_rank_cli",
             "ANALOG_FOUR_PATCH_RENDER_RANK_CLI_COMMAND",
         ),
+        "rio145-inspect-sysex": (
+            "rytm_randomizer.cockpit.export.rio145_cli",
+            "RIO145_INSPECT_SYSEX_CLI_COMMAND",
+        ),
+        "rio145-diff-sysex": (
+            "rytm_randomizer.cockpit.export.rio145_cli",
+            "RIO145_DIFF_SYSEX_CLI_COMMAND",
+        ),
+        "rio145-validate-roundtrip": (
+            "rytm_randomizer.cockpit.export.rio145_cli",
+            "RIO145_VALIDATE_ROUNDTRIP_CLI_COMMAND",
+        ),
+        "rio145-build-a4-kit": (
+            "rytm_randomizer.cockpit.export.rio145_cli",
+            "RIO145_BUILD_A4_KIT_CLI_COMMAND",
+        ),
+        "rio145-build-rytm-kit": (
+            "rytm_randomizer.cockpit.export.rio145_cli",
+            "RIO145_BUILD_RYTM_KIT_CLI_COMMAND",
+        ),
+        "rio145-validate-a4-return": (
+            "rytm_randomizer.cockpit.export.rio145_cli",
+            "RIO145_VALIDATE_A4_RETURN_CLI_COMMAND",
+        ),
+        "rio145-validate-rytm-return": (
+            "rytm_randomizer.cockpit.export.rio145_cli",
+            "RIO145_VALIDATE_RYTM_RETURN_CLI_COMMAND",
+        ),
+        "rio145-export-oxi-manifest": (
+            "rytm_randomizer.cockpit.export.rio145_cli",
+            "RIO145_EXPORT_OXI_MANIFEST_CLI_COMMAND",
+        ),
         "cockpit-export-rehearsal-report": (
             "rytm_randomizer.reports.cockpit_export_rehearsal",
             "COCKPIT_EXPORT_REHEARSAL_CLI_COMMAND",

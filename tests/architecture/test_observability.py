@@ -329,6 +329,12 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # while exposing typed BoundaryError subclasses to their callers.
         "ElektronPackedPayloadError",
         "AnalogRytmSavedKitCodecError",
+        # RIO145 passive native-KIT compilers preserve stdlib ValueError
+        # compatibility while participating in the shared error taxonomy.
+        "Rio145OfflineError",
+        "ElektronNativeObjectError",
+        "A4RecipeError",
+        "RytmRecipeError",
         # Re-homed legacy classes (still raisable by their original name):
         "RealMidiDependencyError",
         "RealMidiPortError",
