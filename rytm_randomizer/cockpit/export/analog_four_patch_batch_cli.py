@@ -6,7 +6,7 @@ import json
 import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, Literal, Protocol, TypedDict, cast
+from typing import TYPE_CHECKING, Final, Literal, Protocol, TypedDict
 
 from ...behavior.operator_console import powershell_literal_arg
 from ...cli_registry import CliCommand, register
@@ -16,7 +16,7 @@ from .analog_four_export_contracts import (
     AnalogFourExportErrorCode,
     analog_four_export_error_code,
 )
-from .cli_options import pop_required_cli_value
+from .cli_options import exception_notes, parse_bounded_integer, pop_required_cli_value
 
 COMMAND_NAME: Final[str] = "analog-four-audio-patch-batch"
 DEFAULT_TRACK: Final[int] = A4_SYNTH_TRACK_MIN
@@ -225,16 +225,6 @@ def _export_analog_four_audio_patch_batch(  # noqa: PLR0913 - lazy service bound
     )
 
 
-def _bounded_integer(value: str, option: str, lower: int, upper: int) -> int:
-    try:
-        parsed = int(value)
-    except ValueError as exc:
-        raise ValueError(f"{option} must be an integer from {lower} to {upper}") from exc
-    if str(parsed) != value or not lower <= parsed <= upper:
-        raise ValueError(f"{option} must be an integer from {lower} to {upper}")
-    return parsed
-
-
 def _required_batch_path(value: Path | None, option: str) -> Path:
     if value is None:
         raise ValueError(f"{option} is required")
@@ -281,18 +271,18 @@ def parse_analog_four_audio_patch_batch_args(
         elif option == "--output-dir":
             output_dir = Path(pop_required_cli_value(remaining, option=option))
         elif option == "--track":
-            track = _bounded_integer(
+            track = parse_bounded_integer(
                 pop_required_cli_value(remaining, option=option),
-                option,
-                MIN_TRACK,
-                MAX_TRACK,
+                option=option,
+                lower=MIN_TRACK,
+                upper=MAX_TRACK,
             )
         elif option == "--candidates":
-            candidate_count = _bounded_integer(
+            candidate_count = parse_bounded_integer(
                 pop_required_cli_value(remaining, option=option),
-                option,
-                MIN_CANDIDATE_COUNT,
-                MAX_CANDIDATE_COUNT,
+                option=option,
+                lower=MIN_CANDIDATE_COUNT,
+                upper=MAX_CANDIDATE_COUNT,
             )
         elif option == "--overwrite":
             overwrite = True
@@ -607,13 +597,6 @@ def _batch_cli_error_code(  # noqa: PLR0911 - ordered fail-closed classifier
     return "validation"
 
 
-def _exception_details(exc: Exception) -> list[str]:
-    notes = getattr(exc, "__notes__", ())
-    if not isinstance(notes, list):
-        return []
-    return [note for note in cast(list[object], notes) if isinstance(note, str)]
-
-
 def _write_batch_error(
     *,
     error_code: AnalogFourExportErrorCode,
@@ -692,7 +675,7 @@ def handle_analog_four_audio_patch_batch(  # noqa: PLR0913 - typed CLI boundary
         return 130
     except (ImportError, KeyError, ValueError, TypeError, OSError, RuntimeError) as exc:
         error_code = _batch_cli_error_code(exc)
-        details = _exception_details(exc)
+        details = exception_notes(exc)
         if json_output:
             _write_batch_error(
                 error_code=error_code,

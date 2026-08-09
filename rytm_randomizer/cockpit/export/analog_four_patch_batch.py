@@ -10,7 +10,7 @@ import time
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import ClassVar, Final
+from typing import TYPE_CHECKING, ClassVar, Final
 
 from ...data.analog_four_sysex_calibration import A4_FILTER2_RESONANCE_PARAMETER
 from ...devices.analog_four import (
@@ -97,6 +97,9 @@ from .analog_four_patch_batch_publication import (
 )
 from .analog_four_patch_batch_publication import release_batch_lock as _release_batch_lock
 from .writer import WriteResult, atomic_write
+
+if TYPE_CHECKING:
+    from ...style_analysis.analog_four_patch_inference import AnalogFourAudioPatchGenome
 
 _MIDI_DATA_MAX: Final[int] = 127
 
@@ -283,6 +286,26 @@ def _build_audio_inference(
         genome=result.genome,
         audio_features_payload=analog_four_patch_audio_features_to_dict(result.audio_features),
         genome_payload=analog_four_patch_genome_to_dict(result.genome),
+    )
+
+
+def _build_precomputed_audio_inference(value: object) -> _AudioInference:
+    from ...style_analysis.analog_four_patch_genome import analog_four_patch_genome_to_dict
+    from ...style_analysis.analog_four_patch_inference import (
+        AnalogFourAudioPatchGenome,
+        analog_four_patch_audio_features_to_dict,
+    )
+
+    if not isinstance(value, AnalogFourAudioPatchGenome):
+        raise TypeError("audio_genome must be an AnalogFourAudioPatchGenome")
+    candidates = value.genome.candidates
+    if len(candidates) != 1 or candidates[0].column != 1:
+        raise ValueError("audio_genome must contain exactly one candidate in column 1")
+    return _AudioInference(
+        feature_report=value.feature_report,
+        genome=value.genome,
+        audio_features_payload=analog_four_patch_audio_features_to_dict(value.audio_features),
+        genome_payload=analog_four_patch_genome_to_dict(value.genome),
     )
 
 
@@ -755,6 +778,16 @@ def _infer_parent_owned_audio_snapshot(
     return inference, _payload_sha256(inference.genome_payload)
 
 
+def _validate_precomputed_audio_inference(
+    inference: _AudioInference,
+    *,
+    audio_sha256: str,
+) -> tuple[_AudioInference, str]:
+    if inference.audio_features_payload["audio_sha256"] != audio_sha256:
+        raise ValueError("audio snapshot hash does not match patch inference provenance")
+    return inference, _payload_sha256(inference.genome_payload)
+
+
 def _render_and_identify_batch(  # noqa: PLR0913 - render boundary needs source identity
     inference: _AudioInference,
     source_kit_snapshot_bytes: bytes,
@@ -797,6 +830,7 @@ def _stage_batch(  # noqa: PLR0913 - private staging boundary is intentionally e
     output_dir: Path,
     track: int,
     candidate_count: int,
+    inference_override: _AudioInference | None,
 ) -> _StagedBatch:
     """Build every artifact in parent-owned private storage."""
 
@@ -807,12 +841,18 @@ def _stage_batch(  # noqa: PLR0913 - private staging boundary is intentionally e
             source_kit_bytes=source_kit_bytes,
             staging_dir=Path(temp_name),
         )
-        inference, genome_sha256 = _infer_parent_owned_audio_snapshot(
-            audio_snapshot,
-            audio_sha256=audio_sha256,
-            track=track,
-            candidate_count=candidate_count,
-        )
+        if inference_override is None:
+            inference, genome_sha256 = _infer_parent_owned_audio_snapshot(
+                audio_snapshot,
+                audio_sha256=audio_sha256,
+                track=track,
+                candidate_count=candidate_count,
+            )
+        else:
+            inference, genome_sha256 = _validate_precomputed_audio_inference(
+                inference_override,
+                audio_sha256=audio_sha256,
+            )
         rendered_candidates, generation_id = _render_and_identify_batch(
             inference,
             source_kit_snapshot_bytes,
@@ -916,6 +956,7 @@ def _stage_batch_request(  # noqa: PLR0913 - request fields remain typed and exp
     sources: _BatchSources,
     track: int,
     candidate_count: int,
+    inference_override: _AudioInference | None,
 ) -> _StagedBatch:
     try:
         return _stage_batch(
@@ -928,6 +969,7 @@ def _stage_batch_request(  # noqa: PLR0913 - request fields remain typed and exp
             output_dir=output_dir,
             track=track,
             candidate_count=candidate_count,
+            inference_override=inference_override,
         )
     except AnalogFourPatchBatchStageError:
         raise
@@ -1173,6 +1215,7 @@ def _execute_analog_four_audio_patch_batch(  # noqa: PLR0913 - service boundary 
     track: int,
     candidate_count: int,
     overwrite: bool,
+    inference_override: _AudioInference | None = None,
 ) -> AnalogFourAudioPatchBatchExportResult:
     started_at = time.perf_counter()
     source_reads_complete = False
@@ -1200,6 +1243,7 @@ def _execute_analog_four_audio_patch_batch(  # noqa: PLR0913 - service boundary 
             sources=sources,
             track=track,
             candidate_count=candidate_count,
+            inference_override=inference_override,
         )
         output_phase_started = True
         published_batch = _publish_staged_batch(
@@ -1241,6 +1285,38 @@ def _execute_analog_four_audio_patch_batch(  # noqa: PLR0913 - service boundary 
     return result
 
 
+def export_selected_analog_four_audio_patch(
+    *,
+    audio_path: Path,
+    source_kit_path: Path,
+    output_dir: Path,
+    audio_genome: AnalogFourAudioPatchGenome,
+    overwrite: bool = False,
+) -> AnalogFourAudioPatchBatchExportResult:
+    """Render one preselected, audio-provenanced A4 candidate offline."""
+
+    inference = _build_precomputed_audio_inference(audio_genome)
+    track = inference.genome.selected_track
+    with trace_operation(
+        "a4_audio_patch_selected_export",
+        logger=_logger,
+        audio_name=analog_four_export_path_name(audio_path),
+        source_kit_name=analog_four_export_path_name(source_kit_path),
+        output_dir_name=analog_four_export_path_name(output_dir),
+        track=track,
+        candidate_count=1,
+    ):
+        return _execute_analog_four_audio_patch_batch(
+            audio_path=audio_path,
+            source_kit_path=source_kit_path,
+            output_dir=output_dir,
+            track=track,
+            candidate_count=1,
+            overwrite=overwrite,
+            inference_override=inference,
+        )
+
+
 def export_analog_four_audio_patch_batch(  # noqa: PLR0913 - public API mirrors request
     *,
     audio_path: Path,
@@ -1268,6 +1344,7 @@ def export_analog_four_audio_patch_batch(  # noqa: PLR0913 - public API mirrors 
             track=track,
             candidate_count=candidate_count,
             overwrite=overwrite,
+            inference_override=None,
         )
 
 
@@ -1279,4 +1356,5 @@ __all__ = [
     "FILTER2_RESONANCE_PARAMETER",
     "SYSEX_COVERAGE_STATEMENT",
     "export_analog_four_audio_patch_batch",
+    "export_selected_analog_four_audio_patch",
 ]

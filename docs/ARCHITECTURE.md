@@ -429,6 +429,18 @@ audio-dependent inference, but not full saved-kit coverage or a claim of
 Synthplant-equivalent learned accuracy. `analog-four-audio-patch-batch` remains
 hardware-passive: local reads/writes only, with no MIDI port or send.
 
+The `audio-patch-dna` workspace is a passive comparison layer over that same
+extractor and A4 export path. One isolated audio analysis produces readable
+pitch, envelope, transient, rhythm, brightness, noise, spectral-movement, and
+tonal-stability evidence. Eight fixed pure transforms then produce Closest,
+Darker, Brighter, Metallic, Percussive, Atmospheric, Deeper, and Animated
+candidates without decoding the source again. Compare-only mode writes the
+deterministic workspace JSON and Markdown. An explicit selection plus source
+kit passes the already-built candidate into the guarded A4 batch exporter; it
+does not rerun audio analysis and never opens a MIDI port. Analog Rytm export is
+deliberately deferred until the passive Rytm codec integration is available on
+the target branch.
+
 The stored-plan reader treats the stable manifest as the publication commit
 marker. Before a candidate reaches dry-run or the armed sender, it verifies the
 sidecar byte hash, generation ID, source hash, candidate DNA hash, send-plan

@@ -37,11 +37,13 @@ import pytest
 
 from rytm_randomizer.guardrails.schema import Confidence, SourceType
 from rytm_randomizer.style_analysis import (
+    AudioDnaEvidence,
     AudioSynthesisFeatures,
     FeatureReport,
     StyleAnalysisDependencyError,
     analyze_audio,
     analyze_library,
+    audio_dna_evidence_to_dict,
     audio_synthesis_features_to_dict,
     compute_feature_report_hash,
     extract_from_audio,
@@ -99,6 +101,12 @@ def _build_synthesis_features() -> AudioSynthesisFeatures:
     )
 
 
+def test_audio_dna_spectral_helpers_handle_silent_and_short_inputs() -> None:
+    assert extractor_module._dominant_frequency([[0.0]], [440.0]) == (0.0, 0.0)
+    assert extractor_module._spectral_movement([], 22_050.0) == 0.0
+    assert extractor_module._spectral_movement([1.0, 2.0], 0.0) == 0.0
+
+
 def test_audio_synthesis_features_validate_and_serialize_generic_contract() -> None:
     features = _build_synthesis_features()
 
@@ -111,6 +119,28 @@ def test_audio_synthesis_features_validate_and_serialize_generic_contract() -> N
         dataclasses.replace(features, audio_sha256="g" * 64)
     with pytest.raises(ValueError, match="normalized"):
         dataclasses.replace(features, brightness=1.01)
+
+
+def test_audio_dna_evidence_validates_and_serializes_readable_measurements() -> None:
+    evidence = AudioDnaEvidence(
+        dominant_frequency_hz=440.0,
+        dominant_note="A4",
+        pitch_confidence=0.91,
+        tonal_stability=0.82,
+        spectral_movement=0.17,
+    )
+
+    assert audio_dna_evidence_to_dict(evidence) == dataclasses.asdict(evidence)
+    with pytest.raises(TypeError, match="AudioDnaEvidence"):
+        audio_dna_evidence_to_dict(object())  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="finite and positive"):
+        dataclasses.replace(evidence, dominant_frequency_hz=0.0)
+    with pytest.raises(ValueError, match="finite and positive"):
+        dataclasses.replace(evidence, dominant_frequency_hz=float("inf"))
+    with pytest.raises(ValueError, match="non-empty"):
+        dataclasses.replace(evidence, dominant_note=" ")
+    with pytest.raises(ValueError, match="normalized"):
+        dataclasses.replace(evidence, tonal_stability=-0.01)
 
 
 def test_feature_report_serializer_exposes_generic_payload() -> None:
@@ -697,8 +727,12 @@ def test_package_reexports_public_surface():
     from rytm_randomizer import style_analysis
 
     expected = {
+        "AUDIO_PATCH_DNA_CANDIDATE_COUNT",
         "AnalogFourTrackBlueprint",
+        "AudioDnaEvidence",
         "AudioFeatureAnalysis",
+        "AudioPatchDnaCandidate",
+        "AudioPatchDnaWorkspace",
         "AudioSynthesisFeatures",
         "Confidence",
         "FeatureReport",
@@ -710,7 +744,10 @@ def test_package_reexports_public_surface():
         "StyleAnalysisDependencyError",
         "analyze_library",
         "analyze_audio",
+        "audio_dna_evidence_to_dict",
+        "audio_patch_dna_workspace_to_dict",
         "audio_synthesis_features_to_dict",
+        "build_audio_patch_dna_workspace",
         "build_reference_style_blueprint",
         "compute_feature_report_hash",
         "extract_from_audio",
@@ -718,6 +755,8 @@ def test_package_reexports_public_surface():
         "extract_from_partial",
         "feature_report_to_dict",
         "reference_style_blueprint_to_dict",
+        "render_audio_patch_dna_markdown",
+        "select_audio_patch_dna_candidate",
     }
     assert expected == set(style_analysis.__all__)
     for name in expected:
