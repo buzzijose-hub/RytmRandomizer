@@ -175,6 +175,8 @@ on one line for an existing module, you probably need a new module instead.
 | `cockpit/export/analog_four_cli.py` | Registered local-file command for one or four validated Filter2 Resonance mutations; no MIDI I/O. |
 | `cockpit/export/al16_rytm_kit.py` | Fail-closed AL16 recipe auditor and local evidence publisher; resolves the pure Rytm codec through the public device capability, consumes data-layer facts, withholds SysEx while critical mappings remain unresolved, and publishes reports through the canonical atomic writer. |
 | `cockpit/export/al16_rytm_cli.py` | Registered passive local-file adapter for Phase R1 AL16 Rytm audit evidence; validates the exact initialized reference, writes mapping-gap artifacts, and emits no `.syx`. |
+| `cockpit/export/rio145_codec.py` | Passive RIO145 dual-device file codec; composes the canonical Elektron envelope and existing A4/Rytm saved-KIT codecs for inspection, diffing, deterministic recipe builds, and binary return validation. |
+| `cockpit/export/rio145_cli.py` | Eight registered file-only RIO145 commands for inspect, diff, round-trip validation, A4/Rytm build and return validation, and OXI manifest export; never imports or constructs a MIDI provider. |
 | `style_analysis/analog_four_patch_inference.py` | Typed, single-decode audio evidence and audio-dependent four-column A4 patch-genome inference with direct RED metrics. |
 | `style_analysis/runtime_types.py` | Shared runtime type-validation helper used by extractor and A4 inference boundaries. |
 | `cockpit/export/cli_options.py` | Shared side-effect-free option parsing helpers for registered export commands. |
@@ -393,6 +395,16 @@ mutation, repacking, and semantic re-verification remain the future writer path
 after every critical mapping is positively verified. The registered CLI is
 only an argument/process-status adapter. Neither module imports or constructs a
 MIDI provider.
+
+The RIO145 integration is another passive local-file workflow under
+`cockpit/export`; it does not widen the `Device` Protocol or the armed hardware
+boundary. `snapshot/elektron_native_object.py` supplies the shared native-object
+adapter, while the A4/Rytm field codecs and recipe compilers remain in the
+existing device-strategy layer. Both build paths reuse the canonical saved-KIT
+codecs and Elektron envelope handling, decode their generated frames again, and
+enforce declared byte-diff regions. The OXI manifest is sequencing metadata
+only: RIO145 emits no native device patterns, opens no MIDI ports, and sends no
+MIDI or SysEx.
 
 The audio batch path composes the existing audio extractor, the focused A4
 audio-inference compiler, patch send-plan metadata, and guarded saved-kit

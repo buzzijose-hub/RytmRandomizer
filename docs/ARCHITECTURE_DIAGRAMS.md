@@ -36,13 +36,13 @@ Current baseline used while creating / refreshing this document:
 | Active / real MIDI boundaries | `rytm_randomizer/active_boundary.py`, `rytm_randomizer/real_midi_adapter.py`, `rytm_randomizer/mido_provider.py`, `rytm_randomizer/midi_io.py` |
 | Generic senders | `rytm_randomizer/senders/{guarded,hardware,midi_event_plan}.py` |
 | Engines (per-pad runtime cores) | `rytm_randomizer/engines/{_runtime,pad1,pad2,pad3,pad4}.py`, `rytm_randomizer/randomization.py`, `rytm_randomizer/scene_runner.py`, `rytm_randomizer/group_runner.py`, `rytm_randomizer/runtime_plan.py` |
-| Devices (cross-machine boundary) | `rytm_randomizer/devices/{base,registry,analog_rytm,analog_four}.py`, `rytm_randomizer/devices/strategies/{analog_four_offset_manifest,analog_four_saved_kit_codec,analog_four_saved_kit_writer,analog_four_snapshot_decoder,analog_four_style_snapshot_routing,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_mutation_planner,analog_four_message_renderer,analog_rytm_saved_kit_codec,analog_rytm_snapshot_decoder,analog_rytm_snapshot_routing,analog_rytm_style_snapshot_routing,analog_rytm_style_mutation_intent,analog_rytm_style_mutation_mock_preview,analog_rytm_style_mutation_render_plan,analog_rytm_mutation_planner,analog_rytm_message_renderer}.py` |
-| Snapshot Protocols + envelope | `rytm_randomizer/snapshot/{envelope,elektron_packed_payload,elektron_u14,decoder,planner,mock_runtime,sysex_file}.py` |
+| Devices (cross-machine boundary) | `rytm_randomizer/devices/{base,registry,analog_rytm,analog_four,rio145_recipes}.py`, `rytm_randomizer/devices/strategies/{analog_four_offset_manifest,analog_four_saved_kit_codec,analog_four_saved_kit_writer,analog_four_kit_fields,analog_four_kit_recipe,analog_four_snapshot_decoder,analog_four_style_snapshot_routing,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_mutation_planner,analog_four_message_renderer,analog_rytm_saved_kit_codec,analog_rytm_kit_fields,analog_rytm_kit_recipe,analog_rytm_snapshot_decoder,analog_rytm_snapshot_routing,analog_rytm_style_snapshot_routing,analog_rytm_style_mutation_intent,analog_rytm_style_mutation_mock_preview,analog_rytm_style_mutation_render_plan,analog_rytm_mutation_planner,analog_rytm_message_renderer}.py` |
+| Snapshot Protocols + envelope | `rytm_randomizer/snapshot/{envelope,elektron_native_object,elektron_packed_payload,elektron_u14,decoder,planner,mock_runtime,sysex_file}.py` |
 | Guardrails | `rytm_randomizer/guardrails/{resolver,store,schema,validation}.py` |
 | Observability | `rytm_randomizer/observability/{logging,tracing,metrics,errors}.py` |
 | Style analysis | `rytm_randomizer/style_analysis/{extractor,runtime_types,feature_report,library,blueprint,analog_four_patch_genome,analog_four_patch_inference,analog_four_patch_learning,analog_four_patch_corpus,analog_four_patch_send_plan,analog_four_patch_render_rank,analog_four_patch_codesigner}.py` |
-| Cockpit export | `rytm_randomizer/cockpit/export/{file_export_contracts,analog_four_export_contracts,analog_four_cli,analog_four_kit,al16_rytm_cli,al16_rytm_kit,analog_four_patch_batch,analog_four_patch_batch_cli,analog_four_patch_batch_codec,analog_four_patch_batch_contracts,analog_four_patch_batch_publication,analog_four_patch_batch_reader,analog_four_patch_render_rank,analog_four_patch_render_rank_cli,cli_options,writer}.py` plus the profile-model serialization/signing/verifier modules. |
-| Tests | `tests/test_*.py`, `tests/cockpit/test_*.py`, `tests/architecture/test_*.py`, `tests/fixtures/{analog_four_saved_kit,v134_parity}/`, `tests/_parity_worker.py`, `tests/conftest.py` |
+| Cockpit export | `rytm_randomizer/cockpit/export/{file_export_contracts,analog_four_export_contracts,analog_four_cli,analog_four_kit,al16_rytm_cli,al16_rytm_kit,rio145_cli,rio145_codec,analog_four_patch_batch,analog_four_patch_batch_cli,analog_four_patch_batch_codec,analog_four_patch_batch_contracts,analog_four_patch_batch_publication,analog_four_patch_batch_reader,analog_four_patch_render_rank,analog_four_patch_render_rank_cli,cli_options,writer}.py` plus the profile-model serialization/signing/verifier modules. |
+| Tests | `tests/test_*.py`, `tests/cockpit/test_*.py`, `tests/architecture/test_*.py`, `tests/fixtures/{analog_four_saved_kit,rio145,v134_parity}/`, `tests/_parity_worker.py`, `tests/conftest.py` |
 | Project documentation | `CONTRIBUTING.md`, `docs/*.md`, `.claude/rules/*.md`, `.claude/skills/**/SKILL.md` |
 
 ---
@@ -1120,12 +1120,20 @@ flowchart LR
         AL16RytmExport["al16-rytm-kit-export<br/>recipe + initialized kit -> verified evidence"]
     end
 
+    subgraph RIO145LocalCmds["Passive RIO145 dual-device local-file commands"]
+        RIO145Inspect["rio145-inspect-sysex / rio145-diff-sysex<br/>file inspection + semantic/native diff"]
+        RIO145Validate["rio145-validate-roundtrip / rio145-validate-*-return<br/>codec + target-return validation"]
+        RIO145Build["rio145-build-a4-kit / rio145-build-rytm-kit<br/>typed recipe -> deterministic saved KIT"]
+        RIO145Oxi["rio145-export-oxi-manifest<br/>four programs; no native device patterns"]
+    end
+
     Operator --> CLI
     CLI --> ReportCmds
     CLI --> BrowseCmds
     CLI --> StyleBrowseCmds
     CLI --> A4LocalCmds
     CLI --> RytmLocalCmds
+    CLI --> RIO145LocalCmds
 
     ReportCmds --> ReportsPkg["reports/<br/>(PassiveReportHeader + builders)"]
     BrowseCmds --> RegistryCore["registry.py<br/>profile_lookup.py<br/>inspection.py"]
@@ -1138,6 +1146,8 @@ flowchart LR
     RytmExportService --> FileExportContract
     RytmExportService --> RytmCapability["AnalogRytmDevice<br/>saved-KIT codec capability"]
     RytmCapability --> RytmCodec["devices/strategies/analog_rytm_saved_kit_codec.py<br/>pure frame codec"]
+    RIO145LocalCmds --> RIO145Codec["cockpit/export/rio145_codec.py<br/>canonical envelope + A4/Rytm saved-KIT codecs"]
+    RIO145Codec --> NativeObject["snapshot/elektron_native_object.py<br/>file-only native-object adapter"]
 
     CLI -.->|"safety invariants tested by<br/>test_real_midi_passive_cli_safety<br/>test_real_midi_import_safety"| Safety["no MIDI sent<br/>no ports opened<br/>no real MIDI execution<br/>no hardware required"]
 ```
@@ -1881,6 +1891,7 @@ flowchart LR
         A4PatchSendPlan["analog-four-patch-send-plan-report"]
         A4SavedKitExport["analog-four-saved-kit-export --source K --output O --filter2-resonance T:V [...]"]
         AL16RytmExport["al16-rytm-kit-export --reference K --recipe R --destination-slot N --output O"]
+        RIO145Commands["rio145-*<br/>inspect / diff / roundtrip / A4+Rytm build+return / OXI manifest"]
         A4AudioPatchBatch["analog-four-audio-patch-batch --audio A --source-kit K --output-dir D [--track N] --candidates 4 [--studio-handoff --a4-output-port EXACT_NAME] [--json]"]
         A4AudioPatchRank["analog-four-audio-patch-rank --reference A --manifest M --render N=R [...]"]
         A4StyleKitReadiness["analog-four-style-kit-readiness-report"]
@@ -1935,6 +1946,7 @@ flowchart LR
     CliRegistry -->|"registered passive command:<br/>analog-four-patch-corpus-report"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-patch-send-plan-report"| CLI
     CliRegistry -->|"registered local-file command:<br/>analog-four-saved-kit-export"| CLI
+    CliRegistry -->|"registered passive local-file commands:<br/>eight rio145-* commands"| CLI
     CliRegistry -->|"registered passive-hardware command:<br/>analog-four-audio-patch-batch"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-audio-patch-rank"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-style-kit-readiness-report"| CLI
@@ -1961,6 +1973,7 @@ flowchart LR
 - The `cli.py` is visibility-first. No active execution / send / hardware-test command is wired here.
 - `app.py` is the interactive entry point and is the ONLY surface where the `--arm` flag triggers real MIDI. The A4 manifest reader validates the complete stored CC/NRPN plan before the app constructs the provider; the passive CLI, local SysEx writer, batch generator, ranker, and local-model copilot never open a port.
 - The registered `al16-rytm-kit-export` command is a passive adapter around the AL16 `cockpit/export` build service. A blocked proof returns status `2`, atomically writes deterministic evidence reports, and withholds `.syx` output; it never enumerates or opens MIDI ports.
+- The eight registered `rio145-*` commands form a passive dual-device saved-KIT workflow. They reuse the canonical A4/Rytm codecs and Elektron envelope, verify generated frames by decoding them again, and export OXI sequencing metadata without native patterns or any MIDI-port access.
 - `cli_registry.py` (WS-S7) is the future-extension seam. The passive Rytm 12-pad machine matrix, manual feedback packet, snapshot pad-compatibility, snapshot intelligence, snapshot mutation preview, Rytm style snapshot routing, Rytm style mutation intent/render-plan/mock-preview, Analog Four style routing/intent/mock-preview/kit-catalog/baseline/patch-genome/patch-learning/patch-send-plan/readiness/OXI macro set planner, local model copilot, dual-machine style routing/intent/mock-preview, style-profile, style-target, reference-style blueprint, and style-performance-arc commands are registered there instead of growing `cli.py` with more inline report arms. The manual feedback packet turns installer/Profile Wizard/export/pad-scope/manual hardware observations into deterministic reviewer evidence without launching the GUI, running analysis, opening MIDI, or writing files; the reference-style blueprint report turns a description/audio/library FeatureReport into an influence-only 12-pad Rytm plus 4-track Analog Four starting blueprint; the A4 initialized-baseline report compares kit/pattern+kit/whole-project dumps and publishes a stable clean-slate fingerprint for future changed-patch diffs; the A4 patch-genome report turns a description/audio FeatureReport into four passive single-sound DNA candidates with front-panel targets plus CC/NRPN metadata; the A4 patch send-plan report compiles the selected candidate into ordered CC/NRPN events while skipping screen-only destination rows; the local model copilot report composes deterministic docs/MIDI, staged mutation-intent, and A4 patch-review packets and only runs the configured `LOCAL_MODEL_COMMAND` subprocess when `--ask-local-model` is set; the A4 kit catalog/readiness reports carry stable payload fingerprints for future GUI/audio-analyzer kit-state comparison; the A4 OXI macro set planner turns curated macro sequences into exact replayable set-plan JSON and Cockpit cards; the live render bundle reuses existing segment mock previews and deferred A4 rows, the live cue sheet converts that bundle into operator risk/move/recovery cues plus compact stage cards, the live runbook turns direct arcs or reference matches into launch/timeline/recovery context, the stage-routing report turns that runbook into saved-kit slot/fingerprint route cards, the stage-rehearsal-state report turns those route cards into go/rehearse/do-not-arm cue and machine states, the live set cockpit and live show export reports climb from rehearsal state into show handoff JSON, the live transition timeline turns that export into cue-to-cue prep/launch/hold/recovery cards, the live command deck turns the timeline into current-cue command cards and lookahead, the live state packet turns that deck into GUI-ready now/next cues plus machine panels/action/warning/recovery stacks, the live readiness report turns that state packet into launch-gate confidence/warning/recovery checks, the live control surface report turns readiness into GUI/audio-analyzer cards and replayable passive commands, the live analyzer handoff report pairs reference-match FeatureReport meters with that control surface for future analyzer panels, the live analyzer target packet turns that handoff into rehearsal target bands/checkpoints/calibration/warnings for future analyzer comparison, the live GUI analyzer readiness bundle turns that target packet into panel manifests/stream wiring/operator workflow/blocked active actions for future desktop surfaces, the live GUI analyzer overlay turns render-tree nodes into meter widgets, threshold markers, selected-capture badges, and overlay annotations, the live GUI analyzer frame turns overlay metadata into ordered frame events and visual assertions for future GUI tests, the live GUI interaction script turns frame metadata into operator action bindings and disabled hardware locks for future GUI controls, the live GUI implementation bridge turns test-harness readiness into future-GUI wiring metadata, the live GUI desktop blueprint turns that bridge into desktop shell/layout/widget/binding metadata, the live GUI desktop app plan turns that blueprint into app shell/route/component/state/style-token metadata, the live GUI desktop component contract turns that app plan into component/prop/action/selector metadata, the live GUI desktop view model turns that contract into component view-model/state-binding/disabled-action/style-token metadata, the live GUI desktop render contract turns that view model into render-surface/render-binding/style-token/assertion metadata, the live GUI desktop render harness turns that render contract into surface-harness/binding-harness/style-token-check/assertion metadata, and the reference-match report turns a description/audio/library/FeatureReport reference into a ranked arc plus optional embedded cue sheet, snapshot preview, and stage packet projection. Most legacy CLI dispatch remains in-line until the broader WS-S7 refactor lands. The architecture rule `test_no_parallel_device_registry` allows `cli_registry.py` (the CLI registry) as a non-device registry.
 
 ---
