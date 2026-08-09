@@ -32,10 +32,14 @@ export function HeaderBar(): JSX.Element {
   const clearReconnectNotice = useCockpitStore((s) => s.clearReconnectNotice);
 
   if (session === null) {
+    // No session yet (sidecar never answered): honest placeholder badges,
+    // with the Arm affordance PRESENT but disabled — never hidden — so the
+    // operator can see the control and why it is unavailable.
     return (
       <header className="cockpit-header" data-testid="header-bar">
         <span className="title">RytmRandomizer · Cockpit</span>
         <span className="badge">disconnected</span>
+        <ArmControl />
       </header>
     );
   }

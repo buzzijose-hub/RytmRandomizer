@@ -17,41 +17,42 @@
  * side trips at the cheapest layer that can catch it (E2E with full
  * browser + full sidecar, not 30 seconds of unit-test mocks).
  *
- * ## Rewritten for the WS-A offline shell (e2e-no-device plan)
+ * ## Rewritten for the no-gate cockpit (e2e-no-device plan)
  *
- * The old "without a token the cockpit stays on the connecting
- * placeholder" test pinned the DEAD placeholder (`main.cockpit-placeholder`)
- * as correct behavior. WS-A replaced that placeholder with the live
- * OfflineShell, so the auth-failure cases now assert:
+ * The cockpit now mounts unconditionally — there is no session gate, so
+ * "the cockpit never mounts" is no longer the auth-failure signal. What a
+ * failed handshake means today is: **the session never hydrates.** The
+ * auth-failure cases assert:
  *
  * - **No token at all:** the client deliberately withholds the `hello`
  *   frame (`sendHandshake` refuses to send an empty token). The server
  *   no longer waits forever: `_perform_handshake` enforces a first-frame
  *   deadline (`HANDSHAKE_FIRST_FRAME_TIMEOUT_SECONDS`, 10 s in
  *   production) and then rejects with `{ok:false, code:auth_required}` +
- *   close 1008 — so the shell cycles through a VISIBLE reconnecting
- *   loop instead of parking on a false "connected". The spec shrinks the
- *   deadline to 1 s via the sidecar's test-only
- *   `RYTM_RAND_WS_HANDSHAKE_TIMEOUT_SECONDS` env override so the loop
- *   is observable in seconds, not tens of seconds. The cockpit never
- *   mounts.
+ *   close 1008 — a VISIBLE reconnect loop (SafetyRail's WebSocket row
+ *   oscillates Reconnecting → Connected → Reconnecting) instead of
+ *   parking on a false "connected". The spec shrinks the deadline to 1 s
+ *   via the sidecar's test-only `RYTM_RAND_WS_HANDSHAKE_TIMEOUT_SECONDS`
+ *   env override so the loop is observable in seconds, not tens of
+ *   seconds. The cockpit mounts degraded; session data never arrives
+ *   (the header stays "disconnected", no connection pill).
  * - **Wrong token:** the server rejects with `{ok:false, code:auth_failed}`
  *   and closes at 1008; the client enters its reconnect loop, so the
- *   shell reaches `reconnecting` with a visibly-advancing retry line.
- *   The cockpit never mounts.
+ *   ReconnectBanner shows with a visibly-advancing retry line. The
+ *   cockpit mounts degraded; session data never arrives.
  *
  * See also:
  * - `tests/architecture/test_frontend_matches_handshake_contract.py`
  *   (catches the violation at the Python arch-test layer in <5s)
  * - `desktop/web/tests/ws-client.test.ts` § handshake branches
  *   (catches it at the unit-test layer in <100ms)
- * - `e2e/offline_shell.spec.ts` (the no-sidecar half of the story)
+ * - `e2e/offline_cockpit.spec.ts` (the no-sidecar half of the story)
  */
 
 import { test, expect } from './fixtures/wizard_fixture';
 
 test.describe('handshake token (PR #113 / C1)', () => {
-  test('with a valid token the cockpit-root mounts (handshake succeeds)', async ({
+  test('with a valid token the session hydrates (handshake succeeds)', async ({
     page,
     sidecar,
   }) => {
@@ -61,11 +62,13 @@ test.describe('handshake token (PR #113 / C1)', () => {
 
     await page.goto('/');
 
-    // `cockpit-root` only mounts after `sessionStatus` arrives, which
-    // requires a successful handshake + the bootstrap-event set from
-    // `_perform_handshake` + `emit_initial_events`. If the handshake
-    // fails, the offline shell stays on screen instead.
+    // The cockpit mounts unconditionally now; the handshake-success signal
+    // is HYDRATION: `sessionStatus` arrives only after a successful
+    // handshake + the bootstrap-event set from `_perform_handshake` +
+    // `emit_initial_events`. The connection pill exists only with a session.
     await expect(page.getByTestId('cockpit-root')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId('connection-pill')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId('header-bar')).not.toContainText('disconnected');
   });
 
   test.describe('without a token (server first-frame deadline)', () => {
@@ -98,31 +101,34 @@ test.describe('handshake token (PR #113 / C1)', () => {
 
       await page.goto('/');
 
-      // The live OfflineShell renders (WS-A) — no dead placeholder anymore.
-      await expect(page.getByTestId('offline-shell')).toBeVisible({ timeout: 5_000 });
+      // The cockpit mounts immediately, degraded (no gate anymore).
+      await expect(page.getByTestId('cockpit-root')).toBeVisible({ timeout: 5_000 });
+      const safetyRail = page.getByTestId('safety-rail');
 
       // FIXED behavior: the token-less client withholds its hello frame,
       // and the server now closes the parked socket at the first-frame
       // deadline (auth_required + 1008) instead of waiting forever. The
       // client re-dials, parks again, is closed again — a VISIBLE loop:
-      // the shell oscillates through `reconnecting` rather than resting
-      // on a false "connected".
-      await expect(page.getByTestId('offline-status')).toContainText('reconnecting', {
+      // the SafetyRail's WebSocket row oscillates through `Reconnecting`
+      // rather than resting on a false "Connected".
+      await expect(safetyRail.getByText('Reconnecting', { exact: true })).toBeVisible({
         timeout: 15_000,
       });
 
       // Prove it is a LOOP, not a one-off close: the next cycle dials
-      // (back to connected while the deadline runs) and is closed again.
-      await expect(page.getByTestId('offline-status')).toContainText('connected', {
+      // (back to Connected while the deadline runs) and is closed again.
+      await expect(safetyRail.getByText('Connected', { exact: true })).toBeVisible({
         timeout: 15_000,
       });
-      await expect(page.getByTestId('offline-status')).toContainText('reconnecting', {
+      await expect(safetyRail.getByText('Reconnecting', { exact: true })).toBeVisible({
         timeout: 15_000,
       });
 
-      // And `cockpit-root` must NOT mount — no session_status can ever
-      // arrive without a completed handshake.
-      await expect(page.getByTestId('cockpit-root')).not.toBeVisible();
+      // And the session must NEVER hydrate — no session_status can ever
+      // arrive without a completed handshake. The header stays on the
+      // degraded placeholder and the connection pill never appears.
+      await expect(page.getByTestId('header-bar')).toContainText('disconnected');
+      await expect(page.getByTestId('connection-pill')).toHaveCount(0);
     });
   });
 
@@ -146,13 +152,16 @@ test.describe('handshake token (PR #113 / C1)', () => {
 
     await page.goto('/');
 
-    await expect(page.getByTestId('offline-shell')).toBeVisible({ timeout: 5_000 });
-    // The reject → close → redial loop is visible: reconnecting status and
-    // a retry attempt line.
-    await expect(page.getByTestId('offline-status')).toContainText('reconnecting', {
+    // The cockpit mounts immediately, degraded (no gate anymore).
+    await expect(page.getByTestId('cockpit-root')).toBeVisible({ timeout: 5_000 });
+    // The reject → close → redial loop is visible: the ReconnectBanner
+    // shows with a retry attempt line that keeps the loop honest.
+    await expect(page.getByTestId('reconnect-banner')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId('reconnect-banner-retry-line')).toBeVisible({
       timeout: 10_000,
     });
-    await expect(page.getByTestId('offline-retry-line')).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByTestId('cockpit-root')).not.toBeVisible();
+    // Session data never hydrates on a rejected handshake.
+    await expect(page.getByTestId('header-bar')).toContainText('disconnected');
+    await expect(page.getByTestId('connection-pill')).toHaveCount(0);
   });
 });

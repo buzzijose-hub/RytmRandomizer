@@ -1,6 +1,6 @@
 # Audio-to-Patch Studio Handoff Plan
 
-Status: in-flight
+Status: shipped (PR #220, merged 2026-08-03 as `a7898be3`)
 
 ## Goal
 

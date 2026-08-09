@@ -7,13 +7,13 @@
  * 1. **The cockpit stays mounted AND the ReconnectBanner appears.** The
  *    store's `sessionStatus` slice is deliberately never cleared on
  *    disconnect (losing panel context mid-performance is worse than
- *    stale values), so the OfflineShell does not return mid-session.
- *    The loud reconnect surface is the fixed-position ReconnectBanner
- *    App renders whenever the WS status is reconnecting/closed while a
- *    session is on screen: it carries the advancing retry-attempt
- *    counter, the next-dial countdown, and a Retry-now action, and it
- *    disappears on recovery. The SafetyRail's WebSocket row + operator
- *    log remain the quiet, always-on truth underneath.
+ *    stale values). The loud reconnect surface is the fixed-position
+ *    ReconnectBanner App always renders (it self-gates): mid-session it
+ *    carries the advancing retry-attempt counter, the next-dial
+ *    countdown, and a Retry-now action — but NOT the pre-session
+ *    "Connection help" disclosure — and it disappears on recovery. The
+ *    SafetyRail's WebSocket row + operator log remain the quiet,
+ *    always-on truth underneath.
  *
  * 2. **A restarted sidecar mints a NEW WS token** (`_provision_token`
  *    always regenerates; the old one is deliberately dead). The browser
@@ -55,6 +55,12 @@ test.describe('reconnect journey (sidecar killed mid-session)', () => {
     await expect(safetyRail.getByText('Connected', { exact: true })).toBeVisible({
       timeout: 10_000,
     });
+    // Under the no-gate design, cockpit-root + WS "Connected" no longer
+    // imply the session hydrated (the cockpit mounts unconditionally).
+    // Wait for a session-dependent surface before killing, or the banner
+    // legitimately renders its PRE-session copy and the mid-session
+    // assertions below race.
+    await expect(page.getByTestId('connection-pill')).toBeVisible({ timeout: 10_000 });
 
     // Marker to prove recovery happens without a page reload.
     await page.evaluate(() => {
@@ -71,16 +77,17 @@ test.describe('reconnect journey (sidecar killed mid-session)', () => {
       timeout: 15_000,
     });
     await expect(page.getByTestId('cockpit-root')).toBeVisible();
-    await expect(page.getByTestId('offline-shell')).toHaveCount(0);
     await expect(page.getByTestId('operator-log-list')).toContainText(
       'WebSocket reconnecting',
     );
 
-    // The banner is visible, alert-shaped, and actionable.
+    // The banner is visible, alert-shaped, and actionable — in its
+    // MID-SESSION form (no pre-session connection-help disclosure).
     const banner = page.getByTestId('reconnect-banner');
     await expect(banner).toBeVisible({ timeout: 10_000 });
     await expect(banner.getByRole('alert')).toContainText('Sidecar connection lost');
     await expect(banner.getByTestId('reconnect-banner-retry-now')).toBeVisible();
+    await expect(page.getByTestId('reconnect-banner-help')).toHaveCount(0);
 
     // The retry attempt counter is visible and ADVANCING (backoff loop is
     // really running: 0.5s, 1s, 2s... so attempt ≥ 2 lands within seconds).
