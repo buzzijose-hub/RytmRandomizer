@@ -534,13 +534,15 @@ def test_observability_package_reload_reuses_existing_null_handler() -> None:
     import rytm_randomizer.observability as observability
 
     package_logger = logging.getLogger(PACKAGE_LOGGER_NAME)
-    null_handlers_before = [
-        handler for handler in package_logger.handlers if isinstance(handler, logging.NullHandler)
-    ]
+    for handler in list(package_logger.handlers):
+        if isinstance(handler, logging.NullHandler):
+            package_logger.removeHandler(handler)
+    existing_null_handler = logging.NullHandler()
+    package_logger.addHandler(existing_null_handler)
 
     importlib.reload(observability)
 
     null_handlers_after = [
         handler for handler in package_logger.handlers if isinstance(handler, logging.NullHandler)
     ]
-    assert null_handlers_after == null_handlers_before
+    assert null_handlers_after == [existing_null_handler]

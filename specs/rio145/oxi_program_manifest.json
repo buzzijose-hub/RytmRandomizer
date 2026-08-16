@@ -16,14 +16,14 @@
       "pattern variation",
       "arrangement"
     ],
-    "analog_rytm_mkii": [
+    "analog_rytm_mk2": [
       "12 drum/percussion Sounds",
       "track filters/amps/LFOs",
       "send FX",
       "distortion",
       "compressor"
     ],
-    "analog_four_mkii": [
+    "analog_four_mk2": [
       "4 synth Sounds",
       "oscillators",
       "filters",
@@ -57,7 +57,7 @@
   },
   "midi_sync": {
     "master": "OXI One",
-    "analog_rytm_mkii": {
+    "analog_rytm_mk2": {
       "clock_receive": true,
       "clock_send": false,
       "transport_receive": true,
@@ -67,7 +67,7 @@
       "program_change_receive": "OFF for one carrier Kit; optional later",
       "input_from": "MIDI or MIDI+USB only when USB MIDI is intentionally used"
     },
-    "analog_four_mkii": {
+    "analog_four_mk2": {
       "clock_receive": true,
       "clock_send": false,
       "transport_receive": true,
@@ -184,7 +184,7 @@
     }
   },
   "optional_modulation_lanes": {
-    "analog_rytm_mkii": [
+    "analog_rytm_mk2": [
       {
         "destination": "Filter frequency",
         "cc_msb": 74,
@@ -222,7 +222,7 @@
         "suggested": "subtle tom/metal motion; never kick"
       }
     ],
-    "analog_four_mkii": [
+    "analog_four_mk2": [
       {
         "track": "T1 A-RUMBLE",
         "destination": "Filter 1 frequency",

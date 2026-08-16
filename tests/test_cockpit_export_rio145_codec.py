@@ -416,6 +416,13 @@ def test_diff_distinguishes_slot_only_from_native_payload_changes() -> None:
 
 
 def test_oxi_export_is_hash_pinned_and_deterministic(tmp_path: Path) -> None:
+    source_manifest = json.loads((SPECS / "oxi_program_manifest.json").read_text(encoding="utf-8"))
+    for section in ("ownership", "midi_sync", "optional_modulation_lanes"):
+        assert "analog_rytm_mk2" in source_manifest[section]
+        assert "analog_four_mk2" in source_manifest[section]
+        assert "analog_rytm_mkii" not in source_manifest[section]
+        assert "analog_four_mkii" not in source_manifest[section]
+
     first_path = tmp_path / "first.json"
     second_path = tmp_path / "second.json"
     kwargs = {

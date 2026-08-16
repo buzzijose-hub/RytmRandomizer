@@ -28,7 +28,7 @@ from ...observability.tracing import operation
 from ...snapshot import ElektronNativeObjectMessage, extract_sysex_payloads
 
 _OXI_MANIFEST_SHA256: Final[str] = (
-    "6c4a1b00c9a8c6c0943218e08830e6c7b7d18bb6e965d83cdf0a133e9f65405e"
+    "2401a92cc06fb795266a2df090d37340a68ab22d34f1c38b62eb9b66e656fe38"
 )
 _OXI_EVENTS_SHA256: Final[str] = "87d969c1af75edacd4591c57132bbae108d1210ac135a0c99623a5e4f2f994df"
 _OXI_SCHEMA: Final[str] = "buzzi.oxi.elektron-program.v1"
