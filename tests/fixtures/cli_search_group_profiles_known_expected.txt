@@ -1,6 +1,6 @@
 RytmRandomizer passive group profile search
 Section: group_profiles
-Query: Hard
+Query: <input omitted>
 Match count: 1
 Matches:
 - 2: My BD Hard

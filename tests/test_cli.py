@@ -315,6 +315,10 @@ USAGE = (
     "[--overwrite] [--json] | "
     "al16-rytm-kit-export --reference <kit.syx> --recipe <recipe.yaml> "
     "--destination-slot <0..127> --output <kit.syx> | "
+    "al16-rytm-mapping-evidence --reference <baseline.syx> "
+    "--configured <configured.syx> --recipe <recipe.yaml> "
+    "--gap-manifest <manifest.json> --expected-gap-manifest-sha256 <sha256> "
+    "--report <report.json> | "
     "analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> "
     "--output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json] | "
     "audio-patch-dna --audio <path> --output-dir <dir> [--track N] "
@@ -2446,6 +2450,7 @@ def test_dual_machine_target_report_rejects_unknown_target(capsys) -> None:
     err = capsys.readouterr().err
     assert exit_code == 2
     assert "unknown target" in err
+    assert "octatrack" not in err
 
 
 def test_dual_machine_target_report_requires_target_arg(capsys) -> None:
@@ -3474,9 +3479,8 @@ def test_search_commands_are_case_insensitive_and_deterministic():
 
     assert first.returncode == 0
     assert second.returncode == 0
-    assert normalize_newlines(first.stdout).replace("Query: guarded", "Query: QUERY") == (
-        normalize_newlines(second.stdout).replace("Query: GUARDED", "Query: QUERY")
-    )
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert "Query: <input omitted>" in normalize_newlines(first.stdout)
     assert first.stderr == ""
     assert second.stderr == ""
 

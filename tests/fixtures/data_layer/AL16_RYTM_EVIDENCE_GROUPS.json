@@ -1,0 +1,32 @@
+[
+  {
+    "evidence_class": "machine_selection",
+    "session_number": 1,
+    "session_label": "configured AL02 saved-kit capture",
+    "expected_evidence": "One initialized/configured saved-kit comparison showing machine bytes."
+  },
+  {
+    "evidence_class": "machine_source",
+    "session_number": 1,
+    "session_label": "configured AL02 saved-kit capture",
+    "expected_evidence": "One initialized/configured saved-kit comparison showing source-field bytes."
+  },
+  {
+    "evidence_class": "amp_volume",
+    "session_number": 1,
+    "session_label": "configured AL02 saved-kit capture",
+    "expected_evidence": "One initialized/configured saved-kit comparison showing amp-volume bytes."
+  },
+  {
+    "evidence_class": "machine_tuning",
+    "session_number": 1,
+    "session_label": "configured AL02 saved-kit capture",
+    "expected_evidence": "One XT Classic F2 display/raw observation in the configured saved kit."
+  },
+  {
+    "evidence_class": "destination_slot",
+    "session_number": 2,
+    "session_label": "destination-slot scratch proof",
+    "expected_evidence": "One user-selected scratch-slot import and dump-back header comparison."
+  }
+]

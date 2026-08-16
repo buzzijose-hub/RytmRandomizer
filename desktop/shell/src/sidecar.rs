@@ -405,6 +405,36 @@ pub fn shutdown_child(child: &mut Child) {
 mod tests {
     use super::*;
 
+    static PROCESS_ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    struct ScopedEnvVar {
+        name: &'static str,
+        prior: Option<std::ffi::OsString>,
+    }
+
+    impl ScopedEnvVar {
+        fn set(name: &'static str, value: &str) -> Self {
+            let prior = std::env::var_os(name);
+            std::env::set_var(name, value);
+            Self { name, prior }
+        }
+    }
+
+    impl Drop for ScopedEnvVar {
+        fn drop(&mut self) {
+            match self.prior.take() {
+                Some(value) => std::env::set_var(self.name, value),
+                None => std::env::remove_var(self.name),
+            }
+        }
+    }
+
+    fn lock_process_env() -> std::sync::MutexGuard<'static, ()> {
+        PROCESS_ENV_LOCK
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
     #[test]
     fn backoff_starts_at_one_second() {
         assert_eq!(backoff_delay(0), Duration::from_secs(1));
@@ -437,16 +467,12 @@ mod tests {
 
     #[test]
     fn resolve_token_file_path_honors_env_override() {
-        let prior = std::env::var_os(TOKEN_FILE_ENV_VAR);
-        std::env::set_var(TOKEN_FILE_ENV_VAR, "C:/tmp/override-token.txt");
+        let _env_guard = lock_process_env();
+        let _env_override = ScopedEnvVar::set(TOKEN_FILE_ENV_VAR, "C:/tmp/override-token.txt");
         assert_eq!(
             resolve_token_file_path(),
             std::path::PathBuf::from("C:/tmp/override-token.txt")
         );
-        match prior {
-            Some(value) => std::env::set_var(TOKEN_FILE_ENV_VAR, value),
-            None => std::env::remove_var(TOKEN_FILE_ENV_VAR),
-        }
     }
 
     #[test]
@@ -689,16 +715,12 @@ mod tests {
 
     #[test]
     fn resolve_arm_secret_file_path_honors_env_override() {
-        let prior = std::env::var_os(ARM_SECRET_FILE_ENV_VAR);
-        std::env::set_var(ARM_SECRET_FILE_ENV_VAR, "/tmp/override-arm-secret");
+        let _env_guard = lock_process_env();
+        let _env_override = ScopedEnvVar::set(ARM_SECRET_FILE_ENV_VAR, "/tmp/override-arm-secret");
         assert_eq!(
             resolve_arm_secret_file_path(),
             std::path::PathBuf::from("/tmp/override-arm-secret")
         );
-        match prior {
-            Some(value) => std::env::set_var(ARM_SECRET_FILE_ENV_VAR, value),
-            None => std::env::remove_var(ARM_SECRET_FILE_ENV_VAR),
-        }
     }
 
     #[test]
@@ -706,15 +728,11 @@ mod tests {
         // A blank override is treated as unset (same posture as the WS
         // token), and the fallback must land on the Python sidecar's own
         // dev-mode default so a hand-started sidecar is still discoverable.
-        let prior = std::env::var_os(ARM_SECRET_FILE_ENV_VAR);
-        std::env::set_var(ARM_SECRET_FILE_ENV_VAR, "   ");
+        let _env_guard = lock_process_env();
+        let _env_override = ScopedEnvVar::set(ARM_SECRET_FILE_ENV_VAR, "   ");
         let resolved = resolve_arm_secret_file_path();
         assert!(resolved
             .ends_with(std::path::Path::new(DEFAULT_ARM_SECRET_DIR).join(DEFAULT_ARM_SECRET_FILE)));
-        match prior {
-            Some(value) => std::env::set_var(ARM_SECRET_FILE_ENV_VAR, value),
-            None => std::env::remove_var(ARM_SECRET_FILE_ENV_VAR),
-        }
     }
 
     #[test]

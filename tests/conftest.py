@@ -27,11 +27,14 @@ sys.path).
 
 from __future__ import annotations
 
+import hashlib
 import io
+import json
 import logging
 import sys
 import types
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
@@ -137,6 +140,72 @@ def analog_four_saved_kit_mutation(
 
 
 ANALOG_RYTM_SAVED_KIT_TEST_HEADER = bytes((0x00, 0x20, 0x3C, 0x07, 0x00, 0x52, 0x01, 0x01, 0x00))
+
+
+@dataclass(frozen=True)
+class Al16RytmMappingTestInputs:
+    """Paths and trust anchor for one deterministic mapping-evidence test bundle."""
+
+    reference_path: Path
+    configured_path: Path
+    recipe_path: Path
+    manifest_path: Path
+    manifest_sha256: str
+
+
+def write_al16_rytm_mapping_test_inputs(
+    tmp_path: Path,
+    *,
+    reference_frame: bytes,
+    configured_frame: bytes,
+    recipe: Mapping[str, object],
+    recipe_payload: bytes,
+    semantic_paths: tuple[str, ...],
+    requested_values: Mapping[str, object],
+) -> Al16RytmMappingTestInputs:
+    """Write a bound local evidence bundle and return its manifest trust anchor."""
+
+    from rytm_randomizer.cockpit.export.al16_rytm_kit import (
+        deterministic_recipe_identifier,
+    )
+
+    reference_path = tmp_path / "reference.syx"
+    configured_path = tmp_path / "configured.syx"
+    recipe_path = tmp_path / "recipe.yaml"
+    manifest_path = tmp_path / "manifest.json"
+    reference_path.write_bytes(reference_frame)
+    configured_path.write_bytes(configured_frame)
+    recipe_path.write_bytes(recipe_payload)
+    manifest_payload = json.dumps(
+        {
+            "critical_mapping_gaps": [
+                {"semantic_path": semantic_path} for semantic_path in semantic_paths
+            ],
+            "semantic_field_audits": [
+                {
+                    "semantic_path": semantic_path,
+                    "requested_semantic_value": requested_values.get(
+                        semantic_path,
+                        f"requested:{semantic_path}",
+                    ),
+                    "verification_status": "critical_mapping_gap",
+                }
+                for semantic_path in semantic_paths
+            ],
+            "deterministic_recipe_identifier": deterministic_recipe_identifier(recipe),
+            "recipe_sha256": hashlib.sha256(recipe_payload).hexdigest(),
+            "reference_sha256": hashlib.sha256(reference_frame).hexdigest(),
+        },
+        sort_keys=True,
+    ).encode("utf-8")
+    manifest_path.write_bytes(manifest_payload)
+    return Al16RytmMappingTestInputs(
+        reference_path=reference_path,
+        configured_path=configured_path,
+        recipe_path=recipe_path,
+        manifest_path=manifest_path,
+        manifest_sha256=hashlib.sha256(manifest_payload).hexdigest(),
+    )
 
 
 def analog_rytm_saved_kit_test_raw() -> bytes:

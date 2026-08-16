@@ -1,4 +1,4 @@
 RytmRandomizer passive scene inspection
-Scene: UNKNOWN
+Scene: <unrecognized>
 Found: False
 Message: Scene metadata not found. No MIDI was sent. No command executed.

@@ -254,6 +254,7 @@ audio-patch-dna --audio REF.wav --output-dir output/local/audio-dna/ --select 6 
 
 # AL16 Analog Rytm offline audit proof (no MIDI; current AL02 build is blocked)
 al16-rytm-kit-export --reference output/local/reference/RYTM_Test1_Init_Kit.syx --recipe specs/al16/AL02_LOCK_RYTM.yaml --destination-slot 127 --output output/local/al16/AL02_LOCK_RYTM.syx
+al16-rytm-mapping-evidence --reference output/local/reference/RYTM_Test1_Init_Kit.syx --configured output/local/al16/AL02_LOCK_RYTM_CONFIGURED.syx --recipe specs/al16/AL02_LOCK_RYTM.yaml --gap-manifest output/al16/AL02_LOCK_RYTM_manifest.json --expected-gap-manifest-sha256 <reviewed-sha256> --report output/local/al16/AL02_LOCK_RYTM_mapping_evidence.json
 ```
 
 `audio-patch-dna` turns one immutable audio snapshot into a readable analysis
@@ -282,6 +283,18 @@ evidence and is regenerated only by the repository's deterministic artifact
 workflow. Evidence timestamps default to the reproducible Unix epoch; set
 `SOURCE_DATE_EPOCH` to an in-range Unix timestamp when a deterministic release
 timestamp is required.
+
+Phase R2 replaces independent one-parameter calibration rounds with one
+manually configured saved-KIT capture that can provide review evidence for
+many AL02 gaps at once. The passive analyzer binds its report to the exact
+recipe bytes, gap-manifest bytes, deterministic recipe identifier, and
+reference SHA-256 recorded by the manifest. The operator must supply the
+reviewed SHA-256 of the exact gap-manifest bytes, so replacing that file cannot
+silently redefine the evidence request. It uses only canonical Rytm layout and
+parameter-map facts, emits structured review-required evidence, and never
+promotes a candidate offset automatically. A separate scratch-slot dump is
+still required to prove destination-slot header behavior. Neither R2 command
+enumerates MIDI ports, imports a MIDI backend, sends SysEx, or writes a kit.
 
 Every command above is **passive by construction** — no output port opens, no MIDI is sent (armed A4 delivery requires `--arm` plus a reviewed batch manifest). The full list is auto-discovered and swept on every PR.
 
