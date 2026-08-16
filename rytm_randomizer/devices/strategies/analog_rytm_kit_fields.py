@@ -13,10 +13,27 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import Final
 
+from ...data.analog_rytm_kit_fields import (
+    RYTM_FX_OFFSETS,
+    RYTM_MACHINE_PARAMETER_NAMES,
+    RYTM_SOUND_NAME_OFFSET,
+    RYTM_SOUND_NAME_STORAGE_LENGTH,
+    RYTM_SOUND_NAME_VISIBLE_LENGTH,
+    RYTM_SOUND_U7_FIELDS,
+)
 from ...data.analog_rytm_kit_layout import (
+    RYTM_KIT_NAME_LENGTH,
+    RYTM_KIT_NAME_OFFSET,
+    RYTM_KIT_NAME_VISIBLE_LENGTH,
     RYTM_KIT_RAW_SIZE,
     RYTM_KIT_TRACK_SOUND_SIZE,
     RYTM_KIT_TRACKS_OFFSET,
+    RYTM_SOUND_MACHINE_TYPE_OFFSET,
+)
+from .elektron_kit_common import (
+    ElektronKitFieldError,
+    read_fixed_width_ascii,
+    write_fixed_width_ascii,
 )
 
 RYTM_KIT_SIZE = RYTM_KIT_RAW_SIZE
@@ -26,13 +43,13 @@ RYTM_SOUND_SIZE = RYTM_KIT_TRACK_SOUND_SIZE
 
 def _check_rytm_u7(value: int, label: str = "value") -> int:
     if not 0 <= value <= 127:
-        raise ValueError(f"{label} must be in 0..127, got {value}")
+        raise ElektronKitFieldError(f"{label} must be in 0..127, got {value}")
     return value
 
 
 def _encode_bipolar(value: int, *, minimum: int = -64, maximum: int = 63) -> int:
     if not minimum <= value <= maximum:
-        raise ValueError(f"bipolar value must be in {minimum}..{maximum}, got {value}")
+        raise ElektronKitFieldError(f"bipolar value must be in {minimum}..{maximum}, got {value}")
     return value + 64
 
 
@@ -46,7 +63,7 @@ def _read_u16_be(data: bytearray | bytes, offset: int) -> int:
 
 def _write_u16_be(data: bytearray, offset: int, value: int) -> None:
     if not 0 <= value <= 0xFFFF:
-        raise ValueError(f"16-bit value must be in 0..65535, got {value}")
+        raise ElektronKitFieldError(f"16-bit value must be in 0..65535, got {value}")
     data[offset] = (value >> 8) & 0xFF
     data[offset + 1] = value & 0xFF
 
@@ -231,31 +248,17 @@ def encode_rytm_mod_depth(value: float) -> int:
     scaled = value * RYTM_MOD_DEPTH_UNITS_PER_DISPLAY
     rounded = int(round(scaled))
     if abs(scaled - rounded) > 1e-9:
-        raise ValueError("Rytm modulation depth must be representable in 1/128 steps")
+        raise ElektronKitFieldError("Rytm modulation depth must be representable in 1/128 steps")
     raw = RYTM_MOD_DEPTH_ZERO + rounded
     if not 0 <= raw <= 0x7FFF:
-        raise ValueError("Rytm modulation depth is outside the native range")
+        raise ElektronKitFieldError("Rytm modulation depth is outside the native range")
     return raw
 
 
 def decode_rytm_mod_depth(raw: int) -> float:
     if not 0 <= raw <= 0x7FFF:
-        raise ValueError("raw Rytm modulation depth must be in 0x0000..0x7FFF")
+        raise ElektronKitFieldError("raw Rytm modulation depth must be in 0x0000..0x7FFF")
     return (raw - RYTM_MOD_DEPTH_ZERO) / RYTM_MOD_DEPTH_UNITS_PER_DISPLAY
-
-
-MACHINE_PARAMETER_NAMES: dict[RytmMachine, tuple[str, ...]] = {
-    RytmMachine.BD_SHARP: ("LEV", "TUN", "DEC", "HLD", "SWT", "SWD", "WAV", "TIC"),
-    RytmMachine.SD_HARD: ("LEV", "TUN", "DEC", "SWD", "TIC", "NOD", "NOL", "SWT"),
-    RytmMachine.RS_HARD: ("LEV", "TUN", "DEC", "SWD", "TIC", "NOL", "SYM", "SWT"),
-    RytmMachine.CP_CLASSIC: ("LEV", "TON", "NOD", "NUM", "RAT", "NOL", "RND", "CPD"),
-    RytmMachine.BT_CLASSIC: ("LEV", "TUN", "DEC", "_", "NOL", "SNP", "SWD", "_"),
-    RytmMachine.XT_CLASSIC: ("LEV", "TUN", "DEC", "SWD", "SWT", "NOD", "NOL", "TON"),
-    RytmMachine.CH_CLASSIC: ("LEV", "TUN", "DEC", "COL", "_", "_", "_", "_"),
-    RytmMachine.OH_CLASSIC: ("LEV", "TUN", "DEC", "COL", "_", "_", "_", "_"),
-    RytmMachine.CY_RIDE: ("LEV", "TUN", "DEC", "TYP", "HIT", "C1", "C2", "C3"),
-    RytmMachine.CB_METALLIC: ("LEV", "TUN", "DEC", "DET", "PW1", "PW2", "_", "_"),
-}
 
 
 @dataclass(slots=True)
@@ -263,16 +266,18 @@ class RytmSound:
     _data: bytearray
 
     SIGNATURE = bytes.fromhex("be ef ba ce")
-    NAME_OFFSET = 0x0C
-    NAME_LENGTH = 15
+    NAME_OFFSET = RYTM_SOUND_NAME_OFFSET
+    NAME_LENGTH = RYTM_SOUND_NAME_STORAGE_LENGTH
+    NAME_VISIBLE_LENGTH = RYTM_SOUND_NAME_VISIBLE_LENGTH
     MACHINE_PARAM_OFFSET = 0x1C
-    MACHINE_TYPE_OFFSET = 0x7C
 
     def __post_init__(self) -> None:
         if len(self._data) != RYTM_SOUND_SIZE:
-            raise ValueError(f"Rytm sound block must be {RYTM_SOUND_SIZE} bytes")
+            raise ElektronKitFieldError(f"Rytm sound block must be {RYTM_SOUND_SIZE} bytes")
         if bytes(self._data[:4]) != self.SIGNATURE:
-            raise ValueError(f"Unexpected Rytm sound signature {self._data[:4].hex(' ')}")
+            raise ElektronKitFieldError(
+                f"Unexpected Rytm sound signature {self._data[:4].hex(' ')}"
+            )
 
     @classmethod
     def from_bytes(cls, data: bytes | bytearray | memoryview) -> RytmSound:
@@ -283,38 +288,50 @@ class RytmSound:
 
     @property
     def name(self) -> str:
-        raw = bytes(self._data[self.NAME_OFFSET : self.NAME_OFFSET + self.NAME_LENGTH])
-        return raw.split(b"\x00", 1)[0].decode("ascii", errors="replace").rstrip()
+        return read_fixed_width_ascii(self._data, offset=self.NAME_OFFSET, length=self.NAME_LENGTH)
 
     @name.setter
     def name(self, value: str) -> None:
-        encoded = value.encode("ascii", errors="strict")[: self.NAME_LENGTH]
-        self._data[self.NAME_OFFSET : self.NAME_OFFSET + self.NAME_LENGTH] = encoded.ljust(
-            self.NAME_LENGTH, b"\x00"
+        write_fixed_width_ascii(
+            self._data,
+            offset=self.NAME_OFFSET,
+            storage_length=self.NAME_LENGTH,
+            visible_length=self.NAME_VISIBLE_LENGTH,
+            value=value,
+            nul_terminated=True,
         )
 
     @property
     def machine(self) -> RytmMachine:
-        return RytmMachine(self._data[self.MACHINE_TYPE_OFFSET])
+        try:
+            return RytmMachine(self._data[RYTM_SOUND_MACHINE_TYPE_OFFSET])
+        except ValueError as exc:
+            raise ElektronKitFieldError(
+                "unknown Rytm machine value " f"{self._data[RYTM_SOUND_MACHINE_TYPE_OFFSET]}"
+            ) from exc
 
     @machine.setter
     def machine(self, value: RytmMachine | int) -> None:
-        self._data[self.MACHINE_TYPE_OFFSET] = int(RytmMachine(value))
+        try:
+            machine = RytmMachine(value)
+        except ValueError as exc:
+            raise ElektronKitFieldError(f"unknown Rytm machine value {value}") from exc
+        self._data[RYTM_SOUND_MACHINE_TYPE_OFFSET] = int(machine)
 
     def machine_parameter_name(self, index: int) -> str | None:
         if not 1 <= index <= 8:
-            raise ValueError("machine parameter index must be 1..8")
-        names = MACHINE_PARAMETER_NAMES.get(self.machine)
+            raise ElektronKitFieldError("machine parameter index must be 1..8")
+        names = RYTM_MACHINE_PARAMETER_NAMES.get(int(self.machine))
         return names[index - 1] if names else None
 
     def get_machine_parameter_raw16(self, index: int) -> int:
         if not 1 <= index <= 8:
-            raise ValueError("machine parameter index must be 1..8")
+            raise ElektronKitFieldError("machine parameter index must be 1..8")
         return _read_u16_be(self._data, self.MACHINE_PARAM_OFFSET + (index - 1) * 2)
 
     def set_machine_parameter_raw16(self, index: int, value: int) -> None:
         if not 1 <= index <= 8:
-            raise ValueError("machine parameter index must be 1..8")
+            raise ElektronKitFieldError("machine parameter index must be 1..8")
         _write_u16_be(self._data, self.MACHINE_PARAM_OFFSET + (index - 1) * 2, value)
 
     def get_machine_parameter_u7(self, index: int) -> int:
@@ -334,52 +351,18 @@ class RytmSound:
         self.set_machine_parameter_u7(index, _encode_bipolar(value))
 
     # General sound page fields. These are the high/display byte unless noted.
-    _U7_FIELDS = {
-        "sample_tune": 0x2C,
-        "sample_fine": 0x2E,
-        "sample_number": 0x30,
-        "sample_bit_reduction": 0x32,
-        "sample_loop": 0x38,
-        "sample_level": 0x3A,
-        "filter_attack": 0x3C,
-        "filter_sustain": 0x3E,
-        "filter_decay": 0x40,
-        "filter_release": 0x42,
-        "filter_frequency": 0x44,
-        "filter_resonance": 0x46,
-        "filter_type": 0x48,
-        "filter_envelope_depth": 0x4A,
-        "amp_attack": 0x4C,
-        "amp_hold": 0x4E,
-        "amp_decay": 0x50,
-        "amp_overdrive": 0x52,
-        "amp_delay_send": 0x54,
-        "amp_reverb_send": 0x56,
-        "amp_pan": 0x58,
-        "amp_volume": 0x5A,
-        "accent_level": 0x5C,
-        "lfo_speed": 0x5E,
-        "lfo_multiplier": 0x60,
-        "lfo_fade": 0x62,
-        "lfo_destination": 0x64,
-        "lfo_waveform": 0x66,
-        "lfo_phase_or_slew": 0x68,
-        "lfo_mode": 0x6A,
-        "default_note": 0x6E,
-    }
-
     def get_u7(self, field: str) -> int:
         try:
-            return self._data[self._U7_FIELDS[field]]
+            return self._data[RYTM_SOUND_U7_FIELDS[field]]
         except KeyError as exc:
-            raise KeyError(f"Unknown Rytm sound field {field!r}") from exc
+            raise ElektronKitFieldError(f"unknown Rytm sound field {field!r}") from exc
 
     def set_u7(self, field: str, value: int, *, clear_lsb: bool = True) -> None:
         _check_rytm_u7(value, field)
         try:
-            offset = self._U7_FIELDS[field]
+            offset = RYTM_SOUND_U7_FIELDS[field]
         except KeyError as exc:
-            raise KeyError(f"Unknown Rytm sound field {field!r}") from exc
+            raise ElektronKitFieldError(f"unknown Rytm sound field {field!r}") from exc
         self._data[offset] = value
         if clear_lsb and offset % 2 == 0 and offset + 1 < len(self._data):
             self._data[offset + 1] = 0
@@ -389,9 +372,9 @@ class RytmSound:
         """Return the verified payload offset for a named 7-bit field."""
 
         try:
-            return cls._U7_FIELDS[field]
+            return RYTM_SOUND_U7_FIELDS[field]
         except KeyError as exc:
-            raise ValueError(f"unknown Rytm sound field {field!r}") from exc
+            raise ElektronKitFieldError(f"unknown Rytm sound field {field!r}") from exc
 
     def get_bipolar(self, field: str) -> int:
         return _decode_bipolar(self.get_u7(field))
@@ -436,53 +419,14 @@ class RytmSound:
 class RytmKit:
     _data: bytearray
 
-    NAME_OFFSET = 0x04
-    NAME_LENGTH = 15
+    NAME_OFFSET = RYTM_KIT_NAME_OFFSET
+    NAME_LENGTH = RYTM_KIT_NAME_LENGTH
+    NAME_VISIBLE_LENGTH = RYTM_KIT_NAME_VISIBLE_LENGTH
     TRACK_LEVELS_OFFSET = 0x14
-    FX_OFFSETS = {
-        "delay_time": 0x07CA,
-        "delay_pingpong": 0x07CC,
-        "delay_width": 0x07CE,
-        "delay_feedback": 0x07D0,
-        "delay_hpf": 0x07D2,
-        "delay_lpf": 0x07D4,
-        "delay_reverb_send": 0x07D6,
-        "delay_volume": 0x07D8,
-        "delay_overdrive": 0x07DA,
-        "distortion_delay_overdrive": 0x07DA,
-        "delay_dist_comp_route": 0x07DC,
-        "distortion_delay_pre_post": 0x07DC,
-        "reverb_predelay": 0x07DE,
-        "reverb_decay": 0x07E0,
-        "reverb_shelving_frequency": 0x07E2,
-        "reverb_shelving_gain": 0x07E4,
-        "reverb_hpf": 0x07E6,
-        "reverb_lpf": 0x07E8,
-        "reverb_volume": 0x07EA,
-        "reverb_dist_comp_route": 0x07EC,
-        "distortion_reverb_pre_post": 0x07EC,
-        "distortion_amount": 0x07EE,
-        "distortion_symmetry": 0x07F0,
-        "compressor_threshold": 0x07F4,
-        "compressor_attack": 0x07F6,
-        "compressor_release": 0x07F8,
-        "compressor_ratio": 0x07FA,
-        "compressor_sidechain_eq": 0x07FC,
-        "compressor_makeup_gain": 0x07FE,
-        "compressor_mix": 0x0800,
-        "compressor_volume": 0x0802,
-        "fx_lfo_speed": 0x0804,
-        "fx_lfo_multiplier": 0x0806,
-        "fx_lfo_fade": 0x0808,
-        "fx_lfo_destination": 0x080A,
-        "fx_lfo_waveform": 0x080C,
-        "fx_lfo_phase": 0x080E,
-        "fx_lfo_mode": 0x0810,
-    }
 
     def __post_init__(self) -> None:
         if len(self._data) != RYTM_KIT_SIZE:
-            raise ValueError(
+            raise ElektronKitFieldError(
                 f"Rytm kit object must be {RYTM_KIT_SIZE} bytes, got {len(self._data)}"
             )
 
@@ -495,38 +439,41 @@ class RytmKit:
 
     @property
     def name(self) -> str:
-        raw = bytes(self._data[self.NAME_OFFSET : self.NAME_OFFSET + self.NAME_LENGTH])
-        return raw.split(b"\x00", 1)[0].decode("ascii", errors="replace").rstrip()
+        return read_fixed_width_ascii(self._data, offset=self.NAME_OFFSET, length=self.NAME_LENGTH)
 
     @name.setter
     def name(self, value: str) -> None:
-        encoded = value.encode("ascii", errors="strict")[: self.NAME_LENGTH]
-        self._data[self.NAME_OFFSET : self.NAME_OFFSET + self.NAME_LENGTH] = encoded.ljust(
-            self.NAME_LENGTH, b"\x00"
+        write_fixed_width_ascii(
+            self._data,
+            offset=self.NAME_OFFSET,
+            storage_length=self.NAME_LENGTH,
+            visible_length=self.NAME_VISIBLE_LENGTH,
+            value=value,
+            nul_terminated=True,
         )
 
     def track_level(self, track_index: int) -> int:
         if not 0 <= track_index < 13:
-            raise ValueError("track index must be 0..12 (12 is FX)")
+            raise ElektronKitFieldError("track index must be 0..12 (12 is FX)")
         return self._data[self.TRACK_LEVELS_OFFSET + track_index * 2]
 
     def set_track_level(self, track_index: int, value: int) -> None:
         _check_rytm_u7(value, "track level")
         if not 0 <= track_index < 13:
-            raise ValueError("track index must be 0..12 (12 is FX)")
+            raise ElektronKitFieldError("track index must be 0..12 (12 is FX)")
         offset = self.TRACK_LEVELS_OFFSET + track_index * 2
         self._data[offset] = value
         self._data[offset + 1] = 0
 
     def sound(self, track_index: int) -> RytmSound:
         if not 0 <= track_index < 12:
-            raise ValueError("drum track index must be 0..11")
+            raise ElektronKitFieldError("drum track index must be 0..11")
         start = RYTM_KIT_TRACKS_START + track_index * RYTM_SOUND_SIZE
         return RytmSound.from_bytes(self._data[start : start + RYTM_SOUND_SIZE])
 
     def replace_sound(self, track_index: int, sound: RytmSound) -> None:
         if not 0 <= track_index < 12:
-            raise ValueError("drum track index must be 0..11")
+            raise ElektronKitFieldError("drum track index must be 0..11")
         start = RYTM_KIT_TRACKS_START + track_index * RYTM_SOUND_SIZE
         self._data[start : start + RYTM_SOUND_SIZE] = sound.to_bytes()
 
@@ -536,19 +483,28 @@ class RytmKit:
 
     def get_fx_u7(self, field: str) -> int:
         try:
-            return self._data[self.FX_OFFSETS[field]]
+            return self._data[RYTM_FX_OFFSETS[field]]
         except KeyError as exc:
-            raise KeyError(f"Unknown Rytm FX field {field!r}") from exc
+            raise ElektronKitFieldError(f"unknown Rytm FX field {field!r}") from exc
 
     def set_fx_u7(self, field: str, value: int, *, clear_lsb: bool = True) -> None:
         _check_rytm_u7(value, field)
         try:
-            offset = self.FX_OFFSETS[field]
+            offset = RYTM_FX_OFFSETS[field]
         except KeyError as exc:
-            raise KeyError(f"Unknown Rytm FX field {field!r}") from exc
+            raise ElektronKitFieldError(f"unknown Rytm FX field {field!r}") from exc
         self._data[offset] = value
         if clear_lsb:
             self._data[offset + 1] = 0
+
+    @classmethod
+    def fx_field_offset(cls, field: str) -> int:
+        """Return the verified payload offset for a named FX field."""
+
+        try:
+            return RYTM_FX_OFFSETS[field]
+        except KeyError as exc:
+            raise ElektronKitFieldError(f"unknown Rytm FX field {field!r}") from exc
 
     def get_fx_bipolar(self, field: str) -> int:
         return _decode_bipolar(self.get_fx_u7(field))

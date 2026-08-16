@@ -63,7 +63,7 @@ finished their listening refinement.
 
 | WS | Scope | Depends on | Worktree / branch | File ownership |
 |---|---|---|---|---|
-| WS-RIO | One contained integration bundle | none | `.worktrees/rio145-dual-kit-codec-integration` / `codex/rio145-dual-kit-codec-integration` | `devices/strategies/*kit_fields.py`, `cockpit/export/rio145_*`, `specs/rio145/`, `tests/fixtures/rio145/`, `tests/test_rio145_*`, RIO145 docs, CLI registry import list |
+| WS-RIO | One contained integration bundle | none | `.worktrees/rio145-dual-kit-codec-integration` / `codex/rio145-dual-kit-codec-integration` | `snapshot/{envelope,elektron_packed_payload,elektron_native_object,sysex_file}.py`, `data/*kit_fields.py`, `devices/strategies/*kit_{fields,recipe}.py`, saved-KIT codecs, `devices/strategies/elektron_kit_common.py`, `cockpit/export/rio145_*`, observability taxonomy, `specs/rio145/`, RIO145 fixtures/tests/docs, CLI registry import list |
 
 A single workstream is intentional: the recipe compilers, immutable fixtures,
 and return validators share one typed field contract and one acceptance matrix.

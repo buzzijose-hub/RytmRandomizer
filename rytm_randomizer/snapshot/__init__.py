@@ -11,6 +11,7 @@ from .elektron_native_object import (
 )
 from .envelope import (
     ELEKTRON_MFR_ID,
+    Elektron7BitMaskOrder,
     find_kit_record,
     format_manufacturer_id,
     pack_elektron_7bit,
@@ -23,6 +24,7 @@ from .sysex_file import extract_sysex_payloads, read_sysex_payloads_from_path
 
 __all__ = [
     "ELEKTRON_MFR_ID",
+    "Elektron7BitMaskOrder",
     "ElektronNativeObjectError",
     "ElektronNativeObjectMessage",
     "BaseMockRuntime",

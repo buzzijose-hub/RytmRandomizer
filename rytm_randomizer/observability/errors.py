@@ -80,6 +80,8 @@ __all__ = [
     "BoundaryError",
     "ConfigError",
     "DataError",
+    "ElektronKitFieldError",
+    "ElektronKitRecipeError",
     "MidiError",
     "MidiEventPlanSendError",
     "MockMessageMappingError",
@@ -184,6 +186,18 @@ class DataError(RytmRandomizerError):
     """Missing or malformed data-layer entry."""
 
     fingerprint: ClassVar[str] = "data.error.unspecified"
+
+
+class ElektronKitFieldError(DataError, ValueError):
+    """A saved-Kit field is unknown or outside its typed domain."""
+
+    fingerprint: ClassVar[str] = "data.elektron.kit_field"
+
+
+class ElektronKitRecipeError(DataError, ValueError):
+    """Base error for malformed or unsafe saved-Kit recipes."""
+
+    fingerprint: ClassVar[str] = "data.elektron.kit_recipe"
 
 
 class BoundaryError(RytmRandomizerError):

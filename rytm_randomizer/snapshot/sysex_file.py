@@ -9,8 +9,12 @@ _SYSEX_START: Final[int] = 0xF0
 _SYSEX_END: Final[int] = 0xF7
 
 
-def extract_sysex_payloads(raw: bytes) -> tuple[bytes, ...]:
-    """Return unframed SysEx payloads from ``raw`` bytes."""
+def extract_sysex_payloads(raw: bytes, *, keep_framing: bool = False) -> tuple[bytes, ...]:
+    """Return SysEx frames or their payloads from ``raw`` bytes.
+
+    By default the leading ``F0`` and trailing ``F7`` bytes are removed.
+    ``keep_framing=True`` retains complete frames for native-object codecs.
+    """
 
     if not raw:
         raise ValueError("SysEx data is empty")
@@ -28,7 +32,7 @@ def extract_sysex_payloads(raw: bytes) -> tuple[bytes, ...]:
             raise ValueError(
                 f"SysEx frame starting at byte {start} is without a closing F7 byte"
             ) from exc
-        payload = raw[start + 1 : end]
+        payload = raw[start : end + 1] if keep_framing else raw[start + 1 : end]
         if not payload:
             raise ValueError(f"SysEx frame starting at byte {start} has an empty payload")
         frames.append(payload)

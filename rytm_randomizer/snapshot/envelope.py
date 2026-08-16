@@ -33,6 +33,7 @@ manufacturer-id constant is annotated ``Final``.
 
 from __future__ import annotations
 
+from enum import Enum
 from typing import Final
 
 #: Elektron's IEEE-registered 3-byte SysEx manufacturer ID. Documented in
@@ -42,7 +43,22 @@ from typing import Final
 ELEKTRON_MFR_ID: Final[bytes] = bytes([0x00, 0x20, 0x3C])
 
 
-def pack_elektron_7bit(unpacked: bytes) -> bytes:
+class Elektron7BitMaskOrder(str, Enum):
+    """Bit order used by an Elektron 7-bit packing mask."""
+
+    LSB_FIRST = "lsb_first"
+    MSB_FIRST = "msb_first"
+
+
+def _mask_bit_index(index: int, mask_order: Elektron7BitMaskOrder) -> int:
+    return index if mask_order is Elektron7BitMaskOrder.LSB_FIRST else 6 - index
+
+
+def pack_elektron_7bit(
+    unpacked: bytes,
+    *,
+    mask_order: Elektron7BitMaskOrder = Elektron7BitMaskOrder.LSB_FIRST,
+) -> bytes:
     """Pack arbitrary bytes into Elektron's 7-bit SysEx payload encoding.
 
     Each group of up to seven input bytes becomes one high-bit header followed
@@ -60,13 +76,17 @@ def pack_elektron_7bit(unpacked: bytes) -> bytes:
         group = unpacked[start : start + 7]
         header = 0
         for bit_index, byte in enumerate(group):
-            header |= ((byte >> 7) & 0x01) << bit_index
+            header |= ((byte >> 7) & 0x01) << _mask_bit_index(bit_index, mask_order)
         out.append(header)
         out.extend(byte & 0x7F for byte in group)
     return bytes(out)
 
 
-def unpack_elektron_7bit(packed: bytes) -> bytes:
+def unpack_elektron_7bit(
+    packed: bytes,
+    *,
+    mask_order: Elektron7BitMaskOrder = Elektron7BitMaskOrder.LSB_FIRST,
+) -> bytes:
     """Unpack an Elektron 7-bit-stuffed payload into a flat byte string.
 
     Elektron's SysEx payload uses the standard MIDI "MSB header" 7-bit
@@ -119,7 +139,7 @@ def unpack_elektron_7bit(packed: bytes) -> bytes:
                 "the SysEx envelope framing before unpacking."
             )
         for bit_index, data_index in enumerate(range(cursor, group_end)):
-            high_bit = (header >> bit_index) & 0x01
+            high_bit = (header >> _mask_bit_index(bit_index, mask_order)) & 0x01
             out.append((high_bit << 7) | packed[data_index])
         cursor = group_end
     return bytes(out)

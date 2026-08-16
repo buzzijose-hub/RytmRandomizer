@@ -6,9 +6,10 @@ import json
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Final, Literal
+from typing import Final, Literal, cast
 
 from ...cli_registry import CliCommand, register
+from .cli_options import parse_bounded_integer, pop_required_cli_value
 from .rio145_codec import (
     Rio145OfflineError,
     build_a4_kit,
@@ -21,36 +22,21 @@ from .rio145_codec import (
     validate_rytm_return,
 )
 
-Action = Literal[
-    "inspect",
-    "diff",
-    "roundtrip",
-    "build_a4",
-    "build_rytm",
-    "validate_a4_return",
-    "validate_rytm_return",
-    "export_oxi",
-]
+Action = Literal["inspect", "diff", "roundtrip", "build", "validate_return", "export_oxi"]
+Rio145Device = Literal["analog_four_mk2", "analog_rytm_mk2"]
 
 _USAGE: Final[Mapping[Action, str]] = {
     "inspect": "Usage: rio145-inspect-sysex --input <file.syx>",
     "diff": "Usage: rio145-diff-sysex --left <file.syx> --right <file.syx>",
     "roundtrip": "Usage: rio145-validate-roundtrip --input <file.syx>",
-    "build_a4": (
-        "Usage: rio145-build-a4-kit --reference <file.syx> --recipe <recipe.json> "
-        "--destination-slot <0..127> --output <file.syx> [--overwrite]"
+    "build": (
+        "Usage: rio145-build-kit --device <analog_four_mk2|analog_rytm_mk2> "
+        "--reference <file.syx> --recipe <recipe.json> --destination-slot <0..127> "
+        "--output <file.syx> [--overwrite]"
     ),
-    "build_rytm": (
-        "Usage: rio145-build-rytm-kit --reference <file.syx> --recipe <recipe.json> "
-        "--destination-slot <0..127> --output <file.syx> [--overwrite]"
-    ),
-    "validate_a4_return": (
-        "Usage: rio145-validate-a4-return --reference <file.syx> "
-        "--recipe <recipe.json> --returned <file.syx>"
-    ),
-    "validate_rytm_return": (
-        "Usage: rio145-validate-rytm-return --reference <file.syx> "
-        "--recipe <recipe.json> --returned <file.syx>"
+    "validate_return": (
+        "Usage: rio145-validate-return --device <analog_four_mk2|analog_rytm_mk2> "
+        "--reference <file.syx> --recipe <recipe.json> --returned <file.syx>"
     ),
     "export_oxi": (
         "Usage: rio145-export-oxi-manifest --manifest <manifest.json> "
@@ -62,14 +48,13 @@ _REQUIRED_OPTIONS: Final[Mapping[Action, tuple[str, ...]]] = {
     "inspect": ("--input",),
     "diff": ("--left", "--right"),
     "roundtrip": ("--input",),
-    "build_a4": ("--reference", "--recipe", "--destination-slot", "--output"),
-    "build_rytm": ("--reference", "--recipe", "--destination-slot", "--output"),
-    "validate_a4_return": ("--reference", "--recipe", "--returned"),
-    "validate_rytm_return": ("--reference", "--recipe", "--returned"),
+    "build": ("--device", "--reference", "--recipe", "--destination-slot", "--output"),
+    "validate_return": ("--device", "--reference", "--recipe", "--returned"),
     "export_oxi": ("--manifest", "--events", "--output"),
 }
 
-_OVERWRITE_ACTIONS: Final[frozenset[Action]] = frozenset({"build_a4", "build_rytm", "export_oxi"})
+_OVERWRITE_ACTIONS: Final[frozenset[Action]] = frozenset({"build", "export_oxi"})
+_DEVICES: Final[frozenset[str]] = frozenset({"analog_four_mk2", "analog_rytm_mk2"})
 
 
 def _parse_action(action: Action, args: Sequence[str]) -> dict[str, object]:
@@ -94,17 +79,20 @@ def _parse_action(action: Action, args: Sequence[str]) -> dict[str, object]:
         key = option[2:].replace("-", "_")
         if key in options:
             raise ValueError(f"{option} may be specified only once")
-        if not remaining or remaining[0].startswith("--"):
+        if remaining and remaining[0].startswith("--"):
             raise ValueError(f"{option} requires a value")
-        raw_value = remaining.pop(0)
+        raw_value = pop_required_cli_value(remaining, option=option)
         if option == "--destination-slot":
-            try:
-                slot = int(raw_value)
-            except ValueError as exc:
-                raise ValueError("--destination-slot must be a decimal integer") from exc
-            if str(slot) != raw_value or not 0 <= slot <= 127:
-                raise ValueError("--destination-slot must be in the range 0..127")
-            options[key] = slot
+            options[key] = parse_bounded_integer(
+                raw_value,
+                option=option,
+                lower=0,
+                upper=127,
+            )
+        elif option == "--device":
+            if raw_value not in _DEVICES:
+                raise ValueError("--device must be analog_four_mk2 or analog_rytm_mk2")
+            options[key] = raw_value
         else:
             options[key] = Path(raw_value)
 
@@ -136,6 +124,13 @@ def _rio145_slot(options: Mapping[str, object]) -> int:
     return value
 
 
+def _rio145_device(options: Mapping[str, object]) -> Rio145Device:
+    value = options.get("device")
+    if value == "analog_four_mk2" or value == "analog_rytm_mk2":
+        return cast(Rio145Device, value)
+    raise Rio145OfflineError("internal device option is missing or invalid")
+
+
 def _overwrite(options: Mapping[str, object]) -> bool:
     value = options.get("overwrite", False)
     if not isinstance(value, bool):
@@ -150,30 +145,22 @@ def _execute(action: Action, options: Mapping[str, object]) -> dict[str, object]
         return diff_sysex(_path(options, "left"), _path(options, "right"))
     if action == "roundtrip":
         return validate_roundtrip(_path(options, "input"))
-    if action == "build_a4":
-        return build_a4_kit(
+    if action == "build":
+        builder = build_a4_kit if _rio145_device(options) == "analog_four_mk2" else build_rytm_kit
+        return builder(
             reference_path=_path(options, "reference"),
             recipe_path=_path(options, "recipe"),
             destination_slot=_rio145_slot(options),
             output_path=_path(options, "output"),
             overwrite=_overwrite(options),
         )
-    if action == "build_rytm":
-        return build_rytm_kit(
-            reference_path=_path(options, "reference"),
-            recipe_path=_path(options, "recipe"),
-            destination_slot=_rio145_slot(options),
-            output_path=_path(options, "output"),
-            overwrite=_overwrite(options),
+    if action == "validate_return":
+        validator = (
+            validate_a4_return
+            if _rio145_device(options) == "analog_four_mk2"
+            else validate_rytm_return
         )
-    if action == "validate_a4_return":
-        return validate_a4_return(
-            reference_path=_path(options, "reference"),
-            recipe_path=_path(options, "recipe"),
-            returned_path=_path(options, "returned"),
-        )
-    if action == "validate_rytm_return":
-        return validate_rytm_return(
+        return validator(
             reference_path=_path(options, "reference"),
             recipe_path=_path(options, "recipe"),
             returned_path=_path(options, "returned"),
@@ -234,21 +221,13 @@ RIO145_DIFF_SYSEX_CLI_COMMAND: Final[CliCommand] = _command(
 RIO145_VALIDATE_ROUNDTRIP_CLI_COMMAND: Final[CliCommand] = _command(
     "rio145-validate-roundtrip", "roundtrip", "Validate byte-identical SysEx roundtrips."
 )
-RIO145_BUILD_A4_KIT_CLI_COMMAND: Final[CliCommand] = _command(
-    "rio145-build-a4-kit", "build_a4", "Compile one Analog Four KIT file offline."
+RIO145_BUILD_KIT_CLI_COMMAND: Final[CliCommand] = _command(
+    "rio145-build-kit", "build", "Compile one device-selected Elektron KIT file offline."
 )
-RIO145_BUILD_RYTM_KIT_CLI_COMMAND: Final[CliCommand] = _command(
-    "rio145-build-rytm-kit", "build_rytm", "Compile one Analog Rytm KIT file offline."
-)
-RIO145_VALIDATE_A4_RETURN_CLI_COMMAND: Final[CliCommand] = _command(
-    "rio145-validate-a4-return",
-    "validate_a4_return",
-    "Validate an Analog Four target return offline.",
-)
-RIO145_VALIDATE_RYTM_RETURN_CLI_COMMAND: Final[CliCommand] = _command(
-    "rio145-validate-rytm-return",
-    "validate_rytm_return",
-    "Validate an Analog Rytm target return offline.",
+RIO145_VALIDATE_RETURN_CLI_COMMAND: Final[CliCommand] = _command(
+    "rio145-validate-return",
+    "validate_return",
+    "Validate one device-selected target return offline.",
 )
 RIO145_EXPORT_OXI_MANIFEST_CLI_COMMAND: Final[CliCommand] = _command(
     "rio145-export-oxi-manifest", "export_oxi", "Validate and export OXI evidence offline."
@@ -256,13 +235,11 @@ RIO145_EXPORT_OXI_MANIFEST_CLI_COMMAND: Final[CliCommand] = _command(
 
 
 __all__ = [
-    "RIO145_BUILD_A4_KIT_CLI_COMMAND",
-    "RIO145_BUILD_RYTM_KIT_CLI_COMMAND",
+    "RIO145_BUILD_KIT_CLI_COMMAND",
     "RIO145_DIFF_SYSEX_CLI_COMMAND",
     "RIO145_EXPORT_OXI_MANIFEST_CLI_COMMAND",
     "RIO145_INSPECT_SYSEX_CLI_COMMAND",
-    "RIO145_VALIDATE_A4_RETURN_CLI_COMMAND",
+    "RIO145_VALIDATE_RETURN_CLI_COMMAND",
     "RIO145_VALIDATE_ROUNDTRIP_CLI_COMMAND",
-    "RIO145_VALIDATE_RYTM_RETURN_CLI_COMMAND",
     "handle_rio145_command",
 ]

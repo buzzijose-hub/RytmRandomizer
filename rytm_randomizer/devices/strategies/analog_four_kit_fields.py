@@ -13,10 +13,25 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import Final
 
+from ...data.analog_four_kit_fields import (
+    A4_BIPOLAR_FIELDS,
+    A4_MOD_DEPTH_FIELDS,
+    A4_SOUND_NAME_LENGTH,
+    A4_SOUND_NAME_OFFSET,
+    A4_TRACK_OFFSETS,
+    A4_TWO_BYTE_FIELDS,
+)
 from ...data.analog_four_saved_kit_layout import (
+    A4_KIT_NAME_LENGTH,
+    A4_KIT_NAME_OFFSET,
     A4_KIT_OBJECT_TRACK_SOUND_SIZE,
     A4_KIT_OBJECT_TRACKS_OFFSET,
     A4_SAVED_KIT_OBJECT_SIZE,
+)
+from .elektron_kit_common import (
+    ElektronKitFieldError,
+    read_fixed_width_ascii,
+    write_fixed_width_ascii,
 )
 
 A4_KIT_TRACKS_START = A4_KIT_OBJECT_TRACKS_OFFSET
@@ -25,19 +40,19 @@ A4_SOUND_SIZE = A4_KIT_OBJECT_TRACK_SOUND_SIZE
 
 def _check_u8(value: int, label: str = "value") -> int:
     if not 0 <= value <= 255:
-        raise ValueError(f"{label} must be in 0..255, got {value}")
+        raise ElektronKitFieldError(f"{label} must be in 0..255, got {value}")
     return value
 
 
 def _check_a4_u7(value: int, label: str = "value") -> int:
     if not 0 <= value <= 127:
-        raise ValueError(f"{label} must be in 0..127, got {value}")
+        raise ElektronKitFieldError(f"{label} must be in 0..127, got {value}")
     return value
 
 
 def encode_bipolar(value: int, *, minimum: int = -64, maximum: int = 63) -> int:
     if not minimum <= value <= maximum:
-        raise ValueError(f"bipolar value must be in {minimum}..{maximum}, got {value}")
+        raise ElektronKitFieldError(f"bipolar value must be in {minimum}..{maximum}, got {value}")
     return value + 64
 
 
@@ -81,13 +96,15 @@ def decode_a4_pitch_components(raw: int) -> tuple[int, int, int, int]:
     present in the source dump.
     """
     if not 0 <= raw <= 0x7FFF:
-        raise ValueError("raw oscillator pitch must be in 0x0000..0x7FFF")
+        raise ElektronKitFieldError("raw oscillator pitch must be in 0x0000..0x7FFF")
     delta = raw - A4_PITCH_ZERO
     tune = math.floor((delta + 128) / A4_PITCH_UNITS_PER_SEMITONE)
     residual = delta - tune * A4_PITCH_UNITS_PER_SEMITONE
     # The floor-based decomposition above proves this range; retain the guard
     # as a backstop if the pitch constants ever change.
-    if not A4_FINE_NATIVE_MIN <= residual <= A4_FINE_NATIVE_MAX:  # pragma: no cover
+    if (
+        not A4_FINE_NATIVE_MIN <= residual <= A4_FINE_NATIVE_MAX
+    ):  # pragma: no cover - proven by floor decomposition; guards future constant changes
         raise AssertionError(f"pitch decomposition produced invalid residual {residual}")
     fine = residual // 2
     hidden_half_step = residual - fine * 2
@@ -102,65 +119,51 @@ def encode_a4_pitch_raw(tune_semitones: int, fine_value: int, *, hidden_half_ste
     byte-for-byte.
     """
     if not -64 <= tune_semitones <= 63:
-        raise ValueError(f"TUN must be in -64..63, got {tune_semitones}")
+        raise ElektronKitFieldError(f"TUN must be in -64..63, got {tune_semitones}")
     if not A4_FINE_DISPLAY_MIN <= fine_value <= A4_FINE_DISPLAY_MAX:
-        raise ValueError(
+        raise ElektronKitFieldError(
             f"FIN must be in {A4_FINE_DISPLAY_MIN}..{A4_FINE_DISPLAY_MAX}, got {fine_value}"
         )
     if hidden_half_step not in (0, 1):
-        raise ValueError("hidden_half_step must be 0 or 1")
+        raise ElektronKitFieldError("hidden_half_step must be 0 or 1")
     residual = fine_value * 2 + hidden_half_step
     raw = A4_PITCH_ZERO + tune_semitones * A4_PITCH_UNITS_PER_SEMITONE + residual
     if not 0 <= raw <= 0x7FFF:
-        raise ValueError(f"TUN {tune_semitones:+d} / FIN {fine_value:+d} is outside native range")
+        raise ElektronKitFieldError(
+            f"TUN {tune_semitones:+d} / FIN {fine_value:+d} is outside native range"
+        )
     return raw
 
 
 def decode_a4_pitch_semitones(raw: int) -> float:
     if not 0 <= raw <= 0x7FFF:
-        raise ValueError("raw oscillator pitch must be in 0x0000..0x7FFF")
+        raise ElektronKitFieldError("raw oscillator pitch must be in 0x0000..0x7FFF")
     return (raw - A4_PITCH_ZERO) / A4_PITCH_UNITS_PER_SEMITONE
 
 
 def encode_a4_mod_depth(value: float) -> int:
     """Encode ENV/LFO destination depth in the confirmed native Q8.7 format."""
     if not -128.0 <= value <= 127.9921875:
-        raise ValueError("modulation depth must be in -128.0..127.9921875")
+        raise ElektronKitFieldError("modulation depth must be in -128.0..127.9921875")
     scaled = value * A4_MOD_DEPTH_UNITS_PER_DISPLAY
     rounded = int(round(scaled))
     if not math.isclose(scaled, rounded, rel_tol=0.0, abs_tol=1e-9):
-        raise ValueError("modulation depth must be representable in 1/128 increments")
+        raise ElektronKitFieldError("modulation depth must be representable in 1/128 increments")
     raw = A4_MOD_DEPTH_ZERO + rounded
     # The accepted display range and exact 1/128 quantization prove this range.
-    if not 0 <= raw <= 0x7FFF:  # pragma: no cover
-        raise ValueError(f"encoded modulation depth is outside native range: 0x{raw:04X}")
+    if (
+        not 0 <= raw <= 0x7FFF
+    ):  # pragma: no cover - proven by validated display range and exact quantization
+        raise ElektronKitFieldError(
+            f"encoded modulation depth is outside native range: 0x{raw:04X}"
+        )
     return raw
 
 
 def decode_a4_mod_depth(raw: int) -> float:
     if not 0 <= raw <= 0x7FFF:
-        raise ValueError("raw modulation depth must be in 0x0000..0x7FFF")
+        raise ElektronKitFieldError("raw modulation depth must be in 0x0000..0x7FFF")
     return (raw - A4_MOD_DEPTH_ZERO) / A4_MOD_DEPTH_UNITS_PER_DISPLAY
-
-
-def wire_address_to_track_raw_offset(address: int) -> int:
-    """Translate an older standalone A4 Sound wire address into kit-track raw offset.
-
-    Addresses that point to a 7-bit packing mask have no standalone raw byte and
-    raise ValueError. The resulting unpacked index is the offset inside the 350-byte
-    track block; this was empirically validated against the user-supplied target-unit kit.
-    """
-    if address < 10:
-        raise ValueError("wire address must point into packed payload at byte 10 or later")
-    relative = address - 10
-    remainder = relative % 8
-    if remainder == 0:
-        raise ValueError(f"wire address {address} is a 7-bit packing mask, not a raw field")
-    unpacked_index = (relative // 8) * 7 + (remainder - 1)
-    raw_offset = unpacked_index
-    if not 0 <= raw_offset < A4_SOUND_SIZE:
-        raise ValueError(f"translated raw offset {raw_offset} is outside a 350-byte A4 Sound")
-    return raw_offset
 
 
 class A4SyncMode(IntEnum):
@@ -355,170 +358,23 @@ class A4Destination(IntEnum):
     NOISE_COLOR = 0x64
 
 
-# Public table wire addresses, translated at import time into target-unit track offsets.
-_WIRE_ADDRESSES: Final[dict[str, int]] = {
-    "osc1_tune": 43,
-    "osc1_fine": 44,
-    "osc2_tune": 45,
-    "osc2_fine": 46,
-    "osc1_detune": 47,
-    "osc2_detune": 49,
-    "osc1_tracking": 52,
-    "osc2_tracking": 54,
-    "osc1_level": 56,
-    "osc2_level": 59,
-    "osc1_waveform": 61,
-    "osc2_waveform": 63,
-    "osc1_sub": 65,
-    "osc2_sub": 68,
-    "osc1_pw": 70,
-    "osc2_pw": 72,
-    "osc1_pwm_speed": 75,
-    "osc2_pwm_speed": 77,
-    "osc1_pwm_depth": 79,
-    "osc2_pwm_depth": 81,
-    "noise_sample_hold": 91,
-    "noise_fade": 93,
-    "noise_level": 95,
-    "osc1_am": 97,
-    "osc2_am": 100,
-    "sync_mode": 102,
-    "sync_amount": 104,
-    "bend_depth": 107,
-    "slide_time": 109,
-    "osc_retrigger": 111,
-    "vibrato_fade": 113,
-    "vibrato_speed": 116,
-    "vibrato_depth": 118,
-    "filter1_frequency": 120,
-    "filter1_resonance": 123,
-    "filter1_overdrive": 125,
-    "filter1_tracking": 127,
-    "filter1_env_depth": 129,
-    "filter2_frequency": 132,
-    "filter2_resonance": 134,
-    "filter2_type": 136,
-    "filter2_tracking": 139,
-    "filter2_env_depth": 141,
-    "amp_chorus_send": 145,
-    "amp_delay_send": 148,
-    "amp_reverb_send": 150,
-    "amp_pan": 152,
-    "amp_volume": 155,
-    "envf_attack": 159,
-    "env2_attack": 161,
-    "amp_attack": 164,
-    "envf_decay": 166,
-    "env2_decay": 168,
-    "amp_decay": 171,
-    "envf_sustain": 173,
-    "env2_sustain": 175,
-    "amp_sustain": 177,
-    "envf_release": 180,
-    "env2_release": 182,
-    "amp_release": 184,
-    "envf_shape": 187,
-    "env2_shape": 189,
-    "amp_shape": 191,
-    "envf_length": 193,
-    "env2_length": 196,
-    "envf_destination_a": 198,
-    "envf_destination_b": 200,
-    "env2_destination_a": 203,
-    "env2_destination_b": 205,
-    "envf_depth_a": 207,
-    "envf_depth_a_fraction": 208,
-    "envf_depth_b": 209,
-    "envf_depth_b_fraction": 211,
-    "env2_depth_a": 212,
-    "env2_depth_a_fraction": 213,
-    "env2_depth_b": 214,
-    "env2_depth_b_fraction": 215,
-    "lfo1_speed": 216,
-    "lfo2_speed": 219,
-    "lfo1_multiplier": 221,
-    "lfo2_multiplier": 223,
-    "lfo1_fade": 225,
-    "lfo2_fade": 228,
-    "lfo1_phase": 230,
-    "lfo2_phase": 232,
-    "lfo1_mode": 235,
-    "lfo2_mode": 237,
-    "lfo1_waveform": 239,
-    "lfo2_waveform": 241,
-    "lfo1_destination_a": 244,
-    "lfo1_destination_b": 246,
-    "lfo2_destination_a": 248,
-    "lfo2_destination_b": 251,
-    "lfo1_depth_a": 253,
-    "lfo1_depth_a_fraction": 254,
-    "lfo1_depth_b": 255,
-    "lfo1_depth_b_fraction": 256,
-    "lfo2_depth_a": 257,
-    "lfo2_depth_a_fraction": 259,
-    "lfo2_depth_b": 260,
-    "lfo2_depth_b_fraction": 261,
-    "noise_color": 271,
-    "oscillator_drift": 280,
-    "portamento": 281,
-    "legato_mode": 283,
-    "filter1_resonance_boost": 285,
-}
-
-A4_TRACK_OFFSETS = {
-    name: wire_address_to_track_raw_offset(address) for name, address in _WIRE_ADDRESSES.items()
-}
-
-# Two-byte 8.8 fixed-point cutoff values begin at these fields.
-A4_TWO_BYTE_FIELDS: Final[set[str]] = {"filter1_frequency", "filter2_frequency"}
-A4_BIPOLAR_FIELDS: Final[set[str]] = {
-    "osc1_detune",
-    "osc2_detune",
-    "osc1_pw",
-    "osc2_pw",
-    "noise_fade",
-    "noise_color",
-    "bend_depth",
-    "vibrato_fade",
-    "filter1_overdrive",
-    "filter1_tracking",
-    "filter1_env_depth",
-    "filter2_tracking",
-    "filter2_env_depth",
-    "amp_pan",
-    "lfo1_speed",
-    "lfo2_speed",
-    "lfo1_fade",
-    "lfo2_fade",
-}
-
-A4_MOD_DEPTH_FIELDS: Final[dict[str, str]] = {
-    "envf_depth_a": "envf_depth_a_fraction",
-    "envf_depth_b": "envf_depth_b_fraction",
-    "env2_depth_a": "env2_depth_a_fraction",
-    "env2_depth_b": "env2_depth_b_fraction",
-    "lfo1_depth_a": "lfo1_depth_a_fraction",
-    "lfo1_depth_b": "lfo1_depth_b_fraction",
-    "lfo2_depth_a": "lfo2_depth_a_fraction",
-    "lfo2_depth_b": "lfo2_depth_b_fraction",
-}
-
-
 @dataclass(slots=True)
 class A4Sound:
     _data: bytearray
 
     SIGNATURE = bytes.fromhex("be ef ba ba")
-    NAME_OFFSET = 0x0C
-    NAME_LENGTH = 16
+    NAME_OFFSET = A4_SOUND_NAME_OFFSET
+    NAME_LENGTH = A4_SOUND_NAME_LENGTH
 
     def __post_init__(self) -> None:
         if len(self._data) != A4_SOUND_SIZE:
-            raise ValueError(f"A4 sound block must be {A4_SOUND_SIZE} bytes")
+            raise ElektronKitFieldError(f"A4 sound block must be {A4_SOUND_SIZE} bytes")
         if bytes(self._data[:4]) != self.SIGNATURE:
-            raise ValueError(f"Unexpected A4 track signature {self._data[:4].hex(' ')}")
+            raise ElektronKitFieldError(f"Unexpected A4 track signature {self._data[:4].hex(' ')}")
         if bytes(self._data[4:8]) != bytes.fromhex("00 00 00 06"):
-            raise ValueError(f"Unexpected A4 track format marker {self._data[4:8].hex(' ')}")
+            raise ElektronKitFieldError(
+                f"Unexpected A4 track format marker {self._data[4:8].hex(' ')}"
+            )
 
     @classmethod
     def from_bytes(cls, data: bytes | bytearray | memoryview) -> A4Sound:
@@ -529,21 +385,24 @@ class A4Sound:
 
     @property
     def name(self) -> str:
-        raw = bytes(self._data[self.NAME_OFFSET : self.NAME_OFFSET + self.NAME_LENGTH])
-        return raw.split(b"\x00", 1)[0].decode("ascii", errors="replace").rstrip()
+        return read_fixed_width_ascii(self._data, offset=self.NAME_OFFSET, length=self.NAME_LENGTH)
 
     @name.setter
     def name(self, value: str) -> None:
-        encoded = value.encode("ascii", errors="strict")[: self.NAME_LENGTH]
-        self._data[self.NAME_OFFSET : self.NAME_OFFSET + self.NAME_LENGTH] = encoded.ljust(
-            self.NAME_LENGTH, b"\x00"
+        write_fixed_width_ascii(
+            self._data,
+            offset=self.NAME_OFFSET,
+            storage_length=self.NAME_LENGTH,
+            visible_length=self.NAME_LENGTH,
+            value=value,
+            nul_terminated=False,
         )
 
     def offset(self, field: str) -> int:
         try:
             return A4_TRACK_OFFSETS[field]
         except KeyError as exc:
-            raise KeyError(f"Unknown mapped A4 field {field!r}") from exc
+            raise ElektronKitFieldError(f"Unknown mapped A4 field {field!r}") from exc
 
     def get_raw_u8(self, field: str) -> int:
         return self._data[self.offset(field)]
@@ -554,7 +413,9 @@ class A4Sound:
     def get_u7(self, field: str) -> int:
         value = self.get_raw_u8(field)
         if value > 127:
-            raise ValueError(f"Mapped field {field!r} currently contains 8-bit raw value {value}")
+            raise ElektronKitFieldError(
+                f"Mapped field {field!r} currently contains 8-bit raw value {value}"
+            )
         return value
 
     def set_u7(self, field: str, value: int) -> None:
@@ -562,18 +423,18 @@ class A4Sound:
 
     def get_bipolar(self, field: str) -> int:
         if field not in A4_BIPOLAR_FIELDS:
-            raise ValueError(f"{field!r} is not registered as a simple bipolar field")
+            raise ElektronKitFieldError(f"{field!r} is not registered as a simple bipolar field")
         return decode_bipolar(self.get_u7(field))
 
     def set_bipolar(self, field: str, value: int) -> None:
         if field not in A4_BIPOLAR_FIELDS:
-            raise ValueError(f"{field!r} is not registered as a simple bipolar field")
+            raise ElektronKitFieldError(f"{field!r} is not registered as a simple bipolar field")
         self.set_u7(field, encode_bipolar(value))
 
     @staticmethod
     def _validate_oscillator(oscillator: int) -> None:
         if oscillator not in (1, 2):
-            raise ValueError("oscillator must be 1 or 2")
+            raise ElektronKitFieldError("oscillator must be 1 or 2")
 
     def get_oscillator_pitch_raw(self, oscillator: int) -> int:
         self._validate_oscillator(oscillator)
@@ -583,7 +444,7 @@ class A4Sound:
     def set_oscillator_pitch_raw(self, oscillator: int, raw: int) -> None:
         self._validate_oscillator(oscillator)
         if not 0 <= raw <= 0x7FFF:
-            raise ValueError("raw oscillator pitch must be in 0x0000..0x7FFF")
+            raise ElektronKitFieldError("raw oscillator pitch must be in 0x0000..0x7FFF")
         offset = self.offset(f"osc{oscillator}_tune")
         self._data[offset] = (raw >> 8) & 0xFF
         self._data[offset + 1] = raw & 0xFF
@@ -641,18 +502,18 @@ class A4Sound:
 
     def get_fixed_8_8(self, field: str) -> float:
         if field not in A4_TWO_BYTE_FIELDS:
-            raise ValueError(f"{field!r} is not a mapped 8.8 fixed-point field")
+            raise ElektronKitFieldError(f"{field!r} is not a mapped 8.8 fixed-point field")
         offset = self.offset(field)
         return self._data[offset] + self._data[offset + 1] / 256.0
 
     def set_fixed_8_8(self, field: str, value: float) -> None:
         if field not in A4_TWO_BYTE_FIELDS:
-            raise ValueError(f"{field!r} is not a mapped 8.8 fixed-point field")
+            raise ElektronKitFieldError(f"{field!r} is not a mapped 8.8 fixed-point field")
         if not 0.0 <= value <= 127.99609375:
-            raise ValueError("8.8 display value must be between 0.0 and 127.99609375")
+            raise ElektronKitFieldError("8.8 display value must be between 0.0 and 127.99609375")
         scaled = int(round(value * 256.0))
         # The validated maximum is exactly 0x7FFF after 8.8 conversion.
-        if scaled > 0x7FFF:  # pragma: no cover
+        if scaled > 0x7FFF:  # pragma: no cover - roundoff backstop at the validated 8.8 maximum
             scaled = 0x7FFF
         offset = self.offset(field)
         self._data[offset] = (scaled >> 8) & 0xFF
@@ -665,7 +526,9 @@ class A4Sound:
         try:
             fraction_field = A4_MOD_DEPTH_FIELDS[field]
         except KeyError as exc:
-            raise ValueError(f"{field!r} is not a mapped modulation-depth field") from exc
+            raise ElektronKitFieldError(
+                f"{field!r} is not a mapped modulation-depth field"
+            ) from exc
         return (self.get_raw_u8(field) << 8) | self.get_raw_u8(fraction_field)
 
     def get_mod_depth(self, field: str) -> float:
@@ -675,7 +538,9 @@ class A4Sound:
         try:
             fraction_field = A4_MOD_DEPTH_FIELDS[field]
         except KeyError as exc:
-            raise ValueError(f"{field!r} is not a mapped modulation-depth field") from exc
+            raise ElektronKitFieldError(
+                f"{field!r} is not a mapped modulation-depth field"
+            ) from exc
         raw = encode_a4_mod_depth(value)
         self.set_raw_u8(field, (raw >> 8) & 0xFF)
         self.set_raw_u8(fraction_field, raw & 0xFF)
@@ -689,13 +554,13 @@ class A4Sound:
 class A4Kit:
     _data: bytearray
 
-    NAME_OFFSET = 0x04
-    NAME_LENGTH = 16
+    NAME_OFFSET = A4_KIT_NAME_OFFSET
+    NAME_LENGTH = A4_KIT_NAME_LENGTH
     TRACK_LEVELS_OFFSET = 0x14
 
     def __post_init__(self) -> None:
         if len(self._data) != A4_SAVED_KIT_OBJECT_SIZE:
-            raise ValueError(
+            raise ElektronKitFieldError(
                 "A4 kit object must be " f"{A4_SAVED_KIT_OBJECT_SIZE} bytes, got {len(self._data)}"
             )
 
@@ -708,38 +573,41 @@ class A4Kit:
 
     @property
     def name(self) -> str:
-        raw = bytes(self._data[self.NAME_OFFSET : self.NAME_OFFSET + self.NAME_LENGTH])
-        return raw.split(b"\x00", 1)[0].decode("ascii", errors="replace").rstrip()
+        return read_fixed_width_ascii(self._data, offset=self.NAME_OFFSET, length=self.NAME_LENGTH)
 
     @name.setter
     def name(self, value: str) -> None:
-        encoded = value.encode("ascii", errors="strict")[: self.NAME_LENGTH]
-        self._data[self.NAME_OFFSET : self.NAME_OFFSET + self.NAME_LENGTH] = encoded.ljust(
-            self.NAME_LENGTH, b"\x00"
+        write_fixed_width_ascii(
+            self._data,
+            offset=self.NAME_OFFSET,
+            storage_length=self.NAME_LENGTH,
+            visible_length=self.NAME_LENGTH,
+            value=value,
+            nul_terminated=False,
         )
 
     def track_level(self, track_index: int) -> int:
         if not 0 <= track_index < 6:
-            raise ValueError("track level index must be 0..5 (T1-T4, FX, CV/kit slot)")
+            raise ElektronKitFieldError("track level index must be 0..5 (T1-T4, FX, CV/kit slot)")
         return self._data[self.TRACK_LEVELS_OFFSET + track_index * 2]
 
     def set_track_level(self, track_index: int, value: int) -> None:
         _check_a4_u7(value, "track level")
         if not 0 <= track_index < 6:
-            raise ValueError("track level index must be 0..5")
+            raise ElektronKitFieldError("track level index must be 0..5")
         offset = self.TRACK_LEVELS_OFFSET + track_index * 2
         self._data[offset] = value
         self._data[offset + 1] = 0
 
     def sound(self, track_index: int) -> A4Sound:
         if not 0 <= track_index < 4:
-            raise ValueError("synth track index must be 0..3")
+            raise ElektronKitFieldError("synth track index must be 0..3")
         start = A4_KIT_TRACKS_START + track_index * A4_SOUND_SIZE
         return A4Sound.from_bytes(self._data[start : start + A4_SOUND_SIZE])
 
     def replace_sound(self, track_index: int, sound: A4Sound) -> None:
         if not 0 <= track_index < 4:
-            raise ValueError("synth track index must be 0..3")
+            raise ElektronKitFieldError("synth track index must be 0..3")
         start = A4_KIT_TRACKS_START + track_index * A4_SOUND_SIZE
         self._data[start : start + A4_SOUND_SIZE] = sound.to_bytes()
 

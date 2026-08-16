@@ -6,9 +6,13 @@ from pathlib import Path
 
 import pytest
 
+from rytm_randomizer.data.analog_four_kit_fields import A4_TRACK_OFFSETS
+from rytm_randomizer.data.analog_four_saved_kit_layout import (
+    A4_KIT_OBJECT_TRACK_SOUND_SIZE,
+    wire_address_to_track_raw_offset,
+)
+from rytm_randomizer.data.analog_rytm_kit_layout import RYTM_SOUND_MACHINE_TYPE_OFFSET
 from rytm_randomizer.devices.strategies.analog_four_kit_fields import (
-    A4_SOUND_SIZE,
-    A4_TRACK_OFFSETS,
     A4Destination,
     A4Kit,
     A4Sound,
@@ -20,7 +24,6 @@ from rytm_randomizer.devices.strategies.analog_four_kit_fields import (
     encode_a4_mod_depth,
     encode_a4_pitch_raw,
     encode_bipolar,
-    wire_address_to_track_raw_offset,
 )
 from rytm_randomizer.devices.strategies.analog_four_saved_kit_codec import (
     decode_analog_four_saved_kit_payload,
@@ -38,12 +41,19 @@ from rytm_randomizer.devices.strategies.analog_rytm_saved_kit_codec import (
     decode_analog_rytm_saved_kit_frame,
     encode_analog_rytm_saved_kit_frame,
 )
-from rytm_randomizer.snapshot import ElektronNativeObjectMessage, extract_sysex_payloads
+from rytm_randomizer.devices.strategies.elektron_kit_common import (
+    write_fixed_width_ascii,
+)
+from rytm_randomizer.observability import ElektronKitFieldError
+from rytm_randomizer.snapshot import ElektronNativeObjectMessage
+from rytm_randomizer.snapshot import elektron_native_object as native_object
+from rytm_randomizer.snapshot import extract_sysex_payloads
 from rytm_randomizer.snapshot.elektron_native_object import (
     ElektronNativeObjectError,
     pack_elektron_native_object,
     unpack_elektron_native_object,
 )
+from rytm_randomizer.snapshot.elektron_packed_payload import ElektronPackedPayloadError
 
 pytestmark = pytest.mark.fast
 
@@ -100,6 +110,33 @@ def test_rytm_fixture_reencodes_byte_identically(fixture_name: str) -> None:
     decoded = decode_analog_rytm_saved_kit_frame(frame)
 
     assert encode_analog_rytm_saved_kit_frame(decoded.header, decoded.unpacked) == frame
+
+
+@pytest.mark.parametrize(
+    "fixture_name",
+    [
+        "A4_Test1_Init_Kit.syx",
+        "A4_RIO145_CORE_RETURN_Kit.syx",
+        "RYTM_Test1_Init_Kit.syx",
+        "RYTM_RIO145_AR_CORE_RETURN_Kit.syx",
+    ],
+)
+def test_device_codec_plaintext_matches_native_object_fixture(
+    fixture_name: str,
+) -> None:
+    frame = (_FIXTURE_DIR / fixture_name).read_bytes()
+    native_payload = ElektronNativeObjectMessage.from_bytes(frame).payload
+
+    if fixture_name.startswith("A4_"):
+        sysex_payload = extract_sysex_payloads(frame)[0]
+        device_payload = decode_analog_four_saved_kit_payload(
+            sysex_payload,
+            require_trailer=True,
+        ).unpacked
+    else:
+        device_payload = decode_analog_rytm_saved_kit_frame(frame).unpacked
+
+    assert device_payload == native_payload
 
 
 def test_initialized_a4_tracks_and_public_offset_alignment() -> None:
@@ -213,7 +250,9 @@ def test_native_object_unpack_rejects_malformed_groups(packed: bytes) -> None:
         unpack_elektron_native_object(packed)
 
 
-def test_native_object_message_rejects_invalid_envelope_and_headers() -> None:
+def test_native_object_message_rejects_invalid_envelope_and_headers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     frame = bytearray((_FIXTURE_DIR / "A4_Test1_Init_Kit.syx").read_bytes())
     variants = [
         b"\xf0\xf7",
@@ -245,6 +284,13 @@ def test_native_object_message_rejects_invalid_envelope_and_headers() -> None:
         decoded.with_slot(128)
     assert decoded.with_payload(b"test").payload == b"test"
     assert decoded.with_slot(7).slot == 7
+
+    def fail_encoder(*_args: object, **_kwargs: object) -> None:
+        raise ElektronPackedPayloadError("invalid native payload")
+
+    monkeypatch.setattr(native_object, "encode_elektron_packed_payload", fail_encoder)
+    with pytest.raises(ElektronNativeObjectError, match="invalid native payload"):
+        decoded.to_bytes()
 
 
 def test_a4_value_converters_cover_boundaries_and_fail_closed() -> None:
@@ -287,7 +333,7 @@ def test_a4_sound_and_kit_guards_cover_unknown_fields_and_ranges() -> None:
     assert sound.name == "1234567890123456"
 
     with pytest.raises(ValueError, match="350 bytes"):
-        A4Sound.from_bytes(bytes(A4_SOUND_SIZE - 1))
+        A4Sound.from_bytes(bytes(A4_KIT_OBJECT_TRACK_SOUND_SIZE - 1))
     malformed = bytearray(sound.to_bytes())
     malformed[:4] = b"nope"
     with pytest.raises(ValueError, match="signature"):
@@ -297,7 +343,7 @@ def test_a4_sound_and_kit_guards_cover_unknown_fields_and_ranges() -> None:
     with pytest.raises(ValueError, match="format marker"):
         A4Sound.from_bytes(malformed)
 
-    with pytest.raises(KeyError, match="Unknown mapped"):
+    with pytest.raises(ElektronKitFieldError, match="Unknown mapped"):
         sound.offset("unknown")
     for value in (-1, 256):
         with pytest.raises(ValueError, match="0..255"):
@@ -403,6 +449,12 @@ def test_rytm_value_converters_and_field_views_fail_closed() -> None:
     with pytest.raises(ValueError, match="0..127"):
         sound.set_machine_parameter_u7(1, 128)
     assert sound.machine == RytmMachine.BD_HARD
+    invalid_machine = bytearray(sound.to_bytes())
+    invalid_machine[RYTM_SOUND_MACHINE_TYPE_OFFSET] = 0xFF
+    with pytest.raises(ElektronKitFieldError, match="unknown Rytm machine value 255"):
+        _ = RytmSound.from_bytes(invalid_machine).machine
+    with pytest.raises(ElektronKitFieldError, match="unknown Rytm machine value 255"):
+        sound.machine = 0xFF
     assert sound.machine_parameter_name(1) is None
     sound.set_machine_parameter_raw16(1, 0x1234)
     assert sound.get_machine_parameter_raw16(1) == 0x1234
@@ -414,7 +466,7 @@ def test_rytm_value_converters_and_field_views_fail_closed() -> None:
         sound.set_machine_parameter_bipolar(1, -65)
 
     for operation in (sound.get_u7, sound.set_u7):
-        with pytest.raises(KeyError, match="Unknown Rytm sound"):
+        with pytest.raises(ElektronKitFieldError, match="unknown Rytm sound"):
             operation("unknown", 0) if operation == sound.set_u7 else operation("unknown")
     with pytest.raises(ValueError, match="unknown Rytm sound"):
         sound.u7_field_offset("unknown")
@@ -448,8 +500,10 @@ def test_rytm_value_converters_and_field_views_fail_closed() -> None:
         with pytest.raises(ValueError, match="drum track"):
             kit.replace_sound(track, sound)
     for operation in (kit.get_fx_u7, kit.set_fx_u7):
-        with pytest.raises(KeyError, match="Unknown Rytm FX"):
+        with pytest.raises(ElektronKitFieldError, match="unknown Rytm FX"):
             operation("unknown", 0) if operation == kit.set_fx_u7 else operation("unknown")
+    with pytest.raises(ElektronKitFieldError, match="unknown Rytm FX"):
+        RytmKit.fx_field_offset("unknown")
     kit.set_fx_u7("delay_time", 77, clear_lsb=False)
     assert kit.get_fx_u7("delay_time") == 77
     kit.set_fx_bipolar("distortion_symmetry", -4)
@@ -462,3 +516,50 @@ def test_rytm_value_converters_and_field_views_fail_closed() -> None:
 def test_a4_wire_address_translation_rejects_non_fields(address: int) -> None:
     with pytest.raises(ValueError):
         wire_address_to_track_raw_offset(address)
+
+
+def test_fixed_width_ascii_rejects_invalid_storage_contracts() -> None:
+    data = bytearray(4)
+
+    with pytest.raises(ElektronKitFieldError, match="cannot exceed storage"):
+        write_fixed_width_ascii(
+            data,
+            offset=0,
+            storage_length=2,
+            visible_length=3,
+            value="A",
+            nul_terminated=False,
+        )
+    with pytest.raises(ElektronKitFieldError, match="require one storage byte"):
+        write_fixed_width_ascii(
+            data,
+            offset=0,
+            storage_length=2,
+            visible_length=2,
+            value="A",
+            nul_terminated=True,
+        )
+    with pytest.raises(ElektronKitFieldError, match="ASCII"):
+        write_fixed_width_ascii(
+            data,
+            offset=0,
+            storage_length=4,
+            visible_length=3,
+            value="caf\u00e9",
+            nul_terminated=True,
+        )
+
+
+def test_fixed_width_ascii_writes_nul_terminated_storage() -> None:
+    data = bytearray(b"xxxx")
+
+    write_fixed_width_ascii(
+        data,
+        offset=0,
+        storage_length=4,
+        visible_length=3,
+        value="AB",
+        nul_terminated=True,
+    )
+
+    assert data == b"AB\x00\x00"

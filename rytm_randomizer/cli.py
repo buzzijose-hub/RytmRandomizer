@@ -538,21 +538,13 @@ def _registered_command_exit_code(args: Sequence[str]) -> int | None:
             "rytm_randomizer.cockpit.export.rio145_cli",
             "RIO145_VALIDATE_ROUNDTRIP_CLI_COMMAND",
         ),
-        "rio145-build-a4-kit": (
+        "rio145-build-kit": (
             "rytm_randomizer.cockpit.export.rio145_cli",
-            "RIO145_BUILD_A4_KIT_CLI_COMMAND",
+            "RIO145_BUILD_KIT_CLI_COMMAND",
         ),
-        "rio145-build-rytm-kit": (
+        "rio145-validate-return": (
             "rytm_randomizer.cockpit.export.rio145_cli",
-            "RIO145_BUILD_RYTM_KIT_CLI_COMMAND",
-        ),
-        "rio145-validate-a4-return": (
-            "rytm_randomizer.cockpit.export.rio145_cli",
-            "RIO145_VALIDATE_A4_RETURN_CLI_COMMAND",
-        ),
-        "rio145-validate-rytm-return": (
-            "rytm_randomizer.cockpit.export.rio145_cli",
-            "RIO145_VALIDATE_RYTM_RETURN_CLI_COMMAND",
+            "RIO145_VALIDATE_RETURN_CLI_COMMAND",
         ),
         "rio145-export-oxi-manifest": (
             "rytm_randomizer.cockpit.export.rio145_cli",

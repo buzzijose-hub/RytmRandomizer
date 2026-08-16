@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import sys
-from collections.abc import Mapping
-from dataclasses import dataclass, replace
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
+from dataclasses import replace
 from pathlib import Path
-from typing import Callable
+from typing import Callable, cast
 
 import pytest
 
@@ -23,7 +25,9 @@ from rytm_randomizer.cockpit.export.rio145_codec import (
     validate_roundtrip,
     validate_rytm_return,
 )
-from rytm_randomizer.devices.rio145_recipes import compile_a4_kit_recipe
+from rytm_randomizer.devices.rio145_recipes import KitRecipeBuildResult, compile_a4_kit_recipe
+from rytm_randomizer.observability.logging import configure_logging
+from rytm_randomizer.observability.metrics import get_metrics
 from rytm_randomizer.snapshot import ElektronNativeObjectMessage
 
 pytestmark = pytest.mark.fast
@@ -37,27 +41,26 @@ def _fixture(name: str) -> Path:
     return FIXTURES / name
 
 
-@dataclass(frozen=True)
-class _FakeBuildResult:
-    message: ElektronNativeObjectMessage
-    changed_payload_offsets: tuple[int, ...] = ()
-    changed_outside_declared_edit_regions: tuple[int, ...] = ()
-    changed_payload_byte_count: int = 0
+def _single_native_message(path: Path) -> ElektronNativeObjectMessage:
+    frames = split_elektron_sysex(path.read_bytes())
+    assert len(frames) == 1
+    return ElektronNativeObjectMessage.from_bytes(frames[0])
 
 
-def _a4_compilation() -> tuple[ElektronNativeObjectMessage, _FakeBuildResult]:
-    _, baseline = codec._single_message(_fixture("A4_Test1_Init_Kit.syx"))
-    recipe = codec._load_json_mapping(SPECS / "come_to_rio_a4_core.json")
+def _recipe(path: Path) -> Mapping[str, object]:
+    decoded: object = json.loads(path.read_text(encoding="utf-8"))
+    assert isinstance(decoded, Mapping)
+    return cast(Mapping[str, object], decoded)
+
+
+def _a4_compilation() -> tuple[ElektronNativeObjectMessage, KitRecipeBuildResult]:
+    baseline = _single_native_message(_fixture("A4_Test1_Init_Kit.syx"))
+    recipe = _recipe(SPECS / "come_to_rio_a4_core.json")
     result = compile_a4_kit_recipe(baseline, recipe)
-    return baseline, _FakeBuildResult(
-        message=result.message,
-        changed_payload_offsets=result.changed_payload_offsets,
-        changed_outside_declared_edit_regions=result.changed_outside_declared_edit_regions,
-        changed_payload_byte_count=result.changed_payload_byte_count,
-    )
+    return baseline, result
 
 
-def test_multi_frame_inspection_and_roundtrip_are_strict() -> None:
+def test_multi_frame_inspection_and_roundtrip_are_strict(tmp_path: Path) -> None:
     source = _fixture("A4_Test1_Init_A01_PatternKit.syx")
     frames = split_elektron_sysex(source.read_bytes())
 
@@ -73,10 +76,24 @@ def test_multi_frame_inspection_and_roundtrip_are_strict() -> None:
 
     with pytest.raises(Rio145OfflineError, match="empty"):
         split_elektron_sysex(b"")
-    with pytest.raises(Rio145OfflineError, match="unterminated"):
+    with pytest.raises(Rio145OfflineError, match="without a closing F7"):
         split_elektron_sysex(frames[0][:-1])
     with pytest.raises(Rio145OfflineError, match="exactly one"):
-        codec._single_message(source)
+        build_a4_kit(
+            reference_path=source,
+            recipe_path=SPECS / "come_to_rio_a4_core.json",
+            destination_slot=0,
+            output_path=tmp_path / "refused.syx",
+        )
+
+
+def test_sysex_split_rejects_non_adjacent_extractor_results(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(codec, "extract_sysex_payloads", lambda *_args, **_kwargs: (b"frame",))
+
+    with pytest.raises(Rio145OfflineError, match="complete adjacent frames"):
+        split_elektron_sysex(b"different input")
 
 
 def test_roundtrip_detects_a_changed_reserialization(
@@ -103,11 +120,21 @@ def test_json_mapping_loader_rejects_non_objects_and_non_string_keys(
     source = tmp_path / "recipe.json"
     source.write_text("[]", encoding="utf-8")
     with pytest.raises(Rio145OfflineError, match="JSON object"):
-        codec._load_json_mapping(source)
+        build_a4_kit(
+            reference_path=_fixture("A4_Test1_Init_Kit.syx"),
+            recipe_path=source,
+            destination_slot=0,
+            output_path=tmp_path / "non-object.syx",
+        )
 
     monkeypatch.setattr(codec.json, "loads", lambda _text: {1: "value"})
     with pytest.raises(Rio145OfflineError, match="string keys"):
-        codec._load_json_mapping(source)
+        build_a4_kit(
+            reference_path=_fixture("A4_Test1_Init_Kit.syx"),
+            recipe_path=source,
+            destination_slot=0,
+            output_path=tmp_path / "non-string-key.syx",
+        )
 
 
 @pytest.mark.parametrize(
@@ -191,6 +218,7 @@ def test_builds_are_deterministic_allowlisted_and_overwrite_guarded(
 
 def test_build_guardrails_reject_invalid_slot_outside_edits_and_nondeterminism(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reference = _fixture("A4_Test1_Init_Kit.syx")
     recipe = SPECS / "come_to_rio_a4_core.json"
@@ -206,18 +234,17 @@ def test_build_guardrails_reject_invalid_slot_outside_edits_and_nondeterminism(
 
     def outside_compiler(
         _baseline: ElektronNativeObjectMessage, _recipe: Mapping[str, object]
-    ) -> _FakeBuildResult:
+    ) -> KitRecipeBuildResult:
         return replace(compiled, changed_outside_declared_edit_regions=(7,))
 
+    monkeypatch.setattr(codec, "compile_a4_kit_recipe", outside_compiler)
     with pytest.raises(Rio145OfflineError, match="outside declared edit regions"):
-        codec._build_kit(
-            device="analog_four_mkii",
+        build_a4_kit(
             reference_path=reference,
             recipe_path=recipe,
             destination_slot=0,
             output_path=tmp_path / "outside.syx",
             overwrite=False,
-            compiler=outside_compiler,
         )
 
     altered_payload = bytearray(compiled.message.payload)
@@ -227,18 +254,17 @@ def test_build_guardrails_reject_invalid_slot_outside_edits_and_nondeterminism(
 
     def nondeterministic_compiler(
         _baseline: ElektronNativeObjectMessage, _recipe: Mapping[str, object]
-    ) -> _FakeBuildResult:
+    ) -> KitRecipeBuildResult:
         return next(results)
 
+    monkeypatch.setattr(codec, "compile_a4_kit_recipe", nondeterministic_compiler)
     with pytest.raises(Rio145OfflineError, match="different output bytes"):
-        codec._build_kit(
-            device="analog_four_mkii",
+        build_a4_kit(
             reference_path=reference,
             recipe_path=recipe,
             destination_slot=0,
             output_path=tmp_path / "nondeterministic.syx",
             overwrite=False,
-            compiler=nondeterministic_compiler,
         )
 
 
@@ -246,8 +272,9 @@ def test_build_guardrails_reject_invalid_slot_outside_edits_and_nondeterminism(
 def test_build_guardrails_verify_reparsed_output(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failure: str
 ) -> None:
-    baseline, compiled = _a4_compilation()
+    _baseline, compiled = _a4_compilation()
     output = compiled.message.with_slot(0).to_bytes()
+    original_parser = ElektronNativeObjectMessage
 
     class _Reparsed:
         payload = compiled.message.payload if failure == "reserialization" else b"different payload"
@@ -257,23 +284,26 @@ def test_build_guardrails_verify_reparsed_output(
             return b"different wire" if failure == "reserialization" else output
 
     class _Parser:
+        calls = 0
+
         @classmethod
-        def from_bytes(cls, _frame: bytes) -> _Reparsed:
+        def from_bytes(cls, frame: bytes) -> ElektronNativeObjectMessage | _Reparsed:
+            cls.calls += 1
+            if cls.calls <= 2:
+                return original_parser.from_bytes(frame)
             return _Reparsed()
 
-    monkeypatch.setattr(codec, "_single_message", lambda _path: (b"reference", baseline))
+    monkeypatch.setattr(codec, "compile_a4_kit_recipe", lambda _baseline, _recipe: compiled)
     monkeypatch.setattr(codec, "ElektronNativeObjectMessage", _Parser)
 
     expected = "reserialization" if failure == "reserialization" else "semantic payload"
     with pytest.raises(Rio145OfflineError, match=expected):
-        codec._build_kit(
-            device="analog_four_mkii",
-            reference_path=tmp_path / "reference.syx",
+        build_a4_kit(
+            reference_path=_fixture("A4_Test1_Init_Kit.syx"),
             recipe_path=SPECS / "come_to_rio_a4_core.json",
             destination_slot=0,
             output_path=tmp_path / "output.syx",
             overwrite=False,
-            compiler=lambda _baseline, _recipe: compiled,
         )
 
 
@@ -297,22 +327,24 @@ def test_target_returns_match_compiled_native_payloads() -> None:
     assert rytm["sonic_equivalence_claim"] is False
 
 
-def test_target_return_validation_rejects_outside_edits_and_payload_mismatch() -> None:
+def test_target_return_validation_rejects_outside_edits_and_payload_mismatch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     baseline, compiled = _a4_compilation()
 
     def outside_compiler(
         _baseline: ElektronNativeObjectMessage, _recipe: Mapping[str, object]
-    ) -> _FakeBuildResult:
+    ) -> KitRecipeBuildResult:
         return replace(compiled, changed_outside_declared_edit_regions=(1,))
 
+    monkeypatch.setattr(codec, "compile_a4_kit_recipe", outside_compiler)
     with pytest.raises(Rio145OfflineError, match="outside declared edit regions"):
-        codec._validate_target_return(
-            device="analog_four_mkii",
+        validate_a4_return(
             reference_path=_fixture("A4_Test1_Init_Kit.syx"),
             recipe_path=SPECS / "come_to_rio_a4_core.json",
             returned_path=_fixture("A4_RIO145_CORE_RETURN_Kit.syx"),
-            compiler=outside_compiler,
         )
+    monkeypatch.setattr(codec, "compile_a4_kit_recipe", compile_a4_kit_recipe)
 
     assert baseline.product_id == compiled.message.product_id
     with pytest.raises(Rio145OfflineError, match="differs from compiled payload"):
@@ -326,7 +358,8 @@ def test_target_return_validation_rejects_outside_edits_and_payload_mismatch() -
 def test_target_return_validation_rejects_roundtrip_and_header_mismatch(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    baseline, compiled = _a4_compilation()
+    _baseline, compiled = _a4_compilation()
+    original_parser = ElektronNativeObjectMessage
 
     class _Returned:
         payload = compiled.message.payload
@@ -335,28 +368,35 @@ def test_target_return_validation_rejects_roundtrip_and_header_mismatch(
         def to_bytes(self) -> bytes:
             return b"changed"
 
-    calls = iter(((b"reference", baseline), (b"returned", _Returned())))
-    monkeypatch.setattr(codec, "_single_message", lambda _path: next(calls))
+    class _Parser:
+        calls = 0
+
+        @classmethod
+        def from_bytes(cls, frame: bytes) -> ElektronNativeObjectMessage | _Returned:
+            cls.calls += 1
+            if cls.calls <= 2:
+                return original_parser.from_bytes(frame)
+            return _Returned()
+
+    monkeypatch.setattr(codec, "compile_a4_kit_recipe", lambda _baseline, _recipe: compiled)
+    monkeypatch.setattr(codec, "ElektronNativeObjectMessage", _Parser)
     with pytest.raises(Rio145OfflineError, match="roundtrip"):
-        codec._validate_target_return(
-            device="analog_four_mkii",
-            reference_path=tmp_path / "reference.syx",
+        validate_a4_return(
+            reference_path=_fixture("A4_Test1_Init_Kit.syx"),
             recipe_path=SPECS / "come_to_rio_a4_core.json",
-            returned_path=tmp_path / "returned.syx",
-            compiler=lambda _baseline, _recipe: compiled,
+            returned_path=_fixture("A4_RIO145_CORE_RETURN_Kit.syx"),
         )
 
     monkeypatch.undo()
     returned = replace(compiled.message, device_id=(compiled.message.device_id + 1) % 128)
     returned_path = tmp_path / "header-mismatch.syx"
     returned_path.write_bytes(returned.with_slot(11).to_bytes())
+    monkeypatch.setattr(codec, "compile_a4_kit_recipe", lambda _baseline, _recipe: compiled)
     with pytest.raises(Rio145OfflineError, match="normalizing the destination slot"):
-        codec._validate_target_return(
-            device="analog_four_mkii",
+        validate_a4_return(
             reference_path=_fixture("A4_Test1_Init_Kit.syx"),
             recipe_path=SPECS / "come_to_rio_a4_core.json",
             returned_path=returned_path,
-            compiler=lambda _baseline, _recipe: compiled,
         )
 
 
@@ -434,9 +474,11 @@ def _write_oxi_case(
     events_path = tmp_path / "events.csv"
     events_path.write_bytes(b"".join(event_lines[:-1] if truncate_events else event_lines))
     monkeypatch.setattr(
-        codec, "_OXI_MANIFEST_SHA256", codec._rio145_sha256(manifest_path.read_bytes())
+        codec, "_OXI_MANIFEST_SHA256", hashlib.sha256(manifest_path.read_bytes()).hexdigest()
     )
-    monkeypatch.setattr(codec, "_OXI_EVENTS_SHA256", codec._rio145_sha256(events_path.read_bytes()))
+    monkeypatch.setattr(
+        codec, "_OXI_EVENTS_SHA256", hashlib.sha256(events_path.read_bytes()).hexdigest()
+    )
     return manifest_path, events_path
 
 
@@ -483,10 +525,25 @@ def test_oxi_export_rejects_tampered_semantics(
 def test_oxi_export_rejects_non_string_mapping_keys_and_wrong_event_count(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    monkeypatch.setattr(codec.json, "loads", lambda _text: {1: "value"})
     with pytest.raises(Rio145OfflineError, match="string keys"):
-        codec._rio145_require_mapping({1: "value"}, "mapping")
-    with pytest.raises(Rio145OfflineError, match="must be an array"):
-        codec._rio145_require_sequence(b"bytes", "sequence")
+        export_oxi_manifest(
+            manifest_path=SPECS / "oxi_program_manifest.json",
+            events_path=SPECS / "oxi_event_list.csv",
+            output_path=tmp_path / "non-string-key.json",
+        )
+    monkeypatch.undo()
+
+    manifest = json.loads((SPECS / "oxi_program_manifest.json").read_text(encoding="utf-8"))
+    manifest["ownership"] = {1: ["notes"]}
+    monkeypatch.setattr(codec, "_load_json_mapping", lambda _path: manifest)
+    with pytest.raises(Rio145OfflineError, match="ownership must contain only string keys"):
+        export_oxi_manifest(
+            manifest_path=SPECS / "oxi_program_manifest.json",
+            events_path=SPECS / "oxi_event_list.csv",
+            output_path=tmp_path / "nested-non-string-key.json",
+        )
+    monkeypatch.undo()
 
     manifest_path, events_path = _write_oxi_case(
         tmp_path, monkeypatch, lambda _value: None, truncate_events=True
@@ -512,3 +569,51 @@ def test_offline_operations_do_not_load_midi_backends(tmp_path: Path) -> None:
     assert not {"mido", "rtmidi", "pythonrtmidi"}.intersection(loaded)
     assert "rytm_randomizer.real_midi_adapter" not in loaded
     assert "rytm_randomizer.mido_provider" not in loaded
+
+
+def test_rio145_public_boundary_records_bounded_success_and_failure_telemetry(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    isolated_observability: None,
+) -> None:
+    assert isolated_observability is None
+    traced: list[tuple[str, str]] = []
+
+    @contextmanager
+    def observe_operation(name: str, **_kwargs: object) -> Iterator[str]:
+        traced.append(("start", name))
+        try:
+            yield "rio145-test-op"
+        finally:
+            traced.append(("end", name))
+
+    monkeypatch.setattr(codec, "operation", observe_operation)
+    log_stream = io.StringIO()
+    configure_logging(json=True, stream=log_stream)
+
+    result = inspect_sysex(_fixture("A4_Test1_Init_Kit.syx"))
+    with pytest.raises(FileNotFoundError):
+        inspect_sysex(tmp_path / "missing.syx")
+
+    metrics = get_metrics()
+    assert result["hardware_access"] is False
+    assert metrics.export_count == 2
+    assert metrics.export_errors_by_code == {"offline_validation": 1}
+    assert traced == [
+        ("start", "rio145_inspect_sysex"),
+        ("end", "rio145_inspect_sysex"),
+        ("start", "rio145_inspect_sysex"),
+        ("end", "rio145_inspect_sysex"),
+    ]
+    records = [json.loads(line) for line in log_stream.getvalue().splitlines()]
+    completed = next(
+        record for record in records if record["message"] == "RIO145 offline operation completed"
+    )
+    failed = next(
+        record for record in records if record["message"] == "RIO145 offline operation failed"
+    )
+    assert completed["outcome"] == "completed"
+    assert failed["outcome"] == "failed"
+    assert failed["error_code"] == "offline_validation"
+    assert failed["fingerprint"] == "boundary.rio145.offline_operation"
+    assert "path" not in failed

@@ -16,14 +16,13 @@ pytestmark = pytest.mark.fast
 
 
 def _rendered_unpacked(frame: bytes) -> bytes:
-    from rytm_randomizer.devices.strategies.analog_four_offset_manifest import (
-        A4_PACKED_PAYLOAD_OFFSET,
-        A4_SAVED_KIT_TRAILER_SIZE,
+    from rytm_randomizer.devices.strategies.analog_four_saved_kit_codec import (
+        decode_analog_four_saved_kit_payload,
     )
-    from rytm_randomizer.snapshot import extract_sysex_payloads, unpack_elektron_7bit
+    from rytm_randomizer.snapshot import extract_sysex_payloads
 
     payload = extract_sysex_payloads(frame)[0]
-    return unpack_elektron_7bit(payload[A4_PACKED_PAYLOAD_OFFSET:-A4_SAVED_KIT_TRAILER_SIZE])
+    return decode_analog_four_saved_kit_payload(payload, require_trailer=True).unpacked
 
 
 def test_render_saved_kit_synthesizes_novel_filter2_resonance_value() -> None:
@@ -37,18 +36,18 @@ def test_render_saved_kit_synthesizes_novel_filter2_resonance_value() -> None:
     rendered_unpacked = _rendered_unpacked(result.framed_sysex)
 
     assert result.kit_name == "KIT 1"
-    assert result.packed_length == 2760
+    assert result.packed_length == 2755
     assert result.source_checksum != result.rendered_checksum
     assert result.sha256 == sha256(result.framed_sysex).hexdigest()
-    assert result.applied_mutations[0].unpacked_offset == 145
+    assert result.applied_mutations[0].unpacked_offset == 140
     assert result.applied_mutations[0].source_unpacked_value == 0
     assert result.applied_mutations[0].rendered_unpacked_value == 64
-    assert rendered_unpacked[145] == 64
+    assert rendered_unpacked[140] == 64
     assert [
         index
         for index, (before, after) in enumerate(zip(source_unpacked, rendered_unpacked))
         if before != after
-    ] == [145]
+    ] == [140]
 
 
 def test_render_saved_kit_matches_hardware_reference_bytes_exactly() -> None:
@@ -120,10 +119,10 @@ def test_render_saved_kit_applies_distinct_values_to_all_four_tracks() -> None:
 
     result = render_analog_four_saved_kit(analog_four_saved_kit_frame(), mutations)
 
-    assert [row.unpacked_offset for row in result.applied_mutations] == [145, 495, 845, 1195]
+    assert [row.unpacked_offset for row in result.applied_mutations] == [140, 490, 840, 1190]
     assert [row.rendered_unpacked_value for row in result.applied_mutations] == [16, 48, 80, 112]
     assert [
-        _rendered_unpacked(result.framed_sysex)[offset] for offset in (145, 495, 845, 1195)
+        _rendered_unpacked(result.framed_sysex)[offset] for offset in (140, 490, 840, 1190)
     ] == [
         16,
         48,
@@ -137,15 +136,15 @@ def test_render_saved_kit_preserves_neighbor_high_bit_for_validated_field() -> N
         render_analog_four_saved_kit,
     )
 
-    source = analog_four_saved_kit_frame(unpacked_overrides={145: 0x80})
+    source = analog_four_saved_kit_frame(unpacked_overrides={140: 0x80})
     result = render_analog_four_saved_kit(
         source,
         (_mutation(screen_value="20"),),
     )
 
-    assert result.applied_mutations[0].unpacked_offset == 145
+    assert result.applied_mutations[0].unpacked_offset == 140
     assert result.applied_mutations[0].rendered_unpacked_value == 0x94
-    assert _rendered_unpacked(result.framed_sysex)[145] == 0x94
+    assert _rendered_unpacked(result.framed_sysex)[140] == 0x94
 
 
 def test_render_saved_kit_rejects_candidate_only_calibration() -> None:
@@ -164,6 +163,7 @@ def test_render_saved_kit_emits_valid_checksum_and_packed_length() -> None:
     from rytm_randomizer.devices.strategies.analog_four_offset_manifest import (
         A4_CHECKSUM_PACKED_OFFSET,
         A4_PACKED_PAYLOAD_OFFSET,
+        A4_SAVED_KIT_LENGTH_ADJUSTMENT,
         A4_SAVED_KIT_TRAILER_SIZE,
     )
     from rytm_randomizer.devices.strategies.analog_four_saved_kit_writer import (
@@ -178,21 +178,35 @@ def test_render_saved_kit_emits_valid_checksum_and_packed_length() -> None:
     packed_length = (payload[-2] << 7) | payload[-1]
 
     assert checksum == sum(packed[A4_CHECKSUM_PACKED_OFFSET:]) & 0x3FFF
-    assert packed_length == len(packed)
+    assert packed_length == len(packed) + A4_SAVED_KIT_LENGTH_ADJUSTMENT
 
 
 def test_saved_kit_manifest_constants_pin_observed_hardware_frame_shape() -> None:
     from rytm_randomizer.devices.strategies.analog_four_offset_manifest import (
         A4_CHECKSUM_PACKED_OFFSET,
+        A4_SAVED_KIT_HEADER_SIZE_WITHOUT_F0,
+        A4_SAVED_KIT_LENGTH_ADJUSTMENT,
+        A4_SAVED_KIT_PACKED_SIZE,
         A4_SAVED_KIT_TRAILER_SIZE,
         A4_SAVED_KIT_UNPACKED_SIZE,
     )
-    from rytm_randomizer.snapshot import pack_elektron_7bit
+    from rytm_randomizer.snapshot import Elektron7BitMaskOrder, pack_elektron_7bit
 
-    assert A4_CHECKSUM_PACKED_OFFSET == 8
+    assert A4_CHECKSUM_PACKED_OFFSET == 0
+    assert A4_SAVED_KIT_HEADER_SIZE_WITHOUT_F0 == 9
+    assert A4_SAVED_KIT_LENGTH_ADJUSTMENT == 5
     assert A4_SAVED_KIT_TRAILER_SIZE == 4
-    assert A4_SAVED_KIT_UNPACKED_SIZE == 2415
-    assert len(pack_elektron_7bit(bytes(A4_SAVED_KIT_UNPACKED_SIZE))) == 2760
+    assert A4_SAVED_KIT_UNPACKED_SIZE == 2410
+    assert A4_SAVED_KIT_PACKED_SIZE == 2755
+    assert (
+        len(
+            pack_elektron_7bit(
+                bytes(A4_SAVED_KIT_UNPACKED_SIZE),
+                mask_order=Elektron7BitMaskOrder.MSB_FIRST,
+            )
+        )
+        == A4_SAVED_KIT_PACKED_SIZE
+    )
     assert len(analog_four_saved_kit_frame()) == 2770
 
 
@@ -245,7 +259,7 @@ def test_render_saved_kit_rejects_unsafe_mutation_requests(
         (lambda frame: frame[:1] + b"\x01" + frame[2:], "manufacturer"),
         (lambda frame: frame[:4] + b"\x07" + frame[5:], "family"),
         (lambda frame: frame[:-5] + b"\x00\x00" + frame[-3:], "checksum"),
-        (lambda frame: frame[:-3] + b"\x00\x01" + frame[-1:], "packed length"),
+        (lambda frame: frame[:-3] + b"\x00\x01" + frame[-1:], "encoded length"),
     ],
 )
 def test_render_saved_kit_rejects_malformed_or_unsupported_frames(mutator, message: str) -> None:
@@ -257,7 +271,7 @@ def test_render_saved_kit_rejects_malformed_or_unsupported_frames(mutator, messa
         render_analog_four_saved_kit(mutator(analog_four_saved_kit_frame()), (_mutation(),))
 
 
-@pytest.mark.parametrize("unpacked_size", [2414, 2416])
+@pytest.mark.parametrize("unpacked_size", [2409, 2411])
 def test_render_saved_kit_rejects_self_consistent_wrong_body_size(
     unpacked_size: int,
 ) -> None:
@@ -271,15 +285,16 @@ def test_render_saved_kit_rejects_self_consistent_wrong_body_size(
         render_analog_four_saved_kit(source, (_mutation(),))
 
 
-def test_render_saved_kit_rejects_wrong_saved_kit_object_byte() -> None:
+def test_render_saved_kit_rejects_wrong_saved_kit_command() -> None:
     from rytm_randomizer.devices.strategies.analog_four_saved_kit_writer import (
         render_analog_four_saved_kit,
     )
 
-    source = analog_four_saved_kit_frame(unpacked_overrides={0: 0x51})
+    source = bytearray(analog_four_saved_kit_frame())
+    source[6] = 0x51
 
     with pytest.raises(ValueError, match="not a saved kit"):
-        render_analog_four_saved_kit(source, (_mutation(),))
+        render_analog_four_saved_kit(bytes(source), (_mutation(),))
 
 
 def test_render_saved_kit_rejects_non_seven_bit_packed_byte() -> None:
@@ -288,10 +303,10 @@ def test_render_saved_kit_rejects_non_seven_bit_packed_byte() -> None:
     )
 
     source = bytearray(analog_four_saved_kit_frame())
-    packed_start = 5
+    packed_start = 10
     source[packed_start + 10] = 0x80
     packed = source[packed_start:-5]
-    checksum = sum(packed[8:]) & 0x3FFF
+    checksum = sum(packed) & 0x3FFF
     source[-5] = (checksum >> 7) & 0x7F
     source[-4] = checksum & 0x7F
 
@@ -352,7 +367,7 @@ def test_render_saved_kit_rejects_repacked_length_change(
     monkeypatch.setattr(
         packed_payload_module,
         "pack_elektron_7bit",
-        lambda unpacked: pack(unpacked) + b"\x00",
+        lambda unpacked, *, mask_order: pack(unpacked, mask_order=mask_order) + b"\x00",
     )
 
     with pytest.raises(ValueError, match="repacking changed"):

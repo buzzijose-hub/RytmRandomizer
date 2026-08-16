@@ -258,9 +258,9 @@ al16-rytm-kit-export --reference output/local/reference/RYTM_Test1_Init_Kit.syx 
 # RIO145 offline native-KIT codec and target-return evidence (no MIDI)
 rio145-inspect-sysex --input A4_NATIVE.syx
 rio145-validate-roundtrip --input A4_NATIVE.syx
-rio145-build-a4-kit --reference A4_NATIVE.syx --recipe specs/rio145/come_to_rio_a4_core.json --destination-slot 0 --output output/local/rio145/RIO_A4_CORE.syx
-rio145-build-rytm-kit --reference RYTM_NATIVE.syx --recipe specs/rio145/come_to_rio_rytm_core.json --destination-slot 0 --output output/local/rio145/RIO_RYTM_CORE.syx
-rio145-validate-a4-return --reference A4_NATIVE.syx --recipe specs/rio145/come_to_rio_a4_core.json --returned A4_TARGET_RETURN.syx
+rio145-build-kit --device analog_four_mk2 --reference A4_NATIVE.syx --recipe specs/rio145/come_to_rio_a4_core.json --destination-slot 0 --output output/local/rio145/RIO_A4_CORE.syx
+rio145-build-kit --device analog_rytm_mk2 --reference RYTM_NATIVE.syx --recipe specs/rio145/come_to_rio_rytm_core.json --destination-slot 0 --output output/local/rio145/RIO_RYTM_CORE.syx
+rio145-validate-return --device analog_four_mk2 --reference A4_NATIVE.syx --recipe specs/rio145/come_to_rio_a4_core.json --returned A4_TARGET_RETURN.syx
 al16-rytm-mapping-evidence --reference output/local/reference/RYTM_Test1_Init_Kit.syx --configured output/local/al16/AL02_LOCK_RYTM_CONFIGURED.syx --recipe specs/al16/AL02_LOCK_RYTM.yaml --gap-manifest output/al16/AL02_LOCK_RYTM_manifest.json --expected-gap-manifest-sha256 <reviewed-sha256> --report output/local/al16/AL02_LOCK_RYTM_mapping_evidence.json
 ```
 

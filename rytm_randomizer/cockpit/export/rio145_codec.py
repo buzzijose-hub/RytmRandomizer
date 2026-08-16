@@ -10,13 +10,22 @@ import csv
 import hashlib
 import json
 import re
-from collections.abc import Mapping, Sequence
+import time
+from collections.abc import Callable, Mapping, Sequence
+from functools import wraps
 from pathlib import Path
-from typing import ClassVar, Final, Protocol, cast
+from typing import ClassVar, Final, ParamSpec, TypeVar, cast
 
-from ...devices.rio145_recipes import compile_a4_kit_recipe, compile_rytm_kit_recipe
+from ...devices.rio145_recipes import (
+    KitRecipeBuildResult,
+    compile_a4_kit_recipe,
+    compile_rytm_kit_recipe,
+)
 from ...observability.errors import BoundaryError
-from ...snapshot import ElektronNativeObjectMessage
+from ...observability.logging import get_logger
+from ...observability.metrics import get_metrics
+from ...observability.tracing import operation
+from ...snapshot import ElektronNativeObjectMessage, extract_sysex_payloads
 
 _OXI_MANIFEST_SHA256: Final[str] = (
     "6c4a1b00c9a8c6c0943218e08830e6c7b7d18bb6e965d83cdf0a133e9f65405e"
@@ -44,32 +53,76 @@ _OXI_OWNERSHIP: Final[tuple[str, ...]] = (
 _BAR_RANGE_RE: Final[re.Pattern[str]] = re.compile(r"^(\d+)[–-](\d+)$")
 
 
+_RIO145_FAILURE_FINGERPRINT: Final[str] = "boundary.rio145.offline_operation"
+_logger = get_logger(__name__)
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
+
+
 class Rio145OfflineError(BoundaryError, ValueError):
     """RIO145 input or output failed a passive validation boundary."""
 
     fingerprint: ClassVar[str] = "boundary.rio145.offline"
 
 
-class _RecipeBuildResult(Protocol):
-    @property
-    def message(self) -> ElektronNativeObjectMessage: ...  # pragma: no cover
-
-    @property
-    def changed_payload_offsets(self) -> tuple[int, ...]: ...  # pragma: no cover
-
-    @property
-    def changed_outside_declared_edit_regions(self) -> tuple[int, ...]: ...  # pragma: no cover
-
-    @property
-    def changed_payload_byte_count(self) -> int: ...  # pragma: no cover
+_RecipeCompiler = Callable[
+    [ElektronNativeObjectMessage, Mapping[str, object]],
+    KitRecipeBuildResult,
+]
 
 
-class _RecipeCompiler(Protocol):
-    def __call__(
-        self,
-        baseline: ElektronNativeObjectMessage,
-        recipe: Mapping[str, object],
-    ) -> _RecipeBuildResult: ...  # pragma: no cover
+def _observed_rio145(
+    operation_name: str,
+) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
+    """Instrument one passive RIO145 boundary with bounded RED telemetry."""
+
+    def decorate(func: Callable[_P, _R]) -> Callable[_P, _R]:
+        @wraps(func)
+        def wrapped(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+            metrics = get_metrics()
+            started_at = time.perf_counter()
+            operation_id = ""
+            try:
+                with operation(
+                    operation_name,
+                    logger=_logger,
+                    workflow="rio145_offline",
+                ) as operation_id:
+                    result = func(*args, **kwargs)
+            except (OSError, TypeError, ValueError, KeyboardInterrupt, SystemExit) as exc:
+                duration_ms = (time.perf_counter() - started_at) * 1000.0
+                metrics.record_export(duration_ms, error_code="offline_validation")
+                _logger.warning(
+                    "RIO145 offline operation failed",
+                    extra={
+                        "op_id": operation_id,
+                        "operation": operation_name,
+                        "outcome": "failed",
+                        "error_code": "offline_validation",
+                        "fingerprint": _RIO145_FAILURE_FINGERPRINT,
+                        "error_type": type(exc).__name__,
+                        "duration_ms": duration_ms,
+                        "metrics_summary": metrics.format_summary(),
+                    },
+                )
+                raise
+            duration_ms = (time.perf_counter() - started_at) * 1000.0
+            metrics.record_export(duration_ms)
+            _logger.info(
+                "RIO145 offline operation completed",
+                extra={
+                    "op_id": operation_id,
+                    "operation": operation_name,
+                    "outcome": "completed",
+                    "duration_ms": duration_ms,
+                    "metrics_summary": metrics.format_summary(),
+                },
+            )
+            return result
+
+        return wrapped
+
+    return decorate
 
 
 def _rio145_sha256(data: bytes) -> str:
@@ -79,24 +132,17 @@ def _rio145_sha256(data: bytes) -> str:
 def split_elektron_sysex(data: bytes) -> tuple[bytes, ...]:
     """Split a strict concatenation of complete Elektron SysEx frames."""
 
-    if not data:
-        raise Rio145OfflineError("SysEx input is empty")
-    frames: list[bytes] = []
-    cursor = 0
-    while cursor < len(data):
-        if data[cursor] != 0xF0:
-            raise Rio145OfflineError(
-                "SysEx framing error: "
-                f"unexpected byte outside a SysEx frame at wire offset {cursor}"
-            )
-        end = data.find(b"\xf7", cursor + 1)
-        if end < 0:
-            raise Rio145OfflineError(f"unterminated SysEx frame beginning at wire offset {cursor}")
-        frame = data[cursor : end + 1]
-        ElektronNativeObjectMessage.from_bytes(frame)
-        frames.append(frame)
-        cursor = end + 1
-    return tuple(frames)
+    try:
+        frames = extract_sysex_payloads(data, keep_framing=True)
+        if b"".join(frames) != data:
+            raise Rio145OfflineError("SysEx input must contain only complete adjacent frames")
+        for frame in frames:
+            ElektronNativeObjectMessage.from_bytes(frame)
+    except Rio145OfflineError:
+        raise
+    except ValueError as exc:
+        raise Rio145OfflineError(f"SysEx framing validation failed: {exc}") from exc
+    return frames
 
 
 def _read_frames(path: Path) -> tuple[bytes, tuple[bytes, ...]]:
@@ -130,6 +176,7 @@ def _frame_payload(index: int, frame: bytes) -> dict[str, object]:
     }
 
 
+@_observed_rio145("rio145_inspect_sysex")
 def inspect_sysex(path: Path) -> dict[str, object]:
     """Return stable metadata for every native object in ``path``."""
 
@@ -145,6 +192,7 @@ def inspect_sysex(path: Path) -> dict[str, object]:
     }
 
 
+@_observed_rio145("rio145_validate_roundtrip")
 def validate_roundtrip(path: Path) -> dict[str, object]:
     """Require parse/serialize identity for every frame in ``path``."""
 
@@ -170,6 +218,7 @@ def _different_offsets(left: bytes, right: bytes) -> list[int]:
     return offsets
 
 
+@_observed_rio145("rio145_diff_sysex")
 def diff_sysex(left_path: Path, right_path: Path) -> dict[str, object]:
     """Return stable wire and native-payload differences between two files."""
 
@@ -280,6 +329,7 @@ def _build_kit(
     }
 
 
+@_observed_rio145("rio145_build_a4_kit")
 def build_a4_kit(
     *,
     reference_path: Path,
@@ -291,7 +341,7 @@ def build_a4_kit(
     """Compile one Analog Four KIT file without hardware access."""
 
     return _build_kit(
-        device="analog_four_mkii",
+        device="analog_four_mk2",
         reference_path=reference_path,
         recipe_path=recipe_path,
         destination_slot=destination_slot,
@@ -301,6 +351,7 @@ def build_a4_kit(
     )
 
 
+@_observed_rio145("rio145_build_rytm_kit")
 def build_rytm_kit(
     *,
     reference_path: Path,
@@ -312,7 +363,7 @@ def build_rytm_kit(
     """Compile one Analog Rytm KIT file without hardware access."""
 
     return _build_kit(
-        device="analog_rytm_mkii",
+        device="analog_rytm_mk2",
         reference_path=reference_path,
         recipe_path=recipe_path,
         destination_slot=destination_slot,
@@ -368,13 +419,14 @@ def _validate_target_return(
     }
 
 
+@_observed_rio145("rio145_validate_a4_return")
 def validate_a4_return(
     *, reference_path: Path, recipe_path: Path, returned_path: Path
 ) -> dict[str, object]:
     """Validate an Analog Four target-unit return against its recipe."""
 
     return _validate_target_return(
-        device="analog_four_mkii",
+        device="analog_four_mk2",
         reference_path=reference_path,
         recipe_path=recipe_path,
         returned_path=returned_path,
@@ -382,13 +434,14 @@ def validate_a4_return(
     )
 
 
+@_observed_rio145("rio145_validate_rytm_return")
 def validate_rytm_return(
     *, reference_path: Path, recipe_path: Path, returned_path: Path
 ) -> dict[str, object]:
     """Validate an Analog Rytm target-unit return against its recipe."""
 
     return _validate_target_return(
-        device="analog_rytm_mkii",
+        device="analog_rytm_mk2",
         reference_path=reference_path,
         recipe_path=recipe_path,
         returned_path=returned_path,
@@ -425,6 +478,7 @@ def _last_arrangement_bar(arrangement: Sequence[object]) -> int:
     return last_bar
 
 
+@_observed_rio145("rio145_export_oxi_manifest")
 def export_oxi_manifest(
     *,
     manifest_path: Path,

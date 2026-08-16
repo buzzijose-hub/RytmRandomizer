@@ -328,13 +328,22 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # Passive Elektron codec boundaries retain ValueError compatibility
         # while exposing typed BoundaryError subclasses to their callers.
         "ElektronPackedPayloadError",
+        "AnalogFourSavedKitCodecError",
         "AnalogRytmSavedKitCodecError",
+        # Shared saved-KIT field/recipe errors preserve stdlib ValueError
+        # compatibility while participating in the shared data taxonomy.
+        "ElektronKitFieldError",
+        "ElektronKitRecipeError",
         # RIO145 passive native-KIT compilers preserve stdlib ValueError
         # compatibility while participating in the shared error taxonomy.
         "Rio145OfflineError",
         "ElektronNativeObjectError",
         "A4RecipeError",
         "RytmRecipeError",
+        # elektron_kit_common receives only the registered A4RecipeError or
+        # RytmRecipeError class and raises that bounded typed constructor.
+        # The AST scanner sees the parameter name rather than either class.
+        "error_type",
         # Re-homed legacy classes (still raisable by their original name):
         "RealMidiDependencyError",
         "RealMidiPortError",

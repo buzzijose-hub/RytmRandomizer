@@ -9,9 +9,9 @@ slot are preserved unless a caller deliberately changes them elsewhere.
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
 from enum import IntEnum
-from typing import ClassVar, cast
+from types import MappingProxyType
+from typing import ClassVar
 
 from ...data.analog_four_saved_kit_layout import (
     A4_FAMILY_BYTE,
@@ -19,7 +19,7 @@ from ...data.analog_four_saved_kit_layout import (
     A4_KIT_OBJECT_TRACK_SOUND_SIZE,
     A4_KIT_OBJECT_TRACKS_OFFSET,
 )
-from ...observability.errors import DataError
+from ...observability.errors import ElektronKitRecipeError
 from ...snapshot import ElektronNativeObjectMessage
 from .analog_four_kit_fields import (
     A4_BIPOLAR_FIELDS,
@@ -38,110 +38,103 @@ from .analog_four_kit_fields import (
     A4SyncMode,
     A4Waveform,
 )
+from .elektron_kit_common import (
+    KitRecipeBuildResult,
+    require_enum,
+    require_float,
+    require_int,
+    require_recipe_mapping,
+    require_sequence,
+)
 
 
-class A4RecipeError(DataError, ValueError):
+class A4RecipeError(ElektronKitRecipeError):
     """Raised when a recipe is malformed or asks for an unsafe/unmapped edit."""
 
     fingerprint: ClassVar[str] = "data.rio145.a4_recipe"
 
 
-_ENUM_FIELDS: dict[str, type[IntEnum]] = {
-    "osc1_waveform": A4Waveform,
-    "osc2_waveform": A4Waveform,
-    "osc1_sub": A4SubOscillator,
-    "osc2_sub": A4SubOscillator,
-    "sync_mode": A4SyncMode,
-    "filter2_type": A4Filter2Type,
-    "amp_shape": A4EnvelopeShape,
-    "envf_shape": A4EnvelopeShape,
-    "env2_shape": A4EnvelopeShape,
-    "lfo1_multiplier": A4LfoMultiplier,
-    "lfo2_multiplier": A4LfoMultiplier,
-    "lfo1_mode": A4LfoMode,
-    "lfo2_mode": A4LfoMode,
-    "lfo1_waveform": A4LfoWave,
-    "lfo2_waveform": A4LfoWave,
-    "portamento": A4Portamento,
-}
+_ENUM_FIELDS: Mapping[str, type[IntEnum]] = MappingProxyType(
+    {
+        "osc1_waveform": A4Waveform,
+        "osc2_waveform": A4Waveform,
+        "osc1_sub": A4SubOscillator,
+        "osc2_sub": A4SubOscillator,
+        "sync_mode": A4SyncMode,
+        "filter2_type": A4Filter2Type,
+        "amp_shape": A4EnvelopeShape,
+        "envf_shape": A4EnvelopeShape,
+        "env2_shape": A4EnvelopeShape,
+        "lfo1_multiplier": A4LfoMultiplier,
+        "lfo2_multiplier": A4LfoMultiplier,
+        "lfo1_mode": A4LfoMode,
+        "lfo2_mode": A4LfoMode,
+        "lfo1_waveform": A4LfoWave,
+        "lfo2_waveform": A4LfoWave,
+        "portamento": A4Portamento,
+    }
+)
 
-
-@dataclass(frozen=True, slots=True)
-class A4RecipeBuildResult:
-    message: ElektronNativeObjectMessage
-    changed_payload_offsets: tuple[int, ...]
-    changed_outside_declared_edit_regions: tuple[int, ...]
-
-    @property
-    def changed_payload_byte_count(self) -> int:
-        return len(self.changed_payload_offsets)
+A4RecipeBuildResult = KitRecipeBuildResult
 
 
 def _require_a4_mapping(value: object, label: str) -> Mapping[str, object]:
-    if not isinstance(value, Mapping):
-        raise A4RecipeError(f"{label} must be an object")
-    raw = cast(Mapping[object, object], value)
-    if not all(isinstance(key, str) for key in raw):
-        raise A4RecipeError(f"{label} keys must be strings")
-    return {str(key): item for key, item in raw.items()}
+    return require_recipe_mapping(value, label, A4RecipeError)
 
 
 def _require_a4_sequence(value: object, label: str) -> Sequence[object]:
-    if not isinstance(value, Sequence) or isinstance(value, (str, bytes, bytearray)):
-        raise A4RecipeError(f"{label} must be an array")
-    return cast(Sequence[object], value)
+    return require_sequence(value, label, A4RecipeError)
 
 
 def _a4_int_value(value: object, label: str) -> int:
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise A4RecipeError(f"{label} must be an integer")
-    return value
+    return require_int(value, label, A4RecipeError)
 
 
 def _a4_float_value(value: object, label: str) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise A4RecipeError(f"{label} must be numeric")
-    return float(value)
+    return require_float(value, label, A4RecipeError)
 
 
 def _a4_enum_value(field: str, value: object) -> int:
-    try:
-        enum_type = _ENUM_FIELDS[field]
-    except KeyError as exc:
-        raise A4RecipeError(f"{field!r} is not a supported enum field") from exc
-    if isinstance(value, str):
-        try:
-            return int(enum_type[value])
-        except KeyError as exc:
-            names = ", ".join(member.name for member in enum_type)
-            raise A4RecipeError(
-                f"unknown {field} enum name {value!r}; expected one of: {names}"
-            ) from exc
-    numeric = _a4_int_value(value, field)
-    try:
-        return int(enum_type(numeric))
-    except (TypeError, ValueError) as exc:
-        raise A4RecipeError(f"invalid numeric enum value {value!r} for {field}") from exc
+    enum_type = _ENUM_FIELDS.get(field)
+    if enum_type is None:
+        raise A4RecipeError(f"{field!r} is not a supported enum field")
+    return require_enum(field, value, enum_type, A4RecipeError)
 
 
 def _destination_value(value: object) -> A4Destination:
-    if isinstance(value, str):
-        try:
-            return A4Destination[value]
-        except KeyError as exc:
-            names = ", ".join(member.name for member in A4Destination)
-            raise A4RecipeError(
-                f"unknown modulation destination {value!r}; expected one of: {names}"
-            ) from exc
-    numeric = _a4_int_value(value, "modulation destination")
     try:
-        return A4Destination(numeric)
-    except (TypeError, ValueError) as exc:
+        return A4Destination(
+            require_enum(
+                "modulation destination",
+                value,
+                A4Destination,
+                A4RecipeError,
+            )
+        )
+    except A4RecipeError as exc:
+        if isinstance(value, str):
+            raise
         raise A4RecipeError(f"invalid modulation destination {value!r}") from exc
 
 
 def apply_a4_sound_recipe(sound: A4Sound, recipe: Mapping[str, object]) -> A4Sound:
     """Return a copy of ``sound`` with one declarative recipe applied."""
+    allowed_sections = frozenset(
+        {
+            "name",
+            "pitch",
+            "u7",
+            "bipolar",
+            "fixed_8_8",
+            "enum",
+            "destinations",
+            "mod_depths",
+        }
+    )
+    unknown_sections = set(recipe) - allowed_sections
+    if unknown_sections:
+        raise A4RecipeError(f"unknown track recipe section(s): {sorted(unknown_sections)}")
+
     edited = A4Sound.from_bytes(sound.to_bytes())
 
     if "name" in recipe:
@@ -201,20 +194,6 @@ def apply_a4_sound_recipe(sound: A4Sound, recipe: Mapping[str, object]) -> A4Sou
     for field, value in destinations.items():
         edited.set_destination(str(field), _destination_value(value))
 
-    allowed_sections = {
-        "name",
-        "pitch",
-        "u7",
-        "bipolar",
-        "fixed_8_8",
-        "enum",
-        "destinations",
-        "mod_depths",
-    }
-    unknown_sections = set(recipe) - allowed_sections
-    if unknown_sections:
-        raise A4RecipeError(f"unknown track recipe section(s): {sorted(unknown_sections)}")
-
     return edited
 
 
@@ -232,6 +211,24 @@ def compile_a4_kit_recipe(
         raise A4RecipeError(
             "unsupported or missing recipe schema; expected elektron.a4.kit-recipe.v1"
         )
+
+    allowed_top_level = frozenset(
+        {
+            "schema",
+            "title",
+            "description",
+            "compatibility_basis",
+            "firmware",
+            "baseline_fixture",
+            "kit_name",
+            "track_levels",
+            "tracks",
+            "preservation_policy",
+        }
+    )
+    unknown_top_level = set(recipe) - allowed_top_level
+    if unknown_top_level:
+        raise A4RecipeError(f"unknown top-level recipe key(s): {sorted(unknown_top_level)}")
 
     before = bytes(baseline.payload)
     kit = A4Kit.from_bytes(before)
@@ -258,22 +255,6 @@ def compile_a4_kit_recipe(
         typed_track_recipe = _require_a4_mapping(track_recipe, f"tracks[{track_index}]")
         edited = apply_a4_sound_recipe(kit.sound(track_index), typed_track_recipe)
         kit.replace_sound(track_index, edited)
-
-    allowed_top_level = {
-        "schema",
-        "title",
-        "description",
-        "compatibility_basis",
-        "firmware",
-        "baseline_fixture",
-        "kit_name",
-        "track_levels",
-        "tracks",
-        "preservation_policy",
-    }
-    unknown_top_level = set(recipe) - allowed_top_level
-    if unknown_top_level:
-        raise A4RecipeError(f"unknown top-level recipe key(s): {sorted(unknown_top_level)}")
 
     after = kit.to_bytes()
     changed = tuple(

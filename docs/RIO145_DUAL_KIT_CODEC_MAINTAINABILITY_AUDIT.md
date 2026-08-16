@@ -50,11 +50,14 @@ the linked plan.
 
 - The integration delegates Elektron envelope handling to the canonical
   snapshot helpers and cross-validates Rytm output with the existing saved-KIT
-  codec. No competing envelope or hardware adapter was introduced.
+  codec. Native A4 and Rytm saved-KIT paths select MSB-first mask ordering;
+  LSB-first remains limited to the named legacy synthetic Rytm body decoder.
+  A native-fixture divergence witness prevents those contracts from being
+  conflated. No competing envelope or hardware adapter was introduced.
 - A4 object offsets are isolated behind the explicit five-byte-prefix adapter;
   field and recipe modules use typed enums, frozen records, named constants,
   and fail-closed validation.
-- The passive command registry exposes eight file-only RIO145 operations. No
+- The passive command registry exposes six file-only RIO145 operations. No
   RIO145 production or test path imports a MIDI backend, enumerates ports,
   opens ports, or sends MIDI/SysEx.
 - The 12 real-machine fixtures are immutable and hash-pinned. Generated A4 and

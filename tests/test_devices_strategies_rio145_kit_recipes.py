@@ -10,6 +10,7 @@ from typing import cast
 
 import pytest
 
+from rytm_randomizer.data.analog_rytm_kit_fields import RYTM_MACHINE_PARAMETER_NAMES
 from rytm_randomizer.devices.strategies.analog_four_kit_fields import (
     A4Destination,
     A4Kit,
@@ -27,7 +28,6 @@ from rytm_randomizer.devices.strategies.analog_four_kit_recipe import (
     compile_a4_kit_recipe,
 )
 from rytm_randomizer.devices.strategies.analog_rytm_kit_fields import (
-    MACHINE_PARAMETER_NAMES,
     RytmFilterType,
     RytmKit,
     RytmMachine,
@@ -322,7 +322,7 @@ def test_rytm_exact_key_and_machine_parameter_validation() -> None:
         _machine_parameter_index(RytmMachine.BD_SHARP, "NOPE")
 
     untyped_machine = next(
-        machine for machine in RytmMachine if machine not in MACHINE_PARAMETER_NAMES
+        machine for machine in RytmMachine if machine not in RYTM_MACHINE_PARAMETER_NAMES
     )
     with pytest.raises(RytmRecipeError, match="no typed parameter layout"):
         _machine_parameter_index(untyped_machine, "TUN")

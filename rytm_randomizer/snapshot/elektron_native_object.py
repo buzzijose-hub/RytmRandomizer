@@ -13,11 +13,26 @@ from dataclasses import dataclass, replace
 from typing import ClassVar, Final
 
 from ..observability.errors import BoundaryError
-from .elektron_u14 import ELEKTRON_U14_MAX, decode_elektron_u14, encode_elektron_u14
-from .envelope import ELEKTRON_MFR_ID
+from .elektron_packed_payload import (
+    ELEKTRON_CHECKSUM_LENGTH_TRAILER_SIZE,
+    ElektronPackedPayloadError,
+    encode_elektron_packed_payload,
+    split_elektron_packed_payload_body,
+    validate_elektron_packed_payload,
+)
+from .envelope import (
+    ELEKTRON_MFR_ID,
+    Elektron7BitMaskOrder,
+    pack_elektron_7bit,
+    unpack_elektron_7bit,
+)
 
 _WIRE_HEADER_SIZE: Final[int] = 10
 _WIRE_TRAILER_SIZE: Final[int] = 5
+_BODY_HEADER_SIZE: Final[int] = _WIRE_HEADER_SIZE - 1
+_BODY_TRAILER_SIZE: Final[int] = _WIRE_TRAILER_SIZE - 1
+_LENGTH_ADJUSTMENT: Final[int] = _WIRE_TRAILER_SIZE
+_DEVICE_LABEL: Final[str] = "Elektron native object"
 
 
 class ElektronNativeObjectError(BoundaryError, ValueError):
@@ -29,43 +44,22 @@ class ElektronNativeObjectError(BoundaryError, ValueError):
 def pack_elektron_native_object(payload: bytes) -> bytes:
     """Pack native bytes with the target-validated Elektron MSB-mask order."""
 
-    packed = bytearray()
-    for start in range(0, len(payload), 7):
-        group = payload[start : start + 7]
-        mask = 0
-        lows = bytearray()
-        for index, value in enumerate(group):
-            if value & 0x80:
-                mask |= 1 << (6 - index)
-            lows.append(value & 0x7F)
-        packed.append(mask)
-        packed.extend(lows)
-    return bytes(packed)
+    return pack_elektron_7bit(
+        payload,
+        mask_order=Elektron7BitMaskOrder.MSB_FIRST,
+    )
 
 
 def unpack_elektron_native_object(packed: bytes) -> bytes:
     """Unpack target-validated Elektron object bytes from MIDI-safe data."""
 
-    if any(value > 0x7F for value in packed):
-        raise ElektronNativeObjectError(
-            "Packed Elektron native-object payload contains a non-MIDI-safe byte"
+    try:
+        return unpack_elektron_7bit(
+            packed,
+            mask_order=Elektron7BitMaskOrder.MSB_FIRST,
         )
-    unpacked = bytearray()
-    cursor = 0
-    while cursor < len(packed):
-        mask = packed[cursor]
-        cursor += 1
-        count = min(7, len(packed) - cursor)
-        if count == 0:
-            raise ElektronNativeObjectError(
-                "Packed Elektron native-object payload ends with an empty mask group"
-            )
-        for index in range(count):
-            value = packed[cursor + index]
-            value |= ((mask >> (6 - index)) & 1) << 7
-            unpacked.append(value)
-        cursor += count
-    return bytes(unpacked)
+    except ValueError as exc:
+        raise ElektronNativeObjectError(str(exc)) from exc
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,28 +89,33 @@ class ElektronNativeObjectMessage:
                 "Elektron object message contains a non-MIDI-safe data byte"
             )
 
-        packed = frame[_WIRE_HEADER_SIZE:-_WIRE_TRAILER_SIZE]
-        stored_checksum = decode_elektron_u14(frame[-5], frame[-4])
-        expected_checksum = sum(packed) & ELEKTRON_U14_MAX
-        if stored_checksum != expected_checksum:
-            raise ElektronNativeObjectError(
-                "Elektron object checksum does not match the packed payload"
+        try:
+            body = split_elektron_packed_payload_body(
+                frame[1:-1],
+                header_size=_BODY_HEADER_SIZE,
+                trailer_size=_BODY_TRAILER_SIZE,
+                device_label=_DEVICE_LABEL,
             )
-        stored_length = decode_elektron_u14(frame[-3], frame[-2])
-        expected_length = len(frame) - _WIRE_HEADER_SIZE
-        if stored_length != expected_length:
-            raise ElektronNativeObjectError(
-                "Elektron object encoded length does not match the frame"
+            validate_elektron_packed_payload(
+                body.packed,
+                body.trailer,
+                checksum_start=0,
+                length_adjustment=_LENGTH_ADJUSTMENT,
+                expected_packed_size=None,
+                expected_trailer_size=ELEKTRON_CHECKSUM_LENGTH_TRAILER_SIZE,
+                device_label=_DEVICE_LABEL,
             )
+        except ElektronPackedPayloadError as exc:
+            raise ElektronNativeObjectError(str(exc)) from exc
 
         return cls(
-            product_id=frame[4],
-            device_id=frame[5],
-            command=frame[6],
-            format_version=frame[7],
-            format_revision=frame[8],
-            slot=frame[9],
-            payload=unpack_elektron_native_object(packed),
+            product_id=body.header[3],
+            device_id=body.header[4],
+            command=body.header[5],
+            format_version=body.header[6],
+            format_revision=body.header[7],
+            slot=body.header[8],
+            payload=unpack_elektron_native_object(body.packed),
         )
 
     def to_bytes(self) -> bytes:
@@ -133,16 +132,23 @@ class ElektronNativeObjectMessage:
         if any(not 0 <= value <= 0x7F for value in header_values):
             raise ValueError("Elektron object header values must be in the range 0..127")
 
-        packed = pack_elektron_native_object(self.payload)
-        checksum = sum(packed) & ELEKTRON_U14_MAX
-        encoded_length = len(packed) + _WIRE_TRAILER_SIZE
+        try:
+            encoded = encode_elektron_packed_payload(
+                self.payload,
+                checksum_start=0,
+                length_adjustment=_LENGTH_ADJUSTMENT,
+                expected_packed_size=None,
+                device_label=_DEVICE_LABEL,
+                mask_order=Elektron7BitMaskOrder.MSB_FIRST,
+            )
+        except ElektronPackedPayloadError as exc:
+            raise ElektronNativeObjectError(str(exc)) from exc
         frame = (
             bytes((0xF0,))
             + ELEKTRON_MFR_ID
             + bytes(header_values)
-            + packed
-            + encode_elektron_u14(checksum)
-            + encode_elektron_u14(encoded_length)
+            + encoded.packed
+            + encoded.trailer
             + bytes((0xF7,))
         )
         ElektronNativeObjectMessage.from_bytes(frame)

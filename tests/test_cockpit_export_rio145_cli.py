@@ -18,10 +18,8 @@ COMMANDS = (
     "rio145-inspect-sysex",
     "rio145-diff-sysex",
     "rio145-validate-roundtrip",
-    "rio145-build-a4-kit",
-    "rio145-build-rytm-kit",
-    "rio145-validate-a4-return",
-    "rio145-validate-rytm-return",
+    "rio145-build-kit",
+    "rio145-validate-return",
     "rio145-export-oxi-manifest",
 )
 
@@ -55,7 +53,9 @@ def test_inspect_and_build_commands_emit_json(
     assert (
         cli.main(
             (
-                "rio145-build-a4-kit",
+                "rio145-build-kit",
+                "--device",
+                "analog_four_mk2",
                 "--reference",
                 str(FIXTURES / "A4_Test1_Init_Kit.syx"),
                 "--recipe",
@@ -78,7 +78,9 @@ def test_cli_rejects_invalid_slot_and_overwrite(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     args = (
-        "rio145-build-a4-kit",
+        "rio145-build-kit",
+        "--device",
+        "analog_four_mk2",
         "--reference",
         str(FIXTURES / "A4_Test1_Init_Kit.syx"),
         "--recipe",
@@ -105,7 +107,9 @@ def test_cli_rejects_invalid_slot_and_overwrite(
         (("rio145-inspect-sysex", "--input", "--left"), "requires a value"),
         (
             (
-                "rio145-build-a4-kit",
+                "rio145-build-kit",
+                "--device",
+                "analog_four_mk2",
                 "--reference",
                 "a",
                 "--recipe",
@@ -115,11 +119,13 @@ def test_cli_rejects_invalid_slot_and_overwrite(
                 "--output",
                 "c",
             ),
-            "decimal integer",
+            "integer from 0 to 127",
         ),
         (
             (
-                "rio145-build-a4-kit",
+                "rio145-build-kit",
+                "--device",
+                "analog_four_mk2",
                 "--reference",
                 "a",
                 "--recipe",
@@ -134,7 +140,9 @@ def test_cli_rejects_invalid_slot_and_overwrite(
         (("rio145-diff-sysex", "--left", "a"), "missing required option"),
         (
             (
-                "rio145-build-a4-kit",
+                "rio145-build-kit",
+                "--device",
+                "analog_four_mk2",
                 "--overwrite",
                 "--overwrite",
                 "--reference",
@@ -147,6 +155,10 @@ def test_cli_rejects_invalid_slot_and_overwrite(
                 "c",
             ),
             "overwrite may be specified only once",
+        ),
+        (
+            ("rio145-build-kit", "--device", "analog_four_mkii"),
+            "must be analog_four_mk2 or analog_rytm_mk2",
         ),
         (("rio145-inspect-sysex", "--overwrite"), "unknown option"),
     ],
@@ -177,7 +189,9 @@ def test_remaining_commands_execute_passively(
             str(FIXTURES / "A4_Test1_Init_Kit.syx"),
         ),
         (
-            "rio145-build-rytm-kit",
+            "rio145-build-kit",
+            "--device",
+            "analog_rytm_mk2",
             "--reference",
             str(FIXTURES / "RYTM_Test1_Init_Kit.syx"),
             "--recipe",
@@ -188,7 +202,9 @@ def test_remaining_commands_execute_passively(
             str(tmp_path / "rytm.syx"),
         ),
         (
-            "rio145-validate-a4-return",
+            "rio145-validate-return",
+            "--device",
+            "analog_four_mk2",
             "--reference",
             str(FIXTURES / "A4_Test1_Init_Kit.syx"),
             "--recipe",
@@ -197,7 +213,9 @@ def test_remaining_commands_execute_passively(
             str(FIXTURES / "A4_RIO145_CORE_RETURN_Kit.syx"),
         ),
         (
-            "rio145-validate-rytm-return",
+            "rio145-validate-return",
+            "--device",
+            "analog_rytm_mk2",
             "--reference",
             str(FIXTURES / "RYTM_Test1_Init_Kit.syx"),
             "--recipe",
@@ -227,7 +245,9 @@ def test_overwrite_is_explicit_and_missing_files_fail_offline(
 ) -> None:
     output = tmp_path / "a4.syx"
     base = (
-        "rio145-build-a4-kit",
+        "rio145-build-kit",
+        "--device",
+        "analog_four_mk2",
         "--reference",
         str(FIXTURES / "A4_Test1_Init_Kit.syx"),
         "--recipe",
@@ -251,14 +271,26 @@ def test_overwrite_is_explicit_and_missing_files_fail_offline(
     [
         ("inspect", {}, "option 'input' is missing"),
         (
-            "build_a4",
+            "build",
             {
+                "device": "analog_four_mk2",
                 "reference": Path("reference.syx"),
                 "recipe": Path("recipe.json"),
                 "destination_slot": True,
                 "output": Path("output.syx"),
             },
             "destination-slot option is missing",
+        ),
+        (
+            "build",
+            {
+                "device": "unsupported_device",
+                "reference": Path("reference.syx"),
+                "recipe": Path("recipe.json"),
+                "destination_slot": 0,
+                "output": Path("output.syx"),
+            },
+            "device option is missing or invalid",
         ),
         (
             "export_oxi",
