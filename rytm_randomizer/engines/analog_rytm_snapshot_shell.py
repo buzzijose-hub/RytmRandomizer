@@ -15,9 +15,8 @@ from types import MappingProxyType
 from typing import Final, Literal, TypeAlias
 
 from ..data.analog_rytm_kit_layout import (
-    RYTM_KIT_TRACK_SOUND_SIZE,
-    RYTM_KIT_TRACKS_OFFSET,
     RYTM_SOUND_FIELD_BY_NRPN_LSB,
+    analog_rytm_track_sound_offset,
 )
 from ..data.analog_rytm_midi import (
     ANALOG_RYTM_VALIDATED_RUNTIME_CC,
@@ -1255,7 +1254,7 @@ def _track_value(snapshot: RytmKitSnapshot, pad: int, nrpn_lsb: int) -> int | No
     field = RYTM_SOUND_FIELD_BY_NRPN_LSB.get(nrpn_lsb)
     if field is None:
         return None
-    offset = RYTM_KIT_TRACKS_OFFSET + (RYTM_KIT_TRACK_SOUND_SIZE * (pad - 1)) + field.sound_offset
+    offset = analog_rytm_track_sound_offset(pad, field.sound_offset)
     if offset >= len(snapshot.unpacked):
         return None
     return _clamp_midi_value(snapshot.unpacked[offset] & 0x7F)

@@ -83,6 +83,26 @@ def _analysis(*, features=None, report: FeatureReport | None = None):
     )
 
 
+def test_isolated_analysis_wrapper_records_native_audio_analysis(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    audio_path = tmp_path / "reference.wav"
+    expected = _analysis()
+    observed: list[Path] = []
+
+    def fake_run(path: Path):
+        observed.append(path)
+        return expected
+
+    monkeypatch.setattr(inference, "_run_native_audio_analysis_process", fake_run)
+
+    assert inference.analyze_analog_four_patch_audio_analysis_isolated(audio_path) == expected
+    assert observed == [audio_path]
+
+
 def _successful_native_analysis_worker(_path: str, sender: Connection) -> None:
     from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
 
@@ -1137,8 +1157,8 @@ def test_candidate_count_and_numeric_helpers_cover_bounds(
     assert inference._unipolar(200.0) == 127
     assert inference._bipolar(-100.0) == -64
     assert inference._bipolar(100.0) == 63
-    assert inference._clamp_audio_feature_unit(-1.0) == 0.0
-    assert inference._clamp_audio_feature_unit(2.0) == 1.0
+    assert inference.clamp_audio_feature_unit(-1.0) == 0.0
+    assert inference.clamp_audio_feature_unit(2.0) == 1.0
     with pytest.raises(ValueError, match="candidate column must be"):
         inference._candidate_character(_features(), 5)
 

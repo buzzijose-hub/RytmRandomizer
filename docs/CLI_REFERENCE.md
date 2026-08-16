@@ -235,6 +235,8 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `rio145-validate-a4-return` | Offline Analog Four target-return validation against the deterministic recipe build |
 | `rio145-validate-rytm-return` | Offline Analog Rytm target-return validation against the deterministic recipe build |
 | `rio145-export-oxi-manifest` | Validate and export the RIO145 OXI sequence-evidence bundle offline |
+| `al16-rytm-mapping-evidence` | Passive AL16 Rytm mapping-closure analyzer; cryptographically binds initialized/configured saved-kit evidence to the exact recipe, R1 gap manifest, recipe identity, and reference SHA without promoting offsets or writing SysEx |
+| `audio-patch-dna` | Passive one-analysis workspace with readable sound DNA, exactly eight fixed directions, and optional selected-candidate Analog Four SysEx export |
 | `analog-four-audio-patch-batch` | Real local audio analysis; the documented/default workflow deterministically commits exactly four immutable `.syx` candidates, complete DNA sidecars, and one manifest; `--studio-handoff` prints the bounded four-audition workflow with zero calibration rounds |
 | `analog-four-audio-patch-rank` | Passive acoustic ranking of recorded A4 candidates against the exact batch reference |
 | `local-model-copilot-report` | Passive local model docs, mutation-intent, and Analog Four patch-review packets; optional local model subprocess call with `--ask-local-model` |
@@ -265,6 +267,9 @@ python -m rytm_randomizer.cli rio145-build-rytm-kit --reference RYTM_NATIVE.syx 
 python -m rytm_randomizer.cli rio145-validate-a4-return --reference A4_NATIVE.syx --recipe specs/rio145/come_to_rio_a4_core.json --returned A4_TARGET_RETURN.syx
 python -m rytm_randomizer.cli rio145-validate-rytm-return --reference RYTM_NATIVE.syx --recipe specs/rio145/come_to_rio_rytm_core.json --returned RYTM_TARGET_RETURN.syx
 python -m rytm_randomizer.cli rio145-export-oxi-manifest --manifest RIO145_OXI_PROGRAM_MANIFEST.json --events RIO145_OXI_EVENTS.csv --output output/local/rio145/RIO145_OXI_EVIDENCE.json
+python -m rytm_randomizer.cli al16-rytm-mapping-evidence --reference output/local/reference/RYTM_Test1_Init_Kit.syx --configured output/local/al16/AL02_LOCK_RYTM_CONFIGURED.syx --recipe specs/al16/AL02_LOCK_RYTM.yaml --gap-manifest output/al16/AL02_LOCK_RYTM_manifest.json --expected-gap-manifest-sha256 "<reviewed SHA-256>" --report output/local/al16/AL02_LOCK_RYTM_mapping_evidence.json
+python -m rytm_randomizer.cli audio-patch-dna --audio reference.wav --output-dir output/local/audio-dna
+python -m rytm_randomizer.cli audio-patch-dna --audio reference.wav --output-dir output/local/audio-dna --select 6 --source-kit INIT.syx
 python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit INIT.syx --output-dir batch --track 1 --candidates 4
 python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit INIT.syx --output-dir batch --track 1 --studio-handoff --a4-output-port "<exact configured Analog Four output name>"
 python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference reference.wav --manifest batch/a4-t1-audio-patch-batch.json --render 1=candidate-1.wav
@@ -339,6 +344,19 @@ assignments through the registered Analog Four device capability, and writes a
 new `.syx` through the canonical atomic writer. It never opens a MIDI port and
 refuses unsupported or unvalidated saved-kit parameters.
 
+`audio-patch-dna` is the passive reference-to-discovery workspace. It decodes
+one immutable audio snapshot once, reports pitch, envelope, transients,
+rhythm, brightness, noise, spectral movement, and tonal stability, then builds
+exactly eight deterministic directions in this order: Closest, Darker,
+Brighter, Metallic, Percussive, Atmospheric, Deeper, and Animated. The default
+run writes JSON and readable Markdown for comparison only. A selected export
+requires `--select 1..8` and `--source-kit` together, then routes only that
+candidate through the existing validated Analog Four batch/SysEx exporter
+without analyzing the audio again. The command imports no MIDI backend,
+enumerates no ports, sends no data, and performs no network access. Analog Rytm
+selection/export is not included in this command yet; it follows the separate
+Rytm codec integration rather than duplicating that architecture here.
+
 `al16-rytm-kit-export` is the offline Analog Rytm audit/evidence compiler for
 the original AL16 Reference -> Discovery performance bank. It is not a
 forensic recreation workflow. Store the private initialized reference under
@@ -368,6 +386,25 @@ the preserved four-variant, 360-event, 191-bar sequence evidence; it does not
 author Elektron patterns. None of these commands imports or constructs a MIDI
 provider, enumerates ports, or sends data. Binary target-return validation is
 not a claim of sonic equivalence; listening refinement remains pending.
+
+`al16-rytm-mapping-evidence` is the passive Phase R2 mapping-closure analyzer.
+It compares the initialized saved-kit dump with one manually configured
+AL02-like dump, limits candidate locations to the existing Rytm layout
+metadata and canonical parameter resolver, and writes a deterministic JSON
+review packet covering the R1 mapping gaps. Before comparing payloads it
+verifies SHA-256 provenance for the exact recipe and gap-manifest files, the
+operator-supplied expected SHA-256 for those exact manifest bytes, the
+deterministic recipe identifier, and the initialized-reference SHA recorded in
+the manifest. Path roles are validated against the canonical AL16 gap grammar
+before file I/O; failures use bounded error codes and safe basenames, and
+success/failure metrics are recorded under the mapping-evidence operation. A
+second scratch-slot import/dump supplies the bounded destination-slot proof
+described in the linked plan. The command never opens or enumerates MIDI ports,
+writes SysEx, or promotes a candidate mapping; the ambiguous Pad 9 machine
+request remains explicitly unresolved until device evidence identifies the
+intended machine. One configured saved-KIT capture is intended to close many
+gaps together; repeated single-parameter calibration rounds are not the
+operator workflow.
 
 `analog-four-audio-patch-batch` is the end-to-end offline candidate generator.
 With the documented/default `--candidates 4` workflow, it analyzes an immutable

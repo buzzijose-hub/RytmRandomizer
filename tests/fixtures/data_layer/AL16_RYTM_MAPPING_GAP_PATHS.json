@@ -1,0 +1,20 @@
+[
+  "destination_slot",
+  "tracks.1.machine",
+  "tracks.1.source.dec",
+  "tracks.1.source.hld",
+  "tracks.1.source.swd",
+  "tracks.1.source.swt",
+  "tracks.1.source.trn",
+  "tracks.1.source.tun",
+  "tracks.1.source.wav",
+  "tracks.1.amp.vol",
+  "tracks.3.machine",
+  "tracks.3.amp.vol",
+  "tracks.6.source.decay",
+  "tracks.6.source.target_note",
+  "tracks.6.amp.vol",
+  "tracks.9.machine",
+  "tracks.9.source.decay",
+  "tracks.9.amp.vol"
+]

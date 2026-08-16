@@ -45,6 +45,7 @@ from rytm_randomizer.data.al16_rytm import (
 from rytm_randomizer.data.analog_rytm_kit_layout import (
     RYTM_KIT_RAW_SIZE,
     RYTM_SOUND_MACHINE_TYPE_OFFSET,
+    analog_rytm_track_sound_offset,
 )
 from rytm_randomizer.data.rytm_machine_catalog import (
     RYTM_MACHINE_PROFILES,
@@ -70,7 +71,7 @@ _BANK_SPEC = _REPO_ROOT / "specs" / "al16" / "AL16_BANK.yaml"
 _AL02_RECIPE = _REPO_ROOT / "specs" / "al16" / "AL02_LOCK_RYTM.yaml"
 _COMMITTED_EVIDENCE_HASHES = {
     "output/al16/AL02_LOCK_RYTM_manifest.json": (
-        "256c675b3752432ce10c50555caacd12c2a896e03231af0d6a478966ffca9f74"
+        "21c7db4395e0a9dfb79b5f6b71cbdbe224ac8eb91e18dd8bbfa6a373a3367b3c"
     ),
     "output/al16/AL02_LOCK_RYTM_validation.md": (
         "bcf04d1a77c412d93efa1ec558a817df6656ea000d0fb8b337efc992eabbe6e5"
@@ -103,7 +104,7 @@ def _requested_audit_paths(recipe: Mapping[str, object]) -> set[str]:
 
 def _synthetic_reference(path: Path) -> bytes:
     raw = bytearray(RYTM_KIT_RAW_SIZE)
-    pad6_machine_offset = exporter._track_offset(6, RYTM_SOUND_MACHINE_TYPE_OFFSET)
+    pad6_machine_offset = analog_rytm_track_sound_offset(6, RYTM_SOUND_MACHINE_TYPE_OFFSET)
     raw[pad6_machine_offset] = get_rytm_machine_profile("xt_classic").machine_value
     reference = encode_analog_rytm_saved_kit_frame(_HEADER, bytes(raw))
     path.write_bytes(reference)
@@ -896,7 +897,7 @@ def test_al16_machine_validation_covers_preserve_and_wrong_pad() -> None:
     allowed = next(
         profile for profile in RYTM_MACHINE_PROFILES if is_machine_allowed_on_pad(1, profile.key)
     )
-    machine_offset = exporter._track_offset(1, RYTM_SOUND_MACHINE_TYPE_OFFSET)
+    machine_offset = analog_rytm_track_sound_offset(1, RYTM_SOUND_MACHINE_TYPE_OFFSET)
     raw[machine_offset] = allowed.machine_value
     audits: list[exporter.FieldAudit] = []
     gaps: list[exporter.MappingGap] = []
@@ -1424,7 +1425,7 @@ def test_al16_build_does_not_reclassify_unexpected_codec_failure(
 @pytest.mark.parametrize("payload", (b"\xff", b"{"))
 def test_al16_recipe_loader_classifies_expected_decode_failures(payload: bytes) -> None:
     with pytest.raises(Al16BuildError) as exc_info:
-        exporter._load_recipe_bytes(payload)
+        exporter.load_al16_recipe_bytes(payload)
 
     assert exc_info.value.reason == "recipe_schema_invalid"
     assert isinstance(
@@ -1449,7 +1450,7 @@ def test_al16_build_does_not_mask_unexpected_recipe_load_failure(
         "_REFERENCE_EXPECTED_SHA256",
         hashlib.sha256(reference).hexdigest(),
     )
-    monkeypatch.setattr(exporter, "_load_recipe_bytes", fail_recipe_load)
+    monkeypatch.setattr(exporter, "load_al16_recipe_bytes", fail_recipe_load)
 
     with pytest.raises(KeyError, match="missing recipe root") as exc_info:
         build_al16_rytm_kit(

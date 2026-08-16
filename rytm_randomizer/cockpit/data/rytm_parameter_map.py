@@ -16,6 +16,7 @@ from typing import Final
 from ...data.analog_rytm_midi import (
     ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER,
     ANALOG_RYTM_MACHINE_SRC_BY_MACHINE,
+    AnalogRytmCcMapping,
 )
 
 _PAD_ID_MIN: Final[int] = 1
@@ -63,11 +64,15 @@ _BD_HARD_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
         "lev": "Level",
         "tun": "Tune",
         "dec": "Decay",
+        "hld": "Hold",
         "hold": "Hold",
         "swt": "Sweep Time",
+        "swd": "Sweep Depth",
         "sweep_depth": "Sweep Depth",
         "snap": "Sweep Depth",
+        "wav": "Waveform",
         "wave": "Waveform",
+        "trn": "Transient Tick",
         "tick": "Transient Tick",
     }
 )
@@ -230,7 +235,9 @@ _XT_CLASSIC_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
     {
         "lev": "Level",
         "tun": "Tune",
+        "target_note": "Tune",
         "dec": "Decay",
+        "decay": "Decay",
         "sweep_depth": "Sweep Depth",
         "swt": "Sweep Time",
         "noise_decay": "Noise Decay",
@@ -305,13 +312,6 @@ _MACHINE_PARAMETER_ALIASES: Final[Mapping[str, Mapping[str, str]]] = MappingProx
     }
 )
 
-_COMMON_CONTROLS: Final[Mapping[str, int]] = MappingProxyType(
-    {
-        compact_key: ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER[catalog_key].cc_msb
-        for compact_key, catalog_key in _COMMON_ALIASES.items()
-    }
-)
-
 _MACHINE_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
     {
         "bd": "bd_hard",
@@ -373,42 +373,35 @@ def cockpit_parameter_control(machine: str, parameter: str) -> int | None:
     falling back to a synthetic CC.
     """
 
+    mapping = cockpit_parameter_mapping(machine, parameter)
+    return None if mapping is None else mapping.cc_msb
+
+
+def cockpit_parameter_mapping(machine: str, parameter: str) -> AnalogRytmCcMapping | None:
+    """Return the canonical manual-backed mapping for one cockpit field."""
+
     machine_key = _machine_key(machine)
-    controls = _MACHINE_CONTROLS.get(machine_key)
-    if controls is not None and parameter in controls:
-        return controls[parameter]
-    return _COMMON_CONTROLS.get(parameter)
+    aliases = _MACHINE_PARAMETER_ALIASES.get(machine_key)
+    if aliases is not None:
+        catalog_parameter = aliases.get(parameter)
+        if catalog_parameter is not None:
+            for mapping in ANALOG_RYTM_MACHINE_SRC_BY_MACHINE[machine_key]:
+                if mapping.parameter == catalog_parameter:
+                    return mapping
+            raise ValueError(
+                f"missing Analog Rytm catalog row for {machine_key}:{catalog_parameter}"
+            )
+
+    catalog_key = _COMMON_ALIASES.get(parameter)
+    if catalog_key is None:
+        return None
+    return ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER[catalog_key]
 
 
-def _machine_controls(machine_key: str, aliases: Mapping[str, str]) -> Mapping[str, int]:
-    catalog_controls = {
-        mapping.parameter: mapping.cc_msb
-        for mapping in ANALOG_RYTM_MACHINE_SRC_BY_MACHINE[machine_key]
-    }
-    missing = tuple(
-        sorted(
-            catalog_parameter
-            for catalog_parameter in aliases.values()
-            if catalog_parameter not in catalog_controls
-        )
-    )
-    if missing:
-        joined = ", ".join(missing)
-        raise ValueError(f"missing Analog Rytm catalog row(s) for {machine_key}: {joined}")
-    return MappingProxyType(
-        {
-            compact_key: catalog_controls[catalog_parameter]
-            for compact_key, catalog_parameter in aliases.items()
-        }
-    )
+def cockpit_machine_is_known(machine: str) -> bool:
+    """Return whether ``machine`` resolves to the canonical source catalog."""
 
-
-_MACHINE_CONTROLS: Final[Mapping[str, Mapping[str, int]]] = MappingProxyType(
-    {
-        machine_key: _machine_controls(machine_key, aliases)
-        for machine_key, aliases in _MACHINE_PARAMETER_ALIASES.items()
-    }
-)
+    return _machine_key(machine) in ANALOG_RYTM_MACHINE_SRC_BY_MACHINE
 
 
 def _machine_key(machine: str) -> str:
@@ -423,4 +416,9 @@ def _normalize_label(label: str) -> str:
     return " ".join(label.lower().replace("_", " ").replace("-", " ").split())
 
 
-__all__ = ["cockpit_pad_channel", "cockpit_parameter_control"]
+__all__ = [
+    "cockpit_machine_is_known",
+    "cockpit_pad_channel",
+    "cockpit_parameter_control",
+    "cockpit_parameter_mapping",
+]

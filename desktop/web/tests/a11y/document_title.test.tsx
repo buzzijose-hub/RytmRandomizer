@@ -1,9 +1,9 @@
 /**
  * Per-route document.title verification (WCAG 2.4.2).
  *
- * Uses the FakeCockpitClient fixture so the App's `useCockpitStore`
- * receives a `sessionStatus` and renders Cockpit / Wizard rather than
- * the "Connecting" placeholder.
+ * Uses the FakeCockpitClient fixture with a seeded `sessionStatus` so the
+ * Cockpit / Wizard surfaces render fully hydrated (they mount regardless —
+ * there is no session gate anymore).
  */
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';

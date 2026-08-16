@@ -1,7 +1,9 @@
 /**
- * Top-level App. Mounts <Cockpit /> once the engine has pushed a session_status; otherwise
- * shows the OfflineShell — a live surface with WS status, retry visibility (attempt count +
- * next-dial countdown), a manual "Retry now" action, and client-side connection help.
+ * Top-level App. The cockpit (and the wizard route) mount immediately and
+ * unconditionally — there is NO session gate. Plenty of the UI is usable
+ * with no sidecar connected; the client keeps retrying in the background
+ * and the <ReconnectBanner /> is the single, always-truthful connection
+ * surface (never-connected AND lost-mid-session, see its docstring).
  *
  * Hash routing
  * ------------
@@ -25,7 +27,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { LiveRegion, useDocumentTitle, useFocusOnRouteChange } from './a11y';
 import {
   Cockpit,
-  OfflineShell,
   PerformanceConsole,
   ReconnectBanner,
   performanceConsoleDemoModel,
@@ -69,7 +70,6 @@ function isPerformanceConsoleRoute(hash: string): boolean {
 
 export function App({ client: injected, performanceConsole }: AppProps = {}): JSX.Element {
   const client = useMemo(() => injected ?? new CockpitClient(), [injected]);
-  const sessionStatus = useCockpitStore((s) => s.sessionStatus);
   const storePerformanceConsole = useCockpitStore((s) => s.performanceConsole);
   const [connStatus, setConnStatus] = useState<ConnectionStatus>(client.getStatus());
   const route = useHashRoute();
@@ -101,14 +101,12 @@ export function App({ client: injected, performanceConsole }: AppProps = {}): JS
   useDocumentTitle(
     showPerformanceConsole
       ? 'RytmRandomizer · Performance Console'
-      : sessionStatus === null
-      ? 'RytmRandomizer · Connecting'
       : isWizardRoute(route)
         ? 'RytmRandomizer · Profile Wizard'
         : 'RytmRandomizer · Cockpit',
   );
 
-  useFocusOnRouteChange(routeRootRef, [route, sessionStatus === null]);
+  useFocusOnRouteChange(routeRootRef, [route]);
 
   if (showPerformanceConsole) {
     return (
@@ -129,22 +127,12 @@ export function App({ client: injected, performanceConsole }: AppProps = {}): JS
     );
   }
 
-  if (sessionStatus === null) {
-    return (
-      <>
-        <LiveRegion />
-        <div ref={routeRootRef} tabIndex={-1}>
-          <OfflineShell client={client} status={connStatus} />
-        </div>
-      </>
-    );
-  }
-
-  // Mid-session surfaces (wizard + cockpit) reach here only with a non-null
-  // sessionStatus, so a reconnecting/closed WS status means the sidecar was
-  // lost MID-SESSION. The cockpit deliberately stays mounted on its stale
-  // data (losing panel context mid-performance is worse); the banner is the
-  // loud, actionable reconnect surface for that state.
+  // No session gate: both live surfaces mount regardless of sidecar state.
+  // The ReconnectBanner self-gates (hidden while connected / during the
+  // initial-connect grace) and covers both the never-connected and the
+  // lost-mid-session case. The cockpit stays mounted on stale data when the
+  // sidecar drops mid-session (losing panel context mid-performance is
+  // worse); components degrade to empty/disabled states when slices are null.
   if (isWizardRoute(route)) {
     return (
       <>

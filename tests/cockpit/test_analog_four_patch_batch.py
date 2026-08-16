@@ -149,6 +149,20 @@ def _inference(*, track: int, candidate_count: int) -> _AudioInference:
     )
 
 
+def _public_audio_genome(*, track: int, candidate_count: int):
+    from rytm_randomizer.style_analysis.analog_four_patch_inference import (
+        AnalogFourAudioPatchGenome,
+        AnalogFourPatchAudioFeatures,
+    )
+
+    inference = _inference(track=track, candidate_count=candidate_count)
+    return AnalogFourAudioPatchGenome(
+        feature_report=inference.feature_report,
+        audio_features=AnalogFourPatchAudioFeatures(**inference.audio_features_payload),
+        genome=inference.genome,
+    )
+
+
 @pytest.fixture
 def _mocked_inference(monkeypatch: pytest.MonkeyPatch) -> None:
     from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
@@ -1725,3 +1739,62 @@ def test_build_audio_inference_uses_public_audio_inference_serializers(
     assert observed == {"path": tmp_path / "audio.wav", "track": 3, "candidate_count": 1}
     assert result.audio_features_payload["audio_sha256"] == "b" * 64
     assert result.genome_payload["selected_track"] == 3
+
+
+def test_precomputed_audio_inference_requires_one_column_one_candidate() -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch as batch
+
+    with pytest.raises(TypeError, match="AnalogFourAudioPatchGenome"):
+        batch._build_precomputed_audio_inference(object())
+
+    with pytest.raises(ValueError, match="exactly one candidate"):
+        batch._build_precomputed_audio_inference(_public_audio_genome(track=2, candidate_count=2))
+
+    one_candidate = _public_audio_genome(track=2, candidate_count=1)
+    wrong_column = replace(
+        one_candidate,
+        genome=replace(
+            one_candidate.genome,
+            candidates=(replace(one_candidate.genome.candidates[0], column=2),),
+        ),
+    )
+    with pytest.raises(ValueError, match="column 1"):
+        batch._build_precomputed_audio_inference(wrong_column)
+
+
+def test_export_selected_audio_patch_uses_precomputed_inference(tmp_path: Path) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch import (
+        export_selected_analog_four_audio_patch,
+    )
+
+    audio_path = tmp_path / "reference.wav"
+    audio_path.write_bytes(AUDIO_BYTES)
+    result = export_selected_analog_four_audio_patch(
+        audio_path=audio_path,
+        source_kit_path=SOURCE_KIT,
+        output_dir=tmp_path / "selected",
+        audio_genome=_public_audio_genome(track=2, candidate_count=1),
+    )
+
+    assert result.selected_track == 2
+    assert len(result.candidates) == 1
+    assert result.candidates[0].column == 1
+
+
+def test_export_selected_audio_patch_rejects_audio_provenance_mismatch(
+    tmp_path: Path,
+) -> None:
+    from rytm_randomizer.cockpit.export.analog_four_patch_batch import (
+        export_selected_analog_four_audio_patch,
+    )
+
+    audio_path = tmp_path / "different.wav"
+    audio_path.write_bytes(b"different audio snapshot")
+
+    with pytest.raises(ValueError, match="audio snapshot hash"):
+        export_selected_analog_four_audio_patch(
+            audio_path=audio_path,
+            source_kit_path=SOURCE_KIT,
+            output_dir=tmp_path / "selected",
+            audio_genome=_public_audio_genome(track=2, candidate_count=1),
+        )

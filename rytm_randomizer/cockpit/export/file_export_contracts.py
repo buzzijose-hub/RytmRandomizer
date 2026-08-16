@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Literal, TypeAlias, cast
@@ -103,6 +105,18 @@ def validate_local_file_export_artifact_path(path: Path, *, label: str) -> None:
         raise ValueError(f"{label} must identify a safe filename")
 
 
+def validate_distinct_local_file_export_paths(paths: Mapping[str, Path]) -> None:
+    """Reject canonical path aliases across named input and output roles."""
+
+    canonical_roles: dict[str, str] = {}
+    for label, path in paths.items():
+        canonical_path = os.path.normcase(str(path.resolve(strict=False)))
+        previous_label = canonical_roles.get(canonical_path)
+        if previous_label is not None:
+            raise ValueError(f"{label} path collides with {previous_label}")
+        canonical_roles[canonical_path] = label
+
+
 def attach_local_file_export_error_context(
     exc: BaseException,
     *,
@@ -180,5 +194,6 @@ __all__ = [
     "classify_local_file_export_error",
     "local_file_export_error_context",
     "safe_local_file_export_artifact_name",
+    "validate_distinct_local_file_export_paths",
     "validate_local_file_export_artifact_path",
 ]

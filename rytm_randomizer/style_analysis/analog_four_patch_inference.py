@@ -147,6 +147,15 @@ def analyze_analog_four_patch_audio_isolated(path: Path) -> AnalogFourPatchAudio
     )
 
 
+def analyze_analog_four_patch_audio_analysis_isolated(path: Path) -> AudioFeatureAnalysis:
+    """Return the complete shared analysis with native decoding isolated."""
+
+    return _recorded_a4_inference(
+        path,
+        lambda: _run_native_audio_analysis_process(path),
+    )
+
+
 def _a4_inference_error_code(exc: BaseException) -> AnalogFourPatchInferenceErrorCode:
     if isinstance(exc, (KeyboardInterrupt, SystemExit)):
         return "interrupted"
@@ -607,6 +616,26 @@ def build_analog_four_audio_patch_genome_isolated(
     )
 
 
+def build_analog_four_audio_patch_genome_from_analysis(
+    analysis: AudioFeatureAnalysis,
+    *,
+    track: int = 1,
+    candidate_count: int = ANALOG_FOUR_PATCH_CANDIDATE_MAX,
+) -> AnalogFourAudioPatchGenome:
+    """Infer A4 candidates from an already-decoded shared analysis."""
+
+    validated_analysis = require_runtime_type(
+        analysis,
+        AudioFeatureAnalysis,
+        "analysis must be AudioFeatureAnalysis",
+    )
+    return _build_analog_four_audio_patch_genome_from_analysis(
+        validated_analysis,
+        track=track,
+        candidate_count=candidate_count,
+    )
+
+
 def _build_analog_four_audio_patch_genome(
     path: Path,
     *,
@@ -766,11 +795,11 @@ def _candidate_character(
     if template.column != column:
         raise ValueError("candidate template columns must be contiguous and one-based")
     return (
-        _clamp_audio_feature_unit(features.brightness + template.brightness_offset),
-        _clamp_audio_feature_unit(features.noise + template.noise_offset),
-        _clamp_audio_feature_unit(features.low_end + template.low_end_offset),
-        _clamp_audio_feature_unit(features.modulation + template.animation_offset),
-        _clamp_audio_feature_unit(features.tail + template.tail_offset),
+        clamp_audio_feature_unit(features.brightness + template.brightness_offset),
+        clamp_audio_feature_unit(features.noise + template.noise_offset),
+        clamp_audio_feature_unit(features.low_end + template.low_end_offset),
+        clamp_audio_feature_unit(features.modulation + template.animation_offset),
+        clamp_audio_feature_unit(features.tail + template.tail_offset),
     )
 
 
@@ -782,7 +811,9 @@ def _bipolar(value: float) -> int:
     return max(-64, min(63, int(round(value))))
 
 
-def _clamp_audio_feature_unit(value: float) -> float:
+def clamp_audio_feature_unit(value: float) -> float:
+    """Clamp one normalized audio feature to the closed unit interval."""
+
     return max(0.0, min(1.0, float(value)))
 
 
@@ -795,7 +826,10 @@ __all__ = [
     "analog_four_audio_patch_genome_to_dict",
     "analog_four_patch_audio_features_to_dict",
     "analyze_analog_four_patch_audio",
+    "analyze_analog_four_patch_audio_analysis_isolated",
     "analyze_analog_four_patch_audio_isolated",
     "build_analog_four_audio_patch_genome",
+    "build_analog_four_audio_patch_genome_from_analysis",
     "build_analog_four_audio_patch_genome_isolated",
+    "clamp_audio_feature_unit",
 ]
