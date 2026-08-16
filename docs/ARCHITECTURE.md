@@ -102,6 +102,7 @@ on one line for an existing module, you probably need a new module instead.
 | `data/analog_four_patch_templates.py` | Static Analog Four patch-genome candidate templates and rationale rows. Pure data. |
 | `data/analog_four_patch_corpus.py` | Synthetic Analog Four patch-corpus starter feature vectors. Pure data. |
 | `data/analog_four_render_rank.py` | Stable feature weights for recorded A4 candidate ranking. Pure data. |
+| `data/audio_patch_dna.py` | Canonical Audio-to-Patch DNA creative directions, feature offsets, roles, rationale, and candidate-count facts. Pure data. |
 | `data/analog_four_recipes.py` | Manual-backed Analog Four kit recipe definitions. Pure data.       |
 | `data/analog_rytm_midi.py` | Manual-backed Analog Rytm OS 1.72 CC/NRPN catalog and safety status labels. Pure data. |
 | `data/analog_rytm_style_recipes.py` | Curated full-12-pad Analog Rytm style-kit CC MSB recipes. Pure data. |
@@ -152,6 +153,7 @@ on one line for an existing module, you probably need a new module instead.
 | --------------------- | ------------------------------------------------------------------------------- |
 | `group_runner.py`     | Four-pad group + isolated-pad orchestration. Drives `randomization` + `midi_io`.|
 | `scene_runner.py`     | Scene/preset thin layer on top of `group_runner`.                               |
+| `style_analysis/audio_patch_dna.py` | Pure one-analysis-to-eight-directions Audio-to-Patch DNA transforms, comparison payloads, and explicit candidate selection. |
 | `style_analysis/analog_four_patch_genome.py` | Passive FeatureReport -> four-column Analog Four single-sound patch DNA compiler. |
 | `style_analysis/analog_four_patch_learning.py` | Passive patch-genome learning packet compiler: candidate ranking, trait routes, capture matrix, and live-dial readiness. |
 | `style_analysis/analog_four_patch_corpus.py` | Passive A4 patch/audio corpus nearest-match ranking and calibration-gap compiler. |
@@ -181,6 +183,8 @@ on one line for an existing module, you probably need a new module instead.
 | `style_analysis/analog_four_patch_inference.py` | Typed, single-decode audio evidence and audio-dependent four-column A4 patch-genome inference with direct RED metrics. |
 | `style_analysis/runtime_types.py` | Shared runtime type-validation helper used by extractor and A4 inference boundaries. |
 | `cockpit/export/cli_options.py` | Shared side-effect-free option parsing helpers for registered export commands. |
+| `cockpit/export/audio_patch_dna.py` | Passive analyze-once Audio-to-Patch DNA comparison service with observability, atomic local-file publication, and optional explicit selection through the existing A4 exporter; no MIDI I/O. |
+| `cockpit/export/audio_patch_dna_cli.py` | Registered passive file-only Audio-to-Patch DNA compare/select CLI; may export one explicitly selected A4 candidate and never enumerates or opens MIDI ports. |
 | `cockpit/export/analog_four_patch_batch.py` | Transactional batch service that stages candidate saved kits and complete DNA/live-dial sidecars from immutable inputs, then publishes a manifest commit marker through the canonical atomic writer. |
 | `cockpit/export/analog_four_patch_batch_codec.py` | Canonical JSON encoding/decoding and SHA-256 helpers shared by batch writer and reader. |
 | `cockpit/export/analog_four_patch_batch_contracts.py` | Stable batch payload and result contracts. |
@@ -446,6 +450,18 @@ still encodes only hardware-write-validated Filter2 Resonance. This is real
 audio-dependent inference, but not full saved-kit coverage or a claim of
 Synthplant-equivalent learned accuracy. `analog-four-audio-patch-batch` remains
 hardware-passive: local reads/writes only, with no MIDI port or send.
+
+The `audio-patch-dna` workspace is a passive comparison layer over that same
+extractor and A4 export path. One isolated audio analysis produces readable
+pitch, envelope, transient, rhythm, brightness, noise, spectral-movement, and
+tonal-stability evidence. Eight fixed pure transforms then produce Closest,
+Darker, Brighter, Metallic, Percussive, Atmospheric, Deeper, and Animated
+candidates without decoding the source again. Compare-only mode writes the
+deterministic workspace JSON and Markdown. An explicit selection plus source
+kit passes the already-built candidate into the guarded A4 batch exporter; it
+does not rerun audio analysis and never opens a MIDI port. Analog Rytm export is
+deliberately deferred until the passive Rytm codec integration is available on
+the target branch.
 
 The stored-plan reader treats the stable manifest as the publication commit
 marker. Before a candidate reaches dry-run or the armed sender, it verifies the

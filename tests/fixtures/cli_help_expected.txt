@@ -119,6 +119,7 @@ Usage:
   python -m rytm_randomizer.cli al16-rytm-kit-export --reference <kit.syx> --recipe <recipe.yaml> --destination-slot <0..127> --output <kit.syx>
   python -m rytm_randomizer.cli al16-rytm-mapping-evidence --reference <baseline.syx> --configured <configured.syx> --recipe <recipe.yaml> --gap-manifest <manifest.json> --expected-gap-manifest-sha256 <sha256> --report <report.json>
   python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json]
+  python -m rytm_randomizer.cli audio-patch-dna --audio <path> --output-dir <dir> [--track N] [--select N --source-kit <kit.syx>] [--overwrite] [--json]
   python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference <path> --manifest <batch.json> --render <N=path> [--render <N=path> ...] [--json]
   python -m rytm_randomizer.cli cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> [--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
@@ -373,6 +374,8 @@ Commands:
                     Compare two local Rytm kits for review-only mapping evidence.
   analog-four-audio-patch-batch
                     Infer and export up to four passive Analog Four patch candidates from audio.
+  audio-patch-dna
+                    Analyze audio once and write eight comparable patch directions.
   analog-four-audio-patch-rank
                     Rank recorded Analog Four candidates against their reference audio.
   cockpit-export-rehearsal-report

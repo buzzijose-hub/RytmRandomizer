@@ -44,7 +44,7 @@ if TYPE_CHECKING:
     from rytm_randomizer.devices.strategies.analog_four_saved_kit_writer import (
         AnalogFourSavedKitMutation,
     )
-    from rytm_randomizer.style_analysis import FeatureReport
+    from rytm_randomizer.style_analysis import AudioFeatureAnalysis, FeatureReport
 
 
 def analog_four_reference_feature_report(*, derived_at: str) -> FeatureReport:
@@ -66,6 +66,58 @@ def analog_four_reference_feature_report(*, derived_at: str) -> FeatureReport:
         energy_arc=(0.18, 0.34, 0.48, 0.72, 0.84, 0.78, 0.61, 0.4),
         content_hash="",
         derived_at=derived_at,
+    )
+
+
+@pytest.fixture
+def audio_patch_dna_analysis() -> AudioFeatureAnalysis:
+    """Build the canonical measured-audio analysis shared by DNA tests."""
+
+    from rytm_randomizer.guardrails.schema import Confidence, SourceType
+    from rytm_randomizer.style_analysis import (
+        AudioDnaEvidence,
+        AudioFeatureAnalysis,
+        AudioSynthesisFeatures,
+        FeatureReport,
+    )
+
+    return AudioFeatureAnalysis(
+        feature_report=FeatureReport(
+            source_type=SourceType.SINGLE_TRACK,
+            confidence=Confidence.HIGH,
+            bpm=138.0,
+            tempo_stability=0.92,
+            kick_density=0.31,
+            percussion_density=0.48,
+            low_end_weight=0.61,
+            spectral_brightness=0.57,
+            texture_noise=0.23,
+            energy_arc=(0.2, 0.4, 0.7, 0.6),
+            content_hash="placeholder",
+            derived_at="2026-08-09T00:00:00Z",
+        ),
+        synthesis_features=AudioSynthesisFeatures(
+            audio_sha256="b" * 64,
+            duration=0.40,
+            attack=0.18,
+            decay=0.42,
+            sustain=0.38,
+            tail=0.36,
+            brightness=0.55,
+            spectral_flatness=0.20,
+            noise=0.24,
+            low_end=0.58,
+            harmonicity=0.68,
+            transient=0.62,
+            modulation=0.27,
+        ),
+        dna_evidence=AudioDnaEvidence(
+            dominant_frequency_hz=87.31,
+            dominant_note="F2",
+            pitch_confidence=0.81,
+            tonal_stability=0.72,
+            spectral_movement=0.19,
+        ),
     )
 
 

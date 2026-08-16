@@ -321,6 +321,8 @@ USAGE = (
     "--report <report.json> | "
     "analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> "
     "--output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json] | "
+    "audio-patch-dna --audio <path> --output-dir <dir> [--track N] "
+    "[--select N --source-kit <kit.syx>] [--overwrite] [--json] | "
     "analog-four-audio-patch-rank --reference <path> --manifest <batch.json> "
     "--render <N=path> [--render <N=path> ...] [--json] | "
     "cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> "
@@ -396,6 +398,26 @@ def test_analog_four_audio_patch_batch_help_is_exact_and_passive():
     assert "zero calibration" in help_text
     assert "generated app --arm commands" in help_text
     assert "not a claim of full saved-kit coverage" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_audio_patch_dna_help_is_exact_and_passive():
+    from rytm_randomizer.cockpit.export.audio_patch_dna_cli import SAFETY_LINES
+
+    result = run_cli("audio-patch-dna", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: audio-patch-dna" in help_text
+    assert "Analyzes one immutable audio snapshot once" in help_text
+    assert "exactly eight deterministic directions" in help_text
+    assert "Closest, Darker" in help_text
+    assert "Compare-only" in help_text
+    assert "--select and --source-kit" in help_text
+    assert "without decoding the audio again" in help_text
+    assert "does not" in help_text
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
     assert result.stderr == ""

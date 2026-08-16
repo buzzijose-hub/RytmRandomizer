@@ -125,6 +125,10 @@ from .analog_rytm_midi import (
     ANALOG_RYTM_VALIDATED_RUNTIME_CC,
 )
 from .analog_rytm_style_recipes import ANALOG_RYTM_STYLE_RECIPES
+from .audio_patch_dna import (
+    AUDIO_PATCH_DNA_CANDIDATE_COUNT,
+    AUDIO_PATCH_DNA_DIRECTION_SPECS,
+)
 from .controller_mapping_profiles import (
     CONTROLLER_ENCODER_COUNT,
     CONTROLLER_MAPPING_PROFILES,
@@ -264,6 +268,8 @@ from .style_profiles import STYLE_PROFILES
 from .style_targets import STYLE_TARGET_VECTOR_AXES, STYLE_TARGET_VECTORS
 
 __all__ = [
+    "AUDIO_PATCH_DNA_CANDIDATE_COUNT",
+    "AUDIO_PATCH_DNA_DIRECTION_SPECS",
     "AL16_ADJACENT_SONIC_DNA_TARGET_PERCENT",
     "AL16_BANK_CONCEPT",
     "AL16_BANK_SCHEMA_VERSION",

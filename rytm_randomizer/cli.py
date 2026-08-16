@@ -518,6 +518,10 @@ def _registered_command_exit_code(args: Sequence[str]) -> int | None:
             "rytm_randomizer.cockpit.export.analog_four_patch_batch_cli",
             "ANALOG_FOUR_AUDIO_PATCH_BATCH_CLI_COMMAND",
         ),
+        "audio-patch-dna": (
+            "rytm_randomizer.cockpit.export.audio_patch_dna_cli",
+            "AUDIO_PATCH_DNA_CLI_COMMAND",
+        ),
         "analog-four-audio-patch-rank": (
             "rytm_randomizer.cockpit.export.analog_four_patch_render_rank_cli",
             "ANALOG_FOUR_PATCH_RENDER_RANK_CLI_COMMAND",
