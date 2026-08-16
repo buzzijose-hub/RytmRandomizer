@@ -15,6 +15,14 @@ from rytm_randomizer.cockpit.export.analog_four_export_contracts import (
 
 pytestmark = pytest.mark.fast
 
+# Shared studio-handoff rejection messages (single source for the parser-level
+# and handler-level tables below; the count wording itself is drift-guarded
+# against DEFAULT_CANDIDATE_COUNT in
+# test_studio_count_prose_derives_from_template_table).
+STUDIO_ERR_PORT_REQUIRED = "--studio-handoff requires --a4-output-port"
+STUDIO_ERR_HANDOFF_REQUIRED = "--a4-output-port requires --studio-handoff"
+STUDIO_ERR_CANDIDATE_COUNT = "--studio-handoff requires exactly four candidates"
+
 
 @dataclass(frozen=True)
 class _CandidateOutput:
@@ -226,7 +234,7 @@ def test_parser_accepts_every_documented_option() -> None:
                 "out",
                 "--studio-handoff",
             ],
-            "--studio-handoff requires --a4-output-port",
+            STUDIO_ERR_PORT_REQUIRED,
         ),
         (
             [
@@ -239,7 +247,7 @@ def test_parser_accepts_every_documented_option() -> None:
                 "--a4-output-port",
                 "A4 Port",
             ],
-            "--a4-output-port requires --studio-handoff",
+            STUDIO_ERR_HANDOFF_REQUIRED,
         ),
         (
             [
@@ -255,7 +263,7 @@ def test_parser_accepts_every_documented_option() -> None:
                 "--a4-output-port",
                 "A4 Port",
             ],
-            "--studio-handoff requires exactly four candidates",
+            STUDIO_ERR_CANDIDATE_COUNT,
         ),
         (
             [
@@ -518,8 +526,18 @@ def test_studio_handoff_commands_round_trip_through_their_real_parsers(
     )
     app_parser = app._build_parser()
 
+    # Every generated command targets the armed app entry point through the
+    # same interpreter launcher; pin the prefix explicitly so the slice
+    # offsets below cannot silently drift out of sync with the builder.
+    import sys as _sys
+
+    launcher = str(Path(_sys.executable).resolve())
+    app_prefix = [launcher, "-m", "rytm_randomizer.app"]
+
     for column, candidate in enumerate(handoff["candidates"], start=1):
-        dry_run = app_parser.parse_args(candidate["dry_run_argv"][3:])
+        assert candidate["dry_run_argv"][: len(app_prefix)] == app_prefix
+        assert candidate["armed_audition_argv"][: len(app_prefix)] == app_prefix
+        dry_run = app_parser.parse_args(candidate["dry_run_argv"][len(app_prefix) :])
         assert dry_run.dry_run is True
         assert dry_run.arm is False
         assert dry_run.a4_patch_send_plan is True
@@ -529,7 +547,7 @@ def test_studio_handoff_commands_round_trip_through_their_real_parsers(
         assert dry_run.confirm_a4_patch_send_plan is False
         assert dry_run.a4_output_port is None
 
-        armed = app_parser.parse_args(candidate["armed_audition_argv"][3:])
+        armed = app_parser.parse_args(candidate["armed_audition_argv"][len(app_prefix) :])
         assert armed.arm is True
         assert armed.dry_run is False
         assert armed.a4_patch_send_plan is True
@@ -539,7 +557,13 @@ def test_studio_handoff_commands_round_trip_through_their_real_parsers(
         assert armed.confirm_a4_patch_send_plan is True
         assert armed.a4_output_port == "Elektron Analog Four MKII 2"
 
-    rank = parse_analog_four_patch_render_rank_args(handoff["rank_argv"][4:])
+    from rytm_randomizer.cockpit.export.analog_four_patch_render_rank_cli import (
+        COMMAND_NAME as RANK_COMMAND_NAME,
+    )
+
+    rank_prefix = [launcher, "-m", "rytm_randomizer.cli", RANK_COMMAND_NAME]
+    assert handoff["rank_argv"][: len(rank_prefix)] == rank_prefix
+    rank = parse_analog_four_patch_render_rank_args(handoff["rank_argv"][len(rank_prefix) :])
     assert rank == {
         "reference_audio_path": audio_path.resolve(),
         "manifest_path": result.manifest_path.resolve(),
@@ -554,9 +578,9 @@ def test_studio_handoff_commands_round_trip_through_their_real_parsers(
 @pytest.mark.parametrize(
     ("studio_handoff", "a4_output_port", "candidate_count", "message"),
     [
-        (True, None, 4, "--studio-handoff requires --a4-output-port"),
-        (False, "A4 Port", 4, "--a4-output-port requires --studio-handoff"),
-        (True, "A4 Port", 3, "--studio-handoff requires exactly four candidates"),
+        (True, None, 4, STUDIO_ERR_PORT_REQUIRED),
+        (False, "A4 Port", 4, STUDIO_ERR_HANDOFF_REQUIRED),
+        (True, "A4 Port", 3, STUDIO_ERR_CANDIDATE_COUNT),
     ],
 )
 def test_handler_rejects_invalid_direct_studio_handoff_calls(
@@ -601,7 +625,7 @@ def test_handler_reports_invalid_studio_handoff_as_text(
     captured = capsys.readouterr()
     assert exit_code == 2
     assert captured.out == ""
-    assert "Error [invalid_input]: --studio-handoff requires --a4-output-port" in (captured.err)
+    assert f"Error [invalid_input]: {STUDIO_ERR_PORT_REQUIRED}" in captured.err
 
 
 def test_handler_emits_lock_cleanup_warning_in_text(
@@ -927,3 +951,81 @@ def test_batch_cli_reports_text_interrupted_response(
     assert exit_code == 130
     assert "Error [interrupted]: operator cancelled" in captured.err
     assert captured.out == ""
+
+
+def test_parser_rejects_control_characters_in_a4_output_port() -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+
+    args = [
+        "--audio",
+        "clip.wav",
+        "--source-kit",
+        "init.syx",
+        "--output-dir",
+        "out",
+        "--studio-handoff",
+        "--a4-output-port",
+        "Elektron\nAnalog Four",
+    ]
+    with pytest.raises(ValueError, match="must not contain control characters"):
+        cli.parse_analog_four_audio_patch_batch_args(args)
+
+
+@pytest.mark.parametrize("bad_char", ["\r", "\t", "\x1b", "\x7f"])
+def test_parser_rejects_every_control_character_class_in_port(bad_char: str) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+
+    args = [
+        "--audio",
+        "clip.wav",
+        "--source-kit",
+        "init.syx",
+        "--output-dir",
+        "out",
+        "--studio-handoff",
+        "--a4-output-port",
+        f"A4{bad_char}Port",
+    ]
+    with pytest.raises(ValueError, match="must not contain control characters"):
+        cli.parse_analog_four_audio_patch_batch_args(args)
+
+
+def test_studio_count_prose_derives_from_template_table() -> None:
+    """The 'exactly four candidates' wording must track the data layer.
+
+    If ``data/analog_four_patch_templates.py`` grows a fifth template, the
+    rejection message, workflow prose, and safety line all follow through
+    ``DEFAULT_CANDIDATE_COUNT_WORD`` — and this test pins the mapping so the
+    shared literals in this module fail loudly instead of drifting.
+    """
+
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+
+    assert cli._count_word(cli.DEFAULT_CANDIDATE_COUNT) == cli.DEFAULT_CANDIDATE_COUNT_WORD
+    assert (
+        f"--studio-handoff requires exactly {cli.DEFAULT_CANDIDATE_COUNT_WORD} candidates"
+        == STUDIO_ERR_CANDIDATE_COUNT
+    )
+    assert (
+        f"writes up to {cli.DEFAULT_CANDIDATE_COUNT_WORD} candidate .syx files"
+        in cli.SAFETY_LINES[1]
+    )
+
+
+def test_count_word_spells_small_counts_and_falls_back_to_digits() -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+
+    assert cli._count_word(4) == "four"
+    assert cli._count_word(2) == "two"
+    assert cli._count_word(7) == "7"
+
+
+def test_help_text_count_prose_matches_the_template_table() -> None:
+    """The static help prose must agree with DEFAULT_CANDIDATE_COUNT."""
+
+    from rytm_randomizer import help_text
+    from rytm_randomizer.cockpit.export import analog_four_patch_batch_cli as cli
+
+    entry = help_text.HELP_TEXT[cli.COMMAND_NAME]
+    rendered = entry() if callable(entry) else entry
+    assert f"exactly {cli.DEFAULT_CANDIDATE_COUNT_WORD} candidates" in rendered

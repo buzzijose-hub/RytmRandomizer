@@ -36,6 +36,7 @@ import {
   useCockpitStore,
 } from '../state';
 
+import { SIDECAR_REQUIRED_REASON } from './ReconnectBanner';
 import { useLoggedCommand } from './useLoggedCommand';
 
 export interface ActionBarProps {
@@ -74,6 +75,13 @@ export function ActionBar({ previewOn, onTogglePreview }: ActionBarProps): JSX.E
   const session = useCockpitStore((s) => s.sessionStatus);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  // Never-connected (no session ever arrived): the sidecar-requiring
+  // actions are disabled WITH a reason — present, never hidden. Data-driven
+  // buttons (PREPARE/SEND/UNDO) are already disabled by their empty slices.
+  // Mid-session loss deliberately keeps them enabled: failures surface in
+  // the operator log and the ReconnectBanner owns the connection truth.
+  const offline = session === null;
+  const offlineTitle = offline ? SIDECAR_REQUIRED_REASON : undefined;
   const prepareDisabled = candidate === null;
   const sendDisabled = !canSend;
   const previewLabel = previewOn ? '◐ PREVIEW (on)' : '◐ PREVIEW (off)';
@@ -110,6 +118,8 @@ export function ActionBar({ previewOn, onTogglePreview }: ActionBarProps): JSX.E
         className={previewOn ? 'action-button toggle on' : 'action-button toggle'}
         aria-pressed={previewOn}
         data-testid="action-preview"
+        disabled={offline}
+        title={offlineTitle}
         onClick={handleTogglePreview}
       >
         {previewLabel}
@@ -118,6 +128,8 @@ export function ActionBar({ previewOn, onTogglePreview }: ActionBarProps): JSX.E
         type="button"
         className="action-button"
         data-testid="action-regen"
+        disabled={offline}
+        title={offlineTitle}
         onClick={() => {
           sendCommand({ type: 'regen' });
         }}
@@ -159,6 +171,8 @@ export function ActionBar({ previewOn, onTogglePreview }: ActionBarProps): JSX.E
         type="button"
         className="action-button"
         data-testid="action-save"
+        disabled={offline}
+        title={offlineTitle}
         onClick={() => {
           sendCommand({ type: 'save' });
         }}

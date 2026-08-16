@@ -2923,121 +2923,8 @@ html,
   }
 }
 
-/* ---------- OfflineShell (sidecar not yet answering) ---------- */
-
-.offline-shell {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  padding: 16px;
-  gap: 12px;
-  box-sizing: border-box;
-}
-
-.offline-shell-main {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  flex: 1;
-}
-
-.offline-shell-card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 20px 24px;
-  max-width: 560px;
-  width: 100%;
-  margin-top: 32px;
-}
-
-.offline-shell-card h1 {
-  font-size: 18px;
-  margin: 0 0 8px;
-}
-
-.offline-shell-detail {
-  color: var(--text);
-  margin: 0 0 4px;
-}
-
-.offline-shell-retry-line {
-  color: var(--text-dim);
-  font-variant-numeric: tabular-nums;
-  margin: 0 0 8px;
-}
-
-.offline-shell-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin: 12px 0;
-}
-
-.offline-retry-button {
-  background: var(--accent);
-  color: var(--bg);
-  border: 1px solid var(--accent);
-  border-radius: 6px;
-  padding: 6px 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.offline-retry-button:disabled {
-  background: var(--panel-2);
-  color: var(--text-dim);
-  border-color: var(--border);
-  cursor: not-allowed;
-}
-
-.offline-shell-target {
-  color: var(--text-dim);
-  font-size: 13px;
-}
-
-.offline-shell-help {
-  border-top: 1px solid var(--border);
-  margin-top: 8px;
-  padding-top: 12px;
-}
-
-.offline-shell-help h2 {
-  font-size: 14px;
-  margin: 0 0 6px;
-}
-
-.offline-shell-help ul {
-  margin: 0;
-  padding-left: 18px;
-  color: var(--text-dim);
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.offline-shell-note {
-  color: var(--text-dim);
-  font-size: 13px;
-  margin: 10px 0 0;
-}
-
-.offline-status-badge.offline-status-connected {
-  color: var(--green);
-  border-color: var(--green);
-}
-
-.offline-status-badge.offline-status-reconnecting {
-  color: var(--amber);
-  border-color: var(--amber);
-}
-
-.offline-status-badge.offline-status-closed {
-  color: var(--danger);
-  border-color: var(--danger);
-}
-
-/* ---------- ReconnectBanner (mid-session sidecar loss) ----------
+/* ---------- ReconnectBanner (sidecar not connected — never-connected
+   AND mid-session loss) ----------
    Fixed-position so it stays visible over the mounted cockpit no matter
    where the operator has scrolled. Danger border + amber-free palette:
    the banner is a fault surface, not an armed indicator. */
@@ -3090,6 +2977,55 @@ html,
   padding: 6px 14px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.reconnect-banner-retry-button:disabled {
+  background: var(--panel-2);
+  color: var(--text-dim);
+  border-color: var(--border);
+  cursor: not-allowed;
+}
+
+.reconnect-banner-status {
+  color: var(--text-dim);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Pre-session "Connection help" disclosure — the compact successor of the
+   retired OfflineShell's help card. */
+.reconnect-banner-help {
+  flex-basis: 100%;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.reconnect-banner-help summary {
+  cursor: pointer;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.reconnect-banner-target {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin: 8px 0 4px;
+}
+
+.reconnect-banner-help ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.reconnect-banner-note {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin: 8px 0 0;
 }
 
 /* ---------- DeviceRail hardware honesty (banner + preview badge) ---------- */
