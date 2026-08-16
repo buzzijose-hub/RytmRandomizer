@@ -227,6 +227,7 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `analog-four-patch-send-plan-report` | Passive CC/NRPN live-dial send plan for a generated Analog Four patch |
 | `analog-four-saved-kit-export` | Guarded local-file saved-kit export; currently admits hardware-validated Filter2 Resonance only |
 | `al16-rytm-kit-export` | Offline AL16 Analog Rytm audit/evidence compiler; Phase R1 validates the exact initialized reference, writes deterministic mapping-gap evidence, and emits no `.syx` |
+| `audio-patch-dna` | Passive one-analysis workspace with readable sound DNA, exactly eight fixed directions, and optional selected-candidate Analog Four SysEx export |
 | `analog-four-audio-patch-batch` | Real local audio analysis; the documented/default workflow deterministically commits exactly four immutable `.syx` candidates, complete DNA sidecars, and one manifest; `--studio-handoff` prints the bounded four-audition workflow with zero calibration rounds |
 | `analog-four-audio-patch-rank` | Passive acoustic ranking of recorded A4 candidates against the exact batch reference |
 | `local-model-copilot-report` | Passive local model docs, mutation-intent, and Analog Four patch-review packets; optional local model subprocess call with `--ask-local-model` |
@@ -249,6 +250,8 @@ python -m rytm_randomizer.cli analog-four-patch-corpus-report --audio reference.
 python -m rytm_randomizer.cli analog-four-patch-send-plan-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
 python -m rytm_randomizer.cli analog-four-saved-kit-export --source INIT.syx --output PATCH.syx --filter2-resonance 1:64
 python -m rytm_randomizer.cli al16-rytm-kit-export --reference output/local/reference/RYTM_Test1_Init_Kit.syx --recipe specs/al16/AL02_LOCK_RYTM.yaml --destination-slot 127 --output output/local/al16/AL02_LOCK_RYTM.syx
+python -m rytm_randomizer.cli audio-patch-dna --audio reference.wav --output-dir output/local/audio-dna
+python -m rytm_randomizer.cli audio-patch-dna --audio reference.wav --output-dir output/local/audio-dna --select 6 --source-kit INIT.syx
 python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit INIT.syx --output-dir batch --track 1 --candidates 4
 python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit INIT.syx --output-dir batch --track 1 --studio-handoff --a4-output-port "<exact configured Analog Four output name>"
 python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference reference.wav --manifest batch/a4-t1-audio-patch-batch.json --render 1=candidate-1.wav
@@ -322,6 +325,19 @@ It reads a saved-kit dump, applies explicit `TRACK:VALUE` Filter2 Resonance
 assignments through the registered Analog Four device capability, and writes a
 new `.syx` through the canonical atomic writer. It never opens a MIDI port and
 refuses unsupported or unvalidated saved-kit parameters.
+
+`audio-patch-dna` is the passive reference-to-discovery workspace. It decodes
+one immutable audio snapshot once, reports pitch, envelope, transients,
+rhythm, brightness, noise, spectral movement, and tonal stability, then builds
+exactly eight deterministic directions in this order: Closest, Darker,
+Brighter, Metallic, Percussive, Atmospheric, Deeper, and Animated. The default
+run writes JSON and readable Markdown for comparison only. A selected export
+requires `--select 1..8` and `--source-kit` together, then routes only that
+candidate through the existing validated Analog Four batch/SysEx exporter
+without analyzing the audio again. The command imports no MIDI backend,
+enumerates no ports, sends no data, and performs no network access. Analog Rytm
+selection/export is not included in this command yet; it follows the separate
+Rytm codec integration rather than duplicating that architecture here.
 
 `al16-rytm-kit-export` is the offline Analog Rytm audit/evidence compiler for
 the original AL16 Reference -> Discovery performance bank. It is not a

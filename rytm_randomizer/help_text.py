@@ -293,6 +293,8 @@ USAGE = (
     "--destination-slot <0..127> --output <kit.syx> | "
     "analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> "
     "--output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json] | "
+    "audio-patch-dna --audio <path> --output-dir <dir> [--track N] "
+    "[--select N --source-kit <kit.syx>] [--overwrite] [--json] | "
     "analog-four-audio-patch-rank --reference <path> --manifest <batch.json> "
     "--render <N=path> [--render <N=path> ...] [--json] | "
     "cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> "
@@ -2652,6 +2654,39 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _audio_patch_dna_help():
+    from .cockpit.export.audio_patch_dna_cli import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: audio-patch-dna
+
+Usage:
+  python -m rytm_randomizer.cli audio-patch-dna --audio <path> --output-dir <dir>
+  python -m rytm_randomizer.cli audio-patch-dna --audio <path> --output-dir <dir> --track 2 --select 6 --source-kit <kit.syx> --json
+  python -m rytm_randomizer.cli audio-patch-dna --help
+
+Arguments:
+  --audio <path>           Operator-selected reference audio to analyze once
+  --output-dir <dir>       Destination for the DNA comparison reports
+  --track N                Analog Four track 1-4; default 1
+  --select N               Optional direction 1-8 to export for Analog Four
+  --source-kit <kit.syx>   Required only with --select; source A4 saved kit
+  --overwrite              Replace the stable reports and selected export
+  --json                   Emit a JSON acknowledgment instead of text
+
+Behavior:
+  Analyzes one immutable audio snapshot once, exposes readable pitch, envelope,
+  transient, rhythm, brightness, noise, spectral-movement, and tonal-stability
+  evidence, and writes exactly eight deterministic directions: Closest, Darker,
+  Brighter, Metallic, Percussive, Atmospheric, Deeper, and Animated. Compare-only
+  mode is the default. Supplying the paired --select and --source-kit options
+  exports only the selected direction through the existing passive Analog Four
+  saved-kit workflow without decoding the audio again. This command does not
+  audition candidates, control hardware, or generate an Analog Rytm kit.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def _analog_four_audio_patch_rank_help():
     from .cockpit.export.analog_four_patch_render_rank import (
         ANALOG_FOUR_RENDER_RANK_SAFETY,
@@ -2851,6 +2886,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-saved-kit-export --source <kit.syx> --output <kit.syx> --filter2-resonance <track:value> [--filter2-resonance <track:value> ...] [--overwrite] [--json]
   python -m rytm_randomizer.cli al16-rytm-kit-export --reference <kit.syx> --recipe <recipe.yaml> --destination-slot <0..127> --output <kit.syx>
   python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json]
+  python -m rytm_randomizer.cli audio-patch-dna --audio <path> --output-dir <dir> [--track N] [--select N --source-kit <kit.syx>] [--overwrite] [--json]
   python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference <path> --manifest <batch.json> --render <N=path> [--render <N=path> ...] [--json]
   python -m rytm_randomizer.cli cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> [--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
@@ -3103,6 +3139,8 @@ Commands:
                     Audit AL16 Rytm inputs and emit deterministic mapping-gap evidence.
   analog-four-audio-patch-batch
                     Infer and export up to four passive Analog Four patch candidates from audio.
+  audio-patch-dna
+                    Analyze audio once and write eight comparable patch directions.
   analog-four-audio-patch-rank
                     Rank recorded Analog Four candidates against their reference audio.
   cockpit-export-rehearsal-report
@@ -3520,6 +3558,7 @@ Safety:
     "analog-four-saved-kit-export": _analog_four_saved_kit_export_help,
     "al16-rytm-kit-export": _al16_rytm_kit_export_help,
     "analog-four-audio-patch-batch": _analog_four_audio_patch_batch_help,
+    "audio-patch-dna": _audio_patch_dna_help,
     "analog-four-audio-patch-rank": _analog_four_audio_patch_rank_help,
     "cockpit-export-rehearsal-report": _cockpit_export_rehearsal_report_help,
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report

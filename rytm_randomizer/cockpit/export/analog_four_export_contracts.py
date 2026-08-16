@@ -5,9 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final, Literal, TypeAlias, cast
 
+from ...observability.errors import BoundaryError
 from .file_export_contracts import (
     LOCAL_FILE_EXPORT_ERROR_CODES,
     LocalFileExportErrorCode,
+    classify_local_file_export_error,
     safe_local_file_export_artifact_name,
 )
 
@@ -73,11 +75,39 @@ def analog_four_export_error_code(
     return None
 
 
+def classify_analog_four_cli_error(
+    exc: Exception,
+    *,
+    default_error_code: AnalogFourExportErrorCode,
+) -> AnalogFourExportErrorCode:
+    """Classify one A4 command failure through the shared passive contract."""
+
+    propagated = analog_four_export_error_code(exc)
+    if propagated is not None:
+        return propagated
+
+    from ...style_analysis.extractor import StyleAnalysisDependencyError
+
+    if isinstance(exc, StyleAnalysisDependencyError):
+        return "dependency_missing"
+    if isinstance(exc, BoundaryError):
+        return "inference_failed"
+    if isinstance(exc, ImportError):
+        return "service_unavailable"
+    if isinstance(exc, RuntimeError):
+        return "inference_failed"
+    if isinstance(exc, FileNotFoundError):
+        return "input_not_found"
+    local_error = classify_local_file_export_error(exc, phase="output_write")
+    return default_error_code if local_error == "validation" else local_error
+
+
 __all__ = [
     "ANALOG_FOUR_EXPORT_ERROR_CODES",
     "AnalogFourExportErrorCode",
     "analog_four_export_path_name",
     "analog_four_export_error_code",
     "attach_analog_four_export_error_code",
+    "classify_analog_four_cli_error",
     "require_analog_four_export_path",
 ]
