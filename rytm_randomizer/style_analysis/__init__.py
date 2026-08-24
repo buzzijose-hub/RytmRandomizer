@@ -38,6 +38,17 @@ from .audio_patch_dna import (
     render_audio_patch_dna_markdown,
     select_audio_patch_dna_candidate,
 )
+from .audio_reference_suitability import (
+    AUDIO_REFERENCE_SUITABILITY_POLICY_VERSION,
+    AUDIO_REFERENCE_SUITABILITY_SCHEMA_VERSION,
+    ReferenceAudioSuitability,
+    ReferenceWorkflow,
+    SuitabilityRecommendation,
+    SuitabilityStatus,
+    WorkflowSuitability,
+    assess_reference_audio,
+    reference_audio_suitability_to_dict,
+)
 from .blueprint import (
     AnalogFourTrackBlueprint,
     ReferenceStyleBlueprint,
@@ -68,6 +79,8 @@ from .library import analyze_library
 
 __all__ = [
     "AUDIO_PATCH_DNA_CANDIDATE_COUNT",
+    "AUDIO_REFERENCE_SUITABILITY_POLICY_VERSION",
+    "AUDIO_REFERENCE_SUITABILITY_SCHEMA_VERSION",
     "AudioDnaEvidence",
     "AudioFeatureAnalysis",
     "AudioPatchDnaCandidate",
@@ -78,11 +91,17 @@ __all__ = [
     "FeatureReport",
     "FeatureReportPayload",
     "ReferenceStyleBlueprint",
+    "ReferenceAudioSuitability",
+    "ReferenceWorkflow",
     "ReferenceTrait",
     "RytmPadBlueprint",
     "SourceType",
     "StyleAnalysisDependencyError",
+    "SuitabilityRecommendation",
+    "SuitabilityStatus",
+    "WorkflowSuitability",
     "analyze_audio",
+    "assess_reference_audio",
     "audio_dna_evidence_to_dict",
     "audio_patch_dna_workspace_to_dict",
     "audio_synthesis_features_to_dict",
@@ -95,6 +114,7 @@ __all__ = [
     "extract_from_description",
     "extract_from_partial",
     "reference_style_blueprint_to_dict",
+    "reference_audio_suitability_to_dict",
     "render_audio_patch_dna_markdown",
     "select_audio_patch_dna_candidate",
 ]
