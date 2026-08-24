@@ -451,6 +451,17 @@ audio-dependent inference, but not full saved-kit coverage or a claim of
 Synthplant-equivalent learned accuracy. `analog-four-audio-patch-batch` remains
 hardware-passive: local reads/writes only, with no MIDI port or send.
 
+The registered `analog-four-audio-patch-refine` command adds one bounded,
+offline feedback pass over that batch. It verifies the immutable manifest,
+selected candidate, and reference hash, ranks one recorded Analog Four render
+with the existing 11-feature acoustic comparison, and either accepts the
+render at the configured threshold or infers exactly one corrected candidate
+from the normalized residual. Duration is preserved, every corrected feature
+is clamped to its verified normalized domain, and optional SysEx output still
+routes through the existing hardware-write-validated local-file exporter.
+This is an explainable heuristic, not model training or an exact-recreation
+claim. The command imports no MIDI provider, opens no port, and sends nothing.
+
 The `audio-patch-dna` workspace is a passive comparison layer over that same
 extractor and A4 export path. One isolated audio analysis produces readable
 pitch, envelope, transient, rhythm, brightness, noise, spectral-movement, and
