@@ -292,6 +292,30 @@ def discover_all(package_root: str = "rytm_randomizer") -> None:
         importlib.import_module(fullname)
 
 
+def make_parsed_cli_command(
+    name: str,
+    summary: str,
+    *,
+    args_parser: Callable[[Sequence[str]], dict[str, Any]],
+    handler: Callable[..., int],
+    error_formatter: Callable[[Exception], str] | None = None,
+) -> CliCommand:
+    """Return a passive command with a caller-owned argument parser.
+
+    Input-bearing report modules use this factory when their option surface is
+    richer than the no-input text/JSON contract handled by
+    :func:`make_passive_report_command`.
+    """
+
+    return CliCommand(
+        name=name,
+        summary=summary,
+        args_parser=args_parser,
+        handler=handler,
+        error_formatter=error_formatter,
+    )
+
+
 def make_passive_report_command(
     name: str,
     summary: str,

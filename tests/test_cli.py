@@ -58,7 +58,10 @@ USAGE = (
     "<syx-path> [--limit N] [--json] | analog-four-baseline-report --kit <syx-path> "
     "--pattern-kit <syx-path> --whole-project <syx-path> [--json] | "
     "analog-four-patch-genome-report (--description <text>|--audio <path>) [--track N] "
-    "[--candidate N] [--json] | analog-four-patch-learning-report (--description "
+    "[--candidate N] [--json] | reference-audio-atlas-report --audio <path> "
+    "[--window-seconds N] [--hop-seconds N] [--max-windows N] [--moments N] "
+    "[--min-novelty N] [--track N] [--candidates N] [--json] | "
+    "analog-four-patch-learning-report (--description "
     "<text>|--audio <path>) [--track N] [--candidate N] [--json] | "
     "analog-four-patch-corpus-report (--description <text>|--audio <path>) [--track N] "
     "[--limit N] [--corpus-file <path>] [--json] | analog-four-patch-send-plan-report "
@@ -446,6 +449,7 @@ def test_analog_four_audio_patch_rank_help_is_exact_and_passive():
         "analog-rytm-midi-catalog-report",
         "analog-four-baseline-report",
         "analog-four-patch-genome-report",
+        "reference-audio-atlas-report",
         "analog-four-patch-learning-report",
         "analog-four-patch-corpus-report",
         "analog-four-patch-send-plan-report",

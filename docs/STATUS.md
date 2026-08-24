@@ -1,8 +1,24 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-08-04. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-08-24. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
+
+- 2026-08-24: Added a bounded long-form reference-audio atlas.
+  - The passive `reference-audio-atlas-report` command scans one audio file as
+    sequential 5–120 second windows, with hard ceilings of 240 decoded windows
+    and eight selected moments.
+  - Deterministic diversity selection reuses the existing Analog Four patch
+    genome and Rytm/Analog Four reference-blueprint builders for every moment.
+  - The atlas is interpretive rather than forensic: it does not separate
+    stems, identify artists or equipment, claim exact reconstruction, produce
+    hardware-verified settings, open MIDI, or send MIDI/SysEx.
+  - Fresh one-worker verification passed 573 focused tests with 100 percent
+    statement and branch coverage on all touched production modules, 751
+    architecture tests, 685 frozen V1.34 parity tests, and the 7,939-test full
+    suite with 4 skips. Total package coverage is 99.57 percent; the existing
+    package-wide branch baseline is 99.20 percent, while every production
+    module touched by this change is at 100 percent branch coverage.
 
 - 2026-08-04: Repaired the AL16 Phase R2 Analog Rytm mapping-closure review.
   - Replaced exporter-local offsets, pad bounds, source aliases, and controls

@@ -34,7 +34,10 @@ USAGE = (
     "<syx-path> [--limit N] [--json] | analog-four-baseline-report --kit <syx-path> "
     "--pattern-kit <syx-path> --whole-project <syx-path> [--json] | "
     "analog-four-patch-genome-report (--description <text>|--audio <path>) [--track N] "
-    "[--candidate N] [--json] | analog-four-patch-learning-report (--description "
+    "[--candidate N] [--json] | reference-audio-atlas-report --audio <path> "
+    "[--window-seconds N] [--hop-seconds N] [--max-windows N] [--moments N] "
+    "[--min-novelty N] [--track N] [--candidates N] [--json] | "
+    "analog-four-patch-learning-report (--description "
     "<text>|--audio <path>) [--track N] [--candidate N] [--json] | "
     "analog-four-patch-corpus-report (--description <text>|--audio <path>) [--track N] "
     "[--limit N] [--corpus-file <path>] [--json] | analog-four-patch-send-plan-report "
@@ -694,6 +697,28 @@ Behavior:
   front-panel targets plus CC/NRPN metadata. CC-ready scalar rows include
   concrete 0..127 values; NRPN-only destination rows remain screen-only until
   exact destination ordinals are captured for live dial-in.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _reference_audio_atlas_report_help():
+    from .reports.reference_audio_atlas import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: reference-audio-atlas-report
+
+Usage:
+  python -m rytm_randomizer.cli reference-audio-atlas-report --audio <path>
+  python -m rytm_randomizer.cli reference-audio-atlas-report --audio <path> --window-seconds N --hop-seconds N
+  python -m rytm_randomizer.cli reference-audio-atlas-report --audio <path> --max-windows N --moments N --min-novelty N
+  python -m rytm_randomizer.cli reference-audio-atlas-report --audio <path> --track N --candidates N --json
+  python -m rytm_randomizer.cli reference-audio-atlas-report --help
+
+Behavior:
+  Sequentially analyzes bounded windows from long reference audio, selects up
+  to eight materially distinct moments, and emits chronological Analog Four
+  patch DNA plus dual-device style-blueprint directions. Defaults are 30-second
+  windows and hops, with a hard ceiling of 240 analyzed windows.
 
 Safety:
 {_safety_block(SAFETY_LINES)}"""
@@ -2831,6 +2856,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-kit-catalog-report <syx-path> [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-baseline-report --kit <syx-path> --pattern-kit <syx-path> --whole-project <syx-path> [--json]
   python -m rytm_randomizer.cli analog-four-patch-genome-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
+  python -m rytm_randomizer.cli reference-audio-atlas-report --audio <path> [--window-seconds N] [--hop-seconds N] [--max-windows N] [--moments N] [--min-novelty N] [--track N] [--candidates N] [--json]
   python -m rytm_randomizer.cli analog-four-patch-learning-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
   python -m rytm_randomizer.cli analog-four-patch-corpus-report (--description <text>|--audio <path>) [--track N] [--limit N] [--corpus-file <path>] [--json]
   python -m rytm_randomizer.cli analog-four-patch-send-plan-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
@@ -2985,6 +3011,8 @@ Commands:
                      Compare initialized Analog Four kit, pattern+kit, and project dumps.
   analog-four-patch-genome-report
                      Generate passive Analog Four patch DNA candidates from audio or text.
+  reference-audio-atlas-report
+                     Analyze bounded moments from long reference audio into chronological patch DNA.
   analog-four-patch-learning-report
                      Generate passive Analog Four patch learning and live-dial readiness.
   analog-four-patch-corpus-report
@@ -3442,6 +3470,7 @@ Safety:
     "analog-four-kit-catalog-report": _analog_four_kit_catalog_report_help,
     "analog-four-baseline-report": _analog_four_baseline_report_help,
     "analog-four-patch-genome-report": _analog_four_patch_genome_report_help,
+    "reference-audio-atlas-report": _reference_audio_atlas_report_help,
     "analog-four-patch-learning-report": _analog_four_patch_learning_report_help,
     "analog-four-patch-corpus-report": _analog_four_patch_corpus_report_help,
     "analog-four-patch-send-plan-report": _analog_four_patch_send_plan_report_help,

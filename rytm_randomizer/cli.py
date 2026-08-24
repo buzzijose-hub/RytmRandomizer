@@ -194,6 +194,10 @@ def _registered_command_exit_code(args: Sequence[str]) -> int | None:
             "rytm_randomizer.reports.analog_four_patch_genome",
             "ANALOG_FOUR_PATCH_GENOME_CLI_COMMAND",
         ),
+        "reference-audio-atlas-report": (
+            "rytm_randomizer.reports.reference_audio_atlas",
+            "REFERENCE_AUDIO_ATLAS_CLI_COMMAND",
+        ),
         "analog-four-patch-learning-report": (
             "rytm_randomizer.reports.analog_four_patch_learning",
             "ANALOG_FOUR_PATCH_LEARNING_CLI_COMMAND",

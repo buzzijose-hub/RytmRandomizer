@@ -36,6 +36,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-kit-catalog-report <syx-path> [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-baseline-report --kit <syx-path> --pattern-kit <syx-path> --whole-project <syx-path> [--json]
   python -m rytm_randomizer.cli analog-four-patch-genome-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
+  python -m rytm_randomizer.cli reference-audio-atlas-report --audio <path> [--window-seconds N] [--hop-seconds N] [--max-windows N] [--moments N] [--min-novelty N] [--track N] [--candidates N] [--json]
   python -m rytm_randomizer.cli analog-four-patch-learning-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
   python -m rytm_randomizer.cli analog-four-patch-corpus-report (--description <text>|--audio <path>) [--track N] [--limit N] [--corpus-file <path>] [--json]
   python -m rytm_randomizer.cli analog-four-patch-send-plan-report (--description <text>|--audio <path>) [--track N] [--candidate N] [--json]
@@ -190,6 +191,8 @@ Commands:
                      Compare initialized Analog Four kit, pattern+kit, and project dumps.
   analog-four-patch-genome-report
                      Generate passive Analog Four patch DNA candidates from audio or text.
+  reference-audio-atlas-report
+                     Analyze bounded moments from long reference audio into chronological patch DNA.
   analog-four-patch-learning-report
                      Generate passive Analog Four patch learning and live-dial readiness.
   analog-four-patch-corpus-report
