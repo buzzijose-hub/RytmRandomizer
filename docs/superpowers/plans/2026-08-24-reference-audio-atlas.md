@@ -1,6 +1,6 @@
 # Reference Audio Atlas
 
-> Status: implementation and local verification complete; review pending
+> Status: in-flight (implementation and local verification complete; review pending)
 
 ## Goal
 
