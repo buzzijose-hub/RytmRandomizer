@@ -732,6 +732,34 @@ arc later, and these reports already show which segment-level machine
 rows and operator actions would be available without opening ports or
 sending MIDI.
 
+## Audio-to-Patch DNA causal lineage
+
+The passive Audio-to-Patch DNA lineage audit explains how each candidate is
+derived without presenting an authored direction score as measured acoustic
+similarity. It recomputes every audio-inferred Analog Four parameter from the
+canonical inference equations, records each feature contribution and weighted
+term, and reports template-only genes separately from inferred genes.
+
+Use `build_audio_patch_dna_lineage_audit` to create the typed audit,
+`audio_patch_dna_lineage_audit_to_dict` for deterministic structured output,
+and `render_audio_patch_dna_lineage_markdown` for a human-readable report.
+These APIs are pure: they do not read audio, open files, enumerate MIDI ports,
+or transmit MIDI.
+
+The evidence labels are intentionally conservative:
+
+- `creative_proximity_hint` is the authored direction value from the source
+  candidate, not an acoustic similarity measurement.
+- `mean_absolute_feature_delta` is the unweighted mean of the absolute changes
+  applied to unit-normalized analysis inputs. It is descriptive authored-input
+  metadata, not a calibrated perceptual distance or rendered-sound similarity
+  score.
+- `inferred_parameters` are exactly reproducible from the canonical equations.
+- `template_only_parameters` are creative defaults with no claim that audio
+  analysis inferred them.
+- Every candidate remains `render_required` until a synthesized render is
+  compared with the reference through the refinement/evaluation workflow.
+
 ## See also
 
 - `GUARDRAILS_DESIGN_SPEC.md` - the full four-layer design.
