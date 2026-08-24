@@ -121,6 +121,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json]
   python -m rytm_randomizer.cli audio-patch-dna --audio <path> --output-dir <dir> [--track N] [--select N --source-kit <kit.syx>] [--overwrite] [--json]
   python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference <path> --manifest <batch.json> --render <N=path> [--render <N=path> ...] [--json]
+  python -m rytm_randomizer.cli analog-four-audio-patch-refine --reference <path> --manifest <batch.json> --candidate <1-4> --render <path> --output-dir <dir> [--gain N] [--accept-similarity N] [--source-kit <kit.syx>] [--overwrite] [--json]
   python -m rytm_randomizer.cli cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> [--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
@@ -378,6 +379,8 @@ Commands:
                     Analyze audio once and write eight comparable patch directions.
   analog-four-audio-patch-rank
                     Rank recorded Analog Four candidates against their reference audio.
+  analog-four-audio-patch-refine
+                    Refine one A4 candidate from a measured hardware render.
   cockpit-export-rehearsal-report
                     Build GUI-ready passive cockpit model-export rehearsal surface state.
   inspect-command    Inspect passive command metadata by key.

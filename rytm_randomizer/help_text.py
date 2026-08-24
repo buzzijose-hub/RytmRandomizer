@@ -301,6 +301,9 @@ USAGE = (
     "[--select N --source-kit <kit.syx>] [--overwrite] [--json] | "
     "analog-four-audio-patch-rank --reference <path> --manifest <batch.json> "
     "--render <N=path> [--render <N=path> ...] [--json] | "
+    "analog-four-audio-patch-refine --reference <path> --manifest <batch.json> "
+    "--candidate <1-4> --render <path> --output-dir <dir> [--gain N] "
+    "[--accept-similarity N] [--source-kit <kit.syx>] [--overwrite] [--json] | "
     "cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> "
     "[--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json] | "
     "manual-feedback-packet-report "
@@ -2742,6 +2745,43 @@ Safety:
 {_safety_block(ANALOG_FOUR_RENDER_RANK_SAFETY)}"""
 
 
+def _analog_four_audio_patch_refine_help():
+    from .cockpit.export.analog_four_patch_refinement import (
+        ANALOG_FOUR_PATCH_REFINEMENT_SAFETY,
+    )
+
+    return f"""RytmRandomizer passive CLI: analog-four-audio-patch-refine
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-audio-patch-refine --reference <path> --manifest <batch.json> --candidate <1-4> --render <path> --output-dir <dir>
+  python -m rytm_randomizer.cli analog-four-audio-patch-refine --reference <path> --manifest <batch.json> --candidate <1-4> --render <path> --output-dir <dir> --gain 0.65 --accept-similarity 88 --source-kit <kit.syx> --json
+  python -m rytm_randomizer.cli analog-four-audio-patch-refine --help
+
+Arguments:
+  --reference <path>       Original audio used to create the batch
+  --manifest <batch.json>  Committed audio-patch batch manifest
+  --candidate <1-4>        Candidate represented by the recorded A4 render
+  --render <path>          Recorded A4 audio for the selected candidate
+  --output-dir <dir>       Directory for the refinement JSON and Markdown
+  --gain <0.0-1.0>         Bounded correction strength; default 0.65
+  --accept-similarity N    Accept without refinement at this 0-100 score
+  --source-kit <kit.syx>   Optionally export the next A4 SysEx candidate offline
+  --overwrite              Replace existing refinement artifacts
+  --json                   Emit deterministic JSON instead of text
+
+Behavior:
+  Hash-verifies the selected batch candidate, measures the reference and its
+  recorded A4 render with the existing eleven-feature acoustic model, and
+  accepts the render when it meets the threshold. Otherwise it applies one
+  bounded residual correction and infers exactly one follow-up candidate.
+  Supplying --source-kit exports that candidate through the existing passive
+  A4 saved-kit workflow. This is iterative matching evidence, not proof of an
+  exact reconstruction of a commercial recording or another artist's patch.
+
+Safety:
+{_safety_block(ANALOG_FOUR_PATCH_REFINEMENT_SAFETY)}"""
+
+
 def _cockpit_export_rehearsal_report_help():
     from .reports.cockpit_export_rehearsal import SAFETY_LINES
 
@@ -2916,6 +2956,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json]
   python -m rytm_randomizer.cli audio-patch-dna --audio <path> --output-dir <dir> [--track N] [--select N --source-kit <kit.syx>] [--overwrite] [--json]
   python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference <path> --manifest <batch.json> --render <N=path> [--render <N=path> ...] [--json]
+  python -m rytm_randomizer.cli analog-four-audio-patch-refine --reference <path> --manifest <batch.json> --candidate <1-4> --render <path> --output-dir <dir> [--gain N] [--accept-similarity N] [--source-kit <kit.syx>] [--overwrite] [--json]
   python -m rytm_randomizer.cli cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> [--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
@@ -3173,6 +3214,8 @@ Commands:
                     Analyze audio once and write eight comparable patch directions.
   analog-four-audio-patch-rank
                     Rank recorded Analog Four candidates against their reference audio.
+  analog-four-audio-patch-refine
+                    Refine one A4 candidate from a measured hardware render.
   cockpit-export-rehearsal-report
                     Build GUI-ready passive cockpit model-export rehearsal surface state.
   inspect-command    Inspect passive command metadata by key.
@@ -3591,6 +3634,7 @@ Safety:
     "analog-four-audio-patch-batch": _analog_four_audio_patch_batch_help,
     "audio-patch-dna": _audio_patch_dna_help,
     "analog-four-audio-patch-rank": _analog_four_audio_patch_rank_help,
+    "analog-four-audio-patch-refine": _analog_four_audio_patch_refine_help,
     "cockpit-export-rehearsal-report": _cockpit_export_rehearsal_report_help,
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 

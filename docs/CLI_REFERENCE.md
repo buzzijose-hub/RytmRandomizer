@@ -231,6 +231,7 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `audio-patch-dna` | Passive one-analysis workspace with readable sound DNA, exactly eight fixed directions, and optional selected-candidate Analog Four SysEx export |
 | `analog-four-audio-patch-batch` | Real local audio analysis; the documented/default workflow deterministically commits exactly four immutable `.syx` candidates, complete DNA sidecars, and one manifest; `--studio-handoff` prints the bounded four-audition workflow with zero calibration rounds |
 | `analog-four-audio-patch-rank` | Passive acoustic ranking of recorded A4 candidates against the exact batch reference |
+| `analog-four-audio-patch-refine` | Passive bounded feedback pass for one recorded A4 candidate; accepts a close render or emits exactly one corrected target and optional offline SysEx artifact |
 | `local-model-copilot-report` | Passive local model docs, mutation-intent, and Analog Four patch-review packets; optional local model subprocess call with `--ask-local-model` |
 | `analog-four-oxi-macro-report` | Passive in-memory Analog Four OXI-style four-track macro preview |
 | `analog-four-oxi-macro-readiness-report` | Passive Analog Four OXI macro readiness, soft-capture preflight, and operator-present validation commands |
@@ -257,6 +258,7 @@ python -m rytm_randomizer.cli audio-patch-dna --audio reference.wav --output-dir
 python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit INIT.syx --output-dir batch --track 1 --candidates 4
 python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit INIT.syx --output-dir batch --track 1 --studio-handoff --a4-output-port "<exact configured Analog Four output name>"
 python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference reference.wav --manifest batch/a4-t1-audio-patch-batch.json --render 1=candidate-1.wav
+python -m rytm_randomizer.cli analog-four-audio-patch-refine --reference reference.wav --manifest batch/a4-t1-audio-patch-batch.json --candidate 1 --render candidate-1.wav --output-dir output/local/a4-refinement
 python -m rytm_randomizer.cli local-model-copilot-report --question "Which A4 rows are staged only?" --workflow all --description "hypnotic metallic HP2 stab" --json
 python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove --seed 23 --intensity 6 --events --limit 0
 python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4
@@ -410,6 +412,20 @@ verifies every candidate sidecar and the original reference hash before
 comparing recorded A4 renders across 11 normalized synthesis measurements.
 The result is an explainable ranking packet; it is not promoted into training
 data automatically.
+
+`analog-four-audio-patch-refine` performs one bounded correction after that
+ranking step. It verifies the exact reference hash, manifest, and selected
+candidate before analyzing one recorded A4 render. A similarity score at or
+above `--accept-similarity` (default `92`) produces an `accept` decision with
+no new candidate. A lower score applies `reference + gain * (reference -
+render)` to the 11 normalized acoustic features, clamps each feature to its
+valid domain, preserves the reference duration, and infers exactly one
+follow-up candidate. The default `--gain` is `0.65`. Supplying
+`--source-kit` routes that one candidate through the existing passive A4
+saved-kit exporter; omitting it writes only JSON/Markdown analysis artifacts.
+This is not iterative training or a forensic-recreation claim. The command
+never imports a MIDI backend, enumerates ports, opens hardware, or transmits
+MIDI/SysEx.
 
 `local-model-copilot-report` is the passive local-AI bridge. By default it
 does not run a model; it prints deterministic source packets and JSON schemas
