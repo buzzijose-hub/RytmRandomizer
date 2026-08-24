@@ -1,6 +1,6 @@
 # Analog Four Render-Feedback Refinement Plan
 
-Status: in-flight (implemented and locally verified; PR pending)
+Status: in-flight (implemented and locally verified; PR #230 open)
 
 ## Goal
 
