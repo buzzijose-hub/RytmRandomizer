@@ -21,6 +21,7 @@ from rytm_randomizer.data.al16_rytm import (
 )
 from rytm_randomizer.data.rytm_machine_catalog import is_machine_allowed_on_pad
 
+from .analog_four_patch_inference import clamp_audio_feature_unit
 from .extractor import AudioFeatureAnalysis, AudioSynthesisFeatures
 from .runtime_types import require_runtime_type
 
@@ -185,7 +186,7 @@ def _evidence(
 def _to_7bit(value: float) -> int:
     if not math.isfinite(value):
         raise ValueError("Rytm recipe equation must produce a finite value")
-    return round(127.0 * min(1.0, max(0.0, value)))
+    return round(127.0 * clamp_audio_feature_unit(value))
 
 
 def _field(
