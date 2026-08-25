@@ -148,6 +148,40 @@ can reach HIGH-confidence measurement, but the resulting blueprint is
 still metadata only. It does not create patterns, write files, launch a
 GUI, open MIDI ports, or send MIDI.
 
+## Long-form reference-audio atlas
+
+`build_reference_audio_atlas()` extends the single-sound analysis path to a
+long recording without loading or analyzing every possible moment at once.
+It reads duration metadata, extracts bounded sequential windows, and selects
+the requested number of acoustically distinct moments with a deterministic
+farthest-first feature-distance pass. Selected moments are returned in
+chronological order and compiled through the existing
+`build_analog_four_patch_genome()` and
+`build_reference_style_blueprint()` functions.
+
+The default scan uses 30-second windows and a 30-second hop. Every window is
+between 5 and 120 seconds, at most 240 windows are decoded, and at most eight
+moments are selected. The implementation processes one window at a time so a
+long mix does not require a full-duration waveform in memory.
+
+Run the passive report with:
+
+```bash
+python -m rytm_randomizer.cli reference-audio-atlas-report \
+  --audio long-mix.wav --moments 8 --json
+```
+
+The atlas `analysis_id` is derived from numeric measurements and scan
+configuration, excluding source path, timestamps, and provenance hashes.
+Embedded feature reports, patch genomes, and blueprints retain their genuine
+per-window provenance hashes. This gives deterministic musical identity
+without erasing the evidence chain.
+
+The atlas does not perform stem separation, artist identification, copyright
+reconstruction, equipment attribution, exact sound recreation, or hardware
+verification. It writes no patch or kit and never enumerates, opens, or sends
+to MIDI.
+
 ## Audio-to-Rytm recipe proposals
 
 `build_analog_rytm_audio_recipe_proposal(analysis)` turns an existing

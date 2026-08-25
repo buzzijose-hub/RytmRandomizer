@@ -105,6 +105,16 @@ Each source is analyzed, the derived `StyleTrait`s are averaged, and the wizard 
 
 The wizard is passive — it never opens a MIDI output and never sends MIDI.
 
+### Long-form reference atlas
+
+`reference-audio-atlas-report` scans a long recording or DJ mix as bounded,
+sequential windows, selects up to eight acoustically distinct moments, and
+compiles each moment through the existing Analog Four patch-genome and
+Rytm/Analog Four reference-blueprint layers. The atlas is passive and
+interpretive: it does not separate stems, identify artists or equipment,
+claim an exact reconstruction, or produce hardware-verified settings. It
+never enumerates, opens, or writes a MIDI port.
+
 ---
 
 <a id="export-pipeline"></a>
@@ -238,6 +248,7 @@ analog-rytm-midi-catalog-report                                       # Analog R
 
 # Style + previews
 reference-style-blueprint-report --description "rolling warehouse"    # 12-pad + A4 blueprint
+reference-audio-atlas-report --audio long-mix.wav --moments 8         # bounded long-form moments
 dual-machine-style-kit-selection-report STYLE --rytm KITS --analog-four KITS
 scoped-randomization-preview                                          # mask + depth plan preview
 kit-morph-preview                                                     # current↔target morph preview

@@ -35,7 +35,7 @@ import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, fields, is_dataclass
 from enum import Enum
-from typing import TypedDict, cast
+from typing import Final, TypedDict, cast
 
 from rytm_randomizer.guardrails.schema import Confidence, SourceType
 
@@ -99,6 +99,19 @@ class FeatureReportPayload(TypedDict):
     derived_at: str
 
 
+_FEATURE_DISTANCE_WEIGHTS: Final[tuple[tuple[str, float], ...]] = (
+    ("tempo_stability", 0.10),
+    ("kick_density", 0.10),
+    ("percussion_density", 0.13),
+    ("low_end_weight", 0.15),
+    ("spectral_brightness", 0.18),
+    ("texture_noise", 0.16),
+)
+_FEATURE_DISTANCE_BPM_WEIGHT: Final[float] = 0.10
+_FEATURE_DISTANCE_ENERGY_WEIGHT: Final[float] = 0.08
+_FEATURE_DISTANCE_BPM_NORMALIZATION: Final[float] = 60.0
+
+
 def _require_serializable_feature_report(value: object) -> FeatureReport:
     if not isinstance(value, FeatureReport):
         raise TypeError("report must be a FeatureReport")
@@ -123,6 +136,33 @@ def feature_report_to_dict(report: FeatureReport) -> FeatureReportPayload:
         "content_hash": report.content_hash,
         "derived_at": report.derived_at,
     }
+
+
+def feature_distance(reference: FeatureReport, candidate: FeatureReport) -> float:
+    """Return the established weighted distance between two feature reports."""
+
+    reference = _require_serializable_feature_report(reference)
+    candidate = _require_serializable_feature_report(candidate)
+    distance = _FEATURE_DISTANCE_BPM_WEIGHT * _normalized_bpm_delta(reference.bpm, candidate.bpm)
+    for field_name, weight in _FEATURE_DISTANCE_WEIGHTS:
+        distance += weight * abs(
+            float(getattr(reference, field_name)) - float(getattr(candidate, field_name))
+        )
+    distance += _FEATURE_DISTANCE_ENERGY_WEIGHT * _energy_arc_distance(
+        reference.energy_arc, candidate.energy_arc
+    )
+    return min(1.0, max(0.0, distance))
+
+
+def _normalized_bpm_delta(left: float, right: float) -> float:
+    return min(1.0, abs(left - right) / _FEATURE_DISTANCE_BPM_NORMALIZATION)
+
+
+def _energy_arc_distance(left: tuple[float, ...], right: tuple[float, ...]) -> float:
+    if not left or not right:
+        return 1.0
+    count = min(len(left), len(right))
+    return sum(abs(left[index] - right[index]) for index in range(count)) / float(count)
 
 
 # ---------------------------------------------------------------------------
@@ -190,5 +230,6 @@ __all__ = [
     "FeatureReport",
     "FeatureReportPayload",
     "compute_feature_report_hash",
+    "feature_distance",
     "feature_report_to_dict",
 ]

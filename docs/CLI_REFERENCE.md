@@ -212,6 +212,33 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 
 ---
 
+## Long-form reference-audio atlas
+
+`reference-audio-atlas-report` scans a long audio file with bounded,
+sequential windows, deterministically selects acoustically distinct moments,
+and generates an Analog Four patch genome plus a Rytm/Analog Four style
+blueprint for each selected moment.
+
+```bash
+python -m rytm_randomizer.cli reference-audio-atlas-report \
+  --audio long-mix.wav \
+  --window-seconds 30 \
+  --hop-seconds 30 \
+  --max-windows 240 \
+  --moments 8 \
+  --min-novelty 0.08 \
+  --track 1 \
+  --candidates 4 \
+  --json
+```
+
+Windows must be 5–120 seconds; the hard ceilings are 240 decoded windows and
+eight selected moments. The command is passive and output-only. It does not
+separate stems, identify artists or equipment, claim forensic reconstruction,
+produce hardware-verified settings, open a MIDI port, or send MIDI/SysEx.
+
+---
+
 ## Analog Four — style routing + mutation planning
 
 | Command | Description |

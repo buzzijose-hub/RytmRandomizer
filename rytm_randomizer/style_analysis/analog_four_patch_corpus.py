@@ -9,7 +9,7 @@ labeled synthetic starter vectors from the current patch templates.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import Final
+from typing import Final, cast
 
 from ..data.analog_four_patch_corpus import (
     ANALOG_FOUR_PATCH_CORPUS_STARTER_SPECS,
@@ -24,7 +24,8 @@ from .analog_four_patch_genome import (
     ANALOG_FOUR_TRACK_MIN,
     build_analog_four_patch_genome,
 )
-from .feature_report import FeatureReport, compute_feature_report_hash
+from .feature_report import FeatureReport, compute_feature_report_hash, feature_distance
+from .runtime_types import require_runtime_type
 
 ANALOG_FOUR_PATCH_CORPUS_VERSION: Final[str] = "analog-four-patch-corpus-v1"
 ANALOG_FOUR_PATCH_CORPUS_MODE: Final[str] = "single-sound-capture-corpus"
@@ -42,17 +43,6 @@ ANALOG_FOUR_PATCH_CORPUS_SAFETY: Final[tuple[str, ...]] = (
     "captured entries are ranked as evidence only until operator validation",
 )
 _STARTER_DERIVED_AT: Final[str] = "2026-07-03T00:00:00Z"
-_FEATURE_WEIGHTS: Final[tuple[tuple[str, float], ...]] = (
-    ("tempo_stability", 0.10),
-    ("kick_density", 0.10),
-    ("percussion_density", 0.13),
-    ("low_end_weight", 0.15),
-    ("spectral_brightness", 0.18),
-    ("texture_noise", 0.16),
-)
-_BPM_WEIGHT: Final[float] = 0.10
-_ENERGY_WEIGHT: Final[float] = 0.08
-_BPM_NORMALIZATION: Final[float] = 60.0
 _MIN_CAPTURED_READY_COUNT: Final[int] = 4
 
 
@@ -121,6 +111,30 @@ class AnalogFourPatchCorpusMatchPacket:
     safety: tuple[str, ...]
 
 
+def _require_corpus_feature_report(value: object, *, name: str) -> FeatureReport:
+    return require_runtime_type(value, FeatureReport, f"{name} must be a FeatureReport")
+
+
+def _require_corpus_capture_notes(value: object) -> tuple[str, ...]:
+    if not isinstance(value, tuple):
+        raise TypeError("capture_notes must be a tuple")
+    return cast(tuple[str, ...], value)
+
+
+def _require_corpus_entries(value: object) -> tuple[AnalogFourPatchCorpusEntry, ...]:
+    if not isinstance(value, tuple):
+        raise TypeError("entries must be a tuple")
+    return cast(tuple[AnalogFourPatchCorpusEntry, ...], value)
+
+
+def _require_corpus_match_packet(value: object) -> AnalogFourPatchCorpusMatchPacket:
+    return require_runtime_type(
+        value,
+        AnalogFourPatchCorpusMatchPacket,
+        "packet must be an AnalogFourPatchCorpusMatchPacket",
+    )
+
+
 def build_starter_analog_four_patch_corpus_entries(
     *,
     track: int = ANALOG_FOUR_TRACK_MIN,
@@ -154,10 +168,11 @@ def build_analog_four_patch_corpus_entry(
 ) -> AnalogFourPatchCorpusEntry:
     """Build one typed corpus entry from a measured A4 example."""
 
-    if not isinstance(feature_report, FeatureReport):
-        raise TypeError("feature_report must be a FeatureReport")
-    if not isinstance(capture_notes, tuple):
-        raise TypeError("capture_notes must be a tuple")
+    settled_feature_report = _require_corpus_feature_report(
+        feature_report,
+        name="feature_report",
+    )
+    settled_capture_notes = _require_corpus_capture_notes(capture_notes)
     _validate_track(track)
     _validate_candidate(selected_candidate)
     if not entry_id:
@@ -167,7 +182,7 @@ def build_analog_four_patch_corpus_entry(
     if not source_kind:
         raise ValueError("source_kind must not be empty")
 
-    settled_report = _settle_feature_report_hash(feature_report)
+    settled_report = _settle_feature_report_hash(settled_feature_report)
     genome = build_analog_four_patch_genome(settled_report, track=track)
     selected_patch = genome.candidates[selected_candidate - 1]
     return AnalogFourPatchCorpusEntry(
@@ -180,7 +195,7 @@ def build_analog_four_patch_corpus_entry(
         source_hash=settled_report.content_hash,
         feature_report=settled_report,
         patch_parameters=tuple(gene.value.parameter for gene in selected_patch.genes),
-        capture_notes=capture_notes,
+        capture_notes=settled_capture_notes,
     )
 
 
@@ -192,16 +207,17 @@ def build_analog_four_patch_corpus_match_packet(
 ) -> AnalogFourPatchCorpusMatchPacket:
     """Rank a reference against A4 patch-corpus entries."""
 
-    if not isinstance(reference_report, FeatureReport):
-        raise TypeError("reference_report must be a FeatureReport")
-    if not isinstance(entries, tuple):
-        raise TypeError("entries must be a tuple")
+    settled_reference_report = _require_corpus_feature_report(
+        reference_report,
+        name="reference_report",
+    )
+    settled_entries = _require_corpus_entries(entries)
     _validate_limit(limit)
 
-    settled_reference = _settle_feature_report_hash(reference_report)
+    settled_reference = _settle_feature_report_hash(settled_reference_report)
     corpus_entries = (
-        entries
-        if entries
+        settled_entries
+        if settled_entries
         else build_starter_analog_four_patch_corpus_entries(track=ANALOG_FOUR_TRACK_MIN)
     )
     matches = tuple(
@@ -242,8 +258,7 @@ def analog_four_patch_corpus_match_packet_to_dict(
 ) -> dict[str, object]:
     """Return a stable JSON-ready representation of ``packet``."""
 
-    if not isinstance(packet, AnalogFourPatchCorpusMatchPacket):
-        raise TypeError("packet must be an AnalogFourPatchCorpusMatchPacket")
+    packet = _require_corpus_match_packet(packet)
     return {
         "version": packet.version,
         "device_id": packet.device_id,
@@ -291,7 +306,7 @@ def _build_match(
     entry: AnalogFourPatchCorpusEntry,
 ) -> AnalogFourPatchCorpusMatch:
     effective_reference = _effective_reference_report(reference)
-    distance = _feature_distance(effective_reference, entry.feature_report)
+    distance = feature_distance(effective_reference, entry.feature_report)
     similarity = _similarity_from_distance(distance)
     return AnalogFourPatchCorpusMatch(
         rank=0,
@@ -344,27 +359,6 @@ def _is_empty_feature_report(report: FeatureReport) -> bool:
         and report.texture_noise == 0.0
         and all(value == 0.0 for value in report.energy_arc)
     )
-
-
-def _feature_distance(reference: FeatureReport, candidate: FeatureReport) -> float:
-    distance = _BPM_WEIGHT * _normalized_bpm_delta(reference.bpm, candidate.bpm)
-    for field_name, weight in _FEATURE_WEIGHTS:
-        distance += weight * abs(
-            float(getattr(reference, field_name)) - float(getattr(candidate, field_name))
-        )
-    distance += _ENERGY_WEIGHT * _energy_arc_distance(reference.energy_arc, candidate.energy_arc)
-    return min(1.0, max(0.0, distance))
-
-
-def _normalized_bpm_delta(left: float, right: float) -> float:
-    return min(1.0, abs(left - right) / _BPM_NORMALIZATION)
-
-
-def _energy_arc_distance(left: tuple[float, ...], right: tuple[float, ...]) -> float:
-    if not left or not right:
-        return 1.0
-    count = min(len(left), len(right))
-    return sum(abs(left[index] - right[index]) for index in range(count)) / float(count)
 
 
 def _similarity_from_distance(distance: float) -> int:
@@ -491,4 +485,5 @@ __all__ = [
     "build_analog_four_patch_corpus_entry",
     "build_analog_four_patch_corpus_match_packet",
     "build_starter_analog_four_patch_corpus_entries",
+    "feature_distance",
 ]

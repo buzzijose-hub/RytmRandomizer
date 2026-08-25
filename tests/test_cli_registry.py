@@ -64,6 +64,7 @@ def test_cli_registry_module_exposes_expected_public_names() -> None:
         "get",
         "all_commands",
         "default_error_formatter",
+        "make_parsed_cli_command",
         "make_passive_report_command",
     ):
         assert hasattr(cli_registry, name), f"cli_registry missing {name!r}"
@@ -86,7 +87,7 @@ def _stub_parser(argv):
     return {"argv": list(argv)}
 
 
-def _stub_handler(**kwargs):
+def _stub_handler(**_kwargs):
     return 0
 
 
@@ -299,8 +300,40 @@ def test_default_error_formatter_handles_subclassed_exception_when_raised() -> N
 
 
 # ---------------------------------------------------------------------------
-# 6. make_passive_report_command
+# 6. command factories
 # ---------------------------------------------------------------------------
+
+
+def test_make_parsed_cli_command_preserves_supplied_command_contract() -> None:
+    from rytm_randomizer.cli_registry import make_parsed_cli_command
+
+    def format_error(exc: Exception) -> str:
+        return f"custom: {exc}"
+
+    command = make_parsed_cli_command(
+        "input-report",
+        "input-bearing passive report",
+        args_parser=_stub_parser,
+        handler=_stub_handler,
+        error_formatter=format_error,
+    )
+
+    assert command.name == "input-report"
+    assert command.summary == "input-bearing passive report"
+    assert command.args_parser is _stub_parser
+    assert command.handler is _stub_handler
+    assert command.error_formatter is format_error
+
+
+def test_pop_next_option_value_fails_closed_when_value_is_missing() -> None:
+    from rytm_randomizer.cli_registry import _pop_next_option_value
+
+    with pytest.raises(ValueError, match="demo usage"):
+        _pop_next_option_value([], usage="demo usage")
+
+    remaining = ["value", "tail"]
+    assert _pop_next_option_value(remaining, usage="demo usage") == "value"
+    assert remaining == ["tail"]
 
 
 def test_make_passive_report_command_writes_text_when_no_json_flag(capsys) -> None:

@@ -245,9 +245,8 @@ def test_patch_corpus_rejects_empty_entry_metadata(
         )
 
 
-def test_patch_corpus_defensive_helpers_cover_ready_and_empty_arc_branches() -> None:
+def test_patch_corpus_defensive_helpers_cover_ready_branches() -> None:
     from rytm_randomizer.style_analysis.analog_four_patch_corpus import (
-        _energy_arc_distance,
         build_analog_four_patch_corpus_entry,
         build_analog_four_patch_corpus_match_packet,
     )
@@ -274,4 +273,3 @@ def test_patch_corpus_defensive_helpers_cover_ready_and_empty_arc_branches() -> 
     assert packet.calibration_gaps == (
         "review outlier hardware captures before model-training promotion",
     )
-    assert _energy_arc_distance((), (0.1, 0.2)) == 1.0
