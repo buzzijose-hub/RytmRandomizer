@@ -18,7 +18,7 @@ from ...data.analog_rytm_kit_layout import (
     RYTM_SYSEX_PRODUCT_ID,
 )
 from ...observability.errors import BoundaryError
-from ...snapshot import ELEKTRON_MFR_ID, unpack_elektron_7bit
+from ...snapshot import ELEKTRON_MFR_ID, Elektron7BitMaskOrder, unpack_elektron_7bit
 from ...snapshot.elektron_packed_payload import (
     ElektronPackedPayloadError,
     elektron_packed_payload_checksum,
@@ -106,7 +106,13 @@ def decode_analog_rytm_saved_kit_frame(frame: bytes) -> AnalogRytmSavedKitFrame:
     except ElektronPackedPayloadError as exc:
         raise AnalogRytmSavedKitCodecError(str(exc)) from exc
 
-    unpacked = unpack_elektron_7bit(body.packed)
+    try:
+        unpacked = unpack_elektron_7bit(
+            body.packed,
+            mask_order=Elektron7BitMaskOrder.MSB_FIRST,
+        )
+    except ValueError as exc:
+        raise AnalogRytmSavedKitCodecError(str(exc)) from exc
     if len(unpacked) != RYTM_KIT_RAW_SIZE:
         raise AnalogRytmSavedKitCodecError(
             "Analog Rytm saved-kit payload has an unexpected unpacked length"
@@ -135,6 +141,7 @@ def encode_analog_rytm_saved_kit_frame(header: bytes, unpacked: bytes) -> bytes:
             length_adjustment=RYTM_KIT_LENGTH_ADJUSTMENT,
             expected_packed_size=RYTM_KIT_PACKED_SIZE,
             device_label=_DEVICE_LABEL,
+            mask_order=Elektron7BitMaskOrder.MSB_FIRST,
         )
     except ElektronPackedPayloadError as exc:
         raise AnalogRytmSavedKitCodecError(str(exc)) from exc

@@ -81,11 +81,17 @@ def test_a4_sysex_calibration_tracks_filter2_resonance_capture():
 
 
 def test_a4_saved_kit_layout_is_canonical_data() -> None:
-    assert data.A4_CHECKSUM_PACKED_OFFSET == 8
+    assert data.A4_SAVED_KIT_HEADER_SIZE_WITHOUT_F0 == 9
+    assert data.A4_CHECKSUM_PACKED_OFFSET == 0
+    assert data.A4_SAVED_KIT_LENGTH_ADJUSTMENT == 5
+    assert data.A4_SAVED_KIT_TRAILER_SIZE_WITHOUT_F7 == 4
     assert data.A4_SAVED_KIT_TRAILER_SIZE == 4
-    assert data.A4_SAVED_KIT_UNPACKED_SIZE == 2415
-    assert data.A4_SAVED_KIT_PACKED_SIZE == 2760
+    assert data.A4_SAVED_KIT_UNPACKED_SIZE == 2410
+    assert data.A4_SAVED_KIT_OBJECT_SIZE == 2410
+    assert data.A4_SAVED_KIT_PACKED_SIZE == 2755
     assert data.A4_SAVED_KIT_FRAMED_SIZE == 2770
+    assert data.A4_KIT_NAME_OFFSET == 4
+    assert data.A4_KIT_OBJECT_NAME_OFFSET == 4
 
 
 def test_a4_audio_inference_model_is_canonical_immutable_data() -> None:

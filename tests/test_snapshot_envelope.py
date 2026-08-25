@@ -62,6 +62,7 @@ def test_snapshot_subpackage_exports_expected_public_names() -> None:
 
     expected = {
         "ELEKTRON_MFR_ID",
+        "Elektron7BitMaskOrder",
         "BaseMockRuntime",
         "MockRuntime",
         "MutationPlanner",
@@ -152,6 +153,41 @@ def test_pack_elektron_7bit_pins_header_bit_order_and_short_tail() -> None:
 
     assert packed == bytes([0x25, 0x00, 0x01, 0x7F, 0x7F, 0x00, 0x25, 0x55, 0x01, 0x01])
     assert all(byte <= 0x7F for byte in packed)
+
+
+def test_pack_elektron_7bit_pins_native_msb_header_order() -> None:
+    from rytm_randomizer.snapshot import Elektron7BitMaskOrder, pack_elektron_7bit
+
+    unpacked = bytes([0x80, 0x01, 0xFF, 0x7F, 0x00, 0xA5, 0x55, 0x81])
+
+    packed = pack_elektron_7bit(
+        unpacked,
+        mask_order=Elektron7BitMaskOrder.MSB_FIRST,
+    )
+
+    assert packed == bytes([0x52, 0x00, 0x01, 0x7F, 0x7F, 0x00, 0x25, 0x55, 0x40, 0x01])
+
+
+def test_unpack_elektron_7bit_round_trips_native_msb_order() -> None:
+    from rytm_randomizer.snapshot import (
+        Elektron7BitMaskOrder,
+        pack_elektron_7bit,
+        unpack_elektron_7bit,
+    )
+
+    unpacked = bytes([0x80, 0x01, 0xFF, 0x7F, 0x00, 0xA5, 0x55, 0x81])
+    packed = pack_elektron_7bit(
+        unpacked,
+        mask_order=Elektron7BitMaskOrder.MSB_FIRST,
+    )
+
+    assert (
+        unpack_elektron_7bit(
+            packed,
+            mask_order=Elektron7BitMaskOrder.MSB_FIRST,
+        )
+        == unpacked
+    )
 
 
 def test_unpack_elektron_7bit_raises_on_non_seven_bit_byte() -> None:
