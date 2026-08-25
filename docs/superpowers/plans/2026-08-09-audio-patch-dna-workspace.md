@@ -1,6 +1,6 @@
 # Audio-to-Patch DNA Workspace
 
-> Status: in-flight (implementation complete, PR pending review)
+> Status: shipped (merged in PR #228)
 
 ## Goal
 

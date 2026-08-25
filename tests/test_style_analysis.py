@@ -757,6 +757,8 @@ def test_package_reexports_public_surface():
         "AudioDnaEvidence",
         "AudioFeatureAnalysis",
         "AudioPatchDnaCandidate",
+        "AudioPatchDnaCandidateLineage",
+        "AudioPatchDnaLineageAudit",
         "AudioPatchDnaWorkspace",
         "AudioSynthesisFeatures",
         "Confidence",
@@ -781,8 +783,10 @@ def test_package_reexports_public_surface():
         "analyze_audio",
         "audio_dna_evidence_to_dict",
         "audio_patch_dna_workspace_to_dict",
+        "audio_patch_dna_lineage_audit_to_dict",
         "audio_synthesis_features_to_dict",
         "build_audio_patch_dna_workspace",
+        "build_audio_patch_dna_lineage_audit",
         "build_reference_audio_atlas",
         "build_reference_style_blueprint",
         "compute_feature_report_hash",
@@ -796,6 +800,7 @@ def test_package_reexports_public_surface():
         "reference_audio_atlas_to_dict",
         "reference_style_blueprint_to_dict",
         "render_audio_patch_dna_markdown",
+        "render_audio_patch_dna_lineage_markdown",
         "select_audio_patch_dna_candidate",
     }
     assert expected == set(style_analysis.__all__)

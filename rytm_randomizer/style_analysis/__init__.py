@@ -38,6 +38,13 @@ from .audio_patch_dna import (
     render_audio_patch_dna_markdown,
     select_audio_patch_dna_candidate,
 )
+from .audio_patch_dna_lineage import (
+    AudioPatchDnaCandidateLineage,
+    AudioPatchDnaLineageAudit,
+    audio_patch_dna_lineage_audit_to_dict,
+    build_audio_patch_dna_lineage_audit,
+    render_audio_patch_dna_lineage_markdown,
+)
 from .blueprint import (
     AnalogFourTrackBlueprint,
     ReferenceStyleBlueprint,
@@ -88,6 +95,8 @@ __all__ = [
     "AudioDnaEvidence",
     "AudioFeatureAnalysis",
     "AudioPatchDnaCandidate",
+    "AudioPatchDnaCandidateLineage",
+    "AudioPatchDnaLineageAudit",
     "AudioPatchDnaWorkspace",
     "AudioSynthesisFeatures",
     "AnalogFourTrackBlueprint",
@@ -112,6 +121,7 @@ __all__ = [
     "analyze_audio",
     "audio_dna_evidence_to_dict",
     "audio_patch_dna_workspace_to_dict",
+    "audio_patch_dna_lineage_audit_to_dict",
     "audio_synthesis_features_to_dict",
     "analyze_library",
     "compute_feature_report_hash",
@@ -120,6 +130,7 @@ __all__ = [
     "build_reference_style_blueprint",
     "build_reference_audio_atlas",
     "build_audio_patch_dna_workspace",
+    "build_audio_patch_dna_lineage_audit",
     "extract_audio_window",
     "extract_from_audio",
     "extract_from_description",
@@ -128,5 +139,6 @@ __all__ = [
     "reference_audio_atlas_to_dict",
     "reference_style_blueprint_to_dict",
     "render_audio_patch_dna_markdown",
+    "render_audio_patch_dna_lineage_markdown",
     "select_audio_patch_dna_candidate",
 ]

@@ -86,7 +86,7 @@ class _NativeAnalysisProcessContext(Protocol):
     ) -> tuple[_NativeAnalysisConnection, _NativeAnalysisConnection]: ...
 
     @abstractmethod
-    def Process(self, **kwargs: object) -> BaseProcess: ...
+    def Process(self, **kwargs: object) -> BaseProcess: ...  # noqa: V107 - protocol contract
 
 
 _NativeAnalysisWorker: TypeAlias = Callable[[str, _NativeAnalysisConnection], None]
@@ -747,38 +747,69 @@ def _inferred_screen_target(
     column: int,
     features: AnalogFourPatchAudioFeatures,
 ) -> int | None:
-    brightness, noise, low_end, animation, tail = _candidate_character(features, column)
-    feature_values: Mapping[AnalogFourInferenceFeatureKey, float] = {
-        "attack": features.attack,
-        "decay": features.decay,
-        "sustain": features.sustain,
-        "duration": features.duration,
+    feature_values = build_analog_four_inference_feature_values(features, column=column)
+    if parameter not in ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER:
+        return None
+    spec = ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER[cast(AnalogFourInferenceParameter, parameter)]
+    return evaluate_analog_four_inference_spec(spec, feature_values)
+
+
+def build_analog_four_inference_feature_values(
+    features: AnalogFourPatchAudioFeatures,
+    *,
+    column: object,
+) -> Mapping[AnalogFourInferenceFeatureKey, float]:
+    """Return the canonical feature inputs used by one A4 candidate column."""
+
+    validated_features = require_runtime_type(
+        features,
+        AudioSynthesisFeatures,
+        "features must be AudioSynthesisFeatures",
+    )
+    if isinstance(column, bool) or not isinstance(column, int):
+        raise TypeError("column must be int")
+    if not 1 <= column <= len(ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES):
+        raise ValueError(
+            "candidate column must be in " f"1..{len(ANALOG_FOUR_PATCH_CANDIDATE_TEMPLATES)}"
+        )
+    brightness, noise, low_end, animation, tail = _candidate_character(validated_features, column)
+    return {
+        "attack": validated_features.attack,
+        "decay": validated_features.decay,
+        "sustain": validated_features.sustain,
+        "duration": validated_features.duration,
         "brightness": brightness,
         "noise": noise,
         "low_end": low_end,
         "animation": animation,
         "tail": tail,
-        "harmonicity": features.harmonicity,
-        "transient": features.transient,
+        "harmonicity": validated_features.harmonicity,
+        "transient": validated_features.transient,
     }
-    if parameter not in ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER:
-        return None
-    spec = ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER[cast(AnalogFourInferenceParameter, parameter)]
-    return _evaluate_inference_spec(spec, feature_values)
 
 
-def _evaluate_inference_spec(
+def evaluate_analog_four_inference_spec(
     spec: AnalogFourAudioInferenceSpec,
-    feature_values: Mapping[AnalogFourInferenceFeatureKey, float],
+    feature_values: object,
 ) -> int:
-    value = spec.intercept
-    for term in spec.terms:
+    """Evaluate one canonical A4 inference equation and apply its scale clamp."""
+
+    validated_spec = require_runtime_type(
+        spec,
+        AnalogFourAudioInferenceSpec,
+        "spec must be AnalogFourAudioInferenceSpec",
+    )
+    if not isinstance(feature_values, Mapping):
+        raise TypeError("feature_values must be Mapping")
+    validated_feature_values = cast(Mapping[AnalogFourInferenceFeatureKey, float], feature_values)
+    value = validated_spec.intercept
+    for term in validated_spec.terms:
         product = 1.0
         for feature_key in term.feature_keys:
-            product *= feature_values[feature_key]
+            product *= validated_feature_values[feature_key]
         value += product * term.coefficient
-    value *= spec.output_multiplier
-    if spec.scale == A4_AUDIO_INFERENCE_BIPOLAR:
+    value *= validated_spec.output_multiplier
+    if validated_spec.scale == A4_AUDIO_INFERENCE_BIPOLAR:
         return _bipolar(value)
     return _unipolar(value)
 
@@ -826,5 +857,7 @@ __all__ = [
     "build_analog_four_audio_patch_genome",
     "build_analog_four_audio_patch_genome_from_analysis",
     "build_analog_four_audio_patch_genome_isolated",
+    "build_analog_four_inference_feature_values",
     "clamp_audio_feature_unit",
+    "evaluate_analog_four_inference_spec",
 ]
