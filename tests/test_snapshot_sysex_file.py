@@ -27,6 +27,15 @@ def test_extract_sysex_payloads_strips_single_framed_sysex() -> None:
     assert extract_sysex_payloads(bytes([0xF0]) + payload + bytes([0xF7])) == (payload,)
 
 
+def test_extract_sysex_payloads_can_keep_complete_framing() -> None:
+    from rytm_randomizer.snapshot.sysex_file import extract_sysex_payloads
+
+    payload = rytm_real_layout_kit_payload(name=b"FRAMED")
+    frame = bytes([0xF0]) + payload + bytes([0xF7])
+
+    assert extract_sysex_payloads(frame, keep_framing=True) == (frame,)
+
+
 def test_extract_sysex_payloads_returns_all_frames_from_c6_dump() -> None:
     from rytm_randomizer.snapshot.sysex_file import extract_sysex_payloads
 

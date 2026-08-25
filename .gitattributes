@@ -58,6 +58,7 @@ tests/fixtures/cli_*.txt             text eol=lf
 *.dll            binary
 *.so             binary
 *.dylib          binary
+*.syx            binary
 
 # Generated / lockfile: keep text but don't show in diff by default.
 poetry.lock      text eol=lf -diff

@@ -35,7 +35,7 @@ pytestmark = pytest.mark.fast
 FIXTURE_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "analog_four_saved_kit"
 SOURCE_KIT = FIXTURE_DIR / "filter2_res_000_source.syx"
 AUDIO_BYTES = b"sanitized-audio-reference-for-mocked-inference\n"
-EXPECTED_GENERATION_ID = "435bb3263fc336de1eaf44aad2ec9eda"
+EXPECTED_GENERATION_ID = "1d91a3f4f701e5d89b1a2cf750415277"
 EXPECTED_SYSEX_SHA256 = (
     "2f6d97445535a1eb1f4b54e234d7b8d96b9c646c2f611a99f0e6e06a39980835",
     "16aee178243000a52cad0031429ca9768924e37c3989d1ad22c757cb7c266847",
@@ -43,12 +43,12 @@ EXPECTED_SYSEX_SHA256 = (
     "e1384abed1898010debfedf64386dd45485493cabb28b05f2e5bcd1c72096702",
 )
 EXPECTED_SIDECAR_SHA256 = (
-    "672f02d7aa0935a5c70b333a34161b8bdf25a137d5979218db49bfb0f69d8b03",
-    "318df497797f1512c424c00c00ad42590938ea582d6abb23cbbe263f03f53352",
-    "021b0fce47d6847c8cc3eb8434a57857d6f8326afdd083129d6a6f23fba56fac",
-    "c4a1eea93244d70e7c080dbe34189495e8f7efdae7e76ebd4e716908108e4b70",
+    "7640bd8530d8fc8dd0f23215dd160eea1a10b082159ba1201017eab24190d355",
+    "2638ec0b1053757ce9fe6a02988f375bbd520edce27d71e9177aa0d7409b8b92",
+    "8ddb9e956c6be0ed6f347e2d4a1d6287b19d3317f709b1f42870e7a532588d38",
+    "1dd41453c386be0125e96df01dd7108e2763c45c61a1174c63d749f87e441977",
 )
-EXPECTED_MANIFEST_SHA256 = "1214b278d085efffd1f78ec7e14a321fc4a0beaa131a37501f5b2e9cfd387970"
+EXPECTED_MANIFEST_SHA256 = "71021ea5079e3e10f9d1b9084ade6c27c50c7e71f5af879c9d6751a7f95365d4"
 
 
 def _json_payload_sha256(payload: object) -> str:
@@ -258,7 +258,7 @@ def test_export_audio_patch_batch_writes_four_pinned_candidates_and_manifest(
                 "screen_value": resonance,
                 "source_unpacked_value": 12,
                 "track": 2,
-                "unpacked_offset": 495,
+                "unpacked_offset": 490,
             }
         ]
         assert sidecar["coverage_counts"] == {

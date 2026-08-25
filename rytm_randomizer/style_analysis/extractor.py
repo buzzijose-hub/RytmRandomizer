@@ -133,6 +133,7 @@ class _FeatureApi(Protocol):
 class _LibrosaApi(Protocol):
     onset: _OnsetApi
     feature: _FeatureApi
+    get_duration: Callable[..., float]
     load: Callable[..., tuple[object, int]]
     stft: Callable[..., object]
     fft_frequencies: Callable[..., object]
@@ -585,7 +586,12 @@ def _spectral_movement(centroid: list[float], nyquist: float) -> float:
     return _normalize_unit(_audio_mean(differences) / nyquist * 8.0)
 
 
-def _measure_audio_features(source: Path | BytesIO) -> AudioMeasurements:
+def _measure_audio_features(
+    source: Path | BytesIO,
+    *,
+    offset_seconds: float = 0.0,
+    duration_seconds: float | None = None,
+) -> AudioMeasurements:
     """Return the raw measurement dict for a single audio file.
 
     Pulled out so :func:`extract_from_audio`, :func:`extract_from_partial`,
@@ -600,12 +606,26 @@ def _measure_audio_features(source: Path | BytesIO) -> AudioMeasurements:
     why the body carries a ``pragma: no cover`` marker.
     """
 
+    if not math.isfinite(offset_seconds) or offset_seconds < 0.0:
+        raise ValueError("offset_seconds must be finite and non-negative")
+    if duration_seconds is not None and (
+        not math.isfinite(duration_seconds) or duration_seconds <= 0.0
+    ):
+        raise ValueError("duration_seconds must be finite and positive")
+
     librosa, numpy = _require_librosa()
 
     # ``mono=True`` and an explicit sample rate keep the measurement
     # deterministic across machines / librosa versions.
     decode_source = str(source) if isinstance(source, Path) else source
-    y, sr = librosa.load(decode_source, sr=_AUDIO_SAMPLE_RATE, mono=True)
+    load_options: dict[str, object] = {
+        "sr": _AUDIO_SAMPLE_RATE,
+        "mono": True,
+        "offset": offset_seconds,
+    }
+    if duration_seconds is not None:
+        load_options["duration"] = duration_seconds
+    y, sr = librosa.load(decode_source, **load_options)
     samples = _flat_float_values(numpy, y)
 
     if not samples or sr <= 0:
@@ -738,6 +758,42 @@ def measure_audio_features(source: Path | BytesIO) -> AudioMeasurements:
     """Measure one audio source through the shared deterministic extractor."""
 
     return _measure_audio_features(source)
+
+
+def get_audio_duration(path: Path) -> float:
+    """Return the decoded duration of one audio file without loading its waveform."""
+
+    validated_path = require_runtime_type(
+        path,
+        Path,
+        "path must be a pathlib.Path",
+    )
+    librosa, _ = _require_librosa()
+    duration = float(librosa.get_duration(path=str(validated_path)))
+    if not math.isfinite(duration) or duration <= 0.0:
+        raise ValueError("audio duration must be finite and positive")
+    return duration
+
+
+def extract_audio_window(
+    path: Path,
+    *,
+    offset_seconds: float,
+    duration_seconds: float,
+) -> FeatureReport:
+    """Extract one bounded HIGH-confidence window from a larger audio file."""
+
+    validated_path = require_runtime_type(
+        path,
+        Path,
+        "path must be a pathlib.Path",
+    )
+    measurements = _measure_audio_features(
+        validated_path,
+        offset_seconds=offset_seconds,
+        duration_seconds=duration_seconds,
+    )
+    return _audio_feature_report(measurements)
 
 
 # ---------------------------------------------------------------------------
@@ -992,6 +1048,12 @@ def aggregate_audio_measurements(
     return _aggregate_measurements(per_file)
 
 
+def clamp_audio_feature_unit(value: float) -> float:
+    """Clamp one normalized audio feature to the closed unit interval."""
+
+    return max(0.0, min(1.0, float(value)))
+
+
 __all__ = [
     "AudioDnaEvidence",
     "AudioDnaEvidencePayload",
@@ -1006,6 +1068,7 @@ __all__ = [
     "aggregate_audio_measurements",
     "audio_dna_evidence_to_dict",
     "audio_synthesis_features_to_dict",
+    "clamp_audio_feature_unit",
     "extract_from_audio",
     "extract_from_description",
     "extract_from_partial",

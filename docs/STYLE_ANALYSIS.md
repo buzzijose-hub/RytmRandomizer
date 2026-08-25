@@ -148,6 +148,79 @@ can reach HIGH-confidence measurement, but the resulting blueprint is
 still metadata only. It does not create patterns, write files, launch a
 GUI, open MIDI ports, or send MIDI.
 
+## Long-form reference-audio atlas
+
+`build_reference_audio_atlas()` extends the single-sound analysis path to a
+long recording without loading or analyzing every possible moment at once.
+It reads duration metadata, extracts bounded sequential windows, and selects
+the requested number of acoustically distinct moments with a deterministic
+farthest-first feature-distance pass. Selected moments are returned in
+chronological order and compiled through the existing
+`build_analog_four_patch_genome()` and
+`build_reference_style_blueprint()` functions.
+
+The default scan uses 30-second windows and a 30-second hop. Every window is
+between 5 and 120 seconds, at most 240 windows are decoded, and at most eight
+moments are selected. The implementation processes one window at a time so a
+long mix does not require a full-duration waveform in memory.
+
+Run the passive report with:
+
+```bash
+python -m rytm_randomizer.cli reference-audio-atlas-report \
+  --audio long-mix.wav --moments 8 --json
+```
+
+The atlas `analysis_id` is derived from numeric measurements and scan
+configuration, excluding source path, timestamps, and provenance hashes.
+Embedded feature reports, patch genomes, and blueprints retain their genuine
+per-window provenance hashes. This gives deterministic musical identity
+without erasing the evidence chain.
+
+The atlas does not perform stem separation, artist identification, copyright
+reconstruction, equipment attribution, exact sound recreation, or hardware
+verification. It writes no patch or kit and never enumerates, opens, or sends
+to MIDI.
+
+## Audio-to-Rytm recipe proposals
+
+`build_analog_rytm_audio_recipe_proposal(analysis)` turns an existing
+`AudioFeatureAnalysis` into a deterministic, pad-stable Analog Rytm recipe
+proposal. Import it from its focused module:
+
+```python
+from rytm_randomizer.style_analysis.analog_rytm_recipe_inference import (
+    analog_rytm_audio_recipe_proposal_to_dict,
+    build_analog_rytm_audio_recipe_proposal,
+)
+
+proposal = build_analog_rytm_audio_recipe_proposal(analysis)
+payload = analog_rytm_audio_recipe_proposal_to_dict(proposal)
+```
+
+The proposal keeps three evidence levels separate:
+
+- measured audio facts, copied from the supplied analysis;
+- bounded musical proposals, whose formulas and source features are recorded;
+- verified writable mappings, which are marked independently from musical intent.
+
+The first proposal surface uses the permanent AL16 pad roles for the main kick
+(pad 1), dry punctuation (pad 3), tuned low body (pad 6), and closed-hat clock
+(pad 9). All other pads are explicitly preserved. Machine choices are checked
+against the current Rytm machine catalog. Fields in the approved AL16 writable
+allowlist carry normalized 7-bit proposals; machine selection, track volume,
+and any unresolved machine-specific tuning remain `mapping_required`.
+
+Pitch evidence becomes a musical tuning intent, never a guessed raw tune value.
+A raw value can become `approved_tuning` only when the exact machine/note pair
+exists in the repository's machine-specific tuning table. Otherwise the
+proposal records the gap and preserves the device state.
+
+This layer is proposal-only. It performs no file or audio reads, does not encode
+SysEx, does not enumerate or open MIDI ports, and does not claim that a proposed
+recipe is hardware verified or compile ready. Codec/export work remains a
+separate downstream boundary.
+
 ## Determinism guarantee
 
 For a given audio file, `extract_from_audio` always returns the same
@@ -731,6 +804,34 @@ GUI/audio-analyzer planner: the analyzer can choose or bias a reference
 arc later, and these reports already show which segment-level machine
 rows and operator actions would be available without opening ports or
 sending MIDI.
+
+## Audio-to-Patch DNA causal lineage
+
+The passive Audio-to-Patch DNA lineage audit explains how each candidate is
+derived without presenting an authored direction score as measured acoustic
+similarity. It recomputes every audio-inferred Analog Four parameter from the
+canonical inference equations, records each feature contribution and weighted
+term, and reports template-only genes separately from inferred genes.
+
+Use `build_audio_patch_dna_lineage_audit` to create the typed audit,
+`audio_patch_dna_lineage_audit_to_dict` for deterministic structured output,
+and `render_audio_patch_dna_lineage_markdown` for a human-readable report.
+These APIs are pure: they do not read audio, open files, enumerate MIDI ports,
+or transmit MIDI.
+
+The evidence labels are intentionally conservative:
+
+- `creative_proximity_hint` is the authored direction value from the source
+  candidate, not an acoustic similarity measurement.
+- `mean_absolute_feature_delta` is the unweighted mean of the absolute changes
+  applied to unit-normalized analysis inputs. It is descriptive authored-input
+  metadata, not a calibrated perceptual distance or rendered-sound similarity
+  score.
+- `inferred_parameters` are exactly reproducible from the canonical equations.
+- `template_only_parameters` are creative defaults with no claim that audio
+  analysis inferred them.
+- Every candidate remains `render_required` until a synthesized render is
+  compared with the reference through the refinement/evaluation workflow.
 
 ## See also
 

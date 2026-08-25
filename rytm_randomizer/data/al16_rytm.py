@@ -120,6 +120,17 @@ AL16_PAD_ROLES: Final[Mapping[int, str]] = MappingProxyType(
     }
 )
 
+AL16_RYTM_RECIPE_PRESERVED_PADS: Final[tuple[int, ...]] = (
+    2,
+    4,
+    5,
+    7,
+    8,
+    10,
+    11,
+    12,
+)
+
 AL16_RYTM_MAPPING_GAP_PATHS: Final[tuple[str, ...]] = (
     "destination_slot",
     "tracks.1.machine",
@@ -250,6 +261,7 @@ __all__ = [
     "AL16_RYTM_EVIDENCE_GROUPS",
     "AL16_RYTM_FILTER_TYPES",
     "AL16_RYTM_MAPPING_GAP_PATHS",
+    "AL16_RYTM_RECIPE_PRESERVED_PADS",
     "AL16_RYTM_WRITABLE_FIELDS",
     "AL16_TRACK_MODE_PATCH",
     "AL16_TRACK_MODE_PRESERVE",

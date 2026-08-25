@@ -14,6 +14,11 @@ full version-bump and tagging flow.
 
 ### Added
 
+- Passive RIO145 native-KIT tooling for Analog Four and Analog Rytm: strict
+  SysEx inspection/diff/roundtrip validation, deterministic recipe builds,
+  target-return validation, and OXI evidence export. The integration includes
+  12 real-machine fixtures and adds no MIDI provider, port, sender, or native
+  Elektron pattern-generation path.
 - `tests/fixtures/v134_parity/` — JSON goldens capturing the V1.34 reference
   output for every parity request the engine/runner suite asserts against.
   Generated via `PARITY_CAPTURE_MODE=1 pytest`, then committed.

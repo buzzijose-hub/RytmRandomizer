@@ -58,7 +58,10 @@ USAGE = (
     "<syx-path> [--limit N] [--json] | analog-four-baseline-report --kit <syx-path> "
     "--pattern-kit <syx-path> --whole-project <syx-path> [--json] | "
     "analog-four-patch-genome-report (--description <text>|--audio <path>) [--track N] "
-    "[--candidate N] [--json] | analog-four-patch-learning-report (--description "
+    "[--candidate N] [--json] | reference-audio-atlas-report --audio <path> "
+    "[--window-seconds N] [--hop-seconds N] [--max-windows N] [--moments N] "
+    "[--min-novelty N] [--track N] [--candidates N] [--json] | "
+    "analog-four-patch-learning-report (--description "
     "<text>|--audio <path>) [--track N] [--candidate N] [--json] | "
     "analog-four-patch-corpus-report (--description <text>|--audio <path>) [--track N] "
     "[--limit N] [--corpus-file <path>] [--json] | analog-four-patch-send-plan-report "
@@ -325,6 +328,9 @@ USAGE = (
     "[--select N --source-kit <kit.syx>] [--overwrite] [--json] | "
     "analog-four-audio-patch-rank --reference <path> --manifest <batch.json> "
     "--render <N=path> [--render <N=path> ...] [--json] | "
+    "analog-four-audio-patch-refine --reference <path> --manifest <batch.json> "
+    "--candidate <1-4> --render <path> --output-dir <dir> [--gain N] "
+    "[--accept-similarity N] [--source-kit <kit.syx>] [--overwrite] [--json] | "
     "cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> "
     "[--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json] | "
     "manual-feedback-packet-report "
@@ -440,12 +446,32 @@ def test_analog_four_audio_patch_rank_help_is_exact_and_passive():
     assert result.stderr == ""
 
 
+def test_analog_four_audio_patch_refine_help_is_exact_and_passive():
+    from rytm_randomizer.cockpit.export.analog_four_patch_refinement import (
+        ANALOG_FOUR_PATCH_REFINEMENT_SAFETY,
+    )
+
+    result = run_cli("analog-four-audio-patch-refine", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: analog-four-audio-patch-refine" in help_text
+    assert "--accept-similarity" in help_text
+    assert "bounded residual correction" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [
+        f"  {line}" for line in ANALOG_FOUR_PATCH_REFINEMENT_SAFETY
+    ]
+    assert result.stderr == ""
+
+
 @pytest.mark.parametrize(
     "command",
     [
         "analog-rytm-midi-catalog-report",
         "analog-four-baseline-report",
         "analog-four-patch-genome-report",
+        "reference-audio-atlas-report",
         "analog-four-patch-learning-report",
         "analog-four-patch-corpus-report",
         "analog-four-patch-send-plan-report",
