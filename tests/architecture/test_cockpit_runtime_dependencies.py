@@ -11,7 +11,7 @@ pytestmark = pytest.mark.fast
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-SAFE_FASTAPI_REQUIREMENT = "fastapi>=0.110.0,!=0.136.3,<0.139.2"
+SAFE_FASTAPI_REQUIREMENT = "fastapi>=0.110.0,!=0.136.3,<0.141.2"
 DEPENDABOT_CONFIG = PROJECT_ROOT / ".github" / "dependabot.yml"
 # The single FastAPI release pip-audit flags as MAL-2026-4750. Excluded from
 # SAFE_FASTAPI_REQUIREMENT via `!=` and mirrored in the dependabot ignore
