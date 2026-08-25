@@ -1,6 +1,6 @@
 RytmRandomizer passive command search
 Section: commands
-Query: guarded
+Query: <input omitted>
 Match count: 3
 Matches:
 - 1: guarded depth input 1, requires lane/mode prefix

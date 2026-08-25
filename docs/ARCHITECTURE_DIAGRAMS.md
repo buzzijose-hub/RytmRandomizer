@@ -41,7 +41,7 @@ Current baseline used while creating / refreshing this document:
 | Guardrails | `rytm_randomizer/guardrails/{resolver,store,schema,validation}.py` |
 | Observability | `rytm_randomizer/observability/{logging,tracing,metrics,errors}.py` |
 | Style analysis | `rytm_randomizer/style_analysis/{extractor,runtime_types,feature_report,library,blueprint,analog_four_patch_genome,analog_four_patch_inference,analog_four_patch_learning,analog_four_patch_corpus,analog_four_patch_send_plan,analog_four_patch_render_rank,analog_four_patch_codesigner}.py` |
-| Cockpit export | `rytm_randomizer/cockpit/export/{file_export_contracts,analog_four_export_contracts,analog_four_cli,analog_four_kit,al16_rytm_cli,al16_rytm_kit,analog_four_patch_batch,analog_four_patch_batch_cli,analog_four_patch_batch_codec,analog_four_patch_batch_contracts,analog_four_patch_batch_publication,analog_four_patch_batch_reader,analog_four_patch_render_rank,analog_four_patch_render_rank_cli,cli_options,writer}.py` plus the profile-model serialization/signing/verifier modules. |
+| Cockpit export | `rytm_randomizer/cockpit/export/{file_export_contracts,analog_four_export_contracts,analog_four_cli,analog_four_kit,al16_rytm_cli,al16_rytm_kit,al16_rytm_mapping_closure,al16_rytm_mapping_closure_cli,analog_four_patch_batch,analog_four_patch_batch_cli,analog_four_patch_batch_codec,analog_four_patch_batch_contracts,analog_four_patch_batch_publication,analog_four_patch_batch_reader,analog_four_patch_render_rank,analog_four_patch_render_rank_cli,cli_options,writer}.py` plus the profile-model serialization/signing/verifier modules. |
 | Tests | `tests/test_*.py`, `tests/cockpit/test_*.py`, `tests/architecture/test_*.py`, `tests/fixtures/{analog_four_saved_kit,v134_parity}/`, `tests/_parity_worker.py`, `tests/conftest.py` |
 | Project documentation | `CONTRIBUTING.md`, `docs/*.md`, `.claude/rules/*.md`, `.claude/skills/**/SKILL.md` |
 
@@ -768,6 +768,9 @@ flowchart TB
         A4Batch["cockpit/export/analog_four_patch_batch.py<br/>staging + transaction orchestration"]
         A4BatchSupport["batch_codec + contracts + publication<br/>shared JSON/hashes + DTOs + locks"]
         A4BatchCli["analog-four-audio-patch-batch<br/>registered passive-hardware command"]
+        A4Dna["style_analysis/audio_patch_dna.py<br/>eight fixed pure candidate transforms"]
+        A4DnaExport["cockpit/export/audio_patch_dna.py<br/>one analysis + compare/select orchestration"]
+        A4DnaCli["audio-patch-dna<br/>registered passive comparison command"]
         A4BatchReader["analog_four_patch_batch_reader.py<br/>verify manifest + exact sidecar plan"]
         A4RenderRank["analog_four_patch_render_rank.py<br/>reference + A4 recordings -> acoustic rank"]
         A4RenderRankCli["analog-four-audio-patch-rank<br/>registered passive command"]
@@ -792,6 +795,10 @@ flowchart TB
     A4Batch --> A4Device
     A4Batch --> A4BatchSupport
     A4BatchCli --> A4Batch
+    A4Dna --> A4Inference
+    A4DnaExport --> A4Dna
+    A4DnaExport --> A4Batch
+    A4DnaCli --> A4DnaExport
     A4RenderRank --> A4BatchReader
     A4RenderRankCli --> A4RenderRank
 
@@ -1113,11 +1120,13 @@ flowchart LR
     subgraph A4LocalCmds["Passive Analog Four local-file and analysis commands"]
         A4SavedKitExport["analog-four-saved-kit-export<br/>validated fields -> local .syx"]
         A4AudioPatchBatch["analog-four-audio-patch-batch<br/>audio + source kit -> candidates + sidecars"]
+        AudioPatchDna["audio-patch-dna<br/>one analysis -> eight comparisons -> optional selected A4 export"]
         A4AudioPatchRank["analog-four-audio-patch-rank<br/>reference + recorded renders -> ranking"]
     end
 
     subgraph RytmLocalCmds["Passive Analog Rytm local-file commands"]
         AL16RytmExport["al16-rytm-kit-export<br/>recipe + initialized kit -> verified evidence"]
+        AL16RytmMappingEvidence["al16-rytm-mapping-evidence<br/>initialized + configured kits -> review packet"]
     end
 
     Operator --> CLI
@@ -1133,6 +1142,14 @@ flowchart LR
     A4LocalCmds --> A4ExportPipeline["cockpit/export/<br/>saved-kit writer + batch + rank"]
     RytmLocalCmds --> RytmExportAdapter["cockpit/export/al16_rytm_cli.py<br/>arguments + process status"]
     RytmExportAdapter --> RytmExportService["cockpit/export/al16_rytm_kit.py<br/>fail-closed audit + atomic evidence"]
+    AL16RytmMappingEvidence --> RytmMappingAdapter["cockpit/export/al16_rytm_mapping_closure_cli.py<br/>passive arguments + atomic JSON output"]
+    RytmMappingAdapter --> RytmMappingService["cockpit/export/al16_rytm_mapping_closure.py<br/>layout-bounded diff + review-only evidence"]
+    RytmMappingAdapter --> FileExportContract
+    RytmMappingService --> RytmMappingInputs["recipe SHA + operator-pinned gap-manifest SHA<br/>recipe identifier + reference SHA"]
+    RytmMappingService --> RytmCanonicalFacts["data/al16_rytm.py gap grammar<br/>data/analog_rytm_kit_layout.py<br/>cockpit/data/rytm_parameter_map.py"]
+    RytmMappingService --> RytmExportService
+    RytmMappingService --> RytmCapability
+    RytmMappingAdapter --> Observability["operation + structured errors + metrics"]
     A4LocalCmds --> FileExportContract["cockpit/export/file_export_contracts.py<br/>bounded phase + error code + basename context"]
     RytmExportAdapter --> FileExportContract
     RytmExportService --> FileExportContract
@@ -1881,7 +1898,9 @@ flowchart LR
         A4PatchSendPlan["analog-four-patch-send-plan-report"]
         A4SavedKitExport["analog-four-saved-kit-export --source K --output O --filter2-resonance T:V [...]"]
         AL16RytmExport["al16-rytm-kit-export --reference K --recipe R --destination-slot N --output O"]
+        AL16RytmMappingEvidence["al16-rytm-mapping-evidence --reference K --configured C --recipe R --gap-manifest G --expected-gap-manifest-sha256 H --report O"]
         A4AudioPatchBatch["analog-four-audio-patch-batch --audio A --source-kit K --output-dir D [--track N] --candidates 4 [--studio-handoff --a4-output-port EXACT_NAME] [--json]"]
+        AudioPatchDna["audio-patch-dna --audio A --output-dir D [--track N] [--select 1..8 --source-kit K] [--json]"]
         A4AudioPatchRank["analog-four-audio-patch-rank --reference A --manifest M --render N=R [...]"]
         A4StyleKitReadiness["analog-four-style-kit-readiness-report"]
         A4OxiMacroSetPlanner["analog-four-oxi-macro-set-planner-report [--set-name N] [--sequence A,B] [--seed N] [--json]"]
@@ -1935,7 +1954,9 @@ flowchart LR
     CliRegistry -->|"registered passive command:<br/>analog-four-patch-corpus-report"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-patch-send-plan-report"| CLI
     CliRegistry -->|"registered local-file command:<br/>analog-four-saved-kit-export"| CLI
+    CliRegistry -->|"registered passive command:<br/>al16-rytm-mapping-evidence"| CLI
     CliRegistry -->|"registered passive-hardware command:<br/>analog-four-audio-patch-batch"| CLI
+    CliRegistry -->|"registered passive comparison command:<br/>audio-patch-dna"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-audio-patch-rank"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-style-kit-readiness-report"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-oxi-macro-set-planner-report"| CLI
@@ -1959,8 +1980,10 @@ flowchart LR
 **Current nuance:**
 
 - The `cli.py` is visibility-first. No active execution / send / hardware-test command is wired here.
-- `app.py` is the interactive entry point and is the ONLY surface where the `--arm` flag triggers real MIDI. The A4 manifest reader validates the complete stored CC/NRPN plan before the app constructs the provider; the passive CLI, local SysEx writer, batch generator, ranker, and local-model copilot never open a port.
+- `app.py` is the interactive entry point and is the ONLY surface where the `--arm` flag triggers real MIDI. The A4 manifest reader validates the complete stored CC/NRPN plan before the app constructs the provider; the passive CLI, local SysEx writer, batch generator, eight-candidate DNA workspace, ranker, and local-model copilot never open a port.
+- `audio-patch-dna` decodes the source audio once, displays exactly eight fixed candidate directions, and writes deterministic comparison artifacts. Only an explicit `--select` paired with `--source-kit` invokes the existing passive A4 file exporter, using the precomputed selected candidate without a second audio decode.
 - The registered `al16-rytm-kit-export` command is a passive adapter around the AL16 `cockpit/export` build service. A blocked proof returns status `2`, atomically writes deterministic evidence reports, and withholds `.syx` output; it never enumerates or opens MIDI ports.
+- The registered `al16-rytm-mapping-evidence` command compares initialized and manually configured local Rytm kit dumps against the R1 gap manifest. It requires the operator-pinned SHA-256 of the exact manifest bytes, then verifies recipe and manifest hashes, deterministic recipe identity, and initialized-reference identity before analysis; candidate locations are restricted to the canonical AL16 gap grammar, layout, and parameter-map facts. The command writes review-only JSON, records structured operations/metrics, and cannot promote mappings, write SysEx, or reach hardware.
 - `cli_registry.py` (WS-S7) is the future-extension seam. The passive Rytm 12-pad machine matrix, manual feedback packet, snapshot pad-compatibility, snapshot intelligence, snapshot mutation preview, Rytm style snapshot routing, Rytm style mutation intent/render-plan/mock-preview, Analog Four style routing/intent/mock-preview/kit-catalog/baseline/patch-genome/patch-learning/patch-send-plan/readiness/OXI macro set planner, local model copilot, dual-machine style routing/intent/mock-preview, style-profile, style-target, reference-style blueprint, and style-performance-arc commands are registered there instead of growing `cli.py` with more inline report arms. The manual feedback packet turns installer/Profile Wizard/export/pad-scope/manual hardware observations into deterministic reviewer evidence without launching the GUI, running analysis, opening MIDI, or writing files; the reference-style blueprint report turns a description/audio/library FeatureReport into an influence-only 12-pad Rytm plus 4-track Analog Four starting blueprint; the A4 initialized-baseline report compares kit/pattern+kit/whole-project dumps and publishes a stable clean-slate fingerprint for future changed-patch diffs; the A4 patch-genome report turns a description/audio FeatureReport into four passive single-sound DNA candidates with front-panel targets plus CC/NRPN metadata; the A4 patch send-plan report compiles the selected candidate into ordered CC/NRPN events while skipping screen-only destination rows; the local model copilot report composes deterministic docs/MIDI, staged mutation-intent, and A4 patch-review packets and only runs the configured `LOCAL_MODEL_COMMAND` subprocess when `--ask-local-model` is set; the A4 kit catalog/readiness reports carry stable payload fingerprints for future GUI/audio-analyzer kit-state comparison; the A4 OXI macro set planner turns curated macro sequences into exact replayable set-plan JSON and Cockpit cards; the live render bundle reuses existing segment mock previews and deferred A4 rows, the live cue sheet converts that bundle into operator risk/move/recovery cues plus compact stage cards, the live runbook turns direct arcs or reference matches into launch/timeline/recovery context, the stage-routing report turns that runbook into saved-kit slot/fingerprint route cards, the stage-rehearsal-state report turns those route cards into go/rehearse/do-not-arm cue and machine states, the live set cockpit and live show export reports climb from rehearsal state into show handoff JSON, the live transition timeline turns that export into cue-to-cue prep/launch/hold/recovery cards, the live command deck turns the timeline into current-cue command cards and lookahead, the live state packet turns that deck into GUI-ready now/next cues plus machine panels/action/warning/recovery stacks, the live readiness report turns that state packet into launch-gate confidence/warning/recovery checks, the live control surface report turns readiness into GUI/audio-analyzer cards and replayable passive commands, the live analyzer handoff report pairs reference-match FeatureReport meters with that control surface for future analyzer panels, the live analyzer target packet turns that handoff into rehearsal target bands/checkpoints/calibration/warnings for future analyzer comparison, the live GUI analyzer readiness bundle turns that target packet into panel manifests/stream wiring/operator workflow/blocked active actions for future desktop surfaces, the live GUI analyzer overlay turns render-tree nodes into meter widgets, threshold markers, selected-capture badges, and overlay annotations, the live GUI analyzer frame turns overlay metadata into ordered frame events and visual assertions for future GUI tests, the live GUI interaction script turns frame metadata into operator action bindings and disabled hardware locks for future GUI controls, the live GUI implementation bridge turns test-harness readiness into future-GUI wiring metadata, the live GUI desktop blueprint turns that bridge into desktop shell/layout/widget/binding metadata, the live GUI desktop app plan turns that blueprint into app shell/route/component/state/style-token metadata, the live GUI desktop component contract turns that app plan into component/prop/action/selector metadata, the live GUI desktop view model turns that contract into component view-model/state-binding/disabled-action/style-token metadata, the live GUI desktop render contract turns that view model into render-surface/render-binding/style-token/assertion metadata, the live GUI desktop render harness turns that render contract into surface-harness/binding-harness/style-token-check/assertion metadata, and the reference-match report turns a description/audio/library/FeatureReport reference into a ranked arc plus optional embedded cue sheet, snapshot preview, and stage packet projection. Most legacy CLI dispatch remains in-line until the broader WS-S7 refactor lands. The architecture rule `test_no_parallel_device_registry` allows `cli_registry.py` (the CLI registry) as a non-device registry.
 
 ---

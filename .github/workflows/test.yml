@@ -329,11 +329,13 @@ jobs:
       needs.detect-changes.outputs.deps == 'true' ||
       needs.detect-changes.outputs.ci == 'true'
     runs-on: ${{ matrix.os }}
-    # `contents: write` is needed so the coverage-ratchet auto-commit step
-    # (see below) can push the bumped .coveragerc back to the PR branch.
-    # All other steps are read-only; this is the minimum scope required.
+    # `contents: write` lets the coverage-ratchet auto-commit step push the
+    # bumped .coveragerc back to the PR branch. `checks: write` lets that
+    # same job propagate required-checks to the bot commit, whose token push
+    # intentionally does not trigger another workflow run.
     permissions:
       contents: write
+      checks: write
     strategy:
       fail-fast: false
       matrix:
@@ -404,6 +406,16 @@ jobs:
       - name: Ratchet coverage floor
         if: matrix.os == 'ubuntu-latest'
         run: python scripts/coverage_ratchet.py coverage.xml
+
+      # The coverage-floor commit below performs a normal git push, so the
+      # repository pre-push hook runs inside this job. The test extras provide
+      # pytest and typing tools but intentionally omit the lint executables;
+      # install the same pinned versions used by the lint job before pushing.
+      - name: Install pre-push lint tools for coverage ratchet
+        if: |
+          matrix.os == 'ubuntu-latest' &&
+          github.event_name == 'push'
+        run: pip install "ruff==0.15.13" "black==26.3.1" "isort==8.0.1"
 
       # When the ratchet step above rewrote .coveragerc, commit the bump
       # back to the PR branch as github-actions[bot] so the new floor

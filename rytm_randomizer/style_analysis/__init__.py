@@ -29,6 +29,15 @@ pulls librosa in for users who need real audio measurement.
 from __future__ import annotations
 
 from ..guardrails.schema import Confidence, SourceType
+from .audio_patch_dna import (
+    AUDIO_PATCH_DNA_CANDIDATE_COUNT,
+    AudioPatchDnaCandidate,
+    AudioPatchDnaWorkspace,
+    audio_patch_dna_workspace_to_dict,
+    build_audio_patch_dna_workspace,
+    render_audio_patch_dna_markdown,
+    select_audio_patch_dna_candidate,
+)
 from .blueprint import (
     AnalogFourTrackBlueprint,
     ReferenceStyleBlueprint,
@@ -38,10 +47,12 @@ from .blueprint import (
     reference_style_blueprint_to_dict,
 )
 from .extractor import (
+    AudioDnaEvidence,
     AudioFeatureAnalysis,
     AudioSynthesisFeatures,
     StyleAnalysisDependencyError,
     analyze_audio,
+    audio_dna_evidence_to_dict,
     audio_synthesis_features_to_dict,
     extract_from_audio,
     extract_from_description,
@@ -56,7 +67,11 @@ from .feature_report import (
 from .library import analyze_library
 
 __all__ = [
+    "AUDIO_PATCH_DNA_CANDIDATE_COUNT",
+    "AudioDnaEvidence",
     "AudioFeatureAnalysis",
+    "AudioPatchDnaCandidate",
+    "AudioPatchDnaWorkspace",
     "AudioSynthesisFeatures",
     "AnalogFourTrackBlueprint",
     "Confidence",
@@ -68,13 +83,18 @@ __all__ = [
     "SourceType",
     "StyleAnalysisDependencyError",
     "analyze_audio",
+    "audio_dna_evidence_to_dict",
+    "audio_patch_dna_workspace_to_dict",
     "audio_synthesis_features_to_dict",
     "analyze_library",
     "compute_feature_report_hash",
     "feature_report_to_dict",
     "build_reference_style_blueprint",
+    "build_audio_patch_dna_workspace",
     "extract_from_audio",
     "extract_from_description",
     "extract_from_partial",
     "reference_style_blueprint_to_dict",
+    "render_audio_patch_dna_markdown",
+    "select_audio_patch_dna_candidate",
 ]

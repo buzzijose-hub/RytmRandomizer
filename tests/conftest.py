@@ -27,11 +27,14 @@ sys.path).
 
 from __future__ import annotations
 
+import hashlib
 import io
+import json
 import logging
 import sys
 import types
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
@@ -41,7 +44,7 @@ if TYPE_CHECKING:
     from rytm_randomizer.devices.strategies.analog_four_saved_kit_writer import (
         AnalogFourSavedKitMutation,
     )
-    from rytm_randomizer.style_analysis import FeatureReport
+    from rytm_randomizer.style_analysis import AudioFeatureAnalysis, FeatureReport
 
 
 def analog_four_reference_feature_report(*, derived_at: str) -> FeatureReport:
@@ -66,6 +69,58 @@ def analog_four_reference_feature_report(*, derived_at: str) -> FeatureReport:
     )
 
 
+@pytest.fixture
+def audio_patch_dna_analysis() -> AudioFeatureAnalysis:
+    """Build the canonical measured-audio analysis shared by DNA tests."""
+
+    from rytm_randomizer.guardrails.schema import Confidence, SourceType
+    from rytm_randomizer.style_analysis import (
+        AudioDnaEvidence,
+        AudioFeatureAnalysis,
+        AudioSynthesisFeatures,
+        FeatureReport,
+    )
+
+    return AudioFeatureAnalysis(
+        feature_report=FeatureReport(
+            source_type=SourceType.SINGLE_TRACK,
+            confidence=Confidence.HIGH,
+            bpm=138.0,
+            tempo_stability=0.92,
+            kick_density=0.31,
+            percussion_density=0.48,
+            low_end_weight=0.61,
+            spectral_brightness=0.57,
+            texture_noise=0.23,
+            energy_arc=(0.2, 0.4, 0.7, 0.6),
+            content_hash="placeholder",
+            derived_at="2026-08-09T00:00:00Z",
+        ),
+        synthesis_features=AudioSynthesisFeatures(
+            audio_sha256="b" * 64,
+            duration=0.40,
+            attack=0.18,
+            decay=0.42,
+            sustain=0.38,
+            tail=0.36,
+            brightness=0.55,
+            spectral_flatness=0.20,
+            noise=0.24,
+            low_end=0.58,
+            harmonicity=0.68,
+            transient=0.62,
+            modulation=0.27,
+        ),
+        dna_evidence=AudioDnaEvidence(
+            dominant_frequency_hz=87.31,
+            dominant_note="F2",
+            pitch_confidence=0.81,
+            tonal_stability=0.72,
+            spectral_movement=0.19,
+        ),
+    )
+
+
 def analog_four_saved_kit_mutation(
     track: int = 1,
     screen_value: str = "64",
@@ -85,6 +140,72 @@ def analog_four_saved_kit_mutation(
 
 
 ANALOG_RYTM_SAVED_KIT_TEST_HEADER = bytes((0x00, 0x20, 0x3C, 0x07, 0x00, 0x52, 0x01, 0x01, 0x00))
+
+
+@dataclass(frozen=True)
+class Al16RytmMappingTestInputs:
+    """Paths and trust anchor for one deterministic mapping-evidence test bundle."""
+
+    reference_path: Path
+    configured_path: Path
+    recipe_path: Path
+    manifest_path: Path
+    manifest_sha256: str
+
+
+def write_al16_rytm_mapping_test_inputs(
+    tmp_path: Path,
+    *,
+    reference_frame: bytes,
+    configured_frame: bytes,
+    recipe: Mapping[str, object],
+    recipe_payload: bytes,
+    semantic_paths: tuple[str, ...],
+    requested_values: Mapping[str, object],
+) -> Al16RytmMappingTestInputs:
+    """Write a bound local evidence bundle and return its manifest trust anchor."""
+
+    from rytm_randomizer.cockpit.export.al16_rytm_kit import (
+        deterministic_recipe_identifier,
+    )
+
+    reference_path = tmp_path / "reference.syx"
+    configured_path = tmp_path / "configured.syx"
+    recipe_path = tmp_path / "recipe.yaml"
+    manifest_path = tmp_path / "manifest.json"
+    reference_path.write_bytes(reference_frame)
+    configured_path.write_bytes(configured_frame)
+    recipe_path.write_bytes(recipe_payload)
+    manifest_payload = json.dumps(
+        {
+            "critical_mapping_gaps": [
+                {"semantic_path": semantic_path} for semantic_path in semantic_paths
+            ],
+            "semantic_field_audits": [
+                {
+                    "semantic_path": semantic_path,
+                    "requested_semantic_value": requested_values.get(
+                        semantic_path,
+                        f"requested:{semantic_path}",
+                    ),
+                    "verification_status": "critical_mapping_gap",
+                }
+                for semantic_path in semantic_paths
+            ],
+            "deterministic_recipe_identifier": deterministic_recipe_identifier(recipe),
+            "recipe_sha256": hashlib.sha256(recipe_payload).hexdigest(),
+            "reference_sha256": hashlib.sha256(reference_frame).hexdigest(),
+        },
+        sort_keys=True,
+    ).encode("utf-8")
+    manifest_path.write_bytes(manifest_payload)
+    return Al16RytmMappingTestInputs(
+        reference_path=reference_path,
+        configured_path=configured_path,
+        recipe_path=recipe_path,
+        manifest_path=manifest_path,
+        manifest_sha256=hashlib.sha256(manifest_payload).hexdigest(),
+    )
 
 
 def analog_rytm_saved_kit_test_raw() -> bytes:

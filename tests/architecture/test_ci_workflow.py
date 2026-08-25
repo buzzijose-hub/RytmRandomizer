@@ -22,6 +22,10 @@ Rules checked here:
    Branch protection requires only the aggregate; a new job that is not
    listed in ``required-checks.needs:`` silently bypasses the gate.
 
+4. **The coverage-ratchet job can push and publish checks.** Its bot commit
+   needs ``contents: write`` and its propagated branch-protection verdict
+   needs ``checks: write``.
+
 The first run of these tests caught real bugs: lint-tool version drift
 between workflow and pre-commit (would only surface as CI failure with
 no local repro), and a freshly-added job that the aggregate did not
@@ -321,4 +325,30 @@ def test_required_checks_aggregate_covers_every_upstream_job() -> None:
         "required-checks aggregate is out of sync with the workflow's "
         "job list. Update the `needs:` line in .github/workflows/test.yml "
         "so branch protection sees every gate.\n\n" + "\n\n".join(error_parts)
+    )
+
+
+# ---------------------------------------------------------------------------
+# Rule 4: the coverage ratchet can push and propagate required-checks.
+# ---------------------------------------------------------------------------
+
+
+def test_coverage_ratchet_job_has_required_write_permissions() -> None:
+    """The test job must be able to push and annotate its ratchet commit."""
+
+    try:
+        import yaml  # type: ignore[import-untyped]
+    except ImportError:  # pragma: no cover - install yaml
+        pytest.skip("PyYAML not installed; skipping workflow permission check.")
+
+    data = yaml.safe_load(_read_workflow_text(TEST_WORKFLOW))
+    test_job = (data.get("jobs", {}) or {}).get("test", {}) or {}
+    permissions = test_job.get("permissions", {}) or {}
+
+    assert (
+        permissions.get("contents") == "write"
+    ), "The coverage-ratchet bot commit requires `test.permissions.contents: write`."
+    assert permissions.get("checks") == "write", (
+        "Propagating required-checks to the coverage-ratchet bot commit requires "
+        "`test.permissions.checks: write`."
     )

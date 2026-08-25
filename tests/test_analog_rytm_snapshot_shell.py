@@ -2536,6 +2536,7 @@ def test_snapshot_shell_private_selector_role_and_profile_edges() -> None:
 
     assert shellmod._preset_guardrails("studio") is not None
     assert shellmod._randomizer_role_for_machine("ut_noise") == "noise"
+    assert shellmod._randomizer_role_for_machine("unknown_future") == "perc"
     assert shellmod._randomizer_default_contract_for_pad(sparse_anchor, 1).role == "perc"
     assert shellmod._normalized_selector_value(127, (4, 4)) == 4
     assert shellmod._selector_mutated_value(127, 3, (4, 4), wrap=True, single_step=False) == 4
@@ -2557,6 +2558,42 @@ def test_snapshot_shell_private_selector_role_and_profile_edges() -> None:
     first_lsb = next(iter(RYTM_SOUND_FIELD_BY_NRPN_LSB))
     truncated = replace(_snapshot(), unpacked=b"")
     assert shellmod._track_value(truncated, 1, first_lsb) is None
+
+
+def test_snapshot_shell_private_snapshot_and_anchor_edges(monkeypatch) -> None:
+    from rytm_randomizer.engines import analog_rytm_snapshot_shell as shellmod
+
+    snapshot = _snapshot()
+    no_facts = replace(
+        snapshot,
+        machine_facts=replace(snapshot.machine_facts, facts_by_pad={}),
+    )
+    assert shellmod._snapshot_profile(no_facts, 1) is None
+
+    raw_fact = replace(
+        snapshot.machine_facts.facts_by_pad[1],
+        decoded_machine_value=None,
+        raw_machine_value=-1,
+    )
+    negative_raw = replace(
+        snapshot,
+        machine_facts=replace(
+            snapshot.machine_facts,
+            facts_by_pad={**snapshot.machine_facts.facts_by_pad, 1: raw_fact},
+        ),
+    )
+    assert shellmod._snapshot_profile(negative_raw, 1) is None
+
+    profile = shellmod._snapshot_profile(snapshot, 1)
+    assert profile is not None
+    monkeypatch.setattr(shellmod, "_track_value", lambda *_args: None)
+    assert shellmod._general_anchor_events(snapshot, 1, profile) == ()
+    assert shellmod._src_anchor_events(snapshot, 1, None) == ()
+    assert shellmod._src_anchor_events(snapshot, 1, profile) == ()
+
+    monkeypatch.setattr(shellmod, "_track_value", lambda *_args: 0)
+    monkeypatch.setattr(shellmod, "_event_from_mapping", lambda **_kwargs: None)
+    assert shellmod._general_anchor_events(snapshot, 1, profile) == ()
 
 
 def test_snapshot_shell_tune_policy_reverses_at_value_edges() -> None:
@@ -2650,6 +2687,15 @@ def test_snapshot_shell_private_zone_and_delta_edges(monkeypatch) -> None:
         )
         == 8
     )
+    generic_event = replace(filter_event, parameter="Pan", section="AMP")
+    assert (
+        shellmod._base_delta(
+            generic_event,
+            shellmod.SNAPSHOT_SHELL_COMMANDS["s3b"],
+            9,
+        )
+        == 3
+    )
 
     monkeypatch.setattr(shellmod, "_base_delta", lambda *_args: 0)
     monkeypatch.setattr(shellmod, "_generation_jitter", lambda *_args: 0)
@@ -2659,6 +2705,162 @@ def test_snapshot_shell_private_zone_and_delta_edges(monkeypatch) -> None:
         )
         == 1
     )
+    monkeypatch.setattr(shellmod, "_generation_jitter", lambda *_args: 2)
+    assert (
+        shellmod._delta_with_generation_jitter(
+            filter_event, shellmod.SNAPSHOT_SHELL_COMMANDS["4"], 8, 2
+        )
+        == 2
+    )
+
+
+def test_snapshot_shell_private_detune_and_mutation_edges(monkeypatch) -> None:
+    from rytm_randomizer.engines import analog_rytm_snapshot_shell as shellmod
+
+    anchor = shellmod.build_snapshot_shell_anchor(_snapshot())
+    filter_event = _event_for(anchor.events, pad=2, parameter="Filter Frequency")
+    detune = replace(
+        _event_for(anchor.events, pad=3, parameter="Osc 2 Detune"),
+        machine_key="dual_vco",
+    )
+    safe_detune = replace(detune, value=70)
+
+    assert shellmod._live_dual_vco_detune_window(filter_event, 2) is None
+    assert shellmod._live_dual_vco_detune_window(replace(detune, value=0), 2) is None
+    assert (
+        shellmod._live_dual_vco_detune_limited_value(
+            replace(detune, value=0),
+            detune,
+            70,
+            2,
+        )
+        == 0
+    )
+    assert shellmod._live_dual_vco_detune_limited_value(safe_detune, safe_detune, 70, 2) == 72
+
+    command = shellmod.SNAPSHOT_SHELL_COMMANDS["4"]
+    guardrails = shellmod.default_snapshot_session_guardrails()
+    contract = shellmod._randomizer_default_contract_for_machine(filter_event.machine_key)
+    depth_results = iter(("normal", None))
+    monkeypatch.setattr(
+        shellmod,
+        "_lane_limited_session_depth",
+        lambda *_args: next(depth_results),
+    )
+    assert (
+        shellmod._mutate_snapshot_event(
+            filter_event,
+            filter_event,
+            command,
+            "strong",
+            1,
+            guardrails,
+            contract,
+        )
+        == filter_event
+    )
+    monkeypatch.setattr(shellmod, "_randomizer_density_allows_event", lambda *_args: True)
+    randomizer_depth_results = iter(("normal", None))
+    monkeypatch.setattr(
+        shellmod,
+        "_lane_limited_session_depth",
+        lambda *_args: next(randomizer_depth_results),
+    )
+    assert (
+        shellmod._mutate_snapshot_event(
+            filter_event,
+            filter_event,
+            command,
+            "strong",
+            1,
+            guardrails,
+            contract,
+        )
+        == filter_event
+    )
+
+    tune_event = _event_for(anchor.events, pad=2, parameter="Tune")
+    monkeypatch.setattr(shellmod, "_lane_limited_session_depth", lambda *_args: "normal")
+    monkeypatch.setattr(shellmod, "_tune_policy_delta", lambda *_args: 0)
+    assert (
+        shellmod._mutate_snapshot_event(
+            tune_event,
+            tune_event,
+            command,
+            "strong",
+            1,
+            guardrails,
+        )
+        == tune_event
+    )
+
+    pad_one_tune = _event_for(anchor.events, pad=1, parameter="Tune")
+    monkeypatch.setattr(shellmod, "_is_machine_source_tune_event", lambda _event: False)
+    monkeypatch.setattr(shellmod, "_delta_with_generation_jitter", lambda *_args: 20)
+    mutated = shellmod._mutate_snapshot_event(
+        pad_one_tune,
+        pad_one_tune,
+        command,
+        "strong",
+        1,
+        guardrails,
+    )
+    assert abs(mutated.value - pad_one_tune.value) <= 3
+
+    sender = MockMidiSender()
+    shellmod.send_snapshot_shell_events(sender, (filter_event,), skip_sleep=False)
+    assert len(sender.sent_messages) == 1
+
+
+def test_snapshot_shell_private_empty_change_and_command_edges(capsys) -> None:
+    from rytm_randomizer.engines import analog_rytm_snapshot_shell as shellmod
+
+    anchor = shellmod.build_snapshot_shell_anchor(_snapshot())
+    shell = shellmod.AnalogRytmSnapshotShell(anchor, MockMidiSender())
+    sparse_state = replace(
+        shell.state,
+        current_events=tuple(event for event in shell.state.current_events if event.pad != 12),
+    )
+    assert "Pad 12" not in shellmod.format_snapshot_shell_changes(sparse_state)
+
+    assert shell.dispatch("again") is True
+    shell._undo()
+    assert shell.dispatch("macro") is True
+    shell._set_pad_randomizer_policy(("pad", "13", "role", "auto"))
+
+    cancelled = shellmod.AnalogRytmSnapshotShell(
+        anchor,
+        MockMidiSender(),
+        resnapshot_func=lambda: None,
+    )
+    assert cancelled.dispatch("kit") is True
+
+    def _raise_eof(_prompt: str) -> str:
+        raise EOFError
+
+    interrupted = shellmod.AnalogRytmSnapshotShell(
+        anchor,
+        MockMidiSender(),
+        input_func=_raise_eof,
+    )
+    assert interrupted._read_depth("test") is None
+    assert interrupted.run() == 0
+
+    normal_commands = iter(("help", "q"))
+    normal_exit = shellmod.AnalogRytmSnapshotShell(
+        anchor,
+        MockMidiSender(),
+        input_func=lambda _prompt: next(normal_commands),
+    )
+    assert normal_exit.run() == 0
+
+    captured = capsys.readouterr()
+    assert "nothing to repeat" in captured.out
+    assert "nothing to undo" in captured.out
+    assert "usage: macro NAME" in captured.out
+    assert "pad number must be 1-12: 13" in captured.out
+    assert "KIT resnapshot cancelled" in captured.out
+    assert "depth choice cancelled" in captured.out
 
 
 def test_snapshot_shell_dispatch_validation_edges(capsys, monkeypatch) -> None:
