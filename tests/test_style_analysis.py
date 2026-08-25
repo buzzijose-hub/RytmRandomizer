@@ -51,6 +51,9 @@ from rytm_randomizer.style_analysis import (
     extract_from_partial,
 )
 from rytm_randomizer.style_analysis import extractor as extractor_module
+from rytm_randomizer.style_analysis import (
+    feature_distance,
+)
 from rytm_randomizer.style_analysis import feature_report as feature_report_module
 from rytm_randomizer.style_analysis import (
     feature_report_to_dict,
@@ -156,6 +159,21 @@ def test_feature_report_serializer_exposes_generic_payload() -> None:
     assert feature_report_to_dict(report)["content_hash"] == "a" * 64
     with pytest.raises(TypeError, match="FeatureReport"):
         feature_report_to_dict(object())  # type: ignore[arg-type]
+
+
+def test_feature_distance_is_device_neutral_and_bounded() -> None:
+    report = _build_report()
+    changed = dataclasses.replace(
+        report,
+        bpm=188.0,
+        spectral_brightness=1.0,
+        energy_arc=(),
+    )
+
+    assert feature_distance(report, report) == 0.0
+    assert 0.0 < feature_distance(report, changed) <= 1.0
+    with pytest.raises(TypeError, match="FeatureReport"):
+        feature_distance(object(), report)  # type: ignore[arg-type]
 
 
 # ---------------------------------------------------------------------------
@@ -748,6 +766,16 @@ def test_package_reexports_public_surface():
         "FeatureReportPayload",
         "ReferenceStyleBlueprint",
         "ReferenceTrait",
+        "REFERENCE_AUDIO_ATLAS_MAX_MOMENTS",
+        "REFERENCE_AUDIO_ATLAS_MAX_WINDOWS",
+        "REFERENCE_AUDIO_ATLAS_SAFETY",
+        "REFERENCE_AUDIO_ATLAS_VERSION",
+        "REFERENCE_AUDIO_ATLAS_WINDOW_MAX_SECONDS",
+        "REFERENCE_AUDIO_ATLAS_WINDOW_MIN_SECONDS",
+        "ReferenceAudioAtlas",
+        "ReferenceAudioAtlasConfig",
+        "ReferenceAudioMoment",
+        "ReferenceAudioWindow",
         "RytmPadBlueprint",
         "SourceType",
         "StyleAnalysisDependencyError",
@@ -759,12 +787,17 @@ def test_package_reexports_public_surface():
         "audio_synthesis_features_to_dict",
         "build_audio_patch_dna_workspace",
         "build_audio_patch_dna_lineage_audit",
+        "build_reference_audio_atlas",
         "build_reference_style_blueprint",
         "compute_feature_report_hash",
         "extract_from_audio",
+        "extract_audio_window",
         "extract_from_description",
         "extract_from_partial",
+        "feature_distance",
         "feature_report_to_dict",
+        "get_audio_duration",
+        "reference_audio_atlas_to_dict",
         "reference_style_blueprint_to_dict",
         "render_audio_patch_dna_markdown",
         "render_audio_patch_dna_lineage_markdown",

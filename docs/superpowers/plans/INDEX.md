@@ -214,3 +214,4 @@ Requirements gates for all plans: [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUI
 | 2026-08-03 | [e2e-no-device-experience](2026-08-03-e2e-no-device-experience.md) | complete — WS-A merged in PR #221; no-gate final form merged in PR #225 |  |
 | 2026-08-03 | [autoupdate-distribution](2026-08-03-autoupdate-distribution.md) | proposed |  |
 | 2026-08-04 | [al16-r2-rytm-mapping-closure](2026-08-04-al16-r2-rytm-mapping-closure.md) | in-flight - PR #224 |  |
+| 2026-08-24 | [reference-audio-atlas](2026-08-24-reference-audio-atlas.md) | implementation and local verification complete; review pending |  |
