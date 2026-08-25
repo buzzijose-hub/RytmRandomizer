@@ -991,6 +991,12 @@ def aggregate_audio_measurements(
     return _aggregate_measurements(per_file)
 
 
+def clamp_audio_feature_unit(value: float) -> float:
+    """Clamp one normalized audio feature to the closed unit interval."""
+
+    return max(0.0, min(1.0, float(value)))
+
+
 __all__ = [
     "AudioDnaEvidence",
     "AudioDnaEvidencePayload",
@@ -1005,6 +1011,7 @@ __all__ = [
     "aggregate_audio_measurements",
     "audio_dna_evidence_to_dict",
     "audio_synthesis_features_to_dict",
+    "clamp_audio_feature_unit",
     "extract_from_audio",
     "extract_from_description",
     "extract_from_partial",

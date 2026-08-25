@@ -71,7 +71,7 @@ _BANK_SPEC = _REPO_ROOT / "specs" / "al16" / "AL16_BANK.yaml"
 _AL02_RECIPE = _REPO_ROOT / "specs" / "al16" / "AL02_LOCK_RYTM.yaml"
 _COMMITTED_EVIDENCE_HASHES = {
     "output/al16/AL02_LOCK_RYTM_manifest.json": (
-        "5fb07318ea818839133252aac773a18e71fd30e3b940806325b0a2c11bdd5ea8"
+        "2326c54f1c4ba807039d71508dd94324a79480bb468cda9d4541060aa41ac000"
     ),
     "output/al16/AL02_LOCK_RYTM_validation.md": (
         "bcf04d1a77c412d93efa1ec558a817df6656ea000d0fb8b337efc992eabbe6e5"
