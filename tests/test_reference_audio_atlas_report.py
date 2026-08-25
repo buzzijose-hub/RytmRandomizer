@@ -97,10 +97,17 @@ def test_text_report_is_chronological_and_states_scope() -> None:
     assert "not stem separation" in text
 
 
-def test_text_report_uses_only_the_source_basename() -> None:
+@pytest.mark.parametrize(
+    "source_path",
+    (
+        r"C:\Users\Jose Buzzi\private\two-hour-reference.wav",
+        "/home/jose/private/two-hour-reference.wav",
+    ),
+)
+def test_text_report_uses_only_the_source_basename(source_path: str) -> None:
     atlas = replace(
         _atlas(),
-        source_path=r"C:\Users\Jose Buzzi\private\two-hour-reference.wav",
+        source_path=source_path,
     )
 
     text = "\n".join(report_module.format_reference_audio_atlas_report(atlas))

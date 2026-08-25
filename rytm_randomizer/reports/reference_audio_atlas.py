@@ -6,7 +6,7 @@ import json
 import math
 import sys
 from collections.abc import Sequence
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Final
 
 from ..cli_registry import CliCommand, make_parsed_cli_command, register
@@ -51,7 +51,7 @@ def format_reference_audio_atlas_report(atlas: ReferenceAudioAtlas) -> list[str]
     atlas = _require_report_reference_audio_atlas(atlas)
     lines: list[str] = [
         "Summary:",
-        f"- Source: {Path(atlas.source_path).name}",
+        f"- Source: {_portable_basename(atlas.source_path)}",
         f"- Duration: {_timestamp(atlas.duration_seconds)}",
         f"- Window / hop: {atlas.window_seconds:g}s / {atlas.hop_seconds:g}s",
         f"- Windows analyzed: {atlas.analyzed_windows}",
@@ -80,6 +80,12 @@ def format_reference_audio_atlas_report(atlas: ReferenceAudioAtlas) -> list[str]
     lines.append(SAFETY_SECTION_HEADER)
     lines.extend(f"- {line}" for line in atlas.safety)
     return passive_report_lines(_HEADER, lines)
+
+
+def _portable_basename(value: str) -> str:
+    """Return a basename for either Windows- or POSIX-style source paths."""
+
+    return PureWindowsPath(PurePosixPath(value).name).name
 
 
 def _parse_reference_audio_atlas_args(argv: Sequence[str]) -> dict[str, object]:
