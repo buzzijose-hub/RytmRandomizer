@@ -247,6 +247,7 @@ analog-four-saved-kit-export --source KIT.syx --output OUT.syx --filter2-resonan
 analog-four-audio-patch-batch --audio REF.wav --source-kit KIT.syx --output-dir batch/
 analog-four-audio-patch-batch --audio REF.wav --source-kit KIT.syx --output-dir batch/ --studio-handoff --a4-output-port "<exact A4 output>"
 analog-four-audio-patch-rank --reference REF.wav --manifest batch.json --render 1=take1.wav
+analog-four-audio-patch-refine --reference REF.wav --manifest batch.json --candidate 1 --render take1.wav --output-dir output/local/a4-refinement/
 
 # Audio-to-Patch DNA workspace (one analysis, eight directions, passive)
 audio-patch-dna --audio REF.wav --output-dir output/local/audio-dna/
@@ -274,6 +275,17 @@ existing validated SysEx writer without decoding the audio a second time. The
 workflow never enumerates or opens a MIDI port. Analog Rytm selection/export
 is intentionally deferred until the separate Rytm codec integration is part
 of the base branch.
+
+`analog-four-audio-patch-refine` adds one bounded, explainable feedback pass
+after a candidate is recorded from the Analog Four. It verifies the immutable
+reference and batch manifest, compares the render across the same 11
+normalized synthesis measurements used by the ranker, and accepts the render
+when its score meets the threshold (92 by default). Otherwise it applies one
+deterministic residual correction (gain 0.65 by default), infers exactly one
+follow-up candidate, writes the analysis artifacts, and stops. Supplying
+`--source-kit KIT.syx` also writes that single follow-up through the existing
+offline SysEx exporter. The command does not train a model, promise an exact
+recreation, loop indefinitely, enumerate MIDI ports, or transmit to hardware.
 
 The AL16 command is currently an offline audit/evidence compiler, not a
 positive kit writer or hardware sender. Keep the operator-local initialized

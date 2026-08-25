@@ -388,6 +388,7 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     a4_audio_patch_batch_help = resolve_help_text("analog-four-audio-patch-batch")
     audio_patch_dna_help = resolve_help_text("audio-patch-dna")
     a4_audio_patch_rank_help = resolve_help_text("analog-four-audio-patch-rank")
+    a4_audio_patch_refine_help = resolve_help_text("analog-four-audio-patch-refine")
 
     assert top_level_help.startswith("RytmRandomizer passive CLI")
     assert "style-performance-arc-live-readiness-report" in top_level_help
@@ -418,6 +419,9 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     assert audio_patch_dna_help.startswith("RytmRandomizer passive CLI: audio-patch-dna")
     assert a4_audio_patch_rank_help.startswith(
         "RytmRandomizer passive CLI: analog-four-audio-patch-rank"
+    )
+    assert a4_audio_patch_refine_help.startswith(
+        "RytmRandomizer passive CLI: analog-four-audio-patch-refine"
     )
     assert snapshot_help.startswith(
         "RytmRandomizer passive CLI: rytm-snapshot-pad-compatibility-report"
@@ -613,6 +617,40 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     assert snapshot_help.split("Safety:\n", 1)[1].splitlines() == [
         f"  {line}" for line in SAFETY_LINES
     ]
+
+
+@pytest.mark.parametrize(
+    "command",
+    (
+        "style-profile-report",
+        "style-crate-rehearsal-deck-report",
+        "controller-brain-operator-package-report",
+        "controller-brain-live-runbook-report",
+        "controller-brain-live-state-report",
+        "controller-brain-live-bridge-readiness-report",
+        "controller-brain-live-dispatch-rehearsal-report",
+        "controller-brain-live-feedback-rehearsal-report",
+        "controller-brain-live-cockpit-handoff-report",
+        "controller-brain-live-implementation-bridge-report",
+        "reference-style-blueprint-report",
+        "style-performance-arc-report",
+        "style-performance-arc-set-plan-report",
+        "style-performance-arc-readiness-report",
+        "style-performance-arc-audition-packet-report",
+        "style-performance-arc-rehearsal-manifest-report",
+        "style-performance-arc-live-session-packet-report",
+        "style-performance-arc-live-render-bundle-report",
+        "style-performance-arc-live-cue-sheet-report",
+        "style-performance-arc-reference-match-report",
+        "cockpit-export-profile-model",
+        "al16-rytm-kit-export",
+        "al16-rytm-mapping-evidence",
+    ),
+)
+def test_dynamic_help_providers_resolve_with_command_heading(command: str) -> None:
+    from rytm_randomizer.help_text import resolve_help_text
+
+    assert resolve_help_text(command).startswith(f"RytmRandomizer passive CLI: {command}")
 
 
 def test_resolve_help_text_rejects_provider_that_returns_non_string(

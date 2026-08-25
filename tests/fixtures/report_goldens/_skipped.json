@@ -5,6 +5,7 @@
   "audio-patch-dna": "requires explicit --audio and --output-dir inputs; deterministic comparison and selected A4 export behavior is covered by dedicated Audio-to-Patch DNA tests",
   "analog-four-audio-patch-batch": "exit 2: Usage: python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json]",
   "analog-four-audio-patch-rank": "exit 2: Usage: python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference <audio> --manifest <batch.json> --render <N=audio> [--render <N=audio> ...] [--json]",
+  "analog-four-audio-patch-refine": "requires explicit reference, manifest, candidate render, and output inputs; deterministic behavior is covered by dedicated refinement tests",
   "analog-four-baseline-report": "exit 2: Error: analog-four-baseline-report usage: --kit <syx-path> --pattern-kit <syx-path> --whole-project <syx-path> [--json]",
   "analog-four-kit-catalog-report": "exit 2: Error: analog-four-kit-catalog-report usage: <syx-path> [--limit N] [--json]",
   "analog-four-patch-corpus-report": "exit 2: Usage: python -m rytm_randomizer.cli analog-four-patch-corpus-report (--description <text>|--audio <path>) [--track N] [--limit N] [--corpus-file <path>] [--json]",

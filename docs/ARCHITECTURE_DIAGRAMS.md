@@ -789,6 +789,9 @@ flowchart TB
         A4BatchReader["analog_four_patch_batch_reader.py<br/>verify manifest + exact sidecar plan"]
         A4RenderRank["analog_four_patch_render_rank.py<br/>reference + A4 recordings -> acoustic rank"]
         A4RenderRankCli["analog-four-audio-patch-rank<br/>registered passive command"]
+        A4Refine["style_analysis/analog_four_patch_refinement.py<br/>bounded normalized residual correction"]
+        A4RefineExport["cockpit/export/analog_four_patch_refinement.py<br/>verify + accept or infer one candidate"]
+        A4RefineCli["analog-four-audio-patch-refine<br/>registered passive command"]
     end
 
     RytmDecoder -->|"depends on"| Envelope
@@ -831,6 +834,12 @@ flowchart TB
     A4DnaCli --> A4DnaExport
     A4RenderRank --> A4BatchReader
     A4RenderRankCli --> A4RenderRank
+    A4Refine --> A4Inference
+    A4RefineExport --> A4BatchReader
+    A4RefineExport --> A4RenderRank
+    A4RefineExport --> A4Refine
+    A4RefineExport --> A4Export
+    A4RefineCli --> A4RefineExport
 
     BaseMockRuntime -.satisfies.-> MockProto
 ```
@@ -1152,6 +1161,7 @@ flowchart LR
         A4AudioPatchBatch["analog-four-audio-patch-batch<br/>audio + source kit -> candidates + sidecars"]
         AudioPatchDna["audio-patch-dna<br/>one analysis -> eight comparisons -> optional selected A4 export"]
         A4AudioPatchRank["analog-four-audio-patch-rank<br/>reference + recorded renders -> ranking"]
+        A4AudioPatchRefine["analog-four-audio-patch-refine<br/>one render -> accept or one corrected candidate"]
     end
 
     subgraph RytmLocalCmds["Passive Analog Rytm local-file commands"]
@@ -1177,7 +1187,7 @@ flowchart LR
     ReportCmds --> ReportsPkg["reports/<br/>(PassiveReportHeader + builders)"]
     BrowseCmds --> RegistryCore["registry.py<br/>profile_lookup.py<br/>inspection.py"]
     StyleBrowseCmds --> ReportsPkg
-    A4LocalCmds --> A4ExportPipeline["cockpit/export/<br/>saved-kit writer + batch + rank"]
+    A4LocalCmds --> A4ExportPipeline["cockpit/export/<br/>saved-kit writer + batch + rank + bounded refinement"]
     RytmLocalCmds --> RytmExportAdapter["cockpit/export/al16_rytm_cli.py<br/>arguments + process status"]
     RytmExportAdapter --> RytmExportService["cockpit/export/al16_rytm_kit.py<br/>fail-closed audit + atomic evidence"]
     AL16RytmMappingEvidence --> RytmMappingAdapter["cockpit/export/al16_rytm_mapping_closure_cli.py<br/>passive arguments + atomic JSON output"]
@@ -1943,6 +1953,7 @@ flowchart LR
         A4AudioPatchBatch["analog-four-audio-patch-batch --audio A --source-kit K --output-dir D [--track N] --candidates 4 [--studio-handoff --a4-output-port EXACT_NAME] [--json]"]
         AudioPatchDna["audio-patch-dna --audio A --output-dir D [--track N] [--select 1..8 --source-kit K] [--json]"]
         A4AudioPatchRank["analog-four-audio-patch-rank --reference A --manifest M --render N=R [...]"]
+        A4AudioPatchRefine["analog-four-audio-patch-refine --reference A --manifest M --candidate N --render R --output-dir D [--accept-similarity P] [--gain G] [--source-kit K] [--json]"]
         A4StyleKitReadiness["analog-four-style-kit-readiness-report"]
         A4OxiMacroSetPlanner["analog-four-oxi-macro-set-planner-report [--set-name N] [--sequence A,B] [--seed N] [--json]"]
         LocalModelCopilot["local-model-copilot-report --question Q [--workflow docs|mutation|patch|all] [--ask-local-model] [--json]"]
@@ -2000,6 +2011,7 @@ flowchart LR
     CliRegistry -->|"registered passive-hardware command:<br/>analog-four-audio-patch-batch"| CLI
     CliRegistry -->|"registered passive comparison command:<br/>audio-patch-dna"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-audio-patch-rank"| CLI
+    CliRegistry -->|"registered passive command:<br/>analog-four-audio-patch-refine"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-style-kit-readiness-report"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-oxi-macro-set-planner-report"| CLI
     CliRegistry -->|"registered passive command:<br/>local-model-copilot-report"| CLI
@@ -2022,8 +2034,9 @@ flowchart LR
 **Current nuance:**
 
 - The `cli.py` is visibility-first. No active execution / send / hardware-test command is wired here.
-- `app.py` is the interactive entry point and is the ONLY surface where the `--arm` flag triggers real MIDI. The A4 manifest reader validates the complete stored CC/NRPN plan before the app constructs the provider; the passive CLI, local SysEx writer, batch generator, eight-candidate DNA workspace, ranker, and local-model copilot never open a port.
+- `app.py` is the interactive entry point and is the ONLY surface where the `--arm` flag triggers real MIDI. The A4 manifest reader validates the complete stored CC/NRPN plan before the app constructs the provider; the passive CLI, local SysEx writer, batch generator, eight-candidate DNA workspace, ranker, bounded render refinement, and local-model copilot never open a port.
 - `audio-patch-dna` decodes the source audio once, displays exactly eight fixed candidate directions, and writes deterministic comparison artifacts. Only an explicit `--select` paired with `--source-kit` invokes the existing passive A4 file exporter, using the precomputed selected candidate without a second audio decode.
+- `analog-four-audio-patch-refine` verifies one batch candidate and one recorded hardware render, then either accepts the render at the configured similarity threshold or emits exactly one normalized, clamped follow-up candidate. It is a finite heuristic pass, not model training or a forensic-recreation claim; optional SysEx output reuses the passive hardware-write-validated exporter.
 - The registered `al16-rytm-kit-export` command is a passive adapter around the AL16 `cockpit/export` build service. A blocked proof returns status `2`, atomically writes deterministic evidence reports, and withholds `.syx` output; it never enumerates or opens MIDI ports.
 - The six registered `rio145-*` commands form a passive dual-device saved-KIT workflow. Device-selected build and return validation reuse the canonical A4/Rytm codecs and Elektron envelope, verify generated frames by decoding them again, and export OXI sequencing metadata without native patterns or any MIDI-port access.
 - The registered `al16-rytm-mapping-evidence` command compares initialized and manually configured local Rytm kit dumps against the R1 gap manifest. It requires the operator-pinned SHA-256 of the exact manifest bytes, then verifies recipe and manifest hashes, deterministic recipe identity, and initialized-reference identity before analysis; candidate locations are restricted to the canonical AL16 gap grammar, layout, and parameter-map facts. The command writes review-only JSON, records structured operations/metrics, and cannot promote mappings, write SysEx, or reach hardware.

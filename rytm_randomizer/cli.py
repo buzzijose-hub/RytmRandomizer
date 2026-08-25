@@ -526,6 +526,10 @@ def _registered_command_exit_code(args: Sequence[str]) -> int | None:
             "rytm_randomizer.cockpit.export.analog_four_patch_render_rank_cli",
             "ANALOG_FOUR_PATCH_RENDER_RANK_CLI_COMMAND",
         ),
+        "analog-four-audio-patch-refine": (
+            "rytm_randomizer.cockpit.export.analog_four_patch_refinement_cli",
+            "ANALOG_FOUR_PATCH_REFINEMENT_CLI_COMMAND",
+        ),
         "rio145-inspect-sysex": (
             "rytm_randomizer.cockpit.export.rio145_cli",
             "RIO145_INSPECT_SYSEX_CLI_COMMAND",

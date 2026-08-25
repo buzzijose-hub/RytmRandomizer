@@ -1,8 +1,25 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-08-08. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-08-24. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
+
+- 2026-08-24: Added a bounded offline Analog Four render-feedback refinement.
+  - Registered the passive `analog-four-audio-patch-refine` command. It
+    verifies one immutable batch candidate and one recorded A4 render, then
+    either accepts the render at the configured acoustic-similarity threshold
+    or infers exactly one normalized, clamped follow-up candidate.
+  - The correction reuses the existing 11-feature ranker and A4 inference
+    compiler. It is an explainable heuristic, not model training or a claim of
+    exact forensic recreation. Optional SysEx output reuses the existing
+    hardware-write-validated offline exporter.
+  - No MIDI provider is imported, no port is enumerated or opened, and no MIDI
+    is sent. Fresh single-process verification passed 469 focused tests, 755
+    architecture tests, and 685 frozen V1.34 parity tests. All six touched
+    production modules have 100 percent statement and branch coverage and pass
+    strict typing; lint, formatting, import order, and the pre-push mechanical
+    gate are green. The complete all-tests suite remains delegated to CI to
+    keep local resource use bounded on the operator workstation.
 
 - 2026-08-08: Integrated the passive RIO145 dual-device native-KIT codec and
   target-return evidence bundle.
