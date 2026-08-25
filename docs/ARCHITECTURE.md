@@ -154,12 +154,14 @@ on one line for an existing module, you probably need a new module instead.
 | `group_runner.py`     | Four-pad group + isolated-pad orchestration. Drives `randomization` + `midi_io`.|
 | `scene_runner.py`     | Scene/preset thin layer on top of `group_runner`.                               |
 | `style_analysis/audio_patch_dna.py` | Pure one-analysis-to-eight-directions Audio-to-Patch DNA transforms, comparison payloads, and explicit candidate selection. |
+| `data/analog_four_patch_refinement.py` | Canonical bounded refinement gains, similarity thresholds, feature routes, and schema facts. Pure data. |
 | `style_analysis/analog_four_patch_genome.py` | Passive FeatureReport -> four-column Analog Four single-sound patch DNA compiler. |
 | `style_analysis/analog_four_patch_learning.py` | Passive patch-genome learning packet compiler: candidate ranking, trait routes, capture matrix, and live-dial readiness. |
 | `style_analysis/analog_four_patch_corpus.py` | Passive A4 patch/audio corpus nearest-match ranking and calibration-gap compiler. |
 | `style_analysis/analog_four_patch_codesigner.py` | Passive A4 patch-genome co-designer packet compiler for staged local-AI review. |
 | `style_analysis/analog_four_patch_send_plan.py` | Passive selected A4 patch -> ordered CC/NRPN live-dial send-plan compiler. |
 | `style_analysis/analog_four_patch_render_rank.py` | Pure measured-feature scoring and deterministic ranking for recorded A4 candidates. |
+| `style_analysis/analog_four_patch_refinement.py` | Pure measured-residual analysis and bounded one-step feature correction for A4 render feedback. |
 | `local_ai/` | Passive local-AI DTOs, local model subprocess adapter, docs/MIDI context packets, staged mutation-intent validation, and JSON-schema helpers. |
 
 ### Upper (entry points)
@@ -193,6 +195,8 @@ on one line for an existing module, you probably need a new module instead.
 | `cockpit/export/analog_four_patch_batch_reader.py` | Strict manifest/sidecar reader that verifies candidate identity, nested hashes, coverage, and event routing before a stored plan can reach the app sender. |
 | `cockpit/export/analog_four_patch_render_rank.py` | Passive acoustic feedback service that compares recorded A4 candidates with the exact batch reference across weighted envelope/timbre features. |
 | `cockpit/export/analog_four_patch_render_rank_cli.py` | Registered local-only render-ranking command; no MIDI or hardware mutation. |
+| `cockpit/export/analog_four_patch_refinement.py` | Passive bounded render-feedback service that verifies batch/reference identity, records RED observability, and publishes deterministic local artifacts through the existing offline A4 exporter; no MIDI I/O. |
+| `cockpit/export/analog_four_patch_refinement_cli.py` | Registered passive local-only refinement command with bounded gain and acceptance controls; no MIDI or hardware mutation. |
 
 ### Frozen reference (NOT in the layered graph)
 
@@ -986,6 +990,8 @@ rytm_randomizer/cockpit/export/
     analog_four_patch_batch_cli.py  # Registered passive-hardware batch command
     analog_four_patch_render_rank.py # Passive artifact/audio ranking orchestration
     analog_four_patch_render_rank_cli.py # Registered ranking command
+    analog_four_patch_refinement.py # Passive bounded render-feedback orchestration
+    analog_four_patch_refinement_cli.py # Registered refinement command
     model_format.py        # Phase 1, existing — MAGIC=b"RYMP", format_version, build/parse header, CRC32 trailer
     serialize.py           # Phase 1, existing — pack_profile_model / unpack_profile_model
     signing.py             # Phase 3, NEW — HMAC-SHA256 signing + signed envelope (MAGIC=b"RYMS")

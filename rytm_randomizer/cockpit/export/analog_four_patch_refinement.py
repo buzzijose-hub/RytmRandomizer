@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, TypedDict
@@ -12,7 +13,9 @@ from ...data.analog_four_patch_refinement import (
     ANALOG_FOUR_PATCH_REFINEMENT_GAIN_DEFAULT,
     ANALOG_FOUR_PATCH_REFINEMENT_SCHEMA_VERSION,
 )
+from ...observability.errors import BoundaryError
 from ...observability.logging import get_logger
+from ...observability.metrics import get_metrics
 from ...observability.tracing import operation as trace_operation
 from ...style_analysis.analog_four_patch_inference import (
     analyze_analog_four_patch_audio_analysis_isolated,
@@ -40,6 +43,7 @@ from .analog_four_patch_batch_reader import (
 from .analog_four_patch_render_rank import (
     AnalogFourPatchRenderRankArtifactError,
     AnalogFourPatchRenderRankReferenceError,
+    analog_four_patch_render_rank_error_code,
 )
 from .writer import WriteResult, atomic_write_set
 
@@ -56,6 +60,7 @@ ANALOG_FOUR_PATCH_REFINEMENT_SAFETY: Final[tuple[str, ...]] = (
     "no MIDI or SysEx transmitted",
     "no hardware mutation",
 )
+_REFINEMENT_FAILURE_FINGERPRINT: Final[str] = "a4.patch_refinement.failed"
 _logger = get_logger(__name__)
 
 
@@ -127,22 +132,80 @@ def export_analog_four_patch_refinement(  # noqa: PLR0913 - public request contr
 ) -> AnalogFourPatchRefinementResult:
     """Measure one render and emit one bounded follow-up candidate when needed."""
 
-    with trace_operation(
-        "a4_audio_patch_refinement",
-        logger=_logger,
-        candidate=candidate,
-    ):
-        return _execute_analog_four_patch_refinement(
-            reference_audio_path=reference_audio_path,
-            manifest_path=manifest_path,
+    started_at = time.perf_counter()
+    metrics = get_metrics()
+    operation_id = ""
+    try:
+        with trace_operation(
+            "a4_audio_patch_refinement",
+            logger=_logger,
             candidate=candidate,
-            render_audio_path=render_audio_path,
-            output_dir=output_dir,
-            correction_gain=correction_gain,
-            accept_similarity=accept_similarity,
-            source_kit_path=source_kit_path,
-            overwrite=overwrite,
+        ) as operation_id:
+            result = _execute_analog_four_patch_refinement(
+                reference_audio_path=reference_audio_path,
+                manifest_path=manifest_path,
+                candidate=candidate,
+                render_audio_path=render_audio_path,
+                output_dir=output_dir,
+                correction_gain=correction_gain,
+                accept_similarity=accept_similarity,
+                source_kit_path=source_kit_path,
+                overwrite=overwrite,
+            )
+    except (
+        ImportError,
+        BoundaryError,
+        KeyError,
+        OSError,
+        RuntimeError,
+        TypeError,
+        ValueError,
+        KeyboardInterrupt,
+        SystemExit,
+    ) as exc:
+        error_code = analog_four_patch_render_rank_error_code(exc)
+        duration_ms = (time.perf_counter() - started_at) * 1000.0
+        metrics.record_a4_patch_render_rank(duration_ms, error_code=error_code)
+        _logger.warning(
+            "Analog Four patch refinement failed",
+            extra={
+                "op_id": operation_id,
+                "operation": "a4_audio_patch_refinement",
+                "outcome": "failed",
+                "error_code": error_code,
+                "candidate": candidate,
+                "duration_ms": duration_ms,
+                "error_type": type(exc).__name__,
+                "fingerprint": _refinement_failure_fingerprint(exc),
+                "metrics_summary": metrics.format_summary(),
+            },
         )
+        raise
+
+    duration_ms = (time.perf_counter() - started_at) * 1000.0
+    metrics.record_a4_patch_render_rank(duration_ms)
+    _logger.info(
+        "Analog Four patch refinement completed",
+        extra={
+            "op_id": operation_id,
+            "operation": "a4_audio_patch_refinement",
+            "outcome": "completed",
+            "generation_id": result.selection.generation_id,
+            "candidate": candidate,
+            "action": result.plan.action,
+            "similarity": result.plan.similarity,
+            "duration_ms": duration_ms,
+            "metrics_summary": metrics.format_summary(),
+        },
+    )
+    return result
+
+
+def _refinement_failure_fingerprint(exc: BaseException) -> str:
+    fingerprint = getattr(exc, "fingerprint", _REFINEMENT_FAILURE_FINGERPRINT)
+    if isinstance(exc, BoundaryError):
+        fingerprint = exc.context.get("fingerprint", fingerprint)
+    return str(fingerprint)
 
 
 def _execute_analog_four_patch_refinement(  # noqa: PLR0913 - service boundary

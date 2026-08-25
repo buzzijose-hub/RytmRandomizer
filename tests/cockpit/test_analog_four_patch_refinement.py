@@ -292,6 +292,11 @@ def test_refinement_service_writes_deterministic_passive_artifacts(
     assert b"# Analog Four Patch Refinement" in first_markdown
     assert second.json_path.read_bytes() == first_json
     assert second.markdown_path.read_bytes() == first_markdown
+    from rytm_randomizer.observability.metrics import get_metrics
+
+    metrics = get_metrics()
+    assert metrics.a4_patch_render_rank_count == 2
+    assert not metrics.a4_patch_render_rank_errors_by_code
 
 
 def test_refinement_service_rejects_reference_audio_mismatch(
@@ -300,6 +305,7 @@ def test_refinement_service_rejects_reference_audio_mismatch(
     audio_patch_dna_analysis: AudioFeatureAnalysis,
 ) -> None:
     from rytm_randomizer.cockpit.export import analog_four_patch_refinement as service
+    from rytm_randomizer.observability.metrics import get_metrics
 
     reference = audio_patch_dna_analysis.synthesis_features
     rendered = replace(reference, audio_sha256="4" * 64)
@@ -318,6 +324,12 @@ def test_refinement_service_rejects_reference_audio_mismatch(
             audio_sha256="9" * 64,
         ),
     )
+    logged: list[dict[str, object]] = []
+    monkeypatch.setattr(
+        service._logger,
+        "warning",
+        lambda _message, *, extra: logged.append(extra),
+    )
 
     with pytest.raises(service.AnalogFourPatchRenderRankReferenceError):
         service.export_analog_four_patch_refinement(
@@ -327,6 +339,51 @@ def test_refinement_service_rejects_reference_audio_mismatch(
             render_audio_path=tmp_path / "render.wav",
             output_dir=tmp_path / "out",
         )
+
+    metrics = get_metrics()
+    assert metrics.a4_patch_render_rank_count == 1
+    assert metrics.a4_patch_render_rank_errors_by_code["reference_mismatch"] == 1
+    assert logged[0]["outcome"] == "failed"
+    assert logged[0]["fingerprint"] == "a4.render_rank.reference_mismatch"
+
+
+def test_refinement_service_preserves_native_analysis_failure_fingerprint(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.export import analog_four_patch_refinement as service
+    from rytm_randomizer.observability.errors import BoundaryError
+
+    failure = BoundaryError(
+        "native analysis failed",
+        context={
+            "error_code": "inference_failed",
+            "fingerprint": "a4.audio_patch.native_analysis_failed",
+        },
+    )
+    logged: list[dict[str, object]] = []
+    monkeypatch.setattr(
+        service,
+        "_execute_analog_four_patch_refinement",
+        lambda **_kwargs: (_ for _ in ()).throw(failure),
+    )
+    monkeypatch.setattr(
+        service._logger,
+        "warning",
+        lambda _message, *, extra: logged.append(extra),
+    )
+
+    with pytest.raises(BoundaryError, match="native analysis failed"):
+        service.export_analog_four_patch_refinement(
+            reference_audio_path=tmp_path / "reference.wav",
+            manifest_path=tmp_path / "batch.json",
+            candidate=2,
+            render_audio_path=tmp_path / "render.wav",
+            output_dir=tmp_path / "out",
+        )
+
+    assert logged[0]["fingerprint"] == "a4.audio_patch.native_analysis_failed"
+    assert logged[0]["error_code"] == "rank_failed"
 
 
 def test_refinement_selection_wraps_artifact_errors(

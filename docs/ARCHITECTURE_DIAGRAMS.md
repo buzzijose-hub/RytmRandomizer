@@ -1912,7 +1912,7 @@ flowchart LR
         A4AudioPatchBatch["analog-four-audio-patch-batch --audio A --source-kit K --output-dir D [--track N] --candidates 4 [--studio-handoff --a4-output-port EXACT_NAME] [--json]"]
         AudioPatchDna["audio-patch-dna --audio A --output-dir D [--track N] [--select 1..8 --source-kit K] [--json]"]
         A4AudioPatchRank["analog-four-audio-patch-rank --reference A --manifest M --render N=R [...]"]
-        A4AudioPatchRefine["analog-four-audio-patch-refine --reference A --manifest M --candidate N --render R --output-dir D [--threshold P] [--gain G] [--source-kit K] [--json]"]
+        A4AudioPatchRefine["analog-four-audio-patch-refine --reference A --manifest M --candidate N --render R --output-dir D [--accept-similarity P] [--gain G] [--source-kit K] [--json]"]
         A4StyleKitReadiness["analog-four-style-kit-readiness-report"]
         A4OxiMacroSetPlanner["analog-four-oxi-macro-set-planner-report [--set-name N] [--sequence A,B] [--seed N] [--json]"]
         LocalModelCopilot["local-model-copilot-report --question Q [--workflow docs|mutation|patch|all] [--ask-local-model] [--json]"]
