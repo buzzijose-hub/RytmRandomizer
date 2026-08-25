@@ -153,6 +153,7 @@ on one line for an existing module, you probably need a new module instead.
 | --------------------- | ------------------------------------------------------------------------------- |
 | `group_runner.py`     | Four-pad group + isolated-pad orchestration. Drives `randomization` + `midi_io`.|
 | `scene_runner.py`     | Scene/preset thin layer on top of `group_runner`.                               |
+| `style_analysis/audio_reference_suitability.py` | Pure advisory workflow-suitability assessment over existing measured audio evidence; currently unenforced until a consumer explicitly applies its result. |
 | `style_analysis/audio_patch_dna.py` | Pure one-analysis-to-eight-directions Audio-to-Patch DNA transforms, comparison payloads, and explicit candidate selection. |
 | `style_analysis/analog_four_patch_genome.py` | Passive FeatureReport -> four-column Analog Four single-sound patch DNA compiler. |
 | `style_analysis/analog_four_patch_learning.py` | Passive patch-genome learning packet compiler: candidate ranking, trait routes, capture matrix, and live-dial readiness. |

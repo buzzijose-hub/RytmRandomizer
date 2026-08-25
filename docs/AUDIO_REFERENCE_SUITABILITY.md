@@ -1,8 +1,11 @@
 # Audio Reference Suitability
 
-The audio-reference suitability policy decides which workflows a measured
-`AudioFeatureAnalysis` can support. It is a passive evidence gate, not an
-artistic-quality score and not a claim that the source can be recreated.
+The audio-reference suitability policy provides an advisory assessment of
+which workflows a measured `AudioFeatureAnalysis` can support. No production
+inference, export, or compilation path consumes this result yet, so it does not
+currently enforce routing or block a workflow. A future consumer must apply the
+result explicitly. It is not an artistic-quality score and not a claim that the
+source can be recreated.
 
 ## Workflow lanes
 
@@ -19,10 +22,12 @@ identity, policy version, lane decisions, and recommendation.
 
 ## Interpretation
 
-`ready` means the evidence clears this policy for that workflow. `limited`
-means it may inform interpretation but must not become an unqualified hardware
-parameter claim. `blocked` means the required evidence is absent.
-`not_applicable` means the workflow is unnecessary for the measured source.
+Within the advisory result, `ready` means the evidence clears this policy for
+that workflow. `limited` means it may inform interpretation but must not become
+an unqualified hardware parameter claim. `blocked` means the required evidence
+is absent. These labels do not enforce behavior until a consumer explicitly
+applies them. `not_applicable` means the workflow is unnecessary for the
+measured source.
 
 The module performs no audio decoding, file I/O, model inference, MIDI port
 enumeration, MIDI/SysEx transmission, or hardware access.

@@ -16,6 +16,7 @@ from rytm_randomizer.style_analysis.audio_reference_suitability import (
     reference_audio_suitability_to_dict,
 )
 from rytm_randomizer.style_analysis.extractor import (
+    AUDIO_DURATION_CEILING_SECONDS,
     AudioDnaEvidence,
     AudioFeatureAnalysis,
 )
@@ -80,7 +81,7 @@ def test_long_form_source_routes_to_segmentation_first(
     )
     segmentation = _workflow(analysis, ReferenceWorkflow.LONG_FORM_SEGMENTATION)
     assert segmentation.status is SuitabilityStatus.READY
-    assert "8 seconds or longer" in segmentation.reasons[0]
+    assert f"{AUDIO_DURATION_CEILING_SECONDS:.0f} seconds or longer" in segmentation.reasons[0]
 
 
 def test_missing_pitch_blocks_note_specific_synthesis(

@@ -14,12 +14,11 @@ from enum import Enum
 from typing import Final, TypeAlias, TypedDict
 
 from ..guardrails.schema import Confidence
-from .extractor import AudioFeatureAnalysis
+from .extractor import AUDIO_DURATION_CEILING_SECONDS, AudioFeatureAnalysis
 from .runtime_types import require_runtime_type
 
 AUDIO_REFERENCE_SUITABILITY_SCHEMA_VERSION: Final[str] = "audio-reference-suitability-v1"
 AUDIO_REFERENCE_SUITABILITY_POLICY_VERSION: Final[str] = "measured-evidence-v1"
-AUDIO_DURATION_CEILING_SECONDS: Final[float] = 8.0
 PATCH_FOCUSED_DURATION_CEILING: Final[float] = 1.0
 PITCH_CONFIDENCE_MINIMUM: Final[float] = 0.75
 TONAL_STABILITY_MINIMUM: Final[float] = 0.60
