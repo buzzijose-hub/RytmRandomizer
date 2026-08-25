@@ -24,7 +24,6 @@ from .analog_four_patch_genome import (
 from .analog_four_patch_inference import (
     AnalogFourAudioPatchGenome,
     build_analog_four_audio_patch_genome_from_analysis,
-    clamp_audio_feature_unit,
 )
 from .extractor import (
     AudioDnaEvidence,
@@ -34,6 +33,7 @@ from .extractor import (
     AudioSynthesisFeaturesPayload,
     audio_dna_evidence_to_dict,
     audio_synthesis_features_to_dict,
+    clamp_audio_feature_unit,
 )
 from .feature_report import FeatureReport, FeatureReportPayload, feature_report_to_dict
 from .runtime_types import require_runtime_type

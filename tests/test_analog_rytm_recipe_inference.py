@@ -7,7 +7,11 @@ import math
 
 import pytest
 
-from rytm_randomizer.data.al16_rytm import AL16_PAD_ROLES, AL16_RYTM_WRITABLE_FIELDS
+from rytm_randomizer.data.al16_rytm import (
+    AL16_PAD_ROLES,
+    AL16_RYTM_RECIPE_PRESERVED_PADS,
+    AL16_RYTM_WRITABLE_FIELDS,
+)
 from rytm_randomizer.data.rytm_machine_catalog import is_machine_allowed_on_pad
 from rytm_randomizer.guardrails.schema import Confidence, SourceType
 from rytm_randomizer.style_analysis.extractor import (
@@ -98,6 +102,8 @@ def test_proposal_is_deterministic_passive_and_explicitly_not_compile_ready() ->
     first = build_analog_rytm_audio_recipe_proposal(_analysis())
     second = build_analog_rytm_audio_recipe_proposal(_analysis())
     payload = analog_rytm_audio_recipe_proposal_to_dict(first)
+    assert first.preserved_pads == AL16_RYTM_RECIPE_PRESERVED_PADS
+    assert payload["preserved_pads"] == list(AL16_RYTM_RECIPE_PRESERVED_PADS)
 
     assert first == second
     assert len(first.recipe_id) == 64

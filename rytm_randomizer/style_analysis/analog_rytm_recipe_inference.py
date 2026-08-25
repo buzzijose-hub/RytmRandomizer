@@ -17,12 +17,16 @@ from typing import Final, Literal, TypeAlias, TypedDict
 from rytm_randomizer.data.al16_rytm import (
     AL16_PAD_ROLES,
     AL16_RYTM_APPROVED_TUNING,
+    AL16_RYTM_RECIPE_PRESERVED_PADS,
     AL16_RYTM_WRITABLE_FIELDS,
 )
 from rytm_randomizer.data.rytm_machine_catalog import is_machine_allowed_on_pad
 
-from .analog_four_patch_inference import clamp_audio_feature_unit
-from .extractor import AudioFeatureAnalysis, AudioSynthesisFeatures
+from .extractor import (
+    AudioFeatureAnalysis,
+    AudioSynthesisFeatures,
+    clamp_audio_feature_unit,
+)
 from .runtime_types import require_runtime_type
 
 RytmRecipeScalar: TypeAlias = int | str | bool
@@ -33,7 +37,6 @@ RytmTuningStatus: TypeAlias = Literal["approved_tuning", "mapping_required"]
 RYTM_AUDIO_RECIPE_SCHEMA_VERSION: Final[int] = 1
 RYTM_RECIPE_STATUS: Final[str] = "proposal_only"
 RYTM_RECIPE_INFLUENCE_POLICY: Final[str] = "reference_to_discovery"
-RYTM_RECIPE_PRESERVED_PADS: Final[tuple[int, ...]] = (2, 4, 5, 7, 8, 10, 11, 12)
 
 
 @dataclass(frozen=True)
@@ -160,7 +163,7 @@ class AnalogRytmAudioRecipeProposal:
     codec_ready: bool = False
     render_required: bool = True
     midi_sent: bool = False
-    preserved_pads: tuple[int, ...] = RYTM_RECIPE_PRESERVED_PADS
+    preserved_pads: tuple[int, ...] = AL16_RYTM_RECIPE_PRESERVED_PADS
 
 
 def _evidence(
@@ -607,7 +610,7 @@ def _recipe_id_payload(
         "audio_sha256": audio_sha256,
         "influence_policy": RYTM_RECIPE_INFLUENCE_POLICY,
         "tracks": [_track_payload(track) for track in tracks],
-        "preserved_pads": list(RYTM_RECIPE_PRESERVED_PADS),
+        "preserved_pads": list(AL16_RYTM_RECIPE_PRESERVED_PADS),
     }
 
 
