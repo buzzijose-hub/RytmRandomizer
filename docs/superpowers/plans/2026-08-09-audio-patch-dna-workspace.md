@@ -1,6 +1,6 @@
 # Audio-to-Patch DNA Workspace
 
-> Status: complete (merged in PR #228)
+> Status: shipped (merged in PR #228)
 
 ## Goal
 
