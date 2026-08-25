@@ -12,6 +12,7 @@ from rytm_randomizer.data.analog_four_audio_inference import (
 )
 from rytm_randomizer.style_analysis import (
     AudioFeatureAnalysis,
+    AudioSynthesisFeatures,
     audio_patch_dna_lineage_audit_to_dict,
     build_audio_patch_dna_lineage_audit,
     build_audio_patch_dna_workspace,
@@ -21,8 +22,22 @@ from rytm_randomizer.style_analysis.analog_four_patch_inference import (
     build_analog_four_inference_feature_values,
     evaluate_analog_four_inference_spec,
 )
+from rytm_randomizer.style_analysis.audio_patch_dna_lineage import (
+    AUDIO_PATCH_DNA_LINEAGE_FEATURE_KEYS,
+)
 
 pytestmark = pytest.mark.fast
+
+
+def test_lineage_feature_keys_exhaustively_match_audio_synthesis_features() -> None:
+    assert (
+        tuple(
+            field.name
+            for field in dataclasses.fields(AudioSynthesisFeatures)
+            if field.name != "audio_sha256"
+        )
+        == AUDIO_PATCH_DNA_LINEAGE_FEATURE_KEYS
+    )
 
 
 def test_lineage_reconciles_inferred_and_template_only_genes(
