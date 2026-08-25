@@ -199,6 +199,23 @@ def test_analog_rytm_saved_kit_codec_translates_packed_body_errors(
         decode_analog_rytm_saved_kit_frame(frame)
 
 
+def test_analog_rytm_saved_kit_codec_translates_unpack_errors(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    frame = encode_analog_rytm_saved_kit_frame(
+        _HEADER,
+        analog_rytm_saved_kit_test_raw(),
+    )
+
+    def fail_unpacker(*_args: object, **_kwargs: object) -> bytes:
+        raise ValueError("invalid native packing")
+
+    monkeypatch.setattr(codec, "unpack_elektron_7bit", fail_unpacker)
+
+    with pytest.raises(AnalogRytmSavedKitCodecError, match="invalid native packing"):
+        decode_analog_rytm_saved_kit_frame(frame)
+
+
 @pytest.mark.parametrize(("high", "low"), [(-1, 0), (0, 128)])
 def test_elektron_u14_decoder_rejects_non_data_bytes(high: int, low: int) -> None:
     with pytest.raises(ValueError, match="range 0..127"):

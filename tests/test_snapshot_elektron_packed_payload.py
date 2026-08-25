@@ -15,7 +15,11 @@ from rytm_randomizer.snapshot.elektron_packed_payload import (
     validate_elektron_packed_payload,
 )
 from rytm_randomizer.snapshot.elektron_u14 import encode_elektron_u14
-from rytm_randomizer.snapshot.envelope import pack_elektron_7bit
+from rytm_randomizer.snapshot.envelope import (
+    Elektron7BitMaskOrder,
+    pack_elektron_7bit,
+    unpack_elektron_7bit,
+)
 
 pytestmark = pytest.mark.fast
 
@@ -46,6 +50,38 @@ def test_packed_payload_contract_round_trips_device_facts() -> None:
     assert validated == encoded
     assert encoded.checksum == sum(_PACKED[1:]) & 0x3FFF
     assert encoded.encoded_length == len(_PACKED) + 5
+
+
+def test_packed_payload_contract_supports_native_msb_order_and_dynamic_size() -> None:
+    encoded = encode_elektron_packed_payload(
+        _UNPACKED,
+        checksum_start=0,
+        length_adjustment=5,
+        expected_packed_size=None,
+        device_label=_LABEL,
+        mask_order=Elektron7BitMaskOrder.MSB_FIRST,
+    )
+
+    assert encoded.packed != _PACKED
+    assert (
+        unpack_elektron_7bit(
+            encoded.packed,
+            mask_order=Elektron7BitMaskOrder.MSB_FIRST,
+        )
+        == _UNPACKED
+    )
+    assert (
+        validate_elektron_packed_payload(
+            encoded.packed,
+            encoded.trailer,
+            checksum_start=0,
+            length_adjustment=5,
+            expected_packed_size=None,
+            expected_trailer_size=ELEKTRON_CHECKSUM_LENGTH_TRAILER_SIZE,
+            device_label=_LABEL,
+        )
+        == encoded
+    )
 
 
 def test_checksum_rejects_negative_device_slice() -> None:

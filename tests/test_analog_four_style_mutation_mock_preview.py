@@ -3,6 +3,8 @@ from pathlib import Path
 
 import pytest
 
+from rytm_randomizer.snapshot import Elektron7BitMaskOrder, pack_elektron_7bit
+
 pytestmark = pytest.mark.fast
 
 
@@ -39,20 +41,6 @@ def _framed_a4_payload(name: bytes = b"A4MOCK") -> bytes:
     return bytes([0xF0]) + payload + bytes([0xF7])
 
 
-def _pack_elektron_7bit(unpacked: bytes) -> bytes:
-    packed = bytearray()
-    for cursor in range(0, len(unpacked), 7):
-        group = unpacked[cursor : cursor + 7]
-        header = 0
-        data = bytearray()
-        for bit_index, byte in enumerate(group):
-            header |= ((byte >> 7) & 0x01) << bit_index
-            data.append(byte & 0x7F)
-        packed.append(header)
-        packed.extend(data)
-    return bytes(packed)
-
-
 def _framed_a4_saved_kit_payload(name: bytes = b"REAL A4") -> bytes:
     from rytm_randomizer.devices.strategies.analog_four_offset_manifest import (
         A4_FAMILY_BYTE,
@@ -62,15 +50,15 @@ def _framed_a4_saved_kit_payload(name: bytes = b"REAL A4") -> bytes:
     )
     from rytm_randomizer.snapshot.envelope import ELEKTRON_MFR_ID
 
+    prefix = ELEKTRON_MFR_ID + bytes([A4_FAMILY_BYTE, 0x00, A4_KIT_OBJECT_BYTE, 0x01, 0x01, 0x00])
     unpacked = bytearray(A4_KIT_NAME_OFFSET + A4_KIT_NAME_LENGTH + 8)
-    unpacked[0] = A4_KIT_OBJECT_BYTE
-    unpacked[1] = 0x01
-    unpacked[2] = 0x01
-    unpacked[7] = 0x0A
     unpacked[A4_KIT_NAME_OFFSET : A4_KIT_NAME_OFFSET + A4_KIT_NAME_LENGTH] = name[
         :A4_KIT_NAME_LENGTH
     ].ljust(A4_KIT_NAME_LENGTH, b"\x00")
-    payload = ELEKTRON_MFR_ID + bytes([A4_FAMILY_BYTE]) + _pack_elektron_7bit(bytes(unpacked))
+    payload = prefix + pack_elektron_7bit(
+        bytes(unpacked),
+        mask_order=Elektron7BitMaskOrder.MSB_FIRST,
+    )
     return bytes([0xF0]) + payload + bytes([0xF7])
 
 

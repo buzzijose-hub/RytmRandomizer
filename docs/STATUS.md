@@ -21,6 +21,26 @@ Last updated: 2026-08-24. This file is a hand-authored snapshot and is meant to 
     gate are green. The complete all-tests suite remains delegated to CI to
     keep local resource use bounded on the operator workstation.
 
+- 2026-08-08: Integrated the passive RIO145 dual-device native-KIT codec and
+  target-return evidence bundle.
+  - Added strict offline inspection, diff, byte-identical roundtrip, recipe
+    build, target-return validation, and OXI evidence commands for Analog Four
+    and Analog Rytm. No command imports or constructs a MIDI backend.
+  - Cross-validation reproduces the target-return native payload exactly for
+    both devices after destination-slot normalization. The deterministic A4
+    build changes 354 allowlisted payload bytes; the Rytm build changes 495.
+  - Preserved 12 real-machine fixtures and the checked OXI ownership evidence:
+    four variants, 360 events, and 191 bars. RIO-A CORE intentionally keeps
+    pad 11 silent; RIO-B PEAK activates it.
+  - Binary return validation proves payload identity, not sonic equivalence.
+    Listening refinement remains pending and no Elektron pattern generation is
+    claimed; OXI One remains the sequence owner.
+  - Fresh focused verification passes 118 RIO145 tests with 100 percent
+    statement and branch coverage across the seven new production modules. All
+    11 touched production modules pass strict typing with zero findings. Fresh
+    repository closeout passes 748 architecture tests, 685 frozen V1.34 parity
+    tests, and the 7,821-test full suite with 4 skips; Ruff, Black, isort, and
+    deterministic artifact checks are clean.
 - 2026-08-04: Repaired the AL16 Phase R2 Analog Rytm mapping-closure review.
   - Replaced exporter-local offsets, pad bounds, source aliases, and controls
     with canonical Rytm layout and parameter-map ownership.
@@ -39,7 +59,6 @@ Last updated: 2026-08-24. This file is a hand-authored snapshot and is meant to 
     review-repair commit have 100 percent statement and branch coverage; all
     11 production modules touched across the PR pass strict typing. Total
     package coverage is 99.45 percent.
-
 - 2026-08-03: Prepared the fail-closed AL16 Phase R1 offline Analog Rytm kit exporter for review.
   - Registered the passive `al16-rytm-kit-export` command and the pure Rytm
     saved-kit codec/compiler path. The command never enumerates or opens MIDI.

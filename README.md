@@ -255,6 +255,13 @@ audio-patch-dna --audio REF.wav --output-dir output/local/audio-dna/ --select 6 
 
 # AL16 Analog Rytm offline audit proof (no MIDI; current AL02 build is blocked)
 al16-rytm-kit-export --reference output/local/reference/RYTM_Test1_Init_Kit.syx --recipe specs/al16/AL02_LOCK_RYTM.yaml --destination-slot 127 --output output/local/al16/AL02_LOCK_RYTM.syx
+
+# RIO145 offline native-KIT codec and target-return evidence (no MIDI)
+rio145-inspect-sysex --input A4_NATIVE.syx
+rio145-validate-roundtrip --input A4_NATIVE.syx
+rio145-build-kit --device analog_four_mk2 --reference A4_NATIVE.syx --recipe specs/rio145/come_to_rio_a4_core.json --destination-slot 0 --output output/local/rio145/RIO_A4_CORE.syx
+rio145-build-kit --device analog_rytm_mk2 --reference RYTM_NATIVE.syx --recipe specs/rio145/come_to_rio_rytm_core.json --destination-slot 0 --output output/local/rio145/RIO_RYTM_CORE.syx
+rio145-validate-return --device analog_four_mk2 --reference A4_NATIVE.syx --recipe specs/rio145/come_to_rio_a4_core.json --returned A4_TARGET_RETURN.syx
 al16-rytm-mapping-evidence --reference output/local/reference/RYTM_Test1_Init_Kit.syx --configured output/local/al16/AL02_LOCK_RYTM_CONFIGURED.syx --recipe specs/al16/AL02_LOCK_RYTM.yaml --gap-manifest output/al16/AL02_LOCK_RYTM_manifest.json --expected-gap-manifest-sha256 <reviewed-sha256> --report output/local/al16/AL02_LOCK_RYTM_mapping_evidence.json
 ```
 
@@ -295,6 +302,18 @@ evidence and is regenerated only by the repository's deterministic artifact
 workflow. Evidence timestamps default to the reproducible Unix epoch; set
 `SOURCE_DATE_EPOCH` to an in-range Unix timestamp when a deterministic release
 timestamp is required.
+
+The RIO145 command family is a separate passive, file-only workflow for the
+target-return-validated Analog Four and Analog Rytm KIT codec foundation. It
+can inspect and diff native SysEx, prove byte-identical decode/encode
+roundtrips, build deterministic KIT files from strict JSON recipes, validate
+target-unit returns after normalizing the explicit destination slot, and
+export the checked OXI evidence bundle. Builds require an explicit slot and
+output path, refuse to overwrite by default, and never enumerate, open, or
+write a MIDI port. The OXI evidence owns the sequence; these commands do not
+generate Elektron patterns. Binary target-return validation establishes
+native payload identity, not sonic equivalence; listening refinement remains
+an operator task.
 
 Phase R2 replaces independent one-parameter calibration rounds with one
 manually configured saved-KIT capture that can provide review evidence for
@@ -353,8 +372,8 @@ Counts as of the rival-program bundle (derived from the tree, not aspirational):
 
 | Suite | Count |
 |---|---|
-| Full Python suite (`pytest`) | 6,643 tests, green |
-| Architecture invariants (`tests/architecture/`) | 687 tests |
+| Full Python suite (`pytest`) | 8,049 tests, green |
+| Architecture invariants (`tests/architecture/`) | 764 tests |
 | V1.34 parity | 505 golden JSON files → 685 byte-identical test items |
 | Frontend (`desktop/web`, vitest) | 582 tests + 44 a11y tests |
 | Accessibility gate | axe WCAG 2.2 AA, 0 violations |

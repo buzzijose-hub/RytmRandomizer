@@ -41,6 +41,7 @@ from .extractor import (
     analyze_audio,
     analyze_audio_snapshot,
     audio_synthesis_features_to_dict,
+    clamp_audio_feature_unit,
 )
 from .feature_report import (
     FeatureReport,
@@ -809,12 +810,6 @@ def _unipolar(value: float) -> int:
 
 def _bipolar(value: float) -> int:
     return max(-64, min(63, int(round(value))))
-
-
-def clamp_audio_feature_unit(value: float) -> float:
-    """Clamp one normalized audio feature to the closed unit interval."""
-
-    return max(0.0, min(1.0, float(value)))
 
 
 __all__ = [
