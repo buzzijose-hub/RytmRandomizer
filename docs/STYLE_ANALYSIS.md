@@ -182,6 +182,45 @@ reconstruction, equipment attribution, exact sound recreation, or hardware
 verification. It writes no patch or kit and never enumerates, opens, or sends
 to MIDI.
 
+## Audio-to-Rytm recipe proposals
+
+`build_analog_rytm_audio_recipe_proposal(analysis)` turns an existing
+`AudioFeatureAnalysis` into a deterministic, pad-stable Analog Rytm recipe
+proposal. Import it from its focused module:
+
+```python
+from rytm_randomizer.style_analysis.analog_rytm_recipe_inference import (
+    analog_rytm_audio_recipe_proposal_to_dict,
+    build_analog_rytm_audio_recipe_proposal,
+)
+
+proposal = build_analog_rytm_audio_recipe_proposal(analysis)
+payload = analog_rytm_audio_recipe_proposal_to_dict(proposal)
+```
+
+The proposal keeps three evidence levels separate:
+
+- measured audio facts, copied from the supplied analysis;
+- bounded musical proposals, whose formulas and source features are recorded;
+- verified writable mappings, which are marked independently from musical intent.
+
+The first proposal surface uses the permanent AL16 pad roles for the main kick
+(pad 1), dry punctuation (pad 3), tuned low body (pad 6), and closed-hat clock
+(pad 9). All other pads are explicitly preserved. Machine choices are checked
+against the current Rytm machine catalog. Fields in the approved AL16 writable
+allowlist carry normalized 7-bit proposals; machine selection, track volume,
+and any unresolved machine-specific tuning remain `mapping_required`.
+
+Pitch evidence becomes a musical tuning intent, never a guessed raw tune value.
+A raw value can become `approved_tuning` only when the exact machine/note pair
+exists in the repository's machine-specific tuning table. Otherwise the
+proposal records the gap and preserves the device state.
+
+This layer is proposal-only. It performs no file or audio reads, does not encode
+SysEx, does not enumerate or open MIDI ports, and does not claim that a proposed
+recipe is hardware verified or compile ready. Codec/export work remains a
+separate downstream boundary.
+
 ## Determinism guarantee
 
 For a given audio file, `extract_from_audio` always returns the same

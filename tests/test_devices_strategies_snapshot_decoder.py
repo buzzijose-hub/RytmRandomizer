@@ -131,6 +131,22 @@ def test_decode_unpacks_payload_so_planner_can_slice_it() -> None:
     assert snap.unpacked[4:5] == b"X"
 
 
+def test_full_saved_kit_decoder_matches_canonical_saved_kit_codec() -> None:
+    """Both native Rytm decode paths must produce the same unpacked KIT body."""
+
+    from rytm_randomizer.devices.strategies import AnalogRytmSnapshotDecoder
+    from rytm_randomizer.devices.strategies.analog_rytm_saved_kit_codec import (
+        decode_analog_rytm_saved_kit_frame,
+    )
+
+    payload = _real_layout_kit_payload(name=b"WITNESS")
+    snapshot = AnalogRytmSnapshotDecoder().decode(payload, slot=0)
+    saved_kit = decode_analog_rytm_saved_kit_frame(b"\xf0" + payload + b"\xf7")
+
+    assert snapshot.unpacked == saved_kit.unpacked
+    assert snapshot.kit_name == "WITNESS"
+
+
 def test_snapshot_exports_machine_fact_types() -> None:
     from rytm_randomizer.devices.strategies import (
         RytmSnapshotMachineFact,

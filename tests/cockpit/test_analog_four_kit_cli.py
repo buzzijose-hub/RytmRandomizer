@@ -51,7 +51,7 @@ def test_registered_cli_exports_exact_hardware_fixture(
             "rendered_unpacked_value": 127,
             "screen_value": "127",
             "track": 1,
-            "unpacked_offset": 145,
+            "unpacked_offset": 140,
         }
     ]
     assert output.read_bytes() == EXPECTED_FIXTURE.read_bytes()
@@ -91,8 +91,8 @@ def test_cli_text_output_supports_four_tracks_and_overwrite(
     assert exit_code == 0
     assert captured.err == ""
     assert "overwrote_existing: true" in captured.out
-    assert "mutation: T1 Filter2 Resonance=16 @ unpacked[145]" in captured.out
-    assert "mutation: T4 Filter2 Resonance=112 @ unpacked[1195]" in captured.out
+    assert "mutation: T1 Filter2 Resonance=16 @ unpacked[140]" in captured.out
+    assert "mutation: T4 Filter2 Resonance=112 @ unpacked[1190]" in captured.out
 
 
 @pytest.mark.parametrize(
