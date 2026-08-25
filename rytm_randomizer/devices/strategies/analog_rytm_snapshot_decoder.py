@@ -32,10 +32,11 @@ from ...data.analog_rytm_kit_layout import (
     RYTM_KIT_RAW_SIZE,
     RYTM_KIT_SYSEX_HEADER_SIZE_WITHOUT_F0,
     RYTM_KIT_SYSEX_TRAILER_SIZE_WITHOUT_F7,
-    RYTM_KIT_TRACK_MACHINE_VALUE_OFFSET,
-    RYTM_KIT_TRACK_SOUND_SIZE,
+    RYTM_KIT_TRACK_COUNT,
     RYTM_KIT_WORK_BUFFER_DUMP_ID,
+    RYTM_SOUND_MACHINE_TYPE_OFFSET,
     RYTM_SYSEX_PRODUCT_ID,
+    analog_rytm_track_sound_offset,
 )
 from ...snapshot.elektron_packed_payload import split_elektron_packed_payload_body
 from ...snapshot.envelope import (
@@ -125,9 +126,6 @@ _KIT_NAME_OFFSET: Final[int] = RYTM_KIT_NAME_OFFSET
 #: operator-facing name.
 _KIT_NAME_LENGTH: Final[int] = RYTM_KIT_NAME_LENGTH
 
-_TRACK_COUNT: Final[int] = 12
-_TRACK_MACHINE_VALUE_OFFSET: Final[int] = RYTM_KIT_TRACK_MACHINE_VALUE_OFFSET
-_TRACK_SOUND_STRIDE: Final[int] = RYTM_KIT_TRACK_SOUND_SIZE
 _CANDIDATE_ONLY_PADS: Final[frozenset[int]] = frozenset({6, 7, 8})
 _FULL_KIT_DUMP_IDS: Final[frozenset[int]] = frozenset(
     {RYTM_KIT_DUMP_ID, RYTM_KIT_WORK_BUFFER_DUMP_ID}
@@ -136,8 +134,8 @@ _FULL_KIT_DUMP_IDS: Final[frozenset[int]] = frozenset(
 
 def _extract_machine_facts(unpacked: bytes) -> RytmSnapshotMachineFacts:
     facts: dict[int, RytmSnapshotMachineFact] = {}
-    for pad in range(1, _TRACK_COUNT + 1):
-        offset = _TRACK_MACHINE_VALUE_OFFSET + (_TRACK_SOUND_STRIDE * (pad - 1))
+    for pad in range(1, RYTM_KIT_TRACK_COUNT + 1):
+        offset = analog_rytm_track_sound_offset(pad, RYTM_SOUND_MACHINE_TYPE_OFFSET)
         if offset >= len(unpacked):
             fact = RytmSnapshotMachineFact(
                 pad=pad,

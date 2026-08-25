@@ -1,6 +1,6 @@
 RytmRandomizer passive scene search
 Section: scenes
-Query: Wild
+Query: <input omitted>
 Match count: 3
 Matches:
 - S4: Wild

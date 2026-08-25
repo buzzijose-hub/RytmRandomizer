@@ -102,6 +102,7 @@ on one line for an existing module, you probably need a new module instead.
 | `data/analog_four_patch_templates.py` | Static Analog Four patch-genome candidate templates and rationale rows. Pure data. |
 | `data/analog_four_patch_corpus.py` | Synthetic Analog Four patch-corpus starter feature vectors. Pure data. |
 | `data/analog_four_render_rank.py` | Stable feature weights for recorded A4 candidate ranking. Pure data. |
+| `data/audio_patch_dna.py` | Canonical Audio-to-Patch DNA creative directions, feature offsets, roles, rationale, and candidate-count facts. Pure data. |
 | `data/analog_four_recipes.py` | Manual-backed Analog Four kit recipe definitions. Pure data.       |
 | `data/analog_rytm_midi.py` | Manual-backed Analog Rytm OS 1.72 CC/NRPN catalog and safety status labels. Pure data. |
 | `data/analog_rytm_style_recipes.py` | Curated full-12-pad Analog Rytm style-kit CC MSB recipes. Pure data. |
@@ -152,6 +153,7 @@ on one line for an existing module, you probably need a new module instead.
 | --------------------- | ------------------------------------------------------------------------------- |
 | `group_runner.py`     | Four-pad group + isolated-pad orchestration. Drives `randomization` + `midi_io`.|
 | `scene_runner.py`     | Scene/preset thin layer on top of `group_runner`.                               |
+| `style_analysis/audio_patch_dna.py` | Pure one-analysis-to-eight-directions Audio-to-Patch DNA transforms, comparison payloads, and explicit candidate selection. |
 | `style_analysis/analog_four_patch_genome.py` | Passive FeatureReport -> four-column Analog Four single-sound patch DNA compiler. |
 | `style_analysis/analog_four_patch_learning.py` | Passive patch-genome learning packet compiler: candidate ranking, trait routes, capture matrix, and live-dial readiness. |
 | `style_analysis/analog_four_patch_corpus.py` | Passive A4 patch/audio corpus nearest-match ranking and calibration-gap compiler. |
@@ -175,9 +177,14 @@ on one line for an existing module, you probably need a new module instead.
 | `cockpit/export/analog_four_cli.py` | Registered local-file command for one or four validated Filter2 Resonance mutations; no MIDI I/O. |
 | `cockpit/export/al16_rytm_kit.py` | Fail-closed AL16 recipe auditor and local evidence publisher; resolves the pure Rytm codec through the public device capability, consumes data-layer facts, withholds SysEx while critical mappings remain unresolved, and publishes reports through the canonical atomic writer. |
 | `cockpit/export/al16_rytm_cli.py` | Registered passive local-file adapter for Phase R1 AL16 Rytm audit evidence; validates the exact initialized reference, writes mapping-gap artifacts, and emits no `.syx`. |
+| `cockpit/export/al16_rytm_mapping_closure.py` | Pure Phase R2 saved-KIT comparison service; binds recipe, gap-manifest, recipe-identity, and reference provenance before producing review-required candidate evidence from canonical layout metadata. |
+| `cockpit/export/al16_rytm_mapping_closure_cli.py` | Registered passive Phase R2 adapter; validates path contracts before I/O, records structured operations and metrics, writes one deterministic JSON report, and never reaches MIDI. |
+| `cockpit/data/rytm_parameter_map.py` | Canonical cockpit-facing Analog Rytm machine aliases and parameter bindings; delegates CC/NRPN facts to the shared device data layer instead of duplicating controls or offsets. |
 | `style_analysis/analog_four_patch_inference.py` | Typed, single-decode audio evidence and audio-dependent four-column A4 patch-genome inference with direct RED metrics. |
 | `style_analysis/runtime_types.py` | Shared runtime type-validation helper used by extractor and A4 inference boundaries. |
 | `cockpit/export/cli_options.py` | Shared side-effect-free option parsing helpers for registered export commands. |
+| `cockpit/export/audio_patch_dna.py` | Passive analyze-once Audio-to-Patch DNA comparison service with observability, atomic local-file publication, and optional explicit selection through the existing A4 exporter; no MIDI I/O. |
+| `cockpit/export/audio_patch_dna_cli.py` | Registered passive file-only Audio-to-Patch DNA compare/select CLI; may export one explicitly selected A4 candidate and never enumerates or opens MIDI ports. |
 | `cockpit/export/analog_four_patch_batch.py` | Transactional batch service that stages candidate saved kits and complete DNA/live-dial sidecars from immutable inputs, then publishes a manifest commit marker through the canonical atomic writer. |
 | `cockpit/export/analog_four_patch_batch_codec.py` | Canonical JSON encoding/decoding and SHA-256 helpers shared by batch writer and reader. |
 | `cockpit/export/analog_four_patch_batch_contracts.py` | Stable batch payload and result contracts. |
@@ -394,6 +401,21 @@ after every critical mapping is positively verified. The registered CLI is
 only an argument/process-status adapter. Neither module imports or constructs a
 MIDI provider.
 
+Phase R2 stays in the same passive `cockpit/export` boundary. Its mapping
+closure service compares one initialized saved KIT with one manually
+configured AL02-like saved KIT so a single capture can address many gaps. The
+service does not own offsets: track strides come from
+`data/analog_rytm_kit_layout.py`, and source/control aliases resolve through
+`cockpit/data/rytm_parameter_map.py`; the finite evidence groups and semantic
+gap paths come from `data/al16_rytm.py`. Before analysis, it verifies the exact
+recipe bytes, the operator-pinned SHA-256 of the exact gap-manifest bytes, the
+deterministic recipe identifier, and the manifest's initialized-reference
+SHA-256. Candidate evidence remains
+`review_required`; no result can mutate the allowlist, emit a kit, or contact
+hardware. The CLI validates all path roles before opening files, reports
+taxonomy-backed failures without echoing sensitive paths, and records the
+canonical operation/metric outcome.
+
 The audio batch path composes the existing audio extractor, the focused A4
 audio-inference compiler, patch send-plan metadata, and guarded saved-kit
 export. The inference coefficients and feature terms live as immutable facts in
@@ -428,6 +450,18 @@ still encodes only hardware-write-validated Filter2 Resonance. This is real
 audio-dependent inference, but not full saved-kit coverage or a claim of
 Synthplant-equivalent learned accuracy. `analog-four-audio-patch-batch` remains
 hardware-passive: local reads/writes only, with no MIDI port or send.
+
+The `audio-patch-dna` workspace is a passive comparison layer over that same
+extractor and A4 export path. One isolated audio analysis produces readable
+pitch, envelope, transient, rhythm, brightness, noise, spectral-movement, and
+tonal-stability evidence. Eight fixed pure transforms then produce Closest,
+Darker, Brighter, Metallic, Percussive, Atmospheric, Deeper, and Animated
+candidates without decoding the source again. Compare-only mode writes the
+deterministic workspace JSON and Markdown. An explicit selection plus source
+kit passes the already-built candidate into the guarded A4 batch exporter; it
+does not rerun audio analysis and never opens a MIDI port. Analog Rytm export is
+deliberately deferred until the passive Rytm codec integration is available on
+the target branch.
 
 The stored-plan reader treats the stable manifest as the publication commit
 marker. Before a candidate reaches dry-run or the armed sender, it verifies the
@@ -929,8 +963,10 @@ rytm_randomizer/cockpit/export/
     file_export_contracts.py # Shared phase-aware local-file failure vocabulary
     analog_four_export_contracts.py # A4 aliases and domain contracts
     analog_four_kit.py     # Guarded A4 saved-kit .syx adapter -> canonical atomic_write
-    al16_rytm_kit.py       # Fail-closed AL16 audit/evidence service
-    al16_rytm_cli.py       # Registered passive AL16 local-file command
+    al16_rytm_kit.py                       # Fail-closed AL16 audit/evidence service
+    al16_rytm_cli.py                       # Registered passive AL16 local-file command
+    al16_rytm_mapping_closure.py           # Provenance-bound saved-KIT comparison
+    al16_rytm_mapping_closure_cli.py       # Passive mapping-evidence adapter
     analog_four_patch_batch.py      # Audio inference -> candidate .syx/sidecars/manifest
     analog_four_patch_batch_codec.py # Canonical writer/reader JSON + hashes
     analog_four_patch_batch_contracts.py # Stable payload/result DTOs

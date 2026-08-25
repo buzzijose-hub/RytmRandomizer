@@ -190,7 +190,7 @@ Launch the produced app: it opens in **listening** mode, shows detected Elektron
 - If the sidecar fails to spawn, the shell shows a native failure dialog with the reason — no silent blank window.
 - Port conflict? Set `RYTM_RAND_WS_PORT` to override the sidecar's WebSocket port.
 - Suspect the MIDI backend itself (driver crash loops, CI, containers)? `RYTM_RAND_MIDI_BACKEND=off` starts the app with MIDI discovery disabled entirely — the UI runs with an explicit "no backend" state. For development and e2e testing, `RYTM_RAND_MIDI_BACKEND=fake` presents a list-only fake Elektron port (no transmit surface) so device-present flows work with zero hardware.
-- Sidecar unreachable? The window shows a live **offline shell** instead of a dead "Connecting…" screen: connection status, the retry attempt counter with a next-dial countdown (retries never give up), a Retry-now button, and per-OS connection help. With the sidecar up but no device plugged in, the device rail says so honestly — "No hardware detected — still scanning (every 2 s)" — and everything device-independent (sound library, profiles, wizard, reports, exports) keeps working.
+- Sidecar unreachable? **The cockpit loads anyway** — there is no connection gate. Panels render honest empty states, sidecar-requiring buttons are disabled with a stated reason (never hidden), and a reconnect banner carries the live retry state: attempt counter, next-dial countdown (retries never give up), a Retry-now button, and a connection-help disclosure with the exact WS target and per-OS hints. When the sidecar comes up, the app hydrates in place — no reload. With the sidecar up but no device plugged in, the device rail says so honestly — "No hardware detected — still scanning (every 2 s)" — and everything device-independent (sound library, profiles, wizard, reports, exports) keeps working.
 
 ### Dev loop (two terminals)
 
@@ -248,9 +248,25 @@ analog-four-audio-patch-batch --audio REF.wav --source-kit KIT.syx --output-dir 
 analog-four-audio-patch-batch --audio REF.wav --source-kit KIT.syx --output-dir batch/ --studio-handoff --a4-output-port "<exact A4 output>"
 analog-four-audio-patch-rank --reference REF.wav --manifest batch.json --render 1=take1.wav
 
+# Audio-to-Patch DNA workspace (one analysis, eight directions, passive)
+audio-patch-dna --audio REF.wav --output-dir output/local/audio-dna/
+audio-patch-dna --audio REF.wav --output-dir output/local/audio-dna/ --select 6 --source-kit KIT.syx
+
 # AL16 Analog Rytm offline audit proof (no MIDI; current AL02 build is blocked)
 al16-rytm-kit-export --reference output/local/reference/RYTM_Test1_Init_Kit.syx --recipe specs/al16/AL02_LOCK_RYTM.yaml --destination-slot 127 --output output/local/al16/AL02_LOCK_RYTM.syx
+al16-rytm-mapping-evidence --reference output/local/reference/RYTM_Test1_Init_Kit.syx --configured output/local/al16/AL02_LOCK_RYTM_CONFIGURED.syx --recipe specs/al16/AL02_LOCK_RYTM.yaml --gap-manifest output/al16/AL02_LOCK_RYTM_manifest.json --expected-gap-manifest-sha256 <reviewed-sha256> --report output/local/al16/AL02_LOCK_RYTM_mapping_evidence.json
 ```
+
+`audio-patch-dna` turns one immutable audio snapshot into a readable analysis
+of pitch, envelope, transients, rhythm, brightness, noise, spectral movement,
+and tonal stability. It always produces the same eight ordered directions:
+Closest, Darker, Brighter, Metallic, Percussive, Atmospheric, Deeper, and
+Animated. The default is comparison-only. Supplying a paired `--select` and
+`--source-kit` exports only the chosen Analog Four candidate through the
+existing validated SysEx writer without decoding the audio a second time. The
+workflow never enumerates or opens a MIDI port. Analog Rytm selection/export
+is intentionally deferred until the separate Rytm codec integration is part
+of the base branch.
 
 The AL16 command is currently an offline audit/evidence compiler, not a
 positive kit writer or hardware sender. Keep the operator-local initialized
@@ -267,6 +283,18 @@ evidence and is regenerated only by the repository's deterministic artifact
 workflow. Evidence timestamps default to the reproducible Unix epoch; set
 `SOURCE_DATE_EPOCH` to an in-range Unix timestamp when a deterministic release
 timestamp is required.
+
+Phase R2 replaces independent one-parameter calibration rounds with one
+manually configured saved-KIT capture that can provide review evidence for
+many AL02 gaps at once. The passive analyzer binds its report to the exact
+recipe bytes, gap-manifest bytes, deterministic recipe identifier, and
+reference SHA-256 recorded by the manifest. The operator must supply the
+reviewed SHA-256 of the exact gap-manifest bytes, so replacing that file cannot
+silently redefine the evidence request. It uses only canonical Rytm layout and
+parameter-map facts, emits structured review-required evidence, and never
+promotes a candidate offset automatically. A separate scratch-slot dump is
+still required to prove destination-slot header behavior. Neither R2 command
+enumerates MIDI ports, imports a MIDI backend, sends SysEx, or writes a kit.
 
 Every command above is **passive by construction** — no output port opens, no MIDI is sent (armed A4 delivery requires `--arm` plus a reviewed batch manifest). The full list is auto-discovered and swept on every PR.
 

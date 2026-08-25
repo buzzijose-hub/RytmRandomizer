@@ -1,4 +1,4 @@
 RytmRandomizer passive scene preview
-Scene: DOES_NOT_EXIST
+Scene: <unrecognized>
 Found: False
 Message: Scene preview not found. No MIDI was sent. No scene executed. No command executed. No hardware was mutated.

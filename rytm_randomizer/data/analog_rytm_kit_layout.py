@@ -35,6 +35,7 @@ RYTM_KIT_NAME_OFFSET: Final[int] = 0x0004
 RYTM_KIT_NAME_LENGTH: Final[int] = 16
 RYTM_KIT_TRACKS_OFFSET: Final[int] = 0x002E
 RYTM_KIT_TRACK_SOUND_SIZE: Final[int] = 162
+RYTM_KIT_TRACK_COUNT: Final[int] = 12
 
 RYTM_SOUND_MACHINE_TYPE_OFFSET: Final[int] = 0x007C
 RYTM_KIT_TRACK_MACHINE_VALUE_OFFSET: Final[int] = (
@@ -88,6 +89,14 @@ RYTM_SOUND_FIELD_BY_NRPN_LSB: Final[MappingProxyType[int, AnalogRytmSoundField]]
 )
 
 
+def analog_rytm_track_sound_offset(pad: int, sound_offset: int) -> int:
+    """Return the raw-kit offset for one field in a 1-based track sound."""
+
+    if not 1 <= pad <= RYTM_KIT_TRACK_COUNT:
+        raise ValueError(f"pad must be in [1, {RYTM_KIT_TRACK_COUNT}]; got {pad}")
+    return RYTM_KIT_TRACKS_OFFSET + ((pad - 1) * RYTM_KIT_TRACK_SOUND_SIZE) + sound_offset
+
+
 __all__ = [
     "AnalogRytmSoundField",
     "RYTM_KIT_CHECKSUM_PACKED_START",
@@ -100,6 +109,7 @@ __all__ = [
     "RYTM_KIT_RAW_SIZE",
     "RYTM_KIT_SYSEX_HEADER_SIZE_WITHOUT_F0",
     "RYTM_KIT_SYSEX_TRAILER_SIZE_WITHOUT_F7",
+    "RYTM_KIT_TRACK_COUNT",
     "RYTM_KIT_TRACKS_OFFSET",
     "RYTM_KIT_TRACK_MACHINE_VALUE_OFFSET",
     "RYTM_KIT_TRACK_SOUND_SIZE",
@@ -107,4 +117,5 @@ __all__ = [
     "RYTM_SOUND_FIELD_BY_NRPN_LSB",
     "RYTM_SOUND_MACHINE_TYPE_OFFSET",
     "RYTM_SYSEX_PRODUCT_ID",
+    "analog_rytm_track_sound_offset",
 ]

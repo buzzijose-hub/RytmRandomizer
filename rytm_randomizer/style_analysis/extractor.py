@@ -80,6 +80,10 @@ class AudioMeasurements(FeatureMeasurements):
     harmonicity: float
     transient: float
     modulation: float
+    dominant_frequency_hz: float
+    pitch_confidence: float
+    tonal_stability: float
+    spectral_movement: float
 
 
 def _require_path_list(value: object) -> list[Path]:
@@ -191,11 +195,55 @@ class AudioSynthesisFeaturesPayload(TypedDict):
 
 
 @dataclass(frozen=True)
+class AudioDnaEvidence:
+    """Human-readable pitch and spectral evidence from one audio decode."""
+
+    dominant_frequency_hz: float | None
+    dominant_note: str | None
+    pitch_confidence: float
+    tonal_stability: float
+    spectral_movement: float
+
+    def __post_init__(self) -> None:
+        if self.dominant_frequency_hz is not None and (
+            not math.isfinite(self.dominant_frequency_hz) or self.dominant_frequency_hz <= 0.0
+        ):
+            raise ValueError("dominant_frequency_hz must be finite and positive")
+        if self.dominant_note is not None and not self.dominant_note.strip():
+            raise ValueError("dominant_note must be non-empty")
+        normalized_values = (
+            self.pitch_confidence,
+            self.tonal_stability,
+            self.spectral_movement,
+        )
+        if any(not 0.0 <= value <= 1.0 for value in normalized_values):
+            raise ValueError("audio DNA evidence values must be normalized to 0.0..1.0")
+
+
+class AudioDnaEvidencePayload(TypedDict):
+    dominant_frequency_hz: float | None
+    dominant_note: str | None
+    pitch_confidence: float
+    tonal_stability: float
+    spectral_movement: float
+
+
+EMPTY_AUDIO_DNA_EVIDENCE: Final[AudioDnaEvidence] = AudioDnaEvidence(
+    dominant_frequency_hz=None,
+    dominant_note=None,
+    pitch_confidence=0.0,
+    tonal_stability=0.0,
+    spectral_movement=0.0,
+)
+
+
+@dataclass(frozen=True)
 class AudioFeatureAnalysis:
     """One shared audio decode with report and synthesis-facing measurements."""
 
     feature_report: FeatureReport
     synthesis_features: AudioSynthesisFeatures
+    dna_evidence: AudioDnaEvidence = EMPTY_AUDIO_DNA_EVIDENCE
 
     @property
     def audio_sha256(self) -> str:
@@ -274,6 +322,23 @@ def audio_synthesis_features_to_dict(
         "harmonicity": validated_features.harmonicity,
         "transient": validated_features.transient,
         "modulation": validated_features.modulation,
+    }
+
+
+def audio_dna_evidence_to_dict(evidence: AudioDnaEvidence) -> AudioDnaEvidencePayload:
+    """Return the stable JSON payload for readable audio DNA evidence."""
+
+    validated_evidence = require_runtime_type(
+        evidence,
+        AudioDnaEvidence,
+        "evidence must be AudioDnaEvidence",
+    )
+    return {
+        "dominant_frequency_hz": validated_evidence.dominant_frequency_hz,
+        "dominant_note": validated_evidence.dominant_note,
+        "pitch_confidence": validated_evidence.pitch_confidence,
+        "tonal_stability": validated_evidence.tonal_stability,
+        "spectral_movement": validated_evidence.spectral_movement,
     }
 
 
@@ -489,6 +554,36 @@ def _energy_arc(rms: list[float]) -> tuple[float, ...]:
     return tuple(_normalize_unit(rms[index] / peak) for index in indices)
 
 
+def _dominant_frequency(
+    magnitude: list[list[float]], frequencies: list[float]
+) -> tuple[float, float]:
+    candidates = tuple(
+        (frequency, sum(row))
+        for frequency, row in zip(frequencies, magnitude, strict=False)
+        if 40.0 <= frequency <= 4_000.0
+    )
+    total_energy = sum(energy for _, energy in candidates)
+    if total_energy <= 0.0:
+        return 0.0, 0.0
+    frequency, peak_energy = max(candidates, key=lambda candidate: candidate[1])
+    return frequency, _normalize_unit(peak_energy / total_energy * 8.0)
+
+
+def _frequency_to_note(frequency: float) -> str | None:
+    if frequency <= 0.0 or not math.isfinite(frequency):
+        return None
+    midi_note = int(round(69.0 + 12.0 * math.log2(frequency / 440.0)))
+    names = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
+    return f"{names[midi_note % 12]}{midi_note // 12 - 1}"
+
+
+def _spectral_movement(centroid: list[float], nyquist: float) -> float:
+    if len(centroid) < 2 or nyquist <= 0.0:
+        return 0.0
+    differences = [abs(right - left) for left, right in zip(centroid, centroid[1:])]
+    return _normalize_unit(_audio_mean(differences) / nyquist * 8.0)
+
+
 def _measure_audio_features(source: Path | BytesIO) -> AudioMeasurements:
     """Return the raw measurement dict for a single audio file.
 
@@ -533,6 +628,10 @@ def _measure_audio_features(source: Path | BytesIO) -> AudioMeasurements:
             "harmonicity": 0.0,
             "transient": 0.0,
             "modulation": 0.0,
+            "dominant_frequency_hz": 0.0,
+            "pitch_confidence": 0.0,
+            "tonal_stability": 0.0,
+            "spectral_movement": 0.0,
         }
 
     # Onset spacing -> bounded tempo/stability. This avoids librosa's native
@@ -596,6 +695,9 @@ def _measure_audio_features(source: Path | BytesIO) -> AudioMeasurements:
     # Spectral concentration is a stable proxy for harmonicity and avoids
     # native HPSS code paths that can terminate the process on broadband noise.
     harmonicity = _normalize_unit(1.0 - flatness_mean)
+    dominant_frequency_hz, pitch_confidence = _dominant_frequency(stft, freqs)
+    spectral_movement = _spectral_movement(centroid, nyquist)
+    tonal_stability = _normalize_unit(harmonicity * (1.0 - spectral_movement))
     transient = _audio_safe_ratio(
         _audio_mean(onset_values),
         max(onset_values, default=0.0),
@@ -624,6 +726,10 @@ def _measure_audio_features(source: Path | BytesIO) -> AudioMeasurements:
         "harmonicity": harmonicity,
         "transient": transient,
         "modulation": modulation,
+        "dominant_frequency_hz": dominant_frequency_hz,
+        "pitch_confidence": pitch_confidence,
+        "tonal_stability": tonal_stability,
+        "spectral_movement": spectral_movement,
     }
 
 
@@ -661,6 +767,7 @@ def _audio_feature_analysis(
     audio_sha256: str,
     measurements: AudioMeasurements,
 ) -> AudioFeatureAnalysis:
+    dominant_frequency_hz = measurements.get("dominant_frequency_hz", 0.0)
     return AudioFeatureAnalysis(
         feature_report=_audio_feature_report(measurements),
         synthesis_features=AudioSynthesisFeatures(
@@ -677,6 +784,13 @@ def _audio_feature_analysis(
             harmonicity=measurements["harmonicity"],
             transient=measurements["transient"],
             modulation=measurements["modulation"],
+        ),
+        dna_evidence=AudioDnaEvidence(
+            dominant_frequency_hz=(dominant_frequency_hz if dominant_frequency_hz > 0.0 else None),
+            dominant_note=_frequency_to_note(dominant_frequency_hz),
+            pitch_confidence=measurements.get("pitch_confidence", 0.0),
+            tonal_stability=measurements.get("tonal_stability", 0.0),
+            spectral_movement=measurements.get("spectral_movement", 0.0),
         ),
     )
 
@@ -878,6 +992,8 @@ def aggregate_audio_measurements(
 
 
 __all__ = [
+    "AudioDnaEvidence",
+    "AudioDnaEvidencePayload",
     "AudioMeasurements",
     "AudioFeatureAnalysis",
     "AudioSynthesisFeatures",
@@ -887,6 +1003,7 @@ __all__ = [
     "analyze_audio",
     "analyze_audio_snapshot",
     "aggregate_audio_measurements",
+    "audio_dna_evidence_to_dict",
     "audio_synthesis_features_to_dict",
     "extract_from_audio",
     "extract_from_description",

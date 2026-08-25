@@ -10,9 +10,13 @@ export { Cockpit } from './Cockpit';
 export type { CockpitProps } from './Cockpit';
 
 export { HeaderBar } from './HeaderBar';
-export { OfflineShell, OFFLINE_STATUS_DISPLAY } from './OfflineShell';
-export type { OfflineShellProps } from './OfflineShell';
-export { ReconnectBanner, RECONNECT_BANNER_DISPLAY } from './ReconnectBanner';
+export {
+  INITIAL_CONNECT_GRACE_MS,
+  RECONNECT_BANNER_DISPLAY,
+  RECONNECT_BANNER_PRE_SESSION_DISPLAY,
+  ReconnectBanner,
+  SIDECAR_REQUIRED_REASON,
+} from './ReconnectBanner';
 export type { ReconnectBannerProps, ReconnectBannerStatus } from './ReconnectBanner';
 export { SnapshotPanel } from './SnapshotPanel';
 export type { SnapshotPanelProps } from './SnapshotPanel';

@@ -1,6 +1,6 @@
 RytmRandomizer passive scene search
 Section: scenes
-Query: NO_MATCH
+Query: <input omitted>
 Match count: 0
 Matches:
 - no matches found. No MIDI was sent. No command executed.

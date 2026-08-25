@@ -202,5 +202,11 @@ Requirements gates for all plans: [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUI
 | 2026-07-03 | [synplant-inspired-cockpit-ui-pr-body](2026-07-03-synplant-inspired-cockpit-ui-pr-body.md) | (PR body draft — no lifecycle) |  |
 | 2026-07-03 | [synplant-inspired-cockpit-ui](2026-07-03-synplant-inspired-cockpit-ui.md) | in-flight |  |
 | 2026-07-08 | [local-model-copilot](2026-07-08-local-model-copilot.md) | in-flight |  |
+| 2026-08-09 | [audio-patch-dna-workspace](2026-08-09-audio-patch-dna-workspace.md) | in-flight (implementation complete, PR pending review) |  |
 | 2026-07-18 | [rival-program](2026-07-18-rival-program.md) | in-flight — bundle executed on the `rival-program` integration branch (18 commits over ... |  |
 | 2026-07-20 | [live-gui-retirement-evidence](2026-07-20-live-gui-retirement-evidence.md) | in-flight (retirement executed on `rival-program` 2026-07-28 — see |  |
+| 2026-08-02 | [al16-r1-offline-rytm-kit-exporter](2026-08-02-al16-r1-offline-rytm-kit-exporter.md) | complete — merged in PR #222 (AL02 correctly blocked on 18 verified mapping gaps) |  |
+| 2026-08-02 | [audio-patch-studio-handoff](2026-08-02-audio-patch-studio-handoff.md) | complete — merged in PR #220; status flip in PR #223 |  |
+| 2026-08-03 | [e2e-no-device-experience](2026-08-03-e2e-no-device-experience.md) | complete — WS-A merged in PR #221; no-gate final form merged in PR #225 |  |
+| 2026-08-03 | [autoupdate-distribution](2026-08-03-autoupdate-distribution.md) | proposed |  |
+| 2026-08-04 | [al16-r2-rytm-mapping-closure](2026-08-04-al16-r2-rytm-mapping-closure.md) | in-flight - PR #224 |  |

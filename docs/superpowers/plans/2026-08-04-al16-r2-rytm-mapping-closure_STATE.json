@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "plan": "docs/superpowers/plans/2026-08-04-al16-r2-rytm-mapping-closure.md",
+  "branch": "codex/al16-r2-rytm-mapping-closure",
+  "pull_request": 224,
+  "phase": "review",
+  "workstreams": {
+    "evidence_contract": "complete",
+    "tests": "complete",
+    "learning_artifacts": "complete",
+    "final_gates": "complete"
+  },
+  "last_event": "Local review repair is complete: all verification and scope/privacy audits pass, and the exact 16-file repair is ready for publication and hosted review."
+}

@@ -23,6 +23,38 @@ describe('Cockpit', () => {
     });
   });
 
+  it('mounts the FULL cockpit tree with a pristine store (no sidecar, nothing hydrated)', () => {
+    // The App no longer gates on sessionStatus: every panel must render a
+    // graceful empty/degraded state from all-null slices without throwing.
+    const fake = new FakeCockpitClient();
+    render(<Cockpit client={fake.asClient()} />);
+
+    expect(screen.getByTestId('cockpit-root')).toBeInTheDocument();
+    expect(screen.getByTestId('header-bar')).toHaveTextContent('disconnected');
+    expect(screen.getByTestId('snapshot-panel')).toHaveTextContent('Waiting for snapshot…');
+    expect(screen.getByTestId('device-rail')).toBeInTheDocument();
+    expect(screen.getByTestId('mutation-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('patch-genome-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('live-readiness-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('safety-rail')).toBeInTheDocument();
+    // Bottom-rail registry panels mount and degrade (empty states, no crash).
+    expect(screen.getByTestId('live-midi-monitor')).toBeInTheDocument();
+    expect(screen.getByTestId('connection-doctor')).toBeInTheDocument();
+    expect(screen.getByTestId('library-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('library-load')).toBeEnabled();
+    expect(screen.getByTestId('kit-morph')).toBeInTheDocument();
+
+    // Sidecar-requiring affordances are present but disabled, with a reason.
+    expect(screen.getByTestId('arm-open-button')).toBeDisabled();
+    expect(screen.getByTestId('arm-open-button')).toHaveAttribute(
+      'title',
+      'Requires sidecar connection',
+    );
+    expect(screen.getByTestId('action-regen')).toBeDisabled();
+    expect(screen.getByTestId('action-save')).toBeDisabled();
+    expect(screen.getByTestId('action-send')).toBeDisabled();
+  });
+
   it('renders the root + HeaderBar + both panels', () => {
     const fake = new FakeCockpitClient();
     act(() => {
