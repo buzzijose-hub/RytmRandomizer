@@ -227,10 +227,17 @@ python -m rytm_randomizer.cli reference-style-blueprint-report --library referen
 | `analog-four-patch-send-plan-report` | Passive CC/NRPN live-dial send plan for a generated Analog Four patch |
 | `analog-four-saved-kit-export` | Guarded local-file saved-kit export; currently admits hardware-validated Filter2 Resonance only |
 | `al16-rytm-kit-export` | Offline AL16 Analog Rytm audit/evidence compiler; Phase R1 validates the exact initialized reference, writes deterministic mapping-gap evidence, and emits no `.syx` |
+| `rio145-inspect-sysex` | Strict offline inspection of one native Elektron SysEx object |
+| `rio145-diff-sysex` | Offline wire and native-payload comparison of two Elektron SysEx objects |
+| `rio145-validate-roundtrip` | Byte-identical decode/encode validation for one native Elektron SysEx object |
+| `rio145-build-kit` | Deterministic offline Analog Four or Analog Rytm KIT recipe build selected by `--device`, with explicit slot and output |
+| `rio145-validate-return` | Offline device-selected target-return validation against the deterministic recipe build |
+| `rio145-export-oxi-manifest` | Validate and export the RIO145 OXI sequence-evidence bundle offline |
 | `al16-rytm-mapping-evidence` | Passive AL16 Rytm mapping-closure analyzer; cryptographically binds initialized/configured saved-kit evidence to the exact recipe, R1 gap manifest, recipe identity, and reference SHA without promoting offsets or writing SysEx |
 | `audio-patch-dna` | Passive one-analysis workspace with readable sound DNA, exactly eight fixed directions, and optional selected-candidate Analog Four SysEx export |
 | `analog-four-audio-patch-batch` | Real local audio analysis; the documented/default workflow deterministically commits exactly four immutable `.syx` candidates, complete DNA sidecars, and one manifest; `--studio-handoff` prints the bounded four-audition workflow with zero calibration rounds |
 | `analog-four-audio-patch-rank` | Passive acoustic ranking of recorded A4 candidates against the exact batch reference |
+| `analog-four-audio-patch-refine` | Passive bounded feedback pass for one recorded A4 candidate; accepts a close render or emits exactly one corrected target and optional offline SysEx artifact |
 | `local-model-copilot-report` | Passive local model docs, mutation-intent, and Analog Four patch-review packets; optional local model subprocess call with `--ask-local-model` |
 | `analog-four-oxi-macro-report` | Passive in-memory Analog Four OXI-style four-track macro preview |
 | `analog-four-oxi-macro-readiness-report` | Passive Analog Four OXI macro readiness, soft-capture preflight, and operator-present validation commands |
@@ -251,12 +258,21 @@ python -m rytm_randomizer.cli analog-four-patch-corpus-report --audio reference.
 python -m rytm_randomizer.cli analog-four-patch-send-plan-report --description "hypnotic metallic HP2 stab" --track 1 --candidate 1
 python -m rytm_randomizer.cli analog-four-saved-kit-export --source INIT.syx --output PATCH.syx --filter2-resonance 1:64
 python -m rytm_randomizer.cli al16-rytm-kit-export --reference output/local/reference/RYTM_Test1_Init_Kit.syx --recipe specs/al16/AL02_LOCK_RYTM.yaml --destination-slot 127 --output output/local/al16/AL02_LOCK_RYTM.syx
+python -m rytm_randomizer.cli rio145-inspect-sysex --input A4_NATIVE.syx
+python -m rytm_randomizer.cli rio145-diff-sysex --left A4_GENERATED.syx --right A4_TARGET_RETURN.syx
+python -m rytm_randomizer.cli rio145-validate-roundtrip --input RYTM_NATIVE.syx
+python -m rytm_randomizer.cli rio145-build-kit --device analog_four_mk2 --reference A4_NATIVE.syx --recipe specs/rio145/come_to_rio_a4_core.json --destination-slot 0 --output output/local/rio145/RIO_A4_CORE.syx
+python -m rytm_randomizer.cli rio145-build-kit --device analog_rytm_mk2 --reference RYTM_NATIVE.syx --recipe specs/rio145/come_to_rio_rytm_core.json --destination-slot 0 --output output/local/rio145/RIO_RYTM_CORE.syx
+python -m rytm_randomizer.cli rio145-validate-return --device analog_four_mk2 --reference A4_NATIVE.syx --recipe specs/rio145/come_to_rio_a4_core.json --returned A4_TARGET_RETURN.syx
+python -m rytm_randomizer.cli rio145-validate-return --device analog_rytm_mk2 --reference RYTM_NATIVE.syx --recipe specs/rio145/come_to_rio_rytm_core.json --returned RYTM_TARGET_RETURN.syx
+python -m rytm_randomizer.cli rio145-export-oxi-manifest --manifest RIO145_OXI_PROGRAM_MANIFEST.json --events RIO145_OXI_EVENTS.csv --output output/local/rio145/RIO145_OXI_EVIDENCE.json
 python -m rytm_randomizer.cli al16-rytm-mapping-evidence --reference output/local/reference/RYTM_Test1_Init_Kit.syx --configured output/local/al16/AL02_LOCK_RYTM_CONFIGURED.syx --recipe specs/al16/AL02_LOCK_RYTM.yaml --gap-manifest output/al16/AL02_LOCK_RYTM_manifest.json --expected-gap-manifest-sha256 "<reviewed SHA-256>" --report output/local/al16/AL02_LOCK_RYTM_mapping_evidence.json
 python -m rytm_randomizer.cli audio-patch-dna --audio reference.wav --output-dir output/local/audio-dna
 python -m rytm_randomizer.cli audio-patch-dna --audio reference.wav --output-dir output/local/audio-dna --select 6 --source-kit INIT.syx
 python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit INIT.syx --output-dir batch --track 1 --candidates 4
 python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit INIT.syx --output-dir batch --track 1 --studio-handoff --a4-output-port "<exact configured Analog Four output name>"
 python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference reference.wav --manifest batch/a4-t1-audio-patch-batch.json --render 1=candidate-1.wav
+python -m rytm_randomizer.cli analog-four-audio-patch-refine --reference reference.wav --manifest batch/a4-t1-audio-patch-batch.json --candidate 1 --render candidate-1.wav --output-dir output/local/a4-refinement
 python -m rytm_randomizer.cli local-model-copilot-report --question "Which A4 rows are staged only?" --workflow all --description "hypnotic metallic HP2 stab" --json
 python -m rytm_randomizer.cli analog-four-oxi-macro-report hard-groove --seed 23 --intensity 6 --events --limit 0
 python -m rytm_randomizer.cli analog-four-oxi-macro-readiness-report hard-groove --seed 0 --intensity 4 --limit 4
@@ -357,6 +373,20 @@ returns `2`, writes manifest/validation/byte-diff evidence, emits no `.syx`,
 and authorizes no manual hardware import. Positive kit generation remains
 future work after those writer mappings are verified.
 
+The six `rio145-*` commands are passive, file-only tooling for the preserved
+RIO145 native-object evidence. The shared parser validates Elektron framing,
+MIDI-safe data bytes, native MSB packing, encoded length, and checksum before
+exposing a payload. A build compiles the strict device recipe twice, requires
+byte-identical output, reparses and reserializes the result, verifies the
+known-field allowlist, requires an explicit `0..127` destination slot, and
+refuses an existing output unless `--overwrite` is supplied. Target-return
+validation requires exact native-payload identity and exact whole-wire identity
+after normalizing only the returned destination slot. The OXI export validates
+the preserved four-variant, 360-event, 191-bar sequence evidence; it does not
+author Elektron patterns. None of these commands imports or constructs a MIDI
+provider, enumerates ports, or sends data. Binary target-return validation is
+not a claim of sonic equivalence; listening refinement remains pending.
+
 `al16-rytm-mapping-evidence` is the passive Phase R2 mapping-closure analyzer.
 It compares the initialized saved-kit dump with one manually configured
 AL02-like dump, limits candidate locations to the existing Rytm layout
@@ -410,6 +440,20 @@ verifies every candidate sidecar and the original reference hash before
 comparing recorded A4 renders across 11 normalized synthesis measurements.
 The result is an explainable ranking packet; it is not promoted into training
 data automatically.
+
+`analog-four-audio-patch-refine` performs one bounded correction after that
+ranking step. It verifies the exact reference hash, manifest, and selected
+candidate before analyzing one recorded A4 render. A similarity score at or
+above `--accept-similarity` (default `92`) produces an `accept` decision with
+no new candidate. A lower score applies `reference + gain * (reference -
+render)` to the 11 normalized acoustic features, clamps each feature to its
+valid domain, preserves the reference duration, and infers exactly one
+follow-up candidate. The default `--gain` is `0.65`. Supplying
+`--source-kit` routes that one candidate through the existing passive A4
+saved-kit exporter; omitting it writes only JSON/Markdown analysis artifacts.
+This is not iterative training or a forensic-recreation claim. The command
+never imports a MIDI backend, enumerates ports, opens hardware, or transmits
+MIDI/SysEx.
 
 `local-model-copilot-report` is the passive local-AI bridge. By default it
 does not run a model; it prints deterministic source packets and JSON schemas

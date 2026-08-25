@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from conftest import analog_four_saved_kit_frame
+from rytm_randomizer.snapshot import Elektron7BitMaskOrder, pack_elektron_7bit
 
 pytestmark = pytest.mark.fast
 
@@ -24,20 +25,6 @@ def _a4_kit_payload(name: bytes = b"A4KIT") -> bytes:
     return bytes([0x00, 0x20, 0x3C, 0x07]) + padded_name + bytes([0x01, 0x02, 0x03])
 
 
-def _pack_elektron_7bit(unpacked: bytes) -> bytes:
-    packed = bytearray()
-    for cursor in range(0, len(unpacked), 7):
-        group = unpacked[cursor : cursor + 7]
-        header = 0
-        data = bytearray()
-        for bit_index, byte in enumerate(group):
-            header |= ((byte >> 7) & 0x01) << bit_index
-            data.append(byte & 0x7F)
-        packed.append(header)
-        packed.extend(data)
-    return bytes(packed)
-
-
 def _a4_saved_kit_payload(
     name: bytes = b"REAL A4",
     *,
@@ -52,15 +39,15 @@ def _a4_saved_kit_payload(
     from rytm_randomizer.snapshot.envelope import ELEKTRON_MFR_ID
 
     object_byte = A4_KIT_OBJECT_BYTE if kit_object_byte is None else kit_object_byte
+    prefix = ELEKTRON_MFR_ID + bytes([A4_FAMILY_BYTE, 0x00, object_byte, 0x01, 0x01, 0x00])
     unpacked = bytearray(A4_KIT_NAME_OFFSET + A4_KIT_NAME_LENGTH + 8)
-    unpacked[0] = object_byte
-    unpacked[1] = 0x01
-    unpacked[2] = 0x01
-    unpacked[7] = 0x0A
     unpacked[A4_KIT_NAME_OFFSET : A4_KIT_NAME_OFFSET + A4_KIT_NAME_LENGTH] = name[
         :A4_KIT_NAME_LENGTH
     ].ljust(A4_KIT_NAME_LENGTH, b"\x00")
-    return ELEKTRON_MFR_ID + bytes([A4_FAMILY_BYTE]) + _pack_elektron_7bit(bytes(unpacked))
+    return prefix + pack_elektron_7bit(
+        bytes(unpacked),
+        mask_order=Elektron7BitMaskOrder.MSB_FIRST,
+    )
 
 
 def test_decode_returns_analog_four_kit_snapshot_with_slot_and_name() -> None:
@@ -83,7 +70,8 @@ def test_decode_returns_analog_four_kit_snapshot_with_slot_and_name() -> None:
 def test_decode_real_saved_kit_frame_unpacks_name_and_keeps_offsets_candidate() -> None:
     from rytm_randomizer.devices.strategies import AnalogFourKitSnapshot, AnalogFourSnapshotDecoder
     from rytm_randomizer.devices.strategies.analog_four_offset_manifest import (
-        A4_KIT_OBJECT_BYTE,
+        A4_KIT_NAME_LENGTH,
+        A4_KIT_NAME_OFFSET,
         A4_SNAPSHOT_LAYOUT_SAVED_KIT,
     )
 
@@ -95,7 +83,9 @@ def test_decode_real_saved_kit_frame_unpacks_name_and_keeps_offsets_candidate() 
     assert snapshot.slot == 5
     assert snapshot.kit_name == "REALKIT"
     assert snapshot.raw == payload
-    assert snapshot.unpacked[:3] == bytes([A4_KIT_OBJECT_BYTE, 0x01, 0x01])
+    assert snapshot.unpacked[
+        A4_KIT_NAME_OFFSET : A4_KIT_NAME_OFFSET + A4_KIT_NAME_LENGTH
+    ].startswith(b"REALKIT")
     assert snapshot.snapshot_layout == A4_SNAPSHOT_LAYOUT_SAVED_KIT
     assert snapshot.offsets_promoted is False
 
@@ -109,7 +99,7 @@ def test_decode_hardware_saved_kit_strips_checksum_and_length_trailer() -> None:
     snapshot = AnalogFourSnapshotDecoder().decode(payload, slot=0)
 
     assert snapshot.kit_name == "KIT 1"
-    assert len(snapshot.unpacked) == 2415
+    assert len(snapshot.unpacked) == 2410
 
 
 def test_decode_real_saved_kit_cleans_internal_nul_name_padding() -> None:
@@ -179,7 +169,7 @@ def test_decode_real_saved_kit_rejects_wrong_object_byte() -> None:
 
     payload = _a4_saved_kit_payload(b"BADOBJ", kit_object_byte=0x53)
 
-    with pytest.raises(ValueError, match="Analog Four kit object byte"):
+    with pytest.raises(ValueError, match="object is not a saved kit"):
         AnalogFourSnapshotDecoder().decode(payload, slot=0)
 
 

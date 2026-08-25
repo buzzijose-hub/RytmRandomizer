@@ -61,6 +61,13 @@ from rytm_randomizer.style_analysis import library as library_module
 # warm-worker V1.34 parity fixtures and runs in <60s.
 pytestmark = pytest.mark.fast
 
+
+def test_clamp_audio_feature_unit_bounds_normalized_features() -> None:
+    assert extractor_module.clamp_audio_feature_unit(-1.0) == 0.0
+    assert extractor_module.clamp_audio_feature_unit(0.25) == 0.25
+    assert extractor_module.clamp_audio_feature_unit(2.0) == 1.0
+
+
 # ---------------------------------------------------------------------------
 # Builders
 # ---------------------------------------------------------------------------

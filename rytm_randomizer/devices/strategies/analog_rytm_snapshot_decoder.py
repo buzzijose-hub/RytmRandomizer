@@ -41,6 +41,7 @@ from ...data.analog_rytm_kit_layout import (
 from ...snapshot.elektron_packed_payload import split_elektron_packed_payload_body
 from ...snapshot.envelope import (
     ELEKTRON_MFR_ID,
+    Elektron7BitMaskOrder,
     find_kit_record,
     read_ascii_name,
     unpack_elektron_7bit,
@@ -191,7 +192,10 @@ def _unpack_full_kit_dump(raw: bytes) -> bytes:
         trailer_size=RYTM_KIT_SYSEX_TRAILER_SIZE_WITHOUT_F7,
         device_label="Analog Rytm kit snapshot",
     )
-    unpacked = unpack_elektron_7bit(body.packed)
+    unpacked = unpack_elektron_7bit(
+        body.packed,
+        mask_order=Elektron7BitMaskOrder.MSB_FIRST,
+    )
     if len(unpacked) != RYTM_KIT_RAW_SIZE:
         raise ValueError(
             "AnalogRytmSnapshotDecoder.decode: decoded kit payload has "
@@ -201,8 +205,13 @@ def _unpack_full_kit_dump(raw: bytes) -> bytes:
 
 
 def _unpack_legacy_kit_body(raw: bytes) -> bytes:
+    # This compatibility-only body predates native saved-kit frames and was
+    # historically emitted by the repository's LSB-first synthetic fixture.
     record = find_kit_record(raw, slot=0, kit_type_byte=RYTM_KIT_TYPE_BYTE)
-    unpacked = unpack_elektron_7bit(record[1:])
+    unpacked = unpack_elektron_7bit(
+        record[1:],
+        mask_order=Elektron7BitMaskOrder.LSB_FIRST,
+    )
     if len(unpacked) >= RYTM_KIT_RAW_SIZE + 4 and unpacked[:4] == bytes(
         [RYTM_KIT_DUMP_ID, 0x01, 0x01, 0x00]
     ):

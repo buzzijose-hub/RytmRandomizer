@@ -372,27 +372,36 @@ def analog_four_saved_kit_frame(
         A4_KIT_OBJECT_BYTE,
         A4_SAVED_KIT_UNPACKED_SIZE,
     )
-    from rytm_randomizer.snapshot.envelope import ELEKTRON_MFR_ID
+    from rytm_randomizer.snapshot.envelope import (
+        ELEKTRON_MFR_ID,
+        Elektron7BitMaskOrder,
+    )
+    from rytm_randomizer.snapshot.envelope import pack_elektron_7bit as pack
 
     unpacked = bytearray(A4_SAVED_KIT_UNPACKED_SIZE if unpacked_size is None else unpacked_size)
-    unpacked[0:4] = bytes([A4_KIT_OBJECT_BYTE, 0x01, 0x01, 0x00])
     unpacked[A4_KIT_NAME_OFFSET : A4_KIT_NAME_OFFSET + A4_KIT_NAME_LENGTH] = name[
         :A4_KIT_NAME_LENGTH
     ].ljust(A4_KIT_NAME_LENGTH, b"\x00")
     for offset, value in (unpacked_overrides or {}).items():
         unpacked[offset] = value
 
-    packed = pack_elektron_7bit(bytes(unpacked))
+    packed = pack(bytes(unpacked), mask_order=Elektron7BitMaskOrder.MSB_FIRST)
     checksum = sum(packed[A4_CHECKSUM_PACKED_OFFSET:]) & 0x3FFF
+    encoded_length = len(packed) + 5
     trailer = bytes(
         [
             (checksum >> 7) & 0x7F,
             checksum & 0x7F,
-            (len(packed) >> 7) & 0x7F,
-            len(packed) & 0x7F,
+            (encoded_length >> 7) & 0x7F,
+            encoded_length & 0x7F,
         ]
     )
-    payload = ELEKTRON_MFR_ID + bytes([A4_FAMILY_BYTE]) + packed + trailer
+    payload = (
+        ELEKTRON_MFR_ID
+        + bytes([A4_FAMILY_BYTE, 0x00, A4_KIT_OBJECT_BYTE, 0x01, 0x01, 0x00])
+        + packed
+        + trailer
+    )
     return bytes([0xF0]) + payload + bytes([0xF7])
 
 
@@ -408,6 +417,8 @@ def rytm_real_layout_kit_payload(name: bytes = b"KIT 1") -> bytes:
         RYTM_SOUND_FIELD_BY_NRPN_LSB,
         RYTM_SYSEX_PRODUCT_ID,
     )
+    from rytm_randomizer.snapshot import Elektron7BitMaskOrder
+    from rytm_randomizer.snapshot import pack_elektron_7bit as pack
 
     raw = bytearray(bytes([0x00] * RYTM_KIT_RAW_SIZE))
     raw[0:4] = bytes([0x00, 0x00, 0x00, 0x06])
@@ -433,7 +444,7 @@ def rytm_real_layout_kit_payload(name: bytes = b"KIT 1") -> bytes:
         raw[track_offset + RYTM_SOUND_FIELD_BY_NRPN_LSB[2].sound_offset] = 50 + pad
         raw[track_offset + RYTM_SOUND_FIELD_BY_NRPN_LSB[20].sound_offset] = 24 + pad
         raw[track_offset + RYTM_SOUND_FIELD_BY_NRPN_LSB[27].sound_offset] = 18 + pad
-    packed = pack_elektron_7bit(bytes(raw))
+    packed = pack(bytes(raw), mask_order=Elektron7BitMaskOrder.MSB_FIRST)
     checksum = sum(packed) & 0x3FFF
     size = (len(packed) + 5) & 0x3FFF
     trailer = bytes(
