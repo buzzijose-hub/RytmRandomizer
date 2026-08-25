@@ -52,6 +52,7 @@ from .runtime_types import require_runtime_type
 
 _AUDIO_SAMPLE_RATE: Final[int] = 22_050
 _AUDIO_HOP_LENGTH: Final[int] = 512
+AUDIO_DURATION_CEILING_SECONDS: Final[float] = 8.0
 
 
 class FeatureMeasurements(TypedDict):
@@ -736,7 +737,7 @@ def _measure_audio_features(
         "spectral_brightness": spectral_brightness,
         "texture_noise": texture_noise,
         "energy_arc": arc,
-        "duration": _normalize_unit(duration / 8.0),
+        "duration": _normalize_unit(duration / AUDIO_DURATION_CEILING_SECONDS),
         "attack": _normalize_unit(attack_seconds / 2.0),
         "decay": _normalize_unit(decay_seconds / 4.0),
         "sustain": sustain,

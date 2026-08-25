@@ -45,6 +45,17 @@ from .audio_patch_dna_lineage import (
     build_audio_patch_dna_lineage_audit,
     render_audio_patch_dna_lineage_markdown,
 )
+from .audio_reference_suitability import (
+    AUDIO_REFERENCE_SUITABILITY_POLICY_VERSION,
+    AUDIO_REFERENCE_SUITABILITY_SCHEMA_VERSION,
+    ReferenceAudioSuitability,
+    ReferenceWorkflow,
+    SuitabilityRecommendation,
+    SuitabilityStatus,
+    WorkflowSuitability,
+    assess_reference_audio,
+    reference_audio_suitability_to_dict,
+)
 from .blueprint import (
     AnalogFourTrackBlueprint,
     ReferenceStyleBlueprint,
@@ -92,6 +103,8 @@ from .reference_audio_atlas import (
 
 __all__ = [
     "AUDIO_PATCH_DNA_CANDIDATE_COUNT",
+    "AUDIO_REFERENCE_SUITABILITY_POLICY_VERSION",
+    "AUDIO_REFERENCE_SUITABILITY_SCHEMA_VERSION",
     "AudioDnaEvidence",
     "AudioFeatureAnalysis",
     "AudioPatchDnaCandidate",
@@ -104,6 +117,8 @@ __all__ = [
     "FeatureReport",
     "FeatureReportPayload",
     "ReferenceStyleBlueprint",
+    "ReferenceAudioSuitability",
+    "ReferenceWorkflow",
     "ReferenceTrait",
     "RytmPadBlueprint",
     "REFERENCE_AUDIO_ATLAS_MAX_MOMENTS",
@@ -118,7 +133,11 @@ __all__ = [
     "ReferenceAudioWindow",
     "SourceType",
     "StyleAnalysisDependencyError",
+    "SuitabilityRecommendation",
+    "SuitabilityStatus",
+    "WorkflowSuitability",
     "analyze_audio",
+    "assess_reference_audio",
     "audio_dna_evidence_to_dict",
     "audio_patch_dna_workspace_to_dict",
     "audio_patch_dna_lineage_audit_to_dict",
@@ -138,6 +157,7 @@ __all__ = [
     "get_audio_duration",
     "reference_audio_atlas_to_dict",
     "reference_style_blueprint_to_dict",
+    "reference_audio_suitability_to_dict",
     "render_audio_patch_dna_markdown",
     "render_audio_patch_dna_lineage_markdown",
     "select_audio_patch_dna_candidate",

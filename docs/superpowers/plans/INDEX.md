@@ -204,7 +204,8 @@ Requirements gates for all plans: [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUI
 | 2026-07-03 | [synplant-inspired-cockpit-ui](2026-07-03-synplant-inspired-cockpit-ui.md) | in-flight |  |
 | 2026-07-08 | [local-model-copilot](2026-07-08-local-model-copilot.md) | in-flight |  |
 | 2026-08-09 | [audio-patch-dna-workspace](2026-08-09-audio-patch-dna-workspace.md) | complete (merged in PR #228) | #228 |
-| 2026-08-24 | [audio-patch-dna-lineage](2026-08-24-audio-patch-dna-lineage.md) | in-flight (implementation complete; review pending) | #232 |
+| 2026-08-24 | [audio-patch-dna-lineage](2026-08-24-audio-patch-dna-lineage.md) | complete (merged in PR #232) | #232 |
+| 2026-08-24 | [audio-reference-suitability](2026-08-24-audio-reference-suitability.md) | in-flight (PR #234) | #234 |
 | 2026-08-24 | [audio-rytm-recipe-inference](2026-08-24-audio-rytm-recipe-inference.md) | complete (merged in PR #233) | #233 |
 | 2026-07-18 | [rival-program](2026-07-18-rival-program.md) | in-flight — bundle executed on the `rival-program` integration branch (18 commits over ... |  |
 | 2026-07-20 | [live-gui-retirement-evidence](2026-07-20-live-gui-retirement-evidence.md) | in-flight (retirement executed on `rival-program` 2026-07-28 — see |  |
