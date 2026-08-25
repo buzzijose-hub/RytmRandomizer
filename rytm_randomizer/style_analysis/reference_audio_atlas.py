@@ -26,6 +26,7 @@ from .blueprint import (
 )
 from .extractor import extract_audio_window, get_audio_duration
 from .feature_report import FeatureReport
+from .runtime_types import require_runtime_type
 
 REFERENCE_AUDIO_ATLAS_VERSION: Final[int] = 1
 REFERENCE_AUDIO_ATLAS_WINDOW_MIN_SECONDS: Final[float] = 5.0
@@ -157,15 +158,15 @@ class ReferenceAudioAtlas:
 
 
 def _require_atlas_path(value: object) -> Path:
-    if not isinstance(value, Path):
-        raise TypeError("path must be a pathlib.Path")
-    return value
+    return require_runtime_type(value, Path, "path must be a pathlib.Path")
 
 
 def _require_atlas_config(value: object) -> ReferenceAudioAtlasConfig:
-    if not isinstance(value, ReferenceAudioAtlasConfig):
-        raise TypeError("config must be a ReferenceAudioAtlasConfig")
-    return value
+    return require_runtime_type(
+        value,
+        ReferenceAudioAtlasConfig,
+        "config must be a ReferenceAudioAtlasConfig",
+    )
 
 
 def _require_atlas_feature_report(
@@ -174,18 +175,20 @@ def _require_atlas_feature_report(
     index: int,
     start_seconds: float,
 ) -> FeatureReport:
-    if not isinstance(value, FeatureReport):
-        raise TypeError(
-            "window extractor must return a FeatureReport "
-            f"for window {index} at {start_seconds:g} seconds"
-        )
-    return value
+    return require_runtime_type(
+        value,
+        FeatureReport,
+        "window extractor must return a FeatureReport "
+        f"for window {index} at {start_seconds:g} seconds",
+    )
 
 
 def _require_reference_audio_atlas(value: object) -> ReferenceAudioAtlas:
-    if not isinstance(value, ReferenceAudioAtlas):
-        raise TypeError("atlas must be a ReferenceAudioAtlas")
-    return value
+    return require_runtime_type(
+        value,
+        ReferenceAudioAtlas,
+        "atlas must be a ReferenceAudioAtlas",
+    )
 
 
 def build_reference_audio_atlas(

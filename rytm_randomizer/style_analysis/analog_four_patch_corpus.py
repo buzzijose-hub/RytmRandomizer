@@ -25,6 +25,7 @@ from .analog_four_patch_genome import (
     build_analog_four_patch_genome,
 )
 from .feature_report import FeatureReport, compute_feature_report_hash
+from .runtime_types import require_runtime_type
 
 ANALOG_FOUR_PATCH_CORPUS_VERSION: Final[str] = "analog-four-patch-corpus-v1"
 ANALOG_FOUR_PATCH_CORPUS_MODE: Final[str] = "single-sound-capture-corpus"
@@ -122,9 +123,7 @@ class AnalogFourPatchCorpusMatchPacket:
 
 
 def _require_corpus_feature_report(value: object, *, name: str) -> FeatureReport:
-    if not isinstance(value, FeatureReport):
-        raise TypeError(f"{name} must be a FeatureReport")
-    return value
+    return require_runtime_type(value, FeatureReport, f"{name} must be a FeatureReport")
 
 
 def _require_corpus_capture_notes(value: object) -> tuple[str, ...]:
@@ -140,9 +139,11 @@ def _require_corpus_entries(value: object) -> tuple[AnalogFourPatchCorpusEntry, 
 
 
 def _require_corpus_match_packet(value: object) -> AnalogFourPatchCorpusMatchPacket:
-    if not isinstance(value, AnalogFourPatchCorpusMatchPacket):
-        raise TypeError("packet must be an AnalogFourPatchCorpusMatchPacket")
-    return value
+    return require_runtime_type(
+        value,
+        AnalogFourPatchCorpusMatchPacket,
+        "packet must be an AnalogFourPatchCorpusMatchPacket",
+    )
 
 
 def build_starter_analog_four_patch_corpus_entries(

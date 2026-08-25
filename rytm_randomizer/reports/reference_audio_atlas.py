@@ -19,6 +19,7 @@ from ..style_analysis.reference_audio_atlas import (
     build_reference_audio_atlas,
     reference_audio_atlas_to_dict,
 )
+from ..style_analysis.runtime_types import require_runtime_type
 from .formatter import SAFETY_SECTION_HEADER, PassiveReportHeader, passive_report_lines
 
 REPORT_TITLE: Final[str] = "RytmRandomizer passive reference-audio atlas"
@@ -37,9 +38,11 @@ _HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
 
 
 def _require_report_reference_audio_atlas(value: object) -> ReferenceAudioAtlas:
-    if not isinstance(value, ReferenceAudioAtlas):
-        raise TypeError("atlas must be a ReferenceAudioAtlas")
-    return value
+    return require_runtime_type(
+        value,
+        ReferenceAudioAtlas,
+        "atlas must be a ReferenceAudioAtlas",
+    )
 
 
 def format_reference_audio_atlas_report(atlas: ReferenceAudioAtlas) -> list[str]:
@@ -48,7 +51,7 @@ def format_reference_audio_atlas_report(atlas: ReferenceAudioAtlas) -> list[str]
     atlas = _require_report_reference_audio_atlas(atlas)
     lines: list[str] = [
         "Summary:",
-        f"- Source: {atlas.source_path}",
+        f"- Source: {Path(atlas.source_path).name}",
         f"- Duration: {_timestamp(atlas.duration_seconds)}",
         f"- Window / hop: {atlas.window_seconds:g}s / {atlas.hop_seconds:g}s",
         f"- Windows analyzed: {atlas.analyzed_windows}",

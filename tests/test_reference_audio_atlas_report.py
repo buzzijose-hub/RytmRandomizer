@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -94,6 +95,18 @@ def test_text_report_is_chronological_and_states_scope() -> None:
     assert "A4 candidate DNA:" in text
     assert "Rytm/A4 blueprint traits:" in text
     assert "not stem separation" in text
+
+
+def test_text_report_uses_only_the_source_basename() -> None:
+    atlas = replace(
+        _atlas(),
+        source_path=r"C:\Users\Jose Buzzi\private\two-hour-reference.wav",
+    )
+
+    text = "\n".join(report_module.format_reference_audio_atlas_report(atlas))
+
+    assert "- Source: two-hour-reference.wav" in text
+    assert "Jose Buzzi" not in text
 
 
 def test_json_handler_emits_atlas_payload_without_hardware(
