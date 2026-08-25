@@ -360,8 +360,8 @@ Counts as of the rival-program bundle (derived from the tree, not aspirational):
 
 | Suite | Count |
 |---|---|
-| Full Python suite (`pytest`) | 6,643 tests, green |
-| Architecture invariants (`tests/architecture/`) | 687 tests |
+| Full Python suite (`pytest`) | 8,049 tests, green |
+| Architecture invariants (`tests/architecture/`) | 764 tests |
 | V1.34 parity | 505 golden JSON files → 685 byte-identical test items |
 | Frontend (`desktop/web`, vitest) | 582 tests + 44 a11y tests |
 | Accessibility gate | axe WCAG 2.2 AA, 0 violations |

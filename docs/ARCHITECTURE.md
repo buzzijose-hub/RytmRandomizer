@@ -144,12 +144,19 @@ on one line for an existing module, you probably need a new module instead.
 | `engines/analog_rytm_12_pad_shell.py` | All-12-pad style/mutation shell. Consumes rendered style events; sends only through injected sender. |
 | `engines/analog_rytm_snapshot_shell.py` | All-12-pad current-kit snapshot shell. Extracts live-safe CC events from a decoded Rytm kit snapshot; sends only through injected sender. |
 | `snapshot/envelope.py` | Shared Elektron manufacturer envelope plus inverse 7-bit pack/unpack helpers. Pure bytes in/out. |
+| `snapshot/elektron_native_object.py` | Pure target-return-validated Elektron native-object codec using an explicit 7-bit mask order and shared packed-payload integrity rules. |
 | `snapshot/elektron_packed_payload.py` | Shared pure packed-payload/trailer splitter and integrity contract used by A4 and Analog Rytm saved-kit codecs. |
 | `snapshot/elektron_u14.py` | Shared pure Elektron 14-bit integer validation and packing helpers used across saved-kit families. |
+| `snapshot/sysex_file.py` | Passive local SysEx frame extraction and trusted-file reading helpers; no MIDI enumeration, port access, or transmission. |
 | `devices/strategies/analog_four_saved_kit_codec.py` | Shared A4 saved-kit payload validator/encoder used by decoder and writer; owns checksum/trailer handling. |
 | `devices/strategies/analog_four_saved_kit_writer.py` | Pure A4 saved-kit mutator/renderer consuming the shared codec, calibration, and canonical data-layer layout facts; no filesystem or MIDI I/O. |
+| `devices/strategies/analog_four_kit_fields.py` | Typed copy-on-edit A4 saved-KIT and sound-field views over canonical layout facts; preserves unknown bytes and performs no framing or hardware I/O. |
+| `devices/strategies/analog_four_kit_recipe.py` | Conservative passive A4 semantic recipe compiler that edits only mapped fields in a valid native object and preserves unknown and device-wide data. |
 | `devices/strategies/analog_rytm_saved_kit_codec.py` | Pure initialized Rytm saved-kit frame codec; validates envelope, length, and checksum while providing byte-identical decode/encode. |
+| `devices/strategies/analog_rytm_kit_fields.py` | Typed copy-on-edit Rytm saved-KIT and sound-field views over canonical layout facts; preserves unknown bytes and performs no framing or hardware I/O. |
+| `devices/strategies/analog_rytm_kit_recipe.py` | Conservative passive Rytm semantic recipe compiler with machine-aware validation; edits only mapped fields and preserves unknown and device-wide data. |
 | `devices/strategies/elektron_kit_common.py` | Shared pure recipe validation, fixed-width ASCII field handling, and deterministic build-result contract used by both saved-KIT families. |
+| `devices/rio145_recipes.py` | Public passive facade for the shared RIO145 A4/Rytm semantic recipe compilers and deterministic build-result contract. |
 
 ### Mid-upper (orchestration)
 

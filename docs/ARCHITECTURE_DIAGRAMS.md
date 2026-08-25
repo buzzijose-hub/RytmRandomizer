@@ -54,7 +54,7 @@ flowchart TB
     User["Operator / developer"]
     V134["V1.34 reference behavior<br/>tests/fixtures/v134_parity/<br/>(505 JSON goldens; 685 parity test items)"]
     Package["Modular package<br/>rytm_randomizer/<br/>(14 subpackages, 377 modules)"]
-    Tests["Tests<br/>6800+ pytest tests<br/>tests/, tests/architecture/"]
+    Tests["Tests<br/>8,049 pytest tests<br/>tests/, tests/architecture/"]
     CI[".github/workflows/test.yml<br/>3 OS × py3.11 matrix<br/>+ codeql, release, installers"]
     Docs["Project docs<br/>CONTRIBUTING.md, docs/*.md<br/>.claude/{rules,skills}/"]
 
@@ -735,11 +735,17 @@ The shared Elektron SysEx envelope helpers + the three Protocols every per-devic
 flowchart TB
     subgraph Envelope["snapshot/envelope.py (shared)"]
         MFR_ID["ELEKTRON_MFR_ID: Final[bytes]<br/>= 0x00 0x20 0x3C"]
+        MaskOrder["Elektron7BitMaskOrder<br/>LSB_FIRST / MSB_FIRST"]
         Pack["pack_elektron_7bit(unpacked)<br/>emits MIDI-safe header/data groups"]
         Unpack["unpack_elektron_7bit(packed)<br/>rejects lone trailing header<br/>(codex P2)"]
         FindKit["find_kit_record(raw, slot, type_byte)<br/>scans for kit-type byte"]
         ReadName["read_ascii_name(record, offset, length)<br/>NUL-stripped ASCII"]
         FormatID["format_manufacturer_id(raw)"]
+    end
+
+    subgraph NativeObject["snapshot native-object + local-file helpers"]
+        NativeCodec["elektron_native_object.py<br/>target-return-validated object codec"]
+        SysexFile["sysex_file.py<br/>passive local frame extraction/read"]
     end
 
     subgraph Protocols["snapshot/{decoder,planner,mock_runtime}.py"]
@@ -753,6 +759,15 @@ flowchart TB
         RytmDecoder["AnalogRytmSnapshotDecoder<br/>uses envelope helpers"]
         RytmRouter["analog_rytm_snapshot_routing.py<br/>routes pad/machine values to profile keys"]
         RytmPlanner["AnalogRytmMutationPlanner<br/>(no shared planner state needed)"]
+    end
+
+    subgraph KitRecipes["RIO145 passive saved-KIT recipe chain"]
+        RecipeFacade["devices/rio145_recipes.py<br/>public dual-device facade"]
+        KitCommon["elektron_kit_common.py<br/>validation + deterministic result"]
+        A4Recipe["analog_four_kit_recipe.py<br/>semantic recipe compiler"]
+        A4Fields["analog_four_kit_fields.py<br/>typed copy-on-edit views"]
+        RytmRecipe["analog_rytm_kit_recipe.py<br/>machine-aware recipe compiler"]
+        RytmFields["analog_rytm_kit_fields.py<br/>typed copy-on-edit views"]
     end
 
     subgraph A4Impls["Analog Four impls (devices/strategies/)"]
@@ -780,6 +795,21 @@ flowchart TB
     RytmDecoder -.satisfies.-> SD
     RytmRouter --> RytmPlanner
     RytmPlanner -.satisfies.-> MP_proto
+
+    MaskOrder --> Pack
+    MaskOrder --> Unpack
+    NativeCodec --> Envelope
+    NativeCodec --> MaskOrder
+
+    RecipeFacade --> A4Recipe
+    RecipeFacade --> RytmRecipe
+    A4Recipe --> A4Fields
+    A4Recipe --> KitCommon
+    A4Recipe --> NativeCodec
+    RytmRecipe --> RytmFields
+    RytmRecipe --> KitCommon
+    RytmRecipe --> NativeCodec
+    SysexFile -.supplies framed bytes.-> NativeCodec
 
     A4Codec --> Envelope
     A4Codec --> A4Layout
@@ -813,7 +843,7 @@ flowchart TB
 
 ## 10. Architecture Test Enforcement Graph
 
-The 61 architecture-test files (739 individual test items) under `tests/architecture/` mechanically enforce the rules in `docs/PLAN_REQUIREMENTS.md` + `CONTRIBUTING.md`. Each one uses the **drained-allowlist** pattern: violations today are explicit `frozenset` entries that PR-review must approve; the long-term state is empty allowlists.
+The 61 architecture-test files (764 individual test items) under `tests/architecture/` mechanically enforce the rules in `docs/PLAN_REQUIREMENTS.md` + `CONTRIBUTING.md`. Each one uses the **drained-allowlist** pattern: violations today are explicit `frozenset` entries that PR-review must approve; the long-term state is empty allowlists.
 
 ```mermaid
 flowchart TB
@@ -898,8 +928,8 @@ flowchart TB
     subgraph Jobs["Parallel CI jobs (test.yml)"]
         Lint["lint<br/>ruff + black + isort<br/>~14s"]
         Security["security<br/>pip-audit<br/>(skipped if no deps/ci changes)"]
-        Architecture["architecture<br/>tests/architecture/<br/>~10-30s · 739 tests"]
-        TestMatrix["test (matrix)<br/>windows + ubuntu<br/>(+ macos on push only)<br/>~60-90s · 6800+ tests"]
+        Architecture["architecture<br/>tests/architecture/<br/>~10-30s · 764 tests"]
+        TestMatrix["test (matrix)<br/>windows + ubuntu<br/>(+ macos on push only)<br/>~60-90s · 8,049 tests"]
         E2EMatrix["e2e (matrix)<br/>windows + ubuntu<br/>(+ macos on push only)<br/>~20-40s · 43 tests"]
         DocsGate["docs-gate<br/>~7s"]
         CodeQL["codeql.yml<br/>~60-75s"]
@@ -1000,7 +1030,7 @@ flowchart LR
 
 ---
 
-## 13. Test Suite Layers (6800+ tests)
+## 13. Test Suite Layers (8,049 tests)
 
 ```mermaid
 flowchart TB
@@ -1023,7 +1053,7 @@ flowchart TB
         MidiTests["test_midi_io.py<br/>test_mock_*.py<br/>test_real_midi_*.py"]
     end
 
-    subgraph Layer3["Layer 3 — Architecture (739 tests, 61 files)"]
+    subgraph Layer3["Layer 3 — Architecture (764 tests, 61 files)"]
         ArchTests["tests/architecture/<br/>(Gates 6, 9, 10, 11, etc.)<br/>+ NEW test_device_protocol_enforcement<br/>(7 sub-tests)"]
     end
 
@@ -1821,14 +1851,14 @@ flowchart TB
     end
 
     subgraph GateSteps["Closeout gate steps (closeout_check.py)"]
-        Step1["1. pytest (full suite)<br/>with -n auto<br/>(6800+ tests)"]
+        Step1["1. pytest (full suite)<br/>with -n auto<br/>(8,049 tests)"]
         Step2["2. import smoke<br/>(import rytm_randomizer)"]
     end
 
     subgraph PytestLayers["What pytest runs"]
         PassiveTests["Layer 2 unit / behavior tests<br/>(~1500 tests)"]
         ParityTests["Layer 1 V1.34 parity tests<br/>(685 items from 505 goldens)"]
-        ArchTests["Layer 3 architecture tests<br/>(739 tests across 61 files)"]
+        ArchTests["Layer 3 architecture tests<br/>(764 tests across 61 files)"]
         E2ETests["Layer 4 e2e tests<br/>(43 tests)"]
         CovStep["Layer 5 coverage ratchet<br/>(scripts/coverage_ratchet.py)<br/>floor: ≥95% pure-branch"]
     end
@@ -1860,7 +1890,7 @@ flowchart TB
 
 - `Scripts/closeout_check.ps1` is the original Windows-only PowerShell entry. `scripts/closeout_check.py` is the cross-platform Python equivalent added in WS-M4 (preferred for new tooling).
 - Both run pytest and an import smoke. The Python script also tests cross-platform (works on Windows / macOS / Linux without modification).
-- CI splits the 5 layers across separate jobs (test / architecture / e2e / coverage-ratchet) so a failure in one layer is visible without scrolling through 6800+ test results — see §11 (CI Pipeline) for the full job map.
+- CI splits the 5 layers across separate jobs (test / architecture / e2e / coverage-ratchet) so a failure in one layer is visible without scrolling through 8,049 test results — see §11 (CI Pipeline) for the full job map.
 
 ---
 
