@@ -24,7 +24,7 @@ from .analog_four_patch_genome import (
     ANALOG_FOUR_TRACK_MIN,
     build_analog_four_patch_genome,
 )
-from .feature_report import FeatureReport, compute_feature_report_hash
+from .feature_report import FeatureReport, compute_feature_report_hash, feature_distance
 from .runtime_types import require_runtime_type
 
 ANALOG_FOUR_PATCH_CORPUS_VERSION: Final[str] = "analog-four-patch-corpus-v1"
@@ -43,17 +43,6 @@ ANALOG_FOUR_PATCH_CORPUS_SAFETY: Final[tuple[str, ...]] = (
     "captured entries are ranked as evidence only until operator validation",
 )
 _STARTER_DERIVED_AT: Final[str] = "2026-07-03T00:00:00Z"
-_FEATURE_WEIGHTS: Final[tuple[tuple[str, float], ...]] = (
-    ("tempo_stability", 0.10),
-    ("kick_density", 0.10),
-    ("percussion_density", 0.13),
-    ("low_end_weight", 0.15),
-    ("spectral_brightness", 0.18),
-    ("texture_noise", 0.16),
-)
-_BPM_WEIGHT: Final[float] = 0.10
-_ENERGY_WEIGHT: Final[float] = 0.08
-_BPM_NORMALIZATION: Final[float] = 60.0
 _MIN_CAPTURED_READY_COUNT: Final[int] = 4
 
 
@@ -370,29 +359,6 @@ def _is_empty_feature_report(report: FeatureReport) -> bool:
         and report.texture_noise == 0.0
         and all(value == 0.0 for value in report.energy_arc)
     )
-
-
-def feature_distance(reference: FeatureReport, candidate: FeatureReport) -> float:
-    """Return the established weighted distance between two feature reports."""
-
-    distance = _BPM_WEIGHT * _normalized_bpm_delta(reference.bpm, candidate.bpm)
-    for field_name, weight in _FEATURE_WEIGHTS:
-        distance += weight * abs(
-            float(getattr(reference, field_name)) - float(getattr(candidate, field_name))
-        )
-    distance += _ENERGY_WEIGHT * _energy_arc_distance(reference.energy_arc, candidate.energy_arc)
-    return min(1.0, max(0.0, distance))
-
-
-def _normalized_bpm_delta(left: float, right: float) -> float:
-    return min(1.0, abs(left - right) / _BPM_NORMALIZATION)
-
-
-def _energy_arc_distance(left: tuple[float, ...], right: tuple[float, ...]) -> float:
-    if not left or not right:
-        return 1.0
-    count = min(len(left), len(right))
-    return sum(abs(left[index] - right[index]) for index in range(count)) / float(count)
 
 
 def _similarity_from_distance(distance: float) -> int:

@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Protocol
 
-from .analog_four_patch_corpus import feature_distance
 from .analog_four_patch_genome import (
     ANALOG_FOUR_PATCH_CANDIDATE_MAX,
     ANALOG_FOUR_PATCH_CANDIDATE_MIN,
@@ -25,7 +24,7 @@ from .blueprint import (
     reference_style_blueprint_to_dict,
 )
 from .extractor import extract_audio_window, get_audio_duration
-from .feature_report import FeatureReport
+from .feature_report import FeatureReport, feature_distance, feature_report_to_dict
 from .runtime_types import require_runtime_type
 
 REFERENCE_AUDIO_ATLAS_VERSION: Final[int] = 1
@@ -413,18 +412,10 @@ def _moment_payload(moment: ReferenceAudioMoment) -> dict[str, object]:
 
 
 def _stable_feature_payload(report: FeatureReport) -> dict[str, object]:
-    return {
-        "source_type": report.source_type.value,
-        "confidence": report.confidence.value,
-        "bpm": report.bpm,
-        "tempo_stability": report.tempo_stability,
-        "kick_density": report.kick_density,
-        "percussion_density": report.percussion_density,
-        "low_end_weight": report.low_end_weight,
-        "spectral_brightness": report.spectral_brightness,
-        "texture_noise": report.texture_noise,
-        "energy_arc": list(report.energy_arc),
-    }
+    payload: dict[str, object] = dict(feature_report_to_dict(report))
+    payload.pop("content_hash")
+    payload.pop("derived_at")
+    return payload
 
 
 def _require_finite_range(

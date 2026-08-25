@@ -51,6 +51,9 @@ from rytm_randomizer.style_analysis import (
     extract_from_partial,
 )
 from rytm_randomizer.style_analysis import extractor as extractor_module
+from rytm_randomizer.style_analysis import (
+    feature_distance,
+)
 from rytm_randomizer.style_analysis import feature_report as feature_report_module
 from rytm_randomizer.style_analysis import (
     feature_report_to_dict,
@@ -149,6 +152,21 @@ def test_feature_report_serializer_exposes_generic_payload() -> None:
     assert feature_report_to_dict(report)["content_hash"] == "a" * 64
     with pytest.raises(TypeError, match="FeatureReport"):
         feature_report_to_dict(object())  # type: ignore[arg-type]
+
+
+def test_feature_distance_is_device_neutral_and_bounded() -> None:
+    report = _build_report()
+    changed = dataclasses.replace(
+        report,
+        bpm=188.0,
+        spectral_brightness=1.0,
+        energy_arc=(),
+    )
+
+    assert feature_distance(report, report) == 0.0
+    assert 0.0 < feature_distance(report, changed) <= 1.0
+    with pytest.raises(TypeError, match="FeatureReport"):
+        feature_distance(object(), report)  # type: ignore[arg-type]
 
 
 # ---------------------------------------------------------------------------
@@ -765,6 +783,7 @@ def test_package_reexports_public_surface():
         "extract_audio_window",
         "extract_from_description",
         "extract_from_partial",
+        "feature_distance",
         "feature_report_to_dict",
         "get_audio_duration",
         "reference_audio_atlas_to_dict",

@@ -64,6 +64,7 @@ from .feature_report import (
     FeatureReport,
     FeatureReportPayload,
     compute_feature_report_hash,
+    feature_distance,
     feature_report_to_dict,
 )
 from .library import analyze_library
@@ -114,6 +115,7 @@ __all__ = [
     "audio_synthesis_features_to_dict",
     "analyze_library",
     "compute_feature_report_hash",
+    "feature_distance",
     "feature_report_to_dict",
     "build_reference_style_blueprint",
     "build_reference_audio_atlas",
