@@ -1,0 +1,336 @@
+{
+  "schema": "buzzi.oxi.elektron-program.v1",
+  "title": "Come To Rio \u2014 RIO145 OXI program",
+  "tempo_bpm": 145.0,
+  "meter": "4/4",
+  "tonal_center": "A minor with F breakdown color",
+  "ownership": {
+    "oxi_one": [
+      "notes",
+      "drum triggers",
+      "velocity",
+      "gate length",
+      "microtiming",
+      "probability",
+      "ratchets",
+      "pattern variation",
+      "arrangement"
+    ],
+    "analog_rytm_mk2": [
+      "12 drum/percussion Sounds",
+      "track filters/amps/LFOs",
+      "send FX",
+      "distortion",
+      "compressor"
+    ],
+    "analog_four_mk2": [
+      "4 synth Sounds",
+      "oscillators",
+      "filters",
+      "amp/envelopes/LFOs",
+      "track effect sends"
+    ]
+  },
+  "routing": {
+    "seq_1": {
+      "mode": "MULTITRACK",
+      "lanes": "Rytm Pads 1\u20138"
+    },
+    "seq_2": {
+      "mode": "MULTITRACK",
+      "lanes_1_4": "Rytm Pads 9\u201312",
+      "lanes_5_8": "free"
+    },
+    "seq_3": {
+      "mode": "MULTITRACK",
+      "lanes_1_4": "A4 Tracks 1\u20134",
+      "lanes_5_8": "free"
+    },
+    "seq_4": {
+      "mode": "free / chord / auxiliary",
+      "used_in_this_program": false
+    },
+    "recommended_ports": {
+      "OXI OUT 1": "Analog Rytm MKII",
+      "OXI OUT 2": "Analog Four MKII"
+    }
+  },
+  "midi_sync": {
+    "master": "OXI One",
+    "analog_rytm_mk2": {
+      "clock_receive": true,
+      "clock_send": false,
+      "transport_receive": true,
+      "transport_send": false,
+      "receive_notes": true,
+      "receive_cc_nrpn": true,
+      "program_change_receive": "OFF for one carrier Kit; optional later",
+      "input_from": "MIDI or MIDI+USB only when USB MIDI is intentionally used"
+    },
+    "analog_four_mk2": {
+      "clock_receive": true,
+      "clock_send": false,
+      "transport_receive": true,
+      "transport_send": false,
+      "receive_notes": true,
+      "receive_cc_nrpn": true,
+      "program_change_receive": "OFF for one carrier Kit; optional later",
+      "input_from": "MIDI or MIDI+USB only when USB MIDI is intentionally used"
+    }
+  },
+  "channel_strategy": {
+    "two_port_recommended": {
+      "OXI OUT 1": "Rytm using established pad-trigger channel mapping",
+      "OXI OUT 2": "A4 T1\u2013T4 on channels 1\u20134"
+    },
+    "single_port_alternative": "Use non-overlapping channels; e.g. move A4 T1\u2013T4 to 13\u201316."
+  },
+  "rytm_note_map": [
+    {
+      "pad": 1,
+      "midi_note": 0,
+      "elektron_label": "C0",
+      "alternate_octave_label": "C-2"
+    },
+    {
+      "pad": 2,
+      "midi_note": 1,
+      "elektron_label": "C#0",
+      "alternate_octave_label": "C#-2"
+    },
+    {
+      "pad": 3,
+      "midi_note": 2,
+      "elektron_label": "D0",
+      "alternate_octave_label": "D-2"
+    },
+    {
+      "pad": 4,
+      "midi_note": 3,
+      "elektron_label": "D#0",
+      "alternate_octave_label": "D#-2"
+    },
+    {
+      "pad": 5,
+      "midi_note": 4,
+      "elektron_label": "E0",
+      "alternate_octave_label": "E-2"
+    },
+    {
+      "pad": 6,
+      "midi_note": 5,
+      "elektron_label": "F0",
+      "alternate_octave_label": "F-2"
+    },
+    {
+      "pad": 7,
+      "midi_note": 6,
+      "elektron_label": "F#0",
+      "alternate_octave_label": "F#-2"
+    },
+    {
+      "pad": 8,
+      "midi_note": 7,
+      "elektron_label": "G0",
+      "alternate_octave_label": "G-2"
+    },
+    {
+      "pad": 9,
+      "midi_note": 8,
+      "elektron_label": "G#0",
+      "alternate_octave_label": "G#-2"
+    },
+    {
+      "pad": 10,
+      "midi_note": 9,
+      "elektron_label": "A0",
+      "alternate_octave_label": "A-2"
+    },
+    {
+      "pad": 11,
+      "midi_note": 10,
+      "elektron_label": "A#0",
+      "alternate_octave_label": "A#-2"
+    },
+    {
+      "pad": 12,
+      "midi_note": 11,
+      "elektron_label": "B0",
+      "alternate_octave_label": "B-2"
+    }
+  ],
+  "a4_track_channels": {
+    "T1": 1,
+    "T2": 2,
+    "T3": 3,
+    "T4": 4
+  },
+  "programs": {
+    "RIO-A CORE": {
+      "bars": 4,
+      "purpose": "primary groove"
+    },
+    "RIO-B PEAK": {
+      "bars": 4,
+      "purpose": "ride and full-density peak"
+    },
+    "RIO-C BREAK": {
+      "bars": 4,
+      "purpose": "F-centered breakdown"
+    },
+    "RIO-D RISE": {
+      "bars": 8,
+      "purpose": "main synchronized rise"
+    }
+  },
+  "optional_modulation_lanes": {
+    "analog_rytm_mk2": [
+      {
+        "destination": "Filter frequency",
+        "cc_msb": 74,
+        "scope": "track channel",
+        "suggested": "Pad 5 36\u201348 over 8\u201316 bars; Pad 12 60\u201372 in breaks"
+      },
+      {
+        "destination": "Filter resonance",
+        "cc_msb": 75,
+        "scope": "track channel",
+        "suggested": "small accents only"
+      },
+      {
+        "destination": "Amp overdrive",
+        "cc_msb": 81,
+        "scope": "track channel",
+        "suggested": "Pads 6\u20138 +6 to +10 in Peak"
+      },
+      {
+        "destination": "Delay send",
+        "cc_msb": 82,
+        "scope": "track channel",
+        "suggested": "Pad 12 12\u201326 in transitions"
+      },
+      {
+        "destination": "Reverb send",
+        "cc_msb": 83,
+        "scope": "track channel",
+        "suggested": "Pads 2/12 build tails; reset before drop"
+      },
+      {
+        "destination": "Pan",
+        "cc_msb": 10,
+        "scope": "track channel",
+        "suggested": "subtle tom/metal motion; never kick"
+      }
+    ],
+    "analog_four_mk2": [
+      {
+        "track": "T1 A-RUMBLE",
+        "destination": "Filter 1 frequency",
+        "cc_msb": 18,
+        "cc_lsb": 50,
+        "suggested": "small 8-bar breathing"
+      },
+      {
+        "track": "T2 F-RIO",
+        "destination": "Reverb send",
+        "cc_msb": 93,
+        "suggested": "34 toward 48\u201354 in BREAK; reset before drop"
+      },
+      {
+        "track": "T3 METAL MOTIF",
+        "destination": "Delay send",
+        "cc_msb": 92,
+        "suggested": "20 toward 30 in PEAK"
+      },
+      {
+        "track": "T4 SYNC RISE",
+        "destination": "Filter 1 frequency",
+        "cc_msb": 18,
+        "cc_lsb": 50,
+        "suggested": "long upward 8-bar ramp"
+      },
+      {
+        "track": "T4 SYNC RISE",
+        "destination": "Reverb send",
+        "cc_msb": 93,
+        "suggested": "50 toward 70\u201378; reset before next use"
+      }
+    ],
+    "safety": "Do not automate Rytm compressor, master distortion, or FX LFO until the static Kit passes its target-unit return test."
+  },
+  "arrangement": [
+    {
+      "bars": "1\u201316",
+      "program": "RIO-A CORE",
+      "operation": "Start kick/hat only; reveal rim, rumble and toms progressively."
+    },
+    {
+      "bars": "17\u201352",
+      "program": "RIO-A CORE",
+      "operation": "Full core groove; use lane mutes for eight-bar breathing."
+    },
+    {
+      "bars": "53\u201356",
+      "program": "RIO-A CORE \u2192 RIO-C BREAK",
+      "operation": "Strip OH, toms and A4 T1."
+    },
+    {
+      "bars": "57\u201360",
+      "program": "RIO-C BREAK",
+      "operation": "No kick/rumble; expose F-RIO stab and sparse metal."
+    },
+    {
+      "bars": "61\u201364",
+      "program": "RIO-A CORE",
+      "operation": "Kick, rumble, hats and toms return in four stages."
+    },
+    {
+      "bars": "65\u201388",
+      "program": "RIO-A CORE \u2192 RIO-B PEAK",
+      "operation": "Second groove; introduce ride after eight bars."
+    },
+    {
+      "bars": "89\u2013108",
+      "program": "RIO-A CORE",
+      "operation": "Progressively mute ride, OH, HT, MT, A4 T3 and A4 T1."
+    },
+    {
+      "bars": "109\u2013136",
+      "program": "RIO-B PEAK",
+      "operation": "Main peak; all core lanes, ride and 100% metallic motif."
+    },
+    {
+      "bars": "137\u2013144",
+      "program": "RIO-D RISE",
+      "operation": "Eight-bar rise; sparse rim/bell only; mute T4 just before drop."
+    },
+    {
+      "bars": "145\u2013164",
+      "program": "RIO-A CORE \u2192 RIO-B PEAK",
+      "operation": "Drop without ride for four bars, then add ride and metal."
+    },
+    {
+      "bars": "165\u2013180",
+      "program": "RIO-B PEAK",
+      "operation": "Final full-density peak, then begin stripping."
+    },
+    {
+      "bars": "181\u2013184",
+      "program": "RIO-C BREAK",
+      "operation": "Deliberate stop with one F stab/metal tail."
+    },
+    {
+      "bars": "185\u2013191",
+      "program": "RIO-A CORE",
+      "operation": "Final kick/rumble/hat/rim/tom re-entry; no ride; hard cut."
+    }
+  ],
+  "event_file": "generated/OXI_RIO145_EVENT_LIST.csv",
+  "event_count": 360,
+  "notes": [
+    "Rytm octave names vary between devices/software; trust MIDI note numbers 0\u201311.",
+    "Retain the user\u2019s already working Rytm receive channel configuration; do not rewire the live rig merely for this program.",
+    "The Rytm shared voice pairs are RS/CP, MT/HT, CH/OH and CY/CB; right-hand tracks have priority.",
+    "A4 note names use standard MIDI convention C4=60; trust the MIDI note number if OXI labels octaves differently."
+  ]
+}

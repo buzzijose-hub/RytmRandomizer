@@ -7,7 +7,7 @@ from typing import ClassVar, Final
 
 from ..observability.errors import BoundaryError
 from .elektron_u14 import ELEKTRON_U14_MAX, decode_elektron_u14, encode_elektron_u14
-from .envelope import pack_elektron_7bit
+from .envelope import Elektron7BitMaskOrder, pack_elektron_7bit
 
 ELEKTRON_CHECKSUM_LENGTH_TRAILER_SIZE: Final[int] = 4
 
@@ -78,13 +78,14 @@ def encode_elektron_packed_payload(
     *,
     checksum_start: int,
     length_adjustment: int,
-    expected_packed_size: int,
+    expected_packed_size: int | None,
     device_label: str,
+    mask_order: Elektron7BitMaskOrder = Elektron7BitMaskOrder.LSB_FIRST,
 ) -> ElektronPackedPayload:
     """Pack one body and append its device-defined checksum/length trailer."""
 
-    packed = pack_elektron_7bit(unpacked)
-    if len(packed) != expected_packed_size:
+    packed = pack_elektron_7bit(unpacked, mask_order=mask_order)
+    if expected_packed_size is not None and len(packed) != expected_packed_size:
         raise ElektronPackedPayloadError(
             f"{device_label} repacking changed the packed payload length"
         )
@@ -109,13 +110,13 @@ def validate_elektron_packed_payload(
     *,
     checksum_start: int,
     length_adjustment: int,
-    expected_packed_size: int,
+    expected_packed_size: int | None,
     expected_trailer_size: int,
     device_label: str,
 ) -> ElektronPackedPayload:
     """Validate one packed body against its device-defined integrity trailer."""
 
-    if len(packed) != expected_packed_size:
+    if expected_packed_size is not None and len(packed) != expected_packed_size:
         raise ElektronPackedPayloadError(f"{device_label} packed payload has an unexpected length")
     if expected_trailer_size != ELEKTRON_CHECKSUM_LENGTH_TRAILER_SIZE:
         raise ElektronPackedPayloadError(

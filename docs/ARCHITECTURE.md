@@ -99,6 +99,7 @@ on one line for an existing module, you probably need a new module instead.
 | `data/midi_event_kinds.py` | Canonical typed CC/NRPN event kinds and manual skip-code vocabulary. Pure data. |
 | `data/analog_four_sysex_calibration.py` | Operator-captured Analog Four SysEx field offsets plus immutable hardware-write validation evidence. Pure data. |
 | `data/analog_four_saved_kit_layout.py` | Observed A4 saved-kit family/object, packing, trailer, size, and name-field constants. Pure data. |
+| `data/analog_four_kit_fields.py` | Immutable Analog Four saved-KIT field addresses, track offsets, value-domain sets, and 16-byte name-storage facts. Pure data. |
 | `data/analog_four_patch_templates.py` | Static Analog Four patch-genome candidate templates and rationale rows. Pure data. |
 | `data/analog_four_patch_corpus.py` | Synthetic Analog Four patch-corpus starter feature vectors. Pure data. |
 | `data/analog_four_render_rank.py` | Stable feature weights for recorded A4 candidate ranking. Pure data. |
@@ -106,6 +107,8 @@ on one line for an existing module, you probably need a new module instead.
 | `data/analog_four_recipes.py` | Manual-backed Analog Four kit recipe definitions. Pure data.       |
 | `data/analog_rytm_midi.py` | Manual-backed Analog Rytm OS 1.72 CC/NRPN catalog and safety status labels. Pure data. |
 | `data/analog_rytm_style_recipes.py` | Curated full-12-pad Analog Rytm style-kit CC MSB recipes. Pure data. |
+| `data/analog_rytm_kit_layout.py` | Canonical Analog Rytm saved-KIT frame, payload, track, integrity, and machine-layout facts. Pure data. |
+| `data/analog_rytm_kit_fields.py` | Immutable Analog Rytm field offsets, machine parameter vocabularies, recipe enums, and distinct 16-byte storage/15-character visible-name facts. Pure data. |
 | `data/al16_rytm.py` | Immutable AL16 bank identity, permanent pad-role, machine/section allowlist, and tuning-table facts. Pure data. |
 | `data/profiles.py`    | The `PROFILES` discovery registry. Composed from `param_maps`.                  |
 | `data/scenes.py`      | The 14 V1.34 `SCENE_PRESETS`. Pure data.                                        |
@@ -141,11 +144,19 @@ on one line for an existing module, you probably need a new module instead.
 | `engines/analog_rytm_12_pad_shell.py` | All-12-pad style/mutation shell. Consumes rendered style events; sends only through injected sender. |
 | `engines/analog_rytm_snapshot_shell.py` | All-12-pad current-kit snapshot shell. Extracts live-safe CC events from a decoded Rytm kit snapshot; sends only through injected sender. |
 | `snapshot/envelope.py` | Shared Elektron manufacturer envelope plus inverse 7-bit pack/unpack helpers. Pure bytes in/out. |
+| `snapshot/elektron_native_object.py` | Pure target-return-validated Elektron native-object codec using an explicit 7-bit mask order and shared packed-payload integrity rules. |
 | `snapshot/elektron_packed_payload.py` | Shared pure packed-payload/trailer splitter and integrity contract used by A4 and Analog Rytm saved-kit codecs. |
 | `snapshot/elektron_u14.py` | Shared pure Elektron 14-bit integer validation and packing helpers used across saved-kit families. |
+| `snapshot/sysex_file.py` | Passive local SysEx frame extraction and trusted-file reading helpers; no MIDI enumeration, port access, or transmission. |
 | `devices/strategies/analog_four_saved_kit_codec.py` | Shared A4 saved-kit payload validator/encoder used by decoder and writer; owns checksum/trailer handling. |
 | `devices/strategies/analog_four_saved_kit_writer.py` | Pure A4 saved-kit mutator/renderer consuming the shared codec, calibration, and canonical data-layer layout facts; no filesystem or MIDI I/O. |
+| `devices/strategies/analog_four_kit_fields.py` | Typed copy-on-edit A4 saved-KIT and sound-field views over canonical layout facts; preserves unknown bytes and performs no framing or hardware I/O. |
+| `devices/strategies/analog_four_kit_recipe.py` | Conservative passive A4 semantic recipe compiler that edits only mapped fields in a valid native object and preserves unknown and device-wide data. |
 | `devices/strategies/analog_rytm_saved_kit_codec.py` | Pure initialized Rytm saved-kit frame codec; validates envelope, length, and checksum while providing byte-identical decode/encode. |
+| `devices/strategies/analog_rytm_kit_fields.py` | Typed copy-on-edit Rytm saved-KIT and sound-field views over canonical layout facts; preserves unknown bytes and performs no framing or hardware I/O. |
+| `devices/strategies/analog_rytm_kit_recipe.py` | Conservative passive Rytm semantic recipe compiler with machine-aware validation; edits only mapped fields and preserves unknown and device-wide data. |
+| `devices/strategies/elektron_kit_common.py` | Shared pure recipe validation, fixed-width ASCII field handling, and deterministic build-result contract used by both saved-KIT families. |
+| `devices/rio145_recipes.py` | Public passive facade for the shared RIO145 A4/Rytm semantic recipe compilers and deterministic build-result contract. |
 
 ### Mid-upper (orchestration)
 
@@ -178,6 +189,8 @@ on one line for an existing module, you probably need a new module instead.
 | `cockpit/export/analog_four_cli.py` | Registered local-file command for one or four validated Filter2 Resonance mutations; no MIDI I/O. |
 | `cockpit/export/al16_rytm_kit.py` | Fail-closed AL16 recipe auditor and local evidence publisher; resolves the pure Rytm codec through the public device capability, consumes data-layer facts, withholds SysEx while critical mappings remain unresolved, and publishes reports through the canonical atomic writer. |
 | `cockpit/export/al16_rytm_cli.py` | Registered passive local-file adapter for Phase R1 AL16 Rytm audit evidence; validates the exact initialized reference, writes mapping-gap artifacts, and emits no `.syx`. |
+| `cockpit/export/rio145_codec.py` | Passive RIO145 dual-device file codec; composes the canonical Elektron envelope and existing A4/Rytm saved-KIT codecs for inspection, diffing, deterministic recipe builds, and binary return validation. |
+| `cockpit/export/rio145_cli.py` | Six registered file-only RIO145 commands for inspect, diff, round-trip validation, device-selected build and return validation, and OXI manifest export; never imports or constructs a MIDI provider. |
 | `cockpit/export/al16_rytm_mapping_closure.py` | Pure Phase R2 saved-KIT comparison service; binds recipe, gap-manifest, recipe-identity, and reference provenance before producing review-required candidate evidence from canonical layout metadata. |
 | `cockpit/export/al16_rytm_mapping_closure_cli.py` | Registered passive Phase R2 adapter; validates path contracts before I/O, records structured operations and metrics, writes one deterministic JSON report, and never reaches MIDI. |
 | `cockpit/data/rytm_parameter_map.py` | Canonical cockpit-facing Analog Rytm machine aliases and parameter bindings; delegates CC/NRPN facts to the shared device data layer instead of duplicating controls or offsets. |
@@ -380,7 +393,12 @@ and audio batch consume that capability instead of importing a concrete writer
 strategy. `analog_four_saved_kit_codec.py` remains the shared decoder/writer
 owner for frame validation, packing, checksum, and trailer reconstruction;
 `analog_four_saved_kit_writer.py` consumes that codec plus promoted calibration
-facts to mutate and rebuild one frame.
+facts to mutate and rebuild one frame. Native Analog Four and Analog Rytm
+saved-KIT frames both use the shared `snapshot.envelope` implementation with
+MSB-first 7-bit mask ordering. The LSB-first option is retained only for the
+explicitly identified legacy synthetic Rytm body format; it is not used by
+either native saved-KIT codec or the full saved-KIT decoder. Cross-codec tests
+lock this distinction to the captured native fixtures.
 The pure renderer may exercise candidate offsets in tests, but the
 operator-facing `cockpit.export.analog_four_kit` adapter accepts only fields
 marked `hardware-write-validated`. It writes a local file through the canonical
@@ -400,7 +418,19 @@ currently enter a positive mutation path or emit `.syx`. Copying, allowlisted
 mutation, repacking, and semantic re-verification remain the future writer path
 after every critical mapping is positively verified. The registered CLI is
 only an argument/process-status adapter. Neither module imports or constructs a
-MIDI provider.
+MIDI provider. Its blocked AL02 manifest is regenerated from the corrected
+native MSB-first decoding path; no prior packed-byte interpretation is treated
+as mapping authority.
+
+The RIO145 integration is another passive local-file workflow under
+`cockpit/export`; it does not widen the `Device` Protocol or the armed hardware
+boundary. `snapshot/elektron_native_object.py` supplies the shared native-object
+adapter, while the A4/Rytm field codecs and recipe compilers remain in the
+existing device-strategy layer. Both build paths reuse the canonical saved-KIT
+codecs and Elektron envelope handling, decode their generated frames again, and
+enforce declared byte-diff regions. The OXI manifest is sequencing metadata
+only: RIO145 emits no native device patterns, opens no MIDI ports, and sends no
+MIDI or SysEx.
 
 Phase R2 stays in the same passive `cockpit/export` boundary. Its mapping
 closure service compares one initialized saved KIT with one manually
