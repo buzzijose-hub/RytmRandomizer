@@ -40,7 +40,7 @@ import shutil
 import stat
 import sys
 import tempfile
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Generator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
@@ -184,7 +184,7 @@ _ATOMIC_WRITE_TREE_GUARD: ContextVar[_AtomicWriteTreeGuard | None] = ContextVar(
 
 
 @contextmanager
-def guard_atomic_write_tree(root: Path, identity: tuple[int, int]) -> Iterator[None]:
+def guard_atomic_write_tree(root: Path, identity: tuple[int, int]) -> Generator[None, None, None]:
     """Reject nested atomic publication if ``root`` is replaced mid-write."""
 
     absolute_root = root.absolute()

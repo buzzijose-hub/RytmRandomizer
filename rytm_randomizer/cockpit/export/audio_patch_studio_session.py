@@ -8,7 +8,7 @@ import math
 import os
 import stat
 import time
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Generator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from io import BufferedReader
@@ -1288,7 +1288,7 @@ def _sha256_file(path: Path) -> str:
 
 
 @contextmanager
-def _open_regular_binary(path: Path) -> Iterator[BufferedReader]:
+def _open_regular_binary(path: Path) -> Generator[BufferedReader, None, None]:
     """Open one unchanged regular file without following a pre-existing link."""
 
     artifact_name = safe_local_file_export_artifact_name(
