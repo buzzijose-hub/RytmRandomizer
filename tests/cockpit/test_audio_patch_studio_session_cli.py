@@ -27,6 +27,33 @@ def test_shared_required_option_can_include_usage_guidance() -> None:
         )
 
 
+def test_shared_bounded_integer_rejects_non_integer_text() -> None:
+    with pytest.raises(
+        ValueError,
+        match="--select must be an integer from 1 to 12",
+    ):
+        cli_options.parse_bounded_integer(
+            "not-an-integer",
+            option="--select",
+            lower=1,
+            upper=12,
+        )
+
+
+def test_shared_exception_notes_rejects_non_list_storage() -> None:
+    error = ValueError("invalid")
+    error.__notes__ = ("not canonical",)  # type: ignore[assignment]
+
+    assert cli_options.exception_notes(error) == []
+
+
+def test_shared_exception_notes_returns_only_strings() -> None:
+    error = ValueError("invalid")
+    error.__notes__ = ["keep", 7]  # type: ignore[list-item]
+
+    assert cli_options.exception_notes(error) == ["keep"]
+
+
 def _result(
     tmp_path: Path, *, status: service.AudioPatchStudioSessionStatus
 ) -> service.AudioPatchStudioSessionResult:
@@ -302,6 +329,7 @@ def test_json_start_handler_forwards_inputs(
     assert payload["status"] == "waiting_for_render"
     assert payload["selection"]["dna_candidate"] == 6
     assert payload["selection"]["manifest_candidate"] == 1
+    assert payload["transition"] == "replayed"
     assert payload["ok"] is True
 
 
@@ -336,6 +364,7 @@ def test_text_resume_handler_forwards_inputs(
     assert "status: refined" in stdout
     assert "dna_candidate: 6" in stdout
     assert "manifest_candidate: 1" in stdout
+    assert "transition: replayed" in stdout
     assert "- no MIDI ports enumerated or opened" in stdout
 
 

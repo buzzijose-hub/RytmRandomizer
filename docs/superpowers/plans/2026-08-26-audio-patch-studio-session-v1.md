@@ -89,14 +89,17 @@ reference audio + source A4 kit + DNA direction
 
 ## Verification
 
-- Focused repaired Studio Session service and CLI: 88 passed, 1 skipped.
-- Touched-module regression and coverage set: 208 passed, 1 skipped; all four
+- Focused repaired Studio Session, CLI, writer, and mode tests: 107 passed, 1
+  skipped.
+- Touched-module regression and coverage set: 685 passed, 1 skipped; all seven
   touched production modules reached 100 percent statement and branch coverage.
 - Architecture gate: 777 passed with one existing warn-only generic-`main`
   finding.
 - Frozen V1.34 parity gate: 685 passed.
-- Full suite with two workers: 8,303 passed, 5 skipped.
-- Ruff, Black, isort, and strict touched-production typecheck passed; 5
+- AL16 deterministic dependency-evidence proof: 98 passed; the proof remains
+  intentionally blocked on 18 critical mapping gaps and emitted no `.syx`.
+- Full suite with two workers: 8,321 passed, 5 skipped.
+- Ruff, Black, isort, and strict touched-production typecheck passed; 7
   production modules reported 0 errors, 0 warnings, and 0 information messages.
 
 ## PR Review Repair
@@ -104,11 +107,16 @@ reference audio + source A4 kit + DNA direction
 PR #236 review found contained contract and durability gaps. The repair makes
 the persisted JSON authoritative for the exact Markdown bytes, validates child
 track and one-candidate export contracts, derives accept/refine decisions from
-the committed threshold, guards child output publication for the duration of
-each export, preserves categorical read errors with the actual failing path,
-and rejects traversal and platform-specific filename hazards. Regression tests
-cover each repaired boundary; final exact-head gate counts are recorded in the
-PR body and `docs/STATUS.md`.
+the committed threshold, and records the terminal `committed` or `replayed`
+transition explicitly. Atomic publication now holds an identity-checked guard
+over the complete output tree, rejects replacement races, uses no-follow reads
+and hashes, classifies access and lock failures consistently, preserves the
+primary exception when cleanup also fails, and rejects traversal, alias, and
+platform-specific filename hazards. Modes and transitions share one canonical
+data-layer vocabulary. Regression tests cover each repaired boundary; AL16
+deterministic evidence was refreshed for the changed writer dependency while
+remaining correctly blocked with no `.syx`; final exact-head gate counts are
+recorded in the PR body and `docs/STATUS.md`.
 
 ## Termination Condition
 

@@ -8,10 +8,12 @@ import math
 import os
 import stat
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import contextmanager
 from dataclasses import dataclass
+from io import BufferedReader
 from pathlib import Path, PurePosixPath
-from typing import Final, Literal, TypedDict, TypeVar, cast
+from typing import ClassVar, Final, Literal, TypedDict, TypeVar, cast
 
 from ...data.analog_four_patch_refinement import (
     ANALOG_FOUR_PATCH_REFINEMENT_ACCEPT_SIMILARITY_DEFAULT,
@@ -23,6 +25,11 @@ from ...data.analog_four_patch_refinement import (
 )
 from ...data.analog_four_sysex_calibration import A4_SYNTH_TRACK_MAX, A4_SYNTH_TRACK_MIN
 from ...data.audio_patch_dna import AUDIO_PATCH_DNA_CANDIDATE_COUNT
+from ...data.modes import (
+    AUDIO_PATCH_STUDIO_SESSION_COMMITTED_TRANSITION,
+    AUDIO_PATCH_STUDIO_SESSION_REPLAYED_TRANSITION,
+    AudioPatchStudioSessionTransition,
+)
 from ...observability.errors import BoundaryError
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
@@ -47,7 +54,13 @@ from .analog_four_patch_batch_contracts import (
 )
 from .analog_four_patch_refinement import export_analog_four_patch_refinement
 from .audio_patch_dna import export_audio_patch_dna_workspace
-from .writer import WriteResult, atomic_write_set
+from .file_export_contracts import (
+    attach_local_file_export_error_context,
+    classify_local_file_export_error,
+    local_file_export_error_context,
+    safe_local_file_export_artifact_name,
+)
+from .writer import WriteResult, atomic_write_set, guard_atomic_write_tree
 
 AUDIO_PATCH_STUDIO_SESSION_SCHEMA_VERSION: Final[str] = "audio-patch-studio-session-v1"
 AUDIO_PATCH_STUDIO_SESSION_JSON_NAME: Final[str] = "studio-session.json"
@@ -64,7 +77,6 @@ AUDIO_PATCH_STUDIO_SESSION_SAFETY: Final[tuple[str, ...]] = (
     "no network access",
 )
 _SESSION_FAILURE_FINGERPRINT: Final[str] = "a4.audio_patch_studio_session.failed"
-_SESSION_FAILURE_SOURCE_ATTR: Final[str] = "_audio_patch_studio_failure_source"
 _OUTPUT_GUARD_NAME: Final[str] = ".audio-patch-studio-output.guard"
 _REFINEMENT_ACTIONS: Final[tuple[AnalogFourPatchRefinementAction, ...]] = (
     "accept",
@@ -156,6 +168,30 @@ class AudioPatchStudioSessionResult:
     json_write: WriteResult | None = None
     markdown_write: WriteResult | None = None
 
+    @property
+    def transition(self) -> AudioPatchStudioSessionTransition:
+        """Report whether this invocation committed state or replayed it."""
+
+        if self.json_write is None:
+            return AUDIO_PATCH_STUDIO_SESSION_REPLAYED_TRANSITION
+        return AUDIO_PATCH_STUDIO_SESSION_COMMITTED_TRANSITION
+
+
+class AudioPatchStudioSessionAccessError(BoundaryError, PermissionError):
+    """The session output tree could not be inspected safely."""
+
+    fingerprint: ClassVar[str] = "a4.audio_patch_studio_session.access_denied"
+
+
+class AudioPatchStudioSessionLockedError(BoundaryError, FileExistsError):
+    """A concurrent process already owns one session publication tree."""
+
+    fingerprint: ClassVar[str] = "a4.audio_patch_studio_session.publication_locked"
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+        attach_analog_four_export_error_code(self, "publication_locked")
+
 
 def _run_session_operation(
     *,
@@ -221,17 +257,26 @@ def _record_session_failure(
     duration_ms = (time.perf_counter() - started_at) * 1000.0
     metrics = get_metrics()
     metrics.record_export(duration_ms, error_code=error_code)
+    local_context = local_file_export_error_context(exc)
+    source_name = (
+        local_context.artifact_name
+        if local_context is not None
+        else analog_four_export_path_name(source_path)
+    )
+    fingerprint = getattr(exc, "fingerprint", _SESSION_FAILURE_FINGERPRINT)
+    if isinstance(exc, BoundaryError):
+        contextual_fingerprint = exc.context.get("fingerprint")
+        if isinstance(contextual_fingerprint, str) and contextual_fingerprint:
+            fingerprint = contextual_fingerprint
     _logger.warning(
         "Audio-to-Patch studio session failed",
         extra={
             "operation": operation_name,
             "outcome": "failed",
             "error_code": error_code,
-            "fingerprint": getattr(exc, "fingerprint", _SESSION_FAILURE_FINGERPRINT),
+            "fingerprint": fingerprint,
             "error_type": type(exc).__name__,
-            "source_name": analog_four_export_path_name(
-                getattr(exc, _SESSION_FAILURE_SOURCE_ATTR, source_path)
-            ),
+            "source_name": source_name,
             "output_name": analog_four_export_path_name(output_path),
             "duration_ms": duration_ms,
             "metrics_summary": metrics.format_summary(),
@@ -257,7 +302,7 @@ def _record_session_success(
             "output_name": analog_four_export_path_name(output_path),
             "session_id": result.payload["session_id"],
             "status": result.payload["status"],
-            "transition": "replayed" if result.json_write is None else "committed",
+            "transition": result.transition,
             "duration_ms": duration_ms,
             "metrics_summary": metrics.format_summary(),
         },
@@ -311,6 +356,13 @@ def _execute_start_audio_patch_studio_session(
     """Execute a validated session start inside the recorded service boundary."""
 
     session_root = output_dir.resolve()
+    _validate_inputs_outside_output_tree(
+        output_dir=session_root,
+        inputs={
+            "reference audio": reference_audio_path,
+            "source kit": source_kit_path,
+        },
+    )
     json_path = session_root / AUDIO_PATCH_STUDIO_SESSION_JSON_NAME
     if json_path.exists():
         result = load_audio_patch_studio_session(json_path)
@@ -451,6 +503,14 @@ def _execute_resume_audio_patch_studio_session(  # noqa: PLR0913
     current = load_audio_patch_studio_session(session_path)
     session_root = current.json_path.parent
     payload = current.payload
+    _validate_inputs_outside_output_tree(
+        output_dir=session_root,
+        inputs={
+            "reference audio": reference_audio_path,
+            "source kit": source_kit_path,
+            "render audio": render_audio_path,
+        },
+    )
     _verify_external_file(payload["reference_audio"], reference_audio_path, "reference audio")
     _verify_external_file(payload["source_kit"], source_kit_path, "source kit")
     _verify_committed_artifacts(payload, session_root=session_root)
@@ -584,9 +644,9 @@ def load_audio_patch_studio_session(session_path: Path) -> AudioPatchStudioSessi
 
     if session_path.name != AUDIO_PATCH_STUDIO_SESSION_JSON_NAME:
         raise ValueError(f"studio session filename must be {AUDIO_PATCH_STUDIO_SESSION_JSON_NAME}")
-    resolved_path = session_path.resolve()
+    absolute_path = session_path.absolute()
     try:
-        decoded: object = json.loads(_read_text(resolved_path))
+        decoded: object = json.loads(_read_text(absolute_path))
     except json.JSONDecodeError as exc:
         raise ValueError("studio session JSON is invalid") from exc
     if not isinstance(decoded, dict):
@@ -594,7 +654,8 @@ def load_audio_patch_studio_session(session_path: Path) -> AudioPatchStudioSessi
     payload = cast(dict[str, object], decoded)
     _validate_session_payload(payload)
     typed_payload = cast(AudioPatchStudioSessionPayload, payload)
-    markdown_path = resolved_path.with_name(AUDIO_PATCH_STUDIO_SESSION_MARKDOWN_NAME)
+    resolved_path = absolute_path.resolve()
+    markdown_path = absolute_path.with_name(AUDIO_PATCH_STUDIO_SESSION_MARKDOWN_NAME)
     if _sha256_file(markdown_path) != cast(str, payload["summary_sha256"]):
         raise ValueError("studio session Markdown does not match the committed JSON state")
     return AudioPatchStudioSessionResult(
@@ -1130,7 +1191,7 @@ def _validate_output_tree(session_root: Path, output_dir: Path) -> None:
 
 
 def _raise_walk_error(exc: OSError) -> None:
-    raise ValueError("studio session output traversal failed") from exc
+    raise AudioPatchStudioSessionAccessError(str(exc)) from exc
 
 
 def _directory_identity(path: Path) -> tuple[int, int]:
@@ -1153,8 +1214,15 @@ def _run_in_guarded_output_tree(
     _validate_output_tree(session_root, output_dir)
     output_identity = _directory_identity(output_dir)
     guard_path = output_dir / _OUTPUT_GUARD_NAME
+    active_exception: Exception | KeyboardInterrupt | SystemExit | None = None
     try:
-        with guard_path.open("x+b") as guard:
+        try:
+            guard = guard_path.open("x+b")
+        except FileExistsError as exc:
+            raise AudioPatchStudioSessionLockedError(
+                f"studio session publication already in progress: {_OUTPUT_GUARD_NAME}"
+            ) from exc
+        with guard, guard_atomic_write_tree(output_dir, output_identity):
             guard.write(b"audio-patch-studio-output\n")
             guard.flush()
             result = execute()
@@ -1162,6 +1230,9 @@ def _run_in_guarded_output_tree(
                 raise ValueError("studio session output identity changed during publication")
             _validate_output_tree(session_root, output_dir)
             return result
+    except (Exception, KeyboardInterrupt, SystemExit) as exc:
+        active_exception = exc
+        raise
     finally:
         try:
             identity_unchanged = (
@@ -1170,7 +1241,14 @@ def _run_in_guarded_output_tree(
         except (OSError, ValueError):
             identity_unchanged = False
         if identity_unchanged:
-            guard_path.unlink(missing_ok=True)
+            try:
+                guard_path.unlink(missing_ok=True)
+            except OSError:
+                if active_exception is None:
+                    raise
+                active_exception.add_note(
+                    "studio session output guard cleanup failed after the primary error"
+                )
 
 
 def _require_path_within_root(root: Path, path: Path, label: str) -> Path:
@@ -1188,41 +1266,88 @@ def _resolve_artifact(
     if relative_path.is_absolute():
         raise ValueError("studio session artifact path must be relative")
     resolved_root = session_root.resolve()
-    resolved_path = (resolved_root / relative_path).resolve()
+    candidate_path = resolved_root / relative_path
+    resolved_path = candidate_path.resolve()
     _require_path_within_root(resolved_root, resolved_path, "studio session artifact")
-    if _sha256_file(resolved_path) != artifact["sha256"]:
+    if _sha256_file(candidate_path) != artifact["sha256"]:
         raise ValueError(f"studio session artifact hash mismatch: {relative_path.as_posix()}")
     return resolved_path
 
 
 def _read_text(path: Path) -> str:
-    try:
-        return path.read_text(encoding="utf-8")
-    except OSError as exc:
-        error_code = classify_analog_four_cli_error(
-            exc,
-            default_error_code="source_read_failed",
-        )
-        attach_analog_four_export_error_code(exc, error_code)
-        setattr(exc, _SESSION_FAILURE_SOURCE_ATTR, path)
-        raise
+    with _open_regular_binary(path) as handle:
+        return handle.read().decode("utf-8")
 
 
 def _sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
-    try:
-        with path.resolve().open("rb") as handle:
-            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-                digest.update(chunk)
-    except OSError as exc:
-        error_code = classify_analog_four_cli_error(
-            exc,
-            default_error_code="source_read_failed",
-        )
-        attach_analog_four_export_error_code(exc, error_code)
-        setattr(exc, _SESSION_FAILURE_SOURCE_ATTR, path)
-        raise
+    with _open_regular_binary(path) as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
     return digest.hexdigest()
+
+
+@contextmanager
+def _open_regular_binary(path: Path) -> Iterator[BufferedReader]:
+    """Open one unchanged regular file without following a pre-existing link."""
+
+    artifact_name = safe_local_file_export_artifact_name(
+        path,
+        fallback="<invalid>",
+    )
+    descriptor = -1
+    try:
+        try:
+            before = path.stat(follow_symlinks=False)
+            if not stat.S_ISREG(before.st_mode):
+                raise ValueError("studio session source must be a regular file")
+            flags = (
+                os.O_RDONLY
+                | getattr(os, "O_BINARY", 0)
+                | getattr(os, "O_NOINHERIT", 0)
+                | getattr(os, "O_NOFOLLOW", 0)
+                | getattr(os, "O_NONBLOCK", 0)
+            )
+            descriptor = os.open(path, flags)
+            opened = os.fstat(descriptor)
+            if not stat.S_ISREG(opened.st_mode) or (
+                opened.st_dev,
+                opened.st_ino,
+            ) != (before.st_dev, before.st_ino):
+                raise ValueError("studio session source changed during open")
+        except (OSError, ValueError) as exc:
+            error_code = classify_local_file_export_error(exc, phase="source_read")
+            attach_local_file_export_error_context(
+                exc,
+                error_code=error_code,
+                phase="source_read",
+                artifact_name=artifact_name,
+            )
+            attach_analog_four_export_error_code(exc, error_code)
+            raise
+        with os.fdopen(descriptor, "rb") as handle:
+            descriptor = -1
+            yield handle
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
+
+
+def _validate_inputs_outside_output_tree(
+    *,
+    output_dir: Path,
+    inputs: Mapping[str, Path],
+) -> None:
+    """Reject input/output aliases before any child exporter can overwrite data."""
+
+    resolved_output = output_dir.resolve(strict=False)
+    for label, input_path in inputs.items():
+        resolved_input = input_path.resolve(strict=False)
+        try:
+            resolved_input.relative_to(resolved_output)
+        except ValueError:
+            continue
+        raise ValueError(f"{label} must not be inside the generated output tree")
 
 
 __all__ = [

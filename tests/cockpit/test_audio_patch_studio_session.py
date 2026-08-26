@@ -2,17 +2,27 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import logging
+import shutil
+from contextlib import nullcontext
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Literal
 
 import pytest
 
+from rytm_randomizer.cockpit.export import analog_four_patch_refinement, audio_patch_dna
 from rytm_randomizer.cockpit.export import audio_patch_studio_session as service
 from rytm_randomizer.cockpit.export.analog_four_export_contracts import (
     analog_four_export_error_code,
 )
+from rytm_randomizer.cockpit.export.file_export_contracts import (
+    local_file_export_error_context,
+)
+from rytm_randomizer.observability.errors import BoundaryError
+from rytm_randomizer.style_analysis import AudioFeatureAnalysis
 
 pytestmark = pytest.mark.fast
 
@@ -1100,13 +1110,8 @@ def test_output_tree_validation_propagates_walk_errors(
         return iter(())
 
     monkeypatch.setattr(service.os, "walk", fail_walk)
-    with pytest.raises(
-        ValueError,
-        match="studio session output traversal failed",
-    ) as raised:
+    with pytest.raises(PermissionError, match="blocked subtree"):
         service._validate_output_tree(session_root, output_dir)
-    assert isinstance(raised.value.__cause__, PermissionError)
-    assert str(raised.value.__cause__) == "blocked subtree"
 
 
 def test_guarded_output_tree_removes_its_marker_after_child_failure(
@@ -1143,6 +1148,11 @@ def test_guarded_output_tree_rejects_identity_change(
     output_dir = session_root / "workspace"
     identities = iter(((1, 1), (1, 2), (1, 2)))
     monkeypatch.setattr(service, "_directory_identity", lambda _path: next(identities))
+    monkeypatch.setattr(
+        service,
+        "guard_atomic_write_tree",
+        lambda _root, _identity: nullcontext(),
+    )
 
     with pytest.raises(ValueError, match="identity changed"):
         service._run_in_guarded_output_tree(
@@ -1170,6 +1180,11 @@ def test_guarded_output_tree_preserves_marker_when_cleanup_identity_is_unreadabl
         return (1, 1)
 
     monkeypatch.setattr(service, "_directory_identity", identity)
+    monkeypatch.setattr(
+        service,
+        "guard_atomic_write_tree",
+        lambda _root, _identity: nullcontext(),
+    )
     assert (
         service._run_in_guarded_output_tree(
             session_root,
@@ -1193,4 +1208,294 @@ def test_session_file_readers_classify_missing_sources(
     with pytest.raises(OSError) as raised:
         reader(tmp_path / "missing")
     assert analog_four_export_error_code(raised.value) == "input_not_found"
-    assert getattr(raised.value, service._SESSION_FAILURE_SOURCE_ATTR) == tmp_path / "missing"
+    context = local_file_export_error_context(raised.value)
+    assert context is not None
+    assert context.error_code == "input_not_found"
+    assert context.phase == "source_read"
+    assert context.artifact_name == "missing"
+
+
+@pytest.mark.parametrize("reader", [service._read_text, service._sha256_file])
+def test_session_file_readers_reject_non_regular_sources(
+    tmp_path: Path,
+    reader: object,
+) -> None:
+    assert callable(reader)
+    directory = tmp_path / "not-a-file"
+    directory.mkdir()
+
+    with pytest.raises(ValueError, match="must be a regular file") as raised:
+        reader(directory)
+
+    context = local_file_export_error_context(raised.value)
+    assert context is not None
+    assert context.error_code == "validation"
+    assert context.phase == "source_read"
+    assert context.artifact_name == directory.name
+
+
+def test_session_file_reader_rejects_source_replaced_during_open(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source = _write(tmp_path / "source.bin", b"before")
+    replacement = _write(tmp_path / "replacement.bin", b"after")
+    real_open = service.os.open
+
+    def replace_then_open(path: Path, flags: int) -> int:
+        source.unlink()
+        replacement.replace(source)
+        return real_open(path, flags)
+
+    monkeypatch.setattr(service.os, "open", replace_then_open)
+    with pytest.raises(ValueError, match="changed during open") as raised:
+        service._sha256_file(source)
+
+    context = local_file_export_error_context(raised.value)
+    assert context is not None
+    assert context.phase == "source_read"
+
+
+def test_start_rejects_input_inside_generated_output_before_child_export(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session_root = tmp_path / "session"
+    reference = _write(session_root / "reference.wav", b"reference")
+    source_kit = _write(tmp_path / "source.syx", b"source")
+
+    def fail_export(**_kwargs: object) -> None:
+        pytest.fail("child exporter must not run for an input/output alias")
+
+    monkeypatch.setattr(service, "export_audio_patch_dna_workspace", fail_export)
+    with pytest.raises(ValueError, match="reference audio must not be inside"):
+        service.start_audio_patch_studio_session(
+            reference_audio_path=reference,
+            source_kit_path=source_kit,
+            selection=6,
+            output_dir=session_root,
+            overwrite=True,
+        )
+
+
+def test_resume_rejects_render_inside_session_before_child_export(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    started, reference, source_kit, _calls = _start(tmp_path, monkeypatch)
+    render = _write(started.json_path.parent / "render.wav", b"render")
+
+    def fail_refinement(**_kwargs: object) -> None:
+        pytest.fail("child exporter must not run for an input/output alias")
+
+    monkeypatch.setattr(service, "export_analog_four_patch_refinement", fail_refinement)
+    with pytest.raises(ValueError, match="render audio must not be inside"):
+        service.resume_audio_patch_studio_session(
+            session_path=started.json_path,
+            reference_audio_path=reference,
+            source_kit_path=source_kit,
+            render_audio_path=render,
+            overwrite=True,
+        )
+
+
+def test_guarded_output_tree_classifies_an_existing_guard_as_publication_locked(
+    tmp_path: Path,
+) -> None:
+    session_root = tmp_path / "session"
+    output_dir = session_root / "workspace"
+    output_dir.mkdir(parents=True)
+    guard_path = _write(output_dir / service._OUTPUT_GUARD_NAME, b"active\n")
+
+    with pytest.raises(service.AudioPatchStudioSessionLockedError) as raised:
+        service._run_in_guarded_output_tree(
+            session_root,
+            output_dir,
+            execute=lambda: "unreachable",
+        )
+
+    assert analog_four_export_error_code(raised.value) == "publication_locked"
+    assert guard_path.name in str(raised.value)
+    assert str(tmp_path) not in str(raised.value)
+
+
+@pytest.mark.parametrize(
+    "primary_error",
+    [
+        RuntimeError("child failed"),
+        KeyboardInterrupt(),
+    ],
+)
+def test_guard_cleanup_failure_does_not_mask_primary_error(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    primary_error: BaseException,
+) -> None:
+    session_root = tmp_path / "session"
+    output_dir = session_root / "workspace"
+    real_unlink = Path.unlink
+
+    def fail_guard_unlink(path: Path, *, missing_ok: bool = False) -> None:
+        if path.name == service._OUTPUT_GUARD_NAME:
+            raise PermissionError("cleanup blocked")
+        real_unlink(path, missing_ok=missing_ok)
+
+    def fail() -> None:
+        raise primary_error
+
+    monkeypatch.setattr(Path, "unlink", fail_guard_unlink)
+    with pytest.raises(type(primary_error)) as raised:
+        service._run_in_guarded_output_tree(
+            session_root,
+            output_dir,
+            execute=fail,
+        )
+    assert str(raised.value) == str(primary_error)
+    assert any("guard cleanup failed" in note for note in raised.value.__notes__)
+
+
+def test_guard_cleanup_failure_after_success_is_raised(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session_root = tmp_path / "session"
+    output_dir = session_root / "workspace"
+    real_unlink = Path.unlink
+
+    def fail_guard_unlink(path: Path, *, missing_ok: bool = False) -> None:
+        if path.name == service._OUTPUT_GUARD_NAME:
+            raise PermissionError("cleanup blocked")
+        real_unlink(path, missing_ok=missing_ok)
+
+    monkeypatch.setattr(Path, "unlink", fail_guard_unlink)
+    with pytest.raises(PermissionError, match="cleanup blocked"):
+        service._run_in_guarded_output_tree(
+            session_root,
+            output_dir,
+            execute=lambda: "completed",
+        )
+
+
+def test_session_failure_log_uses_boundary_context_fingerprint(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    error = BoundaryError(
+        "bounded failure",
+        context={"fingerprint": "audio_patch.session.contextual_failure"},
+    )
+
+    service._logger.addHandler(caplog.handler)
+    try:
+        with caplog.at_level(logging.WARNING, logger=service._logger.name):
+            service._record_session_failure(
+                error,
+                operation_name="a4_audio_patch_studio_session_start",
+                source_path=tmp_path / "source.wav",
+                output_path=tmp_path / "output",
+                started_at=service.time.perf_counter(),
+            )
+    finally:
+        service._logger.removeHandler(caplog.handler)
+
+    record = caplog.records[-1]
+    assert record.fingerprint == "audio_patch.session.contextual_failure"
+
+
+def test_session_failure_log_uses_boundary_type_fingerprint_without_context_override(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    error = BoundaryError("bounded failure", context={"fingerprint": ""})
+
+    service._logger.addHandler(caplog.handler)
+    try:
+        with caplog.at_level(logging.WARNING, logger=service._logger.name):
+            service._record_session_failure(
+                error,
+                operation_name="a4_audio_patch_studio_session_start",
+                source_path=tmp_path / "source.wav",
+                output_path=tmp_path / "output",
+                started_at=service.time.perf_counter(),
+            )
+    finally:
+        service._logger.removeHandler(caplog.handler)
+
+    record = caplog.records[-1]
+    assert record.fingerprint == BoundaryError.fingerprint
+
+
+def test_real_child_exporters_are_fresh_run_deterministic(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    audio_patch_dna_analysis: AudioFeatureAnalysis,
+) -> None:
+    reference = _write(tmp_path / "reference.wav", b"reference-audio")
+    render = _write(tmp_path / "render.wav", b"render-audio")
+    source_kit = (
+        Path(__file__).parents[1]
+        / "fixtures"
+        / "analog_four_saved_kit"
+        / "filter2_res_000_source.syx"
+    )
+    reference_sha256 = hashlib.sha256(reference.read_bytes()).hexdigest()
+    render_sha256 = hashlib.sha256(render.read_bytes()).hexdigest()
+    reference_analysis = replace(
+        audio_patch_dna_analysis,
+        feature_report=replace(
+            audio_patch_dna_analysis.feature_report,
+            content_hash=reference_sha256,
+        ),
+        synthesis_features=replace(
+            audio_patch_dna_analysis.synthesis_features,
+            audio_sha256=reference_sha256,
+        ),
+    )
+    render_features = replace(
+        reference_analysis.synthesis_features,
+        audio_sha256=render_sha256,
+    )
+    monkeypatch.setattr(
+        audio_patch_dna,
+        "analyze_analog_four_patch_audio_analysis_isolated",
+        lambda _path: reference_analysis,
+    )
+    monkeypatch.setattr(
+        analog_four_patch_refinement,
+        "analyze_analog_four_patch_audio_analysis_isolated",
+        lambda _path: reference_analysis,
+    )
+    monkeypatch.setattr(
+        analog_four_patch_refinement,
+        "analyze_analog_four_patch_audio_isolated",
+        lambda _path: render_features,
+    )
+
+    def run_session(session_root: Path) -> dict[str, bytes]:
+        started = service.start_audio_patch_studio_session(
+            reference_audio_path=reference,
+            source_kit_path=source_kit,
+            selection=6,
+            output_dir=session_root,
+            track=2,
+        )
+        completed = service.resume_audio_patch_studio_session(
+            session_path=started.json_path,
+            reference_audio_path=reference,
+            source_kit_path=source_kit,
+            render_audio_path=render,
+            accept_similarity=0,
+        )
+        assert completed.payload["status"] == "accepted"
+        return {
+            path.relative_to(session_root).as_posix(): path.read_bytes()
+            for path in sorted(
+                (candidate for candidate in session_root.rglob("*") if candidate.is_file()),
+                key=lambda candidate: candidate.as_posix(),
+            )
+        }
+
+    session_root = tmp_path / "session"
+    first = run_session(session_root)
+    shutil.rmtree(session_root)
+    assert first == run_session(session_root)

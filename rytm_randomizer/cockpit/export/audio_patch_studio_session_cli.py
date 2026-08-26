@@ -6,7 +6,7 @@ import json
 import sys
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Final, Literal, TypedDict
+from typing import Final, TypedDict
 
 from ...cli_registry import CliCommand, register
 from ...data.analog_four_patch_refinement import (
@@ -19,6 +19,11 @@ from ...data.analog_four_patch_refinement import (
 )
 from ...data.analog_four_sysex_calibration import A4_SYNTH_TRACK_MAX, A4_SYNTH_TRACK_MIN
 from ...data.audio_patch_dna import AUDIO_PATCH_DNA_CANDIDATE_COUNT
+from ...data.modes import (
+    AUDIO_PATCH_STUDIO_SESSION_RESUME_MODE,
+    AUDIO_PATCH_STUDIO_SESSION_START_MODE,
+    AudioPatchStudioSessionMode,
+)
 from ...observability.errors import BoundaryError
 from .analog_four_export_contracts import (
     AnalogFourExportErrorCode,
@@ -40,8 +45,6 @@ USAGE: Final[str] = (
     "--render <audio> [--gain <0.0-1.0>] [--accept-similarity <0-100>] "
     "[--overwrite] [--json]"
 )
-
-AudioPatchStudioSessionMode = Literal["start", "resume"]
 
 
 class AudioPatchStudioSessionArgs(TypedDict):
@@ -67,7 +70,7 @@ def parse_audio_patch_studio_session_args(
 
     if tuple(args) == ("--help",):
         return {
-            "mode": "start",
+            "mode": AUDIO_PATCH_STUDIO_SESSION_START_MODE,
             "reference_audio_path": Path(),
             "source_kit_path": Path(),
             "selection": None,
@@ -156,7 +159,7 @@ def parse_audio_patch_studio_session_args(
             raise ValueError("--session and --render are required together")
         if selection is not None or output_dir is not None or track_supplied:
             raise ValueError("--select, --output-dir, and --track are start-only options")
-        mode: AudioPatchStudioSessionMode = "resume"
+        mode: AudioPatchStudioSessionMode = AUDIO_PATCH_STUDIO_SESSION_RESUME_MODE
     else:
         if selection is None:
             raise ValueError("--select is required when starting a session")
@@ -164,7 +167,7 @@ def parse_audio_patch_studio_session_args(
             raise ValueError("--output-dir is required when starting a session")
         if gain_supplied or similarity_supplied:
             raise ValueError("--gain and --accept-similarity are resume-only options")
-        mode = "start"
+        mode = AUDIO_PATCH_STUDIO_SESSION_START_MODE
     return {
         "mode": mode,
         "reference_audio_path": reference_audio_path,
@@ -189,7 +192,7 @@ def _parse_session_args_for_registry(args: Sequence[str]) -> dict[str, object]:
         if "--json" not in args:
             raise
         return {
-            "mode": "start",
+            "mode": AUDIO_PATCH_STUDIO_SESSION_START_MODE,
             "reference_audio_path": Path(),
             "source_kit_path": Path(),
             "selection": None,
@@ -276,7 +279,7 @@ def handle_audio_patch_studio_session(  # noqa: PLR0913 - registered CLI contrac
     if parse_error is not None:
         return _report_error(ValueError(parse_error), json_output=True)
     try:
-        if mode == "start":
+        if mode == AUDIO_PATCH_STUDIO_SESSION_START_MODE:
             if selection is None or output_dir is None:
                 raise ValueError("start mode requires selection and output directory")
             result = _start_session(
@@ -287,7 +290,7 @@ def handle_audio_patch_studio_session(  # noqa: PLR0913 - registered CLI contrac
                 track=track,
                 overwrite=overwrite,
             )
-        elif mode == "resume":
+        elif mode == AUDIO_PATCH_STUDIO_SESSION_RESUME_MODE:
             if session_path is None or render_audio_path is None:
                 raise ValueError("resume mode requires session and render paths")
             result = _resume_session(
@@ -318,6 +321,7 @@ def handle_audio_patch_studio_session(  # noqa: PLR0913 - registered CLI contrac
             json.dumps(
                 {
                     "ok": True,
+                    "transition": result.transition,
                     **result.payload,
                     "json_path": str(result.json_path),
                     "markdown_path": str(result.markdown_path),
@@ -333,6 +337,7 @@ def handle_audio_patch_studio_session(  # noqa: PLR0913 - registered CLI contrac
             "\n".join(
                 (
                     "ok: true",
+                    f"transition: {result.transition}",
                     f"session_id: {result.payload['session_id']}",
                     f"status: {result.payload['status']}",
                     f"dna_candidate: {selection_payload['dna_candidate']}",
