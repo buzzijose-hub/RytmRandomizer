@@ -792,6 +792,8 @@ flowchart TB
         A4Dna["style_analysis/audio_patch_dna.py<br/>eight fixed pure candidate transforms"]
         A4DnaExport["cockpit/export/audio_patch_dna.py<br/>one analysis + compare/select orchestration"]
         A4DnaCli["audio-patch-dna<br/>registered passive comparison command"]
+        A4StudioSession["cockpit/export/audio_patch_studio_session.py<br/>SHA-bound start/resume commit marker"]
+        A4StudioSessionCli["audio-patch-studio-session<br/>registered passive session command"]
         A4BatchReader["analog_four_patch_batch_reader.py<br/>verify manifest + exact sidecar plan"]
         A4RenderRank["analog_four_patch_render_rank.py<br/>reference + A4 recordings -> acoustic rank"]
         A4RenderRankCli["analog-four-audio-patch-rank<br/>registered passive command"]
@@ -838,6 +840,9 @@ flowchart TB
     A4DnaExport --> A4Dna
     A4DnaExport --> A4Batch
     A4DnaCli --> A4DnaExport
+    A4StudioSession --> A4DnaExport
+    A4StudioSession --> A4RefineExport
+    A4StudioSessionCli --> A4StudioSession
     A4RenderRank --> A4BatchReader
     A4RenderRankCli --> A4RenderRank
     A4Refine --> A4Inference
@@ -1167,6 +1172,7 @@ flowchart LR
         A4SavedKitExport["analog-four-saved-kit-export<br/>validated fields -> local .syx"]
         A4AudioPatchBatch["analog-four-audio-patch-batch<br/>audio + source kit -> candidates + sidecars"]
         AudioPatchDna["audio-patch-dna<br/>one analysis -> eight comparisons -> optional selected A4 export"]
+        AudioPatchStudioSession["audio-patch-studio-session<br/>DNA selection -> A4 render -> bounded accept/refine state"]
         A4AudioPatchRank["analog-four-audio-patch-rank<br/>reference + recorded renders -> ranking"]
         A4AudioPatchRefine["analog-four-audio-patch-refine<br/>one render -> accept or one corrected candidate"]
     end
@@ -1962,6 +1968,7 @@ flowchart LR
         AL16RytmMappingEvidence["al16-rytm-mapping-evidence --reference K --configured C --recipe R --gap-manifest G --expected-gap-manifest-sha256 H --report O"]
         A4AudioPatchBatch["analog-four-audio-patch-batch --audio A --source-kit K --output-dir D [--track N] --candidates 4 [--studio-handoff --a4-output-port EXACT_NAME] [--json]"]
         AudioPatchDna["audio-patch-dna --audio A --output-dir D [--track N] [--select 1..8 --source-kit K] [--json]"]
+        AudioPatchStudioSession["audio-patch-studio-session --reference A --source-kit K --select N --output-dir D<br/>or --session S --reference A --source-kit K --render R"]
         A4AudioPatchRank["analog-four-audio-patch-rank --reference A --manifest M --render N=R [...]"]
         A4AudioPatchRefine["analog-four-audio-patch-refine --reference A --manifest M --candidate N --render R --output-dir D [--accept-similarity P] [--gain G] [--source-kit K] [--json]"]
         A4StyleKitReadiness["analog-four-style-kit-readiness-report"]
@@ -2021,6 +2028,7 @@ flowchart LR
     CliRegistry -->|"registered passive command:<br/>al16-rytm-mapping-evidence"| CLI
     CliRegistry -->|"registered passive-hardware command:<br/>analog-four-audio-patch-batch"| CLI
     CliRegistry -->|"registered passive comparison command:<br/>audio-patch-dna"| CLI
+    CliRegistry -->|"registered passive session command:<br/>audio-patch-studio-session"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-audio-patch-rank"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-audio-patch-refine"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-style-kit-readiness-report"| CLI
@@ -2047,6 +2055,7 @@ flowchart LR
 - The `cli.py` is visibility-first. No active execution / send / hardware-test command is wired here.
 - `app.py` is the interactive entry point and is the ONLY surface where the `--arm` flag triggers real MIDI. The A4 manifest reader validates the complete stored CC/NRPN plan before the app constructs the provider; the passive CLI, local SysEx writer, batch generator, eight-candidate DNA workspace, ranker, bounded render refinement, and local-model copilot never open a port.
 - `audio-patch-dna` decodes the source audio once, displays exactly eight fixed candidate directions, and writes deterministic comparison artifacts. Only an explicit `--select` paired with `--source-kit` invokes the existing passive A4 file exporter, using the precomputed selected candidate without a second audio decode.
+- `audio-patch-studio-session` composes that selected export with one SHA-verified recorded render and one bounded accept/refine pass. Its JSON state is the durable commit marker; repeated requests are idempotent, artifact drift fails closed, and the service remains file-only.
 - `analog-four-audio-patch-refine` verifies one batch candidate and one recorded hardware render, then either accepts the render at the configured similarity threshold or emits exactly one normalized, clamped follow-up candidate. It is a finite heuristic pass, not model training or a forensic-recreation claim; optional SysEx output reuses the passive hardware-write-validated exporter.
 - The registered `al16-rytm-kit-export` command is a passive adapter around the AL16 `cockpit/export` build service. A blocked proof returns status `2`, atomically writes deterministic evidence reports, and withholds `.syx` output; it never enumerates or opens MIDI ports.
 - The six registered `rio145-*` commands form a passive dual-device saved-KIT workflow. Device-selected build and return validation reuse the canonical A4/Rytm codecs and Elektron envelope, verify generated frames by decoding them again, and export OXI sequencing metadata without native patterns or any MIDI-port access.

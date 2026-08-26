@@ -204,6 +204,8 @@ on one line for an existing module, you probably need a new module instead.
 | `cockpit/export/cli_options.py` | Shared side-effect-free option parsing helpers for registered export commands. |
 | `cockpit/export/audio_patch_dna.py` | Passive analyze-once Audio-to-Patch DNA comparison service with observability, atomic local-file publication, and optional explicit selection through the existing A4 exporter; no MIDI I/O. |
 | `cockpit/export/audio_patch_dna_cli.py` | Registered passive file-only Audio-to-Patch DNA compare/select CLI; may export one explicitly selected A4 candidate and never enumerates or opens MIDI ports. |
+| `cockpit/export/audio_patch_studio_session.py` | Passive resumable Studio Session V1 orchestrator; binds immutable DNA selection, one selected A4 export, one recorded render, and one bounded accept/refine result through SHA-verified commit-marker state. |
+| `cockpit/export/audio_patch_studio_session_cli.py` | Registered file-only start/resume command for Studio Session V1; validates mode-specific paths and never imports or constructs a MIDI provider. |
 | `cockpit/export/analog_four_patch_batch.py` | Transactional batch service that stages candidate saved kits and complete DNA/live-dial sidecars from immutable inputs, then publishes a manifest commit marker through the canonical atomic writer. |
 | `cockpit/export/analog_four_patch_batch_codec.py` | Canonical JSON encoding/decoding and SHA-256 helpers shared by batch writer and reader. |
 | `cockpit/export/analog_four_patch_batch_contracts.py` | Stable batch payload and result contracts. |
@@ -511,6 +513,18 @@ kit passes the already-built candidate into the guarded A4 batch exporter; it
 does not rerun audio analysis and never opens a MIDI port. Analog Rytm export is
 deliberately deferred until the passive Rytm codec integration is available on
 the target branch.
+
+Studio Session V1 composes the existing DNA and refinement services without
+duplicating their analysis, export, or validation logic. Start mode publishes
+the DNA workspace and one selected A4 export first, then writes
+`studio-session.json` as the durable commit marker. Resume mode reloads that
+marker, re-hashes the original reference, source kit, manifest, and every
+recorded artifact, and permits one render-feedback pass. The state records the
+global DNA direction separately from the one-candidate batch manifest index.
+Terminal accept/refine results are idempotent for the same render; a different
+render or any artifact drift fails closed. The orchestrator stays entirely on
+the passive file side of the architecture and cannot reach the armed MIDI
+boundary.
 
 The stored-plan reader treats the stable manifest as the publication commit
 marker. Before a candidate reaches dry-run or the armed sender, it verifies the

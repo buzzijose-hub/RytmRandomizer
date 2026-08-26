@@ -262,6 +262,7 @@ produce hardware-verified settings, open a MIDI port, or send MIDI/SysEx.
 | `rio145-export-oxi-manifest` | Validate and export the RIO145 OXI sequence-evidence bundle offline |
 | `al16-rytm-mapping-evidence` | Passive AL16 Rytm mapping-closure analyzer; cryptographically binds initialized/configured saved-kit evidence to the exact recipe, R1 gap manifest, recipe identity, and reference SHA without promoting offsets or writing SysEx |
 | `audio-patch-dna` | Passive one-analysis workspace with readable sound DNA, exactly eight fixed directions, and optional selected-candidate Analog Four SysEx export |
+| `audio-patch-studio-session` | Passive resumable session that binds one DNA selection, selected A4 export, recorded render, and bounded accept/refine result behind SHA-verified state |
 | `analog-four-audio-patch-batch` | Real local audio analysis; the documented/default workflow deterministically commits exactly four immutable `.syx` candidates, complete DNA sidecars, and one manifest; `--studio-handoff` prints the bounded four-audition workflow with zero calibration rounds |
 | `analog-four-audio-patch-rank` | Passive acoustic ranking of recorded A4 candidates against the exact batch reference |
 | `analog-four-audio-patch-refine` | Passive bounded feedback pass for one recorded A4 candidate; accepts a close render or emits exactly one corrected target and optional offline SysEx artifact |
@@ -296,6 +297,8 @@ python -m rytm_randomizer.cli rio145-export-oxi-manifest --manifest RIO145_OXI_P
 python -m rytm_randomizer.cli al16-rytm-mapping-evidence --reference output/local/reference/RYTM_Test1_Init_Kit.syx --configured output/local/al16/AL02_LOCK_RYTM_CONFIGURED.syx --recipe specs/al16/AL02_LOCK_RYTM.yaml --gap-manifest output/al16/AL02_LOCK_RYTM_manifest.json --expected-gap-manifest-sha256 "<reviewed SHA-256>" --report output/local/al16/AL02_LOCK_RYTM_mapping_evidence.json
 python -m rytm_randomizer.cli audio-patch-dna --audio reference.wav --output-dir output/local/audio-dna
 python -m rytm_randomizer.cli audio-patch-dna --audio reference.wav --output-dir output/local/audio-dna --select 6 --source-kit INIT.syx
+python -m rytm_randomizer.cli audio-patch-studio-session --reference reference.wav --source-kit INIT.syx --select 6 --output-dir output/local/audio-session
+python -m rytm_randomizer.cli audio-patch-studio-session --session output/local/audio-session/studio-session.json --reference reference.wav --source-kit INIT.syx --render selected-a4-render.wav
 python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit INIT.syx --output-dir batch --track 1 --candidates 4
 python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio reference.wav --source-kit INIT.syx --output-dir batch --track 1 --studio-handoff --a4-output-port "<exact configured Analog Four output name>"
 python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference reference.wav --manifest batch/a4-t1-audio-patch-batch.json --render 1=candidate-1.wav
@@ -383,6 +386,20 @@ without analyzing the audio again. The command imports no MIDI backend,
 enumerates no ports, sends no data, and performs no network access. Analog Rytm
 selection/export is not included in this command yet; it follows the separate
 Rytm codec integration rather than duplicating that architecture here.
+
+`audio-patch-studio-session` is the resumable operator layer over
+`audio-patch-dna` and `analog-four-audio-patch-refine`. Start mode requires
+`--reference`, `--source-kit`, `--select 1..8`, and `--output-dir`; it commits
+the DNA workspace and selected one-candidate A4 export before publishing
+`studio-session.json` and `studio-session.md`. Resume mode requires
+`--session`, the same reference and source kit, and one `--render`; it verifies
+all recorded hashes before invoking exactly one accept/refine pass. The
+session records both the DNA direction number and the selected batch's local
+manifest candidate number, so those identities cannot be confused. Completed
+requests are idempotent, a different render cannot replace a terminal result,
+and failures leave the prior state intact. This command performs file I/O
+only and never imports a MIDI backend, enumerates ports, opens hardware, or
+transmits MIDI/SysEx.
 
 `al16-rytm-kit-export` is the offline Analog Rytm audit/evidence compiler for
 the original AL16 Reference -> Discovery performance bank. It is not a
