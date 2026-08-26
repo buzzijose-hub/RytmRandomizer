@@ -1,6 +1,6 @@
 # Audio-to-Patch Studio Session V1
 
-> Status: in-flight (implementation and verification complete; PR pending)
+> Status: in-flight (PR #236 review repair verified; CODEOWNER re-review pending)
 
 ## Goal
 
@@ -24,6 +24,8 @@ silently replacing earlier work.
   manifest candidate number.
 - Make identical start/resume requests idempotent and reject input or artifact
   drift.
+- Bind terminal replay to the exact render SHA-256, correction gain, and
+  acceptance threshold; policy changes require a new session/output directory.
 - Register one passive CLI command with explicit start and resume forms.
 
 ## Out Of Scope
@@ -87,16 +89,26 @@ reference audio + source A4 kit + DNA direction
 
 ## Verification
 
-- Focused Studio Session service and CLI: 53 passed; both new production
-  modules reached 100 percent statement and branch coverage.
-- Existing DNA, A4 batch reader/export, render-rank, and refinement regression
-  slice: 437 passed.
-- Architecture gate: 777 passed.
+- Focused repaired Studio Session service and CLI: 88 passed, 1 skipped.
+- Touched-module regression and coverage set: 208 passed, 1 skipped; all four
+  touched production modules reached 100 percent statement and branch coverage.
+- Architecture gate: 777 passed with one existing warn-only generic-`main`
+  finding.
 - Frozen V1.34 parity gate: 685 passed.
-- Full suite with two workers: 8,264 passed, 4 skipped; total package coverage
-  was 99.59 percent.
-- Ruff, Black, isort, strict touched-production typecheck, and diff checks all
-  passed.
+- Full suite with two workers: 8,303 passed, 5 skipped.
+- Ruff, Black, isort, and strict touched-production typecheck passed; 5
+  production modules reported 0 errors, 0 warnings, and 0 information messages.
+
+## PR Review Repair
+
+PR #236 review found contained contract and durability gaps. The repair makes
+the persisted JSON authoritative for the exact Markdown bytes, validates child
+track and one-candidate export contracts, derives accept/refine decisions from
+the committed threshold, guards child output publication for the duration of
+each export, preserves categorical read errors with the actual failing path,
+and rejects traversal and platform-specific filename hazards. Regression tests
+cover each repaired boundary; final exact-head gate counts are recorded in the
+PR body and `docs/STATUS.md`.
 
 ## Termination Condition
 

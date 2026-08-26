@@ -6,11 +6,12 @@ import hashlib
 import json
 import math
 import os
+import stat
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Final, Literal, TypedDict, cast
+from typing import Final, Literal, TypedDict, TypeVar, cast
 
 from ...data.analog_four_patch_refinement import (
     ANALOG_FOUR_PATCH_REFINEMENT_ACCEPT_SIMILARITY_DEFAULT,
@@ -30,12 +31,16 @@ from ...style_analysis.analog_four_patch_genome import (
     ANALOG_FOUR_PATCH_CANDIDATE_MAX,
     ANALOG_FOUR_PATCH_CANDIDATE_MIN,
 )
+from ...style_analysis.analog_four_patch_refinement import (
+    AnalogFourPatchRefinementAction,
+)
 from .analog_four_export_contracts import (
     AnalogFourExportErrorCode,
     analog_four_export_path_name,
     attach_analog_four_export_error_code,
     classify_analog_four_cli_error,
 )
+from .analog_four_patch_batch_codec import validate_analog_four_patch_batch_sha256
 from .analog_four_patch_batch_contracts import (
     AnalogFourAudioPatchBatchExportResult,
     AnalogFourPatchCandidateBatchResult,
@@ -59,9 +64,15 @@ AUDIO_PATCH_STUDIO_SESSION_SAFETY: Final[tuple[str, ...]] = (
     "no network access",
 )
 _SESSION_FAILURE_FINGERPRINT: Final[str] = "a4.audio_patch_studio_session.failed"
-_SHA256_HEX_LENGTH: Final[int] = 64
+_SESSION_FAILURE_SOURCE_ATTR: Final[str] = "_audio_patch_studio_failure_source"
+_OUTPUT_GUARD_NAME: Final[str] = ".audio-patch-studio-output.guard"
+_REFINEMENT_ACTIONS: Final[tuple[AnalogFourPatchRefinementAction, ...]] = (
+    "accept",
+    "refine",
+)
 _logger = get_logger(__name__)
 AudioPatchStudioSessionStatus = Literal["waiting_for_render", "accepted", "refined"]
+_OutputResult = TypeVar("_OutputResult")
 
 
 class AudioPatchStudioSessionFilePayload(TypedDict):
@@ -108,7 +119,7 @@ class _AudioPatchStudioSessionResultOptionalPayload(TypedDict, total=False):
 
 class AudioPatchStudioSessionRefinementPayload(_AudioPatchStudioSessionResultOptionalPayload):
     render_audio: AudioPatchStudioSessionFilePayload
-    action: Literal["accept", "refine"]
+    action: AnalogFourPatchRefinementAction
     similarity: int
     correction_gain: float
     accept_similarity: int
@@ -118,6 +129,7 @@ class AudioPatchStudioSessionRefinementPayload(_AudioPatchStudioSessionResultOpt
 
 class _AudioPatchStudioSessionOptionalPayload(TypedDict, total=False):
     refinement: AudioPatchStudioSessionRefinementPayload
+    summary_sha256: str
 
 
 class AudioPatchStudioSessionPayload(_AudioPatchStudioSessionOptionalPayload):
@@ -217,7 +229,9 @@ def _record_session_failure(
             "error_code": error_code,
             "fingerprint": getattr(exc, "fingerprint", _SESSION_FAILURE_FINGERPRINT),
             "error_type": type(exc).__name__,
-            "source_name": analog_four_export_path_name(source_path),
+            "source_name": analog_four_export_path_name(
+                getattr(exc, _SESSION_FAILURE_SOURCE_ATTR, source_path)
+            ),
             "output_name": analog_four_export_path_name(output_path),
             "duration_ms": duration_ms,
             "metrics_summary": metrics.format_summary(),
@@ -243,6 +257,7 @@ def _record_session_success(
             "output_name": analog_four_export_path_name(output_path),
             "session_id": result.payload["session_id"],
             "status": result.payload["status"],
+            "transition": "replayed" if result.json_write is None else "committed",
             "duration_ms": duration_ms,
             "metrics_summary": metrics.format_summary(),
         },
@@ -312,14 +327,17 @@ def _execute_start_audio_patch_studio_session(
     reference_sha256 = _sha256_file(reference_audio_path)
     source_kit_sha256 = _sha256_file(source_kit_path)
     workspace_dir = session_root / AUDIO_PATCH_STUDIO_SESSION_WORKSPACE_DIR_NAME
-    _validate_output_tree(session_root, workspace_dir)
-    dna_result = export_audio_patch_dna_workspace(
-        audio_path=reference_audio_path,
-        output_dir=workspace_dir,
-        track=track,
-        selection=selection,
-        source_kit_path=source_kit_path,
-        overwrite=overwrite,
+    dna_result = _run_in_guarded_output_tree(
+        session_root,
+        workspace_dir,
+        execute=lambda: export_audio_patch_dna_workspace(
+            audio_path=reference_audio_path,
+            output_dir=workspace_dir,
+            track=track,
+            selection=selection,
+            source_kit_path=source_kit_path,
+            overwrite=overwrite,
+        ),
     )
     selected = dna_result.selected_candidate
     selected_export = dna_result.analog_four_export
@@ -346,6 +364,7 @@ def _execute_start_audio_patch_studio_session(
         session_root=session_root,
         export_result=selected_export,
         exported_candidate=exported_candidate,
+        expected_track=track,
         label="selected export",
     )
     _require_file_unchanged(reference_audio_path, reference_sha256, "reference audio")
@@ -398,6 +417,8 @@ def resume_audio_patch_studio_session(  # noqa: PLR0913 - explicit resume contra
         reference_name=analog_four_export_path_name(reference_audio_path),
         source_kit_name=analog_four_export_path_name(source_kit_path),
         render_name=analog_four_export_path_name(render_audio_path),
+        correction_gain=correction_gain,
+        accept_similarity=accept_similarity,
     ):
         return _run_session_operation(
             operation_name="a4_audio_patch_studio_session_resume",
@@ -452,17 +473,20 @@ def _execute_resume_audio_patch_studio_session(  # noqa: PLR0913
         payload["selected_export"]["manifest"],
     )
     refinement_dir = session_root / AUDIO_PATCH_STUDIO_SESSION_REFINEMENT_DIR_NAME
-    _validate_output_tree(session_root, refinement_dir)
-    refinement_result = export_analog_four_patch_refinement(
-        reference_audio_path=reference_audio_path,
-        manifest_path=manifest_path,
-        candidate=payload["selection"]["manifest_candidate"],
-        render_audio_path=render_audio_path,
-        output_dir=refinement_dir,
-        correction_gain=correction_gain,
-        accept_similarity=accept_similarity,
-        source_kit_path=source_kit_path,
-        overwrite=overwrite,
+    refinement_result = _run_in_guarded_output_tree(
+        session_root,
+        refinement_dir,
+        execute=lambda: export_analog_four_patch_refinement(
+            reference_audio_path=reference_audio_path,
+            manifest_path=manifest_path,
+            candidate=payload["selection"]["manifest_candidate"],
+            render_audio_path=render_audio_path,
+            output_dir=refinement_dir,
+            correction_gain=correction_gain,
+            accept_similarity=accept_similarity,
+            source_kit_path=source_kit_path,
+            overwrite=overwrite,
+        ),
     )
     result_payload = refinement_result.payload
     _require_hash_match(
@@ -528,6 +552,7 @@ def _execute_resume_audio_patch_studio_session(  # noqa: PLR0913
             session_root=session_root,
             export_result=next_export,
             exported_candidate=next_candidate,
+            expected_track=payload["selection"]["track"],
             label="refinement export",
         )
     elif result_payload["next_export"] is not None:
@@ -570,8 +595,7 @@ def load_audio_patch_studio_session(session_path: Path) -> AudioPatchStudioSessi
     _validate_session_payload(payload)
     typed_payload = cast(AudioPatchStudioSessionPayload, payload)
     markdown_path = resolved_path.with_name(AUDIO_PATCH_STUDIO_SESSION_MARKDOWN_NAME)
-    expected_markdown = _render_session_markdown(typed_payload)
-    if _read_text(markdown_path) != expected_markdown:
+    if _sha256_file(markdown_path) != cast(str, payload["summary_sha256"]):
         raise ValueError("studio session Markdown does not match the committed JSON state")
     return AudioPatchStudioSessionResult(
         payload=typed_payload,
@@ -593,6 +617,7 @@ def _validate_session_payload(payload: dict[str, object]) -> None:
             "workspace",
             "selected_export",
             "safety",
+            "summary_sha256",
         },
         {"refinement"},
         "studio session",
@@ -614,6 +639,7 @@ def _validate_session_payload(payload: dict[str, object]) -> None:
     _validate_selection_payload(selection)
     _validate_workspace_payload(workspace)
     _validate_export_payload(selected_export, "selected export")
+    _validate_sha256(payload.get("summary_sha256"), "studio session Markdown digest")
     safety = payload.get("safety")
     if safety != list(AUDIO_PATCH_STUDIO_SESSION_SAFETY):
         raise ValueError("studio session safety declaration is invalid")
@@ -685,13 +711,9 @@ def _require_number(value: object, label: str, *, lower: float, upper: float) ->
 
 
 def _validate_sha256(value: object, label: str) -> None:
-    if (
-        not isinstance(value, str)
-        or len(value) != _SHA256_HEX_LENGTH
-        or value != value.lower()
-        or any(character not in "0123456789abcdef" for character in value)
-    ):
+    if not isinstance(value, str):
         raise ValueError(f"{label} must be a lowercase SHA-256 digest")
+    validate_analog_four_patch_batch_sha256(value, label=label)
 
 
 def _validate_filename(value: object, label: str) -> None:
@@ -700,7 +722,8 @@ def _validate_filename(value: object, label: str) -> None:
         filename in {".", ".."}
         or "/" in filename
         or "\\" in filename
-        or Path(filename).name != filename
+        or ":" in filename
+        or any(ord(character) < 32 for character in filename)
     ):
         raise ValueError(f"{label} must be a filename without directories")
 
@@ -814,10 +837,11 @@ def _validate_refinement_payload(
         _require_mapping(payload["render_audio"], "refinement render audio"),
         "refinement render audio",
     )
-    action = payload["action"]
-    if action not in {"accept", "refine"}:
+    action_value = payload["action"]
+    if action_value not in _REFINEMENT_ACTIONS:
         raise ValueError("refinement action is invalid")
-    _require_integer(
+    action = action_value
+    similarity = _require_integer(
         payload["similarity"],
         "refinement similarity",
         lower=ANALOG_FOUR_PATCH_REFINEMENT_SIMILARITY_MIN,
@@ -829,12 +853,17 @@ def _validate_refinement_payload(
         lower=ANALOG_FOUR_PATCH_REFINEMENT_GAIN_MIN,
         upper=ANALOG_FOUR_PATCH_REFINEMENT_GAIN_MAX,
     )
-    _require_integer(
+    accept_similarity = _require_integer(
         payload["accept_similarity"],
         "refinement acceptance threshold",
         lower=ANALOG_FOUR_PATCH_REFINEMENT_SIMILARITY_MIN,
         upper=ANALOG_FOUR_PATCH_REFINEMENT_SIMILARITY_MAX,
     )
+    expected_action: AnalogFourPatchRefinementAction = (
+        "accept" if similarity >= accept_similarity else "refine"
+    )
+    if action != expected_action:
+        raise ValueError("refinement action does not match its similarity threshold")
     _validate_artifact_payload(
         _require_mapping(payload["json"], "refinement json"),
         "refinement json",
@@ -914,9 +943,16 @@ def _write_session(
     session_root: Path,
     overwrite: bool,
 ) -> AudioPatchStudioSessionResult:
-    _validate_session_payload(cast(dict[str, object], payload))
-    json_bytes = (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode("utf-8")
     markdown_bytes = _render_session_markdown(payload).encode("utf-8")
+    committed_payload = cast(
+        AudioPatchStudioSessionPayload,
+        {
+            **payload,
+            "summary_sha256": hashlib.sha256(markdown_bytes).hexdigest(),
+        },
+    )
+    _validate_session_payload(cast(dict[str, object], committed_payload))
+    json_bytes = (json.dumps(committed_payload, indent=2, sort_keys=True) + "\n").encode("utf-8")
     json_write, markdown_write = atomic_write_set(
         {
             session_root / AUDIO_PATCH_STUDIO_SESSION_JSON_NAME: json_bytes,
@@ -925,7 +961,7 @@ def _write_session(
         overwrite=overwrite,
     )
     return AudioPatchStudioSessionResult(
-        payload=payload,
+        payload=committed_payload,
         json_path=json_write.path,
         markdown_path=markdown_write.path,
         json_write=json_write,
@@ -1014,8 +1050,17 @@ def _verified_export_payload(
     session_root: Path,
     export_result: AnalogFourAudioPatchBatchExportResult,
     exported_candidate: AnalogFourPatchCandidateBatchResult,
+    expected_track: int,
     label: str,
 ) -> AudioPatchStudioSessionExportPayload:
+    if export_result.track != expected_track:
+        raise ValueError(f"{label} track does not match the studio session")
+    if (
+        export_result.candidate_count != len(export_result.candidates)
+        or export_result.candidate_count != 1
+        or export_result.candidates[0] != exported_candidate
+    ):
+        raise ValueError(f"{label} candidate count does not match the studio session")
     manifest = _artifact_payload(session_root, export_result.manifest_path)
     sysex = _artifact_payload(session_root, exported_candidate.sysex_path)
     sidecar = _artifact_payload(session_root, exported_candidate.sidecar_path)
@@ -1067,6 +1112,7 @@ def _validate_output_tree(session_root: Path, output_dir: Path) -> None:
     for directory, child_directories, filenames in os.walk(
         lexical_output,
         followlinks=False,
+        onerror=_raise_walk_error,
     ):
         directory_path = Path(directory)
         _require_path_within_root(
@@ -1081,6 +1127,50 @@ def _validate_output_tree(session_root: Path, output_dir: Path) -> None:
                 child_path.resolve(),
                 "studio session output",
             )
+
+
+def _raise_walk_error(exc: OSError) -> None:
+    raise ValueError("studio session output traversal failed") from exc
+
+
+def _directory_identity(path: Path) -> tuple[int, int]:
+    metadata = path.stat(follow_symlinks=False)
+    if not stat.S_ISDIR(metadata.st_mode):
+        raise ValueError("studio session output must remain a directory")
+    return metadata.st_dev, metadata.st_ino
+
+
+def _run_in_guarded_output_tree(
+    session_root: Path,
+    output_dir: Path,
+    *,
+    execute: Callable[[], _OutputResult],
+) -> _OutputResult:
+    """Pin one validated output directory while a child exporter publishes files."""
+
+    _validate_output_tree(session_root, output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    _validate_output_tree(session_root, output_dir)
+    output_identity = _directory_identity(output_dir)
+    guard_path = output_dir / _OUTPUT_GUARD_NAME
+    try:
+        with guard_path.open("x+b") as guard:
+            guard.write(b"audio-patch-studio-output\n")
+            guard.flush()
+            result = execute()
+            if _directory_identity(output_dir) != output_identity:
+                raise ValueError("studio session output identity changed during publication")
+            _validate_output_tree(session_root, output_dir)
+            return result
+    finally:
+        try:
+            identity_unchanged = (
+                output_dir.exists() and _directory_identity(output_dir) == output_identity
+            )
+        except (OSError, ValueError):
+            identity_unchanged = False
+        if identity_unchanged:
+            guard_path.unlink(missing_ok=True)
 
 
 def _require_path_within_root(root: Path, path: Path, label: str) -> Path:
@@ -1109,7 +1199,12 @@ def _read_text(path: Path) -> str:
     try:
         return path.read_text(encoding="utf-8")
     except OSError as exc:
-        attach_analog_four_export_error_code(exc, "source_read_failed")
+        error_code = classify_analog_four_cli_error(
+            exc,
+            default_error_code="source_read_failed",
+        )
+        attach_analog_four_export_error_code(exc, error_code)
+        setattr(exc, _SESSION_FAILURE_SOURCE_ATTR, path)
         raise
 
 
@@ -1120,7 +1215,12 @@ def _sha256_file(path: Path) -> str:
             for chunk in iter(lambda: handle.read(1024 * 1024), b""):
                 digest.update(chunk)
     except OSError as exc:
-        attach_analog_four_export_error_code(exc, "source_read_failed")
+        error_code = classify_analog_four_cli_error(
+            exc,
+            default_error_code="source_read_failed",
+        )
+        attach_analog_four_export_error_code(exc, error_code)
+        setattr(exc, _SESSION_FAILURE_SOURCE_ATTR, path)
         raise
     return digest.hexdigest()
 

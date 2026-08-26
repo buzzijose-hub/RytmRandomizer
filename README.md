@@ -299,7 +299,11 @@ candidate, the resume command verifies the same reference, source kit,
 manifest, and committed artifacts before accepting the render or exporting
 one corrected follow-up. Repeating either request is idempotent; changed or
 tampered inputs fail closed. The workflow is passive and never enumerates,
-opens, or writes a MIDI port.
+opens, or writes a MIDI port. Terminal replay is valid only when the render
+SHA-256, correction gain, and acceptance threshold exactly match the committed
+request. Changing any of those policy inputs requires a new session in a new
+output directory; an accepted or refined terminal session is never silently
+reinterpreted under a different policy.
 
 `analog-four-audio-patch-refine` adds one bounded, explainable feedback pass
 after a candidate is recorded from the Analog Four. It verifies the immutable

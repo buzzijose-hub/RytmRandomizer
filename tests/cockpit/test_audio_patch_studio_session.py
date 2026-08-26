@@ -54,6 +54,7 @@ class _A4Export:
     generation_id: str
     manifest_path: Path
     candidates: tuple[_ExportCandidate, ...]
+    candidate_count: int
     track: int
     audio_sha256: str
     source_kit_sha256: str
@@ -100,6 +101,7 @@ def _a4_export(
     audio_sha256: str,
     source_kit_sha256: str,
     candidate: int = 1,
+    candidate_count: int = 1,
     track: int = 2,
     sysex_content: bytes = b"offline-sysex",
 ) -> _A4Export:
@@ -121,6 +123,7 @@ def _a4_export(
                 sidecar_sha256=_artifact_hash(sidecar_path),
             ),
         ),
+        candidate_count=candidate_count,
         track=track,
         audio_sha256=audio_sha256,
         source_kit_sha256=source_kit_sha256,
@@ -303,6 +306,11 @@ def test_start_commits_relative_hash_bound_state_and_distinct_candidate_ids(
         "studio-"
     )
     assert "no MIDI ports enumerated or opened" in result.markdown_path.read_text(encoding="utf-8")
+    assert not (
+        result.json_path.parent
+        / service.AUDIO_PATCH_STUDIO_SESSION_WORKSPACE_DIR_NAME
+        / service._OUTPUT_GUARD_NAME
+    ).exists()
 
 
 def test_start_persists_the_exported_manifest_candidate(
@@ -519,6 +527,25 @@ def test_load_rejects_a_noncanonical_filename_and_tampered_markdown(
         service.load_audio_patch_studio_session(started.json_path)
 
 
+def test_load_uses_the_committed_markdown_digest_across_renderer_updates(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    started, _reference, _source_kit, _calls = _start(tmp_path, monkeypatch)
+    original_markdown = started.markdown_path.read_bytes()
+
+    monkeypatch.setattr(
+        service,
+        "_render_session_markdown",
+        lambda _payload: "# A future presentation format\n",
+    )
+
+    loaded = service.load_audio_patch_studio_session(started.json_path)
+
+    assert loaded.payload == started.payload
+    assert loaded.markdown_path.read_bytes() == original_markdown
+
+
 def test_load_rejects_unexpected_nested_keys_and_cross_state_data(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -683,6 +710,52 @@ def test_start_rejects_mismatched_child_provenance_without_committing(
 
     monkeypatch.setattr(service, "export_audio_patch_dna_workspace", fake_export)
     with pytest.raises(ValueError, match="selected export reference audio hash"):
+        service.start_audio_patch_studio_session(
+            reference_audio_path=reference,
+            source_kit_path=source_kit,
+            selection=6,
+            output_dir=session_root,
+            track=2,
+        )
+
+    assert not (session_root / service.AUDIO_PATCH_STUDIO_SESSION_JSON_NAME).exists()
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("track", 1, "track does not match"),
+        ("candidate_count", 2, "candidate count does not match"),
+    ],
+)
+def test_start_rejects_a_child_export_for_a_different_request(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    field: str,
+    value: int,
+    message: str,
+) -> None:
+    reference = _write(tmp_path / "reference.wav", b"reference")
+    source_kit = _write(tmp_path / "source.syx", b"source")
+    session_root = tmp_path / "session"
+
+    def fake_export(**kwargs: object) -> _DnaResult:
+        output_dir = kwargs["output_dir"]
+        assert isinstance(output_dir, Path)
+        valid = _dna_result(
+            output_dir,
+            audio_sha256=_artifact_hash(reference),
+            source_kit_sha256=_artifact_hash(source_kit),
+        )
+        export = valid.analog_four_export
+        assert export is not None
+        return replace(
+            valid,
+            analog_four_export=replace(export, **{field: value}),
+        )
+
+    monkeypatch.setattr(service, "export_audio_patch_dna_workspace", fake_export)
+    with pytest.raises(ValueError, match=message):
         service.start_audio_patch_studio_session(
             reference_audio_path=reference,
             source_kit_path=source_kit,
@@ -864,8 +937,10 @@ def test_session_operation_records_an_interruption() -> None:
             lambda: service._require_number(float("inf"), "value", lower=0.0, upper=1.0),
             "must be finite",
         ),
+        (lambda: service._validate_sha256(1, "digest"), "lowercase SHA-256"),
         (lambda: service._validate_sha256("not-a-digest", "digest"), "lowercase SHA-256"),
         (lambda: service._validate_filename("../state.json", "filename"), "without directories"),
+        (lambda: service._validate_filename("C:state.json", "filename"), "without directories"),
     ],
 )
 def test_session_value_validators_fail_closed(
@@ -923,6 +998,10 @@ def test_refinement_state_validation_rejects_invalid_action_and_status(
 
     inconsistent_accepted = dict(refinement)
     inconsistent_accepted["action"] = "refine"
+    with pytest.raises(ValueError, match="similarity threshold"):
+        service._validate_refinement_payload(inconsistent_accepted, status="accepted")
+
+    inconsistent_accepted["similarity"] = 72
     with pytest.raises(ValueError, match="accepted studio session"):
         service._validate_refinement_payload(inconsistent_accepted, status="accepted")
 
@@ -937,6 +1016,8 @@ def test_refinement_state_validation_rejects_invalid_action_and_status(
         ("plan", "plan does not match"),
         ("missing_next", "omitted next-export provenance"),
         ("unexpected_next", "unexpected next export"),
+        ("track", "track does not match"),
+        ("candidate_count", "candidate count does not match"),
     ],
 )
 def test_resume_rejects_inconsistent_child_contracts(
@@ -968,6 +1049,11 @@ def test_resume_rejects_inconsistent_child_contracts(
             payload["plan"] = plan
         elif failure == "missing_next":
             payload["next_export"] = None
+        elif failure in {"track", "candidate_count"}:
+            export = valid.analog_four_export
+            assert export is not None
+            value = 1 if failure == "track" else 2
+            return replace(valid, analog_four_export=replace(export, **{failure: value}))
         else:
             payload["next_export"] = {"unexpected": True}
         return replace(valid, payload=payload)
@@ -994,6 +1080,110 @@ def test_output_tree_validation_accepts_contained_files_and_rejects_escape(
         service._validate_output_tree(session_root, tmp_path / "outside")
 
 
+def test_output_tree_validation_propagates_walk_errors(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session_root = tmp_path / "session"
+    output_dir = session_root / "workspace"
+    output_dir.mkdir(parents=True)
+
+    def fail_walk(
+        _path: Path,
+        *,
+        followlinks: bool,
+        onerror: object,
+    ) -> object:
+        assert followlinks is False
+        assert callable(onerror)
+        onerror(PermissionError("blocked subtree"))
+        return iter(())
+
+    monkeypatch.setattr(service.os, "walk", fail_walk)
+    with pytest.raises(
+        ValueError,
+        match="studio session output traversal failed",
+    ) as raised:
+        service._validate_output_tree(session_root, output_dir)
+    assert isinstance(raised.value.__cause__, PermissionError)
+    assert str(raised.value.__cause__) == "blocked subtree"
+
+
+def test_guarded_output_tree_removes_its_marker_after_child_failure(
+    tmp_path: Path,
+) -> None:
+    session_root = tmp_path / "session"
+    output_dir = session_root / "workspace"
+
+    def fail() -> None:
+        raise RuntimeError("child failed")
+
+    with pytest.raises(RuntimeError, match="child failed"):
+        service._run_in_guarded_output_tree(
+            session_root,
+            output_dir,
+            execute=fail,
+        )
+
+    assert not (output_dir / service._OUTPUT_GUARD_NAME).exists()
+
+
+def test_directory_identity_rejects_a_non_directory(tmp_path: Path) -> None:
+    artifact = _write(tmp_path / "artifact.json", b"{}\n")
+
+    with pytest.raises(ValueError, match="must remain a directory"):
+        service._directory_identity(artifact)
+
+
+def test_guarded_output_tree_rejects_identity_change(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session_root = tmp_path / "session"
+    output_dir = session_root / "workspace"
+    identities = iter(((1, 1), (1, 2), (1, 2)))
+    monkeypatch.setattr(service, "_directory_identity", lambda _path: next(identities))
+
+    with pytest.raises(ValueError, match="identity changed"):
+        service._run_in_guarded_output_tree(
+            session_root,
+            output_dir,
+            execute=lambda: "result",
+        )
+
+    (output_dir / service._OUTPUT_GUARD_NAME).unlink()
+
+
+def test_guarded_output_tree_preserves_marker_when_cleanup_identity_is_unreadable(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session_root = tmp_path / "session"
+    output_dir = session_root / "workspace"
+    calls = 0
+
+    def identity(_path: Path) -> tuple[int, int]:
+        nonlocal calls
+        calls += 1
+        if calls == 3:
+            raise PermissionError("metadata unavailable")
+        return (1, 1)
+
+    monkeypatch.setattr(service, "_directory_identity", identity)
+    assert (
+        service._run_in_guarded_output_tree(
+            session_root,
+            output_dir,
+            execute=lambda: "result",
+        )
+        == "result"
+    )
+
+    guard_path = output_dir / service._OUTPUT_GUARD_NAME
+    assert guard_path.exists()
+    guard_path.unlink()
+
+
 @pytest.mark.parametrize("reader", [service._read_text, service._sha256_file])
 def test_session_file_readers_classify_missing_sources(
     tmp_path: Path,
@@ -1002,4 +1192,5 @@ def test_session_file_readers_classify_missing_sources(
     assert callable(reader)
     with pytest.raises(OSError) as raised:
         reader(tmp_path / "missing")
-    assert analog_four_export_error_code(raised.value) == "source_read_failed"
+    assert analog_four_export_error_code(raised.value) == "input_not_found"
+    assert getattr(raised.value, service._SESSION_FAILURE_SOURCE_ATTR) == tmp_path / "missing"

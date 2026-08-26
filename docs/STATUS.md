@@ -13,10 +13,18 @@ Last updated: 2026-08-26. This file is a hand-authored snapshot and is meant to 
   - Repeated identical requests are idempotent; changed inputs, artifact drift,
     or an attempt to replace a terminal render fail closed. The workflow never
     imports a MIDI backend, enumerates or opens a port, or sends MIDI/SysEx.
-  - Fresh bounded verification passed 53 focused tests with 100 percent
-    statement and branch coverage on both new production modules, 777
-    architecture tests, 685 frozen V1.34 parity tests, and the 8,264-test full
-    suite with 4 skips. Total package coverage is 99.59 percent.
+  - PR #236 review repair binds terminal replay to the committed rendering
+    policy, verifies child track and one-candidate contracts, hashes the exact
+    committed Markdown bytes, guards child output publication, preserves
+    classified read failures with their actual source, and rejects traversal
+    and non-portable filename hazards.
+  - Fresh bounded verification passed 88 focused service/CLI tests with 1
+    skip; a 208-test touched-module coverage set passed with 1 skip and 100
+    percent statement and branch coverage across all four touched production
+    modules. The exact tree also passed 777 architecture tests, 685 frozen
+    V1.34 parity tests, and the 8,303-test full suite with 5 skips. Strict
+    typing for 5 production modules and the Ruff, Black, and isort gates are
+    clean.
 
 - 2026-08-24: Added a bounded long-form reference-audio atlas.
   - The passive `reference-audio-atlas-report` command scans one audio file as

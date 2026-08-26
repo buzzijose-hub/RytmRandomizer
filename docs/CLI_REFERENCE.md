@@ -397,9 +397,12 @@ all recorded hashes before invoking exactly one accept/refine pass. The
 session records both the DNA direction number and the selected batch's local
 manifest candidate number, so those identities cannot be confused. Completed
 requests are idempotent, a different render cannot replace a terminal result,
-and failures leave the prior state intact. This command performs file I/O
-only and never imports a MIDI backend, enumerates ports, opens hardware, or
-transmits MIDI/SysEx.
+and failures leave the prior state intact. A terminal replay must use the same
+render SHA-256, correction gain, and acceptance threshold recorded by the
+committed request. To change any of those policy inputs, start a new session
+with a different output directory. This command performs file I/O only and
+never imports a MIDI backend, enumerates ports, opens hardware, or transmits
+MIDI/SysEx.
 
 `al16-rytm-kit-export` is the offline Analog Rytm audit/evidence compiler for
 the original AL16 Reference -> Discovery performance bank. It is not a
