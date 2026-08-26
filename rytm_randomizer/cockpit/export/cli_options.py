@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from typing import cast
 
 
@@ -39,6 +40,24 @@ def parse_bounded_integer(
     return parsed
 
 
+def parse_bounded_float(
+    value: str,
+    *,
+    option: str,
+    lower: float,
+    upper: float,
+) -> float:
+    """Parse one finite floating-point value inside an inclusive range."""
+
+    try:
+        parsed = float(value)
+    except ValueError as exc:
+        raise ValueError(f"{option} must be a number from {lower} to {upper}") from exc
+    if not math.isfinite(parsed) or not lower <= parsed <= upper:
+        raise ValueError(f"{option} must be a number from {lower} to {upper}")
+    return parsed
+
+
 def exception_notes(exc: Exception) -> list[str]:
     """Return string-only exception notes for stable CLI diagnostics."""
 
@@ -48,4 +67,9 @@ def exception_notes(exc: Exception) -> list[str]:
     return [note for note in cast(list[object], notes) if isinstance(note, str)]
 
 
-__all__ = ["exception_notes", "parse_bounded_integer", "pop_required_cli_value"]
+__all__ = [
+    "exception_notes",
+    "parse_bounded_float",
+    "parse_bounded_integer",
+    "pop_required_cli_value",
+]

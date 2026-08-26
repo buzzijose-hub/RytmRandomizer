@@ -10,8 +10,21 @@ import pytest
 from rytm_randomizer import cli as root_cli
 from rytm_randomizer.cockpit.export import audio_patch_studio_session as service
 from rytm_randomizer.cockpit.export import audio_patch_studio_session_cli as cli
+from rytm_randomizer.cockpit.export import cli_options
 
 pytestmark = pytest.mark.fast
+
+
+def test_shared_required_option_can_include_usage_guidance() -> None:
+    with pytest.raises(
+        ValueError,
+        match=r"--session requires a value\. Usage: studio-session",
+    ):
+        cli_options.pop_required_cli_value(
+            [],
+            option="--session",
+            usage="Usage: studio-session",
+        )
 
 
 def _result(
@@ -468,6 +481,25 @@ def test_handler_rejects_missing_mode_contract(
     assert exit_code == 2
     assert payload["error_code"] == "invalid_input"
     assert "mode requires" in payload["error"]
+
+
+def test_handler_rejects_an_unknown_mode(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = cli.handle_audio_patch_studio_session(
+        mode="unknown",  # type: ignore[arg-type] - runtime boundary regression
+        reference_audio_path=tmp_path / "reference.wav",
+        source_kit_path=tmp_path / "source.syx",
+        selection=None,
+        output_dir=None,
+        json_output=True,
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 2
+    assert payload["error_code"] == "invalid_input"
+    assert payload["error"] == "studio session mode must be 'start' or 'resume'"
 
 
 def test_handler_reports_service_error_as_text(

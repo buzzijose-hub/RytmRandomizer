@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import math
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -29,7 +28,7 @@ from .audio_patch_studio_session import (
     AUDIO_PATCH_STUDIO_SESSION_SAFETY,
     AudioPatchStudioSessionResult,
 )
-from .cli_options import parse_bounded_integer, pop_required_cli_value
+from .cli_options import parse_bounded_float, parse_bounded_integer, pop_required_cli_value
 
 COMMAND_NAME: Final[str] = "audio-patch-studio-session"
 USAGE: Final[str] = (
@@ -59,18 +58,6 @@ class AudioPatchStudioSessionArgs(TypedDict):
     overwrite: bool
     json_output: bool
     help_requested: bool
-
-
-def _parse_session_gain(value: str) -> float:
-    try:
-        gain = float(value)
-    except ValueError as exc:
-        raise ValueError("--gain must be a number from 0.0 to 1.0") from exc
-    if not math.isfinite(gain) or not (
-        ANALOG_FOUR_PATCH_REFINEMENT_GAIN_MIN <= gain <= ANALOG_FOUR_PATCH_REFINEMENT_GAIN_MAX
-    ):
-        raise ValueError("--gain must be a number from 0.0 to 1.0")
-    return gain
 
 
 def parse_audio_patch_studio_session_args(
@@ -138,7 +125,12 @@ def parse_audio_patch_studio_session_args(
         elif option == "--render":
             render_audio_path = Path(pop_required_cli_value(remaining, option=option))
         elif option == "--gain":
-            correction_gain = _parse_session_gain(pop_required_cli_value(remaining, option=option))
+            correction_gain = parse_bounded_float(
+                pop_required_cli_value(remaining, option=option),
+                option=option,
+                lower=ANALOG_FOUR_PATCH_REFINEMENT_GAIN_MIN,
+                upper=ANALOG_FOUR_PATCH_REFINEMENT_GAIN_MAX,
+            )
             gain_supplied = True
         elif option == "--accept-similarity":
             accept_similarity = parse_bounded_integer(
@@ -295,7 +287,7 @@ def handle_audio_patch_studio_session(  # noqa: PLR0913 - registered CLI contrac
                 track=track,
                 overwrite=overwrite,
             )
-        else:
+        elif mode == "resume":
             if session_path is None or render_audio_path is None:
                 raise ValueError("resume mode requires session and render paths")
             result = _resume_session(
@@ -307,6 +299,8 @@ def handle_audio_patch_studio_session(  # noqa: PLR0913 - registered CLI contrac
                 accept_similarity=accept_similarity,
                 overwrite=overwrite,
             )
+        else:
+            raise ValueError("studio session mode must be 'start' or 'resume'")
     except (KeyboardInterrupt, SystemExit) as exc:
         return _report_error(exc, json_output=json_output)
     except (

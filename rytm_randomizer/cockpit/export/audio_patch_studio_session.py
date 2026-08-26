@@ -4,13 +4,41 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
+import os
+import time
+from collections.abc import Callable
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Final, Literal, TypedDict, cast
 
 from ...data.analog_four_patch_refinement import (
     ANALOG_FOUR_PATCH_REFINEMENT_ACCEPT_SIMILARITY_DEFAULT,
     ANALOG_FOUR_PATCH_REFINEMENT_GAIN_DEFAULT,
+    ANALOG_FOUR_PATCH_REFINEMENT_GAIN_MAX,
+    ANALOG_FOUR_PATCH_REFINEMENT_GAIN_MIN,
+    ANALOG_FOUR_PATCH_REFINEMENT_SIMILARITY_MAX,
+    ANALOG_FOUR_PATCH_REFINEMENT_SIMILARITY_MIN,
+)
+from ...data.analog_four_sysex_calibration import A4_SYNTH_TRACK_MAX, A4_SYNTH_TRACK_MIN
+from ...data.audio_patch_dna import AUDIO_PATCH_DNA_CANDIDATE_COUNT
+from ...observability.errors import BoundaryError
+from ...observability.logging import get_logger
+from ...observability.metrics import get_metrics
+from ...observability.tracing import operation as trace_operation
+from ...style_analysis.analog_four_patch_genome import (
+    ANALOG_FOUR_PATCH_CANDIDATE_MAX,
+    ANALOG_FOUR_PATCH_CANDIDATE_MIN,
+)
+from .analog_four_export_contracts import (
+    AnalogFourExportErrorCode,
+    analog_four_export_path_name,
+    attach_analog_four_export_error_code,
+    classify_analog_four_cli_error,
+)
+from .analog_four_patch_batch_contracts import (
+    AnalogFourAudioPatchBatchExportResult,
+    AnalogFourPatchCandidateBatchResult,
 )
 from .analog_four_patch_refinement import export_analog_four_patch_refinement
 from .audio_patch_dna import export_audio_patch_dna_workspace
@@ -21,7 +49,6 @@ AUDIO_PATCH_STUDIO_SESSION_JSON_NAME: Final[str] = "studio-session.json"
 AUDIO_PATCH_STUDIO_SESSION_MARKDOWN_NAME: Final[str] = "studio-session.md"
 AUDIO_PATCH_STUDIO_SESSION_WORKSPACE_DIR_NAME: Final[str] = "workspace"
 AUDIO_PATCH_STUDIO_SESSION_REFINEMENT_DIR_NAME: Final[str] = "refinement"
-AUDIO_PATCH_STUDIO_SESSION_MANIFEST_CANDIDATE: Final[int] = 1
 AUDIO_PATCH_STUDIO_SESSION_SAFETY: Final[tuple[str, ...]] = (
     "passive local audio analysis and offline artifact generation",
     "candidate selection is explicit and hash-bound to this session",
@@ -31,7 +58,9 @@ AUDIO_PATCH_STUDIO_SESSION_SAFETY: Final[tuple[str, ...]] = (
     "no hardware mutation",
     "no network access",
 )
-
+_SESSION_FAILURE_FINGERPRINT: Final[str] = "a4.audio_patch_studio_session.failed"
+_SHA256_HEX_LENGTH: Final[int] = 64
+_logger = get_logger(__name__)
 AudioPatchStudioSessionStatus = Literal["waiting_for_render", "accepted", "refined"]
 
 
@@ -67,26 +96,22 @@ class AudioPatchStudioSessionWorkspacePayload(TypedDict):
     markdown: AudioPatchStudioSessionArtifactPayload
 
 
-class AudioPatchStudioSessionSelectedExportPayload(TypedDict):
-    manifest: AudioPatchStudioSessionArtifactPayload
-    sysex: AudioPatchStudioSessionArtifactPayload
-    sidecar: AudioPatchStudioSessionArtifactPayload
-
-
-class AudioPatchStudioSessionNextExportPayload(TypedDict):
+class AudioPatchStudioSessionExportPayload(TypedDict):
     manifest: AudioPatchStudioSessionArtifactPayload
     sysex: AudioPatchStudioSessionArtifactPayload
     sidecar: AudioPatchStudioSessionArtifactPayload
 
 
 class _AudioPatchStudioSessionResultOptionalPayload(TypedDict, total=False):
-    next_export: AudioPatchStudioSessionNextExportPayload
+    next_export: AudioPatchStudioSessionExportPayload
 
 
 class AudioPatchStudioSessionRefinementPayload(_AudioPatchStudioSessionResultOptionalPayload):
     render_audio: AudioPatchStudioSessionFilePayload
     action: Literal["accept", "refine"]
     similarity: int
+    correction_gain: float
+    accept_similarity: int
     json: AudioPatchStudioSessionArtifactPayload
     markdown: AudioPatchStudioSessionArtifactPayload
 
@@ -105,7 +130,7 @@ class AudioPatchStudioSessionPayload(_AudioPatchStudioSessionOptionalPayload):
     source_kit: AudioPatchStudioSessionFilePayload
     selection: AudioPatchStudioSessionSelectionPayload
     workspace: AudioPatchStudioSessionWorkspacePayload
-    selected_export: AudioPatchStudioSessionSelectedExportPayload
+    selected_export: AudioPatchStudioSessionExportPayload
     safety: list[str]
 
 
@@ -120,6 +145,110 @@ class AudioPatchStudioSessionResult:
     markdown_write: WriteResult | None = None
 
 
+def _run_session_operation(
+    *,
+    operation_name: str,
+    source_path: object,
+    output_path: object,
+    execute: Callable[[], AudioPatchStudioSessionResult],
+) -> AudioPatchStudioSessionResult:
+    started_at = time.perf_counter()
+    try:
+        result = execute()
+    except (KeyboardInterrupt, SystemExit) as exc:
+        _record_session_failure(
+            exc,
+            operation_name=operation_name,
+            source_path=source_path,
+            output_path=output_path,
+            started_at=started_at,
+        )
+        raise
+    except (
+        BoundaryError,
+        ImportError,
+        KeyError,
+        OSError,
+        RuntimeError,
+        TypeError,
+        ValueError,
+    ) as exc:
+        _record_session_failure(
+            exc,
+            operation_name=operation_name,
+            source_path=source_path,
+            output_path=output_path,
+            started_at=started_at,
+        )
+        raise
+    _record_session_success(
+        result,
+        operation_name=operation_name,
+        output_path=output_path,
+        started_at=started_at,
+    )
+    return result
+
+
+def _record_session_failure(
+    exc: Exception | KeyboardInterrupt | SystemExit,
+    *,
+    operation_name: str,
+    source_path: object,
+    output_path: object,
+    started_at: float,
+) -> None:
+    if isinstance(exc, (KeyboardInterrupt, SystemExit)):
+        error_code: AnalogFourExportErrorCode = "interrupted"
+    else:
+        error_code = classify_analog_four_cli_error(
+            exc,
+            default_error_code="invalid_input",
+        )
+        attach_analog_four_export_error_code(exc, error_code)
+    duration_ms = (time.perf_counter() - started_at) * 1000.0
+    metrics = get_metrics()
+    metrics.record_export(duration_ms, error_code=error_code)
+    _logger.warning(
+        "Audio-to-Patch studio session failed",
+        extra={
+            "operation": operation_name,
+            "outcome": "failed",
+            "error_code": error_code,
+            "fingerprint": getattr(exc, "fingerprint", _SESSION_FAILURE_FINGERPRINT),
+            "error_type": type(exc).__name__,
+            "source_name": analog_four_export_path_name(source_path),
+            "output_name": analog_four_export_path_name(output_path),
+            "duration_ms": duration_ms,
+            "metrics_summary": metrics.format_summary(),
+        },
+    )
+
+
+def _record_session_success(
+    result: AudioPatchStudioSessionResult,
+    *,
+    operation_name: str,
+    output_path: object,
+    started_at: float,
+) -> None:
+    duration_ms = (time.perf_counter() - started_at) * 1000.0
+    metrics = get_metrics()
+    metrics.record_export(duration_ms)
+    _logger.info(
+        "Audio-to-Patch studio session completed",
+        extra={
+            "operation": operation_name,
+            "outcome": "completed",
+            "output_name": analog_four_export_path_name(output_path),
+            "session_id": result.payload["session_id"],
+            "status": result.payload["status"],
+            "duration_ms": duration_ms,
+            "metrics_summary": metrics.format_summary(),
+        },
+    )
+
+
 def start_audio_patch_studio_session(
     *,
     reference_audio_path: Path,
@@ -130,6 +259,41 @@ def start_audio_patch_studio_session(
     overwrite: bool = False,
 ) -> AudioPatchStudioSessionResult:
     """Create or idempotently reopen a selected DNA studio session."""
+
+    with trace_operation(
+        "a4_audio_patch_studio_session_start",
+        logger=_logger,
+        reference_name=analog_four_export_path_name(reference_audio_path),
+        source_kit_name=analog_four_export_path_name(source_kit_path),
+        output_dir_name=analog_four_export_path_name(output_dir),
+        selection=selection,
+        track=track,
+    ):
+        return _run_session_operation(
+            operation_name="a4_audio_patch_studio_session_start",
+            source_path=reference_audio_path,
+            output_path=output_dir,
+            execute=lambda: _execute_start_audio_patch_studio_session(
+                reference_audio_path=reference_audio_path,
+                source_kit_path=source_kit_path,
+                selection=selection,
+                output_dir=output_dir,
+                track=track,
+                overwrite=overwrite,
+            ),
+        )
+
+
+def _execute_start_audio_patch_studio_session(
+    *,
+    reference_audio_path: Path,
+    source_kit_path: Path,
+    selection: int,
+    output_dir: Path,
+    track: int,
+    overwrite: bool,
+) -> AudioPatchStudioSessionResult:
+    """Execute a validated session start inside the recorded service boundary."""
 
     session_root = output_dir.resolve()
     json_path = session_root / AUDIO_PATCH_STUDIO_SESSION_JSON_NAME
@@ -147,9 +311,11 @@ def start_audio_patch_studio_session(
 
     reference_sha256 = _sha256_file(reference_audio_path)
     source_kit_sha256 = _sha256_file(source_kit_path)
+    workspace_dir = session_root / AUDIO_PATCH_STUDIO_SESSION_WORKSPACE_DIR_NAME
+    _validate_output_tree(session_root, workspace_dir)
     dna_result = export_audio_patch_dna_workspace(
         audio_path=reference_audio_path,
-        output_dir=session_root / AUDIO_PATCH_STUDIO_SESSION_WORKSPACE_DIR_NAME,
+        output_dir=workspace_dir,
         track=track,
         selection=selection,
         source_kit_path=source_kit_path,
@@ -162,6 +328,28 @@ def start_audio_patch_studio_session(
     if len(selected_export.candidates) != 1:
         raise ValueError("studio session selected export must contain exactly one candidate")
     exported_candidate = selected_export.candidates[0]
+    _require_hash_match(
+        selected_export.audio_sha256,
+        reference_sha256,
+        "selected export reference audio",
+    )
+    _require_hash_match(
+        selected_export.source_kit_sha256,
+        source_kit_sha256,
+        "selected export source kit",
+    )
+    workspace_payload: AudioPatchStudioSessionWorkspacePayload = {
+        "json": _artifact_payload(session_root, dna_result.json_path),
+        "markdown": _artifact_payload(session_root, dna_result.markdown_path),
+    }
+    selected_export_payload = _verified_export_payload(
+        session_root=session_root,
+        export_result=selected_export,
+        exported_candidate=exported_candidate,
+        label="selected export",
+    )
+    _require_file_unchanged(reference_audio_path, reference_sha256, "reference audio")
+    _require_file_unchanged(source_kit_path, source_kit_sha256, "source kit")
     session_id = _studio_session_id(
         reference_sha256=reference_sha256,
         source_kit_sha256=source_kit_sha256,
@@ -176,7 +364,7 @@ def start_audio_patch_studio_session(
         "source_kit": _file_payload(source_kit_path, source_kit_sha256),
         "selection": {
             "dna_candidate": selected.column,
-            "manifest_candidate": AUDIO_PATCH_STUDIO_SESSION_MANIFEST_CANDIDATE,
+            "manifest_candidate": exported_candidate.candidate,
             "key": selected.key,
             "label": selected.label,
             "role": selected.role,
@@ -184,15 +372,8 @@ def start_audio_patch_studio_session(
             "track": track,
             "generation_id": selected_export.generation_id,
         },
-        "workspace": {
-            "json": _artifact_payload(session_root, dna_result.json_path),
-            "markdown": _artifact_payload(session_root, dna_result.markdown_path),
-        },
-        "selected_export": {
-            "manifest": _artifact_payload(session_root, selected_export.manifest_path),
-            "sysex": _artifact_payload(session_root, exported_candidate.sysex_path),
-            "sidecar": _artifact_payload(session_root, exported_candidate.sidecar_path),
-        },
+        "workspace": workspace_payload,
+        "selected_export": selected_export_payload,
         "safety": list(AUDIO_PATCH_STUDIO_SESSION_SAFETY),
     }
     return _write_session(payload, session_root=session_root, overwrite=overwrite)
@@ -210,6 +391,42 @@ def resume_audio_patch_studio_session(  # noqa: PLR0913 - explicit resume contra
 ) -> AudioPatchStudioSessionResult:
     """Measure one render and commit the terminal accepted/refined state."""
 
+    with trace_operation(
+        "a4_audio_patch_studio_session_resume",
+        logger=_logger,
+        session_name=analog_four_export_path_name(session_path),
+        reference_name=analog_four_export_path_name(reference_audio_path),
+        source_kit_name=analog_four_export_path_name(source_kit_path),
+        render_name=analog_four_export_path_name(render_audio_path),
+    ):
+        return _run_session_operation(
+            operation_name="a4_audio_patch_studio_session_resume",
+            source_path=render_audio_path,
+            output_path=session_path,
+            execute=lambda: _execute_resume_audio_patch_studio_session(
+                session_path=session_path,
+                reference_audio_path=reference_audio_path,
+                source_kit_path=source_kit_path,
+                render_audio_path=render_audio_path,
+                correction_gain=correction_gain,
+                accept_similarity=accept_similarity,
+                overwrite=overwrite,
+            ),
+        )
+
+
+def _execute_resume_audio_patch_studio_session(  # noqa: PLR0913
+    *,
+    session_path: Path,
+    reference_audio_path: Path,
+    source_kit_path: Path,
+    render_audio_path: Path,
+    correction_gain: float,
+    accept_similarity: int,
+    overwrite: bool,
+) -> AudioPatchStudioSessionResult:
+    """Execute a validated session resume inside the recorded service boundary."""
+
     current = load_audio_patch_studio_session(session_path)
     session_root = current.json_path.parent
     payload = current.payload
@@ -219,29 +436,68 @@ def resume_audio_patch_studio_session(  # noqa: PLR0913 - explicit resume contra
     render_sha256 = _sha256_file(render_audio_path)
     if payload["status"] != "waiting_for_render":
         refinement = payload.get("refinement")
-        if refinement is None or refinement["render_audio"]["sha256"] != render_sha256:
-            raise ValueError("studio session is already complete for a different render")
-        return current
+        if (
+            refinement is not None
+            and refinement["render_audio"]["sha256"] == render_sha256
+            and refinement["correction_gain"] == correction_gain
+            and refinement["accept_similarity"] == accept_similarity
+        ):
+            return current
+        raise ValueError(
+            "studio session is already complete for a different render or refinement policy"
+        )
 
     manifest_path = _resolve_artifact(
         session_root,
         payload["selected_export"]["manifest"],
     )
+    refinement_dir = session_root / AUDIO_PATCH_STUDIO_SESSION_REFINEMENT_DIR_NAME
+    _validate_output_tree(session_root, refinement_dir)
     refinement_result = export_analog_four_patch_refinement(
         reference_audio_path=reference_audio_path,
         manifest_path=manifest_path,
         candidate=payload["selection"]["manifest_candidate"],
         render_audio_path=render_audio_path,
-        output_dir=session_root / AUDIO_PATCH_STUDIO_SESSION_REFINEMENT_DIR_NAME,
+        output_dir=refinement_dir,
         correction_gain=correction_gain,
         accept_similarity=accept_similarity,
         source_kit_path=source_kit_path,
         overwrite=overwrite,
     )
+    result_payload = refinement_result.payload
+    _require_hash_match(
+        result_payload["reference_audio"]["sha256"],
+        payload["reference_audio"]["sha256"],
+        "refinement reference audio",
+    )
+    _require_hash_match(
+        result_payload["render_audio"]["sha256"],
+        render_sha256,
+        "refinement render audio",
+    )
+    result_selection = result_payload["selection"]
+    if (
+        result_selection["generation_id"] != payload["selection"]["generation_id"]
+        or result_selection["candidate"] != payload["selection"]["manifest_candidate"]
+        or result_selection["track"] != payload["selection"]["track"]
+    ):
+        raise ValueError("refinement selection does not match the studio session")
+    result_plan = result_payload["plan"]
+    if (
+        result_plan["candidate"] != payload["selection"]["manifest_candidate"]
+        or result_plan["selected_track"] != payload["selection"]["track"]
+        or result_plan["correction_gain"] != correction_gain
+        or result_plan["accept_similarity"] != accept_similarity
+        or result_plan["action"] != refinement_result.plan.action
+        or result_plan["similarity"] != refinement_result.plan.similarity
+    ):
+        raise ValueError("refinement plan does not match the requested studio policy")
     refinement_payload: AudioPatchStudioSessionRefinementPayload = {
         "render_audio": _file_payload(render_audio_path, render_sha256),
         "action": refinement_result.plan.action,
         "similarity": refinement_result.plan.similarity,
+        "correction_gain": correction_gain,
+        "accept_similarity": accept_similarity,
         "json": _artifact_payload(session_root, refinement_result.json_path),
         "markdown": _artifact_payload(session_root, refinement_result.markdown_path),
     }
@@ -250,11 +506,43 @@ def resume_audio_patch_studio_session(  # noqa: PLR0913 - explicit resume contra
         if len(next_export.candidates) != 1:
             raise ValueError("studio session refinement must contain exactly one candidate")
         next_candidate = next_export.candidates[0]
-        refinement_payload["next_export"] = {
-            "manifest": _artifact_payload(session_root, next_export.manifest_path),
-            "sysex": _artifact_payload(session_root, next_candidate.sysex_path),
-            "sidecar": _artifact_payload(session_root, next_candidate.sidecar_path),
-        }
+        next_payload = result_payload["next_export"]
+        if next_payload is None:
+            raise ValueError("refinement result omitted next-export provenance")
+        _require_hash_match(
+            next_export.audio_sha256,
+            payload["reference_audio"]["sha256"],
+            "refinement export reference audio",
+        )
+        _require_hash_match(
+            next_export.source_kit_sha256,
+            payload["source_kit"]["sha256"],
+            "refinement export source kit",
+        )
+        _require_hash_match(
+            next_payload["manifest_sha256"],
+            next_export.manifest_sha256,
+            "refinement manifest provenance",
+        )
+        refinement_payload["next_export"] = _verified_export_payload(
+            session_root=session_root,
+            export_result=next_export,
+            exported_candidate=next_candidate,
+            label="refinement export",
+        )
+    elif result_payload["next_export"] is not None:
+        raise ValueError("refinement payload reported an unexpected next export")
+    _require_file_unchanged(
+        reference_audio_path,
+        payload["reference_audio"]["sha256"],
+        "reference audio",
+    )
+    _require_file_unchanged(
+        source_kit_path,
+        payload["source_kit"]["sha256"],
+        "source kit",
+    )
+    _require_file_unchanged(render_audio_path, render_sha256, "render audio")
     status: AudioPatchStudioSessionStatus = (
         "accepted" if refinement_result.plan.action == "accept" else "refined"
     )
@@ -269,9 +557,11 @@ def resume_audio_patch_studio_session(  # noqa: PLR0913 - explicit resume contra
 def load_audio_patch_studio_session(session_path: Path) -> AudioPatchStudioSessionResult:
     """Load and structurally validate one committed session document."""
 
+    if session_path.name != AUDIO_PATCH_STUDIO_SESSION_JSON_NAME:
+        raise ValueError(f"studio session filename must be {AUDIO_PATCH_STUDIO_SESSION_JSON_NAME}")
     resolved_path = session_path.resolve()
     try:
-        decoded: object = json.loads(resolved_path.read_text(encoding="utf-8"))
+        decoded: object = json.loads(_read_text(resolved_path))
     except json.JSONDecodeError as exc:
         raise ValueError("studio session JSON is invalid") from exc
     if not isinstance(decoded, dict):
@@ -279,34 +569,291 @@ def load_audio_patch_studio_session(session_path: Path) -> AudioPatchStudioSessi
     payload = cast(dict[str, object], decoded)
     _validate_session_payload(payload)
     typed_payload = cast(AudioPatchStudioSessionPayload, payload)
+    markdown_path = resolved_path.with_name(AUDIO_PATCH_STUDIO_SESSION_MARKDOWN_NAME)
+    expected_markdown = _render_session_markdown(typed_payload)
+    if _read_text(markdown_path) != expected_markdown:
+        raise ValueError("studio session Markdown does not match the committed JSON state")
     return AudioPatchStudioSessionResult(
         payload=typed_payload,
         json_path=resolved_path,
-        markdown_path=resolved_path.with_name(AUDIO_PATCH_STUDIO_SESSION_MARKDOWN_NAME),
+        markdown_path=markdown_path,
     )
 
 
 def _validate_session_payload(payload: dict[str, object]) -> None:
+    _require_payload_keys(
+        payload,
+        {
+            "schema_version",
+            "session_id",
+            "status",
+            "reference_audio",
+            "source_kit",
+            "selection",
+            "workspace",
+            "selected_export",
+            "safety",
+        },
+        {"refinement"},
+        "studio session",
+    )
     if payload.get("schema_version") != AUDIO_PATCH_STUDIO_SESSION_SCHEMA_VERSION:
         raise ValueError("unsupported studio session schema version")
     status = payload.get("status")
     if status not in {"waiting_for_render", "accepted", "refined"}:
         raise ValueError("studio session status is invalid")
-    required_mappings = (
-        "reference_audio",
-        "source_kit",
-        "selection",
-        "workspace",
-        "selected_export",
-    )
-    if not isinstance(payload.get("session_id"), str):
+    if not isinstance(payload.get("session_id"), str) or not payload["session_id"]:
         raise ValueError("studio session id is invalid")
-    if any(not isinstance(payload.get(key), dict) for key in required_mappings):
-        raise ValueError("studio session is missing required state")
-    if not isinstance(payload.get("safety"), list):
+    reference_audio = _require_mapping(payload.get("reference_audio"), "reference audio")
+    source_kit = _require_mapping(payload.get("source_kit"), "source kit")
+    selection = _require_mapping(payload.get("selection"), "selection")
+    workspace = _require_mapping(payload.get("workspace"), "workspace")
+    selected_export = _require_mapping(payload.get("selected_export"), "selected export")
+    _validate_file_payload(reference_audio, "reference audio")
+    _validate_file_payload(source_kit, "source kit")
+    _validate_selection_payload(selection)
+    _validate_workspace_payload(workspace)
+    _validate_export_payload(selected_export, "selected export")
+    safety = payload.get("safety")
+    if safety != list(AUDIO_PATCH_STUDIO_SESSION_SAFETY):
         raise ValueError("studio session safety declaration is invalid")
-    if status != "waiting_for_render" and not isinstance(payload.get("refinement"), dict):
-        raise ValueError("completed studio session is missing refinement state")
+    expected_session_id = _studio_session_id(
+        reference_sha256=cast(str, reference_audio["sha256"]),
+        source_kit_sha256=cast(str, source_kit["sha256"]),
+        selection=cast(int, selection["dna_candidate"]),
+        track=cast(int, selection["track"]),
+    )
+    if payload["session_id"] != expected_session_id:
+        raise ValueError("studio session id does not match its request identity")
+    refinement_value = payload.get("refinement")
+    if status == "waiting_for_render":
+        if refinement_value is not None:
+            raise ValueError("waiting studio session must not contain refinement state")
+        return
+    refinement = _require_mapping(refinement_value, "refinement")
+    _validate_refinement_payload(refinement, status=cast(AudioPatchStudioSessionStatus, status))
+
+
+def _require_payload_keys(
+    payload: dict[str, object],
+    required: set[str],
+    optional: set[str],
+    label: str,
+) -> None:
+    actual = set(payload)
+    missing = tuple(sorted(required - actual))
+    unexpected = tuple(sorted(actual - required - optional))
+    if missing or unexpected:
+        details: list[str] = []
+        if missing:
+            details.append(f"missing={','.join(missing)}")
+        if unexpected:
+            details.append(f"unexpected={','.join(unexpected)}")
+        raise ValueError(f"{label} keys are invalid: {'; '.join(details)}")
+
+
+def _require_mapping(value: object, label: str) -> dict[str, object]:
+    if not isinstance(value, dict):
+        raise ValueError(f"{label} must be an object")
+    mapping = cast(dict[object, object], value)
+    if any(not isinstance(key, str) for key in mapping):
+        raise ValueError(f"{label} must be an object")
+    return cast(dict[str, object], value)
+
+
+def _require_nonempty_string(value: object, label: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise ValueError(f"{label} must be a non-empty string")
+    return value
+
+
+def _require_integer(value: object, label: str, *, lower: int, upper: int) -> int:
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise ValueError(f"{label} must be an integer")
+    if not lower <= value <= upper:
+        raise ValueError(f"{label} must be in {lower}..{upper}")
+    return value
+
+
+def _require_number(value: object, label: str, *, lower: float, upper: float) -> float:
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        raise ValueError(f"{label} must be a number")
+    number = float(value)
+    if not math.isfinite(number) or not lower <= number <= upper:
+        raise ValueError(f"{label} must be finite and in {lower}..{upper}")
+    return number
+
+
+def _validate_sha256(value: object, label: str) -> None:
+    if (
+        not isinstance(value, str)
+        or len(value) != _SHA256_HEX_LENGTH
+        or value != value.lower()
+        or any(character not in "0123456789abcdef" for character in value)
+    ):
+        raise ValueError(f"{label} must be a lowercase SHA-256 digest")
+
+
+def _validate_filename(value: object, label: str) -> None:
+    filename = _require_nonempty_string(value, label)
+    if (
+        filename in {".", ".."}
+        or "/" in filename
+        or "\\" in filename
+        or Path(filename).name != filename
+    ):
+        raise ValueError(f"{label} must be a filename without directories")
+
+
+def _validate_artifact_path(value: object, label: str) -> None:
+    path_value = _require_nonempty_string(value, label)
+    path = PurePosixPath(path_value)
+    if (
+        path.is_absolute()
+        or path_value != path.as_posix()
+        or path == PurePosixPath(".")
+        or any(part in {"", ".", ".."} for part in path.parts)
+        or "\\" in path_value
+    ):
+        raise ValueError(f"{label} must be a canonical relative POSIX path")
+
+
+def _validate_file_payload(payload: dict[str, object], label: str) -> None:
+    _require_payload_keys(payload, {"filename", "sha256"}, set(), label)
+    _validate_filename(payload["filename"], f"{label} filename")
+    _validate_sha256(payload["sha256"], f"{label} sha256")
+
+
+def _validate_artifact_payload(payload: dict[str, object], label: str) -> None:
+    _require_payload_keys(payload, {"path", "sha256"}, set(), label)
+    _validate_artifact_path(payload["path"], f"{label} path")
+    _validate_sha256(payload["sha256"], f"{label} sha256")
+
+
+def _validate_selection_payload(payload: dict[str, object]) -> None:
+    _require_payload_keys(
+        payload,
+        {
+            "dna_candidate",
+            "manifest_candidate",
+            "key",
+            "label",
+            "role",
+            "closeness",
+            "track",
+            "generation_id",
+        },
+        set(),
+        "selection",
+    )
+    _require_integer(
+        payload["dna_candidate"],
+        "selection dna candidate",
+        lower=1,
+        upper=AUDIO_PATCH_DNA_CANDIDATE_COUNT,
+    )
+    _require_integer(
+        payload["manifest_candidate"],
+        "selection manifest candidate",
+        lower=ANALOG_FOUR_PATCH_CANDIDATE_MIN,
+        upper=ANALOG_FOUR_PATCH_CANDIDATE_MAX,
+    )
+    _require_nonempty_string(payload["key"], "selection key")
+    _require_nonempty_string(payload["label"], "selection label")
+    _require_nonempty_string(payload["role"], "selection role")
+    _require_integer(payload["closeness"], "selection closeness", lower=0, upper=100)
+    _require_integer(
+        payload["track"],
+        "selection track",
+        lower=A4_SYNTH_TRACK_MIN,
+        upper=A4_SYNTH_TRACK_MAX,
+    )
+    _require_nonempty_string(payload["generation_id"], "selection generation id")
+
+
+def _validate_workspace_payload(payload: dict[str, object]) -> None:
+    _require_payload_keys(payload, {"json", "markdown"}, set(), "workspace")
+    _validate_artifact_payload(
+        _require_mapping(payload["json"], "workspace json"), "workspace json"
+    )
+    _validate_artifact_payload(
+        _require_mapping(payload["markdown"], "workspace markdown"),
+        "workspace markdown",
+    )
+
+
+def _validate_export_payload(payload: dict[str, object], label: str) -> None:
+    _require_payload_keys(payload, {"manifest", "sysex", "sidecar"}, set(), label)
+    for artifact_name in ("manifest", "sysex", "sidecar"):
+        _validate_artifact_payload(
+            _require_mapping(payload[artifact_name], f"{label} {artifact_name}"),
+            f"{label} {artifact_name}",
+        )
+
+
+def _validate_refinement_payload(
+    payload: dict[str, object],
+    *,
+    status: AudioPatchStudioSessionStatus,
+) -> None:
+    _require_payload_keys(
+        payload,
+        {
+            "render_audio",
+            "action",
+            "similarity",
+            "correction_gain",
+            "accept_similarity",
+            "json",
+            "markdown",
+        },
+        {"next_export"},
+        "refinement",
+    )
+    _validate_file_payload(
+        _require_mapping(payload["render_audio"], "refinement render audio"),
+        "refinement render audio",
+    )
+    action = payload["action"]
+    if action not in {"accept", "refine"}:
+        raise ValueError("refinement action is invalid")
+    _require_integer(
+        payload["similarity"],
+        "refinement similarity",
+        lower=ANALOG_FOUR_PATCH_REFINEMENT_SIMILARITY_MIN,
+        upper=ANALOG_FOUR_PATCH_REFINEMENT_SIMILARITY_MAX,
+    )
+    _require_number(
+        payload["correction_gain"],
+        "refinement correction gain",
+        lower=ANALOG_FOUR_PATCH_REFINEMENT_GAIN_MIN,
+        upper=ANALOG_FOUR_PATCH_REFINEMENT_GAIN_MAX,
+    )
+    _require_integer(
+        payload["accept_similarity"],
+        "refinement acceptance threshold",
+        lower=ANALOG_FOUR_PATCH_REFINEMENT_SIMILARITY_MIN,
+        upper=ANALOG_FOUR_PATCH_REFINEMENT_SIMILARITY_MAX,
+    )
+    _validate_artifact_payload(
+        _require_mapping(payload["json"], "refinement json"),
+        "refinement json",
+    )
+    _validate_artifact_payload(
+        _require_mapping(payload["markdown"], "refinement markdown"),
+        "refinement markdown",
+    )
+    next_export_value = payload.get("next_export")
+    if status == "accepted":
+        if action != "accept" or next_export_value is not None:
+            raise ValueError("accepted studio session has inconsistent refinement state")
+        return
+    if status != "refined" or action != "refine" or next_export_value is None:
+        raise ValueError("refined studio session has inconsistent refinement state")
+    _validate_export_payload(
+        _require_mapping(next_export_value, "refinement next export"),
+        "refinement next export",
+    )
 
 
 def _verify_start_request(
@@ -367,6 +914,7 @@ def _write_session(
     session_root: Path,
     overwrite: bool,
 ) -> AudioPatchStudioSessionResult:
+    _validate_session_payload(cast(dict[str, object], payload))
     json_bytes = (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode("utf-8")
     markdown_bytes = _render_session_markdown(payload).encode("utf-8")
     json_write, markdown_write = atomic_write_set(
@@ -415,6 +963,8 @@ def _render_session_markdown(payload: AudioPatchStudioSessionPayload) -> str:
             (
                 f"- Decision: `{refinement['action']}`",
                 f"- Similarity: {refinement['similarity']}",
+                f"- Correction gain: {refinement['correction_gain']}",
+                f"- Acceptance threshold: {refinement['accept_similarity']}",
             )
         )
     lines.extend(("", "## Safety", "", *(f"- {item}" for item in payload["safety"])))
@@ -451,11 +1001,93 @@ def _artifact_payload(
 ) -> AudioPatchStudioSessionArtifactPayload:
     resolved_root = session_root.resolve()
     resolved_path = path.resolve()
-    try:
-        relative_path = resolved_path.relative_to(resolved_root)
-    except ValueError as exc:
-        raise ValueError("studio session artifact escaped the session root") from exc
+    relative_path = _require_path_within_root(
+        resolved_root,
+        resolved_path,
+        "studio session artifact",
+    )
     return {"path": relative_path.as_posix(), "sha256": _sha256_file(resolved_path)}
+
+
+def _verified_export_payload(
+    *,
+    session_root: Path,
+    export_result: AnalogFourAudioPatchBatchExportResult,
+    exported_candidate: AnalogFourPatchCandidateBatchResult,
+    label: str,
+) -> AudioPatchStudioSessionExportPayload:
+    manifest = _artifact_payload(session_root, export_result.manifest_path)
+    sysex = _artifact_payload(session_root, exported_candidate.sysex_path)
+    sidecar = _artifact_payload(session_root, exported_candidate.sidecar_path)
+    _require_hash_match(manifest["sha256"], export_result.manifest_sha256, f"{label} manifest")
+    _require_hash_match(
+        sysex["sha256"],
+        exported_candidate.sysex_export.render.sha256,
+        f"{label} SysEx",
+    )
+    _require_hash_match(
+        sidecar["sha256"],
+        exported_candidate.sidecar_sha256,
+        f"{label} sidecar",
+    )
+    return {"manifest": manifest, "sysex": sysex, "sidecar": sidecar}
+
+
+def _require_hash_match(actual: str, expected: str, label: str) -> None:
+    if actual != expected:
+        raise ValueError(f"{label} hash does not match its reported provenance")
+
+
+def _require_file_unchanged(path: Path, expected_sha256: str, label: str) -> None:
+    _require_hash_match(_sha256_file(path), expected_sha256, label)
+
+
+def _validate_output_tree(session_root: Path, output_dir: Path) -> None:
+    lexical_root = session_root.absolute()
+    lexical_output = output_dir.absolute()
+    try:
+        relative_output = lexical_output.relative_to(lexical_root)
+    except ValueError as exc:
+        raise ValueError("studio session output escaped the session root") from exc
+
+    resolved_root = lexical_root.resolve()
+    current = lexical_root
+    _require_path_within_root(resolved_root, current.resolve(), "studio session root")
+    for part in relative_output.parts:
+        current /= part
+        if current.exists() or current.is_symlink():
+            _require_path_within_root(
+                resolved_root,
+                current.resolve(),
+                "studio session output",
+            )
+
+    if not lexical_output.exists():
+        return
+    for directory, child_directories, filenames in os.walk(
+        lexical_output,
+        followlinks=False,
+    ):
+        directory_path = Path(directory)
+        _require_path_within_root(
+            resolved_root,
+            directory_path.resolve(),
+            "studio session output",
+        )
+        for child_name in (*child_directories, *filenames):
+            child_path = directory_path / child_name
+            _require_path_within_root(
+                resolved_root,
+                child_path.resolve(),
+                "studio session output",
+            )
+
+
+def _require_path_within_root(root: Path, path: Path, label: str) -> Path:
+    try:
+        return path.relative_to(root)
+    except ValueError as exc:
+        raise ValueError(f"{label} escaped the session root") from exc
 
 
 def _resolve_artifact(
@@ -467,20 +1099,29 @@ def _resolve_artifact(
         raise ValueError("studio session artifact path must be relative")
     resolved_root = session_root.resolve()
     resolved_path = (resolved_root / relative_path).resolve()
-    try:
-        resolved_path.relative_to(resolved_root)
-    except ValueError as exc:
-        raise ValueError("studio session artifact escaped the session root") from exc
+    _require_path_within_root(resolved_root, resolved_path, "studio session artifact")
     if _sha256_file(resolved_path) != artifact["sha256"]:
         raise ValueError(f"studio session artifact hash mismatch: {relative_path.as_posix()}")
     return resolved_path
 
 
+def _read_text(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except OSError as exc:
+        attach_analog_four_export_error_code(exc, "source_read_failed")
+        raise
+
+
 def _sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
-    with path.resolve().open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
+    try:
+        with path.resolve().open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+    except OSError as exc:
+        attach_analog_four_export_error_code(exc, "source_read_failed")
+        raise
     return digest.hexdigest()
 
 
