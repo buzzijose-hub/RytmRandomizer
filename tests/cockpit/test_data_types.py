@@ -49,7 +49,7 @@ def test_history_kind_values_are_exact_spec() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Via: "send" | "regen" | "load" | "import"
+# Via: "send" | "regen" | "load" | "import" | "capture"
 # ---------------------------------------------------------------------------
 
 
@@ -58,7 +58,7 @@ def test_via_values_tuple_matches_literal_args() -> None:
 
 
 def test_via_values_are_exact_spec() -> None:
-    assert types.VIA_VALUES == ("send", "regen", "load", "import")
+    assert types.VIA_VALUES == ("send", "regen", "load", "import", "capture")
 
 
 # ---------------------------------------------------------------------------

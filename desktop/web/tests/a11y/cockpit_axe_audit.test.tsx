@@ -44,6 +44,7 @@ import {
   diagnosticsHealthy,
   libraryRecordA,
   midiBatch,
+  readyDualMachineStage,
   sendPlan,
   sessionLive,
   sessionMock,
@@ -198,6 +199,9 @@ describe('cockpit axe audit (WCAG 2.2 AA)', () => {
 
   it('ActionBar armed send-confirmation dialog is clean', async () => {
     useCockpitStore.setState({
+      connectionStatus: 'connected',
+      dualMachineStage: readyDualMachineStage,
+      rytmPadLocks: [2],
       sessionStatus: sessionLive,
       previewCandidate: candidate,
       sendPlan,

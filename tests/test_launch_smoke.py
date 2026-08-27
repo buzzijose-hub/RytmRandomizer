@@ -8,7 +8,7 @@ same environment contract the shell uses (``RYTM_RAND_WS_PORT`` +
 1. Poll ``GET /health`` until the sidecar answers (liveness).
 2. Read the freshly-minted handshake token from the token file.
 3. Open the WebSocket with the pinned subprotocol, send the ``hello``
-   frame, and assert the ack + the 5-frame bootstrap event set (plus
+   frame, and assert the ack + the 11-frame bootstrap event set (plus
    the wired-launch ``connection_changed`` extra) arrive in order.
 4. Shut the process down cleanly (SIGTERM on POSIX — the same signal
    the shell sends — and assert a zero exit).
@@ -61,10 +61,16 @@ EXPECTED_BOOTSTRAP_EVENT_TYPES = (
     "session_status",
     "snapshot_changed",
     "profile_changed",
+    "profile_catalog_changed",
     "history_updated",
+    "patch_genome_changed",
+    "kit_captures_changed",
+    "mutation_targets_changed",
+    "mutation_locks_changed",
+    "dual_machine_stage_changed",
     "performance_console_changed",
 )
-"""The 5 bootstrap events every fresh connection receives, in spec order."""
+"""The 11 bootstrap events every fresh connection receives, in spec order."""
 
 HEALTH_TIMEOUT_SECS = 90.0
 """Generous ceiling for the subprocess to import + bind + serve on CI."""
@@ -283,11 +289,12 @@ def test_launch_smoke_end_to_end(tmp_path: Path) -> None:
 
 
 def test_build_script_entry_stub_is_deterministic_module_equivalent() -> None:
-    """The generated entry stub delegates to ``cockpit.__main__.main``."""
+    """The generated stub delegates to the armed input-only app composition."""
 
     build_script = _load_build_script()
     source = build_script.entry_source()
-    assert "from rytm_randomizer.cockpit.__main__ import main as cockpit_main" in source
+    assert "from rytm_randomizer.app import main as app_main" in source
+    assert 'app_main(["--arm", "--cockpit-kit-capture-sidecar"])' in source
     assert build_script.SHUTDOWN_SENTINEL in source
     # The stub must be valid Python (it is written verbatim at build time).
     compile(source, "rytm_sidecar_entry.py", "exec")

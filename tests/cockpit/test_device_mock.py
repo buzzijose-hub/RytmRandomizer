@@ -159,6 +159,17 @@ def test_capture_after_apply_returns_updated_snapshot() -> None:
     assert adapter.capture_snapshot() != _snapshot()
 
 
+def test_adopt_snapshot_replaces_state_without_io_and_rejects_wrong_type() -> None:
+    adapter = MockDeviceAdapter(initial=_snapshot())
+    adopted = _snapshot(_pad(3, machine="SY Raw", tun=72))
+
+    adapter.adopt_snapshot(adopted)
+
+    assert adapter.capture_snapshot() is adopted
+    with pytest.raises(TypeError, match="Snapshot"):
+        adapter.adopt_snapshot(object())  # type: ignore[arg-type]
+
+
 # ---------------------------------------------------------------------------
 # apply: with no locks, every non-locked pad's params are replaced.
 # ---------------------------------------------------------------------------
@@ -358,4 +369,10 @@ def test_the_mock_exposes_no_persistent_write_surface_at_all() -> None:
 
     surface = {name for name in dir(MockDeviceAdapter) if not name.startswith("_")}
 
-    assert surface == {"apply", "apply_send_plan", "capture_snapshot", "is_armed"}
+    assert surface == {
+        "adopt_snapshot",
+        "apply",
+        "apply_send_plan",
+        "capture_snapshot",
+        "is_armed",
+    }

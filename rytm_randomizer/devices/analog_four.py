@@ -8,6 +8,7 @@ from typing import Final, Protocol, runtime_checkable
 
 from ..mock_midi import MidiMessage
 from ..snapshot.envelope import ELEKTRON_MFR_ID
+from ..snapshot.mutation_scope import DEFAULT_MUTATION_SCOPE, MutationScope
 from . import registry
 from .base import Device
 from .strategies import (
@@ -90,10 +91,20 @@ class AnalogFourDevice:
 
         return self.snapshot_decoder.decode(raw, slot=slot)
 
-    def plan_mutation(self, snapshot: object, depth: int) -> AnalogFourMutationPlan:
+    def plan_mutation(
+        self,
+        snapshot: object,
+        depth: int,
+        *,
+        scope: MutationScope = DEFAULT_MUTATION_SCOPE,
+    ) -> AnalogFourMutationPlan:
         """Delegate to the Analog Four mutation planner strategy."""
 
-        return self.mutation_planner.plan(_require_analog_four_kit_snapshot(snapshot), depth)
+        return self.mutation_planner.plan(
+            _require_analog_four_kit_snapshot(snapshot),
+            depth,
+            scope=scope,
+        )
 
     def to_mock_messages(self, plan: object) -> list[MidiMessage]:
         """Render ready plan events into inert mock MIDI messages."""

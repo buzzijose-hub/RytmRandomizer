@@ -1,0 +1,26 @@
+# Targeted live-kit mutation run log
+
+- 2026-08-26 — START: user-authorized autonomous implementation on the existing dirty Cockpit/capture worktree.
+- 2026-08-26 — MODEL: canonical include targets, deny locks, and empty-target default defined.
+- 2026-08-26 — BACKEND: session, WS, planners, send-plan invariant, and captured Rytm anchor bridge implemented.
+- 2026-08-26 — FRONTEND: Rytm/A4 multi-select controls and targeted/locked/inactive presentation implemented.
+- 2026-08-26 — A4: captured saved-kit mutation retained as zero-event fail-closed scaffolding pending semantic offset evidence.
+- 2026-08-26 — REVIEW: architecture, house-style, parity/test, observability, and docs findings addressed.
+- 2026-08-26 — VERIFY: 443 focused Python, 5,213 broad fast, 693 architecture, 685 parity, and 519 frontend tests passed; frontend coverage reached 100%; lint/type/build gates passed.
+- 2026-08-26 — DONE: implementation completed locally; no external PR/push/merge action was authorized or taken.
+- 2026-08-26 — PHASE 2 START: user authorized the next best move, a separately armed one-Rytm-output Cockpit rehearsal path.
+- 2026-08-26 — PHASE 2 BOUNDARY: the Tauri launch remained input-only; manual live composition gained exact-port and feature-confirmation gates with lazy output open.
+- 2026-08-26 — PHASE 2 SEND: live UI confirmation now names the port, plan, packet pads, and message count; armed WS SEND requires the exact current plan id.
+- 2026-08-26 — PHASE 2 VERIFY: 221 focused backend, 242 app-boundary, 1,522 Cockpit, 5,229 broad fast, 693 architecture, 685 parity, and 522 frontend tests passed; frontend coverage remained 100% and all lint/type/build gates passed.
+- 2026-08-26 — PHASE 2 DONE: automated work stayed mock-safe; the documented operator-present hardware rehearsal and restore remain manual.
+- 2026-08-27 — CONTINUATION START: resumed the comprehensive one-PR live-performance mission on the dirty `codex/rush16-anchor-audition-batch` checkout.
+- 2026-08-27 — PRESERVATION: classified the seven branch commits as RUSH01/RUSH16 history and kept every dirty/untracked path intact; no reset, clean, checkout, or bulk staging was used.
+- 2026-08-27 — INTEGRATION PLAN: preserve this checkout as the source checkpoint, audit acceptance gaps, then transfer only the coherent live-performance feature into a clean worktree from the latest `origin/modularize-v1.34`.
+- 2026-08-27 — HARDWARE BLOCKER: A4 saved-KIT semantic evidence and physical rehearsal remain studio-only; automated work continues with zero-event/unsendable A4 planning and mock-backed Rytm verification.
+- 2026-08-27 — CHECKPOINT: committed only the coherent 105-file live-performance feature on a local preservation branch; the seven unrelated RUSH commits, two dirty RUSH files, installers, references, and handoff artifacts stayed in the source checkout.
+- 2026-08-27 — TRANSPLANT: replayed the checkpoint onto a clean `origin/modularize-v1.34` worktree and resolved 23 conflicts by preserving the latest base architecture.
+- 2026-08-27 — OUTPUT SEAM: did not resurrect the deleted Cockpit real-device adapter. Rytm output remains exclusively behind `senders.armed_apply` with exact PREPARE/plan confirmation.
+- 2026-08-27 — CAPTURE CODEC: replaced branch-only calibration codec dependencies with the latest-base canonical Rytm/A4 saved-KIT codecs and preserved exact decode/re-encode validation.
+- 2026-08-27 — REHEARSAL: added a full mock-backed capture → target/lock → profile/depth/preview → PREPARE → exact confirmed ArmedApply SEND → untouched-scope verification → load/undo recovery test; its focused run passed.
+- 2026-08-27 — COORDINATOR: added independent Rytm/A4 stage state, lane-local failure/reconnect/stale/recovery semantics, separate authorities, and explicit OXI sequencing ownership; backend/frontend whole-state hydration is being verified.
+- 2026-08-27 — DOCS: updated current-base architecture prose/diagram, installer launch truth, Cockpit operator workflow, A4 mapping matrix, emergency recovery, and evidence checklist.

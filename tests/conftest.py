@@ -422,7 +422,7 @@ def rytm_real_layout_kit_payload(name: bytes = b"KIT 1") -> bytes:
 
     raw = bytearray(bytes([0x00] * RYTM_KIT_RAW_SIZE))
     raw[0:4] = bytes([0x00, 0x00, 0x00, 0x06])
-    raw[4:20] = name.ljust(16, b"\x00")
+    raw[4:20] = name[:16].ljust(16, b"\x00")
     machine_values = {
         1: 0,
         2: 2,

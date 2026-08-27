@@ -16,6 +16,7 @@ import type {
   CommandAck,
   ConnectionStateDict,
   DiagnosticsPayload,
+  DualMachineStageState,
   Event as ProtocolEvent,
   EventType,
   History,
@@ -23,6 +24,8 @@ import type {
   LibraryRecord,
   MidiActivityBatch,
   MutationCandidate,
+  AnalogFourPatchGenomePayload,
+  AnalogFourPatchGene,
   ProfileModel,
   Snapshot,
 } from '../../src/ws/protocol';
@@ -86,6 +89,7 @@ export const sendPlan: CockpitSendPlan = {
   estimated_midi_msgs: 2,
   pad_count: 2,
   locked_pad_ids: [2],
+  target_pad_ids: [],
   blocked_reasons: [],
   packets: [
     { pad_id: 1, parameter: 'tun', channel: 0, control: 52, value: 35 },
@@ -146,6 +150,7 @@ export const sessionLive: SessionStatus = {
   mode: 'live',
   connection_phase: 'armed',
   unsaved_sends: 2,
+  capture_enabled: true,
 };
 
 export const sessionMock: SessionStatus = {
@@ -154,6 +159,41 @@ export const sessionMock: SessionStatus = {
   mode: 'mock',
   connection_phase: 'disconnected',
   unsaved_sends: 0,
+  capture_enabled: false,
+};
+
+export const readyDualMachineStage: DualMachineStageState = {
+  revision: 8,
+  rytm: {
+    device_id: 'analog_rytm_mk2',
+    connection_state: 'connected',
+    capture_state: 'captured',
+    target_ids: [],
+    locked_ids: [2],
+    effective_ids: [1, 3],
+    candidate_state: 'ready',
+    plan_state: 'ready',
+    authority_state: 'not_armed',
+    blocked_reasons: [],
+    recovery_actions: ['confirm_exact_plan'],
+    last_error: null,
+  },
+  analog_four: {
+    device_id: 'analog_four_mk2',
+    connection_state: 'unknown',
+    capture_state: 'not_captured',
+    target_ids: [],
+    locked_ids: [],
+    effective_ids: [],
+    candidate_state: 'none',
+    plan_state: 'blocked',
+    authority_state: 'blocked',
+    blocked_reasons: ['a4_semantic_mapping_unpromoted'],
+    recovery_actions: ['capture_current_kit', 'run_a4_mapping_gap_procedure'],
+    last_error: null,
+  },
+  oxi_owns_sequencing: true,
+  direct_oxi_control: false,
 };
 
 // ---------- Wave-4 fixtures (connection / monitor / doctor / library) ----------
@@ -253,16 +293,125 @@ export const diagnosticsFaulty: DiagnosticsPayload = {
 };
 
 export const availableProfiles = [
-  { profile_id: 'scene-industrial', name: 'Industrial', kind: 'scene' as const },
-  { profile_id: 'scene-warehouse', name: 'Warehouse', kind: 'scene' as const },
-  { profile_id: 'user-buzzi', name: 'buzzi', kind: 'user' as const },
+  {
+    profile_id: 'scene-industrial',
+    name: 'Industrial',
+    kind: 'scene' as const,
+    model_version: '1.0.0',
+    source_summary: 'Built-in scene · metallic and harsh',
+  },
+  {
+    profile_id: 'scene-warehouse',
+    name: 'Warehouse',
+    kind: 'scene' as const,
+    model_version: '1.0.0',
+    source_summary: 'Built-in scene · rolling warehouse pressure',
+  },
+  {
+    profile_id: 'user-buzzi',
+    name: 'buzzi',
+    kind: 'user' as const,
+    model_version: '1.2.0',
+    source_summary: '5 sources · 1,243 analyzed signals',
+  },
 ];
+
+const patchGenes: AnalogFourPatchGene[] = [
+  {
+    track: 2,
+    family: 'Oscillators',
+    rationale: 'Keep the first oscillator tight and centered.',
+    confidence: 'high',
+    value: {
+      parameter: 'OSC1 TUN',
+      section: 'OSC1',
+      encoder: 'A',
+      screen_value: '+7.00',
+      midi_value: 71,
+      cc_msb: 16,
+      cc_lsb: null,
+      nrpn_address: null,
+      transport_status: 'cc-ready',
+      dial_direction: 'clockwise',
+    },
+  },
+  {
+    track: 2,
+    family: 'Envelope and LFO',
+    rationale: 'Short motion reinforces the pressure pulse.',
+    confidence: 'medium',
+    value: {
+      parameter: 'LFO1 SPD',
+      section: 'LFO1',
+      encoder: 'B',
+      screen_value: '64',
+      midi_value: 64,
+      cc_msb: null,
+      cc_lsb: null,
+      nrpn_address: [1, 32],
+      transport_status: 'nrpn-ready',
+      dial_direction: 'clockwise',
+    },
+  },
+  {
+    track: 2,
+    family: 'Filter and effects',
+    rationale: 'Open the filter without losing the low-end anchor.',
+    confidence: 'high',
+    value: {
+      parameter: 'FILT1 FRQ',
+      section: 'FILTER',
+      encoder: 'A',
+      screen_value: '88',
+      midi_value: null,
+      cc_msb: null,
+      cc_lsb: null,
+      nrpn_address: [2, 10],
+      transport_status: 'screen-only-nrpn',
+      dial_direction: 'clockwise',
+    },
+  },
+];
+
+function patchCandidate(column: number, label: string, role: string, closeness: number) {
+  return { column, label, role, closeness, genes: patchGenes };
+}
+
+export const patchGenome: AnalogFourPatchGenomePayload = {
+  source: { type: 'description', value: 'Tight warehouse pressure' },
+  selected_candidate: 2,
+  selected_track: 2,
+  selected: patchCandidate(2, 'Brighter sync', 'Sharper sync-led variation', 86),
+  genome: {
+    version: 'analog-four-patch-genome-v1',
+    device_id: 'analog_four',
+    mode: 'passive',
+    selected_track: 2,
+    source_hash: '0123456789abcdef',
+    source_confidence: 'high',
+    candidate_count: 4,
+    traits: [
+      { key: 'energy', label: 'Energy', intensity: 78, evidence: ['pressure'] },
+      { key: 'brightness', label: 'Brightness', intensity: 61, evidence: ['tight'] },
+    ],
+    candidates: [
+      patchCandidate(1, 'Closest match', 'Reference-nearest patch', 92),
+      patchCandidate(2, 'Brighter sync', 'Sharper sync-led variation', 86),
+      patchCandidate(3, 'Darker drive', 'Driven low-mid variation', 80),
+      patchCandidate(4, 'Wider motion', 'Motion-rich spatial variation', 76),
+    ],
+    safety: ['passive read-only patch genome'],
+  },
+  safety: ['passive read-only patch genome'],
+};
 
 // ---------- FakeClient ----------
 
 export class FakeCockpitClient {
   sent: Command[] = [];
   ackQueue: CommandAck[] = [];
+  /** Explicit promises consumed before the synchronous ack helpers. */
+  responseQueue: Promise<CommandAck>[] = [];
   /** Make the next `send` call reject with this value (consumed once). */
   nextRejection: unknown | null = null;
   /** When true, send() returns a never-resolving promise (used to test no-ack paths). */
@@ -282,6 +431,8 @@ export class FakeCockpitClient {
 
   send(command: Command): Promise<CommandAck> {
     this.sent.push(command);
+    const queuedResponse = this.responseQueue.shift();
+    if (queuedResponse !== undefined) return queuedResponse;
     if (this.nextRejection !== null) {
       const err = this.nextRejection;
       this.nextRejection = null;

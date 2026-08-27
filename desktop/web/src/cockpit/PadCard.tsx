@@ -13,6 +13,8 @@ import { Knob } from './Knob';
 import { LockButton } from './LockButton';
 import { RYTM_PARAMETER_GROUPS, type ParameterDefinition } from './parameterGroups';
 import { usePadLocks } from './usePadLocks';
+import { useMutationTargets } from './useMutationTargets';
+import { RYTM_DEVICE_ID } from './devices';
 
 export interface PadCardProps {
   pad: PadState;
@@ -34,18 +36,46 @@ function selectGhostParams(
 
 export function PadCard({ pad, previewCandidate, previewOn }: PadCardProps): JSX.Element {
   const { isLocked, toggleLock } = usePadLocks();
+  const { hasExplicitTargets, isTargeted, toggleTarget } =
+    useMutationTargets(RYTM_DEVICE_ID);
   const locked = isLocked(pad.pad_id);
-  const ghostParams = selectGhostParams(pad.pad_id, previewCandidate, previewOn);
-  const className = locked ? 'pad-card locked' : 'pad-card';
+  const targeted = isTargeted(pad.pad_id);
+  // A lock is authoritative protection, so a pre-lock candidate must not keep
+  // drawing proposed values while the replacement whole-state event arrives.
+  const ghostParams = locked
+    ? null
+    : selectGhostParams(pad.pad_id, previewCandidate, previewOn);
+  const className = [
+    'pad-card',
+    hasExplicitTargets ? (targeted ? 'targeted' : 'inactive') : '',
+    locked ? 'locked' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
-    <div className={className} data-testid={`pad-card-${pad.pad_id}`}>
+    <div
+      className={className}
+      data-target-state={targeted ? 'targeted' : 'inactive'}
+      data-testid={`pad-card-${pad.pad_id}`}
+    >
       <div className="pad-card-header">
         <div>
           <div className="pad-card-title">Pad {pad.pad_id}</div>
           <div className="pad-card-machine">{pad.machine}</div>
         </div>
-        <LockButton locked={locked} padId={pad.pad_id} onToggle={() => toggleLock(pad.pad_id)} />
+        <div className="mutation-scope-actions">
+          <button
+            aria-label={`${targeted && hasExplicitTargets ? 'Remove' : 'Target'} pad ${pad.pad_id}`}
+            aria-pressed={targeted && hasExplicitTargets}
+            className="target-button"
+            onClick={() => toggleTarget(pad.pad_id)}
+            type="button"
+          >
+            {targeted && hasExplicitTargets ? 'Targeted' : 'Target'}
+          </button>
+          <LockButton locked={locked} padId={pad.pad_id} onToggle={() => toggleLock(pad.pad_id)} />
+        </div>
       </div>
       <div className="pad-card-parameter-groups">
         {RYTM_PARAMETER_GROUPS.map((group) => (

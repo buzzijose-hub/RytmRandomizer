@@ -3,7 +3,7 @@
 **Status:** Phase 1 normative — must be implemented byte-identically by every reference implementation (Python today; C99 / Rust on the Phase 4 hardware runtime).
 **Authority:** This document. The Python implementation in `mutate.py` + `prng.py` conforms to this spec; the JSON conformance corpus under `tests/cockpit/fixtures/engine_conformance/` is the byte-frozen reference output.
 
-This file is the **single source of truth** for how `mutate(snapshot, profile, depth, seed) → MutationCandidate` produces its output. Any disagreement between this file and a reference implementation is a spec defect (file an issue and reconcile in this document first; the implementation follows).
+This file is the **single source of truth** for how `mutate(snapshot, profile, depth, seed, target_pad_ids=()) → MutationCandidate` produces its output. Any disagreement between this file and a reference implementation is a spec defect (file an issue and reconcile in this document first; the implementation follows).
 
 A C99 or Rust port that satisfies the entire conformance corpus (`tests/cockpit/test_engine_conformance.py`) is *by construction* conformant.
 
@@ -14,7 +14,7 @@ A C99 or Rust port that satisfies the entire conformance corpus (`tests/cockpit/
 The mutation engine is a pure function:
 
 ```text
-mutate : (Snapshot, ProfileModel, depth: float, seed: uint32) → MutationCandidate
+mutate : (Snapshot, ProfileModel, depth: float, seed: uint32, target_pad_ids: Set<pad_id> = {}) → MutationCandidate
 ```
 
 | Input | Type | Constraints |
@@ -23,6 +23,7 @@ mutate : (Snapshot, ProfileModel, depth: float, seed: uint32) → MutationCandid
 | `profile` | `ProfileModel` | Every `pad_mappings[i].trait` must exist in `traits`. |
 | `depth` | IEEE-754 double | `0.10 ≤ depth ≤ 0.90` (UI-snapped range). |
 | `seed` | uint32 | Any 32-bit unsigned value. `0` is a documented special case (see §3). |
+| `target_pad_ids` | set of uint8 | Optional explicit include-list in `1..12`. Empty means all snapshot pads, preserving the original behavior. |
 
 Every dataclass field used by the engine is round-trip-serializable; see `rytm_randomizer/cockpit/data/`.
 
@@ -39,7 +40,7 @@ The engine produces a `MutationCandidate` with:
 | `profile_id` | Copied from `profile.profile_id`. |
 | `depth` | Copied from input. |
 | `seed` | Copied from input (the raw value the caller passed — the engine's internal PRNG normalisation in §3 is invisible). |
-| `pad_deltas` | One `PadDelta` per pad in `snapshot.pads`, in `pad_id` order; see §6. |
+| `pad_deltas` | One `PadDelta` per targeted pad, or per snapshot pad when the include-list is empty, in `pad_id` order; see §6. |
 | `safety_status` | Derived from `depth`; see §7. |
 | `estimated_midi_msgs` | Sum of `len(pd.changed_keys)` across all pad deltas. |
 
@@ -105,6 +106,13 @@ Determinism requires every reference implementation to traverse the inputs in th
 2. **Parameter iteration order:** ascending by key (lexicographic Unicode-codepoint comparison, the natural Python `sorted()` order for `str`). The C-port author must iterate a sorted key array.
 
 Within each pad, **one** `xorshift32` value is drawn per parameter. The PRNG state threads through the entire candidate — every draw uses the state left behind by the previous draw. There is no per-pad re-seeding.
+
+Target filtering happens **after** every pad's parameter draws are consumed.
+An untargeted pad is omitted from `pad_deltas` and from
+`estimated_midi_msgs`, but it advances the PRNG exactly as it would in the
+default all-pad call. Therefore a selected pad's proposed values are identical
+for the same snapshot/profile/depth/seed regardless of which neighboring pads
+are included.
 
 ---
 

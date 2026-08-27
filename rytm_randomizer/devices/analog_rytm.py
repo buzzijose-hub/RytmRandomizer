@@ -18,6 +18,7 @@ from collections.abc import Iterable
 from typing import Final, Protocol, runtime_checkable
 
 from ..mock_midi import MidiMessage
+from ..snapshot.mutation_scope import DEFAULT_MUTATION_SCOPE, MutationScope
 from . import registry
 from .base import Device
 from .strategies import (
@@ -130,10 +131,20 @@ class AnalogRytmDevice:
 
         return self.snapshot_decoder.decode(raw, slot=slot)
 
-    def plan_mutation(self, snapshot: object, depth: int) -> RytmMutationPlan:
+    def plan_mutation(
+        self,
+        snapshot: object,
+        depth: int,
+        *,
+        scope: MutationScope = DEFAULT_MUTATION_SCOPE,
+    ) -> RytmMutationPlan:
         """Delegate to :attr:`mutation_planner` (the WS-S6 ``plan``)."""
 
-        return self.mutation_planner.plan(_require_analog_rytm_kit_snapshot(snapshot), depth)
+        return self.mutation_planner.plan(
+            _require_analog_rytm_kit_snapshot(snapshot),
+            depth,
+            scope=scope,
+        )
 
     def to_mock_messages(self, plan: object) -> list[MidiMessage]:
         """Render every event in ``plan`` into an inert ``MidiMessage``.

@@ -31,13 +31,20 @@ import type {
 import type {
   Event,
   EventType,
+  DualMachineStageChangedEvent,
+  DualMachineStageState,
   History,
   HistoryUpdatedEvent,
+  KitCapturesChangedEvent,
   CockpitSendPlan,
   MutationCandidate,
   MutationPreviewedEvent,
+  MutationLocksChangedEvent,
+  MutationTargetsChangedEvent,
+  PatchGenomeChangedEvent,
   PerformanceConsoleChangedEvent,
   ProfileChangedEvent,
+  ProfileCatalogChangedEvent,
   ProfileModel,
   SessionStatusEvent,
   SendPlanChangedEvent,
@@ -45,6 +52,7 @@ import type {
   SnapshotChangedEvent,
 } from '../src/ws/protocol';
 import { performanceConsoleModel } from './cockpit/performanceConsoleFixture';
+import { availableProfiles, connectionFault, patchGenome } from './cockpit/_fixtures';
 
 // ---------- Fixtures ----------
 
@@ -84,6 +92,7 @@ const sendPlan: CockpitSendPlan = {
   estimated_midi_msgs: 2,
   pad_count: 2,
   locked_pad_ids: [],
+  target_pad_ids: [],
   blocked_reasons: [],
   packets: [
     { pad_id: 1, parameter: 'tun', channel: 0, control: 52, value: 45 },
@@ -116,6 +125,41 @@ const session: SessionStatus = {
   mode: 'live',
   connection_phase: 'armed',
   unsaved_sends: 2,
+  capture_enabled: true,
+};
+
+const readyStage: DualMachineStageState = {
+  revision: 4,
+  rytm: {
+    device_id: 'analog_rytm_mk2',
+    connection_state: 'connected',
+    capture_state: 'captured',
+    target_ids: [],
+    locked_ids: [],
+    effective_ids: [1, 2],
+    candidate_state: 'ready',
+    plan_state: 'ready',
+    authority_state: 'armed',
+    blocked_reasons: [],
+    recovery_actions: ['confirm_exact_plan'],
+    last_error: null,
+  },
+  analog_four: {
+    device_id: 'analog_four_mk2',
+    connection_state: 'connected',
+    capture_state: 'captured',
+    target_ids: [],
+    locked_ids: [],
+    effective_ids: [1, 2, 3, 4],
+    candidate_state: 'ready',
+    plan_state: 'blocked',
+    authority_state: 'blocked',
+    blocked_reasons: ['a4_semantic_mapping_unpromoted'],
+    recovery_actions: ['run_a4_mapping_gap_procedure'],
+    last_error: null,
+  },
+  oxi_owns_sequencing: true,
+  direct_oxi_control: false,
 };
 
 // ---------- Tests: store actions ----------
@@ -128,16 +172,30 @@ describe('cockpit store — actions write each slice', () => {
     expect(state.previewCandidate).toBeNull();
     expect(state.history).toBeNull();
     expect(state.profile).toBeNull();
+    expect(state.profileCatalog).toEqual([]);
+    expect(state.patchGenome).toBeNull();
+    expect(state.patchGenomeStale).toBe(false);
+    expect(state.kitCaptures).toEqual([]);
     expect(state.performanceConsole).toBeNull();
     expect(state.sendPlan).toBeNull();
     expect(state.sessionStatus).toBeNull();
     expect(state.connectionStatus).toBe('closed');
+    expect(state.dualMachineStage).toBeNull();
     expect(state.operatorLog).toEqual([]);
     expect(INITIAL_STATE).toEqual({
       snapshot: null,
       previewCandidate: null,
       history: null,
       profile: null,
+      profileCatalog: [],
+      patchGenome: null,
+      patchGenomeStale: false,
+      kitCaptures: [],
+      rytmPadTargets: [],
+      a4TrackTargets: [],
+      rytmPadLocks: [],
+      a4TrackLocks: [],
+      dualMachineStage: null,
       performanceConsole: null,
       sendPlan: null,
       sessionStatus: null,
@@ -172,6 +230,131 @@ describe('cockpit store — actions write each slice', () => {
     const store = createCockpitStore();
     store.getState().setHistory(history);
     expect(store.getState().history).toBe(history);
+  });
+
+  it('setProfileCatalog and setPatchGenome write live catalogue slices', () => {
+    const store = createCockpitStore();
+    store.getState().setProfileCatalog([...availableProfiles]);
+    store.getState().setPatchGenome(patchGenome);
+    expect(store.getState().profileCatalog).toEqual(availableProfiles);
+    expect(store.getState().patchGenome).toBe(patchGenome);
+    expect(store.getState().patchGenomeStale).toBe(false);
+  });
+
+  it('optimistic target and lock changes revoke prepared artifacts immediately', () => {
+    const store = createCockpitStore();
+    store.getState().setPreviewCandidate(candidate);
+    store.getState().setSendPlan(sendPlan);
+    store.getState().setPatchGenome(patchGenome);
+
+    store.getState().setMutationTargets([], [2]);
+
+    expect(store.getState().previewCandidate).toBeNull();
+    expect(store.getState().sendPlan).toBeNull();
+    expect(store.getState().patchGenomeStale).toBe(true);
+
+    store.getState().setPatchGenome(patchGenome);
+    expect(store.getState().patchGenomeStale).toBe(false);
+    store.getState().setA4TrackLocks([3]);
+    expect(store.getState().patchGenomeStale).toBe(true);
+  });
+
+  it('treats identical targets as a no-op and does not invent stale genome state', () => {
+    const store = createCockpitStore();
+    store.getState().setPreviewCandidate(candidate);
+    store.getState().setSendPlan(sendPlan);
+
+    store.getState().setMutationTargets([], []);
+    store.getState().setRytmPadLocks([]);
+    store.getState().setA4TrackLocks([]);
+    expect(store.getState().previewCandidate).toBe(candidate);
+    expect(store.getState().sendPlan).toBe(sendPlan);
+
+    store.getState().setMutationTargets([], [2]);
+    expect(store.getState().patchGenomeStale).toBe(false);
+  });
+
+  it('marks a genome stale when authoritative whole-lock hydration changes A4 scope', () => {
+    const store = createCockpitStore();
+    store.getState().setPatchGenome(patchGenome);
+
+    store.getState().setMutationLocks([], [4]);
+
+    expect(store.getState().patchGenomeStale).toBe(true);
+  });
+
+  it('tracks stale, blocked, and freshly ready A4 candidates without conflating them', () => {
+    const store = createCockpitStore();
+    store.getState().setPatchGenome(patchGenome);
+    store.getState().setDualMachineStage(readyStage);
+    expect(store.getState().patchGenomeStale).toBe(false);
+
+    store.getState().setDualMachineStage({
+      ...readyStage,
+      analog_four: { ...readyStage.analog_four, candidate_state: 'stale' },
+    });
+    expect(store.getState().patchGenomeStale).toBe(true);
+
+    store.getState().setDualMachineStage({
+      ...readyStage,
+      analog_four: { ...readyStage.analog_four, candidate_state: 'blocked' },
+    });
+    expect(store.getState().patchGenomeStale).toBe(true);
+
+    store.getState().setDualMachineStage(readyStage);
+    expect(store.getState().patchGenomeStale).toBe(false);
+  });
+
+  it('hydrates whole-stage authority without letting an A4 failure revoke a ready Rytm lane', () => {
+    const store = createCockpitStore();
+    store.getState().setPreviewCandidate(candidate);
+    store.getState().setSendPlan(sendPlan);
+    store.getState().setPatchGenome(patchGenome);
+    const a4Failed: DualMachineStageState = {
+      ...readyStage,
+      revision: 5,
+      analog_four: {
+        ...readyStage.analog_four,
+        connection_state: 'disconnected',
+        candidate_state: 'stale',
+        plan_state: 'stale',
+        locked_ids: [3],
+        blocked_reasons: ['device_disconnected'],
+        recovery_actions: ['reconnect_device', 'capture_current_kit'],
+        last_error: 'device disconnected',
+      },
+    };
+
+    store.getState().setDualMachineStage(a4Failed);
+
+    expect(store.getState().dualMachineStage).toBe(a4Failed);
+    expect(store.getState().previewCandidate).toBe(candidate);
+    expect(store.getState().sendPlan).toBe(sendPlan);
+    expect(store.getState().a4TrackLocks).toEqual([3]);
+    expect(store.getState().patchGenomeStale).toBe(true);
+  });
+
+  it('authoritative lock hydration revokes artifacts only when the complete lock set changes', () => {
+    const store = createCockpitStore();
+    store.getState().setPreviewCandidate(candidate);
+    store.getState().setSendPlan(sendPlan);
+
+    store.getState().setMutationLocks([], []);
+    expect(store.getState().previewCandidate).toBe(candidate);
+    expect(store.getState().sendPlan).toBe(sendPlan);
+
+    store.getState().setMutationLocks([2], [4]);
+    expect(store.getState().rytmPadLocks).toEqual([2]);
+    expect(store.getState().a4TrackLocks).toEqual([4]);
+    expect(store.getState().previewCandidate).toBeNull();
+    expect(store.getState().sendPlan).toBeNull();
+  });
+
+  it('setKitCaptures replaces the complete dual-device anchor set', () => {
+    const store = createCockpitStore();
+    const captures: KitCapturesChangedEvent['captures'] = [];
+    store.getState().setKitCaptures(captures);
+    expect(store.getState().kitCaptures).toBe(captures);
   });
 
   it('setProfile accepts a profile and null (no active profile)', () => {
@@ -215,6 +398,55 @@ describe('cockpit store — actions write each slice', () => {
       'send rejected',
     ]);
     expect(store.getState().operatorLog[1]).toMatchObject({ level: 'error' });
+  });
+
+  it('disconnect revokes candidate and plan, and reconnect does not resurrect them', () => {
+    const store = createCockpitStore();
+    store.getState().setDualMachineStage(readyStage);
+    store.getState().setPreviewCandidate(candidate);
+    store.getState().setSendPlan(sendPlan);
+    store.getState().setConnectionStatus('connected');
+
+    store.getState().setConnectionStatus('reconnecting');
+
+    expect(store.getState().previewCandidate).toBeNull();
+    expect(store.getState().sendPlan).toBeNull();
+    expect(store.getState().dualMachineStage?.rytm).toMatchObject({
+      connection_state: 'disconnected',
+      candidate_state: 'stale',
+      plan_state: 'stale',
+      authority_state: 'blocked',
+    });
+
+    // Repeated loss is idempotent: it exercises the already-stale and
+    // already-recorded blocked-reason paths without duplicating authority.
+    store.getState().setConnectionStatus('closed');
+    expect(store.getState().dualMachineStage?.rytm.blocked_reasons).toEqual([
+      'device_disconnected',
+    ]);
+
+    store.getState().setConnectionStatus('connected');
+    expect(store.getState().previewCandidate).toBeNull();
+    expect(store.getState().sendPlan).toBeNull();
+
+    store.getState().setConnection(connectionFault);
+    expect(store.getState().dualMachineStage?.rytm.connection_state).toBe('disconnected');
+  });
+
+  it('reconnect whole-state hydration replaces retained optimistic locks authoritatively', () => {
+    const store = createCockpitStore();
+    store.getState().setConnectionStatus('connected');
+    store.getState().setMutationLocks([1], [2]);
+    store.getState().setConnectionStatus('reconnecting');
+    store.getState().setConnectionStatus('connected');
+
+    // Locks remain fail-closed through transport loss, then the first complete
+    // server event replaces both device dimensions atomically.
+    expect(store.getState().rytmPadLocks).toEqual([1]);
+    expect(store.getState().a4TrackLocks).toEqual([2]);
+    store.getState().setMutationLocks([3], [4]);
+    expect(store.getState().rytmPadLocks).toEqual([3]);
+    expect(store.getState().a4TrackLocks).toEqual([4]);
   });
 
   it('reset() returns to INITIAL_STATE', () => {
@@ -274,14 +506,101 @@ describe('cockpit store — selectors', () => {
     expect(selectPadCount({ ...INITIAL_STATE, snapshot })).toBe(2);
   });
 
-  it('selectSendPlanReady and selectCanSend require a ready send plan', () => {
+  it('selectCanSend requires a connected exact plan for the current candidate, scope, and stage', () => {
     expect(selectSendPlanReady({ ...INITIAL_STATE })).toBe(false);
     expect(selectCanSend({ ...INITIAL_STATE })).toBe(false);
     expect(selectSendPlanReady({ ...INITIAL_STATE, sendPlan })).toBe(true);
-    expect(selectCanSend({ ...INITIAL_STATE, sendPlan })).toBe(true);
+    const sendableState = {
+      ...INITIAL_STATE,
+      connectionStatus: 'connected' as const,
+      previewCandidate: candidate,
+      sendPlan,
+      dualMachineStage: readyStage,
+    };
+    expect(selectCanSend(sendableState)).toBe(true);
+    expect(
+      selectCanSend({ ...INITIAL_STATE, connectionStatus: 'connected' }),
+    ).toBe(false);
+    expect(
+      selectCanSend({ ...INITIAL_STATE, connectionStatus: 'connected', sendPlan }),
+    ).toBe(false);
+    expect(selectCanSend({ ...sendableState, connectionStatus: 'reconnecting' })).toBe(false);
     expect(
       selectCanSend({
-        ...INITIAL_STATE,
+        ...sendableState,
+        sendPlan: { ...sendPlan, plan_id: '' },
+      }),
+    ).toBe(false);
+    expect(
+      selectCanSend({
+        ...sendableState,
+        sendPlan: { ...sendPlan, candidate_id: 'stale-candidate' },
+      }),
+    ).toBe(false);
+    expect(
+      selectCanSend({
+        ...sendableState,
+        sendPlan: { ...sendPlan, source_snapshot_id: 'stale-snapshot' },
+      }),
+    ).toBe(false);
+    expect(
+      selectCanSend({
+        ...sendableState,
+        sendPlan: { ...sendPlan, profile_id: 'stale-profile' },
+      }),
+    ).toBe(false);
+    expect(
+      selectCanSend({
+        ...sendableState,
+        rytmPadTargets: [1],
+      }),
+    ).toBe(false);
+    expect(
+      selectCanSend({
+        ...sendableState,
+        rytmPadLocks: [2],
+      }),
+    ).toBe(false);
+    expect(selectCanSend({ ...sendableState, dualMachineStage: null })).toBe(false);
+    expect(
+      selectCanSend({
+        ...sendableState,
+        dualMachineStage: {
+          ...readyStage,
+          rytm: { ...readyStage.rytm, candidate_state: 'none' },
+        },
+      }),
+    ).toBe(false);
+    expect(
+      selectCanSend({
+        ...sendableState,
+        dualMachineStage: {
+          ...readyStage,
+          rytm: { ...readyStage.rytm, plan_state: 'stale' },
+        },
+      }),
+    ).toBe(false);
+    expect(
+      selectCanSend({
+        ...sendableState,
+        dualMachineStage: {
+          ...readyStage,
+          rytm: { ...readyStage.rytm, connection_state: 'disconnected' },
+        },
+      }),
+    ).toBe(false);
+    expect(
+      selectCanSend({
+        ...sendableState,
+        dualMachineStage: {
+          ...readyStage,
+          rytm: { ...readyStage.rytm, authority_state: 'blocked' },
+        },
+      }),
+    ).toBe(false);
+    expect(
+      selectCanSend({
+        ...sendableState,
         sendPlan: { ...sendPlan, ready: false, readiness_reason: 'candidate_high_risk' },
       }),
     ).toBe(false);
@@ -370,7 +689,7 @@ class FakeClient {
 }
 
 describe('bindClientToStore', () => {
-  it('routes all seven engine events into the corresponding store slices', () => {
+  it('routes all nine engine events into the corresponding store slices', () => {
     const store = createCockpitStore();
     const client = new FakeClient();
     const unbind = bindClientToStore(client as unknown as CockpitClient, store);
@@ -416,6 +735,54 @@ describe('bindClientToStore', () => {
     fire('profile_changed', profileOff);
     expect(store.getState().profile).toBeNull();
 
+    const catalogEvent: ProfileCatalogChangedEvent = {
+      type: 'profile_catalog_changed',
+      profiles: [...availableProfiles],
+    };
+    fire('profile_catalog_changed', catalogEvent);
+    expect(store.getState().profileCatalog).toEqual(availableProfiles);
+
+    const capturesEvent: KitCapturesChangedEvent = {
+      type: 'kit_captures_changed',
+      captures: [],
+    };
+    fire('kit_captures_changed', capturesEvent);
+    expect(store.getState().kitCaptures).toEqual([]);
+
+    const targetsEvent: MutationTargetsChangedEvent = {
+      type: 'mutation_targets_changed',
+      rytm_pad_targets: [1, 4],
+      a4_track_targets: [2],
+    };
+    fire('mutation_targets_changed', targetsEvent);
+    expect(store.getState().rytmPadTargets).toEqual([1, 4]);
+    expect(store.getState().a4TrackTargets).toEqual([2]);
+
+    const locksEvent: MutationLocksChangedEvent = {
+      type: 'mutation_locks_changed',
+      rytm_pad_locks: [2],
+      a4_track_locks: [3],
+    };
+    fire('mutation_locks_changed', locksEvent);
+    expect(store.getState().rytmPadLocks).toEqual([2]);
+    expect(store.getState().a4TrackLocks).toEqual([3]);
+
+    const stageEvent: DualMachineStageChangedEvent = {
+      type: 'dual_machine_stage_changed',
+      stage: readyStage,
+    };
+    fire('dual_machine_stage_changed', stageEvent);
+    expect(store.getState().dualMachineStage).toBe(readyStage);
+    expect(store.getState().rytmPadTargets).toEqual([]);
+    expect(store.getState().rytmPadLocks).toEqual([]);
+
+    const genomeEvent: PatchGenomeChangedEvent = {
+      type: 'patch_genome_changed',
+      patch_genome: patchGenome,
+    };
+    fire('patch_genome_changed', genomeEvent);
+    expect(store.getState().patchGenome).toBe(patchGenome);
+
     const consoleEvent: PerformanceConsoleChangedEvent = {
       type: 'performance_console_changed',
       performance_console: performanceConsoleModel,
@@ -437,6 +804,7 @@ describe('bindClientToStore', () => {
       mode: 'mock',
       connection_phase: 'disconnected',
       unsaved_sends: 0,
+      capture_enabled: false,
     };
     fire('session_status', sessionEvent);
     expect(store.getState().sessionStatus).toEqual({
@@ -445,6 +813,7 @@ describe('bindClientToStore', () => {
       mode: 'mock',
       connection_phase: 'disconnected',
       unsaved_sends: 0,
+      capture_enabled: false,
     });
 
     client.fireStatus('connected');
@@ -456,7 +825,7 @@ describe('bindClientToStore', () => {
 
     // Unsubscribe should call client's individual unsubs.
     unbind();
-    expect(client.unsubCalls).toBe(11);
+    expect(client.unsubCalls).toBe(17);
   });
 
   it('falls back to the module-level singleton store when no store is provided', () => {

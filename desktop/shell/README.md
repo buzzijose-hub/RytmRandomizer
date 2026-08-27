@@ -8,8 +8,9 @@ minimal Tauri 2 application that:
    404 surface is shown — this is intentional so the operator immediately
    knows the frontend hasn't been built.
 2. Spawns and **supervises** the Python sidecar
-   (`python -m rytm_randomizer.cockpit`) that hosts the WebSocket server,
-   mutation engine, profile registry, and device adapter.
+   (`python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar`) that
+   hosts the WebSocket server, input-only current-KIT capture, mutation engine,
+   profile registry, and mock state adapter. Output remains separately armed.
 3. Exposes a **system tray** with a single `Quit` menu item that shuts down
    the app cleanly.
 
@@ -41,7 +42,8 @@ desktop/shell/
 Implemented in `src/sidecar.rs` and orchestrated by the supervisor thread in
 `src/main.rs`.
 
-- **Spawn:** `python -m rytm_randomizer.cockpit` inherits stdout/stderr so
+- **Spawn:** `python -m rytm_randomizer.app --arm
+  --cockpit-kit-capture-sidecar` inherits stdout/stderr so
   Python logs flow to the shell's console.
 - **Restart on crash:** the supervisor thread polls the child every 250 ms;
   when it exits, the thread waits `backoff_delay(failures)` and respawns.

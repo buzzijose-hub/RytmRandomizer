@@ -30,7 +30,9 @@ from cockpit.conftest import collect_initial_events, complete_handshake, drain_e
 from fastapi.testclient import TestClient
 
 from rytm_randomizer.cockpit.ws.protocol import (
+    COMMAND_ANALYZE_PATCH_GENOME,
     COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
+    COMMAND_CLEAR_MUTATION_TARGETS,
     COMMAND_EXPORT_PROFILE_MODEL,
     COMMAND_LOAD_SNAPSHOT,
     COMMAND_PREPARE_SEND_PLAN,
@@ -41,7 +43,9 @@ from rytm_randomizer.cockpit.ws.protocol import (
     COMMAND_SAVE,
     COMMAND_SELECT_PROFILE,
     COMMAND_SEND,
+    COMMAND_SET_A4_TRACK_LOCK,
     COMMAND_SET_DEPTH,
+    COMMAND_SET_MUTATION_TARGETS,
     COMMAND_SET_PAD_LOCK,
     COMMAND_TOGGLE_PREVIEW,
     COMMAND_TYPES,
@@ -57,6 +61,23 @@ _COMMAND_MOCK_APPLY_OPERATOR_PACKAGE = "mock_apply_operator_package"
 # ---------------------------------------------------------------------------
 # Per-command round-trip: request_id echo + ok=True + command-specific fields.
 # ---------------------------------------------------------------------------
+
+
+def test_analyze_patch_genome_roundtrips_with_passive_payload(cockpit_ws: object) -> None:
+    ack = send_cmd(
+        cockpit_ws,
+        COMMAND_ANALYZE_PATCH_GENOME,
+        request_id="rt-genome",
+        description="Tight warehouse pressure",
+        track=2,
+    )
+    events = drain_events(cockpit_ws, 1)
+
+    assert ack["request_id"] == "rt-genome"
+    assert ack["ok"] is True
+    assert ack["patch_genome"]["selected_track"] == 2
+    assert len(ack["patch_genome"]["genome"]["candidates"]) == 4
+    assert events[0]["type"] == "patch_genome_changed"
 
 
 def test_select_profile_roundtrips_with_ok_ack(cockpit_ws: object) -> None:
@@ -103,6 +124,47 @@ def test_set_pad_lock_roundtrips_with_no_extras(cockpit_ws: object) -> None:
 
     assert ack["request_id"] == "rt-lock"
     assert ack["ok"] is True
+
+
+def test_mutation_target_commands_roundtrip_with_whole_state_event(cockpit_ws: object) -> None:
+    ack = send_cmd(
+        cockpit_ws,
+        COMMAND_SET_MUTATION_TARGETS,
+        request_id="rt-targets",
+        device_id="analog_rytm_mk2",
+        target_ids=[1, 4],
+    )
+    event = drain_events(cockpit_ws, 1)[0]
+
+    assert ack["request_id"] == "rt-targets"
+    assert ack["ok"] is True
+    assert event == {
+        "type": "mutation_targets_changed",
+        "rytm_pad_targets": [1, 4],
+        "a4_track_targets": [],
+    }
+
+    clear_ack = send_cmd(
+        cockpit_ws,
+        COMMAND_CLEAR_MUTATION_TARGETS,
+        request_id="rt-targets-clear",
+        device_id="analog_rytm_mk2",
+    )
+    clear_event = drain_events(cockpit_ws, 1)[0]
+    assert clear_ack["ok"] is True
+    assert clear_event["rytm_pad_targets"] == []
+
+
+def test_a4_track_lock_roundtrips_without_outbound_events(cockpit_ws: object) -> None:
+    ack = send_cmd(
+        cockpit_ws,
+        COMMAND_SET_A4_TRACK_LOCK,
+        request_id="rt-a4-lock",
+        track=3,
+        locked=True,
+    )
+
+    assert ack == {"request_id": "rt-a4-lock", "ok": True}
 
 
 def test_toggle_preview_roundtrips_with_candidate_field(cockpit_ws: object) -> None:
@@ -403,25 +465,27 @@ def test_build_operator_package_receipt_roundtrips_with_mock_safe_receipt_ack(
     assert receipt["events_emitted"] is False
 
 
-def test_all_sixteen_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
+def test_all_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
     """Pin invariant: every cockpit-native command has a matching round-trip test above.
 
     ``COMMAND_TYPES`` is the union of the cockpit + wizard command surfaces
-    (16 cockpit + 8 wizard = 24 total). This test pins the 16 cockpit-native
+    (30 cockpit + 8 wizard = 38 total). This test pins the cockpit-native
     commands; the wizard subset is exercised end-to-end in
     ``test_integration_wizard_flow.py``. If a new cockpit command lands and
     this assertion is not extended, the file falls out of sync silently —
     this test makes that drift visible at the integration boundary.
     """
 
-    # 16 pre-Wave-4 cockpit commands round-trip in this file; the 8
-    # Wave-4 commands (arm/disarm/diagnostics/library_*) are exercised in
-    # tests/cockpit/test_ws_arm_and_library_handlers.py.
-    assert len(COMMAND_TYPES) == 32
+    # 22 commands round-trip here; the 8 arm/diagnostics/library commands
+    # are exercised in tests/cockpit/test_ws_arm_and_library_handlers.py.
+    assert len(COMMAND_TYPES) == 38
     cockpit_native = {
         COMMAND_SELECT_PROFILE,
         COMMAND_SET_DEPTH,
         COMMAND_SET_PAD_LOCK,
+        COMMAND_SET_A4_TRACK_LOCK,
+        COMMAND_SET_MUTATION_TARGETS,
+        COMMAND_CLEAR_MUTATION_TARGETS,
         COMMAND_TOGGLE_PREVIEW,
         COMMAND_REGEN,
         COMMAND_PREPARE_SEND_PLAN,
@@ -435,9 +499,12 @@ def test_all_sixteen_cockpit_command_types_are_exercised(cockpit_ws: object) -> 
         COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
         _COMMAND_MOCK_APPLY_OPERATOR_PACKAGE,
         COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
+        COMMAND_ANALYZE_PATCH_GENOME,
+        "list_capture_inputs",
+        "capture_current_kit",
     }
     assert cockpit_native <= COMMAND_TYPES
-    assert len(cockpit_native) == 16
+    assert len(cockpit_native) == 22
 
 
 # ---------------------------------------------------------------------------
@@ -520,7 +587,7 @@ def test_malformed_json_closes_connection_but_server_keeps_serving(
     try:
         with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
             complete_handshake(ws)
-            collect_initial_events(ws, count=5)
+            collect_initial_events(ws)
             ws.send_text("this is not json at all")
     except Exception:
         # Either path is acceptable; the spec-bearing assertion is below.
@@ -529,8 +596,8 @@ def test_malformed_json_closes_connection_but_server_keeps_serving(
     # Prove the server still serves: open a fresh connection and bootstrap.
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
-        bootstrap = collect_initial_events(ws, count=5)
-    assert len(bootstrap) == 5
+        bootstrap = collect_initial_events(ws)
+    assert len(bootstrap) == 11
 
 
 def test_request_id_round_trips_with_unicode_payload(cockpit_ws: object) -> None:

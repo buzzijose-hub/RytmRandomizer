@@ -21,11 +21,12 @@ from __future__ import annotations
 import random
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Final
+from typing import Final, cast
 
 from ...data.profiles import PROFILES
 from ...guardrails.validation import PAD_PROFILE_KEY
 from ...observability.metrics import get_metrics
+from ...snapshot.mutation_scope import DEFAULT_MUTATION_SCOPE, MutationScope
 from .analog_rytm_snapshot_decoder import RytmKitSnapshot
 from .analog_rytm_snapshot_routing import (
     RytmSnapshotMachineRoutingResult,
@@ -78,6 +79,7 @@ class RytmMutationPlan:
     events: tuple[RytmPlanEvent, ...] = field(default_factory=tuple)
     ready: bool = True
     readiness_reason: str = ""
+    scope: MutationScope = DEFAULT_MUTATION_SCOPE
 
 
 # ---------------------------------------------------------------------------
@@ -91,6 +93,7 @@ class RytmMutationPlan:
 
 #: Maximum allowed depth. Matches the V1.34 monolith's documented range.
 MAX_DEPTH: Final[int] = 7
+_RYTM_PAD_IDS: Final[range] = range(1, 13)
 
 
 # ---------------------------------------------------------------------------
@@ -117,7 +120,13 @@ class AnalogRytmMutationPlanner:
 
         self._seed = seed
 
-    def plan(self, snapshot: RytmKitSnapshot, depth: int) -> RytmMutationPlan:
+    def plan(
+        self,
+        snapshot: object,
+        depth: int,
+        *,
+        scope: MutationScope = DEFAULT_MUTATION_SCOPE,
+    ) -> RytmMutationPlan:
         """Build a :class:`RytmMutationPlan` from ``snapshot`` at ``depth``.
 
         ``depth`` must be in ``[0, MAX_DEPTH]``.
@@ -132,58 +141,82 @@ class AnalogRytmMutationPlanner:
                 or if ``depth`` is outside ``[0, MAX_DEPTH]``.
         """
 
-        self._validate_inputs(snapshot, depth)
-        return self._plan_for_profile_keys(snapshot, depth, PAD_PROFILE_KEY)
+        validated_snapshot = self._validate_inputs(snapshot, depth)
+        return self._plan_for_profile_keys(validated_snapshot, depth, PAD_PROFILE_KEY, scope)
 
     def plan_for_machine_values(
         self,
-        snapshot: RytmKitSnapshot,
+        snapshot: object,
         depth: int,
         pad_machine_values: Mapping[int, int],
+        *,
+        scope: MutationScope = DEFAULT_MUTATION_SCOPE,
     ) -> RytmMutationPlan:
         """Build a plan from snapshot-derived ``pad -> machine_value`` facts."""
 
-        self._validate_inputs(snapshot, depth)
+        validated_snapshot = self._validate_inputs(snapshot, depth)
 
-        routing = route_rytm_snapshot_machine_values(pad_machine_values)
+        scoped_machine_values = pad_machine_values
+        if scope.target_ids or scope.locked_ids:
+            effective_pad_ids = self._effective_pad_ids(scope)
+            scoped_machine_values = {
+                pad: machine_value
+                for pad, machine_value in pad_machine_values.items()
+                if pad in effective_pad_ids
+            }
+        routing = route_rytm_snapshot_machine_values(scoped_machine_values)
         if not routing.ready:
             self._record_blocked_snapshot_routes(routing)
             return RytmMutationPlan(
-                snapshot=snapshot,
+                snapshot=validated_snapshot,
                 depth=depth,
                 events=(),
                 ready=False,
                 readiness_reason=routing.readiness_reason,
+                scope=scope,
             )
 
-        return self._plan_for_profile_keys(snapshot, depth, routing.profile_keys_by_pad)
+        return self._plan_for_profile_keys(
+            validated_snapshot,
+            depth,
+            routing.profile_keys_by_pad,
+            scope,
+        )
 
     def plan_for_snapshot_machine_facts(
         self,
-        snapshot: RytmKitSnapshot,
+        snapshot: object,
         depth: int,
+        *,
+        scope: MutationScope = DEFAULT_MUTATION_SCOPE,
     ) -> RytmMutationPlan:
         """Build a plan from machine facts already decoded on ``snapshot``."""
 
-        self._validate_inputs(snapshot, depth)
-        if not snapshot.machine_facts.promoted:
+        validated_snapshot = self._validate_inputs(snapshot, depth)
+        if not validated_snapshot.machine_facts.promoted:
             return RytmMutationPlan(
-                snapshot=snapshot,
+                snapshot=validated_snapshot,
                 depth=depth,
                 events=(),
                 ready=False,
                 readiness_reason=(
                     "snapshot machine facts are candidate-only; promote offsets before mutation"
                 ),
+                scope=scope,
             )
 
         machine_values: dict[int, int] = {}
-        for pad, fact in snapshot.machine_facts.facts_by_pad.items():
+        for pad, fact in validated_snapshot.machine_facts.facts_by_pad.items():
             if fact.decoded_machine_value is not None:
                 machine_values[pad] = fact.decoded_machine_value
-        return self.plan_for_machine_values(snapshot, depth, machine_values)
+        return self.plan_for_machine_values(
+            validated_snapshot,
+            depth,
+            machine_values,
+            scope=scope,
+        )
 
-    def _validate_inputs(self, snapshot: RytmKitSnapshot, depth: int) -> None:
+    def _validate_inputs(self, snapshot: object, depth: int) -> RytmKitSnapshot:
         if not isinstance(snapshot, RytmKitSnapshot):
             raise ValueError(
                 "AnalogRytmMutationPlanner.plan: snapshot must be a "
@@ -194,12 +227,14 @@ class AnalogRytmMutationPlanner:
                 f"AnalogRytmMutationPlanner.plan: depth must be in [0, {MAX_DEPTH}], "
                 f"got {depth}"
             )
+        return snapshot
 
     def _plan_for_profile_keys(
         self,
         snapshot: RytmKitSnapshot,
         depth: int,
         pad_profile_keys: Mapping[int, str],
+        scope: MutationScope,
     ) -> RytmMutationPlan:
         # Derive a deterministic integer seed from (seed, slot, depth) so
         # the same triple always produces the same plan. Stuff the three
@@ -208,12 +243,17 @@ class AnalogRytmMutationPlanner:
         rng_seed = (self._seed * 1_000_003) ^ (snapshot.slot * 1009) ^ depth
         rng = random.Random(rng_seed)  # noqa: S311 - non-crypto, deterministic plan generation
 
+        effective_pad_ids = (
+            self._effective_pad_ids(scope) if scope.target_ids or scope.locked_ids else None
+        )
         events: list[RytmPlanEvent] = []
         # Iterate pads in stable order so the plan is deterministic.
         for pad in sorted(pad_profile_keys):
+            if effective_pad_ids is not None and pad not in effective_pad_ids:
+                continue
             profile_key = pad_profile_keys[pad]
-            profile = PROFILES.get(profile_key)
-            if profile is None:
+            profile_obj: object = PROFILES.get(profile_key)
+            if profile_obj is None:
                 # Snapshot-machine routing emits only profile keys derived
                 # from PROFILES; the default PAD_PROFILE_KEY path can drift
                 # independently, so keep this guard close to plan creation.
@@ -229,8 +269,10 @@ class AnalogRytmMutationPlanner:
                         f"pad {pad} references profile {profile_key!r} which "
                         "is not in PROFILES -- data drift"
                     ),
+                    scope=scope,
                 )
-            safe_table = profile["safe"]
+            profile = cast("Mapping[str, object]", profile_obj)
+            safe_table = cast("Mapping[str, tuple[int, int]]", profile["safe"])
             for parameter, (low, high) in safe_table.items():
                 if depth == 0:
                     value = low
@@ -255,7 +297,12 @@ class AnalogRytmMutationPlanner:
                 depth=depth,
                 events=(),
                 ready=False,
-                readiness_reason="no events produced -- PAD_PROFILE_KEY is empty",
+                readiness_reason=(
+                    "no sendable Rytm pads after targets and locks"
+                    if scope.target_ids or scope.locked_ids
+                    else "no events produced -- PAD_PROFILE_KEY is empty"
+                ),
+                scope=scope,
             )
 
         return RytmMutationPlan(
@@ -264,6 +311,14 @@ class AnalogRytmMutationPlanner:
             events=tuple(events),
             ready=True,
             readiness_reason="",
+            scope=scope,
+        )
+
+    @staticmethod
+    def _effective_pad_ids(scope: MutationScope) -> frozenset[int]:
+        return scope.validated_effective_ids(
+            _RYTM_PAD_IDS,
+            item_label="Rytm pad",
         )
 
     def _record_blocked_snapshot_routes(self, routing: RytmSnapshotMachineRoutingResult) -> None:

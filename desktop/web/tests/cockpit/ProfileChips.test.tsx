@@ -15,7 +15,7 @@ const originalCreateObjectURL = URL.createObjectURL;
 const originalRevokeObjectURL = URL.revokeObjectURL;
 
 function renderWith(
-  available: ReadonlyArray<{ profile_id: string; name: string; kind: 'scene' | 'user' }> = availableProfiles,
+  available = availableProfiles,
 ): FakeCockpitClient {
   const fake = new FakeCockpitClient();
   render(
@@ -83,12 +83,27 @@ describe('ProfileChips', () => {
     }
   });
 
+  it('filters the live catalog by name and source summary', () => {
+    renderWith();
+    fireEvent.change(screen.getByLabelText('Search catalogue'), {
+      target: { value: 'warehouse' },
+    });
+
+    expect(screen.getByTestId('profile-chip-scene-warehouse')).toBeInTheDocument();
+    expect(screen.queryByTestId('profile-chip-user-buzzi')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Search catalogue'), {
+      target: { value: 'no matching profile' },
+    });
+    expect(screen.getByText('No profiles available')).toBeInTheDocument();
+  });
+
   it('highlights the active chip when its id matches the store profile', () => {
     setActiveProfile();
     renderWith();
     const activeChip = screen.getByTestId(`profile-chip-${profile.profile_id}`);
     expect(activeChip.className).toBe('profile-chip active');
-    expect(activeChip).toHaveTextContent('★ buzzi');
+    expect(activeChip).toHaveTextContent('Selected · buzzi');
   });
 
   it('does not render the active card when no profile is selected', () => {

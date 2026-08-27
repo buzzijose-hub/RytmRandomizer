@@ -27,18 +27,21 @@ export { MutationPanel } from './MutationPanel';
 export type { MutationPanelProps } from './MutationPanel';
 export { PatchGenomePanel } from './PatchGenomePanel';
 export type { PatchGenomePanelProps } from './PatchGenomePanel';
+export { KitCapturePanel } from './KitCapturePanel';
+export type { KitCapturePanelProps } from './KitCapturePanel';
 export {
-  DEFAULT_PATCH_GENOME_MODEL,
   countReadyGenes,
+  genesForFamily,
   getPatchGenomeFamily,
+  patchGeneKey,
+  patchGeneStatus,
+  PATCH_GENOME_FAMILIES,
+  transportLabel,
 } from './patchGenomeModel';
 export type {
-  PatchGenomeFamily,
+  PatchGenomeFamilyDefinition,
   PatchGenomeFamilyKey,
-  PatchGenomeGene,
   PatchGenomeGeneStatus,
-  PatchGenomeModel,
-  PatchGenomeTrait,
 } from './patchGenomeModel';
 export { StyleCrateQueue } from './StyleCrateQueue';
 export type { StyleCrateQueueProps } from './StyleCrateQueue';
@@ -140,3 +143,5 @@ export { CockpitClientProvider, useCockpitClient } from './context';
 export type { CockpitClientProviderProps } from './context';
 export { usePadLocks } from './usePadLocks';
 export type { PadLocksApi } from './usePadLocks';
+export { useMutationTargets } from './useMutationTargets';
+export type { MutationTargetsApi } from './useMutationTargets';

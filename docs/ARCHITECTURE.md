@@ -608,6 +608,7 @@ rytm_randomizer/cockpit/
         profile_model.py   # StyleTrait, TraitPadWeight, ProfileModel
         mutation_candidate.py  # PadDelta, MutationCandidate
         send_plan.py       # CockpitSendPlan, SendPlanPacket
+        stage.py           # Independent Rytm/A4 stage lifecycle + authority state
         history.py         # HistoryEntry, History
         types.py           # Literal aliases (kind, status, via, ...)
     engine/                # The deterministic mutation function
@@ -620,6 +621,10 @@ rytm_randomizer/cockpit/
         builtin.py         # Seven default `kind="scene"` profiles
     history/               # In-memory snapshot chain
         store.py           # append, undo, load, promote-to-saved
+    capture/               # Explicitly armed, input-only current-KIT reception
+        service.py         # family codec + checksum + exact round-trip verification
+        bridge.py          # verified Rytm capture -> Cockpit Snapshot anchor
+    mutation_targets.py    # Rytm pad/A4 track include targets + lock-aware scope
     device/                # Device adapter abstraction
         adapter.py         # DeviceAdapter Protocol
         mock.py            # MockDeviceAdapter (the only adapter — state,
@@ -643,15 +648,20 @@ rytm_randomizer/cockpit/
 The desktop shell (`desktop/shell/` — Rust + Tauri 2) and the web frontend
 (`desktop/web/` — Vite + React + TypeScript) live **outside** the Python
 package: they are bundled by `cargo build --release` into a single binary
-that spawns the Python sidecar via `python -m rytm_randomizer.cockpit`.
+that spawns the Python sidecar via the explicit input-only composition
+`python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar` (or its
+equivalent bundled entry stub). This grants no output authority.
 
 The web cockpit may render more than one device surface, but device facts
 still come from the shared Device + Strategy layer. The current UI selects
 between the default Analog Rytm MKII 12-pad snapshot view and an Analog Four
 MKII four-track staged view that consumes the existing A4 role/zone vocabulary.
 The A4 surface also renders OXI-style Anchor / Shape / Pressure / Space macro
-rows as frontend-only review metadata. That A4 surface is visibility-only until
-the A4 SEND path is separately designed, tested, and armed.
+rows as frontend-only review metadata. Verified A4 KIT capture and lock-aware
+zero-event planning exist, but A4 SEND remains blocked until saved-KIT semantic
+offsets are promoted from codec, stride, and physical evidence. OXI One remains
+the owner of sequencing, notes, triggers, mutes, and pattern motion; Cockpit
+does not claim direct OXI control.
 
 ### The Protocol — events out, commands in
 
@@ -665,6 +675,10 @@ UI drives the engine with **typed commands** that ack synchronously.
 | `snapshot_changed` | `{ snapshot: Snapshot }` | After SEND, LOAD, or UNDO |
 | `mutation_previewed` | `{ candidate: MutationCandidate \| null }` | After depth change, REGEN, or PREVIEW toggle |
 | `send_plan_changed` | `{ send_plan: CockpitSendPlan \| null }` | After PREPARE, stale candidate/lock changes, or SEND |
+| `kit_captures_changed` | `{ captures: { Rytm?, A4? } }` | On connect and after a verified input-only current-KIT capture |
+| `mutation_targets_changed` | `{ rytm_pad_targets, a4_track_targets }` | On connect and after whole-state target replacement/clear |
+| `mutation_locks_changed` | `{ rytm_pad_locks, a4_track_locks }` | On connect and after either independent deny-list changes |
+| `dual_machine_stage_changed` | `{ stage: DualMachineStageState }` | On connect and every capture/scope/candidate/plan/authority/recovery transition |
 | `history_updated` | `{ history: History }` | After SEND, SAVE, LOAD, or UNDO |
 | `profile_changed` | `{ profile: ProfileModel \| null }` | After `select_profile` |
 | `performance_console_changed` | `{ performance_console: LiveGuiPerformanceConsoleModel \| null }` | On connect, when the passive performance-console packet refreshes |
@@ -675,11 +689,14 @@ UI drives the engine with **typed commands** that ack synchronously.
 | `select_profile` | `{ ok }` | Sets active profile |
 | `set_depth` | `{ ok, candidate? }` | Recomputes candidate at new depth |
 | `set_pad_lock` | `{ ok }` | Locked pads are skipped on SEND |
+| `set_a4_track_lock` | `{ ok }` | Updates the A4 deny-list; grants no A4 output authority |
+| `set_mutation_targets` / `clear_mutation_targets` | `{ ok }` | Replaces one device include-list; empty means all, then locks are subtracted |
+| `list_capture_inputs` / `capture_current_kit` | `{ ok, ... }` | Available only in the explicitly armed input composition; never transmits |
 | `toggle_preview` | `{ ok, candidate? }` | Ghost overlay on/off |
 | `regen` | `{ ok, candidate }` | New seed, same depth |
 | `prepare_send_plan` | `{ ok, send_plan }` | Builds an inert packet plan and readiness blockers |
 | `send` | `{ ok, new_snapshot_id, send_plan_id }` | Applies the ready plan. When the session is armed the command MUST carry `confirm: true` — the seam refuses otherwise (per-action operator confirmation); unarmed/mock sends need no `confirm`. |
-| `save` | `{ ok, snapshot_id }` | Promotes the current snapshot to a labelled `kind="saved"` **history** entry. It does **not** write to the device: a persistent kit write is refused at the seam while capture-before-write and restore do not exist. |
+| `save` | `{ ok: false, ... }` | Refused: persistent kit write and the required capture-before-write restore seam do not exist. |
 | `load_snapshot` | `{ ok }` | Restores a historical snapshot |
 | `undo` | `{ ok, snapshot_id }` | Walks history back one step |
 | `export_profile_model` | `{ ok, model_bytes }` | MessagePack + header + CRC |
@@ -687,6 +704,14 @@ UI drives the engine with **typed commands** that ack synchronously.
 Events are full-state — the UI re-renders from the latest event per kind,
 no delta-ordering subtleties. Commands are idempotent given the same
 engine state.
+
+`DualMachineStageCoordinator` is hardware-inert and owns no codec or port.
+It carries separate Rytm/A4 capture, connection, target, lock, candidate,
+plan, authority, blocker, stale, and recovery state plus a monotonic revision.
+One lane's timeout or disconnect revokes only that lane. Rytm authority mirrors
+the `ArmedApplySession`; A4 authority is independently blocked while its
+semantic mapping manifest is incomplete. Target or lock changes revoke plans
+and invalidate candidates derived from the old effective scope.
 
 ### Mutation engine — two reference implementations, identical output
 

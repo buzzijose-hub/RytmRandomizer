@@ -57,6 +57,7 @@ See ``docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md``
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import hashlib
 import hmac
@@ -73,15 +74,39 @@ from ...observability.errors import RytmRandomizerError
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
 from ...observability.tracing import operation
-from ..data import CockpitSendPlan, History, MutationCandidate, ProfileModel, Snapshot
+from ..capture import (
+    ANALOG_FOUR_DEVICE_ID,
+    ANALOG_RYTM_DEVICE_ID,
+    CAPTURE_DEVICE_IDS,
+    cockpit_snapshot_from_rytm_capture,
+    narrow_kit_capture_device_id,
+)
+from ..data import (
+    CockpitSendPlan,
+    History,
+    MutationCandidate,
+    ProfileModel,
+    Snapshot,
+    StageDeviceId,
+)
 from ..device.connection import ConnectionState, active_connection_manager
 from ..diagnostics import build_diagnostics_payload
 from ..engine import mutate, prepare_send_plan
 from ..export import pack_profile_model
 from ..library import LibraryStore
+from ..mutation_targets import (
+    A4_TRACK_TARGET_MAX,
+    A4_TRACK_TARGET_MIN,
+    RYTM_PAD_TARGET_MAX,
+    RYTM_PAD_TARGET_MIN,
+    MutationTargets,
+)
 from .protocol import (
+    COMMAND_ANALYZE_PATCH_GENOME,
     COMMAND_ARM,
     COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
+    COMMAND_CAPTURE_CURRENT_KIT,
+    COMMAND_CLEAR_MUTATION_TARGETS,
     COMMAND_DIAGNOSTICS,
     COMMAND_DISARM,
     COMMAND_EXPORT_PROFILE_MODEL,
@@ -90,6 +115,7 @@ from .protocol import (
     COMMAND_LIBRARY_LIST,
     COMMAND_LIBRARY_SEARCH,
     COMMAND_LIBRARY_TAG,
+    COMMAND_LIST_CAPTURE_INPUTS,
     COMMAND_LOAD_SNAPSHOT,
     COMMAND_MOCK_APPLY_OPERATOR_PACKAGE,
     COMMAND_PREPARE_SEND_PLAN,
@@ -100,7 +126,9 @@ from .protocol import (
     COMMAND_SAVE,
     COMMAND_SELECT_PROFILE,
     COMMAND_SEND,
+    COMMAND_SET_A4_TRACK_LOCK,
     COMMAND_SET_DEPTH,
+    COMMAND_SET_MUTATION_TARGETS,
     COMMAND_SET_PAD_LOCK,
     COMMAND_TOGGLE_PREVIEW,
     COMMAND_UNDO,
@@ -109,10 +137,16 @@ from .protocol import (
     ERR_UNKNOWN_COMMAND,
     ERR_VALIDATION,
     EVENT_CONNECTION_CHANGED,
+    EVENT_DUAL_MACHINE_STAGE_CHANGED,
     EVENT_HISTORY_UPDATED,
+    EVENT_KIT_CAPTURES_CHANGED,
     EVENT_LIBRARY_CHANGED,
+    EVENT_MUTATION_LOCKS_CHANGED,
     EVENT_MUTATION_PREVIEWED,
+    EVENT_MUTATION_TARGETS_CHANGED,
+    EVENT_PATCH_GENOME_CHANGED,
     EVENT_PERFORMANCE_CONSOLE_CHANGED,
+    EVENT_PROFILE_CATALOG_CHANGED,
     EVENT_PROFILE_CHANGED,
     EVENT_SEND_PLAN_CHANGED,
     EVENT_SESSION_STATUS,
@@ -202,6 +236,7 @@ def _build_session_status(session: CockpitSession) -> dict[str, object]:
         "mode": "live" if armed else "mock",
         "connection_phase": _connection_phase(session),
         "unsaved_sends": session.unsaved_sends,
+        "capture_enabled": session.kit_capture_service.enabled,
     }
 
 
@@ -305,6 +340,130 @@ def _build_profile_changed(profile: ProfileModel | None) -> dict[str, object]:
     }
 
 
+def _profile_catalog_item(profile: ProfileModel) -> dict[str, str]:
+    """Return the compact, JSON-ready metadata shown in the profile catalogue."""
+
+    return {
+        "profile_id": profile.profile_id,
+        "name": profile.name,
+        "kind": profile.kind,
+        "model_version": profile.model_version,
+        "source_summary": profile.source_summary,
+    }
+
+
+def build_profile_catalog_changed(session: CockpitSession) -> dict[str, object]:
+    """Construct the complete built-in + user profile catalogue event."""
+
+    return {
+        "type": EVENT_PROFILE_CATALOG_CHANGED,
+        "profiles": [
+            _profile_catalog_item(profile) for profile in session.profile_registry.list_profiles()
+        ],
+    }
+
+
+def _build_patch_genome_changed(description: str, track: int) -> dict[str, object]:
+    """Build one passive Analog Four patch-genome compiler event."""
+
+    from ...reports.analog_four_patch_genome import (  # noqa: PLC0415
+        build_analog_four_patch_genome_payload,
+        build_analog_four_patch_genome_report_from_source,
+    )
+
+    report = build_analog_four_patch_genome_report_from_source(
+        "--description",
+        description,
+        track=track,
+        selected_candidate=2,
+    )
+    return {
+        "type": EVENT_PATCH_GENOME_CHANGED,
+        "patch_genome": build_analog_four_patch_genome_payload(report),
+    }
+
+
+def _build_kit_captures_changed(session: CockpitSession) -> dict[str, object]:
+    """Build the whole verified-anchor set in stable device order."""
+
+    return {
+        "type": EVENT_KIT_CAPTURES_CHANGED,
+        "captures": [
+            session.kit_captures[device_id].to_dict()
+            for device_id in CAPTURE_DEVICE_IDS
+            if device_id in session.kit_captures
+        ],
+    }
+
+
+def _build_mutation_targets_changed(session: CockpitSession) -> dict[str, object]:
+    """Build both explicit include-lists as one whole-state event."""
+
+    return {
+        "type": EVENT_MUTATION_TARGETS_CHANGED,
+        **MutationTargets(
+            rytm_pad_targets=frozenset(session.rytm_pad_targets),
+            a4_track_targets=frozenset(session.a4_track_targets),
+        ).to_dict(),
+    }
+
+
+def _build_mutation_locks_changed(session: CockpitSession) -> dict[str, object]:
+    """Build both lock deny-lists as one deterministic whole-state event."""
+
+    return {
+        "type": EVENT_MUTATION_LOCKS_CHANGED,
+        "rytm_pad_locks": sorted(session.pad_locks),
+        "a4_track_locks": sorted(session.a4_track_locks),
+    }
+
+
+def _build_dual_machine_stage_changed(session: CockpitSession) -> dict[str, object]:
+    """Build the authoritative coordinated stage at its current revision."""
+
+    return {
+        "type": EVENT_DUAL_MACHINE_STAGE_CHANGED,
+        "stage": session.stage_coordinator.state.to_dict(),
+    }
+
+
+def _record_stage_scope(session: CockpitSession, device_id: StageDeviceId) -> None:
+    """Synchronize one lane's targets-or-all-minus-locks scope."""
+
+    targets = MutationTargets(
+        rytm_pad_targets=frozenset(session.rytm_pad_targets),
+        a4_track_targets=frozenset(session.a4_track_targets),
+    )
+    if device_id == ANALOG_RYTM_DEVICE_ID:
+        available_ids = frozenset(pad.pad_id for pad in session.device.capture_snapshot().pads)
+        target_ids = frozenset(session.rytm_pad_targets)
+        locked_ids = frozenset(session.pad_locks)
+        effective_ids = targets.effective_rytm_pads(available_ids, locked_ids)
+    else:
+        available_ids = frozenset(range(A4_TRACK_TARGET_MIN, A4_TRACK_TARGET_MAX + 1))
+        target_ids = frozenset(session.a4_track_targets)
+        locked_ids = frozenset(session.a4_track_locks)
+        effective_ids = targets.effective_a4_tracks(available_ids, locked_ids)
+    session.stage_coordinator.record_scope(
+        device_id,
+        target_ids=target_ids,
+        locked_ids=locked_ids,
+        effective_ids=effective_ids,
+    )
+
+
+def _record_rytm_candidate(
+    session: CockpitSession,
+    candidate: MutationCandidate | None,
+) -> None:
+    """Record whether the current Rytm candidate is freshly usable."""
+
+    session.stage_coordinator.record_candidate(
+        ANALOG_RYTM_DEVICE_ID,
+        ready=True if candidate is not None else None,
+    )
+
+
 def _build_performance_console_changed() -> dict[str, object]:
     """Construct the passive performance-console packet event."""
 
@@ -320,7 +479,7 @@ def _build_performance_console_changed() -> dict[str, object]:
 
 
 async def emit_initial_events(emitter: EventEmitter, session: CockpitSession) -> None:
-    """Send the 5 bootstrap events a freshly-connected client expects.
+    """Send the 11 bootstrap events a freshly-connected client expects.
 
     Order matters for the UI: a client renders the session status pill
     first (so the user sees "armed" or "mock"), then the snapshot (so
@@ -331,16 +490,30 @@ async def emit_initial_events(emitter: EventEmitter, session: CockpitSession) ->
     fresh connect.
     """
 
+    _record_stage_scope(session, ANALOG_RYTM_DEVICE_ID)
+    _record_stage_scope(session, ANALOG_FOUR_DEVICE_ID)
     await emitter.send_event(_build_session_status(session))
     await emitter.send_event(_build_snapshot_changed(session.device.capture_snapshot()))
     await emitter.send_event(_build_profile_changed(session.active_profile))
+    await emitter.send_event(build_profile_catalog_changed(session))
     await emitter.send_event(_build_history_updated(session.history_store.current))
+    await emitter.send_event(
+        _build_patch_genome_changed(
+            session.patch_genome_description,
+            session.patch_genome_track,
+        )
+    )
+    await emitter.send_event(_build_kit_captures_changed(session))
+    await emitter.send_event(_build_mutation_targets_changed(session))
+    await emitter.send_event(_build_mutation_locks_changed(session))
+    await emitter.send_event(_build_dual_machine_stage_changed(session))
     await emitter.send_event(_build_performance_console_changed())
     # Wave 3: when the launch brain is wired (the ``__main__`` boot path),
     # a freshly-connected client also receives the latest passive
     # connection state so the header renders plug/unplug truth without
     # waiting for the next poll diff. Unwired sessions (unit tests,
-    # embedded harnesses) keep the historical five-event bootstrap.
+    # embedded harnesses) keep the authoritative 11-event whole-state
+    # bootstrap; wired sessions append this connection frame as event 12.
     manager = active_connection_manager()
     if manager is not None:
         await emitter.send_event(build_connection_changed(manager.state))
@@ -379,10 +552,17 @@ async def emit_initial_events(emitter: EventEmitter, session: CockpitSession) ->
 # regen a few more" iteration pattern operators show in the v10 UX
 # mockups.
 _RECOMPUTE_CACHE_MAXSIZE: Final[int] = 16
-_recompute_cache: OrderedDict[tuple[str, str, float, int], MutationCandidate] = OrderedDict()
+_recompute_cache: OrderedDict[
+    tuple[str, str, float, int, tuple[int, ...], tuple[int, ...]],
+    MutationCandidate,
+] = OrderedDict()
 
 
-def _recompute_candidate(session: CockpitSession) -> MutationCandidate | None:
+def _recompute_candidate(
+    session: CockpitSession,
+    *,
+    force_fresh: bool = False,
+) -> MutationCandidate | None:
     """Recompute and store the current candidate, or ``None`` if not ready.
 
     The engine needs an active profile + a captured snapshot to mutate.
@@ -404,14 +584,28 @@ def _recompute_candidate(session: CockpitSession) -> MutationCandidate | None:
         session.current_candidate = None
         return None
     snapshot = session.device.capture_snapshot()
-    key = (snapshot.snapshot_id, session.active_profile.profile_id, session.depth, session.seed)
-    cached = _recompute_cache.get(key)
+    target_pad_ids = frozenset(session.rytm_pad_targets)
+    key = (
+        snapshot.snapshot_id,
+        session.active_profile.profile_id,
+        session.depth,
+        session.seed,
+        tuple(sorted(target_pad_ids)),
+        tuple(sorted(session.pad_locks)),
+    )
+    cached = None if force_fresh else _recompute_cache.get(key)
     if cached is not None:
         # LRU touch — re-insert moves the key to the most-recent end.
         _recompute_cache.move_to_end(key)
         session.current_candidate = cached
         return cached
-    candidate = mutate(snapshot, session.active_profile, session.depth, session.seed)
+    candidate = mutate(
+        snapshot,
+        session.active_profile,
+        session.depth,
+        session.seed,
+        target_pad_ids=target_pad_ids,
+    )
     _recompute_cache[key] = candidate
     # Evict the least-recently-used entry once over capacity. ``popitem
     # (last=False)`` removes the front (oldest) entry; with the touch
@@ -528,6 +722,158 @@ def _exc_fingerprint(exc: BaseException) -> str | None:
 # after the ack. The dispatcher fills in ``request_id`` and sends ack-first.
 # ---------------------------------------------------------------------------
 
+_PATCH_GENOME_DESCRIPTION_MAX: Final[int] = 240
+_PATCH_GENOME_TRACK_MIN: Final[int] = 1
+_PATCH_GENOME_TRACK_MAX: Final[int] = 4
+
+
+async def _handle_analyze_patch_genome(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    """Compile four real, passive Analog Four candidates from a text description."""
+
+    description_raw = cmd["description"]
+    track_raw = cmd["track"]
+    if not isinstance(description_raw, str):
+        raise ValueError("description must be a string")
+    description = description_raw.strip()
+    if not description:
+        raise ValueError("description must not be empty")
+    if len(description) > _PATCH_GENOME_DESCRIPTION_MAX:
+        raise ValueError("description is too long")
+    if isinstance(track_raw, bool) or not isinstance(track_raw, int):
+        raise ValueError("track must be an integer")
+    if not (_PATCH_GENOME_TRACK_MIN <= track_raw <= _PATCH_GENOME_TRACK_MAX):
+        raise ValueError("track must be between 1 and 4")
+    effective_tracks = MutationTargets(
+        a4_track_targets=frozenset(session.a4_track_targets)
+    ).effective_a4_tracks(
+        range(A4_TRACK_TARGET_MIN, A4_TRACK_TARGET_MAX + 1),
+        session.a4_track_locks,
+    )
+    if track_raw not in effective_tracks:
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION,
+                "selected A4 track is not sendable under the current targets and locks",
+            )
+        )
+
+    event = _build_patch_genome_changed(description, track_raw)
+    patch_genome = cast("dict[str, object]", event["patch_genome"])
+    genome = cast("dict[str, object]", patch_genome["genome"])
+    candidates = cast("list[object]", genome["candidates"])
+    session.patch_genome_description = description
+    session.patch_genome_track = track_raw
+    _record_stage_scope(session, ANALOG_FOUR_DEVICE_ID)
+    session.stage_coordinator.record_candidate(
+        ANALOG_FOUR_DEVICE_ID,
+        ready=False,
+        blocked_reason="a4_semantic_mapping_unpromoted",
+    )
+    session.stage_coordinator.record_plan(ANALOG_FOUR_DEVICE_ID, ready=False)
+    _logger.info(
+        "patch_genome_analyzed",
+        extra={
+            "description_length": len(description),
+            "selected_track": track_raw,
+            "candidate_count": len(candidates),
+            "opened_midi_port": False,
+            "sent_midi": False,
+        },
+    )
+    return HandlerResult(
+        ack={"ok": True, "patch_genome": patch_genome},
+        events=[event, _build_dual_machine_stage_changed(session)],
+    )
+
+
+async def _handle_list_capture_inputs(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    """Enumerate MIDI inputs only after the operator opens a capture workflow."""
+
+    device_id = narrow_kit_capture_device_id(cmd["device_id"])
+    names = await asyncio.to_thread(session.kit_capture_service.list_input_names)
+    return HandlerResult(
+        ack={
+            "ok": True,
+            "capture_enabled": session.kit_capture_service.enabled,
+            "capture_device_id": device_id,
+            "capture_inputs": list(names),
+        }
+    )
+
+
+async def _handle_capture_current_kit(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    """Wait input-only for one selected machine's current KIT SysEx dump."""
+
+    device_id = narrow_kit_capture_device_id(cmd["device_id"])
+    input_port = cmd["input_port"]
+    if not isinstance(input_port, str) or not input_port.strip():
+        raise ValueError("capture input_port must be a non-empty string")
+    try:
+        result = await asyncio.to_thread(
+            session.kit_capture_service.capture,
+            device_id,
+            input_port.strip(),
+        )
+    except (OSError, RuntimeError, ValueError, RytmRandomizerError):
+        session.stage_coordinator.record_capture(
+            device_id,
+            succeeded=False,
+            connected=None,
+            error="current-kit capture failed",
+        )
+        failure_events: list[dict[str, object]] = []
+        if device_id == ANALOG_RYTM_DEVICE_ID:
+            failure_events.extend(_clear_send_plan_if_needed(session))
+            session.current_candidate = None
+            if session.preview_on:
+                failure_events.append(_build_mutation_previewed(None))
+        failure_events.append(_build_dual_machine_stage_changed(session))
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, "current-kit capture failed"),
+            events=failure_events,
+        )
+    events: list[dict[str, object]] = []
+    session.stage_coordinator.record_capture(
+        device_id,
+        succeeded=True,
+        connected=True,
+    )
+    if device_id == ANALOG_RYTM_DEVICE_ID:
+        snapshot = cockpit_snapshot_from_rytm_capture(result)
+        events.extend(_clear_send_plan_if_needed(session))
+        session.device.adopt_snapshot(snapshot)
+        if session.history_store.has_entries:
+            session.history_store.append_post_send(snapshot, via="capture")
+        else:
+            session.history_store.initial(snapshot)
+        session.current_candidate = None
+        candidate = _recompute_candidate(session, force_fresh=True)
+        _record_stage_scope(session, ANALOG_RYTM_DEVICE_ID)
+        _record_rytm_candidate(session, candidate)
+        events.extend(
+            [
+                _build_snapshot_changed(snapshot),
+                _build_history_updated(session.history_store.current),
+            ]
+        )
+        if session.preview_on:
+            events.append(_build_mutation_previewed(candidate))
+    else:
+        _record_stage_scope(session, ANALOG_FOUR_DEVICE_ID)
+    session.kit_captures[device_id] = result
+    events.insert(0, _build_kit_captures_changed(session))
+    events.append(_build_dual_machine_stage_changed(session))
+    return HandlerResult(
+        ack={"ok": True, "kit_capture": result.to_dict()},
+        events=events,
+    )
+
 
 async def _handle_select_profile(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     profile_id = str(cmd["profile_id"])
@@ -537,9 +883,11 @@ async def _handle_select_profile(cmd: dict[str, object], session: CockpitSession
     events = _clear_send_plan_if_needed(session)
     session.active_profile = profile
     candidate = _recompute_candidate(session)
+    _record_rytm_candidate(session, candidate)
     events.append(_build_profile_changed(profile))
     if session.preview_on:
         events.append(_build_mutation_previewed(candidate))
+    events.append(_build_dual_machine_stage_changed(session))
     return HandlerResult(ack={"ok": True}, events=events)
 
 
@@ -550,8 +898,10 @@ async def _handle_set_depth(cmd: dict[str, object], session: CockpitSession) -> 
     events = _clear_send_plan_if_needed(session)
     session.depth = depth
     candidate = _recompute_candidate(session)
+    _record_rytm_candidate(session, candidate)
     if session.preview_on:
         events.append(_build_mutation_previewed(candidate))
+    events.append(_build_dual_machine_stage_changed(session))
     return HandlerResult(
         ack={"ok": True, "candidate": None if candidate is None else candidate.to_dict()},
         events=events,
@@ -559,13 +909,153 @@ async def _handle_set_depth(cmd: dict[str, object], session: CockpitSession) -> 
 
 
 async def _handle_set_pad_lock(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
-    pad_id = int(cast("SupportsInt", cmd["pad_id"]))
-    locked = bool(cmd["locked"])
+    pad_id = cmd["pad_id"]
+    locked = cmd["locked"]
+    if isinstance(pad_id, bool) or not isinstance(pad_id, int):
+        raise ValueError("pad_id must be an integer")
+    if not (RYTM_PAD_TARGET_MIN <= pad_id <= RYTM_PAD_TARGET_MAX):
+        raise ValueError("pad_id must be between 1 and 12")
+    if not isinstance(locked, bool):
+        raise ValueError("locked must be a boolean")
     if locked:
         session.pad_locks.add(pad_id)
     else:
         session.pad_locks.discard(pad_id)
-    return HandlerResult(ack={"ok": True}, events=_clear_send_plan_if_needed(session))
+    events = _clear_send_plan_if_needed(session)
+    session.current_candidate = None
+    _record_stage_scope(session, ANALOG_RYTM_DEVICE_ID)
+    candidate = _recompute_candidate(session, force_fresh=True)
+    _record_rytm_candidate(session, candidate)
+    _logger.info(
+        "mutation_lock_changed",
+        extra={
+            "device_id": ANALOG_RYTM_DEVICE_ID,
+            "item_id": pad_id,
+            "locked": locked,
+            "locked_item_ids": sorted(session.pad_locks),
+        },
+    )
+    events.append(_build_mutation_locks_changed(session))
+    if session.preview_on:
+        events.append(_build_mutation_previewed(candidate))
+    events.append(_build_dual_machine_stage_changed(session))
+    return HandlerResult(ack={"ok": True}, events=events)
+
+
+async def _handle_set_a4_track_lock(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    """Set the A4 deny-list state without granting any SEND authority."""
+
+    track = cmd["track"]
+    locked = cmd["locked"]
+    if isinstance(track, bool) or not isinstance(track, int):
+        raise ValueError("track must be an integer")
+    if not (A4_TRACK_TARGET_MIN <= track <= A4_TRACK_TARGET_MAX):
+        raise ValueError("track must be between 1 and 4")
+    if not isinstance(locked, bool):
+        raise ValueError("locked must be a boolean")
+    if locked:
+        session.a4_track_locks.add(track)
+    else:
+        session.a4_track_locks.discard(track)
+    _record_stage_scope(session, ANALOG_FOUR_DEVICE_ID)
+    _logger.info(
+        "mutation_lock_changed",
+        extra={
+            "device_id": ANALOG_FOUR_DEVICE_ID,
+            "item_id": track,
+            "locked": locked,
+            "locked_item_ids": sorted(session.a4_track_locks),
+        },
+    )
+    return HandlerResult(
+        ack={"ok": True},
+        events=[
+            _build_mutation_locks_changed(session),
+            _build_dual_machine_stage_changed(session),
+        ],
+    )
+
+
+def _target_ids_from_command(cmd: dict[str, object], *, device_id: str) -> frozenset[int]:
+    """Validate one target replacement at the untrusted WS boundary."""
+
+    raw_target_ids = cmd["target_ids"]
+    if not isinstance(raw_target_ids, (list, tuple)):
+        raise ValueError("target_ids must be a list")
+    target_items = cast("list[object] | tuple[object, ...]", raw_target_ids)
+    validated_ids: set[int] = set()
+    for value in target_items:
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise ValueError("target_ids must contain integers")
+        validated_ids.add(value)
+    target_ids = frozenset(validated_ids)
+    if device_id == ANALOG_RYTM_DEVICE_ID:
+        return MutationTargets(rytm_pad_targets=target_ids).rytm_pad_targets
+    return MutationTargets(a4_track_targets=target_ids).a4_track_targets
+
+
+async def _handle_set_mutation_targets(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    """Replace one device's explicit include-list and invalidate stale plans."""
+
+    device_id = narrow_kit_capture_device_id(cmd["device_id"])
+    target_ids = _target_ids_from_command(cmd, device_id=device_id)
+    events: list[dict[str, object]] = []
+    candidate: MutationCandidate | None = None
+    if device_id == ANALOG_RYTM_DEVICE_ID:
+        events.extend(_clear_send_plan_if_needed(session))
+        session.rytm_pad_targets = set(target_ids)
+        session.current_candidate = None
+        _record_stage_scope(session, ANALOG_RYTM_DEVICE_ID)
+        candidate = _recompute_candidate(session, force_fresh=True)
+        _record_rytm_candidate(session, candidate)
+    else:
+        session.a4_track_targets = set(target_ids)
+        _record_stage_scope(session, ANALOG_FOUR_DEVICE_ID)
+    _logger.info(
+        "mutation_targets_changed",
+        extra={
+            "device_id": device_id,
+            "target_ids": sorted(target_ids),
+        },
+    )
+    events.append(_build_mutation_targets_changed(session))
+    if device_id == ANALOG_RYTM_DEVICE_ID and session.preview_on:
+        events.append(_build_mutation_previewed(candidate))
+    events.append(_build_dual_machine_stage_changed(session))
+    return HandlerResult(ack={"ok": True}, events=events)
+
+
+async def _handle_clear_mutation_targets(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    """Clear one include-list, restoring the historical all-scope default."""
+
+    device_id = narrow_kit_capture_device_id(cmd["device_id"])
+    events: list[dict[str, object]] = []
+    candidate: MutationCandidate | None = None
+    if device_id == ANALOG_RYTM_DEVICE_ID:
+        events.extend(_clear_send_plan_if_needed(session))
+        session.rytm_pad_targets.clear()
+        session.current_candidate = None
+        _record_stage_scope(session, ANALOG_RYTM_DEVICE_ID)
+        candidate = _recompute_candidate(session, force_fresh=True)
+        _record_rytm_candidate(session, candidate)
+    else:
+        session.a4_track_targets.clear()
+        _record_stage_scope(session, ANALOG_FOUR_DEVICE_ID)
+    _logger.info(
+        "mutation_targets_changed",
+        extra={"device_id": device_id, "target_ids": []},
+    )
+    events.append(_build_mutation_targets_changed(session))
+    if device_id == ANALOG_RYTM_DEVICE_ID and session.preview_on:
+        events.append(_build_mutation_previewed(candidate))
+    events.append(_build_dual_machine_stage_changed(session))
+    return HandlerResult(ack={"ok": True}, events=events)
 
 
 async def _handle_toggle_preview(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
@@ -576,10 +1066,12 @@ async def _handle_toggle_preview(cmd: dict[str, object], session: CockpitSession
     # shown); toggling off keeps the prior candidate in memory but emits a
     # null event so the ghost overlay drops.
     candidate = _recompute_candidate(session) if on else session.current_candidate
+    _record_rytm_candidate(session, candidate)
     if on:
         events.append(_build_mutation_previewed(candidate))
     else:
         events.append(_build_mutation_previewed(None))
+    events.append(_build_dual_machine_stage_changed(session))
     return HandlerResult(
         ack={
             "ok": True,
@@ -603,9 +1095,11 @@ async def _handle_regen(_cmd: dict[str, object], session: CockpitSession) -> Han
 
     events = _clear_send_plan_if_needed(session)
     session.seed = fresh_seed()
-    candidate = _recompute_candidate(session)
+    candidate = _recompute_candidate(session, force_fresh=True)
+    _record_rytm_candidate(session, candidate)
     if session.preview_on:
         events.append(_build_mutation_previewed(candidate))
+    events.append(_build_dual_machine_stage_changed(session))
     return HandlerResult(
         ack={"ok": True, "candidate": None if candidate is None else candidate.to_dict()},
         events=events,
@@ -616,25 +1110,34 @@ async def _handle_prepare_send_plan(
     _cmd: dict[str, object], session: CockpitSession
 ) -> HandlerResult:
     if session.current_candidate is None:
+        session.stage_coordinator.record_plan(ANALOG_RYTM_DEVICE_ID, ready=False)
         return HandlerResult(
-            ack=_error_ack(ERR_VALIDATION, "no current candidate; set a profile and depth first")
+            ack=_error_ack(ERR_VALIDATION, "no current candidate; set a profile and depth first"),
+            events=[_build_dual_machine_stage_changed(session)],
         )
     plan = prepare_send_plan(
         session.device.capture_snapshot(),
         session.active_profile,
         session.current_candidate,
         frozenset(session.pad_locks),
+        pad_targets=frozenset(session.rytm_pad_targets),
     )
     if plan is None:
+        session.stage_coordinator.record_plan(ANALOG_RYTM_DEVICE_ID, ready=False)
         return HandlerResult(
             ack=_error_ack(
                 ERR_VALIDATION, "no active profile; select one before preparing send plan"
-            )
+            ),
+            events=[_build_dual_machine_stage_changed(session)],
         )
     session.current_send_plan = plan
+    session.stage_coordinator.record_plan(ANALOG_RYTM_DEVICE_ID, ready=plan.ready)
     return HandlerResult(
         ack={"ok": True, "send_plan": plan.to_dict()},
-        events=[_build_send_plan_changed(plan)],
+        events=[
+            _build_send_plan_changed(plan),
+            _build_dual_machine_stage_changed(session),
+        ],
     )
 
 
@@ -648,6 +1151,24 @@ async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> Handl
             ack=_error_ack(ERR_VALIDATION, "no ready send plan; run prepare_send_plan first")
         )
     sent_plan = session.current_send_plan
+    requested_plan_id = cmd.get("send_plan_id")
+    if requested_plan_id is not None and not isinstance(requested_plan_id, str):
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, "send_plan_id must be a string"))
+    if requested_plan_id is not None and requested_plan_id != sent_plan.plan_id:
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, "send_plan_id does not match the prepared plan")
+        )
+    if (
+        session.armed_apply is None
+        and session.device.is_armed
+        and requested_plan_id != sent_plan.plan_id
+    ):
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION,
+                "armed SEND requires confirmation of the current prepared plan",
+            )
+        )
     if session.armed_apply is not None:
         refusal = _armed_send_over_seam(session, sent_plan, cmd)
         if refusal is not None:
@@ -668,12 +1189,30 @@ async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> Handl
                 "to continue in mock mode",
             )
         )
-    new_snapshot = session.device.apply_send_plan(sent_plan)
+    elif session.device.is_armed:
+        _logger.info(
+            "cockpit_live_send_authorized",
+            extra={
+                "send_plan_id": sent_plan.plan_id,
+                "midi_port": _midi_port(session),
+                "packet_count": len(sent_plan.packets),
+                "pad_ids": sorted({packet.pad_id for packet in sent_plan.packets}),
+            },
+        )
+    try:
+        new_snapshot = session.device.apply_send_plan(sent_plan)
+    except (OSError, RuntimeError, RytmRandomizerError):
+        session.stage_coordinator.record_send(ANALOG_RYTM_DEVICE_ID, succeeded=False)
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, "send failed at the guarded device boundary"),
+            events=[_build_dual_machine_stage_changed(session)],
+        )
     session.history_store.append_post_send(new_snapshot, via="send")
     session.unsaved_sends += 1
     # Preview clears after a SEND per spec § "Operator hits SEND" step 4.
     session.current_candidate = None
     session.current_send_plan = None
+    session.stage_coordinator.record_send(ANALOG_RYTM_DEVICE_ID, succeeded=True)
     return HandlerResult(
         ack={
             "ok": True,
@@ -686,6 +1225,7 @@ async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> Handl
             _build_mutation_previewed(None),
             _build_send_plan_changed(None),
             _build_session_status(session),
+            _build_dual_machine_stage_changed(session),
         ],
     )
 
@@ -1534,12 +2074,20 @@ def _armed_send_over_seam(
             context={"plan_id": plan.plan_id},
         )
         get_metrics().record_error(_ARM_SEND_REFUSED_FINGERPRINT)
+        session.stage_coordinator.record_send(ANALOG_RYTM_DEVICE_ID, succeeded=False)
         return HandlerResult(
             ack=_error_ack(ERR_VALIDATION, "armed send refused at the guarded seam"),
-            events=[_build_session_status(session)],
+            events=[
+                _build_session_status(session),
+                _build_dual_machine_stage_changed(session),
+            ],
         )
     if not result.ok:
-        return HandlerResult(ack=_error_ack(ERR_VALIDATION, "armed send refused: plan not ready"))
+        session.stage_coordinator.record_plan(ANALOG_RYTM_DEVICE_ID, ready=False)
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, "armed send refused: plan not ready"),
+            events=[_build_dual_machine_stage_changed(session)],
+        )
     return None
 
 
@@ -1562,6 +2110,7 @@ def _teardown_armed_state(session: CockpitSession) -> None:
     session.armed_apply = None
     if armed is not None:
         armed.disarm()
+    session.stage_coordinator.record_rytm_authority(armed=False)
 
 
 def disarm_session_on_teardown(session: CockpitSession) -> None:
@@ -1615,6 +2164,10 @@ def build_armed_watchdog(
         if not phase_lost and not port_lost:
             return
         _teardown_armed_state(session)
+        session.stage_coordinator.record_connection(
+            ANALOG_RYTM_DEVICE_ID,
+            connected=False,
+        )
         session.error_journal.record(
             _ARM_DEVICE_LOST_FINGERPRINT,
             "device disappeared while armed; auto-disarmed",
@@ -1626,6 +2179,7 @@ def build_armed_watchdog(
         get_metrics().record_error(_ARM_DEVICE_LOST_FINGERPRINT)
         if broadcaster is not None:
             broadcaster(_build_session_status(session))
+            broadcaster(_build_dual_machine_stage_changed(session))
 
     return _on_connection_change
 
@@ -1824,9 +2378,17 @@ async def _handle_arm(cmd: dict[str, object], session: CockpitSession) -> Handle
     # auto-disarm so a later SEND is refused rather than silently
     # downgraded to a mock write (see CockpitSession.hardware_intent).
     session.hardware_intent = True
+    session.stage_coordinator.record_connection(
+        ANALOG_RYTM_DEVICE_ID,
+        connected=True,
+    )
+    session.stage_coordinator.record_rytm_authority(armed=True)
     return HandlerResult(
         ack={"ok": True, "armed": True, "midi_port": port_name},
-        events=[_build_session_status(session)],
+        events=[
+            _build_session_status(session),
+            _build_dual_machine_stage_changed(session),
+        ],
     )
 
 
@@ -1843,7 +2405,10 @@ async def _handle_disarm(_cmd: dict[str, object], session: CockpitSession) -> Ha
     session.hardware_intent = False
     return HandlerResult(
         ack={"ok": True, "armed": False},
-        events=[_build_session_status(session)],
+        events=[
+            _build_session_status(session),
+            _build_dual_machine_stage_changed(session),
+        ],
     )
 
 
@@ -1968,8 +2533,14 @@ async def _handle_library_import_captures(
 HandlerFn = Callable[[dict[str, object], CockpitSession], Awaitable[HandlerResult]]
 
 _CORE_HANDLERS: dict[str, HandlerFn] = {
+    COMMAND_ANALYZE_PATCH_GENOME: _handle_analyze_patch_genome,
+    COMMAND_LIST_CAPTURE_INPUTS: _handle_list_capture_inputs,
+    COMMAND_CAPTURE_CURRENT_KIT: _handle_capture_current_kit,
+    COMMAND_CLEAR_MUTATION_TARGETS: _handle_clear_mutation_targets,
     COMMAND_SELECT_PROFILE: _handle_select_profile,
     COMMAND_SET_DEPTH: _handle_set_depth,
+    COMMAND_SET_A4_TRACK_LOCK: _handle_set_a4_track_lock,
+    COMMAND_SET_MUTATION_TARGETS: _handle_set_mutation_targets,
     COMMAND_SET_PAD_LOCK: _handle_set_pad_lock,
     COMMAND_TOGGLE_PREVIEW: _handle_toggle_preview,
     COMMAND_REGEN: _handle_regen,

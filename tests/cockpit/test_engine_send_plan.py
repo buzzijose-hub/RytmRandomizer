@@ -103,6 +103,36 @@ def test_prepare_send_plan_excludes_locked_pads_but_stays_ready_for_remaining_pa
     assert plan.to_dict()["estimated_midi_msgs"] == 3
 
 
+def test_prepare_send_plan_intersects_targets_with_locks() -> None:
+    plan = prepare_send_plan(
+        _snapshot(),
+        _profile(),
+        _candidate(),
+        frozenset({1}),
+        pad_targets=frozenset({1, 2}),
+    )
+
+    assert plan is not None
+    assert plan.ready is True
+    assert plan.target_pad_ids == frozenset({1, 2})
+    assert {packet.pad_id for packet in plan.packets} == {2}
+
+
+def test_prepare_send_plan_blocks_when_every_target_is_locked() -> None:
+    plan = prepare_send_plan(
+        _snapshot(),
+        _profile(),
+        _candidate(),
+        frozenset({2}),
+        pad_targets=frozenset({2}),
+    )
+
+    assert plan is not None
+    assert plan.ready is False
+    assert plan.readiness_reason == "no_sendable_changes"
+    assert plan.packets == ()
+
+
 def test_prepare_send_plan_maps_full_12_pad_controls_to_track_channels() -> None:
     snapshot = Snapshot(
         snapshot_id="snapshot-1",

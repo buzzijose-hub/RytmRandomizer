@@ -210,16 +210,22 @@ def test_decode_snapshot_delegates_to_strategy_and_returns_kit_snapshot() -> Non
 def test_plan_mutation_delegates_to_strategy_and_returns_mutation_plan() -> None:
     from rytm_randomizer.devices import get_device
     from rytm_randomizer.devices.strategies import RytmKitSnapshot, RytmMutationPlan
+    from rytm_randomizer.snapshot import MutationScope
 
     rytm = get_device("analog_rytm_mk2")
     snap = RytmKitSnapshot(slot=1, kit_name="", raw=b"", unpacked=b"")
-    plan = rytm.plan_mutation(snap, depth=2)
+    scope = MutationScope(
+        target_ids=frozenset({1, 2}),
+        locked_ids=frozenset({2}),
+    )
+    plan = rytm.plan_mutation(snap, depth=2, scope=scope)
 
     assert isinstance(plan, RytmMutationPlan)
     assert plan.depth == 2
     assert plan.snapshot is snap
+    assert plan.scope == scope
     assert plan.ready is True
-    assert len(plan.events) > 0
+    assert {event.pad for event in plan.events} == {1}
 
 
 def test_plan_mutation_rejects_wrong_snapshot_type() -> None:

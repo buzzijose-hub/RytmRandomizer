@@ -7,6 +7,8 @@ import {
 } from './devices';
 import { LockButton } from './LockButton';
 import { usePadLocks } from './usePadLocks';
+import { useMutationTargets } from './useMutationTargets';
+import { ANALOG_FOUR_DEVICE_ID } from './devices';
 
 export interface AnalogFourTrackCardProps {
   track: AnalogFourTrackProfile;
@@ -17,9 +19,18 @@ export function AnalogFourTrackCard({
   track,
   previewOn,
 }: AnalogFourTrackCardProps): JSX.Element {
-  const { isLocked, toggleLock } = usePadLocks();
+  const { isLocked, toggleLock } = usePadLocks(ANALOG_FOUR_DEVICE_ID);
+  const { hasExplicitTargets, isTargeted, toggleTarget } =
+    useMutationTargets(ANALOG_FOUR_DEVICE_ID);
   const locked = isLocked(track.track);
-  const className = locked ? 'a4-track-card locked' : 'a4-track-card';
+  const targeted = isTargeted(track.track);
+  const className = [
+    'a4-track-card',
+    hasExplicitTargets ? (targeted ? 'targeted' : 'inactive') : '',
+    locked ? 'locked' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
   const oxiActions = ANALOG_FOUR_OXI_ACTIONS_BY_ROLE[track.roleKey];
 
   return (
@@ -27,6 +38,7 @@ export function AnalogFourTrackCard({
       className={className}
       data-testid={`a4-track-card-${track.track}`}
       data-role-key={track.roleKey}
+      data-target-state={targeted ? 'targeted' : 'inactive'}
     >
       <header className="a4-track-header">
         <div>
@@ -35,11 +47,23 @@ export function AnalogFourTrackCard({
           </div>
           <div className="pad-card-machine">{track.roleLabel}</div>
         </div>
-        <LockButton
-          locked={locked}
-          padId={track.track}
-          onToggle={() => toggleLock(track.track)}
-        />
+        <div className="mutation-scope-actions">
+          <button
+            aria-label={`${targeted && hasExplicitTargets ? 'Remove' : 'Target'} track ${track.track}`}
+            aria-pressed={targeted && hasExplicitTargets}
+            className="target-button"
+            onClick={() => toggleTarget(track.track)}
+            type="button"
+          >
+            {targeted && hasExplicitTargets ? 'Targeted' : 'Target'}
+          </button>
+          <LockButton
+            itemLabel="track"
+            locked={locked}
+            padId={track.track}
+            onToggle={() => toggleLock(track.track)}
+          />
+        </div>
       </header>
       <div className="a4-depth-row">
         <span id={`a4-track-${track.track}-safe-depth-label`}>Safe Depth</span>

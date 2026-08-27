@@ -674,7 +674,7 @@ def test_wizard_review_without_active_wizard_returns_error(tmp_path: Path) -> No
 # ---------------------------------------------------------------------------
 
 
-def test_wizard_save_persists_profile_and_emits_both_events(tmp_path: Path) -> None:
+def test_wizard_save_persists_profile_and_refreshes_catalogue(tmp_path: Path) -> None:
     session = _make_session(tmp_path)
     wizard = _attach_wizard(session, with_source=True)
     wizard.state = wizard.state.with_metadata(name="buzzi")
@@ -704,6 +704,9 @@ def test_wizard_save_persists_profile_and_emits_both_events(tmp_path: Path) -> N
     event_types = [e["type"] for e in recorder.events]
     assert EVENT_PROFILE_CREATED in event_types
     assert EVENT_PROFILE_CHANGED in event_types
+    assert "profile_catalog_changed" in event_types
+    catalogue = next(e for e in recorder.events if e["type"] == "profile_catalog_changed")
+    assert any(item["profile_id"] == profile_id for item in catalogue["profiles"])
     # active_wizard is cleared after a successful save.
     assert session.active_wizard is None
 

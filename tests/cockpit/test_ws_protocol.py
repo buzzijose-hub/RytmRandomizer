@@ -42,8 +42,14 @@ def test_event_types_frozenset_lists_every_event_constant() -> None:
         protocol.EVENT_MUTATION_PREVIEWED,
         protocol.EVENT_SEND_PLAN_CHANGED,
         protocol.EVENT_HISTORY_UPDATED,
+        protocol.EVENT_KIT_CAPTURES_CHANGED,
+        protocol.EVENT_MUTATION_TARGETS_CHANGED,
+        protocol.EVENT_MUTATION_LOCKS_CHANGED,
+        protocol.EVENT_DUAL_MACHINE_STAGE_CHANGED,
         protocol.EVENT_PROFILE_CHANGED,
+        protocol.EVENT_PATCH_GENOME_CHANGED,
         protocol.EVENT_PERFORMANCE_CONSOLE_CHANGED,
+        protocol.EVENT_PROFILE_CATALOG_CHANGED,
         protocol.EVENT_SESSION_STATUS,
         protocol.EVENT_CONNECTION_CHANGED,
         protocol.EVENT_MIDI_ACTIVITY,
@@ -51,8 +57,8 @@ def test_event_types_frozenset_lists_every_event_constant() -> None:
     }
     assert individual <= protocol.EVENT_TYPES
     assert isinstance(protocol.EVENT_TYPES, frozenset)
-    # 10 cockpit events + 3 wizard events (folded in from wizard_protocol)
-    assert len(protocol.EVENT_TYPES) == 13
+    # 16 cockpit events + 3 wizard events (folded in from wizard_protocol)
+    assert len(protocol.EVENT_TYPES) == 19
 
 
 def test_command_types_frozenset_lists_every_command_constant() -> None:
@@ -65,9 +71,15 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
     """
 
     individual = {
+        protocol.COMMAND_ANALYZE_PATCH_GENOME,
+        protocol.COMMAND_CAPTURE_CURRENT_KIT,
+        protocol.COMMAND_LIST_CAPTURE_INPUTS,
         protocol.COMMAND_SELECT_PROFILE,
         protocol.COMMAND_SET_DEPTH,
         protocol.COMMAND_SET_PAD_LOCK,
+        protocol.COMMAND_SET_A4_TRACK_LOCK,
+        protocol.COMMAND_SET_MUTATION_TARGETS,
+        protocol.COMMAND_CLEAR_MUTATION_TARGETS,
         protocol.COMMAND_TOGGLE_PREVIEW,
         protocol.COMMAND_PREPARE_SEND_PLAN,
         protocol.COMMAND_REGEN,
@@ -92,8 +104,8 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
     }
     assert individual <= protocol.COMMAND_TYPES
     assert isinstance(protocol.COMMAND_TYPES, frozenset)
-    # 24 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
-    assert len(protocol.COMMAND_TYPES) == 32
+    # 30 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
+    assert len(protocol.COMMAND_TYPES) == 38
 
 
 def test_event_and_command_constants_match_spec_strings() -> None:
@@ -101,16 +113,25 @@ def test_event_and_command_constants_match_spec_strings() -> None:
 
     assert protocol.EVENT_SNAPSHOT_CHANGED == "snapshot_changed"
     assert protocol.EVENT_MUTATION_PREVIEWED == "mutation_previewed"
+    assert protocol.EVENT_MUTATION_TARGETS_CHANGED == "mutation_targets_changed"
+    assert protocol.EVENT_MUTATION_LOCKS_CHANGED == "mutation_locks_changed"
+    assert protocol.EVENT_DUAL_MACHINE_STAGE_CHANGED == "dual_machine_stage_changed"
     assert protocol.EVENT_SEND_PLAN_CHANGED == "send_plan_changed"
     assert protocol.EVENT_HISTORY_UPDATED == "history_updated"
     assert protocol.EVENT_PROFILE_CHANGED == "profile_changed"
+    assert protocol.EVENT_PROFILE_CATALOG_CHANGED == "profile_catalog_changed"
+    assert protocol.EVENT_PATCH_GENOME_CHANGED == "patch_genome_changed"
     assert protocol.EVENT_PERFORMANCE_CONSOLE_CHANGED == "performance_console_changed"
     assert protocol.EVENT_SESSION_STATUS == "session_status"
     assert protocol.EVENT_CONNECTION_CHANGED == "connection_changed"
 
+    assert protocol.COMMAND_ANALYZE_PATCH_GENOME == "analyze_patch_genome"
     assert protocol.COMMAND_SELECT_PROFILE == "select_profile"
     assert protocol.COMMAND_SET_DEPTH == "set_depth"
     assert protocol.COMMAND_SET_PAD_LOCK == "set_pad_lock"
+    assert protocol.COMMAND_SET_A4_TRACK_LOCK == "set_a4_track_lock"
+    assert protocol.COMMAND_SET_MUTATION_TARGETS == "set_mutation_targets"
+    assert protocol.COMMAND_CLEAR_MUTATION_TARGETS == "clear_mutation_targets"
     assert protocol.COMMAND_TOGGLE_PREVIEW == "toggle_preview"
     assert protocol.COMMAND_PREPARE_SEND_PLAN == "prepare_send_plan"
     assert protocol.COMMAND_REGEN == "regen"
@@ -182,6 +203,86 @@ def test_mutation_previewed_event_accepts_candidate_dict() -> None:
         "candidate": {"candidate_id": "c1", "depth": 0.5},
     }
     assert event["candidate"]["candidate_id"] == "c1"
+
+
+def test_dual_machine_stage_and_lock_events_carry_whole_state() -> None:
+    locks: protocol.MutationLocksChangedEvent = {
+        "type": "mutation_locks_changed",
+        "rytm_pad_locks": [2, 8],
+        "a4_track_locks": [3],
+    }
+    stage: protocol.DualMachineStageChangedEvent = {
+        "type": "dual_machine_stage_changed",
+        "stage": {
+            "revision": 7,
+            "rytm": {
+                "device_id": "analog_rytm_mk2",
+                "connection_state": "connected",
+                "capture_state": "captured",
+                "target_ids": [1, 2],
+                "locked_ids": [2],
+                "effective_ids": [1],
+                "candidate_state": "ready",
+                "plan_state": "none",
+                "authority_state": "not_armed",
+                "blocked_reasons": [],
+                "recovery_actions": ["prepare"],
+                "last_error": None,
+            },
+            "analog_four": {
+                "device_id": "analog_four_mk2",
+                "connection_state": "unknown",
+                "capture_state": "not_captured",
+                "target_ids": [],
+                "locked_ids": [3],
+                "effective_ids": [1, 2, 4],
+                "candidate_state": "none",
+                "plan_state": "blocked",
+                "authority_state": "blocked",
+                "blocked_reasons": ["a4_semantic_mapping_unpromoted"],
+                "recovery_actions": ["run_a4_mapping_gap_procedure"],
+                "last_error": None,
+            },
+            "oxi_owns_sequencing": True,
+            "direct_oxi_control": False,
+        },
+    }
+
+    assert locks == {
+        "type": protocol.EVENT_MUTATION_LOCKS_CHANGED,
+        "rytm_pad_locks": [2, 8],
+        "a4_track_locks": [3],
+    }
+    assert stage["stage"]["revision"] == 7
+    assert stage["stage"]["analog_four"]["authority_state"] == "blocked"
+
+
+def test_profile_catalog_changed_event_carries_compact_items() -> None:
+    event: protocol.ProfileCatalogChangedEvent = {
+        "type": "profile_catalog_changed",
+        "profiles": [
+            {
+                "profile_id": "scene-industrial",
+                "name": "Industrial",
+                "kind": "scene",
+                "model_version": "1.0.0",
+                "source_summary": "Built-in scene",
+            }
+        ],
+    }
+
+    assert event["type"] == protocol.EVENT_PROFILE_CATALOG_CHANGED
+    assert event["profiles"][0]["name"] == "Industrial"
+
+
+def test_patch_genome_changed_event_carries_compiler_payload() -> None:
+    event: protocol.PatchGenomeChangedEvent = {
+        "type": "patch_genome_changed",
+        "patch_genome": {"selected_track": 2, "genome": {"candidates": []}},
+    }
+
+    assert event["type"] == protocol.EVENT_PATCH_GENOME_CHANGED
+    assert event["patch_genome"]["selected_track"] == 2
 
 
 def test_send_plan_changed_event_accepts_plan_and_none() -> None:
@@ -528,6 +629,16 @@ def test_command_ack_with_candidate_for_set_depth() -> None:
     assert ack["candidate"]["candidate_id"] == "c1"
 
 
+def test_command_ack_accepts_patch_genome_payload() -> None:
+    ack: protocol.CommandAck = {
+        "request_id": "req-genome",
+        "ok": True,
+        "patch_genome": {"selected_track": 4},
+    }
+
+    assert ack["patch_genome"]["selected_track"] == 4
+
+
 def test_command_ack_with_send_plan_for_prepare_send_plan() -> None:
     ack: protocol.CommandAck = {
         "request_id": "req-plan",
@@ -575,6 +686,17 @@ def test_select_profile_command_shape() -> None:
         "profile_id": "scene-rolling",
     }
     assert cmd["profile_id"] == "scene-rolling"
+
+
+def test_analyze_patch_genome_command_shape() -> None:
+    cmd: protocol.AnalyzePatchGenomeCommand = {
+        "type": "analyze_patch_genome",
+        "description": "Tight warehouse pressure",
+        "track": 2,
+    }
+
+    assert cmd["description"] == "Tight warehouse pressure"
+    assert cmd["track"] == 2
 
 
 def test_set_depth_command_shape() -> None:

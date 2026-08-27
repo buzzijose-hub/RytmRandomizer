@@ -26,6 +26,10 @@ Flag behavior (Wave 4 / WS-O convergence):
 * ``--arm --rytm-live-snapshot-shell``: receive one current-kit SysEx dump from
   the Rytm, decode it, and run the all-12-pad snapshot shell from that live
   anchor. Armed sends require ``--confirm-rytm-snapshot-shell-send``.
+* ``--arm --cockpit-kit-capture-sidecar``: run the input-only Cockpit capture
+  composition. It can open only the operator-selected input and cannot send a
+  SysEx request or any output message. Cockpit output remains owned by the
+  in-UI ``ArmedApply`` seam.
 
 This module is import-safe: importing it does not import ``mido`` and does not
 open ports. Those happen lazily inside the ``--arm`` handler only. The
@@ -275,6 +279,14 @@ def _build_parser() -> argparse.ArgumentParser:
         help=(
             "Run the interactive randomizer logic against the in-memory mock "
             "sender. No hardware, no port opened."
+        ),
+    )
+    parser.add_argument(
+        "--cockpit-kit-capture-sidecar",
+        action="store_true",
+        help=(
+            "Launch the Cockpit sidecar with input-only current-KIT capture. "
+            "Requires --arm; opens no output and sends no MIDI."
         ),
     )
     parser.add_argument(
@@ -3573,6 +3585,18 @@ def _run_validate_one_cc(args: argparse.Namespace) -> int:
     return _run_dry_run_one_cc_validation(channel, control, value)
 
 
+def _run_cockpit_kit_capture_sidecar() -> int:
+    """Compose input-only KIT capture through the explicit app arm boundary."""
+
+    from .cockpit.__main__ import run as run_cockpit_sidecar
+    from .cockpit.capture import KitCaptureService
+    from .mido_provider import build_mido_midi_port_provider
+
+    capture_service = KitCaptureService(build_mido_midi_port_provider())
+    run_cockpit_sidecar(capture_service)
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the RytmRandomizer entry point. Returns an int exit code."""
 
@@ -3599,6 +3623,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         },
     )
 
+    if args.cockpit_kit_capture_sidecar:
+        if not args.arm:
+            sys.stderr.write("--cockpit-kit-capture-sidecar requires --arm.\n")
+            return 1
+        return _run_cockpit_kit_capture_sidecar()
     if args.a4_soft_capture and args.validate_one_cc:
         sys.stderr.write("--a4-soft-capture cannot be combined with --validate-one-cc.\n")
         return 1

@@ -208,7 +208,7 @@ Launch the produced app: it opens in **listening** mode, shows detected Elektron
 pip install -e ".[dev]"
 
 # Terminal 1 — Python sidecar (WebSocket on 127.0.0.1:4317)
-python -m rytm_randomizer.cockpit
+python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar
 
 # Terminal 2 — Tauri shell + web frontend
 cd desktop/shell && cargo run
@@ -235,7 +235,7 @@ The passive report surface is 100+ registered commands — see [`docs/CLI_REFERE
 
 ```bash
 # Cockpit + export
-python -m rytm_randomizer.cockpit                                     # sidecar
+python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar     # input-only live-kit sidecar
 cockpit-export-profile-model --profile-id X --output Y.rymp           # ship a profile
 cockpit-export-rehearsal-report --profile-id X                        # passive pre-flight
 

@@ -1,9 +1,5 @@
 /**
- * ProfileChips — horizontal chip list of available profiles + an active-profile card.
- *
- * The list of available profiles is provided as a prop (the engine pushes a `profile_changed`
- * event for the active one; the full registry will land on the WS-K → integration side. For
- * the v10 layout we accept an `available` list so storybook / tests can drive it directly).
+ * ProfileChips — searchable live profile catalogue + active-profile card.
  *
  * Clicking a chip emits `select_profile`. The active profile (from the store) is highlighted
  * and its body is rendered as a card with traits + an EXPORT button.
@@ -12,27 +8,42 @@
 import { useState } from 'react';
 
 import { useCockpitStore } from '../state';
-import type { ProfileKind, ProfileModel } from '../ws/protocol';
+import type { ProfileCatalogItem, ProfileModel } from '../ws/protocol';
 
 import { useCockpitClient } from './context';
 import { useLoggedCommand } from './useLoggedCommand';
 
 export interface ProfileChipsProps {
-  /** Catalogue of profiles to show as chips. Filtered by `kind` upstream. */
-  available: ReadonlyArray<{ profile_id: string; name: string; kind: ProfileKind }>;
+  /** Catalogue slice to show. Filtered by profile kind upstream. */
+  available: ReadonlyArray<ProfileCatalogItem>;
 }
 
 export function ProfileChips({ available }: ProfileChipsProps): JSX.Element {
   const active = useCockpitStore((s) => s.profile);
   const sendCommand = useLoggedCommand();
+  const [query, setQuery] = useState('');
+  const normalizedQuery = query.trim().toLowerCase();
+  const visible = available.filter((profile) =>
+    `${profile.name} ${profile.source_summary}`.toLowerCase().includes(normalizedQuery),
+  );
 
   return (
     <div className="profile-chips" data-testid="profile-chips">
-      <div className="profile-chip-list">
-        {available.length === 0 ? (
+      <label className="profile-search" htmlFor="profile-catalog-search">
+        <span>Search catalogue</span>
+        <input
+          id="profile-catalog-search"
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Filter by name or source"
+          type="search"
+          value={query}
+        />
+      </label>
+      <div className="profile-chip-list" aria-live="polite">
+        {visible.length === 0 ? (
           <span className="panel-meta">No profiles available</span>
         ) : (
-          available.map((p) => {
+          visible.map((p) => {
             const isActive = active !== null && active.profile_id === p.profile_id;
             return (
               <button
@@ -45,8 +56,9 @@ export function ProfileChips({ available }: ProfileChipsProps): JSX.Element {
                   sendCommand({ type: 'select_profile', profile_id: p.profile_id });
                 }}
               >
-                {isActive ? '★ ' : ''}
-                {p.name}
+                <span className="profile-chip-name">{isActive ? 'Selected · ' : ''}{p.name}</span>
+                <span className="profile-chip-meta">model {p.model_version}</span>
+                <small>{p.source_summary}</small>
               </button>
             );
           })

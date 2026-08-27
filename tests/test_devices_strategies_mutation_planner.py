@@ -744,6 +744,22 @@ def test_planner_plan_for_machine_values_raises_value_error_when_snapshot_is_wro
         )  # type: ignore[arg-type]
 
 
+def test_planner_plan_for_machine_values_filters_through_shared_scope() -> None:
+    from rytm_randomizer.devices.strategies import AnalogRytmMutationPlanner, RytmKitSnapshot
+    from rytm_randomizer.snapshot import MutationScope
+
+    snapshot = RytmKitSnapshot(slot=7, kit_name="LIVE", raw=b"", unpacked=b"")
+    plan = AnalogRytmMutationPlanner(seed=1).plan_for_machine_values(
+        snapshot,
+        depth=1,
+        pad_machine_values={1: 0, 2: 3},
+        scope=MutationScope(target_ids=frozenset({2})),
+    )
+
+    assert plan.ready is True
+    assert {event.pad for event in plan.events} == {2}
+
+
 def test_planner_plan_for_machine_values_raises_value_error_when_depth_exceeds_max() -> None:
     from rytm_randomizer.devices.strategies import MAX_DEPTH, AnalogRytmMutationPlanner
 

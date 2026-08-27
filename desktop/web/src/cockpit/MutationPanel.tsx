@@ -8,6 +8,7 @@
 
 import { useMemo, useState } from 'react';
 
+import { useCockpitStore } from '../state';
 import type { ProfileKind } from '../ws/protocol';
 
 import { ActionBar } from './ActionBar';
@@ -17,12 +18,6 @@ import { ProfileToggle } from './ProfileToggle';
 import { StyleCrateQueue } from './StyleCrateQueue';
 
 export interface MutationPanelProps {
-  /** Catalogue of all profiles known to the cockpit. */
-  availableProfiles: ReadonlyArray<{
-    profile_id: string;
-    name: string;
-    kind: ProfileKind;
-  }>;
   previewOn: boolean;
   onTogglePreview: (next: boolean) => void;
   /**
@@ -34,11 +29,11 @@ export interface MutationPanelProps {
 }
 
 export function MutationPanel({
-  availableProfiles,
   previewOn,
   onTogglePreview,
   onLaunchWizard,
 }: MutationPanelProps): JSX.Element {
+  const availableProfiles = useCockpitStore((state) => state.profileCatalog);
   const [kind, setKind] = useState<ProfileKind>('scene');
   const filtered = useMemo(
     () => availableProfiles.filter((p) => p.kind === kind),
@@ -55,8 +50,13 @@ export function MutationPanel({
 
   return (
     <section className="cockpit-panel" data-testid="mutation-panel">
-      <h2>Mutation Panel</h2>
-      <StyleCrateQueue />
+      <div className="mutation-panel-heading">
+        <div>
+          <p className="panel-kicker">Registry synced</p>
+          <h2>Live Profile Catalog</h2>
+        </div>
+        <span>{availableProfiles.length} profiles</span>
+      </div>
       <ProfileToggle value={kind} onChange={setKind} />
       <ProfileChips available={filtered} />
       <button
@@ -67,6 +67,7 @@ export function MutationPanel({
       >
         + Create profile…
       </button>
+      <StyleCrateQueue />
       <DepthSlider />
       <ActionBar previewOn={previewOn} onTogglePreview={onTogglePreview} />
     </section>

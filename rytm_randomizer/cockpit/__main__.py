@@ -70,8 +70,9 @@ import uvicorn
 from fastapi import FastAPI
 
 from ..observability.logging import get_logger
+from .capture import KitCaptureService
 from .data import PadState, Snapshot, new_ulid
-from .device import MockDeviceAdapter
+from .device import DeviceAdapter, MockDeviceAdapter
 from .device.connection import (
     DEFAULT_FAKE_PORT_NAMES,
     ConnectionManager,
@@ -389,17 +390,22 @@ def _provision_arm_secret() -> str:
     return secret
 
 
-def build_session() -> CockpitSession:
-    """Compose the default cockpit session — mock device, on-disk profiles, empty history."""
+def build_session(
+    kit_capture_service: KitCaptureService | None = None,
+    *,
+    device: DeviceAdapter | None = None,
+) -> CockpitSession:
+    """Compose a Cockpit session with passive defaults and optional armed authority."""
 
     initial_snapshot = _default_initial_snapshot()
-    device = MockDeviceAdapter(initial=initial_snapshot)
+    selected_device = device if device is not None else MockDeviceAdapter(initial=initial_snapshot)
     history_store = HistoryStore()
-    history_store.initial(device.capture_snapshot())
+    history_store.initial(selected_device.capture_snapshot())
     return CockpitSession(
         profile_registry=ProfileRegistry(default_profiles_dir()),
         history_store=history_store,
-        device=device,
+        device=selected_device,
+        kit_capture_service=kit_capture_service or KitCaptureService.disabled(),
     )
 
 
@@ -541,10 +547,17 @@ def _install_connection_manager_lifecycle(app: FastAPI, manager: ConnectionManag
     app.router.add_event_handler("shutdown", manager.stop)
 
 
-def main() -> None:
-    """Mint the handshake token, build the app, run uvicorn on the resolved port."""
+def run(
+    kit_capture_service: KitCaptureService | None = None,
+    *,
+    device: DeviceAdapter | None = None,
+) -> None:
+    """Run with passive defaults or explicitly injected capture/output authority."""
 
-    session = build_session()
+    if kit_capture_service is None and device is None:
+        session = build_session()
+    else:
+        session = build_session(kit_capture_service, device=device)
     # Wave 4: the injected kit/sound library (JSON records under the
     # platform config dir; importer reads ./captures). Injected on the
     # session — the store module itself keeps zero module-level state.
@@ -595,6 +608,12 @@ def main() -> None:
         # exactly once. The process must never exit still holding the
         # device's exclusive output port.
         disarm_session_on_teardown(session)
+
+
+def main() -> None:
+    """Run the ordinary passive sidecar with hardware capture disabled."""
+
+    run()
 
 
 if __name__ == "__main__":  # pragma: no cover - exercised via ``python -m``

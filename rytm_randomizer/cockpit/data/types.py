@@ -28,7 +28,7 @@ characters so a malicious large blob cannot bloat a log line, and use
 
 from __future__ import annotations
 
-from typing import Final, Literal, cast
+from typing import Final, Literal
 
 # ---------------------------------------------------------------------------
 # ProfileModel.kind
@@ -56,10 +56,10 @@ HISTORY_KIND_VALUES: Final[tuple[HistoryKind, ...]] = ("auto", "saved")
 # HistoryEntry.via
 # ---------------------------------------------------------------------------
 
-Via = Literal["send", "regen", "load", "import"]
+Via = Literal["send", "regen", "load", "import", "capture"]
 """How the snapshot at a history entry came into being."""
 
-VIA_VALUES: Final[tuple[Via, ...]] = ("send", "regen", "load", "import")
+VIA_VALUES: Final[tuple[Via, ...]] = ("send", "regen", "load", "import", "capture")
 """Runtime tuple of every ``Via`` literal."""
 
 
@@ -100,7 +100,7 @@ contain control characters; truncating + ``repr()``-ing keeps log lines tame
 without losing the value's diagnostic shape for legitimate small inputs."""
 
 
-def _safe_repr(value: str) -> str:
+def safe_repr(value: str) -> str:
     """Return a length-bounded, escape-quoted repr of ``value`` for error messages.
 
     ``repr()`` already escapes non-printable bytes and quotes the string;
@@ -118,6 +118,12 @@ def _safe_repr(value: str) -> str:
     return repr(value)
 
 
+def _safe_repr(value: str) -> str:
+    """Backward-compatible private alias for older sibling modules."""
+
+    return safe_repr(value)
+
+
 def narrow_kind(s: str) -> Kind:
     """Narrow ``s`` to :data:`Kind` or raise :class:`ValueError`.
 
@@ -129,7 +135,7 @@ def narrow_kind(s: str) -> Kind:
     """
 
     if s in KIND_VALUES:
-        return cast(Kind, s)
+        return s
     raise ValueError(f"invalid kind: {_safe_repr(s)}; expected one of {KIND_VALUES}")
 
 
@@ -137,7 +143,7 @@ def narrow_history_kind(s: str) -> HistoryKind:
     """Narrow ``s`` to :data:`HistoryKind` or raise :class:`ValueError`."""
 
     if s in HISTORY_KIND_VALUES:
-        return cast(HistoryKind, s)
+        return s
     raise ValueError(
         f"invalid history kind: {_safe_repr(s)}; expected one of {HISTORY_KIND_VALUES}"
     )
@@ -147,7 +153,7 @@ def narrow_via(s: str) -> Via:
     """Narrow ``s`` to :data:`Via` or raise :class:`ValueError`."""
 
     if s in VIA_VALUES:
-        return cast(Via, s)
+        return s
     raise ValueError(f"invalid via: {_safe_repr(s)}; expected one of {VIA_VALUES}")
 
 
@@ -155,7 +161,7 @@ def narrow_status(s: str) -> Status:
     """Narrow ``s`` to :data:`Status` or raise :class:`ValueError`."""
 
     if s in STATUS_VALUES:
-        return cast(Status, s)
+        return s
     raise ValueError(f"invalid status: {_safe_repr(s)}; expected one of {STATUS_VALUES}")
 
 
@@ -163,7 +169,7 @@ def narrow_transition_curve(s: str) -> TransitionCurve:
     """Narrow ``s`` to :data:`TransitionCurve` or raise :class:`ValueError`."""
 
     if s in TRANSITION_CURVE_VALUES:
-        return cast(TransitionCurve, s)
+        return s
     raise ValueError(
         "invalid transition_curve: " f"{_safe_repr(s)}; expected one of {TRANSITION_CURVE_VALUES}"
     )
@@ -185,4 +191,5 @@ __all__ = [
     "narrow_status",
     "narrow_transition_curve",
     "narrow_via",
+    "safe_repr",
 ]

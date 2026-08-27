@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from rytm_randomizer.snapshot import MutationScope
+
 pytestmark = pytest.mark.fast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -72,3 +74,54 @@ def test_plan_is_deterministic_for_same_seed_slot_and_depth() -> None:
     snap = _snapshot(offsets_promoted=True)
 
     assert planner.plan(snap, depth=3) == planner.plan(snap, depth=3)
+
+
+def test_plan_intersects_explicit_track_targets_with_locks_when_promoted() -> None:
+    from rytm_randomizer.devices.strategies import AnalogFourMutationPlanner
+
+    planner = AnalogFourMutationPlanner(seed=99)
+    plan = planner.plan(
+        _snapshot(offsets_promoted=True),
+        depth=3,
+        scope=MutationScope(
+            target_ids=frozenset({1, 3, 4}),
+            locked_ids=frozenset({3}),
+        ),
+    )
+
+    assert plan.ready is True
+    assert {event.track for event in plan.events} == {1, 4}
+    assert plan.scope.target_ids == frozenset({1, 3, 4})
+    assert plan.scope.locked_ids == frozenset({3})
+
+
+def test_captured_candidate_only_a4_snapshot_stays_fail_closed_with_targets() -> None:
+    from rytm_randomizer.devices.strategies import AnalogFourMutationPlanner
+
+    plan = AnalogFourMutationPlanner().plan(
+        _snapshot(offsets_promoted=False),
+        depth=3,
+        scope=MutationScope(target_ids=frozenset({2})),
+    )
+
+    assert plan.ready is False
+    assert plan.events == ()
+    assert "byte offsets" in plan.readiness_reason
+    assert "value encodings" in plan.readiness_reason
+
+
+def test_plan_blocks_when_targets_are_entirely_locked() -> None:
+    from rytm_randomizer.devices.strategies import AnalogFourMutationPlanner
+
+    plan = AnalogFourMutationPlanner().plan(
+        _snapshot(offsets_promoted=True),
+        depth=3,
+        scope=MutationScope(
+            target_ids=frozenset({2}),
+            locked_ids=frozenset({2}),
+        ),
+    )
+
+    assert plan.ready is False
+    assert plan.events == ()
+    assert plan.readiness_reason == "no sendable A4 tracks after targets and locks"

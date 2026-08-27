@@ -2,7 +2,7 @@
 
 These fixtures spin up a real :func:`rytm_randomizer.cockpit.ws.server.create_app`
 FastAPI instance in-process and drive it through ``fastapi.testclient.TestClient``
-so every command in the spec (11 total) and every event (7 total) can be
+so every command and event in the spec can be
 exercised end-to-end across the JSON-over-WebSocket protocol.
 
 The two top-level fixtures:
@@ -13,7 +13,7 @@ The two top-level fixtures:
   :class:`ProfileRegistry`, so the seven built-in scenes are always
   available without filesystem mutation.
 * :func:`cockpit_ws` — opens a WebSocket connection against
-  :func:`cockpit_client`, **drains the five bootstrap events** so tests
+  :func:`cockpit_client`, **drains the authoritative bootstrap events** so tests
   start at the "live command loop" cursor, and yields the live socket.
 
 One autouse fixture every cockpit test module inherits:
@@ -57,7 +57,11 @@ from rytm_randomizer.cockpit.device import MockDeviceAdapter
 from rytm_randomizer.cockpit.device.connection import set_active_connection_manager
 from rytm_randomizer.cockpit.history import HistoryStore
 from rytm_randomizer.cockpit.profiles import ProfileRegistry
-from rytm_randomizer.cockpit.ws.protocol import HELLO_FRAME_TYPE, WS_SUBPROTOCOL
+from rytm_randomizer.cockpit.ws.protocol import (
+    HELLO_FRAME_TYPE,
+    INITIAL_EVENT_COUNT,
+    WS_SUBPROTOCOL,
+)
 from rytm_randomizer.cockpit.ws.server import create_app
 from rytm_randomizer.cockpit.ws.session import CockpitSession
 
@@ -187,7 +191,7 @@ def cockpit_ws(cockpit_client: TestClient) -> Iterator[object]:
        accepts the upgrade (L8).
     2. Sends ``{"type": "hello", "token": TEST_WS_TOKEN}`` and reads the
        ``{"ok": true}`` ack (C1).
-    3. Drains the five bootstrap events emitted by
+    3. Drains the bootstrap events emitted by
        :func:`emit_initial_events` so the first ``receive_json`` inside
        the test body is the response to its first command.
 
@@ -198,7 +202,7 @@ def cockpit_ws(cockpit_client: TestClient) -> Iterator[object]:
 
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
-        for _ in range(5):
+        for _ in range(INITIAL_EVENT_COUNT):
             ws.receive_json()
         yield ws
 
@@ -216,7 +220,7 @@ def complete_handshake(ws: object, token: str = TEST_WS_TOKEN) -> dict:
     return ws.receive_json()  # type: ignore[attr-defined]
 
 
-def collect_initial_events(ws: object, count: int = 5) -> list[dict]:
+def collect_initial_events(ws: object, count: int = INITIAL_EVENT_COUNT) -> list[dict]:
     """Read ``count`` event frames in order (default: the bootstrap event set).
 
     Use only on a freshly-connected WebSocket whose bootstrap events have
@@ -240,7 +244,11 @@ def send_cmd(ws: object, cmd_type: str, request_id: str | None = None, **body: o
         request_id = f"req-{cmd_type}"
     envelope = {"request_id": request_id, "command": {"type": cmd_type, **body}}
     ws.send_json(envelope)  # type: ignore[attr-defined]
-    return ws.receive_json()  # type: ignore[attr-defined]
+    for _ in range(64):
+        frame = ws.receive_json()  # type: ignore[attr-defined]
+        if frame.get("request_id") == request_id and "ok" in frame:
+            return frame
+    raise AssertionError(f"no matching ack received for {request_id!r}")
 
 
 def drain_events(ws: object, count: int) -> list[dict]:
@@ -256,14 +264,14 @@ def drain_events(ws: object, count: int) -> list[dict]:
 
 
 def prepare_send_plan(ws: object, request_id: str = "req-prepare-send-plan") -> dict:
-    """Prepare and drain the inert SEND-plan event before a SEND command."""
+    """Prepare and drain plan plus authoritative-stage events before SEND."""
 
     ack = send_cmd(ws, "prepare_send_plan", request_id=request_id)
     if ack.get("ok") is not True:
         raise AssertionError(f"prepare_send_plan failed: {ack}")
     if ack["send_plan"]["ready"] is not True:
         raise AssertionError(f"prepare_send_plan blocked: {ack['send_plan']}")
-    drain_events(ws, 1)
+    drain_events(ws, 2)
     return ack
 
 

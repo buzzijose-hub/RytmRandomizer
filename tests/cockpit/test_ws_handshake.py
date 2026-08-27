@@ -39,14 +39,21 @@ from rytm_randomizer.cockpit.profiles import ProfileRegistry
 from rytm_randomizer.cockpit.ws.protocol import (
     CLOSE_CODE_MESSAGE_TOO_BIG,
     CLOSE_CODE_POLICY_VIOLATION,
+    EVENT_DUAL_MACHINE_STAGE_CHANGED,
     EVENT_HISTORY_UPDATED,
+    EVENT_KIT_CAPTURES_CHANGED,
+    EVENT_MUTATION_LOCKS_CHANGED,
+    EVENT_MUTATION_TARGETS_CHANGED,
+    EVENT_PATCH_GENOME_CHANGED,
     EVENT_PERFORMANCE_CONSOLE_CHANGED,
+    EVENT_PROFILE_CATALOG_CHANGED,
     EVENT_PROFILE_CHANGED,
     EVENT_SESSION_STATUS,
     EVENT_SNAPSHOT_CHANGED,
     HANDSHAKE_AUTH_FAILED,
     HANDSHAKE_AUTH_REQUIRED,
     HELLO_FRAME_TYPE,
+    INITIAL_EVENT_COUNT,
     MESSAGE_TOO_LARGE_CODE,
     WS_SUBPROTOCOL,
 )
@@ -130,13 +137,19 @@ def test_handshake_with_valid_token_unlocks_bootstrap_events(client: TestClient)
         ack = ws.receive_json()
         assert ack == {"ok": True}
 
-        # The five bootstrap events arrive in the documented order.
-        events = [ws.receive_json() for _ in range(5)]
+        # The eleven bootstrap events arrive in the documented order.
+        events = [ws.receive_json() for _ in range(INITIAL_EVENT_COUNT)]
         assert [e["type"] for e in events] == [
             EVENT_SESSION_STATUS,
             EVENT_SNAPSHOT_CHANGED,
             EVENT_PROFILE_CHANGED,
+            EVENT_PROFILE_CATALOG_CHANGED,
             EVENT_HISTORY_UPDATED,
+            EVENT_PATCH_GENOME_CHANGED,
+            EVENT_KIT_CAPTURES_CHANGED,
+            EVENT_MUTATION_TARGETS_CHANGED,
+            EVENT_MUTATION_LOCKS_CHANGED,
+            EVENT_DUAL_MACHINE_STAGE_CHANGED,
             EVENT_PERFORMANCE_CONSOLE_CHANGED,
         ]
 
@@ -259,7 +272,7 @@ def test_handshake_deadline_does_not_touch_the_post_auth_path(
         with testclient.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
             ws.send_json(_hello(_TOKEN))
             assert ws.receive_json() == {"ok": True}
-            for _ in range(5):
+            for _ in range(INITIAL_EVENT_COUNT):
                 ws.receive_json()  # drain bootstrap
 
             time.sleep(0.5)  # idle well past the handshake deadline
@@ -310,7 +323,7 @@ def test_oversize_message_after_handshake_is_rejected(
         with testclient.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
             ws.send_json(_hello(_TOKEN))
             assert ws.receive_json() == {"ok": True}
-            for _ in range(5):
+            for _ in range(INITIAL_EVENT_COUNT):
                 ws.receive_json()  # drain bootstrap
 
             # Build a request envelope whose JSON serialization comfortably
@@ -335,7 +348,7 @@ def test_under_cap_message_after_handshake_is_processed(client: TestClient) -> N
     with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         ws.send_json(_hello(_TOKEN))
         assert ws.receive_json() == {"ok": True}
-        for _ in range(5):
+        for _ in range(INITIAL_EVENT_COUNT):
             ws.receive_json()  # drain bootstrap
 
         ws.send_json(
@@ -360,7 +373,7 @@ def _handshake_and_drain_bootstrap(ws: object) -> None:
     ws.send_json(_hello(_TOKEN))  # type: ignore[attr-defined]
     ack = ws.receive_json()  # type: ignore[attr-defined]
     assert ack == {"ok": True}
-    for _ in range(5):
+    for _ in range(INITIAL_EVENT_COUNT):
         ws.receive_json()  # type: ignore[attr-defined]
 
 

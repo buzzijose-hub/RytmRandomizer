@@ -29,6 +29,7 @@ from typing import Any, Final
 import pytest
 
 from rytm_randomizer.cockpit.data import (
+    CockpitSendPlan,
     PadState,
     ProfileModel,
     Snapshot,
@@ -41,11 +42,18 @@ from rytm_randomizer.cockpit.profiles import ProfileRegistry
 from rytm_randomizer.cockpit.ws import handlers
 from rytm_randomizer.cockpit.ws.handlers import drain_pending_events, handle_command
 from rytm_randomizer.cockpit.ws.protocol import (
+    COMMAND_ANALYZE_PATCH_GENOME,
     COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
     COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
     COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
+    EVENT_DUAL_MACHINE_STAGE_CHANGED,
     EVENT_HISTORY_UPDATED,
+    EVENT_KIT_CAPTURES_CHANGED,
+    EVENT_MUTATION_LOCKS_CHANGED,
     EVENT_MUTATION_PREVIEWED,
+    EVENT_MUTATION_TARGETS_CHANGED,
+    EVENT_PATCH_GENOME_CHANGED,
+    EVENT_PROFILE_CATALOG_CHANGED,
     EVENT_PROFILE_CHANGED,
     EVENT_SEND_PLAN_CHANGED,
     EVENT_SESSION_STATUS,
@@ -470,15 +478,23 @@ def test_set_pad_lock_remove_nonpresent_pad_is_noop(tmp_path: Path) -> None:
     assert 3 not in session.pad_locks
 
 
-def test_set_pad_lock_does_not_emit_events(tmp_path: Path) -> None:
-    """Pad-lock state lives on the client; no event is broadcast."""
+def test_set_pad_lock_emits_whole_lock_and_stage_state(tmp_path: Path) -> None:
+    """Pad locks are authoritative server state and rehydrate with the stage."""
 
     session = _make_session(tmp_path)
     recorder = _Recorder()
 
     _dispatch(_envelope("set_pad_lock", pad_id=1, locked=True), session, recorder)
 
-    assert recorder.events == []
+    assert [event["type"] for event in recorder.events] == [
+        EVENT_MUTATION_LOCKS_CHANGED,
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
+    ]
+    assert recorder.events[0] == {
+        "type": EVENT_MUTATION_LOCKS_CHANGED,
+        "rytm_pad_locks": [1],
+        "a4_track_locks": [],
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -603,7 +619,7 @@ def test_prepare_send_plan_without_candidate_returns_error(tmp_path: Path) -> No
     assert ack["code"] == "validation_error"
     assert "no current candidate" in ack["message"]
     assert session.current_send_plan is None
-    assert recorder.events == []
+    assert [event["type"] for event in recorder.events] == [EVENT_DUAL_MACHINE_STAGE_CHANGED]
 
 
 def test_prepare_send_plan_with_candidate_stores_and_emits_plan(tmp_path: Path) -> None:
@@ -619,11 +635,13 @@ def test_prepare_send_plan_with_candidate_stores_and_emits_plan(tmp_path: Path) 
     assert ack["send_plan"]["ready"] is True
     assert session.current_send_plan is not None
     assert ack["send_plan"]["plan_id"] == session.current_send_plan.plan_id
-    assert recorder.events == [
-        {
-            "type": EVENT_SEND_PLAN_CHANGED,
-            "send_plan": session.current_send_plan.to_dict(),
-        }
+    assert recorder.events[0] == {
+        "type": EVENT_SEND_PLAN_CHANGED,
+        "send_plan": session.current_send_plan.to_dict(),
+    }
+    assert [event["type"] for event in recorder.events] == [
+        EVENT_SEND_PLAN_CHANGED,
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
     ]
 
 
@@ -642,7 +660,7 @@ def test_prepare_send_plan_without_active_profile_returns_error(tmp_path: Path) 
     assert ack["code"] == "validation_error"
     assert "no active profile" in ack["message"]
     assert session.current_send_plan is None
-    assert recorder.events == []
+    assert [event["type"] for event in recorder.events] == [EVENT_DUAL_MACHINE_STAGE_CHANGED]
 
 
 def test_set_pad_lock_clears_stale_send_plan(tmp_path: Path) -> None:
@@ -658,7 +676,227 @@ def test_set_pad_lock_clears_stale_send_plan(tmp_path: Path) -> None:
 
     assert ack["ok"] is True
     assert session.current_send_plan is None
-    assert recorder.events == [{"type": EVENT_SEND_PLAN_CHANGED, "send_plan": None}]
+    assert [event["type"] for event in recorder.events] == [
+        EVENT_SEND_PLAN_CHANGED,
+        EVENT_MUTATION_LOCKS_CHANGED,
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
+    ]
+    assert recorder.events[0] == {"type": EVENT_SEND_PLAN_CHANGED, "send_plan": None}
+    assert recorder.events[1] == {
+        "type": EVENT_MUTATION_LOCKS_CHANGED,
+        "rytm_pad_locks": [1],
+        "a4_track_locks": [],
+    }
+
+
+def test_set_rytm_targets_recomputes_candidate_and_filters_prepared_plan(
+    tmp_path: Path,
+) -> None:
+    profile = _profile()
+    session = _make_session(tmp_path, profile)
+    session.active_profile = profile
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            "set_mutation_targets",
+            device_id="analog_rytm_mk2",
+            target_ids=[2],
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is True
+    assert session.rytm_pad_targets == {2}
+    assert session.current_candidate is not None
+    assert {delta.pad_id for delta in session.current_candidate.pad_deltas} == {2}
+    assert recorder.events[0] == {
+        "type": EVENT_MUTATION_TARGETS_CHANGED,
+        "rytm_pad_targets": [2],
+        "a4_track_targets": [],
+    }
+    assert [event["type"] for event in recorder.events] == [
+        EVENT_MUTATION_TARGETS_CHANGED,
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
+    ]
+
+    prepare_ack = _dispatch(_envelope("prepare_send_plan"), session, _Recorder())
+    assert prepare_ack["ok"] is True
+    assert {packet["pad_id"] for packet in prepare_ack["send_plan"]["packets"]} == {2}
+
+
+def test_clear_rytm_targets_restores_default_all_pad_candidate_scope(tmp_path: Path) -> None:
+    profile = _profile()
+    session = _make_session(tmp_path, profile)
+    session.active_profile = profile
+    session.rytm_pad_targets = {2}
+    handlers._recompute_candidate(session)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope("clear_mutation_targets", device_id="analog_rytm_mk2"),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is True
+    assert session.rytm_pad_targets == set()
+    assert session.current_candidate is not None
+    assert {delta.pad_id for delta in session.current_candidate.pad_deltas} == {1, 2}
+    assert [event["type"] for event in recorder.events] == [
+        EVENT_MUTATION_TARGETS_CHANGED,
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
+    ]
+
+
+def test_target_change_refreshes_active_preview(tmp_path: Path) -> None:
+    profile = _profile()
+    session = _make_session(tmp_path, profile)
+    session.active_profile = profile
+    session.preview_on = True
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            "set_mutation_targets",
+            device_id="analog_rytm_mk2",
+            target_ids=[1],
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is True
+    assert [event["type"] for event in recorder.events] == [
+        EVENT_MUTATION_TARGETS_CHANGED,
+        EVENT_MUTATION_PREVIEWED,
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
+    ]
+
+
+def test_clear_a4_targets_restores_default_all_track_scope(tmp_path: Path) -> None:
+    session = _make_session(tmp_path)
+    session.a4_track_targets = {2, 3}
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope("clear_mutation_targets", device_id="analog_four_mk2"),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is True
+    assert session.a4_track_targets == set()
+    assert recorder.events[0] == {
+        "type": EVENT_MUTATION_TARGETS_CHANGED,
+        "rytm_pad_targets": [],
+        "a4_track_targets": [],
+    }
+    assert [event["type"] for event in recorder.events] == [
+        EVENT_MUTATION_TARGETS_CHANGED,
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
+    ]
+
+
+def test_targets_and_locks_can_remove_every_sendable_rytm_pad(tmp_path: Path) -> None:
+    profile = _profile()
+    session = _make_session(tmp_path, profile)
+    session.active_profile = profile
+    session.rytm_pad_targets = {2}
+    session.pad_locks = {2}
+    handlers._recompute_candidate(session)
+
+    ack = _dispatch(_envelope("prepare_send_plan"), session, _Recorder())
+
+    assert ack["ok"] is True
+    assert ack["send_plan"]["ready"] is False
+    assert ack["send_plan"]["readiness_reason"] == "no_sendable_changes"
+
+
+def test_a4_targets_and_track_locks_gate_passive_patch_genome_selection(
+    tmp_path: Path,
+) -> None:
+    session = _make_session(tmp_path)
+
+    target_ack = _dispatch(
+        _envelope(
+            "set_mutation_targets",
+            device_id="analog_four_mk2",
+            target_ids=[2, 3],
+        ),
+        session,
+        _Recorder(),
+    )
+    lock_ack = _dispatch(
+        _envelope("set_a4_track_lock", track=2, locked=True),
+        session,
+        _Recorder(),
+    )
+    blocked = _dispatch(
+        _envelope(
+            "analyze_patch_genome",
+            description="Tight warehouse pressure",
+            track=2,
+        ),
+        session,
+        _Recorder(),
+    )
+    allowed = _dispatch(
+        _envelope(
+            "analyze_patch_genome",
+            description="Tight warehouse pressure",
+            track=3,
+        ),
+        session,
+        _Recorder(),
+    )
+
+    assert target_ack["ok"] is True
+    assert lock_ack["ok"] is True
+    assert blocked["ok"] is False
+    assert blocked["code"] == "validation_error"
+    assert allowed["ok"] is True
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        {
+            "type": "set_mutation_targets",
+            "device_id": "analog_rytm_mk2",
+            "target_ids": [13],
+        },
+        {
+            "type": "set_mutation_targets",
+            "device_id": "analog_rytm_mk2",
+            "target_ids": "1",
+        },
+        {
+            "type": "set_mutation_targets",
+            "device_id": "analog_four_mk2",
+            "target_ids": [True],
+        },
+        {"type": "set_a4_track_lock", "track": 5, "locked": True},
+        {"type": "set_a4_track_lock", "track": True, "locked": True},
+        {"type": "set_a4_track_lock", "track": 1, "locked": "yes"},
+        {"type": "set_pad_lock", "pad_id": 0, "locked": True},
+        {"type": "set_pad_lock", "pad_id": True, "locked": True},
+        {"type": "set_pad_lock", "pad_id": 1, "locked": "yes"},
+    ],
+)
+def test_target_and_lock_commands_reject_out_of_range_ids(
+    tmp_path: Path,
+    command: dict,
+) -> None:
+    ack = _dispatch(
+        {"request_id": "scope-invalid", "command": command},
+        _make_session(tmp_path),
+        _Recorder(),
+    )
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
 
 
 def test_send_with_candidate_but_no_ready_plan_returns_error(tmp_path: Path) -> None:
@@ -681,7 +919,7 @@ def test_send_with_candidate_but_no_ready_plan_returns_error(tmp_path: Path) -> 
 # ---------------------------------------------------------------------------
 
 
-def test_send_with_ready_plan_applies_and_emits_five_events(tmp_path: Path) -> None:
+def test_send_with_ready_plan_applies_and_emits_six_events(tmp_path: Path) -> None:
     profile = _profile()
     session = _make_session(tmp_path, profile)
     session.active_profile = profile
@@ -696,7 +934,7 @@ def test_send_with_ready_plan_applies_and_emits_five_events(tmp_path: Path) -> N
     assert ack["ok"] is True
     assert ack["new_snapshot_id"]
     assert ack["send_plan_id"]
-    # Five events in order: snapshot, history, preview(null), send_plan(null), status.
+    # Six events: the five lifecycle frames followed by coordinated stage state.
     types_emitted = [e["type"] for e in recorder.events]
     assert types_emitted == [
         EVENT_SNAPSHOT_CHANGED,
@@ -704,6 +942,7 @@ def test_send_with_ready_plan_applies_and_emits_five_events(tmp_path: Path) -> N
         EVENT_MUTATION_PREVIEWED,
         EVENT_SEND_PLAN_CHANGED,
         EVENT_SESSION_STATUS,
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
     ]
     # mutation_previewed must carry null (preview clears post-send)
     null_event = next(e for e in recorder.events if e["type"] == EVENT_MUTATION_PREVIEWED)
@@ -740,6 +979,79 @@ def test_send_without_candidate_returns_error(tmp_path: Path) -> None:
     assert ack["ok"] is False
     assert ack["code"] == "validation_error"
     assert "no current candidate" in ack["message"]
+
+
+class _ArmedTrackingDevice(MockDeviceAdapter):
+    """Mock-safe adapter that exercises armed handler gates without MIDI."""
+
+    def __init__(self, initial: Snapshot) -> None:
+        super().__init__(initial)
+        self.applied_plan_ids: list[str] = []
+
+    @property
+    def is_armed(self) -> bool:
+        return True
+
+    @property
+    def midi_port(self) -> str:
+        return "Exact Test Rytm"
+
+    def apply_send_plan(self, send_plan: CockpitSendPlan) -> Snapshot:
+        self.applied_plan_ids.append(send_plan.plan_id)
+        return super().apply_send_plan(send_plan)
+
+
+def _prepared_armed_session(tmp_path: Path) -> CockpitSession:
+    profile = _profile()
+    session = _make_session(tmp_path, profile)
+    session.device = _ArmedTrackingDevice(session.device.capture_snapshot())
+    session.active_profile = profile
+    _dispatch(_envelope("set_depth", depth=0.5), session, _Recorder())
+    _dispatch(_envelope("prepare_send_plan"), session, _Recorder())
+    return session
+
+
+def test_armed_send_requires_exact_current_plan_id(tmp_path: Path) -> None:
+    session = _prepared_armed_session(tmp_path)
+    device = session.device
+    prepared = session.current_send_plan
+    assert prepared is not None
+
+    missing = _dispatch(_envelope("send"), session, _Recorder())
+    stale = _dispatch(_envelope("send", send_plan_id="stale-plan"), session, _Recorder())
+
+    assert missing["ok"] is False
+    assert stale["ok"] is False
+    assert "confirmation" in missing["message"]
+    assert session.current_send_plan is prepared
+    assert device.applied_plan_ids == []
+
+
+def test_armed_send_applies_only_after_exact_plan_confirmation(tmp_path: Path) -> None:
+    session = _prepared_armed_session(tmp_path)
+    device = session.device
+    prepared = session.current_send_plan
+    assert prepared is not None
+
+    ack = _dispatch(_envelope("send", send_plan_id=prepared.plan_id), session, _Recorder())
+
+    assert ack["ok"] is True
+    assert device.applied_plan_ids == [prepared.plan_id]
+
+
+def test_send_rejects_non_string_or_mismatched_optional_plan_id(tmp_path: Path) -> None:
+    profile = _profile()
+    session = _make_session(tmp_path, profile)
+    session.active_profile = profile
+    _dispatch(_envelope("set_depth", depth=0.5), session, _Recorder())
+    _dispatch(_envelope("prepare_send_plan"), session, _Recorder())
+
+    non_string = _dispatch(_envelope("send", send_plan_id=7), session, _Recorder())
+    mismatch = _dispatch(_envelope("send", send_plan_id="stale-plan"), session, _Recorder())
+
+    assert non_string["ok"] is False
+    assert mismatch["ok"] is False
+    assert session.current_send_plan is not None
 
 
 # ---------------------------------------------------------------------------
@@ -2196,7 +2508,88 @@ def test_build_operator_package_receipt_preserves_send_plan_and_device_state(
 # ---------------------------------------------------------------------------
 
 
-def test_emit_initial_events_sends_five_events_in_order(tmp_path: Path) -> None:
+def test_analyze_patch_genome_returns_real_candidates_without_device_side_effects(
+    tmp_path: Path,
+) -> None:
+    session = _make_session(tmp_path)
+    before_snapshot = session.device.capture_snapshot().to_dict()
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(
+            COMMAND_ANALYZE_PATCH_GENOME,
+            description="  brittle sync pressure  ",
+            track=4,
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is True
+    assert ack["patch_genome"]["source"]["value"] == "brittle sync pressure"
+    assert ack["patch_genome"]["selected_track"] == 4
+    assert len(ack["patch_genome"]["genome"]["candidates"]) == 4
+    assert recorder.events[0] == {
+        "type": EVENT_PATCH_GENOME_CHANGED,
+        "patch_genome": ack["patch_genome"],
+    }
+    assert [event["type"] for event in recorder.events] == [
+        EVENT_PATCH_GENOME_CHANGED,
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
+    ]
+    assert session.patch_genome_description == "brittle sync pressure"
+    assert session.patch_genome_track == 4
+    assert session.device.capture_snapshot().to_dict() == before_snapshot
+    assert session.device.is_armed is False
+
+
+@pytest.mark.parametrize(
+    ("description", "track"),
+    [
+        (42, 2),
+        ("   ", 2),
+        ("x" * 241, 2),
+        ("pressure", True),
+        ("pressure", "2"),
+        ("pressure", 0),
+        ("pressure", 5),
+    ],
+)
+def test_analyze_patch_genome_rejects_invalid_inputs(
+    tmp_path: Path, description: object, track: object
+) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(COMMAND_ANALYZE_PATCH_GENOME, description=description, track=track),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert recorder.events == []
+    assert session.patch_genome_description == "Tight warehouse pressure"
+    assert session.patch_genome_track == 2
+
+
+def test_analyze_patch_genome_requires_both_fields(tmp_path: Path) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope(COMMAND_ANALYZE_PATCH_GENOME, description="pressure"),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert recorder.events == []
+
+
+def test_emit_initial_events_sends_eleven_events_in_order(tmp_path: Path) -> None:
     session = _make_session(tmp_path)
     recorder = _Recorder()
 
@@ -2207,9 +2600,40 @@ def test_emit_initial_events_sends_five_events_in_order(tmp_path: Path) -> None:
         EVENT_SESSION_STATUS,
         EVENT_SNAPSHOT_CHANGED,
         EVENT_PROFILE_CHANGED,
+        EVENT_PROFILE_CATALOG_CHANGED,
         EVENT_HISTORY_UPDATED,
+        EVENT_PATCH_GENOME_CHANGED,
+        EVENT_KIT_CAPTURES_CHANGED,
+        EVENT_MUTATION_TARGETS_CHANGED,
+        EVENT_MUTATION_LOCKS_CHANGED,
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
         _PERFORMANCE_CONSOLE_CHANGED,
     ]
+
+
+def test_emit_initial_events_carries_live_catalog_and_passive_patch_genome(
+    tmp_path: Path,
+) -> None:
+    session = _make_session(tmp_path, profile=_profile())
+    recorder = _Recorder()
+
+    _run(handlers.emit_initial_events(recorder, session))
+
+    catalogue = next(e for e in recorder.events if e["type"] == EVENT_PROFILE_CATALOG_CHANGED)
+    assert len(catalogue["profiles"]) == 8
+    assert catalogue["profiles"][-1] == {
+        "profile_id": "profile-test",
+        "name": "test-profile",
+        "kind": "user",
+        "model_version": "1.0.0",
+        "source_summary": "test fixture",
+    }
+    genome_event = next(e for e in recorder.events if e["type"] == EVENT_PATCH_GENOME_CHANGED)
+    patch_genome = genome_event["patch_genome"]
+    assert patch_genome["source"]["value"] == "Tight warehouse pressure"
+    assert patch_genome["selected_track"] == 2
+    assert len(patch_genome["genome"]["candidates"]) == 4
+    assert patch_genome["genome"]["safety"][0] == "passive read-only patch genome"
 
 
 def test_emit_initial_events_carries_passive_performance_console_packet(tmp_path: Path) -> None:
@@ -2437,7 +2861,7 @@ def test_build_connection_changed_carries_whole_state_dict() -> None:
 def test_emit_initial_events_appends_connection_changed_when_manager_active(
     tmp_path: Path,
 ) -> None:
-    """Wired boot path: the bootstrap grows a sixth, final connection frame."""
+    """Wired boot path: the 11-event bootstrap gains a final connection frame."""
 
     session = _make_session(tmp_path)
     recorder = _Recorder()
@@ -2451,7 +2875,13 @@ def test_emit_initial_events_appends_connection_changed_when_manager_active(
         EVENT_SESSION_STATUS,
         EVENT_SNAPSHOT_CHANGED,
         EVENT_PROFILE_CHANGED,
+        EVENT_PROFILE_CATALOG_CHANGED,
         EVENT_HISTORY_UPDATED,
+        EVENT_PATCH_GENOME_CHANGED,
+        EVENT_KIT_CAPTURES_CHANGED,
+        EVENT_MUTATION_TARGETS_CHANGED,
+        EVENT_MUTATION_LOCKS_CHANGED,
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
         _PERFORMANCE_CONSOLE_CHANGED,
         "connection_changed",
     ]
@@ -2460,8 +2890,8 @@ def test_emit_initial_events_appends_connection_changed_when_manager_active(
     assert recorder.events[0]["connection_phase"] == "listening"
 
 
-def test_emit_initial_events_stays_five_events_when_unwired(tmp_path: Path) -> None:
-    """Unwired sessions keep the historical five-event bootstrap exactly."""
+def test_emit_initial_events_stays_eleven_events_when_unwired(tmp_path: Path) -> None:
+    """Unwired sessions emit the authoritative 11-event bootstrap exactly."""
 
     connection.set_active_connection_manager(None)
     session = _make_session(tmp_path)
@@ -2473,6 +2903,12 @@ def test_emit_initial_events_stays_five_events_when_unwired(tmp_path: Path) -> N
         EVENT_SESSION_STATUS,
         EVENT_SNAPSHOT_CHANGED,
         EVENT_PROFILE_CHANGED,
+        EVENT_PROFILE_CATALOG_CHANGED,
         EVENT_HISTORY_UPDATED,
+        EVENT_PATCH_GENOME_CHANGED,
+        EVENT_KIT_CAPTURES_CHANGED,
+        EVENT_MUTATION_TARGETS_CHANGED,
+        EVENT_MUTATION_LOCKS_CHANGED,
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
         _PERFORMANCE_CONSOLE_CHANGED,
     ]

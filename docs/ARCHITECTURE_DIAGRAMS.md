@@ -3040,3 +3040,50 @@ sequenceDiagram
   malformed JSON is warn-and-skip (the rest of the registry still loads).
 - **The arch test `test_abstraction_reuse.py` (PR 13, Gate 17) flags any
   module that grows a second canonical surface for these primitives.**
+
+## 36. Targeted Dual-Machine Live Stage and Recovery
+
+```mermaid
+flowchart LR
+    Operator["Operator"] --> CaptureUI["Capture Current Kit<br/>exact input selection"]
+    CaptureUI --> InputBoundary["app --arm<br/>--cockpit-kit-capture-sidecar<br/>INPUT ONLY"]
+    InputBoundary --> Codecs["Rytm/A4 saved-KIT codecs<br/>family + checksum + length<br/>exact decode/re-encode"]
+
+    Codecs --> RytmAnchor["Verified Rytm anchor"]
+    Codecs --> A4Anchor["Verified A4 anchor"]
+
+    RytmAnchor --> RytmLane["Rytm lane<br/>capture / targets / locks<br/>candidate / plan / authority<br/>stale / recovery"]
+    A4Anchor --> A4Lane["A4 lane<br/>capture / targets / locks<br/>zero-event plan / blocker<br/>stale / recovery"]
+
+    Scope["effective scope<br/>(targets or complete domain)<br/>minus locks"] --> RytmLane
+    Scope --> A4Lane
+    Coordinator["DualMachineStageCoordinator<br/>whole-state revision"] --> RytmLane
+    Coordinator --> A4Lane
+
+    RytmLane --> Prepare["PREPARE<br/>exact plan id + pads + count"]
+    Prepare --> Confirm["per-action confirm:true<br/>same current plan id"]
+    Confirm --> ArmedApply["senders/armed_apply.py<br/>sole Cockpit output handle"]
+    ArmedApply --> Rytm["Analog Rytm RAM-only CC"]
+
+    A4Lane --> A4Block["BLOCKED<br/>semantic saved-KIT offsets<br/>not promoted"]
+    A4Block -.-> Mapping["Studio mapping matrix<br/>offset + encoding + stride<br/>round-trip + physical proof"]
+
+    OXI["OXI One<br/>sequencing / notes / triggers<br/>mutes / pattern motion"] --> Rytm
+    OXI --> A4["Analog Four"]
+    Coordinator -.->|"no direct control"| OXI
+
+    Disconnect["timeout / malformed frame<br/>disconnect / stale scope"] --> Coordinator
+    Coordinator --> Recovery["lane-local revoke<br/>reconnect + re-capture<br/>preview + PREPARE again"]
+
+    style InputBoundary fill:#eef,stroke:#448
+    style ArmedApply fill:#fee,stroke:#a44
+    style A4Block fill:#fff3cd,stroke:#997000
+    style OXI fill:#efe,stroke:#474
+```
+
+The coordinator owns state only; it cannot open a port or render messages.
+Capture authority and send authority are deliberately separate. A failure in
+one lane cannot promote, arm, or corrupt the other lane. Rytm plans are bound
+to the captured source, effective scope, candidate, and exact plan id. A4
+remains useful for capture, target/lock rehearsal, and mapping evidence while
+its output authority is structurally blocked.

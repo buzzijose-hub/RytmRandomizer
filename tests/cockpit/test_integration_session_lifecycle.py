@@ -33,8 +33,15 @@ from cockpit.conftest import (
 from fastapi.testclient import TestClient
 
 from rytm_randomizer.cockpit.ws.protocol import (
+    EVENT_DUAL_MACHINE_STAGE_CHANGED,
     EVENT_HISTORY_UPDATED,
+    EVENT_KIT_CAPTURES_CHANGED,
+    EVENT_MUTATION_LOCKS_CHANGED,
+    EVENT_MUTATION_TARGETS_CHANGED,
+    EVENT_PATCH_GENOME_CHANGED,
     EVENT_PERFORMANCE_CONSOLE_CHANGED,
+    EVENT_PROFILE_CATALOG_CHANGED,
+    EVENT_PROFILE_CHANGED,
     EVENT_SESSION_STATUS,
     EVENT_SNAPSHOT_CHANGED,
     WS_SUBPROTOCOL,
@@ -54,7 +61,7 @@ def test_pad_locks_persist_across_reconnect(cockpit_client: TestClient) -> None:
     # Connection #1: set pad 3 locked, then close.
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
-        collect_initial_events(ws, count=5)
+        collect_initial_events(ws)
         ack = send_cmd(ws, "set_pad_lock", pad_id=3, locked=True)
         assert ack["ok"] is True
 
@@ -62,7 +69,7 @@ def test_pad_locks_persist_across_reconnect(cockpit_client: TestClient) -> None:
     # We verify indirectly by arming a SEND and checking pad 3 is unchanged.
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
-        collect_initial_events(ws, count=5)
+        collect_initial_events(ws)
         send_cmd(ws, "select_profile", profile_id="scene-industrial")
         drain_events(ws, 1)
         send_cmd(ws, "set_depth", depth=0.64)
@@ -76,13 +83,38 @@ def test_pad_locks_persist_across_reconnect(cockpit_client: TestClient) -> None:
     assert pad3["params"] == {"tun": 50, "dec": 70, "lev": 95}
 
 
+def test_mutation_targets_persist_and_rehydrate_as_whole_state(
+    cockpit_client: TestClient,
+) -> None:
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
+        collect_initial_events(ws)
+        ack = send_cmd(
+            ws,
+            "set_mutation_targets",
+            device_id="analog_rytm_mk2",
+            target_ids=[2, 4],
+        )
+        assert ack["ok"] is True
+        changed = drain_events(ws, 1)[0]
+        assert changed["type"] == EVENT_MUTATION_TARGETS_CHANGED
+
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
+        bootstrap = collect_initial_events(ws)
+
+    targets = next(event for event in bootstrap if event["type"] == EVENT_MUTATION_TARGETS_CHANGED)
+    assert targets["rytm_pad_targets"] == [2, 4]
+    assert targets["a4_track_targets"] == []
+
+
 def test_unsaved_sends_persists_across_reconnect(cockpit_client: TestClient) -> None:
     """The ``unsaved_sends`` counter survives the disconnect/reconnect cycle."""
 
     # Connection #1: do one SEND, then disconnect.
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
-        collect_initial_events(ws, count=5)
+        collect_initial_events(ws)
         send_cmd(ws, "select_profile", profile_id="scene-industrial")
         drain_events(ws, 1)
         send_cmd(ws, "set_depth", depth=0.55)
@@ -93,7 +125,7 @@ def test_unsaved_sends_persists_across_reconnect(cockpit_client: TestClient) -> 
     # Connection #2: the bootstrap ``session_status`` carries the preserved count.
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
-        bootstrap = collect_initial_events(ws, count=5)
+        bootstrap = collect_initial_events(ws)
 
     status = next(e for e in bootstrap if e["type"] == EVENT_SESSION_STATUS)
     assert status["unsaved_sends"] == 1
@@ -105,7 +137,7 @@ def test_history_chain_persists_across_reconnect(cockpit_client: TestClient) -> 
     # Connection #1: SEND twice → chain of 3 entries (root + 2 sends).
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
-        collect_initial_events(ws, count=5)
+        collect_initial_events(ws)
         send_cmd(ws, "select_profile", profile_id="scene-industrial")
         drain_events(ws, 1)
         send_cmd(ws, "set_depth", request_id="req-d-1", depth=0.45)
@@ -120,7 +152,7 @@ def test_history_chain_persists_across_reconnect(cockpit_client: TestClient) -> 
     # Connection #2: the bootstrap history event reflects all 3 entries.
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
-        bootstrap = collect_initial_events(ws, count=5)
+        bootstrap = collect_initial_events(ws)
 
     history = next(e for e in bootstrap if e["type"] == EVENT_HISTORY_UPDATED)["history"]
     assert len(history["entries"]) == 3
@@ -137,7 +169,7 @@ def test_history_growth_persists_across_reconnect(cockpit_client: TestClient) ->
 
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
-        collect_initial_events(ws, count=5)
+        collect_initial_events(ws)
         send_cmd(ws, "select_profile", profile_id="scene-industrial")
         drain_events(ws, 1)
         send_cmd(ws, "set_depth", depth=0.45)
@@ -149,7 +181,7 @@ def test_history_growth_persists_across_reconnect(cockpit_client: TestClient) ->
 
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
-        bootstrap = collect_initial_events(ws, count=5)
+        bootstrap = collect_initial_events(ws)
 
     history = next(e for e in bootstrap if e["type"] == EVENT_HISTORY_UPDATED)["history"]
     assert history["current_id"] == sent_snapshot_id
@@ -164,7 +196,7 @@ def test_clean_disconnect_does_not_leak_pending_events(
     # Connection #1: send a command but disconnect before draining its events.
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
-        collect_initial_events(ws, count=5)
+        collect_initial_events(ws)
         send_cmd(ws, "select_profile", profile_id="scene-industrial")
         # NOTE: deliberately do NOT drain_events(ws, 1) — close mid-stream.
 
@@ -172,13 +204,19 @@ def test_clean_disconnect_does_not_leak_pending_events(
     # are bound to that closed socket and do not bleed into the new one.
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
-        bootstrap = collect_initial_events(ws, count=5)
+        bootstrap = collect_initial_events(ws)
 
     assert {e["type"] for e in bootstrap} == {
         EVENT_SESSION_STATUS,
         EVENT_SNAPSHOT_CHANGED,
-        "profile_changed",
+        EVENT_PROFILE_CHANGED,
+        EVENT_PROFILE_CATALOG_CHANGED,
         EVENT_HISTORY_UPDATED,
+        EVENT_PATCH_GENOME_CHANGED,
+        EVENT_KIT_CAPTURES_CHANGED,
+        EVENT_MUTATION_TARGETS_CHANGED,
+        EVENT_MUTATION_LOCKS_CHANGED,
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
         EVENT_PERFORMANCE_CONSOLE_CHANGED,
     }
 
@@ -199,8 +237,8 @@ def test_two_concurrent_clients_see_same_bootstrap_snapshot(
     ):
         complete_handshake(ws_a)
         complete_handshake(ws_b)
-        events_a = collect_initial_events(ws_a, count=5)
-        events_b = collect_initial_events(ws_b, count=5)
+        events_a = collect_initial_events(ws_a)
+        events_b = collect_initial_events(ws_b)
 
     snap_a = next(e for e in events_a if e["type"] == EVENT_SNAPSHOT_CHANGED)["snapshot"]
     snap_b = next(e for e in events_b if e["type"] == EVENT_SNAPSHOT_CHANGED)["snapshot"]
@@ -220,7 +258,7 @@ def test_concurrent_clients_share_session_state_after_command(
 
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws_a:
         complete_handshake(ws_a)
-        collect_initial_events(ws_a, count=5)
+        collect_initial_events(ws_a)
         send_cmd(ws_a, "select_profile", profile_id="scene-industrial")
         drain_events(ws_a, 1)
         send_cmd(ws_a, "set_depth", depth=0.45)
@@ -231,7 +269,7 @@ def test_concurrent_clients_share_session_state_after_command(
         # Open a brand-new connection while the first is still alive.
         with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws_b:
             complete_handshake(ws_b)
-            events_b = collect_initial_events(ws_b, count=5)
+            events_b = collect_initial_events(ws_b)
 
     history_b = next(e for e in events_b if e["type"] == EVENT_HISTORY_UPDATED)["history"]
     assert history_b["current_id"] == ack_a["new_snapshot_id"]
@@ -246,8 +284,8 @@ def test_concurrent_clients_independent_command_loops(cockpit_client: TestClient
     ):
         complete_handshake(ws_a)
         complete_handshake(ws_b)
-        collect_initial_events(ws_a, count=5)
-        collect_initial_events(ws_b, count=5)
+        collect_initial_events(ws_a)
+        collect_initial_events(ws_b)
 
         ack_a = send_cmd(ws_a, "set_pad_lock", request_id="req-a", pad_id=1, locked=True)
         ack_b = send_cmd(ws_b, "set_pad_lock", request_id="req-b", pad_id=2, locked=True)

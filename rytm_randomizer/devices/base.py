@@ -59,6 +59,7 @@ from typing import Protocol, runtime_checkable
 # they need from one place (``from rytm_randomizer.devices import Device,
 # SnapshotDecoder, MutationPlanner, MessageRenderer``).
 from ..snapshot.decoder import SnapshotDecoder
+from ..snapshot.mutation_scope import DEFAULT_MUTATION_SCOPE, MutationScope
 from ..snapshot.planner import MutationPlanner
 
 
@@ -187,7 +188,13 @@ class Device(Protocol):
     def decode_snapshot(self, raw: bytes, slot: int) -> object: ...
 
     @abstractmethod
-    def plan_mutation(self, snapshot: object, depth: int) -> object: ...
+    def plan_mutation(
+        self,
+        snapshot: object,
+        depth: int,
+        *,
+        scope: MutationScope = DEFAULT_MUTATION_SCOPE,
+    ) -> object: ...
 
     @abstractmethod
     def to_mock_messages(self, plan: object) -> Sequence[object]: ...

@@ -3,7 +3,8 @@
 //! Spawns the cockpit sidecar — preferring the bundled one-file
 //! `rytm-sidecar` binary produced by `scripts/build_sidecar_binary.py`
 //! when it is present in the Tauri resources, falling back to a PATH
-//! `python -m rytm_randomizer.cockpit` for dev checkouts — restarts it
+//! `python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar`
+//! for dev checkouts — restarts it
 //! on crash with exponential backoff (1s, 2s, 4s, 8s, 16s, capped at
 //! 16s, resets after 60s of clean uptime), and shuts it down cleanly on
 //! window close (stdin shutdown sentinel on every OS, plus SIGTERM on
@@ -91,7 +92,7 @@ const DEFAULT_ARM_SECRET_FILE: &str = "cockpit-arm-secret";
 pub enum SidecarLaunch {
     /// A bundled one-file binary (production double-click path).
     Bundled(PathBuf),
-    /// `python -m rytm_randomizer.cockpit` from PATH (dev fallback).
+    /// Explicitly armed input-only capture composition from PATH (dev fallback).
     DevPython(String),
 }
 
@@ -101,7 +102,10 @@ impl SidecarLaunch {
         match self {
             SidecarLaunch::Bundled(path) => format!("bundled sidecar `{}`", path.display()),
             SidecarLaunch::DevPython(python) => {
-                format!("`{python} -m rytm_randomizer.cockpit` (dev fallback)")
+                format!(
+                    "`{python} -m rytm_randomizer.app --arm \
+                     --cockpit-kit-capture-sidecar` (dev fallback)"
+                )
             }
         }
     }
@@ -331,7 +335,12 @@ pub fn sidecar_command(
         SidecarLaunch::Bundled(path) => Command::new(path),
         SidecarLaunch::DevPython(python) => {
             let mut dev = Command::new(python);
-            dev.args(["-m", "rytm_randomizer.cockpit"]);
+            dev.args([
+                "-m",
+                "rytm_randomizer.app",
+                "--arm",
+                "--cockpit-kit-capture-sidecar",
+            ]);
             dev
         }
     };
@@ -551,7 +560,15 @@ mod tests {
             .get_args()
             .map(|a| a.to_string_lossy().to_string())
             .collect();
-        assert_eq!(args, vec!["-m", "rytm_randomizer.cockpit"]);
+        assert_eq!(
+            args,
+            vec![
+                "-m",
+                "rytm_randomizer.app",
+                "--arm",
+                "--cockpit-kit-capture-sidecar",
+            ]
+        );
     }
 
     #[test]

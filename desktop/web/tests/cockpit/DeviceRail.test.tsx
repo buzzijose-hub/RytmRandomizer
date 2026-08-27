@@ -11,7 +11,15 @@ import { ANALOG_FOUR_DEVICE_ID, RYTM_DEVICE_ID } from '../../src/cockpit/devices
 import { useCockpitStore } from '../../src/state';
 import type { ConnectionStateDict } from '../../src/ws/protocol';
 
-import { connectionFault, connectionListening, sessionLive, sessionMock, snapshot } from './_fixtures';
+import {
+  connectionFault,
+  connectionListening,
+  patchGenome,
+  readyDualMachineStage,
+  sessionLive,
+  sessionMock,
+  snapshot,
+} from './_fixtures';
 
 const connectionSearching: ConnectionStateDict = {
   phase: 'searching',
@@ -42,7 +50,13 @@ describe('DeviceRail', () => {
       useCockpitStore.getState().setSnapshot(snapshot);
     });
 
-    render(<DeviceRail activeDeviceId={RYTM_DEVICE_ID} onSelectDevice={() => undefined} />);
+    render(
+      <DeviceRail
+        activeDeviceId={RYTM_DEVICE_ID}
+        onSelectDevice={() => undefined}
+        onCaptureDevice={() => undefined}
+      />,
+    );
 
     const rail = screen.getByTestId('device-rail');
     const rytm = within(rail).getByTestId('device-card-analog-rytm-mk2');
@@ -77,6 +91,7 @@ describe('DeviceRail', () => {
       <DeviceRail
         activeDeviceId={ANALOG_FOUR_DEVICE_ID}
         onSelectDevice={(deviceId) => selected.push(deviceId)}
+        onCaptureDevice={() => undefined}
       />,
     );
 
@@ -183,10 +198,16 @@ describe('DeviceRail', () => {
       useCockpitStore.getState().setSnapshot(snapshot);
     });
 
-    render(<DeviceRail activeDeviceId={RYTM_DEVICE_ID} onSelectDevice={() => undefined} />);
+    render(
+      <DeviceRail
+        activeDeviceId={RYTM_DEVICE_ID}
+        onSelectDevice={() => undefined}
+        onCaptureDevice={() => undefined}
+      />,
+    );
 
-    expect(screen.getByTestId('device-card-analog-rytm-mk2')).toHaveTextContent('Mock Safe');
-    expect(screen.getByTestId('device-card-analog-four-mk2')).toHaveTextContent('Mock Staged');
+    expect(screen.getByTestId('device-card-analog-rytm-mk2')).toHaveTextContent('Awaiting stage');
+    expect(screen.getByTestId('device-card-analog-four-mk2')).toHaveTextContent('Awaiting stage');
     expect(
       screen.getByTestId('device-card-analog-rytm-mk2-hardware-banner'),
     ).toHaveTextContent('No hardware detected — device scan idle');
@@ -313,11 +334,190 @@ describe('DeviceRail', () => {
   });
 
   it('renders planned Rytm pads as locked before a snapshot is loaded', () => {
-    render(<DeviceRail activeDeviceId={RYTM_DEVICE_ID} onSelectDevice={() => undefined} />);
+    render(
+      <DeviceRail
+        activeDeviceId={RYTM_DEVICE_ID}
+        onSelectDevice={() => undefined}
+        onCaptureDevice={() => undefined}
+      />,
+    );
 
     const rytm = screen.getByTestId('device-card-analog-rytm-mk2');
     expect(within(rytm).getAllByTestId(/device-rail-rytm-pad-/)).toHaveLength(12);
     expect(within(rytm).getByTestId('device-rail-rytm-pad-1')).toHaveClass('locked');
     expect(within(rytm).getByTestId('device-rail-rytm-pad-12')).toHaveTextContent('Pad 12');
+  });
+
+  it('offers the same prepare-to-receive control on Rytm and A4', () => {
+    const requested: string[] = [];
+
+    render(
+      <DeviceRail
+        activeDeviceId={RYTM_DEVICE_ID}
+        onSelectDevice={() => undefined}
+        onCaptureDevice={(deviceId) => requested.push(deviceId)}
+      />,
+    );
+
+    screen.getByTestId('capture-kit-analog-rytm-mk2').click();
+    screen.getByTestId('capture-kit-analog-four-mk2').click();
+
+    expect(requested).toEqual([RYTM_DEVICE_ID, ANALOG_FOUR_DEVICE_ID]);
+    expect(screen.getAllByText('Capture Current Kit')).toHaveLength(2);
+  });
+
+  it('renders the authoritative per-machine lifecycle and the explicit OXI boundary', () => {
+    act(() => {
+      useCockpitStore.getState().setDualMachineStage(readyDualMachineStage);
+    });
+
+    render(<DeviceRail activeDeviceId={RYTM_DEVICE_ID} onSelectDevice={() => undefined} />);
+
+    const rytmStage = screen.getByTestId('device-card-analog-rytm-mk2-stage');
+    expect(rytmStage).toHaveTextContent('Connectionconnected');
+    expect(rytmStage).toHaveTextContent('Capturecaptured');
+    expect(rytmStage).toHaveTextContent('TargetsDefault all');
+    expect(rytmStage).toHaveTextContent('Locks2');
+    expect(rytmStage).toHaveTextContent('Candidateready');
+    expect(rytmStage).toHaveTextContent('Planready');
+    expect(rytmStage).toHaveTextContent('Authoritynot armed');
+    expect(rytmStage).toHaveTextContent('Recovery confirm exact plan');
+
+    const a4Stage = screen.getByTestId('device-card-analog-four-mk2-stage');
+    expect(a4Stage).toHaveTextContent('Planblocked');
+    expect(a4Stage).toHaveTextContent('Blocked a4 semantic mapping unpromoted');
+    expect(a4Stage).toHaveTextContent('Recovery capture current kit');
+
+    const oxi = screen.getByTestId('oxi-ownership-boundary');
+    expect(oxi).toHaveTextContent(
+      'OXI owns sequencing, notes, triggers, mutes, and pattern motion.',
+    );
+    expect(oxi).toHaveTextContent('No direct OXI control');
+    expect(oxi).toHaveTextContent('sends no OXI notes, triggers, mutes, or pattern commands');
+  });
+
+  it('isolates an A4 disconnect and exposes stale/recovery state without downgrading Rytm', () => {
+    act(() => {
+      useCockpitStore.getState().setDualMachineStage({
+        ...readyDualMachineStage,
+        revision: 9,
+        analog_four: {
+          ...readyDualMachineStage.analog_four,
+          connection_state: 'disconnected',
+          candidate_state: 'stale',
+          plan_state: 'stale',
+          blocked_reasons: ['device_disconnected'],
+          recovery_actions: ['reconnect_device', 'capture_current_kit', 'prepare_again'],
+          last_error: 'A4 cable removed',
+        },
+      });
+    });
+
+    render(<DeviceRail activeDeviceId={RYTM_DEVICE_ID} onSelectDevice={() => undefined} />);
+
+    expect(screen.getByTestId('device-card-analog-rytm-mk2')).toHaveTextContent(
+      'Ready · Passive',
+    );
+    const a4 = screen.getByTestId('device-card-analog-four-mk2');
+    expect(a4).toHaveTextContent('Disconnected');
+    expect(a4).toHaveTextContent('Candidatestale');
+    expect(a4).toHaveTextContent('Planstale');
+    expect(a4).toHaveTextContent('reconnect device');
+    expect(a4).toHaveTextContent('Last error: A4 cable removed');
+  });
+
+  it('shows an optimistic A4 target/lock change as stale until a fresh genome arrives', () => {
+    act(() => {
+      useCockpitStore.getState().setDualMachineStage({
+        ...readyDualMachineStage,
+        analog_four: {
+          ...readyDualMachineStage.analog_four,
+          candidate_state: 'ready',
+          recovery_actions: [
+            ...readyDualMachineStage.analog_four.recovery_actions,
+            'analyze_patch_again',
+          ],
+        },
+      });
+      useCockpitStore.getState().setPatchGenome(patchGenome);
+      useCockpitStore.getState().setA4TrackLocks([3]);
+    });
+
+    render(<DeviceRail activeDeviceId={ANALOG_FOUR_DEVICE_ID} onSelectDevice={() => undefined} />);
+
+    const a4 = screen.getByTestId('device-card-analog-four-mk2');
+    expect(a4).toHaveTextContent('Stale');
+    expect(a4).toHaveTextContent('Candidatestale');
+    expect(a4).toHaveTextContent('analyze patch again');
+  });
+
+  it('adds the A4 re-analysis recovery action when the backend stage omits it', () => {
+    act(() => {
+      useCockpitStore.getState().setDualMachineStage({
+        ...readyDualMachineStage,
+        analog_four: {
+          ...readyDualMachineStage.analog_four,
+          candidate_state: 'ready',
+          recovery_actions: [],
+        },
+      });
+      useCockpitStore.getState().setPatchGenome(patchGenome);
+      useCockpitStore.getState().setA4TrackLocks([3]);
+    });
+
+    render(<DeviceRail activeDeviceId={ANALOG_FOUR_DEVICE_ID} onSelectDevice={() => undefined} />);
+
+    expect(screen.getByTestId('device-card-analog-four-mk2')).toHaveTextContent(
+      'analyze patch again',
+    );
+  });
+
+  it('surfaces exceptional OXI authority flags and armed Rytm readiness', () => {
+    act(() => {
+      useCockpitStore.getState().setDualMachineStage({
+        ...readyDualMachineStage,
+        oxi_owns_sequencing: false,
+        direct_oxi_control: true,
+        rytm: { ...readyDualMachineStage.rytm, authority_state: 'armed' },
+      });
+    });
+
+    render(<DeviceRail activeDeviceId={RYTM_DEVICE_ID} onSelectDevice={() => undefined} />);
+
+    expect(screen.getByTestId('device-card-analog-rytm-mk2')).toHaveTextContent(
+      'Ready · Armed',
+    );
+    const oxi = screen.getByTestId('oxi-ownership-boundary');
+    expect(oxi).toHaveTextContent('has not confirmed OXI sequencing ownership');
+    expect(oxi).toHaveTextContent('Backend reported direct OXI control');
+  });
+
+  it('distinguishes a captured lane from an idle lane before candidate generation', () => {
+    act(() => {
+      useCockpitStore.getState().setDualMachineStage({
+        ...readyDualMachineStage,
+        rytm: {
+          ...readyDualMachineStage.rytm,
+          candidate_state: 'none',
+          plan_state: 'none',
+        },
+      });
+    });
+
+    render(<DeviceRail activeDeviceId={RYTM_DEVICE_ID} onSelectDevice={() => undefined} />);
+    expect(screen.getByTestId('device-card-analog-rytm-mk2')).toHaveTextContent('Captured');
+
+    act(() => {
+      useCockpitStore.getState().setDualMachineStage({
+        ...readyDualMachineStage,
+        rytm: {
+          ...readyDualMachineStage.rytm,
+          capture_state: 'not_captured',
+          candidate_state: 'none',
+          plan_state: 'none',
+        },
+      });
+    });
+    expect(screen.getByTestId('device-card-analog-rytm-mk2')).toHaveTextContent('Stage idle');
   });
 });

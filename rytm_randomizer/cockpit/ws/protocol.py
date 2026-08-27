@@ -34,8 +34,11 @@ See ``docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md``
 
 from __future__ import annotations
 
-from typing import Final, Literal, TypedDict
+from typing import Final, Literal, NotRequired, TypedDict
 
+from ..capture import KitCaptureDeviceId, KitCaptureResultDict
+from ..data.stage import DualMachineStageStateDict
+from ..mutation_targets import MutationTargetsDict
 from .wizard_protocol import WIZARD_COMMAND_TYPES, WIZARD_EVENT_TYPES
 
 # ---------------------------------------------------------------------------
@@ -69,6 +72,9 @@ The frame shape is ``{"type": "hello", "token": "<urlsafe>"}``. Any
 other first-frame type is treated as a malformed handshake and the
 socket is closed with policy-violation code 1008.
 """
+
+INITIAL_EVENT_COUNT: Final[int] = 11
+"""Number of whole-state event frames emitted after a successful handshake."""
 
 # Failure codes carried on the handshake / size-cap rejection acks. These
 # are echoed into the ack's ``code`` field so a programmatic client can
@@ -159,6 +165,28 @@ EVENT_HISTORY_UPDATED: Final[Literal["history_updated"]] = "history_updated"
 EVENT_PROFILE_CHANGED: Final[Literal["profile_changed"]] = "profile_changed"
 """Emitted when the operator selects a different active :class:`ProfileModel`."""
 
+EVENT_PROFILE_CATALOG_CHANGED: Final[Literal["profile_catalog_changed"]] = "profile_catalog_changed"
+"""Emitted when the built-in + user-authored profile catalogue changes."""
+
+EVENT_PATCH_GENOME_CHANGED: Final[Literal["patch_genome_changed"]] = "patch_genome_changed"
+"""Emitted when the passive Analog Four patch-genome compiler refreshes."""
+
+EVENT_KIT_CAPTURES_CHANGED: Final[Literal["kit_captures_changed"]] = "kit_captures_changed"
+"""Emitted with the complete set of verified machine kit anchors."""
+
+EVENT_MUTATION_TARGETS_CHANGED: Final[Literal["mutation_targets_changed"]] = (
+    "mutation_targets_changed"
+)
+"""Emitted when either device's explicit mutation include-list changes."""
+
+EVENT_MUTATION_LOCKS_CHANGED: Final[Literal["mutation_locks_changed"]] = "mutation_locks_changed"
+"""Emitted with both machines' complete lock deny-lists."""
+
+EVENT_DUAL_MACHINE_STAGE_CHANGED: Final[Literal["dual_machine_stage_changed"]] = (
+    "dual_machine_stage_changed"
+)
+"""Emitted after any coordinated capture/scope/artifact/authority transition."""
+
 EVENT_PERFORMANCE_CONSOLE_CHANGED: Final[Literal["performance_console_changed"]] = (
     "performance_console_changed"
 )
@@ -205,6 +233,12 @@ EVENT_TYPES: Final[frozenset[str]] = (
             EVENT_SEND_PLAN_CHANGED,
             EVENT_HISTORY_UPDATED,
             EVENT_PROFILE_CHANGED,
+            EVENT_PROFILE_CATALOG_CHANGED,
+            EVENT_PATCH_GENOME_CHANGED,
+            EVENT_KIT_CAPTURES_CHANGED,
+            EVENT_MUTATION_TARGETS_CHANGED,
+            EVENT_MUTATION_LOCKS_CHANGED,
+            EVENT_DUAL_MACHINE_STAGE_CHANGED,
             EVENT_PERFORMANCE_CONSOLE_CHANGED,
             EVENT_SESSION_STATUS,
             EVENT_CONNECTION_CHANGED,
@@ -231,6 +265,9 @@ authority for any consumer (server, tests, future TypeScript client).
 COMMAND_SELECT_PROFILE: Final[Literal["select_profile"]] = "select_profile"
 COMMAND_SET_DEPTH: Final[Literal["set_depth"]] = "set_depth"
 COMMAND_SET_PAD_LOCK: Final[Literal["set_pad_lock"]] = "set_pad_lock"
+COMMAND_SET_A4_TRACK_LOCK: Final[Literal["set_a4_track_lock"]] = "set_a4_track_lock"
+COMMAND_SET_MUTATION_TARGETS: Final[Literal["set_mutation_targets"]] = "set_mutation_targets"
+COMMAND_CLEAR_MUTATION_TARGETS: Final[Literal["clear_mutation_targets"]] = "clear_mutation_targets"
 COMMAND_TOGGLE_PREVIEW: Final[Literal["toggle_preview"]] = "toggle_preview"
 COMMAND_REGEN: Final[Literal["regen"]] = "regen"
 COMMAND_PREPARE_SEND_PLAN: Final[Literal["prepare_send_plan"]] = "prepare_send_plan"
@@ -254,6 +291,9 @@ COMMAND_MOCK_APPLY_OPERATOR_PACKAGE: Final[Literal["mock_apply_operator_package"
 COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT: Final[Literal["build_operator_package_receipt"]] = (
     "build_operator_package_receipt"
 )
+COMMAND_ANALYZE_PATCH_GENOME: Final[Literal["analyze_patch_genome"]] = "analyze_patch_genome"
+COMMAND_LIST_CAPTURE_INPUTS: Final[Literal["list_capture_inputs"]] = "list_capture_inputs"
+COMMAND_CAPTURE_CURRENT_KIT: Final[Literal["capture_current_kit"]] = "capture_current_kit"
 
 COMMAND_ARM: Final[Literal["arm"]] = "arm"
 """Explicit in-UI arm: swap the session onto the real-MIDI adapter.
@@ -285,6 +325,9 @@ COMMAND_TYPES: Final[frozenset[str]] = (
             COMMAND_SELECT_PROFILE,
             COMMAND_SET_DEPTH,
             COMMAND_SET_PAD_LOCK,
+            COMMAND_SET_A4_TRACK_LOCK,
+            COMMAND_SET_MUTATION_TARGETS,
+            COMMAND_CLEAR_MUTATION_TARGETS,
             COMMAND_TOGGLE_PREVIEW,
             COMMAND_REGEN,
             COMMAND_PREPARE_SEND_PLAN,
@@ -306,13 +349,16 @@ COMMAND_TYPES: Final[frozenset[str]] = (
             COMMAND_LIBRARY_TAG,
             COMMAND_LIBRARY_DELETE,
             COMMAND_LIBRARY_IMPORT_CAPTURES,
+            COMMAND_ANALYZE_PATCH_GENOME,
+            COMMAND_LIST_CAPTURE_INPUTS,
+            COMMAND_CAPTURE_CURRENT_KIT,
         }
     )
     | WIZARD_COMMAND_TYPES
 )
 """Frozen set of every supported command-type discriminator (cockpit + wizard).
 
-24 cockpit commands + 8 wizard commands = 32 total. The wizard commands are
+30 cockpit commands + 8 wizard commands = 38 total. The wizard commands are
 folded in from :data:`wizard_protocol.WIZARD_COMMAND_TYPES` so the cockpit's
 single ``COMMAND_TYPES`` constant remains the wire-format authority.
 """
@@ -380,6 +426,58 @@ class ProfileChangedEvent(TypedDict):
     profile: dict[str, object] | None
 
 
+class ProfileCatalogItem(TypedDict):
+    """Compact profile metadata used by the live catalogue panel."""
+
+    profile_id: str
+    name: str
+    kind: str
+    model_version: str
+    source_summary: str
+
+
+class ProfileCatalogChangedEvent(TypedDict):
+    """``profile_catalog_changed`` — complete built-in + user profile list."""
+
+    type: Literal["profile_catalog_changed"]
+    profiles: list[ProfileCatalogItem]
+
+
+class PatchGenomeChangedEvent(TypedDict):
+    """``patch_genome_changed`` — passive Analog Four compiler payload."""
+
+    type: Literal["patch_genome_changed"]
+    patch_genome: dict[str, object]
+
+
+class KitCapturesChangedEvent(TypedDict):
+    """``kit_captures_changed`` — all verified input-only current-kit anchors."""
+
+    type: Literal["kit_captures_changed"]
+    captures: list[KitCaptureResultDict]
+
+
+class MutationTargetsChangedEvent(MutationTargetsDict):
+    """``mutation_targets_changed`` — both explicit include-list dimensions."""
+
+    type: Literal["mutation_targets_changed"]
+
+
+class MutationLocksChangedEvent(TypedDict):
+    """Whole-state event carrying both complete lock deny-lists."""
+
+    type: Literal["mutation_locks_changed"]
+    rytm_pad_locks: list[int]
+    a4_track_locks: list[int]
+
+
+class DualMachineStageChangedEvent(TypedDict):
+    """Whole-state event carrying the authoritative coordinated stage."""
+
+    type: Literal["dual_machine_stage_changed"]
+    stage: DualMachineStageStateDict
+
+
 class PerformanceConsoleChangedEvent(TypedDict):
     """``performance_console_changed`` - passive performance-console packet.
 
@@ -410,6 +508,7 @@ class SessionStatusEvent(TypedDict):
     mode: Literal["live", "mock"]
     connection_phase: Literal["disconnected", "searching", "listening", "armed", "fault"]
     unsaved_sends: int
+    capture_enabled: bool
 
 
 class ConnectionStateDict(TypedDict):
@@ -584,6 +683,11 @@ class CommandAck(TypedDict, total=False):
     library_record: dict[str, object] | None
     library_record_id: str | None
     library_import: dict[str, object] | None
+    patch_genome: dict[str, object] | None
+    capture_enabled: bool
+    capture_device_id: KitCaptureDeviceId
+    capture_inputs: list[str]
+    kit_capture: KitCaptureResultDict
 
 
 # ---------------------------------------------------------------------------
@@ -617,6 +721,29 @@ class SetPadLockCommand(TypedDict):
     locked: bool
 
 
+class SetA4TrackLockCommand(TypedDict):
+    """``set_a4_track_lock { track, locked }`` — protect one A4 track."""
+
+    type: Literal["set_a4_track_lock"]
+    track: int
+    locked: bool
+
+
+class SetMutationTargetsCommand(TypedDict):
+    """Replace one device's explicit mutation include-list."""
+
+    type: Literal["set_mutation_targets"]
+    device_id: KitCaptureDeviceId
+    target_ids: list[int]
+
+
+class ClearMutationTargetsCommand(TypedDict):
+    """Clear one device's include-list, restoring default all-scope behavior."""
+
+    type: Literal["clear_mutation_targets"]
+    device_id: KitCaptureDeviceId
+
+
 class TogglePreviewCommand(TypedDict):
     """``toggle_preview { on }`` — show or hide the ghost overlay."""
 
@@ -637,9 +764,10 @@ class PrepareSendPlanCommand(TypedDict):
 
 
 class SendCommand(TypedDict):
-    """``send {}`` — apply the current candidate to the device."""
+    """Apply the prepared plan; armed sessions require the exact plan id."""
 
     type: Literal["send"]
+    send_plan_id: NotRequired[str]
 
 
 class SaveCommand(TypedDict, total=False):
@@ -798,9 +926,38 @@ class LibraryImportCapturesCommand(TypedDict):
     type: Literal["library_import_captures"]
 
 
+class AnalyzePatchGenomeCommand(TypedDict):
+    """``analyze_patch_genome`` — compile four passive Analog Four candidates."""
+
+    type: Literal["analyze_patch_genome"]
+    description: str
+    track: int
+
+
+class ListCaptureInputsCommand(TypedDict):
+    """``list_capture_inputs`` — enumerate inputs after explicit operator action."""
+
+    type: Literal["list_capture_inputs"]
+    device_id: KitCaptureDeviceId
+
+
+class CaptureCurrentKitCommand(TypedDict):
+    """``capture_current_kit`` — wait for one machine's current KIT dump."""
+
+    type: Literal["capture_current_kit"]
+    device_id: KitCaptureDeviceId
+    input_port: str
+
+
 __all__ = [
     "ArmCommand",
+    "AnalyzePatchGenomeCommand",
+    "CaptureCurrentKitCommand",
+    "ClearMutationTargetsCommand",
     "COMMAND_ARM",
+    "COMMAND_ANALYZE_PATCH_GENOME",
+    "COMMAND_CAPTURE_CURRENT_KIT",
+    "COMMAND_CLEAR_MUTATION_TARGETS",
     "COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT",
     "CLOSE_CODE_MESSAGE_TOO_BIG",
     "CLOSE_CODE_POLICY_VIOLATION",
@@ -813,6 +970,7 @@ __all__ = [
     "COMMAND_LIBRARY_SEARCH",
     "COMMAND_LIBRARY_TAG",
     "COMMAND_LOAD_SNAPSHOT",
+    "COMMAND_LIST_CAPTURE_INPUTS",
     "COMMAND_MOCK_APPLY_OPERATOR_PACKAGE",
     "COMMAND_PREPARE_SEND_PLAN",
     "COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY",
@@ -823,6 +981,8 @@ __all__ = [
     "COMMAND_SELECT_PROFILE",
     "COMMAND_SEND",
     "COMMAND_SET_DEPTH",
+    "COMMAND_SET_A4_TRACK_LOCK",
+    "COMMAND_SET_MUTATION_TARGETS",
     "COMMAND_SET_PAD_LOCK",
     "COMMAND_TOGGLE_PREVIEW",
     "COMMAND_TYPES",
@@ -833,16 +993,23 @@ __all__ = [
     "ConnectionStateDict",
     "DiagnosticsCommand",
     "DisarmCommand",
+    "DualMachineStageChangedEvent",
     "ERR_INTERNAL",
     "ERR_MISSING_ENVELOPE_KEY",
     "ERR_UNKNOWN_COMMAND",
     "ERR_VALIDATION",
     "EVENT_CONNECTION_CHANGED",
+    "EVENT_DUAL_MACHINE_STAGE_CHANGED",
     "EVENT_HISTORY_UPDATED",
     "EVENT_LIBRARY_CHANGED",
     "EVENT_MIDI_ACTIVITY",
+    "EVENT_KIT_CAPTURES_CHANGED",
+    "EVENT_MUTATION_TARGETS_CHANGED",
+    "EVENT_MUTATION_LOCKS_CHANGED",
     "EVENT_MUTATION_PREVIEWED",
+    "EVENT_PATCH_GENOME_CHANGED",
     "EVENT_PERFORMANCE_CONSOLE_CHANGED",
+    "EVENT_PROFILE_CATALOG_CHANGED",
     "EVENT_PROFILE_CHANGED",
     "EVENT_SEND_PLAN_CHANGED",
     "EVENT_SESSION_STATUS",
@@ -853,6 +1020,7 @@ __all__ = [
     "HANDSHAKE_AUTH_FAILED",
     "HANDSHAKE_AUTH_REQUIRED",
     "HELLO_FRAME_TYPE",
+    "INITIAL_EVENT_COUNT",
     "HistoryUpdatedEvent",
     "LibraryChangedEvent",
     "LibraryDeleteCommand",
@@ -860,15 +1028,22 @@ __all__ = [
     "LibraryListCommand",
     "LibrarySearchCommand",
     "LibraryTagCommand",
+    "KitCapturesChangedEvent",
+    "ListCaptureInputsCommand",
     "LoadSnapshotCommand",
     "MESSAGE_TOO_LARGE_CODE",
     "MidiActivityEvent",
     "MockApplyOperatorPackageCommand",
     "MutationPreviewedEvent",
+    "MutationLocksChangedEvent",
+    "MutationTargetsChangedEvent",
+    "PatchGenomeChangedEvent",
     "PerformanceConsoleChangedEvent",
     "PrepareSendPlanCommand",
     "PreviewOperatorPackageApplyCommand",
     "ProfileChangedEvent",
+    "ProfileCatalogChangedEvent",
+    "ProfileCatalogItem",
     "RegenCommand",
     "RehearseOperatorPackageSequenceCommand",
     "RehearseOperatorPackageStepCommand",
@@ -878,6 +1053,8 @@ __all__ = [
     "SendPlanChangedEvent",
     "SessionStatusEvent",
     "SetDepthCommand",
+    "SetA4TrackLockCommand",
+    "SetMutationTargetsCommand",
     "SetPadLockCommand",
     "SnapshotChangedEvent",
     "TogglePreviewCommand",

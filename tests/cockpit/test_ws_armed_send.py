@@ -36,7 +36,11 @@ from rytm_randomizer.cockpit.device import MockDeviceAdapter
 from rytm_randomizer.cockpit.history import HistoryStore
 from rytm_randomizer.cockpit.profiles import ProfileRegistry
 from rytm_randomizer.cockpit.ws import handlers
-from rytm_randomizer.cockpit.ws.protocol import EVENT_SESSION_STATUS, WS_SUBPROTOCOL
+from rytm_randomizer.cockpit.ws.protocol import (
+    EVENT_DUAL_MACHINE_STAGE_CHANGED,
+    EVENT_SESSION_STATUS,
+    WS_SUBPROTOCOL,
+)
 from rytm_randomizer.cockpit.ws.server import create_app
 from rytm_randomizer.cockpit.ws.session import CockpitSession
 from rytm_randomizer.devices import get_device
@@ -293,8 +297,9 @@ def test_armed_send_auto_disarms_on_provider_error(tmp_path: Path) -> None:
     assert handlers.session_is_armed(session) is False
     # The operator is told, via the journal and a fresh status broadcast.
     assert session.error_journal.entries[-1].fingerprint == "cockpit.arm.send_refused"
-    assert session.pending_events[-1]["type"] == EVENT_SESSION_STATUS
-    assert session.pending_events[-1]["armed"] is False
+    assert session.pending_events[-2]["type"] == EVENT_SESSION_STATUS
+    assert session.pending_events[-2]["armed"] is False
+    assert session.pending_events[-1]["type"] == EVENT_DUAL_MACHINE_STAGE_CHANGED
     # Nothing was written to history: the send did not happen.
     assert session.unsaved_sends == 0
 
@@ -405,6 +410,7 @@ def test_unarmed_send_needs_no_confirm_and_never_touches_the_seam(
         "mutation_previewed",
         "send_plan_changed",
         EVENT_SESSION_STATUS,
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
     ]
 
 

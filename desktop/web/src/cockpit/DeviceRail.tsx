@@ -1,7 +1,11 @@
 import type { ReactNode } from 'react';
 
 import { useCockpitStore } from '../state';
-import type { ConnectionPhase, ConnectionStateDict } from '../ws/protocol';
+import type {
+  ConnectionPhase,
+  ConnectionStateDict,
+  MachineStageState,
+} from '../ws/protocol';
 import type {
   LiveGuiDeviceInventoryCardDict,
   LiveGuiDualDeviceRigDeviceDict,
@@ -58,12 +62,20 @@ interface BuildDeviceRailReadinessModelOptions {
 export interface DeviceRailProps {
   activeDeviceId: CockpitDeviceId;
   onSelectDevice: (deviceId: CockpitDeviceId) => void;
+  /** Additive live-capture action; omitted by read-only/base consumers. */
+  onCaptureDevice?: (deviceId: CockpitDeviceId) => void;
 }
 
-export function DeviceRail({ activeDeviceId, onSelectDevice }: DeviceRailProps): JSX.Element {
+export function DeviceRail({
+  activeDeviceId,
+  onSelectDevice,
+  onCaptureDevice,
+}: DeviceRailProps): JSX.Element {
   const snapshot = useCockpitStore((s) => s.snapshot);
   const session = useCockpitStore((s) => s.sessionStatus);
   const connection = useCockpitStore((s) => s.connection);
+  const stage = useCockpitStore((s) => s.dualMachineStage);
+  const patchGenomeStale = useCockpitStore((s) => s.patchGenomeStale);
   const model = buildDeviceRailReadinessModel({ snapshot, session, connection });
   const hardwareNotice = HARDWARE_NOTICE_BY_PHASE[resolveConnectionPhase(connection, session)];
   const rytmDevice = model.devices.find(
@@ -76,19 +88,38 @@ export function DeviceRail({ activeDeviceId, onSelectDevice }: DeviceRailProps):
   const analogFourTracks = model.tracks.filter(
     (track) => track.device_id === ANALOG_FOUR_DEVICE_ID,
   );
+  const rytmStage = stage?.rytm ?? null;
+  const analogFourStage =
+    stage === null
+      ? null
+      : patchGenomeStale && stage.analog_four.candidate_state === 'ready'
+        ? {
+            ...stage.analog_four,
+            candidate_state: 'stale' as const,
+            recovery_actions: appendUniqueStageAction(
+              stage.analog_four.recovery_actions,
+              'analyze_patch_again',
+            ),
+          }
+        : stage.analog_four;
 
   return (
     <aside className="device-rail" data-testid="device-rail" aria-label="Device status">
       <div className="rail-section-title">Devices</div>
       <DeviceCard
         name={rytmDevice.display_name}
-        status={deviceDisplayStatus(rytmDevice)}
+        status={deviceStageStatus(rytmStage)}
         detail={`${rytmDevice.mapped_track_count} pads mapped`}
         active={activeDeviceId === RYTM_DEVICE_ID}
         testId={rytmDevice.test_id}
         selectTestId="device-select-analog-rytm-mk2"
         banner={hardwareNotice}
         onSelect={() => onSelectDevice(RYTM_DEVICE_ID)}
+        captureTestId="capture-kit-analog-rytm-mk2"
+        onCapture={
+          onCaptureDevice === undefined ? undefined : () => onCaptureDevice(RYTM_DEVICE_ID)
+        }
+        stage={rytmStage}
       >
         <div className="device-chip-grid" aria-label="Analog Rytm pad map">
           {rytmTracks.map((track) => (
@@ -110,13 +141,18 @@ export function DeviceRail({ activeDeviceId, onSelectDevice }: DeviceRailProps):
       </DeviceCard>
       <DeviceCard
         name={analogFourDevice.display_name}
-        status={deviceDisplayStatus(analogFourDevice)}
+        status={deviceStageStatus(analogFourStage)}
         detail={`${analogFourDevice.planned_track_count} tracks staged`}
         active={activeDeviceId === ANALOG_FOUR_DEVICE_ID}
         testId={analogFourDevice.test_id}
         selectTestId="device-select-analog-four-mk2"
         banner={hardwareNotice}
         onSelect={() => onSelectDevice(ANALOG_FOUR_DEVICE_ID)}
+        captureTestId="capture-kit-analog-four-mk2"
+        onCapture={
+          onCaptureDevice === undefined ? undefined : () => onCaptureDevice(ANALOG_FOUR_DEVICE_ID)
+        }
+        stage={analogFourStage}
       >
         <div className="device-chip-grid" aria-label="Analog Four staged track map">
           {analogFourTracks.map((track) => (
@@ -132,6 +168,19 @@ export function DeviceRail({ activeDeviceId, onSelectDevice }: DeviceRailProps):
           </p>
         )}
       </DeviceCard>
+      <section className="oxi-ownership-boundary" data-testid="oxi-ownership-boundary">
+        <strong>OXI owns sequencing, notes, triggers, mutes, and pattern motion.</strong>
+        <span>
+          {stage?.oxi_owns_sequencing === false
+            ? 'Stage authority has not confirmed OXI sequencing ownership.'
+            : 'Cockpit stages sound changes around that external performance authority.'}
+        </span>
+        <span>
+          {stage?.direct_oxi_control === true
+            ? 'Backend reported direct OXI control; keep SEND blocked pending operator review.'
+            : 'No direct OXI control — Cockpit sends no OXI notes, triggers, mutes, or pattern commands.'}
+        </span>
+      </section>
     </aside>
   );
 }
@@ -325,11 +374,26 @@ export function buildDeviceRailReadinessModel({
   };
 }
 
-function deviceDisplayStatus(device: LiveGuiDualDeviceRigDeviceDict): string {
-  if (device.device_id === RYTM_DEVICE_ID) {
-    return device.hardware_state === 'armed' ? 'Armed' : 'Mock Safe';
+function appendUniqueStageAction(actions: readonly string[], action: string): string[] {
+  return actions.includes(action) ? [...actions] : [...actions, action];
+}
+
+function deviceStageStatus(stage: MachineStageState | null): string {
+  if (stage === null) return 'Awaiting stage';
+  if (stage.connection_state === 'disconnected') return 'Disconnected';
+  if (stage.candidate_state === 'stale' || stage.plan_state === 'stale') return 'Stale';
+  if (
+    stage.authority_state === 'blocked' ||
+    stage.candidate_state === 'blocked' ||
+    stage.plan_state === 'blocked'
+  ) {
+    return 'Blocked';
   }
-  return 'Mock Staged';
+  if (stage.plan_state === 'ready') {
+    return stage.authority_state === 'armed' ? 'Ready · Armed' : 'Ready · Passive';
+  }
+  if (stage.capture_state === 'captured') return 'Captured';
+  return 'Stage idle';
 }
 
 function rytmPadSurfaceCard(pad: PadState): LiveGuiRytmPadSurfaceCardDict {
@@ -444,6 +508,9 @@ function DeviceCard({
   selectTestId,
   banner,
   onSelect,
+  captureTestId,
+  onCapture,
+  stage,
   children,
 }: {
   name: string;
@@ -455,6 +522,9 @@ function DeviceCard({
   /** Hardware honesty notice; null when real hardware is reachable. */
   banner: string | null;
   onSelect: () => void;
+  captureTestId: string;
+  onCapture?: () => void;
+  stage: MachineStageState | null;
   children: ReactNode;
 }): JSX.Element {
   return (
@@ -491,7 +561,73 @@ function DeviceCard({
           <span className="device-preview-badge">Preview — mock data</span>
         </div>
       )}
+      {onCapture !== undefined && (
+        <button
+          type="button"
+          className="device-capture-button"
+          data-testid={captureTestId}
+          onClick={onCapture}
+        >
+          <span>Capture Current Kit</span>
+          <small>Prepare to receive SysEx</small>
+        </button>
+      )}
+      <MachineStagePanel stage={stage} testId={`${testId}-stage`} />
       {children}
     </section>
   );
+}
+
+function MachineStagePanel({
+  stage,
+  testId,
+}: {
+  stage: MachineStageState | null;
+  testId: string;
+}): JSX.Element {
+  if (stage === null) {
+    return (
+      <section className="machine-stage-state pending" data-testid={testId}>
+        <strong>Stage authority pending</strong>
+        <span>Waiting for whole-state hydration before SEND can become eligible.</span>
+      </section>
+    );
+  }
+
+  return (
+    <section
+      className={`machine-stage-state ${deviceStageStatus(stage).toLowerCase().replaceAll(' ', '-')}`}
+      data-testid={testId}
+    >
+      <div><span>Connection</span><strong>{formatStageToken(stage.connection_state)}</strong></div>
+      <div><span>Capture</span><strong>{formatStageToken(stage.capture_state)}</strong></div>
+      <div><span>Targets</span><strong>{formatIds(stage.target_ids, 'Default all')}</strong></div>
+      <div><span>Locks</span><strong>{formatIds(stage.locked_ids, 'None')}</strong></div>
+      <div><span>Effective</span><strong>{formatIds(stage.effective_ids, 'None')}</strong></div>
+      <div><span>Candidate</span><strong>{formatStageToken(stage.candidate_state)}</strong></div>
+      <div><span>Plan</span><strong>{formatStageToken(stage.plan_state)}</strong></div>
+      <div><span>Authority</span><strong>{formatStageToken(stage.authority_state)}</strong></div>
+      <p>
+        <span>Blocked</span>{' '}
+        <strong>{formatTokens(stage.blocked_reasons, 'None')}</strong>
+      </p>
+      <p>
+        <span>Recovery</span>{' '}
+        <strong>{formatTokens(stage.recovery_actions, 'None')}</strong>
+      </p>
+      {stage.last_error === null ? null : <p role="alert">Last error: {stage.last_error}</p>}
+    </section>
+  );
+}
+
+function formatIds(ids: readonly number[], empty: string): string {
+  return ids.length === 0 ? empty : ids.join(', ');
+}
+
+function formatTokens(tokens: readonly string[], empty: string): string {
+  return tokens.length === 0 ? empty : tokens.map(formatStageToken).join(' · ');
+}
+
+function formatStageToken(token: string): string {
+  return token.replaceAll('_', ' ');
 }

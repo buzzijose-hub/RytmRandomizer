@@ -8,9 +8,15 @@
 import { useCockpitStore } from '../state';
 
 import { AnalogFourTrackCard } from './AnalogFourTrackCard';
-import { ANALOG_FOUR_DEVICE_ID, ANALOG_FOUR_TRACKS, type CockpitDeviceId } from './devices';
+import {
+  ANALOG_FOUR_DEVICE_ID,
+  ANALOG_FOUR_TRACKS,
+  RYTM_DEVICE_ID,
+  type CockpitDeviceId,
+} from './devices';
 import { HistoryStrip } from './HistoryStrip';
 import { PadCard } from './PadCard';
+import { useMutationTargets } from './useMutationTargets';
 
 export interface SnapshotPanelProps {
   activeDeviceId: CockpitDeviceId;
@@ -20,6 +26,7 @@ export interface SnapshotPanelProps {
 export function SnapshotPanel({ activeDeviceId, previewOn }: SnapshotPanelProps): JSX.Element {
   const snapshot = useCockpitStore((s) => s.snapshot);
   const previewCandidate = useCockpitStore((s) => s.previewCandidate);
+  const rytmTargets = useMutationTargets(RYTM_DEVICE_ID);
 
   if (snapshot === null) {
     return (
@@ -78,6 +85,20 @@ export function SnapshotPanel({ activeDeviceId, previewOn }: SnapshotPanelProps)
           {previewOn ? ' · PREVIEW ON' : ''}
         </p>
         <p className="snapshot-readiness">{snapshot.pads.length} pads ready for dry-run review</p>
+        <div className="mutation-scope-summary" data-testid="rytm-target-summary">
+          <span>
+            {rytmTargets.hasExplicitTargets
+              ? `${rytmTargets.targets.size} targeted pads`
+              : 'All pads in scope by default'}
+          </span>
+          <button
+            disabled={!rytmTargets.hasExplicitTargets}
+            onClick={rytmTargets.clearTargets}
+            type="button"
+          >
+            Clear targets
+          </button>
+        </div>
       </header>
       <div className="pad-grid">
         {snapshot.pads.map((pad) => (

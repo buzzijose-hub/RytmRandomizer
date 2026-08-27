@@ -12,11 +12,12 @@
  *
  * SEND has two distinct shapes, and the difference is load-bearing:
  *
- *   - **Unarmed / mock (DRY-RUN SEND).** One click, `{ type: 'send' }` with no
- *     `confirm`. Nothing reaches hardware, so an extra gesture would be
- *     safety theatre — and the sidecar does not ask for one.
+ *   - **Unarmed / mock (DRY-RUN SEND).** One click with the exact prepared
+ *     `send_plan_id` and no `confirm`. Nothing reaches hardware, so an extra
+ *     gesture would be safety theatre.
  *   - **Live + armed (SEND).** Opens an explicit per-action confirmation
- *     dialog; only "Confirm send" emits `{ type: 'send', confirm: true }`.
+ *     dialog showing the exact output, plan, pads, and message count; only
+ *     "Confirm send" emits both `confirm: true` and the current plan id.
  *     The sidecar's ArmedApply seam *refuses* an armed send without
  *     `confirm: true` (`cockpit/ws/handlers.py::_armed_send_over_seam`), so
  *     without this affordance the live SEND button could not succeed at all.
@@ -72,6 +73,7 @@ export function ActionBar({ previewOn, onTogglePreview }: ActionBarProps): JSX.E
   const canSend = useCockpitStore(selectCanSend);
   const canUndo = useCockpitStore(selectCanUndo);
   const preparedPadCount = useCockpitStore(selectPreparedPadCount);
+  const sendPlan = useCockpitStore((s) => s.sendPlan);
   const session = useCockpitStore((s) => s.sessionStatus);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -83,12 +85,18 @@ export function ActionBar({ previewOn, onTogglePreview }: ActionBarProps): JSX.E
   const offline = session === null;
   const offlineTitle = offline ? SIDECAR_REQUIRED_REASON : undefined;
   const prepareDisabled = candidate === null;
-  const sendDisabled = !canSend;
+  const isLiveHardware = session?.mode === 'live' && session.armed;
+  const sendDisabled = !canSend || sendPlan === null || (isLiveHardware && session.midi_port === null);
   const previewLabel = previewOn ? '◐ PREVIEW (on)' : '◐ PREVIEW (off)';
   const padsAffected = preparedPadCount;
-  const isLiveHardware = session?.mode === 'live' && session.armed;
   const sendLabel = isLiveHardware ? 'SEND' : 'DRY-RUN SEND';
   const padSuffix = padsAffected === 0 ? '' : `(${padsAffected} pad${padsAffected === 1 ? '' : 's'})`;
+  const preparedPadIds =
+    sendPlan === null
+      ? []
+      : [...new Set(sendPlan.packets.map((packet) => packet.pad_id))].sort(
+          (left, right) => left - right,
+        );
 
   const handleTogglePreview = (): void => {
     const next = !previewOn;
@@ -97,18 +105,18 @@ export function ActionBar({ previewOn, onTogglePreview }: ActionBarProps): JSX.E
   };
 
   // Armed: gather the per-action confirmation first. Unarmed: send straight
-  // through, exactly as before — no confirm field, no extra click.
-  const handleSendClick = (): void => {
+  // through with the exact prepared plan id and no extra click.
+  const handleSendClick = (planId: string): void => {
     if (isLiveHardware) {
       setConfirmOpen(true);
       return;
     }
-    sendCommand({ type: 'send' });
+    sendCommand({ type: 'send', send_plan_id: planId });
   };
 
-  const handleConfirmSend = (): void => {
+  const handleConfirmSend = (planId: string): void => {
     setConfirmOpen(false);
-    sendCommand({ type: 'send', confirm: true });
+    sendCommand({ type: 'send', confirm: true, send_plan_id: planId });
   };
 
   return (
@@ -152,7 +160,7 @@ export function ActionBar({ previewOn, onTogglePreview }: ActionBarProps): JSX.E
         className="action-button primary"
         data-testid="action-send"
         disabled={sendDisabled}
-        onClick={handleSendClick}
+        onClick={sendPlan === null ? undefined : () => handleSendClick(sendPlan.plan_id)}
       >
         {sendLabel} ▶ {padSuffix}
       </button>
@@ -187,7 +195,7 @@ export function ActionBar({ previewOn, onTogglePreview }: ActionBarProps): JSX.E
         longer has one. Dropping it on the same render keeps the UI from
         outliving the state it describes.
       */}
-      {confirmOpen && isLiveHardware && (
+      {confirmOpen && isLiveHardware && sendPlan !== null && (
         <div
           role="dialog"
           aria-modal="true"
@@ -205,11 +213,16 @@ export function ActionBar({ previewOn, onTogglePreview }: ActionBarProps): JSX.E
         >
           <h2 id="send-confirm-title">Confirm send to hardware</h2>
           <p id="send-confirm-desc">
-            The session is armed on {session?.midi_port ?? 'the selected output'}. Confirming
-            transmits this prepared plan {padSuffix === '' ? '' : `${padSuffix} `}as live-dial CC
-            changes to the instrument&apos;s working memory. Saved kits and sounds are not
-            written. Each send is confirmed separately.
+            Confirming transmits this exact prepared plan as live-dial CC changes to the
+            instrument&apos;s working memory. Saved kits and sounds are not written. Each send is
+            confirmed separately.
           </p>
+          <dl className="send-confirm-details">
+            <div><dt>Output</dt><dd>{session.midi_port}</dd></div>
+            <div><dt>Prepared plan</dt><dd>{sendPlan.plan_id}</dd></div>
+            <div><dt>Pads</dt><dd>{preparedPadIds.join(', ') || 'None'}</dd></div>
+            <div><dt>Messages</dt><dd>{sendPlan.estimated_midi_msgs}</dd></div>
+          </dl>
           <div className="arm-dialog-actions">
             <button
               type="button"
@@ -220,7 +233,7 @@ export function ActionBar({ previewOn, onTogglePreview }: ActionBarProps): JSX.E
             </button>
             <button
               type="button"
-              onClick={handleConfirmSend}
+              onClick={() => handleConfirmSend(sendPlan.plan_id)}
               data-testid="send-confirm-button"
               autoFocus
             >

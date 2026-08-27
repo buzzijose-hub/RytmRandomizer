@@ -90,6 +90,22 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             # app-owned wiring.
             "mido_provider",
             "observability",
+            # Live-kit targeting owns only the device-neutral include/lock
+            # view; the reusable scope record remains in snapshot/.
+            "snapshot",
+        }
+    ),
+    "cockpit.capture": frozenset(
+        {
+            "cockpit.data",
+            "data",
+            "devices",
+            "devices.strategies",
+            # Capture validates and round-trips the canonical saved-KIT
+            # codecs already owned by the engine layer; it does not fork a
+            # second Elektron envelope implementation.
+            "engines",
+            "observability",
         }
     ),
     "cockpit.data": frozenset({"data"}),
@@ -115,6 +131,7 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
         {
             "cockpit.data",
             "observability",
+            "snapshot",
         }
     ),
     "cockpit.export": frozenset(
@@ -165,6 +182,7 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
     ),
     "cockpit.ws": frozenset(
         {
+            "cockpit.capture",
             "cockpit.data",
             "cockpit.device",
             "cockpit.engine",

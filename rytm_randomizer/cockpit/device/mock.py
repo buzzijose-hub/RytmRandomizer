@@ -58,6 +58,13 @@ class MockDeviceAdapter:
 
         return self._state
 
+    def adopt_snapshot(self, snapshot: object) -> None:
+        """Replace mock state with a verified capture anchor, without I/O."""
+
+        if not isinstance(snapshot, Snapshot):
+            raise TypeError(f"snapshot must be a Snapshot; got {type(snapshot).__name__}")
+        self._state = snapshot
+
     def apply(
         self,
         candidate: MutationCandidate,

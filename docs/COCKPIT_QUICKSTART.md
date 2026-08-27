@@ -1,15 +1,17 @@
 # Cockpit Quickstart
 
-> **Status: alpha.** The Phase 1 cockpit is in active implementation against
-> `feat/cockpit-and-profile-model-bundle`. Treat this guide as the operator-
-> facing entry point; the [design spec](superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md)
-> is the authoritative architectural reference, and [`docs/ARCHITECTURE.md` §6.2](ARCHITECTURE.md#62-cockpit--profile-model-layer-phase-1)
-> is the architecture-doc explanation.
+> **Status: integrated Cockpit operator guide.** Treat this as the launch and
+> studio-rehearsal entry point. The
+> [design spec](superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md)
+> remains the data/protocol reference, and
+> [`docs/ARCHITECTURE.md` §6.2](ARCHITECTURE.md#62-cockpit--profile-model-layer-phase-1)
+> explains the package boundary.
 
 The Cockpit is a desktop window that gives you a single-screen view of your
 Elektron rig's current state and lets you generate new kits from your own
-authored intelligence. Pick a profile, slide a depth knob, hit SEND, audition,
-SAVE the good ones, UNDO the bad ones. Walk forward through history. The
+authored intelligence. Capture a current kit, select targets and locks, pick a
+profile and depth, PREPARE an exact plan, confirm SEND, audition, and recover
+from history. The
 whole point is to keep you at the rig, not at the laptop.
 
 This guide gets you from a clean clone to a working cockpit window on your
@@ -283,21 +285,23 @@ where the A4 side will fit before any outbound A4 macro path exists.
 1. **Pick a built-in scene** — the right panel lists seven shipped
    `kind="scene"` profiles (industrial, hypnotic, garage, peak_time,
    rolling, birmingham, drone). Click one to make it active.
-2. **Slide the depth** — somewhere mid-range (45%) is the live-safe
-   default. The ghost overlay on the pad cards previews the proposed
-   parameter changes.
+2. **Slide the depth** — 45% is the mock-workbench default. Start at **10%**
+   for the first operator-present hardware rehearsal. The ghost overlay on
+   unlocked target pads previews the proposed parameter changes.
 3. **Toggle PREVIEW off and on** — confirms the overlay tracks the
    active candidate.
 4. **Hit REGEN** — same depth, new seed, different candidate.
-5. **Hit SEND** — the candidate becomes the new snapshot; a grey dot
-   joins the history strip; preview clears.
-6. **Hit SAVE with a label** — promotes the current snapshot to a
-   `kind="saved"` history entry; the dot turns green. **SAVE does not write
-   to the instrument.** It labels a point in the cockpit's own history so
-   you can find it again; persisting a kit to device memory is refused (see
-   §6 — no capture-before-write or restore path exists). To keep a kit on
-   the hardware, save it on the device itself.
-7. **Hit UNDO** — walks the history back one step.
+5. **Hit PREPARE** — inspect the exact port (when armed), plan id, affected
+   pad ids, and message count. A target/lock/profile/depth change revokes the
+   plan; PREPARE again.
+6. **Hit SEND** — mock mode applies the exact prepared plan locally. Armed
+   mode opens a second confirmation dialog and requires that same current
+   plan id plus `confirm: true`; the snapshot/history advance and preview
+   clears only after success.
+7. **SAVE is refused.** Cockpit does not claim a persistent hardware write.
+   Save the kit on the instrument itself if you want to keep it.
+8. **Hit UNDO** — adopts the previous snapshot as the in-memory anchor and
+   revokes any candidate/plan derived from the newer state.
 
 Profiles live as flat JSON files under `~/.rytm-randomizer/profiles/` on
 Linux (`$XDG_CONFIG_HOME/rytm-randomizer/profiles/` is honored if set),
@@ -522,6 +526,18 @@ The cockpit defaults to a **mock device adapter**: it opens no MIDI port
 and sends no MIDI, even when you hit SEND. This is the same passive-
 default discipline the rest of the project uses.
 
+The installed shell and development fallback start current-KIT reception
+through the explicit input-only composition:
+
+```bash
+python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar
+```
+
+That authority can list and open the input selected in **Capture Current
+Kit**, but it has no output surface and cannot transmit a request or a kit.
+Rytm and A4 frames must pass the family codec, checksum/length validation,
+and an exact decode/re-encode check before becoming in-memory captures.
+
 The real-MIDI path is gated behind an explicit arm step. In the cockpit
 UI that means choosing the **exact** MIDI output port from the arm
 dialog's selector and entering the per-launch arm token — nothing is
@@ -535,6 +551,18 @@ that opens the one real output port through
 session's `confirm()` + `apply()` lifecycle. `MockDeviceAdapter` keeps
 modelling snapshot/history state throughout.
 
+Rytm and A4 are independent lanes in the stage state. A Rytm capture, target,
+lock, candidate, plan, and armed authority cannot grant A4 authority. A4
+captured-kit mutation remains blocked and zero-event until saved-KIT semantic
+offsets, value encodings, track stride, and physical behavior are promoted
+from evidence. Do not treat the existing live CC vocabulary as saved-KIT
+offset evidence.
+
+OXI One remains beside Cockpit as owner of sequencing, notes, triggers, mutes,
+and pattern motion. Cockpit owns mutation/performance intelligence, target
+selection, locks, depth, preview, and exact plan confirmation. It does not
+claim direct OXI hardware control.
+
 **What an armed SEND may and may not do:** live-dial CC changes (the
 device's working RAM) are sent. Writes to *saved* kits and sounds are
 refused, because capture-before-write and restore are not implemented —
@@ -547,11 +575,53 @@ device to discard live-dial changes.
 - The MIDI port is opened once, when you arm; it stays open until you
   close the window or explicitly disarm.
 - Locked pads are skipped on SEND. Use this to protect your kick.
-- SAVE does **not** write to the device. It promotes the current snapshot
-  to a labelled `kind="saved"` entry in the cockpit's history and nothing
-  leaves the app. Writing a Rytm SysEx kit dump to persistent kit memory is
-  exactly the operation the seam refuses today; use the instrument's own
-  save to keep a kit on the hardware.
+- SAVE is refused. It neither writes to the device nor promotes an in-memory
+  snapshot, because no persistent-write plus capture-before-write restore seam
+  exists. Use the instrument's own save to keep a kit on the hardware.
+
+### 6a. Deterministic first studio rehearsal
+
+Before launch, save the current Rytm and A4 kits into spare hardware slots.
+Keep the original `.syx` captures and record their SHA-256 fingerprints.
+
+1. Launch Cockpit and verify the stage says OXI owns sequencing and neither
+   device was auto-selected for output.
+2. Open **Capture Current Kit** for Rytm, select the exact input, dump the
+   current kit from the hardware, and record the displayed fingerprint.
+3. Select only **Pad 2** as the Rytm target and lock **Pad 2** once to prove
+   the effective scope becomes empty; unlock Pad 2, then lock a different pad
+   such as Pad 1. Set depth to **10%**.
+4. Choose a profile, preview, and PREPARE. Record the exact output port, plan
+   id, affected pad list, and message count. The affected set must contain
+   Pad 2 only and must exclude every locked/untargeted pad.
+5. Confirm SEND once. Audition while OXI continues to own notes/triggers. Save
+   a screenshot and the Cockpit log line carrying the plan id and packet
+   count. Verify Pad 1 and at least one untargeted pad against the before
+   capture.
+6. Recover in Cockpit with UNDO/load of the captured anchor, then reload the
+   saved hardware kit. Re-capture and compare fingerprints. After any cable
+   disconnect or sidecar reconnect, discard the old plan, capture again, and
+   PREPARE a new plan before sending.
+7. Emergency stop: close the confirmation dialog without confirming, DISARM,
+   close Cockpit or press Ctrl-C on the sidecar, and reload the saved hardware
+   kit. If the MIDI transport itself is wedged, disconnect the selected USB
+   MIDI path only after disarming.
+
+For the A4 mapping gap, do not send a Cockpit plan. Use one scratch kit and
+capture a strict matrix named like
+`A4_T1_FILTER1_FREQ_{000,063,127}_SLOT_<n>.syx`: minimum/mid/maximum for one
+parameter on Track 1, repeat the same value on Tracks 2–4 to prove stride,
+then repeat one second parameter to distinguish field offset from stride.
+For every frame, preserve the exact original, verify codec round-trip, record
+only semantic unpacked-byte diffs, infer value encoding, reload and physically
+audition the intended control, and capture the returned kit. Mapping promotion
+requires all five: offset, encoding, track stride, round-trip fixture, and
+physical verification.
+
+Studio evidence to keep together: before/after `.syx` files, SHA-256 values,
+kit slots, exact port names, target/lock/depth settings, plan id, affected pad
+ids, message count, screenshots, Cockpit logs, physical listening notes, and
+the final restored capture.
 
 ---
 

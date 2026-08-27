@@ -19,6 +19,7 @@ from .envelope import (
     unpack_elektron_7bit,
 )
 from .mock_runtime import BaseMockRuntime, MockRuntime
+from .mutation_scope import DEFAULT_MUTATION_SCOPE, MutationScope
 from .planner import MutationPlanner
 from .sysex_file import extract_sysex_payloads, read_sysex_payloads_from_path
 
@@ -29,6 +30,8 @@ __all__ = [
     "ElektronNativeObjectMessage",
     "BaseMockRuntime",
     "MockRuntime",
+    "DEFAULT_MUTATION_SCOPE",
+    "MutationScope",
     "MutationPlanner",
     "SnapshotDecoder",
     "extract_sysex_payloads",

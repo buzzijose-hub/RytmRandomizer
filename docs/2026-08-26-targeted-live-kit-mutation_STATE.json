@@ -1,0 +1,15 @@
+{
+  "status": "in_progress",
+  "workstreams": {
+    "preflight_and_classification": "in_progress",
+    "acceptance_gap_audit": "in_progress",
+    "clean_base_integration": "pending",
+    "focused_verification": "pending",
+    "complete_verification": "pending",
+    "code_review": "pending",
+    "pr_delivery": "pending",
+    "studio_hardware_validation": "blocked"
+  },
+  "last_verified_at": "2026-08-27T13:23:35.3900806-04:00",
+  "blocker": "A4 saved-KIT semantic offsets and physical Rytm/A4 rehearsal evidence require operator-present studio hardware; software work continues fail-closed."
+}
