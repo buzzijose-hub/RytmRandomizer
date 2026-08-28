@@ -14,19 +14,30 @@ Last updated: 2026-08-27. This file is a hand-authored snapshot and is meant to 
     canonical effective-scope rule `(targets or complete domain) - locks`
     through UI, WebSocket, session, planners, preview, and Rytm send plans.
   - Added an authoritative dual-machine stage coordinator with independent
-    capture, connection, candidate, plan, authority, blocker, stale, and
-    recovery state. OXI One remains sequencing/trigger/mute/pattern owner;
-    Cockpit claims no direct OXI control.
+    capture, candidate, plan, authority, blocker, stale, and recovery state.
+    The Rytm lane mirrors the armed-output connection manager; the A4 lane
+    records capture/session state but does not claim continuous independent
+    physical hot-plug telemetry. OXI One remains sequencing/trigger/mute/pattern
+    owner; Cockpit claims no direct OXI control.
   - Rytm live output continues exclusively through `senders/armed_apply.py`
     with PREPARE plus exact plan/port/pad/message confirmation. The obsolete
     second real-adapter output seam was deliberately not restored.
   - A4 captured-KIT planning remains zero-event and unsendable pending saved-KIT
     offset, encoding, track-stride, round-trip, and physical evidence. The
-    exact one-track/one-parameter studio procedure is in
-    `docs/COCKPIT_QUICKSTART.md` §6a.
+    deterministic two-control procedure covers Filter 1 Frequency on Track 1
+    at 0/63/127, the same control at 63 on Tracks 1-4 for stride, and Amp
+    Attack on Track 1 at 0/63/127; see `docs/COCKPIT_QUICKSTART.md` §6a and the
+    machine-readable mapping-gap manifest.
   - The seven RUSH01/RUSH16 commits and all unrelated dirty artifacts/reference
-    files in the source checkout were preserved and excluded. PR #236 overlaps
-    only shared documentation and did not block this integration.
+    files in the source checkout were preserved and excluded. PR #236 has a
+    six-file integration overlap: `README.md`, `docs/ARCHITECTURE.md`,
+    `docs/ARCHITECTURE_DIAGRAMS.md`, `docs/STATUS.md`,
+    `output/al16/AL02_LOCK_RYTM_manifest.json`, and
+    `tests/test_al16_rytm_export.py`. If #236 merges or is rebased first, resolve
+    all six together. In particular, regenerate the combined AL02 dependency
+    hashes from both the #236 writer SHA and this bundle's device/snapshot SHAs,
+    then update the expected generated-manifest digest/test as one atomic
+    rebase decision; never accept either side's manifest hash in isolation.
 
 - 2026-08-24: Added a bounded long-form reference-audio atlas.
   - The passive `reference-audio-atlas-report` command scans one audio file as

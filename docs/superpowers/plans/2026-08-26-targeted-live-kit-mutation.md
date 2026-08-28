@@ -1,307 +1,280 @@
-# Targeted live-kit mutation plan
+# Targeted dual-machine live-kit mutation plan
 
 Date: 2026-08-26
 
-Status: in-flight — implementation and local verification complete; no PR opened
+Status: in-flight - implementation, verification, and review are complete in
+the clean integration worktree; push, PR delivery, and CI observation remain.
 
-Phase 2 status: explicitly armed Rytm Cockpit output composition implemented;
-operator-present hardware rehearsal remains intentionally manual.
+Hardware status: no real MIDI input or output was opened during implementation
+or automated verification. Studio rehearsal remains an explicit operator task.
 
 ## Why
 
-The live-kit path already has Rytm lock/depth guardrails, a passive A4
-single-track Patch Genome compiler, and verified input-only current-KIT capture
-for both machines. It does not yet have an authoritative include-list that can
-say “mutate only these pads/tracks,” and a verified Rytm capture is retained in
-memory without becoming the Cockpit mutation anchor.
+The Cockpit needed one coherent live-performance path for Analog Rytm and
+Analog Four saved KIT captures:
 
-This slice adds one typed target model and carries it through session state,
-WebSocket state, inert planning, and the existing Cockpit UI. Rytm captures are
-projected only through the promoted snapshot-shell rows. A4 capture remains
-fail-closed because its saved-kit semantic offsets are still candidate-level;
-the existing manual-backed live parameter map is not evidence that those same
-parameters may be rewritten at guessed saved-kit offsets.
+- capture the current saved KIT without granting output authority;
+- represent explicit Rytm pad and A4 track targets;
+- intersect include targets with independent deny locks;
+- make a verified captured Rytm KIT the mutation anchor;
+- prepare and send only the exact selected Rytm scope;
+- retain A4 evidence while refusing to guess unproven saved-KIT offsets; and
+- preserve OXI as the owner of sequencing, notes, triggers, mutes, and pattern
+  motion.
 
-The implementation extends the current dirty Cockpit/capture WIP in place. The
-same files contain the uncommitted capture milestone, so splitting this run into
-parallel worktrees would discard that baseline or create overlapping edits.
-Independent verification commands still run in parallel where safe.
+The bundle also had to preserve frozen V1.34 output, passive defaults, lazy MIDI
+imports, the Device/strategy architecture, and one non-stacked PR.
 
-## What changes
+## Delivered architecture
 
-### WS-1 — target model and Rytm planning
+### Capture boundary
 
-Owns:
+The packaged Cockpit supports an explicitly armed, input-only current-KIT
+capture sidecar. Rytm and A4 frames pass through the canonical codecs and must
+prove exact decode/re-encode stability before they become semantic evidence.
+Capture does not enumerate or open an output port and does not send a dump
+request.
 
-- `rytm_randomizer/cockpit/data/`
-- `rytm_randomizer/cockpit/mutation_targets.py`
-- `rytm_randomizer/snapshot/mutation_scope.py`
-- `rytm_randomizer/cockpit/engine/`
-- focused data/engine tests under `tests/cockpit/`
+### Target and lock model
 
-Changes:
-
-1. Add a frozen `MutationTargets` model with Rytm pad ids `1..12` and A4
-   track ids `1..4`. Empty sets mean no explicit include filter, preserving
-   the existing all-scope default.
-2. Resolve effective Rytm scope as explicit targets (or all candidate pads)
-   minus locks. Keep locks as a deny-list and targets as an include-list.
-3. Carry explicit target evidence on `CockpitSendPlan`; include target state in
-   its deterministic id and filter packets at preflight even if a stale or
-   externally-created candidate contains wider deltas.
-4. Filter mutation candidates to explicit Rytm targets while preserving the
-   byte-identical no-target engine-conformance behavior.
-
-### WS-2 — session and WebSocket contract
-
-Owns:
-
-- `rytm_randomizer/cockpit/ws/{session,protocol,handlers}.py`
-- focused handler/protocol/integration tests under `tests/cockpit/`
-
-Changes:
-
-1. Add `rytm_pad_targets`, `a4_track_targets`, and A4 track locks to the
-   declared session state.
-2. Add typed set/clear target commands and a whole-state
-   `mutation_targets_changed` event emitted at bootstrap and after changes.
-3. Add a dedicated A4 track-lock command; the existing Rytm pad-lock command
-   remains backward compatible.
-4. Recompute/invalidate Rytm candidates and send plans on Rytm target changes.
-   Passive A4 Patch Genome analysis rejects a requested track outside an
-   explicit A4 target set.
-
-### WS-3 — verified capture bridge and A4 fail-closed planning
-
-Owns:
-
-- `rytm_randomizer/cockpit/capture/`
-- `rytm_randomizer/cockpit/device/`
-- `rytm_randomizer/devices/strategies/analog_four_mutation_planner.py`
-- focused capture/device/strategy tests
-
-Changes:
-
-1. Project a round-trip-verified `RytmKitSnapshot` through the existing
-   `build_snapshot_shell_anchor` promotion rules into a Cockpit `Snapshot`.
-   No raw offset is invented and unmapped rows are omitted.
-2. Adopt the projected snapshot as the adapter/session anchor without opening
-   a port, append it to in-memory history as `via="capture"`, and recompute the
-   preview from that exact source id.
-3. Make adapter snapshot adoption an explicit Protocol method. Mock adoption
-   replaces only in-memory state; real-adapter adoption caches the verified
-   anchor and performs no I/O.
-4. Thread the device-neutral `MutationScope` through the public
-   `MutationPlanner`/`Device` seam and both registered devices, while preserving
-   A4's `offsets_promoted=False` blocker. Capture plus targets cannot produce A4
-   events or a sendable plan.
-
-### WS-4 — Cockpit controls and state
-
-Owns:
-
-- `desktop/web/src/ws/protocol.ts`
-- `desktop/web/src/state/`
-- focused files under `desktop/web/src/cockpit/`
-- Vitest coverage under `desktop/web/tests/`
-
-Changes:
-
-1. Mirror target commands/events and plan evidence in TypeScript/Zustand.
-2. Replace per-card isolated lock state with shared authoritative UI state.
-3. Add compact multi-select target controls to Rytm pad cards and the A4 Patch
-   Genome workspace. Explicit targets use the existing cyan selection language;
-   locks stay amber/denied; untargeted items become visibly inactive.
-4. Keep the existing layout and disabled A4 hardware action. Clearing targets
-   returns the device to its current default all-scope behavior.
-
-### WS-5 — docs and verification
-
-Owns:
-
-- `docs/STATUS.md`
-- `docs/COCKPIT_QUICKSTART.md`
-- `docs/ARCHITECTURE.md`
-- `docs/ARCHITECTURE_DIAGRAMS.md`
-
-Changes:
-
-1. Document include targets, deny locks, effective scope, captured Rytm anchor
-   promotion, and A4 mapping-pending behavior.
-2. Update the Cockpit SEND and current-KIT capture diagrams.
-3. Record exact A4 evidence still required: promoted unpacked offsets per
-   semantic field, typed raw-value conversions, second-track stride evidence,
-   fixture-backed decode/mutate/re-encode round trips, and hardware validation.
-
-## Architecture shape
+The canonical scope equation is:
 
 ```text
-MutationTargets (empty = existing all-scope default)
-    -> CockpitSession target fields
-    -> mutation_targets_changed
-    -> Zustand + multi-select controls
-    -> candidate include filter
-    -> send-plan include filter
-    -> minus Rytm pad locks / A4 track locks
-
-verified Rytm KIT capture
-    -> canonical codec round trip
-    -> registered Rytm snapshot decoder
-    -> existing snapshot-shell promoted anchor rows
-    -> Cockpit Snapshot adoption (no I/O)
-    -> targeted candidate -> explicit inert send plan
-
-verified A4 KIT capture
-    -> exact bytes retained
-    -> target/lock state retained
-    -> AnalogFourMutationPlan ready=False while offsets_promoted=False
+(explicit targets or the complete registered device domain) - locks
 ```
 
-No new top-level package, device registry, envelope implementation, hardware
-sender, or SysEx offset table is introduced. The Rytm/A4 target and wire facade
-lives inside Cockpit; the device-neutral `MutationScope` lives at the existing
-snapshot/planner seam. Capture consumes the existing codec, decoder,
-snapshot-shell promotion, adapter, history, and strategy seams.
+Rytm pad ids are `1..12`; A4 track ids are `1..4`. Identifiers are strict
+non-boolean integers. Empty targets preserve the backward-compatible all-scope
+default. Invalid input leaves authoritative state unchanged. A target or lock
+change invalidates any prepared plan.
 
-## Parity and safety impact
+The scope travels through `MutationScope`, the public `MutationPlanner` and
+`Device` seams, candidate construction, PREPARE, and the inert send-plan
+boundary. The boundary repeats the scope check so a stale or externally built
+candidate cannot address a locked or untargeted item.
 
-- V1.34 engines/runners and all 505 parity fixtures remain untouched.
-- The no-target Cockpit mutation path remains output-identical to existing
-  conformance fixtures.
-- Capture adoption is in-memory and input-only; it does not enumerate or open
-  an output port and does not send a dump request.
-- SEND still requires an explicit ready plan. Target and lock changes make old
-  plans stale.
-- A4 hardware SEND stays disabled. Candidate offsets are never promoted or
-  guessed by this work.
-- Hardware-pinned package versions and lazy MIDI imports remain unchanged.
+### Rytm captured-anchor promotion
 
-## Maintainability audit
+A round-trip-verified `RytmKitSnapshot` is projected only through promoted
+snapshot-shell semantic rows. Unknown bytes are retained by the codec but are
+never guessed into a semantic field. Adoption is in-memory, adds capture
+history, recomputes the candidate from the exact source id, and performs no
+MIDI I/O.
 
-1. Onboarding: the target equation and one model are documented in Cockpit
-   architecture/quickstart rather than repeated per device.
-2. Naming: `targets` always means include-list; `locks` always means deny-list.
-3. Coupling: WebSocket/session/UI consume the Cockpit model; device-specific
-   capture decoding stays in registered strategies.
-4. Magic values: pad/track bounds are `Final`; wire strings are Literal-backed.
-5. Configuration: no new environment variables.
-6. Tests: existing Cockpit fixtures are extended rather than duplicated.
-7. Dev loop: focused Python and Vitest suites precede broad gates.
-8. Errors: invalid target ids and mapping-pending A4 plans fail categorically.
-9. Versioning: no file format or version field changes.
-10. Future-proofing: a later device can add one bounded target dimension to the
-    model without creating a sender or registry fork.
+### Analog Four fail-closed planning
 
-The post-implementation re-audit is recorded in
-`docs/2026-08-26-targeted-live-kit-mutation_MAINTAINABILITY_REPORT.md`; review
-regressions were fixed before handoff.
+Captured A4 KIT evidence, targets, and locks are retained independently from
+Rytm state. Saved-KIT mutation remains blocked and produces a zero-event,
+unsendable pending plan until every required mapping proof is promoted:
 
-## Workstream graph and execution
+1. unpacked offset for each semantic field;
+2. typed raw-value encoding;
+3. per-track stride evidence;
+4. exact decode/mutate/re-encode round trips;
+5. fixture-backed byte-diff isolation; and
+6. physical-device validation.
 
-| Workstream | Depends on | Execution / ownership |
+The machine-readable evidence matrix and promotion rule live in
+`docs/2026-08-26-targeted-live-kit-mutation_A4_MAPPING_GAP.json`. Manual-backed
+live CC facts are not accepted as saved-KIT offset evidence.
+
+### Sole output authority
+
+The existing `senders.armed_apply.ArmedApplySession` remains the sole real
+MIDI output authority. Cockpit PREPARE creates an inert plan containing exact
+target-minus-lock evidence. SEND requires the current plan id, current
+authority, explicit arming, and operator confirmation before that existing
+boundary may open the exact selected Rytm output port lazily. There is no second
+Cockpit hardware sender and no restored real-device adapter output path.
+
+A4 captured-KIT hardware output is outside this slice and remains blocked.
+
+### Authoritative bootstrap and frontend
+
+The server bootstrap is an eleven-event authoritative snapshot, in this order:
+`session_status`, `snapshot_changed`, `profile_changed`,
+`profile_catalog_changed`, `history_updated`, `patch_genome_changed`,
+`kit_captures_changed`, `mutation_targets_changed`, `mutation_locks_changed`,
+`dual_machine_stage_changed`, and `performance_console_changed`. A wired
+connection manager may append `connection_changed` as event 12. The frontend
+hydrates independent capture, target, lock, candidate, plan, authority,
+failure, and recovery state, guards optimistic updates by request generation,
+suppresses stale locked ghosts, renders a per-machine DeviceRail, and displays
+the exact selected send scope. Rytm connection state mirrors the armed-output
+manager; A4 capture/session state is not continuous physical hot-plug telemetry.
+
+## Workstreams and integration
+
+| Workstream | Scope | Result |
 |---|---|---|
-| WS-1 target model/planning | none | current worktree; core model first |
-| WS-2 session/WS | WS-1 | current worktree; overlaps live capture handlers |
-| WS-3 capture/A4 | WS-1 | current worktree; overlaps uncommitted capture WIP |
-| WS-4 frontend | WS-2 | current worktree; overlaps uncommitted Cockpit WIP |
-| WS-5 docs/verification | WS-1..4 | current worktree; verification commands parallelized |
+| WS-1 | mutation scope, target model, candidates, send plans | complete |
+| WS-2 | session, protocol, handlers, bootstrap | complete |
+| WS-3 | capture bridge, Rytm anchor, A4 blocked planner | complete |
+| WS-4 | TypeScript state, DeviceRail, controls, rehearsal | complete |
+| WS-5 | docs, evidence manifest, verification, review, PR | delivery in progress |
 
-Normal repo plans assign disjoint worktrees and parallel agents. This run uses
-one worktree because every eligible workstream depends on the same uncommitted
-capture/Cockpit baseline and multiple worktrees cannot faithfully inherit it.
-No PR cascade is created. The kickoff is this user-approved autonomous Codex
-run; the stop signal is a user message replacing the task. The wall-clock cap
-is the active Codex session. Recovery reads this plan plus `git status` and the
-latest test output; no force-push, base-branch mutation, fixture regeneration,
-or external PR action is authorized.
+```mermaid
+flowchart LR
+    Base["origin/modularize-v1.34"]
+    Source["preservation/source worktree<br/>dirty user state retained"]
+    ScopeCrew["scope + backend crew"]
+    CaptureCrew["capture + device-seam crew"]
+    FrontendCrew["frontend rehearsal crew"]
+    DocsCrew["docs + evidence crew"]
+    Integration["clean integration worktree<br/>codex/dual-machine-live-performance-bundle"]
+    PR["one bundled PR<br/>base: modularize-v1.34"]
+
+    Base --> Integration
+    Source -->|"selected coherent checkpoint only"| Integration
+    ScopeCrew --> Integration
+    CaptureCrew --> Integration
+    FrontendCrew --> Integration
+    DocsCrew --> Integration
+    Integration --> PR
+```
+
+| Crew | Worktree / ownership | Non-overlap rule |
+|---|---|---|
+| Preservation lead | Original `codex/rush16-anchor-audition-batch` checkout | Read/classify only; preserve unrelated RUSH commits, dirty files, references, and artifacts. |
+| Scope + backend | Isolated implementation worktree | Own `snapshot/mutation_scope.py`, `cockpit/mutation_targets.py`, `cockpit/data/stage.py`, `cockpit/stage/`, `cockpit/engine/send_plan.py`, `cockpit/ws/{protocol,session,handlers}.py`, and their focused Python tests. |
+| Capture + device seam | Isolated implementation worktree | Own `cockpit/capture/`, `devices/saved_kit_capture.py`, `devices/{analog_rytm,analog_four}.py`, and matching capture/device tests. |
+| Frontend rehearsal | Isolated implementation worktree | Own `desktop/web/` protocol/state/components/styles/tests; do not edit backend or docs. |
+| Docs + evidence | Clean integration worktree | Own README/contributor docs, `docs/**`, project memory, and the A4 mapping manifest; do not edit production/tests. |
+| Integrator | `RytmRandomizer-worktrees/dual-machine-live-performance` | Resolve overlap once, run serialized closeout, and deliver the single branch/PR. |
+
+The dependency graph is base → disjoint crew outputs → one clean integration
+branch → one PR. No crew opens a PR and no branch is based on another open
+branch. File ownership is exclusive during implementation; any unavoidable
+shared-file edit is handed to the integrator instead of edited concurrently.
+The user's unrelated dirty checkout remains preserved.
+
+PR #236 has a known six-file overlap: `README.md`, `docs/ARCHITECTURE.md`,
+`docs/ARCHITECTURE_DIAGRAMS.md`, `docs/STATUS.md`,
+`output/al16/AL02_LOCK_RYTM_manifest.json`, and
+`tests/test_al16_rytm_export.py`. A rebase after #236 must resolve the set as
+one integration unit. The combined AL02 manifest dependency hashes must be
+recomputed from the #236 writer SHA and this bundle's device/snapshot SHAs,
+then the expected generated-manifest digest/test must be updated together.
+Taking either side's manifest hash alone is forbidden.
+
+After a host freeze warning, all remaining validation is intentionally
+serialized: one test, build, or review process at a time.
+
+## Safety and parity invariants
+
+- V1.34 engines, runners, and all 505 golden fixture files remain byte-frozen.
+- Parity verification runs without `PARITY_CAPTURE_MODE=1`.
+- Ordinary CLI and Cockpit composition stay passive.
+- Capture is input-only; capture adoption is in-memory.
+- No direct OXI control is added.
+- A prepared plan is inert and explicit.
+- Armed SEND requires `confirm: true` and the exact current `send_plan_id`;
+  the implementation/tests fix the reviewed missing-id acceptance defect.
+- Target and lock changes revoke stale plans.
+- A4 mapping uncertainty is a categorical zero-event blocker.
+- `mido==1.3.3` and `python-rtmidi==1.5.8` remain pinned.
+- MIDI imports remain lazy at the approved boundary.
+- No `Any` escape hatch, new package-root module, or sibling device package is
+  introduced.
 
 ## Self-driving decision rules
 
-- Invalid target input: reject without changing prior target state.
-- Rytm capture projection failure: leave adapter/history/candidate unchanged.
-- A4 `offsets_promoted=False`: return a blocked plan with zero events.
-- Focused test failure: fix the first attributable regression and rerun.
-- Unrelated pre-existing failure: record exact evidence and continue with
-  remaining in-scope checks.
-- V1.34 parity failure or fixture diff: stop implementation and report; never
-  regenerate fixtures.
+- Invalid target input: reject it without changing prior target state.
+- Unstable or contradictory capture: retain no promoted anchor.
+- Unmapped Rytm field: preserve the raw frame but omit semantic projection.
+- A4 `offsets_promoted=False`: emit a blocked zero-event plan.
+- Focused failure: fix the first attributable regression and rerun serially.
+- Frozen parity failure or fixture diff: stop; never regenerate fixtures.
+- Hardware dependency: record the blocker; never simulate a successful physical
+  rehearsal.
+- External delivery: push one integration branch, open one PR, request the
+  required reviewer, monitor CI, and do not merge.
+
+## Verification plan
+
+1. Target model and planner:
+   bounds, boolean rejection, empty-default behavior, explicit filtering,
+   target-plus-lock intersection, deterministic plan evidence, and stale-plan
+   rejection.
+2. WebSocket/session:
+   eleven-event bootstrap, set/replace/clear commands, authoritative rollback,
+   capture isolation, disconnect revocation, and per-machine recovery.
+3. Capture:
+   canonical framing, exact round trip, Rytm projection and adoption,
+   wrong-device rejection, and A4 retained-but-blocked evidence.
+4. Output boundary:
+   PREPARE/SEND exact-scope enforcement, sole `ArmedApplySession` authority,
+   passive composition, and injected providers only.
+5. Frontend:
+   authoritative hydration, generation guards, targets/locks, disabled A4 send,
+   DeviceRail, exact selector, and complete mock rehearsal.
+6. Broad gates:
+   all Cockpit Python tests, frontend 100% coverage, TypeScript typecheck,
+   ESLint, production build, strict touched-file Python coverage, architecture
+   tests, frozen V1.34 parity, lint trio, fast suite, and full suite.
+7. Review:
+   separate read-only review dimensions for architecture, house style,
+   parity/tests, side effects, observability, abstraction reuse, docs freshness,
+   and maintainability/string/env/learning concerns.
 
 ## Plan-requirements conformance
 
-Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
+- [x] Gate 1 - 100% branch coverage required for every touched Python module.
+- [x] Gate 2 - V1.34 parity stays byte-identical; capture mode is forbidden.
+- [x] Gate 3 - Python and frontend lint, format, type, and build gates.
+- [x] Gate 4 - no dead or duplicate target, codec, or hardware-send surface.
+- [x] Gate 5 - status, quickstart, architecture, diagrams, and run artifacts.
+- [x] Gate 6 - frozen dataclasses, Protocols, TypedDicts, and Literals; no Any.
+- [x] Gate 7 - structured observability on state and authority transitions.
+- [x] Gate 8 - intent-named focused tests reuse shared fixtures.
+- [x] Gate 9 - additions remain within approved existing subpackages.
+- [x] Gate 10 - Literal-backed wire discriminators; no ad hoc mode dispatch.
+- [x] Gate 11 - shared Cockpit fixtures extended rather than duplicated.
+- [x] Gate 12 - new constants use Final.
+- [x] Gate 13 - no new environment variables.
+- [x] Gate 14 - pre/post maintainability audit and durable report.
+- [x] Gate 15 - plan, run report/log, state, architecture diff, replay playbook,
+  rule, skill, and machine-readable evidence are durable.
+- [x] Gate 16 - the graph, worktrees, crew/file ownership, one clean bundled
+  branch, one base branch, and no-stack rule are explicit above.
+- [x] Gate 17 - reuses codecs, Device strategies, MutationScope, history,
+  snapshot promotion, send-plan, and ArmedApply abstractions.
+- [x] Gate 18 - architecture prose and relevant diagrams updated.
 
-- [x] Gate 1 — focused branch coverage for every touched Python branch.
-- [x] Gate 2 — V1.34 parity remains byte-identical; no capture mode.
-- [x] Gate 3 — Python and frontend lint/format/type gates.
-- [x] Gate 4 — no dead or duplicate target/envelope surface.
-- [x] Gate 5 — STATUS, Quickstart, architecture, and diagrams updated.
-- [x] Gate 6 — frozen dataclasses/TypedDicts/Literals; no `Any` escape hatch.
-- [x] Gate 7 — structured logs on target/capture state transitions.
-- [x] Gate 8 — intent-named focused tests reuse current fixtures.
-- [x] Gate 9 — additions remain in existing subpackages.
-- [x] Gate 10 — Literal-backed wire discriminators; no ad hoc mode dispatch.
-- [x] Gate 11 — shared Cockpit fixtures extended in place.
-- [x] Gate 12 — all new constants use `Final`.
-- [x] Gate 13 — no new environment variables.
-- [x] Gate 14 — maintainability audit above and paired durable re-audit.
-- [x] Gate 15 — repo-scoped skill/rule, run report/log, architecture diff,
-  replay playbook, state schema, and project guidance landed locally.
-- [ ] Gate 16 — documented local-run deviation: the required capture baseline
-  was already uncommitted and overlapped every code workstream, so isolated
-  worktrees could not inherit it safely. No PR/cascade is claimed.
-- [x] Gate 17 — reuse MutationCandidate/CockpitSendPlan, DeviceAdapter,
-  HistoryStore, snapshot-shell promotion, Device strategies, and codecs.
-- [x] Gate 18 — architecture prose and both relevant diagrams refreshed.
+## Maintainability audit
 
-Exceptions: Gate 16’s normal per-WS worktree fan-out is not safe because the
-required baseline is uncommitted and overlapping; all work remains in one
-reversible worktree and no external actions are taken.
+1. One documented include-minus-deny equation replaces device-local variants.
+2. Capture, adoption, planning, and output authority remain distinct seams.
+3. Rytm and A4 state is independent without parallel package hierarchies.
+4. Bounds and discriminators use typed constants rather than magic values.
+5. No new environment-variable configuration is introduced.
+6. Shared fixtures and test helpers minimize setup duplication.
+7. Focused suites precede serialized broad gates.
+8. Errors are categorical and actionable; uncertain mapping fails closed.
+9. No persisted target schema or frozen format migration is required.
+10. A future device family can reuse the same Device/strategy and scope seams.
 
-## Test plan
+The post-implementation audit is recorded in
+`docs/2026-08-26-targeted-live-kit-mutation_MAINTAINABILITY_REPORT.md`.
 
-1. Target model/engine: bounds, empty-default behavior, explicit filtering,
-   target-plus-lock intersection, deterministic plan id/evidence.
-2. WebSocket/session: set, replace, clear, invalid fail-closed, bootstrap event,
-   stale-plan invalidation, A4 analysis target enforcement.
-3. Capture: promoted-row Rytm projection, adapter adoption, history/candidate
-   rebase, wrong-device/unstable fail-closed behavior.
-4. A4 strategy: default all-track behavior when promotion is explicitly
-   simulated, target-minus-lock filtering, and zero-event blocked captured-kit
-   behavior when offsets remain candidate-only.
-5. Frontend: store/event guard, Rytm/A4 multi-select controls, targeted/locked/
-   inactive classes, rollback on rejected commands, clear-target behavior.
-6. Gates: focused Python tests, all Cockpit Python tests, frontend coverage,
-   typecheck, ESLint/build, architecture tests, frozen V1.34 parity, lint trio,
-   and broad pytest as time permits.
+## Rollback
 
-## Rollback plan
-
-The model, wire fields, adapter adoption method, and UI controls are additive.
-Reverting this logical change returns empty targets to implicit all-scope and
-leaves captured raw frames/profile files untouched. There is no persisted
-target schema, no device write, no offset promotion, and no fixture migration.
+The target model, wire fields, capture bridge, and UI controls are additive.
+Reverting this single logical branch returns empty targets to the previous
+all-scope behavior. No device was written, no parity fixture was regenerated,
+no A4 offset was promoted, and no external data migration is required.
 
 ## Done criteria
 
-- Explicit Rytm pad targets and A4 track targets round-trip through the server
-  and render as multi-select state.
-- Rytm candidates and prepared packets contain only target-minus-lock scope;
-  empty targets preserve current behavior.
-- A verified Rytm capture becomes the mutation source using only promoted
-  snapshot-shell rows.
-- A4 target/lock planning is modeled, but captured-kit planning remains blocked
-  with zero events until mapping evidence is promoted.
-- Docs state the exact A4 evidence gap and all required safety/parity gates pass
-  or are reported with attributable blockers.
-
-## Phase 2 — explicitly armed Rytm output composition
-
-This follow-on keeps the shipped Tauri command input-only and adds one separate
-manual rehearsal composition. It requires `--arm`, an exact selected output
-port, and a feature-specific launch confirmation. Port discovery validates the
-name without opening it. PREPARE produces the same inert, target-minus-lock
-packet plan; live UI confirmation displays the exact port, plan id, sendable
-pads, and message count. Armed SEND must echo that current plan id before the
-adapter opens output lazily. Tests use injected providers/adapters only and do
-not touch MIDI. A4 captured-kit output remains outside this phase and blocked
-on the semantic evidence listed above.
+- Rytm pad targets and A4 track targets round-trip as authoritative state.
+- Candidates and prepared Rytm packets contain only target-minus-lock scope.
+- A verified Rytm capture becomes the semantic mutation anchor.
+- Captured A4 mutation is visibly blocked with zero events and explicit missing
+  evidence.
+- OXI ownership remains unchanged.
+- Automated gates pass without hardware I/O or parity-fixture changes.
+- Per-dimension review findings are resolved or documented.
+- One PR is opened against `modularize-v1.34`, required review is requested,
+  and CI is observed; the PR is not merged.
+- Physical capture/send rehearsal and A4 mapping promotion are reported as
+  studio blockers, never claimed complete.

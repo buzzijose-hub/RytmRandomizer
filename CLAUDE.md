@@ -12,9 +12,9 @@
 2. **[`AGENTS.md`](AGENTS.md)** — folder map, test commands, anti-patterns, cross-reference index.
 3. **[`agent-memory/INDEX.md`](agent-memory/INDEX.md)** — shared agent memory (workflow feedback, project facts, reference). Same shape as Claude Code's local memory (`~/.claude/projects/<id>/memory/`); the in-repo store is the canonical version so every agent on every machine reads the same observations. Individual memories are read on demand when their `description` matches the current task.
 4. **[`CONTRIBUTING.md`](CONTRIBUTING.md)** — full developer handbook (read on demand; AGENTS.md links into the right sections).
-5. **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** + **[`docs/ARCHITECTURE_DIAGRAMS.md`](docs/ARCHITECTURE_DIAGRAMS.md)** — architecture standard + 26 mermaid diagrams.
-6. **[`.claude/rules/`](.claude/rules/)** — 12 mandatory rules (architecture, cascade-merge-pattern, coverage-gate-100pct, parity-fixture-discipline, skill-routing, device-protocol-strategy, hardware-pinned-packages, live-but-passive-midi, pr-body-conformance-checklist, maximize-parallelization, autonomous-agent-execution, codex-contribution-guide).
-7. **[`.claude/skills/`](.claude/skills/)** — 19 task-specific skills, invokable via `/<skill-name>`.
+5. **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** + **[`docs/ARCHITECTURE_DIAGRAMS.md`](docs/ARCHITECTURE_DIAGRAMS.md)** — architecture standard + current Mermaid maps.
+6. **[`.claude/rules/`](.claude/rules/)** — mandatory rules (architecture, autonomous execution, cascade bundling, codex contribution, coverage, Device/strategy, hardware pins, live-but-passive MIDI, parallelization, parity, PR-body conformance, README freshness, skill routing, and targeted-mutation safety).
+7. **[`.claude/skills/`](.claude/skills/)** — repo-specific and learned task skills, invokable via `/<skill-name>`.
 
 ## Operational guardrails — apply on every task
 

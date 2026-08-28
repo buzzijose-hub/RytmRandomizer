@@ -18,45 +18,69 @@ from threading import Lock
 from typing import Final, Literal, Protocol, TypedDict
 
 from ...data import RYTM_MACHINE_PROFILES
-from ...devices import get_device
-from ...devices.strategies.analog_four_saved_kit_codec import (
-    decode_analog_four_saved_kit_payload,
-    encode_analog_four_saved_kit_payload,
-)
-from ...devices.strategies.analog_four_snapshot_decoder import (
+from ...devices import (
     AnalogFourKitSnapshot,
-    analog_four_snapshot_payload_fingerprint,
-)
-from ...devices.strategies.analog_rytm_saved_kit_codec import (
-    decode_analog_rytm_saved_kit_frame,
-    encode_analog_rytm_saved_kit_frame,
-)
-from ...devices.strategies.analog_rytm_snapshot_decoder import (
+    RegisteredSavedKitCaptureCapability,
     RytmKitSnapshot,
+    analog_four_snapshot_payload_fingerprint,
+    resolve_saved_kit_capture_capability,
     rytm_snapshot_payload_fingerprint,
 )
-from ...observability.errors import StateError
+from ...observability.errors import RytmRandomizerError, StateError
 from ...observability.logging import get_logger
+from ...observability.metrics import get_metrics
 from ...observability.tracing import operation
+from ..data.stage import StageDeviceId
+from ..stage.policy import (
+    A4_LANE_POLICY,
+    ANALOG_FOUR_DEVICE_ID,
+    ANALOG_RYTM_DEVICE_ID,
+)
 
-ANALOG_RYTM_DEVICE_ID: Final[Literal["analog_rytm_mk2"]] = "analog_rytm_mk2"
-ANALOG_FOUR_DEVICE_ID: Final[Literal["analog_four_mk2"]] = "analog_four_mk2"
 CAPTURE_TIMEOUT_SECONDS: Final[float] = 120.0
 
-KitCaptureDeviceId = Literal["analog_rytm_mk2", "analog_four_mk2"]
+KitCaptureDeviceId = StageDeviceId
 KitParameterReadiness = Literal[
     "rytm_anchor_ready",
     "exact_kit_anchor_offsets_candidate",
 ]
 KitCaptureLayoutStatus = Literal["mutation_ready", "captured_mapping_pending"]
+KitCaptureRefusalReason = Literal[
+    "capture_busy",
+    "capture_not_armed",
+    "frame_count_invalid",
+    "frame_validation_failed",
+    "input_port_required",
+    "receive_failed",
+    "timeout_invalid",
+    "unsupported_device",
+]
 KitCaptureSnapshot = RytmKitSnapshot | AnalogFourKitSnapshot
 CAPTURE_DEVICE_IDS: Final[tuple[KitCaptureDeviceId, ...]] = (
     ANALOG_RYTM_DEVICE_ID,
     ANALOG_FOUR_DEVICE_ID,
 )
-_ANALOG_FOUR_TRACK_LABELS: Final[tuple[str, ...]] = ("T1", "T2", "T3", "T4")
-
 _logger = get_logger(__name__)
+_CAPTURE_REFUSED_ERROR_KIND: Final[str] = "cockpit_capture_refused"
+
+
+def _record_capture_refusal(
+    reason: KitCaptureRefusalReason,
+    *,
+    device_id: str,
+    exception_type: str | None = None,
+) -> None:
+    """Emit one bounded refusal signal without exposing a MIDI port name."""
+
+    context: dict[str, object] = {
+        "device_id": device_id if device_id in CAPTURE_DEVICE_IDS else "unsupported",
+        "exception_type": exception_type,
+        "input_only": True,
+        "reason": reason,
+        "sent_midi": False,
+    }
+    _logger.warning("cockpit_capture_refused", extra=context)
+    get_metrics().record_error(_CAPTURE_REFUSED_ERROR_KIND)
 
 
 class SysexCaptureProvider(Protocol):
@@ -168,80 +192,6 @@ class KitCaptureResult:
         }
 
 
-@dataclass(frozen=True)
-class _CaptureDeviceSpec:
-    device_id: KitCaptureDeviceId
-    codec: _CaptureFrameCodec
-
-
-@dataclass(frozen=True)
-class _DecodedCaptureFrame:
-    payload: bytes
-    slot: int
-    header: bytes
-    unpacked: bytes
-
-
-class _CaptureFrameCodec(Protocol):
-    def decode_frame(self, frame: bytes) -> object:
-        """Decode and validate one complete family-specific frame."""
-
-        ...
-
-    def encode_frame(self, decoded: object) -> bytes:
-        """Re-encode the decoded frame for an exact stability check."""
-
-        ...
-
-
-class _AnalogRytmCaptureFrameCodec:
-    def decode_frame(self, frame: bytes) -> object:
-        decoded = decode_analog_rytm_saved_kit_frame(frame)
-        return _DecodedCaptureFrame(
-            payload=frame[1:-1],
-            slot=decoded.header[-1],
-            header=decoded.header,
-            unpacked=decoded.unpacked,
-        )
-
-    def encode_frame(self, decoded: object) -> bytes:
-        if not isinstance(decoded, _DecodedCaptureFrame):
-            raise TypeError("Rytm capture codec received an unsupported decoded frame")
-        return encode_analog_rytm_saved_kit_frame(decoded.header, decoded.unpacked)
-
-
-class _AnalogFourCaptureFrameCodec:
-    def decode_frame(self, frame: bytes) -> object:
-        if len(frame) < 2 or frame[0] != 0xF0 or frame[-1] != 0xF7:
-            raise ValueError("Analog Four saved-kit SysEx framing is invalid")
-        decoded = decode_analog_four_saved_kit_payload(frame[1:-1], require_trailer=True)
-        return _DecodedCaptureFrame(
-            payload=frame[1:-1],
-            slot=0,
-            header=decoded.prefix,
-            unpacked=decoded.unpacked,
-        )
-
-    def encode_frame(self, decoded: object) -> bytes:
-        if not isinstance(decoded, _DecodedCaptureFrame):
-            raise TypeError("A4 capture codec received an unsupported decoded frame")
-        encoded = encode_analog_four_saved_kit_payload(decoded.header, decoded.unpacked)
-        return bytes((0xF0,)) + encoded.payload + bytes((0xF7,))
-
-
-_CAPTURE_DEVICE_SPECS: Final[tuple[_CaptureDeviceSpec, ...]] = (
-    _CaptureDeviceSpec(ANALOG_RYTM_DEVICE_ID, _AnalogRytmCaptureFrameCodec()),
-    _CaptureDeviceSpec(ANALOG_FOUR_DEVICE_ID, _AnalogFourCaptureFrameCodec()),
-)
-
-
-def _capture_device_spec(device_id: str) -> _CaptureDeviceSpec:
-    for spec in _CAPTURE_DEVICE_SPECS:
-        if spec.device_id == device_id:
-            return spec
-    raise ValueError(f"unsupported capture device: {device_id}")
-
-
 def narrow_kit_capture_device_id(value: object) -> KitCaptureDeviceId:
     """Validate and narrow an untrusted wire value to a supported device id."""
 
@@ -251,20 +201,22 @@ def narrow_kit_capture_device_id(value: object) -> KitCaptureDeviceId:
 
 
 def _decode_capture_result(
-    spec: _CaptureDeviceSpec,
+    device_id: KitCaptureDeviceId,
+    registered: RegisteredSavedKitCaptureCapability,
     frame: bytes,
 ) -> KitCaptureResult:
-    decoded_frame = spec.codec.decode_frame(frame)
-    if spec.codec.encode_frame(decoded_frame) != frame:
+    decoded_frame = registered.capability.decode_saved_kit_capture(frame)
+    if registered.capability.encode_saved_kit_capture(decoded_frame) != frame:
         raise ValueError("captured KIT frame is not decode/encode stable")
-    if not isinstance(decoded_frame, _DecodedCaptureFrame):
-        raise TypeError("capture codec returned an unsupported decoded frame")
 
-    device = get_device(spec.device_id)
-    snapshot = device.snapshot_decoder.decode(decoded_frame.payload, slot=decoded_frame.slot)
+    device = registered.device
+    snapshot = device.snapshot_decoder.decode(
+        decoded_frame.payload,
+        slot=decoded_frame.snapshot_slot,
+    )
     captured_at = datetime.now(timezone.utc)
 
-    if isinstance(snapshot, RytmKitSnapshot):
+    if device_id == ANALOG_RYTM_DEVICE_ID and isinstance(snapshot, RytmKitSnapshot):
         profiles_by_value = {profile.machine_value: profile for profile in RYTM_MACHINE_PROFILES}
         layout_items = tuple(
             KitCaptureLayoutItem(
@@ -291,15 +243,15 @@ def _decode_capture_result(
             snapshot=snapshot,
             layout_items=layout_items,
         )
-    if isinstance(snapshot, AnalogFourKitSnapshot):
+    if device_id == ANALOG_FOUR_DEVICE_ID and isinstance(snapshot, AnalogFourKitSnapshot):
         layout_items = tuple(
             KitCaptureLayoutItem(
                 index=index,
-                label=track_code,
+                label=f"T{index}",
                 status="captured_mapping_pending",
                 detail="Exact saved-kit bytes captured; semantic parameter offsets pending mapping",
             )
-            for index, track_code in enumerate(_ANALOG_FOUR_TRACK_LABELS, start=1)
+            for index in sorted(A4_LANE_POLICY.available_ids)
         )
         return KitCaptureResult(
             device_id=ANALOG_FOUR_DEVICE_ID,
@@ -361,29 +313,65 @@ class KitCaptureService:
     ) -> KitCaptureResult:
         """Receive exactly one complete current-kit frame and decode its anchor."""
 
-        spec = _capture_device_spec(device_id)
+        try:
+            registered = resolve_saved_kit_capture_capability(device_id)
+            narrowed_device_id = narrow_kit_capture_device_id(device_id)
+        except (TypeError, ValueError) as exc:
+            _record_capture_refusal(
+                "unsupported_device",
+                device_id=device_id,
+                exception_type=type(exc).__name__,
+            )
+            raise
         if not port_name:
+            _record_capture_refusal("input_port_required", device_id=narrowed_device_id)
             raise ValueError("capture input port is required")
         if self._provider is None:
+            _record_capture_refusal("capture_not_armed", device_id=narrowed_device_id)
             raise StateError("current-kit capture is not armed")
         if timeout_seconds <= 0:
+            _record_capture_refusal("timeout_invalid", device_id=narrowed_device_id)
             raise ValueError("capture timeout must be positive")
         if not self._capture_lock.acquire(blocking=False):
+            _record_capture_refusal("capture_busy", device_id=narrowed_device_id)
             raise StateError("another current-kit capture is already active")
 
         try:
             with operation(
                 "cockpit_capture_current_kit",
-                device_id=spec.device_id,
-                port_name=port_name,
+                device_id=narrowed_device_id,
             ):
-                frames = self._provider.capture_sysex_messages(
-                    port_name,
-                    timeout_seconds=timeout_seconds,
-                )
+                try:
+                    frames = self._provider.capture_sysex_messages(
+                        port_name,
+                        timeout_seconds=timeout_seconds,
+                    )
+                except (OSError, RuntimeError, TypeError, ValueError) as exc:
+                    _record_capture_refusal(
+                        "receive_failed",
+                        device_id=narrowed_device_id,
+                        exception_type=type(exc).__name__,
+                    )
+                    raise
                 if len(frames) != 1:
+                    _record_capture_refusal(
+                        "frame_count_invalid",
+                        device_id=narrowed_device_id,
+                    )
                     raise ValueError("current-kit capture requires exactly one KIT SysEx frame")
-                result = _decode_capture_result(spec, frames[0])
+                try:
+                    result = _decode_capture_result(
+                        narrowed_device_id,
+                        registered,
+                        frames[0],
+                    )
+                except (RytmRandomizerError, TypeError, ValueError) as exc:
+                    _record_capture_refusal(
+                        "frame_validation_failed",
+                        device_id=narrowed_device_id,
+                        exception_type=type(exc).__name__,
+                    )
+                    raise
         finally:
             self._capture_lock.release()
 

@@ -25,6 +25,7 @@ from typing import Final, cast
 
 from ...data.profiles import PROFILES
 from ...guardrails.validation import PAD_PROFILE_KEY
+from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
 from ...snapshot.mutation_scope import DEFAULT_MUTATION_SCOPE, MutationScope
 from .analog_rytm_snapshot_decoder import RytmKitSnapshot
@@ -32,6 +33,8 @@ from .analog_rytm_snapshot_routing import (
     RytmSnapshotMachineRoutingResult,
     route_rytm_snapshot_machine_values,
 )
+
+_logger = get_logger(__name__)
 
 # ---------------------------------------------------------------------------
 # Plan dataclasses
@@ -164,6 +167,16 @@ class AnalogRytmMutationPlanner:
                 for pad, machine_value in pad_machine_values.items()
                 if pad in effective_pad_ids
             }
+            if not scoped_machine_values:
+                self._record_empty_scope_refusal(scope)
+                return RytmMutationPlan(
+                    snapshot=validated_snapshot,
+                    depth=depth,
+                    events=(),
+                    ready=False,
+                    readiness_reason="no sendable Rytm pads after targets and locks",
+                    scope=scope,
+                )
         routing = route_rytm_snapshot_machine_values(scoped_machine_values)
         if not routing.ready:
             self._record_blocked_snapshot_routes(routing)
@@ -292,6 +305,9 @@ class AnalogRytmMutationPlanner:
                 )
 
         if not events:
+            scoped_refusal = bool(scope.target_ids or scope.locked_ids)
+            if scoped_refusal:
+                self._record_empty_scope_refusal(scope)
             return RytmMutationPlan(
                 snapshot=snapshot,
                 depth=depth,
@@ -299,7 +315,7 @@ class AnalogRytmMutationPlanner:
                 ready=False,
                 readiness_reason=(
                     "no sendable Rytm pads after targets and locks"
-                    if scope.target_ids or scope.locked_ids
+                    if scoped_refusal
                     else "no events produced -- PAD_PROFILE_KEY is empty"
                 ),
                 scope=scope,
@@ -313,6 +329,18 @@ class AnalogRytmMutationPlanner:
             readiness_reason="",
             scope=scope,
         )
+
+    @staticmethod
+    def _record_empty_scope_refusal(scope: MutationScope) -> None:
+        _logger.warning(
+            "rytm_mutation_plan_blocked",
+            extra={
+                "locked_pad_ids": sorted(scope.locked_ids),
+                "reason": "no_sendable_pads",
+                "target_pad_ids": sorted(scope.target_ids),
+            },
+        )
+        get_metrics().record_error("rytm_mutation_plan_no_sendable_pads")
 
     @staticmethod
     def _effective_pad_ids(scope: MutationScope) -> frozenset[int]:

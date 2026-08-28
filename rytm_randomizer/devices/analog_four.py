@@ -11,12 +11,17 @@ from ..snapshot.envelope import ELEKTRON_MFR_ID
 from ..snapshot.mutation_scope import DEFAULT_MUTATION_SCOPE, MutationScope
 from . import registry
 from .base import Device
+from .saved_kit_capture import SavedKitCaptureFrame
 from .strategies import (
     AnalogFourKitSnapshot,
     AnalogFourMessageRenderer,
     AnalogFourMutationPlan,
     AnalogFourMutationPlanner,
     AnalogFourSnapshotDecoder,
+)
+from .strategies.analog_four_saved_kit_codec import (
+    decode_analog_four_saved_kit_payload,
+    encode_analog_four_saved_kit_payload,
 )
 from .strategies.analog_four_saved_kit_writer import (
     AnalogFourSavedKitMutation,
@@ -141,6 +146,27 @@ class AnalogFourDevice:
         """Render a complete A4 saved-kit frame through the registered device."""
 
         return render_analog_four_saved_kit(raw, mutations)
+
+    def decode_saved_kit_capture(self, frame: bytes) -> SavedKitCaptureFrame:
+        """Decode a complete capture frame through the canonical A4 codec."""
+
+        if len(frame) < 2 or frame[0] != 0xF0 or frame[-1] != 0xF7:
+            raise ValueError("Analog Four saved-kit SysEx framing is invalid")
+        decoded = decode_analog_four_saved_kit_payload(frame[1:-1], require_trailer=True)
+        return SavedKitCaptureFrame(
+            payload=frame[1:-1],
+            snapshot_slot=0,
+            header=decoded.prefix,
+            unpacked=decoded.unpacked,
+        )
+
+    def encode_saved_kit_capture(self, decoded: object) -> bytes:
+        """Re-encode a captured A4 frame for exact stability validation."""
+
+        if not isinstance(decoded, SavedKitCaptureFrame):
+            raise TypeError("A4 capture capability received an unsupported frame")
+        encoded = encode_analog_four_saved_kit_payload(decoded.header, decoded.unpacked)
+        return bytes((0xF0,)) + encoded.payload + bytes((0xF7,))
 
 
 registry.register_device(AnalogFourDevice())

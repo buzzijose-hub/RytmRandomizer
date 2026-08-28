@@ -77,7 +77,7 @@ if TYPE_CHECKING:
         MidiMetrics,
     )
     from .real_midi_adapter import RealMidiOutputPort, RealMidiOutputProvider
-    from .state.a4_soft_capture import (
+    from .state.a4_soft_capture import (  # noqa: V104 - string-only cast annotations
         A4CaptureCcMapping,
         A4NrpnControlSpec,
         A4SoftCaptureSnapshot,
@@ -3593,6 +3593,10 @@ def _run_cockpit_kit_capture_sidecar() -> int:
     from .mido_provider import build_mido_midi_port_provider
 
     capture_service = KitCaptureService(build_mido_midi_port_provider())
+    _observability_get_logger(__name__).info(
+        "cockpit_kit_capture_sidecar_start",
+        extra={"capture_enabled": True, "input_only": True, "output_armed": False},
+    )
     run_cockpit_sidecar(capture_service)
     return 0
 

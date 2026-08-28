@@ -48,8 +48,6 @@ class MutationScope:
     def effective_ids(
         self,
         available_ids: Iterable[int],
-        *,
-        item_label: str,
     ) -> frozenset[int]:
         """Resolve ``(targets or available) - locks`` over current items."""
 
@@ -72,7 +70,7 @@ class MutationScope:
             raise ValueError(f"target {item_label} ids are unavailable: {unknown_targets}")
         if unknown_locks:
             raise ValueError(f"locked {item_label} ids are unavailable: {unknown_locks}")
-        return self.effective_ids(available, item_label=item_label)
+        return self.effective_ids(available)
 
 
 DEFAULT_MUTATION_SCOPE: Final[MutationScope] = MutationScope()

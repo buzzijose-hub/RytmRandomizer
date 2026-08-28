@@ -1,6 +1,6 @@
 ---
 name: project-cockpit-live-patch-genome
-description: "Current Cockpit GUI truth: passive A4 Patch Genome, live profiles, input-only dual-device KIT capture, safety, QA, and the next extension seam."
+description: "Current Cockpit GUI truth: live profiles, input-only dual-device KIT capture, scoped Rytm mutation, blocked A4 saved-KIT mutation, authority limits, and studio continuation."
 metadata:
   node_type: memory
   type: project
@@ -65,10 +65,14 @@ description + A4 track
     -> Patch Genome workspace
 ```
 
-The bootstrap event set now includes whole-state profile-catalog and Patch
-Genome packets plus `kit_captures_changed`. Keep the Python TypedDicts,
-TypeScript discriminated unions, Zustand setters, event guards, and tests
-synchronized when this shape changes.
+The authoritative bootstrap now has eleven ordered whole-state events:
+`session_status`, `snapshot_changed`, `profile_changed`,
+`profile_catalog_changed`, `history_updated`, `patch_genome_changed`,
+`kit_captures_changed`, `mutation_targets_changed`, `mutation_locks_changed`,
+`dual_machine_stage_changed`, and `performance_console_changed`. A wired
+connection manager may append `connection_changed` as event 12. Keep the
+Python TypedDicts, TypeScript discriminated unions, Zustand setters, event
+guards, and tests synchronized when this shape changes.
 
 ## Non-negotiable safety boundary
 
@@ -88,9 +92,11 @@ synchronized when this shape changes.
 - A wrong-family, malformed, timed-out, or multi-frame capture must leave the
   previous anchor unchanged. Raw decoded bytes stay in memory and are omitted
   from the WebSocket DTO.
-- Rytm promoted rows can become the mutation source in the next bridge. A4
-  semantic parameters must remain mapping-pending until saved-kit offsets are
-  evidence-promoted; exact capture alone is not offset proof.
+- Rytm promoted rows are now the in-memory mutation source, with pad targets,
+  locks, preview, PREPARE, and exact-plan-id guarded SEND. A4 capture, track
+  targets, locks, and stage state exist, but semantic planning stays zero-event
+  and unsendable until saved-kit offsets are evidence-promoted; exact capture
+  alone is not offset proof.
 - V1.34 engines/runners and their 505 golden files (685 pytest items) were not
   changed or regenerated.
 
@@ -154,26 +160,29 @@ synchronized when this shape changes.
   persistence, JSON import/export, operator packages, and clear/restore
   controls. Reuse or migrate that schema; do not invent parallel rehearsal
   persistence for Patch Genome.
-- The current Tauri installer embeds the React build but still expects
-  `python -m rytm_randomizer.cockpit` to be reachable on `PATH`, normally via a
-  second Briefcase/editable Python installation. Therefore it is a desktop
-  bundle, but not yet the small self-contained one-box appliance envisioned
-  beside the hardware.
+- Release installers built through CI embed a self-contained `rytm-sidecar`
+  binary. Its deterministic entry is equivalent to
+  `python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar`; a local
+  Tauri build without that binary uses the same command through PATH as a
+  development fallback. The ordinary `python -m rytm_randomizer.cockpit`
+  entry remains passive-only and cannot capture hardware.
 
-## Best continuation seam
+## Current continuation seam
 
-The next useful move is the **capture-to-mutation bridge**, starting with Rytm.
+The Rytm capture-to-mutation bridge and self-contained installer composition
+are delivered. Continue only with evidence that cannot be produced safely in
+software:
 
-1. Project the retained `RytmKitSnapshot` through the existing snapshot-shell
-   anchor rows into the Cockpit preview model without inventing offsets.
-2. Rebase preview/history on the captured fingerprint and display mutations as
-   deltas from the captured values, with micro/groove/strong guardrails.
-3. Keep this first bridge preview/mock-only: no output should open merely
-   because a capture exists. Add an explicit later confirmation boundary for
-   outbound rehearsal.
-4. For A4, use captured pairs to promote saved-kit offsets with evidence. Only
-   after promotion should the four-track view expose semantic mutation; until
-   then, preserve the exact anchor and keep controls mapping-pending.
-5. After the bridge is proven, return to the self-contained Windows Studio
-   Rehearsal bundle: freeze the Python sidecar beside Tauri, retain Python-on-
-   PATH as a dev fallback, and soak restart/recovery with no implicit port open.
+1. Rehearse physical Rytm capture, one-pad target-minus-lock SEND, untouched-pad
+   verification, disarm, and manual reload of the original hardware KIT.
+   Cockpit has no persistent restore operation; SAVE is refused.
+2. Capture the deterministic A4 matrix: Filter 1 Frequency on Track 1 at
+   0/63/127; the same control at 63 on Tracks 1-4 for stride; Amp Attack on
+   Track 1 at 0/63/127.
+3. Promote an A4 semantic field only after offset, encoding, stride,
+   round-trip/byte-diff isolation, and physical return-capture evidence are all
+   satisfied. Until then, A4 remains capture/target/lock/stage capable but
+   zero-event and unsendable.
+4. Treat Rytm connection-manager state and A4 capture/session state separately;
+   the current implementation does not claim continuous independent A4
+   hot-plug telemetry.

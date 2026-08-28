@@ -15,13 +15,19 @@
 
 No module was renamed or deleted. New modules are
 `snapshot/mutation_scope.py`, `cockpit/mutation_targets.py`,
-`cockpit/data/stage.py`, and the existing capture subpackage's `bridge.py`.
-No top-level package, device family package, sender, or SysEx envelope
-implementation was added.
+`cockpit/data/stage.py` (immutable wire DTOs),
+`cockpit/stage/{__init__,coordinator,policy}.py` (orchestration and
+registry-derived lane policy), `cockpit/capture/{__init__,service,bridge}.py`,
+and `devices/saved_kit_capture.py`. The last module is an optional registry-backed
+capture capability, not a new mandatory `Device` member; it removes concrete
+family-codec imports from the Cockpit capture service. No top-level package,
+device-family package, sender, or SysEx-envelope implementation was added.
 
 The composition deliberately does not restore the deleted
 `RealMidiDeviceAdapter`. `MockDeviceAdapter` remains the Cockpit state/history
 model, while all real output authority stays exclusively in the existing
 `senders.armed_apply.ArmedApplySession`. The packaged shell's added authority
 is input-only current-KIT capture; ordinary passive entry points stay passive,
-and A4 mutation output remains structurally blocked.
+and A4 mutation output remains structurally blocked. The exact
+`send_plan_id` defect found during review is fixed in implementation and tests:
+armed SEND now rejects a missing, malformed, or stale id before opening output.

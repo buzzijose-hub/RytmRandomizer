@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from ...data import RYTM_MACHINE_PROFILES, RYTM_MACHINE_PROFILES_BY_KEY
-from ...devices.strategies.analog_rytm_snapshot_decoder import RytmKitSnapshot
+from ...devices import RytmKitSnapshot
 from ...engines.analog_rytm_snapshot_shell import build_snapshot_shell_anchor
 from ...observability.logging import get_logger
 from ..data import PadState, Snapshot, new_ulid
 from ..data.rytm_parameter_map import cockpit_parameter_control, cockpit_parameter_key
-from .service import ANALOG_RYTM_DEVICE_ID, KitCaptureResult
+from ..stage.policy import ANALOG_RYTM_DEVICE_ID, RYTM_LANE_POLICY
+from .service import KitCaptureResult
 
 _logger = get_logger(__name__)
 
@@ -46,7 +47,7 @@ def cockpit_snapshot_from_rytm_capture(result: KitCaptureResult) -> Snapshot:
     pads: list[PadState] = []
     promoted_parameter_count = 0
     omitted_parameter_count = 0
-    for pad_id in range(1, 13):
+    for pad_id in sorted(RYTM_LANE_POLICY.available_ids):
         events = anchor.events_by_pad.get(pad_id, ())
         profile = None
         if events:

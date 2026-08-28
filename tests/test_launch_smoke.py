@@ -1,7 +1,7 @@
 """Launch smoke test — the double-click contract, without the binary.
 
 Boots the EXACT process the Tauri shell spawns in dev-fallback mode
-(``python -m rytm_randomizer.cockpit``) as a real subprocess with the
+(``python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar``) as a real subprocess with the
 same environment contract the shell uses (``RYTM_RAND_WS_PORT`` +
 ``RYTM_RAND_WS_TOKEN_FILE``), then walks the full launch health path:
 
@@ -210,7 +210,13 @@ def test_launch_smoke_end_to_end(tmp_path: Path) -> None:
         env["RYTM_RAND_WS_PORT"] = str(port)
         with log_path.open("wb") as log_handle:
             proc = subprocess.Popen(
-                [sys.executable, "-m", "rytm_randomizer.cockpit"],
+                [
+                    sys.executable,
+                    "-m",
+                    "rytm_randomizer.app",
+                    "--arm",
+                    "--cockpit-kit-capture-sidecar",
+                ],
                 cwd=PROJECT_ROOT,
                 env=env,
                 stdin=subprocess.PIPE,
@@ -246,12 +252,19 @@ def test_launch_smoke_end_to_end(tmp_path: Path) -> None:
             ack = json.loads(ws.recv(timeout=30))
             assert ack == {"ok": True}, f"handshake ack mismatch: {ack!r}"
 
-            received_types = [
-                json.loads(ws.recv(timeout=30)).get("type") for _ in EXPECTED_BOOTSTRAP_EVENT_TYPES
+            bootstrap_events = [
+                json.loads(ws.recv(timeout=30)) for _ in EXPECTED_BOOTSTRAP_EVENT_TYPES
             ]
+            received_types = [event.get("type") for event in bootstrap_events]
             assert received_types == list(EXPECTED_BOOTSTRAP_EVENT_TYPES), (
                 "bootstrap event order drifted: " f"{received_types!r}"
             )
+            # The packaged app composition injects input-only KIT capture
+            # authority while output remains unarmed. ``MIDI_BACKEND=off``
+            # keeps this smoke hermetic; no provider method is invoked.
+            session_status = bootstrap_events[0]
+            assert session_status.get("capture_enabled") is True, session_status
+            assert session_status.get("armed") is False, session_status
             # The wired launch path (__main__ installs a
             # ConnectionManager) appends a connection_changed frame so
             # the header renders plug/unplug truth immediately.

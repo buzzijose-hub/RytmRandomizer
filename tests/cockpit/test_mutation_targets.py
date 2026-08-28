@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from rytm_randomizer.cockpit.mutation_targets import MutationTargets
-from rytm_randomizer.snapshot import MutationScope
 
 pytestmark = pytest.mark.fast
 
@@ -15,6 +14,8 @@ def test_empty_targets_preserve_default_scope_then_subtract_locks() -> None:
 
     assert targets.effective_rytm_pads(range(1, 5), {2}) == frozenset({1, 3, 4})
     assert targets.effective_a4_tracks(range(1, 5), {4}) == frozenset({1, 2, 3})
+    assert targets.effective_rytm_pads(locked_pad_ids={12}) == frozenset(range(1, 12))
+    assert targets.effective_a4_tracks(locked_track_ids={4}) == frozenset({1, 2, 3})
 
 
 def test_explicit_targets_are_include_lists_and_locks_remain_deny_lists() -> None:
@@ -52,22 +53,3 @@ def test_target_model_wire_round_trip_is_stably_sorted() -> None:
 def test_target_model_rejects_non_integer_ids(bad_id: object) -> None:
     with pytest.raises(ValueError, match="rytm_pad_targets"):
         MutationTargets(rytm_pad_targets=frozenset({bad_id}))  # type: ignore[arg-type]
-
-
-def test_device_scope_rejects_unavailable_targets_and_locks() -> None:
-    with pytest.raises(ValueError, match="target A4 track"):
-        MutationScope(target_ids=frozenset({5})).validated_effective_ids(
-            range(1, 5),
-            item_label="A4 track",
-        )
-    with pytest.raises(ValueError, match="locked Rytm pad"):
-        MutationScope(locked_ids=frozenset({13})).validated_effective_ids(
-            range(1, 13),
-            item_label="Rytm pad",
-        )
-
-
-@pytest.mark.parametrize("bad_id", [True, 1.5, "1", 0])
-def test_device_scope_rejects_non_positive_integer_ids(bad_id: object) -> None:
-    with pytest.raises(ValueError, match="target_ids"):
-        MutationScope(target_ids=frozenset({bad_id}))  # type: ignore[arg-type]

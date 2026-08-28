@@ -20,7 +20,6 @@ from .send_plan import (
 )
 from .snapshot import PadState, Snapshot
 from .stage import (
-    DualMachineStageCoordinator,
     DualMachineStageState,
     DualMachineStageStateDict,
     MachineStageState,
@@ -59,7 +58,6 @@ __all__ = [
     "READINESS_REASON_VALUES",
     "Kind",
     "CockpitSendPlan",
-    "DualMachineStageCoordinator",
     "DualMachineStageState",
     "DualMachineStageStateDict",
     "MutationCandidate",

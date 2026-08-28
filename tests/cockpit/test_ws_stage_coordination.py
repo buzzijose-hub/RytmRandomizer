@@ -210,3 +210,31 @@ def test_capture_failure_blocks_only_requested_machine_and_is_wire_safe(tmp_path
     assert session.stage_coordinator.state.analog_four.capture_state == "failed"
     assert session.stage_coordinator.state.analog_four.authority_state == "blocked"
     assert session.stage_coordinator.state.analog_four.last_error == "current-kit capture failed"
+
+
+@pytest.mark.parametrize("preview_on", [False, True])
+def test_rytm_capture_failure_updates_preview_only_when_active(
+    tmp_path: Path,
+    preview_on: bool,
+) -> None:
+    session = _session(tmp_path)
+    session.kit_capture_service = _FailedCaptureService()  # type: ignore[assignment]
+    session.preview_on = preview_on
+
+    ack, events = _dispatch(
+        session,
+        {
+            "type": "capture_current_kit",
+            "device_id": "analog_rytm_mk2",
+            "input_port": "Rytm input",
+        },
+    )
+
+    assert ack["ok"] is False
+    assert ack["message"] == "current-kit capture failed"
+    expected_events = ["mutation_previewed"] if preview_on else []
+    expected_events.append("dual_machine_stage_changed")
+    assert [event["type"] for event in events] == expected_events
+    if preview_on:
+        assert events[0]["candidate"] is None
+    assert session.current_candidate is None

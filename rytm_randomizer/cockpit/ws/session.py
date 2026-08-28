@@ -45,12 +45,13 @@ from ...observability.logging import get_logger
 from ...senders.armed_apply import ArmedApplySession
 from ...senders.hardware import OutputOpeningProvider
 from ..capture import KitCaptureDeviceId, KitCaptureResult, KitCaptureService
-from ..data import CockpitSendPlan, DualMachineStageCoordinator, MutationCandidate, ProfileModel
+from ..data import CockpitSendPlan, MutationCandidate, ProfileModel
 from ..device import DeviceAdapter
 from ..diagnostics import ErrorJournal
 from ..history import HistoryStore
 from ..library import LibraryStore
 from ..profiles import ProfileRegistry
+from ..stage import DualMachineStageCoordinator
 from .wizard_session import WizardSession
 
 _logger = get_logger(__name__)

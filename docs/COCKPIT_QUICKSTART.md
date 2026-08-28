@@ -28,11 +28,13 @@ any of the toolchains below. Install it, double-click the app, and the
 shell does the rest:
 
 1. **Spawns the bundled sidecar.** The bundle embeds a self-contained
-   `rytm-sidecar` binary (a PyInstaller freeze of
-   `python -m rytm_randomizer.cockpit`); no Python install is required
-   on your machine. A dev checkout without the bundled binary
-   automatically falls back to `python -m rytm_randomizer.cockpit` from
-   PATH (sections 1–4 below).
+   `rytm-sidecar` binary whose entry stub calls
+   `rytm_randomizer.app.main(["--arm", "--cockpit-kit-capture-sidecar"])`;
+   no Python install is required on your machine. A dev checkout without the
+   bundled binary automatically falls back to
+   `python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar` from
+   PATH (sections 1–4 below). This grants input-only KIT capture, not output
+   authority.
 2. **Picks a free port.** The shell uses 4317 when it's free and asks
    the OS for a free ephemeral port otherwise, passing the choice to
    both the sidecar (`RYTM_RAND_WS_PORT`) and the webview — a busy port
@@ -143,7 +145,8 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-Verify the sidecar starts:
+Verify the passive-only sidecar starts (this development smoke check does not
+enable KIT capture):
 
 ```bash
 python -m rytm_randomizer.cockpit
@@ -203,11 +206,11 @@ on disk, set `WIZARD_SOURCE_ROOTS` before starting the sidecar:
 
 ```bash
 # POSIX
-WIZARD_SOURCE_ROOTS="$HOME/Music/inspiration:$HOME/Sounds/kits" python -m rytm_randomizer.cockpit
+WIZARD_SOURCE_ROOTS="$HOME/Music/inspiration:$HOME/Sounds/kits" python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar
 
 # Windows PowerShell
 $env:WIZARD_SOURCE_ROOTS="C:\Users\you\Music\inspiration;C:\Users\you\Sounds\kits"
-python -m rytm_randomizer.cockpit
+python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar
 ```
 
 An empty or whitespace value silently falls back to the default root so
@@ -254,8 +257,9 @@ cargo build --release
 ```
 
 The release binary embeds the web frontend (from `desktop/web/dist/`)
-and spawns the sidecar via the `python -m rytm_randomizer.cockpit`
-command on your PATH — unless a bundled `rytm-sidecar` binary is
+and spawns the sidecar via
+`python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar`
+on your PATH — unless a bundled `rytm-sidecar` binary is
 present in `desktop/shell/binaries/` (or the app resources), in which
 case the shell prefers it. See
 [`docs/BUILDING_INSTALLERS.md` § Bundled Python sidecar](BUILDING_INSTALLERS.md#bundled-python-sidecar-pyinstaller)
@@ -271,10 +275,10 @@ left (your current pad state) and a Mutation Panel on the right
 
 The device rail can switch the center view between the default Analog Rytm
 MKII 12-pad snapshot surface and the Analog Four MKII four-track staged
-surface. The Analog Four view is for dry-run visibility only: it shows the
-current A4 track roles, mutation zones, and OXI-style Anchor / Shape /
-Pressure / Space macro rows, but it does not add an A4 SEND path, open MIDI
-ports, or send MIDI.
+surface. The Analog Four lane supports input-only verified KIT capture, track
+targets and locks, and independent coordinated stage state. Its semantic
+mutation plan remains zero-event and unsendable until saved-KIT mappings are
+evidence-promoted; the lane does not add an A4 SEND path or output authority.
 
 The Style Crates queue also includes a passive Analog Four set-plan card. It
 renders the current/up-next A4 `warehouse-arc` macro sequence from
@@ -537,6 +541,12 @@ That authority can list and open the input selected in **Capture Current
 Kit**, but it has no output surface and cannot transmit a request or a kit.
 Rytm and A4 frames must pass the family codec, checksum/length validation,
 and an exact decode/re-encode check before becoming in-memory captures.
+`session_status.capture_enabled` is the authoritative capability flag. The
+ordinary passive sidecar reports `false`; the app composition above reports
+`true`. `list_capture_inputs` returns a device id plus a flat
+`capture_inputs: string[]` only after the operator opens the capture workflow,
+and `kit_captures_changed` publishes the complete
+`captures: KitCaptureResult[]` list in stable device order.
 
 The real-MIDI path is gated behind an explicit arm step. In the cockpit
 UI that means choosing the **exact** MIDI output port from the arm
@@ -552,11 +562,13 @@ session's `confirm()` + `apply()` lifecycle. `MockDeviceAdapter` keeps
 modelling snapshot/history state throughout.
 
 Rytm and A4 are independent lanes in the stage state. A Rytm capture, target,
-lock, candidate, plan, and armed authority cannot grant A4 authority. A4
-captured-kit mutation remains blocked and zero-event until saved-KIT semantic
-offsets, value encodings, track stride, and physical behavior are promoted
-from evidence. Do not treat the existing live CC vocabulary as saved-KIT
-offset evidence.
+lock, candidate, plan, and armed authority cannot grant A4 authority. Rytm
+connection phases come from its armed-output manager; the A4 lane reflects
+capture/session evidence and is not continuous independent hot-plug telemetry.
+A4 captured-kit mutation remains blocked and zero-event until saved-KIT
+semantic offsets, value encodings, track stride, and physical behavior are
+promoted from evidence. Do not treat the existing live CC vocabulary as
+saved-KIT offset evidence.
 
 OXI One remains beside Cockpit as owner of sequencing, notes, triggers, mutes,
 and pattern motion. Cockpit owns mutation/performance intelligence, target
@@ -608,20 +620,30 @@ Keep the original `.syx` captures and record their SHA-256 fingerprints.
    MIDI path only after disarming.
 
 For the A4 mapping gap, do not send a Cockpit plan. Use one scratch kit and
-capture a strict matrix named like
-`A4_T1_FILTER1_FREQ_{000,063,127}_SLOT_<n>.syx`: minimum/mid/maximum for one
-parameter on Track 1, repeat the same value on Tracks 2–4 to prove stride,
-then repeat one second parameter to distinguish field offset from stride.
+capture this exact two-control matrix:
+
+1. Filter 1 Frequency on Track 1 at 0, 63, and 127:
+   `A4_T1_FILTER1_FREQ_{000,063,127}_SLOT_<n>.syx`.
+2. Filter 1 Frequency at 63 on Tracks 1, 2, 3, and 4 to prove track stride:
+   `A4_T{1,2,3,4}_FILTER1_FREQ_063_SLOT_<n>.syx`.
+3. Amp Attack on Track 1 at 0, 63, and 127 to distinguish the second field
+   offset/encoding from the track stride:
+   `A4_T1_AMP_ATTACK_{000,063,127}_SLOT_<n>.syx`.
+
 For every frame, preserve the exact original, verify codec round-trip, record
 only semantic unpacked-byte diffs, infer value encoding, reload and physically
 audition the intended control, and capture the returned kit. Mapping promotion
 requires all five: offset, encoding, track stride, round-trip fixture, and
 physical verification.
 
+The machine-readable blocked-state contract and exact capture matrix live in
+[`2026-08-26-targeted-live-kit-mutation_A4_MAPPING_GAP.json`](2026-08-26-targeted-live-kit-mutation_A4_MAPPING_GAP.json).
+
 Studio evidence to keep together: before/after `.syx` files, SHA-256 values,
 kit slots, exact port names, target/lock/depth settings, plan id, affected pad
 ids, message count, screenshots, Cockpit logs, physical listening notes, and
-the final restored capture.
+the final capture after manually reloading the original hardware KIT. Cockpit
+does not provide persistent restore.
 
 ---
 

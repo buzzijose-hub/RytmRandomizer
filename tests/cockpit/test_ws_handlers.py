@@ -75,6 +75,12 @@ def test_error_ack_rejects_unknown_error_code() -> None:
         handlers._error_ack("unknown_error_code", "not a wire-safe bucket")
 
 
+def test_redacted_exception_repr_preserves_nonsensitive_exception_details() -> None:
+    error = TypeError("bounded diagnostic")
+
+    assert handlers._redacted_exception_repr(error) == repr(error)
+
+
 def test_operator_package_helpers_treat_malformed_rows_as_empty() -> None:
     malformed_package = {
         "operator_steps": "not-a-list",
@@ -670,6 +676,7 @@ def test_set_pad_lock_clears_stale_send_plan(tmp_path: Path) -> None:
     _dispatch(_envelope("set_depth", depth=0.5), session, _Recorder())
     _dispatch(_envelope("prepare_send_plan"), session, _Recorder())
     assert session.current_send_plan is not None
+    session.preview_on = True
 
     recorder = _Recorder()
     ack = _dispatch(_envelope("set_pad_lock", pad_id=1, locked=True), session, recorder)
@@ -679,6 +686,7 @@ def test_set_pad_lock_clears_stale_send_plan(tmp_path: Path) -> None:
     assert [event["type"] for event in recorder.events] == [
         EVENT_SEND_PLAN_CHANGED,
         EVENT_MUTATION_LOCKS_CHANGED,
+        EVENT_MUTATION_PREVIEWED,
         EVENT_DUAL_MACHINE_STAGE_CHANGED,
     ]
     assert recorder.events[0] == {"type": EVENT_SEND_PLAN_CHANGED, "send_plan": None}
@@ -732,6 +740,7 @@ def test_clear_rytm_targets_restores_default_all_pad_candidate_scope(tmp_path: P
     session.active_profile = profile
     session.rytm_pad_targets = {2}
     handlers._recompute_candidate(session)
+    session.preview_on = True
     recorder = _Recorder()
 
     ack = _dispatch(
@@ -746,6 +755,7 @@ def test_clear_rytm_targets_restores_default_all_pad_candidate_scope(tmp_path: P
     assert {delta.pad_id for delta in session.current_candidate.pad_deltas} == {1, 2}
     assert [event["type"] for event in recorder.events] == [
         EVENT_MUTATION_TARGETS_CHANGED,
+        EVENT_MUTATION_PREVIEWED,
         EVENT_DUAL_MACHINE_STAGE_CHANGED,
     ]
 
@@ -859,6 +869,30 @@ def test_a4_targets_and_track_locks_gate_passive_patch_genome_selection(
     assert allowed["ok"] is True
 
 
+def test_a4_track_lock_can_be_removed_without_granting_authority(tmp_path: Path) -> None:
+    session = _make_session(tmp_path)
+    session.a4_track_locks = {2}
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope("set_a4_track_lock", track=2, locked=False),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is True
+    assert session.a4_track_locks == set()
+    assert recorder.events[0] == {
+        "type": EVENT_MUTATION_LOCKS_CHANGED,
+        "rytm_pad_locks": [],
+        "a4_track_locks": [],
+    }
+    assert [event["type"] for event in recorder.events] == [
+        EVENT_MUTATION_LOCKS_CHANGED,
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
+    ]
+
+
 @pytest.mark.parametrize(
     "command",
     [
@@ -950,6 +984,41 @@ def test_send_with_ready_plan_applies_and_emits_six_events(tmp_path: Path) -> No
     assert session.current_candidate is None
     assert session.current_send_plan is None
     assert session.unsaved_sends == 1
+
+
+def test_send_failure_at_guarded_device_boundary_blocks_stage(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    profile = _profile()
+    session = _make_session(tmp_path, profile)
+    session.active_profile = profile
+    _dispatch(_envelope("set_depth", depth=0.5), session, _Recorder())
+    _dispatch(_envelope("prepare_send_plan"), session, _Recorder())
+    candidate = session.current_candidate
+    plan = session.current_send_plan
+    assert candidate is not None
+    assert plan is not None
+
+    def _fail_send(_send_plan: CockpitSendPlan) -> Snapshot:
+        raise OSError("device lost")
+
+    monkeypatch.setattr(session.device, "apply_send_plan", _fail_send)
+    recorder = _Recorder()
+
+    ack = _dispatch(_envelope("send"), session, recorder)
+
+    assert ack["ok"] is False
+    assert ack["message"] == "send failed at the guarded device boundary"
+    assert [event["type"] for event in recorder.events] == [
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
+    ]
+    assert session.stage_coordinator.state.rytm.plan_state == "blocked"
+    assert session.stage_coordinator.state.rytm.authority_state == "blocked"
+    assert session.stage_coordinator.state.rytm.last_error == "send failed"
+    assert session.current_candidate is candidate
+    assert session.current_send_plan is plan
+    assert session.unsaved_sends == 0
 
 
 def test_send_respects_pad_locks(tmp_path: Path) -> None:

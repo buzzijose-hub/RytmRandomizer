@@ -2,7 +2,10 @@
 
 Date: 2026-08-26
 
-Status: in-flight
+Status: superseded by
+`2026-08-26-targeted-live-kit-mutation.md`. The live registry, passive Patch
+Genome, and input-only dual-device KIT capture shipped; the later plan records
+the delivered capture-to-mutation bridge and remaining studio blockers.
 
 ## Why
 

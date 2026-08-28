@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import nullcontext
 from dataclasses import dataclass
 from threading import Event
 
@@ -21,7 +22,15 @@ from rytm_randomizer.cockpit.capture import (
     narrow_kit_capture_device_id,
 )
 from rytm_randomizer.cockpit.capture import service as capture_service
-from rytm_randomizer.devices.strategies import AnalogFourKitSnapshot, RytmKitSnapshot
+from rytm_randomizer.cockpit.stage.policy import A4_LANE_POLICY
+from rytm_randomizer.devices import (
+    AnalogFourKitSnapshot,
+    RegisteredSavedKitCaptureCapability,
+    RytmKitSnapshot,
+    SavedKitCaptureFrame,
+    resolve_saved_kit_capture_capability,
+)
+from rytm_randomizer.observability.metrics import get_metrics
 
 pytestmark = pytest.mark.fast
 
@@ -100,6 +109,57 @@ def test_enabled_capture_service_lists_inputs_only_on_explicit_call() -> None:
     assert service.list_input_names() == ("Elektron Input",)
 
 
+def test_capture_failure_logs_category_without_input_port_name(
+    monkeypatch: pytest.MonkeyPatch,
+    isolated_observability: None,
+) -> None:
+    del isolated_observability
+    secret_port_name = "Jose's exact studio input"
+    operation_contexts: list[dict[str, object]] = []
+    warning_records: list[tuple[str, dict[str, object]]] = []
+
+    class _FailingProvider(_CaptureProvider):
+        def capture_sysex_messages(
+            self,
+            port_name: str,
+            *,
+            timeout_seconds: float,
+        ) -> tuple[bytes, ...]:
+            del timeout_seconds
+            raise OSError(f"cannot read {port_name}")
+
+    def capture_operation(_name: str, **context: object):
+        operation_contexts.append(context)
+        return nullcontext("")
+
+    def record_warning(message: str, *, extra: dict[str, object]) -> None:
+        warning_records.append((message, extra))
+
+    monkeypatch.setattr(capture_service, "operation", capture_operation)
+    monkeypatch.setattr(capture_service._logger, "warning", record_warning)
+    service = KitCaptureService(_FailingProvider(()))
+
+    with pytest.raises(OSError, match="cannot read"):
+        service.capture(ANALOG_RYTM_DEVICE_ID, secret_port_name)
+
+    assert operation_contexts == [{"device_id": ANALOG_RYTM_DEVICE_ID}]
+    assert warning_records == [
+        (
+            "cockpit_capture_refused",
+            {
+                "device_id": ANALOG_RYTM_DEVICE_ID,
+                "exception_type": "OSError",
+                "input_only": True,
+                "reason": "receive_failed",
+                "sent_midi": False,
+            },
+        )
+    ]
+    assert secret_port_name not in repr(operation_contexts)
+    assert secret_port_name not in repr(warning_records)
+    assert get_metrics().errors_by_kind["cockpit_capture_refused"] == 1
+
+
 def test_capture_service_decodes_verified_a4_current_kit_without_overclaiming_offsets() -> None:
     frame = _a4_saved_kit_frame()
     provider = _CaptureProvider((frame,))
@@ -159,17 +219,30 @@ def test_capture_service_rejects_a_checksum_corrupted_frame() -> None:
 
 
 def test_capture_decoder_rejects_a_non_stable_codec_round_trip() -> None:
-    class _UnstableCodec:
-        def decode_frame(self, _frame: bytes) -> object:
-            return object()
+    class _UnstableCapability:
+        def decode_saved_kit_capture(self, frame: bytes) -> SavedKitCaptureFrame:
+            return SavedKitCaptureFrame(
+                payload=frame,
+                snapshot_slot=0,
+                header=b"header",
+                unpacked=b"unpacked",
+            )
 
-        def encode_frame(self, _decoded: object) -> bytes:
+        def encode_saved_kit_capture(self, _decoded: SavedKitCaptureFrame) -> bytes:
             return b"different frame"
 
-    spec = capture_service._CaptureDeviceSpec(ANALOG_RYTM_DEVICE_ID, _UnstableCodec())
+    registered = resolve_saved_kit_capture_capability(ANALOG_RYTM_DEVICE_ID)
+    unstable = RegisteredSavedKitCaptureCapability(
+        device=registered.device,
+        capability=_UnstableCapability(),
+    )
 
     with pytest.raises(ValueError, match="not decode/encode stable"):
-        capture_service._decode_capture_result(spec, b"captured frame")
+        capture_service._decode_capture_result(
+            ANALOG_RYTM_DEVICE_ID,
+            unstable,
+            b"captured frame",
+        )
 
 
 def test_capture_decoder_rejects_an_unexpected_registered_snapshot(
@@ -182,14 +255,25 @@ def test_capture_decoder_rejects_an_unexpected_registered_snapshot(
             del slot
             return object()
 
-    class _UnexpectedDevice:
-        snapshot_decoder = _UnexpectedDecoder()
-
-    monkeypatch.setattr(capture_service, "get_device", lambda _device_id: _UnexpectedDevice())
-    spec = capture_service._capture_device_spec(ANALOG_RYTM_DEVICE_ID)
+    registered = resolve_saved_kit_capture_capability(ANALOG_RYTM_DEVICE_ID)
+    monkeypatch.setattr(registered.device, "snapshot_decoder", _UnexpectedDecoder())
 
     with pytest.raises(TypeError, match="unsupported snapshot type"):
-        capture_service._decode_capture_result(spec, frame)
+        capture_service._decode_capture_result(
+            ANALOG_RYTM_DEVICE_ID,
+            registered,
+            frame,
+        )
+
+
+def test_a4_capture_layout_cardinality_comes_from_registered_lane_policy() -> None:
+    registered = resolve_saved_kit_capture_capability(ANALOG_FOUR_DEVICE_ID)
+    service = KitCaptureService(_CaptureProvider((_a4_saved_kit_frame(),)))
+
+    result = service.capture(ANALOG_FOUR_DEVICE_ID, "Elektron Input")
+
+    assert [item.index for item in result.layout_items] == sorted(A4_LANE_POLICY.available_ids)
+    assert len(result.layout_items) == registered.device.track_count
 
 
 def test_capture_service_serializes_rytm_and_a4_receive_windows() -> None:

@@ -8,6 +8,7 @@ from rytm_randomizer.cockpit.data import rytm_parameter_map as mapmod
 from rytm_randomizer.cockpit.data.rytm_parameter_map import (
     cockpit_pad_channel,
     cockpit_parameter_control,
+    cockpit_parameter_key,
     cockpit_parameter_mapping,
 )
 from rytm_randomizer.data.analog_rytm_midi import (
@@ -72,6 +73,11 @@ def test_cockpit_parameter_mapping_rejects_a_dangling_alias(monkeypatch) -> None
 def test_cockpit_machine_known_uses_the_canonical_catalog() -> None:
     assert mapmod.cockpit_machine_is_known("BD Hard") is True
     assert mapmod.cockpit_machine_is_known("unknown future machine") is False
+
+
+def test_cockpit_parameter_key_projects_and_rejects_machine_specific_rows() -> None:
+    assert cockpit_parameter_key("BD Hard", "SRC", "Tune") == "tun"
+    assert cockpit_parameter_key("BD Hard", "SRC", "unknown future parameter") is None
 
 
 @pytest.mark.parametrize(

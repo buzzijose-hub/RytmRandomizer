@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -30,12 +31,16 @@ def _snapshot(*, offsets_promoted: bool = False):
 
 def test_plan_returns_not_ready_when_offsets_are_candidate_only() -> None:
     from rytm_randomizer.devices.strategies import AnalogFourMutationPlanner
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
+    reset_metrics()
     plan = AnalogFourMutationPlanner(seed=0).plan(_snapshot(offsets_promoted=False), depth=1)
 
     assert plan.ready is False
     assert plan.events == ()
     assert "offsets are candidate" in plan.readiness_reason
+    assert get_metrics().errors_by_kind["a4_mutation_plan_semantic_offsets_unpromoted"] == 1
+    reset_metrics()
 
 
 def test_plan_returns_ready_events_when_offsets_are_promoted() -> None:
@@ -112,7 +117,9 @@ def test_captured_candidate_only_a4_snapshot_stays_fail_closed_with_targets() ->
 
 def test_plan_blocks_when_targets_are_entirely_locked() -> None:
     from rytm_randomizer.devices.strategies import AnalogFourMutationPlanner
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
+    reset_metrics()
     plan = AnalogFourMutationPlanner().plan(
         _snapshot(offsets_promoted=True),
         depth=3,
@@ -125,3 +132,22 @@ def test_plan_blocks_when_targets_are_entirely_locked() -> None:
     assert plan.ready is False
     assert plan.events == ()
     assert plan.readiness_reason == "no sendable A4 tracks after targets and locks"
+    assert get_metrics().errors_by_kind["a4_mutation_plan_no_sendable_tracks"] == 1
+    reset_metrics()
+
+
+def test_plan_rejects_a_missing_promoted_pwm_control(monkeypatch: pytest.MonkeyPatch) -> None:
+    from rytm_randomizer.devices.strategies import analog_four_mutation_planner as planner_mod
+
+    pwm_depth = planner_mod.ANALOG_FOUR_SYNTH_TRACK_CC["OSC1 PWM Depth"]
+    monkeypatch.setattr(
+        planner_mod,
+        "ANALOG_FOUR_SYNTH_TRACK_CC",
+        {"OSC1 PWM Depth": replace(pwm_depth, cc_msb=None)},
+    )
+
+    with pytest.raises(ValueError, match="promoted CC MSB"):
+        planner_mod.AnalogFourMutationPlanner().plan(
+            _snapshot(offsets_promoted=True),
+            depth=1,
+        )

@@ -131,7 +131,8 @@ codebase. Humans can use them too.
 
 **When:** you want to mechanically enforce a new architecture invariant.
 **Diagrams:** [§10 Architecture Test Enforcement Graph](ARCHITECTURE_DIAGRAMS.md#10-architecture-test-enforcement-graph).
-**Learned skill:** [`ast-walked-arch-tests-with-drained-allowlist`](../.claude/skills/learned/ast-walked-arch-tests-with-drained-allowlist/SKILL.md).
+**Rule:** follow the drained-allowlist architecture-test pattern documented in
+[`CONTRIBUTING.md`](../CONTRIBUTING.md#architecture-tests-dont-break-these).
 
 ### Steps
 
@@ -358,7 +359,7 @@ python -m pytest --cov=rytm_randomizer --cov-branch
 All four must pass. If any fail, fix the cause (don't bypass with `--no-verify` or `-o addopts=''`).
 
 ### Common pitfalls
-- Running `pytest -o addopts=''` makes the suite ~3× slower because it disables `-n auto` xdist. The pyproject default is the fast path. See [`.claude/skills/learned/pytest-xdist-fast-local-loop/SKILL.md`](../.claude/skills/learned/pytest-xdist-fast-local-loop/SKILL.md).
+- Running `pytest -o addopts=''` makes the suite ~3× slower because it disables `-n auto` xdist. The pyproject default is the fast path. See [`agent-memory/python_tooling_pitfalls.md`](../agent-memory/python_tooling_pitfalls.md).
 - macOS isn't tested on pull_request CI (only push); validate locally if you can.
 
 ---
@@ -427,11 +428,11 @@ All four must pass. If any fail, fix the cause (don't bypass with `--no-verify` 
 
 ## Cross-references
 
-- [`CONTRIBUTING.md`](../CONTRIBUTING.md) — developer handbook (722 lines; this file is the per-task subset)
+- [`CONTRIBUTING.md`](../CONTRIBUTING.md) — developer handbook (this file is the per-task subset)
 - [`AGENTS.md`](../AGENTS.md) — agent-facing one-page index
 - [`CLAUDE.md`](../CLAUDE.md) — Claude Code per-session system prompt
 - [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) — architecture standard
-- [`docs/ARCHITECTURE_DIAGRAMS.md`](ARCHITECTURE_DIAGRAMS.md) — 27 sections, 26 mermaid diagrams
+- [`docs/ARCHITECTURE_DIAGRAMS.md`](ARCHITECTURE_DIAGRAMS.md) — current architecture maps
 - [`docs/PLAN_REQUIREMENTS.md`](PLAN_REQUIREMENTS.md) — 18 gates
-- [`.claude/rules/`](../.claude/rules/) — 8 mandatory rules
-- [`.claude/skills/`](../.claude/skills/) — 19 task-specific skills
+- [`.claude/rules/`](../.claude/rules/) — mandatory project rules
+- [`.claude/skills/`](../.claude/skills/) — repo-specific and learned task skills

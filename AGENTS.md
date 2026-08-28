@@ -56,7 +56,7 @@ How to add a new memory: create `agent-memory/<slug>.md` with the standard front
    - § **PR bundling — one PR per logical change, not per commit**
    - § **Running tests fast** (the inner-loop pytest commands; **do not suppress `pytest-xdist` with `-o addopts=''`** unless you are in `PARITY_CAPTURE_MODE=1` — it's a 3× slowdown)
 2. **Skim [`docs/ARCHITECTURE.md` §6](docs/ARCHITECTURE.md#6-where-to-put-new-work)** — the "Where to put new work" table maps every change type to (module, skill).
-3. **Look at [`docs/ARCHITECTURE_DIAGRAMS.md`](docs/ARCHITECTURE_DIAGRAMS.md)** — 27 mermaid diagrams. The most important ones up front:
+3. **Look at [`docs/ARCHITECTURE_DIAGRAMS.md`](docs/ARCHITECTURE_DIAGRAMS.md)** — the current Mermaid architecture maps. The most important ones up front:
    - §1 Repository-Level System Map · §2 Package Layer Map (orient yourself)
    - §3 Device + Strategy Capability Stack · §4 Snapshot → Plan → Render Lifecycle (the cross-machine abstraction)
    - §10 Architecture Test Enforcement Graph (what CI mechanically rejects)
@@ -95,7 +95,7 @@ RytmRandomizer/
 ├─ .devcontainer/
 │  └─ devcontainer.json            ← reproducible dev container (matches CI Python + tooling)
 │
-├─ rytm_randomizer/                ← the package (10 subpackages, 86 modules)
+├─ rytm_randomizer/                ← the package (established modules + subpackages; current inventory is in ARCHITECTURE)
 │  ├─ app.py                       ← entry point (--arm / --dry-run / passive)
 │  ├─ cli.py                       ← passive CLI
 │  ├─ shell.py                     ← interactive shell
@@ -144,7 +144,7 @@ RytmRandomizer/
 ├─ docs/
 │  ├─ README.md                    ← doc index
 │  ├─ ARCHITECTURE.md              ← architecture standard (§3 deps, §5 parity, §6 where to add, §6.1 Device+Strategy)
-│  ├─ ARCHITECTURE_DIAGRAMS.md     ← 27 mermaid diagrams
+│  ├─ ARCHITECTURE_DIAGRAMS.md     ← current Mermaid architecture maps
 │  ├─ PLAN_REQUIREMENTS.md         ← 18 mandatory gates
 │  ├─ STATUS.md                    ← recent cleanup log (hand-authored, never appended)
 │  ├─ OBSERVABILITY.md
@@ -159,7 +159,7 @@ RytmRandomizer/
 │
 └─ .claude/
    ├─ agents/                      ← agent role definitions (code-reviewer, etc.)
-   ├─ rules/                       ← 11 mandatory rule files (read on every task)
+   ├─ rules/                       ← mandatory rule files (read on every task)
    │  ├─ architecture.md                    ← agent-facing distillation of `docs/ARCHITECTURE.md` (layer order, direction rules)
    │  ├─ autonomous-agent-execution.md      ← drive chained tasks to completion without per-step confirmation
    │  ├─ cascade-merge-pattern.md           ← Gate 16 — bundle multi-WS work into one PR under approval-gated branches
@@ -167,12 +167,16 @@ RytmRandomizer/
    │  ├─ coverage-gate-100pct.md            ← Gate 1 — 100% branch coverage on touched files
    │  ├─ device-protocol-strategy.md        ← every Elektron device family routes through `devices/` + `devices/strategies/`
    │  ├─ hardware-pinned-packages.md        ← do not bump `mido==1.3.3` or `python-rtmidi==1.5.8` without hardware re-validation
+   │  ├─ live-but-passive-midi.md            ← input/output authority and persistent-write refusal boundary
    │  ├─ maximize-parallelization.md        ← dispatch independent tool calls / agents in one message, not serially
    │  ├─ parity-fixture-discipline.md       ← when/how to regenerate V1.34 fixtures (and when you absolutely must not)
    │  ├─ pr-body-conformance-checklist.md   ← every PR body carries the 18-gate + strict-rules checklist verbatim
-   │  └─ skill-routing.md                   ← which skill applies to which task (consult before starting)
+   │  ├─ readme-freshness.md                ← current capability/count/safety claims must stay truthful
+   │  ├─ skill-routing.md                   ← which skill applies to which task (consult before starting)
+   │  └─ targeted-mutation-safety.md        ← target/lock, capture anchor, exact-plan SEND, and blocked-A4 rules
    ├─ settings.json                ← post-push code-reviewer hook config
-   └─ skills/                      ← 19 task-specific skill files
+   └─ skills/                      ← repo-specific skills plus the learned catalog
+      ├─ add-cockpit-panel/SKILL.md     ← adding a schema-driven Cockpit panel
       ├─ add-pad-command/SKILL.md       ← adding a V1.34-equivalent command
       ├─ extend-data-layer/SKILL.md     ← adding a new fact table
       ├─ code-review/SKILL.md           ← post-push code review pattern
@@ -182,7 +186,7 @@ RytmRandomizer/
       ├─ python-on-windows/SKILL.md     ← Windows PowerShell gotchas
       ├─ DataAnalysisGuardrails/SKILL.md
       ├─ MusicLibraryGuardrails/SKILL.md
-      └─ learned/                       ← skills extracted from past runs (12 entries; codex reads them via the .agents/skills symlink)
+      └─ learned/                       ← skills extracted from past runs (14 entries; codex reads them via the .agents/skills symlink)
 ```
 
 ## Test commands (use these, not your own)
@@ -218,6 +222,7 @@ PARITY_CAPTURE_MODE=1 python -m pytest tests/test_engines_pad*.py tests/test_gro
 
 | Skill | When |
 |---|---|
+| [`add-cockpit-panel`](.claude/skills/add-cockpit-panel/SKILL.md) | Adding a schema-driven Cockpit panel |
 | [`add-pad-command`](.claude/skills/add-pad-command/SKILL.md) | Adding a V1.34-equivalent shell command |
 | [`extend-data-layer`](.claude/skills/extend-data-layer/SKILL.md) | Adding a new fact table to `data/` |
 | [`code-review`](.claude/skills/code-review/SKILL.md) | Post-push standardized review |
@@ -228,7 +233,7 @@ PARITY_CAPTURE_MODE=1 python -m pytest tests/test_engines_pad*.py tests/test_gro
 | [`DataAnalysisGuardrails`](.claude/skills/DataAnalysisGuardrails/SKILL.md) | Safe data analysis (no hardware I/O) |
 | [`MusicLibraryGuardrails`](.claude/skills/MusicLibraryGuardrails/SKILL.md) | Working with music-library data safely |
 
-12 additional "learned" skills (extracted from past runs) live under `.claude/skills/learned/` — see [`CONTRIBUTING.md` § Skill catalog](CONTRIBUTING.md#skill-catalog) for the full table. Codex auto-discovers them via the `.agents/skills` → `.claude/skills/learned` symlink (see [§ Skills](#skills--codex-auto-discovers-them-from-agentsskills) above).
+14 additional "learned" skills (extracted from past runs) live under `.claude/skills/learned/` — see [`CONTRIBUTING.md` § Skill catalog](CONTRIBUTING.md#skill-catalog) for the full table. Codex auto-discovers them via the `.agents/skills` → `.claude/skills/learned` symlink (see [§ Skills](#skills--codex-auto-discovers-them-from-agentsskills) above).
 
 ## How to open a PR (autonomous-agent compatible)
 
@@ -295,7 +300,7 @@ PR body must include (enforced by `.claude/rules/pr-body-conformance-checklist.m
 | "How do I contribute?" | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
 | "Where do I add X?" | [`docs/ARCHITECTURE.md` §6](docs/ARCHITECTURE.md#6-where-to-put-new-work) |
 | "What are the 18 mandatory gates?" | [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md) |
-| "What does the architecture look like?" | [`docs/ARCHITECTURE_DIAGRAMS.md`](docs/ARCHITECTURE_DIAGRAMS.md) (27 mermaid diagrams) |
+| "What does the architecture look like?" | [`docs/ARCHITECTURE_DIAGRAMS.md`](docs/ARCHITECTURE_DIAGRAMS.md) |
 | "What's the latest project status?" | [`docs/STATUS.md`](docs/STATUS.md) |
 | "How does observability work?" | [`docs/OBSERVABILITY.md`](docs/OBSERVABILITY.md) |
 | "How does the V1.34 parity rule work?" | [`.claude/rules/parity-fixture-discipline.md`](.claude/rules/parity-fixture-discipline.md) |

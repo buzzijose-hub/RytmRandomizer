@@ -83,7 +83,7 @@ def _candidate_packets(
     scope: MutationScope,
 ) -> tuple[SendPlanPacket, ...]:
     machines_by_pad = {pad.pad_id: pad.machine for pad in snapshot.pads}
-    sendable_pad_ids = scope.effective_ids(machines_by_pad, item_label="Rytm pad")
+    sendable_pad_ids = scope.effective_ids(machines_by_pad)
     packets: list[SendPlanPacket] = []
     for delta in sorted(candidate.pad_deltas, key=lambda item: item.pad_id):
         if delta.pad_id not in sendable_pad_ids:

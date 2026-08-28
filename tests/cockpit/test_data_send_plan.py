@@ -10,6 +10,7 @@ from __future__ import annotations
 import pytest
 
 from rytm_randomizer.cockpit.data import CockpitSendPlan, SendPlanPacket
+from rytm_randomizer.cockpit.data.send_plan import synthetic_parameter_cc
 
 pytestmark = pytest.mark.fast
 
@@ -37,6 +38,13 @@ def _plan(*packets: SendPlanPacket) -> CockpitSendPlan:
         locked_pad_ids=frozenset({2}),
         blocked_reasons=(),
     )
+
+
+def test_synthetic_parameter_cc_is_deterministic_and_midi_safe() -> None:
+    control = synthetic_parameter_cc("tun")
+
+    assert control == synthetic_parameter_cc("tun") == 52
+    assert 33 <= control <= 127
 
 
 def test_send_plan_packet_round_trips_through_dict() -> None:

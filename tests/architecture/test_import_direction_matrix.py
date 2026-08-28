@@ -98,12 +98,9 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
     "cockpit.capture": frozenset(
         {
             "cockpit.data",
+            "cockpit.stage",
             "data",
             "devices",
-            "devices.strategies",
-            # Capture validates and round-trips the canonical saved-KIT
-            # codecs already owned by the engine layer; it does not fork a
-            # second Elektron envelope implementation.
             "engines",
             "observability",
         }
@@ -173,6 +170,13 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             "observability",
         }
     ),
+    "cockpit.stage": frozenset(
+        {
+            "cockpit.data",
+            "devices",
+            "observability",
+        }
+    ),
     "cockpit.wizard": frozenset(
         {
             "cockpit.data",
@@ -190,6 +194,7 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             "cockpit.history",
             "cockpit.library",
             "cockpit.profiles",
+            "cockpit.stage",
             "cockpit.wizard",
             "devices",
             # TODO(rival-program): review this edge — see cockpit note above.

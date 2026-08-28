@@ -714,6 +714,24 @@ def _exc_fingerprint(exc: BaseException) -> str | None:
     return None
 
 
+def _redacted_exception_repr(
+    exc: BaseException,
+    *,
+    sensitive_value: str | None = None,
+) -> str:
+    """Render ``exc`` while removing an operator's machine-local port name."""
+
+    if sensitive_value:
+        # Do not scrub the already-rendered repr: Python can choose either
+        # quote style and add multiple escaping layers, so a port containing
+        # quotes, backslashes, or control characters can evade token
+        # replacement.  The categorical exception type remains useful for
+        # diagnosis; the free-form detail is intentionally omitted whenever
+        # it may contain an operator's machine-local port name.
+        return f"{type(exc).__name__}('<redacted-midi-port>')"
+    return repr(exc)
+
+
 # ---------------------------------------------------------------------------
 # Per-command handlers.
 #
@@ -820,7 +838,25 @@ async def _handle_capture_current_kit(
             device_id,
             input_port.strip(),
         )
-    except (OSError, RuntimeError, ValueError, RytmRandomizerError):
+    except (OSError, RuntimeError, TypeError, ValueError, RytmRandomizerError) as exc:
+        _logger.warning(
+            "cockpit_kit_capture_failed",
+            extra={
+                "device_id": device_id,
+                "exception_type": type(exc).__name__,
+                "exception_repr": _redacted_exception_repr(
+                    exc,
+                    sensitive_value=input_port.strip(),
+                ),
+                "fingerprint": _CAPTURE_FAILED_FINGERPRINT,
+            },
+        )
+        session.error_journal.record(
+            _CAPTURE_FAILED_FINGERPRINT,
+            "current-kit capture failed",
+            context={"device_id": device_id},
+        )
+        get_metrics().record_error(_CAPTURE_FAILED_FINGERPRINT)
         session.stage_coordinator.record_capture(
             device_id,
             succeeded=False,
@@ -894,7 +930,7 @@ async def _handle_select_profile(cmd: dict[str, object], session: CockpitSession
 async def _handle_set_depth(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     # ``cast`` mirrors the historical ``float(<wire value>)`` coercion
     # exactly: a non-numeric wire value still raises through ``float``.
-    depth = float(cast("SupportsFloat", cmd["depth"]))
+    depth = float(cast(SupportsFloat, cmd["depth"]))
     events = _clear_send_plan_if_needed(session)
     session.depth = depth
     candidate = _recompute_candidate(session)
@@ -1159,10 +1195,8 @@ async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> Handl
             ack=_error_ack(ERR_VALIDATION, "send_plan_id does not match the prepared plan")
         )
     if (
-        session.armed_apply is None
-        and session.device.is_armed
-        and requested_plan_id != sent_plan.plan_id
-    ):
+        session.armed_apply is not None or session.device.is_armed
+    ) and requested_plan_id != sent_plan.plan_id:
         return HandlerResult(
             ack=_error_ack(
                 ERR_VALIDATION,
@@ -1194,14 +1228,28 @@ async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> Handl
             "cockpit_live_send_authorized",
             extra={
                 "send_plan_id": sent_plan.plan_id,
-                "midi_port": _midi_port(session),
                 "packet_count": len(sent_plan.packets),
                 "pad_ids": sorted({packet.pad_id for packet in sent_plan.packets}),
             },
         )
     try:
         new_snapshot = session.device.apply_send_plan(sent_plan)
-    except (OSError, RuntimeError, RytmRandomizerError):
+    except (OSError, RuntimeError, RytmRandomizerError) as exc:
+        _logger.warning(
+            "cockpit_guarded_send_failed",
+            extra={
+                "exception_type": type(exc).__name__,
+                "exception_repr": repr(exc),
+                "fingerprint": _GUARDED_SEND_FAILED_FINGERPRINT,
+                "send_plan_id": sent_plan.plan_id,
+            },
+        )
+        session.error_journal.record(
+            _GUARDED_SEND_FAILED_FINGERPRINT,
+            "send failed at the guarded device boundary",
+            context={"plan_id": sent_plan.plan_id},
+        )
+        get_metrics().record_error(_GUARDED_SEND_FAILED_FINGERPRINT)
         session.stage_coordinator.record_send(ANALOG_RYTM_DEVICE_ID, succeeded=False)
         return HandlerResult(
             ack=_error_ack(ERR_VALIDATION, "send failed at the guarded device boundary"),
@@ -1475,7 +1523,7 @@ def _operator_package_step_rehearsal(
 ) -> dict[str, object]:
     step_key = str(step["step_key"])
     slot_key = str(step["slot_key"])
-    depth_percent = int(cast("SupportsInt", binding.get("depth_percent", 0)))
+    depth_percent = int(cast(SupportsInt, binding.get("depth_percent", 0)))
     package_export_key = _expected_operator_package_export_key(step=step, binding=binding)
     return {
         "rehearsal_id": f"operator-package-rehearsal:{step_key}",
@@ -1981,6 +2029,12 @@ _ARM_DEVICE_LOST_FINGERPRINT: Final[str] = "cockpit.arm.device_lost"
 _ARM_SEND_REFUSED_FINGERPRINT: Final[str] = "cockpit.arm.send_refused"
 """Journal fingerprint for an armed SEND the seam refused."""
 
+_CAPTURE_FAILED_FINGERPRINT: Final[str] = "cockpit.capture.failed"
+"""Journal fingerprint for an input-only saved-KIT capture failure."""
+
+_GUARDED_SEND_FAILED_FINGERPRINT: Final[str] = "cockpit.send.guarded_boundary_failed"
+"""Journal fingerprint for a guarded-device apply failure."""
+
 _ARMED_SEND_DEVICE_ID: Final[str] = "analog_rytm_mk2"
 """Registered device the cockpit's armed send reports against.
 
@@ -2037,6 +2091,14 @@ def _armed_send_over_seam(
     armed = session.armed_apply
     if armed is None:  # pragma: no cover - guarded by the caller
         return None
+    confirmed_plan_id = cmd.get("send_plan_id")
+    if not isinstance(confirmed_plan_id, str) or confirmed_plan_id != plan.plan_id:
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION,
+                "armed SEND requires confirmation of the current prepared plan",
+            )
+        )
     if cmd.get("confirm") is not True:
         return HandlerResult(
             ack=_error_ack(
@@ -2047,7 +2109,7 @@ def _armed_send_over_seam(
 
     device = get_device(_ARMED_SEND_DEVICE_ID)
     try:
-        armed.confirm(plan.plan_id)
+        armed.confirm(confirmed_plan_id)
         result = armed.apply(
             device,
             plan,
@@ -2060,12 +2122,20 @@ def _armed_send_over_seam(
         # the armed state so the session is honestly passive again.
         if not armed.is_armed:
             _teardown_armed_state(session)
+        partial_outcome = exc.partial_outcome
+        if partial_outcome is not None:
+            for packet in plan.packets[: partial_outcome.sent_count]:
+                get_metrics().record_cc_sent(packet.channel)
         _logger.warning(
             "armed_send_refused",
             extra={
                 "exception_type": type(exc).__name__,
                 "exception_repr": repr(exc),
                 "fingerprint": _ARM_SEND_REFUSED_FINGERPRINT,
+                "sent_count": 0 if partial_outcome is None else partial_outcome.sent_count,
+                "expected_count": (
+                    0 if partial_outcome is None else partial_outcome.expected_count
+                ),
             },
         )
         session.error_journal.record(
@@ -2083,11 +2153,37 @@ def _armed_send_over_seam(
             ],
         )
     if not result.ok:
+        _logger.warning(
+            "armed_send_refused",
+            extra={
+                "fingerprint": _ARM_SEND_REFUSED_FINGERPRINT,
+                "sent_count": result.sent_count,
+                "expected_count": result.expected_count,
+                "status": result.status,
+            },
+        )
+        session.error_journal.record(
+            _ARM_SEND_REFUSED_FINGERPRINT,
+            "armed send refused because the prepared plan was not ready",
+            context={"plan_id": plan.plan_id},
+        )
+        get_metrics().record_error(_ARM_SEND_REFUSED_FINGERPRINT)
         session.stage_coordinator.record_plan(ANALOG_RYTM_DEVICE_ID, ready=False)
         return HandlerResult(
             ack=_error_ack(ERR_VALIDATION, "armed send refused: plan not ready"),
             events=[_build_dual_machine_stage_changed(session)],
         )
+    for packet in plan.packets[: result.sent_count]:
+        get_metrics().record_cc_sent(packet.channel)
+    _logger.info(
+        "armed_send_complete",
+        extra={
+            "send_plan_id": plan.plan_id,
+            "sent_count": result.sent_count,
+            "expected_count": result.expected_count,
+            "status": result.status,
+        },
+    )
     return None
 
 
@@ -2111,6 +2207,10 @@ def _teardown_armed_state(session: CockpitSession) -> None:
     if armed is not None:
         armed.disarm()
     session.stage_coordinator.record_rytm_authority(armed=False)
+    _logger.info(
+        "cockpit_armed_state_revoked",
+        extra={"had_armed_seam": armed is not None},
+    )
 
 
 def disarm_session_on_teardown(session: CockpitSession) -> None:
@@ -2171,9 +2271,13 @@ def build_armed_watchdog(
         session.error_journal.record(
             _ARM_DEVICE_LOST_FINGERPRINT,
             "device disappeared while armed; auto-disarmed",
-            context={
+            context={"phase": state.phase},
+        )
+        _logger.warning(
+            "cockpit_armed_device_lost",
+            extra={
                 "phase": state.phase,
-                "port": "" if armed_port is None else armed_port,
+                "fingerprint": _ARM_DEVICE_LOST_FINGERPRINT,
             },
         )
         get_metrics().record_error(_ARM_DEVICE_LOST_FINGERPRINT)
@@ -2350,16 +2454,17 @@ async def _handle_arm(cmd: dict[str, object], session: CockpitSession) -> Handle
         _logger.warning(
             "arm_failed",
             extra={
-                "port_name": port_name,
                 "exception_type": type(exc).__name__,
-                "exception_repr": repr(exc),
+                "exception_repr": _redacted_exception_repr(
+                    exc,
+                    sensitive_value=port_name,
+                ),
                 "fingerprint": _ARM_FAILED_FINGERPRINT,
             },
         )
         session.error_journal.record(
             _ARM_FAILED_FINGERPRINT,
             "arm refused: output port could not be resolved or opened",
-            context={"port": port_name},
         )
         get_metrics().record_error(_ARM_FAILED_FINGERPRINT)
         return HandlerResult(

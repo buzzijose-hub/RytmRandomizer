@@ -21,6 +21,7 @@ from ..mock_midi import MidiMessage
 from ..snapshot.mutation_scope import DEFAULT_MUTATION_SCOPE, MutationScope
 from . import registry
 from .base import Device
+from .saved_kit_capture import SavedKitCaptureFrame
 from .strategies import (
     AnalogRytmMessageRenderer,
     AnalogRytmMutationPlanner,
@@ -120,6 +121,24 @@ class AnalogRytmDevice:
         """Delegate saved-KIT encoding to the pure Rytm codec strategy."""
 
         return encode_analog_rytm_saved_kit_frame(header, unpacked)
+
+    def decode_saved_kit_capture(self, frame: bytes) -> SavedKitCaptureFrame:
+        """Decode a complete capture frame through the canonical Rytm codec."""
+
+        decoded = self.decode_saved_kit_frame(frame)
+        return SavedKitCaptureFrame(
+            payload=frame[1:-1],
+            snapshot_slot=decoded.header[-1],
+            header=decoded.header,
+            unpacked=decoded.unpacked,
+        )
+
+    def encode_saved_kit_capture(self, decoded: object) -> bytes:
+        """Re-encode a captured Rytm frame for exact stability validation."""
+
+        if not isinstance(decoded, SavedKitCaptureFrame):
+            raise TypeError("Rytm capture capability received an unsupported frame")
+        return self.encode_saved_kit_frame(decoded.header, decoded.unpacked)
 
     # ------------------------------------------------------------------
     # WS-S5 convenience methods. Each delegates to the matching strategy

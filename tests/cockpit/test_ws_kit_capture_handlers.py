@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 
-from conftest import elektron_syx_message, rytm_real_layout_kit_payload
+from conftest import (
+    analog_four_saved_kit_frame,
+    elektron_syx_message,
+    rytm_real_layout_kit_payload,
+)
 from rytm_randomizer.cockpit.capture import KitCaptureService
 from rytm_randomizer.cockpit.capture import bridge as capture_bridge
 from rytm_randomizer.cockpit.capture import cockpit_snapshot_from_rytm_capture
@@ -28,6 +33,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
     EVENT_DUAL_MACHINE_STAGE_CHANGED,
     EVENT_HISTORY_UPDATED,
     EVENT_KIT_CAPTURES_CHANGED,
+    EVENT_MUTATION_PREVIEWED,
     EVENT_SNAPSHOT_CHANGED,
 )
 from rytm_randomizer.cockpit.ws.session import CockpitSession
@@ -51,6 +57,25 @@ class _Provider:
     ) -> tuple[bytes, ...]:
         del port_name, timeout_seconds
         return (self.frame,)
+
+
+@dataclass(frozen=True)
+class _TypeErrorProvider:
+    """Capture provider whose diagnostic includes its machine-local port."""
+
+    name: str
+
+    def list_input_names(self) -> tuple[str, ...]:
+        return (self.name,)
+
+    def capture_sysex_messages(
+        self,
+        port_name: str,
+        *,
+        timeout_seconds: float,
+    ) -> tuple[bytes, ...]:
+        del timeout_seconds
+        raise TypeError(f'capture "decoder" failed on {port_name!r}')
 
 
 def _session(tmp_path: Path, service: KitCaptureService | None = None) -> CockpitSession:
@@ -144,6 +169,63 @@ def test_capture_current_kit_updates_full_anchor_event(tmp_path: Path) -> None:
     assert promoted.snapshot_id != "capture-root"
     assert len(promoted.pads) == 12
     assert session.history_store.current.entries[-1].via == "capture"
+
+
+def test_rytm_capture_bootstraps_empty_history_and_refreshes_preview(tmp_path: Path) -> None:
+    frame = elektron_syx_message(rytm_real_layout_kit_payload(b"EMPTY HISTORY"))
+    session = _session(tmp_path, KitCaptureService(_Provider(frame)))
+    session.history_store = HistoryStore()
+    session.active_profile = session.profile_registry.list_profiles()[0]
+    session.preview_on = True
+
+    ack = _dispatch(
+        session,
+        {
+            "type": COMMAND_CAPTURE_CURRENT_KIT,
+            "device_id": "analog_rytm_mk2",
+            "input_port": "Rytm Input",
+        },
+    )
+
+    assert ack["ok"] is True
+    assert [event["type"] for event in session.pending_events] == [
+        EVENT_KIT_CAPTURES_CHANGED,
+        EVENT_SNAPSHOT_CHANGED,
+        EVENT_HISTORY_UPDATED,
+        EVENT_MUTATION_PREVIEWED,
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
+    ]
+    assert session.history_store.current.current_id == session.device.capture_snapshot().snapshot_id
+    assert session.history_store.current.entries[-1].via is None
+    assert session.pending_events[-2]["candidate"] is not None
+
+
+def test_a4_capture_retains_exact_evidence_without_touching_rytm_state(
+    tmp_path: Path,
+) -> None:
+    frame = analog_four_saved_kit_frame(name=b"LIVE A4 KIT")
+    session = _session(tmp_path, KitCaptureService(_Provider(frame)))
+    rytm_snapshot = session.device.capture_snapshot()
+    rytm_history = session.history_store.current
+
+    ack = _dispatch(
+        session,
+        {
+            "type": COMMAND_CAPTURE_CURRENT_KIT,
+            "device_id": "analog_four_mk2",
+            "input_port": "A4 Input",
+        },
+    )
+
+    assert ack["ok"] is True
+    assert ack["kit_capture"]["device_id"] == "analog_four_mk2"
+    assert ack["kit_capture"]["parameter_readiness"] == "exact_kit_anchor_offsets_candidate"
+    assert [event["type"] for event in session.pending_events] == [
+        EVENT_KIT_CAPTURES_CHANGED,
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
+    ]
+    assert session.device.capture_snapshot() == rytm_snapshot
+    assert session.history_store.current == rytm_history
 
 
 def test_captured_rytm_anchor_mutates_and_prepares_only_selected_pad(
@@ -277,3 +359,46 @@ def test_capture_commands_fail_closed_on_invalid_wire_values(
     assert ack["ok"] is False
     assert ack["code"] == "validation_error"
     assert session.kit_captures == {}
+
+
+@pytest.mark.parametrize(
+    "private_port",
+    [
+        "PRIVATE_INPUT_Jose's_Rytm",
+        'PRIVATE_INPUT_"Jose_Rytm"',
+        "PRIVATE_INPUT_Jose\\Rytm\nControl\tPort",
+    ],
+)
+def test_capture_type_error_records_failure_without_logging_the_port(
+    tmp_path: Path,
+    ws_handler_caplog: pytest.LogCaptureFixture,
+    private_port: str,
+) -> None:
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
+    reset_metrics()
+    session = _session(tmp_path, KitCaptureService(_TypeErrorProvider(private_port)))
+
+    with ws_handler_caplog.at_level(logging.WARNING):
+        ack = _dispatch(
+            session,
+            {
+                "type": COMMAND_CAPTURE_CURRENT_KIT,
+                "device_id": "analog_rytm_mk2",
+                "input_port": private_port,
+            },
+        )
+
+    assert ack["ok"] is False
+    assert session.stage_coordinator.state.rytm.capture_state == "failed"
+    assert session.error_journal.entries[-1].fingerprint == "cockpit.capture.failed"
+    assert get_metrics().errors_by_kind["cockpit.capture.failed"] == 1
+    record = next(
+        record for record in ws_handler_caplog.records if record.msg == "cockpit_kit_capture_failed"
+    )
+    exception_repr = str(record.__dict__["exception_repr"])
+    assert exception_repr == "TypeError('<redacted-midi-port>')"
+    assert private_port not in exception_repr
+    assert private_port.encode("unicode_escape").decode("ascii") not in exception_repr
+    assert "<redacted-midi-port>" in exception_repr
+    reset_metrics()

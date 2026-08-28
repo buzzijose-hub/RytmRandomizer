@@ -1,15 +1,27 @@
 {
-  "status": "in_progress",
+  "status": "delivery_in_progress",
   "workstreams": {
-    "preflight_and_classification": "in_progress",
-    "acceptance_gap_audit": "in_progress",
-    "clean_base_integration": "pending",
-    "focused_verification": "pending",
-    "complete_verification": "pending",
-    "code_review": "pending",
-    "pr_delivery": "pending",
+    "preflight_and_classification": "verified",
+    "acceptance_gap_audit": "verified",
+    "clean_base_integration": "verified",
+    "focused_verification": "verified",
+    "complete_verification": "verified",
+    "code_review": "verified",
+    "pr_delivery": "in_progress",
     "studio_hardware_validation": "blocked"
   },
-  "last_verified_at": "2026-08-27T13:23:35.3900806-04:00",
+  "verification": {
+    "cockpit_python": "2339 passed, 3 skipped",
+    "fast_suite": "7689 passed, 4 skipped",
+    "architecture": "785 passed",
+    "v134_parity": "685 passed",
+    "full_suite_with_branch_coverage": "8374 passed, 4 skipped; 99.61% package coverage",
+    "post_coverage_focused_tests": "2 passed",
+    "touched_production_coverage": "28 files at 100% lines and branches",
+    "frontend": "58 files, 730 tests; 100% statements, branches, functions, and lines",
+    "static": "Ruff, Black, isort, Vulture, strict touched Pyright, JSON, and git diff checks passed",
+    "native_tauri": "not run; Cargo unavailable on the delivery host"
+  },
+  "last_verified_at": "2026-08-27T20:18:39-04:00",
   "blocker": "A4 saved-KIT semantic offsets and physical Rytm/A4 rehearsal evidence require operator-present studio hardware; software work continues fail-closed."
 }

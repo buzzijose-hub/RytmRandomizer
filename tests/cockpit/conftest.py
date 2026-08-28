@@ -44,6 +44,7 @@ not from sibling test files, per Gate 11 (fixture deduplication).
 from __future__ import annotations
 
 import hashlib
+import logging
 from collections.abc import Generator, Iterator
 from datetime import datetime, timezone
 from pathlib import Path
@@ -78,6 +79,21 @@ never leaves the process.
 """
 
 pytestmark = pytest.mark.fast
+
+
+@pytest.fixture
+def ws_handler_caplog(
+    caplog: pytest.LogCaptureFixture,
+) -> Iterator[pytest.LogCaptureFixture]:
+    """Capture handler records despite package-level propagation being disabled."""
+
+    logger = logging.getLogger("rytm_randomizer.cockpit.ws.handlers")
+    logger.addHandler(caplog.handler)
+    try:
+        yield caplog
+    finally:
+        logger.removeHandler(caplog.handler)
+
 
 _INITIAL_SNAPSHOT_ID = "01HXY5Q9PJM00000000000ROOT"
 """Deterministic root snapshot id used by every integration test.

@@ -2,11 +2,31 @@
 
 from __future__ import annotations
 
+import logging
+from collections.abc import Iterator
+
 import pytest
 
-from rytm_randomizer.cockpit.data.stage import DualMachineStageCoordinator
+from rytm_randomizer.cockpit.stage import DualMachineStageCoordinator
 
 pytestmark = pytest.mark.fast
+
+
+@pytest.fixture
+def capture_stage_logs(
+    caplog: pytest.LogCaptureFixture,
+) -> Iterator[pytest.LogCaptureFixture]:
+    """Capture structured stage transitions despite package log isolation."""
+
+    logger = logging.getLogger("rytm_randomizer.cockpit.stage.coordinator")
+    prior_level = logger.level
+    logger.setLevel(logging.INFO)
+    logger.addHandler(caplog.handler)
+    try:
+        yield caplog
+    finally:
+        logger.removeHandler(caplog.handler)
+        logger.setLevel(prior_level)
 
 
 def test_stage_bootstrap_keeps_oxi_adjacent_and_a4_unsendable() -> None:
@@ -124,6 +144,55 @@ def test_whole_state_revision_advances_for_every_lane_transition() -> None:
     assert coordinator.state.revision == 3
 
 
+def test_every_revision_emits_one_categorical_transition(
+    capture_stage_logs: pytest.LogCaptureFixture,
+) -> None:
+    coordinator = DualMachineStageCoordinator()
+
+    coordinator.record_capture("analog_rytm_mk2", succeeded=True, connected=True)
+    coordinator.record_capture("analog_rytm_mk2", succeeded=True, connected=True)
+
+    records = [
+        record
+        for record in capture_stage_logs.records
+        if getattr(record, "event", None) == "cockpit_stage_transition"
+    ]
+    assert len(records) == 2
+    first, forced = records
+    assert first.transition == "capture"
+    assert first.device_id == "analog_rytm_mk2"
+    assert first.revision == 1
+    assert first.state_changed is True
+    assert first.from_connection_state == "unknown"
+    assert first.to_connection_state == "connected"
+    assert first.from_capture_state == "not_captured"
+    assert first.to_capture_state == "captured"
+    assert first.from_candidate_state == first.to_candidate_state == "none"
+    assert first.from_plan_state == first.to_plan_state == "none"
+    assert first.from_authority_state == first.to_authority_state == "not_armed"
+    assert first.from_target_count == first.to_target_count == 0
+    assert first.from_locked_count == first.to_locked_count == 0
+    assert first.from_effective_count == first.to_effective_count == 12
+    assert forced.revision == 2
+    assert forced.state_changed is False
+
+
+def test_unchanged_scope_is_not_a_transition(
+    capture_stage_logs: pytest.LogCaptureFixture,
+) -> None:
+    coordinator = DualMachineStageCoordinator()
+
+    coordinator.record_scope(
+        "analog_rytm_mk2",
+        target_ids=frozenset(),
+        locked_ids=frozenset(),
+        effective_ids=frozenset(range(1, 13)),
+    )
+
+    assert coordinator.state.revision == 0
+    assert capture_stage_logs.records == []
+
+
 def test_capture_recovery_clears_only_transient_a4_failure() -> None:
     coordinator = DualMachineStageCoordinator(rytm_send_armed=True)
     coordinator.record_capture("analog_rytm_mk2", succeeded=True, connected=True)
@@ -172,3 +241,33 @@ def test_rytm_authority_stays_fail_closed_after_capture_failure() -> None:
     assert coordinator.state.rytm.authority_state == "blocked"
     assert "capture_failed" in coordinator.state.rytm.blocked_reasons
     assert coordinator.state.analog_four.authority_state == "blocked"
+
+
+def test_a4_connection_never_grants_output_authority() -> None:
+    coordinator = DualMachineStageCoordinator()
+
+    coordinator.record_connection("analog_four_mk2", connected=True)
+
+    assert coordinator.state.analog_four.connection_state == "connected"
+    assert coordinator.state.analog_four.authority_state == "blocked"
+
+
+def test_rytm_arm_stays_blocked_while_device_is_disconnected() -> None:
+    coordinator = DualMachineStageCoordinator()
+    coordinator.record_connection("analog_rytm_mk2", connected=False)
+
+    coordinator.record_rytm_authority(armed=True)
+
+    assert coordinator.state.rytm.authority_state == "blocked"
+    assert "device_disconnected" in coordinator.state.rytm.blocked_reasons
+
+
+def test_a4_send_attempt_remains_mapping_blocked() -> None:
+    coordinator = DualMachineStageCoordinator()
+
+    coordinator.record_send("analog_four_mk2", succeeded=True)
+
+    assert coordinator.state.analog_four.candidate_state == "blocked"
+    assert coordinator.state.analog_four.plan_state == "blocked"
+    assert coordinator.state.analog_four.authority_state == "blocked"
+    assert coordinator.state.analog_four.recovery_actions == ("run_a4_mapping_gap_procedure",)

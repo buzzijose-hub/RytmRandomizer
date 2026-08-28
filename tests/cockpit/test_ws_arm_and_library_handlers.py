@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import importlib.machinery
+import logging
 import types
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -49,6 +50,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
 )
 from rytm_randomizer.cockpit.ws.server import APP_VERSION, create_app
 from rytm_randomizer.cockpit.ws.session import CockpitSession
+from rytm_randomizer.senders.armed_apply import ArmedApplyError
 
 pytestmark = pytest.mark.fast
 
@@ -82,6 +84,20 @@ class _FakeProvider:
     def open_output(self, port_name: str) -> _FakeOutPort:
         assert port_name == self.port.name
         return self.port
+
+
+@dataclass
+class _DiagnosticFailureProvider:
+    """Output provider whose diagnostic repr-escapes its local port name."""
+
+    name: str
+
+    def list_output_names(self) -> tuple[str, ...]:
+        return (self.name,)
+
+    def open_output(self, port_name: str) -> object:
+        assert port_name == self.name
+        raise ArmedApplyError(f'output "backend" failed for {port_name!r}')
 
 
 def _make_session(tmp_path: Path, *, arm_secret: str | None = _ARM_TOKEN) -> CockpitSession:
@@ -370,6 +386,35 @@ def test_arm_without_a_connection_manager_trusts_the_seam_to_fail_closed(
     set_active_connection_manager(None)
 
     assert _arm(session, port_name=_OUT_PORT)["ok"] is True
+
+
+@pytest.mark.parametrize(
+    "private_port",
+    [
+        "PRIVATE_OUTPUT_Jose's_Rytm",
+        'PRIVATE_OUTPUT_"Jose_Rytm"',
+        "PRIVATE_OUTPUT_Jose\\Rytm\nControl\tPort",
+    ],
+)
+def test_arm_failure_log_redacts_the_exact_output_port(
+    tmp_path: Path,
+    ws_handler_caplog: pytest.LogCaptureFixture,
+    private_port: str,
+) -> None:
+    session = _make_session(tmp_path)
+    session.arm_port_provider = _DiagnosticFailureProvider(private_port)
+    set_active_connection_manager(None)
+
+    with ws_handler_caplog.at_level(logging.WARNING):
+        ack = _arm(session, port_name=private_port)
+
+    assert ack["ok"] is False
+    record = next(record for record in ws_handler_caplog.records if record.msg == "arm_failed")
+    exception_repr = str(record.__dict__["exception_repr"])
+    assert exception_repr == "ArmedApplyError('<redacted-midi-port>')"
+    assert private_port not in exception_repr
+    assert private_port.encode("unicode_escape").decode("ascii") not in exception_repr
+    assert "<redacted-midi-port>" in exception_repr
 
 
 def test_arm_fails_closed_when_port_missing_from_enumeration(tmp_path: Path) -> None:

@@ -155,6 +155,9 @@ def _stage_send(session: CockpitSession, *, ready: bool = True) -> CockpitSendPl
 def test_armed_send_transmits_through_the_seam(tmp_path: Path) -> None:
     """The bytes leave via the seam's port, carrying the plan's own packets."""
 
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
+    reset_metrics()
     session = _make_session(tmp_path)
     provider = _FakeProvider()
     session.arm_port_provider = provider
@@ -176,7 +179,10 @@ def test_armed_send_transmits_through_the_seam(tmp_path: Path) -> None:
 
     session.armed_apply.apply = _spy  # type: ignore[union-attr, assignment, method-assign]
 
-    ack = _dispatch(session, {"type": "send", "confirm": True})
+    ack = _dispatch(
+        session,
+        {"type": "send", "confirm": True, "send_plan_id": plan.plan_id},
+    )
 
     assert ack["ok"] is True
     # (a) the seam's apply ran, with the prepared plan and a RAM-only intent.
@@ -184,6 +190,8 @@ def test_armed_send_transmits_through_the_seam(tmp_path: Path) -> None:
     # The wire triples are exactly the plan's preflight-resolved packets —
     # nothing is recomputed at the hardware boundary.
     assert provider.port.sent == [(0, 16, 42), (0, 17, 90)]
+    assert get_metrics().cc_sent_by_channel[0] == 2
+    reset_metrics()
 
 
 def test_armed_send_refuses_an_unready_plan_without_transmitting(tmp_path: Path) -> None:
@@ -213,7 +221,7 @@ def test_armed_send_refuses_when_the_seam_reports_an_unready_plan(
     provider = _FakeProvider()
     session.arm_port_provider = provider
     assert _arm(session)["ok"] is True
-    _stage_send(session)
+    plan = _stage_send(session)
 
     def _refuse(*_args: object, **_kwargs: object) -> ArmedApplyResult:
         return ArmedApplyResult(
@@ -222,7 +230,10 @@ def test_armed_send_refuses_when_the_seam_reports_an_unready_plan(
 
     session.armed_apply.apply = _refuse  # type: ignore[union-attr, assignment, method-assign]
 
-    ack = _dispatch(session, {"type": "send", "confirm": True})
+    ack = _dispatch(
+        session,
+        {"type": "send", "confirm": True, "send_plan_id": plan.plan_id},
+    )
 
     assert ack["ok"] is False
     assert ack["code"] == "validation_error"
@@ -243,9 +254,9 @@ def test_armed_send_is_refused_without_a_per_action_confirm(tmp_path: Path) -> N
     provider = _FakeProvider()
     session.arm_port_provider = provider
     assert _arm(session)["ok"] is True
-    _stage_send(session)
+    plan = _stage_send(session)
 
-    ack = _dispatch(session, {"type": "send"})
+    ack = _dispatch(session, {"type": "send", "send_plan_id": plan.plan_id})
 
     assert ack["ok"] is False
     assert ack["code"] == "validation_error"
@@ -258,6 +269,49 @@ def test_armed_send_is_refused_without_a_per_action_confirm(tmp_path: Path) -> N
     assert handlers.session_is_armed(session) is True
 
 
+@pytest.mark.parametrize("send_plan_id", [None, "stale-plan"])
+def test_armed_send_requires_the_exact_current_plan_id(
+    tmp_path: Path,
+    send_plan_id: str | None,
+) -> None:
+    """Missing or stale plan identity cannot authorize even a confirmed SEND."""
+
+    session = _make_session(tmp_path)
+    provider = _FakeProvider()
+    session.arm_port_provider = provider
+    assert _arm(session)["ok"] is True
+    plan = _stage_send(session)
+    command: dict[str, object] = {"type": "send", "confirm": True}
+    if send_plan_id is not None:
+        command["send_plan_id"] = send_plan_id
+
+    ack = _dispatch(session, command)
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert "prepared plan" in ack["message"]
+    assert provider.port.sent == []
+    assert session.current_send_plan == plan
+    assert handlers.session_is_armed(session) is True
+
+
+def test_armed_send_seam_defensively_rejects_a_missing_plan_id(tmp_path: Path) -> None:
+    """The hardware seam repeats the identity gate even when called directly."""
+
+    session = _make_session(tmp_path)
+    provider = _FakeProvider()
+    session.arm_port_provider = provider
+    assert _arm(session)["ok"] is True
+    plan = _stage_send(session)
+
+    refusal = handlers._armed_send_over_seam(session, plan, {"confirm": True})
+
+    assert refusal is not None
+    assert refusal.ack["ok"] is False
+    assert "current prepared plan" in refusal.ack["message"]
+    assert provider.port.sent == []
+
+
 @pytest.mark.parametrize("confirm", [False, "true", 1, None])
 def test_armed_send_requires_confirm_to_be_exactly_true(tmp_path: Path, confirm: object) -> None:
     """Truthy-but-not-``True`` never counts as an operator confirmation."""
@@ -266,9 +320,12 @@ def test_armed_send_requires_confirm_to_be_exactly_true(tmp_path: Path, confirm:
     provider = _FakeProvider()
     session.arm_port_provider = provider
     assert _arm(session)["ok"] is True
-    _stage_send(session)
+    plan = _stage_send(session)
 
-    ack = _dispatch(session, {"type": "send", "confirm": confirm})
+    ack = _dispatch(
+        session,
+        {"type": "send", "confirm": confirm, "send_plan_id": plan.plan_id},
+    )
 
     assert ack["ok"] is False
     assert provider.port.sent == []
@@ -286,9 +343,12 @@ def test_armed_send_auto_disarms_on_provider_error(tmp_path: Path) -> None:
     provider = _FakeProvider(port=_FakeOutPort(fail_after=0))
     session.arm_port_provider = provider
     assert _arm(session)["ok"] is True
-    _stage_send(session)
+    plan = _stage_send(session)
 
-    ack = _dispatch(session, {"type": "send", "confirm": True})
+    ack = _dispatch(
+        session,
+        {"type": "send", "confirm": True, "send_plan_id": plan.plan_id},
+    )
 
     assert ack["ok"] is False
     assert ack["code"] == "validation_error"
@@ -302,6 +362,29 @@ def test_armed_send_auto_disarms_on_provider_error(tmp_path: Path) -> None:
     assert session.pending_events[-1]["type"] == EVENT_DUAL_MACHINE_STAGE_CHANGED
     # Nothing was written to history: the send did not happen.
     assert session.unsaved_sends == 0
+
+
+def test_partial_armed_send_records_only_delivered_ccs(tmp_path: Path) -> None:
+    """A mid-burst failure reports metrics for bytes that actually reached the port."""
+
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
+    reset_metrics()
+    session = _make_session(tmp_path)
+    provider = _FakeProvider(port=_FakeOutPort(fail_after=1))
+    session.arm_port_provider = provider
+    assert _arm(session)["ok"] is True
+    plan = _stage_send(session)
+
+    ack = _dispatch(
+        session,
+        {"type": "send", "confirm": True, "send_plan_id": plan.plan_id},
+    )
+
+    assert ack["ok"] is False
+    assert provider.port.sent == [(0, 16, 42)]
+    assert get_metrics().cc_sent_by_channel[0] == 1
+    reset_metrics()
 
 
 def test_a_refused_armed_send_that_stays_armed_does_not_tear_down(
@@ -319,14 +402,17 @@ def test_a_refused_armed_send_that_stays_armed_does_not_tear_down(
     provider = _FakeProvider()
     session.arm_port_provider = provider
     assert _arm(session)["ok"] is True
-    _stage_send(session)
+    plan = _stage_send(session)
 
     def _raise(*_args: object, **_kwargs: object) -> None:
         raise ArmedApplyError("armed_apply_action_not_confirmed")
 
     session.armed_apply.apply = _raise  # type: ignore[union-attr, assignment, method-assign]
 
-    ack = _dispatch(session, {"type": "send", "confirm": True})
+    ack = _dispatch(
+        session,
+        {"type": "send", "confirm": True, "send_plan_id": plan.plan_id},
+    )
 
     assert ack["ok"] is False
     assert session.armed_apply is not None
@@ -352,7 +438,13 @@ def test_arming_and_sending_opens_exactly_one_port(tmp_path: Path) -> None:
         _stage_send(session)
         # Each SEND needs a distinct plan_id so its confirmation is single-use.
         session.current_send_plan = _plan(plan_id=f"plan-{index}")
-        assert _dispatch(session, {"type": "send", "confirm": True})["ok"] is True
+        assert (
+            _dispatch(
+                session,
+                {"type": "send", "confirm": True, "send_plan_id": f"plan-{index}"},
+            )["ok"]
+            is True
+        )
 
     # (d) still exactly one port — no second adapter, no re-open per send.
     assert provider.open_calls == [_OUT_PORT]

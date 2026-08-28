@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useCockpitStore } from '../state';
 
 import { useCockpitClient } from './context';
-import { ANALOG_FOUR_DEVICE_ID } from './devices';
+import { ANALOG_FOUR_DEVICE_ID, ANALOG_FOUR_TRACKS } from './devices';
 import {
   countReadyGenes,
   genesForFamily,
@@ -169,7 +169,7 @@ export function PatchGenomePanel({ previewOn }: PatchGenomePanelProps): JSX.Elem
             </button>
           </div>
           <div className="a4-target-grid">
-            {[1, 2, 3, 4].map((trackNumber) => {
+            {ANALOG_FOUR_TRACKS.map(({ track: trackNumber }) => {
               const targeted = mutationTargets.isTargeted(trackNumber);
               const locked = trackLocks.isLocked(trackNumber);
               const targetClass = mutationTargets.hasExplicitTargets
@@ -223,7 +223,7 @@ export function PatchGenomePanel({ previewOn }: PatchGenomePanelProps): JSX.Elem
             onChange={(event) => setTrack(Number(event.target.value))}
             value={track}
           >
-            {[1, 2, 3, 4].map((trackNumber) => (
+            {ANALOG_FOUR_TRACKS.map(({ track: trackNumber }) => (
               <option key={trackNumber} value={trackNumber}>
                 {trackNumber}
               </option>

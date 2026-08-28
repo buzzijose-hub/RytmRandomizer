@@ -8,6 +8,7 @@ from typing import Final
 
 from ...data import ANALOG_FOUR_SYNTH_TRACK_CC
 from ...observability.logging import get_logger
+from ...observability.metrics import get_metrics
 from ...snapshot.mutation_scope import DEFAULT_MUTATION_SCOPE, MutationScope
 from .analog_four_snapshot_decoder import AnalogFourKitSnapshot
 
@@ -64,6 +65,7 @@ class AnalogFourMutationPlanner:
             )
         effective_tracks = scope.validated_effective_ids(range(1, 5), item_label="A4 track")
         if not snapshot.offsets_promoted:
+            get_metrics().record_error("a4_mutation_plan_semantic_offsets_unpromoted")
             _logger.warning(
                 "a4_mutation_plan_blocked",
                 extra={
@@ -84,6 +86,7 @@ class AnalogFourMutationPlanner:
                 scope=scope,
             )
         if not effective_tracks:
+            get_metrics().record_error("a4_mutation_plan_no_sendable_tracks")
             _logger.warning(
                 "a4_mutation_plan_blocked",
                 extra={

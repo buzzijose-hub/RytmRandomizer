@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from rytm_randomizer import app
+from rytm_randomizer import app, mido_provider
 from rytm_randomizer.cockpit import __main__ as cockpit_main
 from rytm_randomizer.cockpit import device as device_boundary
 from rytm_randomizer.cockpit.capture import KitCaptureService
@@ -14,6 +14,20 @@ from rytm_randomizer.cockpit.device import MockDeviceAdapter
 from rytm_randomizer.senders.armed_apply import ArmedApplySession
 
 pytestmark = pytest.mark.fast
+
+
+class _InputOnlyProvider:
+    def list_input_names(self) -> tuple[str, ...]:
+        return ("Elektron Input",)
+
+    def capture_sysex_messages(
+        self,
+        _port_name: str,
+        *,
+        timeout_seconds: float,
+    ) -> tuple[bytes, ...]:
+        assert timeout_seconds > 0
+        return ()
 
 
 def test_capture_sidecar_requires_explicit_app_arm(capsys: pytest.CaptureFixture[str]) -> None:
@@ -35,6 +49,25 @@ def test_armed_capture_sidecar_dispatches_through_app_boundary(
 
     assert app.main(["--arm", "--cockpit-kit-capture-sidecar"]) == 0
     assert calls == ["capture-sidecar"]
+
+
+def test_capture_sidecar_composes_injected_input_authority(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    provider = _InputOnlyProvider()
+    captured: list[KitCaptureService] = []
+    monkeypatch.setattr(
+        mido_provider,
+        "build_mido_midi_port_provider",
+        lambda: provider,
+    )
+    monkeypatch.setattr(cockpit_main, "run", captured.append)
+
+    assert app._run_cockpit_kit_capture_sidecar() == 0
+
+    assert len(captured) == 1
+    assert captured[0].enabled is True
+    assert captured[0].list_input_names() == ("Elektron Input",)
 
 
 def test_passive_cockpit_session_keeps_capture_disabled(

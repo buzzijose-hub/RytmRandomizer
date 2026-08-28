@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "device_id": "analog_four_mk2",
+  "status": "blocked",
+  "blocked_reason": "a4_semantic_mapping_unpromoted",
+  "captured_kit_mutation": {
+    "sendable": false,
+    "events": [],
+    "promoted_offsets": [],
+    "live_cc_is_saved_kit_evidence": false
+  },
+  "required_evidence": [
+    {
+      "key": "semantic_offset",
+      "proof": "One isolated unpacked-byte field changes for the named control while unrelated bytes remain stable."
+    },
+    {
+      "key": "value_encoding",
+      "proof": "Minimum, midpoint, and maximum captures establish the raw representation and direction."
+    },
+    {
+      "key": "track_stride",
+      "proof": "The same control and value on tracks 1 through 4 establish a constant per-track displacement."
+    },
+    {
+      "key": "round_trip_fixture",
+      "proof": "The original frame and every changed frame pass checksum, length, decode, mutate, encode, and exact re-decode validation."
+    },
+    {
+      "key": "physical_verification",
+      "proof": "The edited scratch kit is loaded on the Analog Four, the intended control is observed or heard, and a returned kit capture confirms the value."
+    }
+  ],
+  "capture_matrix": [
+    {
+      "semantic_control": "filter_1_frequency",
+      "tracks": [1],
+      "values": [0, 63, 127],
+      "file_pattern": "A4_T1_FILTER1_FREQ_{000,063,127}_SLOT_<n>.syx",
+      "purpose": "offset and value encoding"
+    },
+    {
+      "semantic_control": "filter_1_frequency",
+      "tracks": [1, 2, 3, 4],
+      "values": [63],
+      "file_pattern": "A4_T{1,2,3,4}_FILTER1_FREQ_063_SLOT_<n>.syx",
+      "purpose": "track stride"
+    },
+    {
+      "semantic_control": "amp_attack",
+      "tracks": [1],
+      "values": [0, 63, 127],
+      "file_pattern": "A4_T1_AMP_ATTACK_{000,063,127}_SLOT_<n>.syx",
+      "purpose": "second-field offset and value encoding"
+    }
+  ],
+  "promotion_rule": "All five required_evidence keys must be satisfied for each promoted semantic field; partial evidence remains blocked and produces zero events."
+}
