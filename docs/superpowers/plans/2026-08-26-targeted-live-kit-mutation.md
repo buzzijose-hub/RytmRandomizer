@@ -2,8 +2,10 @@
 
 Date: 2026-08-26
 
-Status: in-flight - implementation, verification, and review are complete in
-the clean integration worktree; push, PR delivery, and CI observation remain.
+Status: in-flight — software-complete / hardware-blocked. Implementation, local
+verification, review, push, and non-stacked PR #237 delivery are complete; CI
+is green on the current code head. Required review and operator-present studio
+hardware evidence remain outstanding; no merge was attempted.
 
 Hardware status: no real MIDI input or output was opened during implementation
 or automated verification. Studio rehearsal remains an explicit operator task.
@@ -111,7 +113,7 @@ manager; A4 capture/session state is not continuous physical hot-plug telemetry.
 | WS-2 | session, protocol, handlers, bootstrap | complete |
 | WS-3 | capture bridge, Rytm anchor, A4 blocked planner | complete |
 | WS-4 | TypeScript state, DeviceRail, controls, rehearsal | complete |
-| WS-5 | docs, evidence manifest, verification, review, PR | delivery in progress |
+| WS-5 | docs, evidence manifest, verification, review, PR | complete; PR #237 open and CI green |
 
 ```mermaid
 flowchart LR
@@ -122,7 +124,7 @@ flowchart LR
     FrontendCrew["frontend rehearsal crew"]
     DocsCrew["docs + evidence crew"]
     Integration["clean integration worktree<br/>codex/dual-machine-live-performance-bundle"]
-    PR["one bundled PR<br/>base: modularize-v1.34"]
+    PR["bundled PR #237<br/>base: modularize-v1.34"]
 
     Base --> Integration
     Source -->|"selected coherent checkpoint only"| Integration

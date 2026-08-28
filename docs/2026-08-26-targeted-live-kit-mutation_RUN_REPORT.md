@@ -6,9 +6,11 @@ Branch: `codex/dual-machine-live-performance-bundle`
 
 Base: latest `origin/modularize-v1.34` at integration time
 
-Status: software implementation and focused verification are complete. Final
-serialized broad gates, per-dimension review, push, and PR delivery are in
-progress.
+Status: software implementation, serialized local verification, and
+per-dimension review are complete. Non-stacked PR #237 is open against
+`modularize-v1.34` with the required reviewer requested; every required
+current-head CI check is green. Operator-present studio hardware evidence
+remains blocked.
 
 ## Outcome
 
@@ -49,7 +51,10 @@ retaining the intended feature. The clean integration checkpoint is:
 ef4dff7b feat: coordinate targeted dual-machine live kits
 ```
 
-No stacked branch or partial PR was created.
+The integration branch is open as non-stacked
+[PR #237](https://github.com/buzzijose-hub/RytmRandomizer/pull/237) against
+`modularize-v1.34`, with the required reviewer requested. Every required check
+passed on current head `1ee3929c`; no merge was attempted.
 
 PR #236 overlaps this bundle in exactly six integration files: `README.md`,
 `docs/ARCHITECTURE.md`, `docs/ARCHITECTURE_DIAGRAMS.md`, `docs/STATUS.md`,
