@@ -20,12 +20,19 @@ def capture_stage_logs(
 
     logger = logging.getLogger("rytm_randomizer.cockpit.stage.coordinator")
     prior_level = logger.level
+    prior_propagate = logger.propagate
     logger.setLevel(logging.INFO)
+    # Capture through exactly one handler even if a prior test changed the
+    # package logger's propagation setting.  xdist schedules files differently
+    # across platforms, so relying on ambient logger ancestry double-counted
+    # each transition on macOS CI.
+    logger.propagate = False
     logger.addHandler(caplog.handler)
     try:
         yield caplog
     finally:
         logger.removeHandler(caplog.handler)
+        logger.propagate = prior_propagate
         logger.setLevel(prior_level)
 
 

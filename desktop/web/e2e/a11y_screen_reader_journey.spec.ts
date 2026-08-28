@@ -48,31 +48,25 @@ test.describe('SR-equivalent journey', () => {
     ).toBeVisible();
     await expect(page.getByText('12 pads ready for dry-run review').first()).toBeVisible();
 
-    // Switch to the Analog Four center panel: click the rail's View button,
-    // verify the Analog Four MKII heading mounts in the snapshot panel (the
-    // device rail card carries the same name as its aria-label, so we scope
-    // the heading lookup to the snapshot panel), and verify all four track
-    // cards land with their accessible safe-depth meters and role-key
-    // diagnostic attributes. This closes the E2E gap from the PR review.
+    // Switch to the Analog Four center panel: the live bundle routes A4 to the
+    // passive Patch Genome compiler rather than the Rytm snapshot surface.
+    // Verify its heading, four target controls, candidate selector, and
+    // explicit hardware lock through their accessible contracts.
     await page.getByTestId('device-select-analog-four-mk2').click();
-    const snapshotPanel = page.getByTestId('snapshot-panel');
+    const patchGenomePanel = page.getByTestId('patch-genome-panel');
     await expect(
-      snapshotPanel.getByRole('heading', { exact: true, level: 2, name: 'Analog Four MKII' }),
+      patchGenomePanel.getByRole('heading', { exact: true, level: 2, name: 'A4 Patch Genome' }),
     ).toBeVisible();
     for (const track of [1, 2, 3, 4]) {
-      const card = page.getByTestId(`a4-track-card-${track}`);
-      await expect(card).toBeVisible();
-      await expect(card).toHaveAttribute('data-role-key', /\w+/);
+      await expect(page.getByTestId(`a4-target-control-${track}`)).toBeVisible();
     }
-    // Meters should expose accessible value text — pick the first card's meter
-    // and assert the screen-reader announcement contains the expected phrase.
-    await expect(
-      page.getByTestId('a4-track-card-1').getByRole('meter'),
-    ).toHaveAttribute('aria-valuetext', /safe mutation depth/);
+    await expect(page.getByTestId('patch-genome-variant')).toContainText(/Candidate \d of 4/);
+    await expect(page.getByRole('button', { name: 'Hardware send locked' })).toBeDisabled();
 
     // Switch back to the Rytm panel so the rest of the checkpoint runs against
     // the surface the original spec was scoped to.
     await page.getByTestId('device-select-analog-rytm-mk2').click();
+    const snapshotPanel = page.getByTestId('snapshot-panel');
     await expect(
       snapshotPanel.getByRole('heading', { exact: true, level: 2, name: 'Snapshot' }),
     ).toBeVisible();
