@@ -85,6 +85,9 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
     # passive provider. The real graph lives in the nested rows below.
     "cockpit": frozenset(
         {
+            # Target validation reuses the device-neutral identifier-set
+            # primitive from the lower data layer.
+            "data",
             # TODO(rival-program): review this edge — cockpit reaching the
             # armed MIDI boundary module directly should be funneled through
             # app-owned wiring.
@@ -302,6 +305,9 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
     ),
     "snapshot": frozenset(
         {
+            # Device-neutral identifier-set validation is a lower-layer data
+            # primitive shared with cockpit DTO validation.
+            "data",
             "devices",
             # Typed packed-payload validation failures participate in the
             # package-wide BoundaryError taxonomy.

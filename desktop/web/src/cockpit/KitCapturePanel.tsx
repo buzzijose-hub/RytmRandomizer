@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useCockpitStore } from '../state';
 import type { KitCaptureResult } from '../ws/protocol';
@@ -10,6 +10,8 @@ import {
   RYTM_DEVICE_ID,
 } from './devices';
 
+// The backend listener closes after 120 seconds; leave five seconds for the
+// acknowledgement to cross the sidecar boundary before the UI times out.
 const CAPTURE_ACK_TIMEOUT_MS = 125_000;
 
 type CaptureStage = 'scanning' | 'ready' | 'listening' | 'captured' | 'error';
@@ -52,6 +54,8 @@ export function KitCapturePanel({ deviceId, onClose }: KitCapturePanelProps): JS
   const [localCapture, setLocalCapture] = useState<KitCaptureResult | null>(null);
   const [error, setError] = useState('');
   const capture = localCapture ?? storedCapture;
+  const captureRef = useRef<KitCaptureResult | null>(capture);
+  captureRef.current = capture;
 
   useEffect(() => {
     let active = true;
@@ -70,7 +74,7 @@ export function KitCapturePanel({ deviceId, onClose }: KitCapturePanelProps): JS
         setInputs(nextInputs);
         setSelectedInput(nextInputs[0] ?? '');
         setCaptureEnabled(ack.capture_enabled ?? session?.capture_enabled ?? false);
-        setStage(capture === null ? 'ready' : 'captured');
+        setStage(captureRef.current === null ? 'ready' : 'captured');
       })
       .catch(() => {
         if (!active) return;
@@ -80,7 +84,7 @@ export function KitCapturePanel({ deviceId, onClose }: KitCapturePanelProps): JS
     return () => {
       active = false;
     };
-  }, [capture, client, deviceId, session?.capture_enabled]);
+  }, [client, deviceId, session?.capture_enabled]);
 
   const startCapture = async (): Promise<void> => {
     setError('');
@@ -185,9 +189,14 @@ export function KitCapturePanel({ deviceId, onClose }: KitCapturePanelProps): JS
           <div
             className={deviceId === ANALOG_FOUR_DEVICE_ID ? 'capture-layout a4' : 'capture-layout rytm'}
             aria-label={`${deviceName(deviceId)} captured layout`}
+            role="list"
           >
             {capture.layout_items.map((item) => (
-              <article className={`capture-layout-item ${item.status}`} key={item.index}>
+              <article
+                className={`capture-layout-item ${item.status}`}
+                key={item.index}
+                role="listitem"
+              >
                 <span>{deviceId === RYTM_DEVICE_ID ? `P${item.index}` : `T${item.index}`}</span>
                 <strong>{item.label}</strong>
                 <small>

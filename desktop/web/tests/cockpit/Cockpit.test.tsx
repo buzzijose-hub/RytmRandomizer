@@ -130,6 +130,8 @@ describe('Cockpit', () => {
     fireEvent.click(screen.getByTestId('device-select-analog-four-mk2'));
 
     expect(screen.queryByTestId('pad-card-1')).not.toBeInTheDocument();
+    expect(screen.getByTestId('a4-track-card-1')).toBeVisible();
+    expect(screen.getByTestId('a4-track-card-4')).toBeVisible();
     expect(screen.getByTestId('patch-genome-panel')).toHaveTextContent('A4 Patch Genome');
     expect(screen.getByTestId('mutation-panel')).toBeInTheDocument();
     expect(screen.getByTestId('safety-rail')).toHaveTextContent('Mock Safe');

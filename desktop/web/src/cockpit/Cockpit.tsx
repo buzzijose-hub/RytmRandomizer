@@ -81,7 +81,10 @@ export function Cockpit({ client }: CockpitProps): JSX.Element {
                 <LiveReadinessPanel />
               </>
             ) : (
-              <PatchGenomePanel previewOn={previewOn} />
+              <>
+                <SnapshotPanel activeDeviceId={activeDeviceId} previewOn={previewOn} />
+                <PatchGenomePanel previewOn={previewOn} />
+              </>
             )}
           </div>
           <div className="cockpit-side-stack">

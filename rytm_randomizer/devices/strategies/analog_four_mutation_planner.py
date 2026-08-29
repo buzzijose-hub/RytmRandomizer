@@ -41,7 +41,10 @@ class AnalogFourMutationPlan:
 class AnalogFourMutationPlanner:
     """Mutation planner for candidate Analog Four snapshots."""
 
-    def __init__(self, *, seed: int = 0) -> None:
+    def __init__(self, *, track_count: int, seed: int = 0) -> None:
+        if type(track_count) is not int or track_count < 1:
+            raise ValueError(f"track_count must be a positive integer; got {track_count!r}")
+        self._track_count = track_count
         self._seed = seed
 
     def plan(
@@ -63,7 +66,11 @@ class AnalogFourMutationPlanner:
                 f"AnalogFourMutationPlanner.plan: depth must be in [0, {MAX_A4_DEPTH}], "
                 f"got {depth}"
             )
-        effective_tracks = scope.validated_effective_ids(range(1, 5), item_label="A4 track")
+        available_tracks = range(1, self._track_count + 1)
+        effective_tracks = scope.validated_effective_ids(
+            available_tracks,
+            item_label="A4 track",
+        )
         if not snapshot.offsets_promoted:
             get_metrics().record_error("a4_mutation_plan_semantic_offsets_unpromoted")
             _logger.warning(
@@ -117,7 +124,7 @@ class AnalogFourMutationPlanner:
                 control=pwm_control,
                 value=rng.randint(48, 96) if depth else 64,
             )
-            for track in range(1, 5)
+            for track in available_tracks
         )
         events = tuple(event for event in all_events if event.track in effective_tracks)
         return AnalogFourMutationPlan(

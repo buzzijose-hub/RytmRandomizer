@@ -9,7 +9,7 @@
 
 [![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-orange.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/tests-6%2C600%2B-9be8a0.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-8%2C389-9be8a0.svg)](#testing)
 [![WCAG](https://img.shields.io/badge/accessibility-WCAG%202.2%20AA-7cc4ff.svg)](docs/ACCESSIBILITY.md)
 [![Phase 1 · Cockpit](https://img.shields.io/badge/Phase%201%20%C2%B7%20Cockpit-shipped-7cc4ff.svg)](#cockpit)
 [![Phase 2 · Wizard](https://img.shields.io/badge/Phase%202%20%C2%B7%20Wizard-shipped-9be8a0.svg)](#profile-wizard)
@@ -214,6 +214,11 @@ python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar
 cd desktop/shell && cargo run
 ```
 
+For a fully passive UI-development sidecar, use
+`python -m rytm_randomizer.cockpit`. The armed form above is the explicit
+input-only KIT-capture composition: it can open the selected MIDI input, but
+it never opens a MIDI output or sends data to either instrument.
+
 See [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md) for prerequisites and the first-profile walkthrough.
 
 ### CLI (pip)
@@ -379,14 +384,15 @@ See [`docs/STATUS.md`](docs/STATUS.md) for the dated snapshot and the per-phase 
 <a id="testing"></a>
 ## Testing
 
-Counts as of the rival-program bundle (derived from the tree, not aspirational):
+Counts as of the targeted dual-machine live-kit branch (derived from the tree,
+not aspirational):
 
 | Suite | Count |
 |---|---|
-| Full Python suite (`pytest`) | Run `python -m pytest`; the current closeout total is recorded in the latest run report |
-| Architecture invariants (`tests/architecture/`) | Run `python -m pytest tests/architecture/ -q`; the current closeout total is recorded in the latest run report |
+| Full Python suite (`pytest`) | 8,389 collected test items |
+| Architecture invariants (`tests/architecture/`) | 788 test items |
 | V1.34 parity | 505 golden JSON files → 685 byte-identical test items |
-| Frontend (`desktop/web`, vitest) | Run the frontend coverage suite; the current closeout total is recorded in the latest run report |
+| Frontend (`desktop/web`, vitest) | 731 test items |
 | Accessibility gate | axe WCAG 2.2 AA, 0 violations |
 
 The suite uses `pytest-xdist` (`-n auto`). Don't pass `-o addopts=''` for normal runs — it disables xdist and triples the runtime.

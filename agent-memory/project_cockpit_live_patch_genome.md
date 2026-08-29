@@ -47,7 +47,8 @@ Primary implementation paths:
 
 The implementation plan is
 `docs/superpowers/plans/2026-08-26-cockpit-live-genome-profile-catalog.md`.
-The source-versus-implementation review is in `design-qa.md`.
+The source-versus-implementation review is in
+`docs/2026-08-26-cockpit-a4-patch-genome-design-qa.md`.
 
 ## Wire and state shape
 
@@ -147,7 +148,8 @@ guards, and tests synchronized when this shape changes.
    server rejection, transport rejection, missing inline payload, catalog
    search, unlock, preview-on, NRPN labels, and fallback family selection.
 4. Visual QA must compare source and implementation together, preserve the
-   same state, and record fixes in `design-qa.md`.
+   same state, and record fixes in
+   `docs/2026-08-26-cockpit-a4-patch-genome-design-qa.md`.
 5. Keep unrelated dirty RUSH/calibration work untouched when continuing this
    slice; the 2026-08-26 workspace contained independent user changes.
 

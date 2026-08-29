@@ -2103,8 +2103,8 @@ flowchart LR
         ARCH["docs/ARCHITECTURE.md<br/>§6.1 Device + Strategy seam"]
         DIAG["docs/ARCHITECTURE_DIAGRAMS.md<br/>(this file)"]
         PLAN_REQ["docs/PLAN_REQUIREMENTS.md<br/>(18 gates)"]
-        RULES[".claude/rules/<br/>{cascade-merge-pattern,<br/>parity-fixture-discipline,<br/>coverage-gate-100pct,<br/>architecture,<br/>skill-routing}"]
-        SKILLS[".claude/skills/<br/>(19 skills incl. add-pad-command,<br/>extend-data-layer,<br/>python-on-windows)"]
+        RULES[".claude/rules/<br/>{cascade-merge-pattern,<br/>parity-fixture-discipline,<br/>coverage-gate-100pct,<br/>architecture,<br/>targeted-mutation-safety,<br/>skill-routing}"]
+        SKILLS[".claude/skills/<br/>(24 skills incl. add-pad-command,<br/>extend-data-layer,<br/>python-on-windows)"]
         STATUS["docs/STATUS.md"]
     end
 

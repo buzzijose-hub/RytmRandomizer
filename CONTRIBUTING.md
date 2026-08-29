@@ -33,7 +33,7 @@ Every PR must satisfy ALL of these. If you cannot satisfy one, do not open the P
 
 1. **V1.34 parity** — 685/685 byte-identical JSON goldens under `tests/fixtures/v134_parity/`. Do not regenerate without explicit approval.
 2. **Coverage ratchet** — ≥95% pure-branch coverage project-wide (enforced by `scripts/coverage_ratchet.py`).
-3. **Architecture tests** — all 17 test files under `tests/architecture/` pass. Do not add to allowlists without justification in the PR body.
+3. **Architecture tests** — all tests under `tests/architecture/` pass. Do not add to allowlists without justification in the PR body.
 4. **Lint clean** — `ruff check`, `black --check --target-version=py311`, `isort --profile black --check-only` all clean. No exceptions; auto-fix locally before pushing.
 5. **No hardware in tests** — no test opens a real MIDI port; no test mutates a connected device.
 6. **Lazy MIDI imports** — `mido` and `python-rtmidi` are imported lazily inside `real_midi_adapter.py`. Never at module top-level. Enforced by `tests/architecture/test_no_side_effects.py`.

@@ -12,6 +12,8 @@ import hashlib
 from dataclasses import dataclass
 from typing import Final, Literal, NotRequired, Self, TypedDict, cast
 
+from ...data.analog_rytm_kit_layout import RYTM_KIT_TRACK_COUNT
+from ...data.identifier_sets import validated_id_set
 from .types import STATUS_VALUES, Status, narrow_status, safe_repr
 
 
@@ -50,10 +52,6 @@ class CockpitSendPlanDict(TypedDict):
     blocked_reasons: list[str]
 
 
-_PAD_ID_MIN: Final[int] = 1
-_PAD_ID_MAX: Final[int] = 12
-
-
 def _strict_pad_id_set(values: object, *, field_name: str) -> frozenset[int]:
     if not isinstance(values, (list, tuple, frozenset, set)):
         raise TypeError(f"{field_name} must be an iterable; got {type(values).__name__}")
@@ -61,24 +59,12 @@ def _strict_pad_id_set(values: object, *, field_name: str) -> frozenset[int]:
         "list[object] | tuple[object, ...] | frozenset[object] | set[object]",
         values,
     )
-    invalid: list[object] = []
-    valid: set[int] = set()
-    for value in collection:
-        if (
-            isinstance(value, bool)
-            or not isinstance(value, int)
-            or not (_PAD_ID_MIN <= value <= _PAD_ID_MAX)
-        ):
-            invalid.append(value)
-        else:
-            valid.add(value)
-    if invalid:
-        rendered = sorted(repr(value) for value in invalid)
-        raise ValueError(
-            f"{field_name} must contain only integer pad ids in "
-            f"[{_PAD_ID_MIN}, {_PAD_ID_MAX}]; got {rendered}"
-        )
-    return frozenset(valid)
+    return validated_id_set(
+        collection,
+        field_name=field_name,
+        is_allowed=lambda value: value <= RYTM_KIT_TRACK_COUNT,
+        expected=f"only integer pad ids in [1, {RYTM_KIT_TRACK_COUNT}]",
+    )
 
 
 def _strict_sequence(values: object, *, field_name: str) -> list[object] | tuple[object, ...]:
@@ -148,8 +134,8 @@ class SendPlanPacket:
     value: int
 
     def __post_init__(self) -> None:
-        if not (_PAD_ID_MIN <= self.pad_id <= _PAD_ID_MAX):
-            raise ValueError(f"pad_id must be in [{_PAD_ID_MIN}, {_PAD_ID_MAX}]; got {self.pad_id}")
+        if not 1 <= self.pad_id <= RYTM_KIT_TRACK_COUNT:
+            raise ValueError(f"pad_id must be in [1, {RYTM_KIT_TRACK_COUNT}]; got {self.pad_id}")
         if not self.parameter:
             raise ValueError("parameter must be a non-empty string")
         if not (_MIDI_CHANNEL_MIN <= self.channel <= _MIDI_CHANNEL_MAX):

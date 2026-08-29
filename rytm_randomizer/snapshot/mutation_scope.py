@@ -11,20 +11,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Final
 
-
-def _validated_positive_ids(values: Iterable[object], *, field_name: str) -> frozenset[int]:
-    normalized = frozenset(values)
-    invalid: list[object] = []
-    valid: set[int] = set()
-    for value in normalized:
-        if isinstance(value, bool) or not isinstance(value, int) or value < 1:
-            invalid.append(value)
-        else:
-            valid.add(value)
-    if invalid:
-        rendered = sorted(repr(value) for value in invalid)
-        raise ValueError(f"{field_name} must contain positive integer ids; got {rendered}")
-    return frozenset(valid)
+from ..data.identifier_sets import validated_id_set
 
 
 @dataclass(frozen=True)
@@ -42,7 +29,7 @@ class MutationScope:
             object.__setattr__(
                 self,
                 field_name,
-                _validated_positive_ids(values, field_name=field_name),
+                validated_id_set(values, field_name=field_name),
             )
 
     def effective_ids(

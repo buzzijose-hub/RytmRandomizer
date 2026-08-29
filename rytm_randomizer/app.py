@@ -77,12 +77,12 @@ if TYPE_CHECKING:
         MidiMetrics,
     )
     from .real_midi_adapter import RealMidiOutputPort, RealMidiOutputProvider
-    from .state.a4_soft_capture import (  # noqa: V104 - string-only cast annotations
+    from .state.a4_soft_capture import (
         A4CaptureCcMapping,
         A4NrpnControlSpec,
         A4SoftCaptureSnapshot,
     )
-    from .state.rytm_cc_observe import (  # noqa: V104 - string-only cast annotations
+    from .state.rytm_cc_observe import (
         RytmObserveAnchorEvent,
         RytmObserveCcMapping,
         RytmObserveExactEvent,

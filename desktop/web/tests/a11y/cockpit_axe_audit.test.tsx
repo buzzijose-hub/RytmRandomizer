@@ -25,6 +25,7 @@ import { CockpitClientProvider } from '../../src/cockpit/context';
 import { ArmControl } from '../../src/cockpit/ArmControl';
 import { DepthSlider } from '../../src/cockpit/DepthSlider';
 import { Knob } from '../../src/cockpit/Knob';
+import { KitCapturePanel } from '../../src/cockpit/KitCapturePanel';
 import { ProfileToggle } from '../../src/cockpit/ProfileToggle';
 import { LockButton } from '../../src/cockpit/LockButton';
 import { ConnectionDoctorPanel } from '../../src/cockpit/panels/ConnectionDoctorPanel';
@@ -32,6 +33,7 @@ import { KitMorphPanel } from '../../src/cockpit/panels/KitMorphPanel';
 import { LibraryPanel } from '../../src/cockpit/panels/LibraryPanel';
 import { LiveMidiMonitorPanel } from '../../src/cockpit/panels/LiveMidiMonitorPanel';
 import { DeviceRail } from '../../src/cockpit/DeviceRail';
+import { RYTM_DEVICE_ID } from '../../src/cockpit/devices';
 import { ReconnectBanner } from '../../src/cockpit/ReconnectBanner';
 import { PanelRenderer } from '../../src/cockpit/panels/PanelRenderer';
 import { ScopedRandomizationPanel } from '../../src/cockpit/panels/ScopedRandomizationPanel';
@@ -42,6 +44,7 @@ import {
   candidate,
   connectionListening,
   diagnosticsHealthy,
+  FakeCockpitClient,
   libraryRecordA,
   midiBatch,
   readyDualMachineStage,
@@ -50,7 +53,6 @@ import {
   sessionMock,
 } from '../cockpit/_fixtures';
 import { runAxe, violationSummary } from './__helpers__/axe';
-import { FakeCockpitClient } from '../cockpit/_fixtures';
 
 // component-name → expected (grandfathered) violation count. Keep at 0.
 const FLOORS = {
@@ -62,6 +64,7 @@ const FLOORS = {
   LockButton: 0,
   ConnectionDoctorPanel: 0,
   KitMorphPanel: 0,
+  KitCapturePanel: 0,
   LibraryPanel: 0,
   LiveMidiMonitorPanel: 0,
   PanelRenderer: 0,
@@ -159,6 +162,26 @@ describe('cockpit axe audit (WCAG 2.2 AA)', () => {
   it('KitMorphPanel (with the static-demonstration banner) is clean', async () => {
     const { container } = render(withClient(<KitMorphPanel />));
     await expectClean('KitMorphPanel', container);
+  });
+
+  it('KitCapturePanel passive input-only state is clean', async () => {
+    useCockpitStore.setState({ sessionStatus: sessionMock });
+    const fake = new FakeCockpitClient();
+    fake.ackQueue.push({
+      request_id: 'capture-inputs',
+      ok: true,
+      capture_enabled: false,
+      capture_device_id: RYTM_DEVICE_ID,
+      capture_inputs: [],
+    });
+    const { container } = render(
+      <CockpitClientProvider client={fake.asClient()}>
+        <KitCapturePanel deviceId={RYTM_DEVICE_ID} onClose={() => {}} />
+      </CockpitClientProvider>,
+    );
+
+    await screen.findByTestId('capture-locked-message');
+    await expectClean('KitCapturePanel', container);
   });
 
   it('ArmControl open dialog is clean', async () => {

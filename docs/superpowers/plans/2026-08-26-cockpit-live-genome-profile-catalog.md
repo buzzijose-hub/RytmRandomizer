@@ -90,7 +90,7 @@ Owns:
 - `docs/STATUS.md`
 - `docs/ARCHITECTURE.md` and diagrams if the event flow changes their current
   documented boundary
-- Product Design `design-qa.md`
+- Product Design [`docs/2026-08-26-cockpit-a4-patch-genome-design-qa.md`](../../2026-08-26-cockpit-a4-patch-genome-design-qa.md)
 
 Changes:
 

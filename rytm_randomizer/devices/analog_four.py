@@ -88,7 +88,9 @@ class AnalogFourDevice:
         """Compose the three capability strategies on this device instance."""
 
         self.snapshot_decoder: AnalogFourSnapshotDecoder = AnalogFourSnapshotDecoder()
-        self.mutation_planner: AnalogFourMutationPlanner = AnalogFourMutationPlanner()
+        self.mutation_planner: AnalogFourMutationPlanner = AnalogFourMutationPlanner(
+            track_count=self.track_count
+        )
         self.message_renderer: AnalogFourMessageRenderer = AnalogFourMessageRenderer()
 
     def decode_snapshot(self, raw: bytes, slot: int) -> AnalogFourKitSnapshot:

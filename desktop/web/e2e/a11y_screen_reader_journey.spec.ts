@@ -48,11 +48,23 @@ test.describe('SR-equivalent journey', () => {
     ).toBeVisible();
     await expect(page.getByText('12 pads ready for dry-run review').first()).toBeVisible();
 
-    // Switch to the Analog Four center panel: the live bundle routes A4 to the
-    // passive Patch Genome compiler rather than the Rytm snapshot surface.
-    // Verify its heading, four target controls, candidate selector, and
-    // explicit hardware lock through their accessible contracts.
+    // Switch to the Analog Four center panel and prove both the track grid and
+    // passive Patch Genome compiler are reachable through the shipped route.
     await page.getByTestId('device-select-analog-four-mk2').click();
+    const snapshotPanel = page.getByTestId('snapshot-panel');
+    await expect(
+      snapshotPanel.getByRole('heading', { exact: true, level: 2, name: 'Analog Four MKII' }),
+    ).toBeVisible();
+    for (const track of [1, 2, 3, 4]) {
+      const card = page.getByTestId(`a4-track-card-${track}`);
+      await expect(card).toBeVisible();
+      await expect(card).toHaveAttribute('data-role-key', /\w+/);
+    }
+    await expect(page.getByTestId('a4-track-card-1').getByRole('meter')).toHaveAttribute(
+      'aria-valuetext',
+      /safe mutation depth/,
+    );
+
     const patchGenomePanel = page.getByTestId('patch-genome-panel');
     await expect(
       patchGenomePanel.getByRole('heading', { exact: true, level: 2, name: 'A4 Patch Genome' }),
@@ -66,7 +78,6 @@ test.describe('SR-equivalent journey', () => {
     // Switch back to the Rytm panel so the rest of the checkpoint runs against
     // the surface the original spec was scoped to.
     await page.getByTestId('device-select-analog-rytm-mk2').click();
-    const snapshotPanel = page.getByTestId('snapshot-panel');
     await expect(
       snapshotPanel.getByRole('heading', { exact: true, level: 2, name: 'Snapshot' }),
     ).toBeVisible();

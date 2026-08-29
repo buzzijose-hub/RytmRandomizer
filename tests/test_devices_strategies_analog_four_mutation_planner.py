@@ -29,12 +29,17 @@ def _snapshot(*, offsets_promoted: bool = False):
     )
 
 
-def test_plan_returns_not_ready_when_offsets_are_candidate_only() -> None:
+def _planner(*, seed: int = 0, track_count: int = 4):
     from rytm_randomizer.devices.strategies import AnalogFourMutationPlanner
+
+    return AnalogFourMutationPlanner(track_count=track_count, seed=seed)
+
+
+def test_plan_returns_not_ready_when_offsets_are_candidate_only() -> None:
     from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
     reset_metrics()
-    plan = AnalogFourMutationPlanner(seed=0).plan(_snapshot(offsets_promoted=False), depth=1)
+    plan = _planner(seed=0).plan(_snapshot(offsets_promoted=False), depth=1)
 
     assert plan.ready is False
     assert plan.events == ()
@@ -44,9 +49,7 @@ def test_plan_returns_not_ready_when_offsets_are_candidate_only() -> None:
 
 
 def test_plan_returns_ready_events_when_offsets_are_promoted() -> None:
-    from rytm_randomizer.devices.strategies import AnalogFourMutationPlanner
-
-    plan = AnalogFourMutationPlanner(seed=0).plan(_snapshot(offsets_promoted=True), depth=1)
+    plan = _planner(seed=0).plan(_snapshot(offsets_promoted=True), depth=1)
 
     assert plan.ready is True
     assert plan.readiness_reason == ""
@@ -55,16 +58,12 @@ def test_plan_returns_ready_events_when_offsets_are_promoted() -> None:
 
 
 def test_plan_rejects_wrong_snapshot_type() -> None:
-    from rytm_randomizer.devices.strategies import AnalogFourMutationPlanner
-
     with pytest.raises(ValueError, match="AnalogFourKitSnapshot"):
-        AnalogFourMutationPlanner().plan("not a snapshot", depth=1)  # type: ignore[arg-type]
+        _planner().plan("not a snapshot", depth=1)  # type: ignore[arg-type]
 
 
 def test_plan_rejects_depth_outside_bounds() -> None:
-    from rytm_randomizer.devices.strategies import AnalogFourMutationPlanner
-
-    planner = AnalogFourMutationPlanner()
+    planner = _planner()
 
     with pytest.raises(ValueError, match=r"\[0,\s*7\]"):
         planner.plan(_snapshot(offsets_promoted=True), depth=-1)
@@ -73,18 +72,14 @@ def test_plan_rejects_depth_outside_bounds() -> None:
 
 
 def test_plan_is_deterministic_for_same_seed_slot_and_depth() -> None:
-    from rytm_randomizer.devices.strategies import AnalogFourMutationPlanner
-
-    planner = AnalogFourMutationPlanner(seed=99)
+    planner = _planner(seed=99)
     snap = _snapshot(offsets_promoted=True)
 
     assert planner.plan(snap, depth=3) == planner.plan(snap, depth=3)
 
 
 def test_plan_intersects_explicit_track_targets_with_locks_when_promoted() -> None:
-    from rytm_randomizer.devices.strategies import AnalogFourMutationPlanner
-
-    planner = AnalogFourMutationPlanner(seed=99)
+    planner = _planner(seed=99)
     plan = planner.plan(
         _snapshot(offsets_promoted=True),
         depth=3,
@@ -101,9 +96,7 @@ def test_plan_intersects_explicit_track_targets_with_locks_when_promoted() -> No
 
 
 def test_captured_candidate_only_a4_snapshot_stays_fail_closed_with_targets() -> None:
-    from rytm_randomizer.devices.strategies import AnalogFourMutationPlanner
-
-    plan = AnalogFourMutationPlanner().plan(
+    plan = _planner().plan(
         _snapshot(offsets_promoted=False),
         depth=3,
         scope=MutationScope(target_ids=frozenset({2})),
@@ -116,11 +109,10 @@ def test_captured_candidate_only_a4_snapshot_stays_fail_closed_with_targets() ->
 
 
 def test_plan_blocks_when_targets_are_entirely_locked() -> None:
-    from rytm_randomizer.devices.strategies import AnalogFourMutationPlanner
     from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
     reset_metrics()
-    plan = AnalogFourMutationPlanner().plan(
+    plan = _planner().plan(
         _snapshot(offsets_promoted=True),
         depth=3,
         scope=MutationScope(
@@ -147,7 +139,21 @@ def test_plan_rejects_a_missing_promoted_pwm_control(monkeypatch: pytest.MonkeyP
     )
 
     with pytest.raises(ValueError, match="promoted CC MSB"):
-        planner_mod.AnalogFourMutationPlanner().plan(
+        planner_mod.AnalogFourMutationPlanner(track_count=4).plan(
             _snapshot(offsets_promoted=True),
             depth=1,
         )
+
+
+def test_plan_uses_injected_track_count() -> None:
+    plan = _planner(track_count=2).plan(_snapshot(offsets_promoted=True), depth=1)
+
+    assert {event.track for event in plan.events} == {1, 2}
+
+
+@pytest.mark.parametrize("track_count", [True, 0, -1, 1.5, "4"])
+def test_planner_rejects_invalid_track_count(track_count: object) -> None:
+    from rytm_randomizer.devices.strategies import AnalogFourMutationPlanner
+
+    with pytest.raises(ValueError, match="track_count must be a positive integer"):
+        AnalogFourMutationPlanner(track_count=track_count)  # type: ignore[arg-type]

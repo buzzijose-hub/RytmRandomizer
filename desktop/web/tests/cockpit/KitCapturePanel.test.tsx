@@ -101,6 +101,7 @@ describe('KitCapturePanel', () => {
       device_id: ANALOG_FOUR_DEVICE_ID,
       input_port: 'Analog Four MIDI In',
     });
+    expect(fake.sent.filter((message) => message.type === 'list_capture_inputs')).toHaveLength(1);
   });
 
   it('renders all 12 Rytm pad rows from an already captured anchor', async () => {

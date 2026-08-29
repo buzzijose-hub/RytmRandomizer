@@ -6,6 +6,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Final, Self, TypedDict
 
+from ..data.identifier_sets import validated_id_set
 from ..snapshot.mutation_scope import MutationScope
 from .stage.policy import A4_LANE_POLICY, RYTM_LANE_POLICY, StageLanePolicy
 
@@ -28,25 +29,12 @@ def _validated_ids(
     field_name: str,
     policy: StageLanePolicy,
 ) -> frozenset[int]:
-    normalized = frozenset(values)
-    invalid: list[object] = []
-    valid: set[int] = set()
-    for value in normalized:
-        if (
-            isinstance(value, bool)
-            or not isinstance(value, int)
-            or value not in policy.available_ids
-        ):
-            invalid.append(value)
-        else:
-            valid.add(value)
-    if invalid:
-        rendered = sorted(repr(value) for value in invalid)
-        raise ValueError(
-            f"{field_name} must contain ids in "
-            f"[{policy.minimum_id}, {policy.maximum_id}]; got {rendered}"
-        )
-    return frozenset(valid)
+    return validated_id_set(
+        values,
+        field_name=field_name,
+        is_allowed=policy.available_ids.__contains__,
+        expected=f"ids in [{policy.minimum_id}, {policy.maximum_id}]",
+    )
 
 
 @dataclass(frozen=True)
