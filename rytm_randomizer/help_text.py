@@ -2751,24 +2751,36 @@ def _audio_patch_studio_session_help():
     from .cockpit.export.audio_patch_studio_session import (
         AUDIO_PATCH_STUDIO_SESSION_SAFETY,
     )
+    from .data.analog_four_patch_refinement import (
+        ANALOG_FOUR_PATCH_REFINEMENT_GAIN_DEFAULT,
+        ANALOG_FOUR_PATCH_REFINEMENT_GAIN_MAX,
+        ANALOG_FOUR_PATCH_REFINEMENT_GAIN_MIN,
+        ANALOG_FOUR_PATCH_REFINEMENT_SIMILARITY_MAX,
+        ANALOG_FOUR_PATCH_REFINEMENT_SIMILARITY_MIN,
+    )
+    from .data.analog_four_sysex_calibration import (
+        A4_SYNTH_TRACK_MAX,
+        A4_SYNTH_TRACK_MIN,
+    )
+    from .data.audio_patch_dna import AUDIO_PATCH_DNA_CANDIDATE_COUNT
 
     return f"""RytmRandomizer passive CLI: audio-patch-studio-session
 
 Usage:
-  python -m rytm_randomizer.cli audio-patch-studio-session --reference <path> --source-kit <kit.syx> --select <1-8> --output-dir <dir> [--track <1-4>] [--overwrite] [--json]
-  python -m rytm_randomizer.cli audio-patch-studio-session --session <session.json> --reference <path> --source-kit <kit.syx> --render <path> [--gain <0.0-1.0>] [--accept-similarity <0-100>] [--overwrite] [--json]
+  python -m rytm_randomizer.cli audio-patch-studio-session --reference <path> --source-kit <kit.syx> --select <1-{AUDIO_PATCH_DNA_CANDIDATE_COUNT}> --output-dir <dir> [--track <{A4_SYNTH_TRACK_MIN}-{A4_SYNTH_TRACK_MAX}>] [--overwrite] [--json]
+  python -m rytm_randomizer.cli audio-patch-studio-session --session <session.json> --reference <path> --source-kit <kit.syx> --render <path> [--gain <{ANALOG_FOUR_PATCH_REFINEMENT_GAIN_MIN}-{ANALOG_FOUR_PATCH_REFINEMENT_GAIN_MAX}>] [--accept-similarity <{ANALOG_FOUR_PATCH_REFINEMENT_SIMILARITY_MIN}-{ANALOG_FOUR_PATCH_REFINEMENT_SIMILARITY_MAX}>] [--overwrite] [--json]
   python -m rytm_randomizer.cli audio-patch-studio-session --help
 
 Arguments:
   --reference <path>       Immutable reference audio used by both modes
   --source-kit <kit.syx>   Initialized Analog Four saved-kit source
-  --select <1-8>           DNA direction selected when starting a session
+  --select <1-{AUDIO_PATCH_DNA_CANDIDATE_COUNT}>           DNA direction selected when starting a session
   --output-dir <dir>       Destination for new session artifacts
-  --track <1-4>            Analog Four track used in start mode; default 1
+  --track <{A4_SYNTH_TRACK_MIN}-{A4_SYNTH_TRACK_MAX}>            Analog Four track used in start mode; default {A4_SYNTH_TRACK_MIN}
   --session <session.json> Existing session state to resume
   --render <path>          Recorded Analog Four render for resume mode
-  --gain <0.0-1.0>         Bounded correction strength; default 0.65
-  --accept-similarity N    Accept without refinement at this 0-100 score
+  --gain <{ANALOG_FOUR_PATCH_REFINEMENT_GAIN_MIN}-{ANALOG_FOUR_PATCH_REFINEMENT_GAIN_MAX}>         Bounded correction strength; default {ANALOG_FOUR_PATCH_REFINEMENT_GAIN_DEFAULT}
+  --accept-similarity N    Accept without refinement at this {ANALOG_FOUR_PATCH_REFINEMENT_SIMILARITY_MIN}-{ANALOG_FOUR_PATCH_REFINEMENT_SIMILARITY_MAX} score
   --overwrite              Replace the mode's stable output artifacts
   --json                   Emit a JSON acknowledgment instead of text
 

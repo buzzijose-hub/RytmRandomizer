@@ -62,16 +62,33 @@ infrastructure (not subcommands) and are excluded from the ratchet.
 
 from __future__ import annotations
 
+import ast
 import re
 from pathlib import Path
 from typing import Final
 
 import pytest
 
+from rytm_randomizer.help_text import HELP_TEXT
+
 pytestmark = pytest.mark.fast
 
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 CLI_MODULE: Final[Path] = PROJECT_ROOT / "rytm_randomizer" / "cli.py"
+
+# Existing internal RIO145 utilities are intentionally not advertised in the
+# public help surface yet. Keep this baseline exact so it can only shrink, and
+# so every new lazy command must ship with discoverable help.
+_LAZY_COMMANDS_WITHOUT_HELP_BASELINE: Final[frozenset[str]] = frozenset(
+    {
+        "rio145-build-kit",
+        "rio145-diff-sysex",
+        "rio145-export-oxi-manifest",
+        "rio145-inspect-sysex",
+        "rio145-validate-return",
+        "rio145-validate-roundtrip",
+    }
+)
 
 # Matches the inline-arm shapes we care about. The token is captured as
 # a double-quoted string literal in ``args[0]`` position. We deliberately
@@ -171,6 +188,25 @@ def _extract_inline_arm_tokens(cli_source: str) -> set[str]:
     return tokens - _INFRASTRUCTURE_TOKENS
 
 
+def _extract_lazy_command_tokens(cli_source: str) -> set[str]:
+    """Return the literal keys in ``_registered_command_exit_code``."""
+
+    tree = ast.parse(cli_source)
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign) or not any(
+            isinstance(target, ast.Name) and target.id == "lazy_commands" for target in node.targets
+        ):
+            continue
+        if not isinstance(node.value, ast.Dict):
+            raise AssertionError("lazy_commands must remain a literal dictionary")
+        return {
+            key.value
+            for key in node.value.keys
+            if isinstance(key, ast.Constant) and isinstance(key.value, str)
+        }
+    raise AssertionError("cli.py must define the lazy_commands dispatch manifest")
+
+
 def test_cli_module_exists() -> None:
     """``rytm_randomizer/cli.py`` must exist — regression guard against
     a refactor that moves or deletes the dispatcher without updating
@@ -181,6 +217,20 @@ def test_cli_module_exists() -> None:
         f"{CLI_MODULE} must exist — it is the passive-CLI dispatcher "
         "this ratchet guards. If the dispatcher moved, update "
         "``CLI_MODULE`` to point at its new location."
+    )
+
+
+def test_lazy_registered_commands_match_help_registry_when_manifest_changes() -> None:
+    """New lazy commands must be discoverable through central CLI help."""
+
+    lazy_commands = _extract_lazy_command_tokens(CLI_MODULE.read_text(encoding="utf-8"))
+    missing_help = lazy_commands - set(HELP_TEXT)
+    assert missing_help == _LAZY_COMMANDS_WITHOUT_HELP_BASELINE, (
+        "The lazy command and help registries drifted. Every new dispatchable "
+        "command must have a HELP_TEXT entry; remove repaired legacy gaps from "
+        "_LAZY_COMMANDS_WITHOUT_HELP_BASELINE in the same change.\n"
+        f"Expected legacy-only gaps: {sorted(_LAZY_COMMANDS_WITHOUT_HELP_BASELINE)}\n"
+        f"Actual gaps: {sorted(missing_help)}"
     )
 
 
