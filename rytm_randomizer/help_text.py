@@ -302,6 +302,11 @@ USAGE = (
     "--output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json] | "
     "audio-patch-dna --audio <path> --output-dir <dir> [--track N] "
     "[--select N --source-kit <kit.syx>] [--overwrite] [--json] | "
+    "audio-patch-studio-session "
+    "(--reference <path> --source-kit <kit.syx> --select <1-8> "
+    "--output-dir <dir> [--track N] | --session <session.json> "
+    "--reference <path> --source-kit <kit.syx> --render <path> "
+    "[--gain N] [--accept-similarity N]) [--overwrite] [--json] | "
     "analog-four-audio-patch-rank --reference <path> --manifest <batch.json> "
     "--render <N=path> [--render <N=path> ...] [--json] | "
     "analog-four-audio-patch-refine --reference <path> --manifest <batch.json> "
@@ -2742,6 +2747,43 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _audio_patch_studio_session_help():
+    from .cockpit.export.audio_patch_studio_session import (
+        AUDIO_PATCH_STUDIO_SESSION_SAFETY,
+    )
+
+    return f"""RytmRandomizer passive CLI: audio-patch-studio-session
+
+Usage:
+  python -m rytm_randomizer.cli audio-patch-studio-session --reference <path> --source-kit <kit.syx> --select <1-8> --output-dir <dir> [--track <1-4>] [--overwrite] [--json]
+  python -m rytm_randomizer.cli audio-patch-studio-session --session <session.json> --reference <path> --source-kit <kit.syx> --render <path> [--gain <0.0-1.0>] [--accept-similarity <0-100>] [--overwrite] [--json]
+  python -m rytm_randomizer.cli audio-patch-studio-session --help
+
+Arguments:
+  --reference <path>       Immutable reference audio used by both modes
+  --source-kit <kit.syx>   Initialized Analog Four saved-kit source
+  --select <1-8>           DNA direction selected when starting a session
+  --output-dir <dir>       Destination for new session artifacts
+  --track <1-4>            Analog Four track used in start mode; default 1
+  --session <session.json> Existing session state to resume
+  --render <path>          Recorded Analog Four render for resume mode
+  --gain <0.0-1.0>         Bounded correction strength; default 0.65
+  --accept-similarity N    Accept without refinement at this 0-100 score
+  --overwrite              Replace the mode's stable output artifacts
+  --json                   Emit a JSON acknowledgment instead of text
+
+Behavior:
+  Start mode analyzes the reference once, commits the selected DNA direction
+  and its passive Analog Four saved-kit export, and writes hash-bound resumable
+  session state. Resume mode verifies that state, every committed artifact,
+  the original inputs, and the recorded render before either accepting it or
+  applying one bounded refinement pass. Repeating an identical completed
+  request is idempotent; provenance or artifact drift fails closed.
+
+Safety:
+{_safety_block(AUDIO_PATCH_STUDIO_SESSION_SAFETY)}"""
+
+
 def _analog_four_audio_patch_rank_help():
     from .cockpit.export.analog_four_patch_render_rank import (
         ANALOG_FOUR_RENDER_RANK_SAFETY,
@@ -2981,6 +3023,8 @@ Usage:
   python -m rytm_randomizer.cli al16-rytm-mapping-evidence --reference <baseline.syx> --configured <configured.syx> --recipe <recipe.yaml> --gap-manifest <manifest.json> --expected-gap-manifest-sha256 <sha256> --report <report.json>
   python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json]
   python -m rytm_randomizer.cli audio-patch-dna --audio <path> --output-dir <dir> [--track N] [--select N --source-kit <kit.syx>] [--overwrite] [--json]
+  python -m rytm_randomizer.cli audio-patch-studio-session --reference <path> --source-kit <kit.syx> --select <1-8> --output-dir <dir> [--track N] [--overwrite] [--json]
+  python -m rytm_randomizer.cli audio-patch-studio-session --session <session.json> --reference <path> --source-kit <kit.syx> --render <path> [--gain N] [--accept-similarity N] [--overwrite] [--json]
   python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference <path> --manifest <batch.json> --render <N=path> [--render <N=path> ...] [--json]
   python -m rytm_randomizer.cli analog-four-audio-patch-refine --reference <path> --manifest <batch.json> --candidate <1-4> --render <path> --output-dir <dir> [--gain N] [--accept-similarity N] [--source-kit <kit.syx>] [--overwrite] [--json]
   python -m rytm_randomizer.cli cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> [--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json]
@@ -3240,6 +3284,8 @@ Commands:
                     Infer and export up to four passive Analog Four patch candidates from audio.
   audio-patch-dna
                     Analyze audio once and write eight comparable patch directions.
+  audio-patch-studio-session
+                    Start or resume a passive Audio-to-Patch studio session.
   analog-four-audio-patch-rank
                     Rank recorded Analog Four candidates against their reference audio.
   analog-four-audio-patch-refine
@@ -3662,6 +3708,7 @@ Safety:
     "al16-rytm-mapping-evidence": _al16_rytm_mapping_evidence_help,
     "analog-four-audio-patch-batch": _analog_four_audio_patch_batch_help,
     "audio-patch-dna": _audio_patch_dna_help,
+    "audio-patch-studio-session": _audio_patch_studio_session_help,
     "analog-four-audio-patch-rank": _analog_four_audio_patch_rank_help,
     "analog-four-audio-patch-refine": _analog_four_audio_patch_refine_help,
     "cockpit-export-rehearsal-report": _cockpit_export_rehearsal_report_help,

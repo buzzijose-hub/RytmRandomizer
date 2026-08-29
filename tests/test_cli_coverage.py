@@ -387,6 +387,7 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     a4_saved_kit_export_help = resolve_help_text("analog-four-saved-kit-export")
     a4_audio_patch_batch_help = resolve_help_text("analog-four-audio-patch-batch")
     audio_patch_dna_help = resolve_help_text("audio-patch-dna")
+    audio_patch_studio_session_help = resolve_help_text("audio-patch-studio-session")
     a4_audio_patch_rank_help = resolve_help_text("analog-four-audio-patch-rank")
     a4_audio_patch_refine_help = resolve_help_text("analog-four-audio-patch-refine")
 
@@ -417,6 +418,9 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
         "RytmRandomizer passive CLI: analog-four-audio-patch-batch"
     )
     assert audio_patch_dna_help.startswith("RytmRandomizer passive CLI: audio-patch-dna")
+    assert audio_patch_studio_session_help.startswith(
+        "RytmRandomizer passive CLI: audio-patch-studio-session"
+    )
     assert a4_audio_patch_rank_help.startswith(
         "RytmRandomizer passive CLI: analog-four-audio-patch-rank"
     )
