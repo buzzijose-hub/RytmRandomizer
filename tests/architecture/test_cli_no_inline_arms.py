@@ -199,11 +199,12 @@ def _extract_lazy_command_tokens(cli_source: str) -> set[str]:
             continue
         if not isinstance(node.value, ast.Dict):
             raise AssertionError("lazy_commands must remain a literal dictionary")
-        return {
-            key.value
-            for key in node.value.keys
-            if isinstance(key, ast.Constant) and isinstance(key.value, str)
-        }
+        tokens: set[str] = set()
+        for key in node.value.keys:
+            if not isinstance(key, ast.Constant) or not isinstance(key.value, str):
+                raise AssertionError("lazy_commands keys must remain string literals")
+            tokens.add(key.value)
+        return tokens
     raise AssertionError("cli.py must define the lazy_commands dispatch manifest")
 
 
@@ -232,6 +233,19 @@ def test_lazy_registered_commands_match_help_registry_when_manifest_changes() ->
         f"Expected legacy-only gaps: {sorted(_LAZY_COMMANDS_WITHOUT_HELP_BASELINE)}\n"
         f"Actual gaps: {sorted(missing_help)}"
     )
+
+
+def test_lazy_command_extraction_rejects_dynamic_keys_when_manifest_changes() -> None:
+    """A computed dispatch key must not evade the help-parity ratchet."""
+
+    source = """
+def command_manifest():
+    command_name = "dynamic-command"
+    lazy_commands = {command_name: ("module", "COMMAND")}
+    return lazy_commands
+"""
+    with pytest.raises(AssertionError, match="keys must remain string literals"):
+        _extract_lazy_command_tokens(source)
 
 
 def test_no_new_inline_arms_added_to_cli_main() -> None:

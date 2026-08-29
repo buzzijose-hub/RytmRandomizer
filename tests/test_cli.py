@@ -327,7 +327,7 @@ USAGE = (
     "audio-patch-dna --audio <path> --output-dir <dir> [--track N] "
     "[--select N --source-kit <kit.syx>] [--overwrite] [--json] | "
     "audio-patch-studio-session "
-    "(--reference <path> --source-kit <kit.syx> --select <1-8> "
+    "(--reference <path> --source-kit <kit.syx> --select <N> "
     "--output-dir <dir> [--track N] | --session <session.json> "
     "--reference <path> --source-kit <kit.syx> --render <path> "
     "[--gain N] [--accept-similarity N]) [--overwrite] [--json] | "

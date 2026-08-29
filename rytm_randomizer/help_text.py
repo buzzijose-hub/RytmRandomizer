@@ -303,7 +303,7 @@ USAGE = (
     "audio-patch-dna --audio <path> --output-dir <dir> [--track N] "
     "[--select N --source-kit <kit.syx>] [--overwrite] [--json] | "
     "audio-patch-studio-session "
-    "(--reference <path> --source-kit <kit.syx> --select <1-8> "
+    "(--reference <path> --source-kit <kit.syx> --select <N> "
     "--output-dir <dir> [--track N] | --session <session.json> "
     "--reference <path> --source-kit <kit.syx> --render <path> "
     "[--gain N] [--accept-similarity N]) [--overwrite] [--json] | "
@@ -3035,7 +3035,7 @@ Usage:
   python -m rytm_randomizer.cli al16-rytm-mapping-evidence --reference <baseline.syx> --configured <configured.syx> --recipe <recipe.yaml> --gap-manifest <manifest.json> --expected-gap-manifest-sha256 <sha256> --report <report.json>
   python -m rytm_randomizer.cli analog-four-audio-patch-batch --audio <path> --source-kit <kit.syx> --output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json]
   python -m rytm_randomizer.cli audio-patch-dna --audio <path> --output-dir <dir> [--track N] [--select N --source-kit <kit.syx>] [--overwrite] [--json]
-  python -m rytm_randomizer.cli audio-patch-studio-session --reference <path> --source-kit <kit.syx> --select <1-8> --output-dir <dir> [--track N] [--overwrite] [--json]
+  python -m rytm_randomizer.cli audio-patch-studio-session --reference <path> --source-kit <kit.syx> --select <N> --output-dir <dir> [--track N] [--overwrite] [--json]
   python -m rytm_randomizer.cli audio-patch-studio-session --session <session.json> --reference <path> --source-kit <kit.syx> --render <path> [--gain N] [--accept-similarity N] [--overwrite] [--json]
   python -m rytm_randomizer.cli analog-four-audio-patch-rank --reference <path> --manifest <batch.json> --render <N=path> [--render <N=path> ...] [--json]
   python -m rytm_randomizer.cli analog-four-audio-patch-refine --reference <path> --manifest <batch.json> --candidate <1-4> --render <path> --output-dir <dir> [--gain N] [--accept-similarity N] [--source-kit <kit.syx>] [--overwrite] [--json]
