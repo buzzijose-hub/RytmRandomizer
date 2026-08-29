@@ -434,7 +434,7 @@ def test_audio_patch_dna_help_is_exact_and_passive():
     assert result.stderr == ""
 
 
-def test_audio_patch_studio_session_help_is_exact_and_passive():
+def test_audio_patch_studio_session_help_is_exact_and_passive_when_requested():
     from rytm_randomizer.cockpit.export.audio_patch_studio_session import (
         AUDIO_PATCH_STUDIO_SESSION_SAFETY,
     )

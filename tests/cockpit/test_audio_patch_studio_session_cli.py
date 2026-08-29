@@ -91,10 +91,18 @@ def _result(
     )
 
 
-def test_help_is_passive_and_successful(capsys: pytest.CaptureFixture[str]) -> None:
+def test_help_is_passive_and_successful_when_requested(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     parsed = cli.parse_audio_patch_studio_session_args(["--help"])
 
     assert parsed["help_requested"] is True
+
+    assert cli.handle_audio_patch_studio_session(**parsed) == 0
+    module_captured = capsys.readouterr()
+    assert module_captured.out == f"{cli.USAGE}\n"
+    assert module_captured.err == ""
+
     assert root_cli.main([cli.COMMAND_NAME, "--help"]) == 0
     captured = capsys.readouterr()
     assert captured.out.startswith("RytmRandomizer passive CLI: audio-patch-studio-session\n")
