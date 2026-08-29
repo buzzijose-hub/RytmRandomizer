@@ -26,10 +26,10 @@ Flag behavior (Wave 4 / WS-O convergence):
 * ``--arm --rytm-live-snapshot-shell``: receive one current-kit SysEx dump from
   the Rytm, decode it, and run the all-12-pad snapshot shell from that live
   anchor. Armed sends require ``--confirm-rytm-snapshot-shell-send``.
-* ``--arm --cockpit-kit-capture-sidecar``: run the input-only Cockpit capture
-  composition. It can open only the operator-selected input and cannot send a
-  SysEx request or any output message. Cockpit output remains owned by the
-  in-UI ``ArmedApply`` seam.
+* ``--arm --cockpit-kit-capture-sidecar``: run Cockpit with input-only current-
+  KIT capture enabled. Capture opens only the operator-selected input; any
+  outbound action remains separately armed and confirmed through the in-UI
+  ``ArmedApply`` seam.
 
 This module is import-safe: importing it does not import ``mido`` and does not
 open ports. Those happen lazily inside the ``--arm`` handler only. The
@@ -49,7 +49,7 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence  # noqa: V104
 from pathlib import Path
 from time import perf_counter
 from time import sleep as _hardware_settle_sleep
@@ -77,12 +77,12 @@ if TYPE_CHECKING:
         MidiMetrics,
     )
     from .real_midi_adapter import RealMidiOutputPort, RealMidiOutputProvider
-    from .state.a4_soft_capture import (
+    from .state.a4_soft_capture import (  # noqa: V104 - string-only cast annotations
         A4CaptureCcMapping,
         A4NrpnControlSpec,
         A4SoftCaptureSnapshot,
     )
-    from .state.rytm_cc_observe import (
+    from .state.rytm_cc_observe import (  # noqa: V104 - string-only cast annotations
         RytmObserveAnchorEvent,
         RytmObserveCcMapping,
         RytmObserveExactEvent,
@@ -251,7 +251,7 @@ class _RytmSysexCaptureProvider(Protocol):
         self,
         port_name: str,
         *,
-        timeout_seconds: float,
+        timeout_seconds: float,  # noqa  # required Protocol keyword
     ) -> tuple[bytes, ...]: ...
 
 
@@ -285,8 +285,9 @@ def _build_parser() -> argparse.ArgumentParser:
         "--cockpit-kit-capture-sidecar",
         action="store_true",
         help=(
-            "Launch the Cockpit sidecar with input-only current-KIT capture. "
-            "Requires --arm; opens no output and sends no MIDI."
+            "Launch Cockpit with input-only current-KIT capture. Capture itself "
+            "opens no output and sends no MIDI; outbound actions remain behind "
+            "the in-UI arm and per-action confirmation. Requires --arm."
         ),
     )
     parser.add_argument(
@@ -3586,7 +3587,7 @@ def _run_validate_one_cc(args: argparse.Namespace) -> int:
 
 
 def _run_cockpit_kit_capture_sidecar() -> int:
-    """Compose input-only KIT capture through the explicit app arm boundary."""
+    """Compose Cockpit with input-only KIT capture through the app boundary."""
 
     from .cockpit.__main__ import run as run_cockpit_sidecar
     from .cockpit.capture import KitCaptureService

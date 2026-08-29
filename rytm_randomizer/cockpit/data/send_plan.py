@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from typing import Final, Literal, NotRequired, Self, TypedDict, cast
 
 from ...data.analog_rytm_kit_layout import RYTM_KIT_TRACK_COUNT
-from ...data.identifier_sets import validated_id_set
+from ...guardrails.identifier_sets import validated_id, validated_id_set
 from .types import STATUS_VALUES, Status, narrow_status, safe_repr
 
 
@@ -134,8 +134,12 @@ class SendPlanPacket:
     value: int
 
     def __post_init__(self) -> None:
-        if not 1 <= self.pad_id <= RYTM_KIT_TRACK_COUNT:
-            raise ValueError(f"pad_id must be in [1, {RYTM_KIT_TRACK_COUNT}]; got {self.pad_id}")
+        validated_id(
+            self.pad_id,
+            field_name="pad_id",
+            is_allowed=lambda pad_id: pad_id <= RYTM_KIT_TRACK_COUNT,
+            expected=f"in [1, {RYTM_KIT_TRACK_COUNT}]",
+        )
         if not self.parameter:
             raise ValueError("parameter must be a non-empty string")
         if not (_MIDI_CHANNEL_MIN <= self.channel <= _MIDI_CHANNEL_MAX):

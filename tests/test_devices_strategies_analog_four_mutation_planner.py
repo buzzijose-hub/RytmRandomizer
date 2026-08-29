@@ -31,8 +31,14 @@ def _snapshot(*, offsets_promoted: bool = False):
 
 def _planner(*, seed: int = 0, track_count: int = 4):
     from rytm_randomizer.devices.strategies import AnalogFourMutationPlanner
+    from rytm_randomizer.devices.strategies.analog_four_track_domain import (
+        AnalogFourTrackDomain,
+    )
 
-    return AnalogFourMutationPlanner(track_count=track_count, seed=seed)
+    return AnalogFourMutationPlanner(
+        track_domain=AnalogFourTrackDomain(track_count),
+        seed=seed,
+    )
 
 
 def test_plan_returns_not_ready_when_offsets_are_candidate_only() -> None:
@@ -139,21 +145,34 @@ def test_plan_rejects_a_missing_promoted_pwm_control(monkeypatch: pytest.MonkeyP
     )
 
     with pytest.raises(ValueError, match="promoted CC MSB"):
-        planner_mod.AnalogFourMutationPlanner(track_count=4).plan(
+        planner_mod.AnalogFourMutationPlanner(
+            track_domain=planner_mod.AnalogFourTrackDomain(4)
+        ).plan(
             _snapshot(offsets_promoted=True),
             depth=1,
         )
 
 
-def test_plan_uses_injected_track_count() -> None:
-    plan = _planner(track_count=2).plan(_snapshot(offsets_promoted=True), depth=1)
+def test_plan_uses_injected_device_track_domain() -> None:
+    plan = _planner(track_count=5).plan(_snapshot(offsets_promoted=True), depth=1)
 
-    assert {event.track for event in plan.events} == {1, 2}
+    assert {event.track for event in plan.events} == {1, 2, 3, 4, 5}
 
 
 @pytest.mark.parametrize("track_count", [True, 0, -1, 1.5, "4"])
 def test_planner_rejects_invalid_track_count(track_count: object) -> None:
-    from rytm_randomizer.devices.strategies import AnalogFourMutationPlanner
+    from rytm_randomizer.devices.strategies.analog_four_track_domain import (
+        AnalogFourTrackDomain,
+    )
 
     with pytest.raises(ValueError, match="track_count must be a positive integer"):
-        AnalogFourMutationPlanner(track_count=track_count)  # type: ignore[arg-type]
+        AnalogFourTrackDomain(track_count)  # type: ignore[arg-type]
+
+
+def test_track_domain_rejects_count_beyond_midi_channel_domain() -> None:
+    from rytm_randomizer.devices.strategies.analog_four_track_domain import (
+        AnalogFourTrackDomain,
+    )
+
+    with pytest.raises(ValueError, match="must not exceed 16 MIDI channels"):
+        AnalogFourTrackDomain(17)

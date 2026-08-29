@@ -216,8 +216,9 @@ cd desktop/shell && cargo run
 
 For a fully passive UI-development sidecar, use
 `python -m rytm_randomizer.cockpit`. The armed form above is the explicit
-input-only KIT-capture composition: it can open the selected MIDI input, but
-it never opens a MIDI output or sends data to either instrument.
+KIT-capture-enabled composition: the capture flow itself opens only the
+selected MIDI input. Explicitly armed, per-action-confirmed RAM-only sends
+remain available through the Cockpit's sole output boundary, `ArmedApply`.
 
 See [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md) for prerequisites and the first-profile walkthrough.
 
@@ -240,7 +241,7 @@ The passive report surface is 100+ registered commands — see [`docs/CLI_REFERE
 
 ```bash
 # Cockpit + export
-python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar     # input-only live-kit sidecar
+python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar     # input-only capture; ArmedApply-gated sends
 cockpit-export-profile-model --profile-id X --output Y.rymp           # ship a profile
 cockpit-export-rehearsal-report --profile-id X                        # passive pre-flight
 

@@ -33,8 +33,9 @@ shell does the rest:
    no Python install is required on your machine. A dev checkout without the
    bundled binary automatically falls back to
    `python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar` from
-   PATH (sections 1–4 below). This grants input-only KIT capture, not output
-   authority.
+   PATH (sections 1–4 below). At startup this grants only input-side KIT
+   capture; output authority still requires a separate in-UI arm, exact port,
+   token, and per-action confirmation.
 2. **Picks a free port.** The shell uses 4317 when it's free and asks
    the OS for a free ephemeral port otherwise, passing the choice to
    both the sidecar (`RYTM_RAND_WS_PORT`) and the webview — a busy port
@@ -530,15 +531,17 @@ The cockpit defaults to a **mock device adapter**: it opens no MIDI port
 and sends no MIDI, even when you hit SEND. This is the same passive-
 default discipline the rest of the project uses.
 
-The installed shell and development fallback start current-KIT reception
-through the explicit input-only composition:
+The installed shell and development fallback start Cockpit with input-only
+current-KIT reception enabled:
 
 ```bash
 python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar
 ```
 
-That authority can list and open the input selected in **Capture Current
-Kit**, but it has no output surface and cannot transmit a request or a kit.
+That capture authority can list and open the input selected in **Capture
+Current Kit**, but the capture flow has no output surface and cannot transmit a
+request or a kit. Cockpit's separate outbound surface remains unavailable until
+the operator completes the explicit arm flow described below.
 Rytm and A4 frames must pass the family codec, checksum/length validation,
 and an exact decode/re-encode check before becoming in-memory captures.
 `session_status.capture_enabled` is the authoritative capability flag. The

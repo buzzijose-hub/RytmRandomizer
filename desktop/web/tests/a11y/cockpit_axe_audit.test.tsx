@@ -17,7 +17,7 @@
  * entry is a documented, dated debt with a fix owner. As of this suite's
  * introduction the audit found every scanned surface clean (all floors 0).
  */
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { ActionBar } from '../../src/cockpit/ActionBar';
@@ -39,6 +39,7 @@ import { PanelRenderer } from '../../src/cockpit/panels/PanelRenderer';
 import { ScopedRandomizationPanel } from '../../src/cockpit/panels/ScopedRandomizationPanel';
 import { liveMidiMonitorPanelSpec } from '../../src/cockpit/panels/liveMidiMonitorPanelSpec';
 import { useCockpitStore } from '../../src/state';
+import type { KitCaptureResult } from '../../src/ws/protocol';
 
 import {
   candidate,
@@ -164,8 +165,27 @@ describe('cockpit axe audit (WCAG 2.2 AA)', () => {
     await expectClean('KitMorphPanel', container);
   });
 
-  it('KitCapturePanel passive input-only state is clean', async () => {
-    useCockpitStore.setState({ sessionStatus: sessionMock });
+  it('KitCapturePanel captured layout is clean and exposes list semantics', async () => {
+    const capture: KitCaptureResult = {
+      device_id: RYTM_DEVICE_ID,
+      kit_name: 'LIVE RYTM KIT',
+      slot: 3,
+      fingerprint: '0123456789abcdef',
+      frame_bytes: 3001,
+      captured_at: '2026-08-26T12:00:00+00:00',
+      snapshot_layout: 'saved_kit',
+      parameter_readiness: 'rytm_anchor_ready',
+      round_trip_verified: true,
+      input_only: true,
+      sent_midi: false,
+      layout_items: Array.from({ length: 12 }, (_, index) => ({
+        index: index + 1,
+        label: `Machine ${index + 1}`,
+        status: 'mutation_ready',
+        detail: 'promoted machine fact',
+      })),
+    };
+    useCockpitStore.setState({ sessionStatus: sessionMock, kitCaptures: [capture] });
     const fake = new FakeCockpitClient();
     fake.ackQueue.push({
       request_id: 'capture-inputs',
@@ -181,6 +201,8 @@ describe('cockpit axe audit (WCAG 2.2 AA)', () => {
     );
 
     await screen.findByTestId('capture-locked-message');
+    const layout = screen.getByRole('list', { name: 'Analog Rytm MKII captured layout' });
+    expect(within(layout).getAllByRole('listitem')).toHaveLength(12);
     await expectClean('KitCapturePanel', container);
   });
 

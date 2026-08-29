@@ -11,7 +11,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Final
 
-from ..data.identifier_sets import validated_id_set
+from ..guardrails.identifier_sets import validated_id_set
 
 
 @dataclass(frozen=True)

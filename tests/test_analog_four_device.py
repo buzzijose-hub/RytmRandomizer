@@ -94,6 +94,24 @@ def test_analog_four_device_renders_ready_plan_messages() -> None:
     assert len(tuple(a4.to_cc_messages(plan))) == len(plan.events)
 
 
+def test_analog_four_device_shares_one_track_domain_across_plan_and_render() -> None:
+    from rytm_randomizer.devices.analog_four import AnalogFourDevice
+    from rytm_randomizer.devices.strategies import AnalogFourKitSnapshot
+
+    class FiveTrackAnalogFourDevice(AnalogFourDevice):
+        track_count = 5
+
+    a4 = FiveTrackAnalogFourDevice()
+    snapshot = AnalogFourKitSnapshot(slot=1, kit_name="A4", raw=b"", offsets_promoted=True)
+
+    plan = a4.plan_mutation(snapshot, depth=1)
+    messages = tuple(a4.to_cc_messages(plan))
+
+    assert a4.mutation_planner.track_domain is a4.message_renderer.track_domain
+    assert {event.track for event in plan.events} == {1, 2, 3, 4, 5}
+    assert messages[-1][0] == 4
+
+
 def test_analog_four_device_rejects_wrong_snapshot_type() -> None:
     from rytm_randomizer.devices import get_device
 

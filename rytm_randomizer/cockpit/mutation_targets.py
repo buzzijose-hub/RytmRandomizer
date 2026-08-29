@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Final, Self, TypedDict
 
-from ..data.identifier_sets import validated_id_set
+from ..guardrails.identifier_sets import validated_id_set
 from ..snapshot.mutation_scope import MutationScope
 from .stage.policy import A4_LANE_POLICY, RYTM_LANE_POLICY, StageLanePolicy
 

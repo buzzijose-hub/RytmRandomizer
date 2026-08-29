@@ -1,4 +1,4 @@
-"""Shared validation for positive identifier sets.
+"""Shared guardrail validation for positive identifier sets.
 
 The base rule is device-neutral: identifiers are positive integers and booleans
 are never accepted as integers. Callers may inject a stricter device-domain
@@ -8,6 +8,25 @@ predicate while retaining one normalization and error-reporting path.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
+
+
+def validated_id(
+    value: object,
+    *,
+    field_name: str,
+    is_allowed: Callable[[int], bool] | None = None,
+    expected: str = "a positive integer id",
+) -> int:
+    """Return one valid identifier, rejecting booleans and invalid domains."""
+
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, int)
+        or value < 1
+        or (is_allowed is not None and not is_allowed(value))
+    ):
+        raise ValueError(f"{field_name} must be {expected}; got {value!r}")
+    return value
 
 
 def validated_id_set(
@@ -22,19 +41,21 @@ def validated_id_set(
     invalid: list[object] = []
     valid: set[int] = set()
     for value in values:
-        if (
-            isinstance(value, bool)
-            or not isinstance(value, int)
-            or value < 1
-            or (is_allowed is not None and not is_allowed(value))
-        ):
+        try:
+            valid.add(
+                validated_id(
+                    value,
+                    field_name=field_name,
+                    is_allowed=is_allowed,
+                    expected=expected,
+                )
+            )
+        except ValueError:
             invalid.append(value)
-        else:
-            valid.add(value)
     if invalid:
         rendered = sorted(repr(value) for value in invalid)
         raise ValueError(f"{field_name} must contain {expected}; got {rendered}")
     return frozenset(valid)
 
 
-__all__ = ["validated_id_set"]
+__all__ = ["validated_id", "validated_id_set"]

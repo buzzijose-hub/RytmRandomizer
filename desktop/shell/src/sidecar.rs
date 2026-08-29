@@ -92,7 +92,7 @@ const DEFAULT_ARM_SECRET_FILE: &str = "cockpit-arm-secret";
 pub enum SidecarLaunch {
     /// A bundled one-file binary (production double-click path).
     Bundled(PathBuf),
-    /// Explicitly armed input-only capture composition from PATH (dev fallback).
+    /// Cockpit composition with input-only capture enabled (dev fallback).
     DevPython(String),
 }
 

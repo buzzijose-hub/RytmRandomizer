@@ -11,6 +11,7 @@ from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
 from ...snapshot.mutation_scope import DEFAULT_MUTATION_SCOPE, MutationScope
 from .analog_four_snapshot_decoder import AnalogFourKitSnapshot
+from .analog_four_track_domain import AnalogFourTrackDomain
 
 MAX_A4_DEPTH: Final[int] = 7
 _logger = get_logger(__name__)
@@ -41,10 +42,8 @@ class AnalogFourMutationPlan:
 class AnalogFourMutationPlanner:
     """Mutation planner for candidate Analog Four snapshots."""
 
-    def __init__(self, *, track_count: int, seed: int = 0) -> None:
-        if type(track_count) is not int or track_count < 1:
-            raise ValueError(f"track_count must be a positive integer; got {track_count!r}")
-        self._track_count = track_count
+    def __init__(self, *, track_domain: AnalogFourTrackDomain, seed: int = 0) -> None:
+        self.track_domain = track_domain
         self._seed = seed
 
     def plan(
@@ -66,7 +65,7 @@ class AnalogFourMutationPlanner:
                 f"AnalogFourMutationPlanner.plan: depth must be in [0, {MAX_A4_DEPTH}], "
                 f"got {depth}"
             )
-        available_tracks = range(1, self._track_count + 1)
+        available_tracks = self.track_domain.track_ids
         effective_tracks = scope.validated_effective_ids(
             available_tracks,
             item_label="A4 track",

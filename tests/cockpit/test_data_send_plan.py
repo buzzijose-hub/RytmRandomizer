@@ -79,6 +79,14 @@ def test_send_plan_packet_rejects_out_of_range_midi_values() -> None:
         SendPlanPacket(pad_id=1, parameter="tun", channel=16, control=74, value=64)
 
 
+def test_send_plan_packet_rejects_boolean_pad_id_from_wire_dict() -> None:
+    packet = _packet().to_dict()
+    packet["pad_id"] = True
+
+    with pytest.raises(ValueError, match=r"pad_id must be in \[1, 12\]; got True"):
+        SendPlanPacket.from_dict(packet)  # type: ignore[arg-type]
+
+
 def test_send_plan_round_trips_and_exposes_ui_counts() -> None:
     plan = _plan(
         _packet(pad_id=1, parameter="dec", value=80),

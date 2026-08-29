@@ -28,6 +28,7 @@ from .strategies.analog_four_saved_kit_writer import (
     AnalogFourSavedKitRenderResult,
     render_analog_four_saved_kit,
 )
+from .strategies.analog_four_track_domain import AnalogFourTrackDomain
 
 _REPORT_HEADER: Final[str] = "RytmRandomizer Analog Four MK2 Guarded Send"
 _DEVICE_ID: Final[str] = "analog_four_mk2"
@@ -87,11 +88,14 @@ class AnalogFourDevice:
     def __init__(self) -> None:
         """Compose the three capability strategies on this device instance."""
 
+        track_domain = AnalogFourTrackDomain(self.track_count)
         self.snapshot_decoder: AnalogFourSnapshotDecoder = AnalogFourSnapshotDecoder()
         self.mutation_planner: AnalogFourMutationPlanner = AnalogFourMutationPlanner(
-            track_count=self.track_count
+            track_domain=track_domain
         )
-        self.message_renderer: AnalogFourMessageRenderer = AnalogFourMessageRenderer()
+        self.message_renderer: AnalogFourMessageRenderer = AnalogFourMessageRenderer(
+            track_domain=track_domain
+        )
 
     def decode_snapshot(self, raw: bytes, slot: int) -> AnalogFourKitSnapshot:
         """Delegate to the Analog Four snapshot decoder strategy."""
