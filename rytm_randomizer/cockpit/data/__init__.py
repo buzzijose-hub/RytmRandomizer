@@ -19,6 +19,17 @@ from .send_plan import (
     narrow_readiness_reason,
 )
 from .snapshot import PadState, Snapshot
+from .stage import (
+    DualMachineStageState,
+    DualMachineStageStateDict,
+    MachineStageState,
+    MachineStageStateDict,
+    StageArtifactState,
+    StageAuthorityState,
+    StageCaptureState,
+    StageConnectionState,
+    StageDeviceId,
+)
 from .types import (
     HISTORY_KIND_VALUES,
     KIND_VALUES,
@@ -47,7 +58,11 @@ __all__ = [
     "READINESS_REASON_VALUES",
     "Kind",
     "CockpitSendPlan",
+    "DualMachineStageState",
+    "DualMachineStageStateDict",
     "MutationCandidate",
+    "MachineStageState",
+    "MachineStageStateDict",
     "PadDelta",
     "PadState",
     "ProfileModel",
@@ -55,6 +70,11 @@ __all__ = [
     "STATUS_VALUES",
     "SendPlanPacket",
     "Snapshot",
+    "StageArtifactState",
+    "StageAuthorityState",
+    "StageCaptureState",
+    "StageConnectionState",
+    "StageDeviceId",
     "Status",
     "StyleTrait",
     "TRANSITION_CURVE_VALUES",

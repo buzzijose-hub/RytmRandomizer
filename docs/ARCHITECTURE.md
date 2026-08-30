@@ -148,6 +148,8 @@ on one line for an existing module, you probably need a new module instead.
 | `snapshot/elektron_packed_payload.py` | Shared pure packed-payload/trailer splitter and integrity contract used by A4 and Analog Rytm saved-kit codecs. |
 | `snapshot/elektron_u14.py` | Shared pure Elektron 14-bit integer validation and packing helpers used across saved-kit families. |
 | `snapshot/sysex_file.py` | Passive local SysEx frame extraction and trusted-file reading helpers; no MIDI enumeration, port access, or transmission. |
+| `snapshot/mutation_scope.py` | Device-neutral immutable include-target/deny-lock scope; empty targets mean the full device domain before locks are subtracted. |
+| `devices/saved_kit_capture.py` | Optional registry-resolved saved-KIT capture capability and canonical round-trip frame DTO; keeps Cockpit from importing concrete family codecs. |
 | `devices/strategies/analog_four_saved_kit_codec.py` | Shared A4 saved-kit payload validator/encoder used by decoder and writer; owns checksum/trailer handling. |
 | `devices/strategies/analog_four_saved_kit_writer.py` | Pure A4 saved-kit mutator/renderer consuming the shared codec, calibration, and canonical data-layer layout facts; no filesystem or MIDI I/O. |
 | `devices/strategies/analog_four_kit_fields.py` | Typed copy-on-edit A4 saved-KIT and sound-field views over canonical layout facts; preserves unknown bytes and performs no framing or hardware I/O. |
@@ -198,6 +200,10 @@ on one line for an existing module, you probably need a new module instead.
 | `cockpit/export/rio145_cli.py` | Six registered file-only RIO145 commands for inspect, diff, round-trip validation, device-selected build and return validation, and OXI manifest export; never imports or constructs a MIDI provider. |
 | `cockpit/export/al16_rytm_mapping_closure.py` | Pure Phase R2 saved-KIT comparison service; binds recipe, gap-manifest, recipe-identity, and reference provenance before producing review-required candidate evidence from canonical layout metadata. |
 | `cockpit/export/al16_rytm_mapping_closure_cli.py` | Registered passive Phase R2 adapter; validates path contracts before I/O, records structured operations and metrics, writes one deterministic JSON report, and never reaches MIDI. |
+| `cockpit/capture/{service,bridge}.py` | Input-only saved-KIT capture and verified Rytm-anchor/A4-blocked-plan adoption; resolves optional capture capability through the device registry and owns no output surface. |
+| `cockpit/mutation_targets.py` | Strict whole-state Rytm-pad/A4-track target model built on device-neutral `MutationScope`. |
+| `cockpit/data/stage.py` | Immutable dual-machine stage DTOs and WebSocket serialization only. |
+| `cockpit/stage/{coordinator,policy}.py` | Hardware-inert lane orchestration plus registry-derived device domains/authority policy; no codec or port ownership. |
 | `cockpit/data/rytm_parameter_map.py` | Canonical cockpit-facing Analog Rytm machine aliases and parameter bindings; delegates CC/NRPN facts to the shared device data layer instead of duplicating controls or offsets. |
 | `style_analysis/analog_four_patch_inference.py` | Typed, single-decode audio evidence and audio-dependent four-column A4 patch-genome inference with direct RED metrics. |
 | `style_analysis/runtime_types.py` | Shared runtime type-validation helper used by extractor and A4 inference boundaries. |
@@ -387,13 +393,19 @@ through three Strategy sub-Protocols.
 | `track_count`               | `int`                                                 | Pads / tracks (4 for A4, 12 for Rytm) |
 | `sysex_manufacturer_id`     | `bytes`                                               | 3-byte Elektron ID (`0x00 0x20 0x3C`) |
 | `snapshot_decoder`          | `snapshot.SnapshotDecoder` Protocol                   | `decode(raw, slot)` → device-specific snapshot |
-| `mutation_planner`          | `snapshot.MutationPlanner` Protocol                   | `plan(snapshot, depth)` → device-specific plan |
+| `mutation_planner`          | `snapshot.MutationPlanner` Protocol                   | `plan(snapshot, depth, *, scope=...)` → device-specific plan constrained to effective target-minus-lock scope |
 | `message_renderer`          | `devices.MessageRenderer` Protocol                    | `to_mock_message(event, plan)` + `to_cc_triple(event, plan)` |
 | `report_header`             | `str`                                                 | Header line for guarded / hardware send reports |
 
 The Protocol's four legacy convenience methods (`decode_snapshot`,
 `plan_mutation`, `to_mock_messages`, `to_cc_messages`) remain for
 backward compatibility — they delegate to the strategies.
+
+Saved-KIT input capture is a separate optional structural capability. Cockpit
+resolves it through `devices.saved_kit_capture` and the device registry, so the
+capture service never imports a concrete Rytm or A4 codec. This keeps the
+mandatory `Device` Protocol stable while allowing each registered family to
+prove exact frame decode/re-encode support.
 
 The A4 saved-kit renderer is an optional family capability resolved from the
 registered `AnalogFourDevice` through `get_analog_four_saved_kit_capability()`;
@@ -622,6 +634,7 @@ rytm_randomizer/cockpit/
         profile_model.py   # StyleTrait, TraitPadWeight, ProfileModel
         mutation_candidate.py  # PadDelta, MutationCandidate
         send_plan.py       # CockpitSendPlan, SendPlanPacket
+        stage.py           # Independent Rytm/A4 stage lifecycle + authority state
         history.py         # HistoryEntry, History
         types.py           # Literal aliases (kind, status, via, ...)
     engine/                # The deterministic mutation function
@@ -634,6 +647,10 @@ rytm_randomizer/cockpit/
         builtin.py         # Seven default `kind="scene"` profiles
     history/               # In-memory snapshot chain
         store.py           # append, undo, load, promote-to-saved
+    capture/               # Explicitly armed, input-only current-KIT reception
+        service.py         # family codec + checksum + exact round-trip verification
+        bridge.py          # verified Rytm capture -> Cockpit Snapshot anchor
+    mutation_targets.py    # Rytm pad/A4 track include targets + lock-aware scope
     device/                # Device adapter abstraction
         adapter.py         # DeviceAdapter Protocol
         mock.py            # MockDeviceAdapter (the only adapter — state,
@@ -657,15 +674,20 @@ rytm_randomizer/cockpit/
 The desktop shell (`desktop/shell/` — Rust + Tauri 2) and the web frontend
 (`desktop/web/` — Vite + React + TypeScript) live **outside** the Python
 package: they are bundled by `cargo build --release` into a single binary
-that spawns the Python sidecar via `python -m rytm_randomizer.cockpit`.
+that spawns the Python sidecar via the explicit input-only composition
+`python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar` (or its
+equivalent bundled entry stub). This grants no output authority.
 
 The web cockpit may render more than one device surface, but device facts
 still come from the shared Device + Strategy layer. The current UI selects
 between the default Analog Rytm MKII 12-pad snapshot view and an Analog Four
 MKII four-track staged view that consumes the existing A4 role/zone vocabulary.
 The A4 surface also renders OXI-style Anchor / Shape / Pressure / Space macro
-rows as frontend-only review metadata. That A4 surface is visibility-only until
-the A4 SEND path is separately designed, tested, and armed.
+rows as frontend-only review metadata. Verified A4 KIT capture and lock-aware
+zero-event planning exist, but A4 SEND remains blocked until saved-KIT semantic
+offsets are promoted from codec, stride, and physical evidence. OXI One remains
+the owner of sequencing, notes, triggers, mutes, and pattern motion; Cockpit
+does not claim direct OXI control.
 
 ### The Protocol — events out, commands in
 
@@ -679,21 +701,37 @@ UI drives the engine with **typed commands** that ack synchronously.
 | `snapshot_changed` | `{ snapshot: Snapshot }` | After SEND, LOAD, or UNDO |
 | `mutation_previewed` | `{ candidate: MutationCandidate \| null }` | After depth change, REGEN, or PREVIEW toggle |
 | `send_plan_changed` | `{ send_plan: CockpitSendPlan \| null }` | After PREPARE, stale candidate/lock changes, or SEND |
-| `history_updated` | `{ history: History }` | After SEND, SAVE, LOAD, or UNDO |
+| `kit_captures_changed` | `{ captures: KitCaptureResult[] }` | On connect and after a verified input-only current-KIT capture |
+| `mutation_targets_changed` | `{ rytm_pad_targets, a4_track_targets }` | On connect and after whole-state target replacement/clear |
+| `mutation_locks_changed` | `{ rytm_pad_locks, a4_track_locks }` | On connect and after either independent deny-list changes |
+| `dual_machine_stage_changed` | `{ stage: DualMachineStageState }` | On connect and every capture/scope/candidate/plan/authority/recovery transition |
+| `history_updated` | `{ history: History }` | After capture adoption, SEND, LOAD, or UNDO; refused SAVE emits no event |
 | `profile_changed` | `{ profile: ProfileModel \| null }` | After `select_profile` |
+| `profile_catalog_changed` | `{ profiles: ProfileSummary[] }` | On connect and after the Wizard saves a profile |
+| `patch_genome_changed` | `{ patch_genome: AnalogFourPatchGenomePayload \| null }` | On connect and after passive Patch Genome analysis |
 | `performance_console_changed` | `{ performance_console: LiveGuiPerformanceConsoleModel \| null }` | On connect, when the passive performance-console packet refreshes |
-| `session_status` | `{ armed, midi_port, mode, unsaved_sends }` | On connect, on arm-toggle |
+| `session_status` | `{ armed, midi_port, mode, unsaved_sends, connection_phase, capture_enabled }` | On connect and authority/connection changes; `capture_enabled` reflects the injected input-only capture service |
+
+After authentication, bootstrap emits exactly these eleven events in order:
+`session_status`, `snapshot_changed`, `profile_changed`,
+`profile_catalog_changed`, `history_updated`, `patch_genome_changed`,
+`kit_captures_changed`, `mutation_targets_changed`, `mutation_locks_changed`,
+`dual_machine_stage_changed`, and `performance_console_changed`. When a
+connection manager is injected, `connection_changed` may follow as event 12.
 
 | Command (UI → engine) | Returns | Notes |
 |---|---|---|
 | `select_profile` | `{ ok }` | Sets active profile |
 | `set_depth` | `{ ok, candidate? }` | Recomputes candidate at new depth |
 | `set_pad_lock` | `{ ok }` | Locked pads are skipped on SEND |
+| `set_a4_track_lock` | `{ ok }` | Updates the A4 deny-list; grants no A4 output authority |
+| `set_mutation_targets` / `clear_mutation_targets` | `{ ok }` | Replaces one device include-list; empty means all, then locks are subtracted |
+| `list_capture_inputs` / `capture_current_kit` | `{ ok, ... }` | Available only in the explicitly armed input composition; never transmits |
 | `toggle_preview` | `{ ok, candidate? }` | Ghost overlay on/off |
 | `regen` | `{ ok, candidate }` | New seed, same depth |
 | `prepare_send_plan` | `{ ok, send_plan }` | Builds an inert packet plan and readiness blockers |
-| `send` | `{ ok, new_snapshot_id, send_plan_id }` | Applies the ready plan. When the session is armed the command MUST carry `confirm: true` — the seam refuses otherwise (per-action operator confirmation); unarmed/mock sends need no `confirm`. |
-| `save` | `{ ok, snapshot_id }` | Promotes the current snapshot to a labelled `kind="saved"` **history** entry. It does **not** write to the device: a persistent kit write is refused at the seam while capture-before-write and restore do not exist. |
+| `send` | `{ ok, new_snapshot_id, send_plan_id }` | Applies the ready plan. Armed SEND MUST carry both `confirm: true` and the exact current `send_plan_id`; missing, malformed, or stale ids are refused before the output boundary opens. Unarmed/mock sends remain local. |
+| `save` | `{ ok: false, ... }` | Refused: persistent kit write and the required capture-before-write restore seam do not exist. |
 | `load_snapshot` | `{ ok }` | Restores a historical snapshot |
 | `undo` | `{ ok, snapshot_id }` | Walks history back one step |
 | `export_profile_model` | `{ ok, model_bytes }` | MessagePack + header + CRC |
@@ -701,6 +739,17 @@ UI drives the engine with **typed commands** that ack synchronously.
 Events are full-state — the UI re-renders from the latest event per kind,
 no delta-ordering subtleties. Commands are idempotent given the same
 engine state.
+
+`DualMachineStageCoordinator` is hardware-inert and owns no codec or port.
+It carries separate Rytm/A4 capture, target, lock, candidate, plan, authority,
+blocker, stale, and recovery state plus a monotonic revision. Rytm connection
+state mirrors the armed-output connection manager. The A4 lane currently
+records capture success/failure and session-stage state; it does not claim a
+continuously monitored independent physical hot-plug connection. One lane's
+failure or stale transition cannot grant authority to its sibling. A4
+authority is independently blocked while its semantic mapping manifest is
+incomplete. Target or lock changes revoke plans and invalidate candidates
+derived from the old effective scope.
 
 ### Mutation engine — two reference implementations, identical output
 

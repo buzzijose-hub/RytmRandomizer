@@ -86,6 +86,9 @@ class DeviceAdapter(Protocol):
         """
         ...
 
+    def adopt_snapshot(self, snapshot: Snapshot) -> None:
+        """Cache a verified input-only capture without opening an output port."""
+
     def apply(
         self,
         candidate: MutationCandidate,

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { AnalogFourTrackCard } from '../../src/cockpit/AnalogFourTrackCard';
 import { CockpitClientProvider } from '../../src/cockpit/context';
@@ -8,6 +8,7 @@ import {
   ANALOG_FOUR_OXI_ACTIONS_BY_ROLE,
   ANALOG_FOUR_TRACKS,
 } from '../../src/cockpit/devices';
+import { useCockpitStore } from '../../src/state';
 
 import { FakeCockpitClient } from './_fixtures';
 
@@ -25,6 +26,9 @@ function renderCard(
 }
 
 describe('AnalogFourTrackCard', () => {
+  beforeEach(() => useCockpitStore.getState().reset());
+  afterEach(() => useCockpitStore.getState().reset());
+
   it('shows preview rows for CC-ready zones and deferred rows for NRPN-only zones', () => {
     renderCard(true);
 
@@ -46,11 +50,38 @@ describe('AnalogFourTrackCard', () => {
     );
     expect(card).not.toHaveClass('locked');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Lock pad 1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Lock track 1' }));
 
-    expect(fake.sent).toEqual([{ type: 'set_pad_lock', pad_id: 1, locked: true }]);
+    expect(fake.sent).toEqual([{ type: 'set_a4_track_lock', track: 1, locked: true }]);
     expect(card).toHaveClass('locked');
-    expect(screen.getByRole('button', { name: 'Unlock pad 1' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Unlock track 1' })).toBeInTheDocument();
+  });
+
+  it('adds the A4 track to the explicit mutation target include-list', () => {
+    const fake = renderCard(false);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Target track 1' }));
+
+    expect(fake.sent).toEqual([
+      {
+        type: 'set_mutation_targets',
+        device_id: 'analog_four_mk2',
+        target_ids: [1],
+      },
+    ]);
+    expect(screen.getByTestId('a4-track-card-1')).toHaveClass('targeted');
+    expect(screen.getByRole('button', { name: 'Remove track 1' })).toBePressed();
+  });
+
+  it('marks a track inactive when a different explicit A4 target is selected', () => {
+    useCockpitStore.getState().setMutationTargets([], [2]);
+    renderCard(false);
+
+    expect(screen.getByTestId('a4-track-card-1')).toHaveClass('inactive');
+    expect(screen.getByTestId('a4-track-card-1')).toHaveAttribute(
+      'data-target-state',
+      'inactive',
+    );
   });
 
   it('exposes the role key as a data-role-key attribute for diagnostics + locks it against the devices.ts source of truth', () => {

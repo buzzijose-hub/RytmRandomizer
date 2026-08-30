@@ -6,7 +6,7 @@ The session bundles every long-lived collaborator the handlers need:
 * the :class:`HistoryStore` (the snapshot chain + ``current_id``),
 * the :class:`DeviceAdapter` (mock by default, real-MIDI when ``--arm``),
 * plus the transient operator state (``active_profile``, ``depth``,
-  ``seed``, ``pad_locks``, ``preview_on``, ``current_candidate``,
+  ``seed``, mutation targets, locks, ``preview_on``, ``current_candidate``,
   ``unsaved_sends``).
 
 Why a mutable dataclass and not a frozen one
@@ -44,12 +44,14 @@ from typing import Final
 from ...observability.logging import get_logger
 from ...senders.armed_apply import ArmedApplySession
 from ...senders.hardware import OutputOpeningProvider
+from ..capture import KitCaptureDeviceId, KitCaptureResult, KitCaptureService
 from ..data import CockpitSendPlan, MutationCandidate, ProfileModel
 from ..device import DeviceAdapter
 from ..diagnostics import ErrorJournal
 from ..history import HistoryStore
 from ..library import LibraryStore
 from ..profiles import ProfileRegistry
+from ..stage import DualMachineStageCoordinator
 from .wizard_session import WizardSession
 
 _logger = get_logger(__name__)
@@ -63,6 +65,12 @@ DEFAULT_DEPTH: Final[float] = 0.45
 
 _SEED_BITS: Final[int] = 32
 """xorshift32 (the engine PRNG) consumes a 32-bit seed; sample exactly that width."""
+
+DEFAULT_PATCH_GENOME_DESCRIPTION: Final[str] = "Tight warehouse pressure"
+"""Passive Analog Four compiler prompt shown on a fresh Cockpit session."""
+
+DEFAULT_PATCH_GENOME_TRACK: Final[int] = 2
+"""One-based Analog Four track selected on a fresh Cockpit session."""
 
 
 def fresh_seed() -> int:
@@ -90,14 +98,26 @@ class CockpitSession:
     profile_registry: ProfileRegistry
     history_store: HistoryStore
     device: DeviceAdapter
+    kit_capture_service: KitCaptureService = field(default_factory=KitCaptureService.disabled)
+    kit_captures: dict[KitCaptureDeviceId, KitCaptureResult] = field(
+        default_factory=dict[KitCaptureDeviceId, KitCaptureResult]
+    )
     active_profile: ProfileModel | None = None
     depth: float = DEFAULT_DEPTH
     seed: int = field(default_factory=fresh_seed)
     pad_locks: set[int] = field(default_factory=set[int])
+    rytm_pad_targets: set[int] = field(default_factory=set[int])
+    a4_track_targets: set[int] = field(default_factory=set[int])
+    a4_track_locks: set[int] = field(default_factory=set[int])
+    stage_coordinator: DualMachineStageCoordinator = field(
+        default_factory=DualMachineStageCoordinator
+    )
     preview_on: bool = False
     current_candidate: MutationCandidate | None = None
     current_send_plan: CockpitSendPlan | None = None
     unsaved_sends: int = 0
+    patch_genome_description: str = DEFAULT_PATCH_GENOME_DESCRIPTION
+    patch_genome_track: int = DEFAULT_PATCH_GENOME_TRACK
     active_wizard: WizardSession | None = None
     """The in-flight :class:`WizardSession`, or ``None`` between wizard runs.
 
@@ -169,7 +189,8 @@ class CockpitSession:
 
     Unwired sessions (unit tests, embedded harnesses) reject library
     commands with a validation ack and never emit ``library_changed`` —
-    the historical wire surface stays byte-identical.
+    the current whole-state event contract stays intact, including the
+    authoritative 11-event bootstrap without an implicit library frame.
     """
 
     error_journal: ErrorJournal = field(default_factory=ErrorJournal)
@@ -213,4 +234,10 @@ class CockpitSession:
         self.pending_events = []
 
 
-__all__ = ["DEFAULT_DEPTH", "CockpitSession", "fresh_seed"]
+__all__ = [
+    "DEFAULT_DEPTH",
+    "DEFAULT_PATCH_GENOME_DESCRIPTION",
+    "DEFAULT_PATCH_GENOME_TRACK",
+    "CockpitSession",
+    "fresh_seed",
+]

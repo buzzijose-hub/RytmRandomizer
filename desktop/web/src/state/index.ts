@@ -79,6 +79,42 @@ export function bindClientToStore(
         ev.profile !== null ? `Profile selected: ${ev.profile.name}` : 'Profile cleared',
       );
     }),
+    client.on('profile_catalog_changed', (ev) => {
+      store.getState().setProfileCatalog(ev.profiles);
+      announce(`Profile catalogue updated, ${ev.profiles.length} profiles available`);
+    }),
+    client.on('kit_captures_changed', (ev) => {
+      store.getState().setKitCaptures(ev.captures);
+      announce(
+        ev.captures.length > 0
+          ? `Current kit anchors updated, ${ev.captures.length} machines captured`
+          : 'No current kit anchors captured',
+      );
+    }),
+    client.on('mutation_targets_changed', (ev) => {
+      store.getState().setMutationTargets(ev.rytm_pad_targets, ev.a4_track_targets);
+      announce(
+        `Mutation targets updated, ${ev.rytm_pad_targets.length || 12} Rytm pads and ${ev.a4_track_targets.length || 4} Analog Four tracks in scope`,
+      );
+    }),
+    client.on('mutation_locks_changed', (ev) => {
+      store.getState().setMutationLocks(ev.rytm_pad_locks, ev.a4_track_locks);
+      announce(
+        `Mutation locks updated, ${ev.rytm_pad_locks.length} Rytm pads and ${ev.a4_track_locks.length} Analog Four tracks protected`,
+      );
+    }),
+    client.on('dual_machine_stage_changed', (ev) => {
+      store.getState().setDualMachineStage(ev.stage);
+      announce(
+        `Dual-machine stage revision ${ev.stage.revision}, Rytm plan ${ev.stage.rytm.plan_state}, Analog Four plan ${ev.stage.analog_four.plan_state}`,
+      );
+    }),
+    client.on('patch_genome_changed', (ev) => {
+      store.getState().setPatchGenome(ev.patch_genome);
+      announce(
+        `Analog Four patch genome ready, ${ev.patch_genome.genome.candidate_count} candidates`,
+      );
+    }),
     client.on('performance_console_changed', (ev) => {
       store.getState().setPerformanceConsole(ev.performance_console);
       announce(
@@ -94,6 +130,7 @@ export function bindClientToStore(
         mode: ev.mode,
         connection_phase: ev.connection_phase,
         unsaved_sends: ev.unsaved_sends,
+        capture_enabled: ev.capture_enabled,
       });
       announce(
         `Session status updated, mode ${ev.mode}, ${ev.armed ? 'armed' : 'passive'}`,

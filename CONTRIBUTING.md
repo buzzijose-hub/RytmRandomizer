@@ -33,7 +33,7 @@ Every PR must satisfy ALL of these. If you cannot satisfy one, do not open the P
 
 1. **V1.34 parity** — 685/685 byte-identical JSON goldens under `tests/fixtures/v134_parity/`. Do not regenerate without explicit approval.
 2. **Coverage ratchet** — ≥95% pure-branch coverage project-wide (enforced by `scripts/coverage_ratchet.py`).
-3. **Architecture tests** — all 17 test files under `tests/architecture/` pass. Do not add to allowlists without justification in the PR body.
+3. **Architecture tests** — all tests under `tests/architecture/` pass. Do not add to allowlists without justification in the PR body.
 4. **Lint clean** — `ruff check`, `black --check --target-version=py311`, `isort --profile black --check-only` all clean. No exceptions; auto-fix locally before pushing.
 5. **No hardware in tests** — no test opens a real MIDI port; no test mutates a connected device.
 6. **Lazy MIDI imports** — `mido` and `python-rtmidi` are imported lazily inside `real_midi_adapter.py`. Never at module top-level. Enforced by `tests/architecture/test_no_side_effects.py`.
@@ -596,20 +596,24 @@ Sub-rules under `.claude/rules/` extend the 18 gates:
 - [`parity-fixture-discipline.md`](.claude/rules/parity-fixture-discipline.md) — Gate 2 details; when and how to regenerate V1.34 fixtures.
 - [`coverage-gate-100pct.md`](.claude/rules/coverage-gate-100pct.md) — Gate 1 details; branch coverage and per-file ratchet.
 - [`cascade-merge-pattern.md`](.claude/rules/cascade-merge-pattern.md) — Gate 16 enforcement for autonomous multi-WS runs.
+- [`live-but-passive-midi.md`](.claude/rules/live-but-passive-midi.md) — input/output authority, ArmedApply, and persistent-write refusal boundary.
+- [`readme-freshness.md`](.claude/rules/readme-freshness.md) — keep current user-facing capabilities, counts, and safety claims truthful.
+- [`targeted-mutation-safety.md`](.claude/rules/targeted-mutation-safety.md) — target-minus-lock scope, capture-anchor, exact-plan, A4 fail-closed, and OXI ownership rules.
 
 Architecture-enforcement tests under `tests/architecture/` mechanically
 verify a subset of these gates on every CI run; do not skip them locally.
 
-`RYTM_RAND_WS_PORT` is reserved for a future cockpit Python sidecar/WebSocket
-port. It is not currently read by runtime code and must not start a server,
-open a port, launch a GUI, or send MIDI. If a future cockpit implementation
-starts reading it, document the default, valid overrides, local setup, CI
-behavior, installer behavior, and passive-CLI isolation here and in
-`docs/LOCAL_DEV_TOOLING_NOTES.md` before enabling the sidecar.
+`RYTM_RAND_WS_PORT` configures the loopback Cockpit WebSocket port (default
+4317) for the Python sidecar and Tauri shell. It grants no MIDI authority;
+hardware capture still requires the explicit input-only app composition and
+output still requires the separate ArmedApply lifecycle. Keep the default,
+override, installer, and passive-CLI behavior synchronized with
+`docs/LOCAL_DEV_TOOLING_NOTES.md` and `docs/COCKPIT_QUICKSTART.md`.
 
 ## Test suite structure
 
-The suite has 2370+ tests across these layers. **Visual reference:** [`docs/ARCHITECTURE_DIAGRAMS.md` §13 Test Suite Layers](docs/ARCHITECTURE_DIAGRAMS.md#13-test-suite-layers-2370-tests) and [§24 Closeout + Test Coverage Map](docs/ARCHITECTURE_DIAGRAMS.md#24-closeout--test-coverage-map).
+The suite spans these layers; current totals belong in the latest closeout run
+report. **Visual reference:** [`docs/ARCHITECTURE_DIAGRAMS.md` §13 Test Suite Layers](docs/ARCHITECTURE_DIAGRAMS.md#13-test-suite-layers) and [§24 Closeout + Test Coverage Map](docs/ARCHITECTURE_DIAGRAMS.md#24-closeout--test-coverage-map).
 
 | Layer | Where | Purpose |
 |---|---|---|
@@ -682,7 +686,7 @@ The table there maps change types to the right module and the right skill.
 | Doc | Purpose | When to read |
 |---|---|---|
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | The fixed architecture standard. §3 dependency direction rules, §5 V1.34 parity discipline, §6 "where to put new work", §6.1 Device + Strategy seam, §7 enforcement summary, §8 V1.34 parity API surface. | First read before any non-trivial change. |
-| [`docs/ARCHITECTURE_DIAGRAMS.md`](docs/ARCHITECTURE_DIAGRAMS.md) | 27 mermaid diagrams covering the package layer map, Device + Strategy stack, snapshot → plan → render lifecycle, engines / data / guardrails / observability subpackages, arch-test enforcement graph, CI pipeline, 18 plan-requirement gates, cascade-vs-bundled PR flow, future codex PR shape, and more. | Before adding a new device family, refactoring a subpackage, or trying to understand any of the major abstractions. |
+| [`docs/ARCHITECTURE_DIAGRAMS.md`](docs/ARCHITECTURE_DIAGRAMS.md) | Current Mermaid maps covering the package layer map, Device + Strategy stack, snapshot → plan → render lifecycle, engines / data / guardrails / observability subpackages, arch-test enforcement graph, CI pipeline, 18 plan-requirement gates, bundled-PR flow, targeted live-KIT state, and more. | Before adding a new device family, refactoring a subpackage, or trying to understand any of the major abstractions. |
 | [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md) | The 18 mandatory gates every PR must satisfy. | Before opening any PR — its conformance checklist is required in the PR body. |
 
 Quick links for the most common tasks:
@@ -712,6 +716,7 @@ Skills under `.claude/skills/` package repeatable knowledge so an agent (or a hu
 | Skill | When to invoke |
 |---|---|
 | [`add-pad-command`](.claude/skills/add-pad-command/SKILL.md) | Adding a new V1.34-equivalent shell command. |
+| [`add-cockpit-panel`](.claude/skills/add-cockpit-panel/SKILL.md) | Adding a schema-driven Cockpit panel without forking protocol/state/renderer conventions. |
 | [`extend-data-layer`](.claude/skills/extend-data-layer/SKILL.md) | Adding a new fact table to `rytm_randomizer/data/`. |
 | [`code-review`](.claude/skills/code-review/SKILL.md) | Running the standardized post-push code review. |
 | [`coverage-ratchet`](.claude/skills/coverage-ratchet/SKILL.md) | Updating the coverage floor when a legitimate floor change is needed. |
@@ -737,6 +742,8 @@ Skills under `.claude/skills/` package repeatable knowledge so an agent (or a hu
 | [`github-token-no-workflow-trigger`](.claude/skills/learned/github-token-no-workflow-trigger/SKILL.md) | Pushing from a workflow without triggering recursive CI. |
 | [`branch-protection-with-path-filters`](.claude/skills/learned/branch-protection-with-path-filters/SKILL.md) | Configuring branch protection together with `paths:` filters. |
 | [`codex-hook-additionalcontext-reprompt`](.claude/skills/learned/codex-hook-additionalcontext-reprompt/SKILL.md) | Codex hooks run only `type:command` handlers — re-prompt the model via `additionalContext`. |
+| [`playwright-strict-mode-selectors`](.claude/skills/learned/playwright-strict-mode-selectors/SKILL.md) | Keep browser locators unique and stable under Playwright strict mode. |
+| [`targeted-live-kit-mutation`](.claude/skills/learned/targeted-live-kit-mutation/SKILL.md) | Carry target-minus-lock scope through capture, planning, exact-plan SEND, blocked A4 evidence, docs, and studio handoff. |
 
 **Codex discovers these too.** Codex scans `$REPO_ROOT/.agents/skills/`, not `.claude/skills/`. The repo ships a committed symlink **`.agents/skills` → `.claude/skills/learned`** so codex auto-discovers every learned skill (identical `SKILL.md` format). Edit a skill once in `.claude/skills/learned/` and both agents see it. On a Windows clone where the symlink checked out as a plain file, run `git config core.symlinks true && git checkout -- .agents/skills` to re-materialize it. See [`AGENTS.md` § Skills](AGENTS.md#skills--codex-auto-discovers-them-from-agentsskills).
 

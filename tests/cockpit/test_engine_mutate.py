@@ -131,6 +131,24 @@ def test_mutate_copies_snapshot_id_and_profile_id() -> None:
     assert c.seed == 1
 
 
+def test_mutate_explicit_targets_return_only_selected_pad_deltas() -> None:
+    snap = _snapshot()
+    prof = _profile()
+
+    all_scope = mutate(snap, prof, depth=0.5, seed=42)
+    targeted = mutate(
+        snap,
+        prof,
+        depth=0.5,
+        seed=42,
+        target_pad_ids=frozenset({2}),
+    )
+
+    assert {delta.pad_id for delta in targeted.pad_deltas} == {2}
+    assert targeted.pad_deltas[0] == all_scope.pad_deltas[1]
+    assert targeted.estimated_midi_msgs == len(targeted.pad_deltas[0].changed_keys)
+
+
 # ---------------------------------------------------------------------------
 # Output pad_delta ordering — pins the engine's "defensive sort" invariant
 # (mutate.py line 196-199). CODE_REVIEW.md P6.

@@ -54,7 +54,7 @@ from ..wizard.state import (
     narrow_kind,
     narrow_mode,
 )
-from .handlers import HandlerResult
+from .handlers import HandlerResult, build_profile_catalog_changed
 from .protocol import EVENT_PROFILE_CHANGED
 from .session import CockpitSession
 from .wizard_protocol import (
@@ -583,10 +583,9 @@ async def _handle_wizard_review(_cmd: dict[str, object], session: CockpitSession
 async def _handle_wizard_save(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     """Persist the candidate profile via :meth:`ProfileRegistry.save`.
 
-    Emits both :data:`EVENT_PROFILE_CREATED` (wizard-specific) AND
-    :data:`EVENT_PROFILE_CHANGED` (the cockpit's existing event) so the
-    cockpit's active-profile chip reflects the new profile without an
-    explicit ``select_profile`` round-trip.
+    Emits :data:`EVENT_PROFILE_CREATED`, :data:`EVENT_PROFILE_CHANGED`,
+    and the refreshed profile catalogue so every visible profile picker
+    reflects the saved model without a reconnect.
 
     Clears :attr:`CockpitSession.active_wizard` so the next command sees
     a clean slate.
@@ -607,6 +606,7 @@ async def _handle_wizard_save(_cmd: dict[str, object], session: CockpitSession) 
         events=[
             _build_profile_created(profile),
             _build_profile_changed(profile),
+            build_profile_catalog_changed(session),
         ],
     )
 

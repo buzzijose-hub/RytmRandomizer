@@ -147,7 +147,7 @@ def test_initial_alone_does_not_allow_undo() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("via", ["send", "regen", "load", "import"])
+@pytest.mark.parametrize("via", ["send", "regen", "load", "import", "capture"])
 def test_append_post_send_accepts_every_canonical_via(via: str) -> None:
     store = HistoryStore()
     store.initial(_make_snap(SNAP_A))

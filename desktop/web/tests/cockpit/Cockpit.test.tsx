@@ -15,6 +15,7 @@ describe('Cockpit', () => {
   beforeEach(() => {
     act(() => {
       useCockpitStore.getState().reset();
+      useCockpitStore.getState().setProfileCatalog([...availableProfiles]);
     });
   });
   afterEach(() => {
@@ -34,7 +35,9 @@ describe('Cockpit', () => {
     expect(screen.getByTestId('snapshot-panel')).toHaveTextContent('Waiting for snapshot…');
     expect(screen.getByTestId('device-rail')).toBeInTheDocument();
     expect(screen.getByTestId('mutation-panel')).toBeInTheDocument();
-    expect(screen.getByTestId('patch-genome-panel')).toBeInTheDocument();
+    // Device-specific center panels are mutually exclusive; A4 is exercised
+    // after selecting its card below.
+    expect(screen.queryByTestId('patch-genome-panel')).not.toBeInTheDocument();
     expect(screen.getByTestId('live-readiness-panel')).toBeInTheDocument();
     expect(screen.getByTestId('safety-rail')).toBeInTheDocument();
     // Bottom-rail registry panels mount and degrade (empty states, no crash).
@@ -61,12 +64,12 @@ describe('Cockpit', () => {
       useCockpitStore.getState().setSessionStatus(sessionLive);
       useCockpitStore.getState().setSnapshot(snapshot);
     });
-    render(<Cockpit client={fake.asClient()} availableProfiles={availableProfiles} />);
+    render(<Cockpit client={fake.asClient()} />);
     expect(screen.getByTestId('cockpit-root')).toBeInTheDocument();
     expect(screen.getByTestId('header-bar')).toBeInTheDocument();
     expect(screen.getByTestId('snapshot-panel')).toBeInTheDocument();
     expect(screen.getByTestId('live-readiness-panel')).toBeInTheDocument();
-    expect(screen.getByTestId('patch-genome-panel')).toBeInTheDocument();
+    expect(screen.queryByTestId('patch-genome-panel')).not.toBeInTheDocument();
     expect(screen.getByTestId('mutation-panel')).toBeInTheDocument();
   });
 
@@ -76,7 +79,7 @@ describe('Cockpit', () => {
       useCockpitStore.getState().setSessionStatus(sessionMock);
       useCockpitStore.getState().setSnapshot(snapshot);
     });
-    render(<Cockpit client={fake.asClient()} availableProfiles={availableProfiles} />);
+    render(<Cockpit client={fake.asClient()} />);
 
     const deviceRail = screen.getByTestId('device-rail');
     expect(within(deviceRail).getByText('Analog Rytm MKII')).toBeInTheDocument();
@@ -86,14 +89,14 @@ describe('Cockpit', () => {
     expect(within(screen.getByTestId('safety-rail')).getByText('Simulation / Mock')).toBeInTheDocument();
   });
 
-  it('uses a sensible default profile list when none is provided', () => {
+  it('renders the registry-backed profile catalogue from the store', () => {
     const fake = new FakeCockpitClient();
     act(() => {
       useCockpitStore.getState().setSessionStatus(sessionLive);
       useCockpitStore.getState().setSnapshot(snapshot);
     });
     render(<Cockpit client={fake.asClient()} />);
-    // Default list contains "Industrial" + "Warehouse" scene profiles.
+    // The bootstrap catalogue contains "Industrial" + "Warehouse" scene profiles.
     expect(screen.getByTestId('profile-chip-scene-industrial')).toBeInTheDocument();
     expect(screen.getByTestId('profile-chip-scene-warehouse')).toBeInTheDocument();
   });
@@ -121,14 +124,46 @@ describe('Cockpit', () => {
       useCockpitStore.getState().setSnapshot(snapshot);
     });
 
-    render(<Cockpit client={fake.asClient()} availableProfiles={availableProfiles} />);
+    render(<Cockpit client={fake.asClient()} />);
 
     expect(screen.getByTestId('pad-card-1')).toHaveTextContent('BD Hard');
     fireEvent.click(screen.getByTestId('device-select-analog-four-mk2'));
 
     expect(screen.queryByTestId('pad-card-1')).not.toBeInTheDocument();
-    expect(screen.getByTestId('a4-track-card-1')).toHaveTextContent('Bass / low pulse');
+    expect(screen.getByTestId('a4-track-card-1')).toBeVisible();
+    expect(screen.getByTestId('a4-track-card-4')).toBeVisible();
+    expect(screen.getByTestId('patch-genome-panel')).toHaveTextContent('A4 Patch Genome');
     expect(screen.getByTestId('mutation-panel')).toBeInTheDocument();
     expect(screen.getByTestId('safety-rail')).toHaveTextContent('Mock Safe');
+  });
+
+  it('opens the shared prepare-to-receive workflow from either machine card', async () => {
+    const fake = new FakeCockpitClient();
+    fake.ackQueue.push(
+      {
+        request_id: 'rytm-inputs',
+        ok: true,
+        capture_enabled: false,
+        capture_device_id: 'analog_rytm_mk2',
+        capture_inputs: [],
+      },
+      {
+        request_id: 'a4-inputs',
+        ok: true,
+        capture_enabled: false,
+        capture_device_id: 'analog_four_mk2',
+        capture_inputs: [],
+      },
+    );
+    act(() => useCockpitStore.getState().setSessionStatus(sessionMock));
+
+    render(<Cockpit client={fake.asClient()} />);
+
+    fireEvent.click(screen.getByTestId('capture-kit-analog-rytm-mk2'));
+    expect(await screen.findByText('Prepare Analog Rytm MKII to receive')).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Close kit capture'));
+    expect(screen.getByTestId('snapshot-panel')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('capture-kit-analog-four-mk2'));
+    expect(await screen.findByText('Prepare Analog Four MKII to receive')).toBeInTheDocument();
   });
 });

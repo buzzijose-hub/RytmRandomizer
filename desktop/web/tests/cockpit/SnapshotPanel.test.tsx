@@ -4,7 +4,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { act, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 
 import { CockpitClientProvider } from '../../src/cockpit/context';
 import {
@@ -58,6 +58,27 @@ describe('SnapshotPanel', () => {
     }
     expect(screen.getByTestId('pad-card-12')).toHaveTextContent('BD Acoustic');
     expect(screen.getByText('12 pads ready for dry-run review')).toBeInTheDocument();
+  });
+
+  it('summarizes and clears an explicit Rytm target scope', async () => {
+    act(() => {
+      useCockpitStore.getState().setSnapshot(snapshot);
+      useCockpitStore.getState().setMutationTargets([2, 4], []);
+    });
+    const fake = renderWith();
+
+    expect(screen.getByTestId('rytm-target-summary')).toHaveTextContent('2 targeted pads');
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Clear targets' }));
+      await Promise.resolve();
+    });
+
+    expect(fake.sent).toEqual([
+      { type: 'clear_mutation_targets', device_id: 'analog_rytm_mk2' },
+    ]);
+    expect(screen.getByTestId('rytm-target-summary')).toHaveTextContent(
+      'All pads in scope by default',
+    );
   });
 
   it('shows "PREVIEW ON" in the panel meta when previewOn=true', () => {

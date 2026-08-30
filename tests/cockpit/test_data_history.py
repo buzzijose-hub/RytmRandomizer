@@ -80,7 +80,7 @@ def test_history_entry_rejects_unknown_kind() -> None:
         _make_entry(kind="archived")
 
 
-@pytest.mark.parametrize("via", ["send", "regen", "load", "import"])
+@pytest.mark.parametrize("via", ["send", "regen", "load", "import", "capture"])
 def test_history_entry_accepts_canonical_via(via: str) -> None:
     entry = _make_entry(via=via)
     assert entry.via == via

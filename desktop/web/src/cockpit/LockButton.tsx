@@ -10,11 +10,19 @@ export interface LockButtonProps {
   onToggle: () => void;
   /** Pad id, used only for accessibility labelling. */
   padId: number;
+  itemLabel?: 'pad' | 'track';
 }
 
-export function LockButton({ locked, onToggle, padId }: LockButtonProps): JSX.Element {
+export function LockButton({
+  locked,
+  onToggle,
+  padId,
+  itemLabel = 'pad',
+}: LockButtonProps): JSX.Element {
   const className = locked ? 'lock-button locked' : 'lock-button';
-  const label = locked ? `Unlock pad ${padId}` : `Lock pad ${padId}`;
+  const label = locked
+    ? `Unlock ${itemLabel} ${padId}`
+    : `Lock ${itemLabel} ${padId}`;
   return (
     <button
       type="button"

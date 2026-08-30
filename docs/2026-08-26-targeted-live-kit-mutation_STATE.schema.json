@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "2026-08-26-targeted-live-kit-mutation_STATE.schema.json",
+  "title": "Targeted live-kit mutation run state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "workstreams", "last_verified_at"],
+  "properties": {
+    "status": {
+      "enum": ["not_started", "in_progress", "blocked", "done", "interrupted"]
+    },
+    "workstreams": {
+      "type": "object",
+      "additionalProperties": {
+        "enum": ["pending", "in_progress", "verified", "blocked"]
+      }
+    },
+    "last_verified_at": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "blocker": {
+      "type": ["string", "null"]
+    }
+  }
+}

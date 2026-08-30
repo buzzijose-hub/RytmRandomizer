@@ -19,6 +19,7 @@ from .analog_four_style_mutation_intent import (
     AnalogFourStyleMutationTrackIntent,
     plan_analog_four_style_mutation_intent,
 )
+from .analog_four_track_domain import AnalogFourTrackDomain
 
 _DEPTH_VALUES: Final[Mapping[str, int]] = MappingProxyType(
     {
@@ -239,14 +240,16 @@ def _render_mock_rows(
     mutation_plan = AnalogFourMutationPlan(
         snapshot=snapshot,
         depth=_mutation_depth_value(intent_plan.mutation_depth),
-        events=tuple(plan_event for plan_event, track_intent, intent_row in pairs),
+        events=tuple(plan_event for plan_event, _track_intent, _intent_row in pairs),
         ready=True,
         readiness_reason="",
     )
-    renderer = AnalogFourMessageRenderer()
+    renderer = AnalogFourMessageRenderer(
+        track_domain=AnalogFourTrackDomain(max(plan_event.track for plan_event, _, _ in pairs))
+    )
     messages = tuple(
         renderer.to_mock_message(plan_event, mutation_plan)
-        for plan_event, track_intent, intent_row in pairs
+        for plan_event, _track_intent, _intent_row in pairs
     )
     return tuple(
         _event_row(
@@ -254,7 +257,7 @@ def _render_mock_rows(
             track_intent=track_intent,
             intent_row=intent_row,
         )
-        for message, (plan_event, track_intent, intent_row) in zip(messages, pairs, strict=True)
+        for message, (_plan_event, track_intent, intent_row) in zip(messages, pairs, strict=True)
     )
 
 

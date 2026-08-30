@@ -48,12 +48,8 @@ test.describe('SR-equivalent journey', () => {
     ).toBeVisible();
     await expect(page.getByText('12 pads ready for dry-run review').first()).toBeVisible();
 
-    // Switch to the Analog Four center panel: click the rail's View button,
-    // verify the Analog Four MKII heading mounts in the snapshot panel (the
-    // device rail card carries the same name as its aria-label, so we scope
-    // the heading lookup to the snapshot panel), and verify all four track
-    // cards land with their accessible safe-depth meters and role-key
-    // diagnostic attributes. This closes the E2E gap from the PR review.
+    // Switch to the Analog Four center panel and prove both the track grid and
+    // passive Patch Genome compiler are reachable through the shipped route.
     await page.getByTestId('device-select-analog-four-mk2').click();
     const snapshotPanel = page.getByTestId('snapshot-panel');
     await expect(
@@ -64,11 +60,20 @@ test.describe('SR-equivalent journey', () => {
       await expect(card).toBeVisible();
       await expect(card).toHaveAttribute('data-role-key', /\w+/);
     }
-    // Meters should expose accessible value text — pick the first card's meter
-    // and assert the screen-reader announcement contains the expected phrase.
+    await expect(page.getByTestId('a4-track-card-1').getByRole('meter')).toHaveAttribute(
+      'aria-valuetext',
+      /safe mutation depth/,
+    );
+
+    const patchGenomePanel = page.getByTestId('patch-genome-panel');
     await expect(
-      page.getByTestId('a4-track-card-1').getByRole('meter'),
-    ).toHaveAttribute('aria-valuetext', /safe mutation depth/);
+      patchGenomePanel.getByRole('heading', { exact: true, level: 2, name: 'A4 Patch Genome' }),
+    ).toBeVisible();
+    for (const track of [1, 2, 3, 4]) {
+      await expect(page.getByTestId(`a4-target-control-${track}`)).toBeVisible();
+    }
+    await expect(page.getByTestId('patch-genome-variant')).toContainText(/Candidate \d of 4/);
+    await expect(page.getByRole('button', { name: 'Hardware send locked' })).toBeDisabled();
 
     // Switch back to the Rytm panel so the rest of the checkpoint runs against
     // the surface the original spec was scoped to.

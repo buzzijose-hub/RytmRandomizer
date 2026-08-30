@@ -28,12 +28,20 @@ def _plan_event():
     return plan, event
 
 
-def test_to_mock_message_renders_midi_message_for_event() -> None:
+def _renderer(*, track_count: int = 4):
     from rytm_randomizer.devices.strategies import AnalogFourMessageRenderer
+    from rytm_randomizer.devices.strategies.analog_four_track_domain import (
+        AnalogFourTrackDomain,
+    )
+
+    return AnalogFourMessageRenderer(track_domain=AnalogFourTrackDomain(track_count))
+
+
+def test_to_mock_message_renders_midi_message_for_event() -> None:
     from rytm_randomizer.mock_midi import MidiMessage
 
     plan, event = _plan_event()
-    message = AnalogFourMessageRenderer().to_mock_message(event, plan)
+    message = _renderer().to_mock_message(event, plan)
 
     assert isinstance(message, MidiMessage)
     assert message.type == "cc"
@@ -45,17 +53,14 @@ def test_to_mock_message_renders_midi_message_for_event() -> None:
 
 
 def test_to_cc_triple_renders_channel_control_value() -> None:
-    from rytm_randomizer.devices.strategies import AnalogFourMessageRenderer
-
     plan, event = _plan_event()
 
-    assert AnalogFourMessageRenderer().to_cc_triple(event, plan) == (1, 74, 91)
+    assert _renderer().to_cc_triple(event, plan) == (1, 74, 91)
 
 
 def test_renderer_rejects_track_outside_1_to_4() -> None:
     from rytm_randomizer.devices.strategies import (
         AnalogFourKitSnapshot,
-        AnalogFourMessageRenderer,
         AnalogFourMutationPlan,
         AnalogFourPlanEvent,
     )
@@ -65,42 +70,52 @@ def test_renderer_rejects_track_outside_1_to_4() -> None:
     plan = AnalogFourMutationPlan(snapshot=snapshot, depth=1, events=(event,))
 
     with pytest.raises(ValueError, match=r"track must be in \[1, 4\]"):
-        AnalogFourMessageRenderer().to_cc_triple(event, plan)
+        _renderer().to_cc_triple(event, plan)
+
+
+def test_renderer_uses_the_injected_device_track_domain() -> None:
+    from rytm_randomizer.devices.strategies import (
+        AnalogFourKitSnapshot,
+        AnalogFourMutationPlan,
+        AnalogFourPlanEvent,
+    )
+
+    snapshot = AnalogFourKitSnapshot(slot=1, kit_name="A4", raw=b"", offsets_promoted=True)
+    event = AnalogFourPlanEvent(track=5, parameter="Filter 1 Frequency", control=74, value=91)
+    plan = AnalogFourMutationPlan(snapshot=snapshot, depth=1, events=(event,))
+
+    assert _renderer(track_count=5).to_cc_triple(event, plan) == (4, 74, 91)
 
 
 def test_renderer_rejects_control_outside_0_to_127() -> None:
-    from rytm_randomizer.devices.strategies import AnalogFourMessageRenderer, AnalogFourPlanEvent
+    from rytm_randomizer.devices.strategies import AnalogFourPlanEvent
 
     plan, _event = _plan_event()
     event = AnalogFourPlanEvent(track=1, parameter="Filter 1 Frequency", control=128, value=91)
 
     with pytest.raises(ValueError, match=r"control must be in \[0, 127\]"):
-        AnalogFourMessageRenderer().to_cc_triple(event, plan)
+        _renderer().to_cc_triple(event, plan)
 
 
 def test_renderer_rejects_value_outside_0_to_127() -> None:
-    from rytm_randomizer.devices.strategies import AnalogFourMessageRenderer, AnalogFourPlanEvent
+    from rytm_randomizer.devices.strategies import AnalogFourPlanEvent
 
     plan, _event = _plan_event()
     event = AnalogFourPlanEvent(track=1, parameter="Filter 1 Frequency", control=74, value=-1)
 
     with pytest.raises(ValueError, match=r"value must be in \[0, 127\]"):
-        AnalogFourMessageRenderer().to_cc_triple(event, plan)
+        _renderer().to_cc_triple(event, plan)
 
 
 def test_renderer_rejects_wrong_event_type() -> None:
-    from rytm_randomizer.devices.strategies import AnalogFourMessageRenderer
-
     plan, _event = _plan_event()
 
     with pytest.raises(TypeError, match="AnalogFourPlanEvent"):
-        AnalogFourMessageRenderer().to_cc_triple(object(), plan)
+        _renderer().to_cc_triple(object(), plan)
 
 
 def test_renderer_rejects_wrong_plan_type() -> None:
-    from rytm_randomizer.devices.strategies import AnalogFourMessageRenderer
-
     _plan, event = _plan_event()
 
     with pytest.raises(TypeError, match="AnalogFourMutationPlan"):
-        AnalogFourMessageRenderer().to_mock_message(event, object())
+        _renderer().to_mock_message(event, object())

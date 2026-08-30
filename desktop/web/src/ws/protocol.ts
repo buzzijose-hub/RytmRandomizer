@@ -31,7 +31,7 @@ export type SendPlanReadinessReason =
 
 export type HistoryEntryKind = 'auto' | 'saved';
 
-export type HistoryVia = 'send' | 'regen' | 'load' | 'import';
+export type HistoryVia = 'send' | 'regen' | 'load' | 'import' | 'capture';
 
 export type SessionMode = 'live' | 'mock';
 
@@ -84,6 +84,78 @@ export interface ProfileModel {
   source_summary: string;
 }
 
+export interface ProfileCatalogItem {
+  profile_id: string;
+  name: string;
+  kind: ProfileKind;
+  model_version: string;
+  source_summary: string;
+}
+
+export type AnalogFourPatchTransportStatus =
+  | 'cc-ready'
+  | 'nrpn-ready'
+  | 'screen-only-nrpn'
+  | 'screen-only';
+
+export interface AnalogFourPatchValue {
+  parameter: string;
+  section: string;
+  encoder: string;
+  screen_value: string;
+  midi_value: number | null;
+  cc_msb: number | null;
+  cc_lsb: number | null;
+  nrpn_address: number[] | null;
+  transport_status: AnalogFourPatchTransportStatus;
+  dial_direction: string;
+}
+
+export interface AnalogFourPatchGene {
+  track: number;
+  family: string;
+  rationale: string;
+  confidence: string;
+  value: AnalogFourPatchValue;
+}
+
+export interface AnalogFourPatchCandidate {
+  column: number;
+  label: string;
+  role: string;
+  closeness: number;
+  genes: AnalogFourPatchGene[];
+}
+
+export interface AnalogFourPatchTrait {
+  key: string;
+  label: string;
+  intensity: number;
+  evidence: string[];
+}
+
+export interface AnalogFourPatchGenome {
+  version: string;
+  device_id: string;
+  mode: string;
+  selected_track: number;
+  source_hash: string;
+  source_confidence: string;
+  candidate_count: number;
+  traits: AnalogFourPatchTrait[];
+  candidates: AnalogFourPatchCandidate[];
+  safety: string[];
+}
+
+export interface AnalogFourPatchGenomePayload {
+  source: { type: string; value: string };
+  selected_candidate: number;
+  selected_track: number;
+  selected: AnalogFourPatchCandidate;
+  genome: AnalogFourPatchGenome;
+  safety: string[];
+}
+
 export interface PadDelta {
   pad_id: number;
   proposed_params: Record<string, number>;
@@ -120,6 +192,7 @@ export interface CockpitSendPlan {
   estimated_midi_msgs: number;
   pad_count: number;
   locked_pad_ids: number[];
+  target_pad_ids: number[];
   blocked_reasons: SendPlanReadinessReason[];
   packets: SendPlanPacket[];
 }
@@ -444,6 +517,98 @@ export interface ProfileChangedEvent {
   profile: ProfileModel | null;
 }
 
+export interface ProfileCatalogChangedEvent {
+  type: 'profile_catalog_changed';
+  profiles: ProfileCatalogItem[];
+}
+
+export type KitCaptureDeviceId = 'analog_rytm_mk2' | 'analog_four_mk2';
+export type KitCaptureLayoutStatus = 'mutation_ready' | 'captured_mapping_pending';
+export type KitParameterReadiness =
+  | 'rytm_anchor_ready'
+  | 'exact_kit_anchor_offsets_candidate';
+
+export interface KitCaptureLayoutItem {
+  index: number;
+  label: string;
+  status: KitCaptureLayoutStatus;
+  detail: string;
+}
+
+export interface KitCaptureResult {
+  device_id: KitCaptureDeviceId;
+  kit_name: string;
+  slot: number | null;
+  fingerprint: string;
+  frame_bytes: number;
+  captured_at: string;
+  snapshot_layout: string;
+  parameter_readiness: KitParameterReadiness;
+  round_trip_verified: boolean;
+  input_only: boolean;
+  sent_midi: boolean;
+  layout_items: KitCaptureLayoutItem[];
+}
+
+export interface KitCapturesChangedEvent {
+  type: 'kit_captures_changed';
+  captures: KitCaptureResult[];
+}
+
+export interface MutationTargetsChangedEvent {
+  type: 'mutation_targets_changed';
+  rytm_pad_targets: number[];
+  a4_track_targets: number[];
+}
+
+/** Whole-state lock authority used for bootstrap, reconnect, and every lock revision. */
+export interface MutationLocksChangedEvent {
+  type: 'mutation_locks_changed';
+  rytm_pad_locks: number[];
+  a4_track_locks: number[];
+}
+
+// Mirrors `rytm_randomizer/cockpit/data/stage.py` exactly. Stage events replace
+// this shape wholesale; clients must never merge individual machine fields.
+export type StageDeviceId = 'analog_rytm_mk2' | 'analog_four_mk2';
+export type StageConnectionState = 'unknown' | 'connected' | 'disconnected';
+export type StageCaptureState = 'not_captured' | 'captured' | 'failed';
+export type StageArtifactState = 'none' | 'ready' | 'stale' | 'blocked';
+export type StageAuthorityState = 'not_armed' | 'armed' | 'blocked';
+
+export interface MachineStageState {
+  device_id: StageDeviceId;
+  connection_state: StageConnectionState;
+  capture_state: StageCaptureState;
+  target_ids: number[];
+  locked_ids: number[];
+  effective_ids: number[];
+  candidate_state: StageArtifactState;
+  plan_state: StageArtifactState;
+  authority_state: StageAuthorityState;
+  blocked_reasons: string[];
+  recovery_actions: string[];
+  last_error: string | null;
+}
+
+export interface DualMachineStageState {
+  revision: number;
+  rytm: MachineStageState;
+  analog_four: MachineStageState;
+  oxi_owns_sequencing: boolean;
+  direct_oxi_control: boolean;
+}
+
+export interface DualMachineStageChangedEvent {
+  type: 'dual_machine_stage_changed';
+  stage: DualMachineStageState;
+}
+
+export interface PatchGenomeChangedEvent {
+  type: 'patch_genome_changed';
+  patch_genome: AnalogFourPatchGenomePayload;
+}
+
 export interface PerformanceConsoleChangedEvent {
   type: 'performance_console_changed';
   performance_console: LiveGuiPerformanceConsoleModelDict | null;
@@ -456,6 +621,8 @@ export interface SessionStatusEvent {
   mode: SessionMode;
   connection_phase: ConnectionPhase;
   unsaved_sends: number;
+  /** Additive capability flag; older sidecars may omit it. */
+  capture_enabled?: boolean;
 }
 
 /** `connection_changed` — the full fresh ConnectionStateDict (never a delta). */
@@ -485,6 +652,12 @@ export type Event =
   | SendPlanChangedEvent
   | HistoryUpdatedEvent
   | ProfileChangedEvent
+  | ProfileCatalogChangedEvent
+  | KitCapturesChangedEvent
+  | MutationTargetsChangedEvent
+  | MutationLocksChangedEvent
+  | DualMachineStageChangedEvent
+  | PatchGenomeChangedEvent
   | PerformanceConsoleChangedEvent
   | SessionStatusEvent
   | ConnectionChangedEvent
@@ -501,6 +674,23 @@ export interface SelectProfileCommand {
   profile_id: string;
 }
 
+export interface AnalyzePatchGenomeCommand {
+  type: 'analyze_patch_genome';
+  description: string;
+  track: number;
+}
+
+export interface ListCaptureInputsCommand {
+  type: 'list_capture_inputs';
+  device_id: KitCaptureDeviceId;
+}
+
+export interface CaptureCurrentKitCommand {
+  type: 'capture_current_kit';
+  device_id: KitCaptureDeviceId;
+  input_port: string;
+}
+
 export interface SetDepthCommand {
   type: 'set_depth';
   depth: number;
@@ -510,6 +700,23 @@ export interface SetPadLockCommand {
   type: 'set_pad_lock';
   pad_id: number;
   locked: boolean;
+}
+
+export interface SetA4TrackLockCommand {
+  type: 'set_a4_track_lock';
+  track: number;
+  locked: boolean;
+}
+
+export interface SetMutationTargetsCommand {
+  type: 'set_mutation_targets';
+  device_id: KitCaptureDeviceId;
+  target_ids: number[];
+}
+
+export interface ClearMutationTargetsCommand {
+  type: 'clear_mutation_targets';
+  device_id: KitCaptureDeviceId;
 }
 
 export interface TogglePreviewCommand {
@@ -540,6 +747,8 @@ export interface PrepareSendPlanCommand {
 export interface SendCommand {
   type: 'send';
   confirm?: boolean;
+  /** Exact prepared plan being confirmed; mandatory for armed sessions. */
+  send_plan_id?: string;
 }
 
 export interface SaveCommand {
@@ -664,9 +873,15 @@ export interface LibraryImportCapturesCommand {
 }
 
 export type Command =
+  | AnalyzePatchGenomeCommand
+  | ListCaptureInputsCommand
+  | CaptureCurrentKitCommand
   | SelectProfileCommand
   | SetDepthCommand
   | SetPadLockCommand
+  | SetA4TrackLockCommand
+  | SetMutationTargetsCommand
+  | ClearMutationTargetsCommand
   | TogglePreviewCommand
   | RegenCommand
   | PrepareSendPlanCommand
@@ -726,6 +941,11 @@ export interface CommandAck {
   library_record?: LibraryRecord | null;
   library_record_id?: string | null;
   library_import?: LibraryImportResult | null;
+  patch_genome?: AnalogFourPatchGenomePayload;
+  capture_enabled?: boolean;
+  capture_device_id?: KitCaptureDeviceId;
+  capture_inputs?: string[];
+  kit_capture?: KitCaptureResult;
   error?: string;
   code?: string;
   message?: string;
@@ -746,6 +966,12 @@ export function isEvent(msg: unknown): msg is Event {
     'send_plan_changed',
     'history_updated',
     'profile_changed',
+    'profile_catalog_changed',
+    'kit_captures_changed',
+    'mutation_targets_changed',
+    'mutation_locks_changed',
+    'dual_machine_stage_changed',
+    'patch_genome_changed',
     'performance_console_changed',
     'session_status',
     'connection_changed',

@@ -100,10 +100,21 @@ test.describe('offline cockpit (no sidecar at load)', () => {
     await expect(page.getByTestId('action-regen')).toBeDisabled();
     await expect(page.getByTestId('action-save')).toBeDisabled();
 
-    // Local-only surfaces stay fully interactive (patch genome variants).
-    await expect(page.getByTestId('patch-genome-variant')).toHaveText('Variant 1');
-    await page.getByRole('button', { name: 'Grow variant' }).click();
-    await expect(page.getByTestId('patch-genome-variant')).toHaveText('Variant 2');
+    // Keyboard routing remains interactive beneath the reconnect banner while
+    // the compiler packet honestly stays unavailable: the A4 surface mounts
+    // without sidecar data and keeps hardware output disabled.
+    const selectA4 = page.getByTestId('device-select-analog-four-mk2');
+    await selectA4.focus();
+    await selectA4.press('Enter');
+    await expect(page.getByTestId('patch-genome-panel')).toBeVisible();
+    await expect(page.getByTestId('patch-genome-empty')).toContainText(
+      'Waiting for the passive sidecar compiler packet',
+    );
+    await expect(page.getByRole('button', { name: 'Hardware send locked' })).toBeDisabled();
+    const selectRytm = page.getByTestId('device-select-analog-rytm-mk2');
+    await selectRytm.focus();
+    await selectRytm.press('Enter');
+    await expect(page.getByTestId('snapshot-panel')).toContainText('Waiting for snapshot…');
 
     // Plant a marker to prove the hydration below happens WITHOUT a reload.
     await page.evaluate(() => {

@@ -14,9 +14,9 @@ See "Explicit non-claims" for the audited list of what is still absent.
 
 Current baseline used while creating / refreshing this document:
 
-- Branch: Analog Four snapshot/style readiness bundle, built on the passive style profile/target/routing/render-plan/mock-preview and dual-machine mock-preview foundation.
+- Branch: targeted dual-machine live-performance bundle, based directly on `origin/modularize-v1.34` for one non-stacked integration PR.
 - Protected reference: `tests/fixtures/v134_parity/*.json` (the retired V1.34 monolith's behavior, captured as 505 byte-frozen JSON golden files; parametrized into 685 pytest parity test items).
-- Current package: `rytm_randomizer/` - 26 top-level Python files + 14 subpackages = 385 total Python modules. The 14 subpackages: `behavior/`, `cockpit/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `local_ai/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
+- Current package: `rytm_randomizer/` with the established top-level modules and 14 subpackages: `behavior/`, `cockpit/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `local_ai/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`. Exact module/test totals are recorded only after the final closeout run, not frozen in this architecture map.
 - Closeout scripts: `Scripts/closeout_check.ps1` (PowerShell, Windows) and `scripts/closeout_check.py` (Python, cross-platform).
 - This file was audited and refreshed as part of PR #43, then updated through the style-profile, style-target-vector, Rytm style snapshot routing, Analog Four style snapshot routing, dual-machine style routing, reference/discovery slider, Rytm/Analog Four style mutation-intent, dual-machine style mutation-intent, Rytm style mutation render-plan, Rytm style mutation mock-preview, Analog Four style mutation mock-preview, dual-machine style mutation mock-preview, Analog Four saved-kit SysEx readiness-intake, Analog Four kit-catalog, Analog Four initialized baseline, Analog Four patch genome, Analog Four patch learning, Analog Four patch corpus, Analog Four patch send-plan, Analog Four SysEx Filter1 Frequency/Resonance calibration, Analog Four style kit-readiness, Analog Four kit-fingerprint, Analog Four OXI macro set planner, live runbook, stage-routing, stage-rehearsal-state, live-set-cockpit, live-show-export, live-transition-timeline, live-command-deck, live-state-packet, live-readiness, live-control-surface, live-analyzer-handoff, live-analyzer-targets, live GUI analyzer readiness, live GUI rehearsal session, live GUI capture queue, live GUI capture review, live GUI sidecar session, live GUI screen contract, live GUI render tree, live GUI analyzer overlay, live GUI analyzer frame, live GUI interaction script, live GUI action reducer, live GUI controller state, live GUI playback transcript, live GUI playback validation, live GUI test-harness contract, live GUI test-harness readiness, live GUI implementation bridge, live GUI desktop blueprint, live GUI desktop app plan, live GUI desktop component contract, live GUI desktop view-model, live GUI desktop render-contract, cockpit send-plan operator-readiness, cockpit send-plan rehearsal-surface, live-kit capture workbench, live-kit package audition, live-kit operator package, live-kit operator review ledger, reference-style blueprint, bounded reference-audio atlas, manual-feedback packet, generic MIDI event-plan sender, and passive local model copilot slices so the strategy/report-module list and counts stay current.
 
@@ -37,8 +37,9 @@ Current baseline used while creating / refreshing this document:
 | Active / real MIDI boundaries | `rytm_randomizer/active_boundary.py`, `rytm_randomizer/real_midi_adapter.py`, `rytm_randomizer/mido_provider.py`, `rytm_randomizer/midi_io.py` |
 | Generic senders | `rytm_randomizer/senders/{guarded,hardware,midi_event_plan}.py` |
 | Engines (per-pad runtime cores) | `rytm_randomizer/engines/{_runtime,pad1,pad2,pad3,pad4}.py`, `rytm_randomizer/randomization.py`, `rytm_randomizer/scene_runner.py`, `rytm_randomizer/group_runner.py`, `rytm_randomizer/runtime_plan.py` |
-| Devices (cross-machine boundary) | `rytm_randomizer/devices/{base,registry,analog_rytm,analog_four,rio145_recipes}.py`, `rytm_randomizer/devices/strategies/{elektron_kit_common,analog_four_offset_manifest,analog_four_saved_kit_codec,analog_four_saved_kit_writer,analog_four_kit_fields,analog_four_kit_recipe,analog_four_snapshot_decoder,analog_four_style_snapshot_routing,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_mutation_planner,analog_four_message_renderer,analog_rytm_saved_kit_codec,analog_rytm_kit_fields,analog_rytm_kit_recipe,analog_rytm_snapshot_decoder,analog_rytm_snapshot_routing,analog_rytm_style_snapshot_routing,analog_rytm_style_mutation_intent,analog_rytm_style_mutation_mock_preview,analog_rytm_style_mutation_render_plan,analog_rytm_mutation_planner,analog_rytm_message_renderer}.py` |
-| Snapshot Protocols + envelope | `rytm_randomizer/snapshot/{envelope,elektron_native_object,elektron_packed_payload,elektron_u14,decoder,planner,mock_runtime,sysex_file}.py` |
+| Devices (cross-machine boundary) | `rytm_randomizer/devices/{base,registry,analog_rytm,analog_four,saved_kit_capture,rio145_recipes}.py`, `rytm_randomizer/devices/strategies/{elektron_kit_common,analog_four_offset_manifest,analog_four_saved_kit_codec,analog_four_saved_kit_writer,analog_four_kit_fields,analog_four_kit_recipe,analog_four_snapshot_decoder,analog_four_style_snapshot_routing,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_mutation_planner,analog_four_message_renderer,analog_rytm_saved_kit_codec,analog_rytm_kit_fields,analog_rytm_kit_recipe,analog_rytm_snapshot_decoder,analog_rytm_snapshot_routing,analog_rytm_style_snapshot_routing,analog_rytm_style_mutation_intent,analog_rytm_style_mutation_mock_preview,analog_rytm_style_mutation_render_plan,analog_rytm_mutation_planner,analog_rytm_message_renderer}.py` |
+| Snapshot Protocols + envelope | `rytm_randomizer/snapshot/{envelope,elektron_native_object,elektron_packed_payload,elektron_u14,decoder,planner,mock_runtime,mutation_scope,sysex_file}.py` |
+| Cockpit live capture + stage scope | `rytm_randomizer/cockpit/capture/{__init__,bridge,service}.py`, `rytm_randomizer/cockpit/mutation_targets.py`, immutable DTOs in `cockpit/data/stage.py`, and orchestration/policy in `cockpit/stage/{__init__,coordinator,policy}.py` |
 | Guardrails | `rytm_randomizer/guardrails/{resolver,store,schema,validation}.py` |
 | Observability | `rytm_randomizer/observability/{logging,tracing,metrics,errors}.py` |
 | Style analysis | `rytm_randomizer/style_analysis/{extractor,runtime_types,feature_report,library,blueprint,reference_audio_atlas,audio_patch_dna,audio_patch_dna_lineage,analog_four_patch_genome,analog_four_patch_inference,analog_four_patch_learning,analog_four_patch_corpus,analog_four_patch_send_plan,analog_four_patch_render_rank,analog_four_patch_refinement,analog_four_patch_codesigner,analog_rytm_recipe_inference}.py` |
@@ -54,8 +55,8 @@ Current baseline used while creating / refreshing this document:
 flowchart TB
     User["Operator / developer"]
     V134["V1.34 reference behavior<br/>tests/fixtures/v134_parity/<br/>(505 JSON goldens; 685 parity test items)"]
-    Package["Modular package<br/>rytm_randomizer/<br/>(14 subpackages, 385 modules)"]
-    Tests["Tests<br/>8,049 pytest tests<br/>tests/, tests/architecture/"]
+    Package["Modular package<br/>rytm_randomizer/<br/>14 established subpackages"]
+    Tests["Tests<br/>current totals in closeout report<br/>tests/, tests/architecture/"]
     CI[".github/workflows/test.yml<br/>3 OS × py3.11 matrix<br/>+ codeql, release, installers"]
     Docs["Project docs<br/>CONTRIBUTING.md, docs/*.md<br/>.claude/{rules,skills}/"]
 
@@ -149,16 +150,18 @@ flowchart TB
     subgraph DevicesPkg["devices/ subpackage<br/>(WS-S5 + Strategy seam)"]
         DevBase["base.py<br/>Device, MidiOutbox,<br/>MessageRenderer Protocols"]
         DevRegistry["registry.py<br/>register_device, get_device, all_devices"]
+        DevCapture["saved_kit_capture.py<br/>optional registry-backed<br/>input capture capability"]
         DevAR["analog_rytm.py<br/>AnalogRytmDevice"]
         DevA4["analog_four.py<br/>AnalogFourDevice"]
         DevStrategies["strategies/<br/>analog_rytm_{snapshot_decoder,<br/>snapshot_routing,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_render_plan,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer}.py<br/>analog_four_{offset_manifest,<br/>snapshot_decoder,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer,<br/>saved_kit_codec,<br/>saved_kit_writer}.py"]
         DevRytmSavedKit["strategies/analog_rytm_saved_kit_codec.py<br/>pure saved-KIT frame codec"]
     end
 
-    subgraph SnapshotPkg["snapshot/ subpackage<br/>(WS-S6 envelope + 3 Protocols)"]
+    subgraph SnapshotPkg["snapshot/ subpackage<br/>(WS-S6 envelope + Protocols + scope)"]
         SnapEnvelope["envelope.py<br/>ELEKTRON_MFR_ID +<br/>pack/unpack_elektron_7bit +<br/>find_kit_record +<br/>read_ascii_name"]
         SnapPackedPayload["elektron_packed_payload.py + elektron_u14.py<br/>shared packed-payload integrity + u14"]
         SnapProto["decoder / planner / mock_runtime<br/>Protocols"]
+        SnapScope["mutation_scope.py<br/>targets-or-domain minus locks"]
     end
 
     subgraph GuardrailsPkg["guardrails/"]
@@ -287,6 +290,7 @@ flowchart TB
     DevStrategies --> SnapshotPkg
     DevStrategies --> DataLayer
     DevAR --> DevRegistry
+    DevCapture --> DevRegistry
     DevBase --> SnapshotPkg
 
     GroupRunner --> EnginesPkg
@@ -340,7 +344,7 @@ classDiagram
         +MessageRenderer message_renderer
         +str report_header
         +decode_snapshot(raw, slot) Any
-        +plan_mutation(snapshot, depth) Any
+        +plan_mutation(snapshot, depth, *, scope=DEFAULT) Any
         +to_mock_messages(plan) list
         +to_cc_messages(plan) Iterable
     }
@@ -352,7 +356,7 @@ classDiagram
 
     class MutationPlanner {
         <<Protocol @runtime_checkable>>
-        +plan(snapshot, depth) Any
+        +plan(snapshot, depth, *, scope=DEFAULT) Any
     }
 
     class MessageRenderer {
@@ -364,6 +368,17 @@ classDiagram
     class MidiOutbox {
         <<Protocol>>
         +send(message) None
+    }
+
+    class SavedKitCaptureCapability {
+        <<Protocol @runtime_checkable>>
+        +decode_saved_kit_capture(frame) SavedKitCaptureFrame
+        +encode_saved_kit_capture(decoded) bytes
+    }
+
+    class SavedKitCaptureResolver {
+        <<module>>
+        +resolve_saved_kit_capture_capability(device_id) RegisteredCapability
     }
 
     class AnalogRytmDevice {
@@ -398,8 +413,8 @@ classDiagram
 
     class AnalogRytmMutationPlanner {
         +seed
-        +plan(snapshot, depth) RytmMutationPlan
-        +plan_for_machine_values(snapshot, depth, pad_machine_values) RytmMutationPlan
+        +plan(snapshot, depth, *, scope=DEFAULT) RytmMutationPlan
+        +plan_for_machine_values(snapshot, depth, pad_machine_values, *, scope=DEFAULT) RytmMutationPlan
     }
 
     class RytmSnapshotRouting {
@@ -430,6 +445,7 @@ classDiagram
     AnalogRytmDevice o-- AnalogRytmMutationPlanner : composes
     AnalogRytmDevice o-- AnalogRytmMessageRenderer : composes
     AnalogRytmDevice ..|> AnalogRytmSavedKitCodecCapability : structurally satisfies
+    AnalogRytmDevice ..|> SavedKitCaptureCapability : optionally satisfies
     AnalogRytmDevice --> AnalogRytmSavedKitCodec : delegates saved-KIT frames
 
     AnalogRytmSnapshotDecoder ..|> SnapshotDecoder : satisfies
@@ -438,13 +454,15 @@ classDiagram
     AnalogRytmMessageRenderer ..|> MessageRenderer : satisfies
 
     Registry --> Device : holds Mapping[str, Device]
+    SavedKitCaptureResolver --> Registry : resolves registered Device
+    SavedKitCaptureResolver ..> SavedKitCaptureCapability : narrows structurally
     AnalogRytmDevice --> Registry : register_device() at import time
 ```
 
 **Key:**
 
 - **Protocol vs class.** `Device`, `SnapshotDecoder`, `MutationPlanner`, `MessageRenderer`, `MidiOutbox` are `@runtime_checkable Protocol`s. They're not inherited from — concrete classes match structurally. This is Gate 6 (type-system hygiene) and lets PR #21 / PR #36's `AnalogFourDevice` drop in without inheritance gymnastics.
-- **Composition over inheritance.** `AnalogRytmDevice` and `AnalogFourDevice` construct strategy instances in `__init__` and delegate their convenience methods to them. The Rytm device also exposes the narrow optional `AnalogRytmSavedKitCodecCapability`, which delegates pure saved-KIT frame work to `analog_rytm_saved_kit_codec.py` without widening the base `Device` Protocol. The strategies don't know about each other except through their shared device-family types (`RytmKitSnapshot`, `RytmMutationPlan`, `RytmPlanEvent`, `AnalogFourKitSnapshot`, and `AnalogFourMutationPlan`).
+- **Composition over inheritance.** `AnalogRytmDevice` and `AnalogFourDevice` construct strategy instances in `__init__` and delegate their convenience methods to them. The Rytm device also exposes the narrow optional `AnalogRytmSavedKitCodecCapability`; both registered families structurally opt into `SavedKitCaptureCapability`, resolved through `devices/saved_kit_capture.py`, without widening the base `Device` Protocol. Cockpit capture therefore imports neither concrete family codec. The strategies don't know about each other except through their shared device-family types (`RytmKitSnapshot`, `RytmMutationPlan`, `RytmPlanEvent`, `AnalogFourKitSnapshot`, and `AnalogFourMutationPlan`).
 - **Import-time registration.** `analog_rytm.py` calls `register_device(AnalogRytmDevice())` at module load. The `devices/__init__.py` imports `analog_rytm` for the side effect; consumers get a non-empty registry on first import.
 - **Adding a new family** = one device class + three strategy modules + register at import. No parallel sibling subpackages allowed (enforced by `test_device_protocol_enforcement.py`).
 
@@ -478,8 +496,8 @@ sequenceDiagram
     Decoder-->>Device: RytmKitSnapshot(slot=3, kit_name, raw, unpacked)
     Device-->>Caller: snapshot
 
-    Caller->>Device: plan_mutation(snapshot, depth=3)
-    Device->>Planner: mutation_planner.plan(snapshot, 3)
+    Caller->>Device: plan_mutation(snapshot, depth=3, scope=target-minus-lock)
+    Device->>Planner: mutation_planner.plan(snapshot, 3, scope=target-minus-lock)
     Planner->>Data: read PAD_PROFILE_KEY (pad → profile_key)
     Note over Planner,Data: Snapshot mode can instead call<br/>plan_for_machine_values(...), which routes<br/>pad+machine_value facts before planning
     Planner->>Data: read PROFILES[profile_key]["safe"] (param range table)
@@ -756,7 +774,7 @@ flowchart TB
 
     subgraph Protocols["snapshot/{decoder,planner,mock_runtime}.py"]
         SD["SnapshotDecoder Protocol<br/>decode(raw, slot) -> Any"]
-        MP_proto["MutationPlanner Protocol<br/>plan(snapshot, depth) -> Any"]
+        MP_proto["MutationPlanner Protocol<br/>plan(snapshot, depth, *, scope) -> Any"]
         MockProto["MockRuntime Protocol<br/>capture_messages(plan) -> list"]
         BaseMockRuntime["BaseMockRuntime ABC<br/>capture_messages(plan, device)<br/>forwards to outbox + device.to_mock_messages"]
     end
@@ -863,7 +881,7 @@ flowchart TB
 
 ## 10. Architecture Test Enforcement Graph
 
-The 61 architecture-test files (764 individual test items) under `tests/architecture/` mechanically enforce the rules in `docs/PLAN_REQUIREMENTS.md` + `CONTRIBUTING.md`. Each one uses the **drained-allowlist** pattern: violations today are explicit `frozenset` entries that PR-review must approve; the long-term state is empty allowlists.
+The architecture tests under `tests/architecture/` mechanically enforce the rules in `docs/PLAN_REQUIREMENTS.md` + `CONTRIBUTING.md`; the latest closeout report records the current file/item totals. Each one uses the **drained-allowlist** pattern: violations today are explicit `frozenset` entries that PR-review must approve; the long-term state is empty allowlists.
 
 ```mermaid
 flowchart TB
@@ -948,8 +966,8 @@ flowchart TB
     subgraph Jobs["Parallel CI jobs (test.yml)"]
         Lint["lint<br/>ruff + black + isort<br/>~14s"]
         Security["security<br/>pip-audit<br/>(skipped if no deps/ci changes)"]
-        Architecture["architecture<br/>tests/architecture/<br/>~10-30s · 764 tests"]
-        TestMatrix["test (matrix)<br/>windows + ubuntu<br/>(+ macos on push only)<br/>~60-90s · 8,049 tests"]
+        Architecture["architecture<br/>tests/architecture/<br/>current total in closeout report"]
+        TestMatrix["test (matrix)<br/>windows + ubuntu<br/>(+ macos on push only)<br/>current total in closeout report"]
         E2EMatrix["e2e (matrix)<br/>windows + ubuntu<br/>(+ macos on push only)<br/>~20-40s · 43 tests"]
         DocsGate["docs-gate<br/>~7s"]
         CodeQL["codeql.yml<br/>~60-75s"]
@@ -1050,7 +1068,7 @@ flowchart LR
 
 ---
 
-## 13. Test Suite Layers (8,049 tests)
+## 13. Test Suite Layers
 
 ```mermaid
 flowchart TB
@@ -1073,7 +1091,7 @@ flowchart TB
         MidiTests["test_midi_io.py<br/>test_mock_*.py<br/>test_real_midi_*.py"]
     end
 
-    subgraph Layer3["Layer 3 — Architecture (764 tests, 61 files)"]
+    subgraph Layer3["Layer 3 — Architecture (current total in closeout report)"]
         ArchTests["tests/architecture/<br/>(Gates 6, 9, 10, 11, etc.)<br/>+ NEW test_device_protocol_enforcement<br/>(7 sub-tests)"]
     end
 
@@ -1470,7 +1488,7 @@ sequenceDiagram
         DM->>device: device.snapshot_decoder.decode(raw, slot)
         device-->>DM: device-specific snapshot
 
-        DM->>device: device.mutation_planner.plan(snapshot, depth)
+        DM->>device: device.mutation_planner.plan(snapshot, depth, scope=target-minus-lock)
         device-->>DM: plan (with .ready / .readiness_reason)
 
         alt plan.ready is True
@@ -1876,14 +1894,14 @@ flowchart TB
     end
 
     subgraph GateSteps["Closeout gate steps (closeout_check.py)"]
-        Step1["1. pytest (full suite)<br/>with -n auto<br/>(8,049 tests)"]
+        Step1["1. pytest (full suite)<br/>with -n auto<br/>(current total in closeout report)"]
         Step2["2. import smoke<br/>(import rytm_randomizer)"]
     end
 
     subgraph PytestLayers["What pytest runs"]
         PassiveTests["Layer 2 unit / behavior tests<br/>(~1500 tests)"]
         ParityTests["Layer 1 V1.34 parity tests<br/>(685 items from 505 goldens)"]
-        ArchTests["Layer 3 architecture tests<br/>(764 tests across 61 files)"]
+        ArchTests["Layer 3 architecture tests<br/>(current total in closeout report)"]
         E2ETests["Layer 4 e2e tests<br/>(43 tests)"]
         CovStep["Layer 5 coverage ratchet<br/>(scripts/coverage_ratchet.py)<br/>floor: ≥95% pure-branch"]
     end
@@ -1915,7 +1933,7 @@ flowchart TB
 
 - `Scripts/closeout_check.ps1` is the original Windows-only PowerShell entry. `scripts/closeout_check.py` is the cross-platform Python equivalent added in WS-M4 (preferred for new tooling).
 - Both run pytest and an import smoke. The Python script also tests cross-platform (works on Windows / macOS / Linux without modification).
-- CI splits the 5 layers across separate jobs (test / architecture / e2e / coverage-ratchet) so a failure in one layer is visible without scrolling through 8,049 test results — see §11 (CI Pipeline) for the full job map.
+- CI splits the 5 layers across separate jobs (test / architecture / e2e / coverage-ratchet) so a failure in one layer is visible without scrolling through the full test output — see §11 (CI Pipeline) for the full job map.
 
 ---
 
@@ -2094,8 +2112,8 @@ flowchart LR
         ARCH["docs/ARCHITECTURE.md<br/>§6.1 Device + Strategy seam"]
         DIAG["docs/ARCHITECTURE_DIAGRAMS.md<br/>(this file)"]
         PLAN_REQ["docs/PLAN_REQUIREMENTS.md<br/>(18 gates)"]
-        RULES[".claude/rules/<br/>{cascade-merge-pattern,<br/>parity-fixture-discipline,<br/>coverage-gate-100pct,<br/>architecture,<br/>skill-routing}"]
-        SKILLS[".claude/skills/<br/>(19 skills incl. add-pad-command,<br/>extend-data-layer,<br/>python-on-windows)"]
+        RULES[".claude/rules/<br/>{cascade-merge-pattern,<br/>parity-fixture-discipline,<br/>coverage-gate-100pct,<br/>architecture,<br/>targeted-mutation-safety,<br/>skill-routing}"]
+        SKILLS[".claude/skills/<br/>(24 skills incl. add-pad-command,<br/>extend-data-layer,<br/>python-on-windows)"]
         STATUS["docs/STATUS.md"]
     end
 
@@ -2136,7 +2154,7 @@ flowchart LR
 - **Understanding safety:** MIDI Boundary Map (§15), Safety Boundary Diagram (§16).
 - **Test ecosystem:** Test Suite Layers (§13), Closeout + Test Coverage Map (§24).
 - **CLI surface:** Passive CLI Command Flow (§14), Command / Capability Surface (§25).
-- **Cockpit (Phase 1, in flight):** C4 Component Diagram (§28), SEND Command Sequence (§29).
+- **Cockpit:** C4 Component Diagram (§28), SEND Command Sequence (§29), and Targeted Dual-Machine Live-KIT Flow (§36).
 
 ### Explicit non-claims
 
@@ -2144,9 +2162,9 @@ The diagrams DO NOT claim that the project currently has:
 
 - Real MIDI sending in the passive default (an explicit arm is always required)
 - Automatic *output* arming from port discovery (enumeration and input opens are passive; nothing arms itself)
-- Pads 5-12 in the live mutation path
+- Captured-A4 semantic saved-KIT mutation or A4 Cockpit SEND (zero-event and blocked until mapping promotion)
 - Restore-to-device / persistent kit writes (refused at the seam — no capture-before-write or restore path exists)
-- A repo-wide single transmit path (the cockpit routes through the ArmedApply seam; legacy `app.py` / `shell.py` still open their own ports under the allowlist)
+- A repo-wide single transmit path (the cockpit routes through the ArmedApply seam; legacy `app.py` still owns allowlisted output paths)
 - `analog_four/` / `rytm/` / `essence/` top-level subpackages (anti-pattern, rejected by arch tests in §10)
 
 These remain absent unless a later committed code change and CI evidence prove
@@ -2195,7 +2213,7 @@ flowchart TB
         Handlers["Command handlers<br/>cockpit/ws/handlers.py"]
         Engine["Mutation engine<br/>cockpit/engine/mutate.py<br/>· pure deterministic function<br/>· xorshift32 PRNG<br/>· C-portable spec"]
         Profiles["Profile registry<br/>cockpit/profiles/registry.py<br/>· built-in scenes<br/>· user profiles<br/>· $XDG_CONFIG_HOME/rytm-randomizer/profiles/"]
-        History["History store<br/>cockpit/history/store.py<br/>· in-memory chain<br/>· UNDO + LOAD + SAVE"]
+        History["History store<br/>cockpit/history/store.py<br/>· in-memory chain<br/>· capture + SEND + LOAD + UNDO<br/>· SAVE refused"]
         Export["Model export<br/>cockpit/export/<br/>· MessagePack<br/>· header + CRC32"]
         DeviceAdapter["Device adapter<br/>cockpit/device/adapter.py<br/>· DeviceAdapter Protocol<br/>· MockDeviceAdapter (state only)<br/>· no real-MIDI adapter — the<br/>  ArmedApply seam owns the port"]
     end
@@ -2210,7 +2228,7 @@ flowchart TB
     Disk[("Profile registry<br/>flat JSON files<br/>(operator-authored<br/>+ built-in scenes)")]
 
     Operator -->|"runs Tauri binary"| TauriShell
-    TauriShell -->|"spawns + supervises<br/>python -m rytm_randomizer.cockpit"| WSServer
+    TauriShell -->|"spawns + supervises<br/>python -m rytm_randomizer.app --arm<br/>--cockpit-kit-capture-sidecar<br/>(or equivalent bundled stub)"| WSServer
     TauriShell -->|"loads HTML/JS from<br/>desktop/web/dist"| WebFrontend
     WebFrontend --> WSClient
 
@@ -2302,7 +2320,7 @@ sequenceDiagram
     WS->>Handler: dispatch("prepare_send_plan", payload)
 
     Note over Handler: the active candidate was<br/>computed earlier by set_depth /<br/>regen and cached in engine state
-    Handler->>Engine: prepare_send_plan(snapshot, profile, candidate, pad_locks)
+    Handler->>Engine: prepare_send_plan(snapshot, profile, candidate,<br/>targets, locks, effective scope)
     Engine-->>Handler: CockpitSendPlan (ready, packets, blockers)
     Handler-->>WS: { ok: true, send_plan }
     WS-->>UI: command ack (synchronous)
@@ -2313,15 +2331,15 @@ sequenceDiagram
     alt session armed (live hardware)
         UI->>Operator: per-action confirmation dialog
         Operator->>UI: "Confirm send"
-        UI->>WS: send { confirm: true }
+        UI->>WS: send { confirm: true, send_plan_id: current_plan_id }
     else unarmed (mock / dry run)
         UI->>WS: send { }
     end
     WS->>Handler: dispatch("send", payload)
 
     opt session armed
-        Note over Handler,Seam: refuses unless the command itself<br/>carries confirm: true — "armed" is a<br/>session state, each write its own decision
-        Handler->>Seam: confirm(plan_id) then apply(plan, mutates_kit=false)
+        Note over Handler,Seam: refuses before output open unless the command<br/>carries confirm: true and the exact current send_plan_id
+        Handler->>Seam: confirm(send_plan_id) then apply(plan, mutates_kit=false)
         Note over Seam: persistent kit/sound writes raise<br/>KitMutationUnsupportedError;<br/>only live-dial CC reaches the wire
         Seam-->>Handler: ArmedApplyResult (bytes sent) | refusal
     end
@@ -2369,16 +2387,15 @@ sequenceDiagram
   locked pads before the adapter sees packet rows. The adapter consumes the
   plan without recomputing CC/channel/value data at the hardware boundary.
 - **History entry kind = "auto".** Post-SEND entries are `kind="auto"`
-  with `via="send"`. Only explicit SAVE promotes a snapshot to
-  `kind="saved"` with an optional label. **SAVE does not write to the
-  device** — persisting a kit to hardware is a kit mutation, which the
-  ArmedApply seam refuses outright while capture-before-write and restore
-  do not exist. SAVE is a label on the cockpit's own history chain.
-- **Armed SEND needs its own `confirm`.** The seam refuses an armed send
-  whose command omits `confirm: true`, so the UI raises a per-action
-  confirmation dialog before emitting it. The unarmed / dry-run path stays
-  a single click and carries no `confirm` — nothing reaches hardware, so
-  there is nothing to confirm.
+  with `via="send"`. **SAVE is refused and emits no history event** because
+  neither persistent device write nor its required capture-before-write
+  restore seam exists. LOAD and UNDO only move the in-memory anchor.
+- **Armed SEND needs an exact plan id and its own `confirm`.** The seam refuses
+  an armed send unless the command carries `confirm: true` and the matching
+  current `send_plan_id`; missing, malformed, or stale ids are rejected before
+  the output boundary opens. The exact-id defect found during review is fixed
+  in the implementation and regression tests. The unarmed / dry-run path
+  stays local.
 
 ---
 
@@ -2792,7 +2809,7 @@ sequenceDiagram
     autonumber
     actor TauriShell as Tauri shell<br/>(release: auto-spawn;<br/>dev: human operator)
     participant TokenFile as $RYTM_RAND_WS_TOKEN_FILE<br/>(or ~/.rytm-randomizer/cockpit-ws-token)
-    participant Sidecar as cockpit/__main__.py<br/>(python -m rytm_randomizer.cockpit)
+    participant Sidecar as app.py capture composition<br/>(python -m rytm_randomizer.app --arm<br/>--cockpit-kit-capture-sidecar)<br/>ordinary cockpit/__main__.py is passive-only
     participant Server as cockpit/ws/server.py<br/>create_app(session, token=...)
     participant Endpoint as @app.websocket("/ws")
     participant Dispatcher as handlers.handle_command
@@ -2819,7 +2836,8 @@ sequenceDiagram
     alt token matches
         Endpoint-->>TauriShell: {"ok": true}
         Note over Endpoint: BOOTSTRAP
-        Endpoint-->>TauriShell: session_status<br/>snapshot_changed<br/>profile_changed<br/>history_updated<br/>performance_console_changed
+        Endpoint-->>TauriShell: 1 session_status<br/>2 snapshot_changed<br/>3 profile_changed<br/>4 profile_catalog_changed<br/>5 history_updated<br/>6 patch_genome_changed<br/>7 kit_captures_changed<br/>8 mutation_targets_changed<br/>9 mutation_locks_changed<br/>10 dual_machine_stage_changed<br/>11 performance_console_changed
+        Note over Endpoint,TauriShell: Optional 12 connection_changed<br/>when a connection manager is wired
         Note over Endpoint: COMMAND LOOP (SX1)
         loop until disconnect
             TauriShell->>Endpoint: text frame
@@ -3049,3 +3067,52 @@ sequenceDiagram
   malformed JSON is warn-and-skip (the rest of the registry still loads).
 - **The arch test `test_abstraction_reuse.py` (PR 13, Gate 17) flags any
   module that grows a second canonical surface for these primitives.**
+
+## 36. Targeted Dual-Machine Live Stage and Recovery
+
+```mermaid
+flowchart LR
+    Operator["Operator"] --> CaptureUI["Capture Current Kit<br/>exact input selection"]
+    CaptureUI --> InputBoundary["app --arm<br/>--cockpit-kit-capture-sidecar<br/>INPUT ONLY"]
+    InputBoundary --> Codecs["Rytm/A4 saved-KIT codecs<br/>family + checksum + length<br/>exact decode/re-encode"]
+
+    Codecs --> RytmAnchor["Verified Rytm anchor"]
+    Codecs --> A4Anchor["Verified A4 anchor"]
+
+    RytmAnchor --> RytmLane["Rytm lane<br/>capture / targets / locks<br/>candidate / plan / authority<br/>stale / recovery"]
+    A4Anchor --> A4Lane["A4 lane<br/>capture / targets / locks<br/>zero-event plan / blocker<br/>stale / recovery"]
+
+    Scope["effective scope<br/>(targets or complete domain)<br/>minus locks"] --> RytmLane
+    Scope --> A4Lane
+    Coordinator["DualMachineStageCoordinator<br/>whole-state revision"] --> RytmLane
+    Coordinator --> A4Lane
+
+    RytmLane --> Prepare["PREPARE<br/>exact plan id + pads + count"]
+    Prepare --> Confirm["per-action confirm:true<br/>same current plan id"]
+    Confirm --> ArmedApply["senders/armed_apply.py<br/>sole Cockpit output handle"]
+    ArmedApply --> Rytm["Analog Rytm RAM-only CC"]
+
+    A4Lane --> A4Block["BLOCKED<br/>semantic saved-KIT offsets<br/>not promoted"]
+    A4Block -.-> Mapping["Studio mapping matrix<br/>offset + encoding + stride<br/>round-trip + physical proof"]
+
+    OXI["OXI One<br/>sequencing / notes / triggers<br/>mutes / pattern motion"] --> Rytm
+    OXI --> A4["Analog Four"]
+    Coordinator -.->|"no direct control"| OXI
+
+    Disconnect["capture timeout / malformed frame<br/>Rytm output disconnect / stale scope"] --> Coordinator
+    Coordinator --> Recovery["lane-local failure/revoke<br/>Rytm reconnect or re-capture<br/>preview + PREPARE again"]
+
+    style InputBoundary fill:#eef,stroke:#448
+    style ArmedApply fill:#fee,stroke:#a44
+    style A4Block fill:#fff3cd,stroke:#997000
+    style OXI fill:#efe,stroke:#474
+```
+
+The coordinator owns state only; it cannot open a port or render messages.
+Capture authority and send authority are deliberately separate. A failure in
+one lane cannot promote, arm, or corrupt the other lane. Rytm physical
+connection state comes from the armed-output manager; A4 capture/session state
+does not claim continuous hot-plug monitoring. Rytm plans are bound
+to the captured source, effective scope, candidate, and exact plan id. A4
+remains useful for capture, target/lock rehearsal, and mapping evidence while
+its output authority is structurally blocked.

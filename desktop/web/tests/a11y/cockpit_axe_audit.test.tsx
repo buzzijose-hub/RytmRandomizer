@@ -17,7 +17,7 @@
  * entry is a documented, dated debt with a fix owner. As of this suite's
  * introduction the audit found every scanned surface clean (all floors 0).
  */
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { ActionBar } from '../../src/cockpit/ActionBar';
@@ -25,6 +25,7 @@ import { CockpitClientProvider } from '../../src/cockpit/context';
 import { ArmControl } from '../../src/cockpit/ArmControl';
 import { DepthSlider } from '../../src/cockpit/DepthSlider';
 import { Knob } from '../../src/cockpit/Knob';
+import { KitCapturePanel } from '../../src/cockpit/KitCapturePanel';
 import { ProfileToggle } from '../../src/cockpit/ProfileToggle';
 import { LockButton } from '../../src/cockpit/LockButton';
 import { ConnectionDoctorPanel } from '../../src/cockpit/panels/ConnectionDoctorPanel';
@@ -32,24 +33,27 @@ import { KitMorphPanel } from '../../src/cockpit/panels/KitMorphPanel';
 import { LibraryPanel } from '../../src/cockpit/panels/LibraryPanel';
 import { LiveMidiMonitorPanel } from '../../src/cockpit/panels/LiveMidiMonitorPanel';
 import { DeviceRail } from '../../src/cockpit/DeviceRail';
+import { RYTM_DEVICE_ID } from '../../src/cockpit/devices';
 import { ReconnectBanner } from '../../src/cockpit/ReconnectBanner';
 import { PanelRenderer } from '../../src/cockpit/panels/PanelRenderer';
 import { ScopedRandomizationPanel } from '../../src/cockpit/panels/ScopedRandomizationPanel';
 import { liveMidiMonitorPanelSpec } from '../../src/cockpit/panels/liveMidiMonitorPanelSpec';
 import { useCockpitStore } from '../../src/state';
+import type { KitCaptureResult } from '../../src/ws/protocol';
 
 import {
   candidate,
   connectionListening,
   diagnosticsHealthy,
+  FakeCockpitClient,
   libraryRecordA,
   midiBatch,
+  readyDualMachineStage,
   sendPlan,
   sessionLive,
   sessionMock,
 } from '../cockpit/_fixtures';
 import { runAxe, violationSummary } from './__helpers__/axe';
-import { FakeCockpitClient } from '../cockpit/_fixtures';
 
 // component-name → expected (grandfathered) violation count. Keep at 0.
 const FLOORS = {
@@ -61,6 +65,7 @@ const FLOORS = {
   LockButton: 0,
   ConnectionDoctorPanel: 0,
   KitMorphPanel: 0,
+  KitCapturePanel: 0,
   LibraryPanel: 0,
   LiveMidiMonitorPanel: 0,
   PanelRenderer: 0,
@@ -160,6 +165,47 @@ describe('cockpit axe audit (WCAG 2.2 AA)', () => {
     await expectClean('KitMorphPanel', container);
   });
 
+  it('KitCapturePanel captured layout is clean and exposes list semantics', async () => {
+    const capture: KitCaptureResult = {
+      device_id: RYTM_DEVICE_ID,
+      kit_name: 'LIVE RYTM KIT',
+      slot: 3,
+      fingerprint: '0123456789abcdef',
+      frame_bytes: 3001,
+      captured_at: '2026-08-26T12:00:00+00:00',
+      snapshot_layout: 'saved_kit',
+      parameter_readiness: 'rytm_anchor_ready',
+      round_trip_verified: true,
+      input_only: true,
+      sent_midi: false,
+      layout_items: Array.from({ length: 12 }, (_, index) => ({
+        index: index + 1,
+        label: `Machine ${index + 1}`,
+        status: 'mutation_ready',
+        detail: 'promoted machine fact',
+      })),
+    };
+    useCockpitStore.setState({ sessionStatus: sessionMock, kitCaptures: [capture] });
+    const fake = new FakeCockpitClient();
+    fake.ackQueue.push({
+      request_id: 'capture-inputs',
+      ok: true,
+      capture_enabled: false,
+      capture_device_id: RYTM_DEVICE_ID,
+      capture_inputs: [],
+    });
+    const { container } = render(
+      <CockpitClientProvider client={fake.asClient()}>
+        <KitCapturePanel deviceId={RYTM_DEVICE_ID} onClose={() => {}} />
+      </CockpitClientProvider>,
+    );
+
+    await screen.findByTestId('capture-locked-message');
+    const layout = screen.getByRole('list', { name: 'Analog Rytm MKII captured layout' });
+    expect(within(layout).getAllByRole('listitem')).toHaveLength(12);
+    await expectClean('KitCapturePanel', container);
+  });
+
   it('ArmControl open dialog is clean', async () => {
     useCockpitStore.setState({ sessionStatus: sessionMock, connection: connectionListening });
     const { container } = render(withClient(<ArmControl />));
@@ -198,6 +244,9 @@ describe('cockpit axe audit (WCAG 2.2 AA)', () => {
 
   it('ActionBar armed send-confirmation dialog is clean', async () => {
     useCockpitStore.setState({
+      connectionStatus: 'connected',
+      dualMachineStage: readyDualMachineStage,
+      rytmPadLocks: [2],
       sessionStatus: sessionLive,
       previewCandidate: candidate,
       sendPlan,

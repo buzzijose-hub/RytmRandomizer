@@ -115,6 +115,11 @@ interface PendingCommand {
   timeoutHandle: ReturnType<typeof setTimeout>;
 }
 
+export interface SendCommandOptions {
+  /** Override the normal ack deadline for operator-paced commands such as SysEx capture. */
+  timeoutMs?: number;
+}
+
 // ---------- Constants ----------
 
 export const DEFAULT_WS_URL = 'ws://127.0.0.1:4317/ws';
@@ -338,18 +343,19 @@ export class CockpitClient {
    * - The ack does not arrive within `ackTimeoutMs`.
    * - The connection closes before the ack arrives.
    */
-  send<C extends Command>(command: C): Promise<CommandAck> {
+  send<C extends Command>(command: C, options: SendCommandOptions = {}): Promise<CommandAck> {
     if (this.socket === null || this.socket.readyState !== WS_OPEN) {
       return Promise.reject(new Error('socket not open'));
     }
     const requestId = this.requestIdGenerator();
     const envelope: CommandEnvelope<C> = { request_id: requestId, command };
+    const timeoutMs = options.timeoutMs ?? this.ackTimeoutMs;
     return new Promise<CommandAck>((resolve, reject) => {
       const timeoutHandle = this.setTimeoutImpl(() => {
         if (this.pending.delete(requestId)) {
           reject(new Error(`ack timeout for ${command.type} (request_id=${requestId})`));
         }
-      }, this.ackTimeoutMs);
+      }, timeoutMs);
       this.pending.set(requestId, { resolve, reject, timeoutHandle });
       // We verified `this.socket !== null` at the top of `send`. Inside this Promise
       // executor TypeScript loses that narrowing, so we copy to a local. There's no

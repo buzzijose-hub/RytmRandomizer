@@ -376,6 +376,12 @@ def test_stub_class_with_plan_satisfies_mutation_planner_protocol() -> None:
     assert isinstance(_StubPlanner(), MutationPlanner)
 
 
+def test_mutation_planner_protocol_body_is_runtime_inert() -> None:
+    from rytm_randomizer.snapshot import MutationPlanner
+
+    assert MutationPlanner.plan(object(), object(), 0) is None
+
+
 def test_stub_class_with_capture_messages_satisfies_mock_runtime_protocol() -> None:
     from rytm_randomizer.snapshot import MockRuntime
 

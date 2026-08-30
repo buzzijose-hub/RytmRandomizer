@@ -10,9 +10,11 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from typing import Final, Literal, Self, TypedDict, cast
+from typing import Final, Literal, NotRequired, Self, TypedDict, cast
 
-from .types import STATUS_VALUES, Status, _safe_repr, narrow_status
+from ...data.analog_rytm_kit_layout import RYTM_KIT_TRACK_COUNT
+from ...guardrails.identifier_sets import validated_id, validated_id_set
+from .types import STATUS_VALUES, Status, narrow_status, safe_repr
 
 
 class SendPlanPacketDict(TypedDict):
@@ -46,11 +48,31 @@ class CockpitSendPlanDict(TypedDict):
     safety_status: str
     packets: list[SendPlanPacketDict]
     locked_pad_ids: list[int]
+    target_pad_ids: NotRequired[list[int]]
     blocked_reasons: list[str]
 
 
-_PAD_ID_MIN: Final[int] = 1
-_PAD_ID_MAX: Final[int] = 12
+def _strict_pad_id_set(values: object, *, field_name: str) -> frozenset[int]:
+    if not isinstance(values, (list, tuple, frozenset, set)):
+        raise TypeError(f"{field_name} must be an iterable; got {type(values).__name__}")
+    collection = cast(
+        "list[object] | tuple[object, ...] | frozenset[object] | set[object]",
+        values,
+    )
+    return validated_id_set(
+        collection,
+        field_name=field_name,
+        is_allowed=lambda value: value <= RYTM_KIT_TRACK_COUNT,
+        expected=f"only integer pad ids in [1, {RYTM_KIT_TRACK_COUNT}]",
+    )
+
+
+def _strict_sequence(values: object, *, field_name: str) -> list[object] | tuple[object, ...]:
+    if not isinstance(values, (list, tuple)):
+        raise TypeError(f"{field_name} must be a list/tuple; got {type(values).__name__}")
+    return cast("list[object] | tuple[object, ...]", values)
+
+
 _MIDI_VALUE_MIN: Final[int] = 0
 _MIDI_VALUE_MAX: Final[int] = 127
 _MIDI_CHANNEL_MIN: Final[int] = 0
@@ -83,9 +105,9 @@ def narrow_readiness_reason(s: str) -> ReadinessReason:
     """
 
     if s in READINESS_REASON_VALUES:
-        return cast(ReadinessReason, s)
+        return s
     raise ValueError(
-        "invalid readiness_reason: " f"{_safe_repr(s)}; expected one of {READINESS_REASON_VALUES}"
+        "invalid readiness_reason: " f"{safe_repr(s)}; expected one of {READINESS_REASON_VALUES}"
     )
 
 
@@ -112,8 +134,12 @@ class SendPlanPacket:
     value: int
 
     def __post_init__(self) -> None:
-        if not (_PAD_ID_MIN <= self.pad_id <= _PAD_ID_MAX):
-            raise ValueError(f"pad_id must be in [{_PAD_ID_MIN}, {_PAD_ID_MAX}]; got {self.pad_id}")
+        validated_id(
+            self.pad_id,
+            field_name="pad_id",
+            is_allowed=lambda pad_id: pad_id <= RYTM_KIT_TRACK_COUNT,
+            expected=f"in [1, {RYTM_KIT_TRACK_COUNT}]",
+        )
         if not self.parameter:
             raise ValueError("parameter must be a non-empty string")
         if not (_MIDI_CHANNEL_MIN <= self.channel <= _MIDI_CHANNEL_MAX):
@@ -163,6 +189,7 @@ class CockpitSendPlan:
     packets: tuple[SendPlanPacket, ...]
     locked_pad_ids: frozenset[int]
     blocked_reasons: tuple[ReadinessReason, ...]
+    target_pad_ids: frozenset[int] = frozenset()
 
     def __post_init__(self) -> None:
         for field_name, value in (
@@ -185,6 +212,19 @@ class CockpitSendPlan:
         unknown_reasons = set(self.blocked_reasons) - set(READINESS_REASON_VALUES)
         if unknown_reasons:
             raise ValueError(f"blocked_reasons contains unknown values: {sorted(unknown_reasons)}")
+        for label, pad_ids in (
+            ("locked_pad_ids", self.locked_pad_ids),
+            ("target_pad_ids", self.target_pad_ids),
+        ):
+            object.__setattr__(self, label, _strict_pad_id_set(pad_ids, field_name=label))
+        packet_pad_ids = frozenset(packet.pad_id for packet in self.packets)
+        locked_packet_ids = sorted(packet_pad_ids & self.locked_pad_ids)
+        if locked_packet_ids:
+            raise ValueError(f"packets include locked pad ids: {locked_packet_ids}")
+        if self.target_pad_ids:
+            untargeted_packet_ids = sorted(packet_pad_ids - self.target_pad_ids)
+            if untargeted_packet_ids:
+                raise ValueError(f"packets include untargeted pad ids: {untargeted_packet_ids}")
         if self.ready:
             if self.readiness_reason != "ready":
                 raise ValueError("ready plans must use readiness_reason='ready'")
@@ -211,23 +251,30 @@ class CockpitSendPlan:
             "estimated_midi_msgs": len(self.packets),
             "pad_count": len(packet_pad_ids),
             "locked_pad_ids": sorted(self.locked_pad_ids),
+            "target_pad_ids": sorted(self.target_pad_ids),
             "blocked_reasons": list(self.blocked_reasons),
             "packets": [packet.to_dict() for packet in self.packets],
         }
 
     @classmethod
     def from_dict(cls, data: CockpitSendPlanDict) -> Self:
-        packets_obj = data["packets"]
-        locked_obj = data["locked_pad_ids"]
-        blocked_obj = data["blocked_reasons"]
-        if not isinstance(packets_obj, (list, tuple)):
-            raise TypeError(f"packets must be a list/tuple; got {type(packets_obj).__name__}")
-        if not isinstance(locked_obj, (list, tuple, frozenset, set)):
-            raise TypeError(f"locked_pad_ids must be an iterable; got {type(locked_obj).__name__}")
-        if not isinstance(blocked_obj, (list, tuple)):
-            raise TypeError(
-                f"blocked_reasons must be a list/tuple; got {type(blocked_obj).__name__}"
-            )
+        packets_obj = _strict_sequence(data["packets"], field_name="packets")
+        packets = cast(
+            "list[SendPlanPacketDict] | tuple[SendPlanPacketDict, ...]",
+            packets_obj,
+        )
+        locked_pad_ids = _strict_pad_id_set(
+            data["locked_pad_ids"],
+            field_name="locked_pad_ids",
+        )
+        target_pad_ids = _strict_pad_id_set(
+            data.get("target_pad_ids", []),
+            field_name="target_pad_ids",
+        )
+        blocked_values = _strict_sequence(
+            data["blocked_reasons"],
+            field_name="blocked_reasons",
+        )
         # narrow_status raises "invalid status: ..."; the cockpit wire field is
         # named ``safety_status`` (the dataclass attribute name), so re-raise
         # with the field-qualified prefix so log readers + the existing
@@ -247,7 +294,7 @@ class CockpitSendPlan:
         # dataclass is observed by callers.
         blocked_reasons = cast(
             tuple[ReadinessReason, ...],
-            tuple(str(reason) for reason in blocked_obj),
+            tuple(str(reason) for reason in blocked_values),
         )
         return cls(
             plan_id=data["plan_id"],
@@ -257,8 +304,9 @@ class CockpitSendPlan:
             ready=data["ready"],
             readiness_reason=narrow_readiness_reason(data["readiness_reason"]),
             safety_status=safety_status,
-            packets=tuple(SendPlanPacket.from_dict(packet) for packet in packets_obj),
-            locked_pad_ids=frozenset(int(pad_id) for pad_id in locked_obj),
+            packets=tuple(SendPlanPacket.from_dict(packet) for packet in packets),
+            locked_pad_ids=locked_pad_ids,
+            target_pad_ids=target_pad_ids,
             blocked_reasons=blocked_reasons,
         )
 

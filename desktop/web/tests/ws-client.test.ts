@@ -127,6 +127,7 @@ const sessionStatusEvent: SessionStatusEvent = {
   mode: 'mock',
   connection_phase: 'disconnected',
   unsaved_sends: 0,
+  capture_enabled: false,
 };
 
 const ack = (request_id: string, extra: Partial<CommandAck> = {}): CommandAck => ({
@@ -1296,12 +1297,18 @@ describe('CockpitClient — default request id generator path (no injection)', (
 });
 
 describe('protocol type guards', () => {
-  it('isEvent identifies all seven event types', () => {
+  it('isEvent identifies all ten cockpit event types', () => {
     expect(isEvent({ type: 'snapshot_changed', snapshot: {} })).toBe(true);
     expect(isEvent({ type: 'mutation_previewed', candidate: null })).toBe(true);
     expect(isEvent({ type: 'send_plan_changed', send_plan: null })).toBe(true);
     expect(isEvent({ type: 'history_updated', history: {} })).toBe(true);
     expect(isEvent({ type: 'profile_changed', profile: null })).toBe(true);
+    expect(isEvent({ type: 'profile_catalog_changed', profiles: [] })).toBe(true);
+    expect(
+      isEvent({ type: 'mutation_locks_changed', rytm_pad_locks: [], a4_track_locks: [] }),
+    ).toBe(true);
+    expect(isEvent({ type: 'dual_machine_stage_changed', stage: {} })).toBe(true);
+    expect(isEvent({ type: 'patch_genome_changed', patch_genome: {} })).toBe(true);
     expect(isEvent({ type: 'performance_console_changed', performance_console: null })).toBe(
       true,
     );

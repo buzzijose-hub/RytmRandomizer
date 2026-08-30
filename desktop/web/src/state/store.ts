@@ -22,16 +22,20 @@ import { create } from 'zustand';
 import type { LiveGuiPerformanceConsoleModelDict } from '../types/live_gui_protocol';
 import type { ConnectionStatus } from '../ws/client';
 import type {
+  AnalogFourPatchGenomePayload,
   CockpitSendPlan,
   ConnectionPhase,
   ConnectionStateDict,
   DiagnosticsPayload,
+  DualMachineStageState,
   History,
+  KitCaptureResult,
   LibraryRecord,
   MidiActivityBatch,
   MidiActivityRow,
   MutationCandidate,
   ProfileModel,
+  ProfileCatalogItem,
   SessionMode,
   Snapshot,
 } from '../ws/protocol';
@@ -44,6 +48,8 @@ export interface SessionStatus {
   mode: SessionMode;
   connection_phase: ConnectionPhase;
   unsaved_sends: number;
+  /** Additive capability flag; absent on older sidecar/session fixtures. */
+  capture_enabled?: boolean;
 }
 
 /** One monitor row with a client-side id (React key for the bounded ring). */
@@ -70,6 +76,17 @@ export interface CockpitState {
   previewCandidate: MutationCandidate | null;
   history: History | null;
   profile: ProfileModel | null;
+  profileCatalog: ProfileCatalogItem[];
+  patchGenome: AnalogFourPatchGenomePayload | null;
+  /** True when the visible A4 genome predates the current target/lock authority. */
+  patchGenomeStale: boolean;
+  kitCaptures: KitCaptureResult[];
+  rytmPadTargets: number[];
+  a4TrackTargets: number[];
+  rytmPadLocks: number[];
+  a4TrackLocks: number[];
+  /** Latest whole-state coordinator snapshot; never merged field-by-field. */
+  dualMachineStage: DualMachineStageState | null;
   performanceConsole: LiveGuiPerformanceConsoleModelDict | null;
   sendPlan: CockpitSendPlan | null;
   sessionStatus: SessionStatus | null;
@@ -97,6 +114,14 @@ export interface CockpitActions {
   setPreviewCandidate: (candidate: MutationCandidate | null) => void;
   setHistory: (history: History) => void;
   setProfile: (profile: ProfileModel | null) => void;
+  setProfileCatalog: (profiles: ProfileCatalogItem[]) => void;
+  setPatchGenome: (patchGenome: AnalogFourPatchGenomePayload) => void;
+  setKitCaptures: (captures: KitCaptureResult[]) => void;
+  setMutationTargets: (rytmPadTargets: number[], a4TrackTargets: number[]) => void;
+  setMutationLocks: (rytmPadLocks: number[], a4TrackLocks: number[]) => void;
+  setRytmPadLocks: (padIds: number[]) => void;
+  setA4TrackLocks: (trackIds: number[]) => void;
+  setDualMachineStage: (stage: DualMachineStageState) => void;
   setPerformanceConsole: (model: LiveGuiPerformanceConsoleModelDict | null) => void;
   setSendPlan: (sendPlan: CockpitSendPlan | null) => void;
   setSessionStatus: (status: SessionStatus) => void;
@@ -122,6 +147,15 @@ export const INITIAL_STATE: CockpitState = {
   previewCandidate: null,
   history: null,
   profile: null,
+  profileCatalog: [],
+  patchGenome: null,
+  patchGenomeStale: false,
+  kitCaptures: [],
+  rytmPadTargets: [],
+  a4TrackTargets: [],
+  rytmPadLocks: [],
+  a4TrackLocks: [],
+  dualMachineStage: null,
   performanceConsole: null,
   sendPlan: null,
   sessionStatus: null,
@@ -158,6 +192,42 @@ function makeMonitorRowId(): string {
   return `midi-row-${nextMonitorRowId}`;
 }
 
+function sameNumberSet(left: readonly number[], right: readonly number[]): boolean {
+  if (left.length !== right.length) return false;
+  const rightSet = new Set(right);
+  return left.every((value) => rightSet.has(value));
+}
+
+function appendUnique(values: readonly string[], value: string): string[] {
+  return values.includes(value) ? [...values] : [...values, value];
+}
+
+function revokeMachineForDisconnect(
+  machine: DualMachineStageState['rytm'],
+): DualMachineStageState['rytm'] {
+  return {
+    ...machine,
+    connection_state: 'disconnected',
+    candidate_state: machine.candidate_state === 'ready' ? 'stale' : machine.candidate_state,
+    plan_state: machine.plan_state === 'ready' ? 'stale' : machine.plan_state,
+    authority_state: 'blocked',
+    blocked_reasons: appendUnique(machine.blocked_reasons, 'device_disconnected'),
+    recovery_actions: ['reconnect_device', 'capture_current_kit', 'prepare_again'],
+    last_error: 'device disconnected',
+  };
+}
+
+function revokeStageForTransportDisconnect(
+  stage: DualMachineStageState | null,
+): DualMachineStageState | null {
+  if (stage === null) return null;
+  return {
+    ...stage,
+    rytm: revokeMachineForDisconnect(stage.rytm),
+    analog_four: revokeMachineForDisconnect(stage.analog_four),
+  };
+}
+
 // ---------- Store ----------
 
 /**
@@ -171,18 +241,115 @@ export function createCockpitStore() {
     setPreviewCandidate: (candidate) => set({ previewCandidate: candidate }),
     setHistory: (history) => set({ history }),
     setProfile: (profile) => set({ profile }),
+    setProfileCatalog: (profileCatalog) => set({ profileCatalog }),
+    setPatchGenome: (patchGenome) => set({ patchGenome, patchGenomeStale: false }),
+    setKitCaptures: (kitCaptures) => set({ kitCaptures }),
+    setMutationTargets: (rytmPadTargets, a4TrackTargets) =>
+      set((state) => {
+        const rytmChanged = !sameNumberSet(state.rytmPadTargets, rytmPadTargets);
+        const a4Changed = !sameNumberSet(state.a4TrackTargets, a4TrackTargets);
+        if (!rytmChanged && !a4Changed) return {};
+        return {
+          rytmPadTargets,
+          a4TrackTargets,
+          previewCandidate: null,
+          sendPlan: null,
+          patchGenomeStale:
+            a4Changed && state.patchGenome !== null ? true : state.patchGenomeStale,
+        };
+      }),
+    setMutationLocks: (rytmPadLocks, a4TrackLocks) =>
+      set((state) => {
+        const rytmChanged = !sameNumberSet(state.rytmPadLocks, rytmPadLocks);
+        const a4Changed = !sameNumberSet(state.a4TrackLocks, a4TrackLocks);
+        if (!rytmChanged && !a4Changed) return {};
+        return {
+          rytmPadLocks,
+          a4TrackLocks,
+          previewCandidate: null,
+          sendPlan: null,
+          patchGenomeStale:
+            a4Changed && state.patchGenome !== null ? true : state.patchGenomeStale,
+        };
+      }),
+    setRytmPadLocks: (rytmPadLocks) =>
+      set((state) => {
+        if (sameNumberSet(state.rytmPadLocks, rytmPadLocks)) return {};
+        return { rytmPadLocks, previewCandidate: null, sendPlan: null };
+      }),
+    setA4TrackLocks: (a4TrackLocks) =>
+      set((state) => {
+        if (sameNumberSet(state.a4TrackLocks, a4TrackLocks)) return {};
+        return {
+          a4TrackLocks,
+          previewCandidate: null,
+          sendPlan: null,
+          patchGenomeStale: state.patchGenome !== null ? true : state.patchGenomeStale,
+        };
+      }),
+    setDualMachineStage: (dualMachineStage) =>
+      set((state) => {
+        const rytmScopeChanged =
+          !sameNumberSet(state.rytmPadTargets, dualMachineStage.rytm.target_ids) ||
+          !sameNumberSet(state.rytmPadLocks, dualMachineStage.rytm.locked_ids);
+        const a4ScopeChanged =
+          !sameNumberSet(state.a4TrackTargets, dualMachineStage.analog_four.target_ids) ||
+          !sameNumberSet(state.a4TrackLocks, dualMachineStage.analog_four.locked_ids);
+        const rytmCandidateReady = dualMachineStage.rytm.candidate_state === 'ready';
+        const rytmPlanReady = dualMachineStage.rytm.plan_state === 'ready';
+        const a4CandidateReady = dualMachineStage.analog_four.candidate_state === 'ready';
+        return {
+          dualMachineStage,
+          rytmPadTargets: dualMachineStage.rytm.target_ids,
+          a4TrackTargets: dualMachineStage.analog_four.target_ids,
+          rytmPadLocks: dualMachineStage.rytm.locked_ids,
+          a4TrackLocks: dualMachineStage.analog_four.locked_ids,
+          previewCandidate:
+            rytmScopeChanged || !rytmCandidateReady ? null : state.previewCandidate,
+          sendPlan: rytmScopeChanged || !rytmPlanReady ? null : state.sendPlan,
+          patchGenomeStale:
+            state.patchGenome === null
+              ? false
+              : a4ScopeChanged || dualMachineStage.analog_four.candidate_state === 'stale'
+                ? true
+                : a4CandidateReady
+                  ? false
+                  : state.patchGenomeStale,
+        };
+      }),
     setPerformanceConsole: (model) => set({ performanceConsole: model }),
     setSendPlan: (sendPlan) => set({ sendPlan }),
     setSessionStatus: (status) => set({ sessionStatus: status }),
-    setConnectionStatus: (status) => set({ connectionStatus: status }),
+    setConnectionStatus: (status) =>
+      set((state) =>
+        status === 'connected'
+          ? { connectionStatus: status }
+          : {
+              connectionStatus: status,
+              previewCandidate: null,
+              sendPlan: null,
+              patchGenomeStale: state.patchGenome !== null || state.patchGenomeStale,
+              dualMachineStage: revokeStageForTransportDisconnect(state.dualMachineStage),
+            },
+      ),
     setConnection: (connection) =>
-      set((state) => ({
-        connection,
-        reconnectNotice:
-          state.connection?.phase === 'fault' && connection.phase === 'listening'
-            ? RECONNECT_NOTICE
-            : state.reconnectNotice,
-      })),
+      set((state) => {
+        const disconnected = connection.phase === 'disconnected' || connection.phase === 'fault';
+        const stage = state.dualMachineStage;
+        return {
+          connection,
+          reconnectNotice:
+            state.connection?.phase === 'fault' && connection.phase === 'listening'
+              ? RECONNECT_NOTICE
+              : state.reconnectNotice,
+          previewCandidate: disconnected ? null : state.previewCandidate,
+          sendPlan: disconnected ? null : state.sendPlan,
+          dualMachineStage:
+            disconnected && stage !== null
+              ? { ...stage, rytm: revokeMachineForDisconnect(stage.rytm) }
+              : stage,
+        };
+      }),
     clearReconnectNotice: () => set({ reconnectNotice: null }),
     appendMidiActivity: (activity) =>
       set((state) => {
@@ -237,7 +404,26 @@ export const selectPadCount = (s: CockpitState): number => s.snapshot?.pads.leng
 
 export const selectSendPlanReady = (s: CockpitState): boolean => s.sendPlan?.ready ?? false;
 
-export const selectCanSend = (s: CockpitState): boolean => selectSendPlanReady(s);
+/** Fail closed unless the prepared plan is exact for the current authoritative scope. */
+export const selectCanSend = (s: CockpitState): boolean => {
+  const plan = s.sendPlan;
+  const candidate = s.previewCandidate;
+  const stage = s.dualMachineStage?.rytm;
+  if (s.connectionStatus !== 'connected' || plan === null || candidate === null) return false;
+  if (!plan.ready || plan.plan_id.trim() === '') return false;
+  if (plan.candidate_id !== candidate.candidate_id) return false;
+  if (plan.source_snapshot_id !== candidate.source_snapshot_id) return false;
+  if (plan.profile_id !== candidate.profile_id) return false;
+  if (!sameNumberSet(plan.target_pad_ids, s.rytmPadTargets)) return false;
+  if (!sameNumberSet(plan.locked_pad_ids, s.rytmPadLocks)) return false;
+  if (stage === undefined) return false;
+  return (
+    stage.candidate_state === 'ready' &&
+    stage.plan_state === 'ready' &&
+    stage.connection_state !== 'disconnected' &&
+    stage.authority_state !== 'blocked'
+  );
+};
 
 export const selectPreparedPadCount = (s: CockpitState): number => s.sendPlan?.pad_count ?? 0;
 

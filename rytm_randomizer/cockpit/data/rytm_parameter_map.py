@@ -404,6 +404,27 @@ def cockpit_machine_is_known(machine: str) -> bool:
     return _machine_key(machine) in ANALOG_RYTM_MACHINE_SRC_BY_MACHINE
 
 
+def cockpit_parameter_key(machine: str, section: str, parameter: str) -> str | None:
+    """Project a promoted snapshot row back to a compact Cockpit key.
+
+    The bridge only returns keys already present in this module's manual-backed
+    aliases. Unknown catalog rows remain absent instead of acquiring guessed
+    names or offsets.
+    """
+
+    catalog_pair = (section, parameter)
+    for compact_key, common_pair in _COMMON_ALIASES.items():
+        if common_pair == catalog_pair:
+            return compact_key
+    aliases = _MACHINE_PARAMETER_ALIASES.get(_machine_key(machine))
+    if aliases is None or section != "SRC":
+        return None
+    for compact_key, catalog_parameter in aliases.items():
+        if catalog_parameter == parameter:
+            return compact_key
+    return None
+
+
 def _machine_key(machine: str) -> str:
     normalized = _normalize_label(machine)
     alias = _MACHINE_ALIASES.get(normalized)
@@ -420,5 +441,6 @@ __all__ = [
     "cockpit_machine_is_known",
     "cockpit_pad_channel",
     "cockpit_parameter_control",
+    "cockpit_parameter_key",
     "cockpit_parameter_mapping",
 ]

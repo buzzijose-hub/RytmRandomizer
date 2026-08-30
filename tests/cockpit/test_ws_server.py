@@ -43,13 +43,20 @@ from rytm_randomizer.cockpit.device import MockDeviceAdapter
 from rytm_randomizer.cockpit.history import HistoryStore
 from rytm_randomizer.cockpit.profiles import ProfileRegistry
 from rytm_randomizer.cockpit.ws.protocol import (
+    EVENT_DUAL_MACHINE_STAGE_CHANGED,
     EVENT_HISTORY_UPDATED,
+    EVENT_KIT_CAPTURES_CHANGED,
+    EVENT_MUTATION_LOCKS_CHANGED,
     EVENT_MUTATION_PREVIEWED,
+    EVENT_MUTATION_TARGETS_CHANGED,
+    EVENT_PATCH_GENOME_CHANGED,
     EVENT_PERFORMANCE_CONSOLE_CHANGED,
+    EVENT_PROFILE_CATALOG_CHANGED,
     EVENT_PROFILE_CHANGED,
     EVENT_SEND_PLAN_CHANGED,
     EVENT_SESSION_STATUS,
     EVENT_SNAPSHOT_CHANGED,
+    INITIAL_EVENT_COUNT,
     WS_SUBPROTOCOL,
 )
 from rytm_randomizer.cockpit.ws.server import (
@@ -131,7 +138,7 @@ def session_factory(tmp_path: Path):
 
 
 def _recv_initial_events(ws) -> list[dict]:
-    """Run the handshake then drain the five bootstrap events.
+    """Run the handshake then drain the authoritative bootstrap events.
 
     Per CODE_REVIEW.md PR 1 finding C1, the cockpit WS endpoint now
     requires a handshake before bootstrap fires. Folding the handshake
@@ -140,14 +147,18 @@ def _recv_initial_events(ws) -> list[dict]:
     """
 
     complete_handshake(ws)
-    return [ws.receive_json() for _ in range(5)]
+    return [ws.receive_json() for _ in range(INITIAL_EVENT_COUNT)]
 
 
 def _send_command(ws, request_id: str, cmd_type: str, **body) -> dict:
-    """Send a command envelope, return the ack frame (first ``receive_json``)."""
+    """Send a command envelope and return its request-correlated ack frame."""
 
     ws.send_json({"request_id": request_id, "command": {"type": cmd_type, **body}})
-    return ws.receive_json()
+    for _ in range(64):
+        frame = ws.receive_json()
+        if frame.get("request_id") == request_id and "ok" in frame:
+            return frame
+    raise AssertionError(f"no matching ack received for {request_id!r}")
 
 
 def _drain(ws, n: int) -> list[dict]:
@@ -160,7 +171,7 @@ def _prepare_send_plan(ws, request_id: str = "req-prepare") -> dict:
         raise AssertionError(f"prepare_send_plan failed: {ack}")
     if ack["send_plan"]["ready"] is not True:
         raise AssertionError(f"prepare_send_plan blocked: {ack['send_plan']}")
-    _drain(ws, 1)
+    _drain(ws, 2)
     return ack
 
 
@@ -169,7 +180,7 @@ def _prepare_send_plan(ws, request_id: str = "req-prepare") -> dict:
 # ---------------------------------------------------------------------------
 
 
-def test_connect_emits_five_initial_events_in_order(session_factory) -> None:
+def test_connect_emits_eleven_initial_events_in_order(session_factory) -> None:
     session = session_factory()
     app = create_app(session, token=TEST_WS_TOKEN)
     client = TestClient(app)
@@ -182,7 +193,13 @@ def test_connect_emits_five_initial_events_in_order(session_factory) -> None:
         EVENT_SESSION_STATUS,
         EVENT_SNAPSHOT_CHANGED,
         EVENT_PROFILE_CHANGED,
+        EVENT_PROFILE_CATALOG_CHANGED,
         EVENT_HISTORY_UPDATED,
+        EVENT_PATCH_GENOME_CHANGED,
+        EVENT_KIT_CAPTURES_CHANGED,
+        EVENT_MUTATION_TARGETS_CHANGED,
+        EVENT_MUTATION_LOCKS_CHANGED,
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
         EVENT_PERFORMANCE_CONSOLE_CHANGED,
     ]
     assert events[0]["mode"] == "mock"  # MockDeviceAdapter
@@ -602,6 +619,12 @@ def test_two_connections_get_isolated_acks_and_shared_broadcasts(session_factory
 
             ack = _send_command(ws_a, "req-a", "set_pad_lock", pad_id=1, locked=True)
             assert ack == {"request_id": "req-a", "ok": True}
+            command_events = _drain(ws_a, 2)
+            assert [event["type"] for event in command_events] == [
+                EVENT_MUTATION_LOCKS_CHANGED,
+                EVENT_DUAL_MACHINE_STAGE_CHANGED,
+            ]
+            assert command_events[0]["rytm_pad_locks"] == [1]
 
             delivered = registry.broadcast_event({"type": "monitor_ping", "n": 2})
             assert delivered == 2
@@ -624,12 +647,15 @@ def test_broadcast_after_ack_and_events_preserves_fifo_ordering(session_factory)
     with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         _recv_initial_events(ws)
         ack = _send_command(ws, "req-1", "set_depth", depth=0.55)
-        event = ws.receive_json()
+        command_events = _drain(ws, 2)
         app.state.connection_registry.broadcast_event({"type": "monitor_ping", "n": 3})
         pushed = ws.receive_json()
 
     assert ack["ok"] is True
-    assert event["type"] == EVENT_MUTATION_PREVIEWED
+    assert [event["type"] for event in command_events] == [
+        EVENT_MUTATION_PREVIEWED,
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
+    ]
     assert pushed == {"type": "monitor_ping", "n": 3}
 
 

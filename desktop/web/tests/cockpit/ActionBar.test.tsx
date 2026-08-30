@@ -7,13 +7,14 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 
 import { ActionBar } from '../../src/cockpit/ActionBar';
 import { CockpitClientProvider } from '../../src/cockpit/context';
-import { useCockpitStore } from '../../src/state';
+import { useCockpitStore, type SessionStatus } from '../../src/state';
 
 import {
   FakeCockpitClient,
   blockedSendPlan,
   candidate,
   history,
+  readyDualMachineStage,
   sendPlan,
   sessionMock,
 } from './_fixtures';
@@ -41,13 +42,30 @@ describe('ActionBar', () => {
 
   /** Most tests exercise a connected (mock) session; offline tests skip this. */
   const seedSession = (): void => {
-    updateStore(() => useCockpitStore.getState().setSessionStatus(sessionMock));
+    updateStore(() => {
+      useCockpitStore.getState().setConnectionStatus('connected');
+      useCockpitStore.getState().setSessionStatus(sessionMock);
+    });
+  };
+
+  const seedPreparedState = (
+    plan: typeof sendPlan = sendPlan,
+    status: SessionStatus = sessionMock,
+  ): void => {
+    updateStore(() => {
+      useCockpitStore.getState().setConnectionStatus('connected');
+      useCockpitStore.getState().setDualMachineStage(readyDualMachineStage);
+      useCockpitStore.getState().setSessionStatus(status);
+      useCockpitStore.getState().setPreviewCandidate(candidate);
+      useCockpitStore.getState().setSendPlan(plan);
+    });
   };
 
   beforeEach(() => {
     updateStore(() => useCockpitStore.getState().reset());
   });
   afterEach(() => {
+    vi.restoreAllMocks();
     updateStore(() => useCockpitStore.getState().reset());
   });
 
@@ -116,10 +134,7 @@ describe('ActionBar', () => {
   });
 
   it('SEND is disabled and unclickable when send plan is blocked', () => {
-    updateStore(() => {
-      useCockpitStore.getState().setPreviewCandidate(candidate);
-      useCockpitStore.getState().setSendPlan(blockedSendPlan);
-    });
+    seedPreparedState(blockedSendPlan);
     const { fake } = renderWith(true);
     const send = screen.getByTestId('action-send');
     expect(send).toBeDisabled();
@@ -127,35 +142,28 @@ describe('ActionBar', () => {
     expect(fake.sent).toEqual([]);
   });
 
-  it('SEND enabled with safe candidate, shows mock-safe dry-run label, and emits send', () => {
-    updateStore(() => {
-      useCockpitStore.getState().setPreviewCandidate(candidate);
-      useCockpitStore.getState().setSendPlan(sendPlan);
-    });
+  it('SEND enabled with safe candidate, shows mock-safe dry-run label, and emits the plan id', () => {
+    seedPreparedState();
     const { fake } = renderWith(true);
     const send = screen.getByTestId('action-send');
     expect(send).not.toBeDisabled();
     expect(send).toHaveTextContent('DRY-RUN SEND');
     expect(send).toHaveTextContent('(2 pads)');
     fireEvent.click(send);
-    // Pinned: the unarmed / mock path is ONE click and carries NO `confirm`.
-    // Nothing reaches hardware, and the sidecar only demands the per-action
-    // confirmation on the armed seam — an extra gesture here would be theatre.
-    expect(fake.sent).toEqual([{ type: 'send' }]);
+    // The mock path stays one click and carries no per-action confirmation,
+    // while still binding the request to the exact prepared plan.
+    expect(fake.sent).toEqual([{ type: 'send', send_plan_id: sendPlan.plan_id }]);
     expect(screen.queryByTestId('send-confirm-dialog')).toBeNull();
   });
 
   it('SEND shows the live-hardware label only when the session is live and armed', () => {
-    updateStore(() => {
-      useCockpitStore.getState().setPreviewCandidate(candidate);
-      useCockpitStore.getState().setSendPlan(sendPlan);
-      useCockpitStore.getState().setSessionStatus({
-        armed: true,
-        midi_port: 'IAC Driver Bus 1',
-        mode: 'live',
-        connection_phase: 'armed',
-        unsaved_sends: 0,
-      });
+    seedPreparedState(sendPlan, {
+      armed: true,
+      midi_port: 'IAC Driver Bus 1',
+      mode: 'live',
+      connection_phase: 'armed',
+      unsaved_sends: 0,
+      capture_enabled: true,
     });
     renderWith(true);
     expect(screen.getByTestId('action-send')).toHaveTextContent('SEND');
@@ -164,16 +172,13 @@ describe('ActionBar', () => {
 
   describe('armed per-action send confirmation', () => {
     const armLiveSession = (port: string | null = 'IAC Driver Bus 1'): void => {
-      updateStore(() => {
-        useCockpitStore.getState().setPreviewCandidate(candidate);
-        useCockpitStore.getState().setSendPlan(sendPlan);
-        useCockpitStore.getState().setSessionStatus({
-          armed: true,
-          midi_port: port,
-          mode: 'live',
-          connection_phase: 'armed',
-          unsaved_sends: 0,
-        });
+      seedPreparedState(sendPlan, {
+        armed: true,
+        midi_port: port,
+        mode: 'live',
+        connection_phase: 'armed',
+        unsaved_sends: 0,
+        capture_enabled: true,
       });
     };
 
@@ -188,14 +193,20 @@ describe('ActionBar', () => {
       // Real label, not a testid-only affordance.
       expect(screen.getByRole('heading', { name: 'Confirm send to hardware' })).toBeTruthy();
       expect(dialog).toHaveTextContent('IAC Driver Bus 1');
+      expect(dialog).toHaveTextContent(sendPlan.plan_id);
+      expect(dialog).toHaveTextContent('1, 3');
+      expect(dialog).toHaveTextContent('Messages');
+      expect(dialog).toHaveTextContent('2');
     });
 
-    it('confirming an armed SEND emits send with confirm: true and closes the dialog', () => {
+    it('confirming an armed SEND emits confirmation with the exact plan id and closes', () => {
       armLiveSession();
       const { fake } = renderWith(true);
       fireEvent.click(screen.getByTestId('action-send'));
       fireEvent.click(screen.getByRole('button', { name: 'Confirm send' }));
-      expect(fake.sent).toEqual([{ type: 'send', confirm: true }]);
+      expect(fake.sent).toEqual([
+        { type: 'send', confirm: true, send_plan_id: sendPlan.plan_id },
+      ]);
       expect(screen.queryByTestId('send-confirm-dialog')).toBeNull();
     });
 
@@ -279,6 +290,7 @@ describe('ActionBar', () => {
           mode: 'mock',
           connection_phase: 'disconnected',
           unsaved_sends: 0,
+          capture_enabled: false,
         });
       });
 
@@ -286,24 +298,21 @@ describe('ActionBar', () => {
       expect(screen.getByTestId('action-send')).toHaveTextContent('DRY-RUN SEND');
     });
 
-    it('falls back to generic port wording when the armed session reports no port', () => {
+    it('disables armed SEND when the session reports no exact output port', () => {
       armLiveSession(null);
-      renderWith(true);
-      fireEvent.click(screen.getByTestId('action-send'));
-      expect(screen.getByTestId('send-confirm-dialog')).toHaveTextContent('the selected output');
+      const { fake } = renderWith(true);
+      expect(screen.getByTestId('action-send')).toBeDisabled();
+      expect(fake.sent).toEqual([]);
     });
 
     it('omits the pad-count phrase in the dialog when the plan has zero pads', () => {
-      updateStore(() => {
-        useCockpitStore.getState().setPreviewCandidate(candidate);
-        useCockpitStore.getState().setSendPlan({ ...sendPlan, pad_count: 0, packets: [] });
-        useCockpitStore.getState().setSessionStatus({
-          armed: true,
-          midi_port: 'IAC Driver Bus 1',
-          mode: 'live',
-          connection_phase: 'armed',
-          unsaved_sends: 0,
-        });
+      seedPreparedState({ ...sendPlan, pad_count: 0, packets: [] }, {
+        armed: true,
+        midi_port: 'IAC Driver Bus 1',
+        mode: 'live',
+        connection_phase: 'armed',
+        unsaved_sends: 0,
+        capture_enabled: true,
       });
       renderWith(true);
       fireEvent.click(screen.getByTestId('action-send'));
@@ -312,10 +321,7 @@ describe('ActionBar', () => {
   });
 
   it('logs rejected command acks for operator troubleshooting', async () => {
-    updateStore(() => {
-      useCockpitStore.getState().setPreviewCandidate(candidate);
-      useCockpitStore.getState().setSendPlan(sendPlan);
-    });
+    seedPreparedState();
     const { fake } = renderWith(true);
     fake.ackQueue.push({ request_id: 'reject-1', ok: false, error: 'sidecar rejected send' });
     await act(async () => {
@@ -328,10 +334,7 @@ describe('ActionBar', () => {
   });
 
   it('logs the generic rejection reason when a command ack omits an error', async () => {
-    updateStore(() => {
-      useCockpitStore.getState().setPreviewCandidate(candidate);
-      useCockpitStore.getState().setSendPlan(sendPlan);
-    });
+    seedPreparedState();
     const { fake } = renderWith(true);
     fake.ackQueue.push({ request_id: 'reject-generic', ok: false });
     await act(async () => {
@@ -373,20 +376,14 @@ describe('ActionBar', () => {
   });
 
   it('SEND shows singular "1 pad" when exactly one delta is present', () => {
-    updateStore(() => {
-      useCockpitStore.getState().setPreviewCandidate(candidate);
-      useCockpitStore.getState().setSendPlan({ ...sendPlan, pad_count: 1 });
-    });
+    seedPreparedState({ ...sendPlan, pad_count: 1 });
     renderWith(true);
     expect(screen.getByTestId('action-send')).toHaveTextContent('DRY-RUN SEND');
     expect(screen.getByTestId('action-send')).toHaveTextContent('(1 pad)');
   });
 
   it('SEND omits the pad-count chip when candidate has zero deltas', () => {
-    updateStore(() => {
-      useCockpitStore.getState().setPreviewCandidate(candidate);
-      useCockpitStore.getState().setSendPlan({ ...sendPlan, pad_count: 0, packets: [] });
-    });
+    seedPreparedState({ ...sendPlan, pad_count: 0, packets: [] });
     renderWith(true);
     expect(screen.getByTestId('action-send')).toHaveTextContent('DRY-RUN SEND');
     expect(screen.getByTestId('action-send').textContent).not.toMatch(/\(\d/);

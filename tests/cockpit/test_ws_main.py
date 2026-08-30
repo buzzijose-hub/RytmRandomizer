@@ -224,6 +224,45 @@ def test_main_honours_env_var_port_override(
     assert captured["port"] == 4242
 
 
+def test_run_preserves_injected_capture_and_device_authority(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """The explicit sidecar path forwards both injected authorities."""
+
+    from rytm_randomizer.cockpit.capture import KitCaptureService
+    from rytm_randomizer.cockpit.device import MockDeviceAdapter
+
+    service = KitCaptureService.disabled()
+    device = MockDeviceAdapter(cockpit_main._default_initial_snapshot())
+    received: list[tuple[KitCaptureService | None, object | None]] = []
+    real_build_session = cockpit_main.build_session
+
+    def _capture_build_session(
+        capture_service: KitCaptureService | None = None,
+        *,
+        device: object | None = None,
+    ) -> CockpitSession:
+        received.append((capture_service, device))
+        return real_build_session(capture_service, device=device)
+
+    monkeypatch.setattr(cockpit_main, "build_session", _capture_build_session)
+    monkeypatch.setattr(cockpit_main, "default_profiles_dir", lambda: tmp_path / "profiles")
+    monkeypatch.setattr(cockpit_main, "default_library_dir", lambda: tmp_path / "library")
+    monkeypatch.setattr(cockpit_main, "default_captures_dir", lambda: tmp_path / "captures")
+    monkeypatch.setattr(cockpit_main, "_build_input_opener", lambda: None)
+    monkeypatch.setattr(
+        cockpit_main,
+        "uvicorn",
+        type("U", (), {"run": staticmethod(lambda _app, *, host, port: None)}),
+    )
+    _redirect_token_file(monkeypatch, tmp_path)
+
+    cockpit_main.run(service, device=device)
+
+    assert received == [(service, device)]
+
+
 # ---------------------------------------------------------------------------
 # Token provisioning — file shape, env-var override, dev-mode stdout echo.
 # ---------------------------------------------------------------------------

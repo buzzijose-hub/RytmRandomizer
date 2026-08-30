@@ -9,7 +9,7 @@
 
 [![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-orange.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/tests-6%2C600%2B-9be8a0.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-8%2C389-9be8a0.svg)](#testing)
 [![WCAG](https://img.shields.io/badge/accessibility-WCAG%202.2%20AA-7cc4ff.svg)](docs/ACCESSIBILITY.md)
 [![Phase 1 · Cockpit](https://img.shields.io/badge/Phase%201%20%C2%B7%20Cockpit-shipped-7cc4ff.svg)](#cockpit)
 [![Phase 2 · Wizard](https://img.shields.io/badge/Phase%202%20%C2%B7%20Wizard-shipped-9be8a0.svg)](#profile-wizard)
@@ -26,7 +26,7 @@ You own an Elektron drum machine and a musical taste — a sound you keep chasin
 
 What the app actually does today:
 
-- **Double-click launch.** The desktop app bundles its own Python sidecar — no terminal, no interpreter setup. On launch it enumerates MIDI ports and opens **inputs only**, so you know within seconds whether your Analog Rytm MK2 or Analog Four MK2 is connected (`disconnected → searching → listening`). Passive listening never interrupts the device's sound output.
+- **Double-click launch.** The desktop app bundles its own Python sidecar — no terminal, no interpreter setup. The capture-capable composition can enumerate MIDI inputs only after the operator opens the capture workflow. The Rytm armed-output manager reports its own connection phases; A4 presence is established by verified capture rather than claimed as continuous hot-plug telemetry. Input-only listening never interrupts the device's sound output.
 - **Explicit in-UI arm for every send.** Cockpit outbound MIDI routes through a single ArmedApply seam behind an arm toggle + per-action confirmation, and arming never survives a reconnect. Writes to **saved** kits and sounds are refused outright — there is no capture-before-write or restore path yet, so the app will not make a change it cannot undo. Only live-dial CC/NRPN into working memory is transmitted; reload the kit on the device to revert it.
 - **Live MIDI monitor.** A Protokol-grade passive monitor with timestamps, decoded parameter names, and category/channel/pad filters — see exactly what your devices are saying at all times.
 - **Connection Doctor.** When something is wrong (no ports, driver hints, wedged backend), a diagnostics panel and error journal tell you what and why, instead of a silent dead UI. The sidecar also serves a `GET /health` endpoint.
@@ -67,15 +67,15 @@ A Tauri desktop window backed by a bundled Python sidecar that hosts the mutatio
 
 | Surface | What it does |
 |---|---|
-| **Connection pill + device rail** | Live connection state per detected device; switch between the Analog Rytm MK2 12-pad surface and the Analog Four MK2 four-track review surface. |
+| **Connection pill + device rail** | Rytm armed-output connection state plus separate Rytm/A4 workflow lanes. The A4 lane becomes capture-present after a verified input capture; it is not continuous A4 hot-plug telemetry. |
 | **Arm control** | The explicit gate between listening and transmitting. Disarmed is the default and the app returns to it on every reconnect. |
 | **Snapshot panel** | All 12 pads at a glance, with a ghost overlay showing what the next mutation would change. Lock any pad to protect it. |
 | **Mutation panel** | Pick a profile, set depth, regen on demand. Every change is deterministic for a given (snapshot, profile, depth, seed). |
 | **Morph + scope** | Interpolate current ↔ target kit per track/page, and mask/intensity-scope randomization around the captured kit. |
 | **Live MIDI monitor** | Passive decoded stream of everything the devices send — parameter names, channels, pads, pause/clear/copy. |
 | **Connection Doctor** | Driver hints, error journal, and health status when the connection is not what you expect. |
-| **Sound library** | Browse, tag, and search captured kits; restore-to-device is an armed action with explicit direction-of-sync UI. |
-| **History strip** | Saved + auto snapshots. Undo any move. Jump to any past snapshot. |
+| **Sound library** | Browse, tag, and search local captured-kit metadata. Restore-to-device is not implemented and stays blocked. |
+| **History strip** | In-memory capture, send, load, and undo snapshots. SAVE is refused; use the instrument to persist a kit. |
 | **SEND-plan readiness** | The cockpit refuses to fire SEND until the server confirms the plan is ready; stale plans clear automatically. |
 
 Every new panel is schema-driven: a Python `PanelSpec` builder feeds the generated TypeScript protocol (`desktop/web/src/types/live_gui_protocol.ts` is generated from the Python TypedDicts, never hand-edited), and one generic renderer draws it. Adding an operator surface is a registry entry, not a bespoke React component.
@@ -172,7 +172,7 @@ The cockpit targets **WCAG 2.2 AA** and enforces it in CI: an axe audit runs aga
 
 **Live-set sound design.** Three hours into a warehouse set, you need the kit to evolve without losing the bones. The app is already listening to the Rytm; capture the kit you are playing, morph or scope-randomize around it, watch the ghost preview, lock the kick, arm, confirm, send. What goes out is live-dial CC into working memory — your saved kit on the device is untouched, so reloading it is the way back.
 
-**Dual-machine rigs.** If you run an Analog Four MK2 alongside the Rytm, the same surface plans both. Analog Four sends stay candidate/manifest-gated behind their own readiness checks and the same arm boundary.
+**Dual-machine rigs.** If you run an Analog Four MK2 alongside the Rytm, the same surface can capture both machines and manage separate targets, locks, and stage state. Captured-A4 semantic planning is deliberately zero-event and unsendable until saved-KIT offsets, encodings, track stride, round trips, and physical behavior are proven; this Cockpit flow has no A4 output authority.
 
 **Studio profile authoring.** Drop a folder of reference tracks into the wizard, review the trait bars, save as `kind="user"`. You get a deployable model that captures *that sound* — a reference, not a copy.
 
@@ -208,11 +208,17 @@ Launch the produced app: it opens in **listening** mode, shows detected Elektron
 pip install -e ".[dev]"
 
 # Terminal 1 — Python sidecar (WebSocket on 127.0.0.1:4317)
-python -m rytm_randomizer.cockpit
+python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar
 
 # Terminal 2 — Tauri shell + web frontend
 cd desktop/shell && cargo run
 ```
+
+For a fully passive UI-development sidecar, use
+`python -m rytm_randomizer.cockpit`. The armed form above is the explicit
+KIT-capture-enabled composition: the capture flow itself opens only the
+selected MIDI input. Explicitly armed, per-action-confirmed RAM-only sends
+remain available through the Cockpit's sole output boundary, `ArmedApply`.
 
 See [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md) for prerequisites and the first-profile walkthrough.
 
@@ -235,7 +241,7 @@ The passive report surface is 100+ registered commands — see [`docs/CLI_REFERE
 
 ```bash
 # Cockpit + export
-python -m rytm_randomizer.cockpit                                     # sidecar
+python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar     # input-only capture; ArmedApply-gated sends
 cockpit-export-profile-model --profile-id X --output Y.rymp           # ship a profile
 cockpit-export-rehearsal-report --profile-id X                        # passive pre-flight
 
@@ -397,14 +403,15 @@ See [`docs/STATUS.md`](docs/STATUS.md) for the dated snapshot and the per-phase 
 <a id="testing"></a>
 ## Testing
 
-Counts as of the rival-program bundle (derived from the tree, not aspirational):
+Counts as of the targeted dual-machine live-kit branch (derived from the tree,
+not aspirational):
 
 | Suite | Count |
 |---|---|
-| Full Python suite (`pytest`) | 8,049 tests, green |
-| Architecture invariants (`tests/architecture/`) | 764 tests |
+| Full Python suite (`pytest`) | 8,389 collected test items |
+| Architecture invariants (`tests/architecture/`) | 788 test items |
 | V1.34 parity | 505 golden JSON files → 685 byte-identical test items |
-| Frontend (`desktop/web`, vitest) | 582 tests + 44 a11y tests |
+| Frontend (`desktop/web`, vitest) | 731 test items |
 | Accessibility gate | axe WCAG 2.2 AA, 0 violations |
 
 The suite uses `pytest-xdist` (`-n auto`). Don't pass `-o addopts=''` for normal runs — it disables xdist and triples the runtime.

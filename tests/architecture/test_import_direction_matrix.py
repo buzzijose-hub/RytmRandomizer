@@ -85,14 +85,35 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
     # passive provider. The real graph lives in the nested rows below.
     "cockpit": frozenset(
         {
+            # Target validation reuses the device-neutral guardrail helper.
+            "guardrails",
             # TODO(rival-program): review this edge — cockpit reaching the
             # armed MIDI boundary module directly should be funneled through
             # app-owned wiring.
             "mido_provider",
             "observability",
+            # Live-kit targeting owns only the device-neutral include/lock
+            # view; the reusable scope record remains in snapshot/.
+            "snapshot",
         }
     ),
-    "cockpit.data": frozenset({"data"}),
+    "cockpit.capture": frozenset(
+        {
+            "cockpit.data",
+            "cockpit.stage",
+            "data",
+            "devices",
+            "engines",
+            "observability",
+        }
+    ),
+    "cockpit.data": frozenset(
+        {
+            "data",
+            # Send-plan DTO validation shares the guardrail identifier helper.
+            "guardrails",
+        }
+    ),
     "cockpit.device": frozenset(
         {
             "cockpit.data",
@@ -115,6 +136,7 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
         {
             "cockpit.data",
             "observability",
+            "snapshot",
         }
     ),
     "cockpit.export": frozenset(
@@ -156,6 +178,13 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             "observability",
         }
     ),
+    "cockpit.stage": frozenset(
+        {
+            "cockpit.data",
+            "devices",
+            "observability",
+        }
+    ),
     "cockpit.wizard": frozenset(
         {
             "cockpit.data",
@@ -165,6 +194,7 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
     ),
     "cockpit.ws": frozenset(
         {
+            "cockpit.capture",
             "cockpit.data",
             "cockpit.device",
             "cockpit.engine",
@@ -172,6 +202,7 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             "cockpit.history",
             "cockpit.library",
             "cockpit.profiles",
+            "cockpit.stage",
             "cockpit.wizard",
             "devices",
             # TODO(rival-program): review this edge — see cockpit note above.
@@ -280,6 +311,9 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
     "snapshot": frozenset(
         {
             "devices",
+            # Device-neutral identifier-set validation is a guardrail
+            # primitive shared with cockpit DTO validation.
+            "guardrails",
             # Typed packed-payload validation failures participate in the
             # package-wide BoundaryError taxonomy.
             "observability",

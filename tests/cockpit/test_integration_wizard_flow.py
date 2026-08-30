@@ -51,7 +51,11 @@ from rytm_randomizer.cockpit.device import MockDeviceAdapter
 from rytm_randomizer.cockpit.history import HistoryStore
 from rytm_randomizer.cockpit.profiles import ProfileRegistry
 from rytm_randomizer.cockpit.ws import wizard_handlers
-from rytm_randomizer.cockpit.ws.protocol import EVENT_PROFILE_CHANGED, WS_SUBPROTOCOL
+from rytm_randomizer.cockpit.ws.protocol import (
+    EVENT_PROFILE_CHANGED,
+    INITIAL_EVENT_COUNT,
+    WS_SUBPROTOCOL,
+)
 from rytm_randomizer.cockpit.ws.server import create_app
 from rytm_randomizer.cockpit.ws.session import CockpitSession
 from rytm_randomizer.cockpit.ws.wizard_protocol import (
@@ -156,14 +160,15 @@ def test_wizard_full_flow_persists_profile_over_websocket(cockpit_ws: object) ->
     assert review_events[0]["type"] == EVENT_WIZARD_STATE_CHANGED
     assert review_events[0]["state"]["candidate_profile"] is not None
 
-    # ----- wizard_save: emits BOTH profile_created AND profile_changed.
+    # ----- wizard_save: emits created, changed, and refreshed catalogue events.
     save_ack = send_cmd(cockpit_ws, "wizard_save", request_id="req-save")
-    save_events = drain_events(cockpit_ws, 2)
+    save_events = drain_events(cockpit_ws, 3)
     assert save_ack["ok"] is True
     profile_id = save_ack["profile_id"]
     save_event_types = [e["type"] for e in save_events]
     assert EVENT_PROFILE_CREATED in save_event_types
     assert EVENT_PROFILE_CHANGED in save_event_types
+    assert "profile_catalog_changed" in save_event_types
     created = next(e for e in save_events if e["type"] == EVENT_PROFILE_CREATED)
     assert created["profile"]["profile_id"] == profile_id
     assert created["profile"]["name"] == "my profile"
@@ -209,7 +214,7 @@ def test_wizard_save_writes_profile_file_to_disk_and_is_listable(tmp_path: Path)
         # Complete the per-launch handshake before the bootstrap event set (C1).
         complete_handshake(ws)
         # Drain the bootstrap event set.
-        for _ in range(5):
+        for _ in range(INITIAL_EVENT_COUNT):
             ws.receive_json()
 
         # Drive the full flow via the WebSocket.
@@ -232,7 +237,7 @@ def test_wizard_save_writes_profile_file_to_disk_and_is_listable(tmp_path: Path)
         send_cmd(ws, "wizard_review", request_id="req-review")
         drain_events(ws, 1)
         save_ack = send_cmd(ws, "wizard_save", request_id="req-save")
-        drain_events(ws, 2)
+        drain_events(ws, 3)
 
     profile_id = save_ack["profile_id"]
     # The registry persisted the profile to disk at the expected path.
@@ -284,7 +289,7 @@ def test_wizard_saved_profile_is_visible_to_new_connections(tmp_path: Path) -> N
         client_one.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws_one,
     ):
         complete_handshake(ws_one)
-        for _ in range(5):
+        for _ in range(INITIAL_EVENT_COUNT):
             ws_one.receive_json()
         send_cmd(ws_one, "wizard_start")
         drain_events(ws_one, 1)
@@ -305,7 +310,7 @@ def test_wizard_saved_profile_is_visible_to_new_connections(tmp_path: Path) -> N
         send_cmd(ws_one, "wizard_review", request_id="req-review")
         drain_events(ws_one, 1)
         save_ack = send_cmd(ws_one, "wizard_save", request_id="req-save")
-        drain_events(ws_one, 2)
+        drain_events(ws_one, 3)
         profile_id = save_ack["profile_id"]
 
     # Build a NEW session pointed at the SAME profiles directory; this
@@ -324,7 +329,7 @@ def test_wizard_saved_profile_is_visible_to_new_connections(tmp_path: Path) -> N
         client_two.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws_two,
     ):
         complete_handshake(ws_two)
-        for _ in range(5):
+        for _ in range(INITIAL_EVENT_COUNT):
             ws_two.receive_json()
         select_ack = send_cmd(
             ws_two,
@@ -453,7 +458,7 @@ def test_wizard_analyzer_failure_marks_job_failed_over_ws(
         client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws,
     ):
         complete_handshake(ws)
-        for _ in range(5):
+        for _ in range(INITIAL_EVENT_COUNT):
             ws.receive_json()
         send_cmd(ws, "wizard_start")
         drain_events(ws, 1)

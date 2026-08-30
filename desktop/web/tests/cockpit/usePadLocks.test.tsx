@@ -9,7 +9,7 @@ import { CockpitClientProvider } from '../../src/cockpit/context';
 import { usePadLocks } from '../../src/cockpit/usePadLocks';
 import { useCockpitStore } from '../../src/state';
 
-import { FakeCockpitClient, enqueueRejection } from './_fixtures';
+import { candidate, FakeCockpitClient, enqueueRejection, sendPlan } from './_fixtures';
 
 function makeWrapper(client: FakeCockpitClient) {
   return function Wrapper({ children }: { children: React.ReactNode }): JSX.Element {
@@ -35,6 +35,8 @@ describe('usePadLocks', () => {
 
   it('toggling an unlocked pad locks it and emits set_pad_lock', async () => {
     const fake = new FakeCockpitClient();
+    useCockpitStore.getState().setPreviewCandidate(candidate);
+    useCockpitStore.getState().setSendPlan(sendPlan);
     const { result } = renderHook(() => usePadLocks(), { wrapper: makeWrapper(fake) });
     await act(async () => {
       result.current.toggleLock(2);
@@ -42,6 +44,8 @@ describe('usePadLocks', () => {
     });
     expect(result.current.isLocked(2)).toBe(true);
     expect(fake.sent).toEqual([{ type: 'set_pad_lock', pad_id: 2, locked: true }]);
+    expect(useCockpitStore.getState().previewCandidate).toBeNull();
+    expect(useCockpitStore.getState().sendPlan).toBeNull();
   });
 
   it('toggling a locked pad unlocks it and emits set_pad_lock locked=false', async () => {
@@ -152,5 +156,84 @@ describe('usePadLocks', () => {
       await Promise.resolve();
     });
     expect(result.current.isLocked(2)).toBe(true);
+  });
+
+  it('does not let an older rejection overwrite a newer lock toggle', async () => {
+    const fake = new FakeCockpitClient();
+    let rejectFirst!: (reason?: unknown) => void;
+    fake.responseQueue.push(
+      new Promise<never>((_resolve, reject) => {
+        rejectFirst = reject;
+      }),
+    );
+    const { result } = renderHook(() => usePadLocks(), { wrapper: makeWrapper(fake) });
+
+    act(() => result.current.toggleLock(1));
+    await act(async () => {
+      result.current.toggleLock(1);
+      await Promise.resolve();
+    });
+    await act(async () => {
+      rejectFirst(new Error('late rejection'));
+      await Promise.resolve();
+    });
+
+    expect(result.current.isLocked(1)).toBe(false);
+  });
+
+  it('rolls back a rejected A4 track lock through the A4 state branch', async () => {
+    const fake = new FakeCockpitClient();
+    enqueueRejection(fake);
+    const { result } = renderHook(() => usePadLocks('analog_four_mk2'), {
+      wrapper: makeWrapper(fake),
+    });
+
+    await act(async () => {
+      result.current.toggleLock(3);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(useCockpitStore.getState().a4TrackLocks).toEqual([]);
+  });
+
+  it('does not roll back over a newer authoritative lock-state replacement', async () => {
+    const fake = new FakeCockpitClient();
+    let rejectRequest!: (reason?: unknown) => void;
+    fake.responseQueue.push(
+      new Promise<never>((_resolve, reject) => {
+        rejectRequest = reject;
+      }),
+    );
+    const { result } = renderHook(() => usePadLocks(), { wrapper: makeWrapper(fake) });
+
+    act(() => result.current.toggleLock(1));
+    act(() => useCockpitStore.getState().setRytmPadLocks([]));
+    await act(async () => {
+      rejectRequest(new Error('late rejection after authoritative state'));
+      await Promise.resolve();
+    });
+
+    expect(useCockpitStore.getState().rytmPadLocks).toEqual([]);
+  });
+
+  it('sorts multi-lock optimistic state and rollback state deterministically', async () => {
+    useCockpitStore.getState().setRytmPadLocks([2]);
+    const fake = new FakeCockpitClient();
+    const { result } = renderHook(() => usePadLocks(), { wrapper: makeWrapper(fake) });
+
+    await act(async () => {
+      result.current.toggleLock(1);
+      await Promise.resolve();
+    });
+    expect(useCockpitStore.getState().rytmPadLocks).toEqual([1, 2]);
+
+    enqueueRejection(fake);
+    await act(async () => {
+      result.current.toggleLock(1);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(useCockpitStore.getState().rytmPadLocks).toEqual([1, 2]);
   });
 });

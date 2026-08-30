@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import importlib.machinery
+import logging
 import types
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -41,12 +42,15 @@ from rytm_randomizer.cockpit.library import LibraryStore
 from rytm_randomizer.cockpit.profiles import ProfileRegistry
 from rytm_randomizer.cockpit.ws import handlers
 from rytm_randomizer.cockpit.ws.protocol import (
+    EVENT_DUAL_MACHINE_STAGE_CHANGED,
     EVENT_LIBRARY_CHANGED,
     EVENT_SESSION_STATUS,
+    INITIAL_EVENT_COUNT,
     WS_SUBPROTOCOL,
 )
 from rytm_randomizer.cockpit.ws.server import APP_VERSION, create_app
 from rytm_randomizer.cockpit.ws.session import CockpitSession
+from rytm_randomizer.senders.armed_apply import ArmedApplyError
 
 pytestmark = pytest.mark.fast
 
@@ -80,6 +84,20 @@ class _FakeProvider:
     def open_output(self, port_name: str) -> _FakeOutPort:
         assert port_name == self.port.name
         return self.port
+
+
+@dataclass
+class _DiagnosticFailureProvider:
+    """Output provider whose diagnostic repr-escapes its local port name."""
+
+    name: str
+
+    def list_output_names(self) -> tuple[str, ...]:
+        return (self.name,)
+
+    def open_output(self, port_name: str) -> object:
+        assert port_name == self.name
+        raise ArmedApplyError(f'output "backend" failed for {port_name!r}')
 
 
 def _make_session(tmp_path: Path, *, arm_secret: str | None = _ARM_TOKEN) -> CockpitSession:
@@ -142,8 +160,11 @@ def test_arm_installs_the_seam_and_never_a_second_adapter(tmp_path: Path) -> Non
     assert session.device is passive
     assert session.device.is_armed is False
     assert handlers.session_is_armed(session) is True
-    # The post-ack event reflects the armed session status.
-    assert session.pending_events == [handlers._build_session_status(session)]
+    # Post-ack events expose both the compatibility status and whole-stage truth.
+    assert [event["type"] for event in session.pending_events] == [
+        EVENT_SESSION_STATUS,
+        EVENT_DUAL_MACHINE_STAGE_CHANGED,
+    ]
     status = session.pending_events[0]
     assert status["armed"] is True
     assert status["mode"] == "live"
@@ -367,6 +388,35 @@ def test_arm_without_a_connection_manager_trusts_the_seam_to_fail_closed(
     assert _arm(session, port_name=_OUT_PORT)["ok"] is True
 
 
+@pytest.mark.parametrize(
+    "private_port",
+    [
+        "PRIVATE_OUTPUT_Jose's_Rytm",
+        'PRIVATE_OUTPUT_"Jose_Rytm"',
+        "PRIVATE_OUTPUT_Jose\\Rytm\nControl\tPort",
+    ],
+)
+def test_arm_failure_log_redacts_the_exact_output_port(
+    tmp_path: Path,
+    ws_handler_caplog: pytest.LogCaptureFixture,
+    private_port: str,
+) -> None:
+    session = _make_session(tmp_path)
+    session.arm_port_provider = _DiagnosticFailureProvider(private_port)
+    set_active_connection_manager(None)
+
+    with ws_handler_caplog.at_level(logging.WARNING):
+        ack = _arm(session, port_name=private_port)
+
+    assert ack["ok"] is False
+    record = next(record for record in ws_handler_caplog.records if record.msg == "arm_failed")
+    exception_repr = str(record.__dict__["exception_repr"])
+    assert exception_repr == "ArmedApplyError('<redacted-midi-port>')"
+    assert private_port not in exception_repr
+    assert private_port.encode("unicode_escape").decode("ascii") not in exception_repr
+    assert "<redacted-midi-port>" in exception_repr
+
+
 def test_arm_fails_closed_when_port_missing_from_enumeration(tmp_path: Path) -> None:
     session = _make_session(tmp_path)
     session.arm_port_provider = _FakeProvider(names=("Some Other Port",))
@@ -467,9 +517,10 @@ def test_watchdog_auto_disarms_when_device_disappears(tmp_path: Path) -> None:
     assert session.armed_apply is None
     assert handlers.session_is_armed(session) is False
     assert session.error_journal.entries[-1].fingerprint == "cockpit.arm.device_lost"
-    assert len(broadcasts) == 1
+    assert len(broadcasts) == 2
     assert broadcasts[0]["type"] == EVENT_SESSION_STATUS
     assert broadcasts[0]["armed"] is False
+    assert broadcasts[1]["type"] == EVENT_DUAL_MACHINE_STAGE_CHANGED
 
 
 def test_watchdog_auto_disarms_when_armed_port_vanishes(tmp_path: Path) -> None:
@@ -895,11 +946,11 @@ def test_library_import_captures_imports_and_emits(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Byte-compat: unwired sessions keep the historical wire surface.
+# Bootstrap: unwired sessions still receive the authoritative whole state.
 # ---------------------------------------------------------------------------
 
 
-def test_bootstrap_event_set_unchanged_for_unwired_sessions(tmp_path: Path) -> None:
+def test_bootstrap_event_set_is_authoritative_for_unwired_sessions(tmp_path: Path) -> None:
     session = _make_session(tmp_path)
     recorded: list[dict] = []
 
@@ -912,7 +963,13 @@ def test_bootstrap_event_set_unchanged_for_unwired_sessions(tmp_path: Path) -> N
         "session_status",
         "snapshot_changed",
         "profile_changed",
+        "profile_catalog_changed",
         "history_updated",
+        "patch_genome_changed",
+        "kit_captures_changed",
+        "mutation_targets_changed",
+        "mutation_locks_changed",
+        "dual_machine_stage_changed",
         "performance_console_changed",
     ]
     status = recorded[0]
@@ -981,7 +1038,7 @@ def test_arm_round_trip_over_the_websocket(tmp_path: Path) -> None:
     with TestClient(app) as client:
         with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
             complete_handshake(ws)
-            for _ in range(5):
+            for _ in range(INITIAL_EVENT_COUNT):
                 ws.receive_json()
             ws.send_json(
                 {
@@ -1001,6 +1058,8 @@ def test_arm_round_trip_over_the_websocket(tmp_path: Path) -> None:
             assert status["type"] == EVENT_SESSION_STATUS
             assert status["armed"] is True
             assert status["connection_phase"] == "armed"
+            stage = ws.receive_json()
+            assert stage["type"] == EVENT_DUAL_MACHINE_STAGE_CHANGED
             ws.send_json({"request_id": "req-disarm", "command": {"type": "disarm"}})
             ack = ws.receive_json()
             assert ack["ok"] is True

@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Final
-
 from ...mock_midi import MidiMessage, build_cc_message
 from .analog_four_mutation_planner import AnalogFourMutationPlan, AnalogFourPlanEvent
-
-_TRACK_COUNT: Final[int] = 4
+from .analog_four_track_domain import AnalogFourTrackDomain
 
 
 class AnalogFourMessageRenderer:
     """Render Analog Four plan events into mock messages or CC triples."""
+
+    def __init__(self, *, track_domain: AnalogFourTrackDomain) -> None:
+        self.track_domain = track_domain
 
     def to_mock_message(self, event: object, plan: object) -> MidiMessage:
         """Render one event into an inert mock MIDI message."""
@@ -36,11 +36,10 @@ class AnalogFourMessageRenderer:
 
         evt = _require_event(event)
         _require_plan(plan)
-        if evt.track < 1 or evt.track > _TRACK_COUNT:
-            raise ValueError(
-                f"AnalogFourMessageRenderer.to_cc_triple: track must be in [1, 4], "
-                f"got {evt.track}"
-            )
+        self.track_domain.require_track(
+            evt.track,
+            context="AnalogFourMessageRenderer.to_cc_triple",
+        )
         if evt.control < 0 or evt.control > 127:
             raise ValueError("AnalogFourMessageRenderer.to_cc_triple: control must be in [0, 127]")
         if evt.value < 0 or evt.value > 127:

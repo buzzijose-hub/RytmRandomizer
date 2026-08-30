@@ -18,8 +18,10 @@ from collections.abc import Iterable
 from typing import Final, Protocol, runtime_checkable
 
 from ..mock_midi import MidiMessage
+from ..snapshot.mutation_scope import DEFAULT_MUTATION_SCOPE, MutationScope
 from . import registry
 from .base import Device
+from .saved_kit_capture import SavedKitCaptureFrame
 from .strategies import (
     AnalogRytmMessageRenderer,
     AnalogRytmMutationPlanner,
@@ -120,6 +122,24 @@ class AnalogRytmDevice:
 
         return encode_analog_rytm_saved_kit_frame(header, unpacked)
 
+    def decode_saved_kit_capture(self, frame: bytes) -> SavedKitCaptureFrame:
+        """Decode a complete capture frame through the canonical Rytm codec."""
+
+        decoded = self.decode_saved_kit_frame(frame)
+        return SavedKitCaptureFrame(
+            payload=frame[1:-1],
+            snapshot_slot=decoded.header[-1],
+            header=decoded.header,
+            unpacked=decoded.unpacked,
+        )
+
+    def encode_saved_kit_capture(self, decoded: object) -> bytes:
+        """Re-encode a captured Rytm frame for exact stability validation."""
+
+        if not isinstance(decoded, SavedKitCaptureFrame):
+            raise TypeError("Rytm capture capability received an unsupported frame")
+        return self.encode_saved_kit_frame(decoded.header, decoded.unpacked)
+
     # ------------------------------------------------------------------
     # WS-S5 convenience methods. Each delegates to the matching strategy
     # so old callers keep working byte-identically.
@@ -130,10 +150,20 @@ class AnalogRytmDevice:
 
         return self.snapshot_decoder.decode(raw, slot=slot)
 
-    def plan_mutation(self, snapshot: object, depth: int) -> RytmMutationPlan:
+    def plan_mutation(
+        self,
+        snapshot: object,
+        depth: int,
+        *,
+        scope: MutationScope = DEFAULT_MUTATION_SCOPE,
+    ) -> RytmMutationPlan:
         """Delegate to :attr:`mutation_planner` (the WS-S6 ``plan``)."""
 
-        return self.mutation_planner.plan(_require_analog_rytm_kit_snapshot(snapshot), depth)
+        return self.mutation_planner.plan(
+            _require_analog_rytm_kit_snapshot(snapshot),
+            depth,
+            scope=scope,
+        )
 
     def to_mock_messages(self, plan: object) -> list[MidiMessage]:
         """Render every event in ``plan`` into an inert ``MidiMessage``.

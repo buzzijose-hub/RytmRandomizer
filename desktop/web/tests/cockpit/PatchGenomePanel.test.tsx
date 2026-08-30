@@ -1,115 +1,181 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { CockpitClientProvider } from '../../src/cockpit/context';
 import { PatchGenomePanel } from '../../src/cockpit/PatchGenomePanel';
-import {
-  DEFAULT_PATCH_GENOME_MODEL,
-  type PatchGenomeModel,
-} from '../../src/cockpit/patchGenomeModel';
+import { useCockpitStore } from '../../src/state';
+
+import { FakeCockpitClient, patchGenome } from './_fixtures';
+
+function renderPanel(withPayload = true, previewOn = false): FakeCockpitClient {
+  const fake = new FakeCockpitClient();
+  if (withPayload) {
+    act(() => useCockpitStore.getState().setPatchGenome(patchGenome));
+  }
+  render(
+    <CockpitClientProvider client={fake.asClient()}>
+      <PatchGenomePanel previewOn={previewOn} />
+    </CockpitClientProvider>,
+  );
+  return fake;
+}
 
 describe('PatchGenomePanel', () => {
-  it('renders the design-preview genome surface without send controls', () => {
-    render(<PatchGenomePanel previewOn={false} />);
+  beforeEach(() => useCockpitStore.getState().reset());
+  afterEach(() => useCockpitStore.getState().reset());
 
-    expect(screen.getByTestId('patch-genome-panel')).toHaveTextContent('Patch Genome');
-    expect(screen.getByTestId('patch-genome-panel')).toHaveTextContent('Analog Four MKII');
-    expect(screen.getByTestId('patch-genome-panel')).toHaveTextContent('Dry-run preview');
-    expect(screen.queryByRole('button', { name: /send/i })).not.toBeInTheDocument();
+  it('renders the sidecar-backed compiler surface with hardware send locked', () => {
+    renderPanel();
+
+    const panel = screen.getByTestId('patch-genome-panel');
+    expect(panel).toHaveTextContent('A4 Patch Genome');
+    expect(screen.getByDisplayValue('Tight warehouse pressure')).toBeInTheDocument();
+    expect(panel).toHaveTextContent('Brighter sync');
+    expect(panel).toHaveTextContent('Candidate 2 of 4');
+    expect(screen.getByRole('button', { name: 'Hardware send locked' })).toBeDisabled();
   });
 
-  it('switches selected gene families locally', () => {
-    render(<PatchGenomePanel previewOn={true} />);
+  it('shows when the Rytm preview overlay is active', () => {
+    renderPanel(true, true);
 
+    expect(screen.getByText('Preview overlay active')).toBeInTheDocument();
+  });
+
+  it('marks an A4 genome stale after a scope change and clears it on fresh analysis data', () => {
+    renderPanel();
+
+    act(() => useCockpitStore.getState().setA4TrackLocks([2]));
+
+    expect(screen.getByTestId('patch-genome-stale')).toHaveTextContent(
+      'mutation targets or locks changed',
+    );
+    expect(screen.getByRole('button', { name: 'Grow candidate' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Reset selection' })).toBeDisabled();
+
+    act(() => useCockpitStore.getState().setPatchGenome(patchGenome));
+    expect(screen.queryByTestId('patch-genome-stale')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Grow candidate' })).toBeEnabled();
+  });
+
+  it('switches between real candidate columns and resets to the compiler selection', () => {
+    renderPanel();
+
+    fireEvent.click(screen.getByTestId('patch-genome-candidate-4'));
+    expect(screen.getByTestId('patch-genome-variant')).toHaveTextContent('Candidate 4 of 4');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Grow candidate' }));
+    expect(screen.getByTestId('patch-genome-variant')).toHaveTextContent('Candidate 1 of 4');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset selection' }));
+    expect(screen.getByTestId('patch-genome-variant')).toHaveTextContent('Candidate 2 of 4');
+  });
+
+  it('switches mapped families and keeps gene locks local', () => {
+    const fake = renderPanel();
     fireEvent.click(screen.getByTestId('patch-genome-family-filter_fx'));
+    const gene = screen.getByTestId('patch-genome-gene-2-filter-a-filt1-frq');
 
     expect(screen.getByTestId('patch-genome-selected-family')).toHaveTextContent('Filter / FX');
-    expect(screen.getByTestId('patch-genome-selected-family')).toHaveTextContent(
-      'Filter 1 Frequency',
-    );
-  });
+    expect(gene).toHaveTextContent('FILT1 FRQ');
+    expect(gene).toHaveTextContent('Screen review');
 
-  it('locks and unlocks individual genes without dispatching hardware actions', () => {
-    render(<PatchGenomePanel previewOn={true} />);
-    fireEvent.click(screen.getByTestId('patch-genome-family-filter_fx'));
-    const gene = screen.getByTestId('patch-genome-gene-filter_freq');
-
-    fireEvent.click(within(gene).getByRole('button', { name: /lock filter frequency/i }));
-
+    fireEvent.click(within(gene).getByRole('button', { name: /lock filt1 frq/i }));
     expect(gene).toHaveTextContent('Locked locally');
-
-    fireEvent.click(within(gene).getByRole('button', { name: /unlock filter frequency/i }));
-
-    expect(gene).not.toHaveTextContent('Locked locally');
+    fireEvent.click(within(gene).getByRole('button', { name: /unlock filt1 frq/i }));
+    expect(gene).toHaveTextContent('Screen review');
+    expect(fake.sent).toHaveLength(0);
   });
 
-  it('grows and resets local variants', () => {
-    render(<PatchGenomePanel previewOn={true} />);
+  it('submits a passive compiler request with description and track', async () => {
+    const fake = renderPanel();
+    fake.ackQueue.push({ request_id: 'genome', ok: true, patch_genome: patchGenome });
+    fireEvent.change(screen.getByLabelText('Source description'), {
+      target: { value: 'Brittle sync pressure' },
+    });
+    fireEvent.change(screen.getByLabelText('Track'), { target: { value: '4' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Analyze source' }));
 
-    expect(screen.getByTestId('patch-genome-variant')).toHaveTextContent('Variant 1');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Grow variant' }));
-
-    expect(screen.getByTestId('patch-genome-variant')).toHaveTextContent('Variant 2');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Reset seed' }));
-
-    expect(screen.getByTestId('patch-genome-variant')).toHaveTextContent('Variant 1');
+    await waitFor(() => {
+      expect(fake.sent).toContainEqual({
+        type: 'analyze_patch_genome',
+        description: 'Brittle sync pressure',
+        track: 4,
+      });
+    });
   });
 
-  it('falls back to the first provided family and clamps local candidate values', () => {
-    const model: PatchGenomeModel = {
-      ...DEFAULT_PATCH_GENOME_MODEL,
-      families: [
-        {
-          key: 'filter_fx',
-          sectionLabel: 'III.',
-          label: 'Clamp Family',
-          summary: 'Exercises fallback and bounded preview values.',
-          sendPolicy: 'No-send review',
-          genes: [
-            {
-              key: 'below_zero',
-              label: 'Below Zero',
-              parameterLabel: 'Local test parameter',
-              laneLabel: 'Clamp low',
-              currentValue: 12,
-              candidateValue: -4,
-              status: 'ready',
-              statusLabel: 'Ready',
-            },
-            {
-              key: 'above_max',
-              label: 'Above Max',
-              parameterLabel: 'Local test parameter',
-              laneLabel: 'Clamp high',
-              currentValue: 12,
-              candidateValue: 126,
-              status: 'review',
-              statusLabel: 'Needs review',
-            },
-          ],
-        },
-      ],
-    };
+  it('multi-selects A4 mutation targets and shows inactive and locked tracks', async () => {
+    const fake = renderPanel();
 
-    render(<PatchGenomePanel previewOn={true} model={model} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Target track 2' }));
+    await waitFor(() => {
+      expect(fake.sent).toContainEqual({
+        type: 'set_mutation_targets',
+        device_id: 'analog_four_mk2',
+        target_ids: [2],
+      });
+    });
+    expect(screen.getByTestId('a4-target-control-1')).toHaveClass('inactive');
+    expect(screen.getByTestId('a4-target-control-2')).toHaveClass('targeted');
 
-    expect(screen.getByTestId('patch-genome-selected-family')).toHaveTextContent('Clamp Family');
-    expect(screen.getByTestId('patch-genome-gene-below_zero')).toHaveTextContent('0');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Grow variant' }));
-
-    expect(screen.getByTestId('patch-genome-gene-above_max')).toHaveTextContent('127');
+    fireEvent.click(screen.getByRole('button', { name: 'Lock track 2' }));
+    expect(fake.sent).toContainEqual({
+      type: 'set_a4_track_lock',
+      track: 2,
+      locked: true,
+    });
+    expect(screen.getByTestId('a4-target-control-2')).toHaveClass('locked');
+    expect(screen.getByRole('button', { name: 'Analyze source' })).toBeDisabled();
   });
 
-  it('falls back to the default family when no model families exist', () => {
-    const model: PatchGenomeModel = {
-      ...DEFAULT_PATCH_GENOME_MODEL,
-      families: [],
-    };
+  it('shows a waiting state before the bootstrap compiler packet arrives', () => {
+    renderPanel(false);
 
-    render(<PatchGenomePanel previewOn={false} model={model} />);
+    expect(screen.getByTestId('patch-genome-empty')).toHaveTextContent(
+      'Waiting for the passive sidecar compiler packet',
+    );
+    expect(screen.getByRole('button', { name: 'Grow candidate' })).toBeDisabled();
+  });
 
-    expect(screen.getByTestId('patch-genome-selected-family')).toHaveTextContent('Oscillators');
+  it('validates an empty description without sending a command', () => {
+    const fake = renderPanel();
+    fireEvent.change(screen.getByLabelText('Source description'), { target: { value: '   ' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Analyze source' }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Describe the patch before analyzing');
+    expect(fake.sent).toHaveLength(0);
+  });
+
+  it.each([
+    [{ request_id: 'message', ok: false, message: 'Description rejected' }, 'Description rejected'],
+    [{ request_id: 'error', ok: false, error: 'Compiler offline' }, 'Compiler offline'],
+    [{ request_id: 'fallback', ok: false }, 'Compiler request rejected'],
+  ])('shows a passive compiler rejection from %o', async (ack, expected) => {
+    const fake = renderPanel();
+    fake.ackQueue.push(ack);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Analyze source' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(expected);
+    expect(useCockpitStore.getState().operatorLog.at(-1)?.level).toBe('error');
+  });
+
+  it('handles a non-error compiler transport rejection', async () => {
+    const fake = renderPanel();
+    fake.nextRejection = 'transport closed';
+
+    fireEvent.click(screen.getByRole('button', { name: 'Analyze source' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('transport closed');
+  });
+
+  it('accepts a successful compiler ack without an inline payload', async () => {
+    const fake = renderPanel();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Analyze source' }));
+
+    await waitFor(() => expect(fake.sent).toHaveLength(1));
+    expect(useCockpitStore.getState().patchGenome).toBe(patchGenome);
+    expect(useCockpitStore.getState().operatorLog.at(-1)?.level).toBe('success');
   });
 });

@@ -1,9 +1,43 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-08-26. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-08-27. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-08-27: Integrated the targeted dual-machine live-performance Cockpit
+  bundle on the latest `modularize-v1.34` base.
+  - Added explicitly armed, input-only current-KIT capture for Analog Rytm and
+    Analog Four with family/checksum/length validation and exact codec
+    round-trip verification. The packaged and dev Tauri sidecars use the same
+    capture composition; capture authority has no output surface.
+  - Added Rytm pad and A4 track include targets, independent locks, and the
+    canonical effective-scope rule `(targets or complete domain) - locks`
+    through UI, WebSocket, session, planners, preview, and Rytm send plans.
+  - Added an authoritative dual-machine stage coordinator with independent
+    capture, candidate, plan, authority, blocker, stale, and recovery state.
+    The Rytm lane mirrors the armed-output connection manager; the A4 lane
+    records capture/session state but does not claim continuous independent
+    physical hot-plug telemetry. OXI One remains sequencing/trigger/mute/pattern
+    owner; Cockpit claims no direct OXI control.
+  - Rytm live output continues exclusively through `senders/armed_apply.py`
+    with PREPARE plus exact plan/port/pad/message confirmation. The obsolete
+    second real-adapter output seam was deliberately not restored.
+  - A4 captured-KIT planning remains zero-event and unsendable pending saved-KIT
+    offset, encoding, track-stride, round-trip, and physical evidence. The
+    deterministic two-control procedure covers Filter 1 Frequency on Track 1
+    at 0/63/127, the same control at 63 on Tracks 1-4 for stride, and Amp
+    Attack on Track 1 at 0/63/127; see `docs/COCKPIT_QUICKSTART.md` §6a and the
+    machine-readable mapping-gap manifest.
+  - The seven RUSH01/RUSH16 commits and all unrelated dirty artifacts/reference
+    files in the source checkout were preserved and excluded. PR #236 has a
+    six-file integration overlap: `README.md`, `docs/ARCHITECTURE.md`,
+    `docs/ARCHITECTURE_DIAGRAMS.md`, `docs/STATUS.md`,
+    `output/al16/AL02_LOCK_RYTM_manifest.json`, and
+    `tests/test_al16_rytm_export.py`. If #236 merges or is rebased first, resolve
+    all six together. In particular, regenerate the combined AL02 dependency
+    hashes from both the #236 writer SHA and this bundle's device/snapshot SHAs,
+    then update the expected generated-manifest digest/test as one atomic
+    rebase decision; never accept either side's manifest hash in isolation.
 - 2026-08-26: Added passive, resumable Audio-to-Patch Studio Session V1.
   - One start command composes the existing eight-direction DNA workspace with
     one selected Analog Four export and commits a SHA-bound session marker.

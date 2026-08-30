@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
 
+from .mutation_scope import DEFAULT_MUTATION_SCOPE, MutationScope
+
 
 @runtime_checkable
 class MutationPlanner(Protocol):
@@ -33,4 +35,10 @@ class MutationPlanner(Protocol):
       range.
     """
 
-    def plan(self, snapshot: Any, depth: int) -> Any: ...
+    def plan(
+        self,
+        snapshot: Any,
+        depth: int,
+        *,
+        scope: MutationScope = DEFAULT_MUTATION_SCOPE,
+    ) -> Any: ...

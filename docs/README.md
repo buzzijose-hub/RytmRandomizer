@@ -24,7 +24,7 @@ lives under `docs/archive/` and is historical — safe to skip on first pass.
 
 ### Plans + policy
 - **[SIMPLIFICATION_PLAN.md](SIMPLIFICATION_PLAN.md)** — in-flight plan (Wave 1+ simplification).
-- **[PLAN_REQUIREMENTS.md](PLAN_REQUIREMENTS.md)** — the 16 hard gates every plan must satisfy.
+- **[PLAN_REQUIREMENTS.md](PLAN_REQUIREMENTS.md)** — the 18 hard gates every plan must satisfy.
 - **[COVERAGE_POLICY.md](COVERAGE_POLICY.md)** — ratcheting, package-first coverage policy.
 - **[MODULARIZATION_RULES.md](MODULARIZATION_RULES.md)** — V1.34 modularization rules (allowed / not allowed).
 - **[OBSERVABILITY.md](OBSERVABILITY.md)** — logging, error taxonomy, tracing guide.
@@ -35,9 +35,12 @@ lives under `docs/archive/` and is historical — safe to skip on first pass.
 - **[MANUAL_HARDWARE_VALIDATION.md](MANUAL_HARDWARE_VALIDATION.md)** — pre-release human checklist against real Rytm MK2; referenced from `.github/workflows/release.yml`.
 - **[LOCAL_DEV_TOOLING_NOTES.md](LOCAL_DEV_TOOLING_NOTES.md)** — env-var documentation home per `PLAN_REQUIREMENTS.md` Gate 13.
 
-### Orchestrator state (in-flight, runtime-only)
+### Orchestrator state and current live-KIT evidence (runtime/reference; exempt)
 - **[SIMPLIFICATION_STATE.json](SIMPLIFICATION_STATE.json)** — orchestrator state file (JSON; validates against `SIMPLIFICATION_STATE.schema.json`).
 - **[SIMPLIFICATION_RUN_LOG.md](SIMPLIFICATION_RUN_LOG.md)** — append-only run log; survives context compaction.
+- **[2026-08-26-targeted-live-kit-mutation_STATE.json](2026-08-26-targeted-live-kit-mutation_STATE.json)** — resumable state for the current dual-machine integration run.
+- **[2026-08-26-targeted-live-kit-mutation_RUN_REPORT.md](2026-08-26-targeted-live-kit-mutation_RUN_REPORT.md)** — current outcome, verification checkpoint, and studio blockers.
+- **[2026-08-26-targeted-live-kit-mutation_A4_MAPPING_GAP.json](2026-08-26-targeted-live-kit-mutation_A4_MAPPING_GAP.json)** — machine-readable zero-event A4 blocker and two-control Tracks 1–4 evidence matrix.
 
 ## Historical material
 

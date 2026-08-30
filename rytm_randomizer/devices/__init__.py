@@ -18,18 +18,38 @@ from __future__ import annotations
 # Importing concrete device modules triggers their import-time
 # ``register_device`` calls so ``get_device("<device_id>")`` resolves out
 # of the box. Side-effect import is the documented registry pattern.
-from . import analog_four  # noqa: F401 - import for side effect (registration)
-from . import analog_rytm  # noqa: F401 - import for side effect (registration)
+from . import analog_four  # pyright: ignore[reportUnusedImport]  # noqa: F401 - registration
+from . import analog_rytm  # pyright: ignore[reportUnusedImport]  # noqa: F401 - registration
 from .base import Device, MessageRenderer, MidiOutbox, MutationPlanner, SnapshotDecoder
 from .registry import all_devices, get_device, register_device
+from .saved_kit_capture import (
+    RegisteredSavedKitCaptureCapability,
+    SavedKitCaptureCapability,
+    SavedKitCaptureFrame,
+    resolve_saved_kit_capture_capability,
+)
+from .strategies import (
+    AnalogFourKitSnapshot,
+    RytmKitSnapshot,
+    analog_four_snapshot_payload_fingerprint,
+    rytm_snapshot_payload_fingerprint,
+)
 
 __all__ = [
     "Device",
+    "AnalogFourKitSnapshot",
     "MessageRenderer",
     "MidiOutbox",
     "MutationPlanner",
+    "RegisteredSavedKitCaptureCapability",
+    "RytmKitSnapshot",
+    "SavedKitCaptureCapability",
+    "SavedKitCaptureFrame",
     "SnapshotDecoder",
     "all_devices",
+    "analog_four_snapshot_payload_fingerprint",
     "get_device",
     "register_device",
+    "resolve_saved_kit_capture_capability",
+    "rytm_snapshot_payload_fingerprint",
 ]

@@ -3,11 +3,12 @@
  * and the LockButton toggling via the usePadLocks hook.
  */
 
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 
 import { CockpitClientProvider } from '../../src/cockpit/context';
 import { PadCard } from '../../src/cockpit/PadCard';
+import { useCockpitStore } from '../../src/state';
 
 import { FakeCockpitClient, candidate, snapshot } from './_fixtures';
 
@@ -17,6 +18,9 @@ function renderWith(node: JSX.Element, fake = new FakeCockpitClient()): FakeCock
 }
 
 describe('PadCard', () => {
+  beforeEach(() => useCockpitStore.getState().reset());
+  afterEach(() => useCockpitStore.getState().reset());
+
   it('renders the pad title, machine name, and grouped Overbridge-style parameters', () => {
     const pad = snapshot.pads[0]!;
     renderWith(<PadCard pad={pad} previewCandidate={null} previewOn={false} />);
@@ -83,6 +87,17 @@ describe('PadCard', () => {
     expect(screen.queryByTestId('knob-ghost-TUN')).not.toBeInTheDocument();
   });
 
+  it('suppresses every preview ghost when the pad is authoritatively locked', () => {
+    useCockpitStore.getState().setRytmPadLocks([1]);
+    const pad = snapshot.pads[0]!;
+
+    renderWith(<PadCard pad={pad} previewCandidate={candidate} previewOn={true} />);
+
+    expect(screen.getByTestId('pad-card-1')).toHaveClass('locked');
+    expect(screen.queryByTestId('knob-ghost-TUN')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('knob-ghost-DEC')).not.toBeInTheDocument();
+  });
+
   it('clicking the lock button toggles the locked class and emits set_pad_lock', async () => {
     const pad = snapshot.pads[0]!;
     const fake = renderWith(<PadCard pad={pad} previewCandidate={null} previewOn={false} />);
@@ -93,5 +108,34 @@ describe('PadCard', () => {
     // After lock the class flips.
     expect(screen.getByTestId('pad-card-1').className).toBe('pad-card locked');
     expect(fake.sent).toEqual([{ type: 'set_pad_lock', pad_id: 1, locked: true }]);
+  });
+
+  it('shows targeted and inactive pad states for an explicit multi-select scope', () => {
+    useCockpitStore.getState().setMutationTargets([2], []);
+    renderWith(
+      <PadCard pad={snapshot.pads[0]!} previewCandidate={null} previewOn={false} />,
+    );
+
+    const card = screen.getByTestId('pad-card-1');
+    expect(card).toHaveClass('inactive');
+    expect(card).toHaveAttribute('data-target-state', 'inactive');
+  });
+
+  it('adds a Rytm pad to the explicit mutation target include-list', () => {
+    const fake = renderWith(
+      <PadCard pad={snapshot.pads[0]!} previewCandidate={null} previewOn={false} />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Target pad 1' }));
+
+    expect(fake.sent).toEqual([
+      {
+        type: 'set_mutation_targets',
+        device_id: 'analog_rytm_mk2',
+        target_ids: [1],
+      },
+    ]);
+    expect(screen.getByTestId('pad-card-1')).toHaveClass('targeted');
+    expect(screen.getByRole('button', { name: 'Remove pad 1' })).toBePressed();
   });
 });

@@ -26,7 +26,6 @@ function renderWith(
   render(
     <CockpitClientProvider client={fake.asClient()}>
       <MutationPanel
-        availableProfiles={availableProfiles}
         previewOn={previewOn}
         onTogglePreview={togglePreview}
         {...(onLaunchWizard === undefined ? {} : { onLaunchWizard })}
@@ -39,6 +38,7 @@ function renderWith(
 describe('MutationPanel', () => {
   beforeEach(() => {
     useCockpitStore.getState().reset();
+    useCockpitStore.getState().setProfileCatalog([...availableProfiles]);
   });
   afterEach(() => {
     useCockpitStore.getState().reset();
@@ -48,6 +48,7 @@ describe('MutationPanel', () => {
     renderWith();
     expect(screen.getByTestId('mutation-panel')).toBeInTheDocument();
     expect(screen.getByTestId('style-crate-queue')).toBeInTheDocument();
+    expect(screen.getByText('Live Profile Catalog')).toBeInTheDocument();
     expect(screen.getByTestId('profile-toggle')).toBeInTheDocument();
     expect(screen.getByTestId('profile-chips')).toBeInTheDocument();
     expect(screen.getByTestId('depth-slider')).toBeInTheDocument();

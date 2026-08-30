@@ -36,7 +36,7 @@ Before writing any code in this repo:
 7. **[`docs/PLAN_REQUIREMENTS.md`](PLAN_REQUIREMENTS.md)** — the 18 gates the PR body must confirm
 8. **[`docs/AGENT_TASK_RECIPES.md`](AGENT_TASK_RECIPES.md)** — recipe 5 (add a device family) is the most likely codex task
 
-**Skills.** This repo's 12 reusable "learned skills" are in `.claude/skills/learned/`. Codex scans `$REPO_ROOT/.agents/skills/`, so the repo ships a committed symlink **`.agents/skills` → `.claude/skills/learned`** — you auto-discover all of them, and the model auto-invokes one when a task matches its `description`. If the symlink checked out as a plain text file (a Windows clone with `core.symlinks=false`), run `git config core.symlinks true && git checkout -- .agents/skills`. The most codex-relevant skills: `cascade-merge-pattern`, `parallel-agent-bundle`, `multi-agent-work-collision-recovery`, `codex-hook-additionalcontext-reprompt`, `elektron-sysex-envelope`. See [`AGENTS.md` § Skills](../AGENTS.md#skills--codex-auto-discovers-them-from-agentsskills).
+**Skills.** This repo's 14 reusable "learned skills" are in `.claude/skills/learned/`. Codex scans `$REPO_ROOT/.agents/skills/`, so the repo ships a committed symlink **`.agents/skills` → `.claude/skills/learned`** — you auto-discover all of them, and the model auto-invokes one when a task matches its `description`. If the symlink checked out as a plain text file (a Windows clone with `core.symlinks=false`), run `git config core.symlinks true && git checkout -- .agents/skills`. The most codex-relevant skills include `cascade-merge-pattern`, `parallel-agent-bundle`, `multi-agent-work-collision-recovery`, `codex-hook-additionalcontext-reprompt`, `elektron-sysex-envelope`, and `targeted-live-kit-mutation`. See [`AGENTS.md` § Skills](../AGENTS.md#skills--codex-auto-discovers-them-from-agentsskills).
 
 ## Anti-pattern 1 — Stacked PR cascades
 
@@ -316,12 +316,15 @@ If any of these fail, fix the cause; do not add allowlist entries or work around
 - [`docs/CODE_REVIEW_HOOK_SETUP.md`](CODE_REVIEW_HOOK_SETUP.md) — the automatic post-push code review (`.codex/hooks.json` + `.githooks/pre-push` + `scripts/code_review_gate.py`)
 - [`.claude/skills/code-review/SKILL.md`](../.claude/skills/code-review/SKILL.md) — the 8-step review procedure
 - [`.claude/rules/hardware-pinned-packages.md`](../.claude/rules/hardware-pinned-packages.md) — mido/rtmidi pin
+- [`.claude/rules/live-but-passive-midi.md`](../.claude/rules/live-but-passive-midi.md) — Cockpit output authority and persistent-write refusal
 - [`.claude/rules/maximize-parallelization.md`](../.claude/rules/maximize-parallelization.md) — execution shape
 - [`.claude/rules/autonomous-agent-execution.md`](../.claude/rules/autonomous-agent-execution.md) — autonomy expectation
+- [`.claude/rules/readme-freshness.md`](../.claude/rules/readme-freshness.md) — truthful current user surfaces and counts
+- [`.claude/rules/targeted-mutation-safety.md`](../.claude/rules/targeted-mutation-safety.md) — capture/target/lock/exact-plan/A4-blocker contract
 - [`AGENTS.md`](../AGENTS.md) — top-level agent index
 - [`CLAUDE.md`](../CLAUDE.md) — Claude-specific session prompt (same rules apply to codex)
 - [`CONTRIBUTING.md`](../CONTRIBUTING.md) — full developer handbook
 - [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) — architecture standard
-- [`docs/ARCHITECTURE_DIAGRAMS.md`](ARCHITECTURE_DIAGRAMS.md) — 26 mermaid diagrams
+- [`docs/ARCHITECTURE_DIAGRAMS.md`](ARCHITECTURE_DIAGRAMS.md) — current architecture maps
 - [`docs/AGENT_TASK_RECIPES.md`](AGENT_TASK_RECIPES.md) — 10 step-by-step recipes
 - [Architecture review on PR #36](https://github.com/buzzijose-hub/RytmRandomizer/pull/36#issuecomment-4490858526) — the dual-machine redo plan

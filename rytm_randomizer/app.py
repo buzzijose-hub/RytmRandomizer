@@ -26,6 +26,10 @@ Flag behavior (Wave 4 / WS-O convergence):
 * ``--arm --rytm-live-snapshot-shell``: receive one current-kit SysEx dump from
   the Rytm, decode it, and run the all-12-pad snapshot shell from that live
   anchor. Armed sends require ``--confirm-rytm-snapshot-shell-send``.
+* ``--arm --cockpit-kit-capture-sidecar``: run Cockpit with input-only current-
+  KIT capture enabled. Capture opens only the operator-selected input; any
+  outbound action remains separately armed and confirmed through the in-UI
+  ``ArmedApply`` seam.
 
 This module is import-safe: importing it does not import ``mido`` and does not
 open ports. Those happen lazily inside the ``--arm`` handler only. The
@@ -45,7 +49,7 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence  # noqa: V104
 from pathlib import Path
 from time import perf_counter
 from time import sleep as _hardware_settle_sleep
@@ -73,7 +77,7 @@ if TYPE_CHECKING:
         MidiMetrics,
     )
     from .real_midi_adapter import RealMidiOutputPort, RealMidiOutputProvider
-    from .state.a4_soft_capture import (
+    from .state.a4_soft_capture import (  # noqa: V104 - string-only cast annotations
         A4CaptureCcMapping,
         A4NrpnControlSpec,
         A4SoftCaptureSnapshot,
@@ -247,7 +251,7 @@ class _RytmSysexCaptureProvider(Protocol):
         self,
         port_name: str,
         *,
-        timeout_seconds: float,
+        timeout_seconds: float,  # noqa  # required Protocol keyword
     ) -> tuple[bytes, ...]: ...
 
 
@@ -275,6 +279,15 @@ def _build_parser() -> argparse.ArgumentParser:
         help=(
             "Run the interactive randomizer logic against the in-memory mock "
             "sender. No hardware, no port opened."
+        ),
+    )
+    parser.add_argument(
+        "--cockpit-kit-capture-sidecar",
+        action="store_true",
+        help=(
+            "Launch Cockpit with input-only current-KIT capture. Capture itself "
+            "opens no output and sends no MIDI; outbound actions remain behind "
+            "the in-UI arm and per-action confirmation. Requires --arm."
         ),
     )
     parser.add_argument(
@@ -3573,6 +3586,22 @@ def _run_validate_one_cc(args: argparse.Namespace) -> int:
     return _run_dry_run_one_cc_validation(channel, control, value)
 
 
+def _run_cockpit_kit_capture_sidecar() -> int:
+    """Compose Cockpit with input-only KIT capture through the app boundary."""
+
+    from .cockpit.__main__ import run as run_cockpit_sidecar
+    from .cockpit.capture import KitCaptureService
+    from .mido_provider import build_mido_midi_port_provider
+
+    capture_service = KitCaptureService(build_mido_midi_port_provider())
+    _observability_get_logger(__name__).info(
+        "cockpit_kit_capture_sidecar_start",
+        extra={"capture_enabled": True, "input_only": True, "output_armed": False},
+    )
+    run_cockpit_sidecar(capture_service)
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the RytmRandomizer entry point. Returns an int exit code."""
 
@@ -3599,6 +3628,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         },
     )
 
+    if args.cockpit_kit_capture_sidecar:
+        if not args.arm:
+            sys.stderr.write("--cockpit-kit-capture-sidecar requires --arm.\n")
+            return 1
+        return _run_cockpit_kit_capture_sidecar()
     if args.a4_soft_capture and args.validate_one_cc:
         sys.stderr.write("--a4-soft-capture cannot be combined with --validate-one-cc.\n")
         return 1

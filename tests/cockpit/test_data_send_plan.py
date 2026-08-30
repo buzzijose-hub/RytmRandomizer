@@ -10,6 +10,7 @@ from __future__ import annotations
 import pytest
 
 from rytm_randomizer.cockpit.data import CockpitSendPlan, SendPlanPacket
+from rytm_randomizer.cockpit.data.send_plan import synthetic_parameter_cc
 
 pytestmark = pytest.mark.fast
 
@@ -37,6 +38,13 @@ def _plan(*packets: SendPlanPacket) -> CockpitSendPlan:
         locked_pad_ids=frozenset({2}),
         blocked_reasons=(),
     )
+
+
+def test_synthetic_parameter_cc_is_deterministic_and_midi_safe() -> None:
+    control = synthetic_parameter_cc("tun")
+
+    assert control == synthetic_parameter_cc("tun") == 52
+    assert 33 <= control <= 127
 
 
 def test_send_plan_packet_round_trips_through_dict() -> None:
@@ -69,6 +77,14 @@ def test_send_plan_packet_rejects_out_of_range_midi_values() -> None:
 
     with pytest.raises(ValueError, match="channel must be in \\[0, 15\\]"):
         SendPlanPacket(pad_id=1, parameter="tun", channel=16, control=74, value=64)
+
+
+def test_send_plan_packet_rejects_boolean_pad_id_from_wire_dict() -> None:
+    packet = _packet().to_dict()
+    packet["pad_id"] = True
+
+    with pytest.raises(ValueError, match=r"pad_id must be in \[1, 12\]; got True"):
+        SendPlanPacket.from_dict(packet)  # type: ignore[arg-type]
 
 
 def test_send_plan_round_trips_and_exposes_ui_counts() -> None:
@@ -177,6 +193,34 @@ def test_send_plan_rejects_unknown_status_and_reasons() -> None:
     with pytest.raises(ValueError, match="blocked_reasons contains unknown values"):
         CockpitSendPlan.from_dict(invalid_blocked)
 
+    with pytest.raises(ValueError, match="readiness_reason must be one of"):
+        CockpitSendPlan(
+            plan_id="sendplan-invalid-reason",
+            candidate_id="candidate-1",
+            source_snapshot_id="snapshot-1",
+            profile_id="profile-1",
+            ready=True,
+            readiness_reason="unknown",  # type: ignore[arg-type]
+            safety_status="safe",
+            packets=(_packet(),),
+            locked_pad_ids=frozenset(),
+            blocked_reasons=(),
+        )
+
+    with pytest.raises(ValueError, match="safety_status must be one of"):
+        CockpitSendPlan(
+            plan_id="sendplan-invalid-status",
+            candidate_id="candidate-1",
+            source_snapshot_id="snapshot-1",
+            profile_id="profile-1",
+            ready=True,
+            readiness_reason="ready",
+            safety_status="unknown",  # type: ignore[arg-type]
+            packets=(_packet(),),
+            locked_pad_ids=frozenset(),
+            blocked_reasons=(),
+        )
+
 
 def test_send_plan_rejects_inconsistent_ready_and_blocked_states() -> None:
     with pytest.raises(ValueError, match="ready plans must use readiness_reason"):
@@ -222,6 +266,37 @@ def test_send_plan_rejects_inconsistent_ready_and_blocked_states() -> None:
         )
 
 
+def test_send_plan_rejects_packets_that_contradict_targets_or_locks() -> None:
+    with pytest.raises(ValueError, match="locked pad ids"):
+        CockpitSendPlan(
+            plan_id="sendplan-locked-packet",
+            candidate_id="candidate-1",
+            source_snapshot_id="snapshot-1",
+            profile_id="profile-1",
+            ready=True,
+            readiness_reason="ready",
+            safety_status="safe",
+            packets=(_packet(pad_id=1),),
+            locked_pad_ids=frozenset({1}),
+            blocked_reasons=(),
+        )
+
+    with pytest.raises(ValueError, match="untargeted pad ids"):
+        CockpitSendPlan(
+            plan_id="sendplan-untargeted-packet",
+            candidate_id="candidate-1",
+            source_snapshot_id="snapshot-1",
+            profile_id="profile-1",
+            ready=True,
+            readiness_reason="ready",
+            safety_status="safe",
+            packets=(_packet(pad_id=1),),
+            locked_pad_ids=frozenset(),
+            blocked_reasons=(),
+            target_pad_ids=frozenset({2}),
+        )
+
+
 def test_send_plan_from_dict_rejects_non_sequence_fields() -> None:
     base = _plan().to_dict()
 
@@ -235,7 +310,25 @@ def test_send_plan_from_dict_rejects_non_sequence_fields() -> None:
     with pytest.raises(TypeError, match="locked_pad_ids must be an iterable"):
         CockpitSendPlan.from_dict(bad_locks)
 
+    bad_targets = dict(base)
+    bad_targets["target_pad_ids"] = "2"
+    with pytest.raises(TypeError, match="target_pad_ids must be an iterable"):
+        CockpitSendPlan.from_dict(bad_targets)
+
     bad_blocked = dict(base)
     bad_blocked["blocked_reasons"] = {"reason": "candidate_high_risk"}
     with pytest.raises(TypeError, match="blocked_reasons must be a list/tuple"):
         CockpitSendPlan.from_dict(bad_blocked)
+
+
+@pytest.mark.parametrize("field_name", ["locked_pad_ids", "target_pad_ids"])
+@pytest.mark.parametrize("bad_id", [True, 1.5, "2", 13])
+def test_send_plan_from_dict_rejects_non_integer_or_out_of_range_pad_ids(
+    field_name: str,
+    bad_id: object,
+) -> None:
+    payload = _plan().to_dict()
+    payload[field_name] = [bad_id]
+
+    with pytest.raises(ValueError, match=field_name):
+        CockpitSendPlan.from_dict(payload)

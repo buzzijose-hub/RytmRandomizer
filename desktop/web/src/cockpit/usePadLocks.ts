@@ -1,16 +1,17 @@
 /**
- * Local pad-lock state hook.
+ * Shared device-lock state hook.
  *
- * Per spec: lock state is local UI state, synced to the engine via `set_pad_lock`.
- * The engine doesn't push lock-state events — the UI owns this. We optimistically flip
- * the local bit on toggle and emit `set_pad_lock`; if the ack rejects, we roll back.
+ * Lock state is hydrated from authoritative whole-state events. We still flip
+ * optimistically for immediate operator feedback and emit `set_pad_lock`; if the
+ * ack rejects, we roll back, while reconnect/bootstrap events always win.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 
 import { useCockpitStore } from '../state';
 
 import { useCockpitClient } from './context';
+import { RYTM_DEVICE_ID, type CockpitDeviceId } from './devices';
 
 export interface PadLocksApi {
   /** Set of locked pad_ids. */
@@ -21,10 +22,17 @@ export interface PadLocksApi {
   toggleLock: (padId: number) => void;
 }
 
-export function usePadLocks(): PadLocksApi {
-  const [locked, setLocked] = useState<ReadonlySet<number>>(() => new Set<number>());
+export function usePadLocks(deviceId: CockpitDeviceId = RYTM_DEVICE_ID): PadLocksApi {
   const client = useCockpitClient();
   const appendOperatorLog = useCockpitStore((s) => s.appendOperatorLog);
+  const lockIds = useCockpitStore((s) =>
+    deviceId === RYTM_DEVICE_ID ? s.rytmPadLocks : s.a4TrackLocks,
+  );
+  const setLockIds = useCockpitStore((s) =>
+    deviceId === RYTM_DEVICE_ID ? s.setRytmPadLocks : s.setA4TrackLocks,
+  );
+  const requestGenerations = useRef(new Map<number, number>());
+  const locked = useMemo<ReadonlySet<number>>(() => new Set(lockIds), [lockIds]);
 
   const isLocked = useCallback((padId: number): boolean => locked.has(padId), [locked]);
 
@@ -39,47 +47,50 @@ export function usePadLocks(): PadLocksApi {
         next = new Set(locked);
         next.add(padId);
       }
-      setLocked(next);
+      setLockIds([...next].sort((left, right) => left - right));
       const desired = !wasLocked;
+      const generation = (requestGenerations.current.get(padId) ?? 0) + 1;
+      requestGenerations.current.set(padId, generation);
+      const command =
+        deviceId === RYTM_DEVICE_ID
+          ? ({ type: 'set_pad_lock', pad_id: padId, locked: desired } as const)
+          : ({ type: 'set_a4_track_lock', track: padId, locked: desired } as const);
+      const commandName = command.type;
+
+      const rollBackIfCurrent = (): void => {
+        if (requestGenerations.current.get(padId) !== generation) return;
+        const currentIds =
+          deviceId === RYTM_DEVICE_ID
+            ? useCockpitStore.getState().rytmPadLocks
+            : useCockpitStore.getState().a4TrackLocks;
+        const rolled = new Set(currentIds);
+        if (rolled.has(padId) !== desired) return;
+        if (desired) rolled.delete(padId);
+        else rolled.add(padId);
+        setLockIds([...rolled].sort((left, right) => left - right));
+      };
+
       client
-        .send({ type: 'set_pad_lock', pad_id: padId, locked: desired })
+        .send(command)
         .then((ack) => {
           if (!ack.ok) {
             appendOperatorLog({
               level: 'error',
-              message: `set_pad_lock failed: ${ack.error ?? 'command rejected'}`,
+              message: `${commandName} failed: ${ack.error ?? 'command rejected'}`,
             });
-            // Roll back on rejection.
-            setLocked((prev) => {
-              const rolled = new Set(prev);
-              if (desired) {
-                rolled.delete(padId);
-              } else {
-                rolled.add(padId);
-              }
-              return rolled;
-            });
+            rollBackIfCurrent();
           }
         })
         .catch((error: unknown) => {
           const detail = error instanceof Error ? error.message : String(error);
           appendOperatorLog({
             level: 'error',
-            message: `set_pad_lock failed: ${detail}`,
+            message: `${commandName} failed: ${detail}`,
           });
-          // Network / timeout — roll back so the UI doesn't lie to the operator.
-          setLocked((prev) => {
-            const rolled = new Set(prev);
-            if (desired) {
-              rolled.delete(padId);
-            } else {
-              rolled.add(padId);
-            }
-            return rolled;
-          });
+          rollBackIfCurrent();
         });
     },
-    [appendOperatorLog, client, locked],
+    [appendOperatorLog, client, deviceId, locked, setLockIds],
   );
 
   return { locked, isLocked, toggleLock };

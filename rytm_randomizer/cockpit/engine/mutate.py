@@ -37,6 +37,7 @@ from ..data import (
     Status,
     new_ulid,
 )
+from ..mutation_targets import MutationTargets
 from .prng import xorshift32
 
 _logger = get_logger(__name__)
@@ -151,6 +152,7 @@ def mutate(
     profile: ProfileModel,
     depth: float,
     seed: int,
+    target_pad_ids: frozenset[int] = frozenset(),
 ) -> MutationCandidate:
     """Generate a ``MutationCandidate`` from a snapshot, profile, depth, seed.
 
@@ -172,6 +174,10 @@ def mutate(
         seed: 32-bit unsigned integer used to seed ``xorshift32``. Same
             seed + same other inputs = identical output. ``0`` is mapped
             to a documented substitute (xorshift cannot escape zero).
+        target_pad_ids: Explicit pad include-list. Empty preserves the
+            historical all-pad behavior. Untargeted pads still consume their
+            deterministic PRNG draws so a selected pad's proposed values do
+            not change merely because the surrounding include-list changes.
 
     Returns:
         A fully-formed ``MutationCandidate`` with one ``PadDelta`` per
@@ -179,6 +185,7 @@ def mutate(
         ``estimated_midi_msgs`` is the total ``changed_keys`` count.
     """
 
+    explicit_targets = MutationTargets(rytm_pad_targets=target_pad_ids).rytm_pad_targets
     state = _PRNG_SEED_FOR_ZERO if seed == 0 else (seed & 0xFFFFFFFF)
     # xorshift32 cannot escape state==0; the masking step above lets
     # callers pass any Python int and have it normalised to uint32.
@@ -219,14 +226,15 @@ def mutate(
             if new_value != value:
                 changed.add(key)
 
-        pad_deltas.append(
-            PadDelta(
-                pad_id=pad.pad_id,
-                proposed_params=proposed,
-                changed_keys=frozenset(changed),
+        if not explicit_targets or pad.pad_id in explicit_targets:
+            pad_deltas.append(
+                PadDelta(
+                    pad_id=pad.pad_id,
+                    proposed_params=proposed,
+                    changed_keys=frozenset(changed),
+                )
             )
-        )
-        total_changed += len(changed)
+            total_changed += len(changed)
 
     safety_status = _classify_safety(depth)
 

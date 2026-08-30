@@ -82,7 +82,8 @@ the CLI-oriented Briefcase artifacts. They embed the web frontend from
 fully self-contained: double-click, window opens, sidecar starts. When
 the bundled binary is absent (a local `cargo tauri build` without the
 PyInstaller step), the shell falls back to spawning
-`python -m rytm_randomizer.cockpit` from PATH — typically because the
+`python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar` from
+PATH — typically because the
 operator has an editable `pip install -e ".[cockpit]"` or
 `pip install -e ".[dev]"` checkout active.
 
@@ -101,9 +102,10 @@ python scripts/build_sidecar_binary.py --output-dir desktop/shell/binaries
 Contract details (pinned by `tests/test_launch_smoke.py`):
 
 - **Deterministic entry.** The generated entry stub calls
-  `rytm_randomizer.cockpit.__main__.main` — the exact equivalent of
-  `python -m rytm_randomizer.cockpit`. There is no second launch code
-  path to drift.
+  `rytm_randomizer.app.main(["--arm", "--cockpit-kit-capture-sidecar"])` —
+  the exact equivalent of the development fallback. This grants
+  operator-triggered input capture but no output/send authority. There is no
+  second launch code path to drift.
 - **Env passthrough.** The binary takes no flags. The Tauri shell
   configures it exactly like the dev sidecar: `RYTM_RAND_WS_PORT` (the
   shell picks a free port dynamically — 4317 when available, an
@@ -160,8 +162,9 @@ the cockpit binary, the Rust shell in `desktop/shell/src/main.rs`:
 5. Spawns the Python sidecar as a child process with the env from
    steps 2–3 applied — preferring the bundled `rytm-sidecar` binary
    from the app resources when present (see "Bundled Python sidecar"
-   above), falling back to `python -m rytm_randomizer.cockpit` from
-   PATH for dev checkouts. Repeated spawn failures surface a native
+   above), falling back to `python -m rytm_randomizer.app --arm
+   --cockpit-kit-capture-sidecar` from PATH for dev checkouts. Repeated spawn
+   failures surface a native
    error dialog with the actual OS error instead of crash-looping
    silently.
 6. **Reads the token back from the same file** (the sidecar has now

@@ -77,14 +77,39 @@ def test_analog_four_device_convenience_methods_delegate_to_strategies() -> None
 def test_analog_four_device_renders_ready_plan_messages() -> None:
     from rytm_randomizer.devices import get_device
     from rytm_randomizer.devices.strategies import AnalogFourKitSnapshot
+    from rytm_randomizer.snapshot import MutationScope
 
     a4 = get_device("analog_four_mk2")
     snapshot = AnalogFourKitSnapshot(slot=1, kit_name="A4", raw=b"", offsets_promoted=True)
-    plan = a4.plan_mutation(snapshot, depth=1)
+    scope = MutationScope(
+        target_ids=frozenset({1, 3}),
+        locked_ids=frozenset({3}),
+    )
+    plan = a4.plan_mutation(snapshot, depth=1, scope=scope)
 
     assert plan.ready is True
+    assert {event.track for event in plan.events} == {1}
+    assert plan.scope == scope
     assert len(a4.to_mock_messages(plan)) == len(plan.events)
     assert len(tuple(a4.to_cc_messages(plan))) == len(plan.events)
+
+
+def test_analog_four_device_shares_one_track_domain_across_plan_and_render() -> None:
+    from rytm_randomizer.devices.analog_four import AnalogFourDevice
+    from rytm_randomizer.devices.strategies import AnalogFourKitSnapshot
+
+    class FiveTrackAnalogFourDevice(AnalogFourDevice):
+        track_count = 5
+
+    a4 = FiveTrackAnalogFourDevice()
+    snapshot = AnalogFourKitSnapshot(slot=1, kit_name="A4", raw=b"", offsets_promoted=True)
+
+    plan = a4.plan_mutation(snapshot, depth=1)
+    messages = tuple(a4.to_cc_messages(plan))
+
+    assert a4.mutation_planner.track_domain is a4.message_renderer.track_domain
+    assert {event.track for event in plan.events} == {1, 2, 3, 4, 5}
+    assert messages[-1][0] == 4
 
 
 def test_analog_four_device_rejects_wrong_snapshot_type() -> None:

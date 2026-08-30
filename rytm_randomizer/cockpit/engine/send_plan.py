@@ -12,6 +12,7 @@ import hashlib
 import json
 
 from ...observability.logging import get_logger
+from ...snapshot.mutation_scope import MutationScope
 from ..data import (
     CockpitSendPlan,
     MutationCandidate,
@@ -21,6 +22,7 @@ from ..data import (
     Snapshot,
 )
 from ..data.rytm_parameter_map import cockpit_pad_channel, cockpit_parameter_control
+from ..mutation_targets import MutationTargets
 
 _logger = get_logger(__name__)
 """Module logger for the cockpit send-plan builder. Bound here so future
@@ -34,19 +36,21 @@ def prepare_send_plan(
     profile: ProfileModel | None,
     candidate: MutationCandidate | None,
     pad_locks: frozenset[int],
+    pad_targets: frozenset[int] = frozenset(),
 ) -> CockpitSendPlan | None:
     """Build a deterministic inert send plan, or ``None`` when not stageable."""
 
     if profile is None or candidate is None:
         return None
 
-    packets = _candidate_packets(snapshot, candidate, pad_locks)
+    scope = MutationTargets(rytm_pad_targets=pad_targets).rytm_scope(pad_locks)
+    packets = _candidate_packets(snapshot, candidate, scope)
     blocked_reasons = _blocked_reasons(snapshot, profile, candidate, packets)
     ready = not blocked_reasons
     readiness_reason: ReadinessReason = "ready" if ready else blocked_reasons[0]
 
     plan = CockpitSendPlan(
-        plan_id=_plan_id(candidate, pad_locks, blocked_reasons, packets),
+        plan_id=_plan_id(candidate, pad_locks, pad_targets, blocked_reasons, packets),
         candidate_id=candidate.candidate_id,
         source_snapshot_id=candidate.source_snapshot_id,
         profile_id=candidate.profile_id,
@@ -55,7 +59,20 @@ def prepare_send_plan(
         safety_status=candidate.safety_status,
         packets=packets,
         locked_pad_ids=pad_locks,
+        target_pad_ids=pad_targets,
         blocked_reasons=blocked_reasons,
+    )
+    _logger.info(
+        "cockpit_send_plan_prepared",
+        extra={
+            "blocked_reasons": list(blocked_reasons),
+            "candidate_id": candidate.candidate_id,
+            "locked_pad_ids": sorted(pad_locks),
+            "packet_count": len(packets),
+            "ready": ready,
+            "sendable_pad_ids": sorted({packet.pad_id for packet in packets}),
+            "target_pad_ids": sorted(pad_targets),
+        },
     )
     return plan
 
@@ -63,16 +80,15 @@ def prepare_send_plan(
 def _candidate_packets(
     snapshot: Snapshot,
     candidate: MutationCandidate,
-    pad_locks: frozenset[int],
+    scope: MutationScope,
 ) -> tuple[SendPlanPacket, ...]:
     machines_by_pad = {pad.pad_id: pad.machine for pad in snapshot.pads}
+    sendable_pad_ids = scope.effective_ids(machines_by_pad)
     packets: list[SendPlanPacket] = []
     for delta in sorted(candidate.pad_deltas, key=lambda item: item.pad_id):
-        if delta.pad_id in pad_locks:
+        if delta.pad_id not in sendable_pad_ids:
             continue
-        machine = machines_by_pad.get(delta.pad_id)
-        if machine is None:
-            continue
+        machine = machines_by_pad[delta.pad_id]
         for parameter in sorted(delta.changed_keys):
             control = cockpit_parameter_control(machine, parameter)
             if control is None:
@@ -110,6 +126,7 @@ def _blocked_reasons(
 def _plan_id(
     candidate: MutationCandidate,
     pad_locks: frozenset[int],
+    pad_targets: frozenset[int],
     blocked_reasons: tuple[ReadinessReason, ...],
     packets: tuple[SendPlanPacket, ...],
 ) -> str:
@@ -117,6 +134,7 @@ def _plan_id(
         "blocked_reasons": list(blocked_reasons),
         "candidate_id": candidate.candidate_id,
         "locked_pad_ids": sorted(pad_locks),
+        "target_pad_ids": sorted(pad_targets),
         "packets": [packet.to_dict() for packet in packets],
         "profile_id": candidate.profile_id,
         "safety_status": candidate.safety_status,
