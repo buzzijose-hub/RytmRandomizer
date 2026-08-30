@@ -94,6 +94,31 @@ ZONE_NAMES: Final[tuple[ZoneName, ...]] = (
     "body",
 )
 
+# --- Audio-to-Patch studio session -----------------------------------------
+# Canonical command modes and durable result transitions for the resumable
+# offline studio-session workflow.
+AudioPatchStudioSessionMode = Literal["start", "resume"]
+
+AUDIO_PATCH_STUDIO_SESSION_MODES: Final[tuple[AudioPatchStudioSessionMode, ...]] = (
+    "start",
+    "resume",
+)
+AUDIO_PATCH_STUDIO_SESSION_START_MODE: Final[AudioPatchStudioSessionMode] = "start"
+AUDIO_PATCH_STUDIO_SESSION_RESUME_MODE: Final[AudioPatchStudioSessionMode] = "resume"
+
+AudioPatchStudioSessionTransition = Literal["committed", "replayed"]
+
+AUDIO_PATCH_STUDIO_SESSION_TRANSITIONS: Final[tuple[AudioPatchStudioSessionTransition, ...]] = (
+    "committed",
+    "replayed",
+)
+AUDIO_PATCH_STUDIO_SESSION_COMMITTED_TRANSITION: Final[AudioPatchStudioSessionTransition] = (
+    "committed"
+)
+AUDIO_PATCH_STUDIO_SESSION_REPLAYED_TRANSITION: Final[AudioPatchStudioSessionTransition] = (
+    "replayed"
+)
+
 
 __all__ = [
     "IntensityMode",
@@ -106,4 +131,12 @@ __all__ = [
     "PAD1_MODES",
     "ZoneName",
     "ZONE_NAMES",
+    "AudioPatchStudioSessionMode",
+    "AUDIO_PATCH_STUDIO_SESSION_MODES",
+    "AUDIO_PATCH_STUDIO_SESSION_START_MODE",
+    "AUDIO_PATCH_STUDIO_SESSION_RESUME_MODE",
+    "AudioPatchStudioSessionTransition",
+    "AUDIO_PATCH_STUDIO_SESSION_TRANSITIONS",
+    "AUDIO_PATCH_STUDIO_SESSION_COMMITTED_TRANSITION",
+    "AUDIO_PATCH_STUDIO_SESSION_REPLAYED_TRANSITION",
 ]

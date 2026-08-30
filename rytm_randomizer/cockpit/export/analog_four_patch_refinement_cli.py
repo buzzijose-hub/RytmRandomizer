@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import math
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -30,7 +29,7 @@ from .analog_four_patch_refinement import (
 from .analog_four_patch_render_rank import (
     analog_four_patch_render_rank_error_code,
 )
-from .cli_options import parse_bounded_integer, pop_required_cli_value
+from .cli_options import parse_bounded_float, parse_bounded_integer, pop_required_cli_value
 
 COMMAND_NAME: Final[str] = "analog-four-audio-patch-refine"
 USAGE: Final[str] = (
@@ -53,18 +52,6 @@ class AnalogFourPatchRefinementArgs(TypedDict):
     source_kit_path: Path | None
     overwrite: bool
     json_output: bool
-
-
-def _parse_gain(value: str) -> float:
-    try:
-        gain = float(value)
-    except ValueError as exc:
-        raise ValueError("--gain must be a number from 0.0 to 1.0") from exc
-    if not math.isfinite(gain) or not (
-        ANALOG_FOUR_PATCH_REFINEMENT_GAIN_MIN <= gain <= ANALOG_FOUR_PATCH_REFINEMENT_GAIN_MAX
-    ):
-        raise ValueError("--gain must be a number from 0.0 to 1.0")
-    return gain
 
 
 def parse_analog_four_patch_refinement_args(
@@ -101,7 +88,12 @@ def parse_analog_four_patch_refinement_args(
         elif option == "--output-dir":
             output_dir = Path(pop_required_cli_value(remaining, option=option))
         elif option == "--gain":
-            correction_gain = _parse_gain(pop_required_cli_value(remaining, option=option))
+            correction_gain = parse_bounded_float(
+                pop_required_cli_value(remaining, option=option),
+                option=option,
+                lower=ANALOG_FOUR_PATCH_REFINEMENT_GAIN_MIN,
+                upper=ANALOG_FOUR_PATCH_REFINEMENT_GAIN_MAX,
+            )
         elif option == "--accept-similarity":
             accept_similarity = parse_bounded_integer(
                 pop_required_cli_value(remaining, option=option),

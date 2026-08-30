@@ -40,7 +40,9 @@ import shutil
 import stat
 import sys
 import tempfile
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Generator, Mapping
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 from pathlib import Path
 from typing import ClassVar, Final, Literal, TypeAlias
@@ -167,6 +169,55 @@ class WriteSetError(WriteError):
             )
 
 
+@dataclass(frozen=True)
+class _AtomicWriteTreeGuard:
+    """Directory identity pinned for one nested publication boundary."""
+
+    root: Path
+    identity: tuple[int, int]
+
+
+_ATOMIC_WRITE_TREE_GUARD: ContextVar[_AtomicWriteTreeGuard | None] = ContextVar(
+    "atomic_write_tree_guard",
+    default=None,
+)
+
+
+@contextmanager
+def guard_atomic_write_tree(root: Path, identity: tuple[int, int]) -> Generator[None, None, None]:
+    """Reject nested atomic publication if ``root`` is replaced mid-write."""
+
+    absolute_root = root.absolute()
+    _require_atomic_write_tree_identity(absolute_root, identity)
+    token = _ATOMIC_WRITE_TREE_GUARD.set(
+        _AtomicWriteTreeGuard(root=absolute_root, identity=identity)
+    )
+    try:
+        yield
+    finally:
+        _ATOMIC_WRITE_TREE_GUARD.reset(token)
+
+
+def _require_atomic_write_tree_identity(root: Path, identity: tuple[int, int]) -> None:
+    metadata = root.stat(follow_symlinks=False)
+    if not stat.S_ISDIR(metadata.st_mode) or (metadata.st_dev, metadata.st_ino) != identity:
+        raise WriteError("guarded atomic write tree changed during publication")
+
+
+def _validate_guarded_atomic_write_destination(path: Path) -> None:
+    guard = _ATOMIC_WRITE_TREE_GUARD.get()
+    if guard is None:
+        return
+    try:
+        path.absolute().relative_to(guard.root)
+    except ValueError:
+        # Child exporters may stage private snapshots in their own temporary
+        # directories. The guard protects publications into its tree; it is
+        # not a filesystem sandbox for unrelated scratch writes.
+        return
+    _require_atomic_write_tree_identity(guard.root, guard.identity)
+
+
 # ---------------------------------------------------------------------------
 # Default export directory
 # ---------------------------------------------------------------------------
@@ -254,8 +305,10 @@ def atomic_write(path: Path, data: bytes, *, overwrite: bool = False) -> WriteRe
             original :class:`OSError` is attached via ``__cause__``.
     """
 
+    _validate_guarded_atomic_write_destination(path)
     parent = path.parent
     parent.mkdir(parents=True, exist_ok=True)
+    _validate_guarded_atomic_write_destination(path)
 
     overwrote_existing = path.exists()
     if overwrote_existing and not overwrite:
@@ -314,6 +367,7 @@ def atomic_write(path: Path, data: bytes, *, overwrite: bool = False) -> WriteRe
 def _publish_temp_file(tmp_name: str, path: Path, *, overwrite: bool) -> None:
     """Publish a completed temp file with collision-specific error handling."""
 
+    _validate_guarded_atomic_write_destination(path)
     if overwrite:
         try:
             os.replace(tmp_name, str(path))
@@ -431,8 +485,10 @@ def atomic_write_set(
         raise ValueError("atomic_write_set destinations must share one parent")
     parent = destinations[0].parent
     first_destination = destinations[0]
+    _validate_guarded_atomic_write_destination(first_destination)
     try:
         parent.mkdir(parents=True, exist_ok=True)
+        _validate_guarded_atomic_write_destination(first_destination)
     except OSError as exc:
         raise WriteSetError(
             WriteSetFailureContext(
@@ -479,6 +535,7 @@ def atomic_write_set(
         phase = "backup"
         for index, destination in enumerate(destinations):
             active_destination = destination
+            _validate_guarded_atomic_write_destination(destination)
             if existed[destination]:
                 _require_regular_overwrite_destination(destination)
                 backup_path = transaction_dir / f"{index:04d}.backup"
@@ -488,6 +545,7 @@ def atomic_write_set(
         phase = "publication"
         for destination in destinations:
             active_destination = destination
+            _validate_guarded_atomic_write_destination(destination)
             if overwrite:
                 os.replace(staged[destination], destination)
                 published.add(destination)
@@ -747,5 +805,6 @@ __all__ = [
     "atomic_write",
     "atomic_write_set",
     "default_export_dir",
+    "guard_atomic_write_tree",
     "write_signed_export",
 ]

@@ -394,6 +394,11 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         "AnalogFourPatchBatchLockedError",
         "AnalogFourPatchRenderRankArtifactError",
         "AnalogFourPatchRenderRankReferenceError",
+        # Audio-to-Patch studio sessions preserve PermissionError and
+        # FileExistsError compatibility while exposing stable BoundaryError
+        # fingerprints for output-tree access and publication-lock failures.
+        "AudioPatchStudioSessionAccessError",
+        "AudioPatchStudioSessionLockedError",
         # Generic CC/NRPN plan delivery: carries exact successful/expected
         # message counts so an armed A4 operator can recover from a partial send.
         "MidiEventPlanSendError",

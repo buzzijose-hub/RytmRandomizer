@@ -1,8 +1,33 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-08-24. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-08-26. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
+
+- 2026-08-26: Added passive, resumable Audio-to-Patch Studio Session V1.
+  - One start command composes the existing eight-direction DNA workspace with
+    one selected Analog Four export and commits a SHA-bound session marker.
+  - One resume command verifies the original reference, source kit, manifest,
+    and committed artifacts before reusing the bounded accept/refine service
+    for a recorded render.
+  - Repeated identical requests are idempotent; changed inputs, artifact drift,
+    or an attempt to replace a terminal render fail closed. The workflow never
+    imports a MIDI backend, enumerates or opens a port, or sends MIDI/SysEx.
+  - PR #236 review repair binds terminal replay to the committed rendering
+    policy, verifies child track and one-candidate contracts, hashes the exact
+    committed Markdown bytes, records committed-versus-replayed transitions,
+    and protects the complete output tree against replacement and alias races.
+    No-follow reads and hashes, consistent access/lock errors, primary-error
+    preservation during cleanup, canonical mode/transition vocabularies, and
+    portable filename validation close the remaining durability boundaries.
+  - Fresh bounded verification passed 107 focused service/CLI/writer/mode tests
+    with 1 skip; a 685-test touched-module coverage set passed with 1 skip and
+    100 percent statement and branch coverage across all seven touched
+    production modules. The exact tree also passed 777 architecture tests, 685
+    frozen V1.34 parity tests, a 98-test AL16 dependency-evidence proof, and the
+    8,321-test full suite with 5 skips. The AL16 proof remains correctly blocked
+    on 18 critical mapping gaps and emitted no `.syx`. Strict typing for 7
+    production modules and the Ruff, Black, and isort gates are clean.
 
 - 2026-08-24: Added a bounded long-form reference-audio atlas.
   - The passive `reference-audio-atlas-report` command scans one audio file as

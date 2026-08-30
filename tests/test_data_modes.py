@@ -24,6 +24,8 @@ def test_literal_aliases_are_importable() -> None:
         "MutationKind",
         "Pad1Mode",
         "ZoneName",
+        "AudioPatchStudioSessionMode",
+        "AudioPatchStudioSessionTransition",
     ):
         assert hasattr(modes, name), f"missing Literal alias: {name}"
 
@@ -36,12 +38,14 @@ def test_final_tuples_are_importable() -> None:
         "MUTATION_KINDS",
         "PAD1_MODES",
         "ZONE_NAMES",
+        "AUDIO_PATCH_STUDIO_SESSION_MODES",
+        "AUDIO_PATCH_STUDIO_SESSION_TRANSITIONS",
     ):
         assert hasattr(modes, name), f"missing Final tuple: {name}"
 
 
 def test_all_exports_are_complete() -> None:
-    """``__all__`` must enumerate every public name (5 aliases + 5 tuples)."""
+    """``__all__`` must enumerate the complete canonical mode surface."""
     assert set(modes.__all__) == {
         "IntensityMode",
         "INTENSITY_MODES",
@@ -53,6 +57,14 @@ def test_all_exports_are_complete() -> None:
         "PAD1_MODES",
         "ZoneName",
         "ZONE_NAMES",
+        "AudioPatchStudioSessionMode",
+        "AUDIO_PATCH_STUDIO_SESSION_MODES",
+        "AUDIO_PATCH_STUDIO_SESSION_START_MODE",
+        "AUDIO_PATCH_STUDIO_SESSION_RESUME_MODE",
+        "AudioPatchStudioSessionTransition",
+        "AUDIO_PATCH_STUDIO_SESSION_TRANSITIONS",
+        "AUDIO_PATCH_STUDIO_SESSION_COMMITTED_TRANSITION",
+        "AUDIO_PATCH_STUDIO_SESSION_REPLAYED_TRANSITION",
     }
 
 
@@ -92,6 +104,18 @@ def test_zone_names_content_and_order() -> None:
     assert modes.ZONE_NAMES == ("src", "filter", "amp", "grit", "body")
 
 
+def test_audio_patch_studio_session_modes_content_and_order() -> None:
+    assert modes.AUDIO_PATCH_STUDIO_SESSION_MODES == ("start", "resume")
+    assert modes.AUDIO_PATCH_STUDIO_SESSION_START_MODE == "start"
+    assert modes.AUDIO_PATCH_STUDIO_SESSION_RESUME_MODE == "resume"
+
+
+def test_audio_patch_studio_session_transitions_content_and_order() -> None:
+    assert modes.AUDIO_PATCH_STUDIO_SESSION_TRANSITIONS == ("committed", "replayed")
+    assert modes.AUDIO_PATCH_STUDIO_SESSION_COMMITTED_TRANSITION == "committed"
+    assert modes.AUDIO_PATCH_STUDIO_SESSION_REPLAYED_TRANSITION == "replayed"
+
+
 # --- Immutability -----------------------------------------------------------
 
 
@@ -103,6 +127,8 @@ def test_every_constant_is_a_tuple_not_a_list() -> None:
         "MUTATION_KINDS",
         "PAD1_MODES",
         "ZONE_NAMES",
+        "AUDIO_PATCH_STUDIO_SESSION_MODES",
+        "AUDIO_PATCH_STUDIO_SESSION_TRANSITIONS",
     ):
         value = getattr(modes, name)
         assert isinstance(value, tuple), f"{name} must be a tuple, got {type(value).__name__}"
@@ -119,6 +145,8 @@ def test_tuple_lengths_match_documented_cardinality() -> None:
     assert len(modes.MUTATION_KINDS) == 2
     assert len(modes.PAD1_MODES) == 4
     assert len(modes.ZONE_NAMES) == 5
+    assert len(modes.AUDIO_PATCH_STUDIO_SESSION_MODES) == 2
+    assert len(modes.AUDIO_PATCH_STUDIO_SESSION_TRANSITIONS) == 2
 
 
 def test_no_duplicates_within_any_tuple() -> None:
@@ -129,6 +157,8 @@ def test_no_duplicates_within_any_tuple() -> None:
         "MUTATION_KINDS",
         "PAD1_MODES",
         "ZONE_NAMES",
+        "AUDIO_PATCH_STUDIO_SESSION_MODES",
+        "AUDIO_PATCH_STUDIO_SESSION_TRANSITIONS",
     ):
         value = getattr(modes, name)
         assert len(set(value)) == len(value), f"{name} has duplicates: {value}"

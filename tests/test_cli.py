@@ -326,6 +326,11 @@ USAGE = (
     "--output-dir <dir> [--track N] [--candidates N] [--overwrite] [--json] | "
     "audio-patch-dna --audio <path> --output-dir <dir> [--track N] "
     "[--select N --source-kit <kit.syx>] [--overwrite] [--json] | "
+    "audio-patch-studio-session "
+    "(--reference <path> --source-kit <kit.syx> --select <N> "
+    "--output-dir <dir> [--track N] | --session <session.json> "
+    "--reference <path> --source-kit <kit.syx> --render <path> "
+    "[--gain N] [--accept-similarity N]) [--overwrite] [--json] | "
     "analog-four-audio-patch-rank --reference <path> --manifest <batch.json> "
     "--render <N=path> [--render <N=path> ...] [--json] | "
     "analog-four-audio-patch-refine --reference <path> --manifest <batch.json> "
@@ -426,6 +431,25 @@ def test_audio_patch_dna_help_is_exact_and_passive():
     assert "does not" in help_text
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_audio_patch_studio_session_help_is_exact_and_passive_when_requested():
+    from rytm_randomizer.cockpit.export.audio_patch_studio_session import (
+        AUDIO_PATCH_STUDIO_SESSION_SAFETY,
+    )
+
+    result = run_cli("audio-patch-studio-session", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: audio-patch-studio-session" in help_text
+    assert "Start mode analyzes the reference once" in help_text
+    assert "Resume mode verifies that state" in help_text
+    assert "one bounded refinement pass" in help_text
+    assert "provenance or artifact drift fails closed" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in AUDIO_PATCH_STUDIO_SESSION_SAFETY]
     assert result.stderr == ""
 
 
