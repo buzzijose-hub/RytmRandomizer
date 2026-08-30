@@ -46,11 +46,30 @@ from rytm_randomizer.cockpit.export.writer import (
     atomic_write,
     atomic_write_set,
     default_export_dir,
+    guard_atomic_write_tree,
     write_signed_export,
 )
 from rytm_randomizer.observability.errors import DataError
 
 pytestmark = pytest.mark.fast
+
+
+def test_guarded_atomic_write_rejects_output_tree_replacement(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    root.mkdir()
+    identity = (root.stat().st_dev, root.stat().st_ino)
+
+    with guard_atomic_write_tree(root, identity):
+        moved = tmp_path / "original-root"
+        replacement = tmp_path / "replacement-root"
+        replacement.mkdir()
+        root.rename(moved)
+        replacement.rename(root)
+
+        with pytest.raises(WriteError, match="tree changed"):
+            atomic_write(root / "artifact.json", b"{}\n")
+
+    assert not (root / "artifact.json").exists()
 
 
 # ---------------------------------------------------------------------------

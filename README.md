@@ -270,6 +270,10 @@ analog-four-audio-patch-refine --reference REF.wav --manifest batch.json --candi
 audio-patch-dna --audio REF.wav --output-dir output/local/audio-dna/
 audio-patch-dna --audio REF.wav --output-dir output/local/audio-dna/ --select 6 --source-kit KIT.syx
 
+# Resumable Studio Session V1 (passive files only)
+audio-patch-studio-session --reference REF.wav --source-kit KIT.syx --select 6 --output-dir output/local/audio-session/
+audio-patch-studio-session --session output/local/audio-session/studio-session.json --reference REF.wav --source-kit KIT.syx --render A4_RENDER.wav
+
 # AL16 Analog Rytm offline audit proof (no MIDI; current AL02 build is blocked)
 al16-rytm-kit-export --reference output/local/reference/RYTM_Test1_Init_Kit.syx --recipe specs/al16/AL02_LOCK_RYTM.yaml --destination-slot 127 --output output/local/al16/AL02_LOCK_RYTM.syx
 
@@ -292,6 +296,20 @@ existing validated SysEx writer without decoding the audio a second time. The
 workflow never enumerates or opens a MIDI port. Analog Rytm selection/export
 is intentionally deferred until the separate Rytm codec integration is part
 of the base branch.
+
+`audio-patch-studio-session` joins that compare/select step to one bounded
+render-feedback pass without hiding either stage. A start command writes the
+eight-direction workspace, exports the selected Analog Four candidate, and
+commits a SHA-bound `studio-session.json`. After the operator records the
+candidate, the resume command verifies the same reference, source kit,
+manifest, and committed artifacts before accepting the render or exporting
+one corrected follow-up. Repeating either request is idempotent; changed or
+tampered inputs fail closed. The workflow is passive and never enumerates,
+opens, or writes a MIDI port. Terminal replay is valid only when the render
+SHA-256, correction gain, and acceptance threshold exactly match the committed
+request. Changing any of those policy inputs requires a new session in a new
+output directory; an accepted or refined terminal session is never silently
+reinterpreted under a different policy.
 
 `analog-four-audio-patch-refine` adds one bounded, explainable feedback pass
 after a candidate is recorded from the Analog Four. It verifies the immutable
