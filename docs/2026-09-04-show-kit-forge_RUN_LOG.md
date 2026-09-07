@@ -7,9 +7,10 @@ Branch: `codex/show-kit-forge-complete`
 Base: `origin/modularize-v1.34` at
 `0b77f9fef019dbfe1da943019b339bd446f95725`
 
-Status: local implementation and documentation assembled; repository closeout
-is owned by the integration workstream. Operator-present studio validation is
-still pending.
+Status: implementation published in
+[PR #238](https://github.com/buzzijose-hub/RytmRandomizer/pull/238) against
+`modularize-v1.34`; final CI and operator-present studio validation are tracked
+in the run state.
 
 ## Workstream record
 
@@ -87,9 +88,11 @@ still pending.
 
 The September 7 integration completed 8,788 Python tests with five skips;
 all 22 touched production modules reached 100% branch coverage. Frontend
-verification completed 774 tests with 100% coverage, typecheck, lint, build,
-and one mocked browser journey. The complete recorded results and remaining
-publication fields are maintained in the
+verification completed 779 tests with 100% coverage, typecheck, lint, build,
+and one mocked browser journey. A post-push coverage review removed an
+unnecessary exclusion and added four rejection cases: the 13-case Forge file
+passes independently with 100% statement and branch coverage. The complete
+recorded results and hosted CI status are maintained in the
 [run report](superpowers/plans/2026-09-04-show-kit-forge_RUN_REPORT.md).
 
 Independent reviewers found and drove fixes for import type exactness,

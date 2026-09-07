@@ -163,6 +163,8 @@ export function ShowKitForgePanel(): JSX.Element {
   const profile = useCockpitStore((state) => state.profile);
   const connectionStatus = useCockpitStore((state) => state.connectionStatus);
   const sessionStatus = useCockpitStore((state) => state.sessionStatus);
+  const sessionStatusStale = useCockpitStore((state) => state.sessionStatusStale);
+  const sessionGeneration = useCockpitStore((state) => state.sessionGeneration);
   const sendPlan = useCockpitStore((state) => state.sendPlan);
   const canSend = useCockpitStore(selectCanSend);
   const rytmTargetIds = useCockpitStore((state) => state.rytmPadTargets);
@@ -221,6 +223,7 @@ export function ShowKitForgePanel(): JSX.Element {
   const observedEntryIdentity = useRef<string | null>(null);
   const artifactBankIdentity = useRef<string | null>(null);
   const commandGeneration = useRef(0);
+  const requestedSessionGeneration = useRef<number | null>(null);
 
   const activeBank = useMemo(() => findActiveBank(showBankState), [showBankState]);
   const activeEntry = useMemo(
@@ -244,6 +247,8 @@ export function ShowKitForgePanel(): JSX.Element {
     a4Capture?.round_trip_verified === true &&
     a4Capture.parameter_readiness === 'filter1_frequency_offline_ready';
   const connected = connectionStatus === 'connected';
+  const sessionReady = connected && sessionStatus !== null &&
+    !sessionStatusStale;
   const busy = pendingCommand !== null;
   const selectedCandidate = activeEntry?.candidates.find(
     (candidate) => candidate.candidate_id === activeEntry.selected_candidate_id,
@@ -301,7 +306,7 @@ export function ShowKitForgePanel(): JSX.Element {
     [issue],
   );
   const exactSend = useExactRytmSend({
-    canSend: canSend && selectedCandidateIsCurrent && !showBankStale && !busy,
+    canSend: canSend && selectedCandidateIsCurrent && sessionReady && !showBankStale && !busy,
     onSend: sendExactRytm,
     sendPlan,
     session: sessionStatus,
@@ -311,22 +316,19 @@ export function ShowKitForgePanel(): JSX.Element {
     },
   });
 
-  const previousConnection = useRef<typeof connectionStatus | null>(null);
   useEffect(() => {
-    const reconnected =
-      previousConnection.current !== null &&
-      previousConnection.current !== 'connected' &&
-      connectionStatus === 'connected';
-    const firstMount = previousConnection.current === null;
-    previousConnection.current = connectionStatus;
-    if (!firstMount && !connected) {
+    if (!sessionReady) {
       commandGeneration.current += 1;
       setPendingCommand(null);
+      return;
     }
-    if (firstMount || reconnected) {
+    // Store-owned freshness survives panel remounts and React batching of
+    // disconnect/reconnect updates; socket-open alone never authenticates.
+    if (requestedSessionGeneration.current !== sessionGeneration) {
+      requestedSessionGeneration.current = sessionGeneration;
       void issue({ type: 'show_bank_list' }, 'Show bank refresh', false);
     }
-  }, [connected, connectionStatus, issue]);
+  }, [issue, sessionGeneration, sessionReady]);
 
   useEffect(() => {
     if (activeBank === null) {
@@ -720,7 +722,7 @@ export function ShowKitForgePanel(): JSX.Element {
     (candidate) => candidate.candidate_id === activeEntry.favorite?.candidate_id,
   );
   const hasFavorite = favorite !== undefined;
-  const stale = !connected || showBankStale;
+  const stale = !sessionReady || showBankStale;
   const actionDisabled = stale || busy;
   const validPackName = SAFE_ARTIFACT_NAME.test(packName);
   const validArtifactName = SAFE_ARTIFACT_NAME.test(artifactName);
@@ -817,7 +819,7 @@ export function ShowKitForgePanel(): JSX.Element {
           <button
             type="button"
             onClick={() => void issue({ type: 'show_bank_list' }, 'Show bank refresh')}
-            disabled={busy}
+            disabled={!sessionReady || busy}
           >
             Refresh from server
           </button>

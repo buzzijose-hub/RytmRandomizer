@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { StrictMode } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { CockpitClientProvider } from '../../src/cockpit/context';
@@ -17,16 +18,16 @@ import {
 } from './_fixtures';
 import { forgeCaptures, forgeEntry, readyEntry, showBankState } from './showKitForgeFixture';
 
-function mount(fake: FakeCockpitClient, state: ShowBankState | null = showBankState): void {
+function mount(fake: FakeCockpitClient, state: ShowBankState | null = showBankState): ReturnType<typeof render> {
   useCockpitStore.setState({
     showBank: state,
     showBankStale: false,
     kitCaptures: forgeCaptures,
     profile,
     connectionStatus: 'connected',
-    sessionStatus: sessionLive,
   });
-  render(
+  useCockpitStore.getState().setSessionStatus(sessionLive);
+  return render(
     <CockpitClientProvider client={fake.asClient()}>
       <ShowKitForgePanel />
     </CockpitClientProvider>,
@@ -44,7 +45,7 @@ afterEach(() => {
 });
 
 describe('ShowKitForgePanel', () => {
-  it('loads on mount/reconnect, stays honest without server state, and creates a bank', async () => {
+  it('waits for authenticated session hydration before loading and creating a bank', async () => {
     const fake = new FakeCockpitClient();
     useCockpitStore.setState({ connectionStatus: 'closed', showBank: null, kitCaptures: [] });
     render(
@@ -53,18 +54,23 @@ describe('ShowKitForgePanel', () => {
       </CockpitClientProvider>,
     );
 
-    await waitForCommand(fake, 'show_bank_list');
+    expect(fake.sent).toEqual([]);
     expect(screen.getByText(/Last known server state is read-only/)).toBeInTheDocument();
     expect(screen.getByText('Waiting for a bank')).toBeInTheDocument();
     expect(screen.queryByText('Warehouse Set')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create show bank' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Refresh from server' })).toBeDisabled();
 
     act(() => useCockpitStore.getState().setConnectionStatus('connecting'));
-    expect(fake.sent.filter((command) => command.type === 'show_bank_list')).toHaveLength(1);
+    expect(fake.sent).toEqual([]);
     act(() => useCockpitStore.getState().setConnectionStatus('connected'));
-    await waitFor(() =>
-      expect(fake.sent.filter((command) => command.type === 'show_bank_list')).toHaveLength(2),
-    );
+    expect(fake.sent).toEqual([]);
+    expect(screen.getByRole('button', { name: 'Refresh from server' })).toBeDisabled();
+    act(() => useCockpitStore.getState().setSessionStatus(sessionLive));
+    await waitForCommand(fake, 'show_bank_list');
+    expect(fake.sent.filter((command) => command.type === 'show_bank_list')).toHaveLength(1);
+    act(() => useCockpitStore.getState().setSessionStatus({ ...sessionLive, armed: false }));
+    expect(fake.sent.filter((command) => command.type === 'show_bank_list')).toHaveLength(1);
     act(() => useCockpitStore.getState().setShowBank({ ...showBankState, banks: [], active_bank_id: null }));
 
     fireEvent.change(screen.getByLabelText('Bank name'), { target: { value: '  New Set  ' } });
@@ -77,6 +83,66 @@ describe('ShowKitForgePanel', () => {
       description: 'Friday',
       notes: ['first', 'second'],
     });
+  });
+
+  it('leaves tokenless sockets silent through repeated first-frame deadline reconnects', () => {
+    const fake = new FakeCockpitClient();
+    useCockpitStore.setState({ connectionStatus: 'connecting', sessionStatus: null });
+    render(
+      <CockpitClientProvider client={fake.asClient()}>
+        <ShowKitForgePanel />
+      </CockpitClientProvider>,
+    );
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      act(() => useCockpitStore.getState().setConnectionStatus('connected'));
+      fireEvent.click(screen.getByRole('button', { name: 'Refresh from server' }));
+      expect(fake.sent).toEqual([]);
+      act(() => useCockpitStore.getState().setConnectionStatus('reconnecting'));
+    }
+    expect(useCockpitStore.getState().sessionStatus).toBeNull();
+  });
+
+  it('requires fresh authentication when remounted over a connected socket with a cached session', async () => {
+    const fake = new FakeCockpitClient();
+    const view = mount(fake);
+    await waitForCommand(fake, 'show_bank_list');
+    view.unmount();
+    act(() => {
+      useCockpitStore.getState().setConnectionStatus('reconnecting');
+      useCockpitStore.getState().setConnectionStatus('connected');
+    });
+    render(<CockpitClientProvider client={fake.asClient()}><ShowKitForgePanel /></CockpitClientProvider>);
+
+    expect(useCockpitStore.getState().sessionStatus).toEqual(sessionLive);
+    expect(fake.sent.filter((command) => command.type === 'show_bank_list')).toHaveLength(1);
+    expect(screen.getByRole('button', { name: 'Refresh from server' })).toBeDisabled();
+    act(() => useCockpitStore.getState().setSessionStatus({ ...sessionLive }));
+    await waitFor(() => expect(fake.sent.filter((command) => command.type === 'show_bank_list')).toHaveLength(2));
+  });
+
+  it('refreshes once when remounted under StrictMode in an authenticated connection', async () => {
+    const fake = new FakeCockpitClient();
+    const view = mount(fake);
+    await waitForCommand(fake, 'show_bank_list');
+    view.unmount();
+    render(<StrictMode><CockpitClientProvider client={fake.asClient()}><ShowKitForgePanel /></CockpitClientProvider></StrictMode>);
+    await waitFor(() => expect(fake.sent.filter((command) => command.type === 'show_bank_list')).toHaveLength(2));
+    expect(screen.getByRole('button', { name: 'Refresh from server' })).toBeEnabled();
+  });
+
+  it('refreshes after disconnect and fresh hydration are batched into one render', async () => {
+    const fake = new FakeCockpitClient();
+    mount(fake);
+    await waitForCommand(fake, 'show_bank_list');
+    act(() => {
+      useCockpitStore.getState().setConnectionStatus('closed');
+      useCockpitStore.getState().setConnectionStatus('connected');
+      useCockpitStore.getState().setSessionStatus({ ...sessionLive });
+    });
+    await waitFor(() => expect(fake.sent.filter((command) => command.type === 'show_bank_list')).toHaveLength(2));
+    act(() => useCockpitStore.getState().setSessionStatus({ ...sessionLive, armed: false }));
+    expect(fake.sent.filter((command) => command.type === 'show_bank_list')).toHaveLength(2);
   });
 
   it('reports rejected and thrown commands without changing authoritative bank state', async () => {
@@ -118,6 +184,9 @@ describe('ShowKitForgePanel', () => {
     expect(screen.getByLabelText('P1')).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Lock pad 1' })).toBeDisabled();
     act(() => useCockpitStore.getState().setConnectionStatus('connected'));
+    expect(fake.sent.filter((command) => command.type === 'show_bank_list')).toHaveLength(1);
+    expect(screen.getByRole('button', { name: 'Refresh from server' })).toBeDisabled();
+    act(() => useCockpitStore.getState().setSessionStatus({ ...sessionLive }));
     await waitFor(() => expect(fake.sent.filter((command) => command.type === 'show_bank_list')).toHaveLength(2));
     expect(screen.getByRole('button', { name: 'Create show bank' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Run show-time preflight' })).toBeDisabled();
@@ -137,6 +206,7 @@ describe('ShowKitForgePanel', () => {
     await waitForCommand(fake, 'show_bank_list');
     act(() => useCockpitStore.getState().setConnectionStatus('closed'));
     act(() => useCockpitStore.getState().setConnectionStatus('connected'));
+    act(() => useCockpitStore.getState().setSessionStatus({ ...sessionLive }));
     await act(async () => {
       if (outcome === 'reject') settleOld({ request_id: 'old', ok: false, message: 'Old refresh failed' });
       else rejectOld(new Error('Old refresh failed'));

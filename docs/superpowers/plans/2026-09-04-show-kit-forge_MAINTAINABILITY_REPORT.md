@@ -7,8 +7,10 @@ Plan: [`2026-09-04-show-kit-forge.md`](2026-09-04-show-kit-forge.md)
 Baseline:
 [`2026-09-04-show-kit-forge_MAINTAINABILITY_AUDIT.md`](2026-09-04-show-kit-forge_MAINTAINABILITY_AUDIT.md)
 
-Status: in-flight — software re-audit recorded; final aggregate gates, hosted
-PR/CI, and operator-present studio validation remain pending.
+Status: software re-audit recorded for
+[PR #238](https://github.com/buzzijose-hub/RytmRandomizer/pull/238).
+The run state records current CI status and the remaining operator-present
+studio validation.
 
 This comparison uses qualitative dispositions backed by paths, completed
 automated checks, and the targeted review findings below. Physical evidence

@@ -105,6 +105,26 @@ def test_source_entry_retains_hashes_without_pretending_files_exist() -> None:
     assert entry.analog_four_source.sysex.frame_bytes == len(analog_four.frame)
 
 
+def test_capture_reference_rejects_an_unsupported_device_in_a_typed_capture() -> None:
+    rytm, _analog_four, _snapshot, _entry = _sources()
+    unsupported = replace(rytm, device_id="unsupported")
+
+    with pytest.raises(ValueError, match="unsupported show-bank source device"):
+        capture_reference(unsupported, hardware_slot=20, snapshot_id="source-snapshot")
+
+
+@pytest.mark.parametrize(
+    "flags",
+    ({"round_trip_verified": False}, {"input_only": False}, {"sent_midi": True}),
+)
+def test_capture_reference_requires_verified_input_only_evidence(flags: dict[str, bool]) -> None:
+    rytm, _analog_four, _snapshot, _entry = _sources()
+    invalid = replace(rytm, **flags)
+
+    with pytest.raises(ValueError, match="codec round-trip verified and input-only"):
+        capture_reference(invalid, hardware_slot=20, snapshot_id="source-snapshot")
+
+
 def test_forge_pair_is_deterministic_scoped_and_a4_offline_only(tmp_path: Path) -> None:
     _rytm, analog_four, snapshot, entry = _sources()
     profile = ProfileRegistry(tmp_path).list_profiles()[0]

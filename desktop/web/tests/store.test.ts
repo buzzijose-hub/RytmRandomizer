@@ -210,6 +210,8 @@ describe('cockpit store — actions write each slice', () => {
       performanceConsole: null,
       sendPlan: null,
       sessionStatus: null,
+      sessionStatusStale: true,
+      sessionGeneration: 0,
       connectionStatus: 'closed',
       operatorLog: [],
       connection: null,
@@ -423,6 +425,28 @@ describe('cockpit store — actions write each slice', () => {
     const store = createCockpitStore();
     store.getState().setSessionStatus(session);
     expect(store.getState().sessionStatus).toEqual(session);
+  });
+
+  it('requires fresh session hydration after each transport loss and advances its generation once', () => {
+    const store = createCockpitStore();
+    store.getState().setConnectionStatus('connected');
+    expect(store.getState().sessionStatusStale).toBe(true);
+    expect(store.getState().sessionGeneration).toBe(0);
+    store.getState().setSessionStatus(session);
+    expect(store.getState().sessionStatusStale).toBe(false);
+    expect(store.getState().sessionGeneration).toBe(1);
+    store.getState().setSessionStatus({ ...session, armed: true });
+    expect(store.getState().sessionGeneration).toBe(1);
+
+    const cached = store.getState().sessionStatus;
+    store.getState().setConnectionStatus('reconnecting');
+    store.getState().setConnectionStatus('connected');
+    expect(store.getState().sessionStatus).toBe(cached);
+    expect(store.getState().sessionStatusStale).toBe(true);
+    expect(store.getState().sessionGeneration).toBe(1);
+    store.getState().setSessionStatus(session);
+    expect(store.getState().sessionStatusStale).toBe(false);
+    expect(store.getState().sessionGeneration).toBe(2);
   });
 
   it('setConnectionStatus and appendOperatorLog write operator feedback slices', () => {

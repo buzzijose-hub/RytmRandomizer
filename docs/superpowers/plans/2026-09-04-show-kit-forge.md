@@ -2,8 +2,8 @@
 
 Date: 2026-09-04
 
-Status: in-flight — implementation assembled; automated integration closeout and
-operator-present studio validation remain open
+Status: implementation published in [PR #238](https://github.com/buzzijose-hub/RytmRandomizer/pull/238);
+final CI and operator-present studio validation are tracked in the run state
 
 Branch: `codex/show-kit-forge-complete`
 
@@ -51,7 +51,7 @@ keeping A4 hardware SEND categorically blocked.
 
 ## Scope and operator contract
 
-The delivered workflow will:
+The delivered workflow can:
 
 1. create and name a versioned show bank;
 2. adopt one round-trip-verified Rytm capture and one round-trip-verified A4
@@ -71,13 +71,13 @@ The delivered workflow will:
 10. compare current manual dumps with the expected paired fingerprints before
     granting `show-ready`.
 
-Cockpit will never issue a persistent SAVE. Local export is not hardware-write
+Cockpit never issues a persistent SAVE. Local export is not hardware-write
 authority. A4 SEND remains blocked even when its offline candidate is valid.
 
 ## Evidence promotion boundary
 
-Repository fixtures will preserve the exact August 28 initialized scratch-kit
-baseline and saved Filter 1 Frequency captures. Tests will pin their hashes and
+Repository fixtures preserve the exact August 28 initialized scratch-kit
+baseline and saved Filter 1 Frequency captures. Tests pin their hashes and
 prove:
 
 - A4 MKII saved-KIT framing and checksum validation;
@@ -87,16 +87,16 @@ prove:
 - bounded arbitrary representable Filter 1 Frequency mutation;
 - exact re-decode of the rendered semantic value;
 - intended-byte isolation before envelope repacking; and
-- preservation of every unknown/unselected/unlocked byte.
+- preservation of every unknown, unselected, or locked byte.
 
-The durable evidence status will distinguish offline captured-kit mutation
+The durable evidence status distinguishes offline captured-kit mutation
 validation from hardware-write validation. Only Filter 1 Frequency gains the
 former status. Existing Filter 2 Resonance hardware-write evidence is retained;
 Filter 1 Resonance, Filter 2 Frequency, Amp Attack, and all other unsupported
 Show Kit Forge families remain fail-closed.
 
-A generated scratch-kit fixture and JSON validation handoff will be marked
-`pending_physical_outbound_validation`. It will contain exact source/generated
+A generated scratch-kit fixture and JSON validation handoff are marked
+`pending_physical_outbound_validation`. They contain exact source/generated
 hashes, intended tracks/values, checksum and byte-isolation evidence, plus the
 short operator procedure: manually load into a scratch slot, listen, save on
 the A4, dump the saved KIT, and compare the returned fingerprint. No fabricated
@@ -271,12 +271,12 @@ notes; timestamps; and evidence provenance.
 
 ## Plan-requirements conformance
 
-- [x] **Gate 1** — every touched production Python module will reach 100%
+- [x] **Gate 1** — every touched production Python module reached 100%
   branch coverage.
 - [x] **Gate 2** — all 505 V1.34 golden files stay untouched and all 685 parity
   cases run without capture mode.
-- [x] **Gate 3** — Python/frontend lint, format, strict typecheck, and build are
-  in closeout.
+- [x] **Gate 3** — Python/frontend lint, format, strict typecheck, and build
+  passed; exact evidence is recorded in the run report.
 - [x] **Gate 4** — Vulture and reviewer checks reject dead or duplicate paths.
 - [x] **Gate 5** — STATUS, Quickstart, architecture, diagrams, manual hardware
   validation, plan, run log/report, and studio checklist are in scope.
@@ -298,14 +298,14 @@ notes; timestamps; and evidence provenance.
   [baseline](2026-09-04-show-kit-forge_MAINTAINABILITY_AUDIT.md) and
   [post-plan report](2026-09-04-show-kit-forge_MAINTAINABILITY_REPORT.md).
 - [x] **Gate 15** — reusable Show Kit Forge safety lessons and every required
-  handoff artifact are linked in the durable-handoff section below; final
-  aggregate results and the PR URL remain explicit root-closeout placeholders.
+  handoff artifact are linked in the durable-handoff section below; verification
+  results, the PR URL, and remaining studio work are recorded in the run state.
 - [x] **Gate 16** — the clean worktree, exclusive file ownership, dependency
   graph, one branch, one base, and one non-stacked PR are explicit above.
 - [x] **Gate 17** — Device codecs, MutationScope, capture, history, stage,
   send-plan, ArmedApply, atomic writer, existing live-kit packages, and Zustand
   event reduction are reused.
-- [x] **Gate 18** — architecture prose and diagrams will describe the shipped
+- [x] **Gate 18** — architecture prose and diagrams describe the shipped
   persistence, candidate, and readiness lifecycle exactly.
 
 ## Gate 15 durable handoff
@@ -317,12 +317,12 @@ The learning phase is repo-scoped and directly discoverable:
 | Reusable skill | Updated [`targeted-live-kit-mutation` skill](../../../.claude/skills/learned/targeted-live-kit-mutation/SKILL.md) |
 | Project rule | Updated [`targeted-mutation-safety` rule](../../../.claude/rules/targeted-mutation-safety.md) |
 | Project agent guidance | Root [`CLAUDE.md`](../../../CLAUDE.md), with direct Show Kit Forge handoff links |
-| Run report | [`2026-09-04-show-kit-forge_RUN_REPORT.md`](2026-09-04-show-kit-forge_RUN_REPORT.md), including the five fresh-clone answers and pending final placeholders |
+| Run report | [`2026-09-04-show-kit-forge_RUN_REPORT.md`](2026-09-04-show-kit-forge_RUN_REPORT.md), including verification evidence and the five fresh-clone answers |
 | Preserved run log | [`docs/2026-09-04-show-kit-forge_RUN_LOG.md`](../../2026-09-04-show-kit-forge_RUN_LOG.md) |
 | Architecture before/after | [`2026-09-04-show-kit-forge_ARCHITECTURE_BEFORE_AFTER.md`](2026-09-04-show-kit-forge_ARCHITECTURE_BEFORE_AFTER.md) |
 | Replay playbook | Existing [`docs/AUTONOMOUS_RUN_PLAYBOOK.md`](../../AUTONOMOUS_RUN_PLAYBOOK.md); no plan-local duplicate |
 | State-file schema | [`2026-09-04-show-kit-forge_STATE.schema.json`](2026-09-04-show-kit-forge_STATE.schema.json) |
-| Resumable state | [`2026-09-04-show-kit-forge_STATE.json`](2026-09-04-show-kit-forge_STATE.json), with final counts and PR URL left pending for root closeout |
+| Resumable state | [`2026-09-04-show-kit-forge_STATE.json`](2026-09-04-show-kit-forge_STATE.json), with verification counts, PR URL, and remaining hardware blockers |
 
 No collaborator rebase guide applies because this plan does not integrate an
 external collaborator's open PR. The repo-scoped learned skill is already the

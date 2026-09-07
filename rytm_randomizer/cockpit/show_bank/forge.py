@@ -102,7 +102,7 @@ def capture_reference(
         device_label = "a4"
         if snapshot_id is not None:
             raise ValueError("Analog Four source capture cannot carry a Rytm snapshot id")
-    else:  # pragma: no cover - KitCaptureResult narrows this at construction sites
+    else:
         raise ValueError("unsupported show-bank source device")
 
     frame_sha256 = _show_kit_sha256(result.frame)

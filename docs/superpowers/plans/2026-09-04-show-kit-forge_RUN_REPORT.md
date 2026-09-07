@@ -9,12 +9,12 @@ Branch: `codex/show-kit-forge-complete`
 Base: `origin/modularize-v1.34` at
 `0b77f9fef019dbfe1da943019b339bd446f95725`
 
-Status: in-flight — the local feature bundle and learning artifacts are
-assembled. Final serialized gate counts, hosted CI, and the pull-request URL
-are pending root closeout. Operator-present hardware validation remains
-blocked.
+Status: software verification and review repairs are complete for PR #238.
+The run state links live hosted checks and the consolidated review;
+operator-present hardware validation remains blocked.
 
-Pull request: **PENDING — root closeout**
+Pull request: [#238](https://github.com/buzzijose-hub/RytmRandomizer/pull/238),
+with `edward-rosado` requested for review.
 
 ## Outcome
 
@@ -63,6 +63,11 @@ The hardware authority boundary is unchanged:
 8. Documentation, the safety rule, and the learned mutation skill were updated
    to preserve fresh-capture provenance, manual-save-before-dump ordering,
    catalog-only imports, and atomic paired retention.
+9. Hosted browser integration exposed a pre-authentication catalog request.
+   Forge now waits for a fresh authenticated session tracked in the shared
+   store, including reconnects and panel remounts. The existing browser
+   fixture also defaults to the disabled MIDI backend; device-list tests use
+   its established fake backend.
 
 ## Verification
 
@@ -74,16 +79,17 @@ use `-n 0`. No test accesses physical MIDI.
 | --- | --- |
 | Full Python suite | 8,788 passed, 5 skipped in 315.98 seconds. |
 | Whole-package coverage | 99.358% pure branch; 99.646% blended. Existing unrelated gaps remain above the 99% ratchet. |
-| Touched production coverage | All 22 modules: 1,434 branches, 100%. Final fast run enforces the 100% threshold on 5,540 statements in 19 executable modules; three package initializers were covered in the full run. |
+| Touched production coverage | All 22 modules: 100%. Full/fast coverage records 1,434 branches; the post-push Forge check exposes and covers two previously excluded branches, establishing 1,436 covered branches across the combined evidence. |
 | Cockpit Python aggregate | 2,676 passed, 4 skipped in 19.15 seconds. |
-| Frontend | 774 tests in 61 files; statements, branches, functions, and lines all 100%; typecheck/lint/build pass. |
-| Browser journey | One mocked WebSocket Playwright journey passes at 1440px and 600px; desktop, candidate, and narrow screenshots inspected. |
+| Frontend | 779 tests in 61 files; statements, branches, functions, and lines all 100%; typecheck/lint/build pass. |
+| Browser integration | Full Playwright: 21 passed, 2 existing skips in 50.2 seconds with disabled/fake MIDI. Includes valid/missing/wrong-token authentication, reconnect recovery, and the mocked Forge journey at 1440px and 600px; screenshots inspected. |
 | Fast suite | 8,103 passed, 5 skipped in 279.02 seconds after the final type/data-placement corrections. |
-| Architecture | 801 cases included in the successful full suite; pre-push repeats the separate gate. |
-| Frozen V1.34 parity | All 685 cases included in the successful full suite; all 505 JSON fixtures untouched. |
+| Architecture | 801 cases pass in the full/fast suites and the separate pre-push gate (57.34 seconds). |
+| Frozen V1.34 parity | All 685 cases pass in the full suite and separate pre-push gate (6.17 seconds); all 505 JSON fixtures untouched. |
+| Post-push rejection coverage | 13 focused Forge cases pass in 0.96 seconds; 128 statements and 34 branches, 100%, no exclusions. Four cases were added after the recorded full/fast/Cockpit aggregate runs. Final collection: 8,797 items. |
 | Static checks | Ruff; new-module PLR/ERA/ARG; Black; isort; whole-package Vulture at confidence 70; strict Pyright 1.1.411 on all 22 modules; diff checks pass. |
 | Resumable state | Draft 2020-12 schema and instance validate with format checks. |
-| Hosted CI / PR | Pending publication. |
+| Hosted CI / PR | PR #238 published; current CI disposition is recorded in the resumable state and consolidated PR review. |
 | Physical MIDI / SysEx transfer | Not performed. |
 
 The initial diagnostics exposed stale export dependency metadata, a duplicated
@@ -99,18 +105,21 @@ and maintainability/string/env/learning/execution shape. All Critical and
 Important findings were repaired. Review fixes include canonical imported A4
 semantics, exact nested numeric types, source-slot protection, live-source reload
 and provenance guards, removed-cue plan revocation, shared test fixtures,
-bounded runtime observability, and corrected operator/architecture documentation.
+bounded runtime observability, authenticated-session freshness, explicit
+unsupported-device rejection coverage, and corrected operator/architecture
+documentation.
 
 One Minor readability risk remains: the large Forge panel component. Shared
 SEND controls and pure view logic are extracted; the
 [maintainability report](2026-09-04-show-kit-forge_MAINTAINABILITY_REPORT.md)
 records the remaining size/cohesion tradeoff. Pure math/DTO functions remain
 logger-free; workspace, store, export, and WS boundaries own decision telemetry.
-The consolidated verdict will be posted on the PR after the push gates.
+The consolidated verdict is maintained as one PR review comment after the
+final push gates and targeted dimension checks.
 
 ## Change size
 
-The staged implementation checkpoint contains 107 paths, including four binary
+The initial implementation checkpoint contains 107 paths, including four binary
 SysEx fixtures, with approximately 23,000 text lines added and 300 removed.
 This comprehensive feature remains one reviewed bundle under this plan. Test,
 schema, and operator evidence account for a substantial part of the change;
@@ -171,7 +180,7 @@ external collaborator's open PR.
 
 The machine-readable resume source is
 [`2026-09-04-show-kit-forge_STATE.json`](2026-09-04-show-kit-forge_STATE.json).
-Root closeout must run the remaining serialized gates, replace every pending
-aggregate and PR placeholder in that state and this report, then preserve the
-hardware-blocked state until real observations are entered. Automated checks
-must not turn blank studio evidence into a validation claim.
+Reconcile the PR checks and review with that state before taking the next
+eligible step. Preserve the hardware-blocked state until real observations are
+entered. Automated checks must not turn blank studio evidence into a
+validation claim.

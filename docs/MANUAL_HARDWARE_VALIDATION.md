@@ -634,12 +634,19 @@ The studio pass has three independent acceptance gates:
    edit. This does not authorize A4 SEND or another saved-KIT field.
 2. **Rytm one-pad audition and restoration.** Start from a preserved full-frame
    capture, target one pad at 10% depth, protect every other pad with scope and
-   locks, PREPARE, and confirm the exact current plan id and exact Rytm output
-   port once through `ArmedApply`. Verify the intended pad and untouched pads,
-   click **Return to source** to clear the software audition, manually reload
-   the saved source KIT, and recapture. **Return to source sends no restore
-   bytes.** The whole-payload returned fingerprint must equal the baseline.
-   Existing software and mock coverage do not satisfy this physical gate.
+   locks, and generate the candidate. Before every live audition, manually
+   reload the saved Rytm source KIT and make a fresh matching input-only source
+   dump through the device rail. Capturing clears the current candidate and
+   prepared plan. Click **Select for audition** on that candidate again, then
+   **Preview Rytm** and **Prepare exact plan**. Arm the exact Rytm output,
+   acknowledge the manual source reload in the SEND form, and confirm the exact
+   current plan id and output port once through `ArmedApply`. A saved-KIT dump
+   alone does not prove unsaved RAM restoration. Verify the intended pad and
+   untouched pads, disarm Rytm, then click **Reset Cockpit audition to source**
+   to clear the software audition. **Reset Cockpit audition to source sends no
+   restore bytes.** Manually reload the saved source KIT and recapture; the
+   whole-payload returned fingerprint must equal the baseline. Existing
+   software and mock coverage do not satisfy this physical gate.
 3. **Paired save, recapture, and show-time preflight.** Marking a favorite is
    not saving it. Save both favorite KITs manually, attest their 1–128 slots,
    and make fresh input-only captures. Promoted semantic comparison may advance

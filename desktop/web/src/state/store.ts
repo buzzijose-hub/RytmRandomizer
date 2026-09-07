@@ -91,6 +91,10 @@ export interface CockpitState {
   performanceConsole: LiveGuiPerformanceConsoleModelDict | null;
   sendPlan: CockpitSendPlan | null;
   sessionStatus: SessionStatus | null;
+  /** Cached session data cannot authorize commands after transport loss. */
+  sessionStatusStale: boolean;
+  /** Advances on the first session_status received after each disconnect. */
+  sessionGeneration: number;
   connectionStatus: ConnectionStatus;
   operatorLog: OperatorLogEntry[];
   /** Latest passive connection observation ← connection_changed.connection. */
@@ -165,6 +169,8 @@ export const INITIAL_STATE: CockpitState = {
   performanceConsole: null,
   sendPlan: null,
   sessionStatus: null,
+  sessionStatusStale: true,
+  sessionGeneration: 0,
   connectionStatus: 'closed',
   operatorLog: [],
   connection: null,
@@ -327,13 +333,18 @@ export function createCockpitStore() {
       }),
     setPerformanceConsole: (model) => set({ performanceConsole: model }),
     setSendPlan: (sendPlan) => set({ sendPlan }),
-    setSessionStatus: (status) => set({ sessionStatus: status }),
+    setSessionStatus: (status) => set((state) => ({
+      sessionStatus: status,
+      sessionStatusStale: false,
+      sessionGeneration: state.sessionGeneration + (state.sessionStatusStale ? 1 : 0),
+    })),
     setConnectionStatus: (status) =>
       set((state) =>
         status === 'connected'
           ? { connectionStatus: status }
           : {
               connectionStatus: status,
+              sessionStatusStale: true,
               showBankStale: true,
               previewCandidate: null,
               sendPlan: null,
