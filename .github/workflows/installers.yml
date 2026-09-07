@@ -252,7 +252,9 @@ jobs:
         env:
           STUDIO_WINDOWS: ${{ inputs.studio_windows }}
         run: |
-          git diff --exit-code
+          # Historical CRLF blobs can appear dirty under the current LF attributes.
+          # Ignore only CR at line endings; never rewrite the frozen fixtures.
+          git diff --ignore-cr-at-eol --exit-code
           python - <<'PY'
           import json
           import os
@@ -343,6 +345,16 @@ jobs:
           for name, source in artifacts.items():
               shutil.copy2(source, target / name)
               hashes[name] = hashlib.sha256((target / name).read_bytes()).hexdigest()
+          tracked_build_changes = []
+          numstat = subprocess.check_output(
+              ["git", "diff", "--ignore-cr-at-eol", "--numstat", "--no-renames", "-z"],
+              encoding="utf-8",
+          )
+          for record in numstat.split("\0"):
+              if record:
+                  added, removed, path = record.split("\t", 2)
+                  if added != "0" or removed != "0":
+                      tracked_build_changes.append(path)
           manifest = {
               "schema_version": 1,
               "source_commit": revision,
@@ -355,8 +367,9 @@ jobs:
               "tauri_cli_version": cli_version,
               "build_command": build_command,
               "source_clean_before_build": True,
+              "source_cleanliness_check": "git diff --ignore-cr-at-eol --exit-code; ignores only CR at line endings; fixtures are not rewritten",
               "build_config_overrides": ["sidecar resource", "prebuilt frontend hook", "optional studio window title"],
-              "tracked_build_changes": subprocess.check_output(["git", "diff", "--name-only"], text=True).splitlines(),
+              "tracked_build_changes": tracked_build_changes,
               "resources": ["binaries/rytm-sidecar.exe"],
               "sha256": hashes,
               "hardware_validation": "pending; A4 SEND and persistent SAVE remain blocked",

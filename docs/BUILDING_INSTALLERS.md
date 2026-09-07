@@ -419,6 +419,15 @@ build command/config overrides, and both binary SHA256 hashes. The studio-only
 window title includes the short source commit. No local Python installation is
 needed; Windows still needs the Microsoft Edge WebView2 Runtime.
 
+Before applying packaging overrides, the workflow requires
+`git diff --ignore-cr-at-eol --exit-code` to pass. This ignores only carriage
+returns at line endings because historical CRLF blobs coexist with the current
+LF attributes; substantive changes still fail, and frozen fixtures are never
+rewritten. The manifest's `source_cleanliness_check` records this policy.
+`tracked_build_changes` lists paths with nonzero additions/deletions (including
+binary changes) under the same CR-at-EOL rule, excluding normalization-only
+phantom diffs from the recorded packaging overrides.
+
 The studio command is `npm exec --yes --package=@tauri-apps/cli@2.11.4 -- tauri build --no-bundle`; the regular installer path omits `--no-bundle`. The pinned
 prebuilt CLI enables Tauri's custom
 protocol for the embedded Vite assets. A bare `cargo build --release` is not the

@@ -18,14 +18,14 @@
     "focused_checks": {
       "a4_renderer": "Canonical calibration metadata, exact shared Q8.8 codec, drift rejection, hash-pinned fixtures and unknown-byte isolation pass. Inert A4 preparation remains permanently blocked for output.",
       "domain_readiness": "64/96 identifier bounds and maximum-revision catalog import roundtrip pass; canonical validators/reasons/registry domains, source protection, stale evidence and bounded diagnostics have regressions.",
-      "import_direction": "All801 architecture cases pass; root data exports are constants only, and workspace owns MutationScope construction.",
+      "import_direction": "All805 architecture cases pass; root data exports are constants only, and workspace owns MutationScope construction.",
       "documentation": "Architecture/operator/build prose and diagrams reviewed; build-only variables indexed, relative links checked and resumable schema validates."
     },
     "final_gate_counts": {
       "cockpit_python": "2763 passed,4 skipped in22.61s before three final logging regressions; final full suite covers those regressions.",
       "frontend": "809 tests/62files,100% statements3269/branches2455/functions1125/lines2943; typecheck/lint/build pass. Playwright21passed/2existing skips in50.2s, disabled/fake MIDI; screenshots inspected.",
       "fast_suite": "8238 passed,5skipped in200.93s before three final logging regressions; final full suite covers those regressions.",
-      "architecture": "801 cases pass in final full run; pre-push hook repeats the dedicated gate.",
+      "architecture": "805 cases pass in final full run; pre-push hook repeats the dedicated gate.",
       "v134_parity": "685 cases pass in final full run; all505 frozen JSON fixtures unchanged; hook repeats the dedicated gate.",
       "full_suite": "8926 passed,5skipped in272.28s on local Windows/Python3.12.14.",
       "touched_coverage": "32 production modules,6458 statements/1558 branches,100% lines and branches. Whole-package pure branch99.3597%; ratchet99% passes unchanged.",

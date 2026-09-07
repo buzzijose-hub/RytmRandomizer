@@ -21,7 +21,7 @@ Green CI or an agent verdict cannot substitute for required maintainer review.
 | I5: duplicated validation hidden by aliases | Consolidate primitives behind an appropriate shared boundary and remove the renamed-definition/short-alias pattern. Preserve each public error contract. | Verified in the final full suite and 100% touched-file coverage. |
 | I6: device vocabulary and domain duplication | Alias canonical device types and derive supported domains from the established device facts/registry. | Verified in the final full suite and 100% touched-file coverage. |
 | I7: unbounded free-form blocker prose | Publish closed reason tokens; keep operator identifiers separate from machine-readable reasons and render human explanations in the UI. | Verified in the final full suite and 100% touched-file coverage. |
-| I8: missing architecture inventory/enforcement | Add the workspace responsibility row and rule-10 import-matrix enforcement entry; reconcile diagrams after the refactor. | Verified: 801 architecture cases pass; scoped docs/diagram review has no open Important findings. |
+| I8: missing architecture inventory/enforcement | Add the workspace responsibility row and rule-10 import-matrix enforcement entry; reconcile diagrams after the refactor. | Verified: 805 architecture cases pass; scoped docs/diagram review has no open Important findings. |
 
 ## Additional review observations
 
@@ -84,7 +84,7 @@ review state, and the smallest operator-present
 
 Full Python: 8,926 passed, 5 skipped in 272.28s. All 32 touched production
 modules cover 6,458 statements and 1,558 branches at 100%; whole-package pure
-branch coverage is 99.3597%. All 801 architecture and 685 frozen parity cases
+branch coverage is 99.3597%. All 805 architecture and 685 frozen parity cases
 pass. Frontend: 809 tests in 62 files, all coverage metrics 100%; typecheck,
 lint and production build pass. Full Playwright: 21 passed, 2 existing skips
 in 50.2s with disabled/fake MIDI; the three generated screenshots were inspected.

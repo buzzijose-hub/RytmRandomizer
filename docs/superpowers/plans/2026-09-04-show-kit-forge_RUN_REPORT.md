@@ -89,7 +89,7 @@ use `-n 0`. No test accesses physical MIDI.
 | Frontend | 809 tests in 62 files; 3,269 statements, 2,455 branches, 1,125 functions and 2,943 lines all 100%; typecheck/lint/build pass. |
 | Browser integration | Full Playwright: 21 passed, 2 existing skips in 50.2 seconds; disabled/fake MIDI, real-sidecar authentication and mocked Forge journey; three screenshots inspected. |
 | Fast suite | 8,238 passed, 5 skipped in 200.93 seconds; predates the final three logging regressions, covered by the final full run. |
-| Architecture / parity | All 801 architecture and 685 V1.34 cases pass in the full run; push hook repeats both. All 505 frozen JSON fixtures unchanged. |
+| Architecture / parity | All 805 architecture and 685 V1.34 cases pass in the full run; push hook repeats both. All 505 frozen JSON fixtures unchanged. |
 | Static checks | Ruff, new-module PLR/ERA/ARG, Black, isort, whole-package Vulture70/touched80, strict Pyright1.1.411 on all 32 modules, diff checks pass. |
 | Resumable state | Draft 2020-12 schema and instance validate with date-time format checks. |
 | Hosted CI / identified studio build | Final source SHA, CI run, portable hashes and packaged-GUI smoke receipt are recorded on PR #238 after the build. |
