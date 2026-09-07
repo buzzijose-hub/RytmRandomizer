@@ -9,7 +9,7 @@ Branch: `codex/show-kit-forge-complete`
 Base: `origin/modularize-v1.34` at
 `0b77f9fef019dbfe1da943019b339bd446f95725`
 
-Status: software verification and review repairs are complete for PR #238.
+Status: in-flight — software verification and review repairs are complete for PR #238.
 The run state links live hosted checks and the consolidated review;
 operator-present hardware validation remains blocked.
 

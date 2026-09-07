@@ -2,7 +2,7 @@
 
 Date: 2026-09-04
 
-Status: implementation published in [PR #238](https://github.com/buzzijose-hub/RytmRandomizer/pull/238);
+Status: in-flight — implementation published in [PR #238](https://github.com/buzzijose-hub/RytmRandomizer/pull/238);
 final CI and operator-present studio validation are tracked in the run state
 
 Branch: `codex/show-kit-forge-complete`
