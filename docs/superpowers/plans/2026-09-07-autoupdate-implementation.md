@@ -61,11 +61,33 @@ publish a manifest its own gate would refuse.
 
 1. `VERSION` file at repo root, initial content `1.34.0` (matching
    today's pyproject truth; the first cut release bumps from here).
-2. `pyproject.toml` → `dynamic = ["version"]` +
-   `[tool.setuptools.dynamic]`; delete the duplicate declaration.
+2. `pyproject.toml` → `dynamic = ["version"]`. **Corrected 2026-09-07
+   against the actual tree — the original wording was wrong twice.**
+   (a) The build backend is **hatchling**, not setuptools, so
+   `[tool.setuptools.dynamic]` would be silently ignored. The working
+   recipe (empirically verified by building and installing a probe
+   package) is:
+   ```toml
+   [project]
+   dynamic = ["version"]        # replaces version = "1.34.0" (line 7)
+   [tool.hatch.version]
+   path = "VERSION"
+   pattern = "^(?P<version>.+)$"
+   ```
+   (b) The second declaration at line 305 is **not a duplicate to
+   delete** — it is `[tool.briefcase] version`, which briefcase reads
+   to stamp the `.msi`/`.pkg`/AppImage built by `installers.yml`.
+   Deleting it breaks the installer build. It becomes a **fourth sync
+   target** for `sync_version.py` (with `Cargo.toml`,
+   `tauri.conf.json`, `package.json`), which also retires the
+   "keeping the two in sync is currently manual" comment above it.
+   The post-U1 version guard therefore expects **exactly one** version
+   literal in `pyproject.toml` (briefcase's), with `[project]` carrying
+   `dynamic`.
 3. `scripts/release_lib.py` (R1) + `scripts/sync_version.py` — idempotent writer for `Cargo.toml`,
    `tauri.conf.json`, `package.json` (all move 0.1.0 → 1.34.0 in this
-   PR); `just version-sync` target.
+   PR) **and `[tool.briefcase] version`** (already 1.34.0; see item 2b);
+   `just version-sync` target.
 4. `scripts/prepare_release.py` — bump derivation from conventional
    commits (spec §2.4), changelog generation, release-PR body.
 5. `rytm_randomizer/__version__` via `importlib.metadata` with
