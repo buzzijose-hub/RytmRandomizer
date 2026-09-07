@@ -421,6 +421,80 @@ public repo; enabling it is a one-time repo setting, recorded in U5).
   `RYTM_RAND_UPDATE_BEACON=off`, `RYTM_RAND_UPDATE_CHANNEL=<c>` (dev
   override), `RYTM_RAND_UPDATE_MANIFEST_URL=<url>` (e2e/mock only).
 
+### 7.1 Consent prompt — normative mockup
+
+The update panel's **staged** state *is* the user prompt — there is no
+modal, no interruption, no focus steal (the calm-chip principle
+above). This mockup is **normative**: labels, ordering, and the
+default selection are the UX contract the implementation renders and
+the e2e suite asserts (plan contract I9). Header chip, always visible
+while staged, never animated:
+
+```
+┌──────────────────────────── header ────────────────────────────┐
+│  RytmRandomizer        [● Rytm: reconnecting…]  [⬆ 1.35.1 ready] │
+└────────────────────────────────────────────────────────────────┘
+```
+
+Panel (bottom region, beside the Connection Doctor), staged state:
+
+```
+┌─ UPDATES ──────────────────────────────────────────────────┐
+│ Running v1.35.0 · channel: stable ▾            [Check now] │
+│                                                            │
+│ ⬆ Update ready: v1.35.1                                    │
+│ ────────────────────────────────────────────────────────── │
+│ What's new                                                 │
+│ • <first lines of the manifest `notes`, scrollable>        │
+│                                                            │
+│ ⚠ This update changes hardware send paths. Re-run the      │
+│   manual hardware validation checklist after installing.   │
+│   → docs/MANUAL_HARDWARE_VALIDATION.md                     │
+│                                                            │
+│ How do you want to install it?                             │
+│ (•) When I quit the app                                    │
+│ ( ) Now — restart RytmRandomizer immediately               │
+│ ( ) Skip this version                                      │
+│                                        [Confirm choice]    │
+│                                                            │
+│ Recent update activity                                     │
+│   12:04  check_ok             1.35.1 available             │
+│   12:04  download_ok          42 MB · 6 s                  │
+│   12:04  signature verified   staged                       │
+│                                                            │
+│ Last checked 12:04 · Last check-in ping 12:04              │
+│ [ ] Freeze updates (stops all update network traffic)      │
+└────────────────────────────────────────────────────────────┘
+```
+
+Element → contract mapping (every element is driven by an existing
+contract, none invents state):
+
+| Element | Source | Notes |
+|---|---|---|
+| `Running v1.35.0` | `session_status.app_version` (plan I1) | read-only store slice |
+| chip text / `Update ready` block | shell event `rytm-update-state` (plan I2) | `state`, `version`, `notes` |
+| ⚠ hardware banner | I2 `hardware_revalidation: true` | rendered ONLY when flagged; links the validation doc |
+| radio default `When I quit` | design decision D3 | pre-selected; `Confirm choice` issues the per-version, process-lifetime consent token (§5) |
+| `Skip this version` | §5 `skip_this_version` | persists per-version; journal `skip_recorded` |
+| Recent update activity | journal tail (plan I8) | closed §5.1 vocabulary, newest first, bounded path-free details |
+| timestamps line | journal `check_*` / `ping_*` rows | the phone-home honesty line — always states what was sent when |
+| freeze toggle | `RYTM_RAND_UPDATES` (§7 env surface) | when on: chip hidden, body replaced (below) |
+
+State variants (same frame, body swapped — one component, not five):
+
+- **up_to_date:** `You're on the latest version (v1.35.0). Next
+  automatic check in about 4 hours.` + activity list + footer.
+- **check_failed:** `Couldn't check for updates (manifest_unreachable).
+  Will retry automatically.` — reason code verbatim from the journal
+  row, mirrored to the operator log (§5.1 floor). Never a silent chip.
+- **frozen:** chip hidden; body `Updates are frozen. No update network
+  traffic will occur until you unfreeze.` + the toggle.
+- **dev loop (no shell):** `Updates run in the installed app.` — a
+  sentence, not a broken control (§7 above).
+- **rollout-excluded:** indistinguishable from up_to_date by design
+  (§5) — the journal's `bucket_excluded` row is the only trace.
+
 ## 8. Test & enforcement spec
 
 Architecture tests (**the first three land with this spec PR**, each

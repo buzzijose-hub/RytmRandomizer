@@ -29,6 +29,32 @@ touched production files, and the drift guards that already run
 throughout — PR-A deliberately flips the version guard from ratchet
 mode to full mode by creating `VERSION`.
 
+## Maintainability & reuse contract (binding on every agent)
+
+A maintainability review of this plan found four seams where eleven
+parallel agents would naturally fork logic. Each is now a named
+single-source abstraction; every agent's DoD includes "no fork —
+including renamed-symbol forks (Gate 17) — of R1–R5."
+
+| # | Abstraction | Single home | Who reuses it |
+|---|---|---|---|
+| R1 | Release toolkit: SemVer parse/compare, `VERSION` read, manifest schema + `validate()` + `generate()` | `scripts/release_lib.py` (importable, unit-tested; scripts stay thin CLIs over it) | `sync_version.py`, `prepare_release.py`, `validate_manifest.py`, release.yml verify-tag + manifest jobs, promote.yml, manifest-validate.yml — SemVer logic exists exactly once in Python |
+| R2 | Cross-language contract fixtures: the I3 valid manifest, an invalid-manifest corpus, and bucketing test vectors | `tests/fixtures/update_manifest/` | Python validator tests, Rust serde/policy tests, TS e2e mocks — one truth, three languages, zero per-language re-typing; every invalid fixture must be rejected by BOTH the Python validator and Rust serde |
+| R3 | Updater split: pure policy core `(state, event, config) → (state, effects)` + journal writer + thin I/O driver | `desktop/shell/src/{update_policy.rs, update_journal.rs, updater.rs}` | policy tests enumerate the closed vocabulary exhaustively with zero network/Tauri mocking; the driver interprets effects and stays thin |
+| R4 | One TS protocol module for the I2 event + I8 row shapes | `desktop/web/src/updateProtocol.ts` | store slice, chip, panel, e2e specs — no inline re-declaration of either shape anywhere |
+| R5 | Workflow logic lives in scripts, YAML orchestrates | `scripts/*.py` via R1 | any workflow step beyond ~10 lines of shell must be a tested script; the three manifest-validation sites are three one-line invocations of the same validator |
+
+Two existing abstractions are reaffirmed as the only extension points
+(not new work, but agents must route through them): the
+persisted-state registry (spec §11 Contract A) for any store, and the
+`PanelSpec` generic renderer for the panel — **the activity list
+reuses the existing operator-log list component**; a second
+journal-list component is the fork R4 exists to prevent.
+
+R1's generator must round-trip its own validator in-process
+(generate → validate before any commit), so the pipeline can never
+publish a manifest its own gate would refuse.
+
 ## PR-A — version spine + release train (U1 + U2)
 
 **Scope (Python / CI / docs only; no Rust, no TS):**
@@ -37,7 +63,7 @@ mode to full mode by creating `VERSION`.
    today's pyproject truth; the first cut release bumps from here).
 2. `pyproject.toml` → `dynamic = ["version"]` +
    `[tool.setuptools.dynamic]`; delete the duplicate declaration.
-3. `scripts/sync_version.py` — idempotent writer for `Cargo.toml`,
+3. `scripts/release_lib.py` (R1) + `scripts/sync_version.py` — idempotent writer for `Cargo.toml`,
    `tauri.conf.json`, `package.json` (all move 0.1.0 → 1.34.0 in this
    PR); `just version-sync` target.
 4. `scripts/prepare_release.py` — bump derivation from conventional
@@ -58,8 +84,9 @@ mode to full mode by creating `VERSION`.
    (environment `stable-promote`); `manifest-validate.yml`;
    `test_ci_workflow.py` scope map (spec §9.2 — the pin-scan widening
    already landed with the spec PR).
-9. Manifest schema fixture (`tests/fixtures/update_manifest/`) +
-   Python-side validator consumed by `manifest-validate.yml`.
+9. Manifest schema fixture + invalid corpus + bucket vectors
+   (`tests/fixtures/update_manifest/`, R2) + the R1 validator
+   consumed by all three workflow validation sites.
 10. `releases` branch bootstrap (empty manifests + README stub).
 
 ### PR-A pipeline work package (A5, execution-ready)
@@ -180,7 +207,8 @@ panel may transmit on mount before the WS handshake completes.
 **Scope:**
 
 1. Playwright mock-manifest fixture (static server, ephemeral port)
-   + the seven §8 e2e specs (chip, staged, consent persistence,
+   + the seven §8 e2e specs asserting the spec §7.1 labels and
+   default selection (I9) (chip, staged, consent persistence,
    skip-version, freeze silence, bucket boundary via test-only
    forced id, hardware-reval banner, ping independence).
 2. `release.yml` gains the per-OS one-byte ping assets (§6).
@@ -225,6 +253,7 @@ so no agent ever consumes another agent's output.
 | I6 | Ping asset naming `beacon-<version>-<target>.txt` (spec §6) | A5 | B-rust, C-snap |
 | I7 | `rytm_randomizer/_version.py::__version__` accessor | A1 | A3 |
 | I8 | Update-journal row `{ts, event, version, detail}` with the spec §5.1 closed event vocabulary; file `update-journal.jsonl`, 2-generation rotation | B-rust | B-web (activity list), C-e2e (row assertions), Doctor export |
+| I9 | Consent-prompt UX: spec §7.1 mockup is normative — labels, element order, default radio (`When I quit the app`), and the five body variants, verbatim | spec §7.1 | B-web (renders it), C-e2e (asserts its exact labels + default selection) |
 
 ### Orchestrator-reserved files (no agent may touch these)
 
@@ -257,8 +286,8 @@ other A-agent owns — verified disjoint.
 
 | Agent | Owned files | Contract |
 |---|---|---|
-| B-rust | `desktop/shell/**` (updater.rs, the §5.1 update journal with rotation + bounded path-free details, sidecar token re-injection, conf) | produces I2 + I8; consumes I3 fixture verbatim from the spec, not from A5's branch |
-| B-web | `desktop/web/src/**`, `desktop/web/tests/**` (chip, panel + journal-backed activity list, operator-log mirror rows for check/signature failures, store slice, axe) | consumes I1/I2/I8 as typed stubs checked against the contract table |
+| B-rust | `desktop/shell/**` (the R3 three-module split — update_policy.rs / update_journal.rs / updater.rs — the §5.1 update journal with rotation + bounded path-free details, sidecar token re-injection, conf) | produces I2 + I8; consumes I3 fixture verbatim from the spec, not from A5's branch |
+| B-web | `desktop/web/src/**`, `desktop/web/tests/**` (`updateProtocol.ts` (R4), chip + panel rendering the spec §7.1 mockup verbatim (I9), journal-backed activity list via the existing operator-log list component, operator-log mirror rows for check/signature failures, store slice, axe) | consumes I1/I2/I8 as typed stubs checked against the contract table |
 
 Both start at T0 against base; PR-B rebases once onto merged A
 (expected conflicts: none — file scopes verified disjoint from all of
@@ -291,6 +320,9 @@ merge train, not any single agent's work.
 - A dev-loop client and a bundled client both render the correct §5
   states against the mock manifest; freeze mode provably issues zero
   requests; consent invariants hold under `cargo test`.
+- No fork of R1–R5 anywhere in the three PRs (Gate 17, including
+  renamed-symbol forks); the R1 generate→validate round-trip runs in
+  every pipeline path that writes a manifest.
 - All spec drift guards green; `test_version_single_source.py` running
   in full (post-U1) mode; 18-gate bodies on all three PRs; zero new
   operational cost (§0.2 table unchanged).
