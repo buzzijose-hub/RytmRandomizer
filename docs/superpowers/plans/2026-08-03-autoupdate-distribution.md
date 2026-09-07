@@ -95,24 +95,38 @@ spine eliminates.
    `VERSION` parses as strict SemVer, (b) all four derived files equal
    it exactly, (c) exactly one `version =` occurrence remains in
    `pyproject.toml`. Red CI on any drift — the repo's standard move.
-4. **Tag-driven releases.** Pushing tag `vX.Y.Z` (protected pattern,
+4. **Version bumps are derived, never hand-authored.** Feature PRs do
+   not touch `VERSION` or any derived file — ever. A `cut-release`
+   `workflow_dispatch` (or `scripts/prepare_release.py` locally) derives
+   the bump level from conventional commits since the last tag
+   (`BREAKING CHANGE:`/`!` ⇒ MAJOR, `feat:` ⇒ MINOR, else PATCH),
+   writes `VERSION`, runs `sync_version.py`, generates the changelog,
+   and opens the release PR. The drift guard makes a hand-edit that
+   forgets a derived file fail CI; release-prep is the only sanctioned
+   editor.
+5. **Tag-driven releases.** Pushing tag `vX.Y.Z` (protected pattern,
    maintainers only) is the ONLY way a release exists. The release
    workflow refuses unless the tag name matches `VERSION` at the
    tagged commit AND the commit is an ancestor of the integration
    branch. Pre-release tags (`v1.35.0-beta.1`) flow to the beta
    channel only.
-5. **Changelog from conventional commits** (already house style):
+6. **Changelog from conventional commits** (already house style):
    generated per release, committed as the release notes body, and
    excerpted into the manifest `notes` field the operator sees before
    consenting. `BREAKING CHANGE:`/`!` ⇒ MAJOR.
-6. **Hardware-revalidation flag.** The release workflow derives
+7. **Hardware-revalidation flag.** The release workflow derives
    `hardware_revalidation: true` when the diff since the previous tag
    touches any of: `rytm_randomizer/engines/`, `rytm_randomizer/senders/`,
    `midi_io.py`, `real_midi_adapter.py`, `mido_provider.py`,
    `tests/fixtures/v134_parity/`, or the pinned `mido`/`python-rtmidi`
    versions — OR the tag annotation contains `[hw-reval]`
    (conservative OR; there is no way to force it false when the paths
-   say true). The update UI surfaces it loudly (§7).
+   say true). The path list lives once in `scripts/release_paths.py`,
+   imported by both the workflow and a new architecture test that
+   asserts it is a **superset** of the transmit-allowlist modules and
+   the parity-fixture root — so when a future feature widens the wire
+   surface, the release flag follows automatically instead of rotting.
+   The update UI surfaces the flag loudly (§7).
 
 ## 3. Distribution architecture — static files, no servers we operate
 
@@ -308,11 +322,11 @@ not PR-event jobs), stated here so the aggregate's drift guard is not
 
 | WS | Scope | Acceptance criteria | Depends on |
 |---|---|---|---|
-| **U1 — version spine** | `VERSION`, derivations, `sync_version.py`, drift-guard test, `app_version` in session_status | arch test green; one `version =` left in pyproject; `--help`/panel shows the running version | — |
-| **U2 — release pipeline** | `release.yml`, updater keypair in secrets, changelog gen, manifest gen, `releases` branch; `promote.yml` with environment gate | a `v*-beta.N` tag on a throwaway commit produces signed artifacts + a valid `beta.json` end-to-end, verified against the schema fixture | U1 |
+| **U1 — version spine** | `VERSION`, derivations, `sync_version.py`, drift-guard test, `app_version` in session_status; `data/persisted_state.py` registry + its arch test; `.claude/rules/update-compatibility.md` | arch tests green; one `version =` left in pyproject; every existing config-dir writer registered with a `schema_version`; the rule file lands with the registry | — |
+| **U2 — release pipeline** | `release.yml`, updater keypair in secrets, changelog gen, manifest gen, `releases` branch; `promote.yml` with environment gate | a `v*-beta.N` tag on a throwaway commit produces signed artifacts + a valid `beta.json` end-to-end, verified against the schema fixture; `cut-release` derives the right bump from a synthetic commit history in a workflow test | U1 |
 | **U3 — shell updater** | plugin integration, state machine §5, bucketing, freeze, beacon fetch-through with CDN fallback; **absorbs the standing shell follow-up: re-inject the fresh WS token after sidecar restart** | Rust test list §8 green; mock-manifest flows work in `cargo run` | U1 (rustup: done 2026-08-03) |
 | **U4 — cockpit UX** | chip + PanelSpec panel + consent flows + freeze toggle + dev-loop fallback | axe floor 0; announcer integration; CLI-help parity guard untouched (no CLI surface) | U3 state shape |
-| **U5 — e2e + beacon** | mock-manifest fixture + the §8 spec list; beacon worker + histogram | all §8 e2e specs green in CI; beacon-down spec proves independence | U2–U4 |
+| **U5 — e2e + beacon** | mock-manifest fixture + the §8 spec list; beacon worker + histogram | all §8 e2e specs green in CI; beacon-down spec proves independence; old-state boot compat suite green against the committed vN-1 fixtures | U2–U4 |
 | **U6 — signed rollout** | OS code signing (notarization + Windows cert), flip macOS/Windows updates on by default, beta cohort per D4 | one full beta→stable promotion executed with real installs | certificates (external) |
 
 Sequencing: U1+U2 first (pure CI/repo work, immediately verifiable);
@@ -321,7 +335,50 @@ the certificate purchase. Every PR carries the standard 18-gate body;
 U1 and U2 are the natural first PR (small, high-leverage, unblocks
 everything).
 
-## 10. Risks & honest constraints
+## 10. Change-resilience: the developer contract
+
+The repo's features land weekly; the update system must survive them
+without per-feature update work or tribal knowledge. The design rule:
+**features integrate with updating by not integrating.** The updater
+has deliberately zero in-app extension points — no hooks, no per-panel
+update APIs, nothing a feature can couple to or break. The entire
+interface between "a new feature" and "updating" is two mechanical
+contracts, both enforced by tests rather than review vigilance:
+
+| You (feature author) did… | The update system does… | You must do… | Enforced by |
+|---|---|---|---|
+| Added a feature / fixed a bug | Derives the bump from your conventional commit; changelog + manifest notes generated | Nothing | release-prep (§2.4) |
+| Added **persisted operator state** (session, bank, favorites, …) | Survives the binary swapping under that state | Register the schema in the persisted-state registry with a `schema_version` (compile error / red arch test until you do) | contract A below |
+| Touched wire behavior (engines, senders, parity surface, pins) | Sets `hardware_revalidation: true` on the next release automatically | Nothing | superset guard (§2.7) |
+| Added an env var / CLI command / panel | Unaffected | Existing ratchets (env docs gate, CLI-help parity guard, PanelSpec registry) | pre-existing |
+| Edited `VERSION` or a derived version file by hand | — | Don't; CI fails unless the commit came from release-prep | drift guard (§2.3) |
+
+**Contract A — persisted-state compatibility.** Every module that
+writes operator state under the config dir registers in a new
+`data/persisted_state.py` fact table: `store name → current
+schema_version → owning module`. Rules, all fail-closed:
+
+- every persisted payload embeds its `schema_version` (the #236
+  session store and the update manifest already model this);
+- a newer app reading older same-major state migrates forward
+  explicitly, or refuses with a journaled, bounded message — **never a
+  silent reset** (an operator's show bank outliving an update is a
+  product promise, not a nicety);
+- an older app reading newer state refuses cleanly (the downgrade path
+  after a manifest rollback);
+- a new architecture test walks the registry and asserts each owner
+  writes/validates its declared version, and each release commits an
+  old-state fixture set under `tests/fixtures/persisted_state/` that a
+  compat suite boots against — so "update didn't eat my state" is a
+  regression test, not a hope.
+
+**Contract propagation.** The contract ships as
+`.claude/rules/update-compatibility.md` in U1 — the repo's rule files
+are read by every agent session (human-driven or codex) at task start,
+which is precisely how "any new feature understands how updating
+works" without anyone remembering to explain it.
+
+## 11. Risks & honest constraints
 
 - **Unsigned macOS in-place updates** can trip Gatekeeper on the
   swapped bundle: until U6, macOS updates ship behind an
