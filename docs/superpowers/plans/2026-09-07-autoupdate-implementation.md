@@ -143,15 +143,80 @@ check against synthetic history.
 | 4 | Enable GitHub Pages serving the `releases` branch | PR-C dashboard | Settings → Pages |
 | 5 | U6: purchase Apple Developer + Windows signing certificate | U6 only | the program's single money item (spec §0.2) |
 
-## Sequencing & effort
+## Parallel execution model
 
-PR-A first (everything keys off it; ~2 sessions). PR-B and PR-C can
-start in parallel worktrees once A merges (disjoint file scopes:
-Rust+TS vs e2e+workflows+branch artifacts), with PR-C's client-flow
-specs landing after B merges — the fixture, snapshot, and dashboard
-halves of C are A-only-dependent. Every merge follows the repo's
-one-at-a-time cascade discipline; each PR is re-reviewed at its final
-head per the standing review workflow.
+Per `.claude/rules/maximize-parallelization.md` and the
+`parallel-agent-bundle` skill: development is **maximally parallel from
+T0**; only the *merge train* is serial (A → B → C, one at a time per
+the cascade discipline). Nothing in B or C waits for A's code — every
+cross-track dependency is a spec-fixed interface, pre-declared below,
+so no agent ever consumes another agent's output.
+
+### Pre-declared interface contracts (frozen before any agent starts)
+
+| # | Contract | Producer | Consumers |
+|---|---|---|---|
+| I1 | `session_status.app_version: str` (strict SemVer) | A3 | B-web |
+| I2 | Shell→webview event `rytm-update-state`: `{state, version, notes, hardware_revalidation, error_code}` with `state` ∈ the §5 vocabulary | B-rust | B-web |
+| I3 | Manifest schema fixture at `tests/fixtures/update_manifest/manifest.v1.json` (spec §4 verbatim) | A5 | B-rust serde tests, C-e2e mock, C validator |
+| I4 | Env vars exactly as spec §7 | spec | A, B, C |
+| I5 | `fleet-history.json` row: `{date, counts: {version: {os: n}}, stable: {version, rollout_percent}, beta: {version, rollout_percent}}` | C-snap | C-dash |
+| I6 | Ping asset naming `beacon-<version>-<target>.txt` (spec §6) | A5 | B-rust, C-snap |
+| I7 | `rytm_randomizer/_version.py::__version__` accessor | A1 | A3 |
+
+### Orchestrator-reserved files (no agent may touch these)
+
+`docs/STATUS.md`, `docs/superpowers/plans/INDEX.md`, `README.md`,
+`docs/ARCHITECTURE.md` §2 rows, `docs/ARCHITECTURE_DIAGRAMS.md`,
+`rytm_randomizer/help_text.py` + `tests/fixtures/cli_help_expected.txt`,
+`data/__init__.py`. The orchestrator writes each exactly once at
+integration time — this converts the highest-collision files of every
+past cascade from N-way keep-both conflicts into a single authored
+edit.
+
+### Agent dispatch matrix — PR-A (six agents, one integration)
+
+| Agent | Owned files (disjoint) | Interface produced |
+|---|---|---|
+| A1 version-spine | `VERSION`, `pyproject.toml`, `scripts/sync_version.py`, `Justfile`, `rytm_randomizer/_version.py`, the three synced manifests | I7 |
+| A2 release-prep | `scripts/prepare_release.py`, its test file | — |
+| A3 app-version | `cockpit/ws/` bootstrap field, regenerated `live_gui_protocol.ts`, store read-only slice, their tests | I1 (consumes I7 as a frozen import path, not A1's output) |
+| A4 persisted-state | `data/persisted_state.py`, its arch test, `.claude/rules/update-compatibility.md`, `schema_version` registrations in the existing store modules | — |
+| A5 workflows | `.github/workflows/{installers,release,promote,manifest-validate}.yml`, `test_ci_workflow.py` scope map, schema fixture + Python validator | I3, I6 |
+| A6 branch-bootstrap | `releases` branch content only (no main-branch files) | — |
+
+All six run concurrently in one worktree-per-agent
+(`parallel-agents-need-git-worktrees`); the orchestrator integrates,
+authors the reserved-file edits once, runs the full gate stack, and
+opens PR-A. Known cross-scope seam: A4 touches store modules that no
+other A-agent owns — verified disjoint.
+
+### Agent dispatch matrix — PR-B (two agents, T0 start)
+
+| Agent | Owned files | Contract |
+|---|---|---|
+| B-rust | `desktop/shell/**` (updater.rs, sidecar token re-injection, conf) | produces I2; consumes I3 fixture verbatim from the spec, not from A5's branch |
+| B-web | `desktop/web/src/**`, `desktop/web/tests/**` (chip, panel, store slice, axe) | consumes I1/I2 as typed stubs checked against the contract table |
+
+Both start at T0 against base; PR-B rebases once onto merged A
+(expected conflicts: none — file scopes verified disjoint from all of
+A except the generated protocol file, which A3 owns and B-web merely
+reads; regeneration at rebase reconciles it mechanically).
+
+### Agent dispatch matrix — PR-C (three agents)
+
+| Agent | Owned files | Start |
+|---|---|---|
+| C-e2e | `desktop/web/e2e/update_*.spec.ts` + the mock-manifest fixture | T0 (mock serves I3; client-flow specs marked `.fixme` until B merges, then activated — the spec files themselves are written at T0) |
+| C-snap | `fleet-snapshot.yml`, snapshot script + fixture test, ping-asset step in `release.yml` (coordinated hunk — A5 leaves a marked insertion point) | T0 |
+| C-dash | `index.html` dashboard + render-check test | T0 (against synthetic I5 data) |
+
+### Effort under maximal parallelism
+
+Wall-clock collapses from ~5 serial sessions to ~2: T0 dispatches all
+eleven agents; integration+merge of A in session 1; B and C rebase,
+activate, and merge in session 2. The critical path is A-integration →
+merge train, not any single agent's work.
 
 ## Definition of done (program level)
 
