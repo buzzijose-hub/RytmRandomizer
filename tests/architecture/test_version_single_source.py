@@ -40,6 +40,23 @@ def _pyproject_versions() -> list[str]:
     return re.findall(r'^version = "([^"]+)"', text, flags=re.MULTILINE)
 
 
+def _briefcase_version() -> str | None:
+    """The ``[tool.briefcase] version`` literal, or ``None`` if absent.
+
+    briefcase reads this to stamp the ``.msi`` / ``.pkg`` / AppImage that
+    ``.github/workflows/installers.yml`` builds. It is a real second
+    consumer, **not** a stale duplicate of ``[project] version`` — deleting
+    it silently breaks the installer build, which no other test covers.
+    """
+    text = (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    match = re.search(
+        r'^\[tool\.briefcase\]$.*?^version = "([^"]+)"',
+        text,
+        flags=re.MULTILINE | re.DOTALL,
+    )
+    return match.group(1) if match else None
+
+
 def _cargo_version() -> str:
     text = (PROJECT_ROOT / "desktop/shell/Cargo.toml").read_text(encoding="utf-8")
     match = re.search(r'^version = "([^"]+)"', text, flags=re.MULTILINE)
@@ -96,6 +113,22 @@ def test_version_declarations_do_not_drift() -> None:
         "pyproject.toml must derive its version from VERSION "
         "(dynamic) or carry exactly one matching declaration; got "
         f"{inventory['pyproject.toml']}"
+    )
+    # The one pyproject literal that must SURVIVE U1: briefcase's. The plan
+    # originally told U1 to "delete the duplicate declaration" at line 305 —
+    # but that line is [tool.briefcase] version, which briefcase reads to
+    # stamp the installers. Deleting it breaks installers.yml, and the
+    # assertion above would happily accept the resulting empty tuple.
+    briefcase = _briefcase_version()
+    assert briefcase is not None, (
+        "[tool.briefcase] version disappeared from pyproject.toml. It is "
+        "NOT a duplicate of [project] version — briefcase reads it to stamp "
+        "the .msi/.pkg/AppImage built by .github/workflows/installers.yml. "
+        "Restore it and add it to scripts/sync_version.py's targets."
+    )
+    assert briefcase == canonical, (
+        f"[tool.briefcase] version is {briefcase!r}, expected {canonical!r} "
+        "— run scripts/sync_version.py"
     )
     for relative in (
         "desktop/shell/Cargo.toml",
