@@ -169,6 +169,11 @@ One JSON document per channel:
   "hardware_revalidation": false,
   "rollout_percent": 100,
   "minimum_version": null,
+  "build": {
+    "source_sha": "<40-hex commit the tag pointed at>",
+    "workflow_run_url": "https://github.com/…/actions/runs/…",
+    "builder_workflow_sha": "<sha of release.yml itself at build time>"
+  },
   "platforms": {
     "darwin-aarch64": { "signature": "<minisign>", "url": "https://github.com/…/releases/download/v1.35.1/….app.tar.gz" },
     "darwin-x86_64":  { "signature": "…", "url": "…" },
@@ -194,6 +199,10 @@ Validation rules (client-side, fail-closed):
   it blocking is a deliberate future decision, not a hotfix).
 - Unknown top-level keys are ignored (forward compatibility);
   `schema_version` gates interpretation.
+- `build` is informational provenance (never validated for update
+  eligibility — a client must not refuse an update over provenance
+  fields) but makes every release auditable the way AL16 evidence
+  manifests are: artifact → workflow run → source commit.
 - The manifest schema is pinned by a fixture + a Rust serde round-trip
   test AND a Python-side fixture validator, so both consumers drift
   together or fail loudly.
@@ -308,22 +317,70 @@ manifest server wired via `RYTM_RAND_UPDATE_MANIFEST_URL`):
 - `hardware_revalidation: true` renders the banner naming the manual
   validation doc.
 
-CI: `release.yml` (push `v*` tags) — verify-tag → 3-OS build matrix
-(reusing the installers.yml build steps) → updater-sign → changelog →
-GitHub Release publish → generate + commit `beta.json`.
-`promote.yml` (workflow_dispatch, environment `stable-promote` with a
-required human approval) — copy beta manifest → `stable.json` at a
-chosen `rollout_percent`. Both workflows follow the
-ci-workflow-invariants skill; neither joins `required-checks` (they are
-not PR-event jobs), stated here so the aggregate's drift guard is not
-"fixed" to include them.
+CI: see §9 — the pipeline design is a first-class part of this spec,
+not an implementation detail.
 
-## 9. Workstreams, acceptance criteria, sequencing
+## 9. Pipeline integration & invariants
+
+The repo's pipelines are themselves a guarded surface
+(`tests/architecture/test_ci_workflow.py`: lint-pin parity, pip
+caching, the `required-checks` aggregate) — and #224 demonstrated the
+failure mode this section exists to prevent: a new workflow step
+installing lint tools **outside** the pin-scan's field of view. Every
+pipeline this spec adds lands inside the enforcement perimeter on day
+one.
+
+**Pipeline inventory and touchpoints:**
+
+| Workflow | Trigger | Role in this design |
+|---|---|---|
+| `test.yml` | PR / push | Untouched. The release PR that `cut-release` opens is an ordinary PR — it must pass the full `required-checks` aggregate before anyone may tag. |
+| `installers.yml` | push / dispatch | **Converted to a reusable workflow (`workflow_call`)** exposing the 3-OS bundle build. |
+| `release.yml` | push `v*` tags | verify-tag → **calls the shared build** → updater-sign → changelog → GitHub Release → generate + commit `beta.json`. |
+| `promote.yml` | `workflow_dispatch`, environment `stable-promote` (required human approval) | Validates, then copies beta → `stable.json` at a chosen `rollout_percent`. |
+| `manifest-validate.yml` | push to the `releases` branch | Schema-validates `stable.json`/`beta.json` against the pinned fixture — **the last gate in front of the fleet**; rollback commits pass through it too. |
+
+Rules, each with an enforcement home:
+
+1. **Single build truth.** `release.yml` never re-implements build
+   steps; it `workflow_call`s the same job CI artifacts use, so a
+   build change in a feature PR reaches release builds in the same
+   commit — the two can never drift. (This conversion is U2's first
+   task, and it is also what lets a release build be rehearsed from a
+   PR without tag rights.)
+2. **Enforcement-perimeter membership.** `test_ci_workflow.py` gains
+   an explicit workflow scope map: PR-event jobs must appear in
+   `required-checks.needs`; tag/dispatch workflows are exempt from the
+   aggregate **but not from the pin/caching scans**, and the pin scan
+   is widened to walk *every* workflow file rather than `test.yml`
+   alone — closing the #224-class gap for good rather than per
+   incident.
+3. **Secrets and trigger safety.** `TAURI_SIGNING_PRIVATE_KEY` (+
+   password) exist only in tag-triggered `release.yml` and the
+   environment-gated `promote.yml`; no `pull_request_target` anywhere;
+   fork-originated events can never reach a signing context.
+   `concurrency` groups serialize releases (one tag build at a time)
+   and serialize promote against release.
+4. **Action pinning follows the #219 decision:** float majors
+   (`actions/checkout@v7`-style); no patch pins — a security-scanning
+   or build action frozen at a patch is the anti-pattern this repo
+   already litigated and closed.
+5. **CI cost containment.** Pushes to the `releases` branch (manifest
+   commits, rollbacks) are excluded from `test.yml` triggers;
+   `manifest-validate.yml` is their sole — and sufficient — gate. The
+   mock-manifest e2e fixture binds an ephemeral port so it composes
+   with the existing e2e job's `workers: 1` / port-4317 constraints.
+6. **Bot coexistence.** `cut-release` writes only via an ordinary PR
+   (full gates), so it cannot fight the coverage-ratchet bot's
+   push-back behavior; neither bot ever pushes to a branch the other
+   owns.
+
+## 10. Workstreams, acceptance criteria, sequencing
 
 | WS | Scope | Acceptance criteria | Depends on |
 |---|---|---|---|
 | **U1 — version spine** | `VERSION`, derivations, `sync_version.py`, drift-guard test, `app_version` in session_status; `data/persisted_state.py` registry + its arch test; `.claude/rules/update-compatibility.md` | arch tests green; one `version =` left in pyproject; every existing config-dir writer registered with a `schema_version`; the rule file lands with the registry | — |
-| **U2 — release pipeline** | `release.yml`, updater keypair in secrets, changelog gen, manifest gen, `releases` branch; `promote.yml` with environment gate | a `v*-beta.N` tag on a throwaway commit produces signed artifacts + a valid `beta.json` end-to-end, verified against the schema fixture; `cut-release` derives the right bump from a synthetic commit history in a workflow test | U1 |
+| **U2 — release pipeline** | `installers.yml` → `workflow_call` conversion; `release.yml`, updater keypair in secrets, changelog gen, manifest gen, `releases` branch; `promote.yml` with environment gate; `manifest-validate.yml`; `test_ci_workflow.py` scope map + all-workflow pin scan (§9.2) | a `v*-beta.N` tag on a throwaway commit produces signed artifacts + a valid `beta.json` end-to-end, verified against the schema fixture; `cut-release` derives the right bump from a synthetic commit history in a workflow test; CI artifact and release build come from the same called workflow; an intentionally malformed manifest is refused by `manifest-validate.yml` | U1 |
 | **U3 — shell updater** | plugin integration, state machine §5, bucketing, freeze, beacon fetch-through with CDN fallback; **absorbs the standing shell follow-up: re-inject the fresh WS token after sidecar restart** | Rust test list §8 green; mock-manifest flows work in `cargo run` | U1 (rustup: done 2026-08-03) |
 | **U4 — cockpit UX** | chip + PanelSpec panel + consent flows + freeze toggle + dev-loop fallback | axe floor 0; announcer integration; CLI-help parity guard untouched (no CLI surface) | U3 state shape |
 | **U5 — e2e + beacon** | mock-manifest fixture + the §8 spec list; beacon worker + histogram | all §8 e2e specs green in CI; beacon-down spec proves independence; old-state boot compat suite green against the committed vN-1 fixtures | U2–U4 |
@@ -335,7 +392,7 @@ the certificate purchase. Every PR carries the standard 18-gate body;
 U1 and U2 are the natural first PR (small, high-leverage, unblocks
 everything).
 
-## 10. Change-resilience: the developer contract
+## 11. Change-resilience: the developer contract
 
 The repo's features land weekly; the update system must survive them
 without per-feature update work or tribal knowledge. The design rule:
@@ -378,7 +435,7 @@ are read by every agent session (human-driven or codex) at task start,
 which is precisely how "any new feature understands how updating
 works" without anyone remembering to explain it.
 
-## 11. Risks & honest constraints
+## 12. Risks & honest constraints
 
 - **Unsigned macOS in-place updates** can trip Gatekeeper on the
   swapped bundle: until U6, macOS updates ship behind an
