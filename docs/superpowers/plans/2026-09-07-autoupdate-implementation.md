@@ -62,15 +62,73 @@ mode to full mode by creating `VERSION`.
    Python-side validator consumed by `manifest-validate.yml`.
 10. `releases` branch bootstrap (empty manifests + README stub).
 
+### PR-A pipeline work package (A5, execution-ready)
+
+Grounded in the current tree (verified 2026-09-07): `test.yml`
+triggers on **unfiltered** `push:`, and `installers.yml` already owns
+`push: tags: v*` + `workflow_dispatch` with `permissions: contents:
+read`. Both facts force specific edits below.
+
+1. **`installers.yml` → reusable build.** Add a `workflow_call:`
+   trigger with inputs `{sign: bool = false, updater_artifacts: bool
+   = false, ref: string = ''}` and job outputs naming the produced
+   artifacts. **Remove the `push: tags: v*` trigger** — once
+   `release.yml` owns tags, keeping it would double-build every
+   release. Keep `workflow_dispatch` as the standing no-tag rehearsal
+   (its header already calls it the "manual release dry-run").
+   Existing `permissions: contents: read` and setup-python pip caching
+   stay (the invariants test enforces caching on every setup-python
+   step in every workflow once the scope map lands).
+2. **`release.yml`** — `on: push: tags: ["v*"]` + `workflow_dispatch`
+   with a `dry_run` input; `concurrency: release` (no
+   cancel-in-progress); top-level `permissions: contents: write`.
+   Jobs: `verify-tag` (tag == `VERSION` at the tagged commit, ancestor
+   of `modularize-v1.34`) → `build` (`uses:
+   ./.github/workflows/installers.yml` with `sign` derived from
+   secret presence, `updater_artifacts: true`) → `publish`
+   (signature step no-ops without the keypair secret and the release
+   is created as an **unsigned draft** — the fork-safe degrade that
+   keeps the train testable before operator action #1) → `changelog`
+   → `manifest` (generate `beta.json` + upload the §6 ping assets;
+   under `dry_run`, manifests become run artifacts instead of a
+   `releases`-branch commit). Every job writes its §9.7 step summary.
+3. **`promote.yml`** — `workflow_dispatch` inputs `{version,
+   rollout_percent}`; `environment: stable-promote`; `permissions:
+   contents: write`; validate-with-the-fixture-schema **before**
+   committing `stable.json`; shares the `release` concurrency group so
+   a promote never races a release.
+4. **`manifest-validate.yml`** — `on: push: branches: [releases]`;
+   `permissions: contents: read`; runs the Python validator; the step
+   summary names the failing rule (spec §9.7).
+5. **`fleet-snapshot.yml`** — `schedule: cron "0 */6 * * *"`;
+   `permissions: contents: write`; reads the Releases API with the
+   default token, appends the I5 row, **skips the commit when counts
+   are unchanged** (no noise commits), and never opens issues on
+   failure — a red run + summary is the alert.
+6. **`test.yml` edits (two, surgical):** add `branches-ignore:
+   ["releases"]` to the `push:` trigger (spec §9.6 cost containment —
+   today an unfiltered push trigger would run the full suite on every
+   manifest commit), and nothing else: PR-event behavior, the weekly
+   schedule, and the `required-checks` aggregate are untouched, which
+   the scope-map update to `test_ci_workflow.py` asserts explicitly.
+7. **Invariants compliance:** the widened pin scan (already live)
+   covers any install lines the new workflows add; the scope map
+   registers all five workflows with their exemption class
+   (tag/dispatch/schedule/branch-push — none joins `required-checks`);
+   every new workflow file must `yaml.safe_load` cleanly under the
+   existing loader the invariants test uses.
+
 **Verification recipe:**
 `pytest tests/architecture/ -q` (version guard now in full mode);
 `pip install -e .` clean under dynamic version; `python -m
 rytm_randomizer.cli --help` unchanged bytes except any version line;
-a `v1.34.1-beta.1` tag on a throwaway commit runs `release.yml`
-end-to-end in a fork-safe dry mode (signing step no-ops when the
-secret is absent — the workflow must degrade to unsigned-artifact +
-draft-release so the pipeline is testable before the keypair exists);
-`manifest-validate.yml` refuses a deliberately malformed fixture.
+a `release.yml` `workflow_dispatch` dry run produces the full train
+(unsigned draft + manifest artifacts) with **exactly one** build
+firing (proves the installers tag-trigger removal — no double-fire);
+a push to a scratch `releases` branch triggers `manifest-validate.yml`
+and does NOT trigger `test.yml`; `manifest-validate.yml` refuses a
+deliberately malformed fixture; every new workflow's `permissions:`
+block matches spec §9.4's least-privilege table.
 
 **Watch-outs:** editable installs + `importlib.metadata` staleness
 (the fallback covers source checkouts); pyproject line ~305's
@@ -186,7 +244,7 @@ edit.
 | A2 release-prep | `scripts/prepare_release.py`, its test file | — |
 | A3 app-version | `cockpit/ws/` bootstrap field, regenerated `live_gui_protocol.ts`, store read-only slice, their tests | I1 (consumes I7 as a frozen import path, not A1's output) |
 | A4 persisted-state | `data/persisted_state.py`, its arch test, `.claude/rules/update-compatibility.md`, `schema_version` registrations in the existing store modules, typed `persisted_state.*` taxonomy errors + `record_persisted_state_migration` metrics (spec §5.1, Gate 7) | — |
-| A5 workflows | `.github/workflows/{installers,release,promote,manifest-validate}.yml` incl. `GITHUB_STEP_SUMMARY` blocks per spec §9.6, `test_ci_workflow.py` scope map, schema fixture + Python validator | I3, I6 |
+| A5 workflows | the full pipeline work package below (`installers/release/promote/manifest-validate` + the two `test.yml` edits), `test_ci_workflow.py` scope map, schema fixture + Python validator | I3, I6 |
 | A6 branch-bootstrap | `releases` branch content only (no main-branch files) | — |
 
 All six run concurrently in one worktree-per-agent

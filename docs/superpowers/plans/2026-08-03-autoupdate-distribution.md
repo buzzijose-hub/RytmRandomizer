@@ -526,16 +526,23 @@ Rules, each with an enforcement home:
    fork-originated events can never reach a signing context.
    `concurrency` groups serialize releases (one tag build at a time)
    and serialize promote against release.
-4. **Action pinning follows the #219 decision:** float majors
+4. **Least-privilege permissions, explicitly.** Every workflow this
+   spec adds declares a top-level `permissions:` block with the
+   minimum needed: `contents: write` only where a release or a
+   `releases`-branch commit is actually produced (`release.yml`,
+   `promote.yml`, `fleet-snapshot.yml`), `contents: read` everywhere
+   else, and no other scopes anywhere. The reusable build keeps
+   `installers.yml`'s existing `contents: read`.
+5. **Action pinning follows the #219 decision:** float majors
    (`actions/checkout@v7`-style); no patch pins — a security-scanning
    or build action frozen at a patch is the anti-pattern this repo
    already litigated and closed.
-5. **CI cost containment.** Pushes to the `releases` branch (manifest
+6. **CI cost containment.** Pushes to the `releases` branch (manifest
    commits, rollbacks) are excluded from `test.yml` triggers;
    `manifest-validate.yml` is their sole — and sufficient — gate. The
    mock-manifest e2e fixture binds an ephemeral port so it composes
    with the existing e2e job's `workers: 1` / port-4317 constraints.
-6. **Pipeline observability.** Every workflow this spec adds writes a
+7. **Pipeline observability.** Every workflow this spec adds writes a
    `GITHUB_STEP_SUMMARY` block with its structured outcome —
    `release.yml`: version, artifact list + sizes, signature status,
    manifest committed; `promote.yml`: from→to version and
@@ -543,7 +550,7 @@ Rules, each with an enforcement home:
    failing rule named; `fleet-snapshot.yml`: row appended + count
    deltas — so a maintainer reads outcomes from the run page without
    spelunking logs, and a failed gate names its rule.
-7. **Bot coexistence.** `cut-release` writes only via an ordinary PR
+8. **Bot coexistence.** `cut-release` writes only via an ordinary PR
    (full gates), so it cannot fight the coverage-ratchet bot's
    push-back behavior; neither bot ever pushes to a branch the other
    owns.
