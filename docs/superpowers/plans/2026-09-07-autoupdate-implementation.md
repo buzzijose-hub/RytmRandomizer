@@ -106,7 +106,14 @@ read`. Both facts force specific edits below.
    Existing `permissions: contents: read` and setup-python pip caching
    stay (the invariants test enforces caching on every setup-python
    step in every workflow once the scope map lands).
-2. **`release.yml`** — `on: push: tags: ["v*"]` + `workflow_dispatch`
+2. **`release.yml` — EXTEND, do not create.** Verified 2026-09-07:
+   this file **already exists** as a pip wheel/sdist publisher
+   (checkout → setup-python → `python -m build` → `pytest` gate →
+   `softprops/action-gh-release@v3` with `files: dist/*`), already
+   triggering on `push: tags: v*` with `permissions: contents:
+   write`. The release train is grafted onto it and its existing
+   wheel-publish behavior is preserved — a second release workflow
+   would double-publish. Add `workflow_dispatch`
    with a `dry_run` input; `concurrency: release` (no
    cancel-in-progress); top-level `permissions: contents: write`.
    Jobs: `verify-tag` (tag == `VERSION` at the tagged commit, ancestor
