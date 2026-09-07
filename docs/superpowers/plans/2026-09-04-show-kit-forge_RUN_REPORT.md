@@ -11,10 +11,12 @@ Base: `origin/modularize-v1.34` at
 
 Status: in-flight — maintainer-review closeout for PR #238. The
 [review reconciliation](../../2026-09-07-show-kit-forge-review-reconciliation.md)
-records the latest repairs and current verification. The table below covers
-the final local software closeout; hosted checks and the identified studio
-build are the next external steps.
-Required maintainer review and operator-present hardware validation remain pending.
+records the latest repairs and current verification. Final local checks, the
+identified Windows build and the actual packaged GUI smoke passed. The
+[software handoff](../../2026-09-07-show-kit-forge-software-closeout.md) identifies
+source `076ef67a3276bdd27ec6657f9dff77ccf207a5e2`, both binary hashes and the
+local receipt. Source CI passed on all three operating systems. Required
+maintainer review and operator-present hardware validation remain pending.
 
 Pull request: [#238](https://github.com/buzzijose-hub/RytmRandomizer/pull/238),
 with `edward-rosado` requested for review.
@@ -92,13 +94,24 @@ use `-n 0`. No test accesses physical MIDI.
 | Architecture / parity | All 805 architecture and 685 V1.34 cases pass in the full run; push hook repeats both. All 505 frozen JSON fixtures unchanged. |
 | Static checks | Ruff, new-module PLR/ERA/ARG, Black, isort, whole-package Vulture70/touched80, strict Pyright1.1.411 on all 32 modules, diff checks pass. |
 | Resumable state | Draft 2020-12 schema and instance validate with date-time format checks. |
-| Hosted CI / identified studio build | Final source SHA, CI run, portable hashes and packaged-GUI smoke receipt are recorded on PR #238 after the build. |
+| Identified studio build / packaged GUI | Build 34149935386 succeeded at source 076ef67a3276bdd27ec6657f9dff77ccf207a5e2. Both binary hashes match the manifest. Actual GUI smoke passed at 2026-09-07T18:06:53.332Z on loopback port 64055 with MIDI off; bundled child, authenticated catalog and UI refresh verified, own process tree stopped. No capture, arm or output requested. |
+| Hosted CI / required review | Source push and PR CI passed at the built source. Review remains CHANGES_REQUESTED; no merge or policy bypass. The documentation-only receipt commit does not change the built source. |
 | Physical MIDI / SysEx transfer | Not performed; all studio observation fields remain blank. |
 
 The initial diagnostics exposed stale export dependency metadata, a duplicated
 calibration constant, and missing safety edge coverage. These were repaired;
 no frozen parity output was regenerated. The AL02 blocked manifest changed only
 its dependency hash, with no alteration to mapping gaps or hardware authority.
+
+The initial packaged artifact at `4cb0def` compiled and its hashes matched, but
+the real GUI smoke exposed a frontend port-discovery failure. The correction
+resolves the validated shell port on every dial; 43 new regression cases and
+the updated frontend/browser results above cover it. The corrected packaged
+smoke then passed on a non-default port. The failed copy was moved outside the
+Studio folder; the working `076ef67a` copy includes a blank physical checklist,
+A4 scratch references and separate build/smoke manifests. The
+[software handoff](../../2026-09-07-show-kit-forge-software-closeout.md) records
+the exact evidence and remaining transport work.
 
 ## Review outcome
 
@@ -112,7 +125,8 @@ bounded runtime observability, authenticated-session freshness, explicit
 unsupported-device rejection coverage, and corrected operator/architecture
 documentation.
 
-One Minor readability risk remains: the large Forge panel component. Shared
+Two Minor opportunities remain: the large Forge panel component and a public
+checked-open helper that preserves bounded reads, identity checks and error contracts. Shared
 SEND controls and pure view logic are extracted; the
 [maintainability report](2026-09-04-show-kit-forge_MAINTAINABILITY_REPORT.md)
 records the remaining size/cohesion tradeoff. Pure math/DTO functions remain
@@ -186,7 +200,11 @@ external collaborator's open PR.
 
 The machine-readable resume source is
 [`2026-09-04-show-kit-forge_STATE.json`](2026-09-04-show-kit-forge_STATE.json).
-Reconcile the PR checks and review with that state before taking the next
+Three task-created scratch worktrees were removed after integration, with 32
+backup files hash-preserved under
+`C:/Users/Jose Buzzi/Documents/RytmRandomizer-worktree-backups/pr238-20260907`.
+The main checkout and original dirty checkouts remain untouched.
+Reconcile the latest PR checks and required review with that state before taking the next
 eligible step. Preserve the hardware-blocked state until real observations are
 entered. Automated checks must not turn blank studio evidence into a
 validation claim.

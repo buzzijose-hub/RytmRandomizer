@@ -133,5 +133,21 @@ explicit URL overrides and the existing authenticated handshake. Forty-three
 new regression cases cover bootstrap precedence, invalid values, late injection
 and reconnect behavior. Full frontend: 852 tests at 100% coverage; typecheck,
 lint and production build pass. Full Playwright: 21 passed, two existing skips
-in 51.3 seconds. A rebuilt artifact and non-default-port packaged smoke remain
-required; no physical input, arm or output was requested.
+in 51.3 seconds. At that checkpoint, the rebuilt artifact and non-default-port
+packaged smoke were still required; their result follows below. No physical
+input, arm or output was requested.
+
+## September 7 identified packaged launch
+
+Build `34149935386` from `076ef67a3276bdd27ec6657f9dff77ccf207a5e2` passed
+the actual Windows portable smoke at 18:06:53 UTC. Both binary hashes matched
+the manifest; the window identified its source and spawned the bundled sidecar.
+The production WebView authenticated on the selected non-default port 64055,
+loaded the empty isolated catalog, and acknowledged a Forge refresh. MIDI was
+disabled, capture/arm controls were untouched, screenshots were inspected, and
+the owned test processes and ports were closed afterward. The
+[software closeout receipt](2026-09-07-show-kit-forge-software-closeout.md) records
+the exact launch path, hashes, remaining review state and studio handoff.
+The final receipt commit changes documentation only; the artifact keeps its
+verified source identity. The failed 4cb diagnostic build is preserved outside
+the studio launch folder. All physical observation fields remain blank.

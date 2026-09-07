@@ -11,26 +11,26 @@
     "storage_workspace_websocket": "verified",
     "frontend": "verified",
     "documentation_learning": "verified",
-    "final_closeout": "in_progress",
+    "final_closeout": "verified",
     "studio_hardware_validation": "blocked"
   },
   "verification": {
     "focused_checks": {
       "a4_renderer": "Canonical calibration metadata, exact shared Q8.8 codec, drift rejection, hash-pinned fixtures and unknown-byte isolation pass. Inert A4 preparation remains permanently blocked for output.",
       "domain_readiness": "64/96 identifier bounds and maximum-revision catalog import roundtrip pass; canonical validators/reasons/registry domains, source protection, stale evidence and bounded diagnostics have regressions.",
-      "import_direction": "All805 architecture cases pass; root data exports are constants only, and workspace owns MutationScope construction.",
-      "documentation": "Architecture/operator/build prose and diagrams reviewed; 805 architecture cases verified. Diagnostic Windows build exposed fixed-port frontend behavior; per-dial validated loopback discovery is repaired and documented, with a corrected artifact/smoke still pending."
+      "import_direction": "All 805 architecture cases pass; root data exports are constants only, and workspace owns MutationScope construction.",
+      "documentation": "Architecture/operator/build prose and diagrams reviewed; 805 architecture cases verified. The port-discovery repair is documented, and docs/2026-09-07-show-kit-forge-software-closeout.md records the successful build and actual packaged GUI smoke at source 076ef67a3276bdd27ec6657f9dff77ccf207a5e2. Physical observations remain blank."
     },
     "final_gate_counts": {
-      "cockpit_python": "2763 passed,4 skipped in22.61s before three final logging regressions; final full suite covers those regressions.",
-      "frontend": "852 tests/62files,100% statements3286/branches2475/functions1128/lines2959; typecheck/lint/build pass. Playwright21passed/2existing skips in51.3s, disabled/fake MIDI; screenshots inspected.",
-      "fast_suite": "8238 passed,5skipped in200.93s before three final logging regressions; final full suite covers those regressions.",
+      "cockpit_python": "2,763 passed, 4 skipped in 22.61s before three final logging regressions; the final full suite includes those regressions.",
+      "frontend": "852 tests in 62 files; 100% coverage of 3,286 statements, 2,475 branches, 1,128 functions and 2,959 lines. Typecheck, lint and build pass. Playwright: 21 passed, 2 existing skips in 51.3s; disabled/fake MIDI, screenshots inspected.",
+      "fast_suite": "8,238 passed, 5 skipped in 200.93s before three final logging regressions; the final full suite includes those regressions.",
       "architecture": "805 cases pass in final full run; pre-push hook repeats the dedicated gate.",
-      "v134_parity": "685 cases pass in final full run; all505 frozen JSON fixtures unchanged; hook repeats the dedicated gate.",
-      "full_suite": "8926 passed,5skipped in272.28s on local Windows/Python3.12.14.",
-      "touched_coverage": "32 production modules,6458 statements/1558 branches,100% lines and branches. Whole-package pure branch99.3597%; ratchet99% passes unchanged.",
-      "static_analysis": "Ruff/new-module PLR+ERA+ARG,Black,isort,Vulture whole-package70/touched80,strict Pyright1.1.411 on32modules,diff,state/schema pass.",
-      "hosted_ci": "Push34147435001 and PR34147439270 passed at4cb0def; build34147444366 succeeded but its packaged GUI failed port discovery. Corrected source checks pass; final rebuilt artifact and SHA-specific CI remain pending."
+      "v134_parity": "685 cases pass; all 505 frozen JSON fixtures unchanged. Push hooks repeat the dedicated gate.",
+      "full_suite": "8,926 passed, 5 skipped in 272.28s on local Windows/Python 3.12.14.",
+      "touched_coverage": "32 production modules; 6,458 statements and 1,558 branches at 100%. Whole-package pure branch coverage 99.3597%; unchanged 99% ratchet passes.",
+      "static_analysis": "Ruff/new-module PLR+ERA+ARG, Black, isort, Vulture whole-package 70/touched 80, strict Pyright 1.1.411 on 32 modules, diff and state/schema checks pass.",
+      "hosted_ci": "Build 34149935386 succeeded at source 076ef67a3276bdd27ec6657f9dff77ccf207a5e2. Both binary hashes match the manifest; actual packaged GUI smoke passed at 2026-09-07T18:06:53.332Z on loopback port 64055 with MIDI off, authenticated catalog/UI refresh and exact bundled child. Own process tree stopped; no capture, arm or output. Source push CI 34149921382 and PR CI 34149925207 both passed. The final documentation-only head check receipt is maintained in the consolidated PR comment. Required review remains CHANGES_REQUESTED; no bypass. The final documentation-only receipt commit does not change artifact source."
     }
   },
   "pull_request_url": "https://github.com/buzzijose-hub/RytmRandomizer/pull/238",
@@ -44,15 +44,14 @@
     "observations_recorded": false
   },
   "pending_closeout_fields": [
-    "identified_studio_build",
-    "hosted_ci",
     "required_review"
   ],
-  "next_action": "Push the port-discovery repair through hooks, rerun eight scoped review dimensions, rebuild Windows, and verify the exact packaged artifact on a nondefault loopback port with MIDI off. Required maintainer review and all physical observations remain outstanding.",
+  "next_action": "Reconcile the current PR check and approval state before any merge; obtain required maintainer/code-owner review through the existing policy. Launch the identified 076ef67a Windows studio build and complete the blank operator-present checklist. A4 SEND and persistent SAVE remain blocked pending the documented evidence and reviewed transport/restore implementation.",
   "resume": {
     "read_first": [
       "docs/superpowers/plans/2026-09-04-show-kit-forge.md",
       "docs/2026-09-07-show-kit-forge-review-reconciliation.md",
+      "docs/2026-09-07-show-kit-forge-software-closeout.md",
       "docs/superpowers/plans/2026-09-04-show-kit-forge_STATE.json",
       "docs/superpowers/plans/2026-09-04-show-kit-forge_RUN_REPORT.md",
       "docs/2026-09-04-show-kit-forge_RUN_LOG.md",
@@ -61,8 +60,8 @@
     "reconcile": "Inspect the current working tree and GitHub PR state, compare them with this file, then run only the next eligible serialized closeout step. Never infer hardware observations."
   },
   "last_event": {
-    "at": "2026-09-07T17:56:38.728031+00:00",
-    "summary": "Fixed packaged frontend port discovery; 852 frontend cases and100% coverage pass. Corrected build/smoke and final GitHub checks remain pending."
+    "at": "2026-09-07T18:12:00.025592+00:00",
+    "summary": "Identified build 34149935386, actual packaged GUI smoke and source push/PR CI passed. Software closeout is verified; final documentation-only head receipts are maintained on PR238. Required review and physical evidence remain outstanding. Original dirty checkouts are preserved."
   },
-  "last_updated_at": "2026-09-07T17:56:38.728031+00:00"
+  "last_updated_at": "2026-09-07T18:12:00.025592+00:00"
 }

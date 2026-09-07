@@ -457,9 +457,21 @@ before any physical action.
 at `4cb0defdee3aaaddd02c28621811b4004e62a642` completed and its downloaded
 binary hashes matched the manifest, but its real GUI smoke failed. The shell
 injected port `50477` as a string with a token present; the frontend continued
-dialing `4317` and stayed disconnected. The lazy port-discovery repair requires
-a corrected build and another packaged smoke. Both remain pending; the earlier
-artifact must not be presented as a working studio copy.
+dialing `4317` and stayed disconnected. That artifact is preserved outside the
+Studio folder as diagnostic evidence.
+
+**Corrected software handoff:** build
+[`34149935386`](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34149935386)
+at `076ef67a3276bdd27ec6657f9dff77ccf207a5e2` succeeded. Its downloaded hashes
+matched the manifest, and the actual packaged GUI smoke passed at
+`2026-09-07T18:06:53.332Z` with MIDI off, loopback port 64055 and string port
+bootstrap. The exact bundled child, window title, authenticated catalog and
+UI refresh were verified; the smoke's own process tree was stopped. No capture,
+arm or output was requested. The [software receipt](2026-09-07-show-kit-forge-software-closeout.md)
+records the executable, both hashes and local smoke/checklist paths. A later
+documentation-only receipt commit does not change this artifact's source.
+Source CI passed; required maintainer review remains pending. Physical
+observations remain blank and A4 SEND remains blocked.
 
 ### Briefcase source/install checks
 

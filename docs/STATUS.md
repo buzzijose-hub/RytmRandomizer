@@ -53,8 +53,16 @@ Final local verification passed: 8,926 Python tests with five skips, all 32
 touched production modules at 100% coverage, and 852 frontend tests with all
 coverage metrics at 100%. The full browser suite passed 21 tests with two
 existing skips using disabled/fake MIDI; its screenshots were inspected.
-The identified executable/build manifest and self-contained sidecar smoke test,
-hosted CI, and required maintainer review remain pending.
+The identified Windows build at `076ef67a3276bdd27ec6657f9dff77ccf207a5e2`
+and its actual packaged GUI smoke passed with MIDI off on loopback port 64055.
+The shell and bundled sidecar hashes match the build manifest, and authenticated
+catalog access and the UI refresh succeeded. The
+[software handoff](2026-09-07-show-kit-forge-software-closeout.md) records the
+exact executable, receipts, preserved backups and still-blank physical checklist.
+Source CI passed on Windows, macOS and Linux. Required maintainer review remains
+pending; the
+observed review decision is `CHANGES_REQUESTED`. No hardware validation or merge
+approval is inferred from the software smoke.
 
 ## Recent Cleanup
 
@@ -70,8 +78,8 @@ hosted CI, and required maintainer review remain pending.
   maximum-revision packages importable into a fresh local revision history;
   strengthen refusal assertions; and add the inert A4 preparation review.
   The renderer remains offline-only. Final local Python, frontend, browser,
-  coverage and static checks passed. The identified studio build, hosted CI and
-  required review remain pending in the reconciliation ledger; the dated studio
+  coverage and static checks passed. The identified studio build, actual GUI
+  smoke and source CI also passed; required review remains pending. The dated studio
   checklist retains every outstanding physical observation.
 - 2026-08-27: Integrated the targeted dual-machine live-performance Cockpit
   bundle on the latest `modularize-v1.34` base.

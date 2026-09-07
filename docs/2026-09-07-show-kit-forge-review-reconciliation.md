@@ -1,7 +1,7 @@
 # Show Kit Forge maintainer-review reconciliation
 
-Status: maintainer repairs verified locally; packaged-launch defect being corrected.
-The corrected build, packaged GUI smoke and required GitHub review remain pending.
+Status: maintainer repairs, corrected build, packaged GUI smoke and source CI
+are verified. Required GitHub review and physical validation remain pending.
 
 The existing [PR #238](https://github.com/buzzijose-hub/RytmRandomizer/pull/238)
 and [implementation plan](superpowers/plans/2026-09-04-show-kit-forge.md) remain
@@ -76,9 +76,9 @@ capture, scope and serialization contracts and perform zero physical output. The
 artifact is not a grant of A4 SEND authority. No unobserved load, sound, save,
 recapture, source restoration, or destination behavior will be marked verified.
 
-The final handoff will identify the exact launch executable, Git source revision,
-build manifest and hashes, self-contained sidecar, smoke-test result, remaining
-review state, and the smallest operator-present
+The [software closeout receipt](2026-09-07-show-kit-forge-software-closeout.md)
+identifies the exact executable, source revision, binary hashes, bundled sidecar,
+passing packaged smoke, remaining review state, and the smallest operator-present
 [studio procedure](hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md).
 
 ### Packaged launch exposed a separate port-discovery defect
@@ -96,15 +96,17 @@ late shell injection can be observed. It accepts only a valid integer port,
 uses the injected value before the stored fallback, and constructs the fixed
 loopback `/ws` endpoint. An explicit client URL still takes precedence.
 `getUrl()` continues to describe the actual existing socket target; when no
-socket exists it describes the next dial's current target. The corrected
-artifact must pass a new off-backend packaged GUI smoke before studio handoff.
-Corrected build and smoke evidence are pending; no new passing test count is
-claimed here.
+socket exists it describes the next dial's current target. Corrected build
+`34149935386`, source `076ef67a3276bdd27ec6657f9dff77ccf207a5e2`, passed its
+real packaged smoke on port 64055 with MIDI disabled. The shell-injected port,
+bundled child, authenticated catalog and Forge refresh all matched. Test
+processes were stopped and no capture, arm or physical output was requested.
 
 ## Current local verification
 
-These results cover the feature and maintainer repairs before the packaged
-port-discovery correction; its new verification receipt is still pending.
+The Python evidence is unchanged by the frontend-only port repair. The
+frontend and browser results below include that repair. Its rebuilt packaged
+smoke also passed, as recorded separately in the software closeout receipt.
 
 Full Python: 8,926 passed, 5 skipped in 272.28s. All 32 touched production
 modules cover 6,458 statements and 1,558 branches at 100%; whole-package pure
@@ -129,5 +131,5 @@ The port-discovery correction adds 43 client regression cases, including the
 shell's decimal-string port, invalid types/ranges and storage failures, late
 injection, scheduled reconnect, explicit overrides and current-target reporting.
 The full frontend now passes 852 tests with all coverage metrics at 100%;
-typecheck, lint and production build pass. The rebuilt packaged smoke remains
-pending; successful source tests do not substitute for that launch check.
+typecheck, lint and production build pass. The rebuilt packaged smoke passed
+independently; no hardware observation is inferred from either result.
