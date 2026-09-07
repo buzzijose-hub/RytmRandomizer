@@ -110,3 +110,15 @@ scratch artifact before recapture; execute one exact-plan Rytm pad audition,
 manually reload the source KIT, and prove its whole-payload fingerprint
 returns; then save both chosen favorites, recapture, and run the fresh paired exact
 whole-payload-fingerprint preflight for every cue.
+
+## September 7 maintainer-review closeout
+
+Reconciled review5133649443 against starting head6cfde1fc in isolated worktrees.
+The [review ledger](2026-09-07-show-kit-forge-review-reconciliation.md) maps every
+requested finding, including non-reproduced allegations and retained minors.
+Final local Python: 8,926 passed/5 skipped; 32 touched modules at100% line and
+branch coverage. Final web:809 tests at100%, plus21 browser journeys/2existing
+skips with disabled/fake MIDI. Static and schema gates pass. The run report
+records timings, earlier diagnostics and current external closeout receipts.
+The full run includes the final bounded-diagnostic regressions added after
+the fast/Cockpit benchmark runs. No physical observation is claimed.

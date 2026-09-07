@@ -30,6 +30,7 @@ from ...data.analog_four_sysex_calibration import (
     analog_four_sysex_calibration_for,
 )
 from ...guardrails.input_validation import (
+    require_boolean,
     require_exact_keys,
     require_finite_number_field,
     require_integer_field,
@@ -280,10 +281,7 @@ def _optional_show_bank_integer(data: Mapping[str, object], key: str, label: str
 
 
 def _boolean(data: Mapping[str, object], key: str, label: str) -> bool:
-    value = data[key]
-    if not isinstance(value, bool):
-        raise TypeError(f"{label}.{key} must be a boolean")
-    return value
+    return require_boolean(data[key], f"{label}.{key}")
 
 
 def _show_bank_timestamp(data: Mapping[str, object], key: str, label: str) -> datetime:

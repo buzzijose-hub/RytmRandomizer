@@ -298,7 +298,7 @@ def test_favorite_replacement_requires_explicit_opt_in() -> None:
             "entry-one",
             clock=clock_at(PREFLIGHT_CHECKED_AT),
         )
-    with pytest.raises(TypeError, match="boolean"):
+    with pytest.raises(TypeError, match="^replace_existing must be a boolean$"):
         mark_favorite(
             selected_other,
             "entry-one",

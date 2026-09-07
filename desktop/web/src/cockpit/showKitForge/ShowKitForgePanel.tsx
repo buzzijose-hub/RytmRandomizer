@@ -27,6 +27,7 @@ import { PanelRenderer } from '../panels/PanelRenderer';
 import { useCockpitClient } from '../context';
 import { useMutationTargets } from '../useMutationTargets';
 import { usePadLocks } from '../usePadLocks';
+import { A4PreparationPanel } from './A4PreparationPanel';
 
 import {
   applyEntryMove,
@@ -101,7 +102,7 @@ function auditionStatusLabel(entry: ShowBankEntry): string {
 
 function ScopeGrid({
   label,
-  count,
+  itemIds,
   itemLabel,
   isTargeted,
   toggleTarget,
@@ -112,7 +113,7 @@ function ScopeGrid({
   disabled,
 }: {
   label: string;
-  count: number;
+  itemIds: readonly number[];
   itemLabel: 'pad' | 'track';
   isTargeted: (id: number) => boolean;
   toggleTarget: (id: number) => void;
@@ -123,14 +124,20 @@ function ScopeGrid({
   disabled: boolean;
 }): JSX.Element {
   return (
-    <fieldset className="show-kit-forge-scope" disabled={disabled}>
+    <fieldset className="show-kit-forge-scope" disabled={disabled || itemIds.length === 0}>
       <legend>{label}</legend>
-      <p className="show-kit-forge-help">Effective scope is targets minus locks.</p>
-      <button type="button" className="show-kit-forge-link-button" onClick={clearTargets}>
-        {hasExplicitTargets ? `Target all ${itemLabel}s` : `All ${itemLabel}s targeted`}
-      </button>
+      {itemIds.length === 0 ? (
+        <p className="show-kit-forge-help">Capture this device’s KIT to load its available {itemLabel}s.</p>
+      ) : (
+        <>
+          <p className="show-kit-forge-help">Effective scope is targets minus locks.</p>
+          <button type="button" className="show-kit-forge-link-button" onClick={clearTargets}>
+            {hasExplicitTargets ? `Target all ${itemLabel}s` : `All ${itemLabel}s targeted`}
+          </button>
+        </>
+      )}
       <div className="show-kit-forge-scope-grid">
-        {Array.from({ length: count }, (_, index) => index + 1).map((id) => (
+        {itemIds.map((id) => (
           <div className="show-kit-forge-scope-item" key={id}>
             <label>
               <input
@@ -242,6 +249,8 @@ export function ShowKitForgePanel(): JSX.Element {
 
   const rytmCapture = captures.find((capture) => capture.device_id === RYTM_DEVICE_ID);
   const a4Capture = captures.find((capture) => capture.device_id === ANALOG_FOUR_DEVICE_ID);
+  const rytmScopeIds = rytmCapture?.layout_items.map((item) => item.index) ?? [];
+  const a4ScopeIds = a4Capture?.layout_items.map((item) => item.index) ?? [];
   const pairedCaptureReady =
     rytmCapture?.round_trip_verified === true &&
     a4Capture?.round_trip_verified === true &&
@@ -1097,8 +1106,8 @@ export function ShowKitForgePanel(): JSX.Element {
                   <p>Profile: <strong>{profile?.name ?? 'Select a Cockpit profile first'}</strong></p>
                 </div>
                 <div className="show-kit-forge-scope-columns">
-                  <ScopeGrid disabled={actionDisabled} label="Rytm pads" count={12} itemLabel="pad" isTargeted={rytmTargets.isTargeted} toggleTarget={rytmTargets.toggleTarget} clearTargets={rytmTargets.clearTargets} hasExplicitTargets={rytmTargets.hasExplicitTargets} isLocked={rytmLocks.isLocked} toggleLock={rytmLocks.toggleLock} />
-                  <ScopeGrid disabled={actionDisabled} label="Analog Four tracks" count={4} itemLabel="track" isTargeted={a4Targets.isTargeted} toggleTarget={a4Targets.toggleTarget} clearTargets={a4Targets.clearTargets} hasExplicitTargets={a4Targets.hasExplicitTargets} isLocked={a4Locks.isLocked} toggleLock={a4Locks.toggleLock} />
+                  <ScopeGrid disabled={actionDisabled} label="Rytm pads" itemIds={rytmScopeIds} itemLabel="pad" isTargeted={rytmTargets.isTargeted} toggleTarget={rytmTargets.toggleTarget} clearTargets={rytmTargets.clearTargets} hasExplicitTargets={rytmTargets.hasExplicitTargets} isLocked={rytmLocks.isLocked} toggleLock={rytmLocks.toggleLock} />
+                  <ScopeGrid disabled={actionDisabled} label="Analog Four tracks" itemIds={a4ScopeIds} itemLabel="track" isTargeted={a4Targets.isTargeted} toggleTarget={a4Targets.toggleTarget} clearTargets={a4Targets.clearTargets} hasExplicitTargets={a4Targets.hasExplicitTargets} isLocked={a4Locks.isLocked} toggleLock={a4Locks.toggleLock} />
                 </div>
                 <button
                   type="button"
@@ -1216,6 +1225,8 @@ export function ShowKitForgePanel(): JSX.Element {
                   </div>
                 )}
               </section>
+
+              <A4PreparationPanel bank={activeBank} entry={activeEntry} disabled={actionDisabled} />
 
               <section className="show-kit-forge-section" aria-labelledby="show-kit-audition-title">
                 <div className="show-kit-forge-section-heading"><div><p className="show-kit-forge-step">Rytm audition</p><h3 id="show-kit-audition-title">Existing exact-plan safety path</h3></div><span>{auditionStatusLabel(activeEntry)}</span></div>

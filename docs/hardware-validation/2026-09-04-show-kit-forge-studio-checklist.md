@@ -29,6 +29,11 @@ hardware result.
 
 ## Session record
 
+Use the identified Windows portable copy and record its full source commit from
+`BUILD-MANIFEST.json`, together with both binary hashes. The current PR review
+state and downloaded artifact receipt belong in the software closeout record;
+they do not fill any observation below.
+
 Fill these fields during the studio session, not beforehand.
 
 | Field | Observation |
@@ -42,7 +47,7 @@ Fill these fields during the studio session, not beforehand.
 | Exact Rytm input port | |
 | Exact Rytm output port | |
 | Exact A4 input port | |
-| A4 output port opened? (required result: No) | |
+| Cockpit A4 output port opened? (required result: No) | |
 | OXI connection/role | |
 | Monitoring level | |
 | Disposable Rytm source slot | |
@@ -142,6 +147,30 @@ Expected immutable facts:
 
 Stop on a wrong value/track, any unrelated visible change, transfer ambiguity,
 checksum/re-encode failure, or uncertainty about whether the KIT was saved.
+
+### What this A4 test does and does not complete
+
+The offline preparation report revalidates the selected candidate against the
+retained source and records scope, current capture, recovery slot and exact
+output-name intent. It always remains blocked. Imported evidence, a typed port
+name, and a successful scratch return cannot arm an output.
+
+After the scratch result is physically verified, a separately reviewed transport
+decision is still required. Filter 1 Frequency's paired CC18/50 and NRPN(1,40)
+address facts do not prove how the saved Q8.8 value maps to a live message value.
+The current event planner rejects paired CC and the Cockpit renderer accepts
+seven-bit CC triples. Do not infer or test guessed packets on the instrument.
+Capture documented transport-specific value/destination behavior before adding
+that transport to the existing guarded seam. A persistent SysEx route also needs
+an implemented and physically verified capture/restore contract; Cockpit's
+persistent KIT SAVE refusal remains in force.
+
+Future activation must bind the final candidate/source hashes, selected tracks
+minus locks, current capture/reload proof, connection generation, exact port,
+per-action confirmation and recovery slot to one expiring plan. Exercise those
+conditions with fakes first, then perform the reviewed operator-present send
+and restoration test. None of these observations or activation approvals is
+inferred by this checklist.
 
 ## 3. Rytm one-pad ArmedApply and manual restoration
 

@@ -7,50 +7,64 @@ Plan: [`2026-09-04-show-kit-forge.md`](2026-09-04-show-kit-forge.md)
 Baseline:
 [`2026-09-04-show-kit-forge_MAINTAINABILITY_AUDIT.md`](2026-09-04-show-kit-forge_MAINTAINABILITY_AUDIT.md)
 
-Status: in-flight — software re-audit recorded for
-[PR #238](https://github.com/buzzijose-hub/RytmRandomizer/pull/238).
-The run state records current CI status and the remaining operator-present
-studio validation.
+Status: in-flight — maintainer-review repairs and final local verification are
+complete for [PR #238](https://github.com/buzzijose-hub/RytmRandomizer/pull/238).
+The identified studio build, hosted CI, and required maintainer review remain
+pending. The [review reconciliation ledger](../../2026-09-07-show-kit-forge-review-reconciliation.md)
+and [run report](2026-09-04-show-kit-forge_RUN_REPORT.md) record current local
+evidence and distinguish it from the original integration history.
 
-This comparison uses qualitative dispositions backed by paths, completed
-automated checks, and the targeted review findings below. Physical evidence
-remains outside the software maintainability assessment.
+Final local verification passed 8,926 Python tests with five skips in 272.28s.
+All 32 touched production modules cover 6,458 statements and 1,558 branches at
+100%; whole-package pure-branch coverage is 99.3597%. Frontend verification
+passed 809 tests in 62 files, with 3,269 statements, 2,455 branches, 1,125
+functions and 2,943 lines all at 100%. Typecheck, lint and production build
+passed. Playwright passed 21 tests with two existing skips in 50.2s using
+disabled/fake MIDI, and the screenshots were inspected. Physical evidence
+remains outside this software maintainability assessment.
 
 | Gate 14 question | Pre-plan risk or requirement | Post-plan evidence | Disposition |
 | --- | --- | --- | --- |
 | Onboarding curve | The paired workflow needed one discoverable operator and contributor path. | The Cockpit panel, Quickstart, architecture section, dated run artifacts, and blank studio checklist describe the same lifecycle and authority boundary. `docs/README.md` and `CLAUDE.md` link the handoff directly. | Addressed in software/docs; fresh-clone answers are recorded in the run report. |
 | Naming hygiene | Candidate, live-unsaved, favorite, save attestation, semantic verification, and show readiness could be conflated. | The domain records and UI use distinct names for selection, Rytm live audition, favorite, per-device save attestation, recapture, and show-time preflight. Favorite replacement is explicit. | No observed naming regression. |
-| Coupling / module boundaries | A second sender, registry, package-root hierarchy, or codec fork would create drift. | `cockpit.show_bank` composes existing capture, mutation, export, codec/strategy, and ArmedApply seams. The nested-package dependency row is explicit and its focused import-matrix test passed. A4 offline rendering remains separate from hardware-send authority. | Addressed; 801 architecture cases passed in the full run. |
-| Magic numbers / strings | A4 offsets, stride, Q8.8 bounds, lifecycle labels, and wire actions needed canonical ownership. | Hash-pinned evidence fixes Track 1 offset 128, track stride 350, and unsigned Q8.8 `0x0000..0x7F00`. Typed DTOs and canonical calibration/strategy facts own the lifecycle and evidence vocabulary. | No observed regression in reviewed paths. |
-| Configuration vs convention | Local paths and hardware choices could become client-controlled or implicit. | Store/package identifiers are filename-safe and resolved beneath server-owned roots. Rytm SEND still requires the existing exact plan and output confirmation; A4 has no SEND action. No new environment variable or dependency pin was introduced. | Stable. |
-| Test maintainability | Paired fixtures and lifecycle boundaries needed intent-named, reusable coverage. | Focused Show Bank tests share `tests/cockpit/show_bank/_support.py`; codec, domain, persistence, workspace, WebSocket, and frontend concerns remain separated. The domain/readiness slice reached 100% statement and branch coverage in its recorded focused run. | Addressed; final counts are recorded in the run report. |
-| Build / dev loop friction | Heavy Python/frontend closeout needed serialization and bounded inner loops. | The run log records focused serial checks, while the existing `just check`/`just review` and repository commands remain canonical. No alternate build entry point was added. | Stable; serialized timings are recorded in the run report. |
+| Coupling / module boundaries | A second sender, registry, package-root hierarchy, or codec fork would create drift. | `cockpit.show_bank` composes existing capture, mutation, export, codec/strategy, and ArmedApply seams. Shared input primitives live in `guardrails/input_validation.py`; the thin Filter 1 Frequency adapter delegates to the schema-driven saved-KIT candidate renderer. Device scopes use the canonical registry domain. | All 801 architecture cases passed in final local verification; hosted CI and required review remain pending. |
+| Magic numbers / strings | A4 offsets, stride, Q8.8 bounds, lifecycle labels, and wire actions needed canonical ownership. | The calibration record owns verified native offsets, width, encoding, range, and scale and resolves field offsets through the saved-KIT schema. Shared exact fixed-point parsing/formatting avoids ambient Decimal rounding. Show device IDs alias stage vocabulary; readiness emits closed tokens with UI display text. | Maintainer findings addressed; final local aggregate verification passed. |
+| Configuration vs convention | Local paths and hardware choices could become client-controlled or implicit. | Filename-safe bank/entity IDs retain a 64-character bound and package IDs a distinct 96-character bound beneath server-owned roots. Rytm SEND retains exact plan/output confirmation. A4 review accepts bounded output-port intent without discovering or opening a port. No new runtime environment variable was added; build-only variables are documented in both required indexes. | Boundary contracts are explicit; focused maximum-ID roundtrips passed. |
+| Test maintainability | Paired fixtures and lifecycle boundaries needed intent-named, reusable coverage. | Show Bank tests reuse canonical DTO and workspace helpers plus valid synthetic KIT headers. The nine previously bare `ValueError` sites now assert per-case refusal reasons; categorized `DataError` tests retain stable context assertions. The final full suite covers the changed validation boundaries. | Focused and final local aggregate results are recorded separately in the reconciliation ledger and run report. |
+| Build / dev loop friction | Heavy Python/frontend closeout needed serialization and bounded inner loops. | Heavy checks remain serialized and focused checks use the repository commands. The requested studio handoff must identify the executable, source revision, build manifest/hashes, self-contained sidecar, and smoke result. | Local verification passed; identified studio build, its smoke test and hosted CI remain pending. |
 | Error messages | Stale capture, corrupt package, unsupported A4 field, or unconfirmed SEND failures needed source-local recovery text. | Validation now distinguishes malformed/corrupt retained evidence, stale recapture/preflight provenance, catalog-only imports, explicit favorite replacement, unsupported A4 fields, and exact-plan Rytm refusal. The operator UI/checklist states the corresponding recovery action. | Addressed in reviewed boundaries. |
-| Versioning / release | New persisted shapes must not alter the package release, hardware pins, or V1.34 output. | Show-bank/show-pack records carry explicit schema versions. `pyproject.toml`, hardware dependency pins, and `tests/fixtures/v134_parity/` are outside the working-tree change set. | Stable; all 685 frozen parity cases passed in the full run. |
-| Future-proofing | Another verified A4 field must not implicitly widen output authority. | Filter 1 Frequency has a distinct offline captured-KIT renderer and evidence status; its result always reports `hardware_send_validated = false`. The existing targeted-mutation skill/rule now require field-specific evidence, fresh provenance, atomic paired retention, and catalog-import isolation. | Addressed without granting broader authority. |
+| Versioning / release | New persisted shapes must not alter the package release, hardware pins, or V1.34 output. | Show-bank/show-pack schema versions and the 64/96 ID contracts remain explicit. A verified package starts a new local catalog at revision 0, preserving the source manifest and historical evidence while clearing transient authority. Maximum source revision therefore remains importable. Hardware pins and frozen parity artifacts are unchanged. | All 685 frozen parity cases passed in final local verification; no release or hardware-validation claim. |
+| Future-proofing | Another verified A4 field must not implicitly widen output authority. | Filter 1 Frequency uses a thin field adapter over shared calibration, saved-KIT schema, and renderer behavior. A separate inert A4 preparation report checks selected-candidate provenance, exact source/candidate bytes, current capture freshness, scope, and recovery metadata. It always reports `ready = false`, `hardware_send_validated = false`, and permanent transport blockers. | Reuse improved; no A4 output or persistent-save authority granted. |
 
 ## Regression and residual-risk decision
 
-The implemented safety and persistence boundaries satisfy the reviewed
-software requirements. The run report records test, coverage, lint, type,
-build, parity, review, hosted-CI, and PR results. The residual readability
-tradeoff below is retained explicitly rather than hidden by aggregate counts.
+The review refactor addresses the identified validation, calibration, device
+vocabulary, and blocker-reporting defects. The reconciliation ledger separates
+completed focused and final local checks from identified-build work, hosted CI,
+and required maintainer review. Those remaining external steps are not marked
+complete by this report.
 
-The remaining software concern is panel size: `ShowKitForgePanel.tsx` contains
-roughly 1,380 lines in its principal component, with 33 state hooks and seven
-effects. This is a Minor readability risk under the handbook's 500-line split
-signal. Exact SEND state/confirmation already lives in `ExactRytmSend`, and
-pure view derivation lives in `showKitForgeModel`. Bank/cue drafts and
-acknowledgment/revision handling stay together for this release so ownership
-of those coordinated transitions remains explicit. A later section/hook
-extraction should preserve the complete journey and stale-state tests. The
-report does not present the remaining component size as an ideal design.
+Panel size remains a Minor readability risk under the handbook's 500-line split
+signal. Exact SEND state/confirmation lives in `ExactRytmSend`, pure view
+derivation in `showKitForgeModel`, and the new inert review in
+`A4PreparationPanel`. Bank/cue drafts and acknowledgment/revision handling stay
+together so ownership of coordinated transitions remains explicit. A later
+section/hook extraction must preserve the complete journey and stale-response
+tests. This report does not present the remaining main-panel size as ideal.
 
-Validation complexity in the persistence layer was reduced during review:
-manifest decoding, required retention, device claims, and exact file-set
-verification now have separate helpers. New production modules pass the
-additional PLR/ERA/ARG lint rules; the narrowly retained keyword-rich public
-action signatures document their explicit paired-evidence contracts.
+Validation complexity was reduced through shared strict primitives and one
+canonical JSON encoder for store, package, and review serialization. The renamed
+validator definitions and short-alias blocks were removed; legacy recipe APIs
+re-export the shared implementations. Manifest decoding, required retention,
+device claims, and exact file-set verification retain focused helpers.
+
+File-opening and directory-identity checks retain boundary-specific bounds,
+error categories, publication checks, and cleanup behavior. A shared public
+regular-file opener remains a reviewed extraction opportunity; the existing
+private streaming opener cannot replace the bounded store reader without
+preserving its post-read identity checks. This minor is not marked fully fixed.
+Final local lint/type, full-suite and coverage checks passed. The reconciliation
+ledger retains the pending identified-build, hosted-CI and required-review steps.
 
 The remaining hardware risk is intentionally blocking, not scored away:
 

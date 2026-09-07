@@ -17,7 +17,9 @@ full version-bump and tagging flow.
 - Show Kit Forge: immutable paired Rytm/A4 sources, scoped candidates,
   favorites, manual-save recapture verification, ordered show-time preflight,
   and explicit atomic local show packs. Filter 1 Frequency gains fixture-backed
-  A4 offline generation; A4 SEND and persistent hardware SAVE remain blocked.
+  A4 offline generation and an explicit evidence-preparation review. Calibration
+  and validation reuse are canonical, and bounded show packs import as fresh
+  catalog revisions. A4 SEND and persistent hardware SAVE remain blocked.
 - Passive RIO145 native-KIT tooling for Analog Four and Analog Rytm: strict
   SysEx inspection/diff/roundtrip validation, deterministic recipe builds,
   target-return validation, and OXI evidence export. The integration includes

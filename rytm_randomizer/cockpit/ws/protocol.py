@@ -37,6 +37,7 @@ from __future__ import annotations
 from typing import Final, Literal, NotRequired, TypedDict
 
 from ..capture import KitCaptureDeviceId, KitCaptureResultDict
+from ..data.a4_preparation import A4PreparationReportDict
 from ..data.show_bank import ShowBankWorkspaceStateDict
 from ..data.stage import DualMachineStageStateDict
 from ..mutation_targets import MutationTargetsDict
@@ -787,6 +788,7 @@ class CommandAck(TypedDict, total=False):
     library_import: dict[str, object] | None
     show_bank: ShowBankWorkspaceStateDict
     show_bank_id: str
+    a4_preparation: A4PreparationReportDict
     show_bank_entry_id: str
     candidate_ids: list[str]
     candidate_id: str
@@ -1064,10 +1066,20 @@ class CaptureCurrentKitCommand(TypedDict):
     input_port: str
 
 
+class A4PreparationRequest(TypedDict):
+    """Read-only current-candidate review; the port name conveys no authority."""
+
+    bank_id: str
+    entry_id: str
+    expected_revision: int
+    output_port_name: str | None
+
+
 class ShowBankListCommand(TypedDict):
     """Load the configured Show Bank workspace; performs no hardware action."""
 
     type: Literal["show_bank_list"]
+    a4_preparation: NotRequired[A4PreparationRequest]
 
 
 class ShowBankCreateCommand(TypedDict):
@@ -1223,6 +1235,7 @@ class ShowBankExportCommand(TypedDict):
 
 
 __all__ = [
+    "A4PreparationRequest",
     "ArmCommand",
     "AnalyzePatchGenomeCommand",
     "CaptureCurrentKitCommand",

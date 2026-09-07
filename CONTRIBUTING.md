@@ -610,6 +610,13 @@ output still requires the separate ArmedApply lifecycle. Keep the default,
 override, installer, and passive-CLI behavior synchronized with
 `docs/LOCAL_DEV_TOOLING_NOTES.md` and `docs/COCKPIT_QUICKSTART.md`.
 
+The installer workflow also defines build-only `TAURI_CLI_VERSION` (pinned
+to `2.11.4`) and `STUDIO_WINDOWS` (the `studio_windows` dispatch input, false
+by default). These select the packaging tool and optional Windows studio copy;
+they are not application settings and grant no MIDI authority. See
+[`BUILDING_INSTALLERS.md`](docs/BUILDING_INSTALLERS.md) and the environment
+index in [`LOCAL_DEV_TOOLING_NOTES.md`](docs/LOCAL_DEV_TOOLING_NOTES.md).
+
 ## Test suite structure
 
 The suite spans these layers; current totals belong in the latest closeout run

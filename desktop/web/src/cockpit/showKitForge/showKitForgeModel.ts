@@ -4,6 +4,7 @@ import type {
   ShowBankEntry,
   ShowBankState,
   ShowKitForgeStatus,
+  ShowKitBlockedReason,
 } from '../../ws/protocol';
 
 export const SHOW_STATUS_LABELS: Readonly<Record<ShowKitForgeStatus, string>> = {
@@ -13,6 +14,25 @@ export const SHOW_STATUS_LABELS: Readonly<Record<ShowKitForgeStatus, string>> = 
   'hardware-saved': 'Manually saved — attested/unverified',
   verified: 'Verified recapture',
   'show-ready': 'Show-ready',
+};
+
+/** Closed server reasons are presented as operator instructions, never raw tokens. */
+export const SHOW_BLOCKED_REASON_LABELS: Readonly<Record<ShowKitBlockedReason, string>> = {
+  show_bank_empty: 'Add a paired cue to this show bank.',
+  cue_not_show_ready: 'One or more cues still need a fresh show-time preflight.',
+  paired_candidate_missing: 'Generate a paired candidate from the immutable sources.',
+  favorite_missing: 'Mark a candidate as a favorite.',
+  rytm_hardware_save_missing: 'Save the Rytm favorite on the instrument, then record its new slot.',
+  a4_hardware_save_missing: 'Save the Analog Four favorite on the instrument, then record its new slot.',
+  rytm_favorite_recapture_missing: 'Recapture the saved Rytm favorite.',
+  a4_favorite_recapture_missing: 'Recapture the saved Analog Four favorite.',
+  rytm_recapture_mismatch: 'The Rytm recapture does not match the candidate.',
+  a4_recapture_mismatch: 'The Analog Four recapture does not match the candidate.',
+  preflight_required: 'Load both favorite slots, capture their current kits, then run preflight.',
+  preflight_historical: 'The saved preflight is historical. Capture both current kits again in this session.',
+  rytm_current_kit_mismatch: 'The current Rytm kit differs from the verified favorite.',
+  a4_current_kit_mismatch: 'The current Analog Four kit differs from the verified favorite.',
+  current_session_preflight_required: 'Run a fresh paired preflight in this session.',
 };
 
 /** Decide whether a new authoritative revision may replace a local form draft. */
@@ -173,7 +193,7 @@ export function showReadinessPanelSpec(
     {
       heading: 'Bank blocked reasons',
       kind: 'rows' as const,
-      rows: bankStatus.blocked_reasons,
+      rows: bankStatus.blocked_reasons.map((reason) => SHOW_BLOCKED_REASON_LABELS[reason]),
       table: null,
       chips: [],
     },
@@ -182,7 +202,7 @@ export function showReadinessPanelSpec(
     sections.push({
       heading: `Active cue blocked reasons — ${entry.name}`,
       kind: 'rows',
-      rows: entry.readiness.blocked_reasons,
+      rows: entry.readiness.blocked_reasons.map((reason) => SHOW_BLOCKED_REASON_LABELS[reason]),
       table: null,
       chips: [],
     });

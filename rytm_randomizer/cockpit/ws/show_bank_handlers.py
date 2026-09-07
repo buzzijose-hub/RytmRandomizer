@@ -8,6 +8,7 @@ from typing import Final, cast
 
 from ...guardrails.input_validation import (
     require_boolean,
+    require_exact_keys,
     require_float,
     require_int,
     require_integer_tuple,
@@ -263,8 +264,33 @@ def _sync_selected_candidate(
     ]
 
 
-async def _handle_list(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+async def _handle_list(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     workspace = _workspace(session)
+    if "a4_preparation" in cmd:
+        review = require_object(cmd["a4_preparation"], "a4_preparation", ValueError)
+        require_exact_keys(
+            review,
+            frozenset({"bank_id", "entry_id", "expected_revision", "output_port_name"}),
+            "a4_preparation",
+        )
+        port = review["output_port_name"]
+        report = workspace.prepare_a4_review(
+            require_text(review["bank_id"], "bank_id", ValueError),
+            require_text(review["entry_id"], "entry_id", ValueError),
+            require_int(review["expected_revision"], "expected_revision", ValueError),
+            captures=session.kit_captures,
+            target_ids=tuple(session.a4_track_targets),
+            locked_ids=tuple(session.a4_track_locks),
+            active_candidate_id=(
+                None
+                if session.current_candidate is None
+                else session.current_candidate.candidate_id
+            ),
+            output_port_name=(
+                None if port is None else require_text(port, "output_port_name", ValueError)
+            ),
+        )
+        return _ok(session, show_bank=workspace.state_dict(), a4_preparation=report.to_dict())
     return _ok(session, show_bank=workspace.state_dict())
 
 

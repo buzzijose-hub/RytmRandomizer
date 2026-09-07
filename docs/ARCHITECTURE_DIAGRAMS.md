@@ -3184,6 +3184,12 @@ flowchart TD
     ArmedApply --> LiveUnsaved["live unsaved audition<br/>not favorite · not saved"]
 
     Forge --> A4Candidate["A4 Filter 1 Frequency<br/>offline saved-KIT bytes only"]
+    Calibration["data calibration record + saved-KIT field schema"] --> FieldCodec["generic A4 field codec + calibrated renderer<br/>exact Q8.8 / canonical byte isolation"]
+    FieldCodec --> A4Candidate
+    Validation["guardrails/input_validation<br/>shared strict primitives"] -.-> Store
+    Domains["snapshot/mutation_scope<br/>registry-derived device domain"] -.-> Forge
+    A4Candidate --> A4Preparation["inert preparation report<br/>revalidate retained source + candidate<br/>freshness / scope / recovery / port intent"]
+    A4Preparation --> NoA4Send
     A4Candidate --> NoA4Send["A4 SEND blocked<br/>hardware_send_validated=false"]
 
     LiveUnsaved --> Favorite["operator marks paired favorite"]
@@ -3228,4 +3234,7 @@ must follow that capture. A saved-KIT dump alone does not prove that unsaved RAM
 was restored.
 The A4 branch has no SEND edge at all: the generated four-track Filter 1
 Frequency scratch artifact must be transferred, saved, and recaptured manually
-before any physical observation is recorded.
+before any physical observation is recorded. The frozen preparation report
+always has `ready=false` and `hardware_send_validated=false`. Saved-KIT Q8.8
+evidence does not establish a paired-CC/NRPN transport conversion; the existing
+seven-bit CC audition seam and persistent-KIT refusal remain unchanged.

@@ -15,6 +15,7 @@ from typing import Final, Literal, cast
 
 from ...observability.logging import get_logger
 from ...observability.tracing import trace
+from ...snapshot.mutation_scope import MutationScope
 from ..capture import (
     ANALOG_FOUR_DEVICE_ID,
     ANALOG_RYTM_DEVICE_ID,
@@ -24,6 +25,7 @@ from ..capture import (
     decode_kit_capture_frame,
 )
 from ..data import MutationCandidate, ProfileModel, Snapshot, new_ulid
+from ..data.a4_preparation import A4PreparationReport
 from ..data.show_bank import (
     A4_SHOW_KIT_DEVICE_ID,
     RYTM_SHOW_KIT_DEVICE_ID,
@@ -48,6 +50,7 @@ from ..data.show_bank import (
     ShowKitRytmAuditionStatus,
     ShowKitScope,
 )
+from .a4_preparation import A4PreparationContext, prepare_a4_audition
 from .forge import (
     analog_four_capture_semantic_fingerprint,
     build_source_entry,
@@ -305,6 +308,7 @@ class ShowKitForgeWorkspace:
         self._current_rytm_auditions: dict[tuple[str, str], str] = {}
         self._current_preflight_grants: dict[tuple[str, str], datetime] = {}
         self._rytm_source_capture_cutoff: datetime | None = None
+        self._a4_preparation_cutoff = self._clock()
 
     @property
     def store(self) -> ShowBankStore:
@@ -473,6 +477,7 @@ class ShowKitForgeWorkspace:
         self._current_rytm_auditions.clear()
         self._current_preflight_grants.clear()
         self._rytm_source_capture_cutoff = self._clock()
+        self._a4_preparation_cutoff = self._clock()
         if changed:
             self._workspace_revision += 1
             _logger.info(
@@ -675,14 +680,75 @@ class ShowKitForgeWorkspace:
         self._publish(updated, already_saved=True)
         return updated.entry(resolved_entry_id)
 
-    def _retained_frame(self, bank: ShowBank, artifact_id: str) -> bytes:
+    def _available_artifact_frame(self, bank: ShowBank, artifact_id: str) -> bytes | None:
         volatile = self._volatile_frames.get(artifact_id)
         if volatile is not None:
             return volatile
         artifact = bank.sysex_artifact(artifact_id)
         if artifact.retained is None:
-            raise ValueError("exact SysEx bytes are not retained; regenerate or recapture")
+            return None
         return self._store.read_retained(artifact.retained)
+
+    def _retained_frame(self, bank: ShowBank, artifact_id: str) -> bytes:
+        frame = self._available_artifact_frame(bank, artifact_id)
+        if frame is None:
+            raise ValueError("exact SysEx bytes are not retained; regenerate or recapture")
+        return frame
+
+    # Explicit context fields bind one read-only review to the current session.
+    def prepare_a4_review(  # noqa: PLR0913
+        self,
+        bank_id: str,
+        entry_id: str,
+        expected_revision: int,
+        *,
+        captures: Mapping[KitCaptureDeviceId, KitCaptureResult],
+        target_ids: Sequence[int],
+        locked_ids: Sequence[int],
+        active_candidate_id: str | None,
+        output_port_name: str | None,
+    ) -> A4PreparationReport:
+        """Revalidate A4 evidence without creating any hardware authority."""
+        bank = self._checked_bank(bank_id, expected_revision)
+        entry = bank.entry(entry_id)
+        selected = entry.selected_candidate
+        active = bank_id == self._active_bank_id and entry_id == self._active_entry_ids.get(bank_id)
+        report = prepare_a4_audition(
+            entry=entry,
+            source_frame=self._available_artifact_frame(
+                bank, entry.analog_four_source.sysex.artifact_id
+            ),
+            candidate_frame=(
+                None
+                if selected is None
+                else self._available_artifact_frame(
+                    bank, selected.analog_four_candidate.sysex.artifact_id
+                )
+            ),
+            context=A4PreparationContext(
+                scope=MutationScope(frozenset(target_ids), frozenset(locked_ids)),
+                capture_after=self._a4_preparation_cutoff,
+                checked_at=self._clock(),
+                current_capture=captures.get(ANALOG_FOUR_DEVICE_ID),
+                active_candidate_id=active_candidate_id if active else None,
+                session_connected=True,
+                candidate_is_local=not _is_catalog_only(bank),
+                # No A4 manual-reload attestation/activation contract exists.
+                source_reloaded=False,
+                output_port_name=output_port_name,
+            ),
+        )
+        _logger.info(
+            "show_bank_a4_preparation_reviewed",
+            extra={
+                "bank_id": bank_id,
+                "entry_id": entry_id,
+                "outcome": "offline_only",
+                "candidate_bytes_verified": report.candidate_bytes_verified,
+                "blocked_reasons": list(report.blocked_reasons),
+            },
+        )
+        return report
 
     def _source_snapshot(self, bank: ShowBank, entry: ShowBankEntry) -> Snapshot:
         key = (bank.bank_id, entry.entry_id)

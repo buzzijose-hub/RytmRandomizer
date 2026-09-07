@@ -333,6 +333,12 @@ favorites rather than a single live mutation.
    Use **Retain selected A4 offline artifact** to preserve the selected exact `.syx`
    before favoriting or moving on. Cockpit shows its content-addressed filename,
    SHA-256, and byte count; retention grants no A4 SEND authority.
+   **Review A4 preparation** revalidates the selected candidate's exact source,
+   bytes, track scope and recovery evidence. An optional exact output name is
+   review intent only. The report expires when the cue, capture, scope, port
+   intent or session changes, and A4 SEND remains blocked even when its bytes
+   verify. Physical scratch evidence and a separately verified live MIDI value
+   mapping are still required; a saved-KIT Q8.8 value is not a live packet.
    With every A4 track locked, the paired A4 artifact preserves the source
    bytes exactly. Before each live Show Forge SEND, manually reload the Rytm
    source and take a fresh exact source dump through the device rail. Capturing
@@ -371,6 +377,9 @@ under `%APPDATA%/rytm-randomizer/`, on macOS under
 `<package-id>.show-pack` directory into `show-packs/` and enter its package id
 in the panel. Reusing an existing package or bank id is refused; use a new
 export id. Receiving a dump never automatically retains its `.syx` file.
+Bank IDs allow 64 characters; package IDs allow 96. Import starts revision zero
+in a new local catalog while preserving the original package manifest. This
+also permits importing a valid package exported at the maximum bank revision.
 
 Imported show packs are verified local catalogs, not audition authority. They
 can be inspected, reordered, annotated, preflighted with newly dumped current

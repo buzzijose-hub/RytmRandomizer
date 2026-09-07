@@ -9,9 +9,12 @@ Branch: `codex/show-kit-forge-complete`
 Base: `origin/modularize-v1.34` at
 `0b77f9fef019dbfe1da943019b339bd446f95725`
 
-Status: in-flight — software verification and review repairs are complete for PR #238.
-The run state links live hosted checks and the consolidated review;
-operator-present hardware validation remains blocked.
+Status: in-flight — maintainer-review closeout for PR #238. The
+[review reconciliation](../../2026-09-07-show-kit-forge-review-reconciliation.md)
+records the latest repairs and current verification. The table below covers
+the final local software closeout; hosted checks and the identified studio
+build are the next external steps.
+Required maintainer review and operator-present hardware validation remain pending.
 
 Pull request: [#238](https://github.com/buzzijose-hub/RytmRandomizer/pull/238),
 with `edward-rosado` requested for review.
@@ -45,9 +48,11 @@ The hardware authority boundary is unchanged:
    native Track 1 offset 128, a 350-byte track stride, and unsigned big-endian
    Q8.8 values from `0x0000` through `0x7F00`. Three source fixtures are
    hash-pinned.
-3. A distinct offline candidate renderer was retained instead of widening the
-   existing hardware-write-validated saved-KIT writer. Filter 2 Resonance kept
-   its existing behavior; every other A4 field remains blocked.
+3. The offline candidate authority remains separate from the existing
+   hardware-write-validated saved-KIT writer. Maintainer review subsequently
+   reduced the field-specific adapter to the shared saved-KIT schema and exact
+   Q8.8 codec. Filter 2 Resonance keeps its existing behavior; every other
+   unpromoted A4 field remains blocked.
 4. The show-bank domain separated selection, Rytm live audition, favorite,
    manual save attestation, semantic recapture, and fresh preflight. Favorite
    replacement requires an explicit replacement request.
@@ -77,20 +82,18 @@ use `-n 0`. No test accesses physical MIDI.
 
 | Gate | Result |
 | --- | --- |
-| Full Python suite | 8,788 passed, 5 skipped in 315.98 seconds. |
-| Whole-package coverage | 99.358% pure branch; 99.646% blended. Existing unrelated gaps remain above the 99% ratchet. |
-| Touched production coverage | All 22 modules: 100%. Full/fast coverage records 1,434 branches; the post-push Forge check exposes and covers two previously excluded branches, establishing 1,436 covered branches across the combined evidence. |
-| Cockpit Python aggregate | 2,676 passed, 4 skipped in 19.15 seconds. |
-| Frontend | 779 tests in 61 files; statements, branches, functions, and lines all 100%; typecheck/lint/build pass. |
-| Browser integration | Full Playwright: 21 passed, 2 existing skips in 50.2 seconds with disabled/fake MIDI. Includes valid/missing/wrong-token authentication, reconnect recovery, and the mocked Forge journey at 1440px and 600px; screenshots inspected. |
-| Fast suite | 8,103 passed, 5 skipped in 279.02 seconds after the final type/data-placement corrections. |
-| Architecture | 801 cases pass in the full/fast suites and the separate pre-push gate (57.34 seconds). |
-| Frozen V1.34 parity | All 685 cases pass in the full suite and separate pre-push gate (6.17 seconds); all 505 JSON fixtures untouched. |
-| Post-push rejection coverage | 13 focused Forge cases pass in 0.96 seconds; 128 statements and 34 branches, 100%, no exclusions. Four cases were added after the recorded full/fast/Cockpit aggregate runs. Final collection: 8,797 items. |
-| Static checks | Ruff; new-module PLR/ERA/ARG; Black; isort; whole-package Vulture at confidence 70; strict Pyright 1.1.411 on all 22 modules; diff checks pass. |
-| Resumable state | Draft 2020-12 schema and instance validate with format checks. |
-| Hosted CI / PR | PR #238 published; current CI disposition is recorded in the resumable state and consolidated PR review. |
-| Physical MIDI / SysEx transfer | Not performed. |
+| Full local Windows Python 3.12 suite | 8,926 passed, 5 skipped in 272.28 seconds. |
+| Whole-package coverage | 99.3597% pure branch; 99.6476% blended; 99% ratchet passes without a floor change. |
+| Touched production coverage | All 32 modules: 6,458 statements / 1,558 branches, 100% lines and branches; no exemptions added. |
+| Cockpit Python aggregate | 2,763 passed, 4 skipped in 22.61 seconds; predates three final logging regressions, which pass in the full run. |
+| Frontend | 809 tests in 62 files; 3,269 statements, 2,455 branches, 1,125 functions and 2,943 lines all 100%; typecheck/lint/build pass. |
+| Browser integration | Full Playwright: 21 passed, 2 existing skips in 50.2 seconds; disabled/fake MIDI, real-sidecar authentication and mocked Forge journey; three screenshots inspected. |
+| Fast suite | 8,238 passed, 5 skipped in 200.93 seconds; predates the final three logging regressions, covered by the final full run. |
+| Architecture / parity | All 801 architecture and 685 V1.34 cases pass in the full run; push hook repeats both. All 505 frozen JSON fixtures unchanged. |
+| Static checks | Ruff, new-module PLR/ERA/ARG, Black, isort, whole-package Vulture70/touched80, strict Pyright1.1.411 on all 32 modules, diff checks pass. |
+| Resumable state | Draft 2020-12 schema and instance validate with date-time format checks. |
+| Hosted CI / identified studio build | Final source SHA, CI run, portable hashes and packaged-GUI smoke receipt are recorded on PR #238 after the build. |
+| Physical MIDI / SysEx transfer | Not performed; all studio observation fields remain blank. |
 
 The initial diagnostics exposed stale export dependency metadata, a duplicated
 calibration constant, and missing safety edge coverage. These were repaired;
@@ -115,7 +118,10 @@ SEND controls and pure view logic are extracted; the
 records the remaining size/cohesion tradeoff. Pure math/DTO functions remain
 logger-free; workspace, store, export, and WS boundaries own decision telemetry.
 The consolidated verdict is maintained as one PR review comment after the
-final push gates and targeted dimension checks.
+final push gates and targeted dimension checks. Maintainer findings are mapped
+one by one in the review reconciliation ledger. Shared calibration, scalar
+validation, canonical JSON, registry scopes, inert A4 preparation and bounded
+WS diagnostics now have explicit regression evidence.
 
 ## Change size
 

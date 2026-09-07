@@ -717,10 +717,76 @@ export interface ShowTimePreflight {
   reason: string;
 }
 
+export type ShowKitBlockedReason =
+  | 'show_bank_empty'
+  | 'cue_not_show_ready'
+  | 'paired_candidate_missing'
+  | 'favorite_missing'
+  | 'rytm_hardware_save_missing'
+  | 'a4_hardware_save_missing'
+  | 'rytm_favorite_recapture_missing'
+  | 'a4_favorite_recapture_missing'
+  | 'rytm_recapture_mismatch'
+  | 'a4_recapture_mismatch'
+  | 'preflight_required'
+  | 'preflight_historical'
+  | 'rytm_current_kit_mismatch'
+  | 'a4_current_kit_mismatch'
+  | 'current_session_preflight_required';
+
+export type A4PreparationBlocker =
+  | 'session_unavailable' | 'candidate_not_selected' | 'candidate_not_local'
+  | 'source_bytes_unavailable' | 'source_bytes_invalid'
+  | 'candidate_bytes_unavailable' | 'candidate_bytes_invalid' | 'scope_changed'
+  | 'no_a4_changes' | 'source_reload_required' | 'current_capture_required'
+  | 'current_capture_invalid' | 'current_capture_stale' | 'current_source_mismatch'
+  | 'output_port_intent_required' | 'recovery_slot_required'
+  | 'a4_hardware_audition_validation_pending' | 'a4_live_transport_mapping_unverified'
+  | 'persistent_kit_write_prohibited';
+
+/** Offline preparation evidence. This record has no hardware authority. */
+export interface A4PreparationReport {
+  schema_version: 'a4-preparation-v1';
+  preparation_id: string;
+  entry_id: string;
+  candidate_id: string | null;
+  device_id: 'analog_four_mk2';
+  source_capture_id: string;
+  source_fingerprint: string;
+  source_frame_sha256: string;
+  candidate_frame_sha256: string | null;
+  current_capture_fingerprint: string | null;
+  current_capture_at: string | null;
+  capture_after: string;
+  checked_at: string;
+  target_ids: number[];
+  locked_ids: number[];
+  effective_ids: number[];
+  output_port_name: string | null;
+  recovery_slot: number | null;
+  source_reloaded: boolean;
+  candidate_is_local: boolean;
+  candidate_bytes_verified: boolean;
+  current_source_verified: boolean;
+  changes: {
+    track_id: number;
+    parameter: string;
+    before_raw_q8_8: number;
+    after_raw_q8_8: number;
+    before_screen_value: string;
+    after_screen_value: string;
+    unpacked_offsets: number[];
+  }[];
+  blocked_reasons: A4PreparationBlocker[];
+  ready: false;
+  hardware_send_validated: false;
+  output_authority: 'offline-review-only';
+}
+
 export interface ShowReadiness {
   status: ShowKitForgeStatus;
   show_ready: boolean;
-  blocked_reasons: string[];
+  blocked_reasons: ShowKitBlockedReason[];
   recovery_actions: string[];
 }
 
@@ -1133,6 +1199,13 @@ export interface LibraryImportCapturesCommand {
 
 export interface ShowBankListCommand {
   type: 'show_bank_list';
+  /** Optional read-only review; never arms, opens, or sends to an output. */
+  a4_preparation?: {
+    bank_id: string;
+    entry_id: string;
+    expected_revision: number;
+    output_port_name: string | null;
+  };
 }
 
 export interface ShowBankCreateCommand {
@@ -1386,6 +1459,7 @@ export interface CommandAck {
   show_bank?: ShowBankState | null;
   show_pack_export?: ShowPackExportAck;
   show_pack_import?: ShowPackImportAck;
+  a4_preparation?: A4PreparationReport;
   show_bank_id?: string;
   show_bank_entry_id?: string;
   candidate_id?: string;

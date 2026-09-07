@@ -23,7 +23,7 @@ from ...devices import (
     resolve_saved_kit_capture_capability,
 )
 from ...guardrails.input_validation import require_boolean, require_text
-from ...snapshot.mutation_scope import MutationScope
+from ...snapshot.mutation_scope import MutationScope, registered_mutation_ids
 from ..capture import KitCaptureResult
 from ..data.a4_preparation import (
     A4PreparationBlocker,
@@ -257,9 +257,8 @@ def prepare_a4_audition(
     discovery nor any hardware-side validation takes place.
     """
 
-    device = resolve_saved_kit_capture_capability(ANALOG_FOUR_DEVICE_ID).device
     effective = context.scope.validated_effective_ids(
-        range(1, device.track_count + 1), item_label="A4 track"
+        registered_mutation_ids(ANALOG_FOUR_DEVICE_ID), item_label="A4 track"
     )
     blockers: list[A4PreparationBlocker] = []
     if not context.session_connected:

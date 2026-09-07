@@ -514,7 +514,7 @@ def test_sysex_calibration_rejects_unknown_parameters() -> None:
 
 @pytest.mark.parametrize("value", [True, False, 1.0, 1, None])
 def test_exact_fixed_point_parser_rejects_non_text_without_coercion(value: object) -> None:
-    from rytm_randomizer.data import parse_a4_fixed_8_8
+    from rytm_randomizer.data.analog_four_kit_fields import parse_a4_fixed_8_8
 
     with pytest.raises(ValueError, match="unsupported screen value"):
         parse_a4_fixed_8_8(value)
@@ -526,6 +526,8 @@ def test_shared_fixed_point_codec_covers_full_native_range_and_public_exports() 
         A4_FIXED_8_8_RAW_MAX,
         A4_FIXED_8_8_SCALE,
         A4_FIXED_8_8_WIDTH,
+    )
+    from rytm_randomizer.data.analog_four_kit_fields import (
         format_a4_fixed_8_8,
         parse_a4_fixed_8_8,
     )

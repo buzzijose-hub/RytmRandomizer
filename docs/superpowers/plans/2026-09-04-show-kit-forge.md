@@ -37,6 +37,29 @@ be represented as completed by tests.
 
 ## Why
 
+### September 7 maintainer-review closeout
+
+PR #238 remains the single delivery vehicle. The continuation starts from
+`6cfde1fcd306fa2f5a30ca4a8f2869ec369d9914` and reconciles the maintainer's
+[requested changes](https://github.com/buzzijose-hub/RytmRandomizer/pull/238#pullrequestreview-5133649443).
+The earlier automated software verdict is not maintainer approval.
+
+| Workstream | Exclusive ownership | Depends on |
+| --- | --- | --- |
+| Calibration consistency and codec reuse | Root A4 calibration/field data, A4 strategies, dedicated tests; isolated `cr-pr238-calibration-closeout` worktree | Existing captured evidence and generic saved-KIT field codec |
+| Show-pack compatibility and validation reuse | Show Bank data/lifecycle/store/export/workspace, WS handlers, neutral shared validation, focused tests; isolated `cr-pr238-validation-closeout` worktree | Calibration public API for trusted native values |
+| A4 live-SEND development audit and offline preparation | Frozen report DTO, pure evidence builder and adversarial tests in isolated `cr-pr238-a4-preparation`; root wires authenticated read-only workspace/WS/UI review | Reuses codecs, calibration, scope and capture facts; physical transmission remains blocked |
+| Integration and studio build | Frontend token/identifier projections, architecture/docs, review reconciliation, packaging and exact-build receipt | Both code workstreams and the SEND audit |
+
+The complete finding/evidence ledger is
+[`2026-09-07-show-kit-forge-review-reconciliation.md`](../../2026-09-07-show-kit-forge-review-reconciliation.md).
+Heavy test and build processes remain serialized. The original dirty checkout,
+earlier unfinished worktree, and unrelated local artifacts remain preserved.
+No parity regeneration, pin changes, review bypass, or physical output is
+authorized. GitHub integration may proceed only through its required reviews
+and checks. A source-identified studio build is required even while approval or
+physical evidence remains outstanding.
+
 Jose needs a single show-preparation workflow that starts from two known-good,
 captured hardware kits and ends with an ordered, locally verifiable bank of
 paired Rytm/A4 favorites. The workflow must make experimentation quick while
@@ -292,7 +315,9 @@ notes; timestamps; and evidence provenance.
 - [x] **Gate 11** — shared capture/frame/session fixtures are extended rather
   than copied across tests.
 - [x] **Gate 12** — new module-level constants use `Final`.
-- [x] **Gate 13** — no new environment variable is introduced.
+- [x] **Gate 13** — no new runtime environment variable; build-only
+  `TAURI_CLI_VERSION` and `STUDIO_WINDOWS` are documented in CONTRIBUTING,
+  LOCAL_DEV_TOOLING_NOTES and BUILDING_INSTALLERS.
 - [x] **Gate 14** — pre/post maintainability evidence and complexity review are
   durable in the linked
   [baseline](2026-09-04-show-kit-forge_MAINTAINABILITY_AUDIT.md) and

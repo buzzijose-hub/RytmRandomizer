@@ -138,8 +138,8 @@ describe('Show Kit Forge model selectors', () => {
         }),
       ]),
     );
-    expect(blocked.sections[0]?.rows).toEqual(['one_cue_not_ready']);
-    expect(blocked.sections[1]?.rows).toEqual(['analog_four_recapture_mismatch']);
+    expect(blocked.sections[0]?.rows).toEqual(['One or more cues still need a fresh show-time preflight.']);
+    expect(blocked.sections[1]?.rows).toEqual(['The Analog Four recapture does not match the candidate.']);
     expect(blocked.required_actions).toEqual([
       'Bank: verify_entry_one',
       'Active cue: recapture_intended_a4_slot',

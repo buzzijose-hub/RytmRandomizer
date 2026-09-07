@@ -5,6 +5,8 @@ import type {
   ShowCandidatePair,
   ShowCaptureReference,
 } from '../../src/ws/protocol';
+import { ANALOG_FOUR_TRACKS } from '../../src/cockpit/devices';
+import { snapshot } from './_fixtures';
 
 const when = '2026-09-04T12:00:00+00:00';
 
@@ -164,7 +166,7 @@ export const forgeEntry: ShowBankEntry = {
   readiness: {
     status: 'hardware-saved',
     show_ready: false,
-    blocked_reasons: ['analog_four_recapture_mismatch'],
+    blocked_reasons: ['a4_recapture_mismatch'],
     recovery_actions: ['recapture_intended_a4_slot'],
   },
 };
@@ -237,7 +239,7 @@ export const showBankState: ShowBankState = {
         status: 'hardware-saved',
         show_ready: false,
         show_ready_entry_ids: ['entry-two'],
-        blocked_reasons: ['one_cue_not_ready'],
+        blocked_reasons: ['cue_not_show_ready'],
         recovery_actions: ['verify_entry_one'],
       },
     },
@@ -257,7 +259,12 @@ export const forgeCaptures: KitCaptureResult[] = [
     round_trip_verified: true,
     input_only: true,
     sent_midi: false,
-    layout_items: [],
+    layout_items: snapshot.pads.map((pad) => ({
+      index: pad.pad_id,
+      label: pad.machine,
+      status: 'mutation_ready',
+      detail: 'Captured Rytm machine fields are available for mutation.',
+    })),
   },
   {
     device_id: 'analog_four_mk2',
@@ -271,6 +278,11 @@ export const forgeCaptures: KitCaptureResult[] = [
     round_trip_verified: true,
     input_only: true,
     sent_midi: false,
-    layout_items: [],
+    layout_items: ANALOG_FOUR_TRACKS.map((track) => ({
+      index: track.track,
+      label: track.trackLabel,
+      status: 'mutation_ready',
+      detail: 'Filter 1 Frequency is verified for offline captured-kit mutation; every other parameter remains mapping-blocked',
+    })),
   },
 ];

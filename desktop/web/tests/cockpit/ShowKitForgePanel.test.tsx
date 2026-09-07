@@ -407,6 +407,110 @@ describe('ShowKitForgePanel', () => {
     expect(screen.getByLabelText('Audition notes')).toHaveValue('Draft still open');
   });
 
+  it('renders captured subset IDs and sends their exact target and lock identities', async () => {
+    const fake = new FakeCockpitClient();
+    mount(fake);
+    await waitForCommand(fake, 'show_bank_list');
+    act(() => useCockpitStore.setState({
+      kitCaptures: forgeCaptures.map((capture) => ({
+        ...capture,
+        layout_items: capture.layout_items.filter((item) =>
+          (capture.device_id === 'analog_rytm_mk2' ? [3, 8] : [2, 4]).includes(item.index),
+        ),
+      })),
+      rytmPadTargets: [], a4TrackTargets: [], rytmPadLocks: [], a4TrackLocks: [],
+    }));
+
+    const rytm = within(screen.getByRole('group', { name: 'Rytm pads' }));
+    const a4 = within(screen.getByRole('group', { name: 'Analog Four tracks' }));
+    expect(rytm.getAllByRole('checkbox')).toHaveLength(2);
+    expect(a4.getAllByRole('checkbox')).toHaveLength(2);
+    expect(rytm.queryByLabelText('P1')).not.toBeInTheDocument();
+    expect(a4.queryByLabelText('T1')).not.toBeInTheDocument();
+    fireEvent.click(rytm.getByLabelText('P8'));
+    fireEvent.click(a4.getByLabelText('T4'));
+    fireEvent.click(rytm.getByRole('button', { name: 'Lock pad 3' }));
+    fireEvent.click(a4.getByRole('button', { name: 'Lock track 2' }));
+    expect(fake.sent).toEqual(expect.arrayContaining([
+      { type: 'set_mutation_targets', device_id: 'analog_rytm_mk2', target_ids: [8] },
+      { type: 'set_mutation_targets', device_id: 'analog_four_mk2', target_ids: [4] },
+      { type: 'set_pad_lock', pad_id: 3, locked: true },
+      { type: 'set_a4_track_lock', track: 2, locked: true },
+    ]));
+    fireEvent.click(screen.getByRole('button', { name: 'Forge 3 candidate pairs' }));
+    expect(await waitForCommand(fake, 'show_bank_generate_candidates')).toMatchObject({
+      rytm_targets: [8], rytm_locks: [3], a4_targets: [4], a4_locks: [2],
+    });
+  });
+
+  it.each(['missing', 'empty'] as const)(
+    'keeps %s captured layouts inert while retained-bank generation preserves the server scope',
+    async (layout) => {
+      const retainedState = {
+        ...showBankState,
+        banks: showBankState.banks.map((bank) => ({
+          ...bank,
+          entries: bank.entries.map((entry) => ({
+            ...entry,
+            rytm_source: {
+              ...entry.rytm_source,
+              sysex: {
+                ...entry.rytm_source.sysex,
+                retained: {
+                  artifact_name: `${entry.rytm_source.sysex.frame_sha256}.syx`,
+                  sha256: entry.rytm_source.sysex.frame_sha256,
+                  byte_count: entry.rytm_source.sysex.frame_bytes,
+                },
+              },
+            },
+            analog_four_source: {
+              ...entry.analog_four_source,
+              sysex: {
+                ...entry.analog_four_source.sysex,
+                retained: {
+                  artifact_name: `${entry.analog_four_source.sysex.frame_sha256}.syx`,
+                  sha256: entry.analog_four_source.sysex.frame_sha256,
+                  byte_count: entry.analog_four_source.sysex.frame_bytes,
+                },
+              },
+            },
+          })),
+        })),
+      };
+      const fake = new FakeCockpitClient();
+      mount(fake, retainedState);
+      await waitForCommand(fake, 'show_bank_list');
+      act(() => useCockpitStore.setState({
+        kitCaptures: layout === 'missing' ? [] : forgeCaptures.map((capture) => ({ ...capture, layout_items: [] })),
+        rytmPadTargets: [3], a4TrackTargets: [2], rytmPadLocks: [8], a4TrackLocks: [4],
+      }));
+      for (const name of ['Rytm pads', 'Analog Four tracks']) {
+        const group = screen.getByRole('group', { name });
+        expect(group).toBeDisabled();
+        expect(within(group).queryByRole('checkbox')).not.toBeInTheDocument();
+        expect(within(group).queryByRole('button')).not.toBeInTheDocument();
+        expect(within(group).getByText(/Capture this device’s KIT to load its available/)).toBeInTheDocument();
+      }
+      const forge = screen.getByRole('button', { name: 'Forge 3 candidate pairs' });
+      expect(forge).toBeEnabled();
+      fireEvent.click(forge);
+      expect(await waitForCommand(fake, 'show_bank_generate_candidates')).toMatchObject({
+        rytm_targets: [3], rytm_locks: [8], a4_targets: [2], a4_locks: [4],
+      });
+      expect(fake.sent.filter((command) =>
+        ['set_mutation_targets', 'clear_mutation_targets', 'set_pad_lock', 'set_a4_track_lock'].includes(command.type),
+      )).toEqual([]);
+
+      act(() => useCockpitStore.setState({
+        kitCaptures: forgeCaptures.filter((capture) => capture.device_id === 'analog_rytm_mk2'),
+      }));
+      expect(screen.getByRole('group', { name: 'Rytm pads' })).toBeEnabled();
+      expect(screen.getByRole('group', { name: 'Analog Four tracks' })).toBeDisabled();
+      expect(screen.getByLabelText('P3')).toBeChecked();
+      expect(screen.queryByLabelText('T2')).not.toBeInTheDocument();
+    },
+  );
+
   it('edits metadata, scope, depth, and deterministic multi-candidate controls', async () => {
     const fake = new FakeCockpitClient();
     mount(fake);
@@ -596,7 +700,7 @@ describe('ShowKitForgePanel', () => {
       analog_four_hardware_save: null,
       rytm_recapture: null,
       analog_four_recapture: null,
-      readiness: { status: 'favorite' as const, show_ready: false, blocked_reasons: ['save_required'], recovery_actions: ['save_then_recapture'] },
+      readiness: { status: 'favorite' as const, show_ready: false, blocked_reasons: ['rytm_hardware_save_missing' as const], recovery_actions: ['save_then_recapture'] },
     };
     const favoriteState: ShowBankState = {
       ...showBankState,

@@ -53,8 +53,6 @@ from .analog_four_kit_fields import (
     A4_FIXED_8_8_WIDTH,
     A4_SOUND_FORMAT_MARKER,
     A4_SOUND_SIGNATURE,
-    format_a4_fixed_8_8,
-    parse_a4_fixed_8_8,
 )
 from .analog_four_learning import (
     ANALOG_FOUR_LEARNING_CAPTURE_MATRIX,
@@ -358,8 +356,6 @@ __all__ = [
     "A4_FIXED_8_8_WIDTH",
     "A4_SOUND_FORMAT_MARKER",
     "A4_SOUND_SIGNATURE",
-    "format_a4_fixed_8_8",
-    "parse_a4_fixed_8_8",
     "A4_KIT_NAME_LENGTH",
     "A4_KIT_NAME_OFFSET",
     "A4_KIT_OBJECT_NAME_OFFSET",

@@ -7,6 +7,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from typing import Final, cast
 
+from ...guardrails.input_validation import require_boolean
 from ..data.show_bank import (
     A4_SHOW_KIT_DEVICE_ID,
     RYTM_SHOW_KIT_DEVICE_ID,
@@ -43,11 +44,6 @@ def _now(clock: Clock) -> datetime:
     if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError("show-bank clock must return a timezone-aware datetime")
     return value
-
-
-def _require_boolean(value: object, label: str) -> None:
-    if not isinstance(value, bool):
-        raise TypeError(f"{label} must be a boolean")
 
 
 def create_show_bank(  # noqa: PLR0913 - typed creation fields and injectable evidence clock
@@ -326,7 +322,7 @@ def mark_favorite(
 ) -> ShowBank:
     """Promote the selected candidate; changing an existing favorite is explicit."""
 
-    _require_boolean(replace_existing, "replace_existing")
+    require_boolean(replace_existing, "replace_existing")
 
     def transform(entry: ShowBankEntry, timestamp: datetime) -> ShowBankEntry:
         if entry.selected_candidate_id is None:

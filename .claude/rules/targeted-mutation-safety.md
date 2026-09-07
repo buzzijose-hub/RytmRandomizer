@@ -46,6 +46,10 @@ planner scope, and hardware send plans.
 12. Imported field labels and offsets are claims, not calibration authority.
     Derive comparison offsets from canonical calibration facts and use exact,
     context-independent fixed-point conversion.
+13. Offline A4 preparation cannot confer output authority. Revalidate retained
+    bytes and current context on every request, and revoke stale UI reports
+    after capture, candidate, scope, cue or session changes. Live transport and
+    recovery require their own evidence; saved-KIT encoding is not a substitute.
 
 See `.claude/skills/learned/targeted-live-kit-mutation/SKILL.md` for the focused
 implementation and verification workflow.

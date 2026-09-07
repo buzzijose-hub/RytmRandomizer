@@ -63,6 +63,12 @@ kit adoption, or a send plan that could reach an Elektron device.
 13. Derive imported semantic offsets from trusted calibration facts. Fixed
     point parsing and formatting must remain exact under ambient Decimal
     precision changes and reject nonrepresentable input without rounding.
+14. An offline preparation report is evidence for review, never an ArmedApply
+    grant. Reconstruct candidate bytes from retained source facts and bind the
+    report to current capture, candidate, scope, cue and session. Invalidate
+    both displayed and pending results when any context changes. Saved-KIT
+    Q8.8 evidence cannot establish live paired-CC or NRPN conversion, output
+    destination semantics, or a physical restore contract.
 
 ## Verification
 

@@ -124,6 +124,15 @@ This section is the canonical index for every env var the project reads.
 See [`docs/COCKPIT_QUICKSTART.md`](COCKPIT_QUICKSTART.md) for the
 operator-facing walkthrough and [`docs/ARCHITECTURE.md` §6.5](ARCHITECTURE.md#65-cockpit-websocket-security-contract-post-code_reviewmd-sweep-2026-05) for the WebSocket security contract.
 
+### Installer workflow variables (build only)
+
+`installers.yml` sets `TAURI_CLI_VERSION=2.11.4` for its pinned prebuilt npm
+CLI. Its Python build steps read `STUDIO_WINDOWS`, supplied by the boolean
+`studio_windows` dispatch input (default false). When true, the workflow builds
+only the Windows portable Cockpit and identifies its window/artifact by commit.
+Neither variable is read by the shipped application or changes MIDI authority.
+See [Building installers](BUILDING_INSTALLERS.md#identified-windows-cockpit-studio-copy).
+
 ### 7a. Cockpit sidecar / desktop shell (runtime)
 
 | Env var | Default | Purpose |

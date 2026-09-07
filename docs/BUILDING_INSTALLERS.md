@@ -400,6 +400,43 @@ and the `release.yml` workflow's tag-vs-pyproject check catches the
 
 ## Smoke-testing a local build
 
+### Identified Windows Cockpit studio copy
+
+For a review build of Show Kit Forge, dispatch the existing `installers` workflow
+on the intended feature commit with `studio_windows=true`. This selects only the
+Windows Cockpit job; it does not publish a release or bypass the PR checks/review.
+The default/tag workflow still builds all platforms and Briefcase installers.
+
+The workflow-local `TAURI_CLI_VERSION` pins the prebuilt CLI to `2.11.4`.
+`STUDIO_WINDOWS` passes the boolean dispatch input to the Python packaging
+steps and defaults to false. Neither is a shipped application environment knob.
+
+The Windows job also publishes `show-kit-forge-studio-windows-<full commit>`.
+Its portable directory contains `rytm-randomizer-shell.exe`, the matching
+`binaries/rytm-sidecar.exe`, `README.txt`, and `BUILD-MANIFEST.json`. Keep the
+directory together. The manifest records the source commit, run/attempt, tools,
+build command/config overrides, and both binary SHA256 hashes. The studio-only
+window title includes the short source commit. No local Python installation is
+needed; Windows still needs the Microsoft Edge WebView2 Runtime.
+
+The studio command is `npm exec --yes --package=@tauri-apps/cli@2.11.4 -- tauri build --no-bundle`; the regular installer path omits `--no-bundle`. The pinned
+prebuilt CLI enables Tauri's custom
+protocol for the embedded Vite assets. A bare `cargo build --release` is not the
+same build. CI builds the Python sidecar first, declares it as a resource only
+for packaging, and explicitly builds the frontend before Tauri. Source-only
+Cargo tests therefore do not require an absent sidecar resource.
+
+Smoke the downloaded portable copy with `RYTM_RAND_MIDI_BACKEND=off` and fresh
+temporary token/data directories. Check the initial embedded UI, `/health`,
+authenticated bootstrap, and `show_bank_list`; verify the launched child is the
+bundled sidecar. Leave capture and arm controls untouched: the explicitly armed
+capture composition can enumerate inputs when its capture panel is requested.
+An off-backend smoke is software evidence only. Record exact hashes and use the
+[studio checklist](hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md)
+before any physical action.
+
+### Briefcase source/install checks
+
 The first sanity check is `briefcase create` from a fresh checkout. It:
 
 - Reads `pyproject.toml`.

@@ -158,7 +158,7 @@ def test_untrusted_scalar_and_collection_decoding_is_strict() -> None:
         ShowKitCapture.from_dict(capture_raw)
     capture_raw = source_entry().rytm_source.to_dict()
     capture_raw["round_trip_verified"] = "true"
-    with pytest.raises(TypeError, match="boolean"):
+    with pytest.raises(TypeError, match=r"^capture\.round_trip_verified must be a boolean$"):
         ShowKitCapture.from_dict(capture_raw)
     capture_raw = source_entry().rytm_source.to_dict()
     capture_raw["captured_at"] = "not-a-date"

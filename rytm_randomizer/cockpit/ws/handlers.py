@@ -162,7 +162,7 @@ _logger = get_logger(__name__)
 
 Used for the structured forensic record that backs every categorical
 error envelope returned by :func:`handle_command` (PR 14 / RR4f). The
-``extra=`` payload carries ``repr(exc)`` (which encodes type + args
+``extra=`` payload carries bounded ``repr(exc)`` (which encodes type + args
 without using ``str(exc)`` — the AST guard in
 ``tests/architecture/test_no_raw_exception_messages_on_wire.py`` flags
 ``str(<exc-name>)`` regardless of whether the result reaches the wire,
@@ -175,6 +175,9 @@ correlation, PR O2 — RED metrics, PR O4 — fingerprinted error events)
 land in the package's structured stream without touching this file's
 imports. See ``OBSERVABILITY_REVIEW.md`` Phase 5.
 """
+
+_HANDLER_EXCEPTION_REPR_MAX_CHARS: Final[int] = 1024
+"""Maximum logged exception detail, including any truncation marker."""
 
 
 @runtime_checkable
@@ -719,6 +722,16 @@ def _redacted_exception_repr(
         # it may contain an operator's machine-local port name.
         return f"{type(exc).__name__}('<redacted-midi-port>')"
     return repr(exc)
+
+
+def _bounded_handler_exception_repr(exc: BaseException) -> str:
+    """Keep useful exception context without logging an oversized rejected request."""
+
+    detail = repr(exc)
+    if len(detail) <= _HANDLER_EXCEPTION_REPR_MAX_CHARS:
+        return detail
+    marker = "..."
+    return detail[: _HANDLER_EXCEPTION_REPR_MAX_CHARS - len(marker)] + marker
 
 
 # ---------------------------------------------------------------------------
@@ -2908,13 +2921,14 @@ async def handle_command(envelope: dict[str, object], session: CockpitSession) -
             # PR 14 / RR4f: never echo the underlying exception text back
             # over the wire -- exception messages routinely embed filesystem
             # paths, profile ids the server has rejected, or stack-traceable
-            # details. Map to a categorical code and surface the full
+            # details. Map to a categorical code and surface the bounded
             # forensic record via :data:`_logger` so operators can still
             # correlate. ``repr(exc)`` is used in the structured ``extra``
             # payload (rather than ``str(exc)``) so the AST guard in
             # ``tests/architecture/test_no_raw_exception_messages_on_wire.py``
             # stays at floor 0 for this file -- ``repr`` still carries the
-            # exception type + args for forensic purposes.
+            # exception type + args for forensic purposes. Only the log copy
+            # is truncated; the internal exception retains its full details.
             code, message = _classify_handler_exception(exc)
             # Wave 4: taxonomy errors also land in the session's bounded
             # error journal so the ``diagnostics`` command can replay the
@@ -2937,7 +2951,7 @@ async def handle_command(envelope: dict[str, object], session: CockpitSession) -
                     "code": code,
                     "cmd_type": cmd_type,
                     "exception_type": type(exc).__name__,
-                    "exception_repr": repr(exc),
+                    "exception_repr": _bounded_handler_exception_repr(exc),
                     # OBS O4 — when ``exc`` is a :class:`RytmRandomizerError`
                     # subclass (one of the arms of the except tuple above),
                     # this is the stable ``<subsystem>.<verb>.<noun>``

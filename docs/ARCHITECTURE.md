@@ -97,9 +97,9 @@ on one line for an existing module, you probably need a new module instead.
 | `data/analog_four_midi.py` | Manual-backed Analog Four CC mappings from Appendix D. Pure data.        |
 | `data/analog_four_display.py` | Analog Four front-panel scales, labels, and CC/NRPN-ready patch-value metadata. Pure data. |
 | `data/midi_event_kinds.py` | Canonical typed CC/NRPN event kinds and manual skip-code vocabulary. Pure data. |
-| `data/analog_four_sysex_calibration.py` | Operator-captured Analog Four SysEx field offsets plus immutable hardware-write validation evidence. Pure data. |
+| `data/analog_four_sysex_calibration.py` | Operator-captured Analog Four SysEx field/native-encoding metadata and immutable hardware-write validation evidence; pure schema-agreement and exact value checks. |
 | `data/analog_four_saved_kit_layout.py` | Observed A4 saved-kit family/object, packing, trailer, size, and name-field constants. Pure data. |
-| `data/analog_four_kit_fields.py` | Immutable Analog Four saved-KIT field addresses, track offsets, value-domain sets, and 16-byte name-storage facts. Pure data. |
+| `data/analog_four_kit_fields.py` | Immutable Analog Four saved-KIT field addresses, track/sound geometry, value domains, and name-storage facts; shared exact Decimal-safe Q8.8 conversion. |
 | `data/analog_four_patch_templates.py` | Static Analog Four patch-genome candidate templates and rationale rows. Pure data. |
 | `data/analog_four_patch_corpus.py` | Synthetic Analog Four patch-corpus starter feature vectors. Pure data. |
 | `data/analog_four_render_rank.py` | Stable feature weights for recorded A4 candidate ranking. Pure data. |
@@ -124,6 +124,7 @@ on one line for an existing module, you probably need a new module instead.
 | `state/a4_soft_capture.py` | Frozen Analog Four passive CC-observation state + pure reducer.          |
 | `state/rytm_cc_observe.py` | Frozen Analog Rytm passive CC/NRPN observation state + pure reducer.    |
 | `behavior/midi_event_plan.py` | Passive shared CC/NRPN event-shape selection and validation contract used by compilers, readers, app guards, and senders. |
+| `guardrails/input_validation.py` | Shared stdlib-only strict object/text/number/sequence validation primitives used by recipe and Show Kit boundaries; no device, filesystem, or transport ownership. |
 | `behavior/operator_console.py` | Passive PowerShell literal-argument formatting shared by reports and operator handoffs. |
 
 ### Middle (runtime core)
@@ -148,11 +149,12 @@ on one line for an existing module, you probably need a new module instead.
 | `snapshot/elektron_packed_payload.py` | Shared pure packed-payload/trailer splitter and integrity contract used by A4 and Analog Rytm saved-kit codecs. |
 | `snapshot/elektron_u14.py` | Shared pure Elektron 14-bit integer validation and packing helpers used across saved-kit families. |
 | `snapshot/sysex_file.py` | Passive local SysEx frame extraction and trusted-file reading helpers; no MIDI enumeration, port access, or transmission. |
-| `snapshot/mutation_scope.py` | Device-neutral immutable include-target/deny-lock scope; empty targets mean the full device domain before locks are subtracted. |
+| `snapshot/mutation_scope.py` | Device-neutral immutable include-target/deny-lock scope and lazily registry-derived mutation domains; empty targets mean the full device domain before locks are subtracted. |
 | `devices/saved_kit_capture.py` | Optional registry-resolved saved-KIT capture capability and canonical round-trip frame DTO; keeps Cockpit from importing concrete family codecs. |
 | `devices/strategies/analog_four_saved_kit_codec.py` | Shared A4 saved-kit payload validator/encoder used by decoder and writer; owns checksum/trailer handling. |
 | `devices/strategies/analog_four_saved_kit_writer.py` | Pure legacy A4 saved-kit mutator/renderer for the hardware-write-validated Filter 2 Resonance path; no filesystem or MIDI I/O. |
-| `devices/strategies/analog_four_filter1_frequency_candidate.py` | Distinct pure A4 Filter 1 Frequency candidate renderer for offline captured-KIT evidence only. It validates exact unsigned Q8.8 values, four-track offsets/stride, checksum, re-decode, and native-byte isolation; always reports `hardware_send_validated = false` and owns no file or MIDI I/O. |
+| `devices/strategies/analog_four_saved_kit_candidate.py` | Pure calibrated saved-KIT candidate rendering through the canonical A4 field codec; revalidates calibration/field agreement, exact values, track bounds, roundtrip and byte isolation, with offline-only output authority. |
+| `devices/strategies/analog_four_filter1_frequency_candidate.py` | Typed Filter 1 Frequency adapter for offline captured-KIT evidence; delegates exact calibration/value/byte validation to the shared A4 saved-KIT candidate renderer. Always reports `hardware_send_validated = false`; owns no file or MIDI I/O. |
 | `devices/strategies/analog_four_kit_fields.py` | Typed copy-on-edit A4 saved-KIT and sound-field views over canonical layout facts; preserves unknown bytes and performs no framing or hardware I/O. |
 | `devices/strategies/analog_four_kit_recipe.py` | Conservative passive A4 semantic recipe compiler that edits only mapped fields in a valid native object and preserves unknown and device-wide data. |
 | `devices/strategies/analog_rytm_saved_kit_codec.py` | Pure initialized Rytm saved-kit frame codec; validates envelope, length, and checksum while providing byte-identical decode/encode. |
@@ -206,8 +208,11 @@ on one line for an existing module, you probably need a new module instead.
 | `cockpit/data/stage.py` | Immutable dual-machine stage DTOs and WebSocket serialization only. |
 | `cockpit/data/show_bank.py` | Immutable Show Kit Forge DTOs, bounded wire dictionaries, evidence vocabularies, and derived `source -> candidate -> favorite -> hardware-saved -> verified -> show-ready` lifecycle. Selection and Rytm live audition remain distinct from favorite/save evidence. |
 | `cockpit/stage/{coordinator,policy}.py` | Hardware-inert lane orchestration plus registry-derived device domains/authority policy; no codec or port ownership. |
+| `cockpit/data/a4_preparation.py` | Frozen candidate-bound A4 preparation report and closed blockers; output authority is always offline-only and cannot be imported as a grant. |
+| `cockpit/show_bank/a4_preparation.py` | Pure review of exact source/candidate bytes, current capture, scope, recovery and port intent through registered capabilities; never creates packets, enumerates or opens MIDI. |
 | `cockpit/show_bank/forge.py` | Pure deterministic paired candidate generation. Rytm reuses captured-anchor mutation planning; A4 calls only the offline Filter 1 Frequency renderer and cannot create A4 output authority. |
 | `cockpit/show_bank/readiness.py` | Pure lifecycle transitions, semantic favorite-recapture comparison, exact full-capture show-time preflight, cue-order readiness, and non-destructive source return. |
+| `cockpit/show_bank/workspace.py` | Authoritative session orchestration for paired sources, candidates, favorites, retained evidence, and fresh preflight. Composes capture/history/stage and the existing Rytm exact-plan ArmedApply boundary; invalidates stale live state and never grants A4 SEND or persistent SAVE authority. |
 | `cockpit/show_bank/store.py` | Revisioned canonical-JSON store and explicit content-addressed SysEx retention using the shared atomic writer; validates bounds, framing, hashes, paths, and corruption categories. |
 | `cockpit/show_bank/export.py` | Self-contained `.show-pack` publication/verification/import beneath configured roots. Publishes the manifest last and rejects missing, extra, noncanonical, malformed, or hash-mismatched artifacts before import. |
 | `cockpit/data/rytm_parameter_map.py` | Canonical cockpit-facing Analog Rytm machine aliases and parameter bindings; delegates CC/NRPN facts to the shared device data layer instead of duplicating controls or offsets. |
@@ -299,9 +304,10 @@ rule, change it here first, then update the test.
 
     | Importing package | Declared Show Kit Forge dependency edges |
     | --- | --- |
-    | `cockpit.data` | `snapshot` (device-neutral mutation scope only) |
-    | `cockpit.show_bank` | `cockpit.capture`, `cockpit.data`, `cockpit.engine`, `cockpit.export`, `cockpit.profiles`, `data`, `devices`, `observability`, `snapshot` |
-    | `cockpit.ws` | `cockpit.show_bank` (authoritative workspace and lifecycle dispatch) |
+    | `cockpit.data` | `snapshot` (device-neutral mutation scope/domain), `guardrails` (strict input-validation leaf only) |
+    | `cockpit.show_bank` | `cockpit.capture`, `cockpit.data`, `cockpit.engine`, `cockpit.export`, `cockpit.profiles`, `data`, `devices`, `guardrails` (input-validation leaf), `observability`, `snapshot` |
+    | `cockpit.ws` | `cockpit.show_bank` (authoritative workspace and lifecycle dispatch), `guardrails` (input-validation leaf) |
+    | `cockpit.stage` | `snapshot` (shared registry-derived mutation domain) |
 
     Adding another edge is a separate architecture decision. The workflow and
     optional offline A4 capability are described in
@@ -1457,6 +1463,9 @@ for the still-unperformed physical gates.
 The rules above are mechanically enforced by:
 
 * `tests/architecture/test_import_direction.py` (rules 1-9)
+* `tests/architecture/test_import_direction_matrix.py` (rule 10: explicit
+  nested-package dependencies, including `cockpit.show_bank`, `cockpit.data`,
+  `cockpit.ws`, and the registered optional device-capability boundary)
 * `tests/architecture/test_no_side_effects.py` (no I/O at import, no `mido`)
 * `tests/architecture/test_house_style.py` (frozen dataclasses, type hints,
   no module-level mutable globals)
