@@ -151,7 +151,8 @@ on one line for an existing module, you probably need a new module instead.
 | `snapshot/mutation_scope.py` | Device-neutral immutable include-target/deny-lock scope; empty targets mean the full device domain before locks are subtracted. |
 | `devices/saved_kit_capture.py` | Optional registry-resolved saved-KIT capture capability and canonical round-trip frame DTO; keeps Cockpit from importing concrete family codecs. |
 | `devices/strategies/analog_four_saved_kit_codec.py` | Shared A4 saved-kit payload validator/encoder used by decoder and writer; owns checksum/trailer handling. |
-| `devices/strategies/analog_four_saved_kit_writer.py` | Pure A4 saved-kit mutator/renderer consuming the shared codec, calibration, and canonical data-layer layout facts; no filesystem or MIDI I/O. |
+| `devices/strategies/analog_four_saved_kit_writer.py` | Pure legacy A4 saved-kit mutator/renderer for the hardware-write-validated Filter 2 Resonance path; no filesystem or MIDI I/O. |
+| `devices/strategies/analog_four_filter1_frequency_candidate.py` | Distinct pure A4 Filter 1 Frequency candidate renderer for offline captured-KIT evidence only. It validates exact unsigned Q8.8 values, four-track offsets/stride, checksum, re-decode, and native-byte isolation; always reports `hardware_send_validated = false` and owns no file or MIDI I/O. |
 | `devices/strategies/analog_four_kit_fields.py` | Typed copy-on-edit A4 saved-KIT and sound-field views over canonical layout facts; preserves unknown bytes and performs no framing or hardware I/O. |
 | `devices/strategies/analog_four_kit_recipe.py` | Conservative passive A4 semantic recipe compiler that edits only mapped fields in a valid native object and preserves unknown and device-wide data. |
 | `devices/strategies/analog_rytm_saved_kit_codec.py` | Pure initialized Rytm saved-kit frame codec; validates envelope, length, and checksum while providing byte-identical decode/encode. |
@@ -203,7 +204,12 @@ on one line for an existing module, you probably need a new module instead.
 | `cockpit/capture/{service,bridge}.py` | Input-only saved-KIT capture and verified Rytm-anchor/A4-blocked-plan adoption; resolves optional capture capability through the device registry and owns no output surface. |
 | `cockpit/mutation_targets.py` | Strict whole-state Rytm-pad/A4-track target model built on device-neutral `MutationScope`. |
 | `cockpit/data/stage.py` | Immutable dual-machine stage DTOs and WebSocket serialization only. |
+| `cockpit/data/show_bank.py` | Immutable Show Kit Forge DTOs, bounded wire dictionaries, evidence vocabularies, and derived `source -> candidate -> favorite -> hardware-saved -> verified -> show-ready` lifecycle. Selection and Rytm live audition remain distinct from favorite/save evidence. |
 | `cockpit/stage/{coordinator,policy}.py` | Hardware-inert lane orchestration plus registry-derived device domains/authority policy; no codec or port ownership. |
+| `cockpit/show_bank/forge.py` | Pure deterministic paired candidate generation. Rytm reuses captured-anchor mutation planning; A4 calls only the offline Filter 1 Frequency renderer and cannot create A4 output authority. |
+| `cockpit/show_bank/readiness.py` | Pure lifecycle transitions, semantic favorite-recapture comparison, exact full-capture show-time preflight, cue-order readiness, and non-destructive source return. |
+| `cockpit/show_bank/store.py` | Revisioned canonical-JSON store and explicit content-addressed SysEx retention using the shared atomic writer; validates bounds, framing, hashes, paths, and corruption categories. |
+| `cockpit/show_bank/export.py` | Self-contained `.show-pack` publication/verification/import beneath configured roots. Publishes the manifest last and rejects missing, extra, noncanonical, malformed, or hash-mismatched artifacts before import. |
 | `cockpit/data/rytm_parameter_map.py` | Canonical cockpit-facing Analog Rytm machine aliases and parameter bindings; delegates CC/NRPN facts to the shared device data layer instead of duplicating controls or offsets. |
 | `style_analysis/analog_four_patch_inference.py` | Typed, single-decode audio evidence and audio-dependent four-column A4 patch-genome inference with direct RED metrics. |
 | `style_analysis/runtime_types.py` | Shared runtime type-validation helper used by extractor and A4 inference boundaries. |
@@ -239,8 +245,9 @@ may read from `data/` and `state/` but they may not import `engines`, `shell`,
 
 ## 3. Dependency direction rules (machine-enforced)
 
-These are the rules that `tests/architecture/test_import_direction.py`
-verifies. If you change a rule, change it here first, then update the test.
+These are the rules that `tests/architecture/test_import_direction.py` and
+`tests/architecture/test_import_direction_matrix.py` verify. If you change a
+rule, change it here first, then update the test.
 
 1. **`data/` is a leaf.**
    `data/*` may import only Python stdlib and other `data/*` modules.
@@ -283,6 +290,22 @@ verifies. If you change a rule, change it here first, then update the test.
    `mido_provider.py` and inside conditional branches of `midi_io.py` that
    fire only when a real sender is constructed. Static `import mido` /
    `from mido` at module top level is forbidden in the package.
+
+10. **Show Kit Forge stays inside Cockpit's nested dependency matrix.**
+    `cockpit.show_bank` owns orchestration and local evidence; it resolves
+    device capabilities through public `devices` exports and owns no MIDI
+    adapter. The following edges are declared in
+    `tests/architecture/test_import_direction_matrix.py`:
+
+    | Importing package | Declared Show Kit Forge dependency edges |
+    | --- | --- |
+    | `cockpit.data` | `snapshot` (device-neutral mutation scope only) |
+    | `cockpit.show_bank` | `cockpit.capture`, `cockpit.data`, `cockpit.engine`, `cockpit.export`, `cockpit.profiles`, `data`, `devices`, `observability`, `snapshot` |
+    | `cockpit.ws` | `cockpit.show_bank` (authoritative workspace and lifecycle dispatch) |
+
+    Adding another edge is a separate architecture decision. The workflow and
+    optional offline A4 capability are described in
+    [§6.6](#66-show-kit-forge-paired-preparation-layer-2026-09).
 
 ---
 
@@ -1323,6 +1346,109 @@ now ships a matching `*Dict` TypedDict next to it:
 `from_dict(data)` accepts the TypedDict (or a Mapping that matches its shape).
 This is the M1 + P2 fix — `from_dict` now expresses its wire contract in the type
 system instead of widening to `object`.
+
+---
+
+## 6.6 Show Kit Forge paired preparation layer (2026-09)
+
+Show Kit Forge lives inside `cockpit/`; it is not a parallel device hierarchy
+and it owns no direct hardware adapter. The server is authoritative for bank
+state, revisions, lifecycle transitions, artifact roots, and readiness. The
+frontend renders whole-state `show_bank_changed` events and never reconstructs
+or persists a competing bank in browser storage.
+
+Its allowed nested-package dependencies are listed in
+[§3, rule 10](#3-dependency-direction-rules-machine-enforced) and enforced by
+`tests/architecture/test_import_direction_matrix.py`. The package's place in
+the layer map is shown in
+[Architecture Diagrams §2](ARCHITECTURE_DIAGRAMS.md#2-package-layer-map).
+
+One entry starts with two codec-round-trip-verified captures. Source identity
+is immutable. Multiple deterministic candidate pairs may coexist, while
+`selected_candidate_id`, Rytm live-audition evidence, and the favorite remain
+separate facts. The lifecycle is derived from evidence rather than assigned by
+the client:
+
+```text
+source -> candidate -> favorite -> hardware-saved -> verified -> show-ready
+```
+
+- `favorite` means selected for keeping; it is not a hardware save.
+- `hardware-saved` requires a per-device operator attestation and slot in
+  `1..128`; it remains unverified.
+- `verified` requires fresh Rytm and A4 recaptures whose promoted semantic
+  projections match the favorite pair.
+- `show-ready` requires another fresh paired capture immediately before use.
+  Its whole-decoded-payload fingerprints must exactly equal the fingerprints
+  retained by the successful favorite recaptures. Either mismatch
+  clears `show_ready_at` and retains the mismatch evidence/recovery reason.
+
+This two-level comparison is intentional. A semantic projection establishes
+that the supported candidate controls survived a manual save; it cannot prove
+that unknown or device-wide bytes are unchanged. The show-time gate therefore
+uses the whole-payload capture fingerprints and never degrades to
+semantic-subset matching.
+
+Rytm audition is RAM-only and reuses Cockpit's existing PREPARE, exact current
+plan id, exact selected output port, per-action confirmation, and
+`senders/armed_apply.py` boundary. Before every live audition, the operator
+manually reloads the immutable source KIT and captures its current KIT. This
+capture clears the current candidate and prepared plan, so the operator must
+then select the candidate again, preview it, and prepare its exact plan before
+arming and confirming SEND. The server requires a matching source capture
+newer than the preceding hardware attempt or disconnect, plus explicit manual
+reload acknowledgment; a saved-KIT dump alone cannot prove restored RAM state.
+The path is implemented, but automated tests do not establish that a physical
+one-pad audition and restoration occurred. Persistent SAVE is never issued by
+Cockpit. The operator saves the favorite on the instrument, then requests a
+fresh input-only capture.
+
+The A4 lane has a narrower authority boundary. August 28 captured-KIT evidence
+permits the distinct Filter 1 Frequency renderer to produce local candidate
+bytes for Tracks 1-4 using unsigned big-endian Q8.8, native offset 128, and a
+350-byte track stride. The renderer is not accepted by the legacy
+hardware-write-validated writer, always returns
+`hardware_send_validated = false`, and cannot send or save. A4 SEND,
+destination-slot rewriting, and every unpromoted A4 field remain blocked.
+
+Forge obtains this renderer through the public
+`devices.get_analog_four_filter1_frequency_candidate_capability()` resolver.
+It looks up `analog_four_mk2` in the existing device registry and narrows it
+to the optional `AnalogFourFilter1FrequencyCandidateCapability` Protocol.
+`AnalogFourDevice.render_filter1_frequency_candidate()` delegates to the pure
+strategy; neither Forge nor this capability widens the base `Device` Protocol
+or acquires output authority. The optional capability and delegation are shown
+in [Architecture Diagrams §3](ARCHITECTURE_DIAGRAMS.md#3-device--strategy-capability-stack-ws-s5--strategy);
+the source-capture SEND gate and evidence lifecycle appear in
+[§37](ARCHITECTURE_DIAGRAMS.md#37-show-kit-forge-evidence-and-show-time-readiness).
+
+Show-bank persistence writes each revision as new canonical sorted-key JSON.
+Incoming framed SysEx stays in memory until explicit retention; retained bytes
+are named by SHA-256 and transactionally committed with the new manifest. A
+`.show-pack` is a flat, self-contained configured-root directory containing
+only explicitly retained evidence, canonical cue order, recovery text,
+checksums, and a final `manifest.json` commit marker. Verification rejects
+unexpected/missing files, schema, size, framing, hash, cue-order, recovery,
+path, or cross-reference failures before optional atomic import.
+
+Observability sits at the runtime boundaries: the workspace records bounded
+publication, generation, and live-evidence decisions; the store and show-pack
+service trace persistence and verification, with direct export success/error
+metrics. WebSocket operations retain the shared request span, RED metrics, and
+error journal. Pure DTO validation, readiness transforms, and mutation math
+remain deterministic and logger-free; their callers own the observable
+decision. Decision payloads exclude raw frames, kit names, operator notes,
+and absolute local paths.
+
+OXI project/pattern/chapter/cue fields are descriptive metadata. Show Kit Forge
+does not issue OXI commands; OXI remains responsible for sequencing, notes,
+triggers, mutes, and pattern motion.
+
+See
+[`2026-09-04-show-kit-forge.md`](superpowers/plans/2026-09-04-show-kit-forge.md)
+for the 18-gate implementation plan and
+[`2026-09-04-show-kit-forge-studio-checklist.md`](hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md)
+for the still-unperformed physical gates.
 
 ---
 

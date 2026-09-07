@@ -1,9 +1,49 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-08-27. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-09-07. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+
+## Current Snapshot
+
+Show Kit Forge is implemented on `codex/show-kit-forge-complete` as one
+versioned, paired Analog Rytm/Analog Four preparation workflow. It keeps
+`source -> candidate -> favorite -> hardware-saved -> verified -> show-ready`
+as distinct evidence states; selection and a Rytm live audition do not imply a
+favorite or hardware save. Exact framed SysEx bytes are retained only by an
+explicit action, and show-pack export/import verifies canonical manifests,
+hashes, framing, cue order, recovery text, and the complete file set.
+
+The Analog Four capability promoted from the 2026-08-28 captures is narrowly
+offline: Filter 1 Frequency only, unsigned big-endian Q8.8 over `0x0000` through
+`0x7F00`, at native Track 1 offset 128 with a 350-byte track stride. Its
+distinct renderer reports `hardware_send_validated = false`; A4 SEND and every
+other unpromoted saved-KIT field remain blocked. Filter 2 Resonance retains its
+separate hardware-write-validated file-rendering status.
+
+The Rytm audition route reuses Cockpit's existing PREPARE plus exact
+plan-id/port confirmation and `ArmedApply` RAM-only SEND. The software route
+exists, but the operator-present one-pad send, untouched-pad check, and restore
+rehearsal have not yet been performed for this bundle. Cockpit never saves a
+KIT persistently: after choosing a favorite, the operator must save on each
+instrument and make fresh input-only captures. Candidate verification compares
+the promoted semantic projection; a separate show-time preflight compares the
+fresh whole-payload Rytm and A4 capture fingerprints exactly and revokes
+readiness on either mismatch. OXI project/pattern/chapter fields are metadata
+only; OXI retains sequencing ownership and Cockpit emits no OXI command.
+
+The exact unperformed steps and blank observation fields live in
+[`hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md`](hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md).
 
 ## Recent Cleanup
 
+- 2026-09-07: Completed the Show Kit Forge integration in a fresh worktree,
+  preserving both the dirty main checkout and the earlier unfinished feature
+  worktree. Added immutable paired sources, candidate/favorite workflow,
+  explicit exact-byte retention, bounded atomic show packs, semantic save
+  verification, and fresh paired show-time preflight. Review fixes protect
+  source slots, invalidate removed or stale SEND plans, require a fresh source
+  reload before live Rytm audition, and preserve all A4 bytes when fully locked.
+  The A4 Filter 1 Frequency renderer remains offline-only; the dated studio
+  checklist records every outstanding physical observation.
 - 2026-08-27: Integrated the targeted dual-machine live-performance Cockpit
   bundle on the latest `modularize-v1.34` base.
   - Added explicitly armed, input-only current-KIT capture for Analog Rytm and

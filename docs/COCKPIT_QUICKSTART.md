@@ -277,9 +277,11 @@ left (your current pad state) and a Mutation Panel on the right
 The device rail can switch the center view between the default Analog Rytm
 MKII 12-pad snapshot surface and the Analog Four MKII four-track staged
 surface. The Analog Four lane supports input-only verified KIT capture, track
-targets and locks, and independent coordinated stage state. Its semantic
-mutation plan remains zero-event and unsendable until saved-KIT mappings are
-evidence-promoted; the lane does not add an A4 SEND path or output authority.
+targets and locks, and independent coordinated stage state. Show Kit Forge may
+render Filter 1 Frequency for selected, unlocked A4 tracks as an offline
+saved-KIT candidate. That narrow renderer grants no output authority:
+**A4 SEND remains blocked**, and every other unpromoted A4 saved-KIT field is
+refused.
 
 The Style Crates queue also includes a passive Analog Four set-plan card. It
 renders the current/up-next A4 `warehouse-arc` macro sequence from
@@ -308,7 +310,84 @@ where the A4 side will fit before any outbound A4 macro path exists.
 8. **Hit UNDO** — adopts the previous snapshot as the in-memory anchor and
    revokes any candidate/plan derived from the newer state.
 
-Profiles live as flat JSON files under `~/.rytm-randomizer/profiles/` on
+### 5a. Building a Show Kit Forge bank
+
+Open **Show Kit Forge** when you want an ordered bank of paired Rytm/A4
+favorites rather than a single live mutation.
+
+1. Create or select a versioned bank, then adopt the current round-trip-
+   verified Rytm and A4 captures. Their source fingerprints and recorded
+   hardware slots are immutable anchors.
+2. Add cue/transition/recovery notes and optional OXI project, pattern, and
+   chapter labels. These OXI fields are metadata only; Cockpit sends no OXI
+   command and OXI remains the sequencer.
+3. Choose **Small (25%)**, **Medium (50%)**, **Large (75%)**, or a custom
+   depth, plus the seed/profile and each device's targets and locks. Effective
+   scope is `(targets or complete domain) - locks`.
+4. Generate and compare candidate pairs. Selecting a candidate is separate
+   from **Mark favorite**. For Rytm, Preview -> PREPARE -> confirmed SEND uses
+   the existing exact-plan `ArmedApply` route and is labelled **Live unsaved
+   hardware**. For A4, the candidate is a local Filter 1 Frequency saved-KIT
+   artifact only; the control stays labelled **A4 SEND blocked — offline
+   only**.
+   Use **Retain selected A4 offline artifact** to preserve the selected exact `.syx`
+   before favoriting or moving on. Cockpit shows its content-addressed filename,
+   SHA-256, and byte count; retention grants no A4 SEND authority.
+   With every A4 track locked, the paired A4 artifact preserves the source
+   bytes exactly. Before each live Show Forge SEND, manually reload the Rytm
+   source and take a fresh exact source dump through the device rail. Capturing
+   clears the current candidate and prepared plan. Click **Select for audition**
+   again, then **Preview Rytm** and **Prepare exact plan**. Arm the exact Rytm
+   output, acknowledge the manual source reload in the SEND form, and confirm
+   that current plan once. A saved-KIT dump alone cannot establish unsaved RAM
+   state.
+5. Mark the chosen pair favorite. This means only “chosen in Cockpit.” It is
+   not a hardware save.
+6. Follow the displayed instruction: **Save on instrument, then recapture**.
+   Save manually on both instruments, record each 1–128 destination slot, and
+   make fresh input-only current-KIT dumps. Until recapture matches, a manual
+   save is only **attested/unverified**.
+   Destination slots must differ from every protected source slot for that
+   device in the open workspace. A source remains available for recovery.
+7. Verify the paired recaptures. This checks each favorite's promoted semantic
+   projection and can advance the cue to **Verified**; it does not make the cue
+   show-ready.
+8. Immediately before use, capture both current KITs again and run **Run
+   show-time preflight**. Only exact equality between both fresh whole-payload
+   fingerprints and their retained verified-recapture fingerprints grants
+   **Show-ready**. Either mismatch revokes readiness and keeps the evidence for
+   recovery.
+9. Retain required source/favorite evidence explicitly before export. The
+   server accepts filename-safe package ids under its configured roots; paths
+   never arrive over the wire. A `.show-pack` is accepted only after its
+   canonical manifest, complete file set, checksums, SysEx framing, cue order,
+   and recovery text all verify.
+
+Banks and retained frames live in `show-banks/`; exported packages and import
+inputs live in the sibling `show-packs/` directory. On Windows these are
+under `%APPDATA%/rytm-randomizer/`, on macOS under
+`~/Library/Application Support/rytm-randomizer/`, and on Linux under
+`${XDG_CONFIG_HOME:-~/.config}/rytm-randomizer/`. To import, copy a complete
+`<package-id>.show-pack` directory into `show-packs/` and enter its package id
+in the panel. Reusing an existing package or bank id is refused; use a new
+export id. Receiving a dump never automatically retains its `.syx` file.
+
+Imported show packs are verified local catalogs, not audition authority. They
+can be inspected, reordered, annotated, preflighted with newly dumped current
+KITs, and re-exported, but an imported Rytm candidate cannot reach PREPARE or
+ArmedApply. Capture fresh paired sources in Cockpit to begin a new mutation
+session. Likewise, a saved `show-ready` record is historical after restart;
+Cockpit requires new paired current-KIT dumps in the present process before it
+shows a live show-ready grant.
+
+`favorite`, `hardware-saved`, `verified`, and `show-ready` are deliberately
+different states. **Reset Cockpit audition to source** changes only Cockpit's
+in-memory source projection; it does not touch either instrument. Manually load
+both immutable source slots to return the hardware. The reset clears the active
+selection/live audition and current show-ready grant but preserves prior
+candidate, favorite, save, and recapture evidence.
+
+Profiles live as flat JSON files under `~/.config/rytm-randomizer/profiles/` on
 Linux (`$XDG_CONFIG_HOME/rytm-randomizer/profiles/` is honored if set),
 and platform-appropriate paths on macOS and Windows. You can hand-edit
 the JSON to author profiles, but the supported authoring path is the
@@ -568,10 +647,13 @@ Rytm and A4 are independent lanes in the stage state. A Rytm capture, target,
 lock, candidate, plan, and armed authority cannot grant A4 authority. Rytm
 connection phases come from its armed-output manager; the A4 lane reflects
 capture/session evidence and is not continuous independent hot-plug telemetry.
-A4 captured-kit mutation remains blocked and zero-event until saved-KIT
-semantic offsets, value encodings, track stride, and physical behavior are
-promoted from evidence. Do not treat the existing live CC vocabulary as
-saved-KIT offset evidence.
+A4 live mutation and Cockpit SEND remain blocked. The 2026-08-28 captured
+saved-KIT evidence promotes only offline Filter 1 Frequency candidate bytes:
+unsigned big-endian Q8.8 over `0x0000..0x7F00`, native Track 1 offset 128, and
+350-byte track stride. Do not generalize that local-file capability to another
+field, to destination-slot semantics, or to hardware-send authority. The
+separate legacy saved-KIT writer remains hardware-write-validated only for
+Filter 2 Resonance.
 
 OXI One remains beside Cockpit as owner of sequencing, notes, triggers, mutes,
 and pattern motion. Cockpit owns mutation/performance intelligence, target
@@ -594,10 +676,13 @@ device to discard live-dial changes.
   snapshot, because no persistent-write plus capture-before-write restore seam
   exists. Use the instrument's own save to keep a kit on the hardware.
 
-### 6a. Deterministic first studio rehearsal
+### 6a. Remaining operator-present studio rehearsal
 
-Before launch, save the current Rytm and A4 kits into spare hardware slots.
-Keep the original `.syx` captures and record their SHA-256 fingerprints.
+Automated tests do not complete these steps. Before launch, save the current
+Rytm and A4 kits into spare hardware slots. Keep the original `.syx` captures
+and record their SHA-256 fingerprints. Use the blank, auditable checklist in
+[`hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md`](hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md);
+do not infer an observation from a successful command or file transfer.
 
 1. Launch Cockpit and verify the stage says OXI owns sequencing and neither
    device was auto-selected for output.
@@ -611,42 +696,55 @@ Keep the original `.syx` captures and record their SHA-256 fingerprints.
    Pad 2 only and must exclude every locked/untargeted pad.
 5. Confirm SEND once. Audition while OXI continues to own notes/triggers. Save
    a screenshot and the Cockpit log line carrying the plan id and packet
-   count. Verify Pad 1 and at least one untargeted pad against the before
-   capture.
-6. Recover in Cockpit with UNDO/load of the captured anchor, then reload the
-   saved hardware kit. Re-capture and compare fingerprints. After any cable
-   disconnect or sidecar reconnect, discard the old plan, capture again, and
-   PREPARE a new plan before sending.
+   count. Verify the selected pad changed as intended and compare every
+   locked/untargeted pad against the before capture.
+6. Click **Return to source** to clear Cockpit's active audition selection, then
+   manually reload the saved source KIT on the Rytm. Make a fresh input-only
+   capture. The whole-payload returned fingerprint must equal the baseline
+   before the rehearsal can be recorded as restored. **Return to source does not send
+   restore bytes.** After any cable disconnect or sidecar reconnect, discard
+   the old plan, capture again, and PREPARE a new plan before sending.
 7. Emergency stop: close the confirmation dialog without confirming, DISARM,
    close Cockpit or press Ctrl-C on the sidecar, and reload the saved hardware
    kit. If the MIDI transport itself is wedged, disconnect the selected USB
    MIDI path only after disarming.
 
-For the A4 mapping gap, do not send a Cockpit plan. Use one scratch kit and
-capture this exact two-control matrix:
+For A4, do not arm or send a Cockpit plan. The August 28 captures already prove
+the narrow offline encoding/offset/stride mapping. The remaining physical step
+is the generated four-track scratch candidate:
 
-1. Filter 1 Frequency on Track 1 at 0, 63, and 127:
-   `A4_T1_FILTER1_FREQ_{000,063,127}_SLOT_<n>.syx`.
-2. Filter 1 Frequency at 63 on Tracks 1, 2, 3, and 4 to prove track stride:
-   `A4_T{1,2,3,4}_FILTER1_FREQ_063_SLOT_<n>.syx`.
-3. Amp Attack on Track 1 at 0, 63, and 127 to distinguish the second field
-   offset/encoding from the track stride:
-   `A4_T1_AMP_ATTACK_{000,063,127}_SLOT_<n>.syx`.
+1. Verify
+   `tests/fixtures/analog_four_saved_kit/filter1_freq_tracks_16_25_48_50_80_75_112_25_pending.syx`
+   has SHA-256
+   `829eee0209a248012a968e96df33acd007619a0078255c4fd034b5afda3520dd`.
+2. Manually transfer it to a disposable A4 slot; Cockpit does not perform this
+   transfer.
+3. Confirm Filter 1 Frequency only: Track 1 `16.25`, Track 2 `48.50`, Track 3
+   `80.75`, and Track 4 `112.25`. Audition at a safe level.
+4. Save the KIT on the A4. An unsaved front-panel edit is insufficient because
+   the observed current-KIT dump path reports the last saved KIT.
+5. Make a new input-only dump, preserve it, verify its codec round trip, decode
+   the four values, and record both its full-frame SHA-256 and whole-payload
+   fingerprint. Transfer success alone is not validation.
 
-For every frame, preserve the exact original, verify codec round-trip, record
-only semantic unpacked-byte diffs, infer value encoding, reload and physically
-audition the intended control, and capture the returned kit. Mapping promotion
-requires all five: offset, encoding, track stride, round-trip fixture, and
-physical verification.
+The source captures, exact Q8.8/offset evidence, generated checksum and byte
+isolation, and still-empty observation list are recorded in
+[`hardware-validation/2026-08-28-a4-filter1-frequency-saved-kit-evidence.md`](hardware-validation/2026-08-28-a4-filter1-frequency-saved-kit-evidence.md)
+and
+[`../tests/fixtures/analog_four_saved_kit/filter1_frequency_pending_scratch_validation.json`](../tests/fixtures/analog_four_saved_kit/filter1_frequency_pending_scratch_validation.json).
 
-The machine-readable blocked-state contract and exact capture matrix live in
-[`2026-08-26-targeted-live-kit-mutation_A4_MAPPING_GAP.json`](2026-08-26-targeted-live-kit-mutation_A4_MAPPING_GAP.json).
+After both favorite KITs have been saved manually, recapture both devices and
+verify the promoted semantic projections. Immediately before rehearsal/show
+use, capture both once more and run the exact whole-payload-fingerprint
+preflight. A single payload-fingerprint mismatch blocks the pair and requires
+recovery; the semantic subset used for candidate verification is not a
+substitute.
 
 Studio evidence to keep together: before/after `.syx` files, SHA-256 values,
 kit slots, exact port names, target/lock/depth settings, plan id, affected pad
-ids, message count, screenshots, Cockpit logs, physical listening notes, and
-the final capture after manually reloading the original hardware KIT. Cockpit
-does not provide persistent restore.
+ids, message count, screenshots, Cockpit logs, physical listening notes, save
+attestations, and every fresh recapture. Cockpit does not perform a persistent
+KIT save or A4 SEND.
 
 ---
 

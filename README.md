@@ -31,6 +31,7 @@ What the app actually does today:
 - **Live MIDI monitor.** A Protokol-grade passive monitor with timestamps, decoded parameter names, and category/channel/pad filters — see exactly what your devices are saying at all times.
 - **Connection Doctor.** When something is wrong (no ports, driver hints, wedged backend), a diagnostics panel and error journal tell you what and why, instead of a silent dead UI. The sidecar also serves a `GET /health` endpoint.
 - **Sound library.** Capture kits from the device (input-only receive), then browse, tag, and search them locally. Captures are archived on your disk; there is no restore-to-device path, because writing a saved kit back is exactly the operation the safety model refuses today.
+- **Show Kit Forge.** Build ordered banks of paired Rytm/A4 kits from immutable captures, compare targeted mutations, and keep favorites in verified local show packs. Rytm audition uses exact-plan armed SEND; A4 Filter 1 Frequency generation is offline only. Save favorites manually on each instrument, then recapture and verify both fingerprints before a show. [Start a show bank](docs/COCKPIT_QUICKSTART.md#5a-building-a-show-kit-forge-bank).
 - **Kit morphing + scoped randomization.** Morph between your current kit and a target per track/page with a depth macro, and scope randomization with masks + intensity anchored on the kit you are actually playing. Both are pure, deterministic, and pinned byte-identical across languages.
 - **Profile authoring + signed export.** Learn a style profile from your music (the [wizard](#profile-wizard)), mutate live against it, and ship it as a tiny signed `.rymp` file (the [export pipeline](#export-pipeline)).
 - **Accessible by gate, not by afterthought.** Every cockpit route passes a WCAG 2.2 AA axe audit in CI with zero violations. See the [accessibility statement](docs/ACCESSIBILITY.md).
@@ -77,8 +78,9 @@ A Tauri desktop window backed by a bundled Python sidecar that hosts the mutatio
 | **Sound library** | Browse, tag, and search local captured-kit metadata. Restore-to-device is not implemented and stays blocked. |
 | **History strip** | In-memory capture, send, load, and undo snapshots. SAVE is refused; use the instrument to persist a kit. |
 | **SEND-plan readiness** | The cockpit refuses to fire SEND until the server confirms the plan is ready; stale plans clear automatically. |
+| **Show Kit Forge** | Paired source anchors, depth/target/lock mutations, candidate comparison, explicit favorite retention, manual-save attestations, recapture verification, ordered cues, and fresh show-time preflight. |
 
-Every new panel is schema-driven: a Python `PanelSpec` builder feeds the generated TypeScript protocol (`desktop/web/src/types/live_gui_protocol.ts` is generated from the Python TypedDicts, never hand-edited), and one generic renderer draws it. Adding an operator surface is a registry entry, not a bespoke React component.
+Report panels use Python `PanelSpec` builders and the generated TypeScript protocol (`desktop/web/src/types/live_gui_protocol.ts`). Stateful operator workflows, including Show Kit Forge, use registered React panels and typed commands; the sidecar owns bank revisions, persistence, and readiness.
 
 **Sidecar security guarantees:** per-launch HMAC handshake token (`secrets.token_urlsafe(32)`, compared with `hmac.compare_digest`), pinned WebSocket subprotocol (`rytm-rand-cockpit-v1`), per-message size cap, and a wizard-source path allow-list — all pinned by architecture tests.
 
@@ -403,15 +405,14 @@ See [`docs/STATUS.md`](docs/STATUS.md) for the dated snapshot and the per-phase 
 <a id="testing"></a>
 ## Testing
 
-Counts as of the targeted dual-machine live-kit branch (derived from the tree,
-not aspirational):
+Show Kit Forge integration results (see the [dated run report](docs/superpowers/plans/2026-09-04-show-kit-forge_RUN_REPORT.md)):
 
 | Suite | Count |
 |---|---|
-| Full Python suite (`pytest`) | 8,389 collected test items |
-| Architecture invariants (`tests/architecture/`) | 788 test items |
+| Full Python suite (`pytest`) | 8,793 collected test items (8,788 passed; 5 skipped) |
+| Architecture invariants (`tests/architecture/`) | 801 test items |
 | V1.34 parity | 505 golden JSON files → 685 byte-identical test items |
-| Frontend (`desktop/web`, vitest) | 731 test items |
+| Frontend (`desktop/web`, vitest) | 774 test items; 100% coverage |
 | Accessibility gate | axe WCAG 2.2 AA, 0 violations |
 
 The suite uses `pytest-xdist` (`-n auto`). Don't pass `-o addopts=''` for normal runs — it disables xdist and triples the runtime.

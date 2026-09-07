@@ -1297,13 +1297,14 @@ describe('CockpitClient — default request id generator path (no injection)', (
 });
 
 describe('protocol type guards', () => {
-  it('isEvent identifies all ten cockpit event types', () => {
+  it('isEvent identifies cockpit event types including Show Kit Forge', () => {
     expect(isEvent({ type: 'snapshot_changed', snapshot: {} })).toBe(true);
     expect(isEvent({ type: 'mutation_previewed', candidate: null })).toBe(true);
     expect(isEvent({ type: 'send_plan_changed', send_plan: null })).toBe(true);
     expect(isEvent({ type: 'history_updated', history: {} })).toBe(true);
     expect(isEvent({ type: 'profile_changed', profile: null })).toBe(true);
     expect(isEvent({ type: 'profile_catalog_changed', profiles: [] })).toBe(true);
+    expect(isEvent({ type: 'show_bank_changed', show_bank: null })).toBe(true);
     expect(
       isEvent({ type: 'mutation_locks_changed', rytm_pad_locks: [], a4_track_locks: [] }),
     ).toBe(true);

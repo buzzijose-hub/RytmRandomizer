@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "plan": "docs/superpowers/plans/2026-09-04-show-kit-forge.md",
+  "branch": "codex/show-kit-forge-complete",
+  "base_commit": "0b77f9fef019dbfe1da943019b339bd446f95725",
+  "status": "software_verified_hardware_blocked",
+  "phase": "pr",
+  "workstreams": {
+    "a4_evidence_codec": "verified",
+    "domain_readiness": "verified",
+    "storage_workspace_websocket": "verified",
+    "frontend": "verified",
+    "documentation_learning": "verified",
+    "final_closeout": "in_progress",
+    "studio_hardware_validation": "blocked"
+  },
+  "verification": {
+    "focused_checks": {
+      "a4_renderer": "Fixture hashes, canonical roundtrip, exact full-domain Q8.8 formatting and byte isolation pass; physical outbound validation remains pending.",
+      "domain_readiness": "Complete lifecycle, strict imported types, canonical A4 offsets, source protection, source reload/provenance and stale authority regressions pass.",
+      "import_direction": "All 801 architecture tests pass within the full and final fast suites.",
+      "documentation": "Relative links/fences checked; resumable state/schema validated as Draft 2020-12 with date-time formats; operator sequence reviewed against UI."
+    },
+    "final_gate_counts": {
+      "cockpit_python": "2676 passed, 4 skipped in 19.15s.",
+      "frontend": "774 tests / 61 files; 100% statements, branches, functions and lines; typecheck, lint, build pass; one mocked Playwright journey passes.",
+      "fast_suite": "8103 passed, 5 skipped in 279.02s; final touched-module threshold 100% passes.",
+      "architecture": "801 cases pass within full and final fast suites; separate pre-push gate pending.",
+      "v134_parity": "685 frozen cases pass within full suite; 505 JSON files untouched.",
+      "full_suite": "8788 passed, 5 skipped in 315.98s.",
+      "touched_coverage": "All 22 touched Python modules have 100% branch coverage (1434 branches); final fast coverage reports 5540 statements in 19 executable modules, with three package initializers covered in the full run. Whole-package pure branch 99.358%.",
+      "static_analysis": "Ruff, new-module PLR/ERA/ARG, Black, isort, Vulture confidence70, pinned Pyright1.1.411 (22modules), diff checks and state/schema validation pass.",
+      "hosted_ci": null
+    }
+  },
+  "pull_request_url": null,
+  "hardware_validation": {
+    "a4_offline_candidate": "verified_offline_only",
+    "a4_send": "prohibited",
+    "a4_physical_scratch_return": "blocked",
+    "rytm_one_pad_send_restore": "blocked",
+    "paired_favorite_recapture_preflight": "blocked",
+    "checklist": "docs/hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md",
+    "observations_recorded": false
+  },
+  "pending_closeout_fields": [
+    "/pull_request_url",
+    "/verification/final_gate_counts/hosted_ci"
+  ],
+  "next_action": "Finish the serialized Cockpit check, push through the mandatory gates, open the single PR with the full checklist, complete post-push dimension verification and record CI. Hardware validation remains operator-present.",
+  "resume": {
+    "read_first": [
+      "docs/superpowers/plans/2026-09-04-show-kit-forge.md",
+      "docs/superpowers/plans/2026-09-04-show-kit-forge_STATE.json",
+      "docs/superpowers/plans/2026-09-04-show-kit-forge_RUN_REPORT.md",
+      "docs/2026-09-04-show-kit-forge_RUN_LOG.md",
+      "docs/AUTONOMOUS_RUN_PLAYBOOK.md"
+    ],
+    "reconcile": "Inspect the current working tree and GitHub PR state, compare them with this file, then run only the next eligible serialized closeout step. Never infer hardware observations."
+  },
+  "last_event": {
+    "at": "2026-09-07T15:05:20.086453+00:00",
+    "summary": "Full and final fast suites pass; all touched production branches covered. Preparing the single PR."
+  },
+  "last_updated_at": "2026-09-07T15:05:20.086453+00:00"
+}

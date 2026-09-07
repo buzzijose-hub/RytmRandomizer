@@ -2,21 +2,77 @@
 
 from __future__ import annotations
 
+from decimal import localcontext
+from fractions import Fraction
+
 import pytest
 
 pytestmark = pytest.mark.fast
 
 
+@pytest.mark.parametrize("precision", [1, 2, 28])
+def test_filter1_frequency_formatter_is_exact_across_its_complete_domain(precision: int) -> None:
+    from rytm_randomizer.data.analog_four_sysex_calibration import (
+        A4_FILTER1_FREQUENCY_RAW_MAX,
+        format_analog_four_filter1_frequency_screen_value,
+    )
+
+    with localcontext() as context:
+        context.prec = precision
+        for raw in range(A4_FILTER1_FREQUENCY_RAW_MAX + 1):
+            screen_value = format_analog_four_filter1_frequency_screen_value(raw)
+            assert Fraction(screen_value) == Fraction(raw, 256)
+            assert "." not in screen_value or not screen_value.endswith("0")
+        assert format_analog_four_filter1_frequency_screen_value(0) == "0"
+        assert format_analog_four_filter1_frequency_screen_value(0x3F80) == "63.5"
+        assert format_analog_four_filter1_frequency_screen_value(0x4001) == "64.00390625"
+        assert format_analog_four_filter1_frequency_screen_value(0x7F00) == "127"
+
+
+@pytest.mark.parametrize("value", [True, False, 1.0, "1", None])
+def test_filter1_frequency_formatter_rejects_non_integer_inputs(value: object) -> None:
+    from rytm_randomizer.data.analog_four_sysex_calibration import (
+        format_analog_four_filter1_frequency_screen_value,
+    )
+
+    with pytest.raises(TypeError, match="must be an integer"):
+        format_analog_four_filter1_frequency_screen_value(value)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("value", [-1, 0x7F01, 0xFFFF])
+def test_filter1_frequency_formatter_rejects_unpromoted_range(value: int) -> None:
+    from rytm_randomizer.data.analog_four_sysex_calibration import (
+        format_analog_four_filter1_frequency_screen_value,
+    )
+
+    with pytest.raises(ValueError, match="0x0000..0x7F00"):
+        format_analog_four_filter1_frequency_screen_value(value)
+
+
 def test_filter1_frequency_calibration_records_promoted_track_stride() -> None:
     from rytm_randomizer.data.analog_four_sysex_calibration import (
-        A4_SYSEX_CALIBRATION_STATUS_CANDIDATE_PROMOTED,
+        A4_FILTER1_FREQUENCY_ENCODING,
+        A4_FILTER1_FREQUENCY_RAW_MAX,
+        A4_FILTER1_FREQUENCY_RAW_MIN,
+        A4_FILTER1_FREQUENCY_TRACK_1_UNPACKED_OFFSET,
+        A4_FILTER1_FREQUENCY_TRACK_UNPACKED_STRIDE,
+        A4_SYSEX_CALIBRATION_STATUS_OFFLINE_CAPTURED_KIT_MUTATION_VALIDATED,
         analog_four_sysex_calibration_for,
     )
 
     calibration = analog_four_sysex_calibration_for("Filter1 Frequency")
 
     assert calibration.parameter == "Filter1 Frequency"
-    assert calibration.status == A4_SYSEX_CALIBRATION_STATUS_CANDIDATE_PROMOTED
+    assert calibration.status == A4_SYSEX_CALIBRATION_STATUS_OFFLINE_CAPTURED_KIT_MUTATION_VALIDATED
+    assert calibration.offline_saved_kit_mutation_validated is True
+    assert calibration.hardware_send_validated is False
+    assert A4_FILTER1_FREQUENCY_ENCODING == "unsigned-big-endian-q8.8"
+    assert (A4_FILTER1_FREQUENCY_RAW_MIN, A4_FILTER1_FREQUENCY_RAW_MAX) == (
+        0x0000,
+        0x7F00,
+    )
+    assert A4_FILTER1_FREQUENCY_TRACK_1_UNPACKED_OFFSET == 128
+    assert A4_FILTER1_FREQUENCY_TRACK_UNPACKED_STRIDE == 350
     assert calibration.screen_min == "0.00"
     assert calibration.screen_mid == "63.50"
     assert calibration.screen_max == "127.00"
@@ -66,9 +122,39 @@ def test_filter1_frequency_calibration_keeps_capture_evidence_compact() -> None:
         (3, "0.00", 0x00),
         (4, "0.00", 0x00),
     }
-    assert {row.kit_name for row in calibration.evidence} == {"KIT 1"}
-    assert all(row.source_file.endswith("_Kit.syx") for row in calibration.evidence)
+    assert {
+        (
+            row.screen_value,
+            row.source_file,
+            row.payload_fingerprint,
+        )
+        for row in calibration.evidence
+        if row.track == 1
+    } == {
+        ("0.00", "filter1_freq_000_expected.syx", "3834839047939f0a"),
+        ("63.50", "filter1_freq_063_50_expected.syx", "89569c28ad1c6d3a"),
+        ("127.00", "filter1_freq_127_source.syx", "ca77b13a6131a513"),
+    }
+    assert {row.kit_name for row in calibration.evidence} == {"KIT 1", "KIT 20"}
     assert all(len(row.payload_fingerprint) == 16 for row in calibration.evidence)
+
+
+def test_only_filter1_frequency_has_offline_saved_kit_mutation_authority() -> None:
+    from rytm_randomizer.data.analog_four_sysex_calibration import (
+        A4_SYSEX_CALIBRATION_STATUS_OFFLINE_CAPTURED_KIT_MUTATION_VALIDATED,
+        ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS,
+    )
+
+    offline_parameters = {
+        parameter
+        for parameter, calibration in ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS.items()
+        if calibration.status == A4_SYSEX_CALIBRATION_STATUS_OFFLINE_CAPTURED_KIT_MUTATION_VALIDATED
+    }
+
+    assert offline_parameters == {"Filter1 Frequency"}
+    assert (
+        ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS["Filter1 Frequency"].hardware_send_validated is False
+    )
 
 
 def test_filter1_resonance_calibration_records_promoted_track_stride() -> None:
@@ -219,6 +305,8 @@ def test_filter2_resonance_calibration_records_promoted_track_stride() -> None:
 
     assert calibration.parameter == "Filter2 Resonance"
     assert calibration.status == A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED
+    assert calibration.hardware_send_validated is True
+    assert calibration.offline_saved_kit_mutation_validated is False
     assert calibration.screen_min == "0"
     assert calibration.screen_mid == "20"
     assert calibration.screen_max == "127"
@@ -342,9 +430,14 @@ def test_filter2_resonance_calibration_converts_novel_integer_screen_values() ->
     resonance = analog_four_sysex_calibration_for("Filter2 Resonance")
     frequency = analog_four_sysex_calibration_for("Filter2 Frequency")
 
+    assert frequency.primary_raw_value_for_screen("63.50") == 0x3F
     assert resonance.primary_raw_value_for_screen("64") == 64
     with pytest.raises(ValueError, match="unsupported screen value"):
         resonance.primary_raw_value_for_screen("loud")
+    with pytest.raises(ValueError, match="unsupported screen value"):
+        resonance.primary_raw_value_for_screen("064")
+    with pytest.raises(ValueError, match="unsupported screen value"):
+        resonance.primary_raw_value_for_screen("128")
     with pytest.raises(ValueError, match="unsupported screen value"):
         frequency.primary_raw_value_for_screen("64.00")
 
@@ -394,8 +487,8 @@ def test_sysex_calibration_mapping_is_reexported_from_data_layer() -> None:
     assert set(ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS) == {"Filter2 Resonance"}
 
 
-@pytest.mark.parametrize("track", [0, 5])
-def test_sysex_calibration_rejects_tracks_outside_a4_synth_range(track: int) -> None:
+@pytest.mark.parametrize("track", [0, 5, True, 1.0])
+def test_sysex_calibration_rejects_tracks_outside_a4_synth_range(track: object) -> None:
     from rytm_randomizer.data.analog_four_sysex_calibration import (
         analog_four_sysex_calibration_for,
     )
@@ -403,7 +496,7 @@ def test_sysex_calibration_rejects_tracks_outside_a4_synth_range(track: int) -> 
     calibration = analog_four_sysex_calibration_for("Filter1 Resonance")
 
     with pytest.raises(ValueError, match="track must be in 1..4"):
-        calibration.primary_raw_offset_for_track(track)
+        calibration.primary_raw_offset_for_track(track)  # type: ignore[arg-type]
 
 
 def test_sysex_calibration_rejects_unknown_parameters() -> None:

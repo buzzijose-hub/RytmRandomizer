@@ -12,7 +12,7 @@ from ..data.stage import StageDeviceId
 
 ANALOG_RYTM_DEVICE_ID: Final[StageDeviceId] = "analog_rytm_mk2"
 ANALOG_FOUR_DEVICE_ID: Final[StageDeviceId] = "analog_four_mk2"
-A4_MAPPING_BLOCK_REASON: Final[str] = "a4_semantic_mapping_unpromoted"
+A4_MAPPING_BLOCK_REASON: Final[str] = "a4_hardware_audition_validation_pending"
 
 
 @dataclass(frozen=True)

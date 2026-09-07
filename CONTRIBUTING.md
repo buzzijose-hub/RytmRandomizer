@@ -743,7 +743,7 @@ Skills under `.claude/skills/` package repeatable knowledge so an agent (or a hu
 | [`branch-protection-with-path-filters`](.claude/skills/learned/branch-protection-with-path-filters/SKILL.md) | Configuring branch protection together with `paths:` filters. |
 | [`codex-hook-additionalcontext-reprompt`](.claude/skills/learned/codex-hook-additionalcontext-reprompt/SKILL.md) | Codex hooks run only `type:command` handlers — re-prompt the model via `additionalContext`. |
 | [`playwright-strict-mode-selectors`](.claude/skills/learned/playwright-strict-mode-selectors/SKILL.md) | Keep browser locators unique and stable under Playwright strict mode. |
-| [`targeted-live-kit-mutation`](.claude/skills/learned/targeted-live-kit-mutation/SKILL.md) | Carry target-minus-lock scope through capture, planning, exact-plan SEND, blocked A4 evidence, docs, and studio handoff. |
+| [`targeted-live-kit-mutation`](.claude/skills/learned/targeted-live-kit-mutation/SKILL.md) | Carry target-minus-lock scope, fresh capture authority, package-import isolation, exact-plan SEND, narrow A4 evidence, and atomic paired retention through live-kit work. |
 
 **Codex discovers these too.** Codex scans `$REPO_ROOT/.agents/skills/`, not `.claude/skills/`. The repo ships a committed symlink **`.agents/skills` → `.claude/skills/learned`** so codex auto-discovers every learned skill (identical `SKILL.md` format). Edit a skill once in `.claude/skills/learned/` and both agents see it. On a Windows clone where the symlink checked out as a plain file, run `git config core.symlinks true && git checkout -- .agents/skills` to re-materialize it. See [`AGENTS.md` § Skills](AGENTS.md#skills--codex-auto-discovers-them-from-agentsskills).
 
