@@ -16,10 +16,7 @@ from typing import Final
 
 from ...data.analog_four_sysex_calibration import (
     A4_FILTER1_FREQUENCY_PARAMETER,
-    A4_FILTER1_FREQUENCY_RAW_MAX,
-    A4_FILTER1_FREQUENCY_TRACK_1_UNPACKED_OFFSET,
-    A4_FILTER1_FREQUENCY_TRACK_UNPACKED_STRIDE,
-    format_analog_four_filter1_frequency_screen_value,
+    analog_four_sysex_calibration_for,
 )
 from ...devices import (
     AnalogFourFilter1FrequencyCandidateMutation,
@@ -293,21 +290,19 @@ def _a4_mutation_values(
     mutations: list[AnalogFourFilter1FrequencyCandidateMutation] = []
     for track in effective_tracks:
         raw, state = xorshift32(state)
-        offset = A4_FILTER1_FREQUENCY_TRACK_1_UNPACKED_OFFSET + (
-            (track - 1) * A4_FILTER1_FREQUENCY_TRACK_UNPACKED_STRIDE
-        )
-        source_raw = int.from_bytes(unpacked[offset : offset + 2], "big")
-        if not 0 <= source_raw <= A4_FILTER1_FREQUENCY_RAW_MAX:
+        calibration = analog_four_sysex_calibration_for(A4_FILTER1_FREQUENCY_PARAMETER)
+        offset = calibration.native_offset_for_track(track)
+        source_raw = int.from_bytes(unpacked[offset : offset + calibration.native_width], "big")
+        if not 0 <= source_raw <= calibration.native_raw_max:
             raise ValueError(
                 f"A4 track {track} Filter 1 Frequency is outside the verified 0.00..127.00 range"
             )
         signed_unit = (raw - _UINT32_MIDPOINT) / _UINT32_MIDPOINT
-        delta = int(round(signed_unit * recipe.depth * A4_FILTER1_FREQUENCY_RAW_MAX))
+        delta = int(round(signed_unit * recipe.depth * calibration.native_raw_max))
         rendered_raw = min(
-            A4_FILTER1_FREQUENCY_RAW_MAX,
-            max(0, source_raw + delta),
+            calibration.native_raw_max, max(calibration.native_raw_min, source_raw + delta)
         )
-        screen_value = format_analog_four_filter1_frequency_screen_value(rendered_raw)
+        screen_value = calibration.format_native_screen_value(rendered_raw)
         mutations.append(
             AnalogFourFilter1FrequencyCandidateMutation(
                 track=track,
@@ -439,15 +434,14 @@ def analog_four_capture_semantic_fingerprint(
     unpacked = _a4_source_unpacked(result.frame)
     observed_values: list[AnalogFourCandidateValue] = []
     for value in candidate.values:
-        offset = A4_FILTER1_FREQUENCY_TRACK_1_UNPACKED_OFFSET + (
-            (value.track_id - 1) * A4_FILTER1_FREQUENCY_TRACK_UNPACKED_STRIDE
-        )
-        raw = int.from_bytes(unpacked[offset : offset + 2], "big")
+        calibration = analog_four_sysex_calibration_for(value.parameter)
+        offset = calibration.native_offset_for_track(value.track_id)
+        raw = int.from_bytes(unpacked[offset : offset + calibration.native_width], "big")
         observed_values.append(
             AnalogFourCandidateValue(
                 track_id=value.track_id,
                 parameter=A4_FILTER1_FREQUENCY_PARAMETER,
-                screen_value=format_analog_four_filter1_frequency_screen_value(raw),
+                screen_value=calibration.format_native_screen_value(raw),
                 encoded_unsigned_8_8=raw,
                 unpacked_offset=offset,
             )

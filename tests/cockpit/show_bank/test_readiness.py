@@ -339,7 +339,7 @@ def test_mismatched_or_unsupported_semantic_recapture_fails_closed() -> None:
     assert bank.status == "hardware-saved"
     readiness = show_bank_readiness(bank)
     assert not readiness.ready
-    assert any("Rytm recapture" in reason for reason in readiness.blocked_reasons)
+    assert "rytm_recapture_mismatch" in readiness.blocked_reasons
 
 
 def test_recapture_computes_source_match_without_granting_verification() -> None:
@@ -449,7 +449,7 @@ def test_empty_bank_readiness_is_explicitly_blocked() -> None:
     bank = create_show_bank(bank_id="show", name="Show", clock=lambda: NOW)
     result = show_bank_readiness(bank)
     assert not result.ready
-    assert result.blocked_reasons == ("show bank has no cue entries",)
+    assert result.blocked_reasons == ("show_bank_empty",)
 
 
 def test_catalog_import_is_idempotently_marked_and_revokes_runtime_authority() -> None:

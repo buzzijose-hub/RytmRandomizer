@@ -778,7 +778,4 @@ def test_a4_mismatch_is_reported_and_semantic_failure_cannot_publish_partial_pai
     )
     projected = workspace.state_dict()["banks"][0]["entries"][0]
     assert projected["readiness"]["show_ready"] is False
-    assert (
-        "Current Analog Four KIT differs from the verified favorite capture."
-        in projected["readiness"]["blocked_reasons"]
-    )
+    assert "a4_current_kit_mismatch" in projected["readiness"]["blocked_reasons"]

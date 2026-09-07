@@ -6,6 +6,15 @@ from collections.abc import Awaitable, Callable, Mapping
 from types import MappingProxyType
 from typing import Final, cast
 
+from ...guardrails.input_validation import (
+    require_boolean,
+    require_float,
+    require_int,
+    require_integer_tuple,
+    require_object,
+    require_text,
+    require_text_tuple,
+)
 from ..data.show_bank import (
     OxiShowMetadata,
     ShowKitDepthPreset,
@@ -86,68 +95,35 @@ def _show_bank_text(
     *,
     allow_empty: bool = False,
 ) -> str:
-    value = values.get(key)
-    if not isinstance(value, str):
-        raise ValueError(f"{key} must be a string")
-    normalized = value.strip()
+    normalized = require_text(values.get(key), key, ValueError).strip()
     if not allow_empty and not normalized:
         raise ValueError(f"{key} must not be empty")
     return normalized
 
 
 def _integer(values: Mapping[str, object], key: str) -> int:
-    value = values.get(key)
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise ValueError(f"{key} must be an integer")
-    return value
+    return require_int(values.get(key), key, ValueError)
 
 
 def _optional_integer(values: Mapping[str, object], key: str) -> int | None:
     value = values.get(key)
-    if value is None:
-        return None
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise ValueError(f"{key} must be an integer or null")
-    return value
+    return None if value is None else require_int(value, key, ValueError)
 
 
-def _optional_boolean(
-    values: Mapping[str, object],
-    key: str,
-    *,
-    default: bool,
-) -> bool:
-    value = values.get(key, default)
-    if not isinstance(value, bool):
-        raise ValueError(f"{key} must be a boolean")
-    return value
+def _optional_boolean(values: Mapping[str, object], key: str, *, default: bool) -> bool:
+    return require_boolean(values.get(key, default), key, ValueError)
 
 
 def _number(values: Mapping[str, object], key: str) -> float:
-    value = values.get(key)
-    if isinstance(value, bool) or not isinstance(value, (float, int)):
-        raise ValueError(f"{key} must be a number")
-    return float(value)
+    return require_float(values.get(key), key, ValueError)
 
 
 def _string_list(values: Mapping[str, object], key: str) -> tuple[str, ...]:
-    value = values.get(key)
-    if not isinstance(value, list):
-        raise ValueError(f"{key} must be a string list")
-    items = cast(list[object], value)
-    if any(not isinstance(item, str) for item in items):
-        raise ValueError(f"{key} must be a string list")
-    return tuple(cast(list[str], items))
+    return require_text_tuple(values.get(key), key, ValueError, kind="list")
 
 
 def _integer_list(values: Mapping[str, object], key: str) -> tuple[int, ...]:
-    value = values.get(key)
-    if not isinstance(value, list):
-        raise ValueError(f"{key} must be an integer list")
-    items = cast(list[object], value)
-    if any(isinstance(item, bool) or not isinstance(item, int) for item in items):
-        raise ValueError(f"{key} must be an integer list")
-    return tuple(cast(list[int], items))
+    return require_integer_tuple(values.get(key), key, ValueError, kind="list")
 
 
 def _device(values: Mapping[str, object]) -> ShowKitDeviceId:
@@ -162,10 +138,7 @@ def _capture_kind(values: Mapping[str, object]) -> CaptureKind:
 
 
 def _oxi(values: Mapping[str, object]) -> OxiShowMetadata:
-    raw = values.get("oxi")
-    if not isinstance(raw, Mapping):
-        raise ValueError("oxi must be an object")
-    mapping = cast(Mapping[str, object], raw)
+    mapping = require_object(values.get("oxi"), "oxi", ValueError)
     if mapping.get("direct_oxi_control") is not False:
         raise ValueError("direct OXI control is not supported")
     return OxiShowMetadata(

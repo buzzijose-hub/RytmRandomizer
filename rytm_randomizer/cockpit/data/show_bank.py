@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import math
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
 from dataclasses import replace as dataclass_replace
 from datetime import datetime
@@ -27,28 +27,68 @@ from typing import Final, Literal, Self, TypedDict, cast
 
 from ...data.analog_four_sysex_calibration import (
     A4_FILTER1_FREQUENCY_PARAMETER,
-    A4_FILTER1_FREQUENCY_RAW_MAX,
-    A4_FILTER1_FREQUENCY_TRACK_1_UNPACKED_OFFSET,
-    A4_FILTER1_FREQUENCY_TRACK_UNPACKED_STRIDE,
-    A4_SYNTH_TRACK_MAX,
-    A4_SYNTH_TRACK_MIN,
-    format_analog_four_filter1_frequency_screen_value,
+    analog_four_sysex_calibration_for,
 )
-from ...data.analog_rytm_kit_layout import RYTM_KIT_TRACK_COUNT
-from ...snapshot.mutation_scope import MutationScope
+from ...guardrails.input_validation import (
+    require_exact_keys,
+    require_finite_number_field,
+    require_integer_field,
+    require_integer_tuple,
+    require_object,
+    require_sequence,
+    require_text_field,
+    require_text_tuple,
+    validate_filename_id,
+)
+from ...snapshot.mutation_scope import MutationScope, registered_mutation_ids
 from .mutation_candidate import MutationCandidate, MutationCandidateDict, PadDelta
+from .stage import ANALOG_FOUR_DEVICE_ID as A4_SHOW_KIT_DEVICE_ID
+from .stage import ANALOG_RYTM_DEVICE_ID as RYTM_SHOW_KIT_DEVICE_ID
+from .stage import STAGE_DEVICE_IDS, StageDeviceId
 from .types import narrow_status, safe_repr
 
 SHOW_BANK_SCHEMA_VERSION: Final[str] = "show-bank-v1"
 SHOW_BANK_REVISION_MAX: Final[int] = 99_999_999
+SHOW_BANK_ID_MAX_LENGTH: Final[int] = 64
+SHOW_PACK_ID_MAX_LENGTH: Final[int] = 96
 
-ShowKitDeviceId = Literal["analog_rytm_mk2", "analog_four_mk2"]
-SHOW_KIT_DEVICE_ID_VALUES: Final[tuple[ShowKitDeviceId, ...]] = (
-    "analog_rytm_mk2",
-    "analog_four_mk2",
+ShowKitDeviceId = StageDeviceId
+SHOW_KIT_DEVICE_ID_VALUES: Final[tuple[ShowKitDeviceId, ...]] = STAGE_DEVICE_IDS
+
+ShowKitBlockedReason = Literal[
+    "show_bank_empty",
+    "cue_not_show_ready",
+    "paired_candidate_missing",
+    "favorite_missing",
+    "rytm_hardware_save_missing",
+    "a4_hardware_save_missing",
+    "rytm_favorite_recapture_missing",
+    "a4_favorite_recapture_missing",
+    "rytm_recapture_mismatch",
+    "a4_recapture_mismatch",
+    "preflight_required",
+    "preflight_historical",
+    "rytm_current_kit_mismatch",
+    "a4_current_kit_mismatch",
+    "current_session_preflight_required",
+]
+SHOW_KIT_BLOCKED_REASON_VALUES: Final[tuple[ShowKitBlockedReason, ...]] = (
+    "show_bank_empty",
+    "cue_not_show_ready",
+    "paired_candidate_missing",
+    "favorite_missing",
+    "rytm_hardware_save_missing",
+    "a4_hardware_save_missing",
+    "rytm_favorite_recapture_missing",
+    "a4_favorite_recapture_missing",
+    "rytm_recapture_mismatch",
+    "a4_recapture_mismatch",
+    "preflight_required",
+    "preflight_historical",
+    "rytm_current_kit_mismatch",
+    "a4_current_kit_mismatch",
+    "current_session_preflight_required",
 )
-RYTM_SHOW_KIT_DEVICE_ID: Final[ShowKitDeviceId] = "analog_rytm_mk2"
-A4_SHOW_KIT_DEVICE_ID: Final[ShowKitDeviceId] = "analog_four_mk2"
 
 ShowKitLifecycleStatus = Literal[
     "source",
@@ -104,13 +144,6 @@ SHOW_KIT_EVIDENCE_STATUS_VALUES: Final[tuple[ShowKitEvidenceStatus, ...]] = (
     "blocked",
 )
 
-_DEVICE_IDS: Final[Mapping[ShowKitDeviceId, frozenset[int]]] = MappingProxyType(
-    {
-        RYTM_SHOW_KIT_DEVICE_ID: frozenset(range(1, RYTM_KIT_TRACK_COUNT + 1)),
-        A4_SHOW_KIT_DEVICE_ID: frozenset(range(A4_SYNTH_TRACK_MIN, A4_SYNTH_TRACK_MAX + 1)),
-    }
-)
-_ID_RE: Final[re.Pattern[str]] = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 _SHA256_RE: Final[re.Pattern[str]] = re.compile(r"^[0-9a-f]{64}$")
 _FINGERPRINT_RE: Final[re.Pattern[str]] = re.compile(r"^[0-9a-f]{8,64}$")
 _MIN_DEPTH: Final[float] = 0.10
@@ -175,9 +208,14 @@ def narrow_show_kit_evidence_status(value: str) -> ShowKitEvidenceStatus:
     )
 
 
-def _validate_show_bank_id(value: str, label: str) -> None:
-    if _ID_RE.fullmatch(value) is None:
-        raise ValueError(f"{label} must be a lowercase filename-safe id")
+def validate_show_bank_id(value: str, label: str = "bank_id") -> None:
+    """Validate bank, cue, and evidence ids under the canonical 64-char bound."""
+    validate_filename_id(value, label, maximum=SHOW_BANK_ID_MAX_LENGTH)
+
+
+def validate_show_pack_id(value: str, label: str = "package_id") -> None:
+    """Preserve the distinct 96-char package namespace, including default ids."""
+    validate_filename_id(value, label, maximum=SHOW_PACK_ID_MAX_LENGTH)
 
 
 def _validate_text(
@@ -227,50 +265,10 @@ def _validate_optional_energy_level(value: object) -> None:
         raise ValueError("energy_level must be null or in 1..5")
 
 
-def _show_bank_mapping(value: object, label: str) -> Mapping[str, object]:
-    if not isinstance(value, Mapping):
-        raise TypeError(f"{label} must be a mapping")
-    unknown_mapping = cast(Mapping[object, object], value)
-    if any(not isinstance(key, str) for key in unknown_mapping):
-        raise TypeError(f"{label} keys must be strings")
-    return cast(Mapping[str, object], unknown_mapping)
-
-
-def _as_sequence(value: object, label: str) -> Sequence[object]:
-    if not isinstance(value, (list, tuple)):
-        raise TypeError(f"{label} must be a list or tuple")
-    return cast(Sequence[object], value)
-
-
-def _require_show_bank_keys(
-    data: Mapping[str, object], expected: frozenset[str], label: str
-) -> None:
-    actual = frozenset(data)
-    if actual != expected:
-        raise ValueError(
-            f"{label} keys differ; missing={sorted(expected - actual)}, "
-            f"extra={sorted(actual - expected)}"
-        )
-
-
-def _show_bank_string(data: Mapping[str, object], key: str, label: str) -> str:
-    value = data[key]
-    if not isinstance(value, str):
-        raise TypeError(f"{label}.{key} must be a string")
-    return value
-
-
 def _optional_string(data: Mapping[str, object], key: str, label: str) -> str | None:
     value = data[key]
     if value is not None and not isinstance(value, str):
         raise TypeError(f"{label}.{key} must be a string or null")
-    return value
-
-
-def _show_bank_integer(data: Mapping[str, object], key: str, label: str) -> int:
-    value = data[key]
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise TypeError(f"{label}.{key} must be an integer")
     return value
 
 
@@ -281,16 +279,6 @@ def _optional_show_bank_integer(data: Mapping[str, object], key: str, label: str
     return value
 
 
-def _show_bank_number(data: Mapping[str, object], key: str, label: str) -> float:
-    value = data[key]
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise TypeError(f"{label}.{key} must be numeric")
-    number = float(value)
-    if not math.isfinite(number):
-        raise ValueError(f"{label}.{key} must be finite")
-    return number
-
-
 def _boolean(data: Mapping[str, object], key: str, label: str) -> bool:
     value = data[key]
     if not isinstance(value, bool):
@@ -299,7 +287,7 @@ def _boolean(data: Mapping[str, object], key: str, label: str) -> bool:
 
 
 def _show_bank_timestamp(data: Mapping[str, object], key: str, label: str) -> datetime:
-    raw = _string(data, key, label)
+    raw = require_text_field(data, key, label)
     try:
         value = datetime.fromisoformat(raw)
     except ValueError as exc:
@@ -318,33 +306,6 @@ def _optional_timestamp(data: Mapping[str, object], key: str, label: str) -> dat
         raise ValueError(f"{label}.{key} must be an ISO-8601 timestamp or null") from exc
     _validate_timestamp(value, f"{label}.{key}")
     return value
-
-
-def _show_bank_strings(value: object, label: str) -> tuple[str, ...]:
-    items = _as_sequence(value, label)
-    if any(not isinstance(item, str) for item in items):
-        raise TypeError(f"{label} must contain strings")
-    return tuple(cast(str, item) for item in items)
-
-
-# Short local aliases keep the serializer bodies readable while the definitions
-# retain domain-specific names for the repository abstraction catalog.
-_validate_id = _validate_show_bank_id
-_validate_sha256 = _validate_show_bank_sha256
-_as_mapping = _show_bank_mapping
-_require_exact_keys = _require_show_bank_keys
-_string = _show_bank_string
-_integer = _show_bank_integer
-_number = _show_bank_number
-_timestamp = _show_bank_timestamp
-_strings = _show_bank_strings
-
-
-def _integers(value: object, label: str) -> tuple[int, ...]:
-    items = _as_sequence(value, label)
-    if any(isinstance(item, bool) or not isinstance(item, int) for item in items):
-        raise TypeError(f"{label} must contain integers")
-    return tuple(cast(int, item) for item in items)
 
 
 class ShowKitEvidenceDict(TypedDict):
@@ -366,7 +327,7 @@ class ShowKitEvidence:
     notes: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
-        _validate_id(self.evidence_id, "evidence_id")
+        validate_show_bank_id(self.evidence_id, "evidence_id")
         if self.status not in SHOW_KIT_EVIDENCE_STATUS_VALUES:
             raise ValueError("unsupported show-kit evidence status")
         _validate_text(self.source, "evidence source", maximum=_MAX_TEXT)
@@ -384,18 +345,18 @@ class ShowKitEvidence:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> Self:
-        data = _as_mapping(raw, "evidence")
-        _require_exact_keys(
+        data = require_object(raw, "evidence")
+        require_exact_keys(
             data,
             frozenset({"evidence_id", "status", "source", "observed_at", "notes"}),
             "evidence",
         )
         return cls(
-            evidence_id=_string(data, "evidence_id", "evidence"),
-            status=narrow_show_kit_evidence_status(_string(data, "status", "evidence")),
-            source=_string(data, "source", "evidence"),
-            observed_at=_timestamp(data, "observed_at", "evidence"),
-            notes=_strings(data["notes"], "evidence.notes"),
+            evidence_id=require_text_field(data, "evidence_id", "evidence"),
+            status=narrow_show_kit_evidence_status(require_text_field(data, "status", "evidence")),
+            source=require_text_field(data, "source", "evidence"),
+            observed_at=_show_bank_timestamp(data, "observed_at", "evidence"),
+            notes=require_text_tuple(data["notes"], "evidence.notes"),
         )
 
 
@@ -414,7 +375,7 @@ class RetainedSysexArtifact:
     byte_count: int
 
     def __post_init__(self) -> None:
-        _validate_sha256(self.sha256, "retained artifact sha256")
+        _validate_show_bank_sha256(self.sha256, "retained artifact sha256")
         if self.artifact_name != f"{self.sha256}.syx":
             raise ValueError("retained artifact name must be '<sha256>.syx'")
         if not 1 <= self.byte_count <= _MAX_FRAME_BYTES:
@@ -429,16 +390,16 @@ class RetainedSysexArtifact:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> Self:
-        data = _as_mapping(raw, "retained artifact")
-        _require_exact_keys(
+        data = require_object(raw, "retained artifact")
+        require_exact_keys(
             data,
             frozenset({"artifact_name", "sha256", "byte_count"}),
             "retained artifact",
         )
         return cls(
-            artifact_name=_string(data, "artifact_name", "retained artifact"),
-            sha256=_string(data, "sha256", "retained artifact"),
-            byte_count=_integer(data, "byte_count", "retained artifact"),
+            artifact_name=require_text_field(data, "artifact_name", "retained artifact"),
+            sha256=require_text_field(data, "sha256", "retained artifact"),
+            byte_count=require_integer_field(data, "byte_count", "retained artifact"),
         )
 
 
@@ -459,8 +420,8 @@ class ShowKitSysex:
     retained: RetainedSysexArtifact | None = None
 
     def __post_init__(self) -> None:
-        _validate_id(self.artifact_id, "artifact_id")
-        _validate_sha256(self.frame_sha256, "frame_sha256")
+        validate_show_bank_id(self.artifact_id, "artifact_id")
+        _validate_show_bank_sha256(self.frame_sha256, "frame_sha256")
         if not 1 <= self.frame_bytes <= _MAX_FRAME_BYTES:
             raise ValueError("frame_bytes is outside the supported bound")
         if self.retained is not None and (
@@ -479,21 +440,21 @@ class ShowKitSysex:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> Self:
-        data = _as_mapping(raw, "sysex")
-        _require_exact_keys(
+        data = require_object(raw, "sysex")
+        require_exact_keys(
             data,
             frozenset({"artifact_id", "frame_sha256", "frame_bytes", "retained"}),
             "sysex",
         )
         retained_raw = data["retained"]
         return cls(
-            artifact_id=_string(data, "artifact_id", "sysex"),
-            frame_sha256=_string(data, "frame_sha256", "sysex"),
-            frame_bytes=_integer(data, "frame_bytes", "sysex"),
+            artifact_id=require_text_field(data, "artifact_id", "sysex"),
+            frame_sha256=require_text_field(data, "frame_sha256", "sysex"),
+            frame_bytes=require_integer_field(data, "frame_bytes", "sysex"),
             retained=(
                 None
                 if retained_raw is None
-                else RetainedSysexArtifact.from_dict(_as_mapping(retained_raw, "sysex.retained"))
+                else RetainedSysexArtifact.from_dict(require_object(retained_raw, "sysex.retained"))
             ),
         )
 
@@ -527,7 +488,7 @@ class ShowKitCapture:
     round_trip_verified: bool = True
 
     def __post_init__(self) -> None:
-        _validate_id(self.capture_id, "capture_id")
+        validate_show_bank_id(self.capture_id, "capture_id")
         if self.device_id not in SHOW_KIT_DEVICE_ID_VALUES:
             raise ValueError("unsupported show-kit capture device")
         _validate_text(self.kit_name, "kit_name", maximum=_MAX_NAME)
@@ -560,8 +521,8 @@ class ShowKitCapture:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> Self:
-        data = _as_mapping(raw, "capture")
-        _require_exact_keys(
+        data = require_object(raw, "capture")
+        require_exact_keys(
             data,
             frozenset(
                 {
@@ -580,18 +541,18 @@ class ShowKitCapture:
             "capture",
         )
         return cls(
-            capture_id=_string(data, "capture_id", "capture"),
-            device_id=narrow_show_kit_device_id(_string(data, "device_id", "capture")),
-            kit_name=_string(data, "kit_name", "capture"),
+            capture_id=require_text_field(data, "capture_id", "capture"),
+            device_id=narrow_show_kit_device_id(require_text_field(data, "device_id", "capture")),
+            kit_name=require_text_field(data, "kit_name", "capture"),
             hardware_slot=_optional_show_bank_integer(data, "hardware_slot", "capture"),
-            fingerprint=_string(data, "fingerprint", "capture"),
+            fingerprint=require_text_field(data, "fingerprint", "capture"),
             snapshot_id=_optional_string(data, "snapshot_id", "capture"),
-            captured_at=_timestamp(data, "captured_at", "capture"),
+            captured_at=_show_bank_timestamp(data, "captured_at", "capture"),
             round_trip_verified=_boolean(data, "round_trip_verified", "capture"),
-            sysex=ShowKitSysex.from_dict(_as_mapping(data["sysex"], "capture.sysex")),
+            sysex=ShowKitSysex.from_dict(require_object(data["sysex"], "capture.sysex")),
             evidence=tuple(
-                ShowKitEvidence.from_dict(_as_mapping(item, "capture.evidence item"))
-                for item in _as_sequence(data["evidence"], "capture.evidence")
+                ShowKitEvidence.from_dict(require_object(item, "capture.evidence item"))
+                for item in require_sequence(data["evidence"], "capture.evidence", kind="array")
             ),
         )
 
@@ -613,7 +574,7 @@ class ShowKitScope:
     def __post_init__(self) -> None:
         if self.device_id not in SHOW_KIT_DEVICE_ID_VALUES:
             raise ValueError("unsupported show-kit scope device")
-        available = _DEVICE_IDS[self.device_id]
+        available = registered_mutation_ids(self.device_id)
         scope = MutationScope(
             target_ids=frozenset(self.target_ids),
             locked_ids=frozenset(self.locked_ids),
@@ -633,7 +594,7 @@ class ShowKitScope:
         return tuple(
             sorted(
                 scope.validated_effective_ids(
-                    _DEVICE_IDS[self.device_id], item_label=self.device_id
+                    registered_mutation_ids(self.device_id), item_label=self.device_id
                 )
             )
         )
@@ -647,16 +608,16 @@ class ShowKitScope:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> Self:
-        data = _as_mapping(raw, "scope")
-        _require_exact_keys(
+        data = require_object(raw, "scope")
+        require_exact_keys(
             data,
             frozenset({"device_id", "target_ids", "locked_ids"}),
             "scope",
         )
         return cls(
-            device_id=narrow_show_kit_device_id(_string(data, "device_id", "scope")),
-            target_ids=_integers(data["target_ids"], "scope.target_ids"),
-            locked_ids=_integers(data["locked_ids"], "scope.locked_ids"),
+            device_id=narrow_show_kit_device_id(require_text_field(data, "device_id", "scope")),
+            target_ids=require_integer_tuple(data["target_ids"], "scope.target_ids"),
+            locked_ids=require_integer_tuple(data["locked_ids"], "scope.locked_ids"),
         )
 
 
@@ -705,8 +666,8 @@ class ShowKitRecipe:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> Self:
-        data = _as_mapping(raw, "recipe")
-        _require_exact_keys(
+        data = require_object(raw, "recipe")
+        require_exact_keys(
             data,
             frozenset(
                 {
@@ -721,13 +682,17 @@ class ShowKitRecipe:
             "recipe",
         )
         return cls(
-            profile_id=_string(data, "profile_id", "recipe"),
-            depth_preset=narrow_show_kit_depth_preset(_string(data, "depth_preset", "recipe")),
-            depth=_number(data, "depth", "recipe"),
-            seed=_integer(data, "seed", "recipe"),
-            rytm_scope=ShowKitScope.from_dict(_as_mapping(data["rytm_scope"], "recipe.rytm_scope")),
+            profile_id=require_text_field(data, "profile_id", "recipe"),
+            depth_preset=narrow_show_kit_depth_preset(
+                require_text_field(data, "depth_preset", "recipe")
+            ),
+            depth=require_finite_number_field(data, "depth", "recipe"),
+            seed=require_integer_field(data, "seed", "recipe"),
+            rytm_scope=ShowKitScope.from_dict(
+                require_object(data["rytm_scope"], "recipe.rytm_scope")
+            ),
             analog_four_scope=ShowKitScope.from_dict(
-                _as_mapping(data["analog_four_scope"], "recipe.analog_four_scope")
+                require_object(data["analog_four_scope"], "recipe.analog_four_scope")
             ),
         )
 
@@ -751,30 +716,27 @@ class AnalogFourCandidateValue:
     unpacked_offset: int
 
     def __post_init__(self) -> None:
-        if (
-            type(self.track_id) is not int
-            or self.track_id not in _DEVICE_IDS[A4_SHOW_KIT_DEVICE_ID]
+        if type(self.track_id) is not int or self.track_id not in registered_mutation_ids(
+            A4_SHOW_KIT_DEVICE_ID
         ):
             raise ValueError("A4 candidate track_id must be in 1..4")
         if self.parameter != A4_FILTER1_FREQUENCY_PARAMETER:
             raise ValueError("A4 offline candidates support only Filter1 Frequency")
+        calibration = analog_four_sysex_calibration_for(self.parameter)
         _validate_text(self.screen_value, "A4 candidate screen_value", maximum=32)
         if (
             type(self.encoded_unsigned_8_8) is not int
-            or not 0 <= self.encoded_unsigned_8_8 <= A4_FILTER1_FREQUENCY_RAW_MAX
+            or not calibration.native_raw_min
+            <= self.encoded_unsigned_8_8
+            <= calibration.native_raw_max
         ):
             raise ValueError("encoded_unsigned_8_8 must be in 0x0000..0x7F00")
-        expected_offset = (
-            A4_FILTER1_FREQUENCY_TRACK_1_UNPACKED_OFFSET
-            + (self.track_id - A4_SYNTH_TRACK_MIN) * A4_FILTER1_FREQUENCY_TRACK_UNPACKED_STRIDE
-        )
+        expected_offset = calibration.native_offset_for_track(self.track_id)
         if type(self.unpacked_offset) is not int or self.unpacked_offset != expected_offset:
             raise ValueError(
                 "unpacked_offset must equal the verified Filter1 Frequency track offset"
             )
-        expected_screen = Decimal(
-            format_analog_four_filter1_frequency_screen_value(self.encoded_unsigned_8_8)
-        )
+        expected_screen = Decimal(calibration.format_native_screen_value(self.encoded_unsigned_8_8))
         try:
             parsed_screen = Decimal(self.screen_value)
         except InvalidOperation as exc:
@@ -793,8 +755,8 @@ class AnalogFourCandidateValue:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> Self:
-        data = _as_mapping(raw, "A4 candidate value")
-        _require_exact_keys(
+        data = require_object(raw, "A4 candidate value")
+        require_exact_keys(
             data,
             frozenset(
                 {
@@ -808,11 +770,13 @@ class AnalogFourCandidateValue:
             "A4 candidate value",
         )
         return cls(
-            track_id=_integer(data, "track_id", "A4 candidate value"),
-            parameter=_string(data, "parameter", "A4 candidate value"),
-            screen_value=_string(data, "screen_value", "A4 candidate value"),
-            encoded_unsigned_8_8=_integer(data, "encoded_unsigned_8_8", "A4 candidate value"),
-            unpacked_offset=_integer(data, "unpacked_offset", "A4 candidate value"),
+            track_id=require_integer_field(data, "track_id", "A4 candidate value"),
+            parameter=require_text_field(data, "parameter", "A4 candidate value"),
+            screen_value=require_text_field(data, "screen_value", "A4 candidate value"),
+            encoded_unsigned_8_8=require_integer_field(
+                data, "encoded_unsigned_8_8", "A4 candidate value"
+            ),
+            unpacked_offset=require_integer_field(data, "unpacked_offset", "A4 candidate value"),
         )
 
 
@@ -862,8 +826,8 @@ class AnalogFourOfflineCandidate:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> Self:
-        data = _as_mapping(raw, "A4 offline candidate")
-        _require_exact_keys(
+        data = require_object(raw, "A4 offline candidate")
+        require_exact_keys(
             data,
             frozenset(
                 {
@@ -878,16 +842,28 @@ class AnalogFourOfflineCandidate:
             "A4 offline candidate",
         )
         return cls(
-            artifact_fingerprint=_string(data, "artifact_fingerprint", "A4 offline candidate"),
-            semantic_fingerprint=_string(data, "semantic_fingerprint", "A4 offline candidate"),
-            source_fingerprint=_string(data, "source_fingerprint", "A4 offline candidate"),
-            sysex=ShowKitSysex.from_dict(_as_mapping(data["sysex"], "A4 offline candidate.sysex")),
+            artifact_fingerprint=require_text_field(
+                data, "artifact_fingerprint", "A4 offline candidate"
+            ),
+            semantic_fingerprint=require_text_field(
+                data, "semantic_fingerprint", "A4 offline candidate"
+            ),
+            source_fingerprint=require_text_field(
+                data, "source_fingerprint", "A4 offline candidate"
+            ),
+            sysex=ShowKitSysex.from_dict(
+                require_object(data["sysex"], "A4 offline candidate.sysex")
+            ),
             values=tuple(
-                AnalogFourCandidateValue.from_dict(_as_mapping(item, "A4 offline candidate value"))
-                for item in _as_sequence(data["values"], "A4 offline candidate.values")
+                AnalogFourCandidateValue.from_dict(
+                    require_object(item, "A4 offline candidate value")
+                )
+                for item in require_sequence(
+                    data["values"], "A4 offline candidate.values", kind="array"
+                )
             ),
             evidence_status=narrow_show_kit_evidence_status(
-                _string(data, "evidence_status", "A4 offline candidate")
+                require_text_field(data, "evidence_status", "A4 offline candidate")
             ),
         )
 
@@ -895,17 +871,19 @@ class AnalogFourOfflineCandidate:
 def _decode_show_rytm_pad_delta(raw: object) -> PadDelta:
     """Validate imported pad values without the legacy decoder's coercions."""
 
-    data = _as_mapping(raw, "Rytm pad delta")
-    _require_exact_keys(
+    data = require_object(raw, "Rytm pad delta")
+    require_exact_keys(
         data, frozenset({"pad_id", "proposed_params", "changed_keys"}), "Rytm pad delta"
     )
-    params = _as_mapping(data["proposed_params"], "Rytm proposed_params")
-    changed = _strings(data["changed_keys"], "Rytm changed_keys")
+    params = require_object(data["proposed_params"], "Rytm proposed_params")
+    changed = require_text_tuple(data["changed_keys"], "Rytm changed_keys")
     if len(changed) != len(set(changed)):
         raise ValueError("Rytm changed_keys must be unique")
     return PadDelta(
-        pad_id=_integer(data, "pad_id", "Rytm pad delta"),
-        proposed_params={key: _integer(params, key, "Rytm proposed_params") for key in params},
+        pad_id=require_integer_field(data, "pad_id", "Rytm pad delta"),
+        proposed_params={
+            key: require_integer_field(params, key, "Rytm proposed_params") for key in params
+        },
         changed_keys=frozenset(changed),
     )
 
@@ -913,8 +891,8 @@ def _decode_show_rytm_pad_delta(raw: object) -> PadDelta:
 def _decode_show_rytm_candidate(raw: object) -> MutationCandidate:
     """Narrow all inner wire values before they can acquire Show Kit authority."""
 
-    data = _as_mapping(raw, "Rytm candidate")
-    _require_exact_keys(
+    data = require_object(raw, "Rytm candidate")
+    require_exact_keys(
         data,
         frozenset(
             {
@@ -931,17 +909,17 @@ def _decode_show_rytm_candidate(raw: object) -> MutationCandidate:
         "Rytm candidate",
     )
     return MutationCandidate(
-        candidate_id=_string(data, "candidate_id", "Rytm candidate"),
-        source_snapshot_id=_string(data, "source_snapshot_id", "Rytm candidate"),
-        profile_id=_string(data, "profile_id", "Rytm candidate"),
-        depth=_number(data, "depth", "Rytm candidate"),
-        seed=_integer(data, "seed", "Rytm candidate"),
+        candidate_id=require_text_field(data, "candidate_id", "Rytm candidate"),
+        source_snapshot_id=require_text_field(data, "source_snapshot_id", "Rytm candidate"),
+        profile_id=require_text_field(data, "profile_id", "Rytm candidate"),
+        depth=require_finite_number_field(data, "depth", "Rytm candidate"),
+        seed=require_integer_field(data, "seed", "Rytm candidate"),
         pad_deltas=tuple(
             _decode_show_rytm_pad_delta(item)
-            for item in _as_sequence(data["pad_deltas"], "Rytm pad_deltas")
+            for item in require_sequence(data["pad_deltas"], "Rytm pad_deltas", kind="array")
         ),
-        safety_status=narrow_status(_string(data, "safety_status", "Rytm candidate")),
-        estimated_midi_msgs=_integer(data, "estimated_midi_msgs", "Rytm candidate"),
+        safety_status=narrow_status(require_text_field(data, "safety_status", "Rytm candidate")),
+        estimated_midi_msgs=require_integer_field(data, "estimated_midi_msgs", "Rytm candidate"),
     )
 
 
@@ -972,7 +950,7 @@ class ShowKitCandidate:
     evidence: tuple[ShowKitEvidence, ...] = ()
 
     def __post_init__(self) -> None:
-        _validate_id(self.candidate_id, "candidate_id")
+        validate_show_bank_id(self.candidate_id, "candidate_id")
         # Typed construction is also a public boundary: bool/float equality
         # must not let a malformed inner candidate match an exact recipe.
         object.__setattr__(
@@ -993,7 +971,7 @@ class ShowKitCandidate:
         ):
             raise ValueError("Rytm candidate does not match its deterministic recipe")
         pad_ids = tuple(delta.pad_id for delta in self.rytm_candidate.pad_deltas)
-        if len(pad_ids) > len(_DEVICE_IDS[RYTM_SHOW_KIT_DEVICE_ID]):
+        if len(pad_ids) > len(registered_mutation_ids(RYTM_SHOW_KIT_DEVICE_ID)):
             raise ValueError("Rytm candidate may contain at most 12 pad deltas")
         if len(pad_ids) != len(set(pad_ids)):
             raise ValueError("Rytm candidate pad deltas must have unique pad ids")
@@ -1049,8 +1027,8 @@ class ShowKitCandidate:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> Self:
-        data = _as_mapping(raw, "candidate")
-        _require_exact_keys(
+        data = require_object(raw, "candidate")
+        require_exact_keys(
             data,
             frozenset(
                 {
@@ -1068,19 +1046,23 @@ class ShowKitCandidate:
             "candidate",
         )
         return cls(
-            candidate_id=_string(data, "candidate_id", "candidate"),
-            source_rytm_fingerprint=_string(data, "source_rytm_fingerprint", "candidate"),
-            source_a4_fingerprint=_string(data, "source_a4_fingerprint", "candidate"),
-            rytm_semantic_fingerprint=_string(data, "rytm_semantic_fingerprint", "candidate"),
-            recipe=ShowKitRecipe.from_dict(_as_mapping(data["recipe"], "candidate.recipe")),
+            candidate_id=require_text_field(data, "candidate_id", "candidate"),
+            source_rytm_fingerprint=require_text_field(
+                data, "source_rytm_fingerprint", "candidate"
+            ),
+            source_a4_fingerprint=require_text_field(data, "source_a4_fingerprint", "candidate"),
+            rytm_semantic_fingerprint=require_text_field(
+                data, "rytm_semantic_fingerprint", "candidate"
+            ),
+            recipe=ShowKitRecipe.from_dict(require_object(data["recipe"], "candidate.recipe")),
             rytm_candidate=_decode_show_rytm_candidate(data["rytm_candidate"]),
             analog_four_candidate=AnalogFourOfflineCandidate.from_dict(
-                _as_mapping(data["analog_four_candidate"], "candidate.analog_four_candidate")
+                require_object(data["analog_four_candidate"], "candidate.analog_four_candidate")
             ),
-            created_at=_timestamp(data, "created_at", "candidate"),
+            created_at=_show_bank_timestamp(data, "created_at", "candidate"),
             evidence=tuple(
-                ShowKitEvidence.from_dict(_as_mapping(item, "candidate.evidence item"))
-                for item in _as_sequence(data["evidence"], "candidate.evidence")
+                ShowKitEvidence.from_dict(require_object(item, "candidate.evidence item"))
+                for item in require_sequence(data["evidence"], "candidate.evidence", kind="array")
             ),
         )
 
@@ -1100,7 +1082,7 @@ class ShowKitFavorite:
     notes: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
-        _validate_id(self.candidate_id, "favorite candidate_id")
+        validate_show_bank_id(self.candidate_id, "favorite candidate_id")
         _validate_timestamp(self.selected_at, "favorite selected_at")
         _validate_notes(self.notes, "favorite note")
 
@@ -1113,16 +1095,16 @@ class ShowKitFavorite:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> Self:
-        data = _as_mapping(raw, "favorite")
-        _require_exact_keys(
+        data = require_object(raw, "favorite")
+        require_exact_keys(
             data,
             frozenset({"candidate_id", "selected_at", "notes"}),
             "favorite",
         )
         return cls(
-            candidate_id=_string(data, "candidate_id", "favorite"),
-            selected_at=_timestamp(data, "selected_at", "favorite"),
-            notes=_strings(data["notes"], "favorite.notes"),
+            candidate_id=require_text_field(data, "candidate_id", "favorite"),
+            selected_at=_show_bank_timestamp(data, "selected_at", "favorite"),
+            notes=require_text_tuple(data["notes"], "favorite.notes"),
         )
 
 
@@ -1162,17 +1144,19 @@ class HardwareSaveAttestation:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> Self:
-        data = _as_mapping(raw, "hardware save")
-        _require_exact_keys(
+        data = require_object(raw, "hardware save")
+        require_exact_keys(
             data,
             frozenset({"device_id", "hardware_slot", "attested_at", "note"}),
             "hardware save",
         )
         return cls(
-            device_id=narrow_show_kit_device_id(_string(data, "device_id", "hardware save")),
-            hardware_slot=_integer(data, "hardware_slot", "hardware save"),
-            attested_at=_timestamp(data, "attested_at", "hardware save"),
-            note=_string(data, "note", "hardware save"),
+            device_id=narrow_show_kit_device_id(
+                require_text_field(data, "device_id", "hardware save")
+            ),
+            hardware_slot=require_integer_field(data, "hardware_slot", "hardware save"),
+            attested_at=_show_bank_timestamp(data, "attested_at", "hardware save"),
+            note=require_text_field(data, "note", "hardware save"),
         )
 
 
@@ -1258,8 +1242,8 @@ class FavoriteRecapture:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> Self:
-        data = _as_mapping(raw, "favorite recapture")
-        _require_exact_keys(
+        data = require_object(raw, "favorite recapture")
+        require_exact_keys(
             data,
             frozenset(
                 {
@@ -1277,11 +1261,13 @@ class FavoriteRecapture:
             "favorite recapture",
         )
         return cls(
-            device_id=narrow_show_kit_device_id(_string(data, "device_id", "favorite recapture")),
-            expected_semantic_fingerprint=_string(
+            device_id=narrow_show_kit_device_id(
+                require_text_field(data, "device_id", "favorite recapture")
+            ),
+            expected_semantic_fingerprint=require_text_field(
                 data, "expected_semantic_fingerprint", "favorite recapture"
             ),
-            source_semantic_fingerprint=_string(
+            source_semantic_fingerprint=require_text_field(
                 data, "source_semantic_fingerprint", "favorite recapture"
             ),
             observed_semantic_fingerprint=_optional_string(
@@ -1289,10 +1275,10 @@ class FavoriteRecapture:
             ),
             matches_candidate=_boolean(data, "matches_candidate", "favorite recapture"),
             matches_source=_boolean(data, "matches_source", "favorite recapture"),
-            comparison_reason=_string(data, "comparison_reason", "favorite recapture"),
-            recorded_at=_timestamp(data, "recorded_at", "favorite recapture"),
+            comparison_reason=require_text_field(data, "comparison_reason", "favorite recapture"),
+            recorded_at=_show_bank_timestamp(data, "recorded_at", "favorite recapture"),
             capture=ShowKitCapture.from_dict(
-                _as_mapping(data["capture"], "favorite recapture.capture")
+                require_object(data["capture"], "favorite recapture.capture")
             ),
         )
 
@@ -1324,16 +1310,16 @@ class OxiShowMetadata:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> Self:
-        data = _as_mapping(raw, "OXI metadata")
-        _require_exact_keys(
+        data = require_object(raw, "OXI metadata")
+        require_exact_keys(
             data,
             frozenset({"project", "pattern", "chapter"}),
             "OXI metadata",
         )
         return cls(
-            project=_string(data, "project", "OXI metadata"),
-            pattern=_string(data, "pattern", "OXI metadata"),
-            chapter=_string(data, "chapter", "OXI metadata"),
+            project=require_text_field(data, "project", "OXI metadata"),
+            pattern=require_text_field(data, "pattern", "OXI metadata"),
+            chapter=require_text_field(data, "chapter", "OXI metadata"),
         )
 
 
@@ -1381,8 +1367,8 @@ class ShowTimePreflight:
             raise ValueError("Rytm preflight match flag does not match full fingerprints")
         if self.a4_matches != (self.expected_a4_fingerprint == self.observed_a4_fingerprint):
             raise ValueError("A4 preflight match flag does not match full fingerprints")
-        _validate_id(self.observed_rytm_capture_id, "observed Rytm capture id")
-        _validate_id(self.observed_a4_capture_id, "observed A4 capture id")
+        validate_show_bank_id(self.observed_rytm_capture_id, "observed Rytm capture id")
+        validate_show_bank_id(self.observed_a4_capture_id, "observed A4 capture id")
         _validate_timestamp(
             self.observed_rytm_captured_at,
             "observed Rytm captured_at",
@@ -1421,35 +1407,41 @@ class ShowTimePreflight:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> Self:
-        data = _as_mapping(raw, "show-time preflight")
-        _require_exact_keys(
+        data = require_object(raw, "show-time preflight")
+        require_exact_keys(
             data,
             frozenset(ShowTimePreflightDict.__required_keys__),
             "show-time preflight",
         )
         return cls(
-            expected_rytm_fingerprint=_string(
+            expected_rytm_fingerprint=require_text_field(
                 data, "expected_rytm_fingerprint", "show-time preflight"
             ),
-            observed_rytm_fingerprint=_string(
+            observed_rytm_fingerprint=require_text_field(
                 data, "observed_rytm_fingerprint", "show-time preflight"
             ),
-            observed_rytm_capture_id=_string(
+            observed_rytm_capture_id=require_text_field(
                 data, "observed_rytm_capture_id", "show-time preflight"
             ),
-            observed_rytm_captured_at=_timestamp(
+            observed_rytm_captured_at=_show_bank_timestamp(
                 data, "observed_rytm_captured_at", "show-time preflight"
             ),
             rytm_matches=_boolean(data, "rytm_matches", "show-time preflight"),
-            expected_a4_fingerprint=_string(data, "expected_a4_fingerprint", "show-time preflight"),
-            observed_a4_fingerprint=_string(data, "observed_a4_fingerprint", "show-time preflight"),
-            observed_a4_capture_id=_string(data, "observed_a4_capture_id", "show-time preflight"),
-            observed_a4_captured_at=_timestamp(
+            expected_a4_fingerprint=require_text_field(
+                data, "expected_a4_fingerprint", "show-time preflight"
+            ),
+            observed_a4_fingerprint=require_text_field(
+                data, "observed_a4_fingerprint", "show-time preflight"
+            ),
+            observed_a4_capture_id=require_text_field(
+                data, "observed_a4_capture_id", "show-time preflight"
+            ),
+            observed_a4_captured_at=_show_bank_timestamp(
                 data, "observed_a4_captured_at", "show-time preflight"
             ),
             a4_matches=_boolean(data, "a4_matches", "show-time preflight"),
-            checked_at=_timestamp(data, "checked_at", "show-time preflight"),
-            reason=_string(data, "reason", "show-time preflight"),
+            checked_at=_show_bank_timestamp(data, "checked_at", "show-time preflight"),
+            reason=require_text_field(data, "reason", "show-time preflight"),
         )
 
 
@@ -1513,7 +1505,7 @@ class ShowBankEntry:
     energy_level: int | None = None
 
     def __post_init__(self) -> None:
-        _validate_id(self.entry_id, "entry_id")
+        validate_show_bank_id(self.entry_id, "entry_id")
         if isinstance(self.cue_index, bool) or not 1 <= self.cue_index <= _MAX_ENTRIES:
             raise ValueError(f"cue_index must be in 1..{_MAX_ENTRIES}")
         _validate_text(self.name, "entry name", maximum=_MAX_NAME)
@@ -1779,9 +1771,9 @@ class ShowBankEntry:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> Self:
-        data = _as_mapping(raw, "show-bank entry")
+        data = require_object(raw, "show-bank entry")
         expected_keys = frozenset(ShowBankEntryDict.__required_keys__)
-        _require_exact_keys(data, expected_keys, "show-bank entry")
+        require_exact_keys(data, expected_keys, "show-bank entry")
 
         def optional_model(
             key: str,
@@ -1792,22 +1784,24 @@ class ShowBankEntry:
             value = data[key]
             if value is None:
                 return None
-            return factory.from_dict(_as_mapping(value, f"show-bank entry.{key}"))
+            return factory.from_dict(require_object(value, f"show-bank entry.{key}"))
 
         entry = cls(
-            entry_id=_string(data, "entry_id", "show-bank entry"),
-            cue_index=_integer(data, "cue_index", "show-bank entry"),
-            name=_string(data, "name", "show-bank entry"),
-            description=_string(data, "description", "show-bank entry"),
+            entry_id=require_text_field(data, "entry_id", "show-bank entry"),
+            cue_index=require_integer_field(data, "cue_index", "show-bank entry"),
+            name=require_text_field(data, "name", "show-bank entry"),
+            description=require_text_field(data, "description", "show-bank entry"),
             rytm_source=ShowKitCapture.from_dict(
-                _as_mapping(data["rytm_source"], "show-bank entry.rytm_source")
+                require_object(data["rytm_source"], "show-bank entry.rytm_source")
             ),
             analog_four_source=ShowKitCapture.from_dict(
-                _as_mapping(data["analog_four_source"], "show-bank entry.analog_four_source")
+                require_object(data["analog_four_source"], "show-bank entry.analog_four_source")
             ),
             candidates=tuple(
-                ShowKitCandidate.from_dict(_as_mapping(item, "show-bank candidate"))
-                for item in _as_sequence(data["candidates"], "show-bank entry.candidates")
+                ShowKitCandidate.from_dict(require_object(item, "show-bank candidate"))
+                for item in require_sequence(
+                    data["candidates"], "show-bank entry.candidates", kind="array"
+                )
             ),
             selected_candidate_id=_optional_string(
                 data, "selected_candidate_id", "show-bank entry"
@@ -1842,24 +1836,24 @@ class ShowBankEntry:
                 None
                 if data["show_time_preflight"] is None
                 else ShowTimePreflight.from_dict(
-                    _as_mapping(
+                    require_object(
                         data["show_time_preflight"],
                         "show-bank entry.show_time_preflight",
                     )
                 )
             ),
             show_ready_at=_optional_timestamp(data, "show_ready_at", "show-bank entry"),
-            oxi=OxiShowMetadata.from_dict(_as_mapping(data["oxi"], "show-bank entry.oxi")),
-            audition_notes=_strings(data["audition_notes"], "entry.audition_notes"),
+            oxi=OxiShowMetadata.from_dict(require_object(data["oxi"], "show-bank entry.oxi")),
+            audition_notes=require_text_tuple(data["audition_notes"], "entry.audition_notes"),
             energy_level=_optional_show_bank_integer(data, "energy_level", "show-bank entry"),
-            energy_notes=_strings(data["energy_notes"], "entry.energy_notes"),
-            transition_notes=_strings(data["transition_notes"], "entry.transition_notes"),
-            recovery_notes=_strings(data["recovery_notes"], "entry.recovery_notes"),
-            created_at=_timestamp(data, "created_at", "show-bank entry"),
-            updated_at=_timestamp(data, "updated_at", "show-bank entry"),
+            energy_notes=require_text_tuple(data["energy_notes"], "entry.energy_notes"),
+            transition_notes=require_text_tuple(data["transition_notes"], "entry.transition_notes"),
+            recovery_notes=require_text_tuple(data["recovery_notes"], "entry.recovery_notes"),
+            created_at=_show_bank_timestamp(data, "created_at", "show-bank entry"),
+            updated_at=_show_bank_timestamp(data, "updated_at", "show-bank entry"),
         )
         persisted_status = narrow_show_kit_lifecycle_status(
-            _string(data, "status", "show-bank entry")
+            require_text_field(data, "status", "show-bank entry")
         )
         if persisted_status != entry.status:
             raise ValueError("persisted entry status does not match its evidence")
@@ -1894,7 +1888,7 @@ class ShowKitReadinessProjectionDict(TypedDict):
 
     status: ShowKitLifecycleStatus
     show_ready: bool
-    blocked_reasons: list[str]
+    blocked_reasons: list[ShowKitBlockedReason]
     recovery_actions: list[str]
 
 
@@ -1937,7 +1931,7 @@ class ShowBankReadinessProjectionDict(TypedDict):
     status: ShowKitLifecycleStatus
     show_ready: bool
     show_ready_entry_ids: list[str]
-    blocked_reasons: list[str]
+    blocked_reasons: list[ShowKitBlockedReason]
     recovery_actions: list[str]
 
 
@@ -1995,7 +1989,7 @@ class ShowBank:
     def __post_init__(self) -> None:
         if self.schema_version != SHOW_BANK_SCHEMA_VERSION:
             raise ValueError("unsupported show-bank schema version")
-        _validate_id(self.bank_id, "bank_id")
+        validate_show_bank_id(self.bank_id, "bank_id")
         _validate_text(self.name, "bank name", maximum=_MAX_NAME)
         _validate_text(self.description, "bank description", maximum=_MAX_TEXT, allow_empty=True)
         if isinstance(self.revision, bool) or not 0 <= self.revision <= _MAX_REVISION:
@@ -2065,7 +2059,7 @@ class ShowBank:
     def entry(self, entry_id: str) -> ShowBankEntry:
         """Return one entry by id or raise a bounded validation error."""
 
-        _validate_id(entry_id, "entry_id")
+        validate_show_bank_id(entry_id, "entry_id")
         for entry in self.entries:
             if entry.entry_id == entry_id:
                 return entry
@@ -2098,7 +2092,7 @@ class ShowBank:
     def sysex_artifact(self, artifact_id: str) -> ShowKitSysex:
         """Return one SysEx identity by its safe logical id."""
 
-        _validate_id(artifact_id, "artifact_id")
+        validate_show_bank_id(artifact_id, "artifact_id")
         for artifact in self.sysex_artifacts():
             if artifact.artifact_id == artifact_id:
                 return artifact
@@ -2121,34 +2115,42 @@ class ShowBank:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> Self:
-        data = _as_mapping(raw, "show bank")
-        _require_exact_keys(data, frozenset(ShowBankDict.__required_keys__), "show bank")
+        data = require_object(raw, "show bank")
+        require_exact_keys(data, frozenset(ShowBankDict.__required_keys__), "show bank")
         bank = cls(
-            schema_version=_string(data, "schema_version", "show bank"),
-            bank_id=_string(data, "bank_id", "show bank"),
-            name=_string(data, "name", "show bank"),
-            description=_string(data, "description", "show bank"),
-            revision=_integer(data, "revision", "show bank"),
+            schema_version=require_text_field(data, "schema_version", "show bank"),
+            bank_id=require_text_field(data, "bank_id", "show bank"),
+            name=require_text_field(data, "name", "show bank"),
+            description=require_text_field(data, "description", "show bank"),
+            revision=require_integer_field(data, "revision", "show bank"),
             entries=tuple(
-                ShowBankEntry.from_dict(_as_mapping(item, "show-bank entry"))
-                for item in _as_sequence(data["entries"], "show bank.entries")
+                ShowBankEntry.from_dict(require_object(item, "show-bank entry"))
+                for item in require_sequence(data["entries"], "show bank.entries", kind="array")
             ),
-            notes=_strings(data["notes"], "show bank.notes"),
+            notes=require_text_tuple(data["notes"], "show bank.notes"),
             evidence=tuple(
-                ShowKitEvidence.from_dict(_as_mapping(item, "show-bank evidence"))
-                for item in _as_sequence(data["evidence"], "show bank.evidence")
+                ShowKitEvidence.from_dict(require_object(item, "show-bank evidence"))
+                for item in require_sequence(data["evidence"], "show bank.evidence", kind="array")
             ),
-            created_at=_timestamp(data, "created_at", "show bank"),
-            updated_at=_timestamp(data, "updated_at", "show bank"),
+            created_at=_show_bank_timestamp(data, "created_at", "show bank"),
+            updated_at=_show_bank_timestamp(data, "updated_at", "show bank"),
         )
-        persisted_status = narrow_show_kit_lifecycle_status(_string(data, "status", "show bank"))
+        persisted_status = narrow_show_kit_lifecycle_status(
+            require_text_field(data, "status", "show bank")
+        )
         if persisted_status != bank.status:
             raise ValueError("persisted bank status does not match its entries")
         return bank
 
 
 __all__ = [
+    "SHOW_KIT_BLOCKED_REASON_VALUES",
+    "ShowKitBlockedReason",
     "SHOW_BANK_REVISION_MAX",
+    "SHOW_BANK_ID_MAX_LENGTH",
+    "SHOW_PACK_ID_MAX_LENGTH",
+    "validate_show_bank_id",
+    "validate_show_pack_id",
     "A4_SHOW_KIT_DEVICE_ID",
     "AnalogFourCandidateValue",
     "AnalogFourCandidateValueDict",

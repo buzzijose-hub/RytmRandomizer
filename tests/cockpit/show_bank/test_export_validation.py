@@ -146,11 +146,11 @@ def test_show_pack_artifact_validation_and_strict_decoding() -> None:
         ShowPackArtifact.from_dict(raw)
     raw = valid.to_dict()
     raw["artifact_ids"] = {}
-    with pytest.raises(TypeError, match="list"):
+    with pytest.raises(TypeError, match="array"):
         ShowPackArtifact.from_dict(raw)
     raw = valid.to_dict()
     raw["artifact_ids"] = [1]
-    with pytest.raises(TypeError, match="strings"):
+    with pytest.raises(TypeError, match="string"):
         ShowPackArtifact.from_dict(raw)
 
 
@@ -426,7 +426,7 @@ def test_verify_categorizes_size_checksums_recovery_and_framing(tmp_path: Path) 
 def test_manifest_rejects_non_string_keys_and_structurally_invalid_json(tmp_path: Path) -> None:
     with pytest.raises(DataError, match="directory cannot be inspected"):
         export_module._show_pack_directory_identity(tmp_path / "missing-directory")
-    with pytest.raises(TypeError, match="string keys"):
+    with pytest.raises(TypeError, match="keys must be strings"):
         ShowPackManifest.from_dict({1: "untrusted"})  # type: ignore[dict-item]
     service, result = _exported(tmp_path)
     manifest = result.package_dir / SHOW_PACK_MANIFEST_NAME

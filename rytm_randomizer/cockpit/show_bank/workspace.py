@@ -36,6 +36,7 @@ from ..data.show_bank import (
     ShowBankProjectionDict,
     ShowBankReadinessProjectionDict,
     ShowBankWorkspaceStateDict,
+    ShowKitBlockedReason,
     ShowKitCandidate,
     ShowKitCapture,
     ShowKitDepthPreset,
@@ -149,21 +150,21 @@ def _entry_recovery_actions(
     return actions
 
 
-def _favorite_blocked_reasons(entry: ShowBankEntry) -> list[str]:
-    reasons: list[str] = []
+def _favorite_blocked_reasons(entry: ShowBankEntry) -> list[ShowKitBlockedReason]:
+    reasons: list[ShowKitBlockedReason] = []
     if entry.favorite is not None:
         if entry.rytm_hardware_save is None:
-            reasons.append("Rytm favorite has no manual hardware-save attestation.")
+            reasons.append("rytm_hardware_save_missing")
         if entry.analog_four_hardware_save is None:
-            reasons.append("Analog Four favorite has no manual hardware-save attestation.")
-        for label, recapture in (
-            ("Rytm", entry.rytm_recapture),
-            ("Analog Four", entry.analog_four_recapture),
-        ):
-            if recapture is None:
-                reasons.append(f"{label} favorite has not been recaptured.")
-            elif not recapture.matches_candidate:
-                reasons.append(f"{label} recapture does not match the candidate semantics.")
+            reasons.append("a4_hardware_save_missing")
+        if entry.rytm_recapture is None:
+            reasons.append("rytm_favorite_recapture_missing")
+        elif not entry.rytm_recapture.matches_candidate:
+            reasons.append("rytm_recapture_mismatch")
+        if entry.analog_four_recapture is None:
+            reasons.append("a4_favorite_recapture_missing")
+        elif not entry.analog_four_recapture.matches_candidate:
+            reasons.append("a4_recapture_mismatch")
     return reasons
 
 
@@ -171,25 +172,22 @@ def _entry_blocked_reasons(
     entry: ShowBankEntry,
     *,
     current_show_ready: bool,
-) -> list[str]:
-    reasons: list[str] = []
+) -> list[ShowKitBlockedReason]:
+    reasons: list[ShowKitBlockedReason] = []
     if not entry.candidates:
-        reasons.append("No paired candidate has been generated from the immutable sources.")
+        reasons.append("paired_candidate_missing")
     elif entry.favorite is None:
-        reasons.append("No candidate has been marked as a favorite.")
+        reasons.append("favorite_missing")
     reasons.extend(_favorite_blocked_reasons(entry))
     if entry.status == "verified":
-        reasons.append("A fresh exact-fingerprint show-time preflight is required.")
+        reasons.append("preflight_required")
     elif entry.status == "show-ready" and not current_show_ready:
-        reasons.append(
-            "The saved preflight is historical; fresh paired current-KIT dumps are "
-            "required in this Cockpit session."
-        )
+        reasons.append("preflight_historical")
     if entry.show_time_preflight is not None and not entry.show_time_preflight.ready:
         if not entry.show_time_preflight.rytm_matches:
-            reasons.append("Current Rytm KIT differs from the verified favorite capture.")
+            reasons.append("rytm_current_kit_mismatch")
         if not entry.show_time_preflight.a4_matches:
-            reasons.append("Current Analog Four KIT differs from the verified favorite capture.")
+            reasons.append("a4_current_kit_mismatch")
     return reasons
 
 
@@ -410,14 +408,11 @@ class ShowKitForgeWorkspace:
             projected_status: ShowKitLifecycleStatus = bank.status
             if bank.status == "show-ready" and not currently_ready:
                 projected_status = "verified"
-            blocked_reasons = (
+            blocked_reasons: list[ShowKitBlockedReason] = (
                 []
                 if currently_ready
                 else (
-                    [
-                        "Fresh paired current-KIT preflight is required for every cue "
-                        "in this Cockpit session."
-                    ]
+                    ["current_session_preflight_required"]
                     if readiness.ready
                     else list(readiness.blocked_reasons)
                 )

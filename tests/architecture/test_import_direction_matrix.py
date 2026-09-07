@@ -182,6 +182,7 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
     ),
     "cockpit.show_bank": frozenset(
         {
+            "guardrails",  # Shared strict, device-neutral wire/schema validation.
             "cockpit.capture",
             "cockpit.data",
             "cockpit.engine",
@@ -197,6 +198,7 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
     ),
     "cockpit.stage": frozenset(
         {
+            "snapshot",  # Canonical registered mutation domain.
             "cockpit.data",
             "devices",
             "observability",
@@ -211,6 +213,7 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
     ),
     "cockpit.ws": frozenset(
         {
+            "guardrails",  # Shared strict, device-neutral wire/schema validation.
             "cockpit.capture",
             "cockpit.data",
             "cockpit.device",

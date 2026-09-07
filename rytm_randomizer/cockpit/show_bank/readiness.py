@@ -17,6 +17,7 @@ from ..data.show_bank import (
     RetainedSysexArtifact,
     ShowBank,
     ShowBankEntry,
+    ShowKitBlockedReason,
     ShowKitCandidate,
     ShowKitCapture,
     ShowKitDeviceId,
@@ -606,8 +607,12 @@ def normalize_catalog_import(bank: ShowBank, *, clock: Clock = utc_now) -> ShowB
         )
         for entry in bank.entries
     )
-    projected = replace(bank, evidence=tuple(evidence))
-    return _advance(projected, entries, timestamp)
+    # Import publishes a new create-only local namespace. Revision numbers are
+    # local history, so even a package at the source ceiling starts at zero.
+    # The verified source revision remains immutable in the package manifest.
+    return replace(
+        bank, revision=0, evidence=tuple(evidence), entries=entries, updated_at=timestamp
+    )
 
 
 def _replace_sysex(sysex: ShowKitSysex, artifact: RetainedSysexArtifact) -> ShowKitSysex:
@@ -692,30 +697,31 @@ class ShowBankReadiness:
     ready: bool
     entry_count: int
     show_ready_entry_ids: tuple[str, ...]
-    blocked_reasons: tuple[str, ...]
+    blocked_reasons: tuple[ShowKitBlockedReason, ...]
 
 
 def show_bank_readiness(bank: ShowBank) -> ShowBankReadiness:
     """Summarize whether every ordered cue has an explicit show-ready grant."""
 
     ready_ids = tuple(entry.entry_id for entry in bank.entries if entry.status == "show-ready")
-    reasons: list[str] = []
+    reasons: list[ShowKitBlockedReason] = []
     if not bank.entries:
-        reasons.append("show bank has no cue entries")
+        reasons.append("show_bank_empty")
     for entry in bank.entries:
         if entry.status != "show-ready":
-            reasons.append(f"cue {entry.cue_index} ({entry.entry_id}) is {entry.status}")
-        for label, recapture in (
-            ("Rytm", entry.rytm_recapture),
-            ("A4", entry.analog_four_recapture),
+            reasons.append("cue_not_show_ready")
+        if entry.rytm_recapture is not None and not entry.rytm_recapture.matches_candidate:
+            reasons.append("rytm_recapture_mismatch")
+        if (
+            entry.analog_four_recapture is not None
+            and not entry.analog_four_recapture.matches_candidate
         ):
-            if recapture is not None and not recapture.matches_candidate:
-                reasons.append(f"cue {entry.cue_index} {label} recapture fingerprint mismatched")
+            reasons.append("a4_recapture_mismatch")
     return ShowBankReadiness(
         ready=bool(bank.entries) and len(ready_ids) == len(bank.entries),
         entry_count=len(bank.entries),
         show_ready_entry_ids=ready_ids,
-        blocked_reasons=tuple(reasons),
+        blocked_reasons=tuple(dict.fromkeys(reasons)),
     )
 
 

@@ -307,7 +307,7 @@ def test_workspace_recapture_preflight_revocation_recovery_and_return(
     assert revoked.show_time_preflight.rytm_matches is False
     projected = workspace.state_dict()["banks"][0]["entries"][0]
     assert any(
-        reason.startswith("Current Rytm KIT differs")
+        reason == "rytm_current_kit_mismatch"
         for reason in projected["readiness"]["blocked_reasons"]
     )
 
@@ -646,7 +646,7 @@ def test_semantic_recapture_mismatch_stays_blocked_and_is_projected(
     assert recaptured.rytm_recapture is not None
     assert recaptured.rytm_recapture.matches_candidate is False
     reasons = workspace.state_dict()["banks"][0]["entries"][0]["readiness"]["blocked_reasons"]
-    assert "Rytm recapture does not match the candidate semantics." in reasons
+    assert "rytm_recapture_mismatch" in reasons
 
 
 def test_changed_rytm_candidate_recapture_matches_candidate_not_source(

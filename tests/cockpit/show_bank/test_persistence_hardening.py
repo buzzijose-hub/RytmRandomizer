@@ -489,7 +489,7 @@ def test_import_is_catalog_only_typed_and_rejects_existing_namespace(tmp_path: P
     result = importing.import_into_store(exported.package_id)
 
     assert isinstance(result, ShowPackStoredImportResult)
-    assert result.bank.revision == bank.revision + 1
+    assert result.bank.revision == 0
     assert is_catalog_only_show_bank(result.bank)
     entry = result.bank.entry("entry-strict")
     assert entry.selected_candidate_id is None

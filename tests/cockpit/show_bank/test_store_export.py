@@ -158,8 +158,8 @@ def test_show_pack_export_verify_and_import_are_self_contained(
     target_store = ShowBankStore(tmp_path / "target")
     importing = ShowPackService(tmp_path / "packages", store=target_store)
     stored = importing.import_into_store(exported.package_id)
-    assert stored.writes[-1].path.name == "show.r00000004.show-bank.json"
-    assert stored.bank.revision == bank.revision + 1
+    assert stored.writes[-1].path.name == "show.r00000000.show-bank.json"
+    assert stored.bank.revision == 0
     assert is_catalog_only_show_bank(stored.bank)
     assert target_store.load("show") == stored.bank
 

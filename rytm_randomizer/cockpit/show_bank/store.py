@@ -23,15 +23,18 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Final, Literal, NoReturn, cast
 
+from ...guardrails.input_validation import canonical_json_bytes
 from ...observability.errors import DataError
 from ...observability.logging import get_logger
 from ...observability.tracing import trace
 from ...snapshot.sysex_file import extract_sysex_payloads
 from ..data.show_bank import (
+    SHOW_BANK_ID_MAX_LENGTH,
     SHOW_BANK_REVISION_MAX,
     RetainedSysexArtifact,
     ShowBank,
     ShowKitCapture,
+    validate_show_bank_id,
 )
 from ..export.writer import WriteResult, atomic_write_set, guard_atomic_write_tree
 from ..profiles.paths import default_profiles_dir
@@ -74,9 +77,8 @@ SHOW_BANK_CORRUPTION_CATEGORY_VALUES: Final[tuple[ShowBankCorruptionCategory, ..
     "access",
 )
 
-_SAFE_ID_RE: Final[re.Pattern[str]] = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 _MANIFEST_RE: Final[re.Pattern[str]] = re.compile(
-    r"^(?P<bank_id>[a-z0-9][a-z0-9_-]{0,63})\.r(?P<revision>[0-9]{8})\.show-bank\.json$"
+    rf"^(?P<bank_id>[a-z0-9][a-z0-9_-]{{0,{SHOW_BANK_ID_MAX_LENGTH - 1}}})\.r(?P<revision>[0-9]{{8}})\.show-bank\.json$"
 )
 
 
@@ -129,11 +131,6 @@ def _raise_show_bank_corruption(
     raise DataError(message, context=context)
 
 
-def _validate_safe_id(value: str, label: str) -> None:
-    if _SAFE_ID_RE.fullmatch(value) is None:
-        raise ValueError(f"{label} must be a lowercase filename-safe id")
-
-
 def _require_bytes(value: object, label: str) -> bytes:
     if not isinstance(value, bytes):
         raise TypeError(f"{label} must be bytes")
@@ -143,16 +140,7 @@ def _require_bytes(value: object, label: str) -> bytes:
 def canonical_show_bank_json(bank: ShowBank) -> bytes:
     """Serialize a bank to deterministic UTF-8 JSON with one trailing newline."""
 
-    payload = (
-        json.dumps(
-            bank.to_dict(),
-            ensure_ascii=False,
-            sort_keys=True,
-            separators=(",", ":"),
-            allow_nan=False,
-        )
-        + "\n"
-    ).encode("utf-8")
+    payload = canonical_json_bytes(cast(Mapping[str, object], bank.to_dict()))
     if len(payload) > SHOW_BANK_MANIFEST_MAX_BYTES:
         raise ValueError("show-bank manifest exceeds the supported size bound")
     declared_bytes = sum(item.frame_bytes for item in bank.sysex_artifacts())
@@ -180,14 +168,14 @@ def decode_json_rejecting_duplicate_keys(payload: bytes) -> object:
 
 
 def _manifest_name(bank_id: str, revision: int) -> str:
-    _validate_safe_id(bank_id, "bank_id")
+    validate_show_bank_id(bank_id, "bank_id")
     if isinstance(revision, bool) or not 0 <= revision <= SHOW_BANK_REVISION_MAX:
         raise ValueError("revision must be in 0..99999999")
     return f"{bank_id}.r{revision:08d}{SHOW_BANK_MANIFEST_SUFFIX}"
 
 
 def _namespace_name(bank_id: str) -> str:
-    _validate_safe_id(bank_id, "bank_id")
+    validate_show_bank_id(bank_id, "bank_id")
     return f"{bank_id}{SHOW_BANK_NAMESPACE_SUFFIX}"
 
 
@@ -204,28 +192,30 @@ def validate_show_bank_sysex_frame(frame: bytes) -> None:
 def _show_bank_directory_identity(path: Path) -> tuple[int, int]:
     metadata = path.stat(follow_symlinks=False)
     if not stat.S_ISDIR(metadata.st_mode):
-        _fail("path", "show-bank store root is not a directory", artifact_name=path.name)
+        _raise_show_bank_corruption(
+            "path", "show-bank store root is not a directory", artifact_name=path.name
+        )
     return metadata.st_dev, metadata.st_ino
-
-
-_fail = _raise_show_bank_corruption
-_directory_identity = _show_bank_directory_identity
 
 
 def read_bounded_show_bank_file(path: Path, *, maximum: int) -> bytes:
     try:
         before = path.stat(follow_symlinks=False)
     except FileNotFoundError:
-        _fail("missing", "show-bank artifact is missing", artifact_name=path.name)
+        _raise_show_bank_corruption(
+            "missing", "show-bank artifact is missing", artifact_name=path.name
+        )
     except OSError as exc:
         raise DataError(
             "show-bank artifact cannot be inspected",
             context={"category": "access", "artifact_name": path.name},
         ) from exc
     if not stat.S_ISREG(before.st_mode):
-        _fail("path", "show-bank artifact is not a regular file", artifact_name=path.name)
+        _raise_show_bank_corruption(
+            "path", "show-bank artifact is not a regular file", artifact_name=path.name
+        )
     if before.st_size < 1 or before.st_size > maximum:
-        _fail(
+        _raise_show_bank_corruption(
             "size",
             "show-bank artifact size is outside the supported bound",
             artifact_name=path.name,
@@ -245,7 +235,9 @@ def read_bounded_show_bank_file(path: Path, *, maximum: int) -> bytes:
                 before.st_dev,
                 before.st_ino,
             ):
-                _fail("access", "show-bank artifact changed during open", artifact_name=path.name)
+                _raise_show_bank_corruption(
+                    "access", "show-bank artifact changed during open", artifact_name=path.name
+                )
             payload = handle.read(maximum + 1)
         after = path.stat(follow_symlinks=False)
     except OSError as exc:
@@ -254,11 +246,15 @@ def read_bounded_show_bank_file(path: Path, *, maximum: int) -> bytes:
             context={"category": "access", "artifact_name": path.name},
         ) from exc
     if len(payload) > maximum:
-        _fail("size", "show-bank artifact exceeds the supported bound", artifact_name=path.name)
+        _raise_show_bank_corruption(
+            "size", "show-bank artifact exceeds the supported bound", artifact_name=path.name
+        )
     before_identity = (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns)
     after_identity = (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns)
     if before_identity != after_identity:
-        _fail("access", "show-bank artifact changed while it was read", artifact_name=path.name)
+        _raise_show_bank_corruption(
+            "access", "show-bank artifact changed while it was read", artifact_name=path.name
+        )
     return payload
 
 
@@ -297,7 +293,9 @@ def _decode_show_bank_manifest(payload: bytes, path: Path, bank_id: str, revisio
             context={"category": "malformed-json", "artifact_name": path.name},
         ) from exc
     if not isinstance(decoded, Mapping):
-        _fail("schema", "show-bank manifest root must be an object", artifact_name=path.name)
+        _raise_show_bank_corruption(
+            "schema", "show-bank manifest root must be an object", artifact_name=path.name
+        )
     try:
         bank = ShowBank.from_dict(cast(Mapping[str, object], decoded))
     except (KeyError, TypeError, ValueError) as exc:
@@ -306,13 +304,13 @@ def _decode_show_bank_manifest(payload: bytes, path: Path, bank_id: str, revisio
             context={"category": "schema", "artifact_name": path.name},
         ) from exc
     if bank.bank_id != bank_id or bank.revision != revision:
-        _fail(
+        _raise_show_bank_corruption(
             "cross-reference",
             "show-bank manifest identity does not match its filename",
             artifact_name=path.name,
         )
     if payload != canonical_show_bank_json(bank):
-        _fail(
+        _raise_show_bank_corruption(
             "schema",
             "show-bank manifest is not canonical JSON",
             artifact_name=path.name,
@@ -340,7 +338,9 @@ class ShowBankStore:
 
     def _prepare_root(self) -> tuple[int, int]:
         if self._root.exists() and self._root.is_symlink():
-            _fail("path", "show-bank store root cannot be a symlink", artifact_name=self._root.name)
+            _raise_show_bank_corruption(
+                "path", "show-bank store root cannot be a symlink", artifact_name=self._root.name
+            )
         try:
             self._root.mkdir(parents=True, exist_ok=True)
         except OSError as exc:
@@ -348,7 +348,7 @@ class ShowBankStore:
                 "show-bank store root cannot be created",
                 context={"category": "access", "artifact_name": self._root.name},
             ) from exc
-        return _directory_identity(self._root)
+        return _show_bank_directory_identity(self._root)
 
     def _manifest_path(self, bank_id: str, revision: int) -> Path:
         return self._root / _manifest_name(bank_id, revision)
@@ -384,14 +384,16 @@ class ShowBankStore:
         if not self._root.exists():
             return ()
         if self._root.is_symlink():
-            _fail("path", "show-bank store root cannot be a symlink", artifact_name=self._root.name)
-        _directory_identity(self._root)
+            _raise_show_bank_corruption(
+                "path", "show-bank store root cannot be a symlink", artifact_name=self._root.name
+            )
+        _show_bank_directory_identity(self._root)
         try:
             paths: list[Path] = []
             for path in self._root.iterdir():
                 paths.append(path)
                 if len(paths) > SHOW_BANK_MAX_DIRECTORY_ENTRIES:
-                    _fail(
+                    _raise_show_bank_corruption(
                         "size",
                         "show-bank store contains too many directory entries",
                         artifact_name=self._root.name,
@@ -415,13 +417,17 @@ class ShowBankStore:
                 context={"category": "access", "artifact_name": path.name},
             ) from exc
         if not stat.S_ISREG(metadata.st_mode):
-            _fail("path", "show-bank namespace is not a regular file", artifact_name=path.name)
+            _raise_show_bank_corruption(
+                "path", "show-bank namespace is not a regular file", artifact_name=path.name
+            )
         payload = read_bounded_show_bank_file(
             path,
             maximum=len(SHOW_BANK_NAMESPACE_PAYLOAD),
         )
         if payload != SHOW_BANK_NAMESPACE_PAYLOAD:
-            _fail("schema", "show-bank namespace marker is invalid", artifact_name=path.name)
+            _raise_show_bank_corruption(
+                "schema", "show-bank namespace marker is invalid", artifact_name=path.name
+            )
         return True
 
     @trace("show_bank.persist")
@@ -460,13 +466,17 @@ class ShowBankStore:
             )
             bank_ids = {match.group("bank_id") for match in manifests}
             if len(bank_ids | {bank.bank_id}) > SHOW_BANK_MAX_BANKS:
-                _fail("size", "show-bank store cannot accept another bank")
+                _raise_show_bank_corruption("size", "show-bank store cannot accept another bank")
             revision_count = sum(match.group("bank_id") == bank.bank_id for match in manifests)
             if revision_count >= SHOW_BANK_MAX_REVISIONS_PER_BANK:
-                _fail("size", "show-bank store cannot accept another revision")
+                _raise_show_bank_corruption(
+                    "size", "show-bank store cannot accept another revision"
+                )
             new_names = {path.name for path in artifacts} - {path.name for path in paths}
             if len(paths) + len(new_names) > SHOW_BANK_MAX_DIRECTORY_ENTRIES:
-                _fail("size", "show-bank store cannot accept more directory entries")
+                _raise_show_bank_corruption(
+                    "size", "show-bank store cannot accept more directory entries"
+                )
             with guard_atomic_write_tree(self._root, identity):
                 writes = atomic_write_set(artifacts, overwrite=False)
         _logger.info(
@@ -487,14 +497,14 @@ class ShowBankStore:
         return writes[-1]
 
     def _available_revisions(self, bank_id: str) -> tuple[int, ...]:
-        _validate_safe_id(bank_id, "bank_id")
+        validate_show_bank_id(bank_id, "bank_id")
         revisions: list[int] = []
         for path in self._root_paths():
             match = _MANIFEST_RE.fullmatch(path.name)
             if match is not None and match.group("bank_id") == bank_id:
                 revisions.append(int(match.group("revision")))
                 if len(revisions) > SHOW_BANK_MAX_REVISIONS_PER_BANK:
-                    _fail(
+                    _raise_show_bank_corruption(
                         "size",
                         "show-bank revision history exceeds the supported bound",
                         artifact_name=bank_id,
@@ -516,21 +526,23 @@ class ShowBankStore:
     ) -> ShowBank:
         """Load one revision and optionally verify every retained SysEx artifact."""
 
-        _validate_safe_id(bank_id, "bank_id")
+        validate_show_bank_id(bank_id, "bank_id")
         root_identity: tuple[int, int] | None = None
         if self._root.exists():
             if self._root.is_symlink():
-                _fail(
+                _raise_show_bank_corruption(
                     "path",
                     "show-bank store root cannot be a symlink",
                     artifact_name=self._root.name,
                 )
-            root_identity = _directory_identity(self._root)
+            root_identity = _show_bank_directory_identity(self._root)
         selected_revision = revision
         if selected_revision is None:
             selected_revision = self.latest_revision(bank_id)
             if selected_revision is None:
-                _fail("missing", "show bank does not exist", artifact_name=bank_id)
+                _raise_show_bank_corruption(
+                    "missing", "show bank does not exist", artifact_name=bank_id
+                )
         path = self._manifest_path(bank_id, selected_revision)
         payload = read_bounded_show_bank_file(path, maximum=SHOW_BANK_MANIFEST_MAX_BYTES)
         bank = _decode_show_bank_manifest(payload, path, bank_id, selected_revision)
@@ -538,8 +550,8 @@ class ShowBankStore:
             for sysex in bank.sysex_artifacts():
                 if sysex.retained is not None:
                     self.read_retained(sysex.retained)
-        if root_identity is not None and _directory_identity(self._root) != root_identity:
-            _fail(
+        if root_identity is not None and _show_bank_directory_identity(self._root) != root_identity:
+            _raise_show_bank_corruption(
                 "access",
                 "show-bank store changed while its manifest was read",
                 artifact_name=path.name,
@@ -558,7 +570,7 @@ class ShowBankStore:
             }
         )
         if len(bank_ids) > SHOW_BANK_MAX_BANKS:
-            _fail(
+            _raise_show_bank_corruption(
                 "size",
                 "show-bank store contains too many banks",
                 artifact_name=self._root.name,
@@ -584,19 +596,23 @@ class ShowBankStore:
         """Read and re-verify one content-addressed retained frame."""
 
         if not self._root.exists() or self._root.is_symlink():
-            _fail("path", "show-bank store root is unavailable", artifact_name=self._root.name)
-        identity = _directory_identity(self._root)
+            _raise_show_bank_corruption(
+                "path", "show-bank store root is unavailable", artifact_name=self._root.name
+            )
+        identity = _show_bank_directory_identity(self._root)
         path = self._root / artifact.artifact_name
         frame = read_bounded_show_bank_file(path, maximum=SHOW_BANK_SYSEX_MAX_BYTES)
-        if _directory_identity(self._root) != identity:
-            _fail("access", "show-bank store changed while it was read", artifact_name=path.name)
+        if _show_bank_directory_identity(self._root) != identity:
+            _raise_show_bank_corruption(
+                "access", "show-bank store changed while it was read", artifact_name=path.name
+            )
         if len(frame) != artifact.byte_count:
-            _fail(
+            _raise_show_bank_corruption(
                 "size", "retained SysEx size does not match its manifest", artifact_name=path.name
             )
         digest = hashlib.sha256(frame).hexdigest()
         if digest != artifact.sha256:
-            _fail(
+            _raise_show_bank_corruption(
                 "hash", "retained SysEx hash does not match its manifest", artifact_name=path.name
             )
         try:
@@ -693,7 +709,7 @@ class ShowBankStore:
             if os.path.lexists(capture_path):
                 on_disk = self.read_retained(retained)
                 if on_disk != frame:
-                    _fail(
+                    _raise_show_bank_corruption(
                         "hash",
                         "content-addressed capture collision",
                         artifact_name=capture_path.name,
@@ -701,7 +717,7 @@ class ShowBankStore:
             else:
                 previous = artifacts.setdefault(capture_path, frame)
                 if previous != frame:
-                    _fail(
+                    _raise_show_bank_corruption(
                         "hash",
                         "content-addressed capture collision",
                         artifact_name=capture_path.name,
@@ -745,7 +761,7 @@ class ShowBankStore:
             destination = self._root / retained_record.artifact_name
             if os.path.lexists(destination):
                 if self.read_retained(retained_record) != frame:
-                    _fail(
+                    _raise_show_bank_corruption(
                         "hash",
                         "content-addressed capture collision",
                         artifact_name=destination.name,

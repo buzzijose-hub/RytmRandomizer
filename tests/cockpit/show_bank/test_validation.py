@@ -132,14 +132,14 @@ def _preflight(*, ready: bool = True) -> ShowTimePreflight:
 
 
 def test_untrusted_scalar_and_collection_decoding_is_strict() -> None:
-    with pytest.raises(TypeError, match="mapping"):
+    with pytest.raises(TypeError, match="object"):
         ShowBank.from_dict([])  # type: ignore[arg-type]
     with pytest.raises(TypeError, match="keys"):
         ShowBank.from_dict({1: "bad"})  # type: ignore[arg-type]
 
     raw = _bank().to_dict()
     raw.pop("name")
-    with pytest.raises(ValueError, match="keys differ"):
+    with pytest.raises(ValueError, match="is incomplete"):
         ShowBank.from_dict(raw)
 
     for key, bad in (("name", 1), ("revision", True), ("entries", {}), ("notes", [1])):
@@ -185,7 +185,7 @@ def test_untrusted_scalar_and_collection_decoding_is_strict() -> None:
 
     scope_raw = candidate().recipe.rytm_scope.to_dict()
     scope_raw["target_ids"] = ["one"]
-    with pytest.raises(TypeError, match="integers"):
+    with pytest.raises(TypeError, match="integer"):
         ShowKitScope.from_dict(scope_raw)
 
 

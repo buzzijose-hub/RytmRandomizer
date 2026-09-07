@@ -19,6 +19,14 @@ from time import perf_counter
 from types import MappingProxyType
 from typing import Final, Literal, NoReturn, Self, TypedDict, cast
 
+from ...guardrails.input_validation import (
+    canonical_json_bytes,
+    require_integer_field,
+    require_object,
+    require_sequence,
+    require_text_field,
+    require_text_tuple,
+)
 from ...observability.errors import DataError
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
@@ -32,6 +40,8 @@ from ..data.show_bank import (
     ShowBankDict,
     ShowBankEntry,
     ShowKitCapture,
+    validate_show_bank_id,
+    validate_show_pack_id,
 )
 from ..export.writer import WriteResult, atomic_write_set, guard_atomic_write_tree
 from .forge import (
@@ -72,7 +82,6 @@ SHOW_PACK_ARTIFACT_KIND_VALUES: Final[tuple[ShowPackArtifactKind, ...]] = (
     "recovery",
 )
 
-_SAFE_ID_RE: Final[re.Pattern[str]] = re.compile(r"^[a-z0-9][a-z0-9_-]{0,95}$")
 _SAFE_NAME_RE: Final[re.Pattern[str]] = re.compile(r"^[a-z0-9][a-z0-9._-]{0,127}$")
 _SHA256_RE: Final[re.Pattern[str]] = re.compile(r"^[0-9a-f]{64}$")
 _RESERVED_NAMES: Final[frozenset[str]] = frozenset(
@@ -105,74 +114,16 @@ def _raise_show_pack_corruption(
     raise DataError(message, context=context)
 
 
-def _validate_show_pack_id(value: str, label: str) -> None:
-    if _SAFE_ID_RE.fullmatch(value) is None:
-        raise ValueError(f"{label} must be a lowercase filename-safe id")
-
-
 def _validate_artifact_name(value: str) -> None:
     if _SAFE_NAME_RE.fullmatch(value) is None or ".." in value or Path(value).name != value:
         raise ValueError("show-pack artifact name is unsafe")
 
 
 def _canonical_json(value: Mapping[str, object]) -> bytes:
-    payload = (
-        json.dumps(
-            value,
-            ensure_ascii=False,
-            sort_keys=True,
-            separators=(",", ":"),
-            allow_nan=False,
-        )
-        + "\n"
-    ).encode("utf-8")
+    payload = canonical_json_bytes(value)
     if len(payload) > SHOW_PACK_MAX_ARTIFACT_BYTES:
         raise ValueError("show-pack JSON exceeds the supported size bound")
     return payload
-
-
-def _mapping(value: object, label: str) -> Mapping[str, object]:
-    if not isinstance(value, Mapping):
-        raise TypeError(f"{label} must be an object with string keys")
-    unknown_mapping = cast(Mapping[object, object], value)
-    if any(not isinstance(key, str) for key in unknown_mapping):
-        raise TypeError(f"{label} must be an object with string keys")
-    return cast(Mapping[str, object], unknown_mapping)
-
-
-def _show_pack_sequence(value: object, label: str) -> Sequence[object]:
-    if not isinstance(value, (list, tuple)):
-        raise TypeError(f"{label} must be a list")
-    return cast(Sequence[object], value)
-
-
-def _show_pack_string(data: Mapping[str, object], key: str, label: str) -> str:
-    value = data[key]
-    if not isinstance(value, str):
-        raise TypeError(f"{label}.{key} must be a string")
-    return value
-
-
-def _show_pack_integer(data: Mapping[str, object], key: str, label: str) -> int:
-    value = data[key]
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise TypeError(f"{label}.{key} must be an integer")
-    return value
-
-
-def _show_pack_strings(value: object, label: str) -> tuple[str, ...]:
-    values = _sequence(value, label)
-    if any(not isinstance(item, str) for item in values):
-        raise TypeError(f"{label} must contain strings")
-    return tuple(cast(str, item) for item in values)
-
-
-_fail = _raise_show_pack_corruption
-_validate_id = _validate_show_pack_id
-_sequence = _show_pack_sequence
-_string = _show_pack_string
-_integer = _show_pack_integer
-_strings = _show_pack_strings
 
 
 class ShowPackArtifactDict(TypedDict):
@@ -209,7 +160,7 @@ class ShowPackArtifact:
         if len(set(self.artifact_ids)) != len(self.artifact_ids):
             raise ValueError("show-pack artifact ids must be unique")
         for artifact_id in self.artifact_ids:
-            _validate_id(artifact_id, "artifact_id")
+            validate_show_bank_id(artifact_id, "artifact_id")
         if self.kind == "capture" and (not self.artifact_ids or not self.name.endswith(".syx")):
             raise ValueError("capture artifacts require logical ids and a .syx filename")
         if self.kind != "capture" and self.artifact_ids:
@@ -226,16 +177,20 @@ class ShowPackArtifact:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> Self:
-        data = _mapping(raw, "show-pack artifact")
+        data = require_object(raw, "show-pack artifact")
         expected = frozenset(ShowPackArtifactDict.__required_keys__)
         if frozenset(data) != expected:
             raise ValueError("show-pack artifact keys differ from the schema")
         return cls(
-            name=_string(data, "name", "show-pack artifact"),
-            kind=narrow_show_pack_artifact_kind(_string(data, "kind", "show-pack artifact")),
-            sha256=_string(data, "sha256", "show-pack artifact"),
-            byte_count=_integer(data, "byte_count", "show-pack artifact"),
-            artifact_ids=_strings(data["artifact_ids"], "show-pack artifact.artifact_ids"),
+            name=require_text_field(data, "name", "show-pack artifact"),
+            kind=narrow_show_pack_artifact_kind(
+                require_text_field(data, "kind", "show-pack artifact")
+            ),
+            sha256=require_text_field(data, "sha256", "show-pack artifact"),
+            byte_count=require_integer_field(data, "byte_count", "show-pack artifact"),
+            artifact_ids=require_text_tuple(
+                data["artifact_ids"], "show-pack artifact.artifact_ids"
+            ),
         )
 
 
@@ -264,7 +219,7 @@ class ShowPackManifest:
     checksums_file: str = SHOW_PACK_CHECKSUMS_NAME
 
     def __post_init__(self) -> None:
-        _validate_id(self.package_id, "package_id")
+        validate_show_pack_id(self.package_id, "package_id")
         if self.format != SHOW_PACK_FORMAT:
             raise ValueError("unsupported show-pack format")
         if self.schema_version != SHOW_PACK_SCHEMA_VERSION:
@@ -316,24 +271,26 @@ class ShowPackManifest:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> Self:
-        data = _mapping(raw, "show-pack manifest")
+        data = require_object(raw, "show-pack manifest")
         expected = frozenset(ShowPackManifestDict.__required_keys__)
         if frozenset(data) != expected:
             raise ValueError("show-pack manifest keys differ from the schema")
         return cls(
-            format=_string(data, "format", "show-pack manifest"),
-            schema_version=_string(data, "schema_version", "show-pack manifest"),
-            package_id=_string(data, "package_id", "show-pack manifest"),
+            format=require_text_field(data, "format", "show-pack manifest"),
+            schema_version=require_text_field(data, "schema_version", "show-pack manifest"),
+            package_id=require_text_field(data, "package_id", "show-pack manifest"),
             bank=ShowBank.from_dict(
-                cast(ShowBankDict, _mapping(data["bank"], "show-pack manifest.bank"))
+                cast(ShowBankDict, require_object(data["bank"], "show-pack manifest.bank"))
             ),
             artifacts=tuple(
-                ShowPackArtifact.from_dict(_mapping(item, "show-pack artifact"))
-                for item in _sequence(data["artifacts"], "show-pack manifest.artifacts")
+                ShowPackArtifact.from_dict(require_object(item, "show-pack artifact"))
+                for item in require_sequence(
+                    data["artifacts"], "show-pack manifest.artifacts", kind="array"
+                )
             ),
-            cue_order=_strings(data["cue_order"], "show-pack manifest.cue_order"),
-            recovery=_strings(data["recovery"], "show-pack manifest.recovery"),
-            checksums_file=_string(data, "checksums_file", "show-pack manifest"),
+            cue_order=require_text_tuple(data["cue_order"], "show-pack manifest.cue_order"),
+            recovery=require_text_tuple(data["recovery"], "show-pack manifest.recovery"),
+            checksums_file=require_text_field(data, "checksums_file", "show-pack manifest"),
         )
 
 
@@ -372,13 +329,6 @@ class ShowPackStoredImportResult:
     writes: tuple[WriteResult, ...]
 
 
-def _show_pack_sha256(data: bytes) -> str:
-    return hashlib.sha256(data).hexdigest()
-
-
-_sha256 = _show_pack_sha256
-
-
 def _artifact(
     name: str,
     kind: ShowPackArtifactKind,
@@ -388,7 +338,7 @@ def _artifact(
     return ShowPackArtifact(
         name=name,
         kind=kind,
-        sha256=_sha256(data),
+        sha256=hashlib.sha256(data).hexdigest(),
         byte_count=len(data),
         artifact_ids=artifact_ids,
     )
@@ -480,7 +430,7 @@ def _require_total_size(parts: Sequence[int], *, package_name: str) -> None:
     for size in parts:
         total += size
         if total > SHOW_PACK_MAX_TOTAL_BYTES:
-            _fail(
+            _raise_show_pack_corruption(
                 "size",
                 "show-pack aggregate size exceeds the supported bound",
                 artifact_name=package_name,
@@ -496,13 +446,13 @@ def _decoded_capture(capture: ShowKitCapture, frame: bytes) -> KitCaptureResult:
             context={"category": "framing", "artifact_name": capture.sysex.artifact_id},
         ) from exc
     if decoded.frame != frame or not decoded.round_trip_verified:
-        _fail(
+        _raise_show_pack_corruption(
             "framing",
             "show-pack capture failed exact codec round trip",
             artifact_name=capture.sysex.artifact_id,
         )
     if decoded.fingerprint != capture.fingerprint or decoded.kit_name != capture.kit_name:
-        _fail(
+        _raise_show_pack_corruption(
             "cross-reference",
             "show-pack capture metadata disagrees with decoded bytes",
             artifact_name=capture.sysex.artifact_id,
@@ -530,7 +480,7 @@ def _verify_entry_candidates(
                 },
             ) from exc
         if expected_rytm != candidate.rytm_semantic_fingerprint:
-            _fail(
+            _raise_show_pack_corruption(
                 "cross-reference",
                 "show-pack Rytm candidate semantic fingerprint is invalid",
                 artifact_name=candidate.candidate_id,
@@ -554,14 +504,14 @@ def _verify_entry_candidates(
                     "artifact_name": analog_four.sysex.artifact_id,
                 },
             ) from exc
-        digest = _sha256(frame)
+        digest = hashlib.sha256(frame).hexdigest()
         if (
             decoded_candidate.frame != frame
             or not decoded_candidate.round_trip_verified
             or not digest.startswith(analog_four.artifact_fingerprint)
             or observed_a4 != analog_four.semantic_fingerprint
         ):
-            _fail(
+            _raise_show_pack_corruption(
                 "cross-reference",
                 "show-pack A4 candidate fingerprint evidence is invalid",
                 artifact_name=analog_four.sysex.artifact_id,
@@ -597,7 +547,7 @@ def _verify_entry_recaptures(
             observed != recapture.observed_semantic_fingerprint
             or source != recapture.source_semantic_fingerprint
         ):
-            _fail(
+            _raise_show_pack_corruption(
                 "cross-reference",
                 "show-pack Rytm recapture semantic evidence is invalid",
                 artifact_name=recapture.capture.sysex.artifact_id,
@@ -625,7 +575,7 @@ def _verify_entry_recaptures(
             observed != recapture.observed_semantic_fingerprint
             or source != recapture.source_semantic_fingerprint
         ):
-            _fail(
+            _raise_show_pack_corruption(
                 "cross-reference",
                 "show-pack A4 recapture semantic evidence is invalid",
                 artifact_name=recapture.capture.sysex.artifact_id,
@@ -640,7 +590,7 @@ def _verify_package_device_claims(
 
     required = _required_retained_ids(bank)
     if not required <= frozenset(frames_by_artifact_id):
-        _fail(
+        _raise_show_pack_corruption(
             "cross-reference",
             "show-pack is missing required retained source or favorite evidence",
             artifact_name=SHOW_PACK_MANIFEST_NAME,
@@ -675,7 +625,9 @@ def _show_pack_directory_identity(path: Path) -> tuple[int, int]:
             context={"category": "access", "artifact_name": path.name},
         ) from exc
     if not stat.S_ISDIR(metadata.st_mode):
-        _fail("path", "show-pack path is not a directory", artifact_name=path.name)
+        _raise_show_pack_corruption(
+            "path", "show-pack path is not a directory", artifact_name=path.name
+        )
     return metadata.st_dev, metadata.st_ino
 
 
@@ -699,7 +651,9 @@ def _retained_pack_artifacts(bank: ShowBank, package_name: str) -> dict[str, Ret
     for artifact in retained.values():
         previous_size = retained_sizes.setdefault(artifact.artifact_name, artifact.byte_count)
         if previous_size != artifact.byte_count:
-            _fail("cross-reference", "retained artifact name has conflicting sizes")
+            _raise_show_pack_corruption(
+                "cross-reference", "retained artifact name has conflicting sizes"
+            )
     if len(retained_sizes) + 2 > SHOW_PACK_MAX_ARTIFACTS:
         raise ValueError("show-pack artifact count exceeds the supported bound")
     _require_total_size(list(retained_sizes.values()), package_name=package_name)
@@ -725,7 +679,7 @@ def _read_show_pack_manifest(package_dir: Path, package_id: str) -> ShowPackMani
             },
         ) from exc
     try:
-        manifest_mapping = _mapping(decoded, "show-pack manifest")
+        manifest_mapping = require_object(decoded, "show-pack manifest")
         manifest = ShowPackManifest.from_dict(manifest_mapping)
     except (KeyError, TypeError, ValueError) as exc:
         raise DataError(
@@ -733,13 +687,13 @@ def _read_show_pack_manifest(package_dir: Path, package_id: str) -> ShowPackMani
             context={"category": "schema", "artifact_name": SHOW_PACK_MANIFEST_NAME},
         ) from exc
     if manifest.package_id != package_id:
-        _fail(
+        _raise_show_pack_corruption(
             "cross-reference",
             "show-pack id does not match its directory",
             artifact_name=SHOW_PACK_MANIFEST_NAME,
         )
     if manifest_payload != _canonical_json(cast(Mapping[str, object], manifest.to_dict())):
-        _fail(
+        _raise_show_pack_corruption(
             "schema",
             "show-pack manifest is not canonical JSON",
             artifact_name=SHOW_PACK_MANIFEST_NAME,
@@ -769,7 +723,7 @@ def _read_verified_pack_payloads(package_dir: Path, manifest: ShowPackManifest) 
         for path in package_dir.iterdir():
             paths.append(path)
             if len(paths) > SHOW_PACK_MAX_DIRECTORY_ENTRIES:
-                _fail(
+                _raise_show_pack_corruption(
                     "size",
                     "show-pack directory contains too many entries",
                     artifact_name=package_dir.name,
@@ -781,7 +735,7 @@ def _read_verified_pack_payloads(package_dir: Path, manifest: ShowPackManifest) 
         ) from exc
     actual_names = {path.name for path in paths}
     if actual_names != expected_names:
-        _fail(
+        _raise_show_pack_corruption(
             "cross-reference",
             "show-pack file set differs from its manifest",
             artifact_name=package_dir.name,
@@ -794,28 +748,32 @@ def _read_verified_pack_payloads(package_dir: Path, manifest: ShowPackManifest) 
             maximum=SHOW_PACK_MAX_ARTIFACT_BYTES,
         )
         if len(payload) != artifact.byte_count:
-            _fail("size", "show-pack artifact size mismatch", artifact_name=artifact.name)
-        if _sha256(payload) != artifact.sha256:
-            _fail("hash", "show-pack artifact hash mismatch", artifact_name=artifact.name)
+            _raise_show_pack_corruption(
+                "size", "show-pack artifact size mismatch", artifact_name=artifact.name
+            )
+        if hashlib.sha256(payload).hexdigest() != artifact.sha256:
+            _raise_show_pack_corruption(
+                "hash", "show-pack artifact hash mismatch", artifact_name=artifact.name
+            )
         payloads[artifact.name] = payload
     checksums = read_bounded_show_bank_file(
         package_dir / SHOW_PACK_CHECKSUMS_NAME,
         maximum=SHOW_PACK_MAX_ARTIFACT_BYTES,
     )
     if checksums != _checksums_payload(manifest.artifacts):
-        _fail(
+        _raise_show_pack_corruption(
             "hash",
             "show-pack checksum list is not canonical",
             artifact_name=SHOW_PACK_CHECKSUMS_NAME,
         )
     if payloads[SHOW_PACK_CUE_ORDER_NAME] != _cue_order_payload(manifest.bank):
-        _fail(
+        _raise_show_pack_corruption(
             "cross-reference",
             "show-pack cue order disagrees with its bank",
             artifact_name=SHOW_PACK_CUE_ORDER_NAME,
         )
     if payloads[SHOW_PACK_RECOVERY_NAME] != _recovery_payload(manifest.recovery):
-        _fail(
+        _raise_show_pack_corruption(
             "cross-reference",
             "show-pack recovery file disagrees with its manifest",
             artifact_name=SHOW_PACK_RECOVERY_NAME,
@@ -842,12 +800,12 @@ class ShowPackService:
         return self._package_root
 
     def _package_dir(self, package_id: str) -> Path:
-        _validate_id(package_id, "package_id")
+        validate_show_pack_id(package_id, "package_id")
         return self._package_root / f"{package_id}{SHOW_PACK_SUFFIX}"
 
     def _prepare_export_directory(self, package_id: str) -> tuple[Path, tuple[int, int]]:
         if self._package_root.exists() and self._package_root.is_symlink():
-            _fail(
+            _raise_show_pack_corruption(
                 "path", "show-pack root cannot be a symlink", artifact_name=self._package_root.name
             )
         try:
@@ -869,7 +827,7 @@ class ShowPackService:
                 context={"category": "access", "artifact_name": package_dir.name},
             ) from exc
         if not stat.S_ISDIR(metadata.st_mode):
-            _fail(
+            _raise_show_pack_corruption(
                 "path", "show-pack package path is not a directory", artifact_name=package_dir.name
             )
         return package_dir, (metadata.st_dev, metadata.st_ino)
@@ -922,7 +880,7 @@ class ShowPackService:
         if not bank.entries:
             raise ValueError("cannot export an empty show bank")
         resolved_id = package_id or f"{bank.bank_id}-r{bank.revision:08d}"
-        _validate_id(resolved_id, "package_id")
+        validate_show_pack_id(resolved_id, "package_id")
         canonical_show_bank_json(bank)
         retained_by_id = _retained_pack_artifacts(bank, resolved_id)
 
@@ -932,7 +890,9 @@ class ShowPackService:
             payload = self._store.read_retained(retained)
             prior = capture_data.setdefault(retained.artifact_name, payload)
             if prior != payload:
-                _fail("hash", "retained artifact name resolves to conflicting bytes")
+                _raise_show_pack_corruption(
+                    "hash", "retained artifact name resolves to conflicting bytes"
+                )
             capture_ids.setdefault(retained.artifact_name, []).append(artifact_id)
 
         cue_payload = _cue_order_payload(bank)
@@ -1012,13 +972,13 @@ class ShowPackService:
         package_dir = self._package_dir(package_id)
         try:
             if self._package_root.is_symlink():
-                _fail(
+                _raise_show_pack_corruption(
                     "path",
                     "show-pack root cannot be a symlink",
                     artifact_name=self._package_root.name,
                 )
             if package_dir.is_symlink() or not package_dir.is_dir():
-                _fail(
+                _raise_show_pack_corruption(
                     "missing",
                     "show-pack package directory is missing",
                     artifact_name=package_dir.name,
@@ -1048,7 +1008,7 @@ class ShowPackService:
                 frames[artifact_id] = frame
         _verify_package_device_claims(manifest.bank, frames)
         if _show_pack_directory_identity(package_dir) != package_identity:
-            _fail(
+            _raise_show_pack_corruption(
                 "access",
                 "show-pack directory changed during verification",
                 artifact_name=package_dir.name,

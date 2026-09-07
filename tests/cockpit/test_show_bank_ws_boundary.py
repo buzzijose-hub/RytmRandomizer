@@ -48,13 +48,13 @@ def test_show_bank_handler_registry_is_immutable() -> None:
 def test_show_bank_wire_fields_reject_ambiguous_optional_values() -> None:
     assert show_bank_handlers._optional_integer({}, "energy_level") is None
     assert show_bank_handlers._optional_integer({"energy_level": 7}, "energy_level") == 7
-    with pytest.raises(ValueError, match="integer or null"):
+    with pytest.raises(ValueError, match="must be an integer"):
         show_bank_handlers._optional_integer({"energy_level": True}, "energy_level")
     with pytest.raises(ValueError, match="boolean"):
         show_bank_handlers._optional_boolean(
             {"replace_existing": "true"}, "replace_existing", default=False
         )
-    with pytest.raises(ValueError, match="integer list"):
+    with pytest.raises(ValueError, match="must be an array"):
         show_bank_handlers._integer_list({"rytm_targets": "1,2"}, "rytm_targets")
 
 
