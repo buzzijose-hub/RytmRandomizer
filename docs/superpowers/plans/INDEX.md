@@ -15,6 +15,7 @@ Requirements gates for all plans: [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUI
 
 | Date | Plan | Status | PR |
 |---|---|---|---|
+| 2026-09-07 | [autoupdate-implementation](2026-09-07-autoupdate-implementation.md) | proposed (awaiting kickoff) |  |
 | 2026-08-26 | [targeted-live-kit-mutation](2026-08-26-targeted-live-kit-mutation.md) | in-flight — software-complete / hardware-blocked | #237 |
 | 2026-08-26 | [cockpit-live-genome-profile-catalog](2026-08-26-cockpit-live-genome-profile-catalog.md) | superseded by targeted-live-kit-mutation | #237 |
 | 2026-07-16 | [a4-sysex-roundtrip-writer-pr-body](2026-07-16-a4-sysex-roundtrip-writer-pr-body.md) | (PR body draft — no lifecycle) |  |
