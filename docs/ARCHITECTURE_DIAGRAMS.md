@@ -3116,3 +3116,70 @@ does not claim continuous hot-plug monitoring. Rytm plans are bound
 to the captured source, effective scope, candidate, and exact plan id. A4
 remains useful for capture, target/lock rehearsal, and mapping evidence while
 its output authority is structurally blocked.
+
+## 37. Auto-Update Flow (designed — spec complete, implementation pending)
+
+> Source of truth:
+> [`docs/superpowers/plans/2026-08-03-autoupdate-distribution.md`](superpowers/plans/2026-08-03-autoupdate-distribution.md).
+> This diagram documents the **designed** update process (the spec's
+> drift guards already run in CI; the runtime lands with workstreams
+> U1–U6). Everything below is pull-only, consent-gated, and operates
+> zero servers.
+
+```mermaid
+flowchart TB
+    subgraph Release["Release pipeline (maintainer side, all $0 GitHub-hosted)"]
+        Tag["git tag vX.Y.Z<br/>(bump derived from<br/>conventional commits)"]
+        Verify["verify-tag<br/>tag == VERSION,<br/>ancestor of base"]
+        Build["shared workflow_call build<br/>(same job as CI artifacts)"]
+        Sign["updater-sign<br/>Ed25519 per artifact"]
+        GHRel["GitHub Release<br/>artifacts + sigs +<br/>beacon ping assets"]
+        BetaMan["beta.json<br/>on releases branch"]
+        Promote["promote.yml<br/>human-approved environment,<br/>chooses rollout_percent"]
+        StableMan["stable.json"]
+        Validate["manifest-validate.yml<br/>schema gate — the last gate<br/>before the fleet<br/>(rollbacks pass through too)"]
+        Tag --> Verify --> Build --> Sign --> GHRel
+        Sign --> BetaMan --> Validate
+        BetaMan --> Promote --> StableMan --> Validate
+    end
+
+    subgraph Client["Every install (shell-owned, pull-only)"]
+        Freeze{"freeze mode?<br/>RYTM_RAND_UPDATES=off<br/>or in-UI toggle"}
+        Check["checking<br/>launch + every 4h + manual<br/>~1 KB manifest GET (CDN)"]
+        Bucket{"bucket &lt; rollout_percent?<br/>sha256(install_id) mod 100<br/>(install_id never leaves<br/>the machine)"}
+        Download["downloading + verify sig<br/>(background, eager)"]
+        Staged["staged — chip renders:<br/>version, notes,<br/>hardware-reval warning"]
+        Consent{"operator consent<br/>(per-version)"}
+        Now["install now<br/>restart"]
+        OnQuit["install on next launch<br/>(after graceful shutdown)"]
+        Skip["skip this version"]
+        Freeze -- "frozen: no network,<br/>no chip" --> Idle["idle"]
+        Freeze -- "not frozen" --> Check
+        Check --> Bucket
+        Bucket -- "no (this cycle)" --> Idle
+        Bucket -- "yes" --> Download --> Staged --> Consent
+        Consent --> Now
+        Consent --> OnQuit
+        Consent --> Skip
+    end
+
+    subgraph Fleet["Fleet awareness (anonymous, cannot gate)"]
+        Ping["fire-and-forget GET of<br/>beacon-&lt;ver&gt;-&lt;os&gt;.txt<br/>(own running version)"]
+        Counts["GitHub download counters"]
+        Cron["fleet-snapshot.yml (cron)"]
+        History["fleet-history.json<br/>+ live rollout_percent"]
+        Dash["GitHub Pages dashboard:<br/>composition, adoption curve,<br/>promote markers"]
+        Ping --> Counts --> Cron --> History --> Dash
+    end
+
+    Validate -- "raw CDN fetch" --> Check
+    Check -. "separate request;<br/>failure never blocks<br/>the update path" .-> Ping
+    GHRel -- "artifact download" --> Download
+```
+
+Key invariants the diagram encodes: the **only** human gates are the
+promote approval (release side) and per-version consent (client side);
+`manifest-validate.yml` sits between every manifest commit — including
+rollbacks — and the fleet; the beacon ping is a dashed, fire-and-forget
+edge that cannot sit in front of anything; and no component anywhere is
+an operated server.

@@ -244,6 +244,11 @@ Validation rules (client-side, fail-closed):
 
 ## 5. Update state machine (shell-owned)
 
+The end-to-end process — release pipeline, client state machine, and
+fleet awareness on one canvas — is diagrammed in
+[`docs/ARCHITECTURE_DIAGRAMS.md` §37](../../ARCHITECTURE_DIAGRAMS.md#37-auto-update-flow-designed--spec-complete-implementation-pending)
+(one canonical diagram; this section is the normative text it renders).
+
 ```
 idle ──check──▶ checking ──none──▶ up_to_date ──4h/manual──▶ checking
                   │
