@@ -115,19 +115,25 @@ def test_show_pack_artifact_validation_and_strict_decoding() -> None:
         narrow_show_pack_artifact_kind("other")
 
     changes = (
-        {"name": "../a.syx"},
-        {"name": SHOW_PACK_MANIFEST_NAME},
-        {"kind": "other"},
-        {"sha256": "bad"},
-        {"byte_count": 0},
-        {"artifact_ids": ("frame", "frame")},
-        {"artifact_ids": ("Bad",)},
-        {"artifact_ids": ()},
-        {"name": "capture.bin"},
-        {"kind": "cue-order", "artifact_ids": ("frame",)},
+        ({"name": "../a.syx"}, "show-pack artifact name is unsafe"),
+        (
+            {"name": SHOW_PACK_MANIFEST_NAME},
+            "manifest/checksum files are not payload artifact records",
+        ),
+        ({"kind": "other"}, "unsupported show-pack artifact kind"),
+        ({"sha256": "bad"}, "show-pack artifact sha256 is invalid"),
+        ({"byte_count": 0}, "show-pack artifact byte_count is outside the supported bound"),
+        ({"artifact_ids": ("frame", "frame")}, "show-pack artifact ids must be unique"),
+        ({"artifact_ids": ("Bad",)}, "artifact_id must be a lowercase filename-safe id"),
+        ({"artifact_ids": ()}, "capture artifacts require logical ids"),
+        ({"name": "capture.bin"}, "capture artifacts require logical ids"),
+        (
+            {"kind": "cue-order", "artifact_ids": ("frame",)},
+            "non-capture artifacts cannot carry SysEx artifact ids",
+        ),
     )
-    for change in changes:
-        with pytest.raises(ValueError):
+    for change, message in changes:
+        with pytest.raises(ValueError, match=message):
             dataclasses.replace(valid, **change)
 
     with pytest.raises(TypeError, match="object"):
@@ -158,18 +164,21 @@ def test_show_pack_manifest_validation_is_exhaustive(tmp_path: Path) -> None:
     _, exported = _exported(tmp_path)
     manifest = exported.manifest
 
-    for change in (
-        {"schema_version": "other"},
-        {"checksums_file": "other"},
-        {"artifacts": ()},
-        {"artifacts": (manifest.artifacts[0],) * 3},
-        {"cue_order": ("missing",)},
-        {"recovery": tuple("line" for _ in range(257))},
-        {"recovery": ("",)},
-        {"recovery": ("x" * 513,)},
-        {"recovery": ("nul\x00",)},
+    for change, message in (
+        ({"schema_version": "other"}, "unsupported show-pack schema version"),
+        ({"checksums_file": "other"}, "show-pack checksum filename is not canonical"),
+        ({"artifacts": ()}, "show-pack artifact count is outside the supported bound"),
+        ({"artifacts": (manifest.artifacts[0],) * 3}, "show-pack artifact names must be unique"),
+        ({"cue_order": ("missing",)}, "show-pack cue order does not match bank order"),
+        (
+            {"recovery": tuple("line" for _ in range(257))},
+            "show-pack recovery instructions exceed the supported count",
+        ),
+        ({"recovery": ("",)}, "show-pack recovery instruction is invalid"),
+        ({"recovery": ("x" * 513,)}, "show-pack recovery instruction is invalid"),
+        ({"recovery": ("nul\x00",)}, "show-pack recovery instruction is invalid"),
     ):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=message):
             dataclasses.replace(manifest, **change)
 
     cue = next(item for item in manifest.artifacts if item.kind == "cue-order")

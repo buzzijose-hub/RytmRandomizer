@@ -80,17 +80,24 @@ def test_complete_bank_round_trip_preserves_exact_nested_rytm_candidate() -> Non
 
 
 @pytest.mark.parametrize(
-    ("narrow", "valid", "invalid"),
+    ("narrow", "valid", "invalid", "message"),
     [
-        (narrow_show_kit_device_id, RYTM_SHOW_KIT_DEVICE_ID, "other"),
-        (narrow_show_kit_lifecycle_status, "verified", "almost"),
-        (narrow_show_kit_depth_preset, "custom", "huge"),
-        (narrow_show_kit_evidence_status, "blocked", "maybe"),
+        (narrow_show_kit_device_id, RYTM_SHOW_KIT_DEVICE_ID, "other", "invalid show-kit device id"),
+        (
+            narrow_show_kit_lifecycle_status,
+            "verified",
+            "almost",
+            "invalid show-kit lifecycle status",
+        ),
+        (narrow_show_kit_depth_preset, "custom", "huge", "invalid show-kit depth preset"),
+        (narrow_show_kit_evidence_status, "blocked", "maybe", "invalid show-kit evidence status"),
     ],
 )
-def test_literal_narrowing_validates_untrusted_strings(narrow, valid: str, invalid: str) -> None:
+def test_literal_narrowing_validates_untrusted_strings(
+    narrow, valid: str, invalid: str, message: str
+) -> None:
     assert narrow(valid) == valid
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=message):
         narrow(invalid)
 
 
@@ -108,7 +115,7 @@ def test_scope_uses_include_minus_locks_and_rejects_wrong_domain() -> None:
     ).effective_ids == (2, 3, 4)
     with pytest.raises(ValueError, match="unavailable"):
         ShowKitScope(device_id=A4_SHOW_KIT_DEVICE_ID, target_ids=(5,))
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="target_ids must contain positive integer ids"):
         ShowKitScope(device_id=RYTM_SHOW_KIT_DEVICE_ID, target_ids=(True,))
 
 
@@ -134,17 +141,17 @@ def test_exact_sysex_and_capture_invariants() -> None:
 
 
 @pytest.mark.parametrize(
-    "changes",
+    ("changes", "message"),
     [
-        {"parameter": "Amp Attack"},
-        {"track_id": 5},
-        {"encoded_unsigned_8_8": 0x7F01},
-        {"unpacked_offset": -1},
+        ({"parameter": "Amp Attack"}, "support only Filter1 Frequency"),
+        ({"track_id": 5}, "A4 candidate track_id must be in"),
+        ({"encoded_unsigned_8_8": 0x7F01}, "encoded_unsigned_8_8 must be in"),
+        ({"unpacked_offset": -1}, "unpacked_offset must equal the verified"),
     ],
 )
-def test_a4_candidate_values_are_narrowly_bounded(changes: dict[str, object]) -> None:
+def test_a4_candidate_values_are_narrowly_bounded(changes: dict[str, object], message: str) -> None:
     value = candidate().analog_four_candidate.values[0]
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=message):
         dataclasses.replace(value, **changes)
 
 
@@ -291,7 +298,7 @@ def test_operator_metadata_and_save_attestation_are_bounded() -> None:
     assert HardwareSaveAttestation.from_dict(save.to_dict()) == save
     with pytest.raises(ValueError, match="1..128"):
         dataclasses.replace(save, hardware_slot=129)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="OXI project contains surrounding or control whitespace"):
         OxiShowMetadata(project=" x")
 
 

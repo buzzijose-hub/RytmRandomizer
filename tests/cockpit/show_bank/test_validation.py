@@ -253,15 +253,15 @@ def test_recipe_and_candidate_cross_reference_validation() -> None:
     base_recipe = candidate().recipe
     a4_scope = base_recipe.analog_four_scope
     rytm_scope = base_recipe.rytm_scope
-    for changes in (
-        {"depth_preset": "other"},
-        {"depth": 0.09},
-        {"seed": True},
-        {"seed": 7.0},
-        {"rytm_scope": a4_scope},
-        {"analog_four_scope": rytm_scope},
+    for changes, message in (
+        ({"depth_preset": "other"}, "unsupported show-kit depth preset"),
+        ({"depth": 0.09}, "depth must be in"),
+        ({"seed": True}, "seed must be an integer"),
+        ({"seed": 7.0}, "seed must be an integer"),
+        ({"rytm_scope": a4_scope}, "rytm_scope must target the Analog Rytm lane"),
+        ({"analog_four_scope": rytm_scope}, "analog_four_scope must target the Analog Four lane"),
     ):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=message):
             dataclasses.replace(base_recipe, **changes)
 
     base = candidate()
@@ -338,48 +338,100 @@ def test_entry_rejects_conflated_or_cross_referenced_lifecycle_evidence() -> Non
     selected = _candidate_entry()
     favorite = _favorite_entry()
     makers = (
-        lambda: dataclasses.replace(source, cue_index=0),
-        lambda: dataclasses.replace(source, rytm_source=source.analog_four_source),
-        lambda: dataclasses.replace(source, analog_four_source=source.rytm_source),
-        lambda: dataclasses.replace(
-            source, candidates=tuple(candidate(candidate_id=f"c-{i}") for i in range(65))
+        (lambda: dataclasses.replace(source, cue_index=0), "cue_index must be in"),
+        (
+            lambda: dataclasses.replace(source, rytm_source=source.analog_four_source),
+            "rytm_source must be an Analog Rytm capture",
         ),
-        lambda: dataclasses.replace(selected, candidates=(candidate(), candidate())),
-        lambda: dataclasses.replace(
-            selected,
-            candidates=(dataclasses.replace(candidate(), source_rytm_fingerprint="99999999"),),
+        (
+            lambda: dataclasses.replace(source, analog_four_source=source.rytm_source),
+            "analog_four_source must be an Analog Four capture",
         ),
-        lambda: dataclasses.replace(
-            selected,
-            candidates=(
-                dataclasses.replace(
-                    candidate(),
-                    rytm_candidate=dataclasses.replace(
-                        candidate().rytm_candidate, source_snapshot_id="other"
+        (
+            lambda: dataclasses.replace(
+                source, candidates=tuple(candidate(candidate_id=f"c-{i}") for i in range(65))
+            ),
+            "entry may contain at most 64 candidates",
+        ),
+        (
+            lambda: dataclasses.replace(selected, candidates=(candidate(), candidate())),
+            "entry contains duplicate candidate ids",
+        ),
+        (
+            lambda: dataclasses.replace(
+                selected,
+                candidates=(dataclasses.replace(candidate(), source_rytm_fingerprint="99999999"),),
+            ),
+            "candidate does not reference the entry's immutable sources",
+        ),
+        (
+            lambda: dataclasses.replace(
+                selected,
+                candidates=(
+                    dataclasses.replace(
+                        candidate(),
+                        rytm_candidate=dataclasses.replace(
+                            candidate().rytm_candidate, source_snapshot_id="other"
+                        ),
                     ),
                 ),
             ),
+            "Rytm candidate does not reference the source snapshot",
         ),
-        lambda: dataclasses.replace(selected, selected_candidate_id="missing"),
-        lambda: dataclasses.replace(selected, rytm_live_auditioned_candidate_id="candidate-one"),
-        lambda: dataclasses.replace(
-            selected,
-            rytm_live_auditioned_candidate_id="missing",
-            rytm_live_auditioned_at=NOW,
+        (
+            lambda: dataclasses.replace(selected, selected_candidate_id="missing"),
+            "selected_candidate_id does not name an entry candidate",
         ),
-        lambda: dataclasses.replace(selected, favorite=ShowKitFavorite("missing", NOW)),
-        lambda: dataclasses.replace(source, rytm_hardware_save=_save(RYTM_SHOW_KIT_DEVICE_ID)),
-        lambda: dataclasses.replace(source, updated_at=datetime(2025, 1, 1, tzinfo=timezone.utc)),
-        lambda: dataclasses.replace(favorite, show_ready_at=LATER),
-        lambda: dataclasses.replace(favorite, show_time_preflight=_preflight()),
-        lambda: dataclasses.replace(favorite, rytm_hardware_save=_save(A4_SHOW_KIT_DEVICE_ID)),
-        lambda: dataclasses.replace(
-            favorite,
-            rytm_recapture=_favorite_recapture(RYTM_SHOW_KIT_DEVICE_ID),
+        (
+            lambda: dataclasses.replace(
+                selected, rytm_live_auditioned_candidate_id="candidate-one"
+            ),
+            "Rytm live audition candidate and timestamp must be set together",
+        ),
+        (
+            lambda: dataclasses.replace(
+                selected,
+                rytm_live_auditioned_candidate_id="missing",
+                rytm_live_auditioned_at=NOW,
+            ),
+            "Rytm live audition does not name an entry candidate",
+        ),
+        (
+            lambda: dataclasses.replace(selected, favorite=ShowKitFavorite("missing", NOW)),
+            "favorite does not name an entry candidate",
+        ),
+        (
+            lambda: dataclasses.replace(source, rytm_hardware_save=_save(RYTM_SHOW_KIT_DEVICE_ID)),
+            "hardware-save, recapture, and show-ready state require a favorite",
+        ),
+        (
+            lambda: dataclasses.replace(
+                source, updated_at=datetime(2025, 1, 1, tzinfo=timezone.utc)
+            ),
+            "entry updated_at cannot precede created_at",
+        ),
+        (
+            lambda: dataclasses.replace(favorite, show_ready_at=LATER),
+            "show-ready requires semantic verification",
+        ),
+        (
+            lambda: dataclasses.replace(favorite, show_time_preflight=_preflight()),
+            "show-time preflight requires paired favorite recaptures",
+        ),
+        (
+            lambda: dataclasses.replace(favorite, rytm_hardware_save=_save(A4_SHOW_KIT_DEVICE_ID)),
+            "hardware-save attestation is attached to the wrong device",
+        ),
+        (
+            lambda: dataclasses.replace(
+                favorite,
+                rytm_recapture=_favorite_recapture(RYTM_SHOW_KIT_DEVICE_ID),
+            ),
+            "favorite recapture requires a same-device hardware-save attestation",
         ),
     )
-    for make in makers:
-        with pytest.raises(ValueError):
+    for make, message in makers:
+        with pytest.raises(ValueError, match=message):
             make()
 
 

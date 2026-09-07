@@ -411,26 +411,41 @@ def test_duplicate_reorder_remove_and_metadata_transitions_are_deterministic() -
 
 
 @pytest.mark.parametrize(
-    "operation",
+    ("operation", "message"),
     [
-        lambda bank: select_candidate(bank, "entry-one", "missing", clock=clock),
-        lambda bank: mark_favorite(bank, "entry-one", clock=clock),
-        lambda bank: record_rytm_live_audition(bank, "entry-one", clock=clock),
-        lambda bank: attest_hardware_save(
-            bank,
-            "entry-one",
-            device_id=RYTM_SHOW_KIT_DEVICE_ID,
-            hardware_slot=20,
-            note="save",
-            clock=clock,
+        (
+            lambda bank: select_candidate(bank, "entry-one", "missing", clock=clock),
+            "unknown candidate id",
         ),
-        lambda bank: reorder_entries(bank, ("missing",), clock=clock),
-        lambda bank: remove_entry(bank, "missing", clock=clock),
+        (
+            lambda bank: mark_favorite(bank, "entry-one", clock=clock),
+            "marking a favorite requires a selected candidate",
+        ),
+        (
+            lambda bank: record_rytm_live_audition(bank, "entry-one", clock=clock),
+            "Rytm live audition requires a selected candidate",
+        ),
+        (
+            lambda bank: attest_hardware_save(
+                bank,
+                "entry-one",
+                device_id=RYTM_SHOW_KIT_DEVICE_ID,
+                hardware_slot=20,
+                note="save",
+                clock=clock,
+            ),
+            "hardware-save attestation requires a favorite",
+        ),
+        (
+            lambda bank: reorder_entries(bank, ("missing",), clock=clock),
+            "ordered entry ids must contain every bank entry exactly once",
+        ),
+        (lambda bank: remove_entry(bank, "missing", clock=clock), "unknown show-bank entry id"),
     ],
 )
-def test_invalid_transitions_leave_the_original_bank_unchanged(operation) -> None:
+def test_invalid_transitions_leave_the_original_bank_unchanged(operation, message: str) -> None:
     bank = fresh_bank()
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=message):
         operation(bank)
     assert bank.revision == 1
     assert bank.status == "source"
