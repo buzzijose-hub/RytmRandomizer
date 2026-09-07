@@ -17,6 +17,8 @@ Requirements gates for all plans: [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUI
 |---|---|---|---|
 | 2026-08-26 | [targeted-live-kit-mutation](2026-08-26-targeted-live-kit-mutation.md) | in-flight — software-complete / hardware-blocked | #237 |
 | 2026-08-26 | [cockpit-live-genome-profile-catalog](2026-08-26-cockpit-live-genome-profile-catalog.md) | superseded by targeted-live-kit-mutation | #237 |
+| 2026-07-16 | [a4-sysex-roundtrip-writer-pr-body](2026-07-16-a4-sysex-roundtrip-writer-pr-body.md) | (PR body draft — no lifecycle) |  |
+| 2026-07-17 | [a4-audio-patch-final-review](2026-07-17-a4-audio-patch-final-review.md) | in-flight |  |
 | 2026-08-08 | [rio145-dual-kit-codec-integration](2026-08-08-rio145-dual-kit-codec-integration.md) | in-flight |  |
 | 2026-05-19 | [dual-machine-strategy-redo-pr-body](2026-05-19-dual-machine-strategy-redo-pr-body.md) | (PR body draft — no lifecycle) |  |
 | 2026-05-19 | [dual-machine-strategy-redo](2026-05-19-dual-machine-strategy-redo.md) | legacy (pre-status convention; grandfathered) |  |

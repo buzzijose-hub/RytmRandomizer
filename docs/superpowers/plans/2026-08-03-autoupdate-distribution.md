@@ -155,6 +155,19 @@ spine eliminates.
   skew between halves is structurally impossible; the pinned WS
   subprotocol remains the belt-and-suspenders guard.
 
+**Pull, not push — and no server to operate.** Nothing is ever pushed
+to a client. Each install polls the channel manifest (a ~1 KB static
+JSON on GitHub's CDN) at launch, every 4 h while running, and on
+manual "Check now"; the artifact is then staged in the background and
+installed only on operator consent (§5). A push channel (WebSocket /
+notification service) was considered and deliberately rejected: the
+poll cadence already yields hours-scale worst-case fleet notice with
+**zero operated infrastructure**, and a push path would add a server
+whose availability sat in front of update delivery. The only optional
+hosted piece in the whole design is the fleet-awareness beacon (§6) —
+a logging redirector that can vanish without affecting a single
+update.
+
 ## 4. Manifest schema (v1)
 
 One JSON document per channel:
@@ -287,8 +300,20 @@ staged ──chip visible──▶ consent{ install_now | install_on_quit(defaul
 
 ## 8. Test & enforcement spec
 
-Architecture tests (new):
-- `test_version_single_source.py` — §2.3.
+Architecture tests (**the first three land with this spec PR**, each
+mutation-proven at introduction; the rest arrive with their
+workstreams):
+- `test_version_single_source.py` — §2.3, **landed**: self-upgrading —
+  pins today's five-declaration inventory as a drainable baseline and
+  switches to the full single-source contract automatically when U1
+  creates `VERSION`.
+- `test_plan_index_rows.py` — **landed**: every plan doc has an
+  `INDEX.md` row and every row links a real file (found two missing
+  rows at introduction).
+- The §9.2 pin-scan widening — **landed**: `test_ci_workflow.py` now
+  collects lint pins from every install site in every workflow and
+  asserts cross-site agreement (the second `test.yml` site at line 418
+  was previously invisible to it).
 - `test_update_env_documented.py` — the four env vars appear in the
   README/quickstart env tables (extends the existing Gate 13 pattern).
 
@@ -379,8 +404,8 @@ Rules, each with an enforcement home:
 
 | WS | Scope | Acceptance criteria | Depends on |
 |---|---|---|---|
-| **U1 — version spine** | `VERSION`, derivations, `sync_version.py`, drift-guard test, `app_version` in session_status; `data/persisted_state.py` registry + its arch test; `.claude/rules/update-compatibility.md` | arch tests green; one `version =` left in pyproject; every existing config-dir writer registered with a `schema_version`; the rule file lands with the registry | — |
-| **U2 — release pipeline** | `installers.yml` → `workflow_call` conversion; `release.yml`, updater keypair in secrets, changelog gen, manifest gen, `releases` branch; `promote.yml` with environment gate; `manifest-validate.yml`; `test_ci_workflow.py` scope map + all-workflow pin scan (§9.2) | a `v*-beta.N` tag on a throwaway commit produces signed artifacts + a valid `beta.json` end-to-end, verified against the schema fixture; `cut-release` derives the right bump from a synthetic commit history in a workflow test; CI artifact and release build come from the same called workflow; an intentionally malformed manifest is refused by `manifest-validate.yml` | U1 |
+| **U1 — version spine** | `VERSION`, derivations, `sync_version.py`, drift-guard test, `app_version` in session_status; `data/persisted_state.py` registry + its arch test; `.claude/rules/update-compatibility.md` | arch tests green (the version guard's pre-U1 ratchet already landed with the spec; U1 flips it to full mode by creating `VERSION`); one `version =` left in pyproject; every existing config-dir writer registered with a `schema_version`; the rule file lands with the registry | — |
+| **U2 — release pipeline** | `installers.yml` → `workflow_call` conversion; `release.yml`, updater keypair in secrets, changelog gen, manifest gen, `releases` branch; `promote.yml` with environment gate; `manifest-validate.yml`; `test_ci_workflow.py` scope map (the all-workflow pin scan of §9.2 already landed with the spec) | a `v*-beta.N` tag on a throwaway commit produces signed artifacts + a valid `beta.json` end-to-end, verified against the schema fixture; `cut-release` derives the right bump from a synthetic commit history in a workflow test; CI artifact and release build come from the same called workflow; an intentionally malformed manifest is refused by `manifest-validate.yml` | U1 |
 | **U3 — shell updater** | plugin integration, state machine §5, bucketing, freeze, beacon fetch-through with CDN fallback; **absorbs the standing shell follow-up: re-inject the fresh WS token after sidecar restart** | Rust test list §8 green; mock-manifest flows work in `cargo run` | U1 (rustup: done 2026-08-03) |
 | **U4 — cockpit UX** | chip + PanelSpec panel + consent flows + freeze toggle + dev-loop fallback | axe floor 0; announcer integration; CLI-help parity guard untouched (no CLI surface) | U3 state shape |
 | **U5 — e2e + beacon** | mock-manifest fixture + the §8 spec list; beacon worker + histogram | all §8 e2e specs green in CI; beacon-down spec proves independence; old-state boot compat suite green against the committed vN-1 fixtures | U2–U4 |

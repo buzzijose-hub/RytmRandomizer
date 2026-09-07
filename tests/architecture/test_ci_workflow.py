@@ -75,33 +75,48 @@ def _read_workflow_text(path: Path) -> str:
 
 
 def _extract_workflow_lint_pins() -> dict[str, str]:
-    """Parse the `pip install "ruff==X" "black==Y" "isort==Z"` step.
+    """Collect lint-tool pins from EVERY install site in EVERY workflow.
 
     Returns ``{"ruff": "0.15.13", "black": "26.3.1", "isort": "8.0.1"}``
-    (or whatever versions are currently pinned). The step text is matched
-    with a regex rather than YAML-parsed because the version strings live
-    inside a shell command string, not as structured workflow fields.
+    (or whatever versions are currently pinned) after asserting that all
+    sites agree with each other. Scanning every workflow file — rather
+    than one named step in ``test.yml`` — is the permanent fix for the
+    PR #224 gap class, where a newly added workflow step installed lint
+    tools outside this test's field of view. The lines are matched with
+    a regex rather than YAML-parsed because the version strings live
+    inside shell command strings, not structured workflow fields.
+    (Mandated by the auto-update distribution spec, §9 rule 2.)
     """
 
-    text = _read_workflow_text(TEST_WORKFLOW)
-    # Find the `Install lint tools` step's `run:` line.
-    match = re.search(
-        r"name:\s*Install lint tools\s*\n\s*run:\s*(.+)\n",
-        text,
-    )
-    if match is None:
+    lint_tools = ("ruff", "black", "isort")
+    sites: dict[str, dict[str, str]] = {}
+    for workflow_path in sorted(WORKFLOWS_DIR.glob("*.yml")):
+        text = _read_workflow_text(workflow_path)
+        for line_number, line in enumerate(text.splitlines(), start=1):
+            found = dict(re.findall(r'"?([a-z][a-z0-9-]*)==([0-9][^"\s]+)"?', line))
+            pinned = {name: found[name] for name in lint_tools if name in found}
+            if pinned:
+                sites[f"{workflow_path.name}:{line_number}"] = pinned
+    if not sites:
         pytest.fail(
-            "Could not find the 'Install lint tools' step in "
-            ".github/workflows/test.yml. If the step was renamed, update "
-            "this test's regex."
+            "No lint-tool pin sites found in any workflow under "
+            ".github/workflows/. If the install commands moved out of "
+            "workflow files entirely, update this test."
         )
-    install_line = match.group(1)
-    pins = dict(re.findall(r'"?([a-z][a-z0-9-]*)==([0-9][^"\s]+)"?', install_line))
-    if not pins:
-        pytest.fail(
-            f"Could not parse any ==-pinned packages from the install line: " f"{install_line!r}"
-        )
-    return pins
+    merged: dict[str, str] = {}
+    for site, pinned in sites.items():
+        for name, version in pinned.items():
+            if name in merged and merged[name] != version:
+                pytest.fail(
+                    "Lint-tool pin sites disagree across workflows: "
+                    f"{name} is {merged[name]} elsewhere but {version} "
+                    f"at {site}. All install sites must pin identical "
+                    "versions (auto-update spec §9 rule 2)."
+                )
+            merged[name] = version
+    # ``sites`` non-empty guarantees ``merged`` non-empty: every recorded
+    # site contributed at least one lint-tool pin.
+    return merged
 
 
 def _extract_precommit_pins() -> dict[str, str]:
