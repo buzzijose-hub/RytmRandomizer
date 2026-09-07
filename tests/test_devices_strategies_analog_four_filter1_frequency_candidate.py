@@ -376,6 +376,7 @@ def test_candidate_rejects_duplicate_wrong_record_and_demoted_calibration(
     from typing import cast
 
     import rytm_randomizer.devices.strategies.analog_four_filter1_frequency_candidate as module
+    import rytm_randomizer.devices.strategies.analog_four_saved_kit_candidate as generic_module
     from rytm_randomizer.data.analog_four_sysex_calibration import (
         A4_SYSEX_CALIBRATION_STATUS_PENDING,
         analog_four_sysex_calibration_for,
@@ -404,7 +405,7 @@ def test_candidate_rejects_duplicate_wrong_record_and_demoted_calibration(
         analog_four_sysex_calibration_for("Filter1 Frequency"),
         status=A4_SYSEX_CALIBRATION_STATUS_PENDING,
     )
-    monkeypatch.setattr(module, "analog_four_sysex_calibration_for", lambda _: pending)
+    monkeypatch.setattr(generic_module, "analog_four_sysex_calibration_for", lambda _: pending)
     with pytest.raises(ValueError, match="not offline-captured-kit-mutation-validated"):
         module.render_analog_four_filter1_frequency_candidate(source, (_mutation(),))
 
@@ -442,3 +443,132 @@ def test_candidate_result_is_frozen() -> None:
 
     with pytest.raises(FrozenInstanceError):
         result.hardware_send_validated = True  # type: ignore[misc]
+
+
+@pytest.mark.parametrize(
+    "drift",
+    [
+        {"parameter": "Filter2 Frequency"},
+        {"track_1_primary_raw_offset": 157},
+        {"track_1_primary_raw_offset": 153},  # Packed mask, never native data.
+        {"track_raw_stride": 401},
+        {"track_unpacked_stride": 351},
+        {"track_raw_stride": 400.0},
+        {"track_1_primary_raw_offset": True},
+        {"native_field": None},
+        {"native_field": "filter1_resonance"},
+        {"native_encoding": "little-endian"},
+        {"native_width": 1},
+        {"native_scale": 128},
+        {"native_raw_min": True},
+        {"native_raw_min": -1},
+        {"native_raw_max": 0x8000},
+        {"native_raw_min": 1},
+        {"native_raw_max": 0x7F01},
+        {"screen_max": "126.00"},
+    ],
+)
+def test_calibration_drift_is_rejected_before_patching_any_field(
+    monkeypatch: pytest.MonkeyPatch, drift: dict[str, object]
+) -> None:
+    from dataclasses import replace
+
+    import rytm_randomizer.devices.strategies.analog_four_saved_kit_candidate as renderer
+    from rytm_randomizer.data.analog_four_sysex_calibration import (
+        analog_four_sysex_calibration_for,
+    )
+    from rytm_randomizer.devices.strategies.analog_four_kit_fields import A4Sound
+
+    canonical = analog_four_sysex_calibration_for("Filter1 Frequency")
+    changed = replace(canonical, **drift)
+    resolutions = iter((canonical, changed))
+    monkeypatch.setattr(renderer, "analog_four_sysex_calibration_for", lambda _: next(resolutions))
+    patches: list[tuple[str, int]] = []
+    monkeypatch.setattr(
+        A4Sound, "set_fixed_8_8_raw", lambda self, field, raw: patches.append((field, raw))
+    )
+    source = _fixture_bytes(_SOURCE_NAME)
+
+    with pytest.raises(ValueError, match="calibrat|native range"):
+        renderer.render_analog_four_saved_kit_candidate(
+            source,
+            (
+                renderer.AnalogFourSavedKitCandidateMutation("Filter1 Frequency", 1, "32"),
+                renderer.AnalogFourSavedKitCandidateMutation("Filter1 Frequency", 2, "64"),
+            ),
+        )
+
+    assert patches == []
+    assert source == _fixture_bytes(_SOURCE_NAME)
+
+
+def test_renderer_consumes_packed_calibration_method_result(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.data.analog_four_sysex_calibration import AnalogFourSysexFieldCalibration
+    from rytm_randomizer.devices.strategies.analog_four_filter1_frequency_candidate import (
+        render_analog_four_filter1_frequency_candidate,
+    )
+
+    monkeypatch.setattr(
+        AnalogFourSysexFieldCalibration, "primary_raw_offset_for_track", lambda self, track: 157
+    )
+    with pytest.raises(ValueError, match="calibration offset disagrees"):
+        render_analog_four_filter1_frequency_candidate(_fixture_bytes(_SOURCE_NAME), (_mutation(),))
+
+
+def test_renderer_rejects_canonical_field_map_drift(monkeypatch: pytest.MonkeyPatch) -> None:
+    import rytm_randomizer.data.analog_four_sysex_calibration as calibration
+    from rytm_randomizer.devices.strategies.analog_four_filter1_frequency_candidate import (
+        render_analog_four_filter1_frequency_candidate,
+    )
+
+    fields = dict(calibration.A4_TRACK_OFFSETS)
+    fields["filter1_frequency"] += 1
+    monkeypatch.setattr(calibration, "A4_TRACK_OFFSETS", fields)
+    with pytest.raises(ValueError, match="calibration offset disagrees"):
+        render_analog_four_filter1_frequency_candidate(_fixture_bytes(_SOURCE_NAME), (_mutation(),))
+
+
+def test_shared_renderer_accepts_another_field_only_after_explicit_offline_calibration(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dataclasses import replace
+    from typing import cast
+
+    import rytm_randomizer.devices.strategies.analog_four_saved_kit_candidate as renderer
+    from rytm_randomizer.data.analog_four_sysex_calibration import (
+        A4_SYSEX_CALIBRATION_STATUS_OFFLINE_CAPTURED_KIT_MUTATION_VALIDATED,
+        analog_four_sysex_calibration_for,
+    )
+
+    source = _fixture_bytes(_SOURCE_NAME)
+    mutation = renderer.AnalogFourSavedKitCandidateMutation("Filter2 Frequency", 4, "64.00390625")
+    with pytest.raises(ValueError, match="not offline-captured-kit-mutation-validated"):
+        renderer.render_analog_four_saved_kit_candidate(source, (mutation,))
+    with pytest.raises(TypeError, match="must contain"):
+        renderer.render_analog_four_saved_kit_candidate(
+            source, cast(tuple[renderer.AnalogFourSavedKitCandidateMutation, ...], (object(),))
+        )
+
+    # A hypothetical promotion is test-local; production keeps Filter 2 unpromoted.
+    calibration = replace(
+        analog_four_sysex_calibration_for("Filter2 Frequency"),
+        status=A4_SYSEX_CALIBRATION_STATUS_OFFLINE_CAPTURED_KIT_MUTATION_VALIDATED,
+        native_field="filter2_frequency",
+        native_raw_max=0x7F00,
+    )
+    monkeypatch.setattr(renderer, "analog_four_sysex_calibration_for", lambda _: calibration)
+    result = renderer.render_analog_four_saved_kit_candidate(source, (mutation,))
+
+    expected = bytearray(_decoded_unpacked(source))
+    expected[1188:1190] = b"\x40\x01"
+    assert _decoded_unpacked(result.framed_sysex) == bytes(expected)
+    assert result.intended_unpacked_offsets == (1188, 1189)
+    assert result.applied_mutations[0].parameter == "Filter2 Frequency"
+    assert result.applied_mutations[0].redecoded_screen_value == "64.00390625"
+    assert result.roundtrip_redecoded and result.native_byte_isolation_validated
+    assert result.hardware_send_validated is False
+    assert result.output_authority == "local-file-only"
+    with pytest.raises(ValueError, match="init=False"):
+        replace(result, hardware_send_validated=True)

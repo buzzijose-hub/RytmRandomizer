@@ -10,12 +10,22 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Final
+from typing import Final, cast
 
-from .analog_four_kit_fields import A4_TRACK_OFFSETS
+from .analog_four_kit_fields import (
+    A4_FIXED_8_8_ENCODING,
+    A4_FIXED_8_8_RAW_MAX,
+    A4_FIXED_8_8_SCALE,
+    A4_FIXED_8_8_WIDTH,
+    A4_TRACK_OFFSETS,
+    A4_TWO_BYTE_FIELDS,
+    format_a4_fixed_8_8,
+    parse_a4_fixed_8_8,
+)
 from .analog_four_saved_kit_layout import (
     A4_KIT_OBJECT_TRACK_SOUND_SIZE,
     A4_KIT_OBJECT_TRACKS_OFFSET,
+    A4_PACKED_PAYLOAD_OFFSET,
 )
 
 A4_SYSEX_CALIBRATION_STATUS_CANDIDATE_PROMOTED: Final[str] = "candidate-promoted"
@@ -28,28 +38,7 @@ A4_SYSEX_CALIBRATION_STATUS_PENDING: Final[str] = "pending"
 A4_SYNTH_TRACK_MIN: Final[int] = 1
 A4_SYNTH_TRACK_MAX: Final[int] = 4
 A4_FILTER1_FREQUENCY_PARAMETER: Final[str] = "Filter1 Frequency"
-A4_FILTER1_FREQUENCY_ENCODING: Final[str] = "unsigned-big-endian-q8.8"
-A4_FILTER1_FREQUENCY_RAW_MIN: Final[int] = 0x0000
-A4_FILTER1_FREQUENCY_RAW_MAX: Final[int] = 0x7F00
-A4_FILTER1_FREQUENCY_NATIVE_WIDTH: Final[int] = 2
-A4_FILTER1_FREQUENCY_TRACK_1_UNPACKED_OFFSET: Final[int] = (
-    A4_KIT_OBJECT_TRACKS_OFFSET + A4_TRACK_OFFSETS["filter1_frequency"]
-)
-A4_FILTER1_FREQUENCY_TRACK_UNPACKED_STRIDE: Final[int] = A4_KIT_OBJECT_TRACK_SOUND_SIZE
 A4_FILTER2_RESONANCE_PARAMETER: Final[str] = "Filter2 Resonance"
-A4_FILTER1_FREQUENCY_Q8_8_SCALE: Final[int] = 0x100
-_Q8_8_DECIMAL_SCALE: Final[int] = 10**8 // A4_FILTER1_FREQUENCY_Q8_8_SCALE
-
-
-def format_analog_four_filter1_frequency_screen_value(raw_q8_8: object) -> str:
-    """Format a promoted Filter 1 Frequency value without Decimal rounding."""
-
-    if isinstance(raw_q8_8, bool) or not isinstance(raw_q8_8, int):
-        raise TypeError("Filter 1 Frequency Q8.8 value must be an integer")
-    if not A4_FILTER1_FREQUENCY_RAW_MIN <= raw_q8_8 <= A4_FILTER1_FREQUENCY_RAW_MAX:
-        raise ValueError("Filter 1 Frequency Q8.8 value must be in 0x0000..0x7F00")
-    integer, fraction = divmod(raw_q8_8, A4_FILTER1_FREQUENCY_Q8_8_SCALE)
-    return f"{integer}.{fraction * _Q8_8_DECIMAL_SCALE:08d}".rstrip("0").rstrip(".")
 
 
 @dataclass(frozen=True)
@@ -85,6 +74,83 @@ class AnalogFourSysexFieldCalibration:
     track_unpacked_stride: int
     evidence: tuple[AnalogFourSysexCalibrationEvidence, ...]
     notes: tuple[str, ...]
+    native_field: str | None = None
+    native_encoding: str = A4_FIXED_8_8_ENCODING
+    native_width: int = A4_FIXED_8_8_WIDTH
+    native_raw_min: int = 0
+    native_raw_max: int = A4_FIXED_8_8_RAW_MAX
+    native_scale: int = A4_FIXED_8_8_SCALE
+
+    def _validate_native_layout(self) -> str:
+        if self.native_field is None or self.native_field not in A4_TWO_BYTE_FIELDS:
+            raise ValueError(f"{self.parameter} has no calibrated native fixed-point field")
+        native_numbers = cast(
+            tuple[object, ...],
+            (
+                self.native_width,
+                self.native_scale,
+                self.native_raw_min,
+                self.native_raw_max,
+                self.track_1_primary_raw_offset,
+                self.track_raw_stride,
+                self.track_unpacked_stride,
+            ),
+        )
+        if (
+            self.native_encoding != A4_FIXED_8_8_ENCODING
+            or self.native_width != A4_FIXED_8_8_WIDTH
+            or self.native_scale != A4_FIXED_8_8_SCALE
+            or any(
+                isinstance(value, bool) or not isinstance(value, int) for value in native_numbers
+            )
+            or not 0 <= self.native_raw_min <= self.native_raw_max <= A4_FIXED_8_8_RAW_MAX
+        ):
+            raise ValueError(f"{self.parameter} native fixed-point calibration is invalid")
+        if (
+            parse_a4_fixed_8_8(self.screen_min) != self.native_raw_min
+            or parse_a4_fixed_8_8(self.screen_max) != self.native_raw_max
+        ):
+            raise ValueError(
+                f"{self.parameter} native range disagrees with calibrated screen bounds"
+            )
+        return self.native_field
+
+    def native_offset_for_track(self, track: int) -> int:
+        """Resolve calibrated packed addressing and reject drift from the field map."""
+
+        field_name = self._validate_native_layout()
+        packed_offset = self.primary_raw_offset_for_track(track)
+        group, position = divmod(packed_offset - A4_PACKED_PAYLOAD_OFFSET, 8)
+        native_offset = group * 7 + position - 1
+        mapped_offset = (
+            A4_KIT_OBJECT_TRACKS_OFFSET
+            + (track - 1) * A4_KIT_OBJECT_TRACK_SOUND_SIZE
+            + A4_TRACK_OFFSETS[field_name]
+        )
+        if (
+            position == 0
+            or native_offset != mapped_offset
+            or self.track_unpacked_stride != A4_KIT_OBJECT_TRACK_SOUND_SIZE
+            or self.track_raw_stride != A4_KIT_OBJECT_TRACK_SOUND_SIZE * 8 // 7
+        ):
+            raise ValueError(
+                f"{self.parameter} calibration offset disagrees with mapped native field"
+            )
+        return native_offset
+
+    def parse_native_screen_value(self, screen_value: str) -> int:
+        """Parse a calibrated fixed-point value exactly, without Decimal rounding."""
+
+        self._validate_native_layout()
+        return parse_a4_fixed_8_8(
+            screen_value, minimum=self.native_raw_min, maximum=self.native_raw_max
+        )
+
+    def format_native_screen_value(self, raw: object) -> str:
+        """Format one calibrated native value with the shared exact field codec."""
+
+        self._validate_native_layout()
+        return format_a4_fixed_8_8(raw, minimum=self.native_raw_min, maximum=self.native_raw_max)
 
     @property
     def hardware_send_validated(self) -> bool:
@@ -406,7 +472,9 @@ ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS: Final[Mapping[str, AnalogFourSysexFieldCal
                 raw_group_width=8,
                 track_1_unpacked_group_start=130,
                 unpacked_group_width=10,
-                track_unpacked_stride=A4_FILTER1_FREQUENCY_TRACK_UNPACKED_STRIDE,
+                track_unpacked_stride=A4_KIT_OBJECT_TRACK_SOUND_SIZE,
+                native_field="filter1_frequency",
+                native_raw_max=0x7F00,
                 evidence=_FILTER1_FREQUENCY_EVIDENCE,
                 notes=(
                     "The 2026-08-28 KIT 20 captures isolate native bytes 128:130 as unsigned big-endian Q8.8.",
@@ -576,14 +644,7 @@ def analog_four_sysex_calibration_for(parameter: str) -> AnalogFourSysexFieldCal
 
 
 __all__ = [
-    "A4_FILTER1_FREQUENCY_ENCODING",
-    "A4_FILTER1_FREQUENCY_NATIVE_WIDTH",
     "A4_FILTER1_FREQUENCY_PARAMETER",
-    "A4_FILTER1_FREQUENCY_Q8_8_SCALE",
-    "A4_FILTER1_FREQUENCY_RAW_MAX",
-    "A4_FILTER1_FREQUENCY_RAW_MIN",
-    "A4_FILTER1_FREQUENCY_TRACK_1_UNPACKED_OFFSET",
-    "A4_FILTER1_FREQUENCY_TRACK_UNPACKED_STRIDE",
     "A4_FILTER2_RESONANCE_PARAMETER",
     "A4_SYSEX_CALIBRATION_STATUS_CANDIDATE_PROMOTED",
     "A4_SYSEX_CALIBRATION_STATUS_HARDWARE_WRITE_VALIDATED",
@@ -595,5 +656,4 @@ __all__ = [
     "AnalogFourSysexFieldCalibration",
     "AnalogFourSysexWriteValidationEvidence",
     "analog_four_sysex_calibration_for",
-    "format_analog_four_filter1_frequency_screen_value",
 ]

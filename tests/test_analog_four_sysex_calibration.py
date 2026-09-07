@@ -13,49 +13,46 @@ pytestmark = pytest.mark.fast
 @pytest.mark.parametrize("precision", [1, 2, 28])
 def test_filter1_frequency_formatter_is_exact_across_its_complete_domain(precision: int) -> None:
     from rytm_randomizer.data.analog_four_sysex_calibration import (
-        A4_FILTER1_FREQUENCY_RAW_MAX,
-        format_analog_four_filter1_frequency_screen_value,
+        analog_four_sysex_calibration_for,
     )
 
+    calibration = analog_four_sysex_calibration_for("Filter1 Frequency")
     with localcontext() as context:
         context.prec = precision
-        for raw in range(A4_FILTER1_FREQUENCY_RAW_MAX + 1):
-            screen_value = format_analog_four_filter1_frequency_screen_value(raw)
+        for raw in range(calibration.native_raw_max + 1):
+            screen_value = calibration.format_native_screen_value(raw)
             assert Fraction(screen_value) == Fraction(raw, 256)
             assert "." not in screen_value or not screen_value.endswith("0")
-        assert format_analog_four_filter1_frequency_screen_value(0) == "0"
-        assert format_analog_four_filter1_frequency_screen_value(0x3F80) == "63.5"
-        assert format_analog_four_filter1_frequency_screen_value(0x4001) == "64.00390625"
-        assert format_analog_four_filter1_frequency_screen_value(0x7F00) == "127"
+        assert calibration.format_native_screen_value(0) == "0"
+        assert calibration.format_native_screen_value(0x3F80) == "63.5"
+        assert calibration.format_native_screen_value(0x4001) == "64.00390625"
+        assert calibration.format_native_screen_value(0x7F00) == "127"
 
 
 @pytest.mark.parametrize("value", [True, False, 1.0, "1", None])
 def test_filter1_frequency_formatter_rejects_non_integer_inputs(value: object) -> None:
     from rytm_randomizer.data.analog_four_sysex_calibration import (
-        format_analog_four_filter1_frequency_screen_value,
+        analog_four_sysex_calibration_for,
     )
 
+    calibration = analog_four_sysex_calibration_for("Filter1 Frequency")
     with pytest.raises(TypeError, match="must be an integer"):
-        format_analog_four_filter1_frequency_screen_value(value)  # type: ignore[arg-type]
+        calibration.format_native_screen_value(value)
 
 
 @pytest.mark.parametrize("value", [-1, 0x7F01, 0xFFFF])
 def test_filter1_frequency_formatter_rejects_unpromoted_range(value: int) -> None:
     from rytm_randomizer.data.analog_four_sysex_calibration import (
-        format_analog_four_filter1_frequency_screen_value,
+        analog_four_sysex_calibration_for,
     )
 
+    calibration = analog_four_sysex_calibration_for("Filter1 Frequency")
     with pytest.raises(ValueError, match="0x0000..0x7F00"):
-        format_analog_four_filter1_frequency_screen_value(value)
+        calibration.format_native_screen_value(value)
 
 
 def test_filter1_frequency_calibration_records_promoted_track_stride() -> None:
     from rytm_randomizer.data.analog_four_sysex_calibration import (
-        A4_FILTER1_FREQUENCY_ENCODING,
-        A4_FILTER1_FREQUENCY_RAW_MAX,
-        A4_FILTER1_FREQUENCY_RAW_MIN,
-        A4_FILTER1_FREQUENCY_TRACK_1_UNPACKED_OFFSET,
-        A4_FILTER1_FREQUENCY_TRACK_UNPACKED_STRIDE,
         A4_SYSEX_CALIBRATION_STATUS_OFFLINE_CAPTURED_KIT_MUTATION_VALIDATED,
         analog_four_sysex_calibration_for,
     )
@@ -66,13 +63,20 @@ def test_filter1_frequency_calibration_records_promoted_track_stride() -> None:
     assert calibration.status == A4_SYSEX_CALIBRATION_STATUS_OFFLINE_CAPTURED_KIT_MUTATION_VALIDATED
     assert calibration.offline_saved_kit_mutation_validated is True
     assert calibration.hardware_send_validated is False
-    assert A4_FILTER1_FREQUENCY_ENCODING == "unsigned-big-endian-q8.8"
-    assert (A4_FILTER1_FREQUENCY_RAW_MIN, A4_FILTER1_FREQUENCY_RAW_MAX) == (
+    assert calibration.native_encoding == "unsigned-big-endian-q8.8"
+    assert (calibration.native_raw_min, calibration.native_raw_max) == (
         0x0000,
         0x7F00,
     )
-    assert A4_FILTER1_FREQUENCY_TRACK_1_UNPACKED_OFFSET == 128
-    assert A4_FILTER1_FREQUENCY_TRACK_UNPACKED_STRIDE == 350
+    assert [calibration.native_offset_for_track(track) for track in range(1, 5)] == [
+        128,
+        478,
+        828,
+        1178,
+    ]
+    assert calibration.native_field == "filter1_frequency"
+    assert calibration.native_scale == 256
+    assert calibration.native_width == 2
     assert calibration.screen_min == "0.00"
     assert calibration.screen_mid == "63.50"
     assert calibration.screen_max == "127.00"
@@ -506,3 +510,51 @@ def test_sysex_calibration_rejects_unknown_parameters() -> None:
 
     with pytest.raises(KeyError, match="Unknown Analog Four SysEx calibration"):
         analog_four_sysex_calibration_for("Filter1 Width")
+
+
+@pytest.mark.parametrize("value", [True, False, 1.0, 1, None])
+def test_exact_fixed_point_parser_rejects_non_text_without_coercion(value: object) -> None:
+    from rytm_randomizer.data import parse_a4_fixed_8_8
+
+    with pytest.raises(ValueError, match="unsupported screen value"):
+        parse_a4_fixed_8_8(value)
+
+
+def test_shared_fixed_point_codec_covers_full_native_range_and_public_exports() -> None:
+    from rytm_randomizer.data import (
+        A4_FIXED_8_8_ENCODING,
+        A4_FIXED_8_8_RAW_MAX,
+        A4_FIXED_8_8_SCALE,
+        A4_FIXED_8_8_WIDTH,
+        format_a4_fixed_8_8,
+        parse_a4_fixed_8_8,
+    )
+
+    assert (A4_FIXED_8_8_ENCODING, A4_FIXED_8_8_WIDTH, A4_FIXED_8_8_SCALE) == (
+        "unsigned-big-endian-q8.8",
+        2,
+        256,
+    )
+    assert A4_FIXED_8_8_RAW_MAX == 0x7FFF
+    assert format_a4_fixed_8_8(A4_FIXED_8_8_RAW_MAX) == "127.99609375"
+    assert parse_a4_fixed_8_8("127.99609375") == A4_FIXED_8_8_RAW_MAX
+
+
+def test_calibration_value_parser_obeys_its_explicit_promoted_range() -> None:
+    from dataclasses import replace
+
+    from rytm_randomizer.data.analog_four_sysex_calibration import analog_four_sysex_calibration_for
+
+    calibration = replace(
+        analog_four_sysex_calibration_for("Filter1 Frequency"),
+        screen_min="1",
+        native_raw_min=256,
+        screen_max="64",
+        native_raw_max=16384,
+    )
+    assert calibration.parse_native_screen_value("1") == 256
+    assert calibration.parse_native_screen_value("64") == 16384
+    with pytest.raises(ValueError, match="unsupported screen value"):
+        calibration.parse_native_screen_value("64.00390625")
+    with pytest.raises(ValueError, match="unsupported screen value"):
+        calibration.parse_native_screen_value("0.99609375")
