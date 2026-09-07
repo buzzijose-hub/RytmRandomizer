@@ -253,7 +253,7 @@ so no agent ever consumes another agent's output.
 | I6 | Ping asset naming `beacon-<version>-<target>.txt` (spec §6) | A5 | B-rust, C-snap |
 | I7 | `rytm_randomizer/_version.py::__version__` accessor | A1 | A3 |
 | I8 | Update-journal row `{ts, event, version, detail}` with the spec §5.1 closed event vocabulary; file `update-journal.jsonl`, 2-generation rotation | B-rust | B-web (activity list), C-e2e (row assertions), Doctor export |
-| I9 | Consent-prompt UX: spec §7.1 mockup is normative — labels, element order, default radio (`When I quit the app`), and the five body variants, verbatim | spec §7.1 | B-web (renders it), C-e2e (asserts its exact labels + default selection) |
+| I9 | Consent-prompt UX: spec §7.1 mockup is normative — labels, element order, default radio (`When I quit the app`), and the five body variants, verbatim; pixel render at `docs/design/update-consent-prompt.html` | spec §7.1 | B-web (renders it), C-e2e (asserts its exact labels + default selection) |
 
 ### Orchestrator-reserved files (no agent may touch these)
 

@@ -1,0 +1,190 @@
+<title>Update Consent Prompt</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --ground:#101216; --panel:#191d23; --panel2:#1e232b; --line:#2a303a;
+    --text:#e8ebf0; --muted:#8b94a3; --faint:#5c6472;
+    --amber:#f5a524; --amber-dim:#8a5f14; --aqua:#39c5cf; --crit:#ff5d5d; --ok:#57d98a;
+    --disp:"Chakra Petch",system-ui,sans-serif;
+    --body:"IBM Plex Sans",system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  body{background:var(--ground);color:var(--text);font-family:var(--body);
+       font-size:15px;line-height:1.55;margin:0;padding:40px 20px 80px;}
+  .wrap{max-width:960px;margin:0 auto;}
+  h1{font-family:var(--disp);font-weight:600;font-size:28px;letter-spacing:.02em;margin:0 0 4px;text-wrap:balance;}
+  .sub{color:var(--muted);margin:0 0 40px;max-width:64ch;}
+  .sub a{color:var(--aqua);text-decoration:none;}
+  h2{font-family:var(--disp);font-weight:500;font-size:13px;letter-spacing:.14em;
+     text-transform:uppercase;color:var(--amber);margin:48px 0 16px;
+     display:flex;align-items:center;gap:12px;}
+  h2::after{content:"";flex:1;height:1px;background:var(--line);}
+  /* ---------- header chip ---------- */
+  .apphead{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+     display:flex;align-items:center;gap:14px;padding:10px 16px;max-width:640px;}
+  .brand{font-family:var(--disp);font-weight:600;font-size:14px;letter-spacing:.04em;}
+  .spacer{flex:1;}
+  .chip{font-family:var(--mono);font-size:12.5px;border-radius:999px;padding:4px 12px;
+     display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);color:var(--muted);}
+  .chip .dot{width:7px;height:7px;border-radius:50%;background:var(--faint);}
+  .chip.reconnect .dot{background:var(--aqua);}
+  .chip.update{border-color:var(--amber-dim);color:var(--amber);background:rgba(245,165,36,.07);}
+  .chip.update .dot{background:var(--amber);border-radius:1px;transform:rotate(45deg);width:6px;height:6px;}
+  /* ---------- panel mock ---------- */
+  .board{display:grid;grid-template-columns:minmax(0,480px) 1fr;gap:32px;align-items:start;}
+  @media(max-width:820px){.board{grid-template-columns:1fr;}}
+  .mock{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .mock-title{font-family:var(--disp);font-size:11.5px;font-weight:600;letter-spacing:.16em;
+     color:var(--muted);padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel2);}
+  .mock-body{padding:16px;display:flex;flex-direction:column;gap:14px;}
+  .row{display:flex;align-items:center;gap:10px;}
+  .running{font-size:13.5px;color:var(--muted);}
+  .running b{color:var(--text);font-weight:600;}
+  .select{font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-radius:5px;
+     padding:2px 8px;color:var(--text);background:var(--panel2);}
+  .btn{font-family:var(--disp);font-size:12px;font-weight:600;letter-spacing:.05em;border-radius:6px;
+     padding:6px 14px;border:1px solid var(--line);color:var(--text);background:var(--panel2);cursor:pointer;}
+  .btn.primary{background:var(--amber);border-color:var(--amber);color:#1a1206;}
+  .ready{font-family:var(--disp);font-size:16px;font-weight:600;color:var(--amber);
+     border-top:1px solid var(--line);padding-top:14px;}
+  .notes{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px 14px;font-size:13.5px;}
+  .notes .cap{font-family:var(--disp);font-size:11px;letter-spacing:.12em;color:var(--muted);
+     text-transform:uppercase;margin-bottom:6px;}
+  .notes ul{margin:0;padding-left:18px;color:var(--text);}
+  .warn{border:1px solid rgba(255,93,93,.45);background:rgba(255,93,93,.07);border-radius:6px;
+     padding:10px 14px;font-size:13.5px;color:var(--text);}
+  .warn b{color:var(--crit);}
+  .warn a{color:var(--aqua);font-family:var(--mono);font-size:12.5px;text-decoration:none;}
+  .q{font-weight:600;font-size:14px;}
+  .radios{display:flex;flex-direction:column;gap:8px;font-size:13.5px;}
+  .r{display:flex;align-items:center;gap:10px;}
+  .r .o{width:15px;height:15px;border-radius:50%;border:2px solid var(--faint);flex:none;}
+  .r.sel .o{border-color:var(--amber);box-shadow:inset 0 0 0 3.5px var(--panel),inset 0 0 0 9px var(--amber);}
+  .r.sel{color:var(--text);} .r{color:var(--muted);}
+  .confirm{align-self:flex-end;}
+  .journal{font-family:var(--mono);font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px;}
+  .journal .cap{font-family:var(--disp);font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:2px;color:var(--muted);}
+  .jrow{display:grid;grid-template-columns:52px 158px 1fr;gap:12px;font-variant-numeric:tabular-nums;}
+  .jrow .ev{color:var(--aqua);}
+  .jrow.okrow .ev{color:var(--ok);}
+  .foot{border-top:1px solid var(--line);padding-top:12px;font-size:12.5px;color:var(--muted);
+     display:flex;flex-direction:column;gap:8px;font-variant-numeric:tabular-nums;}
+  .freeze{display:flex;align-items:center;gap:10px;}
+  .box{width:14px;height:14px;border:2px solid var(--faint);border-radius:3px;flex:none;}
+  /* ---------- callouts ---------- */
+  .tag{display:inline-flex;justify-content:center;align-items:center;min-width:18px;height:18px;
+     border-radius:50%;background:var(--amber);color:#1a1206;font-family:var(--mono);
+     font-size:11px;font-weight:500;flex:none;margin-left:auto;}
+  .legend{display:flex;flex-direction:column;gap:14px;position:sticky;top:20px;}
+  .leg{display:grid;grid-template-columns:26px 1fr;gap:10px;font-size:13.5px;}
+  .leg .tag{margin:2px 0 0;}
+  .leg b{font-family:var(--mono);font-weight:500;font-size:12.5px;color:var(--aqua);}
+  .leg p{margin:2px 0 0;color:var(--muted);}
+  /* ---------- variants ---------- */
+  .variants{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px;}
+  .var{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;}
+  .var .cap{font-family:var(--disp);font-size:11px;font-weight:600;letter-spacing:.14em;
+     text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+  .var p{margin:0;font-size:13.5px;}
+  .var .mono{font-family:var(--mono);font-size:12px;color:var(--muted);}
+  .var .code{color:var(--crit);font-family:var(--mono);font-size:12.5px;}
+  .note{color:var(--muted);font-size:13.5px;max-width:70ch;}
+  .note code{font-family:var(--mono);font-size:12.5px;color:var(--aqua);}
+</style>
+<div class="wrap">
+  <h1>Update Consent Prompt</h1>
+  <p class="sub">Normative mockup for spec §7.1 (PR #239). The staged state of the update
+  panel <em>is</em> the prompt — no modal, no focus steal. Every element is driven by an
+  existing plan contract; the callouts map each one. B-web renders this; C-e2e asserts
+  its labels and default selection (contract I9).</p>
+
+  <h2>Header chip — staged, calm, never animated</h2>
+  <div class="apphead">
+    <span class="brand">RytmRandomizer</span>
+    <span class="spacer"></span>
+    <span class="chip reconnect"><span class="dot"></span>Rytm: reconnecting…</span>
+    <span class="chip update"><span class="dot"></span>1.35.1 ready</span>
+  </div>
+
+  <h2>The prompt — panel in staged state</h2>
+  <div class="board">
+    <div class="mock">
+      <div class="mock-title">UPDATES</div>
+      <div class="mock-body">
+        <div class="row">
+          <span class="running">Running <b>v1.35.0</b> · channel:</span>
+          <span class="select">stable ▾</span>
+          <span class="spacer"></span>
+          <span class="btn">Check now</span>
+          <span class="tag">1</span>
+        </div>
+        <div class="ready row">⬆ Update ready: v1.35.1 <span class="tag">2</span></div>
+        <div class="notes">
+          <div class="cap">What's new</div>
+          <ul>
+            <li>Show Kit Forge: bank list no longer sends before handshake</li>
+            <li>Fleet dashboard adoption markers on promote</li>
+          </ul>
+        </div>
+        <div class="warn row"><span><b>⚠</b> This update changes hardware send paths. Re-run the
+          manual hardware validation checklist after installing.
+          <a href="#">docs/MANUAL_HARDWARE_VALIDATION.md</a></span><span class="tag">3</span></div>
+        <div class="q row">How do you want to install it? <span class="tag">4</span></div>
+        <div class="radios">
+          <div class="r sel"><span class="o"></span>When I quit the app</div>
+          <div class="r"><span class="o"></span>Now — restart RytmRandomizer immediately</div>
+          <div class="r"><span class="o"></span>Skip this version</div>
+        </div>
+        <span class="btn primary confirm">Confirm choice</span>
+        <div class="journal">
+          <div class="cap row">Recent update activity <span class="tag">5</span></div>
+          <div class="jrow"><span>12:04</span><span class="ev">check_ok</span><span>1.35.1 available</span></div>
+          <div class="jrow"><span>12:04</span><span class="ev">download_ok</span><span>42 MB · 6 s</span></div>
+          <div class="jrow okrow"><span>12:04</span><span class="ev">signature verified</span><span>staged</span></div>
+        </div>
+        <div class="foot">
+          <div class="row">Last checked 12:04 · Last check-in ping 12:04 <span class="tag">6</span></div>
+          <div class="freeze row"><span class="box"></span>Freeze updates (stops all update network traffic) <span class="tag">7</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <div class="leg"><span class="tag">1</span><div><b>I1 · session_status.app_version</b>
+        <p>Read-only store slice. Channel selector writes RYTM_RAND_UPDATE_CHANNEL semantics; Check now is the manual trigger (D2).</p></div></div>
+      <div class="leg"><span class="tag">2</span><div><b>I2 · rytm-update-state</b>
+        <p>Shell→webview event: state, version, notes. Chip and this block are the same state, two renderings.</p></div></div>
+      <div class="leg"><span class="tag">3</span><div><b>I2 · hardware_revalidation</b>
+        <p>Rendered only when the manifest flags it (spec §2.7 path-derived). Links the manual validation doc.</p></div></div>
+      <div class="leg"><span class="tag">4</span><div><b>D3 · consent default</b>
+        <p>"When I quit" pre-selected. Confirm issues the per-version, process-lifetime consent token (§5) → journal consent_granted.</p></div></div>
+      <div class="leg"><span class="tag">5</span><div><b>I8 · update journal tail</b>
+        <p>Closed §5.1 vocabulary, newest last, bounded path-free details. Rendered by the existing operator-log list component (R4 — no fork).</p></div></div>
+      <div class="leg"><span class="tag">6</span><div><b>I8 · check_* / ping_* rows</b>
+        <p>The phone-home honesty line: always states what was sent, when. Beacon carries zero identifying data (§6).</p></div></div>
+      <div class="leg"><span class="tag">7</span><div><b>§7 env · RYTM_RAND_UPDATES</b>
+        <p>Freeze on: chip hidden, zero update network I/O, journal freeze_suppressed.</p></div></div>
+    </div>
+  </div>
+
+  <h2>Body variants — same frame, body swapped (one component, not five)</h2>
+  <div class="variants">
+    <div class="var"><div class="cap">up_to_date</div>
+      <p>You're on the latest version (v1.35.0). Next automatic check in about 4 hours.</p></div>
+    <div class="var"><div class="cap">check_failed</div>
+      <p>Couldn't check for updates <span class="code">(manifest_unreachable)</span>. Will retry automatically.</p>
+      <p class="mono">reason code verbatim from the journal row; mirrored to the operator log — never a silent chip.</p></div>
+    <div class="var"><div class="cap">frozen</div>
+      <p>Updates are frozen. No update network traffic will occur until you unfreeze.</p>
+      <p class="mono">chip hidden; toggle remains.</p></div>
+    <div class="var"><div class="cap">dev loop (no shell)</div>
+      <p>Updates run in the installed app.</p>
+      <p class="mono">a sentence, not a broken control.</p></div>
+    <div class="var"><div class="cap">rollout-excluded</div>
+      <p>Indistinguishable from up_to_date by design (§5).</p>
+      <p class="mono">journal bucket_excluded is the only trace.</p></div>
+  </div>
+
+  <p class="note" style="margin-top:40px">Canonical source: <code>docs/superpowers/plans/2026-08-03-autoupdate-distribution.md §7.1</code>.
+  If this page and the spec ever disagree, the spec wins — this render exists so the prompt can be
+  judged as a user would meet it.</p>
+</div>

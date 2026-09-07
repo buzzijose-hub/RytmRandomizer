@@ -427,7 +427,12 @@ The update panel's **staged** state *is* the user prompt — there is no
 modal, no interruption, no focus steal (the calm-chip principle
 above). This mockup is **normative**: labels, ordering, and the
 default selection are the UX contract the implementation renders and
-the e2e suite asserts (plan contract I9). Header chip, always visible
+the e2e suite asserts (plan contract I9). A pixel render of this
+mockup — the staged panel in the cockpit's dark idiom with every
+callout mapped to its contract — is checked in as
+[`docs/design/update-consent-prompt.html`](../../design/update-consent-prompt.html)
+(open it in a browser); if render and spec ever disagree, this
+section wins. Header chip, always visible
 while staged, never animated:
 
 ```
