@@ -412,7 +412,7 @@ Show Kit Forge integration results (see the [dated run report](docs/superpowers/
 | Full Python suite (`pytest`) | 8,931 collected test items |
 | Architecture invariants (`tests/architecture/`) | 805 test items |
 | V1.34 parity | 505 golden JSON files → 685 byte-identical test items |
-| Frontend (`desktop/web`, vitest) | 809 test items; 100% coverage |
+| Frontend (`desktop/web`, vitest) | 852 test items; 100% coverage |
 | Accessibility gate | axe WCAG 2.2 AA, 0 violations |
 
 The suite uses `pytest-xdist` (`-n auto`). Don't pass `-o addopts=''` for normal runs — it disables xdist and triples the runtime.

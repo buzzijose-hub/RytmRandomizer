@@ -17,9 +17,9 @@ evidence and distinguish it from the original integration history.
 Final local verification passed 8,926 Python tests with five skips in 272.28s.
 All 32 touched production modules cover 6,458 statements and 1,558 branches at
 100%; whole-package pure-branch coverage is 99.3597%. Frontend verification
-passed 809 tests in 62 files, with 3,269 statements, 2,455 branches, 1,125
-functions and 2,943 lines all at 100%. Typecheck, lint and production build
-passed. Playwright passed 21 tests with two existing skips in 50.2s using
+passed 852 tests in 62 files, with 3,286 statements, 2,475 branches, 1,128
+functions and 2,959 lines all at 100%. Typecheck, lint and production build
+passed. Playwright passed 21 tests with two existing skips in 51.3s using
 disabled/fake MIDI, and the screenshots were inspected. Physical evidence
 remains outside this software maintainability assessment.
 

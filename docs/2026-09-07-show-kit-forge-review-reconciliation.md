@@ -1,6 +1,7 @@
 # Show Kit Forge maintainer-review reconciliation
 
-Status: software repairs verified locally; identified studio build and required GitHub review pending.
+Status: maintainer repairs verified locally; packaged-launch defect being corrected.
+The corrected build, packaged GUI smoke and required GitHub review remain pending.
 
 The existing [PR #238](https://github.com/buzzijose-hub/RytmRandomizer/pull/238)
 and [implementation plan](superpowers/plans/2026-09-04-show-kit-forge.md) remain
@@ -80,14 +81,37 @@ build manifest and hashes, self-contained sidecar, smoke-test result, remaining
 review state, and the smallest operator-present
 [studio procedure](hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md).
 
+### Packaged launch exposed a separate port-discovery defect
+
+[Windows build 34147444366](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34147444366)
+succeeded for `4cb0defdee3aaaddd02c28621811b4004e62a642`, and both downloaded
+binary hashes matched its manifest. The real packaged GUI smoke then failed:
+the shell injected the selected port as the string `50477`, with a handshake
+token present, while the frontend still dialed the default port `4317` and
+remained disconnected. This artifact is diagnostic evidence, not studio-ready.
+Build success and matching hashes did not establish a working packaged session.
+
+The frontend repair resolves the default connection target on each dial, so
+late shell injection can be observed. It accepts only a valid integer port,
+uses the injected value before the stored fallback, and constructs the fixed
+loopback `/ws` endpoint. An explicit client URL still takes precedence.
+`getUrl()` continues to describe the actual existing socket target; when no
+socket exists it describes the next dial's current target. The corrected
+artifact must pass a new off-backend packaged GUI smoke before studio handoff.
+Corrected build and smoke evidence are pending; no new passing test count is
+claimed here.
+
 ## Current local verification
+
+These results cover the feature and maintainer repairs before the packaged
+port-discovery correction; its new verification receipt is still pending.
 
 Full Python: 8,926 passed, 5 skipped in 272.28s. All 32 touched production
 modules cover 6,458 statements and 1,558 branches at 100%; whole-package pure
 branch coverage is 99.3597%. All 805 architecture and 685 frozen parity cases
-pass. Frontend: 809 tests in 62 files, all coverage metrics 100%; typecheck,
+pass. Frontend: 852 tests in 62 files, all coverage metrics 100%; typecheck,
 lint and production build pass. Full Playwright: 21 passed, 2 existing skips
-in 50.2s with disabled/fake MIDI; the three generated screenshots were inspected.
+in 51.3s with disabled/fake MIDI; the three generated screenshots were inspected.
 
 Ruff, stricter new-module rules, Black, isort, strict Pyright 1.1.411, touched
 Vulture80/whole-package70, touched coverage/ratchet, diff and state-schema
@@ -100,3 +124,10 @@ The final scoped review also closed duplicate boolean validators, literal UI
 scope counts, unbounded WS diagnostics and build-variable documentation gaps.
 The existing PR comment records post-push dimension review, hosted checks and
 the exact studio artifact/smoke receipt as those external steps complete.
+
+The port-discovery correction adds 43 client regression cases, including the
+shell's decimal-string port, invalid types/ranges and storage failures, late
+injection, scheduled reconnect, explicit overrides and current-target reporting.
+The full frontend now passes 852 tests with all coverage metrics at 100%;
+typecheck, lint and production build pass. The rebuilt packaged smoke remains
+pending; successful source tests do not substitute for that launch check.

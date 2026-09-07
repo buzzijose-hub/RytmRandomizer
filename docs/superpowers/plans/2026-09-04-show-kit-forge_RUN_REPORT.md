@@ -86,8 +86,8 @@ use `-n 0`. No test accesses physical MIDI.
 | Whole-package coverage | 99.3597% pure branch; 99.6476% blended; 99% ratchet passes without a floor change. |
 | Touched production coverage | All 32 modules: 6,458 statements / 1,558 branches, 100% lines and branches; no exemptions added. |
 | Cockpit Python aggregate | 2,763 passed, 4 skipped in 22.61 seconds; predates three final logging regressions, which pass in the full run. |
-| Frontend | 809 tests in 62 files; 3,269 statements, 2,455 branches, 1,125 functions and 2,943 lines all 100%; typecheck/lint/build pass. |
-| Browser integration | Full Playwright: 21 passed, 2 existing skips in 50.2 seconds; disabled/fake MIDI, real-sidecar authentication and mocked Forge journey; three screenshots inspected. |
+| Frontend | 852 tests in 62 files; 3,286 statements, 2,475 branches, 1,128 functions and 2,959 lines all 100%; typecheck/lint/build pass. |
+| Browser integration | Full Playwright: 21 passed, 2 existing skips in 51.3 seconds; disabled/fake MIDI, real-sidecar authentication and mocked Forge journey; three screenshots inspected. |
 | Fast suite | 8,238 passed, 5 skipped in 200.93 seconds; predates the final three logging regressions, covered by the final full run. |
 | Architecture / parity | All 805 architecture and 685 V1.34 cases pass in the full run; push hook repeats both. All 505 frozen JSON fixtures unchanged. |
 | Static checks | Ruff, new-module PLR/ERA/ARG, Black, isort, whole-package Vulture70/touched80, strict Pyright1.1.411 on all 32 modules, diff checks pass. |

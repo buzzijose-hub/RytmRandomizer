@@ -16,6 +16,7 @@ import {
   ARM_SECRET_STORAGE_KEY,
   resolveArmSecret,
   WS_AUTH_TOKEN_STORAGE_KEY,
+  WS_PORT_STORAGE_KEY,
   WS_SUBPROTOCOL,
   type ClientLogger,
   type ConnectionStatus,
@@ -145,6 +146,8 @@ interface Harness {
 }
 
 interface HarnessOpts {
+  /** null exercises shell/default URL resolution; omission keeps the existing test URL. */
+  url?: string | null;
   disableReconnect?: boolean;
   maxReconnectAttempts?: number;
   initialReconnectDelayMs?: number;
@@ -161,7 +164,7 @@ function makeHarness(opts: HarnessOpts = {}): Harness {
   const fakes: FakeWebSocket[] = [];
   let counter = 0;
   const client = new CockpitClient({
-    url: 'ws://test/ws',
+    url: opts.url === null ? undefined : opts.url ?? 'ws://test/ws',
     disableReconnect: opts.disableReconnect ?? false,
     maxReconnectAttempts: opts.maxReconnectAttempts,
     initialReconnectDelayMs: opts.initialReconnectDelayMs,
@@ -195,13 +198,151 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  if (typeof window !== 'undefined') delete window.__RYTM_RAND_WS_TOKEN__;
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  delete window.__RYTM_RAND_WS_TOKEN__;
+  delete window.__RYTM_RAND_WS_PORT__;
+  window.localStorage.removeItem(WS_PORT_STORAGE_KEY);
   vi.useRealTimers();
 });
 
 // ---------- Tests ----------
+
+describe('CockpitClient — shell port bootstrap', () => {
+  it('uses the shell decimal-string port before storage and preserves the token handshake', () => {
+    expect(WS_PORT_STORAGE_KEY).toBe('rytm-rand-ws-port');
+    window.__RYTM_RAND_WS_PORT__ = '50477';
+    window.localStorage.setItem(WS_PORT_STORAGE_KEY, '50478');
+    const storageRead = vi.spyOn(Storage.prototype, 'getItem');
+    const h = makeHarness({ url: null, authToken: 'unchanged-token' });
+    expect(h.client.getUrl()).toBe('ws://127.0.0.1:50477/ws');
+    h.client.connect();
+    expect(h.currentSocket().url).toBe('ws://127.0.0.1:50477/ws');
+    expect(h.currentSocket().protocols).toBe(WS_SUBPROTOCOL);
+    h.currentSocket().emitOpen();
+    expect(h.currentSocket().sent).toEqual([
+      JSON.stringify({ type: 'hello', token: 'unchanged-token' }),
+    ]);
+    expect(storageRead).not.toHaveBeenCalled();
+    window.__RYTM_RAND_WS_PORT__ = '50479';
+    expect(h.client.getUrl()).toBe('ws://127.0.0.1:50477/ws');
+    expect(h.fakes).toHaveLength(1);
+  });
+
+  it.each([undefined, '', 'invalid', 'ws://remote.example:50477/ws'])(
+    'falls back to stored port when the window value is %s', (value) => {
+      window.__RYTM_RAND_WS_PORT__ = value;
+      window.localStorage.setItem(WS_PORT_STORAGE_KEY, '50478');
+      const h = makeHarness({ url: null });
+      h.client.connect();
+      expect(h.currentSocket().url).toBe('ws://127.0.0.1:50478/ws');
+      expect(h.client.getUrl()).toBe(h.currentSocket().url);
+    },
+  );
+
+  it.each([1, 65_535, '1', '65535', '50477'])(
+    'accepts only a valid integer port while retaining the loopback host: %s', (port) => {
+      window.__RYTM_RAND_WS_PORT__ = port;
+      const h = makeHarness({ url: null });
+      h.client.connect();
+      expect(h.currentSocket().url).toBe(`ws://127.0.0.1:${port}/ws`);
+    },
+  );
+
+  it.each([
+    undefined, null, true, false, {}, [], 0, -1, 65_536, 1.5, Number.NaN,
+    Number.POSITIVE_INFINITY, '', '0', '65536', '1.5', '1e3', '0xAB', '+4317',
+    ' 4317 ', '4317/ws', 'ws://remote.example:4317/ws', '4317@remote.example',
+  ])('rejects invalid window port %s without changing the default host', (value) => {
+    Object.defineProperty(window, '__RYTM_RAND_WS_PORT__', { configurable: true, value });
+    const h = makeHarness({ url: null });
+    h.client.connect();
+    expect(h.currentSocket().url).toBe(DEFAULT_WS_URL);
+    expect(h.client.getUrl()).toBe(DEFAULT_WS_URL);
+  });
+
+  it.each(['', '0', '65536', '4317.5', 'ws://remote.example:4317/ws'])(
+    'rejects invalid stored port %s', (port) => {
+      window.localStorage.setItem(WS_PORT_STORAGE_KEY, port);
+      const h = makeHarness({ url: null });
+      h.client.connect();
+      expect(h.currentSocket().url).toBe(DEFAULT_WS_URL);
+    },
+  );
+
+  it('keeps the default usable when storage is unavailable', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('storage denied');
+    });
+    const h = makeHarness({ url: null });
+    h.client.connect();
+    expect(h.currentSocket().url).toBe(DEFAULT_WS_URL);
+  });
+
+  it('keeps the default usable without a window global', () => {
+    vi.stubGlobal('window', undefined);
+    const h = makeHarness({ url: null });
+    expect(h.client.getUrl()).toBe(DEFAULT_WS_URL);
+    h.client.connect();
+    expect(h.currentSocket().url).toBe(DEFAULT_WS_URL);
+  });
+
+  it('resolves late shell injection and a restarted sidecar on each scheduled dial', () => {
+    const h = makeHarness({ url: null, initialReconnectDelayMs: 100 });
+    h.client.connect();
+    expect(h.currentSocket().url).toBe(DEFAULT_WS_URL);
+    window.__RYTM_RAND_WS_PORT__ = '50477';
+    window.__RYTM_RAND_WS_TOKEN__ = 'first-launch-token';
+    expect(h.client.getUrl()).toBe(DEFAULT_WS_URL); // the existing dial is still on 4317
+    h.currentSocket().emitClose();
+    expect(h.client.getUrl()).toBe('ws://127.0.0.1:50477/ws');
+    vi.advanceTimersByTime(100);
+    expect(h.currentSocket().url).toBe('ws://127.0.0.1:50477/ws');
+    h.currentSocket().emitOpen();
+    expect(h.currentSocket().sent).toEqual([
+      JSON.stringify({ type: 'hello', token: 'first-launch-token' }),
+    ]);
+    window.__RYTM_RAND_WS_PORT__ = '50478';
+    window.__RYTM_RAND_WS_TOKEN__ = 'restarted-launch-token';
+    expect(h.client.getUrl()).toBe('ws://127.0.0.1:50477/ws');
+    h.currentSocket().emitClose();
+    vi.advanceTimersByTime(100);
+    expect(h.currentSocket().url).toBe('ws://127.0.0.1:50478/ws');
+    h.currentSocket().emitOpen();
+    expect(h.currentSocket().sent).toEqual([
+      JSON.stringify({ type: 'hello', token: 'restarted-launch-token' }),
+    ]);
+  });
+
+  it('rechecks storage for an immediate retry and a user-requested reopen', () => {
+    const h = makeHarness({ url: null, initialReconnectDelayMs: 100 });
+    h.client.connect();
+    h.currentSocket().emitClose();
+    window.localStorage.setItem(WS_PORT_STORAGE_KEY, '50477');
+    h.client.retryNow();
+    expect(h.currentSocket().url).toBe('ws://127.0.0.1:50477/ws');
+    h.client.close();
+    window.localStorage.setItem(WS_PORT_STORAGE_KEY, '50478');
+    expect(h.client.getUrl()).toBe('ws://127.0.0.1:50478/ws');
+    h.client.connect();
+    expect(h.currentSocket().url).toBe('ws://127.0.0.1:50478/ws');
+  });
+
+  it('honors an explicit URL unchanged through bootstrap updates and reconnects', () => {
+    window.__RYTM_RAND_WS_PORT__ = '50477';
+    const storageRead = vi.spyOn(Storage.prototype, 'getItem');
+    const h = makeHarness({ url: 'ws://configured.example:9000/custom', initialReconnectDelayMs: 100 });
+    expect(h.client.getUrl()).toBe('ws://configured.example:9000/custom');
+    h.client.connect();
+    window.__RYTM_RAND_WS_PORT__ = '50478';
+    h.currentSocket().emitClose();
+    vi.advanceTimersByTime(100);
+    expect(h.fakes.map((socket) => socket.url)).toEqual([
+      'ws://configured.example:9000/custom', 'ws://configured.example:9000/custom',
+    ]);
+    expect(storageRead).not.toHaveBeenCalled();
+  });
+});
 
 describe('CockpitClient — defaults & constants', () => {
   it('exposes the default WS URL', () => {

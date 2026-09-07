@@ -122,3 +122,16 @@ skips with disabled/fake MIDI. Static and schema gates pass. The run report
 records timings, earlier diagnostics and current external closeout receipts.
 The full run includes the final bounded-diagnostic regressions added after
 the fast/Cockpit benchmark runs. No physical observation is claimed.
+
+## September 7 packaged-launch correction
+
+The identified Windows build at `4cb0defdee3aa` compiled successfully but
+failed the real GUI smoke: the shell supplied a fresh token and port while
+the frontend kept dialing port 4317. It is a diagnostic artifact only.
+The client now resolves the validated loopback port on every dial, preserving
+explicit URL overrides and the existing authenticated handshake. Forty-three
+new regression cases cover bootstrap precedence, invalid values, late injection
+and reconnect behavior. Full frontend: 852 tests at 100% coverage; typecheck,
+lint and production build pass. Full Playwright: 21 passed, two existing skips
+in 51.3 seconds. A rebuilt artifact and non-default-port packaged smoke remain
+required; no physical input, arm or output was requested.

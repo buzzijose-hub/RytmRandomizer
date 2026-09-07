@@ -438,11 +438,28 @@ Cargo tests therefore do not require an absent sidecar resource.
 Smoke the downloaded portable copy with `RYTM_RAND_MIDI_BACKEND=off` and fresh
 temporary token/data directories. Check the initial embedded UI, `/health`,
 authenticated bootstrap, and `show_bank_list`; verify the launched child is the
-bundled sidecar. Leave capture and arm controls untouched: the explicitly armed
+bundled sidecar. Include a non-default loopback port and confirm that the actual
+frontend socket reaches that selected port after shell bootstrap. The frontend
+discovers the default target on each dial, validates the injected or stored port
+and keeps its host/path fixed to `127.0.0.1` and `/ws`; an explicitly supplied
+client URL takes precedence. Late bootstrap must be observed by a later dial,
+while `getUrl()` must continue to report the existing socket's actual target.
+See the [runtime environment index](LOCAL_DEV_TOOLING_NOTES.md#7a-cockpit-sidecar--desktop-shell-runtime)
+for port discovery and fallback details.
+Leave capture and arm controls untouched: the explicitly armed
 capture composition can enumerate inputs when its capture panel is requested.
 An off-backend smoke is software evidence only. Record exact hashes and use the
 [studio checklist](hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md)
 before any physical action.
+
+**Diagnostic artifact, not studio-ready:** Windows build
+[`34147444366`](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34147444366)
+at `4cb0defdee3aaaddd02c28621811b4004e62a642` completed and its downloaded
+binary hashes matched the manifest, but its real GUI smoke failed. The shell
+injected port `50477` as a string with a token present; the frontend continued
+dialing `4317` and stayed disconnected. The lazy port-discovery repair requires
+a corrected build and another packaged smoke. Both remain pending; the earlier
+artifact must not be presented as a working studio copy.
 
 ### Briefcase source/install checks
 

@@ -50,7 +50,7 @@ The exact unperformed steps and blank observation fields live in
 Current software evidence and finding dispositions are tracked in the
 [review reconciliation ledger](2026-09-07-show-kit-forge-review-reconciliation.md).
 Final local verification passed: 8,926 Python tests with five skips, all 32
-touched production modules at 100% coverage, and 809 frontend tests with all
+touched production modules at 100% coverage, and 852 frontend tests with all
 coverage metrics at 100%. The full browser suite passed 21 tests with two
 existing skips using disabled/fake MIDI; its screenshots were inspected.
 The identified executable/build manifest and self-contained sidecar smoke test,
