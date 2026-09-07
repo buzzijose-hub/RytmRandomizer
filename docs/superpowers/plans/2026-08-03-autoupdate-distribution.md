@@ -38,6 +38,7 @@ outside it. Full cost inventory:
 | Release/promote/validate/snapshot workflows | $0 | GitHub Actions on a public repo (this is conditional: if the repo ever went private, the 3-OS build matrix — macOS especially — starts consuming paid minutes; that event re-opens this table) |
 | Updater signatures | $0 | Ed25519 keypair; no CA involved |
 | Fleet awareness (§6) | $0 | GitHub-native beacon — download-counted ping assets + a scheduled snapshot job; no operated service |
+| Fleet dashboard (§6.1) | $0 | one static page on GitHub Pages serving the `releases` branch; no build, no external scripts |
 | **OS code signing (U6 only)** | **the one money item** | Apple Developer ≈ $99/yr + a Windows signing certificate — already deferred to the operator's planned certificate purchase; nothing else in this spec spends anything |
 
 An earlier draft of D1 proposed a Cloudflare Worker beacon. It is
@@ -308,6 +309,47 @@ channel and OS, over time — without operating anything.
   updates past a pre-beacon version is invisible (acceptable — the
   histogram's job is steering rollouts of new releases).
 
+### 6.1 Fleet dashboard — monitoring a rollout over time
+
+The answer to "how many devices, on which versions, and how is the
+rollout going" is a **static dashboard page served by GitHub Pages
+from the `releases` branch** — the page lives next to the data it
+charts, so it fetches `fleet-history.json` same-origin with no CORS,
+no build step, no external service, and no cost (Pages is free on the
+public repo; enabling it is a one-time repo setting, recorded in U5).
+
+- **`index.html` on the `releases` branch** — one self-contained page
+  (inline JS + SVG; no external scripts or chart libraries, so the
+  page has zero third-party dependencies and works offline against a
+  checked-out branch).
+- **What it renders:**
+  1. *Fleet composition now* — estimated devices per version, split by
+     OS (stacked bars from the latest snapshot delta).
+  2. *Rollout adoption curve* — version share over time across
+     snapshots: the line you watch while stepping a rollout, with
+     **rollout-percent markers** annotated where promote commits moved
+     10 → 50 → 100.
+  3. *Raw check-ins* alongside every estimate — the page always shows
+     the measured number next to the derived one.
+- **Estimator, stated on the page itself:** estimated devices =
+  check-ins per interval ÷ expected checks per device per interval
+  (from the §0-D2 cadence: launch + every 4 h while running). It is an
+  estimate and the dashboard says so; the raw counts are the ground
+  truth.
+- **Data plumbing:** each `fleet-snapshot.yml` row records, besides
+  the per-asset counts, the current `stable`/`beta` manifest
+  `version` + `rollout_percent` — which is what lets the adoption
+  curve carry its promote markers without mining git history.
+- **In-app link:** the cockpit update panel (§7) links to the
+  dashboard URL for maintainers; the panel itself never fetches fleet
+  data (operators see their own version, not the fleet).
+- **Validation:** the estimator/delta logic lives in one small
+  embedded function; `manifest-validate.yml` extends to sanity-check
+  `fleet-history.json` rows against a schema fixture, and U5 ships a
+  fixture-driven render check (the page against a synthetic history
+  produces the expected series — run under the existing web test
+  tooling, not a new stack).
+
 ## 7. Cockpit UX
 
 - **Header chip** `⬆ 1.35.1 ready` — icon + shape + text (colorblind-
@@ -377,7 +419,11 @@ manifest server wired via `RYTM_RAND_UPDATE_MANIFEST_URL`):
   update check still completes and the chip still appears (the ping is
   fire-and-forget and cannot gate).
 - fleet-snapshot: the snapshot script against a fixture Releases API
-  payload appends the correct dated row to `fleet-history.json`.
+  payload appends the correct dated row to `fleet-history.json`
+  (including the stable/beta version + rollout_percent columns).
+- dashboard render: the embedded estimator/series function against a
+  synthetic `fleet-history.json` fixture produces the expected
+  composition and adoption series.
 - `hardware_revalidation: true` renders the banner naming the manual
   validation doc.
 
@@ -448,7 +494,7 @@ Rules, each with an enforcement home:
 | **U2 — release pipeline** | `installers.yml` → `workflow_call` conversion; `release.yml`, updater keypair in secrets, changelog gen, manifest gen, `releases` branch; `promote.yml` with environment gate; `manifest-validate.yml`; `test_ci_workflow.py` scope map (the all-workflow pin scan of §9.2 already landed with the spec) | a `v*-beta.N` tag on a throwaway commit produces signed artifacts + a valid `beta.json` end-to-end, verified against the schema fixture; `cut-release` derives the right bump from a synthetic commit history in a workflow test; CI artifact and release build come from the same called workflow; an intentionally malformed manifest is refused by `manifest-validate.yml` | U1 |
 | **U3 — shell updater** | plugin integration, state machine §5, bucketing, freeze, the fire-and-forget ping GET (§6); **absorbs the standing shell follow-up: re-inject the fresh WS token after sidecar restart** | Rust test list §8 green; mock-manifest flows work in `cargo run` | U1 (rustup: done 2026-08-03) |
 | **U4 — cockpit UX** | chip + PanelSpec panel + consent flows + freeze toggle + dev-loop fallback | axe floor 0; announcer integration; CLI-help parity guard untouched (no CLI surface) | U3 state shape |
-| **U5 — e2e + fleet snapshot** | mock-manifest fixture + the §8 spec list; ping assets in the release job; `fleet-snapshot.yml` + `fleet-history.json` | all §8 e2e specs green in CI; the ping-independence spec proves the beacon cannot gate; a snapshot run against fixture API data produces the expected fleet-history row; old-state boot compat suite green against the committed vN-1 fixtures | U2–U4 |
+| **U5 — e2e + fleet snapshot** | mock-manifest fixture + the §8 spec list; ping assets in the release job; `fleet-snapshot.yml` + `fleet-history.json`; the §6.1 dashboard page + Pages enablement | all §8 e2e specs green in CI; the ping-independence spec proves the beacon cannot gate; a snapshot run against fixture API data produces the expected fleet-history row; the dashboard render check passes against the synthetic history fixture; old-state boot compat suite green against the committed vN-1 fixtures | U2–U4 |
 | **U6 — signed rollout** | OS code signing (notarization + Windows cert), flip macOS/Windows updates on by default, beta cohort per D4 | one full beta→stable promotion executed with real installs | certificates (external) |
 
 Sequencing: U1+U2 first (pure CI/repo work, immediately verifiable);
