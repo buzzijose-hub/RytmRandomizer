@@ -103,7 +103,10 @@ bundle identity — confirm `installers.yml` artifacts still build.
 
 **Verification recipe:** `cargo test` (consent invariant: install
 entry unreachable without a version-bound token; token for A refuses
-B; bucketing vectors; freeze zero-network; manifest refusals);
+B; bucketing vectors; freeze zero-network + `freeze_suppressed` row;
+manifest refusals; the §5.1 journal contract — one row per transition,
+closed vocabulary, path-injection probe proving bounded details,
+rotation caps);
 `npx vitest run --coverage`; `npm run lint`; `tsc`; manual
 `cargo run` against a local mock manifest via
 `RYTM_RAND_UPDATE_MANIFEST_URL`.
@@ -163,6 +166,7 @@ so no agent ever consumes another agent's output.
 | I5 | `fleet-history.json` row: `{date, counts: {version: {os: n}}, stable: {version, rollout_percent}, beta: {version, rollout_percent}}` | C-snap | C-dash |
 | I6 | Ping asset naming `beacon-<version>-<target>.txt` (spec §6) | A5 | B-rust, C-snap |
 | I7 | `rytm_randomizer/_version.py::__version__` accessor | A1 | A3 |
+| I8 | Update-journal row `{ts, event, version, detail}` with the spec §5.1 closed event vocabulary; file `update-journal.jsonl`, 2-generation rotation | B-rust | B-web (activity list), C-e2e (row assertions), Doctor export |
 
 ### Orchestrator-reserved files (no agent may touch these)
 
@@ -181,8 +185,8 @@ edit.
 | A1 version-spine | `VERSION`, `pyproject.toml`, `scripts/sync_version.py`, `Justfile`, `rytm_randomizer/_version.py`, the three synced manifests | I7 |
 | A2 release-prep | `scripts/prepare_release.py`, its test file | — |
 | A3 app-version | `cockpit/ws/` bootstrap field, regenerated `live_gui_protocol.ts`, store read-only slice, their tests | I1 (consumes I7 as a frozen import path, not A1's output) |
-| A4 persisted-state | `data/persisted_state.py`, its arch test, `.claude/rules/update-compatibility.md`, `schema_version` registrations in the existing store modules | — |
-| A5 workflows | `.github/workflows/{installers,release,promote,manifest-validate}.yml`, `test_ci_workflow.py` scope map, schema fixture + Python validator | I3, I6 |
+| A4 persisted-state | `data/persisted_state.py`, its arch test, `.claude/rules/update-compatibility.md`, `schema_version` registrations in the existing store modules, typed `persisted_state.*` taxonomy errors + `record_persisted_state_migration` metrics (spec §5.1, Gate 7) | — |
+| A5 workflows | `.github/workflows/{installers,release,promote,manifest-validate}.yml` incl. `GITHUB_STEP_SUMMARY` blocks per spec §9.6, `test_ci_workflow.py` scope map, schema fixture + Python validator | I3, I6 |
 | A6 branch-bootstrap | `releases` branch content only (no main-branch files) | — |
 
 All six run concurrently in one worktree-per-agent
@@ -195,8 +199,8 @@ other A-agent owns — verified disjoint.
 
 | Agent | Owned files | Contract |
 |---|---|---|
-| B-rust | `desktop/shell/**` (updater.rs, sidecar token re-injection, conf) | produces I2; consumes I3 fixture verbatim from the spec, not from A5's branch |
-| B-web | `desktop/web/src/**`, `desktop/web/tests/**` (chip, panel, store slice, axe) | consumes I1/I2 as typed stubs checked against the contract table |
+| B-rust | `desktop/shell/**` (updater.rs, the §5.1 update journal with rotation + bounded path-free details, sidecar token re-injection, conf) | produces I2 + I8; consumes I3 fixture verbatim from the spec, not from A5's branch |
+| B-web | `desktop/web/src/**`, `desktop/web/tests/**` (chip, panel + journal-backed activity list, operator-log mirror rows for check/signature failures, store slice, axe) | consumes I1/I2/I8 as typed stubs checked against the contract table |
 
 Both start at T0 against base; PR-B rebases once onto merged A
 (expected conflicts: none — file scopes verified disjoint from all of
@@ -207,7 +211,7 @@ reads; regeneration at rebase reconciles it mechanically).
 
 | Agent | Owned files | Start |
 |---|---|---|
-| C-e2e | `desktop/web/e2e/update_*.spec.ts` + the mock-manifest fixture | T0 (mock serves I3; client-flow specs marked `.fixme` until B merges, then activated — the spec files themselves are written at T0) |
+| C-e2e | `desktop/web/e2e/update_*.spec.ts` + the mock-manifest fixture | T0 (mock serves I3; client-flow specs assert I8 journal rows per spec §8, marked `.fixme` until B merges — the spec files themselves are written at T0) |
 | C-snap | `fleet-snapshot.yml`, snapshot script + fixture test, ping-asset step in `release.yml` (coordinated hunk — A5 leaves a marked insertion point) | T0 |
 | C-dash | `index.html` dashboard + render-check test | T0 (against synthetic I5 data) |
 
@@ -232,3 +236,9 @@ merge train, not any single agent's work.
 - All spec drift guards green; `test_version_single_source.py` running
   in full (post-U1) mode; 18-gate bodies on all three PRs; zero new
   operational cost (§0.2 table unchanged).
+- Observability floor holds end-to-end: a deliberately broken
+  signature in the mock manifest produces — with no debugging — a
+  `signature_rejected` journal row, an operator-log entry, a Doctor
+  export containing it, and a red `manifest-validate`/e2e assertion;
+  a persisted-state refusal shows up in `format_summary()`. Nothing
+  in the update path can fail silently.

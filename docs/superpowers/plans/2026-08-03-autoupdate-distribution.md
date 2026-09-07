@@ -281,6 +281,46 @@ staged ──chip visible──▶ consent{ install_now | install_on_quit(defaul
 - Consent tokens are process-lifetime and version-bound: a crash after
   consent does NOT auto-install on next start (mirrors never-auto-re-arm).
 
+### 5.1 Update journal — the observability substrate
+
+The updater runs in the Rust shell, outside the Python
+`observability/` stack — and with zero servers, client-side failures
+are visible **only** locally. Observability is therefore designed in,
+not bolted on:
+
+- **Every §5 state transition appends one structured JSONL row** to
+  `update-journal.jsonl` in the config dir (size-capped rotation, two
+  generations): `{ts, event, version, detail}` with `event` drawn from
+  a closed vocabulary (`check_started`, `check_ok`, `check_failed`,
+  `manifest_rejected`, `bucket_excluded`, `download_started`,
+  `download_ok`, `stage_failed`, `signature_rejected`,
+  `consent_granted`, `install_started`, `install_ok`, `install_failed`,
+  `skip_recorded`, `freeze_suppressed`, `ping_ok`, `ping_failed`) and
+  `detail` a **bounded, path-free** map (the #224/#238 hygiene
+  standard: no absolute paths, no raw `str(err)` passthrough — typed
+  reason codes plus sizes/durations only).
+- **The journal is the single source of truth** for three consumers:
+  the update panel's "recent update activity" list (§7), the
+  Connection Doctor's export bundle (extended to include the journal
+  tail), and the e2e suite — specs assert journal rows rather than
+  scraping UI state, which makes every failure path testable.
+- **Privacy:** the journal never leaves the machine and is never
+  transmitted anywhere — consent history is operator-local evidence,
+  full stop.
+- **Sidecar-side pieces use the existing stack** (Gate 7, no
+  exceptions): persisted-state migrations and refusals (§11 Contract
+  A) raise typed taxonomy errors with fingerprints
+  (`persisted_state.schema_newer_than_app`,
+  `persisted_state.migration_failed`) and record
+  `get_metrics().record_persisted_state_migration(store, from_v,
+  to_v)` / refusal counters, surfaced by `format_summary()` and the
+  Doctor journal like every other boundary.
+- **Failure honesty has a floor:** `check_failed` and
+  `signature_rejected` rows are also mirrored as operator-log entries
+  in the cockpit (the ReconnectBanner-era pattern), so a silently
+  failing updater is impossible — it either works or it visibly says
+  why, locally.
+
 ## 6. Fleet awareness — GitHub-native, zero-opex (D1)
 
 The question to answer: which versions is the fleet running, per
@@ -408,7 +448,13 @@ Rust unit tests (shell):
 - manifest validation: schema fixture round-trip; wrong host refused;
   unknown `schema_version` refused; signature-verify failure surfaces
   as journal event, not retry loop.
-- freeze mode: zero network calls (mock transport asserts call count 0).
+- freeze mode: zero network calls (mock transport asserts call count 0)
+  AND a `freeze_suppressed` journal row.
+- journal contract: every §5 transition writes exactly one row with a
+  closed-vocabulary event; failure paths (`manifest_rejected`,
+  `signature_rejected`, `stage_failed`) each produce their row with a
+  typed reason code; a path-injection probe proves `detail` never
+  contains an absolute path; rotation caps hold.
 
 Playwright e2e (the #221 platform; new fixture: a local static
 manifest server wired via `RYTM_RAND_UPDATE_MANIFEST_URL`):
@@ -431,6 +477,9 @@ manifest server wired via `RYTM_RAND_UPDATE_MANIFEST_URL`):
   composition and adoption series.
 - `hardware_revalidation: true` renders the banner naming the manual
   validation doc.
+- journal-backed assertions: the consent-flow and failure-path specs
+  assert §5.1 journal rows (not just UI state), and the panel's
+  activity list matches the journal tail.
 
 CI: see §9 — the pipeline design is a first-class part of this spec,
 not an implementation detail.
@@ -486,7 +535,15 @@ Rules, each with an enforcement home:
    `manifest-validate.yml` is their sole — and sufficient — gate. The
    mock-manifest e2e fixture binds an ephemeral port so it composes
    with the existing e2e job's `workers: 1` / port-4317 constraints.
-6. **Bot coexistence.** `cut-release` writes only via an ordinary PR
+6. **Pipeline observability.** Every workflow this spec adds writes a
+   `GITHUB_STEP_SUMMARY` block with its structured outcome —
+   `release.yml`: version, artifact list + sizes, signature status,
+   manifest committed; `promote.yml`: from→to version and
+   rollout_percent; `manifest-validate.yml`: per-file verdicts with
+   failing rule named; `fleet-snapshot.yml`: row appended + count
+   deltas — so a maintainer reads outcomes from the run page without
+   spelunking logs, and a failed gate names its rule.
+7. **Bot coexistence.** `cut-release` writes only via an ordinary PR
    (full gates), so it cannot fight the coverage-ratchet bot's
    push-back behavior; neither bot ever pushes to a branch the other
    owns.
