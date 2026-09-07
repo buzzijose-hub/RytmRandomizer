@@ -19,10 +19,31 @@ starts; none is load-bearing for the others except D1.
 
 | Gate | Decision | Rationale |
 |---|---|---|
-| **D1 — fleet awareness** | **Tier 1: edge-worker beacon** | The driver directive explicitly demands "be aware of users and their versions"; static files alone cannot answer it. The beacon is structurally incapable of gating updates (see §6) and costs one free-tier worker. |
+| **D1 — fleet awareness** | **GitHub-native beacon** (per-release ping assets + a free scheduled snapshot job) | The driver directive demands "be aware of users and their versions"; the zero-opex constraint (§0.2) rules out any operated service, even free-tier. GitHub download counters + a cron Actions job answer the question with no account, domain, deployment, or pricing policy outside what the repo already uses (see §6). |
 | **D2 — check cadence** | Launch + every 4 h while running + manual "Check now" | Hours-scale worst-case T_notice with zero infrastructure; a ~1 KB CDN GET is cheap enough to be frequent. |
 | **D3 — default consent affordance** | "Install on next launch" pre-selected | Fastest fleet convergence that never forces a restart on a stage machine. |
 | **D4 — beta channel population** | Maintainers first (`buzzijose-hub`, `edward-rosado`); widen by invitation after two beta→stable cycles | Smallest honest test population that still exercises both OS families in daily use. |
+
+## 0.2 Standing constraint: zero operational cost
+
+The operator mandate is **zero recurring operational cost and zero
+operated services**. Every component below must be free on the
+infrastructure the project already uses (a public GitHub repository)
+and must require no account, deployment, domain, or pricing policy
+outside it. Full cost inventory:
+
+| Component | Cost | Notes |
+|---|---|---|
+| Manifest + artifact hosting | $0 | GitHub Releases / raw branch files on the public repo |
+| Release/promote/validate/snapshot workflows | $0 | GitHub Actions on a public repo (this is conditional: if the repo ever went private, the 3-OS build matrix — macOS especially — starts consuming paid minutes; that event re-opens this table) |
+| Updater signatures | $0 | Ed25519 keypair; no CA involved |
+| Fleet awareness (§6) | $0 | GitHub-native beacon — download-counted ping assets + a scheduled snapshot job; no operated service |
+| **OS code signing (U6 only)** | **the one money item** | Apple Developer ≈ $99/yr + a Windows signing certificate — already deferred to the operator's planned certificate purchase; nothing else in this spec spends anything |
+
+An earlier draft of D1 proposed a Cloudflare Worker beacon. It is
+**rejected under this constraint** — even at $0 it is an operated
+service with an external pricing policy — and recorded here so it is
+not re-proposed without noticing the constraint.
 
 ## 0.1 Drift verification (2026-09-07)
 
@@ -254,23 +275,38 @@ staged ──chip visible──▶ consent{ install_now | install_on_quit(defaul
 - Consent tokens are process-lifetime and version-bound: a crash after
   consent does NOT auto-install on next start (mirrors never-auto-re-arm).
 
-## 6. Fleet awareness — the beacon (D1: Tier 1)
+## 6. Fleet awareness — GitHub-native, zero-opex (D1)
 
-- **Endpoint:** `GET /check?channel=<c>&v=<running>&os=<target>&id=<install_id>`
-  on a Cloudflare Worker (free tier). It logs the tuple + timestamp
-  and returns **302 → the raw manifest URL** (or 200-proxies it).
-- **Structurally unable to gate:** the client treats any non-200/302,
-  timeout > 3 s, or malformed response as "use the raw CDN URL
-  directly." Update availability NEVER depends on the beacon; killing
-  the worker in e2e must leave every update path green (§8).
-- **Privacy:** the tuple above is the entire payload. Opt-outs:
-  `RYTM_RAND_UPDATES=off` (no traffic at all) and
-  `RYTM_RAND_UPDATE_BEACON=off` (check via raw CDN, report nothing).
-  One README paragraph states exactly this.
-- **Output:** version histogram over time per channel/OS with
-  rollout-percent overlays — the direct measure of "how fast and
-  uniformly we iterate." Worker analytics first; a small dashboard
-  page only if it earns its keep.
+The question to answer: which versions is the fleet running, per
+channel and OS, over time — without operating anything.
+
+- **Ping assets as counters.** Every release uploads tiny
+  `beacon-<version>-<target>.txt` assets (one byte, one per OS
+  target). When a client performs its scheduled update check, it also
+  fires a fire-and-forget GET of the ping asset for **its own running
+  version and OS**. GitHub increments that asset's `download_count` —
+  which makes the counts a per-version, per-OS check-in tally.
+- **Snapshotting.** A scheduled (cron) `fleet-snapshot.yml` workflow —
+  free on the public repo — reads the counts via the Releases API and
+  appends a dated row to `fleet-history.json` on the `releases`
+  branch. Deltas between snapshots are the version histogram over
+  time; installs ≈ check-ins ÷ expected daily cadence.
+- **Structurally unable to gate, by construction.** The ping is
+  fire-and-forget and entirely separate from the manifest fetch: its
+  failure, absence, or removal cannot delay or block an update check
+  (pinned by a §8 test). There is no server whose uptime sits in front
+  of anything.
+- **Privacy — stronger than the rejected worker design.** No install
+  identifier is ever transmitted: the `install_id` of §5 exists only
+  locally as the rollout-bucketing input. The only signal that leaves
+  the machine is an anonymous HTTP GET of a public release asset.
+  Opt-outs: `RYTM_RAND_UPDATES=off` (no traffic at all) and
+  `RYTM_RAND_UPDATE_BEACON=off` (checks continue, ping never fires).
+- **Honest limits.** Counts are check-ins, not unique installs (the
+  cadence estimate covers fleet-sizing); per-version resolution begins
+  at the first release that ships ping assets; a client that never
+  updates past a pre-beacon version is invisible (acceptable — the
+  histogram's job is steering rollouts of new releases).
 
 ## 7. Cockpit UX
 
@@ -337,8 +373,11 @@ manifest server wired via `RYTM_RAND_UPDATE_MANIFEST_URL`):
 - freeze mode: no chip, and the mock server logs **zero** requests.
 - rollout boundary: forced `install_id` (env override, test-only) at
   bucket 99 vs `rollout_percent: 50` sees no update; at 100 sees it.
-- beacon-down fallback: beacon URL pointed at a dead port; update
-  still found via CDN URL.
+- ping independence: the beacon asset URL pointed at a dead port; the
+  update check still completes and the chip still appears (the ping is
+  fire-and-forget and cannot gate).
+- fleet-snapshot: the snapshot script against a fixture Releases API
+  payload appends the correct dated row to `fleet-history.json`.
 - `hardware_revalidation: true` renders the banner naming the manual
   validation doc.
 
@@ -364,6 +403,7 @@ one.
 | `release.yml` | push `v*` tags | verify-tag → **calls the shared build** → updater-sign → changelog → GitHub Release → generate + commit `beta.json`. |
 | `promote.yml` | `workflow_dispatch`, environment `stable-promote` (required human approval) | Validates, then copies beta → `stable.json` at a chosen `rollout_percent`. |
 | `manifest-validate.yml` | push to the `releases` branch | Schema-validates `stable.json`/`beta.json` against the pinned fixture — **the last gate in front of the fleet**; rollback commits pass through it too. |
+| `fleet-snapshot.yml` | schedule (cron) | Reads release-asset download counts, appends a dated row to `fleet-history.json` on the `releases` branch. Scheduled workflow: exempt from `required-checks`, inside the pin/caching scans (§9.2). |
 
 Rules, each with an enforcement home:
 
@@ -406,9 +446,9 @@ Rules, each with an enforcement home:
 |---|---|---|---|
 | **U1 — version spine** | `VERSION`, derivations, `sync_version.py`, drift-guard test, `app_version` in session_status; `data/persisted_state.py` registry + its arch test; `.claude/rules/update-compatibility.md` | arch tests green (the version guard's pre-U1 ratchet already landed with the spec; U1 flips it to full mode by creating `VERSION`); one `version =` left in pyproject; every existing config-dir writer registered with a `schema_version`; the rule file lands with the registry | — |
 | **U2 — release pipeline** | `installers.yml` → `workflow_call` conversion; `release.yml`, updater keypair in secrets, changelog gen, manifest gen, `releases` branch; `promote.yml` with environment gate; `manifest-validate.yml`; `test_ci_workflow.py` scope map (the all-workflow pin scan of §9.2 already landed with the spec) | a `v*-beta.N` tag on a throwaway commit produces signed artifacts + a valid `beta.json` end-to-end, verified against the schema fixture; `cut-release` derives the right bump from a synthetic commit history in a workflow test; CI artifact and release build come from the same called workflow; an intentionally malformed manifest is refused by `manifest-validate.yml` | U1 |
-| **U3 — shell updater** | plugin integration, state machine §5, bucketing, freeze, beacon fetch-through with CDN fallback; **absorbs the standing shell follow-up: re-inject the fresh WS token after sidecar restart** | Rust test list §8 green; mock-manifest flows work in `cargo run` | U1 (rustup: done 2026-08-03) |
+| **U3 — shell updater** | plugin integration, state machine §5, bucketing, freeze, the fire-and-forget ping GET (§6); **absorbs the standing shell follow-up: re-inject the fresh WS token after sidecar restart** | Rust test list §8 green; mock-manifest flows work in `cargo run` | U1 (rustup: done 2026-08-03) |
 | **U4 — cockpit UX** | chip + PanelSpec panel + consent flows + freeze toggle + dev-loop fallback | axe floor 0; announcer integration; CLI-help parity guard untouched (no CLI surface) | U3 state shape |
-| **U5 — e2e + beacon** | mock-manifest fixture + the §8 spec list; beacon worker + histogram | all §8 e2e specs green in CI; beacon-down spec proves independence; old-state boot compat suite green against the committed vN-1 fixtures | U2–U4 |
+| **U5 — e2e + fleet snapshot** | mock-manifest fixture + the §8 spec list; ping assets in the release job; `fleet-snapshot.yml` + `fleet-history.json` | all §8 e2e specs green in CI; the ping-independence spec proves the beacon cannot gate; a snapshot run against fixture API data produces the expected fleet-history row; old-state boot compat suite green against the committed vN-1 fixtures | U2–U4 |
 | **U6 — signed rollout** | OS code signing (notarization + Windows cert), flip macOS/Windows updates on by default, beta cohort per D4 | one full beta→stable promotion executed with real installs | certificates (external) |
 
 Sequencing: U1+U2 first (pure CI/repo work, immediately verifiable);
@@ -467,6 +507,10 @@ works" without anyone remembering to explain it.
   "experimental" caveat in the panel copy.
 - **Linux:** the updater handles AppImage; `.deb`/`.rpm` installs get
   the chip as notification-only with package-manager instructions.
+- **Actions minutes are free only while the repository is public.** A
+  future move to private re-opens §0.2's cost table (macOS build
+  minutes in particular) — flagged so the constraint is re-checked at
+  that decision, not discovered after it.
 - **Consent is the floor on fleet speed — by design.** The histogram
   makes residual consent-lag visible instead of pretending it away;
   the answer to slow adoption is release notes worth restarting for,
