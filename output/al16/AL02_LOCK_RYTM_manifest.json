@@ -161,7 +161,7 @@
     "rytm_randomizer/data/al16_rytm.py": "5eb4c1f79043592ba07944ae256d1bc91ca1356faced4a1ab8ee40508345ea82",
     "rytm_randomizer/data/analog_rytm_kit_layout.py": "545cbc27135f4b814e8b7231e1e6afbd4788049d3145cf1a58ac57082f1d5e19",
     "rytm_randomizer/data/rytm_machine_catalog.py": "dc38e717b152b1766bf27eed27c65bbc7165c181d20e9f857c4218f7067ee512",
-    "rytm_randomizer/devices/__init__.py": "ad52cf0ed4550904d16f798d32d21f5f6772902c0f2df87d762b824dd2713d9c",
+    "rytm_randomizer/devices/__init__.py": "a84352c6c01f950043af9f3b177b50fe85b96d658b050cb54781183823aef149",
     "rytm_randomizer/devices/analog_rytm.py": "0836e808689ed9d420ce282490eb3a7ed9bec15bf8bf9dfd19e529bdeaa3267b",
     "rytm_randomizer/devices/registry.py": "f74206b10dfdc133514f1235c53aacf33a5155b143c85ac45c4090c9054dbb72",
     "rytm_randomizer/devices/strategies/__init__.py": "5d20deadae4f93967a8991677cf0f346a0db76016bc0b8e77b132b90c1abd21f",

@@ -19,6 +19,11 @@ from .strategies import (
     AnalogFourMutationPlanner,
     AnalogFourSnapshotDecoder,
 )
+from .strategies.analog_four_filter1_frequency_candidate import (
+    AnalogFourFilter1FrequencyCandidateMutation,
+    AnalogFourFilter1FrequencyCandidateResult,
+    render_analog_four_filter1_frequency_candidate,
+)
 from .strategies.analog_four_saved_kit_codec import (
     decode_analog_four_saved_kit_payload,
     encode_analog_four_saved_kit_payload,
@@ -73,6 +78,23 @@ class AnalogFourSavedKitCapability(Protocol):
         raw: bytes,
         mutations: Sequence[AnalogFourSavedKitMutation],
     ) -> AnalogFourSavedKitRenderResult: ...
+
+
+@runtime_checkable
+class AnalogFourFilter1FrequencyCandidateCapability(Protocol):
+    """Optional registered-device capability for offline Filter 1 candidates.
+
+    This capability renders local saved-KIT bytes only.  Its result carries an
+    explicit false hardware-SEND verdict and therefore grants no output
+    authority.
+    """
+
+    @abstractmethod
+    def render_filter1_frequency_candidate(
+        self,
+        raw: bytes,
+        mutations: Sequence[AnalogFourFilter1FrequencyCandidateMutation],
+    ) -> AnalogFourFilter1FrequencyCandidateResult: ...
 
 
 class AnalogFourDevice:
@@ -153,6 +175,15 @@ class AnalogFourDevice:
 
         return render_analog_four_saved_kit(raw, mutations)
 
+    def render_filter1_frequency_candidate(
+        self,
+        raw: bytes,
+        mutations: Sequence[AnalogFourFilter1FrequencyCandidateMutation],
+    ) -> AnalogFourFilter1FrequencyCandidateResult:
+        """Render a local-only Filter 1 Frequency candidate through the device."""
+
+        return render_analog_four_filter1_frequency_candidate(raw, mutations)
+
     def decode_saved_kit_capture(self, frame: bytes) -> SavedKitCaptureFrame:
         """Decode a complete capture frame through the canonical A4 codec."""
 
@@ -199,10 +230,27 @@ def get_analog_four_saved_kit_capability() -> AnalogFourSavedKitCapability:
     return device
 
 
+def get_analog_four_filter1_frequency_candidate_capability() -> (
+    AnalogFourFilter1FrequencyCandidateCapability
+):
+    """Resolve the offline Filter 1 candidate capability from the registry."""
+
+    device = registry.get_device("analog_four_mk2")
+    if not isinstance(device, AnalogFourFilter1FrequencyCandidateCapability):
+        raise TypeError(
+            "registered Analog Four device lacks offline Filter 1 Frequency " "candidate capability"
+        )
+    return device
+
+
 __all__ = [
     "AnalogFourDevice",
+    "AnalogFourFilter1FrequencyCandidateCapability",
+    "AnalogFourFilter1FrequencyCandidateMutation",
+    "AnalogFourFilter1FrequencyCandidateResult",
     "AnalogFourSavedKitCapability",
     "AnalogFourSavedKitMutation",
     "AnalogFourSavedKitRenderResult",
+    "get_analog_four_filter1_frequency_candidate_capability",
     "get_analog_four_saved_kit_capability",
 ]

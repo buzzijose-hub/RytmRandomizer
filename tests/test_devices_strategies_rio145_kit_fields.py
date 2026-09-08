@@ -72,6 +72,42 @@ def _rytm_fixture(name: str) -> tuple[bytes, RytmKit]:
     return frame, RytmKit.from_bytes(decoded.payload)
 
 
+@pytest.mark.parametrize("field", ["filter1_frequency", "filter2_frequency"])
+def test_exact_fixed_point_accessors_share_legacy_field_layout(field: str) -> None:
+    _, kit = _a4_fixture("A4_Test1_Init_Kit.syx")
+    sound = kit.sound(2)
+    original = sound.to_bytes()
+    sound.set_fixed_8_8_raw(field, 0x4001)
+    expected = bytearray(original)
+    offset = A4_TRACK_OFFSETS[field]
+    expected[offset : offset + 2] = b"\x40\x01"
+    assert sound.to_bytes() == bytes(expected)
+    assert sound.get_fixed_8_8_raw(field) == 0x4001
+    assert sound.get_fixed_8_8(field) == 64.00390625
+    sound.set_fixed_8_8(field, 64.1)
+    assert sound.get_fixed_8_8_raw(field) == round(64.1 * 256)
+    sound.set_fixed_8_8_raw(field, 0x7FFF)
+    assert sound.get_fixed_8_8(field) == 127.99609375
+    assert kit.sound(2).to_bytes() == original
+
+
+@pytest.mark.parametrize("raw", [True, False, 1.0, "1", None, -1, 0x8000])
+def test_exact_fixed_point_setter_rejects_invalid_words_without_changes(raw: object) -> None:
+    _, kit = _a4_fixture("A4_Test1_Init_Kit.syx")
+    sound = kit.sound(0)
+    original = sound.to_bytes()
+    with pytest.raises(ElektronKitFieldError, match="raw Q8.8 value must be an integer"):
+        sound.set_fixed_8_8_raw("filter1_frequency", raw)
+    assert sound.to_bytes() == original
+
+
+def test_exact_fixed_point_setter_rejects_unmapped_field() -> None:
+    _, kit = _a4_fixture("A4_Test1_Init_Kit.syx")
+    sound = kit.sound(0)
+    with pytest.raises(ElektronKitFieldError, match="not a mapped 8.8"):
+        sound.set_fixed_8_8_raw("filter1_resonance", 0x4001)
+
+
 @pytest.mark.parametrize(
     "fixture_name",
     [

@@ -112,6 +112,8 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             "data",
             # Send-plan DTO validation shares the guardrail identifier helper.
             "guardrails",
+            # Show Kit Forge DTOs reuse the device-neutral mutation scope.
+            "snapshot",
         }
     ),
     "cockpit.device": frozenset(
@@ -190,8 +192,25 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             "observability",
         }
     ),
+    "cockpit.show_bank": frozenset(
+        {
+            "guardrails",  # Shared strict, device-neutral wire/schema validation.
+            "cockpit.capture",
+            "cockpit.data",
+            "cockpit.engine",
+            "cockpit.export",
+            "cockpit.profiles",
+            "data",
+            # Forge resolves family-neutral codec/candidate capabilities from
+            # the device registry; it never imports a concrete family module.
+            "devices",
+            "observability",
+            "snapshot",
+        }
+    ),
     "cockpit.stage": frozenset(
         {
+            "snapshot",  # Canonical registered mutation domain.
             "cockpit.data",
             "devices",
             "observability",
@@ -212,6 +231,7 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             # VERSION / importlib.metadata anywhere else is exactly the fork
             # the version spine exists to prevent.
             "_version",
+            "guardrails",  # Shared strict, device-neutral wire/schema validation.
             "cockpit.capture",
             "cockpit.data",
             "cockpit.device",
@@ -220,6 +240,9 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             "cockpit.history",
             "cockpit.library",
             "cockpit.profiles",
+            # WebSocket handlers delegate authoritative Show Kit Forge state
+            # and lifecycle changes to the nested orchestration package.
+            "cockpit.show_bank",
             "cockpit.stage",
             "cockpit.wizard",
             "devices",

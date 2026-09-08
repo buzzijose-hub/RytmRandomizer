@@ -46,6 +46,14 @@ from .analog_four_audio_inference import (
     ANALOG_FOUR_INFERENCE_PARAMETERS,
 )
 from .analog_four_display import ANALOG_FOUR_PARAMETER_DISPLAY
+from .analog_four_kit_fields import (
+    A4_FIXED_8_8_ENCODING,
+    A4_FIXED_8_8_RAW_MAX,
+    A4_FIXED_8_8_SCALE,
+    A4_FIXED_8_8_WIDTH,
+    A4_SOUND_FORMAT_MARKER,
+    A4_SOUND_SIGNATURE,
+)
 from .analog_four_learning import (
     ANALOG_FOUR_LEARNING_CAPTURE_MATRIX,
     ANALOG_FOUR_LEARNING_TRAIT_ROUTES,
@@ -342,6 +350,12 @@ __all__ = [
     "A4_CANDIDATE_KIT_TYPE_BYTE",
     "A4_CHECKSUM_PACKED_OFFSET",
     "A4_FAMILY_BYTE",
+    "A4_FIXED_8_8_ENCODING",
+    "A4_FIXED_8_8_RAW_MAX",
+    "A4_FIXED_8_8_SCALE",
+    "A4_FIXED_8_8_WIDTH",
+    "A4_SOUND_FORMAT_MARKER",
+    "A4_SOUND_SIGNATURE",
     "A4_KIT_NAME_LENGTH",
     "A4_KIT_NAME_OFFSET",
     "A4_KIT_OBJECT_NAME_OFFSET",

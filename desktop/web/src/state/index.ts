@@ -156,6 +156,14 @@ export function bindClientToStore(
       store.getState().setLibraryRecords(ev.library.records);
       announce(`Library updated, ${ev.library.records.length} records`);
     }),
+    client.on('show_bank_changed', (ev) => {
+      store.getState().setShowBank(ev.show_bank);
+      announce(
+        ev.show_bank === null
+          ? 'Show Kit Forge bank state cleared'
+          : `Show Kit Forge updated, ${ev.show_bank.banks.length} banks available`,
+      );
+    }),
   ];
   return () => {
     for (const off of unsubs) off();

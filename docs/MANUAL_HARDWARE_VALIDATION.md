@@ -372,8 +372,11 @@ Passed evidence:
 Current authorization boundary:
 
 - Filter2 Resonance is the only hardware-write-validated saved-kit field.
-- Filter1 Frequency, Filter1 Resonance, and Filter2 Frequency remain
-  candidate-only and must be refused by normal file export.
+- Filter1 Frequency is separately
+  `offline-captured-kit-mutation-validated`: the distinct Show Kit Forge
+  renderer may build local candidate bytes, always with
+  `hardware_send_validated = false`. The normal hardware-validated file writer
+  still refuses it. Filter1 Resonance and Filter2 Frequency remain blocked.
 - The exporter writes a local file only. It does not open a MIDI port, launch a
   transfer utility, or send the file to the Analog Four.
 - Firmware and transfer-utility versions were not captured in this pass and
@@ -611,6 +614,50 @@ The command refuses a reference whose SHA-256 differs from the batch source.
 It ranks the renders using 11 normalized envelope and timbre measurements and
 exposes every weighted delta. No MIDI port is opened and no ranking is promoted
 to training evidence without a later reviewed corpus step.
+
+## Show Kit Forge Studio Validation (pending 2026-09-04)
+
+The Show Kit Forge software workflow is not a physical validation result. Its
+remaining operator-present procedure is maintained as a blank evidence form in
+[`hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md`](hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md).
+No box in that file is pre-checked and no hardware observation is inferred from
+an automated test.
+
+The studio pass has three independent acceptance gates:
+
+1. **A4 offline candidate return.** Hash-check the repository's generated
+   four-track Filter 1 Frequency scratch file, transfer it manually to a
+   disposable slot, verify/audition only the four intended values, save on the
+   A4, then request a fresh input-only dump. Record the returned frame and
+   decoded values. The dump must happen after the manual save because the
+   observed current-KIT path reflects the last saved KIT, not an unsaved panel
+   edit. This does not authorize A4 SEND or another saved-KIT field.
+2. **Rytm one-pad audition and restoration.** Start from a preserved full-frame
+   capture, target one pad at 10% depth, protect every other pad with scope and
+   locks, and generate the candidate. Before every live audition, manually
+   reload the saved Rytm source KIT and make a fresh matching input-only source
+   dump through the device rail. Capturing clears the current candidate and
+   prepared plan. Click **Select for audition** on that candidate again, then
+   **Preview Rytm** and **Prepare exact plan**. Arm the exact Rytm output,
+   acknowledge the manual source reload in the SEND form, and confirm the exact
+   current plan id and output port once through `ArmedApply`. A saved-KIT dump
+   alone does not prove unsaved RAM restoration. Verify the intended pad and
+   untouched pads, disarm Rytm, then click **Reset Cockpit audition to source**
+   to clear the software audition. **Reset Cockpit audition to source sends no
+   restore bytes.** Manually reload the saved source KIT and recapture; the
+   whole-payload returned fingerprint must equal the baseline. Existing
+   software and mock coverage do not satisfy this physical gate.
+3. **Paired save, recapture, and show-time preflight.** Marking a favorite is
+   not saving it. Save both favorite KITs manually, attest their 1–128 slots,
+   and make fresh input-only captures. Promoted semantic comparison may advance
+   the pair to `verified`. Immediately before rehearsal/show use, capture both
+   again: only exact equality of each whole-payload current capture fingerprint
+   with its retained successful recapture grants `show-ready`. Any mismatch blocks
+   the pair and requires recovery and another preflight.
+
+OXI project/pattern/chapter values recorded by Show Kit Forge are metadata only.
+Leave OXI in control of sequencing, notes, triggers, mutes, and pattern motion;
+no OXI command should be emitted during this validation.
 
 ## Canonical operator-command flow
 

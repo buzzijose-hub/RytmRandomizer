@@ -47,6 +47,7 @@ import type {
   ProfileModel,
   ProfileCatalogItem,
   SessionMode,
+  ShowBankState,
   Snapshot,
 } from '../ws/protocol';
 
@@ -118,6 +119,10 @@ export interface CockpitState {
    * Nothing renders it yet — the update chip and panel are a later PR.
    */
   appVersion: string | null;
+  /** Cached session data cannot authorize commands after transport loss. */
+  sessionStatusStale: boolean;
+  /** Advances on the first session_status received after each disconnect. */
+  sessionGeneration: number;
   connectionStatus: ConnectionStatus;
   operatorLog: OperatorLogEntry[];
   /** Latest passive connection observation ← connection_changed.connection. */
@@ -142,6 +147,10 @@ export interface CockpitState {
    * derives update state on its own and never initiates a check on mount.
    */
   update: UpdateSlice;
+  /** Authoritative whole-state Show Kit Forge projection ← show_bank_changed. */
+  showBank: ShowBankState | null;
+  /** Read-only until a whole-state bank packet arrives on the current transport. */
+  showBankStale: boolean;
 }
 
 export interface CockpitActions {
@@ -184,6 +193,7 @@ export interface CockpitActions {
   setUpdateFrozen: (frozen: boolean) => void;
   /** Record the operator's confirmed consent choice for the staged version. */
   confirmUpdateChoice: (choice: UpdateConsentChoice) => void;
+  setShowBank: (showBank: ShowBankState | null) => void;
   /** Reset all slices back to null (used on disconnect / shutdown). */
   reset: () => void;
 }
@@ -210,6 +220,8 @@ export const INITIAL_STATE: CockpitState = {
   sendPlan: null,
   sessionStatus: null,
   appVersion: null,
+  sessionStatusStale: true,
+  sessionGeneration: 0,
   connectionStatus: 'closed',
   operatorLog: [],
   connection: null,
@@ -227,6 +239,8 @@ export const INITIAL_STATE: CockpitState = {
     frozen: false,
     confirmedChoice: null,
   },
+  showBank: null,
+  showBankStale: true,
 };
 
 const OPERATOR_LOG_LIMIT = 8;
@@ -397,6 +411,8 @@ export function createCockpitStore() {
       set((state) => ({
         sessionStatus: status,
         appVersion: status.app_version ?? state.appVersion,
+        sessionStatusStale: false,
+        sessionGeneration: state.sessionGeneration + (state.sessionStatusStale ? 1 : 0),
       })),
     setConnectionStatus: (status) =>
       set((state) =>
@@ -404,6 +420,8 @@ export function createCockpitStore() {
           ? { connectionStatus: status }
           : {
               connectionStatus: status,
+              sessionStatusStale: true,
+              showBankStale: true,
               previewCandidate: null,
               sendPlan: null,
               patchGenomeStale: state.patchGenome !== null || state.patchGenomeStale,
@@ -495,6 +513,10 @@ export function createCockpitStore() {
     setUpdateFrozen: (frozen) => set((state) => ({ update: { ...state.update, frozen } })),
     confirmUpdateChoice: (choice) =>
       set((state) => ({ update: { ...state.update, confirmedChoice: choice } })),
+    setShowBank: (showBank) => set((state) => ({
+      showBank,
+      showBankStale: state.connectionStatus !== 'connected',
+    })),
     appendOperatorLog: (entry) =>
       set((state) => ({
         operatorLog: [

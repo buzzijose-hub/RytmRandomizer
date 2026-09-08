@@ -60,8 +60,21 @@ class MutationScope:
         return self.effective_ids(available)
 
 
+def registered_mutation_ids(device_id: str) -> frozenset[int]:
+    """Resolve the target domain from the canonical registered Device.
+
+    The import is deliberately lazy: Device composition imports MutationScope
+    while the registry is being initialized. Domain resolution happens only
+    after composition, when a DTO or stage policy validates actual inputs.
+    """
+    from ..devices import get_device
+
+    device = get_device(device_id)
+    return frozenset(range(1, device.track_count + 1))
+
+
 DEFAULT_MUTATION_SCOPE: Final[MutationScope] = MutationScope()
 """Immutable no-explicit-target/no-lock scope used by planner defaults."""
 
 
-__all__ = ["DEFAULT_MUTATION_SCOPE", "MutationScope"]
+__all__ = ["DEFAULT_MUTATION_SCOPE", "MutationScope", "registered_mutation_ids"]

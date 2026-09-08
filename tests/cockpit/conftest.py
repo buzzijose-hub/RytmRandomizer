@@ -46,6 +46,7 @@ from __future__ import annotations
 import hashlib
 import logging
 from collections.abc import Generator, Iterator
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Final
@@ -53,6 +54,7 @@ from typing import Final
 import pytest
 from fastapi.testclient import TestClient
 
+from rytm_randomizer.cockpit.capture import KitCaptureResult, KitCaptureService
 from rytm_randomizer.cockpit.data import PadState, Snapshot
 from rytm_randomizer.cockpit.device import MockDeviceAdapter
 from rytm_randomizer.cockpit.device.connection import set_active_connection_manager
@@ -79,6 +81,46 @@ never leaves the process.
 """
 
 pytestmark = pytest.mark.fast
+
+
+@dataclass
+class MutableClock:
+    """Explicit test clock shared by capture and show-bank lifecycle harnesses."""
+
+    current: datetime
+
+    def __call__(self) -> datetime:
+        return self.current
+
+
+@dataclass
+class FixedFrameCaptureProvider:
+    """Input-only fake that returns one supplied frame without opening MIDI."""
+
+    frame: bytes
+    port_name: str = "Mock input"
+
+    def list_input_names(self) -> tuple[str, ...]:
+        return (self.port_name,)
+
+    def capture_sysex_messages(
+        self,
+        _port_name: str,
+        *,
+        timeout_seconds: float,
+    ) -> tuple[bytes, ...]:
+        assert timeout_seconds > 0
+        return (self.frame,)
+
+
+def capture_fixed_frame(
+    device_id: str, frame: bytes, *, port_name: str = "Mock input"
+) -> KitCaptureResult:
+    """Exercise the public capture service with the shared input-only fake."""
+
+    return KitCaptureService(FixedFrameCaptureProvider(frame, port_name)).capture(
+        device_id, port_name
+    )
 
 
 @pytest.fixture
@@ -292,7 +334,10 @@ def prepare_send_plan(ws: object, request_id: str = "req-prepare-send-plan") -> 
 
 
 __all__ = [
+    "FixedFrameCaptureProvider",
+    "MutableClock",
     "TEST_WS_TOKEN",
+    "capture_fixed_frame",
     "cockpit_client",
     "cockpit_ws",
     "collect_initial_events",
