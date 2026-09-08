@@ -99,13 +99,28 @@ spine eliminates.
 1. **Canonical home: `VERSION` at the repo root** — single line,
    strict SemVer (`MAJOR.MINOR.PATCH` with optional `-beta.N`).
 2. **Derivations:**
-   - `pyproject.toml`: `dynamic = ["version"]` +
-     `[tool.setuptools.dynamic] version = {file = "VERSION"}` — and the
-     second in-file copy (line ~305) is deleted, not synchronized.
-   - `Cargo.toml` / `tauri.conf.json` / `package.json`: updated by
-     `scripts/sync_version.py` (idempotent; run by the release
-     workflow and by a new `just version-sync` target), and **checked, not
-     trusted**, in CI.
+   - `pyproject.toml`: `[project]` carries `dynamic = ["version"]`,
+     sourced through **hatchling** — the build backend this repo
+     actually uses (`requires = ["hatchling"]`), so the
+     `[tool.setuptools.dynamic]` table an earlier draft of this
+     section prescribed would be silently ignored:
+     ```toml
+     [project]
+     dynamic = ["version"]        # replaces version = "1.34.0" (line 7)
+     [tool.hatch.version]
+     path = "VERSION"
+     pattern = "^(?P<version>.+)$"
+     ```
+     The second declaration (`[tool.briefcase] version`, line ~306) is
+     **not a duplicate to delete** — briefcase reads it to stamp the
+     `.msi`/`.pkg`/AppImage built by `installers.yml`, so deleting it
+     breaks the installer build. It becomes a fourth sync target
+     instead (see below), and `test_version_single_source.py` pins
+     that it must survive.
+   - `Cargo.toml` / `tauri.conf.json` / `package.json` / `[tool.briefcase]
+     version`: updated by `scripts/sync_version.py` (idempotent; run by
+     the release workflow and by a new `just version-sync` target), and
+     **checked, not trusted**, in CI.
    - Runtime: `rytm_randomizer/__version__` read via
      `importlib.metadata` with a `VERSION`-file fallback for source
      checkouts; the WS bootstrap `session_status` payload gains
@@ -116,7 +131,10 @@ spine eliminates.
    `tests/architecture/test_version_single_source.py` asserts (a)
    `VERSION` parses as strict SemVer, (b) all four derived files equal
    it exactly, (c) exactly one `version =` occurrence remains in
-   `pyproject.toml`. Red CI on any drift — the repo's standard move.
+   `pyproject.toml` — **briefcase's**, with `[project]` carrying
+   `dynamic` — and (d) that occurrence still exists, so the installer
+   build cannot be broken by deleting it. Red CI on any drift — the
+   repo's standard move.
 4. **Version bumps are derived, never hand-authored.** Feature PRs do
    not touch `VERSION` or any derived file — ever. A `cut-release`
    `workflow_dispatch` (or `scripts/prepare_release.py` locally) derives
@@ -185,10 +203,13 @@ installed only on operator consent (§5). A push channel (WebSocket /
 notification service) was considered and deliberately rejected: the
 poll cadence already yields hours-scale worst-case fleet notice with
 **zero operated infrastructure**, and a push path would add a server
-whose availability sat in front of update delivery. The only optional
-hosted piece in the whole design is the fleet-awareness beacon (§6) —
-a logging redirector that can vanish without affecting a single
-update.
+whose availability sat in front of update delivery. **Nothing in this
+design is a server we operate** — the fleet-awareness beacon (§6) is
+not an exception: it is a fire-and-forget GET of a public release
+asset on GitHub's CDN, counted by GitHub's own download counters, and
+it can vanish without affecting a single update. (An earlier draft
+proposed a hosted logging redirector here; §0.2 records why that was
+rejected.)
 
 ## 4. Manifest schema (v1)
 
@@ -416,7 +437,7 @@ public repo; enabling it is a one-time repo setting, recorded in U5).
   broken control.
 - **A11y:** axe floor 0 for panel and chip; keyboard operable;
   state-change announcements via the announcer; no live-region
-  countdown spam (the OfflineShell precedent).
+  countdown spam (the ReconnectBanner precedent).
 - **Env surface (documented per Gate 13):** `RYTM_RAND_UPDATES=off`,
   `RYTM_RAND_UPDATE_BEACON=off`, `RYTM_RAND_UPDATE_CHANNEL=<c>` (dev
   override), `RYTM_RAND_UPDATE_MANIFEST_URL=<url>` (e2e/mock only).
@@ -666,7 +687,7 @@ contracts, both enforced by tests rather than review vigilance:
 | Added a feature / fixed a bug | Derives the bump from your conventional commit; changelog + manifest notes generated | Nothing | release-prep (§2.4) |
 | Added **persisted operator state** (session, bank, favorites, …) | Survives the binary swapping under that state | Register the schema in the persisted-state registry with a `schema_version` (compile error / red arch test until you do) | contract A below |
 | Touched wire behavior (engines, senders, parity surface, pins) | Sets `hardware_revalidation: true` on the next release automatically | Nothing | superset guard (§2.7) |
-| Added an env var / CLI command / panel | Unaffected | Existing ratchets (env docs gate, CLI-help parity guard, PanelSpec registry) | pre-existing |
+| Added an env var / CLI command / panel | Unaffected | Existing ratchets (CLI-help parity guard, PanelSpec registry) plus the env-docs gate `test_update_env_documented.py` | pre-existing, except the env-docs gate — **new, lands in §8** |
 | Edited `VERSION` or a derived version file by hand | — | Don't; CI fails unless the commit came from release-prep | drift guard (§2.3) |
 
 **Contract A — persisted-state compatibility.** Every module that
@@ -709,6 +730,9 @@ works" without anyone remembering to explain it.
   makes residual consent-lag visible instead of pretending it away;
   the answer to slow adoption is release notes worth restarting for,
   never removing the gate.
-- **Two prior in-file version duplicates** (pyproject) prove drift is
-  real here, not theoretical — U1's "exactly one occurrence" assertion
-  exists because of it.
+- **Five version declarations carrying two different values** prove
+  drift is real here, not theoretical — U1's single-source assertion
+  exists because of it. Note the two `pyproject.toml` declarations are
+  *not* duplicates: `[project] version` and `[tool.briefcase] version`
+  have different consumers, which is exactly why the guard asserts the
+  briefcase literal survives rather than asserting it away.
