@@ -8,6 +8,8 @@ unvalidated device from ever reaching a real output port.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from rytm_randomizer.data.digitakt_saved_kit_layout import (
@@ -23,6 +25,7 @@ from rytm_randomizer.devices.digitakt import (
     build_digitakt_ii_device,
     build_digitakt_mk1_device,
 )
+from rytm_randomizer.devices.saved_kit_capture import resolve_saved_kit_capture_capability
 from rytm_randomizer.devices.strategies.digitakt_message_renderer import (
     DigitaktMessageRenderer,
 )
@@ -161,9 +164,23 @@ def test_snapshot_fingerprint_is_stable_and_payload_sensitive() -> None:
 
 def test_snapshot_fingerprint_falls_back_to_raw_when_unpacked_empty() -> None:
     snap = DigitaktKitSnapshot(slot=0, kit_name="K", raw=b"\x01\x02", device_id="d", unpacked=b"")
-    assert digitakt_snapshot_payload_fingerprint(snap) == digitakt_snapshot_payload_fingerprint(
-        DigitaktKitSnapshot(slot=0, kit_name="K", raw=b"\x01\x02", device_id="d", unpacked=b"")
+    assert digitakt_snapshot_payload_fingerprint(snap) == "a12871fee210fb86"
+
+
+@pytest.mark.parametrize("bad_slot", [True, 1.5, "1"])
+def test_decoder_refuses_non_integer_slot_ids(bad_slot: object) -> None:
+    decoder = DigitaktSnapshotDecoder(family_byte=DIGITAKT_MK1_FAMILY_BYTE, device_id="d")
+    with pytest.raises(ValueError, match="slot must be non-negative integer"):
+        decoder.decode(_candidate_payload(), bad_slot)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("device_id", ["digitakt_mk1", "digitakt_ii"])
+def test_decoder_refuses_the_other_generation_candidate_family_prefix(device_id: str) -> None:
+    other_family = (
+        DIGITAKT_II_FAMILY_BYTE if device_id == "digitakt_mk1" else DIGITAKT_MK1_FAMILY_BYTE
     )
+    with pytest.raises(ValueError, match="expected candidate kit type byte"):
+        get_device(device_id).decode_snapshot(_saved_kit_payload(other_family), 0)
 
 
 # ---------------------------------------------------------------------------
@@ -217,6 +234,46 @@ def test_planner_validates_targets_against_the_track_domain() -> None:
 def test_planner_rejects_foreign_snapshot_types() -> None:
     with pytest.raises(ValueError, match="must be a DigitaktKitSnapshot"):
         _planner().plan(object(), 1)
+
+
+def test_planner_refuses_another_digitakt_generations_snapshot() -> None:
+    with pytest.raises(ValueError, match="snapshot device does not match planner"):
+        get_device("digitakt_ii").plan_mutation(_snapshot(), 1)
+
+
+@pytest.mark.parametrize("bad_depth", [True, 1.5, "1"])
+def test_planner_refuses_non_integer_depths(bad_depth: object) -> None:
+    with pytest.raises(ValueError, match="an integer is required"):
+        _planner().plan(_snapshot(), bad_depth)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("device_id,track_count", [("digitakt_mk1", 8), ("digitakt_ii", 16)])
+def test_unpromoted_device_refuses_all_scopes_even_with_a_claimed_promoted_snapshot(
+    device_id: str, track_count: int
+) -> None:
+    device = get_device(device_id)
+    snapshot = device.decode_snapshot(_candidate_payload(), 0)
+    assert isinstance(snapshot, DigitaktKitSnapshot)
+    claimed = replace(snapshot, offsets_promoted=True)
+    for scope in (
+        MutationScope(),
+        MutationScope(target_ids=frozenset({track_count}), locked_ids=frozenset()),
+        MutationScope(target_ids=frozenset({track_count}), locked_ids=frozenset({track_count})),
+    ):
+        plan = device.plan_mutation(claimed, MAX_DIGITAKT_DEPTH, scope=scope)
+        assert isinstance(plan, DigitaktMutationPlan)
+        assert plan.ready is False
+        assert plan.events == ()
+        assert device.to_mock_messages(plan) == []
+        assert tuple(device.to_cc_messages(plan)) == ()
+    with pytest.raises(ValueError, match="unavailable"):
+        device.plan_mutation(
+            snapshot, 1, scope=MutationScope(target_ids=frozenset({track_count + 1}))
+        )
+    with pytest.raises(ValueError, match="unavailable"):
+        device.plan_mutation(
+            snapshot, 1, scope=MutationScope(locked_ids=frozenset({track_count + 1}))
+        )
 
 
 @pytest.mark.parametrize("depth", [-1, MAX_DIGITAKT_DEPTH + 1])
@@ -323,6 +380,12 @@ def test_registering_does_not_disturb_existing_families() -> None:
     registered = all_devices()
     assert "analog_rytm_mk2" in registered
     assert "analog_four_mk2" in registered
+
+
+@pytest.mark.parametrize("device_id", ["digitakt_mk1", "digitakt_ii"])
+def test_passive_registration_does_not_claim_saved_kit_capture(device_id: str) -> None:
+    with pytest.raises(TypeError, match="lacks saved-KIT capture capability"):
+        resolve_saved_kit_capture_capability(device_id)
 
 
 def test_device_decode_delegates_to_the_decoder_strategy() -> None:

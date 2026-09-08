@@ -174,7 +174,7 @@ The cockpit targets **WCAG 2.2 AA** and enforces it in CI: an axe audit runs aga
 
 **Dual-machine rigs.** If you run an Analog Four MK2 alongside the Rytm, the same surface can capture both machines and manage separate targets, locks, and stage state. Captured-A4 semantic planning is deliberately zero-event and unsendable until saved-KIT offsets, encodings, track stride, round trips, and physical behavior are proven; this Cockpit flow has no A4 output authority.
 
-**Digitakt in the rig.** Both Digitakt generations are registered devices — `digitakt_mk1` (8 audio tracks) and `digitakt_ii` (16). Today they are **passive only**: the app enumerates them, listens, and decodes the SysEx envelope and kit name from a dump, so a Digitakt shows up in your rig and reports what it is. Mutation planning is deliberately **zero-event and unsendable** — every plan comes back `ready=False` with a reason — because Digitakt saved-project byte offsets, value encodings, and per-track stride have never been validated against hardware. The published CC map describes working-RAM dials and is *not* evidence for stored-project layout, so it is not used to infer offsets. Digitakt output authority arrives only with a change set that promotes real offsets alongside capture fixtures and exact re-encode evidence.
+**Digitakt passive groundwork.** Both generations are registered for passive device inventory and reports: `digitakt_mk1` has eight audio tracks, while `digitakt_ii` has sixteen tracks that can each use an audio or MIDI machine. The decoder accepts synthetic candidate envelopes and reads their name field; it is not a verified Digitakt dump codec. The Cockpit currently has no Digitakt device lane, live listener, or saved-KIT capture capability. Mutation planning is **zero-event and unsendable**: every accepted request returns `ready=False` with a reason. Saved-project offsets, encodings, track modes, and stride remain unvalidated. The [manual-backed MIDI tables and review record](docs/superpowers/plans/2026-09-08-digitakt-review-repairs.md) describe working-RAM controls and establish no stored-project layout or hardware output authority.
 
 **Studio profile authoring.** Drop a folder of reference tracks into the wizard, review the trait bars, save as `kind="user"`. You get a deployable model that captures *that sound* — a reference, not a copy.
 
@@ -476,7 +476,7 @@ and Edward Rosado ([@edward-rosado](https://github.com/edward-rosado)).
 
 <div align="center">
 
-**Made for the Analog Rytm MK2 and Analog Four MK2, listening to Digitakt and Digitakt II. Listening by default, armed by choice.**
+**Made for the Analog Rytm MK2 and Analog Four MK2, with passive Digitakt registry and report support. Listening by default, armed by choice.**
 
 [Docs](docs/) · [Status](docs/STATUS.md) · [Cockpit Quickstart](docs/COCKPIT_QUICKSTART.md) · [Architecture](docs/ARCHITECTURE.md) · [Accessibility](docs/ACCESSIBILITY.md) · [Contributing](CONTRIBUTING.md)
 

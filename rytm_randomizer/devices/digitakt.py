@@ -3,7 +3,8 @@
 Two Digitakt generations register from this one module:
 
 * ``digitakt_mk1`` -- Elektron Digitakt, 8 audio tracks.
-* ``digitakt_ii`` -- Elektron Digitakt II, 16 audio tracks.
+* ``digitakt_ii`` -- Elektron Digitakt II, up to 16 audio-capable tracks;
+  each track can instead use a MIDI machine.
 
 They share one device class and one strategy set, parameterized by track
 count and SysEx family byte. Per
@@ -11,7 +12,7 @@ count and SysEx family byte. Per
 ``devices/<family>.py`` plus strategy modules under
 ``devices/strategies/`` -- never a sibling subpackage at the package root.
 
-**Send authority: none.** Both devices decode snapshots but plan
+**Send authority: none.** Both devices accept synthetic candidate snapshots but plan
 zero-event, not-ready mutations, because Digitakt saved-project offsets
 have never been validated against hardware. See
 :mod:`rytm_randomizer.devices.strategies.digitakt_mutation_planner`.

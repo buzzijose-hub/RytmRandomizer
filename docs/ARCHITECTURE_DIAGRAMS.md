@@ -26,9 +26,9 @@ Current baseline used while creating / refreshing this document:
 |---|---|
 | Package entry points | `rytm_randomizer/app.py`, `rytm_randomizer/cli.py`, `rytm_randomizer/shell.py`, `rytm_randomizer/__init__.py` |
 | Passive metadata | `rytm_randomizer/constants.py`, `rytm_randomizer/commands.py`, `rytm_randomizer/scenes.py`, `rytm_randomizer/profiles.py` |
-| Data layer (single source of truth) | `rytm_randomizer/data/{param_maps,plans,profiles,scenes,scene_display,modes,al16_rytm,analog_four_display,analog_four_saved_kit_layout,analog_four_kit_fields,analog_four_sysex_calibration,analog_four_patch_templates,analog_four_patch_corpus,analog_four_render_rank,analog_four_learning,analog_four_midi,analog_four_audio_inference,analog_rytm_kit_layout,analog_rytm_kit_fields,midi_event_kinds,rytm_machine_catalog,style_discovery,style_profiles,style_targets,manual_feedback_packet,controller_mapping_profiles,controller_rehearsal_scenarios}.py` |
+| Data layer (single source of truth) | `rytm_randomizer/data/{param_maps,plans,profiles,scenes,scene_display,modes,al16_rytm,analog_four_display,analog_four_saved_kit_layout,analog_four_kit_fields,analog_four_sysex_calibration,analog_four_patch_templates,analog_four_patch_corpus,analog_four_render_rank,analog_four_learning,analog_four_midi,digitakt_midi,digitakt_saved_kit_layout,analog_four_audio_inference,analog_rytm_kit_layout,analog_rytm_kit_fields,midi_event_kinds,rytm_machine_catalog,style_discovery,style_profiles,style_targets,manual_feedback_packet,controller_mapping_profiles,controller_rehearsal_scenarios}.py` |
 | Registry, lookup, inspection | `rytm_randomizer/registry.py`, `rytm_randomizer/profile_lookup.py`, `rytm_randomizer/inspection.py`, `rytm_randomizer/validation.py`, `rytm_randomizer/cli_registry.py` |
-| Report surfaces | `rytm_randomizer/reports/__init__.py` + `reports/{_passive_section,formatter,manual_feedback_packet,cockpit_send_plan_operator_readiness,cockpit_send_plan_rehearsal_surface,controller_brain_rehearsal,controller_mapping_profile_catalog,reference_style_blueprint,local_model_copilot,analog_four_baseline,analog_four_kit_catalog,analog_four_patch_genome,analog_four_patch_learning,analog_four_patch_corpus,analog_four_patch_send_plan,analog_four_oxi_macro_set_planner,analog_four_style_kit_readiness,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_style_snapshot_routing,dual_machine_style_kit_readiness,dual_machine_style_kit_selection,dual_machine_style_live_audition,dual_machine_style_mutation_intent,dual_machine_style_mutation_mock_preview,dual_machine_style_performance_set_plan,dual_machine_style_selection_mock_preview,dual_machine_style_snapshot_routing,live_analyzer_handoff,live_analyzer_targets,live_command_deck,live_control_surface,live_gui_action_reducer,live_gui_analyzer_frame,live_gui_analyzer_overlay,live_gui_analyzer_readiness,live_gui_capture_queue,live_gui_capture_review,live_gui_controller_state,live_gui_desktop_app_plan,live_gui_desktop_blueprint,live_gui_desktop_component_contract,live_gui_desktop_view_model,live_gui_implementation_bridge,live_gui_interaction_script,live_gui_performance_console_model,live_gui_playback_transcript,live_gui_playback_validation,live_gui_rehearsal_session,live_gui_render_tree,live_gui_screen_contract,live_gui_sidecar_session,live_gui_test_harness_contract,live_gui_test_harness_readiness,live_performance_readiness,live_performance_runbook,live_performance_state,live_set_cockpit,live_show_export,live_stage_rehearsal_state,live_stage_snapshot_routing,live_transition_timeline,rytm_machine_matrix,rytm_snapshot_pad_compatibility,rytm_snapshot_intelligence,rytm_snapshot_mutation_preview,rytm_style_kit_readiness,rytm_style_mutation_intent,rytm_style_mutation_mock_preview,rytm_style_mutation_render_plan,rytm_style_snapshot_routing,style_performance_arcs,style_profiles,style_targets}.py` plus `reports/performance_console/{live_kit_capture_workbench,live_kit_package_audition,live_kit_operator_package,live_kit_operator_review_ledger,payload_helpers}.py` (subpackage; was the old top-level `reports.py`) |
+| Report surfaces | `rytm_randomizer/reports/__init__.py` + `reports/_core/{anchor_profile,profile_summary,behavior_parity,runtime_plan,mock_mapper,active_boundary,bridge,registry}.py` + `reports/{_passive_section,formatter,manual_feedback_packet,cockpit_send_plan_operator_readiness,cockpit_send_plan_rehearsal_surface,controller_brain_rehearsal,controller_mapping_profile_catalog,reference_style_blueprint,local_model_copilot,analog_four_baseline,analog_four_kit_catalog,analog_four_patch_genome,analog_four_patch_learning,analog_four_patch_corpus,analog_four_patch_send_plan,analog_four_oxi_macro_set_planner,analog_four_style_kit_readiness,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_style_snapshot_routing,dual_machine_style_kit_readiness,dual_machine_style_kit_selection,dual_machine_style_live_audition,dual_machine_style_mutation_intent,dual_machine_style_mutation_mock_preview,dual_machine_style_performance_set_plan,dual_machine_style_selection_mock_preview,dual_machine_style_snapshot_routing,live_analyzer_handoff,live_analyzer_targets,live_command_deck,live_control_surface,live_gui_action_reducer,live_gui_analyzer_frame,live_gui_analyzer_overlay,live_gui_analyzer_readiness,live_gui_capture_queue,live_gui_capture_review,live_gui_controller_state,live_gui_desktop_app_plan,live_gui_desktop_blueprint,live_gui_desktop_component_contract,live_gui_desktop_view_model,live_gui_implementation_bridge,live_gui_interaction_script,live_gui_performance_console_model,live_gui_playback_transcript,live_gui_playback_validation,live_gui_rehearsal_session,live_gui_render_tree,live_gui_screen_contract,live_gui_sidecar_session,live_gui_test_harness_contract,live_gui_test_harness_readiness,live_performance_readiness,live_performance_runbook,live_performance_state,live_set_cockpit,live_show_export,live_stage_rehearsal_state,live_stage_snapshot_routing,live_transition_timeline,rytm_machine_matrix,rytm_snapshot_pad_compatibility,rytm_snapshot_intelligence,rytm_snapshot_mutation_preview,rytm_style_kit_readiness,rytm_style_mutation_intent,rytm_style_mutation_mock_preview,rytm_style_mutation_render_plan,rytm_style_snapshot_routing,style_performance_arcs,style_profiles,style_targets}.py` plus `reports/performance_console/{live_kit_capture_workbench,live_kit_package_audition,live_kit_operator_package,live_kit_operator_review_ledger,payload_helpers}.py` (subpackage; was the old top-level `reports.py`) |
 | Long-form reference report | `rytm_randomizer/reports/reference_audio_atlas.py` |
 | Local AI packets | `rytm_randomizer/local_ai/{provider,local_model,rag,mutation_intent}.py` |
 | Behavior parity evaluators | `rytm_randomizer/behavior/*.py` (subpackage; was 8 top-level `behavior_*.py` files) |
@@ -37,7 +37,7 @@ Current baseline used while creating / refreshing this document:
 | Active / real MIDI boundaries | `rytm_randomizer/active_boundary.py`, `rytm_randomizer/real_midi_adapter.py`, `rytm_randomizer/mido_provider.py`, `rytm_randomizer/midi_io.py` |
 | Generic senders | `rytm_randomizer/senders/{guarded,hardware,midi_event_plan}.py` |
 | Engines (per-pad runtime cores) | `rytm_randomizer/engines/{_runtime,pad1,pad2,pad3,pad4}.py`, `rytm_randomizer/randomization.py`, `rytm_randomizer/scene_runner.py`, `rytm_randomizer/group_runner.py`, `rytm_randomizer/runtime_plan.py` |
-| Devices (cross-machine boundary) | `rytm_randomizer/devices/{base,registry,analog_rytm,analog_four,saved_kit_capture,rio145_recipes}.py`, `rytm_randomizer/devices/strategies/{elektron_kit_common,analog_four_offset_manifest,analog_four_saved_kit_codec,analog_four_saved_kit_writer,analog_four_kit_fields,analog_four_kit_recipe,analog_four_snapshot_decoder,analog_four_style_snapshot_routing,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_mutation_planner,analog_four_message_renderer,analog_rytm_saved_kit_codec,analog_rytm_kit_fields,analog_rytm_kit_recipe,analog_rytm_snapshot_decoder,analog_rytm_snapshot_routing,analog_rytm_style_snapshot_routing,analog_rytm_style_mutation_intent,analog_rytm_style_mutation_mock_preview,analog_rytm_style_mutation_render_plan,analog_rytm_mutation_planner,analog_rytm_message_renderer}.py` |
+| Devices (cross-machine boundary) | `rytm_randomizer/devices/{base,registry,analog_rytm,analog_four,digitakt,saved_kit_capture,rio145_recipes}.py`, `rytm_randomizer/devices/strategies/{elektron_kit_common,elektron_track_domain,digitakt_track_domain,digitakt_snapshot_decoder,digitakt_mutation_planner,digitakt_message_renderer,analog_four_offset_manifest,analog_four_saved_kit_codec,analog_four_saved_kit_writer,analog_four_kit_fields,analog_four_kit_recipe,analog_four_snapshot_decoder,analog_four_style_snapshot_routing,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_mutation_planner,analog_four_message_renderer,analog_rytm_saved_kit_codec,analog_rytm_kit_fields,analog_rytm_kit_recipe,analog_rytm_snapshot_decoder,analog_rytm_snapshot_routing,analog_rytm_style_snapshot_routing,analog_rytm_style_mutation_intent,analog_rytm_style_mutation_mock_preview,analog_rytm_style_mutation_render_plan,analog_rytm_mutation_planner,analog_rytm_message_renderer}.py` |
 | Snapshot Protocols + envelope | `rytm_randomizer/snapshot/{envelope,elektron_native_object,elektron_packed_payload,elektron_u14,decoder,planner,mock_runtime,mutation_scope,sysex_file}.py` |
 | Cockpit live capture + stage scope | `rytm_randomizer/cockpit/capture/{__init__,bridge,service}.py`, `rytm_randomizer/cockpit/mutation_targets.py`, immutable DTOs in `cockpit/data/stage.py`, and orchestration/policy in `cockpit/stage/{__init__,coordinator,policy}.py` |
 | Guardrails | `rytm_randomizer/guardrails/{resolver,store,schema,validation}.py` |
@@ -173,7 +173,8 @@ flowchart TB
     end
 
     subgraph ReportsPkg["reports/ subpackage<br/>(was reports.py)"]
-        RInit["__init__.py<br/>report builders"]
+        RInit["__init__.py<br/>public report facade"]
+        RCore["_core/<br/>anchor/profile, behavior parity,<br/>runtime plan, mock mapper,<br/>active boundary, bridge, registry"]
         RFormatter["formatter.py<br/>PassiveReportHeader"]
         RManualFeedback["manual_feedback_packet.py<br/>passive manual feedback evidence packet<br/>+ registered CliCommand"]
         RMatrix["rytm_machine_matrix.py<br/>12-pad machine report + CliCommand"]
@@ -288,9 +289,12 @@ flowchart TB
 
     DevAR --> DevStrategies
     DevA4 --> DevStrategies
+    DevDT --> DevStrategies
     DevStrategies --> SnapshotPkg
     DevStrategies --> DataLayer
     DevAR --> DevRegistry
+    DevA4 --> DevRegistry
+    DevDT --> DevRegistry
     DevCapture --> DevRegistry
     DevBase --> SnapshotPkg
 
@@ -309,6 +313,7 @@ flowchart TB
     SendHardware --> RealAdapter
 
     ReportsPkg --> RFormatter
+    RInit --> RCore
     ReportsPkg --> RegistryCore
     ReportsPkg --> BehaviorPkg
     ReportsPkg --> StyleAnalysis
@@ -896,7 +901,7 @@ flowchart TB
         SourceFiles["rytm_randomizer/**/*.py<br/>tests/**/*.py<br/>docs/**/*.md"]
     end
 
-    subgraph Gates["61 architecture-test modules"]
+    subgraph Gates["Selected architecture tests; current totals in closeout report"]
         Gate1["test_no_any_escape_hatches<br/>(Gate 6)"]
         Gate2["test_no_new_top_level_modules<br/>(Gate 9)"]
         Gate3["test_no_string_literal_mode_dispatch<br/>(Gate 10)"]
@@ -912,6 +917,9 @@ flowchart TB
         Gate13["test_ci_workflow"]
         Gate14["test_data_not_code<br/>(data vs code)"]
         Gate15["test_device_protocol_enforcement<br/>(NEW in PR #43)<br/>7 sub-tests for Device Protocol"]
+        Gate16["test_no_device_identity_branching<br/>capability-based family dispatch"]
+        Gate17["test_tests_do_not_mutate_tracked_files<br/>isolated test outputs"]
+        Gate18["test_tripwires_actually_fire<br/>negative controls for guards"]
     end
 
     subgraph Allowlists["Drained-allowlist mechanic"]

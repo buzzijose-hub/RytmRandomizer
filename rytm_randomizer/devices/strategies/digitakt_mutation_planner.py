@@ -10,9 +10,9 @@ Analog Four precedent and satisfies
 from real captures with exact re-encode evidence before anything becomes
 sendable, and must never be inferred from live CC facts.
 
-The scope / target / lock plumbing is fully wired even though no events
-are emitted, so promoting offsets later is a one-flag change rather than a
-rewrite -- and the refusal is visible and tested today.
+The scope / target / lock plumbing validates passive requests, but no
+events are synthesized. Promotion requires a separate hardware-evidenced
+implementation; changing a flag cannot enable this planner.
 """
 
 from __future__ import annotations
@@ -20,10 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Final
 
-from ...data.digitakt_saved_kit_layout import (
-    DIGITAKT_OFFSETS_PROMOTED,
-    DIGITAKT_UNPROMOTED_REASON,
-)
+from ...data.digitakt_saved_kit_layout import DIGITAKT_UNPROMOTED_REASON
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
 from ...snapshot.mutation_scope import DEFAULT_MUTATION_SCOPE, MutationScope
@@ -88,54 +85,38 @@ class DigitaktMutationPlanner:
                 "DigitaktMutationPlanner.plan: snapshot must be a "
                 f"DigitaktKitSnapshot, got {type(snapshot).__name__}"
             )
-        if depth < 0 or depth > MAX_DIGITAKT_DEPTH:
+        if snapshot.device_id != self.device_id:
+            raise ValueError("DigitaktMutationPlanner.plan: snapshot device does not match planner")
+        if type(depth) is not int or depth < 0 or depth > MAX_DIGITAKT_DEPTH:
             raise ValueError(
                 f"DigitaktMutationPlanner.plan: depth must be in [0, {MAX_DIGITAKT_DEPTH}], "
-                f"got {depth}"
+                f"got {depth!r}; an integer is required"
             )
 
         # Validate targets/locks even though nothing is emitted, so an
         # out-of-domain target fails loudly now rather than at promotion.
-        effective_tracks = scope.validated_effective_ids(
+        scope.validated_effective_ids(
             self.track_domain.track_ids,
             item_label="Digitakt track",
         )
 
-        if not DIGITAKT_OFFSETS_PROMOTED or not snapshot.offsets_promoted:
-            get_metrics().record_error("digitakt_mutation_plan_semantic_offsets_unpromoted")
-            _logger.warning(
-                "digitakt_mutation_plan_blocked",
-                extra={
-                    "device_id": self.device_id,
-                    "locked_track_ids": sorted(scope.locked_ids),
-                    "reason": "semantic_offsets_unpromoted",
-                    "target_track_ids": sorted(scope.target_ids),
-                },
-            )
-            return DigitaktMutationPlan(
-                snapshot=snapshot,
-                depth=depth,
-                events=(),
-                ready=False,
-                readiness_reason=DIGITAKT_UNPROMOTED_REASON,
-                scope=scope,
-            )
-
-        if not effective_tracks:  # pragma: no cover - unreachable until offsets are promoted
-            get_metrics().record_error("digitakt_mutation_plan_no_sendable_tracks")
-            return DigitaktMutationPlan(
-                snapshot=snapshot,
-                depth=depth,
-                events=(),
-                ready=False,
-                readiness_reason="no sendable Digitakt tracks after targets and locks",
-                scope=scope,
-            )
-
-        # Reached only once offsets are promoted; event synthesis lands in
-        # that same change set, with fixture-backed evidence.
-        raise NotImplementedError(  # pragma: no cover - guarded by the flag above
-            "Digitakt event synthesis lands with the offset-promotion workstream"
+        get_metrics().record_error("digitakt_mutation_plan_semantic_offsets_unpromoted")
+        _logger.warning(
+            "digitakt_mutation_plan_blocked",
+            extra={
+                "device_id": self.device_id,
+                "locked_track_ids": sorted(scope.locked_ids),
+                "reason": "semantic_offsets_unpromoted",
+                "target_track_ids": sorted(scope.target_ids),
+            },
+        )
+        return DigitaktMutationPlan(
+            snapshot=snapshot,
+            depth=depth,
+            events=(),
+            ready=False,
+            readiness_reason=DIGITAKT_UNPROMOTED_REASON,
+            scope=scope,
         )
 
 

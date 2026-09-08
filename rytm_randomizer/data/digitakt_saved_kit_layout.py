@@ -2,9 +2,9 @@
 
 **Promotion status: CANDIDATE.** Unlike
 :mod:`rytm_randomizer.data.analog_four_saved_kit_layout`, nothing in this
-module has been validated against a physical Digitakt. Only envelope
-identity bytes and the in-the-clear ASCII name field are recorded -- the
-parts the shared Elektron envelope helpers already read generically.
+module has been validated against a physical Digitakt. The family/name
+positions describe the repository's synthetic candidate format only; they
+are not manual-backed proof of an actual saved-project dump layout.
 
 Deliberately **absent** here, and required before any Digitakt mutation can
 become sendable (``.claude/rules/targeted-mutation-safety.md`` #6):
@@ -24,10 +24,8 @@ from __future__ import annotations
 
 from typing import Final
 
-#: Elektron device-family bytes, read from the SysEx envelope header.
-#: These identify which machine sent a dump and are visible to any MIDI
-#: monitor on the cable. Used only to route a payload to the right
-#: decoder -- they carry no parameter-layout meaning.
+#: Candidate family selectors, used only by synthetic-layout intake.
+#: Real captures must validate these values and positions before promotion.
 DIGITAKT_MK1_FAMILY_BYTE: Final[int] = 0x0C
 DIGITAKT_II_FAMILY_BYTE: Final[int] = 0x10
 

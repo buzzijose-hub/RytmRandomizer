@@ -4,9 +4,12 @@ Two Digitakt generations are in scope and they do **not** share a track
 domain:
 
 * **Digitakt (MK1)** -- 8 audio tracks + 8 MIDI tracks. Source: Digitakt
-  User Manual ENG OS1.30, Appendix A: MIDI.
-* **Digitakt II** -- 16 audio tracks. Source: Digitakt II User Manual ENG
-  OS1.01, Appendix A: MIDI.
+  User Manual ENG OS1.52A, Appendix B, pages 88-89.
+* **Digitakt II** -- 16 tracks, each configurable as audio or MIDI. Source:
+  Digitakt II User Manual ENG OS1.10, Appendix B, pages 105-106.
+
+Pinned official sources and correction evidence:
+``docs/superpowers/plans/2026-09-08-digitakt-review-repairs.md``.
 
 Per the data-not-code rule these tables live here exactly once and are
 re-exported through :mod:`rytm_randomizer.data`. Strategy modules look CC
@@ -35,8 +38,9 @@ DIGITAKT_NRPN_PARAMETER_MSB_CC: Final[int] = 99
 DIGITAKT_NRPN_PARAMETER_LSB_CC: Final[int] = 98
 DIGITAKT_NRPN_DATA_MSB_CC: Final[int] = 6
 
-#: Audio-track counts per generation. MIDI tracks are sequencer-only and
-#: are not mutation targets, so they are excluded from the track domain.
+#: MK1 has eight audio tracks, excluding its eight dedicated MIDI tracks.
+#: II has sixteen audio-capable tracks; each may instead use a MIDI machine.
+#: This upper-bound domain does not establish a captured track's machine mode.
 DIGITAKT_MK1_AUDIO_TRACK_COUNT: Final[int] = 8
 DIGITAKT_II_AUDIO_TRACK_COUNT: Final[int] = 16
 
@@ -71,7 +75,7 @@ class DigitaktCcMapping:
 
 
 # ---------------------------------------------------------------------------
-# Digitakt (MK1) -- Source: Digitakt User Manual ENG OS1.30, Appendix A: MIDI.
+# Digitakt (MK1) -- OS1.52A, Appendix B.1/B.3/B.4/B.5, pages 88-89.
 # ---------------------------------------------------------------------------
 _DIGITAKT_MK1_TRACK_CC: Final[Mapping[str, DigitaktCcMapping]] = MappingProxyType(
     {
@@ -115,63 +119,63 @@ _DIGITAKT_MK1_TRACK_CC: Final[Mapping[str, DigitaktCcMapping]] = MappingProxyTyp
             parameter="Filter Envelope Depth",
             section="FILTER",
             encoder="H",
-            cc_msb=76,
+            cc_msb=77,
             cc_lsb=None,
             nrpn_msb=1,
-            nrpn_lsb=26,
+            nrpn_lsb=23,
         ),
         "Amp Overdrive": DigitaktCcMapping(
             parameter="Amp Overdrive",
             section="AMP",
-            encoder="A",
+            encoder="D",
             cc_msb=81,
             cc_lsb=None,
             nrpn_msb=1,
-            nrpn_lsb=30,
+            nrpn_lsb=27,
         ),
         "Sample Tune": DigitaktCcMapping(
             parameter="Sample Tune",
             section="SRC",
-            encoder="B",
+            encoder="A",
             cc_msb=16,
             cc_lsb=None,
             nrpn_msb=1,
-            nrpn_lsb=8,
+            nrpn_lsb=0,
         ),
-        "Sample Slot": DigitaktCcMapping(
-            parameter="Sample Slot",
+        "Sample Select": DigitaktCcMapping(
+            parameter="Sample Select",
             section="SRC",
             encoder="D",
             cc_msb=19,
             cc_lsb=None,
             nrpn_msb=1,
-            nrpn_lsb=10,
+            nrpn_lsb=3,
         ),
         "Delay Send": DigitaktCcMapping(
             parameter="Delay Send",
             section="AMP",
-            encoder="G",
-            cc_msb=30,
+            encoder="E",
+            cc_msb=82,
             cc_lsb=None,
             nrpn_msb=1,
-            nrpn_lsb=36,
+            nrpn_lsb=28,
         ),
         "Reverb Send": DigitaktCcMapping(
             parameter="Reverb Send",
             section="AMP",
-            encoder="H",
-            cc_msb=31,
+            encoder="F",
+            cc_msb=83,
             cc_lsb=None,
             nrpn_msb=1,
-            nrpn_lsb=37,
+            nrpn_lsb=29,
         ),
     }
 )
 
 # ---------------------------------------------------------------------------
-# Digitakt II -- Source: Digitakt II User Manual ENG OS1.01, Appendix A: MIDI.
-# The DT II keeps the MK1 assignments for the rows below and extends the
-# track domain to 16.
+# Digitakt II -- OS1.10, Appendix B.1/B.3/B.4/B.7, pages 105-106.
+# The assignments differ from MK1. Source Sample Select is NRPN-only;
+# the separate MISC Sample Slot/Bank controls (page 109) are not this row.
 # ---------------------------------------------------------------------------
 _DIGITAKT_II_TRACK_CC: Final[Mapping[str, DigitaktCcMapping]] = MappingProxyType(
     {
@@ -202,8 +206,8 @@ _DIGITAKT_II_TRACK_CC: Final[Mapping[str, DigitaktCcMapping]] = MappingProxyType
             nrpn_msb=1,
             nrpn_lsb=20,
         ),
-        "Filter Resonance": DigitaktCcMapping(
-            parameter="Filter Resonance",
+        "Filter Data Entry F": DigitaktCcMapping(
+            parameter="Filter Data Entry F",
             section="FILTER",
             encoder="F",
             cc_msb=75,
@@ -215,52 +219,52 @@ _DIGITAKT_II_TRACK_CC: Final[Mapping[str, DigitaktCcMapping]] = MappingProxyType
             parameter="Filter Envelope Depth",
             section="FILTER",
             encoder="H",
-            cc_msb=76,
+            cc_msb=77,
             cc_lsb=None,
             nrpn_msb=1,
-            nrpn_lsb=26,
+            nrpn_lsb=23,
         ),
-        "Amp Overdrive": DigitaktCcMapping(
-            parameter="Amp Overdrive",
-            section="AMP",
-            encoder="A",
-            cc_msb=81,
+        "FX Overdrive": DigitaktCcMapping(
+            parameter="FX Overdrive",
+            section="FX",
+            encoder="B",
+            cc_msb=57,
             cc_lsb=None,
-            nrpn_msb=1,
-            nrpn_lsb=30,
+            nrpn_msb=None,
+            nrpn_lsb=None,
         ),
         "Sample Tune": DigitaktCcMapping(
             parameter="Sample Tune",
             section="SRC",
-            encoder="B",
+            encoder="A",
             cc_msb=16,
             cc_lsb=None,
             nrpn_msb=1,
-            nrpn_lsb=8,
+            nrpn_lsb=0,
         ),
-        "Sample Slot": DigitaktCcMapping(
-            parameter="Sample Slot",
+        "Sample Select": DigitaktCcMapping(
+            parameter="Sample Select",
             section="SRC",
             encoder="D",
-            cc_msb=19,
+            cc_msb=None,
             cc_lsb=None,
             nrpn_msb=1,
-            nrpn_lsb=10,
+            nrpn_lsb=3,
         ),
         "Delay Send": DigitaktCcMapping(
             parameter="Delay Send",
-            section="AMP",
-            encoder="G",
-            cc_msb=30,
+            section="FX",
+            encoder="E",
+            cc_msb=84,
             cc_lsb=None,
             nrpn_msb=1,
             nrpn_lsb=36,
         ),
         "Reverb Send": DigitaktCcMapping(
             parameter="Reverb Send",
-            section="AMP",
-            encoder="H",
-            cc_msb=31,
+            section="FX",
+            encoder="F",
+            cc_msb=85,
             cc_lsb=None,
             nrpn_msb=1,
             nrpn_lsb=37,

@@ -55,13 +55,16 @@ class DigitaktSnapshotDecoder:
     def decode(self, raw: bytes, slot: int) -> DigitaktKitSnapshot:
         """Decode ``raw`` into a :class:`DigitaktKitSnapshot`.
 
-        Validates the shared Elektron envelope and reads the in-the-clear
-        ASCII kit name. Parameter extraction belongs to a later
+        Checks the candidate manufacturer/family prefix and name field.
+        This is synthetic-layout intake, not a verified hardware dump codec.
+        Parameter extraction belongs to a later
         offset-promotion workstream and is deliberately absent.
         """
 
-        if slot < 0:
-            raise ValueError("DigitaktSnapshotDecoder.decode: slot must be non-negative")
+        if type(slot) is not int or slot < 0:
+            raise ValueError(
+                "DigitaktSnapshotDecoder.decode: slot must be non-negative integer"
+            )
         if not raw.startswith(ELEKTRON_MFR_ID):
             raise ValueError("DigitaktSnapshotDecoder.decode: missing Elektron manufacturer id")
         if len(raw) <= _FAMILY_BYTE_INDEX:
