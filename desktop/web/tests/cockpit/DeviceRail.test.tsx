@@ -385,7 +385,7 @@ describe('DeviceRail', () => {
 
     const a4Stage = screen.getByTestId('device-card-analog-four-mk2-stage');
     expect(a4Stage).toHaveTextContent('Planblocked');
-    expect(a4Stage).toHaveTextContent('Blocked a4 semantic mapping unpromoted');
+    expect(a4Stage).toHaveTextContent('Blocked a4 hardware audition validation pending');
     expect(a4Stage).toHaveTextContent('Recovery capture current kit');
 
     const oxi = screen.getByTestId('oxi-ownership-boundary');

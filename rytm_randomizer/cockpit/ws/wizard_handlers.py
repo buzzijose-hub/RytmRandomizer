@@ -54,8 +54,9 @@ from ..wizard.state import (
     narrow_kind,
     narrow_mode,
 )
-from .handlers import HandlerResult, build_profile_catalog_changed
+from .handlers import build_profile_catalog_changed
 from .protocol import EVENT_PROFILE_CHANGED
+from .result import HandlerResult
 from .session import CockpitSession
 from .wizard_protocol import (
     COMMAND_WIZARD_ADD_SOURCE,

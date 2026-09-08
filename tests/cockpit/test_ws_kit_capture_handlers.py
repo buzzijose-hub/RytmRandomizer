@@ -219,7 +219,7 @@ def test_a4_capture_retains_exact_evidence_without_touching_rytm_state(
 
     assert ack["ok"] is True
     assert ack["kit_capture"]["device_id"] == "analog_four_mk2"
-    assert ack["kit_capture"]["parameter_readiness"] == "exact_kit_anchor_offsets_candidate"
+    assert ack["kit_capture"]["parameter_readiness"] == "filter1_frequency_offline_ready"
     assert [event["type"] for event in session.pending_events] == [
         EVENT_KIT_CAPTURES_CHANGED,
         EVENT_DUAL_MACHINE_STAGE_CHANGED,
