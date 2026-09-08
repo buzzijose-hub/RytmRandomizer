@@ -8,11 +8,18 @@ ASCII names, recipe input validation, and recipe build metadata.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import cast
 
+# Compatibility re-exports: recipes retain their public API while all parsing
+# is implemented once at the neutral guardrail boundary.
+from ...guardrails.input_validation import require_exact_keys as require_exact_keys
+from ...guardrails.input_validation import require_float as require_float
+from ...guardrails.input_validation import require_int as require_int
+from ...guardrails.input_validation import require_object as require_recipe_mapping
+from ...guardrails.input_validation import require_recipe_bool as require_recipe_bool
+from ...guardrails.input_validation import require_sequence as require_sequence
 from ...observability.errors import ElektronKitFieldError
 from ...snapshot import ElektronNativeObjectMessage
 
@@ -64,66 +71,6 @@ def write_fixed_width_ascii(
     data[offset : offset + storage_length] = stored
 
 
-def require_recipe_mapping(
-    value: object,
-    label: str,
-    error_type: type[ValueError],
-) -> Mapping[str, object]:
-    if not isinstance(value, Mapping):
-        raise error_type(f"{label} must be an object")
-    raw = cast(Mapping[object, object], value)
-    if not all(isinstance(key, str) for key in raw):
-        raise error_type(f"{label} keys must be strings")
-    return {str(key): item for key, item in raw.items()}
-
-
-def require_sequence(
-    value: object,
-    label: str,
-    error_type: type[ValueError],
-) -> Sequence[object]:
-    if not isinstance(value, Sequence) or isinstance(value, (str, bytes, bytearray)):
-        raise error_type(f"{label} must be an array")
-    return cast(Sequence[object], value)
-
-
-def require_exact_keys(
-    mapping: Mapping[str, object],
-    expected: frozenset[str],
-    label: str,
-    error_type: type[ValueError],
-) -> None:
-    supplied = set(mapping)
-    missing = expected - supplied
-    extra = supplied - expected
-    if not missing and not extra:
-        return
-    parts: list[str] = []
-    if missing:
-        parts.append(f"missing {sorted(missing)}")
-    if extra:
-        parts.append(f"unknown {sorted(extra)}")
-    raise error_type(f"{label} is incomplete: " + "; ".join(parts))
-
-
-def require_int(value: object, label: str, error_type: type[ValueError]) -> int:
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise error_type(f"{label} must be an integer")
-    return value
-
-
-def require_float(value: object, label: str, error_type: type[ValueError]) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise error_type(f"{label} must be numeric")
-    return float(value)
-
-
-def require_recipe_bool(value: object, label: str, error_type: type[ValueError]) -> int:
-    if not isinstance(value, bool):
-        raise error_type(f"{label} must be true or false")
-    return int(value)
-
-
 def require_enum(
     field: str,
     value: object,
@@ -165,3 +112,18 @@ def require_named_index(
             f"invalid {field} index {numeric}; expected one of: {sorted(set(choices.values()))}"
         )
     return numeric
+
+
+__all__ = [
+    "KitRecipeBuildResult",
+    "read_fixed_width_ascii",
+    "write_fixed_width_ascii",
+    "require_recipe_mapping",
+    "require_sequence",
+    "require_exact_keys",
+    "require_int",
+    "require_float",
+    "require_recipe_bool",
+    "require_enum",
+    "require_named_index",
+]

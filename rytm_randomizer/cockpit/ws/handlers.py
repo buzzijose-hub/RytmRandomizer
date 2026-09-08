@@ -66,7 +66,6 @@ import json
 import time
 from collections import OrderedDict
 from collections.abc import Awaitable, Callable, Mapping
-from dataclasses import dataclass, field
 from typing import Final, Protocol, SupportsFloat, SupportsInt, cast, runtime_checkable
 
 from ...devices import get_device
@@ -150,9 +149,12 @@ from .protocol import (
     EVENT_PROFILE_CHANGED,
     EVENT_SEND_PLAN_CHANGED,
     EVENT_SESSION_STATUS,
+    EVENT_SHOW_BANK_CHANGED,
     EVENT_SNAPSHOT_CHANGED,
     WS_ERROR_CODES,
+    ShowBankChangedEvent,
 )
+from .result import HandlerResult
 from .session import CockpitSession
 
 _logger = get_logger(__name__)
@@ -160,7 +162,7 @@ _logger = get_logger(__name__)
 
 Used for the structured forensic record that backs every categorical
 error envelope returned by :func:`handle_command` (PR 14 / RR4f). The
-``extra=`` payload carries ``repr(exc)`` (which encodes type + args
+``extra=`` payload carries bounded ``repr(exc)`` (which encodes type + args
 without using ``str(exc)`` — the AST guard in
 ``tests/architecture/test_no_raw_exception_messages_on_wire.py`` flags
 ``str(<exc-name>)`` regardless of whether the result reaches the wire,
@@ -174,6 +176,9 @@ land in the package's structured stream without touching this file's
 imports. See ``OBSERVABILITY_REVIEW.md`` Phase 5.
 """
 
+_HANDLER_EXCEPTION_REPR_MAX_CHARS: Final[int] = 1024
+"""Maximum logged exception detail, including any truncation marker."""
+
 
 @runtime_checkable
 class EventEmitter(Protocol):
@@ -185,21 +190,6 @@ class EventEmitter(Protocol):
 
     async def send_event(self, event: dict[str, object]) -> None:
         """Send one event payload (a plain dict, JSON-serialisable)."""
-
-
-@dataclass
-class HandlerResult:
-    """A handler's output: the ack body + the post-ack events.
-
-    ``ack`` is the partial :class:`CommandAck` (no ``request_id``); the
-    dispatcher merges in the ``request_id`` before sending. ``events``
-    is the list of event dicts the dispatcher will broadcast **after**
-    the ack, in declaration order — matching the spec's "ack first,
-    then events" wire-ordering contract.
-    """
-
-    ack: dict[str, object]
-    events: list[dict[str, object]] = field(default_factory=list[dict[str, object]])
 
 
 # ---------------------------------------------------------------------------
@@ -605,6 +595,7 @@ def _recompute_candidate(
         session.depth,
         session.seed,
         target_pad_ids=target_pad_ids,
+        locked_pad_ids=frozenset(session.pad_locks),
     )
     _recompute_cache[key] = candidate
     # Evict the least-recently-used entry once over capacity. ``popitem
@@ -675,7 +666,8 @@ _HANDLER_INTERNAL_MESSAGE: Final[str] = "internal error processing command"
 def _classify_handler_exception(exc: BaseException) -> tuple[str, str]:
     """Map a handler-raised exception to a ``(code, canonical_message)`` pair.
 
-    * :class:`KeyError` / :class:`ValueError` → ``ERR_VALIDATION`` --
+    * :class:`KeyError` / :class:`ValueError` / :class:`FileExistsError`
+      → ``ERR_VALIDATION`` --
       both arise from invalid wire-supplied data (a missing dict key
       inside a handler that ``cmd[...]``-ed it, or an out-of-range value
       caught by ``int()`` / ``float()``).
@@ -689,7 +681,7 @@ def _classify_handler_exception(exc: BaseException) -> tuple[str, str]:
     caller MUST NOT pass ``str(exc)`` through to the wire (RR4f).
     """
 
-    if isinstance(exc, (KeyError, ValueError)):
+    if isinstance(exc, (KeyError, ValueError, FileExistsError)):
         return ERR_VALIDATION, _HANDLER_VALIDATION_MESSAGE
     return ERR_INTERNAL, _HANDLER_INTERNAL_MESSAGE
 
@@ -730,6 +722,16 @@ def _redacted_exception_repr(
         # it may contain an operator's machine-local port name.
         return f"{type(exc).__name__}('<redacted-midi-port>')"
     return repr(exc)
+
+
+def _bounded_handler_exception_repr(exc: BaseException) -> str:
+    """Keep useful exception context without logging an oversized rejected request."""
+
+    detail = repr(exc)
+    if len(detail) <= _HANDLER_EXCEPTION_REPR_MAX_CHARS:
+        return detail
+    marker = "..."
+    return detail[: _HANDLER_EXCEPTION_REPR_MAX_CHARS - len(marker)] + marker
 
 
 # ---------------------------------------------------------------------------
@@ -787,7 +789,7 @@ async def _handle_analyze_patch_genome(
     session.stage_coordinator.record_candidate(
         ANALOG_FOUR_DEVICE_ID,
         ready=False,
-        blocked_reason="a4_semantic_mapping_unpromoted",
+        blocked_reason="a4_hardware_audition_validation_pending",
     )
     session.stage_coordinator.record_plan(ANALOG_FOUR_DEVICE_ID, ready=False)
     _logger.info(
@@ -864,6 +866,9 @@ async def _handle_capture_current_kit(
             error="current-kit capture failed",
         )
         failure_events: list[dict[str, object]] = []
+        if session.show_kit_forge is not None:
+            if session.show_kit_forge.revoke_hardware_evidence():
+                failure_events.extend(_show_bank_state_events(session))
         if device_id == ANALOG_RYTM_DEVICE_ID:
             failure_events.extend(_clear_send_plan_if_needed(session))
             session.current_candidate = None
@@ -903,6 +908,8 @@ async def _handle_capture_current_kit(
     else:
         _record_stage_scope(session, ANALOG_FOUR_DEVICE_ID)
     session.kit_captures[device_id] = result
+    if session.show_kit_forge is not None and session.show_kit_forge.observe_capture(result):
+        events.extend(_show_bank_state_events(session))
     events.insert(0, _build_kit_captures_changed(session))
     events.append(_build_dual_machine_stage_changed(session))
     return HandlerResult(
@@ -1203,9 +1210,36 @@ async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> Handl
                 "armed SEND requires confirmation of the current prepared plan",
             )
         )
+    live_hardware_audition = session.armed_apply is not None or session.device.is_armed
+    hardware_evidence_events: list[dict[str, object]] = []
+    if live_hardware_audition and session.show_kit_forge is not None:
+        try:
+            session.show_kit_forge.require_rytm_audition_source(
+                sent_plan.candidate_id,
+                session.kit_captures,
+                manually_reloaded=cmd.get("show_bank_source_reloaded") is True,
+                source_snapshot_id=sent_plan.source_snapshot_id,
+            )
+        except ValueError as exc:
+            _logger.warning(
+                "show_kit_source_reload_required",
+                extra={"candidate_id": sent_plan.candidate_id, "exception_repr": repr(exc)},
+            )
+            return HandlerResult(
+                ack=_error_ack(
+                    ERR_VALIDATION,
+                    "Show Kit SEND requires manually reloading its Rytm source slot, "
+                    "capturing that exact source after the last hardware attempt or disconnect, "
+                    "then reselecting the candidate and confirming the manual reload",
+                )
+            )
+        if cmd.get("confirm") is True:
+            if session.show_kit_forge.revoke_hardware_evidence():
+                hardware_evidence_events = _show_bank_state_events(session)
     if session.armed_apply is not None:
         refusal = _armed_send_over_seam(session, sent_plan, cmd)
         if refusal is not None:
+            refusal.events.extend(hardware_evidence_events)
             return refusal
     elif session.hardware_intent:
         # The operator armed and never explicitly disarmed, but the seam is
@@ -1253,7 +1287,7 @@ async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> Handl
         session.stage_coordinator.record_send(ANALOG_RYTM_DEVICE_ID, succeeded=False)
         return HandlerResult(
             ack=_error_ack(ERR_VALIDATION, "send failed at the guarded device boundary"),
-            events=[_build_dual_machine_stage_changed(session)],
+            events=[_build_dual_machine_stage_changed(session), *hardware_evidence_events],
         )
     session.history_store.append_post_send(new_snapshot, via="send")
     session.unsaved_sends += 1
@@ -1261,6 +1295,34 @@ async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> Handl
     session.current_candidate = None
     session.current_send_plan = None
     session.stage_coordinator.record_send(ANALOG_RYTM_DEVICE_ID, succeeded=True)
+    show_bank_events: list[dict[str, object]] = hardware_evidence_events
+    if live_hardware_audition and session.show_kit_forge is not None:
+        try:
+            recorded = session.show_kit_forge.record_live_rytm_audition(sent_plan.candidate_id)
+        except (OSError, RuntimeError, TypeError, ValueError, RytmRandomizerError) as exc:
+            # The bytes have already reached the guarded hardware seam.  Do
+            # not report SEND as failed (which could invite a duplicate
+            # retry); record the local-catalog failure separately.
+            _logger.warning(
+                "show_kit_forge_live_audition_record_failed",
+                extra={
+                    "candidate_id": sent_plan.candidate_id,
+                    "exception_type": type(exc).__name__,
+                    "exception_repr": repr(exc),
+                },
+            )
+            session.error_journal.record(
+                "show_kit_forge.live_audition_record_failed",
+                "Rytm SEND succeeded but the local show-bank audition marker failed",
+                context={"candidate_id": sent_plan.candidate_id},
+            )
+        else:
+            if recorded is not None:
+                show_bank_event: ShowBankChangedEvent = {
+                    "type": EVENT_SHOW_BANK_CHANGED,
+                    "show_bank": session.show_kit_forge.state_dict(),
+                }
+                show_bank_events.append(dict(show_bank_event))
     return HandlerResult(
         ack={
             "ok": True,
@@ -1274,6 +1336,7 @@ async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> Handl
             _build_send_plan_changed(None),
             _build_session_status(session),
             _build_dual_machine_stage_changed(session),
+            *show_bank_events,
         ],
     )
 
@@ -2187,6 +2250,13 @@ def _armed_send_over_seam(
     return None
 
 
+def _show_bank_state_events(session: CockpitSession) -> list[dict[str, object]]:
+    workspace = session.show_kit_forge
+    if workspace is None:
+        return []
+    return [{"type": EVENT_SHOW_BANK_CHANGED, "show_bank": workspace.state_dict()}]
+
+
 def _teardown_armed_state(session: CockpitSession) -> None:
     """Return the session to the passive baseline (idempotent).
 
@@ -2207,6 +2277,8 @@ def _teardown_armed_state(session: CockpitSession) -> None:
     if armed is not None:
         armed.disarm()
     session.stage_coordinator.record_rytm_authority(armed=False)
+    if session.show_kit_forge is not None:
+        session.show_kit_forge.revoke_hardware_evidence()
     _logger.info(
         "cockpit_armed_state_revoked",
         extra={"had_armed_seam": armed is not None},
@@ -2252,6 +2324,12 @@ def build_armed_watchdog(
     """
 
     def _on_connection_change(state: ConnectionState) -> None:
+        phase_lost = state.phase not in ("listening", "armed")
+        if phase_lost and session.show_kit_forge is not None:
+            changed = session.show_kit_forge.revoke_hardware_evidence()
+            if changed and broadcaster is not None:
+                for event in _show_bank_state_events(session):
+                    broadcaster(event)
         if session.armed_apply is None and not session.device.is_armed:
             return
         armed_port = None
@@ -2259,7 +2337,6 @@ def build_armed_watchdog(
             armed_port = session.armed_apply.port_name
         if armed_port is None:
             armed_port = _midi_port(session)
-        phase_lost = state.phase not in ("listening", "armed")
         port_lost = armed_port is not None and armed_port not in state.available_outputs
         if not phase_lost and not port_lost:
             return
@@ -2284,6 +2361,9 @@ def build_armed_watchdog(
         if broadcaster is not None:
             broadcaster(_build_session_status(session))
             broadcaster(_build_dual_machine_stage_changed(session))
+            if not phase_lost:
+                for event in _show_bank_state_events(session):
+                    broadcaster(event)
 
     return _on_connection_change
 
@@ -2513,6 +2593,7 @@ async def _handle_disarm(_cmd: dict[str, object], session: CockpitSession) -> Ha
         events=[
             _build_session_status(session),
             _build_dual_machine_stage_changed(session),
+            *_show_bank_state_events(session),
         ],
     )
 
@@ -2695,6 +2776,13 @@ def _resolve_handler(cmd_type: str) -> HandlerFn | None:
 
     if cmd_type in _CORE_HANDLERS:
         return _CORE_HANDLERS[cmd_type]
+    if cmd_type.startswith("show_bank_"):
+        # Show Kit Forge is loaded only when its panel requests state, keeping
+        # the fixed eleven-event bootstrap and ordinary passive edit path
+        # unchanged.
+        from .show_bank_handlers import SHOW_BANK_HANDLERS  # noqa: PLC0415
+
+        return SHOW_BANK_HANDLERS.get(cmd_type)
     if cmd_type.startswith("wizard_"):
         # Lazy import keeps the wizard dispatcher table out of the import
         # graph of cockpit boot paths that never touch the wizard.
@@ -2829,17 +2917,18 @@ async def handle_command(envelope: dict[str, object], session: CockpitSession) -
     with operation(op_name, logger=_logger, request_id=request_id):
         try:
             result = await handler(cmd, session)
-        except (KeyError, TypeError, ValueError, RuntimeError, RytmRandomizerError) as exc:
+        except (KeyError, OSError, TypeError, ValueError, RuntimeError, RytmRandomizerError) as exc:
             # PR 14 / RR4f: never echo the underlying exception text back
             # over the wire -- exception messages routinely embed filesystem
             # paths, profile ids the server has rejected, or stack-traceable
-            # details. Map to a categorical code and surface the full
+            # details. Map to a categorical code and surface the bounded
             # forensic record via :data:`_logger` so operators can still
             # correlate. ``repr(exc)`` is used in the structured ``extra``
             # payload (rather than ``str(exc)``) so the AST guard in
             # ``tests/architecture/test_no_raw_exception_messages_on_wire.py``
             # stays at floor 0 for this file -- ``repr`` still carries the
-            # exception type + args for forensic purposes.
+            # exception type + args for forensic purposes. Only the log copy
+            # is truncated; the internal exception retains its full details.
             code, message = _classify_handler_exception(exc)
             # Wave 4: taxonomy errors also land in the session's bounded
             # error journal so the ``diagnostics`` command can replay the
@@ -2862,7 +2951,7 @@ async def handle_command(envelope: dict[str, object], session: CockpitSession) -
                     "code": code,
                     "cmd_type": cmd_type,
                     "exception_type": type(exc).__name__,
-                    "exception_repr": repr(exc),
+                    "exception_repr": _bounded_handler_exception_repr(exc),
                     # OBS O4 — when ``exc`` is a :class:`RytmRandomizerError`
                     # subclass (one of the arms of the except tuple above),
                     # this is the stable ``<subsystem>.<verb>.<noun>``

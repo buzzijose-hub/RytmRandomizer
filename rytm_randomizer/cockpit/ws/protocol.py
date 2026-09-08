@@ -37,6 +37,8 @@ from __future__ import annotations
 from typing import Final, Literal, NotRequired, TypedDict
 
 from ..capture import KitCaptureDeviceId, KitCaptureResultDict
+from ..data.a4_preparation import A4PreparationReportDict
+from ..data.show_bank import ShowBankWorkspaceStateDict
 from ..data.stage import DualMachineStageStateDict
 from ..mutation_targets import MutationTargetsDict
 from .wizard_protocol import WIZARD_COMMAND_TYPES, WIZARD_EVENT_TYPES
@@ -225,6 +227,14 @@ carries the full fresh record listing. Only emitted when a
 session — unwired sessions stay byte-identical on the wire.
 """
 
+EVENT_SHOW_BANK_CHANGED: Final[Literal["show_bank_changed"]] = "show_bank_changed"
+"""Emitted after explicit Show Kit Forge reads and lifecycle mutations.
+
+The event carries the complete server-authoritative Show Bank workspace.
+It is intentionally requested after panel mount rather than added to the
+fixed bootstrap, preserving the existing passive eleven-event handshake.
+"""
+
 EVENT_TYPES: Final[frozenset[str]] = (
     frozenset(
         {
@@ -244,6 +254,7 @@ EVENT_TYPES: Final[frozenset[str]] = (
             EVENT_CONNECTION_CHANGED,
             EVENT_MIDI_ACTIVITY,
             EVENT_LIBRARY_CHANGED,
+            EVENT_SHOW_BANK_CHANGED,
         }
     )
     | WIZARD_EVENT_TYPES
@@ -319,6 +330,48 @@ COMMAND_LIBRARY_IMPORT_CAPTURES: Final[Literal["library_import_captures"]] = (
     "library_import_captures"
 )
 
+COMMAND_SHOW_BANK_LIST: Final[Literal["show_bank_list"]] = "show_bank_list"
+COMMAND_SHOW_BANK_CREATE: Final[Literal["show_bank_create"]] = "show_bank_create"
+COMMAND_SHOW_BANK_SELECT: Final[Literal["show_bank_select"]] = "show_bank_select"
+COMMAND_SHOW_BANK_UPDATE: Final[Literal["show_bank_update"]] = "show_bank_update"
+COMMAND_SHOW_BANK_ADOPT_SOURCES: Final[Literal["show_bank_adopt_sources"]] = (
+    "show_bank_adopt_sources"
+)
+COMMAND_SHOW_BANK_GENERATE_CANDIDATES: Final[Literal["show_bank_generate_candidates"]] = (
+    "show_bank_generate_candidates"
+)
+COMMAND_SHOW_BANK_SELECT_CANDIDATE: Final[Literal["show_bank_select_candidate"]] = (
+    "show_bank_select_candidate"
+)
+COMMAND_SHOW_BANK_MARK_FAVORITE: Final[Literal["show_bank_mark_favorite"]] = (
+    "show_bank_mark_favorite"
+)
+COMMAND_SHOW_BANK_ATTEST_HARDWARE_SAVED: Final[Literal["show_bank_attest_hardware_saved"]] = (
+    "show_bank_attest_hardware_saved"
+)
+COMMAND_SHOW_BANK_VERIFY_RECAPTURE: Final[Literal["show_bank_verify_recapture"]] = (
+    "show_bank_verify_recapture"
+)
+COMMAND_SHOW_BANK_RUN_PREFLIGHT: Final[Literal["show_bank_run_preflight"]] = (
+    "show_bank_run_preflight"
+)
+COMMAND_SHOW_BANK_RETURN_SOURCE: Final[Literal["show_bank_return_source"]] = (
+    "show_bank_return_source"
+)
+COMMAND_SHOW_BANK_UPDATE_ENTRY: Final[Literal["show_bank_update_entry"]] = "show_bank_update_entry"
+COMMAND_SHOW_BANK_REORDER_ENTRIES: Final[Literal["show_bank_reorder_entries"]] = (
+    "show_bank_reorder_entries"
+)
+COMMAND_SHOW_BANK_DUPLICATE_ENTRY: Final[Literal["show_bank_duplicate_entry"]] = (
+    "show_bank_duplicate_entry"
+)
+COMMAND_SHOW_BANK_REMOVE_ENTRY: Final[Literal["show_bank_remove_entry"]] = "show_bank_remove_entry"
+COMMAND_SHOW_BANK_RETAIN_CAPTURE: Final[Literal["show_bank_retain_capture"]] = (
+    "show_bank_retain_capture"
+)
+COMMAND_SHOW_BANK_IMPORT: Final[Literal["show_bank_import"]] = "show_bank_import"
+COMMAND_SHOW_BANK_EXPORT: Final[Literal["show_bank_export"]] = "show_bank_export"
+
 COMMAND_TYPES: Final[frozenset[str]] = (
     frozenset(
         {
@@ -352,13 +405,32 @@ COMMAND_TYPES: Final[frozenset[str]] = (
             COMMAND_ANALYZE_PATCH_GENOME,
             COMMAND_LIST_CAPTURE_INPUTS,
             COMMAND_CAPTURE_CURRENT_KIT,
+            COMMAND_SHOW_BANK_LIST,
+            COMMAND_SHOW_BANK_CREATE,
+            COMMAND_SHOW_BANK_SELECT,
+            COMMAND_SHOW_BANK_UPDATE,
+            COMMAND_SHOW_BANK_ADOPT_SOURCES,
+            COMMAND_SHOW_BANK_GENERATE_CANDIDATES,
+            COMMAND_SHOW_BANK_SELECT_CANDIDATE,
+            COMMAND_SHOW_BANK_MARK_FAVORITE,
+            COMMAND_SHOW_BANK_ATTEST_HARDWARE_SAVED,
+            COMMAND_SHOW_BANK_VERIFY_RECAPTURE,
+            COMMAND_SHOW_BANK_RUN_PREFLIGHT,
+            COMMAND_SHOW_BANK_RETURN_SOURCE,
+            COMMAND_SHOW_BANK_UPDATE_ENTRY,
+            COMMAND_SHOW_BANK_REORDER_ENTRIES,
+            COMMAND_SHOW_BANK_DUPLICATE_ENTRY,
+            COMMAND_SHOW_BANK_REMOVE_ENTRY,
+            COMMAND_SHOW_BANK_RETAIN_CAPTURE,
+            COMMAND_SHOW_BANK_IMPORT,
+            COMMAND_SHOW_BANK_EXPORT,
         }
     )
     | WIZARD_COMMAND_TYPES
 )
 """Frozen set of every supported command-type discriminator (cockpit + wizard).
 
-30 cockpit commands + 8 wizard commands = 38 total. The wizard commands are
+49 cockpit commands + 8 wizard commands = 57 total. The wizard commands are
 folded in from :data:`wizard_protocol.WIZARD_COMMAND_TYPES` so the cockpit's
 single ``COMMAND_TYPES`` constant remains the wire-format authority.
 """
@@ -574,6 +646,13 @@ class LibraryChangedEvent(TypedDict):
     library: dict[str, object]
 
 
+class ShowBankChangedEvent(TypedDict):
+    """Complete Show Kit Forge workspace after an explicit read or mutation."""
+
+    type: Literal["show_bank_changed"]
+    show_bank: ShowBankWorkspaceStateDict
+
+
 # ---------------------------------------------------------------------------
 # Commands — client → server
 #
@@ -595,6 +674,30 @@ class CommandEnvelope(TypedDict):
 
     request_id: str
     command: dict[str, object]
+
+
+class ShowPackExportAck(TypedDict):
+    """Filesystem-safe metadata returned after a completed show-pack export."""
+
+    package_id: str
+    directory_name: str
+    artifact_count: int
+
+
+class ShowPackImportAck(TypedDict):
+    """Catalog metadata returned after a completed show-pack import."""
+
+    package_id: str
+    bank_id: str
+    artifact_count: int
+    write_count: int
+
+
+class ShowBankSourceSlotsAck(TypedDict):
+    """Operator-facing 1-based source slots for a non-destructive reset."""
+
+    rytm: int
+    analog_four: int
 
 
 class CommandAck(TypedDict, total=False):
@@ -683,6 +786,19 @@ class CommandAck(TypedDict, total=False):
     library_record: dict[str, object] | None
     library_record_id: str | None
     library_import: dict[str, object] | None
+    show_bank: ShowBankWorkspaceStateDict
+    show_bank_id: str
+    a4_preparation: A4PreparationReportDict
+    show_bank_entry_id: str
+    candidate_ids: list[str]
+    candidate_id: str
+    show_ready: bool
+    source_snapshot_id: str
+    hardware_changed: Literal[False]
+    source_slots: ShowBankSourceSlotsAck
+    instruction: str
+    show_pack_export: ShowPackExportAck
+    show_pack_import: ShowPackImportAck
     patch_genome: dict[str, object] | None
     capture_enabled: bool
     capture_device_id: KitCaptureDeviceId
@@ -768,6 +884,7 @@ class SendCommand(TypedDict):
 
     type: Literal["send"]
     send_plan_id: NotRequired[str]
+    show_bank_source_reloaded: NotRequired[bool]
 
 
 class SaveCommand(TypedDict, total=False):
@@ -949,7 +1066,176 @@ class CaptureCurrentKitCommand(TypedDict):
     input_port: str
 
 
+class A4PreparationRequest(TypedDict):
+    """Read-only current-candidate review; the port name conveys no authority."""
+
+    bank_id: str
+    entry_id: str
+    expected_revision: int
+    output_port_name: str | None
+
+
+class ShowBankListCommand(TypedDict):
+    """Load the configured Show Bank workspace; performs no hardware action."""
+
+    type: Literal["show_bank_list"]
+    a4_preparation: NotRequired[A4PreparationRequest]
+
+
+class ShowBankCreateCommand(TypedDict):
+    type: Literal["show_bank_create"]
+    name: str
+    description: str
+    notes: list[str]
+
+
+class ShowBankSelectCommand(TypedDict):
+    type: Literal["show_bank_select"]
+    bank_id: str
+
+
+class ShowBankUpdateCommand(TypedDict):
+    type: Literal["show_bank_update"]
+    bank_id: str
+    expected_revision: int
+    name: str
+    description: str
+    notes: list[str]
+
+
+class ShowBankAdoptSourcesCommand(TypedDict):
+    type: Literal["show_bank_adopt_sources"]
+    bank_id: str
+    entry_id: NotRequired[str]
+    expected_revision: int
+    rytm_fingerprint: str
+    a4_fingerprint: str
+    rytm_slot: int
+    a4_slot: int
+
+
+class ShowBankGenerateCandidatesCommand(TypedDict):
+    type: Literal["show_bank_generate_candidates"]
+    bank_id: str
+    entry_id: str
+    expected_revision: int
+    depth_preset: Literal["small", "medium", "large", "custom"]
+    depth: float
+    seed: int
+    profile_id: str
+    candidate_count: int
+    rytm_targets: list[int]
+    rytm_locks: list[int]
+    a4_targets: list[int]
+    a4_locks: list[int]
+
+
+class ShowBankSelectCandidateCommand(TypedDict):
+    type: Literal["show_bank_select_candidate"]
+    bank_id: str
+    entry_id: str
+    candidate_id: str
+    expected_revision: int
+
+
+class ShowBankMarkFavoriteCommand(TypedDict):
+    type: Literal["show_bank_mark_favorite"]
+    bank_id: str
+    entry_id: str
+    candidate_id: str
+    expected_revision: int
+    replace_existing: NotRequired[bool]
+
+
+class ShowBankAttestHardwareSavedCommand(TypedDict):
+    type: Literal["show_bank_attest_hardware_saved"]
+    bank_id: str
+    entry_id: str
+    device_id: KitCaptureDeviceId
+    slot: int
+    expected_revision: int
+
+
+class ShowBankVerifyRecaptureCommand(TypedDict):
+    type: Literal["show_bank_verify_recapture"]
+    bank_id: str
+    entry_id: str
+    expected_revision: int
+
+
+class ShowBankRunPreflightCommand(TypedDict):
+    type: Literal["show_bank_run_preflight"]
+    bank_id: str
+    entry_id: str
+    expected_revision: int
+
+
+class ShowBankReturnSourceCommand(TypedDict):
+    type: Literal["show_bank_return_source"]
+    bank_id: str
+    entry_id: str
+    expected_revision: int
+
+
+class ShowBankUpdateEntryCommand(TypedDict):
+    type: Literal["show_bank_update_entry"]
+    bank_id: str
+    entry_id: str
+    expected_revision: int
+    name: str
+    description: str
+    audition_notes: list[str]
+    energy_level: int | None
+    energy_notes: list[str]
+    transition_notes: list[str]
+    recovery_notes: list[str]
+    oxi: dict[str, object]
+
+
+class ShowBankReorderEntriesCommand(TypedDict):
+    type: Literal["show_bank_reorder_entries"]
+    bank_id: str
+    entry_ids: list[str]
+    expected_revision: int
+
+
+class ShowBankDuplicateEntryCommand(TypedDict):
+    type: Literal["show_bank_duplicate_entry"]
+    bank_id: str
+    entry_id: str
+    expected_revision: int
+
+
+class ShowBankRemoveEntryCommand(TypedDict):
+    type: Literal["show_bank_remove_entry"]
+    bank_id: str
+    entry_id: str
+    expected_revision: int
+
+
+class ShowBankRetainCaptureCommand(TypedDict):
+    type: Literal["show_bank_retain_capture"]
+    bank_id: str
+    entry_id: str
+    capture_kind: Literal["source", "favorite", "candidate"]
+    device_id: KitCaptureDeviceId
+    expected_revision: int
+
+
+class ShowBankImportCommand(TypedDict):
+    type: Literal["show_bank_import"]
+    pack_name: str
+
+
+class ShowBankExportCommand(TypedDict):
+    type: Literal["show_bank_export"]
+    bank_id: str
+    artifact_name: str
+    expected_revision: int
+
+
 __all__ = [
+    "A4PreparationRequest",
     "ArmCommand",
     "AnalyzePatchGenomeCommand",
     "CaptureCurrentKitCommand",
@@ -984,6 +1270,25 @@ __all__ = [
     "COMMAND_SET_A4_TRACK_LOCK",
     "COMMAND_SET_MUTATION_TARGETS",
     "COMMAND_SET_PAD_LOCK",
+    "COMMAND_SHOW_BANK_ADOPT_SOURCES",
+    "COMMAND_SHOW_BANK_ATTEST_HARDWARE_SAVED",
+    "COMMAND_SHOW_BANK_CREATE",
+    "COMMAND_SHOW_BANK_DUPLICATE_ENTRY",
+    "COMMAND_SHOW_BANK_EXPORT",
+    "COMMAND_SHOW_BANK_GENERATE_CANDIDATES",
+    "COMMAND_SHOW_BANK_IMPORT",
+    "COMMAND_SHOW_BANK_LIST",
+    "COMMAND_SHOW_BANK_MARK_FAVORITE",
+    "COMMAND_SHOW_BANK_REMOVE_ENTRY",
+    "COMMAND_SHOW_BANK_REORDER_ENTRIES",
+    "COMMAND_SHOW_BANK_RETAIN_CAPTURE",
+    "COMMAND_SHOW_BANK_RETURN_SOURCE",
+    "COMMAND_SHOW_BANK_RUN_PREFLIGHT",
+    "COMMAND_SHOW_BANK_SELECT",
+    "COMMAND_SHOW_BANK_SELECT_CANDIDATE",
+    "COMMAND_SHOW_BANK_UPDATE",
+    "COMMAND_SHOW_BANK_UPDATE_ENTRY",
+    "COMMAND_SHOW_BANK_VERIFY_RECAPTURE",
     "COMMAND_TOGGLE_PREVIEW",
     "COMMAND_TYPES",
     "COMMAND_UNDO",
@@ -1013,6 +1318,7 @@ __all__ = [
     "EVENT_PROFILE_CHANGED",
     "EVENT_SEND_PLAN_CHANGED",
     "EVENT_SESSION_STATUS",
+    "EVENT_SHOW_BANK_CHANGED",
     "EVENT_SNAPSHOT_CHANGED",
     "EVENT_TYPES",
     "ExportProfileModelCommand",
@@ -1057,6 +1363,29 @@ __all__ = [
     "SetMutationTargetsCommand",
     "SetPadLockCommand",
     "SnapshotChangedEvent",
+    "ShowBankAdoptSourcesCommand",
+    "ShowBankAttestHardwareSavedCommand",
+    "ShowBankChangedEvent",
+    "ShowBankCreateCommand",
+    "ShowBankDuplicateEntryCommand",
+    "ShowBankExportCommand",
+    "ShowBankGenerateCandidatesCommand",
+    "ShowBankImportCommand",
+    "ShowBankListCommand",
+    "ShowBankMarkFavoriteCommand",
+    "ShowBankRemoveEntryCommand",
+    "ShowBankReorderEntriesCommand",
+    "ShowBankRetainCaptureCommand",
+    "ShowBankReturnSourceCommand",
+    "ShowBankRunPreflightCommand",
+    "ShowBankSelectCandidateCommand",
+    "ShowBankSelectCommand",
+    "ShowBankUpdateCommand",
+    "ShowBankUpdateEntryCommand",
+    "ShowBankVerifyRecaptureCommand",
+    "ShowBankSourceSlotsAck",
+    "ShowPackExportAck",
+    "ShowPackImportAck",
     "TogglePreviewCommand",
     "UndoCommand",
     "WS_ERROR_CODES",

@@ -37,6 +37,7 @@ import type {
   ProfileModel,
   ProfileCatalogItem,
   SessionMode,
+  ShowBankState,
   Snapshot,
 } from '../ws/protocol';
 
@@ -90,6 +91,10 @@ export interface CockpitState {
   performanceConsole: LiveGuiPerformanceConsoleModelDict | null;
   sendPlan: CockpitSendPlan | null;
   sessionStatus: SessionStatus | null;
+  /** Cached session data cannot authorize commands after transport loss. */
+  sessionStatusStale: boolean;
+  /** Advances on the first session_status received after each disconnect. */
+  sessionGeneration: number;
   connectionStatus: ConnectionStatus;
   operatorLog: OperatorLogEntry[];
   /** Latest passive connection observation ← connection_changed.connection. */
@@ -107,6 +112,10 @@ export interface CockpitState {
   libraryRecords: LibraryRecord[] | null;
   /** Latest read-only diagnostics packet ← the diagnostics command ack. */
   diagnostics: DiagnosticsPayload | null;
+  /** Authoritative whole-state Show Kit Forge projection ← show_bank_changed. */
+  showBank: ShowBankState | null;
+  /** Read-only until a whole-state bank packet arrives on the current transport. */
+  showBankStale: boolean;
 }
 
 export interface CockpitActions {
@@ -134,6 +143,7 @@ export interface CockpitActions {
   clearMidiActivity: () => void;
   setLibraryRecords: (records: LibraryRecord[]) => void;
   setDiagnostics: (diagnostics: DiagnosticsPayload) => void;
+  setShowBank: (showBank: ShowBankState | null) => void;
   /** Reset all slices back to null (used on disconnect / shutdown). */
   reset: () => void;
 }
@@ -159,6 +169,8 @@ export const INITIAL_STATE: CockpitState = {
   performanceConsole: null,
   sendPlan: null,
   sessionStatus: null,
+  sessionStatusStale: true,
+  sessionGeneration: 0,
   connectionStatus: 'closed',
   operatorLog: [],
   connection: null,
@@ -169,6 +181,8 @@ export const INITIAL_STATE: CockpitState = {
   midiActivityPaused: false,
   libraryRecords: null,
   diagnostics: null,
+  showBank: null,
+  showBankStale: true,
 };
 
 const OPERATOR_LOG_LIMIT = 8;
@@ -319,13 +333,19 @@ export function createCockpitStore() {
       }),
     setPerformanceConsole: (model) => set({ performanceConsole: model }),
     setSendPlan: (sendPlan) => set({ sendPlan }),
-    setSessionStatus: (status) => set({ sessionStatus: status }),
+    setSessionStatus: (status) => set((state) => ({
+      sessionStatus: status,
+      sessionStatusStale: false,
+      sessionGeneration: state.sessionGeneration + (state.sessionStatusStale ? 1 : 0),
+    })),
     setConnectionStatus: (status) =>
       set((state) =>
         status === 'connected'
           ? { connectionStatus: status }
           : {
               connectionStatus: status,
+              sessionStatusStale: true,
+              showBankStale: true,
               previewCandidate: null,
               sendPlan: null,
               patchGenomeStale: state.patchGenome !== null || state.patchGenomeStale,
@@ -374,6 +394,10 @@ export function createCockpitStore() {
       set({ midiActivityRows: [], midiActivityMeta: null, midiActivityBatchCount: 0 }),
     setLibraryRecords: (records) => set({ libraryRecords: records }),
     setDiagnostics: (diagnostics) => set({ diagnostics }),
+    setShowBank: (showBank) => set((state) => ({
+      showBank,
+      showBankStale: state.connectionStatus !== 'connected',
+    })),
     appendOperatorLog: (entry) =>
       set((state) => ({
         operatorLog: [

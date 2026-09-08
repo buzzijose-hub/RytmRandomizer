@@ -162,3 +162,38 @@ def test_saved_kit_capability_resolver_rejects_incompatible_registry_device(
 
     with pytest.raises(TypeError, match="lacks saved-kit rendering capability"):
         analog_four.get_analog_four_saved_kit_capability()
+
+
+def test_filter1_frequency_candidate_capability_routes_through_registered_device() -> None:
+    from rytm_randomizer.devices.analog_four import (
+        AnalogFourFilter1FrequencyCandidateMutation,
+        get_analog_four_filter1_frequency_candidate_capability,
+    )
+
+    source = (
+        PROJECT_ROOT
+        / "tests"
+        / "fixtures"
+        / "analog_four_saved_kit"
+        / "filter1_freq_127_source.syx"
+    ).read_bytes()
+    capability = get_analog_four_filter1_frequency_candidate_capability()
+    result = capability.render_filter1_frequency_candidate(
+        source,
+        (AnalogFourFilter1FrequencyCandidateMutation(track=1, screen_value="63.50"),),
+    )
+
+    assert result.applied_mutations[0].redecoded_screen_value == "63.5"
+    assert result.output_authority == "local-file-only"
+    assert result.hardware_send_validated is False
+
+
+def test_filter1_frequency_candidate_capability_rejects_incompatible_registry_device(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.devices import analog_four
+
+    monkeypatch.setattr(analog_four.registry, "get_device", lambda _device_id: object())
+
+    with pytest.raises(TypeError, match="lacks offline Filter 1 Frequency"):
+        analog_four.get_analog_four_filter1_frequency_candidate_capability()

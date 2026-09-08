@@ -96,7 +96,9 @@ def test_capture_service_decodes_verified_rytm_current_kit() -> None:
     assert result.layout_items[0].status == "mutation_ready"
     assert isinstance(result.snapshot, RytmKitSnapshot)
     assert result.snapshot.raw == frame[1:-1]
+    assert result.frame == frame
     assert "snapshot" not in result.to_dict()
+    assert "frame" not in result.to_dict()
     assert len(result.fingerprint) == 16
     assert provider.capture_calls == [("Elektron Input", 7.5)]
 
@@ -160,7 +162,7 @@ def test_capture_failure_logs_category_without_input_port_name(
     assert get_metrics().errors_by_kind["cockpit_capture_refused"] == 1
 
 
-def test_capture_service_decodes_verified_a4_current_kit_without_overclaiming_offsets() -> None:
+def test_capture_service_decodes_a4_filter1_ready_without_overclaiming_other_fields() -> None:
     frame = _a4_saved_kit_frame()
     provider = _CaptureProvider((frame,))
     service = KitCaptureService(provider)
@@ -171,14 +173,20 @@ def test_capture_service_decodes_verified_a4_current_kit_without_overclaiming_of
     assert result.kit_name == "A4 WAREHOUSE"
     assert result.slot is None
     assert result.snapshot_layout == "saved_kit"
-    assert result.parameter_readiness == "exact_kit_anchor_offsets_candidate"
+    assert result.parameter_readiness == "filter1_frequency_offline_ready"
     assert result.round_trip_verified is True
     assert result.sent_midi is False
     assert isinstance(result.snapshot, AnalogFourKitSnapshot)
     assert result.snapshot.raw == frame[1:-1]
+    assert result.frame == frame
     assert "snapshot" not in result.to_dict()
+    assert "frame" not in result.to_dict()
     assert [item.label for item in result.layout_items] == ["T1", "T2", "T3", "T4"]
-    assert {item.status for item in result.layout_items} == {"captured_mapping_pending"}
+    assert {item.status for item in result.layout_items} == {"mutation_ready"}
+    assert all(
+        "every other parameter remains mapping-blocked" in item.detail
+        for item in result.layout_items
+    )
 
 
 @pytest.mark.parametrize(

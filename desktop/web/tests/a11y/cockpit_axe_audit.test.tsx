@@ -37,6 +37,7 @@ import { RYTM_DEVICE_ID } from '../../src/cockpit/devices';
 import { ReconnectBanner } from '../../src/cockpit/ReconnectBanner';
 import { PanelRenderer } from '../../src/cockpit/panels/PanelRenderer';
 import { ScopedRandomizationPanel } from '../../src/cockpit/panels/ScopedRandomizationPanel';
+import { ShowKitForgePanel } from '../../src/cockpit/showKitForge/ShowKitForgePanel';
 import { liveMidiMonitorPanelSpec } from '../../src/cockpit/panels/liveMidiMonitorPanelSpec';
 import { useCockpitStore } from '../../src/state';
 import type { KitCaptureResult } from '../../src/ws/protocol';
@@ -54,6 +55,7 @@ import {
   sessionMock,
 } from '../cockpit/_fixtures';
 import { runAxe, violationSummary } from './__helpers__/axe';
+import { forgeCaptures, showBankState } from '../cockpit/showKitForgeFixture';
 
 // component-name → expected (grandfathered) violation count. Keep at 0.
 const FLOORS = {
@@ -74,6 +76,7 @@ const FLOORS = {
   ReconnectBanner: 0,
   ReconnectBannerPreSession: 0,
   DeviceRailNoHardware: 0,
+  ShowKitForgePanel: 0,
 } as const;
 
 function withClient(node: React.ReactNode): JSX.Element {
@@ -163,6 +166,29 @@ describe('cockpit axe audit (WCAG 2.2 AA)', () => {
   it('KitMorphPanel (with the static-demonstration banner) is clean', async () => {
     const { container } = render(withClient(<KitMorphPanel />));
     await expectClean('KitMorphPanel', container);
+  });
+
+  it('ShowKitForgePanel with authoritative paired-bank state is clean', async () => {
+    useCockpitStore.setState({
+      showBank: showBankState,
+      showBankStale: false,
+      kitCaptures: forgeCaptures,
+      profile: {
+        profile_id: 'profile-show',
+        name: 'Show profile',
+        kind: 'user',
+        model_version: '1.0.0',
+        traits: [],
+        pad_mappings: [],
+        transition_curve: 'linear',
+        source_summary: 'fixture',
+      },
+      connectionStatus: 'connected',
+      sessionStatus: sessionMock,
+    });
+    const { container } = render(withClient(<ShowKitForgePanel />));
+    await screen.findAllByDisplayValue('Warehouse Set');
+    await expectClean('ShowKitForgePanel', container);
   });
 
   it('KitCapturePanel captured layout is clean and exposes list semantics', async () => {

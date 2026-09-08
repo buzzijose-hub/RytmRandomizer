@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "status": "pending_physical_outbound_validation",
+  "calibration_status": "offline-captured-kit-mutation-validated",
+  "output_authority": "local-file-only",
+  "hardware_send_validated": false,
+  "device": "Elektron Analog Four MKII",
+  "product_id": 6,
+  "parameter": "Filter1 Frequency",
+  "encoding": "unsigned-big-endian-q8.8",
+  "display_range": {
+    "minimum": "0.00",
+    "maximum": "127.00",
+    "exact_step": "0.00390625"
+  },
+  "source": {
+    "file": "filter1_freq_127_source.syx",
+    "sha256": "3d38dd4369cbd6ea496adcfb7698025cd57e21332ffae1dd5a98e18ae767ea95",
+    "hardware_kit_slot": 20,
+    "native_slot": 19,
+    "wire_length": 2770,
+    "native_length": 2410,
+    "checksum": 9577
+  },
+  "captured_references": [
+    {
+      "screen_value": "0.00",
+      "file": "filter1_freq_000_expected.syx",
+      "sha256": "5c8406010e86d11caeb628935820967d698b739b2d588ae949a807d358c9bde7",
+      "native_diff_offsets": [128],
+      "wire_diff_offsets": [157, 2765, 2766]
+    },
+    {
+      "screen_value": "63.50",
+      "file": "filter1_freq_063_50_expected.syx",
+      "sha256": "d6710ca7368e59b8ac136081e61282dd538d49cddeaa5f81571dcff972819429",
+      "native_diff_offsets": [128, 129],
+      "wire_diff_offsets": [154, 157, 2766]
+    },
+    {
+      "screen_value": "127.00",
+      "file": "filter1_freq_127_source.syx",
+      "sha256": "3d38dd4369cbd6ea496adcfb7698025cd57e21332ffae1dd5a98e18ae767ea95",
+      "native_diff_offsets": [],
+      "wire_diff_offsets": []
+    }
+  ],
+  "generated": {
+    "file": "filter1_freq_tracks_16_25_48_50_80_75_112_25_pending.syx",
+    "sha256": "829eee0209a248012a968e96df33acd007619a0078255c4fd034b5afda3520dd",
+    "wire_length": 2770,
+    "native_length": 2410,
+    "packed_length": 2755,
+    "encoded_length": 2760,
+    "checksum": 9533,
+    "roundtrip_redecoded": true,
+    "native_byte_isolation_validated": true,
+    "mutations": [
+      {
+        "track": 1,
+        "screen_value": "16.25",
+        "raw_q8_8": 4160,
+        "native_offsets": [128, 129]
+      },
+      {
+        "track": 2,
+        "screen_value": "48.50",
+        "raw_q8_8": 12416,
+        "native_offsets": [478, 479]
+      },
+      {
+        "track": 3,
+        "screen_value": "80.75",
+        "raw_q8_8": 20672,
+        "native_offsets": [828, 829]
+      },
+      {
+        "track": 4,
+        "screen_value": "112.25",
+        "raw_q8_8": 28736,
+        "native_offsets": [1178, 1179]
+      }
+    ],
+    "intended_native_offsets": [128, 129, 478, 479, 828, 829, 1178, 1179],
+    "changed_native_offsets": [128, 129, 478, 479, 828, 829, 1178, 1179],
+    "changed_wire_offsets": [157, 158, 554, 557, 954, 957, 958, 1357, 1358, 2766]
+  },
+  "observations": [],
+  "operator_procedure": [
+    "Manually load the generated file into a disposable Analog Four scratch slot.",
+    "Confirm the four Filter 1 Frequency values on the front panel and audition the result.",
+    "Save the KIT on the instrument, then request an input-only current-KIT dump.",
+    "Compare the returned fingerprint and decoded values with this manifest before recording an observation."
+  ]
+}

@@ -4,6 +4,7 @@ import type {
   LiveGuiPerformanceConsoleModelDict,
   PanelSpecDict,
 } from '../../types/live_gui_protocol';
+import { ShowKitForgePanel } from '../showKitForge/ShowKitForgePanel';
 import { analyzerPanelSpec } from './analyzerPanel';
 import { ConnectionDoctorPanel } from './ConnectionDoctorPanel';
 import { KitMorphPanel } from './KitMorphPanel';
@@ -80,6 +81,12 @@ export const PANEL_REGISTRY: ReadonlyArray<PanelManifestEntry> = [
     component: ScopedRandomizationPanel,
   },
   { kind: 'store-slice', id: 'kit-morph', region: 'bottom', component: KitMorphPanel },
+  {
+    kind: 'store-slice',
+    id: 'show-kit-forge',
+    region: 'bottom',
+    component: ShowKitForgePanel,
+  },
 ];
 
 export function panelsForRegion(region: PanelRegion): ReadonlyArray<PanelManifestEntry> {

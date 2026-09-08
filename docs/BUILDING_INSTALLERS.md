@@ -400,6 +400,81 @@ and the `release.yml` workflow's tag-vs-pyproject check catches the
 
 ## Smoke-testing a local build
 
+### Identified Windows Cockpit studio copy
+
+For a review build of Show Kit Forge, dispatch the existing `installers` workflow
+on the intended feature commit with `studio_windows=true`. This selects only the
+Windows Cockpit job; it does not publish a release or bypass the PR checks/review.
+The default/tag workflow still builds all platforms and Briefcase installers.
+
+The workflow-local `TAURI_CLI_VERSION` pins the prebuilt CLI to `2.11.4`.
+`STUDIO_WINDOWS` passes the boolean dispatch input to the Python packaging
+steps and defaults to false. Neither is a shipped application environment knob.
+
+The Windows job also publishes `show-kit-forge-studio-windows-<full commit>`.
+Its portable directory contains `rytm-randomizer-shell.exe`, the matching
+`binaries/rytm-sidecar.exe`, `README.txt`, and `BUILD-MANIFEST.json`. Keep the
+directory together. The manifest records the source commit, run/attempt, tools,
+build command/config overrides, and both binary SHA256 hashes. The studio-only
+window title includes the short source commit. No local Python installation is
+needed; Windows still needs the Microsoft Edge WebView2 Runtime.
+
+Before applying packaging overrides, the workflow requires
+`git diff --ignore-cr-at-eol --exit-code` to pass. This ignores only carriage
+returns at line endings because historical CRLF blobs coexist with the current
+LF attributes; substantive changes still fail, and frozen fixtures are never
+rewritten. The manifest's `source_cleanliness_check` records this policy.
+`tracked_build_changes` lists paths with nonzero additions/deletions (including
+binary changes) under the same CR-at-EOL rule, excluding normalization-only
+phantom diffs from the recorded packaging overrides.
+
+The studio command is `npm exec --yes --package=@tauri-apps/cli@2.11.4 -- tauri build --no-bundle`; the regular installer path omits `--no-bundle`. The pinned
+prebuilt CLI enables Tauri's custom
+protocol for the embedded Vite assets. A bare `cargo build --release` is not the
+same build. CI builds the Python sidecar first, declares it as a resource only
+for packaging, and explicitly builds the frontend before Tauri. Source-only
+Cargo tests therefore do not require an absent sidecar resource.
+
+Smoke the downloaded portable copy with `RYTM_RAND_MIDI_BACKEND=off` and fresh
+temporary token/data directories. Check the initial embedded UI, `/health`,
+authenticated bootstrap, and `show_bank_list`; verify the launched child is the
+bundled sidecar. Include a non-default loopback port and confirm that the actual
+frontend socket reaches that selected port after shell bootstrap. The frontend
+discovers the default target on each dial, validates the injected or stored port
+and keeps its host/path fixed to `127.0.0.1` and `/ws`; an explicitly supplied
+client URL takes precedence. Late bootstrap must be observed by a later dial,
+while `getUrl()` must continue to report the existing socket's actual target.
+See the [runtime environment index](LOCAL_DEV_TOOLING_NOTES.md#7a-cockpit-sidecar--desktop-shell-runtime)
+for port discovery and fallback details.
+Leave capture and arm controls untouched: the explicitly armed
+capture composition can enumerate inputs when its capture panel is requested.
+An off-backend smoke is software evidence only. Record exact hashes and use the
+[studio checklist](hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md)
+before any physical action.
+
+**Diagnostic artifact, not studio-ready:** Windows build
+[`34147444366`](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34147444366)
+at `4cb0defdee3aaaddd02c28621811b4004e62a642` completed and its downloaded
+binary hashes matched the manifest, but its real GUI smoke failed. The shell
+injected port `50477` as a string with a token present; the frontend continued
+dialing `4317` and stayed disconnected. That artifact is preserved outside the
+Studio folder as diagnostic evidence.
+
+**Corrected software handoff:** build
+[`34149935386`](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34149935386)
+at `076ef67a3276bdd27ec6657f9dff77ccf207a5e2` succeeded. Its downloaded hashes
+matched the manifest, and the actual packaged GUI smoke passed at
+`2026-09-07T18:06:53.332Z` with MIDI off, loopback port 64055 and string port
+bootstrap. The exact bundled child, window title, authenticated catalog and
+UI refresh were verified; the smoke's own process tree was stopped. No capture,
+arm or output was requested. The [software receipt](2026-09-07-show-kit-forge-software-closeout.md)
+records the executable, both hashes and local smoke/checklist paths. A later
+documentation-only receipt commit does not change this artifact's source.
+Source CI passed; required maintainer review remains pending. Physical
+observations remain blank and A4 SEND remains blocked.
+
+### Briefcase source/install checks
+
 The first sanity check is `briefcase create` from a fresh checkout. It:
 
 - Reads `pyproject.toml`.
