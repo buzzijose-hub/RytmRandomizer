@@ -63,6 +63,7 @@ This repo has unusually strict invariants because it talks to physical hardware 
 - **`-o addopts=''` is a 3× speed trap.** The pyproject default of `-n auto` is the fast path; don't override it.
 - **CONTRIBUTING.md's 18 plan-requirement gates** are mandatory in every PR body. The PR template (`.github/PULL_REQUEST_TEMPLATE.md`) auto-fills the structure.
 - **The Strategy seam on `Device`** (PR #43) is the canonical cross-machine abstraction. The codex dual-machine cascade (PRs #21, #36-#41) is closed; PR #36 is the redo target.
+- **Parallel agent runs are verified at the seams, not per agent.** Eleven individually-green agents produced 21 merge failures; the worked example and its seven blockers are in [`docs/AUTOUPDATE_PARALLEL_RUN_REPORT.md`](docs/AUTOUPDATE_PARALLEL_RUN_REPORT.md).
 - **macOS is dropped from the PR-event CI matrix by design** (queue waits). It runs on push events. See `.github/workflows/test.yml:288-296`.
 
 ## How to know which skill applies
