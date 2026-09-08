@@ -17,6 +17,7 @@
 
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::update_journal::UpdateJournal;
@@ -511,6 +512,66 @@ pub fn classify_http_status(status: u16) -> Option<ErrorCode> {
     }
 }
 
+/// The D2 check cadence: every four hours while the app runs.
+///
+/// Spec §5 pairs this with a check at launch and the manual "Check now", so
+/// the worst case between a release and an operator hearing about it is
+/// hours, not the next restart — which for a long-running cockpit could be
+/// weeks.
+pub const CHECK_INTERVAL: Duration = Duration::from_secs(4 * 60 * 60);
+
+/// How often the timer wakes to look at the shutdown flag.
+///
+/// Deliberately short relative to [`CHECK_INTERVAL`]: sleeping for the whole
+/// four hours would make quit wait up to four hours for this thread to
+/// notice, and a quit that hangs is far worse than a check that fires a
+/// second late.
+pub const SHUTDOWN_POLL: Duration = Duration::from_secs(1);
+
+/// Whether a periodic check is due.
+///
+/// Split out so the cadence is testable without waiting four hours or
+/// injecting a clock into the driver — the caller owns elapsed time, this
+/// owns the decision.
+pub fn periodic_check_due(elapsed: Duration) -> bool {
+    elapsed >= CHECK_INTERVAL
+}
+
+/// Run the D2 periodic check until `shutdown` is set.
+///
+/// Takes `sleep` and `now` so a test drives thousands of simulated hours in
+/// milliseconds. The loop wakes every [`SHUTDOWN_POLL`] rather than sleeping
+/// the full interval, so quitting is prompt.
+///
+/// Freeze is NOT checked here: the policy short-circuits a frozen check
+/// before any network effect, so a frozen app still ticks and still does
+/// nothing. Duplicating that decision here would be a second place for it to
+/// drift.
+pub fn run_periodic_checks<Sink, Sleep, Now>(
+    driver: &Updater<Sink>,
+    shutdown: &std::sync::atomic::AtomicBool,
+    mut sleep: Sleep,
+    mut now: Now,
+) where
+    Sink: EffectSink,
+    Sleep: FnMut(Duration),
+    Now: FnMut() -> std::time::Instant,
+{
+    use std::sync::atomic::Ordering;
+
+    let mut last_check = now();
+    while !shutdown.load(Ordering::SeqCst) {
+        sleep(SHUTDOWN_POLL);
+        if shutdown.load(Ordering::SeqCst) {
+            return;
+        }
+        if periodic_check_due(now().saturating_duration_since(last_check)) {
+            driver.handle(UpdateEvent::CheckRequested);
+            last_check = now();
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -780,6 +841,81 @@ mod tests {
         let payloads = recorder.payloads.lock().unwrap();
         assert_eq!(payloads.last().expect("payload").state, StateKind::Checking);
         assert_eq!(updater.payload().state, StateKind::Checking);
+    }
+
+    #[test]
+    fn the_periodic_timer_fires_once_per_interval_not_once_per_tick() {
+        // Simulated time: a real four-hour wait is untestable, and a test that
+        // waits is a test nobody runs.
+        let config = resolve_config("1.34.0", "id", None, None, None, true);
+        let (updater, recorder) = driver(config);
+        let shutdown = std::sync::atomic::AtomicBool::new(false);
+
+        let start = std::time::Instant::now();
+        let elapsed = std::cell::Cell::new(Duration::ZERO);
+        let ticks = std::cell::Cell::new(0_u32);
+
+        run_periodic_checks(
+            &updater,
+            &shutdown,
+            |_| {
+                // Advance a simulated hour per wake, and stop after 24 of them
+                // so the loop terminates: 24h must yield exactly 6 checks at a
+                // 4h cadence, not 24.
+                elapsed.set(elapsed.get() + Duration::from_secs(3600));
+                ticks.set(ticks.get() + 1);
+                if ticks.get() >= 24 {
+                    shutdown.store(true, std::sync::atomic::Ordering::SeqCst);
+                }
+            },
+            || start + elapsed.get(),
+        );
+
+        // Five, not six: the 24th wake sets shutdown, and the loop returns
+        // BEFORE the due-check rather than starting a fetch it would have to
+        // abandon. Checks land at hours 4, 8, 12, 16 and 20. That ordering is
+        // the point — a check must never begin during shutdown.
+        assert_eq!(
+            recorder.fetches.lock().unwrap().len(),
+            5,
+            "24 simulated hours at a 4h cadence, minus the check suppressed by \
+             shutdown. Firing per tick would hammer the CDN; firing once would \
+             strand a long-running cockpit on a stale version"
+        );
+    }
+
+    #[test]
+    fn the_periodic_timer_returns_promptly_when_shutdown_is_set() {
+        // The loop wakes every SHUTDOWN_POLL rather than sleeping the whole
+        // interval, so quit is not held up. Sleeping 4h would make quit hang.
+        let config = resolve_config("1.34.0", "id", None, None, None, true);
+        let (updater, recorder) = driver(config);
+        let shutdown = std::sync::atomic::AtomicBool::new(false);
+        let start = std::time::Instant::now();
+        let woke = std::cell::Cell::new(0_u32);
+
+        run_periodic_checks(
+            &updater,
+            &shutdown,
+            |_| {
+                woke.set(woke.get() + 1);
+                shutdown.store(true, std::sync::atomic::Ordering::SeqCst);
+            },
+            || start,
+        );
+
+        assert_eq!(woke.get(), 1, "must notice shutdown on the first wake");
+        assert!(
+            recorder.fetches.lock().unwrap().is_empty(),
+            "no time has passed, so no check is due"
+        );
+    }
+
+    #[test]
+    fn the_cadence_boundary_is_inclusive() {
+        assert!(!periodic_check_due(CHECK_INTERVAL - Duration::from_secs(1)));
+        assert!(periodic_check_due(CHECK_INTERVAL));
+        assert!(periodic_check_due(CHECK_INTERVAL + Duration::from_secs(1)));
     }
 
     #[test]

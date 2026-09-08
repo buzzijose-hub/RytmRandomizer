@@ -598,6 +598,26 @@ fn main() {
 
                 update_sink.emit_state(&updater_driver.payload());
 
+                // D2's periodic leg. Launch and "Check now" already reach the
+                // driver; without this a long-running cockpit would never hear
+                // about a release until it was restarted, which for this app
+                // can be weeks.
+                //
+                // The policy decides what a check MEANS — a frozen app ticks
+                // and does nothing, because freeze short-circuits before any
+                // network effect. Deciding that here as well would be a second
+                // place for it to drift.
+                let periodic_driver = updater_driver.clone();
+                let periodic_shutdown = Arc::clone(&shutdown);
+                thread::spawn(move || {
+                    updater::run_periodic_checks(
+                        &periodic_driver,
+                        &periodic_shutdown,
+                        thread::sleep,
+                        std::time::Instant::now,
+                    );
+                });
+
                 let handle = start_credential_bridge(
                     Arc::clone(&shutdown),
                     window.clone(),
