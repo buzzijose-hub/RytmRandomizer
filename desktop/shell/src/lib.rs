@@ -15,4 +15,5 @@
 pub mod sidecar;
 pub mod update_journal;
 pub mod update_policy;
+pub mod update_transport;
 pub mod updater;

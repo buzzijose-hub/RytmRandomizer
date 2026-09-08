@@ -37,6 +37,14 @@ env_logger = "0.11"
 #                           no keys.
 tauri-plugin-updater = "2"
 sha2 = "0.10"
+# Already compiled into the binary via tauri-plugin-updater; declared so the
+# beacon's one-byte GET does not depend on a TRANSITIVE dependency that a
+# plugin bump could remove. Minimal features: the check-in needs a GET and
+# nothing else, and must not drag in cookie/JSON machinery it will never use.
+# No features requested: cargo unions features across the graph, so the beacon
+# inherits whatever TLS backend tauri-plugin-updater already selected rather
+# than forcing a second one into the binary.
+reqwest = { version = "0.13", default-features = false }
 # CI pin: tauri-utils 2.9.2 conflicts with time 0.3.48 on Windows/Rust 1.88.
 time = "=0.3.47"
 # CI pin: 2026-06-14 brotli-decompressor/alloc-stdlib releases can resolve

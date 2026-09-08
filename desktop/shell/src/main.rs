@@ -8,7 +8,7 @@
 use std::path::PathBuf;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
-    Arc, Mutex,
+    Arc, Mutex, Weak,
 };
 use std::thread;
 use std::thread::JoinHandle;
@@ -24,8 +24,11 @@ use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 use rytm_randomizer_shell_lib::sidecar::{self, SidecarLaunch};
 use rytm_randomizer_shell_lib::update_journal::{self, UpdateJournal};
 use rytm_randomizer_shell_lib::update_policy::{
-    Config as UpdateConfig, ConsentChoice, JournalRecord, UpdateEvent, UpdateStatePayload,
-    UPDATE_STATE_EVENT,
+    Config as UpdateConfig, ConsentChoice, ErrorCode, JournalRecord, UpdateEvent,
+    UpdateStatePayload, UPDATE_STATE_EVENT,
+};
+use rytm_randomizer_shell_lib::update_transport::{
+    DisabledTransport, PluginTransport, SharedTransport, TransportOutcome,
 };
 use rytm_randomizer_shell_lib::updater::{self, EffectSink, Updater};
 
@@ -46,6 +49,17 @@ const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 struct ShellSink {
     journal: UpdateJournal,
     window: Mutex<Option<WebviewWindow>>,
+    /// The network half. Held behind the [`Transport`] trait so the driver
+    /// loop is exercised in tests without a network or a running app.
+    transport: Mutex<Option<SharedTransport>>,
+    /// A weak handle to this same sink, for transport callbacks.
+    weak_self: Mutex<Weak<ShellSink>>,
+    /// Feeds transport outcomes back in as [`UpdateEvent`]s.
+    ///
+    /// Set after construction because the driver owns the sink — the cycle is
+    /// deliberate and is what lets an async result re-enter the pure state
+    /// machine on whatever thread it completes on.
+    driver: Mutex<Option<Updater<Arc<ShellSink>>>>,
 }
 
 impl ShellSink {
@@ -53,42 +67,156 @@ impl ShellSink {
         Self {
             journal,
             window: Mutex::new(None),
+            transport: Mutex::new(None),
+            weak_self: Mutex::new(Weak::new()),
+            driver: Mutex::new(None),
         }
     }
 
     fn attach_window(&self, window: WebviewWindow) {
         *self.window.lock().expect("update window slot poisoned") = Some(window);
     }
+
+    /// Install the transport and the driver the outcomes feed back into.
+    fn attach_transport(
+        &self,
+        transport: SharedTransport,
+        driver: Updater<Arc<ShellSink>>,
+        weak_self: Weak<ShellSink>,
+    ) {
+        *self.weak_self.lock().expect("weak self slot poisoned") = weak_self;
+        *self.transport.lock().expect("transport slot poisoned") = Some(transport);
+        *self.driver.lock().expect("driver slot poisoned") = Some(driver);
+    }
+
+    /// The attached transport, if any.
+    fn transport(&self) -> Option<SharedTransport> {
+        self.transport
+            .lock()
+            .expect("transport slot poisoned")
+            .as_ref()
+            .map(Arc::clone)
+    }
+
+    /// A weak self-reference for transport callbacks.
+    ///
+    /// Weak so a completing download cannot keep the sink — and through it the
+    /// window and journal — alive past shutdown.
+    fn self_handle(&self) -> Weak<ShellSink> {
+        self.weak_self
+            .lock()
+            .expect("weak self slot poisoned")
+            .clone()
+    }
+
+    /// Hand one transport outcome back to the state machine.
+    ///
+    /// Every network result re-enters through here, so the policy stays the
+    /// only thing that decides what an outcome MEANS — the transport reports
+    /// facts, never decisions.
+    fn report(&self, outcome: TransportOutcome) {
+        let driver = self
+            .driver
+            .lock()
+            .expect("driver slot poisoned")
+            .as_ref()
+            .cloned();
+        let Some(driver) = driver else {
+            log::warn!("update transport reported before the driver was attached");
+            return;
+        };
+        driver.handle(match outcome {
+            TransportOutcome::Manifest { body, duration_ms } => {
+                UpdateEvent::ManifestFetched { body, duration_ms }
+            }
+            TransportOutcome::ManifestFailed { code } => UpdateEvent::ManifestFetchFailed { code },
+            TransportOutcome::Staged {
+                version,
+                bytes,
+                duration_ms,
+            } => UpdateEvent::DownloadStaged {
+                version,
+                bytes,
+                duration_ms,
+            },
+            TransportOutcome::DownloadFailed { version, code } => {
+                UpdateEvent::DownloadFailed { version, code }
+            }
+            TransportOutcome::SignatureRejected { version } => {
+                UpdateEvent::SignatureRejected { version }
+            }
+        });
+    }
 }
 
 impl EffectSink for ShellSink {
     fn fetch_manifest(&self, channel: &str) {
-        // Transport lands with the tauri-plugin-updater wiring; until then a
-        // check is a no-op that still journals `check_started`, so the panel
-        // shows an honest "couldn't check" rather than a spinner.
-        log::info!("update check requested for channel={channel} (transport not yet wired)");
+        let Some(transport) = self.transport() else {
+            // No transport attached is a wiring bug, not a network condition.
+            // Reporting it as a typed failure keeps the panel honest instead
+            // of leaving it spinning on a check that will never resolve.
+            self.report(TransportOutcome::ManifestFailed {
+                code: ErrorCode::NetworkUnavailable,
+            });
+            return;
+        };
+        let sink = self.self_handle();
+        transport.fetch_manifest(
+            channel,
+            Box::new(move |outcome| {
+                if let Some(sink) = sink.upgrade() {
+                    sink.report(outcome);
+                }
+            }),
+        );
     }
 
-    fn download_artifact(&self, version: &str, _url: &str, _signature: &str) {
-        log::info!("update download requested for {version} (transport not yet wired)");
+    fn download_artifact(&self, version: &str, url: &str, signature: &str) {
+        let Some(transport) = self.transport() else {
+            self.report(TransportOutcome::DownloadFailed {
+                version: version.to_string(),
+                code: ErrorCode::NetworkUnavailable,
+            });
+            return;
+        };
+        let sink = self.self_handle();
+        transport.download(
+            version,
+            url,
+            signature,
+            Box::new(move |outcome| {
+                if let Some(sink) = sink.upgrade() {
+                    sink.report(outcome);
+                }
+            }),
+        );
     }
 
     fn install_staged(&self, version: &str, choice: ConsentChoice) {
-        // Unreachable today: `updater::signing_key_present()` is false until
-        // operator action item 1 lands the Ed25519 public key, and the policy
-        // cannot emit an install effect without it. Logged rather than
-        // silently ignored so that, the moment a key exists, an unwired
-        // install path is loud instead of mysterious.
-        log::warn!("install requested for {version} ({choice:?}) but no install path is wired");
+        // Only ever reached after the graceful sidecar shutdown confirmed the
+        // child exited — the policy emits this effect on `SidecarExited` and
+        // nowhere else, so the swap never races a live MIDI session.
+        let Some(transport) = self.transport() else {
+            log::error!("install requested for {version} ({choice:?}) with no transport attached");
+            return;
+        };
+        if let Err(code) = transport.install(version) {
+            // A failed install must leave the RUNNING app intact and say so.
+            // Silently swallowing it would strand the operator on a version
+            // they were told had updated.
+            log::error!("install of {version} refused: {code:?}");
+        }
     }
 
     fn send_beacon(&self, version: &str, target: &str) {
         // Fire-and-forget by construction: no retry, no error surfaced, no
-        // identifying data. Wired with the HTTP transport.
-        log::debug!(
-            "beacon asset {} (not yet sent)",
-            updater::beacon_asset_name(version, target)
-        );
+        // identifying data. The policy has already decided a beacon is
+        // permitted (freeze and BEACON=off suppress the effect entirely), so
+        // reaching here means the operator's settings allow the check-in.
+        let Some(transport) = self.transport() else {
+            return;
+        };
+        transport.beacon(&updater::beacon_asset_url(version, target));
     }
 
     fn journal(&self, record: &JournalRecord) {
@@ -394,6 +522,24 @@ fn main() {
                 // the cockpit renders the right body (frozen / up-to-date /
                 // dev-loop) from first paint instead of an empty panel.
                 update_sink.attach_window(window.clone());
+
+                // Attach the network half. Without a public key the plugin
+                // cannot verify — and therefore must not download or install
+                // — anything, so the transport is explicitly DISABLED rather
+                // than absent: a disabled transport reports a typed failure
+                // the panel can show, where an absent one left the check
+                // spinning forever.
+                let transport: SharedTransport = if updater::signing_key_present() {
+                    Arc::new(PluginTransport::new(app.handle().clone(), true))
+                } else {
+                    Arc::new(DisabledTransport::new(ErrorCode::SignatureRejected))
+                };
+                update_sink.attach_transport(
+                    transport,
+                    updater_driver.clone(),
+                    Arc::downgrade(&update_sink),
+                );
+
                 update_sink.emit_state(&updater_driver.payload());
 
                 let handle = start_credential_bridge(

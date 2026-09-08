@@ -33,6 +33,11 @@ pub const BEACON_ENV_VAR: &str = "RYTM_RAND_UPDATE_BEACON";
 /// Channel override (`stable` / `beta`).
 pub const CHANNEL_ENV_VAR: &str = "RYTM_RAND_UPDATE_CHANNEL";
 /// Manifest base-URL override, for the e2e mock-manifest server.
+/// Repository the check-in assets live on. A constant, not configuration:
+/// a redirectable beacon host would turn a privacy-preserving download count
+/// into an arbitrary outbound request.
+pub const BEACON_RELEASE_BASE_URL: &str = "https://github.com/buzzijose-hub/RytmRandomizer";
+
 pub const MANIFEST_URL_ENV_VAR: &str = "RYTM_RAND_UPDATE_MANIFEST_URL";
 
 /// Default channel when the operator has not chosen one.
@@ -56,6 +61,21 @@ const OFF: &str = "off";
 /// coarse-adoption signal spec §6 Tier 0 asks for.
 pub fn beacon_asset_name(version: &str, target: &str) -> String {
     format!("beacon-{version}-{target}.txt")
+}
+
+/// The full URL of the check-in asset for `version` on `target`.
+///
+/// Built from the same release-download shape the manifest uses, so the
+/// beacon can only ever reach a published release asset — it cannot be
+/// pointed at an arbitrary host by configuration, which keeps the "carries
+/// nothing, reaches only GitHub" claim in spec §6 true by construction rather
+/// than by convention.
+pub fn beacon_asset_url(version: &str, target: &str) -> String {
+    format!(
+        "{}/releases/download/v{version}/{}",
+        BEACON_RELEASE_BASE_URL.trim_end_matches('/'),
+        beacon_asset_name(version, target)
+    )
 }
 
 /// Whether an env value means "off".
