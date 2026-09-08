@@ -411,7 +411,7 @@ def format_project_status_check(report: StatusSection | None = None) -> list[str
 
     check = check_project_status_report(report)
     lines: list[str] = [
-        check["title"],
+        _render(check["title"]),
         f"- ok: {check['ok']}",
         f"- failure_count: {check['failure_count']}",
     ]
@@ -543,7 +543,14 @@ def format_project_status_report(report: StatusSection | None = None) -> list[st
     convergence = _section(source_report["convergence"], context="convergence")
     for key in convergence:
         entry = convergence[key]
-        rendered = _joined(entry, context=key) if isinstance(entry, tuple) else _render(entry)
+        # ``_joined`` does its own sequence narrowing, so the value is passed
+        # unnarrowed rather than through an isinstance check that would only
+        # widen the element type back to Unknown.
+        rendered = (
+            _joined(convergence[key], context=str(key))
+            if isinstance(entry, tuple)
+            else _render(entry)
+        )
         lines.append(f"- {key}: {rendered}")
 
     lines.extend(safety_section_lines(_section(source_report["safety"], context="safety")))

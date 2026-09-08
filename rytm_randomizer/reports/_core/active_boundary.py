@@ -114,7 +114,22 @@ SAFE_FAILURE_SUMMARY: Final[tuple[str, ...]] = (
     "invalid request or sender type fails before message emission",
 )
 
-ACTIVE_BOUNDARY_SAFETY: Final[dict[str, object]] = {
+
+class ActiveBoundarySafetyDict(TypedDict):
+    """Boundary block spread into the report literal."""
+
+    mock_only: bool
+    hardware_required: bool
+    real_midi: str
+    port_opening: str
+    active_cli_behavior: str
+    dispatch: str
+    command_execution: str
+    scene_execution: str
+    hardware_behavior: str
+
+
+ACTIVE_BOUNDARY_SAFETY: Final[ActiveBoundarySafetyDict] = {
     "mock_only": True,
     "hardware_required": False,
     "real_midi": "absent",

@@ -159,7 +159,7 @@ PARITY_CLOSEOUT_COVERAGE: Final[tuple[str, ...]] = (
     "Runtime-Adjacent Mock-Only L",
 )
 
-PARITY_PROTECTED_FILE_STATE: Final[dict[str, str]] = {
+PARITY_PROTECTED_FILE_STATE: Final[ParityProtectedFileStateDict] = {
     "v134_reference": "untouched",
     "package_metadata": "untouched",
     "runtime_execution_logic": "absent",
@@ -322,7 +322,7 @@ def build_behavior_parity_coverage_report() -> BehaviorParityReportDict:
         "parked_scope": tuple(PARITY_PARKED_SCOPE),
         "absent_behavior": tuple(PARITY_ABSENT_BEHAVIOR),
         "closeout_coverage": tuple(PARITY_CLOSEOUT_COVERAGE),
-        "protected_file_state": dict(PARITY_PROTECTED_FILE_STATE),
+        "protected_file_state": deepcopy(PARITY_PROTECTED_FILE_STATE),
         "source": {
             "plan_document": ("Docs/V134_BEHAVIOR_PARITY_PACKET_12_COVERAGE_REPORT_PLAN.md"),
             "review_document": (

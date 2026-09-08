@@ -126,7 +126,7 @@ class BridgeSummaryDict(TypedDict):
     emits_messages: bool
 
 
-REPORT_MODE: Final[dict[str, bool]] = {
+REPORT_MODE: Final[BridgeModeDict] = {
     "read_only": True,
     "mock_only": True,
     "metadata_only": True,
@@ -135,14 +135,14 @@ REPORT_MODE: Final[dict[str, bool]] = {
     "emits_messages": False,
 }
 
-BRIDGE_SUMMARY: Final[dict[str, str]] = {
+BRIDGE_SUMMARY: Final[BridgeContractDict] = {
     "module": "rytm_randomizer.mock_runtime_active_bridge",
     "request_type": "RuntimeActiveBridgeRequest",
     "result_type": "RuntimeActiveBridgeResult",
     "evaluator": "evaluate_mock_runtime_active_bridge",
 }
 
-ACCEPTED_CANDIDATE: Final[dict[str, object]] = {
+ACCEPTED_CANDIDATE: Final[BridgeAcceptedCandidateDict] = {
     "source_kind": "group_profile",
     "source_key": "2",
     "source_name": "My BD Hard",
@@ -152,7 +152,7 @@ ACCEPTED_CANDIDATE: Final[dict[str, object]] = {
     "sender": "MockMidiSender",
 }
 
-REJECTED_CASES: Final[tuple[dict[str, object], ...]] = (
+REJECTED_CASES: Final[tuple[BridgeRejectedCaseDict, ...]] = (
     {
         "case": "missing_arming",
         "description": "missing arming fails safely",
@@ -192,7 +192,7 @@ REJECTED_CASES: Final[tuple[dict[str, object], ...]] = (
     },
 )
 
-PARKED_CASES: Final[tuple[dict[str, object], ...]] = (
+PARKED_CASES: Final[tuple[BridgeParkedCaseDict, ...]] = (
     {
         "case": "profile_4_parked",
         "source_kind": "group_profile",
@@ -203,7 +203,7 @@ PARKED_CASES: Final[tuple[dict[str, object], ...]] = (
     },
 )
 
-SAFETY_BOUNDARY: Final[dict[str, object]] = {
+SAFETY_BOUNDARY: Final[BridgeSafetyDict] = {
     "real_midi": "absent",
     "port_opening": "absent",
     "hardware_required": False,

@@ -175,11 +175,11 @@ def _pz_readiness_result(runtime_state: object | None = None) -> SelectedIsolate
 
     return SelectedIsolatedPadBehaviorResult(
         command_key="PZ",
-        label=metadata["label"],
+        label=str(metadata["label"]),
         behavior_family=behavior_family,
         accepted=pz_ready,
         reason=reason,
-        source_scope=metadata["scope"],
+        source_scope=str(metadata["scope"]),
         utility_action=utility_action,
         intent_kind=intent_kind,
         target_pad=target_pad,

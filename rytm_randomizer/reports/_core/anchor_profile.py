@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from copy import deepcopy
-from typing import Final, NamedTuple, TypedDict
+from typing import Final, NamedTuple, TypedDict, cast
 
 from ..formatter import safety_section_lines
 
@@ -29,7 +29,7 @@ class AnchorProfileEntryDict(TypedDict):
     source_helper: str
     reason: str
     read_only: bool
-    active_behavior: str
+    active_behavior: bool
     sends_real_midi: bool
     opens_ports: bool
     hardware_required: bool
@@ -123,7 +123,7 @@ class AnchorProfileSectionSpec(NamedTuple):
 
 ANCHOR_PROFILE_REPORT_TITLE: Final[str] = "RytmRandomizer Anchor/Profile Behavior Report"
 
-ANCHOR_PROFILE_SAFETY: Final[dict[str, object]] = {
+ANCHOR_PROFILE_SAFETY: Final[AnchorProfileSafetyDict] = {
     "read_only": True,
     "passive_cli_visibility": "present",
     "real_midi": "absent",
@@ -148,7 +148,7 @@ ANCHOR_PROFILE_CLOSEOUT_COVERAGE: Final[tuple[str, ...]] = (
     "Behavior Selected Isolated Pad",
 )
 
-ANCHOR_PROFILE_PARKED_SECTIONS: Final[tuple[dict[str, object], ...]] = (
+ANCHOR_PROFILE_PARKED_SECTIONS: Final[tuple[AnchorProfileParkedSectionDict, ...]] = (
     {
         "key": "PZ",
         "kind": "selected_isolated_pad_anchor_return",
@@ -182,7 +182,7 @@ def _anchor_profile_section_specs() -> tuple[AnchorProfileSectionSpec, ...]:
     from ...behavior.undo_commit_state import evaluate_undo_commit_state_behavior
 
     return (
-        (
+        AnchorProfileSectionSpec(
             "direct_packet_2_anchor_profile",
             "Direct Packet 2 Anchor/Profile",
             "rytm_randomizer.behavior.anchor_profile",
@@ -190,7 +190,7 @@ def _anchor_profile_section_specs() -> tuple[AnchorProfileSectionSpec, ...]:
             ("BH", "BC", "BS", "BF"),
             {"intent_kind": "anchor/profile"},
         ),
-        (
+        AnchorProfileSectionSpec(
             "pad1_lane_anchor_profile",
             "Pad 1 Lane Anchor/Profile",
             "rytm_randomizer.behavior.pad_lane",
@@ -198,7 +198,7 @@ def _anchor_profile_section_specs() -> tuple[AnchorProfileSectionSpec, ...]:
             ("FZ", "BP", "PBH", "BI", "SBH", "BA"),
             {},
         ),
-        (
+        AnchorProfileSectionSpec(
             "pad2_lane_anchor_profile",
             "Pad 2 Lane Anchor/Profile",
             "rytm_randomizer.behavior.pad_lane",
@@ -213,7 +213,7 @@ def _anchor_profile_section_specs() -> tuple[AnchorProfileSectionSpec, ...]:
                 },
             },
         ),
-        (
+        AnchorProfileSectionSpec(
             "pad3_anchor",
             "Pad 3 Anchor",
             "rytm_randomizer.behavior.pad_lane",
@@ -221,7 +221,7 @@ def _anchor_profile_section_specs() -> tuple[AnchorProfileSectionSpec, ...]:
             ("P3A", "SA"),
             {},
         ),
-        (
+        AnchorProfileSectionSpec(
             "pad4_anchor",
             "Pad 4 Anchor",
             "rytm_randomizer.behavior.pad_lane",
@@ -229,7 +229,7 @@ def _anchor_profile_section_specs() -> tuple[AnchorProfileSectionSpec, ...]:
             ("P4A",),
             {},
         ),
-        (
+        AnchorProfileSectionSpec(
             "group_anchor",
             "Group Anchor",
             "rytm_randomizer.behavior.scene_group",
@@ -242,7 +242,7 @@ def _anchor_profile_section_specs() -> tuple[AnchorProfileSectionSpec, ...]:
                 },
             },
         ),
-        (
+        AnchorProfileSectionSpec(
             "current_anchor_state",
             "Current Anchor State",
             "rytm_randomizer.behavior.undo_commit_state",
@@ -250,7 +250,7 @@ def _anchor_profile_section_specs() -> tuple[AnchorProfileSectionSpec, ...]:
             ("B", "E"),
             {},
         ),
-        (
+        AnchorProfileSectionSpec(
             "selected_profile_workflow",
             "Selected Profile Workflow",
             "rytm_randomizer.behavior.selected_profile",
@@ -262,7 +262,7 @@ def _anchor_profile_section_specs() -> tuple[AnchorProfileSectionSpec, ...]:
                 },
             },
         ),
-        (
+        AnchorProfileSectionSpec(
             "selected_isolated_pad_target",
             "Selected Isolated Pad Target",
             "rytm_randomizer.behavior.selected_isolated_pad",
@@ -294,7 +294,9 @@ def _anchor_profile_intent_kind(
     command_key: str, result: object, metadata: Mapping[str, object], options: Mapping[str, object]
 ) -> str:
     raw_overrides = options.get("intent_kind_overrides", {})
-    overrides: Mapping[str, object] = raw_overrides if isinstance(raw_overrides, Mapping) else {}
+    overrides: Mapping[str, object] = (
+        cast("Mapping[str, object]", raw_overrides) if isinstance(raw_overrides, Mapping) else {}
+    )
     if command_key in overrides:
         return str(overrides[command_key])
     if "intent_kind" in options:
@@ -311,7 +313,9 @@ def _anchor_profile_concept(
     command_key: str, result: object, metadata: Mapping[str, object], options: Mapping[str, object]
 ) -> str:
     raw_overrides = options.get("concept_overrides", {})
-    overrides: Mapping[str, object] = raw_overrides if isinstance(raw_overrides, Mapping) else {}
+    overrides: Mapping[str, object] = (
+        cast("Mapping[str, object]", raw_overrides) if isinstance(raw_overrides, Mapping) else {}
+    )
     if command_key in overrides:
         return str(overrides[command_key])
     return str(
