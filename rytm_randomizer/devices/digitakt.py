@@ -211,8 +211,21 @@ registry.register_device(build_digitakt_ii_device())
 def _assert_registered_digitakt_generations_conform() -> None:
     """Sanity-check both registered instances against the structural protocol."""
 
+    registered = registry.all_devices()
     for device_id in (_MK1_DEVICE_ID, _II_DEVICE_ID):
-        if not _is_digitakt_device(registry.get_device(device_id)):
+        # Look the id up rather than calling ``registry.get_device``: a missing
+        # registration must surface as a named, diagnosable failure here, not
+        # as a bare ``KeyError`` raised while importing ``devices/__init__``.
+        # An import-time KeyError cascades into hundreds of unrelated-looking
+        # collection errors (including a misleading "already registered" from
+        # the retry), burying the real signal.
+        device = registered.get(device_id)
+        if device is None:
+            raise AssertionError(  # pragma: no cover - registration invariant
+                f"{device_id} is not registered; devices/digitakt.py must call "
+                "register_device() for every generation it declares"
+            )
+        if not _is_digitakt_device(device):
             # Structural-typing invariant; see docs/ARCHITECTURE.md §8 (parity
             # API surface). Unreachable unless the Device Protocol changes.
             raise AssertionError(  # pragma: no cover - structural-typing invariant

@@ -17,9 +17,17 @@ invariants enforce.
 
 from __future__ import annotations
 
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
 import pytest
 
 pytestmark = pytest.mark.fast
+
+_REPO_ROOT = Path(__file__).resolve().parents[1]
 
 from rytm_randomizer.devices import Device, all_devices
 from rytm_randomizer.snapshot.decoder import SnapshotDecoder
@@ -44,7 +52,49 @@ def _device(device_id: str) -> Device:
 
 
 def test_registered_device_roster() -> None:
-    """The deliberate tripwire: exactly these families are registered."""
+    """The deliberate tripwire: exactly these families are registered.
+
+    Asserted in a **clean subprocess**, not against the in-process registry.
+
+    ``register_device`` writes to a process-global dict at module import time,
+    so any peer test that imports ``rytm_randomizer.devices.digitakt`` (for
+    example ``tests/test_devices_strategies_digitakt.py``) repopulates the
+    registry for the whole worker. Reading ``all_devices()`` here would let
+    that side effect satisfy the assertion even if ``devices/__init__.py`` had
+    stopped wiring the family up — the tripwire would pass or fail depending
+    on xdist worker placement, which is exactly the property a tripwire must
+    not have.
+
+    Importing only ``rytm_randomizer.devices`` in a fresh interpreter tests
+    what the package actually declares.
+    """
+
+    probe = (
+        "import json, sys; "
+        "from rytm_randomizer.devices import all_devices; "
+        "json.dump(sorted(all_devices()), sys.stdout)"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", probe],
+        capture_output=True,
+        text=True,
+        cwd=_REPO_ROOT,
+        env={**os.environ, "PYTHONPATH": str(_REPO_ROOT)},
+    )
+    assert result.returncode == 0, (
+        "importing rytm_randomizer.devices in a clean interpreter failed:\n"
+        f"{result.stdout}\n{result.stderr}"
+    )
+
+    assert json.loads(result.stdout) == sorted(EXPECTED_DEVICE_IDS)
+
+
+def test_registered_device_roster_matches_in_process_registry() -> None:
+    """The in-process registry agrees with the declared roster.
+
+    Weaker than the subprocess tripwire above (a peer import can satisfy it),
+    but it catches a device registered *twice* or under a mismatched key.
+    """
 
     assert sorted(all_devices()) == sorted(EXPECTED_DEVICE_IDS)
 
