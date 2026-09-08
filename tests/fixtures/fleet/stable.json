@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "version": "1.35.0",
+  "notes": "Synthetic stable channel manifest for fleet-snapshot tests.",
+  "pub_date": "2026-09-01T00:00:00Z",
+  "hardware_revalidation": false,
+  "rollout_percent": 50,
+  "platforms": {
+    "darwin-aarch64": {
+      "signature": "c2lnbmF0dXJl",
+      "url": "https://github.com/buzzijose-hub/RytmRandomizer/releases/download/v1.35.0/RytmRandomizer-1.35.0-darwin-aarch64.tar.gz"
+    }
+  },
+  "channel": "stable",
+  "build": {
+    "source_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "workflow_run_url": "https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/1",
+    "builder_workflow_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+}

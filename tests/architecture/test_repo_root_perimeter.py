@@ -47,6 +47,10 @@ PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 # (see ``_IGNORED_ROOT_NAMES``) rather than allowlisted.
 _ALLOWED_ROOT_DIRS: Final[frozenset[str]] = frozenset(
     {
+        # The zero-opex fleet dashboard (spec §6.1): one self-contained
+        # static page served from GitHub Pages off the `releases` branch.
+        # Repo-root because it is published verbatim, not built.
+        "dashboard",
         # Seed content for the orphan `releases` branch (empty-but-valid
         # channel manifests + fleet history + README). Repo-root per the
         # auto-update plan: scripts/bootstrap_releases_branch.py publishes
