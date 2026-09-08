@@ -14,6 +14,7 @@ from __future__ import annotations
 import itertools
 import json
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import Any, Final
@@ -23,7 +24,9 @@ import pytest
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
-from release_lib import (  # noqa: E402
+import release_lib
+from release_lib import PLACEHOLDER_VERSION  # noqa: E402
+from release_lib import (
     ADVISORY_VIOLATION_CODES,
     ALLOWED_URL_PREFIX,
     MANIFEST_SCHEMA_VERSION,
@@ -922,3 +925,245 @@ def test_generated_manifest_channel_matches_the_expected_channel() -> None:
     assert ViolationCode.MANIFEST_CHANNEL_MISMATCH.value in _codes(
         validate_manifest(manifest, expected_channel="stable")
     )
+
+
+# ---------------------------------------------------------------------------
+# CLI entry point (blocker B3: two workflows invoke this file as a script)
+# ---------------------------------------------------------------------------
+
+
+def _cli_env(**overrides: str) -> dict[str, str]:
+    env = {
+        "GITHUB_REPOSITORY": "o/r",
+        "GITHUB_SHA": "a" * 40,
+        "GITHUB_RUN_ID": "42",
+        "RYTM_PUB_DATE": "2026-09-14T00:00:00Z",
+        "RYTM_SIGNATURE_LINUX_X86_64": "c2ln",
+    }
+    env.update(overrides)
+    return env
+
+
+def _run_cli(monkeypatch: pytest.MonkeyPatch, argv: list[str], env: dict[str, str]) -> int:
+    for key in list(os.environ):
+        if key.startswith(("GITHUB_", "RYTM_")):
+            monkeypatch.delenv(key, raising=False)
+    for key, value in env.items():
+        monkeypatch.setenv(key, value)
+    return release_lib.main(argv)
+
+
+def test_cli_writes_a_validated_manifest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    out = tmp_path / "nested" / "beta.json"
+    code = _run_cli(
+        monkeypatch,
+        ["generate", "--channel", "beta", "--version", "1.35.0", "--output", str(out)],
+        _cli_env(),
+    )
+    assert code == 0
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["version"] == "1.35.0"
+    assert payload["channel"] == "beta"
+    # The URL the CLI builds must satisfy the validator's own path pin.
+    assert validate_manifest(payload, expected_channel="beta") == ()
+    assert "wrote" in capsys.readouterr().out
+
+
+def test_cli_refuses_without_a_repository(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    env = _cli_env()
+    del env["GITHUB_REPOSITORY"]
+    code = _run_cli(
+        monkeypatch,
+        [
+            "generate",
+            "--channel",
+            "beta",
+            "--version",
+            "1.0.0",
+            "--output",
+            str(tmp_path / "x.json"),
+        ],
+        env,
+    )
+    assert code == 2
+    assert "GITHUB_REPOSITORY" in capsys.readouterr().err
+
+
+def test_cli_refuses_without_a_publication_date(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """No wall-clock fallback: a rerun must reproduce the same manifest."""
+    env = _cli_env()
+    del env["RYTM_PUB_DATE"]
+    code = _run_cli(
+        monkeypatch,
+        [
+            "generate",
+            "--channel",
+            "beta",
+            "--version",
+            "1.0.0",
+            "--output",
+            str(tmp_path / "x.json"),
+        ],
+        env,
+    )
+    assert code == 2
+    assert "publication date" in capsys.readouterr().err
+
+
+def test_cli_refuses_when_no_artifact_is_signed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """An unsigned release must fail loudly, not publish an empty manifest."""
+    env = _cli_env()
+    del env["RYTM_SIGNATURE_LINUX_X86_64"]
+    code = _run_cli(
+        monkeypatch,
+        [
+            "generate",
+            "--channel",
+            "beta",
+            "--version",
+            "1.0.0",
+            "--output",
+            str(tmp_path / "x.json"),
+        ],
+        env,
+    )
+    assert code == 2
+    assert "signed platform artifacts" in capsys.readouterr().err
+
+
+def test_cli_accepts_an_explicit_pub_date_over_the_environment(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    out = tmp_path / "b.json"
+    code = _run_cli(
+        monkeypatch,
+        [
+            "generate",
+            "--channel",
+            "beta",
+            "--version",
+            "1.35.0",
+            "--output",
+            str(out),
+            "--pub-date",
+            "2030-01-01T00:00:00Z",
+            "--rollout-percent",
+            "10",
+            "--notes",
+            "hello",
+        ],
+        _cli_env(),
+    )
+    assert code == 0
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["pub_date"] == "2030-01-01T00:00:00Z"
+    assert payload["rollout_percent"] == 10
+    assert payload["notes"] == "hello"
+
+
+def test_cli_reports_a_refusal_from_the_generator(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """generate() validates its own output; the CLI surfaces that as exit 1."""
+    out = tmp_path / "b.json"
+    code = _run_cli(
+        monkeypatch,
+        ["generate", "--channel", "beta", "--version", "1.35.0", "--output", str(out)],
+        _cli_env(RYTM_SIGNATURE_LINUX_X86_64="not base64 !!!"),
+    )
+    assert code == 1
+    assert "refused by its own validator" in capsys.readouterr().err
+    assert not out.exists()
+
+
+def test_cli_builds_one_entry_per_signed_target(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GITHUB_REPOSITORY", "o/r")
+    platforms = release_lib._platforms_from_env(repository="o/r", version="1.2.3")
+    assert platforms == {}
+
+    monkeypatch.setenv("RYTM_SIGNATURE_DARWIN_AARCH64", "c2ln")
+    platforms = release_lib._platforms_from_env(repository="o/r", version="1.2.3")
+    assert set(platforms) == {"darwin-aarch64"}
+    assert "/releases/download/v1.2.3/" in platforms["darwin-aarch64"]["url"]
+
+
+# ---------------------------------------------------------------------------
+# Blocker B5 (URL path pin) and B7 (placeholder seed)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        f"{ALLOWED_URL_PREFIX}attacker/pages-site/evil.app.tar.gz",
+        f"{ALLOWED_URL_PREFIX}o/r/raw/main/evil.tar.gz",
+        f"{ALLOWED_URL_PREFIX}o/r/blob/main/x.tar.gz",
+    ],
+)
+def test_artifact_url_must_be_a_releases_download_path(url: str) -> None:
+    """Host-pinning alone accepts any attacker-controlled path on github.com.
+
+    Spec §4 requires ``…/releases/download/…``; the Rust client enforces it, so
+    a Python validator that did not would sign off on manifests the client must
+    refuse — the two consumers of one schema on different security boundaries.
+    """
+    platforms = {"linux-x86_64": {"signature": "c2ln", "url": url}}
+    violations = validate_manifest(_valid_manifest(platforms=platforms))
+    assert ViolationCode.MANIFEST_URL_NOT_PINNED.value in _codes(violations)
+    assert not manifest_is_acceptable(violations)
+
+
+def test_artifact_url_pointing_at_another_release_is_refused() -> None:
+    """A v1.34.0 artifact under a v1.35.1 manifest ships the wrong binary.
+
+    The signature still verifies — it signs that other artifact — so nothing
+    downstream would catch it.
+    """
+    platforms = {
+        "linux-x86_64": {
+            "signature": "c2ln",
+            "url": f"{ALLOWED_URL_PREFIX}o/r/releases/download/v1.34.0/a.tar.gz",
+        }
+    }
+    violations = validate_manifest(_valid_manifest(version="1.35.1", platforms=platforms))
+    assert ViolationCode.MANIFEST_URL_VERSION_MISMATCH.value in _codes(violations)
+
+
+def test_artifact_url_without_a_version_segment_is_left_alone() -> None:
+    """Spec §4 mandates the download path, not a version segment in it."""
+    platforms = {
+        "linux-x86_64": {
+            "signature": "c2ln",
+            "url": f"{ALLOWED_URL_PREFIX}o/r/releases/download/latest/a.tar.gz",
+        }
+    }
+    assert validate_manifest(_valid_manifest(platforms=platforms)) == ()
+
+
+def test_a_flagged_placeholder_seed_with_no_platforms_validates() -> None:
+    """The first fetch from a fresh `releases` branch must read as no-update."""
+    seed = _valid_manifest(version=PLACEHOLDER_VERSION, platforms={})
+    seed["placeholder"] = True
+    assert validate_manifest(seed) == ()
+
+
+def test_a_real_manifest_cannot_claim_the_placeholder_exemption() -> None:
+    """The flag alone is not enough — the sentinel version is required too."""
+    fake = _valid_manifest(version="1.35.1", platforms={})
+    fake["placeholder"] = True
+    violations = validate_manifest(fake)
+    assert ViolationCode.MANIFEST_PLATFORMS_EMPTY.value in _codes(violations)
+    assert not manifest_is_acceptable(violations)
+
+
+def test_an_unflagged_empty_manifest_is_still_refused() -> None:
+    violations = validate_manifest(_valid_manifest(version=PLACEHOLDER_VERSION, platforms={}))
+    assert ViolationCode.MANIFEST_PLATFORMS_EMPTY.value in _codes(violations)

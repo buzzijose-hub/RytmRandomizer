@@ -670,3 +670,28 @@ def test_fixture_readme_documents_every_platform_target_and_the_beacon_name() ->
     for target in sorted(PLATFORM_TARGETS):
         assert target in readme, target
         assert f"beacon-1.35.1-{target}.txt" in readme, target
+
+
+def test_loader_unregisters_the_module_when_exec_fails(
+    cli: ModuleType, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A half-executed module must not stay cached in ``sys.modules``.
+
+    The loader registers the module BEFORE ``exec_module`` because release_lib
+    defines frozen slots dataclasses, and dataclasses resolves ``__module__``
+    through ``sys.modules`` while building the class — omitting that
+    registration made this CLI raise AttributeError on EVERY invocation.
+    Registering early means a failing import would otherwise leave a broken
+    module cached for every later importer, so the loader unregisters on the
+    way out.
+    """
+
+    sibling = tmp_path / "validate_manifest.py"
+    (tmp_path / "release_lib.py").write_text("raise RuntimeError('boom')\n", encoding="utf-8")
+    monkeypatch.setattr(cli, "__file__", str(sibling))
+    monkeypatch.delitem(sys.modules, "_rytm_release_lib", raising=False)
+
+    with pytest.raises(RuntimeError, match="boom"):
+        cli._load_validator()
+
+    assert "_rytm_release_lib" not in sys.modules

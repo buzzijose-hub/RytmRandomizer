@@ -451,5 +451,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     return 0
 
 
-if __name__ == "__main__":
+# The module-level entry guard cannot execute under import; main() itself
+# is covered directly.
+if __name__ == "__main__":  # pragma: no cover
     raise SystemExit(main())
