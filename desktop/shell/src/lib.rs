@@ -13,6 +13,7 @@
 //!   describes and feeds their outcomes back in as events.
 
 pub mod sidecar;
+pub mod update_commands;
 pub mod update_journal;
 pub mod update_policy;
 pub mod update_transport;

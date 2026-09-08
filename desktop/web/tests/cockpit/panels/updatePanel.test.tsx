@@ -295,6 +295,30 @@ describe('channel selector', () => {
 });
 
 describe('consent confirmation', () => {
+  it('surfaces a shell rejection instead of swallowing it', async () => {
+    // A rejection means the two ends disagree on the choice vocabulary — the
+    // shell refuses an unrecognised value rather than defaulting, precisely so
+    // a drift shows up. Swallowing it would leave the operator believing a
+    // choice was recorded that never reached the driver.
+    const protocol = await import('../../../src/updateProtocol');
+    const spy = vi
+      .spyOn(protocol, 'confirmUpdateChoiceOnShell')
+      .mockResolvedValue(false);
+
+    mount();
+    connect();
+    act(() => useCockpitStore.getState().setUpdateState(state()));
+
+    fireEvent.click(screen.getByTestId('update-confirm'));
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(spy).toHaveBeenCalled();
+    expect(screen.getByText('The shell did not accept that choice.')).toBeInTheDocument();
+    spy.mockRestore();
+  });
+
   it('records the chosen option, announces once, and notes it in the panel', () => {
     const announced: string[] = [];
     _registerWriter((message) => announced.push(message));

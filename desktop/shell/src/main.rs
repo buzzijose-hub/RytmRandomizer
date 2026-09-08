@@ -22,6 +22,7 @@ use tauri::{
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 
 use rytm_randomizer_shell_lib::sidecar::{self, SidecarLaunch};
+use rytm_randomizer_shell_lib::update_commands;
 use rytm_randomizer_shell_lib::update_journal::{self, UpdateJournal};
 use rytm_randomizer_shell_lib::update_policy::{
     Config as UpdateConfig, ConsentChoice, ErrorCode, JournalRecord, UpdateEvent,
@@ -366,6 +367,52 @@ where
     })
 }
 
+/// The driver handle the update commands dispatch into.
+type UpdateCommands = update_commands::UpdateCommandState<Arc<ShellSink>>;
+
+// ---------------------------------------------------------------------------
+// The update command surface (what the panel's buttons actually invoke)
+// ---------------------------------------------------------------------------
+//
+// Each command is a two-line adapter: turn a gesture into an UpdateEvent and
+// hand it to the driver. No command decides anything — whether an update
+// exists, whether freeze applies, whether a consent is still valid are all the
+// policy's calls. Keeping these thin is what stops a second, divergent state
+// machine growing in the IPC layer.
+
+/// "Check now". Idempotent: the policy ignores a check while one is running.
+#[tauri::command]
+fn update_check_now(state: tauri::State<'_, UpdateCommands>) {
+    state.driver.handle(UpdateEvent::CheckRequested);
+}
+
+/// "Confirm choice" — install now, install on quit, or skip this version.
+///
+/// Returns `Err` on an unrecognised choice rather than defaulting, so a
+/// malformed invocation surfaces in the panel instead of silently installing
+/// or silently suppressing.
+#[tauri::command]
+fn update_confirm_choice(
+    version: String,
+    choice: String,
+    state: tauri::State<'_, UpdateCommands>,
+) -> Result<(), String> {
+    let event = update_commands::prompt_event(&version, &choice)
+        .ok_or_else(|| format!("unrecognised update choice: {choice}"))?;
+    state.driver.handle(event);
+    Ok(())
+}
+
+// NOTE: there is deliberately no `update_set_frozen` command.
+//
+// Freeze is a PROCESS-LIFETIME posture read from `RYTM_RAND_UPDATES` at
+// startup, not runtime state. Adding a command to flip it would mean the
+// policy's freeze short-circuit could change mid-flight — so a check already
+// in the air could complete after the operator froze updates, which is
+// exactly the guarantee freeze exists to make. The panel's checkbox is a
+// client-side rendering of the env var (spec §7), and making it a real
+// toggle is a design change, not a wiring gap.
+
 fn main() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
     let shutdown = Arc::new(AtomicBool::new(false));
@@ -445,6 +492,15 @@ fn main() {
         // The policy half is `Config::install_permitted()`, which is false for
         // the same reason and stops an install effect being emitted at all.
         .plugin(tauri_plugin_updater::Builder::new().build())
+        // Without this the panel's buttons are decorative: "Check now" set a
+        // note and "Confirm choice" updated React state, and neither reached
+        // the driver. Same class of defect as the IPC/DOM mismatch, one layer
+        // up — everything looked wired and nothing was.
+        .manage(UpdateCommands::new(updater_driver.clone()))
+        .invoke_handler(tauri::generate_handler![
+            update_check_now,
+            update_confirm_choice
+        ])
         .setup(move |app| {
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&quit])?;
