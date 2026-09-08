@@ -203,7 +203,13 @@ extend-exclude = '''
 [tool.isort]
 profile = "black"
 line_length = 100
-skip = [".venv", ".worktrees", "Backups", "Exports", "LegacyScripts", "node_modules", "venv"]
+skip = [".venv", ".worktrees", ".claude", "Backups", "Exports", "LegacyScripts", "node_modules", "venv"]
+# `skip` matches a path SEGMENT, so ".claude" alone does not exclude files
+# nested under .claude/worktrees/<name>/... — which is where the Claude Code
+# harness puts agent worktrees. Without the glob, a repo-root `isort .` walks
+# into a sibling agent's checkout and fails the pre-push gate on ANOTHER
+# branch's files; the tempting "fix" is --no-verify, which this repo bans.
+skip_glob = [".claude/*", "*/.claude/*"]
 
 [tool.ruff]
 line-length = 100

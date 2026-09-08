@@ -18,6 +18,7 @@
     "e2e:ci": "playwright test --reporter=github"
   },
   "dependencies": {
+    "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-dialog": "^2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

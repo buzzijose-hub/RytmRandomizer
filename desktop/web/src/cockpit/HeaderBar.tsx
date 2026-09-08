@@ -9,7 +9,11 @@
  * A dismissible reconnect toast appears when a fault recovers to listening.
  */
 
+import { useEffect } from 'react';
+
+import { announce } from '../a11y';
 import { selectConnectionPhase, useCockpitStore } from '../state';
+import { chipLabel, shouldShowChip } from '../updateProtocol';
 import type { ConnectionPhase } from '../ws/protocol';
 
 import { ArmControl } from './ArmControl';
@@ -25,6 +29,39 @@ export const CONNECTION_PHASE_DISPLAY: Readonly<
   fault: { icon: '⚠', label: 'fault' },
 };
 
+/**
+ * Update chip — `⬆ 1.35.1 ready` (spec §7 / §7.1 header mockup).
+ *
+ * Icon + shape + text, never hue alone. Hidden outright in freeze mode and
+ * in every state but `staged` (rollout-excluded is indistinguishable from
+ * up-to-date by design, §5). Calm: no animation, no pulse, no countdown —
+ * and announced exactly ONCE per staged version, not on every re-render,
+ * so the polite live region never becomes a ticker.
+ */
+export function UpdateChip(): JSX.Element | null {
+  const update = useCockpitStore((s) => s.update);
+  const visible = shouldShowChip(update);
+  const version = update.state?.version ?? '';
+
+  // Once per (visible, version) pair — the dependency array IS the
+  // de-duplicator. A re-render that changes neither (a refreshed manifest
+  // for the SAME staged version, an unrelated store write) re-runs nothing,
+  // so the polite live region never becomes a ticker. Leaving and re-
+  // entering the staged state does announce again, which is correct: the
+  // operator saw the chip disappear.
+  useEffect(() => {
+    if (!visible) return;
+    announce(`Update ${version} ready to install`);
+  }, [visible, version]);
+
+  if (!visible) return null;
+  return (
+    <span className="badge update-chip" data-testid="update-chip">
+      {chipLabel(version)}
+    </span>
+  );
+}
+
 export function HeaderBar(): JSX.Element {
   const session = useCockpitStore((s) => s.sessionStatus);
   const phase = useCockpitStore(selectConnectionPhase);
@@ -39,6 +76,7 @@ export function HeaderBar(): JSX.Element {
       <header className="cockpit-header" data-testid="header-bar">
         <span className="title">RytmRandomizer · Cockpit</span>
         <span className="badge">disconnected</span>
+        <UpdateChip />
         <ArmControl />
       </header>
     );
@@ -75,6 +113,7 @@ export function HeaderBar(): JSX.Element {
           </button>
         </span>
       )}
+      <UpdateChip />
       <ArmControl />
     </header>
   );

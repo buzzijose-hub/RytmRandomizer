@@ -225,6 +225,13 @@ describe('cockpit store — actions write each slice', () => {
       midiActivityPaused: false,
       libraryRecords: null,
       diagnostics: null,
+      update: {
+        state: null,
+        journal: [],
+        channel: 'stable',
+        frozen: false,
+        confirmedChoice: null,
+      },
       showBank: null,
       showBankStale: true,
     });

@@ -237,3 +237,64 @@
 .midi-activity-dot.flashing {
   color: var(--green);
 }
+
+/* ---------- Update panel + chip (spec §7.1) ----------
+   Deliberately motionless: no animation, no transition, no pulse. The
+   update surface is "persistent but calm until acted on" (§7), so there is
+   nothing here for prefers-reduced-motion to override. Every state pairs a
+   glyph with text — colour is reinforcement, never the only signal. */
+
+.update-chip {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.update-channel-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.update-channel-select {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 12px;
+}
+
+.update-consent {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-2);
+}
+
+.update-consent > legend {
+  padding: 0 4px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.update-consent-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.update-freeze {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  color: var(--text);
+  font-size: 12px;
+}

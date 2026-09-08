@@ -32,8 +32,20 @@
       "tooltip": "RytmRandomizer Cockpit"
     }
   },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://raw.githubusercontent.com/buzzijose-hub/RytmRandomizer/releases/stable.json"
+      ],
+      "pubkey": "",
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": true,
     "targets": "all",
     "icon": [
       "icons/icon.png",

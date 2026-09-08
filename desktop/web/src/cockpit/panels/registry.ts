@@ -12,6 +12,7 @@ import { LibraryPanel } from './LibraryPanel';
 import { LiveMidiMonitorPanel } from './LiveMidiMonitorPanel';
 import { PanelRenderer } from './PanelRenderer';
 import { ScopedRandomizationPanel } from './ScopedRandomizationPanel';
+import { UpdatePanel } from './UpdatePanel';
 
 /**
  * Schema-driven panel manifest. Adding a cockpit panel is one entry here:
@@ -81,6 +82,8 @@ export const PANEL_REGISTRY: ReadonlyArray<PanelManifestEntry> = [
     component: ScopedRandomizationPanel,
   },
   { kind: 'store-slice', id: 'kit-morph', region: 'bottom', component: KitMorphPanel },
+  // Bottom region, beside the Connection Doctor (spec §7).
+  { kind: 'store-slice', id: 'updates', region: 'bottom', component: UpdatePanel },
   {
     kind: 'store-slice',
     id: 'show-kit-forge',

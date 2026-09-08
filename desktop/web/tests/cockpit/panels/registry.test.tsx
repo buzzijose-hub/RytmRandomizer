@@ -24,6 +24,7 @@ const EXPECTED_BOTTOM_PANEL_IDS: ReadonlyArray<string> = [
   'library',
   'scoped-randomization',
   'kit-morph',
+  'updates',
   'show-kit-forge',
 ];
 
@@ -34,6 +35,7 @@ const EXPECTED_BOTTOM_TESTIDS: ReadonlyArray<string> = [
   'library-panel',
   'scoped-randomization',
   'kit-morph',
+  'update-panel',
   'show-kit-forge',
 ];
 
