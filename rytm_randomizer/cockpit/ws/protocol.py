@@ -500,6 +500,14 @@ class SessionStatusEvent(TypedDict):
     Wave-3 ConnectionManager (derived from the adapter when no manager
     is registered), and the count of SEND-since-last-SAVE operations the
     operator has accumulated.
+
+    ``app_version`` is the auto-update programme's **contract I1**: the
+    strict-SemVer version of the *sidecar* half of a running install,
+    resolved from the version spine by
+    :func:`rytm_randomizer.cockpit.ws.app_version.resolve_app_version`.
+    It is read-only server->client state carried on the existing
+    handshake frame -- a string, never an instruction, and never a
+    transmit authority.
     """
 
     type: Literal["session_status"]
@@ -509,6 +517,7 @@ class SessionStatusEvent(TypedDict):
     connection_phase: Literal["disconnected", "searching", "listening", "armed", "fault"]
     unsaved_sends: int
     capture_enabled: bool
+    app_version: str
 
 
 class ConnectionStateDict(TypedDict):

@@ -4,7 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rytm-randomizer"
-version = "1.34.0"
+# The version is DERIVED, never hand-authored here. The repo-root `VERSION`
+# file is the single source of truth (auto-update spec §2); hatchling reads it
+# via [tool.hatch.version] below, and `scripts/sync_version.py` propagates the
+# same value into the other declarations. `tests/architecture/
+# test_version_single_source.py` fails CI on any drift.
+dynamic = ["version"]
 description = "A MIDI randomizer/mutator for the Elektron Analog Rytm MK2."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -109,6 +114,16 @@ packaging = [
 [project.scripts]
 rytm-randomizer = "rytm_randomizer.app:main"
 
+# The build backend resolves `[project] dynamic = ["version"]` by reading the
+# repo-root VERSION file verbatim — one line, strict SemVer, no prefix. The
+# permissive pattern is deliberate: VERSION's *format* is enforced by
+# tests/architecture/test_version_single_source.py (and by
+# scripts/release_lib.py at every write), not by a regex here that would fail
+# the build with an opaque backend error instead of a named test.
+[tool.hatch.version]
+path = "VERSION"
+pattern = "^(?P<version>.+)$"
+
 [tool.hatch.build.targets.wheel]
 packages = ["rytm_randomizer"]
 
@@ -182,14 +197,13 @@ target-version = ["py39", "py310", "py311"]
 extend-exclude = '''
 /(
   \.worktrees
-  | \.claude/worktrees
 )/
 '''
 
 [tool.isort]
 profile = "black"
 line_length = 100
-skip = [".venv", ".worktrees", ".claude", "Backups", "Exports", "LegacyScripts", "node_modules", "venv"]
+skip = [".venv", ".worktrees", "Backups", "Exports", "LegacyScripts", "node_modules", "venv"]
 
 [tool.ruff]
 line-length = 100
@@ -289,9 +303,14 @@ ignore = [
 # On macOS, console_app = true forces the .pkg output format (a .app bundle
 # cannot host a clean stdin/stdout terminal experience).
 #
-# The version below MUST match [project] version above. Keeping the two in
-# sync is currently manual; see docs/BUILDING_INSTALLERS.md for the release
-# checklist. The bundle id `com.rytmrandomizer` is the stable reverse-DNS
+# The version below is DERIVED from the repo-root VERSION file, not
+# hand-authored. briefcase has no dynamic-version hook (unlike [project],
+# which hatchling resolves from VERSION), so the literal must physically live
+# here — it is a real second consumer, not a stale duplicate: briefcase stamps
+# it onto the .msi / .pkg / AppImage. `python scripts/sync_version.py`
+# (or `just version-sync`) writes it; `--check` verifies it, and
+# tests/architecture/test_version_single_source.py fails CI on drift. Never
+# edit it by hand. The bundle id `com.rytmrandomizer` is the stable reverse-DNS
 # identifier used for app registration on macOS and Windows -- changing it
 # after the first signed release would break upgrade paths.
 #

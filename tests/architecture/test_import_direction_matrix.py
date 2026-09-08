@@ -164,6 +164,14 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
         {
             "cockpit.export",
             "cockpit.profiles",
+            # Auto-update spec §11 Contract A: the store declares its
+            # persisted schema_version in the data-layer registry and
+            # routes loads through its pure classification policy, then
+            # raises the shared taxonomy error and records the Gate 7
+            # counters. Both are downward edges (data is a leaf,
+            # observability is the cross-cutting stack).
+            "data",
+            "observability",
             # Wave 4: the library importer decodes captures through the
             # devices registry (device-generic decode) and extracts SysEx
             # payloads via snapshot/sysex_file.
@@ -175,6 +183,10 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
         {
             "cockpit.data",
             "cockpit.export",
+            # Auto-update spec §11 Contract A — same persisted-state
+            # registry edge as cockpit.library above. ``observability``
+            # was already declared for the taxonomy errors.
+            "data",
             "observability",
         }
     ),
@@ -194,6 +206,12 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
     ),
     "cockpit.ws": frozenset(
         {
+            # Contract I7 (auto-update spec §2): `_version` is the ONE version
+            # accessor. cockpit.ws puts the running version on the
+            # session-status handshake frame; re-deriving it from pyproject /
+            # VERSION / importlib.metadata anywhere else is exactly the fork
+            # the version spine exists to prevent.
+            "_version",
             "cockpit.capture",
             "cockpit.data",
             "cockpit.device",

@@ -50,6 +50,11 @@ export interface SessionStatus {
   unsaved_sends: number;
   /** Additive capability flag; absent on older sidecar/session fixtures. */
   capture_enabled?: boolean;
+  /**
+   * Auto-update contract I1: the sidecar's strict-SemVer version.
+   * Absent on a pre-I1 sidecar (older dev-loop checkout).
+   */
+  app_version?: string;
 }
 
 /** One monitor row with a client-side id (React key for the bounded ring). */
@@ -90,6 +95,16 @@ export interface CockpitState {
   performanceConsole: LiveGuiPerformanceConsoleModelDict | null;
   sendPlan: CockpitSendPlan | null;
   sessionStatus: SessionStatus | null;
+  /**
+   * Auto-update contract I1 — the sidecar's SemVer, read-only.
+   *
+   * Populated exclusively by `setSessionStatus` from the `session_status`
+   * handshake frame; there is deliberately **no** `setAppVersion` action,
+   * so no UI surface can write it. `null` until the handshake completes
+   * (or permanently, against a pre-I1 sidecar that omits the field).
+   * Nothing renders it yet — the update chip and panel are a later PR.
+   */
+  appVersion: string | null;
   connectionStatus: ConnectionStatus;
   operatorLog: OperatorLogEntry[];
   /** Latest passive connection observation ← connection_changed.connection. */
@@ -159,6 +174,7 @@ export const INITIAL_STATE: CockpitState = {
   performanceConsole: null,
   sendPlan: null,
   sessionStatus: null,
+  appVersion: null,
   connectionStatus: 'closed',
   operatorLog: [],
   connection: null,
@@ -319,7 +335,18 @@ export function createCockpitStore() {
       }),
     setPerformanceConsole: (model) => set({ performanceConsole: model }),
     setSendPlan: (sendPlan) => set({ sendPlan }),
-    setSessionStatus: (status) => set({ sessionStatus: status }),
+    // Contract I1: `appVersion` is derived here and nowhere else — the
+    // store exposes no `setAppVersion`, so the handshake frame is the
+    // slice's only writer. A later `session_status` refresh that omits
+    // `app_version` (pre-I1 sidecar, or a frame built by an older
+    // handler) leaves the last known value in place rather than
+    // flickering it to null; the version of a running sidecar cannot
+    // change without a reconnect, and `reset()` clears it on disconnect.
+    setSessionStatus: (status) =>
+      set((state) => ({
+        sessionStatus: status,
+        appVersion: status.app_version ?? state.appVersion,
+      })),
     setConnectionStatus: (status) =>
       set((state) =>
         status === 'connected'

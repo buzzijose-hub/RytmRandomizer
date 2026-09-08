@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "channel": "beta",
+  "version": "0.0.0",
+  "pub_date": "1970-01-01T00:00:00Z",
+  "notes": "Placeholder seed. No release has been published to this channel yet. Clients treat this as 'no update available' because version 0.0.0 is never newer than a running build (spec \u00a74). The first release.yml run overwrites this file with a real manifest.",
+  "hardware_revalidation": false,
+  "rollout_percent": 0,
+  "minimum_version": null,
+  "build": {
+    "source_sha": "0000000000000000000000000000000000000000",
+    "workflow_run_url": "",
+    "builder_workflow_sha": "0000000000000000000000000000000000000000"
+  },
+  "platforms": {},
+  "placeholder": true
+}

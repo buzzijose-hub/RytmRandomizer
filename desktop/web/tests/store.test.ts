@@ -199,6 +199,9 @@ describe('cockpit store — actions write each slice', () => {
       performanceConsole: null,
       sendPlan: null,
       sessionStatus: null,
+      // Contract I1 — read-only, populated only by the handshake frame.
+      // Full slice behaviour lives in tests/appVersion.test.ts.
+      appVersion: null,
       connectionStatus: 'closed',
       operatorLog: [],
       connection: null,

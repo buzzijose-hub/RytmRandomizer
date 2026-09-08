@@ -84,6 +84,19 @@ vulture:
     python -m vulture rytm_randomizer/ tests/ --min-confidence 80
 
 # ─────────────────────────────────────────────────────────────────────────
+# VERSION (single source of truth: the repo-root VERSION file)
+# ─────────────────────────────────────────────────────────────────────────
+
+# Propagate VERSION into every derived declaration ([tool.briefcase] version,
+# Cargo.toml, tauri.conf.json, package.json). Idempotent — safe to re-run.
+version-sync:
+    python scripts/sync_version.py
+
+# Verify the derived declarations match VERSION; write nothing, fail on drift.
+version-check:
+    python scripts/sync_version.py --check
+
+# ─────────────────────────────────────────────────────────────────────────
 # CLOSEOUT (the pre-PR verification gate)
 # ─────────────────────────────────────────────────────────────────────────
 
@@ -95,8 +108,8 @@ closeout:
 closeout-ps:
     powershell -ExecutionPolicy Bypass -File Scripts/closeout_check.ps1
 
-# Full pre-PR check: lint + strict production typing + arch + full test suite + coverage
-check: lint typecheck arch test cov
+# Full pre-PR check: version drift + lint + strict production typing + arch + full test suite + coverage
+check: version-check lint typecheck arch test cov
     @echo "✓ All checks passed. Ready to push."
 
 # ─────────────────────────────────────────────────────────────────────────

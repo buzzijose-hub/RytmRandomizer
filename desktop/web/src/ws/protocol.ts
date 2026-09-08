@@ -623,6 +623,15 @@ export interface SessionStatusEvent {
   unsaved_sends: number;
   /** Additive capability flag; older sidecars may omit it. */
   capture_enabled?: boolean;
+  /**
+   * Auto-update contract I1: the sidecar half's strict-SemVer version.
+   *
+   * Read-only server -> client state carried on the handshake frame.
+   * Optional because a pre-I1 sidecar (a dev loop pinned to an older
+   * checkout) omits it entirely; consumers treat `undefined` as
+   * "version unknown" and must never block on it.
+   */
+  app_version?: string;
 }
 
 /** `connection_changed` — the full fresh ConnectionStateDict (never a delta). */
