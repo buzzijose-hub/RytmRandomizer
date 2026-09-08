@@ -12,6 +12,7 @@ from typing import Final
 
 from ..commands import GROUP_COMMANDS
 from ..scenes import SCENE_COMMANDS
+from ._result_fields import empty_metadata
 
 PACKET_4A_SCENE_INTENT_KEYS = tuple(SCENE_COMMANDS)
 PACKET_4B_GROUP_MUTATION_INTENT_KEYS = ("X", "D", "I", "4")
@@ -98,7 +99,7 @@ class SceneGroupBehaviorResult:
     opens_ports: bool = False
     hardware_required: bool = False
     active_behavior: bool = False
-    metadata: Mapping[str, object] = field(default_factory=dict)
+    metadata: Mapping[str, object] = field(default_factory=empty_metadata)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "display_lines", tuple(self.display_lines))
@@ -122,7 +123,9 @@ def evaluate_scene_group_behavior(command_key: str) -> SceneGroupBehaviorResult:
     if key in PACKET_4D_GROUP_ANCHOR_INTENT_KEYS:
         return _accepted_group_anchor_intent_result(key)
 
-    if key in DEFERRED_GROUP_MUTATION_KEYS:
+    if (
+        key in DEFERRED_GROUP_MUTATION_KEYS
+    ):  # pyright: ignore[reportUnnecessaryContains]  # drained deferral list; branch kept as the contract for a future deferral
         return SceneGroupBehaviorResult(
             command_key=key,
             accepted=False,
@@ -130,7 +133,9 @@ def evaluate_scene_group_behavior(command_key: str) -> SceneGroupBehaviorResult:
             metadata=_safe_failure_metadata("GROUP_COMMANDS"),
         )
 
-    if key in DEFERRED_LANE_AWARE_GROUP_MUTATION_KEYS:
+    if (
+        key in DEFERRED_LANE_AWARE_GROUP_MUTATION_KEYS
+    ):  # pyright: ignore[reportUnnecessaryContains]  # drained deferral list; branch kept as the contract for a future deferral
         return SceneGroupBehaviorResult(
             command_key=key,
             accepted=False,

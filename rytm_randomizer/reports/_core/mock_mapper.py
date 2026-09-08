@@ -65,7 +65,21 @@ class MockMapperSummaryDict(TypedDict):
 
 UNSUPPORTED_SAFE_GROUP_PROFILE_KEYS: Final[tuple[str, ...]] = ("4",)
 
-MOCK_MAPPER_BOUNDARY: Final[dict[str, object]] = {
+
+class MockMapperBoundaryDict(TypedDict):
+    """Boundary block spread into the report literal."""
+
+    mock_only: bool
+    real_midi: str
+    port_opening: str
+    cli_wiring: str
+    active_behavior: str
+    hardware_required: bool
+    analog_four_support: str
+    pads_5_12_support: str
+
+
+MOCK_MAPPER_BOUNDARY: Final[MockMapperBoundaryDict] = {
     "mock_only": True,
     "real_midi": "absent",
     "port_opening": "absent",

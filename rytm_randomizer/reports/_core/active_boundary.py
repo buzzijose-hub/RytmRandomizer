@@ -135,12 +135,19 @@ ACTIVE_BOUNDARY_CLOSEOUT_COVERAGE: Final[tuple[str, ...]] = (
 def _unsupported_profile_summary(profile_key: str) -> UnsupportedProfileSummaryDict:
     summary = profile_summary_row(profile_key)
     if str(profile_key) == "3":
-        summary["reason"] = "mock mapper/report scope only; not active-boundary supported"
+        reason = "mock mapper/report scope only; not active-boundary supported"
     elif str(profile_key) == "4":
-        summary["reason"] = "parked until separately approved"
+        reason = "parked until separately approved"
     else:
-        summary["reason"] = "unsupported by active boundary"
-    return summary
+        reason = "unsupported by active boundary"
+    return {
+        "profile_key": summary["profile_key"],
+        "name": summary["name"],
+        "group_pad": summary["group_pad"],
+        "machine_value": summary["machine_value"],
+        "target": summary["target"],
+        "reason": reason,
+    }
 
 
 def build_active_boundary_report() -> ActiveBoundaryReportDict:

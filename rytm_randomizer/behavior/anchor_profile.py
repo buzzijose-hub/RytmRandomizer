@@ -10,6 +10,7 @@ from types import MappingProxyType
 
 from ..commands import COMMANDS, PAD1_COMMANDS
 from ..profile_lookup import describe_group_profile
+from ._result_fields import empty_metadata
 
 PACKET_2A_ANCHOR_PROFILE_KEYS = ("BH", "BC")
 PACKET_2B_ANCHOR_PROFILE_KEYS = ("BS",)
@@ -55,7 +56,7 @@ class AnchorProfileBehaviorResult:
     opens_ports: bool = False
     hardware_required: bool = False
     active_behavior: bool = False
-    metadata: Mapping[str, object] = field(default_factory=dict)
+    metadata: Mapping[str, object] = field(default_factory=empty_metadata)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "display_lines", tuple(self.display_lines))
@@ -91,9 +92,9 @@ def _accepted_anchor_profile_result(command_key: str) -> AnchorProfileBehaviorRe
     profile_key = _COMMAND_PROFILE_KEYS[command_key]
     profile = describe_group_profile(profile_key) if profile_key else None
     anchor_name = _COMMAND_ANCHOR_NAMES[command_key]
-    target_pad = command_metadata["pad"]
-    label = command_metadata["label"]
-    machine_value = profile["machine_value"] if profile else None
+    target_pad = int(str(command_metadata["pad"]))
+    label = str(command_metadata["label"])
+    machine_value = int(str(profile["machine_value"])) if profile else None
 
     return AnchorProfileBehaviorResult(
         command_key=command_key,

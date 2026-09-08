@@ -145,7 +145,21 @@ UNSUPPORTED_REPORT_INPUTS: Final[tuple[dict[str, object], ...]] = (
     },
 )
 
-RUNTIME_PLAN_REPORT_BOUNDARY: Final[dict[str, object]] = {
+
+class RuntimePlanBoundaryDict(TypedDict):
+    """Boundary block spread into the report literal."""
+
+    runtime_execution: str
+    cli_execution_wiring: str
+    dispatch: str
+    command_execution: str
+    scene_execution: str
+    real_midi: str
+    port_opening: str
+    hardware_required: bool
+
+
+RUNTIME_PLAN_REPORT_BOUNDARY: Final[RuntimePlanBoundaryDict] = {
     "runtime_execution": "absent",
     "cli_execution_wiring": "absent",
     "dispatch": "absent",

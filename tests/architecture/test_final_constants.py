@@ -331,7 +331,6 @@ _GRANDFATHERED_BARE_CONSTANTS: Final[frozenset[str]] = frozenset(
         "rytm_randomizer/behavior/menu_utility.py:PACKET_1B_UTILITY_SESSION_KEYS",
         "rytm_randomizer/behavior/menu_utility.py:_SPECIAL_SCOPES",
         "rytm_randomizer/behavior/mutation_depth.py:DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS",
-        "rytm_randomizer/behavior/pad_lane.py:DEFERRED_PACKET_5_PAD1_LANE_KEYS",
         "rytm_randomizer/behavior/pad_lane.py:DEFERRED_PACKET_6_PAD2_LANE_KEYS",
         "rytm_randomizer/behavior/pad_lane.py:DEFERRED_PACKET_7_PAD3_LANE_KEYS",
         "rytm_randomizer/behavior/pad_lane.py:DEFERRED_PACKET_8_PAD4_LANE_KEYS",

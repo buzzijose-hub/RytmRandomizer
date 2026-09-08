@@ -165,7 +165,24 @@ PARITY_PROTECTED_FILE_STATE: Final[dict[str, str]] = {
     "runtime_execution_logic": "absent",
 }
 
-PARITY_REPORT_BOUNDARY: Final[dict[str, object]] = {
+
+class ParityBoundaryDict(TypedDict):
+    """Boundary block spread into the report literal."""
+
+    read_only: bool
+    in_memory_only: bool
+    cli_visibility: str
+    dispatch: str
+    command_execution: str
+    scene_execution: str
+    real_midi: str
+    port_opening: str
+    active_behavior: str
+    hardware_behavior: str
+    hardware_required: bool
+
+
+PARITY_REPORT_BOUNDARY: Final[ParityBoundaryDict] = {
     "read_only": True,
     "in_memory_only": True,
     "cli_visibility": "present",

@@ -14,6 +14,7 @@ from ..commands import COMMANDS, ISOLATED_PAD_UTILITY_COMMANDS
 from ..state.selected_isolated_pad_validation import (
     build_passive_default_selected_isolated_pad_runtime_state,
 )
+from ._result_fields import empty_metadata
 
 PACKET_11A_SELECTED_ISOLATED_PAD_KEYS = ("L",)
 PACKET_11B_SELECTED_ISOLATED_PAD_KEYS = ("PZ",)
@@ -52,7 +53,7 @@ class SelectedIsolatedPadBehaviorResult:
     opens_ports: bool = False
     hardware_required: bool = False
     active_behavior: bool = False
-    metadata: Mapping[str, object] = field(default_factory=dict)
+    metadata: Mapping[str, object] = field(default_factory=empty_metadata)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "display_lines", tuple(self.display_lines))
@@ -86,9 +87,9 @@ def evaluate_selected_isolated_pad_behavior(
 
 def _accepted_l_result() -> SelectedIsolatedPadBehaviorResult:
     metadata = ISOLATED_PAD_UTILITY_COMMANDS["L"]
-    label = metadata["label"]
+    label = str(metadata["label"])
     behavior_family = "selected-isolated-pad/target-selection"
-    source_scope = metadata["scope"]
+    source_scope = str(metadata["scope"])
     utility_action = "describe_selected_isolated_pad_target_intent"
     intent_kind = "selected_isolated_pad_target_selection"
     default_pad = int(metadata["default_pad"])
