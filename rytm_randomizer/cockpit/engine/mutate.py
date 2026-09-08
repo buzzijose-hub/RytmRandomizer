@@ -18,7 +18,8 @@ See :doc:`spec.md <./spec>` for the normative algorithm. Hard rules:
 * Float arithmetic uses IEEE-754 double precision (Python's ``float``,
   C's ``double``). The formula is encoded to avoid catastrophic
   cancellation; see spec §"Arithmetic" for the rationale.
-* Clamp output to ``[0, 127]`` (Rytm MIDI CC value range).
+* Clamp manual-backed parameters to their documented value domains and
+  unmapped parameters to ``[0, 127]`` (the Rytm MIDI CC value range).
 * Emit a key into ``proposed_params`` for **every** input key
   (unchanged or not); record only **actually-changed** keys in
   ``changed_keys`` so callers can compute the MIDI send list cheaply.
@@ -37,6 +38,7 @@ from ..data import (
     Status,
     new_ulid,
 )
+from ..data.rytm_parameter_map import cockpit_parameter_mapping
 from ..mutation_targets import MutationTargets
 from .prng import xorshift32
 
@@ -137,13 +139,26 @@ def _pad_bias(profile: ProfileModel, pad_id: int) -> float:
     return weighted_sum / divisor
 
 
-def _clamp_cc(value: int) -> int:
-    """Clamp ``value`` to the inclusive ``[0, 127]`` Rytm CC range."""
+def _clamp_parameter(value: int, *, machine: str, parameter: str) -> int:
+    """Clamp one proposal to its manual-backed domain when available.
 
-    if value < _CC_MIN:
-        return _CC_MIN
-    if value > _CC_MAX:
-        return _CC_MAX
+    Selector-valued controls such as LFO waveform and trigger mode occupy a
+    much narrower normalized range than the enclosing MIDI byte.  Sending an
+    arbitrary ``0..127`` value for those controls makes a later saved-KIT
+    recapture normalize to a different semantic value, so Show Kit Forge could
+    never prove that the hardware favorite matched its candidate.  The shared
+    manual catalog is the authority for known fields; unknown fields retain the
+    historical full-CC fallback and are still omitted by the send-plan boundary
+    when no safe control mapping exists.
+    """
+
+    mapping = cockpit_parameter_mapping(machine, parameter)
+    minimum = _CC_MIN if mapping is None else mapping.value_min
+    maximum = _CC_MAX if mapping is None else mapping.value_max
+    if value < minimum:
+        return minimum
+    if value > maximum:
+        return maximum
     return value
 
 
@@ -153,6 +168,7 @@ def mutate(
     depth: float,
     seed: int,
     target_pad_ids: frozenset[int] = frozenset(),
+    locked_pad_ids: frozenset[int] = frozenset(),
 ) -> MutationCandidate:
     """Generate a ``MutationCandidate`` from a snapshot, profile, depth, seed.
 
@@ -178,6 +194,10 @@ def mutate(
             historical all-pad behavior. Untargeted pads still consume their
             deterministic PRNG draws so a selected pad's proposed values do
             not change merely because the surrounding include-list changes.
+        locked_pad_ids: Pad deny-list applied after the include-list. Locks
+            are enforced while generating the candidate as well as by the
+            final send-plan boundary. If every available pad is locked, the
+            candidate contains no deltas.
 
     Returns:
         A fully-formed ``MutationCandidate`` with one ``PadDelta`` per
@@ -185,7 +205,8 @@ def mutate(
         ``estimated_midi_msgs`` is the total ``changed_keys`` count.
     """
 
-    explicit_targets = MutationTargets(rytm_pad_targets=target_pad_ids).rytm_pad_targets
+    scope = MutationTargets(rytm_pad_targets=target_pad_ids).rytm_scope(locked_pad_ids)
+    effective_pad_ids = scope.effective_ids(pad.pad_id for pad in snapshot.pads)
     state = _PRNG_SEED_FOR_ZERO if seed == 0 else (seed & 0xFFFFFFFF)
     # xorshift32 cannot escape state==0; the masking step above lets
     # callers pass any Python int and have it normalised to uint32.
@@ -221,12 +242,16 @@ def mutate(
             # independent but disagrees with C's round() on half-values.
             # The spec docs the choice; C-port authors implement
             # round-half-away-from-zero explicitly.
-            new_value = _clamp_cc(value + _round_half_away_from_zero(delta))
+            new_value = _clamp_parameter(
+                value + _round_half_away_from_zero(delta),
+                machine=pad.machine,
+                parameter=key,
+            )
             proposed[key] = new_value
             if new_value != value:
                 changed.add(key)
 
-        if not explicit_targets or pad.pad_id in explicit_targets:
+        if pad.pad_id in effective_pad_ids:
             pad_deltas.append(
                 PadDelta(
                     pad_id=pad.pad_id,

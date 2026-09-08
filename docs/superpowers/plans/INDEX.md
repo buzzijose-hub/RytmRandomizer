@@ -15,6 +15,7 @@ Requirements gates for all plans: [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUI
 
 | Date | Plan | Status | PR |
 |---|---|---|---|
+| 2026-09-04 | [show-kit-forge](2026-09-04-show-kit-forge.md) | in-flight — software assembled / hardware-blocked |  |
 | 2026-08-26 | [targeted-live-kit-mutation](2026-08-26-targeted-live-kit-mutation.md) | in-flight — software-complete / hardware-blocked | #237 |
 | 2026-08-26 | [cockpit-live-genome-profile-catalog](2026-08-26-cockpit-live-genome-profile-catalog.md) | superseded by targeted-live-kit-mutation | #237 |
 | 2026-08-08 | [rio145-dual-kit-codec-integration](2026-08-08-rio145-dual-kit-codec-integration.md) | in-flight |  |

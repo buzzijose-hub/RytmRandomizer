@@ -39,7 +39,7 @@ from __future__ import annotations
 
 import secrets
 from dataclasses import dataclass, field
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from ...observability.logging import get_logger
 from ...senders.armed_apply import ArmedApplySession
@@ -53,6 +53,10 @@ from ..library import LibraryStore
 from ..profiles import ProfileRegistry
 from ..stage import DualMachineStageCoordinator
 from .wizard_session import WizardSession
+
+if TYPE_CHECKING:
+    from ..show_bank.export import ShowPackService
+    from ..show_bank.workspace import ShowKitForgeWorkspace
 
 _logger = get_logger(__name__)
 """Module logger for the cockpit per-process session container. Bound
@@ -192,6 +196,12 @@ class CockpitSession:
     the current whole-state event contract stays intact, including the
     authoritative 11-event bootstrap without an implicit library frame.
     """
+
+    show_kit_forge: ShowKitForgeWorkspace | None = None
+    """Versioned local paired-kit workspace, or ``None`` when unwired."""
+
+    show_pack_service: ShowPackService | None = None
+    """Server-rooted portable pack boundary, or ``None`` when unwired."""
 
     error_journal: ErrorJournal = field(default_factory=ErrorJournal)
     """Bounded in-instance journal of the last 50 categorized errors.
