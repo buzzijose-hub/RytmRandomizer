@@ -253,6 +253,21 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
     ),
     "local_ai": frozenset({"observability"}),
     "observability": frozenset(),
+    # ``reports._core`` holds the report builders/formatters extracted from
+    # the former monolithic ``reports/__init__`` when it hit the 1500-LOC cap.
+    # Its edges are a strict subset of the ``reports`` row below — the split
+    # moved code, it did not add a dependency.
+    "reports._core": frozenset(
+        {
+            "active_boundary",
+            "behavior",
+            "cli_registry",
+            "mock_message_mapper",
+            "profile_lookup",
+            "registry",
+            "runtime_plan",
+        }
+    ),
     "reports": frozenset(
         {
             "observability",  # PR #214 merge: patch-batch reports emit bounded RED telemetry
