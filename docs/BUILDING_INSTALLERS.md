@@ -303,15 +303,67 @@ gate PRs. The installer job runs only on `v*` tags and manual dispatch.
 
 ## Signing
 
-> **Current status: DEFERRED (maintainer decision, 2026-07).** CI
-> produces unsigned / ad-hoc-signed **dev artifacts only** — no signing
-> steps run in `installers.yml` (for the Briefcase installers, the Tauri
-> bundle, or the bundled `rytm-sidecar` binary), and no signing keys
-> live in GitHub Secrets. The placeholders below document the eventual
-> workflow for when the signing/notarization posture decision lands.
-> Until then, expect SmartScreen / Gatekeeper warnings on the dev
-> artifacts (right-click → Open on macOS; "More info → Run anyway" on
-> Windows).
+> **OS code signing remains deferred.** The Windows certificate and macOS
+> Developer ID/notarization steps below still require maintainer provisioning.
+> Updater signatures are a separate mechanism: the release train now creates
+> and verifies them when its updater keypair is configured. An updater
+> signature does not establish Windows publisher identity or Apple notarization.
+
+### Verified updater release assembly
+
+Configure repository variable `TAURI_SIGNING_PUBLIC_KEY` with the public key
+document emitted by Tauri (outer base64), secret `TAURI_SIGNING_PRIVATE_KEY`
+with its matching private key, and optional secret
+`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. These use the
+[official Tauri updater signing contract](https://v2.tauri.app/plugin/updater/#signing-updates).
+No production key is generated or provisioned by this repair.
+
+The reusable installer workflow explicitly passes signing secrets to the Tauri
+build. Before compilation, `scripts/release_artifacts.py configure` rewrites
+the actual `desktop/shell/tauri.conf.json` with the resolved public key and
+`createUpdaterArtifacts` posture. This must be a file rewrite, because
+`updater::signing_key_present()` reads that file with Rust `include_str!`;
+a CLI configuration overlay alone would leave the guard reporting no key.
+The normal `cargo tauri build` then signs native updater bytes. The collector
+requires the bundle version to match `VERSION` and records its source commit.
+
+There are four desktop targets: Windows x86_64, Linux x86_64, macOS x86_64,
+and macOS aarch64. The two Mac builds use separate native runners. Updater
+assets preserve the format Tauri consumes: Windows NSIS `.exe`, Linux
+`.AppImage`, and macOS `.app.tar.gz`. No universal archive extension is
+invented. The release URL is derived from the collected asset's actual name.
+
+The assembly job downloads Python wheel/sdist, all indexed desktop bundles,
+Briefcase installers, and standalone sidecars. It verifies each indexed hash,
+source/version, public key, signature sidecar, and exact updater bytes using
+the reference [Minisign verifier](https://github.com/jedisct1/minisign).
+Only successful verification for all four targets sets `signed=true`.
+The same job writes the beta manifest with a reproducible UTC date from the
+source commit and generates four one-byte beacon assets. The exact assembled
+directory is both retained as workflow evidence and used for release upload.
+
+Without the updater private key, builds set `createUpdaterArtifacts=false`
+and still produce ordinary distributions. Non-dry release runs retain the
+unsigned-draft behavior; no beta manifest or fleet beacon is produced and the
+channel branch is unchanged. `workflow_dispatch` defaults to `dry_run=true`:
+all artifacts stay in the workflow run and no GitHub Release is created.
+Mixed signed/unsigned target sets and invalid signatures fail before upload.
+
+The release job always runs a genuine public Minisign signature vector and a
+modified-byte negative control before assembly. To reproduce it locally with
+Minisign available on PATH (or `MINISIGN` set to its executable):
+
+```text
+python scripts/release_artifacts.py verify-self-test --fixture tests/fixtures/release_signature.json
+python -m pytest tests/test_release_artifacts.py tests/test_release_lib.py tests/test_validate_manifest.py -n 2
+```
+
+The public vector is test data from `minisign-verify` 0.2.5, independent of all
+production keys. Unit regressions also prove that key presence alone, a failed
+verifier, changed bytes, wrong provenance, missing targets, and mismatched
+signature files cannot produce a fleet manifest. OS signing, real installer
+execution on each platform, and production publication require separate
+operator evidence; these tests do not claim those steps occurred.
 
 **Required before public release.** Unsigned `.msi` / `.pkg` artifacts
 trigger SmartScreen / Gatekeeper warnings that look identical to malware
