@@ -11,21 +11,64 @@ name: installers
 # WHY NOT REQUIRED-CHECK: installer builds take ~20 minutes per OS and
 # don't add useful signal on day-to-day PRs. The existing test / e2e /
 # architecture jobs continue to gate PR merges (see .github/workflows/
-# test.yml). This workflow only fires on:
+# test.yml). This workflow fires on:
 #
-#   - v* tag pushes (alongside release.yml's wheel publish)
-#   - workflow_dispatch (manual release dry-run from the Actions tab)
+#   - workflow_call  (release.yml's shared build step — the release train)
+#   - workflow_dispatch (manual no-tag rehearsal from the Actions tab)
+#
+# WHY NO `push: tags: v*` TRIGGER. It was removed when release.yml became
+# the release train. release.yml owns the `v*` tag and calls this file via
+# `uses: ./.github/workflows/installers.yml`; leaving the tag trigger in
+# place would fire a SECOND, independent installer build for every release
+# — double the CI minutes and two divergent artifact sets for the same
+# tag, with no way for the release job to tell which one it should
+# publish. `tests/architecture/test_ci_workflow.py` pins the absence.
 #
 # Artifacts are uploaded to the workflow run (not the GitHub Release)
-# so the release engineer can download, sign locally (Windows EV cert,
-# macOS Developer ID + notarization), and attach to the Release manually.
-# Doing signing in CI requires storing private keys in GitHub Secrets,
-# which is a posture decision the project owner has not yet made.
+# so the caller (or a release engineer on a dispatch rehearsal) can
+# download, sign, and attach them. Doing OS code-signing in CI requires
+# storing private keys in GitHub Secrets, which is a posture decision
+# gated on the certificate purchase (spec §0.2 / U6).
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_call:
+    inputs:
+      sign:
+        description: >-
+          Whether the caller has the OS code-signing material available.
+          Reserved for U6: today every path builds adhoc-signed artifacts,
+          and a `true` value only records the intent in the step summary.
+          Wiring real signing here is the U6 change, not a flag flip.
+        type: boolean
+        required: false
+        default: false
+      updater_artifacts:
+        description: >-
+          Whether to request Tauri updater artifacts (.tar.gz + .sig)
+          alongside the normal bundles. The bundler flag itself lands in
+          PR-B; until then this input is tolerated and reported, so the
+          release train is callable before the updater exists.
+        type: boolean
+        required: false
+        default: false
+      ref:
+        description: >-
+          Git ref to build. Empty string means the ref that triggered the
+          calling workflow (checkout's default), which is what a tag-driven
+          release wants.
+        type: string
+        required: false
+        default: ""
+    outputs:
+      installer_artifacts:
+        description: Comma-separated names of the uploaded briefcase installer artifacts.
+        value: ${{ jobs.installer.outputs.artifact_names }}
+      sidecar_artifacts:
+        description: Comma-separated names of the uploaded standalone sidecar artifacts.
+        value: ${{ jobs['desktop-bundle'].outputs.sidecar_artifact_names }}
+      bundle_artifacts:
+        description: Comma-separated names of the uploaded Tauri cockpit-bundle artifacts.
+        value: ${{ jobs['desktop-bundle'].outputs.bundle_artifact_names }}
   workflow_dispatch:
     inputs:
       studio_windows:
@@ -43,6 +86,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     # 30 min cap: installer builds are slow but should never hang.
     timeout-minutes: 30
+    # Artifact names are a fixed function of the matrix, so the output is a
+    # constant rather than a matrix-derived value: a matrix job's outputs
+    # are last-writer-wins across shards, which would report one OS's name
+    # as if it were the whole set. The `if-no-files-found: error` upload
+    # guard below is what actually proves each name exists.
+    outputs:
+      artifact_names: >-
+        rytm-randomizer-installer-Windows,rytm-randomizer-installer-macOS,rytm-randomizer-installer-Linux
     strategy:
       fail-fast: false
       matrix:
@@ -63,6 +114,30 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          # Empty on workflow_dispatch (and on a caller that omits the
+          # input), which is checkout's own default — the triggering ref.
+          ref: ${{ inputs.ref }}
+
+      - name: Record build context
+        shell: bash
+        # `inputs.ref` is a free-text string a caller supplies. Bound
+        # through `env:` rather than interpolated into the script body,
+        # because `${{ }}` substitutes into the script TEXT before bash
+        # parses it — a crafted ref would run as code, not print as data.
+        env:
+          BUILD_REF: ${{ inputs.ref || github.ref }}
+          BUILD_SIGN: ${{ inputs.sign || false }}
+          BUILD_UPDATER_ARTIFACTS: ${{ inputs.updater_artifacts || false }}
+          RUNNER_OS_LABEL: ${{ runner.os }}
+        run: |
+          {
+            echo "### installer (${RUNNER_OS_LABEL})"
+            echo ""
+            echo "- ref: \`${BUILD_REF}\`"
+            echo "- sign requested: \`${BUILD_SIGN}\` (adhoc-sign until U6 certificates land)"
+            echo "- updater artifacts requested: \`${BUILD_UPDATER_ARTIFACTS}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Set up Python 3.11
         if: runner.os != 'Linux'
@@ -165,6 +240,12 @@ jobs:
     # 30 min cap: the first build per cache key compiles the entire
     # Tauri + wry + webview2-com tree; cached runs are ~5 minutes.
     timeout-minutes: 30
+    # Constant, not matrix-derived — see the note on `installer.outputs`.
+    outputs:
+      sidecar_artifact_names: >-
+        rytm-sidecar-Windows,rytm-sidecar-macOS,rytm-sidecar-Linux
+      bundle_artifact_names: >-
+        cockpit-bundle-windows-latest,cockpit-bundle-macos-latest,cockpit-bundle-ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -173,6 +254,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Record build context
+        shell: bash
+        # See the note on the installer job's copy of this step: caller
+        # inputs are bound through `env:`, never interpolated into the
+        # script body.
+        env:
+          BUILD_REF: ${{ inputs.ref || github.ref }}
+          BUILD_SIGN: ${{ inputs.sign || false }}
+          BUILD_UPDATER_ARTIFACTS: ${{ inputs.updater_artifacts || false }}
+          RUNNER_OS_LABEL: ${{ runner.os }}
+        run: |
+          {
+            echo "### desktop-bundle (${RUNNER_OS_LABEL})"
+            echo ""
+            echo "- ref: \`${BUILD_REF}\`"
+            echo "- sign requested: \`${BUILD_SIGN}\` (adhoc-sign until U6 certificates land)"
+            echo "- updater artifacts requested: \`${BUILD_UPDATER_ARTIFACTS}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Set up Node 20
         uses: actions/setup-node@v7

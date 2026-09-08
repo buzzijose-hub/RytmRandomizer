@@ -41,6 +41,7 @@ Memories about the human's hardware setup, personal preferences across multiple 
 - [Maximum parallelization + worktrees](feedback_maximum_parallelization_worktrees.md) — DEFAULT mode: fan out implementer agents one-per-worktree, in parallel, single message. Sequential is the exception.
 - [Cleanup worktrees as you go](feedback_cleanup_worktrees_as_you_go.md) — `git worktree remove` immediately after each branch merges into the bundle; don't batch cleanup to the end.
 - [Code review fan-out](feedback_code_review_fanout.md) — code reviews: spawn one targeted agent per dimension in parallel, synthesize into one PR comment.
+- [Verify composition, not agents](feedback_verify_composition_not_agents.md) — parallel agents each verifying themselves produce individually-green work that does not compose; a green report that DID NOT RUN is a red report. Parse the runner's summary, take one integration checkpoint.
 
 ### Project facts (load-bearing context about this codebase)
 

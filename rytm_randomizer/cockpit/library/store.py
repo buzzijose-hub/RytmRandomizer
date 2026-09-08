@@ -37,18 +37,46 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Final, cast
 
+from ...data.persisted_state import (
+    PERSISTED_STATE_VERSION_FIELD,
+    classify_payload,
+    require_schema_version,
+)
 from ...devices import all_devices
+from ...observability.errors import PersistedStateVersionError
+from ...observability.metrics import PersistedStateRefusalCode, get_metrics
 from ...snapshot.sysex_file import extract_sysex_payloads
 from ..export.writer import atomic_write
 from ..profiles.paths import default_profiles_dir
 
 __all__ = [
+    "LIBRARY_STORE_ID",
+    "LIBRARY_STORE_SCHEMA_VERSION",
     "LibraryImportResult",
     "LibraryRecord",
     "LibraryStore",
     "default_captures_dir",
     "default_library_dir",
 ]
+
+LIBRARY_STORE_ID: Final[str] = "library_store"
+"""Registry id in :mod:`rytm_randomizer.data.persisted_state` (spec §11 Contract A)."""
+
+LIBRARY_STORE_SCHEMA_VERSION: Final[int] = require_schema_version(LIBRARY_STORE_ID)
+"""The on-disk record version this module writes — sourced from the registry.
+
+Never re-typed here: the registry is the single declaration, so bumping
+it in one place is the only way to change what this store writes.
+"""
+
+_REFUSAL_METRIC_CODES: Final[Mapping[str, PersistedStateRefusalCode]] = {
+    "persisted_state.unreadable": "unreadable",
+    "persisted_state.unknown_shape": "unknown_shape",
+    "persisted_state.unknown_store": "unknown_store",
+    "persisted_state.schema_newer_than_app": "schema_newer_than_app",
+    "persisted_state.migration_failed": "migration_failed",
+}
+"""Registry refusal code -> the bounded metrics label (no free-form strings)."""
 
 _LIBRARY_LEAF: Final[str] = "library"
 _RECORD_SUFFIX: Final[str] = ".json"
@@ -362,21 +390,68 @@ class LibraryStore:
     def _write_record(self, record: LibraryRecord, *, overwrite: bool) -> None:
         """Persist one record atomically (sibling tempfile + rename)."""
 
-        encoded = json.dumps(record.to_dict(), indent=2, sort_keys=True).encode("utf-8")
+        # ``to_dict()`` is also the on-wire ack shape, so the persisted
+        # envelope is stamped here (disk only) rather than in the DTO —
+        # adding a field to the wire payload would change the WS contract.
+        payload = record.to_dict()
+        payload[PERSISTED_STATE_VERSION_FIELD] = LIBRARY_STORE_SCHEMA_VERSION
+        encoded = json.dumps(payload, indent=2, sort_keys=True).encode("utf-8")
         atomic_write(self._record_path(record.record_id), encoded, overwrite=overwrite)
 
 
 def _safe_load_record(path: Path) -> LibraryRecord | None:
-    """Load one record file, or ``None`` when unreadable/malformed."""
+    """Load one record file, or ``None`` when unreadable/malformed.
 
+    Per-file data problems stay on the existing "warn and skip" policy —
+    one corrupt record must not take the whole library surface down.
+
+    The one outcome that is **not** skippable is the spec §11 downgrade
+    case: a record written by a newer app. Skipping it would present the
+    operator with a silently shorter library after a rollback, which is
+    the silent data loss Contract A forbids, so it raises instead. The
+    bytes on disk are never rewritten either way.
+    """
+
+    readable = True
+    raw: object = None
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
+        readable = False
+
+    decision = classify_payload(LIBRARY_STORE_ID, raw, readable=readable)
+    if decision.refused:
+        get_metrics().record_persisted_state_refusal(
+            LIBRARY_STORE_ID,
+            _REFUSAL_METRIC_CODES[decision.code],
+        )
+        if decision.code == "persisted_state.schema_newer_than_app":
+            # Path-free message: the store id and the two version numbers
+            # are the whole diagnostic (the #224/#238 hygiene standard).
+            raise PersistedStateVersionError(
+                f"library record was written by a newer app "
+                f"(found schema_version {decision.from_version}, "
+                f"this build reads {decision.to_version}); "
+                "leaving it untouched — update the app to read it",
+                # ``store_id`` is what distinguishes this refusal from the
+                # profile registry's — the taxonomy carries one shared
+                # class and one shared fingerprint for the condition.
+                context={"store_id": LIBRARY_STORE_ID, **decision.detail},
+            )
         return None
-    if not isinstance(raw, dict):
+
+    if decision.code == "persisted_state.migrated":
+        get_metrics().record_persisted_state_migration(
+            LIBRARY_STORE_ID,
+            int(decision.from_version or 0),
+            int(decision.to_version or 0),
+        )
+
+    payload = decision.payload
+    if payload is None:  # pragma: no cover - accepted decisions always carry one
         return None
     try:
-        return LibraryRecord.from_dict(cast("Mapping[str, object]", raw))
+        return LibraryRecord.from_dict(payload)
     except ValueError:
         return None
 

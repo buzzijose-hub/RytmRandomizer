@@ -50,11 +50,18 @@ import errno
 import json
 import logging
 from pathlib import Path
-from typing import ClassVar, Final
+from typing import ClassVar, Final, cast
 
 from rytm_randomizer.cockpit.data import ProfileModel
+from rytm_randomizer.cockpit.data.profile_model import ProfileModelDict
 from rytm_randomizer.cockpit.export.writer import atomic_write
-from rytm_randomizer.observability.errors import DataError
+from rytm_randomizer.data.persisted_state import (
+    PERSISTED_STATE_VERSION_FIELD,
+    classify_payload,
+    require_schema_version,
+)
+from rytm_randomizer.observability.errors import DataError, PersistedStateVersionError
+from rytm_randomizer.observability.metrics import PersistedStateRefusalCode, get_metrics
 
 from .builtin import BUILTIN_SCENES
 
@@ -66,6 +73,26 @@ _USER_SUBDIR: Final[str] = "user"
 
 _USER_GLOB: Final[str] = "*.json"
 """Glob pattern used to discover user-profile files."""
+
+PROFILE_REGISTRY_STORE_ID: Final[str] = "profile_registry"
+"""Registry id in :mod:`rytm_randomizer.data.persisted_state` (spec §11 Contract A)."""
+
+PROFILE_REGISTRY_SCHEMA_VERSION: Final[int] = require_schema_version(PROFILE_REGISTRY_STORE_ID)
+"""On-disk profile version this module writes — sourced from the registry.
+
+Deliberately not re-typed here: the registry holds the single
+declaration, so the only way to change what this store writes is to bump
+it (and add the matching migration) in one place.
+"""
+
+_REFUSAL_METRIC_CODES: Final[dict[str, PersistedStateRefusalCode]] = {
+    "persisted_state.unreadable": "unreadable",
+    "persisted_state.unknown_shape": "unknown_shape",
+    "persisted_state.unknown_store": "unknown_store",
+    "persisted_state.schema_newer_than_app": "schema_newer_than_app",
+    "persisted_state.migration_failed": "migration_failed",
+}
+"""Registry refusal code -> bounded metrics label (no free-form strings)."""
 
 
 # ---------------------------------------------------------------------------
@@ -201,7 +228,12 @@ class ProfileRegistry:
         target = user_dir / f"{profile.profile_id}.json"
         # ``indent=2`` keeps the on-disk format git-friendly per spec
         # §"Open questions" (flat JSON, not SQLite).
-        encoded = json.dumps(profile.to_dict(), indent=2, sort_keys=True).encode("utf-8")
+        # Stamp the persisted-state envelope on the disk payload only —
+        # ``to_dict()`` also feeds the WS ack, and adding a field there
+        # would change the wire contract (spec §11 Contract A).
+        payload = profile.to_dict()
+        payload[PERSISTED_STATE_VERSION_FIELD] = PROFILE_REGISTRY_SCHEMA_VERSION
+        encoded = json.dumps(payload, indent=2, sort_keys=True).encode("utf-8")
         try:
             atomic_write(target, encoded, overwrite=overwrite)
         except FileExistsError as exc:
@@ -357,8 +389,52 @@ def _safe_load_profile(path: Path) -> ProfileModel | None:
             extra={"event": "profile_registry.file_parse.non_object_root"},
         )
         return None
+    decision = classify_payload(PROFILE_REGISTRY_STORE_ID, cast("dict[str, object]", data))
+    if decision.refused:
+        get_metrics().record_persisted_state_refusal(
+            PROFILE_REGISTRY_STORE_ID,
+            _REFUSAL_METRIC_CODES[decision.code],
+        )
+        if decision.code == "persisted_state.schema_newer_than_app":
+            _logger.error(
+                "Profile store %s was written by a newer app "
+                "(schema_version %s > %s); refusing to read it rather than "
+                "dropping it from the registry.",
+                PROFILE_REGISTRY_STORE_ID,
+                decision.from_version,
+                decision.to_version,
+                extra={"event": "persisted_state.schema_newer_than_app"},
+            )
+            # Path-free message: the store id and the two integers are the
+            # whole diagnostic (#224/#238 hygiene standard).
+            raise PersistedStateVersionError(
+                f"profile was written by a newer app (found schema_version "
+                f"{decision.from_version}, this build reads "
+                f"{decision.to_version}); leaving it untouched",
+                # ``store_id`` distinguishes this refusal from the library
+                # store's — one shared taxonomy class, one fingerprint.
+                context={"store_id": PROFILE_REGISTRY_STORE_ID, **decision.detail},
+            )
+        _logger.warning(
+            "Skipping profile file %s: persisted-state refusal %s",
+            path,
+            decision.code,
+            extra={"event": decision.code},
+        )
+        return None
+
+    if decision.code == "persisted_state.migrated":
+        get_metrics().record_persisted_state_migration(
+            PROFILE_REGISTRY_STORE_ID,
+            int(decision.from_version or 0),
+            int(decision.to_version or 0),
+        )
+
+    payload = decision.payload
+    if payload is None:  # pragma: no cover - accepted decisions always carry one
+        return None
     try:
-        return ProfileModel.from_dict(data)
+        return ProfileModel.from_dict(cast("ProfileModelDict", dict(payload)))
     except (KeyError, TypeError, ValueError) as exc:
         _logger.warning(
             "Skipping invalid profile file %s (%s: %s)",
@@ -371,6 +447,8 @@ def _safe_load_profile(path: Path) -> ProfileModel | None:
 
 
 __all__ = [
+    "PROFILE_REGISTRY_SCHEMA_VERSION",
+    "PROFILE_REGISTRY_STORE_ID",
     "ProfileAlreadyExistsError",
     "ProfileRegistry",
     "ProfileRegistryAccessError",

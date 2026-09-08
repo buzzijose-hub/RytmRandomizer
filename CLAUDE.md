@@ -13,7 +13,7 @@
 3. **[`agent-memory/INDEX.md`](agent-memory/INDEX.md)** — shared agent memory (workflow feedback, project facts, reference). Same shape as Claude Code's local memory (`~/.claude/projects/<id>/memory/`); the in-repo store is the canonical version so every agent on every machine reads the same observations. Individual memories are read on demand when their `description` matches the current task.
 4. **[`CONTRIBUTING.md`](CONTRIBUTING.md)** — full developer handbook (read on demand; AGENTS.md links into the right sections).
 5. **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** + **[`docs/ARCHITECTURE_DIAGRAMS.md`](docs/ARCHITECTURE_DIAGRAMS.md)** — architecture standard + current Mermaid maps.
-6. **[`.claude/rules/`](.claude/rules/)** — mandatory rules (architecture, autonomous execution, cascade bundling, codex contribution, coverage, Device/strategy, hardware pins, live-but-passive MIDI, parallelization, parity, PR-body conformance, README freshness, skill routing, and targeted-mutation safety).
+6. **[`.claude/rules/`](.claude/rules/)** — mandatory rules (architecture, autonomous execution, cascade bundling, codex contribution, coverage, Device/strategy, hardware pins, live-but-passive MIDI, parallel-agent composition, parallelization, parity, PR-body conformance, README freshness, skill routing, and targeted-mutation safety).
 7. **[`.claude/skills/`](.claude/skills/)** — repo-specific and learned task skills, invokable via `/<skill-name>`.
 
 ## Current Show Kit Forge handoff
@@ -51,7 +51,8 @@ fresh paired preflight still require operator-present evidence.
 10. **PR body must include the 18-gate conformance checklist.** See [`.claude/rules/pr-body-conformance-checklist.md`](.claude/rules/pr-body-conformance-checklist.md).
 11. **Do not pause on chained steps.** Once a multi-step task is approved, execute through to a hard stop (push, PR open, merge, force-push, dep bump, fixture regen). Hard stops are enumerated in [`.claude/rules/autonomous-agent-execution.md`](.claude/rules/autonomous-agent-execution.md).
 12. **Dispatch independent work in parallel.** Batch independent reads, searches, and subagent invocations into a single message. See [`.claude/rules/maximize-parallelization.md`](.claude/rules/maximize-parallelization.md).
-13. **On `codex/*` branches, follow the codex contribution guide.** Cascade ordering, redo-branch discipline, and PR-body provenance differ from normal feature branches. See [`.claude/rules/codex-contribution-guide.md`](.claude/rules/codex-contribution-guide.md).
+13. **Parallel agents: a green report that did not run is a RED report.** Verify composition, not just each agent. Parse the runner's summary (collection errors / skips / zero-collected), fail cross-track guards closed, take one integration checkpoint at first cross-agent import, and give every cross-language seam a drift guard naming the CALL FORM. See [`.claude/rules/parallel-agent-composition.md`](.claude/rules/parallel-agent-composition.md).
+14. **On `codex/*` branches, follow the codex contribution guide.** Cascade ordering, redo-branch discipline, and PR-body provenance differ from normal feature branches. See [`.claude/rules/codex-contribution-guide.md`](.claude/rules/codex-contribution-guide.md).
 
 ### Tool defaults
 
@@ -81,6 +82,7 @@ This repo has unusually strict invariants because it talks to physical hardware 
 - **`-o addopts=''` is a 3× speed trap.** The pyproject default of `-n auto` is the fast path; don't override it.
 - **CONTRIBUTING.md's 18 plan-requirement gates** are mandatory in every PR body. The PR template (`.github/PULL_REQUEST_TEMPLATE.md`) auto-fills the structure.
 - **The Strategy seam on `Device`** (PR #43) is the canonical cross-machine abstraction. The codex dual-machine cascade (PRs #21, #36-#41) is closed; PR #36 is the redo target.
+- **Parallel agent runs are verified at the seams, not per agent.** Eleven individually-green agents produced 21 merge failures; the worked example and its seven blockers are in [`docs/AUTOUPDATE_PARALLEL_RUN_REPORT.md`](docs/AUTOUPDATE_PARALLEL_RUN_REPORT.md).
 - **macOS is dropped from the PR-event CI matrix by design** (queue waits). It runs on push events. See `.github/workflows/test.yml:288-296`.
 
 ## How to know which skill applies

@@ -2,6 +2,13 @@ name: test
 
 on:
   push:
+    # The `releases` branch holds only auto-update channel manifests and
+    # the fleet dashboard — no Python, no tests. Running the full 3-OS
+    # matrix on every one-line manifest commit (and every rollout-percent
+    # bump) would burn ~30 CI-minutes to test code that did not change.
+    # manifest-validate.yml is that branch's gate instead.
+    branches-ignore:
+      - releases
   pull_request:
   schedule:
     # Weekly scan: re-runs the security (pip-audit) and architecture
