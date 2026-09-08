@@ -143,7 +143,9 @@ def resolve_app_version() -> str:
         get_metrics().record_error(APP_VERSION_UNAVAILABLE_FINGERPRINT)
         return UNKNOWN_APP_VERSION
 
-    if not isinstance(spine_version, str) or not is_strict_semver(spine_version):
+    if not isinstance(  # pyright: ignore[reportUnnecessaryIsInstance]
+        spine_version, str
+    ) or not is_strict_semver(spine_version):
         _logger.warning(
             "cockpit_app_version_malformed",
             extra={

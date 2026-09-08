@@ -81,7 +81,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Final, Literal, TypeAlias
+from typing import Final, Literal, TypeAlias, cast
 
 __all__ = [
     "PERSISTED_STATE_CODES",
@@ -262,7 +262,7 @@ class PersistedStateDecision:
     to_version: int | None = None
     payload: Mapping[str, object] | None = None
     steps: tuple[str, ...] = field(default=())
-    detail: Mapping[str, object] = field(default_factory=dict)
+    detail: Mapping[str, object] = field(default_factory=lambda: cast("dict[str, object]", {}))
 
     @property
     def accepted(self) -> bool:
@@ -451,7 +451,7 @@ def classify_payload(
             detail={"reason": "payload_not_a_mapping"},
         )
 
-    mapping: Mapping[str, object] = payload
+    mapping: Mapping[str, object] = cast("Mapping[str, object]", payload)
     found = read_schema_version(mapping)
     if found is None:
         return PersistedStateDecision(
@@ -558,7 +558,10 @@ def apply_migration_plan(
                     "failed_to_version": migration.to_version,
                 },
             )
-        if not isinstance(migrated, Mapping):
+        # A migration is typed to return a Mapping, but it is user-supplied
+        # code: the runtime check is deliberate even though the annotation
+        # makes it redundant to the type checker.
+        if not isinstance(migrated, Mapping):  # pyright: ignore[reportUnnecessaryIsInstance]
             return PersistedStateDecision(
                 code="persisted_state.migration_failed",
                 store_id=store.store_id,

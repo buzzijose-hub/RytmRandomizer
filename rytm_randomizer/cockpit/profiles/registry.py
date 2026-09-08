@@ -50,9 +50,10 @@ import errno
 import json
 import logging
 from pathlib import Path
-from typing import ClassVar, Final
+from typing import ClassVar, Final, cast
 
 from rytm_randomizer.cockpit.data import ProfileModel
+from rytm_randomizer.cockpit.data.profile_model import ProfileModelDict
 from rytm_randomizer.cockpit.export.writer import atomic_write
 from rytm_randomizer.data.persisted_state import (
     PERSISTED_STATE_VERSION_FIELD,
@@ -388,7 +389,7 @@ def _safe_load_profile(path: Path) -> ProfileModel | None:
             extra={"event": "profile_registry.file_parse.non_object_root"},
         )
         return None
-    decision = classify_payload(PROFILE_REGISTRY_STORE_ID, data)
+    decision = classify_payload(PROFILE_REGISTRY_STORE_ID, cast("dict[str, object]", data))
     if decision.refused:
         get_metrics().record_persisted_state_refusal(
             PROFILE_REGISTRY_STORE_ID,
@@ -433,7 +434,7 @@ def _safe_load_profile(path: Path) -> ProfileModel | None:
     if payload is None:  # pragma: no cover - accepted decisions always carry one
         return None
     try:
-        return ProfileModel.from_dict(dict(payload))
+        return ProfileModel.from_dict(cast("ProfileModelDict", dict(payload)))
     except (KeyError, TypeError, ValueError) as exc:
         _logger.warning(
             "Skipping invalid profile file %s (%s: %s)",
