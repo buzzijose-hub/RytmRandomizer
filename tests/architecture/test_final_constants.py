@@ -376,8 +376,6 @@ _GRANDFATHERED_BARE_CONSTANTS: Final[frozenset[str]] = frozenset(
         "rytm_randomizer/behavior/pad_lane.py:_PAD3_LANE",
         "rytm_randomizer/behavior/pad_lane.py:_PAD4_LANE",
         "rytm_randomizer/behavior/pad_lane.py:_REGISTRY",
-        "rytm_randomizer/behavior/scene_group.py:DEFERRED_GROUP_MUTATION_KEYS",
-        "rytm_randomizer/behavior/scene_group.py:DEFERRED_LANE_AWARE_GROUP_MUTATION_KEYS",
         "rytm_randomizer/behavior/scene_group.py:PACKET_4B_GROUP_MUTATION_INTENT_KEYS",
         "rytm_randomizer/behavior/scene_group.py:PACKET_4C_LANE_AWARE_GROUP_MUTATION_INTENT_KEYS",
         "rytm_randomizer/behavior/scene_group.py:PACKET_4D_GROUP_ANCHOR_INTENT_KEYS",

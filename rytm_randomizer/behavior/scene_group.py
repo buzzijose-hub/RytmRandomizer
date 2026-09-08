@@ -8,6 +8,7 @@ touching hardware.
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
+from typing import Final
 
 from ..commands import GROUP_COMMANDS
 from ..scenes import SCENE_COMMANDS
@@ -16,8 +17,13 @@ PACKET_4A_SCENE_INTENT_KEYS = tuple(SCENE_COMMANDS)
 PACKET_4B_GROUP_MUTATION_INTENT_KEYS = ("X", "D", "I", "4")
 PACKET_4C_LANE_AWARE_GROUP_MUTATION_INTENT_KEYS = ("Y", "V", "N")
 PACKET_4D_GROUP_ANCHOR_INTENT_KEYS = ("O", "Z")
-DEFERRED_GROUP_MUTATION_KEYS = ()
-DEFERRED_LANE_AWARE_GROUP_MUTATION_KEYS = ()
+# Deferral lists, deliberately drained: every key that once sat here has
+# graduated to a supported packet above. They are annotated (rather than
+# deleted) so a future deferral has an obvious home, and typed so the
+# guard branches below read as reachable-when-populated instead of as a
+# str-vs-empty-tuple comparison the type checker flags as always False.
+DEFERRED_GROUP_MUTATION_KEYS: Final[tuple[str, ...]] = ()
+DEFERRED_LANE_AWARE_GROUP_MUTATION_KEYS: Final[tuple[str, ...]] = ()
 
 _FORBIDDEN_EARLY_HARDWARE_ACTIONS = {
     "harder",
@@ -150,10 +156,10 @@ def evaluate_scene_group_behavior(command_key: str) -> SceneGroupBehaviorResult:
 
 def _accepted_scene_intent_result(command_key: str) -> SceneGroupBehaviorResult:
     scene_metadata = SCENE_COMMANDS[command_key]
-    scene_name = scene_metadata["name"]
-    scene_description = scene_metadata["description"]
-    scene_action = scene_metadata["action"]
-    scene_scope = scene_metadata["scope"]
+    scene_name = str(scene_metadata["name"])
+    scene_description = str(scene_metadata["description"])
+    scene_action = str(scene_metadata["action"])
+    scene_scope = str(scene_metadata["scope"])
     forbidden_early_hardware_scope = scene_action in _FORBIDDEN_EARLY_HARDWARE_ACTIONS
 
     return SceneGroupBehaviorResult(
@@ -197,12 +203,12 @@ def _accepted_scene_intent_result(command_key: str) -> SceneGroupBehaviorResult:
 
 def _accepted_group_mutation_intent_result(command_key: str) -> SceneGroupBehaviorResult:
     group_metadata = GROUP_COMMANDS[command_key]
-    label = group_metadata["label"]
-    command_type = group_metadata["type"]
-    scope = group_metadata["scope"]
+    label = str(group_metadata["label"])
+    command_type = str(group_metadata["type"])
+    scope = str(group_metadata["scope"])
     intent_details = _GROUP_MUTATION_INTENT_DETAILS[command_key]
-    group_mutation_mode = intent_details["mode"]
-    mutation_intensity = intent_details["intensity"]
+    group_mutation_mode = str(intent_details["mode"])
+    mutation_intensity = str(intent_details["intensity"])
     forbidden_early_hardware_scope = command_key in _FORBIDDEN_EARLY_HARDWARE_GROUP_MUTATION_KEYS
 
     return SceneGroupBehaviorResult(
@@ -245,12 +251,12 @@ def _accepted_group_mutation_intent_result(command_key: str) -> SceneGroupBehavi
 
 def _accepted_lane_aware_group_mutation_intent_result(command_key: str) -> SceneGroupBehaviorResult:
     group_metadata = GROUP_COMMANDS[command_key]
-    label = group_metadata["label"]
-    command_type = group_metadata["type"]
-    scope = group_metadata["scope"]
+    label = str(group_metadata["label"])
+    command_type = str(group_metadata["type"])
+    scope = str(group_metadata["scope"])
     command_family = group_metadata["command_family"]
     intent_details = _LANE_AWARE_GROUP_MUTATION_INTENT_DETAILS[command_key]
-    lane_aware_page = intent_details["page"]
+    lane_aware_page = str(intent_details["page"])
     lane_aware_mutation_mode = intent_details["mode"]
 
     return SceneGroupBehaviorResult(
@@ -292,9 +298,9 @@ def _accepted_lane_aware_group_mutation_intent_result(command_key: str) -> Scene
 
 def _accepted_group_anchor_intent_result(command_key: str) -> SceneGroupBehaviorResult:
     group_metadata = GROUP_COMMANDS[command_key]
-    label = group_metadata["label"]
-    command_type = group_metadata["type"]
-    scope = group_metadata["scope"]
+    label = str(group_metadata["label"])
+    command_type = str(group_metadata["type"])
+    scope = str(group_metadata["scope"])
     intent_details = _GROUP_ANCHOR_INTENT_DETAILS[command_key]
     anchor_action = intent_details["anchor_action"]
 
@@ -339,7 +345,7 @@ def _scene_display_lines(
     scene_name: str,
     scene_action: str,
     scene_scope: str,
-    forbidden_early_hardware_scope: str,
+    forbidden_early_hardware_scope: bool,
 ) -> tuple[str, ...]:
     lines = (
         f"{command_key}: {scene_name}",
@@ -365,7 +371,7 @@ def _group_mutation_display_lines(
     label: str,
     group_mutation_mode: str,
     scope: str,
-    forbidden_early_hardware_scope: str,
+    forbidden_early_hardware_scope: bool,
 ) -> tuple[str, ...]:
     lines = (
         f"{command_key}: {label}",
