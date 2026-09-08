@@ -386,11 +386,16 @@ recording, and ranking commands for one bounded session.
    shipped (PR #106)                      atomic writes, never-raises verifier,
                                           CLI driver, passive rehearsal report.
 
-🔄 Rival program                          Live-but-Passive connection manager,
-   in flight (branch rival-program)       ArmedApply seam, double-click launch,
+✅ Rival program                          Live-but-Passive connection manager,
+   shipped (PR #217)                      ArmedApply seam, double-click launch,
                                           live monitor, doctor, sound library,
                                           morphing + scoped randomization,
-                                          WCAG 2.2 AA gate. One bundle PR.
+                                          WCAG 2.2 AA gate.
+
+🔮 Auto-updates                           Pull-only, consent-gated updates with
+   designed (spec complete)               channels, staged rollout, and a fleet
+                                          dashboard — zero operated servers.
+                                          Drift guards already enforce the spec.
 
 🔮 Phase 4 · Hardware Runtime             Dedicated device that loads .rymp
    next                                   from flash, runs an embedded C port
@@ -399,6 +404,40 @@ recording, and ranking commands for one bounded session.
 ```
 
 See [`docs/STATUS.md`](docs/STATUS.md) for the dated snapshot and the per-phase implementation plans indexed at [`docs/superpowers/plans/INDEX.md`](docs/superpowers/plans/INDEX.md).
+
+### How updates will work
+
+The update system is fully specified (and its first drift guards already
+run in CI); implementation is the next program. The design commitments,
+because they shape the product you install:
+
+- **Updates are pulled, never pushed — and there is no update server.**
+  The app polls a ~1 KB static manifest on GitHub's CDN, stages the
+  download in the background, and installs **only on your explicit
+  consent** — "install now", "install on next launch", or "skip this
+  version". This is the Live-but-Passive rule applied to updates:
+  checking and downloading are free, installing is an armed action.
+- **A stage machine can freeze updates entirely** — one toggle (or
+  `RYTM_RAND_UPDATES=off`): no check, no download, no chip. An update
+  will never restart the app mid-set.
+- **Updates that touch MIDI wire behavior warn you first.** Releases
+  whose changes reach the hardware-facing surfaces carry a
+  hardware-revalidation flag, derived automatically and surfaced
+  loudly before you consent.
+- **Channels and staged rollout** (stable/beta, percentage steps) are
+  plain files in this repository — promoting or rolling back a release
+  is a reviewable Git commit, not a server operation.
+- **Fleet visibility without surveillance.** Version check-ins are
+  anonymous downloads of a public one-byte release asset — no
+  identifier ever leaves your machine — and a public
+  [fleet dashboard](docs/superpowers/plans/2026-08-03-autoupdate-distribution.md)
+  charts versions and rollout adoption over time. Opt out of even the
+  anonymous ping with `RYTM_RAND_UPDATE_BEACON=off`.
+
+The full specification — manifest schema, consent state machine,
+pipeline integration, and the zero-operational-cost constraint every
+piece satisfies — lives in
+[`docs/superpowers/plans/2026-08-03-autoupdate-distribution.md`](docs/superpowers/plans/2026-08-03-autoupdate-distribution.md).
 
 ---
 

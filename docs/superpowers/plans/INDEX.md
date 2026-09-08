@@ -15,9 +15,12 @@ Requirements gates for all plans: [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUI
 
 | Date | Plan | Status | PR |
 |---|---|---|---|
+| 2026-09-07 | [autoupdate-implementation](2026-09-07-autoupdate-implementation.md) | proposed (awaiting kickoff) |  |
 | 2026-09-04 | [show-kit-forge](2026-09-04-show-kit-forge.md) | in-flight — software assembled / hardware-blocked |  |
 | 2026-08-26 | [targeted-live-kit-mutation](2026-08-26-targeted-live-kit-mutation.md) | in-flight — software-complete / hardware-blocked | #237 |
 | 2026-08-26 | [cockpit-live-genome-profile-catalog](2026-08-26-cockpit-live-genome-profile-catalog.md) | superseded by targeted-live-kit-mutation | #237 |
+| 2026-07-16 | [a4-sysex-roundtrip-writer-pr-body](2026-07-16-a4-sysex-roundtrip-writer-pr-body.md) | (PR body draft — no lifecycle) |  |
+| 2026-07-17 | [a4-audio-patch-final-review](2026-07-17-a4-audio-patch-final-review.md) | in-flight |  |
 | 2026-08-08 | [rio145-dual-kit-codec-integration](2026-08-08-rio145-dual-kit-codec-integration.md) | in-flight |  |
 | 2026-05-19 | [dual-machine-strategy-redo-pr-body](2026-05-19-dual-machine-strategy-redo-pr-body.md) | (PR body draft — no lifecycle) |  |
 | 2026-05-19 | [dual-machine-strategy-redo](2026-05-19-dual-machine-strategy-redo.md) | legacy (pre-status convention; grandfathered) |  |
@@ -217,6 +220,6 @@ Requirements gates for all plans: [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUI
 | 2026-08-02 | [audio-patch-studio-handoff](2026-08-02-audio-patch-studio-handoff.md) | complete — merged in PR #220; status flip in PR #223 |  |
 | 2026-08-24 | [a4-render-feedback-refinement](2026-08-24-a4-render-feedback-refinement.md) | complete (merged in PR #230) | #230 |
 | 2026-08-03 | [e2e-no-device-experience](2026-08-03-e2e-no-device-experience.md) | complete — WS-A merged in PR #221; no-gate final form merged in PR #225 |  |
-| 2026-08-03 | [autoupdate-distribution](2026-08-03-autoupdate-distribution.md) | proposed |  |
+| 2026-08-03 | [autoupdate-distribution](2026-08-03-autoupdate-distribution.md) | proposed (spec complete 2026-09-07; implementation not started) |  |
 | 2026-08-04 | [al16-r2-rytm-mapping-closure](2026-08-04-al16-r2-rytm-mapping-closure.md) | in-flight - PR #224 |  |
 | 2026-08-24 | [reference-audio-atlas](2026-08-24-reference-audio-atlas.md) | implementation and local verification complete; review pending |  |

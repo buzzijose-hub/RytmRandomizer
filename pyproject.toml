@@ -182,13 +182,14 @@ target-version = ["py39", "py310", "py311"]
 extend-exclude = '''
 /(
   \.worktrees
+  | \.claude/worktrees
 )/
 '''
 
 [tool.isort]
 profile = "black"
 line_length = 100
-skip = [".venv", ".worktrees", "Backups", "Exports", "LegacyScripts", "node_modules", "venv"]
+skip = [".venv", ".worktrees", ".claude", "Backups", "Exports", "LegacyScripts", "node_modules", "venv"]
 
 [tool.ruff]
 line-length = 100
