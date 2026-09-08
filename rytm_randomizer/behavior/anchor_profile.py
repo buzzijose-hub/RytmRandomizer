@@ -57,12 +57,12 @@ class AnchorProfileBehaviorResult:
     active_behavior: bool = False
     metadata: Mapping[str, object] = field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         object.__setattr__(self, "display_lines", tuple(self.display_lines))
         object.__setattr__(self, "metadata", MappingProxyType(dict(self.metadata)))
 
 
-def evaluate_anchor_profile_behavior(command_key):
+def evaluate_anchor_profile_behavior(command_key: str) -> AnchorProfileBehaviorResult:
     """Return a passive Packet 2 anchor/profile behavior result."""
 
     key = str(command_key)
@@ -86,7 +86,7 @@ def evaluate_anchor_profile_behavior(command_key):
     )
 
 
-def _accepted_anchor_profile_result(command_key):
+def _accepted_anchor_profile_result(command_key: str) -> AnchorProfileBehaviorResult:
     command_metadata = PAD1_COMMANDS[command_key]
     profile_key = _COMMAND_PROFILE_KEYS[command_key]
     profile = describe_group_profile(profile_key) if profile_key else None
@@ -135,13 +135,13 @@ def _accepted_anchor_profile_result(command_key):
     )
 
 
-def _profile_display_line(profile_key):
+def _profile_display_line(profile_key: str) -> str:
     if profile_key:
         return f"Profile key: {profile_key}"
     return "Profile metadata: absent"
 
 
-def _safe_failure_metadata(source):
+def _safe_failure_metadata(source: str) -> dict[str, object]:
     return {
         "source": source,
         "mock_only": True,

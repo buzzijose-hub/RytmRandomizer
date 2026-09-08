@@ -9,9 +9,9 @@ so every existing import keeps working.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from copy import deepcopy
-from typing import Final, TypedDict
+from typing import Final, NamedTuple, TypedDict
 
 from ..formatter import safety_section_lines
 
@@ -104,13 +104,21 @@ class AnchorProfileSummaryDict(TypedDict):
     hardware_required: bool
 
 
-class AnchorProfileSectionSpecDict(TypedDict):
-    """Declarative spec for one supported section."""
+class AnchorProfileSectionSpec(NamedTuple):
+    """Declarative spec for one supported section.
+
+    A ``NamedTuple`` rather than a ``TypedDict``: the specs are written as
+    positional tuples and unpacked by the consumer, so the tuple shape is
+    the contract. Naming the fields keeps that readable without changing
+    how the literals are written.
+    """
 
     section_key: str
     section_name: str
     source_helper: str
+    evaluator: Callable[..., object]
     command_keys: tuple[str, ...]
+    options: Mapping[str, object]
 
 
 ANCHOR_PROFILE_REPORT_TITLE: Final[str] = "RytmRandomizer Anchor/Profile Behavior Report"
@@ -160,7 +168,7 @@ ANCHOR_PROFILE_PARKED_SECTIONS: Final[tuple[dict[str, object], ...]] = (
 )
 
 
-def _anchor_profile_section_specs() -> tuple[AnchorProfileSectionSpecDict, ...]:
+def _anchor_profile_section_specs() -> tuple[AnchorProfileSectionSpec, ...]:
     from ...behavior.anchor_profile import evaluate_anchor_profile_behavior
     from ...behavior.pad_lane import (
         evaluate_pad1_lane_behavior,
@@ -266,7 +274,7 @@ def _anchor_profile_section_specs() -> tuple[AnchorProfileSectionSpecDict, ...]:
 
 
 def _anchor_profile_label(result: object, metadata: Mapping[str, object]) -> str:
-    return (
+    return str(
         getattr(result, "label", "")
         or metadata.get("source_group_command_label", "")
         or metadata.get("source_scene_name", "")
@@ -274,7 +282,7 @@ def _anchor_profile_label(result: object, metadata: Mapping[str, object]) -> str
 
 
 def _anchor_profile_target_scope(result: object, metadata: Mapping[str, object]) -> str:
-    return (
+    return str(
         getattr(result, "target_scope", "")
         or getattr(result, "source_scope", "")
         or metadata.get("source_group_command_scope", "")
@@ -285,11 +293,12 @@ def _anchor_profile_target_scope(result: object, metadata: Mapping[str, object])
 def _anchor_profile_intent_kind(
     command_key: str, result: object, metadata: Mapping[str, object], options: Mapping[str, object]
 ) -> str:
-    overrides = options.get("intent_kind_overrides", {})
+    raw_overrides = options.get("intent_kind_overrides", {})
+    overrides: Mapping[str, object] = raw_overrides if isinstance(raw_overrides, Mapping) else {}
     if command_key in overrides:
-        return overrides[command_key]
+        return str(overrides[command_key])
     if "intent_kind" in options:
-        return options["intent_kind"]
+        return str(options["intent_kind"])
     return (
         getattr(result, "intent_kind", "")
         or metadata.get("intent_kind", "")
@@ -342,7 +351,7 @@ def _anchor_profile_supported_entry(
 
 
 def _anchor_profile_supported_section(
-    spec: AnchorProfileSectionSpecDict,
+    spec: AnchorProfileSectionSpec,
 ) -> AnchorProfileSupportedSectionDict:
     (
         section_key,

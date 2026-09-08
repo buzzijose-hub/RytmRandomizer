@@ -94,12 +94,12 @@ class SceneGroupBehaviorResult:
     active_behavior: bool = False
     metadata: Mapping[str, object] = field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         object.__setattr__(self, "display_lines", tuple(self.display_lines))
         object.__setattr__(self, "metadata", MappingProxyType(dict(self.metadata)))
 
 
-def evaluate_scene_group_behavior(command_key):
+def evaluate_scene_group_behavior(command_key: str) -> SceneGroupBehaviorResult:
     """Return a passive Packet 4 scene/group behavior result."""
 
     key = str(command_key)
@@ -148,7 +148,7 @@ def evaluate_scene_group_behavior(command_key):
     )
 
 
-def _accepted_scene_intent_result(command_key):
+def _accepted_scene_intent_result(command_key: str) -> SceneGroupBehaviorResult:
     scene_metadata = SCENE_COMMANDS[command_key]
     scene_name = scene_metadata["name"]
     scene_description = scene_metadata["description"]
@@ -195,7 +195,7 @@ def _accepted_scene_intent_result(command_key):
     )
 
 
-def _accepted_group_mutation_intent_result(command_key):
+def _accepted_group_mutation_intent_result(command_key: str) -> SceneGroupBehaviorResult:
     group_metadata = GROUP_COMMANDS[command_key]
     label = group_metadata["label"]
     command_type = group_metadata["type"]
@@ -243,7 +243,7 @@ def _accepted_group_mutation_intent_result(command_key):
     )
 
 
-def _accepted_lane_aware_group_mutation_intent_result(command_key):
+def _accepted_lane_aware_group_mutation_intent_result(command_key: str) -> SceneGroupBehaviorResult:
     group_metadata = GROUP_COMMANDS[command_key]
     label = group_metadata["label"]
     command_type = group_metadata["type"]
@@ -290,7 +290,7 @@ def _accepted_lane_aware_group_mutation_intent_result(command_key):
     )
 
 
-def _accepted_group_anchor_intent_result(command_key):
+def _accepted_group_anchor_intent_result(command_key: str) -> SceneGroupBehaviorResult:
     group_metadata = GROUP_COMMANDS[command_key]
     label = group_metadata["label"]
     command_type = group_metadata["type"]
@@ -335,12 +335,12 @@ def _accepted_group_anchor_intent_result(command_key):
 
 
 def _scene_display_lines(
-    command_key,
-    scene_name,
-    scene_action,
-    scene_scope,
-    forbidden_early_hardware_scope,
-):
+    command_key: str,
+    scene_name: str,
+    scene_action: str,
+    scene_scope: str,
+    forbidden_early_hardware_scope: str,
+) -> tuple[str, ...]:
     lines = (
         f"{command_key}: {scene_name}",
         "Read-only scene intent.",
@@ -361,12 +361,12 @@ def _scene_display_lines(
 
 
 def _group_mutation_display_lines(
-    command_key,
-    label,
-    group_mutation_mode,
-    scope,
-    forbidden_early_hardware_scope,
-):
+    command_key: str,
+    label: str,
+    group_mutation_mode: str,
+    scope: str,
+    forbidden_early_hardware_scope: str,
+) -> tuple[str, ...]:
     lines = (
         f"{command_key}: {label}",
         "Read-only group mutation intent.",
@@ -387,11 +387,11 @@ def _group_mutation_display_lines(
 
 
 def _lane_aware_group_mutation_display_lines(
-    command_key,
-    label,
-    lane_aware_page,
-    scope,
-):
+    command_key: str,
+    label: str,
+    lane_aware_page: str,
+    scope: str,
+) -> tuple[str, ...]:
     return (
         f"{command_key}: {label}",
         "Read-only lane-aware group mutation intent.",
@@ -408,11 +408,11 @@ def _lane_aware_group_mutation_display_lines(
 
 
 def _group_anchor_display_lines(
-    command_key,
-    label,
-    anchor_action,
-    scope,
-):
+    command_key: str,
+    label: str,
+    anchor_action: str,
+    scope: str,
+) -> tuple[str, ...]:
     return (
         f"{command_key}: {label}",
         "Read-only group anchor intent.",
@@ -428,7 +428,7 @@ def _group_anchor_display_lines(
     )
 
 
-def _safe_failure_metadata(source):
+def _safe_failure_metadata(source: str) -> dict[str, object]:
     return {
         "source": source,
         "mock_only": True,

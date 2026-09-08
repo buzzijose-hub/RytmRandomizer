@@ -51,12 +51,12 @@ class UndoCommitStateBehaviorResult:
     active_behavior: bool = False
     metadata: Mapping[str, object] = field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         object.__setattr__(self, "display_lines", tuple(self.display_lines))
         object.__setattr__(self, "metadata", MappingProxyType(dict(self.metadata)))
 
 
-def evaluate_undo_commit_state_behavior(command_key):
+def evaluate_undo_commit_state_behavior(command_key: str) -> UndoCommitStateBehaviorResult:
     """Return a passive Packet 9 behavior result for a state utility key."""
 
     key = str(command_key)
@@ -88,7 +88,7 @@ def evaluate_undo_commit_state_behavior(command_key):
     )
 
 
-def _accepted_b_result():
+def _accepted_b_result() -> UndoCommitStateBehaviorResult:
     metadata = STATE_UTILITY_COMMANDS["B"]
     label = metadata["label"]
     state_action = "describe_current_anchor_return_intent"
@@ -140,7 +140,7 @@ def _accepted_b_result():
     )
 
 
-def _accepted_e_result():
+def _accepted_e_result() -> UndoCommitStateBehaviorResult:
     metadata = STATE_UTILITY_COMMANDS["E"]
     label = metadata["label"]
     behavior_family = "undo-commit-state/current-state-anchor-commit"
@@ -201,7 +201,7 @@ def _accepted_e_result():
     )
 
 
-def _accepted_w_result():
+def _accepted_w_result() -> UndoCommitStateBehaviorResult:
     metadata = STATE_UTILITY_COMMANDS["W"]
     label = metadata["label"]
     behavior_family = "undo-commit-state/waveform-exploration"
@@ -263,7 +263,7 @@ def _accepted_w_result():
     )
 
 
-def _accepted_u_result():
+def _accepted_u_result() -> UndoCommitStateBehaviorResult:
     metadata = STATE_UTILITY_COMMANDS["U"]
     label = metadata["label"]
     behavior_family = "undo-commit-state/script-generated-state-undo"
@@ -326,7 +326,7 @@ def _accepted_u_result():
     )
 
 
-def _unsupported_result(command_key):
+def _unsupported_result(command_key: str) -> UndoCommitStateBehaviorResult:
     return UndoCommitStateBehaviorResult(
         command_key=command_key,
         accepted=False,

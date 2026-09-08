@@ -54,12 +54,15 @@ class SelectedIsolatedPadBehaviorResult:
     active_behavior: bool = False
     metadata: Mapping[str, object] = field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         object.__setattr__(self, "display_lines", tuple(self.display_lines))
         object.__setattr__(self, "metadata", MappingProxyType(dict(self.metadata)))
 
 
-def evaluate_selected_isolated_pad_behavior(command_key, runtime_state=None):
+def evaluate_selected_isolated_pad_behavior(
+    command_key: str,
+    runtime_state: object | None = None,
+) -> SelectedIsolatedPadBehaviorResult:
     """Return a passive Packet 11 behavior result for selected isolated pad utilities."""
 
     key = str(command_key)
@@ -81,7 +84,7 @@ def evaluate_selected_isolated_pad_behavior(command_key, runtime_state=None):
     )
 
 
-def _accepted_l_result():
+def _accepted_l_result() -> SelectedIsolatedPadBehaviorResult:
     metadata = ISOLATED_PAD_UTILITY_COMMANDS["L"]
     label = metadata["label"]
     behavior_family = "selected-isolated-pad/target-selection"
@@ -149,7 +152,7 @@ def _accepted_l_result():
     )
 
 
-def _pz_readiness_result(runtime_state=None):
+def _pz_readiness_result(runtime_state: object | None = None) -> SelectedIsolatedPadBehaviorResult:
     metadata = ISOLATED_PAD_UTILITY_COMMANDS["PZ"]
     behavior_family = "selected-isolated-pad/anchor-return-readiness"
     utility_action = "describe_selected_isolated_pad_anchor_return_readiness"
@@ -236,7 +239,7 @@ def _pz_readiness_result(runtime_state=None):
     )
 
 
-def _unsupported_result(command_key):
+def _unsupported_result(command_key: str) -> SelectedIsolatedPadBehaviorResult:
     return SelectedIsolatedPadBehaviorResult(
         command_key=command_key,
         accepted=False,
@@ -245,7 +248,7 @@ def _unsupported_result(command_key):
     )
 
 
-def _safe_failure_metadata(source):
+def _safe_failure_metadata(source: str) -> dict[str, object]:
     return {
         "source": source,
         "mock_only": True,
