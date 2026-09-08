@@ -1,9 +1,31 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-08-27. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-09-08. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-09-08: Added passive Digitakt and Digitakt II device support through the
+  `Device` Protocol + Strategy seam (`devices/digitakt.py` + four strategy
+  modules + two manual-backed `data/` tables).
+  - Both generations are **passive-only**: they decode snapshots but plan
+    zero-event, `ready=False` mutations. Digitakt saved-project byte offsets
+    have never been validated against hardware, and per
+    `.claude/rules/targeted-mutation-safety.md` #6 they must be promoted from
+    real captures rather than inferred from the live CC map.
+  - Extended the `Device` Protocol with `role_summary` + `display_order`, so a
+    device declares its own operator-facing role and sort key. This removed the
+    `track_count`-based role guessing and the per-device order table from
+    `reports/live_gui_device_inventory_model.py`, and fixed
+    `live_gui_dual_device_rig_readiness_model.py`, which had been reporting
+    every non-Rytm device's planned track count as the Analog Four's 4.
+  - Added `tests/test_device_family_conformance.py`: the device roster is now
+    pinned in one place (`EXPECTED_DEVICE_IDS`) and the remaining assertions
+    derive from `all_devices()`, so a new family inherits the shared
+    conformance suite instead of editing per-device counts across four files.
+  - Added `scripts/refresh_al16_evidence_manifest.py` (guarded by
+    `RYTM_AL16_MANIFEST_REFRESH=1`) so the AL02 evidence manifest is never
+    hand-edited; registering any device family dirties it because
+    `devices/__init__.py` is a pinned generator dependency.
 - 2026-08-27: Integrated the targeted dual-machine live-performance Cockpit
   bundle on the latest `modularize-v1.34` base.
   - Added explicitly armed, input-only current-KIT capture for Analog Rytm and

@@ -360,7 +360,7 @@ and the parity tests run the extracted engines/runners against those goldens.
 | Add a new state domain               | A new module under `state/` (frozen + transitions).    | (architecture review)     |
 | Add input-only live observation       | Pure state reducer under `state/`, formatter under `reports/`, explicit armed app path. | (architecture review) |
 | Add gated generated patch send        | Pure compiler under `style_analysis/`, passive preview under `reports/`, reusable transport helpers under `senders/`, explicit `app.py --arm` path with a confirmation flag. | (architecture review) |
-| **Add a new Elektron device family** (Analog Four, Digitakt, ...) | One module at `devices/<family>.py` registering a `Device` instance + three Strategy modules under `devices/strategies/`. See §6.1. | (architecture review)     |
+| **Add a new Elektron device family** (Digitone, Syntakt, Octatrack, ...) | One module at `devices/<family>.py` registering a `Device` instance + three Strategy modules under `devices/strategies/`. See §6.1. | (architecture review)     |
 | Music-analysis or guardrail change   | See `.claude/skills/MusicLibraryGuardrails/SKILL.md`. | `MusicLibraryGuardrails`  |
 
 The `controller_brain_live_*` report family is an explicit passive

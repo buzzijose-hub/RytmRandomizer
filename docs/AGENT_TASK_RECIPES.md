@@ -198,6 +198,13 @@ codebase. Humans can use them too.
        track_count: Final[int] = <N>
        sysex_manufacturer_id: Final[bytes] = bytes([0x00, 0x20, 0x3C])
        report_header: Final[str] = "RytmRandomizer <Family> Guarded Send"
+       # Presentation metadata the device owns. Consumers must never infer a
+       # role from track_count (a 12-track Syntakt is not a 12-pad Rytm), and
+       # display_order keeps per-device ordering tables out of reports/.
+       # Both are required by the Device Protocol -- omitting either makes the
+       # import-time isinstance(..., Device) conformance check fail.
+       role_summary: Final[str] = "<N>-track <what the machine is> surface"
+       display_order: Final[int] = <next unused int; must be unique>
 
        def __init__(self) -> None:
            self.snapshot_decoder = <Family>SnapshotDecoder()
@@ -224,6 +231,7 @@ codebase. Humans can use them too.
    - `tests/test_devices_strategies_<family>_mutation_planner.py` (100% branch coverage)
    - `tests/test_devices_strategies_<family>_message_renderer.py` (100% branch coverage)
    - Update `tests/test_devices.py` with `<Family>Device` registry + protocol checks.
+   - **Add the new `device_id`(s) to `EXPECTED_DEVICE_IDS` in `tests/test_device_family_conformance.py`.** That tuple is the single roster tripwire — it is the only place in the suite that pins which families exist, and the ~15 shared conformance tests (identity, Elektron manufacturer id, track/channel bounds, decoder rejects foreign SysEx, planner rejects foreign snapshots, unique `display_order`) then run against the new family for free. Do not re-add per-device `device_count == N` assertions elsewhere; report-model tests derive the count from `len(all_devices())` on purpose.
 7. **Verify:**
    ```bash
    just test
@@ -235,6 +243,9 @@ codebase. Humans can use them too.
 - **Do not create a parallel sibling subpackage at the package root** (`rytm_randomizer/<family>/`). Use `rytm_randomizer/devices/<family>.py`. Enforced by `test_no_new_top_level_modules` + `test_every_device_family_subpackage_registers_with_devices_registry`.
 - **Do not import private symbols** (`_foo`) from a sibling family's strategies. Enforced by `test_no_cross_family_private_api_imports`.
 - The reference implementation is `rytm_randomizer/devices/analog_rytm.py` + three `analog_rytm_*` strategies. Read them first.
+- **Registering a family invalidates the AL02 evidence manifest.** `rytm_randomizer/devices/__init__.py` is a pinned entry in `AL16_GENERATOR_DEPENDENCIES`, so adding the registration import changes its digest and fails `tests/test_al16_rytm_export.py`. Refresh with `RYTM_AL16_MANIFEST_REFRESH=1 .venv/bin/python scripts/refresh_al16_evidence_manifest.py`, then paste the printed SHA into `_COMMITTED_EVIDENCE_HASHES` in that test. Never hand-edit the manifest.
+- **Registering a family changes report output.** `reports/live_gui_device_inventory_model.py` fans out over `all_devices()`, and the performance-console and rig-readiness models embed its payload, so their goldens and the cockpit TS fixture all legitimately change. Regenerate with `RYTM_REPORT_GOLDEN_CAPTURE=1 .venv/bin/python scripts/capture_report_goldens.py` and `.venv/bin/python scripts/generate_live_gui_protocol_ts.py --fixture`, then review the diff — it should contain *only* your new device's rows.
+- **A new family must appear in `README.md`** (`.claude/rules/readme-freshness.md`, enforced by `tests/architecture/test_readme_freshness.py`). If the family is passive-only — no validated saved-kit offsets — say so plainly there rather than implying send authority.
 
 ---
 

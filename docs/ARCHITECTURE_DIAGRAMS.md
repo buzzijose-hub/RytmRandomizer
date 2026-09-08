@@ -153,7 +153,8 @@ flowchart TB
         DevCapture["saved_kit_capture.py<br/>optional registry-backed<br/>input capture capability"]
         DevAR["analog_rytm.py<br/>AnalogRytmDevice"]
         DevA4["analog_four.py<br/>AnalogFourDevice"]
-        DevStrategies["strategies/<br/>analog_rytm_{snapshot_decoder,<br/>snapshot_routing,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_render_plan,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer}.py<br/>analog_four_{offset_manifest,<br/>snapshot_decoder,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer,<br/>saved_kit_codec,<br/>saved_kit_writer}.py"]
+        DevDT["digitakt.py<br/>DigitaktDevice<br/>(digitakt_mk1 + digitakt_ii,<br/>passive: zero-event plans)"]
+        DevStrategies["strategies/<br/>analog_rytm_{snapshot_decoder,<br/>snapshot_routing,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_render_plan,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer}.py<br/>analog_four_{offset_manifest,<br/>snapshot_decoder,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer,<br/>saved_kit_codec,<br/>saved_kit_writer}.py<br/>digitakt_{snapshot_decoder,<br/>mutation_planner,<br/>message_renderer,<br/>track_domain}.py<br/>elektron_track_domain.py<br/>(shared by A4 + Digitakt)"]
         DevRytmSavedKit["strategies/analog_rytm_saved_kit_codec.py<br/>pure saved-KIT frame codec"]
     end
 
@@ -464,7 +465,7 @@ classDiagram
 **Key:**
 
 - **Protocol vs class.** `Device`, `SnapshotDecoder`, `MutationPlanner`, `MessageRenderer`, `MidiOutbox` are `@runtime_checkable Protocol`s. They're not inherited from — concrete classes match structurally. This is Gate 6 (type-system hygiene) and lets PR #21 / PR #36's `AnalogFourDevice` drop in without inheritance gymnastics.
-- **Composition over inheritance.** `AnalogRytmDevice` and `AnalogFourDevice` construct strategy instances in `__init__` and delegate their convenience methods to them. The Rytm device also exposes the narrow optional `AnalogRytmSavedKitCodecCapability`; both registered families structurally opt into `SavedKitCaptureCapability`, resolved through `devices/saved_kit_capture.py`, without widening the base `Device` Protocol. Cockpit capture therefore imports neither concrete family codec. The strategies don't know about each other except through their shared device-family types (`RytmKitSnapshot`, `RytmMutationPlan`, `RytmPlanEvent`, `AnalogFourKitSnapshot`, and `AnalogFourMutationPlan`).
+- **Composition over inheritance.** `AnalogRytmDevice` and `AnalogFourDevice` construct strategy instances in `__init__` and delegate their convenience methods to them. The Rytm device also exposes the narrow optional `AnalogRytmSavedKitCodecCapability`; the Rytm and Analog Four families structurally opt into `SavedKitCaptureCapability`, resolved through `devices/saved_kit_capture.py`, without widening the base `Device` Protocol. Cockpit capture therefore imports neither concrete family codec. The strategies don't know about each other except through their shared device-family types (`RytmKitSnapshot`, `RytmMutationPlan`, `RytmPlanEvent`, `AnalogFourKitSnapshot`, and `AnalogFourMutationPlan`).
 - **Import-time registration.** `analog_rytm.py` calls `register_device(AnalogRytmDevice())` at module load. The `devices/__init__.py` imports `analog_rytm` for the side effect; consumers get a non-empty registry on first import.
 - **Adding a new family** = one device class + three strategy modules + register at import. No parallel sibling subpackages allowed (enforced by `test_device_protocol_enforcement.py`).
 
@@ -544,12 +545,14 @@ flowchart LR
     end
 
     subgraph After["After PR #43 (Strategy)"]
-        NewDev["AnalogRytmDevice<br/>11 attrs + 4 methods<br/>(5 identity + 3 presentation + 3 strategy)"]
+        NewDev["AnalogRytmDevice<br/>11 attrs + 4 methods<br/>(5 identity + 3 presentation + 3 strategy objects)"]
 
         SD["snapshot_decoder<br/>: AnalogRytmSnapshotDecoder"]
         MP["mutation_planner<br/>: AnalogRytmMutationPlanner"]
         MR["message_renderer<br/>: AnalogRytmMessageRenderer"]
         RH["report_header<br/>: str"]
+        RS["role_summary<br/>: str"]
+        DO["display_order<br/>: int"]
 
         Conv1["decode_snapshot()<br/>delegates to snapshot_decoder.decode()"]
         Conv2["plan_mutation()<br/>delegates to mutation_planner.plan()"]
@@ -560,6 +563,8 @@ flowchart LR
         NewDev --> MP
         NewDev --> MR
         NewDev --> RH
+        NewDev --> RS
+        NewDev --> DO
         NewDev --> Conv1
         NewDev --> Conv2
         NewDev --> Conv3
@@ -943,7 +948,7 @@ The 7 sub-tests in `test_device_protocol_enforcement.py` (added by PR #43) all u
 4. Every registered Device satisfies the Protocol (runtime `isinstance`)
 5. Only one `register_device` definition exists (no parallel registry)
 6. Per-device snapshot impls reference the WS-S6 Protocols
-7. Device Protocol surface is stable (9 attrs + 4 methods pinned)
+7. Device Protocol surface is stable (11 attrs + 4 methods pinned)
 
 ---
 
@@ -1443,7 +1448,7 @@ flowchart TB
     end
 
     PostPR43 --> CodexRedo
-    DevBase -.->|"AnalogFourDevice<br/>satisfies Protocol<br/>(9 attrs + 4 methods)"| DevA4
+    DevBase -.->|"AnalogFourDevice<br/>satisfies Protocol<br/>(11 attrs + 4 methods)"| DevA4
     DevA4 --> DevA4_Strategies
     DevA4 --> DevRegistry
 
@@ -1470,7 +1475,7 @@ flowchart TB
 
 ## 19. Registry Fan-Out (dual-machine orchestration via Mapping[str, Device])
 
-How `dual_machine/` consumes the registry instead of importing per-family modules directly. This is the key abstraction that makes adding a 4th machine family (Syntakt, Digitone, etc.) trivial — no `dual_machine/` edits required.
+How `dual_machine/` consumes the registry instead of importing per-family modules directly. This is the key abstraction that makes adding a 5th machine family (Syntakt, Digitone, etc.) trivial — no `dual_machine/` edits required.
 
 ```mermaid
 sequenceDiagram
@@ -1479,7 +1484,7 @@ sequenceDiagram
     participant DM as dual_machine/<br/>orchestrator
     participant Reg as devices.registry
     participant Rytm as AnalogRytmDevice
-    participant A4 as AnalogFourDevice<br/>(future)
+    participant A4 as AnalogFourDevice
     participant Senders as senders/guarded.py<br/>(future generic)
 
     Op->>DM: dual_machine_bank_readiness()
