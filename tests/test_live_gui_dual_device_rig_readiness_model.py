@@ -9,6 +9,8 @@ import pytest
 
 pytestmark = pytest.mark.fast
 
+from rytm_randomizer.devices import all_devices
+
 FORBIDDEN_REAL_MIDI_AND_ADAPTER_MODULES = (
     "mido",
     "rtmidi",
@@ -32,7 +34,7 @@ def test_dual_device_rig_readiness_summarizes_12_rytm_pads_and_4_a4_tracks() -> 
     assert len(report.rig_id) == 16
     assert report.session_label == "Warehouse live session"
     assert report.rig_status == "mock-safe"
-    assert report.total_device_count == 2
+    assert report.total_device_count == len(all_devices())
     assert report.total_track_count == 16
     assert report.active_track_count == 4
     assert report.planned_track_count == 12
@@ -76,7 +78,7 @@ def test_dual_device_rig_readiness_summarizes_12_rytm_pads_and_4_a4_tracks() -> 
     assert rig["total_track_count"] == 16
     assert rig["tracks"][15]["test_id"] == "dual-rig-a4-track-04"
     assert payload["live_gui_12_pad_surface"]["pad_count"] == 12
-    assert payload["live_gui_device_inventory"]["device_count"] == 2
+    assert payload["live_gui_device_inventory"]["device_count"] == len(all_devices())
     assert payload["live_gui_hardware_rail"]["rail_status"] == "mock-safe"
     assert payload["live_gui_snapshot_compatibility"]["pad_count"] == 12
     assert payload["safety"][0] == "passive/read-only"
@@ -85,7 +87,7 @@ def test_dual_device_rig_readiness_summarizes_12_rytm_pads_and_4_a4_tracks() -> 
     lines = format_live_gui_dual_device_rig_readiness_model(report)
     text = "\n".join(lines)
     assert lines[0] == "RytmRandomizer passive live GUI dual-device rig readiness model"
-    assert "- devices: 2" in lines
+    assert f"- devices: {len(all_devices())}" in lines
     assert "- total tracks: 16" in lines
     assert "Analog Four MKII: 4 tracks / mock-staged" in text
     assert "A4 track 4 / FX / texture" in text
