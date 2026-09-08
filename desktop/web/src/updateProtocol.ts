@@ -384,3 +384,49 @@ export function subscribeUpdateState(
     if (unlisten !== null) unlisten();
   };
 }
+
+/**
+ * Ask the shell to check for an update now.
+ *
+ * Paired with {@link confirmUpdateChoiceOnShell} as the ONLY two ways the
+ * panel reaches the updater. Before these existed the buttons were
+ * decorative — "Check now" set a note and "Confirm choice" updated React
+ * state, and neither reached the driver. Everything looked wired.
+ *
+ * Resolves even when there is no shell (the dev loop): a check that cannot
+ * happen is not an error the operator needs to see, and throwing here would
+ * take the panel down.
+ */
+export async function requestUpdateCheck(): Promise<void> {
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('update_check_now');
+  } catch {
+    // No shell, or the command is unavailable. The panel's dev-loop body
+    // already says updates run in the installed app.
+  }
+}
+
+/**
+ * Send the operator's §7.1 consent decision to the shell.
+ *
+ * `choice` is one of {@link UPDATE_CONSENT_CHOICES}. The shell REFUSES an
+ * unrecognised value rather than defaulting — there is no safe default, since
+ * guessing "now" installs without consent and guessing "skip" suppresses an
+ * update nobody dismissed — so a rejection here means the two ends have
+ * drifted and should be surfaced, not swallowed.
+ *
+ * @returns `true` when the shell accepted the decision.
+ */
+export async function confirmUpdateChoiceOnShell(
+  version: string,
+  choice: UpdateConsentChoice,
+): Promise<boolean> {
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('update_confirm_choice', { version, choice });
+    return true;
+  } catch {
+    return false;
+  }
+}

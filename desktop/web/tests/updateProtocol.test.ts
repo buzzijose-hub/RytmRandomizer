@@ -35,6 +35,8 @@ import {
   shouldShowChip,
   type UpdateJournalRow,
   type UpdateSlice,
+  confirmUpdateChoiceOnShell,
+  requestUpdateCheck,
 } from '../src/updateProtocol';
 
 function row(over: Partial<UpdateJournalRow> = {}): UpdateJournalRow {
@@ -282,5 +284,27 @@ describe('failure mirroring (§5.1 honesty floor)', () => {
     expect(mirroredFailureMessage(row({ event: 'check_failed', detail: '' }))).toBe(
       'Update check_failed: no detail',
     );
+  });
+});
+
+describe('shell command bindings', () => {
+  // These are the ONLY two ways the panel reaches the updater. Before they
+  // existed the buttons were decorative — "Check now" set a note and "Confirm
+  // choice" updated React state, and neither reached the driver.
+
+  it('requestUpdateCheck resolves without a shell rather than throwing', async () => {
+    // The dev loop and a plain browser have no Tauri bridge. A throw here
+    // would propagate out of the click handler and blank the cockpit over a
+    // check that simply cannot happen.
+    await expect(requestUpdateCheck()).resolves.toBeUndefined();
+  });
+
+  it('confirmUpdateChoiceOnShell reports failure rather than claiming success', async () => {
+    // Without a shell the consent cannot be delivered. Returning `false` is
+    // what lets the panel tell the operator; returning `true` would show
+    // "choice recorded" for a decision that reached nothing.
+    await expect(
+      confirmUpdateChoiceOnShell('1.35.1', 'install_on_quit'),
+    ).resolves.toBe(false);
   });
 });

@@ -1020,7 +1020,11 @@ impl UpdateState {
 ///
 /// Time enters only through the `_ms` fields on completion events; the
 /// policy never reads a clock.
-#[derive(Debug)]
+// PartialEq so a caller can assert WHICH event an operator gesture produced.
+// Without it the command layer could only be tested by observing side effects,
+// which is exactly the indirection that let the panel's buttons look wired
+// while reaching nothing.
+#[derive(Debug, PartialEq)]
 pub enum UpdateEvent {
     /// Launch, the 4-hourly timer, or the operator's "Check now".
     CheckRequested,

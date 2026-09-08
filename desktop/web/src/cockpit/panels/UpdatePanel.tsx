@@ -37,6 +37,8 @@ import {
   journalLogEntries,
   type UpdateChannel,
   type UpdateConsentChoice,
+  confirmUpdateChoiceOnShell,
+  requestUpdateCheck,
   subscribeUpdateState,
 } from '../../updateProtocol';
 import { OperatorLogList } from '../OperatorLogList';
@@ -90,15 +92,28 @@ export function UpdatePanel(): JSX.Element {
     /* c8 ignore next -- unreachable through the disabled button; the gate is
        proven directly by the `updateActionsAllowed` tests. */
     if (!connected) return;
+    // Reaches the shell's driver. Before this the button only set a note.
+    void requestUpdateCheck();
     setNote('Check requested.');
   };
 
   const confirm = (): void => {
     /* c8 ignore next -- as above: defence in depth behind a disabled button. */
     if (!connected) return;
+    /* c8 ignore next -- the confirm button only renders inside the staged
+       consent block, so a version is always present here; the fallback exists
+       so a future refactor that moves the button cannot send `undefined`. */
+    const version = update.state?.version ?? UNKNOWN_VERSION;
     confirmUpdateChoice(choice);
     announce(`Update choice confirmed: ${CONSENT_LABELS[choice]}`);
     setNote(`Choice recorded: ${CONSENT_LABELS[choice]}`);
+    // The optimistic local update above keeps the UI responsive; this is what
+    // actually reaches the driver. A refusal means the two ends disagree on
+    // the choice vocabulary, which the operator should see rather than have
+    // silently swallowed.
+    void confirmUpdateChoiceOnShell(version, choice).then((accepted) => {
+      if (!accepted) setNote('The shell did not accept that choice.');
+    });
   };
 
   return (
