@@ -267,7 +267,7 @@ Validation rules (client-side, fail-closed):
 
 The end-to-end process — release pipeline, client state machine, and
 fleet awareness on one canvas — is diagrammed in
-[`docs/ARCHITECTURE_DIAGRAMS.md` §37](../../ARCHITECTURE_DIAGRAMS.md#37-auto-update-flow-designed--spec-complete-implementation-pending)
+[`docs/ARCHITECTURE_DIAGRAMS.md` §38](../../ARCHITECTURE_DIAGRAMS.md#38-auto-update-flow-designed--spec-complete-implementation-pending)
 (one canonical diagram; this section is the normative text it renders).
 
 ```

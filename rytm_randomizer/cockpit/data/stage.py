@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal, TypedDict
+from typing import Final, Literal, TypedDict
 
 StageDeviceId = Literal["analog_rytm_mk2", "analog_four_mk2"]
+STAGE_DEVICE_IDS: Final[tuple[StageDeviceId, ...]] = ("analog_rytm_mk2", "analog_four_mk2")
+ANALOG_RYTM_DEVICE_ID: Final[StageDeviceId] = STAGE_DEVICE_IDS[0]
+ANALOG_FOUR_DEVICE_ID: Final[StageDeviceId] = STAGE_DEVICE_IDS[1]
 StageConnectionState = Literal["unknown", "connected", "disconnected"]
 StageCaptureState = Literal["not_captured", "captured", "failed"]
 StageArtifactState = Literal["none", "ready", "stale", "blocked"]
@@ -98,6 +101,9 @@ class DualMachineStageState:
 
 
 __all__ = [
+    "STAGE_DEVICE_IDS",
+    "ANALOG_RYTM_DEVICE_ID",
+    "ANALOG_FOUR_DEVICE_ID",
     "DualMachineStageState",
     "DualMachineStageStateDict",
     "MachineStageState",

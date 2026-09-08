@@ -5,7 +5,7 @@ name: installers
 # Produces a .msi (Windows), .pkg (macOS, console-app spec), AppImage + .deb
 # (Linux) using BeeWare briefcase for the Python sidecar, AND a Tauri
 # desktop bundle for the React cockpit shell on each of the same three
-# OSes via `cargo tauri build`. The full release-engineer story is
+# OSes via the pinned Tauri CLI. The full release-engineer story is
 # documented in docs/BUILDING_INSTALLERS.md.
 #
 # WHY NOT REQUIRED-CHECK: installer builds take ~20 minutes per OS and
@@ -70,12 +70,18 @@ on:
         description: Comma-separated names of the uploaded Tauri cockpit-bundle artifacts.
         value: ${{ jobs['desktop-bundle'].outputs.bundle_artifact_names }}
   workflow_dispatch:
+    inputs:
+      studio_windows:
+        description: Build only the Windows Cockpit studio executable and portable copy
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 jobs:
   installer:
+    if: ${{ !inputs.studio_windows }}
     name: installer (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     # 30 min cap: installer builds are slow but should never hang.
@@ -229,6 +235,8 @@ jobs:
     # is produced by `cargo tauri build` against that host's toolchain.
     name: desktop-bundle (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    env:
+      TAURI_CLI_VERSION: "2.11.4"
     # 30 min cap: the first build per cache key compiles the entire
     # Tauri + wry + webview2-com tree; cached runs are ~5 minutes.
     timeout-minutes: 30
@@ -241,7 +249,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: ${{ fromJSON(inputs.studio_windows && '["windows-latest"]' || '["ubuntu-latest", "macos-latest", "windows-latest"]') }}
 
     steps:
       - name: Checkout
@@ -273,7 +281,9 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-          cache-dependency-path: desktop/web/package-lock.json
+          cache-dependency-path: |
+            desktop/web/package-lock.json
+            .github/workflows/installers.yml
 
       - name: Install stable Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -285,7 +295,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             desktop/shell/target
-          key: ${{ runner.os }}-cargo-tauri-${{ hashFiles('desktop/shell/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-tauri-${{ hashFiles('desktop/shell/Cargo.toml', 'desktop/shell/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-tauri-
 
@@ -341,9 +351,15 @@ jobs:
       # honest: bundles always ship the sidecar, source builds never need it.
       - name: Declare sidecar as a bundled resource
         shell: bash
+        env:
+          STUDIO_WINDOWS: ${{ inputs.studio_windows }}
         run: |
+          # Historical CRLF blobs can appear dirty under the current LF attributes.
+          # Ignore only CR at line endings; never rewrite the frozen fixtures.
+          git diff --ignore-cr-at-eol --exit-code
           python - <<'PY'
           import json
+          import os
           from pathlib import Path
 
           config_path = Path("desktop/shell/tauri.conf.json")
@@ -354,6 +370,13 @@ jobs:
           if glob not in resources:
               resources.append(glob)
           bundle["resources"] = resources
+          # The next steps explicitly build the frontend. Avoid invoking the
+          # development-relative hook a second time from the bundle directory.
+          config["build"]["beforeBuildCommand"] = ""
+          if os.environ["STUDIO_WINDOWS"] == "true":
+              config["app"]["windows"][0]["title"] = (
+                  "Show Kit Forge studio " + os.environ["GITHUB_SHA"][:12]
+              )
           config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
           print(f"tauri.conf.json bundle.resources = {resources}")
           PY
@@ -378,15 +401,105 @@ jobs:
         working-directory: desktop/web
         run: npm run build
 
-      - name: Install tauri-cli
-        # Pinning to ^2 follows the workspace Cargo.toml's Tauri major.
-        run: cargo install tauri-cli --version "^2"
+      - name: Cache and verify pinned Tauri CLI
+        # npm exec fetches the platform's prebuilt CLI into the npm cache.
+        # setup-node caches it with the frontend packages; no Rust CLI build.
+        working-directory: desktop/shell
+        run: npm exec --yes --package=@tauri-apps/cli@${{ env.TAURI_CLI_VERSION }} -- tauri --version
 
       - name: Build Tauri bundle
+        if: ${{ !inputs.studio_windows }}
         working-directory: desktop/shell
-        run: cargo tauri build
+        run: npm exec --yes --package=@tauri-apps/cli@${{ env.TAURI_CLI_VERSION }} -- tauri build
+
+      - name: Build Windows studio executable
+        if: ${{ inputs.studio_windows }}
+        working-directory: desktop/shell
+        run: npm exec --yes --package=@tauri-apps/cli@${{ env.TAURI_CLI_VERSION }} -- tauri build --no-bundle
+
+      - name: Assemble identified Windows portable studio copy
+        if: runner.os == 'Windows'
+        shell: python
+        env:
+          STUDIO_WINDOWS: ${{ inputs.studio_windows }}
+        run: |
+          import hashlib
+          import json
+          import os
+          import platform
+          import shutil
+          import subprocess
+          from pathlib import Path
+
+          revision = os.environ["GITHUB_SHA"]
+          cli_version = os.environ["TAURI_CLI_VERSION"]
+          build_command = f"npm exec --yes --package=@tauri-apps/cli@{cli_version} -- tauri build"
+          if os.environ["STUDIO_WINDOWS"] == "true":
+              build_command += " --no-bundle"
+          target = Path("dist") / f"show-kit-forge-studio-{revision[:12]}"
+          target.mkdir(parents=True, exist_ok=False)
+          (target / "binaries").mkdir()
+          artifacts = {
+              "rytm-randomizer-shell.exe": Path("desktop/shell/target/release/rytm-randomizer-shell.exe"),
+              "binaries/rytm-sidecar.exe": Path("desktop/shell/binaries/rytm-sidecar.exe"),
+          }
+          hashes = {}
+          for name, source in artifacts.items():
+              shutil.copy2(source, target / name)
+              hashes[name] = hashlib.sha256((target / name).read_bytes()).hexdigest()
+          tracked_build_changes = []
+          numstat = subprocess.check_output(
+              ["git", "diff", "--ignore-cr-at-eol", "--numstat", "--no-renames", "-z"],
+              encoding="utf-8",
+          )
+          for record in numstat.split("\0"):
+              if record:
+                  added, removed, path = record.split("\t", 2)
+                  if added != "0" or removed != "0":
+                      tracked_build_changes.append(path)
+          manifest = {
+              "schema_version": 1,
+              "source_commit": revision,
+              "source_repository": os.environ["GITHUB_REPOSITORY"],
+              "workflow_run": os.environ["GITHUB_RUN_ID"],
+              "workflow_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
+              "python": platform.python_version(),
+              "rust": subprocess.check_output(["rustc", "--version"], text=True).strip(),
+              "node": subprocess.check_output(["node", "--version"], text=True).strip(),
+              "tauri_cli_version": cli_version,
+              "build_command": build_command,
+              "source_clean_before_build": True,
+              "source_cleanliness_check": "git diff --ignore-cr-at-eol --exit-code; ignores only CR at line endings; fixtures are not rewritten",
+              "build_config_overrides": ["sidecar resource", "prebuilt frontend hook", "optional studio window title"],
+              "tracked_build_changes": tracked_build_changes,
+              "resources": ["binaries/rytm-sidecar.exe"],
+              "sha256": hashes,
+              "hardware_validation": "pending; A4 SEND and persistent SAVE remain blocked",
+              "signing": "unsigned studio build",
+          }
+          (target / "BUILD-MANIFEST.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+          (target / "README.txt").write_text(
+              f"Show Kit Forge studio build {revision}\n\n"
+              "Keep this whole folder together. Launch rytm-randomizer-shell.exe.\n"
+              "Requires Microsoft Edge WebView2 Runtime. No Python installation is needed.\n"
+              "BUILD-MANIFEST.json identifies the source and both binary SHA256 hashes.\n"
+              "Follow the matching repository studio checklist before any hardware action:\n"
+              "docs/hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md\n"
+              "A4 SEND and persistent Cockpit SAVE remain blocked.\n",
+              encoding="utf-8",
+          )
+
+      - name: Upload identified Windows portable studio artifact
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v7
+        with:
+          name: show-kit-forge-studio-windows-${{ github.sha }}
+          path: dist/show-kit-forge-studio-*/
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Upload Tauri bundle artifact
+        if: ${{ !inputs.studio_windows }}
         uses: actions/upload-artifact@v7
         with:
           name: cockpit-bundle-${{ matrix.os }}

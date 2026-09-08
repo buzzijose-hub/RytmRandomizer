@@ -25,6 +25,7 @@ const EXPECTED_BOTTOM_PANEL_IDS: ReadonlyArray<string> = [
   'scoped-randomization',
   'kit-morph',
   'updates',
+  'show-kit-forge',
 ];
 
 /** Each bottom panel's own root testid, in manifest order. */
@@ -35,6 +36,7 @@ const EXPECTED_BOTTOM_TESTIDS: ReadonlyArray<string> = [
   'scoped-randomization',
   'kit-morph',
   'update-panel',
+  'show-kit-forge',
 ];
 
 describe('panel registry manifest', () => {
