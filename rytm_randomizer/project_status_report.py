@@ -20,7 +20,6 @@ from collections.abc import Mapping, Sequence
 from copy import deepcopy
 from typing import Final, TypeAlias, cast
 
-from .reports._passive_section import _text
 from .reports.formatter import safety_section_lines
 
 #: One node in the status report tree. The tree mixes leaf scalars with
@@ -241,6 +240,12 @@ def _section(value: StatusValue, *, context: str) -> StatusSectionView:
     return narrowed
 
 
+def _render(value: StatusValue) -> str:
+    """Render a status-report leaf for line output."""
+
+    return str(value)
+
+
 def _rows(value: StatusValue, *, context: str) -> tuple[StatusValue, ...]:
     """Narrow a report value to a tuple of rows."""
 
@@ -252,7 +257,7 @@ def _rows(value: StatusValue, *, context: str) -> tuple[StatusValue, ...]:
 def _joined(value: StatusValue, *, context: str) -> str:
     """Render a report collection as a comma-separated string."""
 
-    return ", ".join(_text(item) for item in _rows(value, context=context))
+    return ", ".join(_render(item) for item in _rows(value, context=context))
 
 
 def _get_nested_value(data: StatusSectionView, path: str) -> StatusValue:
@@ -344,7 +349,7 @@ def summarize_project_status_report(report: StatusSection | None = None) -> Stat
         "title": source_report["title"],
         "phase_name": phase["name"],
         "creative_identity_candidate": phase["creative_identity_candidate"],
-        "passive_cli_command_count": len(commands) if isinstance(commands, tuple) else 0,
+        "passive_cli_command_count": len(_rows(commands, context="passive_cli_commands")),
         "accepted_packet_count": behavior["accepted_packet_count"],
         "pad_lane_command_count": behavior["pad_lane_command_count"],
         "runtime_supported_count": runtime["supported_count"],
@@ -405,7 +410,7 @@ def format_project_status_check(report: StatusSection | None = None) -> list[str
     """Return deterministic project status safety check lines."""
 
     check = check_project_status_report(report)
-    lines = [
+    lines: list[str] = [
         check["title"],
         f"- ok: {check['ok']}",
         f"- failure_count: {check['failure_count']}",
@@ -413,7 +418,7 @@ def format_project_status_check(report: StatusSection | None = None) -> list[str
 
     checked = _section(check["checked"], context="check.checked")
     for path, _expected in PROJECT_STATUS_CHECKS:
-        lines.append(f"- {path}: {_text(checked[path])}")
+        lines.append(f"- {path}: {_render(checked[path])}")
 
     failures = check["failures"]
     if failures:
@@ -422,8 +427,8 @@ def format_project_status_check(report: StatusSection | None = None) -> list[str
             row = _section(failure, context="check.failures[]")
             lines.append(
                 "- "
-                f"{_text(row['path'])}: expected {_text(row['expected'])}, "
-                f"actual {_text(row['actual'])}"
+                f"{_render(row['path'])}: expected {_render(row['expected'])}, "
+                f"actual {_render(row['actual'])}"
             )
 
     return lines
@@ -450,7 +455,7 @@ def format_project_status_report(report: StatusSection | None = None) -> list[st
     )
 
     lines = [
-        _text(source_report["title"]),
+        _render(source_report["title"]),
         "Phase:",
         f"- name: {phase['name']}",
         f"- technical_name: {phase['technical_name']}",
@@ -459,7 +464,7 @@ def format_project_status_report(report: StatusSection | None = None) -> list[st
     ]
 
     for command in _rows(source_report["passive_cli_commands"], context="passive_cli_commands"):
-        lines.append(f"- {_text(command)}")
+        lines.append(f"- {_render(command)}")
 
     lines.extend(
         [
@@ -506,7 +511,8 @@ def format_project_status_report(report: StatusSection | None = None) -> list[st
             f"- findings_received: {collaborator['findings_received']}",
             f"- required_format: {collaborator['required_format']}",
             f"- implementation_policy: {collaborator['implementation_policy']}",
-            "- triage_categories: " + ", ".join(collaborator["triage_categories"]),
+            "- triage_categories: "
+            + _joined(collaborator["triage_categories"], context="triage_categories"),
             f"- real_midi: {collaborator['real_midi']}",
             f"- port_opening: {collaborator['port_opening']}",
             f"- active_behavior: {collaborator['active_behavior']}",
@@ -529,22 +535,26 @@ def format_project_status_report(report: StatusSection | None = None) -> list[st
         ]
     )
 
-    for key, value in source_report["closeout"].items():
-        lines.append(f"- {key}: {value}")
+    closeout = _section(source_report["closeout"], context="closeout")
+    for key in closeout:
+        lines.append(f"- {key}: {_render(closeout[key])}")
 
     lines.append("Convergence:")
-    for key, value in source_report["convergence"].items():
-        if isinstance(value, tuple):
-            value = ", ".join(str(item) for item in value)
-        lines.append(f"- {key}: {value}")
+    convergence = _section(source_report["convergence"], context="convergence")
+    for key in convergence:
+        entry = convergence[key]
+        rendered = _joined(entry, context=key) if isinstance(entry, tuple) else _render(entry)
+        lines.append(f"- {key}: {rendered}")
 
-    lines.extend(safety_section_lines(source_report["safety"]))
+    lines.extend(safety_section_lines(_section(source_report["safety"], context="safety")))
+
+    source_block = _section(source_report["source"], context="source")
 
     lines.extend(
         [
             "Source:",
-            f"- in_memory_only: {source_report['source']['in_memory_only']}",
-            f"- writes_files: {source_report['source']['writes_files']}",
+            f"- in_memory_only: {_render(source_block['in_memory_only'])}",
+            f"- writes_files: {_render(source_block['writes_files'])}",
         ]
     )
     return lines
