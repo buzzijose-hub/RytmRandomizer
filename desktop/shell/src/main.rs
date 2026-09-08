@@ -17,13 +17,98 @@ use std::time::{Duration, Instant};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
-    Manager, WebviewWindow, WindowEvent,
+    Emitter, Manager, WebviewWindow, WindowEvent,
 };
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 
 use rytm_randomizer_shell_lib::sidecar::{self, SidecarLaunch};
+use rytm_randomizer_shell_lib::update_journal::{self, UpdateJournal};
+use rytm_randomizer_shell_lib::update_policy::{
+    Config as UpdateConfig, ConsentChoice, JournalRecord, UpdateEvent, UpdateStatePayload,
+    UPDATE_STATE_EVENT,
+};
+use rytm_randomizer_shell_lib::updater::{self, EffectSink, Updater};
 
 const TOKEN_BRIDGE_POLL_MS: u64 = 250;
+
+/// This build's version, from Cargo. `sync_version.py` (PR-A) keeps
+/// `Cargo.toml` equal to the repo-root `VERSION` file, and
+/// `test_version_single_source.py` fails CI if they drift — so this is the
+/// single source of truth reaching the updater, not a second declaration.
+const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+/// The production [`EffectSink`].
+///
+/// Deliberately minimal, and deliberately **incomplete in one direction**:
+/// it journals every effect and republishes state to the webview, but the
+/// three network/install effects are not yet performed. See the module note
+/// on [`ShellSink::install_staged`].
+struct ShellSink {
+    journal: UpdateJournal,
+    window: Mutex<Option<WebviewWindow>>,
+}
+
+impl ShellSink {
+    fn new(journal: UpdateJournal) -> Self {
+        Self {
+            journal,
+            window: Mutex::new(None),
+        }
+    }
+
+    fn attach_window(&self, window: WebviewWindow) {
+        *self.window.lock().expect("update window slot poisoned") = Some(window);
+    }
+}
+
+impl EffectSink for ShellSink {
+    fn fetch_manifest(&self, channel: &str) {
+        // Transport lands with the tauri-plugin-updater wiring; until then a
+        // check is a no-op that still journals `check_started`, so the panel
+        // shows an honest "couldn't check" rather than a spinner.
+        log::info!("update check requested for channel={channel} (transport not yet wired)");
+    }
+
+    fn download_artifact(&self, version: &str, _url: &str, _signature: &str) {
+        log::info!("update download requested for {version} (transport not yet wired)");
+    }
+
+    fn install_staged(&self, version: &str, choice: ConsentChoice) {
+        // Unreachable today: `updater::signing_key_present()` is false until
+        // operator action item 1 lands the Ed25519 public key, and the policy
+        // cannot emit an install effect without it. Logged rather than
+        // silently ignored so that, the moment a key exists, an unwired
+        // install path is loud instead of mysterious.
+        log::warn!("install requested for {version} ({choice:?}) but no install path is wired");
+    }
+
+    fn send_beacon(&self, version: &str, target: &str) {
+        // Fire-and-forget by construction: no retry, no error surfaced, no
+        // identifying data. Wired with the HTTP transport.
+        log::debug!(
+            "beacon asset {} (not yet sent)",
+            updater::beacon_asset_name(version, target)
+        );
+    }
+
+    fn journal(&self, record: &JournalRecord) {
+        updater::write_journal_row(&self.journal, record);
+    }
+
+    fn emit_state(&self, payload: &UpdateStatePayload) {
+        // Contract I2: one typed event carries the whole update surface.
+        if let Some(window) = self
+            .window
+            .lock()
+            .expect("update window slot poisoned")
+            .as_ref()
+        {
+            if let Err(err) = window.emit(UPDATE_STATE_EVENT, payload) {
+                log::warn!("failed to emit {UPDATE_STATE_EVENT}: {err}");
+            }
+        }
+    }
+}
 
 fn supervise<F>(
     shutdown: Arc<AtomicBool>,
@@ -121,7 +206,13 @@ where
         let mut injected: Option<String> = None;
         while !shutdown.load(Ordering::SeqCst) {
             match sidecar::read_token_file(&credential_file) {
-                Ok(Some(value)) if injected.as_deref() != Some(value.as_str()) => {
+                Ok(current)
+                    if sidecar::should_inject_credential(
+                        current.as_deref(),
+                        injected.as_deref(),
+                    ) =>
+                {
+                    let value = current.expect("should_inject_credential implies Some");
                     let script = build_script(&value);
                     match window.eval(&script) {
                         Ok(()) => {
@@ -129,6 +220,10 @@ where
                             log::info!("bridged sidecar {label} into cockpit webview");
                         }
                         Err(err) => {
+                            // Deliberately do NOT record the value as
+                            // injected: a failed eval must be retried on the
+                            // next poll, or a transient webview error would
+                            // strand the cockpit without its credential.
                             log::warn!("failed to inject sidecar {label}: {err}");
                         }
                     }
@@ -151,15 +246,48 @@ fn main() {
     let arm_bridge_slot: Arc<Mutex<Option<JoinHandle<()>>>> = Arc::new(Mutex::new(None));
     let token_file = sidecar::resolve_token_file_path();
     let arm_secret_file = sidecar::resolve_arm_secret_file_path();
+
+    // Update subsystem. The config dir is resolved once and shared by the
+    // journal and the install id; the driver holds all update state.
+    let update_config_dir = update_journal::default_config_dir();
+    let update_config: UpdateConfig = updater::resolve_config_from_env(
+        APP_VERSION,
+        &updater::resolve_install_id(&update_config_dir),
+    );
+    log::info!(
+        "updates: enabled={} beacon={} channel={} install_permitted={}",
+        update_config.updates_enabled,
+        update_config.beacon_enabled,
+        update_config.channel,
+        update_config.install_permitted()
+    );
+    let update_sink = Arc::new(ShellSink::new(UpdateJournal::new(update_config_dir)));
+    let updater_driver = Updater::new(update_config, Arc::clone(&update_sink));
+
     let teardown = {
         let shutdown = Arc::clone(&shutdown);
         let slot = Arc::clone(&child_slot);
         let bridge_slot = Arc::clone(&token_bridge_slot);
         let arm_slot = Arc::clone(&arm_bridge_slot);
+        let updater_driver = updater_driver.clone();
         move || {
             shutdown.store(true, Ordering::SeqCst);
             if let Some(mut child) = slot.lock().expect("child slot poisoned").take() {
-                sidecar::shutdown_child(&mut child);
+                // Spec §5: an install-on-quit runs ONLY after this sequence
+                // confirms the sidecar exited — never concurrently with it.
+                // The outcome, not the mere fact that we asked, is what
+                // decides: a SIGKILL after the grace window is not a
+                // confirmed clean exit, so it feeds the refusal event and the
+                // pending install is journalled as failed rather than run.
+                let outcome = sidecar::shutdown_child(&mut child);
+                updater_driver.handle(if outcome.is_clean_exit() {
+                    UpdateEvent::SidecarExited
+                } else {
+                    UpdateEvent::QuitWithoutSidecarExit
+                });
+            } else {
+                // No child was running, so there is nothing to race with.
+                updater_driver.handle(UpdateEvent::SidecarExited);
             }
             if let Some(handle) = bridge_slot
                 .lock()
@@ -181,6 +309,14 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
+        // The updater plugin owns the signed download/stage/swap transport.
+        // Registering it is inert until `tauri.conf.json`'s
+        // `plugins.updater.pubkey` is non-empty (operator action item 1): with
+        // no key the plugin cannot verify — and therefore cannot install — any
+        // artifact, which is the structural half of "check-and-notify-only".
+        // The policy half is `Config::install_permitted()`, which is false for
+        // the same reason and stops an install effect being emitted at all.
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(move |app| {
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&quit])?;
@@ -253,6 +389,13 @@ fn main() {
             }
 
             if let Some(window) = app.get_webview_window("main") {
+                // Contract I2: give the sink the window it publishes
+                // `rytm-update-state` on, then emit the current state once so
+                // the cockpit renders the right body (frozen / up-to-date /
+                // dev-loop) from first paint instead of an empty panel.
+                update_sink.attach_window(window.clone());
+                update_sink.emit_state(&updater_driver.payload());
+
                 let handle = start_credential_bridge(
                     Arc::clone(&shutdown),
                     window.clone(),

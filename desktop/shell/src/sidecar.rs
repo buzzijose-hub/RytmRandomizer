@@ -285,6 +285,31 @@ pub fn read_token_file(path: &Path) -> io::Result<Option<String>> {
     }
 }
 
+/// Whether a freshly-read credential value should be injected into the live
+/// webview, given what was last injected.
+///
+/// This is the whole decision the credential bridge makes each poll, split
+/// out of the bridge thread so it can be tested without a `WebviewWindow`.
+/// The three cases:
+///
+/// * **not ready** (`None` — the file is missing or blank): inject nothing.
+///   The sidecar writes its credentials a moment *after* the shell starts, so
+///   "absent" is the normal state for the first few polls, not an error.
+/// * **unchanged**: inject nothing. Re-running the bootstrap script on every
+///   250 ms tick would clobber webview state for no reason.
+/// * **new or changed**: inject. Injecting on *change* — not merely once — is
+///   what makes a mid-session sidecar restart recover on its own: the
+///   supervisor clears the file, the restarted sidecar writes a fresh token,
+///   and the live webview is handed the new one without the operator
+///   relaunching the app. Latching after the first injection is the bug this
+///   function exists to make un-writable.
+pub fn should_inject_credential(current: Option<&str>, injected: Option<&str>) -> bool {
+    match current {
+        None => false,
+        Some(value) => injected != Some(value),
+    }
+}
+
 /// JavaScript injected into the WebView once the Python sidecar writes its
 /// token: hands over both the handshake token and the per-launch WS port.
 pub fn token_bootstrap_script(token: &str, port: u16) -> String {
@@ -389,7 +414,7 @@ fn request_graceful_shutdown(child: &mut Child) {
 /// Send a graceful shutdown to the child (stdin sentinel everywhere,
 /// SIGTERM additionally on unix), wait up to [`SHUTDOWN_GRACE_SECS`],
 /// then kill if it is still alive.
-pub fn shutdown_child(child: &mut Child) {
+pub fn shutdown_child(child: &mut Child) -> ShutdownOutcome {
     log::info!("shutting down sidecar pid={}", child.id());
     request_graceful_shutdown(child);
     #[cfg(unix)]
@@ -402,12 +427,38 @@ pub fn shutdown_child(child: &mut Child) {
     let deadline = std::time::Instant::now() + Duration::from_secs(SHUTDOWN_GRACE_SECS);
     while std::time::Instant::now() < deadline {
         if let Ok(Some(_)) = child.try_wait() {
-            return;
+            return ShutdownOutcome::Exited;
         }
         std::thread::sleep(Duration::from_millis(100));
     }
     let _ = child.kill();
     let _ = child.wait();
+    ShutdownOutcome::Killed
+}
+
+/// How the graceful-shutdown sequence ended.
+///
+/// Returned rather than discarded because the update subsystem's
+/// install-on-quit step is gated on it: spec §5 requires the install to run
+/// "only after the shell's existing graceful-shutdown sequence — stdin
+/// sentinel, SIGTERM, 5 s grace — has confirmed the sidecar exited, never
+/// concurrently with it". A `Killed` outcome means the grace window expired
+/// and we resorted to SIGKILL, which is *not* a confirmed clean exit: the
+/// process may still be flushing, and swapping the bundle underneath it is
+/// exactly the concurrent-install the spec forbids.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ShutdownOutcome {
+    /// The child exited within the grace window. Safe to install.
+    Exited,
+    /// The grace window expired and the child was killed. Do NOT install.
+    Killed,
+}
+
+impl ShutdownOutcome {
+    /// Whether this outcome authorises an install-on-quit.
+    pub fn is_clean_exit(self) -> bool {
+        matches!(self, ShutdownOutcome::Exited)
+    }
 }
 
 #[cfg(test)]
@@ -750,6 +801,85 @@ mod tests {
         let resolved = resolve_arm_secret_file_path();
         assert!(resolved
             .ends_with(std::path::Path::new(DEFAULT_ARM_SECRET_DIR).join(DEFAULT_ARM_SECRET_FILE)));
+    }
+
+    // -- shutdown outcome (install-on-quit gate) ---------------------------
+
+    /// Only a confirmed clean exit authorises an install-on-quit. A SIGKILL
+    /// after the 5 s grace window means the sidecar may still be flushing,
+    /// and swapping the bundle underneath it is exactly the concurrent
+    /// install spec §5 forbids.
+    #[test]
+    fn only_a_confirmed_exit_authorises_an_install() {
+        assert!(ShutdownOutcome::Exited.is_clean_exit());
+        assert!(!ShutdownOutcome::Killed.is_clean_exit());
+    }
+
+    #[test]
+    fn a_sidecar_that_exits_within_the_grace_window_reports_exited() {
+        let mut child = std::process::Command::new("true")
+            .stdin(std::process::Stdio::piped())
+            .spawn()
+            .expect("spawn a trivially-exiting child");
+        assert_eq!(shutdown_child(&mut child), ShutdownOutcome::Exited);
+    }
+
+    // -- credential re-injection ------------------------------------------
+
+    #[test]
+    fn a_not_ready_credential_is_never_injected() {
+        // The sidecar writes its credentials after the shell has started, so
+        // the first polls legitimately see nothing.
+        assert!(!should_inject_credential(None, None));
+        assert!(!should_inject_credential(None, Some("tok-a")));
+    }
+
+    #[test]
+    fn a_first_sighting_is_injected_and_an_unchanged_value_is_not() {
+        assert!(should_inject_credential(Some("tok-a"), None));
+        assert!(!should_inject_credential(Some("tok-a"), Some("tok-a")));
+    }
+
+    /// The standing follow-up this pins: after a mid-session sidecar restart
+    /// the shell must hand the *fresh* token to the already-open webview.
+    /// Injecting only once would leave the cockpit holding a token the
+    /// restarted sidecar no longer accepts, and the operator would have to
+    /// relaunch the whole app to recover.
+    #[test]
+    fn a_restarted_sidecars_fresh_credential_is_re_injected_into_the_live_webview() {
+        let mut injected: Option<String> = None;
+
+        // First launch: the sidecar writes tok-a.
+        assert!(should_inject_credential(Some("tok-a"), injected.as_deref()));
+        injected = Some("tok-a".to_string());
+        assert!(!should_inject_credential(
+            Some("tok-a"),
+            injected.as_deref()
+        ));
+
+        // The supervisor clears the file while the sidecar restarts. Nothing
+        // is injected, and — critically — the last-injected value is NOT
+        // forgotten, so the same token reappearing would not be re-injected.
+        assert!(!should_inject_credential(None, injected.as_deref()));
+
+        // The restarted sidecar writes a new token. It must be injected.
+        assert!(should_inject_credential(Some("tok-b"), injected.as_deref()));
+        injected = Some("tok-b".to_string());
+        assert!(!should_inject_credential(
+            Some("tok-b"),
+            injected.as_deref()
+        ));
+
+        // And it keeps working across further restarts.
+        assert!(should_inject_credential(Some("tok-c"), injected.as_deref()));
+    }
+
+    #[test]
+    fn a_credential_that_reverts_to_an_older_value_is_still_re_injected() {
+        // Not merely "different from the first"; the rule is "different from
+        // what the webview currently holds". A sidecar that happens to remint
+        // an earlier token must still be propagated.
+        assert!(should_inject_credential(Some("tok-a"), Some("tok-b")));
     }
 
     #[test]

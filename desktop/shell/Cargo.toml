@@ -25,6 +25,18 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 log = "0.4"
 env_logger = "0.11"
+# Update subsystem (WS-U3):
+#   tauri-plugin-updater  — the signed download/stage/swap transport.
+#                           Runs in check-and-notify-only mode until the
+#                           Ed25519 public key exists (operator action item
+#                           1); `updater::signing_key_present()` is false
+#                           without it and the policy cannot emit an install
+#                           effect. See tauri.conf.json `plugins.updater`.
+#   sha2                  — deterministic staged-rollout bucketing
+#                           (`update_policy::rollout_bucket`). No network,
+#                           no keys.
+tauri-plugin-updater = "2"
+sha2 = "0.10"
 # CI pin: tauri-utils 2.9.2 conflicts with time 0.3.48 on Windows/Rust 1.88.
 time = "=0.3.47"
 # CI pin: 2026-06-14 brotli-decompressor/alloc-stdlib releases can resolve
