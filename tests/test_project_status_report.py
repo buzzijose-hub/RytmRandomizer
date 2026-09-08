@@ -53,7 +53,7 @@ def test_project_status_report_summarizes_current_project_state():
     assert report["closeout"] == {
         "closeout_contract": "present",
         "failure_propagation": "guarded",
-        "closeout_script": "Scripts/closeout_check.ps1",
+        "closeout_script": "scripts/closeout_check.ps1",
     }
 
 
@@ -491,7 +491,7 @@ def test_formatted_project_status_report_is_deterministic():
         "Closeout:",
         "- closeout_contract: present",
         "- failure_propagation: guarded",
-        "- closeout_script: Scripts/closeout_check.ps1",
+        "- closeout_script: scripts/closeout_check.ps1",
         "Convergence:",
         "- active_execution: present",
         "- active_execution_gate: --arm flag",

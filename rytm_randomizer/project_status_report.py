@@ -55,7 +55,7 @@ PROJECT_PHASE = {
 CLOSEOUT_STATUS = {
     "closeout_contract": "present",
     "failure_propagation": "guarded",
-    "closeout_script": "Scripts/closeout_check.ps1",
+    "closeout_script": "scripts/closeout_check.ps1",
 }
 
 # Convergence status values intentionally describe the *package* as it stands

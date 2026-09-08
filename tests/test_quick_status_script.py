@@ -10,8 +10,8 @@ import pytest
 pytestmark = pytest.mark.fast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-QUICK_STATUS_SCRIPT = PROJECT_ROOT / "Scripts" / "quick_status.ps1"
-CLOSEOUT_SCRIPT = PROJECT_ROOT / "Scripts" / "closeout_check.ps1"
+QUICK_STATUS_SCRIPT = PROJECT_ROOT / "scripts" / "quick_status.ps1"
+CLOSEOUT_SCRIPT = PROJECT_ROOT / "scripts" / "closeout_check.ps1"
 
 # Skip Powershell-script execution tests off Windows: the script is .ps1,
 # Powershell isn't installed on the GitHub Linux/macOS runners, and the

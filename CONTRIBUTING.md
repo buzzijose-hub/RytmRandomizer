@@ -274,7 +274,8 @@ The codebase runs on **Windows, macOS, and Linux**. CI exercises all three on `p
 - Use `pathlib.Path`, never raw `os.path.join` with hard-coded separators.
 - Use `tempfile.gettempdir()` for temp paths; never `/tmp` literals.
 - Use `subprocess.run([...], check=True)` with list-of-args, not shell-string commands.
-- When writing scripts under `scripts/`, prefer Python (`scripts/closeout_check.py`) over PowerShell-only (`Scripts/closeout_check.ps1`). The PowerShell scripts under `Scripts/` are legacy duplicates kept for Windows-default operator convenience; new tooling goes under lowercase `scripts/` as Python.
+- All scripts live in one lowercase `scripts/` directory. Never create a second casing (`Scripts/`): the two are one directory on macOS and two on case-sensitive Linux CI, so a file committed under the wrong casing resolves locally and fails only in CI. `tests/architecture/test_repo_root_perimeter.py::test_scripts_directory_has_one_casing` enforces this against git's index.
+- Prefer Python (`scripts/closeout_check.py`) over PowerShell (`scripts/closeout_check.ps1`). The two `.ps1` files are legacy duplicates kept for Windows-default operator convenience; new tooling is Python.
 
 ## End-to-end contributor flow
 

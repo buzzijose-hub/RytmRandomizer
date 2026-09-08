@@ -124,7 +124,7 @@ jobs:
             # `code` -- any change that affects runtime / production code.
             code:
               - 'rytm_randomizer/**'
-              - 'Scripts/**'
+              - 'scripts/**'
 
             # `tests` -- any test source change. Note tests/architecture/ is
             # called out separately so a pure architecture-test edit triggers

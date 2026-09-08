@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Cross-platform closeout verification gate for RytmRandomizer.
 
-Python equivalent of ``Scripts/closeout_check.ps1``. Runs the verification
+Python equivalent of ``scripts/closeout_check.ps1``. Runs the verification
 gate and exits non-zero if any step fails. Intended to be runnable on
 Windows, macOS, and Linux (CI and local).
 

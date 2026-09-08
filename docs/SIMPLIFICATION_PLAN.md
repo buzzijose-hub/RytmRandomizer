@@ -91,7 +91,7 @@ python -m pytest --cov-branch --cov-report=term-missing --cov-fail-under=100 $to
 After WS-S7 merges, before Wave 4 (learning) starts, **WS-S8 runs a full-package sweep** with the same tools but at maximum strictness across the *entire* package — not just touched files. The goal: catch anything the per-WS sweeps missed (especially cross-WS interactions like "WS-S5 made WS-S2's helper redundant").
 
 **WS-S8 scope:**
-- `python -m vulture rytm_randomizer/ tests/ Scripts/ scripts/ --min-confidence 70`
+- `python -m vulture rytm_randomizer/ tests/ scripts/ --min-confidence 70`
 - `python -m ruff check --select F,B,SIM,UP,C4,PLR,ERA,ARG --statistics rytm_randomizer/ tests/`
 - `python -m pytest --cov=rytm_randomizer --cov-branch --cov-report=term-missing --cov-fail-under=100` (whole-package 100%, ratcheted up from current 87%)
 - Cross-check `docs/ARCHITECTURE.md` §8 parity-API surface — any symbol listed there but no longer needed (because the abstraction now obsoletes it) gets removed from both the doc and the code; any symbol used but not listed gets added to the doc.
