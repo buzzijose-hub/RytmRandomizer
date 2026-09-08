@@ -411,6 +411,7 @@ class _TriggerClass:
 # `installers` run blocks a merge.
 _WORKFLOW_SCOPE_MAP: dict[str, tuple[str, bool]] = {
     "codeql.yml": (_TriggerClass.BRANCH_PUSH_GATED, False),
+    "fleet-snapshot.yml": (_TriggerClass.SCHEDULE, False),
     "installers.yml": (_TriggerClass.DISPATCH, False),
     "manifest-validate.yml": (_TriggerClass.BRANCH_PUSH_SCOPED, False),
     "promote.yml": (_TriggerClass.DISPATCH, False),
