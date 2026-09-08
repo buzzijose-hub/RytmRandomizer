@@ -20,9 +20,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
+from typing import Final, TypeVar, cast
 
 from ..commands import COMMANDS, PAD1_COMMANDS, PAD2_COMMANDS, PAD3_COMMANDS, PAD4_COMMANDS
 from ..data.modes import MUTATION_KINDS
+from ._result_fields import empty_metadata
 
 # WS-S8 Gate 10: consume the canonical mutation-kind constants instead of
 # inlining the strings at every dispatch site below.
@@ -96,7 +98,7 @@ class Pad1LaneBehaviorResult:
     opens_ports: bool = False
     hardware_required: bool = False
     active_behavior: bool = False
-    metadata: Mapping[str, object] = field(default_factory=dict)
+    metadata: Mapping[str, object] = field(default_factory=empty_metadata)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "display_lines", tuple(self.display_lines))
@@ -127,7 +129,7 @@ class Pad1LaneStateDescriptor:
     opens_ports: bool = False
     hardware_required: bool = False
     notes: tuple[str, ...] = ()
-    metadata: Mapping[str, object] = field(default_factory=dict)
+    metadata: Mapping[str, object] = field(default_factory=empty_metadata)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "notes", tuple(self.notes))
@@ -158,7 +160,7 @@ class Pad2LaneBehaviorResult:
     opens_ports: bool = False
     hardware_required: bool = False
     active_behavior: bool = False
-    metadata: Mapping[str, object] = field(default_factory=dict)
+    metadata: Mapping[str, object] = field(default_factory=empty_metadata)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "display_lines", tuple(self.display_lines))
@@ -190,7 +192,7 @@ class Pad3LaneBehaviorResult:
     opens_ports: bool = False
     hardware_required: bool = False
     active_behavior: bool = False
-    metadata: Mapping[str, object] = field(default_factory=dict)
+    metadata: Mapping[str, object] = field(default_factory=empty_metadata)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "display_lines", tuple(self.display_lines))
@@ -221,7 +223,7 @@ class Pad4LaneBehaviorResult:
     opens_ports: bool = False
     hardware_required: bool = False
     active_behavior: bool = False
-    metadata: Mapping[str, object] = field(default_factory=dict)
+    metadata: Mapping[str, object] = field(default_factory=empty_metadata)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "display_lines", tuple(self.display_lines))
@@ -236,7 +238,11 @@ PACKET_5B_PAD1_BD_FM_KEYS = ("FT", "FK", "FG", "FZ")
 PACKET_5C_PAD1_BD_PLASTIC_KEYS = ("BP", "PT", "PK", "PX", "PBH")
 PACKET_5D_PAD1_BD_SILKY_KEYS = ("BI", "ST", "SK", "SC", "SBH")
 PACKET_5E_PAD1_BD_ACOUSTIC_KEYS = ("BA",)
-DEFERRED_PACKET_5_PAD1_LANE_KEYS = ()
+# Drained deferral list: every key that once sat here graduated to a
+# supported packet. Annotated rather than deleted so a future deferral
+# has an obvious home, and typed so the guard branch below reads as
+# reachable-when-populated.
+DEFERRED_PACKET_5_PAD1_LANE_KEYS: Final[tuple[str, ...]] = ()
 
 PACKET_6A_PAD2_LANE_KEYS = ("P2B",)
 PACKET_6B_PAD2_LANE_KEYS = ("P2H",)
@@ -1080,7 +1086,7 @@ def _pad1_accepted_metadata(command: PadLaneCommand) -> dict[str, object]:
 
 def _pad1_accepted_result(command: PadLaneCommand) -> Pad1LaneBehaviorResult:
     command_metadata = PAD1_COMMANDS[command.command_key]
-    label = command_metadata["label"]
+    label = str(command_metadata["label"])
 
     display_lines = (
         f"{command.command_key}: {label}",
@@ -1136,7 +1142,7 @@ def _safe_state_metadata(source: str) -> dict[str, object]:
     return metadata
 
 
-def evaluate_pad1_lane_behavior(command_key) -> Pad1LaneBehaviorResult:
+def evaluate_pad1_lane_behavior(command_key: str) -> Pad1LaneBehaviorResult:
     """Return a passive Packet 5 Pad 1 lane behavior result."""
 
     key = str(command_key)
@@ -1145,7 +1151,9 @@ def evaluate_pad1_lane_behavior(command_key) -> Pad1LaneBehaviorResult:
     if command is not None and command.pad == 1:
         return _pad1_accepted_result(command)
 
-    if key in DEFERRED_PACKET_5_PAD1_LANE_KEYS:
+    if (
+        key in DEFERRED_PACKET_5_PAD1_LANE_KEYS
+    ):  # pyright: ignore[reportUnnecessaryContains]  # drained deferral list; branch kept as the contract for a future deferral
         return Pad1LaneBehaviorResult(
             command_key=key,
             accepted=False,
@@ -1232,7 +1240,7 @@ def _pad1_accepted_state_descriptor(
     )
 
 
-def describe_pad1_lane_state(command_key) -> Pad1LaneStateDescriptor:
+def describe_pad1_lane_state(command_key: str) -> Pad1LaneStateDescriptor:
     """Return a static read-only Pad 1 lane-state descriptor."""
 
     key = str(command_key)
@@ -1260,10 +1268,22 @@ def describe_pad1_lane_state(command_key) -> Pad1LaneStateDescriptor:
 # --------------------------------------------------------------------------
 # Shared Pad 2-4 formatter.
 # --------------------------------------------------------------------------
-def _padn_accepted_result(command: PadLaneCommand, result_cls):
+#: The three Pad-N result dataclasses share the keyword surface that
+#: ``_padn_accepted_result`` builds, so the dispatch is parameterized
+#: over them rather than typed as a bare callable -- each caller keeps
+#: its own concrete return type.
+PadNResultT = TypeVar(
+    "PadNResultT", Pad2LaneBehaviorResult, Pad3LaneBehaviorResult, Pad4LaneBehaviorResult
+)
+
+
+def _padn_accepted_result(
+    command: PadLaneCommand,
+    result_cls: type[PadNResultT],
+) -> PadNResultT:
     source_commands = _SOURCE_COMMANDS[command.source]
     command_metadata = source_commands[command.command_key]
-    label = command_metadata["label"]
+    label = str(command_metadata["label"])
     lane_metadata_value = f"pad_{command.pad}_" + (
         "secondary_lane"
         if command.pad == 2
@@ -1305,29 +1325,48 @@ def _padn_accepted_result(command: PadLaneCommand, result_cls):
         *_NO_PROMPT_TAIL,
     )
 
-    kwargs: dict[str, object] = {
-        "command_key": command.command_key,
-        "label": label,
-        "behavior_family": command.behavior_family,
-        "accepted": True,
-        "reason": command.reason,
-        "target_pad": command.pad,
-        "lane": command.lane,
-        "lane_action": command.lane_action,
-        "intent_kind": command.intent_kind,
-        "anchor_concept": command.anchor_concept,
-        "display_lines": display_lines,
-        "metadata": result_metadata,
-    }
     if result_cls is Pad3LaneBehaviorResult:
-        kwargs["mode_concept"] = command.mode_concept
-    return result_cls(**kwargs)
+        # Pad 3 is the only lane carrying a mode concept. The cast tells the
+        # checker what the identity test above already established.
+        pad3_cls = cast("type[Pad3LaneBehaviorResult]", result_cls)
+        return cast(
+            "PadNResultT",
+            pad3_cls(
+                command_key=command.command_key,
+                label=label,
+                behavior_family=command.behavior_family,
+                accepted=True,
+                reason=command.reason,
+                target_pad=command.pad,
+                lane=command.lane,
+                lane_action=command.lane_action,
+                intent_kind=command.intent_kind,
+                anchor_concept=command.anchor_concept,
+                display_lines=display_lines,
+                metadata=result_metadata,
+                mode_concept=command.mode_concept,
+            ),
+        )
+    return result_cls(
+        command_key=command.command_key,
+        label=label,
+        behavior_family=command.behavior_family,
+        accepted=True,
+        reason=command.reason,
+        target_pad=command.pad,
+        lane=command.lane,
+        lane_action=command.lane_action,
+        intent_kind=command.intent_kind,
+        anchor_concept=command.anchor_concept,
+        display_lines=display_lines,
+        metadata=result_metadata,
+    )
 
 
 # --------------------------------------------------------------------------
 # Pad 2 public API.
 # --------------------------------------------------------------------------
-def evaluate_pad2_lane_behavior(command_key) -> Pad2LaneBehaviorResult:
+def evaluate_pad2_lane_behavior(command_key: str) -> Pad2LaneBehaviorResult:
     """Return a passive Packet 6 behavior result for a Pad 2 command key."""
 
     key = str(command_key)
@@ -1366,7 +1405,7 @@ def evaluate_pad2_lane_behavior(command_key) -> Pad2LaneBehaviorResult:
 # --------------------------------------------------------------------------
 # Pad 3 public API.
 # --------------------------------------------------------------------------
-def evaluate_pad3_lane_behavior(command_key) -> Pad3LaneBehaviorResult:
+def evaluate_pad3_lane_behavior(command_key: str) -> Pad3LaneBehaviorResult:
     """Return a passive Packet 7 behavior result for a Pad 3 command key."""
 
     key = str(command_key)
@@ -1405,7 +1444,7 @@ def evaluate_pad3_lane_behavior(command_key) -> Pad3LaneBehaviorResult:
 # --------------------------------------------------------------------------
 # Pad 4 public API.
 # --------------------------------------------------------------------------
-def evaluate_pad4_lane_behavior(command_key) -> Pad4LaneBehaviorResult:
+def evaluate_pad4_lane_behavior(command_key: str) -> Pad4LaneBehaviorResult:
     """Return a passive Packet 8 behavior result for a Pad 4 command key."""
 
     key = str(command_key)

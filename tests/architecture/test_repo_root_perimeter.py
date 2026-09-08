@@ -2,7 +2,7 @@
 
 The rest of the architecture suite anchors on ``PACKAGE_ROOT =
 rytm_randomizer/`` and rglobs within it. That leaves every repo-root Python
-tree (``tooling/``, ``Scripts/``, ``tests/`` helpers, and any future
+tree (``tooling/``, ``scripts/``, ``tests/`` helpers, and any future
 ``tools/``) outside the no-side-effects / lazy-MIDI / passivity gates. PR
 #213 exposed the hole: a second armed-MIDI entry point landed in a brand-new
 top-level ``tools/`` package and sailed past ``test_no_new_top_level_modules``
@@ -31,6 +31,7 @@ whitelist that complements the raw-import scan here.
 from __future__ import annotations
 
 import re
+import subprocess
 from pathlib import Path
 from typing import Final
 
@@ -47,13 +48,13 @@ PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 # (see ``_IGNORED_ROOT_NAMES``) rather than allowlisted.
 _ALLOWED_ROOT_DIRS: Final[frozenset[str]] = frozenset(
     {
-        # NOTE dual casing: git tracks BOTH ``Scripts/`` (PowerShell operator
-        # scripts) and ``scripts/`` (Python repo/CI scripts). On macOS's
-        # case-insensitive filesystem they materialize as ONE directory (the
-        # first-created casing wins in ``iterdir``); on case-sensitive Linux
-        # CI they check out as TWO. Both must therefore be allowlisted.
-        "Scripts",  # PowerShell operator scripts (closeout/quick_status)
-        "scripts",  # Python repo/CI scripts (create_pr, gates, captures)
+        # Exactly ONE casing. The repo previously tracked both ``Scripts/``
+        # (PowerShell) and ``scripts/`` (Python), which materialize as one
+        # directory on macOS and two on case-sensitive Linux CI -- a split
+        # that shipped a file to the wrong path twice. Everything now lives
+        # in lowercase ``scripts/``; ``test_scripts_directory_has_one_casing``
+        # keeps it that way.
+        "scripts",  # all repo/CI/operator scripts (Python, shell, PowerShell)
         "agent-memory",  # shared cross-agent memory store
         "captures",  # raw operator-supplied SysEx capture evidence
         "desktop",  # Tauri shell + React cockpit
@@ -167,10 +168,10 @@ def test_no_unallowlisted_repo_root_directories() -> None:
 def test_allowlisted_root_directories_still_exist() -> None:
     """Every ``_ALLOWED_ROOT_DIRS`` entry must still exist on disk.
 
-    Case-insensitive comparison: on macOS the dual-cased ``Scripts``/
-    ``scripts`` pair materializes as a single directory (one casing visible in
-    ``iterdir``), while Linux checks out both. An entry counts as present if
-    any on-disk directory matches it case-insensitively.
+    Compared case-insensitively so a developer whose filesystem reports a
+    different casing than git records does not see a spurious failure. The
+    casing itself is enforced separately, against git's index, by
+    ``test_scripts_directory_has_one_casing``.
     """
 
     present_casefold = {e.name.casefold() for e in _repo_root_entries() if e.is_dir()}
@@ -181,6 +182,39 @@ def test_allowlisted_root_directories_still_exist() -> None:
         "``_ALLOWED_ROOT_DIRS`` lists directories that no longer exist. "
         "Remove the stale entries in the same PR that deleted them.\n"
         "  Stale entries:\n    " + "\n    ".join(stale)
+    )
+
+
+def test_scripts_directory_has_one_casing() -> None:
+    """All scripts live in lowercase ``scripts/`` -- never a second casing.
+
+    The repo used to track ``Scripts/`` (PowerShell) alongside ``scripts/``
+    (Python). Those are ONE directory on a case-insensitive filesystem (macOS,
+    default Windows) and TWO on Linux, so a file could be committed under one
+    casing, resolve fine locally, and fail only on CI. That happened twice.
+
+    The check reads git's index rather than the filesystem: ``git ls-files``
+    reports the tracked path exactly as recorded, so it sees the difference
+    even on macOS where ``iterdir`` cannot.
+    """
+
+    result = subprocess.run(
+        ["git", "ls-files", "-z"],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        check=True,
+    )
+    tracked = [p for p in result.stdout.decode("utf-8").split("\0") if p]
+
+    offenders = sorted(
+        path
+        for path in tracked
+        if path.split("/", 1)[0] != "scripts" and path.split("/", 1)[0].casefold() == "scripts"
+    )
+    assert not offenders, (
+        "Script paths must use the lowercase ``scripts/`` directory. A second "
+        "casing is invisible on macOS and breaks on case-sensitive Linux CI.\n"
+        "  Move these with ``git mv``:\n    " + "\n    ".join(offenders)
     )
 
 

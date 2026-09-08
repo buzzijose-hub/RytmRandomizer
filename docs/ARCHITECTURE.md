@@ -389,7 +389,7 @@ and the parity tests run the extracted engines/runners against those goldens.
 | Add a new state domain               | A new module under `state/` (frozen + transitions).    | (architecture review)     |
 | Add input-only live observation       | Pure state reducer under `state/`, formatter under `reports/`, explicit armed app path. | (architecture review) |
 | Add gated generated patch send        | Pure compiler under `style_analysis/`, passive preview under `reports/`, reusable transport helpers under `senders/`, explicit `app.py --arm` path with a confirmation flag. | (architecture review) |
-| **Add a new Elektron device family** (Analog Four, Digitakt, ...) | One module at `devices/<family>.py` registering a `Device` instance + three Strategy modules under `devices/strategies/`. See §6.1. | (architecture review)     |
+| **Add a new Elektron device family** (Digitone, Syntakt, Octatrack, ...) | One module at `devices/<family>.py` registering a `Device` instance + three Strategy modules under `devices/strategies/`. See §6.1. | (architecture review)     |
 | Music-analysis or guardrail change   | See `.claude/skills/MusicLibraryGuardrails/SKILL.md`. | `MusicLibraryGuardrails`  |
 
 The `controller_brain_live_*` report family is an explicit passive
@@ -406,9 +406,17 @@ snapshot seams.
 ## 6.1 Device Protocol + Strategy seam (WS-S5 + Strategy)
 
 The `rytm_randomizer.devices.Device` Protocol is the single cross-machine
-boundary. Every Elektron device family - Rytm and Analog Four today -
-exposes exactly one registered `Device` instance and routes its behavior
-through three Strategy sub-Protocols.
+boundary. Every Elektron device family - Rytm, Analog Four, and both
+Digitakt generations today - exposes exactly one registered `Device`
+instance and routes its behavior through three Strategy sub-Protocols.
+
+Not every registered device has send authority. The two Digitakt entries
+are **passive-only**: they decode snapshots but plan zero-event,
+`ready=False` mutations, because their saved-project byte offsets have
+never been validated against hardware (see
+`.claude/rules/targeted-mutation-safety.md` #6). Registration is what makes
+a machine visible to the rig; readiness is a separate, evidence-gated
+question.
 
 **Visual reference:** [`docs/ARCHITECTURE_DIAGRAMS.md`](ARCHITECTURE_DIAGRAMS.md) has six mermaid diagrams that illustrate this section in detail — [§3 Device + Strategy Capability Stack](ARCHITECTURE_DIAGRAMS.md#3-device--strategy-capability-stack-ws-s5--strategy) (class diagram), [§4 Snapshot → Plan → Render Lifecycle](ARCHITECTURE_DIAGRAMS.md#4-snapshot--plan--render-lifecycle-one-rytm-cc) (sequence), [§5 Composition vs Stub](ARCHITECTURE_DIAGRAMS.md#5-device--strategy-composition-vs-old-stub-shape) (before/after), [§9 Snapshot Subpackage](ARCHITECTURE_DIAGRAMS.md#9-snapshot-subpackage-ws-s6-envelope--protocols) (WS-S6 helpers), [§18 Future Codex PR Shape](ARCHITECTURE_DIAGRAMS.md#18-future-codex-pr-shape-post-pr-43-dual-machine-redo) (where the next dual-machine work plugs in), and [§19 Registry Fan-Out](ARCHITECTURE_DIAGRAMS.md#19-registry-fan-out-dual-machine-orchestration-via-mappingstr-device).
 
@@ -425,6 +433,8 @@ through three Strategy sub-Protocols.
 | `mutation_planner`          | `snapshot.MutationPlanner` Protocol                   | `plan(snapshot, depth, *, scope=...)` → device-specific plan constrained to effective target-minus-lock scope |
 | `message_renderer`          | `devices.MessageRenderer` Protocol                    | `to_mock_message(event, plan)` + `to_cc_triple(event, plan)` |
 | `report_header`             | `str`                                                 | Header line for guarded / hardware send reports |
+| `role_summary`              | `str`                                                 | Operator-facing one-liner describing what the machine *is* (`"12-pad drum and sample performance surface"`). Declared by the device — consumers must never infer a role from `track_count` (a 12-track Syntakt is not a 12-pad Rytm) |
+| `display_order`             | `int`                                                 | Sort key for operator-facing device listings; ties break on `device_id`. Keeps per-device ordering tables out of the reports layer |
 
 The Protocol's four legacy convenience methods (`decode_snapshot`,
 `plan_mutation`, `to_mock_messages`, `to_cc_messages`) remain for

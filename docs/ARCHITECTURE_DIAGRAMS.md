@@ -17,7 +17,7 @@ Current baseline used while creating / refreshing this document:
 - Branch: targeted dual-machine live-performance bundle, based directly on `origin/modularize-v1.34` for one non-stacked integration PR.
 - Protected reference: `tests/fixtures/v134_parity/*.json` (the retired V1.34 monolith's behavior, captured as 505 byte-frozen JSON golden files; parametrized into 685 pytest parity test items).
 - Current package: `rytm_randomizer/` with the established top-level modules and 14 subpackages: `behavior/`, `cockpit/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `local_ai/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`. Exact module/test totals are recorded only after the final closeout run, not frozen in this architecture map.
-- Closeout scripts: `Scripts/closeout_check.ps1` (PowerShell, Windows) and `scripts/closeout_check.py` (Python, cross-platform).
+- Closeout scripts: `scripts/closeout_check.ps1` (PowerShell, Windows) and `scripts/closeout_check.py` (Python, cross-platform).
 - This file was audited and refreshed as part of PR #43, then updated through the style-profile, style-target-vector, Rytm style snapshot routing, Analog Four style snapshot routing, dual-machine style routing, reference/discovery slider, Rytm/Analog Four style mutation-intent, dual-machine style mutation-intent, Rytm style mutation render-plan, Rytm style mutation mock-preview, Analog Four style mutation mock-preview, dual-machine style mutation mock-preview, Analog Four saved-kit SysEx readiness-intake, Analog Four kit-catalog, Analog Four initialized baseline, Analog Four patch genome, Analog Four patch learning, Analog Four patch corpus, Analog Four patch send-plan, Analog Four SysEx Filter1 Frequency/Resonance calibration, Analog Four style kit-readiness, Analog Four kit-fingerprint, Analog Four OXI macro set planner, live runbook, stage-routing, stage-rehearsal-state, live-set-cockpit, live-show-export, live-transition-timeline, live-command-deck, live-state-packet, live-readiness, live-control-surface, live-analyzer-handoff, live-analyzer-targets, live GUI analyzer readiness, live GUI rehearsal session, live GUI capture queue, live GUI capture review, live GUI sidecar session, live GUI screen contract, live GUI render tree, live GUI analyzer overlay, live GUI analyzer frame, live GUI interaction script, live GUI action reducer, live GUI controller state, live GUI playback transcript, live GUI playback validation, live GUI test-harness contract, live GUI test-harness readiness, live GUI implementation bridge, live GUI desktop blueprint, live GUI desktop app plan, live GUI desktop component contract, live GUI desktop view-model, live GUI desktop render-contract, cockpit send-plan operator-readiness, cockpit send-plan rehearsal-surface, live-kit capture workbench, live-kit package audition, live-kit operator package, live-kit operator review ledger, reference-style blueprint, bounded reference-audio atlas, manual-feedback packet, generic MIDI event-plan sender, and passive local model copilot slices so the strategy/report-module list and counts stay current.
 
 ## Source Files Used
@@ -153,7 +153,8 @@ flowchart TB
         DevCapture["saved_kit_capture.py<br/>optional registry-backed<br/>input capture capability"]
         DevAR["analog_rytm.py<br/>AnalogRytmDevice"]
         DevA4["analog_four.py<br/>AnalogFourDevice"]
-        DevStrategies["strategies/<br/>analog_rytm_{snapshot_decoder,<br/>snapshot_routing,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_render_plan,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer}.py<br/>analog_four_{offset_manifest,<br/>snapshot_decoder,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer,<br/>saved_kit_codec,<br/>saved_kit_writer}.py"]
+        DevDT["digitakt.py<br/>DigitaktDevice<br/>(digitakt_mk1 + digitakt_ii,<br/>passive: zero-event plans)"]
+        DevStrategies["strategies/<br/>analog_rytm_{snapshot_decoder,<br/>snapshot_routing,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_render_plan,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer}.py<br/>analog_four_{offset_manifest,<br/>snapshot_decoder,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer,<br/>saved_kit_codec,<br/>saved_kit_writer}.py<br/>digitakt_{snapshot_decoder,<br/>mutation_planner,<br/>message_renderer,<br/>track_domain}.py<br/>elektron_track_domain.py<br/>(shared by A4 + Digitakt)"]
         DevRytmSavedKit["strategies/analog_rytm_saved_kit_codec.py<br/>pure saved-KIT frame codec"]
     end
 
@@ -359,6 +360,8 @@ classDiagram
         +MutationPlanner mutation_planner
         +MessageRenderer message_renderer
         +str report_header
+        +str role_summary
+        +int display_order
         +decode_snapshot(raw, slot) Any
         +plan_mutation(snapshot, depth, *, scope=DEFAULT) Any
         +to_mock_messages(plan) list
@@ -510,7 +513,7 @@ classDiagram
 **Key:**
 
 - **Protocol vs class.** `Device`, `SnapshotDecoder`, `MutationPlanner`, `MessageRenderer`, `MidiOutbox` are `@runtime_checkable Protocol`s. They're not inherited from — concrete classes match structurally. This is Gate 6 (type-system hygiene) and lets PR #21 / PR #36's `AnalogFourDevice` drop in without inheritance gymnastics.
-- **Composition over inheritance.** `AnalogRytmDevice` and `AnalogFourDevice` construct strategy instances in `__init__` and delegate their convenience methods to them. The Rytm device also exposes the narrow optional `AnalogRytmSavedKitCodecCapability`; both registered families structurally opt into `SavedKitCaptureCapability`, resolved through `devices/saved_kit_capture.py`, without widening the base `Device` Protocol. Cockpit capture therefore imports neither concrete family codec. The strategies don't know about each other except through their shared device-family types (`RytmKitSnapshot`, `RytmMutationPlan`, `RytmPlanEvent`, `AnalogFourKitSnapshot`, and `AnalogFourMutationPlan`).
+- **Composition over inheritance.** `AnalogRytmDevice` and `AnalogFourDevice` construct strategy instances in `__init__` and delegate their convenience methods to them. The Rytm device also exposes the narrow optional `AnalogRytmSavedKitCodecCapability`; every registered family structurally opts into `SavedKitCaptureCapability`, resolved through `devices/saved_kit_capture.py`, without widening the base `Device` Protocol. Cockpit capture therefore imports neither concrete family codec. The strategies don't know about each other except through their shared device-family types (`RytmKitSnapshot`, `RytmMutationPlan`, `RytmPlanEvent`, `AnalogFourKitSnapshot`, and `AnalogFourMutationPlan`).
 - **Optional offline A4 capability.** Forge calls the public `devices.get_analog_four_filter1_frequency_candidate_capability()` resolver, which narrows the existing registered A4 device to `AnalogFourFilter1FrequencyCandidateCapability`. Its pure strategy produces only local Filter 1 Frequency candidate bytes with `hardware_send_validated = false`; it does not widen `Device` or create an A4 SEND path.
 - **Import-time registration.** `analog_rytm.py` calls `register_device(AnalogRytmDevice())` at module load. The `devices/__init__.py` imports `analog_rytm` for the side effect; consumers get a non-empty registry on first import.
 - **Adding a new family** = one device class + three strategy modules + register at import. No parallel sibling subpackages allowed (enforced by `test_device_protocol_enforcement.py`).
@@ -591,12 +594,14 @@ flowchart LR
     end
 
     subgraph After["After PR #43 (Strategy)"]
-        NewDev["AnalogRytmDevice<br/>9 attrs + 4 methods<br/>(5 identity + 4 strategy)"]
+        NewDev["AnalogRytmDevice<br/>11 attrs + 4 methods<br/>(5 identity + 3 presentation + 3 strategy objects)"]
 
         SD["snapshot_decoder<br/>: AnalogRytmSnapshotDecoder"]
         MP["mutation_planner<br/>: AnalogRytmMutationPlanner"]
         MR["message_renderer<br/>: AnalogRytmMessageRenderer"]
         RH["report_header<br/>: str"]
+        RS["role_summary<br/>: str"]
+        DO["display_order<br/>: int"]
 
         Conv1["decode_snapshot()<br/>delegates to snapshot_decoder.decode()"]
         Conv2["plan_mutation()<br/>delegates to mutation_planner.plan()"]
@@ -607,6 +612,8 @@ flowchart LR
         NewDev --> MP
         NewDev --> MR
         NewDev --> RH
+        NewDev --> RS
+        NewDev --> DO
         NewDev --> Conv1
         NewDev --> Conv2
         NewDev --> Conv3
@@ -990,7 +997,7 @@ The 7 sub-tests in `test_device_protocol_enforcement.py` (added by PR #43) all u
 4. Every registered Device satisfies the Protocol (runtime `isinstance`)
 5. Only one `register_device` definition exists (no parallel registry)
 6. Per-device snapshot impls reference the WS-S6 Protocols
-7. Device Protocol surface is stable (9 attrs + 4 methods pinned)
+7. Device Protocol surface is stable (11 attrs + 4 methods pinned)
 
 ---
 
@@ -1490,7 +1497,7 @@ flowchart TB
     end
 
     PostPR43 --> CodexRedo
-    DevBase -.->|"AnalogFourDevice<br/>satisfies Protocol<br/>(9 attrs + 4 methods)"| DevA4
+    DevBase -.->|"AnalogFourDevice<br/>satisfies Protocol<br/>(11 attrs + 4 methods)"| DevA4
     DevA4 --> DevA4_Strategies
     DevA4 --> DevRegistry
 
@@ -1517,7 +1524,7 @@ flowchart TB
 
 ## 19. Registry Fan-Out (dual-machine orchestration via Mapping[str, Device])
 
-How `dual_machine/` consumes the registry instead of importing per-family modules directly. This is the key abstraction that makes adding a 4th machine family (Syntakt, Digitone, etc.) trivial — no `dual_machine/` edits required.
+How `dual_machine/` consumes the registry instead of importing per-family modules directly. This is the key abstraction that makes adding a 5th machine family (Syntakt, Digitone, etc.) trivial — no `dual_machine/` edits required.
 
 ```mermaid
 sequenceDiagram
@@ -1526,12 +1533,12 @@ sequenceDiagram
     participant DM as dual_machine/<br/>orchestrator
     participant Reg as devices.registry
     participant Rytm as AnalogRytmDevice
-    participant A4 as AnalogFourDevice<br/>(future)
+    participant A4 as AnalogFourDevice
     participant Senders as senders/guarded.py<br/>(future generic)
 
     Op->>DM: dual_machine_bank_readiness()
     DM->>Reg: all_devices()
-    Reg-->>DM: Mapping[<br/>"analog_rytm_mk2": AnalogRytmDevice,<br/>"analog_four_mk2": AnalogFourDevice]<br/>
+    Reg-->>DM: Mapping[<br/>"analog_rytm_mk2": AnalogRytmDevice,<br/>"analog_four_mk2": AnalogFourDevice,<br/>"digitakt_mk1": DigitaktDevice,<br/>"digitakt_ii": DigitaktDevice]<br/>
 
     loop for device_id, device in all_devices().items()
         DM->>device: device.snapshot_decoder.decode(raw, slot)
@@ -1937,7 +1944,7 @@ Both closeout entry points and what they verify. Restored from the original §9 
 ```mermaid
 flowchart TB
     subgraph Entry["Closeout entry points"]
-        CloseoutPS1["Scripts/closeout_check.ps1<br/>(Windows PowerShell)"]
+        CloseoutPS1["scripts/closeout_check.ps1<br/>(Windows PowerShell)"]
         CloseoutPy["scripts/closeout_check.py<br/>(cross-platform Python; preferred)"]
         QuickStatus["scripts/quick_status.ps1<br/>(quick local status)"]
     end
@@ -1980,7 +1987,7 @@ flowchart TB
 
 **Current nuance:**
 
-- `Scripts/closeout_check.ps1` is the original Windows-only PowerShell entry. `scripts/closeout_check.py` is the cross-platform Python equivalent added in WS-M4 (preferred for new tooling).
+- `scripts/closeout_check.ps1` is the original Windows-only PowerShell entry. `scripts/closeout_check.py` is the cross-platform Python equivalent added in WS-M4 (preferred for new tooling).
 - Both run pytest and an import smoke. The Python script also tests cross-platform (works on Windows / macOS / Linux without modification).
 - CI splits the 5 layers across separate jobs (test / architecture / e2e / coverage-ratchet) so a failure in one layer is visible without scrolling through the full test output — see §11 (CI Pipeline) for the full job map.
 

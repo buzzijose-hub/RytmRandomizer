@@ -1,71 +1,31 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-09-07. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
-
-## Current Snapshot
-
-Show Kit Forge is implemented on `codex/show-kit-forge-complete` as one
-versioned, paired Analog Rytm/Analog Four preparation workflow. It keeps
-`source -> candidate -> favorite -> hardware-saved -> verified -> show-ready`
-as distinct evidence states; selection and a Rytm live audition do not imply a
-favorite or hardware save. Exact framed SysEx bytes are retained only by an
-explicit action, and show-pack export/import verifies canonical manifests,
-hashes, framing, cue order, recovery text, and the complete file set. The
-maintainer-review refactor centralizes strict input validation, canonical JSON,
-64-character bank/entity IDs, and 96-character package IDs. Verified imports
-start a new local catalog at revision 0 while preserving their source package
-manifest and historical evidence; transient selection and authority are cleared.
-Show scope domains derive from the registered devices, and readiness reasons
-are closed tokens rendered as operator-facing explanations.
-
-The Analog Four capability promoted from the 2026-08-28 captures is narrowly
-offline: Filter 1 Frequency only, unsigned big-endian Q8.8 over `0x0000` through
-`0x7F00`, at native Track 1 offset 128 with a 350-byte track stride. These facts
-now come from the calibration record and shared saved-KIT field schema. A thin
-Filter 1 Frequency adapter delegates to the shared renderer and exact fixed-point
-codec, preserving unknown bytes. Its result reports
-`hardware_send_validated = false`; A4 SEND and every other unpromoted saved-KIT
-field remain blocked. Filter 2 Resonance retains its separate
-hardware-write-validated file-rendering status.
-
-The new A4 preparation review rechecks the selected cue/candidate, source and
-candidate bytes, current capture freshness, targets/locks, and recovery slot.
-Output-port text records intent only. The report remains inert with
-`ready = false` and permanent hardware/transport blockers; it neither opens a
-port nor attests that the source was restored in working RAM.
-
-The Rytm audition route reuses Cockpit's existing PREPARE plus exact
-plan-id/port confirmation and `ArmedApply` RAM-only SEND. The software route
-exists, but the operator-present one-pad send, untouched-pad check, and restore
-rehearsal have not yet been performed for this bundle. Cockpit never saves a
-KIT persistently: after choosing a favorite, the operator must save on each
-instrument and make fresh input-only captures. Candidate verification compares
-the promoted semantic projection; a separate show-time preflight compares the
-fresh whole-payload Rytm and A4 capture fingerprints exactly and revokes
-readiness on either mismatch. OXI project/pattern/chapter fields are metadata
-only; OXI retains sequencing ownership and Cockpit emits no OXI command.
-
-The exact unperformed steps and blank observation fields live in
-[`hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md`](hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md).
-Current software evidence and finding dispositions are tracked in the
-[review reconciliation ledger](2026-09-07-show-kit-forge-review-reconciliation.md).
-Final local verification passed: 8,926 Python tests with five skips, all 32
-touched production modules at 100% coverage, and 852 frontend tests with all
-coverage metrics at 100%. The full browser suite passed 21 tests with two
-existing skips using disabled/fake MIDI; its screenshots were inspected.
-The identified Windows build at `076ef67a3276bdd27ec6657f9dff77ccf207a5e2`
-and its actual packaged GUI smoke passed with MIDI off on loopback port 64055.
-The shell and bundled sidecar hashes match the build manifest, and authenticated
-catalog access and the UI refresh succeeded. The
-[software handoff](2026-09-07-show-kit-forge-software-closeout.md) records the
-exact executable, receipts, preserved backups and still-blank physical checklist.
-Source CI passed on Windows, macOS and Linux. Required maintainer review remains
-pending; the
-observed review decision is `CHANGES_REQUESTED`. No hardware validation or merge
-approval is inferred from the software smoke.
+Last updated: 2026-09-08. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-09-08: Added passive Digitakt and Digitakt II device support through the
+  `Device` Protocol + Strategy seam (`devices/digitakt.py` + four strategy
+  modules + two manual-backed `data/` tables).
+  - Both generations are **passive-only**: they decode snapshots but plan
+    zero-event, `ready=False` mutations. Digitakt saved-project byte offsets
+    have never been validated against hardware, and per
+    `.claude/rules/targeted-mutation-safety.md` #6 they must be promoted from
+    real captures rather than inferred from the live CC map.
+  - Extended the `Device` Protocol with `role_summary` + `display_order`, so a
+    device declares its own operator-facing role and sort key. This removed the
+    `track_count`-based role guessing and the per-device order table from
+    `reports/live_gui_device_inventory_model.py`, and fixed
+    `live_gui_dual_device_rig_readiness_model.py`, which had been reporting
+    every non-Rytm device's planned track count as the Analog Four's 4.
+  - Added `tests/test_device_family_conformance.py`: the device roster is now
+    pinned in one place (`EXPECTED_DEVICE_IDS`) and the remaining assertions
+    derive from `all_devices()`, so a new family inherits the shared
+    conformance suite instead of editing per-device counts across four files.
+  - Added `scripts/refresh_al16_evidence_manifest.py` (guarded by
+    `RYTM_AL16_MANIFEST_REFRESH=1`) so the AL02 evidence manifest is never
+    hand-edited; registering any device family dirties it because
+    `devices/__init__.py` is a pinned generator dependency.
 - 2026-09-07: Completed the Show Kit Forge integration in a fresh worktree,
   preserving both the dirty main checkout and the earlier unfinished feature
   worktree. Added immutable paired sources, candidate/favorite workflow,

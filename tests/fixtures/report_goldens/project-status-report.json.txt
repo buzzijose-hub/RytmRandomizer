@@ -29,7 +29,7 @@
   },
   "closeout": {
     "closeout_contract": "present",
-    "closeout_script": "Scripts/closeout_check.ps1",
+    "closeout_script": "scripts/closeout_check.ps1",
     "failure_propagation": "guarded"
   },
   "collaborator_review_intake": {

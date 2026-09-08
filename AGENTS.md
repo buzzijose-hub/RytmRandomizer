@@ -129,8 +129,8 @@ RytmRandomizer/
 │  ├─ code_review_gate.py          ← shared mechanical review gate (cli / codex-hook / git-hook modes)
 │  ├─ coverage_check.py
 │  └─ coverage_ratchet.py
-├─ Scripts/                        ← PowerShell-only tools (Windows legacy)
-│  └─ closeout_check.ps1
+│  ├─ closeout_check.ps1           ← PowerShell operator wrappers (Windows legacy)
+│  └─ quick_status.ps1
 │
 ├─ .githooks/                      ← versioned git hooks (activate: git config core.hooksPath .githooks)
 │  └─ pre-push                     ← runs the mechanical review gate on every push, any tool

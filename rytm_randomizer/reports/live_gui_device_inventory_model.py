@@ -35,12 +35,6 @@ CAPABILITY_BADGES: Final[tuple[str, ...]] = (
     "mock_render",
     "guarded_send",
 )
-_DEVICE_ORDER_BY_ID: Final[Mapping[str, int]] = MappingProxyType(
-    {
-        "analog_rytm_mk2": 0,
-        "analog_four_mk2": 1,
-    }
-)
 _HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
     title=REPORT_TITLE,
     source_module=SOURCE_MODULE,
@@ -117,18 +111,6 @@ class LiveGuiDeviceInventoryModelDict(TypedDict):
     safety: tuple[str, ...]
 
 
-def _live_gui_device_inventory_order(device_id: str) -> int:
-    return _DEVICE_ORDER_BY_ID.get(device_id, len(_DEVICE_ORDER_BY_ID))
-
-
-def _live_gui_device_inventory_role_summary(device: Device) -> str:
-    if device.track_count == 12:
-        return "12-pad drum and sample performance surface"
-    if device.track_count == 4:
-        return "4-track synth performance surface"
-    return f"{device.track_count}-track Elektron performance surface"
-
-
 def _manufacturer_id_hex(device: Device) -> str:
     return " ".join(f"{byte:02x}" for byte in device.sysex_manufacturer_id)
 
@@ -137,11 +119,11 @@ def _live_gui_device_inventory_card(device: Device) -> LiveGuiDeviceInventoryCar
     return LiveGuiDeviceInventoryCard(
         device_id=device.device_id,
         display_name=device.display_name,
-        order=_live_gui_device_inventory_order(device.device_id),
+        order=device.display_order,
         track_count=device.track_count,
         default_midi_channel_label=str(device.default_midi_channel + 1),
         sysex_manufacturer_id_hex=_manufacturer_id_hex(device),
-        role_summary=_live_gui_device_inventory_role_summary(device),
+        role_summary=device.role_summary,
         port_state="not_open",
         hardware_state="locked",
         mock_state="mock_safe",
@@ -159,7 +141,7 @@ def build_live_gui_device_inventory_model() -> LiveGuiDeviceInventoryModel:
         _live_gui_device_inventory_card(device)
         for _device_id, device in sorted(
             all_devices().items(),
-            key=lambda item: (_live_gui_device_inventory_order(item[0]), item[0]),
+            key=lambda item: (item[1].display_order, item[0]),
         )
     )
     cards_by_device_id = {card.device_id: card for card in cards}

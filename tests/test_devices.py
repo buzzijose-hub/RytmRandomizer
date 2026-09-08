@@ -327,6 +327,8 @@ def test_arbitrary_compliant_device_class_satisfies_protocol() -> None:
         track_count = 4
         sysex_manufacturer_id = bytes([0x00, 0x20, 0x3C])
         report_header = "Stub A4 Guarded Send"
+        role_summary = "4-track synth performance surface"
+        display_order = 99
 
         snapshot_decoder = _StubSnapshotDecoder()
         mutation_planner = _StubMutationPlanner()

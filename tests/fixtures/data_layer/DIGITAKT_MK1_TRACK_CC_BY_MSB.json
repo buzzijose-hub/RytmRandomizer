@@ -1,0 +1,92 @@
+{
+  "16": {
+    "parameter": "Sample Tune",
+    "section": "SRC",
+    "encoder": "B",
+    "cc_msb": 16,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 8
+  },
+  "19": {
+    "parameter": "Sample Slot",
+    "section": "SRC",
+    "encoder": "D",
+    "cc_msb": 19,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 10
+  },
+  "30": {
+    "parameter": "Delay Send",
+    "section": "AMP",
+    "encoder": "G",
+    "cc_msb": 30,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 36
+  },
+  "31": {
+    "parameter": "Reverb Send",
+    "section": "AMP",
+    "encoder": "H",
+    "cc_msb": 31,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 37
+  },
+  "74": {
+    "parameter": "Filter Frequency",
+    "section": "FILTER",
+    "encoder": "E",
+    "cc_msb": 74,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 20
+  },
+  "75": {
+    "parameter": "Filter Resonance",
+    "section": "FILTER",
+    "encoder": "F",
+    "cc_msb": 75,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 21
+  },
+  "76": {
+    "parameter": "Filter Envelope Depth",
+    "section": "FILTER",
+    "encoder": "H",
+    "cc_msb": 76,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 26
+  },
+  "81": {
+    "parameter": "Amp Overdrive",
+    "section": "AMP",
+    "encoder": "A",
+    "cc_msb": 81,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 30
+  },
+  "94": {
+    "parameter": "Track Mute",
+    "section": "TRACK",
+    "encoder": "-",
+    "cc_msb": 94,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 101
+  },
+  "95": {
+    "parameter": "Track Level",
+    "section": "TRACK",
+    "encoder": "-",
+    "cc_msb": 95,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 100
+  }
+}

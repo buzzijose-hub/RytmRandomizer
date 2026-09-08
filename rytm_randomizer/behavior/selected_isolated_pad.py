@@ -14,6 +14,7 @@ from ..commands import COMMANDS, ISOLATED_PAD_UTILITY_COMMANDS
 from ..state.selected_isolated_pad_validation import (
     build_passive_default_selected_isolated_pad_runtime_state,
 )
+from ._result_fields import empty_metadata
 
 PACKET_11A_SELECTED_ISOLATED_PAD_KEYS = ("L",)
 PACKET_11B_SELECTED_ISOLATED_PAD_KEYS = ("PZ",)
@@ -52,14 +53,17 @@ class SelectedIsolatedPadBehaviorResult:
     opens_ports: bool = False
     hardware_required: bool = False
     active_behavior: bool = False
-    metadata: Mapping[str, object] = field(default_factory=dict)
+    metadata: Mapping[str, object] = field(default_factory=empty_metadata)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         object.__setattr__(self, "display_lines", tuple(self.display_lines))
         object.__setattr__(self, "metadata", MappingProxyType(dict(self.metadata)))
 
 
-def evaluate_selected_isolated_pad_behavior(command_key, runtime_state=None):
+def evaluate_selected_isolated_pad_behavior(
+    command_key: str,
+    runtime_state: object | None = None,
+) -> SelectedIsolatedPadBehaviorResult:
     """Return a passive Packet 11 behavior result for selected isolated pad utilities."""
 
     key = str(command_key)
@@ -81,11 +85,11 @@ def evaluate_selected_isolated_pad_behavior(command_key, runtime_state=None):
     )
 
 
-def _accepted_l_result():
+def _accepted_l_result() -> SelectedIsolatedPadBehaviorResult:
     metadata = ISOLATED_PAD_UTILITY_COMMANDS["L"]
-    label = metadata["label"]
+    label = str(metadata["label"])
     behavior_family = "selected-isolated-pad/target-selection"
-    source_scope = metadata["scope"]
+    source_scope = str(metadata["scope"])
     utility_action = "describe_selected_isolated_pad_target_intent"
     intent_kind = "selected_isolated_pad_target_selection"
     default_pad = int(metadata["default_pad"])
@@ -149,7 +153,7 @@ def _accepted_l_result():
     )
 
 
-def _pz_readiness_result(runtime_state=None):
+def _pz_readiness_result(runtime_state: object | None = None) -> SelectedIsolatedPadBehaviorResult:
     metadata = ISOLATED_PAD_UTILITY_COMMANDS["PZ"]
     behavior_family = "selected-isolated-pad/anchor-return-readiness"
     utility_action = "describe_selected_isolated_pad_anchor_return_readiness"
@@ -171,11 +175,11 @@ def _pz_readiness_result(runtime_state=None):
 
     return SelectedIsolatedPadBehaviorResult(
         command_key="PZ",
-        label=metadata["label"],
+        label=str(metadata["label"]),
         behavior_family=behavior_family,
         accepted=pz_ready,
         reason=reason,
-        source_scope=metadata["scope"],
+        source_scope=str(metadata["scope"]),
         utility_action=utility_action,
         intent_kind=intent_kind,
         target_pad=target_pad,
@@ -236,7 +240,7 @@ def _pz_readiness_result(runtime_state=None):
     )
 
 
-def _unsupported_result(command_key):
+def _unsupported_result(command_key: str) -> SelectedIsolatedPadBehaviorResult:
     return SelectedIsolatedPadBehaviorResult(
         command_key=command_key,
         accepted=False,
@@ -245,7 +249,7 @@ def _unsupported_result(command_key):
     )
 
 
-def _safe_failure_metadata(source):
+def _safe_failure_metadata(source: str) -> dict[str, object]:
     return {
         "source": source,
         "mock_only": True,
