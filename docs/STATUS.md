@@ -26,6 +26,21 @@ Last updated: 2026-09-08. This file is a hand-authored snapshot and is meant to 
     `RYTM_AL16_MANIFEST_REFRESH=1`) so the AL02 evidence manifest is never
     hand-edited; registering any device family dirties it because
     `devices/__init__.py` is a pinned generator dependency.
+- 2026-09-07: Completed the Show Kit Forge integration in a fresh worktree,
+  preserving both the dirty main checkout and the earlier unfinished feature
+  worktree. Added immutable paired sources, candidate/favorite workflow,
+  explicit exact-byte retention, bounded atomic show packs, semantic save
+  verification, and fresh paired show-time preflight. Review fixes protect
+  source slots, invalidate removed or stale SEND plans, require a fresh source
+  reload before live Rytm audition, and preserve all A4 bytes when fully locked.
+  Subsequent maintainer-review repairs replace duplicated validation and
+  per-field rendering with shared primitives, schema, and calibration; make
+  maximum-revision packages importable into a fresh local revision history;
+  strengthen refusal assertions; and add the inert A4 preparation review.
+  The renderer remains offline-only. Final local Python, frontend, browser,
+  coverage and static checks passed. The identified studio build, actual GUI
+  smoke and source CI also passed; required review remains pending. The dated studio
+  checklist retains every outstanding physical observation.
 - 2026-08-27: Integrated the targeted dual-machine live-performance Cockpit
   bundle on the latest `modularize-v1.34` base.
   - Added explicitly armed, input-only current-KIT capture for Analog Rytm and

@@ -611,6 +611,13 @@ output still requires the separate ArmedApply lifecycle. Keep the default,
 override, installer, and passive-CLI behavior synchronized with
 `docs/LOCAL_DEV_TOOLING_NOTES.md` and `docs/COCKPIT_QUICKSTART.md`.
 
+The installer workflow also defines build-only `TAURI_CLI_VERSION` (pinned
+to `2.11.4`) and `STUDIO_WINDOWS` (the `studio_windows` dispatch input, false
+by default). These select the packaging tool and optional Windows studio copy;
+they are not application settings and grant no MIDI authority. See
+[`BUILDING_INSTALLERS.md`](docs/BUILDING_INSTALLERS.md) and the environment
+index in [`LOCAL_DEV_TOOLING_NOTES.md`](docs/LOCAL_DEV_TOOLING_NOTES.md).
+
 ## Test suite structure
 
 The suite spans these layers; current totals belong in the latest closeout run
@@ -744,7 +751,7 @@ Skills under `.claude/skills/` package repeatable knowledge so an agent (or a hu
 | [`branch-protection-with-path-filters`](.claude/skills/learned/branch-protection-with-path-filters/SKILL.md) | Configuring branch protection together with `paths:` filters. |
 | [`codex-hook-additionalcontext-reprompt`](.claude/skills/learned/codex-hook-additionalcontext-reprompt/SKILL.md) | Codex hooks run only `type:command` handlers — re-prompt the model via `additionalContext`. |
 | [`playwright-strict-mode-selectors`](.claude/skills/learned/playwright-strict-mode-selectors/SKILL.md) | Keep browser locators unique and stable under Playwright strict mode. |
-| [`targeted-live-kit-mutation`](.claude/skills/learned/targeted-live-kit-mutation/SKILL.md) | Carry target-minus-lock scope through capture, planning, exact-plan SEND, blocked A4 evidence, docs, and studio handoff. |
+| [`targeted-live-kit-mutation`](.claude/skills/learned/targeted-live-kit-mutation/SKILL.md) | Carry target-minus-lock scope, fresh capture authority, package-import isolation, exact-plan SEND, narrow A4 evidence, and atomic paired retention through live-kit work. |
 
 **Codex discovers these too.** Codex scans `$REPO_ROOT/.agents/skills/`, not `.claude/skills/`. The repo ships a committed symlink **`.agents/skills` → `.claude/skills/learned`** so codex auto-discovers every learned skill (identical `SKILL.md` format). Edit a skill once in `.claude/skills/learned/` and both agents see it. On a Windows clone where the symlink checked out as a plain file, run `git config core.symlinks true && git checkout -- .agents/skills` to re-materialize it. See [`AGENTS.md` § Skills](AGENTS.md#skills--codex-auto-discovers-them-from-agentsskills).
 

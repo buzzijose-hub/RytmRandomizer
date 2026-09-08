@@ -178,13 +178,17 @@ software:
 1. Rehearse physical Rytm capture, one-pad target-minus-lock SEND, untouched-pad
    verification, disarm, and manual reload of the original hardware KIT.
    Cockpit has no persistent restore operation; SAVE is refused.
-2. Capture the deterministic A4 matrix: Filter 1 Frequency on Track 1 at
-   0/63/127; the same control at 63 on Tracks 1-4 for stride; Amp Attack on
-   Track 1 at 0/63/127.
-3. Promote an A4 semantic field only after offset, encoding, stride,
-   round-trip/byte-diff isolation, and physical return-capture evidence are all
-   satisfied. Until then, A4 remains capture/target/lock/stage capable but
-   zero-event and unsendable.
+2. The August 28 saved captures already establish Filter 1 Frequency's
+   offset, exact unsigned Q8.8 encoding, and Track 1-4 stride. Show Kit Forge
+   promotes only offline generation for that field. Do not repeat this
+   mapping capture matrix. Validate the generated four-track scratch file
+   by manually loading, listening, saving on the instrument, and recapturing;
+   see `docs/hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md`.
+3. A4 Cockpit SEND remains blocked pending that physical outbound validation.
+   Amp Attack and other unverified fields need their own evidence before
+   promotion. A current-KIT dump of unsaved A4 front-panel edits returned the
+   previous saved state; always save the scratch kit before requesting its
+   verification dump.
 4. Treat Rytm connection-manager state and A4 capture/session state separately;
    the current implementation does not claim continuous independent A4
    hot-plug telemetry.

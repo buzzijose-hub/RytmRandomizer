@@ -469,7 +469,7 @@ def test_all_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
     """Pin invariant: every cockpit-native command has a matching round-trip test above.
 
     ``COMMAND_TYPES`` is the union of the cockpit + wizard command surfaces
-    (30 cockpit + 8 wizard = 38 total). This test pins the cockpit-native
+    (49 cockpit + 8 wizard = 57 total). This test pins the legacy cockpit-native
     commands; the wizard subset is exercised end-to-end in
     ``test_integration_wizard_flow.py``. If a new cockpit command lands and
     this assertion is not extended, the file falls out of sync silently —
@@ -478,7 +478,7 @@ def test_all_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
 
     # 22 commands round-trip here; the 8 arm/diagnostics/library commands
     # are exercised in tests/cockpit/test_ws_arm_and_library_handlers.py.
-    assert len(COMMAND_TYPES) == 38
+    assert len(COMMAND_TYPES) == 57
     cockpit_native = {
         COMMAND_SELECT_PROFILE,
         COMMAND_SET_DEPTH,

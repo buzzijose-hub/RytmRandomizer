@@ -1,0 +1,274 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "2026-09-04-show-kit-forge_STATE.schema.json",
+  "title": "Show Kit Forge resumable run state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "plan",
+    "branch",
+    "base_commit",
+    "status",
+    "phase",
+    "workstreams",
+    "verification",
+    "pull_request_url",
+    "hardware_validation",
+    "pending_closeout_fields",
+    "next_action",
+    "resume",
+    "last_event",
+    "last_updated_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "plan": {
+      "const": "docs/superpowers/plans/2026-09-04-show-kit-forge.md"
+    },
+    "branch": {
+      "const": "codex/show-kit-forge-complete"
+    },
+    "base_commit": {
+      "const": "0b77f9fef019dbfe1da943019b339bd446f95725"
+    },
+    "status": {
+      "enum": [
+        "software_assembled_hardware_blocked",
+        "software_verified_hardware_blocked",
+        "complete",
+        "interrupted"
+      ]
+    },
+    "phase": {
+      "enum": [
+        "implementation",
+        "verification",
+        "review",
+        "pr",
+        "studio_validation",
+        "complete",
+        "interrupted"
+      ]
+    },
+    "workstreams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "a4_evidence_codec",
+        "domain_readiness",
+        "storage_workspace_websocket",
+        "frontend",
+        "documentation_learning",
+        "final_closeout",
+        "studio_hardware_validation"
+      ],
+      "properties": {
+        "a4_evidence_codec": {
+          "$ref": "#/$defs/workstream_status"
+        },
+        "domain_readiness": {
+          "$ref": "#/$defs/workstream_status"
+        },
+        "storage_workspace_websocket": {
+          "$ref": "#/$defs/workstream_status"
+        },
+        "frontend": {
+          "$ref": "#/$defs/workstream_status"
+        },
+        "documentation_learning": {
+          "$ref": "#/$defs/workstream_status"
+        },
+        "final_closeout": {
+          "$ref": "#/$defs/workstream_status"
+        },
+        "studio_hardware_validation": {
+          "$ref": "#/$defs/workstream_status"
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["focused_checks", "final_gate_counts"],
+      "properties": {
+        "focused_checks": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "a4_renderer",
+            "domain_readiness",
+            "import_direction",
+            "documentation"
+          ],
+          "properties": {
+            "a4_renderer": {
+              "type": "string",
+              "minLength": 1
+            },
+            "domain_readiness": {
+              "type": "string",
+              "minLength": 1
+            },
+            "import_direction": {
+              "type": "string",
+              "minLength": 1
+            },
+            "documentation": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "final_gate_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cockpit_python",
+            "frontend",
+            "fast_suite",
+            "architecture",
+            "v134_parity",
+            "full_suite",
+            "touched_coverage",
+            "static_analysis",
+            "hosted_ci"
+          ],
+          "properties": {
+            "cockpit_python": {
+              "$ref": "#/$defs/pending_result"
+            },
+            "frontend": {
+              "$ref": "#/$defs/pending_result"
+            },
+            "fast_suite": {
+              "$ref": "#/$defs/pending_result"
+            },
+            "architecture": {
+              "$ref": "#/$defs/pending_result"
+            },
+            "v134_parity": {
+              "$ref": "#/$defs/pending_result"
+            },
+            "full_suite": {
+              "$ref": "#/$defs/pending_result"
+            },
+            "touched_coverage": {
+              "$ref": "#/$defs/pending_result"
+            },
+            "static_analysis": {
+              "$ref": "#/$defs/pending_result"
+            },
+            "hosted_ci": {
+              "$ref": "#/$defs/pending_result"
+            }
+          }
+        }
+      }
+    },
+    "pull_request_url": {
+      "type": ["string", "null"],
+      "format": "uri"
+    },
+    "hardware_validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "a4_offline_candidate",
+        "a4_send",
+        "a4_physical_scratch_return",
+        "rytm_one_pad_send_restore",
+        "paired_favorite_recapture_preflight",
+        "checklist",
+        "observations_recorded"
+      ],
+      "properties": {
+        "a4_offline_candidate": {
+          "const": "verified_offline_only"
+        },
+        "a4_send": {
+          "const": "prohibited"
+        },
+        "a4_physical_scratch_return": {
+          "$ref": "#/$defs/hardware_status"
+        },
+        "rytm_one_pad_send_restore": {
+          "$ref": "#/$defs/hardware_status"
+        },
+        "paired_favorite_recapture_preflight": {
+          "$ref": "#/$defs/hardware_status"
+        },
+        "checklist": {
+          "const": "docs/hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md"
+        },
+        "observations_recorded": {
+          "type": "boolean"
+        }
+      }
+    },
+    "pending_closeout_fields": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "next_action": {
+      "type": "string",
+      "minLength": 1
+    },
+    "resume": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["read_first", "reconcile"],
+      "properties": {
+        "read_first": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "reconcile": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "last_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["at", "summary"],
+      "properties": {
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "last_updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "workstream_status": {
+      "enum": ["pending", "in_progress", "verified", "blocked"]
+    },
+    "pending_result": {
+      "type": ["string", "null"]
+    },
+    "hardware_status": {
+      "enum": ["blocked", "verified"]
+    }
+  }
+}

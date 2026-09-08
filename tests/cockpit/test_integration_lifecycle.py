@@ -324,8 +324,8 @@ def test_verified_capture_to_targeted_send_and_snapshot_recovery(tmp_path: Path)
     assert session.depth == 0.55
     assert session.preview_on is True
     assert session.current_candidate is not None
-    # Targets are the preview include-list; locks become the preflight deny-list.
-    assert {delta.pad_id for delta in session.current_candidate.pad_deltas} == {1, 2}
+    # Preview and final SEND share the canonical targets-minus-locks scope.
+    assert {delta.pad_id for delta in session.current_candidate.pad_deltas} == {1}
 
     prepare_ack = _dispatch(session, {"type": "prepare_send_plan"})
     assert prepare_ack["ok"] is True

@@ -44,7 +44,7 @@ def test_stage_bootstrap_keeps_oxi_adjacent_and_a4_unsendable() -> None:
     assert state["rytm"]["authority_state"] == "armed"
     assert state["analog_four"]["authority_state"] == "blocked"
     assert state["analog_four"]["plan_state"] == "blocked"
-    assert state["analog_four"]["blocked_reasons"] == ["a4_semantic_mapping_unpromoted"]
+    assert state["analog_four"]["blocked_reasons"] == ["a4_hardware_audition_validation_pending"]
 
 
 def test_partial_capture_failure_does_not_corrupt_other_machine() -> None:
@@ -77,7 +77,7 @@ def test_target_or_lock_change_marks_only_that_machine_stale() -> None:
     coordinator.record_candidate(
         "analog_four_mk2",
         ready=False,
-        blocked_reason="a4_semantic_mapping_unpromoted",
+        blocked_reason="a4_hardware_audition_validation_pending",
     )
     a4_before = coordinator.state.analog_four
 
@@ -137,7 +137,9 @@ def test_a4_prepare_remains_zero_authority_until_mapping_is_promoted() -> None:
     assert coordinator.state.analog_four.candidate_state == "blocked"
     assert coordinator.state.analog_four.plan_state == "blocked"
     assert coordinator.state.analog_four.authority_state == "blocked"
-    assert "a4_semantic_mapping_unpromoted" in coordinator.state.analog_four.blocked_reasons
+    assert (
+        "a4_hardware_audition_validation_pending" in coordinator.state.analog_four.blocked_reasons
+    )
 
 
 def test_whole_state_revision_advances_for_every_lane_transition() -> None:
@@ -218,7 +220,9 @@ def test_capture_recovery_clears_only_transient_a4_failure() -> None:
     assert coordinator.state.analog_four.last_error is None
     assert coordinator.state.analog_four.plan_state == "blocked"
     assert coordinator.state.analog_four.authority_state == "blocked"
-    assert coordinator.state.analog_four.blocked_reasons == ("a4_semantic_mapping_unpromoted",)
+    assert coordinator.state.analog_four.blocked_reasons == (
+        "a4_hardware_audition_validation_pending",
+    )
 
 
 def test_rytm_arm_and_send_failure_never_grant_a4_authority() -> None:

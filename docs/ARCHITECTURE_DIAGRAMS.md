@@ -165,6 +165,13 @@ flowchart TB
         SnapScope["mutation_scope.py<br/>targets-or-domain minus locks"]
     end
 
+    subgraph CockpitPkg["cockpit/ · Show Kit Forge seams<br/>(full Cockpit map in §28)"]
+        CockpitShowWS["ws/show_bank_handlers.py<br/>authoritative lifecycle commands"]
+        ShowBankPkg["show_bank/ nested subpackage<br/>forge · readiness · workspace<br/>store · export"]
+        ShowBankData["data/show_bank.py<br/>immutable paired evidence DTOs"]
+        ShowBankServices["capture/ · engine/<br/>export/ · profiles/<br/>reused Cockpit services"]
+    end
+
     subgraph GuardrailsPkg["guardrails/"]
         GResolver["resolver.py<br/>ResolvedBounds"]
         GStore["store.py"]
@@ -294,6 +301,15 @@ flowchart TB
     DevCapture --> DevRegistry
     DevBase --> SnapshotPkg
 
+    CockpitShowWS --> ShowBankPkg
+    ShowBankPkg --> ShowBankData
+    ShowBankPkg --> ShowBankServices
+    ShowBankPkg --> DevicesPkg
+    ShowBankPkg --> SnapshotPkg
+    ShowBankPkg --> DataLayer
+    ShowBankPkg --> ObservabilityPkg
+    ShowBankData --> SnapshotPkg
+
     GroupRunner --> EnginesPkg
     SceneRunner --> EnginesPkg
     RuntimePlan --> DataLayer
@@ -321,7 +337,7 @@ flowchart TB
     App --> SendersPkg
 ```
 
-**Subpackage count (audit baseline):** 14 (`behavior/`, `cockpit/`, `data/`, `devices/`, `dual_machine/`, `engines/`, `guardrails/`, `local_ai/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`). Plus `devices/strategies/` as a nested subpackage under `devices/`. The architecture test `test_no_new_top_level_modules.py` mechanically rejects new top-level modules (Gate 9).
+**Subpackage count (audit baseline):** 14 (`behavior/`, `cockpit/`, `data/`, `devices/`, `dual_machine/`, `engines/`, `guardrails/`, `local_ai/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`). Nested packages shown here include `devices/strategies/` and `cockpit/show_bank/`; the other Cockpit packages are detailed in §28. The architecture test `test_no_new_top_level_modules.py` mechanically rejects new top-level modules (Gate 9).
 
 ---
 
@@ -382,6 +398,32 @@ classDiagram
     class SavedKitCaptureResolver {
         <<module>>
         +resolve_saved_kit_capture_capability(device_id) RegisteredCapability
+    }
+
+    class AnalogFourFilter1FrequencyCandidateCapability {
+        <<Protocol @runtime_checkable>>
+        +render_filter1_frequency_candidate(raw, mutations) CandidateResult
+    }
+
+    class A4Filter1CandidateResolver {
+        <<public devices export>>
+        +get_analog_four_filter1_frequency_candidate_capability() Capability
+    }
+
+    class AnalogFourDevice {
+        +device_id = "analog_four_mk2"
+        +render_filter1_frequency_candidate(raw, mutations) CandidateResult
+    }
+
+    class A4Filter1CandidateStrategy {
+        <<pure strategy module>>
+        +render_analog_four_filter1_frequency_candidate(raw, mutations) CandidateResult
+    }
+
+    class A4Filter1CandidateResult {
+        +bytes framed_sysex
+        +output_authority = "local-file-only"
+        +hardware_send_validated = false
     }
 
     class AnalogRytmDevice {
@@ -460,12 +502,19 @@ classDiagram
     SavedKitCaptureResolver --> Registry : resolves registered Device
     SavedKitCaptureResolver ..> SavedKitCaptureCapability : narrows structurally
     AnalogRytmDevice --> Registry : register_device() at import time
+    AnalogFourDevice ..|> Device : structurally satisfies
+    AnalogFourDevice ..|> AnalogFourFilter1FrequencyCandidateCapability : optionally satisfies
+    AnalogFourDevice --> A4Filter1CandidateStrategy : delegates offline render
+    A4Filter1CandidateStrategy --> A4Filter1CandidateResult : local bytes only, no SEND
+    A4Filter1CandidateResolver --> Registry : resolves registered Analog Four
+    A4Filter1CandidateResolver ..> AnalogFourFilter1FrequencyCandidateCapability : narrows structurally
 ```
 
 **Key:**
 
 - **Protocol vs class.** `Device`, `SnapshotDecoder`, `MutationPlanner`, `MessageRenderer`, `MidiOutbox` are `@runtime_checkable Protocol`s. They're not inherited from — concrete classes match structurally. This is Gate 6 (type-system hygiene) and lets PR #21 / PR #36's `AnalogFourDevice` drop in without inheritance gymnastics.
-- **Composition over inheritance.** `AnalogRytmDevice` and `AnalogFourDevice` construct strategy instances in `__init__` and delegate their convenience methods to them. The Rytm device also exposes the narrow optional `AnalogRytmSavedKitCodecCapability`; the Rytm and Analog Four families structurally opt into `SavedKitCaptureCapability`, resolved through `devices/saved_kit_capture.py`, without widening the base `Device` Protocol. Cockpit capture therefore imports neither concrete family codec. The strategies don't know about each other except through their shared device-family types (`RytmKitSnapshot`, `RytmMutationPlan`, `RytmPlanEvent`, `AnalogFourKitSnapshot`, and `AnalogFourMutationPlan`).
+- **Composition over inheritance.** `AnalogRytmDevice` and `AnalogFourDevice` construct strategy instances in `__init__` and delegate their convenience methods to them. The Rytm device also exposes the narrow optional `AnalogRytmSavedKitCodecCapability`; every registered family structurally opts into `SavedKitCaptureCapability`, resolved through `devices/saved_kit_capture.py`, without widening the base `Device` Protocol. Cockpit capture therefore imports neither concrete family codec. The strategies don't know about each other except through their shared device-family types (`RytmKitSnapshot`, `RytmMutationPlan`, `RytmPlanEvent`, `AnalogFourKitSnapshot`, and `AnalogFourMutationPlan`).
+- **Optional offline A4 capability.** Forge calls the public `devices.get_analog_four_filter1_frequency_candidate_capability()` resolver, which narrows the existing registered A4 device to `AnalogFourFilter1FrequencyCandidateCapability`. Its pure strategy produces only local Filter 1 Frequency candidate bytes with `hardware_send_validated = false`; it does not widen `Device` or create an A4 SEND path.
 - **Import-time registration.** `analog_rytm.py` calls `register_device(AnalogRytmDevice())` at module load. The `devices/__init__.py` imports `analog_rytm` for the side effect; consumers get a non-empty registry on first import.
 - **Adding a new family** = one device class + three strategy modules + register at import. No parallel sibling subpackages allowed (enforced by `test_device_protocol_enforcement.py`).
 
@@ -2161,7 +2210,7 @@ flowchart LR
 - **Understanding safety:** MIDI Boundary Map (§15), Safety Boundary Diagram (§16).
 - **Test ecosystem:** Test Suite Layers (§13), Closeout + Test Coverage Map (§24).
 - **CLI surface:** Passive CLI Command Flow (§14), Command / Capability Surface (§25).
-- **Cockpit:** C4 Component Diagram (§28), SEND Command Sequence (§29), and Targeted Dual-Machine Live-KIT Flow (§36).
+- **Cockpit:** C4 Component Diagram (§28), SEND Command Sequence (§29), Targeted Dual-Machine Live-KIT Flow (§36), and Show Kit Forge evidence/readiness flow (§37).
 
 ### Explicit non-claims
 
@@ -2169,7 +2218,7 @@ The diagrams DO NOT claim that the project currently has:
 
 - Real MIDI sending in the passive default (an explicit arm is always required)
 - Automatic *output* arming from port discovery (enumeration and input opens are passive; nothing arms itself)
-- Captured-A4 semantic saved-KIT mutation or A4 Cockpit SEND (zero-event and blocked until mapping promotion)
+- A4 Cockpit SEND, destination-slot rewriting, or general captured-A4 saved-KIT mutation. Show Kit Forge's one exception is a local-file-only Filter 1 Frequency candidate renderer with `hardware_send_validated = false`.
 - Restore-to-device / persistent kit writes (refused at the seam — no capture-before-write or restore path exists)
 - A repo-wide single transmit path (the cockpit routes through the ArmedApply seam; legacy `app.py` still owns allowlisted output paths)
 - `analog_four/` / `rytm/` / `essence/` top-level subpackages (anti-pattern, rejected by arch tests in §10)
@@ -3087,7 +3136,7 @@ flowchart LR
     Codecs --> A4Anchor["Verified A4 anchor"]
 
     RytmAnchor --> RytmLane["Rytm lane<br/>capture / targets / locks<br/>candidate / plan / authority<br/>stale / recovery"]
-    A4Anchor --> A4Lane["A4 lane<br/>capture / targets / locks<br/>zero-event plan / blocker<br/>stale / recovery"]
+    A4Anchor --> A4Lane["A4 lane<br/>capture / targets / locks<br/>live plan blocked<br/>stale / recovery"]
 
     Scope["effective scope<br/>(targets or complete domain)<br/>minus locks"] --> RytmLane
     Scope --> A4Lane
@@ -3099,8 +3148,9 @@ flowchart LR
     Confirm --> ArmedApply["senders/armed_apply.py<br/>sole Cockpit output handle"]
     ArmedApply --> Rytm["Analog Rytm RAM-only CC"]
 
-    A4Lane --> A4Block["BLOCKED<br/>semantic saved-KIT offsets<br/>not promoted"]
-    A4Block -.-> Mapping["Studio mapping matrix<br/>offset + encoding + stride<br/>round-trip + physical proof"]
+    A4Lane --> A4Offline["Filter 1 Frequency only<br/>offline captured-KIT candidate<br/>Q8.8 · stride 350"]
+    A4Offline --> LocalFile["local bytes only<br/>hardware_send_validated=false"]
+    A4Lane --> A4Block["BLOCKED<br/>A4 SEND + every other<br/>unpromoted saved-KIT field"]
 
     OXI["OXI One<br/>sequencing / notes / triggers<br/>mutes / pattern motion"] --> Rytm
     OXI --> A4["Analog Four"]
@@ -3111,6 +3161,7 @@ flowchart LR
 
     style InputBoundary fill:#eef,stroke:#448
     style ArmedApply fill:#fee,stroke:#a44
+    style A4Offline fill:#eef,stroke:#448
     style A4Block fill:#fff3cd,stroke:#997000
     style OXI fill:#efe,stroke:#474
 ```
@@ -3121,5 +3172,76 @@ one lane cannot promote, arm, or corrupt the other lane. Rytm physical
 connection state comes from the armed-output manager; A4 capture/session state
 does not claim continuous hot-plug monitoring. Rytm plans are bound
 to the captured source, effective scope, candidate, and exact plan id. A4
-remains useful for capture, target/lock rehearsal, and mapping evidence while
-its output authority is structurally blocked.
+remains useful for capture, target/lock rehearsal, and narrow offline Filter 1
+Frequency file generation, while its live output authority is structurally
+blocked.
+
+## 37. Show Kit Forge Evidence and Show-Time Readiness
+
+```mermaid
+flowchart TD
+    Pair["paired round-trip-verified<br/>Rytm + A4 source captures"] --> Forge["deterministic paired forge<br/>preset/custom depth<br/>(targets or all) - locks"]
+
+    Forge --> RytmCandidate["Rytm candidate metadata<br/>available for selection"]
+    RytmCandidate --> SourceReload["before every live audition<br/>manually reload immutable Rytm source KIT"]
+    SourceReload --> SourceCapture["fresh exact source capture<br/>clears current candidate + plan"]
+    SourceCapture --> Reselect["Select for audition → Preview Rytm<br/>Prepare exact plan → arm exact output"]
+    Reselect --> ExactConfirm["exact port + current plan id<br/>manual reload acknowledgment<br/>per-action confirmation"]
+    ExactConfirm --> ArmedApply["ArmedApply<br/>RAM-only SEND"]
+    ArmedApply --> LiveUnsaved["live unsaved audition<br/>not favorite · not saved"]
+
+    Forge --> A4Candidate["A4 Filter 1 Frequency<br/>offline saved-KIT bytes only"]
+    Calibration["data calibration record + saved-KIT field schema"] --> FieldCodec["generic A4 field codec + calibrated renderer<br/>exact Q8.8 / canonical byte isolation"]
+    FieldCodec --> A4Candidate
+    Validation["guardrails/input_validation<br/>shared strict primitives"] -.-> Store
+    Domains["snapshot/mutation_scope<br/>registry-derived device domain"] -.-> Forge
+    A4Candidate --> A4Preparation["inert preparation report<br/>revalidate retained source + candidate<br/>freshness / scope / recovery / port intent"]
+    A4Preparation --> NoA4Send
+    A4Candidate --> NoA4Send["A4 SEND blocked<br/>hardware_send_validated=false"]
+
+    LiveUnsaved --> Favorite["operator marks paired favorite"]
+    A4Candidate --> Favorite
+    Favorite --> ManualSave["SAVE ON BOTH INSTRUMENTS<br/>then make fresh input-only dumps"]
+    ManualSave --> SemanticVerify["paired favorite recapture<br/>promoted semantic comparison"]
+    SemanticVerify -->|"both match"| Verified["VERIFIED<br/>not yet show-ready"]
+    SemanticVerify -->|"either mismatch"| Recover["retain evidence + recover<br/>readiness blocked"]
+
+    Verified --> FreshCapture["show-time fresh paired captures"]
+    FreshCapture --> FullFingerprint["exact whole-payload-fingerprint comparison<br/>against verified recaptures"]
+    FullFingerprint -->|"both exact"| ShowReady["SHOW-READY"]
+    FullFingerprint -->|"one or both differ"| Recover
+
+    Metadata["OXI project / pattern / chapter<br/>metadata only"] -.-> Favorite
+    OXI["OXI owns sequencing / triggers / mutes"] -.-> Pair
+    Store["revisioned canonical JSON<br/>explicit content-addressed retention"] --- Favorite
+    Pack["verified .show-pack<br/>cue order + recovery + checksums<br/>manifest published last"] --- Store
+
+    style ArmedApply fill:#fee,stroke:#a44
+    style A4Candidate fill:#eef,stroke:#448
+    style NoA4Send fill:#fff3cd,stroke:#997000
+    style ManualSave fill:#fff3cd,stroke:#997000
+    style ShowReady fill:#efe,stroke:#474
+    style Recover fill:#fee,stroke:#a44
+    style OXI fill:#efe,stroke:#474
+```
+
+The two comparisons answer different questions. Favorite recapture uses the
+promoted semantic projection to prove that supported intended controls survived
+the manual save. Show-time preflight then compares the whole decoded-payload
+fingerprints exactly, so an unknown or device-wide payload change cannot pass
+as show-ready. A mismatch never overwrites retained evidence and clears any
+prior show-ready grant.
+
+The Rytm output branch exists behind the established arm boundary, but its
+Show Kit Forge one-pad/restore pass remains an operator-present physical gate.
+Every live attempt requires a matching source capture newer than the preceding
+hardware attempt or disconnect and explicit manual reload acknowledgment.
+Capturing invalidates the current candidate and plan, so selection and PREPARE
+must follow that capture. A saved-KIT dump alone does not prove that unsaved RAM
+was restored.
+The A4 branch has no SEND edge at all: the generated four-track Filter 1
+Frequency scratch artifact must be transferred, saved, and recaptured manually
+before any physical observation is recorded. The frozen preparation report
+always has `ready=false` and `hardware_send_validated=false`. Saved-KIT Q8.8
+evidence does not establish a paired-CC/NRPN transport conversion; the existing
+seven-bit CC audition seam and persistent-KIT refusal remain unchanged.

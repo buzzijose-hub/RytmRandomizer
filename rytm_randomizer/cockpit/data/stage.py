@@ -3,9 +3,37 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal, TypedDict
+from typing import Final, Literal, TypedDict
 
 StageDeviceId = Literal["analog_rytm_mk2", "analog_four_mk2"]
+STAGE_DEVICE_IDS: Final[tuple[StageDeviceId, ...]] = ("analog_rytm_mk2", "analog_four_mk2")
+ANALOG_RYTM_DEVICE_ID: Final[StageDeviceId] = STAGE_DEVICE_IDS[0]
+ANALOG_FOUR_DEVICE_ID: Final[StageDeviceId] = STAGE_DEVICE_IDS[1]
+
+
+def is_rytm_stage_slot(device_id: StageDeviceId) -> bool:
+    """True for the stage's Rytm slot.
+
+    The dual-machine stage is a **fixed two-slot pairing** — one Rytm slot
+    and one Analog Four slot — not open-ended device dispatch; that is what
+    ``StageDeviceId`` being a closed two-value ``Literal`` encodes. Consumers
+    therefore ask *which slot* rather than comparing an id against a literal,
+    so registering a new device family (Digitakt, Digitone, ...) does not
+    make a consumer's ``== ANALOG_RYTM_DEVICE_ID`` silently mean "everything
+    else is the A4". Identity lives here, once.
+
+    See ``tests/architecture/test_no_device_identity_branching.py``.
+    """
+
+    return device_id == ANALOG_RYTM_DEVICE_ID
+
+
+def is_analog_four_stage_slot(device_id: StageDeviceId) -> bool:
+    """True for the stage's Analog Four slot (see :func:`is_rytm_stage_slot`)."""
+
+    return device_id == ANALOG_FOUR_DEVICE_ID
+
+
 StageConnectionState = Literal["unknown", "connected", "disconnected"]
 StageCaptureState = Literal["not_captured", "captured", "failed"]
 StageArtifactState = Literal["none", "ready", "stale", "blocked"]
@@ -98,6 +126,11 @@ class DualMachineStageState:
 
 
 __all__ = [
+    "STAGE_DEVICE_IDS",
+    "ANALOG_RYTM_DEVICE_ID",
+    "ANALOG_FOUR_DEVICE_ID",
+    "is_analog_four_stage_slot",
+    "is_rytm_stage_slot",
     "DualMachineStageState",
     "DualMachineStageStateDict",
     "MachineStageState",
