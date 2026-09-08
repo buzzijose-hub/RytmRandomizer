@@ -45,6 +45,21 @@ afterEach(() => {
 });
 
 describe('ShowKitForgePanel', () => {
+  it('explains why an empty bank cannot be exported and sends no export command', async () => {
+    const fake = new FakeCockpitClient();
+    mount(fake, {
+      ...showBankState,
+      banks: showBankState.banks.map((bank) => ({ ...bank, entries: [] })),
+    });
+    await waitForCommand(fake, 'show_bank_list');
+    fireEvent.change(screen.getByLabelText('Export package ID'), { target: { value: 'empty-bank' } });
+    const button = screen.getByRole('button', { name: 'Export draft local pack' });
+    expect(button).toBeDisabled();
+    expect(screen.getByText('Add a paired cue before exporting this bank.')).toBeInTheDocument();
+    fireEvent.click(button);
+    expect(fake.sent.some((command) => command.type === 'show_bank_export')).toBe(false);
+  });
+
   it('waits for authenticated session hydration before loading and creating a bank', async () => {
     const fake = new FakeCockpitClient();
     useCockpitStore.setState({ connectionStatus: 'closed', showBank: null, kitCaptures: [] });
