@@ -249,6 +249,14 @@ diagrams:
     @grep '^## ' docs/ARCHITECTURE_DIAGRAMS.md | head -30
 
 # Show the 18 plan-requirement gates
+# Gate 17 — does this already exist? Run BEFORE writing a new module.
+# An instruction with no command is the kind you skip while believing you
+# complied; this one takes a second.
+#   just survey check_touched_branch_coverage
+#   just survey "manifest validation" --keywords
+survey +QUERY:
+    @python scripts/survey_before_writing.py {{QUERY}}
+
 # Gate 1 — 100% BRANCH coverage on every touched production file, locally.
 # Same script CI runs (test.yml); it reads coverage.xml rather than fighting
 # --cov args, which is why it works where the hand-rolled recipe did not.

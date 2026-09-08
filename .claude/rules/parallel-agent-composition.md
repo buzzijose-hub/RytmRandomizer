@@ -152,6 +152,11 @@ a human reading the clause against every implementation of it.
 - `.claude/rules/autonomous-agent-execution.md` — run to a hard stop without pausing.
 - `.claude/rules/cascade-merge-pattern.md` — bundle the parallel outputs into one PR.
 - `scripts/check_agent_report.py` — §1 mechanised (`just agent-report pytest`).
+- `scripts/survey_before_writing.py` + `just survey <name>` — Gate 17's survey
+  step, as a command. Run it BEFORE writing a module: the orchestrator of this
+  very run wrote a fully-tested fork of `check_touched_coverage.py` and found
+  the original afterwards. `tests/architecture/test_no_forked_sibling_scripts.py`
+  is the backstop that catches it at commit time if the survey is skipped.
 - `scripts/check_touched_coverage.py` + `just gate1` — the Gate 1 measurement
   that can actually fail. The hand-rolled `--cov` recipe this rule's sibling
   used to document measured nothing and exited 0: the §5 "coverage against a
