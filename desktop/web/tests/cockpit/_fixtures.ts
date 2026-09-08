@@ -188,7 +188,7 @@ export const readyDualMachineStage: DualMachineStageState = {
     candidate_state: 'none',
     plan_state: 'blocked',
     authority_state: 'blocked',
-    blocked_reasons: ['a4_semantic_mapping_unpromoted'],
+    blocked_reasons: ['a4_hardware_audition_validation_pending'],
     recovery_actions: ['capture_current_kit', 'run_a4_mapping_gap_procedure'],
     last_error: null,
   },

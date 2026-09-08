@@ -5,7 +5,7 @@ Status: proposed (awaiting kickoff)
 Base: `modularize-v1.34`
 Design source of truth: [`2026-08-03-autoupdate-distribution.md`](2026-08-03-autoupdate-distribution.md)
 (the spec; this plan never restates its contracts — section references
-below point into it). Diagram: `docs/ARCHITECTURE_DIAGRAMS.md` §37.
+below point into it). Diagram: `docs/ARCHITECTURE_DIAGRAMS.md` §38.
 
 ## Execution shape — three PRs, one external follow-up
 

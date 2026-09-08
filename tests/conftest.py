@@ -364,6 +364,14 @@ def analog_four_saved_kit_frame(
 ) -> bytes:
     """Build a framed A4 saved-kit fixture using the observed hardware layout."""
 
+    from rytm_randomizer.data.analog_four_kit_fields import (
+        A4_SOUND_FORMAT_MARKER,
+        A4_SOUND_SIGNATURE,
+    )
+    from rytm_randomizer.data.analog_four_saved_kit_layout import (
+        A4_KIT_OBJECT_TRACK_SOUND_SIZE,
+        A4_KIT_OBJECT_TRACKS_OFFSET,
+    )
     from rytm_randomizer.devices.strategies.analog_four_offset_manifest import (
         A4_CHECKSUM_PACKED_OFFSET,
         A4_FAMILY_BYTE,
@@ -382,6 +390,12 @@ def analog_four_saved_kit_frame(
     unpacked[A4_KIT_NAME_OFFSET : A4_KIT_NAME_OFFSET + A4_KIT_NAME_LENGTH] = name[
         :A4_KIT_NAME_LENGTH
     ].ljust(A4_KIT_NAME_LENGTH, b"\x00")
+    # Valid native Sound headers make this fixture usable by the canonical
+    # typed saved-KIT accessor. Apply deliberate malformed overrides afterward.
+    sound_header = A4_SOUND_SIGNATURE + A4_SOUND_FORMAT_MARKER
+    for offset in range(A4_KIT_OBJECT_TRACKS_OFFSET, len(unpacked), A4_KIT_OBJECT_TRACK_SOUND_SIZE):
+        if offset + A4_KIT_OBJECT_TRACK_SOUND_SIZE <= len(unpacked):
+            unpacked[offset : offset + len(sound_header)] = sound_header
     for offset, value in (unpacked_overrides or {}).items():
         unpacked[offset] = value
 

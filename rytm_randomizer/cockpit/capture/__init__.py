@@ -15,6 +15,7 @@ from .service import (
     KitCaptureSnapshot,
     KitCaptureUnavailable,
     SysexCaptureProvider,
+    decode_kit_capture_frame,
     narrow_kit_capture_device_id,
 )
 
@@ -32,6 +33,7 @@ __all__ = [
     "KitCaptureSnapshot",
     "KitCaptureUnavailable",
     "SysexCaptureProvider",
+    "decode_kit_capture_frame",
     "narrow_kit_capture_device_id",
     "cockpit_snapshot_from_rytm_capture",
 ]

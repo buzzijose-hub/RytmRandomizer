@@ -8,11 +8,12 @@ from types import MappingProxyType
 from typing import Final, cast
 
 from ...devices import get_device
+from ...snapshot.mutation_scope import registered_mutation_ids
+from ..data.stage import ANALOG_FOUR_DEVICE_ID as ANALOG_FOUR_DEVICE_ID
+from ..data.stage import ANALOG_RYTM_DEVICE_ID as ANALOG_RYTM_DEVICE_ID
 from ..data.stage import StageDeviceId
 
-ANALOG_RYTM_DEVICE_ID: Final[StageDeviceId] = "analog_rytm_mk2"
-ANALOG_FOUR_DEVICE_ID: Final[StageDeviceId] = "analog_four_mk2"
-A4_MAPPING_BLOCK_REASON: Final[str] = "a4_semantic_mapping_unpromoted"
+A4_MAPPING_BLOCK_REASON: Final[str] = "a4_hardware_audition_validation_pending"
 
 
 @dataclass(frozen=True)
@@ -49,7 +50,7 @@ def _registered_lane_policy(
     return StageLanePolicy(
         device_id=cast(StageDeviceId, device.device_id),
         item_label=item_label,
-        available_ids=frozenset(range(1, device.track_count + 1)),
+        available_ids=registered_mutation_ids(registry_key),
         output_authority_supported=output_authority_supported,
         persistent_block_reason=persistent_block_reason,
     )

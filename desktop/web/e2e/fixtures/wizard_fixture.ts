@@ -15,7 +15,8 @@
  *
  * - `sidecar` — the original auto-spawned handle. Specs that just need a
  *   running sidecar keep using it; `test.use({ sidecarEnv: {...} })` layers
- *   extra environment (e.g. `RYTM_RAND_MIDI_BACKEND: 'off'`) onto the spawn.
+ *   extra environment onto the spawn. MIDI defaults to `off`; device-list
+ *   tests explicitly select the list-only `fake` backend.
  * - `sidecarControl` — a manual start/stop controller for specs that need
  *   the sidecar absent at page load (offline shell), killed mid-test
  *   (reconnect journey), or launched with a custom working directory
@@ -312,6 +313,8 @@ async function launchSidecarOnce(
     RYTM_RAND_WS_PORT: String(SIDECAR_PORT),
     RYTM_RAND_WS_TOKEN_FILE: tokenFile,
     WIZARD_SOURCE_ROOTS: tmpRoot,
+    // Browser integration tests must never enumerate or open physical MIDI.
+    RYTM_RAND_MIDI_BACKEND: 'off',
     // Unbuffer Python stdio so error tracebacks surface promptly in CI logs.
     PYTHONUNBUFFERED: '1',
     ...options.env,

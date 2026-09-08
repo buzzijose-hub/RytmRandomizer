@@ -526,7 +526,8 @@ export type KitCaptureDeviceId = 'analog_rytm_mk2' | 'analog_four_mk2';
 export type KitCaptureLayoutStatus = 'mutation_ready' | 'captured_mapping_pending';
 export type KitParameterReadiness =
   | 'rytm_anchor_ready'
-  | 'exact_kit_anchor_offsets_candidate';
+  | 'exact_kit_anchor_offsets_candidate'
+  | 'filter1_frequency_offline_ready';
 
 export interface KitCaptureLayoutItem {
   index: number;
@@ -553,6 +554,327 @@ export interface KitCaptureResult {
 export interface KitCapturesChangedEvent {
   type: 'kit_captures_changed';
   captures: KitCaptureResult[];
+}
+
+// ---------- Show Kit Forge ----------
+
+/** Lifecycle vocabulary owned by the server-side show-bank model. */
+export type ShowKitForgeStatus =
+  | 'source'
+  | 'candidate'
+  | 'favorite'
+  | 'hardware-saved'
+  | 'verified'
+  | 'show-ready';
+
+export type ShowDepthPreset = 'small' | 'medium' | 'large' | 'custom';
+export type ShowCaptureKind = 'source' | 'candidate' | 'favorite';
+export type ShowRytmAuditionStatus =
+  | 'not_auditioned'
+  | 'live_unsaved_hardware'
+  | 'historical_audition_hardware_unknown';
+export type ShowKitEvidenceStatus =
+  | 'round-trip-verified'
+  | 'offline-captured-kit-mutation-validated'
+  | 'hardware-write-validated'
+  | 'operator-attested'
+  | 'recapture-matched'
+  | 'pending-physical-outbound-validation'
+  | 'blocked';
+
+export interface ShowDepthPresets {
+  small: number;
+  medium: number;
+  large: number;
+}
+
+/** OXI values are cue metadata only; Cockpit never controls OXI directly. */
+export interface ShowOxiMetadata {
+  project: string;
+  pattern: string;
+  chapter: string;
+  direct_oxi_control: false;
+}
+
+export interface ShowKitEvidence {
+  evidence_id: string;
+  status: ShowKitEvidenceStatus;
+  source: string;
+  observed_at: string;
+  notes: string[];
+}
+
+export interface ShowRetainedSysexArtifact {
+  artifact_name: string;
+  sha256: string;
+  byte_count: number;
+}
+
+export interface ShowKitSysex {
+  artifact_id: string;
+  frame_sha256: string;
+  frame_bytes: number;
+  retained: ShowRetainedSysexArtifact | null;
+}
+
+/** Manifest-safe capture reference. Raw SysEx bytes remain server-only. */
+export interface ShowCaptureReference {
+  capture_id: string;
+  device_id: KitCaptureDeviceId;
+  kit_name: string;
+  hardware_slot: number | null;
+  fingerprint: string;
+  snapshot_id: string | null;
+  captured_at: string;
+  round_trip_verified: boolean;
+  sysex: ShowKitSysex;
+  evidence: ShowKitEvidence[];
+}
+
+export interface ShowKitScope {
+  device_id: KitCaptureDeviceId;
+  target_ids: number[];
+  locked_ids: number[];
+}
+
+export interface ShowKitRecipe {
+  profile_id: string;
+  depth_preset: ShowDepthPreset;
+  depth: number;
+  seed: number;
+  rytm_scope: ShowKitScope;
+  analog_four_scope: ShowKitScope;
+}
+
+export interface ShowAnalogFourCandidateValue {
+  track_id: number;
+  parameter: string;
+  screen_value: string;
+  encoded_unsigned_8_8: number;
+  unpacked_offset: number;
+}
+
+export interface ShowAnalogFourOfflineCandidate {
+  artifact_fingerprint: string;
+  semantic_fingerprint: string;
+  source_fingerprint: string;
+  sysex: ShowKitSysex;
+  values: ShowAnalogFourCandidateValue[];
+  evidence_status: ShowKitEvidenceStatus;
+}
+
+export interface ShowCandidatePair {
+  candidate_id: string;
+  source_rytm_fingerprint: string;
+  source_a4_fingerprint: string;
+  rytm_semantic_fingerprint: string;
+  recipe: ShowKitRecipe;
+  rytm_candidate: MutationCandidate;
+  analog_four_candidate: ShowAnalogFourOfflineCandidate;
+  created_at: string;
+  evidence: ShowKitEvidence[];
+}
+
+export interface ShowFavorite {
+  candidate_id: string;
+  selected_at: string;
+  notes: string[];
+}
+
+/** Operator claim only. Verification belongs to the separate recapture record. */
+export interface ShowHardwareSaveAttestation {
+  device_id: KitCaptureDeviceId;
+  hardware_slot: number;
+  attested_at: string;
+  note: string;
+}
+
+export interface ShowFavoriteRecapture {
+  device_id: KitCaptureDeviceId;
+  expected_semantic_fingerprint: string;
+  source_semantic_fingerprint: string;
+  observed_semantic_fingerprint: string | null;
+  matches_candidate: boolean;
+  matches_source: boolean;
+  comparison_reason: string;
+  recorded_at: string;
+  capture: ShowCaptureReference;
+}
+
+/** Fresh full-capture comparison; only this record can grant show-time readiness. */
+export interface ShowTimePreflight {
+  expected_rytm_fingerprint: string;
+  observed_rytm_fingerprint: string;
+  observed_rytm_capture_id: string;
+  observed_rytm_captured_at: string;
+  rytm_matches: boolean;
+  expected_a4_fingerprint: string;
+  observed_a4_fingerprint: string;
+  observed_a4_capture_id: string;
+  observed_a4_captured_at: string;
+  a4_matches: boolean;
+  checked_at: string;
+  reason: string;
+}
+
+export type ShowKitBlockedReason =
+  | 'show_bank_empty'
+  | 'cue_not_show_ready'
+  | 'paired_candidate_missing'
+  | 'favorite_missing'
+  | 'rytm_hardware_save_missing'
+  | 'a4_hardware_save_missing'
+  | 'rytm_favorite_recapture_missing'
+  | 'a4_favorite_recapture_missing'
+  | 'rytm_recapture_mismatch'
+  | 'a4_recapture_mismatch'
+  | 'preflight_required'
+  | 'preflight_historical'
+  | 'rytm_current_kit_mismatch'
+  | 'a4_current_kit_mismatch'
+  | 'current_session_preflight_required';
+
+export type A4PreparationBlocker =
+  | 'session_unavailable' | 'candidate_not_selected' | 'candidate_not_local'
+  | 'source_bytes_unavailable' | 'source_bytes_invalid'
+  | 'candidate_bytes_unavailable' | 'candidate_bytes_invalid' | 'scope_changed'
+  | 'no_a4_changes' | 'source_reload_required' | 'current_capture_required'
+  | 'current_capture_invalid' | 'current_capture_stale' | 'current_source_mismatch'
+  | 'output_port_intent_required' | 'recovery_slot_required'
+  | 'a4_hardware_audition_validation_pending' | 'a4_live_transport_mapping_unverified'
+  | 'persistent_kit_write_prohibited';
+
+/** Offline preparation evidence. This record has no hardware authority. */
+export interface A4PreparationReport {
+  schema_version: 'a4-preparation-v1';
+  preparation_id: string;
+  entry_id: string;
+  candidate_id: string | null;
+  device_id: 'analog_four_mk2';
+  source_capture_id: string;
+  source_fingerprint: string;
+  source_frame_sha256: string;
+  candidate_frame_sha256: string | null;
+  current_capture_fingerprint: string | null;
+  current_capture_at: string | null;
+  capture_after: string;
+  checked_at: string;
+  target_ids: number[];
+  locked_ids: number[];
+  effective_ids: number[];
+  output_port_name: string | null;
+  recovery_slot: number | null;
+  source_reloaded: boolean;
+  candidate_is_local: boolean;
+  candidate_bytes_verified: boolean;
+  current_source_verified: boolean;
+  changes: {
+    track_id: number;
+    parameter: string;
+    before_raw_q8_8: number;
+    after_raw_q8_8: number;
+    before_screen_value: string;
+    after_screen_value: string;
+    unpacked_offsets: number[];
+  }[];
+  blocked_reasons: A4PreparationBlocker[];
+  ready: false;
+  hardware_send_validated: false;
+  output_authority: 'offline-review-only';
+}
+
+export interface ShowReadiness {
+  status: ShowKitForgeStatus;
+  show_ready: boolean;
+  blocked_reasons: ShowKitBlockedReason[];
+  recovery_actions: string[];
+}
+
+/** Whole-bank projection additionally identifies cues holding a current-session preflight grant. */
+export interface ShowBankReadiness extends ShowReadiness {
+  show_ready_entry_ids: string[];
+}
+
+export interface ShowBankEntry {
+  entry_id: string;
+  cue_index: number;
+  name: string;
+  description: string;
+  rytm_source: ShowCaptureReference;
+  analog_four_source: ShowCaptureReference;
+  candidates: ShowCandidatePair[];
+  selected_candidate_id: string | null;
+  rytm_live_auditioned_candidate_id: string | null;
+  rytm_live_auditioned_at: string | null;
+  favorite: ShowFavorite | null;
+  rytm_hardware_save: ShowHardwareSaveAttestation | null;
+  analog_four_hardware_save: ShowHardwareSaveAttestation | null;
+  rytm_recapture: ShowFavoriteRecapture | null;
+  analog_four_recapture: ShowFavoriteRecapture | null;
+  show_time_preflight: ShowTimePreflight | null;
+  show_ready_at: string | null;
+  oxi: ShowOxiMetadata;
+  audition_notes: string[];
+  energy_level: number | null;
+  energy_notes: string[];
+  transition_notes: string[];
+  recovery_notes: string[];
+  created_at: string;
+  updated_at: string;
+  status: ShowKitForgeStatus;
+  rytm_audition_status: ShowRytmAuditionStatus;
+  readiness: ShowReadiness;
+}
+
+export interface ShowBank {
+  schema_version: 'show-bank-v1';
+  bank_id: string;
+  name: string;
+  description: string;
+  revision: number;
+  active_entry_id: string | null;
+  entries: ShowBankEntry[];
+  notes: string[];
+  evidence: ShowKitEvidence[];
+  created_at: string;
+  updated_at: string;
+  status: ShowKitForgeStatus;
+  readiness: ShowBankReadiness;
+}
+
+/** Full replacement packet used for bootstrap, reconnect, and every bank revision. */
+export interface ShowBankState {
+  schema_version: 'show-bank-workspace-v1';
+  revision: number;
+  active_bank_id: string | null;
+  banks: ShowBank[];
+  depth_presets: ShowDepthPresets;
+}
+
+/** Filesystem-safe metadata returned after a server-rooted show-pack export. */
+export interface ShowPackExportAck {
+  package_id: string;
+  directory_name: string;
+  artifact_count: number;
+}
+
+/** Verification/publication summary returned after a server-rooted show-pack import. */
+export interface ShowPackImportAck {
+  package_id: string;
+  bank_id: string;
+  artifact_count: number;
+  write_count: number;
+}
+
+/** Immutable source slots named by the source-reset acknowledgement. */
+export interface ShowBankSourceSlotsAck {
+  rytm: number | null;
+  analog_four: number | null;
+}
+
+export interface ShowBankChangedEvent {
+  type: 'show_bank_changed';
+  show_bank: ShowBankState | null;
 }
 
 export interface MutationTargetsChangedEvent {
@@ -663,6 +985,7 @@ export type Event =
   | ProfileChangedEvent
   | ProfileCatalogChangedEvent
   | KitCapturesChangedEvent
+  | ShowBankChangedEvent
   | MutationTargetsChangedEvent
   | MutationLocksChangedEvent
   | DualMachineStageChangedEvent
@@ -755,6 +1078,8 @@ export interface PrepareSendPlanCommand {
  */
 export interface SendCommand {
   type: 'send';
+  /** Show-kit auditions additionally attest manual immutable-source reload. */
+  show_bank_source_reloaded?: boolean;
   confirm?: boolean;
   /** Exact prepared plan being confirmed; mandatory for armed sessions. */
   send_plan_id?: string;
@@ -881,6 +1206,171 @@ export interface LibraryImportCapturesCommand {
   type: 'library_import_captures';
 }
 
+export interface ShowBankListCommand {
+  type: 'show_bank_list';
+  /** Optional read-only review; never arms, opens, or sends to an output. */
+  a4_preparation?: {
+    bank_id: string;
+    entry_id: string;
+    expected_revision: number;
+    output_port_name: string | null;
+  };
+}
+
+export interface ShowBankCreateCommand {
+  type: 'show_bank_create';
+  name: string;
+  description: string;
+  notes: string[];
+}
+
+export interface ShowBankSelectCommand {
+  type: 'show_bank_select';
+  bank_id: string;
+}
+
+export interface ShowBankUpdateCommand {
+  type: 'show_bank_update';
+  bank_id: string;
+  expected_revision: number;
+  name: string;
+  description: string;
+  notes: string[];
+}
+
+export interface ShowBankAdoptSourcesCommand {
+  type: 'show_bank_adopt_sources';
+  bank_id: string;
+  entry_id?: string;
+  expected_revision: number;
+  rytm_fingerprint: string;
+  a4_fingerprint: string;
+  rytm_slot: number;
+  a4_slot: number;
+}
+
+export interface ShowBankGenerateCandidatesCommand {
+  type: 'show_bank_generate_candidates';
+  bank_id: string;
+  entry_id: string;
+  expected_revision: number;
+  depth_preset: ShowDepthPreset;
+  depth: number;
+  candidate_count: number;
+  seed: number;
+  profile_id: string;
+  rytm_targets: number[];
+  rytm_locks: number[];
+  a4_targets: number[];
+  a4_locks: number[];
+}
+
+export interface ShowBankSelectCandidateCommand {
+  type: 'show_bank_select_candidate';
+  bank_id: string;
+  entry_id: string;
+  candidate_id: string;
+  expected_revision: number;
+}
+
+export interface ShowBankMarkFavoriteCommand {
+  type: 'show_bank_mark_favorite';
+  bank_id: string;
+  entry_id: string;
+  candidate_id: string;
+  expected_revision: number;
+  replace_existing?: boolean;
+}
+
+export interface ShowBankAttestHardwareSavedCommand {
+  type: 'show_bank_attest_hardware_saved';
+  bank_id: string;
+  entry_id: string;
+  device_id: KitCaptureDeviceId;
+  slot: number;
+  expected_revision: number;
+}
+
+export interface ShowBankVerifyRecaptureCommand {
+  type: 'show_bank_verify_recapture';
+  bank_id: string;
+  entry_id: string;
+  expected_revision: number;
+}
+
+export interface ShowBankRunPreflightCommand {
+  type: 'show_bank_run_preflight';
+  bank_id: string;
+  entry_id: string;
+  expected_revision: number;
+}
+
+export interface ShowBankReturnSourceCommand {
+  type: 'show_bank_return_source';
+  bank_id: string;
+  entry_id: string;
+  expected_revision: number;
+}
+
+export interface ShowBankUpdateEntryCommand {
+  type: 'show_bank_update_entry';
+  bank_id: string;
+  entry_id: string;
+  expected_revision: number;
+  name: string;
+  description: string;
+  audition_notes: string[];
+  energy_level: number | null;
+  energy_notes: string[];
+  transition_notes: string[];
+  recovery_notes: string[];
+  oxi: ShowOxiMetadata;
+}
+
+export interface ShowBankReorderEntriesCommand {
+  type: 'show_bank_reorder_entries';
+  bank_id: string;
+  entry_ids: string[];
+  expected_revision: number;
+}
+
+export interface ShowBankDuplicateEntryCommand {
+  type: 'show_bank_duplicate_entry';
+  bank_id: string;
+  entry_id: string;
+  expected_revision: number;
+}
+
+export interface ShowBankRemoveEntryCommand {
+  type: 'show_bank_remove_entry';
+  bank_id: string;
+  entry_id: string;
+  expected_revision: number;
+}
+
+export interface ShowBankRetainCaptureCommand {
+  type: 'show_bank_retain_capture';
+  bank_id: string;
+  entry_id: string;
+  capture_kind: ShowCaptureKind;
+  device_id: KitCaptureDeviceId;
+  expected_revision: number;
+}
+
+export interface ShowBankImportCommand {
+  type: 'show_bank_import';
+  /** Filename-safe pack name resolved by the server beneath its injected import root. */
+  pack_name: string;
+}
+
+export interface ShowBankExportCommand {
+  type: 'show_bank_export';
+  bank_id: string;
+  /** Filename-safe artifact name resolved beneath the server-owned export root. */
+  artifact_name: string;
+  expected_revision: number;
+}
+
 export type Command =
   | AnalyzePatchGenomeCommand
   | ListCaptureInputsCommand
@@ -911,7 +1401,26 @@ export type Command =
   | LibrarySearchCommand
   | LibraryTagCommand
   | LibraryDeleteCommand
-  | LibraryImportCapturesCommand;
+  | LibraryImportCapturesCommand
+  | ShowBankListCommand
+  | ShowBankCreateCommand
+  | ShowBankSelectCommand
+  | ShowBankUpdateCommand
+  | ShowBankAdoptSourcesCommand
+  | ShowBankGenerateCandidatesCommand
+  | ShowBankSelectCandidateCommand
+  | ShowBankMarkFavoriteCommand
+  | ShowBankAttestHardwareSavedCommand
+  | ShowBankVerifyRecaptureCommand
+  | ShowBankRunPreflightCommand
+  | ShowBankReturnSourceCommand
+  | ShowBankUpdateEntryCommand
+  | ShowBankReorderEntriesCommand
+  | ShowBankDuplicateEntryCommand
+  | ShowBankRemoveEntryCommand
+  | ShowBankRetainCaptureCommand
+  | ShowBankImportCommand
+  | ShowBankExportCommand;
 
 export type CommandType = Command['type'];
 
@@ -955,6 +1464,20 @@ export interface CommandAck {
   capture_device_id?: KitCaptureDeviceId;
   capture_inputs?: string[];
   kit_capture?: KitCaptureResult;
+  /** Show Kit Forge result metadata; filesystem paths never cross the wire. */
+  show_bank?: ShowBankState | null;
+  show_pack_export?: ShowPackExportAck;
+  show_pack_import?: ShowPackImportAck;
+  a4_preparation?: A4PreparationReport;
+  show_bank_id?: string;
+  show_bank_entry_id?: string;
+  candidate_id?: string;
+  candidate_ids?: string[];
+  source_snapshot_id?: string;
+  instruction?: string;
+  hardware_changed?: false;
+  source_slots?: ShowBankSourceSlotsAck;
+  show_ready?: boolean;
   error?: string;
   code?: string;
   message?: string;
@@ -977,6 +1500,7 @@ export function isEvent(msg: unknown): msg is Event {
     'profile_changed',
     'profile_catalog_changed',
     'kit_captures_changed',
+    'show_bank_changed',
     'mutation_targets_changed',
     'mutation_locks_changed',
     'dual_machine_stage_changed',

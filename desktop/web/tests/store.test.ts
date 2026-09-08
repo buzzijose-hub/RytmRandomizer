@@ -48,6 +48,8 @@ import type {
   ProfileModel,
   SessionStatusEvent,
   SendPlanChangedEvent,
+  ShowBankChangedEvent,
+  ShowBankState,
   Snapshot,
   SnapshotChangedEvent,
 } from '../src/ws/protocol';
@@ -154,12 +156,20 @@ const readyStage: DualMachineStageState = {
     candidate_state: 'ready',
     plan_state: 'blocked',
     authority_state: 'blocked',
-    blocked_reasons: ['a4_semantic_mapping_unpromoted'],
+    blocked_reasons: ['a4_hardware_audition_validation_pending'],
     recovery_actions: ['run_a4_mapping_gap_procedure'],
     last_error: null,
   },
   oxi_owns_sequencing: true,
   direct_oxi_control: false,
+};
+
+const showBankState: ShowBankState = {
+  schema_version: 'show-bank-workspace-v1',
+  revision: 1,
+  active_bank_id: null,
+  banks: [],
+  depth_presets: { small: 0.25, medium: 0.5, large: 0.75 },
 };
 
 // ---------- Tests: store actions ----------
@@ -182,6 +192,7 @@ describe('cockpit store — actions write each slice', () => {
     expect(state.connectionStatus).toBe('closed');
     expect(state.dualMachineStage).toBeNull();
     expect(state.operatorLog).toEqual([]);
+    expect(state.showBank).toBeNull();
     expect(INITIAL_STATE).toEqual({
       snapshot: null,
       previewCandidate: null,
@@ -202,6 +213,8 @@ describe('cockpit store — actions write each slice', () => {
       // Contract I1 — read-only, populated only by the handshake frame.
       // Full slice behaviour lives in tests/appVersion.test.ts.
       appVersion: null,
+      sessionStatusStale: true,
+      sessionGeneration: 0,
       connectionStatus: 'closed',
       operatorLog: [],
       connection: null,
@@ -212,6 +225,8 @@ describe('cockpit store — actions write each slice', () => {
       midiActivityPaused: false,
       libraryRecords: null,
       diagnostics: null,
+      showBank: null,
+      showBankStale: true,
     });
   });
 
@@ -360,6 +375,31 @@ describe('cockpit store — actions write each slice', () => {
     expect(store.getState().kitCaptures).toBe(captures);
   });
 
+  it('setShowBank replaces and clears the authoritative whole-state projection', () => {
+    const store = createCockpitStore();
+    store.getState().setShowBank(showBankState);
+    expect(store.getState().showBank).toBe(showBankState);
+    store.getState().setShowBank(null);
+    expect(store.getState().showBank).toBeNull();
+  });
+
+  it('keeps bank actions stale after reconnect until a new whole-state packet arrives', () => {
+    const store = createCockpitStore();
+    store.getState().setShowBank(showBankState);
+    expect(store.getState().showBankStale).toBe(true);
+    store.getState().setConnectionStatus('connected');
+    expect(store.getState().showBankStale).toBe(true);
+    store.getState().setShowBank(showBankState);
+    expect(store.getState().showBankStale).toBe(false);
+    store.getState().setConnectionStatus('closed');
+    expect(store.getState().showBankStale).toBe(true);
+    expect(store.getState().showBank).toBe(showBankState);
+    store.getState().setConnectionStatus('connected');
+    expect(store.getState().showBankStale).toBe(true);
+    store.getState().setShowBank(showBankState);
+    expect(store.getState().showBankStale).toBe(false);
+  });
+
   it('setProfile accepts a profile and null (no active profile)', () => {
     const store = createCockpitStore();
     store.getState().setProfile(profile);
@@ -388,6 +428,28 @@ describe('cockpit store — actions write each slice', () => {
     const store = createCockpitStore();
     store.getState().setSessionStatus(session);
     expect(store.getState().sessionStatus).toEqual(session);
+  });
+
+  it('requires fresh session hydration after each transport loss and advances its generation once', () => {
+    const store = createCockpitStore();
+    store.getState().setConnectionStatus('connected');
+    expect(store.getState().sessionStatusStale).toBe(true);
+    expect(store.getState().sessionGeneration).toBe(0);
+    store.getState().setSessionStatus(session);
+    expect(store.getState().sessionStatusStale).toBe(false);
+    expect(store.getState().sessionGeneration).toBe(1);
+    store.getState().setSessionStatus({ ...session, armed: true });
+    expect(store.getState().sessionGeneration).toBe(1);
+
+    const cached = store.getState().sessionStatus;
+    store.getState().setConnectionStatus('reconnecting');
+    store.getState().setConnectionStatus('connected');
+    expect(store.getState().sessionStatus).toBe(cached);
+    expect(store.getState().sessionStatusStale).toBe(true);
+    expect(store.getState().sessionGeneration).toBe(1);
+    store.getState().setSessionStatus(session);
+    expect(store.getState().sessionStatusStale).toBe(false);
+    expect(store.getState().sessionGeneration).toBe(2);
   });
 
   it('setConnectionStatus and appendOperatorLog write operator feedback slices', () => {
@@ -752,6 +814,15 @@ describe('bindClientToStore', () => {
     fire('kit_captures_changed', capturesEvent);
     expect(store.getState().kitCaptures).toEqual([]);
 
+    const showBankEvent: ShowBankChangedEvent = {
+      type: 'show_bank_changed',
+      show_bank: showBankState,
+    };
+    fire('show_bank_changed', showBankEvent);
+    expect(store.getState().showBank).toBe(showBankState);
+    fire('show_bank_changed', { type: 'show_bank_changed', show_bank: null });
+    expect(store.getState().showBank).toBeNull();
+
     const targetsEvent: MutationTargetsChangedEvent = {
       type: 'mutation_targets_changed',
       rytm_pad_targets: [1, 4],
@@ -828,7 +899,7 @@ describe('bindClientToStore', () => {
 
     // Unsubscribe should call client's individual unsubs.
     unbind();
-    expect(client.unsubCalls).toBe(17);
+    expect(client.unsubCalls).toBe(18);
   });
 
   it('falls back to the module-level singleton store when no store is provided', () => {

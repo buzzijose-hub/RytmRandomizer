@@ -42,6 +42,7 @@ CAPTURE_TIMEOUT_SECONDS: Final[float] = 120.0
 KitCaptureDeviceId = StageDeviceId
 KitParameterReadiness = Literal[
     "rytm_anchor_ready",
+    "filter1_frequency_offline_ready",
     "exact_kit_anchor_offsets_candidate",
 ]
 KitCaptureLayoutStatus = Literal["mutation_ready", "captured_mapping_pending"]
@@ -154,9 +155,11 @@ class KitCaptureLayoutItem:
 class KitCaptureResult:
     """Verified in-memory anchor for one received saved-kit frame.
 
-    ``snapshot`` retains the decoded exact payload for the upcoming
-    mutation bridge. It is deliberately omitted from :meth:`to_dict`, so raw
-    kit bytes never cross the WebSocket or get written to disk implicitly.
+    ``snapshot`` retains the decoded exact payload for mutation bridges and
+    ``frame`` retains the exact, already verified framed SysEx bytes for an
+    explicit operator keep/export action. Both are deliberately omitted from
+    :meth:`to_dict`, so raw kit bytes never cross the WebSocket or get written
+    to disk implicitly.
     """
 
     device_id: KitCaptureDeviceId
@@ -168,6 +171,7 @@ class KitCaptureResult:
     snapshot_layout: str
     parameter_readiness: KitParameterReadiness
     snapshot: KitCaptureSnapshot = field(repr=False, compare=False)
+    frame: bytes = field(repr=False, compare=False)
     round_trip_verified: bool = True
     input_only: bool = True
     sent_midi: bool = False
@@ -241,6 +245,7 @@ def _decode_capture_result(
             snapshot_layout="saved_kit",
             parameter_readiness="rytm_anchor_ready",
             snapshot=snapshot,
+            frame=bytes(frame),
             layout_items=layout_items,
         )
     if device_id == ANALOG_FOUR_DEVICE_ID and isinstance(snapshot, AnalogFourKitSnapshot):
@@ -248,8 +253,11 @@ def _decode_capture_result(
             KitCaptureLayoutItem(
                 index=index,
                 label=f"T{index}",
-                status="captured_mapping_pending",
-                detail="Exact saved-kit bytes captured; semantic parameter offsets pending mapping",
+                status="mutation_ready",
+                detail=(
+                    "Filter 1 Frequency is verified for offline captured-kit "
+                    "mutation; every other parameter remains mapping-blocked"
+                ),
             )
             for index in sorted(A4_LANE_POLICY.available_ids)
         )
@@ -261,11 +269,27 @@ def _decode_capture_result(
             frame_bytes=len(frame),
             captured_at=captured_at,
             snapshot_layout=snapshot.snapshot_layout,
-            parameter_readiness="exact_kit_anchor_offsets_candidate",
+            parameter_readiness="filter1_frequency_offline_ready",
             snapshot=snapshot,
+            frame=bytes(frame),
             layout_items=layout_items,
         )
     raise TypeError("registered capture decoder returned an unsupported snapshot type")
+
+
+def decode_kit_capture_frame(device_id: str, frame: bytes) -> KitCaptureResult:
+    """Decode one already-received saved-KIT frame without any MIDI I/O.
+
+    Show-pack import and recovery need the same strict codec round trip as a
+    live input-only capture, but must not enumerate or open a port.  This
+    deliberately small public bridge reuses the registered capture
+    capability and returns the ordinary in-memory result; it never persists
+    the frame and grants no output authority.
+    """
+
+    registered = resolve_saved_kit_capture_capability(device_id)
+    narrowed_device_id = narrow_kit_capture_device_id(device_id)
+    return _decode_capture_result(narrowed_device_id, registered, frame)
 
 
 class KitCaptureService:
@@ -360,11 +384,7 @@ class KitCaptureService:
                     )
                     raise ValueError("current-kit capture requires exactly one KIT SysEx frame")
                 try:
-                    result = _decode_capture_result(
-                        narrowed_device_id,
-                        registered,
-                        frames[0],
-                    )
+                    result = _decode_capture_result(narrowed_device_id, registered, frames[0])
                 except (RytmRandomizerError, TypeError, ValueError) as exc:
                     _record_capture_refusal(
                         "frame_validation_failed",
@@ -403,5 +423,6 @@ __all__ = [
     "KitCaptureSnapshot",
     "KitCaptureUnavailable",
     "SysexCaptureProvider",
+    "decode_kit_capture_frame",
     "narrow_kit_capture_device_id",
 ]

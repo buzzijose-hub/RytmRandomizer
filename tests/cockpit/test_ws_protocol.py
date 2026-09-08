@@ -54,11 +54,12 @@ def test_event_types_frozenset_lists_every_event_constant() -> None:
         protocol.EVENT_CONNECTION_CHANGED,
         protocol.EVENT_MIDI_ACTIVITY,
         protocol.EVENT_LIBRARY_CHANGED,
+        protocol.EVENT_SHOW_BANK_CHANGED,
     }
     assert individual <= protocol.EVENT_TYPES
     assert isinstance(protocol.EVENT_TYPES, frozenset)
-    # 16 cockpit events + 3 wizard events (folded in from wizard_protocol)
-    assert len(protocol.EVENT_TYPES) == 19
+    # 17 cockpit events + 3 wizard events (folded in from wizard_protocol)
+    assert len(protocol.EVENT_TYPES) == 20
 
 
 def test_command_types_frozenset_lists_every_command_constant() -> None:
@@ -101,11 +102,30 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
         protocol.COMMAND_LIBRARY_TAG,
         protocol.COMMAND_LIBRARY_DELETE,
         protocol.COMMAND_LIBRARY_IMPORT_CAPTURES,
+        protocol.COMMAND_SHOW_BANK_LIST,
+        protocol.COMMAND_SHOW_BANK_CREATE,
+        protocol.COMMAND_SHOW_BANK_SELECT,
+        protocol.COMMAND_SHOW_BANK_UPDATE,
+        protocol.COMMAND_SHOW_BANK_ADOPT_SOURCES,
+        protocol.COMMAND_SHOW_BANK_GENERATE_CANDIDATES,
+        protocol.COMMAND_SHOW_BANK_SELECT_CANDIDATE,
+        protocol.COMMAND_SHOW_BANK_MARK_FAVORITE,
+        protocol.COMMAND_SHOW_BANK_ATTEST_HARDWARE_SAVED,
+        protocol.COMMAND_SHOW_BANK_VERIFY_RECAPTURE,
+        protocol.COMMAND_SHOW_BANK_RUN_PREFLIGHT,
+        protocol.COMMAND_SHOW_BANK_RETURN_SOURCE,
+        protocol.COMMAND_SHOW_BANK_UPDATE_ENTRY,
+        protocol.COMMAND_SHOW_BANK_REORDER_ENTRIES,
+        protocol.COMMAND_SHOW_BANK_DUPLICATE_ENTRY,
+        protocol.COMMAND_SHOW_BANK_REMOVE_ENTRY,
+        protocol.COMMAND_SHOW_BANK_RETAIN_CAPTURE,
+        protocol.COMMAND_SHOW_BANK_IMPORT,
+        protocol.COMMAND_SHOW_BANK_EXPORT,
     }
     assert individual <= protocol.COMMAND_TYPES
     assert isinstance(protocol.COMMAND_TYPES, frozenset)
-    # 30 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
-    assert len(protocol.COMMAND_TYPES) == 38
+    # 49 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
+    assert len(protocol.COMMAND_TYPES) == 57
 
 
 def test_event_and_command_constants_match_spec_strings() -> None:
@@ -158,6 +178,26 @@ def test_event_and_command_constants_match_spec_strings() -> None:
     assert protocol.COMMAND_LIBRARY_TAG == "library_tag"
     assert protocol.COMMAND_LIBRARY_DELETE == "library_delete"
     assert protocol.COMMAND_LIBRARY_IMPORT_CAPTURES == "library_import_captures"
+    assert protocol.EVENT_SHOW_BANK_CHANGED == "show_bank_changed"
+    assert protocol.COMMAND_SHOW_BANK_LIST == "show_bank_list"
+    assert protocol.COMMAND_SHOW_BANK_CREATE == "show_bank_create"
+    assert protocol.COMMAND_SHOW_BANK_SELECT == "show_bank_select"
+    assert protocol.COMMAND_SHOW_BANK_UPDATE == "show_bank_update"
+    assert protocol.COMMAND_SHOW_BANK_ADOPT_SOURCES == "show_bank_adopt_sources"
+    assert protocol.COMMAND_SHOW_BANK_GENERATE_CANDIDATES == "show_bank_generate_candidates"
+    assert protocol.COMMAND_SHOW_BANK_SELECT_CANDIDATE == "show_bank_select_candidate"
+    assert protocol.COMMAND_SHOW_BANK_MARK_FAVORITE == "show_bank_mark_favorite"
+    assert protocol.COMMAND_SHOW_BANK_ATTEST_HARDWARE_SAVED == "show_bank_attest_hardware_saved"
+    assert protocol.COMMAND_SHOW_BANK_VERIFY_RECAPTURE == "show_bank_verify_recapture"
+    assert protocol.COMMAND_SHOW_BANK_RUN_PREFLIGHT == "show_bank_run_preflight"
+    assert protocol.COMMAND_SHOW_BANK_RETURN_SOURCE == "show_bank_return_source"
+    assert protocol.COMMAND_SHOW_BANK_UPDATE_ENTRY == "show_bank_update_entry"
+    assert protocol.COMMAND_SHOW_BANK_REORDER_ENTRIES == "show_bank_reorder_entries"
+    assert protocol.COMMAND_SHOW_BANK_DUPLICATE_ENTRY == "show_bank_duplicate_entry"
+    assert protocol.COMMAND_SHOW_BANK_REMOVE_ENTRY == "show_bank_remove_entry"
+    assert protocol.COMMAND_SHOW_BANK_RETAIN_CAPTURE == "show_bank_retain_capture"
+    assert protocol.COMMAND_SHOW_BANK_IMPORT == "show_bank_import"
+    assert protocol.COMMAND_SHOW_BANK_EXPORT == "show_bank_export"
 
 
 def test_event_and_command_typeset_are_disjoint() -> None:
@@ -169,6 +209,41 @@ def test_event_and_command_typeset_are_disjoint() -> None:
     """
 
     assert protocol.EVENT_TYPES.isdisjoint(protocol.COMMAND_TYPES)
+
+
+def test_show_bank_wire_shapes_keep_paths_and_status_server_authoritative() -> None:
+    event: protocol.ShowBankChangedEvent = {
+        "type": "show_bank_changed",
+        "show_bank": {"schema_version": 1, "revision": 3, "banks": []},
+    }
+    generate: protocol.ShowBankGenerateCandidatesCommand = {
+        "type": "show_bank_generate_candidates",
+        "bank_id": "warehouse-set",
+        "entry_id": "entry-001",
+        "expected_revision": 3,
+        "depth_preset": "small",
+        "depth": 0.25,
+        "seed": 42,
+        "profile_id": "industrial",
+        "candidate_count": 4,
+        "rytm_targets": [1, 2],
+        "rytm_locks": [2],
+        "a4_targets": [1, 4],
+        "a4_locks": [4],
+    }
+    export: protocol.ShowBankExportCommand = {
+        "type": "show_bank_export",
+        "bank_id": "warehouse-set",
+        "artifact_name": "warehouse-set-v1",
+        "expected_revision": 3,
+    }
+
+    assert event["show_bank"] is not None
+    assert event["show_bank"]["revision"] == 3
+    assert generate["rytm_targets"] == [1, 2]
+    assert export["artifact_name"] == "warehouse-set-v1"
+    assert "path" not in export
+    assert "status" not in generate
 
 
 # ---------------------------------------------------------------------------
@@ -239,7 +314,7 @@ def test_dual_machine_stage_and_lock_events_carry_whole_state() -> None:
                 "candidate_state": "none",
                 "plan_state": "blocked",
                 "authority_state": "blocked",
-                "blocked_reasons": ["a4_semantic_mapping_unpromoted"],
+                "blocked_reasons": ["a4_hardware_audition_validation_pending"],
                 "recovery_actions": ["run_a4_mapping_gap_procedure"],
                 "last_error": None,
             },
