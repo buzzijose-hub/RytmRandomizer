@@ -1,0 +1,958 @@
+<!doctype html>
+<html lang="en" data-page="fleet-dashboard">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RytmRandomizer fleet dashboard</title>
+<!--
+  Self-contained static page, served from the `releases` branch via GitHub
+  Pages (spec 2026-08-03-autoupdate-distribution.md section 6.1).
+
+  Zero build step. Zero backend. ZERO external requests: no CDN, no font
+  host, no analytics, no chart library. The only network call this page ever
+  makes is a same-directory fetch of `fleet-history.json` -- which is why the
+  page lives next to the data it charts (same origin, no CORS).
+
+  Data contract I5, frozen:
+    {date, counts: {version: {os: n}},
+     stable: {version, rollout_percent},
+     beta:   {version, rollout_percent}}
+
+  `counts` mirrors GitHub's release-asset `download_count`, which is a
+  CUMULATIVE counter. Per spec section 6 ("Deltas between snapshots are the
+  version histogram over time"), this page differences consecutive snapshots
+  before charting anything. Negative deltas -- which happen when a release is
+  re-cut and its assets are replaced -- are clamped to zero and surfaced as a
+  data-quality note rather than silently plotted as a dip.
+
+  Accessibility: no series is encoded by colour alone. Every version carries
+  a distinct dash pattern AND a glyph AND a text label; promote markers carry
+  a rule, a caret, and their own text. Both light and dark palettes are hand
+  picked for contrast against their own background.
+-->
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --ink: #14161a;
+    --ink-dim: #545a63;
+    --rule: #d2d6dd;
+    --grid: #e4e7ec;
+    --accent: #2f4b7c;
+    --marker: #8a3d0b;
+    --warn-bg: #fdf3e6;
+    --s1: #2f4b7c;
+    --s2: #b8500f;
+    --s3: #17706b;
+    --s4: #7a3183;
+    --s5: #4a5a20;
+    --s6: #8c2f45;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a;
+      --panel: #1c1f25;
+      --ink: #eef0f4;
+      --ink-dim: #a9b0bb;
+      --rule: #3a404a;
+      --grid: #2b2f37;
+      --accent: #9db8e8;
+      --marker: #f0a86a;
+      --warn-bg: #2a2118;
+      --s1: #9db8e8;
+      --s2: #f0a86a;
+      --s3: #6cd0c6;
+      --s4: #d0a3e0;
+      --s5: #b7cf72;
+      --s6: #f09aae;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 1.5rem 1.25rem 3rem;
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  main { max-width: 64rem; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; letter-spacing: -0.01em; }
+  h2 { font-size: 1.05rem; margin: 0 0 .35rem; letter-spacing: -0.005em; }
+  .sub { color: var(--ink-dim); margin: 0 0 1.5rem; }
+  .lede { color: var(--ink-dim); margin: 0 0 1rem; font-size: .93rem; }
+  section {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 1.1rem 1.15rem;
+    margin-bottom: 1.25rem;
+  }
+  #estimator-caveat {
+    border-left: 4px solid var(--accent);
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--accent);
+    border-radius: 6px;
+    padding: .9rem 1.05rem;
+    margin: 0 0 1.25rem;
+    color: var(--ink);
+  }
+  #estimator-caveat h2 { font-size: 1rem; margin: 0 0 .4rem; }
+  #estimator-caveat p { margin: 0 0 .6rem; }
+  #estimator-caveat p:last-child { margin-bottom: 0; }
+  #estimator-caveat .formula {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .9em;
+    display: block;
+    margin: .55rem 0;
+    padding: .5rem .65rem;
+    background: var(--bg);
+    border-radius: 5px;
+  }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  caption { text-align: left; color: var(--ink-dim); padding-bottom: .55rem; }
+  th, td { text-align: right; padding: .4rem .6rem; border-bottom: 1px solid var(--grid); }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { border-bottom: 2px solid var(--rule); font-weight: 600; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.raw { color: var(--ink-dim); }
+  .chan { font-size: .85rem; color: var(--ink-dim); font-weight: 400; }
+  .swatch {
+    display: inline-block; width: 1.6rem; height: 0; vertical-align: middle;
+    border-top-width: 3px; margin-right: .45rem;
+  }
+  ul.legend { list-style: none; margin: .9rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: .35rem 1.25rem; }
+  ul.legend li { white-space: nowrap; }
+  .chart-scroll { overflow-x: auto; }
+  svg { display: block; max-width: 100%; height: auto; }
+  .empty { color: var(--ink-dim); font-style: italic; margin: 0; }
+  .note { color: var(--ink-dim); margin: .8rem 0 0; font-size: .9rem; }
+  .anomaly {
+    background: var(--warn-bg);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: .55rem .7rem;
+    margin: .8rem 0 0;
+    color: var(--ink);
+    font-size: .9rem;
+  }
+  footer { color: var(--ink-dim); font-size: .88rem; max-width: 64rem; margin: 0 auto; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .92em; }
+</style>
+</head>
+<body>
+<main>
+  <h1>RytmRandomizer fleet dashboard</h1>
+  <p class="sub">Which versions the installed fleet is running, per OS, and how each rollout is progressing.</p>
+
+  <div id="estimator-caveat">
+    <h2>What these numbers actually are</h2>
+    <p>
+      Every figure on this page comes from one measurement: an anonymous
+      <strong>check-in</strong>. When the app checks for an update it also
+      fetches a tiny per-version, per-OS marker file from the release, and
+      GitHub increments that file&rsquo;s download counter. Nothing else is
+      sent &mdash; no identifier, no machine name, no telemetry payload.
+    </p>
+    <p>
+      Those counters are <strong>cumulative</strong>, so this page charts the
+      <strong>difference between consecutive snapshots</strong>: how many
+      check-ins arrived during each interval. To turn that into a device
+      figure it divides by how often one device is expected to check in
+      &mdash; once at launch and once every 4 hours while running, about
+      <span id="checks-per-day"></span> times a day:
+    </p>
+    <span class="formula" id="estimator-formula">estimated devices = check-ins in the interval &divide; expected check-ins per device in the interval</span>
+    <p>
+      That makes every device number an <strong>estimate, not a count</strong>.
+      It is <strong>not a count of unique devices</strong>: a machine left
+      running all day is indistinguishable from several machines used briefly,
+      and a machine that is switched off contributes nothing. It cannot tell
+      you that any particular machine is on any particular version. The raw
+      check-in totals are the ground truth and are shown beside every estimate
+      on this page.
+    </p>
+  </div>
+
+  <section id="composition" aria-labelledby="composition-heading">
+    <h2 id="composition-heading">Fleet composition now</h2>
+    <p class="lede">Estimated devices per version in the most recent interval, split by OS. Raw check-ins are shown alongside.</p>
+    <div id="composition-body"></div>
+  </section>
+
+  <section id="adoption" aria-labelledby="adoption-heading">
+    <h2 id="adoption-heading">Rollout adoption over time</h2>
+    <p class="lede">Estimated devices per version across every snapshot interval, with a marker wherever a channel changed its target version or its rollout percent.</p>
+    <div id="adoption-body"></div>
+  </section>
+
+  <section id="promotions" aria-labelledby="promotions-heading">
+    <h2 id="promotions-heading">Rollout promotions</h2>
+    <p class="lede">Every recorded channel change &mdash; the events the markers above point at.</p>
+    <div id="promotions-body"></div>
+  </section>
+</main>
+
+<footer>
+  <p>Source: <code>fleet-history.json</code>, committed alongside this page on the
+  <code>releases</code> branch and appended by the scheduled fleet-snapshot workflow.
+  This page loads no third-party scripts, styles, or fonts.</p>
+</footer>
+
+<script>
+(function (global) {
+  "use strict";
+
+  /* ---------------------------------------------------------------- *
+   * Constants                                                         *
+   * ---------------------------------------------------------------- */
+
+  /* Spec section 0 gate D2: a running client checks at launch and every
+     4 hours thereafter. 24 / 4 = 6 expected check-ins per device per day.
+     This is the divisor in the estimator; it is stated on the page. */
+  var CHECK_INTERVAL_HOURS = 4;
+  var EXPECTED_CHECKS_PER_DEVICE_PER_DAY = 24 / CHECK_INTERVAL_HOURS;
+
+  var SERIES_VARS = ["--s1", "--s2", "--s3", "--s4", "--s5", "--s6"];
+  var DASHES = ["", "6 3", "2 3", "9 3 2 3", "4 2 1 2", "12 4"];
+  var GLYPHS = ["●", "■", "▲", "◆", "★", "✖"];
+  var EMPTY_MESSAGE = "No data yet.";
+  var MS_PER_DAY = 86400000;
+
+  /* ---------------------------------------------------------------- *
+   * Parsing / normalisation                                           *
+   * ---------------------------------------------------------------- */
+
+  function isPlainObject(value) {
+    return value !== null && typeof value === "object" && !Array.isArray(value);
+  }
+
+  function isChannel(value) {
+    return (
+      isPlainObject(value) &&
+      typeof value.version === "string" &&
+      typeof value.rollout_percent === "number" &&
+      isFinite(value.rollout_percent)
+    );
+  }
+
+  /* Accept only well-formed I5 entries; anything else is dropped rather than
+     thrown on, so one malformed row can never blank the whole page. */
+  function normalizeHistory(raw) {
+    if (!Array.isArray(raw)) {
+      return [];
+    }
+    var out = [];
+    for (var i = 0; i < raw.length; i += 1) {
+      var row = raw[i];
+      if (!isPlainObject(row) || typeof row.date !== "string" || !isPlainObject(row.counts)) {
+        continue;
+      }
+      var counts = {};
+      var versions = Object.keys(row.counts);
+      for (var v = 0; v < versions.length; v += 1) {
+        var perOs = row.counts[versions[v]];
+        if (!isPlainObject(perOs)) {
+          continue;
+        }
+        var kept = {};
+        var oses = Object.keys(perOs);
+        for (var o = 0; o < oses.length; o += 1) {
+          var n = perOs[oses[o]];
+          if (typeof n === "number" && isFinite(n) && n >= 0) {
+            kept[oses[o]] = n;
+          }
+        }
+        counts[versions[v]] = kept;
+      }
+      out.push({
+        date: row.date,
+        counts: counts,
+        stable: isChannel(row.stable) ? row.stable : null,
+        beta: isChannel(row.beta) ? row.beta : null
+      });
+    }
+    out.sort(function (a, b) {
+      return a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
+    });
+    return out;
+  }
+
+  function collectVersions(history) {
+    var seen = {};
+    var order = [];
+    for (var i = 0; i < history.length; i += 1) {
+      var versions = Object.keys(history[i].counts);
+      for (var v = 0; v < versions.length; v += 1) {
+        if (!Object.prototype.hasOwnProperty.call(seen, versions[v])) {
+          seen[versions[v]] = true;
+          order.push(versions[v]);
+        }
+      }
+    }
+    order.sort();
+    return order;
+  }
+
+  function collectOperatingSystems(history) {
+    var seen = {};
+    var order = [];
+    for (var i = 0; i < history.length; i += 1) {
+      var counts = history[i].counts;
+      var versions = Object.keys(counts);
+      for (var v = 0; v < versions.length; v += 1) {
+        var oses = Object.keys(counts[versions[v]]);
+        for (var o = 0; o < oses.length; o += 1) {
+          if (!Object.prototype.hasOwnProperty.call(seen, oses[o])) {
+            seen[oses[o]] = true;
+            order.push(oses[o]);
+          }
+        }
+      }
+    }
+    order.sort();
+    return order;
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Estimator (spec section 6.1)                                      *
+   * ---------------------------------------------------------------- */
+
+  /* Snapshot rows carry cumulative download counters. The number that means
+     something is the DELTA between two snapshots: check-ins that arrived in
+     that interval. Length of the interval matters, because the snapshot cron
+     may miss a run -- so the divisor scales with elapsed days. */
+  function intervalDays(previousDate, currentDate) {
+    var a = Date.parse(previousDate + "T00:00:00Z");
+    var b = Date.parse(currentDate + "T00:00:00Z");
+    if (isNaN(a) || isNaN(b)) {
+      return 1;
+    }
+    var days = (b - a) / MS_PER_DAY;
+    return days > 0 ? days : 1;
+  }
+
+  function expectedChecksPerDevice(days) {
+    return days * EXPECTED_CHECKS_PER_DEVICE_PER_DAY;
+  }
+
+  function estimateDevices(checkIns, days) {
+    var divisor = expectedChecksPerDevice(days);
+    if (divisor <= 0) {
+      return 0;
+    }
+    return checkIns / divisor;
+  }
+
+  /* Difference consecutive snapshots into per-interval check-ins.
+
+     Returns one interval per pair of adjacent rows, so a history of N rows
+     yields N-1 intervals. A single row yields none: one cumulative reading
+     carries no information about rate, and inventing one by treating the
+     total as an interval would overstate the fleet by however long the
+     counters have been running. That is the honest answer, and the empty
+     state says so rather than drawing a misleading bar.
+
+     A negative delta means the counter was reset (a re-cut release replaces
+     its assets). It is clamped to zero and recorded as an anomaly so the
+     reader is told, rather than shown a phantom dip. */
+  function buildIntervals(history) {
+    var intervals = [];
+    var anomalies = [];
+    for (var i = 1; i < history.length; i += 1) {
+      var previous = history[i - 1];
+      var current = history[i];
+      var days = intervalDays(previous.date, current.date);
+      var deltas = {};
+      var versions = Object.keys(current.counts);
+      for (var v = 0; v < versions.length; v += 1) {
+        var version = versions[v];
+        var nowPerOs = current.counts[version];
+        var thenPerOs = previous.counts[version] || {};
+        var perOs = {};
+        var oses = Object.keys(nowPerOs);
+        for (var o = 0; o < oses.length; o += 1) {
+          var osName = oses[o];
+          var raw = nowPerOs[osName] - (thenPerOs[osName] || 0);
+          if (raw < 0) {
+            anomalies.push({ date: current.date, version: version, os: osName });
+            raw = 0;
+          }
+          perOs[osName] = raw;
+        }
+        deltas[version] = perOs;
+      }
+      intervals.push({
+        date: current.date,
+        from_date: previous.date,
+        days: days,
+        check_ins: deltas,
+        stable: current.stable,
+        beta: current.beta
+      });
+    }
+    return { intervals: intervals, anomalies: anomalies };
+  }
+
+  function checkInsFor(interval, version) {
+    var perOs = interval.check_ins[version];
+    if (!perOs) {
+      return 0;
+    }
+    var sum = 0;
+    var oses = Object.keys(perOs);
+    for (var o = 0; o < oses.length; o += 1) {
+      sum += perOs[oses[o]];
+    }
+    return sum;
+  }
+
+  function devicesFor(interval, version) {
+    return estimateDevices(checkInsFor(interval, version), interval.days);
+  }
+
+  function devicesForOs(interval, version, osName) {
+    var perOs = interval.check_ins[version];
+    var value = perOs && perOs[osName] ? perOs[osName] : 0;
+    return estimateDevices(value, interval.days);
+  }
+
+  /* One decimal place. Device estimates are fractional by construction and
+     rounding them to whole machines would dress an estimate up as a count. */
+  function formatDevices(value) {
+    return (Math.round(value * 10) / 10).toFixed(1);
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Series styling -- never colour alone                              *
+   * ---------------------------------------------------------------- */
+
+  function styleIndex(version, versions) {
+    var at = versions.indexOf(version);
+    return at < 0 ? 0 : at;
+  }
+
+  function seriesColor(version, versions) {
+    return "var(" + SERIES_VARS[styleIndex(version, versions) % SERIES_VARS.length] + ")";
+  }
+
+  function seriesDash(version, versions) {
+    return DASHES[styleIndex(version, versions) % DASHES.length];
+  }
+
+  function seriesGlyph(version, versions) {
+    return GLYPHS[styleIndex(version, versions) % GLYPHS.length];
+  }
+
+  function esc(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function channelLabelFor(interval, version) {
+    var labels = [];
+    if (interval.stable && interval.stable.version === version) {
+      labels.push("stable @ " + interval.stable.rollout_percent + "%");
+    }
+    if (interval.beta && interval.beta.version === version) {
+      labels.push("beta @ " + interval.beta.rollout_percent + "%");
+    }
+    return labels.join(", ");
+  }
+
+  function anomalyNote(anomalies) {
+    if (anomalies.length === 0) {
+      return "";
+    }
+    var names = {};
+    for (var i = 0; i < anomalies.length; i += 1) {
+      names[anomalies[i].version] = true;
+    }
+    return (
+      '<p class="anomaly" data-anomaly-count="' + anomalies.length + '">' +
+      "A download counter went backwards for " + esc(Object.keys(names).sort().join(", ")) +
+      ". That happens when a release is re-cut and its assets are replaced. " +
+      "The affected intervals are shown as zero rather than as a dip.</p>"
+    );
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Fleet composition now -- stacked bars, version x OS               *
+   * ---------------------------------------------------------------- */
+
+  function renderComposition(history) {
+    var built = buildIntervals(history);
+    var intervals = built.intervals;
+    if (intervals.length === 0) {
+      return '<p class="empty">' + EMPTY_MESSAGE + "</p>";
+    }
+    var latest = intervals[intervals.length - 1];
+    var allVersions = collectVersions(history);
+    var versions = allVersions.filter(function (version) {
+      return checkInsFor(latest, version) > 0;
+    });
+    if (versions.length === 0) {
+      /* Nothing moved in the last interval. If that is because a counter was
+         reset, saying only "no data yet" would hide the reason -- so the
+         anomaly note rides along with the empty state. */
+      return '<p class="empty">' + EMPTY_MESSAGE + "</p>" + anomalyNote(built.anomalies);
+    }
+    var oses = collectOperatingSystems(history);
+
+    var grandCheckIns = 0;
+    var peak = 0;
+    for (var g = 0; g < versions.length; g += 1) {
+      var total = checkInsFor(latest, versions[g]);
+      grandCheckIns += total;
+      if (total > peak) {
+        peak = total;
+      }
+    }
+    var peakDevices = estimateDevices(peak, latest.days);
+    var grandDevices = estimateDevices(grandCheckIns, latest.days);
+
+    /* --- stacked bar chart, one bar per version, stacked by OS --- */
+    var rowH = 34;
+    var gap = 10;
+    var labelW = 150;
+    var padR = 96;
+    var padT = 8;
+    var barW = 420;
+    var width = labelW + barW + padR;
+    var height = padT + versions.length * (rowH + gap);
+    var bars = "";
+
+    for (var b = 0; b < versions.length; b += 1) {
+      var version = versions[b];
+      var y = padT + b * (rowH + gap);
+      var x = labelW;
+      bars +=
+        '<g class="composition-bar" data-version="' + esc(version) +
+        '" data-devices="' + formatDevices(devicesFor(latest, version)) +
+        '" data-check-ins="' + checkInsFor(latest, version) + '">';
+      bars +=
+        '<text x="' + (labelW - 10) + '" y="' + (y + rowH / 2 + 4) +
+        '" text-anchor="end" font-size="12" fill="var(--ink)">' +
+        seriesGlyph(version, allVersions) + " " + esc(version) + "</text>";
+
+      for (var o = 0; o < oses.length; o += 1) {
+        var osName = oses[o];
+        var perOs = latest.check_ins[version] || {};
+        var osCheckIns = perOs[osName] || 0;
+        if (osCheckIns <= 0) {
+          continue;
+        }
+        var segW = peak > 0 ? (osCheckIns / peak) * barW : 0;
+        /* Each OS segment gets its own opacity step so the split is
+           readable without relying on a second colour dimension; the
+           <title> names the OS for pointer and screen-reader users. */
+        var shade = 1 - o * (0.55 / Math.max(1, oses.length - 1));
+        bars +=
+          '<rect class="os-segment" data-version="' + esc(version) +
+          '" data-os="' + esc(osName) +
+          '" data-check-ins="' + osCheckIns +
+          '" x="' + x.toFixed(1) + '" y="' + y + '" width="' + segW.toFixed(1) +
+          '" height="' + rowH + '" fill="' + seriesColor(version, allVersions) +
+          '" fill-opacity="' + shade.toFixed(2) +
+          '" stroke="var(--panel)" stroke-width="1"><title>' +
+          esc(version + " on " + osName + ": " + osCheckIns + " check-ins ≈ " +
+            formatDevices(devicesForOs(latest, version, osName)) + " devices") +
+          "</title></rect>";
+        x += segW;
+      }
+
+      bars +=
+        '<text x="' + (x + 8).toFixed(1) + '" y="' + (y + rowH / 2 + 4) +
+        '" font-size="12" fill="var(--ink-dim)">≈ ' +
+        esc(formatDevices(devicesFor(latest, version))) + " devices</text>";
+      bars += "</g>";
+    }
+
+    var chart =
+      '<div class="chart-scroll"><svg role="img" viewBox="0 0 ' + width + " " + height +
+      '" width="' + width + '" height="' + height +
+      '" aria-label="Estimated devices per version in the latest interval, each bar stacked by operating system">' +
+      bars + "</svg></div>";
+
+    /* --- OS legend for the stack shading --- */
+    var osLegend = "";
+    for (var ol = 0; ol < oses.length; ol += 1) {
+      var opacity = 1 - ol * (0.55 / Math.max(1, oses.length - 1));
+      osLegend +=
+        '<li data-os="' + esc(oses[ol]) + '"><span class="swatch" style="border-top-style:solid;border-top-color:' +
+        "var(--ink-dim);opacity:" + opacity.toFixed(2) + '"></span>' + esc(oses[ol]) + "</li>";
+    }
+
+    /* --- the numbers table: estimate and raw side by side --- */
+    var head = "";
+    for (var h = 0; h < oses.length; h += 1) {
+      head += '<th scope="col">' + esc(oses[h]) + "</th>";
+    }
+    var body = "";
+    for (var i = 0; i < versions.length; i += 1) {
+      var rowVersion = versions[i];
+      var channel = channelLabelFor(latest, rowVersion);
+      var tr = '<tr data-version="' + esc(rowVersion) + '">';
+      tr += '<th scope="row">' + seriesGlyph(rowVersion, allVersions) + " " + esc(rowVersion);
+      if (channel !== "") {
+        tr += ' <span class="chan">(' + esc(channel) + ")</span>";
+      }
+      tr += "</th>";
+      for (var t = 0; t < oses.length; t += 1) {
+        var cellPerOs = latest.check_ins[rowVersion] || {};
+        var cellRaw = cellPerOs[oses[t]] || 0;
+        tr +=
+          '<td data-os="' + esc(oses[t]) + '">' +
+          esc(formatDevices(devicesForOs(latest, rowVersion, oses[t]))) +
+          ' <span class="chan">(' + cellRaw + ")</span></td>";
+      }
+      var rowCheckIns = checkInsFor(latest, rowVersion);
+      var rowDevices = devicesFor(latest, rowVersion);
+      var share = grandCheckIns === 0 ? 0 : Math.round((rowCheckIns / grandCheckIns) * 1000) / 10;
+      tr += "<td>" + esc(formatDevices(rowDevices)) + "</td>";
+      tr += '<td class="raw">' + rowCheckIns + "</td>";
+      tr += "<td>" + share + "%</td></tr>";
+      body += tr;
+    }
+
+    var table =
+      '<table><caption>Interval ' + esc(latest.from_date) + " → " + esc(latest.date) +
+      " (" + esc(String(latest.days)) + " day" + (latest.days === 1 ? "" : "s") +
+      "). Each OS cell shows the estimated devices with the raw check-ins in parentheses. " +
+      "Fleet total ≈ " + esc(formatDevices(grandDevices)) + " devices from " +
+      grandCheckIns + " check-ins.</caption>" +
+      '<thead><tr><th scope="col">Version</th>' + head +
+      '<th scope="col">Est. devices</th><th scope="col">Raw check-ins</th>' +
+      '<th scope="col">Share</th></tr></thead>' +
+      "<tbody>" + body + "</tbody></table>";
+
+    return (
+      chart +
+      '<ul class="legend" id="composition-os-legend">' + osLegend + "</ul>" +
+      table +
+      anomalyNote(built.anomalies)
+    );
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Promote markers                                                   *
+   * ---------------------------------------------------------------- */
+
+  /* A promotion is any snapshot at which a channel's target version OR its
+     rollout_percent differs from the previous snapshot. Those are the moments
+     that turn a static picture into a monitored rollout: they are exactly
+     where you expect the adoption curve to bend. */
+  function detectPromotions(history) {
+    var out = [];
+    var channels = ["stable", "beta"];
+    for (var c = 0; c < channels.length; c += 1) {
+      var channel = channels[c];
+      var previous = null;
+      for (var i = 0; i < history.length; i += 1) {
+        var now = history[i][channel];
+        if (!isChannel(now)) {
+          continue;
+        }
+        if (previous !== null &&
+            (previous.version !== now.version || previous.rollout_percent !== now.rollout_percent)) {
+          out.push({
+            channel: channel,
+            date: history[i].date,
+            version: now.version,
+            rollout_percent: now.rollout_percent,
+            from_version: previous.version,
+            from_rollout_percent: previous.rollout_percent
+          });
+        }
+        previous = now;
+      }
+    }
+    out.sort(function (a, b) {
+      if (a.date !== b.date) {
+        return a.date < b.date ? -1 : 1;
+      }
+      return a.channel < b.channel ? -1 : a.channel > b.channel ? 1 : 0;
+    });
+    return out;
+  }
+
+  function promotionLabel(promotion) {
+    if (promotion.from_version !== promotion.version) {
+      return promotion.channel + " → " + promotion.version + " @ " + promotion.rollout_percent + "%";
+    }
+    return (
+      promotion.channel + " " + promotion.version + " " +
+      promotion.from_rollout_percent + "% → " + promotion.rollout_percent + "%"
+    );
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Adoption curve                                                    *
+   * ---------------------------------------------------------------- */
+
+  function renderAdoption(history) {
+    var built = buildIntervals(history);
+    var intervals = built.intervals;
+    if (intervals.length === 0) {
+      return '<p class="empty">' + EMPTY_MESSAGE + "</p>";
+    }
+    var versions = collectVersions(history);
+    if (versions.length === 0) {
+      return '<p class="empty">' + EMPTY_MESSAGE + "</p>" + anomalyNote(built.anomalies);
+    }
+
+    var padL = 62;
+    var padR = 20;
+    var padT = 16;
+    var padB = 96;
+    var plotW = Math.max(360, (intervals.length - 1) * 82);
+    var plotH = 240;
+    var width = padL + plotW + padR;
+    var height = padT + plotH + padB;
+
+    var peak = 1;
+    for (var i = 0; i < intervals.length; i += 1) {
+      for (var v = 0; v < versions.length; v += 1) {
+        var value = devicesFor(intervals[i], versions[v]);
+        if (value > peak) {
+          peak = value;
+        }
+      }
+    }
+
+    function xAt(index) {
+      if (intervals.length === 1) {
+        return padL + plotW / 2;
+      }
+      return padL + (index / (intervals.length - 1)) * plotW;
+    }
+    function yAt(value) {
+      return padT + plotH - (value / peak) * plotH;
+    }
+
+    /* index the intervals by their end date, so a promotion recorded on a
+       snapshot date lands on that snapshot's point on the x axis */
+    var indexByDate = {};
+    for (var ix = 0; ix < intervals.length; ix += 1) {
+      indexByDate[intervals[ix].date] = ix;
+    }
+
+    var svg = "";
+    var ticks = 4;
+    for (var g = 0; g <= ticks; g += 1) {
+      var tickValue = (peak / ticks) * g;
+      var ty = yAt(tickValue);
+      svg +=
+        '<line x1="' + padL + '" y1="' + ty.toFixed(1) + '" x2="' + (padL + plotW) +
+        '" y2="' + ty.toFixed(1) + '" stroke="var(--grid)" stroke-width="1"/>';
+      svg +=
+        '<text x="' + (padL - 8) + '" y="' + (ty + 4).toFixed(1) +
+        '" text-anchor="end" font-size="11" fill="var(--ink-dim)">' +
+        esc(formatDevices(tickValue)) + "</text>";
+    }
+    svg +=
+      '<text x="' + (padL - 8) + '" y="' + (padT - 4) +
+      '" text-anchor="end" font-size="10" fill="var(--ink-dim)">devices</text>';
+
+    for (var d = 0; d < intervals.length; d += 1) {
+      svg +=
+        '<text x="' + xAt(d).toFixed(1) + '" y="' + (padT + plotH + 16) +
+        '" text-anchor="middle" font-size="10" fill="var(--ink-dim)">' +
+        esc(intervals[d].date.slice(5)) + "</text>";
+    }
+
+    for (var s = 0; s < versions.length; s += 1) {
+      var version = versions[s];
+      var points = [];
+      for (var p = 0; p < intervals.length; p += 1) {
+        points.push(xAt(p).toFixed(1) + "," + yAt(devicesFor(intervals[p], version)).toFixed(1));
+      }
+      var dash = seriesDash(version, versions);
+      svg +=
+        '<polyline class="series" data-version="' + esc(version) + '" fill="none" stroke="' +
+        seriesColor(version, versions) + '" stroke-width="2.5"' +
+        (dash === "" ? "" : ' stroke-dasharray="' + dash + '"') +
+        ' points="' + points.join(" ") + '"><title>' + esc(version) + "</title></polyline>";
+      for (var q = 0; q < intervals.length; q += 1) {
+        var qy = yAt(devicesFor(intervals[q], version));
+        svg +=
+          '<circle cx="' + xAt(q).toFixed(1) + '" cy="' + qy.toFixed(1) +
+          '" r="2.6" fill="' + seriesColor(version, versions) + '"><title>' +
+          esc(version + " " + intervals[q].date + ": ≈ " +
+            formatDevices(devicesFor(intervals[q], version)) + " devices, " +
+            checkInsFor(intervals[q], version) + " check-ins") +
+          "</title></circle>";
+      }
+    }
+
+    var promotions = detectPromotions(history);
+    var drawn = 0;
+    for (var m = 0; m < promotions.length; m += 1) {
+      var promotion = promotions[m];
+      if (!Object.prototype.hasOwnProperty.call(indexByDate, promotion.date)) {
+        /* a promotion recorded on the very first snapshot has no interval to
+           sit on; it is still listed in the promotions table below */
+        continue;
+      }
+      var xm = xAt(indexByDate[promotion.date]);
+      var stagger = (drawn % 2) * 14;
+      drawn += 1;
+      svg +=
+        '<g class="promote-marker" data-channel="' + esc(promotion.channel) +
+        '" data-date="' + esc(promotion.date) +
+        '" data-version="' + esc(promotion.version) +
+        '" data-rollout-percent="' + promotion.rollout_percent + '">';
+      svg +=
+        '<line x1="' + xm.toFixed(1) + '" y1="' + padT + '" x2="' + xm.toFixed(1) +
+        '" y2="' + (padT + plotH) +
+        '" stroke="var(--marker)" stroke-width="1.5" stroke-dasharray="3 3"/>';
+      svg +=
+        '<polygon points="' + (xm - 5).toFixed(1) + "," + (padT + plotH + 28 + stagger) + " " +
+        (xm + 5).toFixed(1) + "," + (padT + plotH + 28 + stagger) + " " +
+        xm.toFixed(1) + "," + (padT + plotH + 36 + stagger) + '" fill="var(--marker)"/>';
+      svg +=
+        '<text x="' + xm.toFixed(1) + '" y="' + (padT + plotH + 48 + stagger) +
+        '" text-anchor="middle" font-size="10" fill="var(--marker)">' +
+        esc(promotionLabel(promotion)) + "</text>";
+      svg += "<title>" + esc(promotion.date + " — " + promotionLabel(promotion)) + "</title>";
+      svg += "</g>";
+    }
+
+    var legend = "";
+    for (var l = 0; l < versions.length; l += 1) {
+      var lv = versions[l];
+      var ldash = seriesDash(lv, versions);
+      legend +=
+        '<li data-version="' + esc(lv) + '"><span class="swatch" style="border-top-color:' +
+        seriesColor(lv, versions) + ";border-top-style:" + (ldash === "" ? "solid" : "dashed") +
+        '"></span>' + seriesGlyph(lv, versions) + " " + esc(lv) + "</li>";
+    }
+
+    var markerNote =
+      drawn === 0
+        ? "No rollout promotions fall inside this window."
+        : "Dashed vertical rules mark rollout promotions — the snapshots at which a channel changed its target version or its rollout percent.";
+
+    return (
+      '<div class="chart-scroll"><svg role="img" viewBox="0 0 ' + width + " " + height +
+      '" width="' + width + '" height="' + height +
+      '" aria-label="Estimated devices per version over time, with rollout promotion markers">' +
+      svg + "</svg></div>" +
+      '<ul class="legend">' + legend + "</ul>" +
+      '<p class="note">' + markerNote + " Each point is check-ins in that interval divided by " +
+      esc(String(EXPECTED_CHECKS_PER_DEVICE_PER_DAY)) +
+      " expected check-ins per device per day; hover a point for the raw count.</p>" +
+      anomalyNote(built.anomalies)
+    );
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Promotion log                                                     *
+   * ---------------------------------------------------------------- */
+
+  function renderPromotions(history) {
+    var promotions = detectPromotions(history);
+    if (promotions.length === 0) {
+      return '<p class="empty">' + EMPTY_MESSAGE + "</p>";
+    }
+    var rows = "";
+    for (var i = 0; i < promotions.length; i += 1) {
+      var promotion = promotions[i];
+      rows +=
+        '<tr data-channel="' + esc(promotion.channel) +
+        '" data-date="' + esc(promotion.date) +
+        '" data-version="' + esc(promotion.version) +
+        '" data-rollout-percent="' + promotion.rollout_percent +
+        '"><th scope="row">' + esc(promotion.date) + "</th><td>" + esc(promotion.channel) +
+        "</td><td>" + esc(promotion.from_version) + " @ " + promotion.from_rollout_percent +
+        "%</td><td>" + esc(promotion.version) + " @ " + promotion.rollout_percent +
+        "%</td></tr>";
+    }
+    return (
+      "<table><caption>Every channel change in the recorded window.</caption>" +
+      '<thead><tr><th scope="col">Date</th><th scope="col">Channel</th>' +
+      '<th scope="col">From</th><th scope="col">To</th></tr></thead>' +
+      "<tbody>" + rows + "</tbody></table>"
+    );
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Mount                                                             *
+   * ---------------------------------------------------------------- */
+
+  function renderAll(raw) {
+    var history = normalizeHistory(raw);
+    return {
+      composition: renderComposition(history),
+      adoption: renderAdoption(history),
+      promotions: renderPromotions(history)
+    };
+  }
+
+  function mount(doc, raw) {
+    var parts = renderAll(raw);
+    var targets = {
+      "composition-body": parts.composition,
+      "adoption-body": parts.adoption,
+      "promotions-body": parts.promotions
+    };
+    var ids = Object.keys(targets);
+    for (var i = 0; i < ids.length; i += 1) {
+      var node = doc.getElementById(ids[i]);
+      if (node) {
+        node.innerHTML = targets[ids[i]];
+      }
+    }
+    /* The caveat quotes the cadence divisor; keep it derived from the same
+       constant the estimator uses so the two can never drift apart. */
+    var cadence = doc.getElementById("checks-per-day");
+    if (cadence) {
+      cadence.textContent = String(EXPECTED_CHECKS_PER_DEVICE_PER_DAY);
+    }
+  }
+
+  var api = {
+    EMPTY_MESSAGE: EMPTY_MESSAGE,
+    EXPECTED_CHECKS_PER_DEVICE_PER_DAY: EXPECTED_CHECKS_PER_DEVICE_PER_DAY,
+    normalizeHistory: normalizeHistory,
+    collectVersions: collectVersions,
+    collectOperatingSystems: collectOperatingSystems,
+    buildIntervals: buildIntervals,
+    estimateDevices: estimateDevices,
+    detectPromotions: detectPromotions,
+    promotionLabel: promotionLabel,
+    renderComposition: renderComposition,
+    renderAdoption: renderAdoption,
+    renderPromotions: renderPromotions,
+    renderAll: renderAll,
+    mount: mount
+  };
+
+  global.fleetDashboard = api;
+  if (typeof module === "object" && module && module.exports) {
+    module.exports = api;
+  }
+
+  if (typeof document !== "undefined" && typeof fetch === "function") {
+    fetch("fleet-history.json", { cache: "no-cache" })
+      .then(function (response) {
+        if (!response.ok) {
+          throw new Error("fleet-history.json unavailable");
+        }
+        return response.json();
+      })
+      .then(function (raw) {
+        mount(document, raw);
+      })
+      .catch(function () {
+        mount(document, []);
+      });
+  }
+})(typeof globalThis === "object" ? globalThis : this);
+</script>
+</body>
+</html>
