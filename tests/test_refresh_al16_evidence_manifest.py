@@ -56,20 +56,29 @@ def test_refuses_to_run_without_the_capture_flag() -> None:
     assert json.loads(_MANIFEST.read_text(encoding="utf-8"))
 
 
-def test_is_idempotent_when_digests_are_already_current() -> None:
-    """A no-op refresh reports success without rewriting the manifest."""
+def test_is_idempotent_when_digests_are_already_current(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """A no-op refresh reports success without rewriting the manifest.
 
-    before = _MANIFEST.read_bytes()
-    result = subprocess.run(
-        [sys.executable, str(_SCRIPT)],
-        capture_output=True,
-        text=True,
-        env={**os.environ, _FLAG: "1"},
-        cwd=_REPO_ROOT,
-    )
+    Runs against a *copy*: this test must never invoke the script on the
+    real committed manifest, or a passing run would mutate tracked
+    provenance and break ``test_al16_rytm_export.py`` for everything that
+    executes after it.
+    """
 
-    assert result.returncode == 0, result.stdout + result.stderr
-    assert "already current" in result.stdout
+    module = _load_script()
+    copy = tmp_path / "AL02_LOCK_RYTM_manifest.json"
+    copy.write_bytes(_MANIFEST.read_bytes())
+    before = copy.read_bytes()
+
+    monkeypatch.setattr(module, "_MANIFEST_PATH", copy)
+    monkeypatch.setenv(_FLAG, "1")
+
+    assert module.main() == 0
+    assert copy.read_bytes() == before
+    # The real manifest was never opened for writing by this test.
     assert _MANIFEST.read_bytes() == before
 
 

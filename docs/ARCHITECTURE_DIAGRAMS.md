@@ -343,6 +343,8 @@ classDiagram
         +MutationPlanner mutation_planner
         +MessageRenderer message_renderer
         +str report_header
+        +str role_summary
+        +int display_order
         +decode_snapshot(raw, slot) Any
         +plan_mutation(snapshot, depth, *, scope=DEFAULT) Any
         +to_mock_messages(plan) list
@@ -542,7 +544,7 @@ flowchart LR
     end
 
     subgraph After["After PR #43 (Strategy)"]
-        NewDev["AnalogRytmDevice<br/>9 attrs + 4 methods<br/>(5 identity + 4 strategy)"]
+        NewDev["AnalogRytmDevice<br/>11 attrs + 4 methods<br/>(5 identity + 3 presentation + 3 strategy)"]
 
         SD["snapshot_decoder<br/>: AnalogRytmSnapshotDecoder"]
         MP["mutation_planner<br/>: AnalogRytmMutationPlanner"]
@@ -1482,7 +1484,7 @@ sequenceDiagram
 
     Op->>DM: dual_machine_bank_readiness()
     DM->>Reg: all_devices()
-    Reg-->>DM: Mapping[<br/>"analog_rytm_mk2": AnalogRytmDevice,<br/>"analog_four_mk2": AnalogFourDevice]<br/>
+    Reg-->>DM: Mapping[<br/>"analog_rytm_mk2": AnalogRytmDevice,<br/>"analog_four_mk2": AnalogFourDevice,<br/>"digitakt_mk1": DigitaktDevice,<br/>"digitakt_ii": DigitaktDevice]<br/>
 
     loop for device_id, device in all_devices().items()
         DM->>device: device.snapshot_decoder.decode(raw, slot)

@@ -115,6 +115,7 @@ from .digitakt_snapshot_decoder import (
     digitakt_snapshot_payload_fingerprint,
 )
 from .digitakt_track_domain import DigitaktTrackDomain
+from .elektron_track_domain import MAX_MIDI_TRACK_COUNT, ElektronTrackDomain
 
 __all__ = [
     "A4_CANDIDATE_KIT_TYPE_BYTE",
@@ -146,6 +147,8 @@ __all__ = [
     "DigitaktPlanEvent",
     "DigitaktSnapshotDecoder",
     "DigitaktTrackDomain",
+    "ElektronTrackDomain",
+    "MAX_MIDI_TRACK_COUNT",
     "MAX_A4_DEPTH",
     "MAX_DEPTH",
     "MAX_DIGITAKT_DEPTH",
