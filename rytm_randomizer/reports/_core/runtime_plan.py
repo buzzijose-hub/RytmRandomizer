@@ -106,7 +106,7 @@ class RuntimePlanSummaryDict(TypedDict):
     runtime_execution: str
 
 
-SUPPORTED_REPORT_INPUTS: Final[tuple[dict[str, object], ...]] = (
+SUPPORTED_REPORT_INPUTS: Final[tuple[RuntimePlanInputDict, ...]] = (
     {
         "category": "supported",
         "source_kind": "group_profile",
@@ -121,7 +121,7 @@ SUPPORTED_REPORT_INPUTS: Final[tuple[dict[str, object], ...]] = (
     },
 )
 
-PARKED_REPORT_INPUTS: Final[tuple[dict[str, object], ...]] = (
+PARKED_REPORT_INPUTS: Final[tuple[RuntimePlanInputDict, ...]] = (
     {
         "category": "parked",
         "source_kind": "group_profile",
@@ -130,7 +130,7 @@ PARKED_REPORT_INPUTS: Final[tuple[dict[str, object], ...]] = (
     },
 )
 
-UNSUPPORTED_REPORT_INPUTS: Final[tuple[dict[str, object], ...]] = (
+UNSUPPORTED_REPORT_INPUTS: Final[tuple[RuntimePlanInputDict, ...]] = (
     {
         "category": "unsupported",
         "source_kind": "group_profile",
@@ -182,20 +182,20 @@ def _runtime_preview_summary(report_input: RuntimePlanInputDict) -> RuntimePrevi
     preview = validate_runtime_intent_scope(intent)
     metadata = preview.metadata
     return {
-        "source_kind": metadata["source_kind"],
-        "source_key": metadata["source_key"],
-        "target": metadata["target"],
-        "source_label": metadata["source_label"],
-        "status": preview.status,
-        "reason": preview.reason,
-        "reason_code": metadata["reason_code"],
-        "supported": metadata["supported"],
-        "parked": metadata["parked"],
-        "would_execute": metadata["would_execute"],
-        "mock_only": metadata["mock_only"],
-        "sends_real_midi": metadata["sends_real_midi"],
-        "ports_allowed": metadata["ports_allowed"],
-        "hardware_required": metadata["hardware_required"],
+        "source_kind": str(metadata["source_kind"]),
+        "source_key": str(metadata["source_key"]),
+        "target": str(metadata["target"]),
+        "source_label": str(metadata["source_label"]),
+        "status": str(preview.status),
+        "reason": str(preview.reason),
+        "reason_code": str(metadata["reason_code"]),
+        "supported": bool(metadata["supported"]),
+        "parked": bool(metadata["parked"]),
+        "would_execute": bool(metadata["would_execute"]),
+        "mock_only": bool(metadata["mock_only"]),
+        "sends_real_midi": bool(metadata["sends_real_midi"]),
+        "ports_allowed": bool(metadata["ports_allowed"]),
+        "hardware_required": bool(metadata["hardware_required"]),
     }
 
 

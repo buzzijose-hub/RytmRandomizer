@@ -10,7 +10,7 @@ so every existing import keeps working.
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Final, TypedDict
+from typing import Final, NotRequired, TypedDict
 
 from ...cli_registry import CliCommand, make_passive_report_command
 from ..formatter import passive_footer_lines
@@ -52,11 +52,20 @@ class BridgeAcceptedCandidateDict(TypedDict):
 
 
 class BridgeRejectedCaseDict(TypedDict):
-    """One rejected bridge case."""
+    """One rejected bridge case.
+
+    ``description`` and the ``source_*`` trio are both optional and mutually
+    exclusive in practice: most rows describe the rejection in prose, while
+    the profile-3 row identifies the rejected source instead. They are
+    declared ``NotRequired`` so a reader of either shape type-checks.
+    """
 
     case: str
-    description: str
     emits_messages: bool
+    description: NotRequired[str]
+    source_kind: NotRequired[str]
+    source_key: NotRequired[str]
+    source_name: NotRequired[str]
 
 
 class BridgeParkedCaseDict(TypedDict):
@@ -245,10 +254,11 @@ def summarize_mock_runtime_active_bridge_report(
 def _bridge_rejected_case_line(rejected_case: BridgeRejectedCaseDict) -> str:
     if rejected_case["case"] == "profile_3_bridge_rejected":
         return (
-            f"- {rejected_case['source_kind']}:{rejected_case['source_key']} / "
-            f"{rejected_case['source_name']}: bridge rejected"
+            f"- {rejected_case.get('source_kind', '')}:"
+            f"{rejected_case.get('source_key', '')} / "
+            f"{rejected_case.get('source_name', '')}: bridge rejected"
         )
-    return f"- {rejected_case['case']}: {rejected_case['description']}"
+    return f"- {rejected_case['case']}: {rejected_case.get('description', '')}"
 
 
 def _bridge_parked_case_line(parked_case: BridgeParkedCaseDict) -> str:

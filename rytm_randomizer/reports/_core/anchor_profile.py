@@ -299,7 +299,7 @@ def _anchor_profile_intent_kind(
         return str(overrides[command_key])
     if "intent_kind" in options:
         return str(options["intent_kind"])
-    return (
+    return str(
         getattr(result, "intent_kind", "")
         or metadata.get("intent_kind", "")
         or metadata.get("source_group_command_type", "")
@@ -310,10 +310,11 @@ def _anchor_profile_intent_kind(
 def _anchor_profile_concept(
     command_key: str, result: object, metadata: Mapping[str, object], options: Mapping[str, object]
 ) -> str:
-    overrides = options.get("concept_overrides", {})
+    raw_overrides = options.get("concept_overrides", {})
+    overrides: Mapping[str, object] = raw_overrides if isinstance(raw_overrides, Mapping) else {}
     if command_key in overrides:
-        return overrides[command_key]
-    return (
+        return str(overrides[command_key])
+    return str(
         metadata.get("target", "")
         or getattr(result, "anchor_concept", "")
         or metadata.get("anchor_concept", "")
