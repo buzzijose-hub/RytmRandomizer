@@ -296,7 +296,7 @@ describe('shell command bindings', () => {
     // The dev loop and a plain browser have no Tauri bridge. A throw here
     // would propagate out of the click handler and blank the cockpit over a
     // check that simply cannot happen.
-    await expect(requestUpdateCheck()).resolves.toBeUndefined();
+    await expect(requestUpdateCheck()).resolves.toBe(false);
   });
 
   it('confirmUpdateChoiceOnShell reports failure rather than claiming success', async () => {

@@ -9,8 +9,8 @@
  *      component, not a second journal list.
  */
 
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { act, fireEvent, render, screen, within, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { emitTauriEvent, installTauriEventBridge } from '../../tauriEvent';
 
 import { _reset as resetAnnouncer, _registerWriter } from '../../../src/a11y';
@@ -72,6 +72,7 @@ function connect(): void {
 
 beforeEach(() => {
   client = new FakeCockpitClient();
+  installTauriEventBridge((command) => command === 'update_snapshot' ? undefined : true);
   act(() => useCockpitStore.getState().reset());
 });
 
@@ -122,12 +123,12 @@ describe('#238 — nothing transmits on mount or before the handshake', () => {
     }
   });
 
-  it('enables the controls once connected', () => {
+  it('shows check acceptance only after the shell accepts', async () => {
     mount();
     connect();
     expect(screen.getByTestId('update-check-now')).toBeEnabled();
     fireEvent.click(screen.getByTestId('update-check-now'));
-    expect(screen.getByText('Check requested.')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Check requested.')).toBeInTheDocument());
     // Still no command on the wire: the shell owns the check, not the panel.
     expect(client.sent).toEqual([]);
   });
@@ -136,6 +137,27 @@ describe('#238 — nothing transmits on mount or before the handshake', () => {
 describe('shell event subscription (receive-only)', () => {
   beforeEach(() => {
     installTauriEventBridge();
+  });
+
+  it('hydrates shell posture and journal before a backend WebSocket session exists', async () => {
+    const command = vi.fn(() => ({
+      state: state({ state: 'frozen' }),
+      journal: [row({ event: 'check_failed', detail: 'manifest_unreachable' })],
+      channel: 'beta',
+      frozen: true,
+    }));
+    installTauriEventBridge(command);
+    mount();
+    await waitFor(() => expect(screen.getByTestId('update-channel')).toHaveTextContent('beta'));
+    expect(screen.getByTestId('update-freeze')).toHaveTextContent('Shell updates: frozen');
+    expect(screen.getByTestId('update-activity-list')).toHaveTextContent('manifest_unreachable');
+    expect(screen.getByText('Last checked 12:04 · Last check-in ping never')).toBeInTheDocument();
+    expect(useCockpitStore.getState().operatorLog.at(-1)?.message).toBe(
+      'Update check_failed: manifest_unreachable',
+    );
+    expect(command.mock.calls).toEqual([['update_snapshot', {}]]);
+    expect(client.sent).toEqual([]);
+    expect(screen.getByTestId('update-check-now')).toBeDisabled();
   });
 
   // These assert the TAURI IPC transport, not a DOM event. The original pair
@@ -248,53 +270,91 @@ describe('§7.1 rendering', () => {
   });
 });
 
-describe('freeze toggle', () => {
-  it('replaces the body and suppresses the consent block', () => {
+describe('resolved shell settings', () => {
+  it('shows frozen posture and disables checks without offering a fake toggle', () => {
     mount();
     connect();
     act(() => useCockpitStore.getState().setUpdateState(state()));
-    fireEvent.click(screen.getByTestId('update-freeze'));
+    act(() => useCockpitStore.getState().setUpdateFrozen(true));
     expect(useCockpitStore.getState().update.frozen).toBe(true);
     expect(screen.getByText(UPDATE_COPY.frozenBody)).toBeInTheDocument();
     expect(screen.queryByTestId('update-consent')).not.toBeInTheDocument();
+    expect(screen.getByTestId('update-check-now')).toBeDisabled();
+    expect(screen.getByTestId('update-freeze')).toHaveTextContent('Shell updates: frozen');
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
   });
 
-  it('unfreezes back to the staged body', () => {
+  it('shows enabled posture without changing shell settings on click', () => {
     mount();
     connect();
     act(() => useCockpitStore.getState().setUpdateState(state()));
     fireEvent.click(screen.getByTestId('update-freeze'));
-    fireEvent.click(screen.getByTestId('update-freeze'));
     expect(useCockpitStore.getState().update.frozen).toBe(false);
     expect(screen.getByTestId('update-consent')).toBeInTheDocument();
+    expect(screen.getByTestId('update-freeze')).toHaveTextContent('Shell updates: enabled');
   });
 
-  it('is labelled with the §7.1 copy', () => {
+  it('explains process-lifetime settings and does not guess absent shell posture', () => {
     mount();
-    expect(screen.getByLabelText(UPDATE_COPY.freezeToggle)).toBeInTheDocument();
+    expect(screen.getByText(UPDATE_COPY.settingsInstruction)).toBeInTheDocument();
+    expect(screen.getByTestId('update-freeze')).toHaveTextContent('Waiting for shell settings.');
   });
 });
 
-describe('channel selector', () => {
-  it('writes the operator selection into the slice and the running line', () => {
+describe('resolved shell channel', () => {
+  it('shows the reported channel in a read-only field', () => {
     mount();
     connect();
-    fireEvent.change(screen.getByTestId('update-channel'), { target: { value: 'beta' } });
+    act(() => {
+      useCockpitStore.getState().setUpdateState(state());
+      useCockpitStore.getState().setUpdateChannel('beta');
+    });
     expect(useCockpitStore.getState().update.channel).toBe('beta');
     expect(screen.getByText('Running v1.35.0 · channel: beta')).toBeInTheDocument();
+    expect(screen.getByTestId('update-channel')).toHaveTextContent('Shell channel: beta');
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   });
 
-  it('offers exactly the two channels and is labelled', () => {
+  it('does not guess a channel before the shell is available', () => {
     mount();
-    const select = screen.getByLabelText('channel:');
-    expect(within(select).getAllByRole('option').map((o) => o.textContent)).toEqual([
-      'stable',
-      'beta',
-    ]);
+    expect(screen.getByTestId('update-channel')).toHaveTextContent('Shell channel: unavailable');
   });
 });
 
 describe('consent confirmation', () => {
+  it('keeps consent visible while pending and prevents a stale acceptance hiding a newer release', async () => {
+    let accept: (value: boolean) => void = () => { throw new Error('not pending'); };
+    const response = new Promise<boolean>((resolve) => { accept = resolve; });
+    const command = vi.fn((name: string) => name === 'update_confirm_choice' ? response : undefined);
+    installTauriEventBridge(command);
+    mount();
+    connect();
+    act(() => useCockpitStore.getState().setUpdateState(state()));
+    fireEvent.click(screen.getByTestId('update-consent-install_now'));
+    fireEvent.click(screen.getByTestId('update-confirm'));
+    expect(screen.getByTestId('update-consent')).toBeInTheDocument();
+    expect(screen.getByTestId('update-confirm')).toBeDisabled();
+    expect(useCockpitStore.getState().update.confirmedChoice).toBeNull();
+    await waitFor(() => expect(command).toHaveBeenCalledWith('update_confirm_choice', {
+      version: '1.35.1', choice: 'install_now',
+    }));
+    act(() => useCockpitStore.getState().setUpdateState(state({ version: '1.36.0' })));
+    await act(async () => { accept(true); await response; });
+    expect(useCockpitStore.getState().update.confirmedChoice).toBeNull();
+    expect(screen.getByTestId('update-confirm')).toBeEnabled();
+    expect(screen.getByTestId('update-consent-install_on_quit')).toBeChecked();
+    expect(screen.queryByText(/Choice recorded:/)).not.toBeInTheDocument();
+  });
+
+  it('reports a refused manual check without claiming one ran', async () => {
+    installTauriEventBridge(() => false);
+    mount();
+    connect();
+    fireEvent.click(screen.getByTestId('update-check-now'));
+    await waitFor(() => expect(screen.getByText('The shell did not accept that check.')).toBeInTheDocument());
+    expect(screen.queryByText('Check requested.')).not.toBeInTheDocument();
+  });
+
   it('surfaces a shell rejection instead of swallowing it', async () => {
     // A rejection means the two ends disagree on the choice vocabulary — the
     // shell refuses an unrecognised value rather than defaulting, precisely so
@@ -316,10 +376,15 @@ describe('consent confirmation', () => {
 
     expect(spy).toHaveBeenCalled();
     expect(screen.getByText('The shell did not accept that choice.')).toBeInTheDocument();
+    expect(screen.getByTestId('update-confirm')).toBeEnabled();
+    expect(useCockpitStore.getState().update.confirmedChoice).toBeNull();
+    spy.mockResolvedValue(true);
+    fireEvent.click(screen.getByTestId('update-confirm'));
+    await waitFor(() => expect(useCockpitStore.getState().update.confirmedChoice).toBe('install_on_quit'));
     spy.mockRestore();
   });
 
-  it('records the chosen option, announces once, and notes it in the panel', () => {
+  it('records the chosen option only after acceptance and notes it in the panel', async () => {
     const announced: string[] = [];
     _registerWriter((message) => announced.push(message));
     mount();
@@ -329,7 +394,7 @@ describe('consent confirmation', () => {
     fireEvent.click(screen.getByTestId('update-consent-install_now'));
     fireEvent.click(screen.getByTestId('update-confirm'));
 
-    expect(useCockpitStore.getState().update.confirmedChoice).toBe('install_now');
+    await waitFor(() => expect(useCockpitStore.getState().update.confirmedChoice).toBe('install_now'));
     expect(
       screen.getByText('Choice recorded: Now — restart RytmRandomizer immediately'),
     ).toBeInTheDocument();
@@ -337,21 +402,21 @@ describe('consent confirmation', () => {
     expect(screen.queryByTestId('update-consent')).not.toBeInTheDocument();
   });
 
-  it('defaults to install_on_quit when the operator just presses Confirm', () => {
+  it('defaults to install_on_quit when the operator just presses Confirm', async () => {
     mount();
     connect();
     act(() => useCockpitStore.getState().setUpdateState(state()));
     fireEvent.click(screen.getByTestId('update-confirm'));
-    expect(useCockpitStore.getState().update.confirmedChoice).toBe('install_on_quit');
+    await waitFor(() => expect(useCockpitStore.getState().update.confirmedChoice).toBe('install_on_quit'));
   });
 
-  it('records skip_this_version like any other choice', () => {
+  it('records skip_this_version after the shell accepts it', async () => {
     mount();
     connect();
     act(() => useCockpitStore.getState().setUpdateState(state()));
     fireEvent.click(screen.getByTestId('update-consent-skip_this_version'));
     fireEvent.click(screen.getByTestId('update-confirm'));
-    expect(useCockpitStore.getState().update.confirmedChoice).toBe('skip_this_version');
+    await waitFor(() => expect(useCockpitStore.getState().update.confirmedChoice).toBe('skip_this_version'));
   });
 });
 

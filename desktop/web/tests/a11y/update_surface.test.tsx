@@ -4,7 +4,7 @@
  * announcements via the announcer; no live-region countdown spam").
  */
 
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { _reset as resetAnnouncer } from '../../src/a11y';
@@ -16,6 +16,7 @@ import { useCockpitStore } from '../../src/state';
 import type { UpdateStateEvent } from '../../src/updateProtocol';
 
 import { FakeCockpitClient } from '../cockpit/_fixtures';
+import { installTauriEventBridge } from '../tauriEvent';
 import { runAxe, violationSummary } from './__helpers__/axe';
 
 function state(over: Partial<UpdateStateEvent> = {}): UpdateStateEvent {
@@ -65,6 +66,7 @@ function renderSurface(): HTMLElement {
 }
 
 beforeEach(() => {
+  installTauriEventBridge((command) => command === 'update_snapshot' ? undefined : true);
   act(() => useCockpitStore.getState().reset());
 });
 
@@ -126,7 +128,7 @@ describe('keyboard operability + grouping', () => {
     }
   });
 
-  it('selects a radio by keyboard and confirms with the keyboard-reachable button', () => {
+  it('selects a radio by keyboard and confirms with the keyboard-reachable button', async () => {
     renderSurface();
     stage();
     const skip = screen.getByTestId('update-consent-skip_this_version');
@@ -137,14 +139,16 @@ describe('keyboard operability + grouping', () => {
     confirm.focus();
     expect(confirm).toHaveFocus();
     fireEvent.click(confirm);
-    expect(useCockpitStore.getState().update.confirmedChoice).toBe('skip_this_version');
+    await waitFor(() => expect(useCockpitStore.getState().update.confirmedChoice).toBe('skip_this_version'));
   });
 
-  it('labels the channel select and the freeze checkbox', () => {
+  it('explains read-only shell settings without inaccessible fake controls', () => {
     renderSurface();
     stage();
-    expect(screen.getByLabelText('channel:')).toBeInTheDocument();
-    expect(screen.getByLabelText(UPDATE_COPY.freezeToggle)).toBeInTheDocument();
+    expect(screen.getByTestId('update-channel')).toHaveTextContent('Shell channel: stable');
+    expect(screen.getByText(UPDATE_COPY.settingsInstruction)).toBeInTheDocument();
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
   });
 
   it('names the activity list so a screen reader can jump to it', () => {

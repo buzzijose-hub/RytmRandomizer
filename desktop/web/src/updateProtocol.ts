@@ -13,8 +13,8 @@
  * from here. Re-declaring either shape inline — even under a different
  * symbol name — is the fork R4 exists to prevent (Gate 17).
  *
- * Nothing in this module performs I/O, touches `window`, or transmits: it is
- * types plus pure predicates and formatters over data the shell pushes.
+ * IPC adapters below subscribe and query the local shell. They never use
+ * the backend WebSocket or initiate an update check on mount.
  */
 
 /**
@@ -121,22 +121,29 @@ export interface UpdateStateEvent {
   readonly error_code: string | null;
 }
 
-/** DOM event name the shell dispatches on `window` to deliver I2. */
+/** Tauri IPC event name used by the shell to deliver I2. */
 export const UPDATE_STATE_EVENT_NAME = 'rytm-update-state';
+
+/** Read-only shell snapshot, replayed after the event listener is installed. */
+export interface UpdateSnapshot {
+  readonly state: UpdateStateEvent;
+  readonly journal: ReadonlyArray<UpdateJournalRow>;
+  readonly channel: UpdateChannel;
+  readonly frozen: boolean;
+}
 
 /**
  * The cockpit's own view of the update surface: the last I2 payload the
- * shell pushed, plus the journal tail and the operator-controlled bits the
- * panel owns. This is the store slice's shape, assembled from I2 + I8 only.
+ * shell pushed, plus its journal tail and resolved launch settings.
  */
 export interface UpdateSlice {
   /** Last I2 payload, or `null` when the shell has never spoken (dev loop). */
   readonly state: UpdateStateEvent | null;
   /** Journal tail, oldest first, as the shell reported it (I8). */
   readonly journal: ReadonlyArray<UpdateJournalRow>;
-  /** Operator's channel selection. */
+  /** Release channel resolved by the shell at launch. */
   readonly channel: UpdateChannel;
-  /** Operator's freeze toggle (mirrors `RYTM_RAND_UPDATES=off`). */
+  /** Process-lifetime shell posture (`RYTM_RAND_UPDATES=off`). */
   readonly frozen: boolean;
   /** Consent choice the operator confirmed for `state.version`, if any. */
   readonly confirmedChoice: UpdateConsentChoice | null;
@@ -194,6 +201,23 @@ export function parseUpdateJournalRow(payload: unknown): UpdateJournalRow | null
     version: typeof raw.version === 'string' ? raw.version : '',
     detail: typeof raw.detail === 'string' ? raw.detail : '',
   };
+}
+
+/** Refuse incomplete snapshots rather than inventing the shell's posture. */
+export function parseUpdateSnapshot(payload: unknown): UpdateSnapshot | null {
+  if (typeof payload !== 'object' || payload === null) return null;
+  const raw = payload as Record<string, unknown>;
+  if (raw.channel !== 'stable' && raw.channel !== 'beta') return null;
+  if (typeof raw.frozen !== 'boolean' || !Array.isArray(raw.journal)) return null;
+  const state = parseUpdateStateEvent(raw.state);
+  if (state === null) return null;
+  const journal: UpdateJournalRow[] = [];
+  for (const value of raw.journal) {
+    const row = parseUpdateJournalRow(value);
+    if (row === null) return null;
+    journal.push(row);
+  }
+  return { state, journal, channel: raw.channel, frozen: raw.frozen };
 }
 
 /**
@@ -359,20 +383,45 @@ export function journalLogEntries(
  */
 export function subscribeUpdateState(
   onState: (event: UpdateStateEvent) => void,
+  onSnapshot?: (snapshot: UpdateSnapshot) => void,
 ): () => void {
   let unlisten: (() => void) | null = null;
   let cancelled = false;
+  let generation = 0;
+
+  const refresh = async (): Promise<void> => {
+    if (onSnapshot === undefined) return;
+    const requestedGeneration = ++generation;
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const snapshot = parseUpdateSnapshot(await invoke('update_snapshot'));
+      // A newer event/request supersedes an older snapshot response. An
+      // unmounted panel must not overwrite the next panel's state either.
+      if (!cancelled && requestedGeneration === generation && snapshot !== null) {
+        onSnapshot(snapshot);
+      }
+    } catch {
+      // No shell in the browser dev loop; keep the last evidenced state.
+    }
+  };
 
   void import('@tauri-apps/api/event')
     .then(({ listen }) =>
       listen<unknown>(UPDATE_STATE_EVENT_NAME, (message) => {
         const parsed = parseUpdateStateEvent(message.payload);
-        if (parsed !== null) onState(parsed);
+        if (!cancelled && parsed !== null) {
+          onState(parsed);
+          void refresh();
+        }
       }),
     )
     .then((stop) => {
       if (cancelled) stop();
-      else unlisten = stop;
+      else {
+        unlisten = stop;
+        // Subscribe first: setup may have emitted before React mounted.
+        void refresh();
+      }
     })
     .catch(() => {
       // No Tauri bridge available. The panel's dev-loop body covers this; a
@@ -393,17 +442,15 @@ export function subscribeUpdateState(
  * decorative — "Check now" set a note and "Confirm choice" updated React
  * state, and neither reached the driver. Everything looked wired.
  *
- * Resolves even when there is no shell (the dev loop): a check that cannot
- * happen is not an error the operator needs to see, and throwing here would
- * take the panel down.
+ * A refusal or missing shell resolves false, so the panel cannot claim a
+ * check happened when the command was never accepted.
  */
-export async function requestUpdateCheck(): Promise<void> {
+export async function requestUpdateCheck(): Promise<boolean> {
   try {
     const { invoke } = await import('@tauri-apps/api/core');
-    await invoke('update_check_now');
+    return (await invoke('update_check_now')) === true;
   } catch {
-    // No shell, or the command is unavailable. The panel's dev-loop body
-    // already says updates run in the installed app.
+    return false;
   }
 }
 
@@ -424,8 +471,7 @@ export async function confirmUpdateChoiceOnShell(
 ): Promise<boolean> {
   try {
     const { invoke } = await import('@tauri-apps/api/core');
-    await invoke('update_confirm_choice', { version, choice });
-    return true;
+    return (await invoke('update_confirm_choice', { version, choice })) === true;
   } catch {
     return false;
   }

@@ -33,7 +33,9 @@ export const UPDATE_COPY = {
   consentQuestion: 'How do you want to install it?',
   activityHeading: 'Recent update activity',
   activityEmpty: 'No update activity recorded yet.',
-  freezeToggle: 'Freeze updates (stops all update network traffic)',
+  settingsInstruction:
+    'Update settings apply at launch. Set RYTM_RAND_UPDATES=off to freeze updates, ' +
+    'or RYTM_RAND_UPDATE_CHANNEL=stable or beta to change channel, then restart the app.',
   frozenBody: 'Updates are frozen. No update network traffic will occur until you unfreeze.',
   devLoopBody: 'Updates run in the installed app.',
   checkNow: 'Check now',
@@ -137,7 +139,7 @@ export function bodySections(
   if (state === null) {
     return [rowsSection('Status', [UPDATE_COPY.devLoopBody])];
   }
-  if (state.state === 'check_failed') {
+  if (state.state === 'check_failed' || state.state === 'stage_failed') {
     return [rowsSection('Status', [checkFailedLine(state.error_code ?? 'unknown_reason')])];
   }
   if (state.state === 'staged') {
@@ -158,7 +160,17 @@ export function bodySections(
     }
     return staged;
   }
-  return [rowsSection('Status', [upToDateLine(runningVersion)])];
+  const status = {
+    idle: 'Waiting for the first update check.',
+    checking: 'Checking for updates.',
+    update_available: 'An update is available. Waiting to download and verify it.',
+    downloading: 'Downloading and verifying the update.',
+    installing: 'Installing the update after the backend exits.',
+    frozen: UPDATE_COPY.frozenBody,
+    dev_loop: UPDATE_COPY.devLoopBody,
+    up_to_date: upToDateLine(runningVersion),
+  }[state.state];
+  return [rowsSection('Status', [status])];
 }
 
 /**

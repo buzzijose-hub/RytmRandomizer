@@ -3,8 +3,8 @@
  *
  * Shape follows the ConnectionDoctorPanel precedent: the declarative body
  * renders through the generic `PanelRenderer`, and this component adds only
- * the affordances that renderer has no vocabulary for — a channel select, a
- * radio group, a freeze checkbox, and two buttons. (The generic renderer
+ * the affordances that renderer has no vocabulary for — a consent radio
+ * group and two buttons. (The generic renderer
  * emits headings, rows, tables, chips, and *disabled* action buttons; it
  * cannot express an interactive form, which is why a component exists at
  * all rather than a bare registry row.) It is a `store-slice` entry because
@@ -13,16 +13,13 @@
  * SAFETY — the #238 lesson, which is why PR #238 went red. This panel is a
  * pure mirror of pushed state:
  *
- *   - It sends NOTHING on mount. There is no effect that transmits, no
- *     check kicked off by rendering, no fetch. The only effect subscribes
- *     to a shell DOM event, which is receive-only.
+ *   - Mount subscribes to shell IPC and reads a local snapshot. It never
+ *     sends a backend WebSocket command or starts a network update check.
  *   - Every user-initiated action ("Check now", "Confirm choice") is gated
- *     on `connectionStatus === 'connected'`, so no command can be issued
- *     before the WS handshake has completed. The controls render disabled
+ *     on an established cockpit connection and session. The controls render disabled
  *     rather than hidden, so the operator sees them and sees why.
  *
- * Freeze is honoured client-side by rendering: frozen means no chip and a
- * body that says so. The shell owns the actual network silence.
+ * Channel and freeze are read-only launch settings reported by the shell.
  */
 
 import { useEffect, useState } from 'react';
@@ -31,11 +28,9 @@ import { announce } from '../../a11y';
 import { useCockpitStore } from '../../state';
 import {
   DEFAULT_CONSENT_CHOICE,
-  UPDATE_CHANNELS,
   UPDATE_CONSENT_CHOICES,
   isConsentPending,
   journalLogEntries,
-  type UpdateChannel,
   type UpdateConsentChoice,
   confirmUpdateChoiceOnShell,
   requestUpdateCheck,
@@ -53,8 +48,7 @@ export const UNKNOWN_VERSION = 'unknown';
 export const WAITING_FOR_CONNECTION = 'Waiting for the cockpit connection.';
 
 /**
- * The #238 gate, as a pure predicate: an operator action may run only once
- * the WS handshake has completed.
+ * Connection portion of the action gate; the panel also requires session data.
  *
  * It is a named export rather than an inline `connectionStatus ===
  * 'connected'` inside each handler for two reasons. First, it is the
@@ -73,72 +67,76 @@ export function UpdatePanel(): JSX.Element {
   const session = useCockpitStore((s) => s.sessionStatus);
   const connectionStatus = useCockpitStore((s) => s.connectionStatus);
   const setUpdateState = useCockpitStore((s) => s.setUpdateState);
+  const setUpdateJournal = useCockpitStore((s) => s.setUpdateJournal);
   const setUpdateChannel = useCockpitStore((s) => s.setUpdateChannel);
   const setUpdateFrozen = useCockpitStore((s) => s.setUpdateFrozen);
   const confirmUpdateChoice = useCockpitStore((s) => s.confirmUpdateChoice);
   const [choice, setChoice] = useState<UpdateConsentChoice>(DEFAULT_CONSENT_CHOICE);
   const [note, setNote] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    setChoice(DEFAULT_CONSENT_CHOICE);
+    setNote(null);
+  }, [update.state?.version]);
 
   // Receive-only subscription to the shell's I2 event. Listening is not
   // transmitting: nothing leaves the process because of this effect.
-  useEffect(() => subscribeUpdateState(setUpdateState), [setUpdateState]);
+  useEffect(
+    () => subscribeUpdateState(setUpdateState, (snapshot) => {
+      setUpdateState(snapshot.state);
+      setUpdateJournal(snapshot.journal);
+      setUpdateChannel(snapshot.channel);
+      setUpdateFrozen(snapshot.frozen);
+    }),
+    [setUpdateState, setUpdateJournal, setUpdateChannel, setUpdateFrozen],
+  );
 
-  const connected = updateActionsAllowed(connectionStatus);
+  const connected = updateActionsAllowed(connectionStatus) && session !== null;
   const runningVersion = session?.app_version ?? UNKNOWN_VERSION;
   const consentPending = isConsentPending(update);
   const disabledReason = connected ? undefined : WAITING_FOR_CONNECTION;
 
-  const checkNow = (): void => {
+  const checkNow = async (): Promise<void> => {
     /* c8 ignore next -- unreachable through the disabled button; the gate is
        proven directly by the `updateActionsAllowed` tests. */
     if (!connected) return;
     // Reaches the shell's driver. Before this the button only set a note.
-    void requestUpdateCheck();
-    setNote('Check requested.');
+    const accepted = await requestUpdateCheck();
+    setNote(accepted ? 'Check requested.' : 'The shell did not accept that check.');
   };
 
-  const confirm = (): void => {
+  const confirm = async (): Promise<void> => {
     /* c8 ignore next -- as above: defence in depth behind a disabled button. */
     if (!connected) return;
     /* c8 ignore next -- the confirm button only renders inside the staged
        consent block, so a version is always present here; the fallback exists
        so a future refactor that moves the button cannot send `undefined`. */
     const version = update.state?.version ?? UNKNOWN_VERSION;
+    setSubmitting(true);
+    const accepted = await confirmUpdateChoiceOnShell(version, choice);
+    setSubmitting(false);
+    // An answer for an older release cannot hide a newly staged prompt.
+    if (useCockpitStore.getState().update.state?.version !== version) return;
+    if (!accepted) {
+      setNote('The shell did not accept that choice.');
+      return;
+    }
     confirmUpdateChoice(choice);
     announce(`Update choice confirmed: ${CONSENT_LABELS[choice]}`);
     setNote(`Choice recorded: ${CONSENT_LABELS[choice]}`);
-    // The optimistic local update above keeps the UI responsive; this is what
-    // actually reaches the driver. A refusal means the two ends disagree on
-    // the choice vocabulary, which the operator should see rather than have
-    // silently swallowed.
-    void confirmUpdateChoiceOnShell(version, choice).then((accepted) => {
-      if (!accepted) setNote('The shell did not accept that choice.');
-    });
   };
 
   return (
     <div className="cockpit-panel-stack" data-testid="update-panel">
       <div className="cockpit-panel-controls">
-        <label className="update-channel-label" htmlFor="update-channel-select">
-          channel:
-        </label>
-        <select
-          id="update-channel-select"
-          className="update-channel-select"
-          value={update.channel}
-          onChange={(event) => setUpdateChannel(event.target.value as UpdateChannel)}
-          data-testid="update-channel"
-        >
-          {UPDATE_CHANNELS.map((channel) => (
-            <option key={channel} value={channel}>
-              {channel}
-            </option>
-          ))}
-        </select>
+        <span data-testid="update-channel">
+          Shell channel: {update.state === null ? 'unavailable' : update.channel}
+        </span>
         <button
           type="button"
-          onClick={checkNow}
-          disabled={!connected}
+          onClick={() => { void checkNow(); }}
+          disabled={!connected || update.frozen}
           title={disabledReason}
           data-testid="update-check-now"
         >
@@ -159,6 +157,7 @@ export function UpdatePanel(): JSX.Element {
                 name="update-consent"
                 value={option}
                 checked={choice === option}
+                disabled={submitting}
                 onChange={() => setChoice(option)}
                 data-testid={`update-consent-${option}`}
               />
@@ -167,8 +166,8 @@ export function UpdatePanel(): JSX.Element {
           ))}
           <button
             type="button"
-            onClick={confirm}
-            disabled={!connected}
+            onClick={() => { void confirm(); }}
+            disabled={!connected || submitting}
             title={disabledReason}
             data-testid="update-confirm"
           >
@@ -187,15 +186,11 @@ export function UpdatePanel(): JSX.Element {
         />
       </div>
 
-      <label className="update-freeze">
-        <input
-          type="checkbox"
-          checked={update.frozen}
-          onChange={(event) => setUpdateFrozen(event.target.checked)}
-          data-testid="update-freeze"
-        />
-        {UPDATE_COPY.freezeToggle}
-      </label>
+      <p data-testid="update-freeze">
+        {update.state === null ? 'Waiting for shell settings.' :
+          update.frozen ? 'Shell updates: frozen' : 'Shell updates: enabled'}
+      </p>
+      <p>{UPDATE_COPY.settingsInstruction}</p>
     </div>
   );
 }

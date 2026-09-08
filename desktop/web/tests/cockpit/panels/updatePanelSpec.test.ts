@@ -61,7 +61,8 @@ describe('§7.1 normative copy', () => {
     expect(UPDATE_COPY.activityHeading).toBe('Recent update activity');
     expect(UPDATE_COPY.checkNow).toBe('Check now');
     expect(UPDATE_COPY.confirmChoice).toBe('Confirm choice');
-    expect(UPDATE_COPY.freezeToggle).toBe('Freeze updates (stops all update network traffic)');
+    expect(UPDATE_COPY.settingsInstruction).toContain('RYTM_RAND_UPDATES=off');
+    expect(UPDATE_COPY.settingsInstruction).toContain('restart the app');
     expect(UPDATE_COPY.hardwareWarning).toBe(
       'This update changes hardware send paths. Re-run the manual hardware ' +
         'validation checklist after installing.',
@@ -142,11 +143,14 @@ describe('bodySections — one switch, five variants', () => {
     ]);
   });
 
-  it('falls through to up_to_date for every remaining state', () => {
-    for (const s of ['idle', 'checking', 'up_to_date', 'downloading', 'installing'] as const) {
+  it('never labels pending, in-progress or failed work as up to date', () => {
+    for (const s of ['idle', 'checking', 'downloading', 'installing', 'update_available', 'stage_failed', 'frozen', 'dev_loop'] as const) {
       const sections = bodySections(slice({ state: state({ state: s }) }), '1.35.0');
-      expect(sections[0]!.rows).toEqual([upToDateLine('1.35.0')]);
+      expect(sections[0]!.rows).not.toEqual([upToDateLine('1.35.0')]);
+      expect(sections[0]!.rows[0]).toBeTruthy();
     }
+    expect(bodySections(slice({ state: state({ state: 'up_to_date' }) }), '1.35.0')[0]!.rows)
+      .toEqual([upToDateLine('1.35.0')]);
   });
 });
 

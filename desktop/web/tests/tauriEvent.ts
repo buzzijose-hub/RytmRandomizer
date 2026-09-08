@@ -25,7 +25,9 @@ import { mockIPC } from '@tauri-apps/api/mocks';
 type CallbackId = number;
 
 /** Install the IPC shim. Call once per suite, before mounting. */
-export function installTauriEventBridge(): void {
+export function installTauriEventBridge(
+  onCommand?: (command: string, args: Record<string, unknown>) => unknown,
+): void {
   const listeners = new Map<string, CallbackId[]>();
 
   mockIPC((cmd, args) => {
@@ -56,7 +58,7 @@ export function installTauriEventBridge(): void {
       return undefined;
     }
 
-    return undefined;
+    return onCommand?.(cmd, payload);
   });
 }
 

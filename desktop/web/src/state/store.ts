@@ -138,7 +138,7 @@ export interface CockpitState {
   /**
    * Auto-update surface ← the shell's `rytm-update-state` event (I2) and
    * journal tail (I8). Purely a mirror of what the shell pushed plus the
-   * operator's own channel/freeze/consent choices — the cockpit never
+   * shell's launch settings and accepted consent — the cockpit never
    * derives update state on its own and never initiates a check on mount.
    */
   update: UpdateSlice;
@@ -180,9 +180,11 @@ export interface CockpitActions {
    * must not miss are mirrored into the operator log (§5.1 honesty floor).
    */
   setUpdateJournal: (journal: ReadonlyArray<UpdateJournalRow>) => void;
+  /** Apply the channel reported by the shell, never a local preference. */
   setUpdateChannel: (channel: UpdateChannel) => void;
+  /** Apply the frozen posture reported by the shell at launch. */
   setUpdateFrozen: (frozen: boolean) => void;
-  /** Record the operator's confirmed consent choice for the staged version. */
+  /** Record consent only after the shell accepted it for the staged version. */
   confirmUpdateChoice: (choice: UpdateConsentChoice) => void;
   /** Reset all slices back to null (used on disconnect / shutdown). */
   reset: () => void;
