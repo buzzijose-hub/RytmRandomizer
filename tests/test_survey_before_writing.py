@@ -72,3 +72,20 @@ def test_an_unreadable_file_is_skipped_not_fatal(
 
     monkeypatch.setattr(Path, "read_text", _boom)
     assert survey._by_docstring("manifest validation schema", [unreadable]) == []
+
+
+def test_output_uses_posix_separators_on_every_os(capsys: pytest.CaptureFixture[str]) -> None:
+    """Windows rendered `scripts\\foo.py` and failed a test asserting `scripts/foo.py`.
+
+    The survey's output is read by humans and asserted by tests on three OSes;
+    OS-native separators make it differ per platform for no benefit.
+    """
+    survey.main(["check_touched_branch_coverage"])
+    out = capsys.readouterr().out
+    assert "scripts/check_touched_coverage.py" in out
+    assert "\\" not in out
+
+
+def test_rel_is_repo_relative_and_posix() -> None:
+    rendered = survey._rel(survey.PROJECT_ROOT / "scripts" / "survey_before_writing.py")
+    assert rendered == "scripts/survey_before_writing.py"

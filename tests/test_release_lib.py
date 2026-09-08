@@ -1167,3 +1167,20 @@ def test_a_real_manifest_cannot_claim_the_placeholder_exemption() -> None:
 def test_an_unflagged_empty_manifest_is_still_refused() -> None:
     violations = validate_manifest(_valid_manifest(version=PLACEHOLDER_VERSION, platforms={}))
     assert ViolationCode.MANIFEST_PLATFORMS_EMPTY.value in _codes(violations)
+
+
+def test_redact_path_normalises_the_scripts_directory_casing() -> None:
+    """The repo tracks BOTH `scripts/` and `Scripts/`; output must not vary.
+
+    ``Path.resolve()`` returns whatever casing the running filesystem
+    materialised, so this rendered `scripts/...` on macOS and `Scripts/...` on
+    Windows — a CI failure that appeared on exactly one OS. Emitted details are
+    compared and logged, so they have to be identical everywhere.
+    """
+    assert redact_path(PROJECT_ROOT / "Scripts" / "release_lib.py") == "scripts/release_lib.py"
+    assert redact_path(PROJECT_ROOT / "scripts" / "release_lib.py") == "scripts/release_lib.py"
+
+
+def test_redact_path_always_uses_posix_separators() -> None:
+    rendered = redact_path(PROJECT_ROOT / "scripts" / "release_lib.py")
+    assert "\\" not in rendered

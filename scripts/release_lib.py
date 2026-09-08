@@ -270,9 +270,17 @@ def redact_path(path: Path) -> str:
     bare name.
     """
     try:
-        return path.resolve().relative_to(PROJECT_ROOT).as_posix()
+        rendered = path.resolve().relative_to(PROJECT_ROOT).as_posix()
     except ValueError:
         return path.name
+    # The repo tracks both `scripts/` and `Scripts/` (CONTRIBUTING.md: Python
+    # vs legacy PowerShell). `.resolve()` returns whatever casing the running
+    # filesystem materialised, so the same call renders `scripts/...` on macOS
+    # and `Scripts/...` on Windows. Normalise to the lowercase Python home so
+    # emitted details are identical on every OS.
+    if rendered.startswith("Scripts/"):
+        return "scripts/" + rendered[len("Scripts/") :]
+    return rendered
 
 
 def log_event(event: str, /, **fields: object) -> None:

@@ -47,6 +47,16 @@ _STOPWORDS: Final[frozenset[str]] = frozenset(
 )
 
 
+def _rel(path: Path) -> str:
+    """Repo-relative, POSIX-separated — identical output on every OS.
+
+    ``Path.__str__`` renders OS-native separators, so a Windows run printed
+    ``scripts\\check_touched_coverage.py`` and a test asserting the documented
+    ``scripts/...`` form failed there and only there.
+    """
+    return path.relative_to(PROJECT_ROOT).as_posix()
+
+
 def _candidates() -> list[Path]:
     found: list[Path] = []
     for root in _SEARCH_ROOTS:
@@ -111,10 +121,10 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     print(f"Existing code resembles {args.query!r}. READ THESE FIRST:\n")
     for score, path in name_hits[:8]:
-        print(f"  {path.relative_to(PROJECT_ROOT)}   (name match {score:.2f})")
+        print(f"  {_rel(path)}   (name match {score:.2f})")
     for overlap, path in doc_hits[:8]:
-        rel = path.relative_to(PROJECT_ROOT)
-        if all(rel != p.relative_to(PROJECT_ROOT) for _, p in name_hits):
+        rel = _rel(path)
+        if all(rel != _rel(other) for _, other in name_hits):
             print(f"  {rel}   (docstring overlap {overlap} terms)")
     print(
         "\nGate 17: reuse or extend what is there, or state in the PR body why a "
