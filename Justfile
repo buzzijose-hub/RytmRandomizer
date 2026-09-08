@@ -249,5 +249,19 @@ diagrams:
     @grep '^## ' docs/ARCHITECTURE_DIAGRAMS.md | head -30
 
 # Show the 18 plan-requirement gates
+# Gate 1 — 100% BRANCH coverage on every touched production file, locally.
+# Same script CI runs (test.yml); it reads coverage.xml rather than fighting
+# --cov args, which is why it works where the hand-rolled recipe did not.
+gate1:
+    python -m pytest --cov=rytm_randomizer --cov-branch --cov-report=xml -q
+    python scripts/check_touched_coverage.py coverage.xml
+
+# Classify a parallel agent's test output: RAN/PASSED, RAN/FAILED, or DID NOT RUN.
+# An agent whose suite errored at collection (a sibling's module absent) reports
+# "green" to an orchestrator reading prose. Pipe the runner's output here instead.
+#   pytest -q 2>&1 | just agent-report pytest
+agent-report RUNNER:
+    @python scripts/check_agent_report.py --runner {{RUNNER}}
+
 gates:
     @grep -A 1 '^### ' docs/PLAN_REQUIREMENTS.md 2>/dev/null | head -50 || cat docs/PLAN_REQUIREMENTS.md | head -80

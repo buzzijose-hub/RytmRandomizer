@@ -151,6 +151,11 @@ a human reading the clause against every implementation of it.
 - `.claude/rules/maximize-parallelization.md` — dispatch independent work in parallel.
 - `.claude/rules/autonomous-agent-execution.md` — run to a hard stop without pausing.
 - `.claude/rules/cascade-merge-pattern.md` — bundle the parallel outputs into one PR.
+- `scripts/check_agent_report.py` — §1 mechanised (`just agent-report pytest`).
+- `scripts/check_touched_coverage.py` + `just gate1` — the Gate 1 measurement
+  that can actually fail. The hand-rolled `--cov` recipe this rule's sibling
+  used to document measured nothing and exited 0: the §5 "coverage against a
+  stub" trap in another guise.
 - `tests/architecture/test_workflow_script_invocations_resolve.py` — §3 mechanised.
 - `tests/architecture/test_cross_language_event_seams_agree.py` — §4 mechanised.
 - `tests/architecture/test_frontend_matches_handshake_contract.py` — the call-form precedent.
