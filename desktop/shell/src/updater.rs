@@ -15,6 +15,7 @@
 //! install-only-after-sidecar-exit) is testable with a recording sink and no
 //! network either.
 
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -360,10 +361,19 @@ fn is_well_formed_install_id(value: &str) -> bool {
 ///
 /// Hand-rolled rather than pulling in the `uuid` crate: the value is never
 /// parsed, compared or transmitted — it is hashed into a bucket and nothing
-/// else — so a dependency would buy nothing. Randomness comes from
-/// `getrandom(2)` via `/dev/urandom`, falling back to a time-and-address mix
-/// only if that is unavailable; a weak `install_id` costs a slightly uneven
-/// rollout bucket, never a security property.
+/// else — so a dependency would buy nothing.
+///
+/// Randomness comes from `/dev/urandom` where it exists. **Windows has no
+/// `/dev/urandom`, so the fallback is the only path there** — it is production
+/// code on that platform, not a curiosity. The first version mixed `now_ms()`,
+/// a stack address and the pid, all three of which are constant for two calls
+/// in the same millisecond, so two mints in a loop returned the SAME id. CI
+/// caught it on windows-latest with `left == right`.
+///
+/// A colliding `install_id` is not cosmetic: spec §5 buckets the staged
+/// rollout on `sha256(install_id)`, so identical ids mean those installs move
+/// as one — the opposite of a staged rollout. The counter below guarantees
+/// distinct output within a process regardless of clock resolution.
 fn mint_install_id() -> String {
     let mut bytes = [0_u8; 16];
     if std::fs::File::open("/dev/urandom")
@@ -373,8 +383,28 @@ fn mint_install_id() -> String {
         })
         .is_err()
     {
-        // Degrade, never panic (the `sidecar` module's posture).
-        let seed = now_ms() ^ (&bytes as *const _ as u64) ^ u64::from(std::process::id());
+        fill_without_urandom(&mut bytes);
+    }
+    format_uuid_v4(bytes)
+}
+
+/// The no-`/dev/urandom` path — i.e. **every Windows install**.
+///
+/// Split out so it is testable on a machine that HAS `/dev/urandom`. The
+/// original was only reachable on Windows, so the collision it contained was
+/// invisible to every local run and surfaced only in CI.
+fn fill_without_urandom(bytes: &mut [u8; 16]) {
+    {
+        // Degrade, never panic (the `sidecar` module's posture). The
+        // monotonic counter is what makes two same-millisecond mints differ;
+        // the clock and pid only spread ids ACROSS processes and machines.
+        static MINT_COUNTER: AtomicU64 = AtomicU64::new(0);
+        let unique = MINT_COUNTER.fetch_add(1, Ordering::Relaxed);
+        let seed = now_ms()
+            ^ (&bytes as *const _ as u64)
+            ^ u64::from(std::process::id())
+            ^ unique.rotate_left(32)
+            ^ unique.wrapping_mul(0xD6E8_FEB8_6659_FD93);
         for (i, slot) in bytes.iter_mut().enumerate() {
             let mixed = seed
                 .rotate_left((i as u32).wrapping_mul(7))
@@ -383,8 +413,11 @@ fn mint_install_id() -> String {
             *slot = (mixed >> 24) as u8;
         }
     }
-    // Stamp the version-4 and RFC-4122 variant bits so the value is a
-    // well-formed UUIDv4 as spec §5 specifies.
+}
+
+/// Stamp the version-4 and RFC-4122 variant bits and render the canonical
+/// 8-4-4-4-12 form (spec §5).
+fn format_uuid_v4(mut bytes: [u8; 16]) -> String {
     bytes[6] = (bytes[6] & 0x0F) | 0x40;
     bytes[8] = (bytes[8] & 0x3F) | 0x80;
     let h = |b: &[u8]| b.iter().map(|x| format!("{x:02x}")).collect::<String>();
@@ -1017,6 +1050,52 @@ mod tests {
         let a = mint_install_id();
         let b = mint_install_id();
         assert_ne!(a, b, "two mints must not collide");
+    }
+
+    /// The Windows path, exercised on every OS.
+    ///
+    /// `mint_install_id` reads `/dev/urandom` where it exists, so on macOS and
+    /// Linux the fallback is never reached and a defect in it is invisible
+    /// locally — which is exactly what happened: the first version mixed only
+    /// values that are constant within a millisecond (clock, stack address,
+    /// pid), so two mints in a loop returned the SAME id, and only
+    /// windows-latest ever saw it.
+    ///
+    /// A colliding `install_id` is not cosmetic. Spec §5 buckets the staged
+    /// rollout on `sha256(install_id)`, so identical ids move as one install:
+    /// a "10% rollout" would reach either none of those machines or all of
+    /// them.
+    #[test]
+    fn the_no_urandom_fallback_does_not_collide_within_a_millisecond() {
+        let mut seen = std::collections::HashSet::new();
+        for _ in 0..256 {
+            let mut bytes = [0_u8; 16];
+            fill_without_urandom(&mut bytes);
+            assert!(
+                seen.insert(format_uuid_v4(bytes)),
+                "the no-urandom fallback repeated an id; on Windows this is the ONLY path"
+            );
+        }
+    }
+
+    #[test]
+    fn the_fallback_still_produces_well_formed_uuid_v4s() {
+        let mut bytes = [0_u8; 16];
+        fill_without_urandom(&mut bytes);
+        let rendered = format_uuid_v4(bytes);
+        let parts: Vec<&str> = rendered.split('-').collect();
+        assert_eq!(
+            parts.iter().map(|p| p.len()).collect::<Vec<_>>(),
+            vec![8, 4, 4, 4, 12]
+        );
+        assert!(
+            parts[2].starts_with('4'),
+            "version nibble must be 4: {rendered}"
+        );
+        assert!(
+            matches!(parts[3].as_bytes()[0], b'8' | b'9' | b'a' | b'b'),
+            "RFC-4122 variant bits must be set: {rendered}"
+        );
     }
 
     /// Spec §5: minted on first launch, "never regenerated". A drifting id
