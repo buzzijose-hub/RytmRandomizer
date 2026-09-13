@@ -1,4 +1,4 @@
-/** Native acceptance fixture: real Wry shell and plugin verifier, no OS install. */
+/** Native acceptance: real Wry/plugin, with an explicit isolated Windows handoff. */
 import { spawn, execFileSync, type ChildProcess } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 
 import { resolveRepoRootForManifest } from './update_manifest';
+import { collectHandoffEvidence, loadHandoffInputs, prepareHandoffCopy, type HandoffEvidence } from './native_install_handoff';
 
 // Genuine prehashed test vector from minisign-verify 0.2.5, MIT license.
 // The bytes are deliberately not an installer. No release secret is involved.
@@ -25,6 +26,7 @@ export interface NativeEvidence {
   requests: readonly string[];
   journal: ReadonlyArray<{ event: string; version: string | null; detail: Record<string, unknown> }>;
   terminal: ReadonlyArray<{ event: string; version: string; choice: string; sha256: string }>;
+  handoff?: HandoffEvidence;
 }
 
 function publicKey(wrong: boolean): string {
@@ -33,7 +35,7 @@ function publicKey(wrong: boolean): string {
   return Buffer.from(`untrusted comment: fixture public key\n${raw.toString('base64')}`).toString('base64');
 }
 
-function manifest(version: string, rollout: number, hardware: boolean, malformedSignature: boolean): Record<string, unknown> {
+function manifest(version: string, rollout: number, hardware: boolean, malformedSignature: boolean, signature?: string): Record<string, unknown> {
   return {
     schema_version: 1, channel: 'stable', version,
     pub_date: '2026-09-08T00:00:00Z', notes: 'Native signed fixture release notes',
@@ -44,7 +46,7 @@ function manifest(version: string, rollout: number, hardware: boolean, malformed
     },
     platforms: Object.fromEntries(TARGETS.map((target) => [target, {
       // Alphabet-valid but impossible length exercises the plugin Base64 error.
-      signature: malformedSignature ? 'A' : Buffer.from(SIGNATURE).toString('base64'),
+      signature: signature ?? (malformedSignature ? 'A' : Buffer.from(SIGNATURE).toString('base64')),
       url: `https://github.com/buzzijose-hub/RytmRandomizer/releases/download/v${version}/fixture.bin`,
     }])),
   };
@@ -59,6 +61,18 @@ function killOwnedProcess(child: ChildProcess): void {
   }
 }
 
+async function reapOwnedProcess(child: ChildProcess): Promise<void> {
+  try { killOwnedProcess(child); } catch (error) {
+    if (child.exitCode === null && child.signalCode === null) throw error;
+  }
+  if (child.exitCode === null && child.signalCode === null) {
+    await new Promise<void>((resolve) => {
+      const deadline = setTimeout(resolve, 5000);
+      child.once('exit', () => { clearTimeout(deadline); resolve(); });
+    });
+  }
+}
+
 /** No browser Page and no mocked IPC: the spawned native window runs the assertions. */
 export async function runNativeScenario(scenario: string): Promise<NativeEvidence> {
   const binary = process.env.RYTM_NATIVE_TEST_BINARY;
@@ -70,7 +84,10 @@ export async function runNativeScenario(scenario: string): Promise<NativeEvidenc
     throw new Error('Set PYTHON to the absolute shared environment Python executable.');
   }
   const repo = resolveRepoRootForManifest();
+  const handoffInputs = ['install_handoff_quit', 'install_handoff_now'].includes(scenario) ? loadHandoffInputs(repo) : null;
   const root = mkdtempSync(path.join(tmpdir(), 'rytm-native-update-'));
+  const handoffCopy = handoffInputs === null ? null : prepareHandoffCopy(root, binary, handoffInputs);
+  let handoffCompleted = handoffInputs === null;
   const requests: string[] = [];
   const parked = new Set<http.ServerResponse>();
   const timers = new Set<ReturnType<typeof setTimeout>>();
@@ -91,7 +108,7 @@ export async function runNativeScenario(scenario: string): Promise<NativeEvidenc
     }
     if (url === '/stable.json') {
       if (scenario === 'check_failure') { response.writeHead(503).end(); return; }
-      const body = manifest(version, rollout, hardware, scenario === 'signature_malformed');
+      const body = manifest(version, rollout, hardware, scenario === 'signature_malformed', handoffInputs?.signature);
       if (scenario === 'manifest_invalid') body.hardware_revalidation = 'incorrect_type';
       const send = (): void => { response.setHeader('Content-Type', 'application/json'); response.end(JSON.stringify(body)); };
       if (scenario === 'inflight_checks' || scenario === 'manifest_cancel') {
@@ -104,7 +121,7 @@ export async function runNativeScenario(scenario: string): Promise<NativeEvidenc
     if (url === '/artifact.bin') {
       if (scenario === 'download_cancel') { parked.add(response); response.on('close', () => parked.delete(response)); return; }
       response.setHeader('Content-Type', 'application/octet-stream');
-      response.end(scenario === 'signature_failure' ? 'Test' : 'test'); return;
+      response.end(handoffInputs?.bytes ?? (scenario === 'signature_failure' ? 'Test' : 'test')); return;
     }
     if (url === '/beacon.txt') {
       if (scenario === 'beacon_hang') { parked.add(response); response.on('close', () => parked.delete(response)); return; }
@@ -125,16 +142,18 @@ export async function runNativeScenario(scenario: string): Promise<NativeEvidenc
       entry, path.join(repo, 'scripts', 'build_sidecar_binary.py')], { cwd: repo, windowsHide: true, env: { ...process.env, PYTHONPATH: repo } });
     const config = path.join(root, 'native.json');
     writeFileSync(config, JSON.stringify({
-      root, origin, scenario, public_key: publicKey(scenario === 'wrong_key'),
+      root, origin, scenario, public_key: handoffInputs?.publicKey ?? publicKey(scenario === 'wrong_key'),
       install_id: scenario === 'rollout_in' ? '00000000-0000-4000-8000-000000000015' : '00000000-0000-4000-8000-000000000119',
       python, sidecar_entry: entry,
+      ...(handoffCopy === null ? {} : { handoff_nonce: handoffCopy.nonce }),
     }));
     const output: string[] = [];
-    const launch = (): ChildProcess => spawn(binary, [], {
+    const launch = (): ChildProcess => spawn(handoffCopy?.executable ?? binary, [], {
       cwd: repo, windowsHide: true, detached: process.platform !== 'win32',
       stdio: ['ignore', 'pipe', 'pipe'],
       env: {
         ...process.env, PYTHONPATH: repo, PYTHONUNBUFFERED: '1',
+        ...(handoffCopy === null ? {} : { TMP: path.join(root, 'plugin-temp'), TEMP: path.join(root, 'plugin-temp') }),
         XDG_CONFIG_HOME: root, APPDATA: root,
         RYTM_RAND_NATIVE_TEST_CONFIG: config,
         RYTM_RAND_MIDI_BACKEND: 'off',
@@ -156,6 +175,11 @@ export async function runNativeScenario(scenario: string): Promise<NativeEvidenc
     });
     child = launch();
     await waitForExit(child);
+    let handoff: HandoffEvidence | undefined;
+    if (handoffInputs !== null && handoffCopy !== null) {
+      handoff = await collectHandoffEvidence(root, child, handoffInputs, handoffCopy.originalHash, scenario === 'install_handoff_now');
+      handoffCompleted = true;
+    }
     if (scenario === 'consent_crash') {
       if (child.exitCode !== 86 || !existsSync(path.join(root, 'crashed'))) throw new Error('Native consent crash fixture did not reach its crash boundary');
       const options = JSON.parse(readFileSync(config, 'utf8')) as Record<string, unknown>;
@@ -164,7 +188,7 @@ export async function runNativeScenario(scenario: string): Promise<NativeEvidenc
       await waitForExit(child);
     }
     const resultPath = path.join(root, 'result.json');
-    if (!existsSync(resultPath)) {
+    if (handoff === undefined && !existsSync(resultPath)) {
       let diagnostic = output.join('').slice(-12_000).split(root).join('<fixture-root>');
       for (const name of ['ws-token', 'arm-secret']) {
         const secretPath = path.join(root, name);
@@ -175,29 +199,22 @@ export async function runNativeScenario(scenario: string): Promise<NativeEvidenc
       }
       throw new Error(`Native runner produced no result for ${scenario}:\n${diagnostic}`);
     }
-    const result = JSON.parse(readFileSync(resultPath, 'utf8')) as NativeEvidence['result'];
+    const result = handoff === undefined ? JSON.parse(readFileSync(resultPath, 'utf8')) as NativeEvidence['result']
+      : { passed: true, scenario, detail: 'Real Windows installer handoff and native/DOM assertions' };
     if (!result.passed) throw new Error(`Native ${scenario}: ${result.detail}`);
     const journalPath = path.join(root, 'RytmRandomizer', 'update-journal.jsonl');
     const journal = existsSync(journalPath) ? readFileSync(journalPath, 'utf8').trim().split('\n').filter(Boolean).map((line) => JSON.parse(line)) as NativeEvidence['journal'] : [];
     const terminalPath = path.join(root, 'terminal.json');
     const terminal = existsSync(terminalPath) ? JSON.parse(readFileSync(terminalPath, 'utf8')) as NativeEvidence['terminal'] : [];
-    return { result, requests, journal, terminal };
+    return { result, requests, journal, terminal, ...(handoff === undefined ? {} : { handoff }) };
   } finally {
-    if (child !== null) {
-      try { killOwnedProcess(child); } catch (error) {
-        if (child.exitCode === null && child.signalCode === null) throw error;
-      }
-      if (child.exitCode === null && child.signalCode === null) {
-        await new Promise<void>((resolve) => {
-          const deadline = setTimeout(resolve, 5000);
-          child?.once('exit', () => { clearTimeout(deadline); resolve(); });
-        });
-      }
-    }
+    if (child !== null) await reapOwnedProcess(child);
     timers.forEach(clearTimeout);
     parked.forEach((response) => response.destroy());
     server.closeAllConnections();
     await new Promise<void>((resolve) => server.close(() => resolve()));
-    rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+    // A failed real handoff retains its isolated receipt directory rather than
+    // deleting files that an independently launched bounded installer may own.
+    if (handoffCompleted) rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   }
 }

@@ -787,12 +787,36 @@ jobs:
           $env:RYTM_NATIVE_TEST_BINARY = (Resolve-Path ../shell/target/debug/rytm-randomizer-shell.exe).Path
           npx playwright test --config playwright.native.config.ts --workers=1
 
+      - name: Exercise actual Windows installer handoff and restart
+        working-directory: .
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $nativeHandoffTools = Join-Path $env:RUNNER_TEMP ("rytm-handoff-tools-" + [guid]::NewGuid().ToString('N'))
+          New-Item -ItemType Directory -Path $nativeHandoffTools | Out-Null
+          gh release download 0.12 --repo jedisct1/minisign --pattern minisign-0.12-win64.zip --dir $nativeHandoffTools
+          if ($LASTEXITCODE -ne 0) { throw 'Official acceptance signer download failed' }
+          Expand-Archive -LiteralPath (Join-Path $nativeHandoffTools 'minisign-0.12-win64.zip') -DestinationPath (Join-Path $nativeHandoffTools 'extracted')
+          $nativeHandoffSigner = Join-Path $nativeHandoffTools 'extracted/minisign-win64/x86_64/minisign.exe'
+          $nativeHandoffPrepared = Join-Path $nativeHandoffTools 'prepared'
+          & ./desktop/web/native-e2e/installer-fixture/prepare.ps1 -OutputDirectory $nativeHandoffPrepared -Minisign $nativeHandoffSigner
+          $env:PYTHON = (Get-Command python).Source
+          $env:RYTM_NATIVE_TEST_BINARY = (Resolve-Path desktop/shell/target/debug/rytm-randomizer-shell.exe).Path
+          $env:RYTM_NATIVE_HANDOFF_INPUTS = Join-Path $nativeHandoffPrepared 'handoff-inputs.json'
+          Push-Location desktop/web
+          try { npx playwright test --config playwright.native-install.config.ts --workers=1 }
+          finally { Pop-Location }
+          if ($LASTEXITCODE -ne 0) { throw 'Actual Windows installer acceptance failed' }
+
       - name: Upload native updater acceptance report
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: native-updater-report
-          path: desktop/web/native-playwright-report
+          path: |
+            desktop/web/native-playwright-report
+            desktop/web/native-install-playwright-report
           if-no-files-found: ignore
           retention-days: 14
 

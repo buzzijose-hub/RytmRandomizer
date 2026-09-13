@@ -26,6 +26,8 @@ struct Options {
     install_id: String,
     python: PathBuf,
     sidecar_entry: PathBuf,
+    #[serde(default)]
+    handoff_nonce: Option<String>,
 }
 
 #[derive(Clone, Serialize)]
@@ -85,6 +87,40 @@ impl NativeFixture {
             Some(options.origin.as_str()),
             "native manifest traffic must use the fixture origin"
         );
+        if matches!(
+            options.scenario.as_str(),
+            "install_handoff_quit" | "install_handoff_now"
+        ) {
+            let nonce = options.handoff_nonce.as_ref().expect("handoff nonce");
+            assert!(nonce.len() == 36 && nonce.chars().all(|c| c.is_ascii_hexdigit() || c == '-'));
+            assert!(options
+                .root
+                .file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| name.starts_with("rytm-native-update-")));
+            assert_eq!(
+                std::fs::read_to_string(options.root.join("acceptance-marker"))
+                    .expect("handoff marker"),
+                *nonce
+            );
+            assert_eq!(
+                std::env::current_exe()
+                    .expect("current executable")
+                    .canonicalize()
+                    .expect("canonical executable"),
+                options
+                    .root
+                    .join("fixture-shell.exe")
+                    .canonicalize()
+                    .expect("copied fixture executable"),
+                "real plugin handoff can replace only the isolated fixture copy"
+            );
+        } else {
+            assert!(
+                options.handoff_nonce.is_none(),
+                "handoff nonce requires an explicit handoff scenario"
+            );
+        }
         Arc::new(Self {
             options,
             terminal: Mutex::new(Vec::new()),
@@ -110,6 +146,18 @@ impl NativeFixture {
     }
 
     pub fn configure(&self, config: &mut tauri::Config) {
+        let installer_args = if self.real_install_handoff() {
+            config.product_name = Some("RytmUpdaterAcceptanceFixture".into());
+            config.identifier = "invalid.rytm.updater-acceptance".into();
+            vec![
+                "--fixture-root".to_string(),
+                format!("\"{}\"", self.options.root.display()),
+                "--fixture-nonce".to_string(),
+                self.options.handoff_nonce.clone().expect("handoff nonce"),
+            ]
+        } else {
+            Vec::new()
+        };
         config.build.dev_url = Some("http://127.0.0.1:5173".parse().expect("fixture Vite URL"));
         config.plugins.0.insert(
             "updater".into(),
@@ -117,7 +165,7 @@ impl NativeFixture {
                 "endpoints": [format!("{}/stable.json", self.options.origin)],
                 "pubkey": if self.signing_key_present() { self.options.public_key.as_str() } else { "" },
                 "dangerousInsecureTransportProtocol": true,
-                "windows": {"installMode": "passive"},
+                "windows": {"installMode": "passive", "installerArgs": installer_args},
             }),
         );
         // WebView cookies/storage cannot cross fixture runs or touch a real profile.
@@ -175,6 +223,24 @@ impl NativeFixture {
         choice: ConsentChoice,
         bytes: &[u8],
     ) -> Result<(), ErrorCode> {
+        if self.real_install_handoff() {
+            let stopped = self
+                .shutdown_requested
+                .lock()
+                .expect("fixture shutdown flag")
+                .as_ref()
+                .is_some_and(|flag| flag.load(Ordering::SeqCst));
+            if !stopped {
+                return Err(ErrorCode::InstallFailed);
+            }
+            // Do not relock the child slot: teardown may still hold its guard
+            // while dispatching SidecarExited. The separate installer checks
+            // that the captured real sidecar PID is gone before replacement.
+            std::fs::write(self.options.root.join("handoff-boundary.json"),
+                serde_json::json!({"parent_pid": std::process::id(),
+                    "shutdown_requested": stopped, "artifact_sha256": format!("{:x}", Sha256::digest(bytes))}).to_string())
+                .map_err(|_| ErrorCode::InstallFailed)?;
+        }
         self.persist_terminal(TerminalEvent {
             event: "install",
             version: version.into(),
@@ -201,6 +267,40 @@ impl NativeFixture {
         });
     }
 
+    pub fn real_install_handoff(&self) -> bool {
+        matches!(
+            self.options.scenario.as_str(),
+            "install_handoff_quit" | "install_handoff_now"
+        )
+    }
+
+    fn prepare_handoff(&self) -> Result<(), String> {
+        if !self.real_install_handoff() {
+            return Err("handoff_scenario_required".into());
+        }
+        let slot = self
+            .child
+            .lock()
+            .expect("fixture child")
+            .clone()
+            .ok_or("fixture_child_missing")?;
+        let mut child = slot.lock().expect("child slot");
+        let child = child.as_mut().ok_or("fixture_child_missing")?;
+        if child
+            .try_wait()
+            .map_err(|_| "fixture_child_status_failed")?
+            .is_some()
+        {
+            return Err("fixture_child_not_running".into());
+        }
+        std::fs::write(
+            self.options.root.join("handoff-start.json"),
+            serde_json::json!({"parent_pid": std::process::id(), "sidecar_pid": child.id()})
+                .to_string(),
+        )
+        .map_err(|_| "handoff_receipt_failed".into())
+    }
+
     fn shutdown(&self) {
         let teardown = self.teardown.lock().expect("fixture teardown").clone();
         if let Some(teardown) = teardown {
@@ -223,6 +323,10 @@ pub async fn control<R: Runtime>(
     let fixture = Arc::clone(state.inner());
     match action.as_str() {
         "stats" => Ok(fixture.stats()),
+        "prepare_handoff" => {
+            fixture.prepare_handoff()?;
+            Ok(fixture.stats())
+        }
         "shutdown" => tauri::async_runtime::spawn_blocking(move || {
             fixture.shutdown();
             fixture.stats()

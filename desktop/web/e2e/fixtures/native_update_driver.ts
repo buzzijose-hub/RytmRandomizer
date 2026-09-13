@@ -47,7 +47,7 @@ async function staged(): Promise<void> {
   await until('native stage reflected in React chip', () => element('update-chip')?.textContent?.includes('1.35.1') === true);
 }
 
-async function clickConfirm(choice: string): Promise<void> {
+async function clickConfirm(choice: string, waitForConsent = true): Promise<void> {
   await connected();
   const radio = document.querySelector<HTMLInputElement>(`input[name="update-consent"][value="${choice}"]`);
   check(radio !== null && !radio.disabled, 'consent radio is usable after authentication');
@@ -56,7 +56,7 @@ async function clickConfirm(choice: string): Promise<void> {
   const button = element('update-confirm');
   check(button instanceof HTMLButtonElement && !button.disabled, 'native consent button enabled');
   button.click();
-  await until('consent reached native journal', async () => (await snapshot()).journal.some((row) => row.event === 'consent_granted'));
+  if (waitForConsent) await until('consent reached native journal', async () => (await snapshot()).journal.some((row) => row.event === 'consent_granted'));
 }
 
 async function staleHandshakeRejected(token: string): Promise<boolean> {
@@ -161,6 +161,19 @@ export async function run(scenario: string, origin: string): Promise<void> {
         await until('actual activity contains signed download', () => element('update-activity-list')?.textContent?.includes('download_ok') === true);
         check(element('update-panel')?.textContent?.includes('Native signed fixture release notes'), 'raw release notes reach frontend');
         if (scenario === 'hardware_warning') check(element('update-panel')?.textContent?.includes('This update changes hardware send paths'), 'hardware warning is visible');
+      } else if (scenario === 'install_handoff_quit' || scenario === 'install_handoff_now') {
+        await connected();
+        await nativeControl('prepare_handoff');
+        if (scenario === 'install_handoff_quit') {
+          await clickConfirm('install_on_quit');
+          check((await stats()).terminal.length === 0, 'real installer awaits natural quit');
+          await nativeControl('shutdown');
+        } else {
+          // Successful Windows Update.install exits the native process. The
+          // outside runner observes exit/replacement; no fake success IPC follows.
+          await clickConfirm('install_now', false);
+        }
+        return;
       } else if (scenario === 'consent_stale') {
         check(await confirmUpdateChoiceOnShell('1.36.0', 'install_now') === false, 'stale-version consent rejected');
         check(await invoke('update_confirm_choice', { version: '1.35.1', choice: 'unknown' }) === false, 'unknown choice rejected by real command');

@@ -667,6 +667,7 @@ for the running process; the diagnostic journal does not restore them.
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `RYTM_NATIVE_TEST_BINARY` | Unset: native runner refuses | Absolute path to the isolated debug shell built with `--features native-test`. |
+| `RYTM_NATIVE_HANDOFF_INPUTS` | Unset: explicit Windows install target refuses | Absolute `handoff-inputs.json` path produced by the ephemeral installer fixture preparation. Used only by the two real Windows handoff cases. |
 | `PYTHON`, then `PYTHON_EXECUTABLE` | Unset: native runner refuses | Absolute existing Python executable for the fixture's passive sidecar. |
 | `RYTM_RAND_NATIVE_TEST_CONFIG` | Unset: feature-enabled shell refuses | Runner-generated JSON configuration under its temporary root. Ordinary builds do not include this reader. |
 | `RYTM_RAND_MIDI_BACKEND` | Fixture requires exactly `off` | Prevents real MIDI in native acceptance; the normal application's documented backend setting is unchanged. |

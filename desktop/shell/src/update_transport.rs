@@ -554,7 +554,12 @@ impl<R: tauri::Runtime> Transport for PluginTransport<R> {
         }
         #[cfg(feature = "native-test")]
         if let Some(fixture) = &self.fixture {
-            return fixture.record_install(version, choice, &bytes);
+            fixture.record_install(version, choice, &bytes)?;
+            if !fixture.real_install_handoff() {
+                return Ok(());
+            }
+            // The explicit handoff target runs this real plugin call against
+            // a signed inert installer and a copied executable in its temp root.
         }
         update
             .restart_after_install(choice == crate::update_policy::ConsentChoice::RestartAndInstall)

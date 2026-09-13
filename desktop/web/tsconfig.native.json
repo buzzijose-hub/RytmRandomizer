@@ -1,5 +1,5 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": { "types": ["node", "vitest/globals", "@testing-library/jest-dom"] },
-  "include": ["src", "e2e/fixtures/native_update_driver.ts", "e2e/fixtures/native_update_fixture.ts", "native-e2e", "playwright.native.config.ts"]
+  "include": ["src", "e2e/fixtures/native_update_driver.ts", "e2e/fixtures/native_update_fixture.ts", "native-e2e", "native-install-e2e", "playwright.native.config.ts", "playwright.native-install.config.ts"]
 }
