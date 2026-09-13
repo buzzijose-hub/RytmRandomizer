@@ -1,6 +1,6 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-09-08. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-09-13. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Current Snapshot
 
@@ -65,6 +65,14 @@ approval is inferred from the software smoke.
 Digitakt and Digitakt II are under review in #240. Both are registered passive families with manual-backed CC/NRPN reports, strict 8/16-track domains and synthetic candidate decoding. Hardware saved-project offsets remain unpromoted; mutation plans always refuse and render zero events. September 8 corrections distinguish II Source Sample Select from MISC Sample Slot and preserve Rytm/A4 capture authority. The targeted repair suite passes 459 tests; combined verification is pending.
 
 ## Recent Cleanup
+
+- 2026-09-13: Reconciled the Digitakt review repairs with the author's merged
+  Forge integration. The fixed Rytm/A4 stage now exposes two slot predicates,
+  and Forge consumers use that closed stage domain; Digitakt registration
+  does not expand capture or send authority. The `Device` Protocol owns report
+  roles and ordering, shared family conformance tests pin the clean-process
+  roster, and the guarded AL16 refresh tool maintains source fingerprints.
+  Full combined validation and code-owner review remain pending for #240.
 
 - 2026-09-07: Completed the Show Kit Forge integration in a fresh worktree,
   preserving both the dirty main checkout and the earlier unfinished feature

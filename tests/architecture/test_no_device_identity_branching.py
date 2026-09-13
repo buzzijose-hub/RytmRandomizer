@@ -55,7 +55,20 @@ PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 PACKAGE_ROOT: Final[Path] = PROJECT_ROOT / "rytm_randomizer"
 
 #: ``devices/`` owns device identity, so comparisons there are legitimate.
-_EXEMPT_PREFIXES: Final[tuple[str, ...]] = ("rytm_randomizer/devices/",)
+#:
+#: ``cockpit/data/stage.py`` is the one module outside that tree which also
+#: *defines* identity rather than consuming it: it declares ``StageDeviceId``
+#: as a closed two-value ``Literal`` (the dual-machine stage is a fixed
+#: Rytm+A4 slot pairing, not open-ended dispatch) and exposes
+#: ``is_rytm_stage_slot`` / ``is_analog_four_stage_slot`` so every consumer
+#: asks which slot instead of comparing an id. The two comparisons inside
+#: those predicates are the single place that knowledge lives; exempting the
+#: definition site is what let 13 consumer-side branches across five modules
+#: be deleted. Consumers stay covered by the gate.
+_EXEMPT_PREFIXES: Final[tuple[str, ...]] = (
+    "rytm_randomizer/devices/",
+    "rytm_randomizer/cockpit/data/stage.py",
+)
 
 #: ``device_id == "literal"`` or ``device_id == SOME_DEVICE_ID`` (either
 #: operand order). Deliberately narrow: it targets identity comparison, not

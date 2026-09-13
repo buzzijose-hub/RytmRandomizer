@@ -9,8 +9,6 @@ from typing import Final, cast
 
 from ...guardrails.input_validation import require_boolean
 from ..data.show_bank import (
-    A4_SHOW_KIT_DEVICE_ID,
-    RYTM_SHOW_KIT_DEVICE_ID,
     SHOW_BANK_REVISION_MAX,
     FavoriteRecapture,
     HardwareSaveAttestation,
@@ -27,6 +25,7 @@ from ..data.show_bank import (
     ShowKitSysex,
     ShowTimePreflight,
 )
+from ..data.stage import is_analog_four_stage_slot, is_rytm_stage_slot
 
 Clock = Callable[[], datetime]
 
@@ -375,7 +374,7 @@ def attest_hardware_save(  # noqa: PLR0913 - paired slots, operator evidence, an
             attested_at=timestamp,
             note=note,
         )
-        if device_id == RYTM_SHOW_KIT_DEVICE_ID:
+        if is_rytm_stage_slot(device_id):
             return replace(
                 entry,
                 rytm_hardware_save=save,
@@ -412,7 +411,7 @@ def record_recapture(  # noqa: PLR0913 - paired capture/equivalence evidence sta
         favorite = entry.favorite_candidate
         if favorite is None:
             raise ValueError("favorite recapture requires a favorite")
-        if capture.device_id == RYTM_SHOW_KIT_DEVICE_ID:
+        if is_rytm_stage_slot(capture.device_id):
             if entry.rytm_hardware_save is None:
                 raise ValueError("Rytm recapture requires a Rytm hardware-save attestation")
             expected = favorite.rytm_semantic_fingerprint
@@ -485,9 +484,9 @@ def record_show_time_preflight(  # noqa: PLR0913 - paired fresh evidence and exp
         )
         if rytm_slot is None or analog_four_slot is None:
             raise ValueError("show-time preflight requires paired hardware slots")
-        if current_rytm_capture.device_id != RYTM_SHOW_KIT_DEVICE_ID:
+        if not is_rytm_stage_slot(current_rytm_capture.device_id):
             raise ValueError("show-time Rytm capture is attached to the wrong device")
-        if current_analog_four_capture.device_id != A4_SHOW_KIT_DEVICE_ID:
+        if not is_analog_four_stage_slot(current_analog_four_capture.device_id):
             raise ValueError("show-time A4 capture is attached to the wrong device")
         # The entry status invariant already proves these optionals are present.
         rytm_recapture = cast(FavoriteRecapture, entry.rytm_recapture)

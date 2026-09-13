@@ -1,6 +1,6 @@
 # Digitakt PR #240 review repairs
 
-> **Status:** in-flight
+> Status: in-flight
 > Continuation of the passive Digitakt work at `dc19f868`; software validation and review receipts are owned by the release-closeout orchestrator.
 
 This repair corrects published MIDI facts, narrows support claims to implemented

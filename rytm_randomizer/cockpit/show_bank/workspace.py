@@ -50,6 +50,7 @@ from ..data.show_bank import (
     ShowKitRytmAuditionStatus,
     ShowKitScope,
 )
+from ..data.stage import is_analog_four_stage_slot, is_rytm_stage_slot
 from .a4_preparation import A4PreparationContext, prepare_a4_audition
 from .forge import (
     analog_four_capture_semantic_fingerprint,
@@ -494,7 +495,7 @@ class ShowKitForgeWorkspace:
         """
 
         changed = False
-        if result.device_id == ANALOG_RYTM_DEVICE_ID and self._current_rytm_auditions:
+        if is_rytm_stage_slot(result.device_id) and self._current_rytm_auditions:
             self._current_rytm_auditions.clear()
             changed = True
         if self._active_bank_id is not None:
@@ -504,7 +505,7 @@ class ShowKitForgeWorkspace:
                 entry = self.bank(self._active_bank_id).entry(entry_id)
                 recapture = (
                     entry.rytm_recapture
-                    if result.device_id == ANALOG_RYTM_DEVICE_ID
+                    if is_rytm_stage_slot(result.device_id)
                     else entry.analog_four_recapture
                 )
                 if (
@@ -961,7 +962,7 @@ class ShowKitForgeWorkspace:
             clock=self._clock,
         )
         self._active_entry_ids[bank_id] = entry_id
-        if device_id == RYTM_SHOW_KIT_DEVICE_ID:
+        if is_rytm_stage_slot(device_id):
             self._current_rytm_auditions.pop((bank_id, entry_id), None)
         self._current_preflight_grants.pop((bank_id, entry_id), None)
         self._publish(updated)
@@ -1292,14 +1293,12 @@ class ShowKitForgeWorkspace:
         entry = bank.entry(entry_id)
         if capture_kind == "source":
             capture = (
-                entry.rytm_source
-                if device_id == RYTM_SHOW_KIT_DEVICE_ID
-                else entry.analog_four_source
+                entry.rytm_source if is_rytm_stage_slot(device_id) else entry.analog_four_source
             )
         elif capture_kind == "favorite":
             recapture = (
                 entry.rytm_recapture
-                if device_id == RYTM_SHOW_KIT_DEVICE_ID
+                if is_rytm_stage_slot(device_id)
                 else entry.analog_four_recapture
             )
             if recapture is None:
@@ -1312,9 +1311,7 @@ class ShowKitForgeWorkspace:
         runtime_frame = self._volatile_frames.get(capture.sysex.artifact_id)
         if runtime_frame is None:
             service_id = (
-                ANALOG_RYTM_DEVICE_ID
-                if device_id == RYTM_SHOW_KIT_DEVICE_ID
-                else ANALOG_FOUR_DEVICE_ID
+                ANALOG_RYTM_DEVICE_ID if is_rytm_stage_slot(device_id) else ANALOG_FOUR_DEVICE_ID
             )
             current = current_captures.get(service_id)
             if current is not None and current.fingerprint == capture.fingerprint:
@@ -1330,7 +1327,7 @@ class ShowKitForgeWorkspace:
     def _retain_selected_a4_candidate(
         self, bank: ShowBank, entry: ShowBankEntry, device_id: ShowKitDeviceId
     ) -> ShowBankEntry:
-        if device_id != A4_SHOW_KIT_DEVICE_ID:
+        if not is_analog_four_stage_slot(device_id):
             raise ValueError("candidate retention is available only for Analog Four")
         selected = entry.selected_candidate
         if selected is None:
